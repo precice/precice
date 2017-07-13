@@ -1,5 +1,3 @@
-#ifndef PRECICE_NO_SOCKETS
-
 #include "SocketRequest.hpp"
 
 namespace precice {
@@ -34,4 +32,3 @@ SocketRequest::wait() {
 }
 } // namespace precice, com
 
-#endif // not PRECICE_NO_SOCKETS

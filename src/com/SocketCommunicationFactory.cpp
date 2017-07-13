@@ -1,5 +1,3 @@
-#ifndef PRECICE_NO_SOCKETS
-
 #include "SocketCommunication.hpp"
 
 #include "SocketCommunicationFactory.hpp"
@@ -39,4 +37,3 @@ SocketCommunicationFactory::addressDirectory() {
 }
 } // namespace precice, com
 
-#endif // not PRECICE_NO_SOCKETS

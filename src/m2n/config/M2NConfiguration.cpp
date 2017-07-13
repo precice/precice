@@ -180,12 +180,6 @@ void M2NConfiguration:: xmlTagCallback
     com::PtrCommunicationFactory comFactory;
     com::PtrCommunication com;
     if (tag.getName() == VALUE_SOCKETS){
-#     ifdef PRECICE_NO_SOCKETS
-        std::ostringstream error;
-        error << "M2N type \"" << VALUE_SOCKETS << "\" can only be used "
-              << "when preCICE is compiled with argument \"sockets=on\"";
-        throw error.str();
-#     else
         std::string network = tag.getStringAttributeValue(ATTR_NETWORK);
         int port = tag.getIntAttributeValue(ATTR_PORT);
 
@@ -195,7 +189,6 @@ void M2NConfiguration:: xmlTagCallback
         std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
         comFactory = std::make_shared<com::SocketCommunicationFactory>(port, false, network, dir);
         com = comFactory->newCommunication();
-#     endif // PRECICE_NO_SOCKETS
     }
     else if (tag.getName() == VALUE_MPI){
       std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);

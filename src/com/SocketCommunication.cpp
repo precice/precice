@@ -1,5 +1,3 @@
-#ifndef PRECICE_NO_SOCKETS
-
 #include "SocketCommunication.hpp"
 
 #include "SocketRequest.hpp"
@@ -973,4 +971,3 @@ SocketCommunication::getIpAddress() {
 }
 } // namespace precice, com
 
-#endif // not PRECICE_NO_SOCKETS

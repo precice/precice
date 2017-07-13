@@ -1,5 +1,3 @@
-#ifndef PRECICE_NO_SOCKETS
-
 #include "com/SocketCommunication.hpp"
 #include "testing/Testing.hpp"
 #include "utils/Globals.hpp"
@@ -143,4 +141,3 @@ BOOST_AUTO_TEST_CASE(ParallelClient,
 BOOST_AUTO_TEST_SUITE_END() // Socket
 BOOST_AUTO_TEST_SUITE_END() // Communication
 
-#endif // not PRECICE_NO_SOCKETS

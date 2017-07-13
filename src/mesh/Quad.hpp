@@ -144,7 +144,7 @@ inline Vertex& Quad:: vertex
 {
   assertion((i >= 0) && (i < 4), i);
   return edge(i).vertex(_vertexMap[i]);
-};
+}
 
 inline const Vertex& Quad:: vertex
 (
@@ -152,21 +152,21 @@ inline const Vertex& Quad:: vertex
 {
   assertion((i >= 0) && (i < 4), i);
   return edge(i).vertex(_vertexMap[i]);
-};
+}
 
 inline Edge& Quad:: edge
 (
   int i )
 {
   return *_edges[i];
-};
+}
 
 inline const Edge& Quad:: edge
 (
   int i ) const
 {
   return *_edges[i];
-};
+}
 
 template<typename VECTOR_T>
 void Quad:: setNormal

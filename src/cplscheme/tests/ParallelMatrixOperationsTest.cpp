@@ -14,7 +14,7 @@
 #include "math/math.hpp"
 
 #include "tarch/tests/TestCaseFactory.h"
-registerTest(precice::cplscheme::tests::ParallelMatrixOperationsTest);
+registerTest(precice::cplscheme::tests::ParallelMatrixOperationsTest)
 
 namespace precice {
 namespace cplscheme {

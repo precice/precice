@@ -64,7 +64,7 @@ void SpacetreeTestScenarios:: testSearchPosition()
     spacetree->addMesh(mesh);
     spacetree->initialize();
 
-#   ifdef Debug
+#   ifndef NDEBUG
     int testNumber = 1;
 #   endif
 
@@ -465,7 +465,7 @@ void SpacetreeTestScenarios:: testSearchPosition()
     spacetree->addMesh(mesh);
     spacetree->initialize();
 
-#   ifdef Debug
+#   ifndef NDEBUG
     int testNumber = 1;
 #   endif
 

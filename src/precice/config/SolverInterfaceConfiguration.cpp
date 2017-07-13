@@ -14,7 +14,6 @@
 #include "geometry/Geometry.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
 #include "cplscheme/UncoupledScheme.hpp"
-#include <limits>
 
 namespace precice {
 namespace config {
@@ -96,7 +95,7 @@ void SolverInterfaceConfiguration:: xmlTagCallback
 (
   utils::XMLTag& tag )
 {
-  preciceTrace("xmlTagCallback()", tag.getName());
+  TRACE();
   if (tag.getName() == TAG){
     _dimensions = tag.getIntAttributeValue(ATTR_DIMENSIONS);
     _geometryMode = tag.getBooleanAttributeValue(ATTR_GEOMETRY_MODE);
@@ -108,7 +107,7 @@ void SolverInterfaceConfiguration:: xmlTagCallback
     _participantConfiguration->setDimensions(_dimensions);
   }
   else {
-    preciceError("xmlTagCallback()", "Received callback from tag " << tag.getName());
+    ERROR("Received callback from tag " << tag.getName());
   }
 }
 
@@ -116,13 +115,13 @@ void SolverInterfaceConfiguration:: xmlEndTagCallback
 (
   utils::XMLTag& tag )
 {
-  preciceTrace("xmlEndTagCallback()", tag.getName());
+  TRACE();
   if (tag.getName() == TAG){
     _meshConfiguration->setMeshSubIDs();
     if (_geometryMode ){
       assertion ( _participantConfiguration->getParticipants().size() == 1 );
-      preciceCheck(not _participantConfiguration->getParticipants()[0]->useMaster(),
-          "xmlEndTagCallback()", "In geometry mode, the usage of a master is not yet supported");
+      CHECK(not _participantConfiguration->getParticipants()[0]->useMaster(),
+            "In geometry mode, the usage of a master is not yet supported");
       std::string name = _participantConfiguration->getParticipants()[0]->getName();
       if ( not _couplingSchemeConfiguration->hasCouplingScheme(name)){
         double maxTime = cplscheme::CouplingScheme::UNDEFINED_TIME;
@@ -150,10 +149,10 @@ void SolverInterfaceConfiguration:: xmlEndTagCallback
                   break;
                 }
               }
-              preciceCheck(meshFound,"xmlEndTagCallback()",
-                          "The participant "<< neededMeshes.first <<
-                          " needs to use the mesh " << neededMesh <<
-                          " if he wants to use it in the coupling scheme.");
+              CHECK(meshFound,
+                    "The participant "<< neededMeshes.first <<
+                    " needs to use the mesh " << neededMesh <<
+                    " if he wants to use it in the coupling scheme.");
             }
             participantFound = true;
             break;

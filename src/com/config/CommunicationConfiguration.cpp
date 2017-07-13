@@ -3,9 +3,7 @@
 #include "com/MPIPortsCommunication.hpp"
 #include "com/FileCommunication.hpp"
 #include "m2n/M2N.hpp"
-#ifndef PRECICE_NO_SOCKETS
 #include "com/SocketCommunication.hpp"
-# endif // not PRECICE_NO_SOCKETS
 #include "utils/Globals.hpp"
 #include "utils/xml/XMLAttribute.hpp"
 #include "utils/Helpers.hpp"
@@ -37,12 +35,6 @@ PtrCommunication CommunicationConfiguration:: createCommunication
 {  
   com::PtrCommunication com;
   if (tag.getName() == VALUE_SOCKETS){
-#   ifdef PRECICE_NO_SOCKETS
-    std::ostringstream error;
-    error << "Communication type \"" << VALUE_SOCKETS << "\" can only be used "
-          << "when preCICE is compiled with argument \"sockets=on\"";
-    throw error.str();
-#   else
     std::string network = tag.getStringAttributeValue(ATTR_NETWORK);
     int port = tag.getIntAttributeValue(ATTR_PORT);
 
@@ -53,7 +45,6 @@ PtrCommunication CommunicationConfiguration:: createCommunication
 
     std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
     com = std::make_shared<com::SocketCommunication>(port, false, network, dir);
-#   endif // PRECICE_NO_SOCKETS
   }
   else if (tag.getName() == VALUE_MPI){
     std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);

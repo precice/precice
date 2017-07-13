@@ -145,23 +145,23 @@ inline Vertex& Triangle:: vertex ( int i )
 {
    assertion ( (i >= 0) && (i < 3), i );
    return edge(i).vertex(_vertexMap[i]);
-};
+}
 
 inline const Vertex& Triangle:: vertex ( int i ) const
 {
    assertion ( (i >= 0) && (i < 3), i );
    return edge(i).vertex(_vertexMap[i]);
-};
+}
 
 inline Edge& Triangle:: edge ( int i )
 {
    return *_edges[i];
-};
+}
 
 inline const Edge& Triangle:: edge ( int i ) const
 {
    return *_edges[i];
-};
+}
 
 template<typename VECTOR_T>
 void Triangle:: setNormal

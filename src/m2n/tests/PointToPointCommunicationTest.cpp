@@ -19,7 +19,7 @@ using precice::utils::MasterSlave;
 using std::vector;
 using std::rand;
 
-registerTest(precice::m2n::tests::PointToPointCommunicationTest);
+registerTest(precice::m2n::tests::PointToPointCommunicationTest)
 
 namespace precice {
 namespace m2n {
@@ -64,16 +64,13 @@ PointToPointCommunicationTest::run() {
 
     if (Parallel::getProcessRank() < 4) {
       Parallel::setGlobalCommunicator(communicator);
-      #ifndef PRECICE_NO_SOCKETS
       testMethod(testSocketCommunication);
-      #endif
       testMethod(testMPIPortsCommunication);
       Parallel::setGlobalCommunicator(Parallel::getCommunicatorWorld());
     }
   }
 }
 
-#ifndef PRECICE_NO_SOCKETS
 void
 PointToPointCommunicationTest::testSocketCommunication() {
   preciceTrace("testSocketCommunication");
@@ -83,7 +80,6 @@ PointToPointCommunicationTest::testSocketCommunication() {
 
   test(cf);
 }
-#endif
 
 void
 PointToPointCommunicationTest::testMPIPortsCommunication() {

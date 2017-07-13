@@ -184,7 +184,6 @@ void SolverInterfaceTest:: testExplicit()
     validateEquals(timesteps, 10);
   }
 
-  #ifndef PRECICE_NO_SOCKETS
   if (utils::Parallel::getProcessRank() == 0){
     runSolver("SolverOne", "/explicit-sockets.xml",
               timesteps, time);
@@ -198,7 +197,6 @@ void SolverInterfaceTest:: testExplicit()
     validateEquals(timesteps, 10);
   }
   utils::Parallel::synchronizeProcesses(); // close all sockets before continuing
-  #endif // not PRECICE_NO_SOCKETS
 
   if (utils::Parallel::getProcessRank() == 0){
     runSolver("SolverOne", "/explicit-files.xml",

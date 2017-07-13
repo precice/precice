@@ -68,7 +68,6 @@ vars.Add(PathVariable("builddir", "Directory holding build files.", "build", Pat
 vars.Add(EnumVariable('build', 'Build type, either release or debug', "debug", allowed_values=('release', 'debug')))
 vars.Add("compiler", "Compiler to use.", "g++")
 vars.Add(BoolVariable("mpi", "Enables MPI-based communication and running coupling tests.", True))
-vars.Add(BoolVariable("sockets", "Enables Socket-based communication.", True))
 vars.Add(BoolVariable("spirit2", "Used for parsing VRML file geometries and checkpointing.", True))
 vars.Add(BoolVariable("petsc", "Enable use of the Petsc linear algebra library.", True))
 vars.Add(BoolVariable("python", "Used for Python scripted solver actions.", True))
@@ -196,28 +195,6 @@ elif not env["mpi"]:
     env.Append(CPPDEFINES = ['PRECICE_NO_MPI'])
     buildpath += "-nompi"
 
-# ====== Sockets ======
-if env["sockets"]:
-    pthreadLib = checkset_var('PRECICE_PTHREAD_LIB', "pthread")
-
-    if sys.platform.startswith('win') or sys.platform.startswith('msys'):
-        socketLibPath = checkset_var('PRECICE_SOCKET_LIB_PATH', "/mingw64/lib")
-        socketLib = checkset_var('PRECICE_SOCKET_LIB', "ws2_32")
-        socketIncPath =  checkset_var('PRECICE_SOCKET_INC_PATH', '/mingw64/include')
-
-        env.AppendUnique(LIBPATH = [socketLibPath])
-        uniqueCheckLib(socketLib)
-        env.AppendUnique(CPPPATH = [socketIncPath])
-
-        if socketLib == 'ws2_32':
-            checkHeader('winsock2.h', 'Windows Sockets 2')
-
-    uniqueCheckLib(pthreadLib)
-    if pthreadLib == 'pthread':
-        checkHeader('pthread.h', 'POSIX Threads')
-else:
-    env.Append(CPPDEFINES = ['PRECICE_NO_SOCKETS'])
-    buildpath += "-nosockets"
 
 # ====== Python ======
 if env["python"]:
