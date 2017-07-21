@@ -406,7 +406,10 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     }
 
     // -- SETS THE COEFFICIENTS --    
-    for (mesh::Vertex& vj : inMesh->vertices()) {
+    for (const mesh::Vertex& vj : inMesh->vertices()) {
+      int col = vj.getGlobalIndex() + polyparams;
+      if (row > col)
+        continue;
       distance = inVertex.getCoords() - vj.getCoords();
       for (int d = 0; d < dimensions; d++) {
         if (_deadAxis[d]) {
@@ -416,11 +419,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       double coeff = _basisFunction.evaluate(distance.norm());
       if (not math::equals(coeff, 0.0)) {
         rowVals[colNum] = coeff;
-        colIdx[colNum] = vj.getGlobalIndex() + polyparams; // column of entry is the globalIndex
-        colNum++;
+        colIdx[colNum++] = col; // column of entry is the globalIndex
       }
     }
-
     ierr = MatSetValuesLocal(_matrixC, 1, &row, colNum, colIdx, rowVals, INSERT_VALUES); CHKERRV(ierr);
   }
   DEBUG("Finished filling Matrix C");
@@ -428,7 +429,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   PetscLogEventEnd(logCLoop, 0, 0, 0, 0);
   // -- END FILL LOOP FOR MATRIX C --
 
-  // Petsc requires that all diagonal entries are set, even if set to zero.
+  // PETSc requires that all diagonal entries are set, even if set to zero.
   _matrixC.assemble(MAT_FLUSH_ASSEMBLY);
   petsc::Vector zeros(_matrixC);
   MatDiagonalSet(_matrixC, zeros, ADD_VALUES);
@@ -489,11 +490,11 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   PetscLogEventBegin(logALoop, 0, 0, 0, 0);
   precice::utils::Event eFillA("PetRBF.fillA");
 
-  for (int it = ownerRangeABegin; it < ownerRangeAEnd; it++) {
+  for (int row = ownerRangeABegin; row < ownerRangeAEnd; row++) {
     PetscInt colNum = 0;
     PetscInt colIdx[_matrixA.getSize().second];     // holds the columns indices of the entries
     PetscScalar rowVals[_matrixA.getSize().second]; // holds the values of the entries
-    const mesh::Vertex& oVertex = outMesh->vertices()[it - _matrixA.ownerRange().first];
+    const mesh::Vertex& oVertex = outMesh->vertices()[row - _matrixA.ownerRange().first];
 
     // -- SET THE POLYNOM PART OF THE MATRIX --
     if (_polynomial == Polynomial::ON or _polynomial == Polynomial::SEPARATE) {
@@ -508,7 +509,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
           rowVals[colNum++] = oVertex.getCoords()[dim];
         }
       }
-      ierr = MatSetValuesLocal(m, 1, &it, colNum, colIdx, rowVals, INSERT_VALUES); CHKERRV(ierr);
+      ierr = MatSetValuesLocal(m, 1, &row, colNum, colIdx, rowVals, INSERT_VALUES); CHKERRV(ierr);
       colNum = 0;
     }
     
@@ -522,16 +523,14 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       double coeff = _basisFunction.evaluate(distance.norm());
       if (not math::equals(coeff, 0.0)) {
         rowVals[colNum] = coeff;
-        colIdx[colNum] = inVertex.getGlobalIndex() + polyparams;
-        colNum++;
+        colIdx[colNum++] = inVertex.getGlobalIndex() + polyparams;
       }
     }
-    // DEBUG("Filling A: row = " << it << ", col count = " << colNum);
-    ierr = MatSetValuesLocal(_matrixA, 1, &it, colNum, colIdx, rowVals, INSERT_VALUES); CHKERRV(ierr);
+    ierr = MatSetValuesLocal(_matrixA, 1, &row, colNum, colIdx, rowVals, INSERT_VALUES); CHKERRV(ierr);
   }
   DEBUG("Finished filling Matrix A");
-  eFillA.stop();
   PetscLogEventEnd(logALoop, 0, 0, 0, 0);
+  eFillA.stop();
   // -- END FILL LOOP FOR MATRIX A --
   
   ierr = MatAssemblyBegin(_matrixA, MAT_FINAL_ASSEMBLY); CHKERRV(ierr);
@@ -580,7 +579,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   DEBUG("Non-zeros allocated / used / unused for matrix C = " << _matrixC.getInfo(MAT_LOCAL).nz_allocated << " / " << _matrixC.getInfo(MAT_LOCAL).nz_used << " / " << _matrixC.getInfo(MAT_LOCAL).nz_unneeded);
   DEBUG("Number of mallocs for matrix A = " << _matrixA.getInfo(MAT_LOCAL).mallocs);
   DEBUG("Non-zeros allocated / used / unused for matrix A = " << _matrixA.getInfo(MAT_LOCAL).nz_allocated << " / " << _matrixA.getInfo(MAT_LOCAL).nz_used << " / " << _matrixA.getInfo(MAT_LOCAL).nz_unneeded);
-
 }
 
 template<typename RADIAL_BASIS_FUNCTION_T>
