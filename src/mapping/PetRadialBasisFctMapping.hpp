@@ -134,8 +134,6 @@ private:
 
   virtual bool doesVertexContribute(int vertexID) const override;
 
-  void incPrealloc(PetscInt* diag, PetscInt* offDiag, int pos, int begin, int end);
-
   /// Caches the solution from the previous iteration, used as starting value for current iteration
   std::map<unsigned int, petsc::Vector> previousSolution;
 
@@ -775,16 +773,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::printMappingInfo(int inp
                   << " from " << input()->getName() << " (ID " << input()->getID() << ")"
                   << " to " << output()->getName() << " (ID " << output()->getID() << ") "
                   << "for dimension " << dim << ") with polynomial set to " << polynomialName);
-}
-
-template<typename RADIAL_BASIS_FUNCTION_T>
-void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::incPrealloc(PetscInt* diag, PetscInt* offDiag, int pos, int begin, int end)
-{
-  // Do some optimizatin here: inline, const, ...
-  if ((pos < begin) or (pos > end))
-    (*offDiag)++; // vertex is off-diagonal
-  else
-    (*diag)++; // vertex is diagonal
 }
 
 }} // namespace precice, mapping
