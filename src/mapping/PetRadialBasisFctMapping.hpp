@@ -322,11 +322,15 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   ierr = ISDestroy(&ISidentityGlobal); CHKERRV(ierr);
   ierr = ISLocalToGlobalMappingDestroy(&ISidentityMapping); CHKERRV(ierr);
 
+  const PetscInt *mapIndizes;
+  ISLocalToGlobalMappingGetIndices(_ISmapping, &mapIndizes);
+  
   Eigen::VectorXd distance(dimensions);
 
   // We do preallocating of the matrices C and A. That means we traverse the input data once, just
   // to know where we have entries in the sparse matrix. This information petsc can use to
-  // preallocate the matrix. In the second phase we actually fill the matrix.
+  // preallocate the matrix. In the second phase we actually fill the matrix. Though we are
+  // traversing twice, it brings a tremendous performance gain
 
   // -- BEGIN PREALLOC LOOP FOR MATRIX C --
   // TODO Testen ob Preallocation perfekt ist.
@@ -439,49 +443,70 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   ierr = MatAssemblyBegin(_matrixQ, MAT_FINAL_ASSEMBLY); CHKERRV(ierr);
   
   // -- BEGIN PREALLOC LOOP FOR MATRIX A --
-  // {
-  //   int localDiagColBegin = _matrixA.ownerRangeColumn().first;
-  //   int localDiagColEnd = _matrixA.ownerRangeColumn().second;
-  //   DEBUG("Local Submatrix Rows = " << ownerRangeABegin << " / " << ownerRangeAEnd <<
-  //                ", Local Submatrix Cols = " << localDiagColBegin << " / " << localDiagColEnd);
+  {
+    int logPreallocA = 3;
+    precice::utils::Event ePreallocA("PetRBF.PreallocA");
+    PetscLogEventRegister("Prealloc Matrix A", 0, &logPreallocA);
+    PetscLogEventBegin(logPreallocA, 0, 0, 0, 0);
 
-  //   DEBUG("Begin preallocation matrix A.");
-  //   int logPreallocALoop = 3;
-  //   PetscLogEventRegister("Prealloc Matrix A", 0, &logPreallocALoop);
-  //   PetscLogEventBegin(logPreallocALoop, 0, 0, 0, 0);
-  //   PetscInt nnzA[outputSize]; // Number of non-zero entries, off-diagonal
-  //   PetscInt DnnzA[outputSize]; // Number of non-zero entries, diagonal
-  //   for (int i = 0; i < ownerRangeAEnd - ownerRangeABegin; i++) {
-  //     nnzA[i] = 0; DnnzA[i] = 0;
-  //     int polyCol = 1;
-  //     for (int dim = 0; dim < dimensions; dim++) {
-  //       if (not _deadAxis[dim]) {
-  //         incPrealloc(nnzA, DnnzA, polyCol, localDiagColBegin, localDiagColEnd);
-  //         ++polyCol;
-  //       }
-  //     }
-  //     const mesh::Vertex& oVertex = outMesh->vertices()[i];
-  //     for (const mesh::Vertex& inVertex : inMesh->vertices()) {
-  //       distance = oVertex.getCoords() - inVertex.getCoords();
-  //       for (int d = 0; d < dimensions; d++) {
-  //         if (_deadAxis[d])
-  //           distance[d] = 0;
-  //       }
-  //       double coeff = _basisFunction.evaluate(norm2(distance));
-  //       if (not tarch::la::equals(coeff, 0.0)) {
-  //         const int colPosition = inVertex.getGlobalIndex() + polyparams;
-  //         incPrealloc(nnzA, DnnzA, colPosition, localDiagColBegin, localDiagColEnd);
-  //       }
-  //       DEBUG("Preallocating     diagonal row " << i << " with " << DnnzA[i] << " elements.");
-  //       DEBUG("Preallocating off-diagonal row " << i << " with " << nnzA[i] << " elements.");
-  //     }
-  //   }
-  //   // -- END PREALLOC LOOP FOR MATRIX A --
+    PetscInt d_nnz[outputSize], o_nnz[outputSize];
+    
+    PetscInt colOwnerRangeABegin, colOwnerRangeAEnd;
+    std::tie(colOwnerRangeABegin, colOwnerRangeAEnd) = _matrixA.ownerRangeColumn();
+    
+    for (int localRow = 0; localRow < ownerRangeAEnd - ownerRangeABegin; localRow++) {
+      d_nnz[localRow] = 0;
+      o_nnz[localRow] = 0;
+      PetscInt col = 0;
+      const mesh::Vertex& oVertex = outMesh->vertices()[localRow];
 
-  //   // Preallocation: Number of diagonal non-zero entries equals outputSize, since diagonal is full
-  //   MatSetOption(_matrixA, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_FALSE);
-  //   ierr = MatMPIAIJSetPreallocation(_matrixA, 0, DnnzA, 0, nnzA); CHKERRV(ierr);
-  // }
+      // -- PREALLOCATE THE POLYNOM PART OF THE MATRIX --
+      if (_polynomial == Polynomial::ON) {
+        if (mapIndizes[col] >= colOwnerRangeABegin and mapIndizes[col] < colOwnerRangeAEnd)
+          d_nnz[localRow]++;
+        else
+          o_nnz[localRow]++;
+        col++;
+        
+        for (int dim = 0; dim < dimensions; dim++) {
+          if (not _deadAxis[dim]) {
+            if (mapIndizes[col] >= colOwnerRangeABegin and mapIndizes[col] < colOwnerRangeAEnd)
+              d_nnz[localRow]++;
+            else
+              o_nnz[localRow]++;
+            col++;
+          }
+        }
+      }
+    
+      // -- PREALLOCATE THE COEFFICIENTS --
+      for (const mesh::Vertex& inVertex : inMesh->vertices()) {
+        distance = oVertex.getCoords() - inVertex.getCoords();
+        for (int d = 0; d < dimensions; d++) {
+          if (_deadAxis[d])
+            distance[d] = 0;
+        }
+        double coeff = _basisFunction.evaluate(distance.norm());
+        if (not math::equals(coeff, 0.0)) {
+          col = inVertex.getGlobalIndex() + polyparams;
+          if (mapIndizes[col] >= colOwnerRangeABegin and mapIndizes[col] < colOwnerRangeAEnd)
+            d_nnz[localRow]++;
+          else
+            o_nnz[localRow]++;
+        }
+      }
+    }
+    if (utils::Parallel::getCommunicatorSize() == 1) {
+      ierr = MatSeqAIJSetPreallocation(_matrixA, 0, d_nnz); CHKERRV(ierr);
+    }
+    else {
+      ierr = MatMPIAIJSetPreallocation(_matrixA, 0, d_nnz, 0, o_nnz); CHKERRV(ierr);
+    }
+    MatSetOption(_matrixA, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_TRUE);
+    PetscLogEventEnd(logPreallocA, 0, 0, 0, 0);
+    ePreallocA.stop();
+  }
+  // -- END PREALLOC LOOP FOR MATRIX A --
   
   // -- BEGIN FILL LOOP FOR MATRIX A --
   DEBUG("Begin filling matrix A.");
@@ -534,6 +559,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   // -- END FILL LOOP FOR MATRIX A --
   
   ierr = MatAssemblyBegin(_matrixA, MAT_FINAL_ASSEMBLY); CHKERRV(ierr);
+
+  ISLocalToGlobalMappingRestoreIndices(_ISmapping, &mapIndizes);
   ierr = MatAssemblyEnd(_matrixC, MAT_FINAL_ASSEMBLY); CHKERRV(ierr);
   ierr = MatAssemblyEnd(_matrixQ, MAT_FINAL_ASSEMBLY); CHKERRV(ierr);
   ierr = MatAssemblyEnd(_matrixA, MAT_FINAL_ASSEMBLY); CHKERRV(ierr);
