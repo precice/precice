@@ -32,7 +32,7 @@ This is converted to a data structure:
        "procs"      : "Number of processors"
        "global"     : "Global timings, a numpy array"
        "properties" : "dict of property -> value"
-       "timings"    : "numpy.array with custom datatype"
+       "timings"    : {"Event Name" : "numpy.array with custom datatype" }
    }
 ]
 """
@@ -40,13 +40,12 @@ This is converted to a data structure:
 import locale, shlex, datetime
 import numpy as np
 
-datatype = [ ("name", object),
-             ("count", int),
+datatype = [ ("count", int),
              ("total", int),
-             ("max", float),
-             ("min", float),
-             ("avg", float),
-             ("percent", float)
+             ("max", int),
+             ("min", int),
+             ("avg", int),
+             ("percent", int)
 ]
 
 
@@ -70,7 +69,7 @@ def readBlock(f):
 def parseTimings(tStr):
     """ Returns event name and timings as a dict. """
     s = shlex.split(tStr)
-    return np.array(tuple(s), dtype=datatype)
+    return s[0], np.array(tuple(s[1:]), dtype=datatype)
     
 
 def parseEventlog(file):
@@ -79,22 +78,23 @@ def parseEventlog(file):
 
     events = []
 
-    for line in readBlock(file):
-        timeStamp = datetime.datetime.strptime(line[0][19:], "%a %b %d %H:%M:%S %Y")
-        procs = int(line[1][24:])
+    for block in readBlock(file):
+        timeStamp = datetime.datetime.strptime(block[0][19:], "%a %b %d %H:%M:%S %Y")
+        procs = int(block[1][24:])
         properties = {}
         i = 2
-        while line[i].startswith("# Property "):
-            evStr = line[i][11:]
+        while block[i].startswith("# Property "):
+            evStr = block[i][11:]
             properties[evStr.split(":")[0]] = float(evStr.split(":")[1])
             i += 1
 
-        globalTimings = parseTimings(line[i+1])
-        timings = np.hstack( [parseTimings(t) for t in line[i+2:]] )
+        timings = {}
+        for i in block[i+1:]:
+            timing = parseTimings(i)
+            timings[timing[0]] = timing[1]
         
         events.append( {
             "timestamp"  : timeStamp,
-            "global"     : globalTimings,
             "procs"      : procs,
             "properties" : properties,
             "timings"    : timings
