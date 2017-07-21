@@ -333,45 +333,72 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   // traversing twice, it brings a tremendous performance gain
 
   // -- BEGIN PREALLOC LOOP FOR MATRIX C --
-  // TODO Testen ob Preallocation perfekt ist.
-  // MatSetOption(_matrixC, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_FALSE);
-  // MatSetOption(_matrixA, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_FALSE);
-  // {
-  //   DEBUG("Begin preallocation matrix C");
-  //   int logPreallocCLoop = 1;  //   PetscLogEventRegister("Prealloc Matrix C", 0, &logPreallocCLoop);
-  //   PetscLogEventBegin(logPreallocCLoop, 0, 0, 0, 0);
-  //   PetscInt nnz[n]; // Number of non-zeros per row
+  {
+    int logPreallocC = 1;
+    precice::utils::Event ePreallocC("PetRBF.PreallocC");
+    PetscLogEventRegister("Prealloc Matrix C", 0, &logPreallocC);
+    PetscLogEventBegin(logPreallocC, 0, 0, 0, 0);
 
-  //   if (utils::MasterSlave::_rank <= 0)
-  //     for (int i = 0; i < polyparams; i++)
-  //       nnz[i] = n; // The first rows are dense, except the part in upper right corner
+    PetscInt d_nnz[n], o_nnz[n];
+    PetscInt colOwnerRangeCBegin, colOwnerRangeCEnd;
+    std::tie(colOwnerRangeCBegin, colOwnerRangeCEnd) = _matrixC.ownerRangeColumn();
 
-  //   for (const mesh::Vertex& inVertex : inMesh->vertices()) {
-  //     if (not inVertex.isOwner())
-  //       continue;
+    int local_row = 0;
+    // -- PREALLOCATES THE POLYNOMIAL PART OF THE MATRIX --
+    if (_polynomial == Polynomial::ON) {
+      int localPolyparams = utils::Parallel::getProcessRank() > 0 ? 0 : polyparams;
+      for (local_row = 0; local_row < localPolyparams; local_row++) {
+        d_nnz[local_row] = colOwnerRangeCEnd - colOwnerRangeCBegin;
+        o_nnz[local_row] = _matrixC.getSize().first - d_nnz[local_row];
+      }
+    }
 
-  //     int row = inVertex.getGlobalIndex() + polyparams - _matrixC.ownerRange().first; // getGlobalIndex ist absolut, row[] ist zero based
-  //     // DEBUG("Row = " << row << " n = " << n);
-  //     nnz[row] = 0;
-  
-  //     for (mesh::Vertex& vj : inMesh->vertices()) {
-  //       distance = inVertex.getCoords() - vj.getCoords();
-  //       for (int d = 0; d < dimensions; d++) {
-  //         if (_deadAxis[d]) {
-  //           distance[d] = 0;
-  //         }
-  //       }
-  //       double coeff = _basisFunction.evaluate(norm2(distance));
-  //       if (not tarch::la::equals(coeff, 0.0))
-  //         nnz[row]++;
-  //     }
-  //     // DEBUG("Reserved for row = " << row << ", reserved = " << nnz[row]);
-  //   }
-  //   PetscLogEventEnd(logPreallocCLoop, 0, 0, 0, 0);
-  //   // -- END PREALLOC LOOP FOR MATRIX C --
+    for (const mesh::Vertex& inVertex : inMesh->vertices()) {
+      if (not inVertex.isOwner())
+        continue;
 
-  //   ierr = MatMPISBAIJSetPreallocation(_matrixC, 1, 0, nnz, 0, nnz); CHKERRV(ierr);    
-  // }
+      PetscInt col = polyparams - 1;
+      const int global_row = local_row + _matrixC.ownerRange().first;
+      d_nnz[local_row] = 0;
+      o_nnz[local_row] = 0;
+      
+      // -- PREALLOCATES THE COEFFICIENTS --
+      for (mesh::Vertex& vj : inMesh->vertices()) {
+        col++;
+
+        const int mapped_col = mapIndizes[vj.getGlobalIndex() + polyparams];
+        if (global_row > mapped_col) // Skip, since we are below the diagonal
+            continue;
+          
+        distance = inVertex.getCoords() - vj.getCoords();
+        for (int d = 0; d < dimensions; d++) {
+          if (_deadAxis[d]) {
+            distance[d] = 0;
+          }
+        }
+        const double coeff = _basisFunction.evaluate(distance.norm());
+        if (not math::equals(coeff, 0.0) or col == global_row) {
+          if (mapped_col >= colOwnerRangeCBegin and mapped_col < colOwnerRangeCEnd)
+            d_nnz[local_row]++;
+          else
+            o_nnz[local_row]++;
+        }
+      }
+      local_row++;
+    }
+        
+    if (utils::Parallel::getCommunicatorSize() == 1) {
+      ierr = MatSeqSBAIJSetPreallocation(_matrixC, _matrixC.blockSize(), 0, d_nnz); CHKERRV(ierr);
+    }
+    else {
+      ierr = MatMPISBAIJSetPreallocation(_matrixC, _matrixC.blockSize(), 0, d_nnz, 0, o_nnz); CHKERRV(ierr);
+    }
+    MatSetOption(_matrixC, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_TRUE);
+    
+    PetscLogEventEnd(logPreallocC, 0, 0, 0, 0);
+    ePreallocC.stop();
+  }
+  // -- END PREALLOC LOOP FOR MATRIX C --
   
   // -- BEGIN FILL LOOP FOR MATRIX C --
   int logCLoop = 2;
