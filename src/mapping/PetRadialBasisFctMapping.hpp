@@ -584,6 +584,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   PetscLogEventEnd(logALoop, 0, 0, 0, 0);
   eFillA.stop();
   // -- END FILL LOOP FOR MATRIX A --
+
+  precice::utils::Event ePostFill("PetRBF.PostFill");
   
   ierr = MatAssemblyBegin(_matrixA, MAT_FINAL_ASSEMBLY); CHKERRV(ierr);
 
