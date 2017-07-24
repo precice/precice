@@ -161,7 +161,8 @@ private:
     bool               xDead,
     bool               yDead,
     bool               zDead,
-    Polynomial         polynomial) const;
+    Polynomial         polynomial,
+    bool               preallocation) const;
 
   void checkDuplicates ( const ConfiguredMapping& mapping );
 

@@ -53,6 +53,7 @@ public:
    * @param[in] xDead, yDead, zDead Deactivates mapping along an axis
    * @param[in] solverRtol Relative tolerance for the linear solver.
    * @param[in] polynomial Type of polynomial augmentation
+   * @param[in] preallocation Toggles use of preallocation of matrices.
    *
    * For description on convergence testing and meaning of solverRtol see http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPConvergedDefault.html#KSPConvergedDefault
    */
@@ -64,7 +65,8 @@ public:
     bool                    yDead,
     bool                    zDead,
     double                  solverRtol = 1e-9,
-    Polynomial              polynomial = Polynomial::ON);
+    Polynomial              polynomial = Polynomial::ON,
+    bool                    preallocation = true);
 
   /// Deletes the PETSc objects and the _deadAxis array
   virtual ~PetRadialBasisFctMapping();
@@ -139,6 +141,9 @@ private:
 
   /// Prints an INFO about the current mapping
   void printMappingInfo(int inputDataID, int dim) const;
+
+  /// Toggles use of preallocation for matrix C and A
+  bool doPreallocation;
 };
 
 // --------------------------------------------------- HEADER IMPLEMENTATIONS
@@ -156,7 +161,8 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
   bool                    yDead,
   bool                    zDead,
   double                  solverRtol,
-  Polynomial              polynomial)
+  Polynomial              polynomial,
+  bool                    preallocation)
   :
   Mapping ( constraint, dimensions ),
   _hasComputedMapping ( false ),
@@ -166,7 +172,8 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
   _matrixA(PETSC_COMM_WORLD, "A"),
   _matrixV(PETSC_COMM_WORLD, "V"),
   _solverRtol(solverRtol),
-  _polynomial(polynomial)
+  _polynomial(polynomial),
+  doPreallocation(preallocation)
 {
   setInputRequirement(VERTEX);
   setOutputRequirement(VERTEX);
@@ -333,7 +340,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   // traversing twice, it brings a tremendous performance gain
 
   // -- BEGIN PREALLOC LOOP FOR MATRIX C --
-  {
+  if (doPreallocation) {
     int logPreallocC = 1;
     precice::utils::Event ePreallocC("PetRBF.PreallocC");
     PetscLogEventRegister("Prealloc Matrix C", 0, &logPreallocC);
@@ -368,7 +375,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
         const int mapped_col = mapIndizes[vj.getGlobalIndex() + polyparams];
         if (global_row > mapped_col) // Skip, since we are below the diagonal
-            continue;
+          continue;
           
         distance = inVertex.getCoords() - vj.getCoords();
         for (int d = 0; d < dimensions; d++) {
@@ -470,7 +477,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   ierr = MatAssemblyBegin(_matrixQ, MAT_FINAL_ASSEMBLY); CHKERRV(ierr);
   
   // -- BEGIN PREALLOC LOOP FOR MATRIX A --
-  {
+  if (doPreallocation) {
     int logPreallocA = 3;
     precice::utils::Event ePreallocA("PetRBF.PreallocA");
     PetscLogEventRegister("Prealloc Matrix A", 0, &logPreallocA);
@@ -824,9 +831,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::printMappingInfo(int inp
   const std::string polynomialName = _polynomial == Polynomial::ON ? "on" : _polynomial == Polynomial::OFF ? "off" : "separate";
 
   INFO("Mapping " << input()->data(inputDataID)->getName() << " " << constraintName
-                  << " from " << input()->getName() << " (ID " << input()->getID() << ")"
-                  << " to " << output()->getName() << " (ID " << output()->getID() << ") "
-                  << "for dimension " << dim << ") with polynomial set to " << polynomialName);
+       << " from " << input()->getName() << " (ID " << input()->getID() << ")"
+       << " to " << output()->getName() << " (ID " << output()->getID() << ") "
+       << "for dimension " << dim << ") with polynomial set to " << polynomialName);
 }
 
 }} // namespace precice, mapping
