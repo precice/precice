@@ -14,11 +14,11 @@ namespace mesh {
 
 logging::Logger Mesh:: _log("mesh::Mesh");
 
-utils::ManageUniqueIDs* Mesh:: _managerPropertyIDs = nullptr;
+std::unique_ptr<utils::ManageUniqueIDs> Mesh::_managerPropertyIDs;
 
 void Mesh:: resetGeometryIDsGlobally()
 {
-  if (_managerPropertyIDs != nullptr){
+  if (_managerPropertyIDs) {
     _managerPropertyIDs->resetIDs();
   }
 }
@@ -45,8 +45,8 @@ Mesh:: Mesh
   _globalNumberOfVertices(-1),
   _boundingBox()
 {
-  if (_managerPropertyIDs == nullptr){
-    _managerPropertyIDs = new utils::ManageUniqueIDs;
+  if (not _managerPropertyIDs){
+    _managerPropertyIDs.reset(new utils::ManageUniqueIDs);
   }
   assertion((_dimensions == 2) || (_dimensions == 3), _dimensions);
   assertion(_name != std::string(""));

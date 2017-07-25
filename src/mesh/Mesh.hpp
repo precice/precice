@@ -318,7 +318,7 @@ private:
   static logging::Logger _log;
 
   /// Provides unique IDs for all geometry objects
-  static utils::ManageUniqueIDs* _managerPropertyIDs;
+  static std::unique_ptr<utils::ManageUniqueIDs> _managerPropertyIDs;
 
   /// Name of the mesh.
   std::string _name;
