@@ -68,7 +68,7 @@ ArgumentSet ArgumentSetFabric::getSpecificSet(unsigned int argc, char* argv[]) {
   std::stringstream ss;
   for (std::vector<ArgumentSet>::iterator it = _argumentSets.begin(); it!=_argumentSets.end(); ++it) {
     if((*it).isArgumentSetName(argv[1])) {
-#ifdef Debug
+#ifndef NDEBUG
       ss << "\nArgumentSet ";
       (*it).printDefaultArguments(ss);
       ss <<"was selected.";
@@ -105,7 +105,7 @@ ArgumentSet ArgumentSetFabric::getArgumentSet(unsigned int argc, char* argv[]) {
     preciceWarnung("getArgumentSet","ArgumentSetFabric is not initialized. You have to add Argumentsets to initialize it before "
         "trying to receiving a configuration.");
   }
-#ifdef Debug
+#ifndef NDEBUG
   std::stringstream ss;
   ss << "The configured argument sets are: " <<std::endl;
   printDefaultArguments(ss);

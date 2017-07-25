@@ -7,7 +7,7 @@
 #include "logging/Logger.hpp"
 #include <set>
 #include <list>
-#include <Eigen/Dense>
+#include <Eigen/Core>
 
 namespace precice {
   namespace impl {

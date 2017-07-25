@@ -1,4 +1,5 @@
 #include "FindClosestTriangle.hpp"
+#include <Eigen/Dense>
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
 #include "mesh/Mesh.hpp"

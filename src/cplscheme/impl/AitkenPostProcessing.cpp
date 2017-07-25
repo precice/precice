@@ -4,7 +4,7 @@
 #include "mesh/Vertex.hpp"
 #include "mesh/Mesh.hpp"
 #include "utils/MasterSlave.hpp"
-#include <Eigen/Dense>
+#include <Eigen/Core>
 #include "utils/EigenHelperFunctions.hpp"
 #include <limits>
 #include "math/math.hpp"

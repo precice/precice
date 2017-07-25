@@ -154,9 +154,7 @@ public:
   void clear();
 
   /// Prints a documentation string for this tag.
-  std::string printDocumentation (
-    int linewidth,
-    int indentation ) const;
+  std::string printDocumentation (int indentation) const;
 
 private:
 

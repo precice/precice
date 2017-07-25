@@ -4,7 +4,7 @@
 #include "cplscheme/impl/ValuePreconditioner.hpp"
 #include "cplscheme/impl/ConstantPreconditioner.hpp"
 #include "cplscheme/impl/SharedPointer.hpp"
-#include <Eigen/Dense>
+#include <Eigen/Core>
 #include "utils/MasterSlave.hpp"
 #include "com/MPIDirectCommunication.hpp"
 #include "utils/Parallel.hpp"

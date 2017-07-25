@@ -4,7 +4,7 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
 #include "utils/EigenHelperFunctions.hpp"
-#include <Eigen/Dense>
+#include <Eigen/Core>
 #include "utils/Globals.hpp"
 
 namespace precice {

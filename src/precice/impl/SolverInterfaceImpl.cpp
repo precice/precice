@@ -46,7 +46,7 @@
 #include "utils/MasterSlave.hpp"
 #include "mapping/Mapping.hpp"
 #include <set>
-#include <Eigen/Dense>
+#include <Eigen/Core>
 
 #include <signal.h> // used for installing crash handler
 
@@ -423,7 +423,7 @@ double SolverInterfaceImpl:: advance
     _requestManager->requestAdvance(computedTimestepLength);
   }
   else {
-#   ifdef Debug
+#   ifndef NDEBUG
     if(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode){
       syncTimestep(computedTimestepLength);
     }
@@ -1496,7 +1496,7 @@ void SolverInterfaceImpl:: mapReadDataTo
                    << "\" to mesh \"" << context.mesh->getName() << "\"");
       assertion(mappingContext.mapping==context.mappingContext.mapping);
       mappingContext.mapping->map(inDataID, outDataID);
-#     ifdef Debug
+#     ifndef NDEBUG
       int max = context.toData->values().size();
       std::ostringstream stream;
       for (int i=0; (i < max) && (i < 10); i++){
@@ -1550,7 +1550,7 @@ void SolverInterfaceImpl:: writeVectorData
   const double* value )
 {
   TRACE(fromDataID, valueIndex );
-# ifdef Debug
+# ifndef NDEBUG
   if (_dimensions == 2) DEBUG("value = " << Eigen::Map<const Eigen::Vector2d>(value));
   if (_dimensions == 3) DEBUG("value = " << Eigen::Map<const Eigen::Vector3d>(value));
 # endif
@@ -1687,7 +1687,7 @@ void SolverInterfaceImpl:: readVectorData
     }
 
   }
-# ifdef Debug
+# ifndef NDEBUG
   if (_dimensions == 2) DEBUG("read value = " << Eigen::Map<const Eigen::Vector2d>(value));
   if (_dimensions == 3) DEBUG("read value = " << Eigen::Map<const Eigen::Vector3d>(value));
 # endif
@@ -2028,7 +2028,7 @@ void SolverInterfaceImpl:: mapWrittenData()
       //assign(context.toData->values()) = 0.0;
       DEBUG("Map from dataID " << inDataID << " to dataID: " << outDataID);
       context.mappingContext.mapping->map(inDataID, outDataID);
-#     ifdef Debug
+#     ifndef NDEBUG
       int max = context.toData->values().size();
       std::ostringstream stream;
       for (int i=0; (i < max) && (i < 10); i++){
@@ -2086,7 +2086,7 @@ void SolverInterfaceImpl:: mapReadData()
       DEBUG("Map read data \"" << context.fromData->getName()
                    << "\" to mesh \"" << context.mesh->getName() << "\"");
       context.mappingContext.mapping->map(inDataID, outDataID);
-#     ifdef Debug
+#     ifndef NDEBUG
       int max = context.toData->values().size();
       std::ostringstream stream;
       for (int i=0; (i < max) && (i < 10); i++){

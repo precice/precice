@@ -7,7 +7,7 @@
 #pragma once
 
 #include <string>
-#include <Eigen/Dense>
+#include <Eigen/Core>
 
 namespace precice {
 namespace utils {

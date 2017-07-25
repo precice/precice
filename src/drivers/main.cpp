@@ -16,9 +16,9 @@ extern bool testMode;
 void printUsage()
 {
   std::cout << "Usage:" << std::endl << std::endl;
-  std::cout << "Run tests          :  ./binprecice test ConfigurationName PathToSrc [LogConfFile]" << std::endl;
-  std::cout << "Run server         :  ./binprecice server ParticipantName ConfigurationName [LogConfFile]" << std::endl;
-  std::cout << "Print XML reference:  ./binprecice xml Linewidth" << std::endl;
+  std::cout << "Run tests          :  binprecice test ConfigurationName PathToSrc [LogConfFile]" << std::endl;
+  std::cout << "Run server         :  binprecice server ParticipantName ConfigurationName [LogConfFile]" << std::endl;
+  std::cout << "Print XML reference:  binprecice xml" << std::endl;
 }
 
 void printMPITestWarning(){
@@ -39,7 +39,6 @@ void printMPITestWarning(){
 
 int main ( int argc, char** argv )
 {
-  
   using namespace tarch::configuration;
   
   bool runTests = false;
@@ -48,12 +47,10 @@ int main ( int argc, char** argv )
   bool hasLogConfFile = false;
 
   bool wrongParameters = true;
-  
 
-
-  if (argc >= 3) {
+  if (argc >= 2) {
     std::string action(argv[1]);
-    if ( action == "xml" and argc >= 3 ) {
+    if ( action == "xml" and argc >= 2 ) {
       wrongParameters = false;
       runHelp = true;
     }
@@ -140,7 +137,6 @@ int main ( int argc, char** argv )
   else if (runHelp){
     assertion(not runServer);
     assertion(not runTests);
-    int linewidth = atoi(argv[2]);
     std::cout << "<?xml version=\"1.0\"?>" << std::endl << std::endl
               << "<!-- preCICE XML configuration reference"
               << std::endl << std::endl
@@ -159,7 +155,7 @@ int main ( int argc, char** argv )
               << "     </precice-configuration>"   << std::endl << std::endl
               << "     Configuration reference: -->" << std::endl << std::endl;
     precice::config::Configuration config;
-    std::cout << config.getXMLTag().printDocumentation(linewidth, 0) << std::endl << std::endl;
+    std::cout << config.getXMLTag().printDocumentation(0) << std::endl << std::endl;
     //std::cout << "...finished printing XML documentation" << std::endl;
   }
   else {

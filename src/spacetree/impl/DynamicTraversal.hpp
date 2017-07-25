@@ -234,7 +234,7 @@ int DynamicTraversal<CELL_T>:: searchContent
         DEBUG ( "Set result position to " << pos );
         result->position = pos;
       }
-#     ifdef Asserts
+#     ifndef NDEBUG
       else {
         // If the voxel overlaps with cells that are inside and outside, that
         // would mean the voxel is on the geometry.
@@ -440,7 +440,7 @@ DynamicTraversal<CELL_T>:: searchContentInternal
         else if ( tempData->position == Spacetree::positionOnGeometry() ){
           data->position = Spacetree::positionOnGeometry();
         }
-#       ifdef Asserts
+#       ifndef NDEBUG
         else if ( (tempData->position != Spacetree::positionUndefined())
                   && (data->position != Spacetree::positionOnGeometry()) )
         {

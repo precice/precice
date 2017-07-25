@@ -31,7 +31,7 @@ tarch::logging::Log::~Log() {
 }
 
 
-#if defined(Debug) && !defined(LogOff)
+#if !defined(NDEBUG) && !defined(LogOff)
 void tarch::logging::Log::debug(const std::string& methodName, const std::string& message) const {
   UsedLogService::getInstance().debug(getTimeStampMS(),getTimeStampHumanReadable(),getMachineInformation(),getTraceInformation(methodName),message);
 }

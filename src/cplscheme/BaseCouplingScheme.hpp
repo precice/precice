@@ -9,7 +9,7 @@
 #include "logging/Logger.hpp"
 #include "impl/SharedPointer.hpp"
 #include "io/TXTTableWriter.hpp"
-#include <Eigen/Dense>
+#include <Eigen/Core>
 #include <set>
 
 namespace precice {

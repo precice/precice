@@ -1,7 +1,7 @@
 #pragma once
 
 #include "logging/Logger.hpp"
-#include <Eigen/Dense>
+#include <Eigen/Core>
 #include <string>
 
 namespace precice {

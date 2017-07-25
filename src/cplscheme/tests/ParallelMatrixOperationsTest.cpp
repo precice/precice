@@ -10,7 +10,7 @@
 #include "com/MPIPortsCommunication.hpp"
 #include "com/Communication.hpp"
 #include "logging/Logger.hpp"
-#include <Eigen/Dense>
+#include <Eigen/Core>
 #include "math/math.hpp"
 
 #include "tarch/tests/TestCaseFactory.h"

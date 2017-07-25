@@ -646,7 +646,7 @@ private:
 		for (s32 i=0; i<amount; ++i)
 			array[i] = old_array[i];
 
-#ifdef Asserts
+#ifndef NDEBUG
 		// The following two lines are bullshit
 //		if (allocated < used) {
 //		  assertion(false);

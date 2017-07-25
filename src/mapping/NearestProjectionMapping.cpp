@@ -1,6 +1,6 @@
 #include "NearestProjectionMapping.hpp"
 #include "query/FindClosest.hpp"
-#include <Eigen/Dense>
+#include <Eigen/Core>
 
 namespace precice {
 namespace mapping {

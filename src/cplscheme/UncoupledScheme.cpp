@@ -46,7 +46,7 @@ void UncoupledScheme:: addComputedTime
   preciceTrace("addComputedTime()", timeToAdd);
   preciceCheck ( isCouplingOngoing(), "addComputedTime()",
                  "Invalid call of addComputedTime() after simulation end!" );
-# ifdef Asserts
+# ifndef NDEBUG
   bool greaterThanZero = math::greater(timeToAdd, 0.0, _eps);
   assertion(greaterThanZero, timeToAdd);
 # endif // Asserts
