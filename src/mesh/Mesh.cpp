@@ -642,14 +642,14 @@ void Mesh:: computeDistribution()
       }
     }
       
-#     ifdef Debug
+#   ifndef NDEBUG
     for(int i=0;i<_globalNumberOfVertices;i++){
       if(globalOwnerVec[i]==0){
         WARN("The Vertex with global index " << i << " of mesh: " << _name
              << " was completely filtered out, since it has no influence on any mapping.");
           }
     }
-#     endif
+#   endif
       
   } else{ //coupling mode
     std::vector<int> ownerVec(vertices().size(),1);

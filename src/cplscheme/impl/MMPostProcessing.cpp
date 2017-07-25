@@ -775,7 +775,7 @@ void MMPostProcessing::iterationsConverged
     _matrixCols.pop_front();
   }
 
-# ifdef Debug
+# ifndef NDEBUG
   std::ostringstream stream;
   stream << "Matrix column counters: ";
   for (int cols : _matrixCols) {

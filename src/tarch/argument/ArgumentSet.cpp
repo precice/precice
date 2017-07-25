@@ -45,7 +45,7 @@ void tarch::argument::ArgumentSet::initialize(unsigned int argc, char* argv[]) {
 		printDefaultArguments();
 	}
 	for(unsigned int i=0; i<_arguments.size(); i++) {
-#ifdef Debug
+#ifndef NDEBUG
 		std::stringstream ss;
 		ss << "\nArgument Nr. " <<i <<" : " <<argv[i+2];
 		DEBUG("initialize",ss.str());

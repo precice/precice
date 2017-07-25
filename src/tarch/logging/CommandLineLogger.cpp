@@ -105,7 +105,7 @@ tarch::logging::CommandLineLogger::CommandLineLogger():
   setLogMessageType();
   setLogTrace();
 
-  #ifdef Debug
+  #ifndef NDEBUG
   addFilterListEntry( FilterListEntry( "debug", false )  );
   #endif
   addFilterListEntry( FilterListEntry( "info", false )  );
@@ -210,7 +210,7 @@ std::string tarch::logging::CommandLineLogger::constructMessageString(
 
 void tarch::logging::CommandLineLogger::debug(const long int& timestampMS, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& trace, const std::string& message) {
   if (writeDebug(trace)) {
-    #if !defined(Debug)
+    #if defined(NDEBUG)
     assertion(false);
     #endif
 
@@ -306,7 +306,7 @@ void tarch::logging::CommandLineLogger::error(const long int& timestampMS, const
 
 
 void tarch::logging::CommandLineLogger::indent( bool indent, const std::string& trace, const std::string& message ) {
-  #ifdef Debug
+  #ifndef NDEBUG
 
   tarch::multicore::Lock lockCout( _semaphore );
   if (indent) {
