@@ -487,12 +487,10 @@ void XMLTag:: clear()
    _subtags.clear();
 }
 
-std::string XMLTag:: printDocumentation
-(
-  int linewidth,
-  int indentation ) const
+std::string XMLTag:: printDocumentation(int indentation ) const
 {
   TRACE(indentation);
+  const int linewidth = 1000;
   std::string indent;
   for (int i=0; i < indentation; i++){
     indent += " ";
@@ -581,7 +579,7 @@ std::string XMLTag:: printDocumentation
   if (not _subtags.empty()){
     doc << ">" << std::endl << std::endl;
     for (const XMLTag* subtag : _subtags){
-      doc << subtag->printDocumentation(linewidth, indentation + 3);
+      doc << subtag->printDocumentation(indentation + 3);
     }
     doc << indent << "</" << _fullName << ">" << std::endl << std::endl;
   }
