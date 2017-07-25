@@ -243,7 +243,7 @@ BOOST_AUTO_TEST_CASE(BoundingBoxCOG_3D)
   Eigen::Vector3d coords2(0, 1, -2);
   Eigen::Vector3d coords3(3.5, 2, -2);
 
-  mesh::Mesh::Mesh mesh ("3D Testmesh", 3, false );
+  mesh::Mesh mesh ("3D Testmesh", 3, false );
   mesh.createVertex(coords0);
   mesh.createVertex(coords1);
   mesh.createVertex(coords2);
@@ -251,12 +251,12 @@ BOOST_AUTO_TEST_CASE(BoundingBoxCOG_3D)
 
   mesh.computeState();
 
-  mesh::Mesh::Mesh::BoundingBox bBox = mesh.getBoundingBox();
+  mesh::Mesh::BoundingBox bBox = mesh.getBoundingBox();
   auto cog = mesh.getCOG();
 
-  mesh::Mesh::Mesh::BoundingBox referenceBox =  { {-1.0, 3.5},
-                                                  { 0.0, 4.0},
-                                                  {-3.0, 8.0} };
+  mesh::Mesh::BoundingBox referenceBox =  { {-1.0, 3.5},
+                                            { 0.0, 4.0},
+                                            {-3.0, 8.0} };
 
   std::vector<double> referenceCOG =  { 1.25, 2.0, 2.5 };
 
