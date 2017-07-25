@@ -5,7 +5,7 @@
 #include "mesh/Vertex.hpp"
 #include <array>
 #include "boost/noncopyable.hpp"
-#include <Eigen/Dense>
+#include <Eigen/Core>
 
 namespace precice {
 namespace mesh {

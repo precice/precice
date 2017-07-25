@@ -1,7 +1,7 @@
 #pragma once
 
 #include "tarch/tests/TestCase.h"
-#include <Eigen/Dense>
+#include <Eigen/Core>
 
 namespace precice {
   namespace cplscheme {

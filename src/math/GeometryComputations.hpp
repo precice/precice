@@ -1,6 +1,7 @@
 #pragma once
+#include <Eigen/Core>
 
-#include "math/math.hpp"
+#include "math/differences.hpp"
 
 namespace precice {
 namespace math {

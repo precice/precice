@@ -1,4 +1,5 @@
 #include "FindClosestEdge.hpp"
+#include <Eigen/Dense>
 #include "mesh/Vertex.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Mesh.hpp"

@@ -46,7 +46,7 @@
 #include "utils/MasterSlave.hpp"
 #include "mapping/Mapping.hpp"
 #include <set>
-#include <Eigen/Dense>
+#include <Eigen/Core>
 
 #include <signal.h> // used for installing crash handler
 

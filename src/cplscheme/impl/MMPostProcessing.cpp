@@ -1,4 +1,5 @@
 #include "MMPostProcessing.hpp"
+#include <Eigen/Dense>
 #include "com/Communication.hpp"
 #include "cplscheme/CouplingData.hpp"
 #include "utils/Globals.hpp"

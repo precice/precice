@@ -1,7 +1,7 @@
 #include "NearestNeighborMapping.hpp"
 #include "query/FindClosestVertex.hpp"
 #include "utils/Helpers.hpp"
-#include <Eigen/Dense>
+#include <Eigen/Core>
 
 namespace precice {
 namespace mapping {

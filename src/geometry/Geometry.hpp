@@ -2,7 +2,7 @@
 #define PRECICE_GEOMETRY_GEOMETRY_HPP_
 
 #include "logging/Logger.hpp"
-#include <Eigen/Dense>
+#include <Eigen/Core>
 
 namespace precice {
    namespace mesh {

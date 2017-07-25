@@ -3,7 +3,7 @@
 #include "Export.hpp"
 #include "logging/Logger.hpp"
 #include <string>
-#include <Eigen/Dense>
+#include <Eigen/Core>
 
 namespace precice {
    namespace mesh {

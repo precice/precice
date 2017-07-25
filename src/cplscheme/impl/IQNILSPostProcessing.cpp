@@ -10,7 +10,7 @@
 #include "utils/EventTimings.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "QRFactorization.hpp"
-#include <Eigen/Dense>
+#include <Eigen/Core>
 
 
 //#include "utils/NumericalCompare.hpp"

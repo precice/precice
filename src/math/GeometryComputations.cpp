@@ -1,4 +1,5 @@
 #include "GeometryComputations.hpp"
+#include <Eigen/Dense>
 #include "math/math.hpp"
 #include "utils/Helpers.hpp"
 

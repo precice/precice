@@ -12,7 +12,7 @@
 #include "com/MPIPortsCommunication.hpp"
 #include "com/SocketCommunication.hpp"
 #include "com/Communication.hpp"
-#include <Eigen/Dense>
+#include <Eigen/Core>
 
 #include <sstream>
 #include <fstream>
