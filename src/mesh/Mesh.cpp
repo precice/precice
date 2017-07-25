@@ -185,11 +185,10 @@ PtrData& Mesh:: createData
   const std::string& name,
   int                dimension )
 {
-  preciceTrace("createData()", name, dimension);
+  TRACE(name, dimension);
   for (const PtrData data : _data) {
-    preciceCheck(data->getName() != name, "createData()",
-                 "Data \"" << name << "\" cannot be created twice for "
-                 << "mesh \"" << _name << "\"!");
+    CHECK(data->getName() != name,
+          "Data \"" << name << "\" cannot be created twice for " << "mesh \"" << _name << "\"!");
   }
   int id = Data::getDataCount();
   PtrData data(new Data(name, id, dimension));
@@ -207,19 +206,18 @@ const PtrData& Mesh:: data
   int dataID ) const
 {
   for (const PtrData& data : _data) {
-      if (data->getID() == dataID) {
-         return data;
-      }
-   }
-   preciceError("data()", "Data with ID = " << dataID << " not found in mesh \""
-                << _name << "\"!" );
+    if (data->getID() == dataID) {
+      return data;
+    }
+  }
+  ERROR("Data with ID = " << dataID << " not found in mesh \"" << _name << "\"!" );
 }
 
 PropertyContainer& Mesh:: getPropertyContainer
 (
-  const std::string subIDName )
+  const std::string & subIDName )
 {
-  preciceTrace("getPropertyContainer()", subIDName);
+  TRACE(subIDName);
   assertion(_nameIDPairs.count(subIDName) == 1);
   int id = _nameIDPairs[subIDName];
   for (PropertyContainer& cont : _propertyContainers) {
@@ -227,8 +225,7 @@ PropertyContainer& Mesh:: getPropertyContainer
       return cont;
     }
   }
-  preciceError("getPropertyContainer(string)", "Unknown sub ID name \""
-               << subIDName << "\" in mesh \"" << _name << "\"!");
+  ERROR("Unknown sub ID name \"" << subIDName << "\" in mesh \"" << _name << "\"!");
 }
 
 const std::string& Mesh:: getName() const
@@ -252,12 +249,11 @@ PropertyContainer& Mesh:: setSubID
 (
   const std::string& subIDNamePostfix )
 {
-  preciceTrace("setSubID()", subIDNamePostfix);
-  preciceCheck(subIDNamePostfix != std::string(""), "setSubID",
-      "Sub ID postfix of mesh \"" << _name
-      << "\" is not allowed to be an empty string!");
+  TRACE(subIDNamePostfix);
+  CHECK(subIDNamePostfix != std::string(""),
+      "Sub ID postfix of mesh \"" << _name << "\" is not allowed to be an empty string!");
   std::string idName(_name + "-" + subIDNamePostfix);
-  preciceCheck(_nameIDPairs.count(idName) == 0, "setSubID",
+  CHECK(_nameIDPairs.count(idName) == 0,
       "Sub ID postfix of mesh \"" << _name << "\" is already in use!");
   _nameIDPairs[idName] = _managerPropertyIDs->getFreeID();
   PropertyContainer * newPropertyContainer = new PropertyContainer();
@@ -289,15 +285,14 @@ int Mesh:: getID() const
 
 void Mesh:: allocateDataValues()
 {
-  preciceTrace("allocateDataValues()", _content.vertices().size());
+  TRACE(_content.vertices().size());
   for (PtrData data : _data) {
     int total = _content.vertices().size() * data->getDimensions();
     int leftToAllocate = total - data->values().size();
     if (leftToAllocate > 0){
       utils::append(data->values(), (Eigen::VectorXd) Eigen::VectorXd::Zero(leftToAllocate));
     }
-    DEBUG("Data " << data->getName() << " no has "
-                 << data->values().size() << " values");
+    DEBUG("Data " << data->getName() << " no has " << data->values().size() << " values");
   }
 }
 
@@ -353,7 +348,6 @@ void Mesh:: computeState()
       }
     }
   }
-
 
   if (_dimensions == 3){
     // Compute triangle centers, radius, and normals
@@ -497,10 +491,10 @@ void Mesh:: computeState()
       for (Edge& edge : _content.edges()) {
         double length = edge.getNormal().norm();
         assertion(math::greater(length,0.0),
-          "Edge vertex coords: (" << edge.vertex(0).getCoords() << "), ("
-          << edge.vertex(1).getCoords()
-          << "). Hint: Could be inconsistent triangle/quad orientation or "
-          << "dangling edge. ");
+                  "Edge vertex coords: (" << edge.vertex(0).getCoords() << "), ("
+                  << edge.vertex(1).getCoords()
+                  << "). Hint: Could be inconsistent triangle/quad orientation or "
+                  << "dangling edge. ");
         edge.setNormal(edge.getNormal() / length);
       }
     }
@@ -531,7 +525,7 @@ void Mesh:: computeState()
 
 void Mesh:: computeDistribution()
 {
-  preciceTrace("computeDistribution()", utils::MasterSlave::_slaveMode, utils::MasterSlave::_masterMode);
+  TRACE(utils::MasterSlave::_slaveMode, utils::MasterSlave::_masterMode);
 
   // (0) Broadcast global number of vertices
   if (utils::MasterSlave::_slaveMode) {
@@ -651,8 +645,8 @@ void Mesh:: computeDistribution()
 #     ifdef Debug
     for(int i=0;i<_globalNumberOfVertices;i++){
       if(globalOwnerVec[i]==0){
-        preciceWarning("scatterMesh()", "The Vertex with global index " << i << " of mesh: " << _name
-                       << " was completely filtered out, since it has no influence on any mapping.");
+        WARN("The Vertex with global index " << i << " of mesh: " << _name
+             << " was completely filtered out, since it has no influence on any mapping.");
           }
     }
 #     endif
@@ -685,7 +679,7 @@ void Mesh:: clear()
 
 void Mesh:: notifyListeners()
 {
-  preciceTrace("notifyListeners()");
+  TRACE();
   for (MeshListener* listener : _listeners) {
     assertion(listener != nullptr);
     listener->meshChanged(*this);
@@ -715,7 +709,7 @@ void Mesh:: setOwnerInformation(const std::vector<int> &ownerVec){
 void Mesh:: addMesh(
     Mesh& deltaMesh)
 {
-  preciceTrace("addMesh()");
+  TRACE();
   assertion(_dimensions==deltaMesh.getDimensions());
 
   std::map<int, Vertex*> vertexMap;

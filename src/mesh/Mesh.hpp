@@ -201,7 +201,7 @@ public:
 
   const PtrData& data ( int dataID ) const;
 
-  PropertyContainer& getPropertyContainer ( const std::string subIDName );
+  PropertyContainer& getPropertyContainer (const std::string & subIDName);
 
   /// Returns the name of the mesh, as set in the config file.
   const std::string& getName() const;
@@ -220,24 +220,16 @@ public:
    */
   PropertyContainer& setSubID ( const std::string& subIDNamePostfix );
 
-  /**
-   * @brief Returns all used geometry IDs paired with their names
-   */
+  /// Returns all used geometry IDs paired with their names
   const std::map<std::string,int>& getNameIDPairs();
 
-  /**
-   * @brief Returns the geometry ID corresponding to the given name.
-   */
+  /// Returns the geometry ID corresponding to the given name.
   int getID ( const std::string& name ) const;
 
-  /**
-   * @brief Returns the base ID of the mesh.
-   */
+  /// Returns the base ID of the mesh.
   int getID() const;
 
-  /**
-   * @brief Allocates memory for the vertex data values.
-   */
+  /// Allocates memory for the vertex data values.
   void allocateDataValues();
 
   /**
@@ -268,9 +260,7 @@ public:
    */
   void clear();
 
-  /**
-   * @brief Notifies all MeshListeners that the mesh has changed.
-   */
+  /// Notifies all MeshListeners that the mesh has changed.
   void notifyListeners();
 
   std::map<int,std::vector<int> >& getVertexDistribution(){
@@ -281,8 +271,8 @@ public:
     return _vertexOffsets;
   }
 
-  //only used for tests
-  void setVertexOffsets(std::vector<int> vertexOffsets){
+  /// Only used for tests
+  void setVertexOffsets(std::vector<int> & vertexOffsets){
     _vertexOffsets = vertexOffsets;
   }
 
