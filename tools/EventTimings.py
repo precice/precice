@@ -38,6 +38,11 @@ This is converted to a data structure:
 """
 
 import locale, shlex, datetime
+try:
+    import pandas
+except ImportError:
+    print('Pandas support non available')
+
 import numpy as np
 
 datatype = [ ("count", int),
@@ -66,13 +71,30 @@ def readBlock(f):
     raise StopIteration()
 
     
-def parseTimings(tStr):
+def parseTimingsNP(lines):
     """ Returns event name and timings as a dict. """
-    s = shlex.split(tStr)
-    return s[0], np.array(tuple(s[1:]), dtype=datatype)
+    timings = {}
+    for l in lines:
+        s = shlex.split(l)
+        timing = [s[0], np.array(tuple(s[1:]), dtype=datatype )]
+        timings[timing[0]] = timing[1]
+        
+    return timings
+
+def parseTimingsPandas(procs, lines):
+    """ Returns event name and timings as a dict. """
+    timings = pandas.DataFrame()
+    for l in lines:
+        s = shlex.split(l)
+        series = pandas.Series([procs] + s[1:], name = s[0],
+                               index = ["processors", "count", "total", "max","min", "avg", "percent"],
+                               dtype = int)
+        timings = timings.append(series)
+        
+    return timings
     
 
-def parseEventlog(file):
+def parseEventlog(file, timings_format = "numpy"):
     """ Takes a filename, parses the Eventlog and returns the data. """
     locale.setlocale(locale.LC_TIME, "C") # Set the locale, so that strptime works as intended.
 
@@ -88,10 +110,10 @@ def parseEventlog(file):
             properties[evStr.split(":")[0]] = float(evStr.split(":")[1])
             i += 1
 
-        timings = {}
-        for i in block[i+1:]:
-            timing = parseTimings(i)
-            timings[timing[0]] = timing[1]
+        if timings_format == 'numpy':
+            timings = parseTimingsNP(procs, block[i+1:])
+        elif timings_format == 'pandas':
+            timings = parseTimingsPandas(procs, block[i+1:])
         
         events.append( {
             "timestamp"  : timeStamp,
