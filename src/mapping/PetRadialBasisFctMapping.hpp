@@ -383,8 +383,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
             distance[d] = 0;
           }
         }
-        const double coeff = _basisFunction.evaluate(distance.norm());
-        if (not math::equals(coeff, 0.0) or col == global_row) {
+
+        if (_basisFunction.getSupportRadius() > distance.norm() or col == global_row) {
           if (mapped_col >= colOwnerRangeCBegin and mapped_col < colOwnerRangeCEnd)
             d_nnz[local_row]++;
           else
@@ -454,8 +454,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
           distance[d] = 0;
         }
       }
-      double coeff = _basisFunction.evaluate(distance.norm());
-      if (not math::equals(coeff, 0.0)) {
+
+      if (_basisFunction.getSupportRadius() > distance.norm()) {
+        double coeff = _basisFunction.evaluate(distance.norm());
         rowVals[colNum] = coeff;
         colIdx[colNum++] = col; // column of entry is the globalIndex
       }
@@ -520,8 +521,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
           if (_deadAxis[d])
             distance[d] = 0;
         }
-        double coeff = _basisFunction.evaluate(distance.norm());
-        if (not math::equals(coeff, 0.0)) {
+        
+        if (_basisFunction.getSupportRadius() > distance.norm()) {
           col = inVertex.getGlobalIndex() + polyparams;
           if (mapIndizes[col] >= colOwnerRangeABegin and mapIndizes[col] < colOwnerRangeAEnd)
             d_nnz[localRow]++;
@@ -579,8 +580,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
         if (_deadAxis[d])
           distance[d] = 0;
       }
-      double coeff = _basisFunction.evaluate(distance.norm());
-      if (not math::equals(coeff, 0.0)) {
+      if (_basisFunction.getSupportRadius() > distance.norm()) {
+        double coeff = _basisFunction.evaluate(distance.norm());
         rowVals[colNum] = coeff;
         colIdx[colNum++] = inVertex.getGlobalIndex() + polyparams;
       }
