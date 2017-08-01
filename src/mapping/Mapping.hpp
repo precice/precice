@@ -144,7 +144,7 @@ protected:
    */
   void setOutputRequirement ( MeshRequirement requirement );
 
-  int getDimensions();
+  int getDimensions() const;
 
 private:
 

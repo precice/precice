@@ -83,7 +83,8 @@ bool Mapping:: isProjectionMapping() const
   return false;
 }
 
-int Mapping:: getDimensions(){
+int Mapping:: getDimensions() const
+{
   return _dimensions;
 }
 
