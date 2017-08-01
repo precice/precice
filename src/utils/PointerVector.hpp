@@ -77,7 +77,6 @@ public:
     */
    CONTENT_T & operator[] ( size_t index )
    {
-      assertion ( index >= 0 );
       assertion ( index < _content.size() );
       return *_content[index];
    }
@@ -87,7 +86,6 @@ public:
     */
    const CONTENT_T & operator[] ( size_t index ) const
    {
-      assertion ( index >= 0 );
       assertion ( index < _content.size() );
       return *_content[index];
    }
