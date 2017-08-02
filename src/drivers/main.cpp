@@ -137,26 +137,8 @@ int main ( int argc, char** argv )
   else if (runHelp){
     assertion(not runServer);
     assertion(not runTests);
-    std::cout << "<?xml version=\"1.0\"?>" << std::endl << std::endl
-              << "<!-- preCICE XML configuration reference"
-              << std::endl << std::endl
-              << "     Configuration outline:"     << std::endl << std::endl
-              << "     <precice-configuration>"    << std::endl
-              << "        <log .../>"              << std::endl
-              << "        <solver-interface>"      << std::endl
-              << "           <data .../>"          << std::endl
-              << "           <spacetree .../>"     << std::endl
-              << "           <mesh .../>"          << std::endl
-              << "           <geometry .../>"      << std::endl
-              << "           <participant .../>"   << std::endl
-              << "           <communication .../>" << std::endl
-              << "           <coupling-scheme .../>" << std::endl
-              << "        </solverInterface>"      << std::endl
-              << "     </precice-configuration>"   << std::endl << std::endl
-              << "     Configuration reference: -->" << std::endl << std::endl;
     precice::config::Configuration config;
     std::cout << config.getXMLTag().printDocumentation(0) << std::endl << std::endl;
-    //std::cout << "...finished printing XML documentation" << std::endl;
   }
   else {
     assertion ( false );
