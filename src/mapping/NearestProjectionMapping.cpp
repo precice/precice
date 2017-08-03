@@ -158,4 +158,45 @@ bool NearestProjectionMapping:: isProjectionMapping() const
   return true;
 }
 
+void NearestProjectionMapping::tagMeshFirstRound()
+{
+  TRACE();
+
+  computeMapping();
+
+  if (getConstraint() == CONSISTENT){
+    for(mesh::Vertex& v : input()->vertices()){
+      for (size_t i=0; i < output()->vertices().size(); i++) {
+        const InterpolationElements& elems = _weights[i];
+        for (const query::InterpolationElement& elem : elems) {
+          if (elem.element->getID()==v.getID() && elem.weight!=0.0) {
+            v.tag();
+          }
+        }
+      }
+    }
+  }
+  else {
+    assertion(getConstraint() == CONSERVATIVE, getConstraint());
+    for(mesh::Vertex& v : output()->vertices()){
+      for (size_t i=0; i < input()->vertices().size(); i++) {
+        const InterpolationElements& elems = _weights[i];
+        for (const query::InterpolationElement& elem : elems) {
+          if (elem.element->getID()==v.getID() && elem.weight!=0.0) {
+            v.tag();
+          }
+        }
+      }
+    }
+  }
+
+  clear();
+}
+
+void NearestProjectionMapping::tagMeshSecondRound()
+{
+  TRACE();
+  // for NN mapping no operation needed here
+}
+
 }} // namespace precice, mapping

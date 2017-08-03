@@ -725,6 +725,7 @@ void Mesh:: addMesh(
   for ( const Vertex& vertex : deltaMesh.vertices() ){
     coords = vertex.getCoords();
     Vertex& v = createVertex (coords);
+    v.setGlobalIndex(vertex.getGlobalIndex());
     assertion ( vertex.getID() >= 0, vertex.getID() );
     vertexMap[vertex.getID()] = &v;
   }

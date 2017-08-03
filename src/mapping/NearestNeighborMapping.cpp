@@ -119,4 +119,31 @@ bool NearestNeighborMapping:: isProjectionMapping() const
   return true;
 }
 
+void NearestNeighborMapping::tagMeshFirstRound()
+{
+  TRACE();
+
+  computeMapping();
+
+  if (getConstraint() == CONSISTENT){
+    for(mesh::Vertex& v : input()->vertices()){
+      if(utils::contained(v.getID(),_vertexIndices)) v.tag();
+    }
+  }
+  else {
+    assertion(getConstraint() == CONSERVATIVE, getConstraint());
+    for(mesh::Vertex& v : output()->vertices()){
+      if(utils::contained(v.getID(),_vertexIndices)) v.tag();
+    }
+  }
+
+  clear();
+}
+
+void NearestNeighborMapping::tagMeshSecondRound()
+{
+  TRACE();
+  // for NN mapping no operation needed here
+}
+
 }} // namespace precice, mapping

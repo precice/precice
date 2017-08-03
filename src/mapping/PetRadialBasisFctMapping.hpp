@@ -83,6 +83,10 @@ public:
 
   friend struct MappingTests::PetRadialBasisFunctionMapping::Serial::SolutionCaching;
 
+  virtual void tagMeshFirstRound() override;
+
+  virtual void tagMeshSecondRound() override;
+
 
 private:
 
@@ -764,6 +768,20 @@ bool PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::doesVertexContribute(int
 
   return true;
 }
+
+
+template<typename RADIAL_BASIS_FUNCTION_T>
+void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
+{
+
+}
+
+template<typename RADIAL_BASIS_FUNCTION_T>
+void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
+{
+
+}
+
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::printMappingInfo(int inputDataID, int dim) const

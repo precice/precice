@@ -57,6 +57,10 @@ sourcesMesh = [
     Glob('mesh/config/*.cpp')
 ]
 
+sourcesPartition = [
+    Glob('partition/*.cpp'),
+]
+
 sourcesQuery = [
     Glob('query/*.cpp')
 ]
@@ -66,6 +70,7 @@ sourcesSpacetree = [
     Glob('spacetree/impl/*.cpp'),
     Glob('spacetree/config/*.cpp')
 ]
+
 
 sourcesPrecice = [
     Glob('precice/*.cpp'),
@@ -135,6 +140,7 @@ sourcesAllNoMain = [
     sourcesMath,
     sourcesMapping,
     sourcesMesh,
+    sourcesPartition,
     sourcesPrecice,
     sourcesQuery,
     sourcesSpacetree,
