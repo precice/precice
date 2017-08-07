@@ -86,9 +86,9 @@ MappingConfiguration:: MappingConfiguration
   attrPolynomial.setDocumentation("Toggles use of the global polynomial");
   attrPolynomial.setDefaultValue("on");
 
-  XMLAttribute<bool> attrPreallocation("preallocation");
-  attrPreallocation.setDocumentation("Enabled use of preallocaiton for PETSc RBF implementation");
-  attrPreallocation.setDefaultValue(true);
+  XMLAttribute<std::string> attrPreallocation("preallocation");
+  attrPreallocation.setDocumentation("Sets kind of preallocaiton for PETSc RBF implementation");
+  attrPreallocation.setDefaultValue("off");
 
 
   XMLTag::Occurrence occ = XMLTag::OCCUR_ARBITRARY;
@@ -257,7 +257,7 @@ void MappingConfiguration:: xmlTagCallback
     double solverRtol = 1e-9;
     bool xDead = false, yDead = false, zDead = false;
     Polynomial polynomial = Polynomial::ON;
-    bool preallocation = true;
+    Preallocation preallocation = Preallocation::OFF;
     
     if (tag.hasAttribute(ATTR_SHAPE_PARAM)){
       shapeParameter = tag.getDoubleAttributeValue(ATTR_SHAPE_PARAM);
@@ -285,9 +285,17 @@ void MappingConfiguration:: xmlTagCallback
         polynomial = utils::convertStringToBool(strPolynomial) ? Polynomial::ON : Polynomial::OFF;
     }
     if (tag.hasAttribute("preallocation")){
-      preallocation = tag.getBooleanAttributeValue("preallocation");
+      std::string strPrealloc = tag.getStringAttributeValue("preallocation");
+      if (strPrealloc == "estimate")
+        preallocation = Preallocation::ESTIMATE;
+      else if (strPrealloc == "compute")
+        preallocation = Preallocation::COMPUTE;
+      else if (strPrealloc == "mark")
+        preallocation = Preallocation::MARK;
+      else
+        preallocation = Preallocation::OFF;
     }
-    
+     
           
     ConfiguredMapping configuredMapping = createMapping(dir, type, constraint,
                                                         fromMesh, toMesh, timing,
@@ -342,7 +350,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping
   bool               yDead,
   bool               zDead,
   Polynomial         polynomial,
-  bool               preallocation) const
+  Preallocation      preallocation) const
 {
   TRACE(direction, type, timing, shapeParameter, supportRadius);
   using namespace mapping;

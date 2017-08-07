@@ -22,6 +22,14 @@ enum class Polynomial {
   SEPARATE
 };
 
+enum class Preallocation {
+  OFF,
+  COMPUTE,
+  ESTIMATE,
+  MARK
+};
+
+
 /// Performs XML configuration and holds configured mappings.
 class MappingConfiguration : public utils::XMLTag::Listener
 {
@@ -162,7 +170,7 @@ private:
     bool               yDead,
     bool               zDead,
     Polynomial         polynomial,
-    bool               preallocation) const;
+    Preallocation      preallocation) const;
 
   void checkDuplicates ( const ConfiguredMapping& mapping );
 
