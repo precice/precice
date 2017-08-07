@@ -1,27 +1,26 @@
 language: cpp
+dist: trusty
+sudo: false
 
 compiler:
   - gcc
   - clang
-  
+
 addons:
   apt:
-    sources:
-      - ubuntu-toolchain-r-test
-      - llvm-toolchain-precise-3.8
     packages:
-      - g++-6
-      - clang-3.8
-      - python-numpy
-      - openmpi-bin
       - libopenmpi-dev
+      - openmpi-bin
+      - python-numpy
+
 env:
   global:
     - LOCAL_INSTALL="$HOME/local"
-    - CPLUS_INCLUDE_PATH="$LOCAL_INSTALL/include"
+    - CPLUS_INCLUDE_PATH="$CPLUS_INCLUDE_PATH:$LOCAL_INSTALL/include"
     - LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$LOCAL_INSTALL/lib"
     - LIBRARY_PATH="$LIBRARY_PATH:$LOCAL_INSTALL/lib"
-
+    - PYTHONPATH="/usr/lib/python2.7:/usr/lib/python2.7/dist-packages:/usr/lib/python2.7/plat-x86_64-linux-gnu"
+    
   matrix:
     - MPI=off
     - MPI=on
@@ -31,8 +30,6 @@ cache:
     - $LOCAL_INSTALL
 
 before_install:
-  - if [ "$CXX" = "g++" ]; then export CXX="g++-6"; fi
-  - if [ "$CXX" = "clang++" ]; then export CXX="clang++-3.8"; fi
   - export OMPI_CXX=$CXX
   - if [ "$MPI" = "on" ]; then export CXX="mpicxx"; fi
 
@@ -59,3 +56,5 @@ after_failure:
   - cat -n ./tests/unit-test-output
   - cat -n ./tests/integration-test-output
   - cat -n ./tests/boost-test-output*
+
+
