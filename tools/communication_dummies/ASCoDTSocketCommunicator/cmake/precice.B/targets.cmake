@@ -1,1 +1,0 @@
-ADD_EXECUTABLE("precice.B" ${CPP_FILES} )
