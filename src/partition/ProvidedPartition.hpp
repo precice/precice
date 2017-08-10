@@ -18,21 +18,15 @@ class ProvidedPartition : public Partition
 {
 public:
 
-   /**
-    * @brief Constructor
-    */
+   /// Constructor
    ProvidedPartition (bool hasToSend);
 
    virtual ~ProvidedPartition() {}
 
-   /**
-    * @brief The mesh is gathered and sent to another participant (if required)
-    */
+   /// The mesh is gathered and sent to another participant (if required)
    virtual void communicate ();
 
-   /**
-    * @brief All distribution data structures are set up.
-    */
+   /// All distribution data structures are set up.
    virtual void compute ();
 
 private:

@@ -131,7 +131,7 @@ void Partition:: createOwnerInformation(){
     setOwnerInformation(slaveOwnerVecs[0]);
 
 
-#     ifdef Debug
+#     ifndef NDEBUG
     for(size_t i=0;i<globalOwnerVec.size();i++){
       if(globalOwnerVec[i]==0){
         WARN( "The Vertex with global index " << i << " of mesh: " << _mesh->getName()

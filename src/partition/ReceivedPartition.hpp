@@ -20,21 +20,15 @@ class ReceivedPartition : public Partition
 {
 public:
 
-   /**
-    * @brief Constructor
-    */
+   /// Constructor
   ReceivedPartition (bool filterFirst, int dimensions, double safetyFactor);
 
    virtual ~ReceivedPartition() {}
 
-   /**
-    * @brief The mesh is received from another participant.
-    */
+   /// The mesh is received from another participant.
    virtual void communicate ();
 
-   /**
-    * @brief The mesh is re-partitioned and all distribution data structures are set up.
-    */
+   /// The mesh is re-partitioned and all distribution data structures are set up.
    virtual void compute ();
 
 private:

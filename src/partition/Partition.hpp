@@ -30,23 +30,15 @@ class Partition
 {
 public:
 
-  /**
-   * @brief Constructor.
-   *
-   */
+  /// Constructor.
   Partition ();
 
   virtual ~Partition() {}
 
-  /**
-   * @brief The mesh is communicated between both master ranks (if required)
-   */
+  /// The mesh is communicated between both master ranks (if required)
   virtual void communicate () = 0;
 
-  /**
-   * @brief The partition is computed, i.e. the mesh re-partitioned if required
-   * and all data structures are set up.
-   */
+  ///The partition is computed, i.e. the mesh re-partitioned if required and all data structures are set up.
   virtual void compute () = 0;
 
   //TODO maybe put this in constructor
@@ -77,18 +69,14 @@ protected:
 
   m2n::PtrM2N _m2n;
 
-  /**
-   * @brief Decides which rank owns which vertex, information stored at each rank.
-   */
+   /// Decides which rank owns which vertex, information stored at each rank.
   void createOwnerInformation();
 
 private:
 
   static logging::Logger _log;
 
-  /**
-   * @brief Helper function for 'createOwnerFunction' to set local owner information
-   */
+  /// Helper function for 'createOwnerFunction' to set local owner information
   void setOwnerInformation(const std::vector<int> &ownerVec);
 
 

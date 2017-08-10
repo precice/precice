@@ -122,14 +122,10 @@ public:
    */
   virtual bool isProjectionMapping() const;
 
-  /**
-   * @brief Method used by partition. Tags vertices that could be owned by this rank.
-   */
+  /// Method used by partition. Tags vertices that could be owned by this rank.
   virtual void tagMeshFirstRound() = 0;
 
-  /**
-   * @brief Method used by partition. Tags vertices that can be filtered out.
-   */
+  /// Method used by partition. Tags vertices that can be filtered out.
   virtual void tagMeshSecondRound() = 0;
 
 
