@@ -99,6 +99,22 @@ void createSolidzMesh2D(mesh::PtrMesh pSolidzMesh){
   pSolidzMesh->createEdge(v5,v6);
 }
 
+void createSolidzMesh2DSmall(mesh::PtrMesh pSolidzMesh){
+  int dimensions = 2;
+  assertion(pSolidzMesh.use_count()>0);
+  assertion(pSolidzMesh->getDimensions()==dimensions);
+  Eigen::VectorXd position(dimensions);
+
+  position << 0.0, 0.0;
+  mesh::Vertex& v1 = pSolidzMesh->createVertex(position);
+  position << 0.0, 3.0;
+  mesh::Vertex& v2 = pSolidzMesh->createVertex(position);
+  position << 0.0, 6.0;
+  mesh::Vertex& v3 = pSolidzMesh->createVertex(position);
+  pSolidzMesh->createEdge(v1,v2);
+  pSolidzMesh->createEdge(v2,v3);
+}
+
 void createNastinMesh2D(mesh::PtrMesh pNastinMesh){
   int dimensions = 2;
   assertion(pNastinMesh.use_count()>0);
@@ -250,6 +266,77 @@ BOOST_AUTO_TEST_CASE(RePartitionNNBroadcastFilter2D, * testing::OnRanks({0, 1, 2
   tearDownParallelEnvironment();
 }
 
+BOOST_AUTO_TEST_CASE(RePartitionNNDoubleNode2D, * testing::OnRanks({0, 1, 2, 3}))
+{
+  utils::Parallel::setGlobalCommunicator(utils::Parallel::getRestrictedCommunicator({0,1,2,3}));
+  assertion(utils::Parallel::getCommunicatorSize() == 4);
+  com::PtrCommunication participantCom =
+      com::PtrCommunication(new com::MPIDirectCommunication());
+  m2n::DistributedComFactory::SharedPointer distrFactory = m2n::DistributedComFactory::SharedPointer(
+      new m2n::GatherScatterComFactory(participantCom));
+  m2n::PtrM2N m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory));
+
+  setupParallelEnvironment(m2n);
+
+  int dimensions = 2;
+  bool flipNormals = false;
+  Eigen::VectorXd offset = Eigen::VectorXd::Zero(dimensions);
+
+  if (utils::Parallel::getProcessRank() == 0){ //SOLIDZ
+    utils::MasterSlave::_slaveMode = false;
+    utils::MasterSlave::_masterMode = false;
+    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals));
+    createSolidzMesh2DSmall(pSolidzMesh);
+    bool hasToSend = true;
+    ProvidedPartition part(hasToSend);
+    part.setMesh(pSolidzMesh);
+    part.setm2n(m2n);
+    part.communicate();
+  }
+  else{
+    mesh::PtrMesh pNastinMesh(new mesh::Mesh("NastinMesh", dimensions, flipNormals));
+    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals));
+
+    mapping::PtrMapping boundingFromMapping = mapping::PtrMapping (
+        new mapping::NearestNeighborMapping(mapping::Mapping::CONSISTENT, dimensions) );
+    mapping::PtrMapping boundingToMapping = mapping::PtrMapping (
+        new mapping::NearestNeighborMapping(mapping::Mapping::CONSERVATIVE, dimensions) );
+    boundingFromMapping->setMeshes(pSolidzMesh,pNastinMesh);
+    boundingToMapping->setMeshes(pNastinMesh,pSolidzMesh);
+
+    createNastinMesh2D(pNastinMesh);
+    pNastinMesh->computeState();
+
+    bool filterFirst = false;
+    double safetyFactor = 0.5;
+
+    ReceivedPartition part(filterFirst, dimensions, safetyFactor);
+    part.setMesh(pSolidzMesh);
+    part.setm2n(m2n);
+    part.setFromMapping(boundingFromMapping);
+    part.setToMapping(boundingToMapping);
+    part.communicate();
+    part.compute();
+
+    // check if the sending and filtering worked right
+    if(utils::Parallel::getProcessRank() == 1){//Master
+      BOOST_TEST(pSolidzMesh->vertices().size()==2);
+      BOOST_TEST(pSolidzMesh->edges().size()==1);
+    }
+    else if(utils::Parallel::getProcessRank() == 2){//Slave1
+      BOOST_TEST(pSolidzMesh->vertices().size()==0);
+      BOOST_TEST(pSolidzMesh->edges().size()==0);
+    }
+    else if(utils::Parallel::getProcessRank() == 3){//Slave2
+      BOOST_TEST(pSolidzMesh->vertices().size()==2);
+      BOOST_TEST(pSolidzMesh->edges().size()==1);
+    }
+
+  }
+
+  tearDownParallelEnvironment();
+}
+
 
 BOOST_AUTO_TEST_CASE(RePartitionNPPreFilterPostFilter2D, * testing::OnRanks({0, 1, 2, 3}))
 {
@@ -290,9 +377,8 @@ BOOST_AUTO_TEST_CASE(RePartitionNPPreFilterPostFilter2D, * testing::OnRanks({0, 
     createNastinMesh2D(pNastinMesh);
 
     pNastinMesh->computeState();
-    bool filterFirst = false;
+    bool filterFirst = true;
     double safetyFactor = 0.1;
-    //TODO change filterFirst to true once implemented
     ReceivedPartition part(filterFirst, dimensions, safetyFactor);
     part.setMesh(pSolidzMesh);
     part.setm2n(m2n);
