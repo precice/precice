@@ -16,9 +16,9 @@ extern bool testMode;
 void printUsage()
 {
   std::cout << "Usage:" << std::endl << std::endl;
-  std::cout << "Run tests          :  binprecice test ConfigurationName PathToSrc [LogConfFile]" << std::endl;
-  std::cout << "Run server         :  binprecice server ParticipantName ConfigurationName [LogConfFile]" << std::endl;
-  std::cout << "Print XML reference:  binprecice xml" << std::endl;
+  std::cout << "Run tests               :  binprecice test ConfigurationName PathToSrc [LogConfFile]" << std::endl;
+  std::cout << "Run server (deprecated) :  binprecice server ParticipantName ConfigurationName [LogConfFile]" << std::endl;
+  std::cout << "Print XML reference     :  binprecice xml" << std::endl;
 }
 
 void printMPITestWarning(){
