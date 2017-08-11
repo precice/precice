@@ -46,23 +46,67 @@ void ReceivedPartition::compute()
   //TODO coupling mode abfangen
 
 
-  /**
-   *
-    In geometry: Pre-BB-Filter (either at the master in a pre-filter sense or at each slave after a broadcast)
-    In mapping: Tagging of vertices (which ones could be owned by this rank). NN/NP: compute mappings, tag and mark all contributors, RBF: Step I
-    In mesh: Set owner. Must be independent of mapping.
-    In mapping: Mark vertices for filtering. NN/NP: nothing, RBF: Step III
-    In geometry: Filter mesh according to mark
-    Compute distribution (except owner)
-   *
-   */
-
   // (1) Bounding-Box-Filter
 
   if(_filterFirst){ //pre-filter-post-filter
 
-    //TODO
+    INFO("Pre-filter mesh " << _mesh->getName() << " by bounding-box");
+    Event e("pre-filter mesh by bounding box");
 
+    if (utils::MasterSlave::_slaveMode) {
+      prepareBoundingBox();
+      com::CommunicateMesh(utils::MasterSlave::_communication).sendBoundingBox (_bb, 0);
+      com::CommunicateMesh(utils::MasterSlave::_communication).receiveMesh (*_mesh, 0);
+
+      if((_fromMapping.use_count()>0 && _fromMapping->getOutputMesh()->vertices().size()>0) ||
+         (_toMapping.use_count()>0 && _toMapping->getInputMesh()->vertices().size()>0)){
+           // this rank has vertices at the coupling interface
+           // then, also the filtered mesh should still have vertices
+        std::string msg = "The re-partitioning completely filtered out the mesh received on this rank at the coupling interface. "
+            "Most probably, the coupling interfaces of your coupled participants do not match geometry-wise. "
+            "Please check your geometry setup again. Small overlaps or gaps are no problem. "
+            "If your geometry setup is correct and if you have very different mesh resolutions on both sides, increasing the safety-factor "
+            "of the decomposition strategy might be necessary.";
+        CHECK(_mesh->vertices().size()>0, msg);
+      }
+
+    }
+    else{ // Master
+      assertion(utils::MasterSlave::_rank==0);
+      assertion(utils::MasterSlave::_size>1);
+
+      for (int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++) {
+        com::CommunicateMesh(utils::MasterSlave::_communication).receiveBoundingBox ( _bb, rankSlave);
+
+        DEBUG("From slave " << rankSlave << ", bounding mesh: " << _bb[0].first
+                     << ", " << _bb[0].second << " and " << _bb[1].first << ", " << _bb[1].second);
+        mesh::Mesh slaveMesh("SlaveMesh", _dimensions, _mesh->isFlipNormals());
+        std::vector<int> boundingVertexDistribution = filterMesh(slaveMesh, true); //TODO return here still needed?
+        com::CommunicateMesh(utils::MasterSlave::_communication).sendMesh ( slaveMesh, rankSlave );
+      }
+
+      // Now also filter the remaining master mesh
+      prepareBoundingBox();
+      mesh::Mesh filteredMesh("FilteredMesh", _dimensions, _mesh->isFlipNormals());
+      std::vector<int> tmpVertexPostitions = filterMesh(filteredMesh, true); //TODO still needed?
+      _mesh->clear();
+      _mesh->addMesh(filteredMesh);
+      _mesh->computeState();
+      DEBUG("Master mesh after filtering, #vertices " << _mesh->vertices().size());
+
+      if((_fromMapping.use_count()>0 && _fromMapping->getOutputMesh()->vertices().size()>0) ||
+         (_toMapping.use_count()>0 && _toMapping->getInputMesh()->vertices().size()>0)){
+           // this rank has vertices at the coupling interface
+           // then, also the filtered mesh should still have vertices
+        std::string msg = "The re-partitioning completely filtered out the mesh received on this rank at the coupling interface. "
+            "Most probably, the coupling interfaces of your coupled participants do not match geometry-wise. "
+            "Please check your geometry setup again. Small overlaps or gaps are no problem. "
+            "If your geometry setup is correct and if you have very different mesh resolutions on both sides, increasing the safety-factor "
+            "of the decomposition strategy might be necessary.";
+        CHECK(_mesh->vertices().size()>0, msg);
+      }
+
+    }
   }
   else{ //broadcast-filter
     INFO("Broadcast mesh " << _mesh->getName() );
@@ -195,6 +239,8 @@ std::vector<int> ReceivedPartition:: filterMesh(mesh::Mesh& filteredMesh, const 
 }
 
 void ReceivedPartition::prepareBoundingBox(){
+
+  _bb.resize(_dimensions, std::make_pair(std::numeric_limits<double>::max(), std::numeric_limits<double>::lowest()));
 
   //create BB around both "other" meshes
   if (_fromMapping.use_count()>0) {
