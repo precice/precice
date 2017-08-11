@@ -81,15 +81,16 @@ void Partition:: createOwnerInformation(){
     // receive slave data
     for (int rank = 1; rank < utils::MasterSlave::_size; rank++){
       int localNumberOfVertices = -1;
-      utils::MasterSlave::_communication->receive(localNumberOfVertices,0);
+      utils::MasterSlave::_communication->receive(localNumberOfVertices,rank);
+      DEBUG("Rank " << rank << " has " << localNumberOfVertices << " vertices.");
       slaveOwnerVecs[rank].resize(localNumberOfVertices, 0);
       slaveTags[rank].resize(localNumberOfVertices, -1);
       slaveGlobalIDs[rank].resize(localNumberOfVertices, -1);
 
 
       if (localNumberOfVertices!=0) {
-        utils::MasterSlave::_communication->receive(slaveTags[rank].data(),localNumberOfVertices,0);
-        utils::MasterSlave::_communication->receive(slaveGlobalIDs[rank].data(),localNumberOfVertices,0);
+        utils::MasterSlave::_communication->receive(slaveTags[rank].data(),localNumberOfVertices,rank);
+        utils::MasterSlave::_communication->receive(slaveGlobalIDs[rank].data(),localNumberOfVertices,rank);
         DEBUG("Rank " << rank << " has this tags " << slaveTags[rank]);
         DEBUG("Rank " << rank << " has this global IDs " << slaveGlobalIDs[rank]);
       }
