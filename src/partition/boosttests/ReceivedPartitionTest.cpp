@@ -1,3 +1,5 @@
+#ifndef PRECICE_NO_MPI
+
 #include "testing/Testing.hpp"
 
 #include "partition/ProvidedPartition.hpp"
@@ -479,3 +481,5 @@ BOOST_AUTO_TEST_CASE(RePartitionNPBroadcastFilter3D, * testing::OnRanks({0, 1, 2
 
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
+
+#endif // PRECICE_NO_MPI
