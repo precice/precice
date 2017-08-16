@@ -26,7 +26,7 @@ tarch::argument::Argument::Argument(	std::string name, TYPE type):
 		_type(type),
 		_argument(const_cast<char*>(std::string("uninitialized").c_str()))
 {
-#ifdef Debug
+#ifndef NDEBUG
 	std::stringstream ss;
 	ss << "Argument: " << name
 	   << "Type    : " <<type;
@@ -109,7 +109,7 @@ void tarch::argument::Argument::setArgument(std::string argument) {
 	char * buffer = new char[argument.length()];
 	strcpy(buffer,argument.c_str());
 	_argument = buffer;
-#ifdef Debug
+#ifndef NDEBUG
 	std::stringstream ss;
 	ss <<"Setting argument " << argument <<" successful\n";
 	DEBUG("setArgument()", ss.str() );

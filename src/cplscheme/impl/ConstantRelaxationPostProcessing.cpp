@@ -2,7 +2,7 @@
 #include "../CouplingData.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
-#include <Eigen/Dense>
+#include <Eigen/Core>
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/Helpers.hpp"
 

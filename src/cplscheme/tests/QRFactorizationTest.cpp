@@ -4,7 +4,7 @@
 #include "QRFactorizationTest.hpp"
 #include "cplscheme/impl/QRFactorization.hpp"
 #include "cplscheme/impl/BaseQNPostProcessing.hpp"
-#include <Eigen/Dense>
+#include <Eigen/Core>
 #include "math/math.hpp"
 
 #include "tarch/tests/TestCaseFactory.h"

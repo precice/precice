@@ -531,7 +531,7 @@ StaticTraversal<CELL_T>:: searchContentInternal
         else if ( tempData->position == Spacetree::positionOnGeometry() ){
           data->position = Spacetree::positionOnGeometry();
         }
-//#       ifdef Asserts
+//#       ifndef NDEBUG
 //        else if ( (tempData->position != Spacetree::positionUndefined())
 //                  && (data->position != Spacetree::positionOnGeometry()) )
 //        {

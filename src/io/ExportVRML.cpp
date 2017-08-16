@@ -7,7 +7,7 @@
 #include "utils/String.hpp"
 #include "utils/Globals.hpp"
 #include <iostream>
-#include <Eigen/Dense>
+#include <Eigen/Core>
 #include <fstream>
 #include <map>
 #include <boost/filesystem.hpp>

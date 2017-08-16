@@ -4,7 +4,7 @@
 #include "mesh/Edge.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Quad.hpp"
-#include <Eigen/Dense>
+#include <Eigen/Core>
 #include <iostream>
 #include <fstream>
 #include <boost/filesystem.hpp>

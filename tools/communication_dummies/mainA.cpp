@@ -3,6 +3,7 @@
 #include <com/SocketCommunicationFactory.hpp>
 #include <com/MPIPortsCommunicationFactory.hpp>
 #include <mesh/Mesh.hpp>
+#include <utils/MasterSlave.hpp>
 
 #include <mpi.h>
 
@@ -88,10 +89,12 @@ main(int argc, char** argv) {
   }
 
   if (utils::MasterSlave::_masterMode) {
-    utils::Parallel::initialize(NULL, NULL, "Master");
+    utils::Parallel::initializeMPI(NULL, NULL);
+    utils::Parallel::splitCommunicator("Master");
   } else {
     assertion(utils::MasterSlave::_slaveMode);
-    utils::Parallel::initialize(NULL, NULL, "Slave");
+    utils::Parallel::initializeMPI(NULL, NULL);    
+    utils::Parallel::splitCommunicator("Slave");
   }
 
   utils::MasterSlave::_communication =
@@ -132,8 +135,13 @@ main(int argc, char** argv) {
   }
 
   std::vector<com::PtrCommunicationFactory> cfs(
-      {com::PtrCommunicationFactory(new com::SocketCommunicationFactory),
-       com::PtrCommunicationFactory(new com::MPIPortsCommunicationFactory)});
+      {com::PtrCommunicationFactory(new com::SocketCommunicationFactory)});
+
+ //std::vector<com::PtrCommunicationFactory> cfs(
+ //     {com::PtrCommunicationFactory(new com::SocketCommunicationFactory),
+ //      com::PtrCommunicationFactory(new com::MPIPortsCommunicationFactory)});
+
+
 
   for (auto cf : cfs) {
     m2n::PointToPointCommunication c(cf, mesh);

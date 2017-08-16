@@ -16,7 +16,7 @@ namespace tarch {
   }
 }
 
-#ifdef Debug
+#ifndef NDEBUG
 /**
  * @see logInfo() macro
  */
@@ -520,7 +520,7 @@ class tarch::logging::Log {
      * @param methodName method name
      * @param message    log message
      */
-    #if defined(Debug) && !defined(LogOff)
+    #if !defined(NDEBUG) && !defined(LogOff)
     void debug(const std::string& methodName, const std::string& message) const;
     #else
     void debug(const std::string& methodName, const std::string& message) const {
@@ -545,7 +545,7 @@ class tarch::logging::Log {
      * @param methodName method name
      * @param message    log message
      */
-    #if defined(Debug) && !defined(LogOff)
+    #if !defined(NDEBUG) && !defined(LogOff)
     void debugMasterOnly(const std::string& methodName, const std::string& message) const;
     #else
     void debugMasterOnly(const std::string& methodName, const std::string& message) const {

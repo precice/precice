@@ -7,7 +7,7 @@
 #include "mesh/Edge.hpp"
 #include "mesh/Mesh.hpp"
 #include "utils/Globals.hpp"
-#include <Eigen/Dense>
+#include <Eigen/Core>
 #include "math/math.hpp"
 
 #include "tarch/tests/TestCaseFactory.h"

@@ -4,7 +4,7 @@
 #include "logging/Logger.hpp"
 #include <vector>
 #include <string>
-#include <Eigen/Dense>
+#include <Eigen/Core>
 
 namespace precice {
    namespace mesh {

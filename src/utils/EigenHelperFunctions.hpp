@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Eigen/Dense>
+#include <Eigen/Core>
 #include "utils/assertion.hpp"
 
 namespace precice {

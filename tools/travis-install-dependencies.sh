@@ -18,7 +18,7 @@ if [ ! -d $LOCAL_INSTALL/include ]; then
     # Download, compile and install Boost
     wget 'http://downloads.sourceforge.net/project/boost/boost/1.60.0/boost_1_60_0.tar.bz2' -O - | tar xj
     cd boost_1_60_0
-    ./bootstrap.sh --prefix=$LOCAL_INSTALL
-    ./b2 -j2 --with-program_options --with-test --with-filesystem --with-log install
+    ./bootstrap.sh --prefix=$LOCAL_INSTALL > ~/boost.bootstrap
+    ./b2 -j2 --with-program_options --with-test --with-filesystem --with-log install > ~/boost.b2
 fi
 

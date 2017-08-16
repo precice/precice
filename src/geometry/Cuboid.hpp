@@ -2,7 +2,7 @@
 
 #include "Geometry.hpp"
 #include "logging/Logger.hpp"
-#include <Eigen/Dense>
+#include <Eigen/Core>
 
 namespace precice {
 namespace geometry {

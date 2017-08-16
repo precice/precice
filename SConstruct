@@ -123,7 +123,6 @@ if not conf.CheckCXX():
 if env["build"] == 'debug':
     # The Assert define does not actually switches asserts on/off, these are controlled by NDEBUG.
     # It's kept in place for some legacy code.
-    env.Append(CPPDEFINES = ['Debug', 'Asserts'])
     env.Append(CCFLAGS = ['-g3', '-O0'])
     env.Append(LINKFLAGS = ["-rdynamic"]) # Gives more informative backtraces
     buildpath += "debug"
@@ -132,6 +131,11 @@ elif env["build"] == 'release':
     env.Append(CCFLAGS = ['-O3'])
     buildpath += "release"
 
+    
+# ====== libpthread ======
+uniqueCheckLib("pthread")
+
+    
 # ====== PETSc ======
 if env["petsc"]:
     PETSC_DIR = checkset_var("PETSC_DIR", "")

@@ -5,7 +5,7 @@
 #include "mesh/Edge.hpp"
 #include "mesh/Vertex.hpp"
 #include "utils/Globals.hpp"
-#include <Eigen/Core>
+#include <Eigen/Dense>
 
 namespace precice {
 namespace action {

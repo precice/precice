@@ -21,7 +21,7 @@ namespace impl {
 namespace qi = boost::spirit::qi;
 namespace phoenix = boost::phoenix;
 
-#ifdef Debug
+#ifndef NDEBUG
 #define PRECICE_PARSER_DEBUG(message) >> qi::eps[boost::bind(&VRML10Parser::debug, this, message)]
 #else
 #define PRECICE_PARSER_DEBUG(message)

@@ -95,7 +95,7 @@ class tarch::logging::CommandLineLogger: public tarch::services::Service {
 
     typedef std::set<FilterListEntry> FilterList;
 
-    #if !defined(SharedMemoryParallelisation) && defined(Debug)
+    #if !defined(SharedMemoryParallelisation) && !defined(NDEBUG)
     std::stack<std::string>  _indentTraces;
     #endif
   private:

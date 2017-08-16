@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Eigen/Dense>
+#include <Eigen/Core>
 
 namespace precice {
 namespace utils {

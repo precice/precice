@@ -3,7 +3,7 @@
 #include "mesh/SharedPointer.hpp"
 #include "utils/assertion.hpp"
 #include "mesh/Data.hpp"
-#include <Eigen/Dense>
+#include <Eigen/Core>
 #include <vector>
 
 namespace precice {
