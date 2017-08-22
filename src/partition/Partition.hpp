@@ -69,15 +69,15 @@ protected:
 
   m2n::PtrM2N _m2n;
 
-   /// Decides which rank owns which vertex, information stored at each rank.
-  void createOwnerInformation();
+  /// Decides which rank owns which vertex, information stored at each rank.
+  virtual void createOwnerInformation() = 0;
+
+  /// Generate vertex offsets from the vertexDistribution, broadcast it to all slaves
+  void computeVertexOffsets();
 
 private:
 
   static logging::Logger _log;
-
-  /// Helper function for 'createOwnerFunction' to set local owner information
-  void setOwnerInformation(const std::vector<int> &ownerVec);
 
 
 };

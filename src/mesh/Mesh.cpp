@@ -526,135 +526,8 @@ void Mesh:: computeState()
 void Mesh:: computeDistribution()
 {
   TRACE(utils::MasterSlave::_slaveMode, utils::MasterSlave::_masterMode);
+  //TODO remove
 
-  // (0) Broadcast global number of vertices
-  if (utils::MasterSlave::_slaveMode) {
-    int globalNumber = -1;
-    utils::MasterSlave::_communication->broadcast(globalNumber,0);
-    assertion(globalNumber!=-1);
-    _globalNumberOfVertices = globalNumber;
-  }
-  else if (utils::MasterSlave::_masterMode) {
-    utils::MasterSlave::_communication->broadcast(_globalNumberOfVertices);
-  }
-
-  // (1) Generate vertex offsets from the vertexDistribution, broadcast it to all slaves.
-  DEBUG("Generate vertex offsets");
-  if (utils::MasterSlave::_slaveMode) {
-    _vertexOffsets.resize(utils::MasterSlave::_size);
-    utils::MasterSlave::_communication->broadcast(_vertexOffsets.data(),_vertexOffsets.size(),0);
-    DEBUG("My vertex offsets: " << _vertexOffsets);
-  }
-  else if (utils::MasterSlave::_masterMode) {
-    _vertexOffsets.resize(utils::MasterSlave::_size);
-    _vertexOffsets[0] = _vertexDistribution[0].size();
-    for (int rank = 1; rank < utils::MasterSlave::_size; rank++){
-      _vertexOffsets[rank] = _vertexDistribution[rank].size() + _vertexOffsets[rank-1];
-    }
-    DEBUG("My vertex offsets: " << _vertexOffsets);
-    utils::MasterSlave::_communication->broadcast(_vertexOffsets.data(),_vertexOffsets.size());
-  }
-  else{ //coupling mode
-    _vertexOffsets.push_back(vertices().size());
-  }
-
-
-  // (2) Generate global indices from the vertexDistribution, broadcast it to all slaves.
-  DEBUG("Generate global indices");
-  if (utils::MasterSlave::_slaveMode) {
-    int numberOfVertices = vertices().size();
-    if (numberOfVertices!=0) {
-      std::vector<int> globalIndices(numberOfVertices, -1);
-      utils::MasterSlave::_communication->receive(globalIndices.data(),numberOfVertices,0);
-      DEBUG("My global indices: " << globalIndices);
-      setGlobalIndices(globalIndices);
-    }
-  }
-  else if (utils::MasterSlave::_masterMode) {
-    for (int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
-      auto globalIndices = _vertexDistribution[rankSlave];
-      int numberOfVertices = globalIndices.size();
-      if (numberOfVertices!=0) {
-        utils::MasterSlave::_communication->send(globalIndices.data(),numberOfVertices,rankSlave);
-      }
-    }
-    setGlobalIndices(_vertexDistribution[0]);
-  }
-  else{ //coupling mode
-    std::vector<int> globalIndices;
-    for(size_t i=0; i<vertices().size(); i++){
-      globalIndices.push_back(i);
-    }
-    setGlobalIndices(globalIndices);
-  }
-
-
-  // (3) generate owner information, decide which rank is owner for duplicated vertices
-  DEBUG("Generate owner information");
-  if (utils::MasterSlave::_slaveMode) {
-    int numberOfVertices = vertices().size();
-    if (numberOfVertices!=0) {
-      std::vector<int> ownerVec(numberOfVertices, -1);
-      utils::MasterSlave::_communication->receive(ownerVec.data(),numberOfVertices,0);
-      DEBUG("My owner information: " << ownerVec);
-      setOwnerInformation(ownerVec);
-    }
-  }
-  else if (utils::MasterSlave::_masterMode) {
-    std::vector<int> globalOwnerVec(_globalNumberOfVertices,0); //to temporary store which vertices already have an owner
-    std::vector<std::vector<int> > slaveOwnerVecs; // same, but per slave
-    slaveOwnerVecs.resize(utils::MasterSlave::_size);
-    int localGuess = _globalNumberOfVertices / utils::MasterSlave::_size; //guess for a decent load balancing
-
-    //first round: every slave gets localGuess vertices
-    for (int rank = 0; rank < utils::MasterSlave::_size; rank++){
-      auto globalIndices = _vertexDistribution[rank];
-      int localNumberOfVertices = _vertexDistribution[rank].size();
-      slaveOwnerVecs[rank].resize(localNumberOfVertices);
-      int counter = 0;
-      for (int i=0; i < localNumberOfVertices; i++) {
-        if (globalOwnerVec[globalIndices[i]] == 0) { // Vertex has no owner yet
-          slaveOwnerVecs[rank][i] = 1; // Now it is owned by rank
-          globalOwnerVec[globalIndices[i]] = 1;
-          ++counter;
-          if(counter==localGuess) break;
-        }
-      }
-    }
-    //second round: distribute all other vertices in a greedy way
-    for (int rank = 0; rank < utils::MasterSlave::_size; rank++) {
-      auto globalIndices = _vertexDistribution[rank];
-      int localNumberOfVertices = _vertexDistribution[rank].size();
-      for(int i=0;i<localNumberOfVertices;i++){
-        if(globalOwnerVec[globalIndices[i]] == 0){
-          slaveOwnerVecs[rank][i] = 1;
-          globalOwnerVec[globalIndices[i]] = rank + 1;
-        }
-      }
-        
-      if (localNumberOfVertices!=0) {
-        if (rank==0){ //master own data
-          setOwnerInformation(slaveOwnerVecs[rank]);
-        }
-        else{
-          utils::MasterSlave::_communication->send(slaveOwnerVecs[rank].data(),localNumberOfVertices,rank);
-        }
-      }
-    }
-      
-#   ifndef NDEBUG
-    for(int i=0;i<_globalNumberOfVertices;i++){
-      if(globalOwnerVec[i]==0){
-        WARN("The Vertex with global index " << i << " of mesh: " << _name
-             << " was completely filtered out, since it has no influence on any mapping.");
-          }
-    }
-#   endif
-      
-  } else{ //coupling mode
-    std::vector<int> ownerVec(vertices().size(),1);
-    setOwnerInformation(ownerVec);
-  }
 }
 
     
@@ -686,24 +559,6 @@ void Mesh:: notifyListeners()
   }
 }
 
-void Mesh:: setGlobalIndices(const std::vector<int> &globalIndices){
-  size_t i = 0;
-  for ( Vertex& vertex : vertices() ){
-    assertion(i<globalIndices.size());
-    vertex.setGlobalIndex(globalIndices[i]);
-    i++;
-  }
-}
-
-void Mesh:: setOwnerInformation(const std::vector<int> &ownerVec){
-  size_t i = 0;
-  for ( Vertex& vertex : vertices() ){
-    assertion(i<ownerVec.size());
-    assertion(ownerVec[i]!=-1);
-    vertex.setOwner(ownerVec[i]==1);
-    i++;
-  }
-}
 
 
 void Mesh:: addMesh(
@@ -720,6 +575,8 @@ void Mesh:: addMesh(
     coords = vertex.getCoords();
     Vertex& v = createVertex (coords);
     v.setGlobalIndex(vertex.getGlobalIndex());
+    if(vertex.isTagged()) v.tag();
+    v.setOwner(vertex.isOwner());
     assertion ( vertex.getID() >= 0, vertex.getID() );
     vertexMap[vertex.getID()] = &v;
   }

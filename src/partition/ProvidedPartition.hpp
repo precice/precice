@@ -31,6 +31,8 @@ public:
 
 private:
 
+   virtual void createOwnerInformation();
+
    static logging::Logger _log;
 
    bool _hasToSend;

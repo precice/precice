@@ -21,7 +21,7 @@ class ReceivedPartition : public Partition
 public:
 
    /// Constructor
-  ReceivedPartition (bool filterFirst, int dimensions, double safetyFactor);
+   ReceivedPartition (bool filterFirst, int dimensions, double safetyFactor);
 
    virtual ~ReceivedPartition() {}
 
@@ -33,11 +33,16 @@ public:
 
 private:
 
-   std::vector<int> filterMesh(mesh::Mesh& filteredMesh, const bool filterByBB);
+   void filterMesh(mesh::Mesh& filteredMesh, const bool filterByBB);
 
    void prepareBoundingBox();
 
    bool isVertexInBB(const mesh::Vertex& vertex);
+
+   virtual void createOwnerInformation();
+
+   /// Helper function for 'createOwnerFunction' to set local owner information
+   void setOwnerInformation(const std::vector<int> &ownerVec);
 
    bool _filterFirst;
 

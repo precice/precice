@@ -478,6 +478,141 @@ BOOST_AUTO_TEST_CASE(RePartitionNPBroadcastFilter3D, * testing::OnRanks({0, 1, 2
   tearDownParallelEnvironment();
 }
 
+BOOST_AUTO_TEST_CASE(TestRepartitionAndDistribution2D,
+                     * testing::OnSize(4))
+{
+  com::PtrCommunication masterSlaveCom = com::PtrCommunication(new com::MPIDirectCommunication());
+  utils::MasterSlave::_communication = masterSlaveCom;
+
+  if (utils::Parallel::getProcessRank() == 0){ //Master
+    utils::Parallel::splitCommunicator( "Master" );
+    utils::MasterSlave::_rank = 0;
+    utils::MasterSlave::_size = 4;
+    utils::MasterSlave::_slaveMode = false;
+    utils::MasterSlave::_masterMode = true;
+    masterSlaveCom->acceptConnection("Master", "Slaves", 0, 1);
+    masterSlaveCom->setRankOffset(1);
+  }
+  else if(utils::Parallel::getProcessRank() == 1){
+    utils::Parallel::splitCommunicator( "Slaves" );
+    utils::MasterSlave::_rank = 1;
+    utils::MasterSlave::_size = 4;
+    utils::MasterSlave::_slaveMode = true;
+    utils::MasterSlave::_masterMode = false;
+    masterSlaveCom->requestConnection("Master", "Slaves", 0, 3);
+  }
+  else if(utils::Parallel::getProcessRank() == 2){
+    utils::Parallel::splitCommunicator( "Slaves");
+    utils::MasterSlave::_rank = 2;
+    utils::MasterSlave::_size = 4;
+    utils::MasterSlave::_slaveMode = true;
+    utils::MasterSlave::_masterMode = false;
+    masterSlaveCom->requestConnection("Master", "Slaves", 1, 3);
+  }
+  else if(utils::Parallel::getProcessRank() == 3){
+    utils::Parallel::splitCommunicator( "Slaves");
+    utils::MasterSlave::_rank = 3;
+    utils::MasterSlave::_size = 4;
+    utils::MasterSlave::_slaveMode = true;
+    utils::MasterSlave::_masterMode = false;
+    masterSlaveCom->requestConnection("Master", "Slaves", 2, 3);
+  }
+
+  // Create mesh object
+  int dimensions = 2;
+  bool flipNormals = false; // The normals of triangles, edges, vertices
+  mesh::PtrMesh pMesh(new mesh::Mesh("MyMesh", dimensions, flipNormals));
+  mesh::PtrMesh pOtherMesh(new mesh::Mesh("OtherMesh", dimensions, flipNormals));
+
+  mapping::PtrMapping boundingFromMapping = mapping::PtrMapping (
+      new mapping::NearestNeighborMapping(mapping::Mapping::CONSISTENT, dimensions) );
+  boundingFromMapping->setMeshes(pMesh, pOtherMesh);
+
+
+  if (utils::Parallel::getProcessRank() == 0) { //Master
+    Eigen::VectorXd position(dimensions);
+    position << 0.0, 0.0;
+    mesh::Vertex& v1 = pMesh->createVertex(position);
+    v1.setGlobalIndex(0);
+    position << 1.0, 0.0;
+    mesh::Vertex& v2 = pMesh->createVertex(position);
+    v2.setGlobalIndex(1);
+    position << 2.0, 0.0;
+    mesh::Vertex& v3 = pMesh->createVertex(position);
+    v3.setGlobalIndex(2);
+  } else if (utils::Parallel::getProcessRank() == 1) { //Slave1
+    Eigen::VectorXd position(dimensions);
+    position << 0.0, 0.0;
+    pOtherMesh->createVertex(position);
+    position << 0.8, 0.0;
+    pOtherMesh->createVertex(position);
+  } else if (utils::Parallel::getProcessRank() == 2) { //Slave2
+    Eigen::VectorXd position(dimensions);
+    position << 1.0, 0.0;
+    pOtherMesh->createVertex(position);
+    position << 1.2, 0.0;
+    pOtherMesh->createVertex(position);
+  } else if (utils::Parallel::getProcessRank() == 3) { //Slave3
+  }
+
+  pOtherMesh->computeState();
+  bool filterFirst = false;
+  double safetyFactor = 20.0; //should not filter out anything here
+  ReceivedPartition part(filterFirst, dimensions, safetyFactor);
+  part.setMesh(pMesh);
+  part.setFromMapping(boundingFromMapping);
+  part.compute();
+
+  if (utils::Parallel::getProcessRank() == 0) { //Master
+    BOOST_TEST(pMesh->getGlobalNumberOfVertices() == 3);
+    BOOST_TEST(pMesh->getVertexOffsets().size() == 4);
+    BOOST_TEST(pMesh->getVertexOffsets()[0] == 0);
+    BOOST_TEST(pMesh->getVertexOffsets()[1] == 2);
+    BOOST_TEST(pMesh->getVertexOffsets()[2] == 3);
+    BOOST_TEST(pMesh->getVertexOffsets()[3] == 3);
+    BOOST_TEST(pMesh->getVertexDistribution()[0].size() == 0);
+    BOOST_TEST(pMesh->getVertexDistribution()[1].size() == 2);
+    BOOST_TEST(pMesh->getVertexDistribution()[2].size() == 1);
+    BOOST_TEST(pMesh->getVertexDistribution()[3].size() == 0);
+    BOOST_TEST(pMesh->getVertexDistribution()[1][0] == 0);
+    BOOST_TEST(pMesh->getVertexDistribution()[1][1] == 1);
+    BOOST_TEST(pMesh->getVertexDistribution()[2][0] == 1);
+    BOOST_TEST(pMesh->vertices().size() == 0);
+  } else if (utils::Parallel::getProcessRank() == 1) { //Slave1
+    BOOST_TEST(pMesh->getGlobalNumberOfVertices() == 3);
+    BOOST_TEST(pMesh->getVertexOffsets().size() == 4);
+    BOOST_TEST(pMesh->getVertexOffsets()[0] == 0);
+    BOOST_TEST(pMesh->getVertexOffsets()[1] == 2);
+    BOOST_TEST(pMesh->getVertexOffsets()[2] == 3);
+    BOOST_TEST(pMesh->getVertexOffsets()[3] == 3);
+    BOOST_TEST(pMesh->vertices().size() == 2);
+    BOOST_TEST(pMesh->vertices()[0].getGlobalIndex() == 0);
+    BOOST_TEST(pMesh->vertices()[1].getGlobalIndex() == 1);
+    BOOST_TEST(pMesh->vertices()[0].isOwner() == true);
+    BOOST_TEST(pMesh->vertices()[1].isOwner() == true);
+  } else if (utils::Parallel::getProcessRank() == 2) { //Slave2
+    BOOST_TEST(pMesh->getGlobalNumberOfVertices() == 3);
+    BOOST_TEST(pMesh->getVertexOffsets().size() == 4);
+    BOOST_TEST(pMesh->getVertexOffsets()[0] == 0);
+    BOOST_TEST(pMesh->getVertexOffsets()[1] == 2);
+    BOOST_TEST(pMesh->getVertexOffsets()[2] == 3);
+    BOOST_TEST(pMesh->getVertexOffsets()[3] == 3);
+    BOOST_TEST(pMesh->vertices().size() == 1);
+    BOOST_TEST(pMesh->vertices()[0].getGlobalIndex() == 1);
+    BOOST_TEST(pMesh->vertices()[0].isOwner() == false);
+  } else if (utils::Parallel::getProcessRank() == 3) { //Slave3
+    BOOST_TEST(pMesh->getGlobalNumberOfVertices() == 3);
+    BOOST_TEST(pMesh->getVertexOffsets().size() == 4);
+    BOOST_TEST(pMesh->getVertexOffsets()[0] == 0);
+    BOOST_TEST(pMesh->getVertexOffsets()[1] == 2);
+    BOOST_TEST(pMesh->getVertexOffsets()[2] == 3);
+    BOOST_TEST(pMesh->getVertexOffsets()[3] == 3);
+    BOOST_TEST(pMesh->vertices().size() == 0);
+  }
+
+  tearDownParallelEnvironment();
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()

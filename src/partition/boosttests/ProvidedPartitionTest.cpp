@@ -243,24 +243,176 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate3D, * testing::OnRanks({0, 1, 2, 3}
 
 
     if(utils::Parallel::getProcessRank() == 1){//master
+      BOOST_TEST(pSolidzMesh->getVertexOffsets().size() == 3);
       BOOST_TEST(pSolidzMesh->getVertexOffsets()[0]==2);
       BOOST_TEST(pSolidzMesh->getVertexOffsets()[1]==2);
       BOOST_TEST(pSolidzMesh->getVertexOffsets()[2]==6);
+      BOOST_TEST(pSolidzMesh->getGlobalNumberOfVertices() == 6);
+      BOOST_TEST(pSolidzMesh->vertices()[0].getGlobalIndex() == 0);
+      BOOST_TEST(pSolidzMesh->vertices()[1].getGlobalIndex() == 1);
+      BOOST_TEST(pSolidzMesh->vertices()[0].isOwner() == true);
+      BOOST_TEST(pSolidzMesh->vertices()[1].isOwner() == true);
+      BOOST_TEST(pSolidzMesh->getVertexDistribution()[0].size() == 2);
+      BOOST_TEST(pSolidzMesh->getVertexDistribution()[1].size() == 0);
+      BOOST_TEST(pSolidzMesh->getVertexDistribution()[2].size() == 4);
+      BOOST_TEST(pSolidzMesh->getVertexDistribution()[0][0] == 0);
+      BOOST_TEST(pSolidzMesh->getVertexDistribution()[0][1] == 1);
+      BOOST_TEST(pSolidzMesh->getVertexDistribution()[2][0] == 2);
+      BOOST_TEST(pSolidzMesh->getVertexDistribution()[2][1] == 3);
+      BOOST_TEST(pSolidzMesh->getVertexDistribution()[2][2] == 4);
+      BOOST_TEST(pSolidzMesh->getVertexDistribution()[2][3] == 5);
     }
     else if(utils::Parallel::getProcessRank() == 2){//Slave1
+      BOOST_TEST(pSolidzMesh->getVertexOffsets().size() == 3);
       BOOST_TEST(pSolidzMesh->getVertexOffsets()[0]==2);
       BOOST_TEST(pSolidzMesh->getVertexOffsets()[1]==2);
       BOOST_TEST(pSolidzMesh->getVertexOffsets()[2]==6);
+      BOOST_TEST(pSolidzMesh->getGlobalNumberOfVertices() == 6);
     }
     else if(utils::Parallel::getProcessRank() == 3){//Slave2
+      BOOST_TEST(pSolidzMesh->getVertexOffsets().size() == 3);
       BOOST_TEST(pSolidzMesh->getVertexOffsets()[0]==2);
       BOOST_TEST(pSolidzMesh->getVertexOffsets()[1]==2);
       BOOST_TEST(pSolidzMesh->getVertexOffsets()[2]==6);
+      BOOST_TEST(pSolidzMesh->getGlobalNumberOfVertices() == 6);
+      BOOST_TEST(pSolidzMesh->vertices()[0].getGlobalIndex() == 2);
+      BOOST_TEST(pSolidzMesh->vertices()[1].getGlobalIndex() == 3);
+      BOOST_TEST(pSolidzMesh->vertices()[2].getGlobalIndex() == 4);
+      BOOST_TEST(pSolidzMesh->vertices()[3].getGlobalIndex() == 5);
+      BOOST_TEST(pSolidzMesh->vertices()[0].isOwner() == true);
+      BOOST_TEST(pSolidzMesh->vertices()[1].isOwner() == true);
+      BOOST_TEST(pSolidzMesh->vertices()[2].isOwner() == true);
+      BOOST_TEST(pSolidzMesh->vertices()[3].isOwner() == true);
     }
   }
 
   tearDownParallelEnvironment();
 }
+
+
+BOOST_AUTO_TEST_CASE(TestOnlyDistribution2D, * testing::OnSize(4))
+{
+  com::PtrCommunication masterSlaveCom = com::PtrCommunication(new com::MPIDirectCommunication());
+  utils::MasterSlave::_communication = masterSlaveCom;
+
+  if (utils::Parallel::getProcessRank() == 0){ //Master
+    utils::Parallel::splitCommunicator( "Master" );
+    utils::MasterSlave::_rank = 0;
+    utils::MasterSlave::_size = 4;
+    utils::MasterSlave::_slaveMode = false;
+    utils::MasterSlave::_masterMode = true;
+    masterSlaveCom->acceptConnection("Master", "Slaves", 0, 1);
+    masterSlaveCom->setRankOffset(1);
+  }
+  else if(utils::Parallel::getProcessRank() == 1){
+    utils::Parallel::splitCommunicator( "Slaves" );
+    utils::MasterSlave::_rank = 1;
+    utils::MasterSlave::_size = 4;
+    utils::MasterSlave::_slaveMode = true;
+    utils::MasterSlave::_masterMode = false;
+    masterSlaveCom->requestConnection("Master", "Slaves", 0, 3);
+  }
+  else if(utils::Parallel::getProcessRank() == 2){
+    utils::Parallel::splitCommunicator( "Slaves");
+    utils::MasterSlave::_rank = 2;
+    utils::MasterSlave::_size = 4;
+    utils::MasterSlave::_slaveMode = true;
+    utils::MasterSlave::_masterMode = false;
+    masterSlaveCom->requestConnection("Master", "Slaves", 1, 3);
+  }
+  else if(utils::Parallel::getProcessRank() == 3){
+    utils::Parallel::splitCommunicator( "Slaves");
+    utils::MasterSlave::_rank = 3;
+    utils::MasterSlave::_size = 4;
+    utils::MasterSlave::_slaveMode = true;
+    utils::MasterSlave::_masterMode = false;
+    masterSlaveCom->requestConnection("Master", "Slaves", 2, 3);
+  }
+
+  // Create mesh object
+  std::string meshName ( "MyMesh" );
+  int dim = 2;
+  bool flipNormals = false; // The normals of triangles, edges, vertices
+  mesh::PtrMesh pMesh(new mesh::Mesh(meshName, dim, flipNormals));
+
+  if (utils::Parallel::getProcessRank() == 0) { //Master
+    Eigen::VectorXd position(dim);
+    position << 0.0, 0.0;
+    pMesh->createVertex(position);
+    position <<1.0, 0.0;
+    pMesh->createVertex(position);
+  } else if (utils::Parallel::getProcessRank() == 1) { //Slave1
+    Eigen::VectorXd position(dim);
+    position << 2.0, 0.0;
+    pMesh->createVertex(position);
+  } else if (utils::Parallel::getProcessRank() == 2) { //Slave2
+  } else if (utils::Parallel::getProcessRank() == 3) { //Slave3
+    Eigen::VectorXd position(dim);
+    position << 3.0, 0.0;
+    pMesh->createVertex(position);
+    position << 4.0, 0.0;
+    pMesh->createVertex(position);
+  }
+
+  bool hasToSend = false;
+  ProvidedPartition part(hasToSend);
+  part.setMesh(pMesh);
+  part.communicate();
+  part.compute();
+
+
+  if (utils::Parallel::getProcessRank() == 0) { //Master
+    BOOST_TEST(pMesh->getGlobalNumberOfVertices() == 5);
+    BOOST_TEST(pMesh->getVertexOffsets().size() == 4);
+    BOOST_TEST(pMesh->getVertexOffsets()[0] == 2);
+    BOOST_TEST(pMesh->getVertexOffsets()[1] == 3);
+    BOOST_TEST(pMesh->getVertexOffsets()[2] == 3);
+    BOOST_TEST(pMesh->getVertexOffsets()[3] == 5);
+    BOOST_TEST(pMesh->vertices()[0].getGlobalIndex() == 0);
+    BOOST_TEST(pMesh->vertices()[1].getGlobalIndex() == 1);
+    BOOST_TEST(pMesh->vertices()[0].isOwner() == true);
+    BOOST_TEST(pMesh->vertices()[1].isOwner() == true);
+    BOOST_TEST(pMesh->getVertexDistribution()[0].size() == 2);
+    BOOST_TEST(pMesh->getVertexDistribution()[1].size() == 1);
+    BOOST_TEST(pMesh->getVertexDistribution()[2].size() == 0);
+    BOOST_TEST(pMesh->getVertexDistribution()[3].size() == 2);
+    BOOST_TEST(pMesh->getVertexDistribution()[0][0] == 0);
+    BOOST_TEST(pMesh->getVertexDistribution()[0][1] == 1);
+    BOOST_TEST(pMesh->getVertexDistribution()[1][0] == 2);
+    BOOST_TEST(pMesh->getVertexDistribution()[3][0] == 3);
+    BOOST_TEST(pMesh->getVertexDistribution()[3][1] == 4);
+  } else if (utils::Parallel::getProcessRank() == 1) { //Slave1
+    BOOST_TEST(pMesh->getGlobalNumberOfVertices() == 5);
+    BOOST_TEST(pMesh->getVertexOffsets().size() == 4);
+    BOOST_TEST(pMesh->getVertexOffsets()[0] == 2);
+    BOOST_TEST(pMesh->getVertexOffsets()[1] == 3);
+    BOOST_TEST(pMesh->getVertexOffsets()[2] == 3);
+    BOOST_TEST(pMesh->getVertexOffsets()[3] == 5);
+    BOOST_TEST(pMesh->vertices()[0].getGlobalIndex() == 2);
+    BOOST_TEST(pMesh->vertices()[0].isOwner() == true);
+  } else if (utils::Parallel::getProcessRank() == 2) { //Slave2
+    BOOST_TEST(pMesh->getGlobalNumberOfVertices() == 5);
+    BOOST_TEST(pMesh->getVertexOffsets().size() == 4);
+    BOOST_TEST(pMesh->getVertexOffsets()[0] == 2);
+    BOOST_TEST(pMesh->getVertexOffsets()[1] == 3);
+    BOOST_TEST(pMesh->getVertexOffsets()[2] == 3);
+    BOOST_TEST(pMesh->getVertexOffsets()[3] == 5);
+  } else if (utils::Parallel::getProcessRank() == 3) { //Slave3
+    BOOST_TEST(pMesh->getGlobalNumberOfVertices() == 5);
+    BOOST_TEST(pMesh->getVertexOffsets().size() == 4);
+    BOOST_TEST(pMesh->getVertexOffsets()[0] == 2);
+    BOOST_TEST(pMesh->getVertexOffsets()[1] == 3);
+    BOOST_TEST(pMesh->getVertexOffsets()[2] == 3);
+    BOOST_TEST(pMesh->getVertexOffsets()[3] == 5);
+    BOOST_TEST(pMesh->vertices()[0].getGlobalIndex() == 3);
+    BOOST_TEST(pMesh->vertices()[1].getGlobalIndex() == 4);
+    BOOST_TEST(pMesh->vertices()[0].isOwner() == true);
+    BOOST_TEST(pMesh->vertices()[1].isOwner() == true);
+  }
+
+  tearDownParallelEnvironment();
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()

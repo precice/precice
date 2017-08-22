@@ -49,9 +49,11 @@ void ProvidedPartition::communicate()
 
     //set global index
     if (not utils::MasterSlave::_slaveMode) {
-       for(mesh::Vertex& v : globalMesh.vertices()){
-         v.setGlobalIndex(v.getID());
-       }
+      int globalIndex = 0;
+      for(mesh::Vertex& v : globalMesh.vertices()){
+        v.setGlobalIndex(globalIndex);
+        globalIndex++;
+      }
     }
 
     // Send (global) Mesh
@@ -70,8 +72,18 @@ void ProvidedPartition::compute()
 
   int numberOfVertices = _mesh->vertices().size();
 
+  // set global indices at every slave and vertexDistribution at master
   if (utils::MasterSlave::_slaveMode) {
+    int globalVertexCounter = -1;
     utils::MasterSlave::_communication->send(numberOfVertices,0);
+    utils::MasterSlave::_communication->receive(globalVertexCounter,0);
+    for(int i=0; i<numberOfVertices; i++){
+      _mesh->vertices()[i].setGlobalIndex(globalVertexCounter+i);
+    }
+    int globalNumberOfVertices = -1;
+    utils::MasterSlave::_communication->broadcast(globalNumberOfVertices,0);
+    assertion(globalNumberOfVertices!=-1);
+    _mesh->setGlobalNumberOfVertices(globalNumberOfVertices);
   }
   else if(utils::MasterSlave::_masterMode) {
     assertion(utils::MasterSlave::_size>1);
@@ -80,28 +92,42 @@ void ProvidedPartition::compute()
     //add master vertices
     for(int i=0; i<numberOfVertices; i++){
       _mesh->getVertexDistribution()[0].push_back(vertexCounter);
+      _mesh->vertices()[i].setGlobalIndex(vertexCounter);
       vertexCounter++;
     }
 
     for (int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
       utils::MasterSlave::_communication->receive(numberOfVertices,rankSlave);
+      utils::MasterSlave::_communication->send(vertexCounter,rankSlave);
+
       for(int i=0; i<numberOfVertices; i++){
         _mesh->getVertexDistribution()[rankSlave].push_back(vertexCounter);
         vertexCounter++;
       }
     }
     _mesh->setGlobalNumberOfVertices(vertexCounter);
+    utils::MasterSlave::_communication->broadcast(vertexCounter);
   }
   else{ //coupling mode
-    _mesh->setGlobalNumberOfVertices(_mesh->vertices().size());
+    for(int i=0; i<numberOfVertices; i++){
+      _mesh->vertices()[i].setGlobalIndex(i);
+    }
+    _mesh->setGlobalNumberOfVertices(numberOfVertices);
   }
 
+  createOwnerInformation();
 
-  // TODO kann man computeDistr nicht direkt hier machen?
-  // TODO owner berechnen
-  // TODO globalIndex an slaves schicken
-  // TODO globalIndex setzen falls nicht gesendet wurde
-  _mesh->computeDistribution();
+  computeVertexOffsets();
 }
+
+void ProvidedPartition::createOwnerInformation()
+{
+  TRACE();
+  for(mesh::Vertex& v : _mesh->vertices()){
+    v.setOwner(true);
+  }
+}
+
+
 
 }} // namespace precice, partition
