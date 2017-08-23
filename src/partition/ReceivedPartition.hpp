@@ -20,8 +20,18 @@ class ReceivedPartition : public Partition
 {
 public:
 
+  /// Defines the typ of geometric filter used
+  enum GeometricFilter {
+    // @brief No geometric filter used (e.g. for RBF mappings)
+    NO_FILTER = 0,
+    // @brief Filter at master and communicate only filtered mesh.
+    FILTER_FIRST = 1,
+    // @brief Broadcast first and filter then
+    BROADCAST_FILTER = 2
+  };
+
    /// Constructor
-   ReceivedPartition (bool filterFirst, int dimensions, double safetyFactor);
+   ReceivedPartition (GeometricFilter geometricFilter, int dimensions, double safetyFactor);
 
    virtual ~ReceivedPartition() {}
 
@@ -44,7 +54,7 @@ private:
    /// Helper function for 'createOwnerFunction' to set local owner information
    void setOwnerInformation(const std::vector<int> &ownerVec);
 
-   bool _filterFirst;
+   GeometricFilter _geometricFilter;
 
    mesh::Mesh::BoundingBox _bb;
 

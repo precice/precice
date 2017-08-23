@@ -95,10 +95,9 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate2D, * testing::OnRanks({0, 1, 2, 3}
   if (utils::Parallel::getProcessRank() == 0){ //NASTIN
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals));
 
-    bool filterFirst = false;
     double safetyFactor = 0.1;
 
-    ReceivedPartition part(filterFirst, dimensions, safetyFactor);
+    ReceivedPartition part(ReceivedPartition::BROADCAST_FILTER, dimensions, safetyFactor);
     part.setMesh(pSolidzMesh);
     part.setm2n(m2n);
     part.communicate();
@@ -185,10 +184,9 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate3D, * testing::OnRanks({0, 1, 2, 3}
   if (utils::Parallel::getProcessRank() == 0){ //NASTIN
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals));
 
-    bool filterFirst = false;
     double safetyFactor = 0.1;
 
-    ReceivedPartition part(filterFirst, dimensions, safetyFactor);
+    ReceivedPartition part(ReceivedPartition::BROADCAST_FILTER, dimensions, safetyFactor);
     part.setMesh(pSolidzMesh);
     part.setm2n(m2n);
     part.communicate();

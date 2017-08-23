@@ -23,10 +23,10 @@ logging::Logger ReceivedPartition:: _log ( "precice::partition::ReceivedPartitio
 
 ReceivedPartition::ReceivedPartition
 (
-    bool filterFirst, int dimensions, double safetyFactor )
+    GeometricFilter geometricFilter, int dimensions, double safetyFactor )
 :
   Partition (),
-  _filterFirst(filterFirst),
+  _geometricFilter(geometricFilter),
   _bb(dimensions, std::make_pair(std::numeric_limits<double>::max(), std::numeric_limits<double>::lowest())),
   _dimensions(dimensions),
   _safetyFactor(safetyFactor)
@@ -63,7 +63,7 @@ void ReceivedPartition::compute()
 
   // (1) Bounding-Box-Filter
 
-  if(_filterFirst){ //pre-filter-post-filter
+  if(_geometricFilter == FILTER_FIRST){ //pre-filter-post-filter
 
     INFO("Pre-filter mesh " << _mesh->getName() << " by bounding-box");
     Event e("pre-filter mesh by bounding box");
@@ -123,7 +123,7 @@ void ReceivedPartition::compute()
 
     }
   }
-  else{ //broadcast-filter
+  else {
     INFO("Broadcast mesh " << _mesh->getName() );
     Event e1("broadcast mesh");
 
@@ -138,30 +138,36 @@ void ReceivedPartition::compute()
 
     e1.stop();
 
-    INFO("Filter mesh " << _mesh->getName() << " by bounding-box");
-    Event e2("filter mesh by bounding box");
+    if(_geometricFilter == BROADCAST_FILTER){
 
-    prepareBoundingBox();
-    mesh::Mesh filteredMesh("FilteredMesh", _dimensions, _mesh->isFlipNormals());
-    filterMesh(filteredMesh, true);
+      INFO("Filter mesh " << _mesh->getName() << " by bounding-box");
+      Event e2("filter mesh by bounding box");
 
-    if((_fromMapping.use_count()>0 && _fromMapping->getOutputMesh()->vertices().size()>0) ||
-       (_toMapping.use_count()>0 && _toMapping->getInputMesh()->vertices().size()>0)){
-         // this rank has vertices at the coupling interface
-         // then, also the filtered mesh should still have vertices
-      std::string msg = "The re-partitioning completely filtered out the mesh received on this rank at the coupling interface. "
-          "Most probably, the coupling interfaces of your coupled participants do not match geometry-wise. "
-          "Please check your geometry setup again. Small overlaps or gaps are no problem. "
-          "If your geometry setup is correct and if you have very different mesh resolutions on both sides, increasing the safety-factor "
-          "of the decomposition strategy might be necessary.";
-      CHECK(filteredMesh.vertices().size()>0, msg);
+      prepareBoundingBox();
+      mesh::Mesh filteredMesh("FilteredMesh", _dimensions, _mesh->isFlipNormals());
+      filterMesh(filteredMesh, true);
+
+      if((_fromMapping.use_count()>0 && _fromMapping->getOutputMesh()->vertices().size()>0) ||
+         (_toMapping.use_count()>0 && _toMapping->getInputMesh()->vertices().size()>0)){
+           // this rank has vertices at the coupling interface
+           // then, also the filtered mesh should still have vertices
+        std::string msg = "The re-partitioning completely filtered out the mesh received on this rank at the coupling interface. "
+            "Most probably, the coupling interfaces of your coupled participants do not match geometry-wise. "
+            "Please check your geometry setup again. Small overlaps or gaps are no problem. "
+            "If your geometry setup is correct and if you have very different mesh resolutions on both sides, increasing the safety-factor "
+            "of the decomposition strategy might be necessary.";
+        CHECK(filteredMesh.vertices().size()>0, msg);
+      }
+
+      DEBUG("Bounding box filter, filtered from " << _mesh->vertices().size() << " vertices to " << filteredMesh.vertices().size() << " vertices.");
+      _mesh->clear();
+      _mesh->addMesh(filteredMesh);
+      _mesh->computeState();
+      e2.stop();
     }
-
-    DEBUG("Bounding box filter, filtered from " << _mesh->vertices().size() << " vertices to " << filteredMesh.vertices().size() << " vertices.");
-    _mesh->clear();
-    _mesh->addMesh(filteredMesh);
-    _mesh->computeState();
-    e2.stop();
+    else {
+      assertion(_geometricFilter == NO_FILTER);
+    }
   }
 
   // (2) Tag vertices 1st round (i.e. who could be owned by this rank)
@@ -337,10 +343,12 @@ void ReceivedPartition:: createOwnerInformation(){
     if (numberOfVertices!=0) {
       std::vector<int> tags(numberOfVertices, -1);
       std::vector<int> globalIDs(numberOfVertices, -1);
+      bool atInterface = false;
       for(int i=0; i<numberOfVertices; i++){
         globalIDs[i] = _mesh->vertices()[i].getGlobalIndex();
         if(_mesh->vertices()[i].isTagged()){
           tags[i] = 1;
+          atInterface = true;
         }
         else{
           tags[i] = 0;
@@ -350,6 +358,8 @@ void ReceivedPartition:: createOwnerInformation(){
       DEBUG("My global IDs: " << globalIDs);
       utils::MasterSlave::_communication->send(tags.data(),numberOfVertices,0);
       utils::MasterSlave::_communication->send(globalIDs.data(),numberOfVertices,0);
+      utils::MasterSlave::_communication->send(atInterface,0);
+
       std::vector<int> ownerVec(numberOfVertices, -1);
       utils::MasterSlave::_communication->receive(ownerVec.data(),numberOfVertices,0);
       DEBUG("My owner information: " << ownerVec);
@@ -384,6 +394,7 @@ void ReceivedPartition:: createOwnerInformation(){
     }
 
     // receive slave data
+    int ranksAtInterface = 0;
     for (int rank = 1; rank < utils::MasterSlave::_size; rank++){
       int localNumberOfVertices = -1;
       utils::MasterSlave::_communication->receive(localNumberOfVertices,rank);
@@ -392,17 +403,19 @@ void ReceivedPartition:: createOwnerInformation(){
       slaveTags[rank].resize(localNumberOfVertices, -1);
       slaveGlobalIDs[rank].resize(localNumberOfVertices, -1);
 
-
       if (localNumberOfVertices!=0) {
         utils::MasterSlave::_communication->receive(slaveTags[rank].data(),localNumberOfVertices,rank);
         utils::MasterSlave::_communication->receive(slaveGlobalIDs[rank].data(),localNumberOfVertices,rank);
         DEBUG("Rank " << rank << " has this tags " << slaveTags[rank]);
         DEBUG("Rank " << rank << " has this global IDs " << slaveGlobalIDs[rank]);
+        bool atInterface = false;
+        utils::MasterSlave::_communication->receive(atInterface,rank);
+        if(atInterface) ranksAtInterface++;
       }
     }
 
     // decide upon owners,
-    int localGuess = _mesh->getGlobalNumberOfVertices() / utils::MasterSlave::_size; //guess for a decent load balancing
+    int localGuess = _mesh->getGlobalNumberOfVertices() / ranksAtInterface; //guess for a decent load balancing
     //first round: every slave gets localGuess vertices
     for (int rank = 0; rank < utils::MasterSlave::_size; rank++){
       int counter = 0;

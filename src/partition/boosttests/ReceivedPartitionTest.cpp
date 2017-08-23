@@ -13,6 +13,8 @@
 #include "mapping/SharedPointer.hpp"
 #include "mapping/NearestProjectionMapping.hpp"
 #include "mapping/NearestNeighborMapping.hpp"
+#include "mapping/PetRadialBasisFctMapping.hpp"
+#include "mapping/impl/BasisFunctions.hpp"
 
 using namespace precice;
 using namespace partition;
@@ -20,7 +22,7 @@ using namespace partition;
 BOOST_AUTO_TEST_SUITE(PartitionTests)
 BOOST_AUTO_TEST_SUITE(ReceivedPartitionTests)
 
-void setupParallelEnvironment(m2n::PtrM2N m2n){
+void setupParallelEnvironmentTwoParticipants(m2n::PtrM2N m2n){
   assertion(utils::Parallel::getCommunicatorSize() == 4);
 
   com::PtrCommunication masterSlaveCom =
@@ -68,6 +70,46 @@ void setupParallelEnvironment(m2n::PtrM2N m2n){
   }
 }
 
+void setupParallelEnvironmentOneParticipant(){
+  assertion(utils::Parallel::getCommunicatorSize() == 4);
+  com::PtrCommunication masterSlaveCom = com::PtrCommunication(new com::MPIDirectCommunication());
+  utils::MasterSlave::_communication = masterSlaveCom;
+
+  if (utils::Parallel::getProcessRank() == 0){ //Master
+    utils::Parallel::splitCommunicator( "Master" );
+    utils::MasterSlave::_rank = 0;
+    utils::MasterSlave::_size = 4;
+    utils::MasterSlave::_slaveMode = false;
+    utils::MasterSlave::_masterMode = true;
+    masterSlaveCom->acceptConnection("Master", "Slaves", 0, 1);
+    masterSlaveCom->setRankOffset(1);
+  }
+  else if(utils::Parallel::getProcessRank() == 1){
+    utils::Parallel::splitCommunicator( "Slaves" );
+    utils::MasterSlave::_rank = 1;
+    utils::MasterSlave::_size = 4;
+    utils::MasterSlave::_slaveMode = true;
+    utils::MasterSlave::_masterMode = false;
+    masterSlaveCom->requestConnection("Master", "Slaves", 0, 3);
+  }
+  else if(utils::Parallel::getProcessRank() == 2){
+    utils::Parallel::splitCommunicator( "Slaves");
+    utils::MasterSlave::_rank = 2;
+    utils::MasterSlave::_size = 4;
+    utils::MasterSlave::_slaveMode = true;
+    utils::MasterSlave::_masterMode = false;
+    masterSlaveCom->requestConnection("Master", "Slaves", 1, 3);
+  }
+  else if(utils::Parallel::getProcessRank() == 3){
+    utils::Parallel::splitCommunicator( "Slaves");
+    utils::MasterSlave::_rank = 3;
+    utils::MasterSlave::_size = 4;
+    utils::MasterSlave::_slaveMode = true;
+    utils::MasterSlave::_masterMode = false;
+    masterSlaveCom->requestConnection("Master", "Slaves", 2, 3);
+  }
+}
+
 void tearDownParallelEnvironment(){
   utils::MasterSlave::_communication = nullptr;
   utils::MasterSlave::_slaveMode = false;
@@ -84,16 +126,22 @@ void createSolidzMesh2D(mesh::PtrMesh pSolidzMesh){
 
   position << 0.0, 0.0;
   mesh::Vertex& v1 = pSolidzMesh->createVertex(position);
+  v1.setGlobalIndex(0);
   position << 0.0, 1.95;
   mesh::Vertex& v2 = pSolidzMesh->createVertex(position);
+  v2.setGlobalIndex(1);
   position << 0.0, 2.1;
   mesh::Vertex& v3 = pSolidzMesh->createVertex(position);
+  v3.setGlobalIndex(2);
   position << 0.0, 4.5;
   mesh::Vertex& v4 = pSolidzMesh->createVertex(position);
+  v4.setGlobalIndex(3);
   position << 0.0, 5.95;
   mesh::Vertex& v5 = pSolidzMesh->createVertex(position);
+  v5.setGlobalIndex(4);
   position << 0.0, 6.1;
   mesh::Vertex& v6 = pSolidzMesh->createVertex(position);
+  v6.setGlobalIndex(5);
   pSolidzMesh->createEdge(v1,v2);
   pSolidzMesh->createEdge(v2,v3);
   pSolidzMesh->createEdge(v3,v4);
@@ -122,7 +170,7 @@ void createNastinMesh2D(mesh::PtrMesh pNastinMesh){
   assertion(pNastinMesh.use_count()>0);
   assertion(pNastinMesh->getDimensions()==dimensions);
 
-  if(utils::Parallel::getProcessRank() == 1){//Master
+  if(utils::Parallel::getProcessRank() == 1){
 
     Eigen::VectorXd position(dimensions);
     position << 0.0, 0.0;
@@ -130,10 +178,10 @@ void createNastinMesh2D(mesh::PtrMesh pNastinMesh){
     position << 0.0, 2.0;
     pNastinMesh->createVertex(position);
   }
-  else if(utils::Parallel::getProcessRank() == 2){//Slave1
-    // slave1 not at interface
+  else if(utils::Parallel::getProcessRank() == 2){
+    // not at interface
   }
-  else if(utils::Parallel::getProcessRank() == 3){//Slave2
+  else if(utils::Parallel::getProcessRank() == 3){
 
     Eigen::VectorXd position(dimensions);
     position << 0.0, 4.0;
@@ -207,7 +255,7 @@ BOOST_AUTO_TEST_CASE(RePartitionNNBroadcastFilter2D, * testing::OnRanks({0, 1, 2
       new m2n::GatherScatterComFactory(participantCom));
   m2n::PtrM2N m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory));
 
-  setupParallelEnvironment(m2n);
+  setupParallelEnvironmentTwoParticipants(m2n);
 
   int dimensions = 2;
   bool flipNormals = false;
@@ -238,10 +286,9 @@ BOOST_AUTO_TEST_CASE(RePartitionNNBroadcastFilter2D, * testing::OnRanks({0, 1, 2
     createNastinMesh2D(pNastinMesh);
     pNastinMesh->computeState();
 
-    bool filterFirst = false;
     double safetyFactor = 0.1;
 
-    ReceivedPartition part(filterFirst, dimensions, safetyFactor);
+    ReceivedPartition part(ReceivedPartition::FILTER_FIRST, dimensions, safetyFactor);
     part.setMesh(pSolidzMesh);
     part.setm2n(m2n);
     part.setFromMapping(boundingFromMapping);
@@ -278,7 +325,7 @@ BOOST_AUTO_TEST_CASE(RePartitionNNDoubleNode2D, * testing::OnRanks({0, 1, 2, 3})
       new m2n::GatherScatterComFactory(participantCom));
   m2n::PtrM2N m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory));
 
-  setupParallelEnvironment(m2n);
+  setupParallelEnvironmentTwoParticipants(m2n);
 
   int dimensions = 2;
   bool flipNormals = false;
@@ -309,10 +356,9 @@ BOOST_AUTO_TEST_CASE(RePartitionNNDoubleNode2D, * testing::OnRanks({0, 1, 2, 3})
     createNastinMesh2D(pNastinMesh);
     pNastinMesh->computeState();
 
-    bool filterFirst = false;
     double safetyFactor = 0.5;
 
-    ReceivedPartition part(filterFirst, dimensions, safetyFactor);
+    ReceivedPartition part(ReceivedPartition::BROADCAST_FILTER, dimensions, safetyFactor);
     part.setMesh(pSolidzMesh);
     part.setm2n(m2n);
     part.setFromMapping(boundingFromMapping);
@@ -351,7 +397,7 @@ BOOST_AUTO_TEST_CASE(RePartitionNPPreFilterPostFilter2D, * testing::OnRanks({0, 
       new m2n::GatherScatterComFactory(participantCom));
   m2n::PtrM2N m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory));
 
-  setupParallelEnvironment(m2n);
+  setupParallelEnvironmentTwoParticipants(m2n);
 
   int dimensions = 2;
   bool flipNormals = false;
@@ -379,9 +425,8 @@ BOOST_AUTO_TEST_CASE(RePartitionNPPreFilterPostFilter2D, * testing::OnRanks({0, 
     createNastinMesh2D(pNastinMesh);
 
     pNastinMesh->computeState();
-    bool filterFirst = true;
     double safetyFactor = 0.1;
-    ReceivedPartition part(filterFirst, dimensions, safetyFactor);
+    ReceivedPartition part(ReceivedPartition::FILTER_FIRST, dimensions, safetyFactor);
     part.setMesh(pSolidzMesh);
     part.setm2n(m2n);
     part.setFromMapping(boundingFromMapping);
@@ -408,6 +453,102 @@ BOOST_AUTO_TEST_CASE(RePartitionNPPreFilterPostFilter2D, * testing::OnRanks({0, 
 }
 
 
+#ifndef PRECICE_NO_PETSC
+BOOST_AUTO_TEST_CASE(RePartitionRBFGlobal2D, * testing::OnRanks({0, 1, 2, 3}))
+{
+  utils::Parallel::setGlobalCommunicator(utils::Parallel::getRestrictedCommunicator({0,1,2,3}));
+  assertion(utils::Parallel::getCommunicatorSize() == 4);
+
+  setupParallelEnvironmentOneParticipant();
+
+  int dimensions = 2;
+  bool flipNormals = false;
+  mesh::PtrMesh pMesh(new mesh::Mesh("MyMesh", dimensions, flipNormals));
+  mesh::PtrMesh pOtherMesh(new mesh::Mesh("OtherMesh", dimensions, flipNormals));
+
+  mapping::PtrMapping boundingFromMapping = mapping::PtrMapping (
+      new mapping::PetRadialBasisFctMapping<mapping::ThinPlateSplines>(mapping::Mapping::CONSISTENT, dimensions,
+          mapping::ThinPlateSplines(), false, false, false));
+  mapping::PtrMapping boundingToMapping = mapping::PtrMapping (
+      new mapping::NearestNeighborMapping(mapping::Mapping::CONSERVATIVE, dimensions) );
+  boundingFromMapping->setMeshes(pMesh, pOtherMesh);
+  boundingToMapping->setMeshes(pOtherMesh,pMesh);
+
+  if (utils::Parallel::getProcessRank() == 0) { //Master
+    createSolidzMesh2D(pMesh);
+  } else  { //Slaves
+    createNastinMesh2D(pOtherMesh);
+  }
+
+  pOtherMesh->computeState();
+  double safetyFactor = 20.0;
+  ReceivedPartition part(ReceivedPartition::NO_FILTER, dimensions, safetyFactor);
+  part.setMesh(pMesh);
+  part.setFromMapping(boundingFromMapping);
+  part.setToMapping(boundingToMapping);
+  part.compute();
+
+
+  BOOST_TEST(pMesh->getVertexOffsets().size() == 4);
+  BOOST_TEST(pMesh->getVertexOffsets()[0] == 0);
+  BOOST_TEST(pMesh->getVertexOffsets()[1] == 6);
+  BOOST_TEST(pMesh->getVertexOffsets()[2] == 6);
+  BOOST_TEST(pMesh->getVertexOffsets()[3] == 12);
+  BOOST_TEST(pMesh->getGlobalNumberOfVertices() == 6);
+
+  // check if the sending and filtering worked right
+  if(utils::Parallel::getProcessRank() == 0){//Master
+    BOOST_TEST(pMesh->vertices().size()==0);
+    BOOST_TEST(pMesh->edges().size()==0);
+    BOOST_TEST(pMesh->getVertexDistribution()[0].size() == 0);
+    BOOST_TEST(pMesh->getVertexDistribution()[1].size() == 6);
+    BOOST_TEST(pMesh->getVertexDistribution()[2].size() == 0);
+    BOOST_TEST(pMesh->getVertexDistribution()[3].size() == 6);
+  }
+  else if(utils::Parallel::getProcessRank() == 1){//Slave1
+    BOOST_TEST(pMesh->vertices().size()==6);
+    BOOST_TEST(pMesh->edges().size()==5);
+    BOOST_TEST(pMesh->vertices()[0].isOwner() == true);
+    BOOST_TEST(pMesh->vertices()[1].isOwner() == true);
+    BOOST_TEST(pMesh->vertices()[2].isOwner() == true);
+    BOOST_TEST(pMesh->vertices()[3].isOwner() == false);
+    BOOST_TEST(pMesh->vertices()[4].isOwner() == false);
+    BOOST_TEST(pMesh->vertices()[5].isOwner() == false);
+    BOOST_TEST(pMesh->vertices()[0].getGlobalIndex() == 0);
+    BOOST_TEST(pMesh->vertices()[1].getGlobalIndex() == 1);
+    BOOST_TEST(pMesh->vertices()[2].getGlobalIndex() == 2);
+    BOOST_TEST(pMesh->vertices()[3].getGlobalIndex() == 3);
+    BOOST_TEST(pMesh->vertices()[4].getGlobalIndex() == 4);
+    BOOST_TEST(pMesh->vertices()[5].getGlobalIndex() == 5);
+  }
+  else if(utils::Parallel::getProcessRank() == 2){//Slave2
+    BOOST_TEST(pMesh->vertices().size()==0);
+    BOOST_TEST(pMesh->edges().size()==0);
+  }
+  else if(utils::Parallel::getProcessRank() == 3){//Slave3
+    BOOST_TEST(pMesh->vertices().size()==6);
+    BOOST_TEST(pMesh->edges().size()==5);
+    BOOST_TEST(pMesh->vertices()[0].isOwner() == false);
+    BOOST_TEST(pMesh->vertices()[1].isOwner() == false);
+    BOOST_TEST(pMesh->vertices()[2].isOwner() == false);
+    BOOST_TEST(pMesh->vertices()[3].isOwner() == true);
+    BOOST_TEST(pMesh->vertices()[4].isOwner() == true);
+    BOOST_TEST(pMesh->vertices()[5].isOwner() == true);
+    BOOST_TEST(pMesh->vertices()[0].getGlobalIndex() == 0);
+    BOOST_TEST(pMesh->vertices()[1].getGlobalIndex() == 1);
+    BOOST_TEST(pMesh->vertices()[2].getGlobalIndex() == 2);
+    BOOST_TEST(pMesh->vertices()[3].getGlobalIndex() == 3);
+    BOOST_TEST(pMesh->vertices()[4].getGlobalIndex() == 4);
+    BOOST_TEST(pMesh->vertices()[5].getGlobalIndex() == 5);
+  }
+
+  tearDownParallelEnvironment();
+  //TODO PetRBFMapping Destructor gives PETSc error
+}
+
+#endif // PRECICE_NO_PETSC
+
+
 BOOST_AUTO_TEST_CASE(RePartitionNPBroadcastFilter3D, * testing::OnRanks({0, 1, 2, 3}))
 {
   utils::Parallel::setGlobalCommunicator(utils::Parallel::getRestrictedCommunicator({0,1,2,3}));
@@ -419,7 +560,7 @@ BOOST_AUTO_TEST_CASE(RePartitionNPBroadcastFilter3D, * testing::OnRanks({0, 1, 2
       new m2n::GatherScatterComFactory(participantCom));
   m2n::PtrM2N m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory));
 
-  setupParallelEnvironment(m2n);
+  setupParallelEnvironmentTwoParticipants(m2n);
 
   int dimensions = 3;
   bool flipNormals = false;
@@ -447,9 +588,8 @@ BOOST_AUTO_TEST_CASE(RePartitionNPBroadcastFilter3D, * testing::OnRanks({0, 1, 2
     createNastinMesh3D(pNastinMesh);
 
     pNastinMesh->computeState();
-    bool filterFirst = false;
-    double safetyFactor = 20.0; //should not filter out anything here
-    ReceivedPartition part(filterFirst, dimensions, safetyFactor);
+    double safetyFactor = 20.0;
+    ReceivedPartition part(ReceivedPartition::FILTER_FIRST, dimensions, safetyFactor);
     part.setMesh(pSolidzMesh);
     part.setm2n(m2n);
     part.setFromMapping(boundingFromMapping);
@@ -484,39 +624,7 @@ BOOST_AUTO_TEST_CASE(TestRepartitionAndDistribution2D,
   com::PtrCommunication masterSlaveCom = com::PtrCommunication(new com::MPIDirectCommunication());
   utils::MasterSlave::_communication = masterSlaveCom;
 
-  if (utils::Parallel::getProcessRank() == 0){ //Master
-    utils::Parallel::splitCommunicator( "Master" );
-    utils::MasterSlave::_rank = 0;
-    utils::MasterSlave::_size = 4;
-    utils::MasterSlave::_slaveMode = false;
-    utils::MasterSlave::_masterMode = true;
-    masterSlaveCom->acceptConnection("Master", "Slaves", 0, 1);
-    masterSlaveCom->setRankOffset(1);
-  }
-  else if(utils::Parallel::getProcessRank() == 1){
-    utils::Parallel::splitCommunicator( "Slaves" );
-    utils::MasterSlave::_rank = 1;
-    utils::MasterSlave::_size = 4;
-    utils::MasterSlave::_slaveMode = true;
-    utils::MasterSlave::_masterMode = false;
-    masterSlaveCom->requestConnection("Master", "Slaves", 0, 3);
-  }
-  else if(utils::Parallel::getProcessRank() == 2){
-    utils::Parallel::splitCommunicator( "Slaves");
-    utils::MasterSlave::_rank = 2;
-    utils::MasterSlave::_size = 4;
-    utils::MasterSlave::_slaveMode = true;
-    utils::MasterSlave::_masterMode = false;
-    masterSlaveCom->requestConnection("Master", "Slaves", 1, 3);
-  }
-  else if(utils::Parallel::getProcessRank() == 3){
-    utils::Parallel::splitCommunicator( "Slaves");
-    utils::MasterSlave::_rank = 3;
-    utils::MasterSlave::_size = 4;
-    utils::MasterSlave::_slaveMode = true;
-    utils::MasterSlave::_masterMode = false;
-    masterSlaveCom->requestConnection("Master", "Slaves", 2, 3);
-  }
+  setupParallelEnvironmentOneParticipant();
 
   // Create mesh object
   int dimensions = 2;
@@ -556,9 +664,8 @@ BOOST_AUTO_TEST_CASE(TestRepartitionAndDistribution2D,
   }
 
   pOtherMesh->computeState();
-  bool filterFirst = false;
   double safetyFactor = 20.0; //should not filter out anything here
-  ReceivedPartition part(filterFirst, dimensions, safetyFactor);
+  ReceivedPartition part(ReceivedPartition::FILTER_FIRST, dimensions, safetyFactor);
   part.setMesh(pMesh);
   part.setFromMapping(boundingFromMapping);
   part.compute();
@@ -679,9 +786,8 @@ BOOST_AUTO_TEST_CASE(ProvideAndReceiveCouplingMode, * testing::OnRanks({0, 1, 2,
   else{
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals));
 
-    bool filterFirst = true;
     double safetyFactor = 0.1;
-    ReceivedPartition part(filterFirst, dimensions, safetyFactor);
+    ReceivedPartition part(ReceivedPartition::FILTER_FIRST, dimensions, safetyFactor);
     part.setMesh(pSolidzMesh);
     part.setm2n(m2n);
     part.communicate();
