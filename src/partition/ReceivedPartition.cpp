@@ -46,12 +46,20 @@ void ReceivedPartition::compute()
 {
   TRACE();
 
-  //TODO coupling mode abfangen
-
-  if (not utils::MasterSlave::_slaveMode) {
+  // handle coupling mode first (i.e. serial participant)
+  if (not utils::MasterSlave::_slaveMode && not utils::MasterSlave::_masterMode){ //coupling mode
     _mesh->setGlobalNumberOfVertices(_mesh->vertices().size());
+    computeVertexOffsets();
+    for(mesh::Vertex& v : _mesh->vertices()){
+      v.setOwner(true);
+    }
+    return;
   }
 
+  // (0) set global number of vertices before filtering
+  if (utils::MasterSlave::_masterMode) {
+    _mesh->setGlobalNumberOfVertices(_mesh->vertices().size());
+  }
 
   // (1) Bounding-Box-Filter
 
