@@ -200,14 +200,19 @@ void createSolidzMesh3D(mesh::PtrMesh pSolidzMesh){
 
   position << 0.0, 0.0, -0.1;
   mesh::Vertex& v1 = pSolidzMesh->createVertex(position);
+  v1.setGlobalIndex(0);
   position << -1.0, 0.0, 0.0;
   mesh::Vertex& v2 = pSolidzMesh->createVertex(position);
+  v2.setGlobalIndex(1);
   position << 1.0, 0.0, 0.0;
   mesh::Vertex& v3 = pSolidzMesh->createVertex(position);
+  v3.setGlobalIndex(2);
   position << 0.0, -1.0, 0.0;
   mesh::Vertex& v4 = pSolidzMesh->createVertex(position);
+  v4.setGlobalIndex(3);
   position << 0.0, 1.0, 0.0;
-  mesh::Vertex& v5 = pSolidzMesh->createVertex(position);
+  mesh::Vertex& v5 =pSolidzMesh->createVertex(position);
+  v5.setGlobalIndex(4);
   mesh::Edge& e1 = pSolidzMesh->createEdge(v1,v2);
   mesh::Edge& e2 = pSolidzMesh->createEdge(v2,v4);
   mesh::Edge& e3 = pSolidzMesh->createEdge(v4,v1);
@@ -545,6 +550,274 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFGlobal2D, * testing::OnRanks({0, 1, 2, 3}))
   tearDownParallelEnvironment();
   //TODO PetRBFMapping Destructor gives PETSc error
 }
+
+
+BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D1, * testing::OnRanks({0, 1, 2, 3}))
+{
+  utils::Parallel::setGlobalCommunicator(utils::Parallel::getRestrictedCommunicator({0,1,2,3}));
+  assertion(utils::Parallel::getCommunicatorSize() == 4);
+
+  setupParallelEnvironmentOneParticipant();
+
+  int dimensions = 2;
+  bool flipNormals = false;
+  mesh::PtrMesh pMesh(new mesh::Mesh("MyMesh", dimensions, flipNormals));
+  mesh::PtrMesh pOtherMesh(new mesh::Mesh("OtherMesh", dimensions, flipNormals));
+
+  double supportRadius = 0.25;
+
+  mapping::PtrMapping boundingFromMapping = mapping::PtrMapping (
+      new mapping::PetRadialBasisFctMapping<mapping::CompactThinPlateSplinesC2>(mapping::Mapping::CONSISTENT, dimensions,
+          mapping::CompactThinPlateSplinesC2(supportRadius), false, false, false));
+  mapping::PtrMapping boundingToMapping = mapping::PtrMapping (
+      new mapping::NearestNeighborMapping(mapping::Mapping::CONSERVATIVE, dimensions) );
+  boundingFromMapping->setMeshes(pMesh, pOtherMesh);
+  boundingToMapping->setMeshes(pOtherMesh,pMesh);
+
+  if (utils::Parallel::getProcessRank() == 0) { //Master
+    createSolidzMesh2D(pMesh);
+  } else  { //Slaves
+    createNastinMesh2D(pOtherMesh);
+  }
+
+  pOtherMesh->computeState();
+  double safetyFactor = 20.0;
+  ReceivedPartition part(ReceivedPartition::NO_FILTER, dimensions, safetyFactor);
+  part.setMesh(pMesh);
+  part.setFromMapping(boundingFromMapping);
+  part.setToMapping(boundingToMapping);
+  part.compute();
+
+
+  BOOST_TEST(pMesh->getVertexOffsets().size() == 4);
+  BOOST_TEST(pMesh->getVertexOffsets()[0] == 0);
+  BOOST_TEST(pMesh->getVertexOffsets()[1] == 3);
+  BOOST_TEST(pMesh->getVertexOffsets()[2] == 3);
+  BOOST_TEST(pMesh->getVertexOffsets()[3] == 6);
+  BOOST_TEST(pMesh->getGlobalNumberOfVertices() == 6);
+
+  // check if the sending and filtering worked right
+  if(utils::Parallel::getProcessRank() == 0){//Master
+    BOOST_TEST(pMesh->vertices().size()==0);
+    BOOST_TEST(pMesh->edges().size()==0);
+    BOOST_TEST(pMesh->getVertexDistribution()[0].size() == 0);
+    BOOST_TEST(pMesh->getVertexDistribution()[1].size() == 3);
+    BOOST_TEST(pMesh->getVertexDistribution()[2].size() == 0);
+    BOOST_TEST(pMesh->getVertexDistribution()[3].size() == 3);
+  }
+  else if(utils::Parallel::getProcessRank() == 1){//Slave1
+    BOOST_TEST(pMesh->vertices().size()==3);
+    BOOST_TEST(pMesh->edges().size()==2);
+    BOOST_TEST(pMesh->vertices()[0].isOwner() == true);
+    BOOST_TEST(pMesh->vertices()[1].isOwner() == true);
+    BOOST_TEST(pMesh->vertices()[2].isOwner() == true);
+    BOOST_TEST(pMesh->vertices()[0].getGlobalIndex() == 0);
+    BOOST_TEST(pMesh->vertices()[1].getGlobalIndex() == 1);
+    BOOST_TEST(pMesh->vertices()[2].getGlobalIndex() == 2);
+  }
+  else if(utils::Parallel::getProcessRank() == 2){//Slave2
+    BOOST_TEST(pMesh->vertices().size()==0);
+    BOOST_TEST(pMesh->edges().size()==0);
+  }
+  else if(utils::Parallel::getProcessRank() == 3){//Slave3
+    BOOST_TEST(pMesh->vertices().size()==3);
+    BOOST_TEST(pMesh->edges().size()==2);
+    BOOST_TEST(pMesh->vertices()[0].isOwner() == true);
+    BOOST_TEST(pMesh->vertices()[1].isOwner() == true);
+    BOOST_TEST(pMesh->vertices()[2].isOwner() == true);
+    BOOST_TEST(pMesh->vertices()[0].getGlobalIndex() == 3);
+    BOOST_TEST(pMesh->vertices()[1].getGlobalIndex() == 4);
+    BOOST_TEST(pMesh->vertices()[2].getGlobalIndex() == 5);
+  }
+
+  tearDownParallelEnvironment();
+  //TODO PetRBFMapping Destructor gives PETSc error
+}
+
+BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D2, * testing::OnRanks({0, 1, 2, 3}))
+{
+  utils::Parallel::setGlobalCommunicator(utils::Parallel::getRestrictedCommunicator({0,1,2,3}));
+  assertion(utils::Parallel::getCommunicatorSize() == 4);
+
+  setupParallelEnvironmentOneParticipant();
+
+  int dimensions = 2;
+  bool flipNormals = false;
+  mesh::PtrMesh pMesh(new mesh::Mesh("MyMesh", dimensions, flipNormals));
+  mesh::PtrMesh pOtherMesh(new mesh::Mesh("OtherMesh", dimensions, flipNormals));
+
+  double supportRadius = 2.45;
+
+  mapping::PtrMapping boundingFromMapping = mapping::PtrMapping (
+      new mapping::PetRadialBasisFctMapping<mapping::CompactThinPlateSplinesC2>(mapping::Mapping::CONSISTENT, dimensions,
+          mapping::CompactThinPlateSplinesC2(supportRadius), false, false, false));
+  mapping::PtrMapping boundingToMapping = mapping::PtrMapping (
+      new mapping::NearestNeighborMapping(mapping::Mapping::CONSERVATIVE, dimensions) );
+  boundingFromMapping->setMeshes(pMesh, pOtherMesh);
+  boundingToMapping->setMeshes(pOtherMesh,pMesh);
+
+  if (utils::Parallel::getProcessRank() == 0) { //Master
+    createSolidzMesh2D(pMesh);
+  } else  { //Slaves
+    createNastinMesh2D(pOtherMesh);
+  }
+
+  pOtherMesh->computeState();
+  double safetyFactor = 20.0;
+  ReceivedPartition part(ReceivedPartition::NO_FILTER, dimensions, safetyFactor);
+  part.setMesh(pMesh);
+  part.setFromMapping(boundingFromMapping);
+  part.setToMapping(boundingToMapping);
+  part.compute();
+
+
+  BOOST_TEST(pMesh->getVertexOffsets().size() == 4);
+  BOOST_TEST(pMesh->getVertexOffsets()[0] == 0);
+  BOOST_TEST(pMesh->getVertexOffsets()[1] == 4);
+  BOOST_TEST(pMesh->getVertexOffsets()[2] == 4);
+  BOOST_TEST(pMesh->getVertexOffsets()[3] == 9);
+  BOOST_TEST(pMesh->getGlobalNumberOfVertices() == 6);
+
+  // check if the sending and filtering worked right
+  if(utils::Parallel::getProcessRank() == 0){//Master
+    BOOST_TEST(pMesh->vertices().size()==0);
+    BOOST_TEST(pMesh->edges().size()==0);
+    BOOST_TEST(pMesh->getVertexDistribution()[0].size() == 0);
+    BOOST_TEST(pMesh->getVertexDistribution()[1].size() == 4);
+    BOOST_TEST(pMesh->getVertexDistribution()[2].size() == 0);
+    BOOST_TEST(pMesh->getVertexDistribution()[3].size() == 5);
+  }
+  else if(utils::Parallel::getProcessRank() == 1){//Slave1
+    BOOST_TEST(pMesh->vertices().size()==4);
+    BOOST_TEST(pMesh->edges().size()==3);
+    BOOST_TEST(pMesh->vertices()[0].isOwner() == true);
+    BOOST_TEST(pMesh->vertices()[1].isOwner() == true);
+    BOOST_TEST(pMesh->vertices()[2].isOwner() == true);
+    BOOST_TEST(pMesh->vertices()[3].isOwner() == false);
+    BOOST_TEST(pMesh->vertices()[0].getGlobalIndex() == 0);
+    BOOST_TEST(pMesh->vertices()[1].getGlobalIndex() == 1);
+    BOOST_TEST(pMesh->vertices()[2].getGlobalIndex() == 2);
+    BOOST_TEST(pMesh->vertices()[3].getGlobalIndex() == 3);
+  }
+  else if(utils::Parallel::getProcessRank() == 2){//Slave2
+    BOOST_TEST(pMesh->vertices().size()==0);
+    BOOST_TEST(pMesh->edges().size()==0);
+  }
+  else if(utils::Parallel::getProcessRank() == 3){//Slave3
+    BOOST_TEST(pMesh->vertices().size()==5);
+    BOOST_TEST(pMesh->edges().size()==4);
+    BOOST_TEST(pMesh->vertices()[0].isOwner() == false);
+    BOOST_TEST(pMesh->vertices()[1].isOwner() == false);
+    BOOST_TEST(pMesh->vertices()[2].isOwner() == true);
+    BOOST_TEST(pMesh->vertices()[3].isOwner() == true);
+    BOOST_TEST(pMesh->vertices()[4].isOwner() == true);
+    BOOST_TEST(pMesh->vertices()[0].getGlobalIndex() == 1);
+    BOOST_TEST(pMesh->vertices()[1].getGlobalIndex() == 2);
+    BOOST_TEST(pMesh->vertices()[2].getGlobalIndex() == 3);
+    BOOST_TEST(pMesh->vertices()[3].getGlobalIndex() == 4);
+    BOOST_TEST(pMesh->vertices()[4].getGlobalIndex() == 5);
+  }
+
+  tearDownParallelEnvironment();
+  //TODO PetRBFMapping Destructor gives PETSc error
+}
+
+BOOST_AUTO_TEST_CASE(RePartitionRBFLocal3D, * testing::OnRanks({0, 1, 2, 3}))
+{
+  utils::Parallel::setGlobalCommunicator(utils::Parallel::getRestrictedCommunicator({0,1,2,3}));
+  assertion(utils::Parallel::getCommunicatorSize() == 4);
+
+  setupParallelEnvironmentOneParticipant();
+
+  int dimensions = 3;
+  bool flipNormals = false;
+  mesh::PtrMesh pMesh(new mesh::Mesh("MyMesh", dimensions, flipNormals));
+  mesh::PtrMesh pOtherMesh(new mesh::Mesh("OtherMesh", dimensions, flipNormals));
+
+  double supportRadius1 = 1.2;
+  double supportRadius2 = 0.2;
+
+  mapping::PtrMapping boundingFromMapping = mapping::PtrMapping (
+      new mapping::PetRadialBasisFctMapping<mapping::CompactThinPlateSplinesC2>(mapping::Mapping::CONSISTENT, dimensions,
+          mapping::CompactThinPlateSplinesC2(supportRadius1), false, false, false));
+  mapping::PtrMapping boundingToMapping = mapping::PtrMapping (
+      new mapping::PetRadialBasisFctMapping<mapping::CompactThinPlateSplinesC2>(mapping::Mapping::CONSERVATIVE, dimensions,
+                mapping::CompactThinPlateSplinesC2(supportRadius2), false, false, false));
+  boundingFromMapping->setMeshes(pMesh, pOtherMesh);
+  boundingToMapping->setMeshes(pOtherMesh,pMesh);
+
+  if (utils::Parallel::getProcessRank() == 0) { //Master
+    createSolidzMesh3D(pMesh);
+  } else  { //Slaves
+    createNastinMesh3D(pOtherMesh);
+  }
+
+  pOtherMesh->computeState();
+  double safetyFactor = 20.0;
+  ReceivedPartition part(ReceivedPartition::NO_FILTER, dimensions, safetyFactor);
+  part.setMesh(pMesh);
+  part.setFromMapping(boundingFromMapping);
+  part.setToMapping(boundingToMapping);
+  part.compute();
+
+
+  BOOST_TEST(pMesh->getVertexOffsets().size() == 4);
+  BOOST_TEST(pMesh->getVertexOffsets()[0] == 0);
+  BOOST_TEST(pMesh->getVertexOffsets()[1] == 5);
+  BOOST_TEST(pMesh->getVertexOffsets()[2] == 5);
+  BOOST_TEST(pMesh->getVertexOffsets()[3] == 10);
+  BOOST_TEST(pMesh->getGlobalNumberOfVertices() == 5);
+
+  // check if the sending and filtering worked right
+  if(utils::Parallel::getProcessRank() == 0){//Master
+    BOOST_TEST(pMesh->vertices().size()==0);
+    BOOST_TEST(pMesh->edges().size()==0);
+    BOOST_TEST(pMesh->triangles().size()==0);
+    BOOST_TEST(pMesh->getVertexDistribution()[0].size() == 0);
+    BOOST_TEST(pMesh->getVertexDistribution()[1].size() == 5);
+    BOOST_TEST(pMesh->getVertexDistribution()[2].size() == 0);
+    BOOST_TEST(pMesh->getVertexDistribution()[3].size() == 5);
+  }
+  else if(utils::Parallel::getProcessRank() == 1){//Slave1
+    BOOST_TEST(pMesh->vertices().size()==5);
+    BOOST_TEST(pMesh->edges().size()==6);
+    BOOST_TEST(pMesh->triangles().size()==2);
+    BOOST_TEST(pMesh->vertices()[0].isOwner() == true);
+    BOOST_TEST(pMesh->vertices()[1].isOwner() == true);
+    BOOST_TEST(pMesh->vertices()[2].isOwner() == false);
+    BOOST_TEST(pMesh->vertices()[3].isOwner() == false);
+    BOOST_TEST(pMesh->vertices()[4].isOwner() == false);
+    BOOST_TEST(pMesh->vertices()[0].getGlobalIndex() == 0);
+    BOOST_TEST(pMesh->vertices()[1].getGlobalIndex() == 1);
+    BOOST_TEST(pMesh->vertices()[2].getGlobalIndex() == 2);
+    BOOST_TEST(pMesh->vertices()[3].getGlobalIndex() == 3);
+    BOOST_TEST(pMesh->vertices()[4].getGlobalIndex() == 4);
+  }
+  else if(utils::Parallel::getProcessRank() == 2){//Slave2
+    BOOST_TEST(pMesh->vertices().size()==0);
+    BOOST_TEST(pMesh->edges().size()==0);
+    BOOST_TEST(pMesh->triangles().size()==0);
+  }
+  else if(utils::Parallel::getProcessRank() == 3){//Slave3
+    BOOST_TEST(pMesh->vertices().size()==5);
+    BOOST_TEST(pMesh->edges().size()==6);
+    BOOST_TEST(pMesh->triangles().size()==2);
+    BOOST_TEST(pMesh->vertices()[0].isOwner() == false);
+    BOOST_TEST(pMesh->vertices()[1].isOwner() == false);
+    BOOST_TEST(pMesh->vertices()[2].isOwner() == true);
+    BOOST_TEST(pMesh->vertices()[3].isOwner() == true);
+    BOOST_TEST(pMesh->vertices()[4].isOwner() == true);
+    BOOST_TEST(pMesh->vertices()[0].getGlobalIndex() == 0);
+    BOOST_TEST(pMesh->vertices()[1].getGlobalIndex() == 1);
+    BOOST_TEST(pMesh->vertices()[2].getGlobalIndex() == 2);
+    BOOST_TEST(pMesh->vertices()[3].getGlobalIndex() == 3);
+    BOOST_TEST(pMesh->vertices()[4].getGlobalIndex() == 4);
+  }
+
+  tearDownParallelEnvironment();
+  //TODO PetRBFMapping Destructor gives PETSc error
+}
+
 
 #endif // PRECICE_NO_PETSC
 
