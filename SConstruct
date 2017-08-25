@@ -131,6 +131,11 @@ elif env["build"] == 'release':
     env.Append(CCFLAGS = ['-O3'])
     buildpath += "release"
 
+    
+# ====== libpthread ======
+uniqueCheckLib("pthread")
+
+    
 # ====== PETSc ======
 if env["petsc"]:
     PETSC_DIR = checkset_var("PETSC_DIR", "")
