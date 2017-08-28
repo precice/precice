@@ -270,7 +270,7 @@ env.Alias("tests", tests)
 
 # Creates a symlink that always points to the latest build
 symlink = env.Command(
-    target = "Symlink",
+    target = "symlink",
     source = None,
     action = "ln -fns {0} {1}".format(os.path.split(buildpath)[-1], os.path.join(os.path.split(buildpath)[0], "last"))
 )
