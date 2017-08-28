@@ -1062,7 +1062,6 @@ BOOST_AUTO_TEST_CASE(DeadAxis3D)
 }
 
 BOOST_AUTO_TEST_CASE(SolutionCaching)
-                     
 {
   using Eigen::Vector2d;
   int dimensions = 2;
@@ -1171,6 +1170,40 @@ BOOST_AUTO_TEST_CASE(PolynomialSwitch,
   mappingSep.map(inDataID, outDataID);
 
   BOOST_TEST ( outData->values()[0] == 1.0 ); // Mapping to 1 since there is the polynomial
+}
+
+
+BOOST_AUTO_TEST_CASE(NoMapping)
+{
+  /*
+   * RATIONALE: Correctly destroying PETSc objects in OOP context can be a bit
+   * tricky. We test if an RBF object can be destroyed right after creation
+   * and if only computeMapping (not map) is called.
+   */
+
+  // Call neither computeMapping nor map
+  ThinPlateSplines fct;
+  PetRadialBasisFctMapping<ThinPlateSplines> mapping1(Mapping::CONSISTENT, 3, fct,
+                                                      false, false, false);
+
+  // Call only computeMapping
+  mesh::PtrMesh inMesh ( new mesh::Mesh("InMesh", 2, false) );
+  mesh::PtrData inData = inMesh->createData ( "InData", 1 );
+  inMesh->createVertex ( Eigen::Vector2d(0, 0) );
+  inMesh->allocateDataValues();
+  addGlobalIndex(inMesh);
+  
+  mesh::PtrMesh outMesh( new mesh::Mesh("OutMesh", 2, false) );
+  mesh::PtrData outData = outMesh->createData( "OutData", 1 );
+  outMesh->createVertex( Eigen::Vector2d(0, 0));
+  outMesh->allocateDataValues();
+  addGlobalIndex(outMesh);
+
+  PetRadialBasisFctMapping<ThinPlateSplines> mapping2(Mapping::CONSISTENT, 2, fct,
+                                                      false, false, false);
+
+  mapping2.setMeshes(inMesh, outMesh);
+  mapping2.computeMapping();
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Serial

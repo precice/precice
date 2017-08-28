@@ -171,6 +171,9 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
   _matrixQ(PETSC_COMM_WORLD, "Q"),
   _matrixA(PETSC_COMM_WORLD, "A"),
   _matrixV(PETSC_COMM_WORLD, "V"),
+  _solver(nullptr),
+  _QRsolver(nullptr),
+  _ISmapping(nullptr),
   _solverRtol(solverRtol),
   _polynomial(polynomial)
 {
@@ -210,14 +213,9 @@ template<typename RADIAL_BASIS_FUNCTION_T>
 PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::~PetRadialBasisFctMapping()
 {
   delete[] _deadAxis;
-  PetscBool petscIsInitialized;
-  PetscErrorCode ierr = 0;
-  PetscInitialized(&petscIsInitialized);
-  if (petscIsInitialized) {
-    ierr = ISLocalToGlobalMappingDestroy(&_ISmapping); CHKERRV(ierr);
-    ierr = KSPDestroy(&_solver); CHKERRV(ierr);
-    ierr = KSPDestroy(&_QRsolver); CHKERRV(ierr);
-  }
+  petsc::destroy(&_ISmapping);
+  petsc::destroy(&_solver);
+  petsc::destroy(&_QRsolver);
 }
 
 

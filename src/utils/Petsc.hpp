@@ -39,6 +39,8 @@ private:
 
 #include "petscvec.h"
 #include "petscmat.h"
+#include "petscksp.h"
+#include "petscis.h"
 
 namespace precice {
 namespace utils {
@@ -191,6 +193,13 @@ public:
   void viewDraw();
 
 };
+
+/// Destroys an KSP, if ksp is not null and PetscIsInitialized
+void destroy(KSP * ksp);
+
+/// Destroys an ISLocalToGlobalMapping, if IS is not null and PetscIsInitialized
+void destroy(ISLocalToGlobalMapping * IS);
+
 
 }}} // namespace precice, utils, petsc
 

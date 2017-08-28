@@ -423,6 +423,30 @@ void Matrix::viewDraw()
   ierr = PetscViewerDestroy(&viewer); CHKERRV(ierr);
 }
 
+
+void destroy(KSP * ksp)
+{
+  PetscErrorCode ierr = 0;
+  PetscBool petscIsInitialized;
+  PetscInitialized(&petscIsInitialized);
+  
+  if (ksp and petscIsInitialized) {
+    ierr = KSPDestroy(ksp); CHKERRV(ierr);
+  }
+}
+
+void destroy(ISLocalToGlobalMapping * IS)
+{
+  PetscErrorCode ierr = 0;
+  PetscBool petscIsInitialized;
+  PetscInitialized(&petscIsInitialized);
+  
+  if (IS and petscIsInitialized) {
+    ierr = ISLocalToGlobalMappingDestroy(IS); CHKERRV(ierr);
+  }
+}
+
+
 }}} // namespace precice, utils, petsc
 
 #endif // PRECICE_NO_PETSC
