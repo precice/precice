@@ -250,7 +250,7 @@ void createNastinMesh3D(mesh::PtrMesh pNastinMesh){
 }
 
 
-BOOST_AUTO_TEST_CASE(RePartitionNNBroadcastFilter2D, * testing::OnRanks({0, 1, 2, 3}))
+BOOST_AUTO_TEST_CASE(RePartitionNNBroadcastFilter2D, * testing::OnSize(4))
 {
   utils::Parallel::setGlobalCommunicator(utils::Parallel::getRestrictedCommunicator({0,1,2,3}));
   assertion(utils::Parallel::getCommunicatorSize() == 4);
@@ -320,7 +320,7 @@ BOOST_AUTO_TEST_CASE(RePartitionNNBroadcastFilter2D, * testing::OnRanks({0, 1, 2
   tearDownParallelEnvironment();
 }
 
-BOOST_AUTO_TEST_CASE(RePartitionNNDoubleNode2D, * testing::OnRanks({0, 1, 2, 3}))
+BOOST_AUTO_TEST_CASE(RePartitionNNDoubleNode2D, * testing::OnSize(4))
 {
   utils::Parallel::setGlobalCommunicator(utils::Parallel::getRestrictedCommunicator({0,1,2,3}));
   assertion(utils::Parallel::getCommunicatorSize() == 4);
@@ -391,7 +391,7 @@ BOOST_AUTO_TEST_CASE(RePartitionNNDoubleNode2D, * testing::OnRanks({0, 1, 2, 3})
 }
 
 
-BOOST_AUTO_TEST_CASE(RePartitionNPPreFilterPostFilter2D, * testing::OnRanks({0, 1, 2, 3}))
+BOOST_AUTO_TEST_CASE(RePartitionNPPreFilterPostFilter2D, * testing::OnSize(4))
 {
   utils::Parallel::setGlobalCommunicator(utils::Parallel::getRestrictedCommunicator({0,1,2,3}));
   assertion(utils::Parallel::getCommunicatorSize() == 4);
@@ -459,7 +459,7 @@ BOOST_AUTO_TEST_CASE(RePartitionNPPreFilterPostFilter2D, * testing::OnRanks({0, 
 
 
 #ifndef PRECICE_NO_PETSC
-BOOST_AUTO_TEST_CASE(RePartitionRBFGlobal2D, * testing::OnRanks({0, 1, 2, 3}))
+BOOST_AUTO_TEST_CASE(RePartitionRBFGlobal2D, * testing::OnSize(4))
 {
   utils::Parallel::setGlobalCommunicator(utils::Parallel::getRestrictedCommunicator({0,1,2,3}));
   assertion(utils::Parallel::getCommunicatorSize() == 4);
@@ -548,11 +548,10 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFGlobal2D, * testing::OnRanks({0, 1, 2, 3}))
   }
 
   tearDownParallelEnvironment();
-  //TODO PetRBFMapping Destructor gives PETSc error
 }
 
 
-BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D1, * testing::OnRanks({0, 1, 2, 3}))
+BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D1, * testing::OnSize(4))
 {
   utils::Parallel::setGlobalCommunicator(utils::Parallel::getRestrictedCommunicator({0,1,2,3}));
   assertion(utils::Parallel::getCommunicatorSize() == 4);
@@ -631,10 +630,9 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D1, * testing::OnRanks({0, 1, 2, 3}))
   }
 
   tearDownParallelEnvironment();
-  //TODO PetRBFMapping Destructor gives PETSc error
 }
 
-BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D2, * testing::OnRanks({0, 1, 2, 3}))
+BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D2, * testing::OnSize(4))
 {
   utils::Parallel::setGlobalCommunicator(utils::Parallel::getRestrictedCommunicator({0,1,2,3}));
   assertion(utils::Parallel::getCommunicatorSize() == 4);
@@ -719,10 +717,9 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D2, * testing::OnRanks({0, 1, 2, 3}))
   }
 
   tearDownParallelEnvironment();
-  //TODO PetRBFMapping Destructor gives PETSc error
 }
 
-BOOST_AUTO_TEST_CASE(RePartitionRBFLocal3D, * testing::OnRanks({0, 1, 2, 3}))
+BOOST_AUTO_TEST_CASE(RePartitionRBFLocal3D, * testing::OnSize(4))
 {
   utils::Parallel::setGlobalCommunicator(utils::Parallel::getRestrictedCommunicator({0,1,2,3}));
   assertion(utils::Parallel::getCommunicatorSize() == 4);
@@ -815,14 +812,13 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal3D, * testing::OnRanks({0, 1, 2, 3}))
   }
 
   tearDownParallelEnvironment();
-  //TODO PetRBFMapping Destructor gives PETSc error
 }
 
 
 #endif // PRECICE_NO_PETSC
 
 
-BOOST_AUTO_TEST_CASE(RePartitionNPBroadcastFilter3D, * testing::OnRanks({0, 1, 2, 3}))
+BOOST_AUTO_TEST_CASE(RePartitionNPBroadcastFilter3D, * testing::OnSize(4))
 {
   utils::Parallel::setGlobalCommunicator(utils::Parallel::getRestrictedCommunicator({0,1,2,3}));
   assertion(utils::Parallel::getCommunicatorSize() == 4);
@@ -969,7 +965,7 @@ BOOST_AUTO_TEST_CASE(TestRepartitionAndDistribution2D,
     BOOST_TEST(pMesh->vertices()[0].getGlobalIndex() == 0);
     BOOST_TEST(pMesh->vertices()[1].getGlobalIndex() == 1);
     BOOST_TEST(pMesh->vertices()[0].isOwner() == true);
-    BOOST_TEST(pMesh->vertices()[1].isOwner() == true);
+    BOOST_TEST(pMesh->vertices()[1].isOwner() == false);
   } else if (utils::Parallel::getProcessRank() == 2) { //Slave2
     BOOST_TEST(pMesh->getGlobalNumberOfVertices() == 3);
     BOOST_TEST(pMesh->getVertexOffsets().size() == 4);
@@ -979,7 +975,7 @@ BOOST_AUTO_TEST_CASE(TestRepartitionAndDistribution2D,
     BOOST_TEST(pMesh->getVertexOffsets()[3] == 3);
     BOOST_TEST(pMesh->vertices().size() == 1);
     BOOST_TEST(pMesh->vertices()[0].getGlobalIndex() == 1);
-    BOOST_TEST(pMesh->vertices()[0].isOwner() == false);
+    BOOST_TEST(pMesh->vertices()[0].isOwner() == true);
   } else if (utils::Parallel::getProcessRank() == 3) { //Slave3
     BOOST_TEST(pMesh->getGlobalNumberOfVertices() == 3);
     BOOST_TEST(pMesh->getVertexOffsets().size() == 4);
@@ -993,16 +989,13 @@ BOOST_AUTO_TEST_CASE(TestRepartitionAndDistribution2D,
   tearDownParallelEnvironment();
 }
 
-//TODO restrict to 2 ranks, currently deadlock in getRestrictedCommunicator
-BOOST_AUTO_TEST_CASE(ProvideAndReceiveCouplingMode, * testing::OnRanks({0, 1, 2, 3}))
+BOOST_AUTO_TEST_CASE(ProvideAndReceiveCouplingMode, * testing::MinRanks(2))
 {
-  //utils::Parallel::setGlobalCommunicator(utils::Parallel::getRestrictedCommunicator({0,1}));
-  //assertion(utils::Parallel::getCommunicatorSize() == 2);
+  MPI_Comm comm = utils::Parallel::getRestrictedCommunicator({0,1});
 
-  if (utils::Parallel::getProcessRank() >= 2){
-    utils::Parallel::splitCommunicator( "Blub" );
-    utils::Parallel::synchronizeProcesses();
-    utils::Parallel::clearGroups();
+  if (utils::Parallel::getProcessRank() <= 1){
+    utils::Parallel::setGlobalCommunicator(comm);
+  } else{
     return;
   }
 
