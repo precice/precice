@@ -149,7 +149,7 @@ private:
   /// Toggles use of preallocation for matrix C and A
   const Preallocation _preallocation;
 
-  std::pair<int, int> estimatePreallocation(int rows, int cols, mesh::PtrMesh mesh) const;
+  void estimatePreallocation(int rows, int cols, mesh::PtrMesh mesh);
 
   void computePreallocationMatrixC(const mesh::PtrMesh inMesh);
 
@@ -427,11 +427,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   }
 
   if (_preallocation == Preallocation::ESTIMATE) {
-    int d_nnz, o_nnz;
-    std::tie(d_nnz, o_nnz) = estimatePreallocation(n, n, inMesh);
-    INFO("Estimating preallocation for Matrix C SeqSBAIJ, d_nnz = " << d_nnz);
-    ierr = MatSeqSBAIJSetPreallocation(_matrixC, _matrixC.blockSize(), d_nnz / 2, nullptr); CHKERRV(ierr);
-    MatSetOption(_matrixC, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_FALSE);
+    estimatePreallocation(n, n, inMesh);
   }
   
   // -- BEGIN FILL LOOP FOR MATRIX C --
@@ -595,11 +591,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   }
 
   if (_preallocation == Preallocation::ESTIMATE) {
-    int d_nnz, o_nnz;
-    std::tie(d_nnz, o_nnz) = estimatePreallocation(outputSize, n, inMesh);
-    INFO("Estimating preallocation for Matrix A SeqSBAIJ, d_nnz = " << d_nnz);
-    ierr = MatSeqSBAIJSetPreallocation(_matrixA, _matrixA.blockSize(), d_nnz, nullptr); CHKERRV(ierr);
-    MatSetOption(_matrixA, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_FALSE);
+    estimatePreallocation(outputSize, n, inMesh);
   }  
 
   
@@ -907,8 +899,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::printMappingInfo(int inp
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-std::pair<int, int> PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::estimatePreallocation(
-  int rows, int cols, mesh::PtrMesh mesh) const
+void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::estimatePreallocation(
+  int rows, int cols, mesh::PtrMesh mesh)
 {
   
   auto rank = utils::Parallel::getProcessRank();
@@ -939,8 +931,19 @@ std::pair<int, int> PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::estimateP
   int nnzPerRow = meshSize / meshArea * supportVolume;
   WARN("nnzPerRow = " << nnzPerRow);
   int nnz = nnzPerRow * rows;
- 
-  return std::make_pair(nnzPerRow * 1, 0);
+
+  if (utils::Parallel::getCommunicatorSize() == 1) {
+    MatSeqSBAIJSetPreallocation(_matrixC, _matrixC.blockSize(), nnzPerRow / 2, nullptr);
+    MatSeqSBAIJSetPreallocation(_matrixA, _matrixA.blockSize(), nnzPerRow, nullptr);
+  }
+  else {
+    MatMPISBAIJSetPreallocation(_matrixC, _matrixC.blockSize(),
+                                nnzPerRow / (size * 2), nullptr , nnzPerRow / (size * 2), nullptr);
+    MatMPISBAIJSetPreallocation(_matrixA, _matrixA.blockSize(),
+                                nnzPerRow / size, nullptr , nnzPerRow / size, nullptr);
+  }
+  MatSetOption(_matrixC, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_FALSE);
+  MatSetOption(_matrixA, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_FALSE);
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
