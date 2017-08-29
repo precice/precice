@@ -22,9 +22,9 @@ Triangle:: Triangle
   _enclosingRadius ( 0.0 )
 {
   assertion ( edgeOne.getDimensions() == edgeTwo.getDimensions(),
-               edgeOne.getDimensions(), edgeTwo.getDimensions() );
+              edgeOne.getDimensions(), edgeTwo.getDimensions() );
   assertion ( edgeTwo.getDimensions() == edgeThree.getDimensions(),
-               edgeTwo.getDimensions(), edgeThree.getDimensions() );
+              edgeTwo.getDimensions(), edgeThree.getDimensions() );
   assertion ( getDimensions() == 3, getDimensions() );
 
   // Determine vertex map

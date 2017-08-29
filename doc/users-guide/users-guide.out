@@ -1,8 +1,0 @@
-\BOOKMARK [1][-]{section.1}{Introduction}{}
-\BOOKMARK [1][-]{section.2}{Preparations}{}
-\BOOKMARK [2][-]{subsection.2.1}{Build Prerequesits under Linux}{section.2}
-\BOOKMARK [2][-]{subsection.2.2}{Build Prerequesits under Windows}{section.2}
-\BOOKMARK [2][-]{subsection.2.3}{Building preCICE}{section.2}
-\BOOKMARK [1][-]{section.3}{Running a Simulation with preCICE}{}
-\BOOKMARK [2][-]{subsection.3.1}{Parallel Solvers}{section.3}
-\BOOKMARK [2][-]{subsection.3.2}{Coupling Multiple Solvers}{section.3}

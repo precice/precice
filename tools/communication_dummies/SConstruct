@@ -1,21 +1,9 @@
 import os;
 import sys;
 
-mpiLibPath = 'C:/Builds/x64/MinGW-w64/IMPI/5.0.2.0/lib'
-mpiLib = 'impi'
-mpiIncPath = 'C:/Builds/x64/MinGW-w64/IMPI/5.0.2.0/include'
-
-preciceLibPath = '../../build/release-noomp-nopetsc'
+preciceLibPath = '../../build/last'
 preciceLib = 'precice'
 preciceIncPath = '../../src'
-
-boostLibPath   = "/mingw64/lib/"
-boostSystemLib = "boost_system-mt"
-
-if sys.platform.startswith('win') or sys.platform.startswith('msys'):
-    socketLibPath = '/mingw64/lib'
-    socketLib = 'ws2_32'
-    socketIncPath =  '/mingw64/include'
 
 def errorMissingLib(lib, usage):
     print "ERROR: Library '" + lib + "' (needed for " + usage + ") not found!"
@@ -26,8 +14,7 @@ def errorMissingHeader(header, usage):
     Exit(1)
 
 env = Environment (
-   # CPPDEFINES = ['Parallel'],
-   CPPDEFINES = ['MPICH_SKIP_MPICXX'],
+   CXX = 'mpicxx',
    CCFLAGS    = ['-O3', '-std=c++11'],
    ENV        = os.environ
    )
@@ -42,42 +29,6 @@ else:
     errorMissingLib(preciceLib, 'preCICE')
 
 conf.env.AppendUnique(CPPPATH = [preciceIncPath])
-
-# if not conf.CheckHeader('com/Communication.hpp'):
-#     errorMissingHeader('com/Communication.hpp', 'preCICE')
-
-env.AppendUnique(LIBPATH = [boostLibPath])
-
-if conf.CheckLib(boostSystemLib, autoadd=0):
-    conf.env.AppendUnique(LIBS = [boostSystemLib])
-else:
-    errorMissingLib(boostSystemLib, 'Boost.System')
-
-conf.env.AppendUnique(LIBPATH = [mpiLibPath])
-
-if conf.CheckLib(mpiLib, autoadd=0):
-    conf.env.AppendUnique(LIBS = [mpiLib])
-else:
-    errorMissingLib(mpiLib, 'MPI')
-
-conf.env.AppendUnique(CPPPATH = [mpiIncPath])
-
-if not conf.CheckHeader('mpi.h'):
-    errorMissingHeader('mpi.h', 'MPI')
-
-if sys.platform.startswith('win') or sys.platform.startswith('msys'):
-    conf.env.AppendUnique(LIBPATH = [socketLibPath])
-
-    if conf.CheckLib(socketLib, autoadd=0):
-        conf.env.AppendUnique(LIBS = [socketLib])
-    else:
-        errorMissingLib(socketLib, 'Windows Sockets 2')
-
-    conf.env.AppendUnique(CPPPATH = [socketIncPath])
-
-    if socketLib == 'ws2_32':
-        if not conf.CheckHeader('winsock2.h'):
-            errorMissingHeader('winsock2.h', 'Windows Sockets 2')
 
 conf.env.Program (
     target = 'A',

@@ -1,0 +1,1 @@
+These dummies test the m2n communication, both intialization and execution. The example is described in the master thesis of Alexander Shukaev. A smaller example is also implemented as a unit test in src/m2n/tests. 
