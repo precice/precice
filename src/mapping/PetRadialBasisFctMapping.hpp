@@ -149,7 +149,9 @@ private:
   /// Toggles use of preallocation for matrix C and A
   const Preallocation _preallocation;
 
-  void estimatePreallocation(int rows, int cols, mesh::PtrMesh mesh);
+  void estimatePreallocationMatrixC(int rows, int cols, mesh::PtrMesh mesh);
+
+  void estimatePreallocationMatrixA(int rows, int cols, mesh::PtrMesh mesh);
 
   void computePreallocationMatrixC(const mesh::PtrMesh inMesh);
 
@@ -427,7 +429,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   }
 
   if (_preallocation == Preallocation::ESTIMATE) {
-    estimatePreallocation(n, n, inMesh);
+    estimatePreallocationMatrixC(n, n, inMesh);
   }
   
   // -- BEGIN FILL LOOP FOR MATRIX C --
@@ -591,7 +593,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   }
 
   if (_preallocation == Preallocation::ESTIMATE) {
-    estimatePreallocation(outputSize, n, inMesh);
+    estimatePreallocationMatrixA(outputSize, n, inMesh);
   }  
 
   
@@ -899,7 +901,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::printMappingInfo(int inp
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::estimatePreallocation(
+void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::estimatePreallocationMatrixC(
   int rows, int cols, mesh::PtrMesh mesh)
 {
   
@@ -926,25 +928,64 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::estimatePreallocation(
   WARN("supportVolume = " << supportVolume);
   WARN("meshArea = " << meshArea);
   WARN("meshSize = " << meshSize);
-  
-  
+    
   int nnzPerRow = meshSize / meshArea * supportVolume;
   WARN("nnzPerRow = " << nnzPerRow);
   int nnz = nnzPerRow * rows;
 
   if (utils::Parallel::getCommunicatorSize() == 1) {
     MatSeqSBAIJSetPreallocation(_matrixC, _matrixC.blockSize(), nnzPerRow / 2, nullptr);
-    MatSeqSBAIJSetPreallocation(_matrixA, _matrixA.blockSize(), nnzPerRow, nullptr);
   }
   else {
     MatMPISBAIJSetPreallocation(_matrixC, _matrixC.blockSize(),
                                 nnzPerRow / (size * 2), nullptr , nnzPerRow / (size * 2), nullptr);
+  }
+  MatSetOption(_matrixC, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_FALSE);
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::estimatePreallocationMatrixA(
+  int rows, int cols, mesh::PtrMesh mesh)
+{
+  
+  auto rank = utils::Parallel::getProcessRank();
+  auto size = utils::Parallel::getCommunicatorSize();
+  auto supportRadius = _basisFunction.getSupportRadius();
+
+  auto bbox = mesh->getBoundingBox();
+  auto meshSize = mesh->vertices().size();
+  
+  double meshArea = 1;
+  WARN(bbox);
+  for (int d = 0; d < getDimensions(); d++)
+    if (not _deadAxis[d])
+      meshArea *= bbox[d].second - bbox[d].first;
+
+  // supportVolume = math::PI * 4.0/3.0 * std::pow(supportRadius, 3);
+  double supportVolume;
+  if (getDimensions() == 2)
+    supportVolume = 2 * supportRadius;
+  else if (getDimensions() == 3)
+    supportVolume = math::PI * std::pow(supportRadius, 2);
+
+  WARN("supportVolume = " << supportVolume);
+  WARN("meshArea = " << meshArea);
+  WARN("meshSize = " << meshSize);
+    
+  int nnzPerRow = meshSize / meshArea * supportVolume;
+  WARN("nnzPerRow = " << nnzPerRow);
+  int nnz = nnzPerRow * rows;
+
+  if (utils::Parallel::getCommunicatorSize() == 1) {
+    MatSeqSBAIJSetPreallocation(_matrixA, _matrixA.blockSize(), nnzPerRow, nullptr);
+  }
+  else {
     MatMPISBAIJSetPreallocation(_matrixA, _matrixA.blockSize(),
                                 nnzPerRow / size, nullptr , nnzPerRow / size, nullptr);
   }
-  MatSetOption(_matrixC, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_FALSE);
   MatSetOption(_matrixA, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_FALSE);
 }
+
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computePreallocationMatrixC(const mesh::PtrMesh inMesh)
