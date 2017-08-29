@@ -18,30 +18,22 @@ namespace precice {
 namespace precice {
 namespace mesh {
 
-/**
- * @brief Triangle of a mesh, defined by three edges (and vertices).
- */
+/// Triangle of a mesh, defined by three edges (and vertices).
 class Triangle : public PropertyContainer, private boost::noncopyable
 {
 public:
 
-  /**
-   * @brief Constructor, the order of edges defines the outer normal direction.
-   */
+  /// Constructor, the order of edges defines the outer normal direction.
   Triangle (
     Edge& edgeOne,
     Edge& edgeTwo,
     Edge& edgeThree,
     int   id );
 
-  /**
-   * @brief Destructor, empty.
-   */
+  /// Destructor, empty.
   virtual ~Triangle() {}
 
-  /**
-   * @brief Returns dimensionalty of space the triangle is embedded in.
-   */
+  /// Returns dimensionalty of space the triangle is embedded in.
   int getDimensions() const;
 
   /**
@@ -62,36 +54,24 @@ public:
    */
   const Vertex& vertex ( int i ) const;
 
-  /**
-   * @brief Returns triangle edge with index 0, 1 or 2.
-   */
+  /// Returns triangle edge with index 0, 1 or 2.
   Edge& edge ( int i );
 
-  /**
-   * @brief Returns const triangle edge with index 0, 1 or 2.
-   */
+  /// Returns const triangle edge with index 0, 1 or 2.
   const Edge& edge ( int i ) const;
 
-  /**
-   * @brief Sets the outer normal of the triangle.
-   */
+  /// Sets the outer normal of the triangle.
   template<typename VECTOR_T>
   void setNormal ( const VECTOR_T& normal );
 
-  /**
-   * @brief Sets the barycenter of the triangle.
-   */
+  /// Sets the barycenter of the triangle.
   template<typename VECTOR_T>
   void setCenter ( const VECTOR_T& center );
 
-  /**
-   * @brief Sets the radius of the circle enclosing the triangle.
-   */
+  /// Sets the radius of the circle enclosing the triangle.
   void setEnclosingRadius ( double radius );
 
-  /**
-   * @brief Returns a among triangles globally unique ID.
-   */
+  /// Returns a among triangles globally unique ID.
   int getID() const;
 
   /**
@@ -117,14 +97,14 @@ public:
 
 private:
 
-  // @brief Edges defining the triangle.
+  /// Edges defining the triangle.
   std::array<Edge*,3> _edges;
 
-  // @brief Decider for choosing unique vertices from _edges.
+  /// Decider for choosing unique vertices from _edges.
   std::array<int,3> _vertexMap;
 //  bool _vertexDeciderFirst;
 
-  // @brief ID of the edge.
+  /// ID of the edge.
   int _id;
 
   /// Normal vector of the triangle.
@@ -133,7 +113,7 @@ private:
   /// Center point of the triangle.
   Eigen::VectorXd _center;
 
-  // @brief Minimal radius of circle enclosing the triangle.
+  /// Minimal radius of circle enclosing the triangle.
   double _enclosingRadius;
 };
 

@@ -1,5 +1,4 @@
-#ifndef PRECICE_MESH_EDGE_HPP_
-#define PRECICE_MESH_EDGE_HPP_
+#pragma once
 
 #include "mesh/PropertyContainer.hpp"
 #include "mesh/Vertex.hpp"
@@ -14,9 +13,7 @@ struct ConstEdgeIteratorTypes;
 struct EdgeIteratorTypes;
 template<typename Types> class EdgeIterator;
 
-/**
- * @brief Linear edge of a mesh, defined by two Vertex objects.
- */
+/// Linear edge of a mesh, defined by two Vertex objects.
 class Edge : public PropertyContainer, private boost::noncopyable
 {
 public:
@@ -24,78 +21,56 @@ public:
   /**
    * @brief Constructor.
    *
-   * @param vertexOne [IN] First Vertex object defining the edge.
-   * @param vertexOne [IN] Second Vertex object defining the edge.
-   * @param id [IN] Unique (among edges in one mesh) ID.
+   * @param[in] vertexOne First Vertex object defining the edge.
+   * @param[in] vertexOne Second Vertex object defining the edge.
+   * @param[in] id Unique (among edges in one mesh) ID.
    */
   Edge (
     Vertex& vertexOne,
     Vertex& vertexTwo,
     int     id );
 
-  /**
-   * @brief Destructor, empty.
-   */
+  /// Destructor, empty.
   virtual ~Edge () {}
 
-  /**
-   * @brief Returns number of spatial dimensions (2 or 3) the edge is embedded to.
-   */
+  /// Returns number of spatial dimensions (2 or 3) the edge is embedded to.
   int getDimensions() const;
 
-  /**
-   * @brief Returns the edge's vertex with index 0 or 1.
-   */
+  /// Returns the edge's vertex with index 0 or 1.
   Vertex& vertex ( int i );
 
-  /**
-   * @brief Returns the edge's vertex as const object with index 0 or 1.
-   */
+  /// Returns the edge's vertex as const object with index 0 or 1.
   const Vertex& vertex ( int i ) const;
 
-  /**
-   * @brief Sets the normal of the edge.
-   */
+  /// Sets the normal of the edge.
   template<typename VECTOR_T>
   void setNormal ( const VECTOR_T& normal );
 
-  /**
-   * @brief Sets the center of the edge.
-   */
+  /// Sets the center of the edge.
   template<typename VECTOR_T>
   void setCenter ( const VECTOR_T& center );
 
-  /**
-   * @brief Sets the radius of the circle enclosing the edge.
-   */
+  /// Sets the radius of the circle enclosing the edge.
   void setEnclosingRadius ( double radius );
 
-  /**
-   * @brief Returns the (among edges) unique ID of the edge.
-   */
+  /// Returns the (among edges) unique ID of the edge.
   int getID () const;
 
-  /**
-   * @brief Returns the normal of the edge.
-   */
+  /// Returns the normal of the edge.
   const Eigen::VectorXd& getNormal () const;
 
-  /**
-   * @brief Returns the center of the edge.
-   */
+  /// Returns the center of the edge.
   const Eigen::VectorXd& getCenter () const;
 
-  /**
-   * @brief Returns the radius of the enclosing circle of the edge.
-   */
+  /// Returns the radius of the enclosing circle of the edge.
   double getEnclosingRadius () const;
 
 private:
 
-  // @brief Pointers to Vertex objects defining the edge.
+  /// Pointers to Vertex objects defining the edge.
   std::array<Vertex*,2> _vertices;
 
-  // @brief Unique (among edges) ID of the edge.
+  /// Unique (among edges) ID of the edge.
   int _id;
 
   /// Normal of the edge.
@@ -104,7 +79,7 @@ private:
   /// Center of the edge.
   Eigen::VectorXd _center;
 
-  // @brief Radius of the enclosing circle.
+  /// Radius of the enclosing circle.
   double _enclosingRadius;
 };
 
@@ -157,5 +132,3 @@ inline const Eigen::VectorXd& Edge::getNormal () const
 }
 
 }} // namespace precice, mesh
-
-#endif /* PRECICE_MESH_EDGE_HPP_ */
