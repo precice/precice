@@ -45,12 +45,12 @@ void CommunicatedGeometryTest:: run ()
       testMethod ( testScatterMesh );
       Par::setGlobalCommunicator(Par::getCommunicatorWorld());
     }
-    comm = Par::getRestrictedCommunicator(ranksWanted);
-    if (Par::getProcessRank() <= 3){
-      Par::setGlobalCommunicator(comm); //necessary to be able to re-initialize with different leading ranks
-      testMethod ( testGatherMesh );
-      Par::setGlobalCommunicator(Par::getCommunicatorWorld());
-    }
+//    comm = Par::getRestrictedCommunicator(ranksWanted);
+//    if (Par::getProcessRank() <= 3){
+//      Par::setGlobalCommunicator(comm); //necessary to be able to re-initialize with different leading ranks
+//      testMethod ( testGatherMesh );
+//      Par::setGlobalCommunicator(Par::getCommunicatorWorld());
+//    }
   }
 }
 
@@ -287,7 +287,7 @@ void CommunicatedGeometryTest:: testGatherMesh ()
   int dimensions = 2;
   bool flipNormals = false;
   Eigen::VectorXd offset = Eigen::VectorXd::Zero(dimensions);
-  
+
   if (utils::Parallel::getProcessRank() == 0){ //NASTIN
     utils::MasterSlave::_slaveMode = false;
     utils::MasterSlave::_masterMode = false;
