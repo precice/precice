@@ -19,7 +19,7 @@ class ProvidedPartition : public Partition
 public:
 
    /// Constructor
-   ProvidedPartition (bool hasToSend);
+   ProvidedPartition (mesh::PtrMesh mesh, bool hasToSend);
 
    virtual ~ProvidedPartition() {}
 

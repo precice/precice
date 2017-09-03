@@ -22,6 +22,7 @@
 #include "io/ExportVRML.hpp"
 #include "io/ExportContext.hpp"
 #include "io/SharedPointer.hpp"
+#include "partition/ReceivedPartition.hpp"
 
 namespace precice {
 namespace config {
@@ -463,8 +464,7 @@ void ParticipantConfiguration:: xmlTagCallback
     offset = tag.getEigenVectorXdAttributeValue(ATTR_LOCAL_OFFSET, _dimensions);
     std::string from = tag.getStringAttributeValue(ATTR_FROM);
     double safetyFactor = tag.getDoubleAttributeValue(ATTR_SAFETY_FACTOR);
-    std::string decomposition = tag.getStringAttributeValue(ATTR_DECOMPOSITION);
-    bool doesPreFiltering = (decomposition==VALUE_PRE_FILTER_POST_FILTER);
+    partition::ReceivedPartition::GeometricFilter geoFilter = getGeoFilter(tag.getStringAttributeValue(ATTR_DECOMPOSITION));
     if (safetyFactor < 0){
       std::ostringstream stream;
       stream << "Safety Factor must be positive or 0";
@@ -478,13 +478,12 @@ void ParticipantConfiguration:: xmlTagCallback
              << "\" uses mesh \"" << name << "\" which is not defined";
       throw stream.str();
     }
-    geometry::PtrGeometry geo ( _geometryConfig->getGeometry(name) );
     spacetree::PtrSpacetree spacetree;
     if (_meshConfig->doesMeshUseSpacetree(name)){
       std::string spacetreeName = _meshConfig->getSpacetreeName(name);
       spacetree = _spacetreeConfig->getSpacetree ( spacetreeName );
     }
-    _participants.back()->useMesh ( mesh, geo, spacetree, offset, false, from, safetyFactor, provide, doesPreFiltering );
+    _participants.back()->useMesh ( mesh, spacetree, offset, false, from, safetyFactor, provide, geoFilter );
   }
 //  else if ( tag.getName() == mapping::MappingConfiguration::TAG ) {
 //    return _mappingConfig->parseSubtag ( xmlReader );
@@ -581,6 +580,17 @@ ParticipantConfiguration:: getParticipants() const
   return _participants;
 }
 
+partition::ReceivedPartition::GeometricFilter ParticipantConfiguration:: getGeoFilter(const std::string& geoFilter) const
+{
+  if (geoFilter == VALUE_PRE_FILTER_POST_FILTER){
+    return partition::ReceivedPartition::GeometricFilter::FILTER_FIRST;
+  }
+  else if (geoFilter == VALUE_BROADCAST_FILTER){
+    return partition::ReceivedPartition::GeometricFilter::BROADCAST_FILTER;
+  }
+  ERROR("Unknown geometric filter value \"" << geoFilter << "\"!");
+}
+
 mesh::PtrMesh ParticipantConfiguration:: copy
 (
   const mesh::PtrMesh& mesh ) const
@@ -643,6 +653,11 @@ void ParticipantConfiguration:: finishParticipantConfiguration
 
     impl::MeshContext& fromMeshContext = participant->meshContext(fromMeshID);
     impl::MeshContext& toMeshContext = participant->meshContext(toMeshID);
+
+    if(confMapping.isRBF){
+      fromMeshContext.geoFilter = partition::ReceivedPartition::GeometricFilter::NO_FILTER;
+      toMeshContext.geoFilter = partition::ReceivedPartition::GeometricFilter::NO_FILTER;
+    }
 
     precice::impl::MappingContext* mappingContext = new precice::impl::MappingContext();
     mappingContext->fromMeshID = fromMeshID;

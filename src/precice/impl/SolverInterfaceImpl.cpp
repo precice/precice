@@ -47,6 +47,8 @@
 #include "mapping/Mapping.hpp"
 #include <set>
 #include <Eigen/Core>
+#include "partition/ReceivedPartition.hpp"
+#include "partition/ProvidedPartition.hpp"
 
 #include <signal.h> // used for installing crash handler
 
@@ -171,13 +173,13 @@ void SolverInterfaceImpl:: configure
     preciceInfo("configure()", "Run in geometry mode");
     preciceCheck(_participants.size() == 1, "configure()",
                  "Only one participant can be defined in geometry mode!");
-    configureSolverGeometries(config.getM2NConfiguration());
+    configurePartitions(config.getM2NConfiguration());
   }
   else if (not _clientMode){
     preciceInfo("configure()", "Run in coupling mode");
     preciceCheck(_participants.size() > 1,
                  "configure()", "At least two participants need to be defined!");
-    configureSolverGeometries(config.getM2NConfiguration());
+    configurePartitions(config.getM2NConfiguration());
   }
 
   // Set coupling scheme. In geometry mode, an uncoupled scheme is automatically
@@ -270,37 +272,40 @@ double SolverInterfaceImpl:: initialize()
 
     DEBUG("Perform initializations");
 
-    //create geometry. we need to do this in two loops, to first communicate the mesh and later decompose it
-    //originally this was done in one loop. this however gave deadlock if two meshes needed to be communicated cross-wise.
-    //both loops need a different sorting
 
-    // sort meshContexts by name, for communication in right order.
-    std::sort (_accessor->usedMeshContexts().begin(), _accessor->usedMeshContexts().end(),
-        []( MeshContext* lhs, const MeshContext* rhs) -> bool
-        {
-          return lhs->mesh->getName() < rhs->mesh->getName();
-        } );
+    computePartitions();
 
-    for (MeshContext* meshContext : _accessor->usedMeshContexts()){
-      prepareGeometry(*meshContext);
-    }
-
-    // now sort provided meshes up front, to have them ready for the decomposition
-    std::sort (_accessor->usedMeshContexts().begin(), _accessor->usedMeshContexts().end(),
-        []( MeshContext* lhs, const MeshContext* rhs) -> bool
-        {
-          if(lhs->provideMesh && not rhs->provideMesh){
-            return true;
-          }
-          if(not lhs->provideMesh && rhs->provideMesh){
-            return false;
-          }
-          return lhs->mesh->getName() < rhs->mesh->getName();
-        } );
-
-    for (MeshContext* meshContext : _accessor->usedMeshContexts()){
-      createGeometry(*meshContext);
-    }
+//    //create geometry. we need to do this in two loops, to first communicate the mesh and later decompose it
+//    //originally this was done in one loop. this however gave deadlock if two meshes needed to be communicated cross-wise.
+//    //both loops need a different sorting
+//
+//    // sort meshContexts by name, for communication in right order.
+//    std::sort (_accessor->usedMeshContexts().begin(), _accessor->usedMeshContexts().end(),
+//        []( MeshContext* lhs, const MeshContext* rhs) -> bool
+//        {
+//          return lhs->mesh->getName() < rhs->mesh->getName();
+//        } );
+//
+//    for (MeshContext* meshContext : _accessor->usedMeshContexts()){
+//      prepareGeometry(*meshContext);
+//    }
+//
+//    // now sort provided meshes up front, to have them ready for the decomposition
+//    std::sort (_accessor->usedMeshContexts().begin(), _accessor->usedMeshContexts().end(),
+//        []( MeshContext* lhs, const MeshContext* rhs) -> bool
+//        {
+//          if(lhs->provideMesh && not rhs->provideMesh){
+//            return true;
+//          }
+//          if(not lhs->provideMesh && rhs->provideMesh){
+//            return false;
+//          }
+//          return lhs->mesh->getName() < rhs->mesh->getName();
+//        } );
+//
+//    for (MeshContext* meshContext : _accessor->usedMeshContexts()){
+//      createGeometry(*meshContext);
+//    }
 
 
     typedef std::map<std::string,M2NWrap>::value_type M2NPair;
@@ -1844,151 +1849,159 @@ void SolverInterfaceImpl:: configureM2Ns
   }
 }
 
-void SolverInterfaceImpl:: configureSolverGeometries
+void SolverInterfaceImpl:: configurePartitions
 (
   const m2n::M2NConfiguration::SharedPointer& m2nConfig )
 {
-  preciceTrace ( "configureSolverGeometries()" );
-  Eigen::VectorXd offset = Eigen::VectorXd::Zero(_dimensions);
+  TRACE();
   for (MeshContext* context : _accessor->usedMeshContexts()) {
     if ( context->provideMesh ) { // Accessor provides geometry
       CHECK ( context->receiveMeshFrom.empty(),
               "Participant \"" << _accessorName << "\" cannot provide "
               << "and receive mesh " << context->mesh->getName() << "!" );
-      CHECK ( context->geometry.use_count() == 0,
-              "Participant \"" << _accessorName << "\" cannot provide "
-              << "the geometry of mesh \"" << context->mesh->getName()
-              << " in addition to a defined geometry!" );
 
-      bool addedReceiver = false;
-      geometry::CommunicatedGeometry* comGeo = nullptr;
+
+      bool hasToSend = false; //TODO multiple sends
+      m2n::PtrM2N m2n;
+
       for (PtrParticipant receiver : _participants ) {
         for (MeshContext* receiverContext : receiver->usedMeshContexts()) {
-          bool doesReceive = receiverContext->receiveMeshFrom == _accessorName;
-          doesReceive &= receiverContext->mesh->getName() == context->mesh->getName();
-          if ( doesReceive ){
-            DEBUG ( "   ... receiver " << receiver );
-            std::string provider ( _accessorName );
-
-            if(!addedReceiver){
-              comGeo = new geometry::CommunicatedGeometry ( offset, provider, provider,nullptr);
-              context->geometry = geometry::PtrGeometry ( comGeo );
-            }
-            else{
-              DEBUG ( "Further receiver added.");
-            }
-
+          if(receiverContext->receiveMeshFrom == _accessorName && receiverContext->mesh->getName() == context->mesh->getName()){
+            CHECK( not hasToSend, "Mesh " << context->mesh->getName() << " can currently only be received once.")
+            hasToSend = true;
             // meshRequirement has to be copied from "from" to provide", since
             // mapping are only defined at "provide"
             if(receiverContext->meshRequirement > context->meshRequirement){
               context->meshRequirement = receiverContext->meshRequirement;
             }
-
-            m2n::PtrM2N m2n =
-                m2nConfig->getM2N( receiver->getName(), provider );
-            comGeo->addReceiver ( receiver->getName(), m2n );
+            m2n = m2nConfig->getM2N( receiver->getName(), _accessorName );
             m2n->createDistributedCommunication(context->mesh);
-
-            addedReceiver = true;
           }
         }
       }
-      if(!addedReceiver){
-        DEBUG ( "No receiver found, create SolverGeometry");
-        context->geometry = geometry::PtrGeometry ( new geometry::SolverGeometry ( offset) );
+      //TODO support offset??
+      context->partition = partition::PtrPartition ( new partition::ProvidedPartition( context->mesh, hasToSend) );
+      if(hasToSend){
+        assertion(m2n.use_count()>0);
+        context->partition->setm2n(m2n);
       }
 
-      assertion(context->geometry.use_count() > 0);
-
     }
-    else if ( not context->receiveMeshFrom.empty()) { // Accessor receives geometry
+    else { // Accessor receives geometry
+      CHECK ( not context->receiveMeshFrom.empty(), "Participant \"" << _accessorName << "\" must either provide or receive the mesh "
+          << context->mesh->getName() << "!")
       CHECK ( not context->provideMesh, "Participant \"" << _accessorName << "\" cannot provide "
                      << "and receive mesh " << context->mesh->getName() << "!" );
       std::string receiver ( _accessorName );
       std::string provider ( context->receiveMeshFrom );
       DEBUG ( "Receiving mesh from " << provider );
       geometry::impl::PtrDecomposition decomp = nullptr;
-      if(context->doesPreFiltering){
-        decomp = geometry::impl::PtrDecomposition(
-          new geometry::impl::PreFilterPostFilterDecomposition(_dimensions, context->safetyFactor));
-      } else {
-        decomp = geometry::impl::PtrDecomposition(
-          new geometry::impl::BroadcastFilterDecomposition(_dimensions, context->safetyFactor));
-      }
-      geometry::CommunicatedGeometry * comGeo =
-          new geometry::CommunicatedGeometry ( offset, receiver, provider, decomp );
+
+      context->partition = partition::PtrPartition ( new partition::ReceivedPartition( context->mesh, context->geoFilter, context->safetyFactor));
+
       m2n::PtrM2N m2n = m2nConfig->getM2N ( receiver, provider );
-      comGeo->addReceiver ( receiver, m2n );
       m2n->createDistributedCommunication(context->mesh);
-      preciceCheck ( context->geometry.use_count() == 0, "configureSolverGeometries()",
-                     "Participant \"" << _accessorName << "\" cannot receive "
-                     << "the geometry of mesh \"" << context->mesh->getName()
-                     << " in addition to a defined geometry!" );
-      if(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode){
-        decomp->setBoundingFromMapping(context->fromMappingContext.mapping);
-        decomp->setBoundingToMapping(context->toMappingContext.mapping);
-      }
-      context->geometry = geometry::PtrGeometry ( comGeo );
+      context->partition->setm2n(m2n);
+      context->partition->setFromMapping(context->fromMappingContext.mapping);
+      context->partition->setToMapping(context->toMappingContext.mapping);
     }
   }
 }
 
-void SolverInterfaceImpl:: prepareGeometry
-(
-  MeshContext& meshContext )
+//void SolverInterfaceImpl:: prepareGeometry
+//(
+//  MeshContext& meshContext )
+//{
+//  TRACE(meshContext.mesh->getName());
+//  assertion ( not _clientMode );
+//  mesh::PtrMesh mesh = meshContext.mesh;
+//  assertion(mesh.use_count() > 0);
+//  std::string meshName(mesh->getName());
+//  if (_restartMode){
+//    std::string fileName("precice_checkpoint_" + _accessorName + "_" + meshName);
+//    DEBUG("Importing geometry = " << mesh->getName());
+//    geometry::ImportGeometry* importGeo = new geometry::ImportGeometry (
+//      Eigen::VectorXd::Zero(_dimensions), fileName,
+//      geometry::ImportGeometry::VRML_1_FILE, true, not meshContext.provideMesh);
+//    meshContext.geometry.reset(importGeo);
+//  }
+//  else if ( (not _geometryMode) && (meshContext.geometry.use_count() > 0) ){
+//    Eigen::VectorXd offset(meshContext.geometry->getOffset());
+//    offset += meshContext.localOffset;
+//    DEBUG("Adding local offset = " << meshContext.localOffset
+//                 << " to mesh " << mesh->getName());
+//    meshContext.geometry->setOffset(offset);
+//  }
+//
+//  assertion(not (_geometryMode && (meshContext.geometry.use_count() == 0)));
+//  if (meshContext.geometry.use_count() > 0){
+//    meshContext.geometry->prepare(*mesh);
+//  }
+//}
+//
+//void SolverInterfaceImpl:: createGeometry
+//(
+//  MeshContext& meshContext )
+//{
+//  TRACE(meshContext.mesh->getName());
+//  assertion ( not _clientMode );
+//  mesh::PtrMesh mesh = meshContext.mesh;
+//  assertion(mesh.use_count() > 0);
+//  std::string meshName(mesh->getName());
+//
+//  assertion(not (_geometryMode && (meshContext.geometry.use_count() == 0)));
+//  if (meshContext.geometry.use_count() > 0){
+//    meshContext.geometry->create(*mesh);
+//    DEBUG("Created geometry \"" << meshName
+//                 << "\" with # vertices = " << mesh->vertices().size());
+//    mesh->computeDistribution();
+//  }
+//
+//  // Create spacetree for the geometry, if configured so
+//  if (meshContext.spacetree.use_count() > 0){
+//    preciceCheck(_geometryMode, "createMeshContext()",
+//                 "Creating spacetree in coupling mode!");
+//    meshContext.spacetree->addMesh(mesh);
+//  }
+//}
+
+void SolverInterfaceImpl:: computePartitions()
 {
-  TRACE(meshContext.mesh->getName());
-  assertion ( not _clientMode );
-  mesh::PtrMesh mesh = meshContext.mesh;
-  assertion(mesh.use_count() > 0);
-  std::string meshName(mesh->getName());
-  if (_restartMode){
-    std::string fileName("precice_checkpoint_" + _accessorName + "_" + meshName);
-    DEBUG("Importing geometry = " << mesh->getName());
-    geometry::ImportGeometry* importGeo = new geometry::ImportGeometry (
-      Eigen::VectorXd::Zero(_dimensions), fileName,
-      geometry::ImportGeometry::VRML_1_FILE, true, not meshContext.provideMesh);
-    meshContext.geometry.reset(importGeo);
-  }
-  else if ( (not _geometryMode) && (meshContext.geometry.use_count() > 0) ){
-    Eigen::VectorXd offset(meshContext.geometry->getOffset());
-    offset += meshContext.localOffset;
-    DEBUG("Adding local offset = " << meshContext.localOffset
-                 << " to mesh " << mesh->getName());
-    meshContext.geometry->setOffset(offset);
+  //We need to do this in two loops: First, communicate the mesh and later compute the partition.
+  //Originally, this was done in one loop. This however gave deadlock if two meshes needed to be communicated cross-wise.
+  //Both loops need a different sorting
+
+  // sort meshContexts by name, for communication in right order.
+  std::sort (_accessor->usedMeshContexts().begin(), _accessor->usedMeshContexts().end(),
+      []( MeshContext* lhs, const MeshContext* rhs) -> bool
+      {
+        return lhs->mesh->getName() < rhs->mesh->getName();
+      } );
+
+  for (MeshContext* meshContext : _accessor->usedMeshContexts()){
+    meshContext->partition->communicate();
   }
 
-  assertion(not (_geometryMode && (meshContext.geometry.use_count() == 0)));
-  if (meshContext.geometry.use_count() > 0){
-    meshContext.geometry->prepare(*mesh);
+  // now sort provided meshes up front, to have them ready for the decomposition
+  std::sort (_accessor->usedMeshContexts().begin(), _accessor->usedMeshContexts().end(),
+      []( MeshContext* lhs, const MeshContext* rhs) -> bool
+      {
+        if(lhs->provideMesh && not rhs->provideMesh){
+          return true;
+        }
+        if(not lhs->provideMesh && rhs->provideMesh){
+          return false;
+        }
+        return lhs->mesh->getName() < rhs->mesh->getName();
+      } );
+
+  for (MeshContext* meshContext : _accessor->usedMeshContexts()){
+    meshContext->partition->compute();
+    meshContext->mesh->computeState();
+    meshContext->mesh->allocateDataValues();
   }
 }
 
-void SolverInterfaceImpl:: createGeometry
-(
-  MeshContext& meshContext )
-{
-  TRACE(meshContext.mesh->getName());
-  assertion ( not _clientMode );
-  mesh::PtrMesh mesh = meshContext.mesh;
-  assertion(mesh.use_count() > 0);
-  std::string meshName(mesh->getName());
-
-  assertion(not (_geometryMode && (meshContext.geometry.use_count() == 0)));
-  if (meshContext.geometry.use_count() > 0){
-    meshContext.geometry->create(*mesh);
-    DEBUG("Created geometry \"" << meshName
-                 << "\" with # vertices = " << mesh->vertices().size());
-    mesh->computeDistribution();
-  }
-
-  // Create spacetree for the geometry, if configured so
-  if (meshContext.spacetree.use_count() > 0){
-    preciceCheck(_geometryMode, "createMeshContext()",
-                 "Creating spacetree in coupling mode!");
-    meshContext.spacetree->addMesh(mesh);
-  }
-}
 
 void SolverInterfaceImpl:: mapWrittenData()
 {

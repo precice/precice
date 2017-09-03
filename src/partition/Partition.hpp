@@ -31,7 +31,7 @@ class Partition
 public:
 
   /// Constructor.
-  Partition ();
+  Partition (mesh::PtrMesh mesh);
 
   virtual ~Partition() {}
 
@@ -41,11 +41,6 @@ public:
   ///The partition is computed, i.e. the mesh re-partitioned if required and all data structures are set up.
   virtual void compute () = 0;
 
-  //TODO maybe put this in constructor
-  void setMesh( mesh::PtrMesh mesh){
-    _mesh = mesh;
-  }
-
   void setFromMapping(mapping::PtrMapping fromMapping){
     _fromMapping = fromMapping;
   }
@@ -54,7 +49,6 @@ public:
     _toMapping = toMapping;
   }
 
-  //TODO also move this to the constructor?
   void setm2n(m2n::PtrM2N m2n){
     _m2n = m2n;
   }

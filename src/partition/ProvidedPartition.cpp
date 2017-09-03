@@ -11,15 +11,18 @@ logging::Logger ProvidedPartition:: _log ( "precice::partition::ProvidedPartitio
 
 ProvidedPartition::ProvidedPartition
 (
+    mesh::PtrMesh mesh,
     bool hasToSend)
 :
-    Partition (),
+    Partition (mesh),
     _hasToSend(hasToSend)
 {}
 
 void ProvidedPartition::communicate()
 {
   TRACE();
+
+  //TODO communication to more than one participant
 
   if(_hasToSend){
 

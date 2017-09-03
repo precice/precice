@@ -11,9 +11,9 @@ namespace partition {
 logging::Logger Partition::_log ( "precice::partition::Partition" );
 
 Partition:: Partition
-()
+(mesh::PtrMesh mesh)
 :
-  _mesh(),
+  _mesh(mesh),
   _fromMapping(),
   _toMapping(),
   _m2n()

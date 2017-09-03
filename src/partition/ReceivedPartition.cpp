@@ -23,12 +23,12 @@ logging::Logger ReceivedPartition:: _log ( "precice::partition::ReceivedPartitio
 
 ReceivedPartition::ReceivedPartition
 (
-    GeometricFilter geometricFilter, int dimensions, double safetyFactor )
+    mesh::PtrMesh mesh, GeometricFilter geometricFilter, double safetyFactor )
 :
-  Partition (),
+  Partition (mesh),
   _geometricFilter(geometricFilter),
-  _bb(dimensions, std::make_pair(std::numeric_limits<double>::max(), std::numeric_limits<double>::lowest())),
-  _dimensions(dimensions),
+  _bb(mesh->getDimensions(), std::make_pair(std::numeric_limits<double>::max(), std::numeric_limits<double>::lowest())),
+  _dimensions(mesh->getDimensions()),
   _safetyFactor(safetyFactor)
 {}
 

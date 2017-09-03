@@ -1,12 +1,13 @@
 #pragma once
 
 #include "MappingContext.hpp"
-#include "geometry/SharedPointer.hpp"
+#include "partition/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "spacetree/SharedPointer.hpp"
 #include "com/Communication.hpp"
 #include "mapping/Mapping.hpp"
 #include "SharedPointer.hpp"
+#include "partition/ReceivedPartition.hpp"
 #include <vector>
 
 namespace precice {
@@ -37,14 +38,14 @@ struct MeshContext
    // @brief True, if accessor does create the geometry of the mesh.
    bool provideMesh;
 
-   // @brief True, if mesh is decomposed based on PreFilter-PostFilter strategy.
-   bool doesPreFiltering;
+   /// type of geometric filter
+   partition::ReceivedPartition::GeometricFilter geoFilter;
 
    /// Offset only applied to meshes local to the accessor.
    Eigen::VectorXd localOffset;
 
-   // @brief Geometry creating the mesh. Can be empty.
-   geometry::PtrGeometry geometry;
+   // @brief Partition creating the parallel decomposition of the mesh
+   partition::PtrPartition partition;
 
    // @brief Mapping used when mapping data from the mesh. Can be empty.
    MappingContext fromMappingContext;
@@ -61,9 +62,9 @@ struct MeshContext
      receiveMeshFrom ( "" ),
      safetyFactor(-1.0),
      provideMesh ( false ),
-     doesPreFiltering ( false ),
+     geoFilter (partition::ReceivedPartition::GeometricFilter::UNDEFINED),
      localOffset ( Eigen::VectorXd::Zero(dimensions) ),
-     geometry (),
+     partition (),
      fromMappingContext(),
      toMappingContext()
    {}

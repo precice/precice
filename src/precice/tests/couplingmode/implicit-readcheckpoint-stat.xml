@@ -12,19 +12,14 @@
          <use-data name="Velocities"/>
       </mesh>
       
-      <geometry:builtin-cuboid of-mesh="Square">
-         <length value="1.0; 1.0"/> 
-         <discretization-width value="1.0"/> 
-      </geometry:builtin-cuboid>
-      
       <participant name="SolverOne">
-         <use-mesh name="Square"/>
+         <use-mesh name="Square" provide="yes"/>
          <write-data name="Forces"    mesh="Square"/>
          <read-data name="Velocities" mesh="Square"/>
       </participant>
       
       <participant name="SolverTwo">
-         <use-mesh name="Square"/>
+         <use-mesh name="Square" from="SolverOne"/>
          <write-data name="Velocities" mesh="Square"/>
          <read-data name="Forces"      mesh="Square"/>
       </participant>

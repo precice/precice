@@ -54,6 +54,8 @@ public:
     Direction direction;
     /// When the mapping should be executed.
     Timing timing;
+    /// true for RBF mapping
+    bool isRBF;
   };
 
   MappingConfiguration (

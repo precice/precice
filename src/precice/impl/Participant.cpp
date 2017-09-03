@@ -80,22 +80,20 @@ std::vector<PtrWatchPoint>& Participant:: watchPoints()
 
 void Participant:: useMesh
 (
-  const mesh::PtrMesh&                   mesh,
-  const geometry::PtrGeometry&   geometry,
-  const spacetree::PtrSpacetree& spacetree,
-  const Eigen::VectorXd&                 localOffset,
-  bool                                   remote,
-  const std::string&                     fromParticipant,
-  double                                 safetyFactor,
-  bool                                   provideMesh,
-  bool                                   doesPreFiltering)
+  const mesh::PtrMesh&                          mesh,
+  const spacetree::PtrSpacetree&                spacetree,
+  const Eigen::VectorXd&                        localOffset,
+  bool                                          remote,
+  const std::string&                            fromParticipant,
+  double                                        safetyFactor,
+  bool                                          provideMesh,
+  partition::ReceivedPartition::GeometricFilter geoFilter)
 {
   preciceTrace ( "useMesh()", _name,  mesh->getName(), mesh->getID() );
   checkDuplicatedUse(mesh);
   assertion ( mesh->getID() < (int)_meshContexts.size() );
   MeshContext* context = new MeshContext(mesh->getDimensions());
   context->mesh = mesh;
-  context->geometry = geometry;
   context->spacetree = spacetree;
   context->localOffset = localOffset;
   assertion ( mesh->getDimensions() == context->localOffset.size(),
@@ -103,7 +101,7 @@ void Participant:: useMesh
   context->receiveMeshFrom = fromParticipant;
   context->safetyFactor = safetyFactor;
   context->provideMesh = provideMesh;
-  context->doesPreFiltering = doesPreFiltering;
+  context->geoFilter = geoFilter;
 
 //  if ( spacetree.use_count() > 0 ) {
 //    spacetree->setCenter ( spacetree->getCenter() + localOffset );

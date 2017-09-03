@@ -97,8 +97,7 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate2D, * testing::OnRanks({0, 1, 2, 3}
 
     double safetyFactor = 0.1;
 
-    ReceivedPartition part(ReceivedPartition::BROADCAST_FILTER, dimensions, safetyFactor);
-    part.setMesh(pSolidzMesh);
+    ReceivedPartition part(pSolidzMesh, ReceivedPartition::BROADCAST_FILTER, safetyFactor);
     part.setm2n(m2n);
     part.communicate();
 
@@ -138,8 +137,7 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate2D, * testing::OnRanks({0, 1, 2, 3}
     }
 
     bool hasToSend = true;
-    ProvidedPartition part(hasToSend);
-    part.setMesh(pSolidzMesh);
+    ProvidedPartition part(pSolidzMesh, hasToSend);
     part.setm2n(m2n);
     part.communicate();
     part.compute();
@@ -186,8 +184,7 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate3D, * testing::OnRanks({0, 1, 2, 3}
 
     double safetyFactor = 0.1;
 
-    ReceivedPartition part(ReceivedPartition::BROADCAST_FILTER, dimensions, safetyFactor);
-    part.setMesh(pSolidzMesh);
+    ReceivedPartition part(pSolidzMesh, ReceivedPartition::BROADCAST_FILTER, safetyFactor);
     part.setm2n(m2n);
     part.communicate();
 
@@ -233,8 +230,7 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate3D, * testing::OnRanks({0, 1, 2, 3}
     }
 
     bool hasToSend = true;
-    ProvidedPartition part(hasToSend);
-    part.setMesh(pSolidzMesh);
+    ProvidedPartition part(pSolidzMesh, hasToSend);
     part.setm2n(m2n);
     part.communicate();
     part.compute();
@@ -353,8 +349,7 @@ BOOST_AUTO_TEST_CASE(TestOnlyDistribution2D, * testing::OnSize(4))
   }
 
   bool hasToSend = false;
-  ProvidedPartition part(hasToSend);
-  part.setMesh(pMesh);
+  ProvidedPartition part(pMesh, hasToSend);
   part.communicate();
   part.compute();
 

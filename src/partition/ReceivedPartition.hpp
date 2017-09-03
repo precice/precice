@@ -22,16 +22,18 @@ public:
 
   /// Defines the typ of geometric filter used
   enum GeometricFilter {
+    // @brief undefined
+    UNDEFINED,
     // @brief No geometric filter used (e.g. for RBF mappings)
-    NO_FILTER = 0,
+    NO_FILTER,
     // @brief Filter at master and communicate only filtered mesh.
-    FILTER_FIRST = 1,
+    FILTER_FIRST,
     // @brief Broadcast first and filter then
-    BROADCAST_FILTER = 2
+    BROADCAST_FILTER
   };
 
    /// Constructor
-   ReceivedPartition (GeometricFilter geometricFilter, int dimensions, double safetyFactor);
+   ReceivedPartition (mesh::PtrMesh mesh, GeometricFilter geometricFilter, double safetyFactor);
 
    virtual ~ReceivedPartition() {}
 
