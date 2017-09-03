@@ -1,5 +1,4 @@
-#ifndef PRECICE_MESH_MERGE_HPP_
-#define PRECICE_MESH_MERGE_HPP_
+#pragma once
 
 #include "mesh/Group.hpp"
 #include "mesh/Vertex.hpp"
@@ -97,6 +96,4 @@ Group& Merge:: operator() ( CONTAINER_T& container )
 }
 
 }} // namespace precice, mesh
-
-#endif /* PRECICE_MESH_MERGE_HPP_ */
 
