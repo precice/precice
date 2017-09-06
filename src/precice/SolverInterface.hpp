@@ -23,6 +23,15 @@ namespace precice {
   }
 }
 
+// Forward declaration to friend the boost test struct
+namespace Precice {
+  namespace Parallel {
+    struct Test1;
+    struct TestMasterSlaveSetup;
+    struct GlobalRBFPartitioning;
+}
+}
+
 // ----------------------------------------------------------- CLASS DEFINITION
 
 namespace precice {
@@ -632,9 +641,14 @@ private:
   SolverInterface& operator= ( const SolverInterface& assign );
 
   // @brief To allow white box tests.
+  // tarch integration tests
   friend class tests::SolverInterfaceTest;
   friend class tests::SolverInterfaceTestRemote;
   friend class tests::SolverInterfaceTestGeometry;
+  // boost tests
+  friend struct Precice::Parallel::Test1;
+  friend struct Precice::Parallel::TestMasterSlaveSetup;
+  friend struct Precice::Parallel::GlobalRBFPartitioning;
 };
 
 } // namespace precice
