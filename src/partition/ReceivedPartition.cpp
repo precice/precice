@@ -36,6 +36,7 @@ void ReceivedPartition::communicate()
 {
   TRACE();
   INFO("Receive global mesh " << _mesh->getName());
+  Event e("receive global mesh");
   if (not utils::MasterSlave::_slaveMode) {
     assertion ( _mesh->vertices().size() == 0 );
     com::CommunicateMesh(_m2n->getMasterCommunication()).receiveMesh ( *_mesh, 0 );
@@ -44,7 +45,7 @@ void ReceivedPartition::communicate()
 
 void ReceivedPartition::compute()
 {
-  TRACE();
+  TRACE(_geometricFilter);
 
   // handle coupling mode first (i.e. serial participant)
   if (not utils::MasterSlave::_slaveMode && not utils::MasterSlave::_masterMode){ //coupling mode
@@ -199,7 +200,7 @@ void ReceivedPartition::compute()
 
   // (6) Compute distribution
   INFO("Feedback distribution for mesh " << _mesh->getName());
-  Event e6("Feedback mesh");
+  Event e6("feedback mesh");
   if (utils::MasterSlave::_slaveMode) {
     int numberOfVertices = _mesh->vertices().size();
     utils::MasterSlave::_communication->send(numberOfVertices,0);
@@ -447,6 +448,7 @@ void ReceivedPartition:: createOwnerInformation(){
       }
     }
     // master data
+    DEBUG("My owner information: " << slaveOwnerVecs[0]);
     setOwnerInformation(slaveOwnerVecs[0]);
 
 

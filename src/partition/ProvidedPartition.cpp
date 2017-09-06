@@ -3,6 +3,9 @@
 #include "com/Communication.hpp"
 #include "utils/MasterSlave.hpp"
 #include "m2n/M2N.hpp"
+#include "utils/EventTimings.hpp"
+
+using precice::utils::Event;
 
 namespace precice {
 namespace partition {
@@ -25,6 +28,7 @@ void ProvidedPartition::communicate()
   //TODO communication to more than one participant
 
   if(_hasToSend){
+    Event e1("gather mesh");
 
     // Temporary globalMesh such that the master also keeps his local mesh
     mesh::Mesh globalMesh(_mesh->getName(), _mesh->getDimensions(), _mesh->isFlipNormals());
@@ -59,12 +63,16 @@ void ProvidedPartition::communicate()
       }
     }
 
+    e1.stop();
+
     // Send (global) Mesh
     INFO("Send global mesh " << _mesh->getName());
+    Event e2("send global mesh");
     if (not utils::MasterSlave::_slaveMode) {
       CHECK ( globalMesh.vertices().size() > 0, "The provided mesh " << globalMesh.getName() << " is invalid (possibly empty).");
       com::CommunicateMesh(_m2n->getMasterCommunication()).sendMesh ( globalMesh, 0 );
     }
+    e2.stop();
 
   } //_hasToSend
 }
@@ -72,6 +80,8 @@ void ProvidedPartition::communicate()
 void ProvidedPartition::compute()
 {
   TRACE();
+  INFO("Compute partition for mesh " << _mesh->getName());
+  Event e6("feedback mesh");
 
   int numberOfVertices = _mesh->vertices().size();
 
