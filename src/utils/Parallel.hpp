@@ -1,27 +1,28 @@
 #pragma once
 
-#include "logging/Logger.hpp"
-#include <vector>
 #include <string>
+#include <vector>
+#include "logging/Logger.hpp"
 
 #ifndef PRECICE_NO_MPI
 
-#include "mpi.h"
+#include <mpi.h>
 
 #define PRECICE_MASTER_ONLY \
-  if ( precice::utils::Parallel::getProcessRank() == 0 )
+  if (precice::utils::Parallel::getProcessRank() == 0)
 #else
 #define PRECICE_MASTER_ONLY
 #endif // not PRECICE_NO_MPI
 
-namespace precice {
-namespace utils {
+namespace precice
+{
+namespace utils
+{
 
 /// Utility class for managing MPI operations.
 class Parallel
 {
 public:
-
 #ifndef PRECICE_NO_MPI
   typedef MPI_Comm Communicator;
 #else
@@ -44,9 +45,8 @@ public:
    *
    * @param[in] groupName MPI group in which the calling process will be put in
    */
-  static void splitCommunicator (
-    const std::string& groupName );
-
+  static void splitCommunicator(
+      const std::string &groupName);
 
   /**
    * @brief Initializes the MPI environment.
@@ -54,9 +54,9 @@ public:
    * @param[in] argc Parameter count
    * @param[in] argc Parameter values, is passed to MPI_Init
    */
-  static void initializeMPI (
-    int*               argc,
-    char***            argv);
+  static void initializeMPI(
+      int *argc,
+      char ***argv);
 
   /// Finalizes MPI environment.
   static void finalizeMPI();
@@ -76,7 +76,7 @@ public:
 
   /// Returns the number of processes in the communicator.
   static int getCommunicatorSize();
-  
+
   /// Synchronizes all processes.
   static void synchronizeProcesses();
 
@@ -99,17 +99,17 @@ public:
    * ATTENTION: Will result in an error, if called by a process not in the new
    *            default communicator!
    */
-  static void setGlobalCommunicator ( Communicator defaultCommunicator );
+  static void setGlobalCommunicator(Communicator defaultCommunicator);
 
   /// Returns the default communicator.
-  static const Communicator& getGlobalCommunicator();
+  static const Communicator &getGlobalCommunicator();
 
   /**
    * @brief Returns communicator of processes within one group.
    *
    * This communicator is empty, until initialize() has been called.
    */
-  static const Communicator& getLocalCommunicator();
+  static const Communicator &getLocalCommunicator();
 
   /**
    * @brief Returns a communicator with a subset of processes.
@@ -119,14 +119,13 @@ public:
    * ATTENTION: Has to be called by every process in the communicator to be
    *            restricted, otherwise, a deadlock is achieved!
    *
-   * @param ids [IN] Process ranks to be selected for restricted comm.
+   * @param[in] ids Process ranks to be selected for restricted comm.
    */
-  static Communicator getRestrictedCommunicator ( const std::vector<int>& ranks );
+  static Communicator getRestrictedCommunicator(const std::vector<int> &ranks);
 
-  static const std::vector<AccessorGroup>& getAccessorGroups();
+  static const std::vector<AccessorGroup> &getAccessorGroups();
 
 private:
-
   static logging::Logger _log;
 
   static Communicator _globalCommunicator;
@@ -142,6 +141,5 @@ private:
 
   static bool _mpiInitializedByPrecice;
 };
-
-
-}} // namespace precice, utils
+}
+} // namespace precice, utils
