@@ -17,7 +17,7 @@ void Petsc::initialize
   int*               argc,
   char***            argv )
 {
-  preciceTrace ("initialize()");
+  TRACE();
 #ifndef PRECICE_NO_PETSC
   PetscBool petscIsInitialized;
   PetscInitialized(&petscIsInitialized);
@@ -55,23 +55,27 @@ namespace precice {
 namespace utils {
 namespace petsc {
 
-void openViewer(PetscViewer & viewer, std::string filename, VIEWERFORMAT format)
+void openViewer(PetscViewer & viewer, std::string filename, VIEWERFORMAT format, MPI_Comm comm)
 {
   PetscErrorCode ierr = 0;
   if (format == ASCII) {
-    ierr = PetscViewerASCIIOpen(PETSC_COMM_WORLD, filename.c_str(), &viewer); CHKERRV(ierr);
+    ierr = PetscViewerASCIIOpen(comm, filename.c_str(), &viewer);
+    CHKERRV(ierr);
   }
   else if (format == BINARY) {
-    ierr = PetscViewerBinaryOpen(PETSC_COMM_WORLD, filename.c_str(), FILE_MODE_WRITE, &viewer); CHKERRV(ierr);
+    ierr = PetscViewerBinaryOpen(comm, filename.c_str(), FILE_MODE_WRITE, &viewer);
+    CHKERRV(ierr);
   }
 }
 
 /////////////////////////////////////////////////////////////////////////
 
-Vector::Vector(MPI_Comm comm, std::string name)
+Vector::Vector(std::string name)
 {
+  int size;
+  MPI_Comm_size(utils::Parallel::getGlobalCommunicator(), &size);
   PetscErrorCode ierr = 0;
-  ierr = VecCreate(comm, &vector); CHKERRV(ierr);
+  ierr = VecCreate(utils::Parallel::getGlobalCommunicator(), &vector); CHKERRV(ierr);
   setName(name);
 }
 
@@ -139,6 +143,13 @@ std::string Vector::getName()
   return cstr;    
 }
 
+MPI_Comm Vector::getCommunicator() const
+{
+  MPI_Comm comm;
+  PetscObjectGetComm((PetscObject) vector, &comm);
+  return comm;
+}
+
 int Vector::getSize()
 {
   PetscInt size;
@@ -182,7 +193,7 @@ void Vector::fill_with_randoms()
   std::random_device rd;
   std::uniform_real_distribution<double> dist(0, 1);
 
-  PetscRandomCreate(PETSC_COMM_WORLD, &rctx);
+  PetscRandomCreate(getCommunicator(), &rctx);
   PetscRandomSetType(rctx, PETSCRAND48);
   PetscRandomSetSeed(rctx, dist(rd));
   PetscRandomSeed(rctx);     
@@ -220,7 +231,7 @@ void Vector::write(std::string filename, VIEWERFORMAT format)
 {
   PetscErrorCode ierr = 0;
   PetscViewer viewer;
-  openViewer(viewer, filename, format);
+  openViewer(viewer, filename, format, getCommunicator());
   VecView(vector, viewer); CHKERRV(ierr);
   PetscViewerDestroy(&viewer);
 }
@@ -229,7 +240,7 @@ void Vector::read(std::string filename, VIEWERFORMAT format)
 {
    PetscErrorCode ierr = 0;
    PetscViewer viewer;
-   openViewer(viewer, filename, format);
+   openViewer(viewer, filename, format, getCommunicator());
    VecLoad(vector, viewer); CHKERRV(ierr); CHKERRV(ierr);
    PetscViewerDestroy(&viewer);
 }
@@ -242,15 +253,16 @@ void Vector::view()
 
 /////////////////////////////////////////////////////////////////////////
 
-Matrix::Matrix(MPI_Comm comm, std::string name)
-  :
-  communicator(comm)
+Matrix::Matrix(std::string name)
 {
+  int size;
+  MPI_Comm_size(utils::Parallel::getGlobalCommunicator(), &size);
   PetscErrorCode ierr = 0;
-  ierr = MatCreate(communicator, &matrix); CHKERRV(ierr);
+  ierr = MatCreate(utils::Parallel::getGlobalCommunicator(), &matrix); CHKERRV(ierr);
   setName(name);
 }
-  
+
+
 Matrix::~Matrix()
 {
   PetscErrorCode ierr = 0;
@@ -289,8 +301,9 @@ void Matrix::reset()
 {
   PetscErrorCode ierr = 0;
   std::string name = getName();
+  MPI_Comm comm = getCommunicator();
   ierr = MatDestroy(&matrix); CHKERRV(ierr);
-  ierr = MatCreate(communicator, &matrix); CHKERRV(ierr);
+  ierr = MatCreate(comm, &matrix); CHKERRV(ierr);
   setName(name);
 }
 
@@ -306,6 +319,14 @@ std::string Matrix::getName()
   PetscObjectGetName((PetscObject) matrix, &cstr); 
   return cstr;    
 }
+
+MPI_Comm Matrix::getCommunicator() const
+{
+  MPI_Comm comm;
+  PetscObjectGetComm((PetscObject) matrix, &comm);
+  return comm;
+}
+
 
 MatInfo Matrix::getInfo(MatInfoType flag)
 {
@@ -326,7 +347,7 @@ void Matrix::fill_with_randoms()
   PetscRandom rctx;
 
   unsigned long seed = (double) std::rand()/RAND_MAX * std::numeric_limits<unsigned long>::max();
-  PetscRandomCreate(communicator, &rctx);
+  PetscRandomCreate(getCommunicator(), &rctx);
   PetscRandomSetType(rctx, PETSCRAND48);
   PetscRandomSetSeed(rctx, seed);
   PetscRandomSeed(rctx);     
@@ -384,7 +405,7 @@ void Matrix::write(std::string filename, VIEWERFORMAT format)
 {
   PetscErrorCode ierr = 0;
   PetscViewer viewer;
-  openViewer(viewer, filename, format);
+  openViewer(viewer, filename, format, getCommunicator());
   ierr = MatView(matrix, viewer); CHKERRV(ierr);
   PetscViewerDestroy(&viewer);
 }
@@ -393,7 +414,7 @@ void Matrix::read(std::string filename)
 {
    PetscErrorCode ierr = 0;
    PetscViewer viewer;
-   openViewer(viewer, filename, BINARY);
+   openViewer(viewer, filename, BINARY, getCommunicator());
    ierr = MatLoad(matrix, viewer); CHKERRV(ierr);
    PetscViewerDestroy(&viewer);
 }
@@ -402,7 +423,7 @@ void Matrix::view()
 {
   PetscErrorCode ierr = 0;
   PetscViewer viewer;
-  ierr = PetscViewerCreate(communicator, &viewer); CHKERRV(ierr);
+  ierr = PetscViewerCreate(getCommunicator(), &viewer); CHKERRV(ierr);
   ierr = PetscViewerSetType(viewer, PETSCVIEWERASCII); CHKERRV(ierr); 
   ierr = PetscViewerPushFormat(viewer, PETSC_VIEWER_ASCII_DENSE); CHKERRV(ierr);
   ierr = MatView(matrix, viewer); CHKERRV(ierr);
@@ -415,7 +436,7 @@ void Matrix::viewDraw()
   PetscErrorCode ierr = 0;
   PetscViewer viewer;
   PetscDraw draw;
-  ierr = PetscViewerCreate(communicator, &viewer); CHKERRV(ierr);
+  ierr = PetscViewerCreate(getCommunicator(), &viewer); CHKERRV(ierr);
   ierr = PetscViewerSetType(viewer, PETSCVIEWERDRAW); CHKERRV(ierr); 
   ierr = MatView(matrix, viewer); CHKERRV(ierr);
   ierr = PetscViewerDrawGetDraw(viewer, 0, &draw); CHKERRV(ierr);

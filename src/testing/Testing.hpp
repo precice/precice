@@ -24,22 +24,34 @@ struct MPICommRestrictFixture {
     if (static_cast<int>(ranks.size()) < Par::getCommunicatorSize()) {
       Par::setGlobalCommunicator(Par::getRestrictedCommunicator(ranks));
     }
-
-// if we set always set PETSC_COMM_WORLD to the restricted communicator, PETSc crashes
-#ifndef PRECICE_NO_PETSC
-    if (ranks.size() == 1)
-      PETSC_COMM_WORLD = PETSC_COMM_SELF;
-#endif
   }
 
   ~MPICommRestrictFixture()
   {
     Par::setGlobalCommunicator(Par::getCommunicatorWorld());
-#ifndef PRECICE_NO_PETSC
-    PETSC_COMM_WORLD = MPI_COMM_WORLD;
-#endif
   }
 };
+
+/// Fixture to restrict to a single rank
+/*
+ * How does that differ from MPICommRestrictFixture({0})? The MPICommRestrictFixture restricts the communicator
+ * to rank 0 and assigns that all ranks. This produces invalid communicators on all other ranks.
+ * SingleRankFixture restricts every rank to itself. Effectively using MPI_COMM_SELF as communicator on each rank.
+ * We don' use MPI_COMM_SELF because this causes errors when it's freed.
+ */
+struct SingleRankFixture {
+  explicit SingleRankFixture()
+  {
+    // Restriction MUST always be called on all ranks, otherwise we hang
+    Par::setGlobalCommunicator(Par::getRestrictedCommunicator({Par::getProcessRank()}));
+  }
+
+  ~SingleRankFixture()
+  {
+    Par::setGlobalCommunicator(Par::getCommunicatorWorld());
+  }
+};
+
 
 /// Fixture to sync procceses before and after test
 struct SyncProcessesFixture {

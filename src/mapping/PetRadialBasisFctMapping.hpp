@@ -163,10 +163,10 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
   Mapping ( constraint, dimensions ),
   _hasComputedMapping ( false ),
   _basisFunction ( function ),
-  _matrixC(PETSC_COMM_WORLD, "C"),
-  _matrixQ(PETSC_COMM_WORLD, "Q"),
-  _matrixA(PETSC_COMM_WORLD, "A"),
-  _matrixV(PETSC_COMM_WORLD, "V"),
+  _matrixC("C"),
+  _matrixQ("Q"),
+  _matrixA("A"),
+  _matrixV("V"),
   _solverRtol(solverRtol),
   _polynomial(polynomial)
 {
@@ -198,8 +198,8 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
   polyparams =    (_polynomial == Polynomial::ON      ) ? 1 + dimensions - deadDimensions : 0;
   sepPolyparams = (_polynomial == Polynomial::SEPARATE) ? 1 + dimensions - deadDimensions : 0;
 
-  KSPCreate(PETSC_COMM_WORLD, &_solver);
-  KSPCreate(PETSC_COMM_WORLD, &_QRsolver);
+  KSPCreate(utils::Parallel::getGlobalCommunicator(), &_solver);
+  KSPCreate(utils::Parallel::getGlobalCommunicator(), &_QRsolver);
 }
 
 template<typename RADIAL_BASIS_FUNCTION_T>
@@ -298,14 +298,14 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   IS ISlocal, ISlocalInv, ISglobal, ISidentity, ISidentityGlobal;
   ISLocalToGlobalMapping ISidentityMapping;
   // Create an index set which maps myIndizes to continous chunks of matrix rows.
-  ierr = ISCreateGeneral(PETSC_COMM_WORLD, myIndizes.size(), myIndizes.data(), PETSC_COPY_VALUES, &ISlocal); CHKERRV(ierr);
+  ierr = ISCreateGeneral(utils::Parallel::getGlobalCommunicator(), myIndizes.size(), myIndizes.data(), PETSC_COPY_VALUES, &ISlocal); CHKERRV(ierr);
   ierr = ISSetPermutation(ISlocal); CHKERRV(ierr);
   ierr = ISInvertPermutation(ISlocal, myIndizes.size(), &ISlocalInv); CHKERRV(ierr);
   ierr = ISAllGather(ISlocalInv, &ISglobal); CHKERRV(ierr); // Gather the IS from all processors
   ierr = ISLocalToGlobalMappingCreateIS(ISglobal, &_ISmapping); CHKERRV(ierr); // Make it a mapping
   
   // Create an identity mapping and use that for the rows of matrixA.
-  ierr = ISCreateStride(PETSC_COMM_WORLD, ownerRangeAEnd - ownerRangeABegin, ownerRangeABegin, 1, &ISidentity); CHKERRV(ierr);
+  ierr = ISCreateStride(utils::Parallel::getGlobalCommunicator(), ownerRangeAEnd - ownerRangeABegin, ownerRangeABegin, 1, &ISidentity); CHKERRV(ierr);
   ierr = ISSetIdentity(ISidentity); CHKERRV(ierr);
   ierr = ISAllGather(ISidentity, &ISidentityGlobal); CHKERRV(ierr);
   ierr = ISLocalToGlobalMappingCreateIS(ISidentityGlobal, &ISidentityMapping); CHKERRV(ierr);
@@ -499,7 +499,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
     // -- SET THE POLYNOM PART OF THE MATRIX --
     if (_polynomial == Polynomial::ON or _polynomial == Polynomial::SEPARATE) {
-      Mat m = _polynomial == Polynomial::ON ? _matrixA.matrix : _matrixV.matrix;
+      Mat m = _polynomial == Polynomial::ON ? _matrixA : _matrixV;
       
       colIdx[colNum] = colNum;
       rowVals[colNum++] = 1;

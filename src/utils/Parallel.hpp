@@ -123,6 +123,9 @@ public:
    */
   static Communicator getRestrictedCommunicator(const std::vector<int> &ranks);
 
+  /// Create a restricted communicator and sets them as the global communicator
+  void restrictGlobalCommunicator(const std::vector<int> &ranks);
+
   static const std::vector<AccessorGroup> &getAccessorGroups();
 
 private:

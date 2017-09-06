@@ -56,7 +56,7 @@ public:
   enum LEFTRIGHT { LEFT, RIGHT };
   
   /// Creates a new vector on the given MPI communicator.
-  Vector(MPI_Comm comm = PETSC_COMM_WORLD, std::string name = "");
+  explicit Vector(std::string name = "");
 
   /// Use Vec v as vector.
   Vector(Vec &v, std::string name = "");
@@ -87,6 +87,9 @@ public:
 
   void setName(std::string name);
   std::string getName();
+
+  /// Returns the MPI communicator
+  MPI_Comm getCommunicator() const;
 
   int getSize();
 
@@ -121,8 +124,6 @@ class Matrix
 public:
   Mat matrix;
 
-  MPI_Comm communicator;
-
   /// Delete copy and assignment constructor
   /** Copying and assignment of this class would involve copying the pointer to
       the PETSc object and finallly cause double destruction of it.
@@ -130,7 +131,7 @@ public:
   Matrix(const Matrix&) = delete;
   Matrix& operator=(const Matrix&) = delete;
 
-  Matrix(MPI_Comm comm = PETSC_COMM_WORLD, std::string name = "");
+  explicit Matrix(std::string name = "");
 
   /// Move constructor, use the implicitly declared.
   Matrix(Matrix&& other) = default;
@@ -156,6 +157,9 @@ public:
   
   void setName(std::string name);
   std::string getName();
+
+  /// Returns the MPI communicator
+  MPI_Comm getCommunicator() const;
 
   /// Get the MatInfo struct for the matrix.
   /** See http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatInfo.html for description of fields. */
