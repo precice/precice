@@ -47,7 +47,7 @@ void IQNILSPostProcessing::initialize
 (
   DataMap& cplData )
 {
-  Event e("initialize()", true, true); // time measurement, barrier
+  Event e("IQNILSPostProcessing::initialize", true, true); // time measurement, barrier
 
   // do common QN post processing initialization
   BaseQNPostProcessing::initialize(cplData);
@@ -149,7 +149,7 @@ void IQNILSPostProcessing::computeQNUpdate
 (PostProcessing::DataMap& cplData, Eigen::VectorXd& xUpdate)
 {
 	preciceTrace("computeQNUpdate()");
-  Event e("computeNewtonUpdate", true, true); // time measurement, barrier
+  Event e("IQNILSPostProcessing::computeNewtonUpdate", true, true); // time measurement, barrier
 
   DEBUG("   Compute Newton factors");
 
@@ -170,7 +170,7 @@ void IQNILSPostProcessing::computeQNUpdate
 	Eigen::VectorXd _local_b = Eigen::VectorXd::Zero(_qrV.cols());
 	Eigen::VectorXd _global_b;
 
-	Event e_qrsolve("solve: R alpha = -Q^T r", true, true); // time measurement, barrier
+	Event e_qrsolve("IQNILSPostProcessing::solve: R alpha = -Q^T r", true, true); // time measurement, barrier
 
 	// need to scale the residual to compensate for the scaling in c = R^-1 * Q^T * P^-1 * residual'
 	// it is also possible to apply the inverse scaling weights from the right to the vector c
@@ -261,7 +261,7 @@ void IQNILSPostProcessing:: specializedIterationsConverged
 (
    DataMap & cplData)
 {
-  Event e(__func__, true, true); // time measurement, barrier
+  Event e("IQNILSPostProcessing::specializedIterationsConverged", true, true); // time measurement, barrier
 
   if (_matrixCols.front() == 0){ // Did only one iteration
     _matrixCols.pop_front(); 
