@@ -129,7 +129,7 @@ void ImportVRML:: doImport
   }
   else{
     //for provided meshes, no vertices need to be created,
-    //but we check if the once given by the user coincide with the once read from file
+    //but we check if the ones given by the user coincide with the those read from file
 
     preciceCheck(vrmlParser.coordinates.size()/dimensions == mesh.vertices().size(),
         "doImport()",
