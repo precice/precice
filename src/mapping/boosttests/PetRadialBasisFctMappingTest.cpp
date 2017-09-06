@@ -482,7 +482,7 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV2,
 BOOST_AUTO_TEST_SUITE_END() // Parallel
 
 BOOST_AUTO_TEST_SUITE(Serial,
-                      * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0})))
+                      * boost::unit_test::fixture<testing::SingleRankFixture>())
 
 
 void perform2DTestConsistentMapping(Mapping& mapping)
