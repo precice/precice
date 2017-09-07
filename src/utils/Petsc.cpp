@@ -255,8 +255,6 @@ void Vector::view()
 
 Matrix::Matrix(std::string name)
 {
-  int size;
-  MPI_Comm_size(utils::Parallel::getGlobalCommunicator(), &size);
   PetscErrorCode ierr = 0;
   ierr = MatCreate(utils::Parallel::getGlobalCommunicator(), &matrix); CHKERRV(ierr);
   setName(name);
@@ -301,9 +299,8 @@ void Matrix::reset()
 {
   PetscErrorCode ierr = 0;
   std::string name = getName();
-  MPI_Comm comm = getCommunicator();
   ierr = MatDestroy(&matrix); CHKERRV(ierr);
-  ierr = MatCreate(comm, &matrix); CHKERRV(ierr);
+  ierr = MatCreate(utils::Parallel::getGlobalCommunicator(), &matrix); CHKERRV(ierr);
   setName(name);
 }
 

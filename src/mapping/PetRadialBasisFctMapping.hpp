@@ -597,9 +597,17 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: clear()
   _matrixA.reset();
   _matrixQ.reset();
   _matrixV.reset();
+  
+  KSPDestroy(&_solver);
+  KSPCreate(utils::Parallel::getGlobalCommunicator(), &_solver);
+
+  KSPDestroy(&_QRsolver);
+  KSPCreate(utils::Parallel::getGlobalCommunicator(), &_QRsolver);
+
+  ISLocalToGlobalMappingDestroy(&_ISmapping);
+  
   previousSolution.clear();
   _hasComputedMapping = false;
-  // ISmapping destroy??
 }
 
 template<typename RADIAL_BASIS_FUNCTION_T>

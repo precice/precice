@@ -99,16 +99,15 @@ BOOST_AUTO_TEST_CASE(Test1, * testing::OnRanks({0, 1, 2, 3}))
   }
 }
 
+// This one fails
 BOOST_AUTO_TEST_CASE(GlobalRBFPartitioning, * testing::OnRanks({0, 1, 2, 3}))
 {
-  utils::Parallel::setGlobalCommunicator(utils::Parallel::getRestrictedCommunicator({0,1,2,3}));
+  utils::Parallel::restrictGlobalCommunicator({0,1,2,3});
   assertion(utils::Parallel::getCommunicatorSize() == 4);
 
   reset();
   std::string configFilename = "../src/precice/boosttests/globalRBFPartitioning.xml";
   config::Configuration config;
-  utils::configure(config.getXMLTag(), configFilename);
-
 
   //MPI_Comm comm = utils::Parallel::getRestrictedCommunicator({0,1,2});
 
@@ -117,6 +116,7 @@ BOOST_AUTO_TEST_CASE(GlobalRBFPartitioning, * testing::OnRanks({0, 1, 2, 3}))
     utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator());
     assertion(utils::Parallel::getCommunicatorSize() == 3);
     utils::Parallel::clearGroups();
+    utils::configure(config.getXMLTag(), configFilename);
     SolverInterface interface ( "SolverOne", utils::Parallel::getProcessRank(), 3 );
     interface._impl->configure(config.getSolverInterfaceConfiguration());
     int meshID = interface.getMeshID("MeshOne");
@@ -138,6 +138,7 @@ BOOST_AUTO_TEST_CASE(GlobalRBFPartitioning, * testing::OnRanks({0, 1, 2, 3}))
     utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator());
     assertion(utils::Parallel::getCommunicatorSize() == 1);
     utils::Parallel::clearGroups();
+    utils::configure(config.getXMLTag(), configFilename);
     SolverInterface interface ( "SolverTwo", 0, 1 );
     interface._impl->configure(config.getSolverInterfaceConfiguration());
     int meshID = interface.getMeshID("MeshTwo");
