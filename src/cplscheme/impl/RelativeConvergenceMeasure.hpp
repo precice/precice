@@ -68,7 +68,7 @@ public:
      _normDiff = utils::MasterSlave::l2norm((newValues - oldValues) - designSpecification);
      _norm = utils::MasterSlave::l2norm(newValues + designSpecification);
      _isConvergence = _normDiff <= _norm * _convergenceLimitPercent;
-//      preciceInfo ( "measure()", "Relative convergence measure: "
+//      INFO("Relative convergence measure: "
 //                    << "two-norm differences = " << normDiff
 //                    << ", convergence limit = "
 //                    << normNew * _convergenceLimitPercent

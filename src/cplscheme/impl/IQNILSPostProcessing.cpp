@@ -148,7 +148,7 @@ void IQNILSPostProcessing::computeUnderrelaxationSecondaryData
 void IQNILSPostProcessing::computeQNUpdate
 (PostProcessing::DataMap& cplData, Eigen::VectorXd& xUpdate)
 {
-	preciceTrace("computeQNUpdate()");
+	TRACE();
   Event e("computeNewtonUpdate", true, true); // time measurement, barrier
 
   DEBUG("   Compute Newton factors");

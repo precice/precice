@@ -31,7 +31,7 @@ PreFilterPostFilterDecomposition:: PreFilterPostFilterDecomposition
 void PreFilterPostFilterDecomposition:: decompose(
   mesh::Mesh& seed)
 {
-  preciceTrace ( "decompose()", utils::MasterSlave::_rank );
+  TRACE(utils::MasterSlave::_rank );
 
   std::map<int,std::vector<int> > boundingVertexDistribution;
   std::vector<int> filteredVertexPositions;
@@ -46,8 +46,8 @@ void PreFilterPostFilterDecomposition:: preFilter(
   mesh::Mesh& seed,
   std::map<int,std::vector<int> >& boundingVertexDistribution)
 {
-  preciceTrace ( "preFilter()", utils::MasterSlave::_rank );
-  preciceInfo("preFilter()", "Pre-filter mesh " << seed.getName() );
+  TRACE(utils::MasterSlave::_rank );
+  INFO("Pre-filter mesh " << seed.getName() );
   Event e("pre-filter mesh");
 
   assertion(not _filterByMapping);
@@ -102,8 +102,8 @@ void PreFilterPostFilterDecomposition:: postFilter(
   mesh::Mesh& seed,
   std::vector<int>& filteredVertexPositions)
 {
-  preciceTrace ( "postFilter()", utils::MasterSlave::_rank );
-  preciceInfo("postFilter()", "Post-filter mesh " << seed.getName() );
+  TRACE(utils::MasterSlave::_rank );
+  INFO("Post-filter mesh " << seed.getName() );
   Event e("post-filter mesh");
 
   seed.computeState();
@@ -120,8 +120,8 @@ void PreFilterPostFilterDecomposition:: feedback(
   std::map<int,std::vector<int> >& boundingVertexDistribution,
   std::vector<int>& filteredVertexPositions)
 {
-  preciceTrace ( "feedback()", utils::MasterSlave::_rank );
-  preciceInfo("feedback()", "Feedback mesh " << seed.getName() );
+  TRACE(utils::MasterSlave::_rank );
+  INFO("Feedback mesh " << seed.getName() );
   Event e("feedback mesh");
 
   int numberOfVertices = filteredVertexPositions.size();

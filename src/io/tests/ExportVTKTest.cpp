@@ -33,7 +33,7 @@ void ExportVTKTest:: run()
 
 void ExportVTKTest:: testExportPolygonalMesh()
 {
-  preciceTrace ( "testExportPolygonalMesh" );
+  TRACE();
 
   int dim=2;
   bool invertNormals = false;
@@ -87,7 +87,7 @@ void ExportVTKTest:: testExportTriangulatedMesh()
 
 void ExportVTKTest:: testExportQuadMesh()
 {
-  preciceTrace ( "testExportQuadMesh" );
+  TRACE();
   using namespace mesh;
   int dim = 3;
   bool invertNormals = false;

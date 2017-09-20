@@ -43,8 +43,8 @@ void BroadcastFilterDecomposition:: decompose(
 void BroadcastFilterDecomposition:: broadcast(
   mesh::Mesh& seed)
 {
-  preciceTrace ( "broadcast()", utils::MasterSlave::_rank );
-  preciceInfo("broadcast()", "Broadcast mesh " << seed.getName() );
+  TRACE(utils::MasterSlave::_rank );
+  INFO("Broadcast mesh " << seed.getName() );
   Event e("broadcast mesh");
 
 
@@ -62,8 +62,8 @@ void BroadcastFilterDecomposition:: filter(
   mesh::Mesh& seed,
   std::vector<int>& filteredVertexPositions)
 {
-  preciceTrace ( "filter()", utils::MasterSlave::_rank );
-  preciceInfo("filter()", "Filter mesh " << seed.getName() );
+  TRACE(utils::MasterSlave::_rank );
+  INFO("Filter mesh " << seed.getName() );
   Event e("filter mesh");
 
   // first, bounding box filter
@@ -118,8 +118,8 @@ void BroadcastFilterDecomposition:: feedback(
   mesh::Mesh& seed,
   std::vector<int>& filteredVertexPositions)
 {
-  preciceTrace ( "feedback()", utils::MasterSlave::_rank );
-  preciceInfo("feedback()", "Feedback mesh " << seed.getName() );
+  TRACE(utils::MasterSlave::_rank );
+  INFO("Feedback mesh " << seed.getName() );
 
   int numberOfVertices = filteredVertexPositions.size();
 

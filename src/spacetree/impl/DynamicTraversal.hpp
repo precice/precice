@@ -498,7 +498,7 @@ bool DynamicTraversal<CELL_T>:: isOverlapped
   const Eigen::VectorXd& voxelCenter,
   const Eigen::VectorXd& voxelHalflengths ) const
 {
-  preciceTrace ( "isOverlapped()", cellCenter, cellHalflengths, voxelCenter,
+  TRACE(cellCenter, cellHalflengths, voxelCenter,
                   voxelHalflengths );
   Eigen::VectorXd overlap = cellCenter;
   overlap -= voxelCenter;
@@ -515,7 +515,7 @@ void DynamicTraversal<CELL_T>:: visitAllCells
   CELL_T&    cell,
   VISITOR_T& visitor )
 {
-  //preciceTrace ( "visitAllCells()" );
+  //TRACE();
   if ( cell.isLeaf() ){
     //DEBUG ( "  Applying visitor to leaf cell content with size = "
     //               << cell.content().size() );

@@ -34,7 +34,7 @@ PreconditionerTest::PreconditionerTest ()
 
 void PreconditionerTest::run ()
 {
-  preciceTrace ( "run" );
+  TRACE();
 
 #ifndef PRECICE_NO_MPI
   typedef utils::Parallel Par;
@@ -124,7 +124,7 @@ void PreconditionerTest::setUp()
 
 void PreconditionerTest::testResPreconditioner ()
 {
-  preciceTrace("testResPreconditioner()");
+  TRACE();
   std::vector<size_t> svs;
   svs.push_back(2);
   svs.push_back(4);
@@ -157,7 +157,7 @@ void PreconditionerTest::testResPreconditioner ()
 
 void PreconditionerTest::testResSumPreconditioner ()
 {
-  preciceTrace("testResSumPreconditioner()");
+  TRACE();
   std::vector<size_t> svs;
   svs.push_back(2);
   svs.push_back(4);
@@ -192,7 +192,7 @@ void PreconditionerTest::testResSumPreconditioner ()
 
 void PreconditionerTest::testValuePreconditioner ()
 {
-  preciceTrace("testValuePreconditioner()");
+  TRACE();
   std::vector<size_t> svs;
   svs.push_back(2);
   svs.push_back(4);
@@ -231,7 +231,7 @@ void PreconditionerTest::testValuePreconditioner ()
 
 void PreconditionerTest::testConstPreconditioner ()
 {
-  preciceTrace("testConstPreconditioner()");
+  TRACE();
   std::vector<size_t> svs;
   svs.push_back(2);
   svs.push_back(4);
@@ -272,7 +272,7 @@ void PreconditionerTest::testParallelMatrixScaling ()
 {
 #ifndef PRECICE_NO_MPI
 
-  preciceTrace("testParallelMatrixScaling()");
+  TRACE();
   assertion ( utils::Parallel::getCommunicatorSize() == 4 );
   utils::Parallel::synchronizeProcesses();
 
@@ -421,7 +421,7 @@ void PreconditionerTest::validateVector (DataValues& data, DataValues& compare)
 
 void PreconditionerTest::testMultilpleMeshes ()
 {
-  preciceTrace("testMultilpleMeshes()");
+  TRACE();
   std::vector<size_t> svs;
   svs.push_back(3);
   svs.push_back(5);

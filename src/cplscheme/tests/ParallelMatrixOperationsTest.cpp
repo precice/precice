@@ -222,7 +222,7 @@ void ParallelMatrixOperationsTest::testParVectorOperations()
 
 void ParallelMatrixOperationsTest::testParallelMatrixMatrixOp()
 {
-	preciceTrace ( "testParallelMatrixMatrixOp" ); assertion ( utils::Parallel::getCommunicatorSize() == 4 );
+	TRACE(); assertion ( utils::Parallel::getCommunicatorSize() == 4 );
 
 	com::PtrCommunication masterSlaveCom = com::PtrCommunication(new com::MPIDirectCommunication());
 	utils::MasterSlave::_communication = masterSlaveCom;

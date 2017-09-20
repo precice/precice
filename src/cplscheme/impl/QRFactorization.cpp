@@ -109,7 +109,7 @@ QRFactorization::QRFactorization(
       
 void QRFactorization::applyFilter(double singularityLimit, std::vector<int>& delIndices, Eigen::MatrixXd& V)
 {
-	preciceTrace("applyFilter()");
+	TRACE();
 	delIndices.resize(0);
 	if(_filter == PostProcessing::QR1FILTER || _filter == PostProcessing::QR1FILTER_ABS)
 	{
@@ -172,7 +172,7 @@ void QRFactorization::applyFilter(double singularityLimit, std::vector<int>& del
 void QRFactorization::deleteColumn(int k)
 {
 
-  preciceTrace("deleteColumn()");
+  TRACE();
 
   assertion(k >= 0, k);
   assertion(k < _cols, k, _cols);
@@ -217,7 +217,7 @@ void QRFactorization::deleteColumn(int k)
 // ATTENTION: This method works on the memory of vector v, thus changes the vector v.
 bool QRFactorization::insertColumn(int k, const Eigen::VectorXd& vec, double singularityLimit)
 {
-  preciceTrace("insertColumn()", k);
+  TRACE(k);
 
   Eigen::VectorXd v(vec);
 
@@ -333,7 +333,7 @@ int QRFactorization::orthogonalize(
   double& rho,
   int colNum)
 {
-   preciceTrace(__func__);
+   TRACE();
 
    if(not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode){
      assertion(_globalRows == _rows, _globalRows, _rows);
@@ -386,7 +386,7 @@ int QRFactorization::orthogonalize(
     // Attention (Master-Slave): Here, we need to compare the global _rows with colNum and NOT the local
     // rows on the processor.
     if (_globalRows == colNum) {
-      preciceWarning("orthogonalize()", "The least-squares system matrix is quadratic, i.e., the new column cannot be orthogonalized (and thus inserted) to the LS-system.\nOld columns need to be removed.");
+      WARN("The least-squares system matrix is quadratic, i.e., the new column cannot be orthogonalized (and thus inserted) to the LS-system.\nOld columns need to be removed.");
       v = Eigen::VectorXd::Zero(_rows);
       rho = 0.;
       return k;
@@ -415,7 +415,7 @@ int QRFactorization::orthogonalize(
     if(rho1 * _theta <= rho0 + _omega * norm_coefficients){
       // exit to fail if too many iterations
       if (k >= 4) {
-        preciceWarning("orthogonalize()", "Matrix Q is not sufficiently orthogonal. Failed to rorthogonalize new column after 4 iterations. New column will be discarded. The least-squares system is very bad conditioned and the quasi-Newton will most probably fail to converge.");
+        WARN("Matrix Q is not sufficiently orthogonal. Failed to rorthogonalize new column after 4 iterations. New column will be discarded. The least-squares system is very bad conditioned and the quasi-Newton will most probably fail to converge.");
         return -1;
       }
       rho0 = rho1;
@@ -451,7 +451,7 @@ int QRFactorization::orthogonalize_stable(
   double& rho,
   int colNum)
 {
-   preciceTrace(__func__);
+   TRACE();
 
    // serial case
    if(not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode)
@@ -515,7 +515,7 @@ int QRFactorization::orthogonalize_stable(
 		// Attention (Master-Slave): Here, we need to compare the global _rows with colNum and NOT the local
 		// rows on the processor.
 		if (_globalRows == colNum) {
-			preciceWarning("orthogonalize()", "The least-squares system matrix is quadratic, i.e., the new column cannot be orthogonalized (and thus inserted) to the LS-system.\nOld columns need to be removed.");
+			WARN("The least-squares system matrix is quadratic, i.e., the new column cannot be orthogonalized (and thus inserted) to the LS-system.\nOld columns need to be removed.");
 			v = Eigen::VectorXd::Zero(_rows);
 			rho = 0.;
 			return k;
@@ -538,14 +538,14 @@ int QRFactorization::orthogonalize_stable(
 			if (k >= 4) {
 				std::cout
 						<< "\ntoo many iterations in orthogonalize, termination failed\n";
-				preciceWarning("orthogonalize()", "Matrix Q is not sufficiently orthogonal. Failed to rorthogonalize new column after 4 iterations. New column will be discarded. The least-squares system is very bad conditioned and the quasi-Newton will most probably fail to converge.");
+				WARN("Matrix Q is not sufficiently orthogonal. Failed to rorthogonalize new column after 4 iterations. New column will be discarded. The least-squares system is very bad conditioned and the quasi-Newton will most probably fail to converge.");
 				return -1;
 			}
 
 			// if ||v_orth|| / ||v|| is extremely small (numeric limit)
 			// discard information from column, use any unit vector orthogonal to Q
 			if (!restart && rho1 <= rho * _sigma) {
-			  preciceWarning("orthogonalize()", "The new column is in the range of Q, thus not possible to orthogonalize. Try to insert a unit vector that is orthogonal to the columns space of Q.");
+			  WARN("The new column is in the range of Q, thus not possible to orthogonalize. Try to insert a unit vector that is orthogonal to the columns space of Q.");
 				//DEBUG("[QR-dec] - reorthogonalization");
 				if (_fstream_set)   (*_infostream) << "[QR-dec] - reorthogonalization"<< std::endl;
 
@@ -750,7 +750,7 @@ void QRFactorization::reset(
   double theta, 
   double sigma)
 {
-  preciceTrace("reset() QR-dec with new Matrix A");
+  TRACE();
   _Q.resize(0,0);
   _R.resize(0,0);
   _cols = 0;

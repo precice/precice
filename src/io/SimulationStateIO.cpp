@@ -47,7 +47,7 @@ void SimulationStateIO:: writeState
   std::ofstream out;
   out.open(_file.c_str());
   if (not out){
-    preciceError("writeState()", "Could not open file \"" << _file
+    ERROR("Could not open file \"" << _file
                  << "\" for writing the simulation state!");
   }
   out << "preCICE simulation state" << std::endl
@@ -67,7 +67,7 @@ void SimulationStateIO:: readState
 # ifndef PRECICE_NO_SPIRIT2
   std::ifstream in(_file.c_str());
   if (not in.is_open()){
-    preciceError("readState()", "Could not open file " << _file
+    ERROR("Could not open file " << _file
                  << " to read simulation state!");
   }
   // Wrap input file stream into a multi pass iterator (requirement)
@@ -83,12 +83,12 @@ void SimulationStateIO:: readState
      >> qi::lit("advancecalls") >> qi::long_[phoenix::ref(numberAdvanceCalls) = qi::_1];
   bool success = qi::phrase_parse(first, last, parser, qi::space);
   if((!success) || (first != last)) {
-     preciceError("readState()",
+     ERROR(
                   "Parsing of file " << _file << " failed! Left over: "
                   << std::endl << std::string(first, last));
   }
 # else // not PRECICE_NO_SPIRIT2
-  preciceError("readState()", "Needs Boost.Spirit V2.0!");
+  ERROR("Needs Boost.Spirit V2.0!");
 # endif // PRECICE_NO_SPIRIT2
 }
 

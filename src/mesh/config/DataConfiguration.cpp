@@ -62,7 +62,7 @@ void DataConfiguration:: setDimensions
 (
   int dimensions )
 {
-  preciceTrace("setDimensions()", dimensions);
+  TRACE(dimensions);
   assertion((dimensions == 2) || (dimensions == 3), dimensions);
   _dimensions = dimensions;
 }
@@ -117,7 +117,7 @@ void DataConfiguration:: xmlTagCallback
     addData(name, dataDimensions);
   }
   else {
-    preciceError("xmlTagCallback()", "Received callback from tag " << tag.getName());
+    ERROR("Received callback from tag " << tag.getName());
   }
 }
 
@@ -152,7 +152,7 @@ int DataConfiguration:: getDataDimensions
   else if (typeName == VALUE_SCALAR) {
     return 1;
   }
-  preciceError ( "getDataDimension()", "Unknown data type!" );
+  ERROR("Unknown data type!" );
 }
 
 //int DataConfiguration:: getDimensions() const

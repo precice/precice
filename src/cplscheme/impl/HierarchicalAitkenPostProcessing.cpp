@@ -284,7 +284,7 @@ void HierarchicalAitkenPostProcessing::setDesignSpecification(
      Eigen::VectorXd& q)
  {
    _designSpecification = q;
-   preciceError(__func__, "design specification for Aitken relaxation is not supported yet.");
+   ERROR("design specification for Aitken relaxation is not supported yet.");
  }
 
 }}} // namespace precice, cplscheme, impl

@@ -67,11 +67,7 @@ void tarch::tests::configurations::IntegrationTestConfiguration::parseSubtag( ta
 
   if ( xmlReader->getAttributeValue("output-directory")==nullptr ) {
     _isValid = false;
-    preciceWarning(
-      "parseSubtag(...)",
-      "missing or invalid attribute \"output-directory\" for tag <" + getTag() +
-      ">"
-    );
+    WARN("Missing or invalid attribute \"output-directory\" for tag <" + getTag() + ">");
   }
   else {
     _outputDirectoryForTempFiles = xmlReader->getAttributeValue("output-directory");
@@ -96,19 +92,15 @@ void tarch::tests::configurations::IntegrationTestConfiguration::parseSubtag( ta
     (xmlReader->getNodeType()!=irr::io::EXN_ELEMENT_END) ||
     (xmlReader->getNodeName()!=getTag())
   ) {
-    preciceWarning(
-      "parseSubtag(...)",
-      "expected closing tag for " + getTag() +
-      ", but received tag <" + xmlReader->getNodeName() + ">"
-    );
+    WARN("Expected closing tag for " + getTag() + ", but received tag <" + xmlReader->getNodeName() + ">");
     _isValid = false;
   }
 
   if (!_logConfiguration.isValid()) {
-    preciceWarning( "parse(...)", "subtag <" + _logConfiguration.getTag() + "> missing or invalid." );
+    WARN("subtag <" + _logConfiguration.getTag() + "> missing or invalid." );
   }
   if (!_logFormatConfiguration.isValid()) {
-    preciceWarning( "parse(...)", "subtag <" + _logFormatConfiguration.getTag() + "> missing or invalid." );
+    WARN("subtag <" + _logFormatConfiguration.getTag() + "> missing or invalid." );
   }
 }
 

@@ -168,7 +168,7 @@ void CouplingSchemeConfiguration:: xmlTagCallback
 (
   utils::XMLTag& tag )
 {
-  preciceTrace("xmlTagCallback()", tag.getFullName());
+  TRACE(tag.getFullName());
   if (tag.getNamespace() == TAG){
     _config.type = tag.getName();
     _postProcConfig->clear();
@@ -298,7 +298,7 @@ void CouplingSchemeConfiguration:: xmlEndTagCallback
 (
   utils::XMLTag& tag )
 {
-  preciceTrace("xmlEndTagCallback()", tag.getFullName());
+  TRACE(tag.getFullName());
   if (tag.getNamespace() == TAG){
     if (_config.type == VALUE_SERIAL_EXPLICIT){
       std::string accessor(_config.participants[0]);
@@ -367,7 +367,7 @@ void CouplingSchemeConfiguration:: addCouplingScheme
   PtrCouplingScheme  cplScheme,
   const std::string& participantName )
 {
-  preciceTrace ( "addCouplingScheme()", participantName );
+  TRACE(participantName );
   if (utils::contained(participantName, _couplingSchemes)) {
     DEBUG("Coupling scheme exists already for participant");
     if (utils::contained(participantName, _couplingSchemeCompositions)) {
@@ -400,7 +400,7 @@ void CouplingSchemeConfiguration:: addTypespecifcSubtags
   //const std::string& name,
   utils::XMLTag&     tag  )
 {
-  preciceTrace( "addTypespecifcSubtags()", type );
+  TRACE(type );
   addTransientLimitTags(tag);
   _config.type = type;
   //_config.name = name;
@@ -451,7 +451,7 @@ void CouplingSchemeConfiguration:: addTypespecifcSubtags
   else if (type == VALUE_UNCOUPLED){
   }
   else {
-    preciceError("addTypespecificSubtags()", "Unknown coupling scheme type!");
+    ERROR("Unknown coupling scheme type!");
   }
 }
 
@@ -643,7 +643,7 @@ void CouplingSchemeConfiguration:: addTagPostProcessing
 (
   utils::XMLTag& tag )
 {
-  preciceTrace( "addTagPostProcessing()",tag.getFullName());
+  TRACE(tag.getFullName());
   if(_postProcConfig.get()==nullptr){
     _postProcConfig = PtrPostProcessingConfiguration(
                           new PostProcessingConfiguration(_meshConfig));
@@ -661,7 +661,7 @@ void CouplingSchemeConfiguration:: addAbsoluteConvergenceMeasure
   bool               suffices,
   int                level)
 {
-  preciceTrace( "addAbsoluteConvergenceMeasure()");
+  TRACE();
   impl::PtrConvergenceMeasure measure(new impl::AbsoluteConvergenceMeasure(limit));
   int dataID = getData(dataName, meshName)->getID();
   _config.convMeasures.push_back(std::make_tuple(dataID, suffices, meshName, level, measure));
@@ -675,7 +675,7 @@ void CouplingSchemeConfiguration:: addRelativeConvergenceMeasure
   bool               suffices,
   int                level)
 {
-  preciceTrace( "addRelativeConvergenceMeasure()");
+  TRACE();
   impl::PtrConvergenceMeasure measure (
       new impl::RelativeConvergenceMeasure(limit) );
   int dataID = getData(dataName, meshName)->getID();
@@ -690,7 +690,7 @@ void CouplingSchemeConfiguration:: addResidualRelativeConvergenceMeasure
   bool               suffices,
   int                level)
 {
-  preciceTrace( "addResidualRelativeConvergenceMeasure()");
+  TRACE();
   impl::PtrConvergenceMeasure measure (
       new impl::ResidualRelativeConvergenceMeasure(limit) );
   int dataID = getData(dataName, meshName)->getID();
@@ -705,7 +705,7 @@ void CouplingSchemeConfiguration:: addMinIterationConvergenceMeasure
   bool               suffices,
   int                level)
 {
-  preciceTrace( "addMinIterationConvergenceMeasure()");
+  TRACE();
   impl::PtrConvergenceMeasure measure (
       new impl::MinIterationConvergenceMeasure(minIterations) );
   int dataID = getData(dataName, meshName)->getID();
@@ -726,7 +726,7 @@ mesh::PtrData CouplingSchemeConfiguration:: getData
       }
     }
   }
-  preciceError ( "getData()", "Data \"" << dataName << "\" used by mesh \""
+  ERROR("Data \"" << dataName << "\" used by mesh \""
                  << meshName << "\" is not configured!" );
 }
 
@@ -735,7 +735,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createSerialExplicitCouplingSche
 (
   const std::string& accessor ) const
 {
-  preciceTrace("createSerialExplicitCouplingScheme()", accessor);
+  TRACE(accessor);
   m2n::PtrM2N m2n = _m2nConfig->getM2N (
       _config.participants[0], _config.participants[1] );
   SerialCouplingScheme* scheme = new SerialCouplingScheme (
@@ -753,7 +753,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createParallelExplicitCouplingSc
 (
   const std::string& accessor ) const
 {
-  preciceTrace("createParallelExplicitCouplingScheme()", accessor);
+  TRACE(accessor);
   m2n::PtrM2N m2n = _m2nConfig->getM2N (
       _config.participants[0], _config.participants[1] );
   ParallelCouplingScheme* scheme = new ParallelCouplingScheme (
@@ -771,7 +771,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createSerialImplicitCouplingSche
 (
   const std::string& accessor ) const
 {
-  preciceTrace("createSerialImplicitCouplingScheme()", accessor);
+  TRACE(accessor);
 
   m2n::PtrM2N m2n = _m2nConfig->getM2N (
       _config.participants[0], _config.participants[1] );
@@ -815,7 +815,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createParallelImplicitCouplingSc
 (
   const std::string& accessor ) const
 {
-  preciceTrace("createParallelImplicitCouplingScheme()", accessor);
+  TRACE(accessor);
   m2n::PtrM2N m2n = _m2nConfig->getM2N(
       _config.participants[0], _config.participants[1] );
   ParallelCouplingScheme* scheme = new ParallelCouplingScheme (
@@ -858,7 +858,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createMultiCouplingScheme
 (
   const std::string& accessor ) const
 {
-  preciceTrace("createMultiCouplingScheme()", accessor);
+  TRACE(accessor);
 
   BaseCouplingScheme* scheme;
 
@@ -925,7 +925,7 @@ CouplingSchemeConfiguration:: getTimesteppingMethod
 (
   const std::string& method ) const
 {
-  preciceTrace ( "getTimesteppingMethod()", method );
+  TRACE(method );
   if ( method == VALUE_FIXED ){
     return constants::FIXED_DT;
   }
@@ -935,7 +935,7 @@ CouplingSchemeConfiguration:: getTimesteppingMethod
 //  else if ( method == TagTimestepLength::VALUE_SECOND_PARTICIPANT ){
 //    return constants::SECOND_PARTICIPANT_SETS_DT;
 //  }
-  preciceError ( "getTimesteppingMethod()", "Unknown timestepping method \""
+  ERROR("Unknown timestepping method \""
                  << method << "\"!" );
 }
 
@@ -944,7 +944,7 @@ void CouplingSchemeConfiguration:: addDataToBeExchanged
   BaseCouplingScheme& scheme,
   const std::string&  accessor) const
 {
-  preciceTrace ( "addDataToBeExchanged()");
+  TRACE();
   using std::get;
   for (const Config::Exchange& tuple : _config.exchanges){
     mesh::PtrData data = get<0>(tuple);
@@ -982,7 +982,7 @@ void CouplingSchemeConfiguration:: addMultiDataToBeExchanged
   MultiCouplingScheme& scheme,
   const std::string&  accessor) const
 {
-  preciceTrace ( "addMultiDataToBeExchanged()");
+  TRACE();
   using std::get;
   for (const Config::Exchange& tuple : _config.exchanges){
     mesh::PtrData data = get<0>(tuple);
@@ -1084,7 +1084,7 @@ bool CouplingSchemeConfiguration:: checkIfDataIsCoarse
       err = true;
     }
   }
-  if(err) preciceError(__func__, "Data ID "<<id<<" is not contained in the exchange data for the fine model and no coarse model optimization method is defined.");
+  if(err) ERROR("Data ID "<<id<<" is not contained in the exchange data for the fine model and no coarse model optimization method is defined.");
   return true;
 }
 

@@ -51,7 +51,7 @@ void SVDFactorization::initialize(
 /*
 void SVDFactorization::applyPreconditioner()
 {
-  preciceTrace(__func__);
+  TRACE();
 
   if(_psi.size() > 0 && _phi.size() > 0){
     // apply preconditioner: \psi_i * P_i, corresponds to Wtil_i * P_i, local!
@@ -67,7 +67,7 @@ void SVDFactorization::applyPreconditioner()
 
 void SVDFactorization::revertPreconditioner()
 {
-  preciceTrace(__func__);
+  TRACE();
 
   if(_psi.size() > 0 && _phi.size() > 0){
     // revert preconditioner: \psi_i * P_i^{-1}, corresponds to Wtil_i * P_i^{-1}, local!
@@ -99,7 +99,7 @@ void SVDFactorization::computeQRdecomposition(
     Matrix & Q,
     Matrix & R)
 {
-  preciceTrace(__func__);
+  TRACE();
 //  Event e("compute_QR-dec_for-SVD-update", true, true); // time measurement, barrier
 
   // if nothing is linear dependent, the dimensions stay like this
@@ -125,7 +125,7 @@ void SVDFactorization::computeQRdecomposition(
 
     // if system is quadratic; discard
     if (_globalRows == colIndex) {
-      preciceWarning(__func__,"The matrix that is about to be factorized is quadratic, i.e., the new column cannot be orthogonalized; discard.");
+      WARN("The matrix that is about to be factorized is quadratic, i.e., the new column cannot be orthogonalized; discard.");
       return;
     }
 
@@ -193,7 +193,7 @@ void SVDFactorization::computeQRdecomposition(
       if (rho_orth * theta <= rho0 + omega * norm_coefficients) {
         // exit to fail if too many iterations
         if (its >= 4) {
-          preciceWarning("orthogonalize()","Matrix Q is not sufficiently orthogonal. Failed to rorthogonalize new column after 4 iterations. New column will be discarded.");
+          WARN("Matrix Q is not sufficiently orthogonal. Failed to rorthogonalize new column after 4 iterations. New column will be discarded.");
           orthogonalized = false;
           termination = true;
         }

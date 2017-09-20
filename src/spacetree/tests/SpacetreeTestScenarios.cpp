@@ -963,7 +963,7 @@ void SpacetreeTestScenarios:: testSearchPosition()
 
 void SpacetreeTestScenarios:: testSearchDistance()
 {
-  preciceTrace ( "testSearchDistance()" );
+  TRACE();
   int min = Spacetree::minElementsToRefineCell;
   Spacetree::minElementsToRefineCell = 1;
   int dim = 2;
@@ -1300,7 +1300,7 @@ void SpacetreeTestScenarios:: testNeighborSearch()
 
 void SpacetreeTestScenarios:: testSearchContentVertices()
 {
-  preciceTrace ( "testSearchContentVertices()" );
+  TRACE();
   for ( int dim=2; dim <= 3; dim++ ){
     for ( int testDim=0; testDim < dim; testDim++ ) {
       bool positiveDirection = true;
@@ -1324,7 +1324,7 @@ void SpacetreeTestScenarios:: performTestSearchContentVertices
   bool                    positive,
   const Eigen::VectorXd&  offset )
 {
-  preciceTrace ( "performTestSearchContentVertices()", testDim, positive, offset );
+  TRACE(testDim, positive, offset );
   int min = Spacetree::minElementsToRefineCell;
   Spacetree::minElementsToRefineCell = 1;
   int dim = offset.size();
@@ -1590,7 +1590,7 @@ void SpacetreeTestScenarios:: performTestSearchContentEdges
   bool                    positive,
   const Eigen::VectorXd&  offset )
 {
-  preciceTrace ( "performTestSearchContentEdges()", testDim, positive, offset );
+  TRACE(testDim, positive, offset );
   int min = Spacetree::minElementsToRefineCell;
   Spacetree::minElementsToRefineCell = 1;
   int dim = offset.size();
@@ -1817,7 +1817,7 @@ void SpacetreeTestScenarios:: performTestSearchContentEdges
 
 void SpacetreeTestScenarios:: testSearchContentTriangles()
 {
-  preciceTrace ( "testSearchContentTriangles()" );
+  TRACE();
   int dim = 3;
   for ( int testDim=0; testDim < dim; testDim++ ) {
     bool positiveDirection = true;
@@ -2534,7 +2534,7 @@ void SpacetreeTestScenarios:: testVoxelPosition()
 
 void SpacetreeTestScenarios:: testSplittingVoxels()
 {
-  preciceTrace ( "testSplittingVoxels()" );
+  TRACE();
   int dim = 2;
   using Eigen::Vector2d;
   Vector2d cuboidOffset (-5.0, -4.5);

@@ -64,7 +64,7 @@ public:
          _isFirstIteration = false;
       }
       _isConvergence = _normDiff < _normFirstResidual * _convergenceLimitPercent;
-//      preciceInfo ( "measure()", "Residual Relative convergence measure: "
+//      INFO("Residual Relative convergence measure: "
 //                    << "two-norm differences = " << normDiff
 //                    << ", convergence limit = "
 //                    << _normFirstResidual * _convergenceLimitPercent

@@ -22,7 +22,7 @@ void ImportSTL:: doImport
   const std::string& name,
   mesh::Mesh&        mesh )
 {
-  preciceTrace("doImport()", name);
+  TRACE(name);
   assertion(mesh.getDimensions() == 3, mesh.getDimensions());
   // TODO
 }

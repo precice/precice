@@ -757,7 +757,7 @@ template<typename RADIAL_BASIS_FUNCTION_T>
 bool PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::doesVertexContribute(int vertexID) const
 {
   // FIXME: Use a sane calculation here
-  // preciceTrace(__func__);
+  // TRACE();
 
   if (not _basisFunction.hasCompactSupport())
     return true;

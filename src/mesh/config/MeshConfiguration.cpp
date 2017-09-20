@@ -87,7 +87,7 @@ void MeshConfiguration:: setDimensions
 (
   int dimensions )
 {
-  preciceTrace("setDimensions()", dimensions);
+  TRACE(dimensions);
   assertion((dimensions == 2) || (dimensions == 3), dimensions);
   _dimensions = dimensions;
 }
@@ -96,7 +96,7 @@ void MeshConfiguration:: setDimensions
 //(
 //  utils::XMLTag::XMLReader* xmlReader )
 //{
-//  preciceTrace("parseSubtag()");
+//  TRACE();
 //
 //  assertion(not _setMeshSubIDs);
 //
@@ -129,7 +129,7 @@ void MeshConfiguration:: xmlTagCallback
 (
   utils::XMLTag& tag )
 {
-  preciceTrace("xmlTagCallback()", tag.getName());
+  TRACE(tag.getName());
   if (tag.getName() == TAG){
     assertion(_dimensions != 0);
     std::string name = tag.getStringAttributeValue(ATTR_NAME);
@@ -263,7 +263,7 @@ void MeshConfiguration:: addNeededMesh(
   const std::string& participant,
   const std::string& mesh)
 {
-  preciceTrace ( "addNeededMesh()", participant, mesh );
+  TRACE(participant, mesh );
   if(_neededMeshes.count(participant)==0){
     std::vector<std::string> meshes;
     meshes.push_back(mesh);

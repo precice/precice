@@ -159,7 +159,7 @@ void BalanceVertexPositionActionTest:: testSmoothHexahedron()
 
 void BalanceVertexPositionActionTest:: testConfiguration()
 {
-  preciceTrace("testConfiguration()");
+  TRACE();
   {
     std::string filename = utils::Globals::getPathToSources() +
                            "/action/tests/BalanceVertexPositionActionTest-testConfiguration.xml";

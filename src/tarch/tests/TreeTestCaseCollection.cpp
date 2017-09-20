@@ -104,7 +104,7 @@ void tarch::tests::TreeTestCaseCollection::run( const std::string& prefix ) {
     logInformation += " failed";
   }
   if (_writeToLog) {
-    preciceInfo("run()",logInformation );
+    INFO(logInformation );
   }
 }
 

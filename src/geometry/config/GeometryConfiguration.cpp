@@ -123,7 +123,7 @@ void GeometryConfiguration:: setDimensions
 (
   int dimensions )
 {
-  preciceTrace("setDimensions()", dimensions);
+  TRACE(dimensions);
   assertion((dimensions == 2) || (dimensions == 3), dimensions);
   _dimensions = dimensions;
 }
@@ -132,7 +132,7 @@ void GeometryConfiguration:: setDimensions
 //(
 //  utils::XMLTag::XMLReader* xmlReader )
 //{
-//  preciceTrace ( "parseSubtag()" );
+//  TRACE();
 ////  using utils::XMLTag;
 ////  using utils::XMLAttribute;
 ////  using utils::ValidatorEquals;
@@ -173,7 +173,7 @@ void GeometryConfiguration:: xmlTagCallback
 (
   utils::XMLTag& tag )
 {
-  preciceTrace("xmlTagCallback()", tag.getFullName());
+  TRACE(tag.getFullName());
   if (tag.getNamespace() == TAG){
     assertion(_dimensions != 0);
     _readData = ReadData(_dimensions);
@@ -231,7 +231,7 @@ void GeometryConfiguration:: xmlEndTagCallback
 (
   utils::XMLTag& tag )
 {
-  preciceTrace ( "xmlEndTagCallback()", tag.getFullName() );
+  TRACE(tag.getFullName() );
   if (tag.getNamespace() == TAG ) {
     assertion(not _readData.noReadData);
     assertion(_readData.type == tag.getName(), _readData.type, tag.getName());

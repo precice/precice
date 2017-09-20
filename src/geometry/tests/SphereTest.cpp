@@ -22,7 +22,7 @@ SphereTest:: SphereTest ()
 void SphereTest:: run ()
 {
   PRECICE_MASTER_ONLY {
-    preciceTrace ( "run" );
+    TRACE();
     for ( int dim=2; dim <= 3; dim++ ){
       bool flipNormals = false;
       mesh::Mesh mesh ( "test-sphere", dim, flipNormals );

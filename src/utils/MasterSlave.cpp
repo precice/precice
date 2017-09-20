@@ -116,7 +116,7 @@ double MasterSlave:: dot(const Eigen::VectorXd& vec1, const Eigen::VectorXd& vec
 
 void MasterSlave:: reset()
 {
-  preciceTrace("reset()");
+  TRACE();
   _masterMode = false;
   _slaveMode = false;
   _rank = -1;

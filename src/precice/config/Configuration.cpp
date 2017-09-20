@@ -34,14 +34,14 @@ void Configuration:: xmlTagCallback
 (
   utils::XMLTag& tag )
 {
-  preciceTrace("xmlTagCallback()", tag.getName());
+  TRACE(tag.getName());
 }
 
 void Configuration:: xmlEndTagCallback
 (
   utils::XMLTag& tag )
 {
-  preciceTrace("xmlEndTagCallback()", tag.getName());
+  TRACE(tag.getName());
 }
 
 const SolverInterfaceConfiguration&

@@ -14,7 +14,7 @@ logging::Logger Communication::_log("com::Communication");
  */
 void
 Communication::reduceSum(double* itemsToSend, double* itemsToReceive, int size) {
-  preciceTrace("broadcast(double*)", size);
+  TRACE(size);
 
   for(int i = 0; i < size; i++){
     itemsToReceive[i] = itemsToSend[i];
@@ -33,7 +33,7 @@ Communication::reduceSum(double* itemsToSend, double* itemsToReceive, int size) 
 
 void
 Communication::reduceSum(double* itemsToSend, double* itemsToReceive, int size, int rankMaster) {
-  preciceTrace("allreduce(double*)", size);
+  TRACE(size);
 
   auto request = aSend(itemsToSend, size, rankMaster);
   request->wait();
@@ -44,7 +44,7 @@ Communication::reduceSum(double* itemsToSend, double* itemsToReceive, int size, 
  */
 void
 Communication::reduceSum(int& itemsToSend, int& itemsToReceive) {
-  preciceTrace("broadcast(int)");
+  TRACE();
 
   itemsToReceive = itemsToSend;
 
@@ -59,7 +59,7 @@ Communication::reduceSum(int& itemsToSend, int& itemsToReceive) {
 
 void
 Communication::reduceSum(int& itemsToSend, int& itemsToReceive, int rankMaster) {
-  preciceTrace("allreduce(int)");
+  TRACE();
 
   auto request = aSend(&itemsToSend, 1, rankMaster);
   request->wait();
@@ -67,7 +67,7 @@ Communication::reduceSum(int& itemsToSend, int& itemsToReceive, int rankMaster) 
 
 void
 Communication::allreduceSum() {
-  preciceTrace("allreduceSum()");
+  TRACE();
 }
 
 /**
@@ -75,7 +75,7 @@ Communication::allreduceSum() {
  */
 void
 Communication::allreduceSum(double* itemsToSend, double* itemsToReceive, int size) {
-  preciceTrace("broadcast(double*)", size);
+  TRACE(size);
 
   for(int i = 0; i < size; i++){
     itemsToReceive[i] = itemsToSend[i];
@@ -105,7 +105,7 @@ Communication::allreduceSum(double* itemsToSend, double* itemsToReceive, int siz
  */
 void
 Communication::allreduceSum(double* itemsToSend, double* itemsToReceive, int size, int rankMaster) {
-  preciceTrace("allreduce(double*)", size);
+  TRACE(size);
 
   auto request = aSend(itemsToSend, size, rankMaster);
   request->wait();
@@ -118,7 +118,7 @@ Communication::allreduceSum(double* itemsToSend, double* itemsToReceive, int siz
  */
 void
 Communication::allreduceSum(double& itemsToSend, double& itemsToReceive) {
-  preciceTrace("broadcast(double)");
+  TRACE();
 
   itemsToReceive = itemsToSend;
 
@@ -144,7 +144,7 @@ Communication::allreduceSum(double& itemsToSend, double& itemsToReceive) {
  */
 void
 Communication::allreduceSum(double& itemsToSend, double& itemsToReceive, int rankMaster) {
-  preciceTrace("allreduce(double)");
+  TRACE();
 
   auto request = aSend(&itemsToSend, 1, rankMaster);
   request->wait();
@@ -157,7 +157,7 @@ Communication::allreduceSum(double& itemsToSend, double& itemsToReceive, int ran
  */
 void
 Communication::allreduceSum(int& itemsToSend, int& itemsToReceive) {
-  preciceTrace("broadcast(int)");
+  TRACE();
 
   itemsToReceive = itemsToSend;
 
@@ -183,7 +183,7 @@ Communication::allreduceSum(int& itemsToSend, int& itemsToReceive) {
  */
 void
 Communication::allreduceSum(int& itemsToSend, int& itemsToReceive, int rankMaster) {
-  preciceTrace("allreduce(int)");
+  TRACE();
 
   auto request = aSend(&itemsToSend, 1, rankMaster);
   request->wait();
@@ -195,12 +195,12 @@ Communication::allreduceSum(int& itemsToSend, int& itemsToReceive, int rankMaste
 
 void
 Communication::broadcast() {
-  preciceTrace("broadcast()");
+  TRACE();
 }
 
 void
 Communication::broadcast(int* itemsToSend, int size) {
-  preciceTrace("broadcast(int*)", size);
+  TRACE(size);
 
   std::vector<PtrRequest> requests;
 
@@ -217,14 +217,14 @@ Communication::broadcast(int* itemsToSend, int size) {
 
 void
 Communication::broadcast(int* itemsToReceive, int size, int rankBroadcaster) {
-  preciceTrace("broadcast(int*)", size);
+  TRACE(size);
 
   receive(itemsToReceive, size, rankBroadcaster + _rankOffset);
 }
 
 void
 Communication::broadcast(int itemToSend) {
-  preciceTrace("broadcast(int)");
+  TRACE();
 
   std::vector<PtrRequest> requests;
 
@@ -241,14 +241,14 @@ Communication::broadcast(int itemToSend) {
 
 void
 Communication::broadcast(int& itemToReceive, int rankBroadcaster) {
-  preciceTrace("broadcast(int&)");
+  TRACE();
 
   receive(itemToReceive, rankBroadcaster + _rankOffset);
 }
 
 void
 Communication::broadcast(double* itemsToSend, int size) {
-  preciceTrace("broadcast(double*)", size);
+  TRACE(size);
 
   std::vector<PtrRequest> requests;
 
@@ -267,7 +267,7 @@ void
 Communication::broadcast(double* itemsToReceive,
                          int size,
                          int rankBroadcaster) {
-  preciceTrace("broadcast(double*)", size);
+  TRACE(size);
   receive(itemsToReceive, size, rankBroadcaster + _rankOffset);
 }
 
@@ -305,7 +305,7 @@ Communication::broadcast(bool itemToSend) {
 
 void
 Communication::broadcast(bool& itemToReceive, int rankBroadcaster) {
-  preciceTrace("broadcast(bool&)");
+  TRACE();
 
   int item;
 
