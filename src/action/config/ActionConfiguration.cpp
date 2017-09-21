@@ -232,7 +232,7 @@ ActionConfiguration:: ActionConfiguration
 //(
 //  utils::XMLTag::XMLReader* xmlReader )
 //{
-//  preciceTrace ( "parseSubtag()" );
+//  TRACE();
 //  using namespace utils;
 //  _configured = Configured();
 //
@@ -278,7 +278,7 @@ void ActionConfiguration:: xmlTagCallback
 (
   utils::XMLTag& callingTag )
 {
-  preciceTrace("xmlTagCallback()", callingTag.getName());
+  TRACE(callingTag.getName());
   if (callingTag.getNamespace() == TAG){
     _configuredAction = ConfiguredAction();
     _configuredAction.type = callingTag.getName();
@@ -329,7 +329,7 @@ int ActionConfiguration:: getUsedMeshID() const
       return mesh->getID();
     }
   }
-  preciceError("getUsedMeshID()", "No mesh ID found!");
+  ERROR("No mesh ID found!");
   return -1; // To please compiler
 }
 
@@ -345,7 +345,7 @@ int ActionConfiguration:: getUsedMeshID() const
 //  utils::XMLTag&     callingTag,
 //  const std::string& type )
 //{
-//  preciceTrace ( "addSubtags()", callingTag.getName() );
+//  TRACE(callingTag.getName() );
 //  assertion ( type != std::string("") );
 //  using utils::XMLTag;
 //  using utils::XMLAttribute;
@@ -409,14 +409,14 @@ int ActionConfiguration:: getUsedMeshID() const
 //    callingTag.addSubtag ( tagOptionalTargetData );
 //  }
 //  else {
-//    preciceError ( "addSubtags()", "Unknown action type \""
+//    ERROR("Unknown action type \""
 //                   << _configured.type << "\"!" );
 //  }
 //}
 
 void ActionConfiguration:: createAction()
 {
-  preciceTrace("createAction()");
+  TRACE();
 
   assertion(_configuredAction.type != std::string(""));
   action::Action::Timing timing = getTiming();
@@ -515,7 +515,7 @@ void ActionConfiguration:: createAction()
 
 action::Action::Timing ActionConfiguration:: getTiming () const
 {
-  preciceTrace ( "getTiming()", _configuredAction.timing );
+  TRACE(_configuredAction.timing );
   action::Action::Timing timing;
   if ( _configuredAction.timing == VALUE_REGULAR_PRIOR ){
     timing = action::Action::ALWAYS_PRIOR;
@@ -533,7 +533,7 @@ action::Action::Timing ActionConfiguration:: getTiming () const
     timing = action::Action::ON_TIMESTEP_COMPLETE_POST;
   }
   else {
-    preciceError ( "getTiming()", "Unknown action timing \""
+    ERROR("Unknown action timing \""
                    <<  _configuredAction.timing << "\"!" );
   }
   return timing;

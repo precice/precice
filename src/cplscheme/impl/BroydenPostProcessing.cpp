@@ -89,12 +89,12 @@ void BroydenPostProcessing::updateDifferenceMatrices
 void BroydenPostProcessing::computeQNUpdate
     (PostProcessing::DataMap& cplData, Eigen::VectorXd& xUpdate)
 {
-  preciceTrace("computeQNUpdate()");
+  TRACE();
   
   DEBUG("currentColumns="<<_currentColumns);  
   if(_currentColumns > 1)
   {
-     preciceError(__func__, "truncated IMVJ no longer supported, needs to be parallelized and datastructures need to be changed to Eigen datastructures.");
+     ERROR("truncated IMVJ no longer supported, needs to be parallelized and datastructures need to be changed to Eigen datastructures.");
      DEBUG("compute update with QR-dec");
      //computeNewtonFactorsQRDecomposition(cplData, xUpdate);
   }else

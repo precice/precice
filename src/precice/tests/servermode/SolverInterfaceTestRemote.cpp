@@ -34,7 +34,7 @@ void SolverInterfaceTestRemote:: setUp()
 void SolverInterfaceTestRemote:: run()
 {
 # ifndef PRECICE_NO_MPI
-  preciceTrace("run()");
+  TRACE();
   typedef utils::Parallel Par;
   if (Par::getCommunicatorSize() >= 2){
     Par::Communicator comm = Par::getRestrictedCommunicator({0 ,1});
@@ -70,7 +70,7 @@ void SolverInterfaceTestRemote:: configureSolverInterface
   const std::string& configFilename,
   SolverInterface&   interface )
 {
-  preciceTrace("configureSolverInterface()", configFilename);
+  TRACE(configFilename);
   mesh::Mesh::resetGeometryIDsGlobally();
   mesh::Data::resetDataCount();
   impl::Participant::resetParticipantCount();

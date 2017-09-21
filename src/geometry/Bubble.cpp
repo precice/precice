@@ -27,7 +27,7 @@ void Bubble:: specializedCreate
 (
   mesh::Mesh& seed )
 {
-  preciceTrace ( "specializedCreate()" );
+  TRACE();
   using namespace mesh;
   int dimensions = seed.getDimensions();
   assertion ( (dimensions == 2) || (dimensions == 3), dimensions );
@@ -60,7 +60,7 @@ void Bubble:: specializedCreate
     seed.createEdge (*oldLower, last);
   }
   else {
-    preciceError ( "specializedCreate()", "Geometry bubble only available in 2D!");
+    ERROR("Geometry bubble only available in 2D!");
   }
 }
 

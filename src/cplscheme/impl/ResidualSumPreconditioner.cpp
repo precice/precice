@@ -17,7 +17,7 @@ ResidualSumPreconditioner:: ResidualSumPreconditioner
 {}
 
 void ResidualSumPreconditioner::initialize(std::vector<size_t>& svs){
-  preciceTrace("initialize()");
+  TRACE();
   Preconditioner::initialize(svs);
 
   _residualSum.resize(_subVectorSizes.size(),0.0);

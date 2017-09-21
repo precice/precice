@@ -41,7 +41,7 @@ void ParallelCouplingScheme::initialize
   double startTime,
   int    startTimestep )
 {
-  preciceTrace("initialize()", startTime, startTimestep);
+  TRACE(startTime, startTimestep);
   assertion(not isInitialized());
   assertion(math::greaterEquals(startTime, 0.0), startTime);
   assertion(startTimestep >= 0, startTimestep);
@@ -166,7 +166,7 @@ void ParallelCouplingScheme::advance()
 
 void ParallelCouplingScheme::explicitAdvance()
 {
-  preciceTrace("advance()");
+  TRACE();
   checkCompletenessRequiredActions();
   preciceCheck(!hasToReceiveInitData() && !hasToSendInitData(), "advance()",
                "initializeData() needs to be called before advance if data has to be initialized!");
@@ -213,7 +213,7 @@ void ParallelCouplingScheme::explicitAdvance()
 
 void ParallelCouplingScheme::implicitAdvance()
 {
-  preciceTrace("advance()", getTimesteps(), getTime());
+  TRACE(getTimesteps(), getTime());
   checkCompletenessRequiredActions();
 
   preciceCheck(!hasToReceiveInitData() && !hasToSendInitData(), "advance()",
@@ -362,7 +362,7 @@ void ParallelCouplingScheme::implicitAdvance()
 
 void ParallelCouplingScheme::mergeData()
 {
-  preciceTrace("mergeData()");
+  TRACE();
   assertion(!doesFirstStep(), "Only the second participant should do the post processing." );
   assertion(_allData.empty(), "This function should only be called once.");
   _allData.insert(getSendData().begin(), getSendData().end());

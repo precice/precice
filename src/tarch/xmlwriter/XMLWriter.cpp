@@ -19,7 +19,7 @@ XMLWriter::XMLWriter(std::string sTmp)
   if(fp == NULL) {
     std::stringstream ss;
     ss << "Unable to open output file " << sTmp;
-    preciceWarning("XMLWriter",ss.str());
+    WARN(ss.str());
   }
 }
 
@@ -32,7 +32,7 @@ XMLWriter::XMLWriter(const std::string& sTmp, const std::string& headerInfo)
   if(fp == NULL) {
     std::stringstream ss;
     ss << "Unable to open output file " << sTmp;
-    preciceWarning("XMLWriter",ss.str());
+    WARN(ss.str());
   } else {
     std::stringstream ss;
     ss << "<?xml version=\"1.0\" encoding=\"UTF-8\" \?>" <<std::endl

@@ -32,7 +32,7 @@ void ModifyCoordinatesAction:: performAction
   double computedPartFullDt,
   double fullDt )
 {
-  preciceTrace ( "performAction()" );
+  TRACE();
   auto& values = _data->values();
   int dim = getMesh()->getDimensions();
   Eigen::VectorXd data(dim);
@@ -57,7 +57,7 @@ void ModifyCoordinatesAction:: performAction
     }
   }
   else {
-    preciceError ( "performAction()", "Unknown mode type!" );
+    ERROR("Unknown mode type!" );
   }
   getMesh()->computeState();
   getMesh()->notifyListeners();

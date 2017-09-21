@@ -45,7 +45,7 @@ FileCommunication:: FileCommunication
 }
 
 FileCommunication::~FileCommunication() {
-  preciceTrace("~FileCommunication()", _isConnected);
+  TRACE(_isConnected);
 
   closeConnection();
 }
@@ -62,7 +62,7 @@ void FileCommunication:: acceptConnection
   int                acceptorProcessRank,
   int                acceptorCommunicatorSize )
 {
-  preciceTrace ( "acceptConnection()", nameAcceptor, nameRequester );
+  TRACE(nameAcceptor, nameRequester );
   _nameLocal = nameAcceptor;
   _nameRemote = nameRequester;
   assertion ( (acceptorProcessRank >= 0) && (acceptorProcessRank <= acceptorCommunicatorSize),
@@ -77,7 +77,7 @@ void
 FileCommunication::acceptConnectionAsServer(std::string const& nameAcceptor,
                                             std::string const& nameRequester,
                                             int requesterCommunicatorSize) {
-  preciceError("acceptConnectionAsServer()", "Not implemented!");
+  ERROR("Not implemented!");
 }
 
 void FileCommunication:: requestConnection
@@ -87,7 +87,7 @@ void FileCommunication:: requestConnection
   int                requesterProcessRank,
   int                requesterCommunicatorSize )
 {
-  preciceTrace ( "requestConnection()", nameAcceptor, nameRequester );
+  TRACE(nameAcceptor, nameRequester );
   _nameLocal = nameRequester;
   _nameRemote = nameAcceptor;
   assertion ( (requesterProcessRank >= 0) && (requesterProcessRank <= requesterCommunicatorSize),
@@ -101,13 +101,13 @@ void FileCommunication:: requestConnection
 int
 FileCommunication::requestConnectionAsClient(std::string const& nameAcceptor,
                                              std::string const& nameRequester) {
-  preciceError("requestConnectionAsClient()", "Not implemented!");
+  ERROR("Not implemented!");
   return -1;
 }
 
 void FileCommunication:: closeConnection()
 {
-  preciceTrace ( "closeConnection()" );
+  TRACE();
 
   if (not isConnected())
     return;
@@ -119,7 +119,7 @@ void FileCommunication:: startSendPackage
 (
   int rankReceiver )
 {
-  preciceTrace ( "startSendPackage()" );
+  TRACE();
   assertion ( _currentPackageRank == -1, _currentPackageRank );
   assertion ( rankReceiver >= 0, rankReceiver );
   _currentPackageRank = rankReceiver;
@@ -141,7 +141,7 @@ void FileCommunication:: startSendPackage
 
 void FileCommunication:: finishSendPackage()
 {
-  preciceTrace ( "finishSendPackage()" );
+  TRACE();
   assertion ( _sendFile.is_open() );
   assertion ( _currentPackageRank != -1 );
   _sendFile.close ();
@@ -156,7 +156,7 @@ int FileCommunication:: startReceivePackage
 (
   int rankSender )
 {
-  preciceTrace ( "startReceivePackage()" );
+  TRACE();
   assertion ( _currentPackageRank == -1, _currentPackageRank );
   assertion ( rankSender >= 0, rankSender );
   _currentPackageRank = rankSender;
@@ -180,7 +180,7 @@ int FileCommunication:: startReceivePackage
 
 void FileCommunication:: finishReceivePackage()
 {
-  preciceTrace ( "finishReceivePackage()" );
+  TRACE();
   assertion ( _receiveFile.is_open() );
   assertion ( _currentPackageRank != -1 );
   _receiveFile.close ();
@@ -196,7 +196,7 @@ void FileCommunication:: send
   const std::string& itemToSend,
   int                rankReceiver )
 {
-  preciceTrace ( "send(string)" );
+  TRACE();
   assertion ( _sendFile.is_open() );
   _sendFile.write ( (char*)&TYPE_STRING, sizeof(int) );
   int size = itemToSend.size() + 1;
@@ -210,7 +210,7 @@ void FileCommunication:: send
   int  size,
   int  rankReceiver )
 {
-  preciceTrace ( "send(int*)" );
+  TRACE();
   assertion ( _sendFile.is_open() );
   _sendFile.write ( (char*)&TYPE_INT_VECTOR, sizeof(int) );
   _sendFile.write ( (char*)&size, sizeof(int) );
@@ -219,7 +219,7 @@ void FileCommunication:: send
 
 PtrRequest
 FileCommunication::aSend(int* itemsToSend, int size, int rankReceiver) {
-  preciceError("aSend()", "Not implemented!");
+  ERROR("Not implemented!");
 }
 
 void FileCommunication:: send (
@@ -227,7 +227,7 @@ void FileCommunication:: send (
   int     size,
   int     rankReceiver )
 {
-  preciceTrace ( "send(double*)" );
+  TRACE();
   assertion ( _sendFile.is_open() );
   _sendFile.write ( (char*)&TYPE_DOUBLE_VECTOR, sizeof(int) );
   _sendFile.write ( (char*)&size, sizeof(int) );
@@ -236,7 +236,7 @@ void FileCommunication:: send (
 
 PtrRequest
 FileCommunication::aSend(double* itemsToSend, int size, int rankReceiver) {
-  preciceError("aSend()", "Not implemented!");
+  ERROR("Not implemented!");
 }
 
 void FileCommunication:: send
@@ -251,7 +251,7 @@ void FileCommunication:: send
 
 PtrRequest
 FileCommunication::aSend(double* itemToSend, int rankReceiver) {
-  preciceError("aSend()", "Not implemented!");
+  ERROR("Not implemented!");
 }
 
 void FileCommunication:: send
@@ -266,7 +266,7 @@ void FileCommunication:: send
 
 PtrRequest
 FileCommunication::aSend(int* itemToSend, int rankReceiver) {
-  preciceError("aSend()", "Not implemented!");
+  ERROR("Not implemented!");
 }
 
 void FileCommunication:: send
@@ -281,7 +281,7 @@ void FileCommunication:: send
 
 PtrRequest
 FileCommunication::aSend(bool* itemToSend, int rankReceiver) {
-  preciceError("aSend()", "Not implemented!");
+  ERROR("Not implemented!");
 }
 
 void FileCommunication:: receive
@@ -289,7 +289,7 @@ void FileCommunication:: receive
   std::string& itemToReceive,
   int          rankSender )
 {
-  preciceTrace ( "receive(string)" );
+  TRACE();
   assertion ( _receiveFile.is_open() );
   int type;
   _receiveFile.read ( (char*)&type, sizeof(int) );
@@ -311,7 +311,7 @@ void FileCommunication:: receive
   int  size,
   int  rankSender )
 {
-  preciceTrace ( "receive(int*)", size, rankSender );
+  TRACE(size, rankSender );
   assertion ( _receiveFile.is_open() );
   int type;
   _receiveFile.read ( (char*)&type, sizeof(int) );
@@ -325,7 +325,7 @@ void FileCommunication:: receive
 
 PtrRequest
 FileCommunication::aReceive(int* itemsToReceive, int size, int rankSender) {
-  preciceError("aReceive()", "Not implemented!");
+  ERROR("Not implemented!");
 }
 
 void FileCommunication:: receive
@@ -334,7 +334,7 @@ void FileCommunication:: receive
   int     size,
   int     rankSender )
 {
-  preciceTrace ( "receive(double*)", size, rankSender );
+  TRACE(size, rankSender );
   assertion ( _receiveFile.is_open() );
   int type;
   _receiveFile.read ( (char*)&type, sizeof(int) );
@@ -348,7 +348,7 @@ void FileCommunication:: receive
 
 PtrRequest
 FileCommunication::aReceive(double* itemsToReceive, int size, int rankSender) {
-  preciceError("aReceive()", "Not implemented!");
+  ERROR("Not implemented!");
 }
 
 void FileCommunication:: receive
@@ -356,7 +356,7 @@ void FileCommunication:: receive
    double& itemToReceive,
    int     rankSender )
 {
-  preciceTrace ( "receive(double)", rankSender );
+  TRACE(rankSender );
   assertion ( _receiveFile.is_open() );
   int type;
   _receiveFile.read ( (char*)&type, sizeof(int) );
@@ -367,7 +367,7 @@ void FileCommunication:: receive
 
 PtrRequest
 FileCommunication::aReceive(double* itemToReceive, int rankSender) {
-  preciceError("aReceive()", "Not implemented!");
+  ERROR("Not implemented!");
 }
 
 void FileCommunication:: receive
@@ -375,7 +375,7 @@ void FileCommunication:: receive
   int& itemToReceive,
   int  rankSender )
 {
-  preciceTrace ( "receive(int)", rankSender );
+  TRACE(rankSender );
   assertion ( _receiveFile.is_open() );
   int type;
   _receiveFile.read ( (char*)&type, sizeof(int) );
@@ -386,7 +386,7 @@ void FileCommunication:: receive
 
 PtrRequest
 FileCommunication::aReceive(int* itemToReceive, int rankSender) {
-  preciceError("aReceive()", "Not implemented!");
+  ERROR("Not implemented!");
 }
 
 void FileCommunication:: receive
@@ -394,7 +394,7 @@ void FileCommunication:: receive
   bool& itemToReceive,
   int   rankSender )
 {
-  preciceTrace ( "receive(bool)", rankSender );
+  TRACE(rankSender );
   assertion ( _receiveFile.is_open() );
   int type;
   _receiveFile.read ( (char*)&type, sizeof(int) );
@@ -405,7 +405,7 @@ void FileCommunication:: receive
 
 PtrRequest
 FileCommunication::aReceive(bool* itemToReceive, int rankSender) {
-  preciceError("aReceive()", "Not implemented!");
+  ERROR("Not implemented!");
 }
 
 void FileCommunication:: makeSendFileAvailable
@@ -413,12 +413,12 @@ void FileCommunication:: makeSendFileAvailable
   int rank,
   int index )
 {
-  preciceTrace ( "makeSendFileAvailable()", rank, index );
+  TRACE(rank, index );
   std::string filenameHidden = getSendFilename (true, rank, index);
   std::string filename = getSendFilename (false, rank, index);
   if (rename(filenameHidden.c_str(), filename.c_str()) != 0){
     perror ( "Error renaming file:" );
-    preciceError ( "finishSendPackage()", "Could not make send file \""
+    ERROR("Could not make send file \""
                    << filenameHidden << "\" available!" );
   }
 }
@@ -428,7 +428,7 @@ void FileCommunication:: makeReceiveFileUnavailable
   int rank,
   int index )
 {
-  preciceTrace ( "makeReceiveFileUnavailable()", rank, index );
+  TRACE(rank, index );
   std::string filenameHidden = getReceiveFilename (true, rank, index);
   std::string filename = getReceiveFilename (false, rank, index);
   DEBUG ( "Rename file \"" << filename << "\" to \"" << filenameHidden
@@ -442,9 +442,9 @@ void FileCommunication:: removeReceiveFile
   int rank,
   int index )
 {
-  preciceTrace ( "removeReceiveFile()", rank, index );
+  TRACE(rank, index );
   if ( remove(getReceiveFilename(true,rank,index).c_str() ) != 0){
-    preciceError ( "removeReceiveFile()", "Could not remove receive file \""
+    ERROR("Could not remove receive file \""
                    << getReceiveFilename(true,rank,index) << "\"!" );
   }
 }

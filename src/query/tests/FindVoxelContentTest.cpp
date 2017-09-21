@@ -65,7 +65,7 @@ void FindVoxelContentTest:: performTestVertices
   bool                    positive,
   const Eigen::VectorXd&  offset)
 {
-  preciceTrace("performTestVertices()", testDim, positive, offset);
+  TRACE(testDim, positive, offset);
   int dim = offset.size();
   assertion(not math::oneGreater(offset, Eigen::VectorXd::Constant(dim,1.0)));
   assertion(math::allGreater(offset, Eigen::VectorXd::Constant(dim,-1.0)));
@@ -170,7 +170,7 @@ void FindVoxelContentTest:: performTestVertices
 
 void FindVoxelContentTest:: testEdges()
 {
-  preciceTrace("testEdges()");
+  TRACE();
   for(int dim=2; dim <= 3; dim++){
     for(int testDim=0; testDim < dim; testDim++){
       bool positiveDirection = true;
@@ -696,7 +696,7 @@ void FindVoxelContentTest:: performTestTriangles
 //    INFO("############################## triangles = " << size);
   //}
 //  if(size != 9){
-//    preciceError("sadf", "Aus die Mausss");
+//    ERROR("Aus die Mausss");
 //  }
   validateEquals(size, 9);
 
@@ -741,7 +741,7 @@ void FindVoxelContentTest:: performTestTriangles
 
 void FindVoxelContentTest:: testCompletelyInsideTriangles ()
 {
-  preciceTrace("testCompletelyInsideTriangles()");
+  TRACE();
   int dim = 3;
   Eigen::Vector3d voxelCenter = Eigen::Vector3d::Zero();
   Eigen::Vector3d voxelHalflengths = Eigen::Vector3d::Constant(1);
@@ -796,7 +796,7 @@ void FindVoxelContentTest:: testCompletelyInsideTriangles ()
 
 void FindVoxelContentTest:: testCompletelyOutsideTriangles ()
 {
-  preciceTrace("testCompletelyOutsideTriangles()");
+  TRACE();
   int dim = 3;
   Eigen::Vector3d voxelCenter = Eigen::Vector3d::Zero();
   Eigen::Vector3d voxelHalflengths = Eigen::Vector3d::Constant(1.0);

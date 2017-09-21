@@ -234,7 +234,8 @@ void SerialImplicitCouplingSchemeTest:: testAbsConvergenceMeasureSynchronized ()
    cplscheme::SerialCouplingScheme cplScheme (
        maxTime, maxTimesteps, timestepLength, 16, nameParticipant0,
        nameParticipant1, nameLocalParticipant, globalCom, constants::FIXED_DT,
-       BaseCouplingScheme::Implicit, 100);
+       BaseCouplingScheme::Implicit, 100
+);
    cplScheme.addDataToSend ( mesh->data()[sendDataIndex], mesh, false );
    cplScheme.addDataToReceive ( mesh->data()[receiveDataIndex], mesh, false );
 
@@ -254,7 +255,7 @@ void SerialImplicitCouplingSchemeTest:: testAbsConvergenceMeasureSynchronized ()
 
 //void SerialImplicitCouplingSchemeTest:: testAbsConvergenceMeasureAsync ()
 //{
-//   preciceTrace ( "testAbsConvergenceMeasureAsync()" );
+//   TRACE();
 //   utils::Parallel::synchronizeProcesses ();
 //   assertion ( utils::Parallel::getCommunicatorSize() > 1 );
 //
@@ -527,7 +528,7 @@ void SerialImplicitCouplingSchemeTest:: runCoupling
   const mesh::MeshConfiguration& meshConfig,
   const std::vector<int>&        validIterations )
 {
-  preciceTrace ( "runCoupling", nameParticipant );
+  TRACE(nameParticipant );
   validateEquals ( meshConfig.meshes().size(), 1 );
   mesh::PtrMesh mesh = meshConfig.meshes()[0];
   validateEquals ( mesh->data().size(), 2 );
@@ -705,7 +706,7 @@ void SerialImplicitCouplingSchemeTest:: runCoupling
 void SerialImplicitCouplingSchemeTest::
      testMinIterConvergenceMeasureSynchronizedWithSubcycling ()
 {
-   preciceTrace ( "testMinIterConvergenceMeasureSynchronizedWithSubcycling()" );
+   TRACE();
    utils::Parallel::synchronizeProcesses ();
 
    utils::XMLTag root = utils::getRootTag();
@@ -772,7 +773,7 @@ void SerialImplicitCouplingSchemeTest::
 
 void SerialImplicitCouplingSchemeTest:: testInitializeData()
 {
-  preciceTrace("testInitializeData()");
+  TRACE();
   utils::Parallel::synchronizeProcesses();
 
   utils::XMLTag root = utils::getRootTag();

@@ -157,7 +157,7 @@ void StaticTraversal<CELL_T>:: refineAll
   const Eigen::VectorXd& cellHalflengths,
   double                  refinementLimit )
 {
-  preciceTrace ( "refineAll()", cellCenter, cellHalflengths, refinementLimit );
+  TRACE(cellCenter, cellHalflengths, refinementLimit );
 
 //  // The environment gives information on the position of the cells surrounding
 //  // a current cell of consideration.
@@ -213,7 +213,7 @@ void StaticTraversal<CELL_T>:: refineAllInternal
   const Eigen::VectorXd& cellHalflengths,
   double                  refinementLimit )
 {
-  preciceTrace ( "refineAllInternal()", cellCenter, cellHalflengths,
+  TRACE(cellCenter, cellHalflengths,
                   refinementLimit, cell.isLeaf() );
   if ( cell.isLeaf() && cell.needsRefinement(cellHalflengths, refinementLimit)){
     DEBUG ( "  Refine leaf" );
@@ -243,7 +243,7 @@ void StaticTraversal<CELL_T>:: setCellPositions
   const Eigen::VectorXd& cellHalflengths,
   const Root&             root )
 {
-  preciceTrace("setCellPositions()", cellCenter, cellHalflengths, root.center, root.halflengths);
+  TRACE(cellCenter, cellHalflengths, root.center, root.halflengths);
   assertion(not cell.isLeaf());
   int position = Spacetree::positionUndefined();
   Eigen::VectorXd childCenter(cellCenter.size());
@@ -289,7 +289,7 @@ int StaticTraversal<CELL_T>:: searchPosition
   const Eigen::VectorXd& cellCenter,
   const Eigen::VectorXd& cellHalflengths ) const
 {
-  preciceTrace ( "searchPosition()", searchPoint, cellCenter, cellHalflengths );
+  TRACE(searchPoint, cellCenter, cellHalflengths );
   typedef std::shared_ptr<SearchPositionResult> PtrResult;
   PtrResult result = searchPositionInternal ( cell, searchPoint, cellCenter,
                                               cellHalflengths );
@@ -308,7 +308,7 @@ bool StaticTraversal<CELL_T>:: searchDistance
   const Eigen::VectorXd& cellCenter,
   const Eigen::VectorXd& cellHalflengths ) const
 {
-  preciceTrace ( "searchDistance()", cellCenter, cellHalflengths, findClosest.getSearchPoint() );
+  TRACE(cellCenter, cellHalflengths, findClosest.getSearchPoint() );
   if ( cell.isLeaf() ){
     DEBUG ( "  Leaf" );
     findClosest ( cell.content() );
@@ -351,7 +351,7 @@ int StaticTraversal<CELL_T>:: searchContent
   const Eigen::VectorXd&  cellCenter,
   const Eigen::VectorXd&  cellHalflengths ) const
 {
-  preciceTrace ( "searchContent()", findContent.getVoxelCenter(),
+  TRACE(findContent.getVoxelCenter(),
                   findContent.getVoxelHalflengths() );
   std::shared_ptr<SearchContentResult> result = searchContentInternal (
       cell, findContent, cellCenter, cellHalflengths );
@@ -384,7 +384,7 @@ StaticTraversal<CELL_T>:: searchPositionInternal
   const Eigen::VectorXd& cellCenter,
   const Eigen::VectorXd& cellHalflengths ) const
 {
-  preciceTrace ( "searchPositionInternal()", searchPoint, cellCenter,
+  TRACE(searchPoint, cellCenter,
                   cellHalflengths );
   using namespace math;
   std::shared_ptr<SearchPositionResult> data;
@@ -468,7 +468,7 @@ StaticTraversal<CELL_T>:: searchContentInternal
   const Eigen::VectorXd&  cellCenter,
   const Eigen::VectorXd&  cellHalflengths ) const
 {
-  preciceTrace ( "searchContentInternal()", cellCenter, cellHalflengths,
+  TRACE(cellCenter, cellHalflengths,
                   findContent.getVoxelCenter(), findContent.getVoxelHalflengths() );
   if ( cell.isLeaf() ){
     DEBUG ( "Leaf..." );
@@ -552,7 +552,7 @@ StaticTraversal<CELL_T>:: searchContentInternal
 //    }
     return data;
   }
-  preciceError("findContentInternal()", "Reached invalid code location!");
+  ERROR("Reached invalid code location!");
 }
 
 template<typename CELL_T>
@@ -578,7 +578,7 @@ bool StaticTraversal<CELL_T>:: isCovered
   const Eigen::VectorXd& voxelCenter,
   const Eigen::VectorXd& voxelHalflengths ) const
 {
-  preciceTrace ( "isCovered()", cellCenter, cellHalflengths, voxelCenter,
+  TRACE(cellCenter, cellHalflengths, voxelCenter,
                   voxelHalflengths );
   Eigen::VectorXd coverage ( cellCenter );
   coverage -= voxelCenter;
@@ -596,7 +596,7 @@ bool StaticTraversal<CELL_T>:: isOverlapped
   const Eigen::VectorXd& voxelCenter,
   const Eigen::VectorXd& voxelHalflengths ) const
 {
-  preciceTrace ( "isOverlapped()", cellCenter, cellHalflengths, voxelCenter,
+  TRACE(cellCenter, cellHalflengths, voxelCenter,
                   voxelHalflengths );
   Eigen::VectorXd overlap = cellCenter;
   overlap -= voxelCenter;
@@ -613,7 +613,7 @@ void StaticTraversal<CELL_T>:: visitAllCells
   CELL_T&    cell,
   VISITOR_T& visitor ) const
 {
-  //preciceTrace ( "visitAllCells()" );
+  //TRACE();
   if ( cell.isLeaf() ){
     //DEBUG ( "  Applying visitor to leaf cell content with size = "
     //               << cell.content().size() );

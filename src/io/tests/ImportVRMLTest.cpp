@@ -47,7 +47,7 @@ void ImportVRMLTest:: run ()
 
 void ImportVRMLTest:: testImportSquare()
 {
-  preciceTrace("testImportSquare()");
+  TRACE();
   int dim = 2;
   mesh::Mesh mesh("MyMesh", dim, false);
   mesh::PtrData dataForces = mesh.createData("Forces", dim);
@@ -100,7 +100,7 @@ void ImportVRMLTest:: testImportSquare()
 
 void ImportVRMLTest:: testImportCube()
 {
-  preciceTrace("testImportCube()");
+  TRACE();
   using namespace mesh;
   int dim = 3;
   Mesh mesh("MyMesh", dim, false);
@@ -117,7 +117,7 @@ void ImportVRMLTest:: testImportCube()
 
 void ImportVRMLTest:: testImportSphere()
 {
-  preciceTrace("testImportSphere()");
+  TRACE();
   int dim = 3;
   mesh::Mesh mesh("MyMesh", dim, false);
   ImportVRML in(_pathToTests);
@@ -131,7 +131,7 @@ void ImportVRMLTest:: testImportSphere()
 
 void ImportVRMLTest:: testImportApe ()
 {
-  preciceTrace("testImportApe()");
+  TRACE();
   int dim = 3;
   mesh::Mesh mesh("MyMesh", dim, false);
   ImportVRML in(_pathToTests);
@@ -145,7 +145,7 @@ void ImportVRMLTest:: testImportApe ()
 
 void ImportVRMLTest:: testImportBunny()
 {
-  preciceTrace("testImportBunny()");
+  TRACE();
   int dim = 3;
   mesh::Mesh mesh("MyMesh", dim, false);
   ImportVRML in(_pathToTests);
@@ -159,7 +159,7 @@ void ImportVRMLTest:: testImportBunny()
 
 void ImportVRMLTest:: testImportDragon()
 {
-  preciceTrace("testImportDragon()");
+  TRACE();
   int dim = 3;
   mesh::Mesh mesh("MyMesh", dim, false);
   ImportVRML in(_pathToTests);
@@ -173,7 +173,7 @@ void ImportVRMLTest:: testImportDragon()
 
 void ImportVRMLTest:: testImportReactorPipe()
 {
-  preciceTrace("testImportReactorPipe()");
+  TRACE();
   int dim = 3;
   mesh::Mesh mesh("MyMesh", dim, false);
   ImportVRML in ( _pathToTests );

@@ -78,7 +78,7 @@ void ParallelImplicitCouplingSchemeTest:: run ()
 
 void ParallelImplicitCouplingSchemeTest:: testParseConfigurationWithRelaxation()
 {
-  preciceTrace("testParseConfigurationWithRelaxation()");
+  TRACE();
   using namespace mesh;
   
   std::string path(_pathToTests + "parallel-implicit-cplscheme-relax-const-config.xml");
@@ -99,7 +99,7 @@ void ParallelImplicitCouplingSchemeTest:: testParseConfigurationWithRelaxation()
 
 void ParallelImplicitCouplingSchemeTest:: testInitializeData()
 {
-  preciceTrace("testInitializeData()");
+  TRACE();
   utils::Parallel::synchronizeProcesses();
 
   utils::XMLTag root = utils::getRootTag();
@@ -236,7 +236,7 @@ void ParallelImplicitCouplingSchemeTest:: connect
 
 void ParallelImplicitCouplingSchemeTest:: testVIQNPP()
 {
-  preciceTrace("testVIQNPP()");
+  TRACE();
 
   //use two vectors and see if underrelaxation works
 
@@ -341,7 +341,7 @@ void ParallelImplicitCouplingSchemeTest:: testVIQNPP()
 
 void ParallelImplicitCouplingSchemeTest:: testMVQNPP()
 {
-  preciceTrace("testMVQNPP()");
+  TRACE();
   
   //use two vectors and see if underrelaxation works
   

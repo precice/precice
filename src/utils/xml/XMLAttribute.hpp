@@ -183,7 +183,7 @@ void XMLAttribute<ATTRIBUTE_T>:: setValidator
 //(
 //  const utils::DynVector& defaultValue  )
 //{
-//  preciceTrace("setDefaultValue()", defaultValue);
+//  TRACE(defaultValue);
 //  _hasDefaultValue = true;
 //  _defaultValue.clear();
 //  _defaultValue.append(defaultValue);
@@ -194,7 +194,7 @@ void XMLAttribute<ATTRIBUTE_T>:: setDefaultValue
 (
   const ATTRIBUTE_T& defaultValue )
 {
-  preciceTrace("setDefaultValue()", defaultValue);
+  TRACE(defaultValue);
   _hasDefaultValue = true;
   set(_defaultValue, defaultValue);
 }

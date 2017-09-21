@@ -78,7 +78,7 @@ void XMLTag:: addSubtag
 //      return;
 //    }
 //  }
-//  preciceError ( "removeAttribute()", "Subtag \"" << tagName << "\" does not exist!" );
+//  ERROR("Subtag \"" << tagName << "\" does not exist!" );
 //}
 
 void XMLTag:: addAttribute
@@ -164,7 +164,7 @@ bool XMLTag:: hasAttribute
 //  else if (contained(attributeName, _dynVectorAttributes))
 //    _dynVectorAttributes.erase (attributeName);
 //  else {
-//    preciceError ( "removeAttribute()",
+//    ERROR(
 //                   "Attribute \"" << attributeName << "\" does not exist!" );
 //  }
 //}
@@ -177,7 +177,7 @@ bool XMLTag:: hasAttribute
 //    if (_subtags.at(i)->getName() == tagName)
 //      return *_subtags.at(i);
 //  }
-//  preciceError ( "getTag(.)", "Tag with name " << tagName
+//  ERROR("Tag with name " << tagName
 //      << " does not exist for tag " << _name );
 //}
 
@@ -635,17 +635,17 @@ void configure
 //          success = true;
 //        }
 //        catch (std::string errorMsg){
-//          preciceError("configure()", "Parsing XML file \""
+//          ERROR("Parsing XML file \""
 //                       << configurationFilename << "\"" << std::endl << errorMsg);
 //        }
 //      }
 //      else {
-//        preciceError("configure()", "Found wrong tag <" << xmlReader->getNodeName()
+//        ERROR("Found wrong tag <" << xmlReader->getNodeName()
 //                     << "> in XML file \"" << configurationFilename << "\"!");
 //      }
 //    }
 //    else if (xmlReader->getNodeType() == tarch::irr::io::EXN_ELEMENT_END){
-//      preciceError("configure()", "Found wrong end tag </" << xmlReader->getNodeName()
+//      ERROR("Found wrong end tag </" << xmlReader->getNodeName()
 //                           << "> in XML file \"" << configurationFilename << "\"!");
 //    }
 //  }

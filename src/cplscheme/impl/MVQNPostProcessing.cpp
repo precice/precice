@@ -97,7 +97,7 @@ void MVQNPostProcessing:: initialize
 (
   DataMap& cplData )
 {
-  preciceTrace(__func__);
+  TRACE();
   Event e("MVQNPostProcessing::initialize", true, true); // time measurement, barrier
 
   // do common QN post processing initialization
@@ -222,7 +222,7 @@ void MVQNPostProcessing::updateDifferenceMatrices
    *  NOT SCALED by the preconditioner.
    */
 
-  preciceTrace(__func__);
+  TRACE();
   Event e("MVQNPostProcessing::updateDifferenceMatrices", true, true); // time measurement, barrier
 
   // call the base method for common update of V, W matrices
@@ -328,7 +328,7 @@ void MVQNPostProcessing::computeQNUpdate(
 void MVQNPostProcessing::pseudoInverse(
     Eigen::MatrixXd& pseudoInverse)
 {
-  preciceTrace(__func__);
+  TRACE();
   /**
    *   computation of pseudo inverse matrix Z = (V^TV)^-1 * V^T as solution
    *   to the equation R*z = Q^T(i) for all columns i,  via back substitution.
@@ -366,7 +366,7 @@ void MVQNPostProcessing::buildWtil()
   /**
    * PRECONDITION: Assumes that V, W, J_prev are already preconditioned,
    */
-  preciceTrace(__func__);
+  TRACE();
   Event e("buildWtil()", true, true); // time measurement, barrier
 
   assertion(_matrixV.rows() == _qrV.rows(), _matrixV.rows(), _qrV.rows());  assertion(getLSSystemCols() == _qrV.cols(), getLSSystemCols(), _qrV.cols());
@@ -405,7 +405,7 @@ void MVQNPostProcessing::buildWtil()
 // ==================================================================================
 void MVQNPostProcessing::buildJacobian()
 {
-  preciceTrace(__func__);
+  TRACE();
   Event e("buildJacobian()", true, true); // time measurement, barrier
   /**      --- compute inverse Jacobian ---
   *
@@ -426,7 +426,7 @@ void MVQNPostProcessing::buildJacobian()
   assertion(_matrixV.rows() == _qrV.rows(), _matrixV.rows(), _qrV.rows());  assertion(getLSSystemCols() == _qrV.cols(), getLSSystemCols(), _qrV.cols());
   if(_resetLS){
     buildWtil();
-    preciceWarning(__func__," ATTENTION, in buildJacobian call for buildWtill() - this should not be the case except the coupling did only one iteration");
+    WARN(" ATTENTION, in buildJacobian call for buildWtill() - this should not be the case except the coupling did only one iteration");
   }
 
   /** (3) compute invJacobian = W_til*Z
@@ -447,7 +447,7 @@ void MVQNPostProcessing::computeNewtonUpdateEfficient(
     PostProcessing::DataMap& cplData,
     Eigen::VectorXd& xUpdate)
 {
-  preciceTrace(__func__);
+  TRACE();
   Event e(__func__, true, true); // time measurement, barrier
 
 
@@ -548,7 +548,7 @@ void MVQNPostProcessing::computeNewtonUpdateEfficient(
 void MVQNPostProcessing::computeNewtonUpdate
 (PostProcessing::DataMap& cplData, Eigen::VectorXd& xUpdate)
 {
-	preciceTrace(__func__);
+	TRACE();
 	Event e(__func__, true, true); // time measurement, barrier
 
 	/**      --- update inverse Jacobian ---
@@ -587,7 +587,7 @@ void MVQNPostProcessing::computeNewtonUpdate
 // ==================================================================================
 void MVQNPostProcessing::restartIMVJ()
 {
-  preciceTrace(__func__);
+  TRACE();
   Event e(__func__, true, true); // time measurement, barrier
 
   //int used_storage = 0;
@@ -777,7 +777,7 @@ void MVQNPostProcessing:: specializedIterationsConverged
 (
    DataMap & cplData)
 {
-  preciceTrace(__func__);
+  TRACE();
   Event e(__func__, true, true); // time measurement, barrier
 
   // truncate V_RSLS and W_RSLS matrices according to _RSLSreusedTimesteps
@@ -886,7 +886,7 @@ void MVQNPostProcessing:: removeMatrixColumn
 (
   int columnIndex)
 {
-  preciceTrace(__func__, columnIndex, _matrixV.cols());
+  TRACE(columnIndex, _matrixV.cols());
   assertion(_matrixV.cols() > 1, _matrixV.cols()); assertion(_Wtil.cols() > 1);
 
 
@@ -902,7 +902,7 @@ void MVQNPostProcessing:: removeMatrixColumnRSLS
 (
   int columnIndex)
 {
-  preciceTrace(__func__, columnIndex, _matrixV_RSLS.cols());
+  TRACE(columnIndex, _matrixV_RSLS.cols());
   assertion(_matrixV_RSLS.cols() > 1);
 
   utils::removeColumnFromMatrix(_matrixV_RSLS, columnIndex);

@@ -26,7 +26,7 @@ void UncoupledScheme:: initialize
   double startTime,
   int    startTimestep )
 {
-  preciceTrace ( "initialize()", startTime, startTimestep );
+  TRACE(startTime, startTimestep );
   setTime ( startTime );
   setTimesteps ( startTimestep );
   assertion ( math::greaterEquals(startTime, 0.0), startTime );
@@ -36,14 +36,14 @@ void UncoupledScheme:: initialize
 
 void UncoupledScheme:: initializeData ()
 {
-  preciceTrace ( "initializeData()" );
+  TRACE();
 }
 
 void UncoupledScheme:: addComputedTime
 (
   double timeToAdd )
 {
-  preciceTrace("addComputedTime()", timeToAdd);
+  TRACE(timeToAdd);
   preciceCheck ( isCouplingOngoing(), "addComputedTime()",
                  "Invalid call of addComputedTime() after simulation end!" );
 # ifndef NDEBUG
@@ -56,7 +56,7 @@ void UncoupledScheme:: addComputedTime
 
 void UncoupledScheme:: advance()
 {
-  preciceTrace("advance()");
+  TRACE();
   checkCompletenessRequiredActions();
   setIsCouplingTimestepComplete ( false );
   //double remainder = getTimestepRemainder ( computedTimestepLength );
@@ -74,7 +74,7 @@ void UncoupledScheme:: advance()
 
 void UncoupledScheme:: finalize()
 {
-  preciceTrace ( "finalize()" );
+  TRACE();
 }
 
 std::vector<std::string> UncoupledScheme:: getCouplingPartners() const

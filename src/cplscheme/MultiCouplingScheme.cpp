@@ -44,7 +44,7 @@ void MultiCouplingScheme::initialize
   double startTime,
   int    startTimestep )
 {
-  preciceTrace("initialize()", startTime, startTimestep);
+  TRACE(startTime, startTimestep);
   assertion(not isInitialized());
   assertion(math::greaterEquals(startTime, 0.0), startTime);
   assertion(startTimestep >= 0, startTimestep);
@@ -212,7 +212,7 @@ void MultiCouplingScheme::advance()
 
 void MultiCouplingScheme::mergeData()
 {
-  preciceTrace("mergeData()");
+  TRACE();
   assertion(_allData.empty(), "This function should only be called once.");
   assertion(_sendDataVector.size()==_receiveDataVector.size());
   for(size_t i=0;i<_sendDataVector.size();i++){
@@ -314,7 +314,7 @@ CouplingData* MultiCouplingScheme:: getData
 (
   int dataID)
 {
-  preciceTrace("getData()", dataID);
+  TRACE(dataID);
   DataMap::iterator iter = _allData.find(dataID);
   if (iter != _allData.end()) {
     return  &(*(iter->second));

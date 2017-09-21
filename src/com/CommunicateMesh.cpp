@@ -25,7 +25,7 @@ void CommunicateMesh:: sendMesh
   const mesh::Mesh& mesh,
   int               rankReceiver )
 {
-  preciceTrace ( "sendGeometry()", mesh.getName(), rankReceiver );
+  TRACE(mesh.getName(), rankReceiver );
   int dim = mesh.getDimensions();
 
   int numberOfVertices = mesh.vertices().size();
@@ -87,7 +87,7 @@ void CommunicateMesh:: receiveMesh
   mesh::Mesh& mesh,
   int         rankSender )
 {
-  preciceTrace ( "receiveMesh()", mesh.getName(), rankSender );
+  TRACE(mesh.getName(), rankSender );
   int dim = mesh.getDimensions();
 
   std::vector<mesh::Vertex*> vertices;
@@ -167,7 +167,7 @@ void CommunicateMesh:: broadcastSendMesh
 (
   const mesh::Mesh& mesh )
 {
-  preciceTrace ( "broadcastSendMesh()", mesh.getName() );
+  TRACE(mesh.getName() );
   int dim = mesh.getDimensions();
 
   int numberOfVertices = mesh.vertices().size();
@@ -228,7 +228,7 @@ void CommunicateMesh:: broadcastReceiveMesh
 (
   mesh::Mesh& mesh)
 {
-  preciceTrace ( "broadcastReceiveMesh()", mesh.getName() );
+  TRACE(mesh.getName() );
   int dim = mesh.getDimensions();
   int rankBroadcaster = 0;
 
@@ -303,7 +303,7 @@ void CommunicateMesh:: broadcastReceiveMesh
 void CommunicateMesh:: sendBoundingBox (
   const mesh::Mesh::BoundingBox & bb,
   int                rankReceiver ){
-  preciceTrace ( "sendBoundingBox()", rankReceiver );
+  TRACE(rankReceiver );
   int dim = bb.size();
   for(int d=0; d<dim; d++){
     _communication->send(bb[d].first, rankReceiver);
@@ -314,7 +314,7 @@ void CommunicateMesh:: sendBoundingBox (
 void CommunicateMesh:: receiveBoundingBox (
   mesh::Mesh::BoundingBox & bb,
   int          rankSender ){
-  preciceTrace ( "receiveBoundingBox()", rankSender );
+  TRACE(rankSender );
   int dim = bb.size();
   for(int d=0; d<dim; d++){
     _communication->receive(bb[d].first, rankSender);

@@ -28,7 +28,7 @@ ArgumentSetFabric::~ArgumentSetFabric() {
 void ArgumentSetFabric::print() {
   std::stringstream ss;
   print(ss);
-  preciceInfo("print",ss.str());
+  INFO(ss.str());
 }
 
 void ArgumentSetFabric::print(std::stringstream& ss) {
@@ -48,7 +48,7 @@ void ArgumentSetFabric::printDefaultArguments(std::stringstream& ss) {
 void ArgumentSetFabric::printDefaultArguments() {
   std::stringstream ss;
   printDefaultArguments(ss);
-  preciceInfo("print",ss.str());
+  INFO(ss.str());
 }
 
 void ArgumentSetFabric::printAllPossibleConfigurationsAndExit() {

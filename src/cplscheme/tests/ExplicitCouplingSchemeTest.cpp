@@ -114,7 +114,7 @@ void ExplicitCouplingSchemeTest:: testSimpleExplicitCoupling()
 
 void ExplicitCouplingSchemeTest:: testConfiguredSimpleExplicitCoupling ()
 {
-  preciceTrace ( "testConfiguredSimpleExplicitCoupling()" );
+  TRACE();
   using namespace mesh;
   utils::Parallel::synchronizeProcesses ();
   assertion ( utils::Parallel::getCommunicatorSize() > 1 );
@@ -152,7 +152,7 @@ void ExplicitCouplingSchemeTest:: testConfiguredSimpleExplicitCoupling ()
 
 void ExplicitCouplingSchemeTest:: testExplicitCouplingFirstParticipantSetsDt()
 {
-  preciceTrace ( "testExplicitCouplingFirstParticipantSetsDt()" );
+  TRACE();
   using namespace mesh;
   utils::Parallel::synchronizeProcesses();
   std::string configurationPath ( _pathToTests + "explicit-coupling-scheme-2.xml" );
@@ -241,7 +241,7 @@ void ExplicitCouplingSchemeTest:: testExplicitCouplingFirstParticipantSetsDt()
 
 void ExplicitCouplingSchemeTest:: testSerialDataInitialization()
 {
-  preciceTrace("testSerialDataInitialization()");
+  TRACE();
   using namespace mesh;
   utils::Parallel::synchronizeProcesses();
   assertion(utils::Parallel::getCommunicatorSize() > 1);
@@ -312,7 +312,7 @@ void ExplicitCouplingSchemeTest:: testSerialDataInitialization()
 
 void ExplicitCouplingSchemeTest:: testParallelDataInitialization()
 {
-  preciceTrace("testParallelDataInitialization()");
+  TRACE();
   using namespace mesh;
   utils::Parallel::synchronizeProcesses();
   assertion(utils::Parallel::getCommunicatorSize() > 1);
@@ -394,7 +394,7 @@ void ExplicitCouplingSchemeTest:: runSimpleExplicitCoupling
   const std::string&             participantName,
   const mesh::MeshConfiguration& meshConfig )
 {
-  preciceTrace ( "runSimpleExplicitCoupling()", participantName );
+  TRACE(participantName );
 
   validateEquals ( meshConfig.meshes().size(), 1 );
   mesh::PtrMesh mesh = meshConfig.meshes()[0];
@@ -514,7 +514,7 @@ void ExplicitCouplingSchemeTest:: runSimpleExplicitCoupling
 
 void ExplicitCouplingSchemeTest:: testExplicitCouplingWithSubcycling ()
 {
-  preciceTrace ( "testExplicitCouplingWithSubcycling()" );
+  TRACE();
   utils::Parallel::synchronizeProcesses ();
   assertion ( utils::Parallel::getCommunicatorSize() > 1 );
 
@@ -566,7 +566,7 @@ void ExplicitCouplingSchemeTest:: testExplicitCouplingWithSubcycling ()
 
 void ExplicitCouplingSchemeTest:: testConfiguredExplicitCouplingWithSubcycling ()
 {
-  preciceTrace ( "testConfiguredExplicitCouplingWithSubcycling()" );
+  TRACE();
   using namespace mesh;
   utils::Parallel::synchronizeProcesses ();
   assertion ( utils::Parallel::getCommunicatorSize() > 1 );
@@ -615,7 +615,7 @@ void ExplicitCouplingSchemeTest:: runExplicitCouplingWithSubcycling
   const std::string&             participantName,
   const mesh::MeshConfiguration& meshConfig )
 {
-  preciceTrace ( "runExplicitCouplingWithSubcycling", participantName );
+  TRACE(participantName );
   validateEquals ( meshConfig.meshes().size(), 1 );
   mesh::PtrMesh mesh = meshConfig.meshes()[0];
   validateEquals ( mesh->data().size(), 2 );
@@ -757,7 +757,7 @@ void ExplicitCouplingSchemeTest:: connect
   const std::string&     localParticipant,
   m2n::PtrM2N& communication ) const
 {
-  preciceTrace ( "connect()", participant0, participant1, localParticipant );
+  TRACE(participant0, participant1, localParticipant );
   assertion ( communication.use_count() > 0 );
   assertion ( not communication->isConnected() );
   utils::Parallel::splitCommunicator( localParticipant );

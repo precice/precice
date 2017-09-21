@@ -43,7 +43,7 @@ void SolverInterfaceTestGeometry:: run()
   typedef utils::Parallel Par;
   Par::Communicator comm = Par::getRestrictedCommunicator({0});
   PRECICE_MASTER_ONLY {
-    preciceTrace("run master ()");
+    TRACE();
     Par::setGlobalCommunicator(comm);
     testMethod(testConfiguration);
     testMethod(testSearchQuery);
@@ -617,7 +617,7 @@ void SolverInterfaceTestGeometry:: testVoxelQueryEpsBox()
 void SolverInterfaceTestGeometry:: testConservativeStationaryDataMapping()
 {
 
-  preciceTrace("testConservativeStationaryDataMapping()");
+  TRACE();
   SolverInterface precice("Accessor", 0, 1);
   configureSolverInterface(_pathToTests + "stationary-mapping.xml", precice);
   validateEquals(precice.getDimensions(), 2);
@@ -665,7 +665,7 @@ void SolverInterfaceTestGeometry:: testConservativeStationaryDataMapping()
 
 void SolverInterfaceTestGeometry:: testMappingRBF()
 {
-  preciceTrace("testMappingRBF()");
+  TRACE();
   SolverInterface interface("TestAccessor", 0, 1);
   configureSolverInterface(_pathToTests + "mapping-rbf.xml", interface);
   validateEquals(interface.getDimensions(), 2);
@@ -771,7 +771,7 @@ void SolverInterfaceTestGeometry:: testMappingRBF()
 //void SolverInterfaceTestGeometry:: testConservativeDataMapping ()
 //{
 //# if defined(Dim2)
-//  preciceTrace ( "testConservativeDataMapping()" );
+//  TRACE();
 //
 //  SolverInterface geoInterface ( "TestAccessor" );
 //  geoInterface.configure ( _pathToTests + "SolverInterfaceTestGeometry-conservative-data-mapping-config.xml" );
@@ -1287,7 +1287,7 @@ void SolverInterfaceTestGeometry:: testBug5()
 
 //void SolverInterfaceTestGeometry:: testBug6()
 //{
-//  preciceTrace("testBug6()");
+//  TRACE();
 //  SolverInterface interface("Peano", 0, 1);
 //  configureSolverInterface(_pathToTests + "testBug6.xml", interface);
 //  validateEquals(interface.getDimensions(), 3);

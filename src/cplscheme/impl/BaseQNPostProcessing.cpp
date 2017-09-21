@@ -95,7 +95,7 @@ BaseQNPostProcessing::BaseQNPostProcessing
 void BaseQNPostProcessing::initialize(
     DataMap& cplData)
 {
-  preciceTrace("initialize()", cplData.size());
+  TRACE(cplData.size());
 
   /*
   std::stringstream sss;
@@ -220,7 +220,7 @@ void BaseQNPostProcessing::setDesignSpecification
 (
     Eigen::VectorXd& q)
 {
-  preciceTrace("setDesignSpecification()");
+  TRACE();
   assertion(q.size() == _residuals.size(), q.size(), _residuals.size());
   _designSpecification = q;
 }
@@ -236,7 +236,7 @@ std::map<int, Eigen::VectorXd> BaseQNPostProcessing::getDesignSpecification
 (
   DataMap& cplData)
 {
-  preciceTrace(__func__);
+  TRACE();
   std::map<int, Eigen::VectorXd> designSpecifications;
   int off = 0;
   for (int id : _dataIDs) {
@@ -264,7 +264,7 @@ void BaseQNPostProcessing::updateDifferenceMatrices
 (
     DataMap& cplData)
 {
-  preciceTrace("updateDiffernceMatrices()");
+  TRACE();
   Event e("Base-QN_updateDifferenceMatrices()", true, true); // time measurement, barrier
 
   // Compute current residual: vertex-data - oldData
@@ -283,7 +283,7 @@ void BaseQNPostProcessing::updateDifferenceMatrices
       assertion(getLSSystemCols() <= _maxIterationsUsed,getLSSystemCols(), _maxIterationsUsed);
 
       if (2 * getLSSystemCols() >= getLSSystemRows())
-        preciceWarning("updateDifferenceMatrices()",
+        WARN(
             "The number of columns in the least squares system exceeded half the number of unknowns at the interface. The system will probably become bad or ill-conditioned and the quasi-Newton post processing may not converge. Maybe the number of allowed columns (maxIterationsUsed) should be limited.");
 
       Eigen::VectorXd deltaR = _residuals;
@@ -342,7 +342,7 @@ void BaseQNPostProcessing::performPostProcessing
 (
     DataMap& cplData)
 {
-  preciceTrace("performPostProcessing()", _dataIDs.size(), cplData.size());
+  TRACE(_dataIDs.size(), cplData.size());
   Event e("Base-QN_performPostProcessing()", true, true); // time measurement, barrier
 
   assertion(_oldResiduals.size() == _oldXTilde.size(),_oldResiduals.size(), _oldXTilde.size());
@@ -483,7 +483,7 @@ void BaseQNPostProcessing::performPostProcessing
     }
 
     if(std::isnan(utils::MasterSlave::l2norm(xUpdate))){
-      preciceError(__func__, "The coupling iteration in time step "<<tSteps<<
+      ERROR("The coupling iteration in time step "<<tSteps<<
           " failed to converge and NaN values occurred throughout the coupling process. ");
     }
   }
@@ -511,7 +511,7 @@ void BaseQNPostProcessing::performPostProcessing
 
 void BaseQNPostProcessing::applyFilter()
 {
-  preciceTrace(__func__,_filter);
+  TRACE(_filter);
   Event e("Base-QN_applyFilter()", true, true); // time measurement, barrier
 
   if (_filter == PostProcessing::NOFILTER) {
@@ -538,7 +538,7 @@ void BaseQNPostProcessing::concatenateCouplingData
 (
     DataMap& cplData)
 {
-  preciceTrace("concatenateCouplingData()");
+  TRACE();
 
   int offset = 0;
   for (int id : _dataIDs) {
@@ -558,7 +558,7 @@ void BaseQNPostProcessing::splitCouplingData
 (
     DataMap& cplData)
 {
-  preciceTrace("splitCouplingData()");
+  TRACE();
 
   int offset = 0;
   for (int id : _dataIDs) {
@@ -587,7 +587,7 @@ void BaseQNPostProcessing::iterationsConverged
 (
     DataMap & cplData)
 {
-  preciceTrace(__func__);
+  TRACE();
   Event e("Base-QN_iterationsConvegred()", true, true); // time measurement, barrier
 
   if (utils::MasterSlave::_masterMode || (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode))
@@ -684,7 +684,7 @@ void BaseQNPostProcessing::removeMatrixColumn
 (
     int columnIndex)
 {
-  preciceTrace("removeMatrixColumn()", columnIndex, _matrixV.cols());
+  TRACE(columnIndex, _matrixV.cols());
 
   // debugging information, can be removed
   _nbDelCols++;

@@ -64,7 +64,7 @@ public:
        const Eigen::MatrixBase<Derived1>& A,
        const Eigen::MatrixBase<Derived2>& B)
    {
-     preciceTrace(__func__);
+     TRACE();
 //     utils::Event e("SVD-update", true, true);
      assertion(_initialized);
      /** updates the truncated svd factorization of the Jacobian with a rank-1 modification

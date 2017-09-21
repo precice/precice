@@ -55,7 +55,7 @@ PointToPointCommunicationTest::PointToPointCommunicationTest()
 
 void
 PointToPointCommunicationTest::run() {
-  preciceTrace("run");
+  TRACE();
 
   Parallel::synchronizeProcesses();
 
@@ -73,7 +73,7 @@ PointToPointCommunicationTest::run() {
 
 void
 PointToPointCommunicationTest::testSocketCommunication() {
-  preciceTrace("testSocketCommunication");
+  TRACE();
 
   com::PtrCommunicationFactory cf(
       new com::SocketCommunicationFactory);
@@ -83,7 +83,7 @@ PointToPointCommunicationTest::testSocketCommunication() {
 
 void
 PointToPointCommunicationTest::testMPIPortsCommunication() {
-  preciceTrace("testMPIDirectCommunication");
+  TRACE();
 
   com::PtrCommunicationFactory cf(
       new com::MPIPortsCommunicationFactory);

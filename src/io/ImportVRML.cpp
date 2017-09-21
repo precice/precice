@@ -162,7 +162,7 @@ void ImportVRML:: doImport
 
    // Set data values of vertices
    if (mesh.data().size() != vrmlParser.data.size()){
-      preciceError("doImport()", "Number of vertex data sets configured does "
+      ERROR("Number of vertex data sets configured does "
                    << "not match with that in VRML file!");
    }
    mesh.allocateDataValues();
@@ -171,13 +171,13 @@ void ImportVRML:: doImport
       const impl::VRML10Parser<MultiPassFileIter>::Data&
           vrmlData = vrmlParser.data[iData];
       if (meshData->getName() != vrmlData.name){
-         preciceError("doImport()", "Name of configured data set " << iData
+         ERROR("Name of configured data set " << iData
                       << " \"" << meshData->getName()
                       << "\" does not match with that in VRML file "
                       << "\"" << vrmlData.name << "\"!");
       }
       if ( meshData->getDimensions() != vrmlData.dimensions ) {
-         preciceError ( "doImport()", "Dimension of configured data set " << iData
+         ERROR("Dimension of configured data set " << iData
                          << " \"" << meshData->getDimensions()
                          << "\" does not match with that in VRML file "
                          << "\"" << vrmlData.dimensions << "\"!" );
