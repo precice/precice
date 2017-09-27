@@ -38,6 +38,8 @@ private:
   void testMPIPortsCommunication();
 
   void test(com::PtrCommunicationFactory cf);
+
+  void test2(com::PtrCommunicationFactory cf);
 };
 }
 }
