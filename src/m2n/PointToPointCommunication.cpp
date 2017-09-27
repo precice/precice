@@ -719,9 +719,6 @@ PointToPointCommunication::send(double* itemsToSend,
                                 int valueDimension) {
 
   if (_mappings.size() == 0) {
-    preciceCheck(size==0, "send()", "preCICE trys to communicate data to/from a processor that has no surface "
-                                 << "overlay with the connected participant. Please check the definition of your "
-                                 << "coupling surfaces.");
     assertion(_localIndexCount==0);
     return;
   }
@@ -755,9 +752,6 @@ PointToPointCommunication::receive(double* itemsToReceive,
                                    size_t size,
                                    int valueDimension) {
   if (_mappings.size() == 0) {
-    preciceCheck(size==0, "send()", "preCICE trys to communicate data to/from a processor that has no surface "
-                                     << "overlay with the connected participant. Please check the definition of your "
-                                     << "coupling surfaces.");
     assertion(_localIndexCount==0);
     return;
   }
