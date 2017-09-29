@@ -15,7 +15,6 @@ namespace petsc = precice::utils::petsc;
 
 #include "petscmat.h"
 #include "petscksp.h"
-#include "petsclog.h"
 
 // Forward declaration to friend the boost test struct
 namespace MappingTests {
@@ -67,7 +66,7 @@ public:
     bool                    zDead,
     double                  solverRtol = 1e-9,
     Polynomial              polynomial = Polynomial::ON,
-    Preallocation           preallocation = Preallocation::MARK);
+    Preallocation           preallocation = Preallocation::SAVED);
 
   /// Deletes the PETSc objects and the _deadAxis array
   virtual ~PetRadialBasisFctMapping();
@@ -156,6 +155,11 @@ private:
   void computePreallocationMatrixC(const mesh::PtrMesh inMesh);
 
   void computePreallocationMatrixA(const mesh::PtrMesh inMesh, const mesh::PtrMesh outMesh);
+
+  std::vector<std::vector<std::pair<int, double>>> savedPreallocationMatrixC(const mesh::PtrMesh inMesh);
+  
+  std::vector<std::vector<std::pair<int, double>>> savedPreallocationMatrixA(const mesh::PtrMesh inMesh, const mesh::PtrMesh outMesh);
+
 };
 
 // --------------------------------------------------- HEADER IMPLEMENTATIONS
@@ -352,90 +356,19 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   // preallocate the matrix. In the second phase we actually fill the matrix.
 
   // -- BEGIN PREALLOC LOOP FOR MATRIX C --
-  std::vector<std::vector<std::pair<int, double>>> vertexData(n - localPolyparams);
+  std::vector<std::vector<std::pair<int, double>>> vertexData;
    
-  if (_preallocation == Preallocation::MARK) {
-    int logPreallocC = 1;
-    precice::utils::Event ePreallocC("PetRBF.PreallocC");
-    PetscLogEventRegister("Prealloc Matrix C", 0, &logPreallocC);
-    PetscLogEventBegin(logPreallocC, 0, 0, 0, 0);
-
-    std::vector<PetscInt> d_nnz(n), o_nnz(n);
-    PetscInt colOwnerRangeCBegin, colOwnerRangeCEnd;
-    std::tie(colOwnerRangeCBegin, colOwnerRangeCEnd) = _matrixC.ownerRangeColumn();
-
-    int local_row = 0;
-    // -- PREALLOCATES THE POLYNOMIAL PART OF THE MATRIX --
-    if (_polynomial == Polynomial::ON) {
-      for (local_row = 0; local_row < localPolyparams; local_row++) {
-        d_nnz[local_row] = colOwnerRangeCEnd - colOwnerRangeCBegin;
-        o_nnz[local_row] = _matrixC.getSize().first - d_nnz[local_row];
-      }
-    }
-
-    for (const mesh::Vertex& inVertex : inMesh->vertices()) {
-      if (not inVertex.isOwner())
-        continue;
-
-      PetscInt col = polyparams - 1;
-      const int global_row = local_row + _matrixC.ownerRange().first;
-      d_nnz[local_row] = 0;
-      o_nnz[local_row] = 0;
-      
-      // -- PREALLOCATES THE COEFFICIENTS --
-      for (mesh::Vertex& vj : inMesh->vertices()) {
-        col++;
-
-        const int mapped_col = mapIndizes[vj.getGlobalIndex() + polyparams];
-        if (global_row > mapped_col) // Skip, since we are below the diagonal
-          continue;
-          
-        distance = inVertex.getCoords() - vj.getCoords();
-        for (int d = 0; d < dimensions; d++) {
-          if (_deadAxis[d]) {
-            distance[d] = 0;
-          }
-        }
-
-        if (_basisFunction.getSupportRadius() > distance.norm() or col == global_row) {
-          vertexData[local_row - localPolyparams].emplace_back( vj.getGlobalIndex() + polyparams, distance.norm() );
-          if (mapped_col >= colOwnerRangeCBegin and mapped_col < colOwnerRangeCEnd)
-            d_nnz[local_row]++;
-          else
-            o_nnz[local_row]++;
-        }
-      }
-      local_row++;
-    }
-        
-    if (utils::Parallel::getCommunicatorSize() == 1) {
-      // std::cout << "Computed Preallocation C Seq diagonal = " << std::accumulate(d_nnz.begin(), d_nnz.end(), 0) << std::endl;
-      ierr = MatSeqSBAIJSetPreallocation(_matrixC, _matrixC.blockSize(), 0, d_nnz.data()); CHKERRV(ierr);
-    }
-    else {
-      // std::cout << "Computed Preallocation C MPI diagonal = " << std::accumulate(d_nnz.begin(), d_nnz.end(), 0)
-      //           << ", off-diagonal = " << std::accumulate(o_nnz.begin(), o_nnz.end(), 0) << std::endl;
-      ierr = MatMPISBAIJSetPreallocation(_matrixC, _matrixC.blockSize(), 0, d_nnz.data(), 0, o_nnz.data()); CHKERRV(ierr);
-    }
-    MatSetOption(_matrixC, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_TRUE);
-    
-    PetscLogEventEnd(logPreallocC, 0, 0, 0, 0);
-    ePreallocC.stop();
+  if (_preallocation == Preallocation::SAVED) {
+    vertexData = savedPreallocationMatrixC(inMesh);
   }
-  // -- END PREALLOC LOOP FOR MATRIX C --
-
   if (_preallocation == Preallocation::COMPUTE) {
     computePreallocationMatrixC(inMesh);
   }
-
   if (_preallocation == Preallocation::ESTIMATE) {
     estimatePreallocationMatrixC(n, n, inMesh);
   }
   
   // -- BEGIN FILL LOOP FOR MATRIX C --
-  int logCLoop = 2;
-  PetscLogEventRegister("Filling Matrix C", 0, &logCLoop);
-  PetscLogEventBegin(logCLoop, 0, 0, 0, 0);
   precice::utils::Event eFillC("PetRBF.fillC");
   // We collect entries for each row and set them blockwise using MatSetValues.
   int preallocRow = 0;
@@ -470,7 +403,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     }
 
     // -- SETS THE COEFFICIENTS --
-    if (_preallocation == Preallocation::MARK) {
+    if (_preallocation == Preallocation::SAVED) {
       const auto & rowVertices = vertexData[preallocRow];
       for (const auto & vertex : rowVertices) {
         rowVals[colNum] = _basisFunction.evaluate(vertex.second);
@@ -500,7 +433,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   }
   DEBUG("Finished filling Matrix C");
   eFillC.stop();
-  PetscLogEventEnd(logCLoop, 0, 0, 0, 0);
   // -- END FILL LOOP FOR MATRIX C --
 
   // PETSc requires that all diagonal entries are set, even if set to zero.
@@ -512,86 +444,13 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   ierr = MatAssemblyBegin(_matrixC, MAT_FINAL_ASSEMBLY); CHKERRV(ierr);
   ierr = MatAssemblyBegin(_matrixQ, MAT_FINAL_ASSEMBLY); CHKERRV(ierr);
 
-  // -- BEGIN PREALLOC LOOP FOR MATRIX A --
-  // std::vector<std::vector<std::pair<int, double>>> vertexData(outputSize);
-  vertexData.clear();
-  vertexData.resize(outputSize);
- 
-  if (_preallocation == Preallocation::MARK) {
-    INFO("Using marked preallocation");
-    int logPreallocA = 3;
-    precice::utils::Event ePreallocA("PetRBF.PreallocA");
-    PetscLogEventRegister("Prealloc Matrix A", 0, &logPreallocA);
-    PetscLogEventBegin(logPreallocA, 0, 0, 0, 0);
-
-    std::vector<PetscInt> d_nnz(outputSize), o_nnz(outputSize);
-    
-    PetscInt colOwnerRangeABegin, colOwnerRangeAEnd;
-    std::tie(colOwnerRangeABegin, colOwnerRangeAEnd) = _matrixA.ownerRangeColumn();
-    
-    for (int localRow = 0; localRow < ownerRangeAEnd - ownerRangeABegin; localRow++) {
-      d_nnz[localRow] = 0;
-      o_nnz[localRow] = 0;
-      PetscInt col = 0;
-      const mesh::Vertex& oVertex = outMesh->vertices()[localRow];
-
-      // -- PREALLOCATE THE POLYNOM PART OF THE MATRIX --
-      if (_polynomial == Polynomial::ON) {
-        if (mapIndizes[col] >= colOwnerRangeABegin and mapIndizes[col] < colOwnerRangeAEnd)
-          d_nnz[localRow]++;
-        else
-          o_nnz[localRow]++;
-        col++;
-        
-        for (int dim = 0; dim < dimensions; dim++) {
-          if (not _deadAxis[dim]) {
-            if (mapIndizes[col] >= colOwnerRangeABegin and mapIndizes[col] < colOwnerRangeAEnd)
-              d_nnz[localRow]++;
-            else
-              o_nnz[localRow]++;
-            col++;
-          }
-        }
-      }
-    
-      // -- PREALLOCATE THE COEFFICIENTS --
-      for (const mesh::Vertex& inVertex : inMesh->vertices()) {
-        distance = oVertex.getCoords() - inVertex.getCoords();
-        for (int d = 0; d < dimensions; d++) {
-          if (_deadAxis[d])
-            distance[d] = 0;
-        }
-        
-        if (_basisFunction.getSupportRadius() > distance.norm()) {
-          col = inVertex.getGlobalIndex() + polyparams;
-          vertexData[localRow].emplace_back(col, distance.norm());
-
-          if (mapIndizes[col] >= colOwnerRangeABegin and mapIndizes[col] < colOwnerRangeAEnd)
-            d_nnz[localRow]++;
-          else
-            o_nnz[localRow]++;
-        }
-      }
-    }
-    if (utils::Parallel::getCommunicatorSize() == 1) {
-      // std::cout << "Preallocation A Seq diagonal = " << std::accumulate(d_nnz.begin(), d_nnz.end(), 0) << std::endl;
-      ierr = MatSeqAIJSetPreallocation(_matrixA, 0, d_nnz.data()); CHKERRV(ierr);
-    }
-    else {
-      // std::cout << "Preallocation A MPI diagonal = " << std::accumulate(d_nnz.begin(), d_nnz.end(), 0)
-      //           << ", off-diagonal = " << std::accumulate(o_nnz.begin(), o_nnz.end(), 0) << std::endl;
-      ierr = MatMPIAIJSetPreallocation(_matrixA, 0, d_nnz.data(), 0, o_nnz.data()); CHKERRV(ierr);
-    }
-    MatSetOption(_matrixA, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_TRUE);
-    PetscLogEventEnd(logPreallocA, 0, 0, 0, 0);
-    ePreallocA.stop();
+  
+  if (_preallocation == Preallocation::SAVED) {
+    vertexData = savedPreallocationMatrixA(inMesh, outMesh);
   }
-  // -- END PREALLOC LOOP FOR MATRIX A --
-
   if (_preallocation == Preallocation::COMPUTE) {
     computePreallocationMatrixA(inMesh, outMesh);
   }
-
   if (_preallocation == Preallocation::ESTIMATE) {
     estimatePreallocationMatrixA(outputSize, n, inMesh);
   }  
@@ -599,9 +458,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   
   // -- BEGIN FILL LOOP FOR MATRIX A --
   DEBUG("Begin filling matrix A.");
-  int logALoop = 4;
-  PetscLogEventRegister("Filling Matrix A", 0, &logALoop);
-  PetscLogEventBegin(logALoop, 0, 0, 0, 0);
   precice::utils::Event eFillA("PetRBF.fillA");
 
   for (int row = ownerRangeABegin; row < ownerRangeAEnd; row++) {
@@ -628,11 +484,11 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     }
     
     // -- SETS THE COEFFICIENTS --
-    if (_preallocation == Preallocation::MARK) {
+    if (_preallocation == Preallocation::SAVED) {
       const auto & rowVertices = vertexData[row - ownerRangeABegin];
       for (const auto & vertex : rowVertices) {
         // std::cout << "Setting colNum = " << colNum << ", idx = " << vertex.first
-                  // << " to " << _basisFunction.evaluate(vertex.second) << "\n";
+        // << " to " << _basisFunction.evaluate(vertex.second) << "\n";
         rowVals[colNum] = _basisFunction.evaluate(vertex.second);
         colIdx[colNum++] = vertex.first;
       }
@@ -654,7 +510,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     ierr = MatSetValuesLocal(_matrixA, 1, &row, colNum, colIdx, rowVals, INSERT_VALUES); CHKERRV(ierr);
   }
   DEBUG("Finished filling Matrix A");
-  PetscLogEventEnd(logALoop, 0, 0, 0, 0);
   eFillA.stop();
   // -- END FILL LOOP FOR MATRIX A --
 
@@ -990,10 +845,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::estimatePreallocationMat
 template <typename RADIAL_BASIS_FUNCTION_T>
 void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computePreallocationMatrixC(const mesh::PtrMesh inMesh)
 {
-  int logPreallocC = 1;
   precice::utils::Event ePreallocC("PetRBF.PreallocC");
-  PetscLogEventRegister("Prealloc Matrix C", 0, &logPreallocC);
-  PetscLogEventBegin(logPreallocC, 0, 0, 0, 0);
 
   PetscInt n, ierr;
   
@@ -1057,14 +909,13 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computePreallocationMatr
   }
   else {
     // std::cout << "Computed Preallocation C MPI diagonal = " << std::accumulate(d_nnz.begin(), d_nnz.end(), 0)
-              // << ", off-diagonal = " << std::accumulate(o_nnz.begin(), o_nnz.end(), 0) << std::endl;
+    // << ", off-diagonal = " << std::accumulate(o_nnz.begin(), o_nnz.end(), 0) << std::endl;
     ierr = MatMPISBAIJSetPreallocation(_matrixC, _matrixC.blockSize(), 0, d_nnz.data(), 0, o_nnz.data()); CHKERRV(ierr);
   }
   MatSetOption(_matrixC, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_TRUE);
 
   ISLocalToGlobalMappingRestoreIndices(_ISmapping, &mapIndizes);
   
-  PetscLogEventEnd(logPreallocC, 0, 0, 0, 0);
   ePreallocC.stop();  
 }
 
@@ -1072,10 +923,7 @@ template <typename RADIAL_BASIS_FUNCTION_T>
 void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computePreallocationMatrixA(
   const mesh::PtrMesh inMesh, const mesh::PtrMesh outMesh)
 {  
-  int logPreallocA = 3;
   precice::utils::Event ePreallocA("PetRBF.PreallocA");
-  PetscLogEventRegister("Prealloc Matrix A", 0, &logPreallocA);
-  PetscLogEventBegin(logPreallocA, 0, 0, 0, 0);
 
   PetscInt ownerRangeABegin, ownerRangeAEnd, colOwnerRangeABegin, colOwnerRangeAEnd;
   PetscInt outputSize, ierr;
@@ -1141,17 +989,181 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computePreallocationMatr
   }
   else {
     // std::cout << "Preallocation A MPI diagonal = " << std::accumulate(d_nnz.begin(), d_nnz.end(), 0)
-              // << ", off-diagonal = " << std::accumulate(o_nnz.begin(), o_nnz.end(), 0) << std::endl;
+    // << ", off-diagonal = " << std::accumulate(o_nnz.begin(), o_nnz.end(), 0) << std::endl;
     ierr = MatMPIAIJSetPreallocation(_matrixA, 0, d_nnz.data(), 0, o_nnz.data()); CHKERRV(ierr);
   }
   MatSetOption(_matrixA, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_TRUE);
 
   ISLocalToGlobalMappingRestoreIndices(_ISmapping, &mapIndizes);
   
-  PetscLogEventEnd(logPreallocA, 0, 0, 0, 0);
   ePreallocA.stop();
 }
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::savedPreallocationMatrixC(
+  const mesh::PtrMesh inMesh)
+{
+  precice::utils::Event ePreallocC("PetRBF.PreallocC");
+
+  PetscInt n, ierr;
   
+  const PetscInt *mapIndizes;
+  ISLocalToGlobalMappingGetIndices(_ISmapping, &mapIndizes);
+
+  int dimensions = input()->getDimensions();
+  Eigen::VectorXd distance(dimensions);
+  
+  std::tie(n, std::ignore) = _matrixC.getLocalSize();
+  std::vector<PetscInt> d_nnz(n), o_nnz(n);
+  PetscInt colOwnerRangeCBegin, colOwnerRangeCEnd;
+  std::tie(colOwnerRangeCBegin, colOwnerRangeCEnd) = _matrixC.ownerRangeColumn();
+
+  std::vector<std::vector<std::pair<int, double>>> vertexData(n - localPolyparams);
+  
+  int local_row = 0;
+  // -- PREALLOCATES THE POLYNOMIAL PART OF THE MATRIX --
+  if (_polynomial == Polynomial::ON) {
+    for (local_row = 0; local_row < localPolyparams; local_row++) {
+      d_nnz[local_row] = colOwnerRangeCEnd - colOwnerRangeCBegin;
+      o_nnz[local_row] = _matrixC.getSize().first - d_nnz[local_row];
+    }
+  }
+
+  for (const mesh::Vertex& inVertex : inMesh->vertices()) {
+    if (not inVertex.isOwner())
+      continue;
+
+    PetscInt col = polyparams - 1;
+    const int global_row = local_row + _matrixC.ownerRange().first;
+    d_nnz[local_row] = 0;
+    o_nnz[local_row] = 0;
+      
+    // -- PREALLOCATES THE COEFFICIENTS --
+    for (mesh::Vertex& vj : inMesh->vertices()) {
+      col++;
+
+      const int mapped_col = mapIndizes[vj.getGlobalIndex() + polyparams];
+      if (global_row > mapped_col) // Skip, since we are below the diagonal
+        continue;
+          
+      distance = inVertex.getCoords() - vj.getCoords();
+      for (int d = 0; d < dimensions; d++)
+        if (_deadAxis[d])
+          distance[d] = 0;
+       
+      if (_basisFunction.getSupportRadius() > distance.norm() or col == global_row) {
+        vertexData[local_row - localPolyparams].emplace_back( vj.getGlobalIndex() + polyparams, distance.norm() );
+        if (mapped_col >= colOwnerRangeCBegin and mapped_col < colOwnerRangeCEnd)
+          d_nnz[local_row]++;
+        else
+          o_nnz[local_row]++;
+      }
+    }
+    local_row++;
+  }
+        
+  if (utils::Parallel::getCommunicatorSize() == 1) {
+    // std::cout << "Computed Preallocation C Seq diagonal = " << std::accumulate(d_nnz.begin(), d_nnz.end(), 0) << std::endl;
+    ierr = MatSeqSBAIJSetPreallocation(_matrixC, _matrixC.blockSize(), 0, d_nnz.data());
+  }
+  else {
+    // std::cout << "Computed Preallocation C MPI diagonal = " << std::accumulate(d_nnz.begin(), d_nnz.end(), 0)
+    //           << ", off-diagonal = " << std::accumulate(o_nnz.begin(), o_nnz.end(), 0) << std::endl;
+    ierr = MatMPISBAIJSetPreallocation(_matrixC, _matrixC.blockSize(), 0, d_nnz.data(), 0, o_nnz.data());
+  }
+  MatSetOption(_matrixC, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_TRUE);
+  ISLocalToGlobalMappingRestoreIndices(_ISmapping, &mapIndizes);
+ 
+  ePreallocC.stop();
+
+  return vertexData;
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::savedPreallocationMatrixA(
+  const mesh::PtrMesh inMesh, const mesh::PtrMesh outMesh)
+{
+  INFO("Using saved preallocation");
+  precice::utils::Event ePreallocA("PetRBF.PreallocA");
+
+  PetscInt ownerRangeABegin, ownerRangeAEnd, colOwnerRangeABegin, colOwnerRangeAEnd;
+  PetscInt outputSize, n, ierr;
+  
+  const PetscInt *mapIndizes;
+  ISLocalToGlobalMappingGetIndices(_ISmapping, &mapIndizes);
+
+  std::tie(outputSize, n) = _matrixA.getLocalSize(); // n hier nehmen
+  std::tie(ownerRangeABegin, ownerRangeAEnd) = _matrixA.ownerRange();
+  std::tie(colOwnerRangeABegin, colOwnerRangeAEnd) = _matrixA.ownerRangeColumn();
+  int dimensions = input()->getDimensions();
+    
+  std::vector<PetscInt> d_nnz(outputSize), o_nnz(outputSize);
+  Eigen::VectorXd distance(dimensions);
+
+  // Contains localRow<localCols<colPosition, distance>>>
+  std::vector<std::vector<std::pair<int, double>>> vertexData(outputSize);
+        
+  for (int localRow = 0; localRow < ownerRangeAEnd - ownerRangeABegin; localRow++) {
+    d_nnz[localRow] = 0;
+    o_nnz[localRow] = 0;
+    PetscInt col = 0;
+    const mesh::Vertex& oVertex = outMesh->vertices()[localRow];
+
+    // -- PREALLOCATE THE POLYNOM PART OF THE MATRIX --
+    if (_polynomial == Polynomial::ON) {
+      if (mapIndizes[col] >= colOwnerRangeABegin and mapIndizes[col] < colOwnerRangeAEnd)
+        d_nnz[localRow]++;
+      else
+        o_nnz[localRow]++;
+      col++;
+        
+      for (int dim = 0; dim < dimensions; dim++) {
+        if (not _deadAxis[dim]) {
+          if (mapIndizes[col] >= colOwnerRangeABegin and mapIndizes[col] < colOwnerRangeAEnd)
+            d_nnz[localRow]++;
+          else
+            o_nnz[localRow]++;
+          col++;
+        }
+      }
+    }
+    
+    // -- PREALLOCATE THE COEFFICIENTS --
+    for (const mesh::Vertex& inVertex : inMesh->vertices()) {
+      distance = oVertex.getCoords() - inVertex.getCoords();
+      for (int d = 0; d < dimensions; d++)
+        if (_deadAxis[d])
+          distance[d] = 0;
+        
+      if (_basisFunction.getSupportRadius() > distance.norm()) {
+        col = inVertex.getGlobalIndex() + polyparams;
+        vertexData[localRow].emplace_back(col, distance.norm());
+
+        if (mapIndizes[col] >= colOwnerRangeABegin and mapIndizes[col] < colOwnerRangeAEnd)
+          d_nnz[localRow]++;
+        else
+          o_nnz[localRow]++;
+      }
+    }
+  }
+  if (utils::Parallel::getCommunicatorSize() == 1) {
+    // std::cout << "Preallocation A Seq diagonal = " << std::accumulate(d_nnz.begin(), d_nnz.end(), 0) << std::endl;
+    ierr = MatSeqAIJSetPreallocation(_matrixA, 0, d_nnz.data());
+  }
+  else {
+    // std::cout << "Preallocation A MPI diagonal = " << std::accumulate(d_nnz.begin(), d_nnz.end(), 0)
+    //           << ", off-diagonal = " << std::accumulate(o_nnz.begin(), o_nnz.end(), 0) << std::endl;
+    ierr = MatMPIAIJSetPreallocation(_matrixA, 0, d_nnz.data(), 0, o_nnz.data());
+  }
+  MatSetOption(_matrixA, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_TRUE);
+
+  ISLocalToGlobalMappingRestoreIndices(_ISmapping, &mapIndizes);
+  ePreallocA.stop();
+  return vertexData;  
+}
+
+
+    
 
 }} // namespace precice, mapping
 

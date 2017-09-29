@@ -290,8 +290,8 @@ void MappingConfiguration:: xmlTagCallback
         preallocation = Preallocation::ESTIMATE;
       else if (strPrealloc == "compute")
         preallocation = Preallocation::COMPUTE;
-      else if (strPrealloc == "mark")
-        preallocation = Preallocation::MARK;
+      else if (strPrealloc == "saved")
+        preallocation = Preallocation::SAVED;
       else
         preallocation = Preallocation::OFF;
     }
