@@ -8,6 +8,7 @@
 #include "utils/EigenHelperFunctions.hpp"
 #include "math/math.hpp"
 #include <Eigen/Dense>
+#include "RTree.hpp"
 
 namespace precice {
 namespace mesh {
@@ -672,6 +673,7 @@ void Mesh:: clear()
   _manageEdgeIDs.resetIDs();
   _manageVertexIDs.resetIDs();
 
+  rtree::clear();
   for (mesh::PtrData data : _data) {
     data->values().resize(0); // TODO: mybe incorrect, previous was clear() ... check if resize(0) has some bad side effects
   }

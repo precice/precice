@@ -1,7 +1,9 @@
 #include "NearestNeighborMapping.hpp"
 #include "query/FindClosestVertex.hpp"
 #include "utils/Helpers.hpp"
+#include "mesh/RTree.hpp"
 #include <Eigen/Core>
+#include <boost/function_output_iterator.hpp>
 
 namespace precice {
 namespace mapping {
@@ -26,31 +28,36 @@ void NearestNeighborMapping:: computeMapping()
   TRACE(input()->vertices().size());
   assertion(input().get() != nullptr);
   assertion(output().get() != nullptr);
+  
   if (getConstraint() == CONSISTENT){
     DEBUG("Compute consistent mapping");
+    mesh::rtree::PtrRTree rtree = mesh::rtree::getVertexRTree(input());
     size_t verticesSize = output()->vertices().size();
     _vertexIndices.resize(verticesSize);
     const mesh::Mesh::VertexContainer& outputVertices = output()->vertices();
-    for ( size_t i=0; i < verticesSize; i++ ){
-      const Eigen::VectorXd& coords = outputVertices[i].getCoords();
-      query::FindClosestVertex find(coords); // Search for the output vertex ...
-      find(*input()); // ... inside the input mesh
-      assertion(find.hasFound());
-      _vertexIndices[i] = find.getClosestVertex().getID();
+    for ( size_t i=0; i < verticesSize; i++ ) {
+        const Eigen::VectorXd& coords = outputVertices[i].getCoords();
+        // Search for the output vertex inside the input mesh and add index to _vertexIndices
+        rtree->query(boost::geometry::index::nearest(coords, 1),
+                     boost::make_function_output_iterator([&](size_t const& val) {
+                         _vertexIndices[i] =  input()->vertices()[val].getID();
+                       }));
     }
   }
   else {
     assertion(getConstraint() == CONSERVATIVE, getConstraint());
     DEBUG("Compute conservative mapping");
+    mesh::rtree::PtrRTree rtree = mesh::rtree::getVertexRTree(output());
     size_t verticesSize = input()->vertices().size();
     _vertexIndices.resize(verticesSize);
     const mesh::Mesh::VertexContainer& inputVertices = input()->vertices();
     for ( size_t i=0; i < verticesSize; i++ ){
       const Eigen::VectorXd& coords = inputVertices[i].getCoords();
-      query::FindClosestVertex find(coords); // Search for the input vertex ...
-      find(*output()); // ... inside the output mesh
-      assertion(find.hasFound());
-      _vertexIndices[i] = find.getClosestVertex().getID();
+      // Search for the input vertex inside the output mesh and add index to _vertexIndices
+      rtree->query(boost::geometry::index::nearest(coords, 1),
+                   boost::make_function_output_iterator([&](size_t const& val) {
+                       _vertexIndices[i] =  input()->vertices()[val].getID();
+                     }));
     }
   }
   _hasComputedMapping = true;
