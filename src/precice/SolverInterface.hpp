@@ -29,6 +29,7 @@ namespace Precice {
     struct Test1;
     struct TestMasterSlaveSetup;
     struct GlobalRBFPartitioning;
+    struct LocalRBFPartitioning;
 }
 }
 
@@ -649,6 +650,7 @@ private:
   friend struct Precice::Parallel::Test1;
   friend struct Precice::Parallel::TestMasterSlaveSetup;
   friend struct Precice::Parallel::GlobalRBFPartitioning;
+  friend struct Precice::Parallel::LocalRBFPartitioning;
 };
 
 } // namespace precice

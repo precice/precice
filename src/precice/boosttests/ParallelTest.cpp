@@ -99,7 +99,6 @@ BOOST_AUTO_TEST_CASE(Test1, * testing::OnRanks({0, 1, 2, 3}))
   }
 }
 
-// This one fails
 BOOST_AUTO_TEST_CASE(GlobalRBFPartitioning, * testing::OnRanks({0, 1, 2, 3}))
 {
   utils::Parallel::restrictGlobalCommunicator({0,1,2,3});
@@ -109,14 +108,13 @@ BOOST_AUTO_TEST_CASE(GlobalRBFPartitioning, * testing::OnRanks({0, 1, 2, 3}))
   std::string configFilename = "../src/precice/boosttests/globalRBFPartitioning.xml";
   config::Configuration config;
 
-  //MPI_Comm comm = utils::Parallel::getRestrictedCommunicator({0,1,2});
-
   if(utils::Parallel::getProcessRank()<=2){
     utils::Parallel::splitCommunicator( "SolverOne" );
     utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator());
     assertion(utils::Parallel::getCommunicatorSize() == 3);
     utils::Parallel::clearGroups();
     utils::configure(config.getXMLTag(), configFilename);
+
     SolverInterface interface ( "SolverOne", utils::Parallel::getProcessRank(), 3 );
     interface._impl->configure(config.getSolverInterfaceConfiguration());
     int meshID = interface.getMeshID("MeshOne");
@@ -139,6 +137,61 @@ BOOST_AUTO_TEST_CASE(GlobalRBFPartitioning, * testing::OnRanks({0, 1, 2, 3}))
     assertion(utils::Parallel::getCommunicatorSize() == 1);
     utils::Parallel::clearGroups();
     utils::configure(config.getXMLTag(), configFilename);
+
+    SolverInterface interface ( "SolverTwo", 0, 1 );
+    interface._impl->configure(config.getSolverInterfaceConfiguration());
+    int meshID = interface.getMeshID("MeshTwo");
+    int vertexIDs[6];
+    double positions[12] = {0.0,0.0,0.2,0.0,0.4,0.0,0.6,0.0,0.8,0.0,1.0,0.0};
+    interface.setMeshVertices(meshID, 6, positions, vertexIDs);
+    interface.initialize();
+    int dataID = interface.getDataID("Data2", meshID);
+    double values[6] = {1.0,2.0,3.0,4.0,5.0,6.0};
+    interface.writeBlockScalarData(dataID, 6, vertexIDs, values);
+    interface.advance(1.0);
+    interface.finalize();
+  }
+}
+
+BOOST_AUTO_TEST_CASE(LocalRBFPartitioning, * testing::OnRanks({0, 1, 2, 3}))
+{
+  utils::Parallel::restrictGlobalCommunicator({0,1,2,3});
+  assertion(utils::Parallel::getCommunicatorSize() == 4);
+
+  reset();
+  std::string configFilename = "../src/precice/boosttests/localRBFPartitioning.xml";
+  config::Configuration config;
+
+  if(utils::Parallel::getProcessRank()<=2){
+    utils::Parallel::splitCommunicator( "SolverOne" );
+    utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator());
+    assertion(utils::Parallel::getCommunicatorSize() == 3);
+    utils::Parallel::clearGroups();
+    utils::configure(config.getXMLTag(), configFilename);
+
+    SolverInterface interface ( "SolverOne", utils::Parallel::getProcessRank(), 3 );
+    interface._impl->configure(config.getSolverInterfaceConfiguration());
+    int meshID = interface.getMeshID("MeshOne");
+    int dataID = interface.getDataID("Data2", meshID);
+
+    int vertexIDs[2];
+    double xCoord = utils::Parallel::getProcessRank() * 0.4;
+    double positions[4] = {xCoord,0.0,xCoord+0.2,0.0};
+    interface.setMeshVertices(meshID, 2, positions, vertexIDs);
+    interface.initialize();
+    double values[2];
+    interface.advance(1.0);
+    interface.readBlockScalarData(dataID, 2, vertexIDs, values);
+    std::cout << utils::Parallel::getProcessRank() <<": " << values << std::endl;
+    interface.finalize();
+  }
+  else {
+    utils::Parallel::splitCommunicator( "SolverTwo" );
+    utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator());
+    assertion(utils::Parallel::getCommunicatorSize() == 1);
+    utils::Parallel::clearGroups();
+    utils::configure(config.getXMLTag(), configFilename);
+
     SolverInterface interface ( "SolverTwo", 0, 1 );
     interface._impl->configure(config.getSolverInterfaceConfiguration());
     int meshID = interface.getMeshID("MeshTwo");
