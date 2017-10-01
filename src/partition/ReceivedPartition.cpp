@@ -381,21 +381,26 @@ void ReceivedPartition:: createOwnerInformation(){
 
     // fill master data
 
+    bool masterAtInterface = false;
     slaveOwnerVecs[0].resize(_mesh->vertices().size());
     slaveGlobalIDs[0].resize(_mesh->vertices().size());
     slaveTags[0].resize(_mesh->vertices().size());
     for(size_t i=0; i<_mesh->vertices().size(); i++){
       slaveGlobalIDs[0][i] = _mesh->vertices()[i].getGlobalIndex();
       if(_mesh->vertices()[i].isTagged()){
+        masterAtInterface = true;
         slaveTags[0][i] = 1;
       }
       else{
         slaveTags[0][i] = 0;
       }
     }
+    DEBUG("My tags: " << slaveTags[0]);
 
     // receive slave data
     int ranksAtInterface = 0;
+    if(masterAtInterface) ranksAtInterface++;
+
     for (int rank = 1; rank < utils::MasterSlave::_size; rank++){
       int localNumberOfVertices = -1;
       utils::MasterSlave::_communication->receive(localNumberOfVertices,rank);
