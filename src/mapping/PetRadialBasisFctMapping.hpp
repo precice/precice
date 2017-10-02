@@ -171,6 +171,9 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
   _matrixQ("Q"),
   _matrixA("A"),
   _matrixV("V"),
+  _solver(nullptr),
+  _QRsolver(nullptr),
+  _ISmapping(nullptr),
   _solverRtol(solverRtol),
   _polynomial(polynomial)
 {
@@ -598,13 +601,13 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: clear()
   _matrixQ.reset();
   _matrixV.reset();
   
-  KSPDestroy(&_solver);
+  petsc::destroy(&_solver);
   KSPCreate(utils::Parallel::getGlobalCommunicator(), &_solver);
 
-  KSPDestroy(&_QRsolver);
+  petsc::destroy(&_QRsolver);
   KSPCreate(utils::Parallel::getGlobalCommunicator(), &_QRsolver);
 
-  ISLocalToGlobalMappingDestroy(&_ISmapping);
+  petsc::destroy(&_ISmapping);
   
   previousSolution.clear();
   _hasComputedMapping = false;
