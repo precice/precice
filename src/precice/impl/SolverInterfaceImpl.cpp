@@ -170,13 +170,13 @@ void SolverInterfaceImpl:: configure
   }
 
   if (_geometryMode){
-    preciceInfo("configure()", "Run in geometry mode");
+    INFO("Run in geometry mode");
     preciceCheck(_participants.size() == 1, "configure()",
                  "Only one participant can be defined in geometry mode!");
     configurePartitions(config.getM2NConfiguration());
   }
   else if (not _clientMode){
-    preciceInfo("configure()", "Run in coupling mode");
+    INFO("Run in coupling mode");
     preciceCheck(_participants.size() > 1,
                  "configure()", "At least two participants need to be defined!");
     configurePartitions(config.getM2NConfiguration());
@@ -250,7 +250,7 @@ double SolverInterfaceImpl:: initialize()
     // Setup communication
     if (not _geometryMode){
       typedef std::map<std::string,M2NWrap>::value_type M2NPair;
-      preciceInfo("initialize()", "Setting up master communication to coupling partner/s " );
+      INFO("Setting up master communication to coupling partner/s " );
       for (M2NPair& m2nPair : _m2ns) {
         m2n::PtrM2N& m2n = m2nPair.second.m2n;
         std::string localName = _accessorName;
@@ -267,7 +267,7 @@ double SolverInterfaceImpl:: initialize()
           m2n->acceptMasterConnection(localName, remoteName);
         }
       }
-      preciceInfo("initialize()", "Coupling partner/s are connected " );
+      INFO("Coupling partner/s are connected " );
     }
 
     DEBUG("Perform initializations");
@@ -309,7 +309,7 @@ double SolverInterfaceImpl:: initialize()
 
 
     typedef std::map<std::string,M2NWrap>::value_type M2NPair;
-    preciceInfo("initialize()", "Setting up slaves communication to coupling partner/s " );
+    INFO("Setting up slaves communication to coupling partner/s " );
     for (M2NPair& m2nPair : _m2ns) {
       m2n::PtrM2N& m2n = m2nPair.second.m2n;
       std::string localName = _accessorName;
@@ -325,7 +325,7 @@ double SolverInterfaceImpl:: initialize()
         m2n->acceptSlavesConnection(localName, remoteName);
       }
     }
-    preciceInfo("initialize()", "Slaves are connected" );
+    INFO("Slaves are connected" );
 
     std::set<action::Action::Timing> timings;
     double dt = 0.0;
@@ -339,7 +339,7 @@ double SolverInterfaceImpl:: initialize()
     int timestep = 1;
 
     if (_restartMode){
-      preciceInfo("initialize()", "Reading simulation state for restart");
+      INFO("Reading simulation state for restart");
       io::SimulationStateIO stateIO(_checkpointFileName + "_simstate.txt");
       stateIO.readState(time, timestep, _numberAdvanceCalls);
     }
@@ -347,7 +347,7 @@ double SolverInterfaceImpl:: initialize()
     _couplingScheme->initialize(time, timestep);
 
     if (_restartMode){
-      preciceInfo("initialize()", "Reading coupling scheme state for restart");
+      INFO("Reading coupling scheme state for restart");
       //io::TXTReader txtReader(_checkpointFileName + "_cplscheme.txt");
       _couplingScheme->importState(_checkpointFileName);
     }
@@ -363,14 +363,14 @@ double SolverInterfaceImpl:: initialize()
 
     performDataActions(timings, 0.0, 0.0, 0.0, dt);
 
-    preciceInfo("initialize()", _couplingScheme->printCouplingState());
+    INFO(_couplingScheme->printCouplingState());
   }
   return _couplingScheme->getNextTimestepMaxLength();
 }
 
 void SolverInterfaceImpl:: initializeData ()
 {
-  preciceTrace("initializeData()" );
+  TRACE();
   Event e("initializeData", not precice::testMode);
 
   m2n::PointToPointCommunication::ScopedSetEventNamePrefix ssenp(
@@ -486,7 +486,7 @@ double SolverInterfaceImpl:: advance
       mapReadData();
     }
 
-    preciceInfo("advance()", _couplingScheme->printCouplingState());
+    INFO(_couplingScheme->printCouplingState());
 
     handleExports();
 
@@ -500,7 +500,7 @@ double SolverInterfaceImpl:: advance
 
 void SolverInterfaceImpl:: finalize()
 {
-  preciceTrace("finalize()");
+  TRACE();
   preciceCheck(_couplingScheme->isInitialized(), "finalize()",
                "initialize() has to be called before finalize()");
   _couplingScheme->finalize();
@@ -1126,7 +1126,7 @@ int SolverInterfaceImpl:: setMeshEdge
   int firstVertexID,
   int secondVertexID )
 {
-  preciceTrace ( "setMeshEdge()", meshID, firstVertexID, secondVertexID );
+  TRACE(meshID, firstVertexID, secondVertexID );
   if (_restartMode){
     DEBUG("Ignoring edge, since restart mode is active");
     return -1;
@@ -1160,7 +1160,7 @@ void SolverInterfaceImpl:: setMeshTriangle
   int secondEdgeID,
   int thirdEdgeID )
 {
-  preciceTrace ( "setMeshTriangle()", meshID, firstEdgeID,
+  TRACE(meshID, firstEdgeID,
                   secondEdgeID, thirdEdgeID );
   if (_restartMode){
     DEBUG("Ignoring triangle, since restart mode is active");
@@ -1194,7 +1194,7 @@ void SolverInterfaceImpl:: setMeshTriangleWithEdges
   int secondVertexID,
   int thirdVertexID )
 {
-  preciceTrace("setMeshTriangleWithEdges()", meshID, firstVertexID,
+  TRACE(meshID, firstVertexID,
                 secondVertexID, thirdVertexID);
   if (_clientMode){
     _requestManager->requestSetMeshTriangleWithEdges(meshID,
@@ -1289,7 +1289,7 @@ void SolverInterfaceImpl:: setMeshQuad
   int thirdEdgeID,
   int fourthEdgeID )
 {
-  preciceTrace("setMeshQuad()", meshID, firstEdgeID, secondEdgeID, thirdEdgeID,
+  TRACE(meshID, firstEdgeID, secondEdgeID, thirdEdgeID,
                 fourthEdgeID);
   if (_restartMode){
     DEBUG("Ignoring quad, since restart mode is active");
@@ -1328,7 +1328,7 @@ void SolverInterfaceImpl:: setMeshQuadWithEdges
   int thirdVertexID,
   int fourthVertexID )
 {
-  preciceTrace("setMeshQuadWithEdges()", meshID, firstVertexID,
+  TRACE(meshID, firstVertexID,
                 secondVertexID, thirdVertexID, fourthVertexID);
   if (_clientMode){
     _requestManager->requestSetMeshQuadWithEdges(
@@ -1439,7 +1439,7 @@ void SolverInterfaceImpl:: mapWriteDataFrom
 (
   int fromMeshID )
 {
-  preciceTrace("mapWriteDataFrom(int)", fromMeshID);
+  TRACE(fromMeshID);
   if (_clientMode){
     _requestManager->requestMapWriteDataFrom(fromMeshID);
     return;
@@ -1447,7 +1447,7 @@ void SolverInterfaceImpl:: mapWriteDataFrom
   impl::MeshContext& context = _accessor->meshContext(fromMeshID);
   impl::MappingContext& mappingContext = context.fromMappingContext;
   if (mappingContext.mapping.use_count() == 0){
-    preciceError("mapWriteDataFrom()", "From mesh \"" << context.mesh->getName()
+    ERROR("From mesh \"" << context.mesh->getName()
                    << "\", there is no mapping defined");
     return;
   }
@@ -1475,7 +1475,7 @@ void SolverInterfaceImpl:: mapReadDataTo
 (
   int toMeshID )
 {
-  preciceTrace ("mapReadDataTo(int)", toMeshID);
+  TRACE(toMeshID);
   if (_clientMode){
     _requestManager->requestMapReadDataTo(toMeshID);
     return;
@@ -1483,7 +1483,7 @@ void SolverInterfaceImpl:: mapReadDataTo
   impl::MeshContext& context = _accessor->meshContext(toMeshID);
   impl::MappingContext& mappingContext = context.toMappingContext;
   if (mappingContext.mapping.use_count() == 0){
-    preciceError("mapReadDataFrom()", "From mesh \"" << context.mesh->getName()
+    ERROR("From mesh \"" << context.mesh->getName()
                    << "\", there is no mapping defined!");
     return;
   }
@@ -1616,7 +1616,7 @@ void SolverInterfaceImpl:: writeScalarData
   int    valueIndex,
   double value )
 {
-  preciceTrace("writeScalarData()", fromDataID, valueIndex, value );
+  TRACE(fromDataID, valueIndex, value );
   preciceCheck(valueIndex >= -1, "writeScalarData()", "Invalid value index ("
                << valueIndex << ") when writing scalar data!");
   if (_clientMode){
@@ -1641,7 +1641,7 @@ void SolverInterfaceImpl:: readBlockVectorData
   int*    valueIndices,
   double* values )
 {
-  preciceTrace("readBlockVectorData()", toDataID, size);
+  TRACE(toDataID, size);
   if (size == 0)
     return;
   assertion(valueIndices != nullptr);
@@ -1673,7 +1673,7 @@ void SolverInterfaceImpl:: readVectorData
   int     valueIndex,
   double* value )
 {
-  preciceTrace("readVectorData()", toDataID, valueIndex);
+  TRACE(toDataID, valueIndex);
   preciceCheck(valueIndex >= -1, "readData(vector)", "Invalid value index ( "
                << valueIndex << " )when reading vector data!");
   if (_clientMode){
@@ -1705,7 +1705,7 @@ void SolverInterfaceImpl:: readBlockScalarData
   int*    valueIndices,
   double* values )
 {
-  preciceTrace("readBlockScalarData()", toDataID, size);
+  TRACE(toDataID, size);
   if (size == 0)
     return;
   DEBUG("size = " << size);
@@ -1734,7 +1734,7 @@ void SolverInterfaceImpl:: readScalarData
   int     valueIndex,
   double& value )
 {
-  preciceTrace("readScalarData()", toDataID, valueIndex, value);
+  TRACE(toDataID, valueIndex, value);
   preciceCheck(valueIndex >= -1, "readData(vector)", "Invalid value index ( "
                << valueIndex << " )when reading vector data!");
   if (_clientMode){
@@ -1757,7 +1757,7 @@ void SolverInterfaceImpl:: exportMesh
   const std::string& filenameSuffix,
   int                exportType )
 {
-  preciceTrace ( "exportMesh()", filenameSuffix, exportType );
+  TRACE(filenameSuffix, exportType );
   if ( _clientMode ){
     _requestManager->requestExportMesh ( filenameSuffix, exportType );
     return;
@@ -1797,14 +1797,14 @@ MeshHandle SolverInterfaceImpl:: getMeshHandle
 (
   const std::string& meshName )
 {
-  preciceTrace("getMeshHandle()", meshName);
+  TRACE(meshName);
   assertion(not _clientMode);
   for (MeshContext* context : _accessor->usedMeshContexts()){
     if (context->mesh->getName() == meshName){
       return MeshHandle(context->mesh->content());
     }
   }
-  preciceError("getMeshHandle()", "Participant \"" << _accessorName
+  ERROR("Participant \"" << _accessorName
                << "\" does not use mesh \"" << meshName << "\"!");
 }
 
@@ -1819,7 +1819,7 @@ void SolverInterfaceImpl:: configureM2Ns
 (
   const m2n::M2NConfiguration::SharedPointer& config )
 {
-  preciceTrace("configureM2Ns()");
+  TRACE();
   typedef m2n::M2NConfiguration::M2NTuple M2NTuple;
   for (M2NTuple m2nTuple : config->m2ns()) {
     std::string comPartner("");
@@ -2015,7 +2015,7 @@ void SolverInterfaceImpl:: mapWrittenData()
     rightTime |= timing == MappingConfiguration::INITIAL;
     bool hasComputed = context.mapping->hasComputedMapping();
     if (rightTime && not hasComputed){
-      preciceInfo("mapWrittenData()","Compute write mapping from mesh \""
+      INFO("Compute write mapping from mesh \""
           << _accessor->meshContext(context.fromMeshID).mesh->getName()
           << "\" to mesh \""
           << _accessor->meshContext(context.toMeshID).mesh->getName()
@@ -2074,7 +2074,7 @@ void SolverInterfaceImpl:: mapReadData()
     mapNow |= timing == mapping::MappingConfiguration::INITIAL;
     bool hasComputed = context.mapping->hasComputedMapping();
     if (mapNow && not hasComputed){
-      preciceInfo("mapReadData()","Compute read mapping from mesh \""
+      INFO("Compute read mapping from mesh \""
               << _accessor->meshContext(context.fromMeshID).mesh->getName()
               << "\" to mesh \""
               << _accessor->meshContext(context.toMeshID).mesh->getName()
@@ -2211,7 +2211,7 @@ void SolverInterfaceImpl:: resetWrittenData()
 
 //void SolverInterfaceImpl:: resetDataIndices()
 //{
-//  preciceTrace ( "resetDataIndices()" );
+//  TRACE();
 //  for ( DataContext & context : _accessor->writeDataContexts() ){
 //    context.indexCursor = 0;
 //  }
@@ -2239,7 +2239,7 @@ void SolverInterfaceImpl:: selectInquiryMeshIDs
   const std::set<int>& meshIDs,
   std::vector<int>&    markedMeshContexts ) const
 {
-  preciceTrace("selectInquiryMeshIDs()", meshIDs.size());
+  TRACE(meshIDs.size());
   assertion(markedMeshContexts.size() == _accessor->usedMeshContexts().size(),
              markedMeshContexts.size(), _accessor->usedMeshContexts().size());
 
@@ -2301,12 +2301,12 @@ void SolverInterfaceImpl:: initializeClientServerCommunication()
   com::PtrCommunication com = _accessor->getClientServerCommunication();
   assertion(com.get() != nullptr);
   if ( _serverMode ){
-    preciceInfo ( "initializeClientServerCom.()", "Setting up communication to client" );
+    INFO("Setting up communication to client" );
     com->acceptConnection ( _accessorName + "Server", _accessorName,
                             _accessorProcessRank, _accessorCommunicatorSize );
   }
   else {
-    preciceInfo ( "initializeClientServerCom.()", "Setting up communication to server" );
+    INFO("Setting up communication to server" );
     com->requestConnection( _accessorName + "Server", _accessorName,
                             _accessorProcessRank, _accessorCommunicatorSize );
   }
@@ -2320,7 +2320,7 @@ void SolverInterfaceImpl:: initializeMasterSlaveCommunication()
   // with that offset
   int rankOffset = 1;
   if ( utils::MasterSlave::_masterMode ){
-    preciceInfo ( "initializeMasterSlaveCom.()", "Setting up communication to slaves" );
+    INFO("Setting up communication to slaves" );
     utils::MasterSlave::_communication->acceptConnection ( _accessorName + "Master", _accessorName,
                             _accessorProcessRank, 1);
     utils::MasterSlave::_communication->setRankOffset(rankOffset);

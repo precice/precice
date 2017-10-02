@@ -164,7 +164,7 @@ BaseCouplingScheme::BaseCouplingScheme
     }
   }
   else {
-    preciceError("initialize()", "Name of local participant \""
+    ERROR("Name of local participant \""
          << localParticipant << "\" does not match any "
          << "participant specified for the coupling scheme!");
   }
@@ -210,7 +210,7 @@ void BaseCouplingScheme:: addDataToSend
     _sendData.insert(pair);
   }
   else {
-    preciceError("addDataToSend()", "Data \"" << data->getName()
+    ERROR("Data \"" << data->getName()
          << "\" cannot be added twice for sending!");
   }
 }
@@ -229,7 +229,7 @@ void BaseCouplingScheme:: addDataToReceive
     _receiveData.insert(pair);
   }
   else {
-    preciceError("addDataToReceive()", "Data \"" << data->getName()
+    ERROR("Data \"" << data->getName()
          << "\" cannot be added twice for receiving!");
   }
 }
@@ -272,7 +272,7 @@ void BaseCouplingScheme:: receiveState
   com::PtrCommunication communication,
   int                   rankSender)
 {
-  preciceTrace("receiveState()", rankSender);
+  TRACE(rankSender);
   communication->startReceivePackage(rankSender);
   assertion(communication.get() != nullptr);
   assertion(communication->isConnected());
@@ -310,7 +310,7 @@ std::vector<int> BaseCouplingScheme:: sendData
 (
   m2n::PtrM2N m2n)
 {
-  preciceTrace("sendData()");
+  TRACE();
 
   std::vector<int> sentDataIDs;
   assertion(m2n.get() != nullptr);
@@ -329,7 +329,7 @@ std::vector<int> BaseCouplingScheme:: receiveData
 (
   m2n::PtrM2N m2n)
 {
-  preciceTrace("receiveData()");
+  TRACE();
   std::vector<int> receivedDataIDs;
   assertion(m2n.get() != nullptr);
   assertion(m2n->isConnected());
@@ -362,7 +362,7 @@ CouplingData* BaseCouplingScheme:: getSendData
 (
   int dataID)
 {
-  preciceTrace("getSendData()", dataID);
+  TRACE(dataID);
   DataMap::iterator iter = _sendData.find(dataID);
   if (iter != _sendData.end()) {
     return  &(*(iter->second));
@@ -374,7 +374,7 @@ CouplingData* BaseCouplingScheme:: getReceiveData
 (
   int dataID)
 {
-  preciceTrace("getReceiveData()", dataID);
+  TRACE(dataID);
   DataMap::iterator iter = _receiveData.find(dataID);
   if (iter != _receiveData.end()) {
     return  &(*(iter->second));
@@ -384,7 +384,7 @@ CouplingData* BaseCouplingScheme:: getReceiveData
 
 void BaseCouplingScheme::finalize()
 {
-  preciceTrace("finalize()");
+  TRACE();
   checkCompletenessRequiredActions();
   preciceCheck(isInitialized(), "finalize()",
            "Called finalize() before initialize()!");
@@ -403,9 +403,9 @@ void BaseCouplingScheme:: setExtrapolationOrder
 // TODO: extrapolation of data should only be done for the fine cplData -> then copied to the coarse cplData
 void BaseCouplingScheme::extrapolateData(DataMap& data)
 {
-  preciceTrace("extrapolateData()", _timesteps);
+  TRACE(_timesteps);
   if ((_extrapolationOrder == 1) || getTimesteps() == 2) { //timesteps is increased before extrapolate is called
-    preciceInfo("extrapolateData()", "Performing first order extrapolation" );
+    INFO("Performing first order extrapolation" );
     for (DataMap::value_type & pair : data) {
       DEBUG("Extrapolate data: " << pair.first);
       assertion(pair.second->oldValues.cols() > 1 );
@@ -417,7 +417,7 @@ void BaseCouplingScheme::extrapolateData(DataMap& data)
     }
   }
   else if (_extrapolationOrder == 2 ) {
-    preciceInfo("extrapolateData()", "Performing second order extrapolation" );
+    INFO("Performing second order extrapolation" );
     for (DataMap::value_type & pair : data ) {
       assertion(pair.second->oldValues.cols() > 2 );
       Eigen::VectorXd & values = *pair.second->values;
@@ -432,7 +432,7 @@ void BaseCouplingScheme::extrapolateData(DataMap& data)
     }
   }
   else {
-    preciceError("extrapolateData()", "Called extrapolation with order != 1,2!" );
+    ERROR("Called extrapolation with order != 1,2!" );
   }
 }
 
@@ -451,7 +451,7 @@ void BaseCouplingScheme:: addComputedTime
 (
   double timeToAdd )
 {
-  preciceTrace("addComputedTime()", timeToAdd, _time);
+  TRACE(timeToAdd, _time);
   preciceCheck(isCouplingOngoing(), "addComputedTime()",
            "Invalid call of addComputedTime() after simulation end!");
 
@@ -515,7 +515,7 @@ std::vector<std::string> BaseCouplingScheme::getCouplingPartners() const
 
 double BaseCouplingScheme:: getThisTimestepRemainder() const
 {
-  preciceTrace("getTimestepRemainder()");
+  TRACE();
   double remainder = 0.0;
   if (not math::equals(_timestepLength, UNDEFINED_TIMESTEP_LENGTH)){
     remainder = _timestepLength - _computedTimestepPart;
@@ -635,7 +635,7 @@ std::string BaseCouplingScheme:: printActionsState () const
 
 void BaseCouplingScheme:: checkCompletenessRequiredActions ()
 {
-  preciceTrace("checkCompletenessRequiredActions()");
+  TRACE();
   if(not _actions.empty()){
     std::ostringstream stream;
     for (const std::string & action : _actions) {
@@ -644,7 +644,7 @@ void BaseCouplingScheme:: checkCompletenessRequiredActions ()
       }
       stream << action;
     }
-    preciceError("checkCompletenessRequiredActions()",
+    ERROR(
          "Unfulfilled required actions: " << stream.str() << "!");
   }
 }
@@ -656,7 +656,7 @@ int BaseCouplingScheme:: getValidDigits () const
 
 void BaseCouplingScheme::setupDataMatrices(DataMap& data)
 {
-  preciceTrace("setupDataMatrices()");
+  TRACE();
   DEBUG("Data size: " << data.size());
   // Reserve storage for convergence measurement of send and receive data values
   for (ConvergenceMeasure& convMeasure : _convergenceMeasures) {
@@ -700,7 +700,7 @@ void BaseCouplingScheme::setIterationPostProcessing
 
 void BaseCouplingScheme::setupConvergenceMeasures()
 {
-  preciceTrace("setupConvergenceMeasures()");
+  TRACE();
   assertion(not doesFirstStep());
   preciceCheck(not _convergenceMeasures.empty(), "setupConvergenceMeasures()",
            "At least one convergence measure has to be defined for "
@@ -719,7 +719,7 @@ void BaseCouplingScheme::setupConvergenceMeasures()
 
 void BaseCouplingScheme::newConvergenceMeasurements()
 {
-  preciceTrace("newConvergenceMeasurements()");
+  TRACE();
   for (ConvergenceMeasure& convMeasure : _convergenceMeasures) {
     assertion(convMeasure.measure.get() != nullptr);
     convMeasure.measure->newMeasurementSeries();
@@ -749,7 +749,7 @@ bool BaseCouplingScheme:: measureConvergence
 (
     std::map<int, Eigen::VectorXd>& designSpecifications)
 {
-  preciceTrace(__func__);
+  TRACE();
   assertion(not doesFirstStep());
   bool allConverged = true;
   bool oneSuffices = false;
@@ -788,11 +788,11 @@ bool BaseCouplingScheme:: measureConvergence
     else if (convMeasure.suffices == true) {
       oneSuffices = true;
     }
-    preciceInfo(__func__, convMeasure.measure->printState());
+    INFO(convMeasure.measure->printState());
   }
 
-  if (allConverged){ preciceInfo(__func__, "All converged");}
-  else if (oneSuffices){  preciceInfo(__func__, "Sufficient measure converged");}
+  if (allConverged){ INFO("All converged");}
+  else if (oneSuffices){  INFO("Sufficient measure converged");}
 
   return allConverged || oneSuffices;
 }
@@ -803,7 +803,7 @@ bool BaseCouplingScheme:: measureConvergenceCoarseModelOptimization
 (
     std::map<int, Eigen::VectorXd>& designSpecifications)
 {
-  preciceTrace(__func__);
+  TRACE();
   bool allConverged = true;
   bool oneSuffices = false;
   assertion(_convergenceMeasures.size() > 0);
@@ -828,11 +828,11 @@ bool BaseCouplingScheme:: measureConvergenceCoarseModelOptimization
     else if (convMeasure.suffices == true) {
       oneSuffices = true;
     }
-    preciceInfo(__func__, convMeasure.measure->printState());
+    INFO(convMeasure.measure->printState());
   }
 
-  if (allConverged){ preciceInfo(__func__, "All converged");}
-  else if (oneSuffices){  preciceInfo(__func__, "Sufficient measure converged");}
+  if (allConverged){ INFO("All converged");}
+  else if (oneSuffices){  INFO("Sufficient measure converged");}
 
   return allConverged || oneSuffices;
 }
@@ -997,8 +997,8 @@ void BaseCouplingScheme:: updateTimeAndIterations
 
 void BaseCouplingScheme:: timestepCompleted()
 {
-  preciceTrace("timestepCompleted()", getTimesteps(), getTime());
-  preciceInfo("timestepCompleted()", "Timestep completed");
+  TRACE(getTimesteps(), getTime());
+  INFO("Timestep completed");
   setIsCouplingTimestepComplete(true);
   setTimesteps(getTimesteps() + 1 );
   //setTime(getTimesteps() * getTimestepLength() ); // Removes numerical errors

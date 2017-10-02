@@ -16,7 +16,7 @@ ConstantPreconditioner:: ConstantPreconditioner
 {}
 
 void ConstantPreconditioner::initialize(std::vector<size_t>& svs){
-  preciceTrace("initialize()");
+  TRACE();
   Preconditioner::initialize(svs);
 
   // is always constant by definition

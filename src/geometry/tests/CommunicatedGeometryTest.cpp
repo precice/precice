@@ -35,7 +35,7 @@ CommunicatedGeometryTest:: CommunicatedGeometryTest ()
 
 void CommunicatedGeometryTest:: run ()
 {
-  preciceTrace ( "run" );
+  TRACE();
   typedef utils::Parallel Par;
   if (Par::getCommunicatorSize() > 3){
     const std::vector<int> ranksWanted = {0, 1, 2, 3};
@@ -56,7 +56,7 @@ void CommunicatedGeometryTest:: run ()
 
 void CommunicatedGeometryTest:: testScatterMesh ()
 {
-  preciceTrace ( "testScatterMesh" );
+  TRACE();
   assertion ( utils::Parallel::getCommunicatorSize() == 4 );
 
   com::PtrCommunication participantCom =
@@ -244,7 +244,7 @@ void CommunicatedGeometryTest:: testScatterMesh ()
 
 void CommunicatedGeometryTest:: testGatherMesh ()
 {
-  preciceTrace ( "testGatherMesh" );
+  TRACE();
   assertion ( utils::Parallel::getCommunicatorSize() == 4 );
   com::PtrCommunication participantCom =
       com::PtrCommunication(new com::MPIDirectCommunication());

@@ -27,7 +27,7 @@ void UncoupledSchemeTest:: run ()
 
 void UncoupledSchemeTest:: testBasics ()
 {
-  preciceTrace ( "testBasics()" );
+  TRACE();
   typedef UncoupledScheme CplScheme;
   double maxTime = 10.0;
   int maxTimesteps = CplScheme::UNDEFINED_TIMESTEPS;

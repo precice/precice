@@ -93,7 +93,7 @@ MMPostProcessing::MMPostProcessing
 void MMPostProcessing::initialize(
     DataMap& cplData)
 {
-  preciceTrace(__func__, cplData.size());
+  TRACE(cplData.size());
   size_t entries = 0;
   size_t coarseEntries = 0;
   std::vector<size_t> subVectorSizes; //needed for preconditioner
@@ -224,7 +224,7 @@ void MMPostProcessing::registerSolutionCoarseModelOptimization
 (
     DataMap& cplData)
 {
-  preciceTrace(__func__);
+  TRACE();
   // extract new solution x_star from coarse model optimization problem from coarse cplData
   int off = 0;
   for (int id : _coarseDataIDs) {
@@ -266,7 +266,7 @@ void MMPostProcessing::registerSolutionCoarseModelOptimization
 void MMPostProcessing::setDesignSpecification(
     Eigen::VectorXd& q)
 {
-  preciceTrace(__func__);
+  TRACE();
   assertion(q.size() == _fineResiduals.size(), q.size(), _fineResiduals.size());
   _designSpecification = (q.norm() <= 1.0e-15) ? Eigen::VectorXd::Zero(_fineResiduals.size()) : q;
 
@@ -323,7 +323,7 @@ std::map<int, Eigen::VectorXd> MMPostProcessing::getDesignSpecification
 void MMPostProcessing::updateDifferenceMatrices(
     DataMap& cplData)
 {
-  preciceTrace(__func__);
+  TRACE();
 
   /**
    * Compute current residual: vertex-data - oldData
@@ -342,7 +342,7 @@ void MMPostProcessing::updateDifferenceMatrices(
     assertion(getLSSystemCols() <= _maxIterationsUsed,getLSSystemCols(), _maxIterationsUsed);
 
     if (2 * getLSSystemCols() >= getLSSystemRows())
-      preciceWarning("updateDifferenceMatrices()",
+      WARN(
           "The number of columns in the least squares system exceeded half the number of unknowns at the interface. The system will probably become bad or ill-conditioned and the quasi-Newton post processing may not converge. Maybe the number of allowed columns (maxIterationsUsed) should be limited.");
 
     Eigen::VectorXd colF = _fineResiduals - _fineOldResiduals;
@@ -387,7 +387,7 @@ void MMPostProcessing::updateDifferenceMatrices(
 void MMPostProcessing::performPostProcessing(
     DataMap& cplData)
 {
-  preciceTrace(__func__, _dataIDs.size(), cplData.size());
+  TRACE(_dataIDs.size(), cplData.size());
 
   //assertion(_fineDataIDs.size() == _scalings.size(), _fineDataIDs.size(), _scalings.size());
   assertion(_fineOldResiduals.size() == _fineResiduals.size(),_fineOldResiduals.size(), _fineResiduals.size());
@@ -531,14 +531,14 @@ void MMPostProcessing::performPostProcessing(
     if(_iterCoarseModelOpt >= _maxIterCoarseModelOpt){
       //(*_isCoarseModelOptimizationActive)  = false;
       _notConvergedWithinMaxIter = true;
-      preciceWarning(__func__,"The coarse model optimization in coupling iteration "<< its
+      WARN("The coarse model optimization in coupling iteration "<< its
           << " exceeds maximal number of optimization cycles (" << _maxIterCoarseModelOpt <<" without convergence!");
     }
   }
 
   if(_notConvergedWithinMaxIter){
     if(std::isnan(utils::MasterSlave::l2norm(_input_Xstar))){
-      preciceError(__func__, "The coupling iteration in time step "<<tSteps<<
+      ERROR("The coupling iteration in time step "<<tSteps<<
           " failed to converge and NaN values occured throughout the coupling process. "<<
           "This is most likely due to the fact that the coarse model failed to converge within "<<
           "the given maximum number of allowed iterations: "<<_maxIterCoarseModelOpt);
@@ -559,7 +559,7 @@ void MMPostProcessing::performPostProcessing(
  */
 void MMPostProcessing::computeCoarseModelDesignSpecifiaction()
 {
-  preciceTrace(__func__);
+  TRACE();
 
   /** update design specification
    *  alpha = (f(x) - q),
@@ -673,7 +673,7 @@ void MMPostProcessing::concatenateCouplingData
 (
     DataMap& cplData)
 {
-  preciceTrace("concatenateCouplingData()");
+  TRACE();
 
   int offset = 0;
   int k = 0;
@@ -726,7 +726,7 @@ void MMPostProcessing::iterationsConverged
 (
     DataMap & cplData)
 {
-  preciceTrace(__func__);
+  TRACE();
 
   its = 0;
   tSteps++;
@@ -819,7 +819,7 @@ void MMPostProcessing::removeMatrixColumn
 (
     int columnIndex)
 {
-  preciceTrace(__func__, columnIndex, _matrixF.cols());
+  TRACE(columnIndex, _matrixF.cols());
 
   // debugging information, can be removed
   deletedColumns++;

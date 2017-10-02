@@ -32,10 +32,8 @@ tarch::configuration::ConfigurationRegistry::readConfiguration(
       }
       else
       if ( _topLevelTags.find(currentTag)==_topLevelTags.end() ) {
-        preciceWarning(
-          "readConfiguration(tarch::irr::io::IrrXMLReader,std::string)",
-          "invalid top level tag. Received <" + currentTag + "> but expected <"
-          + topLevelTag + "> or any top level tag"
+        WARN("invalid top level tag. Received <" + currentTag + "> but expected <"
+             + topLevelTag + "> or any top level tag"
         );
         enlistAvailableTopLevelTags();
         error = true;
@@ -61,10 +59,8 @@ tarch::configuration::ConfigurationRegistry::readConfiguration(
     (xmlReader->getNodeName()!=topLevelTag)
     )
   ) {
-    preciceWarning(
-      "parseSubtag(...)",
-      "expected closing tag for " + topLevelTag +
-      ", but received tag <" + xmlReader->getNodeName() + ">"
+    WARN("Expected closing tag for " + topLevelTag +
+         ", but received tag <" + xmlReader->getNodeName() + ">"
     );
     error = true;
   }
@@ -121,7 +117,7 @@ void tarch::configuration::ConfigurationRegistry::enlistAvailableTopLevelTags() 
   for (const auto & elem : _topLevelTags) {
     msg << "<" << elem.first << "> ";
   }
-  preciceInfo( "enlistAvailableTopLevelTags()", msg.str() );
+  INFO(msg.str() );
 }
 
 
@@ -141,7 +137,7 @@ tarch::configuration::ConfigurationRegistry::readFile(
     tarch::irr::io::createIrrXMLReader( filename.c_str() );
   
   if ( (xmlReader==nullptr) || (! xmlReader->read()) || (xmlReader->getNodeType()==irr::io::EXN_NONE) ) {
-    preciceWarning( "readFile(std::string,std::string)", "was not able to read input file " + filename );
+    WARN("was not able to read input file " + filename );
     return std::list<tarch::configuration::TopLevelConfiguration*>();
   }
   
@@ -157,7 +153,7 @@ tarch::configuration::ConfigurationRegistry::readString(
     tarch::irr::io::createIrrXMLReaderFromString( configString );
   
   if ( (xmlReader==nullptr) || (! xmlReader->read()) || (xmlReader->getNodeType()==irr::io::EXN_NONE) ) {
-    preciceWarning( "readString(std::string,std::string)", "was not able to read input string" );
+    WARN("was not able to read input string" );
     return std::list<tarch::configuration::TopLevelConfiguration*>();
   }
   

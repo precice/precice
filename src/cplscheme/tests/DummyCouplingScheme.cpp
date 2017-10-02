@@ -28,7 +28,7 @@ void DummyCouplingScheme:: initialize
   double startTime,
   int    startTimesteps )
 {
-  preciceTrace("initialize()", startTime, startTimesteps);
+  TRACE(startTime, startTimesteps);
   assertion(not _isInitialized);
   _isInitialized = true;
   _isOngoing = true;
@@ -38,7 +38,7 @@ void DummyCouplingScheme:: initialize
 
 void DummyCouplingScheme:: advance()
 {
-  preciceTrace("advance()", _iterations, _timesteps);
+  TRACE(_iterations, _timesteps);
   assertion(_isInitialized);
   assertion(_isOngoing);
   if (_iterations == _numberIterations){
@@ -53,7 +53,7 @@ void DummyCouplingScheme:: advance()
 
 void DummyCouplingScheme:: finalize()
 {
-  preciceTrace("finalize()");
+  TRACE();
   assertion(_isInitialized);
   assertion(not _isOngoing);
 }
@@ -68,7 +68,7 @@ bool DummyCouplingScheme:: isActionRequired
 (
   const std::string& actionName ) const
 {
-  preciceTrace("isActionRequired()", actionName);
+  TRACE(actionName);
   if (_numberIterations > 1){
     if (actionName == constants::actionWriteIterationCheckpoint()){
       if (_iterations == 1) {

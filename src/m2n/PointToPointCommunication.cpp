@@ -371,7 +371,7 @@ PointToPointCommunication::PointToPointCommunication(
 }
 
 PointToPointCommunication::~PointToPointCommunication() {
-  preciceTrace("~PointToPointCommunication()", _isConnected);
+  TRACE(_isConnected);
 
   closeConnection();
 }
@@ -384,7 +384,7 @@ PointToPointCommunication::isConnected() {
 void
 PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
                                             std::string const& nameRequester) {
-  preciceTrace("acceptConnection()", nameAcceptor, nameRequester);
+  TRACE(nameAcceptor, nameRequester);
 
   preciceCheck(not isConnected(), "acceptConnection()", "Already connected!");
 
@@ -535,7 +535,7 @@ PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
 void
 PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
                                              std::string const& nameRequester) {
-  preciceTrace("requestConnection()", nameAcceptor, nameRequester);
+  TRACE(nameAcceptor, nameRequester);
 
   preciceCheck(not isConnected(), "requestConnection()", "Already connected!");
 
@@ -693,7 +693,7 @@ PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
 
 void
 PointToPointCommunication::closeConnection() {
-  preciceTrace("closeConnection()");
+  TRACE();
 
   if (not isConnected())
     return;
@@ -719,9 +719,6 @@ PointToPointCommunication::send(double* itemsToSend,
                                 int valueDimension) {
 
   if (_mappings.size() == 0) {
-    preciceCheck(size==0, "send()", "preCICE trys to communicate data to/from a processor that has no surface "
-                                 << "overlay with the connected participant. Please check the definition of your "
-                                 << "coupling surfaces.");
     assertion(_localIndexCount==0);
     return;
   }
@@ -755,9 +752,6 @@ PointToPointCommunication::receive(double* itemsToReceive,
                                    size_t size,
                                    int valueDimension) {
   if (_mappings.size() == 0) {
-    preciceCheck(size==0, "send()", "preCICE trys to communicate data to/from a processor that has no surface "
-                                     << "overlay with the connected participant. Please check the definition of your "
-                                     << "coupling surfaces.");
     assertion(_localIndexCount==0);
     return;
   }

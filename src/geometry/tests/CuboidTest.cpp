@@ -41,7 +41,7 @@ void CuboidTest:: run ()
 
 void CuboidTest:: testCreation ()
 {
-  preciceTrace ( "testCreation()" );
+  TRACE();
 
   for ( int dim=2; dim <= 3; dim++ ){
     Eigen::VectorXd offset = Eigen::VectorXd::Zero(dim);
@@ -64,7 +64,7 @@ void CuboidTest:: testCreation ()
 
 void CuboidTest:: testConfiguration()
 {
-  preciceTrace("testConfiguration()");
+  TRACE();
   using namespace boost;
 
   for (int dim=2; dim <= 3; dim++){
@@ -109,7 +109,7 @@ void CuboidTest:: testConfiguration()
 
 void CuboidTest:: testSubIDs2D ()
 {
-  preciceTrace ( "testSubIDs2D" );
+  TRACE();
   using math::equals;
   mesh::Mesh::resetGeometryIDsGlobally ();
   bool flipNormals = false;
@@ -187,7 +187,7 @@ void CuboidTest:: testSubIDs2D ()
 
 void CuboidTest:: testSubIDs3D ()
 {
-  preciceTrace ( "testSubIDs3D" );
+  TRACE();
   using utils::contained;
   using math::equals;
   mesh::Mesh::resetGeometryIDsGlobally ();

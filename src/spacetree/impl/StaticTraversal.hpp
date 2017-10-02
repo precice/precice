@@ -578,7 +578,7 @@ StaticTraversal<CELL_T>:: searchContentInternal
     }
     return data;
   }
-  preciceError("findContentInternal()", "Reached invalid code location!");
+  ERROR("Reached invalid code location!");
 }
 
 template<typename CELL_T>

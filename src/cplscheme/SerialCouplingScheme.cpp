@@ -114,7 +114,7 @@ void SerialCouplingScheme::initializeData()
   CHECK(isInitialized(), "initializeData() can be called after initialize() only!");
 
   if (not hasToSendInitData() && not hasToReceiveInitData()) {
-    preciceInfo("initializeData()", "initializeData is skipped since no data has to be initialized");
+    INFO("initializeData is skipped since no data has to be initialized");
     return;
   }
 

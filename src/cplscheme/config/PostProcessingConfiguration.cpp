@@ -170,7 +170,7 @@ void PostProcessingConfiguration:: xmlTagCallback
 (
   utils::XMLTag& callingTag )
 {
-  preciceTrace("xmlTagCallback()", callingTag.getFullName());
+  TRACE(callingTag.getFullName());
 
   if (callingTag.getNamespace() == TAG){
       _config.type = callingTag.getName();
@@ -242,7 +242,7 @@ void PostProcessingConfiguration:: xmlTagCallback
   }else if (callingTag.getName() == TAG_IMVJRESTART){
 
     if(_config.alwaysBuildJacobian)
-      preciceError("xmlEndTagCallback()","IMVJ can not be in restart mode while parameter always-build-jacobian is set true.");
+      ERROR("IMVJ can not be in restart mode while parameter always-build-jacobian is set true.");
 
     #ifndef PRECICE_NO_MPI
     _config.imvjChunkSize = callingTag.getIntAttributeValue(ATTR_IMVJCHUNKSIZE);
@@ -264,7 +264,7 @@ void PostProcessingConfiguration:: xmlTagCallback
       assertion(false);
     }
     #else
-          preciceError("xmlEndTagCallback()", "Post processing IQN-IMVJ only works if preCICE is compiled with MPI");
+          ERROR("Post processing IQN-IMVJ only works if preCICE is compiled with MPI");
     #endif
   }
 }
@@ -273,7 +273,7 @@ void PostProcessingConfiguration:: xmlEndTagCallback
 (
   utils::XMLTag& callingTag )
 {
-  preciceTrace("xmlEndTagCallback()", callingTag.getName());
+  TRACE(callingTag.getName());
   if (callingTag.getNamespace() == TAG){
 
     //create preconditioner
@@ -356,7 +356,7 @@ void PostProcessingConfiguration:: xmlEndTagCallback
 			  _config.imvjRSLS_reustedTimesteps,
 			  _config.imvjRSSVD_truncationEps) );
 		#else
-      	  preciceError("xmlEndTagCallback()", "Post processing IQN-IMVJ only works if preCICE is compiled with MPI");
+      	  ERROR("Post processing IQN-IMVJ only works if preCICE is compiled with MPI");
     #endif
     }
     else if (callingTag.getName() == VALUE_ManifoldMapping){
@@ -737,7 +737,7 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
     tag.addSubtag(tagData);
   }
   else {
-    preciceError("addTypeSpecificSubtag()", "Post-processing of type \""
+    ERROR("Post-processing of type \""
                  << tag.getName() << "\" is unknown!" );
   }
 }

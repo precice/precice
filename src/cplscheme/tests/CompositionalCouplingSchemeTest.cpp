@@ -63,7 +63,7 @@ void CompositionalCouplingSchemeTest:: run ()
 
 void CompositionalCouplingSchemeTest:: testDummySchemeCompositions()
 {
-  preciceTrace("testDummySchemeCompositions()");
+  TRACE();
   std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
   { // Test one explicit dummy coupling scheme
@@ -636,28 +636,28 @@ void CompositionalCouplingSchemeTest:: testDummySchemeCompositions()
 
 void CompositionalCouplingSchemeTest:: testExplicitSchemeComposition1()
 {
-  preciceTrace("testExplicitSchemeComposition1()");
+  TRACE();
   std::string configPath(_pathToTests + "multi-solver-coupling-1.xml");
   setupAndRunThreeSolverCoupling(configPath);
 }
 
 void CompositionalCouplingSchemeTest:: testImplicitSchemeComposition()
 {
-  preciceTrace("testImplicitSchemeComposition()");
+  TRACE();
   std::string configPath(_pathToTests + "multi-solver-coupling-2.xml");
   setupAndRunThreeSolverCoupling(configPath);
 }
 
 void CompositionalCouplingSchemeTest:: testImplicitExplicitSchemeComposition()
 {
-  preciceTrace("testImplicitExplicitSchemeComposition()");
+  TRACE();
   std::string configPath(_pathToTests + "multi-solver-coupling-3.xml");
   setupAndRunThreeSolverCoupling(configPath);
 }
 
 void CompositionalCouplingSchemeTest:: testExplicitImplicitSchemeComposition()
 {
-  preciceTrace("testExplicitImplicitSchemeComposition()");
+  TRACE();
   std::string configPath(_pathToTests + "multi-solver-coupling-4.xml");
   setupAndRunThreeSolverCoupling(configPath);
 }
@@ -666,7 +666,7 @@ void CompositionalCouplingSchemeTest:: setupAndRunThreeSolverCoupling
 (
   const std::string& configFilename)
 {
-  preciceTrace("setupThreeSolverCoupling()", configFilename);
+  TRACE(configFilename);
   using namespace mesh;
   utils::Parallel::synchronizeProcesses();
   assertion(utils::Parallel::getCommunicatorSize() > 1);
@@ -838,7 +838,7 @@ void CompositionalCouplingSchemeTest:: connect
   const std::string&     localParticipant,
   m2n::PtrM2N& communication ) const
 {
-  preciceTrace ( "connect()", participant0, participant1, localParticipant );
+  TRACE(participant0, participant1, localParticipant );
   assertion ( communication.use_count() > 0 );
   assertion ( not communication->isConnected() );
   utils::Parallel::splitCommunicator( localParticipant );

@@ -141,7 +141,7 @@ const value_t &PropertyContainer::getProperty(int propertyID) const
         return prop->getProperty<value_t>(propertyID);
       }
     }
-    preciceError("getProperty()", "No property with id = " << propertyID);
+    ERROR("No property with id = " << propertyID);
   }
   assertion(not iter->second.empty());
   // When the type of value_t does not match that of the any, NULL is returned.

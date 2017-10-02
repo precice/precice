@@ -18,7 +18,7 @@ TXTTableWriter:: TXTTableWriter
 {
   _outputStream.open ( filename.c_str() );
   if ( not _outputStream ) {
-    preciceError ( "TXTTableWriter()", "Could not open file \"" << filename
+    ERROR("Could not open file \"" << filename
                    << "\" for writing txt table data!" );
   }
   _outputStream.setf ( std::ios::showpoint );

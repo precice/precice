@@ -44,7 +44,7 @@ SocketCommunication::SocketCommunication(std::string const& addressDirectory)
 }
 
 SocketCommunication::~SocketCommunication() {
-  preciceTrace("~SocketCommunication()", _isConnected);
+  TRACE(_isConnected);
 
   closeConnection();
 }
@@ -67,7 +67,7 @@ SocketCommunication::acceptConnection(std::string const& nameAcceptor,
                                       std::string const& nameRequester,
                                       int acceptorProcessRank,
                                       int acceptorCommunicatorSize) {
-  preciceTrace("acceptConnection()", nameAcceptor, nameRequester);
+  TRACE(nameAcceptor, nameRequester);
 
   preciceCheck(acceptorCommunicatorSize == 1,
                "acceptConnection()",
@@ -169,7 +169,7 @@ SocketCommunication::acceptConnection(std::string const& nameAcceptor,
 
     acceptor.close();
   } catch (std::exception& e) {
-    preciceError("acceptConnection()",
+    ERROR(
                  "Accepting connection at " << address
                                             << " failed: " << e.what());
   }
@@ -185,7 +185,7 @@ void
 SocketCommunication::acceptConnectionAsServer(std::string const& nameAcceptor,
                                               std::string const& nameRequester,
                                               int requesterCommunicatorSize) {
-  preciceTrace("acceptConnectionAsServer()", nameAcceptor, nameRequester);
+  TRACE(nameAcceptor, nameRequester);
 
   preciceCheck(requesterCommunicatorSize > 0,
                "acceptConnectionAsServer()",
@@ -261,7 +261,7 @@ SocketCommunication::acceptConnectionAsServer(std::string const& nameAcceptor,
 
     acceptor.close();
   } catch (std::exception& e) {
-    preciceError("acceptConnectionAsServer()",
+    ERROR(
                  "Accepting connection at " << address
                                             << " failed: " << e.what());
   }
@@ -278,7 +278,7 @@ SocketCommunication::requestConnection(std::string const& nameAcceptor,
                                        std::string const& nameRequester,
                                        int requesterProcessRank,
                                        int requesterCommunicatorSize) {
-  preciceTrace("requestConnection()", nameAcceptor, nameRequester);
+  TRACE(nameAcceptor, nameRequester);
 
   assertion(not isConnected());
 
@@ -353,7 +353,7 @@ SocketCommunication::requestConnection(std::string const& nameAcceptor,
 
     _remoteCommunicatorSize = remoteSize;
   } catch (std::exception& e) {
-    preciceError("requestConnection()",
+    ERROR(
                  "Requesting connection to " << address
                                              << " failed: " << e.what());
   }
@@ -368,7 +368,7 @@ SocketCommunication::requestConnection(std::string const& nameAcceptor,
 int
 SocketCommunication::requestConnectionAsClient(
     std::string const& nameAcceptor, std::string const& nameRequester) {
-  preciceTrace("requestConnectionAsClient()", nameAcceptor, nameRequester);
+  TRACE(nameAcceptor, nameRequester);
 
   assertion(not isConnected());
 
@@ -440,7 +440,7 @@ SocketCommunication::requestConnectionAsClient(
 
     _remoteCommunicatorSize = remoteSize;
   } catch (std::exception& e) {
-    preciceError("requestConnectionAsClient()",
+    ERROR(
                  "Requesting connection to " << address
                                              << " failed: " << e.what());
   }
@@ -456,7 +456,7 @@ SocketCommunication::requestConnectionAsClient(
 
 void
 SocketCommunication::closeConnection() {
-  preciceTrace("closeConnection()");
+  TRACE();
 
   if (not isConnected())
     return;
@@ -487,7 +487,7 @@ SocketCommunication::finishSendPackage() {
 
 int
 SocketCommunication::startReceivePackage(int rankSender) {
-  preciceTrace("startReceivePackage()", rankSender);
+  TRACE(rankSender);
 
   return rankSender;
 }
@@ -498,7 +498,7 @@ SocketCommunication::finishReceivePackage() {
 
 void
 SocketCommunication::send(std::string const& itemToSend, int rankReceiver) {
-  preciceTrace("send(string)", itemToSend, rankReceiver);
+  TRACE(itemToSend, rankReceiver);
 
   rankReceiver = rankReceiver - _rankOffset;
 
@@ -513,13 +513,13 @@ SocketCommunication::send(std::string const& itemToSend, int rankReceiver) {
     asio::write(*_sockets[rankReceiver],
                 asio::buffer(itemToSend.c_str(), size));
   } catch (std::exception& e) {
-    preciceError("send(string)", "Send failed: " << e.what());
+    ERROR("Send failed: " << e.what());
   }
 }
 
 void
 SocketCommunication::send(int* itemsToSend, int size, int rankReceiver) {
-  preciceTrace("send(int*)", size, rankReceiver);
+  TRACE(size, rankReceiver);
 
   rankReceiver = rankReceiver - _rankOffset;
 
@@ -532,13 +532,13 @@ SocketCommunication::send(int* itemsToSend, int size, int rankReceiver) {
     asio::write(*_sockets[rankReceiver],
                 asio::buffer(itemsToSend, size * sizeof(int)));
   } catch (std::exception& e) {
-    preciceError("send(int*)", "Send failed: " << e.what());
+    ERROR("Send failed: " << e.what());
   }
 }
 
 PtrRequest
 SocketCommunication::aSend(int* itemsToSend, int size, int rankReceiver) {
-  preciceTrace("aSend(int*)", size, rankReceiver);
+  TRACE(size, rankReceiver);
 
   rankReceiver = rankReceiver - _rankOffset;
 
@@ -556,7 +556,7 @@ SocketCommunication::aSend(int* itemsToSend, int size, int rankReceiver) {
       static_cast<SocketRequest*>(request.get())->complete();
     });
   } catch (std::exception& e) {
-    preciceError("aSend(int*)", "Send failed: " << e.what());
+    ERROR("Send failed: " << e.what());
   }
 
   return request;
@@ -564,7 +564,7 @@ SocketCommunication::aSend(int* itemsToSend, int size, int rankReceiver) {
 
 void
 SocketCommunication::send(double* itemsToSend, int size, int rankReceiver) {
-  preciceTrace("send(double*)", size, rankReceiver);
+  TRACE(size, rankReceiver);
 
   rankReceiver = rankReceiver - _rankOffset;
 
@@ -577,13 +577,13 @@ SocketCommunication::send(double* itemsToSend, int size, int rankReceiver) {
     asio::write(*_sockets[rankReceiver],
                 asio::buffer(itemsToSend, size * sizeof(double)));
   } catch (std::exception& e) {
-    preciceError("send(double*)", "Send failed: " << e.what());
+    ERROR("Send failed: " << e.what());
   }
 }
 
 PtrRequest
 SocketCommunication::aSend(double* itemsToSend, int size, int rankReceiver) {
-  preciceTrace("aSend(double*)", size, rankReceiver);
+  TRACE(size, rankReceiver);
 
   rankReceiver = rankReceiver - _rankOffset;
 
@@ -601,7 +601,7 @@ SocketCommunication::aSend(double* itemsToSend, int size, int rankReceiver) {
       static_cast<SocketRequest*>(request.get())->complete();
     });
   } catch (std::exception& e) {
-    preciceError("aSend(double*)", "Send failed: " << e.what());
+    ERROR("Send failed: " << e.what());
   }
 
   return request;
@@ -609,7 +609,7 @@ SocketCommunication::aSend(double* itemsToSend, int size, int rankReceiver) {
 
 void
 SocketCommunication::send(double itemToSend, int rankReceiver) {
-  preciceTrace("send(double)", itemToSend, rankReceiver);
+  TRACE(itemToSend, rankReceiver);
 
   rankReceiver = rankReceiver - _rankOffset;
 
@@ -622,7 +622,7 @@ SocketCommunication::send(double itemToSend, int rankReceiver) {
     asio::write(*_sockets[rankReceiver],
                 asio::buffer(&itemToSend, sizeof(double)));
   } catch (std::exception& e) {
-    preciceError("send(double)", "Send failed: " << e.what());
+    ERROR("Send failed: " << e.what());
   }
 }
 
@@ -633,7 +633,7 @@ SocketCommunication::aSend(double* itemToSend, int rankReceiver) {
 
 void
 SocketCommunication::send(int itemToSend, int rankReceiver) {
-  preciceTrace("send(int)", itemToSend, rankReceiver);
+  TRACE(itemToSend, rankReceiver);
 
   rankReceiver = rankReceiver - _rankOffset;
 
@@ -646,7 +646,7 @@ SocketCommunication::send(int itemToSend, int rankReceiver) {
     asio::write(*_sockets[rankReceiver],
                 asio::buffer(&itemToSend, sizeof(int)));
   } catch (std::exception& e) {
-    preciceError("send(int)", "Send failed: " << e.what());
+    ERROR("Send failed: " << e.what());
   }
 }
 
@@ -657,7 +657,7 @@ SocketCommunication::aSend(int* itemToSend, int rankReceiver) {
 
 void
 SocketCommunication::send(bool itemToSend, int rankReceiver) {
-  preciceTrace("send(bool)", itemToSend, rankReceiver);
+  TRACE(itemToSend, rankReceiver);
 
   rankReceiver = rankReceiver - _rankOffset;
 
@@ -670,13 +670,13 @@ SocketCommunication::send(bool itemToSend, int rankReceiver) {
     asio::write(*_sockets[rankReceiver],
                 asio::buffer(&itemToSend, sizeof(bool)));
   } catch (std::exception& e) {
-    preciceError("send(double)", "Send failed: " << e.what());
+    ERROR("Send failed: " << e.what());
   }
 }
 
 PtrRequest
 SocketCommunication::aSend(bool* itemToSend, int rankReceiver) {
-  preciceTrace("aSend(bool*)", rankReceiver);
+  TRACE(rankReceiver);
 
   rankReceiver = rankReceiver - _rankOffset;
 
@@ -694,7 +694,7 @@ SocketCommunication::aSend(bool* itemToSend, int rankReceiver) {
       static_cast<SocketRequest*>(request.get())->complete();
     });
   } catch (std::exception& e) {
-    preciceError("aSend(bool*)", "Send failed: " << e.what());
+    ERROR("Send failed: " << e.what());
   }
 
   return request;
@@ -702,7 +702,7 @@ SocketCommunication::aSend(bool* itemToSend, int rankReceiver) {
 
 void
 SocketCommunication::receive(std::string& itemToReceive, int rankSender) {
-  preciceTrace("receive(string)", rankSender);
+  TRACE(rankSender);
 
   rankSender = rankSender - _rankOffset;
 
@@ -720,13 +720,13 @@ SocketCommunication::receive(std::string& itemToReceive, int rankSender) {
     itemToReceive = msg;
     delete[] msg;
   } catch (std::exception& e) {
-    preciceError("receive(string)", "Receive failed: " << e.what());
+    ERROR("Receive failed: " << e.what());
   }
 }
 
 void
 SocketCommunication::receive(int* itemsToReceive, int size, int rankSender) {
-  preciceTrace("receive(int*)", size, rankSender);
+  TRACE(size, rankSender);
 
   rankSender = rankSender - _rankOffset;
 
@@ -739,13 +739,13 @@ SocketCommunication::receive(int* itemsToReceive, int size, int rankSender) {
     asio::read(*_sockets[rankSender],
                asio::buffer(itemsToReceive, size * sizeof(int)));
   } catch (std::exception& e) {
-    preciceError("receive(int*)", "Receive failed: " << e.what());
+    ERROR("Receive failed: " << e.what());
   }
 }
 
 PtrRequest
 SocketCommunication::aReceive(int* itemsToReceive, int size, int rankSender) {
-  preciceTrace("aReceive(int*)", size, rankSender);
+  TRACE(size, rankSender);
 
   rankSender = rankSender - _rankOffset;
 
@@ -763,7 +763,7 @@ SocketCommunication::aReceive(int* itemsToReceive, int size, int rankSender) {
       static_cast<SocketRequest*>(request.get())->complete();
     });
   } catch (std::exception& e) {
-    preciceError("aReceive(int*)", "Receive failed: " << e.what());
+    ERROR("Receive failed: " << e.what());
   }
 
   return request;
@@ -771,7 +771,7 @@ SocketCommunication::aReceive(int* itemsToReceive, int size, int rankSender) {
 
 void
 SocketCommunication::receive(double* itemsToReceive, int size, int rankSender) {
-  preciceTrace("receive(double*)", size, rankSender);
+  TRACE(size, rankSender);
 
   rankSender = rankSender - _rankOffset;
 
@@ -784,7 +784,7 @@ SocketCommunication::receive(double* itemsToReceive, int size, int rankSender) {
     asio::read(*_sockets[rankSender],
                asio::buffer(itemsToReceive, size * sizeof(double)));
   } catch (std::exception& e) {
-    preciceError("receive(double*)", "Receive failed: " << e.what());
+    ERROR("Receive failed: " << e.what());
   }
 }
 
@@ -792,7 +792,7 @@ PtrRequest
 SocketCommunication::aReceive(double* itemsToReceive,
                               int size,
                               int rankSender) {
-  preciceTrace("aReceive(double*)", size, rankSender);
+  TRACE(size, rankSender);
 
   rankSender = rankSender - _rankOffset;
 
@@ -810,7 +810,7 @@ SocketCommunication::aReceive(double* itemsToReceive,
       static_cast<SocketRequest*>(request.get())->complete();
     });
   } catch (std::exception& e) {
-    preciceError("aReceive(double*)", "Receive failed: " << e.what());
+    ERROR("Receive failed: " << e.what());
   }
 
   return request;
@@ -818,7 +818,7 @@ SocketCommunication::aReceive(double* itemsToReceive,
 
 void
 SocketCommunication::receive(double& itemToReceive, int rankSender) {
-  preciceTrace("receive(double)", rankSender);
+  TRACE(rankSender);
 
   rankSender = rankSender - _rankOffset;
 
@@ -831,7 +831,7 @@ SocketCommunication::receive(double& itemToReceive, int rankSender) {
     asio::read(*_sockets[rankSender],
                asio::buffer(&itemToReceive, sizeof(double)));
   } catch (std::exception& e) {
-    preciceError("receive(double)", "Receive failed: " << e.what());
+    ERROR("Receive failed: " << e.what());
   }
 }
 
@@ -842,7 +842,7 @@ SocketCommunication::aReceive(double* itemToReceive, int rankSender) {
 
 void
 SocketCommunication::receive(int& itemToReceive, int rankSender) {
-  preciceTrace("receive(int)", rankSender);
+  TRACE(rankSender);
 
   rankSender = rankSender - _rankOffset;
 
@@ -855,7 +855,7 @@ SocketCommunication::receive(int& itemToReceive, int rankSender) {
     asio::read(*_sockets[rankSender],
                asio::buffer(&itemToReceive, sizeof(int)));
   } catch (std::exception& e) {
-    preciceError("receive(int)", "Receive failed: " << e.what());
+    ERROR("Receive failed: " << e.what());
   }
 }
 
@@ -866,7 +866,7 @@ SocketCommunication::aReceive(int* itemToReceive, int rankSender) {
 
 void
 SocketCommunication::receive(bool& itemToReceive, int rankSender) {
-  preciceTrace("receive(bool)", rankSender);
+  TRACE(rankSender);
 
   rankSender = rankSender - _rankOffset;
 
@@ -879,13 +879,13 @@ SocketCommunication::receive(bool& itemToReceive, int rankSender) {
     asio::read(*_sockets[rankSender],
                asio::buffer(&itemToReceive, sizeof(bool)));
   } catch (std::exception& e) {
-    preciceError("receive(bool)", "Receive failed: " << e.what());
+    ERROR("Receive failed: " << e.what());
   }
 }
 
 PtrRequest
 SocketCommunication::aReceive(bool* itemToReceive, int rankSender) {
-  preciceTrace("aReceive(bool*)", rankSender);
+  TRACE(rankSender);
 
   rankSender = rankSender - _rankOffset;
 
@@ -903,7 +903,7 @@ SocketCommunication::aReceive(bool* itemToReceive, int rankSender) {
       static_cast<SocketRequest*>(request.get())->complete();
     });
   } catch (std::exception& e) {
-    preciceError("aReceive(bool*)", "Receive failed: " << e.what());
+    ERROR("Receive failed: " << e.what());
   }
 
   return request;

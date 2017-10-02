@@ -37,7 +37,7 @@ void ScaleActionTest:: run()
 
 void ScaleActionTest:: testDivideByArea()
 {
-   preciceTrace("testDivideByArea()");
+   TRACE();
    using namespace mesh;
    PtrMesh mesh(new Mesh("Mesh", 2, true));
    PtrData data = mesh->createData("test-data", 1);
@@ -72,7 +72,7 @@ void ScaleActionTest:: testDivideByArea()
 
 void ScaleActionTest:: testScaleByComputedTimestepLength()
 {
-  preciceTrace("testScaleByComputedTimestepLength()");
+  TRACE();
   using namespace mesh;
   PtrMesh mesh(new Mesh("Mesh", 3, true));
   PtrData sourceData = mesh->createData("SourceData", 1);
@@ -130,7 +130,7 @@ void ScaleActionTest:: testScaleByComputedTimestepLength()
 
 void ScaleActionTest:: testScaleByComputedTimestepPartLength()
 {
-  preciceTrace("testScaleByComputedTimestepPartLength()");
+  TRACE();
   using namespace mesh;
   PtrMesh mesh(new Mesh("Mesh", 3, true));
   PtrData sourceData = mesh->createData("SourceData", 1);
@@ -179,7 +179,7 @@ void ScaleActionTest:: testScaleByComputedTimestepPartLength()
 
 void ScaleActionTest:: testConfiguration()
 {
-  preciceTrace("testConfiguration()");
+  TRACE();
   {
     DEBUG("Test 1");
     std::string filename = utils::Globals::getPathToSources() +

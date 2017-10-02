@@ -27,7 +27,7 @@ HierarchicalAitkenPostProcessingTest:: HierarchicalAitkenPostProcessingTest ()
 void HierarchicalAitkenPostProcessingTest:: run ()
 {
   PRECICE_MASTER_ONLY {
-    preciceTrace ( "run()" );
+    TRACE();
     impl::PostProcessing::DataMap dataMap;
     int dataID = 0;
     std::vector<int> dataIDs;

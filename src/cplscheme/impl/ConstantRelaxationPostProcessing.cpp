@@ -57,7 +57,7 @@ void ConstantRelaxationPostProcessing:: performPostProcessing
 (
   DataMap& cplData )
 {
-  preciceTrace("performPostProcessing()");
+  TRACE();
   double omega = _relaxation;
   double oneMinusOmega = 1.0 - omega;
   for (DataMap::value_type & pair : cplData) {
@@ -101,7 +101,7 @@ void ConstantRelaxationPostProcessing::setDesignSpecification(
      Eigen::VectorXd& q)
  {
    _designSpecification = q;
-   preciceError(__func__, "design specification for constant relaxation is not supported yet.");
+   ERROR("design specification for constant relaxation is not supported yet.");
  }
 
 

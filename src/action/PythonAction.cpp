@@ -100,7 +100,7 @@ void PythonAction:: performAction
     PyObject_CallObject(_performAction, dataArgs);
     if(PyErr_Occurred()){
       PyErr_Print ();
-      preciceError("performAction()", "Error occurred during call of function "
+      ERROR("Error occurred during call of function "
                      << "performAction() python module \"" << _moduleName << "\"!");
     }
   }
@@ -127,7 +127,7 @@ void PythonAction:: performAction
       PyObject_CallObject(_vertexCallback, vertexArgs);
       if (PyErr_Occurred()){
         PyErr_Print ();
-        preciceError("performAction()", "Error occurred during call of function "
+        ERROR("Error occurred during call of function "
                        << "vertexCallback() python module \"" << _moduleName << "\"!");
       }
     }
@@ -139,7 +139,7 @@ void PythonAction:: performAction
     PyObject_CallObject(_postAction, postActionArgs);
     if(PyErr_Occurred()){
       PyErr_Print ();
-      preciceError("performAction()", "Error occurred during call of function "
+      ERROR("Error occurred during call of function "
                    << "postAction() in python module \"" << _moduleName << "\"!");
     }
     Py_DECREF(postActionArgs);
@@ -165,7 +165,7 @@ void PythonAction:: initialize()
   _module = PyImport_Import(_moduleNameObject);
   if (_module == nullptr){
     PyErr_Print();
-    preciceError("PythonAction()", "Could not load python module \""
+    ERROR("Could not load python module \""
                    << _moduleName << "\" at path \"" << _modulePath << "\"!");
   }
 
@@ -173,7 +173,7 @@ void PythonAction:: initialize()
   _performAction = PyObject_GetAttrString(_module, "performAction");
   if (PyErr_Occurred()){
     PyErr_Clear();
-    preciceWarning("PythonAction()", "No function void performAction() in python module \""
+    WARN("No function void performAction() in python module \""
                    << _moduleName << "\" found.");
     _performAction = nullptr;
   }
@@ -186,7 +186,7 @@ void PythonAction:: initialize()
   _vertexCallback = PyObject_GetAttrString(_module, "vertexCallback");
   if (PyErr_Occurred()){
     PyErr_Clear();
-    preciceWarning("PythonAction()", "No function void vertexCallback() in python module \""
+    WARN("No function void vertexCallback() in python module \""
                    << _moduleName << "\" found.");
     _vertexCallback = nullptr;
   }
@@ -195,7 +195,7 @@ void PythonAction:: initialize()
   _postAction = PyObject_GetAttrString(_module, "postAction");
   if (PyErr_Occurred()){
     PyErr_Clear();
-    preciceWarning("PythonAction()", "No function void postAction() in python module \""
+    WARN("No function void postAction() in python module \""
                    << _moduleName << "\" found.");
     _postAction = nullptr;
   }

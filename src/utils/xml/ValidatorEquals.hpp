@@ -25,7 +25,7 @@ public:
 
    virtual bool validateValue ( const VALUE_T& value )
    {
-     preciceTrace("validateValue()", value);
+     TRACE(value);
      return value == _valueToEqual;
    }
 

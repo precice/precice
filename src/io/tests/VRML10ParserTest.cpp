@@ -36,7 +36,7 @@ void VRML10ParserTest:: run ()
 void VRML10ParserTest:: testParseCube ()
 {
 # ifndef PRECICE_NO_SPIRIT2
-  preciceTrace ( "testParseCube()" );
+  TRACE();
 
   for ( int dim=2; dim <= 3; dim++ ){
     std::string file = utils::Globals::getPathToSources() + "/io/tests/ImportVRMLTest";

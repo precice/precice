@@ -67,7 +67,7 @@ public:
    * @param transpose: false = from left, true = from right
    */
   void apply(Eigen::MatrixXd& M, bool transpose){
-    preciceTrace(__func__);
+    TRACE();
     if(transpose){
       assertion(M.cols()==(int)_weights.size(), M.cols(), _weights.size());
       for(int i=0; i<M.cols(); i++){

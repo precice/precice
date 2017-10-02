@@ -125,7 +125,7 @@ private:
   bool* _deadAxis;
 
   /// Toggles the use of the additonal polynomial
-  const Polynomial _polynomial;
+  Polynomial _polynomial;
 
   /// Toggles use of rescaled basis functions, only active when Polynomial == SEPARATE
   const bool useRescaling = true;
@@ -195,6 +195,11 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
   }
   else {
     assertion(false);
+  }
+
+  if (_polynomial == Polynomial::SEPARATE and constraint == Constraint::CONSERVATIVE) {
+    WARN("Separated polynomial not supported with conservative mapping. Falling back to integrated polynomial.");
+    _polynomial = Polynomial::ON;
   }
 
   // Count number of dead dimensions
@@ -279,12 +284,12 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
   // Matrix Q: Dense, holds the input mesh for the polynom if set to SEPERATE. Zero size otherwise
   _matrixQ.reset();
-  _matrixQ.init(n, sepPolyparams, PETSC_DETERMINE, PETSC_DETERMINE, MATDENSE);
+  _matrixQ.init(n, PETSC_DETERMINE, PETSC_DETERMINE, sepPolyparams, MATDENSE);
   DEBUG("Set matrix Q to local size " << n << " x " << sepPolyparams);
 
   // Matrix V: Dense, holds the output mesh for polynom if set to SEPERATE. Zero size otherwise
   _matrixV.reset();
-  _matrixV.init(outputSize, sepPolyparams, PETSC_DETERMINE, PETSC_DETERMINE, MATDENSE);
+  _matrixV.init(outputSize, PETSC_DETERMINE, PETSC_DETERMINE, sepPolyparams, MATDENSE);
   DEBUG("Set matrix V to local size " << outputSize << " x " << sepPolyparams);    
     
   // Matrix A: Sparse matrix with outputSize x n local size.
@@ -713,6 +718,11 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
             
       if (_polynomial == Polynomial::SEPARATE) {
         KSPSolve(_QRsolver, in, a);
+        ierr = KSPGetConvergedReason(_QRsolver, &convReason); CHKERRV(ierr);
+        if (convReason < 0) {
+          KSPView(_QRsolver, PETSC_VIEWER_STDOUT_WORLD);
+          ERROR("Polynomial QR linear system has not converged.");
+        }
         VecScale(a, -1);
         MatMultAdd(_matrixQ, a, in, in); // Subtract the polynomial from the input values
       }
@@ -767,7 +777,7 @@ template<typename RADIAL_BASIS_FUNCTION_T>
 bool PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::doesVertexContribute(int vertexID) const
 {
   // FIXME: Use a sane calculation here
-  // preciceTrace(__func__);
+  // TRACE();
 
   if (not _basisFunction.hasCompactSupport())
     return true;

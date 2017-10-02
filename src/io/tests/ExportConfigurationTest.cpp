@@ -30,7 +30,7 @@ void ExportConfigurationTest:: run ()
 
 void ExportConfigurationTest:: testConfiguration ()
 {
-  preciceTrace ( "testConfiguration()" );
+  TRACE();
   using utils::XMLTag;
   XMLTag tag = utils::getRootTag();
   {

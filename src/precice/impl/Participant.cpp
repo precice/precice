@@ -89,7 +89,7 @@ void Participant:: useMesh
   bool                                          provideMesh,
   partition::ReceivedPartition::GeometricFilter geoFilter)
 {
-  preciceTrace ( "useMesh()", _name,  mesh->getName(), mesh->getID() );
+  TRACE(_name,  mesh->getName(), mesh->getID() );
   checkDuplicatedUse(mesh);
   assertion ( mesh->getID() < (int)_meshContexts.size() );
   MeshContext* context = new MeshContext(mesh->getDimensions());
@@ -188,7 +188,7 @@ DataContext& Participant:: dataContext
 (
   int dataID )
 {
-  preciceTrace ( "dataContext(id)", dataID, _dataContexts.size() );
+  TRACE(dataID, _dataContexts.size() );
   assertion ( (dataID >= 0) && (dataID < (int)_dataContexts.size()) );
   assertion ( _dataContexts[dataID] != nullptr );
   return *_dataContexts[dataID];
@@ -243,7 +243,7 @@ MeshContext& Participant:: meshContext
 (
   int meshID )
 {
-  preciceTrace("meshContext()", meshID, _meshContexts.size());
+  TRACE(meshID, _meshContexts.size());
   assertion((meshID >= 0) && (meshID < (int)_meshContexts.size()),
              meshID, _meshContexts.size());
   assertion(_meshContexts[meshID] != nullptr);
@@ -303,7 +303,7 @@ void Participant:: checkDuplicatedData
 (
   const mesh::PtrData& data )
 {
-  preciceTrace ( "checkDuplicatedData()", data->getID(), _dataContexts.size() );
+  TRACE(data->getID(), _dataContexts.size() );
   assertion ( data->getID() < (int)_dataContexts.size(), data->getID(), _dataContexts.size() );
   preciceCheck ( _dataContexts[data->getID()] == nullptr, "checkDuplicatedData()",
                  "Participant \"" << _name << "\" can read/write data \""

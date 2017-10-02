@@ -28,7 +28,7 @@ ExportVTKXMLTest:: ExportVTKXMLTest()
 
 void ExportVTKXMLTest:: run()
 {
-  preciceTrace ( "run" );
+  TRACE();
   typedef utils::Parallel Par;
   if (Par::getCommunicatorSize() > 3){
     const std::vector<int> ranksWanted = {0, 1, 2, 3};
@@ -45,7 +45,7 @@ void ExportVTKXMLTest:: run()
 
 void ExportVTKXMLTest:: testExportPolygonalMesh()
 {
-  preciceTrace ( "testExportPolygonalMesh" );
+  TRACE();
   setUpMasterSlave();
 
   int dim=2;
@@ -99,7 +99,7 @@ void ExportVTKXMLTest:: testExportPolygonalMesh()
 
 void ExportVTKXMLTest:: testExportTriangulatedMesh()
 {
-  preciceTrace ( "testExportTriangulatedMesh" );
+  TRACE();
   setUpMasterSlave();
   int dim = 3;
   bool invertNormals = false;
@@ -155,7 +155,7 @@ void ExportVTKXMLTest:: testExportTriangulatedMesh()
 
 void ExportVTKXMLTest:: testExportQuadMesh()
 {
-  preciceTrace ( "testExportQuadMesh" );
+  TRACE();
 
   setUpMasterSlave();
   using namespace mesh;
@@ -273,7 +273,7 @@ void ExportVTKXMLTest:: setUpMasterSlave()
 
 void ExportVTKXMLTest:: tearDownMasterSlave()
 {
-  preciceTrace ( "tearDownMasterSlave" );
+  TRACE();
   utils::Parallel::synchronizeProcesses();
   utils::MasterSlave::_slaveMode = false;
   utils::MasterSlave::_masterMode = false;

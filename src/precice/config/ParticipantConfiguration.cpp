@@ -364,7 +364,7 @@ void ParticipantConfiguration:: setDimensions
 (
   int dimensions )
 {
-  preciceTrace("setDimensions()", dimensions);
+  TRACE(dimensions);
   assertion((dimensions == 2) || (dimensions == 3), dimensions);
   _dimensions = dimensions;
 }
@@ -451,7 +451,7 @@ void ParticipantConfiguration:: xmlTagCallback
 (
   utils::XMLTag& tag )
 {
-  preciceTrace ( "xmlTagCallback()", tag.getName() );
+  TRACE(tag.getName() );
   if (tag.getName() == TAG){
     std::string name = tag.getStringAttributeValue(ATTR_NAME);
     impl::PtrParticipant p(new impl::Participant(name, _meshConfig));
@@ -615,7 +615,7 @@ const mesh::PtrData & ParticipantConfiguration:: getData
       return data;
     }
   }
-  preciceError ( "getData()", "Participant \"" << _participants.back()->getName()
+  ERROR("Participant \"" << _participants.back()->getName()
                  << "\" assignes data \"" << nameData << "\" wrongly to mesh \""
                  << mesh->getName() << "\"!" );
 }
@@ -624,7 +624,7 @@ void ParticipantConfiguration:: finishParticipantConfiguration
 (
   const impl::PtrParticipant& participant )
 {
-  preciceTrace("finishParticipantConfiguration()", participant->getName());
+  TRACE(participant->getName());
 
   // Set input/output meshes for data mappings and mesh requirements
   typedef mapping::MappingConfiguration::ConfiguredMapping ConfMapping;
@@ -643,7 +643,7 @@ void ParticipantConfiguration:: finishParticipantConfiguration
           confMapping.mapping->getConstraint()==mapping::Mapping::CONSISTENT) ||
          (confMapping.direction == mapping::MappingConfiguration::READ &&
           confMapping.mapping->getConstraint()==mapping::Mapping::CONSERVATIVE)){
-        preciceError ( "finishParticipantConfiguration()",
+        ERROR(
                        "If a participant uses a master parallelization, only the mapping"
                     << " combinations read-consistent and write-conservative are allowed");
       }
@@ -766,7 +766,7 @@ void ParticipantConfiguration:: finishParticipantConfiguration
       exporter = io::PtrExport (new io::ExportVRML(context.plotNormals));
     }
     else {
-      preciceError("finishParticipantConfiguration()", "Unknown export type!");
+      ERROR("Unknown export type!");
     }
     context.exporter = exporter;
 

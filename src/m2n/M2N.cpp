@@ -46,7 +46,7 @@ void M2N:: acceptMasterConnection (
   const std::string& nameAcceptor,
   const std::string& nameRequester)
 {
-  preciceTrace("acceptMasterConnection()", nameAcceptor, nameRequester);
+  TRACE(nameAcceptor, nameRequester);
 
   //Event e("M2N::acceptMasterConnection");
 
@@ -63,7 +63,7 @@ void M2N:: requestMasterConnection (
   const std::string& nameAcceptor,
   const std::string& nameRequester)
 {
-  preciceTrace("requestMasterConnection()", nameAcceptor, nameRequester);
+  TRACE(nameAcceptor, nameRequester);
 
   if(not utils::MasterSlave::_slaveMode){
     assertion(_masterCom.use_count()>0);
@@ -83,7 +83,7 @@ void M2N:: acceptSlavesConnection (
   const std::string& nameAcceptor,
   const std::string& nameRequester)
 {
-  preciceTrace("acceptSlavesConnection()", nameAcceptor, nameRequester);
+  TRACE(nameAcceptor, nameRequester);
   _areSlavesConnected = true;
   for( const auto& pair : _distComs){
     pair.second->acceptConnection(nameAcceptor, nameRequester);
@@ -96,7 +96,7 @@ void M2N:: requestSlavesConnection (
   const std::string& nameAcceptor,
   const std::string& nameRequester)
 {
-  preciceTrace("requestSlavesConnection()", nameAcceptor, nameRequester);
+  TRACE(nameAcceptor, nameRequester);
   _areSlavesConnected = true;
   for( const auto& pair : _distComs){
     pair.second->requestConnection(nameAcceptor, nameRequester);
@@ -107,7 +107,7 @@ void M2N:: requestSlavesConnection (
 
 void M2N:: closeConnection()
 {
-  preciceTrace("closeConnection()");
+  TRACE();
   if(not utils::MasterSlave::_slaveMode && _masterCom->isConnected()){
     _masterCom->closeConnection();
     _isMasterConnected = false;
@@ -202,7 +202,7 @@ void M2N:: send (
 void M2N:: send (
   bool   itemToSend)
 {
-  preciceTrace("send(bool)", utils::MasterSlave::_rank);
+  TRACE(utils::MasterSlave::_rank);
   if(not utils::MasterSlave::_slaveMode){
     _masterCom->send(itemToSend, 0);
   }
@@ -212,7 +212,7 @@ void M2N:: send (
 void M2N:: send (
   double itemToSend)
 {
-  preciceTrace("send(double)", utils::MasterSlave::_rank);
+  TRACE(utils::MasterSlave::_rank);
   if(not utils::MasterSlave::_slaveMode){
     _masterCom->send(itemToSend, 0);
   }
@@ -254,7 +254,7 @@ void M2N:: receive (
 void M2N:: receive (
   bool&  itemToReceive )
 {
-  preciceTrace("receive(bool)", utils::MasterSlave::_rank);
+  TRACE(utils::MasterSlave::_rank);
   if(not utils::MasterSlave::_slaveMode){
     _masterCom->receive(itemToReceive, 0);
   }
@@ -268,7 +268,7 @@ void M2N:: receive (
 void M2N:: receive (
   double&  itemToReceive)
 {
-  preciceTrace("receive(double)", utils::MasterSlave::_rank);
+  TRACE(utils::MasterSlave::_rank);
   if(not utils::MasterSlave::_slaveMode){ //coupling mode
     _masterCom->receive(itemToReceive, 0);
   }
