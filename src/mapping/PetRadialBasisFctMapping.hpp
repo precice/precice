@@ -708,6 +708,11 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
             
       if (_polynomial == Polynomial::SEPARATE) {
         KSPSolve(_QRsolver, in, a);
+        ierr = KSPGetConvergedReason(_QRsolver, &convReason); CHKERRV(ierr);
+        if (convReason < 0) {
+          KSPView(_QRsolver, PETSC_VIEWER_STDOUT_WORLD);
+          ERROR("Polynomial QR linear system has not converged.");
+        }
         VecScale(a, -1);
         MatMultAdd(_matrixQ, a, in, in); // Subtract the polynomial from the input values
       }
