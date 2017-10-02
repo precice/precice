@@ -121,7 +121,7 @@ private:
   bool* _deadAxis;
 
   /// Toggles the use of the additonal polynomial
-  const Polynomial _polynomial;
+  Polynomial _polynomial;
 
   /// Toggles use of rescaled basis functions, only active when Polynomial == SEPARATE
   const bool useRescaling = true;
@@ -188,6 +188,11 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
   }
   else {
     assertion(false);
+  }
+
+  if (_polynomial == Polynomial::SEPARATE and constraint == Constraint::CONSERVATIVE) {
+    WARN("Separated polynomial not supported with conservative mapping. Falling back to integrated polynomial.");
+    _polynomial = Polynomial::ON;
   }
 
   // Count number of dead dimensions
