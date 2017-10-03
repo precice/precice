@@ -65,6 +65,8 @@ void openViewer(PetscViewer & viewer, std::string filename, VIEWERFORMAT format,
   else if (format == BINARY) {
     ierr = PetscViewerBinaryOpen(comm, filename.c_str(), FILE_MODE_WRITE, &viewer);
     CHKERRV(ierr);
+    ierr = PetscViewerPushFormat(viewer, PETSC_VIEWER_NATIVE);
+    CHKERRV(ierr);
   }
 }
 
