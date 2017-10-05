@@ -302,8 +302,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   const int ownerRangeABegin = _matrixA.ownerRange().first;
   const int ownerRangeAEnd = _matrixA.ownerRange().second;
   
-  IS ISlocal, ISlocalInv, ISglobal, ISidentity, ISidentityGlobal;
-  ISLocalToGlobalMapping ISidentityMapping;
+  IS ISlocal, ISlocalInv, ISglobal, ISidentity, ISidentityGlobal, ISpolyparams;
+  ISLocalToGlobalMapping ISidentityMapping, ISpolyparamsMapping;
   // Create an index set which maps myIndizes to continous chunks of matrix rows.
   ierr = ISCreateGeneral(utils::Parallel::getGlobalCommunicator(), myIndizes.size(), myIndizes.data(), PETSC_COPY_VALUES, &ISlocal); CHKERRV(ierr);
   ierr = ISSetPermutation(ISlocal); CHKERRV(ierr);
@@ -317,12 +317,17 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   ierr = ISAllGather(ISidentity, &ISidentityGlobal); CHKERRV(ierr);
   ierr = ISLocalToGlobalMappingCreateIS(ISidentityGlobal, &ISidentityMapping); CHKERRV(ierr);
 
+  // Create another identity mapping for the polynomial parameters
+  ierr = ISCreateStride(PETSC_COMM_SELF, sepPolyparams, 0, 1, &ISpolyparams); CHKERRV(ierr);
+  ierr = ISSetIdentity(ISpolyparams); CHKERRV(ierr);
+  ierr = ISLocalToGlobalMappingCreateIS(ISpolyparams, &ISpolyparamsMapping); CHKERRV(ierr);
+
+  // Sets the mappings on the matrices
   ierr = MatSetLocalToGlobalMapping(_matrixC, _ISmapping, _ISmapping); CHKERRV(ierr); // Set mapping for rows and cols
   ierr = MatSetLocalToGlobalMapping(_matrixA, ISidentityMapping, _ISmapping); CHKERRV(ierr); // Set mapping only for cols, use identity for rows
+  ierr = MatSetLocalToGlobalMapping(_matrixQ, _ISmapping, ISpolyparamsMapping); CHKERRV(ierr);
+  ierr = MatSetLocalToGlobalMapping(_matrixV, ISidentityMapping, ISpolyparamsMapping); CHKERRV(ierr);
 
-  ierr = MatSetLocalToGlobalMapping(_matrixQ, _ISmapping, _ISmapping); CHKERRV(ierr);
-  ierr = MatSetLocalToGlobalMapping(_matrixV, ISidentityMapping, _ISmapping); CHKERRV(ierr);
-  
   // Destroy all local index sets and mappings
   ierr = ISDestroy(&ISlocal); CHKERRV(ierr);
   ierr = ISDestroy(&ISlocalInv); CHKERRV(ierr);
@@ -330,6 +335,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   ierr = ISDestroy(&ISidentity); CHKERRV(ierr);
   ierr = ISDestroy(&ISidentityGlobal); CHKERRV(ierr);
   ierr = ISLocalToGlobalMappingDestroy(&ISidentityMapping); CHKERRV(ierr);
+  ierr = ISDestroy(&ISpolyparams); CHKERRV(ierr);
+  ierr = ISLocalToGlobalMappingDestroy(&ISpolyparamsMapping); CHKERRV(ierr);
+
 
   Eigen::VectorXd distance(dimensions);
 

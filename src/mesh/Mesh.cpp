@@ -61,6 +61,8 @@ Mesh:: ~Mesh()
   _content.triangles().deleteElements();
   _content.edges().deleteElements();
   _content.vertices().deleteElements();
+
+  rtree::clear(getID());
 }
 
 const Group& Mesh:: content()
@@ -546,7 +548,7 @@ void Mesh:: clear()
   _manageEdgeIDs.resetIDs();
   _manageVertexIDs.resetIDs();
 
-  rtree::clear();
+  rtree::clear(getID());
   for (mesh::PtrData data : _data) {
     data->values().resize(0); // TODO: mybe incorrect, previous was clear() ... check if resize(0) has some bad side effects
   }
