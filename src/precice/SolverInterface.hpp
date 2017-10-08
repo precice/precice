@@ -26,10 +26,11 @@ namespace precice {
 // Forward declaration to friend the boost test struct
 namespace Precice {
   namespace Parallel {
-    struct Test1;
+    struct TestFinalize;
     struct TestMasterSlaveSetup;
     struct GlobalRBFPartitioning;
     struct LocalRBFPartitioning;
+    struct TestQN;
 }
 }
 
@@ -647,10 +648,11 @@ private:
   friend class tests::SolverInterfaceTestRemote;
   friend class tests::SolverInterfaceTestGeometry;
   // boost tests
-  friend struct Precice::Parallel::Test1;
+  friend struct Precice::Parallel::TestFinalize;
   friend struct Precice::Parallel::TestMasterSlaveSetup;
   friend struct Precice::Parallel::GlobalRBFPartitioning;
   friend struct Precice::Parallel::LocalRBFPartitioning;
+  friend struct Precice::Parallel::TestQN;
 };
 
 } // namespace precice
