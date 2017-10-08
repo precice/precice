@@ -212,6 +212,9 @@ BOOST_AUTO_TEST_CASE(LocalRBFPartitioning, * testing::OnRanks({0, 1, 2, 3}))
 /// tests for various QN settings if correct number of iterations is returned
 BOOST_AUTO_TEST_CASE(TestQN, * testing::OnRanks({0, 1, 2, 3}))
 {
+  utils::Parallel::restrictGlobalCommunicator({0,1,2,3});
+  assertion(utils::Parallel::getCommunicatorSize() == 4);
+
   int numberOfTests = 3;
   std::vector<std::string> configs;
   configs.resize(numberOfTests);
@@ -314,6 +317,7 @@ BOOST_AUTO_TEST_CASE(TestQN, * testing::OnRanks({0, 1, 2, 3}))
   }
 
   utils::Parallel::setGlobalCommunicator(utils::Parallel::getCommunicatorWorld());
+  reset();
 }
 
 BOOST_AUTO_TEST_SUITE_END()

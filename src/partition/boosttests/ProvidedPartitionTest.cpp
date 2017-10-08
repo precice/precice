@@ -73,6 +73,7 @@ void tearDownParallelEnvironment(){
   utils::MasterSlave::_masterMode = false;
   utils::Parallel::synchronizeProcesses();
   utils::Parallel::clearGroups();
+  utils::Parallel::setGlobalCommunicator(utils::Parallel::getCommunicatorWorld());
 }
 
 
