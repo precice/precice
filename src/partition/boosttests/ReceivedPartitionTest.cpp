@@ -454,356 +454,356 @@ BOOST_AUTO_TEST_CASE(RePartitionNPPreFilterPostFilter2D, * testing::OnSize(4))
 
 
 #ifndef PRECICE_NO_PETSC
-BOOST_AUTO_TEST_CASE(RePartitionRBFGlobal2D, * testing::OnSize(4))
-{
-  utils::Parallel::setGlobalCommunicator(utils::Parallel::getRestrictedCommunicator({0,1,2,3}));
-  assertion(utils::Parallel::getCommunicatorSize() == 4);
-
-  setupParallelEnvironmentOneParticipant();
-
-  int dimensions = 2;
-  bool flipNormals = false;
-  mesh::PtrMesh pMesh(new mesh::Mesh("MyMesh", dimensions, flipNormals));
-  mesh::PtrMesh pOtherMesh(new mesh::Mesh("OtherMesh", dimensions, flipNormals));
-
-  mapping::PtrMapping boundingFromMapping = mapping::PtrMapping (
-      new mapping::PetRadialBasisFctMapping<mapping::ThinPlateSplines>(mapping::Mapping::CONSISTENT, dimensions,
-          mapping::ThinPlateSplines(), false, false, false));
-  mapping::PtrMapping boundingToMapping = mapping::PtrMapping (
-      new mapping::NearestNeighborMapping(mapping::Mapping::CONSERVATIVE, dimensions) );
-  boundingFromMapping->setMeshes(pMesh, pOtherMesh);
-  boundingToMapping->setMeshes(pOtherMesh,pMesh);
-
-  if (utils::Parallel::getProcessRank() == 0) { //Master
-    createSolidzMesh2D(pMesh);
-  } else  { //Slaves
-    createNastinMesh2D(pOtherMesh);
-  }
-
-  pOtherMesh->computeState();
-  double safetyFactor = 20.0;
-  ReceivedPartition part(pMesh, ReceivedPartition::NO_FILTER, safetyFactor);
-  part.setFromMapping(boundingFromMapping);
-  part.setToMapping(boundingToMapping);
-  part.compute();
-
-
-  BOOST_TEST(pMesh->getVertexOffsets().size() == 4);
-  BOOST_TEST(pMesh->getVertexOffsets()[0] == 0);
-  BOOST_TEST(pMesh->getVertexOffsets()[1] == 6);
-  BOOST_TEST(pMesh->getVertexOffsets()[2] == 6);
-  BOOST_TEST(pMesh->getVertexOffsets()[3] == 12);
-  BOOST_TEST(pMesh->getGlobalNumberOfVertices() == 6);
-
-  // check if the sending and filtering worked right
-  if(utils::Parallel::getProcessRank() == 0){//Master
-    BOOST_TEST(pMesh->vertices().size()==0);
-    BOOST_TEST(pMesh->edges().size()==0);
-    BOOST_TEST(pMesh->getVertexDistribution()[0].size() == 0);
-    BOOST_TEST(pMesh->getVertexDistribution()[1].size() == 6);
-    BOOST_TEST(pMesh->getVertexDistribution()[2].size() == 0);
-    BOOST_TEST(pMesh->getVertexDistribution()[3].size() == 6);
-  }
-  else if(utils::Parallel::getProcessRank() == 1){//Slave1
-    BOOST_TEST(pMesh->vertices().size()==6);
-    BOOST_TEST(pMesh->edges().size()==5);
-    BOOST_TEST(pMesh->vertices()[0].isOwner() == true);
-    BOOST_TEST(pMesh->vertices()[1].isOwner() == true);
-    BOOST_TEST(pMesh->vertices()[2].isOwner() == true);
-    BOOST_TEST(pMesh->vertices()[3].isOwner() == false);
-    BOOST_TEST(pMesh->vertices()[4].isOwner() == false);
-    BOOST_TEST(pMesh->vertices()[5].isOwner() == false);
-    BOOST_TEST(pMesh->vertices()[0].getGlobalIndex() == 0);
-    BOOST_TEST(pMesh->vertices()[1].getGlobalIndex() == 1);
-    BOOST_TEST(pMesh->vertices()[2].getGlobalIndex() == 2);
-    BOOST_TEST(pMesh->vertices()[3].getGlobalIndex() == 3);
-    BOOST_TEST(pMesh->vertices()[4].getGlobalIndex() == 4);
-    BOOST_TEST(pMesh->vertices()[5].getGlobalIndex() == 5);
-  }
-  else if(utils::Parallel::getProcessRank() == 2){//Slave2
-    BOOST_TEST(pMesh->vertices().size()==0);
-    BOOST_TEST(pMesh->edges().size()==0);
-  }
-  else if(utils::Parallel::getProcessRank() == 3){//Slave3
-    BOOST_TEST(pMesh->vertices().size()==6);
-    BOOST_TEST(pMesh->edges().size()==5);
-    BOOST_TEST(pMesh->vertices()[0].isOwner() == false);
-    BOOST_TEST(pMesh->vertices()[1].isOwner() == false);
-    BOOST_TEST(pMesh->vertices()[2].isOwner() == false);
-    BOOST_TEST(pMesh->vertices()[3].isOwner() == true);
-    BOOST_TEST(pMesh->vertices()[4].isOwner() == true);
-    BOOST_TEST(pMesh->vertices()[5].isOwner() == true);
-    BOOST_TEST(pMesh->vertices()[0].getGlobalIndex() == 0);
-    BOOST_TEST(pMesh->vertices()[1].getGlobalIndex() == 1);
-    BOOST_TEST(pMesh->vertices()[2].getGlobalIndex() == 2);
-    BOOST_TEST(pMesh->vertices()[3].getGlobalIndex() == 3);
-    BOOST_TEST(pMesh->vertices()[4].getGlobalIndex() == 4);
-    BOOST_TEST(pMesh->vertices()[5].getGlobalIndex() == 5);
-  }
-
-  tearDownParallelEnvironment();
-}
-
-
-BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D1, * testing::OnSize(4))
-{
-  utils::Parallel::setGlobalCommunicator(utils::Parallel::getRestrictedCommunicator({0,1,2,3}));
-  assertion(utils::Parallel::getCommunicatorSize() == 4);
-
-  setupParallelEnvironmentOneParticipant();
-
-  int dimensions = 2;
-  bool flipNormals = false;
-  mesh::PtrMesh pMesh(new mesh::Mesh("MyMesh", dimensions, flipNormals));
-  mesh::PtrMesh pOtherMesh(new mesh::Mesh("OtherMesh", dimensions, flipNormals));
-
-  double supportRadius = 0.25;
-
-  mapping::PtrMapping boundingFromMapping = mapping::PtrMapping (
-      new mapping::PetRadialBasisFctMapping<mapping::CompactThinPlateSplinesC2>(mapping::Mapping::CONSISTENT, dimensions,
-          mapping::CompactThinPlateSplinesC2(supportRadius), false, false, false));
-  mapping::PtrMapping boundingToMapping = mapping::PtrMapping (
-      new mapping::NearestNeighborMapping(mapping::Mapping::CONSERVATIVE, dimensions) );
-  boundingFromMapping->setMeshes(pMesh, pOtherMesh);
-  boundingToMapping->setMeshes(pOtherMesh,pMesh);
-
-  if (utils::Parallel::getProcessRank() == 0) { //Master
-    createSolidzMesh2D(pMesh);
-  } else  { //Slaves
-    createNastinMesh2D(pOtherMesh);
-  }
-
-  pOtherMesh->computeState();
-  double safetyFactor = 20.0;
-  ReceivedPartition part(pMesh, ReceivedPartition::NO_FILTER, safetyFactor);
-  part.setFromMapping(boundingFromMapping);
-  part.setToMapping(boundingToMapping);
-  part.compute();
-
-
-  BOOST_TEST(pMesh->getVertexOffsets().size() == 4);
-  BOOST_TEST(pMesh->getVertexOffsets()[0] == 0);
-  BOOST_TEST(pMesh->getVertexOffsets()[1] == 3);
-  BOOST_TEST(pMesh->getVertexOffsets()[2] == 3);
-  BOOST_TEST(pMesh->getVertexOffsets()[3] == 6);
-  BOOST_TEST(pMesh->getGlobalNumberOfVertices() == 6);
-
-  // check if the sending and filtering worked right
-  if(utils::Parallel::getProcessRank() == 0){//Master
-    BOOST_TEST(pMesh->vertices().size()==0);
-    BOOST_TEST(pMesh->edges().size()==0);
-    BOOST_TEST(pMesh->getVertexDistribution()[0].size() == 0);
-    BOOST_TEST(pMesh->getVertexDistribution()[1].size() == 3);
-    BOOST_TEST(pMesh->getVertexDistribution()[2].size() == 0);
-    BOOST_TEST(pMesh->getVertexDistribution()[3].size() == 3);
-  }
-  else if(utils::Parallel::getProcessRank() == 1){//Slave1
-    BOOST_TEST(pMesh->vertices().size()==3);
-    BOOST_TEST(pMesh->edges().size()==2);
-    BOOST_TEST(pMesh->vertices()[0].isOwner() == true);
-    BOOST_TEST(pMesh->vertices()[1].isOwner() == true);
-    BOOST_TEST(pMesh->vertices()[2].isOwner() == true);
-    BOOST_TEST(pMesh->vertices()[0].getGlobalIndex() == 0);
-    BOOST_TEST(pMesh->vertices()[1].getGlobalIndex() == 1);
-    BOOST_TEST(pMesh->vertices()[2].getGlobalIndex() == 2);
-  }
-  else if(utils::Parallel::getProcessRank() == 2){//Slave2
-    BOOST_TEST(pMesh->vertices().size()==0);
-    BOOST_TEST(pMesh->edges().size()==0);
-  }
-  else if(utils::Parallel::getProcessRank() == 3){//Slave3
-    BOOST_TEST(pMesh->vertices().size()==3);
-    BOOST_TEST(pMesh->edges().size()==2);
-    BOOST_TEST(pMesh->vertices()[0].isOwner() == true);
-    BOOST_TEST(pMesh->vertices()[1].isOwner() == true);
-    BOOST_TEST(pMesh->vertices()[2].isOwner() == true);
-    BOOST_TEST(pMesh->vertices()[0].getGlobalIndex() == 3);
-    BOOST_TEST(pMesh->vertices()[1].getGlobalIndex() == 4);
-    BOOST_TEST(pMesh->vertices()[2].getGlobalIndex() == 5);
-  }
-
-  tearDownParallelEnvironment();
-}
-
-BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D2, * testing::OnSize(4))
-{
-  utils::Parallel::setGlobalCommunicator(utils::Parallel::getRestrictedCommunicator({0,1,2,3}));
-  assertion(utils::Parallel::getCommunicatorSize() == 4);
-
-  setupParallelEnvironmentOneParticipant();
-
-  int dimensions = 2;
-  bool flipNormals = false;
-  mesh::PtrMesh pMesh(new mesh::Mesh("MyMesh", dimensions, flipNormals));
-  mesh::PtrMesh pOtherMesh(new mesh::Mesh("OtherMesh", dimensions, flipNormals));
-
-  double supportRadius = 2.45;
-
-  mapping::PtrMapping boundingFromMapping = mapping::PtrMapping (
-      new mapping::PetRadialBasisFctMapping<mapping::CompactThinPlateSplinesC2>(mapping::Mapping::CONSISTENT, dimensions,
-          mapping::CompactThinPlateSplinesC2(supportRadius), false, false, false));
-  mapping::PtrMapping boundingToMapping = mapping::PtrMapping (
-      new mapping::NearestNeighborMapping(mapping::Mapping::CONSERVATIVE, dimensions) );
-  boundingFromMapping->setMeshes(pMesh, pOtherMesh);
-  boundingToMapping->setMeshes(pOtherMesh,pMesh);
-
-  if (utils::Parallel::getProcessRank() == 0) { //Master
-    createSolidzMesh2D(pMesh);
-  } else  { //Slaves
-    createNastinMesh2D(pOtherMesh);
-  }
-
-  pOtherMesh->computeState();
-  double safetyFactor = 20.0;
-  ReceivedPartition part(pMesh, ReceivedPartition::NO_FILTER, safetyFactor);
-  part.setFromMapping(boundingFromMapping);
-  part.setToMapping(boundingToMapping);
-  part.compute();
-
-
-  BOOST_TEST(pMesh->getVertexOffsets().size() == 4);
-  BOOST_TEST(pMesh->getVertexOffsets()[0] == 0);
-  BOOST_TEST(pMesh->getVertexOffsets()[1] == 4);
-  BOOST_TEST(pMesh->getVertexOffsets()[2] == 4);
-  BOOST_TEST(pMesh->getVertexOffsets()[3] == 9);
-  BOOST_TEST(pMesh->getGlobalNumberOfVertices() == 6);
-
-  // check if the sending and filtering worked right
-  if(utils::Parallel::getProcessRank() == 0){//Master
-    BOOST_TEST(pMesh->vertices().size()==0);
-    BOOST_TEST(pMesh->edges().size()==0);
-    BOOST_TEST(pMesh->getVertexDistribution()[0].size() == 0);
-    BOOST_TEST(pMesh->getVertexDistribution()[1].size() == 4);
-    BOOST_TEST(pMesh->getVertexDistribution()[2].size() == 0);
-    BOOST_TEST(pMesh->getVertexDistribution()[3].size() == 5);
-  }
-  else if(utils::Parallel::getProcessRank() == 1){//Slave1
-    BOOST_TEST(pMesh->vertices().size()==4);
-    BOOST_TEST(pMesh->edges().size()==3);
-    BOOST_TEST(pMesh->vertices()[0].isOwner() == true);
-    BOOST_TEST(pMesh->vertices()[1].isOwner() == true);
-    BOOST_TEST(pMesh->vertices()[2].isOwner() == true);
-    BOOST_TEST(pMesh->vertices()[3].isOwner() == false);
-    BOOST_TEST(pMesh->vertices()[0].getGlobalIndex() == 0);
-    BOOST_TEST(pMesh->vertices()[1].getGlobalIndex() == 1);
-    BOOST_TEST(pMesh->vertices()[2].getGlobalIndex() == 2);
-    BOOST_TEST(pMesh->vertices()[3].getGlobalIndex() == 3);
-  }
-  else if(utils::Parallel::getProcessRank() == 2){//Slave2
-    BOOST_TEST(pMesh->vertices().size()==0);
-    BOOST_TEST(pMesh->edges().size()==0);
-  }
-  else if(utils::Parallel::getProcessRank() == 3){//Slave3
-    BOOST_TEST(pMesh->vertices().size()==5);
-    BOOST_TEST(pMesh->edges().size()==4);
-    BOOST_TEST(pMesh->vertices()[0].isOwner() == false);
-    BOOST_TEST(pMesh->vertices()[1].isOwner() == false);
-    BOOST_TEST(pMesh->vertices()[2].isOwner() == true);
-    BOOST_TEST(pMesh->vertices()[3].isOwner() == true);
-    BOOST_TEST(pMesh->vertices()[4].isOwner() == true);
-    BOOST_TEST(pMesh->vertices()[0].getGlobalIndex() == 1);
-    BOOST_TEST(pMesh->vertices()[1].getGlobalIndex() == 2);
-    BOOST_TEST(pMesh->vertices()[2].getGlobalIndex() == 3);
-    BOOST_TEST(pMesh->vertices()[3].getGlobalIndex() == 4);
-    BOOST_TEST(pMesh->vertices()[4].getGlobalIndex() == 5);
-  }
-
-  tearDownParallelEnvironment();
-}
-
-BOOST_AUTO_TEST_CASE(RePartitionRBFLocal3D, * testing::OnSize(4))
-{
-  utils::Parallel::setGlobalCommunicator(utils::Parallel::getRestrictedCommunicator({0,1,2,3}));
-  assertion(utils::Parallel::getCommunicatorSize() == 4);
-
-  setupParallelEnvironmentOneParticipant();
-
-  int dimensions = 3;
-  bool flipNormals = false;
-  mesh::PtrMesh pMesh(new mesh::Mesh("MyMesh", dimensions, flipNormals));
-  mesh::PtrMesh pOtherMesh(new mesh::Mesh("OtherMesh", dimensions, flipNormals));
-
-  double supportRadius1 = 1.2;
-  double supportRadius2 = 0.2;
-
-  mapping::PtrMapping boundingFromMapping = mapping::PtrMapping (
-      new mapping::PetRadialBasisFctMapping<mapping::CompactThinPlateSplinesC2>(mapping::Mapping::CONSISTENT, dimensions,
-          mapping::CompactThinPlateSplinesC2(supportRadius1), false, false, false));
-  mapping::PtrMapping boundingToMapping = mapping::PtrMapping (
-      new mapping::PetRadialBasisFctMapping<mapping::CompactThinPlateSplinesC2>(mapping::Mapping::CONSERVATIVE, dimensions,
-                mapping::CompactThinPlateSplinesC2(supportRadius2), false, false, false));
-  boundingFromMapping->setMeshes(pMesh, pOtherMesh);
-  boundingToMapping->setMeshes(pOtherMesh,pMesh);
-
-  if (utils::Parallel::getProcessRank() == 0) { //Master
-    createSolidzMesh3D(pMesh);
-  } else  { //Slaves
-    createNastinMesh3D(pOtherMesh);
-  }
-
-  pOtherMesh->computeState();
-  double safetyFactor = 20.0;
-  ReceivedPartition part(pMesh, ReceivedPartition::NO_FILTER, safetyFactor);
-  part.setFromMapping(boundingFromMapping);
-  part.setToMapping(boundingToMapping);
-  part.compute();
-
-
-  BOOST_TEST(pMesh->getVertexOffsets().size() == 4);
-  BOOST_TEST(pMesh->getVertexOffsets()[0] == 0);
-  BOOST_TEST(pMesh->getVertexOffsets()[1] == 5);
-  BOOST_TEST(pMesh->getVertexOffsets()[2] == 5);
-  BOOST_TEST(pMesh->getVertexOffsets()[3] == 10);
-  BOOST_TEST(pMesh->getGlobalNumberOfVertices() == 5);
-
-  // check if the sending and filtering worked right
-  if(utils::Parallel::getProcessRank() == 0){//Master
-    BOOST_TEST(pMesh->vertices().size()==0);
-    BOOST_TEST(pMesh->edges().size()==0);
-    BOOST_TEST(pMesh->triangles().size()==0);
-    BOOST_TEST(pMesh->getVertexDistribution()[0].size() == 0);
-    BOOST_TEST(pMesh->getVertexDistribution()[1].size() == 5);
-    BOOST_TEST(pMesh->getVertexDistribution()[2].size() == 0);
-    BOOST_TEST(pMesh->getVertexDistribution()[3].size() == 5);
-  }
-  else if(utils::Parallel::getProcessRank() == 1){//Slave1
-    BOOST_TEST(pMesh->vertices().size()==5);
-    BOOST_TEST(pMesh->edges().size()==6);
-    BOOST_TEST(pMesh->triangles().size()==2);
-    BOOST_TEST(pMesh->vertices()[0].isOwner() == true);
-    BOOST_TEST(pMesh->vertices()[1].isOwner() == true);
-    BOOST_TEST(pMesh->vertices()[2].isOwner() == false);
-    BOOST_TEST(pMesh->vertices()[3].isOwner() == false);
-    BOOST_TEST(pMesh->vertices()[4].isOwner() == false);
-    BOOST_TEST(pMesh->vertices()[0].getGlobalIndex() == 0);
-    BOOST_TEST(pMesh->vertices()[1].getGlobalIndex() == 1);
-    BOOST_TEST(pMesh->vertices()[2].getGlobalIndex() == 2);
-    BOOST_TEST(pMesh->vertices()[3].getGlobalIndex() == 3);
-    BOOST_TEST(pMesh->vertices()[4].getGlobalIndex() == 4);
-  }
-  else if(utils::Parallel::getProcessRank() == 2){//Slave2
-    BOOST_TEST(pMesh->vertices().size()==0);
-    BOOST_TEST(pMesh->edges().size()==0);
-    BOOST_TEST(pMesh->triangles().size()==0);
-  }
-  else if(utils::Parallel::getProcessRank() == 3){//Slave3
-    BOOST_TEST(pMesh->vertices().size()==5);
-    BOOST_TEST(pMesh->edges().size()==6);
-    BOOST_TEST(pMesh->triangles().size()==2);
-    BOOST_TEST(pMesh->vertices()[0].isOwner() == false);
-    BOOST_TEST(pMesh->vertices()[1].isOwner() == false);
-    BOOST_TEST(pMesh->vertices()[2].isOwner() == true);
-    BOOST_TEST(pMesh->vertices()[3].isOwner() == true);
-    BOOST_TEST(pMesh->vertices()[4].isOwner() == true);
-    BOOST_TEST(pMesh->vertices()[0].getGlobalIndex() == 0);
-    BOOST_TEST(pMesh->vertices()[1].getGlobalIndex() == 1);
-    BOOST_TEST(pMesh->vertices()[2].getGlobalIndex() == 2);
-    BOOST_TEST(pMesh->vertices()[3].getGlobalIndex() == 3);
-    BOOST_TEST(pMesh->vertices()[4].getGlobalIndex() == 4);
-  }
-
-  tearDownParallelEnvironment();
-}
+//BOOST_AUTO_TEST_CASE(RePartitionRBFGlobal2D, * testing::OnSize(4))
+//{
+//  utils::Parallel::setGlobalCommunicator(utils::Parallel::getRestrictedCommunicator({0,1,2,3}));
+//  assertion(utils::Parallel::getCommunicatorSize() == 4);
+//
+//  setupParallelEnvironmentOneParticipant();
+//
+//  int dimensions = 2;
+//  bool flipNormals = false;
+//  mesh::PtrMesh pMesh(new mesh::Mesh("MyMesh", dimensions, flipNormals));
+//  mesh::PtrMesh pOtherMesh(new mesh::Mesh("OtherMesh", dimensions, flipNormals));
+//
+//  mapping::PtrMapping boundingFromMapping = mapping::PtrMapping (
+//      new mapping::PetRadialBasisFctMapping<mapping::ThinPlateSplines>(mapping::Mapping::CONSISTENT, dimensions,
+//          mapping::ThinPlateSplines(), false, false, false));
+//  mapping::PtrMapping boundingToMapping = mapping::PtrMapping (
+//      new mapping::NearestNeighborMapping(mapping::Mapping::CONSERVATIVE, dimensions) );
+//  boundingFromMapping->setMeshes(pMesh, pOtherMesh);
+//  boundingToMapping->setMeshes(pOtherMesh,pMesh);
+//
+//  if (utils::Parallel::getProcessRank() == 0) { //Master
+//    createSolidzMesh2D(pMesh);
+//  } else  { //Slaves
+//    createNastinMesh2D(pOtherMesh);
+//  }
+//
+//  pOtherMesh->computeState();
+//  double safetyFactor = 20.0;
+//  ReceivedPartition part(pMesh, ReceivedPartition::NO_FILTER, safetyFactor);
+//  part.setFromMapping(boundingFromMapping);
+//  part.setToMapping(boundingToMapping);
+//  part.compute();
+//
+//
+//  BOOST_TEST(pMesh->getVertexOffsets().size() == 4);
+//  BOOST_TEST(pMesh->getVertexOffsets()[0] == 0);
+//  BOOST_TEST(pMesh->getVertexOffsets()[1] == 6);
+//  BOOST_TEST(pMesh->getVertexOffsets()[2] == 6);
+//  BOOST_TEST(pMesh->getVertexOffsets()[3] == 12);
+//  BOOST_TEST(pMesh->getGlobalNumberOfVertices() == 6);
+//
+//  // check if the sending and filtering worked right
+//  if(utils::Parallel::getProcessRank() == 0){//Master
+//    BOOST_TEST(pMesh->vertices().size()==0);
+//    BOOST_TEST(pMesh->edges().size()==0);
+//    BOOST_TEST(pMesh->getVertexDistribution()[0].size() == 0);
+//    BOOST_TEST(pMesh->getVertexDistribution()[1].size() == 6);
+//    BOOST_TEST(pMesh->getVertexDistribution()[2].size() == 0);
+//    BOOST_TEST(pMesh->getVertexDistribution()[3].size() == 6);
+//  }
+//  else if(utils::Parallel::getProcessRank() == 1){//Slave1
+//    BOOST_TEST(pMesh->vertices().size()==6);
+//    BOOST_TEST(pMesh->edges().size()==5);
+//    BOOST_TEST(pMesh->vertices()[0].isOwner() == true);
+//    BOOST_TEST(pMesh->vertices()[1].isOwner() == true);
+//    BOOST_TEST(pMesh->vertices()[2].isOwner() == true);
+//    BOOST_TEST(pMesh->vertices()[3].isOwner() == false);
+//    BOOST_TEST(pMesh->vertices()[4].isOwner() == false);
+//    BOOST_TEST(pMesh->vertices()[5].isOwner() == false);
+//    BOOST_TEST(pMesh->vertices()[0].getGlobalIndex() == 0);
+//    BOOST_TEST(pMesh->vertices()[1].getGlobalIndex() == 1);
+//    BOOST_TEST(pMesh->vertices()[2].getGlobalIndex() == 2);
+//    BOOST_TEST(pMesh->vertices()[3].getGlobalIndex() == 3);
+//    BOOST_TEST(pMesh->vertices()[4].getGlobalIndex() == 4);
+//    BOOST_TEST(pMesh->vertices()[5].getGlobalIndex() == 5);
+//  }
+//  else if(utils::Parallel::getProcessRank() == 2){//Slave2
+//    BOOST_TEST(pMesh->vertices().size()==0);
+//    BOOST_TEST(pMesh->edges().size()==0);
+//  }
+//  else if(utils::Parallel::getProcessRank() == 3){//Slave3
+//    BOOST_TEST(pMesh->vertices().size()==6);
+//    BOOST_TEST(pMesh->edges().size()==5);
+//    BOOST_TEST(pMesh->vertices()[0].isOwner() == false);
+//    BOOST_TEST(pMesh->vertices()[1].isOwner() == false);
+//    BOOST_TEST(pMesh->vertices()[2].isOwner() == false);
+//    BOOST_TEST(pMesh->vertices()[3].isOwner() == true);
+//    BOOST_TEST(pMesh->vertices()[4].isOwner() == true);
+//    BOOST_TEST(pMesh->vertices()[5].isOwner() == true);
+//    BOOST_TEST(pMesh->vertices()[0].getGlobalIndex() == 0);
+//    BOOST_TEST(pMesh->vertices()[1].getGlobalIndex() == 1);
+//    BOOST_TEST(pMesh->vertices()[2].getGlobalIndex() == 2);
+//    BOOST_TEST(pMesh->vertices()[3].getGlobalIndex() == 3);
+//    BOOST_TEST(pMesh->vertices()[4].getGlobalIndex() == 4);
+//    BOOST_TEST(pMesh->vertices()[5].getGlobalIndex() == 5);
+//  }
+//
+//  tearDownParallelEnvironment();
+//}
+//
+//
+//BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D1, * testing::OnSize(4))
+//{
+//  utils::Parallel::setGlobalCommunicator(utils::Parallel::getRestrictedCommunicator({0,1,2,3}));
+//  assertion(utils::Parallel::getCommunicatorSize() == 4);
+//
+//  setupParallelEnvironmentOneParticipant();
+//
+//  int dimensions = 2;
+//  bool flipNormals = false;
+//  mesh::PtrMesh pMesh(new mesh::Mesh("MyMesh", dimensions, flipNormals));
+//  mesh::PtrMesh pOtherMesh(new mesh::Mesh("OtherMesh", dimensions, flipNormals));
+//
+//  double supportRadius = 0.25;
+//
+//  mapping::PtrMapping boundingFromMapping = mapping::PtrMapping (
+//      new mapping::PetRadialBasisFctMapping<mapping::CompactThinPlateSplinesC2>(mapping::Mapping::CONSISTENT, dimensions,
+//          mapping::CompactThinPlateSplinesC2(supportRadius), false, false, false));
+//  mapping::PtrMapping boundingToMapping = mapping::PtrMapping (
+//      new mapping::NearestNeighborMapping(mapping::Mapping::CONSERVATIVE, dimensions) );
+//  boundingFromMapping->setMeshes(pMesh, pOtherMesh);
+//  boundingToMapping->setMeshes(pOtherMesh,pMesh);
+//
+//  if (utils::Parallel::getProcessRank() == 0) { //Master
+//    createSolidzMesh2D(pMesh);
+//  } else  { //Slaves
+//    createNastinMesh2D(pOtherMesh);
+//  }
+//
+//  pOtherMesh->computeState();
+//  double safetyFactor = 20.0;
+//  ReceivedPartition part(pMesh, ReceivedPartition::NO_FILTER, safetyFactor);
+//  part.setFromMapping(boundingFromMapping);
+//  part.setToMapping(boundingToMapping);
+//  part.compute();
+//
+//
+//  BOOST_TEST(pMesh->getVertexOffsets().size() == 4);
+//  BOOST_TEST(pMesh->getVertexOffsets()[0] == 0);
+//  BOOST_TEST(pMesh->getVertexOffsets()[1] == 3);
+//  BOOST_TEST(pMesh->getVertexOffsets()[2] == 3);
+//  BOOST_TEST(pMesh->getVertexOffsets()[3] == 6);
+//  BOOST_TEST(pMesh->getGlobalNumberOfVertices() == 6);
+//
+//  // check if the sending and filtering worked right
+//  if(utils::Parallel::getProcessRank() == 0){//Master
+//    BOOST_TEST(pMesh->vertices().size()==0);
+//    BOOST_TEST(pMesh->edges().size()==0);
+//    BOOST_TEST(pMesh->getVertexDistribution()[0].size() == 0);
+//    BOOST_TEST(pMesh->getVertexDistribution()[1].size() == 3);
+//    BOOST_TEST(pMesh->getVertexDistribution()[2].size() == 0);
+//    BOOST_TEST(pMesh->getVertexDistribution()[3].size() == 3);
+//  }
+//  else if(utils::Parallel::getProcessRank() == 1){//Slave1
+//    BOOST_TEST(pMesh->vertices().size()==3);
+//    BOOST_TEST(pMesh->edges().size()==2);
+//    BOOST_TEST(pMesh->vertices()[0].isOwner() == true);
+//    BOOST_TEST(pMesh->vertices()[1].isOwner() == true);
+//    BOOST_TEST(pMesh->vertices()[2].isOwner() == true);
+//    BOOST_TEST(pMesh->vertices()[0].getGlobalIndex() == 0);
+//    BOOST_TEST(pMesh->vertices()[1].getGlobalIndex() == 1);
+//    BOOST_TEST(pMesh->vertices()[2].getGlobalIndex() == 2);
+//  }
+//  else if(utils::Parallel::getProcessRank() == 2){//Slave2
+//    BOOST_TEST(pMesh->vertices().size()==0);
+//    BOOST_TEST(pMesh->edges().size()==0);
+//  }
+//  else if(utils::Parallel::getProcessRank() == 3){//Slave3
+//    BOOST_TEST(pMesh->vertices().size()==3);
+//    BOOST_TEST(pMesh->edges().size()==2);
+//    BOOST_TEST(pMesh->vertices()[0].isOwner() == true);
+//    BOOST_TEST(pMesh->vertices()[1].isOwner() == true);
+//    BOOST_TEST(pMesh->vertices()[2].isOwner() == true);
+//    BOOST_TEST(pMesh->vertices()[0].getGlobalIndex() == 3);
+//    BOOST_TEST(pMesh->vertices()[1].getGlobalIndex() == 4);
+//    BOOST_TEST(pMesh->vertices()[2].getGlobalIndex() == 5);
+//  }
+//
+//  tearDownParallelEnvironment();
+//}
+//
+//BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D2, * testing::OnSize(4))
+//{
+//  utils::Parallel::setGlobalCommunicator(utils::Parallel::getRestrictedCommunicator({0,1,2,3}));
+//  assertion(utils::Parallel::getCommunicatorSize() == 4);
+//
+//  setupParallelEnvironmentOneParticipant();
+//
+//  int dimensions = 2;
+//  bool flipNormals = false;
+//  mesh::PtrMesh pMesh(new mesh::Mesh("MyMesh", dimensions, flipNormals));
+//  mesh::PtrMesh pOtherMesh(new mesh::Mesh("OtherMesh", dimensions, flipNormals));
+//
+//  double supportRadius = 2.45;
+//
+//  mapping::PtrMapping boundingFromMapping = mapping::PtrMapping (
+//      new mapping::PetRadialBasisFctMapping<mapping::CompactThinPlateSplinesC2>(mapping::Mapping::CONSISTENT, dimensions,
+//          mapping::CompactThinPlateSplinesC2(supportRadius), false, false, false));
+//  mapping::PtrMapping boundingToMapping = mapping::PtrMapping (
+//      new mapping::NearestNeighborMapping(mapping::Mapping::CONSERVATIVE, dimensions) );
+//  boundingFromMapping->setMeshes(pMesh, pOtherMesh);
+//  boundingToMapping->setMeshes(pOtherMesh,pMesh);
+//
+//  if (utils::Parallel::getProcessRank() == 0) { //Master
+//    createSolidzMesh2D(pMesh);
+//  } else  { //Slaves
+//    createNastinMesh2D(pOtherMesh);
+//  }
+//
+//  pOtherMesh->computeState();
+//  double safetyFactor = 20.0;
+//  ReceivedPartition part(pMesh, ReceivedPartition::NO_FILTER, safetyFactor);
+//  part.setFromMapping(boundingFromMapping);
+//  part.setToMapping(boundingToMapping);
+//  part.compute();
+//
+//
+//  BOOST_TEST(pMesh->getVertexOffsets().size() == 4);
+//  BOOST_TEST(pMesh->getVertexOffsets()[0] == 0);
+//  BOOST_TEST(pMesh->getVertexOffsets()[1] == 4);
+//  BOOST_TEST(pMesh->getVertexOffsets()[2] == 4);
+//  BOOST_TEST(pMesh->getVertexOffsets()[3] == 9);
+//  BOOST_TEST(pMesh->getGlobalNumberOfVertices() == 6);
+//
+//  // check if the sending and filtering worked right
+//  if(utils::Parallel::getProcessRank() == 0){//Master
+//    BOOST_TEST(pMesh->vertices().size()==0);
+//    BOOST_TEST(pMesh->edges().size()==0);
+//    BOOST_TEST(pMesh->getVertexDistribution()[0].size() == 0);
+//    BOOST_TEST(pMesh->getVertexDistribution()[1].size() == 4);
+//    BOOST_TEST(pMesh->getVertexDistribution()[2].size() == 0);
+//    BOOST_TEST(pMesh->getVertexDistribution()[3].size() == 5);
+//  }
+//  else if(utils::Parallel::getProcessRank() == 1){//Slave1
+//    BOOST_TEST(pMesh->vertices().size()==4);
+//    BOOST_TEST(pMesh->edges().size()==3);
+//    BOOST_TEST(pMesh->vertices()[0].isOwner() == true);
+//    BOOST_TEST(pMesh->vertices()[1].isOwner() == true);
+//    BOOST_TEST(pMesh->vertices()[2].isOwner() == true);
+//    BOOST_TEST(pMesh->vertices()[3].isOwner() == false);
+//    BOOST_TEST(pMesh->vertices()[0].getGlobalIndex() == 0);
+//    BOOST_TEST(pMesh->vertices()[1].getGlobalIndex() == 1);
+//    BOOST_TEST(pMesh->vertices()[2].getGlobalIndex() == 2);
+//    BOOST_TEST(pMesh->vertices()[3].getGlobalIndex() == 3);
+//  }
+//  else if(utils::Parallel::getProcessRank() == 2){//Slave2
+//    BOOST_TEST(pMesh->vertices().size()==0);
+//    BOOST_TEST(pMesh->edges().size()==0);
+//  }
+//  else if(utils::Parallel::getProcessRank() == 3){//Slave3
+//    BOOST_TEST(pMesh->vertices().size()==5);
+//    BOOST_TEST(pMesh->edges().size()==4);
+//    BOOST_TEST(pMesh->vertices()[0].isOwner() == false);
+//    BOOST_TEST(pMesh->vertices()[1].isOwner() == false);
+//    BOOST_TEST(pMesh->vertices()[2].isOwner() == true);
+//    BOOST_TEST(pMesh->vertices()[3].isOwner() == true);
+//    BOOST_TEST(pMesh->vertices()[4].isOwner() == true);
+//    BOOST_TEST(pMesh->vertices()[0].getGlobalIndex() == 1);
+//    BOOST_TEST(pMesh->vertices()[1].getGlobalIndex() == 2);
+//    BOOST_TEST(pMesh->vertices()[2].getGlobalIndex() == 3);
+//    BOOST_TEST(pMesh->vertices()[3].getGlobalIndex() == 4);
+//    BOOST_TEST(pMesh->vertices()[4].getGlobalIndex() == 5);
+//  }
+//
+//  tearDownParallelEnvironment();
+//}
+//
+//BOOST_AUTO_TEST_CASE(RePartitionRBFLocal3D, * testing::OnSize(4))
+//{
+//  utils::Parallel::setGlobalCommunicator(utils::Parallel::getRestrictedCommunicator({0,1,2,3}));
+//  assertion(utils::Parallel::getCommunicatorSize() == 4);
+//
+//  setupParallelEnvironmentOneParticipant();
+//
+//  int dimensions = 3;
+//  bool flipNormals = false;
+//  mesh::PtrMesh pMesh(new mesh::Mesh("MyMesh", dimensions, flipNormals));
+//  mesh::PtrMesh pOtherMesh(new mesh::Mesh("OtherMesh", dimensions, flipNormals));
+//
+//  double supportRadius1 = 1.2;
+//  double supportRadius2 = 0.2;
+//
+//  mapping::PtrMapping boundingFromMapping = mapping::PtrMapping (
+//      new mapping::PetRadialBasisFctMapping<mapping::CompactThinPlateSplinesC2>(mapping::Mapping::CONSISTENT, dimensions,
+//          mapping::CompactThinPlateSplinesC2(supportRadius1), false, false, false));
+//  mapping::PtrMapping boundingToMapping = mapping::PtrMapping (
+//      new mapping::PetRadialBasisFctMapping<mapping::CompactThinPlateSplinesC2>(mapping::Mapping::CONSERVATIVE, dimensions,
+//                mapping::CompactThinPlateSplinesC2(supportRadius2), false, false, false));
+//  boundingFromMapping->setMeshes(pMesh, pOtherMesh);
+//  boundingToMapping->setMeshes(pOtherMesh,pMesh);
+//
+//  if (utils::Parallel::getProcessRank() == 0) { //Master
+//    createSolidzMesh3D(pMesh);
+//  } else  { //Slaves
+//    createNastinMesh3D(pOtherMesh);
+//  }
+//
+//  pOtherMesh->computeState();
+//  double safetyFactor = 20.0;
+//  ReceivedPartition part(pMesh, ReceivedPartition::NO_FILTER, safetyFactor);
+//  part.setFromMapping(boundingFromMapping);
+//  part.setToMapping(boundingToMapping);
+//  part.compute();
+//
+//
+//  BOOST_TEST(pMesh->getVertexOffsets().size() == 4);
+//  BOOST_TEST(pMesh->getVertexOffsets()[0] == 0);
+//  BOOST_TEST(pMesh->getVertexOffsets()[1] == 5);
+//  BOOST_TEST(pMesh->getVertexOffsets()[2] == 5);
+//  BOOST_TEST(pMesh->getVertexOffsets()[3] == 10);
+//  BOOST_TEST(pMesh->getGlobalNumberOfVertices() == 5);
+//
+//  // check if the sending and filtering worked right
+//  if(utils::Parallel::getProcessRank() == 0){//Master
+//    BOOST_TEST(pMesh->vertices().size()==0);
+//    BOOST_TEST(pMesh->edges().size()==0);
+//    BOOST_TEST(pMesh->triangles().size()==0);
+//    BOOST_TEST(pMesh->getVertexDistribution()[0].size() == 0);
+//    BOOST_TEST(pMesh->getVertexDistribution()[1].size() == 5);
+//    BOOST_TEST(pMesh->getVertexDistribution()[2].size() == 0);
+//    BOOST_TEST(pMesh->getVertexDistribution()[3].size() == 5);
+//  }
+//  else if(utils::Parallel::getProcessRank() == 1){//Slave1
+//    BOOST_TEST(pMesh->vertices().size()==5);
+//    BOOST_TEST(pMesh->edges().size()==6);
+//    BOOST_TEST(pMesh->triangles().size()==2);
+//    BOOST_TEST(pMesh->vertices()[0].isOwner() == true);
+//    BOOST_TEST(pMesh->vertices()[1].isOwner() == true);
+//    BOOST_TEST(pMesh->vertices()[2].isOwner() == false);
+//    BOOST_TEST(pMesh->vertices()[3].isOwner() == false);
+//    BOOST_TEST(pMesh->vertices()[4].isOwner() == false);
+//    BOOST_TEST(pMesh->vertices()[0].getGlobalIndex() == 0);
+//    BOOST_TEST(pMesh->vertices()[1].getGlobalIndex() == 1);
+//    BOOST_TEST(pMesh->vertices()[2].getGlobalIndex() == 2);
+//    BOOST_TEST(pMesh->vertices()[3].getGlobalIndex() == 3);
+//    BOOST_TEST(pMesh->vertices()[4].getGlobalIndex() == 4);
+//  }
+//  else if(utils::Parallel::getProcessRank() == 2){//Slave2
+//    BOOST_TEST(pMesh->vertices().size()==0);
+//    BOOST_TEST(pMesh->edges().size()==0);
+//    BOOST_TEST(pMesh->triangles().size()==0);
+//  }
+//  else if(utils::Parallel::getProcessRank() == 3){//Slave3
+//    BOOST_TEST(pMesh->vertices().size()==5);
+//    BOOST_TEST(pMesh->edges().size()==6);
+//    BOOST_TEST(pMesh->triangles().size()==2);
+//    BOOST_TEST(pMesh->vertices()[0].isOwner() == false);
+//    BOOST_TEST(pMesh->vertices()[1].isOwner() == false);
+//    BOOST_TEST(pMesh->vertices()[2].isOwner() == true);
+//    BOOST_TEST(pMesh->vertices()[3].isOwner() == true);
+//    BOOST_TEST(pMesh->vertices()[4].isOwner() == true);
+//    BOOST_TEST(pMesh->vertices()[0].getGlobalIndex() == 0);
+//    BOOST_TEST(pMesh->vertices()[1].getGlobalIndex() == 1);
+//    BOOST_TEST(pMesh->vertices()[2].getGlobalIndex() == 2);
+//    BOOST_TEST(pMesh->vertices()[3].getGlobalIndex() == 3);
+//    BOOST_TEST(pMesh->vertices()[4].getGlobalIndex() == 4);
+//  }
+//
+//  tearDownParallelEnvironment();
+//}
 
 
 #endif // PRECICE_NO_PETSC

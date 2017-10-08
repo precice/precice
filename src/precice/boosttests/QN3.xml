@@ -41,8 +41,8 @@
          <exchange data="Data1" mesh="MeshOne" from="SolverOne" to="SolverTwo" />
          <exchange data="Data2" mesh="MeshOne" from="SolverTwo" to="SolverOne"/>
          <max-iterations value="100"/>
-         <relative-convergence-measure limit="1e-2" data="Data1" mesh="MeshOne"/>
-         <relative-convergence-measure limit="1e-2" data="Data2" mesh="MeshOne"/>
+         <relative-convergence-measure limit="5e-1" data="Data1" mesh="MeshOne"/>
+         <relative-convergence-measure limit="5e-1" data="Data2" mesh="MeshOne"/>
          <post-processing:IQN-IMVJ>
             <data name="Data1" mesh="MeshOne"/>
             <data name="Data2" mesh="MeshOne"/>

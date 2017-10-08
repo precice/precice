@@ -225,7 +225,7 @@ BOOST_AUTO_TEST_CASE(TestQN, * testing::OnRanks({0, 1, 2, 3}))
   configs[1] = "../src/precice/boosttests/QN2.xml";
   configs[2] = "../src/precice/boosttests/QN3.xml";
 
-  int correctIterations[3] = {29, 22, 17};
+  int correctIterations[3] = {29, 17, 15};
 
   std::string solverName, meshName, writeDataName, readDataName;
   int rank, size;

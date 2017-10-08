@@ -47,7 +47,7 @@
             <data name="Data1" mesh="MeshOne"/>
             <data name="Data2" mesh="MeshOne"/>
             <preconditioner type="residual-sum"/>
-            <filter type="QR2" limit="1e-4"/>
+            <filter type="QR2" limit="1e-1"/>
             <initial-relaxation value="0.001"/>
             <max-used-iterations value="30"/>
             <timesteps-reused value="2"/>
