@@ -811,15 +811,16 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
 
   for(mesh::Vertex& v : filterMesh->vertices()){
     bool isInside = true;
-    if(otherMesh->vertices().size()==0) isInside = false; //ranks not at the interface should never hold interface vertices
-    if(_basisFunction.hasCompactSupport()){
-      for (int d=0; d<getDimensions(); d++) {
-        if (v.getCoords()[d] < otherMesh->getBoundingBox()[d].first - _basisFunction.getSupportRadius() ||
-            v.getCoords()[d] > otherMesh->getBoundingBox()[d].second + _basisFunction.getSupportRadius() ) {
-          isInside = false;
-        }
-      }
-    }
+    // TODO: use as soon as PETSc bug fixed
+//    if(otherMesh->vertices().size()==0) isInside = false; //ranks not at the interface should never hold interface vertices
+//    if(_basisFunction.hasCompactSupport()){
+//      for (int d=0; d<getDimensions(); d++) {
+//        if (v.getCoords()[d] < otherMesh->getBoundingBox()[d].first - _basisFunction.getSupportRadius() ||
+//            v.getCoords()[d] > otherMesh->getBoundingBox()[d].second + _basisFunction.getSupportRadius() ) {
+//          isInside = false;
+//        }
+//      }
+//    }
     if(isInside) v.tag();
   }
 }
