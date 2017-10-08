@@ -100,6 +100,7 @@ BOOST_AUTO_TEST_CASE(TestFinalize, * testing::OnRanks({0, 1, 2, 3}))
   }
 }
 
+#ifndef PRECICE_NO_PETSC
 BOOST_AUTO_TEST_CASE(GlobalRBFPartitioning, * testing::OnRanks({0, 1, 2, 3}))
 {
   utils::Parallel::restrictGlobalCommunicator({0,1,2,3});
@@ -208,6 +209,8 @@ BOOST_AUTO_TEST_CASE(LocalRBFPartitioning, * testing::OnRanks({0, 1, 2, 3}))
   }
   utils::Parallel::setGlobalCommunicator(utils::Parallel::getCommunicatorWorld());
 }
+
+#endif // PRECICE_NO_PETSC
 
 /// tests for various QN settings if correct number of iterations is returned
 BOOST_AUTO_TEST_CASE(TestQN, * testing::OnRanks({0, 1, 2, 3}))
