@@ -56,7 +56,7 @@ void NearestNeighborMapping:: computeMapping()
       // Search for the input vertex inside the output mesh and add index to _vertexIndices
       rtree->query(boost::geometry::index::nearest(coords, 1),
                    boost::make_function_output_iterator([&](size_t const& val) {
-                       _vertexIndices[i] =  input()->vertices()[val].getID();
+                       _vertexIndices[i] =  output()->vertices()[val].getID();
                      }));
     }
   }
