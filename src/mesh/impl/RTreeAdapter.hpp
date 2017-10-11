@@ -60,7 +60,7 @@ struct access<Eigen::VectorXd, Dimension>
   
   static void set(Eigen::VectorXd& p, double const& value)
   {
-    p[0] = value;
+    p[Dimension] = value;
   }
 };
 
