@@ -86,6 +86,10 @@ public:
 
   void setOwner(bool owner);
 
+  bool isTagged() const;
+
+  void tag();
+
 private:
 
   // @brief Unique (among vertices in one mesh) ID of the vertex.
@@ -102,6 +106,9 @@ private:
 
   // @brief true if this processors is the owner of the vertex (for parallel simulations)
   bool _owner;
+
+  // @brief true if this vertex is tagged for partition
+  bool _tagged;
 
   // @brief Pointer to parent mesh, possibly NULL.
   Mesh * _mesh;
@@ -121,6 +128,7 @@ Vertex:: Vertex
   _normal ( Eigen::VectorXd::Constant(_coords.size(), 0.0) ),
   _globalIndex(-1),
   _owner(true),
+  _tagged(false),
   _mesh ( NULL )
 {}
 
@@ -136,6 +144,7 @@ Vertex:: Vertex (
   _normal ( Eigen::VectorXd::Constant(_coords.size(), 0.0) ),
   _globalIndex(-1),
   _owner(true),
+  _tagged(false),
   _mesh ( & mesh )
 {}
 

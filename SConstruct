@@ -10,12 +10,12 @@ def uniqueCheckLib(lib):
         conf.env.AppendUnique(LIBS = [lib])
         return True
     else:
-        print "ERROR: Library '" + lib + "' not found!"
+        print("ERROR: Library '" + lib + "' not found!")
         Exit(1)
 
 def checkHeader(header, usage):
     if not conf.CheckCXXHeader(header):
-        print "ERROR: Header '" + str(header) + "' (needed for " + usage + ") not found or does not compile!"
+        print("ERROR: Header '" + str(header) + "' (needed for " + usage + ") not found or does not compile!")
         Exit(1)
     else:
         return True
@@ -33,7 +33,7 @@ def vprint(name, value, default=True, description = None):
     """ Pretty prints an environment variabe with value and modified or not. """
     mod = "(default)" if default else "(modified)"
     desc = "   " + description if description else ""
-    print "{0:10} {1:25} = {2!s:8}{3}".format(mod, name, value, desc)
+    print("{0:10} {1:25} = {2!s:8}{3}".format(mod, name, value, desc))
 
 def checkset_var(varname, default):
     """ Checks if environment variable is set, use default otherwise and print the value. """
@@ -51,8 +51,8 @@ def get_real_compiler(compiler):
         try:
             output = subprocess.check_output("%s -show" % compiler, shell=True)
         except (OSError, subprocess.CalledProcessError) as e:
-            print "Error getting wrapped compiler from MPI compiler"
-            print "Command was:", e.cmd, "Output was:", e.output
+            print("Error getting wrapped compiler from MPI compiler")
+            print("Command was:", e.cmd, "Output was:", e.output)
         else:
             return output.split()[0]
     else:
@@ -142,7 +142,7 @@ if env["petsc"]:
     PETSC_ARCH = checkset_var("PETSC_ARCH", "")
     
     if not env["mpi"]:
-        print "Petsc requires MPI to be enabled."
+        print("PETSc requires MPI to be enabled.")
         Exit(1)
 
     env.Append(CPPPATH = [os.path.join( PETSC_DIR, "include"),
@@ -190,7 +190,7 @@ if not env["spirit2"]:
 # ====== MPI ======
 if env["mpi"]:
     if not conf.CheckCXXHeader("mpi.h"):
-        print "mpi.h not found. Maybe try 'compiler=mpicxx' or 'compiler=mpic++' as scons argument?"
+        print("mpi.h not found. Maybe try 'compiler=mpicxx' or 'compiler=mpic++' as scons argument?")
         Exit(1)
         
     # Skip (deprecated) MPI C++ bindings.
@@ -280,6 +280,6 @@ Default(staticlib, bin, solib, tests, symlink)
 
 AlwaysBuild(symlink)
 
-print "Targets:   " + ", ".join([str(i) for i in BUILD_TARGETS])
-print "Buildpath: " + buildpath
-print
+print("Targets:   " + ", ".join([str(i) for i in BUILD_TARGETS]))
+print("Buildpath: " + buildpath)
+print()

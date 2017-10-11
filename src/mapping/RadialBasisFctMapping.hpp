@@ -58,6 +58,10 @@ public:
     int inputDataID,
     int outputDataID ) override;
 
+  virtual void tagMeshFirstRound() override;
+
+  virtual void tagMeshSecondRound() override;
+
 private:
 
   static precice::logging::Logger _log;
@@ -357,6 +361,18 @@ Eigen::VectorXd RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::reduceVector
     }
   }
   return reducedVector;
+}
+
+template<typename RADIAL_BASIS_FUNCTION_T>
+void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
+{
+  assertion(false); //Serial RBF should only be used in coupling mode. This is already handled in the configuration.
+}
+
+template<typename RADIAL_BASIS_FUNCTION_T>
+void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
+{
+  assertion(false); //Serial RBF should only be used in coupling mode. This is already handled in the configuration.
 }
 
 

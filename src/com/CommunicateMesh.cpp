@@ -31,13 +31,16 @@ void CommunicateMesh:: sendMesh
   int numberOfVertices = mesh.vertices().size();
   _communication->send ( numberOfVertices, rankReceiver );
   if(numberOfVertices>0){
-    double itemsToSend[numberOfVertices*dim];
+    double coords[numberOfVertices*dim];
+    int globalIDs[numberOfVertices];
     for(int i=0;i<numberOfVertices;i++){
       for(int d=0;d<dim;d++){
-        itemsToSend[i*dim+d] = mesh.vertices()[i].getCoords()[d];
+        coords[i*dim+d] = mesh.vertices()[i].getCoords()[d];
       }
+      globalIDs[i]=mesh.vertices()[i].getGlobalIndex();
     }
-    _communication->send(itemsToSend,numberOfVertices*dim,rankReceiver);
+    _communication->send(coords,numberOfVertices*dim,rankReceiver);
+    _communication->send(globalIDs,numberOfVertices,rankReceiver);
   }
 
   int numberOfEdges = mesh.edges().size();
@@ -98,7 +101,9 @@ void CommunicateMesh:: receiveMesh
 
   if(numberOfVertices>0){
     double vertexCoords[numberOfVertices*dim];
+    int globalIDs[numberOfVertices];
     _communication->receive(vertexCoords,numberOfVertices*dim,rankSender);
+    _communication->receive(globalIDs,numberOfVertices,rankSender);
     for ( int i=0; i < numberOfVertices; i++ ){
       Eigen::VectorXd coords(dim);
       for ( int d=0; d < dim; d++){
@@ -106,6 +111,7 @@ void CommunicateMesh:: receiveMesh
       }
       mesh::Vertex& v = mesh.createVertex ( coords );
       assertion ( v.getID() >= 0, v.getID() );
+      v.setGlobalIndex(globalIDs[i]);
       vertices.push_back(&v);
     }
   }
@@ -173,13 +179,16 @@ void CommunicateMesh:: broadcastSendMesh
   int numberOfVertices = mesh.vertices().size();
   _communication->broadcast ( numberOfVertices);
   if(numberOfVertices>0){
-    double itemsToSend[numberOfVertices*dim];
+    double coords[numberOfVertices*dim];
+    int globalIDs[numberOfVertices];
     for(int i=0;i<numberOfVertices;i++){
       for(int d=0;d<dim;d++){
-        itemsToSend[i*dim+d] = mesh.vertices()[i].getCoords()[d];
+        coords[i*dim+d] = mesh.vertices()[i].getCoords()[d];
       }
+      globalIDs[i]=mesh.vertices()[i].getGlobalIndex();
     }
-    _communication->broadcast(itemsToSend,numberOfVertices*dim);
+    _communication->broadcast(coords,numberOfVertices*dim);
+    _communication->broadcast(globalIDs,numberOfVertices);
   }
 
   int numberOfEdges = mesh.edges().size();
@@ -239,7 +248,9 @@ void CommunicateMesh:: broadcastReceiveMesh
 
   if(numberOfVertices>0){
     double vertexCoords[numberOfVertices*dim];
+    int globalIDs[numberOfVertices];
     _communication->broadcast(vertexCoords,numberOfVertices*dim,rankBroadcaster);
+    _communication->broadcast(globalIDs,numberOfVertices,rankBroadcaster);
     for ( int i=0; i < numberOfVertices; i++ ){
       Eigen::VectorXd coords(dim);
       for ( int d=0; d < dim; d++){
@@ -247,6 +258,7 @@ void CommunicateMesh:: broadcastReceiveMesh
       }
       mesh::Vertex& v = mesh.createVertex ( coords );
       assertion ( v.getID() >= 0, v.getID() );
+      v.setGlobalIndex(globalIDs[i]);
       vertices.push_back(&v);
     }
   }

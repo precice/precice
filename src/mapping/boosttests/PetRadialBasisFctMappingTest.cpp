@@ -273,6 +273,165 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3,
     );
 }
 
+
+///// Some ranks are empty, does not converge
+//BOOST_AUTO_TEST_CASE(DistributedConsistent2DV4,
+//                       * testing::OnSize(4) )
+//{
+//  assertion(utils::Parallel::getCommunicatorSize() == 4);
+//  ThinPlateSplines fct;
+//  PetRadialBasisFctMapping<ThinPlateSplines> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
+//
+//  std::vector<int> globalIndexOffsets = {0, 0, 0, 0};
+//
+//  testDistributed(mapping,
+//                    {   // Rank 0 has no vertices
+//                        // Rank 1 has the entire mesh, owns a subpart
+//                      {1,  1, {0, 0}, {1.1}}, {1,  1, {0, 1}, {2.5}},
+//                      {1,  1, {1, 0}, {3}}, {1,  1, {1, 1}, {4}},
+//                      {1, -1, {2, 0}, {5}}, {1, -1, {2, 1}, {6}},
+//                      {1, -1, {3, 0}, {7}}, {1, -1, {3, 1}, {8}},
+//                        // Rank 2 has the entire mesh, owns a subpart
+//                      {2, -1, {0, 0}, {1.1}}, {2, -1, {0, 1}, {2.5}},
+//                      {2, -1, {1, 0}, {3}}, {2, -1, {1, 1}, {4}},
+//                      {2,  2, {2, 0}, {5}}, {2,  2, {2, 1}, {6}},
+//                      {2,  2, {3, 0}, {7}}, {2,  2, {3, 1}, {8}},
+//                        // Rank 3 has no vertices
+//                    },
+//                    { // The outMesh is local, rank 0 and 3 are empty
+//                      // not same order as input mesh and vertex (2,0) appears twice
+//                      {1, -1, {2, 0}, {0}},
+//                      {1, -1, {1, 0}, {0}},
+//                      {1, -1, {0, 1}, {0}},
+//                      {1, -1, {1, 1}, {0}},
+//                      {1, -1, {0, 0}, {0}},
+//                      {2, -1, {2, 0}, {0}},
+//                      {2, -1, {2, 1}, {0}},
+//                      {2, -1, {3, 0}, {0}},
+//                      {2, -1, {3, 1}, {0}}
+//                    },
+//                    {
+//                      { 1, {5} },
+//                      { 1, {3} },
+//                      { 1, {2.5} },
+//                      { 1, {4} },
+//                      { 1, {1.1} },
+//                      { 2, {5} },
+//                      { 2, {6} },
+//                      { 2, {7} },
+//                      { 2, {8} }
+//                    },
+//                    globalIndexOffsets[utils::Parallel::getProcessRank()]
+//      );
+//}
+//
+//// same as 2DV4, but all ranks have vertices, converges, but fails
+//BOOST_AUTO_TEST_CASE(DistributedConsistent2DV5,
+//                   * testing::OnSize(4))
+//{
+//  assertion(utils::Parallel::getCommunicatorSize() == 4);
+//  ThinPlateSplines fct;
+//  PetRadialBasisFctMapping<ThinPlateSplines> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
+//
+//  std::vector<int> globalIndexOffsets = {0, 0, 0, 0};
+//
+//  testDistributed(mapping,
+//                    {   // Every rank has the entire mesh and owns a subpart
+//                      {0,  0, {0, 0}, {1.1}}, {0,  0, {0, 1}, {2.5}},
+//                      {0, -1, {1, 0}, {3}},   {0, -1, {1, 1}, {4}},
+//                      {0, -1, {2, 0}, {5}},   {0, -1, {2, 1}, {6}},
+//                      {0, -1, {3, 0}, {7}},   {0, -1, {3, 1}, {8}},
+//                      {1, -1, {0, 0}, {1.1}}, {1, -1, {0, 1}, {2.5}},
+//                      {1,  1, {1, 0}, {3}},   {1,  1, {1, 1}, {4}},
+//                      {1, -1, {2, 0}, {5}},   {1, -1, {2, 1}, {6}},
+//                      {1, -1, {3, 0}, {7}},   {1, -1, {3, 1}, {8}},
+//                      {2, -1, {0, 0}, {1.1}}, {2, -1, {0, 1}, {2.5}},
+//                      {2, -1, {1, 0}, {3}},   {2, -1, {1, 1}, {4}},
+//                      {2,  2, {2, 0}, {5}},   {2,  2, {2, 1}, {6}},
+//                      {2, -1, {3, 0}, {7}},   {2, -1, {3, 1}, {8}},
+//                      {3, -1, {0, 0}, {1.1}}, {3, -1, {0, 1}, {2.5}},
+//                      {3, -1, {1, 0}, {3}},   {3, -1, {1, 1}, {4}},
+//                      {3, -1, {2, 0}, {5}},   {3, -1, {2, 1}, {6}},
+//                      {3,  3, {3, 0}, {7}},   {3,  3, {3, 1}, {8}},
+//                    },
+//                    { // The outMesh is local, rank 0 and 3 are empty
+//                      // not same order as input mesh and vertex (2,0) appears twice
+//                      {1, -1, {2, 0}, {0}},
+//                      {1, -1, {1, 0}, {0}},
+//                      {1, -1, {0, 1}, {0}},
+//                      {1, -1, {1, 1}, {0}},
+//                      {1, -1, {0, 0}, {0}},
+//                      {2, -1, {2, 0}, {0}},
+//                      {2, -1, {2, 1}, {0}},
+//                      {2, -1, {3, 0}, {0}},
+//                      {2, -1, {3, 1}, {0}}
+//                    },
+//                    {
+//                      { 1, {5} },
+//                      { 1, {3} },
+//                      { 1, {2.5} },
+//                      { 1, {4} },
+//                      { 1, {1.1} },
+//                      { 2, {5} },
+//                      { 2, {6} },
+//                      { 2, {7} },
+//                      { 2, {8} }
+//                    },
+//                    globalIndexOffsets[utils::Parallel::getProcessRank()]
+//      );
+//}
+//
+///// same as 2DV4, but strictly linear input values, converges and gives correct results
+//BOOST_AUTO_TEST_CASE(DistributedConsistent2DV6,
+//                     * testing::OnSize(4))
+//{
+//  assertion(utils::Parallel::getCommunicatorSize() == 4);
+//  ThinPlateSplines fct;
+//  PetRadialBasisFctMapping<ThinPlateSplines> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
+//
+//  std::vector<int> globalIndexOffsets = {0, 0, 0, 0};
+//
+//  testDistributed(mapping,
+//                    {   // Rank 0 has no vertices
+//                        // Rank 1 has the entire mesh, owns a subpart
+//                      {1,  1, {0, 0}, {1}}, {1,  1, {0, 1}, {2}},
+//                      {1,  1, {1, 0}, {3}}, {1,  1, {1, 1}, {4}},
+//                      {1, -1, {2, 0}, {5}}, {1, -1, {2, 1}, {6}},
+//                      {1, -1, {3, 0}, {7}}, {1, -1, {3, 1}, {8}},
+//                        // Rank 2 has the entire mesh, owns a subpart
+//                      {2, -1, {0, 0}, {1}}, {2, -1, {0, 1}, {2}},
+//                      {2, -1, {1, 0}, {3}}, {2, -1, {1, 1}, {4}},
+//                      {2,  2, {2, 0}, {5}}, {2,  2, {2, 1}, {6}},
+//                      {2,  2, {3, 0}, {7}}, {2,  2, {3, 1}, {8}},
+//                        // Rank 3 has no vertices
+//                    },
+//                    { // The outMesh is local, rank 0 and 3 are empty
+//                      // not same order as input mesh and vertex (2,0) appears twice
+//                      {1, -1, {2, 0}, {0}},
+//                      {1, -1, {1, 0}, {0}},
+//                      {1, -1, {0, 1}, {0}},
+//                      {1, -1, {1, 1}, {0}},
+//                      {1, -1, {0, 0}, {0}},
+//                      {2, -1, {2, 0}, {0}},
+//                      {2, -1, {2, 1}, {0}},
+//                      {2, -1, {3, 0}, {0}},
+//                      {2, -1, {3, 1}, {0}}
+//                    },
+//                    {
+//                      { 1, {5} },
+//                      { 1, {3} },
+//                      { 1, {2} },
+//                      { 1, {4} },
+//                      { 1, {1} },
+//                      { 2, {5} },
+//                      { 2, {6} },
+//                      { 2, {7} },
+//                      { 2, {8} }
+//                    },
+//                    globalIndexOffsets[utils::Parallel::getProcessRank()]
+//      );
+//}
+
 /// Test with a homogenous distribution of mesh amoung ranks
 BOOST_AUTO_TEST_CASE(DistributedConservative2DV1,
                      * testing::OnSize(4))
@@ -1062,7 +1221,6 @@ BOOST_AUTO_TEST_CASE(DeadAxis3D)
 }
 
 BOOST_AUTO_TEST_CASE(SolutionCaching)
-                     
 {
   using Eigen::Vector2d;
   int dimensions = 2;
@@ -1171,6 +1329,45 @@ BOOST_AUTO_TEST_CASE(PolynomialSwitch,
   mappingSep.map(inDataID, outDataID);
 
   BOOST_TEST ( outData->values()[0] == 1.0 ); // Mapping to 1 since there is the polynomial
+}
+
+
+BOOST_AUTO_TEST_CASE(NoMapping)
+{
+  /*
+   * RATIONALE: Correctly destroying PETSc objects in OOP context can be a bit
+   * tricky. We test if an RBF object can be destroyed right after creation
+   * and if only computeMapping (not map) is called.
+   */
+
+  ThinPlateSplines fct;
+  
+  // Call neither computeMapping nor map
+  {
+    PetRadialBasisFctMapping<ThinPlateSplines> mapping1(Mapping::CONSISTENT, 3, fct,
+                                                        false, false, false);
+  }
+
+  {
+    // Call only computeMapping
+    mesh::PtrMesh inMesh ( new mesh::Mesh("InMesh", 2, false) );
+    mesh::PtrData inData = inMesh->createData ( "InData", 1 );
+    inMesh->createVertex ( Eigen::Vector2d(0, 0) );
+    inMesh->allocateDataValues();
+    addGlobalIndex(inMesh);
+    
+    mesh::PtrMesh outMesh( new mesh::Mesh("OutMesh", 2, false) );
+    mesh::PtrData outData = outMesh->createData( "OutData", 1 );
+    outMesh->createVertex( Eigen::Vector2d(0, 0));
+    outMesh->allocateDataValues();
+    addGlobalIndex(outMesh);
+
+    PetRadialBasisFctMapping<ThinPlateSplines> mapping2(Mapping::CONSISTENT, 2, fct,
+                                                        false, false, false);
+    
+    mapping2.setMeshes(inMesh, outMesh);
+    mapping2.computeMapping();
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Serial

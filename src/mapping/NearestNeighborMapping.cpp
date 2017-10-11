@@ -56,7 +56,7 @@ void NearestNeighborMapping:: computeMapping()
       // Search for the input vertex inside the output mesh and add index to _vertexIndices
       rtree->query(boost::geometry::index::nearest(coords, 1),
                    boost::make_function_output_iterator([&](size_t const& val) {
-                       _vertexIndices[i] =  input()->vertices()[val].getID();
+                       _vertexIndices[i] =  output()->vertices()[val].getID();
                      }));
     }
   }
@@ -124,6 +124,33 @@ bool NearestNeighborMapping::doesVertexContribute(
 bool NearestNeighborMapping:: isProjectionMapping() const
 {
   return true;
+}
+
+void NearestNeighborMapping::tagMeshFirstRound()
+{
+  TRACE();
+
+  computeMapping();
+
+  if (getConstraint() == CONSISTENT){
+    for(mesh::Vertex& v : input()->vertices()){
+      if(utils::contained(v.getID(),_vertexIndices)) v.tag();
+    }
+  }
+  else {
+    assertion(getConstraint() == CONSERVATIVE, getConstraint());
+    for(mesh::Vertex& v : output()->vertices()){
+      if(utils::contained(v.getID(),_vertexIndices)) v.tag();
+    }
+  }
+
+  clear();
+}
+
+void NearestNeighborMapping::tagMeshSecondRound()
+{
+  TRACE();
+  // for NN mapping no operation needed here
 }
 
 }} // namespace precice, mapping

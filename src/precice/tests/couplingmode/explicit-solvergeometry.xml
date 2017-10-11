@@ -23,7 +23,7 @@
                
       <participant name="SolverOne">
          <use-mesh name="MeshOne" provide="yes"/>
-         <use-mesh name="SolverGeometry" offset="10.0; 10.0; 10.0" from="SolverTwo" />
+         <use-mesh name="SolverGeometry" from="SolverTwo" />
          <mapping:nearest-projection direction="write" from="MeshOne" to="SolverGeometry"
                   constraint="conservative" timing="initial" />
          <mapping:nearest-projection direction="read" from="SolverGeometry" to="MeshOne"

@@ -12,6 +12,7 @@
 #include "cplscheme/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include "utils/PointerVector.hpp"
+#include "partition/ReceivedPartition.hpp"
 #include <string>
 
 namespace precice {
@@ -105,15 +106,14 @@ public:
 
   /// Adds a geometry to be used by the participant.
   void useMesh (
-    const mesh::PtrMesh&                   mesh,
-    const geometry::PtrGeometry&   geometry,
-    const spacetree::PtrSpacetree& spacetree,
-    const Eigen::VectorXd&                 localOffset,
-    bool                                   remote,
-    const std::string&                     fromParticipant,
-    double                                 safetyFactor,
-    bool                                   provideMesh,
-    bool                                   doesPreFiltering );
+    const mesh::PtrMesh&                          mesh,
+    const spacetree::PtrSpacetree&                spacetree,
+    const Eigen::VectorXd&                        localOffset,
+    bool                                          remote,
+    const std::string&                            fromParticipant,
+    double                                        safetyFactor,
+    bool                                          provideMesh,
+    partition::ReceivedPartition::GeometricFilter geoFilter);
 
   void addAction ( const action::PtrAction& action );
 

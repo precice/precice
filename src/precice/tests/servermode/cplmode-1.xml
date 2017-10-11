@@ -9,14 +9,9 @@
          <use-data name="ScalarData"/>
          <use-data name="VectorData"/>
       </mesh>
-      <geometry:builtin-sphere of-mesh="Mesh">
-         <radius value="1.0"/>
-         <discretization-width value="1.0"/>
-      </geometry:builtin-sphere>
-      
       
       <participant name="ParticipantA">
-         <use-mesh name="Mesh"/>
+         <use-mesh name="Mesh" provide="true"/>
          <write-data name="ScalarData" mesh="Mesh"/>
          <read-data  name="VectorData" mesh="Mesh"/>
          <export:vtk/>
@@ -24,7 +19,7 @@
       
       <participant name="ParticipantB">
          <server:mpi-single/>
-         <use-mesh name="Mesh"/>
+         <use-mesh name="Mesh" from="ParticipantA" />
          <write-data name="VectorData" mesh="Mesh"/>
          <read-data  name="ScalarData" mesh="Mesh"/>
          <export:vtk/>

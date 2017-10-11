@@ -392,13 +392,18 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping
     strcpy(arg, "precice");
     char** argv = &arg;
   #endif
+
+  configuredMapping.isRBF = true; //will be overwritten for NN and NP just below
+
   if (type == VALUE_NEAREST_NEIGHBOR){
     configuredMapping.mapping = PtrMapping (
         new NearestNeighborMapping(constraintValue, dimensions) );
+    configuredMapping.isRBF = false;
   }
   else if (type == VALUE_NEAREST_PROJECTION){
     configuredMapping.mapping = PtrMapping (
       new NearestProjectionMapping(constraintValue, dimensions) );
+    configuredMapping.isRBF = false;
   }
   else if (type == VALUE_RBF_TPS){
     configuredMapping.mapping = PtrMapping (

@@ -36,21 +36,21 @@ void SolverInterfaceTestRemote:: run()
 # ifndef PRECICE_NO_MPI
   TRACE();
   typedef utils::Parallel Par;
-  if (Par::getCommunicatorSize() >= 2){
-    Par::Communicator comm = Par::getRestrictedCommunicator({0 ,1});
-    if (Par::getProcessRank() <= 1){
-      Par::setGlobalCommunicator(comm);
-      testMethod(testGeometryMode);
-      Par::setGlobalCommunicator(Par::getCommunicatorWorld());
-    }
-  }
+//  if (Par::getCommunicatorSize() >= 2){
+//    Par::Communicator comm = Par::getRestrictedCommunicator({0 ,1});
+//    if (Par::getProcessRank() <= 1){
+//      Par::setGlobalCommunicator(comm);
+//      testMethod(testGeometryMode);
+//      Par::setGlobalCommunicator(Par::getCommunicatorWorld());
+//    }
+//  }
   if (Par::getCommunicatorSize() >= 3){
     Par::Communicator comm = Par::getRestrictedCommunicator({0, 1, 2});
     if ( Par::getProcessRank() <= 2 ){
       Par::setGlobalCommunicator(comm);
       testMethod(testCouplingModeWithOneServer);
-      testMethod(testGeometryModeParallel);
-      testMethod(testGeometryModeParallelStationaryMapping);
+//      testMethod(testGeometryModeParallel);
+//      testMethod(testGeometryModeParallelStationaryMapping);
       Par::setGlobalCommunicator(Par::getCommunicatorWorld());
     }
   }
@@ -408,6 +408,11 @@ void SolverInterfaceTestRemote:: testCouplingModeWithOneServer()
     configureSolverInterface ( configFile, interface );
     double time = 0.0;
     int timesteps = 0;
+
+    int meshID = interface.getMeshID("Mesh");
+    interface.setMeshVertex(meshID, Eigen::Vector2d(0.0,0.0).data());
+    interface.setMeshVertex(meshID, Eigen::Vector2d(1.0,0.0).data());
+
     double dt = interface.initialize();
     while ( interface.isCouplingOngoing() ){
       time += dt;
@@ -461,12 +466,18 @@ void SolverInterfaceTestRemote:: testCouplingModeParallelWithOneServer()
     configureSolverInterface(configFile, interface);
     double time = 0.0;
     int timesteps = 0;
-    double dt = interface.initialize();
-    MeshHandle handle = interface.getMeshHandle("Mesh");
-    VertexHandle vertices = handle.vertices();
+
     int meshID = interface.getMeshID("Mesh");
     int scalarDataID = interface.getDataID("ScalarData", meshID);
     int vectorDataID = interface.getDataID("VectorData", meshID);
+    interface.setMeshVertex(meshID, Eigen::Vector2d(1.0,0.0).data());
+    interface.setMeshVertex(meshID, Eigen::Vector2d(0.0,-1.0).data());
+    interface.setMeshVertex(meshID, Eigen::Vector2d(-1.0,0.0).data());
+    interface.setMeshVertex(meshID, Eigen::Vector2d(0.0,1.0).data());
+
+    double dt = interface.initialize();
+    MeshHandle handle = interface.getMeshHandle("Mesh");
+    VertexHandle vertices = handle.vertices();
     int dataSize = 4;
     int indices[] = {0, 1, 2, 3};
     double vectorValues[] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};

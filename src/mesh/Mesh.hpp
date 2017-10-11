@@ -364,11 +364,6 @@ private:
 
   BoundingBox _boundingBox;
 
-  /// Sets the globalIndices on all vertices in the mesh
-  void setGlobalIndices(const std::vector<int> &globalIndices);
-
-  /// Sets the isOwner property of a vertex i, if ownerVec[i] == 1
-  void setOwnerInformation(const std::vector<int> &ownerVec);
 };
 
 }} // namespace precice, mesh

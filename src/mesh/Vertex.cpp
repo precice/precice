@@ -39,4 +39,12 @@ void Vertex:: setOwner(bool owner){
   _owner = owner;
 }
 
+bool Vertex:: isTagged() const {
+  return _tagged;
+}
+
+void Vertex:: tag() {
+  _tagged = true;
+}
+
 }} // namespace precice, mesh

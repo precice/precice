@@ -34,11 +34,11 @@ struct access<Vertex, Dimension>
   {
     Eigen::VectorXd vec = p.getCoords();
     vec[Dimension] = value;
-    p.setCoords(p);
+    p.setCoords(vec);
   }
 };
 
-/// Adapt Eigen::VectorXd to boost.geometry
+/// Adapts Eigen::VectorXd to boost.geometry
 /*
  * This adapts every VectorXd to a 3d point. For non-existing dimensions, zero is returned.
  */
@@ -60,10 +60,9 @@ struct access<Eigen::VectorXd, Dimension>
   
   static void set(Eigen::VectorXd& p, double const& value)
   {
-    p[0] = value;
+    p[Dimension] = value;
   }
 };
-
 
 }}}
 

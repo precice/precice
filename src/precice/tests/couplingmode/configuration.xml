@@ -21,20 +21,11 @@
          <use-data name="VelocityDeltas" />
       </mesh>
       
-      <mesh name="Boundingbox" flip-normals="yes">
-      </mesh>
-      
       <m2n:mpi-single from="Comsol" to="Peano" />
          
-      <geometry:builtin-cuboid of-mesh="Boundingbox">
-         <discretization-width value="1.0" />     
-         <length value="20; 20; 20" />
-      </geometry:builtin-cuboid>
-      
       <participant name="Peano">
          <use-mesh name="PeanoNodes" provide="yes" />
          <use-mesh name="ComsolNodes" offset="2.0; 2.0; 2.0" from="Comsol"/>
-         <use-mesh name="Boundingbox" />
          <mapping:nearest-projection direction="write" from="PeanoNodes"
                   to="ComsolNodes" 
                   constraint="conservative" timing="onadvance" />

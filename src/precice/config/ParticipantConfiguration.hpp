@@ -132,6 +132,8 @@ private:
 
   std::vector<WatchPointConfig> _watchPointConfigs;
 
+  partition::ReceivedPartition::GeometricFilter getGeoFilter(const std::string& geoFilter) const;
+
   mesh::PtrMesh copy ( const mesh::PtrMesh& mesh ) const;
 
   const mesh::PtrData& getData (

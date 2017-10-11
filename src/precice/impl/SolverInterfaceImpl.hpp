@@ -656,7 +656,7 @@ private:
   /**
    * @brief Determines participants providing meshes to other participants.
    */
-  void configureSolverGeometries (
+  void configurePartitions (
     const m2n::M2NConfiguration::SharedPointer& m2nConfig );
 
   /**
@@ -668,6 +668,9 @@ private:
    * @brief Creates the mesh of a geometry.
    */
   void createGeometry ( impl::MeshContext& meshContext );
+
+  /// Communicate meshes and create partition
+  void computePartitions();
 
   /**
    * @brief Computes, performs, and resets all suitable write mappings.

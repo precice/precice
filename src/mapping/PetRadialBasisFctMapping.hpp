@@ -85,6 +85,10 @@ public:
 
   friend struct MappingTests::PetRadialBasisFunctionMapping::Serial::SolutionCaching;
 
+  virtual void tagMeshFirstRound() override;
+
+  virtual void tagMeshSecondRound() override;
+
 
 private:
 
@@ -123,7 +127,7 @@ private:
   bool* _deadAxis;
 
   /// Toggles the use of the additonal polynomial
-  const Polynomial _polynomial;
+  Polynomial _polynomial;
 
   /// Toggles use of rescaled basis functions, only active when Polynomial == SEPARATE
   const bool useRescaling = true;
@@ -187,6 +191,9 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
   _matrixQ("Q"),
   _matrixA("A"),
   _matrixV("V"),
+  _solver(nullptr),
+  _QRsolver(nullptr),
+  _ISmapping(nullptr),
   _solverRtol(solverRtol),
   _polynomial(polynomial),
   _preallocation(preallocation)
@@ -211,6 +218,11 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
     assertion(false);
   }
 
+  if (_polynomial == Polynomial::SEPARATE and constraint == Constraint::CONSERVATIVE) {
+    WARN("Separated polynomial not supported with conservative mapping. Falling back to integrated polynomial.");
+    _polynomial = Polynomial::ON;
+  }
+
   // Count number of dead dimensions
   int deadDimensions = 0;
   for (int d = 0; d < dimensions; d++) {
@@ -228,14 +240,9 @@ template<typename RADIAL_BASIS_FUNCTION_T>
 PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::~PetRadialBasisFctMapping()
 {
   delete[] _deadAxis;
-  PetscBool petscIsInitialized;
-  PetscErrorCode ierr = 0;
-  PetscInitialized(&petscIsInitialized);
-  if (petscIsInitialized) {
-    ierr = ISLocalToGlobalMappingDestroy(&_ISmapping); CHKERRV(ierr);
-    ierr = KSPDestroy(&_solver); CHKERRV(ierr);
-    ierr = KSPDestroy(&_QRsolver); CHKERRV(ierr);
-  }
+  petsc::destroy(&_ISmapping);
+  petsc::destroy(&_solver);
+  petsc::destroy(&_QRsolver);
 }
 
 
@@ -299,12 +306,12 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
   // Matrix Q: Dense, holds the input mesh for the polynom if set to SEPERATE. Zero size otherwise
   _matrixQ.reset();
-  _matrixQ.init(n, sepPolyparams, PETSC_DETERMINE, PETSC_DETERMINE, MATDENSE);
+  _matrixQ.init(n, PETSC_DETERMINE, PETSC_DETERMINE, sepPolyparams, MATDENSE);
   DEBUG("Set matrix Q to local size " << n << " x " << sepPolyparams);
 
   // Matrix V: Dense, holds the output mesh for polynom if set to SEPERATE. Zero size otherwise
   _matrixV.reset();
-  _matrixV.init(outputSize, sepPolyparams, PETSC_DETERMINE, PETSC_DETERMINE, MATDENSE);
+  _matrixV.init(outputSize, PETSC_DETERMINE, PETSC_DETERMINE, sepPolyparams, MATDENSE);
   DEBUG("Set matrix V to local size " << outputSize << " x " << sepPolyparams);    
     
   // Matrix A: Sparse matrix with outputSize x n local size.
@@ -317,8 +324,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   const int ownerRangeABegin = _matrixA.ownerRange().first;
   const int ownerRangeAEnd = _matrixA.ownerRange().second;
   
-  IS ISlocal, ISlocalInv, ISglobal, ISidentity, ISidentityGlobal;
-  ISLocalToGlobalMapping ISidentityMapping;
+  IS ISlocal, ISlocalInv, ISglobal, ISidentity, ISidentityGlobal, ISpolyparams;
+  ISLocalToGlobalMapping ISidentityMapping, ISpolyparamsMapping;
   // Create an index set which maps myIndizes to continous chunks of matrix rows.
   ierr = ISCreateGeneral(utils::Parallel::getGlobalCommunicator(), myIndizes.size(), myIndizes.data(), PETSC_COPY_VALUES, &ISlocal); CHKERRV(ierr);
   ierr = ISSetPermutation(ISlocal); CHKERRV(ierr);
@@ -332,12 +339,17 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   ierr = ISAllGather(ISidentity, &ISidentityGlobal); CHKERRV(ierr);
   ierr = ISLocalToGlobalMappingCreateIS(ISidentityGlobal, &ISidentityMapping); CHKERRV(ierr);
 
+  // Create another identity mapping for the polynomial parameters
+  ierr = ISCreateStride(PETSC_COMM_SELF, sepPolyparams, 0, 1, &ISpolyparams); CHKERRV(ierr);
+  ierr = ISSetIdentity(ISpolyparams); CHKERRV(ierr);
+  ierr = ISLocalToGlobalMappingCreateIS(ISpolyparams, &ISpolyparamsMapping); CHKERRV(ierr);
+
+  // Sets the mappings on the matrices
   ierr = MatSetLocalToGlobalMapping(_matrixC, _ISmapping, _ISmapping); CHKERRV(ierr); // Set mapping for rows and cols
   ierr = MatSetLocalToGlobalMapping(_matrixA, ISidentityMapping, _ISmapping); CHKERRV(ierr); // Set mapping only for cols, use identity for rows
+  ierr = MatSetLocalToGlobalMapping(_matrixQ, _ISmapping, ISpolyparamsMapping); CHKERRV(ierr);
+  ierr = MatSetLocalToGlobalMapping(_matrixV, ISidentityMapping, ISpolyparamsMapping); CHKERRV(ierr);
 
-  ierr = MatSetLocalToGlobalMapping(_matrixQ, _ISmapping, _ISmapping); CHKERRV(ierr);
-  ierr = MatSetLocalToGlobalMapping(_matrixV, ISidentityMapping, _ISmapping); CHKERRV(ierr);
-  
   // Destroy all local index sets and mappings
   ierr = ISDestroy(&ISlocal); CHKERRV(ierr);
   ierr = ISDestroy(&ISlocalInv); CHKERRV(ierr);
@@ -345,6 +357,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   ierr = ISDestroy(&ISidentity); CHKERRV(ierr);
   ierr = ISDestroy(&ISidentityGlobal); CHKERRV(ierr);
   ierr = ISLocalToGlobalMappingDestroy(&ISidentityMapping); CHKERRV(ierr);
+  ierr = ISDestroy(&ISpolyparams); CHKERRV(ierr);
+  ierr = ISLocalToGlobalMappingDestroy(&ISpolyparamsMapping); CHKERRV(ierr);
+
 
   const PetscInt *mapIndizes;
   ISLocalToGlobalMappingGetIndices(_ISmapping, &mapIndizes);
@@ -578,9 +593,17 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: clear()
   _matrixA.reset();
   _matrixQ.reset();
   _matrixV.reset();
+  
+  petsc::destroy(&_solver);
+  KSPCreate(utils::Parallel::getGlobalCommunicator(), &_solver);
+
+  petsc::destroy(&_QRsolver);
+  KSPCreate(utils::Parallel::getGlobalCommunicator(), &_QRsolver);
+
+  petsc::destroy(&_ISmapping);
+  
   previousSolution.clear();
   _hasComputedMapping = false;
-  // ISmapping destroy??
 }
 
 template<typename RADIAL_BASIS_FUNCTION_T>
@@ -681,6 +704,11 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
             
       if (_polynomial == Polynomial::SEPARATE) {
         KSPSolve(_QRsolver, in, a);
+        ierr = KSPGetConvergedReason(_QRsolver, &convReason); CHKERRV(ierr);
+        if (convReason < 0) {
+          KSPView(_QRsolver, PETSC_VIEWER_STDOUT_WORLD);
+          ERROR("Polynomial QR linear system has not converged.");
+        }
         VecScale(a, -1);
         MatMultAdd(_matrixQ, a, in, in); // Subtract the polynomial from the input values
       }
@@ -742,6 +770,81 @@ bool PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::doesVertexContribute(int
 
   return true;
 }
+
+
+template<typename RADIAL_BASIS_FUNCTION_T>
+void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
+{
+  TRACE();
+  mesh::PtrMesh filterMesh, otherMesh;
+  if (getConstraint() == CONSISTENT){
+    filterMesh = input();
+    otherMesh = output();
+  }
+  else {
+    assertion(getConstraint() == CONSERVATIVE, getConstraint());
+    filterMesh = output();
+    otherMesh = input();
+  }
+
+  for(mesh::Vertex& v : filterMesh->vertices()){
+    bool isInside = true;
+    // TODO: use as soon as PETSc bug fixed
+//    if(otherMesh->vertices().size()==0) isInside = false; //ranks not at the interface should never hold interface vertices
+//    if(_basisFunction.hasCompactSupport()){
+//      for (int d=0; d<getDimensions(); d++) {
+//        if (v.getCoords()[d] < otherMesh->getBoundingBox()[d].first - _basisFunction.getSupportRadius() ||
+//            v.getCoords()[d] > otherMesh->getBoundingBox()[d].second + _basisFunction.getSupportRadius() ) {
+//          isInside = false;
+//        }
+//      }
+//    }
+    if(isInside) v.tag();
+  }
+}
+
+template<typename RADIAL_BASIS_FUNCTION_T>
+void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
+{
+  TRACE();
+
+  if(not _basisFunction.hasCompactSupport()) return; //tags should not be changed
+
+  mesh::Mesh::BoundingBox bb(getDimensions(), std::make_pair(std::numeric_limits<double>::max(), std::numeric_limits<double>::lowest()));
+
+  mesh::PtrMesh mesh; //the mesh we want to filter
+
+  if (getConstraint() == CONSISTENT){
+    mesh = input();
+  }
+  else {
+    assertion(getConstraint() == CONSERVATIVE, getConstraint());
+    mesh = output();
+  }
+
+  // construct bounding box around all owned vertices
+  for(mesh::Vertex& v : mesh->vertices()){
+    if(v.isOwner()){
+      assertion(v.isTagged());
+      for (int d=0; d<getDimensions(); d++) {
+        if(v.getCoords()[d] < bb[d].first) bb[d].first = v.getCoords()[d];
+        if(v.getCoords()[d] > bb[d].second) bb[d].second = v.getCoords()[d];
+      }
+    }
+  }
+  // tag according to bounding box
+  for(mesh::Vertex& v : mesh->vertices()){
+    bool isInside = true;
+    for (int d=0; d<getDimensions(); d++) {
+      if (v.getCoords()[d] < bb[d].first - _basisFunction.getSupportRadius() ||
+          v.getCoords()[d] > bb[d].second + _basisFunction.getSupportRadius() ) {
+        isInside = false;
+      }
+    }
+    if(isInside) v.tag();
+  }
+}
+
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::printMappingInfo(int inputDataID, int dim) const

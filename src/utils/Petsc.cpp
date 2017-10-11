@@ -65,6 +65,8 @@ void openViewer(PetscViewer & viewer, std::string filename, VIEWERFORMAT format,
   else if (format == BINARY) {
     ierr = PetscViewerBinaryOpen(comm, filename.c_str(), FILE_MODE_WRITE, &viewer);
     CHKERRV(ierr);
+    ierr = PetscViewerPushFormat(viewer, PETSC_VIEWER_NATIVE);
+    CHKERRV(ierr);
   }
 }
 
@@ -255,8 +257,6 @@ void Vector::view()
 
 Matrix::Matrix(std::string name)
 {
-  int size;
-  MPI_Comm_size(utils::Parallel::getGlobalCommunicator(), &size);
   PetscErrorCode ierr = 0;
   ierr = MatCreate(utils::Parallel::getGlobalCommunicator(), &matrix); CHKERRV(ierr);
   setName(name);
@@ -301,9 +301,8 @@ void Matrix::reset()
 {
   PetscErrorCode ierr = 0;
   std::string name = getName();
-  MPI_Comm comm = getCommunicator();
   ierr = MatDestroy(&matrix); CHKERRV(ierr);
-  ierr = MatCreate(comm, &matrix); CHKERRV(ierr);
+  ierr = MatCreate(utils::Parallel::getGlobalCommunicator(), &matrix); CHKERRV(ierr);
   setName(name);
 }
 
@@ -451,6 +450,30 @@ void Matrix::viewDraw()
   ierr = PetscDrawSetPause(draw, -1); CHKERRV(ierr); // Wait for user
   ierr = PetscViewerDestroy(&viewer); CHKERRV(ierr);
 }
+
+
+void destroy(KSP * ksp)
+{
+  PetscErrorCode ierr = 0;
+  PetscBool petscIsInitialized;
+  PetscInitialized(&petscIsInitialized);
+  
+  if (ksp and petscIsInitialized) {
+    ierr = KSPDestroy(ksp); CHKERRV(ierr);
+  }
+}
+
+void destroy(ISLocalToGlobalMapping * IS)
+{
+  PetscErrorCode ierr = 0;
+  PetscBool petscIsInitialized;
+  PetscInitialized(&petscIsInitialized);
+  
+  if (IS and petscIsInitialized) {
+    ierr = ISLocalToGlobalMappingDestroy(IS); CHKERRV(ierr);
+  }
+}
+
 
 }}} // namespace precice, utils, petsc
 
