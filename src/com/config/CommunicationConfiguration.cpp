@@ -1,7 +1,6 @@
 #include "CommunicationConfiguration.hpp"
 #include "com/MPIDirectCommunication.hpp"
 #include "com/MPIPortsCommunication.hpp"
-#include "com/FileCommunication.hpp"
 #include "m2n/M2N.hpp"
 #include "com/SocketCommunication.hpp"
 #include "utils/Globals.hpp"
@@ -25,7 +24,6 @@ CommunicationConfiguration:: CommunicationConfiguration()
   ATTR_EXCHANGE_DIRECTORY("exchange-directory"),
   VALUE_MPI("mpi"),
   VALUE_MPI_SINGLE("mpi-single"),
-  VALUE_FILES("files"),
   VALUE_SOCKETS("sockets")
 {}
 
@@ -38,10 +36,8 @@ PtrCommunication CommunicationConfiguration:: createCommunication
     std::string network = tag.getStringAttributeValue(ATTR_NETWORK);
     int port = tag.getIntAttributeValue(ATTR_PORT);
 
-    preciceCheck(not utils::isTruncated<unsigned short>(port),
-                 "createCommunication()",
-                 "The value given for the \"port\" attribute is not a "
-                 "16-bit unsigned integer: " << port);
+    CHECK(not utils::isTruncated<unsigned short>(port),
+          "The value given for the \"port\" attribute is not a 16-bit unsigned integer: " << port);
 
     std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
     com = std::make_shared<com::SocketCommunication>(port, false, network, dir);
@@ -67,10 +63,6 @@ PtrCommunication CommunicationConfiguration:: createCommunication
     com = std::make_shared<com::MPIDirectCommunication>();
 
 #   endif
-  }
-  else if (tag.getName() == VALUE_FILES){
-    std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
-    auto com = std::make_shared<com::FileCommunication>(false, dir);
   }
   assertion(com.get() != nullptr);
   return com;

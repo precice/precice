@@ -43,7 +43,6 @@ private:
 
    const std::string VALUE_MPI;
    const std::string VALUE_MPI_SINGLE;
-   const std::string VALUE_FILES;
    const std::string VALUE_SOCKETS;
 
 };

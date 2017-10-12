@@ -5,7 +5,6 @@
 #include "m2n/PointToPointComFactory.hpp"
 #include "com/SocketCommunicationFactory.hpp"
 #include "com/MPIPortsCommunicationFactory.hpp"
-#include "com/FileCommunication.hpp"
 #include "com/MPIDirectCommunication.hpp"
 #include "utils/Globals.hpp"
 #include "utils/Helpers.hpp"
@@ -34,7 +33,6 @@ M2NConfiguration:: M2NConfiguration
   ATTR_EXCHANGE_DIRECTORY("exchange-directory"),
   VALUE_MPI("mpi"),
   VALUE_MPI_SINGLE("mpi-single"),
-  VALUE_FILES("files"),
   VALUE_SOCKETS("sockets"),
   VALUE_GATHER_SCATTER("gather-scatter"),
   VALUE_POINT_TO_POINT("point-to-point"),
@@ -96,23 +94,7 @@ M2NConfiguration:: M2NConfiguration
     tag.setDocumentation(doc);
     tags.push_back(tag);
   }
-  {
-    XMLTag tag(*this, VALUE_FILES, occ, TAG);
-    doc = "Communication via files.";
-    tag.setDocumentation(doc);
-
-    XMLAttribute<std::string> attrExchangeDirectory(ATTR_EXCHANGE_DIRECTORY);
-    doc = "Directory where communication files are exchanged. By default, the ";
-    doc += "directory of startup is chosen, and both solvers have to be started ";
-    doc += "in the same directory.";
-    attrExchangeDirectory.setDocumentation(doc);
-    attrExchangeDirectory.setDefaultValue("");
-    tag.addAttribute(attrExchangeDirectory);
-
-    tags.push_back(tag);
-  }
-
-
+  
   XMLAttribute<std::string> attrDistrTypeBoth ( ATTR_DISTRIBUTION_TYPE);
   doc = "Distribution manner of the M2N communication .";
   attrDistrTypeBoth.setDocumentation(doc);
@@ -212,15 +194,11 @@ void M2NConfiguration:: xmlTagCallback
         com = std::make_shared<com::MPIDirectCommunication>();
 #     endif
     }
-    else if (tag.getName() == VALUE_FILES){
-      std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
-      com = std::make_shared<com::FileCommunication>(false, dir);
-    }
-
+    
     assertion(com.get() != nullptr);
 
     DistributedComFactory::SharedPointer distrFactory;
-    if(tag.getName() == VALUE_MPI_SINGLE || tag.getName() == VALUE_FILES || distrType == VALUE_GATHER_SCATTER){
+    if(tag.getName() == VALUE_MPI_SINGLE || distrType == VALUE_GATHER_SCATTER){
       assertion(distrType == VALUE_GATHER_SCATTER);
       distrFactory = std::make_shared<GatherScatterComFactory>(com);
     }
