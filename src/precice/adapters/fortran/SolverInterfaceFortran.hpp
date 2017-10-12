@@ -474,19 +474,6 @@ void precicef_map_write_data_from_( const int* meshID );
  */
 void precicef_map_read_data_to_( const int* meshID );
 
-/**
- * @brief See precice::SolverInterface::exportMesh().
- *
- * Fortran syntax:
- * precicef_export_mesh( CHARACTER filenameSuffix(*) )
- *
- * IN:  filenameSuffix
- * OUT: -
- */
-void precicef_export_mesh_(
-  const char* filenameSuffix,
-  int         filenameSuffixLength );
-
 #ifdef __cplusplus
 }
 #endif

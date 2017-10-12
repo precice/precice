@@ -65,13 +65,6 @@ sourcesQuery = [
     Glob('query/*.cpp')
 ]
 
-sourcesSpacetree = [
-    Glob('spacetree/*.cpp'),
-    Glob('spacetree/impl/*.cpp'),
-    Glob('spacetree/config/*.cpp')
-]
-
-
 sourcesPrecice = [
     Glob('precice/*.cpp'),
     Glob('precice/impl/*.cpp'),
@@ -109,7 +102,6 @@ sourcesTarchTests = [
     Glob('mapping/tests/*.cpp'),
     Glob('mesh/tests/*.cpp'),
     Glob('query/tests/*.cpp'),
-    Glob('spacetree/tests/*.cpp'),
     Glob('precice/tests/*.cpp'),
     Glob('precice/tests/geometrymode/*.cpp'),
     Glob('precice/tests/couplingmode/*.cpp'),
@@ -143,7 +135,6 @@ sourcesAllNoMain = [
     sourcesPartition,
     sourcesPrecice,
     sourcesQuery,
-    sourcesSpacetree,
     sourcesUtils,
     sourcesTarch,
 ]

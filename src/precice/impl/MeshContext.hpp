@@ -3,7 +3,6 @@
 #include "MappingContext.hpp"
 #include "partition/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
-#include "spacetree/SharedPointer.hpp"
 #include "com/Communication.hpp"
 #include "mapping/Mapping.hpp"
 #include "SharedPointer.hpp"
@@ -20,10 +19,7 @@ struct MeshContext
    // @brief Mesh holding the geometry data structure.
    mesh::PtrMesh mesh;
 
-   // @brief Spacetree accelerating access to geometry data structure.
-   spacetree::PtrSpacetree spacetree;
-
-   // @brief Data IDs of properties the geometry does posses.
+  // @brief Data IDs of properties the geometry does posses.
    std::vector<int> associatedData;
 
    // @brief Determines which mesh type has to be provided by the accessor.
@@ -56,7 +52,6 @@ struct MeshContext
    MeshContext ( int dimensions )
    :
      mesh (),
-     spacetree (),
      associatedData (),
      meshRequirement ( mapping::Mapping::UNDEFINED ),
      receiveMeshFrom ( "" ),

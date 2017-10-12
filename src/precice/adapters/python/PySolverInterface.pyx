@@ -49,12 +49,6 @@ cdef extern from "./src/precice/SolverInterface.hpp"  namespace "precice":
 
       int getDataID (const string& dataName, int meshID)
 
-      int inquirePosition (const double* point, const set[int]& meshIDs)
-
-#      ClosestMesh inquireClosestMesh (const double* inquiredPoint, const set[int]& meshIDs)
-
-#      VoxelPosition inquireVoxelPosition (const double* inquiryCenter, const double* halfLengthVoxel, bool includeBoundaries, const set[int]& meshIDs)
-
       void resetMesh (int meshID)
 
       void setMeshVertices (int meshID, int size, double* positions, int* ids)
@@ -92,8 +86,6 @@ cdef extern from "./src/precice/SolverInterface.hpp"  namespace "precice":
       void readBlockScalarData (int dataID, int size, int* valueIndices, double* values)
 
       void readScalarData (int dataID, int valueIndex, double& value)
-
-      void exportMesh (const string& filenameSuffix, int exportType)
 
 #      MeshHandle getMeshHandle (const string& meshName)
 
@@ -181,62 +173,6 @@ cdef class PySolverInterface:
    def getDataID (self, dataName, meshID):
       cdef string dataName_ = dataName
       return self.thisptr.getDataID (dataName_, meshID)
-
-   def inquirePosition (self, point, meshIDs):
-      cdef double* point_
-      point_ = <double*> malloc(len(point) * sizeof(double))
-
-      if point_ is NULL:
-         raise MemoryError()
-
-      for i in xrange(len(point)):
-         point_[i] = point[i]
-
-      returnVal = self.thisptr.inquirePosition (point_, meshIDs)
-
-      for i in xrange(len(point)):
-         point[i] = point_[i]
-
-      free(point_)
-
-      return returnVal
-
-#   def inquireClosestMesh (self, inquiredPoint, meshIDs):
-#      cdef double* inquiredPoint_
-#      inquiredPoint_ = <double*> malloc(len(inquiredPoint) * sizeof(double))
-#
-#      if inquiredPoint_ is NULL:
-#         raise MemoryError()
-#
-#      for i in xrange(len(inquiredPoint)):
-#         inquiredPoint_[i] = inquiredPoint[i]
-#
-#      returnVal = self.thisptr.inquireClosestMesh (inquiredPoint_, meshIDs)
-#
-#      free(inquiredPoint_)
-#
-#      return returnVal
-
-#   def inquireVoxelPosition (self, const double* inquiryCenter, const double* halfLengthVoxel, bool includeBoundaries, const set[int]& meshIDs):
-#      cdef double* inquiryCenter_
-#      cdef double* halfLengthVoxel_
-#      inquiryCenter_ = <double*> malloc(len(inquiryCenter) * sizeof(double))
-#      halfLengthVoxel_ = <double*> malloc(len(halfLengthVoxel) * sizeof(double))
-#
-#      if inquiryCenter_ is NULL or halfLengthVoxel_ is NULL:
-#         raise MemoryError()
-#
-#      for i in xrange(len(inquiryCenter)):
-#         inquiryCenter_[i] = inquiryCenter[i]
-#      for i in xrange(len(halfLengthVoxel)):
-#         halfLengthVoxel_[i] = halfLengthVoxel[i]
-#
-#      return self.thisptr.inquireVoxelPosition (inquiryCenter_, halfLengthVoxel_, includeBoundaries, meshIDs)
-#
-#      free(inquiryCenter_)
-#      free(halfLengthVoxel_)
-#
-#      return returnVal
 
    def resetMesh (self, meshID):
       self.thisptr.resetMesh (meshID)
@@ -449,9 +385,6 @@ cdef class PySolverInterface:
 
    def readScalarData (self, int dataID, int valueIndex, double& value):
       self.thisptr.readScalarData (dataID, valueIndex, value)
-
-   def exportMesh (self, const string& filenameSuffix, int exportType):
-      self.thisptr.exportMesh (filenameSuffix, exportType)
 
 #   def getMeshHandle (self, meshName):
 #      return self.thisptr.getMeshHandle (meshName)

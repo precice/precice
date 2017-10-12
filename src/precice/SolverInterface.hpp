@@ -2,8 +2,6 @@
 
 #include "MeshHandle.hpp"
 #include "Constants.hpp"
-#include "ClosestMesh.hpp"
-#include "VoxelPosition.hpp"
 #include <string>
 #include <vector>
 #include <set>
@@ -291,55 +289,6 @@ public:
   bool hasToEvaluateFineModel();
 
   /**
-   * @brief Find out position of point relative to geometries.
-   *
-   * This method utililizes the caching mechanism of spacetees, and runs much
-   * faster for non-local queries than inquireClosestMesh().
-   *
-   * @param point [IN] Point for which the inquiry is done.
-   * @param meshIDs [IN] Mesh IDs of the geometries to be considered.
-   */
-  int inquirePosition (
-    const double*        point,
-    const std::set<int>& meshIDs );
-
-  /**
-   * @brief Find out, which geometry is closest to the specified point
-   *
-   * This function works only for a continuous geometry, not for data sets.
-   * The distance is positive, if the inquired point lies out of the
-   * geometry, and negative, if it lies within the geometry.
-   *
-   * @param[in] inquiredPoint       Coordinates of the point inquired
-   * @param[out] distanceToGeometry Distance to the next geometry
-   * @param[out] geometryID         ID of the next geometry
-   *
-   * @return AdjacentGeometry object containing geometry id and distance
-   */
-  ClosestMesh inquireClosestMesh (
-    const double*        inquiredPoint,
-    const std::set<int>& meshIDs );
-
-  /**
-   * @brief Inquires, whether voxel is inside, outside or on geometry surface
-   *
-   * Objects touching the voxel surface are not considered to be in the voxel.
-   *
-   * @param[in] inquiryCenter Center point of voxel.
-   * @param[in] halfLengthVoxel Half lengths of voxel sides.
-   * @param[in] includeBoundaries If true, touching objects are included.
-   * @param[in] storeContent If true, included objects are stored in VoxelPosition.
-   *
-   * @return Result of inquiry.
-   */
-  VoxelPosition inquireVoxelPosition (
-    const double*        inquiryCenter,
-    const double*        halfLengthVoxel,
-    bool                 includeBoundaries,
-    //bool                 storeContent,
-    const std::set<int>& meshIDs );
-
-  /**
    * @brief Resets mesh with given ID.
    *
    * Has to be called, everytime the positions for data to be mapped
@@ -590,37 +539,6 @@ public:
     int     dataID,
     int     valueIndex,
     double& value );
-
-  /**
-   * @brief Sets the location for all output of preCICE.
-   *
-   * If done after configuration, this overwrites the output location specified
-   * in the configuration.
-   */
-//  void setExportLocation (
-//    const std::string& location,
-//    int                exportType = constants::exportAll() );
-
-  /**
-   * @brief Writes the contained geometries and spacetree to vtk file.
-   *
-   * The plotting path has to be specified in the configuration of the
-   * accessing participant.
-   *
-   * @param filenamePrefix [IN] Prefix of all plotted files
-   */
-  void exportMesh (
-    const std::string& filenameSuffix,
-    int                exportType = constants::exportAll() );
-
-  /**
-   * @brief Scales data values according to configuration.
-   *
-   * Currently, the only scaling supported is a division of the data values
-   * through the surface area belonging to its "support". This allows to come
-   * from forces to stresses, e.g..
-   */
-//  void scaleReadData ()
 
   /**
    * @brief Returns a handle to a created mesh.

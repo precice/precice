@@ -3,7 +3,6 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
 #include "geometry/Geometry.hpp"
-#include "spacetree/Spacetree.hpp"
 #include "utils/Globals.hpp"
 
 namespace precice {

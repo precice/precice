@@ -1,25 +1,9 @@
 #include "Constants.hpp"
 #include "cplscheme/Constants.hpp"
 #include "io/Constants.hpp"
-#include "spacetree/Spacetree.hpp"
 
 namespace precice {
 namespace constants {
-
-int positionInsideOfGeometry()
-{
-  return spacetree::Spacetree::positionInsideOfGeometry();
-}
-
-int positionOutsideOfGeometry()
-{
-  return spacetree::Spacetree::positionOutsideOfGeometry();
-}
-
-int positionOnGeometry()
-{
-  return spacetree::Spacetree::positionOnGeometry();
-}
 
 const std::string& nameConfiguration()
 {

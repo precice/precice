@@ -2,8 +2,6 @@
 
 #include "precice/MeshHandle.hpp"
 #include "precice/Constants.hpp"
-#include "precice/ClosestMesh.hpp"
-#include "precice/VoxelPosition.hpp"
 #include "precice/impl/SharedPointer.hpp"
 #include "precice/impl/DataContext.hpp"
 #include "action/Action.hpp"
@@ -214,54 +212,6 @@ public:
    * and mesh.
    */
   int getDataID ( const std::string& dataName, int meshID );
-
-  /**
-   * @brief Find out position of point relative to geometries.
-   *
-   * This method utililizes the caching mechanism of spacetees, and runs much
-   * faster for non-local queries than inquireClosestMesh().
-   *
-   * @param point [IN] Point for which the inquiry is done.
-   * @param meshIDs [IN] Mesh IDs of the geometries to be considered.
-   * @return Position ID (see precice::constants::positionXYZ()).
-   */
-  int inquirePosition (
-    const double*        point,
-    const std::set<int>& meshIDs );
-
-  /**
-   * @brief Find out, which geometry is closest to the specified point
-   *
-   * This function works only for a continuous geometry, not for data sets.
-   * The distance is positive, if the inquired point lies out of the
-   * geometry, and negative, if it lies within the geometry.
-   *
-   * @param inquiredPoint       [IN] Coordinates of the point inquired
-   * @param distanceToGeometry [OUT] Distance to the next geometry
-   * @param geometryID         [OUT] ID of the next geometry
-   *
-   * @return AdjacentGeometry object containing geometry id and distance
-   */
-  ClosestMesh inquireClosestMesh (
-    const double*        point,
-    const std::set<int>& meshIDs );
-
-  /**
-   * @brief Inquires, whether voxel is inside, outside or on geometry surface
-   *
-   * Objects touching the voxel surface are not considered to be in the voxel.
-   *
-   * @param inquiryCenter   [IN] Center point of voxel
-   * @param halfLengthVoxel [IN] Half length of voxel sides
-   *
-   * @return Constant, specifying if voxel is inside, outside or on geometry
-   */
-  VoxelPosition inquireVoxelPosition (
-    const double*        voxelCenter,
-    const double*        voxelHalflengths,
-    bool                 includeBoundaries,
-//    bool                 storeContent,
-    const std::set<int>& meshIDs );
 
   /**
    * @brief Resets mesh with given ID.
@@ -725,8 +675,7 @@ private:
 
   int markedSkip() const { return 0; }
   int markedQueryDirectly() const { return 1; }
-  int markedQuerySpacetree() const { return 2; }
-
+  
   /**
    * @brief Initializes communication between data server and client.
    */

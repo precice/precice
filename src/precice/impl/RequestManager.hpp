@@ -1,7 +1,5 @@
 #pragma once
 
-#include "precice/ClosestMesh.hpp"
-#include "precice/VoxelPosition.hpp"
 #include "cplscheme/SharedPointer.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
@@ -63,31 +61,6 @@ public:
    * @brief Requests fulfilled action from server.
    */
   void requestFulfilledAction ( const std::string& action );
-
-  /**
-   * @brief Requests inquire position from server.
-   */
-  int requestInquirePosition (
-    Eigen::VectorXd&     point,
-    const std::set<int>& meshIDs );
-
-  /**
-   * @brief Requests inquire closest mesh from server.
-   */
-  void requestInquireClosestMesh (
-    Eigen::VectorXd&     point,
-    const std::set<int>& meshIDs,
-    ClosestMesh&         closest );
-
-  /**
-   * @brief Requests inquire voxel position from server.
-   */
-  void requestInquireVoxelPosition (
-    Eigen::VectorXd&     voxelCenter,
-    Eigen::VectorXd&     voxelHalflengths,
-    bool                 includeBoundaries,
-    const std::set<int>& meshIDs,
-    VoxelPosition&       voxelPosition );
 
   /**
    * @brief Requests set position of solver mesh from server.
@@ -257,13 +230,6 @@ public:
    */
   void requestMapReadDataTo( int toMeshID );
 
-  /**
-   * @brief Requests export mesh from server.
-   */
-  void requestExportMesh (
-    const std::string& filenameSuffix,
-    int                exportType );
-
 private:
 
   /**
@@ -275,9 +241,6 @@ private:
     REQUEST_ADVANCE,
     REQUEST_FINALIZE,
     REQUEST_FULFILLED_ACTION,
-    REQUEST_INQUIRE_POSITION,
-    REQUEST_INQUIRE_CLOSEST_MESH,
-    REQUEST_INQUIRE_VOXEL_POSITION,
     REQUEST_SET_MESH_VERTEX,
     REQUEST_GET_MESH_VERTEX_SIZE,
     REQUEST_RESET_MESH,
@@ -299,7 +262,6 @@ private:
     REQUEST_READ_BLOCK_VECTOR_DATA,
     REQUEST_MAP_WRITE_DATA_FROM,
     REQUEST_MAP_READ_DATA_TO,
-    REQUEST_EXPORT_MESH,
     REQUEST_PING // Used in tests only
   };
 
@@ -337,21 +299,6 @@ private:
    * @brief Handles request fulfilled action from client.
    */
   void handleRequestFulfilledAction ( int rankSender );
-
-  /**
-   * @brief Handles request inquire position from client.
-   */
-  void handleRequestInquirePosition ( int rankSender );
-
-  /**
-   * @brief Handles request inquire closest mesh from client.
-   */
-  void handleRequestInquireClosestMesh ( int rankSender );
-
-  /**
-   * @brief Handles request inquire voxel position from client.
-   */
-  void handleRequestInquireVoxelPosition ( int rankSender );
 
   /**
    * @brief Handles request set mesh vertex from client.
@@ -457,11 +404,6 @@ private:
    * @brief Handles request map read data from client.
    */
   void handleRequestMapReadDataTo ( const std::list<int>& clientRanks );
-
-  /**
-   * @brief Handles request export mesh from client.
-   */
-  void handleRequestExportMesh ( int rankSender );
 
 };
 

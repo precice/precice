@@ -5,7 +5,6 @@
 #include "precice/impl/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "geometry/SharedPointer.hpp"
-#include "spacetree/SharedPointer.hpp"
 #include "cplscheme/SharedPointer.hpp"
 #include "mapping/SharedPointer.hpp"
 #include "m2n/M2N.hpp"
@@ -96,8 +95,6 @@ public:
     return _geometryConfiguration;
   }
 
-  const spacetree::PtrSpacetreeConfiguration& getSpacetreeConfiguration() const;
-
   const PtrParticipantConfiguration& getParticipantConfiguration() const;
 
   const cplscheme::PtrCouplingSchemeConfiguration
@@ -148,8 +145,7 @@ private:
   const std::string ATTR_DIMENSIONS;
   const std::string ATTR_GEOMETRY_MODE;
   const std::string ATTR_RESTART_MODE;
-  const std::string ATTR_SPACETREE_NAME;
-
+  
   // @brief Spatial dimension of problem to be solved. Either 2 or 3.
   int _dimensions;
 
@@ -172,8 +168,6 @@ private:
   m2n::M2NConfiguration::SharedPointer _m2nConfiguration;
 
   geometry::PtrGeometryConfiguration _geometryConfiguration;
-
-  spacetree::PtrSpacetreeConfiguration _spacetreeConfiguration;
 
   PtrParticipantConfiguration _participantConfiguration;
 

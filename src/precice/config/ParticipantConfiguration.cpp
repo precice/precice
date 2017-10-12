@@ -7,7 +7,6 @@
 #include "action/config/ActionConfiguration.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
 #include "geometry/config/GeometryConfiguration.hpp"
-#include "spacetree/config/SpacetreeConfiguration.hpp"
 #include "mapping/Mapping.hpp"
 #include "mapping/config/MappingConfiguration.hpp"
 #include "utils/Globals.hpp"
@@ -40,8 +39,7 @@ ParticipantConfiguration:: ParticipantConfiguration
 (
   utils::XMLTag&                              parent,
   const mesh::PtrMeshConfiguration&           meshConfiguration,
-  const geometry::PtrGeometryConfiguration&   geometryConfiguration,
-  const spacetree::PtrSpacetreeConfiguration& spacetreeConfiguration )
+  const geometry::PtrGeometryConfiguration&   geometryConfiguration)
 :
   TAG("participant"),
   TAG_WRITE("write-data"),
@@ -74,7 +72,6 @@ ParticipantConfiguration:: ParticipantConfiguration
   _dimensions(0),
   _meshConfig(meshConfiguration),
   _geometryConfig(geometryConfiguration),
-  _spacetreeConfig(spacetreeConfiguration),
   _mappingConfig(),
   _actionConfig(),
   //_isValid(false),
@@ -478,12 +475,7 @@ void ParticipantConfiguration:: xmlTagCallback
              << "\" uses mesh \"" << name << "\" which is not defined";
       throw stream.str();
     }
-    spacetree::PtrSpacetree spacetree;
-    if (_meshConfig->doesMeshUseSpacetree(name)){
-      std::string spacetreeName = _meshConfig->getSpacetreeName(name);
-      spacetree = _spacetreeConfig->getSpacetree ( spacetreeName );
-    }
-    _participants.back()->useMesh ( mesh, spacetree, offset, false, from, safetyFactor, provide, geoFilter );
+    _participants.back()->useMesh ( mesh, offset, false, from, safetyFactor, provide, geoFilter );
   }
 //  else if ( tag.getName() == mapping::MappingConfiguration::TAG ) {
 //    return _mappingConfig->parseSubtag ( xmlReader );

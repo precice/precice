@@ -6,7 +6,6 @@
 #include "mesh/SharedPointer.hpp"
 #include "geometry/SharedPointer.hpp"
 #include "mapping/SharedPointer.hpp"
-#include "spacetree/SharedPointer.hpp"
 #include "io/config/ExportConfiguration.hpp"
 #include "io/ExportContext.hpp"
 #include "cplscheme/SharedPointer.hpp"
@@ -107,7 +106,6 @@ public:
   /// Adds a geometry to be used by the participant.
   void useMesh (
     const mesh::PtrMesh&                          mesh,
-    const spacetree::PtrSpacetree&                spacetree,
     const Eigen::VectorXd&                        localOffset,
     bool                                          remote,
     const std::string&                            fromParticipant,

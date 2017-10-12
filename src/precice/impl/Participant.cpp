@@ -6,7 +6,6 @@
 #include "WatchPoint.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
 #include "mesh/config/DataConfiguration.hpp"
-#include "spacetree/Spacetree.hpp"
 
 namespace precice {
 namespace impl {
@@ -81,7 +80,6 @@ std::vector<PtrWatchPoint>& Participant:: watchPoints()
 void Participant:: useMesh
 (
   const mesh::PtrMesh&                          mesh,
-  const spacetree::PtrSpacetree&                spacetree,
   const Eigen::VectorXd&                        localOffset,
   bool                                          remote,
   const std::string&                            fromParticipant,
@@ -94,7 +92,6 @@ void Participant:: useMesh
   assertion ( mesh->getID() < (int)_meshContexts.size() );
   MeshContext* context = new MeshContext(mesh->getDimensions());
   context->mesh = mesh;
-  context->spacetree = spacetree;
   context->localOffset = localOffset;
   assertion ( mesh->getDimensions() == context->localOffset.size(),
                mesh->getDimensions(), context->localOffset.size() );
@@ -102,13 +99,6 @@ void Participant:: useMesh
   context->safetyFactor = safetyFactor;
   context->provideMesh = provideMesh;
   context->geoFilter = geoFilter;
-
-//  if ( spacetree.use_count() > 0 ) {
-//    spacetree->setCenter ( spacetree->getCenter() + localOffset );
-//  }
-//  if ( provideMesh ) {
-//    context->meshRequirement = mapping::Mapping::FULL;
-//  }
 
   _meshContexts[mesh->getID()] = context;
 

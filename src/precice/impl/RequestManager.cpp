@@ -2,7 +2,6 @@
 #include "com/Communication.hpp"
 #include "cplscheme/CouplingScheme.hpp"
 #include "precice/impl/SolverInterfaceImpl.hpp"
-#include "spacetree/Spacetree.hpp"
 #include <algorithm>
 
 namespace precice {
@@ -102,18 +101,6 @@ void RequestManager:: handleRequests()
       handleRequestFulfilledAction(rankSender);
       singleRequest = true;
       break;
-    case REQUEST_INQUIRE_POSITION:
-      handleRequestInquirePosition(rankSender);
-      singleRequest = true;
-      break;
-    case REQUEST_INQUIRE_CLOSEST_MESH:
-      handleRequestInquireClosestMesh(rankSender);
-      singleRequest = true;
-      break;
-    case REQUEST_INQUIRE_VOXEL_POSITION:
-      handleRequestInquireVoxelPosition(rankSender);
-      singleRequest = true;
-      break;
     case REQUEST_SET_MESH_VERTEX:
       handleRequestSetMeshVertex(rankSender);
       singleRequest = true;
@@ -209,10 +196,6 @@ void RequestManager:: handleRequests()
         collectiveRequest = true;
       }
       break;
-    case REQUEST_EXPORT_MESH:
-      handleRequestExportMesh(rankSender);
-      singleRequest = true;
-      break;
     case REQUEST_PING:
       //bool ping = true;
       _com->send(true, rankSender);
@@ -295,92 +278,6 @@ void RequestManager:: requestFulfilledAction
   TRACE();
   _com->send(REQUEST_FULFILLED_ACTION, 0);
   _com->send(action, 0);
-}
-
-int RequestManager:: requestInquirePosition
-(
-  Eigen::VectorXd&     point,
-  const std::set<int>& meshIDs )
-{
-  TRACE(point, meshIDs.size());
-  _com->send(REQUEST_INQUIRE_POSITION, 0);
-  _com->send(point.data(), point.size(), 0);
-  _com->send((int)meshIDs.size(), 0);
-  for (int id : meshIDs) {
-    _com->send(id, 0);
-  }
-  int position = spacetree::Spacetree::positionUndefined();
-  _com->receive(position, 0);
-  assertion(position != spacetree::Spacetree::positionUndefined(), position);
-  return position;
-}
-
-void RequestManager:: requestInquireClosestMesh
-(
-  Eigen::VectorXd&     point,
-  const std::set<int>& meshIDs,
-  ClosestMesh&         closest )
-{
-  TRACE(point, meshIDs.size());
-  _com->send(REQUEST_INQUIRE_CLOSEST_MESH, 0);
-  _com->send(point.data(), point.size(), 0);
-  _com->send((int)meshIDs.size(), 0 );
-  for (int id : meshIDs) {
-    _com->send(id, 0);
-  }
-  int sizeMeshIDs = 0;
-  _com->receive(sizeMeshIDs, 0);
-  for (int i=0; i < sizeMeshIDs; i++){
-    int id = -1;
-    _com->receive(id, 0);
-    assertion(id != -1, id);
-    closest.meshIDs().push_back(id);
-  }
-  int position = -1;
-  _com->receive(position, 0);
-  assertion(position != -1, position);
-  closest.setPosition(position);
-  double distanceVector[_interface.getDimensions()];
-  _com->receive(distanceVector, _interface.getDimensions(), 0);
-  closest.setDistanceVector(distanceVector);
-}
-
-void RequestManager:: requestInquireVoxelPosition
-(
-  Eigen::VectorXd&     voxelCenter,
-  Eigen::VectorXd&     voxelHalflengths,
-  bool                 includeBoundaries,
-  const std::set<int>& meshIDs,
-  VoxelPosition&       voxelPosition )
-{
-  TRACE(voxelCenter, voxelHalflengths, includeBoundaries, meshIDs.size());
-  _com->send(REQUEST_INQUIRE_VOXEL_POSITION, 0);
-  _com->send(voxelCenter.data(), voxelCenter.size(), 0);
-  _com->send(voxelHalflengths.data(), voxelHalflengths.size(), 0);
-  _com->send(includeBoundaries, 0);
-  _com->send((int)meshIDs.size(), 0);
-  if (not meshIDs.empty()){
-    Eigen::VectorXi idVector(meshIDs.size());
-    int i = 0;
-    for (int id : meshIDs) {
-      idVector[i] = id;
-      i++;
-    }
-    _com->send(idVector.data(), (int)meshIDs.size(), 0);
-  }
-
-  // Receive results
-  int position = -1;
-  _com->receive(position, 0);
-  assertion(position != -1, position);
-  voxelPosition.setPosition(position);
-  int sizeResultIDs = -1;
-  _com->receive(sizeResultIDs, 0);
-  if (sizeResultIDs > 0){
-    voxelPosition.meshIDs().resize(sizeResultIDs);
-    int* rawMeshIDs = voxelPosition.meshIDs().data();
-    _com->receive(rawMeshIDs, sizeResultIDs, 0);
-  }
 }
 
 int RequestManager:: requestSetMeshVertex
@@ -665,17 +562,6 @@ void RequestManager:: requestMapReadDataTo
   _com->send(toMeshID, 0);
 }
 
-void RequestManager:: requestExportMesh
-(
-  const std::string& filenameSuffix,
-  int                exportType )
-{
-  TRACE();
-  _com->send(REQUEST_EXPORT_MESH, 0);
-  _com->send(filenameSuffix, 0);
-  _com->send(exportType, 0);
-}
-
 void RequestManager:: handleRequestInitialze
 (
   const std::list<int>& clientRanks )
@@ -734,104 +620,6 @@ void RequestManager:: handleRequestFulfilledAction
   std::string action;
   _com->receive(action, rankSender);
   _interface.fulfilledAction(action);
-}
-
-void RequestManager:: handleRequestInquirePosition
-(
-  int rankSender )
-{
-  TRACE(rankSender);
-  // Receive input
-  double point[_interface.getDimensions()];
-  _com->receive(point, _interface.getDimensions(), rankSender);
-  std::set<int> meshIDs;
-  int sizeMeshIDs = -1;
-  _com->receive(sizeMeshIDs, rankSender);
-  assertion(sizeMeshIDs >= 0, sizeMeshIDs);
-  for (int i=0; i < sizeMeshIDs; i++){
-    int id = -1;
-    _com->receive(id, rankSender);
-    assertion(id >= 0, id);
-    meshIDs.insert(id);
-  }
-
-  // Perform request
-  int position = _interface.inquirePosition(point, meshIDs);
-
-  // Send output
-  _com->send(position, rankSender);
-}
-
-void RequestManager:: handleRequestInquireClosestMesh
-(
-  int rankSender )
-{
-  TRACE(rankSender);
-  // Receive input
-  double point[_interface.getDimensions()];
-  _com->receive(point, _interface.getDimensions(), rankSender);
-  std::set<int> meshIDs;
-  int size = -1;
-  _com->receive(size, rankSender);
-  assertion(size >= 0, size);
-  for (int i=0; i < size; i++){
-    int id = -1;
-    _com->receive(id, rankSender);
-    assertion(id >= 0, id);
-    meshIDs.insert(id);
-  }
-
-  // Perform request
-  ClosestMesh closest = _interface.inquireClosestMesh(point, meshIDs);
-
-  // Send output
-  _com->send((int)closest.meshIDs().size(), rankSender);
-  for (int id : closest.meshIDs()) {
-    _com->send(id, rankSender);
-  }
-  _com->send(closest.position(), rankSender);
-  double distanceVector[_interface.getDimensions()];
-  for (int dim=0; dim < _interface.getDimensions(); dim++){
-    distanceVector[dim] = closest.distanceVector()[dim];
-  }
-  _com->send(distanceVector, _interface.getDimensions(), rankSender);
-}
-
-void RequestManager:: handleRequestInquireVoxelPosition
-(
-  int rankSender )
-{
-  TRACE(rankSender);
-  // Receive input
-  double voxelCenter[_interface.getDimensions()];
-  _com->receive(voxelCenter, _interface.getDimensions(), rankSender);
-  double voxelHalflengths[_interface.getDimensions()];
-  _com->receive(voxelHalflengths, _interface.getDimensions(), rankSender);
-  bool includeBoundaries = false; // initialize to please compiler
-  _com->receive(includeBoundaries, rankSender);
-  int sizeMeshIDs = -1;
-  std::set<int> meshIDs;
-  _com->receive(sizeMeshIDs, rankSender);
-  assertion(sizeMeshIDs >= 0, sizeMeshIDs);
-  if (sizeMeshIDs > 0){
-    Eigen::VectorXi idVector(sizeMeshIDs);
-    _com->receive(idVector.data(), sizeMeshIDs, rankSender);
-    for (int i=0; i < sizeMeshIDs; i++){
-      meshIDs.insert(idVector[i]);
-    }
-  }
-  // Perform request
-  VoxelPosition content = _interface.inquireVoxelPosition(voxelCenter,
-                          voxelHalflengths, includeBoundaries, meshIDs );
-
-  // Send output
-  _com->send(content.position(), rankSender);
-  sizeMeshIDs = (int)content.meshIDs().size();
-  _com->send(sizeMeshIDs, rankSender);
-  if (sizeMeshIDs > 0){
-    int* rawMeshIDs = content.meshIDs().data();
-    _com->send(rawMeshIDs, sizeMeshIDs, rankSender);
-  }
 }
 
 void RequestManager:: handleRequestSetMeshVertex
@@ -1151,18 +939,5 @@ void RequestManager:: handleRequestMapReadDataTo
   }
   _interface.mapReadDataTo(oldMeshID);
 }
-
-void RequestManager:: handleRequestExportMesh
-(
-  int rankSender )
-{
-  TRACE(rankSender);
-  std::string filenameSuffix;
-  _com->receive(filenameSuffix, rankSender);
-  int exportType;
-  _com->receive(exportType, rankSender);
-  _interface.exportMesh(filenameSuffix, exportType);
-}
-
 
 }} // namespace precice, impl

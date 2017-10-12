@@ -357,18 +357,6 @@ void precicef_map_read_data_to_
   impl->mapReadDataTo(*meshID);
 }
 
-void precicef_export_mesh_
-(
-  const char* filenameSuffix,
-  int         filenameSuffixLength )
-{
-  CHECK(impl != nullptr,errormsg);
-  int strippedLength =
-      precice::impl::strippedLength(filenameSuffix, filenameSuffixLength);
-  string stringFilenameSuffix(filenameSuffix, strippedLength);
-  impl->exportMesh(stringFilenameSuffix);
-}
-
 int precice::impl::strippedLength
 (
   const char* string,

@@ -6,7 +6,6 @@
 #include "mesh/config/MeshConfiguration.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
 #include "geometry/config/GeometryConfiguration.hpp"
-#include "spacetree/config/SpacetreeConfiguration.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
 #include "mapping/SharedPointer.hpp"
 #include "utils/xml/ValidatorEquals.hpp"
@@ -28,7 +27,6 @@ SolverInterfaceConfiguration:: SolverInterfaceConfiguration
   ATTR_DIMENSIONS("dimensions"),
   ATTR_GEOMETRY_MODE("geometry-mode"),
   ATTR_RESTART_MODE("restart-mode"),
-  ATTR_SPACETREE_NAME("name"),
   _dimensions(-1),
   _geometryMode(false),
   _restartMode(false),
@@ -38,7 +36,6 @@ SolverInterfaceConfiguration:: SolverInterfaceConfiguration
   _meshConfiguration(),
   _m2nConfiguration(),
   _geometryConfiguration(),
-  _spacetreeConfiguration(),
   _participantConfiguration(),
   _couplingSchemeConfiguration()
 {
@@ -79,11 +76,9 @@ SolverInterfaceConfiguration:: SolverInterfaceConfiguration
       new m2n::M2NConfiguration(tag) );
   _geometryConfiguration = geometry::PtrGeometryConfiguration (
       new geometry::GeometryConfiguration(tag, _meshConfiguration) );
-  _spacetreeConfiguration = spacetree::PtrSpacetreeConfiguration (
-      new spacetree::SpacetreeConfiguration(tag) );
   _participantConfiguration = config::PtrParticipantConfiguration (
       new ParticipantConfiguration(tag, _meshConfiguration,
-     _geometryConfiguration, _spacetreeConfiguration) );
+     _geometryConfiguration) );
   _couplingSchemeConfiguration = cplscheme::PtrCouplingSchemeConfiguration (
     new cplscheme::CouplingSchemeConfiguration(tag, _meshConfiguration,
     _m2nConfiguration) );
@@ -103,7 +98,6 @@ void SolverInterfaceConfiguration:: xmlTagCallback
     _dataConfiguration->setDimensions(_dimensions);
     _meshConfiguration->setDimensions(_dimensions);
     _geometryConfiguration->setDimensions(_dimensions);
-    _spacetreeConfiguration->setDimensions(_dimensions);
     _participantConfiguration->setDimensions(_dimensions);
   }
   else {
@@ -168,12 +162,6 @@ void SolverInterfaceConfiguration:: xmlEndTagCallback
 int SolverInterfaceConfiguration:: getDimensions() const
 {
   return _dimensions;
-}
-
-const spacetree::PtrSpacetreeConfiguration &
-SolverInterfaceConfiguration:: getSpacetreeConfiguration() const
-{
-  return _spacetreeConfiguration;
 }
 
 const PtrParticipantConfiguration &

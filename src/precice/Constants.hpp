@@ -6,10 +6,6 @@
 namespace precice {
 namespace constants {
 
-int positionInsideOfGeometry();
-int positionOutsideOfGeometry();
-int positionOnGeometry();
-
 const std::string& nameConfiguration();
 
 const std::string& dataDisplacements();

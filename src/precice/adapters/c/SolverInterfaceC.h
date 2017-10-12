@@ -244,12 +244,6 @@ void precicec_mapWriteDataFrom ( int fromMeshID );
  */
 void precicec_mapReadDataTo ( int toMeshID );
 
-/**
- * @brief Exports the coupling mesh to a vtk file
- *
- * @param filenameSuffix [IN] Suffix added to the vtk filename.
- */
-void precicec_exportMesh ( const char* filenameSuffix );
 
 #ifdef __cplusplus
 }

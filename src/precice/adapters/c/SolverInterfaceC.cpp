@@ -295,12 +295,3 @@ void precicec_mapReadDataTo ( int toMeshID )
   assertion ( impl != nullptr );
   impl->mapReadDataTo(toMeshID);
 }
-
-void precicec_exportMesh
-(
-  const char* filenameSuffix )
-{
-  assertion ( impl != nullptr );
-  std::string stringFilenameSuffix ( filenameSuffix );
-  impl->exportMesh ( stringFilenameSuffix );
-}

@@ -128,34 +128,6 @@ bool SolverInterface::hasToEvaluateFineModel()
   return _impl->hasToEvaluateFineModel();
 }
 
-int SolverInterface:: inquirePosition
-(
-  const double*        point,
-  const std::set<int>& meshIDs )
-{
-  return _impl->inquirePosition ( point, meshIDs );
-}
-
-ClosestMesh SolverInterface:: inquireClosestMesh
-(
-  const double*        point,
-  const std::set<int>& meshIDs )
-{
-  return _impl->inquireClosestMesh ( point, meshIDs );
-}
-
-VoxelPosition SolverInterface:: inquireVoxelPosition
-(
-  const double*        voxelCenter,
-  const double*        voxelHalflengths,
-  bool                 includeBoundaries,
-  //bool                 storeContent,
-  const std::set<int>& meshIDs )
-{
-  return _impl->inquireVoxelPosition ( voxelCenter, voxelHalflengths,
-                                       includeBoundaries, meshIDs );
-}
-
 void SolverInterface:: resetMesh
 (
   int meshID )
@@ -351,23 +323,6 @@ void SolverInterface:: readScalarData
 {
   return _impl->readScalarData ( dataID, valueIndex, value );
 }
-
-//void SolverInterface:: setExportLocation
-//(
-//  const std::string& location,
-//  int                exportType )
-//{
-//  _impl->setExportLocation ( location, exportType );
-//}
-
-void SolverInterface:: exportMesh
-(
-  const std::string& filenameSuffix,
-  int                exportType )
-{
-  _impl->exportMesh ( filenameSuffix, exportType );
-}
-
 
 MeshHandle SolverInterface:: getMeshHandle
 (

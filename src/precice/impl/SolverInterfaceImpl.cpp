@@ -17,11 +17,6 @@
 #include "io/ExportVRML.hpp"
 #include "io/ExportContext.hpp"
 #include "io/SimulationStateIO.hpp"
-#include "query/FindClosest.hpp"
-#include "query/FindVoxelContent.hpp"
-#include "spacetree/config/SpacetreeConfiguration.hpp"
-#include "spacetree/Spacetree.hpp"
-#include "spacetree/ExportSpacetree.hpp"
 #include "com/MPIPortsCommunication.hpp"
 #include "com/Constants.hpp"
 #include "com/MPIDirectCommunication.hpp"
@@ -198,7 +193,7 @@ void SolverInterfaceImpl:: configure
     _requestManager = new RequestManager(_geometryMode, *this, com, _couplingScheme);
   }
 
-  // Add meshIDs, data IDs, and spacetrees
+  // Add meshIDs and data IDs
   for (MeshContext* meshContext : _accessor->usedMeshContexts()) {
     const mesh::PtrMesh& mesh = meshContext->mesh;
     for (std::pair<std::string,int> nameID : mesh->getNameIDPairs()) {
@@ -214,11 +209,6 @@ void SolverInterfaceImpl:: configure
     }
     std::string meshName = mesh->getName();
     mesh::PtrMeshConfiguration meshConfig = config.getMeshConfiguration();
-    spacetree::PtrSpacetreeConfiguration spacetreeConfig = config.getSpacetreeConfiguration();
-    if (meshConfig->doesMeshUseSpacetree(meshName)){
-      std::string spacetreeName = meshConfig->getSpacetreeName(meshName);
-      meshContext->spacetree = spacetreeConfig->getSpacetree(spacetreeName);
-    }
   }
   
   utils::Parallel::initializeMPI(nullptr, nullptr);
@@ -682,284 +672,6 @@ int SolverInterfaceImpl:: getDataID
         "Data with name \"" << dataName << "\" is not defined on mesh with ID \"" << meshID << "\".");
   return _dataIDs[meshID][dataName];
 }
-
-int SolverInterfaceImpl:: inquirePosition
-(
-  const double*        point,
-  const std::set<int>& meshIDs )
-{
-  TRACE(point, meshIDs.size() );
-  using namespace precice::constants;
-  int pos = positionOutsideOfGeometry();
-  Eigen::VectorXd searchPoint(_dimensions);
-  for (int dim=0; dim<_dimensions; dim++) searchPoint[dim] = point[dim];
-  if (_clientMode){
-    pos = _requestManager->requestInquirePosition(searchPoint, meshIDs);
-  }
-  else {
-    std::vector<int> markedContexts(_accessor->usedMeshContexts().size());
-    selectInquiryMeshIDs(meshIDs, markedContexts);
-    for (int i=0; i < (int)markedContexts.size(); i++){
-      MeshContext* meshContext = _accessor->usedMeshContexts()[i];
-      if (markedContexts[i] == markedSkip()){
-        DEBUG("Skipping mesh " << meshContext->mesh->getName());
-        continue;
-      }
-      int tempPos = -1;
-      if (markedContexts[i] == markedQuerySpacetree()){
-        assertion(meshContext->spacetree.use_count() > 0);
-        tempPos = meshContext->spacetree->searchPosition(searchPoint);
-      }
-      else {
-        assertion(markedContexts[i] == markedQueryDirectly(), markedContexts[i]);
-        query::FindClosest findClosest(searchPoint);
-        findClosest(*(meshContext->mesh));
-        assertion(findClosest.hasFound());
-        tempPos = positionOnGeometry();
-        if (math::greater(findClosest.getClosest().distance, 0.0)){
-          tempPos = positionOutsideOfGeometry();
-        }
-        else if (math::greater(0.0, findClosest.getClosest().distance)){
-          tempPos = positionInsideOfGeometry();
-        }
-      }
-
-      // Union logic for multiple geometries:
-      if (pos != positionInsideOfGeometry()){
-        if (tempPos == positionOutsideOfGeometry()){
-          if (pos != positionOnGeometry()){
-            pos = tempPos; // set outside of geometry
-          }
-        }
-        else {
-          pos = tempPos; // set inside or on geometry
-        }
-      }
-    }
-  }
-  DEBUG("Return position = " << pos);
-  return pos;
-}
-
-ClosestMesh SolverInterfaceImpl:: inquireClosestMesh
-(
-  const double*        point,
-  const std::set<int>& meshIDs )
-{
-  TRACE(point);
-  ClosestMesh closestMesh(_dimensions);
-  Eigen::VectorXd searchPoint(_dimensions);
-  for (int dim=0; dim < _dimensions; dim++){
-    searchPoint[dim] = point[dim];
-  }
-  if (_clientMode){
-    _requestManager->requestInquireClosestMesh(searchPoint, meshIDs, closestMesh);
-  }
-  else {
-    using namespace precice::constants;
-    std::vector<int> markedContexts(_accessor->usedMeshContexts().size());
-    selectInquiryMeshIDs(meshIDs, markedContexts);
-    closestMesh.setPosition(positionOutsideOfGeometry());
-    //for (MeshContext& meshContext : _accessor->usedMeshContexts()){
-    for (int i=0; i < (int)markedContexts.size(); i++){
-      MeshContext* meshContext = _accessor->usedMeshContexts()[i];
-      if (markedContexts[i] == markedSkip()){
-        DEBUG("Skipping mesh " << meshContext->mesh->getName());
-        continue;
-      }
-      query::FindClosest findClosest(searchPoint);
-      if (markedContexts[i] == markedQuerySpacetree()){
-        assertion(meshContext->spacetree.get() != nullptr);
-        meshContext->spacetree->searchDistance(findClosest);
-      }
-      else {
-        assertion(markedContexts[i] == markedQueryDirectly(), markedContexts[i]);
-        findClosest(*(meshContext->mesh));
-      }
-      assertion(findClosest.hasFound());
-      const query::ClosestElement& element = findClosest.getClosest();
-      if ( element.distance > math::NUMERICAL_ZERO_DIFFERENCE &&
-           closestMesh.position() == positionOutsideOfGeometry() )
-      {
-        if ( closestMesh.distance() > element.distance ) {
-          closestMesh.setDistanceVector ( element.vectorToElement.data() );
-          closestMesh.meshIDs() = element.meshIDs;
-        }
-      }
-      else if ( element.distance < - math::NUMERICAL_ZERO_DIFFERENCE ) {
-        closestMesh.setPosition ( positionInsideOfGeometry() );
-        if ( closestMesh.distance() > std::abs(element.distance) ) {
-          closestMesh.setDistanceVector ( element.vectorToElement.data() );
-          closestMesh.meshIDs() = element.meshIDs;
-        }
-      }
-      else if ( closestMesh.position() != positionInsideOfGeometry() ){
-        closestMesh.setPosition ( positionOnGeometry() );
-        closestMesh.setDistanceVector ( element.vectorToElement.data() );
-        closestMesh.meshIDs() = element.meshIDs;
-      }
-      //if ( _accessor->exportContext().plotNeighbors ){
-      //  _exportVTKNeighbors.addNeighbors ( searchPoint, element );
-      //}
-    }
-  }
-  return closestMesh;
-}
-
-VoxelPosition SolverInterfaceImpl:: inquireVoxelPosition
-(
-  const double*        voxelCenter,
-  const double*        voxelHalflengths,
-  bool                 includeBoundaries,
-  const std::set<int>& meshIDs )
-{
-  TRACE(voxelCenter, voxelHalflengths, includeBoundaries, meshIDs.size());
-
-  using namespace precice::constants;
-  Eigen::VectorXd center(_dimensions);
-  Eigen::VectorXd halflengths(_dimensions);
-  for (int dim=0; dim < _dimensions; dim++){
-    center[dim] = voxelCenter[dim];
-    halflengths[dim] = voxelHalflengths[dim];
-  }
-  DEBUG("center = " << center << ", h = " << halflengths);
-
-  if (_clientMode){
-    VoxelPosition pos;
-    _requestManager->requestInquireVoxelPosition(center, halflengths, includeBoundaries, meshIDs, pos);
-    return pos;
-  }
-  query::FindVoxelContent::BoundaryInclusion boundaryInclude;
-  boundaryInclude = includeBoundaries
-                    ? query::FindVoxelContent::INCLUDE_BOUNDARY
-                    : query::FindVoxelContent::EXCLUDE_BOUNDARY;
-
-  //VoxelPosition voxelPosition;
-  int pos = positionOutsideOfGeometry();
-  //mesh::Group* content = new mesh::Group();
-  std::vector<int> containedMeshIDs;
-//  for (MeshContext& meshContext : _accessor->usedMeshContexts()){
-//    bool skip = not utils::contained(meshContext.mesh->getID(), meshIDs);
-//    skip &= not meshIDs.empty();
-//    if (skip){
-//      DEBUG("Skipping mesh " << meshContext.mesh->getName());
-//      continue;
-//    }
-
-  std::vector<int> markedContexts(_accessor->usedMeshContexts().size());
-  selectInquiryMeshIDs(meshIDs, markedContexts);
-    //for (MeshContext& meshContext : _accessor->usedMeshContexts()){
-  for (int i=0; i < (int)markedContexts.size(); i++){
-    MeshContext* meshContext = _accessor->usedMeshContexts()[i];
-    if (markedContexts[i] == markedSkip()){
-      DEBUG("Skipping mesh " << meshContext->mesh->getName());
-      continue;
-    }
-    DEBUG("Query mesh \"" << meshContext->mesh->getName() << "\" with "
-                 << meshContext->mesh->vertices().size() << " vertices");
-    int oldPos = pos;
-    query::FindVoxelContent findVoxel(center, halflengths, boundaryInclude);
-    if (markedContexts[i] == markedQuerySpacetree()){
-      assertion(meshContext->spacetree.get() != nullptr);
-      DEBUG("Use spacetree for query");
-      // Query first including voxel boundaries. This enables to directly
-      // use cached information of spacetree cells, that do also include
-      // objects on boundaries.
-      pos = meshContext->spacetree->searchContent(findVoxel);
-
-      // MERGING DISABLED!!!! CONTENT MIGHT CONTAIN DUPLICATED ELEMENTS
-//      if (not findVoxel.content().empty()){
-//        DEBUG ( "Merging found content of size = " << findVoxel.content().size() );
-//        mesh::Merge mergeContent;
-//        mergeContent ( findVoxel.content() );
-//        //findContent.content() = mergeContent.content();
-//        DEBUG ( "Merged size = " << mergeContent.content().size() );
-//        content->add ( mergeContent.content() );
-//      }
-      //content->add(findVoxel.content());
-
-//      if ( pos == Spacetree::ON_GEOMETRY ) {
-//        query::FindVoxelContent findVoxel ( inquiryCenter, halfLengthVoxel,
-//            query::FindVoxelContent::EXCLUDE_BOUNDARY );
-//        findVoxel ( findVoxelInclude.content() );
-//        if ( ! findVoxel.content().empty() ) {
-//          content->add ( findVoxel.content() );
-//        }
-//      }
-    }
-    // The mesh does not have a spacetree
-    else {
-      DEBUG("Query mesh directly");
-      assertion(markedContexts[i] == markedQueryDirectly(), markedContexts[i]);
-      //query::FindVoxelContent findVoxel(center, halflengths, boundaryInclude);
-      findVoxel(*meshContext->mesh);
-      // If the voxel does have content
-      if (not findVoxel.content().empty()){
-        pos = positionOnGeometry();
-        //content->add ( findVoxel.content() );
-      }
-      // If the voxel is empty and not inside for any other checked geometry
-      else if (oldPos != positionInsideOfGeometry()){
-        //DEBUG("Query found no objects and oldpos isnt't inside");
-        query::FindClosest findClosest(center);
-        findClosest(*(meshContext->mesh));
-        assertion(findClosest.hasFound());
-        const query::ClosestElement& closest = findClosest.getClosest();
-        pos = closest.distance > 0 ? positionOutsideOfGeometry()
-                                   : positionInsideOfGeometry();
-      }
-    }
-
-    // Retrieve mesh IDs of contained elements
-    if (not findVoxel.content().empty()){
-      int geoID = mesh::PropertyContainer::INDEX_GEOMETRY_ID;
-      std::vector<int> tempIDs;
-      std::set<int> uniqueIDs;
-      for (mesh::Vertex& vertex : findVoxel.content().vertices()) {
-        vertex.getProperties(geoID, tempIDs);
-        for (int id : tempIDs) {
-          uniqueIDs.insert(id);
-        }
-        tempIDs.clear();
-      }
-      for (mesh::Edge& edge : findVoxel.content().edges()) {
-        edge.getProperties(geoID, tempIDs);
-        for (int id : tempIDs) {
-          uniqueIDs.insert(id);
-        }
-        tempIDs.clear();
-      }
-      for (mesh::Triangle& triangle : findVoxel.content().triangles()) {
-        triangle.getProperties(geoID, tempIDs);
-        for (int id : tempIDs) {
-          uniqueIDs.insert(id);
-        }
-        tempIDs.clear();
-      }
-      DEBUG("Query found objects, ids.size = " << uniqueIDs.size());
-      for (int id : uniqueIDs) {
-        if (not utils::contained(id, containedMeshIDs)){
-          containedMeshIDs.push_back(id);
-        }
-      }
-    }
-
-    if (oldPos == positionInsideOfGeometry()){
-      DEBUG("Since oldpos is inside, reset to inside");
-      pos = positionInsideOfGeometry();
-    }
-    else if ((oldPos == positionOnGeometry())
-             && (pos == positionOutsideOfGeometry()))
-    {
-      DEBUG ( "Since old pos is on and pos is outside, reset to on" );
-      pos = positionOnGeometry();
-    }
-    DEBUG("pos = " << pos);
-  }
-  DEBUG("Return voxel position = " << pos << ", ids.size = " << containedMeshIDs.size());
-  return VoxelPosition(pos, containedMeshIDs);
-}
-
 
 int SolverInterfaceImpl:: getMeshVertexSize
 (
@@ -1758,10 +1470,6 @@ void SolverInterfaceImpl:: exportMesh
   int                exportType )
 {
   TRACE(filenameSuffix, exportType );
-  if ( _clientMode ){
-    _requestManager->requestExportMesh ( filenameSuffix, exportType );
-    return;
-  }
   // Export meshes
   //const ExportContext& context = _accessor->exportContext();
   for (const io::ExportContext& context : _accessor->exportContexts()) {
@@ -1775,21 +1483,7 @@ void SolverInterfaceImpl:: exportMesh
         context.exporter->doExport ( name, context.location, *(meshContext->mesh) );
       }
     }
-    // Export spacetrees
-    if (context.exportSpacetree){
-      for ( MeshContext* meshContext : _accessor->usedMeshContexts()) {
-        std::string name = meshContext->mesh->getName() + "-" + filenameSuffix + ".spacetree";
-        if ( meshContext->spacetree.get() != nullptr ) {
-          spacetree::ExportSpacetree exportSpacetree(context.location, name);
-          exportSpacetree.doExport ( *(meshContext->spacetree) );
-        }
-      }
-    }
   }
-  // Export neighbors
-  //if ( context.plotNeighbors ) {
-  //  _exportVTKNeighbors.exportNeighbors ( filenameSuffix + ".neighbors" );
-  //}
 }
 
 
@@ -1907,63 +1601,6 @@ void SolverInterfaceImpl:: configurePartitions
     }
   }
 }
-
-//void SolverInterfaceImpl:: prepareGeometry
-//(
-//  MeshContext& meshContext )
-//{
-//  TRACE(meshContext.mesh->getName());
-//  assertion ( not _clientMode );
-//  mesh::PtrMesh mesh = meshContext.mesh;
-//  assertion(mesh.use_count() > 0);
-//  std::string meshName(mesh->getName());
-//  if (_restartMode){
-//    std::string fileName("precice_checkpoint_" + _accessorName + "_" + meshName);
-//    DEBUG("Importing geometry = " << mesh->getName());
-//    geometry::ImportGeometry* importGeo = new geometry::ImportGeometry (
-//      Eigen::VectorXd::Zero(_dimensions), fileName,
-//      geometry::ImportGeometry::VRML_1_FILE, true, not meshContext.provideMesh);
-//    meshContext.geometry.reset(importGeo);
-//  }
-//  else if ( (not _geometryMode) && (meshContext.geometry.use_count() > 0) ){
-//    Eigen::VectorXd offset(meshContext.geometry->getOffset());
-//    offset += meshContext.localOffset;
-//    DEBUG("Adding local offset = " << meshContext.localOffset
-//                 << " to mesh " << mesh->getName());
-//    meshContext.geometry->setOffset(offset);
-//  }
-//
-//  assertion(not (_geometryMode && (meshContext.geometry.use_count() == 0)));
-//  if (meshContext.geometry.use_count() > 0){
-//    meshContext.geometry->prepare(*mesh);
-//  }
-//}
-//
-//void SolverInterfaceImpl:: createGeometry
-//(
-//  MeshContext& meshContext )
-//{
-//  TRACE(meshContext.mesh->getName());
-//  assertion ( not _clientMode );
-//  mesh::PtrMesh mesh = meshContext.mesh;
-//  assertion(mesh.use_count() > 0);
-//  std::string meshName(mesh->getName());
-//
-//  assertion(not (_geometryMode && (meshContext.geometry.use_count() == 0)));
-//  if (meshContext.geometry.use_count() > 0){
-//    meshContext.geometry->create(*mesh);
-//    DEBUG("Created geometry \"" << meshName
-//                 << "\" with # vertices = " << mesh->vertices().size());
-//    mesh->computeDistribution();
-//  }
-//
-//  // Create spacetree for the geometry, if configured so
-//  if (meshContext.spacetree.use_count() > 0){
-//    preciceCheck(_geometryMode, "createMeshContext()",
-//                 "Creating spacetree in coupling mode!");
-//    meshContext.spacetree->addMesh(mesh);
-//  }
-//}
 
 void SolverInterfaceImpl:: computePartitions()
 {
@@ -2234,66 +1871,6 @@ PtrParticipant SolverInterfaceImpl:: determineAccessingParticipant
   ERROR("Accessing participant \"" << _accessorName << "\" is not defined in configuration!");
 }
 
-void SolverInterfaceImpl:: selectInquiryMeshIDs
-(
-  const std::set<int>& meshIDs,
-  std::vector<int>&    markedMeshContexts ) const
-{
-  TRACE(meshIDs.size());
-  assertion(markedMeshContexts.size() == _accessor->usedMeshContexts().size(),
-             markedMeshContexts.size(), _accessor->usedMeshContexts().size());
-
-  if (meshIDs.empty()){ // All mesh IDs are used in inquiry
-    for (int i=0; i < (int)markedMeshContexts.size(); i++){
-      const MeshContext* context = _accessor->usedMeshContexts()[i];
-      if (context->spacetree.get() == nullptr){
-        markedMeshContexts[i] = markedQueryDirectly();
-      }
-      else if (context->mesh->getID() == context->spacetree->meshes().front()->getID()){
-        markedMeshContexts[i] = markedQuerySpacetree();
-      }
-      else {
-        markedMeshContexts[i] = markedSkip();
-      }
-    }
-  }
-  else {
-    for (int i=0; i < (int)markedMeshContexts.size(); i++){
-      const MeshContext* context = _accessor->usedMeshContexts()[i];
-      if (utils::contained(context->mesh->getID(), meshIDs)){
-        if (context->spacetree.get() == nullptr){
-          markedMeshContexts[i] = markedQueryDirectly();
-        }
-        else {
-          bool allSpacetreeMeshesAreInquired = true;
-          for (const mesh::PtrMesh& mesh : context->spacetree->meshes()) {
-            if (not utils::contained(mesh->getID(), meshIDs)){
-              allSpacetreeMeshesAreInquired = false;
-              break;
-            }
-          }
-          if (allSpacetreeMeshesAreInquired){
-            bool isFirst = context->mesh->getID()
-                           == context->spacetree->meshes().front()->getID();
-            if (isFirst){
-              markedMeshContexts[i] = markedQuerySpacetree();
-            }
-            else {
-              // Not selected, since already covered by query of first spacetree mesh.
-              markedMeshContexts[i] = markedSkip();
-            }
-          }
-          else {
-            markedMeshContexts[i] = markedQueryDirectly();
-          }
-        }
-      }
-      else {
-        markedMeshContexts[i] = markedSkip();
-      }
-    }
-  }
-}
 
 void SolverInterfaceImpl:: initializeClientServerCommunication()
 {
