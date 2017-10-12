@@ -8,7 +8,7 @@ using Par = precice::utils::Parallel;
 using namespace precice;
 using namespace precice::com;
 
-BOOST_AUTO_TEST_SUITE(Communication)
+BOOST_AUTO_TEST_SUITE(CommunicationTests)
 
 // Tests disabled because they fail on Travis, nowhere else
 BOOST_AUTO_TEST_SUITE(MPICommunication,

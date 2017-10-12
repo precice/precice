@@ -7,7 +7,7 @@ using namespace precice::mesh;
 namespace bg = boost::geometry;
 namespace bgi = boost::geometry::index;
 
-BOOST_AUTO_TEST_SUITE(Mesh)
+BOOST_AUTO_TEST_SUITE(MeshTests)
 BOOST_AUTO_TEST_SUITE(RTree)
 
 BOOST_AUTO_TEST_CASE(Query_2D)

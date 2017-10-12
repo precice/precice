@@ -5,7 +5,7 @@
 
 using namespace precice::utils;
 
-BOOST_AUTO_TEST_SUITE(Utils)
+BOOST_AUTO_TEST_SUITE(UtilsTests)
 
 BOOST_AUTO_TEST_CASE(LinearizeDelinearize)
 {
