@@ -1,6 +1,5 @@
 #include "ModifyCoordinatesActionTest.hpp"
 #include "action/ModifyCoordinatesAction.hpp"
-#include "geometry/Cuboid.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"

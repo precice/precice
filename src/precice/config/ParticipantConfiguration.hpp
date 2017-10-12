@@ -3,7 +3,6 @@
 
 #include "precice/impl/Participant.hpp"
 #include "mesh/SharedPointer.hpp"
-#include "geometry/SharedPointer.hpp"
 #include "mapping/SharedPointer.hpp"
 #include "io/SharedPointer.hpp"
 #include "logging/Logger.hpp"
@@ -28,8 +27,7 @@ public:
    */
   ParticipantConfiguration (
     utils::XMLTag&                              parent,
-    const mesh::PtrMeshConfiguration&           meshConfiguration,
-    const geometry::PtrGeometryConfiguration&   geometryConfiguration);
+    const mesh::PtrMeshConfiguration&           meshConfiguration);
 
   void setDimensions ( int dimensions );
 
@@ -113,8 +111,6 @@ private:
   int _dimensions;
 
   mesh::PtrMeshConfiguration _meshConfig;
-
-  geometry::PtrGeometryConfiguration _geometryConfig;
 
   mapping::PtrMappingConfiguration _mappingConfig;
 

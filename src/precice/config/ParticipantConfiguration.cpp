@@ -6,7 +6,6 @@
 #include "com/config/CommunicationConfiguration.hpp"
 #include "action/config/ActionConfiguration.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
-#include "geometry/config/GeometryConfiguration.hpp"
 #include "mapping/Mapping.hpp"
 #include "mapping/config/MappingConfiguration.hpp"
 #include "utils/Globals.hpp"
@@ -38,8 +37,7 @@ logging::Logger ParticipantConfiguration::
 ParticipantConfiguration:: ParticipantConfiguration
 (
   utils::XMLTag&                              parent,
-  const mesh::PtrMeshConfiguration&           meshConfiguration,
-  const geometry::PtrGeometryConfiguration&   geometryConfiguration)
+  const mesh::PtrMeshConfiguration&           meshConfiguration)
 :
   TAG("participant"),
   TAG_WRITE("write-data"),
@@ -71,7 +69,6 @@ ParticipantConfiguration:: ParticipantConfiguration
   VALUE_VRML ( "vrml" ),
   _dimensions(0),
   _meshConfig(meshConfiguration),
-  _geometryConfig(geometryConfiguration),
   _mappingConfig(),
   _actionConfig(),
   //_isValid(false),
@@ -83,9 +80,8 @@ ParticipantConfiguration:: ParticipantConfiguration
   using namespace utils;
   std::string doc;
   XMLTag tag(*this, TAG, XMLTag::OCCUR_ONCE_OR_MORE);
-  doc = "Represents one solver using preCICE. In a coupled simulation, two ";
-  doc += "participants have to be defined, while in geometry mode (see tag ";
-  doc += "<solver-interface>) only one participant is necessary.";
+  doc = "Represents one solver using preCICE. In a coupled simulation, at least two ";
+  doc += "participants have to be defined.";
   tag.setDocumentation(doc);
 
   XMLAttribute<std::string> attrName(ATTR_NAME);
@@ -157,8 +153,7 @@ ParticipantConfiguration:: ParticipantConfiguration
   tagUseMesh.addAttribute(attrLocalOffset);
 
   XMLAttribute<std::string> attrFrom(ATTR_FROM);
-  doc = "A mesh might not be constructed by a geometry (see tags <geometry:...>), ";
-  doc += "but by a solver directly. If a solver created mesh should be used by ";
+  doc += "If a solver created mesh should be used by ";
   doc += "another solver, this attribute has to specify the creating participant's";
   doc += " name. The creator has to use the attribute \"provide\" to signal he is ";
   doc += "providing the mesh geometry.";
@@ -190,8 +185,7 @@ ParticipantConfiguration:: ParticipantConfiguration
   tagUseMesh.addAttribute(attrDecomposition);
 
   XMLAttribute<bool> attrProvide(ATTR_PROVIDE);
-  doc = "A mesh might not be constructed by a geometry (see tags<geometry:...>), ";
-  doc += "but by a solver directly. If this attribute is set to \"on\", the ";
+  doc += "If this attribute is set to \"on\", the ";
   doc += "participant has to create the mesh geometry before initializing preCICE.";
   attrProvide.setDocumentation(doc);
   attrProvide.setDefaultValue(false);

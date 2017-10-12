@@ -2,7 +2,6 @@
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
-#include "geometry/Geometry.hpp"
 #include "utils/Globals.hpp"
 
 namespace precice {

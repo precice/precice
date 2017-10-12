@@ -5,12 +5,10 @@
 #include "mesh/config/DataConfiguration.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
-#include "geometry/config/GeometryConfiguration.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
 #include "mapping/SharedPointer.hpp"
 #include "utils/xml/ValidatorEquals.hpp"
 #include "utils/xml/ValidatorOr.hpp"
-#include "geometry/Geometry.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
 #include "cplscheme/UncoupledScheme.hpp"
 
@@ -35,7 +33,6 @@ SolverInterfaceConfiguration:: SolverInterfaceConfiguration
   _dataConfiguration(),
   _meshConfiguration(),
   _m2nConfiguration(),
-  _geometryConfiguration(),
   _participantConfiguration(),
   _couplingSchemeConfiguration()
 {
@@ -74,11 +71,8 @@ SolverInterfaceConfiguration:: SolverInterfaceConfiguration
       new mesh::MeshConfiguration(tag, _dataConfiguration) );
   _m2nConfiguration = m2n::M2NConfiguration::SharedPointer (
       new m2n::M2NConfiguration(tag) );
-  _geometryConfiguration = geometry::PtrGeometryConfiguration (
-      new geometry::GeometryConfiguration(tag, _meshConfiguration) );
   _participantConfiguration = config::PtrParticipantConfiguration (
-      new ParticipantConfiguration(tag, _meshConfiguration,
-     _geometryConfiguration) );
+    new ParticipantConfiguration(tag, _meshConfiguration) );
   _couplingSchemeConfiguration = cplscheme::PtrCouplingSchemeConfiguration (
     new cplscheme::CouplingSchemeConfiguration(tag, _meshConfiguration,
     _m2nConfiguration) );
@@ -97,7 +91,6 @@ void SolverInterfaceConfiguration:: xmlTagCallback
     _restartMode = tag.getBooleanAttributeValue(ATTR_RESTART_MODE);
     _dataConfiguration->setDimensions(_dimensions);
     _meshConfiguration->setDimensions(_dimensions);
-    _geometryConfiguration->setDimensions(_dimensions);
     _participantConfiguration->setDimensions(_dimensions);
   }
   else {

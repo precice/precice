@@ -4,7 +4,6 @@
 #include "SharedPointer.hpp"
 #include "action/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
-#include "geometry/SharedPointer.hpp"
 #include "mapping/SharedPointer.hpp"
 #include "io/config/ExportConfiguration.hpp"
 #include "io/ExportContext.hpp"

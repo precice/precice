@@ -19,12 +19,6 @@ sourcesMain = [
     Glob('drivers/main.cpp')
 ]
 
-sourcesGeometry = [
-    Glob('geometry/*.cpp'),
-    Glob('geometry/config/*.cpp'),
-    Glob('geometry/impl/*.cpp')
-]
-
 sourcesIO = [
     Glob('io/*.cpp'),
     Glob('io/impl/*.cpp'),
@@ -96,14 +90,12 @@ sourcesTarchTests = [
     Glob('action/tests/*.cpp'),
     Glob('com/tests/*.cpp'),
     Glob('cplscheme/tests/*.cpp'),
-    Glob('geometry/tests/*.cpp'),
     Glob('io/tests/*.cpp'),
     Glob('m2n/tests/*.cpp'),
     Glob('mapping/tests/*.cpp'),
     Glob('mesh/tests/*.cpp'),
     Glob('query/tests/*.cpp'),
     Glob('precice/tests/*.cpp'),
-    Glob('precice/tests/geometrymode/*.cpp'),
     Glob('precice/tests/couplingmode/*.cpp'),
     Glob('precice/tests/servermode/*.cpp'),
     Glob('tarch/la/tests/*.cpp'),
@@ -125,7 +117,6 @@ sourcesAllNoMain = [
     sourcesAction,
     sourcesCom,
     sourcesCplscheme,
-    sourcesGeometry,
     sourcesIO,
     sourcesLogging,
     sourcesM2N,

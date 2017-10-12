@@ -23,14 +23,6 @@
 #include "m2n/config/M2NConfiguration.hpp"
 #include "m2n/M2N.hpp"
 #include "m2n/PointToPointCommunication.hpp"
-#include "geometry/config/GeometryConfiguration.hpp"
-#include "geometry/Geometry.hpp"
-#include "geometry/ImportGeometry.hpp"
-#include "geometry/CommunicatedGeometry.hpp"
-#include "geometry/impl/Decomposition.hpp"
-#include "geometry/impl/PreFilterPostFilterDecomposition.hpp"
-#include "geometry/impl/BroadcastFilterDecomposition.hpp"
-#include "geometry/SolverGeometry.hpp"
 #include "cplscheme/CouplingScheme.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
 #include "utils/EventTimings.hpp"
@@ -1589,8 +1581,7 @@ void SolverInterfaceImpl:: configurePartitions
       std::string receiver ( _accessorName );
       std::string provider ( context->receiveMeshFrom );
       DEBUG ( "Receiving mesh from " << provider );
-      geometry::impl::PtrDecomposition decomp = nullptr;
-
+      
       context->partition = partition::PtrPartition ( new partition::ReceivedPartition( context->mesh, context->geoFilter, context->safetyFactor));
 
       m2n::PtrM2N m2n = m2nConfig->getM2N ( receiver, provider );

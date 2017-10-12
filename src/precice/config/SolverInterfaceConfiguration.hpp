@@ -4,7 +4,6 @@
 #include "precice/impl/Participant.hpp"
 #include "precice/impl/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
-#include "geometry/SharedPointer.hpp"
 #include "cplscheme/SharedPointer.hpp"
 #include "mapping/SharedPointer.hpp"
 #include "m2n/M2N.hpp"
@@ -90,11 +89,6 @@ public:
     return _m2nConfiguration;
   }
 
-  const geometry::PtrGeometryConfiguration getGeometryConfiguration() const
-  {
-    return _geometryConfiguration;
-  }
-
   const PtrParticipantConfiguration& getParticipantConfiguration() const;
 
   const cplscheme::PtrCouplingSchemeConfiguration
@@ -120,14 +114,6 @@ public:
   }
 
   /**
-   * @brief For manual configuration in test cases.
-   */
-   void setGeometryConfiguration ( geometry::PtrGeometryConfiguration config )
-   {
-     _geometryConfiguration = config;
-   }
-
-   /**
     * @brief For manual configuration in test cases.
     */
    void setParticipantConfiguration ( PtrParticipantConfiguration config )
@@ -166,8 +152,6 @@ private:
   mesh::PtrMeshConfiguration _meshConfiguration;
 
   m2n::M2NConfiguration::SharedPointer _m2nConfiguration;
-
-  geometry::PtrGeometryConfiguration _geometryConfiguration;
 
   PtrParticipantConfiguration _participantConfiguration;
 

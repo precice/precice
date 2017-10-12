@@ -4,7 +4,6 @@
 #include "precice/impl/MeshContext.hpp"
 #include "precice/impl/DataContext.hpp"
 #include "precice/config/Configuration.hpp"
-#include "geometry/Geometry.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Globals.hpp"
 #include "utils/MasterSlave.hpp"
