@@ -75,7 +75,6 @@ CouplingSchemeConfiguration:: CouplingSchemeConfiguration
   VALUE_SERIAL_IMPLICIT("serial-implicit"),
   VALUE_PARALLEL_IMPLICIT("parallel-implicit"),
   VALUE_MULTI("multi"),
-  VALUE_UNCOUPLED("uncoupled"),
   VALUE_FIXED("fixed"),
   VALUE_FIRST_PARTICIPANT("first-participant"),
   _config(),
@@ -133,14 +132,6 @@ CouplingSchemeConfiguration:: CouplingSchemeConfiguration
     addTypespecifcSubtags(VALUE_MULTI, tag);
     tags.push_back(tag);
   }
-  {
-    XMLTag tag(*this, VALUE_UNCOUPLED, occ, TAG);
-    doc = "Coupling scheme for using geometry mode, i.e., for a solver that uses";
-    doc += " preCICE without coupling to another solver.";
-    tag.setDocumentation(doc);
-    addTypespecifcSubtags(VALUE_UNCOUPLED, tag);
-    tags.push_back(tag);
-  }
 
   for (XMLTag& tag : tags) {
     parent.addSubtag(tag);
@@ -178,7 +169,6 @@ void CouplingSchemeConfiguration:: xmlTagCallback
         tag.getIntAttributeValue(ATTR_TIMESTEP_INTERVAL);
   }
   else if (tag.getName() == TAG_PARTICIPANTS){
-    assertion(_config.type != VALUE_UNCOUPLED);
     _config.participants.push_back(tag.getStringAttributeValue(ATTR_FIRST));
     _config.participants.push_back(tag.getStringAttributeValue(ATTR_SECOND));
   }
@@ -252,7 +242,6 @@ void CouplingSchemeConfiguration:: xmlTagCallback
     addMinIterationConvergenceMeasure(dataName, meshName, minIterations, suffices, level);
   }
   else if (tag.getName() == TAG_EXCHANGE){
-    assertion(_config.type != VALUE_UNCOUPLED);
     std::string nameData = tag.getStringAttributeValue(ATTR_DATA);
     std::string nameMesh = tag.getStringAttributeValue(ATTR_MESH);
     std::string nameParticipantFrom = tag.getStringAttributeValue(ATTR_FROM);
@@ -353,9 +342,6 @@ void CouplingSchemeConfiguration:: xmlEndTagCallback
       addCouplingScheme(scheme, _config.controller);
       _config = Config();
     }
-    else if (_config.type == VALUE_UNCOUPLED){
-      assertion(false);
-    }
     else {
       assertion(false,_config.type);
     }
@@ -447,8 +433,6 @@ void CouplingSchemeConfiguration:: addTypespecifcSubtags
     addTagMinIterationConvergenceMeasure(tag);
     addTagMaxIterations(tag);
     addTagExtrapolation(tag);
-  }
-  else if (type == VALUE_UNCOUPLED){
   }
   else {
     ERROR("Unknown coupling scheme type!");

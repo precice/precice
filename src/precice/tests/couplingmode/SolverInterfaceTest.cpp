@@ -193,18 +193,6 @@ void SolverInterfaceTest:: testExplicit()
   }
   utils::Parallel::synchronizeProcesses(); // close all sockets before continuing
 
-//  if (utils::Parallel::getProcessRank() == 0){
-//    runSolver("SolverOne", "/explicit-files.xml",
-//              timesteps, time);
-//    validateEquals(time, 10.0);
-//    validateEquals(timesteps, 10);
-//  }
-//  else if (utils::Parallel::getProcessRank() == 1){
-//    runSolver("SolverTwo", "/explicit-files.xml",
-//              timesteps, time);
-//    validateEquals(time, 10.0);
-//    validateEquals(timesteps, 10);
-//  }
 }
 
 void SolverInterfaceTest:: testExplicitWithSubcycling()

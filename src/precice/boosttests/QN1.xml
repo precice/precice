@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 
 <precice-configuration>
-   <solver-interface dimensions="2" restart-mode="off" geometry-mode="off">
+   <solver-interface dimensions="2" >
    
       <data:scalar name="Data1"  />
       <data:scalar name="Data2"  />

@@ -22,7 +22,6 @@ class RequestManager
 public:
 
   RequestManager (
-    bool                  geometryMode,
     SolverInterfaceImpl&  solverInterfaceImpl,
     com::PtrCommunication clientServerCommunication,
     cplscheme::PtrCouplingScheme couplingScheme);
@@ -266,8 +265,6 @@ private:
   };
 
   static logging::Logger _log;
-
-  bool _isGeometryMode;
 
   SolverInterfaceImpl& _interface;
 

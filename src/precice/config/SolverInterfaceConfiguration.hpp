@@ -51,22 +51,6 @@ public:
   int getDimensions() const;
 
   /**
-   * @brief Returns true if preCICE is to be used as pure geometry interface.
-   */
-  bool isGeometryMode() const
-  {
-    return _geometryMode;
-  }
-
-  /**
-   * @brief For manual configuration in test cases.
-   */
-  void setGeometryMode()
-  {
-    _geometryMode = true;
-  }
-
-  /**
    * @brief Returns true if a restart checkpoint should be read.
    */
   bool isRestartMode() const
@@ -129,14 +113,10 @@ private:
   // Tag and subtag names used within this configuration.
   const std::string TAG;
   const std::string ATTR_DIMENSIONS;
-  const std::string ATTR_GEOMETRY_MODE;
   const std::string ATTR_RESTART_MODE;
   
   // @brief Spatial dimension of problem to be solved. Either 2 or 3.
   int _dimensions;
-
-  // @brief True, if pure geometry mode configuration without coupling is read.
-  bool _geometryMode;
 
   // @brief True, if the coupled simulation is started from a checkpoint.
   bool _restartMode;

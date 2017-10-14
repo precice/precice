@@ -10,7 +10,6 @@
 #include "utils/xml/ValidatorEquals.hpp"
 #include "utils/xml/ValidatorOr.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
-#include "cplscheme/UncoupledScheme.hpp"
 
 namespace precice {
 namespace config {
@@ -23,10 +22,8 @@ SolverInterfaceConfiguration:: SolverInterfaceConfiguration
 :
   TAG("solver-interface"),
   ATTR_DIMENSIONS("dimensions"),
-  ATTR_GEOMETRY_MODE("geometry-mode"),
   ATTR_RESTART_MODE("restart-mode"),
   _dimensions(-1),
-  _geometryMode(false),
   _restartMode(false),
   //_participants(),
   //_indexAccessor(-1),
@@ -48,14 +45,6 @@ SolverInterfaceConfiguration:: SolverInterfaceConfiguration
   ValidatorEquals<int> validDim3(3);
   attrDimensions.setValidator(validDim2 || validDim3);
   tag.addAttribute(attrDimensions);
-
-  XMLAttribute<bool> attrGeometryMode(ATTR_GEOMETRY_MODE);
-  doc = "By default it is assumed that preCICE is used to perform partitioned ";
-  doc += "coupled simulations. If geometry-mode is activated, preCICE can be ";
-  doc += "used by a single solver only.";
-  attrGeometryMode.setDocumentation(doc);
-  attrGeometryMode.setDefaultValue(false);
-  tag.addAttribute(attrGeometryMode);
 
   XMLAttribute<bool> attrRestartMode(ATTR_RESTART_MODE);
   doc = "If restart-mode is activated, a formerly created simulation checkpoint ";
@@ -87,7 +76,6 @@ void SolverInterfaceConfiguration:: xmlTagCallback
   TRACE();
   if (tag.getName() == TAG){
     _dimensions = tag.getIntAttributeValue(ATTR_DIMENSIONS);
-    _geometryMode = tag.getBooleanAttributeValue(ATTR_GEOMETRY_MODE);
     _restartMode = tag.getBooleanAttributeValue(ATTR_RESTART_MODE);
     _dataConfiguration->setDimensions(_dimensions);
     _meshConfiguration->setDimensions(_dimensions);
@@ -105,50 +93,33 @@ void SolverInterfaceConfiguration:: xmlEndTagCallback
   TRACE();
   if (tag.getName() == TAG){
     _meshConfiguration->setMeshSubIDs();
-    if (_geometryMode ){
-      assertion ( _participantConfiguration->getParticipants().size() == 1 );
-      CHECK(not _participantConfiguration->getParticipants()[0]->useMaster(),
-            "In geometry mode, the usage of a master is not yet supported");
-      std::string name = _participantConfiguration->getParticipants()[0]->getName();
-      if ( not _couplingSchemeConfiguration->hasCouplingScheme(name)){
-        double maxTime = cplscheme::CouplingScheme::UNDEFINED_TIME;
-        int maxTimesteps = cplscheme::CouplingScheme::UNDEFINED_TIMESTEPS;
-        int validDigits = 10;
-        cplscheme::PtrCouplingScheme cplScheme (
-            new cplscheme::UncoupledScheme(maxTime, maxTimesteps,
-            validDigits, name) );
-        _couplingSchemeConfiguration->addCouplingScheme ( cplScheme, name );
-      }
-    }
-    else{
 
-      //test if both participants do have the exchange meshes
-      typedef std::map<std::string, std::vector<std::string> >::value_type neededMeshPair;
-      for (const neededMeshPair& neededMeshes : _meshConfiguration->getNeededMeshes()){
-        bool participantFound = false;
-        for (const impl::PtrParticipant& participant : _participantConfiguration->getParticipants()){
-          if(participant->getName()==neededMeshes.first){
-            for (const std::string& neededMesh  : neededMeshes.second){
-              bool meshFound = false;
-              for (impl::MeshContext* meshContext : participant->usedMeshContexts()){
-                if(meshContext->mesh->getName()==neededMesh){
-                  meshFound = true;
-                  break;
-                }
+    //test if both participants do have the exchange meshes
+    typedef std::map<std::string, std::vector<std::string> >::value_type neededMeshPair;
+    for (const neededMeshPair& neededMeshes : _meshConfiguration->getNeededMeshes()){
+      bool participantFound = false;
+      for (const impl::PtrParticipant& participant : _participantConfiguration->getParticipants()){
+        if(participant->getName()==neededMeshes.first){
+          for (const std::string& neededMesh  : neededMeshes.second){
+            bool meshFound = false;
+            for (impl::MeshContext* meshContext : participant->usedMeshContexts()){
+              if(meshContext->mesh->getName()==neededMesh){
+                meshFound = true;
+                break;
               }
-              CHECK(meshFound,
-                    "The participant "<< neededMeshes.first <<
-                    " needs to use the mesh " << neededMesh <<
-                    " if he wants to use it in the coupling scheme.");
             }
-            participantFound = true;
-            break;
+            CHECK(meshFound,
+                  "The participant "<< neededMeshes.first <<
+                  " needs to use the mesh " << neededMesh <<
+                  " if he wants to use it in the coupling scheme.");
           }
+          participantFound = true;
+          break;
         }
-        assertion(participantFound);
       }
-
+      assertion(participantFound);
     }
+
   }
 }
 

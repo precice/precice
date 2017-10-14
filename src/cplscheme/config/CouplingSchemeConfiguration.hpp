@@ -135,7 +135,6 @@ private:
   const std::string VALUE_SERIAL_IMPLICIT;
   const std::string VALUE_PARALLEL_IMPLICIT;
   const std::string VALUE_MULTI;
-  const std::string VALUE_UNCOUPLED;
   const std::string VALUE_FIXED;
   const std::string VALUE_FIRST_PARTICIPANT;
 

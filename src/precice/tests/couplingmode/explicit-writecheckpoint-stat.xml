@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 
 <precice-configuration>
-   <solver-interface dimensions="2" restart-mode="off" geometry-mode="off">
+   <solver-interface dimensions="2">
    
       <data:vector name="Forces"/>
       <data:vector name="Velocities"/>

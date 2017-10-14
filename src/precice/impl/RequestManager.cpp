@@ -11,12 +11,10 @@ logging::Logger RequestManager::_log("impl::RequestManager");
 
 RequestManager:: RequestManager
 (
-  bool                  geometryMode,
   SolverInterfaceImpl&  solverInterfaceImpl,
   com::PtrCommunication clientServerCommunication,
   cplscheme::PtrCouplingScheme couplingScheme)
 :
-  _isGeometryMode(geometryMode),
   _interface(solverInterfaceImpl),
   _com(clientServerCommunication),
   _couplingScheme(couplingScheme)
@@ -246,10 +244,6 @@ void RequestManager:: requestInitialize()
 void RequestManager:: requestInitialzeData()
 {
   TRACE();
-  if (_isGeometryMode){
-    INFO("Skipping data initialization in geometry mode");
-    return;
-  }
   _com->send(REQUEST_INITIALIZE_DATA, 0);
   _couplingScheme->receiveState(_com, 0);
 }

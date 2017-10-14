@@ -25,7 +25,6 @@ namespace precice {
   namespace tests {
     class SolverInterfaceTest;
     class SolverInterfaceTestRemote;
-    class SolverInterfaceTestGeometry;
   }
 }
 
@@ -511,9 +510,6 @@ private:
   // @brief Spatial dimensions of problem.
   int _dimensions;
 
-  // @brief If true, the SolverInterfaceImpl is used by one solver only.
-  bool _geometryMode;
-
   // @brief If true, the simulation continues from a written checkpoint.
   bool _restartMode;
 
@@ -694,7 +690,6 @@ private:
   // @brief To allow white box tests.
   friend class tests::SolverInterfaceTest;
   friend class tests::SolverInterfaceTestRemote;
-  friend class tests::SolverInterfaceTestGeometry;
 };
 
 }} // namespace precice, impl

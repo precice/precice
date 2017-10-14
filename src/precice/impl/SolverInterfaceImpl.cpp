@@ -66,7 +66,6 @@ SolverInterfaceImpl:: SolverInterfaceImpl
   _accessorCommunicatorSize(accessorCommunicatorSize),
   _accessor(),
   _dimensions(0),
-  _geometryMode(false),
   _restartMode(false),
   _serverMode(serverMode),
   _clientMode(false),
@@ -131,7 +130,6 @@ void SolverInterfaceImpl:: configure
 {
   TRACE();
   _dimensions = config.getDimensions();
-  _geometryMode = config.isGeometryMode ();
   _restartMode = config.isRestartMode ();
   _accessor = determineAccessingParticipant(config);
 
@@ -156,13 +154,7 @@ void SolverInterfaceImpl:: configure
     INFO("Run in client mode");
   }
 
-  if (_geometryMode){
-    INFO("Run in geometry mode");
-    preciceCheck(_participants.size() == 1, "configure()",
-                 "Only one participant can be defined in geometry mode!");
-    configurePartitions(config.getM2NConfiguration());
-  }
-  else if (not _clientMode){
+  if (not _clientMode){
     INFO("Run in coupling mode");
     preciceCheck(_participants.size() > 1,
                  "configure()", "At least two participants need to be defined!");
@@ -182,7 +174,7 @@ void SolverInterfaceImpl:: configure
   if (_serverMode || _clientMode){
     com::PtrCommunication com = _accessor->getClientServerCommunication();
     assertion(com.get() != nullptr);
-    _requestManager = new RequestManager(_geometryMode, *this, com, _couplingScheme);
+    _requestManager = new RequestManager(*this, com, _couplingScheme);
   }
 
   // Add meshIDs and data IDs
@@ -230,65 +222,32 @@ double SolverInterfaceImpl:: initialize()
   }
   else {
     // Setup communication
-    if (not _geometryMode){
-      typedef std::map<std::string,M2NWrap>::value_type M2NPair;
-      INFO("Setting up master communication to coupling partner/s " );
-      for (M2NPair& m2nPair : _m2ns) {
-        m2n::PtrM2N& m2n = m2nPair.second.m2n;
-        std::string localName = _accessorName;
-        if (_serverMode) localName += "Server";
-        std::string remoteName(m2nPair.first);
-        preciceCheck(m2n.get() != nullptr, "initialize()",
-                     "M2N communication from " << localName << " to participant "
-                     << remoteName << " could not be created! Check compile "
-                     "flags used!");
-        if (m2nPair.second.isRequesting){
-          m2n->requestMasterConnection(remoteName, localName);
-        }
-        else {
-          m2n->acceptMasterConnection(localName, remoteName);
-        }
+
+    typedef std::map<std::string,M2NWrap>::value_type M2NPair;
+    INFO("Setting up master communication to coupling partner/s " );
+    for (M2NPair& m2nPair : _m2ns) {
+      m2n::PtrM2N& m2n = m2nPair.second.m2n;
+      std::string localName = _accessorName;
+      if (_serverMode) localName += "Server";
+      std::string remoteName(m2nPair.first);
+      preciceCheck(m2n.get() != nullptr, "initialize()",
+                   "M2N communication from " << localName << " to participant "
+                   << remoteName << " could not be created! Check compile "
+                   "flags used!");
+      if (m2nPair.second.isRequesting){
+        m2n->requestMasterConnection(remoteName, localName);
       }
-      INFO("Coupling partner/s are connected " );
+      else {
+        m2n->acceptMasterConnection(localName, remoteName);
+      }
     }
+    INFO("Coupling partner/s are connected " );
+
 
     DEBUG("Perform initializations");
 
 
     computePartitions();
-
-//    //create geometry. we need to do this in two loops, to first communicate the mesh and later decompose it
-//    //originally this was done in one loop. this however gave deadlock if two meshes needed to be communicated cross-wise.
-//    //both loops need a different sorting
-//
-//    // sort meshContexts by name, for communication in right order.
-//    std::sort (_accessor->usedMeshContexts().begin(), _accessor->usedMeshContexts().end(),
-//        []( MeshContext* lhs, const MeshContext* rhs) -> bool
-//        {
-//          return lhs->mesh->getName() < rhs->mesh->getName();
-//        } );
-//
-//    for (MeshContext* meshContext : _accessor->usedMeshContexts()){
-//      prepareGeometry(*meshContext);
-//    }
-//
-//    // now sort provided meshes up front, to have them ready for the decomposition
-//    std::sort (_accessor->usedMeshContexts().begin(), _accessor->usedMeshContexts().end(),
-//        []( MeshContext* lhs, const MeshContext* rhs) -> bool
-//        {
-//          if(lhs->provideMesh && not rhs->provideMesh){
-//            return true;
-//          }
-//          if(not lhs->provideMesh && rhs->provideMesh){
-//            return false;
-//          }
-//          return lhs->mesh->getName() < rhs->mesh->getName();
-//        } );
-//
-//    for (MeshContext* meshContext : _accessor->usedMeshContexts()){
-//      createGeometry(*meshContext);
-//    }
-
 
     typedef std::map<std::string,M2NWrap>::value_type M2NPair;
     INFO("Setting up slaves communication to coupling partner/s " );
@@ -361,30 +320,28 @@ void SolverInterfaceImpl:: initializeData ()
 
   preciceCheck(_couplingScheme->isInitialized(), "initializeData()",
                "initialize() has to be called before initializeData()");
-  if (not _geometryMode){
-    if (_clientMode){
-      _requestManager->requestInitialzeData();
+  if (_clientMode){
+    _requestManager->requestInitialzeData();
+  }
+  else {
+    mapWrittenData();
+    _couplingScheme->initializeData();
+    double dt = _couplingScheme->getNextTimestepMaxLength();
+    std::set<action::Action::Timing> timings;
+    if (_couplingScheme->hasDataBeenExchanged()){
+      timings.insert(action::Action::ON_EXCHANGE_POST);
+      mapReadData();
     }
-    else {
-      mapWrittenData();
-      _couplingScheme->initializeData();
-      double dt = _couplingScheme->getNextTimestepMaxLength();
-      std::set<action::Action::Timing> timings;
-      if (_couplingScheme->hasDataBeenExchanged()){
-        timings.insert(action::Action::ON_EXCHANGE_POST);
-        mapReadData();
-      }
-      performDataActions(timings, 0.0, 0.0, 0.0, dt);
-      resetWrittenData();
-      DEBUG("Plot output...");
-      for (const io::ExportContext& context : _accessor->exportContexts()){
-        if (context.timestepInterval != -1){
-          std::ostringstream suffix;
-          suffix << _accessorName << ".init";
-          exportMesh(suffix.str());
-          if (context.triggerSolverPlot){
-            _couplingScheme->requireAction(constants::actionPlotOutput());
-          }
+    performDataActions(timings, 0.0, 0.0, 0.0, dt);
+    resetWrittenData();
+    DEBUG("Plot output...");
+    for (const io::ExportContext& context : _accessor->exportContexts()){
+      if (context.timestepInterval != -1){
+        std::ostringstream suffix;
+        suffix << _accessorName << ".init";
+        exportMesh(suffix.str());
+        if (context.triggerSolverPlot){
+          _couplingScheme->requireAction(constants::actionPlotOutput());
         }
       }
     }
@@ -424,20 +381,14 @@ double SolverInterfaceImpl:: advance
     // Update the coupling scheme time state. Necessary to get correct remainder.
     _couplingScheme->addComputedTime(computedTimestepLength);
 
-    if (_geometryMode){
-      timestepLength = computedTimestepLength;
-      timestepPart = computedTimestepLength;
+    //double timestepLength = 0.0;
+    if (_couplingScheme->hasTimestepLength()){
+      timestepLength = _couplingScheme->getTimestepLength();
     }
     else {
-      //double timestepLength = 0.0;
-      if (_couplingScheme->hasTimestepLength()){
-        timestepLength = _couplingScheme->getTimestepLength();
-      }
-      else {
-        timestepLength = computedTimestepLength;
-      }
-      timestepPart = timestepLength - _couplingScheme->getThisTimestepRemainder();
+      timestepLength = computedTimestepLength;
     }
+    timestepPart = timestepLength - _couplingScheme->getThisTimestepRemainder();
     time = _couplingScheme->getTime();
 
 
@@ -1565,7 +1516,7 @@ void SolverInterfaceImpl:: configurePartitions
           }
         }
       }
-      //TODO support offset??
+      //@todo support offset??
       context->partition = partition::PtrPartition ( new partition::ProvidedPartition( context->mesh, hasToSend) );
       if(hasToSend){
         assertion(m2n.use_count()>0);
@@ -1832,21 +1783,7 @@ void SolverInterfaceImpl:: resetWrittenData()
       //assign(context.toData->values()) = 0.0;
     }
   }
-//  if ( _accessor->exportContext().plotNeighbors ){
-//    _exportVTKNeighbors.resetElements ();
-//  }
 }
-
-//void SolverInterfaceImpl:: resetDataIndices()
-//{
-//  TRACE();
-//  for ( DataContext & context : _accessor->writeDataContexts() ){
-//    context.indexCursor = 0;
-//  }
-//  for ( DataContext & context : _accessor->readDataContexts() ){
-//    context.indexCursor = 0;
-//  }
-//}
 
 PtrParticipant SolverInterfaceImpl:: determineAccessingParticipant
 (

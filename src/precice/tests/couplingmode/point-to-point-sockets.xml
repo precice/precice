@@ -4,7 +4,7 @@
 
    
 
-   <solver-interface dimensions="3" restart-mode="off" geometry-mode="off">
+   <solver-interface dimensions="3" >
 
       <data:vector name="Forces"  />
       <data:vector name="Velocities"  />
