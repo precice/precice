@@ -7,7 +7,7 @@
 
 using namespace precice;
 
-BOOST_AUTO_TEST_SUITE(Precice)
+BOOST_AUTO_TEST_SUITE(PreciceTests)
 
 BOOST_AUTO_TEST_CASE(WatchPoint)
 {

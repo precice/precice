@@ -46,7 +46,7 @@ struct ParallelTestFixture {
 
 
 
-BOOST_AUTO_TEST_SUITE(Precice)
+BOOST_AUTO_TEST_SUITE(PreciceTests)
 BOOST_FIXTURE_TEST_SUITE(Parallel, ParallelTestFixture)
 
 
