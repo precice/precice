@@ -51,27 +51,3 @@ void precicef_action_read_iter_checkp_
   }
 }
 
-
-void precicef_action_write_sim_checkp_
-(
-  char*  nameAction,
-  int lengthNameAction )
-{
-  const std::string& name = precice::constants::actionWriteSimulationCheckpoint();
-  assertion(name.size() < (size_t) lengthNameAction, name.size(), lengthNameAction);
-  for (size_t i=0; i < name.size(); i++){
-    nameAction[i] = name[i];
-  }
-}
-
-void precicef_action_read_sim_checkp_
-(
-  char*  nameAction,
-  int lengthNameAction )
-{
-  const std::string& name = precice::constants::actionReadSimulationCheckpoint();
-  assertion(name.size() < (size_t) lengthNameAction, name.size(), lengthNameAction);
-  for (size_t i=0; i < name.size(); i++){
-    nameAction[i] = name[i];
-  }
-}

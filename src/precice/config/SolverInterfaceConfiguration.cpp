@@ -22,11 +22,7 @@ SolverInterfaceConfiguration:: SolverInterfaceConfiguration
 :
   TAG("solver-interface"),
   ATTR_DIMENSIONS("dimensions"),
-  ATTR_RESTART_MODE("restart-mode"),
   _dimensions(-1),
-  _restartMode(false),
-  //_participants(),
-  //_indexAccessor(-1),
   _dataConfiguration(),
   _meshConfiguration(),
   _m2nConfiguration(),
@@ -45,14 +41,6 @@ SolverInterfaceConfiguration:: SolverInterfaceConfiguration
   ValidatorEquals<int> validDim3(3);
   attrDimensions.setValidator(validDim2 || validDim3);
   tag.addAttribute(attrDimensions);
-
-  XMLAttribute<bool> attrRestartMode(ATTR_RESTART_MODE);
-  doc = "If restart-mode is activated, a formerly created simulation checkpoint ";
-  doc += "is read at start of the simulation. The participating solvers have to ";
-  doc += "write/read there own checkpoints of simulation data.";
-  attrRestartMode.setDocumentation(doc);
-  attrRestartMode.setDefaultValue(false);
-  tag.addAttribute(attrRestartMode);
 
   _dataConfiguration = mesh::PtrDataConfiguration (
       new mesh::DataConfiguration(tag) );
@@ -76,7 +64,6 @@ void SolverInterfaceConfiguration:: xmlTagCallback
   TRACE();
   if (tag.getName() == TAG){
     _dimensions = tag.getIntAttributeValue(ATTR_DIMENSIONS);
-    _restartMode = tag.getBooleanAttributeValue(ATTR_RESTART_MODE);
     _dataConfiguration->setDimensions(_dimensions);
     _meshConfiguration->setDimensions(_dimensions);
     _participantConfiguration->setDimensions(_dimensions);

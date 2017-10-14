@@ -50,14 +50,6 @@ public:
    */
   int getDimensions() const;
 
-  /**
-   * @brief Returns true if a restart checkpoint should be read.
-   */
-  bool isRestartMode() const
-  {
-    return _restartMode;
-  }
-
   const mesh::PtrDataConfiguration getDataConfiguration() const
   {
     return _dataConfiguration;
@@ -113,13 +105,9 @@ private:
   // Tag and subtag names used within this configuration.
   const std::string TAG;
   const std::string ATTR_DIMENSIONS;
-  const std::string ATTR_RESTART_MODE;
   
   // @brief Spatial dimension of problem to be solved. Either 2 or 3.
   int _dimensions;
-
-  // @brief True, if the coupled simulation is started from a checkpoint.
-  bool _restartMode;
 
   // @brief Participating solvers in the coupled simulation.
   //std::vector<impl::PtrParticipant> _participants;

@@ -34,21 +34,6 @@ module PreCICE_consts_module
       integer(kind=c_int), value :: lengthNameAction
     end subroutine precicef_action_read_iter_checkp
 
-
-    subroutine precicef_action_write_sim_checkp(nameAction, lengthNameAction) &
-      &        bind(c, name="precicef_action_write_sim_checkp_")
-      use, intrinsic :: iso_c_binding
-      character(kind=c_char), dimension(*) :: nameAction
-      integer(kind=c_int), value :: lengthNameAction
-    end subroutine precicef_action_write_sim_checkp
-
-    subroutine precicef_action_read_sim_checkp(nameAction, lengthNameAction) &
-      &        bind(c, name="precicef_action_read_sim_checkp_")
-      use, intrinsic :: iso_c_binding
-      character(kind=c_char), dimension(*) :: nameAction
-      integer(kind=c_int), value :: lengthNameAction
-    end subroutine precicef_action_read_sim_checkp
-
   end interface
 
 end module PreCICE_consts_module

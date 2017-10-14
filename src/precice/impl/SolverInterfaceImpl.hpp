@@ -510,9 +510,6 @@ private:
   // @brief Spatial dimensions of problem.
   int _dimensions;
 
-  // @brief If true, the simulation continues from a written checkpoint.
-  bool _restartMode;
-
   // @brief If true, the interface is run as server for another interface
   bool _serverMode;
 
@@ -537,15 +534,6 @@ private:
   std::vector<impl::PtrParticipant> _participants;
 
   cplscheme::PtrCouplingScheme _couplingScheme;
-
-  // @brief To avoid multiple plots during one subcycled global timestep.
-  //bool _alreadyPlotThisTimestep;
-
-  // @brief Defines a timestep interval for global checkpointing
-  int _checkpointTimestepInterval;
-
-  // @brief Name of checkpoint file.
-  std::string _checkpointFileName;
 
   // @brief Counts calls to advance for plotting.
   long int _numberAdvanceCalls;

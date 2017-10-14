@@ -49,7 +49,6 @@ CouplingSchemeConfiguration:: CouplingSchemeConfiguration
   TAG_RES_REL_CONV_MEASURE("residual-relative-convergence-measure"),
   TAG_MIN_ITER_CONV_MEASURE("min-iteration-convergence-measure"),
   TAG_MAX_ITERATIONS("max-iterations"),
-  TAG_CHECKPOINT("checkpoint"),
   TAG_EXTRAPOLATION("extrapolation-order"),
   ATTR_DATA("data"),
   ATTR_MESH("mesh"),
@@ -163,10 +162,6 @@ void CouplingSchemeConfiguration:: xmlTagCallback
   if (tag.getNamespace() == TAG){
     _config.type = tag.getName();
     _postProcConfig->clear();
-  }
-  else if (tag.getName() == TAG_CHECKPOINT){
-    _config.checkpointTimestepInterval =
-        tag.getIntAttributeValue(ATTR_TIMESTEP_INTERVAL);
   }
   else if (tag.getName() == TAG_PARTICIPANTS){
     _config.participants.push_back(tag.getStringAttributeValue(ATTR_FIRST));
@@ -391,7 +386,6 @@ void CouplingSchemeConfiguration:: addTypespecifcSubtags
   _config.type = type;
   //_config.name = name;
 
-  addTagCheckpoint(tag);
 
   if (type == VALUE_SERIAL_EXPLICIT){
     addTagParticipants(tag);
@@ -439,18 +433,6 @@ void CouplingSchemeConfiguration:: addTypespecifcSubtags
   }
 }
 
-void CouplingSchemeConfiguration:: addTagCheckpoint
-(
-   utils::XMLTag& tag )
-{
-  using namespace utils;
-  XMLTag tagCheckpoint(*this, TAG_CHECKPOINT, XMLTag::OCCUR_NOT_OR_ONCE);
-   utils::XMLAttribute<int> attrTimestepInterval(ATTR_TIMESTEP_INTERVAL);
-//   utils::ValidatorGreaterThan<int> validTimestepInterval ( 0 );
-//   attrTimestepInterval.setValidator ( validTimestepInterval );
-   tagCheckpoint.addAttribute(attrTimestepInterval);
-   tag.addSubtag(tagCheckpoint);
-}
 
 void CouplingSchemeConfiguration:: addTransientLimitTags
 (
@@ -726,7 +708,6 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createSerialExplicitCouplingSche
       _config.maxTime, _config.maxTimesteps, _config.timestepLength,
       _config.validDigits, _config.participants[0], _config.participants[1],
       accessor, m2n, _config.dtMethod, BaseCouplingScheme::Explicit );
-  scheme->setCheckPointTimestepInterval ( _config.checkpointTimestepInterval );
 
   addDataToBeExchanged(*scheme, accessor);
 
@@ -744,7 +725,6 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createParallelExplicitCouplingSc
       _config.maxTime, _config.maxTimesteps, _config.timestepLength,
       _config.validDigits, _config.participants[0], _config.participants[1],
       accessor, m2n, _config.dtMethod, BaseCouplingScheme::Explicit );
-  scheme->setCheckPointTimestepInterval ( _config.checkpointTimestepInterval );
 
   addDataToBeExchanged(*scheme, accessor);
 
@@ -763,7 +743,6 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createSerialImplicitCouplingSche
       _config.maxTime, _config.maxTimesteps, _config.timestepLength,
       _config.validDigits, _config.participants[0], _config.participants[1],
       accessor, m2n, _config.dtMethod, BaseCouplingScheme::Implicit, _config.maxIterations );
-  scheme->setCheckPointTimestepInterval(_config.checkpointTimestepInterval);
   scheme->setExtrapolationOrder ( _config.extrapolationOrder );
 
   addDataToBeExchanged(*scheme, accessor);
@@ -806,7 +785,6 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createParallelImplicitCouplingSc
       _config.maxTime, _config.maxTimesteps, _config.timestepLength,
       _config.validDigits, _config.participants[0], _config.participants[1],
       accessor, m2n, _config.dtMethod, BaseCouplingScheme::Implicit, _config.maxIterations );
-  scheme->setCheckPointTimestepInterval(_config.checkpointTimestepInterval);
   scheme->setExtrapolationOrder ( _config.extrapolationOrder );
 
   addDataToBeExchanged(*scheme, accessor);
@@ -857,7 +835,6 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createMultiCouplingScheme
         _config.maxTime, _config.maxTimesteps, _config.timestepLength,
         _config.validDigits, accessor, m2ns, _config.dtMethod,
          _config.maxIterations );
-    scheme->setCheckPointTimestepInterval(_config.checkpointTimestepInterval);
     scheme->setExtrapolationOrder ( _config.extrapolationOrder );
 
     MultiCouplingScheme* castedScheme = dynamic_cast<MultiCouplingScheme*>(scheme);
@@ -870,7 +847,6 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createMultiCouplingScheme
         _config.maxTime, _config.maxTimesteps, _config.timestepLength,
         _config.validDigits, accessor, _config.controller,
         accessor, m2n, _config.dtMethod, BaseCouplingScheme::Implicit, _config.maxIterations );
-    scheme->setCheckPointTimestepInterval(_config.checkpointTimestepInterval);
     scheme->setExtrapolationOrder ( _config.extrapolationOrder );
 
     addDataToBeExchanged(*scheme, accessor);

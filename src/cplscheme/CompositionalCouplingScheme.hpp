@@ -249,14 +249,6 @@ public:
   virtual void performedAction(const std::string& actionName);
 
   /**
-   * @brief Returns the checkpointing timestep interval.
-   *
-   * Returns the smallest interval of all composed schemes, although it makes
-   * not much sense to have different intervals.
-   */
-  virtual int getCheckpointTimestepInterval() const;
-
-  /**
    * @brief Sets an action required to be performed by the accessor.
    */
   virtual void requireAction(const std::string& actionName);
@@ -265,20 +257,6 @@ public:
    * @brief Returns a string representation of the current coupling state.
    */
   virtual std::string printCouplingState() const;
-
-  /**
-   * @brief Exports the state of the coupling scheme to file/s.
-   *
-   * Used for checkpointing.
-   */
-  virtual void exportState(const std::string& filenamePrefix) const;
-
-  /**
-   * @brief Imports the state of the coupling scheme from file/s.
-   *
-   * Used for checkpointing.
-   */
-  virtual void importState(const std::string& filenamePrefix);
 
   /**
    * @brief Send the state of the coupling scheme to another remote scheme.

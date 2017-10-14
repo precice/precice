@@ -107,7 +107,6 @@ private:
   const std::string TAG_RES_REL_CONV_MEASURE;
   const std::string TAG_MIN_ITER_CONV_MEASURE;
   const std::string TAG_MAX_ITERATIONS;
-  const std::string TAG_CHECKPOINT;
   const std::string TAG_EXTRAPOLATION;
 
   const std::string ATTR_DATA;
@@ -142,7 +141,6 @@ private:
   {
     std::string type;
     std::string name;
-    int checkpointTimestepInterval;
     std::vector<std::string> participants;
     std::string controller;
     bool setController;
@@ -163,7 +161,6 @@ private:
     :
       type ( "" ),
       name ( "" ),
-      checkpointTimestepInterval ( -1 ),
       participants (),
       controller ( "" ),
       setController( false ),
@@ -197,8 +194,6 @@ private:
   void addTypespecifcSubtags (
     const std::string& type,
     utils::XMLTag&     tag );
-
-  void addTagCheckpoint ( utils::XMLTag& tag );
 
   void addTransientLimitTags ( utils::XMLTag& tag );
 

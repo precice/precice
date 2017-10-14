@@ -53,7 +53,6 @@ BaseCouplingScheme:: BaseCouplingScheme
   _extrapolationOrder(0),
   _validDigits(validDigits),
   _doesFirstStep(false),
-  _checkpointTimestepInterval(-1),
   _isCouplingTimestepComplete(false),
   _hasToSendInitData(false),
   _hasToReceiveInitData(false),
@@ -117,7 +116,6 @@ BaseCouplingScheme::BaseCouplingScheme
   _extrapolationOrder(0),
   _validDigits(validDigits),
   _doesFirstStep(false),
-  _checkpointTimestepInterval(-1),
   _isCouplingTimestepComplete(false),
   _postProcessing(),
   _hasToSendInitData(false),
@@ -249,7 +247,6 @@ void BaseCouplingScheme:: sendState
   communication->send(_timestepLength, rankReceiver);
   communication->send(_time, rankReceiver);
   communication->send(_timesteps, rankReceiver);
-  communication->send(_checkpointTimestepInterval, rankReceiver);
   communication->send(_computedTimestepPart, rankReceiver);
   //communication->send(_maxLengthNextTimestep, rankReceiver);
   communication->send(_isInitialized, rankReceiver);
@@ -281,7 +278,6 @@ void BaseCouplingScheme:: receiveState
   communication->receive(_timestepLength, rankSender);
   communication->receive(_time, rankSender);
   communication->receive(_timesteps, rankSender);
-  communication->receive(_checkpointTimestepInterval, rankSender);
   communication->receive(_computedTimestepPart, rankSender);
   //communication->receive(_maxLengthNextTimestep, rankSender);
   communication->receive(_isInitialized, rankSender);
@@ -562,11 +558,6 @@ void BaseCouplingScheme:: performedAction
   const std::string& actionName)
 {
   _actions.erase(actionName);
-}
-
-int BaseCouplingScheme:: getCheckpointTimestepInterval() const
-{
-  return _checkpointTimestepInterval;
 }
 
 void BaseCouplingScheme:: requireAction
@@ -924,39 +915,6 @@ void BaseCouplingScheme::advanceTXTWriters()
 }
 
 
-void BaseCouplingScheme:: exportState(const std::string& filenamePrefix ) const
-{
-  if (not doesFirstStep()) {
-    io::TXTWriter writer(filenamePrefix + "_cplscheme.txt");
-    for (const BaseCouplingScheme::DataMap::value_type& dataMap : getSendData()) {
-      writer.write(dataMap.second->oldValues);
-    }
-    for (const BaseCouplingScheme::DataMap::value_type& dataMap : getReceiveData()) {
-      writer.write(dataMap.second->oldValues);
-    }
-    if (_postProcessing.get() != nullptr) {
-      _postProcessing->exportState(writer);
-    }
-  }
-}
-
-void BaseCouplingScheme:: importState(const std::string& filenamePrefix)
-{
-  if (not doesFirstStep()) {
-    io::TXTReader reader(filenamePrefix + "_cplscheme.txt");
-    for (BaseCouplingScheme::DataMap::value_type& dataMap : getSendData()) {
-      reader.read(dataMap.second->oldValues);
-    }
-    for (BaseCouplingScheme::DataMap::value_type& dataMap : getReceiveData()) {
-      reader.read(dataMap.second->oldValues);
-      reader.read(dataMap.second->oldValues);
-    }
-    if (_postProcessing.get() != nullptr){
-      _postProcessing->importState(reader);
-    }
-  }
-}
-
 
 void BaseCouplingScheme:: updateTimeAndIterations
 (
@@ -1001,7 +959,6 @@ void BaseCouplingScheme:: timestepCompleted()
   INFO("Timestep completed");
   setIsCouplingTimestepComplete(true);
   setTimesteps(getTimesteps() + 1 );
-  //setTime(getTimesteps() * getTimestepLength() ); // Removes numerical errors
   if (isCouplingOngoing()) {
     DEBUG("Setting require create checkpoint");
     requireAction(constants::actionWriteIterationCheckpoint());

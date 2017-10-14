@@ -45,26 +45,6 @@ void precicef_action_read_iter_checkp_(
   char* nameAction,
   int   lengthNameAction );
 
-/**
- * @brief Name of action for writing simulation checkpoint.
- *
- * Fortran syntax:
- * precicef_action_write_sim_checkpoint( CHARACTER nameAction(*) )
- */
-void precicef_action_write_sim_checkp_(
-  char* nameAction,
-  int   lengthNameAction );
-
-/**
- * @brief Name of action for reading simulation checkpoint.
- *
- * Fortran syntax:
- * precicef_action_read_sim_checkpoint( CHARACTER nameAction(*) )
- */
-void precicef_action_read_sim_checkp_(
-  char* nameAction,
-  int   lengthNameAction );
-
 #ifdef __cplusplus
 }
 #endif

@@ -59,7 +59,6 @@
          <participants first="Peano" second="Comsol" />
          <max-time value="1.0" />
          <timestep-length value="0.1" />
-         <checkpoint timestep-interval="10" />
          <exchange data="Forces"         mesh="ComsolNodes" from="Peano" to="Comsol"/>
          <exchange data="Velocities"     mesh="ComsolNodes" from="Comsol" to="Peano"/>
          <exchange data="Displacements"  mesh="ComsolNodes" from="Comsol" to="Peano"/>

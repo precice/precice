@@ -116,11 +116,6 @@ private:
   void testExplicitWithDataScaling();
 
   /**
-   * @brief Explicit coupled checkpointing with stationary data mapping.
-   */
-  void testExplicitWithCheckpointingStatMapping();
-
-  /**
    * @brief Test simple coupled simulation with coupling iterations.
    */
   void testImplicit();
@@ -130,11 +125,6 @@ private:
    *        performs a subcycling.
    */
   void testImplicitWithSubcycling();
-
-  /**
-   * @brief Implicit coupled checkpointing with stationary data mapping.
-   */
-  void testImplicitWithCheckpointingMappingStat();
 
   /**
    * @brief Initializes, runs and finalizes a coupled simulation.
@@ -188,19 +178,6 @@ private:
    *
    */
   void testMultiCoupling();
-
-  /**
-   * @brief All NASTIN meshes are restarted. One provided as well as one "from"
-   * are tested.
-   *
-   */
-  void testNASTINMeshRestart();
-
-
-  /**
-   * @brief Pinelli approach is tested (compare master thesis Slava), Python action needs to handle targetData as input
-   */
-  void testPinelliCoupled();
 
   void runThreeSolvers (
       const std::string&      configFilename,

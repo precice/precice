@@ -91,11 +91,6 @@ public:
     mesh::PtrMesh mesh,
     bool          initialize );
 
-  /// Sets the checkpointing timestep interval.
-  void setCheckPointTimestepInterval (int timestepInterval) {
-    _checkpointTimestepInterval = timestepInterval;
-  }
-
   /// Returns true, if initialize has been called.
   virtual bool isInitialized() const {
     return _isInitialized;
@@ -185,8 +180,6 @@ public:
   /// Tells the coupling scheme that the accessor has performed the given action.
   virtual void performedAction (const std::string& actionName);
 
-  /// Returns the checkpointing timestep interval.
-  virtual int getCheckpointTimestepInterval() const;
 
   /// Sets an action required to be performed by the accessor.
   virtual void requireAction (const std::string& actionName);
@@ -263,10 +256,6 @@ public:
 
   /// @brief Set a coupling iteration post-processing technique.
   void setIterationPostProcessing ( impl::PtrPostProcessing postProcessing );
-
-  virtual void exportState(const std::string& filenamePrefix) const;
-
-  virtual void importState(const std::string& filenamePrefix);
 
 protected:
 
@@ -538,8 +527,6 @@ private:
 
   /// True, if local participant is the one starting the explicit scheme.
   bool _doesFirstStep;
-
-  int _checkpointTimestepInterval;
 
   bool _isCouplingTimestepComplete;
 

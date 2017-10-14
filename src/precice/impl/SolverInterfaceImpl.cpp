@@ -66,7 +66,6 @@ SolverInterfaceImpl:: SolverInterfaceImpl
   _accessorCommunicatorSize(accessorCommunicatorSize),
   _accessor(),
   _dimensions(0),
-  _restartMode(false),
   _serverMode(serverMode),
   _clientMode(false),
   _meshIDs(),
@@ -74,8 +73,6 @@ SolverInterfaceImpl:: SolverInterfaceImpl
   _exportVTKNeighbors(),
   _m2ns(),
   _participants(),
-  _checkpointTimestepInterval(-1),
-  _checkpointFileName("precice_checkpoint_" + _accessorName),
   _numberAdvanceCalls(0),
   _requestManager(nullptr)
 {
@@ -130,11 +127,9 @@ void SolverInterfaceImpl:: configure
 {
   TRACE();
   _dimensions = config.getDimensions();
-  _restartMode = config.isRestartMode ();
   _accessor = determineAccessingParticipant(config);
 
   CHECK(not (_accessor->useServer() && _accessor->useMaster()), "You cannot use a server and a master.");
-  CHECK(not (_restartMode && _accessor->useMaster()), "To restart while using a master is not yet supported");
   CHECK(_accessorCommunicatorSize==1 || _accessor->useMaster() || _accessor->useServer(),
         "A parallel participant needs either a master or a server communication configured");
 
@@ -166,10 +161,6 @@ void SolverInterfaceImpl:: configure
   cplscheme::PtrCouplingSchemeConfiguration cplSchemeConfig =
       config.getCouplingSchemeConfiguration();
   _couplingScheme = cplSchemeConfig->getCouplingScheme(_accessorName);
-
-  if (_restartMode){
-    _couplingScheme->requireAction(constants::actionReadSimulationCheckpoint());
-  }
 
   if (_serverMode || _clientMode){
     com::PtrCommunication com = _accessor->getClientServerCommunication();
@@ -275,23 +266,11 @@ double SolverInterfaceImpl:: initialize()
       watchPoint->initialize();
     }
 
-    // Initialize coupling state
+    // Initialize coupling state, overwrite these values for restart
     double time = 0.0;
     int timestep = 1;
 
-    if (_restartMode){
-      INFO("Reading simulation state for restart");
-      io::SimulationStateIO stateIO(_checkpointFileName + "_simstate.txt");
-      stateIO.readState(time, timestep, _numberAdvanceCalls);
-    }
-
     _couplingScheme->initialize(time, timestep);
-
-    if (_restartMode){
-      INFO("Reading coupling scheme state for restart");
-      //io::TXTReader txtReader(_checkpointFileName + "_cplscheme.txt");
-      _couplingScheme->importState(_checkpointFileName);
-    }
 
     dt = _couplingScheme->getNextTimestepMaxLength();
 
@@ -782,10 +761,6 @@ int SolverInterfaceImpl:: setMeshEdge
   int secondVertexID )
 {
   TRACE(meshID, firstVertexID, secondVertexID );
-  if (_restartMode){
-    DEBUG("Ignoring edge, since restart mode is active");
-    return -1;
-  }
   if ( _clientMode ){
     return _requestManager->requestSetMeshEdge ( meshID, firstVertexID, secondVertexID );
   }
@@ -817,10 +792,6 @@ void SolverInterfaceImpl:: setMeshTriangle
 {
   TRACE(meshID, firstEdgeID,
                   secondEdgeID, thirdEdgeID );
-  if (_restartMode){
-    DEBUG("Ignoring triangle, since restart mode is active");
-    return;
-  }
   if ( _clientMode ){
     _requestManager->requestSetMeshTriangle ( meshID, firstEdgeID, secondEdgeID, thirdEdgeID );
   }
@@ -946,10 +917,6 @@ void SolverInterfaceImpl:: setMeshQuad
 {
   TRACE(meshID, firstEdgeID, secondEdgeID, thirdEdgeID,
                 fourthEdgeID);
-  if (_restartMode){
-    DEBUG("Ignoring quad, since restart mode is active");
-    return;
-  }
   if (_clientMode){
     _requestManager->requestSetMeshQuad(meshID, firstEdgeID, secondEdgeID,
                                         thirdEdgeID, fourthEdgeID);
@@ -1748,26 +1715,6 @@ void SolverInterfaceImpl:: handleExports()
     // Export watch point data
     for (PtrWatchPoint watchPoint : _accessor->watchPoints()) {
       watchPoint->exportPointData(_couplingScheme->getTime());
-    }
-
-    if(not utils::MasterSlave::_slaveMode){ //TODO not yet supported
-      // Checkpointing
-      int checkpointingInterval = _couplingScheme->getCheckpointTimestepInterval();
-      if ((checkpointingInterval != -1) && (timesteps % checkpointingInterval == 0)){
-        DEBUG("Set require checkpoint");
-        _couplingScheme->requireAction(constants::actionWriteSimulationCheckpoint());
-        for (const MeshContext* meshContext : _accessor->usedMeshContexts()) {
-          io::ExportVRML exportVRML(false);
-          std::string filename("precice_checkpoint_" + _accessorName
-                               + "_" + meshContext->mesh->getName());
-          exportVRML.doExportCheckpoint(filename, *(meshContext->mesh));
-        }
-        io::SimulationStateIO exportState(_checkpointFileName + "_simstate.txt");
-
-        exportState.writeState(_couplingScheme->getTime(),_couplingScheme->getTimesteps(), _numberAdvanceCalls);
-        //io::TXTWriter exportCouplingSchemeState(_checkpointFileName + "_cplscheme.txt");
-        _couplingScheme->exportState(_checkpointFileName);
-      }
     }
   }
 }

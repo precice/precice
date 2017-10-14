@@ -34,18 +34,6 @@ const std::string& actionWriteInitialData()
   return cplscheme::constants::actionWriteInitialData();
 }
 
-const std::string& actionWriteSimulationCheckpoint()
-{
-  static std::string writeSimulationCheckpoint("write-simulation-checkpoint");
-  return writeSimulationCheckpoint;
-}
-
-const std::string& actionReadSimulationCheckpoint()
-{
-  static std::string readSimulationCheckpoint("read-simulation-checkpoint");
-  return readSimulationCheckpoint;
-}
-
 const std::string& actionWriteIterationCheckpoint()
 {
   return cplscheme::constants::actionWriteIterationCheckpoint();

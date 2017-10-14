@@ -13,8 +13,6 @@ const std::string& dataForces();
 const std::string& dataVelocities();
 
 const std::string& actionWriteInitialData();
-const std::string& actionWriteSimulationCheckpoint();
-const std::string& actionReadSimulationCheckpoint();
 const std::string& actionWriteIterationCheckpoint();
 const std::string& actionReadIterationCheckpoint();
 const std::string& actionPlotOutput();

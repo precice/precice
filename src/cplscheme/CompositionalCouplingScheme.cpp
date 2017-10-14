@@ -345,18 +345,6 @@ void CompositionalCouplingScheme:: performedAction
   }
 }
 
-int CompositionalCouplingScheme:: getCheckpointTimestepInterval() const
-{
-  TRACE();
-  int interval = std::numeric_limits<int>::max();
-  for (Scheme scheme : _couplingSchemes) {
-    if (scheme.scheme->getCheckpointTimestepInterval() < interval){
-      interval = scheme.scheme->getCheckpointTimestepInterval();
-    }
-  }
-  DEBUG("return " << interval);
-  return interval;
-}
 
 void CompositionalCouplingScheme:: requireAction
 (
@@ -386,34 +374,6 @@ std::string CompositionalCouplingScheme:: printCouplingState() const
     state += scheme.scheme->printCouplingState();
   }
   return state;
-}
-
-void CompositionalCouplingScheme:: exportState
-(
-  const std::string& filenamePrefix ) const
-{
-  TRACE();
-  int enumerator = 0;
-  for (Scheme scheme : _couplingSchemes) {
-    std::ostringstream stream;
-    stream << filenamePrefix << "_" << enumerator;
-    scheme.scheme->exportState(stream.str());
-    enumerator++;
-  }
-}
-
-void CompositionalCouplingScheme:: importState
-(
-  const std::string& filenamePrefix )
-{
-  TRACE();
-  int enumerator = 0;
-  for (Scheme scheme : _couplingSchemes) {
-    std::ostringstream stream;
-    stream << filenamePrefix << "_" << enumerator;
-    scheme.scheme->importState(stream.str());
-    enumerator++;
-  }
 }
 
 void CompositionalCouplingScheme:: sendState

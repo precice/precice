@@ -188,28 +188,11 @@ public:
   /// @brief Tells the coupling scheme that the accessor has performed the given action.
   virtual void performedAction(const std::string& actionName) =0;
 
-  /// @brief Returns the checkpointing timestep interval.
-  virtual int getCheckpointTimestepInterval() const =0;
-
   /// @brief Sets an action required to be performed by the accessor.
   virtual void requireAction(const std::string& actionName) =0;
 
   /// @brief Returns a string representation of the current coupling state.
   virtual std::string printCouplingState() const =0;
-
-  /**
-   * @brief Exports the state of the coupling scheme to file/s.
-   *
-   * Used for checkpointing.
-   */
-  virtual void exportState(const std::string& filenamePrefix) const =0;
-
-  /**
-   * @brief Imports the state of the coupling scheme from file/s.
-   *
-   * Used for checkpointing.
-   */
-  virtual void importState(const std::string& filenamePrefix) =0;
 
   /**
    * @brief Send the state of the coupling scheme to another remote scheme.
