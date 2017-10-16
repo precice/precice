@@ -737,8 +737,13 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
 
       if (useRescaling and (_polynomial == Polynomial::SEPARATE)) {
         petsc::Vector temp(_matrixA);
+        PetscReal max;
         ierr = MatMult(_matrixA, rescalingCoeffs, temp); CHKERRV(ierr);
-        ierr = VecPointwiseDivide(out, out, temp); CHKERRV(ierr);
+        ierr = VecNorm(temp, NORM_INFINITY, &max); // Test for zero elements before dividing
+        if (max < 1e-6)
+          WARN("Zero elements found in rescaling, omit rescaling.");
+        else
+          ierr = VecPointwiseDivide(out, out, temp); CHKERRV(ierr);
       }
       
       if (_polynomial == Polynomial::SEPARATE) {
