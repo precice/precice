@@ -1,22 +1,14 @@
 #include "utils/Globals.hpp"
+#include <cstdlib>
 
 namespace precice {
 namespace utils {
 
-std::string Globals:: _pathToSources = "";
-
-const std::string & Globals:: getPathToSources ()
+std::string getPathToSources()
 {
-  assertion ( not _pathToSources.empty() );
-  return _pathToSources;
-}
-
-void Globals:: setPathToSources
-(
-  const std::string & path )
-{
-  assertion ( not path.empty() );
-  _pathToSources = path;
+  std::string root(std::getenv("PRECICE_ROOT"));
+  assertion(not root.empty());
+  return root + "/src";
 }
 
 }} // namespace precice, utils

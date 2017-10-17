@@ -26,7 +26,7 @@ SolverInterfaceTest:: SolverInterfaceTest()
 
 void SolverInterfaceTest:: setUp()
 {
-  _pathToTests = utils::Globals::getPathToSources() + "/precice/tests/couplingmode/";
+  _pathToTests = utils::getPathToSources() + "/precice/tests/couplingmode/";
 }
 
 void SolverInterfaceTest:: run()

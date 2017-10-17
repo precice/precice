@@ -182,8 +182,8 @@ void ScaleActionTest:: testConfiguration()
   TRACE();
   {
     DEBUG("Test 1");
-    std::string filename = utils::Globals::getPathToSources() +
-                           "/action/tests/ScaleActionTest-testConfiguration-1.xml";
+    std::string filename = utils::getPathToSources() +
+      "/action/tests/ScaleActionTest-testConfiguration-1.xml";
     utils::XMLTag tag = utils::getRootTag();
     mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(tag));
     dataConfig->setDimensions(3);
@@ -197,7 +197,7 @@ void ScaleActionTest:: testConfiguration()
   }
   {
     DEBUG("Test 2");
-    std::string filename = utils::Globals::getPathToSources() +
+    std::string filename = utils::getPathToSources() +
                            "/action/tests/ScaleActionTest-testConfiguration-2.xml";
     utils::XMLTag tag = utils::getRootTag();
     mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(tag));
@@ -212,7 +212,7 @@ void ScaleActionTest:: testConfiguration()
   }
   {
     DEBUG("Test 3");
-    std::string filename = utils::Globals::getPathToSources() +
+    std::string filename = utils::getPathToSources() +
                            "/action/tests/ScaleActionTest-testConfiguration-3.xml";
     utils::XMLTag tag = utils::getRootTag();
     mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(tag));
@@ -227,7 +227,7 @@ void ScaleActionTest:: testConfiguration()
   }
   {
     DEBUG("Test 4");
-    std::string filename = utils::Globals::getPathToSources() +
+    std::string filename = utils::getPathToSources() +
                            "/action/tests/ScaleActionTest-testConfiguration-4.xml";
     utils::XMLTag tag = utils::getRootTag();
     mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(tag));

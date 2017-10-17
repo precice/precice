@@ -6,7 +6,7 @@
 using namespace precice;
 using namespace precice::com;
 
-BOOST_AUTO_TEST_SUITE(Communication)
+BOOST_AUTO_TEST_SUITE(CommunicationTests)
 
 BOOST_AUTO_TEST_SUITE(Socket)
 

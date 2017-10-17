@@ -16,7 +16,7 @@ extern bool testMode;
 void printUsage()
 {
   std::cout << "Usage:" << std::endl << std::endl;
-  std::cout << "Run tests               :  binprecice test ConfigurationName PathToSrc [LogConfFile]" << std::endl;
+  std::cout << "Run tests               :  binprecice test ConfigurationName [LogConfFile]" << std::endl;
   std::cout << "Run server (deprecated) :  binprecice server ParticipantName ConfigurationName [LogConfFile]" << std::endl;
   std::cout << "Print XML reference     :  binprecice xml" << std::endl;
 }
@@ -61,11 +61,11 @@ int main ( int argc, char** argv )
         hasLogConfFile = true;
       }
     }
-    if ( action == "test" and argc >= 4 ) {
+    if ( action == "test" and argc >= 3 ) {
       wrongParameters = false;
       runTests = true;
       precice::testMode = true;
-      if (argc >= 5){
+      if (argc >= 4){
         hasLogConfFile = true;
       }
     }
@@ -77,7 +77,7 @@ int main ( int argc, char** argv )
   }
 
   if (hasLogConfFile){
-    precice::logging::setupLogging(argv[4]);
+    precice::logging::setupLogging(argv[3]);
   } else {
     precice::logging::setupLogging();
   }
@@ -94,10 +94,9 @@ int main ( int argc, char** argv )
       std::cout << "PreCICE running tests..." << std::endl;
     }
     std::string configFile(argv[2]);
-    precice::utils::Globals::setPathToSources(argv[3]);
     PRECICE_MASTER_ONLY{
       std::cout << "   Configuration file = " << configFile << std::endl;
-      std::cout << "   Path to sources = " << argv[3] << std::endl;
+      std::cout << "   Path to sources = " << precice::utils::getPathToSources() << std::endl;
     }
     ConfigurationRegistry::getInstance().initTopLevelConfigurationFactories();
     std::list<TopLevelConfiguration*> configs =

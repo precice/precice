@@ -27,7 +27,7 @@ ImportVRMLTest::ImportVRMLTest ()
 
 void ImportVRMLTest:: setUp ()
 {
-  _pathToTests = utils::Globals::getPathToSources() + "/io/tests/";
+  _pathToTests = utils::getPathToSources() + "/io/tests/";
 }
 
 void ImportVRMLTest:: run ()

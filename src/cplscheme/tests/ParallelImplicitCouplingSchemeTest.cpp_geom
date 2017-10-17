@@ -50,7 +50,7 @@ ParallelImplicitCouplingSchemeTest:: ParallelImplicitCouplingSchemeTest ()
 
 void ParallelImplicitCouplingSchemeTest:: setUp ()
 {
-  _pathToTests = utils::Globals::getPathToSources() + "/cplscheme/tests/";
+  _pathToTests = utils::getPathToSources() + "/cplscheme/tests/";
 }
 
 void ParallelImplicitCouplingSchemeTest:: run ()

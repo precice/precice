@@ -24,7 +24,7 @@ struct access<Vertex, Dimension>
 {
   static double get(Vertex const& p)
   {
-    if (Dimension > p.getDimensions()-1)
+    if (Dimension > static_cast<size_t>(p.getDimensions())-1)
       return 0;
    
     return p.getCoords()[Dimension];
@@ -52,7 +52,7 @@ struct access<Eigen::VectorXd, Dimension>
 {
   static double get(Eigen::VectorXd const& p)
   {
-    if (Dimension > p.rows()-1)
+    if (Dimension > static_cast<size_t>(p.rows())-1)
       return 0;
    
     return p[Dimension];

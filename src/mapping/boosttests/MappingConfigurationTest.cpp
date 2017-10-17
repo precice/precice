@@ -14,7 +14,7 @@ BOOST_AUTO_TEST_SUITE(Configuration)
 BOOST_AUTO_TEST_CASE(Configuration)
 {
   
-  std::string pathToTests = utils::Globals::getPathToSources() + "/mapping/boosttests/";
+  std::string pathToTests = utils::getPathToSources() + "/mapping/boosttests/";
   std::string file(pathToTests + "mapping-config.xml");
   using utils::XMLTag;
   XMLTag tag = utils::getRootTag();

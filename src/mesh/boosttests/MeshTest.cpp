@@ -17,9 +17,9 @@ using precice::testing::equals;
 using Eigen::Vector2d;
 using Eigen::Vector3d;
 
-BOOST_AUTO_TEST_SUITE(Mesh)
+BOOST_AUTO_TEST_SUITE(MeshTests)
 
-BOOST_AUTO_TEST_SUITE(Mesh)
+BOOST_AUTO_TEST_SUITE(MeshTests)
 
 
 BOOST_AUTO_TEST_CASE(SubIDs)

@@ -3,7 +3,7 @@
 
 using namespace precice::math;
 
-BOOST_AUTO_TEST_SUITE(Math)
+BOOST_AUTO_TEST_SUITE(MathTests)
 BOOST_AUTO_TEST_SUITE(GeometryComputation)
 
 BOOST_AUTO_TEST_CASE(Collinear)

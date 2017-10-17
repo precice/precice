@@ -19,9 +19,6 @@ namespace precice {
 extern bool testMode;
 }
 
-BOOST_AUTO_TEST_SUITE(Precice)
-BOOST_AUTO_TEST_SUITE(Parallel)
-
 
 void reset ()
 {
@@ -30,16 +27,31 @@ void reset ()
   impl::Participant::resetParticipantCount();
   precice::utils::EventRegistry::clear();
   utils::MasterSlave::reset();
-  precice::testMode = true;
 }
+
+struct ParallelTestFixture {
+  ParallelTestFixture()
+  {
+    utils::Parallel::restrictGlobalCommunicator({0,1,2,3});
+    assertion(utils::Parallel::getCommunicatorSize() == 4);
+    precice::testMode = true;
+  }
+
+  ~ParallelTestFixture()
+  {
+    utils::Parallel::setGlobalCommunicator(utils::Parallel::getCommunicatorWorld());
+    reset();
+  }
+};
+
+
+
+BOOST_AUTO_TEST_SUITE(PreciceTests)
+BOOST_FIXTURE_TEST_SUITE(Parallel, ParallelTestFixture)
 
 
 BOOST_AUTO_TEST_CASE(TestMasterSlaveSetup, * testing::OnRanks({0, 1, 2, 3}))
 {
-  utils::Parallel::restrictGlobalCommunicator({0,1,2,3});
-  assertion(utils::Parallel::getCommunicatorSize() == 4);
-
-  reset();
   SolverInterface interface ( "SolverOne", utils::Parallel::getProcessRank(), 4 );
   std::string configFilename = "../src/precice/boosttests/config1.xml";
   config::Configuration config;
@@ -70,10 +82,6 @@ BOOST_AUTO_TEST_CASE(TestMasterSlaveSetup, * testing::OnRanks({0, 1, 2, 3}))
 
 BOOST_AUTO_TEST_CASE(TestFinalize, * testing::OnRanks({0, 1, 2, 3}))
 {
-  utils::Parallel::restrictGlobalCommunicator({0,1,2,3});
-  assertion(utils::Parallel::getCommunicatorSize() == 4);
-
-  reset();
   std::string configFilename = "../src/precice/boosttests/config1.xml";
   config::Configuration config;
   utils::configure(config.getXMLTag(), configFilename);
@@ -103,10 +111,6 @@ BOOST_AUTO_TEST_CASE(TestFinalize, * testing::OnRanks({0, 1, 2, 3}))
 #ifndef PRECICE_NO_PETSC
 BOOST_AUTO_TEST_CASE(GlobalRBFPartitioning, * testing::OnRanks({0, 1, 2, 3}))
 {
-  utils::Parallel::restrictGlobalCommunicator({0,1,2,3});
-  assertion(utils::Parallel::getCommunicatorSize() == 4);
-
-  reset();
   std::string configFilename = "../src/precice/boosttests/globalRBFPartitioning.xml";
   config::Configuration config;
 
@@ -153,15 +157,10 @@ BOOST_AUTO_TEST_CASE(GlobalRBFPartitioning, * testing::OnRanks({0, 1, 2, 3}))
     interface.advance(1.0);
     interface.finalize();
   }
-  utils::Parallel::setGlobalCommunicator(utils::Parallel::getCommunicatorWorld());
 }
 
 BOOST_AUTO_TEST_CASE(LocalRBFPartitioning, * testing::OnRanks({0, 1, 2, 3}))
 {
-  utils::Parallel::restrictGlobalCommunicator({0,1,2,3});
-  assertion(utils::Parallel::getCommunicatorSize() == 4);
-
-  reset();
   std::string configFilename = "../src/precice/boosttests/localRBFPartitioning.xml";
   config::Configuration config;
 
@@ -207,7 +206,6 @@ BOOST_AUTO_TEST_CASE(LocalRBFPartitioning, * testing::OnRanks({0, 1, 2, 3}))
     interface.advance(1.0);
     interface.finalize();
   }
-  utils::Parallel::setGlobalCommunicator(utils::Parallel::getCommunicatorWorld());
 }
 
 #endif // PRECICE_NO_PETSC
@@ -215,9 +213,6 @@ BOOST_AUTO_TEST_CASE(LocalRBFPartitioning, * testing::OnRanks({0, 1, 2, 3}))
 /// tests for various QN settings if correct number of iterations is returned
 BOOST_AUTO_TEST_CASE(TestQN, * testing::OnRanks({0, 1, 2, 3}))
 {
-  utils::Parallel::restrictGlobalCommunicator({0,1,2,3});
-  assertion(utils::Parallel::getCommunicatorSize() == 4);
-
   int numberOfTests = 3;
   std::vector<std::string> configs;
   configs.resize(numberOfTests);
@@ -318,9 +313,6 @@ BOOST_AUTO_TEST_CASE(TestQN, * testing::OnRanks({0, 1, 2, 3}))
     interface.finalize();
     BOOST_TEST(iterations == correctIterations[k]);
   }
-
-  utils::Parallel::setGlobalCommunicator(utils::Parallel::getCommunicatorWorld());
-  reset();
 }
 
 BOOST_AUTO_TEST_SUITE_END()

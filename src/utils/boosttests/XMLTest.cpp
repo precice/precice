@@ -7,7 +7,7 @@
 
 using namespace precice::utils;
 
-BOOST_AUTO_TEST_SUITE(Utils)
+BOOST_AUTO_TEST_SUITE(UtilsTests)
 BOOST_AUTO_TEST_SUITE(XML)
 
 struct CallbackHost : public XMLTag::Listener {
@@ -28,7 +28,7 @@ struct CallbackHost : public XMLTag::Listener {
 
 BOOST_AUTO_TEST_CASE(AttributeConcatenation)
 {
-  std::string filename(Globals::getPathToSources() + "/utils/boosttests/config_xmltest_concatenation.xml");
+  std::string filename(getPathToSources() + "/utils/boosttests/config_xmltest_concatenation.xml");
 
   CallbackHost cb;
   XMLTag rootTag(cb, "configuration", XMLTag::OCCUR_ONCE);
@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(AttributeConcatenation)
 
 BOOST_AUTO_TEST_CASE(VectorAttributes)
 {
-  std::string filename(Globals::getPathToSources() + "/utils/boosttests/config_xmltest_vectorattributes.xml");
+  std::string filename(getPathToSources() + "/utils/boosttests/config_xmltest_vectorattributes.xml");
 
   CallbackHost cb;
   XMLTag rootTag(cb, "configuration", XMLTag::OCCUR_ONCE);

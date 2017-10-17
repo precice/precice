@@ -4,7 +4,7 @@
 
 using namespace precice;
 
-BOOST_AUTO_TEST_SUITE(Utils)
+BOOST_AUTO_TEST_SUITE(UtilsTests)
 
 #ifndef PRECICE_NO_MPI
 
