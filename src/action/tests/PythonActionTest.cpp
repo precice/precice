@@ -39,7 +39,7 @@ void PythonActionTest:: testAllMethods()
   int targetID = mesh->createData("TargetData",1)->getID();
   int sourceID = mesh->createData("SourceData",1)->getID();
   mesh->allocateDataValues();
-  std::string path = utils::Globals::getPathToSources() + "/action/tests/";
+  std::string path = utils::getPathToSources() + "/action/tests/";
   PythonAction action(PythonAction::ALWAYS_PRIOR, path, "TestAllAction", mesh,
                       targetID, sourceID);
   mesh->data(sourceID)->values() << 0.1, 0.2, 0.3;
@@ -56,7 +56,7 @@ void PythonActionTest:: testAllMethods()
 void PythonActionTest:: testOmitMethods()
 {
   TRACE();
-  std::string path = utils::Globals::getPathToSources() + "/action/tests/";
+  std::string path = utils::getPathToSources() + "/action/tests/";
   {
     DEBUG("Test 1");
     mesh::PtrMesh mesh;

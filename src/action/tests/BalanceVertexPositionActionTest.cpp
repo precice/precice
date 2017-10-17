@@ -161,8 +161,8 @@ void BalanceVertexPositionActionTest:: testConfiguration()
 {
   TRACE();
   {
-    std::string filename = utils::Globals::getPathToSources() +
-                           "/action/tests/BalanceVertexPositionActionTest-testConfiguration.xml";
+    std::string filename = utils::getPathToSources() +
+      "/action/tests/BalanceVertexPositionActionTest-testConfiguration.xml";
     utils::XMLTag tag = utils::getRootTag();
     mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(tag));
     dataConfig->setDimensions(3);

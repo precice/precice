@@ -68,7 +68,7 @@ void CuboidTest:: testConfiguration()
   using namespace boost;
 
   for (int dim=2; dim <= 3; dim++){
-    std::string xmlFilename = utils::Globals::getPathToSources() + "/geometry/tests/";
+    std::string xmlFilename = utils::getPathToSources() + "/geometry/tests/";
     DEBUG("dim = " << dim);
     if (dim == 2){
       xmlFilename += "cuboid2d.xml";

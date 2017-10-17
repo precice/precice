@@ -3,7 +3,6 @@
 #include <regex>
 
 #include "utils/EventTimings.hpp"
-#include "utils/Globals.hpp"
 
 #include <boost/filesystem.hpp>
 

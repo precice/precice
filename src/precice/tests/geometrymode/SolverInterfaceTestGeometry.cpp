@@ -34,7 +34,7 @@ SolverInterfaceTestGeometry:: SolverInterfaceTestGeometry ()
 
 void SolverInterfaceTestGeometry:: setUp ()
 {
-  _pathToTests = utils::Globals::getPathToSources() + "/precice/tests/geometrymode/";
+  _pathToTests = utils::getPathToSources() + "/precice/tests/geometrymode/";
 }
 
 void SolverInterfaceTestGeometry:: run()
