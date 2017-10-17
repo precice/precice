@@ -42,14 +42,9 @@ private:
   static logging::Logger _log;
 
   /**
-   * @brief Tests exporting the drift ratchet mesh.
+   * @brief Tests exporting a simple mesh
    */
-  void testExportDriftRatchet();
-
-  /**
-   * @brief Tests exporting a cuboid mesh.
-   */
-  void testExportCuboid();
+  void testExportSimpleMesh();
 };
 
 }}} // namespace precice, io, tests

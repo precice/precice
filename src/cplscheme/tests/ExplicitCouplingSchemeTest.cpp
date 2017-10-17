@@ -7,7 +7,6 @@
 #include "mesh/Vertex.hpp"
 #include "mesh/config/DataConfiguration.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
-#include "geometry/config/GeometryConfiguration.hpp"
 #include "com/Communication.hpp"
 #include "com/MPIDirectCommunication.hpp"
 #include "m2n/M2N.hpp"
@@ -135,15 +134,19 @@ void ExplicitCouplingSchemeTest:: testConfiguredSimpleExplicitCoupling ()
   PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
   meshConfig->setDimensions(3);
   m2n::M2NConfiguration::SharedPointer m2nConfig(new m2n::M2NConfiguration(root));
-  geometry::GeometryConfiguration geoConfig(root, meshConfig);
-  geoConfig.setDimensions(3);
   CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
 
   utils::configure(root, configurationPath);
   meshConfig->setMeshSubIDs();
   m2n::PtrM2N m2n = m2nConfig->getM2N("participant0", "participant1");
 
-  geoConfig.geometries()[0]->create ( *meshConfig->meshes()[0] );
+  // some dummy mesh
+  meshConfig->meshes()[0]->createVertex(Eigen::Vector3d(1.0, 1.0, 1.0));
+  meshConfig->meshes()[0]->createVertex(Eigen::Vector3d(2.0, 1.0, -1.0));
+  meshConfig->meshes()[0]->createVertex(Eigen::Vector3d(3.0, 1.0, 1.0));
+  meshConfig->meshes()[0]->createVertex(Eigen::Vector3d(4.0, 1.0, -1.0));
+  meshConfig->meshes()[0]->allocateDataValues();
+
   connect ( "participant0", "participant1", localParticipant, m2n );
   runSimpleExplicitCoupling ( *cplSchemeConfig.getCouplingScheme(localParticipant),
                               localParticipant, *meshConfig );
@@ -170,21 +173,19 @@ void ExplicitCouplingSchemeTest:: testExplicitCouplingFirstParticipantSetsDt()
   PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
   meshConfig->setDimensions(3);
   m2n::M2NConfiguration::SharedPointer m2nConfig(new m2n::M2NConfiguration(root));
-  geometry::GeometryConfiguration geoConfig(root, meshConfig);
-  geoConfig.setDimensions(3);
   CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
 
   utils::configure(root, configurationPath);
-  //validate(success);
-  //validate(dataConfig->isValid());
-  //validate(meshConfig->isValid());
-  //validate(comConfig->isValid());
-  //validate(geoConfig.isValid());
-  //validate(cplSchemeConfig.isValid());
   meshConfig->setMeshSubIDs();
   m2n::PtrM2N m2n = m2nConfig->getM2N("participant0", "participant1");
 
-  geoConfig.geometries()[0]->create( *meshConfig->meshes()[0] );
+  // some dummy mesh
+  meshConfig->meshes()[0]->createVertex(Eigen::Vector3d(1.0, 1.0, 1.0));
+  meshConfig->meshes()[0]->createVertex(Eigen::Vector3d(2.0, 1.0, -1.0));
+  meshConfig->meshes()[0]->createVertex(Eigen::Vector3d(3.0, 1.0, 1.0));
+  meshConfig->meshes()[0]->createVertex(Eigen::Vector3d(4.0, 1.0, -1.0));
+  meshConfig->meshes()[0]->allocateDataValues();
+
   connect ( "participant0", "participant1", localParticipant, m2n );
   CouplingScheme& cplScheme = *cplSchemeConfig.getCouplingScheme(localParticipant);
 
@@ -262,15 +263,19 @@ void ExplicitCouplingSchemeTest:: testSerialDataInitialization()
   PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
   meshConfig->setDimensions(2);
   m2n::M2NConfiguration::SharedPointer m2nConfig(new m2n::M2NConfiguration(root));
-  geometry::GeometryConfiguration geoConfig(root, meshConfig);
-  geoConfig.setDimensions(2);
   CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
 
   utils::configure(root, configurationPath);
   meshConfig->setMeshSubIDs();
   m2n::PtrM2N m2n = m2nConfig->getM2N("participant0", "participant1");
 
-  geoConfig.geometries()[0]->create(*meshConfig->meshes()[0]);
+  // some dummy mesh
+  meshConfig->meshes()[0]->createVertex(Eigen::Vector2d(1.0, 1.0));
+  meshConfig->meshes()[0]->createVertex(Eigen::Vector2d(2.0,-1.0));
+  meshConfig->meshes()[0]->createVertex(Eigen::Vector2d(3.0, 1.0));
+  meshConfig->meshes()[0]->createVertex(Eigen::Vector2d(4.0,-1.0));
+  meshConfig->meshes()[0]->allocateDataValues();
+
   connect("participant0", "participant1", localParticipant, m2n);
   CouplingScheme& cplScheme = *cplSchemeConfig.getCouplingScheme(localParticipant);
 
@@ -333,15 +338,19 @@ void ExplicitCouplingSchemeTest:: testParallelDataInitialization()
   PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
   meshConfig->setDimensions(2);
   m2n::M2NConfiguration::SharedPointer m2nConfig(new m2n::M2NConfiguration(root));
-  geometry::GeometryConfiguration geoConfig(root, meshConfig);
-  geoConfig.setDimensions(2);
   CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
 
   utils::configure(root, configurationPath);
   meshConfig->setMeshSubIDs();
   m2n::PtrM2N m2n = m2nConfig->getM2N("participant0", "participant1");
 
-  geoConfig.geometries()[0]->create(*meshConfig->meshes()[0]);
+  // some dummy mesh
+  meshConfig->meshes()[0]->createVertex(Eigen::Vector2d(1.0, 1.0));
+  meshConfig->meshes()[0]->createVertex(Eigen::Vector2d(2.0,-1.0));
+  meshConfig->meshes()[0]->createVertex(Eigen::Vector2d(3.0, 1.0));
+  meshConfig->meshes()[0]->createVertex(Eigen::Vector2d(4.0,-1.0));
+  meshConfig->meshes()[0]->allocateDataValues();
+
   connect("participant0", "participant1", localParticipant, m2n);
   CouplingScheme& cplScheme = *cplSchemeConfig.getCouplingScheme(localParticipant);
 
@@ -587,21 +596,19 @@ void ExplicitCouplingSchemeTest:: testConfiguredExplicitCouplingWithSubcycling (
   PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
   meshConfig->setDimensions(3);
   m2n::M2NConfiguration::SharedPointer m2nConfig(new m2n::M2NConfiguration(root));
-  geometry::GeometryConfiguration geoConfig(root, meshConfig);
-  geoConfig.setDimensions(3);
   CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
 
   utils::configure(root, configurationPath);
-  //validate(success);
-  //validate(dataConfig->isValid());
-  //validate(meshConfig->isValid());
-  //validate(comConfig->isValid());
-  //validate(geoConfig.isValid());
-  //validate(cplSchemeConfig.isValid());
   meshConfig->setMeshSubIDs();
   m2n::PtrM2N m2n = m2nConfig->getM2N("participant0", "participant1");
 
-  geoConfig.geometries()[0]->create ( *meshConfig->meshes()[0] );
+  // some dummy mesh
+  meshConfig->meshes()[0]->createVertex(Eigen::Vector3d(1.0, 1.0, 1.0));
+  meshConfig->meshes()[0]->createVertex(Eigen::Vector3d(2.0,-1.0, 1.0));
+  meshConfig->meshes()[0]->createVertex(Eigen::Vector3d(3.0, 1.0, 1.0));
+  meshConfig->meshes()[0]->createVertex(Eigen::Vector3d(4.0,-1.0, 1.0));
+  meshConfig->meshes()[0]->allocateDataValues();
+
   connect ( "participant0", "participant1", localParticipant, m2n );
   runExplicitCouplingWithSubcycling (
       *cplSchemeConfig.getCouplingScheme(localParticipant), localParticipant,

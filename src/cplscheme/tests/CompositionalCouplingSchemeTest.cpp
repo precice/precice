@@ -10,7 +10,6 @@
 #include "mesh/Vertex.hpp"
 #include "mesh/config/DataConfiguration.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
-#include "geometry/config/GeometryConfiguration.hpp"
 #include "com/MPIDirectCommunication.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
 #include "m2n/M2N.hpp"
@@ -51,7 +50,6 @@ void CompositionalCouplingSchemeTest:: run ()
       Par::setGlobalCommunicator(comm) ;
       validateEquals(Par::getCommunicatorSize(), 3);
       testMethod(testExplicitSchemeComposition1);
-      //TODO did produce a deadlock on Benjamin's laptop
       testMethod(testImplicitSchemeComposition);
       testMethod(testImplicitExplicitSchemeComposition);
       testMethod(testExplicitImplicitSchemeComposition);
@@ -684,8 +682,6 @@ void CompositionalCouplingSchemeTest:: setupAndRunThreeSolverCoupling
   PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
   meshConfig->setDimensions(3);
   m2n::M2NConfiguration::SharedPointer m2nConfig(new m2n::M2NConfiguration(root));
-  geometry::PtrGeometryConfiguration geoConfig(new geometry::GeometryConfiguration(root, meshConfig));
-  geoConfig->setDimensions(3);
   CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig );
 
   utils::configure(root, configurationPath);
@@ -695,7 +691,11 @@ void CompositionalCouplingSchemeTest:: setupAndRunThreeSolverCoupling
   m2n::PtrM2N m2n1 =
       m2nConfig->getM2N(nameParticipant1, nameParticipant2);
 
-  geoConfig->geometries()[0]->create(*meshConfig->meshes()[0]);
+  // some dummy mesh
+  meshConfig->meshes()[0]->createVertex(Eigen::Vector3d(1.0, 1.0, 1.0));
+  meshConfig->meshes()[0]->createVertex(Eigen::Vector3d(2.0, 1.0, -1.0));
+  meshConfig->meshes()[0]->createVertex(Eigen::Vector3d(3.0, 1.0, 1.0));
+  meshConfig->meshes()[0]->createVertex(Eigen::Vector3d(4.0, 1.0, -1.0));
 
   if (utils::Parallel::getProcessRank() == 0){
     localParticipant = nameParticipant0;

@@ -1,5 +1,4 @@
 #include "../impl/WatchPoint.hpp"
-#include "geometry/Cuboid.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Vertex.hpp"
@@ -18,21 +17,29 @@ BOOST_AUTO_TEST_CASE(WatchPoint)
   std::string name("rectangle");
   bool flipNormals = false;
   PtrMesh mesh(new Mesh(name, dim, flipNormals));
-  VectorXd offset = VectorXd::Zero(dim);
-  double discretizationWidth = 0.5;
-  VectorXd sidelengths = VectorXd::Constant(dim, 1.0);
-  geometry::Cuboid rectangleGeometry(offset, discretizationWidth, sidelengths);
+
+  mesh::Vertex& v1 = mesh->createVertex(Eigen::Vector2d(1.0, 1.0));
+  mesh::Vertex& v2 = mesh->createVertex(Eigen::Vector2d(2.0, 1.0));
+  mesh::Vertex& v3 = mesh->createVertex(Eigen::Vector2d(1.0, 2.0));
+  mesh::Vertex& v4 = mesh->createVertex(Eigen::Vector2d(2.0, 2.0));
+  mesh->createEdge(v1,v2);
+  mesh->createEdge(v1,v3);
+  mesh->createEdge(v2,v4);
+  mesh->createEdge(v3,v4);
+
   PtrData doubleData = mesh->createData("DoubleData", 1);
   PtrData vectorData = mesh->createData("VectorData", dim);
   auto &doubleValues = doubleData->values();
   auto &vectorValues = vectorData->values();
-  rectangleGeometry.create(*mesh);
+  mesh->computeState();
+  mesh->allocateDataValues();
+
 
   // Create watchpoints
-  VectorXd pointToWatch0 = VectorXd::Constant(dim, 1.0);
+  Eigen::Vector2d pointToWatch0(1.0, 1.0);
   std::string filename0("tests-WatchPointTest-output0.txt");
   impl::WatchPoint watchpoint0(pointToWatch0, mesh, filename0);
-  Eigen::Vector2d pointToWatch1(1.0, 0.5);
+  Eigen::Vector2d pointToWatch1(1.0, 1.5);
   std::string filename1("tests-WatchPointTest-output1.txt");
   impl::WatchPoint watchpoint1(pointToWatch1, mesh, filename1);
 

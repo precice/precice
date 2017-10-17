@@ -9,10 +9,6 @@
       <use-data name="data1"/>
       <use-data name="data2"/>
    </mesh>
-   <geometry:builtin-sphere of-mesh="mesh">
-      <radius value="1.0"/>
-      <discretization-width value="0.2"/>
-   </geometry:builtin-sphere>
    <m2n:mpi distribution-type="gather-scatter" from="participant0" to="participant1"/>
    <coupling-scheme:parallel-explicit>  
       <participants first="participant0" second="participant1"/>
