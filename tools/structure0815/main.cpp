@@ -5,7 +5,6 @@
 #include "Globals.hpp"
 #include "precice/SolverInterface.hpp"
 #include "utils/Dimensions.hpp"
-#include "tarch/la/WrappedVector.h"
 #include "utils/Globals.hpp"
 
 
@@ -13,7 +12,6 @@ using Eigen::VectorXd;
 using Eigen::Vector2d;
 
 using namespace precice;
-using tarch::la::raw;
 
 int main(int argc, char **argv)
 {
@@ -41,6 +39,7 @@ int main(int argc, char **argv)
   std::string readCheckpoint(constants::actionReadIterationCheckpoint());
 
   int dimensions = cplInterface.getDimensions();
+  int meshID = cplInterface.getMeshID(meshName);
   double density = 500.0;
   VectorXd gravity (dimensions, 0.0); //-9.81;
   gravity(1) = -9.81;
@@ -60,39 +59,40 @@ int main(int argc, char **argv)
   int displDeltasID = -1;
   int velocityDeltasID = -1;
 
-  if (not cplInterface.hasData(constants::dataForces())){
+  if (not cplInterface.hasData(constants::dataForces(), meshID)) {
     STRUCTURE_INFO("Data \"Forces\" required for coupling!");
     exit(-1);
   }
-  forcesID = cplInterface.getDataID(constants::dataForces());
-  if (cplInterface.hasData(constants::dataVelocities())){
-    velocitiesID = cplInterface.getDataID(constants::dataVelocities());
+  forcesID = cplInterface.getDataID(constants::dataForces(), meshID);
+  if (cplInterface.hasData(constants::dataVelocities(), meshID)) {
+    velocitiesID = cplInterface.getDataID(constants::dataVelocities(), meshID);
   }
-  if (cplInterface.hasData(constants::dataDisplacements())){
-    displacementsID = cplInterface.getDataID(constants::dataDisplacements());
+  if (cplInterface.hasData(constants::dataDisplacements(), meshID)) {
+    displacementsID = cplInterface.getDataID(constants::dataDisplacements(), meshID);
   }
-  if (cplInterface.hasData("DisplacementDeltas")){
-    displDeltasID = cplInterface.getDataID("DisplacementDeltas");
+  if (cplInterface.hasData("DisplacementDeltas", meshID)) {
+    displDeltasID = cplInterface.getDataID("DisplacementDeltas", meshID);
   }
-  if (cplInterface.hasData("VelocityDeltas")){
-    velocityDeltasID = cplInterface.getDataID("VelocityDeltas");
+  if (cplInterface.hasData("VelocityDeltas", meshID)) {
+    velocityDeltasID = cplInterface.getDataID("VelocityDeltas", meshID);
   }
 
   VectorXd nodes(handle.vertices().size()*dimensions);
   Eigen::VectorXi faces;
   size_t iVertex = 0;
   VertexHandle vertices = handle.vertices();
-  foriter (VertexIterator, it, vertices){
+  for (VertexIterator it : vertices){
     for (int i=0; i < dimensions; i++){
       nodes[iVertex*dimensions+i] = it.vertexCoords()[i];
     }
     iVertex++;
   }
   if (dimensions == 2){
-    faces.append(handle.edges().size()*2, 0);
+    // faces.append(handle.edges().size()*2, 0);
+    faces = Eigen::VectorXi::Zero(handle.edges().size()*2);
     EdgeHandle edges = handle.edges();
     int iEdge = 0;
-    foriter (EdgeIterator, it, edges){
+    for (EdgeIterator it : edges){
       for (int i=0; i < 2; i++){
         faces[iEdge*2+i] = it.vertexID(i);
       }
@@ -101,10 +101,11 @@ int main(int argc, char **argv)
   }
   else {
     assertion(dimensions == 3, dimensions);
-    faces.append(handle.triangles().size()*3, 0);
+    // faces.append(handle.triangles().size()*3, 0);
+    faces = Eigen::VectorXi::Zero(handle.triangles().size()*3);
     TriangleHandle triangles = handle.triangles();
     int iTriangle = 0;
-    foriter (TriangleIterator, it, triangles){
+    for (TriangleIterator it : triangles){
       for (int i=0; i < 3; i++){
         faces[iTriangle*3+i] = it.vertexID(i);
       }

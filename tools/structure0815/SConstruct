@@ -9,19 +9,16 @@ import sys;
   
 preciceRoot = os.getenv ('PRECICE_ROOT')
 if ( preciceRoot == None ):
-   print 'ERROR: Environment variable PRECICE_ROOT not defined!'
+   print('ERROR: Environment variable PRECICE_ROOT not defined!')
    sys.exit(1)
 else:
-   print 'Using environment variable PRECICE_ROOT =', preciceRoot
+   print('Using environment variable PRECICE_ROOT =', preciceRoot)
 
 
 ##### Declare build variables and default values
 #
-cppdefines = [
-   'PRECICE_USE_MPI',
-   'tarch=tarchp2'
-   ]   
-libpath = []   
+cppdefines =  []   
+libpath = []
 libs = [ 'precice' ]
 cpppath = [
    preciceRoot + '/src/'
@@ -44,7 +41,7 @@ if buildmode == 'debug':
 elif buildmode == 'release':
    ccflags.append('-O3')
 else:
-   print "ERROR: flag 'buildmode' must be set to either 'debug' or 'release'!"
+   print("ERROR: flag 'buildmode' must be set to either 'debug' or 'release'!")
    sys.exit(1)
 
 #libpath.append (preciceRoot + '/build/' + buildmode + '-nopython/')
