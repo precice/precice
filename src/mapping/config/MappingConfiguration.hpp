@@ -26,7 +26,8 @@ enum class Preallocation {
   OFF,
   COMPUTE,
   ESTIMATE,
-  SAVED
+  SAVED,
+  TREE
 };
 
 

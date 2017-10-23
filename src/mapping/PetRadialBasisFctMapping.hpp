@@ -6,6 +6,7 @@
 #include <map>
 #include <numeric>
 
+#include "mesh/RTree.hpp"
 #include "math/math.hpp"
 #include "impl/BasisFunctions.hpp"
 #include "config/MappingConfiguration.hpp"
@@ -163,6 +164,10 @@ private:
   std::vector<std::vector<std::pair<int, double>>> savedPreallocationMatrixC(const mesh::PtrMesh inMesh);
   
   std::vector<std::vector<std::pair<int, double>>> savedPreallocationMatrixA(const mesh::PtrMesh inMesh, const mesh::PtrMesh outMesh);
+
+  std::vector<std::vector<std::pair<int, double>>> bgPreallocationMatrixC(const mesh::PtrMesh inMesh);
+  
+  std::vector<std::vector<std::pair<int, double>>> bgPreallocationMatrixA(const mesh::PtrMesh inMesh, const mesh::PtrMesh outMesh);
 
 };
 
@@ -382,6 +387,10 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   if (_preallocation == Preallocation::ESTIMATE) {
     estimatePreallocationMatrixC(n, n, inMesh);
   }
+  if (_preallocation == Preallocation::TREE) {
+    bgPreallocationMatrixC(inMesh);
+  }
+
   
   // -- BEGIN FILL LOOP FOR MATRIX C --
   precice::utils::Event eFillC("PetRBF.fillC");
@@ -418,7 +427,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     }
 
     // -- SETS THE COEFFICIENTS --
-    if (_preallocation == Preallocation::SAVED) {
+    if (_preallocation == Preallocation::SAVED or _preallocation == Preallocation::TREE) {
       const auto & rowVertices = vertexData[preallocRow];
       for (const auto & vertex : rowVertices) {
         rowVals[colNum] = _basisFunction.evaluate(vertex.second);
@@ -468,6 +477,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   }
   if (_preallocation == Preallocation::ESTIMATE) {
     estimatePreallocationMatrixA(outputSize, n, inMesh);
+  }
+  if (_preallocation == Preallocation::TREE) {
+    vertexData = bgPreallocationMatrixA(inMesh, outMesh);
   }  
 
   
@@ -499,7 +511,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     }
     
     // -- SETS THE COEFFICIENTS --
-    if (_preallocation == Preallocation::SAVED) {
+    if (_preallocation == Preallocation::SAVED or _preallocation == Preallocation::TREE) {
       const auto & rowVertices = vertexData[row - ownerRangeABegin];
       for (const auto & vertex : rowVertices) {
         // std::cout << "Setting colNum = " << colNum << ", idx = " << vertex.first
@@ -1271,6 +1283,188 @@ std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL
 }
 
 
+template <typename RADIAL_BASIS_FUNCTION_T>
+std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixC(
+  const mesh::PtrMesh inMesh)
+{
+  INFO("Using tree-based preallocation for matrix C");
+  precice::utils::Event ePreallocC("PetRBF.PreallocC");
+  namespace bg = boost::geometry;
+  
+  PetscInt n, ierr;
+
+  auto tree = mesh::rtree::getVertexRTree(inMesh);
+  double supportRadius = _basisFunction.getSupportRadius();
+  
+  const PetscInt *mapIndizes;
+  ISLocalToGlobalMappingGetIndices(_ISmapping, &mapIndizes);
+  
+  int dimensions = input()->getDimensions();
+  Eigen::VectorXd distance(dimensions);
+  
+  std::tie(n, std::ignore) = _matrixC.getLocalSize();
+  std::vector<PetscInt> d_nnz(n), o_nnz(n);
+  PetscInt colOwnerRangeCBegin, colOwnerRangeCEnd;
+  std::tie(colOwnerRangeCBegin, colOwnerRangeCEnd) = _matrixC.ownerRangeColumn();
+
+  std::vector<std::vector<std::pair<int, double>>> vertexData(n - localPolyparams);
+  
+  int local_row = 0;
+  // -- PREALLOCATES THE POLYNOMIAL PART OF THE MATRIX --
+  if (_polynomial == Polynomial::ON) {
+    for (local_row = 0; local_row < localPolyparams; local_row++) {
+      d_nnz[local_row] = colOwnerRangeCEnd - colOwnerRangeCBegin;
+      o_nnz[local_row] = _matrixC.getSize().first - d_nnz[local_row];
+    }
+  }
+
+  for (const mesh::Vertex& inVertex : inMesh->vertices()) {
+    if (not inVertex.isOwner())
+      continue;
+
+    PetscInt col = polyparams - 1;
+    const int global_row = local_row + _matrixC.ownerRange().first;
+    d_nnz[local_row] = 0;
+    o_nnz[local_row] = 0;
+    
+    // -- PREALLOCATES THE COEFFICIENTS --
+    std::vector<size_t> results;
+    auto search_box = mesh::getEnclosingBox(inVertex, supportRadius);
+    
+    tree->query(bg::index::within(search_box) and bg::index::satisfies([&](size_t const i){
+          return bg::distance(inVertex, inMesh->vertices()[i]) <= supportRadius;}),
+      std::back_inserter(results));
+
+    // for (mesh::Vertex& vj : inMesh->vertices()) {
+    for (auto i : results) {
+      const mesh::Vertex & vj = inMesh->vertices()[i];
+      col++;
+
+      const int mapped_col = mapIndizes[vj.getGlobalIndex() + polyparams];
+      if (global_row > mapped_col) // Skip, since we are below the diagonal
+        continue;
+          
+      distance = inVertex.getCoords() - vj.getCoords();
+      for (int d = 0; d < dimensions; d++)
+        if (_deadAxis[d])
+          distance[d] = 0;
+       
+      if (_basisFunction.getSupportRadius() > distance.norm() or col == global_row) {
+        vertexData[local_row - localPolyparams].emplace_back( vj.getGlobalIndex() + polyparams, distance.norm() );
+        if (mapped_col >= colOwnerRangeCBegin and mapped_col < colOwnerRangeCEnd)
+          d_nnz[local_row]++;
+        else
+          o_nnz[local_row]++;
+      }
+    }
+    local_row++;
+  }
+  
+  if (utils::Parallel::getCommunicatorSize() == 1) {
+    ierr = MatSeqSBAIJSetPreallocation(_matrixC, _matrixC.blockSize(), 0, d_nnz.data());
+  }
+  else {
+    ierr = MatMPISBAIJSetPreallocation(_matrixC, _matrixC.blockSize(), 0, d_nnz.data(), 0, o_nnz.data());
+  }
+  MatSetOption(_matrixC, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_TRUE);
+  ISLocalToGlobalMappingRestoreIndices(_ISmapping, &mapIndizes);
+  
+  ePreallocC.stop();
+
+  return vertexData;
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixA(
+  const mesh::PtrMesh inMesh, const mesh::PtrMesh outMesh)
+{
+  INFO("Using tree-based preallocation for matrix A");
+  precice::utils::Event ePreallocA("PetRBF.PreallocA");
+  namespace bg = boost::geometry;
+  
+  PetscInt ownerRangeABegin, ownerRangeAEnd, colOwnerRangeABegin, colOwnerRangeAEnd;
+  PetscInt outputSize, n, ierr;
+  auto tree = mesh::rtree::getVertexRTree(inMesh);
+  double supportRadius = _basisFunction.getSupportRadius();
+  
+  const PetscInt *mapIndizes;
+  ISLocalToGlobalMappingGetIndices(_ISmapping, &mapIndizes);
+
+  std::tie(outputSize, n) = _matrixA.getLocalSize(); // n hier nehmen
+  std::tie(ownerRangeABegin, ownerRangeAEnd) = _matrixA.ownerRange();
+  std::tie(colOwnerRangeABegin, colOwnerRangeAEnd) = _matrixA.ownerRangeColumn();
+  int dimensions = input()->getDimensions();
+    
+  std::vector<PetscInt> d_nnz(outputSize), o_nnz(outputSize);
+  Eigen::VectorXd distance(dimensions);
+
+  // Contains localRow<localCols<colPosition, distance>>>
+  std::vector<std::vector<std::pair<int, double>>> vertexData(outputSize);
+  
+  for (int localRow = 0; localRow < ownerRangeAEnd - ownerRangeABegin; localRow++) {
+    d_nnz[localRow] = 0;
+    o_nnz[localRow] = 0;
+    PetscInt col = 0;
+    const mesh::Vertex& oVertex = outMesh->vertices()[localRow];
+    
+    // -- PREALLOCATE THE POLYNOM PART OF THE MATRIX --
+    if (_polynomial == Polynomial::ON) {
+      if (mapIndizes[col] >= colOwnerRangeABegin and mapIndizes[col] < colOwnerRangeAEnd)
+        d_nnz[localRow]++;
+      else
+        o_nnz[localRow]++;
+      col++;
+      
+      for (int dim = 0; dim < dimensions; dim++) {
+        if (not _deadAxis[dim]) {
+          if (mapIndizes[col] >= colOwnerRangeABegin and mapIndizes[col] < colOwnerRangeAEnd)
+            d_nnz[localRow]++;
+          else
+            o_nnz[localRow]++;
+          col++;
+        }
+      }
+    }
+    
+    // -- PREALLOCATE THE COEFFICIENTS --
+    std::vector<size_t> results;
+    auto search_box = mesh::getEnclosingBox(oVertex, supportRadius);
+
+    tree->query(bg::index::within(search_box) and bg::index::satisfies([&](size_t const i){
+          return bg::distance(oVertex, inMesh->vertices()[i]) <= supportRadius;}),
+      std::back_inserter(results));
+
+    for (auto i : results ) {
+        const mesh::Vertex & inVertex = inMesh->vertices()[i];
+        distance = oVertex.getCoords() - inVertex.getCoords();
+    
+        for (int d = 0; d < dimensions; d++)
+          if (_deadAxis[d])
+            distance[d] = 0;
+        
+        if (_basisFunction.getSupportRadius() > distance.norm()) {
+          col = inVertex.getGlobalIndex() + polyparams;
+          vertexData[localRow].emplace_back(col, distance.norm());
+
+          if (mapIndizes[col] >= colOwnerRangeABegin and mapIndizes[col] < colOwnerRangeAEnd)
+            d_nnz[localRow]++;
+          else
+            o_nnz[localRow]++;
+        }
+    }
+  }
+  if (utils::Parallel::getCommunicatorSize() == 1) {
+    ierr = MatSeqAIJSetPreallocation(_matrixA, 0, d_nnz.data());
+  }
+  else {
+    ierr = MatMPIAIJSetPreallocation(_matrixA, 0, d_nnz.data(), 0, o_nnz.data());
+  }
+  MatSetOption(_matrixA, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_TRUE);
+
+  ISLocalToGlobalMappingRestoreIndices(_ISmapping, &mapIndizes);
+  ePreallocA.stop();
+  return vertexData;
+}
     
 
 }} // namespace precice, mapping

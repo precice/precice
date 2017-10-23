@@ -33,5 +33,10 @@ private:
   static std::map<int, PtrRTree> trees;
 };
 
-}}
 
+using Box3d = boost::geometry::model::box<boost::geometry::model::point<double, 3, boost::geometry::cs::cartesian>>;
+
+/// Returns a boost::geometry box that encloses a sphere of given radius around a middle point
+Box3d getEnclosingBox(Vertex const & middlePoint, double sphereRadius);
+
+}}

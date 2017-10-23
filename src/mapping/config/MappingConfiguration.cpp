@@ -292,10 +292,11 @@ void MappingConfiguration:: xmlTagCallback
         preallocation = Preallocation::COMPUTE;
       else if (strPrealloc == "saved")
         preallocation = Preallocation::SAVED;
+      else if (strPrealloc == "tree")
+        preallocation = Preallocation::TREE;
       else
         preallocation = Preallocation::OFF;
-    }
-     
+    }     
           
     ConfiguredMapping configuredMapping = createMapping(dir, type, constraint,
                                                         fromMesh, toMesh, timing,
