@@ -25,21 +25,21 @@ public:
   virtual ~NearestNeighborMapping() {}
 
   /// Computes the mapping coefficients from the in- and output mesh.
-  virtual void computeMapping();
+  virtual void computeMapping() override;
 
   /// Returns true, if computeMapping() has been called.
-  virtual bool hasComputedMapping() const;
+  virtual bool hasComputedMapping() const override;
 
   /// Removes a computed mapping.
-  virtual void clear();
+  virtual void clear() override;
 
   /// Maps input data to output data from input mesh to output mesh.
   virtual void map (
     int inputDataID,
-    int outputDataID );
+    int outputDataID ) override;
 
-  virtual bool doesVertexContribute(int vertexID) const;
-  virtual bool isProjectionMapping() const;
+  virtual bool doesVertexContribute(int vertexID) const override;
+  virtual bool isProjectionMapping() const override;
   virtual void tagMeshFirstRound() override;
   virtual void tagMeshSecondRound() override;
 
