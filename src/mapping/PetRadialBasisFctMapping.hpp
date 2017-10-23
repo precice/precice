@@ -67,7 +67,7 @@ public:
     bool                    zDead,
     double                  solverRtol = 1e-9,
     Polynomial              polynomial = Polynomial::ON,
-    Preallocation           preallocation = Preallocation::SAVED);
+    Preallocation           preallocation = Preallocation::OFF);
 
   /// Deletes the PETSc objects and the _deadAxis array
   virtual ~PetRadialBasisFctMapping();
