@@ -64,14 +64,14 @@ private:
     //void testFindClosestDistanceToQuads();
 
     /**
-     * @brief Tests and visualizes queries on geometry with different geoIDs
+     * @brief Tests and visualizes queries on meshes with different meshIDs
      *
-     * The geometry consists of one triangle with 2/3 vertices.
+     * The mesh consists of one triangle with 2/3 vertices.
      * The vertex coordinates are created in a loop, where each vertex coordinate
      * is set either 1.0, if the dimension of the coordinate equals the vertex's
      * (local) index, or 0.0 otherwise.
      */
-    void testMultipleGeometryIDs();
+    void testMultipleMeshIDs();
 
     void testWeigthsOfVertices();
 

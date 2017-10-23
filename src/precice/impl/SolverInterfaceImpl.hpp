@@ -100,11 +100,10 @@ public:
   /**
    * @brief Exchanges coupling data and advances coupling state.
    *
-   * - Updates the topology of geometries changed by the solver.
    * - Sends and resets coupling data written by solver to coupling partners.
-   * - Sends geometries with changed topology to coupling partners.
    * - Receives coupling data read by solver.
-   * - Receives geometries that are changed by other solvers.
+   * - Computes and applied data mappings.
+   * - Computes post-processing of coupling data.
    * - Exchanges and computes information regarding the state of the coupled
    *   simulation.
    *
@@ -190,7 +189,7 @@ public:
   bool hasMesh ( const std::string& meshName ) const;
 
   /**
-   * @brief Returns the geometry ID belonging to the geometry with given name.
+   * @brief Returns the ID belonging to the mesh with given name.
    *
    * The existing names are determined from the configuration.
    */
@@ -350,7 +349,7 @@ public:
 
 
   /**
-   * @brief Write vectorial data to the geometry interface
+   * @brief Write vectorial data to the interface mesh
    *
    * The exact mapping and communication must be specified in XYZ.
    *
@@ -377,7 +376,7 @@ public:
     double* values );
 
   /**
-   * @brief Write scalar data to the geometry interface
+   * @brief Write scalar data to the interface mesh
    *
    * The exact mapping and communication must be specified in XYZ.
    *
@@ -434,7 +433,7 @@ public:
     double* values );
 
   /**
-   * @brief Read scalar data from the geometry interface.
+   * @brief Read scalar data from the interface mesh.
    *
    * The exact mapping and communication must be specified in XYZ.
    *
@@ -458,7 +457,7 @@ public:
 //    int                exportType = constants::exportAll() );
 
   /**
-   * @brief Writes the contained geometries and spacetree to vtk file.
+   * @brief Writes a mesh to vtk file.
    *
    * The plotting path has to be specified in the configuration of the
    * accessing participant.
@@ -519,7 +518,7 @@ private:
   // @brief Communication when for client-server mode.
   //com::Communication::SharedPointer _clientServerCommunication;
 
-  // @brief Geometry name to mesh ID mapping.
+  // @brief mesh name to mesh ID mapping.
   std::map<std::string,int> _meshIDs;
 
   //@brief dataIDs referenced by meshID and data name
@@ -551,7 +550,7 @@ private:
   void configureM2Ns ( const m2n::M2NConfiguration::SharedPointer& config );
 
   /**
-   * @brief Exports geometries with data and watch point data.
+   * @brief Exports meshes with data and watch point data.
    */
   void handleExports();
 
@@ -576,14 +575,14 @@ private:
    *
    * Prerequesits:
    * - _couplingScheme holds a pointer to a valid coupling scheme object
-   * - all meshes of geometries are created
+   * - all meshes are created
    * - all data is added to _data
    * - _accessor points to the accessor
    */
   void addMeshesToCouplingScheme();
 
   /**
-   * @brief Returns true, if the accessor uses the geometry with given name.
+   * @brief Returns true, if the accessor uses the mesh with given name.
    */
   bool isUsingMesh ( const std::string& meshName );
 
@@ -592,16 +591,6 @@ private:
    */
   void configurePartitions (
     const m2n::M2NConfiguration::SharedPointer& m2nConfig );
-
-  /**
-   * @brief Creates context data structure of a geometry, communicates mesh structures
-   */
-  void prepareGeometry ( impl::MeshContext& meshContext );
-
-  /**
-   * @brief Creates the mesh of a geometry.
-   */
-  void createGeometry ( impl::MeshContext& meshContext );
 
   /// Communicate meshes and create partition
   void computePartitions();
@@ -636,26 +625,10 @@ private:
   void resetWrittenData();
 
   /**
-   * @brief Sets all dataContext value indices to zero.
-   */
-  //void resetDataIndices();
-
-  /**
    * @brief Determines participant accessing this interface from the configuration.
    */
   impl::PtrParticipant determineAccessingParticipant (
     const config::SolverInterfaceConfiguration& config );
-
-  /**
-   * @brief Selects meshes to be queried from mesh IDs requested.
-   *
-   * Not all meshes need to be queried separately, if some share the same
-   * spacetree for example. This method selects all necessary meshes necessary
-   * to be queried.
-   */
-  void selectInquiryMeshIDs (
-      const std::set<int>& meshIDs,
-      std::vector<int>&    selectedMeshIDs ) const;
 
   int markedSkip() const { return 0; }
   int markedQueryDirectly() const { return 1; }

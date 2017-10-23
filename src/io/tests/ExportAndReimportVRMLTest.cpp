@@ -32,17 +32,16 @@ void ExportAndReimportVRMLTest:: run()
 {
 # ifndef PRECICE_NO_SPIRIT2
   PRECICE_MASTER_ONLY {
-    testMethod ( testInternallyCreatedGeometry );
+    testMethod ( testInternallyCreatedMesh );
     //testMethod ( testReimportDriftRatchet );
   }
 # endif // not PRECICE_NO_SPIRIT2
 }
 
-void ExportAndReimportVRMLTest:: testInternallyCreatedGeometry()
+void ExportAndReimportVRMLTest:: testInternallyCreatedMesh()
 {
   TRACE();
   mesh::Mesh::resetGeometryIDsGlobally();
-  // Create geometry
   bool flipNormals = false;
   int dim = 2;
   mesh::Mesh mesh("TestCuboid", dim, flipNormals);
@@ -80,14 +79,14 @@ void ExportAndReimportVRMLTest:: testInternallyCreatedGeometry()
 
   data->values().segment(vertex0ID*2, 2) = dataOne;
   data->values().segment(vertexNID*2, 2) = dataN;
-  std::string filename("io-ExportandReimportVRMLTest-testInternallyCreatedGeometry.wrl");
+  std::string filename("io-ExportandReimportVRMLTest-testInternallyCreatedMesh.wrl");
 
-  // Export geometry
+  // Export mesh
   bool exportNormals = false;
   io::ExportVRML exportMesh(exportNormals);
   exportMesh.doExportCheckpoint(filename, mesh);
 
-  // Reimport geometry
+  // Reimport mesh
   mesh::Mesh reimportedMesh("TestCuboid", 2, false);
   mesh::PtrData reimportedData =
       reimportedMesh.createData(data->getName(), data->getDimensions());

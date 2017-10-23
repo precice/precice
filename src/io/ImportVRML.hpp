@@ -20,7 +20,7 @@ namespace precice {
 namespace io {
 
 /**
- * @brief Imports a geometry from a vrml file.
+ * @brief Imports a mesh from a vrml file.
  */
 class ImportVRML : public Import
 {
@@ -38,7 +38,7 @@ public:
    virtual ~ImportVRML() {}
 
    /**
-    * @brief Imports the geometry from an vrml file into a Mesh object.
+    * @brief Imports the mesh from an vrml file into a Mesh object.
     *
     * @param mesh [IN/OUT] The imported elements are added to this mesh.
     */

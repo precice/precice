@@ -40,7 +40,7 @@ private:
 
   static logging::Logger _log;
 
-  void testInternallyCreatedGeometry();
+  void testInternallyCreatedMesh();
 
   void testReimportDriftRatchet();
 };

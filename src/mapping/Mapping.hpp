@@ -112,16 +112,6 @@ public:
     int inputDataID,
     int outputDataID ) =0;
 
-  /**
-   * @brief Returns true if the vertex actually contributes to the mapping.
-   */
-  virtual bool doesVertexContribute(int vertexID) const;
-
-  /**
-   * @brief Returns true if the mapping is a projection mapping.
-   */
-  virtual bool isProjectionMapping() const;
-
   /// Method used by partition. Tags vertices that could be owned by this rank.
   virtual void tagMeshFirstRound() = 0;
 

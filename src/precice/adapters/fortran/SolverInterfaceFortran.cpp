@@ -161,14 +161,14 @@ void precicef_fulfilled_action_
 
 void precicef_get_mesh_id_
 (
-  const char* geometryName,
+  const char* meshName,
   int*        meshID,
-  int         lengthGeometryName )
+  int         lengthMeshName )
 {
   CHECK(impl != nullptr,errormsg);
-  int strippedLength = precice::impl::strippedLength(geometryName, lengthGeometryName);
-  string stringGeometryName(geometryName, strippedLength);
-  *meshID = impl->getMeshID(stringGeometryName);
+  int strippedLength = precice::impl::strippedLength(meshName, lengthMeshName);
+  string stringMeshName(meshName, strippedLength);
+  *meshID = impl->getMeshID(stringMeshName);
 }
 
 void precicef_has_data_

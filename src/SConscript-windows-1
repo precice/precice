@@ -25,23 +25,14 @@ sourcesIO = [
    Glob('io/tests/*.cpp')
    ]
    
-sourcesGeometry = [
-   Glob('geometry/*.cpp'),
-   Glob('geometry/config/*.cpp'),
-   Glob('geometry/tests/*.cpp'),
-   Glob('geometry/impl/*.cpp')
+sourcesPartition = [
+   Glob('partition/*.cpp'),
+   Glob('partition/config/*.cpp')
    ]   
   
 sourcesQuery = [
    Glob('query/*.cpp'),
    Glob('query/tests/*.cpp')
-   ]
-   
-sourcesSpacetree = [
-   Glob('spacetree/*.cpp'),
-   Glob('spacetree/impl/*.cpp'),
-   Glob('spacetree/config/*.cpp'),
-   Glob('spacetree/tests/*.cpp')
    ]
    
 sourcesMapping = [
@@ -61,9 +52,8 @@ sourcesAll = [
    sourcesUtils,
    sourcesMesh,
    sourcesIO,
-   sourcesGeometry,
+   sourcesPartition,
    sourcesQuery,
-   sourcesSpacetree,
    sourcesMapping,
    sourcesCom
    ]

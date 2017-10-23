@@ -29,7 +29,7 @@ struct InterpolationElement
 };
 
 /**
- * @brief Closest element to all objects with given geometry ID
+ * @brief Closest element to all objects with given mesh ID
  */
 struct ClosestElement
 {

@@ -19,7 +19,6 @@ sourcesPrecice = [
    Glob('precice/config/*.cpp'),
    Glob('precice/tests/*.cpp'),
    Glob('precice/tests/couplingmode/*.cpp'),
-   Glob('precice/tests/geometrymode/*.cpp'),
    Glob('precice/tests/servermode/*.cpp'),
    Glob('precice/adapters/c/*.cpp')
    ]

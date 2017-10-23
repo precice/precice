@@ -511,7 +511,7 @@ void ParallelMatrixOperationsTest::validate_result_equals_reference(
 	}
 }
 
-}}} // namespace precice, geometry, tests
+}}} // namespace precice, cplscheme, tests
 
 
 #endif // PRECICE_NO_MPI

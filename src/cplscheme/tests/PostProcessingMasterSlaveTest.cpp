@@ -1276,7 +1276,7 @@ void PostProcessingMasterSlaveTest::testIMVJ_effUpdate_pp()
 }
 
 
-}}} // namespace precice, geometry, tests
+}}} // namespace precice, cplscheme, tests
 
 #endif // PRECICE_NO_MPI
 

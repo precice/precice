@@ -25,16 +25,13 @@ MeshConfiguration:: MeshConfiguration
   ATTR_NAME("name"),
   ATTR_FLIP_NORMALS("flip-normals"),
   TAG_DATA("use-data"),
-  TAG_SPACETREE("use-spacetree"),
   TAG_SUB_ID("sub-id"),
   ATTR_SIDE_INDEX("side"),
   _dimensions(0),
-  //_isValid(false),
   _dataConfig(config),
   _meshes(),
   _setMeshSubIDs(),
   _meshSubIDs(),
-  _spacetreeNames(),
   _neededMeshes()
 {
   using namespace utils;
@@ -42,8 +39,8 @@ MeshConfiguration:: MeshConfiguration
   XMLTag tag(*this, TAG, utils::XMLTag::OCCUR_ONCE_OR_MORE);
   doc = "Surface mesh consisting of vertices and (optional) of edges and ";
   doc += "triangles (only in 3D). The vertices of a mesh can carry data, ";
-  doc += "configured by tag <use-data>. The geometry of a mesh is either defined ";
-  doc += "by a tag <geometry>, or by a participant (see tag <use-mesh>).";
+  doc += "configured by tag <use-data>. The mesh coordinates have to be ";
+  doc += "defined by a participant (see tag <use-mesh>).";
   tag.setDocumentation(doc);
 
   XMLAttribute<std::string> attrName(ATTR_NAME);
@@ -64,21 +61,12 @@ MeshConfiguration:: MeshConfiguration
 
   utils::XMLTag tagSubID(*this, TAG_SUB_ID, utils::XMLTag::OCCUR_ARBITRARY);
   doc = "Every mesh has a global ID (determined by preCICE). It is possible ";
-  doc += "to set additional sub-ids. This sub-ids are used by certain geomtries ";
-  doc += "(see tag <geometry>) to distinguish parts of the mesh in geometry ";
+  doc += "to set additional sub-ids to distinguish parts of the mesh in ";
   doc += "queries.";
   tagSubID.setDocumentation(doc);
   utils::XMLAttribute<int> attrSideIndex(ATTR_SIDE_INDEX);
   tagSubID.addAttribute(attrSideIndex);
   tag.addSubtag(tagSubID);
-
-  XMLTag subtagUseSpacetree(*this, TAG_SPACETREE, XMLTag::OCCUR_NOT_OR_ONCE);
-  doc = "A defined spacetree (see tag <spacetree>) can be used to accelerate ";
-  doc += "spatial queries on the mesh.";
-  subtagUseSpacetree.setDocumentation(doc);
-  attrName.setDocumentation("Name of the spacetree");
-  subtagUseSpacetree.addAttribute(attrName);
-  tag.addSubtag(subtagUseSpacetree);
 
   parent.addSubtag(tag);
 }
@@ -91,39 +79,6 @@ void MeshConfiguration:: setDimensions
   assertion((dimensions == 2) || (dimensions == 3), dimensions);
   _dimensions = dimensions;
 }
-
-//bool MeshConfiguration:: parseSubtag
-//(
-//  utils::XMLTag::XMLReader* xmlReader )
-//{
-//  TRACE();
-//
-//  assertion(not _setMeshSubIDs);
-//
-//  XMLTag tag ( TAG, XMLTag::OCCUR_ONCE );
-//  XMLAttribute<std::string> attrName ( ATTR_NAME );
-//  tag.addAttribute ( attrName );
-//
-//  XMLAttribute<bool> attrFlipNormals ( ATTR_FLIP_NORMALS );
-//  attrFlipNormals.setDefaultValue ( false );
-//  tag.addAttribute ( attrFlipNormals );
-//
-//  XMLTag subtagData ( TAG_DATA, XMLTag::OCCUR_ARBITRARY );
-//  subtagData.addAttribute ( attrName );
-//  tag.addSubtag ( subtagData );
-//
-//  utils::XMLTag tagSubID ( TAG_SUB_ID, utils::XMLTag::OCCUR_ARBITRARY );
-//  utils::XMLAttribute<int> attrSideIndex ( ATTR_SIDE_INDEX );
-//  tagSubID.addAttribute ( attrSideIndex );
-//  tag.addSubtag ( tagSubID );
-//
-//  XMLTag subtagUseSpacetree ( TAG_SPACETREE, XMLTag::OCCUR_NOT_OR_ONCE );
-//  subtagUseSpacetree.addAttribute ( attrName );
-//  tag.addSubtag ( subtagUseSpacetree );
-//
-//  _isValid = _tag.parse(xmlReader);
-//  return _isValid;
-//}
 
 void MeshConfiguration:: xmlTagCallback
 (
@@ -159,16 +114,6 @@ void MeshConfiguration:: xmlTagCallback
              << "configuration of mesh \"" << _meshes.back()->getName() << "\"";
       throw stream.str();
     }
-  }
-  else if (tag.getName() == TAG_SPACETREE){
-    std::string name = tag.getStringAttributeValue(ATTR_NAME);
-    std::string meshName ( _meshes.back()->getName() );
-    if (utils::contained(meshName, _spacetreeNames)){
-      std::ostringstream stream;
-      stream << "Mesh \"" << meshName << "\" can only use one spacetree";
-      throw stream.str();
-    }
-    _spacetreeNames[meshName] = name;
   }
 }
 
@@ -241,22 +186,6 @@ mesh::PtrMesh MeshConfiguration:: getMesh
     }
   }
   return mesh::PtrMesh();
-}
-
-bool MeshConfiguration:: doesMeshUseSpacetree
-(
-  const std::string& meshName ) const
-{
-
-  return _spacetreeNames.count(meshName) > 0;
-}
-
-const std::string& MeshConfiguration:: getSpacetreeName
-(
-  const std::string& meshName ) const
-{
-  assertion ( _spacetreeNames.count(meshName) > 0 );
-  return _spacetreeNames.find(meshName)->second;
 }
 
 void MeshConfiguration:: addNeededMesh(

@@ -107,11 +107,11 @@ void precicec_fulfilledAction ( const char* action )
   impl->fulfilledAction ( std::string(action) );
 }
 
-int precicec_getMeshID ( const char* geometryName )
+int precicec_getMeshID ( const char* meshName )
 {
   assertion ( impl != nullptr );
-  std::string stringGeometryName (geometryName);
-  return impl->getMeshID (stringGeometryName);
+  std::string stringMeshName (meshName);
+  return impl->getMeshID (stringMeshName);
 }
 
 int precicec_hasData ( const char* dataName, int meshID )

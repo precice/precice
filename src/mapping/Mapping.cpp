@@ -72,17 +72,6 @@ void Mapping:: setOutputRequirement
   _outputRequirement = requirement;
 }
 
-bool Mapping:: doesVertexContribute(
-  int vertexID) const
-{
-  return true;
-}
-
-bool Mapping:: isProjectionMapping() const
-{
-  return false;
-}
-
 int Mapping:: getDimensions(){
   return _dimensions;
 }

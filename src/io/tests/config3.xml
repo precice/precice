@@ -1,5 +1,5 @@
 <?xml version="1.0"?> 
 
 <configuration>
-   <export:vrml normals="on" spacetree="off"/>
+   <export:vrml normals="on" />
 </configuration>

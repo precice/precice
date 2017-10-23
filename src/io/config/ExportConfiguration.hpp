@@ -83,7 +83,6 @@ private:
   const std::string ATTR_NEIGHBORS;
   const std::string ATTR_TRIGGER_SOLVER;
   const std::string ATTR_NORMALS;
-  const std::string ATTR_SPACETREE;
   const std::string ATTR_EVERY_ITERATION;
 
   // @brief Flag indicating success of configuration.

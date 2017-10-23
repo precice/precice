@@ -75,9 +75,9 @@ int precicec_isActionRequired ( const char* action );
 void precicec_fulfilledAction ( const char* action );
 
 /**
- * @brief Returns geometry id belonging to the given geometry name
+ * @brief Returns id belonging to the given mesh name
  */
-int precicec_getMeshID ( const char* geometryName );
+int precicec_getMeshID ( const char* meshName );
 
 /**
  * @brief Returns true (!=0), if data with given name is available.

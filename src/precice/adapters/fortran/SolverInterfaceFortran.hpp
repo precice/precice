@@ -160,16 +160,16 @@ void precicef_fulfilled_action_(
  *
  * Fortran syntax:
  * precicef_get_mesh_id(
- *   CHARACTER geometryName(*),
+ *   CHARACTER meshName(*),
  *   INTEGER   meshID )
  *
- * IN:  geometryName
+ * IN:  meshName
  * OUT: meshID
  */
 void precicef_get_mesh_id_(
-  const char* geometryName,
+  const char* meshName,
   int*        meshID,
-  int         lengthGeometryName );
+  int         lengthMeshName );
 
 /**
  * @brief See precice::SolverInterface::hasData().

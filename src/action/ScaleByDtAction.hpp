@@ -11,9 +11,6 @@ namespace precice {
       class Edge;
       class Triangle;
    }
-   namespace spacetree {
-      class Spacetree;
-   }
 }
 
 // ----------------------------------------------------------- CLASS DEFINITION

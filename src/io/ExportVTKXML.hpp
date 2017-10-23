@@ -99,7 +99,7 @@ private:
      const std::string& location,
      mesh::Mesh&        mesh);
 
-   void exportGeometry (
+   void exportMesh (
      std::ofstream& outFile,
      mesh::Mesh&    mesh );
 

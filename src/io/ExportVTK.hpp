@@ -21,9 +21,6 @@ public:
 
   /**
    * @brief Standard constructor
-   *
-   * @param[in] filename  Name of the vtk file (including file extension)
-   * @param[in] container Container holding geometry to be visualized
    */
   explicit ExportVTK ( bool exportNormals );
 
@@ -69,7 +66,7 @@ private:
     std::ofstream&     outFile,
     const std::string& filename ) const;
 
-   void exportGeometry (
+   void exportMesh (
      std::ofstream& outFile,
      mesh::Mesh&    mesh );
 

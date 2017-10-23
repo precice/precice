@@ -2,5 +2,5 @@
 
 <configuration>
    <export:vtk timestep-interval="10" trigger-solver="on"
-           normals="on" directory="./" spacetree="on"/>
+           normals="on" directory="./" />
 </configuration>

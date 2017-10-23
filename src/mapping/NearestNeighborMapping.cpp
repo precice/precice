@@ -115,17 +115,6 @@ void NearestNeighborMapping:: map
   }
 }
 
-bool NearestNeighborMapping::doesVertexContribute(
-  int vertexID) const
-{
-  return utils::contained(vertexID,_vertexIndices);
-}
-
-bool NearestNeighborMapping:: isProjectionMapping() const
-{
-  return true;
-}
-
 void NearestNeighborMapping::tagMeshFirstRound()
 {
   TRACE();

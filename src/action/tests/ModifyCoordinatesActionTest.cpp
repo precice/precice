@@ -34,9 +34,6 @@ void ModifyCoordinatesActionTest:: testAddToCoordinates ()
 {
   TRACE();
   using namespace mesh;
-  // Create geometryContext by faking a geometry but not using it to create
-  // the mesh. The mesh is created by hand, such that references to the vertices
-  // to be displaced are obtained.
   PtrMesh mesh ( new Mesh("Mesh", 2, false) );
   PtrData data = mesh->createData ( "test-data", 2 );
   int dataID = data->getID ();
@@ -49,8 +46,8 @@ void ModifyCoordinatesActionTest:: testAddToCoordinates ()
 
   // Create ApplyDisplacementsMeshAction
   action::ModifyCoordinatesAction modifyCoordinates (
-    action::ModifyCoordinatesAction::ALWAYS_PRIOR, dataID, mesh,
-    action::ModifyCoordinatesAction::ADD_TO_COORDINATES_MODE );
+  action::ModifyCoordinatesAction::ALWAYS_PRIOR, dataID, mesh,
+  action::ModifyCoordinatesAction::ADD_TO_COORDINATES_MODE );
 
   // Validate coordinates of mesh before modifying it
   validate ( math::equals(v0.getCoords(), Eigen::Vector2d::Constant(0.0)) );

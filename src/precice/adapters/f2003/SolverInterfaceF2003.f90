@@ -85,13 +85,13 @@ module PreCICE_solver_if_module
       integer(kind=c_int), value           :: lengthAction
     end subroutine precicef_fulfilled_action
 
-    subroutine precicef_get_mesh_id(geometryName, meshID, lengthGeometryName) &
+    subroutine precicef_get_mesh_id(meshName, meshID, lengthMeshName) &
       &  bind(c, name='precicef_get_mesh_id_')
 
       use, intrinsic :: iso_c_binding
-      character(kind=c_char), dimension(*) :: geometryName
+      character(kind=c_char), dimension(*) :: meshName
       integer(kind=c_int)                  :: meshID
-      integer(kind=c_int), value           :: lengthGeometryName
+      integer(kind=c_int), value           :: lengthMeshName
     end subroutine precicef_get_mesh_id
 
     subroutine precicef_has_data(dataName, hasData, lengthDataName, meshID) &

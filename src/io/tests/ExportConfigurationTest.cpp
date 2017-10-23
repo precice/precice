@@ -44,7 +44,6 @@ void ExportConfigurationTest:: testConfiguration ()
     //validate ( context.plotNormals );
     //validate ( context.plotNeighbors );
     validate ( context.triggerSolverPlot );
-    validate ( context.exportSpacetree );
   }
   {
     tag.clear();
@@ -59,7 +58,6 @@ void ExportConfigurationTest:: testConfiguration ()
     //validate ( not context.plotNormals );
     //validate ( not context.plotNeighbors );
     validate ( not context.triggerSolverPlot );
-    validate ( context.exportSpacetree );
   }
   {
     tag.clear();
@@ -74,7 +72,6 @@ void ExportConfigurationTest:: testConfiguration ()
     //validate ( context.plotNormals );
     //validate ( not context.plotNeighbors );
     validate ( not context.triggerSolverPlot );
-    validate ( not context.exportSpacetree );
   }
 }
 

@@ -32,7 +32,6 @@ ExportConfiguration:: ExportConfiguration
   ATTR_NEIGHBORS ( "neighbors" ),
   ATTR_TRIGGER_SOLVER ( "trigger-solver" ),
   ATTR_NORMALS ( "normals" ),
-  ATTR_SPACETREE ( "spacetree" ),
   ATTR_EVERY_ITERATION("every-iteration"),
   //_isValid ( false ),
   _contexts()
@@ -76,11 +75,6 @@ ExportConfiguration:: ExportConfiguration
   attrNormals.setDocumentation(doc);
   attrNormals.setDefaultValue(true);
 
-  XMLAttribute<bool> attrSpacetree(ATTR_SPACETREE);
-  doc = "If set to on/yes, spacetrees used by a mesh are also exported.";
-  attrSpacetree.setDocumentation(doc);
-  attrSpacetree.setDefaultValue(true);
-
   XMLAttribute<bool> attrEveryIteration(ATTR_EVERY_ITERATION);
   doc = "Exports in every coupling (sub)iteration. For debug purposes.";
   attrEveryIteration.setDocumentation(doc);
@@ -92,61 +86,10 @@ ExportConfiguration:: ExportConfiguration
     //tag.addAttribute(attrNeighbors);
     tag.addAttribute(attrTriggerSolver);
     tag.addAttribute(attrNormals);
-    tag.addAttribute(attrSpacetree);
     tag.addAttribute(attrEveryIteration);
     parent.addSubtag(tag);
   }
 }
-
-//bool ExportConfiguration:: parseSubtag
-//(
-//  utils::XMLTag::XMLReader* xmlReader )
-//{
-//  using utils::XMLTag;
-//  using utils::XMLAttribute;
-//  using utils::ValidatorEquals;
-//  XMLTag tag ( TAG, XMLTag::OCCUR_ARBITRARY );
-//
-//  XMLAttribute<std::string> attrLocation ( ATTR_LOCATION );
-//  attrLocation.setDefaultValue ("");
-//  tag.addAttribute ( attrLocation );
-//
-//  XMLAttribute<std::string> attrType ( ATTR_TYPE );
-//  ValidatorEquals<std::string> validTypeVTK ( VALUE_VTK );
-//  ValidatorEquals<std::string> validTypeSocket ( VALUE_VRML );
-//  attrType.setValidator ( validTypeVTK || validTypeSocket );
-//  attrType.setDefaultValue ( VALUE_VTK );
-//  tag.addAttribute ( attrType );
-//
-//  XMLAttribute<int> attrTimestepInterval ( ATTR_TIMESTEP_INTERVAL );
-//  attrTimestepInterval.setDefaultValue ( -1 );
-//  tag.addAttribute ( attrTimestepInterval );
-//
-//  XMLAttribute<bool> attrNeighbors ( ATTR_NEIGHBORS );
-//  attrNeighbors.setDefaultValue ( false );
-//  tag.addAttribute ( attrNeighbors );
-//
-//  XMLAttribute<bool> attrTriggerSolver ( ATTR_TRIGGER_SOLVER );
-//  attrTriggerSolver.setDefaultValue ( false );
-//  tag.addAttribute ( attrTriggerSolver );
-//
-//  XMLAttribute<bool> attrNormals ( ATTR_NORMALS );
-//  attrNormals.setDefaultValue ( false );
-//  tag.addAttribute ( attrNormals );
-//
-//  XMLAttribute<bool> attrSpacetree ( ATTR_SPACETREE );
-//  attrSpacetree.setDefaultValue(true);
-//  tag.addAttribute(attrSpacetree);
-//
-//  //utils::XMLAttribute<bool> attrAuto ( ATTR_AUTO );
-//  //attrAuto.setDefaultValue ( true );
-//  //tagExport.addAttribute ( attrAuto );
-//
-//  _context = ExportContext();
-//  _isValid = tag.parse ( xmlReader, *this );
-//
-//  return _isValid;
-//}
 
 void ExportConfiguration:: xmlTagCallback
 (
@@ -159,7 +102,6 @@ void ExportConfiguration:: xmlTagCallback
     context.triggerSolverPlot =  tag.getBooleanAttributeValue(ATTR_TRIGGER_SOLVER);
     context.timestepInterval = tag.getIntAttributeValue(ATTR_TIMESTEP_INTERVAL);
     context.plotNormals = tag.getBooleanAttributeValue(ATTR_NORMALS);
-    context.exportSpacetree = tag.getBooleanAttributeValue(ATTR_SPACETREE);
     context.everyIteration = tag.getBooleanAttributeValue(ATTR_EVERY_ITERATION);
     context.type = tag.getName();
     if ((context.timestepInterval == -1) &&  context.triggerSolverPlot){

@@ -136,8 +136,6 @@ private:
   /// Number of coefficients for the separated polynomial. Depends on dimension and number of dead dimensions
   size_t sepPolyparams;
 
-  virtual bool doesVertexContribute(int vertexID) const override;
-
   void incPrealloc(PetscInt* diag, PetscInt* offDiag, int pos, int begin, int end);
 
   /// Caches the solution from the previous iteration, used as starting value for current iteration
@@ -778,19 +776,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
       VecRestoreArrayRead(out, &vecArray);
     }
   }
-}
-
-
-template<typename RADIAL_BASIS_FUNCTION_T>
-bool PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::doesVertexContribute(int vertexID) const
-{
-  // FIXME: Use a sane calculation here
-  // TRACE();
-
-  if (not _basisFunction.hasCompactSupport())
-    return true;
-
-  return true;
 }
 
 

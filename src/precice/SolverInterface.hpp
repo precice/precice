@@ -17,7 +17,6 @@ namespace precice {
   namespace tests {
     class SolverInterfaceTest;
     class SolverInterfaceTestRemote;
-    class SolverInterfaceTestGeometry;
   }
 }
 
@@ -97,7 +96,7 @@ public:
    *
    * Postconditions:
    * - Communication to the coupling partner/s is setup.
-   * - Meshes are created from geometries or sent/received to/from coupling partners.
+   * - Meshes are are sent/received to/from coupling partners and the parallel partitions are created.
    * - If the solver is not starting the simulation, coupling data is received
    *   from the coupling partner's first computation.
    * - The length limitation of the first solver timestep is computed and returned.
@@ -252,7 +251,7 @@ public:
   bool hasMesh ( const std::string& meshName ) const;
 
   /**
-   * @brief Returns the geometry ID belonging to the geometry with given name.
+   * @brief Returns the ID belonging to the mesh with given name.
    *
    * The existing names are determined from the configuration.
    */
@@ -442,7 +441,7 @@ public:
     double* values );
 
   /**
-   * @brief Write vectorial data to the geometry interface
+   * @brief Write vectorial data to the interface mesh
    *
    * The exact mapping and communication must be specified in XYZ.
    *
@@ -470,7 +469,7 @@ public:
     double* values );
 
   /**
-   * @brief Write scalar data to the geometry interface
+   * @brief Write scalar data to the interface mesh
    *
    * The exact mapping and communication must be specified in XYZ.
    *
@@ -527,7 +526,7 @@ public:
     double* values );
 
   /**
-   * @brief Read scalar data from the geometry interface.
+   * @brief Read scalar data from the interface mesh.
    *
    * The exact mapping and communication must be specified in XYZ.
    *
@@ -564,7 +563,6 @@ private:
   // tarch integration tests
   friend class tests::SolverInterfaceTest;
   friend class tests::SolverInterfaceTestRemote;
-  friend class tests::SolverInterfaceTestGeometry;
   // boost tests
   friend struct PreciceTests::Parallel::TestFinalize;
   friend struct PreciceTests::Parallel::TestMasterSlaveSetup;

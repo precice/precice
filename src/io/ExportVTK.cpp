@@ -44,12 +44,12 @@ void ExportVTK:: doExport
 
   initializeWriting(outstream);
   writeHeader(outstream);
-  exportGeometry(outstream, mesh);
+  exportMesh(outstream, mesh);
   exportData(outstream, mesh);
   outstream.close();
 }
 
-void ExportVTK::exportGeometry
+void ExportVTK::exportMesh
 (
   std::ofstream& outFile,
   mesh::Mesh&    mesh)

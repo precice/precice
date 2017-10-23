@@ -14,8 +14,6 @@ Configuration:: Configuration()
 {
   _tag.setDocumentation("Main tag containing preCICE configuration.");
   _tag.addNamespace("data");
-  _tag.addNamespace("geometry");
-  _tag.addNamespace("spacetree");
   _tag.addNamespace("communication");
   _tag.addNamespace("mapping");
   _tag.addNamespace("export");

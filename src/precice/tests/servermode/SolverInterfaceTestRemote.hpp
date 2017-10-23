@@ -50,21 +50,6 @@ private:
     SolverInterface&   interface );
 
   /**
-   * @brief Runs the solver interface in geometry mode with server.
-   */
-  void testGeometryMode();
-
-  /**
-   * @brief Two processes run the solver interface in geo-mode with server.
-   */
-  void testGeometryModeParallel();
-
-  /**
-   * @brief As testGeometryModeParallel() but with a stationary mapping.
-   */
-  void testGeometryModeParallelStationaryMapping();
-
-  /**
    * @brief Runs two solver interfaces in coupling mode, one using a server.
    */
   void testCouplingModeWithOneServer();

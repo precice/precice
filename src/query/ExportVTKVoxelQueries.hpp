@@ -10,9 +10,6 @@ namespace mesh {
    class Group;
    class IVisitable;
 }
-namespace spacetree {
-   class Spacetree;
-}
 namespace query {
 
 /**

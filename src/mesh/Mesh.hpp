@@ -244,12 +244,6 @@ public:
   void computeState();
 
   /**
-   * @brief collect/compute global distribution information (for parallel runs) that
-   * are needed at a local level, e.g. global indices
-   */
-  void computeDistribution();
-
-  /**
    * @brief Removes all mesh elements and data values (does not remove data).
    *
    * A mesh element is a

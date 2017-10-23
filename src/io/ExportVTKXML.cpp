@@ -165,8 +165,8 @@ void ExportVTKXML::writeSubFile
   outSubFile << "            </DataArray>" << std::endl;
   outSubFile << "         </Points> " << std::endl << std::endl;
 
-  // Write geometry
-  exportGeometry(outSubFile, mesh);
+  // Write Mesh
+  exportMesh(outSubFile, mesh);
 
   // Write data
   exportData(outSubFile, mesh);
@@ -178,7 +178,7 @@ void ExportVTKXML::writeSubFile
   outSubFile.close();
 }
 
-void ExportVTKXML::exportGeometry
+void ExportVTKXML::exportMesh
 (
   std::ofstream& outFile,
   mesh::Mesh&    mesh)

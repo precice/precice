@@ -70,16 +70,6 @@ public:
    */
   mesh::PtrMesh getMesh ( const std::string& meshName ) const;
 
-  /**
-   * @brief Returns true, when the geometry with given name uses a spacetree.
-   */
-  bool doesMeshUseSpacetree ( const std::string& meshName ) const;
-
-  /**
-   * @brief Returns name of spacetree used by geometry with given name.
-   */
-  const std::string& getSpacetreeName ( const std::string& meshName ) const;
-
   virtual void xmlTagCallback ( utils::XMLTag& callingTag );
 
   virtual void xmlEndTagCallback ( utils::XMLTag& callingTag );
@@ -98,20 +88,6 @@ public:
 
 private:
 
-//  struct ConfiguredMesh
-//  {
-//    std::string name;
-//    bool flipNormals;
-//    std::list<std::string> data;
-//    std::list<std::string> subIDs;
-//    std::list<std::string> spacetrees;
-//
-//    ConfiguredMesh(
-//      const std::string& name,
-//      bool               flipNormals)
-//    : name(name), flipNormals(flipNormals), subIDs(), spacetrees() {}
-//  };
-
   // @brief Logging device.
   static logging::Logger _log;
 
@@ -120,7 +96,6 @@ private:
   const std::string ATTR_NAME;
   const std::string ATTR_FLIP_NORMALS;
   const std::string TAG_DATA;
-  const std::string TAG_SPACETREE;
   const std::string TAG_SUB_ID;
   const std::string ATTR_SIDE_INDEX;
 
@@ -138,9 +113,6 @@ private:
   bool _setMeshSubIDs;
 
   std::vector<std::list<std::string> > _meshSubIDs;
-
-  // @brief Mesh name -> spacetree name the geometry uses.
-  std::map<std::string,std::string> _spacetreeNames;
 
   // @brief to check later if all meshes that any coupling scheme needs are actually used by the participants
   std::map<std::string,std::vector<std::string> > _neededMeshes;

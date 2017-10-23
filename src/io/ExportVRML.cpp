@@ -42,7 +42,7 @@ void ExportVRML:: doExport
   CHECK(outstream, "Could not open file \"" << outfile.c_str() << "\" for VTK export!");
 
   writeHeader(outstream);
-  writeGeometry(outstream, mesh);
+  writeMesh(outstream, mesh);
   outstream << "}" << std::endl;
   outstream.close();
 }
@@ -57,7 +57,7 @@ void ExportVRML:: doExportCheckpoint
   std::string fullFilename(filename);
   openFile(outFile, utils::checkAppendExtension(fullFilename, std::string(".wrl")));
   writeHeader(outFile);
-  writeGeometry(outFile, mesh);
+  writeMesh(outFile, mesh);
   writeVertexData(outFile, mesh);
   writePropertyContainer(outFile, mesh);
   outFile << "}" << std::endl;
@@ -86,7 +86,7 @@ void ExportVRML:: writeHeader
            << "      point ["     << std::endl;
 }
 
-void ExportVRML:: writeGeometry
+void ExportVRML:: writeMesh
 (
   std::ofstream& outFile,
   mesh::Mesh&    mesh ) const

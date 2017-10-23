@@ -125,19 +125,19 @@ void precice_fastest_fulfilled_action_(
  *
  * Fortran syntax:
  * precicef_get_mesh_id(
- *   CHARACTER geometryName(*),
+ *   CHARACTER meshName(*),
  *   INTEGER   meshID,
  *   INTEGER   useF )
  *
- * IN:  geometryName
+ * IN:  meshName
  * IN:  useF (1: this is the F interface , 0: this is the A interface)
  * OUT: meshID
  */
 void precice_fastest_get_mesh_id_(
-  const char* geometryName,
+  const char* meshName,
   int*        meshID,
   const int*  useF,
-  int         lengthGeometryName );
+  int         lengthMeshName );
 
 
 /**

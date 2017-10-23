@@ -21,14 +21,6 @@ struct ExportContext
   // @brief Flag for synchronuous triggering of solver plots.
   bool triggerSolverPlot;
 
-  // @brief Flag to decide whether neighbors of mapping shall be plotted.
-  //bool plotNeighbors;
-
-  // @brief Flag to decide whether normals of geometry elements shall be plotted.
-  //bool plotNormals;
-
-  bool exportSpacetree;
-
   // @brief If true, export is done in every iteration (also implicit).
   bool everyIteration;
 
@@ -46,9 +38,6 @@ struct ExportContext
     location(),
     timestepInterval(-1),
     triggerSolverPlot(false),
-    //plotNeighbors ( false ),
-    //plotNormals(true),
-    exportSpacetree(false),
     everyIteration(false),
     type(),
     plotNormals(false)

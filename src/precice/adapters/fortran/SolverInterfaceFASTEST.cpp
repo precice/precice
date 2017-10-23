@@ -158,20 +158,20 @@ void precice_fastest_fulfilled_action_
 
 void precice_fastest_get_mesh_id_
 (
-  const char* geometryName,
+  const char* meshName,
   int*        meshID,
   const int*  useF,
-  int         lengthGeometryName )
+  int         lengthMeshName )
 {
   CHECK(implA != nullptr && implF != nullptr ,errormsg);
   assertion(*useF == 0 || *useF == 1);
-  int strippedLength = precice::impl::strippedLength(geometryName, lengthGeometryName);
-  string stringGeometryName(geometryName, strippedLength);
+  int strippedLength = precice::impl::strippedLength(meshName, lengthMeshName);
+  string stringMeshName(meshName, strippedLength);
   if(*useF==0){
-    *meshID = implA->getMeshID(stringGeometryName);
+    *meshID = implA->getMeshID(stringMeshName);
   }
   else{
-    *meshID = implF->getMeshID(stringGeometryName);
+    *meshID = implF->getMeshID(stringMeshName);
   }
 }
 

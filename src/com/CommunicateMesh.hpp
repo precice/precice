@@ -16,12 +16,12 @@ public:
   explicit CommunicateMesh (
     com::PtrCommunication communication );
 
-  /// Sends a constructed CustomGeometry to the receiver with given rank.
+  /// Sends a constructed mesh to the receiver with given rank.
   void sendMesh (
     const mesh::Mesh & mesh,
     int                rankReceiver );
 
-  /// Copies a CustomGeometry from the sender with given rank.
+  /// Copies a mesh from the sender with given rank.
   void receiveMesh (
     mesh::Mesh & mesh,
     int          rankSender );

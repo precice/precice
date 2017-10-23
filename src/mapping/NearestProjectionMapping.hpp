@@ -52,8 +52,6 @@ public:
     int inputDataID,
     int outputDataID );
 
-  virtual bool doesVertexContribute(int vertexID) const;
-  virtual bool isProjectionMapping() const;
   virtual void tagMeshFirstRound() override;
   virtual void tagMeshSecondRound() override;
 

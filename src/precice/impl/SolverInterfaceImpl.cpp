@@ -156,8 +156,6 @@ void SolverInterfaceImpl:: configure
     configurePartitions(config.getM2NConfiguration());
   }
 
-  // Set coupling scheme. In geometry mode, an uncoupled scheme is automatically
-  // created.
   cplscheme::PtrCouplingSchemeConfiguration cplSchemeConfig =
       config.getCouplingSchemeConfiguration();
   _couplingScheme = cplSchemeConfig->getCouplingScheme(_accessorName);
@@ -1459,13 +1457,13 @@ void SolverInterfaceImpl:: configurePartitions
 {
   TRACE();
   for (MeshContext* context : _accessor->usedMeshContexts()) {
-    if ( context->provideMesh ) { // Accessor provides geometry
+    if ( context->provideMesh ) { // Accessor provides mesh
       CHECK ( context->receiveMeshFrom.empty(),
               "Participant \"" << _accessorName << "\" cannot provide "
               << "and receive mesh " << context->mesh->getName() << "!" );
 
 
-      bool hasToSend = false; //TODO multiple sends
+      bool hasToSend = false; //@todo multiple sends
       m2n::PtrM2N m2n;
 
       for (PtrParticipant receiver : _participants ) {
@@ -1491,7 +1489,7 @@ void SolverInterfaceImpl:: configurePartitions
       }
 
     }
-    else { // Accessor receives geometry
+    else { // Accessor receives mesh
       CHECK ( not context->receiveMeshFrom.empty(), "Participant \"" << _accessorName << "\" must either provide or receive the mesh "
           << context->mesh->getName() << "!")
       CHECK ( not context->provideMesh, "Participant \"" << _accessorName << "\" cannot provide "

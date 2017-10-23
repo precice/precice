@@ -526,13 +526,6 @@ void Mesh:: computeState()
   }
 }
 
-void Mesh:: computeDistribution()
-{
-  TRACE(utils::MasterSlave::_slaveMode, utils::MasterSlave::_masterMode);
-  //TODO remove
-
-}
-
     
 void Mesh:: clear()
 {

@@ -28,8 +28,6 @@ public:
 
   /**
    * @brief Standard constructor
-   *
-   * @param container [IN] Container holding geometry to be visualized
    */
   ExportVRML ( bool plotNormals );
 
@@ -47,7 +45,7 @@ public:
     mesh::Mesh&        mesh );
 
   /**
-   * @brief Perform writing to VRML file of a full geometry checkpoint.
+   * @brief Perform writing to VRML file of a full mesh checkpoint.
    *
    * A full checkpoint also  includes vertex data and property containers.
    */
@@ -66,7 +64,7 @@ private:
 
   void writeHeader ( std::ofstream& outFile ) const;
 
-  void writeGeometry (
+  void writeMesh (
     std::ofstream& outFile,
     mesh::Mesh&    mesh ) const;
 

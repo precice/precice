@@ -20,7 +20,6 @@ namespace precice {
     struct MappingContext;
   }
 namespace tests {
-    class SolverInterfaceTestGeometry;
     class SolverInterfaceTest;
     class SolverInterfaceTestRemote;
   }
@@ -102,7 +101,7 @@ public:
 
   std::vector<PtrWatchPoint>& watchPoints();
 
-  /// Adds a geometry to be used by the participant.
+  /// Adds a mesh to be used by the participant.
   void useMesh (
     const mesh::PtrMesh&                          mesh,
     const Eigen::VectorXd&                        localOffset,
@@ -197,7 +196,6 @@ private:
   /// To allow white box tests.
   friend class tests::SolverInterfaceTest;
   friend class tests::SolverInterfaceTestRemote;
-  friend class tests::SolverInterfaceTestGeometry;
 };
 
 

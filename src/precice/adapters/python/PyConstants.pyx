@@ -2,9 +2,6 @@
 from libcpp.string cimport string
 
 cdef extern from "./src/precice/Constants.hpp"  namespace "precice::constants":
-   int positionInsideOfGeometry()
-   int positionOutsideOfGeometry()
-   int positionOnGeometry()
 
    const string& nameConfiguration()
 
@@ -45,18 +42,6 @@ cdef extern from "./src/io/Constants.hpp" namespace "precice::io::constants":
 #   # destructor
 #   def __dealloc__ (self):
 #      del self.thisptr
-
-# WARNING: not dynamically synced with Spacetree
-def PyPositionInsideOfGeometry ():
-   return 1
-
-# WARNING: not dynamically synced with Spacetree
-def PyPositionOutsideOfGeometry ():
-   return 2
-
-# WARNING: not dynamically synced with Spacetree
-def PyPositionOnGeometry ():
-   return 3
 
 def PyNameConfiguration ():
    return nameConfiguration()

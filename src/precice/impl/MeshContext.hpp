@@ -19,19 +19,19 @@ struct MeshContext
    // @brief Mesh holding the geometry data structure.
    mesh::PtrMesh mesh;
 
-  // @brief Data IDs of properties the geometry does posses.
+  // @brief Data IDs of properties the geometry does possess.
    std::vector<int> associatedData;
 
    // @brief Determines which mesh type has to be provided by the accessor.
    mapping::Mapping::MeshRequirement meshRequirement;
 
-   // @brief Name of participant creating the geometry the mesh.
+   // @brief Name of participant that creats the mesh.
    std::string receiveMeshFrom;
 
    // @brief bounding box to speed up decomposition of received mesh is increased by this safety factor
    double safetyFactor;
 
-   // @brief True, if accessor does create the geometry of the mesh.
+   // @brief True, if accessor does create the mesh.
    bool provideMesh;
 
    /// type of geometric filter
