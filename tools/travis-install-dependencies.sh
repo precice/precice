@@ -1,6 +1,6 @@
 #!/bin/sh
 # Installs dependencies of preCICE
-# boost and Eigen
+# boost, Eigen and PETSc
 # if not already cached by Travis.
 
 set -x
@@ -20,5 +20,13 @@ if [ ! -d $LOCAL_INSTALL/include ]; then
     cd boost_1_60_0
     ./bootstrap.sh --prefix=$LOCAL_INSTALL > ~/boost.bootstrap
     ./b2 -j2 --with-program_options --with-test --with-filesystem --with-log install > ~/boost.b2
+
+    # Download and compile PETSc
+    cd $LOCAL_INSTALL
+    git clone -b maint https://bitbucket.org/petsc/petsc petsc
+    cd petsc
+    export PETSC_ARCH=arch-linux2-c-debug
+    python2 configure --with-debugging=1 > ~/petsc.configure
+    make > ~/petsc.make
 fi
 

@@ -39,7 +39,7 @@ void VRML10ParserTest:: testParseCube ()
   TRACE();
 
   for ( int dim=2; dim <= 3; dim++ ){
-    std::string file = utils::Globals::getPathToSources() + "/io/tests/ImportVRMLTest";
+    std::string file = utils::getPathToSources() + "/io/tests/ImportVRMLTest";
     DEBUG ( "dim = " << dim );
     if ( dim == 2 ) {
       file += "2D.wrl";

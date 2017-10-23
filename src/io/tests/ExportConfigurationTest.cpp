@@ -35,8 +35,7 @@ void ExportConfigurationTest:: testConfiguration ()
   XMLTag tag = utils::getRootTag();
   {
     ExportConfiguration config(tag);
-    utils::configure ( tag, utils::Globals::getPathToSources() +
-                       "/io/tests/config1.xml" );
+    utils::configure ( tag, utils::getPathToSources() + "/io/tests/config1.xml" );
     //validate ( config.isValid() );
     validateEquals(config.exportContexts().size(), 1);
     const ExportContext& context = config.exportContexts().front();
@@ -50,8 +49,7 @@ void ExportConfigurationTest:: testConfiguration ()
   {
     tag.clear();
     ExportConfiguration config(tag);
-    utils::configure ( tag, utils::Globals::getPathToSources() +
-                       "/io/tests/config2.xml" );
+    utils::configure ( tag, utils::getPathToSources() + "/io/tests/config2.xml" );
     //validate ( config.isValid() );
     validateEquals(config.exportContexts().size(), 1);
     const ExportContext& context = config.exportContexts().front();
@@ -66,8 +64,7 @@ void ExportConfigurationTest:: testConfiguration ()
   {
     tag.clear();
     ExportConfiguration config(tag);
-    utils::configure ( tag, utils::Globals::getPathToSources() +
-                       "/io/tests/config3.xml" );
+    utils::configure ( tag, utils::getPathToSources() + "/io/tests/config3.xml" );
     //validate ( config.isValid() );
     validateEquals(config.exportContexts().size(), 1);
     const ExportContext& context = config.exportContexts().front();

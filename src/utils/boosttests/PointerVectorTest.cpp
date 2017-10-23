@@ -3,7 +3,7 @@
 
 using namespace precice;
 
-BOOST_AUTO_TEST_SUITE(Utils)
+BOOST_AUTO_TEST_SUITE(UtilsTests)
 
 BOOST_AUTO_TEST_CASE(PointerVector)
 {

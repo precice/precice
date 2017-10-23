@@ -12,18 +12,6 @@
 namespace precice {
 namespace utils {
 
-/// Holds global information.
-class Globals
-{
-public:
-
-  static const std::string & getPathToSources ();
-
-  static void setPathToSources ( const std::string & path );
-
-private:
-
-  static std::string _pathToSources;
-};
+std::string getPathToSources ();
 
 }} // namespace precice, utils

@@ -35,7 +35,7 @@ void ImportGeometryTest:: run ()
 void ImportGeometryTest:: testImportVRMLConfig ()
 {
   TRACE();
-  std::string xmlFilename ( utils::Globals::getPathToSources() + "/geometry/tests/import-vrml-config.xml" );
+  std::string xmlFilename ( utils::getPathToSources() + "/geometry/tests/import-vrml-config.xml" );
   utils::XMLTag tag = utils::getRootTag();
   mesh::PtrDataConfiguration dataConfig ( new mesh::DataConfiguration(tag) );
   dataConfig->setDimensions(3);

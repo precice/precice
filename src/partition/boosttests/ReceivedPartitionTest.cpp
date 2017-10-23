@@ -112,10 +112,11 @@ void setupParallelEnvironmentOneParticipant(){
 
 void tearDownParallelEnvironment(){
   utils::MasterSlave::_communication = nullptr;
-  utils::MasterSlave::_slaveMode = false;
-  utils::MasterSlave::_masterMode = false;
+  utils::MasterSlave::reset();
   utils::Parallel::synchronizeProcesses();
   utils::Parallel::clearGroups();
+  mesh::Mesh::resetGeometryIDsGlobally();
+  mesh::Data::resetDataCount();
   utils::Parallel::setGlobalCommunicator(utils::Parallel::getCommunicatorWorld());
 }
 

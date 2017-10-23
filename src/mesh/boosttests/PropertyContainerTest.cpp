@@ -4,7 +4,7 @@
 using namespace precice;
 using namespace precice::mesh;
 
-BOOST_AUTO_TEST_SUITE(Mesh)
+BOOST_AUTO_TEST_SUITE(MeshTests)
 BOOST_AUTO_TEST_SUITE(PropertyContainerTest)
 
 BOOST_AUTO_TEST_CASE(SinglePropertyContainer)

@@ -35,7 +35,7 @@ CompositionalCouplingSchemeTest:: CompositionalCouplingSchemeTest()
 
 void CompositionalCouplingSchemeTest:: setUp ()
 {
-  _pathToTests = utils::Globals::getPathToSources() + "/cplscheme/tests/";
+  _pathToTests = utils::getPathToSources() + "/cplscheme/tests/";
 }
 
 void CompositionalCouplingSchemeTest:: run ()

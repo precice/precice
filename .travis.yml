@@ -12,18 +12,24 @@ addons:
       - libopenmpi-dev
       - openmpi-bin
       - python-numpy
+      - libblas-dev
+      - liblapack-dev
 
 env:
   global:
+    - PRECICE_ROOT="$TRAVIS_BUILD_DIR"
     - LOCAL_INSTALL="$HOME/local"
-    - CPLUS_INCLUDE_PATH="$CPLUS_INCLUDE_PATH:$LOCAL_INSTALL/include"
-    - LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$LOCAL_INSTALL/lib"
-    - LIBRARY_PATH="$LIBRARY_PATH:$LOCAL_INSTALL/lib"
-    - PYTHONPATH="/usr/lib/python2.7:/usr/lib/python2.7/dist-packages:/usr/lib/python2.7/plat-x86_64-linux-gnu"
+    - PETSC_ARCH=arch-linux2-c-debug
+    - PETSC_DIR=$LOCAL_INSTALL/petsc
+    - CPLUS_INCLUDE_PATH="$PETSC_DIR/include:$PETSC_DIR/$PETSC_ARCH/include:$LOCAL_INSTALL/include:$CPLUS_INCLUDE_PATH"
+    - LD_LIBRARY_PATH="$PETSC_DIR/$PETSC_ARCH/lib:$LOCAL_INSTALL/lib:$LD_LIBRARY_PATH"
+    - LIBRARY_PATH="$PETSC_DIR/$PETSC_ARCH/lib:$LOCAL_INSTALL/lib:$LIBRARY_PATH"
+    - PYTHONPATH="$PETSC_DIR/$PETSC_ARCH/lib:/usr/lib/python2.7:/usr/lib/python2.7/dist-packages:/usr/lib/python2.7/plat-x86_64-linux-gnu"
     
   matrix:
-    - MPI=off
-    - MPI=on
+    - MPI=on PETSC=on
+    - MPI=on PETSC=off
+    - MPI=off PETSC=off
 
 cache:
   directories:
@@ -41,20 +47,18 @@ before_script:
 
 script:
   - cd $TRAVIS_BUILD_DIR
-  - scons -j 2 petsc=off mpi=$MPI python=on compiler=$CXX
+  - scons -j 2 petsc=$PETSC mpi=$MPI python=on compiler=$CXX
   - cd tests
-  - if [ "$MPI" = "off" ]; then ../build/last/binprecice test ../.ci-test-config.xml ../src > unit-test-output; fi
-  - if [ "$MPI" = "off" ]; then ../build/last/binprecice test ../.ci-integration-test-config.xml ../src > integration-test-output; fi
+  - if [ "$MPI" = "off" ]; then ../build/last/binprecice test ../.ci-test-config.xml > unit-test-output; fi
+  - if [ "$MPI" = "off" ]; then ../build/last/binprecice test ../.ci-integration-test-config.xml > integration-test-output; fi
   - if [ "$MPI" = "off" ]; then ../build/last/testprecice -x -r detailed > boost-test-output; fi
-  - if [ "$MPI" = "on"  ]; then mpirun.openmpi -n 4 ../build/last/binprecice test ../.ci-test-config.xml ../src > unit-test-output; fi
-  - if [ "$MPI" = "on"  ]; then mpirun.openmpi -n 4 ../build/last/binprecice test ../.ci-integration-test-config.xml ../src > integration-test-output; fi
+  - if [ "$MPI" = "on"  ]; then mpirun.openmpi -n 4 ../build/last/binprecice test ../.ci-test-config.xml > unit-test-output; fi
+  - if [ "$MPI" = "on"  ]; then mpirun.openmpi -n 4 ../build/last/binprecice test ../.ci-integration-test-config.xml > integration-test-output; fi
   - if [ "$MPI" = "on"  ]; then mpirun.openmpi -n 4 --output-filename boost-test-output  ../build/last/testprecice -r detailed; fi
   
 after_failure:
   - cd $TRAVIS_BUILD_DIR
   - cat config.log
-  - cat -n ./tests/unit-test-output
-  - cat -n ./tests/integration-test-output
+  - cat -n ./tests/unit-test-output*
+  - cat -n ./tests/integration-test-output*
   - cat -n ./tests/boost-test-output*
-
-

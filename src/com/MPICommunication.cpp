@@ -4,7 +4,6 @@
 
 #include "MPIRequest.hpp"
 
-#include "utils/Globals.hpp"
 
 template <size_t>
 struct MPI_Select_unsigned_integer_datatype;

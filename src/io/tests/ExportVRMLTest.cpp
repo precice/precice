@@ -6,7 +6,6 @@
 #include "geometry/DriftRatchet.hpp"
 #include "geometry/Cuboid.hpp"
 #include "utils/Parallel.hpp"
-#include "utils/Globals.hpp"
 #include <string>
 
 #include "tarch/tests/TestCaseFactory.h"

@@ -28,7 +28,7 @@ SolverInterfaceTestRemote:: ~SolverInterfaceTestRemote()
 
 void SolverInterfaceTestRemote:: setUp()
 {
-  _pathToTests = utils::Globals::getPathToSources() + "/precice/tests/servermode/";
+  _pathToTests = utils::getPathToSources() + "/precice/tests/servermode/";
 }
 
 void SolverInterfaceTestRemote:: run()

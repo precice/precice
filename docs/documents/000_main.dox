@@ -1,0 +1,32 @@
+/**
+
+@mainpage preCICE Source Code Documentation
+
+The directory $src$ contains the sources of preCICE. The library API of preCICE
+is contained in the directory $precice$, which brings together the functionalities
+contained in the other components of preCICE. Every component has its own
+directory, and the following components exist currently:
+
+- \ref src/utils "utils" contains functionality serving as technical basis for all other
+  components.
+- \ref src/mesh "mesh" holds the coupling mesh and coupling data classes, which form the base of all other components.
+- \ref src/geometry "geometry" provides functionality to create coupling mesh geometries.
+- \ref src/io "io" implements import and export of the coupling mesh and data.
+- \ref src/query "query" holds classes to perform geometrical queries on geometries.
+- \ref src/mapping "mapping" defines data mapping from points to meshes by using geometrical queries.
+- \ref src/com "com" defines a data communication abstraction layer and implementations  for it to communicate coupling data.
+- \ref src/cplscheme "cplscheme" takes coupling data and communication objects and implements coupling schemes for coupled simulations.
+- \ref src/drivers "drivers "holds the main function for building the ```binprecice``` executable.
+- \ref src/testing "testing" Holds the code that configure the boost testing framework and the main function for the testprecice executable.
+- \ref src/logging "logging" Contains the code for the logging framework, based on boost logging.
+
+The components of preCICE have some common subdirectory structure. Some typical directories appearing are ```tests```, ```config```, and ```impl```.
+- ```tests``` holds classes for automated testing of the corresponding component.
+- ```config``` provides functionality to configure the classes of a component from xml files.
+- ```impl``` contains implementation of a component which is not part of its interface and used only internally.
+
+The hierarchical dependencies of different components is as follows:
+
+\image html component-dependencies.png
+
+*/
