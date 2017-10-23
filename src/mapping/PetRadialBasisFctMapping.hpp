@@ -388,7 +388,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     estimatePreallocationMatrixC(n, n, inMesh);
   }
   if (_preallocation == Preallocation::TREE) {
-    bgPreallocationMatrixC(inMesh);
+    vertexData = bgPreallocationMatrixC(inMesh);
   }
 
   
