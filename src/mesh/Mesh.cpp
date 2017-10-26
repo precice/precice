@@ -493,12 +493,10 @@ void Mesh:: computeState()
     if (computeNormals){
       for (Edge& edge : _content.edges()) {
         double length = edge.getNormal().norm();
-        assertion(math::greater(length,0.0),
-                  "Edge vertex coords: (" << edge.vertex(0).getCoords() << "), ("
-                  << edge.vertex(1).getCoords()
-                  << "). Hint: Could be inconsistent triangle/quad orientation or "
-                  << "dangling edge. ");
-        edge.setNormal(edge.getNormal() / length);
+        // there can be cases when an edge has no adjacent triangle though triangles exist in general (e.g. after filtering)
+        if(math::greater(length,0.0)){
+          edge.setNormal(edge.getNormal() / length);
+        }
       }
     }
   }
@@ -511,9 +509,7 @@ void Mesh:: computeState()
   for (Vertex& vertex : _content.vertices()) {
     if (computeNormals) {
       double length = vertex.getNormal().norm();
-      // i (benjamin) changed this since there can be cases where a node has no edge though
-      // the mesh has edges in general, e.g. after filtering
-      //assertion(tarch::la::greater(length,0.0));
+      // there can be cases when a vertex has no edge though edges exist in general (e.g. after filtering)
       if(math::greater(length,0.0)){
         vertex.setNormal(vertex.getNormal() / length);
       }
