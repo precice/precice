@@ -41,8 +41,6 @@ private:
   static logging::Logger _log;
 
   void testInternallyCreatedMesh();
-
-  void testReimportDriftRatchet();
 };
 
 }}} // namespace precice, io, tests

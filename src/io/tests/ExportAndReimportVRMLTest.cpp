@@ -33,7 +33,6 @@ void ExportAndReimportVRMLTest:: run()
 # ifndef PRECICE_NO_SPIRIT2
   PRECICE_MASTER_ONLY {
     testMethod ( testInternallyCreatedMesh );
-    //testMethod ( testReimportDriftRatchet );
   }
 # endif // not PRECICE_NO_SPIRIT2
 }
@@ -124,17 +123,6 @@ void ExportAndReimportVRMLTest:: testInternallyCreatedMesh()
   validateEquals(reimportedMesh1.propertyContainers().size(), 0);
 }
 
-void ExportAndReimportVRMLTest:: testReimportDriftRatchet()
-{
-  TRACE();
-  mesh::Mesh mesh("test-cuboid", 3, false);
-  io::ImportVRML importMesh("");
-  importMesh.doImport("io-ExportVRMLTest-testExportCuboid-3d.wrl", mesh);
-  mesh.computeState();
-  ExportVTK exportVTK(true);
-  std::string location = "";
-  exportVTK.doExport("io-ExportAndReimportVRMLTest-testReimportDriftRatchet.vtk", location, mesh);
-}
 
 
 }}} // namespace precice, io, tests

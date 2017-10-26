@@ -12,13 +12,8 @@
       
       <m2n:mpi-single from="SolverOne" to="SolverTwo"/>
       
-      <geometry:builtin-cuboid of-mesh="Test-Square">
-         <length value="1.0; 1.0"/> 
-         <discretization-width value="0.1"/> 
-      </geometry:builtin-cuboid>
-      
       <participant name="SolverOne">
-         <use-mesh name="Test-Square" />
+         <use-mesh name="Test-Square" provide="yes"/>
          <write-data name="Velocities" mesh="Test-Square" />
          <read-data  name="Forces"     mesh="Test-Square" />
          <action:divide-by-area timing="on-exchange-post" mesh="Test-Square"> 
@@ -27,7 +22,7 @@
       </participant>
        
       <participant name="SolverTwo">
-         <use-mesh name="Test-Square" />
+         <use-mesh name="Test-Square" from="SolverOne"/>
          <write-data name="Forces"    mesh="Test-Square" />
          <read-data name="Velocities" mesh="Test-Square" />
          <action:divide-by-area timing="on-exchange-post" mesh="Test-Square"> 

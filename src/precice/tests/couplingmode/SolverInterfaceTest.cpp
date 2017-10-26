@@ -48,6 +48,7 @@ void SolverInterfaceTest:: run()
       testMethod(testExplicitWithBlockDataExchange);
       testMethod(testExplicitWithSolverGeometry);
       testMethod(testExplicitWithDisplacingGeometry);
+      //@todo fails currently as action does not introduce mesh-requirement
       //testMethod(testExplicitWithDataScaling);
       testMethod(testImplicit);
       testMethod(testStationaryMappingWithSolverMesh);
@@ -680,8 +681,15 @@ void SolverInterfaceTest:: testExplicitWithDataScaling()
         _pathToTests + "/explicit-datascaling.xml",
         cplInterface );
     validateEquals ( cplInterface.getDimensions(), 2 );
-    dt = cplInterface.initialize();
+
     int meshID = cplInterface.getMeshID("Test-Square");
+    std::vector<double> positions = {0.0,0.0,0.1,0.0,0.2,0.0,0.3,0.0,0.4,0.0};
+    std::vector<int> ids = {0,0,0,0,0};
+    cplInterface.setMeshVertices(meshID,5,positions.data(), ids.data());
+    for(int i=0;i<4;i++) cplInterface.setMeshEdge(meshID,ids[i],ids[i+1]);
+
+    dt = cplInterface.initialize();
+
     int velocitiesID = cplInterface.getDataID ( "Velocities", meshID );
     while ( cplInterface.isCouplingOngoing() ){
       MeshHandle handle = cplInterface.getMeshHandle ( "Test-Square" );
