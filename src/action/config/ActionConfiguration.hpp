@@ -108,7 +108,6 @@ private:
   const std::string NAME_ADD_TO_COORDINATES;
   const std::string NAME_SUBTRACT_FROM_COORDINATES;
   const std::string NAME_COMPUTE_CURVATURE;
-  const std::string NAME_BALANCE_VERTEX_POSITIONS;
   const std::string NAME_PYTHON;
 
   const std::string TAG_SOURCE_DATA;

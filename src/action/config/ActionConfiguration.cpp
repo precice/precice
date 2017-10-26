@@ -6,7 +6,6 @@
 #include "action/ScaleByAreaAction.hpp"
 #include "action/ScaleByDtAction.hpp"
 #include "action/ComputeCurvatureAction.hpp"
-#include "action/BalanceVertexPositionAction.hpp"
 #include "action/PythonAction.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
 #include "mesh/Mesh.hpp"
@@ -18,11 +17,6 @@ namespace action {
 logging::Logger ActionConfiguration::
   _log("config::ActionConfiguration");
 
-//const std::string& ActionConfiguration:: getTag()
-//{
-//  static std::string tag = "action";
-//  return tag;
-//}
 
 ActionConfiguration:: ActionConfiguration
 (
@@ -38,7 +32,6 @@ ActionConfiguration:: ActionConfiguration
   NAME_ADD_TO_COORDINATES ( "add-to-coordinates" ),
   NAME_SUBTRACT_FROM_COORDINATES ( "subtract-from-coordinates" ),
   NAME_COMPUTE_CURVATURE ( "compute-curvature" ),
-  NAME_BALANCE_VERTEX_POSITIONS ( "balance-vertex-positions" ),
   NAME_PYTHON ( "python" ),
   TAG_SOURCE_DATA ( "source-data" ),
   TAG_TARGET_DATA ( "target-data" ),
@@ -136,27 +129,6 @@ ActionConfiguration:: ActionConfiguration
     tags.push_back(tag);
   }
   {
-    XMLTag tag(*this, NAME_BALANCE_VERTEX_POSITIONS, occ, TAG);
-    doc = "Moves mesh vertices in iterative process until they are equally ";
-    doc += "distributed over the mesh surface.";
-    tag.setDocumentation(doc);
-    XMLTag tagConvergenceTol(*this, TAG_CONVERGENCE_TOLERANCE, XMLTag::OCCUR_ONCE);
-    doc = "Convergence tolerance for iterations, measured as L2-norm of vertex ";
-    doc += "displacements.";
-    tagConvergenceTol.setDocumentation(doc);
-    XMLTag tagMaxIterations(*this, TAG_MAX_ITERATIONS, XMLTag::OCCUR_ONCE);
-    tagMaxIterations.setDocumentation("Iteration limit.");
-    XMLAttribute<double> attrDoubleValue(ATTR_VALUE);
-    attrDoubleValue.setDocumentation("Convergence tolerance value.");
-    XMLAttribute<int> attrIntValue(ATTR_VALUE);
-    attrIntValue.setDocumentation("Maximal iterations value.");
-    tagConvergenceTol.addAttribute(attrDoubleValue);
-    tagMaxIterations.addAttribute(attrIntValue);
-    tag.addSubtag(tagConvergenceTol);
-    tag.addSubtag(tagMaxIterations);
-    tags.push_back(tag);
-  }
-  {
     XMLTag tag(*this, NAME_PYTHON, occ, TAG);
     doc = "Calls Python script to execute action.";
     doc += " See preCICE file \"src/action/PythonAction.py\" for an overview.";
@@ -190,23 +162,6 @@ ActionConfiguration:: ActionConfiguration
     tags.push_back(tag);
   }
 
-  //XMLAttribute<std::string> attrType ( ATTR_TYPE );
-  //ValidatorEquals<std::string> validDivideByArea ( VALUE_DIVIDE_BY_AREA );
-  //ValidatorEquals<std::string> validMultiplyByArea ( VALUE_MULTIPLY_BY_AREA );
-  //ValidatorEquals<std::string> validScaleByCompDtRatio ( VALUE_SCALE_BY_COMPUTED_DT_RATIO );
-  //ValidatorEquals<std::string> validScaleByCompDtPartRatio ( VALUE_SCALE_BY_COMPUTED_DT_PART_RATIO );
-  //ValidatorEquals<std::string> validScaleByDt ( VALUE_SCALE_BY_DT );
-  //ValidatorEquals<std::string> validAddToCoordinates ( VALUE_ADD_TO_COORDINATES );
-  //ValidatorEquals<std::string> validSubtractFromCoordinates ( VALUE_SUBTRACT_FROM_COORDINATES );
-  //ValidatorEquals<std::string> validComputeCurvature ( VALUE_COMPUTE_CURVATURE );
-  //ValidatorEquals<std::string> validBalanceVertexPos ( VALUE_BALANCE_VERTEX_POSITIONS );
-  //ValidatorEquals<std::string> validPython ( VALUE_PYTHON );
-  //attrType.setValidator ( validDivideByArea || validMultiplyByArea
-  //    || validScaleByCompDtRatio || validScaleByCompDtPartRatio || validScaleByDt
-  //    || validAddToCoordinates   || validSubtractFromCoordinates
-  //    || validComputeCurvature || validBalanceVertexPos || validPython );
-  //tag.addAttribute ( attrType );
-
   XMLAttribute<std::string> attrTiming ( ATTR_TIMING );
   doc = "Determines when (relative to advancing the coupling scheme) the action is executed.";
   attrTiming.setDocumentation(doc);
@@ -227,52 +182,6 @@ ActionConfiguration:: ActionConfiguration
     parent.addSubtag(tag);
   }
 }
-
-//bool ActionConfiguration:: parseSubtag
-//(
-//  utils::XMLTag::XMLReader* xmlReader )
-//{
-//  TRACE();
-//  using namespace utils;
-//  _configured = Configured();
-//
-//  XMLTag tag ( TAG, utils::XMLTag::OCCUR_ONCE );
-//
-//  XMLAttribute<std::string> attrType ( ATTR_TYPE );
-//  ValidatorEquals<std::string> validDivideByArea ( VALUE_DIVIDE_BY_AREA );
-//  ValidatorEquals<std::string> validMultiplyByArea ( VALUE_MULTIPLY_BY_AREA );
-//  ValidatorEquals<std::string> validScaleByCompDtRatio ( VALUE_SCALE_BY_COMPUTED_DT_RATIO );
-//  ValidatorEquals<std::string> validScaleByCompDtPartRatio ( VALUE_SCALE_BY_COMPUTED_DT_PART_RATIO );
-//  ValidatorEquals<std::string> validScaleByDt ( VALUE_SCALE_BY_DT );
-//  ValidatorEquals<std::string> validAddToCoordinates ( VALUE_ADD_TO_COORDINATES );
-//  ValidatorEquals<std::string> validSubtractFromCoordinates ( VALUE_SUBTRACT_FROM_COORDINATES );
-//  ValidatorEquals<std::string> validComputeCurvature ( VALUE_COMPUTE_CURVATURE );
-//  ValidatorEquals<std::string> validBalanceVertexPos ( VALUE_BALANCE_VERTEX_POSITIONS );
-//  ValidatorEquals<std::string> validPython ( VALUE_PYTHON );
-//  attrType.setValidator ( validDivideByArea || validMultiplyByArea
-//      || validScaleByCompDtRatio || validScaleByCompDtPartRatio || validScaleByDt
-//      || validAddToCoordinates   || validSubtractFromCoordinates
-//      || validComputeCurvature || validBalanceVertexPos || validPython );
-//  tag.addAttribute ( attrType );
-//
-//  XMLAttribute<std::string> attrTiming ( ATTR_TIMING );
-//  ValidatorEquals<std::string> validRegularPrior ( VALUE_REGULAR_PRIOR );
-//  ValidatorEquals<std::string> validRegularPost ( VALUE_REGULAR_POST );
-//  ValidatorEquals<std::string> validOnExchangePrior ( VALUE_ON_EXCHANGE_PRIOR );
-//  ValidatorEquals<std::string> validOnExchangePost ( VALUE_ON_EXCHANGE_POST );
-//  attrTiming.setValidator ( validRegularPrior || validRegularPost ||
-//                            validOnExchangePrior || validOnExchangePost );
-//  tag.addAttribute ( attrTiming );
-//
-//  XMLAttribute<std::string> attrMesh ( ATTR_MESH );
-//  tag.addAttribute ( attrMesh );
-//
-//  _isValid = tag.parse ( xmlReader, *this );
-//  if ( _isValid ){
-//    createAction ();
-//  }
-//  return _isValid;
-//}
 
 void ActionConfiguration:: xmlTagCallback
 (
@@ -313,14 +222,9 @@ void ActionConfiguration:: xmlEndTagCallback
 {
   if (callingTag.getNamespace() == TAG){
     createAction();
-    //_isValid = true;
   }
 }
 
-//bool ActionConfiguration:: isValid() const
-//{
-//  return _isValid;
-//}
 
 int ActionConfiguration:: getUsedMeshID() const
 {
@@ -333,86 +237,6 @@ int ActionConfiguration:: getUsedMeshID() const
   return -1; // To please compiler
 }
 
-//const action::PtrAction & ActionConfiguration:: getAction () const
-//{
-//  assertion ( _isValid );
-//  assertion ( _action.use_count() > 0 );
-//  return _action;
-//}
-
-//void ActionConfiguration:: addSubtags
-//(
-//  utils::XMLTag&     callingTag,
-//  const std::string& type )
-//{
-//  TRACE(callingTag.getName() );
-//  assertion ( type != std::string("") );
-//  using utils::XMLTag;
-//  using utils::XMLAttribute;
-//  XMLTag tagSourceData ( TAG_SOURCE_DATA, XMLTag::OCCUR_ONCE );
-//  XMLTag tagTargetData ( TAG_TARGET_DATA, XMLTag::OCCUR_ONCE );
-//
-//  XMLAttribute<std::string> attrName ( ATTR_NAME );
-//  tagSourceData.addAttribute ( attrName );
-//  tagTargetData.addAttribute ( attrName );
-//
-//  if ( _configured.type == VALUE_ADD_TO_COORDINATES ){
-//    callingTag.addSubtag ( tagSourceData );
-//  }
-//  else if ( _configured.type == VALUE_SUBTRACT_FROM_COORDINATES ){
-//    callingTag.addSubtag ( tagSourceData );
-//  }
-//  else if ( _configured.type == VALUE_MULTIPLY_BY_AREA ){
-//    callingTag.addSubtag ( tagTargetData );
-//  }
-//  else if ( _configured.type == VALUE_DIVIDE_BY_AREA ){
-//    callingTag.addSubtag ( tagTargetData );
-//  }
-//  else if ( _configured.type == VALUE_SCALE_BY_COMPUTED_DT_RATIO ){
-//    callingTag.addSubtag ( tagSourceData );
-//    callingTag.addSubtag ( tagTargetData );
-//  }
-//  else if ( _configured.type == VALUE_SCALE_BY_COMPUTED_DT_PART_RATIO ){
-//    callingTag.addSubtag ( tagSourceData );
-//    callingTag.addSubtag ( tagTargetData );
-//  }
-//  else if ( _configured.type == VALUE_SCALE_BY_DT ){
-//    callingTag.addSubtag ( tagSourceData );
-//    callingTag.addSubtag ( tagTargetData );
-//  }
-//  else if ( _configured.type == VALUE_COMPUTE_CURVATURE ){
-//    callingTag.addSubtag ( tagTargetData );
-//  }
-//  else if ( _configured.type == VALUE_BALANCE_VERTEX_POSITIONS ){
-//    XMLTag tagConvergenceTol ( TAG_CONVERGENCE_TOLERANCE, XMLTag::OCCUR_ONCE );
-//    XMLTag tagMaxIterations ( TAG_MAX_ITERATIONS, XMLTag::OCCUR_ONCE );
-//    XMLAttribute<double> attrDoubleValue ( ATTR_VALUE );
-//    XMLAttribute<int> attrIntValue ( ATTR_VALUE );
-//    tagConvergenceTol.addAttribute ( attrDoubleValue );
-//    tagMaxIterations.addAttribute ( attrIntValue );
-//    callingTag.addSubtag ( tagConvergenceTol );
-//    callingTag.addSubtag ( tagMaxIterations );
-//  }
-//  else if ( _configured.type == VALUE_PYTHON ){
-//    XMLTag tagModulePath ( TAG_MODULE_PATH, XMLTag::OCCUR_NOT_OR_ONCE );
-//    XMLTag tagModule ( TAG_MODULE_NAME, XMLTag::OCCUR_ONCE );
-//    XMLAttribute<std::string> attrName ( ATTR_NAME );
-//    tagModulePath.addAttribute ( attrName );
-//    tagModule.addAttribute ( attrName );
-//    callingTag.addSubtag ( tagModulePath );
-//    callingTag.addSubtag ( tagModule );
-//    XMLTag tagOptionalSourceData ( TAG_SOURCE_DATA, XMLTag::OCCUR_NOT_OR_ONCE );
-//    XMLTag tagOptionalTargetData ( TAG_TARGET_DATA, XMLTag::OCCUR_NOT_OR_ONCE );
-//    tagOptionalSourceData.addAttribute ( attrName );
-//    tagOptionalTargetData.addAttribute ( attrName );
-//    callingTag.addSubtag ( tagOptionalSourceData );
-//    callingTag.addSubtag ( tagOptionalTargetData );
-//  }
-//  else {
-//    ERROR("Unknown action type \""
-//                   << _configured.type << "\"!" );
-//  }
-//}
 
 void ActionConfiguration:: createAction()
 {
@@ -498,11 +322,6 @@ void ActionConfiguration:: createAction()
     action = action::PtrAction(
         new action::ComputeCurvatureAction(timing, targetDataID,
         mesh));
-  }
-  else if ( _configuredAction.type == NAME_BALANCE_VERTEX_POSITIONS ){
-    action = action::PtrAction (
-        new action::BalanceVertexPositionAction(timing, mesh,
-        _configuredAction.convergenceTolerance, _configuredAction.maxIterations) );
   }
   else if ( _configuredAction.type == NAME_PYTHON ){
     action = action::PtrAction (
