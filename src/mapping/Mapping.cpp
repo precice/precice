@@ -72,7 +72,8 @@ void Mapping:: setOutputRequirement
   _outputRequirement = requirement;
 }
 
-int Mapping:: getDimensions(){
+int Mapping:: getDimensions() const
+{
   return _dimensions;
 }
 
