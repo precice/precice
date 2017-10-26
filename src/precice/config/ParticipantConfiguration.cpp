@@ -373,6 +373,13 @@ void ParticipantConfiguration:: xmlTagCallback
              << "\" uses mesh \"" << name << "\" which is not defined";
       throw stream.str();
     }
+    if ((geoFilter != partition::ReceivedPartition::GeometricFilter::BROADCAST_FILTER || safetyFactor != 0.1) && from==""){
+      std::ostringstream stream;
+      stream << "Participant \"" << _participants.back()->getName()
+             << "\" uses mesh \"" << name << "\" which is not received (no \"from\"), but has a geometric-filter and/or"
+             << " a safety factor defined. This is not valid.";
+      throw stream.str();
+    }
     _participants.back()->useMesh ( mesh, offset, false, from, safetyFactor, provide, geoFilter );
   }
   else if ( tag.getName() == TAG_WRITE ) {
