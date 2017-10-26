@@ -47,4 +47,11 @@ void Vertex:: tag() {
   _tagged = true;
 }
 
+
+std::ostream & operator<<(std::ostream &os, Vertex const & v)
+{
+  return os << v.getCoords().transpose(); // transpose, so output is on one line
+}
+
+
 }} // namespace precice, mesh

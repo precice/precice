@@ -37,20 +37,16 @@ public:
    */
   enum MeshRequirement {
     UNDEFINED = 0,
-    // @brief Vertices only.
+    /// Vertices only.
     VERTEX = 1,
-    // @brief Full mesh.
+    /// Full mesh.
     FULL = 2
   };
 
-  /**
-   * @brief Constructor, takes mapping constraint.
-   */
+  /// Constructor, takes mapping constraint.
   Mapping ( Constraint constraint, int dimensions );
 
-  /**
-   * @brief Destructor, empty.
-   */
+  /// Destructor, empty.
   virtual ~Mapping() {}
 
   /**
@@ -67,24 +63,16 @@ public:
 
   const mesh::PtrMesh& getOutputMesh() const;
 
-  /**
-   * @brief Returns the constraint (consistent/conservative) of the mapping.
-   */
+  /// Returns the constraint (consistent/conservative) of the mapping.
   Constraint getConstraint() const;
 
-  /**
-   * @brief Returns the requirement on the input mesh.
-   */
+  /// Returns the requirement on the input mesh.
   MeshRequirement getInputRequirement() const;
 
-  /**
-   * @brief Returns the requirement on the output mesh.
-   */
+  /// Returns the requirement on the output mesh.
   MeshRequirement getOutputRequirement() const;
 
-  /**
-   * @brief Computes the mapping coefficients from the in- and output mesh.
-   */
+  /// Computes the mapping coefficients from the in- and output mesh.
   virtual void computeMapping() =0;
 
   /**
@@ -121,27 +109,19 @@ public:
 
 protected:
 
-  /**
-   * @brief Returns pointer to input mesh.
-   */
+  /// Returns pointer to input mesh.
   mesh::PtrMesh input() const;
 
-  /**
-   * @brief Returns pointer to output mesh.
-   */
+  /// Returns pointer to output mesh.
   mesh::PtrMesh output() const;
 
-  /**
-   * @brief Sets the mesh requirement for the input mesh.
-   */
+  /// Sets the mesh requirement for the input mesh.
   void setInputRequirement ( MeshRequirement requirement );
 
-  /**
-   * @brief Sets the mesh requirement for the output mesh.
-   */
+  /// Sets the mesh requirement for the output mesh.
   void setOutputRequirement ( MeshRequirement requirement );
 
-  int getDimensions();
+  int getDimensions() const;
 
 private:
 

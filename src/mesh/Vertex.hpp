@@ -1,7 +1,7 @@
 #pragma once
 
 #include "mesh/PropertyContainer.hpp"
-#include "boost/noncopyable.hpp"
+#include <boost/noncopyable.hpp>
 #include <Eigen/Core>
 
 namespace precice {
@@ -18,48 +18,34 @@ class Vertex : public PropertyContainer, private boost::noncopyable
 {
 public:
 
-  /**
-   * @brief Constructor for vertex, parent mesh is not assigned.
-   */
+  /// Constructor for vertex, parent mesh is not assigned.
   template<typename VECTOR_T>
   Vertex (
     const VECTOR_T& coordinates,
     int             id );
 
-  /**
-   * @brief Constructor for vertex, parent mesh is assigned.
-   */
+  /// Constructor for vertex, parent mesh is assigned.
   template<typename VECTOR_T>
   Vertex (
     const VECTOR_T& coordinates,
     int             id,
     Mesh&           mesh );
 
-  /**
-   * @brief Destructor, empty.
-   */
+  /// Destructor, empty.
   virtual ~Vertex() {}
 
-  /**
-   * @brief Returns spatial dimenionality of vertex.
-   */
+  /// Returns spatial dimenionality of vertex.
   int getDimensions() const;
 
-  /**
-   * @brief Sets the coordinates of the vertex.
-   */
+  /// Sets the coordinates of the vertex.
   template<typename VECTOR_T>
   void setCoords ( const VECTOR_T& coordinates );
 
-  /**
-   * @brief Sets the normal of the vertex.
-   */
+  /// Sets the normal of the vertex.
   template<typename VECTOR_T>
   void setNormal ( const VECTOR_T& normal );
 
-  /**
-   * @brief Returns the unique (among vertices of one mesh) ID of the vertex.
-   */
+  /// Returns the unique (among vertices of one mesh) ID of the vertex.
   int getID() const;
 
   /// Returns the coordinates of the vertex.
@@ -68,14 +54,10 @@ public:
   /// Returns the normal of the vertex.
   const Eigen::VectorXd& getNormal() const;
 
-  /**
-   * @brief Returns (possibly NULL) pointer to parent const Mesh object.
-   */
+  /// Returns (possibly nullptr) pointer to parent const Mesh object.
   const Mesh* mesh() const;
 
-  /**
-   * @brief Returns possibly NULL pointer to parent Mesh object.
-   */
+  /// Returns possibly null pointer to parent Mesh object.
   Mesh* mesh();
 
   int getGlobalIndex() const;
@@ -92,7 +74,7 @@ public:
 
 private:
 
-  // @brief Unique (among vertices in one mesh) ID of the vertex.
+  /// Unique (among vertices in one mesh) ID of the vertex.
   int _id;
 
   /// Coordinates of the vertex.
@@ -101,16 +83,16 @@ private:
   /// Normal of the vertex.
   Eigen::VectorXd _normal;
 
-  // @brief global (unique) index for parallel simulations
+  /// global (unique) index for parallel simulations
   int _globalIndex;
 
-  // @brief true if this processors is the owner of the vertex (for parallel simulations)
+  /// true if this processors is the owner of the vertex (for parallel simulations)
   bool _owner;
 
-  // @brief true if this vertex is tagged for partition
+  /// true if this vertex is tagged for partition
   bool _tagged;
 
-  // @brief Pointer to parent mesh, possibly NULL.
+  /// Pointer to parent mesh, possibly NULL.
   Mesh * _mesh;
 };
 
@@ -175,6 +157,10 @@ inline const Eigen::VectorXd& Vertex::getCoords() const
 {
   return _coords;
 }
+
+
+/// Make Vertex printable
+std::ostream & operator<<(std::ostream &os, Vertex const & v);
 
 }} // namespace precice, mesh
 

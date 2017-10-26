@@ -400,6 +400,14 @@ std::pair<PetscInt, PetscInt> Matrix::ownerRangeColumn()
   return std::make_pair(range_start, range_end);
 }
 
+PetscInt Matrix::blockSize() const
+{
+  PetscErrorCode ierr = 0;
+  PetscInt bs;
+  ierr = MatGetBlockSize(matrix, &bs); CHKERRQ(ierr);
+  return bs;
+}
+
 void Matrix::write(std::string filename, VIEWERFORMAT format)
 {
   PetscErrorCode ierr = 0;

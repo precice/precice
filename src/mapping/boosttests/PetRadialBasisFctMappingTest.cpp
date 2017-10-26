@@ -1277,7 +1277,7 @@ BOOST_AUTO_TEST_CASE(PolynomialSwitch,
   
   bool xDead = false, yDead = true, zDead = false;
 
-  Gaussian fct(1);
+  Gaussian fct(1); // supportRadius = 4.55
 
   // Create mesh to map from
   mesh::PtrMesh inMesh ( new mesh::Mesh("InMesh", dimensions, false) );
@@ -1293,7 +1293,7 @@ BOOST_AUTO_TEST_CASE(PolynomialSwitch,
   mesh::PtrMesh outMesh( new mesh::Mesh("OutMesh", dimensions, false) );
   mesh::PtrData outData = outMesh->createData( "OutData", 1 );
   int outDataID = outData->getID();
-  outMesh->createVertex(Vector2d(5, 5)); // Point is far outside the inMesh
+  outMesh->createVertex(Vector2d(6, 6)); // Point is far outside the inMesh
     
   outMesh->allocateDataValues();
   addGlobalIndex(outMesh);

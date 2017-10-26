@@ -184,6 +184,9 @@ public:
   
   /// Returns a pair that mark the beginning and end of the matrix' column ownership range.
   std::pair<PetscInt, PetscInt> ownerRangeColumn();
+
+  /// Returns the block size of the matrix
+  PetscInt blockSize() const;
   
   /// Writes the matrix to file.
   void write(std::string filename, VIEWERFORMAT format = ASCII);

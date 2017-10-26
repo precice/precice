@@ -176,6 +176,25 @@ private:
   const int minSize;
 };
 
+
+/// Boost.Test decorator that unconditionally deletes the test.
+class Deleted : public bt::decorator::base
+{
+private:
+  virtual void apply(bt::test_unit &tu)
+  {
+    bt::framework::get<bt::test_suite>(tu.p_parent_id).remove(tu.p_id);
+  }
+
+  virtual bt::decorator::base_ptr clone() const
+  {
+    return bt::decorator::base_ptr(new Deleted());
+  }
+};
+
+
+
+
 /// equals to be used in tests. Prints both operatorans on failure
 template <class DerivedA, class DerivedB>
 boost::test_tools::predicate_result equals(const Eigen::MatrixBase<DerivedA> &A,

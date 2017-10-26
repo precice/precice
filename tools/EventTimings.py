@@ -32,21 +32,25 @@ This is converted to a data structure:
        "procs"      : "Number of processors"
        "global"     : "Global timings, a numpy array"
        "properties" : "dict of property -> value"
-       "timings"    : "numpy.array with custom datatype"
+       "timings"    : {"Event Name" : "numpy.array with custom datatype" }
    }
 ]
 """
 
 import locale, shlex, datetime
+try:
+    import pandas
+except ImportError:
+    print('Pandas support non available')
+
 import numpy as np
 
-datatype = [ ("name", object),
-             ("count", int),
+datatype = [ ("count", int),
              ("total", int),
-             ("max", float),
-             ("min", float),
-             ("avg", float),
-             ("percent", float)
+             ("max", int),
+             ("min", int),
+             ("avg", int),
+             ("percent", int)
 ]
 
 
@@ -67,34 +71,52 @@ def readBlock(f):
     raise StopIteration()
 
     
-def parseTimings(tStr):
+def parseTimingsNP(lines):
     """ Returns event name and timings as a dict. """
-    s = shlex.split(tStr)
-    return np.array(tuple(s), dtype=datatype)
+    timings = {}
+    for l in lines:
+        s = shlex.split(l)
+        timing = [s[0], np.array(tuple(s[1:]), dtype=datatype )]
+        timings[timing[0]] = timing[1]
+        
+    return timings
+
+def parseTimingsPandas(procs, lines):
+    """ Returns event name and timings as a dict. """
+    timings = pandas.DataFrame()
+    for l in lines:
+        s = shlex.split(l)
+        series = pandas.Series([procs] + s[1:], name = s[0],
+                               index = ["processors", "count", "total", "max","min", "avg", "percent"],
+                               dtype = int)
+        timings = timings.append(series)
+        
+    return timings
     
 
-def parseEventlog(file):
+def parseEventlog(file, timings_format = "numpy"):
     """ Takes a filename, parses the Eventlog and returns the data. """
     locale.setlocale(locale.LC_TIME, "C") # Set the locale, so that strptime works as intended.
 
     events = []
 
-    for line in readBlock(file):
-        timeStamp = datetime.datetime.strptime(line[0][19:], "%a %b %d %H:%M:%S %Y")
-        procs = int(line[1][24:])
+    for block in readBlock(file):
+        timeStamp = datetime.datetime.strptime(block[0][19:], "%a %b %d %H:%M:%S %Y")
+        procs = int(block[1][24:])
         properties = {}
         i = 2
-        while line[i].startswith("# Property "):
-            evStr = line[i][11:]
+        while block[i].startswith("# Property "):
+            evStr = block[i][11:]
             properties[evStr.split(":")[0]] = float(evStr.split(":")[1])
             i += 1
 
-        globalTimings = parseTimings(line[i+1])
-        timings = np.hstack( [parseTimings(t) for t in line[i+2:]] )
+        if timings_format == 'numpy':
+            timings = parseTimingsNP(procs, block[i+1:])
+        elif timings_format == 'pandas':
+            timings = parseTimingsPandas(procs, block[i+1:])
         
         events.append( {
             "timestamp"  : timeStamp,
-            "global"     : globalTimings,
             "procs"      : procs,
             "properties" : properties,
             "timings"    : timings

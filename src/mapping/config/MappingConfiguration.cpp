@@ -88,6 +88,11 @@ MappingConfiguration:: MappingConfiguration
   attrPolynomial.setDocumentation("Toggles use of the global polynomial");
   attrPolynomial.setDefaultValue("on");
 
+  XMLAttribute<std::string> attrPreallocation("preallocation");
+  attrPreallocation.setDocumentation("Sets kind of preallocaiton for PETSc RBF implementation");
+  attrPreallocation.setDefaultValue("off");
+
+
   XMLTag::Occurrence occ = XMLTag::OCCUR_ARBITRARY;
   std::list<XMLTag> tags;
   {
@@ -133,6 +138,7 @@ MappingConfiguration:: MappingConfiguration
     XMLTag tag(*this, VALUE_PETRBF_TPS, occ, TAG);
     tag.addAttribute(attrSolverRtol);
     tag.addAttribute(attrPolynomial);
+    tag.addAttribute(attrPreallocation);
     tags.push_back(tag);
   }
   {
@@ -140,6 +146,7 @@ MappingConfiguration:: MappingConfiguration
     tag.addAttribute(attrShapeParam);
     tag.addAttribute(attrSolverRtol);
     tag.addAttribute(attrPolynomial);
+    tag.addAttribute(attrPreallocation);
     tags.push_back(tag);
   }
   {
@@ -147,12 +154,14 @@ MappingConfiguration:: MappingConfiguration
     tag.addAttribute(attrShapeParam);
     tag.addAttribute(attrSolverRtol);
     tag.addAttribute(attrPolynomial);
+    tag.addAttribute(attrPreallocation);
     tags.push_back(tag);
   }
   {
     XMLTag tag(*this, VALUE_PETRBF_VOLUME_SPLINES, occ, TAG);
     tag.addAttribute(attrSolverRtol);
     tag.addAttribute(attrPolynomial);
+    tag.addAttribute(attrPreallocation);
     tags.push_back(tag);
   }
   {
@@ -160,6 +169,7 @@ MappingConfiguration:: MappingConfiguration
     tag.addAttribute(attrSolverRtol);
     tag.addAttribute(attrShapeParam);
     tag.addAttribute(attrPolynomial);
+    tag.addAttribute(attrPreallocation);
     tags.push_back(tag);
   }
   {
@@ -167,6 +177,7 @@ MappingConfiguration:: MappingConfiguration
     tag.addAttribute(attrSolverRtol);
     tag.addAttribute(attrSupportRadius);
     tag.addAttribute(attrPolynomial);
+    tag.addAttribute(attrPreallocation);
     tags.push_back(tag);
   }
   {
@@ -174,6 +185,7 @@ MappingConfiguration:: MappingConfiguration
     tag.addAttribute(attrSolverRtol);
     tag.addAttribute(attrSupportRadius);
     tag.addAttribute(attrPolynomial);
+    tag.addAttribute(attrPreallocation);
     tags.push_back(tag);
   }
   {
@@ -181,6 +193,7 @@ MappingConfiguration:: MappingConfiguration
     tag.addAttribute(attrSolverRtol);
     tag.addAttribute(attrSupportRadius);
     tag.addAttribute(attrPolynomial);
+    tag.addAttribute(attrPreallocation);
     tags.push_back(tag);
   }
   // Add tags that only RBF mappings use
@@ -246,6 +259,7 @@ void MappingConfiguration:: xmlTagCallback
     double solverRtol = 1e-9;
     bool xDead = false, yDead = false, zDead = false;
     Polynomial polynomial = Polynomial::ON;
+    Preallocation preallocation = Preallocation::OFF;
     
     if (tag.hasAttribute(ATTR_SHAPE_PARAM)){
       shapeParameter = tag.getDoubleAttributeValue(ATTR_SHAPE_PARAM);
@@ -272,11 +286,24 @@ void MappingConfiguration:: xmlTagCallback
       else
         polynomial = utils::convertStringToBool(strPolynomial) ? Polynomial::ON : Polynomial::OFF;
     }
+    if (tag.hasAttribute("preallocation")){
+      std::string strPrealloc = tag.getStringAttributeValue("preallocation");
+      if (strPrealloc == "estimate")
+        preallocation = Preallocation::ESTIMATE;
+      else if (strPrealloc == "compute")
+        preallocation = Preallocation::COMPUTE;
+      else if (strPrealloc == "saved")
+        preallocation = Preallocation::SAVED;
+      else if (strPrealloc == "tree")
+        preallocation = Preallocation::TREE;
+      else
+        preallocation = Preallocation::OFF;
+    }     
           
     ConfiguredMapping configuredMapping = createMapping(dir, type, constraint,
                                                         fromMesh, toMesh, timing,
                                                         shapeParameter, supportRadius, solverRtol,
-                                                        xDead, yDead, zDead, polynomial);
+                                                        xDead, yDead, zDead, polynomial, preallocation);
     checkDuplicates ( configuredMapping );
     _mappings.push_back ( configuredMapping );
   }
@@ -292,7 +319,7 @@ MappingConfiguration:: mappings()
   return _mappings;
 }
 
-void MappingConfiguration:: addMapping
+void MappingConfiguration::addMapping
 (
   const PtrMapping&    mapping,
   const mesh::PtrMesh& fromMesh,
@@ -311,7 +338,7 @@ void MappingConfiguration:: addMapping
   _mappings.push_back ( configuredMapping );
 }
 
-MappingConfiguration::ConfiguredMapping MappingConfiguration:: createMapping
+MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping
 (
   const std::string& direction,
   const std::string& type,
@@ -325,7 +352,8 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration:: createMapping
   bool               xDead,
   bool               yDead,
   bool               zDead,
-  Polynomial         polynomial) const
+  Polynomial         polynomial,
+  Preallocation      preallocation) const
 {
   TRACE(direction, type, timing, shapeParameter, supportRadius);
   using namespace mapping;
@@ -431,54 +459,48 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration:: createMapping
     utils::Petsc::initialize(&argc, &argv);
     configuredMapping.mapping = PtrMapping (
       new PetRadialBasisFctMapping<ThinPlateSplines>(constraintValue, dimensions, ThinPlateSplines(),
-                                                     xDead, yDead, zDead, solverRtol, polynomial) );
+                                                     xDead, yDead, zDead, solverRtol, polynomial, preallocation) );
   }
   else if (type == VALUE_PETRBF_MULTIQUADRICS){
     utils::Petsc::initialize(&argc, &argv);
     configuredMapping.mapping = PtrMapping (
-      new PetRadialBasisFctMapping<Multiquadrics>(
-        constraintValue, dimensions, Multiquadrics(shapeParameter),
-        xDead, yDead, zDead, solverRtol, polynomial) );
+      new PetRadialBasisFctMapping<Multiquadrics>(constraintValue, dimensions, Multiquadrics(shapeParameter),
+                                                  xDead, yDead, zDead, solverRtol, polynomial, preallocation) );
   }
   else if (type == VALUE_PETRBF_INV_MULTIQUADRICS){
     utils::Petsc::initialize(&argc, &argv);
     configuredMapping.mapping = PtrMapping (
-      new PetRadialBasisFctMapping<InverseMultiquadrics>(
-        constraintValue, dimensions, InverseMultiquadrics(shapeParameter),
-        xDead, yDead, zDead, solverRtol, polynomial) );
+      new PetRadialBasisFctMapping<InverseMultiquadrics>(constraintValue, dimensions, InverseMultiquadrics(shapeParameter),
+                                                         xDead, yDead, zDead, solverRtol, polynomial, preallocation) );
   }
   else if (type == VALUE_PETRBF_VOLUME_SPLINES){
     utils::Petsc::initialize(&argc, &argv);
     configuredMapping.mapping = PtrMapping (
       new PetRadialBasisFctMapping<VolumeSplines>(constraintValue, dimensions, VolumeSplines(),
-                                                  xDead, yDead, zDead, solverRtol, polynomial) );
+                                                  xDead, yDead, zDead, solverRtol, polynomial, preallocation) );
   }
   else if (type == VALUE_PETRBF_GAUSSIAN){
     utils::Petsc::initialize(&argc, &argv);
     configuredMapping.mapping = PtrMapping(
-        new PetRadialBasisFctMapping<Gaussian>(
-          constraintValue, dimensions, Gaussian(shapeParameter),
-          xDead, yDead, zDead, solverRtol, polynomial));
+      new PetRadialBasisFctMapping<Gaussian>(constraintValue, dimensions, Gaussian(shapeParameter),
+                                             xDead, yDead, zDead, solverRtol, polynomial, preallocation));
   }
   else if (type == VALUE_PETRBF_CTPS_C2){
     utils::Petsc::initialize(&argc, &argv);
     configuredMapping.mapping = PtrMapping (
-      new PetRadialBasisFctMapping<CompactThinPlateSplinesC2>(
-        constraintValue, dimensions, CompactThinPlateSplinesC2(supportRadius),
-        xDead, yDead, zDead, solverRtol, polynomial) );
+      new PetRadialBasisFctMapping<CompactThinPlateSplinesC2>(constraintValue, dimensions, CompactThinPlateSplinesC2(supportRadius),
+                                                              xDead, yDead, zDead, solverRtol, polynomial, preallocation) );
   }
   else if (type == VALUE_PETRBF_CPOLYNOMIAL_C0){
     utils::Petsc::initialize(&argc, &argv);
     configuredMapping.mapping = PtrMapping (
-      new PetRadialBasisFctMapping<CompactPolynomialC0>(
-        constraintValue, dimensions, CompactPolynomialC0(supportRadius),
-        xDead, yDead, zDead, solverRtol, polynomial) );
+      new PetRadialBasisFctMapping<CompactPolynomialC0>(constraintValue, dimensions, CompactPolynomialC0(supportRadius),
+                                                        xDead, yDead, zDead, solverRtol, polynomial, preallocation) );
   }
   else if (type == VALUE_PETRBF_CPOLYNOMIAL_C6){
     utils::Petsc::initialize(&argc, &argv);
-    configuredMapping.mapping = PtrMapping (new PetRadialBasisFctMapping<CompactPolynomialC6>(
-        constraintValue, dimensions, CompactPolynomialC6(supportRadius),
-        xDead, yDead, zDead, solverRtol, polynomial) );
+    configuredMapping.mapping = PtrMapping (new PetRadialBasisFctMapping<CompactPolynomialC6>(constraintValue, dimensions, CompactPolynomialC6(supportRadius),
+                                                                                              xDead, yDead, zDead, solverRtol, polynomial, preallocation) );
   }
 # endif
   else {

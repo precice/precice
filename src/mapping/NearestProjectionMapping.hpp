@@ -17,27 +17,19 @@ class NearestProjectionMapping : public Mapping
 {
 public:
 
-  /**
-   * @brief Constructor, taking mapping constraint.
-   */
+  /// Constructor, taking mapping constraint.
   NearestProjectionMapping ( Constraint constraint, int dimensions );
 
-  /**
-   * @brief Destructor, empty.
-   */
+  /// Destructor, empty.
   virtual ~NearestProjectionMapping() {}
 
-  /**
-   * @brief Computes the projections and interpolation relations.
-   */
-  virtual void computeMapping();
+  /// Computes the projections and interpolation relations.
+  virtual void computeMapping() override;
 
-  virtual bool hasComputedMapping() const;
+  virtual bool hasComputedMapping() const override;
 
-  /**
-   * @brief Removes a computed mapping.
-   */
-  virtual void clear();
+  /// Removes a computed mapping.
+  virtual void clear() override;
 
   /**
    * @brief Uses projection and interpolation relations to map data values.
@@ -50,7 +42,7 @@ public:
    */
   virtual void map (
     int inputDataID,
-    int outputDataID );
+    int outputDataID ) override;
 
   virtual void tagMeshFirstRound() override;
   virtual void tagMeshSecondRound() override;
