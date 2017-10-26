@@ -110,7 +110,7 @@ CouplingSchemeConfiguration:: CouplingSchemeConfiguration
   {
     XMLTag tag(*this, VALUE_SERIAL_IMPLICIT, occ, TAG);
     doc = "Implicit coupling scheme according to block Gauss-Seidel iterations (S-System).";
-    doc += " Improved implicit iterations are achieved by using a post-processing.";
+    doc += " Improved implicit iterations are achieved by using a post-processing (recommended!).";
     tag.setDocumentation(doc);
     addTypespecifcSubtags(VALUE_SERIAL_IMPLICIT, tag);
     tags.push_back(tag);
@@ -118,7 +118,7 @@ CouplingSchemeConfiguration:: CouplingSchemeConfiguration
   {
     XMLTag tag(*this, VALUE_PARALLEL_IMPLICIT, occ, TAG);
     doc = "Parallel Implicit coupling scheme according to block Jacobi iterations (V-System).";
-    doc += " Improved implicit iterations are achieved by using a post-processing.";
+    doc += " Improved implicit iterations are achieved by using a post-processing (recommended!).";
     tag.setDocumentation(doc);
     addTypespecifcSubtags(VALUE_PARALLEL_IMPLICIT, tag);
     tags.push_back(tag);

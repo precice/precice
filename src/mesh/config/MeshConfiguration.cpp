@@ -10,11 +10,6 @@ namespace mesh {
 
 logging::Logger MeshConfiguration:: _log ( "precice::mesh::MeshConfiguration" );
 
-//const std::string& MeshConfiguration:: getTag ()
-//{
-//  static std::string tag ( "mesh" );
-//  return tag;
-//}
 
 MeshConfiguration:: MeshConfiguration
 (

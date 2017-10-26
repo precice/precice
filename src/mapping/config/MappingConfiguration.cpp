@@ -69,7 +69,9 @@ MappingConfiguration:: MappingConfiguration
   using ValidString = ValidatorEquals<std::string>;
 
   XMLAttribute<double> attrShapeParam ( ATTR_SHAPE_PARAM );
+  attrShapeParam.setDocumentation("Specific shape parameter for RBF basis function.");
   XMLAttribute<double> attrSupportRadius ( ATTR_SUPPORT_RADIUS );
+  attrSupportRadius.setDocumentation("Support radius of each RBF basis function (global choice).");
   XMLAttribute<double> attrSolverRtol ( ATTR_SOLVER_RTOL );
   attrSolverRtol.setDocumentation("Solver relative tolerance for convergence");
   attrSolverRtol.setDefaultValue(1e-9);

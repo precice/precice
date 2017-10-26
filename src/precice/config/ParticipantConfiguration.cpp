@@ -28,12 +28,6 @@ namespace config {
 logging::Logger ParticipantConfiguration::
     _log("config::ParticipantConfiguration");
 
-//const std::string& ParticipantConfiguration:: getTag()
-//{
-//  static std::string tag("participant");
-//  return tag;
-//}
-
 ParticipantConfiguration:: ParticipantConfiguration
 (
   utils::XMLTag&                              parent,
@@ -55,7 +49,7 @@ ParticipantConfiguration:: ParticipantConfiguration
   ATTR_ACTION_TYPE("type"),
   ATTR_FROM("from"),
   ATTR_SAFETY_FACTOR("safety-factor"),
-  ATTR_DECOMPOSITION("decomposition"),
+  ATTR_GEOMETRIC_FILTER("geometric-filter"),
   ATTR_PROVIDE("provide"),
   ATTR_MESH("mesh"),
   ATTR_COORDINATE("coordinate"),
@@ -63,24 +57,23 @@ ParticipantConfiguration:: ParticipantConfiguration
   ATTR_CONTEXT("context"),
   ATTR_NETWORK("network"),
   ATTR_EXCHANGE_DIRECTORY("exchange-directory"),
-  VALUE_PRE_FILTER_POST_FILTER("pre-filter-post-filter"),
+  VALUE_FILTER_FIRST("filter-first"),
   VALUE_BROADCAST_FILTER("broadcast-filter"),
+  VALUE_NO_FILTER("no-filter"),
   VALUE_VTK ( "vtk" ),
   VALUE_VRML ( "vrml" ),
   _dimensions(0),
   _meshConfig(meshConfiguration),
   _mappingConfig(),
   _actionConfig(),
-  //_isValid(false),
   _participants(),
   _watchPointConfigs()
 {
-  //assertion ( (_dimensions == 2) || (_dimensions == 3), _dimensions );
   assertion(_meshConfig.use_count() > 0);
   using namespace utils;
   std::string doc;
   XMLTag tag(*this, TAG, XMLTag::OCCUR_ONCE_OR_MORE);
-  doc = "Represents one solver using preCICE. In a coupled simulation, at least two ";
+  doc = "Represents one solver using preCICE. At least two ";
   doc += "participants have to be defined.";
   tag.setDocumentation(doc);
 
@@ -132,7 +125,7 @@ ParticipantConfiguration:: ParticipantConfiguration
   attrMesh.setDocumentation(doc);
   tagWatchPoint.addAttribute(attrMesh);
   XMLAttribute<Eigen::VectorXd> attrCoordinate(ATTR_COORDINATE);
-  doc = "The coordinates of the watch point. I the watch point is not put exactly ";
+  doc = "The coordinates of the watch point. If the watch point is not put exactly ";
   doc += "on the mesh to observe, the closest projection of the point onto the ";
   doc += "mesh is considered instead, and values/coordinates are interpolated ";
   doc += "linearly to that point.";
@@ -145,15 +138,15 @@ ParticipantConfiguration:: ParticipantConfiguration
   tagUseMesh.setDocumentation(doc);
   attrName.setDocumentation("Name of the mesh.");
   tagUseMesh.addAttribute(attrName);
-  XMLAttribute<Eigen::VectorXd> attrLocalOffset(ATTR_LOCAL_OFFSET);
-  doc = "The mesh can have an offset only applied for the local participant. ";
-  doc += "Vector-valued example: '1.0; 0.0; 0.0'";
-  attrLocalOffset.setDocumentation(doc);
-  attrLocalOffset.setDefaultValue(Eigen::VectorXd::Constant(3, 0));
-  tagUseMesh.addAttribute(attrLocalOffset);
+//  XMLAttribute<Eigen::VectorXd> attrLocalOffset(ATTR_LOCAL_OFFSET);
+//  doc = "The mesh can have an offset only applied for the local participant. ";
+//  doc += "Vector-valued example: '1.0; 0.0; 0.0'";
+//  attrLocalOffset.setDocumentation(doc);
+//  attrLocalOffset.setDefaultValue(Eigen::VectorXd::Constant(3, 0));
+//  tagUseMesh.addAttribute(attrLocalOffset);
 
   XMLAttribute<std::string> attrFrom(ATTR_FROM);
-  doc += "If a solver created mesh should be used by ";
+  doc += "If a created mesh should be used by ";
   doc += "another solver, this attribute has to specify the creating participant's";
   doc += " name. The creator has to use the attribute \"provide\" to signal he is ";
   doc += "providing the mesh geometry.";
@@ -161,28 +154,31 @@ ParticipantConfiguration:: ParticipantConfiguration
   attrFrom.setDefaultValue("");
   tagUseMesh.addAttribute(attrFrom);
   XMLAttribute<double> attrSafetyFactor(ATTR_SAFETY_FACTOR);
-  doc = "If a mesh is receiced from another partipant (see tag <from>), it needs to be";
-  doc += "decomposed on this participant (in master mode only). To speed up this process, ";
-  doc += "the receiving master can pre-filter every mesh by bounding box information from the ";
-  doc += "local mesh (see tag <decomposition>). This safety factor defines how by which factor this local information ";
+  doc = "If a mesh is received from another partipant (see tag <from>), it needs to be";
+  doc += "decomposed at the receiving participant. To speed up this process, ";
+  doc += "a geometric filter (see tag <geometric-filter>), i.e. filtering by bounding boxes around the local mesh, can be used. ";
+  doc += "This safety factor defines by which factor this local information is ";
   doc += "increased. An example: 0.1 means that the bounding box is 110% of its original size.";
   attrSafetyFactor.setDocumentation(doc);
   attrSafetyFactor.setDefaultValue(0.1);
   tagUseMesh.addAttribute(attrSafetyFactor);
 
-  XMLAttribute<std::string> attrDecomposition(ATTR_DECOMPOSITION);
-  doc = "If a mesh is receiced from another partipant (see tag <from>), it needs to be";
-  doc += "decomposed on this participant (in master mode only). To this end, ";
-  doc += "2 different variants are implemented: a pre-filter/post-filter strategy, ";
+  XMLAttribute<std::string> attrGeoFilter(ATTR_GEOMETRIC_FILTER);
+  doc = "If a mesh is received from another partipant (see tag <from>), it needs to be";
+  doc += "decomposed at the receiving participant. To speed up this process, ";
+  doc += "a geometric filter, i.e. filtering by bounding boxes around the local mesh, can be used. ";
+  doc += "2 different variants are implemented: a \"filter-first\" strategy, ";
   doc += "which is beneficial for a huge mesh and a low number of processors, and a ";
-  doc += "broadcast/filter strategy, which performs better for a very high number of ";
-  doc += "processors. Both results in the same distribution (if the safety factor is sufficiently large).";
-  attrDecomposition.setDocumentation(doc);
-  ValidatorEquals<std::string> valid1 ( VALUE_PRE_FILTER_POST_FILTER );
+  doc += "\"broadcast/filter\" strategy, which performs better for a very high number of ";
+  doc += "processors. Both result in the same distribution (if the safety factor is sufficiently large).";
+  doc += "For very asymmetric cases, the filter can also be switched off completely (\"no-filter\").";
+  attrGeoFilter.setDocumentation(doc);
+  ValidatorEquals<std::string> valid1 ( VALUE_FILTER_FIRST );
   ValidatorEquals<std::string> valid2 ( VALUE_BROADCAST_FILTER);
-  attrDecomposition.setValidator ( valid1 || valid2 );
-  attrDecomposition.setDefaultValue(VALUE_BROADCAST_FILTER);
-  tagUseMesh.addAttribute(attrDecomposition);
+  ValidatorEquals<std::string> valid3 ( VALUE_NO_FILTER);
+  attrGeoFilter.setValidator ( valid1 || valid2 || valid3);
+  attrGeoFilter.setDefaultValue(VALUE_BROADCAST_FILTER);
+  tagUseMesh.addAttribute(attrGeoFilter);
 
   XMLAttribute<bool> attrProvide(ATTR_PROVIDE);
   doc += "If this attribute is set to \"on\", the ";
@@ -196,8 +192,8 @@ ParticipantConfiguration:: ParticipantConfiguration
   XMLTag::Occurrence serverOcc = XMLTag::OCCUR_NOT_OR_ONCE;
   {
     XMLTag tagServer(*this, "sockets", serverOcc, TAG_SERVER);
-    doc = "When a solver runs in parallel, it has to use preCICE in form of a ";
-    doc += "separatly running server. This is enabled by this tag. ";
+    doc = "When a solver runs in parallel, it can use preCICE in form of a ";
+    doc += "separately running server (deprecated feature). This is enabled by this tag. ";
     doc += "The communication between participant and server is done by sockets.";
     tagServer.setDocumentation(doc);
 
@@ -229,8 +225,8 @@ ParticipantConfiguration:: ParticipantConfiguration
   }
   {
     XMLTag tagServer(*this, "mpi", serverOcc, TAG_SERVER);
-    doc = "When a solver runs in parallel, it has to use preCICE in form of a ";
-    doc += "separatly running server. This is enabled by this tag. ";
+    doc = "When a solver runs in parallel, it can use preCICE in form of a ";
+    doc += "separately running server (deprecated feature). This is enabled by this tag. ";
     doc += "The communication between participant and server is done by mpi ";
     doc += "with startup in separated communication spaces.";
     tagServer.setDocumentation(doc);
@@ -247,8 +243,8 @@ ParticipantConfiguration:: ParticipantConfiguration
   }
   {
     XMLTag tagServer(*this, "mpi-single", serverOcc, TAG_SERVER);
-    doc = "When a solver runs in parallel, it has to use preCICE in form of a ";
-    doc += "separatly running server. This is enabled by this tag. ";
+    doc = "When a solver runs in parallel, it can use preCICE in form of a ";
+    doc += "separately running server (deprecated feature). This is enabled by this tag. ";
     doc += "The communication between participant and server is done by mpi ";
     doc += "with startup in a common communication space.";
     tagServer.setDocumentation(doc);
@@ -262,7 +258,7 @@ ParticipantConfiguration:: ParticipantConfiguration
   XMLTag::Occurrence masterOcc = XMLTag::OCCUR_NOT_OR_ONCE;
   {
     XMLTag tagMaster(*this, "sockets", masterOcc, TAG_MASTER);
-    doc = "A solver in parallel has to use either a Master or a Server, but not both. ";
+    doc = "A solver in parallel has to use either a Master or a Server (Master is recommended), but not both. ";
     doc += "If you use a Master, you do not have to start-up a further executable, ";
     doc += "all communication is handled peer to peer. One solver process becomes the ";
     doc += " Master handling the synchronization of all slaves. Here, you define then ";
@@ -297,7 +293,7 @@ ParticipantConfiguration:: ParticipantConfiguration
   }
   {
     XMLTag tagMaster(*this, "mpi", masterOcc, TAG_MASTER);
-    doc = "A solver in parallel has to use either a Master or a Server, but not both. ";
+    doc = "A solver in parallel has to use either a Master or a Server (Master is recommended), but not both. ";
     doc += "If you use a Master, you do not have to start-up a further executable, ";
     doc += "all communication is handled peer to peer. One solver process becomes the ";
     doc += " Master handling the synchronization of all slaves. Here, you define then ";
@@ -317,13 +313,13 @@ ParticipantConfiguration:: ParticipantConfiguration
   }
   {
     XMLTag tagMaster(*this, "mpi-single", masterOcc, TAG_MASTER);
-    doc = "A solver in parallel has to use either a Master or a Server, but not both. ";
+    doc = "A solver in parallel has to use either a Master or a Server (Master is recommended), but not both. ";
     doc += "If you use a Master, you do not have to start-up a further executable, ";
     doc += "all communication is handled peer to peer. One solver process becomes the ";
     doc += " Master handling the synchronization of all slaves. Here, you define then ";
     doc += " the communication between the Master and all slaves. ";
     doc += "The communication between Master and slaves is done by mpi ";
-    doc += "with startup in one communication spaces.";
+    doc += "with startup in one communication spaces. (This choice is recommended)";
     tagMaster.setDocumentation(doc);
 
     masterTags.push_back(tagMaster);
@@ -331,22 +327,6 @@ ParticipantConfiguration:: ParticipantConfiguration
   for (XMLTag& tagMaster : masterTags){
     tag.addSubtag(tagMaster);
   }
-
-//  XMLAttribute<std::string> attrCom(ATTR_COMMUNICATION);
-//  doc = "Sets the communication means to transmit data between solver processes ";
-//  doc += "and preCICE server (see tag <communication>).";
-//  ValidatorEquals<std::string> validMPI("mpi");
-//  ValidatorEquals<std::string> validMPISingle("mpi-single");
-//  ValidatorEquals<std::string> validSockets("sockets");
-//  attrCom.setValidator(validMPI || validMPISingle || validSockets);
-//  attrCom.setDocumentation(doc);
-//  tagServer.addAttribute(attrCom);
-//  XMLAttribute<std::string> attrContext(ATTR_CONTEXT);
-//  doc = "Sets the communication context (see tag <communication>).";
-//  attrContext.setDocumentation(doc);
-//  attrContext.setDefaultValue("");
-//  tagServer.addAttribute(attrContext);
-//  tag.addSubtag(tagServer);
 
   parent.addSubtag(tag);
 }
@@ -360,83 +340,6 @@ void ParticipantConfiguration:: setDimensions
   _dimensions = dimensions;
 }
 
-//bool ParticipantConfiguration:: parseSubtag
-//(
-//  utils::XMLTag::XMLReader* xmlReader )
-//{
-//  using utils::XMLTag;
-//  using utils::XMLAttribute;
-//  using utils::ValidatorEquals;
-//  XMLTag tagParticipant ( TAG, XMLTag::OCCUR_ONCE );
-//
-//  XMLAttribute<std::string> attrName ( ATTR_NAME );
-//  tagParticipant.addAttribute ( attrName );
-//
-//  XMLTag tagWriteData ( TAG_WRITE, XMLTag::OCCUR_ARBITRARY);
-//  XMLTag tagReadData  ( TAG_READ, XMLTag::OCCUR_ARBITRARY);
-//  XMLAttribute<std::string> attrDataName ( ATTR_NAME );
-//  tagWriteData.addAttribute ( attrDataName );
-//  tagReadData.addAttribute ( attrDataName );
-//  XMLAttribute<std::string> attrMesh ( ATTR_MESH );
-//  tagWriteData.addAttribute ( attrMesh );
-//  tagReadData.addAttribute ( attrMesh );
-//  tagParticipant.addSubtag ( tagWriteData );
-//  tagParticipant.addSubtag ( tagReadData );
-//
-//  XMLTag tagMapping ( mapping::MappingConfiguration::TAG, XMLTag::OCCUR_ARBITRARY );
-//  tagParticipant.addSubtag ( tagMapping );
-//
-//  XMLTag tagAction ( action::ActionConfiguration::TAG, XMLTag::OCCUR_ARBITRARY );
-//  tagParticipant.addSubtag ( tagAction );
-//
-//  XMLTag tagExport ( io::ExportConfiguration::TAG, XMLTag::OCCUR_ARBITRARY );
-//  tagParticipant.addSubtag ( tagExport );
-//
-//  XMLTag tagWatchPoint ( TAG_WATCH_POINT, XMLTag::OCCUR_ARBITRARY );
-//  tagWatchPoint.addAttribute ( attrName );
-//  XMLAttribute<std::string> attrGeometry ( ATTR_MESH );
-//  tagWatchPoint.addAttribute ( attrGeometry );
-//  if (_dimensions == 2){
-//    XMLAttribute<utils::Vector2D> attrCoordinate ( ATTR_COORDINATE );
-//    tagWatchPoint.addAttribute ( attrCoordinate );
-//  }
-//  else {
-//    XMLAttribute<utils::Vector3D> attrCoordinate ( ATTR_COORDINATE );
-//    tagWatchPoint.addAttribute ( attrCoordinate );
-//  }
-//  tagParticipant.addSubtag ( tagWatchPoint );
-//
-//  XMLTag tagUseMesh ( TAG_USE_MESH, XMLTag::OCCUR_ARBITRARY );
-//  tagUseMesh.addAttribute ( attrName );
-//  if ( _dimensions == 2 ){
-//    XMLAttribute<utils::Vector2D> attrLocalOffset ( ATTR_LOCAL_OFFSET );
-//    attrLocalOffset.setDefaultValue ( utils::Vector2D(0.0) );
-//    tagUseMesh.addAttribute ( attrLocalOffset );
-//  }
-//  else {
-//    XMLAttribute<utils::Vector3D> attrLocalOffset ( ATTR_LOCAL_OFFSET );
-//    attrLocalOffset.setDefaultValue ( utils::Vector3D(0.0) );
-//    tagUseMesh.addAttribute ( attrLocalOffset );
-//  }
-//  XMLAttribute<std::string> attrFrom ( ATTR_FROM );
-//  attrFrom.setDefaultValue ( "" );
-//  tagUseMesh.addAttribute ( attrFrom );
-//  XMLAttribute<bool> attrProvide ( ATTR_PROVIDE );
-//  attrProvide.setDefaultValue ( false );
-//  tagUseMesh.addAttribute ( attrProvide );
-//  tagParticipant.addSubtag ( tagUseMesh );
-//
-//  XMLTag tagServer ( TAG_SERVER, XMLTag::OCCUR_NOT_OR_ONCE );
-//  XMLAttribute<std::string> attrCom ( ATTR_COMMUNICATION );
-//  tagServer.addAttribute ( attrCom );
-//  XMLAttribute<std::string> attrContext(ATTR_CONTEXT);
-//  attrContext.setDefaultValue("");
-//  tagServer.addAttribute(attrContext);
-//  tagParticipant.addSubtag ( tagServer );
-//
-//  _isValid = tagParticipant.parse ( xmlReader, *this );
-//  return _isValid;
-//}
 
 void ParticipantConfiguration:: xmlTagCallback
 (
@@ -452,10 +355,11 @@ void ParticipantConfiguration:: xmlTagCallback
     assertion(_dimensions != 0); // setDimensions() has been called
     std::string name = tag.getStringAttributeValue(ATTR_NAME);
     Eigen::VectorXd offset(_dimensions);
-    offset = tag.getEigenVectorXdAttributeValue(ATTR_LOCAL_OFFSET, _dimensions);
+    // @todo offset currently not supported
+    //offset = tag.getEigenVectorXdAttributeValue(ATTR_LOCAL_OFFSET, _dimensions);
     std::string from = tag.getStringAttributeValue(ATTR_FROM);
     double safetyFactor = tag.getDoubleAttributeValue(ATTR_SAFETY_FACTOR);
-    partition::ReceivedPartition::GeometricFilter geoFilter = getGeoFilter(tag.getStringAttributeValue(ATTR_DECOMPOSITION));
+    partition::ReceivedPartition::GeometricFilter geoFilter = getGeoFilter(tag.getStringAttributeValue(ATTR_GEOMETRIC_FILTER));
     if (safetyFactor < 0){
       std::ostringstream stream;
       stream << "Safety Factor must be positive or 0";
@@ -471,9 +375,6 @@ void ParticipantConfiguration:: xmlTagCallback
     }
     _participants.back()->useMesh ( mesh, offset, false, from, safetyFactor, provide, geoFilter );
   }
-//  else if ( tag.getName() == mapping::MappingConfiguration::TAG ) {
-//    return _mappingConfig->parseSubtag ( xmlReader );
-//  }
   else if ( tag.getName() == TAG_WRITE ) {
     std::string dataName = tag.getStringAttributeValue(ATTR_NAME);
     std::string meshName = tag.getStringAttributeValue(ATTR_MESH);
@@ -494,18 +395,6 @@ void ParticipantConfiguration:: xmlTagCallback
     mesh::PtrData data = getData ( mesh, dataName );
     _participants.back()->addReadData ( data, mesh );
   }
-//  else if ( tag.getName() == action::ActionConfiguration::TAG ){
-//    action::ActionConfiguration config ( _meshConfig );
-//    bool success = config.parseSubtag ( xmlReader );
-//    if ( success ){
-//      bool used = _participants.back()->isMeshUsed( config.getUsedMeshID() );
-//      preciceCheck ( used, "xmlTagCallback()", "Data action of participant "
-//                     << _participants.back()->getName()
-//                     << "\" uses mesh which is not used by the participant!" );
-//      _participants.back()->addAction ( config.getAction() );
-//    }
-//    return success;
-//  }
   else if ( tag.getName() == TAG_WATCH_POINT ){
     assertion(_dimensions != 0); // setDimensions() has been called
     WatchPointConfig config;
@@ -535,20 +424,7 @@ void ParticipantConfiguration:: xmlEndTagCallback
   if (tag.getName() == TAG){
     finishParticipantConfiguration(_participants.back());
   }
-//  else if (tag.getName() == action::ActionConfiguration::TAG){
-//    bool used = _participants.back()->isMeshUsed(_actionConfig->getUsedMeshID());
-//    preciceCheck(used, "xmlTagCallback()", "Data action of participant "
-//                 << _participants.back()->getName()
-//                 << "\" uses mesh which is not used by the participant!");
-//    _participants.back()->addAction(_actionConfig->getAction());
-//  }
 }
-
-
-//bool ParticipantConfiguration:: isValid() const
-//{
-//  return _isValid;
-//}
 
 void ParticipantConfiguration:: addParticipant
 (
@@ -568,13 +444,16 @@ ParticipantConfiguration:: getParticipants() const
 
 partition::ReceivedPartition::GeometricFilter ParticipantConfiguration:: getGeoFilter(const std::string& geoFilter) const
 {
-  if (geoFilter == VALUE_PRE_FILTER_POST_FILTER){
+  if (geoFilter == VALUE_FILTER_FIRST){
     return partition::ReceivedPartition::GeometricFilter::FILTER_FIRST;
   }
   else if (geoFilter == VALUE_BROADCAST_FILTER){
     return partition::ReceivedPartition::GeometricFilter::BROADCAST_FILTER;
   }
-  ERROR("Unknown geometric filter value \"" << geoFilter << "\"!");
+  else {
+    assertion(geoFilter == VALUE_NO_FILTER);
+    return partition::ReceivedPartition::GeometricFilter::NO_FILTER;
+  }
 }
 
 mesh::PtrMesh ParticipantConfiguration:: copy

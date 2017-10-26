@@ -12,12 +12,6 @@ namespace io {
 
 logging::Logger ExportConfiguration:: _log("io::ExportConfiguration");
 
-//const std::string& ExportConfiguration:: getTag()
-//{
-//  static std::string tag("export");
-//  return tag;
-//}
-
 ExportConfiguration:: ExportConfiguration
 (
   utils::XMLTag& parent )
@@ -56,13 +50,9 @@ ExportConfiguration:: ExportConfiguration
   attrLocation.setDefaultValue("");
 
   XMLAttribute<int> attrTimestepInterval(ATTR_TIMESTEP_INTERVAL);
-  doc = "preCICE timestep interval for export of files. If set to -1 (default), ";
-  doc += "files are only exported when a solver requests the export.";
+  doc = "preCICE timestep interval for export of files. Choose -1 for no exports.";
   attrTimestepInterval.setDocumentation(doc);
-  attrTimestepInterval.setDefaultValue(-1);
-
-//  XMLAttribute<bool> attrNeighbors(ATTR_NEIGHBORS);
-//  attrNeighbors.setDefaultValue(false);
+  attrTimestepInterval.setDefaultValue(1);
 
   XMLAttribute<bool> attrTriggerSolver(ATTR_TRIGGER_SOLVER);
   doc = "If set to on/yes, an action requirement is set for the participant ";
@@ -71,7 +61,7 @@ ExportConfiguration:: ExportConfiguration
   attrTriggerSolver.setDefaultValue(false);
 
   XMLAttribute<bool> attrNormals(ATTR_NORMALS);
-  doc = "If set to on/yes, mesh normals are added to the export.";
+  doc = "If set to on/yes, mesh normals (if available) are added to the export.";
   attrNormals.setDocumentation(doc);
   attrNormals.setDefaultValue(true);
 
@@ -83,7 +73,6 @@ ExportConfiguration:: ExportConfiguration
   for (XMLTag& tag : tags){
     tag.addAttribute(attrLocation);
     tag.addAttribute(attrTimestepInterval);
-    //tag.addAttribute(attrNeighbors);
     tag.addAttribute(attrTriggerSolver);
     tag.addAttribute(attrNormals);
     tag.addAttribute(attrEveryIteration);
@@ -98,17 +87,11 @@ void ExportConfiguration:: xmlTagCallback
   if ( tag.getNamespace() == TAG ){
     ExportContext context;
     context.location = tag.getStringAttributeValue(ATTR_LOCATION);
-    //context.plotNeighbors = tag.getBooleanAttributeValue(ATTR_NEIGHBORS);
     context.triggerSolverPlot =  tag.getBooleanAttributeValue(ATTR_TRIGGER_SOLVER);
     context.timestepInterval = tag.getIntAttributeValue(ATTR_TIMESTEP_INTERVAL);
     context.plotNormals = tag.getBooleanAttributeValue(ATTR_NORMALS);
     context.everyIteration = tag.getBooleanAttributeValue(ATTR_EVERY_ITERATION);
     context.type = tag.getName();
-    if ((context.timestepInterval == -1) &&  context.triggerSolverPlot){
-      std::string error = "Attribute timestep interval has to be set when ";
-      error += "trigger-solver is activated";
-      throw error;
-    }
     _contexts.push_back(context);
   }
 }

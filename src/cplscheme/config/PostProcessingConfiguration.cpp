@@ -474,8 +474,8 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
     XMLAttribute<std::string> attrMesh(ATTR_MESH);
     XMLAttribute<double> attrScaling(ATTR_SCALING);
     attrScaling.setDefaultValue(1.0);
-    attrScaling.setDocumentation("If the absolute values of two coupling variables"
-         " differ too much, a scaling improves the performance of V-IQN-ILS");
+    attrScaling.setDocumentation("To improve the performance of a parallel or a multi coupling schemes, "
+        "data values can be manually scaled. We recommend, however, to use an automatic scaling via a preconditioner.");
     tagData.addAttribute(attrScaling);
     tagData.addAttribute(attrName);
     tagData.addAttribute(attrMesh);
@@ -576,8 +576,8 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
     XMLAttribute<std::string> attrMesh(ATTR_MESH);
     XMLAttribute<double> attrScaling(ATTR_SCALING);
     attrScaling.setDefaultValue(1.0);
-    attrScaling.setDocumentation("If the absolute values of two coupling variables"
-         " differ too much, a scaling improves the performance of V-IQN-IMVJ");
+    attrScaling.setDocumentation("To improve the performance of a parallel or a multi coupling schemes, "
+        "data values can be manually scaled. We recommend, however, to use an automatic scaling via a preconditioner.");
     tagData.addAttribute(attrScaling);
     tagData.addAttribute(attrName);
     tagData.addAttribute(attrMesh);
@@ -658,8 +658,8 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
     XMLAttribute<std::string> attrMesh(ATTR_MESH);
     XMLAttribute<double> attrScaling(ATTR_SCALING);
     attrScaling.setDefaultValue(1.0);
-    attrScaling.setDocumentation("If the absolute values of two coupling variables"
-         " differ too much, a scaling improves the performance of V-IQN-IMVJ");
+    attrScaling.setDocumentation("To improve the performance of a parallel or a multi coupling schemes, "
+        "data values can be manually scaled. We recommend, however, to use an automatic scaling via a preconditioner.");
     tagData.addAttribute(attrScaling);
     tagData.addAttribute(attrName);
     tagData.addAttribute(attrMesh);
@@ -729,8 +729,8 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
     XMLAttribute<std::string> attrMesh(ATTR_MESH);
     XMLAttribute<double> attrScaling(ATTR_SCALING);
     attrScaling.setDefaultValue(1.0);
-    attrScaling.setDocumentation("If the absolute values of two coupling variables"
-         " differ too much, a scaling improves the performance of Broyden post-processing.");
+    attrScaling.setDocumentation("To improve the performance of a parallel or a multi coupling schemes, "
+        "data values can be manually scaled. We recommend, however, to use an automatic scaling via a preconditioner.");
     tagData.addAttribute(attrScaling);
     tagData.addAttribute(attrName);
     tagData.addAttribute(attrMesh);

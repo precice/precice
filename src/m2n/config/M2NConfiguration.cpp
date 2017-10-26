@@ -49,7 +49,7 @@ M2NConfiguration:: M2NConfiguration
 
     XMLAttribute<int> attrPort(ATTR_PORT);
     doc = "Port number (16-bit unsigned integer) to be used for socket ";
-    doc += "communiation. The default is \"0\", what means that OS will ";
+    doc += "communiation. The default is \"0\", what means that the OS will ";
     doc += "dynamically search for a free port (if at least one exists) and ";
     doc += "bind it automatically.";
     attrPort.setDocumentation(doc);
@@ -58,7 +58,9 @@ M2NConfiguration:: M2NConfiguration
 
     XMLAttribute<std::string> attrNetwork(ATTR_NETWORK);
     doc = "Interface name to be used for socket communiation. ";
-    doc += "Default is \"lo\", i.e., the local host loopback.";
+    doc += "Default is \"lo\", i.e., the local host loopback. ";
+    doc += "Might be different on supercomputing systems, e.g. \"ib0\" ";
+    doc += "for the InfiniBand on SuperMUC";
     attrNetwork.setDocumentation(doc);
     attrNetwork.setDefaultValue("lo");
     tag.addAttribute(attrNetwork);
@@ -96,7 +98,10 @@ M2NConfiguration:: M2NConfiguration
   }
   
   XMLAttribute<std::string> attrDistrTypeBoth ( ATTR_DISTRIBUTION_TYPE);
-  doc = "Distribution manner of the M2N communication .";
+  doc = "Distribution manner of the M2N communication. ";
+  doc += "\"" + VALUE_POINT_TO_POINT + "\" uses a pure point to point communication and is recommended. ";
+  doc += "\"" + VALUE_GATHER_SCATTER + "\" should only be used if at least one serial participant is used ";
+  doc += "or for troubleshooting.";
   attrDistrTypeBoth.setDocumentation(doc);
   ValidatorEquals<std::string> validDistrGatherScatter ( VALUE_GATHER_SCATTER );
   ValidatorEquals<std::string> validDistrP2P ( VALUE_POINT_TO_POINT);
@@ -105,12 +110,16 @@ M2NConfiguration:: M2NConfiguration
 
   XMLAttribute<std::string> attrDistrTypeOnly ( ATTR_DISTRIBUTION_TYPE);
   doc = "Distribution manner of the M2N communication .";
+  doc += "\"" + VALUE_POINT_TO_POINT + "\" uses a pure point to point communication and is recommended. ";
+  doc += "\"" + VALUE_GATHER_SCATTER + "\" should only be used if at least one serial participant is used ";
+  doc += "or for troubleshooting.";
   attrDistrTypeOnly.setDocumentation(doc);
   attrDistrTypeOnly.setValidator ( validDistrGatherScatter );
   attrDistrTypeOnly.setDefaultValue(VALUE_GATHER_SCATTER);
 
   XMLAttribute<std::string> attrFrom ( ATTR_FROM );
-  doc = "First participant name involved in communication.";
+  doc = "First participant name involved in communication. For performance reasons, we recommend to use ";
+  doc += "the participant with less ranks at the coupling interface as \"from\" in the m2n communication.";
   attrFrom.setDocumentation(doc);
   XMLAttribute<std::string> attrTo(ATTR_TO);
   doc = "Second participant name involved in communication.";

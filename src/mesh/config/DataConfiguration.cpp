@@ -11,11 +11,6 @@ namespace mesh {
 
 logging::Logger DataConfiguration:: _log("mesh::DataConfiguration");
 
-//const std::string& DataConfiguration:: getTag()
-//{
-//  static std::string tag("data");
-//  return tag;
-//}
 
 DataConfiguration:: DataConfiguration
 (
@@ -23,11 +18,9 @@ DataConfiguration:: DataConfiguration
 :
   TAG("data"),
   ATTR_NAME("name"),
-  //ATTR_TYPE("type"),
   VALUE_VECTOR("vector"),
   VALUE_SCALAR("scalar"),
   _dimensions(0),
-  //_isValid(false),
   _data(),
   _indexLastConfigured(-1)
 {
@@ -48,12 +41,6 @@ DataConfiguration:: DataConfiguration
   tagScalar.addAttribute(attrName);
   tagVector.addAttribute(attrName);
 
-//  XMLAttribute<std::string> attrType(ATTR_TYPE);
-//  ValidatorEquals<std::string> validVectorType(VALUE_VECTOR);
-//  ValidatorEquals<std::string> validFloatingType(VALUE_SCALAR);
-//  attrType.setValidator(validVectorType || validFloatingType);
-//  tag.addAttribute(attrType);
-
   parent.addSubtag(tagScalar);
   parent.addSubtag(tagVector);
 }
@@ -66,30 +53,6 @@ void DataConfiguration:: setDimensions
   assertion((dimensions == 2) || (dimensions == 3), dimensions);
   _dimensions = dimensions;
 }
-
-//bool DataConfiguration:: parseSubtag
-//(
-//  tarch::irr::io::IrrXMLReader* xmlReader )
-//{
-  //utils::XMLTag tagData ( TAG, utils::XMLTag::OCCUR_ONCE );
-//
-//  utils::XMLAttribute<std::string> attrName ( ATTR_NAME );
-//  tagData.addAttribute ( attrName );
-//
-//  utils::XMLAttribute<std::string> attrType ( ATTR_TYPE );
-//  utils::ValidatorEquals<std::string> validVectorType ( VALUE_VECTOR );
-//  utils::ValidatorEquals<std::string> validFloatingType ( VALUE_SCALAR );
-//  attrType.setValidator ( validVectorType || validFloatingType );
-//  tagData.addAttribute ( attrType );
-//
-//  _isValid = _tag.parse(xmlReader);
-//  return _isValid;
-//}
-
-//bool DataConfiguration:: isValid() const
-//{
-//   return _isValid;
-//}
 
 const std::vector<DataConfiguration::ConfiguredData>&
 DataConfiguration:: data() const
@@ -155,10 +118,6 @@ int DataConfiguration:: getDataDimensions
   ERROR("Unknown data type!" );
 }
 
-//int DataConfiguration:: getDimensions() const
-//{
-//  return _dimensions;
-//}
 
 
 }} // namespace precice, mesh

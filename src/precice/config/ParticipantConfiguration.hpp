@@ -93,7 +93,7 @@ private:
   const std::string ATTR_ACTION_TYPE;
   const std::string ATTR_FROM;
   const std::string ATTR_SAFETY_FACTOR;
-  const std::string ATTR_DECOMPOSITION;
+  const std::string ATTR_GEOMETRIC_FILTER;
   const std::string ATTR_PROVIDE;
   const std::string ATTR_MESH;
   const std::string ATTR_COORDINATE;
@@ -102,8 +102,9 @@ private:
   const std::string ATTR_NETWORK;
   const std::string ATTR_EXCHANGE_DIRECTORY;
 
-  const std::string VALUE_PRE_FILTER_POST_FILTER;
+  const std::string VALUE_FILTER_FIRST;
   const std::string VALUE_BROADCAST_FILTER;
+  const std::string VALUE_NO_FILTER;
 
   const std::string VALUE_VTK;
   const std::string VALUE_VRML;
