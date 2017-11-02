@@ -254,7 +254,7 @@ void SolverInterfaceTest:: testExplicitWithDataExchange()
 
     VertexHandle vertices = cplInterface.getMeshHandle("Test-Square").vertices();
     while (cplInterface.isCouplingOngoing()){
-      cplInterface.resetMesh(meshOneID);
+      cplInterface._impl->resetMesh(meshOneID);
       i = 0;
       for (VertexIterator it = vertices.begin(); it != vertices.end(); it++){
         int index = cplInterface.setMeshVertex(meshOneID, it.vertexCoords());
@@ -412,7 +412,7 @@ void SolverInterfaceTest:: testExplicitWithBlockDataExchange()
     Eigen::VectorXi getReadIDs(size);
 
     while (cplInterface.isCouplingOngoing()){
-      cplInterface.resetMesh(meshOneID);
+      cplInterface._impl->resetMesh(meshOneID);
       for (VertexIterator it = vertices.begin(); it != vertices.end(); it++){
         for (int dim=0; dim < 3; dim++){
           writePositions[it.vertexID()*3 + dim] = it.vertexCoords()[dim];
@@ -449,7 +449,7 @@ void SolverInterfaceTest:: testExplicitWithBlockDataExchange()
           }
           expectedTemperatures[it.vertexID()] = counter + it.vertexCoords()[0];
         }
-        cplInterface.resetMesh(meshOneID);
+        cplInterface._impl->resetMesh(meshOneID);
         cplInterface.setMeshVertices(meshOneID, size, readPositions.data(), readIDs.data());
         cplInterface.mapReadDataTo(meshOneID);
         cplInterface.readBlockVectorData(velocitiesID, size, readIDs.data(),

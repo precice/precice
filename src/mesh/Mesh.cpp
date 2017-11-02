@@ -537,6 +537,8 @@ void Mesh:: clear()
   _manageEdgeIDs.resetIDs();
   _manageVertexIDs.resetIDs();
 
+  notifyListeners();
+
   rtree::clear(getID());
   for (mesh::PtrData data : _data) {
     data->values().resize(0); // TODO: mybe incorrect, previous was clear() ... check if resize(0) has some bad side effects
@@ -597,6 +599,7 @@ void Mesh:: addMesh(
       createTriangle(*edgeMap[edgeIndex1],*edgeMap[edgeIndex2],*edgeMap[edgeIndex3]);
     }
   }
+  notifyListeners();
 }
 
 const Mesh::BoundingBox Mesh::getBoundingBox() const

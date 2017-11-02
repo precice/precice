@@ -128,12 +128,12 @@ bool SolverInterface::hasToEvaluateFineModel()
   return _impl->hasToEvaluateFineModel();
 }
 
-void SolverInterface:: resetMesh
-(
-  int meshID )
-{
-  _impl->resetMesh(meshID);
-}
+//void SolverInterface:: resetMesh
+//(
+//  int meshID )
+//{
+//  _impl->resetMesh(meshID);
+//}
 
 
 int SolverInterface:: setMeshVertex

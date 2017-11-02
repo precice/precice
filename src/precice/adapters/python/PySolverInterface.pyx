@@ -49,8 +49,6 @@ cdef extern from "./src/precice/SolverInterface.hpp"  namespace "precice":
 
       int getDataID (const string& dataName, int meshID)
 
-      void resetMesh (int meshID)
-
       void setMeshVertices (int meshID, int size, double* positions, int* ids)
 
       int getMeshVertexSize(int meshID)

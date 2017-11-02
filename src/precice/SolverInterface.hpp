@@ -294,7 +294,7 @@ public:
    * changes. Only has an effect, if the mapping used is non-stationary and
    * non-incremental.
    */
-  void resetMesh ( int meshID );
+//  void resetMesh ( int meshID );
 
   /**
    * @brief Sets position of surface mesh vertex, returns ID.
