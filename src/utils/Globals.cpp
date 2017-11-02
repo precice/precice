@@ -7,9 +7,10 @@ namespace utils {
 
 std::string getPathToSources()
 {
+  logging::Logger _log("utils");
   char* preciceRoot = std::getenv("PRECICE_ROOT");
-  assertion(preciceRoot != nullptr,
-            "Environment variable PRECICE_ROOT has not been set. Please set it to the precice directory.");
+  CHECK(preciceRoot != nullptr,
+        "Environment variable PRECICE_ROOT has not been set. Please set it to the precice directory.");
   return std::string(preciceRoot) + "/src";
 }
 
