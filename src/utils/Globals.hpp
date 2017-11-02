@@ -12,6 +12,6 @@
 namespace precice {
 namespace utils {
 
-std::string getPathToSources ();
+std::string getPathToSources();
 
 }} // namespace precice, utils
