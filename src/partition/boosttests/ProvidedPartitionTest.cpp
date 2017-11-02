@@ -78,7 +78,7 @@ void tearDownParallelEnvironment(){
 }
 
 
-BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate2D, * testing::OnRanks({0, 1, 2, 3}))
+BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate2D, * testing::OnSize(4))
 {
   utils::Parallel::setGlobalCommunicator(utils::Parallel::getRestrictedCommunicator({0,1,2,3}));
   assertion(utils::Parallel::getCommunicatorSize() == 4);
@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate2D, * testing::OnRanks({0, 1, 2, 3}
   tearDownParallelEnvironment();
 }
 
-BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate3D, * testing::OnRanks({0, 1, 2, 3}))
+BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate3D, * testing::OnSize(4))
 {
   utils::Parallel::setGlobalCommunicator(utils::Parallel::getRestrictedCommunicator({0,1,2,3}));
   assertion(utils::Parallel::getCommunicatorSize() == 4);

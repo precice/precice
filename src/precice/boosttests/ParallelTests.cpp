@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_SUITE(PreciceTests)
 BOOST_FIXTURE_TEST_SUITE(Parallel, ParallelTestFixture)
 
 
-BOOST_AUTO_TEST_CASE(TestMasterSlaveSetup, * testing::OnRanks({0, 1, 2, 3}))
+BOOST_AUTO_TEST_CASE(TestMasterSlaveSetup, * testing::OnSize(4))
 {
   SolverInterface interface ( "SolverOne", utils::Parallel::getProcessRank(), 4 );
   std::string configFilename = "../src/precice/boosttests/config1.xml";
@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(TestMasterSlaveSetup, * testing::OnRanks({0, 1, 2, 3}))
   utils::Parallel::clearGroups();
 }
 
-BOOST_AUTO_TEST_CASE(TestFinalize, * testing::OnRanks({0, 1, 2, 3}))
+BOOST_AUTO_TEST_CASE(TestFinalize, * testing::OnSize(4))
 {
   std::string configFilename = "../src/precice/boosttests/config1.xml";
   config::Configuration config;
@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(TestFinalize, * testing::OnRanks({0, 1, 2, 3}))
 }
 
 #ifndef PRECICE_NO_PETSC
-BOOST_AUTO_TEST_CASE(GlobalRBFPartitioning, * testing::OnRanks({0, 1, 2, 3}))
+BOOST_AUTO_TEST_CASE(GlobalRBFPartitioning, * testing::OnSize(4))
 {
   std::string configFilename = "../src/precice/boosttests/globalRBFPartitioning.xml";
   config::Configuration config;
@@ -159,7 +159,7 @@ BOOST_AUTO_TEST_CASE(GlobalRBFPartitioning, * testing::OnRanks({0, 1, 2, 3}))
   }
 }
 
-BOOST_AUTO_TEST_CASE(LocalRBFPartitioning, * testing::OnRanks({0, 1, 2, 3}))
+BOOST_AUTO_TEST_CASE(LocalRBFPartitioning, * testing::OnSize(4))
 {
   std::string configFilename = "../src/precice/boosttests/localRBFPartitioning.xml";
   config::Configuration config;
@@ -211,7 +211,7 @@ BOOST_AUTO_TEST_CASE(LocalRBFPartitioning, * testing::OnRanks({0, 1, 2, 3}))
 #endif // PRECICE_NO_PETSC
 
 /// tests for various QN settings if correct number of iterations is returned
-BOOST_AUTO_TEST_CASE(TestQN, * testing::OnRanks({0, 1, 2, 3}))
+BOOST_AUTO_TEST_CASE(TestQN, * testing::OnSize(4))
 {
   int numberOfTests = 3;
   std::vector<std::string> configs;

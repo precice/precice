@@ -11,7 +11,7 @@ BOOST_AUTO_TEST_SUITE(CommunicationTests)
 BOOST_AUTO_TEST_SUITE(Socket)
 
 BOOST_AUTO_TEST_CASE(SendAndReceive,
-                     *testing::OnRanks({0, 1}))
+                     *testing::OnSize(2))
 {
   SocketCommunication com;
   if (utils::Parallel::getProcessRank() == 0) {
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(SendAndReceive,
 }
 
 BOOST_AUTO_TEST_CASE(ParallelClient,
-                     *testing::OnRanks({0, 1, 2}))
+                     *testing::OnSize(3))
 {
   SocketCommunication com;
   int rank = utils::Parallel::getProcessRank();

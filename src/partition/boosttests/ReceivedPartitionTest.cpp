@@ -25,8 +25,7 @@ BOOST_AUTO_TEST_SUITE(ReceivedPartitionTests)
 void setupParallelEnvironmentTwoParticipants(m2n::PtrM2N m2n){
   assertion(utils::Parallel::getCommunicatorSize() == 4);
 
-  com::PtrCommunication masterSlaveCom =
-      com::PtrCommunication(new com::MPIDirectCommunication());
+  com::PtrCommunication masterSlaveCom = com::PtrCommunication(new com::MPIDirectCommunication());
   utils::MasterSlave::_communication = masterSlaveCom;
 
   if (utils::Parallel::getProcessRank() == 0){ //SOLIDZ

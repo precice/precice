@@ -32,6 +32,16 @@ int main(int argc, char* argv[])
   logging::setMPIRank(utils::Parallel::getProcessRank());
   utils::Petsc::initialize(&argc, &argv);
 
+  if (utils::Parallel::getCommunicatorSize() < 4) {
+    if (utils::Parallel::getProcessRank() == 0)
+      std::cerr << "Running tests on less than four processors. Not all tests are executed." << std::endl;
+  }
+  if (utils::Parallel::getCommunicatorSize() > 4) {
+    if (utils::Parallel::getProcessRank() == 0)
+      std::cerr << "Running tests one more than 4 processors is not supported. Aborting." << std::endl;
+    std::exit(-1);
+  }
+
   int retCode = boost::unit_test::unit_test_main( &init_unit_test, argc, argv );
 
   utils::Petsc::finalize();
