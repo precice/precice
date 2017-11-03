@@ -53,7 +53,7 @@ BOOST_FIXTURE_TEST_SUITE(Parallel, ParallelTestFixture)
 BOOST_AUTO_TEST_CASE(TestMasterSlaveSetup, * testing::OnSize(4))
 {
   SolverInterface interface ( "SolverOne", utils::Parallel::getProcessRank(), 4 );
-  std::string configFilename = "../src/precice/boosttests/config1.xml";
+  std::string configFilename = utils::getPathToSources() + "/precice/boosttests/config1.xml";
   config::Configuration config;
   utils::configure(config.getXMLTag(), configFilename);
   interface._impl->configure(config.getSolverInterfaceConfiguration());
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(TestMasterSlaveSetup, * testing::OnSize(4))
 
 BOOST_AUTO_TEST_CASE(TestFinalize, * testing::OnSize(4))
 {
-  std::string configFilename = "../src/precice/boosttests/config1.xml";
+  std::string configFilename = utils::getPathToSources() + "/precice/boosttests/config1.xml";
   config::Configuration config;
   utils::configure(config.getXMLTag(), configFilename);
   if(utils::Parallel::getProcessRank()<=1){
@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(TestFinalize, * testing::OnSize(4))
 #ifndef PRECICE_NO_PETSC
 BOOST_AUTO_TEST_CASE(GlobalRBFPartitioning, * testing::OnSize(4))
 {
-  std::string configFilename = "../src/precice/boosttests/globalRBFPartitioning.xml";
+  std::string configFilename = utils::getPathToSources() + "/precice/boosttests/globalRBFPartitioning.xml";
   config::Configuration config;
 
   if(utils::Parallel::getProcessRank()<=2){
@@ -161,7 +161,7 @@ BOOST_AUTO_TEST_CASE(GlobalRBFPartitioning, * testing::OnSize(4))
 
 BOOST_AUTO_TEST_CASE(LocalRBFPartitioning, * testing::OnSize(4))
 {
-  std::string configFilename = "../src/precice/boosttests/localRBFPartitioning.xml";
+  std::string configFilename = utils::getPathToSources() + "/precice/boosttests/localRBFPartitioning.xml";
   config::Configuration config;
 
   if(utils::Parallel::getProcessRank()<=2){
@@ -216,9 +216,9 @@ BOOST_AUTO_TEST_CASE(TestQN, * testing::OnSize(4))
   int numberOfTests = 3;
   std::vector<std::string> configs;
   configs.resize(numberOfTests);
-  configs[0] = "../src/precice/boosttests/QN1.xml";
-  configs[1] = "../src/precice/boosttests/QN2.xml";
-  configs[2] = "../src/precice/boosttests/QN3.xml";
+  configs[0] = utils::getPathToSources() + "/precice/boosttests/QN1.xml";
+  configs[1] = utils::getPathToSources() + "/precice/boosttests/QN2.xml";
+  configs[2] = utils::getPathToSources() + "/precice/boosttests/QN3.xml";
 
   int correctIterations[3] = {29, 17, 15};
 
