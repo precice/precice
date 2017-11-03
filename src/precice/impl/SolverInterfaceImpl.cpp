@@ -56,12 +56,12 @@ logging::Logger SolverInterfaceImpl::_log ("impl::SolverInterfaceImpl");
 
 SolverInterfaceImpl:: SolverInterfaceImpl
 (
-  const std::string& accessorName,
+  const std::string& participantName,
   int                accessorProcessRank,
   int                accessorCommunicatorSize,
   bool               serverMode )
 :
-  _accessorName(accessorName),
+  _accessorName(participantName),
   _accessorProcessRank(accessorProcessRank),
   _accessorCommunicatorSize(accessorCommunicatorSize),
   _accessor(),
@@ -82,7 +82,7 @@ SolverInterfaceImpl:: SolverInterfaceImpl
         "Accessor process index has to be smaller than accessor process "
         << "size (given as " << _accessorProcessRank << ")!");
 
-  precice::utils::EventRegistry::initialize(accessorName);
+  precice::utils::EventRegistry::initialize(participantName);
 
   /* When precice stops abruptly, e.g. an external solver crashes, the
      SolverInterfaceImpl destructor is never called. Since we still want

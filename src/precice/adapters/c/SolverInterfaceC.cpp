@@ -12,12 +12,12 @@ static precice::impl::SolverInterfaceImpl* impl = nullptr;
 
 void precicec_createSolverInterface
 (
-  const char* accessorName,
+  const char* participantName,
   const char* configFileName,
   int         solverProcessIndex,
   int         solverProcessSize )
 {
-  std::string stringAccessorName ( accessorName );
+  std::string stringAccessorName ( participantName );
   impl = new precice::impl::SolverInterfaceImpl ( stringAccessorName,
       solverProcessIndex, solverProcessSize, false );
   std::string stringConfigFileName ( configFileName );

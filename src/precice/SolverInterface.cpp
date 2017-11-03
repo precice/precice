@@ -6,11 +6,11 @@ namespace precice {
 
 SolverInterface:: SolverInterface
 (
-  const std::string& accessorName,
+  const std::string& participantName,
   int                solverProcessIndex,
   int                solverProcessSize )
 :
-  _impl ( new impl::SolverInterfaceImpl(accessorName, solverProcessIndex, solverProcessSize, false) )
+  _impl ( new impl::SolverInterfaceImpl(participantName, solverProcessIndex, solverProcessSize, false) )
 {}
 
 SolverInterface::~SolverInterface() = default;

@@ -43,12 +43,12 @@ public:
    * of this class. The object has to be configured by one of the configure
    * methods before it has a reasonable state and can be used.
    *
-   * @param[in] accessorName Name of the solver using the interface. Has to
-   *                         match the name given for a participant in the
-   *                         xml configuration file.
+   * @param[in] participantName Name of the participant using the interface. Has to
+   *                            match the name given for a participant in the
+   *                            xml configuration file.
    */
   SolverInterfaceImpl (
-    const std::string& accessorName,
+    const std::string& participantName,
     int                accessorProcessRank,
     int                accessorCommunicatorSize,
     bool               serverMode );

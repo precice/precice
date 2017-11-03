@@ -20,16 +20,16 @@ extern"C" {
  *
  * Fortran syntax:
  * precicef_create(
- *   CHARACTER accessorName(*),
+ *   CHARACTER participantName(*),
  *   CHARACTER configFileName(*),
  *   INTEGER   solverProcessIndex,
  *   INTEGER   solverProcessSize )
  *
- * IN:  accessorName, configFileName, solverProcessIndex, solverProcessSize
+ * IN:  participantName, configFileName, solverProcessIndex, solverProcessSize
  * OUT: -
  */
 void precicef_create_(
-  const char* accessorName,
+  const char* participantName,
   const char* configFileName,
   const int*  solverProcessIndex,
   const int*  solverProcessSize,

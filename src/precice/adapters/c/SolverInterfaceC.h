@@ -10,14 +10,14 @@ extern "C" {
  *
  * Has to be called before any other method of this interface.
  *
- * @param accessorName [IN] Name of the solver accessing the interface. Has to
+ * @param participantName [IN] Name of the participant accessing the interface. Has to
  *                          match one of the names specified in the
  *                          configuration xml file.
  * @param configFileName [IN] (Path and) name of the xml configuration file
  *                            containing the precice configuration.
  */
 void precicec_createSolverInterface (
-  const char* accessorName,
+  const char* participantName,
   const char* configFileName,
   int         solverProcessIndex,
   int         solverProcessSize );

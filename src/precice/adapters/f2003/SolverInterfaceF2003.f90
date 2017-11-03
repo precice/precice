@@ -4,13 +4,13 @@ module PreCICE_solver_if_module
 
   interface
 
-    subroutine precicef_create(accessorName, configFileName, &
+    subroutine precicef_create(participantName, configFileName, &
       &                        solverProcessIndex, solverProcessSize, &
       &                        lengthAccessorName, lengthConfigFileName) &
       &  bind(c, name='precicef_create_')
 
       use, intrinsic :: iso_c_binding
-      character(kind=c_char), dimension(*) :: accessorName
+      character(kind=c_char), dimension(*) :: participantName
       character(kind=c_char), dimension(*) :: configFileName
       integer(kind=c_int) :: solverProcessIndex
       integer(kind=c_int) :: solverProcessSize

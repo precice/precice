@@ -53,7 +53,7 @@ public:
   /**
    * @brief Constructor.
    *
-   * @param[in] solverName Name of the solver using the interface. Has to
+   * @param[in] participantName Name of the participant using the interface. Has to
    *        match the name given for a participant in the xml configuration file.
    * @param[in] solverProcessIndex If the solver code runs with several processes,
    *        each process using preCICE has specify its index, which has to start
@@ -61,7 +61,7 @@ public:
    * @param[in] solverProcessSize The number of solver processes using preCICE.
    */
   SolverInterface (
-    const std::string& solverName,
+    const std::string& participantName,
     int                solverProcessIndex,
     int                solverProcessSize );
 

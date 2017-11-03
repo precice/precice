@@ -23,7 +23,7 @@ namespace precice {
 
 void precicef_create_
 (
-  const char* accessorName,
+  const char* participantName,
   const char* configFileName,
   const int*  solverProcessIndex,
   const int*  solverProcessSize,
@@ -34,8 +34,8 @@ void precicef_create_
   //cout << "lengthConfigFileName: " << lengthConfigFileName << endl;
   //cout << "solverProcessIndex: " << *solverProcessIndex << endl;
   //cout << "solverProcessSize: " << *solverProcessSize << endl;
-  int strippedLength = precice::impl::strippedLength(accessorName,lengthAccessorName);
-  string stringAccessorName(accessorName, strippedLength);
+  int strippedLength = precice::impl::strippedLength(participantName,lengthAccessorName);
+  string stringAccessorName(participantName, strippedLength);
   strippedLength = precice::impl::strippedLength(configFileName,lengthConfigFileName);
   string stringConfigFileName(configFileName, strippedLength);
   //cout << "Accessor: " << stringAccessorName << "!" << endl;

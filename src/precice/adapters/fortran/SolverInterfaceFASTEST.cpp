@@ -25,8 +25,8 @@ namespace precice {
 
 void precice_fastest_create_
 (
-  const char* accessorNameA,
-  const char* accessorNameF,
+  const char* participantNameA,
+  const char* participantNameF,
   const char* configFileName,
   const int*  solverProcessIndex,
   const int*  solverProcessSize,
@@ -34,10 +34,10 @@ void precice_fastest_create_
   int   lengthAccessorNameF,
   int   lengthConfigFileName )
 {
-  int strippedLength = precice::impl::strippedLength(accessorNameA,lengthAccessorNameA);
-  string stringAccessorNameA(accessorNameA, strippedLength);
-  strippedLength = precice::impl::strippedLength(accessorNameF,lengthAccessorNameF);
-  string stringAccessorNameF(accessorNameF, strippedLength);
+  int strippedLength = precice::impl::strippedLength(participantNameA,lengthAccessorNameA);
+  string stringAccessorNameA(participantNameA, strippedLength);
+  strippedLength = precice::impl::strippedLength(participantNameF,lengthAccessorNameF);
+  string stringAccessorNameF(participantNameF, strippedLength);
   strippedLength = precice::impl::strippedLength(configFileName,lengthConfigFileName);
   string stringConfigFileName(configFileName, strippedLength);
   //cout << "Accessor: " << stringAccessorName << "!" << endl;
