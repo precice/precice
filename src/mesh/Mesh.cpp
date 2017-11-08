@@ -539,9 +539,8 @@ void Mesh:: clear()
 
   notifyListeners();
 
-  rtree::clear(getID());
   for (mesh::PtrData data : _data) {
-    data->values().resize(0); // TODO: mybe incorrect, previous was clear() ... check if resize(0) has some bad side effects
+    data->values().resize(0);
   }
 }
 
@@ -552,6 +551,7 @@ void Mesh:: notifyListeners()
     assertion(listener != nullptr);
     listener->meshChanged(*this);
   }
+  rtree::clear(getID()); // @TODO: replace this by proper observer pattern
 }
 
 
