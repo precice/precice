@@ -13,8 +13,7 @@ BOOST_AUTO_TEST_SUITE(CommunicationTests)
 // Tests disabled because they fail on Travis, nowhere else
 BOOST_AUTO_TEST_SUITE(MPICommunication,
                       * testing::MinRanks(2)
-                      * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1}))
-                      * boost::unit_test::disabled())
+                      * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
 
 BOOST_AUTO_TEST_CASE(SendAndReceiveString)
 {

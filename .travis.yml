@@ -54,7 +54,7 @@ script:
   - if [ "$MPI" = "off" ]; then ../build/last/testprecice -x -r detailed > boost-test-output; fi
   - if [ "$MPI" = "on"  ]; then mpirun.openmpi -n 4 ../build/last/binprecice test ../.ci-test-config.xml > unit-test-output; fi
   - if [ "$MPI" = "on"  ]; then mpirun.openmpi -n 4 ../build/last/binprecice test ../.ci-integration-test-config.xml > integration-test-output; fi
-  - if [ "$MPI" = "on"  ]; then mpirun.openmpi -n 4 --output-filename boost-test-output  ../build/last/testprecice -r detailed; fi
+  - if [ "$MPI" = "on"  ]; then mpirun.openmpi -n 4 --output-filename boost-test-output  ../build/last/testprecice -r detailed --run_test="!*/MPICommunication/*"  --run_test="!*/MPIDirect/*" --run_test="!*/MPIPorts/*"; fi
   
 after_failure:
   - cd $TRAVIS_BUILD_DIR

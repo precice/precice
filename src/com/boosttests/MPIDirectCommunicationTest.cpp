@@ -16,8 +16,7 @@ BOOST_AUTO_TEST_SUITE(MPIDirect)
 BOOST_AUTO_TEST_CASE(SendReceiveTwoProcesses,
                      * testing::MinRanks(2)
                      * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1}))
-                     * boost::unit_test::fixture<testing::SyncProcessesFixture>()
-                     * boost::unit_test::disabled())
+                     * boost::unit_test::fixture<testing::SyncProcessesFixture>())
 {
   if (Par::getCommunicatorSize() != 2)
     return;
