@@ -32,6 +32,7 @@ void reset ()
 struct ParallelTestFixture {
   ParallelTestFixture()
   {
+    reset();
     utils::Parallel::restrictGlobalCommunicator({0,1,2,3});
     assertion(utils::Parallel::getCommunicatorSize() == 4);
     precice::testMode = true;
