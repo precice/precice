@@ -421,18 +421,19 @@ void PostProcessingMasterSlaveTest::testVIQNILSpp()
 		*/
 	}
 
-
-	utils::Parallel::synchronizeProcesses();
-	utils::MasterSlave::_slaveMode = false;
-	utils::MasterSlave::_masterMode = false;
-	utils::Parallel::clearGroups();
+  utils::MasterSlave::_communication->closeConnection();
+  utils::MasterSlave::_slaveMode = false;
+  utils::MasterSlave::_masterMode = false;
+  utils::Parallel::clearGroups();
+  utils::MasterSlave::_communication = nullptr;
 }
 
 void PostProcessingMasterSlaveTest::testVIQNIMVJpp()
 {
-        TRACE(); assertion ( utils::Parallel::getCommunicatorSize() == 4 );
+  TRACE();
+  assertion ( utils::Parallel::getCommunicatorSize() == 4 );
 
-	com::PtrCommunication masterSlaveCom = com::PtrCommunication(new com::MPIPortsCommunication("."));
+	com::PtrCommunication masterSlaveCom = com::PtrCommunication(new com::MPIDirectCommunication());
 	utils::MasterSlave::_communication = masterSlaveCom;
 
 	utils::Parallel::synchronizeProcesses();
