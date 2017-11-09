@@ -7,9 +7,12 @@
 
 #include <mpi.h>
 
-namespace precice {
-namespace com {
-class MPIRequest : public Request {
+namespace precice
+{
+namespace com
+{
+class MPIRequest : public Request
+{
 public:
   MPIRequest(MPI_Request request);
 

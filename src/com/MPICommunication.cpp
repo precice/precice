@@ -4,7 +4,6 @@
 
 #include "MPIRequest.hpp"
 
-
 template <size_t>
 struct MPI_Select_unsigned_integer_datatype;
 
@@ -34,21 +33,24 @@ MPI_Datatype MPI_Select_unsigned_integer_datatype<8>::datatype = MPI_UNSIGNED_LO
 
 #define MPI_BOOL MPI_Select_unsigned_integer_datatype<sizeof(bool)>::datatype
 
-namespace precice {
-namespace com {
+namespace precice
+{
+namespace com
+{
 logging::Logger MPICommunication::_log("com::MPICommunication");
 
-MPICommunication::MPICommunication() {
+MPICommunication::MPICommunication()
+{
 }
 
-void
-MPICommunication::send(std::string const& itemToSend, int rankReceiver) {
+void MPICommunication::send(std::string const &itemToSend, int rankReceiver)
+{
   TRACE(itemToSend, rankReceiver);
   rankReceiver = rankReceiver - _rankOffset;
-  int length = itemToSend.size();
+  int length   = itemToSend.size();
   DEBUG("Message length: " << length);
   // const_cast is needed because MPI_Send expects a void* as first argument.
-  char* cstr = const_cast<char*>(itemToSend.c_str());
+  char *cstr = const_cast<char *>(itemToSend.c_str());
   DEBUG("Message: " + std::string(cstr));
   MPI_Send(cstr,
            length + 1,
@@ -58,8 +60,8 @@ MPICommunication::send(std::string const& itemToSend, int rankReceiver) {
            communicator(rankReceiver));
 }
 
-void
-MPICommunication::send(int* itemsToSend, int size, int rankReceiver) {
+void MPICommunication::send(int *itemsToSend, int size, int rankReceiver)
+{
   TRACE(size);
   rankReceiver = rankReceiver - _rankOffset;
   MPI_Send(itemsToSend,
@@ -71,7 +73,8 @@ MPICommunication::send(int* itemsToSend, int size, int rankReceiver) {
 }
 
 PtrRequest
-MPICommunication::aSend(int* itemsToSend, int size, int rankReceiver) {
+MPICommunication::aSend(int *itemsToSend, int size, int rankReceiver)
+{
   TRACE(size);
   rankReceiver = rankReceiver - _rankOffset;
 
@@ -88,8 +91,8 @@ MPICommunication::aSend(int* itemsToSend, int size, int rankReceiver) {
   return PtrRequest(new MPIRequest(request));
 }
 
-void
-MPICommunication::send(double* itemsToSend, int size, int rankReceiver) {
+void MPICommunication::send(double *itemsToSend, int size, int rankReceiver)
+{
   TRACE(size);
   rankReceiver = rankReceiver - _rankOffset;
   MPI_Send(itemsToSend,
@@ -101,7 +104,8 @@ MPICommunication::send(double* itemsToSend, int size, int rankReceiver) {
 }
 
 PtrRequest
-MPICommunication::aSend(double* itemsToSend, int size, int rankReceiver) {
+MPICommunication::aSend(double *itemsToSend, int size, int rankReceiver)
+{
   TRACE(size);
   rankReceiver = rankReceiver - _rankOffset;
 
@@ -118,8 +122,8 @@ MPICommunication::aSend(double* itemsToSend, int size, int rankReceiver) {
   return PtrRequest(new MPIRequest(request));
 }
 
-void
-MPICommunication::send(double itemToSend, int rankReceiver) {
+void MPICommunication::send(double itemToSend, int rankReceiver)
+{
   TRACE(itemToSend, rankReceiver);
   rankReceiver = rankReceiver - _rankOffset;
   MPI_Send(&itemToSend,
@@ -131,12 +135,13 @@ MPICommunication::send(double itemToSend, int rankReceiver) {
 }
 
 PtrRequest
-MPICommunication::aSend(double* itemToSend, int rankReceiver) {
+MPICommunication::aSend(double *itemToSend, int rankReceiver)
+{
   return aSend(itemToSend, 1, rankReceiver);
 }
 
-void
-MPICommunication::send(int itemToSend, int rankReceiver) {
+void MPICommunication::send(int itemToSend, int rankReceiver)
+{
   TRACE(itemToSend, rankReceiver);
   rankReceiver = rankReceiver - _rankOffset;
   MPI_Send(&itemToSend,
@@ -148,12 +153,13 @@ MPICommunication::send(int itemToSend, int rankReceiver) {
 }
 
 PtrRequest
-MPICommunication::aSend(int* itemToSend, int rankReceiver) {
+MPICommunication::aSend(int *itemToSend, int rankReceiver)
+{
   return aSend(itemToSend, 1, rankReceiver);
 }
 
-void
-MPICommunication::send(bool itemToSend, int rankReceiver) {
+void MPICommunication::send(bool itemToSend, int rankReceiver)
+{
   TRACE(itemToSend, rankReceiver);
   rankReceiver = rankReceiver - _rankOffset;
   MPI_Send(&itemToSend,
@@ -165,7 +171,8 @@ MPICommunication::send(bool itemToSend, int rankReceiver) {
 }
 
 PtrRequest
-MPICommunication::aSend(bool* itemToSend, int rankReceiver) {
+MPICommunication::aSend(bool *itemToSend, int rankReceiver)
+{
   TRACE();
   rankReceiver = rankReceiver - _rankOffset;
 
@@ -182,11 +189,11 @@ MPICommunication::aSend(bool* itemToSend, int rankReceiver) {
   return PtrRequest(new MPIRequest(request));
 }
 
-void
-MPICommunication::receive(std::string& itemToReceive, int rankSender) {
+void MPICommunication::receive(std::string &itemToReceive, int rankSender)
+{
   TRACE(itemToReceive, rankSender);
   rankSender = rankSender - _rankOffset;
-  int length;
+  int        length;
   MPI_Status status;
   MPI_Probe(rank(rankSender), 0, communicator(rankSender), &status);
   MPI_Get_count(&status, MPI_CHAR, &length);
@@ -203,8 +210,8 @@ MPICommunication::receive(std::string& itemToReceive, int rankSender) {
   DEBUG("Received \"" << itemToReceive << "\" from rank " << rankSender);
 }
 
-void
-MPICommunication::receive(int* itemsToReceive, int size, int rankSender) {
+void MPICommunication::receive(int *itemsToReceive, int size, int rankSender)
+{
   TRACE(size);
   rankSender = rankSender - _rankOffset;
   MPI_Status status;
@@ -218,7 +225,8 @@ MPICommunication::receive(int* itemsToReceive, int size, int rankSender) {
 }
 
 PtrRequest
-MPICommunication::aReceive(int* itemsToReceive, int size, int rankSender) {
+MPICommunication::aReceive(int *itemsToReceive, int size, int rankSender)
+{
   TRACE(size);
   rankSender = rankSender - _rankOffset;
 
@@ -235,8 +243,8 @@ MPICommunication::aReceive(int* itemsToReceive, int size, int rankSender) {
   return PtrRequest(new MPIRequest(request));
 }
 
-void
-MPICommunication::receive(double* itemsToReceive, int size, int rankSender) {
+void MPICommunication::receive(double *itemsToReceive, int size, int rankSender)
+{
   TRACE(size);
   rankSender = rankSender - _rankOffset;
   MPI_Status status;
@@ -250,7 +258,8 @@ MPICommunication::receive(double* itemsToReceive, int size, int rankSender) {
 }
 
 PtrRequest
-MPICommunication::aReceive(double* itemsToReceive, int size, int rankSender) {
+MPICommunication::aReceive(double *itemsToReceive, int size, int rankSender)
+{
   TRACE(size);
   rankSender = rankSender - _rankOffset;
 
@@ -267,8 +276,8 @@ MPICommunication::aReceive(double* itemsToReceive, int size, int rankSender) {
   return PtrRequest(new MPIRequest(request));
 }
 
-void
-MPICommunication::receive(double& itemToReceive, int rankSender) {
+void MPICommunication::receive(double &itemToReceive, int rankSender)
+{
   TRACE(rankSender);
   rankSender = rankSender - _rankOffset;
   MPI_Status status;
@@ -280,16 +289,17 @@ MPICommunication::receive(double& itemToReceive, int rankSender) {
            communicator(rankSender),
            &status);
   DEBUG("Received " << itemToReceive << " from rank "
-                           << rankSender);
+                    << rankSender);
 }
 
 PtrRequest
-MPICommunication::aReceive(double* itemToReceive, int rankSender) {
+MPICommunication::aReceive(double *itemToReceive, int rankSender)
+{
   return aReceive(itemToReceive, 1, rankSender);
 }
 
-void
-MPICommunication::receive(int& itemToReceive, int rankSender) {
+void MPICommunication::receive(int &itemToReceive, int rankSender)
+{
   TRACE(rankSender);
   rankSender = rankSender - _rankOffset;
   MPI_Status status;
@@ -301,16 +311,17 @@ MPICommunication::receive(int& itemToReceive, int rankSender) {
            communicator(rankSender),
            &status);
   DEBUG("Received " << itemToReceive << " from rank "
-                           << rankSender);
+                    << rankSender);
 }
 
 PtrRequest
-MPICommunication::aReceive(int* itemToReceive, int rankSender) {
+MPICommunication::aReceive(int *itemToReceive, int rankSender)
+{
   return aReceive(itemToReceive, 1, rankSender);
 }
 
-void
-MPICommunication::receive(bool& itemToReceive, int rankSender) {
+void MPICommunication::receive(bool &itemToReceive, int rankSender)
+{
   TRACE(rankSender);
   rankSender = rankSender - _rankOffset;
   MPI_Status status;
@@ -322,11 +333,12 @@ MPICommunication::receive(bool& itemToReceive, int rankSender) {
            communicator(rankSender),
            &status);
   DEBUG("Received " << itemToReceive << " from rank "
-                           << rankSender);
+                    << rankSender);
 }
 
 PtrRequest
-MPICommunication::aReceive(bool* itemToReceive, int rankSender) {
+MPICommunication::aReceive(bool *itemToReceive, int rankSender)
+{
   TRACE(rankSender);
   rankSender = rankSender - _rankOffset;
 

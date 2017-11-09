@@ -35,8 +35,8 @@ size_t MPIDirectCommunication::getRemoteCommunicatorSize()
 
 void MPIDirectCommunication::acceptConnection(std::string const &nameAcceptor,
                                               std::string const &nameRequester,
-                                              int acceptorProcessRank,
-                                              int acceptorCommunicatorSize)
+                                              int                acceptorProcessRank,
+                                              int                acceptorCommunicatorSize)
 {
   TRACE(nameAcceptor, nameRequester);
   assertion(not isConnected());
@@ -48,7 +48,7 @@ void MPIDirectCommunication::acceptConnection(std::string const &nameAcceptor,
             << "used with more than one process in base communicator!");
 
   _globalCommunicator = utils::Parallel::getGlobalCommunicator();
-  _localCommunicator = utils::Parallel::getLocalCommunicator();
+  _localCommunicator  = utils::Parallel::getLocalCommunicator();
   MPI_Intercomm_create(
       _localCommunicator,
       0, // Local communicator, local leader rank
@@ -73,8 +73,8 @@ void MPIDirectCommunication::closeConnection()
 
 void MPIDirectCommunication::requestConnection(std::string const &nameAcceptor,
                                                std::string const &nameRequester,
-                                               int requesterProcessRank,
-                                               int requesterCommunicatorSize)
+                                               int                requesterProcessRank,
+                                               int                requesterCommunicatorSize)
 {
   TRACE(nameAcceptor, nameRequester);
   assertion(not isConnected());
@@ -86,7 +86,7 @@ void MPIDirectCommunication::requestConnection(std::string const &nameAcceptor,
             << "used with more than one process in base communicator!");
 
   _globalCommunicator = utils::Parallel::getGlobalCommunicator();
-  _localCommunicator = utils::Parallel::getLocalCommunicator();
+  _localCommunicator  = utils::Parallel::getLocalCommunicator();
   MPI_Intercomm_create(
       _localCommunicator,
       0, // Local communicator, local leader rank
@@ -100,7 +100,7 @@ void MPIDirectCommunication::requestConnection(std::string const &nameAcceptor,
 int MPIDirectCommunication::getGroupID(std::string const &accessorName)
 {
   TRACE(accessorName);
-  typedef utils::Parallel Par;
+  typedef utils::Parallel                Par;
   const std::vector<Par::AccessorGroup> &_groups = Par::getAccessorGroups();
   for (const Par::AccessorGroup &group : _groups) {
     if (group.name == accessorName) {
@@ -114,7 +114,7 @@ int MPIDirectCommunication::getGroupID(std::string const &accessorName)
 int MPIDirectCommunication::getLeaderRank(std::string const &accessorName)
 {
   TRACE(accessorName);
-  typedef utils::Parallel Par;
+  typedef utils::Parallel                Par;
   const std::vector<Par::AccessorGroup> &_groups = Par::getAccessorGroups();
   for (const Par::AccessorGroup &group : _groups) {
     if (group.name == accessorName) {
@@ -123,7 +123,7 @@ int MPIDirectCommunication::getLeaderRank(std::string const &accessorName)
     }
   }
   ERROR(
-               "Unknown accessor name \"" << accessorName << "\"!");
+      "Unknown accessor name \"" << accessorName << "\"!");
 }
 
 void MPIDirectCommunication::allreduceSum()
@@ -222,8 +222,8 @@ void MPIDirectCommunication::broadcast(int *itemsToSend, int size)
 }
 
 void MPIDirectCommunication::broadcast(int *itemsToReceive,
-                                       int size,
-                                       int rankBroadcaster)
+                                       int  size,
+                                       int  rankBroadcaster)
 {
   TRACE(size);
 
@@ -252,8 +252,8 @@ void MPIDirectCommunication::broadcast(double *itemsToSend, int size)
 }
 
 void MPIDirectCommunication::broadcast(double *itemsToReceive,
-                                       int size,
-                                       int rankBroadcaster)
+                                       int     size,
+                                       int     rankBroadcaster)
 {
   TRACE(size);
 

@@ -1,14 +1,17 @@
 #pragma once
 
-#include "com/SharedPointer.hpp"
 #include <vector>
+#include "com/SharedPointer.hpp"
 
-namespace precice {
-namespace com {
-class Request {
+namespace precice
+{
+namespace com
+{
+class Request
+{
 
 public:
-  static void wait(std::vector<PtrRequest>& requests);
+  static void wait(std::vector<PtrRequest> &requests);
 
   virtual ~Request();
 
@@ -16,5 +19,5 @@ public:
 
   virtual void wait() = 0;
 };
-
-}} // namespace precice, com
+}
+} // namespace precice, com

@@ -8,8 +8,10 @@
 
 #include <string>
 
-namespace precice {
-namespace com {
+namespace precice
+{
+namespace com
+{
 /**
  * @brief Provides connection methods for processes located in one communicator.
  *
@@ -21,7 +23,8 @@ namespace com {
  * participate in the communication. If one of the processes does not call
  * either acceptConnection(), or closeConnection(), a deadlock is achieved.
  */
-class MPIDirectCommunication : public MPICommunication {
+class MPIDirectCommunication : public MPICommunication
+{
 public:
   MPIDirectCommunication();
 
@@ -32,7 +35,8 @@ public:
    * setup.
    */
   virtual bool
-  isConnected() {
+  isConnected()
+  {
     return _isConnected;
   }
 
@@ -46,29 +50,31 @@ public:
   /**
    * @brief See precice::com::Communication::acceptConnection().
    */
-  virtual void acceptConnection(std::string const& nameAcceptor,
-                                std::string const& nameRequester,
-                                int acceptorProcessRank,
-                                int acceptorCommunicatorSize);
+  virtual void acceptConnection(std::string const &nameAcceptor,
+                                std::string const &nameRequester,
+                                int                acceptorProcessRank,
+                                int                acceptorCommunicatorSize);
 
   virtual void
-  acceptConnectionAsServer(std::string const& nameAcceptor,
-                           std::string const& nameRequester,
-                           int requesterCommunicatorSize) {
+  acceptConnectionAsServer(std::string const &nameAcceptor,
+                           std::string const &nameRequester,
+                           int                requesterCommunicatorSize)
+  {
     ERROR("Not implemented!");
   }
 
   /**
    * @brief See precice::com::Communication::requestConnection().
    */
-  virtual void requestConnection(std::string const& nameAcceptor,
-                                 std::string const& nameRequester,
-                                 int requesterProcessRank,
-                                 int requesterCommunicatorSize);
+  virtual void requestConnection(std::string const &nameAcceptor,
+                                 std::string const &nameRequester,
+                                 int                requesterProcessRank,
+                                 int                requesterCommunicatorSize);
 
   virtual int
-  requestConnectionAsClient(std::string const& nameAcceptor,
-                            std::string const& nameRequester) {
+  requestConnectionAsClient(std::string const &nameAcceptor,
+                            std::string const &nameRequester)
+  {
     ERROR("Not implemented!");
   }
 
@@ -77,52 +83,52 @@ public:
    */
   virtual void closeConnection();
 
-  virtual void reduceSum(double* itemsToSend, double* itemsToReceive, int size, int rankMaster);
+  virtual void reduceSum(double *itemsToSend, double *itemsToReceive, int size, int rankMaster);
 
-  virtual void reduceSum(double* itemsToSend, double* itemsToReceive, int size);
+  virtual void reduceSum(double *itemsToSend, double *itemsToReceive, int size);
 
-  virtual void reduceSum(int& itemsToSend, int& itemsToReceive, int rankMaster);
+  virtual void reduceSum(int &itemsToSend, int &itemsToReceive, int rankMaster);
 
-  virtual void reduceSum(int& itemsToSend, int& itemsToReceive);
+  virtual void reduceSum(int &itemsToSend, int &itemsToReceive);
 
   virtual void allreduceSum();
 
-  virtual void allreduceSum(double* itemsToSend, double* itemsToReceive, int size, int rankMaster);
+  virtual void allreduceSum(double *itemsToSend, double *itemsToReceive, int size, int rankMaster);
 
-  virtual void allreduceSum(double* itemsToSend, double* itemsToReceive, int size);
+  virtual void allreduceSum(double *itemsToSend, double *itemsToReceive, int size);
 
-  virtual void allreduceSum(double& itemToSend, double& itemsToReceive, int rankMaster);
+  virtual void allreduceSum(double &itemToSend, double &itemsToReceive, int rankMaster);
 
-  virtual void allreduceSum(double& itemToSend, double& itemsToReceive);
+  virtual void allreduceSum(double &itemToSend, double &itemsToReceive);
 
-  virtual void allreduceSum(int& itemToSend, int& itemsToReceive, int rankMaster);
+  virtual void allreduceSum(int &itemToSend, int &itemsToReceive, int rankMaster);
 
-  virtual void allreduceSum(int& itemToSend, int& itemsToReceive);
+  virtual void allreduceSum(int &itemToSend, int &itemsToReceive);
 
   virtual void broadcast();
 
-  virtual void broadcast(int* itemsToSend, int size);
+  virtual void broadcast(int *itemsToSend, int size);
 
-  virtual void broadcast(int* itemsToReceive, int size, int rankBroadcaster);
+  virtual void broadcast(int *itemsToReceive, int size, int rankBroadcaster);
 
   virtual void broadcast(int itemToSend);
 
-  virtual void broadcast(int& itemToReceive, int rankBroadcaster);
+  virtual void broadcast(int &itemToReceive, int rankBroadcaster);
 
-  virtual void broadcast(double* itemsToSend, int size);
+  virtual void broadcast(double *itemsToSend, int size);
 
-  virtual void broadcast(double* itemsToReceive, int size, int rankBroadcaster);
+  virtual void broadcast(double *itemsToReceive, int size, int rankBroadcaster);
 
   virtual void broadcast(double itemToSend);
 
-  virtual void broadcast(double& itemToReceive, int rankBroadcaster);
+  virtual void broadcast(double &itemToReceive, int rankBroadcaster);
 
   virtual void broadcast(bool itemToSend);
 
-  virtual void broadcast(bool& itemToReceive, int rankBroadcaster);
+  virtual void broadcast(bool &itemToReceive, int rankBroadcaster);
 
 private:
-  virtual MPI_Comm& communicator(int rank = 0);
+  virtual MPI_Comm &communicator(int rank = 0);
 
   virtual int rank(int rank);
 
@@ -144,17 +150,16 @@ private:
    *
    * Erroneous, if called before exchangeGroupInformation.
    */
-  int getGroupID(std::string const& accessorName);
+  int getGroupID(std::string const &accessorName);
 
   /**
    * @brief Returns rank of leading process of a group.
    *
    * Erroneous, if called before exchangeGroupInformation.
    */
-  int getLeaderRank(std::string const& accessorName);
+  int getLeaderRank(std::string const &accessorName);
 };
-
-}} // namespace precice, com
-
+}
+} // namespace precice, com
 
 #endif // not PRECICE_NO_MPI

@@ -1,25 +1,24 @@
+#pragma once
 #ifndef PRECICE_NO_MPI
 
-#ifndef PRECICE_COM_MPI_PORTS_COMMUNICATION_HPP_
-#define PRECICE_COM_MPI_PORTS_COMMUNICATION_HPP_
-
+#include <vector>
 #include "MPICommunication.hpp"
-
 #include "logging/Logger.hpp"
 
-#include <vector>
-
-namespace precice {
-namespace com {
+namespace precice
+{
+namespace com
+{
 /**
  * @brief Provides connection methods based on MPI ports (part of MPI 2.0).
  *
  * The two participants to be connected can be run in two process groups started
  * up individually, i.e. not within the same process group.
  */
-class MPIPortsCommunication : public MPICommunication {
+class MPIPortsCommunication : public MPICommunication
+{
 public:
-  explicit MPIPortsCommunication(std::string const& addressDirectory = ".");
+  explicit MPIPortsCommunication(std::string const &addressDirectory = ".");
 
   virtual ~MPIPortsCommunication();
 
@@ -34,23 +33,23 @@ public:
   virtual size_t getRemoteCommunicatorSize();
 
   /// See precice::com::Communication::acceptConnection().
-  virtual void acceptConnection(std::string const& nameAcceptor,
-                                std::string const& nameRequester,
-                                int acceptorProcessRank,
-                                int acceptorCommunicatorSize);
+  virtual void acceptConnection(std::string const &nameAcceptor,
+                                std::string const &nameRequester,
+                                int                acceptorProcessRank,
+                                int                acceptorCommunicatorSize);
 
-  virtual void acceptConnectionAsServer(std::string const& nameAcceptor,
-                                        std::string const& nameRequester,
-                                        int requesterCommunicatorSize);
+  virtual void acceptConnectionAsServer(std::string const &nameAcceptor,
+                                        std::string const &nameRequester,
+                                        int                requesterCommunicatorSize);
 
   /// See precice::com::Communication::requestConnection().
-  virtual void requestConnection(std::string const& nameAcceptor,
-                                 std::string const& nameRequester,
-                                 int requesterProcessRank,
-                                 int requesterCommunicatorSize);
+  virtual void requestConnection(std::string const &nameAcceptor,
+                                 std::string const &nameRequester,
+                                 int                requesterProcessRank,
+                                 int                requesterCommunicatorSize);
 
-  virtual int requestConnectionAsClient(std::string const& nameAcceptor,
-                                        std::string const& nameRequester);
+  virtual int requestConnectionAsClient(std::string const &nameAcceptor,
+                                        std::string const &nameRequester);
 
   /**
    * @brief See precice::com::Communication::closeConnection().
@@ -58,7 +57,7 @@ public:
   virtual void closeConnection();
 
 private:
-  virtual MPI_Comm& communicator(int rank);
+  virtual MPI_Comm &communicator(int rank);
 
   virtual int rank(int rank);
 
@@ -78,7 +77,5 @@ private:
 };
 }
 } // namespace precice, com
-
-#endif /* PRECICE_COM_MPI_PORTS_COMMUNICATION_HPP_ */
 
 #endif // not PRECICE_NO_MPI

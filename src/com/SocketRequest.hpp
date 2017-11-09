@@ -8,9 +8,12 @@
 #include <condition_variable>
 #include <mutex>
 
-namespace precice {
-namespace com {
-class SocketRequest : public Request {
+namespace precice
+{
+namespace com
+{
+class SocketRequest : public Request
+{
 public:
   SocketRequest();
 
@@ -24,7 +27,7 @@ private:
   bool _complete;
 
   std::condition_variable _completeCondition;
-  std::mutex _completeMutex;
+  std::mutex              _completeMutex;
 };
 }
 } // namespace precice, com

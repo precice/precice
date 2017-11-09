@@ -2,13 +2,17 @@
 
 #include "MPIRequest.hpp"
 
-namespace precice {
-namespace com {
-MPIRequest::MPIRequest(MPI_Request request) : _request(request) {
+namespace precice
+{
+namespace com
+{
+MPIRequest::MPIRequest(MPI_Request request)
+    : _request(request)
+{
 }
 
-bool
-MPIRequest::test() {
+bool MPIRequest::test()
+{
   int complete = 0;
 
   MPI_Test(&_request, &complete, MPI_STATUS_IGNORE);
@@ -16,8 +20,8 @@ MPIRequest::test() {
   return complete;
 }
 
-void
-MPIRequest::wait() {
+void MPIRequest::wait()
+{
   MPI_Wait(&_request, MPI_STATUS_IGNORE);
 }
 }

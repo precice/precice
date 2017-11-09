@@ -3,8 +3,8 @@
 #include "MPIPortsCommunication.hpp"
 
 #include "utils/Globals.hpp"
-#include "utils/Publisher.hpp"
 #include "utils/Parallel.hpp"
+#include "utils/Publisher.hpp"
 
 #include <chrono>
 #include <sstream>
@@ -13,44 +13,47 @@
 using precice::utils::Publisher;
 using precice::utils::ScopedPublisher;
 
-namespace precice {
-namespace com {
+namespace precice
+{
+namespace com
+{
 logging::Logger MPIPortsCommunication::_log(
     "precice::com::MPIPortsCommunication");
 
 MPIPortsCommunication::MPIPortsCommunication(
-    std::string const& addressDirectory)
-    : _addressDirectory(addressDirectory)
-    , _isAcceptor(false)
-    , _isConnected(false) {
+    std::string const &addressDirectory)
+    : _addressDirectory(addressDirectory), _isAcceptor(false), _isConnected(false)
+{
   if (_addressDirectory.empty()) {
     _addressDirectory = ".";
   }
 }
 
-MPIPortsCommunication::~MPIPortsCommunication() {
+MPIPortsCommunication::~MPIPortsCommunication()
+{
   TRACE(_isConnected);
 
   closeConnection();
 }
 
-bool
-MPIPortsCommunication::isConnected() {
+bool MPIPortsCommunication::isConnected()
+{
   return _isConnected;
 }
 
-size_t MPIPortsCommunication::getRemoteCommunicatorSize() {
+size_t MPIPortsCommunication::getRemoteCommunicatorSize()
+{
   TRACE();
   assertion(isConnected());
 
   return _communicators.size();
 }
 
-void
-MPIPortsCommunication::acceptConnection(std::string const& nameAcceptor,
-                                        std::string const& nameRequester,
-                                        int acceptorProcessRank,
-                                        int acceptorCommunicatorSize) {
+void MPIPortsCommunication::acceptConnection(std::string const &nameAcceptor,
+                                             std::string const &nameRequester,
+                                             int                acceptorProcessRank,
+                                             int                acceptorCommunicatorSize)
+{
   TRACE(nameAcceptor, nameRequester);
 
   CHECK(acceptorCommunicatorSize == 1,
@@ -59,7 +62,7 @@ MPIPortsCommunication::acceptConnection(std::string const& nameAcceptor,
   assertion(not isConnected());
 
   _isAcceptor = true;
-  _rank = acceptorProcessRank;
+  _rank       = acceptorProcessRank;
 
   // BUG report from Alex:
   // It is extremely important that the call to `Parallel::initialize' follows
@@ -87,7 +90,7 @@ MPIPortsCommunication::acceptConnection(std::string const& nameAcceptor,
 
   DEBUG("Accepted connection at " << address);
 
-  int requesterProcessRank = -1;
+  int    requesterProcessRank      = -1;
   size_t requesterCommunicatorSize = 0;
 
   MPI_Recv(&requesterProcessRank,
@@ -106,7 +109,8 @@ MPIPortsCommunication::acceptConnection(std::string const& nameAcceptor,
            MPI_STATUS_IGNORE);
 
   CHECK(requesterCommunicatorSize > 0,
-        "Requester communicator " << "size has to be > 0!");
+        "Requester communicator "
+            << "size has to be > 0!");
 
   _communicators.resize(requesterCommunicatorSize, MPI_COMM_NULL);
 
@@ -145,11 +149,11 @@ MPIPortsCommunication::acceptConnection(std::string const& nameAcceptor,
   }
 }
 
-void
-MPIPortsCommunication::acceptConnectionAsServer(
-    std::string const& nameAcceptor,
-    std::string const& nameRequester,
-    int requesterCommunicatorSize) {
+void MPIPortsCommunication::acceptConnectionAsServer(
+    std::string const &nameAcceptor,
+    std::string const &nameRequester,
+    int                requesterCommunicatorSize)
+{
   TRACE(nameAcceptor, nameRequester);
 
   CHECK(requesterCommunicatorSize > 0, "Requester communicator size has to be > 0!");
@@ -157,7 +161,7 @@ MPIPortsCommunication::acceptConnectionAsServer(
   assertion(not isConnected());
 
   _isAcceptor = true;
-  _rank = 0;
+  _rank       = 0;
 
   // BUG report from Alex:
   // It is extremely important that the call to `Parallel::initialize' follows
@@ -191,7 +195,7 @@ MPIPortsCommunication::acceptConnectionAsServer(
 
     CHECK(_communicators[requesterProcessRank] == MPI_COMM_NULL,
           "Duplicate request to connect by same rank ("
-          << requesterProcessRank << ")!");
+              << requesterProcessRank << ")!");
 
     _communicators[requesterProcessRank] = communicator;
 
@@ -209,19 +213,18 @@ MPIPortsCommunication::acceptConnectionAsServer(
   }
 }
 
-void
-MPIPortsCommunication::requestConnection(std::string const& nameAcceptor,
-                                         std::string const& nameRequester,
-                                         int requesterProcessRank,
-                                         int requesterCommunicatorSize) {
+void MPIPortsCommunication::requestConnection(std::string const &nameAcceptor,
+                                              std::string const &nameRequester,
+                                              int                requesterProcessRank,
+                                              int                requesterCommunicatorSize)
+{
   TRACE(nameAcceptor, nameRequester);
 
   assertion(not isConnected());
 
   _isAcceptor = false;
 
-  std::string addressFileName("." + nameRequester + "-" + nameAcceptor +
-                              ".address");
+  std::string addressFileName("." + nameRequester + "-" + nameAcceptor + ".address");
 
   Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
 
@@ -253,17 +256,16 @@ MPIPortsCommunication::requestConnection(std::string const& nameAcceptor,
   MPI_Send(&requesterCommunicatorSize, 1, MPI_INT, 0, 42, communicator);
 }
 
-int
-MPIPortsCommunication::requestConnectionAsClient(
-    std::string const& nameAcceptor, std::string const& nameRequester) {
+int MPIPortsCommunication::requestConnectionAsClient(
+    std::string const &nameAcceptor, std::string const &nameRequester)
+{
   TRACE(nameAcceptor, nameRequester);
 
   assertion(not isConnected());
 
   _isAcceptor = false;
 
-  std::string addressFileName("." + nameRequester + "-" + nameAcceptor +
-                              ".address");
+  std::string addressFileName("." + nameRequester + "-" + nameAcceptor + ".address");
 
   Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
 
@@ -326,8 +328,8 @@ MPIPortsCommunication::requestConnectionAsClient(
   return _rank;
 }
 
-void
-MPIPortsCommunication::closeConnection() {
+void MPIPortsCommunication::closeConnection()
+{
   TRACE(_communicators.size());
 
   if (not isConnected())
@@ -347,16 +349,16 @@ MPIPortsCommunication::closeConnection() {
   _isConnected = false;
 }
 
-MPI_Comm&
-MPIPortsCommunication::communicator(int rank) {
+MPI_Comm &MPIPortsCommunication::communicator(int rank)
+{
   return _communicators[rank];
 }
 
-int
-MPIPortsCommunication::rank(int rank) {
+int MPIPortsCommunication::rank(int rank)
+{
   return 0;
 }
-
-}} // namespace precice, com
+}
+} // namespace precice, com
 
 #endif // not PRECICE_NO_MPI
