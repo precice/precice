@@ -291,7 +291,7 @@ SocketCommunication::requestConnection(std::string const& nameAcceptor,
 
     Publisher p(addressFileName);
 
-    p.read(address);
+    address = p.read();
 
     DEBUG("Request connection to " << address);
 
@@ -381,7 +381,7 @@ SocketCommunication::requestConnectionAsClient(
 
     Publisher p(addressFileName);
 
-    p.read(address);
+    std::string address = p.read();
 
     DEBUG("Request connection to " << address);
 

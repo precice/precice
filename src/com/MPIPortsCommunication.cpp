@@ -220,7 +220,6 @@ MPIPortsCommunication::requestConnection(std::string const& nameAcceptor,
 
   _isAcceptor = false;
 
-  std::string address;
   std::string addressFileName("." + nameRequester + "-" + nameAcceptor +
                               ".address");
 
@@ -228,7 +227,7 @@ MPIPortsCommunication::requestConnection(std::string const& nameAcceptor,
 
   Publisher p(addressFileName);
 
-  p.read(address);
+  std::string address = p.read();
 
   DEBUG("Request connection to " << address);
 
@@ -263,7 +262,6 @@ MPIPortsCommunication::requestConnectionAsClient(
 
   _isAcceptor = false;
 
-  std::string address;
   std::string addressFileName("." + nameRequester + "-" + nameAcceptor +
                               ".address");
 
@@ -271,7 +269,7 @@ MPIPortsCommunication::requestConnectionAsClient(
 
   Publisher p(addressFileName);
 
-  p.read(address);
+  std::string address = p.read();
 
   DEBUG("Request connection to " << address);
 

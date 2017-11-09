@@ -116,9 +116,10 @@ Publisher::eventNamePrefix() {
 Publisher::Publisher(std::string const& fp) : _fp(buildFilePath(fp)) {
 }
 
-void Publisher::read(std::string& data) const
+std::string Publisher::read() const
 {
   std::ifstream ifs;
+  std::string data;
 
   do {
     ifs.open(filePath(), std::ifstream::in);
@@ -126,13 +127,12 @@ void Publisher::read(std::string& data) const
 
   std::chrono::milliseconds::rep writeTimeStampCount;
 
-  {
-    std::string line;
-    std::getline(ifs, line);
-    std::istringstream iss(line);
-    iss >> writeTimeStampCount;
-    std::getline(ifs, data);
-  }
+  std::string line;
+  std::getline(ifs, line);
+  std::istringstream iss(line);
+  iss >> writeTimeStampCount;
+  std::getline(ifs, data);
+  return data;
 }
 
 void Publisher::write(std::string const& data) const

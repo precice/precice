@@ -65,7 +65,7 @@ public:
 public:
   explicit Publisher(std::string const& fp);
 
-  void read(std::string& data) const;
+  std::string read() const;
 
   void write(std::string const& data) const;
 
