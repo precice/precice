@@ -58,7 +58,7 @@ void ModifyCoordinatesAction:: performAction
     ERROR("Unknown mode type!" );
   }
   getMesh()->computeState();
-  getMesh()->notifyListeners();
+  getMesh()->meshChanged(*getMesh());
 }
 
 

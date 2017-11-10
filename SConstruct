@@ -181,6 +181,7 @@ uniqueCheckLib("boost_unit_test_framework")
 
 checkHeader('boost/vmd/is_empty.hpp', 'Boost Variadic Macro Data Library')
 checkHeader('boost/geometry.hpp', 'Boost Geometry Library')
+checkHeader('boost/signals2.hpp', 'Boost Signals2')
 
 # ====== Spirit2 ======
 if not env["spirit2"]:

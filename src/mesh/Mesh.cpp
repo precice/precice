@@ -40,7 +40,6 @@ Mesh:: Mesh
   _manageEdgeIDs(),
   _manageTriangleIDs(),
   _manageQuadIDs(),
-  _listeners(),
   _vertexDistribution(),
   _vertexOffsets(),
   _globalNumberOfVertices(-1),
@@ -53,6 +52,9 @@ Mesh:: Mesh
   assertion(_name != std::string(""));
   _nameIDPairs[_name] = _managerPropertyIDs->getFreeID ();
   setProperty(INDEX_GEOMETRY_ID, _nameIDPairs[_name]);
+
+  meshChanged.connect(&rtree::clear);
+  meshDestroyed.connect(&rtree::clear);
 }
 
 Mesh:: ~Mesh()
@@ -62,7 +64,7 @@ Mesh:: ~Mesh()
   _content.edges().deleteElements();
   _content.vertices().deleteElements();
 
-  rtree::clear(getID());
+  meshDestroyed(*this);
 }
 
 const Group& Mesh:: content()
@@ -123,18 +125,6 @@ const Mesh::PropertyContainerContainer& Mesh:: propertyContainers() const
 int Mesh:: getDimensions() const
 {
   return _dimensions;
-}
-
-void Mesh:: addListener
-(
-  Mesh::MeshListener& listener )
-{
-  for (const MeshListener* addedListener : _listeners) {
-    if (& listener == addedListener){
-      return;
-    }
-  }
-  _listeners.push_back(& listener);
 }
 
 Edge& Mesh:: createEdge
@@ -537,23 +527,12 @@ void Mesh:: clear()
   _manageEdgeIDs.resetIDs();
   _manageVertexIDs.resetIDs();
 
-  notifyListeners();
-
+  meshChanged(*this);
+  
   for (mesh::PtrData data : _data) {
     data->values().resize(0);
   }
 }
-
-void Mesh:: notifyListeners()
-{
-  TRACE();
-  for (MeshListener* listener : _listeners) {
-    assertion(listener != nullptr);
-    listener->meshChanged(*this);
-  }
-  rtree::clear(getID()); // @TODO: replace this by proper observer pattern
-}
-
 
 
 void Mesh:: addMesh(
@@ -599,7 +578,7 @@ void Mesh:: addMesh(
       createTriangle(*edgeMap[edgeIndex1],*edgeMap[edgeIndex2],*edgeMap[edgeIndex3]);
     }
   }
-  notifyListeners();
+  meshChanged(*this);
 }
 
 const Mesh::BoundingBox Mesh::getBoundingBox() const

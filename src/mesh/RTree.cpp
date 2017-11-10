@@ -24,14 +24,10 @@ rtree::PtrRTree rtree::getVertexRTree(PtrMesh mesh)
   return tree;
 }
 
-void rtree::clear()
-{
-  trees.clear();
-}
 
-void rtree::clear(int id)
+void rtree::clear(Mesh & mesh)
 {
-  trees.erase(id);
+  trees.erase(mesh.getID());
 }
 
 

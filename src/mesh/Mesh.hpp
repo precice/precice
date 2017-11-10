@@ -10,6 +10,7 @@
 #include <map>
 #include <list>
 #include <vector>
+#include <boost/signals2.hpp>
 
 namespace precice {
   namespace mesh {
@@ -39,13 +40,6 @@ class Mesh : public PropertyContainer, private boost::noncopyable
 {
 public:
 
-  /**
-   * @brief Interface for classes depending on the mesh.
-   */
-  class MeshListener {
-  public:
-    virtual void meshChanged ( Mesh& mesh ) =0;
-  };
 
   typedef utils::ptr_vector<Vertex>              VertexContainer;
   typedef utils::ptr_vector<Edge>                EdgeContainer;
@@ -54,6 +48,12 @@ public:
   typedef std::vector<PtrData>                   DataContainer;
   typedef utils::ptr_vector<PropertyContainer>   PropertyContainerContainer;
   typedef std::vector<std::pair<double, double>> BoundingBox;
+
+  /// Signal is emitted when the mesh is changed
+  boost::signals2::signal<void(Mesh &)> meshChanged;
+
+  /// Signal is emitted when the mesh is destroyed
+  boost::signals2::signal<void(Mesh &)> meshDestroyed;
 
   /**
    * @brief Resets the internal geometry ID counter to start from anew.
@@ -78,24 +78,16 @@ public:
    */
   virtual ~Mesh();
 
-  /**
-   * @brief Returns group object with all Triangle, Edge, Vertex objects.
-   */
+  /// Returns group object with all Triangle, Edge, Vertex objects.
   const Group& content();
 
-  /**
-   * @brief Returns modifieable container holding all vertices.
-   */
+  /// Returns modifieable container holding all vertices.
   VertexContainer& vertices();
 
-  /**
-   * @brief Returns const container holding all vertices.
-   */
+  /// Returns const container holding all vertices.
   const VertexContainer& vertices() const;
 
-  /**
-   * @brief Returns modifieable container holding all edges.
-   */
+  /// Returns modifieable container holding all edges.
   EdgeContainer& edges();
 
   /**
@@ -128,11 +120,6 @@ public:
   const PropertyContainerContainer& propertyContainers() const;
 
   int getDimensions() const;
-
-  /**
-   * @brief Registers the listener to be notified when the mesh changes.
-   */
-  void addListener ( MeshListener& listener );
 
   template<typename VECTOR_T>
   Vertex& createVertex ( const VECTOR_T& coords )
@@ -254,9 +241,6 @@ public:
    */
   void clear();
 
-  /// Notifies all MeshListeners that the mesh has changed.
-  void notifyListeners();
-
   std::map<int,std::vector<int> >& getVertexDistribution(){
     return _vertexDistribution;
   }
@@ -332,9 +316,6 @@ private:
   utils::ManageUniqueIDs _manageTriangleIDs;
 
   utils::ManageUniqueIDs _manageQuadIDs;
-
-  /// Mesh listeners interested in mesh changes.
-  std::list<MeshListener*> _listeners;
 
   /**
    * @brief Vertex distribution for the master, holding for each slave all vertex IDs it owns.

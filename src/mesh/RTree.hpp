@@ -23,11 +23,8 @@ public:
    */
   static PtrRTree getVertexRTree(PtrMesh mesh);
   
-  /// Clears the cache of all trees, e.g. when the mesh has changed
-  static void clear();
-
-  /// Only removed the tree of that specific mesh
-  static void clear(int id);
+  /// Only clear the tree of that specific mesh
+  static void clear(Mesh & mesh);
 
 private:
   static std::map<int, PtrRTree> trees;
