@@ -29,5 +29,5 @@ Before taking non-trivial amount of code from other projects, check back with Be
 
 [commit]: http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html
 [pullrequest]: https://help.github.com/articles/creating-a-pull-request
-[style]: https://ipvs.informatik.uni-stuttgart.de/sgs/precice/doc/develop/conventions.html
+[style]: https://ipvs.informatik.uni-stuttgart.de/sgs/precice/docs/develop/conventions.html
 [workflow]: https://help.github.com/categories/collaborating-with-issues-and-pull-requests
