@@ -19,8 +19,12 @@ General Guidelines
 - Use ```#pragma once``` as an include guard.
 - Use ```std::make_shared``` for creating smart pointers. Why: <a href="https://stackoverflow.com/questions/20895648/difference-in-make-shared-and-normal-shared-ptr-in-c">Difference in make_shared and normal shared_ptr in C++</a>
 
-Indention
----------
+
+Indention & Formatting
+----------------------
+As a rule of thumb again: Orient yourself on the already written code!
+
+There is a settings file for ```clang-format```. You can use the tool to format your code: ```clang-format -style=file -i FILES```
 
 Regarding indention, we follow the BSD-style.
 
