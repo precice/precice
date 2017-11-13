@@ -141,6 +141,23 @@ BOOST_AUTO_TEST_CASE(VectorAdapter)
   BOOST_TEST(bg::get<1>(vec) == 5);
 }
 
+BOOST_AUTO_TEST_CASE(CacheClearing)
+{
+  PtrMesh mesh(new precice::mesh::Mesh("MyMesh", 2, false));
+  mesh->createVertex(Eigen::Vector2d(0, 0));
+  
+  auto tree1 = rtree::getVertexRTree(mesh);
+  BOOST_TEST(rtree::trees.size() == 1);
+  mesh->meshChanged(*mesh); // Emit signal, that mesh has changed
+  BOOST_TEST(rtree::trees.size() == 0);
+  
+  auto tree2 = rtree::getVertexRTree(mesh);
+  BOOST_TEST(rtree::trees.size() == 1);
+  mesh.reset(); // Destroy mesh object, signal is emitted to clear cache
+  BOOST_TEST(rtree::trees.size() == 0);
+  
+}
+
 
 BOOST_AUTO_TEST_SUITE_END() // RTree
 BOOST_AUTO_TEST_SUITE_END() // Mesh

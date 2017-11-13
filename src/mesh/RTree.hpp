@@ -5,6 +5,14 @@
 #include "mesh/Mesh.hpp"
 #include <boost/geometry.hpp>
 
+
+// Forward declaration to friend the boost test struct
+namespace MeshTests {
+namespace RTree {
+struct CacheClearing;
+}}
+
+
 namespace precice {
 namespace mesh {
 
@@ -26,6 +34,8 @@ public:
   /// Only clear the tree of that specific mesh
   static void clear(Mesh & mesh);
 
+  friend struct MeshTests::RTree::CacheClearing;
+  
 private:
   static std::map<int, PtrRTree> trees;
 };
