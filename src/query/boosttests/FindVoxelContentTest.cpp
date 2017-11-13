@@ -1,71 +1,25 @@
-#include "FindVoxelContentTest.hpp"
+#include "testing/Testing.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Triangle.hpp"
 #include "query/FindVoxelContent.hpp"
-#include "utils/Parallel.hpp"
 #include "utils/Globals.hpp"
 #include "io/ExportVTK.hpp"
 #include "query/ExportVTKVoxelQueries.hpp"
-#include "math/math.hpp"
 
-#include "tarch/tests/TestCaseFactory.h"
-registerTest(precice::query::tests::FindVoxelContentTest)
+using namespace precice;
+using namespace precice::query;
 
-namespace precice {
-namespace query {
-namespace tests {
+BOOST_AUTO_TEST_SUITE(QueryTests)
+BOOST_AUTO_TEST_SUITE(FindVoxelContentTests)
 
-logging::Logger FindVoxelContentTest::_log("query::tests::FindVoxelContentTest");
-
-FindVoxelContentTest:: FindVoxelContentTest()
-:
-  TestCase ("query::FindVoxelContentTest")
-{}
-
-void FindVoxelContentTest:: run()
-{
-  PRECICE_MASTER_ONLY {
-    testMethod(testVertices);
-    testMethod(testEdges);
-    testMethod(testZeroVoxel);
-    testMethod(testTriangles);
-    testMethod(testCompletelyInsideTriangles);
-    testMethod(testCompletelyOutsideTriangles);
-    testMethod(testIntersectingTriangles);
-    testMethod(testTouchingTriangles);
-    testMethod(testQueryCube);
-  }
-}
-
-void FindVoxelContentTest:: testVertices()
-{
-  TRACE();
-  for (int dim=2; dim <= 3; dim++){
-    for (int testDim=0; testDim < dim; testDim++){
-      bool positiveDirection = true;
-      bool negativeDirection = false;
-      Eigen::VectorXd offset = Eigen::VectorXd::Zero(dim);
-      performTestVertices(testDim, positiveDirection, offset);
-      performTestVertices(testDim, negativeDirection, offset);
-      offset = Eigen::VectorXd::Constant(dim, -1.0 + 10.0 * math::NUMERICAL_ZERO_DIFFERENCE);
-      performTestVertices(testDim, positiveDirection, offset);
-      performTestVertices(testDim, negativeDirection, offset);
-      offset = Eigen::VectorXd::Constant(dim, 1.0 - 10.0 * math::NUMERICAL_ZERO_DIFFERENCE);
-      performTestVertices(testDim, positiveDirection, offset);
-      performTestVertices(testDim, negativeDirection, offset);
-    }
-  }
-}
-
-void FindVoxelContentTest:: performTestVertices
+void performTestVertices
 (
   int                     testDim,
   bool                    positive,
   const Eigen::VectorXd&  offset)
 {
-  TRACE(testDim, positive, offset);
   int dim = offset.size();
   assertion(not math::oneGreater(offset, Eigen::VectorXd::Constant(dim,1.0)));
   assertion(math::allGreater(offset, Eigen::VectorXd::Constant(dim,-1.0)));
@@ -93,9 +47,9 @@ void FindVoxelContentTest:: performTestVertices
   findIncluded(mesh);
   findExcluded(mesh);
   size = findIncluded.content().vertices().size();
-  validateEquals(size, 0);
+  BOOST_TEST(size == 0);
   size = findExcluded.content().vertices().size();
-  validateEquals(size, 0);
+  BOOST_TEST(size == 0);
 
   // Outside eps
   coords[testDim] = sign * (1.0 + 10.0 * math::NUMERICAL_ZERO_DIFFERENCE);
@@ -103,9 +57,9 @@ void FindVoxelContentTest:: performTestVertices
   findIncluded(mesh);
   findExcluded(mesh);
   size = findIncluded.content().vertices().size();
-  validateEquals(size, 0);
+  BOOST_TEST(size == 0);
   size = findExcluded.content().vertices().size();
-  validateEquals(size, 0);
+  BOOST_TEST(size == 0);
 
   // Outside eps
   coords[testDim] = sign * (1.0 + 10.0 * math::NUMERICAL_ZERO_DIFFERENCE);
@@ -113,9 +67,9 @@ void FindVoxelContentTest:: performTestVertices
   findIncluded(mesh);
   findExcluded(mesh);
   size = findIncluded.content().vertices().size();
-  validateEquals(size, 0);
+  BOOST_TEST(size == 0);
   size = findExcluded.content().vertices().size();
-  validateEquals(size, 0);
+  BOOST_TEST(size == 0);
 
   // Touching + eps
   coords[testDim] = sign * (1.0 + math::NUMERICAL_ZERO_DIFFERENCE);
@@ -123,9 +77,9 @@ void FindVoxelContentTest:: performTestVertices
   findIncluded(mesh);
   findExcluded(mesh);
   size = findIncluded.content().vertices().size();
-  validateEquals(size, 1);
+  BOOST_TEST(size == 1);
   size = findExcluded.content().vertices().size();
-  validateEquals(size, 0);
+  BOOST_TEST(size == 0);
 
   // Touching
   coords[testDim] = sign * 1.0;
@@ -133,9 +87,9 @@ void FindVoxelContentTest:: performTestVertices
   findIncluded(mesh);
   findExcluded(mesh);
   size = findIncluded.content().vertices().size();
-  validateEquals(size, 2);
+  BOOST_TEST(size == 2);
   size = findExcluded.content().vertices().size();
-  validateEquals(size, 0);
+  BOOST_TEST(size == 0);
 
   // Touching - eps
   coords[testDim] = sign * (1.0 - math::NUMERICAL_ZERO_DIFFERENCE);
@@ -143,9 +97,9 @@ void FindVoxelContentTest:: performTestVertices
   findIncluded(mesh);
   findExcluded(mesh);
   size = findIncluded.content().vertices().size();
-  validateEquals(size, 3);
+  BOOST_TEST(size == 3);
   size = findExcluded.content().vertices().size();
-  validateEquals(size, 0);
+  BOOST_TEST(size == 0);
 
   // Inside eps
   coords[testDim] = sign * (1.0 - 10.0 * math::NUMERICAL_ZERO_DIFFERENCE);
@@ -153,9 +107,9 @@ void FindVoxelContentTest:: performTestVertices
   findIncluded(mesh);
   findExcluded(mesh);
   size = findIncluded.content().vertices().size();
-  validateEquals(size, 4);
+  BOOST_TEST(size == 4);
   size = findExcluded.content().vertices().size();
-  validateEquals(size, 1);
+  BOOST_TEST(size == 1);
 
   // Inside
   coords[testDim] = sign * 0.9;
@@ -163,38 +117,17 @@ void FindVoxelContentTest:: performTestVertices
   findIncluded(mesh);
   findExcluded(mesh);
   size = findIncluded.content().vertices().size();
-  validateEquals(size, 5);
+  BOOST_TEST(size == 5);
   size = findExcluded.content().vertices().size();
-  validateEquals(size, 2);
+  BOOST_TEST(size == 2);
 }
 
-void FindVoxelContentTest:: testEdges()
-{
-  TRACE();
-  for(int dim=2; dim <= 3; dim++){
-    for(int testDim=0; testDim < dim; testDim++){
-      bool positiveDirection = true;
-      bool negativeDirection = false;
-      Eigen::VectorXd offset = Eigen::VectorXd::Zero(dim);
-      performTestEdges(testDim, positiveDirection, offset);
-      performTestEdges(testDim, negativeDirection, offset);
-      offset = Eigen::VectorXd::Constant(dim, -1.0 + 10.0 * math::NUMERICAL_ZERO_DIFFERENCE);
-      performTestEdges(testDim, positiveDirection, offset);
-      performTestEdges(testDim, negativeDirection, offset);
-      offset = Eigen::VectorXd::Constant(dim, 1.0 - 10.0 * math::NUMERICAL_ZERO_DIFFERENCE);
-      performTestEdges(testDim, positiveDirection, offset);
-      performTestEdges(testDim, negativeDirection, offset);
-    }
-  }
-}
-
-void FindVoxelContentTest:: performTestEdges
+void performTestEdges
 (
   int                     testDim,
   bool                    positive,
   const Eigen::VectorXd&  offset)
 {
-  TRACE(testDim, positive, offset);
   int dim = offset.size();
   assertion(not math::oneGreater(offset, Eigen::VectorXd::Constant(dim,1.0)));
   assertion(math::allGreater(offset, Eigen::VectorXd::Constant(dim,-1.0)));
@@ -227,9 +160,9 @@ void FindVoxelContentTest:: performTestEdges
   findIncluded(mesh);
   findExcluded(mesh);
   int sizeEdges = findIncluded.content().edges().size();
-  validateEquals(sizeEdges, 0);
+  BOOST_TEST(sizeEdges == 0);
   sizeEdges = findExcluded.content().edges().size();
-  validateEquals(sizeEdges, 0);
+  BOOST_TEST(sizeEdges == 0);
 
   // Outside eps
   coords0[testDim] = sign * (1.0 + 10.0 * math::NUMERICAL_ZERO_DIFFERENCE);
@@ -240,9 +173,9 @@ void FindVoxelContentTest:: performTestEdges
   findIncluded(mesh);
   findExcluded(mesh);
   sizeEdges = findIncluded.content().edges().size();
-  validateEquals(sizeEdges, 0);
+  BOOST_TEST(sizeEdges == 0);
   sizeEdges = findExcluded.content().edges().size();
-  validateEquals(sizeEdges, 0);
+  BOOST_TEST(sizeEdges == 0);
 
   // Outside touching
   coords0[testDim] = sign * 1.0;
@@ -253,9 +186,9 @@ void FindVoxelContentTest:: performTestEdges
   findIncluded(mesh);
   findExcluded(mesh);
   sizeEdges = findIncluded.content().edges().size();
-  validateEquals(sizeEdges, 1);
+  BOOST_TEST(sizeEdges == 1);
   sizeEdges = findExcluded.content().edges().size();
-  validateEquals(sizeEdges, 0);
+  BOOST_TEST(sizeEdges == 0);
 
   // Outside touching eps
   coords0[testDim] = sign * (1.0 + math::NUMERICAL_ZERO_DIFFERENCE);
@@ -266,9 +199,9 @@ void FindVoxelContentTest:: performTestEdges
   findIncluded(mesh);
   findExcluded(mesh);
   sizeEdges = findIncluded.content().edges().size();
-  validateEquals(sizeEdges, 2);
+  BOOST_TEST(sizeEdges == 2);
   sizeEdges = findExcluded.content().edges().size();
-  validateEquals(sizeEdges, 0);
+  BOOST_TEST(sizeEdges == 0);
 
   // Intersecting
   coords0[testDim] = sign * 0.5;
@@ -279,9 +212,9 @@ void FindVoxelContentTest:: performTestEdges
   findIncluded(mesh);
   findExcluded(mesh);
   sizeEdges = findIncluded.content().edges().size();
-  validateEquals(sizeEdges, 3);
+  BOOST_TEST(sizeEdges == 3);
   sizeEdges = findExcluded.content().edges().size();
-  validateEquals(sizeEdges, 1);
+  BOOST_TEST(sizeEdges == 1);
 
   // Intersecting eps
   coords0[testDim] = sign * (1.0 - 10.0 * math::NUMERICAL_ZERO_DIFFERENCE);
@@ -292,9 +225,9 @@ void FindVoxelContentTest:: performTestEdges
   findIncluded(mesh);
   findExcluded(mesh);
   sizeEdges = findIncluded.content().edges().size();
-  validateEquals(sizeEdges, 4);
+  BOOST_TEST(sizeEdges == 4);
   sizeEdges = findExcluded.content().edges().size();
-  validateEquals(sizeEdges, 2);
+  BOOST_TEST(sizeEdges == 2);
 
   // Inside
   coords0[testDim] = sign * 0.3;
@@ -305,60 +238,18 @@ void FindVoxelContentTest:: performTestEdges
   findIncluded(mesh);
   findExcluded(mesh);
   sizeEdges = findIncluded.content().edges().size();
-  validateEquals(sizeEdges, 5);
+  BOOST_TEST(sizeEdges == 5);
   sizeEdges = findExcluded.content().edges().size();
-  validateEquals(sizeEdges, 3);
+  BOOST_TEST(sizeEdges == 3);
 }
 
-void FindVoxelContentTest:: testZeroVoxel ()
-{
-  TRACE();
-  int dim = 2;
-  mesh::Mesh mesh("Mesh", dim, false);
-  mesh::Vertex& v1 = mesh.createVertex (Eigen::Vector2d(2.0, 0.0));
-  mesh::Vertex& v2 = mesh.createVertex (Eigen::Vector2d(2.0, 1.0));
-  mesh.createEdge (v1, v2);
-  Eigen::Vector2d center (1.0, 1.0);
-  Eigen::Vector2d halflengths (0.0, 0.0);
 
-  query::FindVoxelContent find (
-    center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
-  find(mesh);
-  size_t numberContained = find.content().size();
-  validateEquals (numberContained, 0);
-
-  mesh.createVertex (Eigen::Vector2d(1.0, 1.1));
-  mesh.createVertex (Eigen::Vector2d(1.0, 1.0));
-  query::FindVoxelContent find2 (
-    center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
-  find2(mesh);
-  numberContained = find2.content().size ();
-  validateEquals(numberContained, 1);
-}
-
-void FindVoxelContentTest:: testTriangles ()
-{
-  TRACE();
-  for(int testDim=0; testDim < 3; testDim++) {
-    bool positiveDirection = true;
-    bool negativeDirection = false;
-    for(int secondDim=0; secondDim < 3; secondDim++) {
-      if(secondDim == testDim) {
-        continue;
-      }
-      performTestTriangles(testDim, secondDim, positiveDirection);
-      performTestTriangles(testDim, secondDim, negativeDirection);
-    }
-  }
-}
-
-void FindVoxelContentTest:: performTestTriangles
+void performTestTriangles
 (
   int  testDim,
   int  secondDimension,
   bool positive)
 {
-  TRACE(testDim, positive);
   int dim = 3;
   assertion(testDim != secondDimension);
   bool flipNormals = false;
@@ -376,10 +267,8 @@ void FindVoxelContentTest:: performTestTriangles
 
   Eigen::Vector3d center = Eigen::Vector3d::Constant(0.0);
   Eigen::Vector3d halflengths = Eigen::Vector3d::Constant(1.0);
-  FindVoxelContent::BoundaryInclusion includeBounds =
-      FindVoxelContent::INCLUDE_BOUNDARY;
-  FindVoxelContent::BoundaryInclusion excludeBounds =
-      FindVoxelContent::EXCLUDE_BOUNDARY;
+  FindVoxelContent::BoundaryInclusion includeBounds = FindVoxelContent::INCLUDE_BOUNDARY;
+  FindVoxelContent::BoundaryInclusion excludeBounds = FindVoxelContent::EXCLUDE_BOUNDARY;
   query::FindVoxelContent findIncluded(center, halflengths, includeBounds);
   query::FindVoxelContent findExcluded(center, halflengths, excludeBounds);
 
@@ -408,9 +297,9 @@ void FindVoxelContentTest:: performTestTriangles
   findIncluded(mesh);
   findExcluded(mesh);
   int size = findIncluded.content().triangles().size();
-  validateEquals(size, 0);
+  BOOST_TEST(size == 0);
   size = findExcluded.content().triangles().size();
-  validateEquals(size, 0);
+  BOOST_TEST(size == 0);
 
   // Outside eps vertex
   coords0[testDim] = sign * (1.0 + 10.0 * math::NUMERICAL_ZERO_DIFFERENCE);
@@ -424,9 +313,9 @@ void FindVoxelContentTest:: performTestTriangles
   findIncluded(mesh);
   findExcluded(mesh);
   size = findIncluded.content().triangles().size();
-  validateEquals(size, 0);
+  BOOST_TEST(size == 0);
   size = findExcluded.content().triangles().size();
-  validateEquals(size, 0);
+  BOOST_TEST(size == 0);
 
   // Outside eps edge
   coords0[testDim] = sign * (1.0 + 10.0 * math::NUMERICAL_ZERO_DIFFERENCE);
@@ -440,9 +329,9 @@ void FindVoxelContentTest:: performTestTriangles
   findIncluded(mesh);
   findExcluded(mesh);
   size = findIncluded.content().triangles().size();
-  validateEquals(size, 0);
+  BOOST_TEST(size == 0);
   size = findExcluded.content().triangles().size();
-  validateEquals(size, 0);
+  BOOST_TEST(size == 0);
 
   // Touching eps vertex
   coords0[testDim] = sign * (1.0 + math::NUMERICAL_ZERO_DIFFERENCE);
@@ -456,9 +345,9 @@ void FindVoxelContentTest:: performTestTriangles
   findIncluded(mesh);
   findExcluded(mesh);
   size = findIncluded.content().triangles().size();
-  validateEquals(size, 1);
+  BOOST_TEST(size == 1);
   size = findExcluded.content().triangles().size();
-  validateEquals(size, 0);
+  BOOST_TEST(size == 0);
 
   // Touching eps edge
   coords0[testDim] = sign * (1.0 + math::NUMERICAL_ZERO_DIFFERENCE);
@@ -472,9 +361,9 @@ void FindVoxelContentTest:: performTestTriangles
   findIncluded(mesh);
   findExcluded(mesh);
   size = findIncluded.content().triangles().size();
-  validateEquals(size, 2);
+  BOOST_TEST(size == 2);
   size = findExcluded.content().triangles().size();
-  validateEquals(size, 0);
+  BOOST_TEST(size == 0);
 
   // Touching vertex
   coords0[testDim] = sign * 1.0;
@@ -488,9 +377,9 @@ void FindVoxelContentTest:: performTestTriangles
   findIncluded(mesh);
   findExcluded(mesh);
   size = findIncluded.content().triangles().size();
-  validateEquals(size, 3);
+  BOOST_TEST(size == 3);
   size = findExcluded.content().triangles().size();
-  validateEquals(size, 0);
+  BOOST_TEST(size == 0);
 
   // Touching edge
   coords0[testDim] = sign * 1.0;
@@ -504,9 +393,9 @@ void FindVoxelContentTest:: performTestTriangles
   findIncluded(mesh);
   findExcluded(mesh);
   size = findIncluded.content().triangles().size();
-  validateEquals(size, 4);
+  BOOST_TEST(size == 4);
   size = findExcluded.content().triangles().size();
-  validateEquals(size, 0);
+  BOOST_TEST(size == 0);
 
   // Intersecting eps vertex
   coords0[testDim] = sign * (1.0 - 10.0 * math::NUMERICAL_ZERO_DIFFERENCE);
@@ -520,9 +409,9 @@ void FindVoxelContentTest:: performTestTriangles
   findIncluded(mesh);
   findExcluded(mesh);
   size = findIncluded.content().triangles().size();
-  validateEquals(size, 5);
+  BOOST_TEST(size == 5);
   size = findExcluded.content().triangles().size();
-  validateEquals(size, 1);
+  BOOST_TEST(size == 1);
 
   // Intersecting eps edge
   coords0[testDim] = sign * (1.0 - 10.0 * math::NUMERICAL_ZERO_DIFFERENCE);
@@ -536,9 +425,9 @@ void FindVoxelContentTest:: performTestTriangles
   findIncluded(mesh);
   findExcluded(mesh);
   size = findIncluded.content().triangles().size();
-  validateEquals(size, 6);
+  BOOST_TEST(size == 6);
   size = findExcluded.content().triangles().size();
-  validateEquals(size, 2);
+  BOOST_TEST(size == 2);
 
   // Intersecting vertex
   coords0[testDim] = sign * 0.8;
@@ -552,9 +441,9 @@ void FindVoxelContentTest:: performTestTriangles
   findIncluded(mesh);
   findExcluded(mesh);
   size = findIncluded.content().triangles().size();
-  validateEquals(size, 7);
+  BOOST_TEST(size == 7);
   size = findExcluded.content().triangles().size();
-  validateEquals(size, 3);
+  BOOST_TEST(size == 3);
 
   // Intersecting edge
   coords0[testDim] = sign * 0.8;
@@ -568,9 +457,9 @@ void FindVoxelContentTest:: performTestTriangles
   findIncluded(mesh);
   findExcluded(mesh);
   size = findIncluded.content().triangles().size();
-  validateEquals(size, 8);
+  BOOST_TEST(size == 8);
   size = findExcluded.content().triangles().size();
-  validateEquals(size, 4);
+  BOOST_TEST(size == 4);
 
   // Contained
   coords0[testDim] = sign * 0.3;
@@ -584,9 +473,9 @@ void FindVoxelContentTest:: performTestTriangles
   findIncluded(mesh);
   findExcluded(mesh);
   size = findIncluded.content().triangles().size();
-  validateEquals(size, 9);
+  BOOST_TEST(size == 9);
   size = findExcluded.content().triangles().size();
-  validateEquals(size, 5);
+  BOOST_TEST(size == 5);
 
   // Contained filling
   coords0[testDim] = sign * -0.9;
@@ -600,9 +489,9 @@ void FindVoxelContentTest:: performTestTriangles
   findIncluded(mesh);
   findExcluded(mesh);
   size = findIncluded.content().triangles().size();
-  validateEquals(size, 10);
+  BOOST_TEST(size == 10);
   size = findExcluded.content().triangles().size();
-  validateEquals(size, 6);
+  BOOST_TEST(size == 6);
 
   // Contained cutting
   coords0[testDim] = sign * -1.5;
@@ -616,9 +505,9 @@ void FindVoxelContentTest:: performTestTriangles
   findIncluded(mesh);
   findExcluded(mesh);
   size = findIncluded.content().triangles().size();
-  validateEquals(size, 11);
+  BOOST_TEST(size == 11);
   size = findExcluded.content().triangles().size();
-  validateEquals(size, 7);
+  BOOST_TEST(size == 7);
 
   // Contained cutting wide1
   coords0[testDim] = sign * -10.0;
@@ -632,9 +521,9 @@ void FindVoxelContentTest:: performTestTriangles
   findIncluded(mesh);
   findExcluded(mesh);
   size = findIncluded.content().triangles().size();
-  validateEquals(size, 12);
+  BOOST_TEST(size == 12);
   size = findExcluded.content().triangles().size();
-  validateEquals(size, 8);
+  BOOST_TEST(size == 8);
 
   // Contained cutting wide2
   coords0[testDim] = sign * -10000.0;
@@ -648,9 +537,9 @@ void FindVoxelContentTest:: performTestTriangles
   findIncluded(mesh);
   findExcluded(mesh);
   size = findIncluded.content().triangles().size();
-  validateEquals(size, 13);
+  BOOST_TEST(size == 13);
   size = findExcluded.content().triangles().size();
-  validateEquals(size, 9);
+  BOOST_TEST(size == 9);
 
   // Touching contained fully
   coords0[testDim] = sign * 0.3;
@@ -667,9 +556,9 @@ void FindVoxelContentTest:: performTestTriangles
   findIncluded(mesh);
   findExcluded(mesh);
   size = findIncluded.content().triangles().size();
-  validateEquals(size, 14);
+  BOOST_TEST(size == 14);
   size = findExcluded.content().triangles().size();
-  validateEquals(size, 9);
+  BOOST_TEST(size == 9);
 
   // Touching fully
   coords0[testDim] = sign * -1.5;
@@ -690,7 +579,7 @@ void FindVoxelContentTest:: performTestTriangles
 //  }
   findExcluded(mesh);
   size = findIncluded.content().triangles().size();
-  validateEquals(size, 15);
+  BOOST_TEST(size == 15);
   size = findExcluded.content().triangles().size();
   //if((sign = -1) && (testDim == 1) && (secondDimension == 2) && (thirdDimension == 0)){
 //    INFO("############################## triangles = " << size);
@@ -698,7 +587,7 @@ void FindVoxelContentTest:: performTestTriangles
 //  if(size != 9){
 //    ERROR("Aus die Mausss");
 //  }
-  validateEquals(size, 9);
+  BOOST_TEST(size == 9);
 
   // Touching fully wide
   coords0[testDim] = sign * -10.0;
@@ -715,9 +604,9 @@ void FindVoxelContentTest:: performTestTriangles
   findIncluded(mesh);
   findExcluded(mesh);
   size = findIncluded.content().triangles().size();
-  validateEquals(size, 16);
+  BOOST_TEST(size == 16);
   size = findExcluded.content().triangles().size();
-  validateEquals(size, 9);
+  BOOST_TEST(size == 9);
 
   // Touching fully wide2
   coords0[testDim] = sign * -1000.0;
@@ -734,14 +623,94 @@ void FindVoxelContentTest:: performTestTriangles
   findIncluded(mesh);
   findExcluded(mesh);
   size = findIncluded.content().triangles().size();
-  validateEquals(size, 17);
+  BOOST_TEST(size == 17);
   size = findExcluded.content().triangles().size();
-  validateEquals(size, 9);
+  BOOST_TEST(size == 9);
 }
 
-void FindVoxelContentTest:: testCompletelyInsideTriangles ()
+
+BOOST_AUTO_TEST_CASE(Vertices)
 {
-  TRACE();
+  for (int dim=2; dim <= 3; dim++){
+    for (int testDim=0; testDim < dim; testDim++){
+      bool positiveDirection = true;
+      bool negativeDirection = false;
+      Eigen::VectorXd offset = Eigen::VectorXd::Zero(dim);
+      performTestVertices(testDim, positiveDirection, offset);
+      performTestVertices(testDim, negativeDirection, offset);
+      offset = Eigen::VectorXd::Constant(dim, -1.0 + 10.0 * math::NUMERICAL_ZERO_DIFFERENCE);
+      performTestVertices(testDim, positiveDirection, offset);
+      performTestVertices(testDim, negativeDirection, offset);
+      offset = Eigen::VectorXd::Constant(dim, 1.0 - 10.0 * math::NUMERICAL_ZERO_DIFFERENCE);
+      performTestVertices(testDim, positiveDirection, offset);
+      performTestVertices(testDim, negativeDirection, offset);
+    }
+  }
+}
+
+
+BOOST_AUTO_TEST_CASE(Edges)
+{
+  for(int dim=2; dim <= 3; dim++){
+    for(int testDim=0; testDim < dim; testDim++){
+      bool positiveDirection = true;
+      bool negativeDirection = false;
+      Eigen::VectorXd offset = Eigen::VectorXd::Zero(dim);
+      performTestEdges(testDim, positiveDirection, offset);
+      performTestEdges(testDim, negativeDirection, offset);
+      offset = Eigen::VectorXd::Constant(dim, -1.0 + 10.0 * math::NUMERICAL_ZERO_DIFFERENCE);
+      performTestEdges(testDim, positiveDirection, offset);
+      performTestEdges(testDim, negativeDirection, offset);
+      offset = Eigen::VectorXd::Constant(dim, 1.0 - 10.0 * math::NUMERICAL_ZERO_DIFFERENCE);
+      performTestEdges(testDim, positiveDirection, offset);
+      performTestEdges(testDim, negativeDirection, offset);
+    }
+  }
+}
+
+
+BOOST_AUTO_TEST_CASE(testZeroVoxel)
+{
+  int dim = 2;
+  mesh::Mesh mesh("Mesh", dim, false);
+  mesh::Vertex& v1 = mesh.createVertex (Eigen::Vector2d(2.0, 0.0));
+  mesh::Vertex& v2 = mesh.createVertex (Eigen::Vector2d(2.0, 1.0));
+  mesh.createEdge (v1, v2);
+  Eigen::Vector2d center (1.0, 1.0);
+  Eigen::Vector2d halflengths (0.0, 0.0);
+
+  query::FindVoxelContent find (
+    center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
+  find(mesh);
+  size_t numberContained = find.content().size();
+  BOOST_TEST (numberContained == 0);
+
+  mesh.createVertex (Eigen::Vector2d(1.0, 1.1));
+  mesh.createVertex (Eigen::Vector2d(1.0, 1.0));
+  query::FindVoxelContent find2 ( center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
+  find2(mesh);
+  numberContained = find2.content().size ();
+  BOOST_TEST(numberContained == 1);
+}
+
+BOOST_AUTO_TEST_CASE(Triangles)
+{
+  for(int testDim=0; testDim < 3; testDim++) {
+    bool positiveDirection = true;
+    bool negativeDirection = false;
+    for(int secondDim=0; secondDim < 3; secondDim++) {
+      if(secondDim == testDim) {
+        continue;
+      }
+      performTestTriangles(testDim, secondDim, positiveDirection);
+      performTestTriangles(testDim, secondDim, negativeDirection);
+    }
+  }
+}
+
+
+BOOST_AUTO_TEST_CASE(CompletelyInsideTriangles)
+{
   int dim = 3;
   Eigen::Vector3d voxelCenter = Eigen::Vector3d::Zero();
   Eigen::Vector3d voxelHalflengths = Eigen::Vector3d::Constant(1);
@@ -757,11 +726,10 @@ void FindVoxelContentTest:: testCompletelyInsideTriangles ()
   mesh.createTriangle(*e0, *e1, *e2);
   mesh.computeState();
 
-  query::FindVoxelContent find (
-    voxelCenter, voxelHalflengths, FindVoxelContent::INCLUDE_BOUNDARY);
+  query::FindVoxelContent find ( voxelCenter, voxelHalflengths, FindVoxelContent::INCLUDE_BOUNDARY);
   find(mesh);
   size_t count = find.content().triangles().size();
-  validateEquals(count, 1);
+  BOOST_TEST(count == 1);
 
   // Test 2
   v0 = & mesh.createVertex(Eigen::Vector3d(0.9, 0.0, 0.0));
@@ -776,7 +744,7 @@ void FindVoxelContentTest:: testCompletelyInsideTriangles ()
   find.clear ();
   find(mesh);
   count = find.content().triangles().size();
-  validateEquals(count, 2);
+  BOOST_TEST(count == 2);
 
   // Test 3
   v0 = & mesh.createVertex(Eigen::Vector3d(-0.9, 0.0, 0.0));
@@ -791,12 +759,11 @@ void FindVoxelContentTest:: testCompletelyInsideTriangles ()
   find.clear ();
   find(mesh);
   count = find.content().triangles().size();
-  validateEquals(count, 3);
+  BOOST_TEST(count == 3);
 }
 
-void FindVoxelContentTest:: testCompletelyOutsideTriangles ()
+BOOST_AUTO_TEST_CASE(CompletelyOutsideTriangles)
 {
-  TRACE();
   int dim = 3;
   Eigen::Vector3d voxelCenter = Eigen::Vector3d::Zero();
   Eigen::Vector3d voxelHalflengths = Eigen::Vector3d::Constant(1.0);
@@ -812,11 +779,10 @@ void FindVoxelContentTest:: testCompletelyOutsideTriangles ()
   mesh.createTriangle(*e0, *e1, *e2);
   mesh.computeState();
 
-  query::FindVoxelContent find (
-    voxelCenter, voxelHalflengths, FindVoxelContent::INCLUDE_BOUNDARY);
+  query::FindVoxelContent find ( voxelCenter, voxelHalflengths, FindVoxelContent::INCLUDE_BOUNDARY);
   find(mesh);
   size_t count = find.content().triangles().size ();
-  validateEquals(count, 0);
+  BOOST_TEST(count == 0);
 
   // Test 2
   v0 = & mesh.createVertex(Eigen::Vector3d(1.1, 0.0, 0.0));
@@ -831,7 +797,7 @@ void FindVoxelContentTest:: testCompletelyOutsideTriangles ()
   find.clear ();
   find(mesh);
   count = find.content().triangles().size ();
-  validateEquals(count, 0);
+  BOOST_TEST(count == 0);
 
   // Test 3
   v0 = & mesh.createVertex(Eigen::Vector3d(-1.1,  0.0,  0.0));
@@ -846,12 +812,11 @@ void FindVoxelContentTest:: testCompletelyOutsideTriangles ()
   find.clear ();
   find(mesh);
   count = find.content().triangles().size ();
-  validateEquals(count, 0);
+  BOOST_TEST(count == 0);
 }
 
-void FindVoxelContentTest:: testIntersectingTriangles ()
+BOOST_AUTO_TEST_CASE(IntersectingTriangles)
 {
-  TRACE();
   int dim = 3;
   Eigen::Vector3d voxelCenter = Eigen::Vector3d::Zero();
   Eigen::Vector3d voxelHalflengths = Eigen::Vector3d::Constant(1.0);
@@ -867,11 +832,10 @@ void FindVoxelContentTest:: testIntersectingTriangles ()
   mesh.createTriangle(*e0, *e1, *e2);
   mesh.computeState();
 
-  query::FindVoxelContent find (
-    voxelCenter, voxelHalflengths, FindVoxelContent::INCLUDE_BOUNDARY);
+  query::FindVoxelContent find ( voxelCenter, voxelHalflengths, FindVoxelContent::INCLUDE_BOUNDARY);
   find(mesh);
   size_t count = find.content().triangles().size ();
-  validateEquals(count, 1);
+  BOOST_TEST(count == 1);
 
   // Test 2
   v0 = & mesh.createVertex(Eigen::Vector3d(-0.5, 0.0, 0.0));
@@ -886,7 +850,7 @@ void FindVoxelContentTest:: testIntersectingTriangles ()
   find.clear ();
   find(mesh);
   count = find.content().triangles().size ();
-  validateEquals(count, 2);
+  BOOST_TEST(count == 2);
 
   // Test 3
   v0 = & mesh.createVertex(Eigen::Vector3d(0.0, 0.5, 0.0));
@@ -901,7 +865,7 @@ void FindVoxelContentTest:: testIntersectingTriangles ()
   find.clear ();
   find(mesh);
   count = find.content().triangles().size ();
-  validateEquals(count, 3);
+  BOOST_TEST(count == 3);
 
   // Test 4
   v0 = & mesh.createVertex(Eigen::Vector3d(0.0, -0.5, 0.0));
@@ -916,7 +880,7 @@ void FindVoxelContentTest:: testIntersectingTriangles ()
   find.clear ();
   find(mesh);
   count = find.content().triangles().size ();
-  validateEquals(count, 4);
+  BOOST_TEST(count == 4);
 
   // Test 5
   v0 = & mesh.createVertex(Eigen::Vector3d(0.0, 0.0, 0.5));
@@ -931,7 +895,7 @@ void FindVoxelContentTest:: testIntersectingTriangles ()
   find.clear ();
   find(mesh);
   count = find.content().triangles().size ();
-  validateEquals(count, 5);
+  BOOST_TEST(count == 5);
 
   // Test 6
   v0 = & mesh.createVertex(Eigen::Vector3d(0.0, 0.0, -0.5));
@@ -946,7 +910,7 @@ void FindVoxelContentTest:: testIntersectingTriangles ()
   find.clear ();
   find(mesh);
   count = find.content().triangles().size ();
-  validateEquals(count, 6);
+  BOOST_TEST(count == 6);
 
   // Test 6, triangle cuts out corner of voxel, no triangle vertices contained
   v0 = & mesh.createVertex(Eigen::Vector3d(0.5, 1.5, -0.0));
@@ -961,12 +925,11 @@ void FindVoxelContentTest:: testIntersectingTriangles ()
   find.clear ();
   find(mesh);
   count = find.content().triangles().size ();
-  validateEquals(count, 7);
+  BOOST_TEST(count == 7);
 }
 
-void FindVoxelContentTest:: testTouchingTriangles ()
+BOOST_AUTO_TEST_CASE(TouchingTriangles)
 {
-  TRACE();
   int dim = 3;
   Eigen::Vector3d voxelCenter = Eigen::Vector3d::Zero();
   Eigen::Vector3d voxelHalflengths = Eigen::Vector3d::Constant(1.0);
@@ -982,16 +945,14 @@ void FindVoxelContentTest:: testTouchingTriangles ()
   mesh.createTriangle(*e0, *e1, *e2);
   mesh.computeState();
 
-  query::FindVoxelContent findIncluded (
-    voxelCenter, voxelHalflengths, FindVoxelContent::INCLUDE_BOUNDARY);
-  query::FindVoxelContent findExcluded (
-    voxelCenter, voxelHalflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
+  query::FindVoxelContent findIncluded ( voxelCenter, voxelHalflengths, FindVoxelContent::INCLUDE_BOUNDARY);
+  query::FindVoxelContent findExcluded ( voxelCenter, voxelHalflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
   findIncluded(mesh);
   size_t count = findIncluded.content().triangles().size ();
-  validateEquals(count, 1);
+  BOOST_TEST(count == 1);
   findExcluded(mesh);
   count = findExcluded.content().triangles().size ();
-  validateEquals(count, 0);
+  BOOST_TEST(count == 0);
 
   // Test2, second triangle vertex touches voxel side
   v0 = & mesh.createVertex(Eigen::Vector3d(1.0, -2.0, 1.0));
@@ -1006,11 +967,11 @@ void FindVoxelContentTest:: testTouchingTriangles ()
   findIncluded.clear ();
   findIncluded(mesh);
   count = findIncluded.content().triangles().size ();
-  validateEquals(count, 2);
+  BOOST_TEST(count == 2);
   findExcluded.clear ();
   findExcluded(mesh);
   count = findExcluded.content().triangles().size ();
-  validateEquals(count, 0);
+  BOOST_TEST(count == 0);
 
   // Test3, third triangle vertex touches voxel side
   v0 = & mesh.createVertex(Eigen::Vector3d(-1.0, 0.0, 2.0));
@@ -1025,11 +986,11 @@ void FindVoxelContentTest:: testTouchingTriangles ()
   findIncluded.clear ();
   findIncluded(mesh);
   count = findIncluded.content().triangles().size ();
-  validateEquals(count, 3);
+  BOOST_TEST(count == 3);
   findExcluded.clear ();
   findExcluded(mesh);
   count = findExcluded.content().triangles().size ();
-  validateEquals(count, 0);
+  BOOST_TEST(count == 0);
 
   // Test4, triangle edge touches voxel side
   v0 = & mesh.createVertex(Eigen::Vector3d(1.0, -1.0, -1.0));
@@ -1044,11 +1005,11 @@ void FindVoxelContentTest:: testTouchingTriangles ()
   findIncluded.clear ();
   findIncluded(mesh);
   count = findIncluded.content().triangles().size ();
-  validateEquals(count, 4);
+  BOOST_TEST(count == 4);
   findExcluded.clear ();
   findExcluded(mesh);
   count = findExcluded.content().triangles().size ();
-  validateEquals(count, 0);
+  BOOST_TEST(count == 0);
 
   // Test5, triangle edge touches voxel edge in one point
   v0 = & mesh.createVertex(Eigen::Vector3d(2.0, 0.0, 0.0));
@@ -1063,11 +1024,11 @@ void FindVoxelContentTest:: testTouchingTriangles ()
   findIncluded.clear ();
   findIncluded(mesh);
   count = findIncluded.content().triangles().size ();
-  validateEquals(count, 5);
+  BOOST_TEST(count == 5);
   findExcluded.clear ();
   findExcluded(mesh);
   count = findExcluded.content().triangles().size ();
-  validateEquals(count, 0);
+  BOOST_TEST(count == 0);
 
   // Test6, triangle edge overlays with voxel edge
   v0 = & mesh.createVertex(Eigen::Vector3d(-2.0, -1.0, 1.0));
@@ -1082,11 +1043,11 @@ void FindVoxelContentTest:: testTouchingTriangles ()
   findIncluded.clear ();
   findIncluded(mesh);
   count = findIncluded.content().triangles().size ();
-  validateEquals(count, 6);
+  BOOST_TEST(count == 6);
   findExcluded.clear ();
   findExcluded(mesh);
   count = findExcluded.content().triangles().size ();
-  validateEquals(count, 0);
+  BOOST_TEST(count == 0);
 
   // Test6, triangle is contained in voxel side
   v0 = & mesh.createVertex(Eigen::Vector3d(-0.5, -1.0, 0.0));
@@ -1101,11 +1062,11 @@ void FindVoxelContentTest:: testTouchingTriangles ()
   findIncluded.clear ();
   findIncluded(mesh);
   count = findIncluded.content().triangles().size ();
-  validateEquals(count, 7);
+  BOOST_TEST(count == 7);
   findExcluded.clear ();
   findExcluded(mesh);
   count = findExcluded.content().triangles().size ();
-  validateEquals(count, 0);
+  BOOST_TEST(count == 0);
 
   // Test6, voxel side is contained in triangle
   v0 = & mesh.createVertex(Eigen::Vector3d(-5.0, -5.0, 1.0));
@@ -1120,16 +1081,15 @@ void FindVoxelContentTest:: testTouchingTriangles ()
   findIncluded.clear ();
   findIncluded(mesh);
   count = findIncluded.content().triangles().size ();
-  validateEquals(count, 8);
+  BOOST_TEST(count == 8);
   findExcluded.clear ();
   findExcluded(mesh);
   count = findExcluded.content().triangles().size ();
-  validateEquals(count, 0);
+  BOOST_TEST(count == 0);
 }
 
-void FindVoxelContentTest:: testQueryCube ()
+BOOST_AUTO_TEST_CASE(QueryCube)
 {
-  TRACE();
   using namespace mesh;
   int dim = 3;
   bool flipNormals = false;
@@ -1203,8 +1163,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 2.0/3.0, 1.0/3.0, 1.0/3.0;
@@ -1215,8 +1175,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 1.0/3.0, 2.0/3.0, 1.0/3.0;
@@ -1227,8 +1187,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 2.0/3.0, 2.0/3.0, 1.0/3.0;
@@ -1239,8 +1199,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 1.0/3.0, 1.0/3.0, 2.0/3.0;
@@ -1251,8 +1211,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 2.0/3.0, 1.0/3.0, 2.0/3.0;
@@ -1263,8 +1223,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 1.0/3.0, 2.0/3.0, 2.0/3.0;
@@ -1275,8 +1235,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 2.0/3.0, 2.0/3.0, 2.0/3.0;
@@ -1287,8 +1247,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
 
   // z = 1.0/6.0 plane
@@ -1301,8 +1261,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 0.5, 1.0/6.0, 1.0/6.0;
@@ -1313,8 +1273,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 5.0/6.0, 1.0/6.0, 1.0/6.0;
@@ -1325,8 +1285,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 1.0/6.0, 0.5, 1.0/6.0;
@@ -1337,8 +1297,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 0.5, 0.5, 1.0/6.0;
@@ -1349,8 +1309,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 5.0/6.0, 0.5, 1.0/6.0;
@@ -1361,8 +1321,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 1.0/6.0, 5.0/6.0, 1.0/6.0;
@@ -1373,8 +1333,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 0.5, 5.0/6.0, 1.0/6.0;
@@ -1385,8 +1345,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 5.0/6.0, 5.0/6.0, 1.0/6.0;
@@ -1397,8 +1357,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
 
   // z = 0.5 plane
@@ -1411,8 +1371,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 0.5, 1.0/6.0, 0.5;
@@ -1423,8 +1383,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 5.0/6.0, 1.0/6.0, 0.5;
@@ -1435,8 +1395,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 1.0/6.0, 0.5, 0.5;
@@ -1447,8 +1407,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 0.5, 0.5, 0.5;
@@ -1459,8 +1419,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() == 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() == 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 5.0/6.0, 0.5, 0.5;
@@ -1471,8 +1431,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 1.0/6.0, 5.0/6.0, 0.5;
@@ -1483,8 +1443,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 0.5, 5.0/6.0, 0.5;
@@ -1495,8 +1455,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 5.0/6.0, 5.0/6.0, 0.5;
@@ -1507,8 +1467,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
 
   // z = 5.0/6.0 plane
@@ -1521,8 +1481,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 0.5, 1.0/6.0, 5.0/6.0;
@@ -1533,8 +1493,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 5.0/6.0, 1.0/6.0, 5.0/6.0;
@@ -1545,8 +1505,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 1.0/6.0, 0.5, 5.0/6.0;
@@ -1557,8 +1517,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 0.5, 0.5, 5.0/6.0;
@@ -1569,8 +1529,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 5.0/6.0, 0.5, 5.0/6.0;
@@ -1581,8 +1541,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 1.0/6.0, 5.0/6.0, 5.0/6.0;
@@ -1593,8 +1553,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 0.5, 5.0/6.0, 5.0/6.0;
@@ -1605,8 +1565,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 5.0/6.0, 5.0/6.0, 5.0/6.0;
@@ -1617,8 +1577,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
 
   // Query voxel equals mesh outline
@@ -1631,10 +1591,10 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validateEquals(findIncluded.content().vertices().size(), 8);
-    validateEquals(findIncluded.content().edges().size(), 18);
-    validateEquals(findIncluded.content().triangles().size(), 12);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().vertices().size() == 8);
+    BOOST_TEST(findIncluded.content().edges().size() == 18);
+    BOOST_TEST(findIncluded.content().triangles().size() == 12);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
 
 
@@ -1653,8 +1613,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 2.0/3.0, 1.0/3.0, 1.0/3.0;
@@ -1665,8 +1625,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 1.0/3.0, 2.0/3.0, 1.0/3.0;
@@ -1677,8 +1637,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 2.0/3.0, 2.0/3.0, 1.0/3.0;
@@ -1689,8 +1649,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 1.0/3.0, 1.0/3.0, 2.0/3.0;
@@ -1701,8 +1661,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 2.0/3.0, 1.0/3.0, 2.0/3.0;
@@ -1713,8 +1673,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 1.0/3.0, 2.0/3.0, 2.0/3.0;
@@ -1725,8 +1685,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 2.0/3.0, 2.0/3.0, 2.0/3.0;
@@ -1737,8 +1697,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
 
   // z = 1.0/6.0 plane
@@ -1751,8 +1711,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 0.5, 1.0/6.0, 1.0/6.0;
@@ -1763,8 +1723,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 5.0/6.0, 1.0/6.0, 1.0/6.0;
@@ -1775,8 +1735,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 1.0/6.0, 0.5, 1.0/6.0;
@@ -1787,8 +1747,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 0.5, 0.5, 1.0/6.0;
@@ -1799,8 +1759,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 5.0/6.0, 0.5, 1.0/6.0;
@@ -1811,8 +1771,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 1.0/6.0, 5.0/6.0, 1.0/6.0;
@@ -1823,8 +1783,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 0.5, 5.0/6.0, 1.0/6.0;
@@ -1835,8 +1795,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 5.0/6.0, 5.0/6.0, 1.0/6.0;
@@ -1847,8 +1807,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
 
   // z = 0.5 plane
@@ -1861,8 +1821,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 0.5, 1.0/6.0, 0.5;
@@ -1873,8 +1833,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 5.0/6.0, 1.0/6.0, 0.5;
@@ -1885,8 +1845,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 1.0/6.0, 0.5, 0.5;
@@ -1897,8 +1857,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 0.5, 0.5, 0.5;
@@ -1909,8 +1869,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() == 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() == 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 5.0/6.0, 0.5, 0.5;
@@ -1921,8 +1881,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 1.0/6.0, 5.0/6.0, 0.5;
@@ -1933,8 +1893,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 0.5, 5.0/6.0, 0.5;
@@ -1945,8 +1905,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 5.0/6.0, 5.0/6.0, 0.5;
@@ -1957,8 +1917,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
 
   // z = 5.0/6.0 plane
@@ -1971,8 +1931,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 0.5, 1.0/6.0, 5.0/6.0;
@@ -1983,8 +1943,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 5.0/6.0, 1.0/6.0, 5.0/6.0;
@@ -1995,8 +1955,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 1.0/6.0, 0.5, 5.0/6.0;
@@ -2007,8 +1967,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 0.5, 0.5, 5.0/6.0;
@@ -2019,8 +1979,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 5.0/6.0, 0.5, 5.0/6.0;
@@ -2031,8 +1991,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 1.0/6.0, 5.0/6.0, 5.0/6.0;
@@ -2043,8 +2003,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 0.5, 5.0/6.0, 5.0/6.0;
@@ -2055,8 +2015,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
   {
     center << 5.0/6.0, 5.0/6.0, 5.0/6.0;
@@ -2067,8 +2027,8 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validate(findIncluded.content().size() > 0);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
 
   // Query voxel equals mesh outline
@@ -2081,10 +2041,10 @@ void FindVoxelContentTest:: testQueryCube ()
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-    validateEquals(findIncluded.content().vertices().size(), 8);
-    validateEquals(findIncluded.content().edges().size(), 18);
-    validateEquals(findIncluded.content().triangles().size(), 12);
-    validate(findExcluded.content().size() == 0);
+    BOOST_TEST(findIncluded.content().vertices().size() == 8);
+    BOOST_TEST(findIncluded.content().edges().size() == 18);
+    BOOST_TEST(findIncluded.content().triangles().size() == 12);
+    BOOST_TEST(findExcluded.content().size() == 0);
   }
 
   // Special query that gave error in real scenario
@@ -2100,12 +2060,14 @@ void FindVoxelContentTest:: testQueryCube ()
     ExportVTKVoxelQueries exportQueries;
     exportQueries.addQuery(center, halflengths, 0);
     exportQueries.exportQueries("FindVoxelContentTest-testQueryCube-queries");
-    validate(findIncluded.content().size() > 0);
-    validateEquals(findExcluded.content().edges().size(), 1);
-    validateEquals(findExcluded.content().triangles().size(), 2);
+    BOOST_TEST(findIncluded.content().size() > 0);
+    BOOST_TEST(findExcluded.content().edges().size() == 1);
+    BOOST_TEST(findExcluded.content().triangles().size() == 2);
   }
 }
 
-}}} // namespace precice, query, tests
+BOOST_AUTO_TEST_SUITE_END() // FindVoxelContentTests
+BOOST_AUTO_TEST_SUITE_END() // QueryTests
+
 
 
