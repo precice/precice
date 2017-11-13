@@ -22,7 +22,7 @@ struct MPICommRestrictFixture {
   {
     // Restriction MUST always be called on all ranks, otherwise we hang
     if (static_cast<int>(ranks.size()) < Par::getCommunicatorSize()) {
-      Par::setGlobalCommunicator(Par::getRestrictedCommunicator(ranks));
+      Par::restrictGlobalCommunicator(ranks);
     }
   }
 

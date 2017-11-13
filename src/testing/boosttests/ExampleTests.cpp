@@ -45,6 +45,22 @@ BOOST_AUTO_TEST_CASE(FourProcTests,
   BOOST_TEST(utils::Parallel::getCommunicatorSize() == 4);
 }
 
+/// Tests that runs on 2 processors.
+/*
+ * This case is trickier than with 4 procs, because we need to restrict the global communicator on all
+ * ranks first, and then test if we execute at the correct ranks.
+ */
+BOOST_AUTO_TEST_CASE(TwoProcTests,
+                     * testing::MinRanks(2)
+                     * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
+{
+  if (utils::Parallel::getCommunicatorSize() != 2)
+    return;
+  
+  // Put your test code here
+  
+}
+
 
 BOOST_AUTO_TEST_SUITE_END() // Examples
 BOOST_AUTO_TEST_SUITE_END() // Testing
