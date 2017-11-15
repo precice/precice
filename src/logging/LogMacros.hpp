@@ -32,7 +32,7 @@
     LOG_LOCATION;                                                       \
     BOOST_LOG_SEV(_log, boost::log::trivial::severity_level::error)     \
       << message;                                                       \
-    std::exit();                                                        \
+    std::exit(-1);                                                        \
   } while (false)
 
 #define CHECK(check, message)                      \
