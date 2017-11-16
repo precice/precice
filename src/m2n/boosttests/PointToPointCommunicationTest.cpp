@@ -18,7 +18,7 @@ using std::rand;
 using namespace precice;
 using namespace m2n;
 
-BOOST_AUTO_TEST_SUITE(M2N)
+BOOST_AUTO_TEST_SUITE(M2NTests)
 
 void process(vector<double>& data)
 {
@@ -155,10 +155,7 @@ void P2PComTest1(com::PtrCommunicationFactory cf)
   }
 
   MasterSlave::_communication.reset();
-  MasterSlave::_rank = Parallel::getProcessRank();
-  MasterSlave::_size = Parallel::getCommunicatorSize();
-  MasterSlave::_masterMode = false;
-  MasterSlave::_slaveMode = false;
+  MasterSlave::reset();
 
   Parallel::synchronizeProcesses();
   utils::Parallel::clearGroups();
@@ -292,10 +289,7 @@ void P2PComTest2(com::PtrCommunicationFactory cf)
   }
 
   MasterSlave::_communication.reset();
-  MasterSlave::_rank = Parallel::getProcessRank();
-  MasterSlave::_size = Parallel::getCommunicatorSize();
-  MasterSlave::_masterMode = false;
-  MasterSlave::_slaveMode = false;
+  MasterSlave::reset();
 
   Parallel::synchronizeProcesses();
   utils::Parallel::clearGroups();
