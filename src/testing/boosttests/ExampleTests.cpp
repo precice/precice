@@ -1,5 +1,5 @@
 #include "testing/Testing.hpp"
-#include "utils/Parallel.hpp"
+#include "utils/Parallel.hpp" // only required when using something from utils::Parallel
 
 using namespace precice;
 
@@ -13,6 +13,12 @@ BOOST_AUTO_TEST_CASE(SingleProcessor)
   // Do not use DEBUG, TRACE, INFO calls inside tests
   
   BOOST_TEST(0 == 0); // Always use BOOST_TEST
+
+  Eigen::Vector3d one(1, 2, 3);
+  Eigen::Vector3d two(1, 2, 3);
+  // Use testing::equals instead of math::equals when comparing in tests.
+  // This gives you a report which coordinates fail to compare.
+  BOOST_TEST(testing::equals(one, two));
 }
 
 /// Test with a modified numerical tolerance
@@ -35,13 +41,14 @@ BOOST_AUTO_TEST_CASE(Deleted,
 }
 
 
-/// Tests that runs on 4 processors.
+/// Tests that required 4 processors.
 /*
- * If less than 4 procs are available, the test is deleted, if more are availablle, procs > 4 are deleted
+ * If less than 4 procs are available, the test is deleted, if more are available, procs > 4 are deleted
  */
 BOOST_AUTO_TEST_CASE(FourProcTests,
                      * testing::OnSize(4))
 {
+  // Don't copy over that line, it's for testing the example
   BOOST_TEST(utils::Parallel::getCommunicatorSize() == 4);
 }
 
@@ -63,4 +70,4 @@ BOOST_AUTO_TEST_CASE(TwoProcTests,
 
 
 BOOST_AUTO_TEST_SUITE_END() // Examples
-BOOST_AUTO_TEST_SUITE_END() // Testing
+BOOST_AUTO_TEST_SUITE_END() // TestingTests
