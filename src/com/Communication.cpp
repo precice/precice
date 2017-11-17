@@ -11,7 +11,7 @@ namespace com
 logging::Logger Communication::_log("com::Communication");
 
 /**
- * Attention: this method modifies the input buffer.
+ * @attention This method modifies the input buffer.
  */
 void Communication::reduceSum(double *itemsToSend, double *itemsToReceive, int size)
 {
@@ -40,7 +40,7 @@ void Communication::reduceSum(double *itemsToSend, double *itemsToReceive, int s
 }
 
 /**
- * Attention: this method modifies the input buffer.
+ * @attention This method modifies the input buffer.
  */
 void Communication::reduceSum(int &itemsToSend, int &itemsToReceive)
 {
@@ -70,7 +70,7 @@ void Communication::allreduceSum()
 }
 
 /**
- * Attention: this method modifies the input buffer.
+ * @attention This method modifies the input buffer.
  */
 void Communication::allreduceSum(double *itemsToSend, double *itemsToReceive, int size)
 {
@@ -100,7 +100,7 @@ void Communication::allreduceSum(double *itemsToSend, double *itemsToReceive, in
 }
 
 /**
- * Attention: this method modifies the input buffer.
+ * @attention This method modifies the input buffer.
  */
 void Communication::allreduceSum(double *itemsToSend, double *itemsToReceive, int size, int rankMaster)
 {
@@ -113,7 +113,7 @@ void Communication::allreduceSum(double *itemsToSend, double *itemsToReceive, in
 }
 
 /**
- * Attention: this method modifies the input buffer.
+ * @attention This method modifies the input buffer.
  */
 void Communication::allreduceSum(double &itemsToSend, double &itemsToReceive)
 {
@@ -139,7 +139,7 @@ void Communication::allreduceSum(double &itemsToSend, double &itemsToReceive)
 }
 
 /**
- * Attention: this method modifies the input buffer.
+ * @attention This method modifies the input buffer.
  */
 void Communication::allreduceSum(double &itemsToSend, double &itemsToReceive, int rankMaster)
 {
@@ -152,7 +152,7 @@ void Communication::allreduceSum(double &itemsToSend, double &itemsToReceive, in
 }
 
 /**
- * Attention: this method modifies the input buffer.
+ * @attention This method modifies the input buffer.
  */
 void Communication::allreduceSum(int &itemsToSend, int &itemsToReceive)
 {
@@ -178,7 +178,7 @@ void Communication::allreduceSum(int &itemsToSend, int &itemsToReceive)
 }
 
 /**
- * Attention: this method modifies the input buffer.
+ * @attention This method modifies the input buffer.
  */
 void Communication::allreduceSum(int &itemsToSend, int &itemsToReceive, int rankMaster)
 {
