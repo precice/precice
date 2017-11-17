@@ -87,19 +87,13 @@ sourcesTarch = [
 sourcesTarchTests = [
     Glob('tarch/tests/*.cpp'),
     Glob('tarch/tests/configurations/*.cpp'),
-    Glob('action/tests/*.cpp'),
-    Glob('com/tests/*.cpp'),
     Glob('cplscheme/tests/*.cpp'),
     Glob('io/tests/*.cpp'),
     Glob('m2n/tests/*.cpp'),
-    Glob('mapping/tests/*.cpp'),
-    Glob('mesh/tests/*.cpp'),
-    Glob('query/tests/*.cpp'),
     Glob('precice/tests/*.cpp'),
     Glob('precice/tests/couplingmode/*.cpp'),
     Glob('precice/tests/servermode/*.cpp'),
     Glob('tarch/la/tests/*.cpp'),
-    Glob('utils/tests/*.cpp')
 ]
 
 sourcesTests = [
