@@ -18,7 +18,8 @@ using std::rand;
 using namespace precice;
 using namespace m2n;
 
-BOOST_AUTO_TEST_SUITE(M2NTests)
+BOOST_AUTO_TEST_SUITE(M2NTests,
+                      * boost::unit_test::label("MPI_Ports"))
 
 void process(vector<double>& data)
 {

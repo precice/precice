@@ -37,7 +37,7 @@ struct MPICommRestrictFixture {
  * How does that differ from MPICommRestrictFixture({0})? The MPICommRestrictFixture restricts the communicator
  * to rank 0 and assigns that all ranks. This produces invalid communicators on all other ranks.
  * SingleRankFixture restricts every rank to itself. Effectively using MPI_COMM_SELF as communicator on each rank.
- * We don' use MPI_COMM_SELF because this causes errors when it's freed.
+ * We don't use MPI_COMM_SELF because this causes errors when it's freed.
  */
 struct SingleRankFixture {
   explicit SingleRankFixture()

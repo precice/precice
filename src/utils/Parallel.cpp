@@ -245,14 +245,14 @@ const Parallel::Communicator &Parallel::getLocalCommunicator()
   return _localCommunicator;
 }
 
-Parallel::Communicator Parallel::getRestrictedCommunicator(
-    const std::vector<int> &ranks)
+Parallel::Communicator Parallel::getRestrictedCommunicator(const std::vector<int> &ranks)
 {
   TRACE();
   Communicator restrictedCommunicator = getCommunicatorWorld();
 #ifndef PRECICE_NO_MPI
   assertion(_isInitialized);
-  assertion(ranks.size() > 0);
+  assertion(not ranks.empty());
+  assertion(ranks.size() <= static_cast<size_t>(getCommunicatorSize()));
   // Create group, containing all processes of communicator
   MPI_Group currentGroup;
   MPI_Comm_group(_globalCommunicator, &currentGroup);

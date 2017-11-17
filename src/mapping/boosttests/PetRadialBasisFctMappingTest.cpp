@@ -24,7 +24,7 @@ void addGlobalIndex(mesh::PtrMesh &mesh, int offset = 0)
 
 
 BOOST_AUTO_TEST_SUITE(Parallel,
-                      * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0,1,2,3})))
+                      * testing::MinRanks(4))
 
 
 /// Holds rank, owner, position and value of a single vertex
@@ -135,8 +135,7 @@ void testDistributed(Mapping& mapping,
 
 
 /// Test with a homogenous distribution of mesh amoung ranks
-BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1,
-                     * testing::OnSize(4))
+BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1)
 {
   utils::Parallel::setGlobalCommunicator(utils::Parallel::getRestrictedCommunicator({0,1,2,3}));
   assertion(utils::Parallel::getCommunicatorSize() == 4);
@@ -181,8 +180,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1,
 }
 
 /// Using a more heterogenous distributon of vertices and owner
-BOOST_AUTO_TEST_CASE(DistributedConsistent2DV2,
-                     * testing::OnSize(4))
+BOOST_AUTO_TEST_CASE(DistributedConsistent2DV2)
 {
   assertion(utils::Parallel::getCommunicatorSize() == 4);
   Gaussian fct(5.0);
@@ -224,8 +222,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV2,
 }
 
 /// Test with a very heterogenous distributed and non-continues ownership
-BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3,
-                     * testing::OnSize(4))
+BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3)
 {
   assertion(utils::Parallel::getCommunicatorSize() == 4);
   Gaussian fct(5.0);
@@ -276,7 +273,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3,
 
 /// Some ranks are empty, does not converge
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV4,
-                       * testing::OnSize(4) * testing::Deleted())
+                     * testing::Deleted())
 {
   assertion(utils::Parallel::getCommunicatorSize() == 4);
   ThinPlateSplines fct;
@@ -327,7 +324,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV4,
 
 // same as 2DV4, but all ranks have vertices, converges, but fails
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV5,
-                   * testing::OnSize(4) * testing::Deleted())
+                     * testing::Deleted())
 {
   assertion(utils::Parallel::getCommunicatorSize() == 4);
   ThinPlateSplines fct;
@@ -383,7 +380,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV5,
 
 /// same as 2DV4, but strictly linear input values, converges and gives correct results
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV6,
-                     * testing::OnSize(4) * testing::Deleted())
+                     * testing::Deleted())
 {
   assertion(utils::Parallel::getCommunicatorSize() == 4);
   ThinPlateSplines fct;
@@ -433,8 +430,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV6,
 }
 
 /// Test with a homogenous distribution of mesh amoung ranks
-BOOST_AUTO_TEST_CASE(DistributedConservative2DV1,
-                     * testing::OnSize(4))
+BOOST_AUTO_TEST_CASE(DistributedConservative2DV1)
 {
   assertion(utils::Parallel::getCommunicatorSize() == 4);
   Gaussian fct(5.0);
@@ -473,8 +469,7 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV1,
 }
 
 /// Using a more heterogenous distribution of vertices and owner
-BOOST_AUTO_TEST_CASE(DistributedConservative2DV2,
-                     * testing::OnSize(4))
+BOOST_AUTO_TEST_CASE(DistributedConservative2DV2)
 {
   assertion(utils::Parallel::getCommunicatorSize() == 4);
   Gaussian fct(5.0);
