@@ -295,7 +295,8 @@ Parallel::Communicator Parallel::getRestrictedCommunicator(
 void Parallel::restrictGlobalCommunicator(const std::vector<int> &ranks)
 {
   auto restrComm = getRestrictedCommunicator(ranks);
-  setGlobalCommunicator(restrComm);
+  if (std::find(ranks.begin(), ranks.end(), getProcessRank()) != ranks.end())
+    setGlobalCommunicator(restrComm);
 }
 
 const std::vector<Parallel::AccessorGroup> &Parallel::getAccessorGroups()

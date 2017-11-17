@@ -124,6 +124,10 @@ public:
   static Communicator getRestrictedCommunicator(const std::vector<int> &ranks);
 
   /// Create a restricted communicator and sets them as the global communicator
+  /**
+   * Set the new, restricted communicator on all ranks that are contained in
+   * that new communicator. Leaves the other ranks untouched.
+   */
   static void restrictGlobalCommunicator(const std::vector<int> &ranks);
 
   static const std::vector<AccessorGroup> &getAccessorGroups();
