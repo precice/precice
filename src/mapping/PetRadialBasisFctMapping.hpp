@@ -969,7 +969,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computePreallocationMatr
   PetscInt colOwnerRangeCBegin, colOwnerRangeCEnd;
   std::tie(colOwnerRangeCBegin, colOwnerRangeCEnd) = _matrixC.ownerRangeColumn();
 
-  int local_row = 0;
+  size_t local_row = 0;
   // -- PREALLOCATES THE POLYNOMIAL PART OF THE MATRIX --
   if (_polynomial == Polynomial::ON) {
     for (local_row = 0; local_row < localPolyparams; local_row++) {
@@ -1114,7 +1114,7 @@ std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL
 {
   precice::utils::Event ePreallocC("PetRBF.PreallocC");
 
-  PetscInt n, ierr;
+  PetscInt n;
   
   const PetscInt *mapIndizes;
   ISLocalToGlobalMappingGetIndices(_ISmapping, &mapIndizes);
@@ -1129,7 +1129,7 @@ std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL
 
   std::vector<std::vector<std::pair<int, double>>> vertexData(n - localPolyparams);
   
-  int local_row = 0;
+  size_t local_row = 0;
   // -- PREALLOCATES THE POLYNOMIAL PART OF THE MATRIX --
   if (_polynomial == Polynomial::ON) {
     for (local_row = 0; local_row < localPolyparams; local_row++) {
@@ -1173,12 +1173,12 @@ std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL
         
   if (utils::Parallel::getCommunicatorSize() == 1) {
     // std::cout << "Computed Preallocation C Seq diagonal = " << std::accumulate(d_nnz.begin(), d_nnz.end(), 0) << std::endl;
-    ierr = MatSeqSBAIJSetPreallocation(_matrixC, _matrixC.blockSize(), 0, d_nnz.data());
+    MatSeqSBAIJSetPreallocation(_matrixC, _matrixC.blockSize(), 0, d_nnz.data());
   }
   else {
     // std::cout << "Computed Preallocation C MPI diagonal = " << std::accumulate(d_nnz.begin(), d_nnz.end(), 0)
     //           << ", off-diagonal = " << std::accumulate(o_nnz.begin(), o_nnz.end(), 0) << std::endl;
-    ierr = MatMPISBAIJSetPreallocation(_matrixC, _matrixC.blockSize(), 0, d_nnz.data(), 0, o_nnz.data());
+    MatMPISBAIJSetPreallocation(_matrixC, _matrixC.blockSize(), 0, d_nnz.data(), 0, o_nnz.data());
   }
   MatSetOption(_matrixC, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_TRUE);
   ISLocalToGlobalMappingRestoreIndices(_ISmapping, &mapIndizes);
@@ -1196,7 +1196,7 @@ std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL
   precice::utils::Event ePreallocA("PetRBF.PreallocA");
 
   PetscInt ownerRangeABegin, ownerRangeAEnd, colOwnerRangeABegin, colOwnerRangeAEnd;
-  PetscInt outputSize, n, ierr;
+  PetscInt outputSize, n;
   
   const PetscInt *mapIndizes;
   ISLocalToGlobalMappingGetIndices(_ISmapping, &mapIndizes);
@@ -1257,12 +1257,12 @@ std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL
   }
   if (utils::Parallel::getCommunicatorSize() == 1) {
     // std::cout << "Preallocation A Seq diagonal = " << std::accumulate(d_nnz.begin(), d_nnz.end(), 0) << std::endl;
-    ierr = MatSeqAIJSetPreallocation(_matrixA, 0, d_nnz.data());
+    MatSeqAIJSetPreallocation(_matrixA, 0, d_nnz.data());
   }
   else {
     // std::cout << "Preallocation A MPI diagonal = " << std::accumulate(d_nnz.begin(), d_nnz.end(), 0)
     //           << ", off-diagonal = " << std::accumulate(o_nnz.begin(), o_nnz.end(), 0) << std::endl;
-    ierr = MatMPIAIJSetPreallocation(_matrixA, 0, d_nnz.data(), 0, o_nnz.data());
+    MatMPIAIJSetPreallocation(_matrixA, 0, d_nnz.data(), 0, o_nnz.data());
   }
   MatSetOption(_matrixA, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_TRUE);
 
@@ -1280,7 +1280,7 @@ std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL
   precice::utils::Event ePreallocC("PetRBF.PreallocC");
   namespace bg = boost::geometry;
   
-  PetscInt n, ierr;
+  PetscInt n;
 
   auto tree = mesh::rtree::getVertexRTree(inMesh);
   double supportRadius = _basisFunction.getSupportRadius();
@@ -1298,7 +1298,7 @@ std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL
 
   std::vector<std::vector<std::pair<int, double>>> vertexData(n - localPolyparams);
   
-  int local_row = 0;
+  size_t local_row = 0;
   // -- PREALLOCATES THE POLYNOMIAL PART OF THE MATRIX --
   if (_polynomial == Polynomial::ON) {
     for (local_row = 0; local_row < localPolyparams; local_row++) {
@@ -1350,10 +1350,10 @@ std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL
   }
   
   if (utils::Parallel::getCommunicatorSize() == 1) {
-    ierr = MatSeqSBAIJSetPreallocation(_matrixC, _matrixC.blockSize(), 0, d_nnz.data());
+    MatSeqSBAIJSetPreallocation(_matrixC, _matrixC.blockSize(), 0, d_nnz.data());
   }
   else {
-    ierr = MatMPISBAIJSetPreallocation(_matrixC, _matrixC.blockSize(), 0, d_nnz.data(), 0, o_nnz.data());
+    MatMPISBAIJSetPreallocation(_matrixC, _matrixC.blockSize(), 0, d_nnz.data(), 0, o_nnz.data());
   }
   MatSetOption(_matrixC, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_TRUE);
   ISLocalToGlobalMappingRestoreIndices(_ISmapping, &mapIndizes);
@@ -1372,7 +1372,7 @@ std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL
   namespace bg = boost::geometry;
   
   PetscInt ownerRangeABegin, ownerRangeAEnd, colOwnerRangeABegin, colOwnerRangeAEnd;
-  PetscInt outputSize, n, ierr;
+  PetscInt outputSize, n;
   auto tree = mesh::rtree::getVertexRTree(inMesh);
   double supportRadius = _basisFunction.getSupportRadius();
   
@@ -1443,10 +1443,10 @@ std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL
     }
   }
   if (utils::Parallel::getCommunicatorSize() == 1) {
-    ierr = MatSeqAIJSetPreallocation(_matrixA, 0, d_nnz.data());
+    MatSeqAIJSetPreallocation(_matrixA, 0, d_nnz.data());
   }
   else {
-    ierr = MatMPIAIJSetPreallocation(_matrixA, 0, d_nnz.data(), 0, o_nnz.data());
+    MatMPIAIJSetPreallocation(_matrixA, 0, d_nnz.data(), 0, o_nnz.data());
   }
   MatSetOption(_matrixA, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_TRUE);
 

@@ -43,6 +43,7 @@ parser.add_argument("-s", "--split", help="Redirect output to a process-unique f
 parser.add_argument('--unitconfig', help="Configuration to use for unit tests", dest="unit_test_config", default=".ci-test-config.xml")
 parser.add_argument('--integrationconfig', help="Configuration to use for integration tests", dest="integration_test_config", default=".ci-integration-test-config.xml")
 parser.add_argument('--logconfig', "-l", help="Log config file", default = "")
+parser.add_argument('--root', help="preCICE Root, defaults to $PRECICE_ROOT", default = os.getenv("PRECICE_ROOT"))
 
 if len(sys.argv) < 2:
     parser.print_help()
@@ -50,6 +51,7 @@ if len(sys.argv) < 2:
     
 args = parser.parse_args()
 
+os.chdir(args.root)
 
 if args.compile:
     if args.remove_build:

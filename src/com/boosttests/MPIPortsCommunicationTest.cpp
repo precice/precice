@@ -15,7 +15,8 @@ BOOST_AUTO_TEST_SUITE(MPIPorts)
 BOOST_AUTO_TEST_CASE(SendReceiveTwoProcesses,
                      * testing::MinRanks(2)
                      * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1}))
-                     * boost::unit_test::fixture<testing::SyncProcessesFixture>())
+                     * boost::unit_test::fixture<testing::SyncProcessesFixture>()
+                     * boost::unit_test::label("MPI_Ports"))
 {
   if (utils::Parallel::getCommunicatorSize() != 2)
     return;
