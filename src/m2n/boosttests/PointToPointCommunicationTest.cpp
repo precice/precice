@@ -18,8 +18,7 @@ using std::rand;
 using namespace precice;
 using namespace m2n;
 
-BOOST_AUTO_TEST_SUITE(M2NTests,
-                      * boost::unit_test::label("MPI_Ports"))
+BOOST_AUTO_TEST_SUITE(M2NTests)
 
 void process(vector<double>& data)
 {
@@ -307,7 +306,8 @@ BOOST_AUTO_TEST_CASE(SocketCommunication,
 }
 
 BOOST_AUTO_TEST_CASE(MPIPortsCommunication,
-		     *testing::OnSize(4))
+		     * testing::OnSize(4)
+         * boost::unit_test::label("MPI_Ports"))
 {
   com::PtrCommunicationFactory cf(new com::MPIPortsCommunicationFactory);
   if (utils::Parallel::getProcessRank() < 4) {
