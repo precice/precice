@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(TwoProcTests,
   
 }
 
-
+#ifndef PRECICE_NO_MPI
 /// Test that requires 4 processors and a master communication
 /*
  * For some master tests, you might need a master communication. This example shows how to set up one.
@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(MultipleParticipantIntegrationTests,
 }
 
 
-
+#endif // PRECICE_NO_MPI
 
 BOOST_AUTO_TEST_SUITE_END() // Examples
 BOOST_AUTO_TEST_SUITE_END() // TestingTests
