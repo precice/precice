@@ -1,13 +1,21 @@
 #include "testing/Testing.hpp"
 #include "utils/Parallel.hpp" // only required when using something from utils::Parallel
 
+//These includes, you only need for a test with an m2n communication or with a master communication (see below)
+#include "utils/MasterSlave.hpp"
+#include "com/Communication.hpp"
+#include "com/MPIDirectCommunication.hpp"
+#include "m2n/M2N.hpp"
+#include "m2n/GatherScatterComFactory.hpp"
+#include "m2n/SharedPointer.hpp"
+
 using namespace precice;
 
 BOOST_AUTO_TEST_SUITE(TestingTests) // Use name of the module, e.g. subdirectory below src/, suffixed with Tests
 
 BOOST_AUTO_TEST_SUITE(Examples) // If your file contains multiple tests, put them in a test suite
 
-/// This tests runs independently on all processors
+/// This test runs independently on all processors
 BOOST_AUTO_TEST_CASE(SingleProcessor)
 {
   /* Do not use DEBUG, TRACE, INFO calls inside tests, if you need to log a message use
@@ -48,7 +56,7 @@ BOOST_AUTO_TEST_CASE(Deleted,
 }
 
 
-/// Tests that required 4 processors.
+/// Test that requires 4 processors.
 /*
  * If less than 4 procs are available, the test is deleted, if more are available, procs > 4 are deleted
  */
@@ -59,7 +67,7 @@ BOOST_AUTO_TEST_CASE(FourProcTests,
   BOOST_TEST(utils::Parallel::getCommunicatorSize() == 4);
 }
 
-/// Tests that runs on 2 processors.
+/// Test that runs on 2 processors.
 /*
  * This case is trickier than with 4 procs, because we need to restrict the global communicator on all
  * ranks first, and then test if we execute at the correct ranks.
@@ -74,6 +82,117 @@ BOOST_AUTO_TEST_CASE(TwoProcTests,
   // Put your test code here
   
 }
+
+
+/// Test that requires 4 processors and a master communication
+/*
+ * For some master tests, you might need a master communication. This example shows how to set up one.
+ */
+BOOST_AUTO_TEST_CASE(FourProcTestsWithMasterCommmunication,
+                     * testing::OnSize(4)) //Four procs in this example, for two combine this with the example above
+{
+  utils::MasterSlave::_communication = com::PtrCommunication(new com::MPIDirectCommunication());;
+
+  if (utils::Parallel::getProcessRank() == 0){ //Master
+    utils::Parallel::splitCommunicator( "Master" );
+    utils::MasterSlave::_rank = 0;
+    utils::MasterSlave::_size = 4;
+    utils::MasterSlave::_slaveMode = false;
+    utils::MasterSlave::_masterMode = true;
+    utils::MasterSlave::_communication->acceptConnection ( "Master", "Slaves", 0, 1);
+    utils::MasterSlave::_communication->setRankOffset(1);
+  }
+  else {//Slaves
+    assertion(utils::Parallel::getProcessRank() > 0 && utils::Parallel::getProcessRank() < 4);
+    utils::Parallel::splitCommunicator( "Slaves" );
+    utils::MasterSlave::_rank = utils::Parallel::getProcessRank();
+    utils::MasterSlave::_size = 3;
+    utils::MasterSlave::_slaveMode = true;
+    utils::MasterSlave::_masterMode = false;
+    utils::MasterSlave::_communication->requestConnection( "Master", "Slaves", utils::Parallel::getProcessRank()-1 , 3 );
+  }
+
+  // Do your testing
+
+  // Don't copy over that line, it's for testing the example
+  BOOST_TEST(utils::MasterSlave::_communication->isConnected());
+
+  // Clean up
+  // @todo remove this if we can move it to a more general place
+  utils::MasterSlave::_communication = nullptr;
+  utils::MasterSlave::reset();
+  utils::Parallel::clearGroups();
+}
+
+/// Tests that requires an m2n communication
+/*
+ * For some master tests, you might need an m2n communication (e.g. partition or cplscheme).
+ * This example shows how to set up one.
+ */
+BOOST_AUTO_TEST_CASE(TwoProcTestsWithM2NCommunication,
+                     * testing::MinRanks(2) // For simplicity with two ranks only
+                     * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
+{
+  if (utils::Parallel::getCommunicatorSize() != 2)
+    return;
+
+  com::PtrCommunication participantCom =
+        com::PtrCommunication(new com::MPIDirectCommunication());
+  m2n::DistributedComFactory::SharedPointer distrFactory = m2n::DistributedComFactory::SharedPointer(
+      new m2n::GatherScatterComFactory(participantCom));
+  m2n::PtrM2N m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory));
+
+  if (utils::Parallel::getProcessRank() == 0){
+    utils::Parallel::splitCommunicator( "ParticipantOne" );
+    m2n->acceptMasterConnection ( "ParticipantOne", "ParticipantTwo");
+  }
+  else if(utils::Parallel::getProcessRank() == 1){//Master
+    utils::Parallel::splitCommunicator( "ParticipantTwo" );
+    m2n->requestMasterConnection ( "ParticipantOne", "ParticipantTwo" );
+  }
+
+  // Do your testing
+
+  // Don't copy over that line, it's for testing the example
+  BOOST_TEST(m2n->getMasterCommunication()->isConnected());
+
+}
+
+
+/// Integration tests with multiple participants.
+/*
+ * For integration tests (tests that directly use the preCICE API), often, you need multiple participants
+ * where each participant uses it own "global" communicator.
+ */
+BOOST_AUTO_TEST_CASE(MultipleParticipantIntegrationTests,
+                     * testing::OnSize(4)) //Four procs in this example, for two combine with the example above
+{
+  if(utils::Parallel::getProcessRank()<=1){
+    utils::Parallel::splitCommunicator( "ParticipantOne" );
+    utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator());
+    utils::Parallel::clearGroups(); //This is important, because your testcase probably use MPI communication again
+
+    // Now call any API function
+
+    // Don't copy over that line, it's for testing the example
+    BOOST_TEST(utils::Parallel::getCommunicatorSize() == 2);
+
+  }
+  else {
+    assertion(utils::Parallel::getProcessRank() > 1 && utils::Parallel::getProcessRank() < 4);
+    utils::Parallel::splitCommunicator( "ParticipantTwo" );
+    utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator());
+    utils::Parallel::clearGroups();
+
+    // Don't copy over that line, it's for testing the example
+    BOOST_TEST(utils::Parallel::getCommunicatorSize() == 2);
+  }
+
+  // This we currently need to clean up.
+  utils::Parallel::setGlobalCommunicator(utils::Parallel::getCommunicatorWorld());
+}
+
+
 
 
 BOOST_AUTO_TEST_SUITE_END() // Examples
