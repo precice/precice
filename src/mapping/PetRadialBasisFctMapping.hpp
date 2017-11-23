@@ -25,6 +25,10 @@ struct SolutionCaching;
 }}}
 
 namespace precice {
+extern bool testMode;
+}
+
+namespace precice {
 namespace mapping {
 
 namespace tests {
@@ -584,10 +588,10 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
   _hasComputedMapping = true;
 
-  INFO("Number of mallocs for matrix C = " << _matrixC.getInfo(MAT_LOCAL).mallocs);
-  INFO("Non-zeros allocated / used / unused for matrix C = " << _matrixC.getInfo(MAT_LOCAL).nz_allocated << " / " << _matrixC.getInfo(MAT_LOCAL).nz_used << " / " << _matrixC.getInfo(MAT_LOCAL).nz_unneeded);
-  INFO("Number of mallocs for matrix A = " << _matrixA.getInfo(MAT_LOCAL).mallocs);
-  INFO("Non-zeros allocated / used / unused for matrix A = " << _matrixA.getInfo(MAT_LOCAL).nz_allocated << " / " << _matrixA.getInfo(MAT_LOCAL).nz_used << " / " << _matrixA.getInfo(MAT_LOCAL).nz_unneeded);
+  DEBUG("Number of mallocs for matrix C = " << _matrixC.getInfo(MAT_LOCAL).mallocs);
+  DEBUG("Non-zeros allocated / used / unused for matrix C = " << _matrixC.getInfo(MAT_LOCAL).nz_allocated << " / " << _matrixC.getInfo(MAT_LOCAL).nz_used << " / " << _matrixC.getInfo(MAT_LOCAL).nz_unneeded);
+  DEBUG("Number of mallocs for matrix A = " << _matrixA.getInfo(MAT_LOCAL).mallocs);
+  DEBUG("Non-zeros allocated / used / unused for matrix A = " << _matrixA.getInfo(MAT_LOCAL).nz_allocated << " / " << _matrixA.getInfo(MAT_LOCAL).nz_used << " / " << _matrixA.getInfo(MAT_LOCAL).nz_unneeded);
 }
 
 template<typename RADIAL_BASIS_FUNCTION_T>
@@ -851,13 +855,15 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
 template <typename RADIAL_BASIS_FUNCTION_T>
 void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::printMappingInfo(int inputDataID, int dim) const
 {
-  const std::string constraintName = getConstraint() == CONSERVATIVE ? "conservative" : "consistent";
-  const std::string polynomialName = _polynomial == Polynomial::ON ? "on" : _polynomial == Polynomial::OFF ? "off" : "separate";
+  if (not precice::testMode) {
+    const std::string constraintName = getConstraint() == CONSERVATIVE ? "conservative" : "consistent";
+    const std::string polynomialName = _polynomial == Polynomial::ON ? "on" : _polynomial == Polynomial::OFF ? "off" : "separate";
 
-  INFO("Mapping " << input()->data(inputDataID)->getName() << " " << constraintName
-       << " from " << input()->getName() << " (ID " << input()->getID() << ")"
-       << " to " << output()->getName() << " (ID " << output()->getID() << ") "
-       << "for dimension " << dim << ") with polynomial set to " << polynomialName);
+    INFO("Mapping " << input()->data(inputDataID)->getName() << " " << constraintName
+         << " from " << input()->getName() << " (ID " << input()->getID() << ")"
+         << " to " << output()->getName() << " (ID " << output()->getID() << ") "
+         << "for dimension " << dim << ") with polynomial set to " << polynomialName);
+  }
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>

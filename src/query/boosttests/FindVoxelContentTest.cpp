@@ -1139,7 +1139,7 @@ BOOST_AUTO_TEST_CASE(QueryCube)
 
   io::ExportVTK exportMesh(true);
   std::string   location = "";
-  exportMesh.doExport("FindVoxelContentTest-testQueryCube", location, mesh);
+  exportMesh.doExport("query-FindVoxelContentTest", location, mesh);
 
   // Query mesh
   Eigen::Vector3d center      = Eigen::Vector3d::Zero();
@@ -2050,7 +2050,7 @@ BOOST_AUTO_TEST_CASE(QueryCube)
     findExcluded(mesh);
     ExportVTKVoxelQueries exportQueries;
     exportQueries.addQuery(center, halflengths, 0);
-    exportQueries.exportQueries("FindVoxelContentTest-testQueryCube-queries");
+    exportQueries.exportQueries("query-FindVoxelContentTest");
     BOOST_TEST(findIncluded.content().size() > 0);
     BOOST_TEST(findExcluded.content().edges().size() == 1);
     BOOST_TEST(findExcluded.content().triangles().size() == 2);
