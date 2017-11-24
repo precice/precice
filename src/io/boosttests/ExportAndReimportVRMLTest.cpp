@@ -12,7 +12,7 @@ BOOST_AUTO_TEST_SUITE(IOTests)
 
 using namespace precice;
 
-BOOST_AUTO_TEST_CASE(InternallyCreatedMesh)
+BOOST_AUTO_TEST_CASE(InternallyCreatedMesh, * testing::OnMaster())
 {
   mesh::Mesh::resetGeometryIDsGlobally();
   bool       flipNormals = false;

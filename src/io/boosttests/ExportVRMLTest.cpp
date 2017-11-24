@@ -9,7 +9,7 @@ BOOST_AUTO_TEST_SUITE(IOTests)
 
 using namespace precice;
 
-BOOST_AUTO_TEST_CASE(ExportSimpleMesh)
+BOOST_AUTO_TEST_CASE(ExportSimpleMesh, * testing::OnMaster())
 {
   int dim = 2;
   mesh::Mesh::resetGeometryIDsGlobally();
