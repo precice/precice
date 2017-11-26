@@ -74,6 +74,7 @@ struct SyncProcessesFixture {
   }
 };
 
+#ifndef PRECICE_NO_MPI
 /// Fixture to create and destroy a master communication
 /**
  * Many tests with parallel features need a working master communication. This fixture avoid code duplication for such tests.
@@ -139,6 +140,8 @@ struct M2NFixture {
     utils::Parallel::clearGroups();
   }
 };
+
+#endif // PRECICE_NO_MPI
 
 /// Fixture to split two participants such that both can interact in an integration test
 struct SplitParticipantsFixture {

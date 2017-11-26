@@ -79,6 +79,7 @@ BOOST_AUTO_TEST_CASE(TwoProcTests,
 /// Test that requires 4 processors and a master communication
 /*
  * For some master tests, you might need a master communication. This example shows how to set one up.
+ * Please note: Such tests always need to be excluded for compilation without MPI (PRECICE_NO_MPI).
  */
 BOOST_AUTO_TEST_CASE(FourProcTestsWithMasterCommmunication,
                      * testing::OnSize(4)
@@ -93,6 +94,7 @@ BOOST_AUTO_TEST_CASE(FourProcTestsWithMasterCommmunication,
  * For some master tests, you might need an m2n communication (e.g. partition or cplscheme).
  * This example shows how to set up one. Don't use the M2N fixture as a decorator. Otherwise,
  * you cannot access the m2n.
+ * Please note: Such tests always need to be excluded for compilation without MPI (PRECICE_NO_MPI).
  */
 BOOST_FIXTURE_TEST_CASE(TwoProcTestsWithM2NCommunication, testing::M2NFixture,
                        * testing::MinRanks(2)
@@ -105,6 +107,8 @@ BOOST_FIXTURE_TEST_CASE(TwoProcTestsWithM2NCommunication, testing::M2NFixture,
   BOOST_TEST(m2n->getMasterCommunication()->isConnected());
 
 }
+
+#endif // PRECICE_NO_MPI
 
 
 /// Integration tests with two participants.
@@ -135,7 +139,7 @@ BOOST_AUTO_TEST_CASE(IntegrationTestsWithTwoParticipants,
 }
 
 
-#endif // PRECICE_NO_MPI
+
 
 BOOST_AUTO_TEST_SUITE_END() // Examples
 BOOST_AUTO_TEST_SUITE_END() // TestingTests
