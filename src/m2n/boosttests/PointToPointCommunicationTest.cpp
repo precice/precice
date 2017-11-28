@@ -5,8 +5,8 @@
 #include "com/MPIPortsCommunicationFactory.hpp"
 #include "com/SocketCommunicationFactory.hpp"
 #include "mesh/Mesh.hpp"
-#include "utils/MasterSlave.hpp"
 #include "testing/Testing.hpp"
+#include "utils/MasterSlave.hpp"
 #include <vector>
 
 using precice::utils::Parallel;
@@ -20,16 +20,13 @@ using namespace m2n;
 
 BOOST_AUTO_TEST_SUITE(M2NTests)
 
-void process(vector<double>& data)
-{
-  for (auto & elem : data) {
+void process(vector<double> &data) {
+  for (auto &elem : data) {
     elem += MasterSlave::_rank + 1;
   }
 }
 
-
-void P2PComTest1(com::PtrCommunicationFactory cf) 
-{
+void P2PComTest1(com::PtrCommunicationFactory cf) {
   assertion(Parallel::getCommunicatorSize() == 4);
 
   MasterSlave::_communication = std::make_shared<com::MPIDirectCommunication>();
@@ -43,7 +40,7 @@ void P2PComTest1(com::PtrCommunicationFactory cf)
 
   switch (Parallel::getProcessRank()) {
   case 0: {
-    Parallel::splitCommunicator( "A.Master");
+    Parallel::splitCommunicator("A.Master");
 
     MasterSlave::_rank = 0;
     MasterSlave::_size = 2;
@@ -73,7 +70,7 @@ void P2PComTest1(com::PtrCommunicationFactory cf)
     break;
   }
   case 1: {
-    Parallel::splitCommunicator( "A.Slave");
+    Parallel::splitCommunicator("A.Slave");
 
     MasterSlave::_rank = 1;
     MasterSlave::_size = 2;
@@ -88,7 +85,7 @@ void P2PComTest1(com::PtrCommunicationFactory cf)
     break;
   }
   case 2: {
-    Parallel::splitCommunicator( "B.Master");
+    Parallel::splitCommunicator("B.Master");
 
     MasterSlave::_rank = 0;
     MasterSlave::_size = 2;
@@ -112,13 +109,14 @@ void P2PComTest1(com::PtrCommunicationFactory cf)
     mesh->getVertexDistribution()[1].push_back(5); // <-
     mesh->getVertexDistribution()[1].push_back(7);
 
-    data = {static_cast<double>(rand()), static_cast<double>(rand()), static_cast<double>(rand()), static_cast<double>(rand())};
+    data = {static_cast<double>(rand()), static_cast<double>(rand()),
+            static_cast<double>(rand()), static_cast<double>(rand())};
     expectedData = {2 * 20, 30, 2 * 60, 70};
 
     break;
   }
   case 3: {
-    Parallel::splitCommunicator( "B.Slave");
+    Parallel::splitCommunicator("B.Slave");
 
     MasterSlave::_rank = 1;
     MasterSlave::_size = 2;
@@ -127,7 +125,9 @@ void P2PComTest1(com::PtrCommunicationFactory cf)
 
     MasterSlave::_communication->requestConnection("B.Master", "B.Slave", 0, 1);
 
-    data = {static_cast<double>(rand()), static_cast<double>(rand()), static_cast<double>(rand()), static_cast<double>(rand()), static_cast<double>(rand()), static_cast<double>(rand())};
+    data = {static_cast<double>(rand()), static_cast<double>(rand()),
+            static_cast<double>(rand()), static_cast<double>(rand()),
+            static_cast<double>(rand()), static_cast<double>(rand())};
     expectedData = {10, 2 * 20, 40, 50, 2 * 60, 80};
 
     break;
@@ -162,8 +162,7 @@ void P2PComTest1(com::PtrCommunicationFactory cf)
 }
 
 /// a very similar test, but with a vertex that has been completely filtered out
-void P2PComTest2(com::PtrCommunicationFactory cf) 
-{
+void P2PComTest2(com::PtrCommunicationFactory cf) {
   assertion(Parallel::getCommunicatorSize() == 4);
 
   MasterSlave::_communication = std::make_shared<com::MPIDirectCommunication>();
@@ -177,7 +176,7 @@ void P2PComTest2(com::PtrCommunicationFactory cf)
 
   switch (Parallel::getProcessRank()) {
   case 0: {
-    Parallel::splitCommunicator( "A.Master");
+    Parallel::splitCommunicator("A.Master");
 
     MasterSlave::_rank = 0;
     MasterSlave::_size = 2;
@@ -202,12 +201,12 @@ void P2PComTest2(com::PtrCommunicationFactory cf)
     mesh->getVertexDistribution()[1].push_back(6);
 
     data = {10, 20, 40, 60, 80};
-    expectedData = {10 + 2, 4 * 20 + 3, 2*40 + 3, 4 * 60 + 3, 80 + 2};
+    expectedData = {10 + 2, 4 * 20 + 3, 2 * 40 + 3, 4 * 60 + 3, 80 + 2};
 
     break;
   }
   case 1: {
-    Parallel::splitCommunicator( "A.Slave");
+    Parallel::splitCommunicator("A.Slave");
 
     MasterSlave::_rank = 1;
     MasterSlave::_size = 2;
@@ -222,7 +221,7 @@ void P2PComTest2(com::PtrCommunicationFactory cf)
     break;
   }
   case 2: {
-    Parallel::splitCommunicator( "B.Master");
+    Parallel::splitCommunicator("B.Master");
 
     MasterSlave::_rank = 0;
     MasterSlave::_size = 2;
@@ -246,13 +245,14 @@ void P2PComTest2(com::PtrCommunicationFactory cf)
     mesh->getVertexDistribution()[1].push_back(5); // <-
     mesh->getVertexDistribution()[1].push_back(7);
 
-    data = {static_cast<double>(rand()), static_cast<double>(rand()), static_cast<double>(rand()), static_cast<double>(rand())};
+    data = {static_cast<double>(rand()), static_cast<double>(rand()),
+            static_cast<double>(rand()), static_cast<double>(rand())};
     expectedData = {2 * 20, 40, 2 * 60, 70};
 
     break;
   }
   case 3: {
-    Parallel::splitCommunicator( "B.Slave");
+    Parallel::splitCommunicator("B.Slave");
 
     MasterSlave::_rank = 1;
     MasterSlave::_size = 2;
@@ -261,7 +261,9 @@ void P2PComTest2(com::PtrCommunicationFactory cf)
 
     MasterSlave::_communication->requestConnection("B.Master", "B.Slave", 0, 1);
 
-    data = {static_cast<double>(rand()), static_cast<double>(rand()), static_cast<double>(rand()), static_cast<double>(rand()), static_cast<double>(rand()), static_cast<double>(rand())};
+    data = {static_cast<double>(rand()), static_cast<double>(rand()),
+            static_cast<double>(rand()), static_cast<double>(rand()),
+            static_cast<double>(rand()), static_cast<double>(rand())};
     expectedData = {10, 2 * 20, 40, 50, 2 * 60, 80};
 
     break;
@@ -295,9 +297,7 @@ void P2PComTest2(com::PtrCommunicationFactory cf)
   utils::Parallel::clearGroups();
 }
 
-BOOST_AUTO_TEST_CASE(SocketCommunication,
-		     *testing::OnSize(4))
-{
+BOOST_AUTO_TEST_CASE(SocketCommunication, *testing::OnSize(4)) {
   com::PtrCommunicationFactory cf(new com::SocketCommunicationFactory);
   if (utils::Parallel::getProcessRank() < 4) {
     P2PComTest1(cf);
@@ -306,9 +306,8 @@ BOOST_AUTO_TEST_CASE(SocketCommunication,
 }
 
 BOOST_AUTO_TEST_CASE(MPIPortsCommunication,
-		     * testing::OnSize(4)
-         * boost::unit_test::label("MPI_Ports"))
-{
+                     *testing::OnSize(4) *
+                         boost::unit_test::label("MPI_Ports")) {
   com::PtrCommunicationFactory cf(new com::MPIPortsCommunicationFactory);
   if (utils::Parallel::getProcessRank() < 4) {
     P2PComTest1(cf);
@@ -319,4 +318,3 @@ BOOST_AUTO_TEST_CASE(MPIPortsCommunication,
 BOOST_AUTO_TEST_SUITE_END()
 
 #endif // not PRECICE_NO_MPI
-
