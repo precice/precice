@@ -59,7 +59,8 @@ SolverInterfaceImpl:: SolverInterfaceImpl
   const std::string& participantName,
   int                accessorProcessRank,
   int                accessorCommunicatorSize,
-  bool               serverMode )
+  bool               serverMode,
+  utils::Parallel::Communicator communicator)
 :
   _accessorName(participantName),
   _accessorProcessRank(accessorProcessRank),
@@ -82,6 +83,7 @@ SolverInterfaceImpl:: SolverInterfaceImpl
         "Accessor process index has to be smaller than accessor process "
         << "size (given as " << _accessorProcessRank << ")!");
 
+  precice::utils::Parallel::setCommunicatorWorld(communicator);
   precice::utils::EventRegistry::initialize(participantName);
 
   /* When precice stops abruptly, e.g. an external solver crashes, the

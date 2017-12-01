@@ -32,8 +32,15 @@ void precice_fastest_create_
   const int*  solverProcessSize,
   int   lengthAccessorNameA,
   int   lengthAccessorNameF,
-  int   lengthConfigFileName )
+  int   lengthConfigFileName,
+  void *communicator)
 {
+  #ifndef PRECICE_NO_MPI
+  precice::utils::Parallel::Communicator commWorld = static_cast<MPI_Comm>(communicator);
+  #else
+  precice::utils::Parallel::Communicator commWorld = -1;
+  #endif
+
   int strippedLength = precice::impl::strippedLength(participantNameA,lengthAccessorNameA);
   string stringAccessorNameA(participantNameA, strippedLength);
   strippedLength = precice::impl::strippedLength(participantNameF,lengthAccessorNameF);
@@ -43,10 +50,10 @@ void precice_fastest_create_
   //cout << "Accessor: " << stringAccessorName << "!" << endl;
   //cout << "Config  : " << stringConfigFileName << "!" << endl;
   implA = new precice::impl::SolverInterfaceImpl (stringAccessorNameA,
-         *solverProcessIndex, *solverProcessSize, false);
+                                                  *solverProcessIndex, *solverProcessSize, false, commWorld);
   implA->configure(stringConfigFileName);
   implF = new precice::impl::SolverInterfaceImpl (stringAccessorNameF,
-         *solverProcessIndex, *solverProcessSize, false);
+                                                  *solverProcessIndex, *solverProcessSize, false, commWorld);
   implF->configure(stringConfigFileName);
 }
 

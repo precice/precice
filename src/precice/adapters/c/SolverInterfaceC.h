@@ -6,21 +6,24 @@ extern "C" {
 #endif
 
 /**
- * @brief Creates the coupling interface and confiures it.
+ * @brief Creates the coupling interface and configures it.
  *
  * Has to be called before any other method of this interface.
  *
- * @param participantName [IN] Name of the participant accessing the interface. Has to
+ * @param[in] participantName Name of the participant accessing the interface. Has to
  *                          match one of the names specified in the
  *                          configuration xml file.
- * @param configFileName [IN] (Path and) name of the xml configuration file
+ * @param[in] configFileName (Path and) name of the xml configuration file
  *                            containing the precice configuration.
+ * @param[in] communicator Optionally set an MPI communicator which preCICE uses as COMM_WORLD
+ *
  */
 void precicec_createSolverInterface (
   const char* participantName,
   const char* configFileName,
   int         solverProcessIndex,
-  int         solverProcessSize );
+  int         solverProcessSize,
+  void*       communicator);
 
 /**
  * @brief Initiates the coupling to the coupling supervisor.

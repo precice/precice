@@ -25,7 +25,7 @@ extern"C" {
  *   INTEGER   solverProcessIndex,
  *   INTEGER   solverProcessSize )
  *
- * IN:  participantName, configFileName, solverProcessIndex, solverProcessSize
+ * IN:  participantName, configFileName, solverProcessIndex, solverProcessSize, communicator
  * OUT: -
  */
 void precicef_create_(
@@ -34,7 +34,8 @@ void precicef_create_(
   const int*  solverProcessIndex,
   const int*  solverProcessSize,
   int   lengthAccessorName,
-  int   lengthConfigFileName );
+  int   lengthConfigFileName,
+  void* communicator);
 
 /**
  * @brief See precice::SolverInterface::initialize().

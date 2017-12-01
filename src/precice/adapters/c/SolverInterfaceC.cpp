@@ -15,11 +15,18 @@ void precicec_createSolverInterface
   const char* participantName,
   const char* configFileName,
   int         solverProcessIndex,
-  int         solverProcessSize )
+  int         solverProcessSize,
+  void*       communicator)
 {
+  #ifndef PRECICE_NO_MPI
+  precice::utils::Parallel::Communicator commWorld = static_cast<MPI_Comm>(communicator);
+  #else
+  precice::utils::Parallel::Communicator commWorld = -1;
+  #endif
+  
   std::string stringAccessorName ( participantName );
   impl = new precice::impl::SolverInterfaceImpl ( stringAccessorName,
-      solverProcessIndex, solverProcessSize, false );
+                                                  solverProcessIndex, solverProcessSize, false, commWorld );
   std::string stringConfigFileName ( configFileName );
   impl->configure ( stringConfigFileName );
 }

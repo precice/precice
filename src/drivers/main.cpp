@@ -128,7 +128,8 @@ int main ( int argc, char** argv )
     if ( size != 1 ){
       std::cerr << "Server can be run with only one process!" << std::endl;
     }
-    precice::impl::SolverInterfaceImpl server ( participantName, 0, 1, true );
+    precice::impl::SolverInterfaceImpl server ( participantName, 0, 1, true,
+                                                precice::utils::Parallel::getCommunicatorWorld() );
     server.configure(configFile);
     server.runServer();
     std::cout << std::endl << std::endl << "...finished running server" << std::endl;

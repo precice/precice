@@ -28,12 +28,20 @@ void precicef_create_
   const int*  solverProcessIndex,
   const int*  solverProcessSize,
   int   lengthAccessorName,
-  int   lengthConfigFileName )
+  int   lengthConfigFileName,
+  void* communicator)
 {
   //cout << "lengthAccessorName: " << lengthAccessorName << endl;
   //cout << "lengthConfigFileName: " << lengthConfigFileName << endl;
   //cout << "solverProcessIndex: " << *solverProcessIndex << endl;
   //cout << "solverProcessSize: " << *solverProcessSize << endl;
+
+  #ifndef PRECICE_NO_MPI
+  precice::utils::Parallel::Communicator commWorld = static_cast<MPI_Comm>(communicator);
+  #else
+  precice::utils::Parallel::Communicator commWorld = -1;
+  #endif
+
   int strippedLength = precice::impl::strippedLength(participantName,lengthAccessorName);
   string stringAccessorName(participantName, strippedLength);
   strippedLength = precice::impl::strippedLength(configFileName,lengthConfigFileName);
@@ -41,7 +49,7 @@ void precicef_create_
   //cout << "Accessor: " << stringAccessorName << "!" << endl;
   //cout << "Config  : " << stringConfigFileName << "!" << endl;
   impl = new precice::impl::SolverInterfaceImpl (stringAccessorName,
-         *solverProcessIndex, *solverProcessSize, false);
+                                                 *solverProcessIndex, *solverProcessSize, false, commWorld);
   impl->configure(stringConfigFileName);
 }
 

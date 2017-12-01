@@ -28,7 +28,7 @@ extern"C" {
  *   INTEGER   solverProcessIndex,
  *   INTEGER   solverProcessSize )
  *
- * IN:  participantNameA, participantNameF, configFileName, solverProcessIndex, solverProcessSize
+ * IN:  participantNameA, participantNameF, configFileName, solverProcessIndex, solverProcessSize, communicator
  * OUT: -
  */
 void precice_fastest_create_(
@@ -39,7 +39,8 @@ void precice_fastest_create_(
   const int*  solverProcessSize,
   int   lengthAccessorNameA,
   int   lengthAccessorNameF,
-  int   lengthConfigFileName );
+  int   lengthConfigFileName,
+  void *communicator);
 
 /**
  * @brief See precice::SolverInterface::initialize().

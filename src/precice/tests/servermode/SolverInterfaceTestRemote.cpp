@@ -112,7 +112,7 @@ void SolverInterfaceTestRemote:: testCouplingModeWithOneServer()
   else {
     assertion (rank == 2, rank);
     bool isServer = true;
-    impl::SolverInterfaceImpl server("ParticipantB", 0, 1, isServer);
+    impl::SolverInterfaceImpl server("ParticipantB", 0, 1, isServer, utils::Parallel::getCommunicatorWorld());
 
     // Perform manual configuration without overwritting logging config
     mesh::Mesh::resetGeometryIDsGlobally();
@@ -197,7 +197,7 @@ void SolverInterfaceTestRemote:: testCouplingModeParallelWithOneServer()
   else {
     assertion(rank == 3, rank);
     bool isServer = true;
-    impl::SolverInterfaceImpl server("ParticipantB", 0, 1, isServer);
+    impl::SolverInterfaceImpl server("ParticipantB", 0, 1, isServer, utils::Parallel::getCommunicatorWorld() );
 
     // Perform manual configuration without overwritting logging config
     mesh::Mesh::resetGeometryIDsGlobally();

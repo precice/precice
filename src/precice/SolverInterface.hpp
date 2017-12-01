@@ -6,6 +6,7 @@
 #include <vector>
 #include <set>
 #include <memory>
+#include "utils/Parallel.hpp"
 
 /**
  * Pre-declarations.
@@ -59,11 +60,13 @@ public:
    *        each process using preCICE has specify its index, which has to start
    *        from 0 and end with solverProcessSize - 1.
    * @param[in] solverProcessSize The number of solver processes using preCICE.
+   * @param[in] communicator Optionally set an MPI communicator which preCICE uses as COMM_WORLD
    */
   SolverInterface (
     const std::string& participantName,
     int                solverProcessIndex,
-    int                solverProcessSize );
+    int                solverProcessSize,
+    utils::Parallel::Communicator communicator = utils::Parallel::getCommunicatorWorld());
 
   /**
    * @brief Destructor.

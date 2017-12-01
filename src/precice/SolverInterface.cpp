@@ -8,9 +8,12 @@ SolverInterface:: SolverInterface
 (
   const std::string& participantName,
   int                solverProcessIndex,
-  int                solverProcessSize )
+  int                solverProcessSize,
+  utils::Parallel::Communicator communicator)
 :
-  _impl ( new impl::SolverInterfaceImpl(participantName, solverProcessIndex, solverProcessSize, false) )
+  _impl (
+    new impl::SolverInterfaceImpl(participantName, solverProcessIndex, solverProcessSize, false, communicator)
+    )
 {}
 
 SolverInterface::~SolverInterface() = default;

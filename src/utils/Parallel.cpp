@@ -8,6 +8,12 @@ namespace precice
 namespace utils
 {
 
+#ifndef PRECICE_NO_MPI
+  Parallel::Communicator Parallel::_commWorld = MPI_COMM_WORLD;
+#else
+  Parallel::Communicator Parallel::_commWorld = -1;
+#endif
+  
 logging::Logger Parallel::_log("utils::Parallel");
 
 Parallel::Communicator Parallel::_globalCommunicator = Parallel::getCommunicatorWorld();
@@ -20,13 +26,15 @@ bool Parallel::_mpiInitializedByPrecice = false;
 
 std::vector<Parallel::AccessorGroup> Parallel::_accessorGroups;
 
+void Parallel::setCommunicatorWorld(Parallel::Communicator comm)
+{
+  _commWorld = comm;
+  _globalCommunicator = _commWorld;
+}
+
 Parallel::Communicator Parallel::getCommunicatorWorld()
 {
-#ifndef PRECICE_NO_MPI
-  return MPI_COMM_WORLD;
-#else
-  return -1;
-#endif
+  return _commWorld;
 }
 
 void Parallel::initializeMPI(

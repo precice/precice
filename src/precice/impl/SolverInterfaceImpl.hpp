@@ -51,7 +51,8 @@ public:
     const std::string& participantName,
     int                accessorProcessRank,
     int                accessorCommunicatorSize,
-    bool               serverMode );
+    bool               serverMode,
+    utils::Parallel::Communicator communicator);
 
   /**
    * @brief Destructor.

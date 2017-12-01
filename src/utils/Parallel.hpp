@@ -38,6 +38,7 @@ public:
     int size;
   };
 
+  static void setCommunicatorWorld(Parallel::Communicator comm);
   static Communicator getCommunicatorWorld();
 
   /**
@@ -138,6 +139,8 @@ private:
   static Communicator _globalCommunicator;
 
   static Communicator _localCommunicator;
+
+  static Communicator _commWorld;
 
   /// Processes participating in direct communication.
   static std::vector<AccessorGroup> _accessorGroups;
