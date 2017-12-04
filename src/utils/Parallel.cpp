@@ -25,7 +25,7 @@ Parallel::Communicator Parallel::getCommunicatorWorld()
 #ifndef PRECICE_NO_MPI
   return MPI_COMM_WORLD;
 #else
-  return -1;
+  return nullptr;
 #endif
 }
 
