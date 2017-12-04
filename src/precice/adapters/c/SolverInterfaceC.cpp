@@ -10,7 +10,7 @@ extern "C" {
 
 static precice::impl::SolverInterfaceImpl* impl = nullptr;
 
-void precicec_createSolverInterface
+void precicec_createSolverInterface_on_communicator
 (
   const char* participantName,
   const char* configFileName,
@@ -21,7 +21,7 @@ void precicec_createSolverInterface
   #ifndef PRECICE_NO_MPI
   precice::utils::Parallel::Communicator commWorld = static_cast<MPI_Comm>(communicator);
   #else
-  precice::utils::Parallel::Communicator commWorld = -1;
+  precice::utils::Parallel::Communicator commWorld = nullptr;
   #endif
   
   std::string stringAccessorName ( participantName );
@@ -29,6 +29,19 @@ void precicec_createSolverInterface
                                                   solverProcessIndex, solverProcessSize, false, commWorld );
   std::string stringConfigFileName ( configFileName );
   impl->configure ( stringConfigFileName );
+}
+
+void precicec_createSolverInterface
+(
+  const char* participantName,
+  const char* configFileName,
+  int         solverProcessIndex,
+  int         solverProcessSize )
+{
+  precicec_createSolverInterface_on_communicator(
+    participantName, configFileName,
+    solverProcessIndex, solverProcessSize,
+    precice::utils::Parallel::getCommunicatorWorld());
 }
 
 double precicec_initialize()

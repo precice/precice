@@ -23,22 +23,22 @@ namespace precice {
   }
 }
 
-void precice_fastest_create_
+void precice_fastest_create_on_communicator_
 (
   const char* participantNameA,
   const char* participantNameF,
   const char* configFileName,
   const int*  solverProcessIndex,
   const int*  solverProcessSize,
+  void *communicator,
   int   lengthAccessorNameA,
   int   lengthAccessorNameF,
-  int   lengthConfigFileName,
-  void *communicator)
+  int   lengthConfigFileName)
 {
   #ifndef PRECICE_NO_MPI
   precice::utils::Parallel::Communicator commWorld = static_cast<MPI_Comm>(communicator);
   #else
-  precice::utils::Parallel::Communicator commWorld = -1;
+  precice::utils::Parallel::Communicator commWorld = nullptr;
   #endif
 
   int strippedLength = precice::impl::strippedLength(participantNameA,lengthAccessorNameA);
@@ -55,6 +55,25 @@ void precice_fastest_create_
   implF = new precice::impl::SolverInterfaceImpl (stringAccessorNameF,
                                                   *solverProcessIndex, *solverProcessSize, false, commWorld);
   implF->configure(stringConfigFileName);
+}
+
+
+void precice_fastest_create_
+(
+  const char* participantNameA,
+  const char* participantNameF,
+  const char* configFileName,
+  const int*  solverProcessIndex,
+  const int*  solverProcessSize,
+  int   lengthAccessorNameA,
+  int   lengthAccessorNameF,
+  int   lengthConfigFileName)
+{
+  precice_fastest_create_on_communicator_(
+    participantNameA, participantNameF, configFileName,
+    solverProcessIndex, solverProcessSize,
+    precice::utils::Parallel::getCommunicatorWorld(),
+    lengthAccessorNameA,lengthAccessorNameF, lengthConfigFileName);
 }
 
 void precice_fastest_initialize_

@@ -21,7 +21,7 @@ extern"C" {
  * @brief See precice::SolverInterface::SolverInterface() and ...::configure().
  *
  * Fortran syntax:
- * precicef_create(
+ * precice_fastest_create_on_communicator_(
  *   CHARACTER participantNameA(*),
  *   CHARACTER participantNameF(*),
  *   CHARACTER configFileName(*),
@@ -29,6 +29,32 @@ extern"C" {
  *   INTEGER   solverProcessSize )
  *
  * IN:  participantNameA, participantNameF, configFileName, solverProcessIndex, solverProcessSize, communicator
+ * OUT: -
+ */
+void precice_fastest_create_on_communicator_(
+  const char* participantNameA,
+  const char* participantNameF,
+  const char* configFileName,
+  const int*  solverProcessIndex,
+  const int*  solverProcessSize,
+  void *communicator,
+  int   lengthAccessorNameA,
+  int   lengthAccessorNameF,
+  int   lengthConfigFileName);
+
+  
+/**
+ * @brief See precice::SolverInterface::SolverInterface() and ...::configure().
+ *
+ * Fortran syntax:
+ * precicef_create(
+ *   CHARACTER participantNameA(*),
+ *   CHARACTER participantNameF(*),
+ *   CHARACTER configFileName(*),
+ *   INTEGER   solverProcessIndex,
+ *   INTEGER   solverProcessSize )
+ *
+ * IN:  participantNameA, participantNameF, configFileName, solverProcessIndex, solverProcessSize
  * OUT: -
  */
 void precice_fastest_create_(

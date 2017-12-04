@@ -21,7 +21,7 @@ namespace precice {
   }
 }
 
-void precicef_create_
+void precicef_create_on_communicator_
 (
   const char* participantName,
   const char* configFileName,
@@ -39,7 +39,7 @@ void precicef_create_
   #ifndef PRECICE_NO_MPI
   precice::utils::Parallel::Communicator commWorld = static_cast<MPI_Comm>(communicator);
   #else
-  precice::utils::Parallel::Communicator commWorld = -1;
+  precice::utils::Parallel::Communicator commWorld = nullptr;
   #endif
 
   int strippedLength = precice::impl::strippedLength(participantName,lengthAccessorName);
@@ -51,6 +51,22 @@ void precicef_create_
   impl = new precice::impl::SolverInterfaceImpl (stringAccessorName,
                                                  *solverProcessIndex, *solverProcessSize, false, commWorld);
   impl->configure(stringConfigFileName);
+}
+
+
+void precicef_create_
+(
+  const char* participantName,
+  const char* configFileName,
+  const int*  solverProcessIndex,
+  const int*  solverProcessSize,
+  int   lengthAccessorName,
+  int   lengthConfigFileName)
+{
+  precicef_create_on_communicator_(
+    participantName, configFileName, solverProcessIndex, solverProcessSize,
+    precice::utils::Parallel::getCommunicatorWorld(),
+    lengthAccessorName, lengthConfigFileName);
 }
 
 void precicef_initialize_

@@ -19,13 +19,35 @@ extern"C" {
  * @brief See precice::SolverInterface::SolverInterface() and ...::configure().
  *
  * Fortran syntax:
- * precicef_create(
+ * precicef_create_on_communicator_(
  *   CHARACTER participantName(*),
  *   CHARACTER configFileName(*),
  *   INTEGER   solverProcessIndex,
  *   INTEGER   solverProcessSize )
  *
  * IN:  participantName, configFileName, solverProcessIndex, solverProcessSize, communicator
+ * OUT: -
+ */
+void precicef_create_on_communicator_(
+  const char* participantName,
+  const char* configFileName,
+  const int*  solverProcessIndex,
+  const int*  solverProcessSize,
+  void *communicator,
+  int   lengthAccessorName,
+  int   lengthConfigFileName);
+  
+/**
+ * @brief See precice::SolverInterface::SolverInterface() and ...::configure().
+ *
+ * Fortran syntax:
+ * precicef_create(
+ *   CHARACTER participantName(*),
+ *   CHARACTER configFileName(*),
+ *   INTEGER   solverProcessIndex,
+ *   INTEGER   solverProcessSize )
+ *
+ * IN:  participantName, configFileName, solverProcessIndex, solverProcessSize
  * OUT: -
  */
 void precicef_create_(
