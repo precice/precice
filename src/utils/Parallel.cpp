@@ -29,7 +29,7 @@ std::vector<Parallel::AccessorGroup> Parallel::_accessorGroups;
 void Parallel::setCommunicatorWorld(Parallel::Communicator comm)
 {
   _commWorld = comm;
-  _globalCommunicator = _commWorld;
+  // _globalCommunicator = _commWorld;
 }
 
 Parallel::Communicator Parallel::getCommunicatorWorld()
