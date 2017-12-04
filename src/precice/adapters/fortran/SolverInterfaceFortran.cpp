@@ -27,9 +27,9 @@ void precicef_create_
   const char* configFileName,
   const int*  solverProcessIndex,
   const int*  solverProcessSize,
+  void* communicator,	
   int   lengthAccessorName,
-  int   lengthConfigFileName,
-  void* communicator)
+  int   lengthConfigFileName)
 {
   //cout << "lengthAccessorName: " << lengthAccessorName << endl;
   //cout << "lengthConfigFileName: " << lengthConfigFileName << endl;
