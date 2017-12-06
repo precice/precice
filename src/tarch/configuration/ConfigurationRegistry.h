@@ -11,19 +11,13 @@
 #include <list>
 #include <vector>
 
+#include "xmlconfig/parser.hpp"
+
 
 namespace tarch {
   namespace configuration {
     class ConfigurationRegistry;
     class TopLevelConfiguration;
-  }
-  namespace irr {
-    namespace io {
-      class IXMLBase;
-
-      template<class char_type, class super_class>
-        class IIrrXMLReader;
-    }
   }
 }
 
@@ -61,11 +55,13 @@ class tarch::configuration::ConfigurationRegistry {
     
     /**
      * Called internally by readFile() and readString().
-     */
-    std::list<TopLevelConfiguration*> readConfiguration(
-      tarch::irr::io::IIrrXMLReader<char, tarch::irr::io::IXMLBase>* xmlReader,
-      const std::string& topLevelTag
-    );
+     */	
+	std::list<tarch::configuration::TopLevelConfiguration*> 
+	parseTag(const std::string& filename, const std::string& topLevelTag);
+
+	void parseTag(precice::xml::Parser::CTag *pTag, const std::string& topLevelTag,
+		std::list<tarch::configuration::TopLevelConfiguration*> &result);
+
   public:
     virtual ~ConfigurationRegistry();
 
@@ -105,10 +101,10 @@ class tarch::configuration::ConfigurationRegistry {
      *
      * @param configString String containing the XML configuration data.
      */
-    std::list<TopLevelConfiguration*> readString(
+    /*std::list<TopLevelConfiguration*> readString(
       const std::string& configString,
       const std::string& topLevelTag
-    );
+    );*/
 
     void freeConfigurations(std::list<TopLevelConfiguration*>& configurations);
 };

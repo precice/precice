@@ -5,8 +5,8 @@
 #include <mpi.h>
 #endif
 
-#include "tarch/irr/XML.h"
 #include <sstream>
+#include "xmlconfig/parser.hpp"
 
 
 namespace tarch {
@@ -39,9 +39,11 @@ class tarch::configuration::Configuration {
      * any successing isValid() call fails. If something is wrong within the
      * configuration, parseSubtag() should write a (detailed) error description.
      *
-     * @param xmlReader Reader to be used.
-     */
-    virtual void parseSubtag( tarch::irr::io::IrrXMLReader* xmlReader ) = 0;
+	 * @param pTag
+     * @param topLevelTag
+	 * @param result
+	 */
+    virtual void parseSubtag(precice::xml::Parser::CTag *pTag) = 0;
 
     /**
      * Return name of xml tag that is associated to the configuration.

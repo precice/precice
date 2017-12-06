@@ -22,66 +22,64 @@ std::string tarch::logging::configurations::LogOutputFormatConfiguration::getTag
   return "log-output";
 }
 
-
-void tarch::logging::configurations::LogOutputFormatConfiguration::parseSubtag( tarch::irr::io::IrrXMLReader* _xmlReader ) {
-  assertion( _xmlReader != nullptr );
-
-  _isValid   = true;
+void tarch::logging::configurations::LogOutputFormatConfiguration::parseSubtag(precice::xml::Parser::CTag *pTag)
+{
+	_isValid   = true;
   _hasParsed = true;
 
-  if (_xmlReader->getAttributeValue("column-separator") != nullptr) {
-    _logColumnSeparator = _xmlReader->getAttributeValue("column-separator");
-  }
+	if ( pTag->m_aAttributes.find("column-separator") != pTag->m_aAttributes.end() ) {
+	_logColumnSeparator = pTag->m_aAttributes["column-separator"];
+	}
   else {
-    _log.error( "parseSubtag(...)", "attribute \"column-separator\" missing within tag " + getTag() );
+    _log.error ( "parseSubtag(...)", "attribute \"column-separator\" missing within tag " + getTag() );
     _isValid = false;
   }
 
-  if (_xmlReader->getAttributeValue("log-time-stamp") != nullptr) {
-    _logTimeStamp = _xmlReader->getAttributeValueAsBool("log-time-stamp");
+if ( pTag->m_aAttributes.find("log-time-stamp") != pTag->m_aAttributes.end() ) {
+    _logTimeStamp = precice::utils::convertStringToBool(pTag->m_aAttributes["log-time-stamp"]);
   }
   else {
-    _log.error( "parseSubtag(...)", "attribute \"log-time-stamp\" missing within tag " + getTag() );
+    _log.error ( "parseSubtag(...)", "attribute \"log-time-stamp\" missing within tag " + getTag() );
     _isValid = false;
   }
 
-  if (_xmlReader->getAttributeValue("log-output-file") != nullptr) {
-    _logOutputFile = _xmlReader->getAttributeValue("log-output-file");
+  if (pTag->m_aAttributes.find("log-output-file") != pTag->m_aAttributes.end()) {
+    _logOutputFile = pTag->m_aAttributes["log-output-file"];
   }
   else {
-    _log.error( "parseSubtag(...)", "attribute \"log-output-file\" missing within tag " + getTag() + ". Can be empty string, but has to exist" );
+    _log.error ( "parseSubtag(...)", "attribute \"log-output-file\" missing within tag " + getTag() + ". Can be empty string, but has to exist" );
     _isValid = false;
   }
 
-  if (_xmlReader->getAttributeValue("log-time-stamp-human-readable") != nullptr) {
-    _logTimeStampHumanReadable = _xmlReader->getAttributeValueAsBool("log-time-stamp-human-readable");
+  if (pTag->m_aAttributes.find("log-time-stamp-human-readable") != pTag->m_aAttributes.end()) {
+    _logTimeStampHumanReadable = precice::utils::convertStringToBool(pTag->m_aAttributes["log-time-stamp-human-readable"]);
   }
   else {
-    _log.error( "parseSubtag(...)", "attribute \"log-time-stamp-human-readable\" missing within tag " + getTag() );
+    _log.error ( "parseSubtag(...)", "attribute \"log-time-stamp-human-readable\" missing within tag " + getTag() );
+    _isValid = false;
+  }
+// precice::utils::convertStringToBool(
+  if (pTag->m_aAttributes.find("log-machine-name") != pTag->m_aAttributes.end()) {
+    _logMachineName = precice::utils::convertStringToBool(pTag->m_aAttributes["log-machine-name"]);
+  }
+  else {
+    _log.error ( "parseSubtag(...)", "attribute \"log-machine-name\" missing within tag " + getTag() );
     _isValid = false;
   }
 
-  if (_xmlReader->getAttributeValue("log-machine-name") != nullptr) {
-    _logMachineName = _xmlReader->getAttributeValueAsBool("log-machine-name");
+  if (pTag->m_aAttributes.find("log-message-type") != pTag->m_aAttributes.end()) {
+    _logMessageType = precice::utils::convertStringToBool(pTag->m_aAttributes["log-message-type"]);
   }
   else {
-    _log.error( "parseSubtag(...)", "attribute \"log-machine-name\" missing within tag " + getTag() );
+    _log.error ( "parseSubtag(...)", "attribute \"log-message-type\" missing within tag " + getTag() );
     _isValid = false;
   }
 
-  if (_xmlReader->getAttributeValue("log-message-type") != nullptr) {
-    _logMessageType = _xmlReader->getAttributeValueAsBool("log-message-type");
+  if (pTag->m_aAttributes.find("log-trace") != pTag->m_aAttributes.end()) {
+    _logTrace = precice::utils::convertStringToBool(pTag->m_aAttributes["log-trace"]);
   }
   else {
-    _log.error( "parseSubtag(...)", "attribute \"log-message-type\" missing within tag " + getTag() );
-    _isValid = false;
-  }
-
-  if (_xmlReader->getAttributeValue("log-trace") != nullptr) {
-    _logTrace = _xmlReader->getAttributeValueAsBool("log-trace");
-  }
-  else {
-    _log.error( "parseSubtag(...)", "attribute \"log-trace\" missing within tag " + getTag() );
+    _log.error ( "parseSubtag(...)", "attribute \"log-trace\" missing within tag " + getTag() );
     _isValid = false;
   }
 }
@@ -118,10 +116,12 @@ bool tarch::logging::configurations::LogOutputFormatConfiguration::hasParsed() c
 
 
 bool tarch::logging::configurations::LogOutputFormatConfiguration::isValid() const {
-  if (!_hasParsed) {
+  		
+	if (!_hasParsed) {
     assertion( !_isValid );
     logError( "isValid()", "tag <" + getTag() + "> is missing" );
   }
+  
   return _isValid;
 }
 

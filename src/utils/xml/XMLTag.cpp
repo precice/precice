@@ -181,101 +181,6 @@ bool XMLTag:: hasAttribute
 //      << " does not exist for tag " << _name );
 //}
 
-void XMLTag:: parse
-(
-  XMLTag::XMLReader* xmlReader )
-{
-  TRACE(_fullName);
-  try {
-    resetAttributes();
-    if (xmlReader->getNodeType() == tarch::irr::io::EXN_ELEMENT){
-      assertion(xmlReader->getNodeName() != nullptr);
-      DEBUG("reading attributes of tag " << xmlReader->getNodeName());
-      readAttributes(xmlReader);
-      _listener.xmlTagCallback(*this);
-    }
-
-    if (_subtags.size() > 0){
-      while (xmlReader->read()){
-        if (xmlReader->getNodeType() == tarch::irr::io::EXN_ELEMENT){
-          assertion(xmlReader->getNodeName() != nullptr);
-          DEBUG("reading subtag " << xmlReader->getNodeName()
-                       << " of tag " << _fullName);
-          parseSubtag(xmlReader);
-        }
-        else if (xmlReader->getNodeType() == tarch::irr::io::EXN_ELEMENT_END){
-          assertion(xmlReader->getNodeName() != nullptr);
-          if (std::string(xmlReader->getNodeName()) == _fullName){
-            DEBUG("end of tag " << xmlReader->getNodeName());
-            areAllSubtagsConfigured();
-            _configured = true;
-            _listener.xmlEndTagCallback(*this);
-            //resetAttributes();
-            return;
-          }
-          else {
-            std::ostringstream stream;
-            if (not _fullName.empty()){
-              stream << "Invalid closing tag </" << xmlReader->getNodeName() << ">";
-              throw stream.str();
-            }
-            //else {
-            //  stream << "Invalid closing tag </" << xmlReader->getNodeName()
-            //         << ">, expected closing of tag <" << _fullName << "> instead";
-            //}
-          }
-        }
-      }
-      if (not _name.empty()){
-        std::ostringstream error;
-        error << "Missing closing tag </" << _fullName << ">";
-        throw error.str();
-      }
-    }
-    else {
-      _configured = true;
-    }
-  }
-  catch (std::string errorMsg){
-    if (not _name.empty()){
-      errorMsg += "\n   in tag <" + _fullName + ">";
-    }
-    throw errorMsg;
-  }
-}
-
-void XMLTag:: parseSubtag
-(
-  XMLTag::XMLReader* xmlReader )
-{
-  TRACE(_fullName);
-  bool success = false;
-  for (XMLTag* tag : _subtags){
-    if (std::string(xmlReader->getNodeName()) == tag->getFullName()){
-      if (tag->isConfigured()
-          && (tag->getOccurrence() == OCCUR_ONCE
-              || tag->getOccurrence() == OCCUR_NOT_OR_ONCE))
-      {
-        std::string error = "Tag <" + tag->getFullName() + "> is not allowed to occur multiple times";
-        throw error;
-      }
-      tag->parse(xmlReader);
-      if (not tag->_namespace.empty()){
-        assertion(utils::contained(tag->_namespace, _configuredNamespaces));
-        _configuredNamespaces[tag->_namespace] = true;
-      }
-      success = true;
-      break;   // since the xmlReader should not advance further
-    }
-  }
-  if (not success){
-    std::ostringstream stream;
-    stream << "Wrong tag <" << xmlReader->getNodeName() << ">";
-    throw stream.str();
-  }
-
-}
-
 double XMLTag:: getDoubleAttributeValue
 (
   const std::string& name ) const
@@ -340,7 +245,48 @@ Eigen::VectorXd XMLTag::getEigenVectorXdAttributeValue
   return result;
 }
 
-void XMLTag:: readAttributes
+// new readattributes fx
+void XMLTag::readAttributes(std::map<std::string, std::string> &aAttributes)
+{
+	TRACE();
+
+	for (auto & element : aAttributes) 
+	{
+		auto name = element.first;
+		
+		if (not utils::contained(name, _attributes)){
+		  std::string error = "Wrong attribute \"" + name + "\"";
+		  
+		  std::cout << error << std::endl;
+		  throw error;
+		}
+		
+		auto value = element.second;
+		//std::cout << name << " :: " << value << std::endl;
+	}
+
+	for (auto & pair : _doubleAttributes){
+		pair.second.readValue(aAttributes);
+	}
+
+	for ( auto & pair : _intAttributes){
+		pair.second.readValue(aAttributes);
+	}
+
+	for ( auto & pair : _stringAttributes ){
+		pair.second.readValue(aAttributes);
+	}
+
+	for ( auto & pair : _booleanAttributes ){
+		pair.second.readValue(aAttributes);
+	}
+
+	for ( auto & pair : _eigenVectorXdAttributes ){
+		pair.second.readValue(aAttributes);
+	}
+}
+
+/*void XMLTag:: readAttributes
 (
   XMLReader* xmlReader )
 {
@@ -416,22 +362,27 @@ void XMLTag:: readAttributes
   for ( auto & pair : _eigenVectorXdAttributes ){
     pair.second.readValue(xmlReader);
   }
-}
+}*/
 
 void XMLTag:: areAllSubtagsConfigured() const
 {
+	std::ostringstream stream;
+	
   for (XMLTag* tag : _subtags){
     std::string ns = tag->_namespace;
     bool configured = tag->isConfigured();
+	
+	bool occurOnce = tag->getOccurrence() == OCCUR_ONCE;
+    bool occurOnceOrMore = tag->getOccurrence() == OCCUR_ONCE_OR_MORE;
+		
     if (not ns.empty()){
       assertion(utils::contained(ns, _configuredNamespaces));
       configured |= _configuredNamespaces.find(ns)->second;
     }
-    bool occurOnce = tag->getOccurrence() == OCCUR_ONCE;
-    bool occurOnceOrMore = tag->getOccurrence() == OCCUR_ONCE_OR_MORE;
+    
 
     if ( (not configured) && (occurOnce || occurOnceOrMore) ){
-      std::ostringstream stream;
+      
       if (tag->getNamespace().empty()){
         stream << "Tag <" << tag->getName() << "> is missing";
       }
@@ -440,6 +391,7 @@ void XMLTag:: areAllSubtagsConfigured() const
       }
       throw stream.str();
     }
+	
   }
 }
 
@@ -485,6 +437,74 @@ void XMLTag:: clear()
    _stringAttributes.clear();
    _booleanAttributes.clear();
    _subtags.clear();
+}
+
+std::string XMLTag::printDTD(const bool start) const
+{
+	std::ostringstream dtd;
+	
+	if(start)
+		dtd << "<!DOCTYPE " << _fullName << " [" << std::endl;
+	
+	dtd << "<!ELEMENT " << _fullName << " ";
+	
+	if (not _subtags.empty()) {
+	
+		dtd << "(";
+		
+		bool first = true;	
+		for (const XMLTag* subtag : _subtags) {
+			
+			std::string OccurrenceChar = "";
+			
+			Occurrence occ = subtag->getOccurrence();
+			
+			if(occ == OCCUR_ARBITRARY) OccurrenceChar = "*";
+			else if(occ == OCCUR_NOT_OR_ONCE) OccurrenceChar = "?";
+			else if(occ == OCCUR_ONCE_OR_MORE) OccurrenceChar = "+";
+			
+			dtd << (first ? "" : ", ") << subtag->getFullName() << OccurrenceChar;
+			first = false;
+		}
+		
+		dtd << ")>" << std::endl;
+	}
+	else {
+		dtd << "EMPTY>" << std::endl;
+	}
+	
+	for (const auto & pair : _doubleAttributes){
+		dtd << pair.second.printDTD(_fullName);
+	}
+
+	for (const auto & pair : _intAttributes){
+		dtd << pair.second.printDTD(_fullName);
+	}
+
+	for (const auto & pair : _stringAttributes){
+		dtd << pair.second.printDTD(_fullName);
+	}
+
+	for (const auto & pair : _booleanAttributes){
+		dtd << pair.second.printDTD(_fullName);
+	}
+
+	for (const auto & pair : _eigenVectorXdAttributes){
+		dtd << pair.second.printDTD(_fullName);
+	}
+	
+	if (not _subtags.empty()) {
+		for (const XMLTag* subtag : _subtags){
+			dtd << subtag->printDTD();
+		}
+	}
+	
+	dtd << std::endl;
+	
+	if(start)
+		dtd << "]>" << std::endl;
+
+	return dtd.str();
 }
 
 std::string XMLTag:: printDocumentation(int indentation ) const
@@ -609,49 +629,13 @@ void configure
 {
   logging::Logger _log("utils");
   TRACE(tag.getFullName(), configurationFilename);
-    tarch::irr::io::IrrXMLReader* xmlReader = tarch::irr::io::createIrrXMLReader(configurationFilename.c_str());
-  CHECK(xmlReader != nullptr,
-        "Could not create XML reader for file \"" << configurationFilename << "\"!");
-  CHECK(xmlReader->read(),
-        "XML reader doesn't recognize a valid XML tag in file \"" << configurationFilename << "\"!" );
-  CHECK(xmlReader->getNodeType() != tarch::irr::io::EXN_NONE,
-        "XML reader found only invalid XML tag in file \"" << configurationFilename << "\"!" );
+	
   NoPListener nopListener;
   XMLTag root(nopListener, "", XMLTag::OCCUR_ONCE);
-  root.addSubtag(tag);
-  try {
-    root.parse(xmlReader);
-  }
-  catch (std::string errorMsg){
-    ERROR("Parsing XML file \"" << configurationFilename << "\"" << std::endl << errorMsg);
-  }
+  
+  precice::xml::Parser p(configurationFilename, &tag);
 
-//  while (xmlReader->read()){
-//    if (xmlReader->getNodeType() == tarch::irr::io::EXN_ELEMENT){
-//      if (root.getFullName() == xmlReader->getNodeName()){
-//        foundTag = true;
-//        try {
-//          root.parse(xmlReader);
-//          success = true;
-//        }
-//        catch (std::string errorMsg){
-//          ERROR("Parsing XML file \""
-//                       << configurationFilename << "\"" << std::endl << errorMsg);
-//        }
-//      }
-//      else {
-//        ERROR("Found wrong tag <" << xmlReader->getNodeName()
-//                     << "> in XML file \"" << configurationFilename << "\"!");
-//      }
-//    }
-//    else if (xmlReader->getNodeType() == tarch::irr::io::EXN_ELEMENT_END){
-//      ERROR("Found wrong end tag </" << xmlReader->getNodeName()
-//                           << "> in XML file \"" << configurationFilename << "\"!");
-//    }
-//  }
-//  preciceCheck(foundTag, "configure()", "Did not find root tag <" << root.getFullName()
-//               << "> in XML configuration \"" << configurationFilename << "\"!");
-//  return success;
+  root.addSubtag(tag);
 }
 
 std::string XMLTag:: getOccurrenceString ( Occurrence occurrence ) const

@@ -3,7 +3,6 @@
 #endif
 #include "tarch/configuration/ConfigurationRegistry.h"
 #include "tarch/configuration/TopLevelConfiguration.h"
-#include "tarch/irr/XML.h"
 //#include "utils/assertion.hpp"
 //#include "logging/LogMacros.hpp"
 #include "utils/Globals.hpp"
@@ -15,62 +14,66 @@ tarch::configuration::ConfigurationRegistry::ConfigurationRegistry():
 _topLevelTags(){
 }
 
-std::list<tarch::configuration::TopLevelConfiguration*>
-tarch::configuration::ConfigurationRegistry::readConfiguration(
-  tarch::irr::io::IrrXMLReader* xmlReader,
-  const std::string& topLevelTag
-) {
-  bool error = false;
-  std::list<tarch::configuration::TopLevelConfiguration*>  result;
+std::list<tarch::configuration::TopLevelConfiguration*> 
+tarch::configuration::ConfigurationRegistry::parseTag(const std::string& filename, const std::string& topLevelTag)
+{
+	std::list<tarch::configuration::TopLevelConfiguration*>  result;
   
-  while( xmlReader->read() && !error) {
-    if ( xmlReader->getNodeType()==irr::io::EXN_ELEMENT ) {
-      std::string currentTag = xmlReader->getNodeName();
-      if (
-        topLevelTag == currentTag
-      ) {
-      }
-      else
-      if ( _topLevelTags.find(currentTag)==_topLevelTags.end() ) {
-        WARN("invalid top level tag. Received <" + currentTag + "> but expected <"
-             + topLevelTag + "> or any top level tag"
-        );
-        enlistAvailableTopLevelTags();
-        error = true;
-      }
-      else {
-        TopLevelConfiguration* configuration = _topLevelTags[currentTag]->clone();
-        configuration->parseSubtag(xmlReader);
-        if (configuration->isValid()) {
-          result.push_back(configuration);
-        }
-        else {
-          error = true;
-        }
-      }
-    }
-  }
+	precice::xml::Parser p(filename);
+	parseTag(p.getRootTag(), topLevelTag, result);
+	
+	return result;
+}
 
+void tarch::configuration::ConfigurationRegistry::parseTag(precice::xml::Parser::CTag *pTag, const std::string& topLevelTag,
+std::list<tarch::configuration::TopLevelConfiguration*> &result)
+{
+	bool error = false;
+	
+	if(!pTag->m_aSubTags.empty())
+	{
+		std::string currentTag = pTag->m_Name;
+		
+		if (topLevelTag == currentTag) {
+		}
+		else if (_topLevelTags.find(currentTag)==_topLevelTags.end()) 
+		{
+			WARN("invalid top level tag. Received <" + currentTag + "> but expected <"
+				+ topLevelTag + "> or any top level tag"
+			);
 
-  if (
-    !error &&
-    (
-    (xmlReader->getNodeType()!=irr::io::EXN_ELEMENT_END) ||
-    (xmlReader->getNodeName()!=topLevelTag)
-    )
-  ) {
-    WARN("Expected closing tag for " + topLevelTag +
-         ", but received tag <" + xmlReader->getNodeName() + ">"
-    );
-    error = true;
-  }
+			enlistAvailableTopLevelTags();
+			error = true;
+		}
+		else 
+		{
+			TopLevelConfiguration* configuration = _topLevelTags[currentTag]->clone();
 
-  if ( error ) {
-    freeConfigurations( result );
-    result.clear();
-  }
+			configuration->parseSubtag(pTag);
 
-  return result;
+			if (configuration->isValid()) {
+			  result.push_back(configuration);
+			}
+			else {
+				WARN("Invalid subtag: " + pTag->m_Name);
+				error = true;
+			}
+		}
+	}
+	
+	if(error)
+		ERROR("invalid tags were used");
+	
+	
+	if(!pTag->m_aSubTags.empty())
+	{
+		for(auto subtags : pTag->m_aSubTags)
+		{
+			precice::xml::Parser::CTag *pSubTag = (precice::xml::Parser::CTag *)subtags;
+			
+			parseTag(pSubTag, topLevelTag, result);
+		}
+	}
 }
 
 
@@ -132,30 +135,6 @@ std::list<tarch::configuration::TopLevelConfiguration*>
 tarch::configuration::ConfigurationRegistry::readFile(
   const std::string& filename,
   const std::string& topLevelTag
-) {
-  tarch::irr::io::IrrXMLReader* xmlReader =
-    tarch::irr::io::createIrrXMLReader( filename.c_str() );
-  
-  if ( (xmlReader==nullptr) || (! xmlReader->read()) || (xmlReader->getNodeType()==irr::io::EXN_NONE) ) {
-    WARN("was not able to read input file " + filename );
-    return std::list<tarch::configuration::TopLevelConfiguration*>();
-  }
-  
-  return readConfiguration(xmlReader, topLevelTag);
-}
-
-std::list<tarch::configuration::TopLevelConfiguration*>
-tarch::configuration::ConfigurationRegistry::readString(
-  const std::string& configString,
-  const std::string& topLevelTag
-) {
-  tarch::irr::io::IrrXMLReader* xmlReader =
-    tarch::irr::io::createIrrXMLReaderFromString( configString );
-  
-  if ( (xmlReader==nullptr) || (! xmlReader->read()) || (xmlReader->getNodeType()==irr::io::EXN_NONE) ) {
-    WARN("was not able to read input string" );
-    return std::list<tarch::configuration::TopLevelConfiguration*>();
-  }
-  
-  return readConfiguration(xmlReader, topLevelTag);
+) {  
+  return parseTag(filename, topLevelTag);
 }

@@ -23,14 +23,16 @@ std::string tarch::multicore::configurations::CoreConfiguration::getTag() const 
 }
 
 
-void tarch::multicore::configurations::CoreConfiguration::parseSubtag( tarch::irr::io::IrrXMLReader* xmlReader ) {
+void tarch::multicore::configurations::CoreConfiguration::parseSubtag(precice::xml::Parser::CTag *pTag) {
   _hasParsed = true;
+  
+  std::cout << "CoreConfiguration" << std::endl;
 
-  if ( xmlReader->getAttributeValue("threads")==0 ) {
+  if ( pTag->m_aAttributes.find("threads") == pTag->m_aAttributes.end() ) {
     WARN("attribute \"threads\" missing within tag <" + getTag() + ">");
     _numberOfThreads = -1;
   }
-  else if ( std::string("*") == std::string(xmlReader->getAttributeValue("threads")) ) {
+  else if ( std::string("*") == pTag->m_aAttributes["threads"]) ) {
     #ifdef SharedCobra
     WARN("Cobra does not support a default number of threads. Please specify valid number of threads");
     _numberOfThreads = -1;
@@ -40,16 +42,16 @@ void tarch::multicore::configurations::CoreConfiguration::parseSubtag( tarch::ir
     #endif
   }
   else {
-    _numberOfThreads = xmlReader->getAttributeValueAsInt( "threads");
+    _numberOfThreads = std::stoi(pTag->m_aAttributes["threads"]);
   }
 }
-
 
 bool tarch::multicore::configurations::CoreConfiguration::isValid() const {
   if (!_hasParsed) {
     assertion( _numberOfThreads<0 );
     WARN("tag <" + getTag() + "> is missing" );
   }
+  std::cout << "CoreConfiguration" << std::endl;
   return _numberOfThreads >=0;
 }
 
