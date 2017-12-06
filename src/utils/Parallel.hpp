@@ -26,8 +26,8 @@ public:
 #ifndef PRECICE_NO_MPI
   using Communicator = MPI_Comm;
 #else
-  using Communicator = int;
-#define MPI_COMM_NULL -1
+  using Communicator = std::nullptr_t;
+  #define MPI_COMM_NULL nullptr
 #endif
 
   /// Used to sort and order all coupling participants.

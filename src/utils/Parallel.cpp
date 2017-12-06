@@ -11,7 +11,7 @@ namespace utils
 #ifndef PRECICE_NO_MPI
   Parallel::Communicator Parallel::_commWorld = MPI_COMM_WORLD;
 #else
-  Parallel::Communicator Parallel::_commWorld = -1;
+  Parallel::Communicator Parallel::_commWorld = nullptr;
 #endif
   
 logging::Logger Parallel::_log("utils::Parallel");
@@ -34,7 +34,11 @@ void Parallel::setCommunicatorWorld(Parallel::Communicator comm)
 
 Parallel::Communicator Parallel::getCommunicatorWorld()
 {
-  return _commWorld;
+  #ifndef PRECICE_NO_MPI
+    return MPI_COMM_WORLD;
+  #else
+    return nullptr;
+  #endif
 }
 
 void Parallel::initializeMPI(
