@@ -232,6 +232,10 @@ if env["platform"] == "supermuc":
 elif env["platform"] == "hazelhen":
     env.Append(LINKFLAGS = ['-dynamic']) # Needed for correct linking against boost.log
 
+# ====== LibXML2 ======
+env.Append(CPPPATH = ['/usr/include/libxml2'])
+uniqueCheckLib("xml2")
+
 print
 env = conf.Finish() # Used to check libraries
 

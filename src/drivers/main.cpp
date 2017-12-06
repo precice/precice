@@ -6,6 +6,7 @@
 #include "tarch/configuration/TopLevelConfiguration.h"
 #include "precice/impl/SolverInterfaceImpl.hpp"
 #include "precice/config/Configuration.hpp"
+
 #include <iostream>
 
 #include "logging/Logger.hpp"
@@ -44,13 +45,18 @@ int main ( int argc, char** argv )
   bool runTests = false;
   bool runServer = false;
   bool runHelp = false;
+  bool runDtd = false;
   bool hasLogConfFile = false;
 
   bool wrongParameters = true;
 
   if (argc >= 2) {
     std::string action(argv[1]);
-    if ( action == "xml" and argc >= 2 ) {
+    if ( action == "dtd" and argc >= 2 ) {
+      wrongParameters = false;
+      runDtd = true;
+    }
+	if ( action == "xml" and argc >= 2 ) {
       wrongParameters = false;
       runHelp = true;
     }
@@ -138,6 +144,12 @@ int main ( int argc, char** argv )
     assertion(not runTests);
     precice::config::Configuration config;
     std::cout << config.getXMLTag().printDocumentation(0) << std::endl << std::endl;
+  }
+  else if(runDtd) {
+	assertion(not runServer);
+    assertion(not runTests);
+    precice::config::Configuration config;
+    std::cout << config.getXMLTag().printDTD(true) << std::endl << std::endl;
   }
   else {
     assertion ( false );

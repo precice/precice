@@ -104,6 +104,10 @@ sourcesUtils = [
 
 ]
 
+sourcesXml = [
+    Glob('xmlconfig/*.cpp'),
+]
+
 sourcesAllNoMain = [
     sourcesAction,
     sourcesCom,
@@ -119,6 +123,7 @@ sourcesAllNoMain = [
     sourcesQuery,
     sourcesUtils,
     sourcesTarch,
+    sourcesXml,
 ]
 
 Return ('sourcesAllNoMain', 'sourcesMain', 'sourcesTests', 'sourcesTarchTests')

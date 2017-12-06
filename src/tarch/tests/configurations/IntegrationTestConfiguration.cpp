@@ -54,54 +54,43 @@ void tarch::tests::configurations::IntegrationTestConfiguration::toXML(std::ostr
 
 
 bool tarch::tests::configurations::IntegrationTestConfiguration::isValid() const {
-  return _isValid
+	
+	bool ret = _isValid
       && _logConfiguration.isValid()
       && _logFormatConfiguration.isValid();
+	
+  return ret;
 }
 
+void tarch::tests::configurations::IntegrationTestConfiguration::parseSubtag( precice::xml::Parser::CTag *pTag)
+{	
+	_isValid = true;
 
-void tarch::tests::configurations::IntegrationTestConfiguration::parseSubtag( tarch::irr::io::IrrXMLReader* xmlReader ) {
-  assertion( xmlReader != nullptr );
-
-  _isValid = true;
-
-  if ( xmlReader->getAttributeValue("output-directory")==nullptr ) {
-    _isValid = false;
-    WARN("Missing or invalid attribute \"output-directory\" for tag <" + getTag() + ">");
-  }
-  else {
-    _outputDirectoryForTempFiles = xmlReader->getAttributeValue("output-directory");
-  }
+	if ( pTag->m_aAttributes.find("output-directory") == pTag->m_aAttributes.end() ) {
+	_isValid = false;
+	WARN("Missing or invalid attribute \"output-directory\" for tag <" + getTag() + ">");
+	}
+	else {
+	_outputDirectoryForTempFiles = pTag->m_aAttributes["output-directory"];
+	}
 
 
-  while(
-    (xmlReader->getNodeType()!=irr::io::EXN_ELEMENT_END) &&
-    (xmlReader->read() )
-  ) {
-    if ( xmlReader->getNodeType()==irr::io::EXN_ELEMENT ) {
-      if ( xmlReader->getNodeName() == _logConfiguration.getTag() ) {
-        _logConfiguration.parseSubtag(xmlReader);
-      }
-      if ( xmlReader->getNodeName() == _logFormatConfiguration.getTag() ) {
-        _logFormatConfiguration.parseSubtag(xmlReader);
-      }
-    }
-  }
+	for(auto tag : pTag->m_aSubTags)
+	{
+		if ( tag->m_Name == _logConfiguration.getTag() ) {
+			_logConfiguration.parseSubtag(tag);
+		}
+		if ( tag->m_Name == _logFormatConfiguration.getTag() ) {
+			_logFormatConfiguration.parseSubtag(tag);
+		}
+	}
 
-  if (
-    (xmlReader->getNodeType()!=irr::io::EXN_ELEMENT_END) ||
-    (xmlReader->getNodeName()!=getTag())
-  ) {
-    WARN("Expected closing tag for " + getTag() + ", but received tag <" + xmlReader->getNodeName() + ">");
-    _isValid = false;
-  }
-
-  if (!_logConfiguration.isValid()) {
-    WARN("subtag <" + _logConfiguration.getTag() + "> missing or invalid." );
-  }
-  if (!_logFormatConfiguration.isValid()) {
-    WARN("subtag <" + _logFormatConfiguration.getTag() + "> missing or invalid." );
-  }
+	if (!_logConfiguration.isValid()) {
+	WARN("subtag <" + _logConfiguration.getTag() + "> missing or invalid." );
+	}
+	if (!_logFormatConfiguration.isValid()) {
+	WARN("subtag <" + _logFormatConfiguration.getTag() + "> missing or invalid." );
+	}
 }
 
 

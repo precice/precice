@@ -1,10 +1,13 @@
 #pragma once
 
 #include "Validator.hpp"
-#include "tarch/irr/XML.h"
 #include "logging/Logger.hpp"
 #include "utils/TypeNames.hpp"
 #include <string>
+#include "utils/Helpers.hpp"
+#include "utils/assertion.hpp"
+#include "math/math.hpp"
+#include <iostream>
 
 namespace precice {
 namespace utils {
@@ -14,8 +17,6 @@ template<typename ATTRIBUTE_T>
 class XMLAttribute
 {
 public:
-
-  typedef tarch::irr::io::IrrXMLReader XMLReader;
 
   /**
    * @brief Constructor for compatibility with map::operator[]. Not to be used!
@@ -41,28 +42,21 @@ public:
   void setValidator ( const Validator<ATTRIBUTE_T>& validator );
 
   void setDefaultValue ( const ATTRIBUTE_T& defaultValue );
+	
+	
+	void readValue(std::map<std::string, std::string> &aAttributes);
 
-  void readValue ( XMLReader* xmlReader );
+	void readValueSpecific(std::string& rawValue, double& value);
 
-  void readValueSpecific (
-    XMLReader* xmlReader,
-    double&    value );
+	void readValueSpecific (std::string& rawValue, int& value );
 
-  void readValueSpecific (
-    XMLReader* xmlReader,
-    int&       value );
+	void readValueSpecific (std::string& rawValue, std::string& value );
 
-  void readValueSpecific (
-    XMLReader*   xmlReader,
-    std::string& value );
+	void readValueSpecific (std::string& rawValue, bool& value );
 
-  void readValueSpecific (
-    XMLReader* xmlReader,
-    bool&      value );
+	void readValueSpecific (std::string& rawValue, Eigen::VectorXd& value);
 
-  void readValueSpecific (
-    XMLReader*        xmlReader,
-    Eigen::VectorXd&  value );
+	//Eigen::VectorXd getAttributeValueAsEigenVectorXd(std::string& rawValue);
 
   
   const std::string& getName() const { return _name; };
@@ -75,6 +69,7 @@ public:
 
   /// Returns a documentation string about the attribute.
   std::string printDocumentation() const;
+  std::string printDTD(const std::string &ElementName) const;
 
 private:
 
@@ -199,78 +194,169 @@ void XMLAttribute<ATTRIBUTE_T>:: setDefaultValue
   set(_defaultValue, defaultValue);
 }
 
+
 template<typename ATTRIBUTE_T>
-void XMLAttribute<ATTRIBUTE_T>:: readValue
-(
-  XMLReader* xmlReader )
+void XMLAttribute<ATTRIBUTE_T>::readValue(std::map<std::string, std::string> &aAttributes)
 {
-  TRACE(_name);
-  if (_read) throw "Attribute \"" + _name + "\" is defined multiple times";
-  if (xmlReader->getAttributeValue(getName().c_str()) == 0) {
-    if (not _hasDefaultValue){
-      throw "Attribute \"" + _name + "\" missing";
-    }
-    set(_value, _defaultValue);
+	TRACE(_name);
+	if (_read){
+		std::cout << "Attribute \"" + _name + "\" is defined multiple times" << std::endl;
+		throw "Attribute \"" + _name + "\" is defined multiple times";
+	}
+	
+	if (aAttributes.find(getName()) == aAttributes.end()) {
+		if (not _hasDefaultValue){
+		  std::cout << "Attribute \"" + _name + "\" missing" << std::endl;
+		  throw "Attribute \"" + _name + "\" missing";
+		}
+		set(_value, _defaultValue);
+	}
+	else {
+		readValueSpecific(aAttributes[getName()], _value);
+		if (_validator) {
+		  if (not _validator->validateValue(_value)){
+			std::ostringstream stream;
+			stream << "Invalid value \"" << _value << "\" of attribute \""
+				   << getName() << "\": " << _validator->getErrorMessage();
+				   
+			std::cout << stream.str() << std::endl;
+			throw stream.str();
+		  }
+		}
+	}
+	DEBUG("Read valid attribute \"" << getName() << "\" value = " << _value);
+}
+
+template<typename ATTRIBUTE_T>
+void XMLAttribute<ATTRIBUTE_T>::readValueSpecific(std::string& rawValue, double& value)
+{
+	try {
+		if (rawValue.find("/") != std::string::npos) {
+			std::string left  = rawValue.substr(0, rawValue.find("/"));
+			std::string right = rawValue.substr(rawValue.find("/")+1, rawValue.size()-rawValue.find("/")-1);
+			
+			value = std::stod(left) / std::stod(right);
+		}
+		else {
+			value = std::stod(rawValue);
+		}
+	}
+	catch(...) {
+		throw "String to Double error";
+	}
+}
+
+template<typename ATTRIBUTE_T>
+void XMLAttribute<ATTRIBUTE_T>::readValueSpecific(std::string& rawValue, int& value)
+{
+	try {
+		value = std::stoi(rawValue);
+	}
+	catch(...) {
+		throw "String to Int error";
+	}
+}
+
+template<typename ATTRIBUTE_T>
+void XMLAttribute<ATTRIBUTE_T>::readValueSpecific(std::string& rawValue, std::string& value)
+{
+	value = rawValue;
+}
+
+template<typename ATTRIBUTE_T>
+void XMLAttribute<ATTRIBUTE_T>::readValueSpecific(std::string& rawValue, bool& value)
+{
+	value = precice::utils::convertStringToBool(rawValue);
+}
+
+template<typename ATTRIBUTE_T>
+void XMLAttribute<ATTRIBUTE_T>::readValueSpecific(std::string& rawValue, Eigen::VectorXd&  value)
+{
+	Eigen::VectorXd vec;
+
+	std::string valueString(rawValue);
+	bool componentsLeft = true;
+	int i = 0;
+	while (componentsLeft){
+		std::string tmp1(rawValue);
+		// erase entries before i-th entry
+		for (int j = 0; j < i; j++){
+			if (tmp1.find(";") != std::string::npos){
+				tmp1.erase(0,tmp1.find(";")+1);
+			}
+			else {
+				componentsLeft = false;
+			}
+		}
+			// if we are not in the last vector component...
+		if (tmp1.find(";") != std::string::npos){
+			// ..., erase entries after i-th entry
+			tmp1.erase(tmp1.find(";"),tmp1.size());
+		}
+			
+		if (componentsLeft){
+
+			vec.conservativeResize(vec.rows()+1);
+			vec(vec.rows()-1) = std::stod(tmp1);
+		}
+		i++;
+	}
+  
+	value = vec;
+}
+
+/*template<>
+Eigen::VectorXd XMLAttribute<Eigen::VectorXd>::getAttributeValueAsEigenVectorXd(std::string& rawValue)
+{
+  Eigen::VectorXd vec;
+
+  std::string valueString(rawValue);
+  bool componentsLeft = true;
+  int i = 0;
+  while (componentsLeft){
+	std::string tmp1(rawValue);
+	// erase entries before i-th entry
+	for (int j = 0; j < i; j++){
+	  if (tmp1.find(";") != std::string::npos){
+		tmp1.erase(0,tmp1.find(";")+1);
+	  }
+	  else {
+		componentsLeft = false;
+	  }
+	}
+	// if we are not in the last vector component...
+	if (tmp1.find(";") != std::string::npos){
+	  // ..., erase entries after i-th entry
+	  tmp1.erase(tmp1.find(";"),tmp1.size());
+	}
+	if (componentsLeft){
+	   
+	  vec.conservativeResize(vec.rows()+1);
+	  vec(vec.rows()-1) = std::stod(tmp1);
+	}
+	i++;
+  }
+  return vec;
+}*/        
+
+template<typename ATTRIBUTE_T>
+std::string XMLAttribute<ATTRIBUTE_T>:: printDTD(const std::string &ElementName) const
+{
+  std::ostringstream dtd;
+  dtd << "<!ATTLIST " << ElementName << " " << _name << " CDATA ";
+  
+  if (_hasDefaultValue){
+    dtd << "\"" << _defaultValue << "\"";
   }
   else {
-    readValueSpecific(xmlReader, _value);
-    if (_validator) {
-      if (not _validator->validateValue(_value)){
-        std::ostringstream stream;
-        stream << "Invalid value \"" << _value << "\" of attribute \""
-               << getName() << "\": " << _validator->getErrorMessage();
-        throw stream.str();
-      }
-    }
+	dtd << "#REQUIRED";
   }
-  DEBUG("Read valid attribute \"" << getName() << "\" value = " << _value);
-  _read = true;
+  
+  dtd << ">" << std::endl;
+
+  return dtd.str();
 }
 
-template<typename ATTRIBUTE_T>
-void XMLAttribute<ATTRIBUTE_T>:: readValueSpecific
-(
-  XMLReader* xmlReader,
-  double&    value )
-{
-  value = xmlReader->getAttributeValueAsDouble (_name.c_str());
-}
-
-template<typename ATTRIBUTE_T>
-void XMLAttribute<ATTRIBUTE_T>:: readValueSpecific
-(
-  XMLReader* xmlReader,
-  int&       value )
-{
-  value = xmlReader->getAttributeValueAsInt(_name.c_str());
-}
-
-template<typename ATTRIBUTE_T>
-void XMLAttribute<ATTRIBUTE_T>:: readValueSpecific
-(
-  XMLReader*   xmlReader,
-  std::string& value )
-{
-  value = std::string(xmlReader->getAttributeValue(_name.c_str()));
-}
-
-template<typename ATTRIBUTE_T>
-void XMLAttribute<ATTRIBUTE_T>:: readValueSpecific
-(
-  XMLReader* xmlReader,
-  bool&      value )
-{
-  value = xmlReader->getAttributeValueAsBool(_name.c_str());
-}
-
-template<typename ATTRIBUTE_T>
-void XMLAttribute<ATTRIBUTE_T>:: readValueSpecific
-(
-  XMLReader*        xmlReader,
-  Eigen::VectorXd&  value )
-{
-  value = xmlReader->getAttributeValueAsEigenVectorXd(_name.c_str());
-}
 
 template<typename ATTRIBUTE_T>
 std::string XMLAttribute<ATTRIBUTE_T>:: printDocumentation() const

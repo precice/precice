@@ -48,8 +48,8 @@ class tarch::tests::configurations::TestConfiguration: public tarch::configurati
 
     virtual std::string getTag() const;
 
-    virtual void parseSubtag( tarch::irr::io::IrrXMLReader* _xmlReader );
-
+	virtual void parseSubtag( precice::xml::Parser::CTag *pTag);
+	
     virtual bool isValid() const;
 
     virtual void toXML(std::ostream& out) const;

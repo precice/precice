@@ -25,15 +25,6 @@ public:
    PostProcessingConfiguration (
      const mesh::PtrMeshConfiguration& meshConfig);
 
-   /**
-    * @brief Parses the XML information in xmlReader to a configuration.
-    */
-   //bool parseSubtag ( tarch::irr::io::IrrXMLReader * xmlReader );
-
-   /**
-    * @brief Returns true, if configuration has taken place and is valid.
-    */
-   //bool isValid() const;
 
    /**
     * @brief Returns the configured (to be checked by isValid()) coupling scheme.

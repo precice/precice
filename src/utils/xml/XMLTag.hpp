@@ -2,12 +2,19 @@
 
 #include "XMLAttribute.hpp"
 #include "utils/Globals.hpp"
-#include "tarch/irr/XML.h"
 #include <string>
 #include <map>
 #include <vector>
 #include <set>
+#include <algorithm>
 #include "logging/Logger.hpp"
+#include "xmlconfig/parser.hpp"
+
+namespace precice {
+namespace xml {
+class Parser;
+}
+}
 
 namespace precice {
 namespace utils {
@@ -16,9 +23,9 @@ namespace utils {
 /// Represents an XML tag to be configured automatically.
 class XMLTag
 {
+  friend class precice::xml::Parser;
+	
 public:
-
-  typedef tarch::irr::io::IrrXMLReader XMLReader;
 
   /// Callback interface for configuration classes using XMLTag.
   struct Listener
@@ -144,7 +151,8 @@ public:
     int                dimensions ) const;
   
   /// Parses the information from the xmlReader and calls XMLListener.
-  void parse ( XMLReader* xmlReader );
+  //deprecated
+  //void parse ( XMLReader* xmlReader );
 
   bool isConfigured() const { return _configured; }
 
@@ -155,7 +163,13 @@ public:
 
   /// Prints a documentation string for this tag.
   std::string printDocumentation (int indentation) const;
-
+  
+  /// Prints a DTD string for this tag.
+  std::string printDTD(const bool start = false) const;
+  
+  /// reads all attributes of this tag
+  void readAttributes(std::map<std::string, std::string> &aAttributes);
+	
 private:
 
   static logging::Logger _log;
@@ -195,9 +209,6 @@ private:
 
   std::map<std::string,XMLAttribute<Eigen::VectorXd> > _eigenVectorXdAttributes;
 
-  void readAttributes ( XMLReader* xmlReader );
-
-  void parseSubtag ( XMLReader*  xmlReader );
 
   void areAllSubtagsConfigured() const;
 
@@ -235,54 +246,6 @@ XMLTag getRootTag();
 void configure (
   XMLTag&            tag,
   const std::string& configurationFilename );
-
-///**
-// * @brief Configures the given configuration from file configurationFilename.
-// */
-//template< typename CONFIG_T >
-//bool configure
-//(
-//  CONFIG_T&          configuration,
-//  const std::string& configurationFilename )
-//{
-//  logging::Logger _log ( "precice::utils" );
-//  bool success = false;
-//  tarch::irr::io::IrrXMLReader * xmlReader =
-//    tarch::irr::io::createIrrXMLReader ( configurationFilename.c_str() );
-//  preciceCheck ( xmlReader != NULL, "configure()",
-//                 "Could not create XML reader for file \"" << configurationFilename
-//                 << "\"!" );
-//  preciceCheck ( xmlReader->read(), "configure()",
-//                 "XML reader doesn't recognize a valid XML tag in file \""
-//                 << configurationFilename << "\"!" );
-//  preciceCheck ( xmlReader->getNodeType() != tarch::irr::io::EXN_NONE, "configure()",
-//                 "XML reader found only invalid XML tag in file \""
-//                 << configurationFilename << "\"!" );
-//  bool foundTag = false;
-//  while( xmlReader->read() ) {
-//    if ( xmlReader->getNodeType() == tarch::irr::io::EXN_ELEMENT ) {
-//      if ( CONFIG_T::getTag() == xmlReader->getNodeName() ) {
-//        foundTag = true;
-//        success |= configuration.parseSubtag ( xmlReader );
-//      }
-//    }
-//  }
-//  preciceCheck ( foundTag, "configure()", "Did not find suitable XML tag!" );
-//  return success;
-//};
-//
-///**
-// * @brief Configures the given confugration from file configurationFilename.
-// */
-//template< typename CONFIG_T >
-//bool configure
-//(
-//  std::shared_ptr<CONFIG_T> configuration,
-//  const std::string&          configurationFilename )
-//{
-//  assertion ( configuration.get() != NULL );
-//  return configure ( *configuration, configurationFilename );
-//}
 
 }} // namespace precice, utils
 

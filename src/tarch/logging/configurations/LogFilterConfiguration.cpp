@@ -24,31 +24,31 @@ std::string tarch::logging::configurations::LogFilterConfiguration::getTag() con
   return "log-filter";
 }
 
-
-void tarch::logging::configurations::LogFilterConfiguration::parseSubtag( tarch::irr::io::IrrXMLReader* xmlReader ) {
-  assertion( xmlReader != nullptr );
-
-  if (xmlReader->getAttributeValue("target")==nullptr) {
+void tarch::logging::configurations::LogFilterConfiguration::parseSubtag(precice::xml::Parser::CTag *pTag)
+{
+	if ( pTag->m_aAttributes.find("target") == pTag->m_aAttributes.end() ) {
     _log.error("parseSubtag(...)", "attribute \"target\" missing within tag <" + getTag() + ">");
     _isValid = false;
     return;
   }
 
-  if (xmlReader->getAttributeValue("switch")==nullptr) {
+	if ( pTag->m_aAttributes.find("switch") == pTag->m_aAttributes.end() ) {
     _log.error("parseSubtag(...)", "attribute \"switch\" missing within tag <" + getTag() + ">");
     _isValid = false;
     return;
   }
 
-  if (xmlReader->getAttributeValue("component")==nullptr) {
+	if ( pTag->m_aAttributes.find("component") == pTag->m_aAttributes.end() ) {
     _log.error("parseSubtag(...)", "attribute \"component\" missing within tag <" + getTag() + ">");
     _isValid = false;
     return;
   }
 
-  if (strcmp("debug", xmlReader->getAttributeValue("target")) &&
+	if(pTag->m_aAttributes["target"] != "debug" && pTag->m_aAttributes["target"] != "info" && 
+		pTag->m_aAttributes["target"] != "")
+  /*if (strcmp("debug", xmlReader->getAttributeValue("target")) &&
       strcmp("info", xmlReader->getAttributeValue("target")) &&
-      strcmp("", xmlReader->getAttributeValue("target")))
+      strcmp("", xmlReader->getAttributeValue("target")))*/
   {
   	_log.error("parseSubtag(...)", "only value \"debug\", \"info\", or \"\" allowed for \"target\"-attribute within tag <" + getTag() + ">");
   	_isValid = false;
@@ -56,12 +56,12 @@ void tarch::logging::configurations::LogFilterConfiguration::parseSubtag( tarch:
   }
 
   tarch::logging::CommandLineLogger::FilterListEntry newEntry;
-  newEntry._targetName = xmlReader->getAttributeValue("target");
+  newEntry._targetName = pTag->m_aAttributes["target"];
 
-  if (!strcmp("on", xmlReader->getAttributeValue("switch"))) {
+  if (pTag->m_aAttributes["switch"] == "on") {
     newEntry._isBlackEntry = false;
   }
-  else if (!strcmp("off", xmlReader->getAttributeValue("switch"))) {
+  else if (pTag->m_aAttributes["switch"] == "off") {
     newEntry._isBlackEntry = true;
   }
   else {
@@ -70,14 +70,14 @@ void tarch::logging::configurations::LogFilterConfiguration::parseSubtag( tarch:
     return;
   }
 
-  if ( (xmlReader->getAttributeValue("rank")!=nullptr) && strcmp("*",xmlReader->getAttributeValue("rank")) ) {
-  	newEntry._rank = xmlReader->getAttributeValueAsInt("rank");
+	if ( (pTag->m_aAttributes.find("rank") != pTag->m_aAttributes.end()) && pTag->m_aAttributes["rank"] != "*" ) {
+  	newEntry._rank = std::stoi(pTag->m_aAttributes["rank"]);
   }
   else {
     newEntry._rank=-1;
   }
 
-  newEntry._namespaceName = xmlReader->getAttributeValue("component");
+  newEntry._namespaceName = pTag->m_aAttributes["component"];
 
   if ( _filterList.count(newEntry)!=0 ) {
     logError( "parseSubtag(...)", "tried to insert " << newEntry.toString() << " multiple times");

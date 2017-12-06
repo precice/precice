@@ -37,7 +37,7 @@ class tarch::multicore::configurations::CoreConfiguration: public tarch::configu
 
     virtual std::string getTag() const;
 
-    virtual void parseSubtag( tarch::irr::io::IrrXMLReader* xmlReader );
+	virtual void parseSubtag( precice::xml::Parser::CTag *pTag);
 
     virtual bool isValid() const;
 
