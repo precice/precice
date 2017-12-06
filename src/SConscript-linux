@@ -78,7 +78,6 @@ sourcesTarchLogging = [
 
 sourcesTarch = [
     Glob('tarch/configuration/*.cpp'),
-    Glob('tarch/irr/*.cpp'),
     sourcesTarchMulticore,
     sourcesTarchLogging,
     Glob('tarch/services/*.cpp'),
