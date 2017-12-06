@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 
 <!--
-  -- Configuration for test with explicit coupling scheme and fixed timestepping. 
+  Configuration for test with explicit coupling scheme and fixed timestepping. 
   -->
 <configuration>
    <data:scalar name="data0"/>

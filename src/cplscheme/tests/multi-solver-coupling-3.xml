@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 
 <!--
-  -- Configuration for tests 
-  -- * CompositionalCouplingScheme::testImplicitExplicitSchemeComposition()
+   Configuration for tests 
+   * CompositionalCouplingScheme::testImplicitExplicitSchemeComposition()
   -->
 <configuration>
    <data:scalar name="Data0"/>
