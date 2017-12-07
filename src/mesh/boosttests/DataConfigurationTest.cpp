@@ -1,6 +1,6 @@
 #include "mesh/config/DataConfiguration.hpp"
 #include "testing/Testing.hpp"
-#include "utils/xml/XMLTag.hpp"
+#include "xml/XMLTag.hpp"
 
 using namespace precice;
 

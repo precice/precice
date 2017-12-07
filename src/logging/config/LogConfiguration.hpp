@@ -1,7 +1,7 @@
 #pragma once
 
 #include "logging/LogConfiguration.hpp"
-#include "utils/xml/XMLTag.hpp"
+#include "xml/XMLTag.hpp"
 
 namespace precice {
 namespace config {

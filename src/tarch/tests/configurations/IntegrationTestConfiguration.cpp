@@ -62,7 +62,7 @@ bool tarch::tests::configurations::IntegrationTestConfiguration::isValid() const
   return ret;
 }
 
-void tarch::tests::configurations::IntegrationTestConfiguration::parseSubtag( precice::xml::Parser::CTag *pTag)
+void tarch::tests::configurations::IntegrationTestConfiguration::parseSubtag( precice::xml::ConfigParser::CTag *pTag)
 {	
 	_isValid = true;
 

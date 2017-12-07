@@ -23,7 +23,7 @@ std::string tarch::multicore::configurations::CoreConfiguration::getTag() const 
 }
 
 
-void tarch::multicore::configurations::CoreConfiguration::parseSubtag(precice::xml::Parser::CTag *pTag) {
+void tarch::multicore::configurations::CoreConfiguration::parseSubtag(precice::xml::ConfigParser::CTag *pTag) {
   _hasParsed = true;
   
   std::cout << "CoreConfiguration" << std::endl;

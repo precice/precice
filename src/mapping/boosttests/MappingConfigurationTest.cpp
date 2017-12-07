@@ -3,7 +3,7 @@
 #include "mesh/config/MeshConfiguration.hpp"
 #include "mapping/config/MappingConfiguration.hpp"
 #include "mapping/Mapping.hpp"
-#include "utils/xml/XMLTag.hpp"
+#include "xml/XMLTag.hpp"
 
 using namespace precice;
 using namespace precice::mapping;

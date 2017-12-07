@@ -1,9 +1,9 @@
 #include "DataConfiguration.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/PropertyContainer.hpp"
-#include "utils/xml/XMLAttribute.hpp"
-#include "utils/xml/ValidatorEquals.hpp"
-#include "utils/xml/ValidatorOr.hpp"
+#include "xml/XMLAttribute.hpp"
+#include "xml/ValidatorEquals.hpp"
+#include "xml/ValidatorOr.hpp"
 #include "utils/Globals.hpp"
 
 namespace precice {

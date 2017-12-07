@@ -6,7 +6,7 @@
 #endif
 
 #include <sstream>
-#include "xmlconfig/parser.hpp"
+#include "xml/ConfigParser.hpp"
 
 
 namespace tarch {
@@ -43,7 +43,7 @@ class tarch::configuration::Configuration {
      * @param topLevelTag
 	 * @param result
 	 */
-    virtual void parseSubtag(precice::xml::Parser::CTag *pTag) = 0;
+    virtual void parseSubtag(precice::xml::ConfigParser::CTag *pTag) = 0;
 
     /**
      * Return name of xml tag that is associated to the configuration.

@@ -1,7 +1,7 @@
 #include "MeshConfiguration.hpp"
 #include "mesh/config/DataConfiguration.hpp"
 #include "mesh/Mesh.hpp"
-#include "utils/xml/XMLAttribute.hpp"
+#include "xml/XMLAttribute.hpp"
 #include "utils/Globals.hpp"
 #include <sstream>
 

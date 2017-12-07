@@ -1,4 +1,4 @@
-#include "utils/xml/XMLTag.hpp"
+#include "xml/XMLTag.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/String.hpp"
 
@@ -633,7 +633,7 @@ void configure
   NoPListener nopListener;
   XMLTag root(nopListener, "", XMLTag::OCCUR_ONCE);
   
-  precice::xml::Parser p(configurationFilename, &tag);
+  precice::xml::ConfigParser p(configurationFilename, &tag);
 
   root.addSubtag(tag);
 }

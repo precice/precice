@@ -4,7 +4,7 @@
 #include "mesh/SharedPointer.hpp"
 #include "utils/Helpers.hpp"
 #include "logging/Logger.hpp"
-#include "utils/xml/XMLTag.hpp"
+#include "xml/XMLTag.hpp"
 #include <vector>
 #include <list>
 #include <map>

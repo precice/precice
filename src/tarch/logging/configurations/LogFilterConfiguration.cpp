@@ -24,7 +24,7 @@ std::string tarch::logging::configurations::LogFilterConfiguration::getTag() con
   return "log-filter";
 }
 
-void tarch::logging::configurations::LogFilterConfiguration::parseSubtag(precice::xml::Parser::CTag *pTag)
+void tarch::logging::configurations::LogFilterConfiguration::parseSubtag(precice::xml::ConfigParser::CTag *pTag)
 {
 	if ( pTag->m_aAttributes.find("target") == pTag->m_aAttributes.end() ) {
     _log.error("parseSubtag(...)", "attribute \"target\" missing within tag <" + getTag() + ">");

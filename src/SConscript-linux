@@ -99,12 +99,10 @@ sourcesTests = [
 
 sourcesUtils = [
     Glob('utils/*.cpp'),
-    Glob('utils/xml/*.cpp'),
-
 ]
 
 sourcesXml = [
-    Glob('xmlconfig/*.cpp'),
+    Glob('xml/*.cpp'),
 ]
 
 sourcesAllNoMain = [

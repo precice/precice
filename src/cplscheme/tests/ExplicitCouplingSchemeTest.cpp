@@ -14,7 +14,7 @@
 #include "m2n/config/M2NConfiguration.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Globals.hpp"
-#include "utils/xml/XMLTag.hpp"
+#include "xml/XMLTag.hpp"
 #include <Eigen/Core>
 
 #include "tarch/tests/TestCaseFactory.h"

@@ -39,7 +39,7 @@ class tarch::logging::configurations::LogOutputFormatConfiguration: public tarch
 
     virtual std::string getTag() const;
 
-	virtual void parseSubtag( precice::xml::Parser::CTag *pTag);
+	virtual void parseSubtag( precice::xml::ConfigParser::CTag *pTag);
 	
     virtual bool isValid() const;
 
