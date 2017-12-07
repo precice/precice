@@ -17,7 +17,7 @@ BOOST_AUTO_TEST_SUITE(M2NTests)
 using namespace precice;
 using namespace m2n;
 
-void testSendReceiveALL() {
+BOOST_AUTO_TEST_CASE(GatherScatterTest, *testing::OnSize(4)) {
   assertion(utils::Parallel::getCommunicatorSize() == 4);
 
   com::PtrCommunication participantCom =
@@ -146,9 +146,6 @@ void testSendReceiveALL() {
   utils::Parallel::clearGroups();
 }
 
-BOOST_AUTO_TEST_CASE(GatherScatterTest, *testing::OnSize(4)) {
-  testSendReceiveALL();
-}
 
 BOOST_AUTO_TEST_SUITE_END()
 
