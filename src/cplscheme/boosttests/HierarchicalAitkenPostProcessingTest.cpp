@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(HierarchicalAitkenPostProcessingTest) {
   temp = midF; temp *= 0.1; *dataMap[dataID]->values -= temp;
   temp = lowF; temp *= 1.5; *dataMap[dataID]->values -= temp;
   hierarchAitken.performPostProcessing ( dataMap );
-  //TODO BOOST_TEST missing. Nothing is tested in this test.
+  //TODO BOOST_TEST missing. -> https://github.com/precice/precice/issues/88
 }
 
 BOOST_AUTO_TEST_SUITE_END()
