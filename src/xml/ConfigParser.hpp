@@ -10,7 +10,7 @@
 
 #include "logging/LogMacros.hpp"
 #include "logging/Logger.hpp"
-#include "utils/xml/XMLTag.hpp"
+#include "xml/XMLTag.hpp"
 
 namespace precice
 {
@@ -25,7 +25,7 @@ namespace precice
 namespace xml
 {
 
-class Parser
+class ConfigParser
 {
 public:
   /// struct holding the read tag from xml file
@@ -52,35 +52,35 @@ private:
 
   static void GenericErrorFunc(void *ctx, const char *msg, ...);
 
-  /// opens file and starts parsing
+  /// Opens file and starts parsing
   void init(const std::string &filePath);
 
 public:
   typedef CTag::AttributePair AttributePair;
 
   /// Parser ctor for Callback init
-  Parser(const std::string &filePath, precice::utils::XMLTag *pXmlTag);
+  ConfigParser(const std::string &filePath, precice::utils::XMLTag *pXmlTag);
 
   /// Parser ctor without Callbacks
-  Parser(const std::string &filePath);
+  ConfigParser(const std::string &filePath);
 
-  /// removes all used tags
-  ~Parser();
+  /// Removes all used tags
+  ~ConfigParser();
 
-  /// reads the xml file
+  /// Reads the xml file
   int readXmlFile(FILE *f);
 
-  /// creates the handler with callbacks for the SAX interface
+  /// Creates the handler with callbacks for the SAX interface
   xmlSAXHandler makeSaxHandler();
 
   /// returns the root tag
   CTag *getRootTag();
 
   /**
-	 * @brief Connects the actual tags of an xml layer with the predefined tags
-	 * @param DefTags predefined tags
-	 * @param SubTags actual tags from xml file
-	 */
+   * @brief Connects the actual tags of an xml layer with the predefined tags
+   * @param DefTags predefined tags
+   * @param SubTags actual tags from xml file
+   */
   void connectTags(std::vector<precice::utils::XMLTag *> &DefTags, std::vector<CTag *> &SubTags);
 
   /// Callback for Start-Tag

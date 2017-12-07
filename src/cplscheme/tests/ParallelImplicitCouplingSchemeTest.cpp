@@ -23,7 +23,7 @@
 #include "m2n/M2N.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Globals.hpp"
-#include "utils/xml/XMLTag.hpp"
+#include "xml/XMLTag.hpp"
 #include <Eigen/Core>
 #include "utils/EigenHelperFunctions.hpp"
 #include "math/math.hpp"

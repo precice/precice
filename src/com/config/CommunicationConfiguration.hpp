@@ -2,7 +2,7 @@
 
 #include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
-#include "utils/xml/XMLTag.hpp"
+#include "xml/XMLTag.hpp"
 
 #include <string>
 

@@ -19,13 +19,13 @@ tarch::configuration::ConfigurationRegistry::parseTag(const std::string& filenam
 {
 	std::list<tarch::configuration::TopLevelConfiguration*>  result;
   
-	precice::xml::Parser p(filename);
+	precice::xml::ConfigParser p(filename);
 	parseTag(p.getRootTag(), topLevelTag, result);
 	
 	return result;
 }
 
-void tarch::configuration::ConfigurationRegistry::parseTag(precice::xml::Parser::CTag *pTag, const std::string& topLevelTag,
+void tarch::configuration::ConfigurationRegistry::parseTag(precice::xml::ConfigParser::CTag *pTag, const std::string& topLevelTag,
 std::list<tarch::configuration::TopLevelConfiguration*> &result)
 {
 	bool error = false;
@@ -69,7 +69,7 @@ std::list<tarch::configuration::TopLevelConfiguration*> &result)
 	{
 		for(auto subtags : pTag->m_aSubTags)
 		{
-			precice::xml::Parser::CTag *pSubTag = (precice::xml::Parser::CTag *)subtags;
+			precice::xml::ConfigParser::CTag *pSubTag = (precice::xml::ConfigParser::CTag *)subtags;
 			
 			parseTag(pSubTag, topLevelTag, result);
 		}

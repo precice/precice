@@ -22,7 +22,7 @@ std::string tarch::logging::configurations::LogOutputFormatConfiguration::getTag
   return "log-output";
 }
 
-void tarch::logging::configurations::LogOutputFormatConfiguration::parseSubtag(precice::xml::Parser::CTag *pTag)
+void tarch::logging::configurations::LogOutputFormatConfiguration::parseSubtag(precice::xml::ConfigParser::CTag *pTag)
 {
 	_isValid   = true;
   _hasParsed = true;

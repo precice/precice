@@ -7,8 +7,8 @@
 #include "m2n/config/M2NConfiguration.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
 #include "mapping/SharedPointer.hpp"
-#include "utils/xml/ValidatorEquals.hpp"
-#include "utils/xml/ValidatorOr.hpp"
+#include "xml/ValidatorEquals.hpp"
+#include "xml/ValidatorOr.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
 
 namespace precice {

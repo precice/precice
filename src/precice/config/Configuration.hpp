@@ -2,7 +2,7 @@
 
 #include "precice/config/SolverInterfaceConfiguration.hpp"
 #include "logging/config/LogConfiguration.hpp"
-#include "utils/xml/XMLTag.hpp"
+#include "xml/XMLTag.hpp"
 #include "logging/Logger.hpp"
 
 namespace precice {

@@ -4,7 +4,7 @@
 #include "m2n/M2N.hpp"
 #include "tarch/tests/TestCase.h"
 #include "logging/Logger.hpp"
-#include "utils/xml/XMLTag.hpp"
+#include "xml/XMLTag.hpp"
 #include "m2n/SharedPointer.hpp"
 #include <string>
 #include <vector>

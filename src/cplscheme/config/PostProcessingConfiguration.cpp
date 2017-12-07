@@ -16,10 +16,10 @@
 #include "mesh/config/MeshConfiguration.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
-#include "utils/xml/XMLTag.hpp"
-#include "utils/xml/XMLAttribute.hpp"
-#include "utils/xml/ValidatorEquals.hpp"
-#include "utils/xml/ValidatorOr.hpp"
+#include "xml/XMLTag.hpp"
+#include "xml/XMLAttribute.hpp"
+#include "xml/ValidatorEquals.hpp"
+#include "xml/ValidatorOr.hpp"
 #include "utils/Globals.hpp"
 
 namespace precice {

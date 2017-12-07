@@ -4,7 +4,7 @@
 #include "io/ExportContext.hpp"
 #include "io/Constants.hpp"
 #include "io/SharedPointer.hpp"
-#include "utils/xml/XMLTag.hpp"
+#include "xml/XMLTag.hpp"
 #include "logging/Logger.hpp"
 #include "precice/Constants.hpp"
 #include <string>

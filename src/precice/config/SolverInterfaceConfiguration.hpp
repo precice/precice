@@ -9,7 +9,7 @@
 #include "m2n/M2N.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
 #include "logging/Logger.hpp"
-#include "utils/xml/XMLTag.hpp"
+#include "xml/XMLTag.hpp"
 #include <string>
 #include "boost/smart_ptr.hpp"
 

@@ -8,11 +8,11 @@
 #include <set>
 #include <algorithm>
 #include "logging/Logger.hpp"
-#include "xmlconfig/parser.hpp"
+#include "xml/ConfigParser.hpp"
 
 namespace precice {
 namespace xml {
-class Parser;
+class ConfigParser;
 }
 }
 
@@ -23,7 +23,7 @@ namespace utils {
 /// Represents an XML tag to be configured automatically.
 class XMLTag
 {
-  friend class precice::xml::Parser;
+  friend class precice::xml::ConfigParser;
 	
 public:
 

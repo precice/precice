@@ -1,9 +1,9 @@
 #include <string>
 #include "testing/Testing.hpp"
-#include "utils/xml/ValidatorEquals.hpp"
-#include "utils/xml/ValidatorOr.hpp"
-#include "utils/xml/XMLAttribute.hpp"
-#include "utils/xml/XMLTag.hpp"
+#include "xml/ValidatorEquals.hpp"
+#include "xml/ValidatorOr.hpp"
+#include "xml/XMLAttribute.hpp"
+#include "xml/XMLTag.hpp"
 
 using namespace precice::utils;
 

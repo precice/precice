@@ -6,7 +6,7 @@
 #include "cplscheme/impl/MVQNPostProcessing.hpp"
 #include "precice/config/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
-#include "utils/xml/XMLTag.hpp"
+#include "xml/XMLTag.hpp"
 #include "logging/Logger.hpp"
 
 namespace precice {

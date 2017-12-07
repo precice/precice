@@ -11,7 +11,7 @@
 #include <list>
 #include <vector>
 
-#include "xmlconfig/parser.hpp"
+#include "xml/ConfigParser.hpp"
 
 
 namespace tarch {
@@ -59,7 +59,7 @@ class tarch::configuration::ConfigurationRegistry {
 	std::list<tarch::configuration::TopLevelConfiguration*> 
 	parseTag(const std::string& filename, const std::string& topLevelTag);
 
-	void parseTag(precice::xml::Parser::CTag *pTag, const std::string& topLevelTag,
+	void parseTag(precice::xml::ConfigParser::CTag *pTag, const std::string& topLevelTag,
 		std::list<tarch::configuration::TopLevelConfiguration*> &result);
 
   public:

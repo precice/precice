@@ -13,7 +13,7 @@
 #include "com/MPIDirectCommunication.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
 #include "m2n/M2N.hpp"
-#include "utils/xml/XMLTag.hpp"
+#include "xml/XMLTag.hpp"
 #include <vector>
 
 #include "tarch/tests/TestCaseFactory.h"

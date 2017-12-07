@@ -4,7 +4,7 @@
 #include "m2n/M2N.hpp"
 #include "com/SocketCommunication.hpp"
 #include "utils/Globals.hpp"
-#include "utils/xml/XMLAttribute.hpp"
+#include "xml/XMLAttribute.hpp"
 #include "utils/Helpers.hpp"
 
 namespace precice {

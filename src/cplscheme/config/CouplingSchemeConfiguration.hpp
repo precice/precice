@@ -9,7 +9,7 @@
 #include "mesh/SharedPointer.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
 #include "precice/config/SharedPointer.hpp"
-#include "utils/xml/XMLTag.hpp"
+#include "xml/XMLTag.hpp"
 #include "logging/Logger.hpp"
 #include <vector>
 #include <string>

@@ -1,13 +1,13 @@
-#include "parser.hpp"
+#include "ConfigParser.hpp"
 
 namespace precice
 {
 namespace xml
 {
 
-precice::logging::Logger Parser::_log("xml::XMLParser");
+precice::logging::Logger ConfigParser::_log("xml::XMLParser");
 
-Parser::Parser(const std::string &filePath, precice::utils::XMLTag *pXmlTag)
+ConfigParser::ConfigParser(const std::string &filePath, precice::utils::XMLTag *pXmlTag)
 {
   m_pXmlTag = pXmlTag;
   init(filePath);
@@ -25,12 +25,12 @@ Parser::Parser(const std::string &filePath, precice::utils::XMLTag *pXmlTag)
   }
 }
 
-Parser::Parser(const std::string &filePath)
+ConfigParser::ConfigParser(const std::string &filePath)
 {
   init(filePath);
 }
 
-void Parser::init(const std::string &filePath)
+void ConfigParser::init(const std::string &filePath)
 {
   FILE *f = fopen(filePath.c_str(), "r");
   if (!f) {
@@ -44,7 +44,7 @@ void Parser::init(const std::string &filePath)
   fclose(f);
 }
 
-Parser::~Parser()
+ConfigParser::~ConfigParser()
 {
   while (!m_AllTags.empty()) {
     CTag *pTag = m_AllTags.back();
@@ -71,7 +71,7 @@ Parser::~Parser()
 	std::cout << std::endl;
 }*/
 
-void Parser::GenericErrorFunc(void *ctx, const char *msg, ...)
+void ConfigParser::GenericErrorFunc(void *ctx, const char *msg, ...)
 {
   const int TMP_BUF_SIZE = 256;
 
@@ -84,7 +84,7 @@ void Parser::GenericErrorFunc(void *ctx, const char *msg, ...)
   ERROR("hm");
 }
 
-int Parser::readXmlFile(FILE *f)
+int ConfigParser::readXmlFile(FILE *f)
 {
   char chars[1024];
   int  res = fread(chars, 1, 4, f);
@@ -92,7 +92,7 @@ int Parser::readXmlFile(FILE *f)
     return 1;
   }
 
-  xmlGenericErrorFunc handler = (xmlGenericErrorFunc) Parser::GenericErrorFunc;
+  xmlGenericErrorFunc handler = (xmlGenericErrorFunc) ConfigParser::GenericErrorFunc;
   initGenericErrorDefaultFunc(&handler);
 
   xmlSAXHandler SAXHander = makeSaxHandler();
@@ -114,7 +114,7 @@ int Parser::readXmlFile(FILE *f)
   return 0;
 }
 
-Parser::CTag *Parser::getRootTag()
+ConfigParser::CTag *ConfigParser::getRootTag()
 {
   if (m_AllTags.empty())
     return nullptr;
@@ -122,7 +122,7 @@ Parser::CTag *Parser::getRootTag()
   return m_AllTags[0];
 }
 
-void Parser::connectTags(std::vector<precice::utils::XMLTag *> &DefTags, std::vector<CTag *> &SubTags)
+void ConfigParser::connectTags(std::vector<precice::utils::XMLTag *> &DefTags, std::vector<CTag *> &SubTags)
 {
   std::vector<std::string> usedTags;
 
@@ -167,7 +167,7 @@ void Parser::connectTags(std::vector<precice::utils::XMLTag *> &DefTags, std::ve
   }
 }
 
-xmlSAXHandler Parser::makeSaxHandler()
+xmlSAXHandler ConfigParser::makeSaxHandler()
 {
   xmlSAXHandler SAXHander;
 
@@ -181,7 +181,7 @@ xmlSAXHandler Parser::makeSaxHandler()
   return SAXHander;
 }
 
-void Parser::OnStartElementNs(
+void ConfigParser::OnStartElementNs(
     void *          ctx,
     const xmlChar * localname,
     const xmlChar * prefix,
@@ -210,7 +210,7 @@ void Parser::OnStartElementNs(
     pTag->m_aAttributes[std::string((const char *) localname)] = value;
   }
 
-  Parser *pParser = (Parser *) ctx;
+  ConfigParser *pParser = (ConfigParser *) ctx;
 
   if (!pParser->m_CurrentTags.empty()) {
     CTag *pParentTag = pParser->m_CurrentTags.back();
@@ -221,18 +221,18 @@ void Parser::OnStartElementNs(
   pParser->m_CurrentTags.push_back(pTag);
 }
 
-void Parser::OnEndElementNs(
+void ConfigParser::OnEndElementNs(
     void *         ctx,
     const xmlChar *localname,
     const xmlChar *prefix,
     const xmlChar *URI)
 {
-  Parser *pParser = (Parser *) ctx;
+  ConfigParser *pParser = (ConfigParser *) ctx;
 
   pParser->m_CurrentTags.pop_back();
 }
 
-void Parser::OnCharacters(void *ctx, const xmlChar *ch, int len)
+void ConfigParser::OnCharacters(void *ctx, const xmlChar *ch, int len)
 {
   char chars[len + 1];
   strncpy(chars, (const char *) ch, len);

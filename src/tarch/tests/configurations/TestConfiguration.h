@@ -48,7 +48,7 @@ class tarch::tests::configurations::TestConfiguration: public tarch::configurati
 
     virtual std::string getTag() const;
 
-	virtual void parseSubtag( precice::xml::Parser::CTag *pTag);
+	virtual void parseSubtag( precice::xml::ConfigParser::CTag *pTag);
 	
     virtual bool isValid() const;
 

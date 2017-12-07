@@ -54,7 +54,7 @@ bool tarch::tests::configurations::TestConfiguration::isValid() const {
   return ret;
 }
 
-void tarch::tests::configurations::TestConfiguration::parseSubtag(precice::xml::Parser::CTag *pTag)
+void tarch::tests::configurations::TestConfiguration::parseSubtag(precice::xml::ConfigParser::CTag *pTag)
 {
 	_isValid = true;
 	

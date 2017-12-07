@@ -1,7 +1,7 @@
 #include "io/config/ExportConfiguration.hpp"
 #include "testing/Testing.hpp"
 #include "utils/Globals.hpp"
-#include "utils/xml/XMLTag.hpp"
+#include "xml/XMLTag.hpp"
 
 BOOST_AUTO_TEST_SUITE(IOTests)
 

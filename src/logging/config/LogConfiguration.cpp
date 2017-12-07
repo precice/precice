@@ -1,6 +1,6 @@
 #include "LogConfiguration.hpp"
-#include "utils/xml/ValidatorEquals.hpp"
-#include "utils/xml/ValidatorOr.hpp"
+#include "xml/ValidatorEquals.hpp"
+#include "xml/ValidatorOr.hpp"
 
 namespace precice {
 namespace config {
