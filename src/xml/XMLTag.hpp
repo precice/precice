@@ -6,7 +6,6 @@
 #include <map>
 #include <vector>
 #include <set>
-#include <algorithm>
 #include "logging/Logger.hpp"
 #include "xml/ConfigParser.hpp"
 

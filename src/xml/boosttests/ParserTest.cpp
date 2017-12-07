@@ -4,11 +4,8 @@
 #include "xml/ValidatorOr.hpp"
 #include "xml/XMLAttribute.hpp"
 #include "xml/XMLTag.hpp"
-
 #include "xml/ConfigParser.hpp"
 
-#include <unistd.h>
-#include <signal.h>
 
 using namespace precice::utils;
 

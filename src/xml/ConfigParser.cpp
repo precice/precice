@@ -95,10 +95,10 @@ int ConfigParser::readXmlFile(FILE *f)
   xmlGenericErrorFunc handler = (xmlGenericErrorFunc) ConfigParser::GenericErrorFunc;
   initGenericErrorDefaultFunc(&handler);
 
-  xmlSAXHandler SAXHander = makeSaxHandler();
+  xmlSAXHandler SAXHandler = makeSaxHandler();
 
   xmlParserCtxtPtr ctxt = xmlCreatePushParserCtxt(
-      &SAXHander, (void *) this, chars, res, NULL);
+      &SAXHandler, (void *) this, chars, res, nullptr);
 
   while ((res = fread(chars, 1, sizeof(chars), f)) > 0) {
     if (xmlParseChunk(ctxt, chars, res, 0)) {
@@ -169,16 +169,16 @@ void ConfigParser::connectTags(std::vector<precice::utils::XMLTag *> &DefTags, s
 
 xmlSAXHandler ConfigParser::makeSaxHandler()
 {
-  xmlSAXHandler SAXHander;
+  xmlSAXHandler SAXHandler;
 
-  memset(&SAXHander, 0, sizeof(xmlSAXHandler));
+  memset(&SAXHandler, 0, sizeof(xmlSAXHandler));
 
-  SAXHander.initialized    = XML_SAX2_MAGIC;
-  SAXHander.startElementNs = OnStartElementNs;
-  SAXHander.endElementNs   = OnEndElementNs;
-  SAXHander.characters     = OnCharacters;
+  SAXHandler.initialized    = XML_SAX2_MAGIC;
+  SAXHandler.startElementNs = OnStartElementNs;
+  SAXHandler.endElementNs   = OnEndElementNs;
+  SAXHandler.characters     = OnCharacters;
 
-  return SAXHander;
+  return SAXHandler;
 }
 
 void ConfigParser::OnStartElementNs(
@@ -235,8 +235,8 @@ void ConfigParser::OnEndElementNs(
 void ConfigParser::OnCharacters(void *ctx, const xmlChar *ch, int len)
 {
   char chars[len + 1];
-  strncpy(chars, (const char *) ch, len);
-  chars[len] = (char) NULL;
+  std::strncpy(chars, (const char *) ch, len);
+  chars[len] = '\0';
   //std::cout << "Text: " << chars << std::endl;
 }
 }
