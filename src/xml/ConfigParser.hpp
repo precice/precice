@@ -39,9 +39,7 @@ private:
 
   static void GenericErrorFunc(void *ctx, const char *msg, ...);
 
-  /// Opens file and starts parsing
-  void init(const std::string &filePath);
-
+  
 public:
   /// Parser ctor for Callback init
   ConfigParser(const std::string &filePath, XMLTag *pXmlTag);
@@ -53,7 +51,7 @@ public:
   ~ConfigParser();
 
   /// Reads the xml file
-  int readXmlFile(FILE * f);
+  int readXmlFile(std::string const & filePath);
 
   /// Returns the root tag
   CTag *getRootTag();

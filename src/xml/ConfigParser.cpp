@@ -65,7 +65,7 @@ precice::logging::Logger ConfigParser::_log("xml::XMLParser");
 ConfigParser::ConfigParser(const std::string &filePath, precice::xml::XMLTag *pXmlTag)
 {
   m_pXmlTag = pXmlTag;
-  init(filePath);
+  readXmlFile(filePath);
 
   std::vector<XMLTag *> DefTags;
   DefTags.push_back(m_pXmlTag);
@@ -82,21 +82,7 @@ ConfigParser::ConfigParser(const std::string &filePath, precice::xml::XMLTag *pX
 
 ConfigParser::ConfigParser(const std::string &filePath)
 {
-  init(filePath);
-}
-
-void ConfigParser::init(const std::string &filePath)
-{
-  FILE *f = fopen(filePath.c_str(), "r");
-  if (!f) {
-    ERROR("file open error: " << filePath);
-  }
-
-  if (readXmlFile(f)) {
-    ERROR("xml read error: " << filePath);
-  }
-
-  fclose(f);
+  readXmlFile(filePath);
 }
 
 ConfigParser::~ConfigParser()
@@ -123,7 +109,7 @@ void ConfigParser::GenericErrorFunc(void *ctx, const char *msg, ...)
   ERROR(err);
 }
 
-int ConfigParser::readXmlFile(FILE *f)
+int ConfigParser::readXmlFile(std::string const & filePath)
 {
   xmlGenericErrorFunc handler = (xmlGenericErrorFunc) ConfigParser::GenericErrorFunc;
   initGenericErrorDefaultFunc(&handler);
@@ -137,18 +123,24 @@ int ConfigParser::readXmlFile(FILE *f)
   SAXHandler.endElementNs   = OnEndElementNs;
   SAXHandler.characters     = OnCharacters;
 
+  FILE *f = fopen(filePath.c_str(), "r");
+
+  if (not f) {
+    ERROR("File open error: " << filePath);
+  }
+  
   char chars[1024];
-  int  res = fread(chars, 1, 4, f);
+  int  res = std::fread(chars, 1, 4, f);
   if (res <= 0) {
-    return 1;
+    ERROR("XML read error: " << filePath);
   }
 
   xmlParserCtxtPtr ctxt = xmlCreatePushParserCtxt(&SAXHandler, (void *) this, chars, res, nullptr);
 
-  while ((res = fread(chars, 1, sizeof(chars), f)) > 0) {
+  while ((res = std::fread(chars, 1, sizeof(chars), f)) > 0) {
     if (xmlParseChunk(ctxt, chars, res, 0)) {
       xmlParserError(ctxt, "xmlParseChunk");
-      return 1;
+      ERROR("XML read error: " << filePath);
     }
   }
   xmlParseChunk(ctxt, chars, 0, 1);
