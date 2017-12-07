@@ -1,9 +1,64 @@
 #include "ConfigParser.hpp"
+#include <libxml/SAX.h>
+
 
 namespace precice
 {
 namespace xml
 {
+
+// ------------------------- Callback functions for libxml2  -------------------------
+
+void OnStartElementNs(
+    void *          ctx,
+    const xmlChar * localname,
+    const xmlChar * prefix,
+    const xmlChar * URI,
+    int             nb_namespaces,
+    const xmlChar **namespaces,
+    int             nb_attributes,
+    int             nb_defaulted,
+    const xmlChar **attributes)
+{
+  ConfigParser::CTag::AttributePair attributesMap;
+  unsigned int index = 0;
+  for (int indexAttribute = 0; indexAttribute < nb_attributes; ++indexAttribute, index += 5) {
+    std::string attributeName(reinterpret_cast<const char*>(attributes[index]));
+
+    const xmlChar *valueBegin = attributes[index + 3];
+    const xmlChar *valueEnd   = attributes[index + 4];
+    std::string value((const char *) valueBegin, (const char *) valueEnd);
+
+    attributesMap[attributeName] = value;
+  }
+
+  ConfigParser *pParser = static_cast<ConfigParser*>(ctx);
+
+  std::string sPrefix(prefix == nullptr ? "" : reinterpret_cast<const char*>(prefix));
+    
+  pParser->OnStartElement(reinterpret_cast<const char*>(localname), sPrefix, attributesMap);
+}
+
+
+void OnEndElementNs(
+    void *         ctx,
+    const xmlChar *localname,
+    const xmlChar *prefix,
+    const xmlChar *URI)
+{
+  ConfigParser *pParser = static_cast<ConfigParser*>(ctx);
+  pParser->OnEndElement();
+}
+
+void OnCharacters(void *ctx, const xmlChar *ch, int len)
+{
+  ConfigParser *pParser = static_cast<ConfigParser*>(ctx);
+  pParser->OnTextSection(std::string(reinterpret_cast<const char*>(ch), len));
+}
+
+// ------------------------- ConfigParser implementation  -------------------------
+
+
 
 precice::logging::Logger ConfigParser::_log("xml::XMLParser");
 
@@ -55,22 +110,6 @@ ConfigParser::~ConfigParser()
   }
 }
 
-/*void GenericErrorFunc(void * ctx, const char * msg, ...)
-{
-	va_list args;
-    va_start(args, msg);
- 
-    while (*msg != '\0') {
-		std::string err = va_arg(args, const char *);
-		std::cout << err;
-		++msg;
-	}
-	
-	va_end(args);
-   
-	std::cout << std::endl;
-}*/
-
 void ConfigParser::GenericErrorFunc(void *ctx, const char *msg, ...)
 {
   const int TMP_BUF_SIZE = 256;
@@ -81,24 +120,30 @@ void ConfigParser::GenericErrorFunc(void *ctx, const char *msg, ...)
   vsnprintf(err, TMP_BUF_SIZE, msg, arg_ptr);
   va_end(arg_ptr);
 
-  ERROR("hm");
+  ERROR(err);
 }
 
 int ConfigParser::readXmlFile(FILE *f)
 {
+  xmlGenericErrorFunc handler = (xmlGenericErrorFunc) ConfigParser::GenericErrorFunc;
+  initGenericErrorDefaultFunc(&handler);
+
+  xmlSAXHandler SAXHandler;
+
+  memset(&SAXHandler, 0, sizeof(xmlSAXHandler));
+
+  SAXHandler.initialized    = XML_SAX2_MAGIC;
+  SAXHandler.startElementNs = OnStartElementNs;
+  SAXHandler.endElementNs   = OnEndElementNs;
+  SAXHandler.characters     = OnCharacters;
+
   char chars[1024];
   int  res = fread(chars, 1, 4, f);
   if (res <= 0) {
     return 1;
   }
 
-  xmlGenericErrorFunc handler = (xmlGenericErrorFunc) ConfigParser::GenericErrorFunc;
-  initGenericErrorDefaultFunc(&handler);
-
-  xmlSAXHandler SAXHandler = makeSaxHandler();
-
-  xmlParserCtxtPtr ctxt = xmlCreatePushParserCtxt(
-      &SAXHandler, (void *) this, chars, res, nullptr);
+  xmlParserCtxtPtr ctxt = xmlCreatePushParserCtxt(&SAXHandler, (void *) this, chars, res, nullptr);
 
   while ((res = fread(chars, 1, sizeof(chars), f)) > 0) {
     if (xmlParseChunk(ctxt, chars, res, 0)) {
@@ -167,77 +212,35 @@ void ConfigParser::connectTags(std::vector<XMLTag *> &DefTags, std::vector<CTag 
   }
 }
 
-xmlSAXHandler ConfigParser::makeSaxHandler()
-{
-  xmlSAXHandler SAXHandler;
-
-  memset(&SAXHandler, 0, sizeof(xmlSAXHandler));
-
-  SAXHandler.initialized    = XML_SAX2_MAGIC;
-  SAXHandler.startElementNs = OnStartElementNs;
-  SAXHandler.endElementNs   = OnEndElementNs;
-  SAXHandler.characters     = OnCharacters;
-
-  return SAXHandler;
-}
-
-void ConfigParser::OnStartElementNs(
-    void *          ctx,
-    const xmlChar * localname,
-    const xmlChar * prefix,
-    const xmlChar * URI,
-    int             nb_namespaces,
-    const xmlChar **namespaces,
-    int             nb_attributes,
-    int             nb_defaulted,
-    const xmlChar **attributes)
+void ConfigParser::OnStartElement(
+  std::string localname,
+  std::string prefix,
+  CTag::AttributePair attributes)
 {
   CTag *pTag = new CTag();
 
-  if (prefix != nullptr)
-    pTag->m_Prefix = std::string((const char *) prefix);
-
-  pTag->m_Name = std::string((const char *) localname);
-
-  unsigned int index = 0;
-  for (int indexAttribute = 0; indexAttribute < nb_attributes; ++indexAttribute, index += 5) {
-    const xmlChar *localname  = attributes[index];
-    const xmlChar *valueBegin = attributes[index + 3];
-    const xmlChar *valueEnd   = attributes[index + 4];
-
-    std::string value((const char *) valueBegin, (const char *) valueEnd);
-
-    pTag->m_aAttributes[std::string((const char *) localname)] = value;
-  }
-
-  ConfigParser *pParser = (ConfigParser *) ctx;
-
-  if (!pParser->m_CurrentTags.empty()) {
-    CTag *pParentTag = pParser->m_CurrentTags.back();
+  pTag->m_Prefix = prefix;
+  pTag->m_Name = localname;
+  pTag->m_aAttributes = std::move(attributes);
+  
+  if (not m_CurrentTags.empty()) {
+    CTag *pParentTag = m_CurrentTags.back();
     pParentTag->m_aSubTags.push_back(pTag);
   }
 
-  pParser->m_AllTags.push_back(pTag);
-  pParser->m_CurrentTags.push_back(pTag);
+  m_AllTags.push_back(pTag);
+  m_CurrentTags.push_back(pTag);
 }
 
-void ConfigParser::OnEndElementNs(
-    void *         ctx,
-    const xmlChar *localname,
-    const xmlChar *prefix,
-    const xmlChar *URI)
+void ConfigParser::OnEndElement()
 {
-  ConfigParser *pParser = (ConfigParser *) ctx;
-
-  pParser->m_CurrentTags.pop_back();
+  m_CurrentTags.pop_back();
 }
 
-void ConfigParser::OnCharacters(void *ctx, const xmlChar *ch, int len)
+void ConfigParser::OnTextSection(std::string ch)
 {
-  char chars[len + 1];
-  std::strncpy(chars, (const char *) ch, len);
-  chars[len] = '\0';
-  //std::cout << "Text: " << chars << std::endl;
+  // This page intentionally left blank
 }
+
 }
 }

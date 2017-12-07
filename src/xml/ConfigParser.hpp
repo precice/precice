@@ -1,6 +1,5 @@
 #pragma once
 
-#include <libxml/SAX.h>
 #include <map>
 #include <string>
 #include <vector>
@@ -25,7 +24,7 @@ public:
     std::string m_Prefix;
     bool        m_Used;
 
-    typedef std::map<std::string, std::string> AttributePair;
+    using AttributePair = std::map<std::string, std::string>;
     AttributePair                              m_aAttributes;
     std::vector<CTag *>                        m_aSubTags;
   };
@@ -44,8 +43,6 @@ private:
   void init(const std::string &filePath);
 
 public:
-  typedef CTag::AttributePair AttributePair;
-
   /// Parser ctor for Callback init
   ConfigParser(const std::string &filePath, XMLTag *pXmlTag);
 
@@ -56,10 +53,7 @@ public:
   ~ConfigParser();
 
   /// Reads the xml file
-  int readXmlFile(FILE *f);
-
-  /// Creates the handler with callbacks for the SAX interface
-  xmlSAXHandler makeSaxHandler();
+  int readXmlFile(FILE * f);
 
   /// Returns the root tag
   CTag *getRootTag();
@@ -72,26 +66,16 @@ public:
   void connectTags(std::vector<precice::xml::XMLTag *> &DefTags, std::vector<CTag *> &SubTags);
 
   /// Callback for Start-Tag
-  static void OnStartElementNs(
-      void *          ctx,
-      const xmlChar * localname,
-      const xmlChar * prefix,
-      const xmlChar * URI,
-      int             nb_namespaces,
-      const xmlChar **namespaces,
-      int             nb_attributes,
-      int             nb_defaulted,
-      const xmlChar **attributes);
+  void OnStartElement(
+    std::string localname,
+    std::string prefix,
+    CTag::AttributePair attributes);
 
   /// Callback for End-Tag
-  static void OnEndElementNs(
-      void *         ctx,
-      const xmlChar *localname,
-      const xmlChar *prefix,
-      const xmlChar *URI);
+  void OnEndElement();
 
   // Callback for text sections in xml file
-  static void OnCharacters(void *ctx, const xmlChar *ch, int len);
+  void OnTextSection(std::string ch);
 };
 }
 }
