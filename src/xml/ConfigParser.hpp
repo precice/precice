@@ -1,14 +1,9 @@
 #pragma once
 
-#include <iostream>
 #include <libxml/SAX.h>
 #include <map>
-#include <stdio.h>
-#include <string.h>
 #include <string>
 #include <vector>
-
-#include "logging/LogMacros.hpp"
 #include "logging/Logger.hpp"
 #include "xml/XMLTag.hpp"
 
@@ -28,7 +23,7 @@ namespace xml
 class ConfigParser
 {
 public:
-  /// struct holding the read tag from xml file
+  /// Struct holding the read tag from xml file
   struct CTag {
     CTag()
         : m_Used(false) {}
@@ -73,7 +68,7 @@ public:
   /// Creates the handler with callbacks for the SAX interface
   xmlSAXHandler makeSaxHandler();
 
-  /// returns the root tag
+  /// Returns the root tag
   CTag *getRootTag();
 
   /**
