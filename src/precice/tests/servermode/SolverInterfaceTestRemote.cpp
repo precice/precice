@@ -64,7 +64,7 @@ void SolverInterfaceTestRemote:: configureSolverInterface
   mesh::Data::resetDataCount();
   impl::Participant::resetParticipantCount();
   config::Configuration config;
-  utils::configure(config.getXMLTag(), configFilename);
+  xml::configure(config.getXMLTag(), configFilename);
   //validate ( config.isValid() );
   interface._impl->configure(config.getSolverInterfaceConfiguration());
 }
@@ -119,7 +119,7 @@ void SolverInterfaceTestRemote:: testCouplingModeWithOneServer()
     mesh::Data::resetDataCount();
     impl::Participant::resetParticipantCount();
     config::Configuration config;
-    utils::configure ( config.getXMLTag(), configFile );
+    xml::configure ( config.getXMLTag(), configFile );
     //validate ( config.isValid() );
     server.configure ( config.getSolverInterfaceConfiguration() );
 
@@ -204,7 +204,7 @@ void SolverInterfaceTestRemote:: testCouplingModeParallelWithOneServer()
     mesh::Data::resetDataCount();
     impl::Participant::resetParticipantCount();
     config::Configuration config;
-    utils::configure(config.getXMLTag(), configFile);
+    xml::configure(config.getXMLTag(), configFile);
     //validate ( config.isValid() );
     server.configure(config.getSolverInterfaceConfiguration());
     server.runServer();

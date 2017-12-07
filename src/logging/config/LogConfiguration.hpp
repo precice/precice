@@ -7,14 +7,14 @@ namespace precice {
 namespace config {
 
 /// Configures the log config file to use
-class LogConfiguration : public utils::XMLTag::Listener
+class LogConfiguration : public xml::XMLTag::Listener
 {
 public:
-  LogConfiguration(utils::XMLTag& parent);
+  LogConfiguration(xml::XMLTag& parent);
 
-  virtual void xmlTagCallback(utils::XMLTag& tag);
+  virtual void xmlTagCallback(xml::XMLTag& tag);
 
-  virtual void xmlEndTagCallback(utils::XMLTag& tag);
+  virtual void xmlEndTagCallback(xml::XMLTag& tag);
 
 private:
   static precice::logging::Logger _log;

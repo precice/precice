@@ -19,14 +19,14 @@ namespace config {
 /**
  * @brief Configures class SolverInterfaceImpl from XML.
  */
-class SolverInterfaceConfiguration : public utils::XMLTag::Listener
+class SolverInterfaceConfiguration : public xml::XMLTag::Listener
 {
 public:
 
   /**
    * @brief Constructor.
    */
-  SolverInterfaceConfiguration(utils::XMLTag& parent);
+  SolverInterfaceConfiguration(xml::XMLTag& parent);
 
   /**
    * @brief Destructor.
@@ -36,14 +36,14 @@ public:
   virtual ~SolverInterfaceConfiguration() {}
 
   /**
-   * @brief Callback method required when using utils::XMLTag.
+   * @brief Callback method required when using xml::XMLTag.
    */
-  virtual void xmlTagCallback ( utils::XMLTag& callingTag );
+  virtual void xmlTagCallback ( xml::XMLTag& callingTag );
 
   /**
-   * @brief Callback method required when using utils::XMLTag.
+   * @brief Callback method required when using xml::XMLTag.
    */
-  virtual void xmlEndTagCallback ( utils::XMLTag& callingTag );
+  virtual void xmlEndTagCallback ( xml::XMLTag& callingTag );
 
   /**
    * @brief Returns number of spatial dimensions configured.

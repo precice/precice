@@ -1,10 +1,9 @@
-#ifndef PRECICE_UTILS_VALIDATOROR_HPP_
-#define PRECICE_UTILS_VALIDATOROR_HPP_
+#pragma once
 
 #include "Validator.hpp"
 
 namespace precice {
-  namespace utils {
+  namespace xml {
 
     template<typename VALUE_T>
     class ValidatorOr;
@@ -20,7 +19,7 @@ namespace precice {
 // ----------------------------------------------------------- CLASS DEFINITION
 
 namespace precice {
-namespace utils {
+namespace xml {
 
 template<typename VALUE_T>
 class ValidatorOr
@@ -60,6 +59,4 @@ private:
 
 #include "ValidatorOr.cpph"
 
-}} // namespace precice, utils
-
-#endif /* PRECICE_UTILS_VALIDATOROR_HPP_ */
+}} // namespace precice, xml

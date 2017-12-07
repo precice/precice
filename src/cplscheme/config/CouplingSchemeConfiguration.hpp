@@ -35,7 +35,7 @@ namespace cplscheme {
 /**
  * @brief Configuration for coupling schemes.
  */
-class CouplingSchemeConfiguration : public utils::XMLTag::Listener
+class CouplingSchemeConfiguration : public xml::XMLTag::Listener
 {
 public:
 
@@ -48,7 +48,7 @@ public:
    *        to be coupled is defined.
    */
   CouplingSchemeConfiguration (
-    utils::XMLTag&                            parent,
+    xml::XMLTag&                            parent,
     const mesh::PtrMeshConfiguration&         meshConfig,
     const m2n::M2NConfiguration::SharedPointer&           m2nConfig);
 
@@ -73,14 +73,14 @@ public:
   const std::string& getDataToExchange ( int index ) const;
 
   /**
-   * @brief Callback method required when using utils::XMLTag.
+   * @brief Callback method required when using xml::XMLTag.
    */
-  virtual void xmlTagCallback ( utils::XMLTag& callingTag );
+  virtual void xmlTagCallback ( xml::XMLTag& callingTag );
 
   /**
-   * @brief Callback method required when using utils::XMLTag.
+   * @brief Callback method required when using xml::XMLTag.
    */
-  virtual void xmlEndTagCallback ( utils::XMLTag& callingTag );
+  virtual void xmlEndTagCallback ( xml::XMLTag& callingTag );
 
   /**
    * @brief Adds a manually configured coupling scheme for a participant.
@@ -193,31 +193,31 @@ private:
 
   void addTypespecifcSubtags (
     const std::string& type,
-    utils::XMLTag&     tag );
+    xml::XMLTag&     tag );
 
-  void addTransientLimitTags ( utils::XMLTag& tag );
+  void addTransientLimitTags ( xml::XMLTag& tag );
 
-  void addTagParticipants ( utils::XMLTag& tag );
+  void addTagParticipants ( xml::XMLTag& tag );
 
-  void addTagParticipant ( utils::XMLTag& tag );
+  void addTagParticipant ( xml::XMLTag& tag );
 
-  void addTagExchange ( utils::XMLTag& tag );
+  void addTagExchange ( xml::XMLTag& tag );
 
-  void addTagAbsoluteConvergenceMeasure ( utils::XMLTag& tag );
+  void addTagAbsoluteConvergenceMeasure ( xml::XMLTag& tag );
 
-  void addTagRelativeConvergenceMeasure ( utils::XMLTag& tag );
+  void addTagRelativeConvergenceMeasure ( xml::XMLTag& tag );
 
-  void addTagResidualRelativeConvergenceMeasure ( utils::XMLTag& tag );
+  void addTagResidualRelativeConvergenceMeasure ( xml::XMLTag& tag );
 
-  void addTagMinIterationConvergenceMeasure ( utils::XMLTag& tag );
+  void addTagMinIterationConvergenceMeasure ( xml::XMLTag& tag );
 
-  void addBaseAttributesTagConvergenceMeasure ( utils::XMLTag& tag );
+  void addBaseAttributesTagConvergenceMeasure ( xml::XMLTag& tag );
 
-  void addTagMaxIterations ( utils::XMLTag& tag );
+  void addTagMaxIterations ( xml::XMLTag& tag );
 
-  void addTagExtrapolation ( utils::XMLTag& tag );
+  void addTagExtrapolation ( xml::XMLTag& tag );
 
-  void addTagPostProcessing ( utils::XMLTag& tag );
+  void addTagPostProcessing ( xml::XMLTag& tag );
 
   void addAbsoluteConvergenceMeasure (
     const std::string & dataName,

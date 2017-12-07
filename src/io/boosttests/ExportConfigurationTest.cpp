@@ -9,11 +9,11 @@ using namespace precice;
 
 BOOST_AUTO_TEST_CASE(Configuration)
 {
-  using utils::XMLTag;
-  XMLTag tag = utils::getRootTag();
+  using xml::XMLTag;
+  XMLTag tag = xml::getRootTag();
   {
     io::ExportConfiguration config(tag);
-    utils::configure(tag, utils::getPathToSources() + "/io/boosttests/config1.xml");
+    xml::configure(tag, utils::getPathToSources() + "/io/boosttests/config1.xml");
     BOOST_TEST(config.exportContexts().size() == 1);
     const io::ExportContext &context = config.exportContexts().front();
     BOOST_TEST(context.type == "vtk");
@@ -23,7 +23,7 @@ BOOST_AUTO_TEST_CASE(Configuration)
   {
     tag.clear();
     io::ExportConfiguration config(tag);
-    utils::configure(tag, utils::getPathToSources() + "/io/boosttests/config2.xml");
+    xml::configure(tag, utils::getPathToSources() + "/io/boosttests/config2.xml");
     BOOST_TEST(config.exportContexts().size() == 1);
     const io::ExportContext &context = config.exportContexts().front();
     BOOST_TEST(context.type == "vtk");
@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(Configuration)
   {
     tag.clear();
     io::ExportConfiguration config(tag);
-    utils::configure(tag, utils::getPathToSources() + "/io/boosttests/config3.xml");
+    xml::configure(tag, utils::getPathToSources() + "/io/boosttests/config3.xml");
     BOOST_TEST(config.exportContexts().size() == 1);
     const io::ExportContext &context = config.exportContexts().front();
     BOOST_TEST(context.type == "vrml");

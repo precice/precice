@@ -92,9 +92,9 @@ PostProcessingConfiguration:: PostProcessingConfiguration
 }
 
 void PostProcessingConfiguration:: connectTags(
-    utils::XMLTag&                    parent){
+    xml::XMLTag&                    parent){
 
-  using namespace utils;
+  using namespace xml;
 
  // static int recursionCounter = 0;
  // recursionCounter++;
@@ -168,7 +168,7 @@ PtrPostProcessingConfiguration PostProcessingConfiguration::getCoarseModelOptimi
 
 void PostProcessingConfiguration:: xmlTagCallback
 (
-  utils::XMLTag& callingTag )
+  xml::XMLTag& callingTag )
 {
   TRACE(callingTag.getFullName());
 
@@ -271,7 +271,7 @@ void PostProcessingConfiguration:: xmlTagCallback
 
 void PostProcessingConfiguration:: xmlEndTagCallback
 (
-  utils::XMLTag& callingTag )
+  xml::XMLTag& callingTag )
 {
   TRACE(callingTag.getName());
   if (callingTag.getNamespace() == TAG){
@@ -403,9 +403,9 @@ void PostProcessingConfiguration:: clear()
 
 void PostProcessingConfiguration:: addTypeSpecificSubtags
 (
-  utils::XMLTag& tag )
+  xml::XMLTag& tag )
 {
-  using namespace utils;
+  using namespace xml;
   if(tag.getName() == VALUE_CONSTANT ) {
     XMLTag tagRelax(*this, TAG_RELAX, XMLTag::OCCUR_ONCE );
     XMLAttribute<double> attrValue(ATTR_VALUE );

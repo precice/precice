@@ -78,7 +78,7 @@ void SerialImplicitCouplingSchemeTest:: testParseConfigurationWithRelaxation()
 
   std::string path(_pathToTests + "serial-implicit-cplscheme-relax-const-config.xml");
 
-  utils::XMLTag root = utils::getRootTag();
+  xml::XMLTag root = xml::getRootTag();
   PtrDataConfiguration dataConfig(new DataConfiguration(root));
   dataConfig->setDimensions(3);
   PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
@@ -87,7 +87,7 @@ void SerialImplicitCouplingSchemeTest:: testParseConfigurationWithRelaxation()
       new m2n::M2NConfiguration(root));
   CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
 
-  utils::configure(root, path);
+  xml::configure(root, path);
   validate(cplSchemeConfig._postProcConfig->getPostProcessing().get() != nullptr);
   meshConfig->setMeshSubIDs();
 }
@@ -191,7 +191,7 @@ void SerialImplicitCouplingSchemeTest:: testAbsConvergenceMeasureSynchronized ()
    utils::Parallel::synchronizeProcesses ();
    assertion ( utils::Parallel::getCommunicatorSize() > 1 );
 
-   utils::XMLTag root = utils::getRootTag();
+   xml::XMLTag root = xml::getRootTag();
    // Create a data configuration, to simplify configuration of data
    PtrDataConfiguration dataConfig ( new DataConfiguration(root) );
    dataConfig->setDimensions(3);
@@ -341,7 +341,7 @@ void SerialImplicitCouplingSchemeTest:: testConfiguredAbsConvergenceMeasureSynch
       nameLocalParticipant = "participant1";
    }
 
-   utils::XMLTag root = utils::getRootTag();
+   xml::XMLTag root = xml::getRootTag();
    PtrDataConfiguration dataConfig(new DataConfiguration(root));
    dataConfig->setDimensions(3);
    PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
@@ -349,7 +349,7 @@ void SerialImplicitCouplingSchemeTest:: testConfiguredAbsConvergenceMeasureSynch
    m2n::M2NConfiguration::SharedPointer m2nConfig(new m2n::M2NConfiguration(root));
    CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
 
-   utils::configure(root, configurationPath);
+   xml::configure(root, configurationPath);
    meshConfig->setMeshSubIDs();
    m2n::PtrM2N m2n = m2nConfig->getM2N("participant0", "participant1");
 
@@ -373,7 +373,7 @@ void SerialImplicitCouplingSchemeTest:: testMinIterConvergenceMeasureSynchronize
    TRACE();
    utils::Parallel::synchronizeProcesses ();
 
-   utils::XMLTag root = utils::getRootTag();
+   xml::XMLTag root = xml::getRootTag();
    // Create a data configuration, to simplify configuration of data
    mesh::PtrDataConfiguration dataConfig ( new mesh::DataConfiguration(root) );
    dataConfig->setDimensions(3);
@@ -705,7 +705,7 @@ void SerialImplicitCouplingSchemeTest::
    TRACE();
    utils::Parallel::synchronizeProcesses ();
 
-   utils::XMLTag root = utils::getRootTag();
+   xml::XMLTag root = xml::getRootTag();
    // Create a data configuration, to simplify configuration of data
    mesh::PtrDataConfiguration dataConfig ( new mesh::DataConfiguration(root) );
    dataConfig->setDimensions(3);
@@ -772,7 +772,7 @@ void SerialImplicitCouplingSchemeTest:: testInitializeData()
   TRACE();
   utils::Parallel::synchronizeProcesses();
 
-  utils::XMLTag root = utils::getRootTag();
+  xml::XMLTag root = xml::getRootTag();
 
   // Create a data configuration, to simplify configuration of data
 

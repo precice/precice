@@ -30,7 +30,7 @@ logging::Logger ParticipantConfiguration::
 
 ParticipantConfiguration:: ParticipantConfiguration
 (
-  utils::XMLTag&                              parent,
+  xml::XMLTag&                              parent,
   const mesh::PtrMeshConfiguration&           meshConfiguration)
 :
   TAG("participant"),
@@ -70,7 +70,7 @@ ParticipantConfiguration:: ParticipantConfiguration
   _watchPointConfigs()
 {
   assertion(_meshConfig.use_count() > 0);
-  using namespace utils;
+  using namespace xml;
   std::string doc;
   XMLTag tag(*this, TAG, XMLTag::OCCUR_ONCE_OR_MORE);
   doc = "Represents one solver using preCICE. At least two ";
@@ -343,7 +343,7 @@ void ParticipantConfiguration:: setDimensions
 
 void ParticipantConfiguration:: xmlTagCallback
 (
-  utils::XMLTag& tag )
+  xml::XMLTag& tag )
 {
   TRACE(tag.getName() );
   if (tag.getName() == TAG){
@@ -426,7 +426,7 @@ void ParticipantConfiguration:: xmlTagCallback
 
 void ParticipantConfiguration:: xmlEndTagCallback
 (
-  utils::XMLTag& tag )
+  xml::XMLTag& tag )
 {
   if (tag.getName() == TAG){
     finishParticipantConfiguration(_participants.back());

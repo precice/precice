@@ -20,7 +20,7 @@ logging::Logger ActionConfiguration::
 
 ActionConfiguration:: ActionConfiguration
 (
-  utils::XMLTag&                    parent,
+  xml::XMLTag&                    parent,
   const mesh::PtrMeshConfiguration& meshConfig )
 :
   TAG("action"),
@@ -53,7 +53,7 @@ ActionConfiguration:: ActionConfiguration
   _configuredAction(),
   _actions()
 {
-  using namespace utils;
+  using namespace xml;
   std::string doc;
   XMLTag tagSourceData(*this, TAG_SOURCE_DATA, XMLTag::OCCUR_ONCE);
   tagSourceData.setDocumentation("Data to read from.");
@@ -185,7 +185,7 @@ ActionConfiguration:: ActionConfiguration
 
 void ActionConfiguration:: xmlTagCallback
 (
-  utils::XMLTag& callingTag )
+  xml::XMLTag& callingTag )
 {
   TRACE(callingTag.getName());
   if (callingTag.getNamespace() == TAG){
@@ -218,7 +218,7 @@ void ActionConfiguration:: xmlTagCallback
 
 void ActionConfiguration:: xmlEndTagCallback
 (
-  utils::XMLTag& callingTag )
+  xml::XMLTag& callingTag )
 {
   if (callingTag.getNamespace() == TAG){
     createAction();

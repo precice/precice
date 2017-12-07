@@ -12,7 +12,7 @@
 namespace precice {
 namespace cplscheme {
 
-class PostProcessingConfiguration : public utils::XMLTag::Listener
+class PostProcessingConfiguration : public xml::XMLTag::Listener
 {
 public:
 
@@ -37,14 +37,14 @@ public:
    PtrPostProcessingConfiguration getCoarseModelOptimizationConfig();
 
    /**
-    * @brief Callback method required when using utils::XMLTag.
+    * @brief Callback method required when using xml::XMLTag.
     */
-   virtual void xmlTagCallback ( utils::XMLTag& callingTag );
+   virtual void xmlTagCallback ( xml::XMLTag& callingTag );
 
    /**
-    * @brief Callback method required when using utils::XMLTag.
+    * @brief Callback method required when using xml::XMLTag.
     */
-   virtual void xmlEndTagCallback ( utils::XMLTag& callingTag );
+   virtual void xmlEndTagCallback ( xml::XMLTag& callingTag );
 
    /**
     * @brief Removes configured post-processing.
@@ -54,7 +54,7 @@ public:
    /**
    * @brief Connect tags.
    */
-   void connectTags( utils::XMLTag& tag );
+   void connectTags( xml::XMLTag& tag );
 
    std::vector<std::string>& getNeededMeshes(){
      return _neededMeshes;
@@ -175,7 +175,7 @@ private:
    bool _isAddManifoldMappingTagAllowed;
 
 
-   void addTypeSpecificSubtags ( utils::XMLTag& tag );
+   void addTypeSpecificSubtags ( xml::XMLTag& tag );
 };
 
 }} // namespace precice, cplscheme

@@ -5,9 +5,9 @@
 #include "xml/XMLAttribute.hpp"
 #include "xml/XMLTag.hpp"
 
-using namespace precice::utils;
+using namespace precice::xml;
+using precice::utils::getPathToSources;
 
-BOOST_AUTO_TEST_SUITE(UtilsTests)
 BOOST_AUTO_TEST_SUITE(XML)
 
 struct CallbackHost : public XMLTag::Listener {
@@ -28,7 +28,7 @@ struct CallbackHost : public XMLTag::Listener {
 
 BOOST_AUTO_TEST_CASE(AttributeConcatenation)
 {
-  std::string filename(getPathToSources() + "/utils/boosttests/config_xmltest_concatenation.xml");
+  std::string filename(getPathToSources() + "/xml/boosttests/config_xmltest_concatenation.xml");
 
   CallbackHost cb;
   XMLTag rootTag(cb, "configuration", XMLTag::OCCUR_ONCE);
@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(AttributeConcatenation)
 
 BOOST_AUTO_TEST_CASE(VectorAttributes)
 {
-  std::string filename(getPathToSources() + "/utils/boosttests/config_xmltest_vectorattributes.xml");
+  std::string filename(getPathToSources() + "/xml/boosttests/config_xmltest_vectorattributes.xml");
 
   CallbackHost cb;
   XMLTag rootTag(cb, "configuration", XMLTag::OCCUR_ONCE);
@@ -67,5 +67,4 @@ BOOST_AUTO_TEST_CASE(VectorAttributes)
   BOOST_TEST(cb.eigenVectorXd(2) == 1.0);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()

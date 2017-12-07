@@ -151,52 +151,52 @@ BOOST_AUTO_TEST_CASE(Configuration)
 {
   {
     std::string                filename = utils::getPathToSources() + "/action/boosttests/ScaleActionTest-testConfiguration-1.xml";
-    utils::XMLTag              tag      = utils::getRootTag();
+    xml::XMLTag              tag      = xml::getRootTag();
     mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(tag));
     dataConfig->setDimensions(3);
     mesh::PtrMeshConfiguration meshConfig(new mesh::MeshConfiguration(tag, dataConfig));
     meshConfig->setDimensions(3);
     action::ActionConfiguration config(tag, meshConfig);
-    utils::configure(tag, filename);
+    xml::configure(tag, filename);
     BOOST_TEST(config.actions().size() == 1);
     action::PtrAction action = config.actions().front();
     BOOST_TEST(action);
   }
   {
     std::string                filename = utils::getPathToSources() + "/action/boosttests/ScaleActionTest-testConfiguration-2.xml";
-    utils::XMLTag              tag      = utils::getRootTag();
+    xml::XMLTag              tag      = xml::getRootTag();
     mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(tag));
     dataConfig->setDimensions(3);
     mesh::PtrMeshConfiguration meshConfig(new mesh::MeshConfiguration(tag, dataConfig));
     meshConfig->setDimensions(3);
     action::ActionConfiguration config(tag, meshConfig);
-    utils::configure(tag, filename);
+    xml::configure(tag, filename);
     BOOST_TEST(config.actions().size() == 1);
     action::PtrAction action = config.actions().front();
     BOOST_TEST(action);
   }
   {
     std::string                filename = utils::getPathToSources() + "/action/boosttests/ScaleActionTest-testConfiguration-3.xml";
-    utils::XMLTag              tag      = utils::getRootTag();
+    xml::XMLTag              tag      = xml::getRootTag();
     mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(tag));
     dataConfig->setDimensions(3);
     mesh::PtrMeshConfiguration meshConfig(new mesh::MeshConfiguration(tag, dataConfig));
     meshConfig->setDimensions(3);
     action::ActionConfiguration config(tag, meshConfig);
-    utils::configure(tag, filename);
+    xml::configure(tag, filename);
     BOOST_TEST(config.actions().size() == 1);
     action::PtrAction action = config.actions().front();
     BOOST_TEST(action);
   }
   {
     std::string                filename = utils::getPathToSources() + "/action/boosttests/ScaleActionTest-testConfiguration-4.xml";
-    utils::XMLTag              tag      = utils::getRootTag();
+    xml::XMLTag              tag      = xml::getRootTag();
     mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(tag));
     dataConfig->setDimensions(3);
     mesh::PtrMeshConfiguration meshConfig(new mesh::MeshConfiguration(tag, dataConfig));
     meshConfig->setDimensions(3);
     action::ActionConfiguration config(tag, meshConfig);
-    utils::configure(tag, filename);
+    xml::configure(tag, filename);
     BOOST_TEST(config.actions().size() == 1);
     action::PtrAction action = config.actions().front();
     BOOST_TEST(action);

@@ -113,7 +113,7 @@ void SolverInterfaceImpl:: configure
   Participant::resetParticipantCount();
 
   config::Configuration config;
-  utils::configure(config.getXMLTag(), configurationFileName);
+  xml::configure(config.getXMLTag(), configurationFileName);
   //preciceCheck ( config.isValid(), "configure()", "Invalid configuration file!" );
   if(_accessorProcessRank==0){
     INFO("Configuring preCICE with configuration: \"" << configurationFileName << "\"" );

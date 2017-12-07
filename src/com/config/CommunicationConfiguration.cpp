@@ -29,7 +29,7 @@ CommunicationConfiguration:: CommunicationConfiguration()
 
 PtrCommunication CommunicationConfiguration:: createCommunication
 (
-  const utils::XMLTag& tag ) const
+  const xml::XMLTag& tag ) const
 {  
   com::PtrCommunication com;
   if (tag.getName() == VALUE_SOCKETS){

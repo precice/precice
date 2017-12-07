@@ -4,7 +4,7 @@
 #include "logging/Logger.hpp"
 
 namespace precice {
-namespace utils {
+namespace xml {
 
 template<typename VALUE_T>
 class ValidatorEquals;
@@ -62,6 +62,6 @@ private:
 };
 
 template<typename VALUE_T>
-logging::Logger precice::utils::ValidatorEquals<VALUE_T>::_log = logging::Logger ("utils::ValidatorEquals");
+logging::Logger ValidatorEquals<VALUE_T>::_log = logging::Logger ("xml::ValidatorEquals");
 
-}} // namespace precice, utils
+}} // namespace precice, xml

@@ -33,7 +33,7 @@ logging::Logger CouplingSchemeConfiguration::
 
 CouplingSchemeConfiguration:: CouplingSchemeConfiguration
 (
-  utils::XMLTag&                            parent,
+  xml::XMLTag&                            parent,
   const mesh::PtrMeshConfiguration&         meshConfig,
   const m2n::M2NConfiguration::SharedPointer& m2nConfig)
 :
@@ -83,7 +83,7 @@ CouplingSchemeConfiguration:: CouplingSchemeConfiguration
   _couplingSchemes(),
   _couplingSchemeCompositions()
 {
-  using namespace utils;
+  using namespace xml;
   //preciceCheck ( _couplingSchemes.size() == 0, "parseSubtag()",
   //               "Only one tag <coupling-scheme> can be defined!" );
 
@@ -156,7 +156,7 @@ const PtrCouplingScheme& CouplingSchemeConfiguration:: getCouplingScheme
 
 void CouplingSchemeConfiguration:: xmlTagCallback
 (
-  utils::XMLTag& tag )
+  xml::XMLTag& tag )
 {
   TRACE(tag.getFullName());
   if (tag.getNamespace() == TAG){
@@ -280,7 +280,7 @@ void CouplingSchemeConfiguration:: xmlTagCallback
 
 void CouplingSchemeConfiguration:: xmlEndTagCallback
 (
-  utils::XMLTag& tag )
+  xml::XMLTag& tag )
 {
   TRACE(tag.getFullName());
   if (tag.getNamespace() == TAG){
@@ -379,7 +379,7 @@ void CouplingSchemeConfiguration:: addTypespecifcSubtags
 (
   const std::string& type,
   //const std::string& name,
-  utils::XMLTag&     tag  )
+  xml::XMLTag&     tag  )
 {
   TRACE(type );
   addTransientLimitTags(tag);
@@ -436,9 +436,9 @@ void CouplingSchemeConfiguration:: addTypespecifcSubtags
 
 void CouplingSchemeConfiguration:: addTransientLimitTags
 (
-   utils::XMLTag & tag )
+   xml::XMLTag & tag )
 {
-  using namespace utils;
+  using namespace xml;
   XMLTag tagMaxTime(*this, TAG_MAX_TIME, XMLTag::OCCUR_NOT_OR_ONCE);
   XMLAttribute<double> attrValueMaxTime(ATTR_VALUE);
   tagMaxTime.addAttribute(attrValueMaxTime);
@@ -468,9 +468,9 @@ void CouplingSchemeConfiguration:: addTransientLimitTags
 
 void CouplingSchemeConfiguration:: addTagParticipants
 (
-  utils::XMLTag& tag )
+  xml::XMLTag& tag )
 {
-  using namespace utils;
+  using namespace xml;
   XMLTag tagParticipants(*this, TAG_PARTICIPANTS, XMLTag::OCCUR_ONCE);
   XMLAttribute<std::string> attrFirst(ATTR_FIRST);
   tagParticipants.addAttribute(attrFirst);
@@ -481,9 +481,9 @@ void CouplingSchemeConfiguration:: addTagParticipants
 
 void CouplingSchemeConfiguration:: addTagParticipant
 (
-  utils::XMLTag& tag )
+  xml::XMLTag& tag )
 {
-  using namespace utils;
+  using namespace xml;
   XMLTag tagParticipant(*this, TAG_PARTICIPANT, XMLTag::OCCUR_ONCE_OR_MORE);
   XMLAttribute<std::string> attrName(ATTR_NAME);
   tagParticipant.addAttribute(attrName);
@@ -495,9 +495,9 @@ void CouplingSchemeConfiguration:: addTagParticipant
 
 void CouplingSchemeConfiguration:: addTagExchange
 (
-  utils::XMLTag& tag )
+  xml::XMLTag& tag )
 {
-  using namespace utils;
+  using namespace xml;
   XMLTag tagExchange(*this, TAG_EXCHANGE, XMLTag::OCCUR_ONCE_OR_MORE);
   XMLAttribute<std::string> attrData(ATTR_DATA);
   tagExchange.addAttribute(attrData);
@@ -515,9 +515,9 @@ void CouplingSchemeConfiguration:: addTagExchange
 
 void CouplingSchemeConfiguration:: addTagAbsoluteConvergenceMeasure
 (
-  utils::XMLTag& tag )
+  xml::XMLTag& tag )
 {
-  using namespace utils;
+  using namespace xml;
   XMLTag tagConvergenceMeasure(*this, TAG_ABS_CONV_MEASURE, XMLTag::OCCUR_ARBITRARY);
   addBaseAttributesTagConvergenceMeasure(tagConvergenceMeasure);
   XMLAttribute<double> attrLimit(ATTR_LIMIT);
@@ -527,9 +527,9 @@ void CouplingSchemeConfiguration:: addTagAbsoluteConvergenceMeasure
 
 void CouplingSchemeConfiguration:: addTagResidualRelativeConvergenceMeasure
 (
-  utils::XMLTag& tag )
+  xml::XMLTag& tag )
 {
-  using namespace utils;
+  using namespace xml;
   XMLTag tagConvergenceMeasure(*this, TAG_RES_REL_CONV_MEASURE,
                                XMLTag::OCCUR_ARBITRARY );
   addBaseAttributesTagConvergenceMeasure(tagConvergenceMeasure);
@@ -540,9 +540,9 @@ void CouplingSchemeConfiguration:: addTagResidualRelativeConvergenceMeasure
 
 void CouplingSchemeConfiguration:: addTagRelativeConvergenceMeasure
 (
-  utils::XMLTag& tag )
+  xml::XMLTag& tag )
 {
-  using namespace utils;
+  using namespace xml;
   XMLTag tagConvergenceMeasure(*this, TAG_REL_CONV_MEASURE, XMLTag::OCCUR_ARBITRARY);
   addBaseAttributesTagConvergenceMeasure(tagConvergenceMeasure);
   XMLAttribute<double> attrLimit(ATTR_LIMIT);
@@ -552,31 +552,31 @@ void CouplingSchemeConfiguration:: addTagRelativeConvergenceMeasure
 
 void CouplingSchemeConfiguration:: addTagMinIterationConvergenceMeasure
 (
-  utils::XMLTag& tag )
+  xml::XMLTag& tag )
 {
-  utils::XMLTag tagMinIterationConvMeasure (*this,
-    TAG_MIN_ITER_CONV_MEASURE, utils::XMLTag::OCCUR_ARBITRARY );
+  xml::XMLTag tagMinIterationConvMeasure (*this,
+    TAG_MIN_ITER_CONV_MEASURE, xml::XMLTag::OCCUR_ARBITRARY );
   addBaseAttributesTagConvergenceMeasure(tagMinIterationConvMeasure);
-  utils::XMLAttribute<int> attrMinIterations(ATTR_MIN_ITERATIONS);
+  xml::XMLAttribute<int> attrMinIterations(ATTR_MIN_ITERATIONS);
   tagMinIterationConvMeasure.addAttribute(attrMinIterations);
   tag.addSubtag(tagMinIterationConvMeasure);
 }
 
 void CouplingSchemeConfiguration:: addBaseAttributesTagConvergenceMeasure
 (
-  utils::XMLTag& tag )
+  xml::XMLTag& tag )
 {
-  utils::XMLAttribute<std::string> attrData(ATTR_DATA);
+  xml::XMLAttribute<std::string> attrData(ATTR_DATA);
   attrData.setDocumentation("Data to be measured.");
   tag.addAttribute(attrData);
-  utils::XMLAttribute<std::string> attrMesh(ATTR_MESH);
+  xml::XMLAttribute<std::string> attrMesh(ATTR_MESH);
   attrMesh.setDocumentation("Mesh holding the data.");
   tag.addAttribute(attrMesh);
-  utils::XMLAttribute<bool> attrSuffices(ATTR_SUFFICES);
+  xml::XMLAttribute<bool> attrSuffices(ATTR_SUFFICES);
   attrSuffices.setDocumentation("If true, suffices to lead to convergence.");
   attrSuffices.setDefaultValue(false);
   tag.addAttribute(attrSuffices);
-  utils::XMLAttribute<int> attrLevel(ATTR_LEVEL);
+  xml::XMLAttribute<int> attrLevel(ATTR_LEVEL);
   attrLevel.setDocumentation("For multi-level based coupling schemes: Indicates the coarseness level of the associated coupling data for this convergence measure.");
   attrLevel.setDefaultValue(0);
   tag.addAttribute(attrLevel);
@@ -584,9 +584,9 @@ void CouplingSchemeConfiguration:: addBaseAttributesTagConvergenceMeasure
 
 void CouplingSchemeConfiguration:: addTagMaxIterations
 (
-  utils::XMLTag& tag )
+  xml::XMLTag& tag )
 {
-  using namespace utils;
+  using namespace xml;
   XMLTag tagMaxIterations(*this, TAG_MAX_ITERATIONS, XMLTag::OCCUR_NOT_OR_ONCE);
   XMLAttribute<int> attrValue(ATTR_VALUE);
   tagMaxIterations.addAttribute(attrValue);
@@ -595,9 +595,9 @@ void CouplingSchemeConfiguration:: addTagMaxIterations
 
 void CouplingSchemeConfiguration:: addTagExtrapolation
 (
-  utils::XMLTag& tag )
+  xml::XMLTag& tag )
 {
-  using namespace utils;
+  using namespace xml;
   XMLTag tagExtrapolation(*this, TAG_EXTRAPOLATION, XMLTag::OCCUR_NOT_OR_ONCE);
   XMLAttribute<int> attrValue(ATTR_VALUE);
   tagExtrapolation.addAttribute(attrValue);
@@ -607,7 +607,7 @@ void CouplingSchemeConfiguration:: addTagExtrapolation
 
 void CouplingSchemeConfiguration:: addTagPostProcessing
 (
-  utils::XMLTag& tag )
+  xml::XMLTag& tag )
 {
   TRACE(tag.getFullName());
   if(_postProcConfig.get()==nullptr){

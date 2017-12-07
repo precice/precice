@@ -3,9 +3,9 @@
 #include "utils/String.hpp"
 
 namespace precice {
-namespace utils {
+namespace xml {
 
-logging::Logger precice::utils::XMLTag:: _log ("utils::XMLTag");
+logging::Logger precice::xml::XMLTag:: _log ("xml::XMLTag");
 
 XMLTag:: XMLTag
 (
@@ -520,7 +520,7 @@ std::string XMLTag:: printDocumentation(int indentation ) const
   doc << indent << "<!-- TAG " << _fullName << std::endl;
   if (not _doc.empty()){
     std::string indentedDoc = indent + "         " + _doc;
-    doc <<  wrapText(indentedDoc, linewidth, indentation + 9);
+    doc << utils::wrapText(indentedDoc, linewidth, indentation + 9);
     doc << std::endl;
   }
   doc << indent << "         (can occur " << getOccurrenceString(_occurrence) << " times)";
@@ -530,7 +530,7 @@ std::string XMLTag:: printDocumentation(int indentation ) const
     doc << std::endl;
     attrDoc << indent << "     ATTR " << pair.first << ": "
             << pair.second.getUserDocumentation();
-    doc << wrapText(attrDoc.str(), linewidth, indentation + 10);
+    doc << utils::wrapText(attrDoc.str(), linewidth, indentation + 10);
   }
 
   for (const auto & pair : _intAttributes){
@@ -538,7 +538,7 @@ std::string XMLTag:: printDocumentation(int indentation ) const
     doc << std::endl;
     attrDoc << indent << "     ATTR " << pair.first << ": "
             << pair.second.getUserDocumentation();
-    doc << wrapText(attrDoc.str(), linewidth, indentation + 10);
+    doc << utils::wrapText(attrDoc.str(), linewidth, indentation + 10);
   }
 
   for (const auto & pair : _stringAttributes){
@@ -546,7 +546,7 @@ std::string XMLTag:: printDocumentation(int indentation ) const
     doc << std::endl;
     attrDoc << indent << "     ATTR " << pair.first << ": "
             << pair.second.getUserDocumentation();
-    doc << wrapText(attrDoc.str(), linewidth, indentation + 10);
+    doc << utils::wrapText(attrDoc.str(), linewidth, indentation + 10);
   }
 
   for (const auto & pair : _booleanAttributes){
@@ -554,7 +554,7 @@ std::string XMLTag:: printDocumentation(int indentation ) const
     doc << std::endl;
     attrDoc << indent << "     ATTR " << pair.first << ": "
             << pair.second.getUserDocumentation();
-    doc << wrapText(attrDoc.str(), linewidth, indentation + 10);
+    doc << utils::wrapText(attrDoc.str(), linewidth, indentation + 10);
   }
 
   for (const auto & pair : _eigenVectorXdAttributes){
@@ -562,7 +562,7 @@ std::string XMLTag:: printDocumentation(int indentation ) const
     doc << std::endl;
     attrDoc << indent << "     ATTR " << pair.first << ": "
             << pair.second.getUserDocumentation();
-    doc << wrapText(attrDoc.str(), linewidth, indentation + 10);
+    doc << utils::wrapText(attrDoc.str(), linewidth, indentation + 10);
   }
  
   doc << " -->" << std::endl;
@@ -594,7 +594,7 @@ std::string XMLTag:: printDocumentation(int indentation ) const
     tagHead << indent << "   " << pair.second.printDocumentation();
   }
   
-  doc << wrapText(tagHead.str(), linewidth, indentation + 3);
+  doc << utils::wrapText(tagHead.str(), linewidth, indentation + 3);
 
   if (not _subtags.empty()){
     doc << ">" << std::endl << std::endl;
@@ -627,7 +627,7 @@ void configure
   XMLTag&            tag,
   const std::string& configurationFilename )
 {
-  logging::Logger _log("utils");
+  logging::Logger _log("xml");
   TRACE(tag.getFullName(), configurationFilename);
 	
   NoPListener nopListener;
@@ -656,12 +656,12 @@ std::string XMLTag:: getOccurrenceString ( Occurrence occurrence ) const
   return "";
 }
 
-}} // namespace precice, utils
+}} // namespace precice, xml
 
 //std::ostream& operator<<
 //(
 //  std::ostream&                 os,
-//  const precice::utils::XMLTag& tag )
+//  const precice::xml::XMLTag& tag )
 //{
 //  os << tag.printDocumentation(80, 0);
 //  return os;

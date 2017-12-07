@@ -54,7 +54,7 @@ private:
 
   const std::string MY_READ_CHECKPOINT;
 
-  //utils::XMLTag _root;
+  //xml::XMLTag _root;
 
 # ifndef PRECICE_NO_MPI
 

@@ -32,7 +32,7 @@ enum class Preallocation {
 
 
 /// Performs XML configuration and holds configured mappings.
-class MappingConfiguration : public utils::XMLTag::Listener
+class MappingConfiguration : public xml::XMLTag::Listener
 {
 public:
 
@@ -68,27 +68,27 @@ public:
   };
 
   MappingConfiguration (
-    utils::XMLTag&                    parent,
+    xml::XMLTag&                    parent,
     const mesh::PtrMeshConfiguration& meshConfiguration );
 
 //  /**
 //   * @brief Reads the information parsed from an xml-file.
 //   */
-//  bool parseSubtag ( utils::XMLTag::XMLReader* xmlReader );
+//  bool parseSubtag ( xml::XMLTag::XMLReader* xmlReader );
 
   /**
    * @brief Callback function required for use of automatic configuration.
    *
    * @return True, if successful.
    */
-  virtual void xmlTagCallback ( utils::XMLTag& callingTag );
+  virtual void xmlTagCallback ( xml::XMLTag& callingTag );
 
   /**
    * @brief Callback function required for use of automatic configuration.
    *
    * @return True, if successful.
    */
-  virtual void xmlEndTagCallback ( utils::XMLTag& callingTag );
+  virtual void xmlEndTagCallback ( xml::XMLTag& callingTag );
 
   /**
    * @returns Returns true, if the xml-file parsing was successful.

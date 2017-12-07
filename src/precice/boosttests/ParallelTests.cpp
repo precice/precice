@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(TestMasterSlaveSetup, * testing::OnSize(4))
   SolverInterface interface ( "SolverOne", utils::Parallel::getProcessRank(), 4 );
   std::string configFilename = utils::getPathToSources() + "/precice/boosttests/config1.xml";
   config::Configuration config;
-  utils::configure(config.getXMLTag(), configFilename);
+  xml::configure(config.getXMLTag(), configFilename);
   interface._impl->configure(config.getSolverInterfaceConfiguration());
 
   BOOST_TEST ( interface.getDimensions() == 3 );
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(TestFinalize, * testing::OnSize(4))
 {
   std::string configFilename = utils::getPathToSources() + "/precice/boosttests/config1.xml";
   config::Configuration config;
-  utils::configure(config.getXMLTag(), configFilename);
+  xml::configure(config.getXMLTag(), configFilename);
   if(utils::Parallel::getProcessRank()<=1){
     SolverInterface interface ( "SolverOne", utils::Parallel::getProcessRank(), 2 );
     interface._impl->configure(config.getSolverInterfaceConfiguration());
@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(GlobalRBFPartitioning, * testing::OnSize(4))
     utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator());
     assertion(utils::Parallel::getCommunicatorSize() == 3);
     utils::Parallel::clearGroups();
-    utils::configure(config.getXMLTag(), configFilename);
+    xml::configure(config.getXMLTag(), configFilename);
 
     SolverInterface interface ( "SolverOne", utils::Parallel::getProcessRank(), 3 );
     interface._impl->configure(config.getSolverInterfaceConfiguration());
@@ -143,7 +143,7 @@ BOOST_AUTO_TEST_CASE(GlobalRBFPartitioning, * testing::OnSize(4))
     utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator());
     assertion(utils::Parallel::getCommunicatorSize() == 1);
     utils::Parallel::clearGroups();
-    utils::configure(config.getXMLTag(), configFilename);
+    xml::configure(config.getXMLTag(), configFilename);
 
     SolverInterface interface ( "SolverTwo", 0, 1 );
     interface._impl->configure(config.getSolverInterfaceConfiguration());
@@ -170,7 +170,7 @@ BOOST_AUTO_TEST_CASE(LocalRBFPartitioning, * testing::OnSize(4))
     utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator());
     assertion(utils::Parallel::getCommunicatorSize() == 3);
     utils::Parallel::clearGroups();
-    utils::configure(config.getXMLTag(), configFilename);
+    xml::configure(config.getXMLTag(), configFilename);
 
     SolverInterface interface ( "SolverOne", utils::Parallel::getProcessRank(), 3 );
     interface._impl->configure(config.getSolverInterfaceConfiguration());
@@ -192,7 +192,7 @@ BOOST_AUTO_TEST_CASE(LocalRBFPartitioning, * testing::OnSize(4))
     utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator());
     assertion(utils::Parallel::getCommunicatorSize() == 1);
     utils::Parallel::clearGroups();
-    utils::configure(config.getXMLTag(), configFilename);
+    xml::configure(config.getXMLTag(), configFilename);
 
     SolverInterface interface ( "SolverTwo", 0, 1 );
     interface._impl->configure(config.getSolverInterfaceConfiguration());
@@ -253,7 +253,7 @@ BOOST_AUTO_TEST_CASE(TestQN, * testing::OnSize(4))
     config::Configuration config;
     std::string configFilename = configs[k];
 
-    utils::configure(config.getXMLTag(), configFilename);
+    xml::configure(config.getXMLTag(), configFilename);
 
     SolverInterface interface ( solverName, rank, size );
     interface._impl->configure(config.getSolverInterfaceConfiguration());

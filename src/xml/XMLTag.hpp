@@ -16,7 +16,7 @@ class ConfigParser;
 }
 
 namespace precice {
-namespace utils {
+namespace xml {
 
 
 /// Represents an XML tag to be configured automatically.
@@ -246,12 +246,12 @@ void configure (
   XMLTag&            tag,
   const std::string& configurationFilename );
 
-}} // namespace precice, utils
+}} // namespace precice, xml
 
 /**
  * @brief Adds documentation of tag to output stream os.
  */
 //std::ostream& operator<< (
 //  std::ostream&                 os,
-//  const precice::utils::XMLTag& tag );
+//  const precice::xml::XMLTag& tag );
 

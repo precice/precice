@@ -676,7 +676,7 @@ void CompositionalCouplingSchemeTest:: setupAndRunThreeSolverCoupling
   std::string nameParticipant2("Participant2");
   std::string localParticipant("");
 
-  utils::XMLTag root = utils::getRootTag();
+  xml::XMLTag root = xml::getRootTag();
   PtrDataConfiguration dataConfig(new DataConfiguration(root));
   dataConfig->setDimensions(3);
   PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
@@ -684,7 +684,7 @@ void CompositionalCouplingSchemeTest:: setupAndRunThreeSolverCoupling
   m2n::M2NConfiguration::SharedPointer m2nConfig(new m2n::M2NConfiguration(root));
   CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig );
 
-  utils::configure(root, configurationPath);
+  xml::configure(root, configurationPath);
   meshConfig->setMeshSubIDs();
   m2n::PtrM2N m2n0 =
       m2nConfig->getM2N(nameParticipant0, nameParticipant1);

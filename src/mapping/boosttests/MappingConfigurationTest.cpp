@@ -16,14 +16,14 @@ BOOST_AUTO_TEST_CASE(Configuration)
   
   std::string pathToTests = utils::getPathToSources() + "/mapping/boosttests/";
   std::string file(pathToTests + "mapping-config.xml");
-  using utils::XMLTag;
-  XMLTag tag = utils::getRootTag();
+  using xml::XMLTag;
+  XMLTag tag = xml::getRootTag();
   mesh::PtrDataConfiguration dataConfig( new mesh::DataConfiguration(tag) );
   dataConfig->setDimensions(3);
   mesh::PtrMeshConfiguration meshConfig(new mesh::MeshConfiguration(tag, dataConfig));
   meshConfig->setDimensions(3);
   mapping::MappingConfiguration mappingConfig(tag, meshConfig);
-  utils::configure(tag, file);
+  xml::configure(tag, file);
     
   BOOST_TEST(meshConfig->meshes().size() == 3);
   BOOST_TEST(mappingConfig.mappings().size() == 3);

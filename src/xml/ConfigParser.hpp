@@ -9,16 +9,9 @@
 
 namespace precice
 {
-namespace utils
-{
-class XMLTag;
-}
-}
-
-namespace precice
-{
 namespace xml
 {
+class XMLTag; // forward declaration to resolve circular import
 
 class ConfigParser
 {
@@ -43,7 +36,7 @@ private:
   std::vector<CTag *> m_AllTags;
   std::vector<CTag *> m_CurrentTags;
 
-  precice::utils::XMLTag *m_pXmlTag;
+  precice::xml::XMLTag *m_pXmlTag;
 
   static void GenericErrorFunc(void *ctx, const char *msg, ...);
 
@@ -54,7 +47,7 @@ public:
   typedef CTag::AttributePair AttributePair;
 
   /// Parser ctor for Callback init
-  ConfigParser(const std::string &filePath, precice::utils::XMLTag *pXmlTag);
+  ConfigParser(const std::string &filePath, XMLTag *pXmlTag);
 
   /// Parser ctor without Callbacks
   ConfigParser(const std::string &filePath);
@@ -76,7 +69,7 @@ public:
    * @param DefTags predefined tags
    * @param SubTags actual tags from xml file
    */
-  void connectTags(std::vector<precice::utils::XMLTag *> &DefTags, std::vector<CTag *> &SubTags);
+  void connectTags(std::vector<precice::xml::XMLTag *> &DefTags, std::vector<CTag *> &SubTags);
 
   /// Callback for Start-Tag
   static void OnStartElementNs(
