@@ -15,7 +15,7 @@ namespace config {
 /**
  * @brief Performs XML configuration of a participant.
  */
-class ParticipantConfiguration : public utils::XMLTag::Listener
+class ParticipantConfiguration : public xml::XMLTag::Listener
 {
 public:
 
@@ -26,7 +26,7 @@ public:
    * @brief Constructor.
    */
   ParticipantConfiguration (
-    utils::XMLTag&                              parent,
+    xml::XMLTag&                              parent,
     const mesh::PtrMeshConfiguration&           meshConfiguration);
 
   void setDimensions ( int dimensions );
@@ -34,21 +34,21 @@ public:
   /**
    * @brief Reads the information parsed from an xml-file.
    */
-  //bool parseSubtag ( utils::XMLTag::XMLReader* xmlReader );
+  //bool parseSubtag ( xml::XMLTag::XMLReader* xmlReader );
 
   /**
    * @brief Callback function required for use of automatic configuration.
    *
    * @return True, if successful.
    */
-  virtual void xmlTagCallback ( utils::XMLTag& callingTag );
+  virtual void xmlTagCallback ( xml::XMLTag& callingTag );
 
   /**
    * @brief Callback function required for use of automatic configuration.
    *
    * @return True, if successful.
    */
-  virtual void xmlEndTagCallback ( utils::XMLTag& callingTag );
+  virtual void xmlEndTagCallback ( xml::XMLTag& callingTag );
 
   /**
    * @returns Returns true, if the xml-file parsing was successful.

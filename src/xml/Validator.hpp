@@ -1,10 +1,9 @@
-#ifndef PRECICE_UTILS_VALIDATOR_HPP_
-#define PRECICE_UTILS_VALIDATOR_HPP_
+#pragma once
 
 #include <string>
 
 namespace precice {
-namespace utils {
+namespace xml {
 
 
 template<typename VALUE_T>
@@ -31,6 +30,5 @@ private:
    Validator<VALUE_T>& operator= ( const Validator<VALUE_T>& rhs );
 };
 
-}} // namespace precice, utils
+}} // namespace precice, xml
 
-#endif /* PRECICE_UTILS_VALIDATOR_HPP_ */

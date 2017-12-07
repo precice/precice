@@ -10,11 +10,11 @@ BOOST_AUTO_TEST_CASE(DataConfig)
 {
   std::string filename(utils::getPathToSources() + "/mesh/boosttests/data-config.xml");
   int dim = 3;
-  using utils::XMLTag;
-  XMLTag tag = utils::getRootTag();
+  using xml::XMLTag;
+  XMLTag tag = xml::getRootTag();
   mesh::DataConfiguration dataConfig(tag);
   dataConfig.setDimensions(dim);
-  utils::configure(tag, filename);
+  xml::configure(tag, filename);
   BOOST_TEST(dataConfig.data().size() == 3);
   BOOST_TEST(dataConfig.data()[0].name == "vector-data");
   BOOST_TEST(dataConfig.data()[0].dimensions == 3);

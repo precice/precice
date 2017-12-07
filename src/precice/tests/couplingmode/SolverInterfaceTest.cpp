@@ -91,7 +91,7 @@ void SolverInterfaceTest:: configureSolverInterface
   precice::utils::EventRegistry::clear();
   utils::MasterSlave::reset();
   config::Configuration config;
-  utils::configure(config.getXMLTag(), configFilename);
+  xml::configure(config.getXMLTag(), configFilename);
   //validate ( config.isValid() );
   interface._impl->configure(config.getSolverInterfaceConfiguration());
 }

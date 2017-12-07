@@ -21,7 +21,7 @@ logging::Logger M2NConfiguration::
 
 M2NConfiguration:: M2NConfiguration
 (
-  utils::XMLTag& parent )
+  xml::XMLTag& parent )
 :
   TAG("m2n"),
   ATTR_TYPE("type"),
@@ -38,7 +38,7 @@ M2NConfiguration:: M2NConfiguration
   VALUE_POINT_TO_POINT("point-to-point"),
   _m2ns()
 {
-  using namespace utils;
+  using namespace xml;
   std::string doc;
   std::list<XMLTag> tags;
   XMLTag::Occurrence occ = XMLTag::OCCUR_ARBITRARY;
@@ -160,7 +160,7 @@ m2n::PtrM2N M2NConfiguration:: getM2N
 
 void M2NConfiguration:: xmlTagCallback
 (
-   utils::XMLTag& tag )
+   xml::XMLTag& tag )
 {
   if (tag.getNamespace() == TAG){
     std::string from = tag.getStringAttributeValue(ATTR_FROM);

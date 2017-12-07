@@ -27,7 +27,7 @@ public:
    /**
     * @brief Returns a communication object of given type.
     */
-   PtrCommunication createCommunication ( const utils::XMLTag& tag ) const;
+   PtrCommunication createCommunication ( const xml::XMLTag& tag ) const;
 
 private:
 

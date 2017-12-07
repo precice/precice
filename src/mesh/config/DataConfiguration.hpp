@@ -14,7 +14,7 @@ namespace mesh {
 /**
  * @brief Performs and provides configuration for Data objects from XML files.
  */
-class DataConfiguration : public utils::XMLTag::Listener
+class DataConfiguration : public xml::XMLTag::Listener
 {
 public:
 
@@ -37,7 +37,7 @@ public:
   /**
    * @brief Constructor.
    */
-  DataConfiguration ( utils::XMLTag& parent );
+  DataConfiguration ( xml::XMLTag& parent );
 
   void setDimensions ( int dimensions );
 
@@ -50,9 +50,9 @@ public:
 
   ConfiguredData getRecentlyConfiguredData() const;
 
-  virtual void xmlTagCallback ( utils::XMLTag& callingTag );
+  virtual void xmlTagCallback ( xml::XMLTag& callingTag );
 
-  virtual void xmlEndTagCallback ( utils::XMLTag& callingTag );
+  virtual void xmlEndTagCallback ( xml::XMLTag& callingTag );
 
   /**
    * @brief Adds data manually.
@@ -76,7 +76,7 @@ private:
   const std::string VALUE_VECTOR;
   const std::string VALUE_SCALAR;
 
-//  utils::XMLTag _tag;
+//  xml::XMLTag _tag;
 
   // @brief Dimension of space.
   int _dimensions;

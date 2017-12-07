@@ -82,7 +82,7 @@ void ParallelImplicitCouplingSchemeTest:: testParseConfigurationWithRelaxation()
   
   std::string path(_pathToTests + "parallel-implicit-cplscheme-relax-const-config.xml");
   
-  utils::XMLTag root = utils::getRootTag();
+  xml::XMLTag root = xml::getRootTag();
   PtrDataConfiguration dataConfig(new DataConfiguration(root));
   dataConfig->setDimensions(3);
   PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
@@ -91,7 +91,7 @@ void ParallelImplicitCouplingSchemeTest:: testParseConfigurationWithRelaxation()
       new m2n::M2NConfiguration(root));
   CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
   
-  utils::configure(root, path);
+  xml::configure(root, path);
   validate(cplSchemeConfig._postProcConfig->getPostProcessing().get() != nullptr);
   meshConfig->setMeshSubIDs();
 }
@@ -101,7 +101,7 @@ void ParallelImplicitCouplingSchemeTest:: testInitializeData()
   TRACE();
   utils::Parallel::synchronizeProcesses();
 
-  utils::XMLTag root = utils::getRootTag();
+  xml::XMLTag root = xml::getRootTag();
 
   // Create a data configuration, to simplify configuration of data
   mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(root));

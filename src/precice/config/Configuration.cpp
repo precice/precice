@@ -8,7 +8,7 @@ logging::Logger Configuration:: _log("config::Configuration");
 
 Configuration:: Configuration()
 :
-  _tag(*this, "precice-configuration", utils::XMLTag::OCCUR_ONCE),
+  _tag(*this, "precice-configuration", xml::XMLTag::OCCUR_ONCE),
   _logConfig(_tag),
   _solverInterfaceConfig(_tag)
 {
@@ -23,21 +23,21 @@ Configuration:: Configuration()
   _tag.addNamespace("post-processing");
 }
 
-utils::XMLTag& Configuration:: getXMLTag()
+xml::XMLTag& Configuration:: getXMLTag()
 {
   return _tag;
 }
 
 void Configuration:: xmlTagCallback
 (
-  utils::XMLTag& tag )
+  xml::XMLTag& tag )
 {
   TRACE(tag.getName());
 }
 
 void Configuration:: xmlEndTagCallback
 (
-  utils::XMLTag& tag )
+  xml::XMLTag& tag )
 {
   TRACE(tag.getName());
 }

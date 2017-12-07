@@ -7,12 +7,12 @@ namespace xml
 
 precice::logging::Logger ConfigParser::_log("xml::XMLParser");
 
-ConfigParser::ConfigParser(const std::string &filePath, precice::utils::XMLTag *pXmlTag)
+ConfigParser::ConfigParser(const std::string &filePath, precice::xml::XMLTag *pXmlTag)
 {
   m_pXmlTag = pXmlTag;
   init(filePath);
 
-  std::vector<precice::utils::XMLTag *> DefTags;
+  std::vector<XMLTag *> DefTags;
   DefTags.push_back(m_pXmlTag);
 
   std::vector<CTag *> SubTags;
@@ -122,7 +122,7 @@ ConfigParser::CTag *ConfigParser::getRootTag()
   return m_AllTags[0];
 }
 
-void ConfigParser::connectTags(std::vector<precice::utils::XMLTag *> &DefTags, std::vector<CTag *> &SubTags)
+void ConfigParser::connectTags(std::vector<XMLTag *> &DefTags, std::vector<CTag *> &SubTags)
 {
   std::vector<std::string> usedTags;
 
@@ -132,13 +132,13 @@ void ConfigParser::connectTags(std::vector<precice::utils::XMLTag *> &DefTags, s
     bool found = false;
 
     for (auto defSubtag : DefTags) {
-      precice::utils::XMLTag *pDefSubTag = defSubtag;
+      XMLTag *pDefSubTag = defSubtag;
 
       if (pDefSubTag->_fullName == ((pSubTag->m_Prefix.length() ? pSubTag->m_Prefix + ":" : "") + pSubTag->m_Name)) {
         found = true;
         pDefSubTag->resetAttributes();
 
-        if (pDefSubTag->_occurrence == precice::utils::XMLTag::OCCUR_ONCE) {
+        if (pDefSubTag->_occurrence == XMLTag::OCCUR_ONCE) {
           if (std::find(usedTags.begin(), usedTags.end(), pDefSubTag->_fullName) != usedTags.end()) {
             ERROR("Tag <" + pDefSubTag->_fullName + "> is already used");
           }

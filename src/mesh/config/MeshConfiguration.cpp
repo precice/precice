@@ -13,7 +13,7 @@ logging::Logger MeshConfiguration:: _log ( "precice::mesh::MeshConfiguration" );
 
 MeshConfiguration:: MeshConfiguration
 (
-  utils::XMLTag&       parent,
+  xml::XMLTag&       parent,
   PtrDataConfiguration config )
 :
   TAG("mesh"),
@@ -29,9 +29,9 @@ MeshConfiguration:: MeshConfiguration
   _meshSubIDs(),
   _neededMeshes()
 {
-  using namespace utils;
+  using namespace xml;
   std::string doc;
-  XMLTag tag(*this, TAG, utils::XMLTag::OCCUR_ONCE_OR_MORE);
+  XMLTag tag(*this, TAG, xml::XMLTag::OCCUR_ONCE_OR_MORE);
   doc = "Surface mesh consisting of vertices and (optional) of edges and ";
   doc += "triangles (only in 3D). The vertices of a mesh can carry data, ";
   doc += "configured by tag <use-data>. The mesh coordinates have to be ";
@@ -54,12 +54,12 @@ MeshConfiguration:: MeshConfiguration
   subtagData.addAttribute(attrName);
   tag.addSubtag(subtagData);
 
-  utils::XMLTag tagSubID(*this, TAG_SUB_ID, utils::XMLTag::OCCUR_ARBITRARY);
+  xml::XMLTag tagSubID(*this, TAG_SUB_ID, xml::XMLTag::OCCUR_ARBITRARY);
   doc = "Every mesh has a global ID (determined by preCICE). It is possible ";
   doc += "to set additional sub-ids to distinguish parts of the mesh in ";
   doc += "queries.";
   tagSubID.setDocumentation(doc);
-  utils::XMLAttribute<int> attrSideIndex(ATTR_SIDE_INDEX);
+  xml::XMLAttribute<int> attrSideIndex(ATTR_SIDE_INDEX);
   tagSubID.addAttribute(attrSideIndex);
   tag.addSubtag(tagSubID);
 
@@ -77,7 +77,7 @@ void MeshConfiguration:: setDimensions
 
 void MeshConfiguration:: xmlTagCallback
 (
-  utils::XMLTag& tag )
+  xml::XMLTag& tag )
 {
   TRACE(tag.getName());
   if (tag.getName() == TAG){
@@ -114,7 +114,7 @@ void MeshConfiguration:: xmlTagCallback
 
 void MeshConfiguration:: xmlEndTagCallback
 (
-  utils::XMLTag& tag )
+  xml::XMLTag& tag )
 {
 }
 

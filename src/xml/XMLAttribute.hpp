@@ -10,7 +10,7 @@
 #include <iostream>
 
 namespace precice {
-namespace utils {
+namespace xml {
 
 
 template<typename ATTRIBUTE_T>
@@ -105,7 +105,7 @@ private:
 };
 
 template<typename ATTRIBUTE_T>
-logging::Logger XMLAttribute<ATTRIBUTE_T>:: _log ("utils::XMLAttribute");
+logging::Logger XMLAttribute<ATTRIBUTE_T>:: _log ("xml::XMLAttribute");
 
 template<typename ATTRIBUTE_T>
 XMLAttribute<ATTRIBUTE_T>:: XMLAttribute()
@@ -362,7 +362,7 @@ template<typename ATTRIBUTE_T>
 std::string XMLAttribute<ATTRIBUTE_T>:: printDocumentation() const
 {
   std::ostringstream doc;
-  doc << _name << "=\"{" << getTypeName(_value);
+  doc << _name << "=\"{" << utils::getTypeName(_value);
   if (_hasValidation){
     doc << ":" << _validator->getDocumentation();
   }
@@ -399,5 +399,5 @@ typename std::enable_if<
 }
 
 
-}} // namespace precice, utils
+}} // namespace precice, xml
 

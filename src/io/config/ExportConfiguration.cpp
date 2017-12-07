@@ -14,7 +14,7 @@ logging::Logger ExportConfiguration:: _log("io::ExportConfiguration");
 
 ExportConfiguration:: ExportConfiguration
 (
-  utils::XMLTag& parent )
+  xml::XMLTag& parent )
 :
   TAG("export"),
   ATTR_LOCATION ( "directory" ),
@@ -30,7 +30,7 @@ ExportConfiguration:: ExportConfiguration
   //_isValid ( false ),
   _contexts()
 {
-  using namespace utils;
+  using namespace xml;
   std::string doc;
   std::list<XMLTag> tags;
   XMLTag::Occurrence occ = XMLTag::OCCUR_ARBITRARY;
@@ -82,7 +82,7 @@ ExportConfiguration:: ExportConfiguration
 
 void ExportConfiguration:: xmlTagCallback
 (
-  utils::XMLTag& tag )
+  xml::XMLTag& tag )
 {
   if ( tag.getNamespace() == TAG ){
     ExportContext context;

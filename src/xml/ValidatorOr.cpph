@@ -1,6 +1,4 @@
-#ifndef PRECICE_UTILS_VALIDATOROR_CPPH_
-#define PRECICE_UTILS_VALIDATOROR_CPPH_
-
+#pragma once
 
 template<typename VALUE_T>
 const Validator<VALUE_T>& operator||
@@ -47,5 +45,3 @@ std::string ValidatorOr<VALUE_T>:: getDocumentation() const
   return _lhs->getDocumentation() + " or " + _rhs->getDocumentation();
 }
 
-
-#endif /* PRECICE_UTILS_VALIDATOROR_CPPH_ */

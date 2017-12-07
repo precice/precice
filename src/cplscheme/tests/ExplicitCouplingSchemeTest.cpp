@@ -68,7 +68,7 @@ void ExplicitCouplingSchemeTest:: testSimpleExplicitCoupling()
   utils::Parallel::synchronizeProcesses();
 
   mesh::PropertyContainer::resetPropertyIDCounter();
-  utils::XMLTag root = utils::getRootTag();
+  xml::XMLTag root = xml::getRootTag();
   mesh::PtrDataConfiguration dataConfig ( new mesh::DataConfiguration(root) );
   dataConfig->addData ( "data0", 1 );
   dataConfig->addData ( "data1", 3 );
@@ -128,7 +128,7 @@ void ExplicitCouplingSchemeTest:: testConfiguredSimpleExplicitCoupling ()
   else if ( utils::Parallel::getProcessRank() == 1 ) {
     localParticipant = "participant1";
   }
-  utils::XMLTag root = utils::getRootTag();
+  xml::XMLTag root = xml::getRootTag();
   PtrDataConfiguration dataConfig(new DataConfiguration(root));
   dataConfig->setDimensions(3);
   PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
@@ -136,7 +136,7 @@ void ExplicitCouplingSchemeTest:: testConfiguredSimpleExplicitCoupling ()
   m2n::M2NConfiguration::SharedPointer m2nConfig(new m2n::M2NConfiguration(root));
   CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
 
-  utils::configure(root, configurationPath);
+  xml::configure(root, configurationPath);
   meshConfig->setMeshSubIDs();
   m2n::PtrM2N m2n = m2nConfig->getM2N("participant0", "participant1");
 
@@ -167,7 +167,7 @@ void ExplicitCouplingSchemeTest:: testExplicitCouplingFirstParticipantSetsDt()
     localParticipant = "participant1";
   }
 
-  utils::XMLTag root = utils::getRootTag();
+  xml::XMLTag root = xml::getRootTag();
   PtrDataConfiguration dataConfig(new DataConfiguration(root));
   dataConfig->setDimensions(3);
   PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
@@ -175,7 +175,7 @@ void ExplicitCouplingSchemeTest:: testExplicitCouplingFirstParticipantSetsDt()
   m2n::M2NConfiguration::SharedPointer m2nConfig(new m2n::M2NConfiguration(root));
   CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
 
-  utils::configure(root, configurationPath);
+  xml::configure(root, configurationPath);
   meshConfig->setMeshSubIDs();
   m2n::PtrM2N m2n = m2nConfig->getM2N("participant0", "participant1");
 
@@ -257,7 +257,7 @@ void ExplicitCouplingSchemeTest:: testSerialDataInitialization()
   else if (utils::Parallel::getProcessRank() == 1){
     localParticipant = "participant1";
   }
-  utils::XMLTag root = utils::getRootTag();
+  xml::XMLTag root = xml::getRootTag();
   PtrDataConfiguration dataConfig(new DataConfiguration(root));
   dataConfig->setDimensions(2);
   PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
@@ -265,7 +265,7 @@ void ExplicitCouplingSchemeTest:: testSerialDataInitialization()
   m2n::M2NConfiguration::SharedPointer m2nConfig(new m2n::M2NConfiguration(root));
   CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
 
-  utils::configure(root, configurationPath);
+  xml::configure(root, configurationPath);
   meshConfig->setMeshSubIDs();
   m2n::PtrM2N m2n = m2nConfig->getM2N("participant0", "participant1");
 
@@ -332,7 +332,7 @@ void ExplicitCouplingSchemeTest:: testParallelDataInitialization()
   else if (utils::Parallel::getProcessRank() == 1){
     localParticipant = "participant1";
   }
-  utils::XMLTag root = utils::getRootTag();
+  xml::XMLTag root = xml::getRootTag();
   PtrDataConfiguration dataConfig(new DataConfiguration(root));
   dataConfig->setDimensions(2);
   PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
@@ -340,7 +340,7 @@ void ExplicitCouplingSchemeTest:: testParallelDataInitialization()
   m2n::M2NConfiguration::SharedPointer m2nConfig(new m2n::M2NConfiguration(root));
   CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
 
-  utils::configure(root, configurationPath);
+  xml::configure(root, configurationPath);
   meshConfig->setMeshSubIDs();
   m2n::PtrM2N m2n = m2nConfig->getM2N("participant0", "participant1");
 
@@ -528,7 +528,7 @@ void ExplicitCouplingSchemeTest:: testExplicitCouplingWithSubcycling ()
   assertion ( utils::Parallel::getCommunicatorSize() > 1 );
 
   mesh::PropertyContainer::resetPropertyIDCounter ();
-  utils::XMLTag root = utils::getRootTag();
+  xml::XMLTag root = xml::getRootTag();
   mesh::PtrDataConfiguration dataConfig ( new mesh::DataConfiguration(root) );
   dataConfig->setDimensions(3);
   dataConfig->addData ( "data0", 1 );
@@ -590,7 +590,7 @@ void ExplicitCouplingSchemeTest:: testConfiguredExplicitCouplingWithSubcycling (
     localParticipant = "participant1";
   }
 
-  utils::XMLTag root = utils::getRootTag();
+  xml::XMLTag root = xml::getRootTag();
   PtrDataConfiguration dataConfig(new DataConfiguration(root));
   dataConfig->setDimensions(3);
   PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
@@ -598,7 +598,7 @@ void ExplicitCouplingSchemeTest:: testConfiguredExplicitCouplingWithSubcycling (
   m2n::M2NConfiguration::SharedPointer m2nConfig(new m2n::M2NConfiguration(root));
   CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
 
-  utils::configure(root, configurationPath);
+  xml::configure(root, configurationPath);
   meshConfig->setMeshSubIDs();
   m2n::PtrM2N m2n = m2nConfig->getM2N("participant0", "participant1");
 

@@ -6,10 +6,9 @@
 #include "xml/XMLTag.hpp"
 #include "xml/ConfigParser.hpp"
 
+using namespace precice::xml;
+using precice::utils::getPathToSources;
 
-using namespace precice::utils;
-
-BOOST_AUTO_TEST_SUITE(UtilsTests)
 BOOST_AUTO_TEST_SUITE(XML)
 
 struct CallbackHostAttr : public XMLTag::Listener {
@@ -50,7 +49,7 @@ struct CallbackHostAttr : public XMLTag::Listener {
 
 BOOST_AUTO_TEST_CASE(AttributeTypeTest)
 {
-  std::string filename(getPathToSources() + "/utils/boosttests/xmlparser_test.xml");
+  std::string filename(getPathToSources() + "/xml/boosttests/xmlparser_test.xml");
 
   CallbackHostAttr cb;
   XMLTag rootTag(cb, "configuration", XMLTag::OCCUR_ONCE);
@@ -97,7 +96,7 @@ BOOST_AUTO_TEST_CASE(AttributeTypeTest)
 
 BOOST_AUTO_TEST_CASE(OccurenceTest)
 {	
-  std::string filename(getPathToSources() + "/utils/boosttests/xmlparser_occtest.xml");
+  std::string filename(getPathToSources() + "/xml/boosttests/xmlparser_occtest.xml");
 
   CallbackHostAttr cb;
   XMLTag rootTag(cb, "configuration", XMLTag::OCCUR_ONCE);
@@ -128,7 +127,7 @@ BOOST_AUTO_TEST_CASE(OccurenceTest)
 
 BOOST_AUTO_TEST_CASE(NamespaceTest)
 {
-  std::string filename(getPathToSources() + "/utils/boosttests/xmlparser_nstest.xml");
+  std::string filename(getPathToSources() + "/xml/boosttests/xmlparser_nstest.xml");
 
   CallbackHostAttr cb;
   XMLTag rootTag(cb, "configuration", XMLTag::OCCUR_ONCE);
@@ -148,5 +147,4 @@ BOOST_AUTO_TEST_CASE(NamespaceTest)
   configure(rootTag, filename);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()

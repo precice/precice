@@ -16,7 +16,7 @@ namespace m2n {
 /**
  * @brief Configuration for communication channels between solvers.
  */
-class M2NConfiguration : public utils::XMLTag::Listener
+class M2NConfiguration : public xml::XMLTag::Listener
 {
 public:
    using SharedPointer = std::shared_ptr<M2NConfiguration>;
@@ -25,7 +25,7 @@ public:
 
 public:
    
-   M2NConfiguration ( utils::XMLTag& parent );
+   M2NConfiguration ( xml::XMLTag& parent );
 
    virtual ~M2NConfiguration() {}
 
@@ -47,9 +47,9 @@ public:
       return _m2ns;
    }
 
-   virtual void xmlTagCallback ( utils::XMLTag& callingTag );
+   virtual void xmlTagCallback ( xml::XMLTag& callingTag );
 
-   virtual void xmlEndTagCallback ( utils::XMLTag& callingTag ) {}
+   virtual void xmlEndTagCallback ( xml::XMLTag& callingTag ) {}
 
 private:
 
