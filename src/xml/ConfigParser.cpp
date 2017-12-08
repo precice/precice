@@ -1,5 +1,6 @@
 #include "ConfigParser.hpp"
 #include <libxml/SAX.h>
+#include <fstream>
 
 namespace precice
 {
@@ -119,28 +120,17 @@ int ConfigParser::readXmlFile(std::string const &filePath)
   SAXHandler.endElementNs   = OnEndElementNs;
   SAXHandler.characters     = OnCharacters;
 
-  FILE *f = fopen(filePath.c_str(), "r");
-
-  if (not f) {
+  std::ifstream ifs(filePath);
+  if (not ifs) {
     ERROR("File open error: " << filePath);
   }
 
-  char chars[1024];
-  int  res = std::fread(chars, 1, 4, f);
-  if (res <= 0) {
-    ERROR("XML read error: " << filePath);
-  }
+  std::string content{std::istreambuf_iterator<char>(ifs), std::istreambuf_iterator<char>()};
 
-  xmlParserCtxtPtr ctxt = xmlCreatePushParserCtxt(&SAXHandler, (void *) this, chars, res, nullptr);
+  xmlParserCtxtPtr ctxt = xmlCreatePushParserCtxt(&SAXHandler, static_cast<void*>(this),
+                                                  content.c_str(), content.size(), nullptr);
 
-  while ((res = std::fread(chars, 1, sizeof(chars), f)) > 0) {
-    if (xmlParseChunk(ctxt, chars, res, 0)) {
-      xmlParserError(ctxt, "xmlParseChunk");
-      ERROR("XML read error: " << filePath);
-    }
-  }
-  xmlParseChunk(ctxt, chars, 0, 1);
-
+  xmlParseChunk(ctxt, nullptr, 0, 1);
   xmlFreeParserCtxt(ctxt);
   xmlCleanupParser();
 
