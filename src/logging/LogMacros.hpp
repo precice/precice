@@ -11,6 +11,8 @@
 #include <boost/vmd/is_empty.hpp>
 
 #include <string>
+#include "utils/MasterSlave.hpp"
+
 
 #include "Tracer.hpp"
 

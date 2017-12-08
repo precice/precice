@@ -1,6 +1,7 @@
 #ifndef PRECICE_NO_MPI
 
 #include "testing/Testing.hpp"
+#include "utils/Globals.hpp"
 
 #include "partition/ProvidedPartition.hpp"
 #include "partition/ReceivedPartition.hpp"

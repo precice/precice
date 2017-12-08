@@ -881,7 +881,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::estimatePreallocationMat
   auto meshSize = mesh->vertices().size();
   
   double meshArea = 1;
-  WARN(bbox);
+  // WARN(bbox);
   for (int d = 0; d < getDimensions(); d++)
     if (not _deadAxis[d])
       meshArea *= bbox[d].second - bbox[d].first;
@@ -926,7 +926,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::estimatePreallocationMat
   auto meshSize = mesh->vertices().size();
   
   double meshArea = 1;
-  WARN(bbox);
+  // WARN(bbox);
   for (int d = 0; d < getDimensions(); d++)
     if (not _deadAxis[d])
       meshArea *= bbox[d].second - bbox[d].first;

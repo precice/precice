@@ -37,20 +37,17 @@ XMLTag::XMLTag(
   }
 }
 
-void XMLTag::setDocumentation(
-    const std::string &documentation)
+void XMLTag::setDocumentation(const std::string &documentation)
 {
   _doc = documentation;
 }
 
-void XMLTag::addNamespace(
-    const std::string &namespaceName)
+void XMLTag::addNamespace(const std::string &namespaceName)
 {
   _namespaces.push_back(namespaceName);
 }
 
-void XMLTag::addSubtag(
-    const XMLTag &tag)
+void XMLTag::addSubtag(const XMLTag &tag)
 {
   TRACE(tag._fullName);
   assertion(tag._name != std::string(""));
@@ -77,8 +74,7 @@ void XMLTag::addSubtag(
 //  ERROR("Subtag \"" << tagName << "\" does not exist!" );
 //}
 
-void XMLTag::addAttribute(
-    const XMLAttribute<double> &attribute)
+void XMLTag::addAttribute(const XMLAttribute<double> &attribute)
 {
   TRACE(attribute.getName());
   assertion(not utils::contained(attribute.getName(), _attributes));
@@ -86,18 +82,15 @@ void XMLTag::addAttribute(
   _doubleAttributes.insert(std::pair<std::string, XMLAttribute<double>>(attribute.getName(), attribute));
 }
 
-void XMLTag::addAttribute(
-    const XMLAttribute<int> &attribute)
+void XMLTag::addAttribute(const XMLAttribute<int> &attribute)
 {
   TRACE(attribute.getName());
   assertion(not utils::contained(attribute.getName(), _attributes));
   _attributes.insert(attribute.getName());
-  _intAttributes.insert(std::pair<std::string,
-                                  XMLAttribute<int>>(attribute.getName(), attribute));
+  _intAttributes.insert(std::pair<std::string, XMLAttribute<int>>(attribute.getName(), attribute));
 }
 
-void XMLTag::addAttribute(
-    const XMLAttribute<std::string> &attribute)
+void XMLTag::addAttribute(const XMLAttribute<std::string> &attribute)
 {
   TRACE(attribute.getName());
   assertion(not utils::contained(attribute.getName(), _attributes));
@@ -105,8 +98,7 @@ void XMLTag::addAttribute(
   _stringAttributes.insert(std::pair<std::string, XMLAttribute<std::string>>(attribute.getName(), attribute));
 }
 
-void XMLTag::addAttribute(
-    const XMLAttribute<bool> &attribute)
+void XMLTag::addAttribute(const XMLAttribute<bool> &attribute)
 {
   TRACE(attribute.getName());
   assertion(not utils::contained(attribute.getName(), _attributes));
@@ -114,8 +106,7 @@ void XMLTag::addAttribute(
   _booleanAttributes.insert(std::pair<std::string, XMLAttribute<bool>>(attribute.getName(), attribute));
 }
 
-void XMLTag::addAttribute(
-    const XMLAttribute<Eigen::VectorXd> &attribute)
+void XMLTag::addAttribute(const XMLAttribute<Eigen::VectorXd> &attribute)
 {
   TRACE(attribute.getName());
   assertion(not utils::contained(attribute.getName(), _attributes));
@@ -124,8 +115,7 @@ void XMLTag::addAttribute(
       std::pair<std::string, XMLAttribute<Eigen::VectorXd>>(attribute.getName(), attribute));
 }
 
-bool XMLTag::hasAttribute(
-    const std::string &attributeName)
+bool XMLTag::hasAttribute(const std::string &attributeName)
 {
   return utils::contained(attributeName, _attributes);
 }
@@ -167,8 +157,7 @@ bool XMLTag::hasAttribute(
 //      << " does not exist for tag " << _name );
 //}
 
-double XMLTag::getDoubleAttributeValue(
-    const std::string &name) const
+double XMLTag::getDoubleAttributeValue(const std::string &name) const
 {
   std::map<std::string, XMLAttribute<double>>::const_iterator iter;
   iter = _doubleAttributes.find(name);
@@ -176,8 +165,7 @@ double XMLTag::getDoubleAttributeValue(
   return iter->second.getValue();
 }
 
-int XMLTag::getIntAttributeValue(
-    const std::string &name) const
+int XMLTag::getIntAttributeValue(const std::string &name) const
 {
   std::map<std::string, XMLAttribute<int>>::const_iterator iter;
   iter = _intAttributes.find(name);
@@ -185,8 +173,7 @@ int XMLTag::getIntAttributeValue(
   return iter->second.getValue();
 }
 
-const std::string &XMLTag::getStringAttributeValue(
-    const std::string &name) const
+const std::string &XMLTag::getStringAttributeValue(const std::string &name) const
 {
   std::map<std::string, XMLAttribute<std::string>>::const_iterator iter;
   iter = _stringAttributes.find(name);
@@ -194,8 +181,7 @@ const std::string &XMLTag::getStringAttributeValue(
   return iter->second.getValue();
 }
 
-bool XMLTag::getBooleanAttributeValue(
-    const std::string &name) const
+bool XMLTag::getBooleanAttributeValue(const std::string &name) const
 {
   std::map<std::string, XMLAttribute<bool>>::const_iterator iter;
   iter = _booleanAttributes.find(name);
@@ -203,9 +189,7 @@ bool XMLTag::getBooleanAttributeValue(
   return iter->second.getValue();
 }
 
-Eigen::VectorXd XMLTag::getEigenVectorXdAttributeValue(
-    const std::string &name,
-    int                dimensions) const
+Eigen::VectorXd XMLTag::getEigenVectorXdAttributeValue(const std::string &name, int dimensions) const
 {
   TRACE(name, dimensions);
   // std::map<std::string, XMLAttribute<utils::DynVector> >::const_iterator iter;

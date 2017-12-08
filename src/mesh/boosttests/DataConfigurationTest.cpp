@@ -1,6 +1,7 @@
 #include "mesh/config/DataConfiguration.hpp"
 #include "testing/Testing.hpp"
 #include "xml/XMLTag.hpp"
+#include "utils/Globals.hpp"
 
 using namespace precice;
 
