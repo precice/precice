@@ -4,6 +4,7 @@
 #include "mapping/config/MappingConfiguration.hpp"
 #include "mapping/Mapping.hpp"
 #include "xml/XMLTag.hpp"
+#include "utils/Globals.hpp"
 
 using namespace precice;
 using namespace precice::mapping;

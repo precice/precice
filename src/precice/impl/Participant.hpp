@@ -11,6 +11,7 @@
 #include "logging/Logger.hpp"
 #include "utils/PointerVector.hpp"
 #include "partition/ReceivedPartition.hpp"
+#include "utils/MasterSlave.hpp"
 #include <string>
 
 namespace precice {

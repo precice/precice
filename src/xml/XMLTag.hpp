@@ -6,7 +6,6 @@
 #include <vector>
 #include "XMLAttribute.hpp"
 #include "logging/Logger.hpp"
-#include "utils/Globals.hpp"
 #include "xml/ConfigParser.hpp"
 
 namespace precice
@@ -128,9 +127,7 @@ public:
     return _namespace;
   }
 
-  /**
-   * @brief Returns full name consisting of xml namespace + ":" + name.
-   */
+  /// Returns full name consisting of xml namespace + ":" + name.
   const std::string &getFullName() const
   {
     return _fullName;
@@ -158,10 +155,6 @@ public:
   Eigen::VectorXd getEigenVectorXdAttributeValue(
       const std::string &name,
       int                dimensions) const;
-
-  /// Parses the information from the xmlReader and calls XMLListener.
-  //deprecated
-  //void parse ( XMLReader* xmlReader );
 
   bool isConfigured() const
   {
@@ -252,14 +245,12 @@ struct NoPListener : public XMLTag::Listener {
  */
 XMLTag getRootTag();
 
-/**
- * @brief Configures the given configuration from file configurationFilename.
- */
+/// Configures the given configuration from file configurationFilename.
 void configure(
     XMLTag &           tag,
     const std::string &configurationFilename);
-}
-} // namespace precice, xml
+
+}} // namespace precice, xml
 
 /**
  * @brief Adds documentation of tag to output stream os.

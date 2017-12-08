@@ -5,6 +5,7 @@
 #include "xml/ValidatorOr.hpp"
 #include "xml/XMLAttribute.hpp"
 #include "xml/XMLTag.hpp"
+#include "utils/Globals.hpp"
 
 using namespace precice::xml;
 using precice::utils::getPathToSources;

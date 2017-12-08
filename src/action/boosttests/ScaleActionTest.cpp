@@ -8,6 +8,7 @@
 #include "mesh/config/DataConfiguration.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
 #include "testing/Testing.hpp"
+#include "utils/Globals.hpp"
 
 using namespace precice;
 
