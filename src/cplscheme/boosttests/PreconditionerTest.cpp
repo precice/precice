@@ -8,7 +8,7 @@
 #include "math/math.hpp"
 #include "testing/Testing.hpp"
 
-BOOST_AUTO_TEST_SUITE(CplSchemeTests) // TODO maybe we should a suite for all PreconditionerTests in this file?
+BOOST_AUTO_TEST_SUITE(CplSchemeTests)
 
 using namespace precice;
 using namespace cplscheme;
@@ -256,6 +256,7 @@ BOOST_AUTO_TEST_CASE(testMultilpleMeshes){
   BOOST_TEST(testing::equals(_data, backup));
 }
 
+#ifndef PRECICE_NO_MPI
 BOOST_AUTO_TEST_CASE(testParallelMatrixScaling,
     * testing::OnSize(4)
     * boost::unit_test::fixture<testing::MasterComFixture>()){
@@ -352,6 +353,7 @@ BOOST_AUTO_TEST_CASE(testParallelMatrixScaling,
   utils::Parallel::synchronizeProcesses();
   utils::MasterSlave::_communication = nullptr;
 }
+#endif
 
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
