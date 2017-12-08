@@ -1,7 +1,6 @@
 #include "ConfigParser.hpp"
 #include <libxml/SAX.h>
 
-
 namespace precice
 {
 namespace xml
@@ -21,24 +20,23 @@ void OnStartElementNs(
     const xmlChar **attributes)
 {
   ConfigParser::CTag::AttributePair attributesMap;
-  unsigned int index = 0;
+  unsigned int                      index = 0;
   for (int indexAttribute = 0; indexAttribute < nb_attributes; ++indexAttribute, index += 5) {
-    std::string attributeName(reinterpret_cast<const char*>(attributes[index]));
+    std::string attributeName(reinterpret_cast<const char *>(attributes[index]));
 
     const xmlChar *valueBegin = attributes[index + 3];
     const xmlChar *valueEnd   = attributes[index + 4];
-    std::string value((const char *) valueBegin, (const char *) valueEnd);
+    std::string    value((const char *) valueBegin, (const char *) valueEnd);
 
     attributesMap[attributeName] = value;
   }
 
-  ConfigParser *pParser = static_cast<ConfigParser*>(ctx);
+  ConfigParser *pParser = static_cast<ConfigParser *>(ctx);
 
-  std::string sPrefix(prefix == nullptr ? "" : reinterpret_cast<const char*>(prefix));
-    
-  pParser->OnStartElement(reinterpret_cast<const char*>(localname), sPrefix, attributesMap);
+  std::string sPrefix(prefix == nullptr ? "" : reinterpret_cast<const char *>(prefix));
+
+  pParser->OnStartElement(reinterpret_cast<const char *>(localname), sPrefix, attributesMap);
 }
-
 
 void OnEndElementNs(
     void *         ctx,
@@ -46,19 +44,17 @@ void OnEndElementNs(
     const xmlChar *prefix,
     const xmlChar *URI)
 {
-  ConfigParser *pParser = static_cast<ConfigParser*>(ctx);
+  ConfigParser *pParser = static_cast<ConfigParser *>(ctx);
   pParser->OnEndElement();
 }
 
 void OnCharacters(void *ctx, const xmlChar *ch, int len)
 {
-  ConfigParser *pParser = static_cast<ConfigParser*>(ctx);
-  pParser->OnTextSection(std::string(reinterpret_cast<const char*>(ch), len));
+  ConfigParser *pParser = static_cast<ConfigParser *>(ctx);
+  pParser->OnTextSection(std::string(reinterpret_cast<const char *>(ch), len));
 }
 
 // ------------------------- ConfigParser implementation  -------------------------
-
-
 
 precice::logging::Logger ConfigParser::_log("xml::XMLParser");
 
@@ -109,7 +105,7 @@ void ConfigParser::GenericErrorFunc(void *ctx, const char *msg, ...)
   ERROR(err);
 }
 
-int ConfigParser::readXmlFile(std::string const & filePath)
+int ConfigParser::readXmlFile(std::string const &filePath)
 {
   xmlGenericErrorFunc handler = (xmlGenericErrorFunc) ConfigParser::GenericErrorFunc;
   initGenericErrorDefaultFunc(&handler);
@@ -128,7 +124,7 @@ int ConfigParser::readXmlFile(std::string const & filePath)
   if (not f) {
     ERROR("File open error: " << filePath);
   }
-  
+
   char chars[1024];
   int  res = std::fread(chars, 1, 4, f);
   if (res <= 0) {
@@ -205,16 +201,16 @@ void ConfigParser::connectTags(std::vector<XMLTag *> &DefTags, std::vector<CTag 
 }
 
 void ConfigParser::OnStartElement(
-  std::string localname,
-  std::string prefix,
-  CTag::AttributePair attributes)
+    std::string         localname,
+    std::string         prefix,
+    CTag::AttributePair attributes)
 {
   CTag *pTag = new CTag();
 
-  pTag->m_Prefix = prefix;
-  pTag->m_Name = localname;
+  pTag->m_Prefix      = prefix;
+  pTag->m_Name        = localname;
   pTag->m_aAttributes = std::move(attributes);
-  
+
   if (not m_CurrentTags.empty()) {
     CTag *pParentTag = m_CurrentTags.back();
     pParentTag->m_aSubTags.push_back(pTag);
@@ -233,6 +229,5 @@ void ConfigParser::OnTextSection(std::string ch)
 {
   // This page intentionally left blank
 }
-
 }
 }

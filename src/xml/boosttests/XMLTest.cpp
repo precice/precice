@@ -31,11 +31,11 @@ BOOST_AUTO_TEST_CASE(AttributeConcatenation)
   std::string filename(getPathToSources() + "/xml/boosttests/config_xmltest_concatenation.xml");
 
   CallbackHost cb;
-  XMLTag rootTag(cb, "configuration", XMLTag::OCCUR_ONCE);
-  XMLTag testcaseTag(cb, "test-attribute-concatenation", XMLTag::OCCUR_ONCE);
-  XMLTag testTag(cb, "test", XMLTag::OCCUR_ONCE_OR_MORE);
+  XMLTag       rootTag(cb, "configuration", XMLTag::OCCUR_ONCE);
+  XMLTag       testcaseTag(cb, "test-attribute-concatenation", XMLTag::OCCUR_ONCE);
+  XMLTag       testTag(cb, "test", XMLTag::OCCUR_ONCE_OR_MORE);
 
-  XMLAttribute<std::string> attr("attribute");
+  XMLAttribute<std::string>    attr("attribute");
   ValidatorEquals<std::string> equalsOne("value-one");
   ValidatorEquals<std::string> equalsTwo("value-two");
 
@@ -54,8 +54,8 @@ BOOST_AUTO_TEST_CASE(VectorAttributes)
   std::string filename(getPathToSources() + "/xml/boosttests/config_xmltest_vectorattributes.xml");
 
   CallbackHost cb;
-  XMLTag rootTag(cb, "configuration", XMLTag::OCCUR_ONCE);
-  XMLTag testTagEigenXd(cb, "test-eigen-vectorxd-attributes", XMLTag::OCCUR_ONCE);
+  XMLTag       rootTag(cb, "configuration", XMLTag::OCCUR_ONCE);
+  XMLTag       testTagEigenXd(cb, "test-eigen-vectorxd-attributes", XMLTag::OCCUR_ONCE);
 
   XMLAttribute<Eigen::VectorXd> attrEigenXd("value");
   testTagEigenXd.addAttribute(attrEigenXd);

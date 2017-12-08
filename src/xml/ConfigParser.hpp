@@ -25,8 +25,8 @@ public:
     bool        m_Used;
 
     using AttributePair = std::map<std::string, std::string>;
-    AttributePair                              m_aAttributes;
-    std::vector<CTag *>                        m_aSubTags;
+    AttributePair       m_aAttributes;
+    std::vector<CTag *> m_aSubTags;
   };
 
 private:
@@ -39,7 +39,6 @@ private:
 
   static void GenericErrorFunc(void *ctx, const char *msg, ...);
 
-  
 public:
   /// Parser ctor for Callback init
   ConfigParser(const std::string &filePath, XMLTag *pXmlTag);
@@ -51,7 +50,7 @@ public:
   ~ConfigParser();
 
   /// Reads the xml file
-  int readXmlFile(std::string const & filePath);
+  int readXmlFile(std::string const &filePath);
 
   /// Returns the root tag
   CTag *getRootTag();
@@ -65,9 +64,9 @@ public:
 
   /// Callback for Start-Tag
   void OnStartElement(
-    std::string localname,
-    std::string prefix,
-    CTag::AttributePair attributes);
+      std::string         localname,
+      std::string         prefix,
+      CTag::AttributePair attributes);
 
   /// Callback for End-Tag
   void OnEndElement();
