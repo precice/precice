@@ -6,4 +6,4 @@
         <test attribute="value-two" />
         <test attribute="value-three" />
     </test-attribute-concatenation>
-</configuration>  
+</configuration>
