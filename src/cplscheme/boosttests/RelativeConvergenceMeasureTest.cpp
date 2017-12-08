@@ -1,6 +1,4 @@
 #include "../impl/RelativeConvergenceMeasure.hpp"
-#include "utils/Parallel.hpp"
-#include "utils/Globals.hpp"
 #include "testing/Testing.hpp"
 
 BOOST_AUTO_TEST_SUITE(CplSchemeTests)

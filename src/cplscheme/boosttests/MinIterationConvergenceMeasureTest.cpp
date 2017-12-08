@@ -1,6 +1,4 @@
 #include "../impl/MinIterationConvergenceMeasure.hpp"
-#include "utils/Globals.hpp"
-#include "utils/Parallel.hpp"
 #include "mesh/Mesh.hpp"
 #include "testing/Testing.hpp"
 

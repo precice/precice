@@ -1,8 +1,6 @@
 #include "../impl/PostProcessing.hpp"
 #include "../impl/HierarchicalAitkenPostProcessing.hpp"
 #include "../CouplingData.hpp"
-#include "utils/Globals.hpp"
-#include "utils/Parallel.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Mesh.hpp"
 #include <Eigen/Core>
