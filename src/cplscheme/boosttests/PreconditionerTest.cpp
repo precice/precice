@@ -23,7 +23,6 @@ struct ResPreconditionerFixture {
   Eigen::VectorXd _compareDataConstant;
 
   ResPreconditionerFixture(){
-    BOOST_TEST_MESSAGE("setup fixture");
     _data.resize(8);
     _data << 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0;
 
@@ -86,7 +85,6 @@ struct ResPreconditionerFixture {
         7.99999999999999650754e+05;
   }
   ~ResPreconditionerFixture(){
-    BOOST_TEST_MESSAGE("teardown fixture");
   }
 };
 
@@ -132,7 +130,6 @@ BOOST_AUTO_TEST_CASE(testResSumPreconditioner){
   precond.initialize(svs);
   Eigen::VectorXd backup = _data;
 
-  BOOST_TEST_MESSAGE("New iteration");
   //should change, update twice to really test the summation
   precond.update(false, _data, _res);
   precond.update(false, _data, _res*2);
@@ -144,7 +141,6 @@ BOOST_AUTO_TEST_CASE(testResSumPreconditioner){
   precond.revert(_data);
   BOOST_TEST(testing::equals(_data, backup));
 
-  BOOST_TEST_MESSAGE("New timestep");
   //should not change weights
   precond.update(true, _data, _res*10);
   BOOST_TEST(not precond.requireNewQR());
@@ -165,7 +161,6 @@ BOOST_AUTO_TEST_CASE(testValuePreconditioner){
   precond.initialize(svs);
   Eigen::VectorXd backup = _data;
 
-  BOOST_TEST_MESSAGE("New iteration");
   //should change, since first timestep
   precond.update(false, _data, _res);
   BOOST_TEST(precond.requireNewQR());
@@ -176,7 +171,6 @@ BOOST_AUTO_TEST_CASE(testValuePreconditioner){
   BOOST_TEST(testing::equals(_data, backup));
 
   //now no change
-  BOOST_TEST_MESSAGE("Another new iteration");
   precond.update(false, _data, _res);
   BOOST_TEST(not precond.requireNewQR());
   precond.apply(_data);
@@ -184,7 +178,6 @@ BOOST_AUTO_TEST_CASE(testValuePreconditioner){
   precond.revert(_data);
   BOOST_TEST(testing::equals(_data, backup));
 
-  BOOST_TEST_MESSAGE("New timestep");
   //should change weights
   precond.update(true, _data*2, _res);
   BOOST_TEST(precond.requireNewQR());
@@ -207,7 +200,6 @@ BOOST_AUTO_TEST_CASE(testConstPreconditioner){
   precond.initialize(svs); //new weights already computed here
   Eigen::VectorXd backup = _data;
 
-  BOOST_TEST_MESSAGE("New iteration");
   // should have no effect
   precond.update(false, _data, _res);
   BOOST_TEST(not precond.requireNewQR());
@@ -216,7 +208,6 @@ BOOST_AUTO_TEST_CASE(testConstPreconditioner){
   precond.revert(_data);
   BOOST_TEST(testing::equals(_data, backup));
 
-  BOOST_TEST_MESSAGE("New timestep");
   //should not change weights
   precond.update(true, _data, _res);
   BOOST_TEST(not precond.requireNewQR());
@@ -236,7 +227,6 @@ BOOST_AUTO_TEST_CASE(testMultilpleMeshes){
   precond.initialize(svs);
   Eigen::VectorXd backup = _data;
 
-  BOOST_TEST_MESSAGE("New iteration");
   //should change
   precond.update(false, _data, _res);
   BOOST_TEST(precond.requireNewQR());
@@ -246,7 +236,6 @@ BOOST_AUTO_TEST_CASE(testMultilpleMeshes){
   precond.revert(_data);
   BOOST_TEST(testing::equals(_data, backup));
 
-  BOOST_TEST_MESSAGE("New timestep");
   //should not change weights
   precond.update(true, _data, _res*10);
   BOOST_TEST(not precond.requireNewQR());
