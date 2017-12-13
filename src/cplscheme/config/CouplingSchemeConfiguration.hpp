@@ -20,12 +20,17 @@ namespace precice {
   namespace cplscheme {
     class CompositionalCouplingScheme;
     class BaseCouplingScheme;
-    namespace tests {
+    namespace tests { // TODO kick this out as soon as all tests are ported
       class SerialImplicitCouplingSchemeTest;
-      class ParallelImplicitCouplingSchemeTest;
     }
   }
 }
+
+// Forward declaration to friend the boost test struct
+namespace CplSchemeTests {
+namespace ParallelImplicitCouplingSchemeTests{
+struct testParseConfigurationWithRelaxation;
+}}
 
 // ----------------------------------------------------------- CLASS DEFINITION
 
@@ -287,7 +292,7 @@ private:
    * Only used specifically for MultiCouplingScheme
    */
   void addMultiDataToBeExchanged(
-    MultiCouplingScheme& scheme,
+      MultiCouplingScheme& scheme,
     const std::string&  accessor) const;
 
   void checkIfDataIsExchanged(
@@ -296,8 +301,9 @@ private:
   bool checkIfDataIsCoarse(int id) const;
 
 
-  friend class tests::SerialImplicitCouplingSchemeTest; // For whitebox tests
-  friend class tests::ParallelImplicitCouplingSchemeTest; // For whitebox tests
+  friend class tests::SerialImplicitCouplingSchemeTest; // For whitebox tests  // TODO kick this out as soon as ported to boosttests
+
+  friend struct CplSchemeTests::ParallelImplicitCouplingSchemeTests::testParseConfigurationWithRelaxation;  // For whitebox tests
 
 };
 
