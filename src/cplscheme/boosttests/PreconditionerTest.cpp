@@ -1,12 +1,11 @@
+#include "com/MPIDirectCommunication.hpp"
+#include "cplscheme/impl/ConstantPreconditioner.hpp"
 #include "cplscheme/impl/ResidualPreconditioner.hpp"
 #include "cplscheme/impl/ResidualSumPreconditioner.hpp"
-#include "cplscheme/impl/ValuePreconditioner.hpp"
-#include "cplscheme/impl/ConstantPreconditioner.hpp"
 #include "cplscheme/impl/SharedPointer.hpp"
-#include "utils/MasterSlave.hpp"
-#include "com/MPIDirectCommunication.hpp"
-#include "math/math.hpp"
+#include "cplscheme/impl/ValuePreconditioner.hpp"
 #include "testing/Testing.hpp"
+#include "utils/MasterSlave.hpp"
 
 BOOST_AUTO_TEST_SUITE(CplSchemeTests)
 
@@ -22,7 +21,8 @@ struct ResPreconditionerFixture {
   Eigen::VectorXd _compareDataValue;
   Eigen::VectorXd _compareDataConstant;
 
-  ResPreconditionerFixture(){
+  ResPreconditionerFixture()
+  {
     _data.resize(8);
     _data << 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0;
 
@@ -30,8 +30,7 @@ struct ResPreconditionerFixture {
     _res << 0.1, 0.1, 0.001, 0.001, 0.001, 0.001, 10.0, 20.0;
 
     _compareDataRes.resize(8);
-    _compareDataRes <<
-        7.07106781186547372897e+00,
+    _compareDataRes << 7.07106781186547372897e+00,
         1.41421356237309474579e+01,
         1.50000000000000000000e+03,
         2.00000000000000000000e+03,
@@ -41,8 +40,7 @@ struct ResPreconditionerFixture {
         3.57770876399966353265e-01;
 
     _compareDataResSum.resize(8);
-    _compareDataResSum <<
-        7.90585229434499154877e+01,
+    _compareDataResSum << 7.90585229434499154877e+01,
         1.58117045886899830975e+02,
         1.67708453051717078779e+04,
         2.23611270735622783832e+04,
@@ -52,8 +50,7 @@ struct ResPreconditionerFixture {
         4.00008001519969536020e+00;
 
     _compareDataResSum2.resize(8);
-    _compareDataResSum2 <<
-        1.58113093108981217938e+02,
+    _compareDataResSum2 << 1.58113093108981217938e+02,
         3.16226186217962435876e+02,
         4.74339279326943596971e+02,
         4.00008000319945455914e+00,
@@ -63,8 +60,7 @@ struct ResPreconditionerFixture {
         8.00016000639890734192e+00;
 
     _compareDataValue.resize(8);
-    _compareDataValue <<
-        4.47213595499957927704e-01,
+    _compareDataValue << 4.47213595499957927704e-01,
         8.94427190999915855407e-01,
         3.23498319610315276940e-01,
         4.31331092813753647075e-01,
@@ -74,8 +70,7 @@ struct ResPreconditionerFixture {
         7.52576694706877713514e-01;
 
     _compareDataConstant.resize(8);
-    _compareDataConstant <<
-        1.00000000000000002082e-03,
+    _compareDataConstant << 1.00000000000000002082e-03,
         2.00000000000000004163e-03,
         1.49999999999999977796e+00,
         1.99999999999999955591e+00,
@@ -84,13 +79,15 @@ struct ResPreconditionerFixture {
         6.99999999999999883585e+05,
         7.99999999999999650754e+05;
   }
-  ~ResPreconditionerFixture(){
+  ~ResPreconditionerFixture()
+  {
   }
 };
 
 BOOST_FIXTURE_TEST_SUITE(ResPreconditionerTests, ResPreconditionerFixture)
 
-BOOST_AUTO_TEST_CASE(testResPreconditioner){
+BOOST_AUTO_TEST_CASE(testResPreconditioner)
+{
   std::vector<size_t> svs;
   svs.push_back(2);
   svs.push_back(4);
@@ -99,7 +96,7 @@ BOOST_AUTO_TEST_CASE(testResPreconditioner){
   impl::ResidualPreconditioner precond(-1);
 
   precond.initialize(svs);
-  Eigen::VectorXd backup = _data;  // TODO get _data from fixture
+  Eigen::VectorXd backup = _data; // TODO get _data from fixture
 
   //should change
   precond.update(false, _data, _res);
@@ -111,7 +108,7 @@ BOOST_AUTO_TEST_CASE(testResPreconditioner){
   BOOST_TEST(testing::equals(_data, backup));
 
   //should not change weights
-  precond.update(true, _data, _res*10);
+  precond.update(true, _data, _res * 10);
   BOOST_TEST(not precond.requireNewQR());
   precond.apply(_data);
   BOOST_TEST(testing::equals(_data, _compareDataRes));
@@ -119,7 +116,8 @@ BOOST_AUTO_TEST_CASE(testResPreconditioner){
   BOOST_TEST(testing::equals(_data, backup));
 }
 
-BOOST_AUTO_TEST_CASE(testResSumPreconditioner){
+BOOST_AUTO_TEST_CASE(testResSumPreconditioner)
+{
   std::vector<size_t> svs;
   svs.push_back(2);
   svs.push_back(4);
@@ -132,7 +130,7 @@ BOOST_AUTO_TEST_CASE(testResSumPreconditioner){
 
   //should change, update twice to really test the summation
   precond.update(false, _data, _res);
-  precond.update(false, _data, _res*2);
+  precond.update(false, _data, _res * 2);
   BOOST_TEST(precond.requireNewQR());
   precond.newQRfulfilled();
   precond.apply(_data);
@@ -142,7 +140,7 @@ BOOST_AUTO_TEST_CASE(testResSumPreconditioner){
   BOOST_TEST(testing::equals(_data, backup));
 
   //should not change weights
-  precond.update(true, _data, _res*10);
+  precond.update(true, _data, _res * 10);
   BOOST_TEST(not precond.requireNewQR());
   precond.apply(_data);
   BOOST_TEST(testing::equals(_data, _compareDataResSum));
@@ -150,7 +148,8 @@ BOOST_AUTO_TEST_CASE(testResSumPreconditioner){
   BOOST_TEST(testing::equals(_data, backup));
 }
 
-BOOST_AUTO_TEST_CASE(testValuePreconditioner){
+BOOST_AUTO_TEST_CASE(testValuePreconditioner)
+{
   std::vector<size_t> svs;
   svs.push_back(2);
   svs.push_back(4);
@@ -179,12 +178,13 @@ BOOST_AUTO_TEST_CASE(testValuePreconditioner){
   BOOST_TEST(testing::equals(_data, backup));
 
   //should change weights
-  precond.update(true, _data*2, _res);
+  precond.update(true, _data * 2, _res);
   BOOST_TEST(precond.requireNewQR());
   precond.newQRfulfilled();
 }
 
-BOOST_AUTO_TEST_CASE(testConstPreconditioner){
+BOOST_AUTO_TEST_CASE(testConstPreconditioner)
+{
   std::vector<size_t> svs;
   svs.push_back(2);
   svs.push_back(4);
@@ -217,7 +217,8 @@ BOOST_AUTO_TEST_CASE(testConstPreconditioner){
   BOOST_TEST(testing::equals(_data, backup));
 }
 
-BOOST_AUTO_TEST_CASE(testMultilpleMeshes){
+BOOST_AUTO_TEST_CASE(testMultilpleMeshes)
+{
   std::vector<size_t> svs;
   svs.push_back(3);
   svs.push_back(5);
@@ -237,7 +238,7 @@ BOOST_AUTO_TEST_CASE(testMultilpleMeshes){
   BOOST_TEST(testing::equals(_data, backup));
 
   //should not change weights
-  precond.update(true, _data, _res*10);
+  precond.update(true, _data, _res * 10);
   BOOST_TEST(not precond.requireNewQR());
   precond.apply(_data);
   BOOST_TEST(testing::equals(_data, _compareDataResSum2));
@@ -247,96 +248,87 @@ BOOST_AUTO_TEST_CASE(testMultilpleMeshes){
 
 #ifndef PRECICE_NO_MPI
 BOOST_AUTO_TEST_CASE(testParallelMatrixScaling,
-    * testing::OnSize(4)
-    * boost::unit_test::fixture<testing::MasterComFixture>()){
+                     *testing::OnSize(4) * boost::unit_test::fixture<testing::MasterComFixture>())
+{
 
   utils::Parallel::synchronizeProcesses();
 
   //setup data
   int localN = -1;
-  if (utils::Parallel::getProcessRank() == 0){
+  if (utils::Parallel::getProcessRank() == 0) {
     localN = 2;
-  }
-  else if(utils::Parallel::getProcessRank() == 1){
+  } else if (utils::Parallel::getProcessRank() == 1) {
     localN = 1;
-  }
-  else if(utils::Parallel::getProcessRank() == 2){
+  } else if (utils::Parallel::getProcessRank() == 2) {
     localN = 0;
-  }
-  else if(utils::Parallel::getProcessRank() == 3){
+  } else if (utils::Parallel::getProcessRank() == 3) {
     localN = 1;
   }
 
   int globalN = 4;
 
-  Eigen::MatrixXd V(localN,2);
-  Eigen::MatrixXd M(globalN,localN);
+  Eigen::MatrixXd V(localN, 2);
+  Eigen::MatrixXd M(globalN, localN);
   Eigen::VectorXd x(localN);
-  Eigen::MatrixXd V_back(localN,2);
-  Eigen::MatrixXd M_back(globalN,localN);
+  Eigen::MatrixXd V_back(localN, 2);
+  Eigen::MatrixXd M_back(globalN, localN);
   Eigen::VectorXd x_back(localN);
 
-
-  if (utils::Parallel::getProcessRank() == 0){
-    V(0,0) = 1.0;
-    V(0,1) = 2.0;
-    V(1,0) = 3.0;
-    V(1,1) = 4.0;
-    M(0,0) = 1.0;
-    M(0,1) = 2.0;
-    M(1,0) = 3.0;
-    M(1,1) = 4.0;
-    M(2,0) = 1.0;
-    M(2,1) = 2.0;
-    M(3,0) = 3.0;
-    M(3,1) = 4.0;
-    x(0) = 5.0;
-    x(1) = 5.0;
-  }
-  else if(utils::Parallel::getProcessRank() == 1){
-    V(0,0) = 5.0;
-    V(0,1) = 6.0;
-    M(0,0) = 1.0;
-    M(1,0) = 2.0;
-    M(2,0) = 3.0;
-    M(3,0) = 4.0;
-    x(0) = 5.0;
-  }
-  else if(utils::Parallel::getProcessRank() == 2){
-  }
-  else if(utils::Parallel::getProcessRank() == 3){
-    V(0,0) = 7.0;
-    V(0,1) = 8.0;
-    M(0,0) = 1.0;
-    M(1,0) = 2.0;
-    M(2,0) = 3.0;
-    M(3,0) = 4.0;
-    x(0) = 5.0;
+  if (utils::Parallel::getProcessRank() == 0) {
+    V(0, 0) = 1.0;
+    V(0, 1) = 2.0;
+    V(1, 0) = 3.0;
+    V(1, 1) = 4.0;
+    M(0, 0) = 1.0;
+    M(0, 1) = 2.0;
+    M(1, 0) = 3.0;
+    M(1, 1) = 4.0;
+    M(2, 0) = 1.0;
+    M(2, 1) = 2.0;
+    M(3, 0) = 3.0;
+    M(3, 1) = 4.0;
+    x(0)    = 5.0;
+    x(1)    = 5.0;
+  } else if (utils::Parallel::getProcessRank() == 1) {
+    V(0, 0) = 5.0;
+    V(0, 1) = 6.0;
+    M(0, 0) = 1.0;
+    M(1, 0) = 2.0;
+    M(2, 0) = 3.0;
+    M(3, 0) = 4.0;
+    x(0)    = 5.0;
+  } else if (utils::Parallel::getProcessRank() == 2) {
+  } else if (utils::Parallel::getProcessRank() == 3) {
+    V(0, 0) = 7.0;
+    V(0, 1) = 8.0;
+    M(0, 0) = 1.0;
+    M(1, 0) = 2.0;
+    M(2, 0) = 3.0;
+    M(3, 0) = 4.0;
+    x(0)    = 5.0;
   }
 
   V_back = V;
   M_back = M;
   x_back = x;
 
-
   std::vector<size_t> svs;
   svs.push_back(localN);
 
-
   impl::ValuePreconditioner precond(-1);
   precond.initialize(svs);
-  precond.update(true,x,x);
+  precond.update(true, x, x);
   BOOST_TEST(precond.requireNewQR());
 
   precond.apply(V);
 
-  BOOST_TEST(testing::equals(V, V_back*0.1));
+  BOOST_TEST(testing::equals(V, V_back * 0.1));
 
   precond.revert(V);
 
   BOOST_TEST(testing::equals(V, V_back));
 
-  utils::MasterSlave::_slaveMode = false;
+  utils::MasterSlave::_slaveMode  = false;
   utils::MasterSlave::_masterMode = false;
   utils::Parallel::clearGroups();
   utils::Parallel::synchronizeProcesses();
