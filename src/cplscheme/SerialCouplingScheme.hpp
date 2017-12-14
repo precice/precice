@@ -3,9 +3,11 @@
 #include "BaseCouplingScheme.hpp"
 #include "logging/Logger.hpp"
 
-namespace precice { namespace cplscheme { namespace tests {
-class SerialImplicitCouplingSchemeTest;
-} } }
+// Forward declaration to friend the boost test struct
+namespace CplSchemeTests {
+namespace SerialImplicitCouplingSchemeTests{
+struct testExtrapolateData;
+}}
 
 
 namespace precice {
@@ -49,7 +51,7 @@ public:
 
   static logging::Logger _log;
 
-  friend class tests::SerialImplicitCouplingSchemeTest;
+  friend struct CplSchemeTests::SerialImplicitCouplingSchemeTests::testExtrapolateData;  // For whitebox tests
 
 };
 

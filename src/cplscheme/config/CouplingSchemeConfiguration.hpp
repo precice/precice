@@ -21,10 +21,6 @@ namespace cplscheme
 {
 class CompositionalCouplingScheme;
 class BaseCouplingScheme;
-namespace tests
-{ // TODO kick this out as soon as all tests are ported
-class SerialImplicitCouplingSchemeTest;
-}
 }
 }
 
@@ -35,13 +31,17 @@ namespace ParallelImplicitCouplingSchemeTests
 {
 struct testParseConfigurationWithRelaxation;
 }
+namespace SerialImplicitCouplingSchemeTests
+{
+struct testParseConfigurationWithRelaxation;
+}
 }
 
+// ----------------------------------------------------------- CLASS DEFINITION
 namespace precice
 {
 namespace cplscheme
 {
-
 /// Configuration for coupling schemes.
 class CouplingSchemeConfiguration : public xml::XMLTag::Listener
 {
@@ -278,9 +278,9 @@ private:
 
   bool checkIfDataIsCoarse(int id) const;
 
-  friend class tests::SerialImplicitCouplingSchemeTest; // For whitebox tests  // TODO kick this out as soon as ported to boosttests
+  friend struct CplSchemeTests::ParallelImplicitCouplingSchemeTests::testParseConfigurationWithRelaxation;  // For whitebox tests
+  friend struct CplSchemeTests::SerialImplicitCouplingSchemeTests::testParseConfigurationWithRelaxation;  // For whitebox tests
 
-  friend struct CplSchemeTests::ParallelImplicitCouplingSchemeTests::testParseConfigurationWithRelaxation; // For whitebox tests
 };
 }
 } // namespace precice, cplscheme
