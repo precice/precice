@@ -20,7 +20,6 @@
 #include "m2n/GatherScatterCommunication.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
 #include "m2n/M2N.hpp"
-#include "utils/Parallel.hpp"
 #include "utils/Globals.hpp"
 #include "xml/XMLTag.hpp"
 #include <Eigen/Core>
@@ -34,18 +33,16 @@ using namespace precice::cplscheme;
 
 BOOST_AUTO_TEST_SUITE(CplSchemeTests)
 
-struct ParallelImplicitCouplingSchemeFixture {
+struct ParallelImplicitCouplingSchemeFixture
+{
+  using DataMap = std::map<int,PtrCouplingData>;
 
   std::string _pathToTests;
   const std::string MY_WRITE_CHECKPOINT = constants::actionWriteIterationCheckpoint();
   const std::string MY_READ_CHECKPOINT = constants::actionReadIterationCheckpoint();
-  typedef std::map<int,PtrCouplingData> DataMap;
 
   ParallelImplicitCouplingSchemeFixture(){
-    _pathToTests = utils::getPathToSources() + "/cplscheme/tests/";
-  }
-  ~ParallelImplicitCouplingSchemeFixture(){
-    // TODO to be implemented
+    _pathToTests = utils::getPathToSources() + "/cplscheme/boosttests/";
   }
 };
 
@@ -53,10 +50,11 @@ BOOST_FIXTURE_TEST_SUITE(ParallelImplicitCouplingSchemeTests, ParallelImplicitCo
 
 #ifndef PRECICE_NO_MPI
 
-BOOST_AUTO_TEST_CASE(testParseConfigurationWithRelaxation) {
+BOOST_AUTO_TEST_CASE(testParseConfigurationWithRelaxation)
+{
   using namespace mesh;
 
-  std::string path(_pathToTests + "parallel-implicit-cplscheme-relax-const-config.xml"); // TODO _pathToTests comes from fixture
+  std::string path(_pathToTests + "parallel-implicit-cplscheme-relax-const-config.xml");
 
   xml::XMLTag root = xml::getRootTag();
   PtrDataConfiguration dataConfig(new DataConfiguration(root));
@@ -73,7 +71,8 @@ BOOST_AUTO_TEST_CASE(testParseConfigurationWithRelaxation) {
   meshConfig->setMeshSubIDs();
 }
 
-BOOST_AUTO_TEST_CASE(testMVQNPP) {
+BOOST_AUTO_TEST_CASE(testMVQNPP)
+{
   //use two vectors and see if underrelaxation works
   double initialRelaxation = 0.01;
   int    maxIterationsUsed = 50;
@@ -170,7 +169,8 @@ BOOST_AUTO_TEST_CASE(testMVQNPP) {
   BOOST_TEST(testing::equals((*data.at(1)->values)(3), 8.28025852497733250157e-02));
 }
 
-BOOST_AUTO_TEST_CASE(testVIQNPP) {
+BOOST_AUTO_TEST_CASE(testVIQNPP)
+{
   //use two vectors and see if underrelaxation works
 
   double initialRelaxation = 0.01;
@@ -265,12 +265,11 @@ BOOST_AUTO_TEST_CASE(testVIQNPP) {
   BOOST_TEST(testing::equals((*data.at(1)->values)(3), 8.28025852497733944046e-02));
 }
 
-void connect
-(
-  const std::string&      participant0,
-  const std::string&      participant1,
-  const std::string&      localParticipant,
-  m2n::PtrM2N& communication )
+void connect(
+    const std::string&      participant0,
+    const std::string&      participant1,
+    const std::string&      localParticipant,
+    m2n::PtrM2N& communication )
 {
   assertion ( communication.use_count() > 0 );
   assertion ( not communication->isConnected() );
@@ -287,12 +286,11 @@ void connect
 /// Test that runs on 2 processors.
 BOOST_AUTO_TEST_CASE(testInitializeData,
     * testing::MinRanks(2)
-    * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
+* boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
 {
-  if (utils::Parallel::getCommunicatorSize() != 2)
+  if (utils::Parallel::getCommunicatorSize() != 2) // only run test on ranks {0,1}, for other ranks return
     return;
 
-  utils::Parallel::synchronizeProcesses();
   xml::XMLTag root = xml::getRootTag();
 
   // Create a data configuration, to simplify configuration of data
