@@ -38,11 +38,27 @@ struct ParallelImplicitCouplingSchemeFixture
   using DataMap = std::map<int,PtrCouplingData>;
 
   std::string _pathToTests;
-  const std::string MY_WRITE_CHECKPOINT = constants::actionWriteIterationCheckpoint();
-  const std::string MY_READ_CHECKPOINT = constants::actionReadIterationCheckpoint();
 
   ParallelImplicitCouplingSchemeFixture(){
     _pathToTests = utils::getPathToSources() + "/cplscheme/boosttests/";
+  }
+
+  void connect(
+      const std::string&      participant0,
+      const std::string&      participant1,
+      const std::string&      localParticipant,
+      m2n::PtrM2N& communication )
+  {
+    assertion ( communication.use_count() > 0 );
+    assertion ( not communication->isConnected() );
+    utils::Parallel::splitCommunicator( localParticipant );
+    if ( participant0 == localParticipant ) {
+      communication->requestMasterConnection ( participant1, participant0);
+    }
+    else {
+      assertion ( participant1 == localParticipant );
+      communication->acceptMasterConnection ( participant1, participant0);
+    }
   }
 };
 
@@ -265,28 +281,8 @@ BOOST_AUTO_TEST_CASE(testVIQNPP)
   BOOST_TEST(testing::equals((*data.at(1)->values)(3), 8.28025852497733944046e-02));
 }
 
-void connect(
-    const std::string&      participant0,
-    const std::string&      participant1,
-    const std::string&      localParticipant,
-    m2n::PtrM2N& communication )
-{
-  assertion ( communication.use_count() > 0 );
-  assertion ( not communication->isConnected() );
-  utils::Parallel::splitCommunicator( localParticipant );
-  if ( participant0 == localParticipant ) {
-    communication->requestMasterConnection ( participant1, participant0);
-  }
-  else {
-    assertion ( participant1 == localParticipant );
-    communication->acceptMasterConnection ( participant1, participant0);
-  }
-}
-
 /// Test that runs on 2 processors.
-BOOST_AUTO_TEST_CASE(testInitializeData,
-    * testing::MinRanks(2)
-* boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
+BOOST_AUTO_TEST_CASE(testInitializeData, * testing::MinRanks(2) * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
 {
   if (utils::Parallel::getCommunicatorSize() != 2) // only run test on ranks {0,1}, for other ranks return
     return;
