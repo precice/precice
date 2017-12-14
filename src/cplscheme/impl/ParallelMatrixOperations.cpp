@@ -25,14 +25,14 @@ ParallelMatrixOperations::ParallelMatrixOperations()
 void ParallelMatrixOperations::initialize(
     com::PtrCommunication leftComm,
     com::PtrCommunication rightComm,
-    bool needCyclicComm)
+    bool                  needCyclicComm)
 {
   TRACE();
 
   _needCycliclComm = needCyclicComm;
   if (utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode) {
 
-    _cyclicCommLeft = leftComm;
+    _cyclicCommLeft  = leftComm;
     _cyclicCommRight = rightComm;
 
     if (_needCycliclComm) {

@@ -2,11 +2,12 @@
 
 #include "BaseQNPostProcessing.hpp"
 
-// ----------------------------------------------------------- CLASS DEFINITION
-
-namespace precice {
-namespace cplscheme {
-namespace impl {
+namespace precice
+{
+namespace cplscheme
+{
+namespace impl
+{
 
 /**
  * @brief Interface quasi-Newton with interface least-squares approximation.
@@ -24,64 +25,51 @@ namespace impl {
 class IQNILSPostProcessing : public BaseQNPostProcessing
 {
 public:
-
-  /**
-   * @brief Constructor.
-   */
-   IQNILSPostProcessing (
-      double initialRelaxation,
-      bool forceInitialRelaxation,
-      int    maxIterationsUsed,
-      int    timestepsReused,
-      int 	 filter,
-      double singularityLimit,
-      std::vector<int>    dataIDs,
+  IQNILSPostProcessing(
+      double            initialRelaxation,
+      bool              forceInitialRelaxation,
+      int               maxIterationsUsed,
+      int               timestepsReused,
+      int               filter,
+      double            singularityLimit,
+      std::vector<int>  dataIDs,
       PtrPreconditioner preconditioner);
 
-   /**
-    * @brief Destructor, empty.
-    */
-   virtual ~IQNILSPostProcessing() {}
+  virtual ~IQNILSPostProcessing() {}
 
+  /// Initializes the post-processing.
+  virtual void initialize(DataMap &cplData);
 
-   /**
-    * @brief Initializes the post-processing.
-    */
-   virtual void initialize(DataMap& cplData);
-
-   /**
+  /**
     * @brief Marks a iteration sequence as converged.
     *
     * called by the iterationsConverged() method in the BaseQNPostProcessing class
     * handles the postprocessing sepcific action after the convergence of one iteration
     */
-   virtual void specializedIterationsConverged(DataMap& cplData);
+  virtual void specializedIterationsConverged(DataMap &cplData);
 
 private:
+  /// Secondary data solver output from last iteration.
+  std::map<int, Eigen::VectorXd> _secondaryOldXTildes;
 
-   // @brief Secondary data solver output from last iteration.
-   std::map<int, Eigen::VectorXd> _secondaryOldXTildes;
+  // @brief Secondary data x-tilde deltas.
+  //
+  // Stores x-tilde deltas for data not involved in least-squares computation.
+  std::map<int, Eigen::MatrixXd> _secondaryMatricesW;
+  std::map<int, Eigen::MatrixXd> _secondaryMatricesWBackup;
 
+  /// updates the V, W matrices (as well as the matrices for the secondary data)
+  virtual void updateDifferenceMatrices(DataMap &cplData);
 
-   // @brief Secondary data x-tilde deltas.
-   //
-   // Stores x-tilde deltas for data not involved in least-squares computation.
-   std::map<int,Eigen::MatrixXd> _secondaryMatricesW;
-   std::map<int,Eigen::MatrixXd> _secondaryMatricesWBackup;
-   
-   // @brief updates the V, W matrices (as well as the matrices for the secondary data)
-   virtual void updateDifferenceMatrices(DataMap & cplData);
+  /// computes the IQN-ILS update using QR decomposition
+  virtual void computeQNUpdate(DataMap &cplData, Eigen::VectorXd &xUpdate);
 
-   // @brief computes the IQN-ILS update using QR decomposition
-   virtual void computeQNUpdate(DataMap& cplData, Eigen::VectorXd& xUpdate);
-   
-   // @brief computes underrelaxation for the secondary data
-   virtual void computeUnderrelaxationSecondaryData(DataMap& cplData);
-   
-   // @brief Removes one iteration from V,W matrices and adapts _matrixCols.
-   virtual void removeMatrixColumn(int columnIndex);
+  /// computes underrelaxation for the secondary data
+  virtual void computeUnderrelaxationSecondaryData(DataMap &cplData);
+
+  /// Removes one iteration from V,W matrices and adapts _matrixCols.
+  virtual void removeMatrixColumn(int columnIndex);
 };
-
-}}} // namespace precice, cplscheme, impl
-
-
+}
+}
+} // namespace precice, cplscheme, impl

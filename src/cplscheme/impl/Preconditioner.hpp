@@ -1,15 +1,18 @@
 #pragma once
 
-#include "utils/Helpers.hpp"
-#include "utils/Globals.hpp"
 #include <Eigen/Core>
-#include "../SharedPointer.hpp"
 #include <vector>
+#include "../SharedPointer.hpp"
+#include "utils/Globals.hpp"
+#include "utils/Helpers.hpp"
 #include "utils/MasterSlave.hpp"
 
-namespace precice {
-namespace cplscheme {
-namespace impl {
+namespace precice
+{
+namespace cplscheme
+{
+namespace impl
+{
 
 /**
  * @brief Interface for preconditioner variants that can be applied to quasi-Newton post-processing schemes.
@@ -23,38 +26,36 @@ namespace impl {
 class Preconditioner
 {
 public:
-
   Preconditioner(
       int maxNonConstTimesteps)
-  :
-    _weights(),
-    _invWeights(),
-    _subVectorSizes(),
-    _maxNonConstTimesteps(maxNonConstTimesteps),
-    _nbNonConstTimesteps(0),
-    _requireNewQR(false),
-    _freezed(false)
-  {}
-
+      : _weights(),
+        _invWeights(),
+        _subVectorSizes(),
+        _maxNonConstTimesteps(maxNonConstTimesteps),
+        _nbNonConstTimesteps(0),
+        _requireNewQR(false),
+        _freezed(false)
+  {
+  }
 
   /**
    * @brief Destructor, empty.
    */
   virtual ~Preconditioner() {}
 
-
   /**
    * @brief initialize the preconditioner
    * @param size of the pp system (e.g. rows of V)
    */
-  virtual void initialize(std::vector<size_t>& svs){
+  virtual void initialize(std::vector<size_t> &svs)
+  {
     TRACE();
 
-    assertion(_weights.size()==0);
+    assertion(_weights.size() == 0);
     _subVectorSizes = svs;
 
     size_t N = 0;
-    for(auto elem : _subVectorSizes){
+    for (auto elem : _subVectorSizes) {
       N += elem;
     }
     // cannot do this already in the constructor as the size is unknown at that point
@@ -66,21 +67,21 @@ public:
    * @brief Apply preconditioner to matrix
    * @param transpose: false = from left, true = from right
    */
-  void apply(Eigen::MatrixXd& M, bool transpose){
+  void apply(Eigen::MatrixXd &M, bool transpose)
+  {
     TRACE();
-    if(transpose){
-      assertion(M.cols()==(int)_weights.size(), M.cols(), _weights.size());
-      for(int i=0; i<M.cols(); i++){
-        for(int j=0; j<M.rows(); j++){
-          M(j,i) *= _weights[i];
+    if (transpose) {
+      assertion(M.cols() == (int) _weights.size(), M.cols(), _weights.size());
+      for (int i = 0; i < M.cols(); i++) {
+        for (int j = 0; j < M.rows(); j++) {
+          M(j, i) *= _weights[i];
         }
       }
-    }
-    else{
-      assertion(M.rows()==(int)_weights.size(), M.rows(), (int)_weights.size());
-      for(int i=0; i<M.cols(); i++){
-        for(int j=0; j<M.rows(); j++){
-          M(j,i) *= _weights[j];
+    } else {
+      assertion(M.rows() == (int) _weights.size(), M.rows(), (int) _weights.size());
+      for (int i = 0; i < M.cols(); i++) {
+        for (int j = 0; j < M.rows(); j++) {
+          M(j, i) *= _weights[j];
         }
       }
     }
@@ -90,19 +91,19 @@ public:
    * @brief Apply inverse preconditioner to matrix
    * @param transpose: false = from left, true = from right
    */
-  void revert(Eigen::MatrixXd& M, bool transpose){
+  void revert(Eigen::MatrixXd &M, bool transpose)
+  {
     TRACE();
     //assertion(_needsGlobalWeights);
     if (transpose) {
-      assertion(M.cols()==(int)_invWeights.size());
+      assertion(M.cols() == (int) _invWeights.size());
       for (int i = 0; i < M.cols(); i++) {
         for (int j = 0; j < M.rows(); j++) {
           M(j, i) *= _invWeights[i];
         }
       }
-    }
-    else {
-      assertion(M.rows()==(int)_invWeights.size(), M.rows(), (int)_invWeights.size());
+    } else {
+      assertion(M.rows() == (int) _invWeights.size(), M.rows(), (int) _invWeights.size());
       for (int i = 0; i < M.cols(); i++) {
         for (int j = 0; j < M.rows(); j++) {
           M(j, i) *= _invWeights[j];
@@ -114,79 +115,84 @@ public:
   /**
    * @brief To transform physical values to balanced values. Matrix version
    */
-    void apply(Eigen::MatrixXd& M){
-      TRACE();
-      assertion(M.rows()==(int)_weights.size(), M.rows(), (int)_weights.size());
+  void apply(Eigen::MatrixXd &M)
+  {
+    TRACE();
+    assertion(M.rows() == (int) _weights.size(), M.rows(), (int) _weights.size());
 
-      // scale matrix M
-      for(int i=0; i<M.cols(); i++){
-        for(int j=0; j<M.rows(); j++){
-          M(j,i) *= _weights[j];
-        }
+    // scale matrix M
+    for (int i = 0; i < M.cols(); i++) {
+      for (int j = 0; j < M.rows(); j++) {
+        M(j, i) *= _weights[j];
       }
     }
+  }
 
-    /**
+  /**
      * @brief To transform physical values to balanced values. Vector version
      */
-    void apply(Eigen::VectorXd& v){
-      TRACE();
+  void apply(Eigen::VectorXd &v)
+  {
+    TRACE();
 
-      assertion(v.size()==(int)_weights.size());
+    assertion(v.size() == (int) _weights.size());
 
-      // scale residual
-      for(int j=0; j<v.size(); j++){
-        v[j] *= _weights[j];
-      }
+    // scale residual
+    for (int j = 0; j < v.size(); j++) {
+      v[j] *= _weights[j];
     }
+  }
 
-    /**
+  /**
      * @brief To transform balanced values back to physical values. Matrix version
      */
-    void revert(Eigen::MatrixXd& M){
-      TRACE();
+  void revert(Eigen::MatrixXd &M)
+  {
+    TRACE();
 
-      assertion(M.rows()==(int)_weights.size());
+    assertion(M.rows() == (int) _weights.size());
 
-      // scale matrix M
-      for(int i=0; i<M.cols(); i++){
-        for(int j=0; j<M.rows(); j++){
-          M(j,i) *= _invWeights[j];
-        }
+    // scale matrix M
+    for (int i = 0; i < M.cols(); i++) {
+      for (int j = 0; j < M.rows(); j++) {
+        M(j, i) *= _invWeights[j];
       }
     }
+  }
 
-    /**
+  /**
      * @brief To transform balanced values back to physical values. Vector version
      */
-    void revert(Eigen::VectorXd& v){
-      TRACE();
+  void revert(Eigen::VectorXd &v)
+  {
+    TRACE();
 
-      assertion(v.size()==(int)_weights.size());
+    assertion(v.size() == (int) _weights.size());
 
-      // scale residual
-      for(int j=0; j<v.size(); j++){
-        v[j] *= _invWeights[j];
-      }
+    // scale residual
+    for (int j = 0; j < v.size(); j++) {
+      v[j] *= _invWeights[j];
     }
+  }
 
   /**
    * @brief Update the scaling after every FSI iteration and require a new QR decomposition (if necessary)
    *
    * @param[in] timestepComplete True if this FSI iteration also completed a timestep
    */
-  void update(bool timestepComplete, const Eigen::VectorXd& oldValues, const Eigen::VectorXd& res){
+  void update(bool timestepComplete, const Eigen::VectorXd &oldValues, const Eigen::VectorXd &res)
+  {
     TRACE(_nbNonConstTimesteps, _freezed);
 
     // if number of allowed non-const time steps is exceeded, do not update weights
-    if(_freezed)
-     return;
+    if (_freezed)
+      return;
 
     // increment number of time steps that has been scaled with changing preconditioning weights
-    if(timestepComplete){
-     _nbNonConstTimesteps++;
-     if(_nbNonConstTimesteps >= _maxNonConstTimesteps && _maxNonConstTimesteps > 0)
-       _freezed = true;
+    if (timestepComplete) {
+      _nbNonConstTimesteps++;
+      if (_nbNonConstTimesteps >= _maxNonConstTimesteps && _maxNonConstTimesteps > 0)
+        _freezed = true;
     }
 
     // type specific update functionality
@@ -194,17 +200,19 @@ public:
   }
 
   //@brief: returns true if a QR decomposition from scratch is necessary
-  bool requireNewQR(){
+  bool requireNewQR()
+  {
     TRACE(_requireNewQR);
     return _requireNewQR;
   }
 
   //@brief to tell the preconditioner that QR-decomposition has been recomputed
-  void newQRfulfilled(){
+  void newQRfulfilled()
+  {
     _requireNewQR = false;
   }
 
-  std::vector<double>& getWeights()
+  std::vector<double> &getWeights()
   {
     return _weights;
   }
@@ -215,7 +223,6 @@ public:
   }
 
 protected:
-
   //@brief weights used to scale the matrix V and the residual
   std::vector<double> _weights;
 
@@ -236,23 +243,19 @@ protected:
   // true if a QR decomposition from scratch is necessary
   bool _requireNewQR;
 
-
   /// @brief true if _nbNonConstTimesteps >= _maxNonConstTimesteps, i.e., preconditioner is not updated any more.
   bool _freezed;
-
 
   /**
    * @brief Update the scaling after every FSI iteration and require a new QR decomposition (if necessary)
    *
    * @param[in] timestepComplete True if this FSI iteration also completed a timestep
    */
-  virtual void _update_(bool timestepComplete, const Eigen::VectorXd& oldValues, const Eigen::VectorXd& res) =0;
+  virtual void _update_(bool timestepComplete, const Eigen::VectorXd &oldValues, const Eigen::VectorXd &res) = 0;
 
 private:
-
   static logging::Logger _log;
-
 };
-
-
-}}} // namespace precice, cplscheme, impl
+}
+}
+} // namespace precice, cplscheme, impl

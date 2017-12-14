@@ -1,102 +1,87 @@
-#ifndef PRECICE_CPLSCHEME_COUPLINGSCHEMECONFIGURATION_HPP_
-#define PRECICE_CPLSCHEME_COUPLINGSCHEMECONFIGURATION_HPP_
+#pragma once
 
+#include <string>
+#include <tuple>
+#include <vector>
+#include "cplscheme/Constants.hpp"
 #include "cplscheme/CouplingScheme.hpp"
 #include "cplscheme/MultiCouplingScheme.hpp"
 #include "cplscheme/SharedPointer.hpp"
 #include "cplscheme/impl/SharedPointer.hpp"
-#include "cplscheme/Constants.hpp"
-#include "mesh/SharedPointer.hpp"
-#include "m2n/config/M2NConfiguration.hpp"
-#include "precice/config/SharedPointer.hpp"
-#include "xml/XMLTag.hpp"
 #include "logging/Logger.hpp"
-#include <vector>
-#include <string>
-#include <tuple>
+#include "m2n/config/M2NConfiguration.hpp"
+#include "mesh/SharedPointer.hpp"
+#include "precice/config/SharedPointer.hpp"
 #include "precice/impl/MeshContext.hpp"
+#include "xml/XMLTag.hpp"
 
-namespace precice {
-  namespace cplscheme {
-    class CompositionalCouplingScheme;
-    class BaseCouplingScheme;
-    namespace tests { // TODO kick this out as soon as all tests are ported
-      class SerialImplicitCouplingSchemeTest;
-    }
-  }
+namespace precice
+{
+namespace cplscheme
+{
+class CompositionalCouplingScheme;
+class BaseCouplingScheme;
+namespace tests
+{ // TODO kick this out as soon as all tests are ported
+class SerialImplicitCouplingSchemeTest;
+}
+}
 }
 
 // Forward declaration to friend the boost test struct
-namespace CplSchemeTests {
-namespace ParallelImplicitCouplingSchemeTests{
+namespace CplSchemeTests
+{
+namespace ParallelImplicitCouplingSchemeTests
+{
 struct testParseConfigurationWithRelaxation;
-}}
+}
+}
 
-// ----------------------------------------------------------- CLASS DEFINITION
+namespace precice
+{
+namespace cplscheme
+{
 
-namespace precice {
-namespace cplscheme {
-
-/**
- * @brief Configuration for coupling schemes.
- */
+/// Configuration for coupling schemes.
 class CouplingSchemeConfiguration : public xml::XMLTag::Listener
 {
 public:
-
   /**
    * @brief Constructor.
    *
-   * @param parent [IN] Used to add subtags to hierarchical XML structure.
-   * @param meshConfig [IN] For checking if a used mesh is defined.
-   * @param comConfig [IN] For checking if a communication between participants
-   *        to be coupled is defined.
+   * @param[in] parent  Used to add subtags to hierarchical XML structure.
+   * @param[in] meshConfig For checking if a used mesh is defined.
+   * @param[in] comConfig For checking if a communication between participants to be coupled is defined.
    */
-  CouplingSchemeConfiguration (
-    xml::XMLTag&                            parent,
-    const mesh::PtrMeshConfiguration&         meshConfig,
-    const m2n::M2NConfiguration::SharedPointer&           m2nConfig);
+  CouplingSchemeConfiguration(
+      xml::XMLTag &                               parent,
+      const mesh::PtrMeshConfiguration &          meshConfig,
+      const m2n::M2NConfiguration::SharedPointer &m2nConfig);
 
   /**
    * @brief Destructor, empty.
    */
   virtual ~CouplingSchemeConfiguration() {}
 
-  /**
-   * @brief Check, if a coupling scheme is configured for a participant.
-   */
-  bool hasCouplingScheme ( const std::string& participantName ) const;
+  /// Check, if a coupling scheme is configured for a participant.
+  bool hasCouplingScheme(const std::string &participantName) const;
 
-  /**
-   * @brief Returns the configured (to be checked by isValid()) coupling scheme.
-   */
-  const PtrCouplingScheme& getCouplingScheme ( const std::string& participantName ) const;
+  /// Returns the configured (to be checked by isValid()) coupling scheme.
+  const PtrCouplingScheme &getCouplingScheme(const std::string &participantName) const;
 
-  /**
-   * @brief Returns the name of one dataset exchanged in the coupling scheme.
-   */
-  const std::string& getDataToExchange ( int index ) const;
+  /// Returns the name of one dataset exchanged in the coupling scheme.
+  const std::string &getDataToExchange(int index) const;
 
-  /**
-   * @brief Callback method required when using xml::XMLTag.
-   */
-  virtual void xmlTagCallback ( xml::XMLTag& callingTag );
+  /// Callback method required when using xml::XMLTag.
+  virtual void xmlTagCallback(xml::XMLTag &callingTag);
 
-  /**
-   * @brief Callback method required when using xml::XMLTag.
-   */
-  virtual void xmlEndTagCallback ( xml::XMLTag& callingTag );
+  /// Callback method required when using xml::XMLTag.
+  virtual void xmlEndTagCallback(xml::XMLTag &callingTag);
 
-  /**
-   * @brief Adds a manually configured coupling scheme for a participant.
-   */
-  void addCouplingScheme (
-    PtrCouplingScheme  cplScheme,
-    const std::string& participantName );
-
+  /// Adds a manually configured coupling scheme for a participant.
+  void addCouplingScheme(PtrCouplingScheme cplScheme, const std::string &participantName);
 
 private:
-
   // @brief Logging device.
   static logging::Logger _log;
 
@@ -142,43 +127,42 @@ private:
   const std::string VALUE_FIXED;
   const std::string VALUE_FIRST_PARTICIPANT;
 
-  struct Config
-  {
-    std::string type;
-    std::string name;
-    std::vector<std::string> participants;
-    std::string controller;
-    bool setController;
-    double maxTime;
-    int maxTimesteps;
-    double timestepLength;
-    int validDigits;
+  struct Config {
+    std::string                   type;
+    std::string                   name;
+    std::vector<std::string>      participants;
+    std::string                   controller;
+    bool                          setController;
+    double                        maxTime;
+    int                           maxTimesteps;
+    double                        timestepLength;
+    int                           validDigits;
     constants::TimesteppingMethod dtMethod;
-    // @brief Tuples of exchange data, mesh, and participant name.
-    typedef std::tuple<mesh::PtrData, mesh::PtrMesh,std::string, std::string,bool> Exchange;
-    std::vector<Exchange> exchanges;
-    // @brief Tuples of data ID, mesh ID, and convergence measure.
-    std::vector<std::tuple<int, bool, std::string, int, impl::PtrConvergenceMeasure> > convMeasures;
-    int maxIterations;
-    int extrapolationOrder;
+    /// Tuples of exchange data, mesh, and participant name.
+    typedef std::tuple<mesh::PtrData, mesh::PtrMesh, std::string, std::string, bool> Exchange;
+    std::vector<Exchange>                                                            exchanges;
+    /// Tuples of data ID, mesh ID, and convergence measure.
+    std::vector<std::tuple<int, bool, std::string, int, impl::PtrConvergenceMeasure>> convMeasures;
+    int                                                                               maxIterations;
+    int                                                                               extrapolationOrder;
 
     Config()
-    :
-      type ( "" ),
-      name ( "" ),
-      participants (),
-      controller ( "" ),
-      setController( false ),
-      maxTime ( CouplingScheme::UNDEFINED_TIME ),
-      maxTimesteps ( CouplingScheme::UNDEFINED_TIMESTEPS ),
-      timestepLength ( CouplingScheme::UNDEFINED_TIMESTEP_LENGTH ),
-      validDigits ( 16 ),
-      dtMethod ( constants::FIXED_DT ),
-      exchanges (),
-      convMeasures (),
-      maxIterations ( -1 ),
-      extrapolationOrder ( 0 )
-    {}
+        : type(""),
+          name(""),
+          participants(),
+          controller(""),
+          setController(false),
+          maxTime(CouplingScheme::UNDEFINED_TIME),
+          maxTimesteps(CouplingScheme::UNDEFINED_TIMESTEPS),
+          timestepLength(CouplingScheme::UNDEFINED_TIMESTEP_LENGTH),
+          validDigits(16),
+          dtMethod(constants::FIXED_DT),
+          exchanges(),
+          convMeasures(),
+          maxIterations(-1),
+          extrapolationOrder(0)
+    {
+    }
 
   } _config;
 
@@ -190,123 +174,113 @@ private:
 
   bool _isValid;
 
-  // @brief Map from participant name to coupling scheme (composition).
-  std::map<std::string,PtrCouplingScheme> _couplingSchemes;
+  /// Map from participant name to coupling scheme (composition).
+  std::map<std::string, PtrCouplingScheme> _couplingSchemes;
 
-  // @brief If a participant has more than one coupling scheme, a composition is created.
-  std::map<std::string,CompositionalCouplingScheme*> _couplingSchemeCompositions;
+  /// If a participant has more than one coupling scheme, a composition is created.
+  std::map<std::string, CompositionalCouplingScheme *> _couplingSchemeCompositions;
 
-  void addTypespecifcSubtags (
-    const std::string& type,
-    xml::XMLTag&     tag );
+  void addTypespecifcSubtags(const std::string &type, xml::XMLTag &tag);
 
-  void addTransientLimitTags ( xml::XMLTag& tag );
+  void addTransientLimitTags(xml::XMLTag &tag);
 
-  void addTagParticipants ( xml::XMLTag& tag );
+  void addTagParticipants(xml::XMLTag &tag);
 
-  void addTagParticipant ( xml::XMLTag& tag );
+  void addTagParticipant(xml::XMLTag &tag);
 
-  void addTagExchange ( xml::XMLTag& tag );
+  void addTagExchange(xml::XMLTag &tag);
 
-  void addTagAbsoluteConvergenceMeasure ( xml::XMLTag& tag );
+  void addTagAbsoluteConvergenceMeasure(xml::XMLTag &tag);
 
-  void addTagRelativeConvergenceMeasure ( xml::XMLTag& tag );
+  void addTagRelativeConvergenceMeasure(xml::XMLTag &tag);
 
-  void addTagResidualRelativeConvergenceMeasure ( xml::XMLTag& tag );
+  void addTagResidualRelativeConvergenceMeasure(xml::XMLTag &tag);
 
-  void addTagMinIterationConvergenceMeasure ( xml::XMLTag& tag );
+  void addTagMinIterationConvergenceMeasure(xml::XMLTag &tag);
 
-  void addBaseAttributesTagConvergenceMeasure ( xml::XMLTag& tag );
+  void addBaseAttributesTagConvergenceMeasure(xml::XMLTag &tag);
 
-  void addTagMaxIterations ( xml::XMLTag& tag );
+  void addTagMaxIterations(xml::XMLTag &tag);
 
-  void addTagExtrapolation ( xml::XMLTag& tag );
+  void addTagExtrapolation(xml::XMLTag &tag);
 
-  void addTagPostProcessing ( xml::XMLTag& tag );
+  void addTagPostProcessing(xml::XMLTag &tag);
 
-  void addAbsoluteConvergenceMeasure (
-    const std::string & dataName,
-    const std::string & meshName,
-    double              limit,
-    bool                suffices,
-    int                 level);
+  void addAbsoluteConvergenceMeasure(
+      const std::string &dataName,
+      const std::string &meshName,
+      double             limit,
+      bool               suffices,
+      int                level);
 
-  void addRelativeConvergenceMeasure (
-    const std::string & dataName,
-    const std::string & meshName,
-    double              limit,
-    bool                suffices,
-    int                 level);
+  void addRelativeConvergenceMeasure(
+      const std::string &dataName,
+      const std::string &meshName,
+      double             limit,
+      bool               suffices,
+      int                level);
 
-  void addResidualRelativeConvergenceMeasure (
-    const std::string & dataName,
-    const std::string & meshName,
-    double              limit,
-    bool                suffices,
-    int                 level);
+  void addResidualRelativeConvergenceMeasure(
+      const std::string &dataName,
+      const std::string &meshName,
+      double             limit,
+      bool               suffices,
+      int                level);
 
-  void addMinIterationConvergenceMeasure (
-    const std::string & dataName,
-    const std::string & meshName,
-    int                 minIterations,
-    bool                suffices,
-    int                 level);
+  void addMinIterationConvergenceMeasure(
+      const std::string &dataName,
+      const std::string &meshName,
+      int                minIterations,
+      bool               suffices,
+      int                level);
 
-  mesh::PtrData getData (
-    const std::string & dataName,
-    const std::string & meshName ) const;
+  mesh::PtrData getData(
+      const std::string &dataName,
+      const std::string &meshName) const;
 
-  PtrCouplingScheme createSerialExplicitCouplingScheme (
-    const std::string & accessor ) const;
+  PtrCouplingScheme createSerialExplicitCouplingScheme(
+      const std::string &accessor) const;
 
-  PtrCouplingScheme createParallelExplicitCouplingScheme (
-      const std::string & accessor ) const;
+  PtrCouplingScheme createParallelExplicitCouplingScheme(
+      const std::string &accessor) const;
 
-  PtrCouplingScheme createSerialImplicitCouplingScheme (
-    const std::string & accessor ) const;
+  PtrCouplingScheme createSerialImplicitCouplingScheme(
+      const std::string &accessor) const;
 
-  PtrCouplingScheme createParallelImplicitCouplingScheme (
-    const std::string & accessor ) const;
+  PtrCouplingScheme createParallelImplicitCouplingScheme(
+      const std::string &accessor) const;
 
-  PtrCouplingScheme createMultiCouplingScheme (
-      const std::string & accessor ) const;
+  PtrCouplingScheme createMultiCouplingScheme(
+      const std::string &accessor) const;
 
-  /*
-   * @brief returns name of the actual scheme holder (i.e. server name)
-   */
-  std::string determineCouplingSchemeHolder (
-    const std::string & accessorName ) const;
+  /// returns name of the actual scheme holder (i.e. server name)
+  std::string determineCouplingSchemeHolder(
+      const std::string &accessorName) const;
 
-  constants::TimesteppingMethod getTimesteppingMethod (
-    const std::string& method ) const;
+  constants::TimesteppingMethod getTimesteppingMethod(
+      const std::string &method) const;
 
-  /**
-   * @brief Adds configured exchange data to be sent or received to scheme.
-   */
+  /// Adds configured exchange data to be sent or received to scheme.
   void addDataToBeExchanged(
-    BaseCouplingScheme& scheme,
-    const std::string&  accessor) const;
+      BaseCouplingScheme &scheme,
+      const std::string & accessor) const;
 
   /**
    * @brief Adds configured exchange data to be sent or received to scheme.
    * Only used specifically for MultiCouplingScheme
    */
   void addMultiDataToBeExchanged(
-      MultiCouplingScheme& scheme,
-    const std::string&  accessor) const;
+      MultiCouplingScheme &scheme,
+      const std::string &  accessor) const;
 
   void checkIfDataIsExchanged(
-    int dataID) const;
+      int dataID) const;
 
   bool checkIfDataIsCoarse(int id) const;
 
-
   friend class tests::SerialImplicitCouplingSchemeTest; // For whitebox tests  // TODO kick this out as soon as ported to boosttests
 
-  friend struct CplSchemeTests::ParallelImplicitCouplingSchemeTests::testParseConfigurationWithRelaxation;  // For whitebox tests
-
+  friend struct CplSchemeTests::ParallelImplicitCouplingSchemeTests::testParseConfigurationWithRelaxation; // For whitebox tests
 };
-
-}} // namespace precice, cplscheme
-
-#endif /* COUPLINGSCHEMECONFIGURATION_HPP_ */
+}
+} // namespace precice, cplscheme

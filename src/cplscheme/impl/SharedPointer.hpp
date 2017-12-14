@@ -2,9 +2,12 @@
 
 #include <memory>
 
-namespace precice {
-namespace cplscheme {
-namespace impl {
+namespace precice
+{
+namespace cplscheme
+{
+namespace impl
+{
 
 class ConvergenceMeasure;
 class PostProcessing;
@@ -15,6 +18,6 @@ using PtrConvergenceMeasure = std::shared_ptr<ConvergenceMeasure>;
 using PtrPostProcessing     = std::shared_ptr<PostProcessing>;
 using PtrPreconditioner     = std::shared_ptr<Preconditioner>;
 using PtrParMatrixOps       = std::shared_ptr<ParallelMatrixOperations>;
-
-}}} // namespace precice, cplscheme, impl
-
+}
+}
+} // namespace precice, cplscheme, impl

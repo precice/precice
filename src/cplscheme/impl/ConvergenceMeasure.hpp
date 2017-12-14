@@ -2,9 +2,12 @@
 
 #include <Eigen/Core>
 
-namespace precice {
-namespace cplscheme {
-namespace impl {
+namespace precice
+{
+namespace cplscheme
+{
+namespace impl
+{
 
 /**
  * @brief Interface for measures checking the convergence of a series of datasets.
@@ -22,16 +25,11 @@ namespace impl {
 class ConvergenceMeasure
 {
 public:
-
-  /**
-   * @brief Destructor, empty.
-   */
+  /// Destructor, empty.
   virtual ~ConvergenceMeasure() {}
 
-  /**
-   * @brief To be called when a new meas. series (iteration process) starts.
-   */
-  virtual void newMeasurementSeries() =0;
+  /// To be called when a new meas. series (iteration process) starts.
+  virtual void newMeasurementSeries() = 0;
 
   /**
    * @brief Performs convergence measurement.
@@ -39,26 +37,23 @@ public:
    * @param[in] oldValues Old iterate values.
    * @param[in] newValues New iterate values.
    */
-  virtual void measure (
-    const Eigen::VectorXd& oldValues,
-    const Eigen::VectorXd& newValues,
-    const Eigen::VectorXd& designSpecification) =0;
+  virtual void measure(
+      const Eigen::VectorXd &oldValues,
+      const Eigen::VectorXd &newValues,
+      const Eigen::VectorXd &designSpecification) = 0;
 
-  /**
-   * @brief Returns true, if the last measurement indicates convergence.
-   */
-  virtual bool isConvergence() const =0;
+  /// Returns true, if the last measurement indicates convergence.
+  virtual bool isConvergence() const = 0;
 
-  /**
-   * @brief Adds current convergence information to output stream.
-   */
+  /// Adds current convergence information to output stream.
   virtual std::string printState() = 0;
-  
-  /**
-   * @brief Returns the l2-norm of the coupling residuum
-   */
-  virtual double getNormResidual()
-    {return 0;}
-};
 
-}}} // namespace precice, cplscheme, impl
+  /// Returns the l2-norm of the coupling residuum
+  virtual double getNormResidual()
+  {
+    return 0;
+  }
+};
+}
+}
+} // namespace precice, cplscheme, impl

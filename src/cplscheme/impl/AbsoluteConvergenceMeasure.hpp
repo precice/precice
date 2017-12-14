@@ -4,19 +4,23 @@
 #include "logging/Logger.hpp"
 #include "utils/MasterSlave.hpp"
 
-namespace precice {
-   namespace cplscheme {
-      namespace tests {
-         class AbsoluteConvergenceMeasureTest;
-      }
-   }
+namespace precice
+{
+namespace cplscheme
+{
+namespace tests
+{
+class AbsoluteConvergenceMeasureTest;
+}
+}
 }
 
-// ------------------------------------------------------------ CLASS DEFINTION
-
-namespace precice {
-namespace cplscheme {
-namespace impl {
+namespace precice
+{
+namespace cplscheme
+{
+namespace impl
+{
 
 /**
  * @brief Measures the convergence from an old data set to a new one.
@@ -31,63 +35,62 @@ namespace impl {
 class AbsoluteConvergenceMeasure : public ConvergenceMeasure
 {
 public:
+  explicit AbsoluteConvergenceMeasure(double convergenceLimit);
 
-   AbsoluteConvergenceMeasure ( double convergenceLimit );
+  virtual ~AbsoluteConvergenceMeasure(){};
 
-   virtual ~AbsoluteConvergenceMeasure() {};
+  virtual void newMeasurementSeries()
+  {
+    _isConvergence = false;
+  }
 
-   virtual void newMeasurementSeries ()
-   {
-      _isConvergence = false;
-   }
+  virtual void measure(
+      const Eigen::VectorXd &oldValues,
+      const Eigen::VectorXd &newValues,
+      const Eigen::VectorXd &designSpecification)
+  {
+    _normDiff      = utils::MasterSlave::l2norm((newValues - oldValues) - designSpecification);
+    _isConvergence = _normDiff <= _convergenceLimit;
+    //      INFO("Absolute convergence measure: "
+    //                     << "two-norm differences = " << normDiff
+    //                     << ", convergence limit = " << _convergenceLimit
+    //                     << ", convergence = " << _isConvergence );
+  }
 
-   virtual void measure (
-      const Eigen::VectorXd& oldValues,
-      const Eigen::VectorXd& newValues,
-      const Eigen::VectorXd& designSpecification)
-   {
-      _normDiff = utils::MasterSlave::l2norm((newValues - oldValues) - designSpecification);
-      _isConvergence = _normDiff <= _convergenceLimit;
-//      INFO("Absolute convergence measure: "
-//                     << "two-norm differences = " << normDiff
-//                     << ", convergence limit = " << _convergenceLimit
-//                     << ", convergence = " << _isConvergence );
-   }
+  virtual bool isConvergence() const
+  {
+    return _isConvergence;
+  }
 
-   virtual bool isConvergence () const
-   {
-      return _isConvergence;
-   }
+  /// Adds current convergence information to output stream.
+  virtual std::string printState()
+  {
+    std::ostringstream os;
+    os << "absolute convergence measure: ";
+    os << "two-norm diff = " << _normDiff;
+    os << ", limit = " << _convergenceLimit;
+    os << ", conv = ";
+    if (_isConvergence)
+      os << "true";
+    else
+      os << "false";
+    return os.str();
+  }
 
-   /**
-    * @brief Adds current convergence information to output stream.
-    */
-   virtual std::string printState()
-   {
-     std::ostringstream os;
-     os << "absolute convergence measure: ";
-     os << "two-norm diff = " << _normDiff;
-     os << ", limit = " << _convergenceLimit;
-     os << ", conv = ";
-     if (_isConvergence) os << "true";
-     else os << "false";
-     return os.str();
-   }
-   
-   virtual double getNormResidual()
-   {
-    return _normDiff; 
-   }
+  virtual double getNormResidual()
+  {
+    return _normDiff;
+  }
 
 private:
+  static logging::Logger _log;
 
-   static logging::Logger _log;
+  double _convergenceLimit;
 
-   double _convergenceLimit;
+  double _normDiff;
 
-   double _normDiff;
-
-   bool _isConvergence;
+  bool _isConvergence;
 };
-
-}}} // namespace precice, cplscheme, impl
+}
+}
+} // namespace precice, cplscheme, impl

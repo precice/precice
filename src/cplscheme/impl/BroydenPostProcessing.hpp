@@ -4,9 +4,12 @@
 
 // ----------------------------------------------------------- CLASS DEFINITION
 
-namespace precice {
-namespace cplscheme {
-namespace impl {
+namespace precice
+{
+namespace cplscheme
+{
+namespace impl
+{
 
 /**
  * @brief Multi vector quasi-Newton update scheme 
@@ -24,65 +27,61 @@ namespace impl {
 class BroydenPostProcessing : public BaseQNPostProcessing
 {
 public:
-
   /**
    * @brief Constructor.
    */
-   BroydenPostProcessing (
-      double initialRelaxation,
-      bool forceInitialRelaxation,
-      int    maxIterationsUsed,
-      int    timestepsReused,
-      int 	 filter,
-      double singularityLimit,
-      std::vector<int>    dataIDs,
+  BroydenPostProcessing(
+      double            initialRelaxation,
+      bool              forceInitialRelaxation,
+      int               maxIterationsUsed,
+      int               timestepsReused,
+      int               filter,
+      double            singularityLimit,
+      std::vector<int>  dataIDs,
       PtrPreconditioner preconditioner);
 
-   /**
+  /**
     * @brief Destructor, empty.
     */
-   virtual ~BroydenPostProcessing() {}
+  virtual ~BroydenPostProcessing() {}
 
-
-   /**
+  /**
     * @brief Initializes the post-processing.
     */
-   virtual void initialize(DataMap& cplData);
+  virtual void initialize(DataMap &cplData);
 
-
-   /**
+  /**
     * @brief Marks a iteration sequence as converged.
     *
     * called by the iterationsConverged() method in the BaseQNPostProcessing class
     * handles the postprocessing sepcific action after the convergence of one iteration
     */
-   virtual void specializedIterationsConverged(DataMap& cplData);
-  
+  virtual void specializedIterationsConverged(DataMap &cplData);
+
 private:
+  // remove this ofter debugging, not useful
+  // ---------------------------------------
+  std::fstream f;
+  //----------------------------------------
 
-   // remove this ofter debugging, not useful
-   // ---------------------------------------
-   std::fstream f;
-   //----------------------------------------
-   
-   // @brief stores the approximation of the inverse Jacobian of the system at current time step.
-   Eigen::MatrixXd _invJacobian;
-   Eigen::MatrixXd _oldInvJacobian;
-   
-   int _maxColumns;
-   int _currentColumns;
-   
-  // @brief comptes the MVQN update using QR decomposition of V, 
+  // @brief stores the approximation of the inverse Jacobian of the system at current time step.
+  Eigen::MatrixXd _invJacobian;
+  Eigen::MatrixXd _oldInvJacobian;
+
+  int _maxColumns;
+  int _currentColumns;
+
+  // @brief comptes the MVQN update using QR decomposition of V,
   //        furthermore it updates the inverse of the system jacobian
-   virtual void computeQNUpdate(DataMap& cplData, Eigen::VectorXd& xUpdate);
-   
-      // @brief updates the V, W matrices (as well as the matrices for the secondary data)
-   virtual void updateDifferenceMatrices(DataMap & cplData);
+  virtual void computeQNUpdate(DataMap &cplData, Eigen::VectorXd &xUpdate);
 
-   // @brief computes underrelaxation for the secondary data
-   virtual void computeUnderrelaxationSecondaryData(DataMap& cplData);
-   //void computeNewtonFactorsQRDecomposition(DataMap& cplData, Eigen::VectorXd& update);
+  // @brief updates the V, W matrices (as well as the matrices for the secondary data)
+  virtual void updateDifferenceMatrices(DataMap &cplData);
+
+  // @brief computes underrelaxation for the secondary data
+  virtual void computeUnderrelaxationSecondaryData(DataMap &cplData);
+  //void computeNewtonFactorsQRDecomposition(DataMap& cplData, Eigen::VectorXd& update);
 };
-
-}}} // namespace precice, cplscheme, impl
-
+}
+}
+} // namespace precice, cplscheme, impl

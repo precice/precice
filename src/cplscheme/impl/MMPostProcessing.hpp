@@ -1,76 +1,59 @@
 #pragma once
 
-#include "PostProcessing.hpp"
-#include "SharedPointer.hpp"
-#include "logging/Logger.hpp"
-#include "Preconditioner.hpp"
 #include <Eigen/Core>
 #include <deque>
+#include "PostProcessing.hpp"
+#include "Preconditioner.hpp"
+#include "SharedPointer.hpp"
+#include "logging/Logger.hpp"
 
-// ----------------------------------------------------------- CLASS DEFINITION
+namespace precice
+{
+namespace cplscheme
+{
+namespace impl
+{
 
-namespace precice {
-namespace cplscheme {
-namespace impl {
-
-/**
- * @brief Base Class for quasi-Newton post processing schemes
- *
- */
-class MMPostProcessing: public PostProcessing
+/// Base Class for quasi-Newton post processing schemes
+class MMPostProcessing : public PostProcessing
 {
 public:
-
-  /**
-   * @brief Constructor.
-   */
   MMPostProcessing(
       impl::PtrPostProcessing coarseModelOptimization,
-      int maxIterationsUsed,
-      int timestepsReused,
-      int filter,
-      double singularityLimit,
-      bool estimateJacobian,
-      std::vector<int> fineDataIDs,
-      std::vector<int> coarseDataIDs,
-      PtrPreconditioner preconditioner);
+      int                     maxIterationsUsed,
+      int                     timestepsReused,
+      int                     filter,
+      double                  singularityLimit,
+      bool                    estimateJacobian,
+      std::vector<int>        fineDataIDs,
+      std::vector<int>        coarseDataIDs,
+      PtrPreconditioner       preconditioner);
 
-  /**
-   * @brief Destructor, empty.
-   */
   virtual ~MMPostProcessing()
   {
   }
 
-  /**
-   * @brief Returns all MM involved fine model data IDs.
-   */
+  /// Returns all MM involved fine model data IDs.
   virtual std::vector<int> getDataIDs() const
   {
     return _fineDataIDs;
   }
 
-  /**
-   * @brief Returns all MM involved coarse model data IDs.
-   */
+  /// Returns all MM involved coarse model data IDs.
   std::vector<int> getCoarseDataIDs() const
   {
     return _coarseDataIDs;
   }
 
-  /**
-   * @brief Initializes the post-processing.
-   */
-  virtual void initialize(
-      DataMap& cplData);
+  /// Initializes the post-processing.
+  virtual void initialize(DataMap &cplData);
 
   /**
    * @brief Performs one post-processing step.
    *
    * Has to be called after every implicit coupling iteration.
    */
-  virtual void performPostProcessing(
-      DataMap& cplData);
+  virtual void performPostProcessing(DataMap &cplData);
 
   /**
    * @brief Marks a iteration sequence as converged.
@@ -78,8 +61,7 @@ public:
    * Since convergence measurements are done outside the post-processing, this
    * method has to be used to signalize convergence to the post-processing.
    */
-  virtual void iterationsConverged(
-      DataMap& cplData);
+  virtual void iterationsConverged(DataMap &cplData);
 
   /**
    * @brief sets the design specification we want to meet for the objective function,
@@ -87,8 +69,7 @@ public:
    *     Usually we want to solve for a fixed-point of H, thus solving for argmin_x ||R(x)||
    *     with q=0.
    */
-  virtual void setDesignSpecification(
-      Eigen::VectorXd& q);
+  virtual void setDesignSpecification(Eigen::VectorXd &q);
 
   /**
    * @brief Returns the design specification for the optimization problem.
@@ -96,58 +77,50 @@ public:
    *        In case of manifold mapping it also returns the design specification
    *        for the surrogate model which is updated in every iteration.
    */ // TODO: change to call by ref when Eigen is used.
-  virtual std::map<int, Eigen::VectorXd> getDesignSpecification(DataMap& cplData);
+  virtual std::map<int, Eigen::VectorXd> getDesignSpecification(DataMap &cplData);
 
   /**
    * @brief Sets whether the solver has to evaluate the coarse or the fine model representation
    * steers the coupling scheme and the post processing.
    */
-  virtual void setCoarseModelOptimizationActive(
-      bool* coarseOptActive)
+  virtual void setCoarseModelOptimizationActive(bool *coarseOptActive)
   {
     _isCoarseModelOptimizationActive = coarseOptActive;
   }
 
-  /**
-   * @brief Exports the current state of the post-processing to a file.
-   */
-  virtual void exportState(
-      io::TXTWriter& writer);
+  /// Exports the current state of the post-processing to a file.
+  virtual void exportState(io::TXTWriter &writer);
 
   /**
    * @brief Imports the last exported state of the post-processing from file.
    *
    * Is empty at the moment!!!
    */
-  virtual void importState(
-      io::TXTReader& reader);
+  virtual void importState(io::TXTReader &reader);
 
   // delete this:
   virtual int getDeletedColumns();
 
-  /**
-   * @brief Indicates whether the given post processing is based on a multi-level approach
-   */
+  /// Indicates whether the given post processing is based on a multi-level approach
   virtual bool isMultilevelBasedApproach()
   {
     return true;
   }
 
 private:
-
-  /// @brief Logging device.
+  /// Logging device.
   static logging::Logger _log;
 
-  /// @brief coarse model optimization method
+  /// Coarse model optimization method
   impl::PtrPostProcessing _coarseModelOptimization;
 
-  /// @brief preconditioner, i.e., scaling operator for the LS system
+  /// preconditioner, i.e., scaling operator for the LS system
   PtrPreconditioner _preconditioner;
 
-  // @brief Maximum number of old data iterations kept.
+  /// Maximum number of old data iterations kept.
   int _maxIterationsUsed;
 
-  // @brief Maximum number of old timesteps (with data values) kept.
+  /// Maximum number of old timesteps (with data values) kept.
   int _timestepsReused;
 
   // @brief Determines sensitivity when two matrix columns are considered equal.
@@ -170,7 +143,7 @@ private:
    * @brief Sets whether the solver has to evaluate the coarse or the fine model representation
    * steers the coupling scheme and the post processing.
    */
-  bool* _isCoarseModelOptimizationActive;
+  bool *_isCoarseModelOptimizationActive;
 
   /// @brief Data IDs of data to be involved in the MM algorithm.
   std::vector<int> _fineDataIDs;
@@ -199,42 +172,40 @@ private:
    */
   bool _estimateJacobian;
 
-  /// @brief current iteration residuals of fine model coupling data
+  /// current iteration residuals of fine model coupling data
   Eigen::VectorXd _fineResiduals;
 
-  /// @brief current iteration residuals of coarse model coupling data
+  /// current iteration residuals of coarse model coupling data
   Eigen::VectorXd _coarseResiduals;
 
-  /// @brief difference between solver input and output of fine model from last time step
+  /// difference between solver input and output of fine model from last time step
   Eigen::VectorXd _fineOldResiduals;
 
-  /// @brief difference between solver input and output of coarse model from last time step
+  /// difference between solver input and output of coarse model from last time step
   Eigen::VectorXd _coarseOldResiduals;
 
-  /// @brief Temporary used in performPostProcessing(). output fine model
+  /// Temporary used in performPostProcessing(). output fine model
   Eigen::VectorXd _outputFineModel;
 
-  /// @brief Temporary used in performPostProcessing().
+  /// Temporary used in performPostProcessing().
   //Eigen::VectorXd _scaledOldValues;
 
-  /// @brief Temporary used in performPostProcessing(), output coarse model
+  /// Temporary used in performPostProcessing(), output coarse model
   Eigen::VectorXd _outputCoarseModel;
 
-  /// @brief Temporary used in performPostProcessing(), input for model evaluation
+  /// Temporary used in performPostProcessing(), input for model evaluation
   Eigen::VectorXd _input_Xstar;
 
-  /// @brief Temporary used in performPostProcessing().
+  /// Temporary used in performPostProcessing().
   //Eigen::VectorXd _coarseScaledOldValues;
 
-  /// @brief Stores residual deltas for the fine model response
+  /// Stores residual deltas for the fine model response
   Eigen::MatrixXd _matrixF;
 
-  /// @brief Stores residual deltas for the coarse model response
+  /// Stores residual deltas for the coarse model response
   Eigen::MatrixXd _matrixC;
 
-  /** @brief The pseudo inverse of the manifold mapping matrix, only stored and updated
-   *        if _estimateJacobian is set to true.
-   */
+  /// The pseudo inverse of the manifold mapping matrix, only stored and updated if _estimateJacobian is set to true.
   Eigen::MatrixXd _MMMappingMatrix;
   Eigen::MatrixXd _MMMappingMatrix_prev;
 
@@ -255,7 +226,7 @@ private:
   int _iterCoarseModelOpt;
   int _maxIterCoarseModelOpt;
 
-  /// @ brief only debugging info, remove this:
+  /// only debugging info, remove this:
   int its, tSteps;
   int deletedColumns;
 
@@ -277,39 +248,33 @@ private:
   int getLSSystemCols();
   int getLSSystemRows();
 
-  /// @brief updates the V, W matrices (as well as the matrices for the secondary data)
+  /// updates the V, W matrices (as well as the matrices for the secondary data)
   void updateDifferenceMatrices(
-      DataMap & cplData);
+      DataMap &cplData);
 
   /** @brief registers the new solution x_k+1 (x_star) from the coarse model optimization
    *         problem as new input data for the fine model evaluation step. This has to be done
    *         in each iteration that performs the coarse model optimization.
    */
-  void registerSolutionCoarseModelOptimization(
-      DataMap& cplData);
-
+  void registerSolutionCoarseModelOptimization(DataMap &cplData);
 
   /** @brief: computes/updates the design specification for the coarse model optimization problem
    *     	   i. e., q_k = c(x_k) - T_k * (f(x_k) - q), q = 0 is the fine model design specification
    */
   void computeCoarseModelDesignSpecifiaction();
 
-  /// @brief computes the quasi-Newton update using the specified pp scheme (MVQN, IQNILS)
-  void computeQNUpdate(
-      DataMap& cplData, Eigen::VectorXd& xUpdate);
+  /// computes the quasi-Newton update using the specified pp scheme (MVQN, IQNILS)
+  void computeQNUpdate(DataMap &cplData, Eigen::VectorXd &xUpdate);
 
-  /// @brief Removes one iteration from V,W matrices and adapts _matrixCols.
+  /// Removes one iteration from V,W matrices and adapts _matrixCols.
   void removeMatrixColumn(int columnIndex);
 
-  /// @brief concatenates all coupling data involved in the QN system in a single vector
-  void concatenateCouplingData(DataMap & cplData);
+  /// concatenates all coupling data involved in the QN system in a single vector
+  void concatenateCouplingData(DataMap &cplData);
 
-  /// @brief Indicates whether the design specification has been set and is active or not
-  bool isSet(Eigen::VectorXd& designSpec);
-
+  /// Indicates whether the design specification has been set and is active or not
+  bool isSet(Eigen::VectorXd &designSpec);
 };
-
 }
 }
 } // namespace precice, cplscheme, impl
-

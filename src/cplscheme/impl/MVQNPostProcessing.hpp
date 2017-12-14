@@ -2,17 +2,20 @@
 
 #pragma once
 
+#include <deque>
 #include "BaseQNPostProcessing.hpp"
-#include "com/SharedPointer.hpp"
 #include "ParallelMatrixOperations.hpp"
 #include "SVDFactorization.hpp"
-#include <deque>
+#include "com/SharedPointer.hpp"
 
 // ----------------------------------------------------------- CLASS DEFINITION
 
-namespace precice {
-namespace cplscheme {
-namespace impl {
+namespace precice
+{
+namespace cplscheme
+{
+namespace impl
+{
 
 /**
  * @brief Multi vector quasi-Newton update scheme 
@@ -30,149 +33,142 @@ namespace impl {
 class MVQNPostProcessing : public BaseQNPostProcessing
 {
 public:
-
   static const int NO_RESTART = 0;
-  static const int RS_ZERO = 1;
-  static const int RS_LS = 2;
-  static const int RS_SVD = 3;
-  static const int RS_SLIDE = 4;
+  static const int RS_ZERO    = 1;
+  static const int RS_LS      = 2;
+  static const int RS_SVD     = 3;
+  static const int RS_SLIDE   = 4;
 
   /**
    * @brief Constructor.
    */
-   MVQNPostProcessing (
-      double initialRelaxation,
-      bool   forceInitialRelaxation,
-      int    maxIterationsUsed,
-      int    timestepsReused,
-      int 	 filter,
-      double singularityLimit,
-      std::vector<int>    dataIDs,
+  MVQNPostProcessing(
+      double            initialRelaxation,
+      bool              forceInitialRelaxation,
+      int               maxIterationsUsed,
+      int               timestepsReused,
+      int               filter,
+      double            singularityLimit,
+      std::vector<int>  dataIDs,
       PtrPreconditioner preconditioner,
-      bool   alwaysBuildJacobian,
-      int    imvjRestartType,
-      int    chunkSize,
-      int    RSLSreusedTimesteps,
-      double RSSVDtruncationEps);
+      bool              alwaysBuildJacobian,
+      int               imvjRestartType,
+      int               chunkSize,
+      int               RSLSreusedTimesteps,
+      double            RSSVDtruncationEps);
 
-   /**
+  /**
     * @brief Destructor, empty.
     */
-   virtual ~MVQNPostProcessing();
+  virtual ~MVQNPostProcessing();
 
-
-   /**
+  /**
     * @brief Initializes the post-processing.
     */
-   virtual void initialize(DataMap& cplData);
+  virtual void initialize(DataMap &cplData);
 
-
-   /**
+  /**
     * @brief Marks a iteration sequence as converged.
     *
     * called by the iterationsConverged() method in the BaseQNPostProcessing class
     * handles the postprocessing sepcific action after the convergence of one iteration
     */
-   virtual void specializedIterationsConverged(DataMap& cplData);
-  
+  virtual void specializedIterationsConverged(DataMap &cplData);
+
 private:
+  /// @brief: stores the approximation of the inverse Jacobian of the system at current time step.
+  Eigen::MatrixXd _invJacobian;
 
-   /// @brief: stores the approximation of the inverse Jacobian of the system at current time step.
-   Eigen::MatrixXd _invJacobian;
+  /// @brief: stores the approximation of the inverse Jacobian from the previous time step.
+  Eigen::MatrixXd _oldInvJacobian;
 
-   /// @brief: stores the approximation of the inverse Jacobian from the previous time step.
-   Eigen::MatrixXd _oldInvJacobian;
+  /// @brief: stores the sub result (W-J_prev*V) for the current iteration
+  Eigen::MatrixXd _Wtil;
 
-   /// @brief: stores the sub result (W-J_prev*V) for the current iteration
-   Eigen::MatrixXd _Wtil;
+  /// @brief: stores all Wtil matrices within the current chunk of the imvj restart mode, disabled if _imvjRestart = false.
+  std::vector<Eigen::MatrixXd> _WtilChunk;
 
-   /// @brief: stores all Wtil matrices within the current chunk of the imvj restart mode, disabled if _imvjRestart = false.
-   std::vector< Eigen::MatrixXd > _WtilChunk;
+  /// @brief_ stores all pseudo inverses within the current chunk of the imvj restart mode, disabled if _imvjRestart = false.
+  std::vector<Eigen::MatrixXd> _pseudoInverseChunk;
 
-   /// @brief_ stores all pseudo inverses within the current chunk of the imvj restart mode, disabled if _imvjRestart = false.
-   std::vector<Eigen::MatrixXd> _pseudoInverseChunk;
+  /// @brief: stores columns from previous  #_RSLSreusedTimesteps time steps if RS-LS restart-mode is active
+  Eigen::MatrixXd _matrixV_RSLS;
 
-   /// @brief: stores columns from previous  #_RSLSreusedTimesteps time steps if RS-LS restart-mode is active
-   Eigen::MatrixXd _matrixV_RSLS;
+  /// @brief: stores columns from previous  #_RSLSreusedTimesteps time steps if RS-LS restart-mode is active
+  Eigen::MatrixXd _matrixW_RSLS;
 
-   /// @brief: stores columns from previous  #_RSLSreusedTimesteps time steps if RS-LS restart-mode is active
-   Eigen::MatrixXd _matrixW_RSLS;
+  /// @brief: number of cols per time step
+  std::deque<int> _matrixCols_RSLS;
 
-   /// @brief: number of cols per time step
-   std::deque<int> _matrixCols_RSLS;
+  /// @brief: Communication between neighboring slaves, backwards
+  com::PtrCommunication _cyclicCommLeft;
 
-   /// @brief: Communication between neighboring slaves, backwards
-   com::PtrCommunication _cyclicCommLeft;
+  /// @brief: Communication between neighboring slaves, forward
+  com::PtrCommunication _cyclicCommRight;
 
-   /// @brief: Communication between neighboring slaves, forward
-   com::PtrCommunication _cyclicCommRight;
+  /// @brief: encapsulates matrix-matrix and matrix-vector multiplications for serial and parallel execution
+  PtrParMatrixOps _parMatrixOps;
 
-   /// @brief: encapsulates matrix-matrix and matrix-vector multiplications for serial and parallel execution
-   PtrParMatrixOps _parMatrixOps;
+  /// @brief holds and maintains a truncated SVD decomposition of the Jacobian matrix
+  SVDFactorization _svdJ;
 
-   /// @brief holds and maintains a truncated SVD decomposition of the Jacobian matrix
-   SVDFactorization _svdJ;
-
-   /** @brief: If true, the less efficient method to compute the quasi-Newton update is used,
+  /** @brief: If true, the less efficient method to compute the quasi-Newton update is used,
    *   that explicitly builds the Jacobian in each iteration. If set to false this is only done
    *   in the very last iteration and the update is computed based on MATVEC products.
    */
-   bool _alwaysBuildJacobian;
+  bool _alwaysBuildJacobian;
 
-   /** @brief: Indicates the type of the imvj restart-mode:
+  /** @brief: Indicates the type of the imvj restart-mode:
     *  - NO_RESTART: imvj is run on normal mode which builds the Jacobian explicitly
     *  - RS-ZERO:    imvj is run in restart-mode. After M time steps all stored matrices are dropped
     *  - RS-LS:      imvj in restart-mode. After M time steps restart with LS approximation for initial Jacobian
     *  - RS-SVD:     imvj in restart mode. After M time steps, update of an truncated SVD of the Jacobian.
     */
-   int _imvjRestartType;
+  int _imvjRestartType;
 
-   /** @brief: If true, the imvj method is used with the restart chunk based approach that avoids
+  /** @brief: If true, the imvj method is used with the restart chunk based approach that avoids
     *  to explicitly build and store the Jacobian. If false, the Jacobian is stored and build, however,
     *  no truncation of information is present.
     */
-   bool _imvjRestart;
+  bool _imvjRestart;
 
+  /// @brief: Number of time steps between restarts for the imvj method in restart mode
+  int _chunkSize;
 
-   /// @brief: Number of time steps between restarts for the imvj method in restart mode
-   int _chunkSize;
+  /// @brief: Number of reused time steps at restart if restart-mode = RS-LS
+  int _RSLSreusedTimesteps;
 
-   /// @brief: Number of reused time steps at restart if restart-mode = RS-LS
-   int _RSLSreusedTimesteps;
+  /// @brief: Number of used columns per time step. Always the first _usedColumnsPerTstep are used.
+  int _usedColumnsPerTstep;
 
-   /// @brief: Number of used columns per time step. Always the first _usedColumnsPerTstep are used.
-   int _usedColumnsPerTstep;
+  /// @brief tracks the number of restarts of IMVJ
+  int _nbRestarts;
 
-   /// @brief tracks the number of restarts of IMVJ
-   int _nbRestarts;
+  // DEBUG
+  //std::fstream _info2;
+  double _avgRank;
 
-
-   // DEBUG
-   //std::fstream _info2;
-   double _avgRank;
-
-
-   /** @brief: comptes the MVQN update using QR decomposition of V,
+  /** @brief: comptes the MVQN update using QR decomposition of V,
     *        furthermore it updates the inverse of the system jacobian
     */
-   virtual void computeQNUpdate(DataMap& cplData, Eigen::VectorXd& xUpdate);
-   
-   /// @brief: updates the V, W matrices (as well as the matrices for the secondary data)
-   virtual void updateDifferenceMatrices(DataMap & cplData);
+  virtual void computeQNUpdate(DataMap &cplData, Eigen::VectorXd &xUpdate);
 
-   /// @brief: computes underrelaxation for the secondary data
-   virtual void computeUnderrelaxationSecondaryData(DataMap& cplData);
-   
-   /** @brief: computes the quasi-Newton update vector based on the matrices V and W using a QR
+  /// @brief: updates the V, W matrices (as well as the matrices for the secondary data)
+  virtual void updateDifferenceMatrices(DataMap &cplData);
+
+  /// @brief: computes underrelaxation for the secondary data
+  virtual void computeUnderrelaxationSecondaryData(DataMap &cplData);
+
+  /** @brief: computes the quasi-Newton update vector based on the matrices V and W using a QR
     *  decomposition of V. The decomposition is not re-computed en-block in every iteration
     *  but updated so that the new added column in V is incorporated in the decomposition.
     *
     *  This method rebuilds the Jacobian matrix and the matrix W_til in each iteration
     *  which is not necessary and thus inefficient.
     */
-   void computeNewtonUpdate(DataMap& cplData, Eigen::VectorXd& update);
-   
-   /** @brief: computes the quasi-Newton update vector based on the same numerics as above.
+  void computeNewtonUpdate(DataMap &cplData, Eigen::VectorXd &update);
+
+  /** @brief: computes the quasi-Newton update vector based on the same numerics as above.
     *  However, it exploits the fact that the matrix W_til can be updated according to V and W
     *  via the formula W_til.col(j) = W.col(j) - J_inv * V.col(j).
     *  Then, pure matrix-vector products are sufficient to compute the update within one iteration, i.e.,
@@ -180,36 +176,36 @@ private:
     *  The Jacobian matrix only needs to be set up in the very last iteration of one time step, i.e.
     *  in iterationsConverged.
     */
-   void computeNewtonUpdateEfficient(DataMap& cplData, Eigen::VectorXd& update);
+  void computeNewtonUpdateEfficient(DataMap &cplData, Eigen::VectorXd &update);
 
-   /** @brief: computes the pseudo inverse of V multiplied with V^T, i.e., Z = (V^TV)^-1V^T via QR-dec
+  /** @brief: computes the pseudo inverse of V multiplied with V^T, i.e., Z = (V^TV)^-1V^T via QR-dec
     */
-   void pseudoInverse(Eigen::MatrixXd& pseudoInverse);
+  void pseudoInverse(Eigen::MatrixXd &pseudoInverse);
 
-   /** @brief: computes a explicit representation of the Jacobian, i.e., n x n matrix
+  /** @brief: computes a explicit representation of the Jacobian, i.e., n x n matrix
     */
-   void buildJacobian();
+  void buildJacobian();
 
-   /** @brief: re-computes the matrix _Wtil = ( W - J_prev * V) instead of updating it according to V
+  /** @brief: re-computes the matrix _Wtil = ( W - J_prev * V) instead of updating it according to V
     */
-   void buildWtil();
+  void buildWtil();
 
-   /** @brief: restarts the imvj method, i.e., drops all stored matrices Wtil and Z and computes a
+  /** @brief: restarts the imvj method, i.e., drops all stored matrices Wtil and Z and computes a
     *  initial guess of the Jacobian based on the given restart strategy:
     *  RS-LS:   Perform a IQN-LS least squares initial guess with _RSLSreusedTimesteps
     *  RS-SVD:  Update a truncated SVD decomposition of the SVD with rank-1 modifications from Wtil*Z
     *  RS-Zero: Start with zero information, initial guess J = 0.
     */
-   void restartIMVJ();
+  void restartIMVJ();
 
-   /// @brief: Removes one iteration from V,W matrices and adapts _matrixCols.
-   virtual void removeMatrixColumn(int columnIndex);
+  /// @brief: Removes one iteration from V,W matrices and adapts _matrixCols.
+  virtual void removeMatrixColumn(int columnIndex);
 
-   /// @brief: Removes one column form the V_RSLS and W_RSLS matrices and adapts _matrixCols_RSLS
-   void removeMatrixColumnRSLS(int columnINdex);
-
+  /// @brief: Removes one column form the V_RSLS and W_RSLS matrices and adapts _matrixCols_RSLS
+  void removeMatrixColumnRSLS(int columnINdex);
 };
-
-}}} // namespace precice, cplscheme, impl
+}
+}
+} // namespace precice, cplscheme, impl
 
 #endif /* PRECICE_NO_MPI */

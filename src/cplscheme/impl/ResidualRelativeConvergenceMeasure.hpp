@@ -1,24 +1,17 @@
 #pragma once
 
-#include "ConvergenceMeasure.hpp"
-#include "../CouplingData.hpp"
-#include "logging/Logger.hpp"
 #include <limits>
+#include "../CouplingData.hpp"
+#include "ConvergenceMeasure.hpp"
+#include "logging/Logger.hpp"
 #include "utils/MasterSlave.hpp"
 
-namespace precice {
-   namespace cplscheme {
-      namespace tests {
-         class RelativeConvergenceMeasureTest;
-      }
-   }
-}
-
-// ----------------------------------------------------------- CLASS DEFINITION
-
-namespace precice {
-namespace cplscheme {
-namespace impl {
+namespace precice
+{
+namespace cplscheme
+{
+namespace impl
+{
 
 /**
  * @brief Measures the convergence from an old data set to a new one.
@@ -34,77 +27,75 @@ namespace impl {
 class ResidualRelativeConvergenceMeasure : public ConvergenceMeasure
 {
 public:
-
-   /**
+  /**
     * @brief Constructor.
     *
-    * @param convergenceLimitPercent [IN]
+    * @param[in] convergenceLimitPercent
     *        Limit to define convergence relative to the norm of the current
     *        new dataset. Has to be in $] 0 ; 1 ]$.
     */
-   ResidualRelativeConvergenceMeasure ( double convergenceLimitPercent );
+  explicit ResidualRelativeConvergenceMeasure(double convergenceLimitPercent);
 
-   virtual ~ResidualRelativeConvergenceMeasure () {};
+  virtual ~ResidualRelativeConvergenceMeasure(){};
 
-   virtual void newMeasurementSeries ()
-   {
-      _isConvergence = false;
-      _isFirstIteration = true;
-      _normFirstResidual = std::numeric_limits<double>::max ();
-   }
+  virtual void newMeasurementSeries()
+  {
+    _isConvergence     = false;
+    _isFirstIteration  = true;
+    _normFirstResidual = std::numeric_limits<double>::max();
+  }
 
-   virtual void measure (
-      const Eigen::VectorXd& oldValues,
-      const Eigen::VectorXd& newValues,
-      const Eigen::VectorXd& designSpecification)
-   {
-      _normDiff = utils::MasterSlave::l2norm((newValues - oldValues) - designSpecification);
-      if ( _isFirstIteration ) {
-         _normFirstResidual = _normDiff;
-         _isFirstIteration = false;
-      }
-      _isConvergence = _normDiff < _normFirstResidual * _convergenceLimitPercent;
-//      INFO("Residual Relative convergence measure: "
-//                    << "two-norm differences = " << normDiff
-//                    << ", convergence limit = "
-//                    << _normFirstResidual * _convergenceLimitPercent
-//                    << ", convergence = " << _isConvergence );
-   }
+  virtual void measure(
+      const Eigen::VectorXd &oldValues,
+      const Eigen::VectorXd &newValues,
+      const Eigen::VectorXd &designSpecification)
+  {
+    _normDiff = utils::MasterSlave::l2norm((newValues - oldValues) - designSpecification);
+    if (_isFirstIteration) {
+      _normFirstResidual = _normDiff;
+      _isFirstIteration  = false;
+    }
+    _isConvergence = _normDiff < _normFirstResidual * _convergenceLimitPercent;
+    //      INFO("Residual Relative convergence measure: "
+    //                    << "two-norm differences = " << normDiff
+    //                    << ", convergence limit = "
+    //                    << _normFirstResidual * _convergenceLimitPercent
+    //                    << ", convergence = " << _isConvergence );
+  }
 
-   virtual bool isConvergence () const
-   {
-      return _isConvergence;
-   }
+  virtual bool isConvergence() const
+  {
+    return _isConvergence;
+  }
 
-   /**
-    * @brief Adds current convergence information to output stream.
-    */
-   virtual std::string printState()
-   {
-     std::ostringstream os;
-     os << "residual relative convergence measure: ";
-     os << "two-norm diff = " << _normDiff;
-     os << ", relative limit = " << _normFirstResidual * _convergenceLimitPercent;
-     os << ", conv = ";
-     if (_isConvergence) os << "true";
-     else os << "false";
-     return os.str();
-   }
+  /// Adds current convergence information to output stream.
+  virtual std::string printState()
+  {
+    std::ostringstream os;
+    os << "residual relative convergence measure: ";
+    os << "two-norm diff = " << _normDiff;
+    os << ", relative limit = " << _normFirstResidual * _convergenceLimitPercent;
+    os << ", conv = ";
+    if (_isConvergence)
+      os << "true";
+    else
+      os << "false";
+    return os.str();
+  }
 
 private:
+  static logging::Logger _log;
 
-   static logging::Logger _log;
+  double _convergenceLimitPercent;
 
-   double _convergenceLimitPercent;
+  bool _isFirstIteration;
 
-   bool _isFirstIteration;
+  double _normFirstResidual;
 
-   double _normFirstResidual;
+  double _normDiff;
 
-   double _normDiff;
-
-   bool _isConvergence;
+  bool _isConvergence;
 };
-
-}}} // namespace precice, cplscheme, impl
-
+}
+}
+} // namespace precice, cplscheme, impl
