@@ -5,7 +5,6 @@
 #include "cplscheme/impl/SharedPointer.hpp"
 #include "cplscheme/impl/ValuePreconditioner.hpp"
 #include "testing/Testing.hpp"
-#include "utils/MasterSlave.hpp"
 
 BOOST_AUTO_TEST_SUITE(CplSchemeTests)
 
@@ -250,9 +249,6 @@ BOOST_AUTO_TEST_CASE(testMultilpleMeshes)
 BOOST_AUTO_TEST_CASE(testParallelMatrixScaling,
                      *testing::OnSize(4) * boost::unit_test::fixture<testing::MasterComFixture>())
 {
-
-  utils::Parallel::synchronizeProcesses();
-
   //setup data
   int localN = -1;
   if (utils::Parallel::getProcessRank() == 0) {
@@ -327,12 +323,6 @@ BOOST_AUTO_TEST_CASE(testParallelMatrixScaling,
   precond.revert(V);
 
   BOOST_TEST(testing::equals(V, V_back));
-
-  utils::MasterSlave::_slaveMode  = false;
-  utils::MasterSlave::_masterMode = false;
-  utils::Parallel::clearGroups();
-  utils::Parallel::synchronizeProcesses();
-  utils::MasterSlave::_communication = nullptr;
 }
 #endif
 
