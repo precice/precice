@@ -399,7 +399,7 @@ struct SerialImplicitCouplingSchemeFixture
     }
   }
 
-  void connect
+  void connect // TODO this function occurs in multiple tests. Move this to a common fixture? see https://github.com/precice/precice/issues/90
   (
       const std::string&      participant0,
       const std::string&      participant1,

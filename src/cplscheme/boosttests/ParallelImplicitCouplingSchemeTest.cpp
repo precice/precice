@@ -33,7 +33,7 @@ using namespace precice::cplscheme;
 
 BOOST_AUTO_TEST_SUITE(CplSchemeTests)
 
-struct ParallelImplicitCouplingSchemeFixture
+struct ParallelImplicitCouplingSchemeFixture  // TODO fixtures in cplscheme/boosttests are a candidate for refactoring, lots of copy paste code.
 {
   using DataMap = std::map<int,PtrCouplingData>;
 
@@ -43,7 +43,7 @@ struct ParallelImplicitCouplingSchemeFixture
     _pathToTests = utils::getPathToSources() + "/cplscheme/boosttests/";
   }
 
-  void connect(
+  void connect( // TODO this function occurs in multiple tests. Move this to a common fixture? see https://github.com/precice/precice/issues/90
       const std::string&      participant0,
       const std::string&      participant1,
       const std::string&      localParticipant,
