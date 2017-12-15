@@ -5,7 +5,7 @@
 
 namespace precice {
 namespace cplscheme {
-namespace tests {
+namespace boosttests {
 
 logging::Logger DummyCouplingScheme::
    _log("cplscheme::tests::DummyCouplingScheme");
@@ -28,7 +28,6 @@ void DummyCouplingScheme:: initialize
   double startTime,
   int    startTimesteps )
 {
-  TRACE(startTime, startTimesteps);
   assertion(not _isInitialized);
   _isInitialized = true;
   _isOngoing = true;
@@ -38,7 +37,6 @@ void DummyCouplingScheme:: initialize
 
 void DummyCouplingScheme:: advance()
 {
-  TRACE(_iterations, _timesteps);
   assertion(_isInitialized);
   assertion(_isOngoing);
   if (_iterations == _numberIterations){
@@ -53,7 +51,6 @@ void DummyCouplingScheme:: advance()
 
 void DummyCouplingScheme:: finalize()
 {
-  TRACE();
   assertion(_isInitialized);
   assertion(not _isOngoing);
 }
@@ -68,7 +65,6 @@ bool DummyCouplingScheme:: isActionRequired
 (
   const std::string& actionName ) const
 {
-  TRACE(actionName);
   if (_numberIterations > 1){
     if (actionName == constants::actionWriteIterationCheckpoint()){
       if (_iterations == 1) {

@@ -7,7 +7,7 @@
 
 namespace precice {
 namespace cplscheme {
-namespace tests {
+namespace boosttests {
 
 /**
  * @brief Used to test CompositionalCouplingScheme.
