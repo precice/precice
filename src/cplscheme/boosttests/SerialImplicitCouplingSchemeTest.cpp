@@ -26,396 +26,374 @@ using namespace precice::cplscheme;
 
 BOOST_AUTO_TEST_SUITE(CplSchemeTests)
 
-struct SerialImplicitCouplingSchemeFixture
-{
-  std::string _pathToTests;
-  const std::string MY_WRITE_CHECKPOINT = constants::actionWriteIterationCheckpoint();
-  const std::string MY_READ_CHECKPOINT = constants::actionReadIterationCheckpoint();
-
-  SerialImplicitCouplingSchemeFixture(){
-    _pathToTests = utils::getPathToSources() + "/cplscheme/boosttests/";
-  }
-
-  void runCoupling
-  (
+void runCoupling(
       CouplingScheme&                cplScheme,
       const std::string&             nameParticipant,
       const mesh::MeshConfiguration& meshConfig,
       const std::vector<int>&        validIterations )
-  {
-    BOOST_TEST(meshConfig.meshes().size() == 1);
-    mesh::PtrMesh mesh = meshConfig.meshes()[0];
-    BOOST_TEST(mesh->data().size() == 2);
-    BOOST_TEST(mesh->vertices().size() > 0);
-    mesh::Vertex& vertex = mesh->vertices()[0];
-    int index = vertex.getID();
-    auto& dataValues0 = mesh->data()[0]->values();
-    auto& dataValues1 = mesh->data()[1]->values();
-    double initialStepsizeData0 = 5.0;
-    double stepsizeData0 = 5.0;
-    Eigen::VectorXd initialStepsizeData1 = Eigen::VectorXd::Constant(3, 5.0);
-    Eigen::VectorXd stepsizeData1 = Eigen::VectorXd::Constant(3, 5.0);
-    double computedTime = 0.0;
-    int computedTimesteps = 0;
-    std::string nameParticipant0("participant0");
-    std::string nameParticipant1("participant1");
-    assertion ((nameParticipant == nameParticipant0) || (nameParticipant == nameParticipant1));
-    int iterationCount = 0;
-    std::vector<int>::const_iterator iterValidIterations = validIterations.begin();
+{
+  BOOST_TEST(meshConfig.meshes().size() == 1);
+  mesh::PtrMesh mesh = meshConfig.meshes()[0];
+  BOOST_TEST(mesh->data().size() == 2);
+  BOOST_TEST(mesh->vertices().size() > 0);
+  mesh::Vertex& vertex = mesh->vertices()[0];
+  int index = vertex.getID();
+  auto& dataValues0 = mesh->data()[0]->values();
+  auto& dataValues1 = mesh->data()[1]->values();
+  double initialStepsizeData0 = 5.0;
+  double stepsizeData0 = 5.0;
+  Eigen::VectorXd initialStepsizeData1 = Eigen::VectorXd::Constant(3, 5.0);
+  Eigen::VectorXd stepsizeData1 = Eigen::VectorXd::Constant(3, 5.0);
+  double computedTime = 0.0;
+  int computedTimesteps = 0;
+  std::string nameParticipant0("participant0");
+  std::string nameParticipant1("participant1");
+  assertion ((nameParticipant == nameParticipant0) || (nameParticipant == nameParticipant1));
+  int iterationCount = 0;
+  std::vector<int>::const_iterator iterValidIterations = validIterations.begin();
 
-    if( nameParticipant == nameParticipant0 ){
-      cplScheme.initialize ( 0.0, 1);
-      BOOST_TEST(not cplScheme.isCouplingTimestepComplete());
-      BOOST_TEST(cplScheme.isActionRequired(MY_WRITE_CHECKPOINT));
-      BOOST_TEST(not cplScheme.isActionRequired(MY_READ_CHECKPOINT));
-      BOOST_TEST(not cplScheme.hasDataBeenExchanged());
+  if( nameParticipant == nameParticipant0 ){
+    cplScheme.initialize ( 0.0, 1);
+    BOOST_TEST(not cplScheme.isCouplingTimestepComplete());
+    BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
+    BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
+    BOOST_TEST(not cplScheme.hasDataBeenExchanged());
 
-      // Tells coupling scheme, that a checkpoint has been created.
-      // All required actions have to be performed before calling advance().
-      cplScheme.performedAction(MY_WRITE_CHECKPOINT);
-      BOOST_TEST(not cplScheme.isActionRequired(MY_WRITE_CHECKPOINT));
+    // Tells coupling scheme, that a checkpoint has been created.
+    // All required actions have to be performed before calling advance().
+    cplScheme.performedAction(constants::actionWriteIterationCheckpoint());
+    BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
 
-      while ( cplScheme.isCouplingOngoing() ) {
-        dataValues0[index] += stepsizeData0;
-        // The max timestep length is required to be obeyed.
-        double maxLengthTimestep = cplScheme.getNextTimestepMaxLength();
-        cplScheme.addComputedTime ( maxLengthTimestep);
-        cplScheme.advance();
-        iterationCount++;
-        // A coupling timestep is complete, when the coupling iterations are
-        // globally converged and if subcycling steps have filled one global
-        // timestep.
-        if ( cplScheme.isCouplingTimestepComplete() ) {
-          // Advance participant time and timestep
-          computedTime += maxLengthTimestep;
-          computedTimesteps ++;
-          BOOST_TEST(testing::equals(computedTime, cplScheme.getTime() ));
-          BOOST_TEST(testing::equals(computedTimesteps, cplScheme.getTimesteps()-1 ));
-          // The iteration number is enforced by the controlled decrease of the
-          // change of data written
-          BOOST_TEST(testing::equals(iterationCount, *iterValidIterations ));
-          if ( cplScheme.isCouplingOngoing() ) {
-            BOOST_TEST(cplScheme.isActionRequired(MY_WRITE_CHECKPOINT));
-            cplScheme.performedAction(MY_WRITE_CHECKPOINT);
-            BOOST_TEST(not cplScheme.isActionRequired(MY_WRITE_CHECKPOINT));
-          }
-          else {
-            BOOST_TEST(not cplScheme.isActionRequired(MY_WRITE_CHECKPOINT));
-            BOOST_TEST(not cplScheme.isActionRequired(MY_READ_CHECKPOINT ));
-          }
-          iterationCount = 0;
-          iterValidIterations++;
-          if ( iterValidIterations == validIterations.end() ) {
-            BOOST_TEST(not cplScheme.isCouplingOngoing());
-          }
-          // Reset data values, to simulate same convergence behavior of
-          // interface values in next timestep.
-          stepsizeData0 = initialStepsizeData0;
+    while ( cplScheme.isCouplingOngoing() ) {
+      dataValues0[index] += stepsizeData0;
+      // The max timestep length is required to be obeyed.
+      double maxLengthTimestep = cplScheme.getNextTimestepMaxLength();
+      cplScheme.addComputedTime ( maxLengthTimestep);
+      cplScheme.advance();
+      iterationCount++;
+      // A coupling timestep is complete, when the coupling iterations are
+      // globally converged and if subcycling steps have filled one global
+      // timestep.
+      if ( cplScheme.isCouplingTimestepComplete() ) {
+        // Advance participant time and timestep
+        computedTime += maxLengthTimestep;
+        computedTimesteps ++;
+        BOOST_TEST(testing::equals(computedTime, cplScheme.getTime() ));
+        BOOST_TEST(testing::equals(computedTimesteps, cplScheme.getTimesteps()-1 ));
+        // The iteration number is enforced by the controlled decrease of the
+        // change of data written
+        BOOST_TEST(testing::equals(iterationCount, *iterValidIterations ));
+        if ( cplScheme.isCouplingOngoing() ) {
+          BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
+          cplScheme.performedAction(constants::actionWriteIterationCheckpoint());
+          BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
         }
-        else { // coupling timestep is not yet complete
-          BOOST_TEST(cplScheme.isCouplingOngoing());
-          BOOST_TEST(iterationCount < *iterValidIterations);
-          BOOST_TEST(cplScheme.isActionRequired(MY_READ_CHECKPOINT));
-          cplScheme.performedAction ( MY_READ_CHECKPOINT);
-          BOOST_TEST(not cplScheme.isActionRequired(MY_READ_CHECKPOINT));
+        else {
+          BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
+          BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint() ));
+        }
+        iterationCount = 0;
+        iterValidIterations++;
+        if ( iterValidIterations == validIterations.end() ) {
+          BOOST_TEST(not cplScheme.isCouplingOngoing());
+        }
+        // Reset data values, to simulate same convergence behavior of
+        // interface values in next timestep.
+        stepsizeData0 = initialStepsizeData0;
+      }
+      else { // coupling timestep is not yet complete
+        BOOST_TEST(cplScheme.isCouplingOngoing());
+        BOOST_TEST(iterationCount < *iterValidIterations);
+        BOOST_TEST(cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
+        cplScheme.performedAction ( constants::actionReadIterationCheckpoint());
+        BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
+        // The written data value is decreased in a regular manner, in order
+        // to achieve a predictable convergence.
+        stepsizeData0 -= 1.0;
+      }
+      // the first participant always receives new data
+      //if(cplScheme.isCouplingOngoing())
+      BOOST_TEST(cplScheme.hasDataBeenExchanged());
+    }
+    cplScheme.finalize (); // Ends the coupling scheme
+    BOOST_TEST(testing::equals(computedTime, 0.3 ));
+    BOOST_TEST(testing::equals(computedTimesteps, 3 ));
+  }
+  else if (nameParticipant == nameParticipant1) {
+    cplScheme.initialize ( 0.0, 1);
+    BOOST_TEST(not cplScheme.isCouplingTimestepComplete());
+    BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
+    BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
+    BOOST_TEST(cplScheme.hasDataBeenExchanged());
+
+    // Tells coupling scheme, that a checkpoint has been created.
+    // All required actions have to be performed before calling advance().
+    cplScheme.performedAction ( constants::actionWriteIterationCheckpoint());
+    BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
+
+    while ( cplScheme.isCouplingOngoing() ) {
+      Eigen::VectorXd currentData(3);
+      currentData = dataValues1.segment(index * 3, 3);
+      currentData += stepsizeData1;
+      dataValues1.segment(index * 3, 3) = currentData;
+      // The max timestep length is required to be obeyed.
+      double maxLengthTimestep = cplScheme.getNextTimestepMaxLength();
+      cplScheme.addComputedTime ( maxLengthTimestep);
+      cplScheme.advance();
+      iterationCount++;
+      // A coupling timestep is complete, when the coupling iterations are
+      // globally converged and if subcycling steps have filled one global
+      // timestep.
+      if ( cplScheme.isCouplingTimestepComplete() ) {
+        // Advance participant time and timestep
+        computedTime += maxLengthTimestep;
+        computedTimesteps ++;
+        BOOST_TEST(testing::equals(computedTime, cplScheme.getTime() ));
+        BOOST_TEST(testing::equals(computedTimesteps, cplScheme.getTimesteps()-1 ));
+        // The iterations are enforced by the controlled decrease of the
+        // change of data written
+        BOOST_TEST(testing::equals(iterationCount, *iterValidIterations ));
+        if ( cplScheme.isCouplingOngoing() ) {
+          BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
+          cplScheme.performedAction ( constants::actionWriteIterationCheckpoint());
+          BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
+        }
+        else {
+          BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
+          BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint() ));
+        }
+        iterationCount = 0;
+        iterValidIterations++;
+        if ( iterValidIterations == validIterations.end() ) {
+          BOOST_TEST(not cplScheme.isCouplingOngoing());
+        }
+        // Reset data values, to simulate same convergence behavior of
+        // interface values in next timestep.
+        stepsizeData1 = initialStepsizeData1;
+      }
+      else { // coupling timestep is not yet complete
+        BOOST_TEST(cplScheme.isCouplingOngoing());
+        BOOST_TEST(iterationCount < *iterValidIterations);
+        BOOST_TEST(cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
+        // The load checkpoint action requires to fallback to the cplScheme of the
+        // first implicit iteration of the current timestep/time.
+        cplScheme.performedAction ( constants::actionReadIterationCheckpoint());
+        BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
+        // The written data value is decreased in a regular manner, in order
+        // to achieve a predictable convergence.
+        //stepsizeData1 -= 1.0;
+        stepsizeData1 -= Eigen::Vector3d::Constant(1.0);
+      }
+      // only check if data is received
+      if(cplScheme.isCouplingOngoing())
+        BOOST_TEST(cplScheme.hasDataBeenExchanged());
+    }
+    cplScheme.finalize (); // Ends the coupling scheme
+    BOOST_TEST(testing::equals(computedTime, 0.3 ));
+    BOOST_TEST(testing::equals(computedTimesteps, 3 ));
+  }
+}
+
+void runCouplingWithSubcycling
+(
+    CouplingScheme&                cplScheme,
+    const std::string&             nameParticipant,
+    const mesh::MeshConfiguration& meshConfig,
+    const std::vector<int>&        validIterations )
+{
+  BOOST_TEST(meshConfig.meshes().size() == 1);
+  mesh::PtrMesh mesh = meshConfig.meshes()[0];
+  BOOST_TEST(mesh->data().size() == 2);
+  BOOST_TEST(mesh->vertices().size() > 0);
+  double initialStepsizeData0 = 5.0;
+  double stepsizeData0 = 5.0;
+  Eigen::Vector3d initialStepsizeData1 = Eigen::Vector3d::Constant ( 5.0);
+  Eigen::Vector3d stepsizeData1 = Eigen::Vector3d::Constant( 5.0);
+  double computedTime = 0.0;
+  int computedTimesteps = 0;
+  std::string nameParticipant0 ( "participant0");
+  std::string nameParticipant1 ( "participant1");
+  assertion((nameParticipant == nameParticipant0) || (nameParticipant == nameParticipant1));
+  int iterationCount = 0;
+  std::vector<int>::const_iterator iterValidIterations =
+      validIterations.begin();
+
+  if ( nameParticipant == nameParticipant0 ) {
+    iterationCount++; // different handling due to subcycling
+    cplScheme.initialize ( 0.0, 1);
+    BOOST_TEST(not cplScheme.isCouplingTimestepComplete());
+    BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
+    BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
+    BOOST_TEST(not cplScheme.hasDataBeenExchanged());
+
+    // Tells coupling scheme, that a checkpoint has been created.
+    // All required actions have to be performed before calling advance().
+    cplScheme.performedAction ( constants::actionWriteIterationCheckpoint());
+    BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
+
+    double maxTimestepLength = cplScheme.getNextTimestepMaxLength();
+    double computedTimestepLength = maxTimestepLength / 2.0;
+    int subcyclingStep = 0;
+
+    // Main coupling loop
+    while ( cplScheme.isCouplingOngoing() ){
+      cplScheme.addComputedTime ( computedTimestepLength);
+      cplScheme.advance();
+      // A coupling timestep is complete, when the coupling iterations are
+      // globally converged and if subcycling steps have filled one global
+      // timestep.
+      if ( cplScheme.isCouplingTimestepComplete() ){
+        // Advance participant time and timestep
+        computedTime += maxTimestepLength;
+        computedTimesteps ++;
+        BOOST_TEST(testing::equals(computedTime, cplScheme.getTime()));
+        BOOST_TEST(testing::equals(computedTimesteps, cplScheme.getTimesteps()-1));
+        // The iteration number is enforced by the controlled decrease of the
+        // change of data written
+        BOOST_TEST(testing::equals(iterationCount, *iterValidIterations));
+        if ( cplScheme.isCouplingOngoing() ) {
+          BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
+          cplScheme.performedAction(constants::actionWriteIterationCheckpoint());
+          BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
+        }
+        else {
+          BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
+          BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint() ));
+        }
+        iterationCount = 1;
+        iterValidIterations++;
+        if (iterValidIterations == validIterations.end()) {
+          BOOST_TEST(not cplScheme.isCouplingOngoing());
+        }
+        // Reset data values, to simulate same convergence behavior of
+        // interface values in next timestep.
+        stepsizeData0 = initialStepsizeData0;
+        BOOST_TEST(testing::equals(subcyclingStep, 1));
+        subcyclingStep = 0;
+      }
+      else { // coupling timestep is not yet complete
+        BOOST_TEST(cplScheme.isCouplingOngoing());
+        // If length of global timestep is reached
+        if ( cplScheme.hasDataBeenExchanged() ) {
+          BOOST_TEST(iterationCount <= *iterValidIterations);
+          BOOST_TEST(cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
+          BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
+          cplScheme.performedAction ( constants::actionReadIterationCheckpoint());
+          BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
           // The written data value is decreased in a regular manner, in order
           // to achieve a predictable convergence.
           stepsizeData0 -= 1.0;
+          subcyclingStep = 0; // Subcycling steps
+          iterationCount++; // Implicit coupling iterations
         }
-        // the first participant always receives new data
-        //if(cplScheme.isCouplingOngoing())
-        BOOST_TEST(cplScheme.hasDataBeenExchanged());
+        else { // If subcycling
+          BOOST_TEST(iterationCount <= *iterValidIterations);
+          BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
+          BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
+          BOOST_TEST(subcyclingStep < 2);
+          subcyclingStep++;
+        }
       }
-      cplScheme.finalize (); // Ends the coupling scheme
-      BOOST_TEST(testing::equals(computedTime, 0.3 ));
-      BOOST_TEST(testing::equals(computedTimesteps, 3 ));
     }
-    else if (nameParticipant == nameParticipant1) {
-      cplScheme.initialize ( 0.0, 1);
-      BOOST_TEST(not cplScheme.isCouplingTimestepComplete());
-      BOOST_TEST(cplScheme.isActionRequired(MY_WRITE_CHECKPOINT));
-      BOOST_TEST(not cplScheme.isActionRequired(MY_READ_CHECKPOINT));
-      BOOST_TEST(cplScheme.hasDataBeenExchanged());
+    cplScheme.finalize (); // Ends the coupling scheme
+    BOOST_TEST(testing::equals(computedTime, 0.3));
+    BOOST_TEST(testing::equals(computedTimesteps, 3));
+  }
 
-      // Tells coupling scheme, that a checkpoint has been created.
-      // All required actions have to be performed before calling advance().
-      cplScheme.performedAction ( MY_WRITE_CHECKPOINT);
-      BOOST_TEST(not cplScheme.isActionRequired(MY_WRITE_CHECKPOINT));
+  else if ( nameParticipant == nameParticipant1 ) {
+    iterationCount++; // different handling due to subcycling
+    cplScheme.initialize ( 0.0, 1);
+    BOOST_TEST(not cplScheme.isCouplingTimestepComplete());
+    BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
+    BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
+    BOOST_TEST(cplScheme.hasDataBeenExchanged());
 
-      while ( cplScheme.isCouplingOngoing() ) {
-        Eigen::VectorXd currentData(3);
-        currentData = dataValues1.segment(index * 3, 3);
-        currentData += stepsizeData1;
-        dataValues1.segment(index * 3, 3) = currentData;
-        // The max timestep length is required to be obeyed.
-        double maxLengthTimestep = cplScheme.getNextTimestepMaxLength();
-        cplScheme.addComputedTime ( maxLengthTimestep);
-        cplScheme.advance();
-        iterationCount++;
-        // A coupling timestep is complete, when the coupling iterations are
-        // globally converged and if subcycling steps have filled one global
-        // timestep.
-        if ( cplScheme.isCouplingTimestepComplete() ) {
-          // Advance participant time and timestep
-          computedTime += maxLengthTimestep;
-          computedTimesteps ++;
-          BOOST_TEST(testing::equals(computedTime, cplScheme.getTime() ));
-          BOOST_TEST(testing::equals(computedTimesteps, cplScheme.getTimesteps()-1 ));
-          // The iterations are enforced by the controlled decrease of the
-          // change of data written
-          BOOST_TEST(testing::equals(iterationCount, *iterValidIterations ));
-          if ( cplScheme.isCouplingOngoing() ) {
-            BOOST_TEST(cplScheme.isActionRequired(MY_WRITE_CHECKPOINT));
-            cplScheme.performedAction ( MY_WRITE_CHECKPOINT);
-            BOOST_TEST(not cplScheme.isActionRequired(MY_WRITE_CHECKPOINT));
-          }
-          else {
-            BOOST_TEST(not cplScheme.isActionRequired(MY_WRITE_CHECKPOINT));
-            BOOST_TEST(not cplScheme.isActionRequired(MY_READ_CHECKPOINT ));
-          }
-          iterationCount = 0;
-          iterValidIterations++;
-          if ( iterValidIterations == validIterations.end() ) {
-            BOOST_TEST(not cplScheme.isCouplingOngoing());
-          }
-          // Reset data values, to simulate same convergence behavior of
-          // interface values in next timestep.
-          stepsizeData1 = initialStepsizeData1;
+    // Tells coupling scheme, that a checkpoint has been created.
+    // All required actions have to be performed before calling advance().
+    cplScheme.performedAction ( constants::actionWriteIterationCheckpoint());
+    BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
+
+    double maxTimestepLength = cplScheme.getNextTimestepMaxLength ();
+    double preferredTimestepLength = maxTimestepLength / 2.5;
+    double computedTimestepLength = preferredTimestepLength;
+    int subcyclingStep = 0;
+
+    // Main coupling loop
+    while ( cplScheme.isCouplingOngoing() ){
+      cplScheme.addComputedTime ( computedTimestepLength);
+      cplScheme.advance();
+      computedTimestepLength =
+          cplScheme.getNextTimestepMaxLength() < preferredTimestepLength
+          ? cplScheme.getNextTimestepMaxLength()
+              : preferredTimestepLength;
+      // A coupling timestep is complete, when the coupling iterations are
+      // globally converged and if subcycling steps have filled one global
+      // timestep.
+      if ( cplScheme.isCouplingTimestepComplete() ){
+        // Advance participant time and timestep
+        computedTime += maxTimestepLength;
+        computedTimesteps ++;
+        BOOST_TEST(testing::equals(computedTime, cplScheme.getTime()));
+        BOOST_TEST(testing::equals(computedTimesteps, cplScheme.getTimesteps()-1));
+        // The iteration number is enforced by the controlled decrease of the
+        // change of data written
+        BOOST_TEST(testing::equals(iterationCount, *iterValidIterations));
+        if ( cplScheme.isCouplingOngoing() ) {
+          BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
+          cplScheme.performedAction(constants::actionWriteIterationCheckpoint());
+          BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
         }
-        else { // coupling timestep is not yet complete
-          BOOST_TEST(cplScheme.isCouplingOngoing());
-          BOOST_TEST(iterationCount < *iterValidIterations);
-          BOOST_TEST(cplScheme.isActionRequired(MY_READ_CHECKPOINT));
-          // The load checkpoint action requires to fallback to the cplScheme of the
-          // first implicit iteration of the current timestep/time.
-          cplScheme.performedAction ( MY_READ_CHECKPOINT);
-          BOOST_TEST(not cplScheme.isActionRequired(MY_READ_CHECKPOINT));
+        else {
+          BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
+          BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint() ));
+        }
+        iterationCount = 1;
+        iterValidIterations++;
+        if ( iterValidIterations == validIterations.end() ) {
+          BOOST_TEST(not cplScheme.isCouplingOngoing());
+        }
+        // Reset data values, to simulate same convergence behavior of
+        // interface values in next timestep.
+        stepsizeData1 = initialStepsizeData1;
+        BOOST_TEST(testing::equals(subcyclingStep, 2));
+        subcyclingStep = 0;
+      }
+      else { // coupling timestep is not yet complete
+        BOOST_TEST(cplScheme.isCouplingOngoing());
+        // If length of global timestep is reached
+        if ( cplScheme.hasDataBeenExchanged() ) {
+          BOOST_TEST(iterationCount <= *iterValidIterations);
+          BOOST_TEST(cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
+          BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
+          cplScheme.performedAction ( constants::actionReadIterationCheckpoint());
+          BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
           // The written data value is decreased in a regular manner, in order
           // to achieve a predictable convergence.
-          //stepsizeData1 -= 1.0;
-          stepsizeData1 -= Eigen::Vector3d::Constant(1.0);
+          stepsizeData1.array() -= 1.0;
+          subcyclingStep = 0; // Subcycling steps
+          iterationCount++; // Implicit coupling iterations
         }
-        // only check if data is received
-        if(cplScheme.isCouplingOngoing())
-          BOOST_TEST(cplScheme.hasDataBeenExchanged());
+        else { // If subcycling
+          BOOST_TEST(iterationCount <= *iterValidIterations);
+          BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
+          BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
+          BOOST_TEST(subcyclingStep < 3);
+          subcyclingStep++;
+        }
       }
-      cplScheme.finalize (); // Ends the coupling scheme
-      BOOST_TEST(testing::equals(computedTime, 0.3 ));
-      BOOST_TEST(testing::equals(computedTimesteps, 3 ));
     }
+    cplScheme.finalize (); // Ends the coupling scheme
+    BOOST_TEST(testing::equals(computedTime, 0.3));
+    BOOST_TEST(testing::equals(computedTimesteps, 3));
   }
+}
 
-  void runCouplingWithSubcycling
-  (
-      CouplingScheme&                cplScheme,
-      const std::string&             nameParticipant,
-      const mesh::MeshConfiguration& meshConfig,
-      const std::vector<int>&        validIterations )
-  {
-    BOOST_TEST(meshConfig.meshes().size() == 1);
-    mesh::PtrMesh mesh = meshConfig.meshes()[0];
-    BOOST_TEST(mesh->data().size() == 2);
-    BOOST_TEST(mesh->vertices().size() > 0);
-    double initialStepsizeData0 = 5.0;
-    double stepsizeData0 = 5.0;
-    Eigen::Vector3d initialStepsizeData1 = Eigen::Vector3d::Constant ( 5.0);
-    Eigen::Vector3d stepsizeData1 = Eigen::Vector3d::Constant( 5.0);
-    double computedTime = 0.0;
-    int computedTimesteps = 0;
-    std::string nameParticipant0 ( "participant0");
-    std::string nameParticipant1 ( "participant1");
-    assertion((nameParticipant == nameParticipant0) || (nameParticipant == nameParticipant1));
-    int iterationCount = 0;
-    std::vector<int>::const_iterator iterValidIterations =
-        validIterations.begin();
+struct SerialImplicitCouplingSchemeFixture
+{
+  std::string _pathToTests;
 
-    if ( nameParticipant == nameParticipant0 ) {
-      iterationCount++; // different handling due to subcycling
-      cplScheme.initialize ( 0.0, 1);
-      BOOST_TEST(not cplScheme.isCouplingTimestepComplete());
-      BOOST_TEST(cplScheme.isActionRequired(MY_WRITE_CHECKPOINT));
-      BOOST_TEST(not cplScheme.isActionRequired(MY_READ_CHECKPOINT));
-      BOOST_TEST(not cplScheme.hasDataBeenExchanged());
-
-      // Tells coupling scheme, that a checkpoint has been created.
-      // All required actions have to be performed before calling advance().
-      cplScheme.performedAction ( MY_WRITE_CHECKPOINT);
-      BOOST_TEST(not cplScheme.isActionRequired(MY_WRITE_CHECKPOINT));
-
-      double maxTimestepLength = cplScheme.getNextTimestepMaxLength();
-      double computedTimestepLength = maxTimestepLength / 2.0;
-      int subcyclingStep = 0;
-
-      // Main coupling loop
-      while ( cplScheme.isCouplingOngoing() ){
-        cplScheme.addComputedTime ( computedTimestepLength);
-        cplScheme.advance();
-        // A coupling timestep is complete, when the coupling iterations are
-        // globally converged and if subcycling steps have filled one global
-        // timestep.
-        if ( cplScheme.isCouplingTimestepComplete() ){
-          // Advance participant time and timestep
-          computedTime += maxTimestepLength;
-          computedTimesteps ++;
-          BOOST_TEST(testing::equals(computedTime, cplScheme.getTime()));
-          BOOST_TEST(testing::equals(computedTimesteps, cplScheme.getTimesteps()-1));
-          // The iteration number is enforced by the controlled decrease of the
-          // change of data written
-          BOOST_TEST(testing::equals(iterationCount, *iterValidIterations));
-          if ( cplScheme.isCouplingOngoing() ) {
-            BOOST_TEST(cplScheme.isActionRequired(MY_WRITE_CHECKPOINT));
-            cplScheme.performedAction(MY_WRITE_CHECKPOINT);
-            BOOST_TEST(not cplScheme.isActionRequired(MY_WRITE_CHECKPOINT));
-          }
-          else {
-            BOOST_TEST(not cplScheme.isActionRequired(MY_WRITE_CHECKPOINT));
-            BOOST_TEST(not cplScheme.isActionRequired(MY_READ_CHECKPOINT ));
-          }
-          iterationCount = 1;
-          iterValidIterations++;
-          if (iterValidIterations == validIterations.end()) {
-            BOOST_TEST(not cplScheme.isCouplingOngoing());
-          }
-          // Reset data values, to simulate same convergence behavior of
-          // interface values in next timestep.
-          stepsizeData0 = initialStepsizeData0;
-          BOOST_TEST(testing::equals(subcyclingStep, 1));
-          subcyclingStep = 0;
-        }
-        else { // coupling timestep is not yet complete
-          BOOST_TEST(cplScheme.isCouplingOngoing());
-          // If length of global timestep is reached
-          if ( cplScheme.hasDataBeenExchanged() ) {
-            BOOST_TEST(iterationCount <= *iterValidIterations);
-            BOOST_TEST(cplScheme.isActionRequired(MY_READ_CHECKPOINT));
-            BOOST_TEST(not cplScheme.isActionRequired(MY_WRITE_CHECKPOINT));
-            cplScheme.performedAction ( MY_READ_CHECKPOINT);
-            BOOST_TEST(not cplScheme.isActionRequired(MY_READ_CHECKPOINT));
-            // The written data value is decreased in a regular manner, in order
-            // to achieve a predictable convergence.
-            stepsizeData0 -= 1.0;
-            subcyclingStep = 0; // Subcycling steps
-            iterationCount++; // Implicit coupling iterations
-          }
-          else { // If subcycling
-            BOOST_TEST(iterationCount <= *iterValidIterations);
-            BOOST_TEST(not cplScheme.isActionRequired(MY_READ_CHECKPOINT));
-            BOOST_TEST(not cplScheme.isActionRequired(MY_WRITE_CHECKPOINT));
-            BOOST_TEST(subcyclingStep < 2);
-            subcyclingStep++;
-          }
-        }
-      }
-      cplScheme.finalize (); // Ends the coupling scheme
-      BOOST_TEST(testing::equals(computedTime, 0.3));
-      BOOST_TEST(testing::equals(computedTimesteps, 3));
-    }
-
-    else if ( nameParticipant == nameParticipant1 ) {
-      iterationCount++; // different handling due to subcycling
-      cplScheme.initialize ( 0.0, 1);
-      BOOST_TEST(not cplScheme.isCouplingTimestepComplete());
-      BOOST_TEST(cplScheme.isActionRequired(MY_WRITE_CHECKPOINT));
-      BOOST_TEST(not cplScheme.isActionRequired(MY_READ_CHECKPOINT));
-      BOOST_TEST(cplScheme.hasDataBeenExchanged());
-
-      // Tells coupling scheme, that a checkpoint has been created.
-      // All required actions have to be performed before calling advance().
-      cplScheme.performedAction ( MY_WRITE_CHECKPOINT);
-      BOOST_TEST(not cplScheme.isActionRequired(MY_WRITE_CHECKPOINT));
-
-      double maxTimestepLength = cplScheme.getNextTimestepMaxLength ();
-      double preferredTimestepLength = maxTimestepLength / 2.5;
-      double computedTimestepLength = preferredTimestepLength;
-      int subcyclingStep = 0;
-
-      // Main coupling loop
-      while ( cplScheme.isCouplingOngoing() ){
-        cplScheme.addComputedTime ( computedTimestepLength);
-        cplScheme.advance();
-        computedTimestepLength =
-            cplScheme.getNextTimestepMaxLength() < preferredTimestepLength
-            ? cplScheme.getNextTimestepMaxLength()
-                : preferredTimestepLength;
-        // A coupling timestep is complete, when the coupling iterations are
-        // globally converged and if subcycling steps have filled one global
-        // timestep.
-        if ( cplScheme.isCouplingTimestepComplete() ){
-          // Advance participant time and timestep
-          computedTime += maxTimestepLength;
-          computedTimesteps ++;
-          BOOST_TEST(testing::equals(computedTime, cplScheme.getTime()));
-          BOOST_TEST(testing::equals(computedTimesteps, cplScheme.getTimesteps()-1));
-          // The iteration number is enforced by the controlled decrease of the
-          // change of data written
-          BOOST_TEST(testing::equals(iterationCount, *iterValidIterations));
-          if ( cplScheme.isCouplingOngoing() ) {
-            BOOST_TEST(cplScheme.isActionRequired(MY_WRITE_CHECKPOINT));
-            cplScheme.performedAction(MY_WRITE_CHECKPOINT);
-            BOOST_TEST(not cplScheme.isActionRequired(MY_WRITE_CHECKPOINT));
-          }
-          else {
-            BOOST_TEST(not cplScheme.isActionRequired(MY_WRITE_CHECKPOINT));
-            BOOST_TEST(not cplScheme.isActionRequired(MY_READ_CHECKPOINT ));
-          }
-          iterationCount = 1;
-          iterValidIterations++;
-          if ( iterValidIterations == validIterations.end() ) {
-            BOOST_TEST(not cplScheme.isCouplingOngoing());
-          }
-          // Reset data values, to simulate same convergence behavior of
-          // interface values in next timestep.
-          stepsizeData1 = initialStepsizeData1;
-          BOOST_TEST(testing::equals(subcyclingStep, 2));
-          subcyclingStep = 0;
-        }
-        else { // coupling timestep is not yet complete
-          BOOST_TEST(cplScheme.isCouplingOngoing());
-          // If length of global timestep is reached
-          if ( cplScheme.hasDataBeenExchanged() ) {
-            BOOST_TEST(iterationCount <= *iterValidIterations);
-            BOOST_TEST(cplScheme.isActionRequired(MY_READ_CHECKPOINT));
-            BOOST_TEST(not cplScheme.isActionRequired(MY_WRITE_CHECKPOINT));
-            cplScheme.performedAction ( MY_READ_CHECKPOINT);
-            BOOST_TEST(not cplScheme.isActionRequired(MY_READ_CHECKPOINT));
-            // The written data value is decreased in a regular manner, in order
-            // to achieve a predictable convergence.
-            stepsizeData1.array() -= 1.0;
-            subcyclingStep = 0; // Subcycling steps
-            iterationCount++; // Implicit coupling iterations
-          }
-          else { // If subcycling
-            BOOST_TEST(iterationCount <= *iterValidIterations);
-            BOOST_TEST(not cplScheme.isActionRequired(MY_READ_CHECKPOINT));
-            BOOST_TEST(not cplScheme.isActionRequired(MY_WRITE_CHECKPOINT));
-            BOOST_TEST(subcyclingStep < 3);
-            subcyclingStep++;
-          }
-        }
-      }
-      cplScheme.finalize (); // Ends the coupling scheme
-      BOOST_TEST(testing::equals(computedTime, 0.3));
-      BOOST_TEST(testing::equals(computedTimesteps, 3));
-    }
-  }
-
-  void connect // TODO this function occurs in multiple tests. Move this to a common fixture? see https://github.com/precice/precice/issues/90
-  (
-      const std::string&      participant0,
-      const std::string&      participant1,
-      const std::string&      localParticipant,
-      m2n::PtrM2N& communication )
-  {
-    assertion( communication.use_count() > 0);
-    assertion( not communication->isConnected());
-    utils::Parallel::splitCommunicator(localParticipant);
-    if (participant0 == localParticipant ) {
-      communication->requestMasterConnection (participant1, participant0);
-    }
-    else {
-      assertion (participant1 == localParticipant);
-      communication->acceptMasterConnection (participant1, participant0);
-    }
+  SerialImplicitCouplingSchemeFixture(){
+    _pathToTests = utils::getPathToSources() + "/cplscheme/boosttests/";
   }
 };
 
@@ -531,7 +509,9 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
 }
 
 /// Test that runs on 2 processors.
-BOOST_AUTO_TEST_CASE(testAbsConvergenceMeasureSynchronized, * testing::MinRanks(2) * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
+BOOST_FIXTURE_TEST_CASE(testAbsConvergenceMeasureSynchronized, testing::M2NFixture,
+                      * testing::MinRanks(2)
+                      * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
 {
   if (utils::Parallel::getCommunicatorSize() != 2) // only run test on ranks {0,1}, for other ranks return
     return;
@@ -555,8 +535,6 @@ BOOST_AUTO_TEST_CASE(testAbsConvergenceMeasureSynchronized, * testing::MinRanks(
   meshConfig.addMesh(mesh);
 
   // Create all parameters necessary to create an ImplicitCouplingScheme object
-  com::PtrCommunication communication(new com::MPIDirectCommunication());
-  m2n::PtrM2N globalCom(new m2n::M2N(communication, m2n::DistributedComFactory::SharedPointer()));
   double maxTime = 1.0;
   int maxTimesteps = 3;
   double timestepLength = 0.1;
@@ -579,7 +557,7 @@ BOOST_AUTO_TEST_CASE(testAbsConvergenceMeasureSynchronized, * testing::MinRanks(
   // Create the coupling scheme object
   cplscheme::SerialCouplingScheme cplScheme (
       maxTime, maxTimesteps, timestepLength, 16, nameParticipant0,
-      nameParticipant1, nameLocalParticipant, globalCom, constants::FIXED_DT,
+      nameParticipant1, nameLocalParticipant, m2n, constants::FIXED_DT,
       BaseCouplingScheme::Implicit, 100
   );
   cplScheme.addDataToSend (mesh->data()[sendDataIndex], mesh, false);
@@ -593,12 +571,12 @@ BOOST_AUTO_TEST_CASE(testAbsConvergenceMeasureSynchronized, * testing::MinRanks(
 
   // Expected iterations per implicit timesptep
   std::vector<int> validIterations = {5, 5, 5};
-  connect ("participant0", "participant1", nameLocalParticipant, globalCom);
   runCoupling (cplScheme, nameLocalParticipant, meshConfig, validIterations);
 }
 
-/// Test that runs on 2 processors.
-BOOST_AUTO_TEST_CASE(testConfiguredAbsConvergenceMeasureSynchronized, * testing::MinRanks(2) * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
+BOOST_AUTO_TEST_CASE(testConfiguredAbsConvergenceMeasureSynchronized,
+                   * testing::MinRanks(2)
+                   * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
 {
   if (utils::Parallel::getCommunicatorSize() != 2) // only run test on ranks {0,1}, for other ranks return
     return;
@@ -607,14 +585,6 @@ BOOST_AUTO_TEST_CASE(testConfiguredAbsConvergenceMeasureSynchronized, * testing:
 
   std::string configurationPath (
       _pathToTests + "serial-implicit-cplscheme-absolute-config.xml");
-
-  std::string nameLocalParticipant ("");
-  if (utils::Parallel::getProcessRank() == 0 ) {
-    nameLocalParticipant = "participant0";
-  }
-  else if (utils::Parallel::getProcessRank() == 1 ) {
-    nameLocalParticipant = "participant1";
-  }
 
   xml::XMLTag root = xml::getRootTag();
   PtrDataConfiguration dataConfig(new DataConfiguration(root));
@@ -636,13 +606,27 @@ BOOST_AUTO_TEST_CASE(testConfiguredAbsConvergenceMeasureSynchronized, * testing:
   meshConfig->meshes()[0]->allocateDataValues();
 
   std::vector<int> validIterations = {5, 5, 5};
-  connect ("participant0", "participant1", nameLocalParticipant, m2n);
+
+  std::string nameLocalParticipant ("");
+  if (utils::Parallel::getProcessRank() == 0 ) {
+    nameLocalParticipant = "participant0";
+    utils::Parallel::splitCommunicator(nameLocalParticipant);
+    m2n->requestMasterConnection ("participant1", "participant0");
+  }
+  else if (utils::Parallel::getProcessRank() == 1 ) {
+    nameLocalParticipant = "participant1";
+    utils::Parallel::splitCommunicator(nameLocalParticipant);
+    m2n->acceptMasterConnection ("participant1", "participant0");
+  }
+
   runCoupling (*cplSchemeConfig.getCouplingScheme(nameLocalParticipant),
       nameLocalParticipant, *meshConfig, validIterations);
+  utils::Parallel::clearGroups();
 }
 
-/// Test that runs on 2 processors.
-BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronized, * testing::MinRanks(2) * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
+BOOST_FIXTURE_TEST_CASE(testMinIterConvergenceMeasureSynchronized, testing::M2NFixture,
+                      * testing::MinRanks(2)
+                      * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
 {
   if (utils::Parallel::getCommunicatorSize() != 2) // only run test on ranks {0,1}, for other ranks return
     return;
@@ -664,8 +648,6 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronized, * testing::MinRa
   meshConfig.addMesh (mesh);
 
   // Create all parameters necessary to create an ImplicitCouplingScheme object
-  com::PtrCommunication communication (new com::MPIDirectCommunication);
-  m2n::PtrM2N globalCom (new m2n::M2N(communication, m2n::DistributedComFactory::SharedPointer()));
   double maxTime = 1.0;
   int maxTimesteps = 3;
   double timestepLength = 0.1;
@@ -688,7 +670,7 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronized, * testing::MinRa
   // Create the coupling scheme object
   cplscheme::SerialCouplingScheme cplScheme (
       maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
-      nameLocalParticipant, globalCom, constants::FIXED_DT,
+      nameLocalParticipant, m2n, constants::FIXED_DT,
       BaseCouplingScheme::Implicit, 100);
   cplScheme.addDataToSend (mesh->data()[sendDataIndex], mesh, false);
   cplScheme.addDataToReceive (mesh->data()[receiveDataIndex], mesh, false);
@@ -702,12 +684,12 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronized, * testing::MinRa
 
   // Expected iterations per implicit timesptep
   std::vector<int> validIterations = {3, 3, 3};
-  connect ("participant0", "participant1", nameLocalParticipant, globalCom);
   runCoupling (cplScheme, nameLocalParticipant, meshConfig, validIterations);
 }
 
-/// Test that runs on 2 processors.
-BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronizedWithSubcycling, * testing::MinRanks(2) * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
+BOOST_FIXTURE_TEST_CASE(testMinIterConvergenceMeasureSynchronizedWithSubcycling, testing::M2NFixture,
+                      * testing::MinRanks(2)
+                      * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
 {
   if (utils::Parallel::getCommunicatorSize() != 2) // only run test on ranks {0,1}, for other ranks return
     return;
@@ -729,8 +711,6 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronizedWithSubcycling, * 
   meshConfig.addMesh ( mesh);
 
   // Create all parameters necessary to create an ImplicitCouplingScheme object
-  com::PtrCommunication communication ( new com::MPIDirectCommunication);
-  m2n::PtrM2N globalCom ( new m2n::M2N(communication, m2n::DistributedComFactory::SharedPointer()));
   double maxTime = 1.0;
   int maxTimesteps = 3;
   double timestepLength = 0.1;
@@ -756,7 +736,7 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronizedWithSubcycling, * 
   // Create the coupling scheme object
   cplscheme::SerialCouplingScheme cplScheme (
       maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
-      nameLocalParticipant, globalCom, constants::FIXED_DT,
+      nameLocalParticipant, m2n, constants::FIXED_DT,
       BaseCouplingScheme::Implicit, 100);
   cplScheme.addDataToSend ( mesh->data()[sendDataIndex], mesh, false);
   cplScheme.addDataToReceive ( mesh->data()[receiveDataIndex], mesh, false);
@@ -767,13 +747,13 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronizedWithSubcycling, * 
       new cplscheme::impl::MinIterationConvergenceMeasure(minIterations));
   cplScheme.addConvergenceMeasure (
       mesh->data()[1]->getID(), false, false, minIterationConvMeasure1);
-  connect ( "participant0", "participant1", nameLocalParticipant, globalCom);
   runCouplingWithSubcycling (
       cplScheme, nameLocalParticipant, meshConfig, validIterations);
 }
 
-/// Test that runs on 2 processors.
-BOOST_AUTO_TEST_CASE(testInitializeData, * testing::MinRanks(2) * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
+BOOST_FIXTURE_TEST_CASE(testInitializeData, testing::M2NFixture,
+                   * testing::MinRanks(2)
+                   * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
 {
   if (utils::Parallel::getCommunicatorSize() != 2) // only run test on ranks {0,1}, for other ranks return
     return;
@@ -797,8 +777,6 @@ BOOST_AUTO_TEST_CASE(testInitializeData, * testing::MinRanks(2) * boost::unit_te
   meshConfig.addMesh(mesh);
 
   // Create all parameters necessary to create an ImplicitCouplingScheme object
-  com::PtrCommunication communication(new com::MPIDirectCommunication);
-  m2n::PtrM2N globalCom ( new m2n::M2N(communication, m2n::DistributedComFactory::SharedPointer()));
   double maxTime = 1.0;
   int maxTimesteps = 3;
   double timestepLength = 0.1;
@@ -823,7 +801,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData, * testing::MinRanks(2) * boost::unit_te
   // Create the coupling scheme object
   cplscheme::SerialCouplingScheme cplScheme(
       maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
-      nameLocalParticipant, globalCom, constants::FIXED_DT,
+      nameLocalParticipant, m2n, constants::FIXED_DT,
       BaseCouplingScheme::Implicit, 100);
   cplScheme.addDataToSend(mesh->data()[sendDataIndex], mesh, initData);
   cplScheme.addDataToReceive(mesh->data()[receiveDataIndex], mesh, not initData);
@@ -834,7 +812,6 @@ BOOST_AUTO_TEST_CASE(testInitializeData, * testing::MinRanks(2) * boost::unit_te
       new cplscheme::impl::MinIterationConvergenceMeasure(minIterations));
   cplScheme.addConvergenceMeasure (
       mesh->data()[1]->getID(), false, false, minIterationConvMeasure1);
-  connect(nameParticipant0, nameParticipant1, nameLocalParticipant, globalCom);
 
   std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
