@@ -37,34 +37,8 @@ void validate_result_equals_reference(
   }
 }
 
-BOOST_AUTO_TEST_CASE(ParVectorOperations)
+BOOST_AUTO_TEST_CASE(ParVectorOperations, * boost::unit_test::fixture<testing::MasterComFixture>())
 {
-  com::PtrCommunication masterSlaveCom = com::PtrCommunication(new com::MPIDirectCommunication());
-  utils::MasterSlave::_communication   = masterSlaveCom;
-
-  utils::Parallel::synchronizeProcesses();
-
-  if (utils::Parallel::getProcessRank() == 0) { //Master
-    utils::Parallel::splitCommunicator("SOLIDZMaster");
-  } else if (utils::Parallel::getProcessRank() == 1) { //Slave1
-    utils::Parallel::splitCommunicator("SOLIDZSlaves");
-  } else if (utils::Parallel::getProcessRank() == 2) { //Slave2
-    utils::Parallel::splitCommunicator("SOLIDZSlaves");
-  } else if (utils::Parallel::getProcessRank() == 3) { //Slave3
-    utils::Parallel::splitCommunicator("SOLIDZSlaves");
-  }
-
-  if (utils::Parallel::getProcessRank() == 0) { //Master
-    masterSlaveCom->acceptConnection("SOLIDZMaster", "SOLIDZSlaves", 0, 1);
-    masterSlaveCom->setRankOffset(1);
-  } else if (utils::Parallel::getProcessRank() == 1) { //Slave1
-    masterSlaveCom->requestConnection("SOLIDZMaster", "SOLIDZSlaves", 0, 3);
-  } else if (utils::Parallel::getProcessRank() == 2) { //Slave2
-    masterSlaveCom->requestConnection("SOLIDZMaster", "SOLIDZSlaves", 1, 3);
-  } else if (utils::Parallel::getProcessRank() == 3) { //Slave3
-    masterSlaveCom->requestConnection("SOLIDZMaster", "SOLIDZSlaves", 2, 3);
-  }
-
   int              n_global = 10;
   int              n_local;
   double           a = 0;
@@ -100,40 +74,16 @@ BOOST_AUTO_TEST_CASE(ParVectorOperations)
 
   // <vec1, vec2> = 7.069617899295469
 
-  // initialize MasterSlave attributes
-  if (utils::Parallel::getProcessRank() == 0) { //Master
-    utils::MasterSlave::_rank       = 0;
-    utils::MasterSlave::_size       = 4;
-    utils::MasterSlave::_slaveMode  = false;
-    utils::MasterSlave::_masterMode = true;
-
+  if (utils::Parallel::getProcessRank() == 0) {
     n_local = 3;
     a       = 1;
-
-  } else if (utils::Parallel::getProcessRank() == 1) { //Slave1
-    utils::MasterSlave::_rank       = 1;
-    utils::MasterSlave::_size       = 4;
-    utils::MasterSlave::_slaveMode  = true;
-    utils::MasterSlave::_masterMode = false;
-
+  } else if (utils::Parallel::getProcessRank() == 1) {
     n_local = 4;
     a       = 2;
-
-  } else if (utils::Parallel::getProcessRank() == 2) { //Slave2
-    utils::MasterSlave::_rank       = 2;
-    utils::MasterSlave::_size       = 4;
-    utils::MasterSlave::_slaveMode  = true;
-    utils::MasterSlave::_masterMode = false;
-
+  } else if (utils::Parallel::getProcessRank() == 2) {
     n_local = 0;
     a       = 3;
-
-  } else if (utils::Parallel::getProcessRank() == 3) { //Slave3
-    utils::MasterSlave::_rank       = 3;
-    utils::MasterSlave::_size       = 4;
-    utils::MasterSlave::_slaveMode  = true;
-    utils::MasterSlave::_masterMode = false;
-
+  } else if (utils::Parallel::getProcessRank() == 3) {
     n_local = 3;
     a       = 4;
   }
@@ -197,45 +147,10 @@ BOOST_AUTO_TEST_CASE(ParVectorOperations)
   BOOST_TEST(testing::equals(normVec1, 1.502540907218387));
   BOOST_TEST(testing::equals(normVec2, 6.076423472407709));
   BOOST_TEST(testing::equals(dotproduct, 7.069617899295469));
-
-  utils::Parallel::synchronizeProcesses();
-
-  // close and shutdown MasterSlave communication
-  utils::MasterSlave::_communication->closeConnection();
-  utils::MasterSlave::_slaveMode  = false;
-  utils::MasterSlave::_masterMode = false;
-  utils::Parallel::clearGroups();
-  utils::MasterSlave::_communication = nullptr;
 }
 
-BOOST_AUTO_TEST_CASE(ParallelMatrixMatrixOp)
+BOOST_AUTO_TEST_CASE(ParallelMatrixMatrixOp,  * boost::unit_test::fixture<testing::MasterComFixture>())
 {
-  com::PtrCommunication masterSlaveCom = com::PtrCommunication(new com::MPIDirectCommunication());
-  utils::MasterSlave::_communication   = masterSlaveCom;
-
-  utils::Parallel::synchronizeProcesses();
-
-  if (utils::Parallel::getProcessRank() == 0) { //Master
-    utils::Parallel::splitCommunicator("SOLIDZMaster");
-  } else if (utils::Parallel::getProcessRank() == 1) { //Slave1
-    utils::Parallel::splitCommunicator("SOLIDZSlaves");
-  } else if (utils::Parallel::getProcessRank() == 2) { //Slave2
-    utils::Parallel::splitCommunicator("SOLIDZSlaves");
-  } else if (utils::Parallel::getProcessRank() == 3) { //Slave3
-    utils::Parallel::splitCommunicator("SOLIDZSlaves");
-  }
-
-  if (utils::Parallel::getProcessRank() == 0) { //Master
-    masterSlaveCom->acceptConnection("SOLIDZMaster", "SOLIDZSlaves", 0, 1);
-    masterSlaveCom->setRankOffset(1);
-  } else if (utils::Parallel::getProcessRank() == 1) { //Slave1
-    masterSlaveCom->requestConnection("SOLIDZMaster", "SOLIDZSlaves", 0, 3);
-  } else if (utils::Parallel::getProcessRank() == 2) { //Slave2
-    masterSlaveCom->requestConnection("SOLIDZMaster", "SOLIDZSlaves", 1, 3);
-  } else if (utils::Parallel::getProcessRank() == 3) { //Slave3
-    masterSlaveCom->requestConnection("SOLIDZMaster", "SOLIDZSlaves", 2, 3);
-  }
-
   com::PtrCommunication _cyclicCommLeft  = com::PtrCommunication(new com::MPIPortsCommunication("."));
   com::PtrCommunication _cyclicCommRight = com::PtrCommunication(new com::MPIPortsCommunication("."));
 
@@ -334,37 +249,13 @@ BOOST_AUTO_TEST_CASE(ParallelMatrixMatrixOp)
       1.803781441584700,
       1.462976489192458;
 
-  // initialize MasterSlave attributes
-  if (utils::Parallel::getProcessRank() == 0) { //Master
-    utils::MasterSlave::_rank       = 0;
-    utils::MasterSlave::_size       = 4;
-    utils::MasterSlave::_slaveMode  = false;
-    utils::MasterSlave::_masterMode = true;
-
+  if (utils::Parallel::getProcessRank() == 0) {
     n_local = 3;
-
-  } else if (utils::Parallel::getProcessRank() == 1) { //Slave1
-    utils::MasterSlave::_rank       = 1;
-    utils::MasterSlave::_size       = 4;
-    utils::MasterSlave::_slaveMode  = true;
-    utils::MasterSlave::_masterMode = false;
-
+  } else if (utils::Parallel::getProcessRank() == 1) {
     n_local = 4;
-
-  } else if (utils::Parallel::getProcessRank() == 2) { //Slave2
-    utils::MasterSlave::_rank       = 2;
-    utils::MasterSlave::_size       = 4;
-    utils::MasterSlave::_slaveMode  = true;
-    utils::MasterSlave::_masterMode = false;
-
+  } else if (utils::Parallel::getProcessRank() == 2) {
     n_local = 0;
-
-  } else if (utils::Parallel::getProcessRank() == 3) { //Slave3
-    utils::MasterSlave::_rank       = 3;
-    utils::MasterSlave::_size       = 4;
-    utils::MasterSlave::_slaveMode  = true;
-    utils::MasterSlave::_masterMode = false;
-
+  } else if (utils::Parallel::getProcessRank() == 3) {
     n_local = 3;
   }
 
@@ -436,7 +327,6 @@ BOOST_AUTO_TEST_CASE(ParallelMatrixMatrixOp)
   Eigen::MatrixXd matrix_cast = resJres_local2;
   validate_result_equals_reference(matrix_cast, Jres_global, vertexOffsets, true);
 
-  utils::MasterSlave::_communication->closeConnection();
   // close and shut down cyclic communication connections
   if (_cyclicCommRight != nullptr || _cyclicCommLeft != nullptr) {
     if ((utils::Parallel::getProcessRank() % 2) == 0) {
@@ -449,11 +339,6 @@ BOOST_AUTO_TEST_CASE(ParallelMatrixMatrixOp)
     _cyclicCommRight = nullptr;
     _cyclicCommLeft  = nullptr;
   }
-
-  utils::MasterSlave::_slaveMode  = false;
-  utils::MasterSlave::_masterMode = false;
-  utils::Parallel::clearGroups();
-  utils::MasterSlave::_communication = nullptr;
 }
 
 BOOST_AUTO_TEST_SUITE_END()
