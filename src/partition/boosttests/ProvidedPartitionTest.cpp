@@ -80,9 +80,6 @@ void tearDownParallelEnvironment(){
 
 BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate2D, * testing::OnSize(4))
 {
-  utils::Parallel::setGlobalCommunicator(utils::Parallel::getRestrictedCommunicator({0,1,2,3}));
-  assertion(utils::Parallel::getCommunicatorSize() == 4);
-
   com::PtrCommunication participantCom =
       com::PtrCommunication(new com::MPIDirectCommunication());
   m2n::DistributedComFactory::SharedPointer distrFactory = m2n::DistributedComFactory::SharedPointer(
@@ -167,9 +164,6 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate2D, * testing::OnSize(4))
 
 BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate3D, * testing::OnSize(4))
 {
-  utils::Parallel::setGlobalCommunicator(utils::Parallel::getRestrictedCommunicator({0,1,2,3}));
-  assertion(utils::Parallel::getCommunicatorSize() == 4);
-
   com::PtrCommunication participantCom =
       com::PtrCommunication(new com::MPIDirectCommunication());
   m2n::DistributedComFactory::SharedPointer distrFactory = m2n::DistributedComFactory::SharedPointer(
@@ -286,45 +280,10 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate3D, * testing::OnSize(4))
 }
 
 
-BOOST_AUTO_TEST_CASE(TestOnlyDistribution2D, * testing::OnSize(4))
+BOOST_AUTO_TEST_CASE(TestOnlyDistribution2D,
+                     * testing::OnSize(4)
+                     * boost::unit_test::fixture<testing::MasterComFixture>())
 {
-  com::PtrCommunication masterSlaveCom = com::PtrCommunication(new com::MPIDirectCommunication());
-  utils::MasterSlave::_communication = masterSlaveCom;
-
-  if (utils::Parallel::getProcessRank() == 0){ //Master
-    utils::Parallel::splitCommunicator( "Master" );
-    utils::MasterSlave::_rank = 0;
-    utils::MasterSlave::_size = 4;
-    utils::MasterSlave::_slaveMode = false;
-    utils::MasterSlave::_masterMode = true;
-    masterSlaveCom->acceptConnection("Master", "Slaves", 0, 1);
-    masterSlaveCom->setRankOffset(1);
-  }
-  else if(utils::Parallel::getProcessRank() == 1){
-    utils::Parallel::splitCommunicator( "Slaves" );
-    utils::MasterSlave::_rank = 1;
-    utils::MasterSlave::_size = 4;
-    utils::MasterSlave::_slaveMode = true;
-    utils::MasterSlave::_masterMode = false;
-    masterSlaveCom->requestConnection("Master", "Slaves", 0, 3);
-  }
-  else if(utils::Parallel::getProcessRank() == 2){
-    utils::Parallel::splitCommunicator( "Slaves");
-    utils::MasterSlave::_rank = 2;
-    utils::MasterSlave::_size = 4;
-    utils::MasterSlave::_slaveMode = true;
-    utils::MasterSlave::_masterMode = false;
-    masterSlaveCom->requestConnection("Master", "Slaves", 1, 3);
-  }
-  else if(utils::Parallel::getProcessRank() == 3){
-    utils::Parallel::splitCommunicator( "Slaves");
-    utils::MasterSlave::_rank = 3;
-    utils::MasterSlave::_size = 4;
-    utils::MasterSlave::_slaveMode = true;
-    utils::MasterSlave::_masterMode = false;
-    masterSlaveCom->requestConnection("Master", "Slaves", 2, 3);
-  }
-
   // Create mesh object
   std::string meshName ( "MyMesh" );
   int dim = 2;
@@ -354,7 +313,6 @@ BOOST_AUTO_TEST_CASE(TestOnlyDistribution2D, * testing::OnSize(4))
   ProvidedPartition part(pMesh, hasToSend);
   part.communicate();
   part.compute();
-
 
   if (utils::Parallel::getProcessRank() == 0) { //Master
     BOOST_TEST(pMesh->getGlobalNumberOfVertices() == 5);
@@ -404,8 +362,6 @@ BOOST_AUTO_TEST_CASE(TestOnlyDistribution2D, * testing::OnSize(4))
     BOOST_TEST(pMesh->vertices()[0].isOwner() == true);
     BOOST_TEST(pMesh->vertices()[1].isOwner() == true);
   }
-
-  tearDownParallelEnvironment();
 }
 
 
