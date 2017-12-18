@@ -6,6 +6,7 @@
 #include "com/MPIDirectCommunication.hpp"
 #include "com/MPIPortsCommunication.hpp"
 #include "cplscheme/Constants.hpp"
+#include "testing/Fixtures.hpp"
 #include "testing/Testing.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/Parallel.hpp"

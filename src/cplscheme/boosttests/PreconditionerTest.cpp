@@ -5,6 +5,7 @@
 #include "cplscheme/impl/SharedPointer.hpp"
 #include "cplscheme/impl/ValuePreconditioner.hpp"
 #include "testing/Testing.hpp"
+#include "testing/Fixtures.hpp"
 
 BOOST_AUTO_TEST_SUITE(CplSchemeTests)
 

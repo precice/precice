@@ -1,8 +1,8 @@
 #ifndef PRECICE_NO_MPI
 #include "testing/Testing.hpp"
+#include "testing/Fixtures.hpp"
 
 #include "partition/ProvidedPartition.hpp"
-
 #include "partition/ReceivedPartition.hpp"
 
 #include "utils/Parallel.hpp"

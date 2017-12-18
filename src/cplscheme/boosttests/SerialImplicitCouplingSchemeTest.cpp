@@ -18,6 +18,7 @@
 #include <Eigen/Core>
 
 #include "testing/Testing.hpp"
+#include "testing/Fixtures.hpp"
 
 using namespace precice;
 using namespace precice::cplscheme;

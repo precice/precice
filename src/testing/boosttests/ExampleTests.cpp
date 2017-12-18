@@ -1,5 +1,7 @@
 #include "testing/Testing.hpp"
+#include "testing/Fixtures.hpp" // include that for the more advanced fixtures, e.g. to build up m2n com
 #include "utils/Parallel.hpp" // only required when using something from utils::Parallel
+
 
 using namespace precice;
 
