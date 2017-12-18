@@ -48,31 +48,30 @@ void SerialCouplingScheme::initialize
   setTimesteps(startTimestep);
 
   if (_couplingMode == Implicit) {
-    preciceCheck(not getSendData().empty(), "initialize()", "No send data configured! Use explicit scheme for one-way coupling.");
+    CHECK(not getSendData().empty(), "No send data configured! Use explicit scheme for one-way coupling.");
     if (not doesFirstStep()) {
       if (not _convergenceMeasures.empty()) {
         setupConvergenceMeasures(); // needs _couplingData configured
         setupDataMatrices(getSendData()); // Reserve memory and initialize data with zero
       }
       if (getPostProcessing().get() != nullptr) {
-        preciceCheck(getPostProcessing()->getDataIDs().size()<2 ,"initialize()",
-                     "For serial coupling, the number of post-processing data vectors has to be 1 (or 0 for constant underrelaxation)");
+        CHECK(getPostProcessing()->getDataIDs().size()<2,
+              "For serial coupling, the number of post-processing data vectors has to be 1 (or 0 for constant underrelaxation)");
         getPostProcessing()->initialize(getSendData()); // Reserve memory, initialize
       }
     }
     else if (getPostProcessing().get() != nullptr && getPostProcessing()->getDataIDs().size()>0) {
       int dataID = *(getPostProcessing()->getDataIDs().begin());
-      preciceCheck(getSendData(dataID) == nullptr, "initialize()",
-                   "In case of serial coupling, post-processing can be defined for "
-                   << "data of second participant only!");
+      CHECK(getSendData(dataID) == nullptr,
+            "In case of serial coupling, post-processing can be defined for "
+            << "data of second participant only!");
     }
     requireAction(constants::actionWriteIterationCheckpoint());
   }
 
   for (DataMap::value_type & pair : getSendData()) {
     if (pair.second->initialize) {
-      preciceCheck(not doesFirstStep(), "initialize()",
-                   "Only second participant can initialize data!");
+      CHECK(not doesFirstStep(), "Only second participant can initialize data!");
       DEBUG("Initialized data to be written");
       setHasToSendInitData(true);
       break;
@@ -81,8 +80,7 @@ void SerialCouplingScheme::initialize
 
   for (DataMap::value_type & pair : getReceiveData()) {
     if (pair.second->initialize) {
-      preciceCheck(doesFirstStep(), "initialize()",
-                   "Only first participant can receive initial data!");
+      CHECK(doesFirstStep(), "Only first participant can receive initial data!");
       DEBUG("Initialized data to be received");
       setHasToReceiveInitData(true);
     }
@@ -120,8 +118,8 @@ void SerialCouplingScheme::initializeData()
 
   DEBUG("Initializing Data ...");
 
-  preciceCheck(not (hasToSendInitData() && isActionRequired(constants::actionWriteInitialData())),
-               "initializeData()", "InitialData has to be written to preCICE before calling initializeData()");
+  CHECK(not (hasToSendInitData() && isActionRequired(constants::actionWriteInitialData())),
+        "InitialData has to be written to preCICE before calling initializeData()");
 
   setHasDataBeenExchanged(false);
 
@@ -176,8 +174,8 @@ void SerialCouplingScheme::advance()
   #endif
   checkCompletenessRequiredActions();
 
-  preciceCheck(not hasToReceiveInitData() && not hasToSendInitData(), "advance()",
-      "initializeData() needs to be called before advance if data has to be initialized!");
+  CHECK(not hasToReceiveInitData() && not hasToSendInitData(),
+        "initializeData() needs to be called before advance if data has to be initialized!");
 
   setHasDataBeenExchanged(false);
   setIsCouplingTimestepComplete(false);

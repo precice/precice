@@ -92,8 +92,7 @@ void PythonAction:: performAction
       //assertion(_targetValues == NULL);
       _targetValues =
           PyArray_SimpleNewFromData(1, targetDim, NPY_DOUBLE, targetValues);
-      preciceCheck(_targetValues != nullptr, "PythonAction()",
-                   "Creating python target values failed!");
+      CHECK(_targetValues != nullptr, "Creating python target values failed!");
       int argumentIndex = _sourceData.use_count() > 0 ? 3 : 2;
       PyTuple_SetItem(dataArgs, argumentIndex, _targetValues);
     }

@@ -137,8 +137,7 @@ void MeshConfiguration:: addMesh
         break;
       }
     }
-    preciceCheck(found, "addMesh()", "Data " << dataNewMesh->getName()
-                 << " is not available in data configuration!");
+    CHECK(found, "Data " << dataNewMesh->getName() << " is not available in data configuration!");
   }
   _meshes.push_back(mesh);
 }

@@ -1,12 +1,12 @@
-#ifndef PRECICE_NO_MPI
 #pragma once
+
+#ifndef PRECICE_NO_MPI
 
 #include "com/MPIPortsCommunication.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include "utils/Globals.hpp"
 #include "utils/MasterSlave.hpp"
-// #include "utils/Parallel.hpp"
 #include <Eigen/Core>
 
 namespace precice
@@ -255,7 +255,7 @@ private:
     }
   }
 
-  // @brief multiplies matrices based on a SAXPY-like block-wise computation with a rectangular result matrix of dimension n x m
+  /// Multiplies matrices based on a SAXPY-like block-wise computation with a rectangular result matrix of dimension n x m
   template <typename Derived1, typename Derived2>
   void _multiplyNM_block(
       Eigen::PlainObjectBase<Derived1> &leftMatrix,
@@ -267,7 +267,8 @@ private:
     TRACE();
 
     // ensure that both matrices are stored in the same order. Important for reduce function, that adds serialized data.
-    assertion(leftMatrix.IsRowMajor == rightMatrix.IsRowMajor, leftMatrix.IsRowMajor, rightMatrix.IsRowMajor);
+    assertion(static_cast<int>(leftMatrix.IsRowMajor) == static_cast<int>(rightMatrix.IsRowMajor),
+              leftMatrix.IsRowMajor, rightMatrix.IsRowMajor);
 
     // multiply local block (saxpy-based approach)
     // dimension: (n_global x n_local) * (n_local x m) = (n_global x m)

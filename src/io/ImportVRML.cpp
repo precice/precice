@@ -75,9 +75,9 @@ void ImportVRML:: doImport
   impl::VRML10Parser<MultiPassFileIter> vrmlParser(dimensions);
   bool success = spirit::qi::phrase_parse (
       first, last, vrmlParser, spirit::qi::space );
-  preciceCheck(success && (first == last), "doImport()",
-               "Parsing of file " << filename << " failed! Left over: "
-               << std::endl << std::string(first, last));
+  CHECK(success && (first == last),
+        "Parsing of file " << filename << " failed! Left over: "
+        << std::endl << std::string(first, last));
 
   // Construct vertex coordinates from parsed information
   if(_createMesh){
@@ -131,26 +131,24 @@ void ImportVRML:: doImport
     //for provided meshes, no vertices need to be created,
     //but we check if the ones given by the user coincide with the those read from file
 
-    preciceCheck(vrmlParser.coordinates.size()/dimensions == mesh.vertices().size(),
-        "doImport()",
-        "For the mesh " << mesh.getName() << ", " << mesh.vertices().size()
-        << " vertices were set, while " << vrmlParser.coordinates.size()/dimensions
-        << " vertices are read from file for restart.");
+    CHECK(vrmlParser.coordinates.size()/dimensions == mesh.vertices().size(),
+          "For the mesh " << mesh.getName() << ", " << mesh.vertices().size()
+          << " vertices were set, while " << vrmlParser.coordinates.size()/dimensions
+          << " vertices are read from file for restart.");
     if (dimensions == 2){
       for (size_t i=0; i < mesh.vertices().size(); i++){
-        preciceCheck((mesh.vertices()[i].getCoords()[0] == vrmlParser.coordinates[i*2])
-             && (mesh.vertices()[i].getCoords()[1] == vrmlParser.coordinates[i*2+1])                                                                ,
-            "doImport()","For mesh " << mesh.getName() << " the vertices that were set"
-            << " do not coincide with those read from file.");
+        CHECK((mesh.vertices()[i].getCoords()[0] == vrmlParser.coordinates[i*2])
+              && (mesh.vertices()[i].getCoords()[1] == vrmlParser.coordinates[i*2+1]),                                           "For mesh " << mesh.getName() << " the vertices that were set"
+              << " do not coincide with those read from file.");
       }
     }
     else { // 3D
       for (size_t i=0; i < mesh.vertices().size(); i++){
-        preciceCheck((mesh.vertices()[i].getCoords()[0] == vrmlParser.coordinates[i*3])
-             && (mesh.vertices()[i].getCoords()[1] == vrmlParser.coordinates[i*3+1])
-             && (mesh.vertices()[i].getCoords()[2] == vrmlParser.coordinates[i*3+2])   ,
-            "doImport()","For mesh " << mesh.getName() << " the vertices that were set"
-            << " do not coincide with those read from file.");
+        CHECK((mesh.vertices()[i].getCoords()[0] == vrmlParser.coordinates[i*3])
+              && (mesh.vertices()[i].getCoords()[1] == vrmlParser.coordinates[i*3+1])
+              && (mesh.vertices()[i].getCoords()[2] == vrmlParser.coordinates[i*3+2]),
+              "For mesh " << mesh.getName() << " the vertices that were set"
+              << " do not coincide with those read from file.");
       }
     }
   }
@@ -183,22 +181,21 @@ void ImportVRML:: doImport
                          << "\"" << vrmlData.dimensions << "\"!" );
       }
       Eigen::VectorXd& values = meshData->values();
-      preciceCheck(values.size() == (int)vrmlData.values.size(),
-                   "doImport()", "Number of data values from VRML file ("
-                   << vrmlData.values.size()
-                   << ") does not fit to number of expected data values ("
-                   << values.size() << ") for data \""
-                   << meshData->getName() << "\"!");
+      CHECK(values.size() == (int)vrmlData.values.size(),
+            "Number of data values from VRML file ("
+            << vrmlData.values.size()
+            << ") does not fit to number of expected data values ("
+            << values.size() << ") for data \""
+            << meshData->getName() << "\"!");
       for ( size_t i=0; i < vrmlData.values.size(); i++ ) {
          values(i) = vrmlData.values[i];
       }
    }
 
    // Add property containers
-   preciceCheck ( vrmlParser.propertyContainers.size()
-                  == mesh.propertyContainers().size(), "doImport()",
-                  "Number of property containers in VRML file does not equals "
-                  << "that of mesh from configuration!" );
+   CHECK(vrmlParser.propertyContainers.size() == mesh.propertyContainers().size(),
+         "Number of property containers in VRML file does not equals "
+         << "that of mesh from configuration!" );
    for (auto & elem : vrmlParser.propertyContainers) {
       std::string subIDName ( elem.subIDName );
       mesh::PropertyContainer& cont = mesh.getPropertyContainer(subIDName);

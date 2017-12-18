@@ -42,8 +42,6 @@
     ERROR(message);                                \
   }
 
-#define preciceCheck(check, methodname, message) CHECK(check, message)
-
 #ifdef NDEBUG 
 
 #define DEBUG(...)

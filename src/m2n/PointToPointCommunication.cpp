@@ -386,11 +386,11 @@ PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
                                             std::string const& nameRequester) {
   TRACE(nameAcceptor, nameRequester);
 
-  preciceCheck(not isConnected(), "acceptConnection()", "Already connected!");
+  CHECK(not isConnected(), "Already connected!");
 
-  preciceCheck(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode, "acceptConnection()",
-      "You can only use a point-to-point communication between two participants which both use a master. Please use " <<
-      "distribution-type gather-scatter instead.");
+  CHECK(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode,
+        "You can only use a point-to-point communication between two participants which both use a master. "
+        << "Please use distribution-type gather-scatter instead.");
 
   std::map<int, std::vector<int>>& vertexDistribution =
       _mesh->getVertexDistribution();
@@ -537,14 +537,13 @@ PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
                                              std::string const& nameRequester) {
   TRACE(nameAcceptor, nameRequester);
 
-  preciceCheck(not isConnected(), "requestConnection()", "Already connected!");
+  CHECK(not isConnected(), "Already connected!");
 
-  preciceCheck(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode, "acceptConnection()",
-      "You can only use a point-to-point communication between two participants which both use a master. Please use " <<
-      "distribution-type gather-scatter instead.");
+  CHECK(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode,
+        "You can only use a point-to-point communication between two participants which both use a master. "
+        << "Please use distribution-type gather-scatter instead.");
 
-  std::map<int, std::vector<int>>& vertexDistribution =
-      _mesh->getVertexDistribution();
+  std::map<int, std::vector<int>>& vertexDistribution = _mesh->getVertexDistribution();
   std::map<int, std::vector<int>> acceptorVertexDistribution;
 
   if (utils::MasterSlave::_masterMode) {

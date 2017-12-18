@@ -99,8 +99,7 @@ void DataConfiguration:: addData
 
   // Check, if data with same name has been added already
   for (auto & elem : _data) {
-    preciceCheck ( elem.name != data.name, "addData()",
-                   "Data \"" << data.name << "\" uses non-unique name!" );
+    CHECK ( elem.name != data.name, "Data \"" << data.name << "\" uses non-unique name!" );
   }
   _data.push_back ( data );
 }

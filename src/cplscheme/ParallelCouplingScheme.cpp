@@ -48,14 +48,13 @@ void ParallelCouplingScheme::initialize
   setTime(startTime);
   setTimesteps(startTimestep);
   if (_couplingMode == Implicit) {
-    preciceCheck(not getSendData().empty(), "initialize()", "No send data configured! Use explicit scheme for one-way coupling.");
+    CHECK(not getSendData().empty(), "No send data configured! Use explicit scheme for one-way coupling.");
     if (not doesFirstStep()) { // second participant
       setupConvergenceMeasures(); // needs _couplingData configured
       mergeData(); // merge send and receive data for all pp calls
       setupDataMatrices(getAllData()); // Reserve memory and initialize data with zero
       if (getPostProcessing().get() != nullptr) {
-        preciceCheck(getPostProcessing()->getDataIDs().size()==2 || getPostProcessing()->getDataIDs().size()==0 ,"initialize()",
-                     "For parallel coupling, the number of post-processing data vectors has to be 2 (or 0 for constant underrelaxation), not: "
+        CHECK(getPostProcessing()->getDataIDs().size()==2 || getPostProcessing()->getDataIDs().size()==0,                     "For parallel coupling, the number of post-processing data vectors has to be 2 (or 0 for constant underrelaxation), not: "
                      << getPostProcessing()->getDataIDs().size());
         getPostProcessing()->initialize(getAllData()); // Reserve memory, initialize
       }
@@ -95,8 +94,8 @@ void ParallelCouplingScheme::initializeData()
     return;
   }
 
-  preciceCheck(not (hasToSendInitData() && isActionRequired(constants::actionWriteInitialData())),
-               "initializeData()", "InitialData has to be written to preCICE before calling initializeData()");
+  CHECK(not (hasToSendInitData() && isActionRequired(constants::actionWriteInitialData())),
+        "InitialData has to be written to preCICE before calling initializeData()");
 
   setHasDataBeenExchanged(false);
 
@@ -168,8 +167,8 @@ void ParallelCouplingScheme::explicitAdvance()
 {
   TRACE();
   checkCompletenessRequiredActions();
-  preciceCheck(!hasToReceiveInitData() && !hasToSendInitData(), "advance()",
-               "initializeData() needs to be called before advance if data has to be initialized!");
+  CHECK(!hasToReceiveInitData() && !hasToSendInitData(),
+        "initializeData() needs to be called before advance if data has to be initialized!");
   setHasDataBeenExchanged(false);
   setIsCouplingTimestepComplete(false);
 
@@ -216,8 +215,8 @@ void ParallelCouplingScheme::implicitAdvance()
   TRACE(getTimesteps(), getTime());
   checkCompletenessRequiredActions();
 
-  preciceCheck(!hasToReceiveInitData() && !hasToSendInitData(), "advance()",
-               "initializeData() needs to be called before advance if data has to be initialized!");
+  CHECK(!hasToReceiveInitData() && !hasToSendInitData(),
+        "initializeData() needs to be called before advance if data has to be initialized!");
 
   setHasDataBeenExchanged(false);
   setIsCouplingTimestepComplete(false);
