@@ -1,8 +1,0 @@
-<?xml version="1.0"?>
-
-<coupling-scheme type="uncoupled">
-   PreCouplingScheme 
-   <participant name="participant" />
-   <max-time value="1.0" />
-   <max-timesteps value="10" />
-</coupling-scheme>
