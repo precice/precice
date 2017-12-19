@@ -21,6 +21,7 @@
 #include "utils/EigenHelperFunctions.hpp"
 
 #include "testing/Testing.hpp"
+#include "testing/Fixtures.hpp"
 
 using namespace precice;
 using namespace precice::cplscheme;
@@ -29,19 +30,13 @@ using namespace precice::cplscheme;
 
 BOOST_AUTO_TEST_SUITE(CplSchemeTests)
 
-struct PostProcessingMasterSlaveTestFixture
-{
-  using DataMap = std::map<int,PtrCouplingData>;
-};
+using DataMap = std::map<int,PtrCouplingData>;
 
-BOOST_FIXTURE_TEST_SUITE(PostProcessingMasterSlaveTests, PostProcessingMasterSlaveTestFixture)
+BOOST_AUTO_TEST_SUITE(PostProcessingMasterSlaveTests)
 
 /// Test that runs on 4 processors.
-BOOST_AUTO_TEST_CASE(testVIQNILSpp, * testing::MinRanks(4) * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1, 2, 3})) * boost::unit_test::fixture<testing::MasterComFixture>())
+BOOST_AUTO_TEST_CASE(testVIQNILSpp, * testing::OnSize(4) * boost::unit_test::fixture<testing::MasterComFixture>())
 {
-  if (utils::Parallel::getCommunicatorSize() != 4) // only run test on ranks {0,1,2,3}, for other ranks return
-    return;
-
   double initialRelaxation = 0.01;
   int    maxIterationsUsed = 50;
   int    timestepsReused = 6;
@@ -196,9 +191,7 @@ BOOST_AUTO_TEST_CASE(testVIQNILSpp, * testing::MinRanks(4) * boost::unit_test::f
     fpcd->oldValues.col(0) = fcol1;
   }
 
-  utils::Parallel::synchronizeProcesses();
   pp.performPostProcessing(data);
-  utils::Parallel::synchronizeProcesses();
 
   Eigen::VectorXd newdvalues;
   if (utils::Parallel::getProcessRank() == 0) { //Master
@@ -241,9 +234,7 @@ BOOST_AUTO_TEST_CASE(testVIQNILSpp, * testing::MinRanks(4) * boost::unit_test::f
 
   data.begin()->second->values = &newdvalues;
 
-  utils::Parallel::synchronizeProcesses();
   pp.performPostProcessing(data);
-  utils::Parallel::synchronizeProcesses();
 
   if (utils::Parallel::getProcessRank() == 0) { //Master
     BOOST_TEST(testing::equals((*data.at(0)->values)(0), -1.51483105223442748866e+00), (*data.at(0)->values)(0));
@@ -274,11 +265,8 @@ BOOST_AUTO_TEST_CASE(testVIQNILSpp, * testing::MinRanks(4) * boost::unit_test::f
 }
 
 /// Test that runs on 4 processors.
-BOOST_AUTO_TEST_CASE(testVIQNIMVJpp, * testing::MinRanks(4) * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1, 2, 3})) * boost::unit_test::fixture<testing::MasterComFixture>())
+BOOST_AUTO_TEST_CASE(testVIQNIMVJpp, * testing::OnSize(4) * boost::unit_test::fixture<testing::MasterComFixture>())
 {
-  if (utils::Parallel::getCommunicatorSize() != 4) // only run test on ranks {0,1,2,3}, for other ranks return
-    return;
-
   double initialRelaxation = 0.01;
   int    maxIterationsUsed = 50;
   int    timestepsReused = 6;
@@ -504,13 +492,9 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp, * testing::MinRanks(4) * boost::unit_test::
   }
 }
 
-#ifdef XXX
-/// Test that runs on 3 processors.
-BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp, * boost::unit_test::fixture<testing::MasterComFixture>() * testing::MinRanks(3) * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1, 2})))
+/// Test that runs on 4 processors.
+BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp, * testing::OnSize(4) * boost::unit_test::fixture<testing::MasterComFixture>())
 {
-  if (utils::Parallel::getCommunicatorSize() != 3) // only run test on ranks {0,1,2}, for other ranks return
-    return;
-
   // config:
   double initialRelaxation = 0.1;
   int    maxIterationsUsed = 30;
@@ -528,7 +512,7 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp, * boost::unit_test::fixture<testing:
   dataIDs.push_back(4);
   dataIDs.push_back(5);
   impl::PtrPreconditioner _preconditioner = impl::PtrPreconditioner (new impl::ResidualSumPreconditioner(-1));
-  std::vector<int> vertexOffsets {0, 11, 22};
+  std::vector<int> vertexOffsets {0, 11, 22, 22};
 
   mesh::PtrMesh dummyMesh ( new mesh::Mesh("dummyMesh", 2, false) );
   dummyMesh->setVertexOffsets(vertexOffsets);
@@ -549,11 +533,6 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp, * boost::unit_test::fixture<testing:
   DataMap data;
 
   if (utils::Parallel::getProcessRank() == 0) { //Master
-    utils::MasterSlave::_rank = 0;
-    utils::MasterSlave::_size = 3;
-    utils::MasterSlave::_slaveMode = false;
-    utils::MasterSlave::_masterMode = true;
-
     /**
      * processor with no vertices
      */
@@ -576,11 +555,6 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp, * boost::unit_test::fixture<testing:
     fpcd->oldValues.col(0) = foldValues;
 
   } else if (utils::Parallel::getProcessRank() == 1) { //Slave1
-    utils::MasterSlave::_rank = 1;
-    utils::MasterSlave::_size = 3;
-    utils::MasterSlave::_slaveMode = true;
-    utils::MasterSlave::_masterMode = false;
-
     /**
      * processor with 4 vertices
      */
@@ -609,11 +583,6 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp, * boost::unit_test::fixture<testing:
     fpcd->oldValues.col(0) = foldValues;
 
   } else if (utils::Parallel::getProcessRank() == 2) { //Slave2
-    utils::MasterSlave::_rank = 2;
-    utils::MasterSlave::_size = 3;
-    utils::MasterSlave::_slaveMode = true;
-    utils::MasterSlave::_masterMode = false;
-
     /**
      * processor with 4 vertices
      */
@@ -636,6 +605,27 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp, * boost::unit_test::fixture<testing:
     pp.initialize(data);
 
     fvalues << -0.01465589151503364,  -0.0002670111835650672,  0.05711438689366102,  0.0002383730129847531,  -0.01536098575916998,  -0.000285287812066552,  0.05638274807579218,  0.000283961973555227,  -0.006856432131857973,  -0.006815594391460808,  0.02901925611525407,  -0.02907380915674757,  0.05800715138289463,  9.667376010126116e-05,  -0.01376443700165205,  -9.547563271960956e-05,  0.05768190311116184,  0.0001311583226994801,  -0.01408147387131287,  -0.0001216961377915992,  -0.0163823504288376,  -0.0003874626690545313;
+
+    dpcd->oldValues.col(0) = doldValues;
+    fpcd->oldValues.col(0) = foldValues;
+  } else if (utils::Parallel::getProcessRank() == 3) { //Slave3
+    /**
+     * processor with no vertices
+     */
+
+    dvalues.resize(0); doldValues.resize(0);
+    fvalues.resize(0); foldValues.resize(0);
+
+    //init displacements
+    PtrCouplingData dpcd(new CouplingData(&dvalues,dummyMesh,false,2));
+
+    //init forces
+    PtrCouplingData fpcd(new CouplingData(&fvalues,dummyMesh,false,2));
+
+    data.insert(std::pair<int,PtrCouplingData>(4,dpcd));
+    data.insert(std::pair<int,PtrCouplingData>(5,fpcd));
+
+    pp.initialize(data);
 
     dpcd->oldValues.col(0) = doldValues;
     fpcd->oldValues.col(0) = foldValues;
@@ -699,6 +689,8 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp, * boost::unit_test::fixture<testing:
     dvalues    << 1.848184969639987e-06,  -1.983566187932991e-07,  1.952383060128974e-06,  1.050101286643166e-07,  2.020975712018586e-06,  -9.297459906882382e-08,  2.123910878481957e-06,  -3.349554682884977e-08,  0,  0,  0,  0,  7.715047421278781e-07,  2.958323850532032e-07,  6.5137785527863e-07,  -3.40165313149562e-07,  1.498023570500414e-06,  2.492038233690158e-07,  1.395223018993416e-06,  -3.150663149441921e-07,  1.954718171910318e-06,  -3.415637300374603e-08;
     fvalues    << -0.0146558918972568,  -0.000267011181975166,  0.05711438744699839,  0.0002383730136872111,  -0.0153609861368436,  -0.0002852878106683293,  0.05638274862725741,  0.0002839619744993407,  -0.00685643232676097,  -0.006815594586569211,  0.02901925639144463,  -0.02907380943293575,  0.05800715193585099,  9.667375963025685e-05,  -0.01376443739049903,  -9.547563172575954e-05,  0.05768190366530584,  0.0001311583223016465,  -0.01408147425699792,  -0.0001216961368213471,  -0.01638235080508845,  -0.0003874626694560972;
     foldValues << -0.001465589151503364,  -2.670111835650672e-05,  0.005711438689366103,  2.383730129847531e-05,  -0.001536098575916998,  -2.85287812066552e-05,  0.005638274807579218,  2.83961973555227e-05,  -0.0006856432131857974,  -0.0006815594391460808,  0.002901925611525407,  -0.002907380915674757,  0.005800715138289463,  9.667376010126117e-06,  -0.001376443700165206,  -9.547563271960956e-06,  0.005768190311116184,  1.311583226994801e-05,  -0.001408147387131287,  -1.216961377915992e-05,  -0.00163823504288376,  -3.874626690545313e-05;
+  } else if (utils::Parallel::getProcessRank() == 3) { //Slave3
+    // Dummy Slave to be able to reuse the 4 proc Master Slave Fixture
   }
 
   data.at(4)->oldValues.col(0) = doldValues;
@@ -763,6 +755,8 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp, * boost::unit_test::fixture<testing:
     doldValues << 2.253883807144274e-07,  -2.418982831708627e-08,  2.380954632167933e-07,  1.280611153486133e-08,  2.464604196428374e-07,  -1.133836421999323e-08,  2.590134870407767e-07,  -4.084822236363769e-09,  0,  0,  0,  0,  9.408593154806163e-08,  3.607711529166728e-08,  7.943631316463149e-08,  -4.148356921273439e-08,  1.826857767882953e-07,  3.039070609254422e-08,  1.701491258462493e-07,  -3.842271618341636e-08,  2.38380232908047e-07,  -4.165410783473636e-09;
     fvalues    << -0.01568208277628194,  -0.0002595395446636614,  0.0540328986967421,  0.0002362571305830931,  -0.01637736854863682,  -0.0002699645831085989,  0.05331751790879287,  0.0002707054191427001,  -0.007277539612331946,  -0.007235194100552225,  0.02757151633202504,  -0.02762772092892902,  0.05505877464319012,  0.0001052840945529276,  -0.01465499974491537,  -0.0001017767294585529,  0.05464614037258596,  0.0001424559420056945,  -0.01506072500921042,  -0.0001315030046882618,  -0.0173164149989076,  -0.0003474184175392483;
     foldValues << -0.01465589156164622,  -0.0002670111833711768,  0.05711438696114118,  0.0002383730130704187,  -0.01536098580522773,  -0.0002852878118960371,  0.05638274814304403,  0.0002839619736703628,  -0.006856432155626628,  -0.006815594415254513,  0.02901925614893584,  -0.02907380919042905,  0.05800715145032832,  9.667376004382162e-05,  -0.01376443704907241,  -9.547563259840837e-05,  0.05768190317874038,  0.0001311583226509638,  -0.01408147391834763,  -0.0001216961376732758,  -0.01638235047472185,  -0.0003874626691035027;
+  }  else if (utils::Parallel::getProcessRank() == 3) { //Slave3
+    // Dummy Slave to be able to reuse the 4 proc Master Slave Fixture
   }
 
   data.at(4)->oldValues.col(0) = doldValues;
@@ -827,6 +821,8 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp, * boost::unit_test::fixture<testing:
     doldValues << 1.773301313815872e-05,  -1.903469331632798e-06,  1.873284151703964e-05,  1.007255996407046e-06,  1.939089962749955e-05,  -8.922690925673692e-07,  2.037857848281338e-05,  -3.216215773080572e-07,  0,  0,  0,  0,  7.402516024117914e-06,  2.838268713863215e-06,  6.249761203424372e-06,  -3.263999161516882e-06,  1.437336512054573e-05,  2.390776372597577e-06,  1.338687393172981e-05,  -3.023290389839287e-06,  1.875511666670207e-05,  -3.278415622262174e-07;
     fvalues    << -0.09539527385890252,  0.0003208855941258066,  -0.1853399184726223,  7.203155656644242e-05,  -0.09532865072058605,  0.0009202649288056726,  -0.1847925968312873,  -0.0007589246108979722,  -0.03998875591551594,  -0.03982927597079221,  -0.08489044889406808,  0.08470593806523596,  -0.1739740974580442,  0.0007742373134568178,  -0.08383286811708256,  -0.0005911288917162662,  -0.1811747642897668,  0.001020161732709184,  -0.09112767929864005,  -0.0008931566039992005,  -0.08987332323372975,  0.002763113283891189;
     foldValues << -0.01540107886229656,  -0.0002615855206049247,  0.05487671246695029,  0.0002368365301820234,  -0.0160990505051311,  -0.0002741605822288765,  0.05415687969310452,  0.0002743355004921105,  -0.007162227035058467,  -0.007120294400987128,  0.02796795558583163,  -0.02802370793272083,  0.05586613813214418,  0.0001029263016352541,  -0.0144111353804976,  -0.0001000512803033142,  0.05547743301530601,  0.0001393622825766435,  -0.01479257484776803,  -0.0001288175608001121,  -0.01706063837893593,  -0.0003583838471874983;
+  } else if (utils::Parallel::getProcessRank() == 3) { //Slave3
+    // Dummy Slave to be able to reuse the 4 proc Master Slave Fixture
   }
 
 
@@ -892,6 +888,8 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp, * boost::unit_test::fixture<testing:
     doldValues << 1.686458723791834e-05,  -1.810446627874213e-06,  1.781592254220799e-05,  9.575750096228968e-07,  1.844107125032693e-05,  -8.488149913661512e-07,  1.938083795505493e-05,  -3.062726369792662e-07,  0,  0,  0,  0,  7.040556208586022e-06,  2.699202297106055e-06,  5.943687851414432e-06,  -3.104374082089934e-06,  1.367008353382051e-05,  2.273466384432095e-06,  1.27314174291305e-05,  -2.875442657958392e-06,  1.783629704415144e-05,  -3.12140240279707e-07;
     fvalues    << -0.09143825207871489,  0.0002922798859936043,  -0.1734744585823354,  8.018501629471556e-05,  -0.09140909287296797,  0.0008614262538692869,  -0.1729893406976169,  -0.0007078492982043917,  -0.03836482525057584,  -0.03821118279703851,  -0.07931609050916776,  0.07913795276507131,  -0.1626218046186428,  0.0007411076261039719,  -0.08039872451576649,  -0.0005667402343291361,  -0.1694857588798654,  0.0009766586358261331,  -0.0873517838382746,  -0.0008552683303008771,  -0.08627064033821233,  0.002609015553424872;
     foldValues << -0.01626734826572977,  -0.0002552779342950638,  0.05227538136126555,  0.0002350515292044683,  -0.01695703999572442,  -0.0002612258237118909,  0.05156927126324851,  0.0002631458821373055,  -0.007517710152292339,  -0.007474504607240594,  0.02674580053052369,  -0.02680294718917284,  0.05337717466458169,  0.0001101957844225173,  -0.01516291356738642,  -0.0001053694865272746,  0.05291470170150131,  0.0001489003323108161,  -0.01561921932892748,  -0.0001370950096012615,  -0.01784913805041409,  -0.000324580522802835;
+  } else if (utils::Parallel::getProcessRank() == 3) { //Slave3
+    // Dummy Slave to be able to reuse the 4 proc Master Slave Fixture
   }
 
   data.at(4)->oldValues.col(0) = doldValues;
@@ -971,10 +969,10 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp, * boost::unit_test::fixture<testing:
     // validate norm
     BOOST_TEST(testing::equals(data.at(4)->values->norm(), drefNorm));
     BOOST_TEST(testing::equals(data.at(5)->values->norm(), frefNorm));
+  } else if (utils::Parallel::getProcessRank() == 3) { //Slave3
+    // Dummy Slave to be able to reuse the 4 proc Master Slave Fixture
   }
 }
-
-#endif XXX
 
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
