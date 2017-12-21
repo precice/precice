@@ -10,8 +10,6 @@ cdef extern from "./src/precice/Constants.hpp"  namespace "precice::constants":
    const string& dataVelocities()
 
    const string& actionWriteInitialData()
-   const string& actionWriteSimulationCheckpoint()
-   const string& actionReadSimulationCheckpoint()
    const string& actionWriteIterationCheckpoint()
    const string& actionReadIterationCheckpoint()
    const string& actionPlotOutput()
@@ -58,12 +56,6 @@ def PyDataVelocities ():
 def PyActionWriteInitialData ():
    return actionWriteInitialData()
    
-def PyActionWriteSimulationCheckpoint ():
-   return actionWriteSimulationCheckpoint()
-
-def PyActionReadSimulationCheckpoint ():
-   return actionReadSimulationCheckpoint()
-
 def PyActionWriteIterationCheckpoint ():
    return actionWriteIterationCheckpoint()
 
