@@ -172,9 +172,6 @@ cdef class PySolverInterface:
       cdef string dataName_ = dataName
       return self.thisptr.getDataID (dataName_, meshID)
 
-   def resetMesh (self, meshID):
-      self.thisptr.resetMesh (meshID)
-
    def setMeshVertices (self, meshID, size, positions, ids):
       cdef int* ids_
       cdef double* positions_
