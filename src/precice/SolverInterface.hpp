@@ -15,7 +15,6 @@ namespace precice {
     class SolverInterfaceImpl;
   }
   namespace tests {
-    class SolverInterfaceTest;
     class SolverInterfaceTestRemote;
   }
 }
@@ -28,7 +27,24 @@ namespace PreciceTests {
     struct GlobalRBFPartitioning;
     struct LocalRBFPartitioning;
     struct TestQN;
-}
+    struct testDistributedCommunications;
+  }
+  namespace Serial {
+    struct TestExplicit;
+    struct TestConfiguration;
+    struct testExplicitWithSubcycling;
+    struct testExplicitWithDataExchange;
+    struct testExplicitWithDataInitialization;
+    struct testExplicitWithBlockDataExchange;
+    struct testExplicitWithSolverGeometry;
+    struct testExplicitWithDisplacingGeometry;
+    struct testExplicitWithDataScaling;
+    struct testImplicit;
+    struct testStationaryMappingWithSolverMesh;
+    struct testBug;
+    struct testThreeSolvers;
+    struct testMultiCoupling;
+  }
 }
 
 // ----------------------------------------------------------- CLASS DEFINITION
@@ -561,7 +577,6 @@ private:
 
   // @brief To allow white box tests.
   // tarch integration tests
-  friend class tests::SolverInterfaceTest;
   friend class tests::SolverInterfaceTestRemote;
   // boost tests
   friend struct PreciceTests::Parallel::TestFinalize;
@@ -569,6 +584,22 @@ private:
   friend struct PreciceTests::Parallel::GlobalRBFPartitioning;
   friend struct PreciceTests::Parallel::LocalRBFPartitioning;
   friend struct PreciceTests::Parallel::TestQN;
+  friend struct PreciceTests::Parallel::testDistributedCommunications;
+  friend struct PreciceTests::Serial::TestExplicit;
+  friend struct PreciceTests::Serial::TestConfiguration;
+  friend struct PreciceTests::Serial::testExplicitWithSubcycling;
+  friend struct PreciceTests::Serial::testExplicitWithDataExchange;
+  friend struct PreciceTests::Serial::testExplicitWithDataInitialization;
+  friend struct PreciceTests::Serial::testExplicitWithBlockDataExchange;
+  friend struct PreciceTests::Serial::testExplicitWithSolverGeometry;
+  friend struct PreciceTests::Serial::testExplicitWithDisplacingGeometry;
+  friend struct PreciceTests::Serial::testExplicitWithDataScaling;
+  friend struct PreciceTests::Serial::testImplicit;
+  friend struct PreciceTests::Serial::testStationaryMappingWithSolverMesh;
+  friend struct PreciceTests::Serial::testBug;
+  friend struct PreciceTests::Serial::testThreeSolvers;
+  friend struct PreciceTests::Serial::testMultiCoupling;
+
 };
 
 } // namespace precice

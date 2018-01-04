@@ -1,5 +1,6 @@
 #ifndef PRECICE_NO_MPI
 #include "testing/Testing.hpp"
+#include "testing/Fixtures.hpp"
 
 #include "utils/Parallel.hpp"
 #include "precice/impl/SolverInterfaceImpl.hpp"
@@ -15,10 +16,6 @@
 
 using namespace precice;
 
-namespace precice {
-extern bool testMode;
-}
-
 
 void reset ()
 {
@@ -30,12 +27,15 @@ void reset ()
 }
 
 struct ParallelTestFixture {
+
+  std::string _pathToTests;
+
   ParallelTestFixture()
   {
     reset();
+    _pathToTests = utils::getPathToSources() + "/precice/boosttests/";
     utils::Parallel::restrictGlobalCommunicator({0,1,2,3});
     assertion(utils::Parallel::getCommunicatorSize() == 4);
-    precice::testMode = true;
   }
 
   ~ParallelTestFixture()
@@ -54,7 +54,7 @@ BOOST_FIXTURE_TEST_SUITE(Parallel, ParallelTestFixture)
 BOOST_AUTO_TEST_CASE(TestMasterSlaveSetup, * testing::OnSize(4))
 {
   SolverInterface interface ( "SolverOne", utils::Parallel::getProcessRank(), 4 );
-  std::string configFilename = utils::getPathToSources() + "/precice/boosttests/config1.xml";
+  std::string configFilename = _pathToTests + "config1.xml";
   config::Configuration config;
   xml::configure(config.getXMLTag(), configFilename);
   interface._impl->configure(config.getSolverInterfaceConfiguration());
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(TestMasterSlaveSetup, * testing::OnSize(4))
 
 BOOST_AUTO_TEST_CASE(TestFinalize, * testing::OnSize(4))
 {
-  std::string configFilename = utils::getPathToSources() + "/precice/boosttests/config1.xml";
+  std::string configFilename = _pathToTests + "config1.xml";
   config::Configuration config;
   xml::configure(config.getXMLTag(), configFilename);
   if(utils::Parallel::getProcessRank()<=1){
@@ -112,12 +112,12 @@ BOOST_AUTO_TEST_CASE(TestFinalize, * testing::OnSize(4))
 #ifndef PRECICE_NO_PETSC
 BOOST_AUTO_TEST_CASE(GlobalRBFPartitioning, * testing::OnSize(4))
 {
-  std::string configFilename = utils::getPathToSources() + "/precice/boosttests/globalRBFPartitioning.xml";
+  std::string configFilename = _pathToTests + "globalRBFPartitioning.xml";
   config::Configuration config;
 
   if(utils::Parallel::getProcessRank()<=2){
     utils::Parallel::splitCommunicator( "SolverOne" );
-    utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator());
+    utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator()); //needed since this test uses PETSc
     assertion(utils::Parallel::getCommunicatorSize() == 3);
     utils::Parallel::clearGroups();
     xml::configure(config.getXMLTag(), configFilename);
@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE(GlobalRBFPartitioning, * testing::OnSize(4))
 
 BOOST_AUTO_TEST_CASE(LocalRBFPartitioning, * testing::OnSize(4))
 {
-  std::string configFilename = utils::getPathToSources() + "/precice/boosttests/localRBFPartitioning.xml";
+  std::string configFilename = _pathToTests + "localRBFPartitioning.xml";
   config::Configuration config;
 
   if(utils::Parallel::getProcessRank()<=2){
@@ -217,9 +217,9 @@ BOOST_AUTO_TEST_CASE(TestQN, * testing::OnSize(4))
   int numberOfTests = 3;
   std::vector<std::string> configs;
   configs.resize(numberOfTests);
-  configs[0] = utils::getPathToSources() + "/precice/boosttests/QN1.xml";
-  configs[1] = utils::getPathToSources() + "/precice/boosttests/QN2.xml";
-  configs[2] = utils::getPathToSources() + "/precice/boosttests/QN3.xml";
+  configs[0] = _pathToTests + "QN1.xml";
+  configs[1] = _pathToTests + "QN2.xml";
+  configs[2] = _pathToTests + "QN3.xml";
 
   int correctIterations[3] = {29, 17, 15};
 
@@ -313,6 +313,122 @@ BOOST_AUTO_TEST_CASE(TestQN, * testing::OnSize(4))
     }
     interface.finalize();
     BOOST_TEST(iterations == correctIterations[k]);
+  }
+}
+
+// This test does not restrict the communicator per participant, since otherwise MPI ports do not work for Open-MPI
+/// Tests various distributed communication schemes.
+BOOST_AUTO_TEST_CASE(testDistributedCommunications, * testing::OnSize(4))
+{
+  std::vector<std::string> fileNames({
+      "point-to-point-sockets.xml",
+      "point-to-point-mpi.xml",
+      "gather-scatter-mpi.xml"});
+
+  for (auto fileName : fileNames) {
+    reset();
+
+    std::string solverName;
+    int rank = -1, size = -1;
+    std::string meshName;
+    int i1 = -1 ,i2 = -1; //indices for data and positions
+
+    std::vector<Eigen::VectorXd> positions;
+    std::vector<Eigen::VectorXd> data;
+    std::vector<Eigen::VectorXd> expectedData;
+
+    Eigen::Vector3d position;
+    Eigen::Vector3d datum;
+
+    for( int i=0; i<4; i++){
+      position[0] = i*1.0;
+      position[1] = 0.0;
+      position[2] = 0.0;
+      positions.push_back(position);
+      datum[0] = i*1.0;
+      datum[1] = i*1.0;
+      datum[2] = 0.0;
+      data.push_back(datum);
+      datum[0] = i*2.0+1.0;
+      datum[1] = i*2.0+1.0;
+      datum[2] = 1.0;
+      expectedData.push_back(datum);
+    }
+
+    if (utils::Parallel::getProcessRank() == 0){
+      solverName = "Fluid";
+      rank = 0;
+      size = 2;
+      meshName = "FluidMesh";
+      i1 = 0;
+      i2 = 2;
+    }
+    else if(utils::Parallel::getProcessRank() == 1){
+      solverName = "Fluid";
+      rank = 1;
+      size = 2;
+      meshName = "FluidMesh";
+      i1 = 2;
+      i2 = 4;
+    }
+    else if(utils::Parallel::getProcessRank() == 2){
+      solverName = "Structure";
+      rank = 0;
+      size = 2;
+      meshName = "StructureMesh";
+      i1 = 0;
+      i2 = 1;
+    }
+    else if(utils::Parallel::getProcessRank() == 3){
+      solverName = "Structure";
+      rank = 1;
+      size = 2;
+      meshName = "StructureMesh";
+      i1 = 1;
+      i2 = 4;
+    }
+
+    SolverInterface precice(solverName, rank, size);
+    config::Configuration config;
+    xml::configure(config.getXMLTag(), _pathToTests + fileName);
+    precice._impl->configure(config.getSolverInterfaceConfiguration());
+    int meshID = precice.getMeshID(meshName);
+    int forcesID = precice.getDataID("Forces", meshID);
+    int velocID = precice.getDataID("Velocities", meshID);
+
+    std::vector<int> vertexIDs;
+    for(int i=i1; i<i2; i++){
+      int vertexID = precice.setMeshVertex(meshID, positions[i].data());
+      vertexIDs.push_back(vertexID);
+    }
+
+    precice.initialize();
+
+    if (utils::Parallel::getProcessRank() <= 1){ //Fluid
+      for( size_t i=0; i<vertexIDs.size(); i++){
+        precice.writeVectorData(forcesID, vertexIDs[i], data[i+i1].data());
+      }
+    }
+    else if (utils::Parallel::getProcessRank() >= 2){ //Structure
+      for( size_t i=0; i<vertexIDs.size(); i++){
+        precice.readVectorData(forcesID, vertexIDs[i], data[i].data());
+        data[i] = (data[i]*2).array() + 1.0;
+        precice.writeVectorData(velocID, vertexIDs[i], data[i].data());
+      }
+    }
+
+    precice.advance(1.0);
+
+    if (utils::Parallel::getProcessRank() <= 1){ //Fluid
+      for( size_t i=0; i<vertexIDs.size(); i++){
+        precice.readVectorData(velocID, vertexIDs[i], data[i+i1].data());
+        for (size_t d=0; d<3; d++){
+          BOOST_TEST(expectedData[i+i1][d] == data[i+i1][d]);
+        }
+      }
+    }
+
+    precice.finalize();
   }
 }
 
