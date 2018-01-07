@@ -87,7 +87,6 @@ sourcesTarchTests = [
     Glob('tarch/tests/*.cpp'),
     Glob('tarch/tests/configurations/*.cpp'),
     Glob('precice/tests/*.cpp'),
-    Glob('precice/tests/servermode/*.cpp'),
 ]
 
 sourcesTests = [

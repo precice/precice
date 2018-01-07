@@ -14,9 +14,6 @@ namespace precice {
   namespace impl {
     class SolverInterfaceImpl;
   }
-  namespace tests {
-    class SolverInterfaceTestRemote;
-  }
 }
 
 // Forward declaration to friend the boost test struct
@@ -44,6 +41,10 @@ namespace PreciceTests {
     struct testBug;
     struct testThreeSolvers;
     struct testMultiCoupling;
+  }
+  namespace Server {
+    struct testCouplingModeWithOneServer;
+    struct testCouplingModeParallelWithOneServer;
   }
 }
 
@@ -576,9 +577,6 @@ private:
   SolverInterface& operator= ( const SolverInterface& assign );
 
   // @brief To allow white box tests.
-  // tarch integration tests
-  friend class tests::SolverInterfaceTestRemote;
-  // boost tests
   friend struct PreciceTests::Parallel::TestFinalize;
   friend struct PreciceTests::Parallel::TestMasterSlaveSetup;
   friend struct PreciceTests::Parallel::GlobalRBFPartitioning;
@@ -599,6 +597,8 @@ private:
   friend struct PreciceTests::Serial::testBug;
   friend struct PreciceTests::Serial::testThreeSolvers;
   friend struct PreciceTests::Serial::testMultiCoupling;
+  friend struct PreciceTests::Server::testCouplingModeWithOneServer;
+  friend struct PreciceTests::Server::testCouplingModeParallelWithOneServer;
 
 };
 

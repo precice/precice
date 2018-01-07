@@ -20,9 +20,6 @@ namespace precice {
     struct MeshContext;
     struct MappingContext;
   }
-namespace tests {
-    class SolverInterfaceTestRemote;
-  }
 }
 
 // Forward declaration to friend the boost test struct
@@ -202,7 +199,6 @@ private:
   void checkDuplicatedData ( const mesh::PtrData& data );
 
   /// To allow white box tests.
-  friend class tests::SolverInterfaceTestRemote;
   friend struct PreciceTests::Serial::TestConfiguration;
 };
 

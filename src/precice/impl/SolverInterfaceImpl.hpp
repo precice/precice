@@ -22,9 +22,6 @@ namespace precice {
   namespace config {
     class SolverInterfaceConfiguration;
   }
-  namespace tests {
-    class SolverInterfaceTestRemote;
-  }
 }
 
 // Forward declaration to friend the boost test struct
@@ -655,7 +652,6 @@ private:
   void syncTimestep(double computedTimestepLength);
 
   // @brief To allow white box tests.
-  friend class tests::SolverInterfaceTestRemote;
   friend struct PreciceTests::Serial::TestConfiguration;
 };
 

@@ -12,7 +12,6 @@
 #include "utils/Globals.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/EventTimings.hpp"
-#include <fstream>
 
 using namespace precice;
 
