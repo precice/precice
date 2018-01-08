@@ -103,7 +103,6 @@ struct ExplicitCouplingSchemeFixture  // TODO fixtures in cplscheme/boosttests a
       BOOST_TEST(cplScheme.isCouplingOngoing());
       while ( cplScheme.isCouplingOngoing() ) {
         dataValues1.segment(vertex.getID()*3, 3) = valueData1;
-        //tarch::la::slice<3>(dataValues1,vertex.getID()*3) = valueData1;
         computedTime += cplScheme.getNextTimestepMaxLength();
         computedTimesteps ++;
         cplScheme.addComputedTime ( cplScheme.getNextTimestepMaxLength() );
@@ -222,7 +221,6 @@ struct ExplicitCouplingSchemeFixture  // TODO fixtures in cplscheme/boosttests a
       BOOST_TEST(cplScheme.isCouplingOngoing());
       while ( cplScheme.isCouplingOngoing() ) {
         dataValues1.segment(vertex.getID()*3, 3) = valueData1;
-        //tarch::la::slice<3>(dataValues1,vertex.getID()*3) = valueData1;
         computedTime += cplScheme.getNextTimestepMaxLength ();
         computedTimesteps ++;
         cplScheme.addComputedTime ( cplScheme.getNextTimestepMaxLength() );

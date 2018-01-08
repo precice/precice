@@ -176,20 +176,6 @@ void XMLAttribute<ATTRIBUTE_T>::setValidator(
   _hasValidation = true;
 }
 
-//template<typename ATTRIBUTE_T>
-//typename tarch::utils::EnableIf<
-//  tarch::utils::IsEqual<ATTRIBUTE_T,utils::DynVector>::value,
-//  void
-//>::Type XMLAttribute<ATTRIBUTE_T>:: setDefaultValue
-//(
-//  const utils::DynVector& defaultValue  )
-//{
-//  TRACE(defaultValue);
-//  _hasDefaultValue = true;
-//  _defaultValue.clear();
-//  _defaultValue.append(defaultValue);
-//}
-
 template <typename ATTRIBUTE_T>
 void XMLAttribute<ATTRIBUTE_T>::setDefaultValue(
     const ATTRIBUTE_T &defaultValue)
