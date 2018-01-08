@@ -67,28 +67,6 @@ sourcesPrecice = [
     Glob('precice/adapters/fortran/*.cpp')
 ]
 
-sourcesTarchMulticore = [
-    Glob('tarch/multicore/*.cpp')
-]
-
-sourcesTarchLogging = [
-    Glob('tarch/logging/*.cpp'),
-    Glob('tarch/logging/configurations/*.cpp')
-]
-
-sourcesTarch = [
-    Glob('tarch/configuration/*.cpp'),
-    sourcesTarchMulticore,
-    sourcesTarchLogging,
-    Glob('tarch/services/*.cpp'),
-]
-
-sourcesTarchTests = [
-    Glob('tarch/tests/*.cpp'),
-    Glob('tarch/tests/configurations/*.cpp'),
-    Glob('precice/tests/*.cpp'),
-]
-
 sourcesTests = [
     Glob('*/boosttests/*.cpp'),
     File("testing/main.cpp")
@@ -116,8 +94,7 @@ sourcesAllNoMain = [
     sourcesPrecice,
     sourcesQuery,
     sourcesUtils,
-    sourcesTarch,
     sourcesXml,
 ]
 
-Return ('sourcesAllNoMain', 'sourcesMain', 'sourcesTests', 'sourcesTarchTests')
+Return ('sourcesAllNoMain', 'sourcesMain', 'sourcesTests')

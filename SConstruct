@@ -242,7 +242,7 @@ env = conf.Finish() # Used to check libraries
 
 #--------------------------------------------- Define sources and build targets
 
-(sourcesAllNoMain, sourcesMain, sourcesTests, sourcesTarchTests) = SConscript (
+(sourcesAllNoMain, sourcesMain, sourcesTests) = SConscript (
     'src/SConscript-linux',
     variant_dir = buildpath,
     duplicate = 0
@@ -263,8 +263,7 @@ env.Alias("solib", solib)
 bin = env.Program (
     target = buildpath + '/binprecice',
     source = [sourcesAllNoMain,
-              sourcesMain,
-              sourcesTarchTests]
+              sourcesMain]
 )
 env.Alias("bin", bin)
 

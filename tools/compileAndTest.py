@@ -71,23 +71,6 @@ if args.compile:
 mpi_cmd = "mpirun -n {procs} {output_filename}".format(procs = args.mpi_procs,
                                                        output_filename = "--output-filename 'testout'" if args.split_output else "")
 
-
-# Boost Tests
 if args.run_boostttests:
     run_cmd = "{mpi} ../build/last/testprecice --color_output".format(mpi = mpi_cmd)
     run_test(run_cmd, args.keep_test)
-
-# Tarch Unit Tests
-if args.run_unit:
-    run_cmd = "{mpi} ../build/last/binprecice test ../{config} ../src {logconfig}".format(mpi = mpi_cmd,
-                                                                                          config = args.unit_test_config,
-                                                                                          logconfig = args.logconfig)
-    run_test(run_cmd, args.keep_test)
-
-# Tarch Integration Tests
-if args.run_integration:
-    run_cmd = "{mpi} ../build/last/binprecice test ../{config} ../src {logconfig}".format(mpi = mpi_cmd,
-                                                                                          config = args.integration_test_config,
-                                                                                          logconfig = args.logconfig)
-    run_test(run_cmd, args.keep_test)
-
