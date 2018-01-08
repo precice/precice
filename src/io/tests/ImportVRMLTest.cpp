@@ -19,7 +19,7 @@ struct SetPathFixture {
   std::string testPath;
 
   SetPathFixture()
-      : testPath(utils::getPathToSources() + "/io/boosttests/")
+      : testPath(utils::getPathToSources() + "/io/tests/")
   {
   }
 };

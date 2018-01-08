@@ -50,7 +50,7 @@ struct CallbackHostAttr : public XMLTag::Listener {
 
 BOOST_AUTO_TEST_CASE(AttributeTypeTest)
 {
-  std::string filename(getPathToSources() + "/xml/boosttests/xmlparser_test.xml");
+  std::string filename(getPathToSources() + "/xml/tests/xmlparser_test.xml");
 
   CallbackHostAttr cb;
   XMLTag           rootTag(cb, "configuration", XMLTag::OCCUR_ONCE);
@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(AttributeTypeTest)
 
 BOOST_AUTO_TEST_CASE(OccurenceTest)
 {
-  std::string filename(getPathToSources() + "/xml/boosttests/xmlparser_occtest.xml");
+  std::string filename(getPathToSources() + "/xml/tests/xmlparser_occtest.xml");
 
   CallbackHostAttr cb;
   XMLTag           rootTag(cb, "configuration", XMLTag::OCCUR_ONCE);
@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(OccurenceTest)
 
 BOOST_AUTO_TEST_CASE(NamespaceTest)
 {
-  std::string filename(getPathToSources() + "/xml/boosttests/xmlparser_nstest.xml");
+  std::string filename(getPathToSources() + "/xml/tests/xmlparser_nstest.xml");
 
   CallbackHostAttr cb;
   XMLTag           rootTag(cb, "configuration", XMLTag::OCCUR_ONCE);

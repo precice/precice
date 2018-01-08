@@ -23,12 +23,12 @@ using namespace precice::cplscheme;
 
 BOOST_AUTO_TEST_SUITE(CplSchemeTests)
 
-struct ExplicitCouplingSchemeFixture  // TODO fixtures in cplscheme/boosttests are a candidate for refactoring, lots of copy paste code.
+struct ExplicitCouplingSchemeFixture  // TODO fixtures in cplscheme/tests are a candidate for refactoring, lots of copy paste code.
 {
   std::string _pathToTests;
 
   ExplicitCouplingSchemeFixture(){
-    _pathToTests = utils::getPathToSources() + "/cplscheme/boosttests/";
+    _pathToTests = utils::getPathToSources() + "/cplscheme/tests/";
   }
 
   void runSimpleExplicitCoupling

@@ -30,7 +30,7 @@ struct CallbackHost : public XMLTag::Listener {
 
 BOOST_AUTO_TEST_CASE(AttributeConcatenation)
 {
-  std::string filename(getPathToSources() + "/xml/boosttests/config_xmltest_concatenation.xml");
+  std::string filename(getPathToSources() + "/xml/tests/config_xmltest_concatenation.xml");
 
   CallbackHost cb;
   XMLTag       rootTag(cb, "configuration", XMLTag::OCCUR_ONCE);
@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(AttributeConcatenation)
 
 BOOST_AUTO_TEST_CASE(VectorAttributes)
 {
-  std::string filename(getPathToSources() + "/xml/boosttests/config_xmltest_vectorattributes.xml");
+  std::string filename(getPathToSources() + "/xml/tests/config_xmltest_vectorattributes.xml");
 
   CallbackHost cb;
   XMLTag       rootTag(cb, "configuration", XMLTag::OCCUR_ONCE);

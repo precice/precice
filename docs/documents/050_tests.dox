@@ -14,7 +14,7 @@ The ```tools/compileAndTest.py``` script simplifies running all tsts.
 
 Writing
 -------
-To learn, how to write new tests, have a look at ```./src/mapping/boosttests/PetRadialBasisFctMappingTest.cpp```.
+To learn, how to write new tests, have a look at ```./src/mapping/tests/PetRadialBasisFctMappingTest.cpp```.
 
 ```
 #include "testing/Testing.hpp" // Include that for some basic stuff

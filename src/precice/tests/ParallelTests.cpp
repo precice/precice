@@ -32,7 +32,7 @@ struct ParallelTestFixture {
   ParallelTestFixture()
   {
     reset();
-    _pathToTests = utils::getPathToSources() + "/precice/boosttests/";
+    _pathToTests = utils::getPathToSources() + "/precice/tests/";
     utils::Parallel::restrictGlobalCommunicator({0,1,2,3});
     assertion(utils::Parallel::getCommunicatorSize() == 4);
   }

@@ -394,7 +394,7 @@ struct SerialImplicitCouplingSchemeFixture
   std::string _pathToTests;
 
   SerialImplicitCouplingSchemeFixture(){
-    _pathToTests = utils::getPathToSources() + "/cplscheme/boosttests/";
+    _pathToTests = utils::getPathToSources() + "/cplscheme/tests/";
   }
 };
 

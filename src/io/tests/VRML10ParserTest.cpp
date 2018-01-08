@@ -17,7 +17,7 @@ namespace spirit = boost::spirit;
 BOOST_AUTO_TEST_CASE(ParseCube)
 {
   for (int dim = 2; dim <= 3; dim++) {
-    std::string file = utils::getPathToSources() + "/io/boosttests/ImportVRMLTest";
+    std::string file = utils::getPathToSources() + "/io/tests/ImportVRMLTest";
     if (dim == 2) {
       file += "2D.wrl";
     } else {

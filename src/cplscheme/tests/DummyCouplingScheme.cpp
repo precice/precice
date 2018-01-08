@@ -5,7 +5,7 @@
 
 namespace precice {
 namespace cplscheme {
-namespace boosttests {
+namespace tests {
 
 logging::Logger DummyCouplingScheme::
    _log("cplscheme::tests::DummyCouplingScheme");

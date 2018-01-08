@@ -21,7 +21,7 @@ BOOST_AUTO_TEST_CASE(AllMethods)
   int targetID = mesh->createData("TargetData", 1)->getID();
   int sourceID = mesh->createData("SourceData", 1)->getID();
   mesh->allocateDataValues();
-  std::string  path = utils::getPathToSources() + "/action/boosttests/";
+  std::string  path = utils::getPathToSources() + "/action/tests/";
   PythonAction action(PythonAction::ALWAYS_PRIOR, path, "TestAllAction", mesh, targetID, sourceID);
   mesh->data(sourceID)->values() << 0.1, 0.2, 0.3;
   mesh->data(targetID)->values() = Eigen::VectorXd::Zero(mesh->data(targetID)->values().size());
@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(AllMethods)
 
 BOOST_AUTO_TEST_CASE(OmitMethods)
 {
-  std::string path = utils::getPathToSources() + "/action/boosttests/";
+  std::string path = utils::getPathToSources() + "/action/tests/";
   {
     mesh::PtrMesh mesh;
     PythonAction  action(PythonAction::ALWAYS_PRIOR, path, "TestOmitAction1", mesh, -1, -1);

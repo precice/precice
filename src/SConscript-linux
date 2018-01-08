@@ -68,7 +68,7 @@ sourcesPrecice = [
 ]
 
 sourcesTests = [
-    Glob('*/boosttests/*.cpp'),
+    Glob('*/tests/*.cpp'),
     File("testing/main.cpp")
 ]
 
