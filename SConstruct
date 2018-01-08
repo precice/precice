@@ -169,7 +169,8 @@ if env["platform"] == "hazelhen":
     env.Append(LIBPATH = [os.environ['BOOST_ROOT'] + '/lib'])
 
 env.Append(CPPDEFINES= ['BOOST_SPIRIT_USE_PHOENIX_V3',
-                        'BOOST_ALL_DYN_LINK'])
+                        'BOOST_ALL_DYN_LINK',
+                        'BOOST_ASIO_ENABLE_OLD_SERVICES']) # Interfaces have changed in 1.66
 
 uniqueCheckLib("boost_log")
 uniqueCheckLib("boost_log_setup")
