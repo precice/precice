@@ -25,6 +25,7 @@ namespace PreciceTests {
     struct LocalRBFPartitioning;
     struct TestQN;
     struct testDistributedCommunications;
+    struct CouplingOnLine;
   }
   namespace Serial {
     struct TestExplicit;
@@ -583,6 +584,7 @@ private:
   friend struct PreciceTests::Parallel::LocalRBFPartitioning;
   friend struct PreciceTests::Parallel::TestQN;
   friend struct PreciceTests::Parallel::testDistributedCommunications;
+  friend struct PreciceTests::Parallel::CouplingOnLine;
   friend struct PreciceTests::Serial::TestExplicit;
   friend struct PreciceTests::Serial::TestConfiguration;
   friend struct PreciceTests::Serial::testExplicitWithSubcycling;

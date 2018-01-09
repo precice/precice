@@ -317,12 +317,15 @@ void ReceivedPartition::prepareBoundingBox(){
 
   //enlarge BB
   assertion(_safetyFactor>=0.0);
+
+  double maxSideLength = 1e-6; // we need some minimum > 0 here
+
   for (int d=0; d<_dimensions; d++) {
-    if (_bb[d].second > _bb[d].first){
-      double sideLength = _bb[d].second - _bb[d].first;
-      _bb[d].second += _safetyFactor * sideLength;
-      _bb[d].first -= _safetyFactor * sideLength;
-    }
+    maxSideLength = std::max(maxSideLength, _bb[d].second - _bb[d].first);
+  }
+  for (int d=0; d<_dimensions; d++) {
+    _bb[d].second += _safetyFactor * maxSideLength;
+    _bb[d].first -= _safetyFactor * maxSideLength;
     DEBUG("Merged BoundingBox, dim: " << d << ", first: " << _bb[d].first << ", second: " << _bb[d].second);
   }
 
@@ -330,7 +333,6 @@ void ReceivedPartition::prepareBoundingBox(){
 }
 
 bool ReceivedPartition::isVertexInBB(const mesh::Vertex& vertex){
-  TRACE();
   for (int d=0; d<_dimensions; d++) {
     if (vertex.getCoords()[d] < _bb[d].first || vertex.getCoords()[d] > _bb[d].second ) {
       return false;
