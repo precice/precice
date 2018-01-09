@@ -30,9 +30,13 @@ void reset ()
 }
 
 struct ParallelTestFixture {
+
+  std::string _pathToTests;
+
   ParallelTestFixture()
   {
     reset();
+    _pathToTests = utils::getPathToSources() + "/precice/tests/";
     utils::Parallel::restrictGlobalCommunicator({0,1,2,3});
     assertion(utils::Parallel::getCommunicatorSize() == 4);
     precice::testMode = true;
@@ -210,6 +214,67 @@ BOOST_AUTO_TEST_CASE(LocalRBFPartitioning, * testing::OnSize(4))
 }
 
 #endif // PRECICE_NO_PETSC
+
+/// This testcase is based on a bug reported by Thorsten for acoustic FASTEST-Ateles coupling
+BOOST_AUTO_TEST_CASE(CouplingOnLine, * testing::OnSize(4))
+{
+  std::string configFilename = _pathToTests + "line-coupling.xml";
+  config::Configuration config;
+
+  if(utils::Parallel::getProcessRank()<=2){
+    utils::Parallel::splitCommunicator( "Ateles" );
+    utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator());
+    assertion(utils::Parallel::getCommunicatorSize() == 3);
+    utils::Parallel::clearGroups();
+    utils::configure(config.getXMLTag(), configFilename);
+
+    SolverInterface interface ( "Ateles", utils::Parallel::getProcessRank(), 3 );
+    interface._impl->configure(config.getSolverInterfaceConfiguration());
+    int meshID = interface.getMeshID("Ateles_Mesh");
+
+    int vertexIDs[4];
+    double offset = utils::Parallel::getProcessRank() * 0.4;
+    double xCoord = 0.0;
+    double yCoord = 1.0;
+    double positions[12] = {xCoord, yCoord, 0.1 + offset,
+                            xCoord, yCoord, 0.2 + offset,
+                            xCoord, yCoord, 0.3 + offset,
+                            xCoord, yCoord, 0.4 + offset};
+    interface.setMeshVertices(meshID, 4, positions, vertexIDs);
+    interface.initialize();
+    interface.advance(1.0);
+    interface.finalize();
+  }
+  else {
+    utils::Parallel::splitCommunicator( "FASTEST" );
+    utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator());
+    assertion(utils::Parallel::getCommunicatorSize() == 1);
+    utils::Parallel::clearGroups();
+    utils::configure(config.getXMLTag(), configFilename);
+
+    SolverInterface interface ( "FASTEST", 0, 1 );
+    interface._impl->configure(config.getSolverInterfaceConfiguration());
+    int meshID = interface.getMeshID("FASTEST_Mesh");
+    int vertexIDs[10];
+    double xCoord = -0.0001;
+    double yCoord = 1.00001;
+    double positions[30] = {xCoord, yCoord, 0.12,
+                            xCoord, yCoord, 0.24,
+                            xCoord, yCoord, 0.36,
+                            xCoord, yCoord, 0.48,
+                            xCoord, yCoord, 0.60,
+                            xCoord, yCoord, 0.72,
+                            xCoord, yCoord, 0.84,
+                            xCoord, yCoord, 0.96,
+                            xCoord, yCoord, 1.08,
+                            xCoord, yCoord, 1.2};
+    interface.setMeshVertices(meshID, 10, positions, vertexIDs);
+    interface.initialize();
+    interface.advance(1.0);
+    interface.finalize();
+  }
+}
+
 
 /// tests for various QN settings if correct number of iterations is returned
 BOOST_AUTO_TEST_CASE(TestQN, * testing::OnSize(4))

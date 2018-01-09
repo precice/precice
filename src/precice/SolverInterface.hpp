@@ -28,7 +28,29 @@ namespace PreciceTests {
     struct GlobalRBFPartitioning;
     struct LocalRBFPartitioning;
     struct TestQN;
-}
+    struct testDistributedCommunications;
+    struct CouplingOnLine;
+  }
+  namespace Serial {
+    struct TestExplicit;
+    struct TestConfiguration;
+    struct testExplicitWithSubcycling;
+    struct testExplicitWithDataExchange;
+    struct testExplicitWithDataInitialization;
+    struct testExplicitWithBlockDataExchange;
+    struct testExplicitWithSolverGeometry;
+    struct testExplicitWithDisplacingGeometry;
+    struct testExplicitWithDataScaling;
+    struct testImplicit;
+    struct testStationaryMappingWithSolverMesh;
+    struct testBug;
+    struct testThreeSolvers;
+    struct testMultiCoupling;
+  }
+  namespace Server {
+    struct testCouplingModeWithOneServer;
+    struct testCouplingModeParallelWithOneServer;
+  }
 }
 
 // ----------------------------------------------------------- CLASS DEFINITION
@@ -569,6 +591,25 @@ private:
   friend struct PreciceTests::Parallel::GlobalRBFPartitioning;
   friend struct PreciceTests::Parallel::LocalRBFPartitioning;
   friend struct PreciceTests::Parallel::TestQN;
+  friend struct PreciceTests::Parallel::testDistributedCommunications;
+  friend struct PreciceTests::Parallel::CouplingOnLine;
+  friend struct PreciceTests::Serial::TestExplicit;
+  friend struct PreciceTests::Serial::TestConfiguration;
+  friend struct PreciceTests::Serial::testExplicitWithSubcycling;
+  friend struct PreciceTests::Serial::testExplicitWithDataExchange;
+  friend struct PreciceTests::Serial::testExplicitWithDataInitialization;
+  friend struct PreciceTests::Serial::testExplicitWithBlockDataExchange;
+  friend struct PreciceTests::Serial::testExplicitWithSolverGeometry;
+  friend struct PreciceTests::Serial::testExplicitWithDisplacingGeometry;
+  friend struct PreciceTests::Serial::testExplicitWithDataScaling;
+  friend struct PreciceTests::Serial::testImplicit;
+  friend struct PreciceTests::Serial::testStationaryMappingWithSolverMesh;
+  friend struct PreciceTests::Serial::testBug;
+  friend struct PreciceTests::Serial::testThreeSolvers;
+  friend struct PreciceTests::Serial::testMultiCoupling;
+  friend struct PreciceTests::Server::testCouplingModeWithOneServer;
+  friend struct PreciceTests::Server::testCouplingModeParallelWithOneServer;
+
 };
 
 } // namespace precice
