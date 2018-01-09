@@ -242,7 +242,7 @@ void ReceivedPartition::compute()
 }
 
 void ReceivedPartition:: filterMesh(mesh::Mesh& filteredMesh, const bool filterByBB){
-  TRACE();
+  TRACE(filterByBB);
 
   DEBUG("Bounding mesh. #vertices: " << _mesh->vertices().size()
                <<", #edges: " << _mesh->edges().size()
@@ -295,6 +295,7 @@ void ReceivedPartition:: filterMesh(mesh::Mesh& filteredMesh, const bool filterB
 }
 
 void ReceivedPartition::prepareBoundingBox(){
+  TRACE(_safetyFactor);
 
   _bb.resize(_dimensions, std::make_pair(std::numeric_limits<double>::max(), std::numeric_limits<double>::lowest()));
 
@@ -322,10 +323,14 @@ void ReceivedPartition::prepareBoundingBox(){
       _bb[d].second += _safetyFactor * sideLength;
       _bb[d].first -= _safetyFactor * sideLength;
     }
+    DEBUG("Merged BoundingBox, dim: " << d << ", first: " << _bb[d].first << ", second: " << _bb[d].second);
   }
+
+
 }
 
 bool ReceivedPartition::isVertexInBB(const mesh::Vertex& vertex){
+  TRACE();
   for (int d=0; d<_dimensions; d++) {
     if (vertex.getCoords()[d] < _bb[d].first || vertex.getCoords()[d] > _bb[d].second ) {
       return false;

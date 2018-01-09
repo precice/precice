@@ -291,7 +291,7 @@ void Mesh:: allocateDataValues()
 
 void Mesh:: computeState()
 {
-  TRACE();
+  TRACE(_name);
   assertion(_dimensions==2 || _dimensions==3, _dimensions);
 
   // Compute normals only if faces to derive normal information are available
@@ -509,6 +509,9 @@ void Mesh:: computeState()
       _boundingBox[d].first  = std::min(vertex.getCoords()[d], _boundingBox[d].first);
       _boundingBox[d].second = std::max(vertex.getCoords()[d], _boundingBox[d].second);
     }
+  }
+  for (int d = 0; d < _dimensions; d++) {
+    DEBUG("BoundingBox, dim: " << d << ", first: " << _boundingBox[d].first << ", second: " << _boundingBox[d].second);
   }
 }
 
