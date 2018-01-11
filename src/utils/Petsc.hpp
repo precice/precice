@@ -72,7 +72,7 @@ public:
   /// Constructs a vector with the same number of rows (default) or columns.
   Vector(Matrix &m, std::string name = "", LEFTRIGHT type = LEFT);
 
-  /// Delete copy and assignement constructor
+  /// Delete copy and assignment constructor
   /** Copying and assignement of this class would involve copying the pointer to
       the PETSc object and finallly cause double destruction of it.
    */
@@ -213,6 +213,9 @@ public:
   
   /// Destroys and recreates the ksp on the same communicator
   void reset();
+
+  /// Solves the linear system, returns false it not converged
+  bool solve(Vector &b, Vector &x);
 };
 
 

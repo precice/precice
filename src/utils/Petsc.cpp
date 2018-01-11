@@ -465,6 +465,14 @@ void KSPSolver::reset()
   ierr = KSPReset(ksp); CHKERRV(ierr);
 }
 
+bool KSPSolver::solve(Vector &b, Vector &x)
+{
+  PetscErrorCode ierr = 0;
+  KSPConvergedReason convReason;
+  KSPSolve(ksp, b, x);
+  ierr = KSPGetConvergedReason(ksp, &convReason); CHKERRQ(ierr);
+  return (convReason > 0);
+}
 
 
 /////////////////////////////////////////////////////////////////////////

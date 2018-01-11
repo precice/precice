@@ -225,11 +225,6 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
     assertion(false);
   }
 
-  if (_polynomial == Polynomial::SEPARATE and constraint == Constraint::CONSERVATIVE) {
-    WARN("Separated polynomial not supported with conservative mapping. Falling back to integrated polynomial.");
-    _polynomial = Polynomial::ON;
-  }
-
   // Count number of dead dimensions
   int deadDimensions = 0;
   for (int d = 0; d < dimensions; d++) {
@@ -253,6 +248,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 {
   TRACE();
   precice::utils::Event e(__func__);
+
+  clear();
 
   if (_polynomial == Polynomial::ON) {
     DEBUG("Using integrated polynomial.");
@@ -300,29 +297,22 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   DEBUG("outMesh->vertices().size() = " << outMesh->vertices().size());
 
   // Matrix C: Symmetric, sparse matrix with n x n local size.
-  _matrixC.reset();
   _matrixC.init(n, n, PETSC_DETERMINE, PETSC_DETERMINE, MATSBAIJ);
   DEBUG("Set matrix C to local size " << n << " x " << n);
   ierr = MatSetOption(_matrixC, MAT_SYMMETRIC, PETSC_TRUE); CHKERRV(ierr);
   ierr = MatSetOption(_matrixC, MAT_SYMMETRY_ETERNAL, PETSC_TRUE); CHKERRV(ierr);
 
   // Matrix Q: Dense, holds the input mesh for the polynom if set to SEPERATE. Zero size otherwise
-  _matrixQ.reset();
   _matrixQ.init(n, PETSC_DETERMINE, PETSC_DETERMINE, sepPolyparams, MATDENSE);
   DEBUG("Set matrix Q to local size " << n << " x " << sepPolyparams);
 
   // Matrix V: Dense, holds the output mesh for polynom if set to SEPERATE. Zero size otherwise
-  _matrixV.reset();
   _matrixV.init(outputSize, PETSC_DETERMINE, PETSC_DETERMINE, sepPolyparams, MATDENSE);
   DEBUG("Set matrix V to local size " << outputSize << " x " << sepPolyparams);    
     
   // Matrix A: Sparse matrix with outputSize x n local size.
-  _matrixA.reset();
   _matrixA.init(outputSize, n, PETSC_DETERMINE, PETSC_DETERMINE, MATAIJ);
   DEBUG("Set matrix A to local size " << outputSize << " x " << n);
-
-  _solver.reset();
-  _QRsolver.reset();
 
   const int ownerRangeABegin = _matrixA.ownerRange().first;
   const int ownerRangeAEnd = _matrixA.ownerRange().second;
@@ -363,7 +353,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   ierr = ISDestroy(&ISpolyparams); CHKERRV(ierr);
   ierr = ISLocalToGlobalMappingDestroy(&ISpolyparamsMapping); CHKERRV(ierr);
 
-
   const PetscInt *mapIndizes;
   ISLocalToGlobalMappingGetIndices(_ISmapping, &mapIndizes);
   
@@ -373,7 +362,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   // to know where we have entries in the sparse matrix. This information petsc can use to
   // preallocate the matrix. In the second phase we actually fill the matrix.
 
-  // -- BEGIN PREALLOC LOOP FOR MATRIX C --
+  // Stores col -> value for each row;
   std::vector<std::vector<std::pair<int, double>>> vertexData;
    
   if (_preallocation == Preallocation::SAVED) {
@@ -388,7 +377,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   if (_preallocation == Preallocation::TREE) {
     vertexData = bgPreallocationMatrixC(inMesh);
   }
-
   
   // -- BEGIN FILL LOOP FOR MATRIX C --
   precice::utils::Event eFillC("PetRBF.fillC");
@@ -466,7 +454,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   ierr = MatAssemblyBegin(_matrixC, MAT_FINAL_ASSEMBLY); CHKERRV(ierr);
   ierr = MatAssemblyBegin(_matrixQ, MAT_FINAL_ASSEMBLY); CHKERRV(ierr);
 
-  
   if (_preallocation == Preallocation::SAVED) {
     vertexData = savedPreallocationMatrixA(inMesh, outMesh);
   }
@@ -479,7 +466,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   if (_preallocation == Preallocation::TREE) {
     vertexData = bgPreallocationMatrixA(inMesh, outMesh);
   }  
-
   
   // -- BEGIN FILL LOOP FOR MATRIX A --
   DEBUG("Begin filling matrix A.");
@@ -512,8 +498,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     if (_preallocation == Preallocation::SAVED or _preallocation == Preallocation::TREE) {
       const auto & rowVertices = vertexData[row - ownerRangeABegin];
       for (const auto & vertex : rowVertices) {
-        // std::cout << "Setting colNum = " << colNum << ", idx = " << vertex.first
-        // << " to " << _basisFunction.evaluate(vertex.second) << "\n";
         rowVals[colNum] = _basisFunction.evaluate(vertex.second);
         colIdx[colNum++] = vertex.first;
       }
@@ -579,7 +563,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     ierr = MatCreateVecs(_matrixC, nullptr, &rescalingCoeffs.vector); CHKERRV(ierr);
     VecSet(rhs, 1);
     rhs.assemble();
-    ierr = KSPSolve(_solver, rhs, rescalingCoeffs); CHKERRV(ierr);
+    _solver.solve(rhs, rescalingCoeffs);
   }
 
   _hasComputedMapping = true;
@@ -624,7 +608,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
             input()->getDimensions(), output()->getDimensions());
 
   PetscErrorCode ierr = 0;
-  KSPConvergedReason convReason;
   auto& inValues = input()->data(inputDataID)->values();
   auto& outValues = output()->data(outputDataID)->values();
 
@@ -653,22 +636,31 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
                                  std::forward_as_tuple(inputDataID + outputDataID * 10 + dim * 100),
                                  std::forward_as_tuple(_matrixC, "out"))
         )->second;
-      
-      ierr = MatMultTranspose(_matrixA, in, au); CHKERRV(ierr);
-      utils::Event eSolve("PetRBF.solve.conservative");
-      ierr = KSPSolve(_solver, au, out); CHKERRV(ierr);
-      eSolve.stop();
-      
-      PetscInt iterations;
-      KSPGetIterationNumber(_solver, &iterations);
-      utils::EventRegistry::setProp("PetRBF.its.conservative", iterations);
-      
-      ierr = KSPGetConvergedReason(_solver, &convReason); CHKERRV(ierr);
-      if (convReason < 0) {
-        KSPView(_solver, PETSC_VIEWER_STDOUT_WORLD);
-        ERROR("RBF linear system has not converged.");
+
+      if (_polynomial == Polynomial::SEPARATE) {
+        petsc::Vector epsilon(_matrixV, "epsilon", petsc::Vector::RIGHT);
+        ierr = MatMultTranspose(_matrixV, in, epsilon); CHKERRV(ierr);
+        petsc::Vector eta(_matrixA, "eta", petsc::Vector::RIGHT);
+        ierr = MatMultTranspose(_matrixA, in, eta); CHKERRV(ierr);
+        petsc::Vector mu(_matrixC, "mu", petsc::Vector::LEFT);
+        _solver.solve(eta, mu);
+        VecScale(epsilon, -1);
+        petsc::Vector tau(_matrixQ, "tau", petsc::Vector::RIGHT);
+        ierr = MatMultTransposeAdd(_matrixQ, mu, epsilon, tau); CHKERRV(ierr);
+        petsc::Vector sigma(_matrixQ, "sigma", petsc::Vector::LEFT);
+        ierr = KSPSolveTranspose(_QRsolver, tau, sigma); CHKERRV(ierr);
+        VecWAXPY(out, -1, sigma, mu);
       }
-            
+      else {
+        ierr = MatMultTranspose(_matrixA, in, au); CHKERRV(ierr);
+        utils::Event eSolve("PetRBF.solve.conservative");
+        if (not _solver.solve(au, out)) {
+          KSPView(_solver, PETSC_VIEWER_STDOUT_WORLD);
+          ERROR("RBF linear system has not converged.");
+        }
+        eSolve.stop();
+
+      }   
       VecChop(out, 1e-9);
 
       // Copy mapped data to output data values
@@ -710,9 +702,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
       in.assemble();
             
       if (_polynomial == Polynomial::SEPARATE) {
-        KSPSolve(_QRsolver, in, a);
-        ierr = KSPGetConvergedReason(_QRsolver, &convReason); CHKERRV(ierr);
-        if (convReason < 0) {
+        if (not _QRsolver.solve(in, a)) {
           KSPView(_QRsolver, PETSC_VIEWER_STDOUT_WORLD);
           ERROR("Polynomial QR linear system has not converged.");
         }
@@ -727,19 +717,12 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
         )->second;
 
       utils::Event eSolve("PetRBF.solve.consistent");
-      ierr = KSPSolve(_solver, in, p); CHKERRV(ierr);
-      eSolve.stop();
-            
-      PetscInt iterations;
-      KSPGetIterationNumber(_solver, &iterations);
-      utils::EventRegistry::setProp("PetRBF.its.consistent", iterations);
-
-      ierr = KSPGetConvergedReason(_solver, &convReason); CHKERRV(ierr);
-      if (convReason < 0) {
+      if (not _solver.solve(in, p)) {
         KSPView(_solver, PETSC_VIEWER_STDOUT_WORLD);
         ERROR("RBF linear system has not converged.");
       }
-
+      eSolve.stop();
+      
       ierr = MatMult(_matrixA, p, out); CHKERRV(ierr);
 
       if (useRescaling and (_polynomial == Polynomial::SEPARATE)) {

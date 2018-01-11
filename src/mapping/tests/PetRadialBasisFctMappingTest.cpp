@@ -1264,13 +1264,13 @@ BOOST_AUTO_TEST_CASE(SolutionCaching)
   BOOST_TEST(its == 0);
 }
 
-BOOST_AUTO_TEST_CASE(PolynomialSwitch,
+BOOST_AUTO_TEST_CASE(ConsistentPolynomialSwitch,
                      * boost::unit_test::tolerance(1e-6))
 {
   using Eigen::Vector2d;
   int dimensions = 2;
   
-  bool xDead = false, yDead = true, zDead = false;
+  bool xDead = false, yDead = false, zDead = false;
 
   Gaussian fct(1); // supportRadius = 4.55
 
@@ -1278,7 +1278,7 @@ BOOST_AUTO_TEST_CASE(PolynomialSwitch,
   mesh::PtrMesh inMesh ( new mesh::Mesh("InMesh", dimensions, false) );
   mesh::PtrData inData = inMesh->createData ( "InData", 1 );
   int inDataID = inData->getID ();
-  inMesh->createVertex ( Vector2d(1, 1) );  inMesh->createVertex ( Vector2d(1, 1) );
+  inMesh->createVertex ( Vector2d(1, 1) );  inMesh->createVertex ( Vector2d(1, 0) );
   inMesh->createVertex ( Vector2d(0, 0) );  inMesh->createVertex ( Vector2d(0, 1) );
   inMesh->allocateDataValues();
   addGlobalIndex(inMesh);
@@ -1324,6 +1324,80 @@ BOOST_AUTO_TEST_CASE(PolynomialSwitch,
   mappingSep.map(inDataID, outDataID);
 
   BOOST_TEST ( outData->values()[0] == 1.0 ); // Mapping to 1 since there is the polynomial
+}
+
+BOOST_AUTO_TEST_CASE(ConservativePolynomialSwitch,
+                     * boost::unit_test::tolerance(1e-6))
+{
+  using Eigen::Vector2d;
+  int dimensions = 2;
+  
+  bool xDead = false, yDead = false, zDead = false;
+
+  Gaussian fct(1); // supportRadius = 4.55
+
+  // Create mesh to map from
+  mesh::PtrMesh inMesh ( new mesh::Mesh("InMesh", dimensions, false) );
+  mesh::PtrData inData = inMesh->createData ( "InData", 1 );
+  int inDataID = inData->getID ();
+  inMesh->createVertex ( Vector2d(0, 0) );  inMesh->createVertex ( Vector2d(1, 0) );
+  inMesh->createVertex ( Vector2d(1, 1) );  inMesh->createVertex ( Vector2d(0, 1) );
+  inMesh->allocateDataValues();
+  addGlobalIndex(inMesh);
+  inData->values() << 1, 1, 1, 1;
+
+  // Create mesh to map to
+  mesh::PtrMesh outMesh( new mesh::Mesh("OutMesh", dimensions, false) );
+  mesh::PtrData outData = outMesh->createData( "OutData", 1 );
+  int outDataID = outData->getID();
+  outMesh->createVertex(Vector2d(0.4, 0));
+  outMesh->createVertex(Vector2d(6, 6));
+  outMesh->createVertex(Vector2d(7, 7));
+                              
+  outMesh->allocateDataValues();
+  addGlobalIndex(outMesh);
+
+  // Test deactivated polynomial
+  PetRadialBasisFctMapping<Gaussian> mappingOff(Mapping::CONSERVATIVE, dimensions, fct,
+                                             xDead, yDead, zDead,
+                                             1e-9, Polynomial::OFF);
+  mappingOff.setMeshes(inMesh, outMesh);
+  mappingOff.computeMapping();
+  mappingOff.map(inDataID, outDataID);
+
+  BOOST_TEST ( outData->values()[0] == 2.119967 ); // Conservativness is not retained, because no polynomial
+  BOOST_TEST ( outData->values()[1] == 0.0 ); // Mapping to 0 since no basis function at (5,5) and no polynomial
+  BOOST_TEST ( outData->values()[2] == 0.0 ); // Mapping to 0 since no basis function at (5,5) and no polynomial
+  
+
+  // Test integrated polynomial
+  PetRadialBasisFctMapping<Gaussian> mappingOn(Mapping::CONSERVATIVE, dimensions, fct,
+                                               xDead, yDead, zDead,
+                                               1e-9, Polynomial::ON);
+
+  mappingOn.setMeshes(inMesh, outMesh);
+  mappingOn.computeMapping();
+  mappingOn.map(inDataID, outDataID);
+
+  BOOST_TEST ( outData->values()[0] == 0 );
+  BOOST_TEST ( outData->values()[1] == 26.0 );
+  BOOST_TEST ( outData->values()[2] == -22.0 );
+  
+  
+
+  // Test separated polynomial
+  PetRadialBasisFctMapping<Gaussian> mappingSep(Mapping::CONSERVATIVE, dimensions, fct,
+                                               xDead, yDead, zDead,
+                                               1e-9, Polynomial::SEPARATE);
+
+  mappingSep.setMeshes(inMesh, outMesh);
+  mappingSep.computeMapping();
+  mappingSep.map(inDataID, outDataID);
+
+  BOOST_TEST ( outData->values()[0] == 0 );
+  BOOST_TEST ( outData->values()[1] == 26.0 );
+  BOOST_TEST ( outData->values()[2] == -22.0 );
+  
 }
 
 
