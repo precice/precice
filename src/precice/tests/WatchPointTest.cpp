@@ -37,10 +37,10 @@ BOOST_AUTO_TEST_CASE(WatchPoint)
 
   // Create watchpoints
   Eigen::Vector2d pointToWatch0(1.0, 1.0);
-  std::string filename0("tests-WatchPointTest-output0.txt");
+  std::string filename0("precice-WatchPointTest-output0.txt");
   impl::WatchPoint watchpoint0(pointToWatch0, mesh, filename0);
   Eigen::Vector2d pointToWatch1(1.0, 1.5);
-  std::string filename1("tests-WatchPointTest-output1.txt");
+  std::string filename1("precice-WatchPointTest-output1.txt");
   impl::WatchPoint watchpoint1(pointToWatch1, mesh, filename1);
 
   // Initialize

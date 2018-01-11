@@ -119,10 +119,10 @@ private:
 
   petsc::Vector rescalingCoeffs;
 
-  KSP _solver;
+  petsc::KSPSolver _solver;
 
   /// Used to solve the under-determined system for the separated polynomial.
-  KSP _QRsolver;
+  petsc::KSPSolver _QRsolver;
 
   ISLocalToGlobalMapping _ISmapping;
 
@@ -198,8 +198,8 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
   _matrixQ("Q"),
   _matrixA("A"),
   _matrixV("V"),
-  _solver(nullptr),
-  _QRsolver(nullptr),
+  _solver("Coefficient Solver"),
+  _QRsolver("QR Solver"),
   _ISmapping(nullptr),
   _solverRtol(solverRtol),
   _polynomial(polynomial),
@@ -238,9 +238,6 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
   polyparams =    (_polynomial == Polynomial::ON      ) ? 1 + dimensions - deadDimensions : 0;
   sepPolyparams = (_polynomial == Polynomial::SEPARATE) ? 1 + dimensions - deadDimensions : 0;
   localPolyparams = utils::Parallel::getProcessRank() > 0 ? 0 : polyparams;
-
-  KSPCreate(utils::Parallel::getGlobalCommunicator(), &_solver);
-  KSPCreate(utils::Parallel::getGlobalCommunicator(), &_QRsolver);
 }
 
 template<typename RADIAL_BASIS_FUNCTION_T>
@@ -248,8 +245,6 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::~PetRadialBasisFctMapping()
 {
   delete[] _deadAxis;
   petsc::destroy(&_ISmapping);
-  petsc::destroy(&_solver);
-  petsc::destroy(&_QRsolver);
 }
 
 
@@ -326,7 +321,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   _matrixA.init(outputSize, n, PETSC_DETERMINE, PETSC_DETERMINE, MATAIJ);
   DEBUG("Set matrix A to local size " << outputSize << " x " << n);
 
-  KSPReset(_solver);
+  _solver.reset();
+  _QRsolver.reset();
 
   const int ownerRangeABegin = _matrixA.ownerRange().first;
   const int ownerRangeAEnd = _matrixA.ownerRange().second;
@@ -607,12 +603,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: clear()
   _matrixA.reset();
   _matrixQ.reset();
   _matrixV.reset();
-  
-  petsc::destroy(&_solver);
-  KSPCreate(utils::Parallel::getGlobalCommunicator(), &_solver);
 
-  petsc::destroy(&_QRsolver);
-  KSPCreate(utils::Parallel::getGlobalCommunicator(), &_QRsolver);
+  _solver.reset();
+  _QRsolver.reset();
 
   petsc::destroy(&_ISmapping);
   
@@ -649,7 +642,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
   
       for (size_t i = 0; i < input()->vertices().size(); i++ ) {
         int globalIndex = input()->vertices()[i].getGlobalIndex();
-        VecSetValue(in, globalIndex, inValues[i*valueDim + dim], INSERT_VALUES); // Dies besser als VecSetValuesLocal machen
+        VecSetValue(in, globalIndex, inValues[i*valueDim + dim], INSERT_VALUES);
       }
       in.assemble();
 
@@ -711,7 +704,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
       // Fill input from input data values
       int count = 0;
       for (const auto& vertex : input()->vertices()) {
-        ierr = VecSetValueLocal(in, vertex.getGlobalIndex()+polyparams, inValues[count*valueDim + dim], INSERT_VALUES); CHKERRV(ierr); // evtl. besser als VecSetValuesLocal
+        ierr = VecSetValueLocal(in, vertex.getGlobalIndex()+polyparams, inValues[count*valueDim + dim], INSERT_VALUES); CHKERRV(ierr);
         count++;
       }
       in.assemble();

@@ -51,7 +51,7 @@ Before using some precice* debugging methods you should set TRACE() at the begin
 
 - ERROR(message) unconditionally aborts the program. Should be used to catch user errors such as invalid configuration parameter combinations.
 - CHECK(check, errorMessage) checks if check == true and otherwise emits errorMessage and aborts program.
-- assertion(check) behaves like \c preciceCheck but should be used for programming errors and should therefore never happen to the user.
+- assertion(check) behaves like \c CHECK but should be used for programming errors and should therefore never happen to the user.
 - DEBUG(stream) prints a debug message, depending on global log level configuration.
 - INFO(stream) prints an info message, depending on global log level configuration.
 - WARN(stream) prints a warning message, depending on global log level configuration.

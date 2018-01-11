@@ -87,12 +87,6 @@ public:
   /// Sets the size and calls VecSetFromOptions
   void init(PetscInt rows);
 
-  void setName(std::string name);
-  std::string getName();
-
-  /// Returns the MPI communicator
-  MPI_Comm getCommunicator() const;
-
   int getSize();
 
   int getLocalSize();
@@ -101,7 +95,7 @@ public:
 
   void arange(double start, double stop);
 
-  void fill_with_randoms();
+  void fillWithRandoms();
 
   /// Sorts the LOCAL partion of the vector
   void sort();
@@ -157,21 +151,15 @@ public:
   /// Destroys and recreates the matrix on the same communicator
   void reset();
   
-  void setName(std::string name);
-  std::string getName();
-
-  /// Returns the MPI communicator
-  MPI_Comm getCommunicator() const;
-
   /// Get the MatInfo struct for the matrix.
   /** See http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatInfo.html for description of fields. */
   MatInfo getInfo(MatInfoType flag);
   
   void setValue(PetscInt row, PetscInt col, PetscScalar value);
   
-  void fill_with_randoms();
+  void fillWithRandoms();
   
-  void set_column(Vector &v, int col);
+  void setColumn(Vector &v, int col);
 
   /// Returns (rows, cols) global size
   std::pair<PetscInt, PetscInt> getSize();
@@ -200,6 +188,33 @@ public:
   void viewDraw();
 
 };
+
+class KSPSolver
+{
+public:
+  KSP ksp;
+  
+  /// Delete copy and assignment constructor
+  /** Copying and assignment of this class would involve copying the pointer to
+      the PETSc object and finallly cause double destruction of it.
+  */
+  KSPSolver(const KSPSolver&) = delete;
+  KSPSolver& operator=(const KSPSolver&) = delete;
+
+  explicit KSPSolver(std::string name = "");
+
+  /// Move constructor, use the implicitly declared.
+  KSPSolver(KSPSolver&& other) = default;
+
+  ~KSPSolver();
+  
+  /// Enables implicit conversion into a reference to a PETSc KSP type
+  operator KSP&();
+  
+  /// Destroys and recreates the ksp on the same communicator
+  void reset();
+};
+
 
 /// Destroys an KSP, if ksp is not null and PetscIsInitialized
 void destroy(KSP * ksp);
