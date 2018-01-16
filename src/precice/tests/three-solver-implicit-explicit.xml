@@ -18,6 +18,18 @@
          <use-data name="Data2"/>
       </mesh>
       
+      <mesh name="MeshC">
+         <use-data name="Data0"/>
+         <use-data name="Data1"/>
+         <use-data name="Data2"/>
+      </mesh>
+      
+      <mesh name="MeshD">
+         <use-data name="Data0"/>
+         <use-data name="Data1"/>
+         <use-data name="Data2"/>
+      </mesh>
+      
       <participant name="SolverOne">
          <use-mesh name="MeshA" provide="yes"/>
          <use-mesh name="MeshB" provide="yes"/>
@@ -30,12 +42,16 @@
          <use-mesh name="MeshA" from="SolverOne"/>
          <write-data name="Data1" mesh="MeshA"/>
          <read-data  name="Data0" mesh="MeshA"/>
+         <use-mesh name="MeshC" provide="yes"/>
+         <mapping:nearest-neighbor direction="read" from="MeshC" to="MeshA" constraint="conservative" />
       </participant>
       
       <participant name="SolverThree">
          <use-mesh name="MeshB" from="SolverOne"/>
          <write-data name="Data2" mesh="MeshB"/>
          <read-data  name="Data0" mesh="MeshB"/>
+         <use-mesh name="MeshD" provide="yes"/>
+         <mapping:nearest-neighbor direction="read" from="MeshD" to="MeshB" constraint="conservative" />
       </participant>
       
       <m2n:mpi-single from="SolverOne" to="SolverTwo"/>

@@ -57,6 +57,12 @@ void ReceivedPartition::compute()
     return;
   }
 
+  // check to prevent false configuration
+  if (not utils::MasterSlave::_slaveMode) {
+    CHECK(_fromMapping.use_count() > 0 || _toMapping.use_count() > 0, "The received mesh " << _mesh->getName() <<
+        " needs a mapping, either from it, to it, or both. Maybe you don't want to receive this mesh at all?")
+  }
+
   // (0) set global number of vertices before filtering
   if (utils::MasterSlave::_masterMode) {
     _mesh->setGlobalNumberOfVertices(_mesh->vertices().size());

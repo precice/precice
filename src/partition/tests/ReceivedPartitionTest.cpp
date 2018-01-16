@@ -951,8 +951,14 @@ BOOST_FIXTURE_TEST_CASE(ProvideAndReceiveCouplingMode, testing::M2NFixture,
   else{
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals));
 
+    mesh::PtrMesh pOtherMesh(new mesh::Mesh("OtherMesh", dimensions, flipNormals));
+    mapping::PtrMapping boundingFromMapping = mapping::PtrMapping (
+        new mapping::NearestNeighborMapping(mapping::Mapping::CONSISTENT, dimensions) );
+    boundingFromMapping->setMeshes(pSolidzMesh, pOtherMesh);
+
     double safetyFactor = 0.1;
     ReceivedPartition part(pSolidzMesh, ReceivedPartition::FILTER_FIRST, safetyFactor);
+    part.setFromMapping(boundingFromMapping);
     part.setm2n(m2n);
     part.communicate();
     part.compute();

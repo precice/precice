@@ -15,6 +15,11 @@
          <use-data name="Velocities" />
       </mesh>
       
+      <mesh name="SquareTwo" flip-normals="inside">
+         <use-data name="Forces" />
+         <use-data name="Velocities" />
+      </mesh>
+      
       <participant name="SolverOne">
          <use-mesh name="Square" provide="yes"/>
          <write-data name="Forces"    mesh="Square" />
@@ -23,6 +28,8 @@
       
       <participant name="SolverTwo">
          <use-mesh name="Square" from="SolverOne"/>
+         <use-mesh name="SquareTwo" provide="yes"/>
+         <mapping:nearest-neighbor direction="write" from="SquareTwo" to="Square" constraint="conservative" />
          <write-data name="Velocities" mesh="Square" />
          <read-data name="Forces"      mesh="Square" />
       </participant>
