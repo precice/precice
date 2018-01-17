@@ -84,7 +84,7 @@ void ReceivedPartition::compute()
          (_toMapping.use_count()>0 && _toMapping->getInputMesh()->vertices().size()>0)){
            // this rank has vertices at the coupling interface
            // then, also the filtered mesh should still have vertices
-        std::string msg = "The re-partitioning completely filtered out the mesh received on this rank at the coupling interface. "
+        std::string msg = "The re-partitioning completely filtered out the mesh " + _mesh->getName() +" received on this rank at the coupling interface. "
             "Most probably, the coupling interfaces of your coupled participants do not match geometry-wise. "
             "Please check your geometry setup again. Small overlaps or gaps are no problem. "
             "If your geometry setup is correct and if you have very different mesh resolutions on both sides, increasing the safety-factor "
@@ -120,7 +120,7 @@ void ReceivedPartition::compute()
          (_toMapping.use_count()>0 && _toMapping->getInputMesh()->vertices().size()>0)){
            // this rank has vertices at the coupling interface
            // then, also the filtered mesh should still have vertices
-        std::string msg = "The re-partitioning completely filtered out the mesh received on this rank at the coupling interface. "
+        std::string msg = "The re-partitioning completely filtered out the mesh " + _mesh->getName() +" received on this rank at the coupling interface. "
             "Most probably, the coupling interfaces of your coupled participants do not match geometry-wise. "
             "Please check your geometry setup again. Small overlaps or gaps are no problem. "
             "If your geometry setup is correct and if you have very different mesh resolutions on both sides, increasing the safety-factor "
@@ -158,7 +158,7 @@ void ReceivedPartition::compute()
          (_toMapping.use_count()>0 && _toMapping->getInputMesh()->vertices().size()>0)){
            // this rank has vertices at the coupling interface
            // then, also the filtered mesh should still have vertices
-        std::string msg = "The re-partitioning completely filtered out the mesh received on this rank at the coupling interface. "
+        std::string msg = "The re-partitioning completely filtered out the mesh " + _mesh->getName() +" received on this rank at the coupling interface. "
             "Most probably, the coupling interfaces of your coupled participants do not match geometry-wise. "
             "Please check your geometry setup again. Small overlaps or gaps are no problem. "
             "If your geometry setup is correct and if you have very different mesh resolutions on both sides, increasing the safety-factor "
