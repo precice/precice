@@ -29,14 +29,13 @@ def run_test(cmd, keep_test):
         sys.exit(1)
 
 
-parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+                                 description = "All additional arguments are passed to the testprecice binary.")
 
 parser.add_argument('-c', '--compile', help="Compile preCICE", dest='compile', action='store_true')
 parser.add_argument('-r', '--removebuild', help="Remove build/ and .scon* files before compiling", dest='remove_build', action='store_true')
 parser.add_argument('-k', '--keeptest', help="Do not remove test directory for earch test run", dest='keep_test', action='store_true')
 parser.add_argument('-b', help="Run boost tests.", dest='run_boostttests', action="store_true")
-parser.add_argument('-u', help="Run unit tests.", dest='run_unit', action="store_true")
-parser.add_argument('-i', help="Run integration tests.", dest='run_integration', action="store_true")
 parser.add_argument('-j', help="Number of CPUs to compile on", dest='compile_cpus', default=4)
 parser.add_argument('-p', help="Number of MPI procs. Setting to 1 means to not use MPI at all. This does not affect the build process.", type=int, dest='mpi_procs', default=4)
 parser.add_argument("-s", "--split", help="Redirect output to a process-unique file testout.N", dest="split_output", action="store_true")
@@ -49,7 +48,7 @@ if len(sys.argv) < 2:
     parser.print_help()
     sys.exit(1)
     
-args = parser.parse_args()
+args, remainder = parser.parse_known_args()
 
 os.chdir(args.root)
 
@@ -72,5 +71,5 @@ mpi_cmd = "mpirun -n {procs} {output_filename}".format(procs = args.mpi_procs,
                                                        output_filename = "--output-filename 'testout'" if args.split_output else "")
 
 if args.run_boostttests:
-    run_cmd = "{mpi} ../build/last/testprecice --color_output".format(mpi = mpi_cmd)
+    run_cmd = "{mpi} ../build/last/testprecice --color_output {args}".format(mpi = mpi_cmd, args = " ".join(remainder))
     run_test(run_cmd, args.keep_test)
