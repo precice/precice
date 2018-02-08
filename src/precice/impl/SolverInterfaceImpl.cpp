@@ -82,7 +82,7 @@ SolverInterfaceImpl:: SolverInterfaceImpl
         "Accessor process index has to be smaller than accessor process "
         << "size (given as " << _accessorProcessRank << ")!");
 
-  precice::utils::EventRegistry::initialize(participantName);
+  precice::utils::EventRegistry::instance().initialize(participantName);
 
   /* When precice stops abruptly, e.g. an external solver crashes, the
      SolverInterfaceImpl destructor is never called. Since we still want
@@ -465,9 +465,9 @@ void SolverInterfaceImpl:: finalize()
   }
 
   // Stop and print Event logging
-  precice::utils::EventRegistry::finalize();
+  precice::utils::EventRegistry::instance().finalize();
   if (not precice::utils::MasterSlave::_slaveMode) {
-    precice::utils::EventRegistry::printAll();
+    precice::utils::EventRegistry::instance().printAll();
   }
 
   // Tear down MPI and PETSc

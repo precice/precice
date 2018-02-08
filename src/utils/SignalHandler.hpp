@@ -13,7 +13,7 @@ namespace utils {
 void terminationSignalHandler(int signal)
 {
   // Print the events statistics
-  precice::utils::EventRegistry::signal_handler(signal);
+  precice::utils::EventRegistry::instance().signal_handler(signal);
 
   // Delete stale .A-B.adress files
   std::regex addrFile(R"(\..*-.*\.address)");
