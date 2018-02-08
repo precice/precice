@@ -26,7 +26,6 @@ struct SerialTestFixture {
      mesh::Mesh::resetGeometryIDsGlobally();
      mesh::Data::resetDataCount();
      impl::Participant::resetParticipantCount();
-     precice::utils::EventRegistry::clear();
      utils::MasterSlave::reset();
    }
 
