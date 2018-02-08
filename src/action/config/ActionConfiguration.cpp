@@ -14,9 +14,7 @@
 namespace precice {
 namespace action {
 
-logging::Logger ActionConfiguration::
-  _log("config::ActionConfiguration");
-
+logging::Logger ActionConfiguration:: _log("config::ActionConfiguration");
 
 ActionConfiguration:: ActionConfiguration
 (
@@ -323,11 +321,13 @@ void ActionConfiguration:: createAction()
         new action::ComputeCurvatureAction(timing, targetDataID,
         mesh));
   }
+  #ifndef PRECICE_NO_PYTHON
   else if ( _configuredAction.type == NAME_PYTHON ){
     action = action::PtrAction (
         new action::PythonAction(timing, _configuredAction.path, _configuredAction.module,
         mesh, targetDataID, sourceDataID) );
   }
+  #endif
   assertion(action.get() != nullptr);
   _actions.push_back(action);
 }
@@ -352,8 +352,7 @@ action::Action::Timing ActionConfiguration:: getTiming () const
     timing = action::Action::ON_TIMESTEP_COMPLETE_POST;
   }
   else {
-    ERROR("Unknown action timing \""
-                   <<  _configuredAction.timing << "\"!" );
+    ERROR("Unknown action timing \"" <<  _configuredAction.timing << "\"!" );
   }
   return timing;
 }

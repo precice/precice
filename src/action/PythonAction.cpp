@@ -1,7 +1,6 @@
 #ifndef PRECICE_NO_PYTHON
 #include <Python.h>
 #include <numpy/arrayobject.h>
-#endif
 #include "PythonAction.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
@@ -49,7 +48,6 @@ PythonAction:: PythonAction
 
 PythonAction:: ~PythonAction()
 {
-# ifndef PRECICE_NO_PYTHON
   if (_module != nullptr){
     assertion(_moduleNameObject != nullptr);
     assertion(_module != nullptr);
@@ -57,7 +55,6 @@ PythonAction:: ~PythonAction()
     Py_DECREF(_module);
     Py_Finalize();
   }
-# endif // not PRECICE_NO_PYTHON
 }
 
 void PythonAction:: performAction
@@ -67,7 +64,6 @@ void PythonAction:: performAction
   double computedPartFullDt,
   double fullDt)
 {
-# ifndef PRECICE_NO_PYTHON
   TRACE(time, dt, computedPartFullDt, fullDt);
 
   if (not _isInitialized) initialize();
@@ -100,7 +96,7 @@ void PythonAction:: performAction
     if(PyErr_Occurred()){
       PyErr_Print ();
       ERROR("Error occurred during call of function "
-                     << "performAction() python module \"" << _moduleName << "\"!");
+            << "performAction() python module \"" << _moduleName << "\"!");
     }
   }
 
@@ -145,13 +141,10 @@ void PythonAction:: performAction
   }
 
   Py_DECREF(dataArgs);
-
-  # endif // not PRECICE_NO_PYTHON
 }
 
 void PythonAction:: initialize()
 {
-# ifndef PRECICE_NO_PYTHON
   assertion(not _isInitialized);
   // Initialize Python
   Py_Initialize();
@@ -164,16 +157,14 @@ void PythonAction:: initialize()
   _module = PyImport_Import(_moduleNameObject);
   if (_module == nullptr){
     PyErr_Print();
-    ERROR("Could not load python module \""
-                   << _moduleName << "\" at path \"" << _modulePath << "\"!");
+    ERROR("Could not load python module \"" << _moduleName << "\" at path \"" << _modulePath << "\"!");
   }
 
   // Construct method performAction
   _performAction = PyObject_GetAttrString(_module, "performAction");
   if (PyErr_Occurred()){
     PyErr_Clear();
-    WARN("No function void performAction() in python module \""
-                   << _moduleName << "\" found.");
+    WARN("No function void performAction() in python module \"" << _moduleName << "\" found.");
     _performAction = nullptr;
   }
 //  bool valid = _performAction != NULL;
@@ -185,8 +176,7 @@ void PythonAction:: initialize()
   _vertexCallback = PyObject_GetAttrString(_module, "vertexCallback");
   if (PyErr_Occurred()){
     PyErr_Clear();
-    WARN("No function void vertexCallback() in python module \""
-                   << _moduleName << "\" found.");
+    WARN("No function void vertexCallback() in python module \"" << _moduleName << "\" found.");
     _vertexCallback = nullptr;
   }
 
@@ -194,23 +184,20 @@ void PythonAction:: initialize()
   _postAction = PyObject_GetAttrString(_module, "postAction");
   if (PyErr_Occurred()){
     PyErr_Clear();
-    WARN("No function void postAction() in python module \""
-                   << _moduleName << "\" found.");
+    WARN("No function void postAction() in python module \"" << _moduleName << "\" found.");
     _postAction = nullptr;
   }
-# endif // not PRECICE_NO_PYTHON
 }
 
 int PythonAction:: makeNumPyArraysAvailable()
 {
-# ifndef PRECICE_NO_PYTHON
   static bool importedAlready = false;
   if (importedAlready) return 0;
   import_array1(-1); // this macro is defined be NumPy and must be included
   importedAlready = true;
-# endif
   return 1;
 }
 
 }} // namespace precice, action
 
+#endif
