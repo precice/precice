@@ -6,12 +6,9 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
 #include "utils/EigenHelperFunctions.hpp"
-#include "utils/EventTimings.hpp"
 #include "utils/Globals.hpp"
 #include "utils/MasterSlave.hpp"
 //#include "utils/NumericalCompare.hpp"
-
-using precice::utils::Event;
 
 namespace precice
 {
@@ -259,8 +256,7 @@ void BaseQNPostProcessing::updateDifferenceMatrices(
     DataMap &cplData)
 {
   TRACE();
-  Event e("Base-QN_updateDifferenceMatrices()", true, true); // time measurement, barrier
-
+  
   // Compute current residual: vertex-data - oldData
   _residuals = _values;
   _residuals -= _oldValues;
@@ -321,7 +317,6 @@ void BaseQNPostProcessing::updateDifferenceMatrices(
     _oldResiduals = _residuals; // Store residuals
     _oldXTilde    = _values;    // Store x_tilde
   }
-  //e.stop(true);
 }
 
 /** ---------------------------------------------------------------------------------------------
@@ -335,8 +330,7 @@ void BaseQNPostProcessing::performPostProcessing(
     DataMap &cplData)
 {
   TRACE(_dataIDs.size(), cplData.size());
-  Event e("Base-QN_performPostProcessing()", true, true); // time measurement, barrier
-
+  
   assertion(_oldResiduals.size() == _oldXTilde.size(), _oldResiduals.size(), _oldXTilde.size());
   assertion(_values.size() == _oldXTilde.size(), _values.size(), _oldXTilde.size());
   assertion(_oldValues.size() == _oldXTilde.size(), _oldValues.size(), _oldXTilde.size());
@@ -493,14 +487,12 @@ void BaseQNPostProcessing::performPostProcessing(
   // number of iterations (usually equals number of columns in LS-system)
   its++;
   _firstIteration = false;
-  //  e.stop(true);
 }
 
 void BaseQNPostProcessing::applyFilter()
 {
   TRACE(_filter);
-  Event e("Base-QN_applyFilter()", true, true); // time measurement, barrier
-
+  
   if (_filter == PostProcessing::NOFILTER) {
     // do nothing
   } else {
@@ -516,7 +508,6 @@ void BaseQNPostProcessing::applyFilter()
     }
     assertion(_matrixV.cols() == _qrV.cols(), _matrixV.cols(), _qrV.cols());
   }
-  //  e.stop(true);
 }
 
 void BaseQNPostProcessing::concatenateCouplingData(
@@ -568,8 +559,7 @@ void BaseQNPostProcessing::iterationsConverged(
     DataMap &cplData)
 {
   TRACE();
-  Event e("Base-QN_iterationsConvegred()", true, true); // time measurement, barrier
-
+  
   if (utils::MasterSlave::_masterMode || (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode))
     _infostringstream << "# time step " << tSteps << " converged #\n iterations: " << its
                       << "\n used cols: " << getLSSystemCols() << "\n del cols: " << _nbDelCols << std::endl;
@@ -646,7 +636,6 @@ void BaseQNPostProcessing::iterationsConverged(
 
   _matrixCols.push_front(0);
   _firstIteration = true;
-  //  e.stop(true);
 }
 
 /** ---------------------------------------------------------------------------------------------

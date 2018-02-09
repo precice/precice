@@ -9,16 +9,13 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
 #include "utils/EigenHelperFunctions.hpp"
-#include "utils/EventTimings.hpp"
 #include "utils/Globals.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/Publisher.hpp"
 
-#include <cstring>
 #include <fstream>
 #include <sstream>
 
-using precice::utils::Event;
 using precice::utils::Publisher;
 
 namespace precice
@@ -96,8 +93,7 @@ void MVQNPostProcessing::initialize(
     DataMap &cplData)
 {
   TRACE();
-  Event e("MVQNPostProcessing::initialize", true, true); // time measurement, barrier
-
+  
   // do common QN post processing initialization
   BaseQNPostProcessing::initialize(cplData);
 
@@ -118,7 +114,6 @@ void MVQNPostProcessing::initialize(
       try {
         // auto addressDirectory = std::to_string(".");
         if (utils::MasterSlave::_masterMode) {
-          //Event e("CyclicComm::acceptConnection/createDirectories");
           for (int rank = 0; rank < utils::MasterSlave::_size; ++rank) {
             Publisher::createDirectory(std::string(".") + "/" + "." + "cyclicComm-" + std::to_string(rank) + ".address");
           }
@@ -187,8 +182,6 @@ void MVQNPostProcessing::initialize(
   if (utils::MasterSlave::_masterMode || (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode))
     _infostringstream << " IMVJ restart mode: " << _imvjRestart << "\n chunk size: " << _chunkSize << "\n trunc eps: " << _svdJ.getThreshold() << "\n R_RS: " << _RSLSreusedTimesteps << "\n--------\n"
                       << std::endl;
-
-  //e.stop(true);
 }
 
 // ==================================================================================
@@ -217,8 +210,7 @@ void MVQNPostProcessing::updateDifferenceMatrices(
    */
 
   TRACE();
-  Event e("MVQNPostProcessing::updateDifferenceMatrices", true, true); // time measurement, barrier
-
+  
   // call the base method for common update of V, W matrices
   // important that base method is called before updating _Wtil
   BaseQNPostProcessing::updateDifferenceMatrices(cplData);
@@ -283,7 +275,6 @@ void MVQNPostProcessing::updateDifferenceMatrices(
       }
     }
   }
-  //  e.stop(true);
 }
 
 // ==================================================================================
@@ -330,7 +321,6 @@ void MVQNPostProcessing::pseudoInverse(
   assertion(pseudoInverse.rows() == _qrV.cols(), pseudoInverse.rows(), _qrV.cols());
   assertion(pseudoInverse.cols() == _qrV.rows(), pseudoInverse.cols(), _qrV.rows());
 
-  Event           e("computePseudoInverse()", true, true); // time measurement, barrier
   Eigen::VectorXd yVec(pseudoInverse.rows());
 
   // assertions for the case of processors with no vertices
@@ -360,7 +350,6 @@ void MVQNPostProcessing::buildWtil()
    * PRECONDITION: Assumes that V, W, J_prev are already preconditioned,
    */
   TRACE();
-  Event e("buildWtil()", true, true); // time measurement, barrier
 
   assertion(_matrixV.rows() == _qrV.rows(), _matrixV.rows(), _qrV.rows());
   assertion(getLSSystemCols() == _qrV.cols(), getLSSystemCols(), _qrV.cols());
@@ -400,7 +389,6 @@ void MVQNPostProcessing::buildWtil()
 void MVQNPostProcessing::buildJacobian()
 {
   TRACE();
-  Event e("buildJacobian()", true, true); // time measurement, barrier
   /**      --- compute inverse Jacobian ---
   *
   * J_inv = J_inv_n + (W - J_inv_n*V)*(V^T*V)^-1*V^T
@@ -434,7 +422,6 @@ void MVQNPostProcessing::buildJacobian()
 
   // update Jacobian
   _invJacobian = _invJacobian + _oldInvJacobian;
-  //e.stop(true);
 }
 
 // ==================================================================================
@@ -443,8 +430,7 @@ void MVQNPostProcessing::computeNewtonUpdateEfficient(
     Eigen::VectorXd &        xUpdate)
 {
   TRACE();
-  Event e(__func__, true, true); // time measurement, barrier
-
+  
   /**      --- update inverse Jacobian efficient, ---
   *   If normal mode is used:
   *   Do not recompute W_til in every iteration and do not build
@@ -536,15 +522,13 @@ void MVQNPostProcessing::computeNewtonUpdateEfficient(
     _Wtil.conservativeResize(0, 0);
     _resetLS = true;
   }
-  //  e.stop(true);
 }
 
 // ==================================================================================
 void MVQNPostProcessing::computeNewtonUpdate(PostProcessing::DataMap &cplData, Eigen::VectorXd &xUpdate)
 {
   TRACE();
-  Event e(__func__, true, true); // time measurement, barrier
-
+  
   /**      --- update inverse Jacobian ---
 	*
 	* J_inv = J_inv_n + (W - J_inv_n*V)*(V^T*V)^-1*V^T
@@ -582,8 +566,7 @@ void MVQNPostProcessing::computeNewtonUpdate(PostProcessing::DataMap &cplData, E
 void MVQNPostProcessing::restartIMVJ()
 {
   TRACE();
-  Event e(__func__, true, true); // time measurement, barrier
-
+  
   //int used_storage = 0;
   //int theoreticalJ_storage = 2*getLSSystemRows()*_residuals.size() + 3*_residuals.size()*getLSSystemCols() + _residuals.size()*_residuals.size();
   //               ------------ RESTART SVD ------------
@@ -761,7 +744,6 @@ void MVQNPostProcessing::restartIMVJ()
   } else {
     assertion(false);
   }
-  //  e.stop(true);
 }
 
 // ==================================================================================
@@ -769,8 +751,7 @@ void MVQNPostProcessing::specializedIterationsConverged(
     DataMap &cplData)
 {
   TRACE();
-  Event e(__func__, true, true); // time measurement, barrier
-
+  
   // truncate V_RSLS and W_RSLS matrices according to _RSLSreusedTimesteps
   if (_imvjRestartType == RS_LS) {
     if (_matrixCols_RSLS.front() == 0) { // Did only one iteration
@@ -866,7 +847,6 @@ void MVQNPostProcessing::specializedIterationsConverged(
     // store inverse Jacobian from converged time step. NOT SCALED with preconditioner
     _oldInvJacobian = _invJacobian;
   }
-  //  e.stop(true);
 }
 
 // ==================================================================================

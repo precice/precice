@@ -8,12 +8,9 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
 #include "utils/EigenHelperFunctions.hpp"
-#include "utils/EventTimings.hpp"
 #include "utils/MasterSlave.hpp"
 
 //#include "utils/NumericalCompare.hpp"
-
-using precice::utils::Event;
 
 namespace precice
 {
@@ -45,8 +42,6 @@ IQNILSPostProcessing::IQNILSPostProcessing(
 void IQNILSPostProcessing::initialize(
     DataMap &cplData)
 {
-  Event e("IQNILSPostProcessing::initialize", true, true); // time measurement, barrier
-
   // do common QN post processing initialization
   BaseQNPostProcessing::initialize(cplData);
 
@@ -57,13 +52,11 @@ void IQNILSPostProcessing::initialize(
       utils::append(_secondaryOldXTildes[pair.first], (Eigen::VectorXd) Eigen::VectorXd::Zero(secondaryEntries));
     }
   }
-  //  e.stop(true);
 }
 
 void IQNILSPostProcessing::updateDifferenceMatrices(
-    DataMap &cplData)
+  DataMap &cplData)
 {
-  Event e("IQNILSPostProcessing::updateDifferenceMatrices", true, true); // time measurement, barrier
   // Compute residuals of secondary data
   for (int id : _secondaryDataIDs) {
     Eigen::VectorXd &secResiduals = _secondaryResiduals[id];
@@ -112,7 +105,6 @@ void IQNILSPostProcessing::updateDifferenceMatrices(
 
   // call the base method for common update of V, W matrices
   BaseQNPostProcessing::updateDifferenceMatrices(cplData);
-  //  e.stop(true);
 }
 
 void IQNILSPostProcessing::computeUnderrelaxationSecondaryData(
@@ -140,8 +132,6 @@ void IQNILSPostProcessing::computeUnderrelaxationSecondaryData(
 void IQNILSPostProcessing::computeQNUpdate(PostProcessing::DataMap &cplData, Eigen::VectorXd &xUpdate)
 {
   TRACE();
-  Event e("IQNILSPostProcessing::computeNewtonUpdate", true, true); // time measurement, barrier
-
   DEBUG("   Compute Newton factors");
 
   // Calculate QR decomposition of matrix V and solve Rc = -Qr
@@ -160,8 +150,6 @@ void IQNILSPostProcessing::computeQNUpdate(PostProcessing::DataMap &cplData, Eig
 
   Eigen::VectorXd _local_b = Eigen::VectorXd::Zero(_qrV.cols());
   Eigen::VectorXd _global_b;
-
-  Event e_qrsolve("IQNILSPostProcessing::solve: R alpha = -Q^T r", true, true); // time measurement, barrier
 
   // need to scale the residual to compensate for the scaling in c = R^-1 * Q^T * P^-1 * residual'
   // it is also possible to apply the inverse scaling weights from the right to the vector c
@@ -201,8 +189,7 @@ void IQNILSPostProcessing::computeQNUpdate(PostProcessing::DataMap &cplData, Eig
     // broadcast coefficients c to all slaves
     utils::MasterSlave::broadcast(c.data(), c.size());
   }
-  e_qrsolve.stop();
-
+  
   DEBUG("   Apply Newton factors");
   // compute x updates from W and coefficients c, i.e, xUpdate = c*W
   xUpdate = _matrixW * c;
@@ -243,14 +230,11 @@ void IQNILSPostProcessing::computeQNUpdate(PostProcessing::DataMap &cplData, Eig
       _secondaryMatricesW[id].resize(0, 0);
     }
   }
-  //	e.stop(true);
 }
 
 void IQNILSPostProcessing::specializedIterationsConverged(
     DataMap &cplData)
 {
-  Event e("IQNILSPostProcessing::specializedIterationsConverged", true, true); // time measurement, barrier
-
   if (_matrixCols.front() == 0) { // Did only one iteration
     _matrixCols.pop_front();
   }
@@ -277,7 +261,6 @@ void IQNILSPostProcessing::specializedIterationsConverged(
       }
     }
   }
-  //e.stop(true);
 }
 
 void IQNILSPostProcessing::removeMatrixColumn(
