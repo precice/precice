@@ -15,7 +15,9 @@
 #include <chrono>
 #include <utility>
 #include <limits>
+#ifndef PRECICE_NO_MPI
 #include <mpi.h>
+#endif
 #include "prettyprint.hpp"
 #include "TableWriter.hpp"
 
@@ -106,7 +108,7 @@ Event::Clock::duration Event::getDuration()
 EventData::EventData(std::string _name) :
   name(_name)
 {
-  MPI_Comm_rank(Parallel::getGlobalCommunicator(), &rank);
+  rank =  Parallel::getProcessRank();
 }
 
 EventData::EventData(std::string _name, int _rank, long _count, long _total,
@@ -314,9 +316,8 @@ void EventRegistry::printAll()
 
 void EventRegistry::print(std::ostream &out)
 {
-  int rank, size;
-  MPI_Comm_rank(Parallel::getGlobalCommunicator(), &rank);
-  MPI_Comm_size(Parallel::getGlobalCommunicator(), &size);
+  int rank =  Parallel::getProcessRank();
+  int size = Parallel::getCommunicatorSize();
   
   if (rank == 0) {
     using std::endl;
@@ -365,9 +366,8 @@ void EventRegistry::print()
 
 void EventRegistry::writeCSV(std::string filename)
 {
-  int rank, size;
-  MPI_Comm_rank(Parallel::getGlobalCommunicator(), &rank);
-  MPI_Comm_size(Parallel::getGlobalCommunicator(), &size);
+  int rank =  Parallel::getProcessRank();
+  int size = Parallel::getCommunicatorSize();
   
   if (rank != 0)
     return;
@@ -398,10 +398,8 @@ void EventRegistry::writeCSV(std::string filename)
 
 void EventRegistry::writeEventLogs(std::string filename)
 {
-  int rank, size;
-  MPI_Comm_rank(Parallel::getGlobalCommunicator(), &rank);
-  MPI_Comm_size(Parallel::getGlobalCommunicator(), &size);
-  
+  int rank =  Parallel::getProcessRank();
+    
   if (rank != 0)
     return;
   
