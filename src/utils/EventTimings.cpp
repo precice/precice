@@ -457,6 +457,7 @@ void EventRegistry::printGlobalStats()
 
 void EventRegistry::collect()
 {
+  #ifndef PRECICE_NO_MPI
   // Register MPI datatype
   MPI_Datatype MPI_EVENTDATA;
   int blocklengths[] = {255, 2, 3, 2};
@@ -497,11 +498,12 @@ void EventRegistry::collect()
       sizeof(Event::StateChanges::value_type) * ev.second.stateChanges.size();
     packSendBuf.emplace_back(packSize);
     int position = 0;
-    MPI_Pack(ev.second.getData().data(), ev.second.getData().size(),
-             MPI_INT, packSendBuf.back().data(), packSize, &position, Parallel::getGlobalCommunicator());
-    MPI_Pack(ev.second.stateChanges.data(),
+    MPI_Pack(const_cast<int*>(ev.second.getData().data()),
+             ev.second.getData().size(),
+             MPI_INT, packSendBuf.back().data(), packSize, &position, MPI_COMM_WORLD);
+    MPI_Pack(const_cast<Event::StateChanges::pointer>(ev.second.stateChanges.data()),
              ev.second.stateChanges.size() * sizeof(Event::StateChanges::value_type),
-             MPI_BYTE, packSendBuf.back().data(), packSize, &position, Parallel::getGlobalCommunicator());
+             MPI_BYTE, packSendBuf.back().data(), packSize, &position, MPI_COMM_WORLD);
 
     MPI_Isend(&eventSendBuf.back(), 1, MPI_EVENTDATA, 0, 0, Parallel::getGlobalCommunicator(), &req);
     requests.push_back(req);
@@ -536,6 +538,7 @@ void EventRegistry::collect()
   }    
   MPI_Waitall(requests.size(), requests.data(), MPI_STATUSES_IGNORE);
   MPI_Type_free(&MPI_EVENTDATA);
+  #endif
 }
 
 
