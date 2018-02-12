@@ -247,7 +247,7 @@ template<typename RADIAL_BASIS_FUNCTION_T>
 void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 {
   TRACE();
-  precice::utils::Event e(__func__);
+  precice::utils::Event e("PetRBF.computeMapping");
 
   clear();
 
@@ -522,7 +522,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   eFillA.stop();
   // -- END FILL LOOP FOR MATRIX A --
 
-  precice::utils::Event ePostFill("PetRBF.PostFill");
+  precice::utils::Event ePostFill("PetRBF.postFill");
   
   ierr = MatAssemblyBegin(_matrixA, MAT_FINAL_ASSEMBLY); CHKERRV(ierr);
 
@@ -601,7 +601,7 @@ template<typename RADIAL_BASIS_FUNCTION_T>
 void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int outputDataID)
 {
   TRACE(inputDataID, outputDataID);
-  precice::utils::Event e(__func__);
+  precice::utils::Event e("PetRBF.map");
   
   assertion(_hasComputedMapping);
   assertion(input()->getDimensions() == output()->getDimensions(),
@@ -936,7 +936,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::estimatePreallocationMat
 template <typename RADIAL_BASIS_FUNCTION_T>
 void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computePreallocationMatrixC(const mesh::PtrMesh inMesh)
 {
-  precice::utils::Event ePreallocC("PetRBF.PreallocC");
+  precice::utils::Event ePreallocC("PetRBF.preallocC");
 
   PetscInt n, ierr;
   
@@ -1014,7 +1014,7 @@ template <typename RADIAL_BASIS_FUNCTION_T>
 void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computePreallocationMatrixA(
   const mesh::PtrMesh inMesh, const mesh::PtrMesh outMesh)
 {  
-  precice::utils::Event ePreallocA("PetRBF.PreallocA");
+  precice::utils::Event ePreallocA("PetRBF.preallocA");
 
   PetscInt ownerRangeABegin, ownerRangeAEnd, colOwnerRangeABegin, colOwnerRangeAEnd;
   PetscInt outputSize, ierr;
@@ -1094,7 +1094,7 @@ template <typename RADIAL_BASIS_FUNCTION_T>
 std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::savedPreallocationMatrixC(
   const mesh::PtrMesh inMesh)
 {
-  precice::utils::Event ePreallocC("PetRBF.PreallocC");
+  precice::utils::Event ePreallocC("PetRBF.preallocC");
 
   PetscInt n;
   
@@ -1175,7 +1175,7 @@ std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL
   const mesh::PtrMesh inMesh, const mesh::PtrMesh outMesh)
 {
   INFO("Using saved preallocation");
-  precice::utils::Event ePreallocA("PetRBF.PreallocA");
+  precice::utils::Event ePreallocA("PetRBF.preallocA");
 
   PetscInt ownerRangeABegin, ownerRangeAEnd, colOwnerRangeABegin, colOwnerRangeAEnd;
   PetscInt outputSize, n;
@@ -1259,7 +1259,7 @@ std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL
   const mesh::PtrMesh inMesh)
 {
   INFO("Using tree-based preallocation for matrix C");
-  precice::utils::Event ePreallocC("PetRBF.PreallocC");
+  precice::utils::Event ePreallocC("PetRBF.preallocC");
   namespace bg = boost::geometry;
   
   PetscInt n;
@@ -1350,7 +1350,7 @@ std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL
   const mesh::PtrMesh inMesh, const mesh::PtrMesh outMesh)
 {
   INFO("Using tree-based preallocation for matrix A");
-  precice::utils::Event ePreallocA("PetRBF.PreallocA");
+  precice::utils::Event ePreallocA("PetRBF.preallocA");
   namespace bg = boost::geometry;
   
   PetscInt ownerRangeABegin, ownerRangeAEnd, colOwnerRangeABegin, colOwnerRangeAEnd;

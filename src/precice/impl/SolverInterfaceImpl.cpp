@@ -82,8 +82,6 @@ SolverInterfaceImpl:: SolverInterfaceImpl
         "Accessor process index has to be smaller than accessor process "
         << "size (given as " << _accessorProcessRank << ")!");
 
-  precice::utils::EventRegistry::instance().initialize(participantName);
-
   /* When precice stops abruptly, e.g. an external solver crashes, the
      SolverInterfaceImpl destructor is never called. Since we still want
      to print the timings, we install the signal handler here. */
@@ -184,6 +182,7 @@ void SolverInterfaceImpl:: configure
   
   utils::Parallel::initializeMPI(nullptr, nullptr);
   precice::logging::setMPIRank(utils::Parallel::getProcessRank());
+  precice::utils::EventRegistry::instance().initialize(_accessorName);
   
   // Setup communication to server
   if (_clientMode){

@@ -6,7 +6,6 @@ import locale, shlex, datetime, io
 import pandas
 
 import numpy as np
-from ipdb import set_trace
 
 
 def getDataFrame(file):
