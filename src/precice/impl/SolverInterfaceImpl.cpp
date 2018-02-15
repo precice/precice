@@ -465,7 +465,7 @@ void SolverInterfaceImpl:: finalize()
 
   // Stop and print Event logging
   precice::utils::EventRegistry::instance().finalize();
-  if (not precice::utils::MasterSlave::_slaveMode) {
+  if (not precice::testMode and not precice::utils::MasterSlave::_slaveMode) {
     precice::utils::EventRegistry::instance().printAll();
   }
 
