@@ -2,6 +2,9 @@ import os
 import subprocess
 import sys
 
+import sysconfig
+import numpy as np
+
 ##################################################################### FUNCTIONS
 
 def uniqueCheckLib(lib):
@@ -202,17 +205,23 @@ elif not env["mpi"]:
     env.Append(CPPDEFINES = ['PRECICE_NO_MPI'])
     buildpath += "-nompi"
 
-
 # ====== Python ======
 if env["python"]:
-    pythonLib = checkset_var('PRECICE_PYTHON_LIB', "python2.7")
-    pythonIncPath = checkset_var('PRECICE_PYTHON_INC_PATH', '/usr/include/python2.7/')
-    numpyIncPath = checkset_var('PRECICE_NUMPY_INC_PATH',  '/usr/include/python2.7/numpy/')
-    
+    pythonLibDefault = 'python'+str(sys.version_info.major)+'.'+str(sys.version_info.minor)
+    pythonLibPathDefault = sysconfig.get_config_var('LIBDIR')
+    pythonIncPathDefault = sysconfig.get_paths()['include']
+    numpyIncPathDefault = np.get_include()
+
+    pythonLib = checkset_var('PRECICE_PYTHON_LIB', pythonLibDefault)
+    pythonLibPath = checkset_var('PRECICE_PYTHON_LIB_PATH', pythonLibPathDefault)
+    pythonIncPath = checkset_var('PRECICE_PYTHON_INC_PATH', pythonIncPathDefault)
+    numpyIncPath = checkset_var('PRECICE_NUMPY_INC_PATH', numpyIncPathDefault)
+
     # FIXME: Supresses NumPy deprecation warnings. Needs to converted to the newer API.
     env.Append(CPPDEFINES = ['NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION'])
     uniqueCheckLib(pythonLib)
     env.AppendUnique(CPPPATH = [pythonIncPath, numpyIncPath])
+    env.AppendUnique(LIBPATH = [pythonLib])
     checkHeader('Python.h', "Python")
     # Check for numpy header needs python header first to compile
     checkHeader(['Python.h', 'numpy/arrayobject.h'], "NumPy")
