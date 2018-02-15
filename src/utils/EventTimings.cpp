@@ -522,11 +522,10 @@ void EventRegistry::collect()
         MPI_Get_count(&status, MPI_PACKED, &packSize);
         char packBuffer[packSize];
         MPI_Recv(packBuffer, packSize, MPI_PACKED, i, MPI_ANY_TAG, Parallel::getGlobalCommunicator(), MPI_STATUS_IGNORE);
-        MPI_Unpack(packBuffer, ev.dataSize, &position, recvData.data(), ev.dataSize, MPI_INT, Parallel::getGlobalCommunicator());
-        MPI_Unpack(packBuffer, ev.stateChangesSize * sizeof(Event::StateChanges::value_type),
-                   &position, recvStateChanges.data(),
-                   ev.stateChangesSize * sizeof(Event::StateChanges::value_type), MPI_BYTE, Parallel::getGlobalCommunicator());
-          
+        MPI_Unpack(packBuffer, packSize, &position, recvData.data(), ev.dataSize, MPI_INT, MPI_COMM_WORLD);
+        MPI_Unpack(packBuffer, packSize, &position, recvStateChanges.data(),
+                   ev.stateChangesSize * sizeof(Event::StateChanges::value_type), MPI_BYTE, MPI_COMM_WORLD);
+        
         globalEvents.emplace(std::piecewise_construct, std::forward_as_tuple(ev.name),
                              std::forward_as_tuple(ev.name, ev.rank, ev.count, ev.total, ev.max, ev.min,
                                                    recvData, recvStateChanges));
