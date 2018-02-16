@@ -28,6 +28,7 @@ env:
     - LD_LIBRARY_PATH="$PETSC_DIR/$PETSC_ARCH/lib:$LOCAL_INSTALL/lib:$LD_LIBRARY_PATH"
     - LIBRARY_PATH="$PETSC_DIR/$PETSC_ARCH/lib:$LOCAL_INSTALL/lib:$LIBRARY_PATH"
     - PYTHONPATH="$PETSC_DIR/$PETSC_ARCH/lib:/usr/lib/python2.7:/usr/lib/python2.7/dist-packages:/usr/lib/python2.7/plat-x86_64-linux-gnu"
+    - PRECICE_PYTHON_INC_PATH="/usr/include/python2.7/"
     
   matrix:
     - MPI=on PETSC=on
