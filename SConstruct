@@ -3,25 +3,33 @@ import subprocess
 import sys
 
 import sysconfig
-import numpy as np
+try:
+    import numpy as np
+except ImportError:
+    pass
 
 ##################################################################### FUNCTIONS
 
-def uniqueCheckLib(lib):
-    """ Checks for a library and appends it to env if not already appended. """
-    if conf.CheckLib(lib, autoadd=0, language="C++"):
-        conf.env.AppendUnique(LIBS = [lib])
-        return True
-    else:
-        print("ERROR: Library '" + lib + "' not found!")
-        Exit(1)
+def checkAdd(lib = None, header = None, usage = ""):
+    """ Checks for a library and/or header and appends it to env if not already appended. """
 
-def checkHeader(header, usage):
-    if not conf.CheckCXXHeader(header):
-        print("ERROR: Header '" + str(header) + "' (needed for " + usage + ") not found or does not compile!")
-        Exit(1)
-    else:
-        return True
+    usage = " (needed for " + usage + ") " if usage else ""
+    if lib and header:
+        if not conf.CheckLibWithHeader(lib, header = header, autoadd=0, language="C++"):
+            print("ERROR: Library '" + lib + "' or header '" + header + "'" + usage + "not found.")
+            Exit(1)
+        conf.env.AppendUnique(LIBS = [lib])
+    elif lib:
+        if not conf.CheckLib(lib, autoadd=0, language="C++"):
+            print("ERROR: Library '" + lib + "'" + usage + "not found!")
+            Exit(1)
+        conf.env.AppendUnique(LIBS = [lib])
+    elif header:
+        if not conf.CheckCXXHeader(header):
+            print("ERROR: Header '" + header + "'" + usage + "not found!")
+            Exit(1)
+
+
 
 def print_options(vars):
     """ Print all build option and if they have been modified from their default value. """
@@ -36,7 +44,7 @@ def vprint(name, value, default=True, description = None):
     """ Pretty prints an environment variabe with value and modified or not. """
     mod = "(default)" if default else "(modified)"
     desc = "   " + description if description else ""
-    print("{0:10} {1:25} = {2!s:8}{3}".format(mod, name, value, desc))
+    print("{0:10} {1:10} = {2!s:8}{3}".format(mod, name, value, desc))
 
 def checkset_var(varname, default):
     """ Checks if environment variable is set, use default otherwise and print the value. """
@@ -136,7 +144,7 @@ elif env["build"] == 'release':
 
     
 # ====== libpthread ======
-uniqueCheckLib("pthread")
+checkAdd("pthread")
 
     
 # ====== PETSc ======
@@ -150,17 +158,18 @@ if env["petsc"]:
 
     env.Append(CPPPATH = [os.path.join( PETSC_DIR, "include"),
                           os.path.join( PETSC_DIR, PETSC_ARCH, "include")])
-    env.Append(LIBPATH = [os.path.join( PETSC_DIR, PETSC_ARCH, "lib")])
+    env.Append(LIBPATH = [os.path.join( PETSC_DIR, PETSC_ARCH, "lib"),
+                          os.path.join( PETSC_DIR, "lib")])
     if env["platform"] == "hazelhen":
-        uniqueCheckLib("craypetsc_gnu_real")
+        checkAdd("craypetsc_gnu_real")
     else:
-        uniqueCheckLib("petsc")
+        checkAdd("petsc")
 else:
     env.Append(CPPDEFINES = ['PRECICE_NO_PETSC'])
     buildpath += "-nopetsc"
 
 # ====== Eigen ======
-checkHeader("Eigen/Dense", "Eigen")
+checkAdd(header = "Eigen/Dense", usage = "Eigen")
 if env["build"] == "debug":
     env.Append(CPPDEFINES = ['EIGEN_INITIALIZE_MATRICES_BY_NAN'])
 
@@ -175,17 +184,17 @@ env.Append(CPPDEFINES= ['BOOST_SPIRIT_USE_PHOENIX_V3',
                         'BOOST_ALL_DYN_LINK',
                         'BOOST_ASIO_ENABLE_OLD_SERVICES']) # Interfaces have changed in 1.66
 
-uniqueCheckLib("boost_log")
-uniqueCheckLib("boost_log_setup")
-uniqueCheckLib("boost_thread")
-uniqueCheckLib("boost_system")
-uniqueCheckLib("boost_filesystem")
-uniqueCheckLib("boost_program_options")
-uniqueCheckLib("boost_unit_test_framework")
+checkAdd("boost_log")
+checkAdd("boost_log_setup")
+checkAdd("boost_thread")
+checkAdd("boost_system")
+checkAdd("boost_filesystem")
+checkAdd("boost_program_options")
+checkAdd("boost_unit_test_framework")
 
-checkHeader('boost/vmd/is_empty.hpp', 'Boost Variadic Macro Data Library')
-checkHeader('boost/geometry.hpp', 'Boost Geometry Library')
-checkHeader('boost/signals2.hpp', 'Boost Signals2')
+checkAdd(header = 'boost/vmd/is_empty.hpp', usage = 'Boost Variadic Macro Data Library')
+checkAdd(header = 'boost/geometry.hpp', usage = 'Boost Geometry Library')
+checkAdd(header = 'boost/signals2.hpp', usage = 'Boost Signals2')
 
 # ====== Spirit2 ======
 if not env["spirit2"]:
@@ -219,12 +228,11 @@ if env["python"]:
 
     # FIXME: Supresses NumPy deprecation warnings. Needs to converted to the newer API.
     env.Append(CPPDEFINES = ['NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION'])
-    uniqueCheckLib(pythonLib)
     env.AppendUnique(CPPPATH = [pythonIncPath, numpyIncPath])
     env.AppendUnique(LIBPATH = [pythonLib])
-    checkHeader('Python.h', "Python")
+    checkAdd(lib = pythonLib, header = "Python.h")
     # Check for numpy header needs python header first to compile
-    checkHeader(['Python.h', 'numpy/arrayobject.h'], "NumPy")
+    checkAdd( header = ['Python.h', 'numpy/arrayobject.h'], usage = "NumPy")
 else:
     buildpath += "-nopython"
     env.Append(CPPDEFINES = ['PRECICE_NO_PYTHON'])
@@ -244,7 +252,7 @@ elif env["platform"] == "hazelhen":
 
 # ====== LibXML2 ======
 env.Append(CPPPATH = ['/usr/include/libxml2'])
-uniqueCheckLib("xml2")
+checkAdd("xml2")
 
 print
 env = conf.Finish() # Used to check libraries
