@@ -219,6 +219,7 @@ if env["python"]:
     pythonLibDefault = 'python'+str(sys.version_info.major)+'.'+str(sys.version_info.minor)
     pythonLibPathDefault = sysconfig.get_config_var('LIBDIR')
     pythonIncPathDefault = sysconfig.get_paths()['include']
+    pythonIncPathHOTFIX = '/usr/include/python2.7/'  # todo should be replaced by a nicer solution, but otherwise our build system fails currently. See https://stackoverflow.com/questions/48826123/why-do-include-paths-in-python2-and-python3-differ
     numpyIncPathDefault = np.get_include()
 
     pythonLib = checkset_var('PRECICE_PYTHON_LIB', pythonLibDefault)
@@ -228,7 +229,7 @@ if env["python"]:
 
     # FIXME: Supresses NumPy deprecation warnings. Needs to converted to the newer API.
     env.Append(CPPDEFINES = ['NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION'])
-    env.AppendUnique(CPPPATH = [pythonIncPath, numpyIncPath])
+    env.AppendUnique(CPPPATH = [pythonIncPath, pythonIncPathHOTFIX, numpyIncPath])
     env.AppendUnique(LIBPATH = [pythonLib])
     checkAdd(lib = pythonLib, header = "Python.h")
     # Check for numpy header needs python header first to compile
