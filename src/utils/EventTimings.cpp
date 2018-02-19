@@ -503,9 +503,9 @@ void EventRegistry::collect()
     
     packSendBuf[i] = std::unique_ptr<char[]>(new char[packSize]);
     int position = 0;
-    MPI_Pack(ev.second.getData().data(), ev.second.getData().size(),
+    MPI_Pack(const_cast<int*>(ev.second.getData().data()), ev.second.getData().size(),
              MPI_INT, packSendBuf[i].get(), packSize, &position, Parallel::getGlobalCommunicator());
-    MPI_Pack(ev.second.stateChanges.data(),
+    MPI_Pack(const_cast<Event::StateChanges::pointer>(ev.second.stateChanges.data()),
              ev.second.stateChanges.size() * sizeof(Event::StateChanges::value_type),
              MPI_BYTE, packSendBuf[i].get(), packSize, &position, Parallel::getGlobalCommunicator());
 
