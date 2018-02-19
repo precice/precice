@@ -3,10 +3,6 @@ import subprocess
 import sys
 
 import sysconfig
-try:
-    import numpy as np
-except ImportError:
-    pass
 
 ##################################################################### FUNCTIONS
 
@@ -216,11 +212,14 @@ elif not env["mpi"]:
 
 # ====== Python ======
 if env["python"]:
+    installation_scheme = sysconfig._get_default_scheme()
+    if installation_scheme is 'posix_local':  # for ubuntu with python 2.7 posix_local scheme points to an empty include path, fix this by using posix_prefix. See https://stackoverflow.com/questions/48826123/why-do-include-paths-in-python2-and-python3-differ
+        installation_scheme = 'posix_prefix'
+
     pythonLibDefault = 'python'+str(sys.version_info.major)+'.'+str(sys.version_info.minor)
     pythonLibPathDefault = sysconfig.get_config_var('LIBDIR')
-    pythonIncPathDefault = sysconfig.get_paths()['include']
-    pythonIncPathHOTFIX = '/usr/include/python2.7/'  # todo should be replaced by a nicer solution, but otherwise our build system fails currently. See https://stackoverflow.com/questions/48826123/why-do-include-paths-in-python2-and-python3-differ
-    numpyIncPathDefault = np.get_include()
+    pythonIncPathDefault = sysconfig.get_path('include', scheme=installation_scheme)
+    numpyIncPathDefault = sysconfig.get_path('include', scheme=installation_scheme)
 
     pythonLib = checkset_var('PRECICE_PYTHON_LIB', pythonLibDefault)
     pythonLibPath = checkset_var('PRECICE_PYTHON_LIB_PATH', pythonLibPathDefault)
@@ -229,7 +228,7 @@ if env["python"]:
 
     # FIXME: Supresses NumPy deprecation warnings. Needs to converted to the newer API.
     env.Append(CPPDEFINES = ['NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION'])
-    env.AppendUnique(CPPPATH = [pythonIncPath, pythonIncPathHOTFIX, numpyIncPath])
+    env.AppendUnique(CPPPATH = [pythonIncPath, numpyIncPath])
     env.AppendUnique(LIBPATH = [pythonLib])
     checkAdd(lib = pythonLib, header = "Python.h")
     # Check for numpy header needs python header first to compile
