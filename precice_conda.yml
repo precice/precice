@@ -50,5 +50,4 @@ dependencies:
   - suitesparse=4.5.4=blas_openblas_201
   - tbb=2018_20171205=0
   - eigen=3.2.7=0
-prefix: /home/benjamin/anaconda2/envs/precice
 
