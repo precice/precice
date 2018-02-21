@@ -125,7 +125,7 @@ elif real_compiler == "g++-mp-4.9":
 env.Replace(CXX = env["compiler"])
 env.Replace(CC = env["compiler"])
 
-if os.environ['CONDA_PREFIX']:  # building takes place in conda environment
+if 'CONDA_PREFIX' in os.environ:  # building takes place in conda environment
     env.Append(CPPPATH = os.path.join( os.environ['CONDA_PREFIX'], 'include'))
     env.Append(LIBPATH = os.path.join( os.environ['CONDA_PREFIX'], 'lib'))
 
@@ -151,7 +151,7 @@ checkAdd("pthread")
     
 # ====== PETSc ======
 if env["petsc"]:
-    if os.environ['CONDA_PREFIX']:
+    if 'CONDA_PREFIX' in os.environ:  # building takes place in conda environment
         PETSC_DIR = ""  # todo determine path of petsc in conda environment
         PETSC_ARCH = ""
         print("using petsc with conda currently not supported!")
@@ -177,7 +177,7 @@ else:
     buildpath += "-nopetsc"
 
 # ====== Eigen ======
-if os.environ['CONDA_PREFIX']:  # building takes place in conda environment
+if 'CONDA_PREFIX' in os.environ:  # building takes place in conda environment
     env.AppendUnique(CPPPATH = os.path.join( os.environ['CONDA_PREFIX'], 'include/eigen3'))
 
 checkAdd(header = "Eigen/Dense", usage = "Eigen")
@@ -191,7 +191,7 @@ if env["platform"] == "hazelhen":
     env.Append(CPPPATH = os.path.join( os.environ['BOOST_ROOT'], 'include'))
     env.Append(LIBPATH = os.path.join( os.environ['BOOST_ROOT'], 'lib'))
 
-if os.environ['CONDA_PREFIX']:  # building takes place in conda environment
+if 'CONDA_PREFIX' in os.environ:  # building takes place in conda environment
     env.AppendUnique(CPPPATH = os.path.join( os.environ['CONDA_PREFIX'], 'include/boost'))
 
 env.Append(CPPDEFINES= ['BOOST_SPIRIT_USE_PHOENIX_V3',
@@ -269,7 +269,7 @@ elif env["platform"] == "hazelhen":
     env.Append(LINKFLAGS = ['-dynamic']) # Needed for correct linking against boost.log
 
 # ====== LibXML2 ======
-if os.environ['CONDA_PREFIX']:  # building takes place in conda environment
+if 'CONDA_PREFIX' in os.environ:  # building takes place in conda environment
     env.Append(CPPPATH = os.path.join( os.environ['CONDA_PREFIX'], 'include/libxml2'))
 else:
     env.Append(CPPPATH = ['/usr/include/libxml2'])
