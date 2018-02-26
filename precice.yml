@@ -1,39 +1,16 @@
 name: precice
 channels:
+  - mpi4py
   - menpo
   - conda-forge
-  - mpi4py
   - anaconda
   - defaults
 dependencies:
-  - boost=1.65.1=py27_4
-  - bzip2=1.0.6=h9a117a8_4
-  - icu=58.2=h9c2bf20_1
-  - intel-openmp=2018.0.0=hc7b2577_8
-  - libboost=1.65.1=habcd387_4
-  - libgfortran-ng=7.2.0=h9f7466a_2
-  - libxml2=2.9.7=h26e45fe_0
-  - mkl=2018.0.1=h19d6760_4
-  - py-boost=1.65.1=py27hf484d3e_4
-  - xz=5.2.3=h55aa19d_2
-  - blas=1.1=openblas
-  - hypre=2.11.2=1
-  - metis=5.1.0=3
-  - mumps-mpi=5.0.2=blas_openblas_0
-  - numpy=1.14.1=py27_blas_openblas_200
-  - openblas=0.2.20=7
-  - parmetis=4.0.3=0
-  - petsc=3.8.3=blas_openblas_1
-  - ptscotch=6.0.4=5
-  - scalapack=2.0.2=1
-  - scotch=6.0.4=4
-  - suitesparse=4.5.4=blas_openblas_201
-  - tbb=2018_20171205=0
   - backports=1.0=py27h63c9359_1
   - backports.functools_lru_cache=1.5=py27_1
   - backports_abc=0.5=py27h7b3c97b_0
-  - ca-certificates=2017.08.26=h1d4fec5_0
-  - certifi=2018.1.18=py27_0
+  - boost=1.65.1=py27_4
+  - bzip2=1.0.6=h9a117a8_4
   - cycler=0.10.0=py27hc7354d3_0
   - cython=0.27.3=py27hc56b35e_0
   - dbus=1.12.2=hc3f9b76_1
@@ -49,18 +26,24 @@ dependencies:
   - gmpy2=2.0.8=py27h4cf3fa8_2
   - gst-plugins-base=1.12.4=h33fb286_0
   - gstreamer=1.12.4=hb53b477_0
+  - icu=58.2=h9c2bf20_1
+  - intel-openmp=2018.0.0=hc7b2577_8
   - jpeg=9b=h024ee3a_2
+  - libboost=1.65.1=habcd387_4
   - libedit=3.1=heed3624_0
   - libffi=3.2.1=hd88cf55_4
   - libgcc=7.2.0=h69d50b8_2
   - libgcc-ng=7.2.0=h7cc24e2_2
   - libgfortran=3.0.0=1
+  - libgfortran-ng=7.2.0=h9f7466a_2
   - libopus=1.2.1=hb9ed12e_0
   - libpng=1.6.34=hb9fc6fc_0
   - libstdcxx-ng=7.2.0=h7a57d05_2
   - libvpx=1.6.1=h888fd40_0
   - libxcb=1.12=hcd93eb1_4
+  - libxml2=2.9.7=h26e45fe_0
   - matplotlib=2.1.2=py27h0e671d2_0
+  - mkl=2018.0.1=h19d6760_4
   - mpc=1.0.3=hec55b23_5
   - mpfr=3.1.5=h11a74b3_2
   - mpmath=1.0.0=py27h9669132_2
@@ -68,6 +51,7 @@ dependencies:
   - openssl=1.0.2n=hb7f436b_0
   - pcre=8.41=hc27e229_1
   - pip=9.0.1=py27ha730c48_4
+  - py-boost=1.65.1=py27hf484d3e_4
   - pyparsing=2.2.0=py27hf1513f8_1
   - pyqt=5.6.0=py27h4b1e83c_5
   - python=2.7.14=h1571d57_29
@@ -77,7 +61,6 @@ dependencies:
   - readline=7.0=ha6073c6_4
   - scipy=1.0.0=py27hf5f0f52_0
   - scons=3.0.0=py27h8a56064_0
-  - setuptools=38.5.1=py27_0
   - singledispatch=3.4.0.3=py27h9bcb476_0
   - sip=4.18.1=py27he9ba0ab_2
   - six=1.11.0=py27h5f960f1_1
@@ -86,11 +69,30 @@ dependencies:
   - subprocess32=3.2.7=py27h373dbce_0
   - sympy=1.1.1=py27hc28188a_0
   - tk=8.6.7=hc745277_3
-  - tornado=4.5.3=py27_0
   - wheel=0.30.0=py27h2bc6bb2_1
+  - xz=5.2.3=h55aa19d_2
   - zlib=1.2.11=ha838bed_2
+  - blas=1.1=openblas
+  - certifi=2018.1.18=py27_0
+  - hypre=2.11.2=1
+  - metis=5.1.0=3
+  - mpich=3.2=5
+  - mumps-mpi=5.0.2=blas_openblas_0
+  - numpy=1.14.1=py27_blas_openblas_200
+  - openblas=0.2.20=7
+  - parmetis=4.0.3=0
+  - petsc=3.8.3=blas_openblas_1
+  - ptscotch=6.0.4=5
+  - scalapack=2.0.2=1
+  - scotch=6.0.4=4
+  - setuptools=38.5.1=py27_0
+  - suitesparse=4.5.4=blas_openblas_201
+  - tbb=2018_20171205=0
+  - tornado=4.5.3=py27_0
+  - ca-certificates=2017.08.26=h1d4fec5_0
   - eigen=3.2.7=0
   - mpi4py=2.0.0=py27_mpich_2
-  - mpich=3.2.0=1
   - pip:
     - backports.ssl-match-hostname==3.5.0.1
+prefix: /home/benjamin/anaconda2/envs/precice2
+

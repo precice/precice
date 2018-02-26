@@ -125,10 +125,6 @@ elif real_compiler == "g++-mp-4.9":
 env.Replace(CXX = env["compiler"])
 env.Replace(CC = env["compiler"])
 
-if 'CONDA_PREFIX' in os.environ:  # building takes place in conda environment
-    env.Append(CPPPATH = os.path.join( os.environ['CONDA_PREFIX'], 'include'))
-    env.Append(LIBPATH = os.path.join( os.environ['CONDA_PREFIX'], 'lib'))
-
 if not conf.CheckCXX():
     Exit(1)
 
@@ -216,10 +212,6 @@ if not env["spirit2"]:
     buildpath += "-nospirit2"
 
 # ====== MPI ======
-if 'CONDA_PREFIX' in os.environ:  # building takes place in conda environment
-    env.Append(CPPPATH = os.path.join( os.environ['CONDA_PREFIX'], 'include'))
-    print("appending ", os.path.join( os.environ['CONDA_PREFIX'], 'include'), "to path")
-
 if env["mpi"]:
     if not conf.CheckCXXHeader("mpi.h"):
         print("mpi.h not found. Maybe try 'compiler=mpicxx' or 'compiler=mpic++' as scons argument?")
