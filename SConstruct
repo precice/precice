@@ -125,6 +125,10 @@ elif real_compiler == "g++-mp-4.9":
 env.Replace(CXX = env["compiler"])
 env.Replace(CC = env["compiler"])
 
+if 'CONDA_PREFIX' in os.environ:  # building takes place in conda environment
+    env.Append(CPPPATH = os.path.join( os.environ['CONDA_PREFIX'], 'include'))
+    env.Append(LIBPATH = os.path.join( os.environ['CONDA_PREFIX'], 'lib'))
+
 if not conf.CheckCXX():
     Exit(1)
 
@@ -174,7 +178,7 @@ else:
 
 # ====== Eigen ======
 if 'CONDA_PREFIX' in os.environ:  # building takes place in conda environment
-    env.AppendUnique(CPPPATH = os.path.join( os.environ['CONDA_PREFIX'], 'include/eigen3'))
+    env.Append(CPPPATH = os.path.join( os.environ['CONDA_PREFIX'], 'include/eigen3'))
 
 checkAdd(header = "Eigen/Dense", usage = "Eigen")
 if env["build"] == "debug":
@@ -186,9 +190,6 @@ if env["build"] == "debug":
 if env["platform"] == "hazelhen":
     env.Append(CPPPATH = os.path.join( os.environ['BOOST_ROOT'], 'include'))
     env.Append(LIBPATH = os.path.join( os.environ['BOOST_ROOT'], 'lib'))
-
-if 'CONDA_PREFIX' in os.environ:  # building takes place in conda environment
-    env.AppendUnique(CPPPATH = os.path.join( os.environ['CONDA_PREFIX'], 'include/boost'))
 
 env.Append(CPPDEFINES= ['BOOST_SPIRIT_USE_PHOENIX_V3',
                         'BOOST_ALL_DYN_LINK',
