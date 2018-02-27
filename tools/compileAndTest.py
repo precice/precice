@@ -50,7 +50,14 @@ if len(sys.argv) < 2:
     
 args, remainder = parser.parse_known_args()
 
-os.chdir(args.root)
+try:
+    os.chdir(args.root)
+except TypeError:
+    print("The preCICE root directory is not defined. Have you set the $PRECICE_ROOT environment variable?")
+    sys.exit(1)
+except FileNotFoundError:
+    print("$PRECICE_ROOT directory does not exist. Please set the $PRECICE_ROOT environment variable to a valid directory.")
+    sys.exit(1)
 
 if args.compile:
     if args.remove_build:
