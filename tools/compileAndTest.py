@@ -7,6 +7,11 @@ To ensure a clean test it can delete and recreate the ./tests directory.
 """
 import argparse, os, shutil, subprocess, sys
 
+# Enforce Python 3 to avoid unexpected errors.
+if sys.version_info[0] != 3:
+    print("This script requires Python version 3.")
+    sys.exit(1)
+
 def run_test(cmd, keep_test):
     if not keep_test:
         try:
@@ -19,12 +24,12 @@ def run_test(cmd, keep_test):
         os.makedirs("./tests")
     except FileExistsError:
         pass
-    
+
     os.chdir("./tests")
     print("Running: ", cmd)
     ret_code = subprocess.call(cmd, shell = True)
     os.chdir("..")
-    
+
     if not ret_code == 0:
         sys.exit(1)
 
@@ -47,7 +52,7 @@ parser.add_argument('--root', help="preCICE Root, defaults to $PRECICE_ROOT", de
 if len(sys.argv) < 2:
     parser.print_help()
     sys.exit(1)
-    
+
 args, remainder = parser.parse_known_args()
 
 try:
@@ -69,7 +74,7 @@ if args.compile:
         except FileNotFoundError:
             pass
     COMPILE_CMD = 'scons mpi=on petsc=on compiler="mpicxx" build=debug -j {cpus}'.format(cpus=args.compile_cpus)
-    
+
     if subprocess.call(COMPILE_CMD, shell = True) != 0:
         sys.exit(125) # Cannot compile, 125 means to skip that revision
 
