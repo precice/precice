@@ -13,6 +13,7 @@ if not os.getenv('PRECICE_ROOT'):
 
 precice_root = os.getenv('PRECICE_ROOT')
 
+
 # name of Interfacing API
 appname = "PySolverInterface"
 
@@ -25,9 +26,26 @@ for root, dirs, files in os.walk(".", topdown=False):
       if (name == "build"):
          shutil.rmtree(name)
 
-# no mpic++ in distutils. So add those flags
-mpi_compile_args = os.popen("mpic++ --showme:compile").read().strip().split(' ')
-mpi_link_args = os.popen("mpic++ --showme:link").read().strip().split(' ')
+# determine flags using mpic++
+if not os.getenv('PRECICE_MPI_IMPLEMENTATION'):
+    print('please define PRECICE_MPI_IMPLEMENTATION')
+    print('')
+    print('use: export PRECICE_MPI_IMPLEMENTATION=<mpi_implementation>')
+    print('you can determine your implementation by typing mpic++ -v or mpic++ --showme::version, currently openmpi and mpich are supported.')
+    print('')
+    print('stopping setup...')
+    quit()
+elif os.getenv('PRECICE_MPI_IMPLEMENTATION') == 'mpich':
+    mpi_compile_args = os.popen("mpic++ -compile-info").read().strip().split(' ')[1::]
+    mpi_link_args = os.popen("mpic++ -link-info").read().strip().split(' ')[1::]
+elif os.getenv('PRECICE_MPI_IMPLEMENTATION') == 'openmpi':
+    mpi_compile_args = os.popen("mpic++ -showme:compile").read().strip().split(' ')
+    mpi_link_args = os.popen("mpic++ --showme:link").read().strip().split(' ') 
+else:
+    print('use either mpich or openmpi for PRECICE_MPI_IMPLEMENTATION.')
+    print('')
+    print('stopping setup...')
+    quit()
 
 # need to include libs here, because distutils messes up the order
 compile_args = ["-I"+precice_root, "-Wall", "-std=c++11"] + mpi_compile_args

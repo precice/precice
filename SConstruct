@@ -3,6 +3,7 @@ import subprocess
 import sys
 
 import sysconfig
+import pkg_resources
 
 ##################################################################### FUNCTIONS
 
@@ -82,6 +83,7 @@ vars.Add(BoolVariable("gprof", "Used in detailed performance analysis.", False))
 vars.Add(EnumVariable('platform', 'Special configuration for certain platforms', "none", allowed_values=('none', 'supermuc', 'hazelhen')))
 
 env = Environment(variables = vars, ENV = os.environ)   # For configuring build variables
+
 conf = Configure(env) # For checking libraries, headers, ...
 
 Help(vars.GenerateHelpText(env))
@@ -123,6 +125,10 @@ elif real_compiler == "g++-mp-4.9":
 env.Replace(CXX = env["compiler"])
 env.Replace(CC = env["compiler"])
 
+if 'CONDA_PREFIX' in os.environ:  # building takes place in conda environment
+    env.Append(CPPPATH = os.path.join( os.environ['CONDA_PREFIX'], 'include'))
+    env.Append(LIBPATH = os.path.join( os.environ['CONDA_PREFIX'], 'lib'))
+
 if not conf.CheckCXX():
     Exit(1)
 
@@ -145,13 +151,19 @@ checkAdd("pthread")
     
 # ====== PETSc ======
 if env["petsc"]:
-    PETSC_DIR = checkset_var("PETSC_DIR", "")
-    PETSC_ARCH = checkset_var("PETSC_ARCH", "")
+    if 'CONDA_PREFIX' in os.environ:  # building takes place in conda environment
+        PETSC_DIR = ""  # todo determine path of petsc in conda environment
+        PETSC_ARCH = ""
+        print("using petsc with conda currently not supported!")
+        Exit(1)
+    else:
+        PETSC_DIR = checkset_var("PETSC_DIR", "")
+        PETSC_ARCH = checkset_var("PETSC_ARCH", "")
     
     if not env["mpi"]:
         print("PETSc requires MPI to be enabled.")
         Exit(1)
-
+       
     env.Append(CPPPATH = [os.path.join( PETSC_DIR, "include"),
                           os.path.join( PETSC_DIR, PETSC_ARCH, "include")])
     env.Append(LIBPATH = [os.path.join( PETSC_DIR, PETSC_ARCH, "lib"),
@@ -165,6 +177,9 @@ else:
     buildpath += "-nopetsc"
 
 # ====== Eigen ======
+if 'CONDA_PREFIX' in os.environ:  # building takes place in conda environment
+    env.Append(CPPPATH = os.path.join( os.environ['CONDA_PREFIX'], 'include/eigen3'))
+
 checkAdd(header = "Eigen/Dense", usage = "Eigen")
 if env["build"] == "debug":
     env.Append(CPPDEFINES = ['EIGEN_INITIALIZE_MATRICES_BY_NAN'])
@@ -173,8 +188,8 @@ if env["build"] == "debug":
 # Needed for correct linking on Hazel Hen
 # Otherwise it would link partly to old system boost, partly to newer modules boost
 if env["platform"] == "hazelhen":
-    env.Append(CPPPATH = [os.environ['BOOST_ROOT'] + '/include'])
-    env.Append(LIBPATH = [os.environ['BOOST_ROOT'] + '/lib'])
+    env.Append(CPPPATH = os.path.join( os.environ['BOOST_ROOT'], 'include'))
+    env.Append(LIBPATH = os.path.join( os.environ['BOOST_ROOT'], 'lib'))
 
 env.Append(CPPDEFINES= ['BOOST_SPIRIT_USE_PHOENIX_V3',
                         'BOOST_ALL_DYN_LINK',
@@ -219,7 +234,7 @@ if env["python"]:
     pythonLibDefault = 'python'+str(sys.version_info.major)+'.'+str(sys.version_info.minor)
     pythonLibPathDefault = sysconfig.get_config_var('LIBDIR')
     pythonIncPathDefault = sysconfig.get_path('include', scheme=installation_scheme)
-    numpyIncPathDefault = sysconfig.get_path('include', scheme=installation_scheme)
+    numpyIncPathDefault = os.path.join(pkg_resources.get_distribution('numpy').location, 'numpy', 'core', 'include')
 
     pythonLib = checkset_var('PRECICE_PYTHON_LIB', pythonLibDefault)
     pythonLibPath = checkset_var('PRECICE_PYTHON_LIB_PATH', pythonLibPathDefault)
@@ -251,7 +266,10 @@ elif env["platform"] == "hazelhen":
     env.Append(LINKFLAGS = ['-dynamic']) # Needed for correct linking against boost.log
 
 # ====== LibXML2 ======
-env.Append(CPPPATH = ['/usr/include/libxml2'])
+if 'CONDA_PREFIX' in os.environ:  # building takes place in conda environment
+    env.Append(CPPPATH = os.path.join( os.environ['CONDA_PREFIX'], 'include/libxml2'))
+else:
+    env.Append(CPPPATH = ['/usr/include/libxml2'])
 checkAdd("xml2")
 
 print
