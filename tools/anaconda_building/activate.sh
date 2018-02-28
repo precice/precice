@@ -1,5 +1,5 @@
 #!/bin/bash
-source ./precice_config.sh
+source ./config.sh
 
 ############
 

@@ -4,7 +4,7 @@ You can use anaconda to Build precice. Helper scripts are provided in this folde
 
 * install anaconda https://www.anaconda.com/download/#linux
 * go to ```tools/anaconda_building``` (this folder)
-* define ```ANACONDA_ROOT=<path/to/anaconda/installation>``` and ```PRECICE_ROOT=<path/to/precice/folder>``` in ```precice_config.sh```.
-* run ```./precice_install.sh```. This file initializes your anaconda environment ```precice```.
-* use ```precice_activate.sh``` to activate the environment ```precice``` via ```source precice_activate.sh```.
-* run ```python FluidSolver.py precice-config.xml``` and ```python StructureSolver.py precice-config.xml``` each in one shell. Don't forget to activate the environment ```precice_tube```.
+* define ```ANACONDA_ROOT=<path/to/anaconda/installation>``` and ```PRECICE_ROOT=<path/to/precice/folder>``` in ```config.sh```.
+* run ```./install.sh```. This file initializes your anaconda environment ```precice```.
+* use ```activate.sh``` to activate the environment ```precice``` via ```source activate.sh```.
+* run ```./build.sh``` to (clean the potentially existing precice build) and build precice. Output of the cleaning and building process is written to ```scons_clean.log``` and ```scons.log```, respectively.
