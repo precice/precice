@@ -48,6 +48,7 @@ public:
   typedef std::vector<PtrData>                   DataContainer;
   typedef utils::ptr_vector<PropertyContainer>   PropertyContainerContainer;
   typedef std::vector<std::pair<double, double>> BoundingBox;
+  typedef std::map<int,BoundingBox>              BoundingBoxMap;
 
   /// Signal is emitted when the mesh is changed
   boost::signals2::signal<void(Mesh &)> meshChanged;
