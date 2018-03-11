@@ -8,49 +8,35 @@ namespace precice
 namespace com
 {
 
-/// Copies a Mesh object from a sender to a receiver.
+/// Copies either a bounding box around a mesh partition or complete maps of bounding boxes from a sender to a receiver.
 class CommunicateBoundingBox
 {
 public:
   /// Constructor, takes communication to be used in transfer.
   explicit CommunicateBoundingBox(
-      com::PtrCommunication communication);
+    com::PtrCommunication communication);
 
   void sendBoundingBox(
-      const mesh::Mesh::BoundingBox &bb,
-      int rankReceiver);
-
-  void receiveBoundingBox(
-
-    mesh::Mesh::BoundingBox &bb,
-    int rankSender,
-    int dim);
-
-  void sendBoundingBoxMap(
-      mesh::Mesh::BoundingBoxMap &gbb,
-      int rankReceiver,
-      int dim);
-
-  void receiveBoundingBoxMap(
-      mesh::Mesh::BoundingBoxMap &gbb,
-      int rankSender,
-      int dim);
-
-  void sendBoundingBoxFeedBack(
-    std::vector<int> &feedback,
+    const mesh::Mesh::BoundingBox &bb,
     int rankReceiver);
 
-  void receiveBoundingBoxFeedBack(
-    std::map<int, std::vector<int>> &feedbackMap,
+  void receiveBoundingBox(
+    mesh::Mesh::BoundingBox &bb,
     int rankSender);
 
-  void broadcastSendBoundingBox(
-    mesh::Mesh::BoundingBoxMap &gBB,
-    int dim);
+  void sendBoundingBoxMap(
+    mesh::Mesh::BoundingBoxMap &bbm,
+    int rankReceiver);
 
-  void broadcastReceiveBoundingBox(
-    mesh::Mesh::BoundingBoxMap &gBB,
-    int dim);
+  void receiveBoundingBoxMap(
+    mesh::Mesh::BoundingBoxMap &bbm,
+    int rankSender);
+
+  void broadcastSendBoundingBoxMap(
+    mesh::Mesh::BoundingBoxMap &bbm);
+
+  void broadcastReceiveBoundingBoxMap(
+    mesh::Mesh::BoundingBoxMap &bbm);
   
 private:
   static logging::Logger _log;

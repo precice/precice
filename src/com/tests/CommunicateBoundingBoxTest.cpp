@@ -11,55 +11,43 @@ using namespace precice::com;
 
 BOOST_AUTO_TEST_SUITE(CommunicationTests)
 
-BOOST_AUTO_TEST_SUITE(BoundingBoxTests)
+BOOST_AUTO_TEST_SUITE(CommunicateBoundingBoxTests)
 
-BOOST_FIXTURE_TEST_CASE(TwoProcTestsWithM2NCommunication, testing::M2NFixture,
+BOOST_FIXTURE_TEST_CASE(SendAndReceiveBoundingBox, testing::M2NFixture,
                        * testing::MinRanks(2)
                        * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
 {
-  utils::Parallel::synchronizeProcesses();
-  assertion(utils::Parallel::getCommunicatorSize() > 1);
-  mesh::PropertyContainer::resetPropertyIDCounter();
+  if (utils::Parallel::getCommunicatorSize() != 2)
+    return;
 
   for (int dim = 2; dim <= 3; dim++) {
-    // Build BB to communicate for rank0
-    mesh::Mesh::BoundingBox BBToSend;
+    mesh::Mesh::BoundingBox bb;
 
-    if (utils::Parallel::getProcessRank() == 0) {
-      for (int i=0; i < dim; i++) {
-        BBToSend.push_back(std::make_pair(i,i+1));
-      }      
+    for (int i=0; i < dim; i++) {
+      bb.push_back(std::make_pair(i,i+1));
     }
 
-    if (utils::Parallel::getProcessRank() < 2) {
+    CommunicateBoundingBox comBB(m2n->getMasterCommunication());
 
-      com::PtrCommunication com(new com::MPIDirectCommunication());
-      CommunicateBoundingBox comBB(com);
-      
-      if (utils::Parallel::getProcessRank() == 0) {
+    if (utils::Parallel::getProcessRank() == 0) {
+      comBB.sendBoundingBox(bb, 0); // send to 0 as we communicate between both master ranks
+    }
+    else if (utils::Parallel::getProcessRank() == 1) {
 
-        comBB.sendBoundingBox(BBToSend, 0);        
+      mesh::Mesh::BoundingBox bbCompare;
+      for (int i=0; i < dim; i++) {
+        bbCompare.push_back(std::make_pair(-1,-1));
       }
-      
-      else if (utils::Parallel::getProcessRank() == 1) {
 
-        mesh::Mesh::BoundingBox BBToReceive, BBToCompare;
-        for (int i=0; i < dim; i++) {
-        BBToCompare.push_back(std::make_pair(i,i+1));
-        BBToReceive.push_back(std::make_pair(0,0));
-        }
-      
-        comBB.receiveBoundingBox(BBToReceive, 0, dim);
-        BOOST_TEST(BBToReceive==BBToCompare);
+      comBB.receiveBoundingBox(bbCompare, 0);
 
-        
-      }
-      com->closeConnection();
-          
-      utils::Parallel::setGlobalCommunicator(utils::Parallel::getCommunicatorWorld());
+      BOOST_TEST(bb==bbCompare);
     }
   }
 }
+
+//@todo: tests for all other methods
+
 BOOST_AUTO_TEST_SUITE_END() // BB
 
 BOOST_AUTO_TEST_SUITE_END() // Communication
