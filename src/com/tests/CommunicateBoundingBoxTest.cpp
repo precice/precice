@@ -62,7 +62,7 @@ BOOST_FIXTURE_TEST_CASE(SendAndReceiveBoundingBoxMap, testing::M2NFixture,
     for (int rank=0; rank <3; rank++) {
 
       for (int i=0; i < dim; i++) {
-        bb.push_back(std::make_pair(i,i+1));
+        bb.push_back(std::make_pair(rank * i,i+1));
       }
 
       bbm[rank]=bb;
@@ -79,15 +79,15 @@ BOOST_FIXTURE_TEST_CASE(SendAndReceiveBoundingBoxMap, testing::M2NFixture,
       mesh::Mesh::BoundingBox bbCompare;
       mesh::Mesh::BoundingBoxMap bbmCompare;
 
-    for (int rank=0; rank <3; rank++) {
+      for (int rank=0; rank <3; rank++) {
 
-      for (int i=0; i < dim; i++) {
-        bbCompare.push_back(std::make_pair(-1,-1));
+        for (int i=0; i < dim; i++) {
+          bbCompare.push_back(std::make_pair(-1,-1));
+        }
+
+        bbmCompare[rank]=bbCompare;
+        bbCompare.clear();
       }
-
-      bbmCompare[rank]=bbCompare;
-      bbCompare.clear();
-    }
 
       comBB.receiveBoundingBoxMap(bbmCompare, 0);
 
