@@ -54,7 +54,6 @@ void CommunicateBoundingBox::sendBoundingBoxMap(
   }
 
 
-///@todo this still needs testing
 void CommunicateBoundingBox::receiveBoundingBoxMap(
   mesh::Mesh::BoundingBoxMap &bbm,
   int rankSender)
@@ -69,13 +68,26 @@ void CommunicateBoundingBox::receiveBoundingBoxMap(
 void CommunicateBoundingBox::broadcastSendBoundingBoxMap(
   mesh::Mesh::BoundingBoxMap &bbm)
 {
-  //@todo
+
+  for (auto &rank : bbm) {
+    for (auto &dimension : rank.second) {
+      _communication->broadcast(dimension.first);
+      _communication->broadcast(dimension.second);
+    }
+  }
+  
 }
 
 void CommunicateBoundingBox::broadcastReceiveBoundingBoxMap(
   mesh::Mesh::BoundingBoxMap &bbm)
 {
-  //@todo
+  for (auto &rank : bbm) {
+    for (auto &dimension : rank.second) {
+      _communication->broadcast(dimension.first, 0);
+      _communication->broadcast(dimension.second, 0);
+    }
+  }
+  
 }
 
 

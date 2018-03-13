@@ -30,7 +30,7 @@ BOOST_FIXTURE_TEST_CASE(SendAndReceiveBoundingBox, testing::M2NFixture,
     CommunicateBoundingBox comBB(m2n->getMasterCommunication());
 
     if (utils::Parallel::getProcessRank() == 0) {
-      comBB.sendBoundingBox(bb, 0); // send to 0 as we communicate between both master ranks
+      comBB.sendBoundingBox(bb, 0);
     }
     else if (utils::Parallel::getProcessRank() == 1) {
 
@@ -72,7 +72,7 @@ BOOST_FIXTURE_TEST_CASE(SendAndReceiveBoundingBoxMap, testing::M2NFixture,
     CommunicateBoundingBox comBB(m2n->getMasterCommunication());
 
     if (utils::Parallel::getProcessRank() == 0) {
-      comBB.sendBoundingBoxMap(bbm, 0); // send to 0 as we communicate between both master ranks
+      comBB.sendBoundingBoxMap(bbm, 0); 
     }
     else if (utils::Parallel::getProcessRank() == 1) {
 
@@ -99,7 +99,53 @@ BOOST_FIXTURE_TEST_CASE(SendAndReceiveBoundingBoxMap, testing::M2NFixture,
     }
   }
 }
-//@todo: tests for all other methods
+
+BOOST_AUTO_TEST_CASE(BroadcastSendAndReceiveBoundingBoxMap,
+                     * testing::OnSize(4)
+                     * boost::unit_test::fixture<testing::MasterComFixture>())
+{
+
+  // Build BB/BBMap to communicate 
+
+  mesh::Mesh::BoundingBox bb;
+  mesh::Mesh::BoundingBoxMap bbm;
+
+  for (int i=0; i < 3; i++) {
+    for (int j=0; j < 3; j++) {
+      bb.push_back(std::make_pair(i*j,i*(j+1)));
+    }
+    bbm[i]=bb;
+    bb.clear();
+  }
+
+  CommunicateBoundingBox comBB(utils::MasterSlave::_communication);
+
+  if (utils::Parallel::getProcessRank() == 0) {
+    comBB.broadcastSendBoundingBoxMap(bbm);
+  }
+  else {
+
+    mesh::Mesh::BoundingBox bbCompare;
+    mesh::Mesh::BoundingBoxMap bbmCompare;
+
+    for (int i=0; i < 3; i++) {
+      for (int j=0; j < 3; j++) {
+        bbCompare.push_back(std::make_pair(-1,-1));     
+      }
+      bbmCompare[i]=bbCompare;
+      bbCompare.clear();
+    }
+
+    comBB.broadcastReceiveBoundingBoxMap(bbmCompare);
+
+    for(int rank=0; rank<3; rank++){
+      
+      BOOST_TEST(bbm[rank]==bbmCompare[rank]);
+
+    }
+  }
+}
+
 
 BOOST_AUTO_TEST_SUITE_END() // BB
 
