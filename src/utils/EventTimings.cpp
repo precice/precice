@@ -448,7 +448,7 @@ void EventRegistry::printGlobalStats()
   auto stats = getGlobalStats(globalEvents);
   for (auto & e : stats) {
     auto & ev = e.second;
-    double rel = static_cast<double>(ev.min.count()) / static_cast<double>(ev.max.count());
+    double rel = ev.max == Event::Clock::duration::zero() ? 0 : ev.min / ev.max; // Guard against division by zero
     t.printLine(e.first, ev.max, ev.maxRank, ev.min, ev.minRank, rel);
   }
 }
