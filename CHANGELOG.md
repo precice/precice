@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file.
 
+- Change build types to mixed case, i.e. ```Debug``` and ```Release```. Old versions are retained for backward compatibility.
+
 ## 1.0.3
 - Fix compilation for boost 1.66, see issue #93.
 

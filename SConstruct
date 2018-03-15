@@ -76,7 +76,7 @@ def get_real_compiler(compiler):
 vars = Variables(None, ARGUMENTS)
 
 vars.Add(PathVariable("builddir", "Directory holding build files.", "build", PathVariable.PathAccept))
-vars.Add(EnumVariable('build', 'Build type, either release or debug', "debug", allowed_values=('release', 'debug')))
+vars.Add(EnumVariable('build', 'Build type', "Debug", allowed_values=('release', 'debug', 'Release', 'Debug')))
 vars.Add("compiler", "Compiler to use.", "g++")
 vars.Add(BoolVariable("mpi", "Enables MPI-based communication and running coupling tests.", True))
 vars.Add(BoolVariable("spirit2", "Used for parsing VRML file geometries and checkpointing.", True))
@@ -94,6 +94,15 @@ env.Append(CPPPATH = ['#src'])
 
 print
 print_options(vars)
+
+if env["build"] == 'debug':
+    env["build"] == 'Debug'
+    print("WARNING: Lower-case build type 'debug' is deprecated, use 'Debug' instead!")
+
+if env["build"] == 'release':
+    env["build"] == 'Release'
+    print("WARNING: Lower-case build type 'release' is deprecated, use 'Release' instead!")
+    
 
 buildpath = os.path.join(env["builddir"], "") # Ensures to have a trailing slash
 
@@ -136,13 +145,13 @@ if not conf.CheckCXX():
     Exit(1)
 
 # ====== Build Directories ======
-if env["build"] == 'debug':
+if env["build"] == 'Debug':
     # The Assert define does not actually switches asserts on/off, these are controlled by NDEBUG.
     # It's kept in place for some legacy code.
     env.Append(CCFLAGS = ['-g3', '-O0'])
     env.Append(LINKFLAGS = ["-rdynamic"]) # Gives more informative backtraces
     buildpath += "debug"
-elif env["build"] == 'release':
+elif env["build"] == 'Release':
     env.Append(CPPDEFINES = ['NDEBUG']) # Standard C++ macro which disables all asserts, also used by Eigen
     env.Append(CCFLAGS = ['-O3'])
     buildpath += "release"
