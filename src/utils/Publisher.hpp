@@ -1,10 +1,12 @@
 #pragma once
 
-#include <string>
 #include <stack>
+#include <string>
 
-namespace precice {
-namespace utils {
+namespace precice
+{
+namespace utils
+{
 
 /**
  * @brief Publisher Class. This utility class can be used to publish connection information and
@@ -14,10 +16,11 @@ namespace utils {
  * @todo implementation should be substituted by a proper publishing strategy, not via files.
  * (to allow for exa-scale one day)
  */
-class Publisher {
+class Publisher
+{
 public:
   struct ScopedSetEventNamePrefix {
-    explicit ScopedSetEventNamePrefix(std::string const& prefix);
+    explicit ScopedSetEventNamePrefix(std::string const &prefix);
 
     ~ScopedSetEventNamePrefix();
 
@@ -26,13 +29,13 @@ public:
   };
 
   struct ScopedPushDirectory {
-    explicit ScopedPushDirectory(std::string const& dp);
+    explicit ScopedPushDirectory(std::string const &dp);
 
     ~ScopedPushDirectory();
   };
 
   struct ScopedChangePrefixDirectory {
-    explicit ScopedChangePrefixDirectory(std::string const& pdp);
+    explicit ScopedChangePrefixDirectory(std::string const &pdp);
 
     ~ScopedChangePrefixDirectory();
 
@@ -40,39 +43,39 @@ public:
   };
 
 public:
-  static std::string parentPath(std::string const& p);
+  static std::string parentPath(std::string const &p);
 
-  static bool createDirectory(std::string const& dp);
+  static bool createDirectory(std::string const &dp);
 
-  static bool exists(std::string const& p);
+  static bool exists(std::string const &p);
 
-  static bool remove(std::string const& p);
+  static bool remove(std::string const &p);
 
-  static void rename(std::string const& op, std::string const& np);
+  static void rename(std::string const &op, std::string const &np);
 
-  static bool pushDirectory(std::string const& dp);
+  static bool pushDirectory(std::string const &dp);
 
   static bool popDirectory();
 
-  static void changePrefixDirectory(std::string const& pdp);
+  static void changePrefixDirectory(std::string const &pdp);
 
-  static std::string const& prefixDirectoryPath();
+  static std::string const &prefixDirectoryPath();
 
-  static void setEventNamePrefix(std::string const& prefix);
+  static void setEventNamePrefix(std::string const &prefix);
 
-  static std::string const& eventNamePrefix();
+  static std::string const &eventNamePrefix();
 
 public:
-  explicit Publisher(std::string const& fp);
+  explicit Publisher(std::string const &fp);
 
   std::string read() const;
 
-  void write(std::string const& data) const;
+  void write(std::string const &data) const;
 
-  std::string const& filePath() const;
+  std::string const &filePath() const;
 
 private:
-  static std::string buildFilePath(std::string const& fp);
+  static std::string buildFilePath(std::string const &fp);
 
   static std::string _pdp;
 
@@ -84,9 +87,10 @@ private:
   std::string _fp;
 };
 
-class ScopedPublisher : public Publisher {
+class ScopedPublisher : public Publisher
+{
 public:
-  explicit ScopedPublisher(std::string const& fp);
+  explicit ScopedPublisher(std::string const &fp);
 
   ~ScopedPublisher();
 };
