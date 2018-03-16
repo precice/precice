@@ -166,14 +166,8 @@ checkAdd("pthread")
     
 # ====== PETSc ======
 if env["petsc"]:
-    if 'CONDA_PREFIX' in os.environ:  # building takes place in conda environment
-        PETSC_DIR = ""  # todo determine path of petsc in conda environment
-        PETSC_ARCH = ""
-        print("Using PETSc with conda currently not supported!")
-        Exit(1)
-    else:
-        PETSC_DIR = checkset_var("PETSC_DIR", "")
-        PETSC_ARCH = checkset_var("PETSC_ARCH", "")
+    PETSC_DIR = checkset_var("PETSC_DIR", "")
+    PETSC_ARCH = checkset_var("PETSC_ARCH", "")
     
     if not env["mpi"]:
         print("PETSc requires MPI to be enabled.")
