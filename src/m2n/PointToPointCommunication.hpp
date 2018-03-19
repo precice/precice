@@ -3,11 +3,13 @@
 #include "DistributedCommunication.hpp"
 
 #include "com/SharedPointer.hpp"
-#include "mesh/SharedPointer.hpp"
 #include "logging/Logger.hpp"
+#include "mesh/SharedPointer.hpp"
 
-namespace precice {
-namespace m2n {
+namespace precice
+{
+namespace m2n
+{
 /**
  * @brief Point-to-point communication implementation of
  *        DistributedCommunication.
@@ -21,10 +23,11 @@ namespace m2n {
  * For the detailed implementation documentation refer to
  * PointToPointCommunication.cpp.
  */
-class PointToPointCommunication : public DistributedCommunication {
+class PointToPointCommunication : public DistributedCommunication
+{
 public:
   struct ScopedSetEventNamePrefix {
-    explicit ScopedSetEventNamePrefix(std::string const& prefix);
+    explicit ScopedSetEventNamePrefix(std::string const &prefix);
 
     ~ScopedSetEventNamePrefix();
 
@@ -33,15 +36,14 @@ public:
   };
 
 public:
-  static void setEventNamePrefix(std::string const& prefix);
+  static void setEventNamePrefix(std::string const &prefix);
 
-  static std::string const& eventNamePrefix();
+  static std::string const &eventNamePrefix();
 
 public:
-  
   PointToPointCommunication(
       com::PtrCommunicationFactory communicationFactory,
-      mesh::PtrMesh mesh);
+      mesh::PtrMesh                mesh);
 
   virtual ~PointToPointCommunication();
 
@@ -55,8 +57,8 @@ public:
    * @param[in] nameAcceptor  Name of calling participant.
    * @param[in] nameRequester Name of remote participant to connect to.
    */
-  virtual void acceptConnection(std::string const& nameAcceptor,
-                                std::string const& nameRequester);
+  virtual void acceptConnection(std::string const &nameAcceptor,
+                                std::string const &nameRequester);
 
   /**
    * @brief Requests connection from participant, which has to call acceptConnection().
@@ -64,8 +66,8 @@ public:
    * @param[in] nameAcceptor Name of remote participant to connect to.
    * @param[in] nameRequester Name of calling participant.
    */
-  virtual void requestConnection(std::string const& nameAcceptor,
-                                 std::string const& nameRequester);
+  virtual void requestConnection(std::string const &nameAcceptor,
+                                 std::string const &nameRequester);
 
   /**
    * @brief Disconnects from communication space, i.e. participant.
@@ -78,15 +80,15 @@ public:
    * @brief Sends a subset of local double values corresponding to local indices
    *        deduced from the current and remote vertex distributions.
    */
-  virtual void send(double* itemsToSend, size_t size, int valueDimension = 1);
+  virtual void send(double *itemsToSend, size_t size, int valueDimension = 1);
 
   /**
    * @brief Receives a subset of local double values corresponding to local
    *        indices deduced from the current and remote vertex distributions.
    */
-  virtual void receive(double* itemsToReceive,
-                       size_t size,
-                       int valueDimension = 1);
+  virtual void receive(double *itemsToReceive,
+                       size_t  size,
+                       int     valueDimension = 1);
 
 private:
   static logging::Logger _log;
@@ -107,12 +109,12 @@ private:
    *           routines).
    */
   struct Mapping {
-    int localRemoteRank;
-    int globalRemoteRank;
-    std::vector<int> indices;
+    int                   localRemoteRank;
+    int                   globalRemoteRank;
+    std::vector<int>      indices;
     com::PtrCommunication communication;
-    com::PtrRequest request;
-    size_t offset;
+    com::PtrRequest       request;
+    size_t                offset;
   };
 
   /**
@@ -129,6 +131,5 @@ private:
 
   bool _isConnected;
 };
-
-}} // namespace precice, m2n
-
+}
+} // namespace precice, m2n

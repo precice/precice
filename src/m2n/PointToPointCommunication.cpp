@@ -13,56 +13,51 @@
 using precice::utils::Event;
 using precice::utils::Publisher;
 
-namespace precice {
-namespace m2n {
+namespace precice
+{
+namespace m2n
+{
 
-
-void
-send(std::vector<int> const& v,
-     int rankReceiver,
-     com::PtrCommunication communication) {
+void send(std::vector<int> const &v,
+          int                     rankReceiver,
+          com::PtrCommunication   communication)
+{
   communication->send(static_cast<int>(v.size()), rankReceiver);
-  communication->send(const_cast<int*>(&v[0]), v.size(), rankReceiver);
+  communication->send(const_cast<int *>(&v[0]), v.size(), rankReceiver);
 }
 
-void
-receive(std::vector<int>& v,
-        int rankSender,
-        com::PtrCommunication communication) {
+void receive(std::vector<int> &    v,
+             int                   rankSender,
+             com::PtrCommunication communication)
+{
   v.clear();
-
   int size = 0;
-
   communication->receive(size, rankSender);
-
   v.resize(size);
-
   communication->receive(&v[0], size, rankSender);
 }
 
-void
-send(std::map<int, std::vector<int>> const& m,
-     int rankReceiver,
-     com::PtrCommunication communication) {
+void send(std::map<int, std::vector<int>> const &m,
+          int                                    rankReceiver,
+          com::PtrCommunication                  communication)
+{
   communication->send(static_cast<int>(m.size()), rankReceiver);
 
-  for (auto const& i : m) {
-    auto const& rank = i.first;
-    auto const& indices = i.second;
+  for (auto const &i : m) {
+    auto const &rank    = i.first;
+    auto const &indices = i.second;
 
     communication->send(rank, rankReceiver);
     send(indices, rankReceiver, communication);
   }
 }
 
-void
-receive(std::map<int, std::vector<int>>& m,
-        int rankSender,
-        com::PtrCommunication communication) {
+void receive(std::map<int, std::vector<int>> &m,
+             int                              rankSender,
+             com::PtrCommunication            communication)
+{
   m.clear();
-
   int size = 0;
-
   communication->receive(size, rankSender);
 
   while (size--) {
@@ -73,70 +68,61 @@ receive(std::map<int, std::vector<int>>& m,
   }
 }
 
-void
-broadcast(std::vector<int> const& v,
-          com::PtrCommunication communication =
-              utils::MasterSlave::_communication) {
+void broadcast(std::vector<int> const &v,
+               com::PtrCommunication   communication = utils::MasterSlave::_communication)
+{
   communication->broadcast(static_cast<int>(v.size()));
-  communication->broadcast(const_cast<int*>(&v[0]), v.size());
+  communication->broadcast(const_cast<int *>(&v[0]), v.size());
 }
 
-void
-broadcast(std::vector<int>& v,
-          int rankBroadcaster,
-          com::PtrCommunication communication =
-              utils::MasterSlave::_communication) {
+void broadcast(std::vector<int> &    v,
+               int                   rankBroadcaster,
+               com::PtrCommunication communication = utils::MasterSlave::_communication)
+{
   v.clear();
-
   int size = 0;
-
-  communication->broadcast(size, rankBroadcaster);
-
-  v.resize(size);
+  communication->broadcast(size, rankBroadcaster);  v.resize(size);
 
   communication->broadcast(&v[0], size, rankBroadcaster);
 }
 
-void
-broadcastSend(std::map<int, std::vector<int>> const& m,
-              com::PtrCommunication communication =
-                  utils::MasterSlave::_communication) {
+void broadcastSend(std::map<int, std::vector<int>> const &m,
+                   com::PtrCommunication                  communication =
+                       utils::MasterSlave::_communication)
+{
   communication->broadcast(static_cast<int>(m.size()));
 
-  for (auto const& i : m) {
-    auto const& rank = i.first;
-    auto const& indices = i.second;
+  for (auto const &i : m) {
+    auto const &rank    = i.first;
+    auto const &indices = i.second;
 
     communication->broadcast(rank);
     broadcast(indices, communication);
   }
 }
 
-void
-broadcastReceive(std::map<int, std::vector<int>>& m,
-                 int rankBroadcaster,
-                 com::PtrCommunication communication =
-                     utils::MasterSlave::_communication) {
+void broadcastReceive(std::map<int, std::vector<int>> &m,
+                      int                              rankBroadcaster,
+                      com::PtrCommunication            communication = utils::MasterSlave::_communication)
+{
   m.clear();
-
   int size = 0;
-
   communication->broadcast(size, rankBroadcaster);
 
   while (size--) {
     int rank = -1;
-
     communication->broadcast(rank, rankBroadcaster);
     broadcast(m[rank], rankBroadcaster, communication);
   }
 }
 
-void
-broadcast(std::map<int, std::vector<int>>& m) {
+void broadcast(std::map<int, std::vector<int>> &m)
+{
   if (utils::MasterSlave::_masterMode) {
     // Broadcast (send) vertex distributions.
     m2n::broadcastSend(m);
-  } else {
+  }
+  else {
     assertion(utils::MasterSlave::_slaveMode);
 
     // Broadcast (receive) vertex distributions.
@@ -144,13 +130,13 @@ broadcast(std::map<int, std::vector<int>>& m) {
   }
 }
 
-void
-print(std::map<int, std::vector<int>> const& m) {
+void print(std::map<int, std::vector<int>> const &m)
+{
   std::ostringstream oss;
 
   oss << "rank: " << utils::MasterSlave::_rank << "\n";
 
-  for (auto  &i : m) {
+  for (auto &i : m) {
     for (auto &j : i.second) {
       oss << i.first << ":" << j << std::endl; // prints rank:index
     }
@@ -173,15 +159,15 @@ print(std::map<int, std::vector<int>> const& m) {
   }
 }
 
-void
-printCommunicationPartnerCountStats(std::map<int, std::vector<int>> const& m) {
+void printCommunicationPartnerCountStats(std::map<int, std::vector<int>> const &m)
+{
   int size = m.size();
 
   if (utils::MasterSlave::_masterMode) {
-    size_t count = 0;
+    size_t count   = 0;
     size_t maximum = std::numeric_limits<size_t>::min();
     size_t minimum = std::numeric_limits<size_t>::max();
-    size_t total = size;
+    size_t total   = size;
 
     if (size) {
       maximum = std::max(maximum, static_cast<size_t>(size));
@@ -224,20 +210,19 @@ printCommunicationPartnerCountStats(std::map<int, std::vector<int>> const& m) {
   }
 }
 
-void
-printLocalIndexCountStats(std::map<int, std::vector<int>> const& m) {
+void printLocalIndexCountStats(std::map<int, std::vector<int>> const &m)
+{
   int size = 0;
 
-  for (auto& i : m) {
+  for (auto &i : m) {
     size += i.second.size();
   }
 
-
   if (utils::MasterSlave::_masterMode) {
-    size_t count = 0;
+    size_t count   = 0;
     size_t maximum = std::numeric_limits<size_t>::min();
     size_t minimum = std::numeric_limits<size_t>::max();
-    size_t total = size;
+    size_t total   = size;
 
     if (size) {
       maximum = std::max(maximum, static_cast<size_t>(size));
@@ -287,25 +272,26 @@ std::map<int, std::vector<int>>
 buildCommunicationMap(
     // `localIndexCount' is the number of unique local indices for the current
     // rank.
-    size_t& localIndexCount,
+    size_t &localIndexCount,
     // `thisVertexDistribution' is input vertex distribution from this
     // participant.
-    std::map<int, std::vector<int>> const& thisVertexDistribution,
+    std::map<int, std::vector<int>> const &thisVertexDistribution,
     // `otherVertexDistribution' is input vertex distribution from other
     // participant.
-    std::map<int, std::vector<int>> const& otherVertexDistribution,
-    int thisRank = utils::MasterSlave::_rank) {
+    std::map<int, std::vector<int>> const &otherVertexDistribution,
+    int                                    thisRank = utils::MasterSlave::_rank)
+{
 
   localIndexCount = 0;
-  
+
   std::map<int, std::vector<int>> communicationMap;
 
   auto iterator = thisVertexDistribution.find(thisRank);
-  
+
   if (iterator == thisVertexDistribution.end())
     return communicationMap;
-  
-  auto const& indices = iterator->second;
+
+  auto const &indices = iterator->second;
 
   int index = 0;
 
@@ -320,7 +306,7 @@ buildCommunicationMap(
     }
     ++index;
   }
-  
+
   // CAUTION:
   // This prevents point-to-point communication from considering those process
   // ranks, which don't have matching indices in the remote participant
@@ -337,62 +323,62 @@ buildCommunicationMap(
 std::string PointToPointCommunication::_prefix;
 
 PointToPointCommunication::ScopedSetEventNamePrefix::ScopedSetEventNamePrefix(
-    std::string const& prefix)
-    : _prefix(PointToPointCommunication::eventNamePrefix()) {
+    std::string const &prefix)
+    : _prefix(PointToPointCommunication::eventNamePrefix())
+{
   PointToPointCommunication::setEventNamePrefix(prefix);
 }
 
 PointToPointCommunication::ScopedSetEventNamePrefix::
-    ~ScopedSetEventNamePrefix() {
+    ~ScopedSetEventNamePrefix()
+{
   PointToPointCommunication::setEventNamePrefix(_prefix);
 }
 
-void
-PointToPointCommunication::setEventNamePrefix(std::string const& prefix) {
+void PointToPointCommunication::setEventNamePrefix(std::string const &prefix)
+{
   _prefix = prefix;
 }
 
-std::string const&
-PointToPointCommunication::eventNamePrefix() {
+std::string const &
+PointToPointCommunication::eventNamePrefix()
+{
   return _prefix;
 }
 
-logging::Logger PointToPointCommunication::_log(
-    "precice::m2n::PointToPointCommunication");
+logging::Logger PointToPointCommunication::_log("m2n::PointToPointCommunication");
 
 PointToPointCommunication::PointToPointCommunication(
     com::PtrCommunicationFactory communicationFactory,
-    mesh::PtrMesh mesh)
-    : DistributedCommunication(mesh)
-    , _communicationFactory(communicationFactory)
-    , _localIndexCount(0)
-    , _totalIndexCount(0)
-    , _isConnected(false) {
+    mesh::PtrMesh                mesh)
+    : DistributedCommunication(mesh), _communicationFactory(communicationFactory), _localIndexCount(0), _totalIndexCount(0), _isConnected(false)
+{
 }
 
-PointToPointCommunication::~PointToPointCommunication() {
+PointToPointCommunication::~PointToPointCommunication()
+{
   TRACE(_isConnected);
 
   closeConnection();
 }
 
-bool
-PointToPointCommunication::isConnected() {
+bool PointToPointCommunication::isConnected()
+{
   return _isConnected;
 }
 
-void
-PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
-                                            std::string const& nameRequester) {
+void PointToPointCommunication::acceptConnection(std::string const &nameAcceptor,
+                                                 std::string const &nameRequester)
+{
   TRACE(nameAcceptor, nameRequester);
 
   CHECK(not isConnected(), "Already connected!");
 
   CHECK(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode,
         "You can only use a point-to-point communication between two participants which both use a master. "
-        << "Please use distribution-type gather-scatter instead.");
+            << "Please use distribution-type gather-scatter instead.");
 
-  std::map<int, std::vector<int>>& vertexDistribution =
+  std::map<int, std::vector<int>> &vertexDistribution =
       _mesh->getVertexDistribution();
   std::map<int, std::vector<int>> requesterVertexDistribution;
 
@@ -401,7 +387,7 @@ PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
     auto c = _communicationFactory->newCommunication();
 
     c->acceptConnection(nameAcceptor, nameRequester, 0, 1);
-    
+
     int requesterMasterRank;
 
     // Exchange ranks of participants' master processes.
@@ -513,10 +499,10 @@ PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
     // NOTE:
     // Everything is moved (efficiency)!
     _mappings.push_back(
-      {static_cast<int>(localRequesterRank),
-          globalRequesterRank,
-          std::move(indices),
-          // NOTE:
+        {static_cast<int>(localRequesterRank),
+         globalRequesterRank,
+         std::move(indices),
+         // NOTE:
          // On the acceptor participant side, the communication object `c'
          // behaves as a server, i.e. it implicitly accepts multiple connections
          // to requester processes (in the requester participant). As a result,
@@ -532,19 +518,19 @@ PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
   _isConnected = true;
 }
 
-void
-PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
-                                             std::string const& nameRequester) {
+void PointToPointCommunication::requestConnection(std::string const &nameAcceptor,
+                                                  std::string const &nameRequester)
+{
   TRACE(nameAcceptor, nameRequester);
 
   CHECK(not isConnected(), "Already connected!");
 
   CHECK(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode,
         "You can only use a point-to-point communication between two participants which both use a master. "
-        << "Please use distribution-type gather-scatter instead.");
+            << "Please use distribution-type gather-scatter instead.");
 
-  std::map<int, std::vector<int>>& vertexDistribution = _mesh->getVertexDistribution();
-  std::map<int, std::vector<int>> acceptorVertexDistribution;
+  std::map<int, std::vector<int>> &vertexDistribution = _mesh->getVertexDistribution();
+  std::map<int, std::vector<int>>  acceptorVertexDistribution;
 
   if (utils::MasterSlave::_masterMode) {
     // Establish connection between participants' master processes.
@@ -572,7 +558,6 @@ PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
     m2n::send(vertexDistribution, 0, c);
   } else {
     assertion(utils::MasterSlave::_slaveMode);
-
   }
 
   m2n::broadcast(vertexDistribution);
@@ -647,9 +632,9 @@ PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
   // requester process (in the current participant) and (multiple) acceptor
   // processes (in the acceptor participant) with ranks `globalAcceptorRank'
   // according to communication map.
-  for (auto& i : communicationMap) {
+  for (auto &i : communicationMap) {
     auto globalAcceptorRank = i.first;
-    auto indices = std::move(i.second);
+    auto indices            = std::move(i.second);
 
     _totalIndexCount += indices.size();
 
@@ -690,41 +675,37 @@ PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
   _isConnected = true;
 }
 
-void
-PointToPointCommunication::closeConnection() {
+void PointToPointCommunication::closeConnection()
+{
   TRACE();
 
   if (not isConnected())
     return;
 
-  for (auto& mapping : _mappings) {
+  for (auto &mapping : _mappings) {
     mapping.communication->closeConnection();
   }
 
   _mappings.clear();
-
   _buffer.clear();
-
   _localIndexCount = 0;
-
   _totalIndexCount = 0;
-
   _isConnected = false;
 }
 
-void
-PointToPointCommunication::send(double* itemsToSend,
-                                size_t size,
-                                int valueDimension) {
+void PointToPointCommunication::send(double *itemsToSend,
+                                     size_t  size,
+                                     int     valueDimension)
+{
 
   if (_mappings.size() == 0) {
-    assertion(_localIndexCount==0);
+    assertion(_localIndexCount == 0);
     return;
   }
 
-  assertion(size == _localIndexCount * valueDimension, size,_localIndexCount * valueDimension);
+  assertion(size == _localIndexCount * valueDimension, size, _localIndexCount * valueDimension);
 
-  for (auto& mapping : _mappings) {
+  for (auto &mapping : _mappings) {
     mapping.offset = _buffer.size();
 
     for (auto index : mapping.indices) {
@@ -739,27 +720,27 @@ PointToPointCommunication::send(double* itemsToSend,
                                      mapping.localRemoteRank);
   }
 
-  for (auto& mapping : _mappings) {
+  for (auto &mapping : _mappings) {
     mapping.request->wait();
   }
 
   _buffer.clear();
 }
 
-void
-PointToPointCommunication::receive(double* itemsToReceive,
-                                   size_t size,
-                                   int valueDimension) {
+void PointToPointCommunication::receive(double *itemsToReceive,
+                                        size_t  size,
+                                        int     valueDimension)
+{
   if (_mappings.size() == 0) {
-    assertion(_localIndexCount==0);
+    assertion(_localIndexCount == 0);
     return;
   }
 
-  assertion(size == _localIndexCount * valueDimension, size,_localIndexCount * valueDimension);
+  assertion(size == _localIndexCount * valueDimension, size, _localIndexCount * valueDimension);
 
   std::fill(itemsToReceive, itemsToReceive + size, 0);
 
-  for (auto& mapping : _mappings) {
+  for (auto &mapping : _mappings) {
     mapping.offset = _buffer.size();
 
     _buffer.resize(_buffer.size() + mapping.indices.size() * valueDimension);
@@ -770,7 +751,7 @@ PointToPointCommunication::receive(double* itemsToReceive,
                                         mapping.localRemoteRank);
   }
 
-  for (auto& mapping : _mappings) {
+  for (auto &mapping : _mappings) {
     mapping.request->wait();
 
     int i = 0;

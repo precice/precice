@@ -17,12 +17,10 @@ namespace precice
 {
 namespace com
 {
-logging::Logger MPIPortsCommunication::_log(
-    "precice::com::MPIPortsCommunication");
+logging::Logger MPIPortsCommunication::_log("com::MPIPortsCommunication");
 
-MPIPortsCommunication::MPIPortsCommunication(
-    std::string const &addressDirectory)
-    : _addressDirectory(addressDirectory), _isAcceptor(false), _isConnected(false)
+MPIPortsCommunication::MPIPortsCommunication(std::string const &addressDirectory)
+    : _addressDirectory(addressDirectory)
 {
   if (_addressDirectory.empty()) {
     _addressDirectory = ".";
@@ -32,7 +30,6 @@ MPIPortsCommunication::MPIPortsCommunication(
 MPIPortsCommunication::~MPIPortsCommunication()
 {
   TRACE(_isConnected);
-
   closeConnection();
 }
 
@@ -55,10 +52,7 @@ void MPIPortsCommunication::acceptConnection(std::string const &nameAcceptor,
                                              int                acceptorCommunicatorSize)
 {
   TRACE(nameAcceptor, nameRequester);
-
-  CHECK(acceptorCommunicatorSize == 1,
-        "Acceptor of MPI port connection can only have one process!");
-
+  CHECK(acceptorCommunicatorSize == 1, "Acceptor of MPI port connection can only have one process!");
   assertion(not isConnected());
 
   _isAcceptor = true;
@@ -108,9 +102,7 @@ void MPIPortsCommunication::acceptConnection(std::string const &nameAcceptor,
            communicator,
            MPI_STATUS_IGNORE);
 
-  CHECK(requesterCommunicatorSize > 0,
-        "Requester communicator "
-            << "size has to be > 0!");
+  CHECK(requesterCommunicatorSize > 0, "Requester communicator size has to be > 0!");
 
   _communicators.resize(requesterCommunicatorSize, MPI_COMM_NULL);
 
@@ -144,7 +136,6 @@ void MPIPortsCommunication::acceptConnection(std::string const &nameAcceptor,
           "Duplicate request to connect by same rank (" << requesterProcessRank << ")!");
 
     _communicators[requesterProcessRank] = communicator;
-
     _isConnected = true;
   }
 }

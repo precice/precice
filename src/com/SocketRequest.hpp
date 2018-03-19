@@ -1,7 +1,5 @@
+#pragma once
 #ifndef PRECICE_NO_SOCKETS
-
-#ifndef PRECICE_COM_SOCKET_REQUEST_HPP_
-#define PRECICE_COM_SOCKET_REQUEST_HPP_
 
 #include "Request.hpp"
 
@@ -31,7 +29,5 @@ private:
 };
 }
 } // namespace precice, com
-
-#endif /* PRECICE_COM_SOCKET_REQUEST_HPP_ */
 
 #endif // not PRECICE_NO_SOCKETS

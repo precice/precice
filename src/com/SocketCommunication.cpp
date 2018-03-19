@@ -19,14 +19,17 @@ namespace com
 
 namespace asio = boost::asio;
 
-logging::Logger SocketCommunication::_log(
-    "precice::com::SocketCommunication");
+logging::Logger SocketCommunication::_log("com::SocketCommunication");
 
 SocketCommunication::SocketCommunication(unsigned short     portNumber,
                                          bool               reuseAddress,
                                          std::string const &networkName,
                                          std::string const &addressDirectory)
-    : _portNumber(portNumber), _reuseAddress(reuseAddress), _networkName(networkName), _addressDirectory(addressDirectory), _isConnected(false), _remoteCommunicatorSize(0), _ioService(new IOService), _sockets(), _work(), _thread()
+  : _portNumber(portNumber),
+    _reuseAddress(reuseAddress),
+    _networkName(networkName),
+    _addressDirectory(addressDirectory),
+    _ioService(new IOService)
 {
   if (_addressDirectory.empty()) {
     _addressDirectory = ".";
@@ -506,8 +509,7 @@ void SocketCommunication::send(int *itemsToSend, int size, int rankReceiver)
   }
 }
 
-PtrRequest
-SocketCommunication::aSend(int *itemsToSend, int size, int rankReceiver)
+PtrRequest SocketCommunication::aSend(int *itemsToSend, int size, int rankReceiver)
 {
   TRACE(size, rankReceiver);
 
@@ -552,8 +554,7 @@ void SocketCommunication::send(double *itemsToSend, int size, int rankReceiver)
   }
 }
 
-PtrRequest
-SocketCommunication::aSend(double *itemsToSend, int size, int rankReceiver)
+PtrRequest SocketCommunication::aSend(double *itemsToSend, int size, int rankReceiver)
 {
   TRACE(size, rankReceiver);
 
@@ -598,8 +599,7 @@ void SocketCommunication::send(double itemToSend, int rankReceiver)
   }
 }
 
-PtrRequest
-SocketCommunication::aSend(double *itemToSend, int rankReceiver)
+PtrRequest SocketCommunication::aSend(double *itemToSend, int rankReceiver)
 {
   return aSend(itemToSend, 1, rankReceiver);
 }
@@ -623,8 +623,7 @@ void SocketCommunication::send(int itemToSend, int rankReceiver)
   }
 }
 
-PtrRequest
-SocketCommunication::aSend(int *itemToSend, int rankReceiver)
+PtrRequest SocketCommunication::aSend(int *itemToSend, int rankReceiver)
 {
   return aSend(itemToSend, 1, rankReceiver);
 }
@@ -648,8 +647,7 @@ void SocketCommunication::send(bool itemToSend, int rankReceiver)
   }
 }
 
-PtrRequest
-SocketCommunication::aSend(bool *itemToSend, int rankReceiver)
+PtrRequest SocketCommunication::aSend(bool *itemToSend, int rankReceiver)
 {
   TRACE(rankReceiver);
 
@@ -682,8 +680,7 @@ void SocketCommunication::receive(std::string &itemToReceive, int rankSender)
   rankSender = rankSender - _rankOffset;
 
   assertion((rankSender >= 0) && (rankSender < (int) _sockets.size()),
-            rankSender,
-            _sockets.size());
+            rankSender, _sockets.size());
   assertion(isConnected());
 
   size_t size = 0;
@@ -718,8 +715,7 @@ void SocketCommunication::receive(int *itemsToReceive, int size, int rankSender)
   }
 }
 
-PtrRequest
-SocketCommunication::aReceive(int *itemsToReceive, int size, int rankSender)
+PtrRequest SocketCommunication::aReceive(int *itemsToReceive, int size, int rankSender)
 {
   TRACE(size, rankSender);
 

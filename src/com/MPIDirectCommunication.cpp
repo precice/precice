@@ -13,7 +13,9 @@ namespace com
 logging::Logger MPIDirectCommunication::_log("com::MPIDirectCommunication");
 
 MPIDirectCommunication::MPIDirectCommunication()
-    : _communicator(utils::Parallel::getGlobalCommunicator()), _globalCommunicator(utils::Parallel::getGlobalCommunicator()), _localCommunicator(utils::Parallel::getGlobalCommunicator()), _isConnected(false)
+    : _communicator(utils::Parallel::getGlobalCommunicator()),
+      _globalCommunicator(utils::Parallel::getGlobalCommunicator()),
+      _localCommunicator(utils::Parallel::getGlobalCommunicator())
 {
 }
 
@@ -122,8 +124,7 @@ int MPIDirectCommunication::getLeaderRank(std::string const &accessorName)
       return group.leaderRank;
     }
   }
-  ERROR(
-      "Unknown accessor name \"" << accessorName << "\"!");
+  ERROR("Unknown accessor name \"" << accessorName << "\"!");
 }
 
 void MPIDirectCommunication::allreduceSum()
@@ -294,8 +295,7 @@ void MPIDirectCommunication::broadcast(bool &itemToReceive, int rankBroadcaster)
   itemToReceive = item;
 }
 
-MPI_Comm &
-MPIDirectCommunication::communicator(int rank)
+MPI_Comm& MPIDirectCommunication::communicator(int rank)
 {
   return _communicator;
 }

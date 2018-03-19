@@ -28,7 +28,7 @@ public:
   /**
    * @brief Returns the number of processes in the remote communicator.
    *
-   * Precondition: a connection to the remote participant has been setup.
+   * @pre A connection to the remote participant has been setup.
    */
   virtual size_t getRemoteCommunicatorSize();
 
@@ -51,9 +51,7 @@ public:
   virtual int requestConnectionAsClient(std::string const &nameAcceptor,
                                         std::string const &nameRequester);
 
-  /**
-   * @brief See precice::com::Communication::closeConnection().
-   */
+  /// See precice::com::Communication::closeConnection().
   virtual void closeConnection();
 
 private:
@@ -70,10 +68,10 @@ private:
   /// Name of the port used for connection.
   char _portName[MPI_MAX_PORT_NAME];
 
-  bool _isAcceptor;
+  bool _isAcceptor = false;
 
   /// Flag indicating a connection.
-  bool _isConnected;
+  bool _isConnected = false;
 };
 }
 } // namespace precice, com

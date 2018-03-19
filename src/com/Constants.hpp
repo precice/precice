@@ -1,5 +1,4 @@
-#ifndef PRECICE_COM_CONSTANTS_HPP_
-#define PRECICE_COM_CONSTANTS_HPP_
+#pragma once
 
 namespace precice
 {
@@ -16,5 +15,3 @@ public:
 };
 }
 } // namespace precice, com
-
-#endif /* PRECICE_COM_CONSTANTS_HPP_ */
