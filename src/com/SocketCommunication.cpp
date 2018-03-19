@@ -687,10 +687,9 @@ void SocketCommunication::receive(std::string &itemToReceive, int rankSender)
 
   try {
     asio::read(*_sockets[rankSender], asio::buffer(&size, sizeof(size_t)));
-    char *msg = new char[size];
+    char msg[size];
     asio::read(*_sockets[rankSender], asio::buffer(msg, size));
     itemToReceive = msg;
-    delete[] msg;
   } catch (std::exception &e) {
     ERROR("Receive failed: " << e.what());
   }

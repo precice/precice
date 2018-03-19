@@ -66,7 +66,7 @@ private:
   std::vector<MPI_Comm> _communicators;
 
   /// Name of the port used for connection.
-  char _portName[MPI_MAX_PORT_NAME];
+  std::string _portName = std::string(MPI_MAX_PORT_NAME, '\0');
 
   bool _isAcceptor = false;
 
