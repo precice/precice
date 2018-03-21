@@ -15,7 +15,7 @@ dependencies:
   - mkl=2018.0.1=h19d6760_4
   - py-boost=1.65.1=py27hf484d3e_4
   - xz=5.2.3=h55aa19d_2
-  - mpich=3.2=5
+  - mpich
   - ca-certificates=2017.08.26=h1d4fec5_0
   - certifi=2018.1.18=py27_0
   - libedit=3.1=heed3624_0
@@ -36,5 +36,4 @@ dependencies:
   - wheel=0.30.0=py27h2bc6bb2_1
   - zlib=1.2.11=ha838bed_2
   - eigen=3.2.7=0
-prefix: /work_fast/ga25zih/anaconda2/envs/precice
 

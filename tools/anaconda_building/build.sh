@@ -1,5 +1,5 @@
 #!/bin/bash
-
+set -e
 source activate.sh
 
 # TODO: make parallel jobs variable
@@ -24,7 +24,7 @@ printf "\ncleaning done."
 echo ""
 
 # building
-(cd $PRECICE_ROOT; scons --config=force $SCONS_OPTIONS -j8)  &> scons.log || exit &
+(cd $PRECICE_ROOT; scons --config=force libprefix=$CONDA_PREFIX $SCONS_OPTIONS -j8)  &> scons.log || exit &
 # create a spinner indicating progress. See https://stackoverflow.com/a/12498305/5158031
 pid=$! # Process Id of the previous running command
 
