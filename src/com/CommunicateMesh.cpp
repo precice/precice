@@ -13,7 +13,7 @@ namespace precice
 namespace com
 {
 
-logging::Logger CommunicateMesh::_log("precice::com::CommunicateMesh");
+logging::Logger CommunicateMesh::_log("com::CommunicateMesh");
 
 CommunicateMesh::CommunicateMesh(
     com::PtrCommunication communication)

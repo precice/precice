@@ -13,7 +13,6 @@
 #include "math/math.hpp"
 #include "mesh/Mesh.hpp"
 #include "utils/EigenHelperFunctions.hpp"
-#include "utils/Globals.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/MasterSlave.hpp"
 
@@ -30,15 +29,11 @@ BaseCouplingScheme::BaseCouplingScheme(
     double timestepLength,
     int    validDigits)
     : _couplingMode(Undefined),
-      _isCoarseModelOptimizationActive(false),
       _firstParticipant("unknown"),
       _secondParticipant("unknown"),
       _localParticipant("unknown"),
       _eps(std::pow(10.0, -1 * validDigits)),
-      _deletedColumnsPPFiltering(0),
       _iterationsCoarseOptimization(-1),
-      _participantSetsDt(false),
-      _participantReceivesDt(false),
       _maxTime(maxTime),
       _maxTimesteps(maxTimesteps),
       _iterations(-1),
@@ -47,22 +42,8 @@ BaseCouplingScheme::BaseCouplingScheme(
       _totalIterations(-1),
       _timesteps(0),
       _timestepLength(timestepLength),
-      _time(0.0),
-      _computedTimestepPart(0.0),
       _firstResiduumNorm(0),
-      _extrapolationOrder(0),
-      _validDigits(validDigits),
-      _doesFirstStep(false),
-      _isCouplingTimestepComplete(false),
-      _hasToSendInitData(false),
-      _hasToReceiveInitData(false),
-      _hasDataBeenExchanged(false),
-      _isInitialized(false),
-      _actions(),
-      _sendData(),
-      _receiveData(),
-      _iterationsWriter(),
-      _convergenceWriter()
+      _validDigits(validDigits)
 {
   CHECK(
       not((maxTime != UNDEFINED_TIME) && (maxTime < 0.0)),
@@ -88,17 +69,12 @@ BaseCouplingScheme::BaseCouplingScheme(
     m2n::PtrM2N                   m2n,
     int                           maxIterations,
     constants::TimesteppingMethod dtMethod)
-    : _isCoarseModelOptimizationActive(false),
-      _firstParticipant(firstParticipant),
+  :   _firstParticipant(firstParticipant),
       _secondParticipant(secondParticipant),
       _localParticipant(localParticipant),
-      _convergenceMeasures(),
       _eps(std::pow(10.0, -1 * validDigits)),
-      _deletedColumnsPPFiltering(0),
       _iterationsCoarseOptimization(1),
       _m2n(m2n),
-      _participantSetsDt(false),
-      _participantReceivesDt(false),
       _maxTime(maxTime),
       _maxTimesteps(maxTimesteps),
       _iterations(1),
@@ -107,23 +83,8 @@ BaseCouplingScheme::BaseCouplingScheme(
       _totalIterations(1),
       _timesteps(1),
       _timestepLength(timestepLength),
-      _time(0.0),
-      _computedTimestepPart(0.0),
       _firstResiduumNorm(0),
-      _extrapolationOrder(0),
-      _validDigits(validDigits),
-      _doesFirstStep(false),
-      _isCouplingTimestepComplete(false),
-      _postProcessing(),
-      _hasToSendInitData(false),
-      _hasToReceiveInitData(false),
-      _hasDataBeenExchanged(false),
-      _isInitialized(false),
-      _actions(),
-      _sendData(),
-      _receiveData(),
-      _iterationsWriter(),
-      _convergenceWriter()
+      _validDigits(validDigits)
 {
   CHECK(
       not((maxTime != UNDEFINED_TIME) && (maxTime < 0.0)),

@@ -34,6 +34,7 @@ public:
     ~ScopedPushDirectory();
   };
 
+  /// Sets the address publishing directory. Resets it, when object leaves scope.
   struct ScopedChangePrefixDirectory {
     explicit ScopedChangePrefixDirectory(std::string const &pdp);
 

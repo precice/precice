@@ -18,7 +18,6 @@
 #include "io/ExportContext.hpp"
 #include "io/SimulationStateIO.hpp"
 #include "com/MPIPortsCommunication.hpp"
-#include "com/Constants.hpp"
 #include "com/MPIDirectCommunication.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
 #include "m2n/M2N.hpp"

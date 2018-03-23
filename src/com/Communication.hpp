@@ -47,9 +47,7 @@ public:
   {
   }
 
-  /**
-   * @brief Destructor, empty.
-   */
+  /// Destructor, empty.
   virtual ~Communication()
   {
   }

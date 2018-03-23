@@ -76,8 +76,7 @@ void SocketCommunication::acceptConnection(std::string const &nameAcceptor,
   _rank = acceptorProcessRank;
 
   std::string address;
-  std::string addressFileName("." + nameRequester + "-" + nameAcceptor +
-                              ".address");
+  std::string addressFileName("." + nameRequester + "-" + nameAcceptor + ".address");
 
   try {
     std::string ipAddress = getIpAddress();
@@ -128,7 +127,6 @@ void SocketCommunication::acceptConnection(std::string const &nameAcceptor,
     _remoteCommunicatorSize = remoteSize;
 
     _sockets.resize(_remoteCommunicatorSize);
-
     _sockets[remoteRank] = socket;
 
     _isConnected = true;
@@ -160,9 +158,7 @@ void SocketCommunication::acceptConnection(std::string const &nameAcceptor,
 
     acceptor.close();
   } catch (std::exception &e) {
-    ERROR(
-        "Accepting connection at " << address
-                                   << " failed: " << e.what());
+    ERROR("Accepting connection at " << address << " failed: " << e.what());
   }
 
   // NOTE:
@@ -228,7 +224,6 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &nameAccept
       PtrSocket socket = PtrSocket(new Socket(*_ioService));
 
       acceptor.accept(*socket);
-
       DEBUG("Accepted connection at " << address);
 
       CHECK(_sockets[remoteRank].use_count() == 0,
@@ -246,9 +241,7 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &nameAccept
 
     acceptor.close();
   } catch (std::exception &e) {
-    ERROR(
-        "Accepting connection at " << address
-                                   << " failed: " << e.what());
+    ERROR("Accepting connection at " << address << " failed: " << e.what());
   }
 
   // NOTE:
@@ -332,9 +325,7 @@ void SocketCommunication::requestConnection(std::string const &nameAcceptor,
 
     _remoteCommunicatorSize = remoteSize;
   } catch (std::exception &e) {
-    ERROR(
-        "Requesting connection to " << address
-                                    << " failed: " << e.what());
+    ERROR("Requesting connection to " << address << " failed: " << e.what());
   }
 
   // NOTE:
@@ -413,9 +404,7 @@ int SocketCommunication::requestConnectionAsClient(
 
     _remoteCommunicatorSize = remoteSize;
   } catch (std::exception &e) {
-    ERROR(
-        "Requesting connection to " << address
-                                    << " failed: " << e.what());
+    ERROR("Requesting connection to " << address << " failed: " << e.what());
   }
 
   // NOTE:

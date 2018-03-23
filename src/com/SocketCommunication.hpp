@@ -56,12 +56,10 @@ public:
   virtual size_t getRemoteCommunicatorSize();
 
   /**
-   * @brief Accepts connection from participant, which has to call
-   *requestConnection().
+   * @brief Accepts connection from participant, which has to call requestConnection().
    *
    * If several connections are going in to a server, the server has to call
-   *this
-   * method, while the clients have to call requestConnection().
+   * this method, while the clients have to call requestConnection().
    *
    * @param[in] nameAcceptor Name of calling participant.
    * @param[in] nameRequester Name of remote participant to connect to.
@@ -76,12 +74,10 @@ public:
                                         int                requesterCommunicatorSize);
 
   /**
-   * @brief Requests connection from participant, which has to call
-   *acceptConnection().
+   * @brief Requests connection from participant, which has to call acceptConnection().
    *
    * If several connections are going in to a server, the clients have to call
-   *this
-   * method, while the server has to call acceptConnection().
+   * this method, while the server has to call acceptConnection().
    *
    * @param nameAcceptor [IN] Name of remote participant to connect to.
    * @param nameReuester [IN] Name of calling participant.
