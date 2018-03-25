@@ -23,9 +23,7 @@ public:
 
   M2N( com::PtrCommunication masterCom, DistributedComFactory::SharedPointer distrFactory);
 
-  /**
-   * @brief Destructor, empty.
-   */
+  /// Destructor, empty.
   ~M2N();
 
   /// Returns true, if a connection to a remote participant has been setup.
@@ -79,31 +77,13 @@ public:
    */
   void closeConnection();
 
-  /**
-   * @brief Get the basic communication between the 2 masters.
-   */
+  /// Get the basic communication between the 2 masters.
   com::PtrCommunication getMasterCommunication();
 
 
   void createDistributedCommunication(mesh::PtrMesh mesh);
 
-  void startSendPackage ( int rankReceiver );
-
-  void finishSendPackage();
-
-  /**
-   * @brief Starts to receive messages from rankSender.
-   *
-   * @return Rank of sender, which is useful when ANY_SENDER is used.
-   */
-  int startReceivePackage ( int rankSender );
-
-  void finishReceivePackage();
-
-
-  /**
-   * @brief Sends an array of double values from all slaves (different for each slave).
-   */
+  /// Sends an array of double values from all slaves (different for each slave).
   void send (
     double* itemsToSend,
     int     size,
@@ -125,24 +105,18 @@ public:
   void send (
     double itemToSend);
 
-  /**
-   * @brief All slaves receive an array of doubles (different for each slave).
-   */
+  /// All slaves receive an array of doubles (different for each slave).
   void receive (
     double* itemsToReceive,
     int     size,
     int     meshID,
     int     valueDimension );
 
-  /**
-   * @brief All slaves receive a bool (the same for each slave).
-   */
+  /// All slaves receive a bool (the same for each slave).
   void receive (
     bool&  itemToReceive);
 
-  /**
-   * @brief All slaves receive a double (the same for each slave).
-   */
+  /// All slaves receive a double (the same for each slave).
   void receive (
     double&  itemToReceive);
 

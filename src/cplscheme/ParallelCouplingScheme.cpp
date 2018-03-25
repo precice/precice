@@ -102,23 +102,17 @@ void ParallelCouplingScheme::initializeData()
   // F: send, receive, S: receive, send
   if (doesFirstStep()) {
     if (hasToSendInitData()) {
-      getM2N()->startSendPackage(0);
       sendData(getM2N());
-      getM2N()->finishSendPackage();
     }
     if (hasToReceiveInitData()) {
-      getM2N()->startReceivePackage(0);
       receiveData(getM2N());
-      getM2N()->finishReceivePackage();
       setHasDataBeenExchanged(true);
     }
   }
 
   else { // second participant
     if (hasToReceiveInitData()) {
-      getM2N()->startReceivePackage(0);
       receiveData(getM2N());
-      getM2N()->finishReceivePackage();
       setHasDataBeenExchanged(true);
 
       // second participant has to save values for extrapolation
@@ -142,9 +136,7 @@ void ParallelCouplingScheme::initializeData()
           utils::shiftSetFirst(pair.second->oldValues, *pair.second->values);
         }
       }
-      getM2N()->startSendPackage(0);
       sendData(getM2N());
-      getM2N()->finishSendPackage();
     }
   }
 
@@ -178,31 +170,23 @@ void ParallelCouplingScheme::explicitAdvance()
 
     if (doesFirstStep()) {
       DEBUG("Sending data...");
-      getM2N()->startSendPackage(0);
       sendDt();
       sendData(getM2N());
-      getM2N()->finishSendPackage();
 
       DEBUG("Receiving data...");
-      getM2N()->startReceivePackage(0);
       receiveAndSetDt();
       receiveData(getM2N());
-      getM2N()->finishReceivePackage();
       setHasDataBeenExchanged(true);
     }
     else { //second participant
       DEBUG("Receiving data...");
-      getM2N()->startReceivePackage(0);
       receiveAndSetDt();
       receiveData(getM2N());
-      getM2N()->finishReceivePackage();
       setHasDataBeenExchanged(true);
 
       DEBUG("Sending data...");
-      getM2N()->startSendPackage(0);
       sendDt();
       sendData(getM2N());
-      getM2N()->finishSendPackage();
     }
 
     //both participants
@@ -226,23 +210,16 @@ void ParallelCouplingScheme::implicitAdvance()
   if (math::equals(getThisTimestepRemainder(), 0.0, _eps)) {
     DEBUG("Computed full length of iteration");
     if (doesFirstStep()) { //First participant
-      getM2N()->startSendPackage(0);
       sendData(getM2N());
-      getM2N()->finishSendPackage();
-      getM2N()->startReceivePackage(0);
       getM2N()->receive(convergence);
       getM2N()->receive(_isCoarseModelOptimizationActive);
       if (convergence) {
         timestepCompleted();
       }
       receiveData(getM2N());
-      getM2N()->finishReceivePackage();
     }
     else { // second participant
-
-      getM2N()->startReceivePackage(0);
       receiveData(getM2N());
-      getM2N()->finishReceivePackage();
 
       // get the current design specifications from the post processing (for convergence measure)
       std::map<int, Eigen::VectorXd> designSpecifications;
@@ -334,12 +311,10 @@ void ParallelCouplingScheme::implicitAdvance()
        }
      }
 
-      getM2N()->startSendPackage(0);
       getM2N()->send(convergence);
       getM2N()->send(_isCoarseModelOptimizationActive);
 
       sendData(getM2N());
-      getM2N()->finishSendPackage();
     }
 
     // both participants

@@ -183,7 +183,6 @@ void BaseCouplingScheme::sendState(
     int                   rankReceiver)
 {
   TRACE(rankReceiver);
-  communication->startSendPackage(rankReceiver);
   assertion(communication.get() != nullptr);
   assertion(communication->isConnected());
   communication->send(_maxTime, rankReceiver);
@@ -204,7 +203,6 @@ void BaseCouplingScheme::sendState(
   communication->send(_iterations, rankReceiver);
   communication->send(_iterationsCoarseOptimization, rankReceiver); // new, correct?? TODO
   communication->send(_totalIterations, rankReceiver);
-  communication->finishSendPackage();
 }
 
 void BaseCouplingScheme::receiveState(
@@ -212,7 +210,6 @@ void BaseCouplingScheme::receiveState(
     int                   rankSender)
 {
   TRACE(rankSender);
-  communication->startReceivePackage(rankSender);
   assertion(communication.get() != nullptr);
   assertion(communication->isConnected());
   communication->receive(_maxTime, rankSender);
@@ -240,18 +237,16 @@ void BaseCouplingScheme::receiveState(
   communication->receive(subIteration, rankSender); // new, correct?? TODO
   _iterationsCoarseOptimization = subIteration;     // new, correct? TODO
   communication->receive(_totalIterations, rankSender);
-  communication->finishReceivePackage();
 }
 
-std::vector<int> BaseCouplingScheme::sendData(
-    m2n::PtrM2N m2n)
+std::vector<int> BaseCouplingScheme::sendData(m2n::PtrM2N m2n)
 {
   TRACE();
 
   std::vector<int> sentDataIDs;
   assertion(m2n.get() != nullptr);
   assertion(m2n->isConnected());
-  for (DataMap::value_type &pair : _sendData) {
+  for (const DataMap::value_type &pair : _sendData) {
     //std::cout<<"\nsend data id="<<pair.first<<": "<<*(pair.second->values)<<std::endl;
     int size = pair.second->values->size();
     m2n->send(pair.second->values->data(), size, pair.second->mesh->getID(), pair.second->dimension);

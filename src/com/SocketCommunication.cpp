@@ -439,25 +439,6 @@ void SocketCommunication::closeConnection()
   _isConnected            = false;
 }
 
-void SocketCommunication::startSendPackage(int rankReceiver)
-{
-}
-
-void SocketCommunication::finishSendPackage()
-{
-}
-
-int SocketCommunication::startReceivePackage(int rankSender)
-{
-  TRACE(rankSender);
-
-  return rankSender;
-}
-
-void SocketCommunication::finishReceivePackage()
-{
-}
-
 void SocketCommunication::send(std::string const &itemToSend, int rankReceiver)
 {
   TRACE(itemToSend, rankReceiver);

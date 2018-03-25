@@ -100,19 +100,6 @@ public:
    */
   virtual void closeConnection() = 0;
 
-  virtual void startSendPackage(int rankReceiver) = 0;
-
-  virtual void finishSendPackage() = 0;
-
-  /**
-   * @brief Starts to receive messages from rankSender.
-   *
-   * @return Rank of sender, which is useful when ANY_SENDER is used.
-   */
-  virtual int startReceivePackage(int rankSender) = 0;
-
-  virtual void finishReceivePackage() = 0;
-
   virtual void reduceSum(double *itemsToSend, double *itemsToReceive, int size, int rankMaster);
 
   virtual void reduceSum(double *itemsToSend, double *itemsToReceive, int size);

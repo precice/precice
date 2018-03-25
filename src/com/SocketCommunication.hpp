@@ -97,18 +97,6 @@ public:
    */
   virtual void closeConnection();
 
-  /// Is empty.
-  virtual void startSendPackage(int rankReceiver);
-
-  /// Is empty.
-  virtual void finishSendPackage();
-
-  /// Just returns rank of sender.
-  virtual int startReceivePackage(int rankSender);
-
-  /// Is empty.
-  virtual void finishReceivePackage();
-
   /// Sends a std::string to process with given rank.
   virtual void send(std::string const &itemToSend, int rankReceiver);
 
