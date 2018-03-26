@@ -137,35 +137,6 @@ void M2N:: createDistributedCommunication(mesh::PtrMesh mesh){
   _distComs[mesh->getID()] = distCom;
 }
 
-void M2N:: startSendPackage ( int rankReceiver )
-{
-  if(not utils::MasterSlave::_slaveMode){
-    _masterCom->startSendPackage(rankReceiver);
-  }
-}
-
-void M2N:: finishSendPackage()
-{
-  if(not utils::MasterSlave::_slaveMode){
-    _masterCom->finishSendPackage();
-  }
-}
-
-int M2N:: startReceivePackage ( int rankSender )
-{
-  if(not utils::MasterSlave::_slaveMode){
-    return _masterCom->startReceivePackage(rankSender);
-  }
-  return -1;
-}
-
-void M2N:: finishReceivePackage()
-{
-  if(not utils::MasterSlave::_slaveMode){
-    _masterCom->finishReceivePackage();
-  }
-}
-
 void M2N:: send (
   double* itemsToSend,
   int     size,

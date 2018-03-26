@@ -161,7 +161,7 @@ struct VRML10Parser : public qi::grammar<ITERATOR_T, qi::space_type>
 
 
 template< typename ITERATOR_T >
-logging::Logger VRML10Parser<ITERATOR_T>:: _log ( "precice::io::impl::VRML10Parser" );
+logging::Logger VRML10Parser<ITERATOR_T>:: _log ("io::impl::VRML10Parser");
 
 template< typename ITERATOR_T >
 VRML10Parser<ITERATOR_T>:: VRML10Parser

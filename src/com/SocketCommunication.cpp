@@ -19,14 +19,17 @@ namespace com
 
 namespace asio = boost::asio;
 
-logging::Logger SocketCommunication::_log(
-    "precice::com::SocketCommunication");
+logging::Logger SocketCommunication::_log("com::SocketCommunication");
 
 SocketCommunication::SocketCommunication(unsigned short     portNumber,
                                          bool               reuseAddress,
                                          std::string const &networkName,
                                          std::string const &addressDirectory)
-    : _portNumber(portNumber), _reuseAddress(reuseAddress), _networkName(networkName), _addressDirectory(addressDirectory), _isConnected(false), _remoteCommunicatorSize(0), _ioService(new IOService), _sockets(), _work(), _thread()
+  : _portNumber(portNumber),
+    _reuseAddress(reuseAddress),
+    _networkName(networkName),
+    _addressDirectory(addressDirectory),
+    _ioService(new IOService)
 {
   if (_addressDirectory.empty()) {
     _addressDirectory = ".";
@@ -73,8 +76,7 @@ void SocketCommunication::acceptConnection(std::string const &nameAcceptor,
   _rank = acceptorProcessRank;
 
   std::string address;
-  std::string addressFileName("." + nameRequester + "-" + nameAcceptor +
-                              ".address");
+  std::string addressFileName("." + nameRequester + "-" + nameAcceptor + ".address");
 
   try {
     std::string ipAddress = getIpAddress();
@@ -125,7 +127,6 @@ void SocketCommunication::acceptConnection(std::string const &nameAcceptor,
     _remoteCommunicatorSize = remoteSize;
 
     _sockets.resize(_remoteCommunicatorSize);
-
     _sockets[remoteRank] = socket;
 
     _isConnected = true;
@@ -157,9 +158,7 @@ void SocketCommunication::acceptConnection(std::string const &nameAcceptor,
 
     acceptor.close();
   } catch (std::exception &e) {
-    ERROR(
-        "Accepting connection at " << address
-                                   << " failed: " << e.what());
+    ERROR("Accepting connection at " << address << " failed: " << e.what());
   }
 
   // NOTE:
@@ -225,7 +224,6 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &nameAccept
       PtrSocket socket = PtrSocket(new Socket(*_ioService));
 
       acceptor.accept(*socket);
-
       DEBUG("Accepted connection at " << address);
 
       CHECK(_sockets[remoteRank].use_count() == 0,
@@ -243,9 +241,7 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &nameAccept
 
     acceptor.close();
   } catch (std::exception &e) {
-    ERROR(
-        "Accepting connection at " << address
-                                   << " failed: " << e.what());
+    ERROR("Accepting connection at " << address << " failed: " << e.what());
   }
 
   // NOTE:
@@ -329,9 +325,7 @@ void SocketCommunication::requestConnection(std::string const &nameAcceptor,
 
     _remoteCommunicatorSize = remoteSize;
   } catch (std::exception &e) {
-    ERROR(
-        "Requesting connection to " << address
-                                    << " failed: " << e.what());
+    ERROR("Requesting connection to " << address << " failed: " << e.what());
   }
 
   // NOTE:
@@ -410,9 +404,7 @@ int SocketCommunication::requestConnectionAsClient(
 
     _remoteCommunicatorSize = remoteSize;
   } catch (std::exception &e) {
-    ERROR(
-        "Requesting connection to " << address
-                                    << " failed: " << e.what());
+    ERROR("Requesting connection to " << address << " failed: " << e.what());
   }
 
   // NOTE:
@@ -445,25 +437,6 @@ void SocketCommunication::closeConnection()
 
   _remoteCommunicatorSize = 0;
   _isConnected            = false;
-}
-
-void SocketCommunication::startSendPackage(int rankReceiver)
-{
-}
-
-void SocketCommunication::finishSendPackage()
-{
-}
-
-int SocketCommunication::startReceivePackage(int rankSender)
-{
-  TRACE(rankSender);
-
-  return rankSender;
-}
-
-void SocketCommunication::finishReceivePackage()
-{
 }
 
 void SocketCommunication::send(std::string const &itemToSend, int rankReceiver)
@@ -506,8 +479,7 @@ void SocketCommunication::send(int *itemsToSend, int size, int rankReceiver)
   }
 }
 
-PtrRequest
-SocketCommunication::aSend(int *itemsToSend, int size, int rankReceiver)
+PtrRequest SocketCommunication::aSend(int *itemsToSend, int size, int rankReceiver)
 {
   TRACE(size, rankReceiver);
 
@@ -552,8 +524,7 @@ void SocketCommunication::send(double *itemsToSend, int size, int rankReceiver)
   }
 }
 
-PtrRequest
-SocketCommunication::aSend(double *itemsToSend, int size, int rankReceiver)
+PtrRequest SocketCommunication::aSend(double *itemsToSend, int size, int rankReceiver)
 {
   TRACE(size, rankReceiver);
 
@@ -598,8 +569,7 @@ void SocketCommunication::send(double itemToSend, int rankReceiver)
   }
 }
 
-PtrRequest
-SocketCommunication::aSend(double *itemToSend, int rankReceiver)
+PtrRequest SocketCommunication::aSend(double *itemToSend, int rankReceiver)
 {
   return aSend(itemToSend, 1, rankReceiver);
 }
@@ -623,8 +593,7 @@ void SocketCommunication::send(int itemToSend, int rankReceiver)
   }
 }
 
-PtrRequest
-SocketCommunication::aSend(int *itemToSend, int rankReceiver)
+PtrRequest SocketCommunication::aSend(int *itemToSend, int rankReceiver)
 {
   return aSend(itemToSend, 1, rankReceiver);
 }
@@ -648,8 +617,7 @@ void SocketCommunication::send(bool itemToSend, int rankReceiver)
   }
 }
 
-PtrRequest
-SocketCommunication::aSend(bool *itemToSend, int rankReceiver)
+PtrRequest SocketCommunication::aSend(bool *itemToSend, int rankReceiver)
 {
   TRACE(rankReceiver);
 
@@ -682,18 +650,16 @@ void SocketCommunication::receive(std::string &itemToReceive, int rankSender)
   rankSender = rankSender - _rankOffset;
 
   assertion((rankSender >= 0) && (rankSender < (int) _sockets.size()),
-            rankSender,
-            _sockets.size());
+            rankSender, _sockets.size());
   assertion(isConnected());
 
   size_t size = 0;
 
   try {
     asio::read(*_sockets[rankSender], asio::buffer(&size, sizeof(size_t)));
-    char *msg = new char[size];
+    char msg[size];
     asio::read(*_sockets[rankSender], asio::buffer(msg, size));
     itemToReceive = msg;
-    delete[] msg;
   } catch (std::exception &e) {
     ERROR("Receive failed: " << e.what());
   }
@@ -718,8 +684,7 @@ void SocketCommunication::receive(int *itemsToReceive, int size, int rankSender)
   }
 }
 
-PtrRequest
-SocketCommunication::aReceive(int *itemsToReceive, int size, int rankSender)
+PtrRequest SocketCommunication::aReceive(int *itemsToReceive, int size, int rankSender)
 {
   TRACE(size, rankSender);
 

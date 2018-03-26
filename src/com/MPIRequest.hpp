@@ -1,7 +1,6 @@
+#pragma once
 #ifndef PRECICE_NO_MPI
 
-#ifndef PRECICE_COM_MPI_REQUEST_HPP_
-#define PRECICE_COM_MPI_REQUEST_HPP_
 
 #include "Request.hpp"
 
@@ -25,7 +24,5 @@ private:
 };
 }
 } // namespace precice, com
-
-#endif /* PRECICE_COM_MPI_REQUEST_HPP_ */
 
 #endif // not PRECICE_NO_MPI

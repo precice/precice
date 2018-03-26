@@ -235,7 +235,7 @@ void precicef_set_vertex_(
  * @brief See precice::SolverInterface::setMeshVertices().
  *
  * Fortran syntax:
- * precicef_set_read_poss(
+ * precicef_set_vertices(
  *   INTEGER          meshID,
  *   INTEGER          size,
  *   DOUBLE PRECISION positions(dim*size),

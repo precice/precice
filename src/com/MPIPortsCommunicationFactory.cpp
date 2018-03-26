@@ -9,8 +9,7 @@ namespace precice
 {
 namespace com
 {
-MPIPortsCommunicationFactory::MPIPortsCommunicationFactory(
-    std::string const &addressDirectory)
+MPIPortsCommunicationFactory::MPIPortsCommunicationFactory(std::string const &addressDirectory)
     : _addressDirectory(addressDirectory)
 {
   if (_addressDirectory.empty()) {
@@ -20,12 +19,10 @@ MPIPortsCommunicationFactory::MPIPortsCommunicationFactory(
 
 PtrCommunication MPIPortsCommunicationFactory::newCommunication()
 {
-  return PtrCommunication(
-      new MPIPortsCommunication(_addressDirectory));
+  return PtrCommunication(new MPIPortsCommunication(_addressDirectory));
 }
 
-std::string
-MPIPortsCommunicationFactory::addressDirectory()
+std::string MPIPortsCommunicationFactory::addressDirectory()
 {
   return _addressDirectory;
 }

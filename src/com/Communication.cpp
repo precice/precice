@@ -1,8 +1,5 @@
 #include "Communication.hpp"
-
 #include "Request.hpp"
-
-#include "utils/Globals.hpp"
 
 namespace precice
 {
@@ -66,6 +63,7 @@ void Communication::reduceSum(int &itemsToSend, int &itemsToReceive, int rankMas
 
 void Communication::allreduceSum()
 {
+  ERROR("Not implemented!");
   TRACE();
 }
 
