@@ -10,7 +10,7 @@ namespace precice
 namespace com
 {
 
-logging::Logger CommunicateBoundingBox::_log("precice::com::CommunicateBoundingBox");
+logging::Logger CommunicateBoundingBox::_log("com::CommunicateBoundingBox");
 
 CommunicateBoundingBox::CommunicateBoundingBox(
   com::PtrCommunication communication)
@@ -23,7 +23,7 @@ void CommunicateBoundingBox::sendBoundingBox(
 {
   TRACE(rankReceiver);
 
-  for (auto &d : bb) {
+  for (const auto &d : bb) {
     _communication->send(d.first, rankReceiver);
     _communication->send(d.second, rankReceiver);
   }
@@ -48,7 +48,7 @@ void CommunicateBoundingBox::sendBoundingBoxMap(
 {
   TRACE(rankReceiver);
 
-  for (auto &bb : bbm) {
+  for (const auto &bb : bbm) {
       sendBoundingBox(bb.second, rankReceiver);
     }
   }
@@ -69,8 +69,8 @@ void CommunicateBoundingBox::broadcastSendBoundingBoxMap(
   mesh::Mesh::BoundingBoxMap &bbm)
 {
 
-  for (auto &rank : bbm) {
-    for (auto &dimension : rank.second) {
+  for (const auto &rank : bbm) {
+    for (const auto &dimension : rank.second) {
       _communication->broadcast(dimension.first);
       _communication->broadcast(dimension.second);
     }
