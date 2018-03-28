@@ -19,7 +19,7 @@ using precice::utils::Event;
 namespace precice {
 namespace partition {
 
-logging::Logger ReceivedPartition:: _log ( "precice::partition::ReceivedPartition" );
+logging::Logger ReceivedPartition:: _log ( "partition::ReceivedPartition" );
 
 ReceivedPartition::ReceivedPartition
 (

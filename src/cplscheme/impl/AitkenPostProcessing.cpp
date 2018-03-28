@@ -17,7 +17,7 @@ namespace cplscheme
 namespace impl
 {
 
-logging::Logger AitkenPostProcessing::_log("precice::cplscheme::AitkenPostProcessing");
+logging::Logger AitkenPostProcessing::_log("cplscheme::AitkenPostProcessing");
 
 AitkenPostProcessing::AitkenPostProcessing(
     double           initialRelaxation,

@@ -10,7 +10,7 @@
 namespace precice {
 namespace action {
 
-logging::Logger PythonAction:: _log ( "precice::action::PythonAction" );
+logging::Logger PythonAction:: _log("action::PythonAction" );
 
 PythonAction:: PythonAction
 (

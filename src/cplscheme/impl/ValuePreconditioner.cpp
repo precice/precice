@@ -9,7 +9,7 @@ namespace impl
 {
 
 logging::Logger ValuePreconditioner::
-    _log("precice::cplscheme::ValuePreconditioner");
+    _log("cplscheme::ValuePreconditioner");
 
 ValuePreconditioner::ValuePreconditioner(
     int maxNonConstTimesteps)

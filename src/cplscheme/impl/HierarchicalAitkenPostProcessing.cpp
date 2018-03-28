@@ -13,7 +13,7 @@ namespace impl
 {
 
 logging::Logger HierarchicalAitkenPostProcessing::
-    _log("precice::cplscheme::HierarchicalAitkenPostProcessing");
+    _log("cplscheme::HierarchicalAitkenPostProcessing");
 
 HierarchicalAitkenPostProcessing::HierarchicalAitkenPostProcessing(
     double           initialRelaxation,

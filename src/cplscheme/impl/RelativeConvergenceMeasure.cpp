@@ -9,7 +9,7 @@ namespace impl
 {
 
 logging::Logger RelativeConvergenceMeasure::
-    _log("precice::cplscheme::RelativeConvergenceMeasure");
+    _log("cplscheme::RelativeConvergenceMeasure");
 
 RelativeConvergenceMeasure::RelativeConvergenceMeasure(
     double convergenceLimitPercent)

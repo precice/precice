@@ -8,7 +8,7 @@ namespace impl
 {
 
 logging::Logger ConstantPreconditioner::
-    _log("precice::cplscheme::ConstantPreconditioner");
+    _log("cplscheme::ConstantPreconditioner");
 
 ConstantPreconditioner::ConstantPreconditioner(
     std::vector<double> factors)

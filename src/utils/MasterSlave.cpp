@@ -20,7 +20,7 @@ bool MasterSlave::_slaveMode = false;
 com::PtrCommunication MasterSlave::_communication;
 
 
-logging::Logger MasterSlave:: _log ( "precice::utils::MasterSlave" );
+logging::Logger MasterSlave:: _log("utils::MasterSlave" );
 
 void MasterSlave:: configure(int rank, int size)
 {

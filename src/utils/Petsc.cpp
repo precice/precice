@@ -8,7 +8,7 @@
 namespace precice {
 namespace utils {
 
-logging::Logger Petsc:: _log ( "precice::utils::Petsc" );
+logging::Logger Petsc:: _log("utils::Petsc" );
 
 bool Petsc::weInitialized = false;
 
