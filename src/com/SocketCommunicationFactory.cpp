@@ -12,7 +12,10 @@ SocketCommunicationFactory::SocketCommunicationFactory(
     bool               reuseAddress,
     std::string const &networkName,
     std::string const &addressDirectory)
-    : _portNumber(portNumber), _reuseAddress(reuseAddress), _networkName(networkName), _addressDirectory(addressDirectory)
+    : _portNumber(portNumber),
+      _reuseAddress(reuseAddress),
+      _networkName(networkName),
+      _addressDirectory(addressDirectory)
 {
   if (_addressDirectory.empty()) {
     _addressDirectory = ".";
@@ -27,12 +30,11 @@ SocketCommunicationFactory::SocketCommunicationFactory(
 
 PtrCommunication SocketCommunicationFactory::newCommunication()
 {
-  return PtrCommunication(new SocketCommunication(
-      _portNumber, _reuseAddress, _networkName, _addressDirectory));
+  return std::make_shared<SocketCommunication>(                            
+    _portNumber, _reuseAddress, _networkName, _addressDirectory);
 }
 
-std::string
-SocketCommunicationFactory::addressDirectory()
+std::string SocketCommunicationFactory::addressDirectory()
 {
   return _addressDirectory;
 }

@@ -19,7 +19,7 @@ MPIPortsCommunicationFactory::MPIPortsCommunicationFactory(std::string const &ad
 
 PtrCommunication MPIPortsCommunicationFactory::newCommunication()
 {
-  return PtrCommunication(new MPIPortsCommunication(_addressDirectory));
+  return std::make_shared<MPIPortsCommunication>(_addressDirectory);
 }
 
 std::string MPIPortsCommunicationFactory::addressDirectory()
