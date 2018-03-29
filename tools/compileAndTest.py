@@ -35,14 +35,14 @@ parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFo
 parser.add_argument('-c', '--compile', help="Compile preCICE", dest='compile', action='store_true')
 parser.add_argument('-r', '--removebuild', help="Remove build/ and .scon* files before compiling", dest='remove_build', action='store_true')
 parser.add_argument('-k', '--keeptest', help="Do not remove test directory for earch test run", dest='keep_test', action='store_true')
-parser.add_argument('-b', help="Run boost tests.", dest='run_boostttests', action="store_true")
+parser.add_argument('-t', help="Run tests.", dest='run_tests', action="store_true")
 parser.add_argument('-j', help="Number of CPUs to compile on", dest='compile_cpus', default=4)
 parser.add_argument('-p', help="Number of MPI procs. Setting to 1 means to not use MPI at all. This does not affect the build process.", type=int, dest='mpi_procs', default=4)
 parser.add_argument("-s", "--split", help="Redirect output to a process-unique file testout.N", dest="split_output", action="store_true")
-parser.add_argument('--unitconfig', help="Configuration to use for unit tests", dest="unit_test_config", default=".ci-test-config.xml")
-parser.add_argument('--integrationconfig', help="Configuration to use for integration tests", dest="integration_test_config", default=".ci-integration-test-config.xml")
 parser.add_argument('--logconfig', "-l", help="Log config file", default = "")
 parser.add_argument('--root', help="preCICE Root, defaults to $PRECICE_ROOT", default = os.getenv("PRECICE_ROOT"))
+parser.add_argument('--mpirun', help="mpirun executable", default = "mpirun")
+
 
 if len(sys.argv) < 2:
     parser.print_help()
@@ -74,9 +74,10 @@ if args.compile:
         sys.exit(125) # Cannot compile, 125 means to skip that revision
 
 
-mpi_cmd = "mpirun -n {procs} {output_filename}".format(procs = args.mpi_procs,
-                                                       output_filename = "--output-filename 'testout'" if args.split_output else "")
+mpi_cmd = "{mpirun} -n {procs} {output_filename}".format(mpirun = args.mpirun,
+                                                         procs = args.mpi_procs,
+                                                         output_filename = "--output-filename 'testout'" if args.split_output else "")
 
-if args.run_boostttests:
+if args.run_tests:
     run_cmd = "{mpi} ../build/last/testprecice --color_output {args}".format(mpi = mpi_cmd, args = " ".join(remainder))
     run_test(run_cmd, args.keep_test)
