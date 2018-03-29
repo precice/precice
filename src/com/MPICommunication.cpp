@@ -3,35 +3,6 @@
 #include "MPICommunication.hpp"
 #include "MPIRequest.hpp"
 
-template <size_t>
-struct MPI_Select_unsigned_integer_datatype;
-
-template <>
-struct MPI_Select_unsigned_integer_datatype<1> {
-  static MPI_Datatype datatype;
-};
-MPI_Datatype MPI_Select_unsigned_integer_datatype<1>::datatype = MPI_UNSIGNED_CHAR;
-
-template <>
-struct MPI_Select_unsigned_integer_datatype<2> {
-  static MPI_Datatype datatype;
-};
-MPI_Datatype MPI_Select_unsigned_integer_datatype<2>::datatype = MPI_UNSIGNED_SHORT;
-
-template <>
-struct MPI_Select_unsigned_integer_datatype<4> {
-  static MPI_Datatype datatype;
-};
-MPI_Datatype MPI_Select_unsigned_integer_datatype<4>::datatype = MPI_UNSIGNED;
-
-template <>
-struct MPI_Select_unsigned_integer_datatype<8> {
-  static MPI_Datatype datatype;
-};
-MPI_Datatype MPI_Select_unsigned_integer_datatype<8>::datatype = MPI_UNSIGNED_LONG;
-
-#define MPI_BOOL MPI_Select_unsigned_integer_datatype<sizeof(bool)>::datatype
-
 namespace precice
 {
 namespace com
@@ -155,7 +126,7 @@ void MPICommunication::send(bool itemToSend, int rankReceiver)
   rankReceiver = rankReceiver - _rankOffset;
   MPI_Send(&itemToSend,
            1,
-           MPI_BOOL,
+           MPI_CXX_BOOL,
            rank(rankReceiver),
            0,
            communicator(rankReceiver));
@@ -170,7 +141,7 @@ PtrRequest MPICommunication::aSend(bool *itemToSend, int rankReceiver)
 
   MPI_Isend(itemToSend,
             1,
-            MPI_BOOL,
+            MPI_CXX_BOOL,
             rank(rankReceiver),
             0,
             communicator(rankReceiver),
@@ -312,7 +283,7 @@ void MPICommunication::receive(bool &itemToReceive, int rankSender)
   MPI_Status status;
   MPI_Recv(&itemToReceive,
            1,
-           MPI_BOOL,
+           MPI_CXX_BOOL,
            rank(rankSender),
            0,
            communicator(rankSender),
@@ -330,7 +301,7 @@ PtrRequest MPICommunication::aReceive(bool *itemToReceive, int rankSender)
 
   MPI_Irecv(itemToReceive,
             1,
-            MPI_BOOL,
+            MPI_CXX_BOOL,
             rank(rankSender),
             0,
             communicator(rankSender),
