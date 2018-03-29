@@ -48,11 +48,6 @@ SocketCommunication::~SocketCommunication()
   closeConnection();
 }
 
-bool SocketCommunication::isConnected()
-{
-  return _isConnected;
-}
-
 size_t SocketCommunication::getRemoteCommunicatorSize()
 {
   TRACE();

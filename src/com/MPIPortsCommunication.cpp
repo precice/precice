@@ -32,11 +32,6 @@ MPIPortsCommunication::~MPIPortsCommunication()
   closeConnection();
 }
 
-bool MPIPortsCommunication::isConnected()
-{
-  return _isConnected;
-}
-
 size_t MPIPortsCommunication::getRemoteCommunicatorSize()
 {
   TRACE();

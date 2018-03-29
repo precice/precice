@@ -22,9 +22,6 @@ public:
 
   virtual ~MPIPortsCommunication();
 
-  /// Returns true, if a connection to a remote participant has been setup.
-  virtual bool isConnected();
-
   /**
    * @brief Returns the number of processes in the remote communicator.
    *
@@ -70,8 +67,6 @@ private:
 
   bool _isAcceptor = false;
 
-  /// Flag indicating a connection.
-  bool _isConnected = false;
 };
 }
 } // namespace precice, com

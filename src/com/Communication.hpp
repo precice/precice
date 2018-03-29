@@ -53,7 +53,10 @@ public:
   }
 
   /// Returns true, if a connection to a remote participant has been setup.
-  virtual bool isConnected() = 0;
+  virtual bool isConnected()
+  {
+    return _isConnected;
+  }
 
   /**
    * @brief Returns the number of processes in the remote communicator.
@@ -239,8 +242,11 @@ protected:
   /// Rank offset for masters-slave communication, since ranks are from 0 to size - 2
   int _rankOffset;
 
+  bool _isConnected = false;
+
 private:
   static logging::Logger _log;
+
 };
 }
 } // namespace precice, com

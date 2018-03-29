@@ -30,12 +30,6 @@ public:
 
   virtual ~MPIDirectCommunication();
 
-  /// Returns true, if a connection to a remote participant has been setup.
-  virtual bool isConnected()
-  {
-    return _isConnected;
-  }
-
   /**
    * @brief Returns the number of processes in the remote communicator.
    *
@@ -129,8 +123,6 @@ private:
 
   /// Communicator for communicator between process groups.
   MPI_Comm _localCommunicator;
-
-  bool _isConnected = false;
 
   /**
    * @brief Returns ID belonging to a group of processes.

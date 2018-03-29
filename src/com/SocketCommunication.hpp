@@ -45,9 +45,6 @@ public:
 
   virtual ~SocketCommunication();
 
-  /// Returns true, if a connection to a remote participant has been setup.
-  virtual bool isConnected();
-
   /**
    * @brief Returns the number of processes in the remote communicator.
    *
@@ -185,8 +182,6 @@ private:
 
   /// Directory where IP address is exchanged by file.
   std::string _addressDirectory;
-
-  bool _isConnected = false;
 
   int _remoteCommunicatorSize = 0;
 
