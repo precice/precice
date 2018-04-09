@@ -7,19 +7,20 @@ To ensure a clean test it can delete and recreate the ./tests directory.
 """
 import argparse, os, shutil, subprocess, sys
 
-def run_test(cmd, keep_test):
-    if not keep_test:
-        try:
+def recreate_testdir(keep_test):
+    try:
+        if not keep_test:
             print("Removing ./tests")
             shutil.rmtree("./tests")
-        except FileNotFoundError:
-            pass
 
-    try:
+        print("Creating ./tests")
         os.makedirs("./tests")
-    except FileExistsError:
+    except FileNotFoundError:
         pass
     
+
+def run_test(cmd):
+        
     os.chdir("./tests")
     print("Running: ", cmd)
     ret_code = subprocess.call(cmd, shell = True)
@@ -79,5 +80,10 @@ mpi_cmd = "{mpirun} -n {procs} {output_filename}".format(mpirun = args.mpirun,
                                                          output_filename = "--output-filename 'testout'" if args.split_output else "")
 
 if args.run_tests:
+    recreate_testdir(args.keep_test)
+    if args.logconfig:
+        print("Copy", args.logconfig, "to tests/log.conf")
+        shutil.copyfile(args.logconfig, "tests/log.conf")
+
     run_cmd = "{mpi} ../build/last/testprecice --color_output {args}".format(mpi = mpi_cmd, args = " ".join(remainder))
-    run_test(run_cmd, args.keep_test)
+    run_test(run_cmd)
