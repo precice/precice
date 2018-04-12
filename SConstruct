@@ -77,7 +77,7 @@ vars = Variables(None, ARGUMENTS)
 
 vars.Add(PathVariable("builddir", "Directory holding build files.", "build", PathVariable.PathAccept))
 vars.Add(EnumVariable('build', 'Build type', "Debug", allowed_values=('release', 'debug', 'Release', 'Debug')))
-vars.Add("compiler", "Compiler to use.", "g++")
+vars.Add("compiler", "Compiler to use.", "mpicxx")
 vars.Add(BoolVariable("mpi", "Enables MPI-based communication and running coupling tests.", True))
 vars.Add(BoolVariable("spirit2", "Used for parsing VRML file geometries and checkpointing.", True))
 vars.Add(BoolVariable("petsc", "Enable use of the Petsc linear algebra library.", True))
@@ -102,7 +102,7 @@ if env["build"] == 'debug':
 if env["build"] == 'release':
     env["build"] == 'Release'
     print("WARNING: Lower-case build type 'release' is deprecated, use 'Release' instead!")
-    
+
 
 buildpath = os.path.join(env["builddir"], "") # Ensures to have a trailing slash
 
@@ -156,11 +156,11 @@ elif env["build"] == 'Release':
     env.Append(CCFLAGS = ['-O3'])
     buildpath += "release"
 
-    
+
 # ====== libpthread ======
 checkAdd("pthread")
 
-    
+
 # ====== PETSc ======
 if env["petsc"]:
     if 'CONDA_PREFIX' in os.environ:  # building takes place in conda environment
@@ -171,11 +171,11 @@ if env["petsc"]:
     else:
         PETSC_DIR = checkset_var("PETSC_DIR", "")
         PETSC_ARCH = checkset_var("PETSC_ARCH", "")
-    
+
     if not env["mpi"]:
         print("PETSc requires MPI to be enabled.")
         Exit(1)
-       
+
     env.Append(CPPPATH = [os.path.join( PETSC_DIR, "include"),
                           os.path.join( PETSC_DIR, PETSC_ARCH, "include")])
     env.Append(LIBPATH = [os.path.join( PETSC_DIR, PETSC_ARCH, "lib"),
@@ -229,10 +229,10 @@ if env["mpi"]:
     if not conf.CheckCXXHeader("mpi.h"):
         print("mpi.h not found. Maybe try 'compiler=mpicxx' or 'compiler=mpic++' as scons argument?")
         Exit(1)
-        
+
     # Skip (deprecated) MPI C++ bindings.
     env.Append(CPPDEFINES = ['MPICH_SKIP_MPICXX'])
-        
+
 elif not env["mpi"]:
     env.Append(CPPDEFINES = ['PRECICE_NO_MPI'])
     buildpath += "-nompi"
