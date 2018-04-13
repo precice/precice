@@ -11,7 +11,7 @@ def recreate_testdir(keep_test):
     try:
         if not keep_test:
             print("Removing ./tests")
-            shutil.rmtree("./tests")
+            shutil.rmtree("./tests", ignore_errors = True)
 
         print("Creating ./tests")
         os.makedirs("./tests")
@@ -20,7 +20,6 @@ def recreate_testdir(keep_test):
     
 
 def run_test(cmd):
-        
     os.chdir("./tests")
     print("Running: ", cmd)
     ret_code = subprocess.call(cmd, shell = True)
