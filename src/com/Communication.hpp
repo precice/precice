@@ -42,11 +42,6 @@ class Communication
 {
 
 public:
-  Communication()
-      : _rank(-1), _rankOffset(0)
-  {
-  }
-
   /// Destructor, empty.
   virtual ~Communication()
   {
@@ -66,8 +61,7 @@ public:
   virtual size_t getRemoteCommunicatorSize() = 0;
 
   /**
-   * @brief Connects to another participant, which has to call
-   * requestConnection().
+   * @brief Connects to another participant, which has to call requestConnection().
    *
    * @param[in] nameAcceptor Name of calling participant.
    * @param[in] nameRequester Name of remote participant to connect to.
@@ -82,11 +76,10 @@ public:
                                         int                requesterCommunicatorSize) = 0;
 
   /**
-   * @brief Connects to another participant, which has to call
-   * acceptConnection().
+   * @brief Connects to another participant, which has to call acceptConnection().
    *
    * @param[in] nameAcceptor Name of remote participant to connect to.
-   * @param[in] nameReuester Name of calling participant.
+   * @param[in] nameRequester Name of calling participant.
    */
   virtual void requestConnection(std::string const &nameAcceptor,
                                  std::string const &nameRequester,
@@ -237,16 +230,16 @@ public:
   }
 
 protected:
-  int _rank;
+  int _rank = -1;
 
   /// Rank offset for masters-slave communication, since ranks are from 0 to size - 2
-  int _rankOffset;
+  int _rankOffset = 0;
 
   bool _isConnected = false;
 
 private:
-  static logging::Logger _log;
-
+  logging::Logger _log{"com::Communication"};
+  
 };
-}
-} // namespace precice, com
+} // namespace com
+} // namespace precice

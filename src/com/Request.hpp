@@ -19,5 +19,5 @@ public:
 
   virtual void wait() = 0;
 };
-}
-} // namespace precice, com
+} // namespace com
+} // namespace precice

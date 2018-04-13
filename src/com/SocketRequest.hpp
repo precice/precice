@@ -27,7 +27,7 @@ private:
   std::condition_variable _completeCondition;
   std::mutex              _completeMutex;
 };
-}
-} // namespace precice, com
+} // namespace com
+} // namespace precice
 
 #endif // not PRECICE_NO_SOCKETS

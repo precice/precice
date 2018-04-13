@@ -3,10 +3,13 @@
 #include "DistributedComFactory.hpp"
 #include "com/SharedPointer.hpp"
 
-namespace precice {
-namespace m2n {
+namespace precice
+{
+namespace m2n
+{
 
-class PointToPointComFactory : public DistributedComFactory {
+class PointToPointComFactory : public DistributedComFactory
+{
 
 public:
   explicit PointToPointComFactory(com::PtrCommunicationFactory comFactory);
@@ -17,8 +20,7 @@ public:
 private:
   /// communication factory for 1:M communications
   com::PtrCommunicationFactory _comFactory;
-
 };
 
-
-}} // namespace precice, m2n
+} // namespace m2n
+} // namespace precice

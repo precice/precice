@@ -3,13 +3,15 @@
 #include "DistributedComFactory.hpp"
 
 #include "com/SharedPointer.hpp"
-#include "mesh/SharedPointer.hpp"
 #include "logging/Logger.hpp"
+#include "mesh/SharedPointer.hpp"
 
 #include <map>
 
-namespace precice {
-namespace m2n {
+namespace precice
+{
+namespace m2n
+{
 
 /**
  * @brief M2N communication class.
@@ -20,8 +22,7 @@ namespace m2n {
 class M2N
 {
 public:
-
-  M2N( com::PtrCommunication masterCom, DistributedComFactory::SharedPointer distrFactory);
+  M2N(com::PtrCommunication masterCom, DistributedComFactory::SharedPointer distrFactory);
 
   /// Destructor, empty.
   ~M2N();
@@ -35,9 +36,8 @@ public:
    * @param[in] nameAcceptor Name of calling participant.
    * @param[in] nameRequester Name of remote participant to connect to.
    */
-  void acceptMasterConnection (
-    const std::string& nameAcceptor,
-    const std::string& nameRequester);
+  void acceptMasterConnection(const std::string &nameAcceptor,
+                              const std::string &nameRequester);
 
   /**
    * @brief Connects to another participant, which has to call acceptConnection().
@@ -45,10 +45,8 @@ public:
    * @param[in] nameAcceptor Name of remote participant to connect to.
    * @param[in] nameReuester Name of calling participant.
    */
-  void requestMasterConnection (
-    const std::string& nameAcceptor,
-    const std::string& nameRequester);
-
+  void requestMasterConnection(const std::string &nameAcceptor,
+                               const std::string &nameRequester);
 
   /**
    * @brief Connects to another participant, which has to call requestConnection().
@@ -56,9 +54,8 @@ public:
    * @param[in] nameAcceptor Name of calling participant.
    * @param[in] nameRequester Name of remote participant to connect to.
    */
-  void acceptSlavesConnection (
-    const std::string& nameAcceptor,
-    const std::string& nameRequester);
+  void acceptSlavesConnection(const std::string &nameAcceptor,
+                              const std::string &nameRequester);
 
   /**
    * @brief Connects to another participant, which has to call acceptConnection().
@@ -66,9 +63,8 @@ public:
    * @param[in] nameAcceptor Name of remote participant to connect to.
    * @param[in] nameReuester Name of calling participant.
    */
-  void requestSlavesConnection (
-    const std::string& nameAcceptor,
-    const std::string& nameRequester);
+  void requestSlavesConnection(const std::string &nameAcceptor,
+                               const std::string &nameRequester);
 
   /**
    * @brief Disconnects from communication space, i.e. participant.
@@ -80,49 +76,40 @@ public:
   /// Get the basic communication between the 2 masters.
   com::PtrCommunication getMasterCommunication();
 
-
   void createDistributedCommunication(mesh::PtrMesh mesh);
 
   /// Sends an array of double values from all slaves (different for each slave).
-  void send (
-    double* itemsToSend,
-    int     size,
-    int     meshID,
-    int     valueDimension );
+  void send(double *itemsToSend,
+            int     size,
+            int     meshID,
+            int     valueDimension);
 
   /**
    * @brief The master sends a bool to the other master, for performance reasons, we
    * neglect the gathering and checking step.
    */
-  void send (
-    bool   itemToSend);
-
+  void send(bool itemToSend);
 
   /**
    * @brief The master sends a double to the other master, for performance reasons, we
    * neglect the gathering and checking step.
    */
-  void send (
-    double itemToSend);
+  void send(double itemToSend);
 
   /// All slaves receive an array of doubles (different for each slave).
-  void receive (
-    double* itemsToReceive,
-    int     size,
-    int     meshID,
-    int     valueDimension );
+  void receive(double *itemsToReceive,
+               int     size,
+               int     meshID,
+               int     valueDimension);
 
   /// All slaves receive a bool (the same for each slave).
-  void receive (
-    bool&  itemToReceive);
+  void receive(bool &itemToReceive);
 
   /// All slaves receive a double (the same for each slave).
-  void receive (
-    double&  itemToReceive);
+  void receive(double &itemToReceive);
 
 private:
-
-  static logging::Logger _log;
+  logging::Logger _log{"m2n::M2N"};
 
   std::map<int, DistributedCommunication::SharedPointer> _distComs;
 
@@ -130,11 +117,10 @@ private:
 
   DistributedComFactory::SharedPointer _distrFactory;
 
-  bool _isMasterConnected;
+  bool _isMasterConnected = false;
 
-  bool _areSlavesConnected;
-
-
+  bool _areSlavesConnected = false;
 };
 
-}} // namespace precice, m2n
+} // namespace m2n
+} // namespace precice

@@ -19,17 +19,15 @@ namespace com
 
 namespace asio = boost::asio;
 
-logging::Logger SocketCommunication::_log("com::SocketCommunication");
-
 SocketCommunication::SocketCommunication(unsigned short     portNumber,
                                          bool               reuseAddress,
                                          std::string const &networkName,
                                          std::string const &addressDirectory)
-  : _portNumber(portNumber),
-    _reuseAddress(reuseAddress),
-    _networkName(networkName),
-    _addressDirectory(addressDirectory),
-    _ioService(new IOService)
+    : _portNumber(portNumber),
+      _reuseAddress(reuseAddress),
+      _networkName(networkName),
+      _addressDirectory(addressDirectory),
+      _ioService(new IOService)
 {
   if (_addressDirectory.empty()) {
     _addressDirectory = ".";
@@ -38,22 +36,18 @@ SocketCommunication::SocketCommunication(unsigned short     portNumber,
 
 SocketCommunication::SocketCommunication(std::string const &addressDirectory)
     : SocketCommunication(0, false, "lo", addressDirectory)
-{
-}
+{}
 
 SocketCommunication::~SocketCommunication()
 {
   TRACE(_isConnected);
-
   closeConnection();
 }
 
 size_t SocketCommunication::getRemoteCommunicatorSize()
 {
   TRACE();
-
   assertion(isConnected());
-
   return _remoteCommunicatorSize;
 }
 
@@ -63,7 +57,6 @@ void SocketCommunication::acceptConnection(std::string const &nameAcceptor,
                                            int                acceptorCommunicatorSize)
 {
   TRACE(nameAcceptor, nameRequester);
-
   CHECK(acceptorCommunicatorSize == 1, "Acceptor of socket connection can only have one process!");
 
   assertion(not isConnected());
@@ -168,10 +161,7 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &nameAccept
                                                    int                requesterCommunicatorSize)
 {
   TRACE(nameAcceptor, nameRequester);
-
-  CHECK(requesterCommunicatorSize > 0,
-        "Requester communicator size has to be > 0!");
-
+  CHECK(requesterCommunicatorSize > 0, "Requester communicator size has to be > 0!");
   assertion(not isConnected());
 
   _remoteCommunicatorSize = requesterCommunicatorSize;
@@ -252,7 +242,6 @@ void SocketCommunication::requestConnection(std::string const &nameAcceptor,
                                             int                requesterCommunicatorSize)
 {
   TRACE(nameAcceptor, nameRequester);
-
   assertion(not isConnected());
 
   std::string address;
@@ -313,10 +302,8 @@ void SocketCommunication::requestConnection(std::string const &nameAcceptor,
     receive(remoteRank, 0);
     receive(remoteSize, 0);
 
-    CHECK(remoteRank == 0,
-          "Acceptor base rank has to be 0 but is " << remoteRank << "!");
-    CHECK(remoteSize == 1,
-          "Acceptor communicator size has to be 1!");
+    CHECK(remoteRank == 0, "Acceptor base rank has to be 0 but is " << remoteRank << "!");
+    CHECK(remoteSize == 1, "Acceptor communicator size has to be 1!");
 
     _remoteCommunicatorSize = remoteSize;
   } catch (std::exception &e) {
@@ -334,7 +321,6 @@ int SocketCommunication::requestConnectionAsClient(
     std::string const &nameAcceptor, std::string const &nameRequester)
 {
   TRACE(nameAcceptor, nameRequester);
-
   assertion(not isConnected());
 
   std::string address;
@@ -902,5 +888,5 @@ std::string SocketCommunication::getIpAddress()
 
   return oss.str();
 }
-}
-} // namespace precice, com
+} // namespace com
+} // namespace precice

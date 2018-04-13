@@ -4,50 +4,52 @@
 #include "com/SocketCommunication.hpp"
 #include "xml/XMLAttribute.hpp"
 
-namespace precice {
-namespace com {
+namespace precice
+{
+namespace com
+{
 
 logging::Logger CommunicationConfiguration::_log("com::CommunicationConfiguration");
 
-PtrCommunication CommunicationConfiguration:: createCommunication
-(
-  const xml::XMLTag& tag ) const
-{  
+PtrCommunication CommunicationConfiguration::createCommunication(
+    const xml::XMLTag &tag) const
+{
   com::PtrCommunication com;
   if (tag.getName() == "sockets") {
     std::string network = tag.getStringAttributeValue("network");
-    int port = tag.getIntAttributeValue("port");
+    int         port    = tag.getIntAttributeValue("port");
 
     CHECK(not utils::isTruncated<unsigned short>(port),
           "The value given for the \"port\" attribute is not a 16-bit unsigned integer: " << port);
 
     std::string dir = tag.getStringAttributeValue("exchange-directory");
-    com = std::make_shared<com::SocketCommunication>(port, false, network, dir);
+    com             = std::make_shared<com::SocketCommunication>(port, false, network, dir);
   }
-  else if (tag.getName() == "mpi"){
+  else if (tag.getName() == "mpi") {
     std::string dir = tag.getStringAttributeValue("exchange-directory");
-#   ifdef PRECICE_NO_MPI
+#ifdef PRECICE_NO_MPI
     std::ostringstream error;
     error << "Communication type \"mpi\" can only be used "
           << "when preCICE is compiled with argument \"mpi=on\"";
     throw error.str();
-#   else
+#else
     com = std::make_shared<com::MPIPortsCommunication>(dir);
-#   endif
+#endif
   }
-  else if (tag.getName() == "mpi-single"){
-#   ifdef PRECICE_NO_MPI
+  else if (tag.getName() == "mpi-single") {
+#ifdef PRECICE_NO_MPI
     std::ostringstream error;
     error << "Communication type \"mpi-single\" can only be used "
           << "when preCICE is compiled with argument \"mpi=on\"";
     throw error.str();
-#   else
+#else
     com = std::make_shared<com::MPIDirectCommunication>();
 
-#   endif
+#endif
   }
   assertion(com.get() != nullptr);
   return com;
 }
 
-}} // namespace precice, com
+} // namespace com
+} // namespace precice

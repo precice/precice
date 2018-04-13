@@ -3,11 +3,13 @@
 
 #include "com/SharedPointer.hpp"
 
-namespace precice {
-namespace m2n {
+namespace precice
+{
+namespace m2n
+{
 
 PointToPointComFactory::PointToPointComFactory(com::PtrCommunicationFactory comFactory)
-  : _comFactory(comFactory) {}
+    : _comFactory(comFactory) {}
 
 DistributedCommunication::SharedPointer
 PointToPointComFactory::newDistributedCommunication(mesh::PtrMesh mesh)
@@ -15,4 +17,5 @@ PointToPointComFactory::newDistributedCommunication(mesh::PtrMesh mesh)
   return DistributedCommunication::SharedPointer(new PointToPointCommunication(_comFactory, mesh));
 }
 
-}} // namespace precice, m2n
+} // namespace m2n
+} // namespace precice

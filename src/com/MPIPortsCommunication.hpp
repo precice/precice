@@ -56,7 +56,7 @@ private:
 
   virtual int rank(int rank);
 
-  static logging::Logger _log;
+  logging::Logger _log{"com::MPIPortsCommunication"};
 
   std::string _addressDirectory;
 
@@ -66,9 +66,8 @@ private:
   std::string _portName = std::string(MPI_MAX_PORT_NAME, '\0');
 
   bool _isAcceptor = false;
-
 };
-}
-} // namespace precice, com
+} // namespace com
+} // namespace precice
 
 #endif // not PRECICE_NO_MPI

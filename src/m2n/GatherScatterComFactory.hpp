@@ -2,9 +2,12 @@
 
 #include "DistributedComFactory.hpp"
 
-namespace precice {
-namespace m2n {
-class GatherScatterComFactory : public DistributedComFactory {
+namespace precice
+{
+namespace m2n
+{
+class GatherScatterComFactory : public DistributedComFactory
+{
 public:
   GatherScatterComFactory(com::PtrCommunication masterCom);
 
@@ -15,5 +18,5 @@ private:
   /// communication between the master processes
   com::PtrCommunication _masterCom;
 };
-}
-} // namespace precice, m2n
+} // namespace m2n
+} // namespace precice

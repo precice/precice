@@ -141,16 +141,15 @@ public:
   virtual PtrRequest aReceive(bool *itemToReceive, int rankSender);
 
 protected:
-  
   /// Returns the communicator.
   virtual MPI_Comm &communicator(int rank) = 0;
 
   virtual int rank(int rank) = 0;
 
 private:
-  static logging::Logger _log;
+  logging::Logger _log{"com::MPICommunication"};
 };
-}
-} // namespace precice, com
+} // namespace com
+} // namespace precice
 
 #endif // not PRECICE_NO_MPI

@@ -5,8 +5,6 @@ namespace precice
 {
 namespace com
 {
-logging::Logger Communication::_log("com::Communication");
-
 /**
  * @attention This method modifies the input buffer.
  */
@@ -292,21 +290,16 @@ void Communication::broadcast(double &itemToReceive, int rankBroadcaster)
 void Communication::broadcast(bool itemToSend)
 {
   TRACE();
-
   int item = itemToSend;
-
   broadcast(item);
 }
 
 void Communication::broadcast(bool &itemToReceive, int rankBroadcaster)
 {
   TRACE();
-
   int item;
-
   broadcast(item, rankBroadcaster);
-
   itemToReceive = item;
 }
-}
-} // namespace precice, com
+} // namespace com
+} // namespace precice

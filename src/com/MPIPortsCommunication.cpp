@@ -16,8 +16,6 @@ namespace precice
 {
 namespace com
 {
-logging::Logger MPIPortsCommunication::_log("com::MPIPortsCommunication");
-
 MPIPortsCommunication::MPIPortsCommunication(std::string const &addressDirectory)
     : _addressDirectory(addressDirectory)
 {
@@ -58,18 +56,18 @@ void MPIPortsCommunication::acceptConnection(std::string const &nameAcceptor,
   // latest Intel MPI, the program hangs. Possibly `Parallel::initialize' is
   // doing something weird inside?
 
-  MPI_Open_port(MPI_INFO_NULL, const_cast<char*>(_portName.data()));
+  MPI_Open_port(MPI_INFO_NULL, const_cast<char *>(_portName.data()));
 
   std::string addressFileName("." + nameRequester + "-" + nameAcceptor + ".address");
 
   Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
-  ScopedPublisher p(addressFileName);
+  ScopedPublisher                        p(addressFileName);
   p.write(_portName);
   DEBUG("Accept connection at " << _portName);
 
   // Connect the first peer, s.t. we can exchange some information about the other side
   MPI_Comm communicator;
-  MPI_Comm_accept(const_cast<char*>(_portName.c_str()), MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
+  MPI_Comm_accept(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
   DEBUG("Accepted connection at " << _portName);
 
   int    requesterProcessRank      = -1;
@@ -101,7 +99,7 @@ void MPIPortsCommunication::acceptConnection(std::string const &nameAcceptor,
 
   // Connect all other peers
   for (size_t i = 1; i < requesterCommunicatorSize; ++i) {
-    MPI_Comm_accept(const_cast<char*>(_portName.c_str()), MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
+    MPI_Comm_accept(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
     DEBUG("Accepted connection at " << _portName);
 
     MPI_Recv(&requesterProcessRank,
@@ -125,7 +123,7 @@ void MPIPortsCommunication::acceptConnection(std::string const &nameAcceptor,
           "Duplicate request to connect by same rank (" << requesterProcessRank << ")!");
 
     _communicators[requesterProcessRank] = communicator;
-    _isConnected = true;
+    _isConnected                         = true;
   }
 }
 
@@ -149,12 +147,12 @@ void MPIPortsCommunication::acceptConnectionAsServer(
   // latest Intel MPI, the program hangs. Possibly `Parallel::initialize' is
   // doing something weird inside?
 
-  MPI_Open_port(MPI_INFO_NULL, const_cast<char*>(_portName.data()));
+  MPI_Open_port(MPI_INFO_NULL, const_cast<char *>(_portName.data()));
 
   std::string addressFileName("." + nameRequester + "-" + nameAcceptor + ".address");
 
   Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
-  ScopedPublisher p(addressFileName);
+  ScopedPublisher                        p(addressFileName);
   p.write(_portName);
   DEBUG("Accept connection at " << _portName);
 
@@ -165,7 +163,7 @@ void MPIPortsCommunication::acceptConnectionAsServer(
        ++requesterProcessRank) {
     MPI_Comm communicator;
 
-    MPI_Comm_accept(const_cast<char*>(_portName.c_str()), MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
+    MPI_Comm_accept(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
 
     DEBUG("Accepted connection at " << _portName);
     CHECK(_communicators[requesterProcessRank] == MPI_COMM_NULL,
@@ -207,12 +205,12 @@ void MPIPortsCommunication::requestConnection(std::string const &nameAcceptor,
   DEBUG("Request connection to " << _portName);
 
   MPI_Comm communicator;
-  MPI_Comm_connect(const_cast<char*>(_portName.c_str()), MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
+  MPI_Comm_connect(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
   DEBUG("Requested connection to " << _portName);
 
   _communicators.push_back(communicator);
   _isConnected = true;
-  _rank = requesterProcessRank;
+  _rank        = requesterProcessRank;
 
   MPI_Send(&requesterProcessRank, 1, MPI_INT, 0, 42, communicator);
   MPI_Send(&requesterCommunicatorSize, 1, MPI_INT, 0, 42, communicator);
@@ -236,7 +234,7 @@ int MPIPortsCommunication::requestConnectionAsClient(
   DEBUG("Request connection to " << _portName);
 
   MPI_Comm communicator;
-  MPI_Comm_connect(const_cast<char*>(_portName.c_str()), MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
+  MPI_Comm_connect(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
   DEBUG("Requested connection to " << _portName);
 
   _communicators.push_back(communicator);
@@ -293,7 +291,7 @@ void MPIPortsCommunication::closeConnection()
   DEBUG("Disconnected");
 
   if (_isAcceptor) {
-    MPI_Close_port(const_cast<char*>(_portName.c_str()));
+    MPI_Close_port(const_cast<char *>(_portName.c_str()));
     DEBUG("Port closed");
   }
 
@@ -309,7 +307,7 @@ int MPIPortsCommunication::rank(int rank)
 {
   return 0;
 }
-}
-} // namespace precice, com
+} // namespace com
+} // namespace precice
 
 #endif // not PRECICE_NO_MPI

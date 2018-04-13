@@ -3,8 +3,10 @@
 #include "logging/Logger.hpp"
 #include "xml/XMLTag.hpp"
 
-namespace precice {
-namespace com {
+namespace precice
+{
+namespace com
+{
 
 /**
  * @brief Configuration for communication channels between server and clients or master and slaves.
@@ -13,15 +15,14 @@ namespace com {
 class CommunicationConfiguration
 {
 public:
-
-   virtual ~CommunicationConfiguration() {}
+  virtual ~CommunicationConfiguration() {}
 
   /// Returns a communication object of given type.
-  PtrCommunication createCommunication ( const xml::XMLTag& tag ) const;
+  PtrCommunication createCommunication(const xml::XMLTag &tag) const;
 
 private:
-  
-   static logging::Logger _log;      
+  static logging::Logger _log;
 };
 
-}} // namespace precice, com
+} // namespace com
+} // namespace precice

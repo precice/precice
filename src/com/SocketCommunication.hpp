@@ -21,12 +21,12 @@ template <typename Protocol>
 class stream_socket_service;
 template <typename Protocol, typename StreamSocketService>
 class basic_stream_socket;
-}
+} // namespace asio
 namespace system
 {
 class error_code;
 }
-}
+} // namespace boost
 
 namespace precice
 {
@@ -170,7 +170,7 @@ public:
   virtual PtrRequest aReceive(bool *itemToReceive, int rankSender);
 
 private:
-  static logging::Logger _log;
+  logging::Logger _log{"com::SocketCommunication"};
 
   /// Port used for socket connection.
   unsigned short _portNumber;
@@ -205,7 +205,7 @@ private:
 
   std::string getIpAddress();
 };
-}
-} // namespace precice, com
+} // namespace com
+} // namespace precice
 
 #endif // not PRECICE_NO_SOCKETS

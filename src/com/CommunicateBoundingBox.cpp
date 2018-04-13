@@ -1,25 +1,23 @@
 #include "CommunicateBoundingBox.hpp"
+#include <map>
+#include <vector>
 #include "Communication.hpp"
 #include "com/SharedPointer.hpp"
 #include "mesh/Mesh.hpp"
-#include <map>
-#include <vector>
 
 namespace precice
 {
 namespace com
 {
-
-logging::Logger CommunicateBoundingBox::_log("com::CommunicateBoundingBox");
-
 CommunicateBoundingBox::CommunicateBoundingBox(
-  com::PtrCommunication communication)
-  : _communication(communication)
-{}
+    com::PtrCommunication communication)
+    : _communication(communication)
+{
+}
 
 void CommunicateBoundingBox::sendBoundingBox(
-  const mesh::Mesh::BoundingBox &bb,
-  int rankReceiver)
+    const mesh::Mesh::BoundingBox &bb,
+    int                            rankReceiver)
 {
   TRACE(rankReceiver);
 
@@ -30,8 +28,8 @@ void CommunicateBoundingBox::sendBoundingBox(
 }
 
 void CommunicateBoundingBox::receiveBoundingBox(
-  mesh::Mesh::BoundingBox &bb,
-  int rankSender)
+    mesh::Mesh::BoundingBox &bb,
+    int                      rankSender)
 {
   TRACE(rankSender);
 
@@ -41,22 +39,20 @@ void CommunicateBoundingBox::receiveBoundingBox(
   }
 }
 
-
 void CommunicateBoundingBox::sendBoundingBoxMap(
-  mesh::Mesh::BoundingBoxMap &bbm,
-  int rankReceiver)
+    mesh::Mesh::BoundingBoxMap &bbm,
+    int                         rankReceiver)
 {
   TRACE(rankReceiver);
 
   for (const auto &bb : bbm) {
-      sendBoundingBox(bb.second, rankReceiver);
-    }
+    sendBoundingBox(bb.second, rankReceiver);
   }
-
+}
 
 void CommunicateBoundingBox::receiveBoundingBoxMap(
-  mesh::Mesh::BoundingBoxMap &bbm,
-  int rankSender)
+    mesh::Mesh::BoundingBoxMap &bbm,
+    int                         rankSender)
 {
   TRACE(rankSender);
 
@@ -66,7 +62,7 @@ void CommunicateBoundingBox::receiveBoundingBoxMap(
 }
 
 void CommunicateBoundingBox::broadcastSendBoundingBoxMap(
-  mesh::Mesh::BoundingBoxMap &bbm)
+    mesh::Mesh::BoundingBoxMap &bbm)
 {
 
   for (const auto &rank : bbm) {
@@ -75,11 +71,10 @@ void CommunicateBoundingBox::broadcastSendBoundingBoxMap(
       _communication->broadcast(dimension.second);
     }
   }
-  
 }
 
 void CommunicateBoundingBox::broadcastReceiveBoundingBoxMap(
-  mesh::Mesh::BoundingBoxMap &bbm)
+    mesh::Mesh::BoundingBoxMap &bbm)
 {
   for (auto &rank : bbm) {
     for (auto &dimension : rank.second) {
@@ -87,9 +82,7 @@ void CommunicateBoundingBox::broadcastReceiveBoundingBoxMap(
       _communication->broadcast(dimension.second, 0);
     }
   }
-  
 }
 
-
-}
-} // namespace precice, com
+} // namespace com
+} // namespace precice

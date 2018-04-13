@@ -14,35 +14,35 @@ class CommunicateBoundingBox
 public:
   /// Constructor, takes communication to be used in transfer.
   explicit CommunicateBoundingBox(
-    com::PtrCommunication communication);
+      com::PtrCommunication communication);
 
   void sendBoundingBox(
-    const mesh::Mesh::BoundingBox &bb,
-    int rankReceiver);
+      const mesh::Mesh::BoundingBox &bb,
+      int                            rankReceiver);
 
   void receiveBoundingBox(
-    mesh::Mesh::BoundingBox &bb,
-    int rankSender);
+      mesh::Mesh::BoundingBox &bb,
+      int                      rankSender);
 
   void sendBoundingBoxMap(
-    mesh::Mesh::BoundingBoxMap &bbm,
-    int rankReceiver);
+      mesh::Mesh::BoundingBoxMap &bbm,
+      int                         rankReceiver);
 
   void receiveBoundingBoxMap(
-    mesh::Mesh::BoundingBoxMap &bbm,
-    int rankSender);
+      mesh::Mesh::BoundingBoxMap &bbm,
+      int                         rankSender);
 
   void broadcastSendBoundingBoxMap(
-    mesh::Mesh::BoundingBoxMap &bbm);
+      mesh::Mesh::BoundingBoxMap &bbm);
 
   void broadcastReceiveBoundingBoxMap(
-    mesh::Mesh::BoundingBoxMap &bbm);
-  
+      mesh::Mesh::BoundingBoxMap &bbm);
+
 private:
-  static logging::Logger _log;
+  logging::Logger _log{"com::CommunicateBoundingBox"};
 
   /// Communication means used for the transfer of the geometry.
   com::PtrCommunication _communication;
 };
-}
-} // namespace precice, com
+} // namespace com
+} // namespace precice

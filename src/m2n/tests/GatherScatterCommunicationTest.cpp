@@ -17,47 +17,46 @@ BOOST_AUTO_TEST_SUITE(M2NTests)
 using namespace precice;
 using namespace m2n;
 
-BOOST_AUTO_TEST_CASE(GatherScatterTest, *testing::OnSize(4)) {
+BOOST_AUTO_TEST_CASE(GatherScatterTest, *testing::OnSize(4))
+{
   assertion(utils::Parallel::getCommunicatorSize() == 4);
 
-  com::PtrCommunication participantCom =
-      com::PtrCommunication(new com::MPIDirectCommunication());
+  com::PtrCommunication participantCom = com::PtrCommunication(new com::MPIDirectCommunication());
   m2n::DistributedComFactory::SharedPointer distrFactory =
       m2n::DistributedComFactory::SharedPointer(
           new m2n::GatherScatterComFactory(participantCom));
-  m2n::PtrM2N m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory));
-  com::PtrCommunication masterSlaveCom =
-      com::PtrCommunication(new com::MPIDirectCommunication());
+  m2n::PtrM2N           m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory));
+  com::PtrCommunication masterSlaveCom = com::PtrCommunication(new com::MPIDirectCommunication());
   utils::MasterSlave::_communication = masterSlaveCom;
 
   utils::Parallel::synchronizeProcesses();
 
   if (utils::Parallel::getProcessRank() == 0) { // Participant 1
     utils::Parallel::splitCommunicator("Part1");
-    utils::MasterSlave::_rank = 0;
-    utils::MasterSlave::_size = 1;
-    utils::MasterSlave::_slaveMode = false;
+    utils::MasterSlave::_rank       = 0;
+    utils::MasterSlave::_size       = 1;
+    utils::MasterSlave::_slaveMode  = false;
     utils::MasterSlave::_masterMode = false;
   } else if (utils::Parallel::getProcessRank() == 1) { // Participant 2 - Master
     utils::Parallel::splitCommunicator("Part2Master");
-    utils::MasterSlave::_rank = 0;
-    utils::MasterSlave::_size = 3;
-    utils::MasterSlave::_slaveMode = false;
+    utils::MasterSlave::_rank       = 0;
+    utils::MasterSlave::_size       = 3;
+    utils::MasterSlave::_slaveMode  = false;
     utils::MasterSlave::_masterMode = true;
     masterSlaveCom->acceptConnection("Part2Master", "Part2Slaves", 0, 1);
     masterSlaveCom->setRankOffset(1);
   } else if (utils::Parallel::getProcessRank() == 2) { // Participant 2 - Slave1
     utils::Parallel::splitCommunicator("Part2Slaves");
-    utils::MasterSlave::_rank = 1;
-    utils::MasterSlave::_size = 3;
-    utils::MasterSlave::_slaveMode = true;
+    utils::MasterSlave::_rank       = 1;
+    utils::MasterSlave::_size       = 3;
+    utils::MasterSlave::_slaveMode  = true;
     utils::MasterSlave::_masterMode = false;
     masterSlaveCom->requestConnection("Part2Master", "Part2Slaves", 0, 2);
   } else if (utils::Parallel::getProcessRank() == 3) { // Participant 2 - Slave2
     utils::Parallel::splitCommunicator("Part2Slaves");
-    utils::MasterSlave::_rank = 2;
-    utils::MasterSlave::_size = 3;
-    utils::MasterSlave::_slaveMode = true;
+    utils::MasterSlave::_rank       = 2;
+    utils::MasterSlave::_size       = 3;
+    utils::MasterSlave::_slaveMode  = true;
     utils::MasterSlave::_masterMode = false;
     masterSlaveCom->requestConnection("Part2Master", "Part2Slaves", 1, 2);
   }
@@ -76,11 +75,11 @@ BOOST_AUTO_TEST_CASE(GatherScatterTest, *testing::OnSize(4)) {
 
   utils::Parallel::synchronizeProcesses();
 
-  int dimensions = 2;
-  int numberOfVertices = 6;
-  bool flipNormals = false;
-  int valueDimension = 1;
-  Eigen::VectorXd offset = Eigen::VectorXd::Zero(dimensions);
+  int             dimensions       = 2;
+  int             numberOfVertices = 6;
+  bool            flipNormals      = false;
+  int             valueDimension   = 1;
+  Eigen::VectorXd offset           = Eigen::VectorXd::Zero(dimensions);
 
   if (utils::Parallel::getProcessRank() == 0) { // Part1
     mesh::PtrMesh pMesh(new mesh::Mesh("Mesh", dimensions, flipNormals));
@@ -137,15 +136,14 @@ BOOST_AUTO_TEST_CASE(GatherScatterTest, *testing::OnSize(4)) {
   }
 
   utils::MasterSlave::_communication.reset();
-  utils::MasterSlave::_rank = utils::Parallel::getProcessRank();
-  utils::MasterSlave::_size = utils::Parallel::getCommunicatorSize();
-  utils::MasterSlave::_slaveMode = false;
+  utils::MasterSlave::_rank       = utils::Parallel::getProcessRank();
+  utils::MasterSlave::_size       = utils::Parallel::getCommunicatorSize();
+  utils::MasterSlave::_slaveMode  = false;
   utils::MasterSlave::_masterMode = false;
 
   utils::Parallel::synchronizeProcesses();
   utils::Parallel::clearGroups();
 }
-
 
 BOOST_AUTO_TEST_SUITE_END()
 

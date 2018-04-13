@@ -11,8 +11,7 @@ namespace precice
 namespace m2n
 {
 /**
- * @brief Point-to-point communication implementation of
- *        DistributedCommunication.
+ * @brief Point-to-point communication implementation of DistributedCommunication.
  *
  * Direct communication of local data subsets is performed between processes of
  * coupled participants. The two supported implementations of direct
@@ -20,8 +19,7 @@ namespace m2n
  * supplied via their corresponding instantiation factories
  * SocketCommunicationFactory and MPIPortsCommunicationFactory.
  *
- * For the detailed implementation documentation refer to
- * PointToPointCommunication.cpp.
+ * For the detailed implementation documentation refer to PointToPointCommunication.cpp.
  */
 class PointToPointCommunication : public DistributedCommunication
 {
@@ -41,9 +39,8 @@ public:
   static std::string const &eventNamePrefix();
 
 public:
-  PointToPointCommunication(
-      com::PtrCommunicationFactory communicationFactory,
-      mesh::PtrMesh                mesh);
+  PointToPointCommunication(com::PtrCommunicationFactory communicationFactory,
+                            mesh::PtrMesh                mesh);
 
   virtual ~PointToPointCommunication();
 
@@ -91,11 +88,10 @@ public:
                        int     valueDimension = 1);
 
 private:
-  static logging::Logger _log;
+  logging::Logger _log{"m2n::PointToPointCommunication"};
 
   static std::string _prefix;
 
-private:
   com::PtrCommunicationFactory _communicationFactory;
 
   /**
@@ -125,11 +121,11 @@ private:
 
   std::vector<double> _buffer;
 
-  size_t _localIndexCount;
+  size_t _localIndexCount = 0;
 
-  size_t _totalIndexCount;
+  size_t _totalIndexCount = 0;
 
-  bool _isConnected;
+  bool _isConnected = false;
 };
-}
-} // namespace precice, m2n
+} // namespace m2n
+} // namespace precice

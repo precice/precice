@@ -2,11 +2,9 @@
 
 #pragma once
 
-#include "MPICommunication.hpp"
-
-#include "logging/Logger.hpp"
-
 #include <string>
+#include "MPICommunication.hpp"
+#include "logging/Logger.hpp"
 
 namespace precice
 {
@@ -114,7 +112,8 @@ private:
 
   virtual int rank(int rank);
 
-  static logging::Logger _log;
+  logging::Logger _log{"com::MPIDirectCommunication"};
+  ;
 
   MPI_Comm _communicator;
 
@@ -138,7 +137,7 @@ private:
    */
   int getLeaderRank(std::string const &accessorName);
 };
-}
-} // namespace precice, com
+} // namespace com
+} // namespace precice
 
 #endif // not PRECICE_NO_MPI
