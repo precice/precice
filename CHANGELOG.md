@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## develop
+
+- Remove the `staticlib` and `bin` from the default targets to reduce the building time and storage requirements.
+- Change the `-b` option to `-t` in the script `compileAndTest.py`.
 - Change build types to mixed case, i.e. ```Debug``` and ```Release```. Old versions are retained for backward compatibility.
 
 ## 1.0.3

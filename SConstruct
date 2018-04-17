@@ -328,7 +328,7 @@ symlink = env.Command(
     action = "ln -fns {0} {1}".format(os.path.split(buildpath)[-1], os.path.join(os.path.split(buildpath)[0], "last"))
 )
 
-Default(staticlib, bin, solib, tests, symlink)
+Default(solib, tests, symlink)
 
 AlwaysBuild(symlink)
 
