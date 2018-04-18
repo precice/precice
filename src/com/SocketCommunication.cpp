@@ -266,7 +266,7 @@ void SocketCommunication::requestConnection(std::string const &nameAcceptor,
 
     using asio::ip::tcp;
 
-    tcp::resolver::query query(tcp::v4(), ipAddress, portNumber);
+    tcp::resolver::query query(tcp::v4(), ipAddress, portNumber, tcp::resolver::query::canonical_name);
 
     while (not isConnected()) {
       tcp::resolver resolver(*_ioService);
