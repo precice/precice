@@ -2,11 +2,14 @@
 
 #include <memory>
 
-namespace precice {
-namespace m2n {
+namespace precice
+{
+namespace m2n
+{
 
 class M2N;
 
 using PtrM2N = std::shared_ptr<M2N>;
 
-}} // namespace precice, m2n
+} // namespace m2n
+} // namespace precice

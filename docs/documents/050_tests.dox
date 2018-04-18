@@ -8,13 +8,13 @@ Running
 ------
 The ```tools/compileAndTest.py``` script simplifies running all tsts.
 
-- ```./tools/compileAndTest.py -b``` runs all boost tests on 4 MPI ranks. Add -u -i to also run tarch unit and integration tests.
+- ```./tools/compileAndTest.py -b``` runs all tests on 4 MPI ranks.
 - ```./build/last/testprecice -x``` runs boost test with colored output.
 - ```./build/last/testprecice -x -r detailed -t "+/+PetRadial+"``` (replace all + by *, due to Doxygen) runs all ```PetRadial*``` tests from all test suites using colored output and detailed reporting.
 
 Writing
 -------
-To learn, how to write new tests, have a look at ```./src/mapping/boosttests/PetRadialBasisFctMappingTest.cpp```. Since we have both the legacy tarch tests as well as the newer boost tests, place the tests in a directory ```./boosttest``` for the being.
+To learn, how to write new tests, have a look at ```./src/mapping/tests/PetRadialBasisFctMappingTest.cpp```.
 
 ```
 #include "testing/Testing.hpp" // Include that for some basic stuff

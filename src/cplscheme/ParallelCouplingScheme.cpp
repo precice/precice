@@ -48,14 +48,13 @@ void ParallelCouplingScheme::initialize
   setTime(startTime);
   setTimesteps(startTimestep);
   if (_couplingMode == Implicit) {
-    preciceCheck(not getSendData().empty(), "initialize()", "No send data configured! Use explicit scheme for one-way coupling.");
+    CHECK(not getSendData().empty(), "No send data configured! Use explicit scheme for one-way coupling.");
     if (not doesFirstStep()) { // second participant
       setupConvergenceMeasures(); // needs _couplingData configured
       mergeData(); // merge send and receive data for all pp calls
       setupDataMatrices(getAllData()); // Reserve memory and initialize data with zero
       if (getPostProcessing().get() != nullptr) {
-        preciceCheck(getPostProcessing()->getDataIDs().size()==2 || getPostProcessing()->getDataIDs().size()==0 ,"initialize()",
-                     "For parallel coupling, the number of post-processing data vectors has to be 2 (or 0 for constant underrelaxation), not: "
+        CHECK(getPostProcessing()->getDataIDs().size()==2 || getPostProcessing()->getDataIDs().size()==0,                     "For parallel coupling, the number of post-processing data vectors has to be 2 (or 0 for constant underrelaxation), not: "
                      << getPostProcessing()->getDataIDs().size());
         getPostProcessing()->initialize(getAllData()); // Reserve memory, initialize
       }
@@ -95,31 +94,25 @@ void ParallelCouplingScheme::initializeData()
     return;
   }
 
-  preciceCheck(not (hasToSendInitData() && isActionRequired(constants::actionWriteInitialData())),
-               "initializeData()", "InitialData has to be written to preCICE before calling initializeData()");
+  CHECK(not (hasToSendInitData() && isActionRequired(constants::actionWriteInitialData())),
+        "InitialData has to be written to preCICE before calling initializeData()");
 
   setHasDataBeenExchanged(false);
 
   // F: send, receive, S: receive, send
   if (doesFirstStep()) {
     if (hasToSendInitData()) {
-      getM2N()->startSendPackage(0);
       sendData(getM2N());
-      getM2N()->finishSendPackage();
     }
     if (hasToReceiveInitData()) {
-      getM2N()->startReceivePackage(0);
       receiveData(getM2N());
-      getM2N()->finishReceivePackage();
       setHasDataBeenExchanged(true);
     }
   }
 
   else { // second participant
     if (hasToReceiveInitData()) {
-      getM2N()->startReceivePackage(0);
       receiveData(getM2N());
-      getM2N()->finishReceivePackage();
       setHasDataBeenExchanged(true);
 
       // second participant has to save values for extrapolation
@@ -143,9 +136,7 @@ void ParallelCouplingScheme::initializeData()
           utils::shiftSetFirst(pair.second->oldValues, *pair.second->values);
         }
       }
-      getM2N()->startSendPackage(0);
       sendData(getM2N());
-      getM2N()->finishSendPackage();
     }
   }
 
@@ -168,8 +159,8 @@ void ParallelCouplingScheme::explicitAdvance()
 {
   TRACE();
   checkCompletenessRequiredActions();
-  preciceCheck(!hasToReceiveInitData() && !hasToSendInitData(), "advance()",
-               "initializeData() needs to be called before advance if data has to be initialized!");
+  CHECK(!hasToReceiveInitData() && !hasToSendInitData(),
+        "initializeData() needs to be called before advance if data has to be initialized!");
   setHasDataBeenExchanged(false);
   setIsCouplingTimestepComplete(false);
 
@@ -179,31 +170,23 @@ void ParallelCouplingScheme::explicitAdvance()
 
     if (doesFirstStep()) {
       DEBUG("Sending data...");
-      getM2N()->startSendPackage(0);
       sendDt();
       sendData(getM2N());
-      getM2N()->finishSendPackage();
 
       DEBUG("Receiving data...");
-      getM2N()->startReceivePackage(0);
       receiveAndSetDt();
       receiveData(getM2N());
-      getM2N()->finishReceivePackage();
       setHasDataBeenExchanged(true);
     }
     else { //second participant
       DEBUG("Receiving data...");
-      getM2N()->startReceivePackage(0);
       receiveAndSetDt();
       receiveData(getM2N());
-      getM2N()->finishReceivePackage();
       setHasDataBeenExchanged(true);
 
       DEBUG("Sending data...");
-      getM2N()->startSendPackage(0);
       sendDt();
       sendData(getM2N());
-      getM2N()->finishSendPackage();
     }
 
     //both participants
@@ -216,8 +199,8 @@ void ParallelCouplingScheme::implicitAdvance()
   TRACE(getTimesteps(), getTime());
   checkCompletenessRequiredActions();
 
-  preciceCheck(!hasToReceiveInitData() && !hasToSendInitData(), "advance()",
-               "initializeData() needs to be called before advance if data has to be initialized!");
+  CHECK(!hasToReceiveInitData() && !hasToSendInitData(),
+        "initializeData() needs to be called before advance if data has to be initialized!");
 
   setHasDataBeenExchanged(false);
   setIsCouplingTimestepComplete(false);
@@ -227,23 +210,16 @@ void ParallelCouplingScheme::implicitAdvance()
   if (math::equals(getThisTimestepRemainder(), 0.0, _eps)) {
     DEBUG("Computed full length of iteration");
     if (doesFirstStep()) { //First participant
-      getM2N()->startSendPackage(0);
       sendData(getM2N());
-      getM2N()->finishSendPackage();
-      getM2N()->startReceivePackage(0);
       getM2N()->receive(convergence);
       getM2N()->receive(_isCoarseModelOptimizationActive);
       if (convergence) {
         timestepCompleted();
       }
       receiveData(getM2N());
-      getM2N()->finishReceivePackage();
     }
     else { // second participant
-
-      getM2N()->startReceivePackage(0);
       receiveData(getM2N());
-      getM2N()->finishReceivePackage();
 
       // get the current design specifications from the post processing (for convergence measure)
       std::map<int, Eigen::VectorXd> designSpecifications;
@@ -335,12 +311,10 @@ void ParallelCouplingScheme::implicitAdvance()
        }
      }
 
-      getM2N()->startSendPackage(0);
       getM2N()->send(convergence);
       getM2N()->send(_isCoarseModelOptimizationActive);
 
       sendData(getM2N());
-      getM2N()->finishSendPackage();
     }
 
     // both participants

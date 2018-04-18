@@ -5,7 +5,7 @@
 namespace precice {
 namespace io {
 
-logging::Logger TXTWriter:: _log ( "precice::io::TXTWriter" );
+logging::Logger TXTWriter:: _log ("io::TXTWriter");
 
 TXTWriter:: TXTWriter
 (

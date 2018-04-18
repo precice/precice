@@ -5,6 +5,11 @@
 #include "utils/Globals.hpp"
 #include "logging/LogConfiguration.hpp"
 
+namespace precice {
+extern bool testMode;
+}
+
+
 /// Boost test Initialization function:
 bool init_unit_test()
 {
@@ -27,6 +32,7 @@ int main(int argc, char* argv[])
 {
   using namespace precice;
 
+  precice::testMode = true;
   logging::setupLogging();
   utils::Parallel::initializeMPI(&argc, &argv);
   logging::setMPIRank(utils::Parallel::getProcessRank());

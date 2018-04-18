@@ -6,10 +6,10 @@
 #include "mapping/impl/BasisFunctions.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
 #include "utils/Globals.hpp"
-#include "utils/xml/XMLTag.hpp"
-#include "utils/xml/XMLAttribute.hpp"
-#include "utils/xml/ValidatorEquals.hpp"
-#include "utils/xml/ValidatorOr.hpp"
+#include "xml/XMLTag.hpp"
+#include "xml/XMLAttribute.hpp"
+#include "xml/ValidatorEquals.hpp"
+#include "xml/ValidatorOr.hpp"
 
 namespace precice {
 namespace mapping {
@@ -18,7 +18,7 @@ logging::Logger MappingConfiguration::_log("config::MappingConfiguration");
 
 MappingConfiguration:: MappingConfiguration
 (
-  utils::XMLTag &                   parent,
+  xml::XMLTag &                   parent,
   const mesh::PtrMeshConfiguration& meshConfiguration )
 :
   TAG("mapping"),
@@ -65,7 +65,7 @@ MappingConfiguration:: MappingConfiguration
   _mappings()
 {
   assertion (_meshConfig.use_count() > 0);
-  using namespace utils;
+  using namespace xml;
   using ValidString = ValidatorEquals<std::string>;
 
   XMLAttribute<double> attrShapeParam ( ATTR_SHAPE_PARAM );
@@ -244,7 +244,7 @@ MappingConfiguration:: MappingConfiguration
 
 void MappingConfiguration:: xmlTagCallback
 (
-  utils::XMLTag& tag )
+  xml::XMLTag& tag )
 {
   TRACE(tag.getName());
   if (tag.getNamespace() == TAG){
@@ -309,7 +309,7 @@ void MappingConfiguration:: xmlTagCallback
   }
 }
 
-void MappingConfiguration::xmlEndTagCallback(utils::XMLTag& tag)
+void MappingConfiguration::xmlEndTagCallback(xml::XMLTag& tag)
 {
 }
 

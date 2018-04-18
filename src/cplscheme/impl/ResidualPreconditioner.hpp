@@ -1,11 +1,14 @@
 #pragma once
 
-#include "Preconditioner.hpp"
 #include <Eigen/Core>
+#include "Preconditioner.hpp"
 
-namespace precice {
-namespace cplscheme {
-namespace impl {
+namespace precice
+{
+namespace cplscheme
+{
+namespace impl
+{
 
 /**
  * @brief Preconditioner that uses the recent residual to scale the quasi-Newton system.
@@ -13,7 +16,6 @@ namespace impl {
 class ResidualPreconditioner : public Preconditioner
 {
 public:
-
   ResidualPreconditioner(
       int maxNonConstTimesteps);
 
@@ -22,18 +24,16 @@ public:
    */
   virtual ~ResidualPreconditioner() {}
 
-
 private:
-
   /**
     * @brief Update the scaling after every FSI iteration.
     *
     * @param timestepComplete [IN] True if this FSI iteration also completed a timestep
     */
-   virtual void _update_(bool timestepComplete, const Eigen::VectorXd& oldValues, const Eigen::VectorXd& res);
-
+  virtual void _update_(bool timestepComplete, const Eigen::VectorXd &oldValues, const Eigen::VectorXd &res);
 
   static logging::Logger _log;
 };
-
-}}} // namespace precice, cplscheme, impl
+}
+}
+} // namespace precice, cplscheme, impl

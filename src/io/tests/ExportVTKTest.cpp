@@ -1,122 +1,96 @@
-#include "ExportVTKTest.hpp"
 #include "io/ExportVTK.hpp"
-#include "mesh/Triangle.hpp"
 #include "mesh/Edge.hpp"
-#include "mesh/Vertex.hpp"
 #include "mesh/Mesh.hpp"
-#include "utils/Parallel.hpp"
-#include <sstream>
+#include "mesh/Triangle.hpp"
+#include "mesh/Vertex.hpp"
+#include "testing/Testing.hpp"
 
-#include "tarch/tests/TestCaseFactory.h"
-registerTest(precice::io::tests::ExportVTKTest)
+BOOST_AUTO_TEST_SUITE(IOTests)
 
-namespace precice {
-namespace io {
-namespace tests {
+BOOST_AUTO_TEST_SUITE(VTKExport, * precice::testing::OnMaster())
 
-logging::Logger ExportVTKTest:: _log ("io::ExportVTKTest");
+using namespace precice;
 
-ExportVTKTest:: ExportVTKTest()
-:
-  TestCase ("io::ExportVTKTest")
-{}
-
-void ExportVTKTest:: run()
+BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
 {
-  PRECICE_MASTER_ONLY {
-    testMethod(testExportPolygonalMesh);
-    testMethod(testExportTriangulatedMesh);
-    testMethod(testExportQuadMesh);
-  }
-}
-
-void ExportVTKTest:: testExportPolygonalMesh()
-{
-  TRACE();
-
-  int dim=2;
-  bool invertNormals = false;
-  mesh::Mesh mesh ("MyMesh", dim, invertNormals);
-  mesh::Vertex& v1 = mesh.createVertex ( Eigen::VectorXd::Constant(dim, 0.0) );
-  mesh::Vertex& v2 = mesh.createVertex ( Eigen::VectorXd::Constant(dim, 1.0) );
+  int             dim           = 2;
+  bool            invertNormals = false;
+  mesh::Mesh      mesh("MyMesh", dim, invertNormals);
+  mesh::Vertex &  v1      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 0.0));
+  mesh::Vertex &  v2      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 1.0));
   Eigen::VectorXd coords3 = Eigen::VectorXd::Constant(dim, 0.0);
-  coords3[0] = 1.0;
-  mesh::Vertex& v3 = mesh.createVertex(coords3);
+  coords3[0]              = 1.0;
+  mesh::Vertex &v3        = mesh.createVertex(coords3);
 
-  mesh.createEdge (v1, v2);
-  mesh.createEdge (v2, v3);
-  mesh.createEdge (v3, v1);
+  mesh.createEdge(v1, v2);
+  mesh.createEdge(v2, v3);
+  mesh.createEdge(v3, v1);
 
   mesh.computeState();
 
-  bool exportNormals = true;
-  ExportVTK exportVTK(exportNormals);
-  std::ostringstream filename;
-  filename << "io-ExportVTKTest-testExportPolygonalMesh";
-  std::string location = "";
-  exportVTK.doExport ( filename.str(), location, mesh );
+  bool          exportNormals = true;
+  io::ExportVTK exportVTK(exportNormals);
+  std::string   filename = "io-VTKExport-ExportPolygonalMesh";
+  std::string   location = "";
+  exportVTK.doExport(filename, location, mesh);
 }
 
-void ExportVTKTest:: testExportTriangulatedMesh()
+BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
 {
-  TRACE();
-
-  int dim = 3;
-  bool invertNormals = false;
-  mesh::Mesh mesh ("MyMesh", dim, invertNormals);
-  mesh::Vertex& v1 = mesh.createVertex ( Eigen::VectorXd::Constant(dim, 0.0) );
-  mesh::Vertex& v2 = mesh.createVertex ( Eigen::VectorXd::Constant(dim, 1.0) );
+  int             dim           = 3;
+  bool            invertNormals = false;
+  mesh::Mesh      mesh("MyMesh", dim, invertNormals);
+  mesh::Vertex &  v1      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 0.0));
+  mesh::Vertex &  v2      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 1.0));
   Eigen::VectorXd coords3 = Eigen::VectorXd::Zero(dim);
-  coords3[0] = 1.0;
-  mesh::Vertex& v3 = mesh.createVertex(coords3);
+  coords3[0]              = 1.0;
+  mesh::Vertex &v3        = mesh.createVertex(coords3);
 
-  mesh::Edge& e1 = mesh.createEdge (v1, v2);
-  mesh::Edge& e2 = mesh.createEdge (v2, v3);
-  mesh::Edge& e3 = mesh.createEdge (v3, v1);
-  mesh.createTriangle (e1, e2, e3);
+  mesh::Edge &e1 = mesh.createEdge(v1, v2);
+  mesh::Edge &e2 = mesh.createEdge(v2, v3);
+  mesh::Edge &e3 = mesh.createEdge(v3, v1);
+  mesh.createTriangle(e1, e2, e3);
   mesh.computeState();
 
-  bool exportNormals = true;
-  ExportVTK exportVTK(exportNormals);
-  std::ostringstream filename;
-  filename << "io-ExportVTKTest-testExportTriangulatedMesh";
-  std::string location = "";
-  exportVTK.doExport ( filename.str(), location, mesh );
+  bool          exportNormals = true;
+  io::ExportVTK exportVTK(exportNormals);
+  std::string   filename = "io-VTKExport-ExportTriangulatedMesh";
+  std::string   location = "";
+  exportVTK.doExport(filename, location, mesh);
 }
 
-void ExportVTKTest:: testExportQuadMesh()
+BOOST_AUTO_TEST_CASE(ExportQuadMesh)
 {
-  TRACE();
   using namespace mesh;
-  int dim = 3;
+  int  dim           = 3;
   bool invertNormals = false;
   Mesh mesh("QuadMesh", dim, invertNormals);
   // z=0 plane
-  Vertex& v0 = mesh.createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
-  Vertex& v1 = mesh.createVertex(Eigen::Vector3d(1.0, 0.0, 0.0));
-  Vertex& v2 = mesh.createVertex(Eigen::Vector3d(1.0, 1.0, 0.0));
-  Vertex& v3 = mesh.createVertex(Eigen::Vector3d(0.0, 1.0, 0.0));
+  Vertex &v0 = mesh.createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
+  Vertex &v1 = mesh.createVertex(Eigen::Vector3d(1.0, 0.0, 0.0));
+  Vertex &v2 = mesh.createVertex(Eigen::Vector3d(1.0, 1.0, 0.0));
+  Vertex &v3 = mesh.createVertex(Eigen::Vector3d(0.0, 1.0, 0.0));
   // z=1 plane
-  Vertex& v4 = mesh.createVertex(Eigen::Vector3d(0.0, 0.0, 1.0));
-  Vertex& v5 = mesh.createVertex(Eigen::Vector3d(1.0, 0.0, 1.0));
-  Vertex& v6 = mesh.createVertex(Eigen::Vector3d(1.0, 1.0, 1.0));
-  Vertex& v7 = mesh.createVertex(Eigen::Vector3d(0.0, 1.0, 1.0));
+  Vertex &v4 = mesh.createVertex(Eigen::Vector3d(0.0, 0.0, 1.0));
+  Vertex &v5 = mesh.createVertex(Eigen::Vector3d(1.0, 0.0, 1.0));
+  Vertex &v6 = mesh.createVertex(Eigen::Vector3d(1.0, 1.0, 1.0));
+  Vertex &v7 = mesh.createVertex(Eigen::Vector3d(0.0, 1.0, 1.0));
 
   // z=0 plane
-  Edge& e0 = mesh.createEdge(v0, v1);
-  Edge& e1 = mesh.createEdge(v1, v2);
-  Edge& e2 = mesh.createEdge(v2, v3);
-  Edge& e3 = mesh.createEdge(v3, v0);
+  Edge &e0 = mesh.createEdge(v0, v1);
+  Edge &e1 = mesh.createEdge(v1, v2);
+  Edge &e2 = mesh.createEdge(v2, v3);
+  Edge &e3 = mesh.createEdge(v3, v0);
   // z=1 plane
-  Edge& e4 = mesh.createEdge(v4, v5);
-  Edge& e5 = mesh.createEdge(v5, v6);
-  Edge& e6 = mesh.createEdge(v6, v7);
-  Edge& e7 = mesh.createEdge(v7, v4);
+  Edge &e4 = mesh.createEdge(v4, v5);
+  Edge &e5 = mesh.createEdge(v5, v6);
+  Edge &e6 = mesh.createEdge(v6, v7);
+  Edge &e7 = mesh.createEdge(v7, v4);
   // inbetween edges
-  Edge& e8 = mesh.createEdge(v0, v4);
-  Edge& e9 = mesh.createEdge(v1, v5);
-  Edge& e10 = mesh.createEdge(v2, v6);
-  Edge& e11 = mesh.createEdge(v3, v7);
+  Edge &e8  = mesh.createEdge(v0, v4);
+  Edge &e9  = mesh.createEdge(v1, v5);
+  Edge &e10 = mesh.createEdge(v2, v6);
+  Edge &e11 = mesh.createEdge(v3, v7);
 
   // x-y plane
   mesh.createQuad(e3, e2, e1, e0);
@@ -130,12 +104,12 @@ void ExportVTKTest:: testExportQuadMesh()
 
   mesh.computeState();
 
-  bool exportNormals = true;
-  ExportVTK exportVTK(exportNormals);
-  std::ostringstream filename;
-  filename << "io-ExportVTKTest-testExportQuadMesh";
-  std::string location = "";
-  exportVTK.doExport(filename.str(), location, mesh);
+  bool          exportNormals = true;
+  io::ExportVTK exportVTK(exportNormals);
+  std::string   filename = "io-VTKExport-ExportQuadMesh";
+  std::string   location = "";
+  exportVTK.doExport(filename, location, mesh);
 }
 
-}}} // namespace precice, io, tests
+BOOST_AUTO_TEST_SUITE_END() // ExportVTK
+BOOST_AUTO_TEST_SUITE_END() // IOTests

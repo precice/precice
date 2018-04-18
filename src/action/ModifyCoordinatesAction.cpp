@@ -8,7 +8,7 @@ namespace precice {
 namespace action {
 
 logging::Logger ModifyCoordinatesAction::
-  _log ( "precice::action::ModifyCoordinatesAction" );
+  _log("action::ModifyCoordinatesAction" );
 
 
 ModifyCoordinatesAction:: ModifyCoordinatesAction
@@ -58,7 +58,7 @@ void ModifyCoordinatesAction:: performAction
     ERROR("Unknown mode type!" );
   }
   getMesh()->computeState();
-  getMesh()->notifyListeners();
+  getMesh()->meshChanged(*getMesh());
 }
 
 

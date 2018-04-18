@@ -1,45 +1,27 @@
-#include "MinIterationConvergenceMeasureTest.hpp"
 #include "../impl/MinIterationConvergenceMeasure.hpp"
-#include "utils/Globals.hpp"
-#include "utils/Parallel.hpp"
-#include "mesh/Mesh.hpp"
+#include "testing/Testing.hpp"
 
-#include "tarch/tests/TestCaseFactory.h"
-registerTest(precice::cplscheme::tests::MinIterationConvergenceMeasureTest)
+BOOST_AUTO_TEST_SUITE(CplSchemeTests)
 
-namespace precice {
-namespace cplscheme {
-namespace tests {
+using namespace precice;
+using namespace cplscheme;
 
-logging::Logger MinIterationConvergenceMeasureTest::
-   _log ( "precice::cplscheme::tests::MinIterationConvergenceMeasureTest" );
-
-
-MinIterationConvergenceMeasureTest:: MinIterationConvergenceMeasureTest ()
-:
-  TestCase ( "precice::cplscheme::tests::MinIterationConvergenceMeasureTest" )
-{}
-
-void MinIterationConvergenceMeasureTest:: run ()
+BOOST_AUTO_TEST_CASE(MinIterationConvergenceMeasureTest)
 {
-  PRECICE_MASTER_ONLY {
-    TRACE();
-    impl::MinIterationConvergenceMeasure measure ( 5 );
-    Eigen::VectorXd emptyValues; // No values needed for min-iter
+  impl::MinIterationConvergenceMeasure measure(5);
+  Eigen::VectorXd                      emptyValues; // No values needed for min-iter
 
-    for ( int iSeries=0; iSeries < 3; iSeries++ ) {
-      measure.newMeasurementSeries ();
-      for ( int iMeasurement=1; iMeasurement < 10; iMeasurement++ ) {
-        measure.measure ( emptyValues, emptyValues, emptyValues );
-        if ( iMeasurement < 5 ) {
-          validate ( ! measure.isConvergence() );
-        }
-        else {
-          validate ( measure.isConvergence() );
-        }
+  for (int iSeries = 0; iSeries < 3; iSeries++) {
+    measure.newMeasurementSeries();
+    for (int iMeasurement = 1; iMeasurement < 10; iMeasurement++) {
+      measure.measure(emptyValues, emptyValues, emptyValues);
+      if (iMeasurement < 5) {
+        BOOST_TEST(not measure.isConvergence());
+      } else {
+        BOOST_TEST(measure.isConvergence());
       }
     }
   }
 }
 
-}}} // namespace precice, cplscheme, tests
+BOOST_AUTO_TEST_SUITE_END()

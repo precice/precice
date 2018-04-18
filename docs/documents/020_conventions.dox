@@ -13,14 +13,19 @@ General Guidelines
 
 - Main rule: orient yourself on the already written code.
 - CamelCase notation is used, no underlines please.
+- Make sure your code compiles before you commit.
 - Pay attention to compiler generated warnings and try to fix them.
 - In case you can't fix a unused variable warning, e.g. with range based for loops, you can use std::ignore = vertex; // Silence unused variable warning.
 - Use ```std::vector::empty()``` to check for emptiness, not ```vector.size() == 0```. ```empty()``` is guaranteed to be O(1) for all STL container classes. Furthermore, it says what you are actually doing.
 - Use ```#pragma once``` as an include guard.
 - Use ```std::make_shared``` for creating smart pointers. Why: <a href="https://stackoverflow.com/questions/20895648/difference-in-make-shared-and-normal-shared-ptr-in-c">Difference in make_shared and normal shared_ptr in C++</a>
 
-Indention
----------
+
+Indention & Formatting
+----------------------
+As a rule of thumb again: Orient yourself on the already written code!
+
+There is a settings file for ```clang-format```. You can use the tool to format your code: ```clang-format -style=file -i FILES```
 
 Regarding indention, we follow the BSD-style.
 
@@ -43,11 +48,12 @@ Using Emacs you get the indention style using this snippet.
 Debug Output and Checks
 -----------------------
 
-Before using some precice* debugging methods you should set TRACE() at the beginning of the function.
+Before using any of debugging/logging methods below you should set TRACE() at the beginning of the function.
 
+- TRACE(parameters) entering and leaving that function, print the parameters. This call should go to the very top of a function.
 - ERROR(message) unconditionally aborts the program. Should be used to catch user errors such as invalid configuration parameter combinations.
 - CHECK(check, errorMessage) checks if check == true and otherwise emits errorMessage and aborts program.
-- assertion(check) behaves like \c preciceCheck but should be used for programming errors and should therefore never happen to the user.
+- assertion(check) behaves like \c CHECK but should be used for programming errors and should therefore never happen to the user.
 - DEBUG(stream) prints a debug message, depending on global log level configuration.
 - INFO(stream) prints an info message, depending on global log level configuration.
 - WARN(stream) prints a warning message, depending on global log level configuration.

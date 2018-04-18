@@ -31,26 +31,6 @@ public:
   {
   }
 
-  virtual void startSendPackage(int rankReceiver)
-  {
-  }
-
-  virtual void finishSendPackage()
-  {
-  }
-
-  /**
-   * @return rankSender
-   */
-  virtual int startReceivePackage(int rankSender)
-  {
-    return rankSender;
-  }
-
-  virtual void finishReceivePackage()
-  {
-  }
-
   /**
    * @brief Sends a std::string to process with given rank.
    *
@@ -58,26 +38,18 @@ public:
    */
   virtual void send(std::string const &itemToSend, int rankReceiver);
 
-  /**
-   * @brief Sends an array of integer values.
-   */
+  /// Sends an array of integer values.
   virtual void send(int *itemsToSend, int size, int rankReceiver);
 
-  /**
-   * @brief Asynchronously sends an array of integer values.
-   */
+  /// Asynchronously sends an array of integer values.
   virtual PtrRequest aSend(int *itemsToSend,
                            int  size,
                            int  rankReceiver);
 
-  /**
-   * @brief Sends an array of double values.
-   */
+  /// Sends an array of double values.
   virtual void send(double *itemsToSend, int size, int rankReceiver);
 
-  /**
-   * @brief Asynchronously sends an array of double values.
-   */
+  /// Asynchronously sends an array of double values.
   virtual PtrRequest aSend(double *itemsToSend,
                            int     size,
                            int     rankReceiver);
@@ -89,9 +61,7 @@ public:
    */
   virtual void send(double itemToSend, int rankReceiver);
 
-  /**
-   * @brief Asynchronously sends a double to process with given rank.
-   */
+  /// Asynchronously sends a double to process with given rank.
   virtual PtrRequest aSend(double *itemToSend, int rankReceiver);
 
   /**
@@ -101,9 +71,7 @@ public:
    */
   virtual void send(int itemToSend, int rankReceiver);
 
-  /**
-   * @brief Asynchronously sends an int to process with given rank.
-   */
+  /// Asynchronously sends an int to process with given rank.
   virtual PtrRequest aSend(int *itemToSend, int rankReceiver);
 
   /**
@@ -113,9 +81,7 @@ public:
    */
   virtual void send(bool itemToSend, int rankReceiver);
 
-  /**
-   * @brief Asynchronously sends a bool to process with given rank.
-   */
+  /// Asynchronously sends a bool to process with given rank.
   virtual PtrRequest aSend(bool *itemToSend, int rankReceiver);
 
   /**
@@ -125,26 +91,18 @@ public:
    */
   virtual void receive(std::string &itemToReceive, int rankSender);
 
-  /**
-   * @brief Receives an array of integer values.
-   */
+  /// Receives an array of integer values.
   virtual void receive(int *itemsToReceive, int size, int rankSender);
 
-  /**
-   * @brief Asynchronously receives an array of integer values.
-   */
+  /// Asynchronously receives an array of integer values.
   virtual PtrRequest aReceive(int *itemsToReceive,
                               int  size,
                               int  rankSender);
 
-  /**
-   * @brief Receives an array of double values.
-   */
+  /// Receives an array of double values.
   virtual void receive(double *itemsToReceive, int size, int rankSender);
 
-  /**
-   * @brief Asynchronously receives an array of double values.
-   */
+  /// Asynchronously receives an array of double values.
   virtual PtrRequest aReceive(double *itemsToReceive,
                               int     size,
                               int     rankSender);
@@ -156,9 +114,7 @@ public:
    */
   virtual void receive(double &itemToReceive, int rankSender);
 
-  /**
-   * @brief Asynchronously receives a double from process with given rank.
-   */
+  /// Asynchronously receives a double from process with given rank.
   virtual PtrRequest aReceive(double *itemToReceive,
                               int     rankSender);
 
@@ -191,9 +147,9 @@ protected:
   virtual int rank(int rank) = 0;
 
 private:
-  static logging::Logger _log;
+  logging::Logger _log{"com::MPICommunication"};
 };
-}
-} // namespace precice, com
+} // namespace com
+} // namespace precice
 
 #endif // not PRECICE_NO_MPI

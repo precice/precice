@@ -7,8 +7,8 @@
 #include "m2n/config/M2NConfiguration.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
 #include "mapping/SharedPointer.hpp"
-#include "utils/xml/ValidatorEquals.hpp"
-#include "utils/xml/ValidatorOr.hpp"
+#include "xml/ValidatorEquals.hpp"
+#include "xml/ValidatorOr.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
 
 namespace precice {
@@ -18,7 +18,7 @@ logging::Logger SolverInterfaceConfiguration:: _log("config::SolverInterfaceConf
 
 SolverInterfaceConfiguration:: SolverInterfaceConfiguration
 (
-  utils::XMLTag& parent )
+  xml::XMLTag& parent )
 :
   TAG("solver-interface"),
   ATTR_DIMENSIONS("dimensions"),
@@ -29,7 +29,7 @@ SolverInterfaceConfiguration:: SolverInterfaceConfiguration
   _participantConfiguration(),
   _couplingSchemeConfiguration()
 {
-  using namespace utils;
+  using namespace xml;
   std::string doc;
   XMLTag tag(*this, TAG, XMLTag::OCCUR_ONCE);
   tag.setDocumentation("Configuration of simulation relevant features.");
@@ -59,7 +59,7 @@ SolverInterfaceConfiguration:: SolverInterfaceConfiguration
 
 void SolverInterfaceConfiguration:: xmlTagCallback
 (
-  utils::XMLTag& tag )
+  xml::XMLTag& tag )
 {
   TRACE();
   if (tag.getName() == TAG){
@@ -75,7 +75,7 @@ void SolverInterfaceConfiguration:: xmlTagCallback
 
 void SolverInterfaceConfiguration:: xmlEndTagCallback
 (
-  utils::XMLTag& tag )
+  xml::XMLTag& tag )
 {
   TRACE();
   if (tag.getName() == TAG){

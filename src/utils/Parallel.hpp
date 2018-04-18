@@ -24,10 +24,10 @@ class Parallel
 {
 public:
 #ifndef PRECICE_NO_MPI
-  typedef MPI_Comm Communicator;
+  using Communicator = MPI_Comm;
 #else
-  typedef int Communicator;
-#define MPI_COMM_NULL -1
+  using Communicator = std::nullptr_t;
+  #define MPI_COMM_NULL nullptr
 #endif
 
   /// Used to sort and order all coupling participants.
@@ -96,7 +96,7 @@ public:
    * and communicator size is recomputed, relative to the new default
    * communicator.
    *
-   * ATTENTION: Will result in an error, if called by a process not in the new
+   * @attention Will result in an error, if called by a process not in the new
    *            default communicator!
    */
   static void setGlobalCommunicator(Communicator defaultCommunicator);
@@ -116,7 +116,7 @@ public:
    *
    * Does not change the default communicator.
    *
-   * ATTENTION: Has to be called by every process in the communicator to be
+   * @attention Has to be called by every process in the communicator to be
    *            restricted, otherwise, a deadlock is achieved!
    *
    * @param[in] ids Process ranks to be selected for restricted comm.
@@ -124,6 +124,10 @@ public:
   static Communicator getRestrictedCommunicator(const std::vector<int> &ranks);
 
   /// Create a restricted communicator and sets them as the global communicator
+  /**
+   * Set the new, restricted communicator on all ranks that are contained in
+   * that new communicator. Leaves the other ranks untouched.
+   */
   static void restrictGlobalCommunicator(const std::vector<int> &ranks);
 
   static const std::vector<AccessorGroup> &getAccessorGroups();

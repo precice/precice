@@ -43,7 +43,7 @@ void RequestManager:: handleRequests()
     if((std::find(clientRanks.begin(), clientRanks.end(), rankSender) == clientRanks.end()) &&
                        requests[rankSender]->test()){
       requestID = requestIDs[rankSender];
-      preciceCheck(requestID != -1, "handleRequest()", "Receiving of request ID failed");
+      CHECK(requestID != -1, "Receiving of request ID failed");
       DEBUG("Received request ID " << requestID << " from rank " << rankSender);
     }
     else{
@@ -660,8 +660,7 @@ void RequestManager:: handleRequestSetMeshVertices
   _com->receive(meshID, rankSender);
   int size = -1;
   _com->receive(size, rankSender);
-  preciceCheck(size > 0, "handleRequestSetMeshVertices()",
-                     "You cannot call setMeshVertices with size=0.");
+  CHECK(size > 0, "You cannot call setMeshVertices with size=0.");
   double* positions = new double[size*_interface.getDimensions()];
   _com->receive(positions, size*_interface.getDimensions(), rankSender);
   int* ids = new int[size];
@@ -903,9 +902,9 @@ void RequestManager:: handleRequestMapWriteDataFrom
     _com->send(ping, *iter);
     int meshID;
     _com->receive(meshID, *iter);
-    preciceCheck(meshID == oldMeshID, "handleRequestMapWriteDataFrom()",
-                 "Ambiguous mesh ID when calling map written data from "
-                 << "several processes!");
+    CHECK(meshID == oldMeshID,
+          "Ambiguous mesh ID when calling map written data from "
+          << "several processes!");
     oldMeshID = meshID;
   }
   _interface.mapWriteDataFrom(oldMeshID);
@@ -926,9 +925,9 @@ void RequestManager:: handleRequestMapReadDataTo
     _com->send(ping, *iter);
     int meshID;
     _com->receive(meshID, *iter);
-    preciceCheck(meshID == oldMeshID, "handleRequestMapReadDataFrom()",
-                 "Ambiguous mesh IDs (" << meshID << " and " << oldMeshID
-                 <<  ") when calling map read data from several processes!");
+    CHECK(meshID == oldMeshID,
+          "Ambiguous mesh IDs (" << meshID << " and " << oldMeshID
+          <<  ") when calling map read data from several processes!");
     oldMeshID = meshID;
   }
   _interface.mapReadDataTo(oldMeshID);

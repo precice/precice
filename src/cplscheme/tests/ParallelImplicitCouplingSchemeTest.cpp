@@ -1,4 +1,3 @@
-#include "ParallelImplicitCouplingSchemeTest.hpp"
 #include "cplscheme/ParallelCouplingScheme.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
 #include "cplscheme/config/PostProcessingConfiguration.hpp"
@@ -21,87 +20,274 @@
 #include "m2n/GatherScatterCommunication.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
 #include "m2n/M2N.hpp"
-#include "utils/Parallel.hpp"
 #include "utils/Globals.hpp"
-#include "utils/xml/XMLTag.hpp"
+#include "xml/XMLTag.hpp"
 #include <Eigen/Core>
+#include <string>
 #include "utils/EigenHelperFunctions.hpp"
-#include "math/math.hpp"
 
-#include "tarch/tests/TestCaseFactory.h"
-registerTest(precice::cplscheme::tests::ParallelImplicitCouplingSchemeTest)
+#include "testing/Testing.hpp"
 
-namespace precice {
-namespace cplscheme {
-namespace tests {
+using namespace precice;
+using namespace precice::cplscheme;
 
-logging::Logger ParallelImplicitCouplingSchemeTest::
-_log ( "precice::cplscheme::tests::ParallelImplicitCouplingSchemeTest" );
+BOOST_AUTO_TEST_SUITE(CplSchemeTests)
 
-
-ParallelImplicitCouplingSchemeTest:: ParallelImplicitCouplingSchemeTest ()
-  :
-  TestCase ( "precice::cplscheme::tests::ParallelImplicitCouplingSchemeTest" ),
-   _pathToTests (),
-   MY_WRITE_CHECKPOINT ( constants::actionWriteIterationCheckpoint() ),
-   MY_READ_CHECKPOINT ( constants::actionReadIterationCheckpoint() )
-{}
-
-void ParallelImplicitCouplingSchemeTest:: setUp ()
+struct ParallelImplicitCouplingSchemeFixture  // TODO fixtures in cplscheme/tests are a candidate for refactoring, lots of copy paste code.
 {
-  _pathToTests = utils::getPathToSources() + "/cplscheme/tests/";
-}
+  using DataMap = std::map<int,PtrCouplingData>;
 
-void ParallelImplicitCouplingSchemeTest:: run ()
-{
-# ifndef PRECICE_NO_MPI
-  PRECICE_MASTER_ONLY {
-    testMethod(testParseConfigurationWithRelaxation);
-    testMethod(testMVQNPP);
-    testMethod(testVIQNPP);
+  std::string _pathToTests;
+
+  ParallelImplicitCouplingSchemeFixture(){
+    _pathToTests = utils::getPathToSources() + "/cplscheme/tests/";
   }
-  typedef utils::Parallel Par;
-  if (Par::getCommunicatorSize() > 1){
-    // Do only use process 0 and 1 for the following tests
-    MPI_Comm comm = Par::getRestrictedCommunicator({0, 1});
-    if (Par::getProcessRank() <= 1){
-      Par::setGlobalCommunicator(comm);
-      testMethod(testInitializeData);
-      Par::setGlobalCommunicator(Par::getCommunicatorWorld());
+
+  void connect( // TODO this function occurs in multiple tests. Move this to a common fixture? see https://github.com/precice/precice/issues/90
+      const std::string&      participant0,
+      const std::string&      participant1,
+      const std::string&      localParticipant,
+      m2n::PtrM2N& communication )
+  {
+    assertion ( communication.use_count() > 0 );
+    assertion ( not communication->isConnected() );
+    utils::Parallel::splitCommunicator( localParticipant );
+    if ( participant0 == localParticipant ) {
+      communication->requestMasterConnection ( participant1, participant0);
+    }
+    else {
+      assertion ( participant1 == localParticipant );
+      communication->acceptMasterConnection ( participant1, participant0);
     }
   }
-# endif // not PRECICE_NO_MPI
-}
+};
+
+BOOST_FIXTURE_TEST_SUITE(ParallelImplicitCouplingSchemeTests, ParallelImplicitCouplingSchemeFixture)
 
 #ifndef PRECICE_NO_MPI
 
-void ParallelImplicitCouplingSchemeTest:: testParseConfigurationWithRelaxation()
+BOOST_AUTO_TEST_CASE(testParseConfigurationWithRelaxation)
 {
-  TRACE();
   using namespace mesh;
-  
+
   std::string path(_pathToTests + "parallel-implicit-cplscheme-relax-const-config.xml");
-  
-  utils::XMLTag root = utils::getRootTag();
+
+  xml::XMLTag root = xml::getRootTag();
   PtrDataConfiguration dataConfig(new DataConfiguration(root));
   dataConfig->setDimensions(3);
   PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
   meshConfig->setDimensions(3);
   m2n::M2NConfiguration::SharedPointer m2nConfig(
       new m2n::M2NConfiguration(root));
+
   CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
-  
-  utils::configure(root, path);
-  validate(cplSchemeConfig._postProcConfig->getPostProcessing().get() != nullptr);
+
+  xml::configure(root, path);
+  BOOST_CHECK(cplSchemeConfig._postProcConfig->getPostProcessing().get());
   meshConfig->setMeshSubIDs();
 }
 
-void ParallelImplicitCouplingSchemeTest:: testInitializeData()
+BOOST_AUTO_TEST_CASE(testMVQNPP)
 {
-  TRACE();
-  utils::Parallel::synchronizeProcesses();
+  //use two vectors and see if underrelaxation works
+  double initialRelaxation = 0.01;
+  int    maxIterationsUsed = 50;
+  int    timestepsReused = 6;
+  int    reusedTimestepsAtRestart = 0;
+  int    chunkSize = 0;
+  int filter = cplscheme::impl::PostProcessing::QR1FILTER;
+  int restartType = cplscheme::impl::MVQNPostProcessing::NO_RESTART;
+  double singularityLimit = 1e-10;
+  double svdTruncationEps = 0.0;
+  bool enforceInitialRelaxation = false;
+  bool alwaysBuildJacobian = false;
+  std::vector<int> dataIDs;
+  dataIDs.push_back(0);
+  dataIDs.push_back(1);
+  std::vector<double> factors;
+  factors.resize(2,1.0);
+  cplscheme::impl::PtrPreconditioner prec(new cplscheme::impl::ConstantPreconditioner(factors));
+  mesh::PtrMesh dummyMesh ( new mesh::Mesh("dummyMesh", 3, false) );
 
-  utils::XMLTag root = utils::getRootTag();
+
+  cplscheme::impl::MVQNPostProcessing pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
+      timestepsReused, filter, singularityLimit, dataIDs, prec, alwaysBuildJacobian,
+      restartType, chunkSize, reusedTimestepsAtRestart, svdTruncationEps);
+
+  Eigen::VectorXd dvalues;
+  Eigen::VectorXd dcol1;
+  Eigen::VectorXd fvalues;
+  Eigen::VectorXd fcol1;
+
+  //init displacements
+  utils::append(dvalues, 1.0);
+  utils::append(dvalues, 2.0);
+  utils::append(dvalues, 3.0);
+  utils::append(dvalues, 4.0);
+
+  utils::append(dcol1, 1.0);
+  utils::append(dcol1, 1.0);
+  utils::append(dcol1, 1.0);
+  utils::append(dcol1, 1.0);
+
+  PtrCouplingData dpcd(new CouplingData(&dvalues,dummyMesh,false,1));
+
+  //init forces
+  utils::append(fvalues, 0.1);
+  utils::append(fvalues, 0.1);
+  utils::append(fvalues, 0.1);
+  utils::append(fvalues, 0.1);
+
+  utils::append(fcol1, 0.2);
+  utils::append(fcol1, 0.2);
+  utils::append(fcol1, 0.2);
+  utils::append(fcol1, 0.2);
+
+  PtrCouplingData fpcd(new CouplingData(&fvalues,dummyMesh,false,1));
+
+  DataMap data;
+  data.insert(std::pair<int,PtrCouplingData>(0,dpcd));
+  data.insert(std::pair<int,PtrCouplingData>(1,fpcd));
+
+  pp.initialize(data);
+
+  dpcd->oldValues.col(0) = dcol1;
+  fpcd->oldValues.col(0) = fcol1;
+
+  pp.performPostProcessing(data);
+
+  BOOST_TEST(testing::equals((*data.at(0)->values)(0), 1.00000000000000000000));
+  BOOST_TEST(testing::equals((*data.at(0)->values)(1), 1.01000000000000000888));
+  BOOST_TEST(testing::equals((*data.at(0)->values)(2), 1.02000000000000001776));
+  BOOST_TEST(testing::equals((*data.at(0)->values)(3), 1.03000000000000002665));
+  BOOST_TEST(testing::equals((*data.at(1)->values)(0), 0.199000000000000010214));
+  BOOST_TEST(testing::equals((*data.at(1)->values)(1), 0.199000000000000010214));
+  BOOST_TEST(testing::equals((*data.at(1)->values)(2), 0.199000000000000010214));
+  BOOST_TEST(testing::equals((*data.at(1)->values)(3), 0.199000000000000010214));
+
+  Eigen::VectorXd newdvalues;
+  utils::append(newdvalues, 10.0);
+  utils::append(newdvalues, 10.0);
+  utils::append(newdvalues, 10.0);
+  utils::append(newdvalues, 10.0);
+
+  data.begin()->second->values = &newdvalues;
+
+  pp.performPostProcessing(data);
+
+  BOOST_TEST(testing::equals((*data.at(0)->values)(0), -5.63401340929695848558e-01));
+  BOOST_TEST(testing::equals((*data.at(0)->values)(1), 6.10309919173602111186e-01));
+  BOOST_TEST(testing::equals((*data.at(0)->values)(2), 1.78402117927690184729e+00));
+  BOOST_TEST(testing::equals((*data.at(0)->values)(3), 2.95773243938020247157e+00));
+  BOOST_TEST(testing::equals((*data.at(1)->values)(0), 8.28025852497733250157e-02));
+  BOOST_TEST(testing::equals((*data.at(1)->values)(1), 8.28025852497733250157e-02));
+  BOOST_TEST(testing::equals((*data.at(1)->values)(2), 8.28025852497733250157e-02));
+  BOOST_TEST(testing::equals((*data.at(1)->values)(3), 8.28025852497733250157e-02));
+}
+
+BOOST_AUTO_TEST_CASE(testVIQNPP)
+{
+  //use two vectors and see if underrelaxation works
+
+  double initialRelaxation = 0.01;
+  int    maxIterationsUsed = 50;
+  int    timestepsReused = 6;
+  int filter = cplscheme::impl::BaseQNPostProcessing::QR1FILTER;
+  double singularityLimit = 1e-10;
+  bool enforceInitialRelaxation = false;
+  std::vector<int> dataIDs;
+  dataIDs.push_back(0);
+  dataIDs.push_back(1);
+  std::vector<double> factors;
+  factors.resize(2,1.0);
+  cplscheme::impl::PtrPreconditioner prec(new cplscheme::impl::ConstantPreconditioner(factors));
+
+  std::map<int, double> scalings;
+  scalings.insert(std::make_pair(0,1.0));
+  scalings.insert(std::make_pair(1,1.0));
+  mesh::PtrMesh dummyMesh ( new mesh::Mesh("dummyMesh", 3, false) );
+
+  cplscheme::impl::IQNILSPostProcessing pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
+      timestepsReused, filter, singularityLimit, dataIDs, prec);
+
+
+  Eigen::VectorXd dvalues;
+  Eigen::VectorXd dcol1;
+  Eigen::VectorXd fvalues;
+  Eigen::VectorXd fcol1;
+
+  //init displacements
+  utils::append(dvalues, 1.0);
+  utils::append(dvalues, 2.0);
+  utils::append(dvalues, 3.0);
+  utils::append(dvalues, 4.0);
+
+  utils::append(dcol1, 1.0);
+  utils::append(dcol1, 1.0);
+  utils::append(dcol1, 1.0);
+  utils::append(dcol1, 1.0);
+
+  PtrCouplingData dpcd(new CouplingData(&dvalues,dummyMesh,false,1));
+
+  //init forces
+  utils::append(fvalues, 0.1);
+  utils::append(fvalues, 0.1);
+  utils::append(fvalues, 0.1);
+  utils::append(fvalues, 0.1);
+
+  utils::append(fcol1, 0.2);
+  utils::append(fcol1, 0.2);
+  utils::append(fcol1, 0.2);
+  utils::append(fcol1, 0.2);
+
+  PtrCouplingData fpcd(new CouplingData(&fvalues,dummyMesh,false,1));
+
+  DataMap data;
+  data.insert(std::pair<int,PtrCouplingData>(0,dpcd));
+  data.insert(std::pair<int,PtrCouplingData>(1,fpcd));
+
+  pp.initialize(data);
+
+  dpcd->oldValues.col(0) = dcol1;
+  fpcd->oldValues.col(0) = fcol1;
+
+  pp.performPostProcessing(data);
+
+  BOOST_TEST(testing::equals((*data.at(0)->values)(0), 1.00));
+  BOOST_TEST(testing::equals((*data.at(0)->values)(1), 1.01));
+  BOOST_TEST(testing::equals((*data.at(0)->values)(2), 1.02));
+  BOOST_TEST(testing::equals((*data.at(0)->values)(3), 1.03));
+  BOOST_TEST(testing::equals((*data.at(1)->values)(0), 0.199));
+  BOOST_TEST(testing::equals((*data.at(1)->values)(1), 0.199));
+  BOOST_TEST(testing::equals((*data.at(1)->values)(2), 0.199));
+  BOOST_TEST(testing::equals((*data.at(1)->values)(3), 0.199));
+
+  Eigen::VectorXd newdvalues;
+  utils::append(newdvalues, 10.0);
+  utils::append(newdvalues, 10.0);
+  utils::append(newdvalues, 10.0);
+  utils::append(newdvalues, 10.0);
+  data.begin()->second->values = &newdvalues;
+
+  pp.performPostProcessing(data);
+
+  BOOST_TEST(testing::equals((*data.at(0)->values)(0), -5.63401340929692295845e-01));
+  BOOST_TEST(testing::equals((*data.at(0)->values)(1), 6.10309919173607440257e-01));
+  BOOST_TEST(testing::equals((*data.at(0)->values)(2), 1.78402117927690717636e+00));
+  BOOST_TEST(testing::equals((*data.at(0)->values)(3), 2.95773243938020513610e+00));
+  BOOST_TEST(testing::equals((*data.at(1)->values)(0), 8.28025852497733944046e-02));
+  BOOST_TEST(testing::equals((*data.at(1)->values)(1), 8.28025852497733944046e-02));
+  BOOST_TEST(testing::equals((*data.at(1)->values)(2), 8.28025852497733944046e-02));
+  BOOST_TEST(testing::equals((*data.at(1)->values)(3), 8.28025852497733944046e-02));
+}
+
+/// Test that runs on 2 processors.
+BOOST_AUTO_TEST_CASE(testInitializeData, * testing::MinRanks(2) * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
+{
+  if (utils::Parallel::getCommunicatorSize() != 2) // only run test on ranks {0,1}, for other ranks return
+    return;
+
+  xml::XMLTag root = xml::getRootTag();
 
   // Create a data configuration, to simplify configuration of data
   mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(root));
@@ -144,22 +330,22 @@ void ParallelImplicitCouplingSchemeTest:: testInitializeData()
   }
 
   // Create the coupling scheme object
-  cplscheme::ParallelCouplingScheme cplScheme(
-    maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
-    nameLocalParticipant, globalCom, constants::FIXED_DT, BaseCouplingScheme::Implicit, 100);
+  ParallelCouplingScheme cplScheme(
+      maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
+      nameLocalParticipant, globalCom, constants::FIXED_DT, BaseCouplingScheme::Implicit, 100);
   cplScheme.addDataToSend(mesh->data()[sendDataIndex], mesh, initData);
   cplScheme.addDataToReceive(mesh->data()[receiveDataIndex], mesh, initData);
 
   // Add convergence measures
   int minIterations = 3;
-  impl::PtrConvergenceMeasure minIterationConvMeasure1 (
-    new impl::MinIterationConvergenceMeasure(minIterations) );
-  impl::PtrConvergenceMeasure minIterationConvMeasure2 (
-    new impl::MinIterationConvergenceMeasure(minIterations) );
+  cplscheme::impl::PtrConvergenceMeasure minIterationConvMeasure1 (
+      new cplscheme::impl::MinIterationConvergenceMeasure(minIterations) );
+  cplscheme::impl::PtrConvergenceMeasure minIterationConvMeasure2 (
+      new cplscheme::impl::MinIterationConvergenceMeasure(minIterations) );
   cplScheme.addConvergenceMeasure (
-    mesh->data()[1]->getID(), false, false, minIterationConvMeasure1 );
+      mesh->data()[1]->getID(), false, false, minIterationConvMeasure1 );
   cplScheme.addConvergenceMeasure (
-    mesh->data()[0]->getID(), false, false, minIterationConvMeasure2 );
+      mesh->data()[0]->getID(), false, false, minIterationConvMeasure2 );
   connect(nameParticipant0, nameParticipant1, nameLocalParticipant, globalCom);
 
   std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
@@ -168,13 +354,13 @@ void ParallelImplicitCouplingSchemeTest:: testInitializeData()
   cplScheme.initialize(0.0, 0);
 
   if (nameLocalParticipant == nameParticipant0){
-    validate(cplScheme.isActionRequired(constants::actionWriteInitialData()));
+    BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteInitialData()));
     mesh->data(0)->values() = Eigen::VectorXd::Constant(1, 4.0);
     cplScheme.performedAction(constants::actionWriteInitialData());
     cplScheme.initializeData();
-    validate(cplScheme.hasDataBeenExchanged());
+    BOOST_TEST(cplScheme.hasDataBeenExchanged());
     auto& values = mesh->data(1)->values();
-    validateWithParams1(math::equals(values, Eigen::Vector3d(1.0, 2.0, 3.0)), values);
+    BOOST_TEST(testing::equals(values, Eigen::Vector3d(1.0, 2.0, 3.0)), values);
 
     while (cplScheme.isCouplingOngoing()){
       if (cplScheme.isActionRequired(writeIterationCheckpoint)){
@@ -190,14 +376,14 @@ void ParallelImplicitCouplingSchemeTest:: testInitializeData()
   else {
     assertion(nameLocalParticipant == nameParticipant1);
     auto& values = mesh->data(0)->values();
-    validate(cplScheme.isActionRequired(constants::actionWriteInitialData()));
+    BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteInitialData()));
     Eigen::VectorXd v(3); v << 1.0, 2.0, 3.0;
     mesh->data(1)->values() = v;
     cplScheme.performedAction(constants::actionWriteInitialData());
-    validateWithParams1(math::equals(values(0), 0.0), values);
+    BOOST_TEST(testing::equals(values(0), 0.0), values);
     cplScheme.initializeData();
-    validate(cplScheme.hasDataBeenExchanged());
-    validateWithParams1(math::equals(values(0), 4.0), values);
+    BOOST_TEST(cplScheme.hasDataBeenExchanged());
+    BOOST_TEST(testing::equals(values(0), 4.0), values);
 
     while (cplScheme.isCouplingOngoing()){
       if (cplScheme.isActionRequired(writeIterationCheckpoint)){
@@ -213,239 +399,7 @@ void ParallelImplicitCouplingSchemeTest:: testInitializeData()
   cplScheme.finalize();
   utils::Parallel::clearGroups();
 }
+# endif // not PRECICE_NO_MPI
 
-void ParallelImplicitCouplingSchemeTest:: connect
-(
-  const std::string&      participant0,
-  const std::string&      participant1,
-  const std::string&      localParticipant,
-  m2n::PtrM2N& communication ) const
-{
-  assertion ( communication.use_count() > 0 );
-  assertion ( not communication->isConnected() );
-  utils::Parallel::splitCommunicator( localParticipant );
-  if ( participant0 == localParticipant ) {
-    communication->requestMasterConnection ( participant1, participant0);
-  }
-  else {
-    assertion ( participant1 == localParticipant );
-    communication->acceptMasterConnection ( participant1, participant0);
-  }
-}
-
-void ParallelImplicitCouplingSchemeTest:: testVIQNPP()
-{
-  TRACE();
-
-  //use two vectors and see if underrelaxation works
-
-  double initialRelaxation = 0.01;
-  int    maxIterationsUsed = 50;
-  int    timestepsReused = 6;
-  int filter = impl::BaseQNPostProcessing::QR1FILTER;
-  double singularityLimit = 1e-10;
-  bool enforceInitialRelaxation = false;
-  std::vector<int> dataIDs;
-  dataIDs.push_back(0);
-  dataIDs.push_back(1);
-  std::vector<double> factors;
-  factors.resize(2,1.0);
-  impl::PtrPreconditioner prec(new impl::ConstantPreconditioner(factors));
-
-  std::map<int, double> scalings;
-  scalings.insert(std::make_pair(0,1.0));
-  scalings.insert(std::make_pair(1,1.0));
-  mesh::PtrMesh dummyMesh ( new mesh::Mesh("dummyMesh", 3, false) );
-
-  cplscheme::impl::IQNILSPostProcessing pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
-                                           timestepsReused, filter, singularityLimit, dataIDs, prec);
-
-
-  Eigen::VectorXd dvalues;
-  Eigen::VectorXd dcol1;
-  Eigen::VectorXd fvalues;
-  Eigen::VectorXd fcol1;
-
-  //init displacements
-  utils::append(dvalues, 1.0);
-  utils::append(dvalues, 2.0);
-  utils::append(dvalues, 3.0);
-  utils::append(dvalues, 4.0);
-
-  utils::append(dcol1, 1.0);
-  utils::append(dcol1, 1.0);
-  utils::append(dcol1, 1.0);
-  utils::append(dcol1, 1.0);
-
-  PtrCouplingData dpcd(new CouplingData(&dvalues,dummyMesh,false,1));
-
-  //init forces
-  utils::append(fvalues, 0.1);
-  utils::append(fvalues, 0.1);
-  utils::append(fvalues, 0.1);
-  utils::append(fvalues, 0.1);
-
-  utils::append(fcol1, 0.2);
-  utils::append(fcol1, 0.2);
-  utils::append(fcol1, 0.2);
-  utils::append(fcol1, 0.2);
-
-  PtrCouplingData fpcd(new CouplingData(&fvalues,dummyMesh,false,1));
-
-  DataMap data;
-  data.insert(std::pair<int,PtrCouplingData>(0,dpcd));
-  data.insert(std::pair<int,PtrCouplingData>(1,fpcd));
-
-//  for (DataMap::value_type& pair : data){
-//    std::cout << *pair.second->values << "\n";
-//    std::cout << pair.second->oldValues << "\n";
-//  }
-
-  pp.initialize(data);
-
-  dpcd->oldValues.col(0) = dcol1;
-  fpcd->oldValues.col(0) = fcol1;
-
-  pp.performPostProcessing(data);
-
-  validateWithParams1(math::equals((*data.at(0)->values)(0), 1.00), (*data.at(0)->values)(0));
-  validateWithParams1(math::equals((*data.at(0)->values)(1), 1.01), (*data.at(0)->values)(1));
-  validateWithParams1(math::equals((*data.at(0)->values)(2), 1.02), (*data.at(0)->values)(2));
-  validateWithParams1(math::equals((*data.at(0)->values)(3), 1.03), (*data.at(0)->values)(3));
-  validateWithParams1(math::equals((*data.at(1)->values)(0), 0.199), (*data.at(1)->values)(0));
-  validateWithParams1(math::equals((*data.at(1)->values)(1), 0.199), (*data.at(1)->values)(1));
-  validateWithParams1(math::equals((*data.at(1)->values)(2), 0.199), (*data.at(1)->values)(2));
-  validateWithParams1(math::equals((*data.at(1)->values)(3), 0.199), (*data.at(1)->values)(3));
-
-  Eigen::VectorXd newdvalues;
-  utils::append(newdvalues, 10.0);
-  utils::append(newdvalues, 10.0);
-  utils::append(newdvalues, 10.0);
-  utils::append(newdvalues, 10.0);
-  data.begin()->second->values = &newdvalues;
-
-  pp.performPostProcessing(data);
-
-  validateWithParams1(math::equals((*data.at(0)->values)(0), -5.63401340929692295845e-01), (*data.at(0)->values)(0));
-  validateWithParams1(math::equals((*data.at(0)->values)(1), 6.10309919173607440257e-01), (*data.at(0)->values)(1));
-  validateWithParams1(math::equals((*data.at(0)->values)(2), 1.78402117927690717636e+00), (*data.at(0)->values)(2));
-  validateWithParams1(math::equals((*data.at(0)->values)(3), 2.95773243938020513610e+00), (*data.at(0)->values)(3));
-  validateWithParams1(math::equals((*data.at(1)->values)(0), 8.28025852497733944046e-02), (*data.at(1)->values)(0));
-  validateWithParams1(math::equals((*data.at(1)->values)(1), 8.28025852497733944046e-02), (*data.at(1)->values)(1));
-  validateWithParams1(math::equals((*data.at(1)->values)(2), 8.28025852497733944046e-02), (*data.at(1)->values)(2));
-  validateWithParams1(math::equals((*data.at(1)->values)(3), 8.28025852497733944046e-02), (*data.at(1)->values)(3));
-
-}
-
-
-void ParallelImplicitCouplingSchemeTest:: testMVQNPP()
-{
-  TRACE();
-  
-  //use two vectors and see if underrelaxation works
-  
-  double initialRelaxation = 0.01;
-  int    maxIterationsUsed = 50;
-  int    timestepsReused = 6;
-  int    reusedTimestepsAtRestart = 0;
-  int    chunkSize = 0;
-  int filter = impl::BaseQNPostProcessing::QR1FILTER;
-  int restartType = impl::MVQNPostProcessing::NO_RESTART;
-  double singularityLimit = 1e-10;
-  double svdTruncationEps = 0.0;
-  bool enforceInitialRelaxation = false;
-  bool alwaysBuildJacobian = false;
-  std::vector<int> dataIDs;
-  dataIDs.push_back(0);
-  dataIDs.push_back(1);
-  std::vector<double> factors;
-  factors.resize(2,1.0);
-  impl::PtrPreconditioner prec(new impl::ConstantPreconditioner(factors));
-  mesh::PtrMesh dummyMesh ( new mesh::Mesh("dummyMesh", 3, false) );
-
-  
-  cplscheme::impl::MVQNPostProcessing pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
-                                         timestepsReused, filter, singularityLimit, dataIDs, prec, alwaysBuildJacobian,
-                                         restartType, chunkSize, reusedTimestepsAtRestart, svdTruncationEps);
-  
-  Eigen::VectorXd dvalues;
-  Eigen::VectorXd dcol1;
-  Eigen::VectorXd fvalues;
-  Eigen::VectorXd fcol1;
-
-  //init displacements
-  utils::append(dvalues, 1.0);
-  utils::append(dvalues, 2.0);
-  utils::append(dvalues, 3.0);
-  utils::append(dvalues, 4.0);
-  
-  utils::append(dcol1, 1.0);
-  utils::append(dcol1, 1.0);
-  utils::append(dcol1, 1.0);
-  utils::append(dcol1, 1.0);
-
-  PtrCouplingData dpcd(new CouplingData(&dvalues,dummyMesh,false,1));
-
-  //init forces
-  utils::append(fvalues, 0.1);
-  utils::append(fvalues, 0.1);
-  utils::append(fvalues, 0.1);
-  utils::append(fvalues, 0.1);
-
-  utils::append(fcol1, 0.2);
-  utils::append(fcol1, 0.2);
-  utils::append(fcol1, 0.2);
-  utils::append(fcol1, 0.2);
-
-  PtrCouplingData fpcd(new CouplingData(&fvalues,dummyMesh,false,1));
-  
-  DataMap data;
-  data.insert(std::pair<int,PtrCouplingData>(0,dpcd));
-  data.insert(std::pair<int,PtrCouplingData>(1,fpcd));
-  
-//  for (DataMap::value_type& pair : data){
-//    std::cout << *pair.second->values << "\n";
-//    std::cout << pair.second->oldValues << "\n";
-//  }
-  
-  pp.initialize(data);
-  
-  dpcd->oldValues.col(0) = dcol1;
-  fpcd->oldValues.col(0) = fcol1;
-  
-  pp.performPostProcessing(data);
-  
-  validateWithParams1(math::equals((*data.at(0)->values)(0), 1.00000000000000000000), (*data.at(0)->values)(0));
-  validateWithParams1(math::equals((*data.at(0)->values)(1), 1.01000000000000000888), (*data.at(0)->values)(1));
-  validateWithParams1(math::equals((*data.at(0)->values)(2), 1.02000000000000001776), (*data.at(0)->values)(2));
-  validateWithParams1(math::equals((*data.at(0)->values)(3), 1.03000000000000002665), (*data.at(0)->values)(3));
-  validateWithParams1(math::equals((*data.at(1)->values)(0), 0.199000000000000010214), (*data.at(1)->values)(0));
-  validateWithParams1(math::equals((*data.at(1)->values)(1), 0.199000000000000010214), (*data.at(1)->values)(1));
-  validateWithParams1(math::equals((*data.at(1)->values)(2), 0.199000000000000010214), (*data.at(1)->values)(2));
-  validateWithParams1(math::equals((*data.at(1)->values)(3), 0.199000000000000010214), (*data.at(1)->values)(3));
-    
-  Eigen::VectorXd newdvalues;
-  utils::append(newdvalues, 10.0);
-  utils::append(newdvalues, 10.0);
-  utils::append(newdvalues, 10.0);
-  utils::append(newdvalues, 10.0);
-
-  data.begin()->second->values = &newdvalues;
-  
-  pp.performPostProcessing(data);
-  
-  validateWithParams1(math::equals((*data.at(0)->values)(0), -5.63401340929695848558e-01), (*data.at(0)->values)(0));
-  validateWithParams1(math::equals((*data.at(0)->values)(1), 6.10309919173602111186e-01), (*data.at(0)->values)(1));
-  validateWithParams1(math::equals((*data.at(0)->values)(2), 1.78402117927690184729e+00), (*data.at(0)->values)(2));
-  validateWithParams1(math::equals((*data.at(0)->values)(3), 2.95773243938020247157e+00), (*data.at(0)->values)(3));
-  validateWithParams1(math::equals((*data.at(1)->values)(0), 8.28025852497733250157e-02), (*data.at(1)->values)(0));
-  validateWithParams1(math::equals((*data.at(1)->values)(1), 8.28025852497733250157e-02), (*data.at(1)->values)(1));
-  validateWithParams1(math::equals((*data.at(1)->values)(2), 8.28025852497733250157e-02), (*data.at(1)->values)(2));
-  validateWithParams1(math::equals((*data.at(1)->values)(3), 8.28025852497733250157e-02), (*data.at(1)->values)(3));
-
-}
-
-#endif // not PRECICE_NO_MPI
-
-}}}// namespace precice, cplscheme, tests
-
+BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END()

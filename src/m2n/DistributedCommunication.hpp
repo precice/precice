@@ -2,8 +2,10 @@
 
 #include "mesh/SharedPointer.hpp"
 
-namespace precice {
-namespace m2n {
+namespace precice
+{
+namespace m2n
+{
 
 /**
  * @brief Interface for all distributed solver to solver communication classes.
@@ -32,11 +34,10 @@ public:
   using SharedPointer = std::shared_ptr<DistributedCommunication>;
 
 public:
-
   explicit DistributedCommunication(mesh::PtrMesh mesh)
-  :
-  _mesh(mesh)
-  {}
+      : _mesh(mesh)
+  {
+  }
 
   /**
    * @brief Destructor, empty.
@@ -44,7 +45,7 @@ public:
   virtual ~DistributedCommunication() {}
 
   /// Returns true, if a connection to a remote participant has been setup.
-  virtual bool isConnected() =0;
+  virtual bool isConnected() = 0;
 
   /**
    * @brief Connects to another participant, which has to call requestConnection().
@@ -52,9 +53,9 @@ public:
    * @param[in] nameAcceptor Name of calling participant.
    * @param[in] nameRequester Name of remote participant to connect to.
    */
-  virtual void acceptConnection (
-    const std::string& nameAcceptor,
-    const std::string& nameRequester) =0;
+  virtual void acceptConnection(
+      const std::string &nameAcceptor,
+      const std::string &nameRequester) = 0;
 
   /**
    * @brief Connects to another participant, which has to call acceptConnection().
@@ -62,28 +63,28 @@ public:
    * @param[in] nameAcceptor Name of remote participant to connect to.
    * @param[in] nameRequester Name of calling participant.
    */
-  virtual void requestConnection (
-    const std::string& nameAcceptor,
-    const std::string& nameRequester) =0;
+  virtual void requestConnection(
+      const std::string &nameAcceptor,
+      const std::string &nameRequester) = 0;
 
   /**
    * @brief Disconnects from communication space, i.e. participant.
    *
    * This method is called on destruction.
    */
-  virtual void closeConnection() =0;
+  virtual void closeConnection() = 0;
 
   /// Sends an array of double values from all slaves (different for each slave).
-  virtual void send (
-    double* itemsToSend,
-    size_t     size,
-    int     valueDimension) =0;
+  virtual void send(
+      double *itemsToSend,
+      size_t  size,
+      int     valueDimension) = 0;
 
   /// All slaves receive an array of doubles (different for each slave).
-  virtual void receive (
-    double* itemsToReceive,
-    size_t     size,
-    int     valueDimension) =0;
+  virtual void receive(
+      double *itemsToReceive,
+      size_t  size,
+      int     valueDimension) = 0;
 
 protected:
   /**
@@ -94,7 +95,5 @@ protected:
   mesh::PtrMesh _mesh;
 };
 
-
-
-}} // namespace precice, m2n
-
+} // namespace m2n
+} // namespace precice

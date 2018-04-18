@@ -3,7 +3,7 @@
 
 #include "action/Action.hpp"
 #include "action/SharedPointer.hpp"
-#include "utils/xml/XMLTag.hpp"
+#include "xml/XMLTag.hpp"
 #include "logging/Logger.hpp"
 #include "mesh/SharedPointer.hpp"
 #include <string>
@@ -15,7 +15,7 @@ namespace action {
 /**
  * @brief Configures an Action subclass object.
  */
-class ActionConfiguration : public utils::XMLTag::Listener
+class ActionConfiguration : public xml::XMLTag::Listener
 {
 public:
 
@@ -28,27 +28,27 @@ public:
    * @brief Constructor.
    */
   ActionConfiguration (
-    utils::XMLTag&                    parent,
+    xml::XMLTag&                    parent,
     const mesh::PtrMeshConfiguration& meshConfig );
 
 //  /**
 //   * @brief Reads the information parsed from an xml-file.
 //   */
-//  bool parseSubtag ( utils::XMLTag::XMLReader* xmlReader );
+//  bool parseSubtag ( xml::XMLTag::XMLReader* xmlReader );
 
   /**
    * @brief Callback function required for use of automatic configuration.
    *
    * @return True, if successful.
    */
-  virtual void xmlTagCallback ( utils::XMLTag& callingTag );
+  virtual void xmlTagCallback ( xml::XMLTag& callingTag );
 
   /**
    * @brief Callback function required for use of automatic configuration.
    *
    * @return True, if successful.
    */
-  virtual void xmlEndTagCallback ( utils::XMLTag& callingTag );
+  virtual void xmlEndTagCallback ( xml::XMLTag& callingTag );
 
   /**
    * @brief Returns true, if configuration has validly taken place.
@@ -141,7 +141,7 @@ private:
 //   * @brief Adds all required subtags to the main action tag.
 //   */
 //  void addSubtags (
-//    std::list<utils::XMLTag>& tags,
+//    std::list<xml::XMLTag>& tags,
 //    const std::string&        type );
 
   /**

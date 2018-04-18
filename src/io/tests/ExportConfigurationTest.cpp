@@ -1,78 +1,47 @@
-#include "ExportConfigurationTest.hpp"
-#include "io/Export.hpp"
 #include "io/config/ExportConfiguration.hpp"
+#include "testing/Testing.hpp"
 #include "utils/Globals.hpp"
-#include "utils/Parallel.hpp"
-#include "utils/xml/XMLTag.hpp"
+#include "xml/XMLTag.hpp"
 
-#include "tarch/tests/TestCaseFactory.h"
-registerTest(precice::io::tests::ExportConfigurationTest)
+BOOST_AUTO_TEST_SUITE(IOTests)
 
-namespace precice {
-namespace io {
-namespace tests {
+using namespace precice;
 
-
-logging::Logger ExportConfigurationTest::
-   _log ( "precice::io::tests::ExportConfigurationTest" );
-
-ExportConfigurationTest:: ExportConfigurationTest ()
-:
-   TestCase ( "io::tests::ExportConfiguratinTest" )
-{}
-
-void ExportConfigurationTest:: run ()
+BOOST_AUTO_TEST_CASE(Configuration)
 {
-  PRECICE_MASTER_ONLY {
-    testMethod ( testConfiguration );
-  }
-}
-
-void ExportConfigurationTest:: testConfiguration ()
-{
-  TRACE();
-  using utils::XMLTag;
-  XMLTag tag = utils::getRootTag();
+  using xml::XMLTag;
+  XMLTag tag = xml::getRootTag();
   {
-    ExportConfiguration config(tag);
-    utils::configure ( tag, utils::getPathToSources() + "/io/tests/config1.xml" );
-    //validate ( config.isValid() );
-    validateEquals(config.exportContexts().size(), 1);
-    const ExportContext& context = config.exportContexts().front();
-    validateEquals ( context.type, "vtk" );
-    validateEquals ( context.timestepInterval, 10 );
-    //validate ( context.plotNormals );
-    //validate ( context.plotNeighbors );
-    validate ( context.triggerSolverPlot );
+    io::ExportConfiguration config(tag);
+    xml::configure(tag, utils::getPathToSources() + "/io/tests/config1.xml");
+    BOOST_TEST(config.exportContexts().size() == 1);
+    const io::ExportContext &context = config.exportContexts().front();
+    BOOST_TEST(context.type == "vtk");
+    BOOST_TEST(context.timestepInterval == 10);
+    BOOST_TEST(context.triggerSolverPlot);
   }
   {
     tag.clear();
-    ExportConfiguration config(tag);
-    utils::configure ( tag, utils::getPathToSources() + "/io/tests/config2.xml" );
-    //validate ( config.isValid() );
-    validateEquals(config.exportContexts().size(), 1);
-    const ExportContext& context = config.exportContexts().front();
-    validateEquals ( context.type, "vtk" );
-    validateEquals ( context.timestepInterval, 1 );
-    validateEquals ( context.location, std::string("somepath") );
-    //validate ( not context.plotNormals );
-    //validate ( not context.plotNeighbors );
-    validate ( not context.triggerSolverPlot );
+    io::ExportConfiguration config(tag);
+    xml::configure(tag, utils::getPathToSources() + "/io/tests/config2.xml");
+    BOOST_TEST(config.exportContexts().size() == 1);
+    const io::ExportContext &context = config.exportContexts().front();
+    BOOST_TEST(context.type == "vtk");
+    BOOST_TEST(context.timestepInterval == 1);
+    BOOST_TEST(context.location == "somepath");
+    BOOST_TEST(not context.triggerSolverPlot);
   }
   {
     tag.clear();
-    ExportConfiguration config(tag);
-    utils::configure ( tag, utils::getPathToSources() + "/io/tests/config3.xml" );
-    //validate ( config.isValid() );
-    validateEquals(config.exportContexts().size(), 1);
-    const ExportContext& context = config.exportContexts().front();
-    validateEquals ( context.type, "vrml" );
-    validateEquals ( context.timestepInterval, 1 );
-    validateEquals ( context.location, std::string("") );
-    //validate ( context.plotNormals );
-    //validate ( not context.plotNeighbors );
-    validate ( not context.triggerSolverPlot );
+    io::ExportConfiguration config(tag);
+    xml::configure(tag, utils::getPathToSources() + "/io/tests/config3.xml");
+    BOOST_TEST(config.exportContexts().size() == 1);
+    const io::ExportContext &context = config.exportContexts().front();
+    BOOST_TEST(context.type == "vrml");
+    BOOST_TEST(context.timestepInterval == 1);
+    BOOST_TEST(context.location == "");
+    BOOST_TEST(not context.triggerSolverPlot);
   }
 }
 
-}}} // namespace precice, io, tests
+BOOST_AUTO_TEST_SUITE_END() // IOTests

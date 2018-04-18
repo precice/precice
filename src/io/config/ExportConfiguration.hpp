@@ -4,7 +4,7 @@
 #include "io/ExportContext.hpp"
 #include "io/Constants.hpp"
 #include "io/SharedPointer.hpp"
-#include "utils/xml/XMLTag.hpp"
+#include "xml/XMLTag.hpp"
 #include "logging/Logger.hpp"
 #include "precice/Constants.hpp"
 #include <string>
@@ -16,7 +16,7 @@ namespace io {
 /**
  * @brief Configuration class for exports.
  */
-class ExportConfiguration : public utils::XMLTag::Listener
+class ExportConfiguration : public xml::XMLTag::Listener
 {
 public:
 
@@ -28,7 +28,7 @@ public:
   /**
    * @brief Constructor.
    */
-  ExportConfiguration ( utils::XMLTag& parent );
+  ExportConfiguration ( xml::XMLTag& parent );
 
   /**
    * @brief Parses the export configuration xml-tag.
@@ -36,7 +36,7 @@ public:
    * Requirements:
    * - xmlReader has to point to the tag corresponding to ExportConfiguration
    */
-  //bool parseSubtag ( utils::XMLTag::XMLReader* xmlReader );
+  //bool parseSubtag ( xml::XMLTag::XMLReader* xmlReader );
 
   /**
    * @brief Returns true, if xml-tag has been parsed successfully.
@@ -51,18 +51,18 @@ public:
   /**
    * @brief Callback function required for use of automatic configuration.
    *
-   * Is called by utils::XMLTag on automatic configuration every time an xml
+   * Is called by xml::XMLTag on automatic configuration every time an xml
    * tag and its attributes have been read.
    * @param callingTag [IN] XML tag currently read.
    * @param xmlReader  [IN] XML Reader responsible for reading the tag.
    * @return True, if the corresponding actions could be successfully performed.
    */
-  virtual void xmlTagCallback ( utils::XMLTag& callingTag );
+  virtual void xmlTagCallback ( xml::XMLTag& callingTag );
 
   /**
    * @brief Callback from automatic configuration. Not utilitzed here.
    */
-  virtual void xmlEndTagCallback ( utils::XMLTag& callingTag ) {}
+  virtual void xmlEndTagCallback ( xml::XMLTag& callingTag ) {}
 
   void resetExports() { _contexts.clear(); }
 

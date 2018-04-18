@@ -5,6 +5,14 @@
 #include "mesh/Mesh.hpp"
 #include <boost/geometry.hpp>
 
+
+// Forward declaration to friend the boost test struct
+namespace MeshTests {
+namespace RTree {
+struct CacheClearing;
+}}
+
+
 namespace precice {
 namespace mesh {
 
@@ -23,12 +31,11 @@ public:
    */
   static PtrRTree getVertexRTree(PtrMesh mesh);
   
-  /// Clears the cache of all trees, e.g. when the mesh has changed
-  static void clear();
+  /// Only clear the tree of that specific mesh
+  static void clear(Mesh & mesh);
 
-  /// Only removed the tree of that specific mesh
-  static void clear(int id);
-
+  friend struct MeshTests::RTree::CacheClearing;
+  
 private:
   static std::map<int, PtrRTree> trees;
 };

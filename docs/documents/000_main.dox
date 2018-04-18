@@ -7,26 +7,27 @@ is contained in the directory $precice$, which brings together the functionaliti
 contained in the other components of preCICE. Every component has its own
 directory, and the following components exist currently:
 
-- \ref src/utils "utils" contains functionality serving as technical basis for all other
-  components.
-- \ref src/mesh "mesh" holds the coupling mesh and coupling data classes, which form the base of all other components.
-- \ref src/geometry "geometry" provides functionality to create coupling mesh geometries.
-- \ref src/io "io" implements import and export of the coupling mesh and data.
-- \ref src/query "query" holds classes to perform geometrical queries on geometries.
-- \ref src/mapping "mapping" defines data mapping from points to meshes by using geometrical queries.
-- \ref src/com "com" defines a data communication abstraction layer and implementations  for it to communicate coupling data.
+- \ref src/action "action" -- Actions that can be executed to modify the exchanged data, can be written in Python.
+- \ref src/com "com" defines a data communication abstraction layer and implementations.
 - \ref src/cplscheme "cplscheme" takes coupling data and communication objects and implements coupling schemes for coupled simulations.
 - \ref src/drivers "drivers "holds the main function for building the ```binprecice``` executable.
-- \ref src/testing "testing" Holds the code that configure the boost testing framework and the main function for the testprecice executable.
+- \ref src/io "io" implements import and export of the coupling mesh and data.
 - \ref src/logging "logging" Contains the code for the logging framework, based on boost logging.
+- \ref src/m2n "m2n" define the logical part of the parallel communication between participants
+- \ref src/mesh "mesh" holds the coupling mesh and coupling data classes, which form the base of all other components.
+- \ref src/math "math" -- General mathematical constants and functions.
+- \ref src/mapping "mapping" defines data mapping from points to meshes by using geometrical queries.
+- \ref src/partition "partition" computes the partitioning of distributed meshes at initialization.  
+- \ref src/query "query" holds classes to perform geometrical queries on geometries.
+- \ref src/testing "testing" holds the code that configure the boost testing framework and the main function for the testprecice executable.
+- \ref src/utils "utils" contains functionality serving as technical basis for all other components.
+- \ref src/xml "xml" -- The XML configuration parser.
+
 
 The components of preCICE have some common subdirectory structure. Some typical directories appearing are ```tests```, ```config```, and ```impl```.
 - ```tests``` holds classes for automated testing of the corresponding component.
 - ```config``` provides functionality to configure the classes of a component from xml files.
 - ```impl``` contains implementation of a component which is not part of its interface and used only internally.
 
-The hierarchical dependencies of different components is as follows:
-
-\image html component-dependencies.png
 
 */

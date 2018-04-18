@@ -1,5 +1,5 @@
-#ifndef PRECICE_ACTION_PYTHONACTION_HPP_
-#define PRECICE_ACTION_PYTHONACTION_HPP_
+#pragma once
+#ifndef PRECICE_NO_PYTHON
 
 #include "action/Action.hpp"
 #include "mesh/SharedPointer.hpp"
@@ -7,16 +7,13 @@
 #include <string>
 
 struct _object;
-typedef _object PyObject;
+using PyObject = _object;
 
-// ----------------------------------------------------------- CLASS DEFINITION
 
 namespace precice {
 namespace action {
 
-/**
- * @brief Action whose implementation is given in a Python file.
- */
+/// Action whose implementation is given in a Python file.
 class PythonAction : public Action
 {
 public:
@@ -74,4 +71,4 @@ private:
 
 }} // namespace precice, action
 
-#endif /* PRECICE_ACTION_PYTHONACTION_HPP_ */
+#endif

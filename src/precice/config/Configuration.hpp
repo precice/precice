@@ -2,7 +2,7 @@
 
 #include "precice/config/SolverInterfaceConfiguration.hpp"
 #include "logging/config/LogConfiguration.hpp"
-#include "utils/xml/XMLTag.hpp"
+#include "xml/XMLTag.hpp"
 #include "logging/Logger.hpp"
 
 namespace precice {
@@ -14,7 +14,7 @@ namespace config {
  * The configuration process is triggered by fetching the root tag with method
  * getXMLTag() and calling its parse() method.
  */
-class Configuration : public utils::XMLTag::Listener
+class Configuration : public xml::XMLTag::Listener
 {
 public:
 
@@ -31,21 +31,21 @@ public:
   /**
    * @brief Returns root xml tag to start the automatic configuration process.
    */
-  utils::XMLTag& getXMLTag();
+  xml::XMLTag& getXMLTag();
 
   /**
    * @brief Callback function required for use of automatic configuration.
    *
    * @return True, if successful.
    */
-  virtual void xmlTagCallback ( utils::XMLTag& tag );
+  virtual void xmlTagCallback ( xml::XMLTag& tag );
 
   /**
    * @brief Callback function required for use of automatic configuration.
    *
    * @return True, if successful.
    */
-  virtual void xmlEndTagCallback ( utils::XMLTag& tag );
+  virtual void xmlEndTagCallback ( xml::XMLTag& tag );
 
   /**
    * @brief Returns solver interface configuration.
@@ -58,7 +58,7 @@ private:
   static logging::Logger _log;
 
   // @brief Root tag of preCICE configuration.
-  utils::XMLTag _tag;
+  xml::XMLTag _tag;
 
   LogConfiguration _logConfig;
 

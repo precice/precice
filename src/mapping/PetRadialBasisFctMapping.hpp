@@ -25,6 +25,10 @@ struct SolutionCaching;
 }}}
 
 namespace precice {
+extern bool testMode;
+}
+
+namespace precice {
 namespace mapping {
 
 namespace tests {
@@ -115,10 +119,10 @@ private:
 
   petsc::Vector rescalingCoeffs;
 
-  KSP _solver;
+  petsc::KSPSolver _solver;
 
   /// Used to solve the under-determined system for the separated polynomial.
-  KSP _QRsolver;
+  petsc::KSPSolver _QRsolver;
 
   ISLocalToGlobalMapping _ISmapping;
 
@@ -194,8 +198,8 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
   _matrixQ("Q"),
   _matrixA("A"),
   _matrixV("V"),
-  _solver(nullptr),
-  _QRsolver(nullptr),
+  _solver("Coefficient Solver"),
+  _QRsolver("QR Solver"),
   _ISmapping(nullptr),
   _solverRtol(solverRtol),
   _polynomial(polynomial),
@@ -221,11 +225,6 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
     assertion(false);
   }
 
-  if (_polynomial == Polynomial::SEPARATE and constraint == Constraint::CONSERVATIVE) {
-    WARN("Separated polynomial not supported with conservative mapping. Falling back to integrated polynomial.");
-    _polynomial = Polynomial::ON;
-  }
-
   // Count number of dead dimensions
   int deadDimensions = 0;
   for (int d = 0; d < dimensions; d++) {
@@ -234,9 +233,6 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
   polyparams =    (_polynomial == Polynomial::ON      ) ? 1 + dimensions - deadDimensions : 0;
   sepPolyparams = (_polynomial == Polynomial::SEPARATE) ? 1 + dimensions - deadDimensions : 0;
   localPolyparams = utils::Parallel::getProcessRank() > 0 ? 0 : polyparams;
-
-  KSPCreate(utils::Parallel::getGlobalCommunicator(), &_solver);
-  KSPCreate(utils::Parallel::getGlobalCommunicator(), &_QRsolver);
 }
 
 template<typename RADIAL_BASIS_FUNCTION_T>
@@ -244,8 +240,6 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::~PetRadialBasisFctMapping()
 {
   delete[] _deadAxis;
   petsc::destroy(&_ISmapping);
-  petsc::destroy(&_solver);
-  petsc::destroy(&_QRsolver);
 }
 
 
@@ -253,7 +247,9 @@ template<typename RADIAL_BASIS_FUNCTION_T>
 void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 {
   TRACE();
-  precice::utils::Event e(__func__);
+  precice::utils::Event e("PetRBF.computeMapping");
+
+  clear();
 
   if (_polynomial == Polynomial::ON) {
     DEBUG("Using integrated polynomial.");
@@ -301,28 +297,22 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   DEBUG("outMesh->vertices().size() = " << outMesh->vertices().size());
 
   // Matrix C: Symmetric, sparse matrix with n x n local size.
-  _matrixC.reset();
   _matrixC.init(n, n, PETSC_DETERMINE, PETSC_DETERMINE, MATSBAIJ);
   DEBUG("Set matrix C to local size " << n << " x " << n);
   ierr = MatSetOption(_matrixC, MAT_SYMMETRIC, PETSC_TRUE); CHKERRV(ierr);
   ierr = MatSetOption(_matrixC, MAT_SYMMETRY_ETERNAL, PETSC_TRUE); CHKERRV(ierr);
 
   // Matrix Q: Dense, holds the input mesh for the polynom if set to SEPERATE. Zero size otherwise
-  _matrixQ.reset();
   _matrixQ.init(n, PETSC_DETERMINE, PETSC_DETERMINE, sepPolyparams, MATDENSE);
   DEBUG("Set matrix Q to local size " << n << " x " << sepPolyparams);
 
   // Matrix V: Dense, holds the output mesh for polynom if set to SEPERATE. Zero size otherwise
-  _matrixV.reset();
   _matrixV.init(outputSize, PETSC_DETERMINE, PETSC_DETERMINE, sepPolyparams, MATDENSE);
   DEBUG("Set matrix V to local size " << outputSize << " x " << sepPolyparams);    
     
   // Matrix A: Sparse matrix with outputSize x n local size.
-  _matrixA.reset();
   _matrixA.init(outputSize, n, PETSC_DETERMINE, PETSC_DETERMINE, MATAIJ);
   DEBUG("Set matrix A to local size " << outputSize << " x " << n);
-
-  KSPReset(_solver);
 
   const int ownerRangeABegin = _matrixA.ownerRange().first;
   const int ownerRangeAEnd = _matrixA.ownerRange().second;
@@ -363,7 +353,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   ierr = ISDestroy(&ISpolyparams); CHKERRV(ierr);
   ierr = ISLocalToGlobalMappingDestroy(&ISpolyparamsMapping); CHKERRV(ierr);
 
-
   const PetscInt *mapIndizes;
   ISLocalToGlobalMappingGetIndices(_ISmapping, &mapIndizes);
   
@@ -373,7 +362,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   // to know where we have entries in the sparse matrix. This information petsc can use to
   // preallocate the matrix. In the second phase we actually fill the matrix.
 
-  // -- BEGIN PREALLOC LOOP FOR MATRIX C --
+  // Stores col -> value for each row;
   std::vector<std::vector<std::pair<int, double>>> vertexData;
    
   if (_preallocation == Preallocation::SAVED) {
@@ -388,7 +377,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   if (_preallocation == Preallocation::TREE) {
     vertexData = bgPreallocationMatrixC(inMesh);
   }
-
   
   // -- BEGIN FILL LOOP FOR MATRIX C --
   precice::utils::Event eFillC("PetRBF.fillC");
@@ -466,7 +454,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   ierr = MatAssemblyBegin(_matrixC, MAT_FINAL_ASSEMBLY); CHKERRV(ierr);
   ierr = MatAssemblyBegin(_matrixQ, MAT_FINAL_ASSEMBLY); CHKERRV(ierr);
 
-  
   if (_preallocation == Preallocation::SAVED) {
     vertexData = savedPreallocationMatrixA(inMesh, outMesh);
   }
@@ -479,7 +466,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   if (_preallocation == Preallocation::TREE) {
     vertexData = bgPreallocationMatrixA(inMesh, outMesh);
   }  
-
   
   // -- BEGIN FILL LOOP FOR MATRIX A --
   DEBUG("Begin filling matrix A.");
@@ -512,8 +498,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     if (_preallocation == Preallocation::SAVED or _preallocation == Preallocation::TREE) {
       const auto & rowVertices = vertexData[row - ownerRangeABegin];
       for (const auto & vertex : rowVertices) {
-        // std::cout << "Setting colNum = " << colNum << ", idx = " << vertex.first
-        // << " to " << _basisFunction.evaluate(vertex.second) << "\n";
         rowVals[colNum] = _basisFunction.evaluate(vertex.second);
         colIdx[colNum++] = vertex.first;
       }
@@ -538,7 +522,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   eFillA.stop();
   // -- END FILL LOOP FOR MATRIX A --
 
-  precice::utils::Event ePostFill("PetRBF.PostFill");
+  precice::utils::Event ePostFill("PetRBF.postFill");
   
   ierr = MatAssemblyBegin(_matrixA, MAT_FINAL_ASSEMBLY); CHKERRV(ierr);
 
@@ -579,15 +563,15 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     ierr = MatCreateVecs(_matrixC, nullptr, &rescalingCoeffs.vector); CHKERRV(ierr);
     VecSet(rhs, 1);
     rhs.assemble();
-    ierr = KSPSolve(_solver, rhs, rescalingCoeffs); CHKERRV(ierr);
+    _solver.solve(rhs, rescalingCoeffs);
   }
 
   _hasComputedMapping = true;
 
-  INFO("Number of mallocs for matrix C = " << _matrixC.getInfo(MAT_LOCAL).mallocs);
-  INFO("Non-zeros allocated / used / unused for matrix C = " << _matrixC.getInfo(MAT_LOCAL).nz_allocated << " / " << _matrixC.getInfo(MAT_LOCAL).nz_used << " / " << _matrixC.getInfo(MAT_LOCAL).nz_unneeded);
-  INFO("Number of mallocs for matrix A = " << _matrixA.getInfo(MAT_LOCAL).mallocs);
-  INFO("Non-zeros allocated / used / unused for matrix A = " << _matrixA.getInfo(MAT_LOCAL).nz_allocated << " / " << _matrixA.getInfo(MAT_LOCAL).nz_used << " / " << _matrixA.getInfo(MAT_LOCAL).nz_unneeded);
+  DEBUG("Number of mallocs for matrix C = " << _matrixC.getInfo(MAT_LOCAL).mallocs);
+  DEBUG("Non-zeros allocated / used / unused for matrix C = " << _matrixC.getInfo(MAT_LOCAL).nz_allocated << " / " << _matrixC.getInfo(MAT_LOCAL).nz_used << " / " << _matrixC.getInfo(MAT_LOCAL).nz_unneeded);
+  DEBUG("Number of mallocs for matrix A = " << _matrixA.getInfo(MAT_LOCAL).mallocs);
+  DEBUG("Non-zeros allocated / used / unused for matrix A = " << _matrixA.getInfo(MAT_LOCAL).nz_allocated << " / " << _matrixA.getInfo(MAT_LOCAL).nz_used << " / " << _matrixA.getInfo(MAT_LOCAL).nz_unneeded);
 }
 
 template<typename RADIAL_BASIS_FUNCTION_T>
@@ -603,12 +587,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: clear()
   _matrixA.reset();
   _matrixQ.reset();
   _matrixV.reset();
-  
-  petsc::destroy(&_solver);
-  KSPCreate(utils::Parallel::getGlobalCommunicator(), &_solver);
 
-  petsc::destroy(&_QRsolver);
-  KSPCreate(utils::Parallel::getGlobalCommunicator(), &_QRsolver);
+  _solver.reset();
+  _QRsolver.reset();
 
   petsc::destroy(&_ISmapping);
   
@@ -620,14 +601,13 @@ template<typename RADIAL_BASIS_FUNCTION_T>
 void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int outputDataID)
 {
   TRACE(inputDataID, outputDataID);
-  precice::utils::Event e(__func__);
+  precice::utils::Event e("PetRBF.map");
   
   assertion(_hasComputedMapping);
   assertion(input()->getDimensions() == output()->getDimensions(),
             input()->getDimensions(), output()->getDimensions());
 
   PetscErrorCode ierr = 0;
-  KSPConvergedReason convReason;
   auto& inValues = input()->data(inputDataID)->values();
   auto& outValues = output()->data(outputDataID)->values();
 
@@ -645,7 +625,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
   
       for (size_t i = 0; i < input()->vertices().size(); i++ ) {
         int globalIndex = input()->vertices()[i].getGlobalIndex();
-        VecSetValue(in, globalIndex, inValues[i*valueDim + dim], INSERT_VALUES); // Dies besser als VecSetValuesLocal machen
+        VecSetValue(in, globalIndex, inValues[i*valueDim + dim], INSERT_VALUES);
       }
       in.assemble();
 
@@ -656,22 +636,31 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
                                  std::forward_as_tuple(inputDataID + outputDataID * 10 + dim * 100),
                                  std::forward_as_tuple(_matrixC, "out"))
         )->second;
-      
-      ierr = MatMultTranspose(_matrixA, in, au); CHKERRV(ierr);
-      utils::Event eSolve("PetRBF.solve.conservative");
-      ierr = KSPSolve(_solver, au, out); CHKERRV(ierr);
-      eSolve.stop();
-      
-      PetscInt iterations;
-      KSPGetIterationNumber(_solver, &iterations);
-      utils::EventRegistry::setProp("PetRBF.its.conservative", iterations);
-      
-      ierr = KSPGetConvergedReason(_solver, &convReason); CHKERRV(ierr);
-      if (convReason < 0) {
-        KSPView(_solver, PETSC_VIEWER_STDOUT_WORLD);
-        ERROR("RBF linear system has not converged.");
+
+      if (_polynomial == Polynomial::SEPARATE) {
+        petsc::Vector epsilon(_matrixV, "epsilon", petsc::Vector::RIGHT);
+        ierr = MatMultTranspose(_matrixV, in, epsilon); CHKERRV(ierr);
+        petsc::Vector eta(_matrixA, "eta", petsc::Vector::RIGHT);
+        ierr = MatMultTranspose(_matrixA, in, eta); CHKERRV(ierr);
+        petsc::Vector mu(_matrixC, "mu", petsc::Vector::LEFT);
+        _solver.solve(eta, mu);
+        VecScale(epsilon, -1);
+        petsc::Vector tau(_matrixQ, "tau", petsc::Vector::RIGHT);
+        ierr = MatMultTransposeAdd(_matrixQ, mu, epsilon, tau); CHKERRV(ierr);
+        petsc::Vector sigma(_matrixQ, "sigma", petsc::Vector::LEFT);
+        ierr = KSPSolveTranspose(_QRsolver, tau, sigma); CHKERRV(ierr);
+        VecWAXPY(out, -1, sigma, mu);
       }
-            
+      else {
+        ierr = MatMultTranspose(_matrixA, in, au); CHKERRV(ierr);
+        utils::Event eSolve("PetRBF.solve.conservative");
+        if (not _solver.solve(au, out)) {
+          KSPView(_solver, PETSC_VIEWER_STDOUT_WORLD);
+          ERROR("RBF linear system has not converged.");
+        }
+        eSolve.stop();
+
+      }   
       VecChop(out, 1e-9);
 
       // Copy mapped data to output data values
@@ -707,15 +696,13 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
       // Fill input from input data values
       int count = 0;
       for (const auto& vertex : input()->vertices()) {
-        ierr = VecSetValueLocal(in, vertex.getGlobalIndex()+polyparams, inValues[count*valueDim + dim], INSERT_VALUES); CHKERRV(ierr); // evtl. besser als VecSetValuesLocal
+        ierr = VecSetValueLocal(in, vertex.getGlobalIndex()+polyparams, inValues[count*valueDim + dim], INSERT_VALUES); CHKERRV(ierr);
         count++;
       }
       in.assemble();
             
       if (_polynomial == Polynomial::SEPARATE) {
-        KSPSolve(_QRsolver, in, a);
-        ierr = KSPGetConvergedReason(_QRsolver, &convReason); CHKERRV(ierr);
-        if (convReason < 0) {
+        if (not _QRsolver.solve(in, a)) {
           KSPView(_QRsolver, PETSC_VIEWER_STDOUT_WORLD);
           ERROR("Polynomial QR linear system has not converged.");
         }
@@ -730,19 +717,12 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
         )->second;
 
       utils::Event eSolve("PetRBF.solve.consistent");
-      ierr = KSPSolve(_solver, in, p); CHKERRV(ierr);
-      eSolve.stop();
-            
-      PetscInt iterations;
-      KSPGetIterationNumber(_solver, &iterations);
-      utils::EventRegistry::setProp("PetRBF.its.consistent", iterations);
-
-      ierr = KSPGetConvergedReason(_solver, &convReason); CHKERRV(ierr);
-      if (convReason < 0) {
+      if (not _solver.solve(in, p)) {
         KSPView(_solver, PETSC_VIEWER_STDOUT_WORLD);
         ERROR("RBF linear system has not converged.");
       }
-
+      eSolve.stop();
+      
       ierr = MatMult(_matrixA, p, out); CHKERRV(ierr);
 
       if (useRescaling and (_polynomial == Polynomial::SEPARATE)) {
@@ -851,13 +831,15 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
 template <typename RADIAL_BASIS_FUNCTION_T>
 void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::printMappingInfo(int inputDataID, int dim) const
 {
-  const std::string constraintName = getConstraint() == CONSERVATIVE ? "conservative" : "consistent";
-  const std::string polynomialName = _polynomial == Polynomial::ON ? "on" : _polynomial == Polynomial::OFF ? "off" : "separate";
+  if (not precice::testMode) {
+    const std::string constraintName = getConstraint() == CONSERVATIVE ? "conservative" : "consistent";
+    const std::string polynomialName = _polynomial == Polynomial::ON ? "on" : _polynomial == Polynomial::OFF ? "off" : "separate";
 
-  INFO("Mapping " << input()->data(inputDataID)->getName() << " " << constraintName
-       << " from " << input()->getName() << " (ID " << input()->getID() << ")"
-       << " to " << output()->getName() << " (ID " << output()->getID() << ") "
-       << "for dimension " << dim << ") with polynomial set to " << polynomialName);
+    INFO("Mapping " << input()->data(inputDataID)->getName() << " " << constraintName
+         << " from " << input()->getName() << " (ID " << input()->getID() << ")"
+         << " to " << output()->getName() << " (ID " << output()->getID() << ") "
+         << "for dimension " << dim << ") with polynomial set to " << polynomialName);
+  }
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
@@ -875,7 +857,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::estimatePreallocationMat
   auto meshSize = mesh->vertices().size();
   
   double meshArea = 1;
-  WARN(bbox);
+  // WARN(bbox);
   for (int d = 0; d < getDimensions(); d++)
     if (not _deadAxis[d])
       meshArea *= bbox[d].second - bbox[d].first;
@@ -920,7 +902,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::estimatePreallocationMat
   auto meshSize = mesh->vertices().size();
   
   double meshArea = 1;
-  WARN(bbox);
+  // WARN(bbox);
   for (int d = 0; d < getDimensions(); d++)
     if (not _deadAxis[d])
       meshArea *= bbox[d].second - bbox[d].first;
@@ -954,7 +936,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::estimatePreallocationMat
 template <typename RADIAL_BASIS_FUNCTION_T>
 void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computePreallocationMatrixC(const mesh::PtrMesh inMesh)
 {
-  precice::utils::Event ePreallocC("PetRBF.PreallocC");
+  precice::utils::Event ePreallocC("PetRBF.preallocC");
 
   PetscInt n, ierr;
   
@@ -969,7 +951,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computePreallocationMatr
   PetscInt colOwnerRangeCBegin, colOwnerRangeCEnd;
   std::tie(colOwnerRangeCBegin, colOwnerRangeCEnd) = _matrixC.ownerRangeColumn();
 
-  int local_row = 0;
+  size_t local_row = 0;
   // -- PREALLOCATES THE POLYNOMIAL PART OF THE MATRIX --
   if (_polynomial == Polynomial::ON) {
     for (local_row = 0; local_row < localPolyparams; local_row++) {
@@ -1032,7 +1014,7 @@ template <typename RADIAL_BASIS_FUNCTION_T>
 void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computePreallocationMatrixA(
   const mesh::PtrMesh inMesh, const mesh::PtrMesh outMesh)
 {  
-  precice::utils::Event ePreallocA("PetRBF.PreallocA");
+  precice::utils::Event ePreallocA("PetRBF.preallocA");
 
   PetscInt ownerRangeABegin, ownerRangeAEnd, colOwnerRangeABegin, colOwnerRangeAEnd;
   PetscInt outputSize, ierr;
@@ -1112,9 +1094,9 @@ template <typename RADIAL_BASIS_FUNCTION_T>
 std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::savedPreallocationMatrixC(
   const mesh::PtrMesh inMesh)
 {
-  precice::utils::Event ePreallocC("PetRBF.PreallocC");
+  precice::utils::Event ePreallocC("PetRBF.preallocC");
 
-  PetscInt n, ierr;
+  PetscInt n;
   
   const PetscInt *mapIndizes;
   ISLocalToGlobalMappingGetIndices(_ISmapping, &mapIndizes);
@@ -1129,7 +1111,7 @@ std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL
 
   std::vector<std::vector<std::pair<int, double>>> vertexData(n - localPolyparams);
   
-  int local_row = 0;
+  size_t local_row = 0;
   // -- PREALLOCATES THE POLYNOMIAL PART OF THE MATRIX --
   if (_polynomial == Polynomial::ON) {
     for (local_row = 0; local_row < localPolyparams; local_row++) {
@@ -1173,12 +1155,12 @@ std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL
         
   if (utils::Parallel::getCommunicatorSize() == 1) {
     // std::cout << "Computed Preallocation C Seq diagonal = " << std::accumulate(d_nnz.begin(), d_nnz.end(), 0) << std::endl;
-    ierr = MatSeqSBAIJSetPreallocation(_matrixC, _matrixC.blockSize(), 0, d_nnz.data());
+    MatSeqSBAIJSetPreallocation(_matrixC, _matrixC.blockSize(), 0, d_nnz.data());
   }
   else {
     // std::cout << "Computed Preallocation C MPI diagonal = " << std::accumulate(d_nnz.begin(), d_nnz.end(), 0)
     //           << ", off-diagonal = " << std::accumulate(o_nnz.begin(), o_nnz.end(), 0) << std::endl;
-    ierr = MatMPISBAIJSetPreallocation(_matrixC, _matrixC.blockSize(), 0, d_nnz.data(), 0, o_nnz.data());
+    MatMPISBAIJSetPreallocation(_matrixC, _matrixC.blockSize(), 0, d_nnz.data(), 0, o_nnz.data());
   }
   MatSetOption(_matrixC, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_TRUE);
   ISLocalToGlobalMappingRestoreIndices(_ISmapping, &mapIndizes);
@@ -1193,10 +1175,10 @@ std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL
   const mesh::PtrMesh inMesh, const mesh::PtrMesh outMesh)
 {
   INFO("Using saved preallocation");
-  precice::utils::Event ePreallocA("PetRBF.PreallocA");
+  precice::utils::Event ePreallocA("PetRBF.preallocA");
 
   PetscInt ownerRangeABegin, ownerRangeAEnd, colOwnerRangeABegin, colOwnerRangeAEnd;
-  PetscInt outputSize, n, ierr;
+  PetscInt outputSize, n;
   
   const PetscInt *mapIndizes;
   ISLocalToGlobalMappingGetIndices(_ISmapping, &mapIndizes);
@@ -1257,12 +1239,12 @@ std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL
   }
   if (utils::Parallel::getCommunicatorSize() == 1) {
     // std::cout << "Preallocation A Seq diagonal = " << std::accumulate(d_nnz.begin(), d_nnz.end(), 0) << std::endl;
-    ierr = MatSeqAIJSetPreallocation(_matrixA, 0, d_nnz.data());
+    MatSeqAIJSetPreallocation(_matrixA, 0, d_nnz.data());
   }
   else {
     // std::cout << "Preallocation A MPI diagonal = " << std::accumulate(d_nnz.begin(), d_nnz.end(), 0)
     //           << ", off-diagonal = " << std::accumulate(o_nnz.begin(), o_nnz.end(), 0) << std::endl;
-    ierr = MatMPIAIJSetPreallocation(_matrixA, 0, d_nnz.data(), 0, o_nnz.data());
+    MatMPIAIJSetPreallocation(_matrixA, 0, d_nnz.data(), 0, o_nnz.data());
   }
   MatSetOption(_matrixA, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_TRUE);
 
@@ -1277,10 +1259,10 @@ std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL
   const mesh::PtrMesh inMesh)
 {
   INFO("Using tree-based preallocation for matrix C");
-  precice::utils::Event ePreallocC("PetRBF.PreallocC");
+  precice::utils::Event ePreallocC("PetRBF.preallocC");
   namespace bg = boost::geometry;
   
-  PetscInt n, ierr;
+  PetscInt n;
 
   auto tree = mesh::rtree::getVertexRTree(inMesh);
   double supportRadius = _basisFunction.getSupportRadius();
@@ -1298,7 +1280,7 @@ std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL
 
   std::vector<std::vector<std::pair<int, double>>> vertexData(n - localPolyparams);
   
-  int local_row = 0;
+  size_t local_row = 0;
   // -- PREALLOCATES THE POLYNOMIAL PART OF THE MATRIX --
   if (_polynomial == Polynomial::ON) {
     for (local_row = 0; local_row < localPolyparams; local_row++) {
@@ -1350,10 +1332,10 @@ std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL
   }
   
   if (utils::Parallel::getCommunicatorSize() == 1) {
-    ierr = MatSeqSBAIJSetPreallocation(_matrixC, _matrixC.blockSize(), 0, d_nnz.data());
+    MatSeqSBAIJSetPreallocation(_matrixC, _matrixC.blockSize(), 0, d_nnz.data());
   }
   else {
-    ierr = MatMPISBAIJSetPreallocation(_matrixC, _matrixC.blockSize(), 0, d_nnz.data(), 0, o_nnz.data());
+    MatMPISBAIJSetPreallocation(_matrixC, _matrixC.blockSize(), 0, d_nnz.data(), 0, o_nnz.data());
   }
   MatSetOption(_matrixC, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_TRUE);
   ISLocalToGlobalMappingRestoreIndices(_ISmapping, &mapIndizes);
@@ -1368,11 +1350,11 @@ std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL
   const mesh::PtrMesh inMesh, const mesh::PtrMesh outMesh)
 {
   INFO("Using tree-based preallocation for matrix A");
-  precice::utils::Event ePreallocA("PetRBF.PreallocA");
+  precice::utils::Event ePreallocA("PetRBF.preallocA");
   namespace bg = boost::geometry;
   
   PetscInt ownerRangeABegin, ownerRangeAEnd, colOwnerRangeABegin, colOwnerRangeAEnd;
-  PetscInt outputSize, n, ierr;
+  PetscInt outputSize, n;
   auto tree = mesh::rtree::getVertexRTree(inMesh);
   double supportRadius = _basisFunction.getSupportRadius();
   
@@ -1443,10 +1425,10 @@ std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL
     }
   }
   if (utils::Parallel::getCommunicatorSize() == 1) {
-    ierr = MatSeqAIJSetPreallocation(_matrixA, 0, d_nnz.data());
+    MatSeqAIJSetPreallocation(_matrixA, 0, d_nnz.data());
   }
   else {
-    ierr = MatMPIAIJSetPreallocation(_matrixA, 0, d_nnz.data(), 0, o_nnz.data());
+    MatMPIAIJSetPreallocation(_matrixA, 0, d_nnz.data(), 0, o_nnz.data());
   }
   MatSetOption(_matrixA, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_TRUE);
 

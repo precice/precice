@@ -1,21 +1,23 @@
 #pragma once
 
+#include <Eigen/Core>
 #include "PostProcessing.hpp"
 #include "logging/Logger.hpp"
-#include <Eigen/Core>
 
 #include <map>
 
-namespace precice {
-namespace cplscheme {
-namespace impl {
+namespace precice
+{
+namespace cplscheme
+{
+namespace impl
+{
 
-class AitkenPostProcessing: public PostProcessing
+class AitkenPostProcessing : public PostProcessing
 {
 public:
-
   AitkenPostProcessing(
-      double initialRelaxationFactor,
+      double           initialRelaxationFactor,
       std::vector<int> dataIDs);
 
   virtual ~AitkenPostProcessing() {}
@@ -26,21 +28,20 @@ public:
   }
 
   virtual void setDesignSpecification(
-      Eigen::VectorXd& q);
+      Eigen::VectorXd &q);
 
-  virtual std::map<int, Eigen::VectorXd> getDesignSpecification(DataMap& cplData);
+  virtual std::map<int, Eigen::VectorXd> getDesignSpecification(DataMap &cplData);
 
   virtual void initialize(
-      DataMap& cpldata);
+      DataMap &cpldata);
 
   virtual void performPostProcessing(
-      DataMap& cpldata);
+      DataMap &cpldata);
 
   virtual void iterationsConverged(
-      DataMap& cpldata);
+      DataMap &cpldata);
 
 private:
-
   static logging::Logger _log;
 
   double _initialRelaxation;
@@ -55,8 +56,6 @@ private:
 
   Eigen::VectorXd _designSpecification;
 };
-
 }
 }
 } // namespace precice, cplscheme, impl
-

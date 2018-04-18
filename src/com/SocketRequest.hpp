@@ -1,7 +1,5 @@
+#pragma once
 #ifndef PRECICE_NO_SOCKETS
-
-#ifndef PRECICE_COM_SOCKET_REQUEST_HPP_
-#define PRECICE_COM_SOCKET_REQUEST_HPP_
 
 #include "Request.hpp"
 
@@ -29,9 +27,7 @@ private:
   std::condition_variable _completeCondition;
   std::mutex              _completeMutex;
 };
-}
-} // namespace precice, com
-
-#endif /* PRECICE_COM_SOCKET_REQUEST_HPP_ */
+} // namespace com
+} // namespace precice
 
 #endif // not PRECICE_NO_SOCKETS

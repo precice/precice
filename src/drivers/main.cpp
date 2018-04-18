@@ -1,11 +1,9 @@
 #include "utils/Globals.hpp"
-#include "tarch/logging/Log.h"
 #include "utils/Parallel.hpp"
 #include "utils/Petsc.hpp"
-#include "tarch/configuration/ConfigurationRegistry.h"
-#include "tarch/configuration/TopLevelConfiguration.h"
 #include "precice/impl/SolverInterfaceImpl.hpp"
 #include "precice/config/Configuration.hpp"
+
 #include <iostream>
 
 #include "logging/Logger.hpp"
@@ -16,7 +14,6 @@ extern bool testMode;
 void printUsage()
 {
   std::cout << "Usage:" << std::endl << std::endl;
-  std::cout << "Run tests               :  binprecice test ConfigurationName [LogConfFile]" << std::endl;
   std::cout << "Run server (deprecated) :  binprecice server ParticipantName ConfigurationName [LogConfFile]" << std::endl;
   std::cout << "Print XML reference     :  binprecice xml" << std::endl;
 }
@@ -39,17 +36,20 @@ void printMPITestWarning(){
 
 int main ( int argc, char** argv )
 {
-  using namespace tarch::configuration;
-  
   bool runTests = false;
   bool runServer = false;
   bool runHelp = false;
+  bool runDtd = false;
   bool hasLogConfFile = false;
 
   bool wrongParameters = true;
 
   if (argc >= 2) {
     std::string action(argv[1]);
+    if ( action == "dtd" and argc >= 2 ) {
+      wrongParameters = false;
+      runDtd = true;
+    }
     if ( action == "xml" and argc >= 2 ) {
       wrongParameters = false;
       runHelp = true;
@@ -58,14 +58,6 @@ int main ( int argc, char** argv )
       wrongParameters = false;
       runServer = true;
       if (argc >= 5){
-        hasLogConfFile = true;
-      }
-    }
-    if ( action == "test" and argc >= 3 ) {
-      wrongParameters = false;
-      runTests = true;
-      precice::testMode = true;
-      if (argc >= 4){
         hasLogConfFile = true;
       }
     }
@@ -87,36 +79,7 @@ int main ( int argc, char** argv )
 
   precice::utils::Petsc::initialize(&argc, &argv);
 
-  if (runTests){
-    assertion(not runServer);
-    assertion(not runHelp);
-    PRECICE_MASTER_ONLY{
-      std::cout << "PreCICE running tests..." << std::endl;
-    }
-    std::string configFile(argv[2]);
-    PRECICE_MASTER_ONLY{
-      std::cout << "   Configuration file = " << configFile << std::endl;
-      std::cout << "   Path to sources = " << precice::utils::getPathToSources() << std::endl;
-    }
-    ConfigurationRegistry::getInstance().initTopLevelConfigurationFactories();
-    std::list<TopLevelConfiguration*> configs =
-      ConfigurationRegistry::getInstance().readFile(configFile, "configuration");
-    if (configs.empty()) {
-      std::cerr << "Config file " << configFile << " not found or invalid!" << std::endl;
-      return 1;
-    }
-    printMPITestWarning();
-    int errors = 0;
-    for (TopLevelConfiguration* config : configs ) {
-      errors += config->interpreteConfiguration();
-    }
-    ConfigurationRegistry::getInstance().freeConfigurations(configs);
-    printMPITestWarning();
-    if (errors != 0) {
-      return 1;
-    }
-  }
-  else if ( runServer ){
+  if ( runServer ){
     assertion(not runTests);
     assertion(not runHelp);
     std::cout << "PreCICE running server..." << std::endl;
@@ -138,6 +101,12 @@ int main ( int argc, char** argv )
     assertion(not runTests);
     precice::config::Configuration config;
     std::cout << config.getXMLTag().printDocumentation(0) << std::endl << std::endl;
+  }
+  else if (runDtd) {
+	assertion(not runServer);
+    assertion(not runTests);
+    precice::config::Configuration config;
+    std::cout << config.getXMLTag().printDTD(true) << std::endl << std::endl;
   }
   else {
     assertion ( false );

@@ -1,189 +1,164 @@
-#include "ImportVRMLTest.hpp"
-#include "io/ImportVRML.hpp"
+#ifndef PRECICE_NO_SPIRIT2
+
+#include <Eigen/Core>
 #include "io/ExportVTK.hpp"
-#include "mesh/SharedPointer.hpp"
-#include "mesh/Data.hpp"
-#include "mesh/Vertex.hpp"
+#include "io/ImportVRML.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Mesh.hpp"
+#include "mesh/SharedPointer.hpp"
+#include "mesh/Vertex.hpp"
+#include "testing/Testing.hpp"
 #include "utils/Globals.hpp"
-#include <Eigen/Core>
-#include "math/math.hpp"
 
-#include "tarch/tests/TestCaseFactory.h"
-registerTest(precice::io::tests::ImportVRMLTest)
+BOOST_AUTO_TEST_SUITE(IOTests)
 
-namespace precice {
-namespace io {
-namespace tests {
+using namespace precice;
+using namespace precice::io;
 
-logging::Logger ImportVRMLTest:: _log ( "precice::io::ImportVRMLTest" );
+struct SetPathFixture {
+  std::string testPath;
 
-ImportVRMLTest::ImportVRMLTest ()
-:
-   TestCase ( "io::ImportVRMLTest" ),
-   _pathToTests ()
-{}
-
-void ImportVRMLTest:: setUp ()
-{
-  _pathToTests = utils::getPathToSources() + "/io/tests/";
-}
-
-void ImportVRMLTest:: run ()
-{
-# ifndef PRECICE_NO_SPIRIT2
-  PRECICE_MASTER_ONLY {
-    testMethod(testImportSquare);
-    testMethod(testImportCube);
-    testMethod(testImportSphere);
-    testMethod(testImportApe);
-    testMethod(testImportBunny);
-    testMethod(testImportDragon);
-    testMethod(testImportReactorPipe);
+  SetPathFixture()
+      : testPath(utils::getPathToSources() + "/io/tests/")
+  {
   }
-# endif // not PRECICE_NO_SPIRIT2
-}
+};
 
-void ImportVRMLTest:: testImportSquare()
+BOOST_FIXTURE_TEST_SUITE(VRMLImport, SetPathFixture)
+
+BOOST_AUTO_TEST_CASE(ImportSquare)
 {
-  TRACE();
-  int dim = 2;
-  mesh::Mesh mesh("MyMesh", dim, false);
-  mesh::PtrData dataForces = mesh.createData("Forces", dim);
-  int dataIDForces = dataForces->getID();
-  mesh::PtrData dataVelocities = mesh.createData("Velocities", dim);
-  int dataIDVelocities = dataVelocities->getID();
+  int           dim = 2;
+  mesh::Mesh    mesh("MyMesh", dim, false);
+  mesh::PtrData dataForces       = mesh.createData("Forces", dim);
+  int           dataIDForces     = dataForces->getID();
+  mesh::PtrData dataVelocities   = mesh.createData("Velocities", dim);
+  int           dataIDVelocities = dataVelocities->getID();
   mesh.setSubID("test-subid");
 
-  ImportVRML in(_pathToTests);
+  ImportVRML in(testPath);
   in.doImportCheckpoint("ImportVRMLTest2D.wrl", mesh, true);
 
-  validateEquals(mesh.vertices().size(), 4);
-  validateEquals(mesh.edges().size(), 4);
+  BOOST_TEST(mesh.vertices().size() == 4);
+  BOOST_TEST(mesh.edges().size() == 4);
 
-  // Validate vertex coordinates
-  validate(math::equals(mesh.vertices()[0].getCoords(),Eigen::Vector2d(0.0, 0.0)));
-  validate(math::equals(mesh.vertices()[1].getCoords(),Eigen::Vector2d(1.0, 0.0)));
-  validate(math::equals(mesh.vertices()[2].getCoords(),Eigen::Vector2d(1.0, 1.0)));
-  validate(math::equals(mesh.vertices()[3].getCoords(),Eigen::Vector2d(0.0, 1.0)));
+  // BOOST_TEST vertex coordinates
+  BOOST_TEST(testing::equals(mesh.vertices()[0].getCoords(), Eigen::Vector2d(0.0, 0.0)));
+  BOOST_TEST(testing::equals(mesh.vertices()[1].getCoords(), Eigen::Vector2d(1.0, 0.0)));
+  BOOST_TEST(testing::equals(mesh.vertices()[2].getCoords(), Eigen::Vector2d(1.0, 1.0)));
+  BOOST_TEST(testing::equals(mesh.vertices()[3].getCoords(), Eigen::Vector2d(0.0, 1.0)));
 
-  // Validate edge vertex coordinates
-  validate(math::equals(mesh.edges()[0].vertex(0).getCoords(), Eigen::Vector2d(0.0, 0.0)));
-  validate(math::equals(mesh.edges()[0].vertex(1).getCoords(), Eigen::Vector2d(1.0, 0.0)));
-  validate(math::equals(mesh.edges()[1].vertex(0).getCoords(), Eigen::Vector2d(1.0, 0.0)));
-  validate(math::equals(mesh.edges()[1].vertex(1).getCoords(), Eigen::Vector2d(1.0, 1.0)));
-  validate(math::equals(mesh.edges()[2].vertex(0).getCoords(), Eigen::Vector2d(1.0, 1.0)));
-  validate(math::equals(mesh.edges()[2].vertex(1).getCoords(), Eigen::Vector2d(0.0, 1.0)));
-  validate(math::equals(mesh.edges()[3].vertex(0).getCoords(), Eigen::Vector2d(0.0, 1.0)));
-  validate(math::equals(mesh.edges()[3].vertex(1).getCoords(), Eigen::Vector2d(0.0, 0.0)));
+  // BOOST_TEST edge vertex coordinates
+  BOOST_TEST(testing::equals(mesh.edges()[0].vertex(0).getCoords(), Eigen::Vector2d(0.0, 0.0)));
+  BOOST_TEST(testing::equals(mesh.edges()[0].vertex(1).getCoords(), Eigen::Vector2d(1.0, 0.0)));
+  BOOST_TEST(testing::equals(mesh.edges()[1].vertex(0).getCoords(), Eigen::Vector2d(1.0, 0.0)));
+  BOOST_TEST(testing::equals(mesh.edges()[1].vertex(1).getCoords(), Eigen::Vector2d(1.0, 1.0)));
+  BOOST_TEST(testing::equals(mesh.edges()[2].vertex(0).getCoords(), Eigen::Vector2d(1.0, 1.0)));
+  BOOST_TEST(testing::equals(mesh.edges()[2].vertex(1).getCoords(), Eigen::Vector2d(0.0, 1.0)));
+  BOOST_TEST(testing::equals(mesh.edges()[3].vertex(0).getCoords(), Eigen::Vector2d(0.0, 1.0)));
+  BOOST_TEST(testing::equals(mesh.edges()[3].vertex(1).getCoords(), Eigen::Vector2d(0.0, 0.0)));
 
   // Validate data sets
-  Eigen::VectorXd& forces = mesh.data(dataIDForces)->values();
-  validateNumericalEquals(forces(0), 1.0);
-  validateNumericalEquals(forces(1), 1.0);
-  validateNumericalEquals(forces(6), 4.0);
-  validateNumericalEquals(forces(7), 4.0);
-  Eigen::VectorXd& velocities = mesh.data(dataIDVelocities)->values();
-  validateNumericalEquals(velocities(0), 4.0);
-  validateNumericalEquals(velocities(1), 4.0);
-  validateNumericalEquals(velocities(6), 1.0);
-  validateNumericalEquals(velocities(7), 1.0);
+  Eigen::VectorXd &forces = mesh.data(dataIDForces)->values();
+  BOOST_TEST(forces(0) == 1.0);
+  BOOST_TEST(forces(1) == 1.0);
+  BOOST_TEST(forces(6) == 4.0);
+  BOOST_TEST(forces(7) == 4.0);
+  Eigen::VectorXd &velocities = mesh.data(dataIDVelocities)->values();
+  BOOST_TEST(velocities(0) == 4.0);
+  BOOST_TEST(velocities(1) == 4.0);
+  BOOST_TEST(velocities(6) == 1.0);
+  BOOST_TEST(velocities(7) == 1.0);
 
   // Compute mesh state and export to vtk file
   mesh.computeState();
-  bool exportNormals = true;
-  ExportVTK out(exportNormals);
+  bool        exportNormals = true;
+  ExportVTK   out(exportNormals);
   std::string location = "";
-  out.doExport("ImportVRMLTest2D",location, mesh);
+  out.doExport("io-VRMLImport-Square", location, mesh);
 }
 
-void ImportVRMLTest:: testImportCube()
+BOOST_AUTO_TEST_CASE(ImportCube)
 {
-  TRACE();
-  using namespace mesh;
-  int dim = 3;
-  Mesh mesh("MyMesh", dim, false);
-  mesh::PtrData dataForces = mesh.createData("Forces", dim);
+  int           dim = 3;
+  mesh::Mesh    mesh("MyMesh", dim, false);
+  mesh::PtrData dataForces     = mesh.createData("Forces", dim);
   mesh::PtrData dataVelocities = mesh.createData("Velocities", dim);
-  ImportVRML in(_pathToTests);
+  ImportVRML    in(testPath);
   in.doImportCheckpoint("ImportVRMLTest-Cube.wrl", mesh, true);
   mesh.computeState();
-  bool exportNormals = true;
-  ExportVTK out(exportNormals);
+  bool        exportNormals = true;
+  ExportVTK   out(exportNormals);
   std::string location = "";
-  out.doExport("ImportVRMLTest-Cube", location, mesh);
+  out.doExport("io-ImportVRML-Cube", location, mesh);
 }
 
-void ImportVRMLTest:: testImportSphere()
+BOOST_AUTO_TEST_CASE(ImportSphere)
 {
-  TRACE();
-  int dim = 3;
+  int        dim = 3;
   mesh::Mesh mesh("MyMesh", dim, false);
-  ImportVRML in(_pathToTests);
+  ImportVRML in(testPath);
   in.doImport("ImportVRMLTest-Sphere.wrl", mesh);
   mesh.computeState();
-  bool exportNormals = true;
-  ExportVTK out(exportNormals);
+  bool        exportNormals = true;
+  ExportVTK   out(exportNormals);
   std::string location = "";
-  out.doExport("ImportVRMLTest-Sphere",location, mesh);
+  out.doExport("io-VRMLImport-Sphere", location, mesh);
 }
 
-void ImportVRMLTest:: testImportApe ()
+BOOST_AUTO_TEST_CASE(ImportApe)
 {
-  TRACE();
-  int dim = 3;
+  int        dim = 3;
   mesh::Mesh mesh("MyMesh", dim, false);
-  ImportVRML in(_pathToTests);
+  ImportVRML in(testPath);
   in.doImport("ImportVRMLTest-Ape.wrl", mesh);
   mesh.computeState();
-  bool exportNormals = true;
-  ExportVTK out(exportNormals);
+  bool        exportNormals = true;
+  ExportVTK   out(exportNormals);
   std::string location = "";
-  out.doExport("ImportVRMLTest-Ape", location, mesh);
+  out.doExport("io-VRMLImport-Ape", location, mesh);
 }
 
-void ImportVRMLTest:: testImportBunny()
+BOOST_AUTO_TEST_CASE(ImportBunny)
 {
-  TRACE();
-  int dim = 3;
+  int        dim = 3;
   mesh::Mesh mesh("MyMesh", dim, false);
-  ImportVRML in(_pathToTests);
+  ImportVRML in(testPath);
   in.doImport("ImportVRMLTest-Bunny.wrl", mesh);
   mesh.computeState();
-  bool exportNormals = true;
-  ExportVTK out(exportNormals);
+  bool        exportNormals = true;
+  ExportVTK   out(exportNormals);
   std::string location = "";
-  out.doExport("ImportVRMLTest-Bunny", location, mesh);
+  out.doExport("io-VRMLImport-Bunny", location, mesh);
 }
 
-void ImportVRMLTest:: testImportDragon()
+BOOST_AUTO_TEST_CASE(ImportDragon)
 {
-  TRACE();
-  int dim = 3;
+  int        dim = 3;
   mesh::Mesh mesh("MyMesh", dim, false);
-  ImportVRML in(_pathToTests);
+  ImportVRML in(testPath);
   in.doImport("ImportVRMLTest-Dragon.wrl", mesh);
   mesh.computeState();
-  bool exportNormals = true;
-  ExportVTK out(exportNormals);
+  bool        exportNormals = true;
+  ExportVTK   out(exportNormals);
   std::string location = "";
-  out.doExport("ImportVRMLTest-Dragon", location, mesh);
+  out.doExport("io-VRMLImport-Dragon", location, mesh);
 }
 
-void ImportVRMLTest:: testImportReactorPipe()
+BOOST_AUTO_TEST_CASE(ImportReactorPipe)
 {
-  TRACE();
-  int dim = 3;
+  int        dim = 3;
   mesh::Mesh mesh("MyMesh", dim, false);
-  ImportVRML in ( _pathToTests );
+  ImportVRML in(testPath);
   in.doImport("ImportVRMLTest-ReactorPipeCut.wrl", mesh);
   mesh.computeState();
-  bool exportNormals = true;
-  ExportVTK out(exportNormals);
+  bool        exportNormals = true;
+  ExportVTK   out(exportNormals);
   std::string location = "";
-  out.doExport("ImportVRMLTest-ReactorPipeCut", location, mesh);
+  out.doExport("io-VRMLImport-ReactorPipeCut", location, mesh);
 }
 
-}}} // namespace precice, io, tests
+BOOST_AUTO_TEST_SUITE_END() // ImportVRML
+BOOST_AUTO_TEST_SUITE_END() // IOTests
 
+#endif // not PRECICE_NO_SPIRIT2

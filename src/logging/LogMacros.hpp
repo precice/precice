@@ -11,6 +11,8 @@
 #include <boost/vmd/is_empty.hpp>
 
 #include <string>
+#include "utils/MasterSlave.hpp"
+
 
 #include "Tracer.hpp"
 
@@ -32,15 +34,13 @@
     LOG_LOCATION;                                                       \
     BOOST_LOG_SEV(_log, boost::log::trivial::severity_level::error)     \
       << message;                                                       \
-    std::abort();                                                       \
+    std::exit(-1);                                                        \
   } while (false)
 
 #define CHECK(check, message)                      \
   if ( !(check) ) {                                \
     ERROR(message);                                \
   }
-
-#define preciceCheck(check, methodname, message) CHECK(check, message)
 
 #ifdef NDEBUG 
 

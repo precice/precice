@@ -9,7 +9,6 @@ namespace math {
  * vector are a sequence of smaller vectors with length of result.
  * @param[in] vector Vector that is summed up
  * @param[in, out] result Vector which holds the sum and also defines the block sizes.
- * @todo Copy tests from tarch::la
  */
 template <typename DerivedA, typename DerivedB>
 void sumSubvectors (const Eigen::MatrixBase<DerivedA>& vector,

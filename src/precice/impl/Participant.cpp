@@ -10,7 +10,7 @@
 namespace precice {
 namespace impl {
 
-logging::Logger Participant:: _log ( "precice::impl::Participant" );
+logging::Logger Participant:: _log("impl::Participant" );
 
 int Participant:: _participantsSize = 0;
 
@@ -104,9 +104,9 @@ void Participant:: useMesh
 
   _usedMeshContexts.push_back ( context );
 
-  preciceCheck ( fromParticipant.empty() || (! provideMesh), "useMesh()",
-                 "Participant " << _name << " cannot receive and provide mesh "
-                 << mesh->getName() << " at the same time!" );
+  CHECK( fromParticipant.empty() || (! provideMesh),
+         "Participant " << _name << " cannot receive and provide mesh "
+         << mesh->getName() << " at the same time!" );
 }
 
 void Participant:: addWriteData
@@ -284,9 +284,9 @@ void Participant:: checkDuplicatedUse
   const mesh::PtrMesh& mesh )
 {
   assertion ( (int)_meshContexts.size() > mesh->getID() );
-  preciceCheck ( _meshContexts[mesh->getID()] == nullptr, "checkDuplicateUse()",
-                 "Mesh \"" << mesh->getName() << " cannot be used twice by "
-                 << "participant " << _name << "!" );
+  CHECK( _meshContexts[mesh->getID()] == nullptr,
+         "Mesh \"" << mesh->getName() << " cannot be used twice by "
+         << "participant " << _name << "!" );
 }
 
 void Participant:: checkDuplicatedData
@@ -295,9 +295,9 @@ void Participant:: checkDuplicatedData
 {
   TRACE(data->getID(), _dataContexts.size() );
   assertion ( data->getID() < (int)_dataContexts.size(), data->getID(), _dataContexts.size() );
-  preciceCheck ( _dataContexts[data->getID()] == nullptr, "checkDuplicatedData()",
-                 "Participant \"" << _name << "\" can read/write data \""
-                 << data->getName() << "\" only once!" );
+  CHECK ( _dataContexts[data->getID()] == nullptr,
+          "Participant \"" << _name << "\" can read/write data \""
+          << data->getName() << "\" only once!" );
 }
 
 bool Participant:: useServer()

@@ -1,9 +1,9 @@
 #include "DataConfiguration.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/PropertyContainer.hpp"
-#include "utils/xml/XMLAttribute.hpp"
-#include "utils/xml/ValidatorEquals.hpp"
-#include "utils/xml/ValidatorOr.hpp"
+#include "xml/XMLAttribute.hpp"
+#include "xml/ValidatorEquals.hpp"
+#include "xml/ValidatorOr.hpp"
 #include "utils/Globals.hpp"
 
 namespace precice {
@@ -14,7 +14,7 @@ logging::Logger DataConfiguration:: _log("mesh::DataConfiguration");
 
 DataConfiguration:: DataConfiguration
 (
-  utils::XMLTag& parent )
+  xml::XMLTag& parent )
 :
   TAG("data"),
   ATTR_NAME("name"),
@@ -24,7 +24,7 @@ DataConfiguration:: DataConfiguration
   _data(),
   _indexLastConfigured(-1)
 {
-  using namespace utils;
+  using namespace xml;
   std::string doc;
   XMLTag tagScalar(*this, VALUE_SCALAR, XMLTag::OCCUR_ARBITRARY, TAG);
   doc = "Defines a scalar data set to be assigned to meshes.";
@@ -70,7 +70,7 @@ DataConfiguration::ConfiguredData DataConfiguration:: getRecentlyConfiguredData(
 
 void DataConfiguration:: xmlTagCallback
 (
-  utils::XMLTag& tag )
+  xml::XMLTag& tag )
 {
   if (tag.getNamespace() == TAG){
     assertion(_dimensions != 0);
@@ -86,7 +86,7 @@ void DataConfiguration:: xmlTagCallback
 
 void DataConfiguration:: xmlEndTagCallback
 (
-  utils::XMLTag& tag )
+  xml::XMLTag& tag )
 {
 }
 
@@ -99,8 +99,7 @@ void DataConfiguration:: addData
 
   // Check, if data with same name has been added already
   for (auto & elem : _data) {
-    preciceCheck ( elem.name != data.name, "addData()",
-                   "Data \"" << data.name << "\" uses non-unique name!" );
+    CHECK ( elem.name != data.name, "Data \"" << data.name << "\" uses non-unique name!" );
   }
   _data.push_back ( data );
 }

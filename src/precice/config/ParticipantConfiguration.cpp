@@ -9,9 +9,9 @@
 #include "mapping/Mapping.hpp"
 #include "mapping/config/MappingConfiguration.hpp"
 #include "utils/Globals.hpp"
-#include "utils/xml/XMLAttribute.hpp"
-#include "utils/xml/ValidatorEquals.hpp"
-#include "utils/xml/ValidatorOr.hpp"
+#include "xml/XMLAttribute.hpp"
+#include "xml/ValidatorEquals.hpp"
+#include "xml/ValidatorOr.hpp"
 #include "utils/MasterSlave.hpp"
 #include "com/MPIDirectCommunication.hpp"
 #include "com/MPIPortsCommunication.hpp"
@@ -30,7 +30,7 @@ logging::Logger ParticipantConfiguration::
 
 ParticipantConfiguration:: ParticipantConfiguration
 (
-  utils::XMLTag&                              parent,
+  xml::XMLTag&                              parent,
   const mesh::PtrMeshConfiguration&           meshConfiguration)
 :
   TAG("participant"),
@@ -70,7 +70,7 @@ ParticipantConfiguration:: ParticipantConfiguration
   _watchPointConfigs()
 {
   assertion(_meshConfig.use_count() > 0);
-  using namespace utils;
+  using namespace xml;
   std::string doc;
   XMLTag tag(*this, TAG, XMLTag::OCCUR_ONCE_OR_MORE);
   doc = "Represents one solver using preCICE. At least two ";
@@ -343,7 +343,7 @@ void ParticipantConfiguration:: setDimensions
 
 void ParticipantConfiguration:: xmlTagCallback
 (
-  utils::XMLTag& tag )
+  xml::XMLTag& tag )
 {
   TRACE(tag.getName() );
   if (tag.getName() == TAG){
@@ -386,9 +386,9 @@ void ParticipantConfiguration:: xmlTagCallback
     std::string dataName = tag.getStringAttributeValue(ATTR_NAME);
     std::string meshName = tag.getStringAttributeValue(ATTR_MESH);
     mesh::PtrMesh mesh = _meshConfig->getMesh ( meshName );
-    preciceCheck ( mesh.use_count() > 0, "xmlTagCallback()", "Participant "
-                   << "\"" << _participants.back()->getName() << "\" has to use "
-                   << "mesh \"" << meshName << "\" in order to write data to it!" );
+    CHECK(mesh.use_count() > 0, "Participant "
+          << "\"" << _participants.back()->getName() << "\" has to use "
+          << "mesh \"" << meshName << "\" in order to write data to it!" );
     mesh::PtrData data = getData ( mesh, dataName );
     _participants.back()->addWriteData ( data, mesh );
   }
@@ -396,9 +396,9 @@ void ParticipantConfiguration:: xmlTagCallback
     std::string dataName = tag.getStringAttributeValue(ATTR_NAME);
     std::string meshName = tag.getStringAttributeValue(ATTR_MESH);
     mesh::PtrMesh mesh = _meshConfig->getMesh ( meshName );
-    preciceCheck ( mesh.use_count() > 0, "xmlTagCallback()", "Participant "
-                   << "\"" << _participants.back()->getName() << "\" has to use "
-                   << "mesh \"" << meshName << "\" in order to read data from it!" );
+    CHECK(mesh.use_count() > 0, "Participant "
+          << "\"" << _participants.back()->getName() << "\" has to use "
+          << "mesh \"" << meshName << "\" in order to read data from it!" );
     mesh::PtrData data = getData ( mesh, dataName );
     _participants.back()->addReadData ( data, mesh );
   }
@@ -426,7 +426,7 @@ void ParticipantConfiguration:: xmlTagCallback
 
 void ParticipantConfiguration:: xmlEndTagCallback
 (
-  utils::XMLTag& tag )
+  xml::XMLTag& tag )
 {
   if (tag.getName() == TAG){
     finishParticipantConfiguration(_participants.back());
@@ -504,12 +504,12 @@ void ParticipantConfiguration:: finishParticipantConfiguration
     int fromMeshID = confMapping.fromMesh->getID();
     int toMeshID = confMapping.toMesh->getID();
 
-    preciceCheck(participant->isMeshUsed(fromMeshID), "finishParticipantConfiguration()",
-        "Participant \"" << participant->getName() << "\" has mapping"
-        << " from mesh \"" << confMapping.fromMesh->getName() << "\" which he does not use!");
-    preciceCheck(participant->isMeshUsed(toMeshID), "finishParticipantConfiguration()",
-            "Participant \"" << participant->getName() << "\" has mapping"
-            << " to mesh \"" << confMapping.toMesh->getName() << "\" which he does not use!");
+    CHECK(participant->isMeshUsed(fromMeshID),
+          "Participant \"" << participant->getName() << "\" has mapping"
+          << " from mesh \"" << confMapping.fromMesh->getName() << "\" which he does not use!");
+    CHECK(participant->isMeshUsed(toMeshID),
+          "Participant \"" << participant->getName() << "\" has mapping"
+          << " to mesh \"" << confMapping.toMesh->getName() << "\" which he does not use!");
     if(participant->useMaster()){
       if((confMapping.direction == mapping::MappingConfiguration::WRITE &&
           confMapping.mapping->getConstraint()==mapping::Mapping::CONSISTENT) ||
@@ -569,9 +569,9 @@ void ParticipantConfiguration:: finishParticipantConfiguration
   // Set participant data for data contexts
   for (impl::DataContext& dataContext : participant->writeDataContexts()){
     int fromMeshID = dataContext.mesh->getID();
-    preciceCheck(participant->isMeshUsed(fromMeshID), "finishParticipant()",
-        "Participant \"" << participant->getName() << "\" has to use mesh \""
-        << dataContext.mesh->getName() << "\" when writing data to it!");
+    CHECK(participant->isMeshUsed(fromMeshID),
+          "Participant \"" << participant->getName() << "\" has to use mesh \""
+          << dataContext.mesh->getName() << "\" when writing data to it!");
 
     for (impl::MappingContext& mappingContext : participant->writeMappingContexts()){
       if(mappingContext.fromMeshID==fromMeshID){
@@ -582,7 +582,7 @@ void ParticipantConfiguration:: finishParticipantConfiguration
             dataContext.toData = data;
           }
         }
-        preciceCheck(dataContext.fromData!=dataContext.toData,"finishParticipant()",
+        CHECK(dataContext.fromData!=dataContext.toData,
               "The mesh \"" << meshContext.mesh->getName() << "\" needs to use the data \""
               << dataContext.fromData->getName() << "\"! to allow the write mapping");
       }
@@ -591,9 +591,9 @@ void ParticipantConfiguration:: finishParticipantConfiguration
 
   for (impl::DataContext& dataContext : participant->readDataContexts()){
     int toMeshID = dataContext.mesh->getID();
-    preciceCheck(participant->isMeshUsed(toMeshID), "finishParticipant()",
-      "Participant \"" << participant->getName() << "\" has to use mesh \""
-      << dataContext.mesh->getName() << "\" when writing data to it!");
+    CHECK(participant->isMeshUsed(toMeshID),
+          "Participant \"" << participant->getName() << "\" has to use mesh \""
+          << dataContext.mesh->getName() << "\" when writing data to it!");
 
     for (impl::MappingContext& mappingContext : participant->readMappingContexts()){
       if(mappingContext.toMeshID==toMeshID){
@@ -604,7 +604,7 @@ void ParticipantConfiguration:: finishParticipantConfiguration
             dataContext.fromData = data;
           }
         }
-        preciceCheck(dataContext.toData!=dataContext.fromData,"finishParticipant()",
+        CHECK(dataContext.toData!=dataContext.fromData,
               "The mesh \"" << meshContext.mesh->getName() << "\" needs to use the data \""
               << dataContext.toData->getName() << "\"! to allow the read mapping");
       }
@@ -614,9 +614,9 @@ void ParticipantConfiguration:: finishParticipantConfiguration
   // Add actions
   for (const action::PtrAction& action : _actionConfig->actions()){
     bool used = _participants.back()->isMeshUsed(action->getMesh()->getID());
-    preciceCheck(used, "finishParticipantConfiguration()", "Data action of participant "
-                 << _participants.back()->getName()
-                 << "\" uses mesh which is not used by the participant!");
+    CHECK(used, "Data action of participant "
+          << _participants.back()->getName()
+          << "\" uses mesh which is not used by the participant!");
     _participants.back()->addAction(action);
   }
   _actionConfig->resetActions();
@@ -633,8 +633,7 @@ void ParticipantConfiguration:: finishParticipantConfiguration
       }
     }
     else if (context.type == VALUE_VRML){
-      preciceCheck(not participant->useMaster(), "finishParticipantConfiguration()",
-              "VRML exports while using a master is not yet supported");
+      CHECK(not participant->useMaster(), "VRML exports while using a master is not yet supported");
       exporter = io::PtrExport (new io::ExportVRML(context.plotNormals));
     }
     else {
@@ -654,11 +653,11 @@ void ParticipantConfiguration:: finishParticipantConfiguration
         mesh = context->mesh;
       }
     }
-    preciceCheck ( mesh.use_count() > 0, "xmlEndTagCallback()",
-                   "Participant \"" << participant->getName()
-                   << "\" defines watchpoint \"" << config.name
-                   << "\" for mesh \"" << config.nameMesh
-                   << "\" which is not used by him!" );
+    CHECK(mesh.use_count() > 0,
+          "Participant \"" << participant->getName()
+          << "\" defines watchpoint \"" << config.name
+          << "\" for mesh \"" << config.nameMesh
+          << "\" which is not used by him!" );
     std::string filename = config.name + ".watchpoint.txt";
     impl::PtrWatchPoint watchPoint (
         new impl::WatchPoint(config.coordinates, mesh, filename) );

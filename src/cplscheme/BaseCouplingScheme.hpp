@@ -1,19 +1,20 @@
 #pragma once
 
-#include "CouplingScheme.hpp"
-#include "CouplingData.hpp"
-#include "Constants.hpp"
-#include "SharedPointer.hpp"
-#include "m2n/SharedPointer.hpp"
-#include "com/Constants.hpp"
-#include "logging/Logger.hpp"
-#include "impl/SharedPointer.hpp"
-#include "io/TXTTableWriter.hpp"
 #include <Eigen/Core>
 #include <set>
+#include "Constants.hpp"
+#include "CouplingData.hpp"
+#include "CouplingScheme.hpp"
+#include "SharedPointer.hpp"
+#include "impl/SharedPointer.hpp"
+#include "io/TXTTableWriter.hpp"
+#include "logging/Logger.hpp"
+#include "m2n/SharedPointer.hpp"
 
-namespace precice {
-namespace cplscheme {
+namespace precice
+{
+namespace cplscheme
+{
 
 /**
  * @brief Abstract base class for standard coupling schemes.
@@ -46,26 +47,27 @@ namespace cplscheme {
 class BaseCouplingScheme : public CouplingScheme
 {
 public:
+  BaseCouplingScheme(
+      double maxTime,
+      int    maxTimesteps,
+      double timestepLength,
+      int    validDigits);
 
-  BaseCouplingScheme (
-    double maxTime,
-    int    maxTimesteps,
-    double timestepLength,
-    int    validDigits );
+  BaseCouplingScheme(
+      double                        maxTime,
+      int                           maxTimesteps,
+      double                        timestepLength,
+      int                           validDigits,
+      const std::string &           firstParticipant,
+      const std::string &           secondParticipant,
+      const std::string &           localParticipant,
+      m2n::PtrM2N                   m2n,
+      int                           maxIterations,
+      constants::TimesteppingMethod dtMethod);
 
-  BaseCouplingScheme (
-    double                        maxTime,
-    int                           maxTimesteps,
-    double                        timestepLength,
-    int                           validDigits,
-    const std::string&            firstParticipant,
-    const std::string&            secondParticipant,
-    const std::string&            localParticipant,
-    m2n::PtrM2N                   m2n,
-    int                           maxIterations,
-    constants::TimesteppingMethod dtMethod );
-
-  enum CouplingMode {Explicit, Implicit, Undefined};
+  enum CouplingMode { Explicit,
+                      Implicit,
+                      Undefined };
 
   /**
    * @brief Adds another coupling scheme in parallel to this scheme.
@@ -80,19 +82,20 @@ public:
   //virtual PtrCouplingScheme addSchemeInParallel (PtrCouplingScheme scheme);
 
   /// Adds data to be sent on data exchange and possibly be modified during coupling iterations.
-  void addDataToSend (
-    mesh::PtrData data,
-    mesh::PtrMesh mesh,
-    bool          initialize );
+  void addDataToSend(
+      mesh::PtrData data,
+      mesh::PtrMesh mesh,
+      bool          initialize);
 
   /// Adds data to be received on data exchange.
-  void addDataToReceive (
-    mesh::PtrData data,
-    mesh::PtrMesh mesh,
-    bool          initialize );
+  void addDataToReceive(
+      mesh::PtrData data,
+      mesh::PtrMesh mesh,
+      bool          initialize);
 
   /// Returns true, if initialize has been called.
-  virtual bool isInitialized() const {
+  virtual bool isInitialized() const
+  {
     return _isInitialized;
   }
 
@@ -120,17 +123,18 @@ public:
   virtual int getTimesteps() const;
 
   /// Returns the maximal time to be computed.
-  virtual double getMaxTime() const {
+  virtual double getMaxTime() const
+  {
     return _maxTime;
   }
 
-  /// @brief Returns the maximal timesteps to be computed.
-  virtual int getMaxTimesteps() const {
+  /// Returns the maximal timesteps to be computed.
+  virtual int getMaxTimesteps() const
+  {
     return _maxTimesteps;
   }
 
-
-  /// @brief Returns true, if timestep length is prescribed by the cpl scheme.
+  /// Returns true, if timestep length is prescribed by the cpl scheme.
   virtual bool hasTimestepLength() const;
 
   /**
@@ -141,7 +145,7 @@ public:
    */
   virtual double getTimestepLength() const;
 
-  /// @brief returns list of all coupling partners
+  /// returns list of all coupling partners
   virtual std::vector<std::string> getCouplingPartners() const;
 
   /**
@@ -152,8 +156,9 @@ public:
    */
   virtual double getThisTimestepRemainder() const;
 
-  /// @brief Returns part of the current timestep that has been computed already.
-  virtual double getComputedTimestepPart() const {
+  /// Returns part of the current timestep that has been computed already.
+  virtual double getComputedTimestepPart() const
+  {
     return _computedTimestepPart;
   }
 
@@ -175,14 +180,13 @@ public:
   virtual bool isCouplingTimestepComplete() const;
 
   /// Returns true, if the given action has to be performed by the accessor.
-  virtual bool isActionRequired (const std::string& actionName) const;
+  virtual bool isActionRequired(const std::string &actionName) const;
 
   /// Tells the coupling scheme that the accessor has performed the given action.
-  virtual void performedAction (const std::string& actionName);
-
+  virtual void performedAction(const std::string &actionName);
 
   /// Sets an action required to be performed by the accessor.
-  virtual void requireAction (const std::string& actionName);
+  virtual void requireAction(const std::string &actionName);
 
   /**
    * @brief Send the state of the coupling scheme to another remote scheme.
@@ -192,9 +196,9 @@ public:
    * is transferred between the solver coupling scheme and the server coupling
    * scheme via sendState and receiveState.
    */
-  virtual void sendState (
-    com::PtrCommunication communication,
-    int                   rankReceiver );
+  virtual void sendState(
+      com::PtrCommunication communication,
+      int                   rankReceiver);
 
   /**
    * @brief Receive the state of the coupling scheme from another remote scheme.
@@ -204,15 +208,15 @@ public:
    * is transferred between the solver coupling scheme and the server coupling
    * scheme via sendState and receiveState.
    */
-  virtual void receiveState (
-    com::PtrCommunication communication,
-    int                   rankSender );
+  virtual void receiveState(
+      com::PtrCommunication communication,
+      int                   rankSender);
 
   /// Finalizes the coupling scheme.
   virtual void finalize();
 
   /// Initializes the coupling scheme.
-  virtual void initialize(double startTime, int startTimestep ) = 0;
+  virtual void initialize(double startTime, int startTimestep) = 0;
 
   /**
    * @brief Initializes data with written values.
@@ -223,10 +227,10 @@ public:
    */
   virtual void initializeData() = 0;
 
-
   /// Returns whether the solver has to evaluate the coarse or the fine model representation
-  virtual bool isCoarseModelOptimizationActive(){
-	  return _isCoarseModelOptimizationActive;
+  virtual bool isCoarseModelOptimizationActive()
+  {
+    return _isCoarseModelOptimizationActive;
   }
 
   /**
@@ -241,29 +245,28 @@ public:
    * of the last timestep are taken as initial guess for the coupling iterations.
    * Currently, an order 1 predictor is implement besides that.
    */
-  void setExtrapolationOrder ( int order );
+  void setExtrapolationOrder(int order);
 
-  typedef std::map<int,PtrCouplingData> DataMap; // move that back to protected
+  typedef std::map<int, PtrCouplingData> DataMap; // move that back to protected
 
-  void extrapolateData(DataMap& data);
+  void extrapolateData(DataMap &data);
 
   /// Adds a measure to determine the convergence of coupling iterations.
-  void addConvergenceMeasure (
-    int                         dataID,
-    bool                        suffices,
-    int                         level,
-    impl::PtrConvergenceMeasure measure );
+  void addConvergenceMeasure(
+      int                         dataID,
+      bool                        suffices,
+      int                         level,
+      impl::PtrConvergenceMeasure measure);
 
-  /// @brief Set a coupling iteration post-processing technique.
-  void setIterationPostProcessing ( impl::PtrPostProcessing postProcessing );
+  /// Set a coupling iteration post-processing technique.
+  void setIterationPostProcessing(impl::PtrPostProcessing postProcessing);
 
 protected:
-
   /// Sets whether explicit or implicit coupling is being done.
   CouplingMode _couplingMode;
 
   /// Sets whether the solver evaluates the fine or the coarse model representation
-  bool _isCoarseModelOptimizationActive;
+  bool _isCoarseModelOptimizationActive = false;
 
   /// Updates internal state of coupling scheme for next timestep.
   void timestepCompleted();
@@ -275,54 +278,61 @@ protected:
   void sendDt();
 
   /// @return True, if local participant is the one starting the scheme.
-  bool doesFirstStep() const {
+  bool doesFirstStep() const
+  {
     return _doesFirstStep;
   }
 
-  /// @brief Sends data sendDataIDs given in mapCouplingData with communication.
-  std::vector<int> sendData ( m2n::PtrM2N m2n );
+  /// Sends data sendDataIDs given in mapCouplingData with communication.
+  std::vector<int> sendData(m2n::PtrM2N m2n);
 
-  /// @brief Receives data receiveDataIDs given in mapCouplingData with communication.
-  std::vector<int> receiveData ( m2n::PtrM2N m2n );
+  /// Receives data receiveDataIDs given in mapCouplingData with communication.
+  std::vector<int> receiveData(m2n::PtrM2N m2n);
 
-  /// @brief Returns all data to be sent.
-  const DataMap& getSendData() const {
+  /// Returns all data to be sent.
+  const DataMap &getSendData() const
+  {
     return _sendData;
   }
 
-  const DataMap& getReceiveData() const {
+  const DataMap &getReceiveData() const
+  {
     return _receiveData;
   }
 
-  /// @brief Returns all data to be sent.
-  DataMap& getSendData() {
+  /// Returns all data to be sent.
+  DataMap &getSendData()
+  {
     return _sendData;
   }
 
-  DataMap& getReceiveData() {
+  DataMap &getReceiveData()
+  {
     return _receiveData;
   }
 
-  /// @brief Sets the values
-  CouplingData* getSendData ( int dataID );
+  /// Sets the values
+  CouplingData *getSendData(int dataID);
 
-  /// @brief Returns all data to be received with data ID as given.
-  CouplingData* getReceiveData ( int dataID );
+  /// Returns all data to be received with data ID as given.
+  CouplingData *getReceiveData(int dataID);
 
-  /// @brief Sets value for computed timestep part.
-  void setComputedTimestepPart ( double computedTimestepPart ) {
+  /// Sets value for computed timestep part.
+  void setComputedTimestepPart(double computedTimestepPart)
+  {
     _computedTimestepPart = computedTimestepPart;
   }
 
-  /// @brief Sets flag to determine whether data has been exchanged in the last coupling iteration.
-  void setHasDataBeenExchanged ( bool hasDataBeenExchanged );
+  /// Sets flag to determine whether data has been exchanged in the last coupling iteration.
+  void setHasDataBeenExchanged(bool hasDataBeenExchanged);
 
   /**
    * @brief Sets the computed time of the coupling scheme.
    *
    * Used from subclasses and when a checkpoint has been read.
    */
-  void setTime ( double time ) {
+  void setTime(double time)
+  {
     _time = time;
   }
 
@@ -331,23 +341,27 @@ protected:
    *
    * Used from subclasses and when a checkpoint has been read.
    */
-  void setTimesteps ( int timesteps ) {
+  void setTimesteps(int timesteps)
+  {
     _timesteps = timesteps;
   }
 
-  void setTimestepLength ( double timestepLength ) {
+  void setTimestepLength(double timestepLength)
+  {
     _timestepLength = timestepLength;
   }
 
-  void setIsCouplingTimestepComplete ( bool isCouplingTimestepComplete ) {
+  void setIsCouplingTimestepComplete(bool isCouplingTimestepComplete)
+  {
     _isCouplingTimestepComplete = isCouplingTimestepComplete;
   }
 
-  void setIsInitialized ( bool isInitialized ) {
+  void setIsInitialized(bool isInitialized)
+  {
     _isInitialized = isInitialized;
   }
 
-  /// @brief If any required actions are open, an error message is issued.
+  /// If any required actions are open, an error message is issued.
   void checkCompletenessRequiredActions();
 
   /**
@@ -357,7 +371,7 @@ protected:
    */
   virtual std::string printCouplingState() const;
 
-  /// @brief Returns a string representing the basic state w/o actions.
+  /// Returns a string representing the basic state w/o actions.
   std::string printBasicState() const;
 
   /**
@@ -368,58 +382,64 @@ protected:
    * a timestep are converged.
    */
   std::string printBasicState(
-    int    timesteps,
-    double time) const;
+      int    timesteps,
+      double time) const;
 
-  /// @brief Returns a string representing the required actions.
+  /// Returns a string representing the required actions.
   std::string printActionsState() const;
 
-  /// @brief First participant name.
+  /// First participant name.
   std::string _firstParticipant;
 
-  /// @brief Second participant name.
+  /// Second participant name.
   std::string _secondParticipant;
 
-  /// @brief Local participant name.
+  /// Local participant name.
   std::string _localParticipant;
 
   /// @return Communication device to the other coupling participant.
-  m2n::PtrM2N getM2N() {
+  m2n::PtrM2N getM2N()
+  {
     assertion(_m2n.use_count() > 0);
     return _m2n;
   }
 
-  void setHasToSendInitData(bool hasToSendInitData) {
+  void setHasToSendInitData(bool hasToSendInitData)
+  {
     _hasToSendInitData = hasToSendInitData;
   }
 
-  void setHasToReceiveInitData(bool hasToReceiveInitData) {
+  void setHasToReceiveInitData(bool hasToReceiveInitData)
+  {
     _hasToReceiveInitData = hasToReceiveInitData;
   }
 
-  bool hasToSendInitData() {
+  bool hasToSendInitData()
+  {
     return _hasToSendInitData;
   }
 
-  bool hasToReceiveInitData() {
+  bool hasToReceiveInitData()
+  {
     return _hasToReceiveInitData;
   }
 
-  bool participantReceivesDt() {
+  bool participantReceivesDt()
+  {
     return _participantReceivesDt;
   }
 
-  bool participantSetsDt() {
+  bool participantSetsDt()
+  {
     return _participantSetsDt;
   }
 
   /// @brief Holds relevant variables to perform a convergence measurement.
-  struct ConvergenceMeasure
-  {
-    int dataID;
-    CouplingData* data;
-    bool suffices;
-    int level;
+  struct ConvergenceMeasure {
+    int                         dataID;
+    CouplingData *              data;
+    bool                        suffices;
+    int                         level;
     impl::PtrConvergenceMeasure measure;
   };
 
@@ -436,10 +456,10 @@ protected:
   void newConvergenceMeasurements();
 
   bool measureConvergence(
-      std::map<int, Eigen::VectorXd>& designSpecification);
+      std::map<int, Eigen::VectorXd> &designSpecification);
 
   bool measureConvergenceCoarseModelOptimization(
-      std::map<int, Eigen::VectorXd>& designSpecification);
+      std::map<int, Eigen::VectorXd> &designSpecification);
 
   /**
    * @brief Sets up _dataStorage to store data values of last timestep.
@@ -449,9 +469,10 @@ protected:
    * meshes. The ordering of the data values corresponds to that in the meshes
    * and the ordering of the meshes to that in _couplingData.
    */
-  void setupDataMatrices(DataMap& data);
+  void setupDataMatrices(DataMap &data);
 
-  impl::PtrPostProcessing getPostProcessing() {
+  impl::PtrPostProcessing getPostProcessing()
+  {
     return _postProcessing;
   }
 
@@ -461,12 +482,13 @@ protected:
 
   void updateTimeAndIterations(bool convergence, bool convergenceCoarseOptimization = true);
 
-
-  int getMaxIterations() const {
+  int getMaxIterations() const
+  {
     return _maxIterations;
   }
 
-  int getExtrapolationOrder() {
+  int getExtrapolationOrder()
+  {
     return _extrapolationOrder;
   }
 
@@ -475,23 +497,21 @@ protected:
   /// @brief Smallest number, taking validDigists into account: eps = std::pow(10.0, -1 * validDigits)
   const double _eps;
 
-  int _deletedColumnsPPFiltering;
+  int _deletedColumnsPPFiltering = 0;
 
   /// @brief Number of  coarse model optimization iterations in current time step.
   int _iterationsCoarseOptimization;
 
 private:
-
   /// @brief Communication device to the other coupling participant.
   m2n::PtrM2N _m2n;
 
-  /// @brief Determines, if the timestep length is set by the participant.
-  bool _participantSetsDt;
+  /// Determines, if the timestep length is set by the participant.
+  bool _participantSetsDt = false;
 
-  /// @brief Determines, if the dt length is set received from the other participant
-  bool _participantReceivesDt;
+  /// Determines, if the dt length is set received from the other participant
+  bool _participantReceivesDt = false;
 
-  /// @brief Logging device.
   static logging::Logger _log;
 
   double _maxTime;
@@ -514,36 +534,36 @@ private:
 
   double _timestepLength;
 
-  double _time;
+  double _time = 0;
 
-  double _computedTimestepPart;
-  
+  double _computedTimestepPart = 0;
+
   std::vector<double> _firstResiduumNorm;
 
   /// Extrapolation order of coupling data for first iteration of every dt.
-  int _extrapolationOrder;
+  int _extrapolationOrder = 0;
 
   int _validDigits;
 
   /// True, if local participant is the one starting the explicit scheme.
-  bool _doesFirstStep;
+  bool _doesFirstStep = false;
 
-  bool _isCouplingTimestepComplete;
+  bool _isCouplingTimestepComplete = false;
 
   /// Post-processing method to speedup iteration convergence.
   impl::PtrPostProcessing _postProcessing;
 
   /// To carry initData information from initialize to initData
-  bool _hasToSendInitData;
+  bool _hasToSendInitData = false;
 
   /// To carry initData information from initialize to initData
-  bool _hasToReceiveInitData;
+  bool _hasToReceiveInitData = false;
 
   /// True, if data has been exchanged between solvers.
-  bool _hasDataBeenExchanged;
+  bool _hasDataBeenExchanged = false;
 
   /// True, if coupling has been initialized.
-  bool _isInitialized;
+  bool _isInitialized = false;
 
   std::set<std::string> _actions;
 
@@ -559,9 +579,7 @@ private:
   /// Writes out coupling convergence within all timesteps.
   std::shared_ptr<io::TXTTableWriter> _convergenceWriter;
 
-  int getVertexOffset(std::map<int,int>& vertexDistribution, int rank, int dim);
-
-
+  int getVertexOffset(std::map<int, int> &vertexDistribution, int rank, int dim);
 };
-
-}} // namespace precice, cplscheme
+}
+} // namespace precice, cplscheme

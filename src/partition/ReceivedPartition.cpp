@@ -19,7 +19,7 @@ using precice::utils::Event;
 namespace precice {
 namespace partition {
 
-logging::Logger ReceivedPartition:: _log ( "precice::partition::ReceivedPartition" );
+logging::Logger ReceivedPartition:: _log ( "partition::ReceivedPartition" );
 
 ReceivedPartition::ReceivedPartition
 (
@@ -57,6 +57,12 @@ void ReceivedPartition::compute()
     return;
   }
 
+  // check to prevent false configuration
+  if (not utils::MasterSlave::_slaveMode) {
+    CHECK(_fromMapping.use_count() > 0 || _toMapping.use_count() > 0, "The received mesh " << _mesh->getName() <<
+        " needs a mapping, either from it, to it, or both. Maybe you don't want to receive this mesh at all?")
+  }
+
   // (0) set global number of vertices before filtering
   if (utils::MasterSlave::_masterMode) {
     _mesh->setGlobalNumberOfVertices(_mesh->vertices().size());
@@ -78,7 +84,7 @@ void ReceivedPartition::compute()
          (_toMapping.use_count()>0 && _toMapping->getInputMesh()->vertices().size()>0)){
            // this rank has vertices at the coupling interface
            // then, also the filtered mesh should still have vertices
-        std::string msg = "The re-partitioning completely filtered out the mesh received on this rank at the coupling interface. "
+        std::string msg = "The re-partitioning completely filtered out the mesh " + _mesh->getName() +" received on this rank at the coupling interface. "
             "Most probably, the coupling interfaces of your coupled participants do not match geometry-wise. "
             "Please check your geometry setup again. Small overlaps or gaps are no problem. "
             "If your geometry setup is correct and if you have very different mesh resolutions on both sides, increasing the safety-factor "
@@ -114,7 +120,7 @@ void ReceivedPartition::compute()
          (_toMapping.use_count()>0 && _toMapping->getInputMesh()->vertices().size()>0)){
            // this rank has vertices at the coupling interface
            // then, also the filtered mesh should still have vertices
-        std::string msg = "The re-partitioning completely filtered out the mesh received on this rank at the coupling interface. "
+        std::string msg = "The re-partitioning completely filtered out the mesh " + _mesh->getName() +" received on this rank at the coupling interface. "
             "Most probably, the coupling interfaces of your coupled participants do not match geometry-wise. "
             "Please check your geometry setup again. Small overlaps or gaps are no problem. "
             "If your geometry setup is correct and if you have very different mesh resolutions on both sides, increasing the safety-factor "
@@ -152,7 +158,7 @@ void ReceivedPartition::compute()
          (_toMapping.use_count()>0 && _toMapping->getInputMesh()->vertices().size()>0)){
            // this rank has vertices at the coupling interface
            // then, also the filtered mesh should still have vertices
-        std::string msg = "The re-partitioning completely filtered out the mesh received on this rank at the coupling interface. "
+        std::string msg = "The re-partitioning completely filtered out the mesh " + _mesh->getName() +" received on this rank at the coupling interface. "
             "Most probably, the coupling interfaces of your coupled participants do not match geometry-wise. "
             "Please check your geometry setup again. Small overlaps or gaps are no problem. "
             "If your geometry setup is correct and if you have very different mesh resolutions on both sides, increasing the safety-factor "
@@ -242,7 +248,7 @@ void ReceivedPartition::compute()
 }
 
 void ReceivedPartition:: filterMesh(mesh::Mesh& filteredMesh, const bool filterByBB){
-  TRACE();
+  TRACE(filterByBB);
 
   DEBUG("Bounding mesh. #vertices: " << _mesh->vertices().size()
                <<", #edges: " << _mesh->edges().size()
@@ -295,6 +301,7 @@ void ReceivedPartition:: filterMesh(mesh::Mesh& filteredMesh, const bool filterB
 }
 
 void ReceivedPartition::prepareBoundingBox(){
+  TRACE(_safetyFactor);
 
   _bb.resize(_dimensions, std::make_pair(std::numeric_limits<double>::max(), std::numeric_limits<double>::lowest()));
 
@@ -327,6 +334,8 @@ void ReceivedPartition::prepareBoundingBox(){
     _bb[d].first -= _safetyFactor * maxSideLength;
     DEBUG("Merged BoundingBox, dim: " << d << ", first: " << _bb[d].first << ", second: " << _bb[d].second);
   }
+
+
 }
 
 bool ReceivedPartition::isVertexInBB(const mesh::Vertex& vertex){

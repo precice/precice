@@ -18,7 +18,6 @@
 #include "io/ExportContext.hpp"
 #include "io/SimulationStateIO.hpp"
 #include "com/MPIPortsCommunication.hpp"
-#include "com/Constants.hpp"
 #include "com/MPIDirectCommunication.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
 #include "m2n/M2N.hpp"
@@ -82,8 +81,6 @@ SolverInterfaceImpl:: SolverInterfaceImpl
         "Accessor process index has to be smaller than accessor process "
         << "size (given as " << _accessorProcessRank << ")!");
 
-  precice::utils::EventRegistry::initialize(participantName);
-
   /* When precice stops abruptly, e.g. an external solver crashes, the
      SolverInterfaceImpl destructor is never called. Since we still want
      to print the timings, we install the signal handler here. */
@@ -113,8 +110,7 @@ void SolverInterfaceImpl:: configure
   Participant::resetParticipantCount();
 
   config::Configuration config;
-  utils::configure(config.getXMLTag(), configurationFileName);
-  //preciceCheck ( config.isValid(), "configure()", "Invalid configuration file!" );
+  xml::configure(config.getXMLTag(), configurationFileName);
   if(_accessorProcessRank==0){
     INFO("Configuring preCICE with configuration: \"" << configurationFileName << "\"" );
   }
@@ -151,8 +147,7 @@ void SolverInterfaceImpl:: configure
 
   if (not _clientMode){
     INFO("Run in coupling mode");
-    preciceCheck(_participants.size() > 1,
-                 "configure()", "At least two participants need to be defined!");
+    CHECK(_participants.size() > 1, "At least two participants need to be defined!");
     configurePartitions(config.getM2NConfiguration());
   }
 
@@ -186,6 +181,7 @@ void SolverInterfaceImpl:: configure
   
   utils::Parallel::initializeMPI(nullptr, nullptr);
   precice::logging::setMPIRank(utils::Parallel::getProcessRank());
+  precice::utils::EventRegistry::instance().initialize(_accessorName);
   
   // Setup communication to server
   if (_clientMode){
@@ -219,10 +215,9 @@ double SolverInterfaceImpl:: initialize()
       std::string localName = _accessorName;
       if (_serverMode) localName += "Server";
       std::string remoteName(m2nPair.first);
-      preciceCheck(m2n.get() != nullptr, "initialize()",
-                   "M2N communication from " << localName << " to participant "
-                   << remoteName << " could not be created! Check compile "
-                   "flags used!");
+      CHECK(m2n.get() != nullptr,
+            "M2N communication from " << localName << " to participant "
+            << remoteName << " could not be created! Check compile flags used!");
       if (m2nPair.second.isRequesting){
         m2n->requestMasterConnection(remoteName, localName);
       }
@@ -244,10 +239,9 @@ double SolverInterfaceImpl:: initialize()
       m2n::PtrM2N& m2n = m2nPair.second.m2n;
       std::string localName = _accessorName;
       std::string remoteName(m2nPair.first);
-      preciceCheck(m2n.get() != nullptr, "initialize()",
+      CHECK(m2n.get() != nullptr,
                    "Communication from " << localName << " to participant "
-                   << remoteName << " could not be created! Check compile "
-                   "flags used!");
+                   << remoteName << " could not be created! Check compile flags used!");
       if (m2nPair.second.isRequesting){
         m2n->requestSlavesConnection(remoteName, localName);
       }
@@ -295,8 +289,8 @@ void SolverInterfaceImpl:: initializeData ()
       "initializeData"
       "/");
 
-  preciceCheck(_couplingScheme->isInitialized(), "initializeData()",
-               "initialize() has to be called before initializeData()");
+  CHECK(_couplingScheme->isInitialized(),
+        "initialize() has to be called before initializeData()");
   if (_clientMode){
     _requestManager->requestInitialzeData();
   }
@@ -337,8 +331,7 @@ double SolverInterfaceImpl:: advance
       "advance"
       "/");
 
-  preciceCheck(_couplingScheme->isInitialized(), "advance()",
-               "initialize() has to be called before advance()");
+  CHECK(_couplingScheme->isInitialized(), "initialize() has to be called before advance()");
   _numberAdvanceCalls++;
   if (_clientMode){
     _requestManager->requestAdvance(computedTimestepLength);
@@ -411,8 +404,7 @@ double SolverInterfaceImpl:: advance
 void SolverInterfaceImpl:: finalize()
 {
   TRACE();
-  preciceCheck(_couplingScheme->isInitialized(), "finalize()",
-               "initialize() has to be called before finalize()");
+  CHECK(_couplingScheme->isInitialized(), "initialize() has to be called before finalize()");
   _couplingScheme->finalize();
   _couplingScheme.reset();
 
@@ -438,24 +430,16 @@ void SolverInterfaceImpl:: finalize()
     for (auto &iter : _m2ns) {
       if( not utils::MasterSlave::_slaveMode){
         if(iter.second.isRequesting){
-          iter.second.m2n->getMasterCommunication()->startSendPackage(0);
           iter.second.m2n->getMasterCommunication()->send(ping,0);
-          iter.second.m2n->getMasterCommunication()->finishSendPackage();
           std::string receive = "init";
-          iter.second.m2n->getMasterCommunication()->startReceivePackage(0);
           iter.second.m2n->getMasterCommunication()->receive(receive,0);
-          iter.second.m2n->getMasterCommunication()->finishReceivePackage();
           assertion(receive==pong);
         }
         else{
           std::string receive = "init";
-          iter.second.m2n->getMasterCommunication()->startReceivePackage(0);
           iter.second.m2n->getMasterCommunication()->receive(receive,0);
-          iter.second.m2n->getMasterCommunication()->finishReceivePackage();
           assertion(receive==ping);
-          iter.second.m2n->getMasterCommunication()->startSendPackage(0);
           iter.second.m2n->getMasterCommunication()->send(pong,0);
-          iter.second.m2n->getMasterCommunication()->finishSendPackage();
         }
       }
       iter.second.m2n->closeConnection();
@@ -471,9 +455,9 @@ void SolverInterfaceImpl:: finalize()
   }
 
   // Stop and print Event logging
-  precice::utils::EventRegistry::finalize();
-  if (not precice::utils::MasterSlave::_slaveMode) {
-    precice::utils::EventRegistry::printAll();
+  precice::utils::EventRegistry::instance().finalize();
+  if (not precice::testMode and not precice::utils::MasterSlave::_slaveMode) {
+    precice::utils::EventRegistry::instance().printAll();
   }
 
   // Tear down MPI and PETSc
@@ -628,10 +612,8 @@ void SolverInterfaceImpl:: resetMesh
           context.fromMappingContext.timing == mapping::MappingConfiguration::INITIAL &&
               context.toMappingContext.timing == mapping::MappingConfiguration::INITIAL;
 
-    preciceCheck(!isStationary, "resetMesh()", "A mesh with only initial mappings"
-              << " must not be reseted");
-    preciceCheck(hasMapping, "resetMesh()", "A mesh with no mappings"
-                << " must not be reseted");
+    CHECK(!isStationary, "A mesh with only initial mappings  must not be reseted");
+    CHECK(hasMapping, "A mesh with no mappings must not be reseted");
 
     DEBUG ( "Clear mesh positions for mesh \"" << context.mesh->getName() << "\"" );
     context.mesh->clear ();
@@ -1163,8 +1145,8 @@ void SolverInterfaceImpl:: writeBlockVectorData
     _requestManager->requestWriteBlockVectorData(fromDataID, size, valueIndices, values);
   }
   else { //couplingMode
-    preciceCheck(_accessor->isDataUsed(fromDataID), "writeBlockVectorData()",
-                 "You try to write to data that is not defined for " << _accessor->getName());
+    CHECK(_accessor->isDataUsed(fromDataID),
+          "You try to write to data // TODO: hat is not defined for " << _accessor->getName());
     DataContext& context = _accessor->dataContext(fromDataID);
 
     assertion(context.toData.get() != nullptr);
@@ -1250,14 +1232,13 @@ void SolverInterfaceImpl:: writeScalarData
   double value )
 {
   TRACE(fromDataID, valueIndex, value );
-  preciceCheck(valueIndex >= -1, "writeScalarData()", "Invalid value index ("
-               << valueIndex << ") when writing scalar data!");
+  CHECK(valueIndex >= -1, "Invalid value index (" << valueIndex << ") when writing scalar data!");
   if (_clientMode){
     _requestManager->requestWriteScalarData(fromDataID, valueIndex, value);
   }
   else {
-    preciceCheck(_accessor->isDataUsed(fromDataID), "writeScalarData()",
-                 "You try to write to data that is not defined for " << _accessor->getName());
+    CHECK(_accessor->isDataUsed(fromDataID),
+          "You try to write to data that is not defined for " << _accessor->getName());
     DataContext& context = _accessor->dataContext(fromDataID);
     assertion(context.toData.use_count() > 0);
     auto& values = context.fromData->values();
@@ -1283,8 +1264,8 @@ void SolverInterfaceImpl:: readBlockVectorData
     _requestManager->requestReadBlockVectorData(toDataID, size, valueIndices, values);
   }
   else { //couplingMode
-    preciceCheck(_accessor->isDataUsed(toDataID), "readBlockVectorData()",
-                 "You try to read from data that is not defined for " << _accessor->getName());
+    CHECK(_accessor->isDataUsed(toDataID),
+          "You try to read from data that is not defined for " << _accessor->getName());
     DataContext& context = _accessor->dataContext(toDataID);
     assertion(context.fromData.get() != nullptr);
     auto& valuesInternal = context.toData->values();
@@ -1307,14 +1288,13 @@ void SolverInterfaceImpl:: readVectorData
   double* value )
 {
   TRACE(toDataID, valueIndex);
-  preciceCheck(valueIndex >= -1, "readData(vector)", "Invalid value index ( "
-               << valueIndex << " )when reading vector data!");
+  CHECK(valueIndex >= -1, "Invalid value index ( " << valueIndex << " )when reading vector data!");
   if (_clientMode){
     _requestManager->requestReadVectorData(toDataID, valueIndex, value);
   }
   else {
-    preciceCheck(_accessor->isDataUsed(toDataID), "readVectorData()",
-                     "You try to read from data that is not defined for " << _accessor->getName());
+    CHECK(_accessor->isDataUsed(toDataID),
+          "You try to read from data that is not defined for " << _accessor->getName());
     DataContext& context = _accessor->dataContext(toDataID);
     assertion(context.fromData.use_count() > 0);
     auto& values = context.toData->values();
@@ -1348,8 +1328,8 @@ void SolverInterfaceImpl:: readBlockScalarData
     _requestManager->requestReadBlockScalarData(toDataID, size, valueIndices, values);
   }
   else {
-    preciceCheck(_accessor->isDataUsed(toDataID), "readBlockScalarData()",
-                     "You try to read from data that is not defined for " << _accessor->getName());
+    CHECK(_accessor->isDataUsed(toDataID),
+          "You try to read from data that is not defined for " << _accessor->getName());
     DataContext& context = _accessor->dataContext(toDataID);
     assertion(context.fromData.get() != nullptr);
     auto& valuesInternal = context.toData->values();
@@ -1368,14 +1348,13 @@ void SolverInterfaceImpl:: readScalarData
   double& value )
 {
   TRACE(toDataID, valueIndex, value);
-  preciceCheck(valueIndex >= -1, "readData(vector)", "Invalid value index ( "
-               << valueIndex << " )when reading vector data!");
+  CHECK(valueIndex >= -1, "Invalid value index ( " << valueIndex << " )when reading vector data!");
   if (_clientMode){
     _requestManager->requestReadScalarData(toDataID, valueIndex, value);
   }
   else {
-    preciceCheck(_accessor->isDataUsed(toDataID), "readScalarData()",
-                     "You try to read from data that is not defined for " << _accessor->getName());
+    CHECK(_accessor->isDataUsed(toDataID),
+          "You try to read from data that is not defined for " << _accessor->getName());
     DataContext& context = _accessor->dataContext(toDataID);
     assertion(context.fromData.use_count() > 0);
     auto& values = context.toData->values();

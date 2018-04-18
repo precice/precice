@@ -1,6 +1,6 @@
 #include "LogConfiguration.hpp"
-#include "utils/xml/ValidatorEquals.hpp"
-#include "utils/xml/ValidatorOr.hpp"
+#include "xml/ValidatorEquals.hpp"
+#include "xml/ValidatorOr.hpp"
 
 namespace precice {
 namespace config {
@@ -9,13 +9,13 @@ precice::logging::Logger precice::config::LogConfiguration::_log("logging::confi
 
 LogConfiguration::LogConfiguration
 (
-  utils::XMLTag& parent)
+  xml::XMLTag& parent)
 {
   // We do default initialization here, so logging will be initialized
   // as soon as possible and also if there is no <log> tag.
   precice::logging::setupLogging();
   
-  using namespace utils;
+  using namespace xml;
   XMLTag tagLog(*this, "log", XMLTag::OCCUR_NOT_OR_ONCE);
   tagLog.setDocumentation("Configures logging");
 
@@ -57,7 +57,7 @@ LogConfiguration::LogConfiguration
 
 void LogConfiguration::xmlTagCallback
 (
-  utils::XMLTag& tag )
+  xml::XMLTag& tag )
 {
   TRACE(tag.getFullName());
   
@@ -74,7 +74,7 @@ void LogConfiguration::xmlTagCallback
 
 void LogConfiguration::xmlEndTagCallback
 (
-  utils::XMLTag& tag )
+  xml::XMLTag& tag )
 {
   TRACE(tag.getFullName());
   if (tag.getName() == "log")

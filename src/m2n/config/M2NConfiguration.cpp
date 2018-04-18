@@ -1,46 +1,25 @@
 #include "M2NConfiguration.hpp"
-#include "m2n/M2N.hpp"
+#include <list>
+#include "com/MPIDirectCommunication.hpp"
+#include "com/MPIPortsCommunicationFactory.hpp"
+#include "com/SocketCommunicationFactory.hpp"
 #include "m2n/DistributedComFactory.hpp"
 #include "m2n/GatherScatterComFactory.hpp"
+#include "m2n/M2N.hpp"
 #include "m2n/PointToPointComFactory.hpp"
-#include "com/SocketCommunicationFactory.hpp"
-#include "com/MPIPortsCommunicationFactory.hpp"
-#include "com/MPIDirectCommunication.hpp"
-#include "utils/Globals.hpp"
-#include "utils/Helpers.hpp"
-#include "utils/xml/XMLAttribute.hpp"
-#include "utils/xml/ValidatorEquals.hpp"
-#include "utils/xml/ValidatorOr.hpp"
-#include <list>
+#include "xml/ValidatorEquals.hpp"
+#include "xml/ValidatorOr.hpp"
+#include "xml/XMLAttribute.hpp"
 
-namespace precice {
-namespace m2n {
-
-logging::Logger M2NConfiguration::
-   _log("m2n::M2NConfiguration");
-
-M2NConfiguration:: M2NConfiguration
-(
-  utils::XMLTag& parent )
-:
-  TAG("m2n"),
-  ATTR_TYPE("type"),
-  ATTR_DISTRIBUTION_TYPE("distribution-type"),
-  ATTR_FROM("from"),
-  ATTR_TO("to"),
-  ATTR_PORT("port"),
-  ATTR_NETWORK("network"),
-  ATTR_EXCHANGE_DIRECTORY("exchange-directory"),
-  VALUE_MPI("mpi"),
-  VALUE_MPI_SINGLE("mpi-single"),
-  VALUE_SOCKETS("sockets"),
-  VALUE_GATHER_SCATTER("gather-scatter"),
-  VALUE_POINT_TO_POINT("point-to-point"),
-  _m2ns()
+namespace precice
 {
-  using namespace utils;
-  std::string doc;
-  std::list<XMLTag> tags;
+namespace m2n
+{
+M2NConfiguration::M2NConfiguration(xml::XMLTag &parent)
+{
+  using namespace xml;
+  std::string        doc;
+  std::list<XMLTag>  tags;
   XMLTag::Occurrence occ = XMLTag::OCCUR_ARBITRARY;
   {
     XMLTag tag(*this, VALUE_SOCKETS, occ, TAG);
@@ -90,34 +69,35 @@ M2NConfiguration:: M2NConfiguration
 
     tags.push_back(tag);
   }
+  
   {
     XMLTag tag(*this, VALUE_MPI_SINGLE, occ, TAG);
     doc = "Communication via MPI with startup in common communication space.";
     tag.setDocumentation(doc);
     tags.push_back(tag);
   }
-  
-  XMLAttribute<std::string> attrDistrTypeBoth ( ATTR_DISTRIBUTION_TYPE);
+
+  XMLAttribute<std::string> attrDistrTypeBoth(ATTR_DISTRIBUTION_TYPE);
   doc = "Distribution manner of the M2N communication. ";
   doc += "\"" + VALUE_POINT_TO_POINT + "\" uses a pure point to point communication and is recommended. ";
   doc += "\"" + VALUE_GATHER_SCATTER + "\" should only be used if at least one serial participant is used ";
   doc += "or for troubleshooting.";
   attrDistrTypeBoth.setDocumentation(doc);
-  ValidatorEquals<std::string> validDistrGatherScatter ( VALUE_GATHER_SCATTER );
-  ValidatorEquals<std::string> validDistrP2P ( VALUE_POINT_TO_POINT);
-  attrDistrTypeBoth.setValidator ( validDistrGatherScatter || validDistrP2P );
+  ValidatorEquals<std::string> validDistrGatherScatter(VALUE_GATHER_SCATTER);
+  ValidatorEquals<std::string> validDistrP2P(VALUE_POINT_TO_POINT);
+  attrDistrTypeBoth.setValidator(validDistrGatherScatter || validDistrP2P);
   attrDistrTypeBoth.setDefaultValue(VALUE_POINT_TO_POINT);
 
-  XMLAttribute<std::string> attrDistrTypeOnly ( ATTR_DISTRIBUTION_TYPE);
+  XMLAttribute<std::string> attrDistrTypeOnly(ATTR_DISTRIBUTION_TYPE);
   doc = "Distribution manner of the M2N communication .";
   doc += "\"" + VALUE_POINT_TO_POINT + "\" uses a pure point to point communication and is recommended. ";
   doc += "\"" + VALUE_GATHER_SCATTER + "\" should only be used if at least one serial participant is used ";
   doc += "or for troubleshooting.";
   attrDistrTypeOnly.setDocumentation(doc);
-  attrDistrTypeOnly.setValidator ( validDistrGatherScatter );
+  attrDistrTypeOnly.setValidator(validDistrGatherScatter);
   attrDistrTypeOnly.setDefaultValue(VALUE_GATHER_SCATTER);
 
-  XMLAttribute<std::string> attrFrom ( ATTR_FROM );
+  XMLAttribute<std::string> attrFrom(ATTR_FROM);
   doc = "First participant name involved in communication. For performance reasons, we recommend to use ";
   doc += "the participant with less ranks at the coupling interface as \"from\" in the m2n communication.";
   attrFrom.setDocumentation(doc);
@@ -125,30 +105,27 @@ M2NConfiguration:: M2NConfiguration
   doc = "Second participant name involved in communication.";
   attrTo.setDocumentation(doc);
 
-  for (XMLTag& tag : tags) {
+  for (XMLTag &tag : tags) {
     tag.addAttribute(attrFrom);
     tag.addAttribute(attrTo);
-    if(tag.getName() == VALUE_MPI || tag.getName() == VALUE_SOCKETS){
+    if (tag.getName() == VALUE_MPI || tag.getName() == VALUE_SOCKETS) {
       tag.addAttribute(attrDistrTypeBoth);
-    }
-    else{
+    } else {
       tag.addAttribute(attrDistrTypeOnly);
     }
     parent.addSubtag(tag);
   }
 }
 
-m2n::PtrM2N M2NConfiguration:: getM2N
-(
-  const std::string& from,
-  const std::string& to )
+m2n::PtrM2N M2NConfiguration::getM2N(
+    const std::string &from,
+    const std::string &to)
 {
   using std::get;
-  for (M2NTuple & tuple : _m2ns){
-    if ((get<1>(tuple) == from) && (get<2>(tuple) == to)){
+  for (M2NTuple &tuple : _m2ns) {
+    if ((get<1>(tuple) == from) && (get<2>(tuple) == to)) {
       return get<0>(tuple);
-    }
-    else if ((get<2>(tuple) == from) && (get<1>(tuple) == to)){
+    } else if ((get<2>(tuple) == from) && (get<1>(tuple) == to)) {
       return get<0>(tuple);
     }
   }
@@ -158,61 +135,57 @@ m2n::PtrM2N M2NConfiguration:: getM2N
   throw error.str();
 }
 
-void M2NConfiguration:: xmlTagCallback
-(
-   utils::XMLTag& tag )
+void M2NConfiguration::xmlTagCallback(
+    xml::XMLTag &tag)
 {
-  if (tag.getNamespace() == TAG){
+  if (tag.getNamespace() == TAG) {
     std::string from = tag.getStringAttributeValue(ATTR_FROM);
-    std::string to = tag.getStringAttributeValue(ATTR_TO);
+    std::string to   = tag.getStringAttributeValue(ATTR_TO);
     checkDuplicates(from, to);
     std::string distrType = tag.getStringAttributeValue(ATTR_DISTRIBUTION_TYPE);
 
     com::PtrCommunicationFactory comFactory;
-    com::PtrCommunication com;
-    if (tag.getName() == VALUE_SOCKETS){
-        std::string network = tag.getStringAttributeValue(ATTR_NETWORK);
-        int port = tag.getIntAttributeValue(ATTR_PORT);
+    com::PtrCommunication        com;
+    if (tag.getName() == VALUE_SOCKETS) {
+      std::string network = tag.getStringAttributeValue(ATTR_NETWORK);
+      int         port    = tag.getIntAttributeValue(ATTR_PORT);
 
-        CHECK(not utils::isTruncated<unsigned short>(port),
-              "The value given for the \"port\" attribute is not a 16-bit unsigned integer: " << port);
+      CHECK(not utils::isTruncated<unsigned short>(port),
+            "The value given for the \"port\" attribute is not a 16-bit unsigned integer: " << port);
 
-        std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
-        comFactory = std::make_shared<com::SocketCommunicationFactory>(port, false, network, dir);
-        com = comFactory->newCommunication();
-    }
-    else if (tag.getName() == VALUE_MPI){
       std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
-#     ifdef PRECICE_NO_MPI
-        std::ostringstream error;
-        error << "Communication type \"" << VALUE_MPI << "\" can only be used "
-              << "when preCICE is compiled with argument \"mpi=on\"";
-        throw error.str();
-#     else
-        comFactory = std::make_shared<com::MPIPortsCommunicationFactory>(dir);
-      com = comFactory->newCommunication();
-#     endif
+      comFactory      = std::make_shared<com::SocketCommunicationFactory>(port, false, network, dir);
+      com             = comFactory->newCommunication();
+    } else if (tag.getName() == VALUE_MPI) {
+      std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
+#ifdef PRECICE_NO_MPI
+      std::ostringstream error;
+      error << "Communication type \"" << VALUE_MPI << "\" can only be used "
+            << "when preCICE is compiled with argument \"mpi=on\"";
+      throw error.str();
+#else
+      comFactory = std::make_shared<com::MPIPortsCommunicationFactory>(dir);
+      com        = comFactory->newCommunication();
+#endif
+    } else if (tag.getName() == VALUE_MPI_SINGLE) {
+#ifdef PRECICE_NO_MPI
+      std::ostringstream error;
+      error << "Communication type \"" << VALUE_MPI_SINGLE << "\" can only be used "
+            << "when preCICE is compiled with argument \"mpi=on\"";
+      throw error.str();
+#else
+      com        = std::make_shared<com::MPIDirectCommunication>();
+#endif
     }
-    else if (tag.getName() == VALUE_MPI_SINGLE){
-#     ifdef PRECICE_NO_MPI
-        std::ostringstream error;
-        error << "Communication type \"" << VALUE_MPI_SINGLE << "\" can only be used "
-              << "when preCICE is compiled with argument \"mpi=on\"";
-        throw error.str();
-#     else
-        com = std::make_shared<com::MPIDirectCommunication>();
-#     endif
-    }
-    
+
     assertion(com.get() != nullptr);
 
     DistributedComFactory::SharedPointer distrFactory;
-    if(tag.getName() == VALUE_MPI_SINGLE || distrType == VALUE_GATHER_SCATTER){
+    if (tag.getName() == VALUE_MPI_SINGLE || distrType == VALUE_GATHER_SCATTER) {
       assertion(distrType == VALUE_GATHER_SCATTER);
       distrFactory = std::make_shared<GatherScatterComFactory>(com);
-    }
-    else if(distrType == VALUE_POINT_TO_POINT){
-      assertion(tag.getName() == VALUE_MPI || tag.getName() == VALUE_SOCKETS);
+    } else if (distrType == VALUE_POINT_TO_POINT) {
+      assertion(tag.getName() == VALUE_MPI or tag.getName() == "mpi-singleports" or tag.getName() == VALUE_SOCKETS);
       distrFactory = std::make_shared<PointToPointComFactory>(comFactory);
     }
     assertion(distrFactory.get() != nullptr);
@@ -222,18 +195,17 @@ void M2NConfiguration:: xmlTagCallback
   }
 }
 
-void M2NConfiguration:: checkDuplicates
-(
-  const std::string& from,
-  const std::string& to )
+void M2NConfiguration::checkDuplicates(
+    const std::string &from,
+    const std::string &to)
 {
   using std::get;
   bool alreadyAdded = false;
-  for (M2NTuple& tuple : _m2ns){
+  for (M2NTuple &tuple : _m2ns) {
     alreadyAdded |= (get<1>(tuple) == from) && (get<2>(tuple) == to);
     alreadyAdded |= (get<2>(tuple) == from) && (get<1>(tuple) == to);
   }
-  if (alreadyAdded){
+  if (alreadyAdded) {
     std::ostringstream error;
     error << "Multiple communication defined between participant \"" << from
           << "\" and \"" << to << "\"";
@@ -241,4 +213,5 @@ void M2NConfiguration:: checkDuplicates
   }
 }
 
-}} // namespace precice, com
+} // namespace m2n
+} // namespace precice

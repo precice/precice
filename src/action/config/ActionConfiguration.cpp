@@ -1,7 +1,7 @@
 #include "ActionConfiguration.hpp"
-#include "utils/xml/XMLAttribute.hpp"
-#include "utils/xml/ValidatorEquals.hpp"
-#include "utils/xml/ValidatorOr.hpp"
+#include "xml/XMLAttribute.hpp"
+#include "xml/ValidatorEquals.hpp"
+#include "xml/ValidatorOr.hpp"
 #include "action/ModifyCoordinatesAction.hpp"
 #include "action/ScaleByAreaAction.hpp"
 #include "action/ScaleByDtAction.hpp"
@@ -14,13 +14,11 @@
 namespace precice {
 namespace action {
 
-logging::Logger ActionConfiguration::
-  _log("config::ActionConfiguration");
-
+logging::Logger ActionConfiguration:: _log("config::ActionConfiguration");
 
 ActionConfiguration:: ActionConfiguration
 (
-  utils::XMLTag&                    parent,
+  xml::XMLTag&                    parent,
   const mesh::PtrMeshConfiguration& meshConfig )
 :
   TAG("action"),
@@ -53,7 +51,7 @@ ActionConfiguration:: ActionConfiguration
   _configuredAction(),
   _actions()
 {
-  using namespace utils;
+  using namespace xml;
   std::string doc;
   XMLTag tagSourceData(*this, TAG_SOURCE_DATA, XMLTag::OCCUR_ONCE);
   tagSourceData.setDocumentation("Data to read from.");
@@ -185,7 +183,7 @@ ActionConfiguration:: ActionConfiguration
 
 void ActionConfiguration:: xmlTagCallback
 (
-  utils::XMLTag& callingTag )
+  xml::XMLTag& callingTag )
 {
   TRACE(callingTag.getName());
   if (callingTag.getNamespace() == TAG){
@@ -218,7 +216,7 @@ void ActionConfiguration:: xmlTagCallback
 
 void ActionConfiguration:: xmlEndTagCallback
 (
-  utils::XMLTag& callingTag )
+  xml::XMLTag& callingTag )
 {
   if (callingTag.getNamespace() == TAG){
     createAction();
@@ -323,11 +321,13 @@ void ActionConfiguration:: createAction()
         new action::ComputeCurvatureAction(timing, targetDataID,
         mesh));
   }
+  #ifndef PRECICE_NO_PYTHON
   else if ( _configuredAction.type == NAME_PYTHON ){
     action = action::PtrAction (
         new action::PythonAction(timing, _configuredAction.path, _configuredAction.module,
         mesh, targetDataID, sourceDataID) );
   }
+  #endif
   assertion(action.get() != nullptr);
   _actions.push_back(action);
 }
@@ -352,8 +352,7 @@ action::Action::Timing ActionConfiguration:: getTiming () const
     timing = action::Action::ON_TIMESTEP_COMPLETE_POST;
   }
   else {
-    ERROR("Unknown action timing \""
-                   <<  _configuredAction.timing << "\"!" );
+    ERROR("Unknown action timing \"" <<  _configuredAction.timing << "\"!" );
   }
   return timing;
 }

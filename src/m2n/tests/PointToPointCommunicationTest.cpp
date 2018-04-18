@@ -1,105 +1,35 @@
 #ifndef PRECICE_NO_MPI
 
-#include "PointToPointCommunicationTest.hpp"
-
-#include "m2n/PointToPointCommunication.hpp"
+#include <vector>
 #include "com/MPIDirectCommunication.hpp"
 #include "com/MPIPortsCommunicationFactory.hpp"
 #include "com/SocketCommunicationFactory.hpp"
+#include "m2n/PointToPointCommunication.hpp"
 #include "mesh/Mesh.hpp"
+#include "testing/Testing.hpp"
 #include "utils/MasterSlave.hpp"
 
-#include "tarch/tests/TestCaseFactory.h"
-
-#include <vector>
-#include <iostream>
-
-using precice::utils::Parallel;
 using precice::utils::MasterSlave;
+using precice::utils::Parallel;
 
-using std::vector;
 using std::rand;
+using std::vector;
 
-registerTest(precice::m2n::tests::PointToPointCommunicationTest)
+using namespace precice;
+using namespace m2n;
 
-namespace precice {
-namespace m2n {
-namespace tests {
+BOOST_AUTO_TEST_SUITE(M2NTests)
 
-void
-process(vector<double>& data) {
-  for (auto & elem : data) {
+void process(vector<double> &data)
+{
+  for (auto &elem : data) {
     elem += MasterSlave::_rank + 1;
   }
 }
 
-bool
-equal(vector<double> const& data, vector<double> const& expectedData) {
-  bool valid = true;
-
-  if (data.size() != expectedData.size())
-    return false;
-
-  for (size_t i = 0; i < data.size(); ++i) {
-    valid &= (data[i] == expectedData[i]);
-  }
-
-  return valid;
-}
-
-logging::Logger PointToPointCommunicationTest::_log(
-    "precice::m2n::tests::PointToPointCommunicationTest");
-
-PointToPointCommunicationTest::PointToPointCommunicationTest()
-    : TestCase("m2n::tests::PointToPointCommunicationTest") {
-}
-
-void
-PointToPointCommunicationTest::run() {
-  TRACE();
-
-  Parallel::synchronizeProcesses();
-
-  if (Parallel::getCommunicatorSize() > 3) {
-    auto communicator = Parallel::getRestrictedCommunicator({0, 1, 2, 3});
-
-    if (Parallel::getProcessRank() < 4) {
-      Parallel::setGlobalCommunicator(communicator);
-      testMethod(testSocketCommunication);
-      testMethod(testMPIPortsCommunication);
-      Parallel::setGlobalCommunicator(Parallel::getCommunicatorWorld());
-    }
-  }
-}
-
-void
-PointToPointCommunicationTest::testSocketCommunication() {
-  TRACE();
-
-  com::PtrCommunicationFactory cf(
-      new com::SocketCommunicationFactory);
-
-  test(cf);
-  test2(cf);
-}
-
-void
-PointToPointCommunicationTest::testMPIPortsCommunication() {
-  TRACE();
-
-  com::PtrCommunicationFactory cf(
-      new com::MPIPortsCommunicationFactory);
-
-  test(cf);
-  test2(cf);
-}
-
-void
-PointToPointCommunicationTest::test(
-    com::PtrCommunicationFactory cf) {
+void P2PComTest1(com::PtrCommunicationFactory cf)
+{
   assertion(Parallel::getCommunicatorSize() == 4);
-
-  validateEquals(Parallel::getCommunicatorSize(), 4);
 
   MasterSlave::_communication = std::make_shared<com::MPIDirectCommunication>();
 
@@ -112,12 +42,12 @@ PointToPointCommunicationTest::test(
 
   switch (Parallel::getProcessRank()) {
   case 0: {
-    Parallel::splitCommunicator( "A.Master");
+    Parallel::splitCommunicator("A.Master");
 
-    MasterSlave::_rank = 0;
-    MasterSlave::_size = 2;
+    MasterSlave::_rank       = 0;
+    MasterSlave::_size       = 2;
     MasterSlave::_masterMode = true;
-    MasterSlave::_slaveMode = false;
+    MasterSlave::_slaveMode  = false;
 
     MasterSlave::_communication->acceptConnection("A.Master", "A.Slave", 0, 1);
     MasterSlave::_communication->setRankOffset(1);
@@ -136,33 +66,33 @@ PointToPointCommunicationTest::test(
     mesh->getVertexDistribution()[1].push_back(5); // <-
     mesh->getVertexDistribution()[1].push_back(6);
 
-    data = {10, 20, 40, 60, 80};
+    data         = {10, 20, 40, 60, 80};
     expectedData = {10 + 2, 4 * 20 + 3, 40 + 2, 4 * 60 + 3, 80 + 2};
 
     break;
   }
   case 1: {
-    Parallel::splitCommunicator( "A.Slave");
+    Parallel::splitCommunicator("A.Slave");
 
-    MasterSlave::_rank = 1;
-    MasterSlave::_size = 2;
+    MasterSlave::_rank       = 1;
+    MasterSlave::_size       = 2;
     MasterSlave::_masterMode = false;
-    MasterSlave::_slaveMode = true;
+    MasterSlave::_slaveMode  = true;
 
     MasterSlave::_communication->requestConnection("A.Master", "A.Slave", 0, 1);
 
-    data = {20, 30, 50, 60, 70};
+    data         = {20, 30, 50, 60, 70};
     expectedData = {4 * 20 + 3, 30 + 1, 50 + 2, 4 * 60 + 3, 70 + 1};
 
     break;
   }
   case 2: {
-    Parallel::splitCommunicator( "B.Master");
+    Parallel::splitCommunicator("B.Master");
 
-    MasterSlave::_rank = 0;
-    MasterSlave::_size = 2;
+    MasterSlave::_rank       = 0;
+    MasterSlave::_size       = 2;
     MasterSlave::_masterMode = true;
-    MasterSlave::_slaveMode = false;
+    MasterSlave::_slaveMode  = false;
 
     MasterSlave::_communication->acceptConnection("B.Master", "B.Slave", 0, 1);
     MasterSlave::_communication->setRankOffset(1);
@@ -181,22 +111,25 @@ PointToPointCommunicationTest::test(
     mesh->getVertexDistribution()[1].push_back(5); // <-
     mesh->getVertexDistribution()[1].push_back(7);
 
-    data = {static_cast<double>(rand()), static_cast<double>(rand()), static_cast<double>(rand()), static_cast<double>(rand())};
+    data         = {static_cast<double>(rand()), static_cast<double>(rand()),
+            static_cast<double>(rand()), static_cast<double>(rand())};
     expectedData = {2 * 20, 30, 2 * 60, 70};
 
     break;
   }
   case 3: {
-    Parallel::splitCommunicator( "B.Slave");
+    Parallel::splitCommunicator("B.Slave");
 
-    MasterSlave::_rank = 1;
-    MasterSlave::_size = 2;
+    MasterSlave::_rank       = 1;
+    MasterSlave::_size       = 2;
     MasterSlave::_masterMode = false;
-    MasterSlave::_slaveMode = true;
+    MasterSlave::_slaveMode  = true;
 
     MasterSlave::_communication->requestConnection("B.Master", "B.Slave", 0, 1);
 
-    data = {static_cast<double>(rand()), static_cast<double>(rand()), static_cast<double>(rand()), static_cast<double>(rand()), static_cast<double>(rand()), static_cast<double>(rand())};
+    data         = {static_cast<double>(rand()), static_cast<double>(rand()),
+            static_cast<double>(rand()), static_cast<double>(rand()),
+            static_cast<double>(rand()), static_cast<double>(rand())};
     expectedData = {10, 2 * 20, 40, 50, 2 * 60, 80};
 
     break;
@@ -210,13 +143,13 @@ PointToPointCommunicationTest::test(
 
     c.receive(data.data(), data.size());
 
-    validate(equal(data, expectedData));
+    BOOST_TEST(data == expectedData);
   } else {
     c.acceptConnection("B", "A");
 
     c.receive(data.data(), data.size());
 
-    validate(equal(data, expectedData));
+    BOOST_TEST(data == expectedData);
 
     process(data);
 
@@ -224,22 +157,16 @@ PointToPointCommunicationTest::test(
   }
 
   MasterSlave::_communication.reset();
-  MasterSlave::_rank = Parallel::getProcessRank();
-  MasterSlave::_size = Parallel::getCommunicatorSize();
-  MasterSlave::_masterMode = false;
-  MasterSlave::_slaveMode = false;
+  MasterSlave::reset();
 
   Parallel::synchronizeProcesses();
   utils::Parallel::clearGroups();
 }
 
 /// a very similar test, but with a vertex that has been completely filtered out
-void
-PointToPointCommunicationTest::test2(
-    com::PtrCommunicationFactory cf) {
+void P2PComTest2(com::PtrCommunicationFactory cf)
+{
   assertion(Parallel::getCommunicatorSize() == 4);
-
-  validateEquals(Parallel::getCommunicatorSize(), 4);
 
   MasterSlave::_communication = std::make_shared<com::MPIDirectCommunication>();
 
@@ -252,12 +179,12 @@ PointToPointCommunicationTest::test2(
 
   switch (Parallel::getProcessRank()) {
   case 0: {
-    Parallel::splitCommunicator( "A.Master");
+    Parallel::splitCommunicator("A.Master");
 
-    MasterSlave::_rank = 0;
-    MasterSlave::_size = 2;
+    MasterSlave::_rank       = 0;
+    MasterSlave::_size       = 2;
     MasterSlave::_masterMode = true;
-    MasterSlave::_slaveMode = false;
+    MasterSlave::_slaveMode  = false;
 
     MasterSlave::_communication->acceptConnection("A.Master", "A.Slave", 0, 1);
     MasterSlave::_communication->setRankOffset(1);
@@ -276,33 +203,33 @@ PointToPointCommunicationTest::test2(
     mesh->getVertexDistribution()[1].push_back(5); // <-
     mesh->getVertexDistribution()[1].push_back(6);
 
-    data = {10, 20, 40, 60, 80};
-    expectedData = {10 + 2, 4 * 20 + 3, 2*40 + 3, 4 * 60 + 3, 80 + 2};
+    data         = {10, 20, 40, 60, 80};
+    expectedData = {10 + 2, 4 * 20 + 3, 2 * 40 + 3, 4 * 60 + 3, 80 + 2};
 
     break;
   }
   case 1: {
-    Parallel::splitCommunicator( "A.Slave");
+    Parallel::splitCommunicator("A.Slave");
 
-    MasterSlave::_rank = 1;
-    MasterSlave::_size = 2;
+    MasterSlave::_rank       = 1;
+    MasterSlave::_size       = 2;
     MasterSlave::_masterMode = false;
-    MasterSlave::_slaveMode = true;
+    MasterSlave::_slaveMode  = true;
 
     MasterSlave::_communication->requestConnection("A.Master", "A.Slave", 0, 1);
 
-    data = {20, 30, 50, 60, 70};
+    data         = {20, 30, 50, 60, 70};
     expectedData = {4 * 20 + 3, 0, 50 + 2, 4 * 60 + 3, 70 + 1};
 
     break;
   }
   case 2: {
-    Parallel::splitCommunicator( "B.Master");
+    Parallel::splitCommunicator("B.Master");
 
-    MasterSlave::_rank = 0;
-    MasterSlave::_size = 2;
+    MasterSlave::_rank       = 0;
+    MasterSlave::_size       = 2;
     MasterSlave::_masterMode = true;
-    MasterSlave::_slaveMode = false;
+    MasterSlave::_slaveMode  = false;
 
     MasterSlave::_communication->acceptConnection("B.Master", "B.Slave", 0, 1);
     MasterSlave::_communication->setRankOffset(1);
@@ -321,22 +248,25 @@ PointToPointCommunicationTest::test2(
     mesh->getVertexDistribution()[1].push_back(5); // <-
     mesh->getVertexDistribution()[1].push_back(7);
 
-    data = {static_cast<double>(rand()), static_cast<double>(rand()), static_cast<double>(rand()), static_cast<double>(rand())};
+    data         = {static_cast<double>(rand()), static_cast<double>(rand()),
+            static_cast<double>(rand()), static_cast<double>(rand())};
     expectedData = {2 * 20, 40, 2 * 60, 70};
 
     break;
   }
   case 3: {
-    Parallel::splitCommunicator( "B.Slave");
+    Parallel::splitCommunicator("B.Slave");
 
-    MasterSlave::_rank = 1;
-    MasterSlave::_size = 2;
+    MasterSlave::_rank       = 1;
+    MasterSlave::_size       = 2;
     MasterSlave::_masterMode = false;
-    MasterSlave::_slaveMode = true;
+    MasterSlave::_slaveMode  = true;
 
     MasterSlave::_communication->requestConnection("B.Master", "B.Slave", 0, 1);
 
-    data = {static_cast<double>(rand()), static_cast<double>(rand()), static_cast<double>(rand()), static_cast<double>(rand()), static_cast<double>(rand()), static_cast<double>(rand())};
+    data         = {static_cast<double>(rand()), static_cast<double>(rand()),
+            static_cast<double>(rand()), static_cast<double>(rand()),
+            static_cast<double>(rand()), static_cast<double>(rand())};
     expectedData = {10, 2 * 20, 40, 50, 2 * 60, 80};
 
     break;
@@ -350,13 +280,13 @@ PointToPointCommunicationTest::test2(
 
     c.receive(data.data(), data.size());
 
-    validate(equal(data, expectedData));
+    BOOST_TEST(data == expectedData);
   } else {
     c.acceptConnection("B", "A");
 
     c.receive(data.data(), data.size());
 
-    validate(equal(data, expectedData));
+    BOOST_TEST(data == expectedData);
 
     process(data);
 
@@ -364,17 +294,32 @@ PointToPointCommunicationTest::test2(
   }
 
   MasterSlave::_communication.reset();
-  MasterSlave::_rank = Parallel::getProcessRank();
-  MasterSlave::_size = Parallel::getCommunicatorSize();
-  MasterSlave::_masterMode = false;
-  MasterSlave::_slaveMode = false;
+  MasterSlave::reset();
 
   Parallel::synchronizeProcesses();
   utils::Parallel::clearGroups();
 }
 
+BOOST_AUTO_TEST_CASE(SocketCommunication, *testing::OnSize(4))
+{
+  com::PtrCommunicationFactory cf(new com::SocketCommunicationFactory);
+  if (utils::Parallel::getProcessRank() < 4) {
+    P2PComTest1(cf);
+    P2PComTest2(cf);
+  }
+}
 
+BOOST_AUTO_TEST_CASE(MPIPortsCommunication,
+                     *testing::OnSize(4) *
+                         boost::unit_test::label("MPI_Ports"))
+{
+  com::PtrCommunicationFactory cf(new com::MPIPortsCommunicationFactory);
+  if (utils::Parallel::getProcessRank() < 4) {
+    P2PComTest1(cf);
+    P2PComTest2(cf);
+  }
+}
 
-}}} // namespace precice, m2n, tests
+BOOST_AUTO_TEST_SUITE_END()
 
 #endif // not PRECICE_NO_MPI

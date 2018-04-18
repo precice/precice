@@ -11,7 +11,7 @@ Steps:
 2. Define the environment variable PRECICE_ROOT as the path to preCICE on your system.
 3. Execute the following command:
 
-   $ python setup.py build_ext --inplace
+   $ python2 setup.py build_ext --inplace
 
 This generates the PySolverInterface.so library. If you use preCICE as a static library, you have to manually add all thrid-party libraries (boost, python, petsc) that you use to setup.py. It is recommended to use preCICE as a shared library here. 
 

@@ -11,6 +11,7 @@
 #include "logging/Logger.hpp"
 #include "utils/PointerVector.hpp"
 #include "partition/ReceivedPartition.hpp"
+#include "utils/MasterSlave.hpp"
 #include <string>
 
 namespace precice {
@@ -19,11 +20,15 @@ namespace precice {
     struct MeshContext;
     struct MappingContext;
   }
-namespace tests {
-    class SolverInterfaceTest;
-    class SolverInterfaceTestRemote;
+}
+
+// Forward declaration to friend the boost test struct
+namespace PreciceTests {
+  namespace Serial {
+    struct TestConfiguration;
   }
 }
+
 
 namespace precice {
 namespace impl {
@@ -194,8 +199,7 @@ private:
   void checkDuplicatedData ( const mesh::PtrData& data );
 
   /// To allow white box tests.
-  friend class tests::SolverInterfaceTest;
-  friend class tests::SolverInterfaceTestRemote;
+  friend struct PreciceTests::Serial::TestConfiguration;
 };
 
 

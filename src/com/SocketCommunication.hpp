@@ -21,12 +21,12 @@ template <typename Protocol>
 class stream_socket_service;
 template <typename Protocol, typename StreamSocketService>
 class basic_stream_socket;
-}
+} // namespace asio
 namespace system
 {
 class error_code;
 }
-}
+} // namespace boost
 
 namespace precice
 {
@@ -45,9 +45,6 @@ public:
 
   virtual ~SocketCommunication();
 
-  /// Returns true, if a connection to a remote participant has been setup.
-  virtual bool isConnected();
-
   /**
    * @brief Returns the number of processes in the remote communicator.
    *
@@ -56,12 +53,10 @@ public:
   virtual size_t getRemoteCommunicatorSize();
 
   /**
-   * @brief Accepts connection from participant, which has to call
-   *requestConnection().
+   * @brief Accepts connection from participant, which has to call requestConnection().
    *
    * If several connections are going in to a server, the server has to call
-   *this
-   * method, while the clients have to call requestConnection().
+   * this method, while the clients have to call requestConnection().
    *
    * @param[in] nameAcceptor Name of calling participant.
    * @param[in] nameRequester Name of remote participant to connect to.
@@ -76,12 +71,10 @@ public:
                                         int                requesterCommunicatorSize);
 
   /**
-   * @brief Requests connection from participant, which has to call
-   *acceptConnection().
+   * @brief Requests connection from participant, which has to call acceptConnection().
    *
    * If several connections are going in to a server, the clients have to call
-   *this
-   * method, while the server has to call acceptConnection().
+   * this method, while the server has to call acceptConnection().
    *
    * @param nameAcceptor [IN] Name of remote participant to connect to.
    * @param nameReuester [IN] Name of calling participant.
@@ -101,133 +94,73 @@ public:
    */
   virtual void closeConnection();
 
-  /**
-   * @brief Is empty.
-   */
-  virtual void startSendPackage(int rankReceiver);
-
-  /**
-   * @brief Is empty.
-   */
-  virtual void finishSendPackage();
-
-  /**
-   * @brief Just returns rank of sender.
-   */
-  virtual int startReceivePackage(int rankSender);
-
-  /**
-   * @brief Is empty.
-   */
-  virtual void finishReceivePackage();
-
-  /**
-   * @brief Sends a std::string to process with given rank.
-   */
+  /// Sends a std::string to process with given rank.
   virtual void send(std::string const &itemToSend, int rankReceiver);
 
-  /**
-   * @brief Sends an array of integer values.
-   */
+  /// Sends an array of integer values.
   virtual void send(int *itemsToSend, int size, int rankReceiver);
 
-  /**
-   * @brief Asynchronously sends an array of integer values.
-   */
+  /// Asynchronously sends an array of integer values.
   virtual PtrRequest aSend(int *itemsToSend,
                            int  size,
                            int  rankReceiver);
 
-  /**
-   * @brief Sends an array of double values.
-   */
+  /// Sends an array of double values.
   virtual void send(double *itemsToSend, int size, int rankReceiver);
 
-  /**
-   * @brief Asynchronously sends an array of double values.
-   */
+  /// Asynchronously sends an array of double values.
   virtual PtrRequest aSend(double *itemsToSend,
                            int     size,
                            int     rankReceiver);
 
-  /**
-   * @brief Sends a double to process with given rank.
-   */
+  /// Sends a double to process with given rank.
   virtual void send(double itemToSend, int rankReceiver);
 
-  /**
-   * @brief Asynchronously sends a double to process with given rank.
-   */
+  /// Asynchronously sends a double to process with given rank.
   virtual PtrRequest aSend(double *itemToSend, int rankReceiver);
 
-  /**
-   * @brief Sends an int to process with given rank.
-   */
+  /// Sends an int to process with given rank.
   virtual void send(int itemToSend, int rankReceiver);
 
-  /**
-   * @brief Asynchronously sends an int to process with given rank.
-   */
+  /// Asynchronously sends an int to process with given rank.
   virtual PtrRequest aSend(int *itemToSend, int rankReceiver);
 
-  /**
-   * @brief Sends a bool to process with given rank.
-   */
+  /// Sends a bool to process with given rank.
   virtual void send(bool itemToSend, int rankReceiver);
 
-  /**
-   * @brief Asynchronously sends a bool to process with given rank.
-   */
+  /// Asynchronously sends a bool to process with given rank.
   virtual PtrRequest aSend(bool *itemToSend, int rankReceiver);
 
-  /**
-   * @brief Receives a std::string from process with given rank.
-   */
+  /// Receives a std::string from process with given rank.
   virtual void receive(std::string &itemToReceive, int rankSender);
 
-  /**
-   * @brief Receives an array of integer values.
-   */
+  /// Receives an array of integer values.
   virtual void receive(int *itemsToReceive, int size, int rankSender);
 
-  /**
-   * @brief Asynchronously receives an array of integer values.
-   */
+  /// Asynchronously receives an array of integer values.
   virtual PtrRequest aReceive(int *itemsToReceive,
                               int  size,
                               int  rankSender);
 
-  /**
-   * @brief Receives an array of double values.
-   */
+  /// Receives an array of double values.
   virtual void receive(double *itemsToReceive, int size, int rankSender);
 
-  /**
-   * @brief Asynchronously receives an array of double values.
-   */
+  /// Asynchronously receives an array of double values.
   virtual PtrRequest aReceive(double *itemsToReceive,
                               int     size,
                               int     rankSender);
 
-  /**
-   * @brief Receives a double from process with given rank.
-   */
+  /// Receives a double from process with given rank.
   virtual void receive(double &itemToReceive, int rankSender);
 
-  /**
-   * @brief Asynchronously receives a double from process with given rank.
-   */
+  /// Asynchronously receives a double from process with given rank.
   virtual PtrRequest aReceive(double *itemToReceive,
                               int     rankSender);
 
-  /**
-   * @brief Receives an int from process with given rank.
-   */
+  /// Receives an int from process with given rank.
   virtual void receive(int &itemToReceive, int rankSender);
 
-  /**
-   * @brief Asynchronously receives an int from process with given rank.
-   */
+  /// Asynchronously receives an int from process with given rank.
   virtual PtrRequest aReceive(int *itemToReceive, int rankSender);
 
   /// Receives a bool from process with given rank.
@@ -237,9 +170,9 @@ public:
   virtual PtrRequest aReceive(bool *itemToReceive, int rankSender);
 
 private:
-  static logging::Logger _log;
+  logging::Logger _log{"com::SocketCommunication"};
 
-  // @brief Port used for socket connection.
+  /// Port used for socket connection.
   unsigned short _portNumber;
 
   bool _reuseAddress;
@@ -250,9 +183,7 @@ private:
   /// Directory where IP address is exchanged by file.
   std::string _addressDirectory;
 
-  bool _isConnected;
-
-  int _remoteCommunicatorSize;
+  int _remoteCommunicatorSize = 0;
 
   typedef boost::asio::io_service IOService;
   std::shared_ptr<IOService>      _ioService;
@@ -274,7 +205,7 @@ private:
 
   std::string getIpAddress();
 };
-}
-} // namespace precice, com
+} // namespace com
+} // namespace precice
 
 #endif // not PRECICE_NO_SOCKETS

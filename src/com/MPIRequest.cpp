@@ -24,7 +24,7 @@ void MPIRequest::wait()
 {
   MPI_Wait(&_request, MPI_STATUS_IGNORE);
 }
-}
-} // namespace precice, com
+} // namespace com
+} // namespace precice
 
 #endif // not PRECICE_NO_MPI

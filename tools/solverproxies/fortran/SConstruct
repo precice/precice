@@ -9,9 +9,6 @@ libs    = []
 preciceRootPath = os.getenv('PRECICE_ROOT')
 cpppath.append(preciceRootPath + '/src/')
 
-tarchSrcPath = os.getenv('TARCH_SRC')
-cpppath.append(tarchSrcPath)
-
 # MPI
 mpiIncPath = '/usr/include/mpich2'
 cpppath.append(mpiIncPath) 

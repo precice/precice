@@ -1,12 +1,12 @@
-#ifndef PRECICE_NO_MPI
 #pragma once
+
+#ifndef PRECICE_NO_MPI
 
 #include "com/MPIPortsCommunication.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include "utils/Globals.hpp"
 #include "utils/MasterSlave.hpp"
-// #include "utils/Parallel.hpp"
 #include <Eigen/Core>
 
 namespace precice
@@ -27,14 +27,14 @@ public:
   /// Initializes the post-processing.
   void initialize(com::PtrCommunication leftComm,
                   com::PtrCommunication rightComm,
-                  bool needcyclicComm);
+                  bool                  needcyclicComm);
 
   template <typename Derived1, typename Derived2>
   void multiply(
       Eigen::PlainObjectBase<Derived1> &leftMatrix,
       Eigen::PlainObjectBase<Derived2> &rightMatrix,
       Eigen::PlainObjectBase<Derived2> &result,
-      const std::vector<int> &offsets,
+      const std::vector<int> &          offsets,
       int p, int q, int r,
       bool dotProductComputation = true)
   {
@@ -90,7 +90,7 @@ public:
   void multiply(
       const Eigen::MatrixBase<Derived1> &leftMatrix,
       const Eigen::MatrixBase<Derived2> &rightMatrix,
-      Eigen::PlainObjectBase<Derived3> &result,
+      Eigen::PlainObjectBase<Derived3> & result,
       int p, int q, int r)
   {
     TRACE();
@@ -120,7 +120,7 @@ private:
       Eigen::PlainObjectBase<Derived1> &leftMatrix,
       Eigen::PlainObjectBase<Derived2> &rightMatrix,
       Eigen::PlainObjectBase<Derived2> &result,
-      const std::vector<int> &offsets,
+      const std::vector<int> &          offsets,
       int p, int q, int r)
   {
     TRACE();
@@ -193,8 +193,8 @@ private:
       int sourceProc = (utils::MasterSlave::_rank - cycle < 0) ? utils::MasterSlave::_size + (utils::MasterSlave::_rank - cycle) : utils::MasterSlave::_rank - cycle;
 
       int rows_rcv_nextCycle = (sourceProc_nextCycle > 0) ? offsets[sourceProc_nextCycle + 1] - offsets[sourceProc_nextCycle] : offsets[1];
-      rows_rcv = (sourceProc > 0) ? offsets[sourceProc + 1] - offsets[sourceProc] : offsets[1];
-      leftMatrix_rcv = Eigen::MatrixXd::Zero(rows_rcv_nextCycle, q);
+      rows_rcv               = (sourceProc > 0) ? offsets[sourceProc + 1] - offsets[sourceProc] : offsets[1];
+      leftMatrix_rcv         = Eigen::MatrixXd::Zero(rows_rcv_nextCycle, q);
 
       // initiate asynchronous receive operation for leftMatrix (W_til) from previous processor --> W_til (this data is needed in the next cycle)
       if (cycle < utils::MasterSlave::_size - 1) {
@@ -224,7 +224,7 @@ private:
       Eigen::PlainObjectBase<Derived1> &leftMatrix,
       Eigen::PlainObjectBase<Derived2> &rightMatrix,
       Eigen::PlainObjectBase<Derived2> &result,
-      const std::vector<int> &offsets,
+      const std::vector<int> &          offsets,
       int p, int q, int r)
   {
     TRACE();
@@ -242,37 +242,38 @@ private:
 
       for (int j = 0; j < r; j++) {
 
-        Eigen::VectorXd rMCol = rightMatrix.col(j);
-        double res_ij = utils::MasterSlave::dot(lMRow, rMCol);
+        Eigen::VectorXd rMCol  = rightMatrix.col(j);
+        double          res_ij = utils::MasterSlave::dot(lMRow, rMCol);
 
         // find proc that needs to store the result.
         int local_row;
         if (utils::MasterSlave::_rank == rank) {
-          local_row = i - offsets[rank];
+          local_row            = i - offsets[rank];
           result(local_row, j) = res_ij;
         }
       }
     }
   }
 
-  // @brief multiplies matrices based on a SAXPY-like block-wise computation with a rectangular result matrix of dimension n x m
+  /// Multiplies matrices based on a SAXPY-like block-wise computation with a rectangular result matrix of dimension n x m
   template <typename Derived1, typename Derived2>
   void _multiplyNM_block(
       Eigen::PlainObjectBase<Derived1> &leftMatrix,
       Eigen::PlainObjectBase<Derived2> &rightMatrix,
       Eigen::PlainObjectBase<Derived2> &result,
-      const std::vector<int> &offsets,
+      const std::vector<int> &          offsets,
       int p, int q, int r)
   {
     TRACE();
 
     // ensure that both matrices are stored in the same order. Important for reduce function, that adds serialized data.
-    assertion(leftMatrix.IsRowMajor == rightMatrix.IsRowMajor, leftMatrix.IsRowMajor, rightMatrix.IsRowMajor);
+    assertion(static_cast<int>(leftMatrix.IsRowMajor) == static_cast<int>(rightMatrix.IsRowMajor),
+              leftMatrix.IsRowMajor, rightMatrix.IsRowMajor);
 
     // multiply local block (saxpy-based approach)
     // dimension: (n_global x n_local) * (n_local x m) = (n_global x m)
     Eigen::MatrixXd block = Eigen::MatrixXd::Zero(p, r);
-    block.noalias() = leftMatrix * rightMatrix;
+    block.noalias()       = leftMatrix * rightMatrix;
 
     // all blocks have size (n_global x m)
     // Note: if procs have no vertices, the block size remains (n_global x m), however,
@@ -294,7 +295,7 @@ private:
       result = summarizedBlocks.block(0, 0, offsets[1], r);
 
       for (int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++) {
-        int off = offsets[rankSlave];
+        int off       = offsets[rankSlave];
         int send_rows = offsets[rankSlave + 1] - offsets[rankSlave];
 
         if (summarizedBlocks.block(off, 0, send_rows, r).size() > 0) {
@@ -315,7 +316,6 @@ private:
 
   bool _needCycliclComm;
 };
-
 }
 }
 } // namespace precice, cplscheme, impl

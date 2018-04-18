@@ -14,10 +14,6 @@ namespace precice {
   namespace impl {
     class SolverInterfaceImpl;
   }
-  namespace tests {
-    class SolverInterfaceTest;
-    class SolverInterfaceTestRemote;
-  }
 }
 
 // Forward declaration to friend the boost test struct
@@ -582,10 +578,6 @@ private:
   SolverInterface& operator= ( const SolverInterface& assign );
 
   // @brief To allow white box tests.
-  // tarch integration tests
-  friend class tests::SolverInterfaceTest;
-  friend class tests::SolverInterfaceTestRemote;
-  // boost tests
   friend struct PreciceTests::Parallel::TestFinalize;
   friend struct PreciceTests::Parallel::TestMasterSlaveSetup;
   friend struct PreciceTests::Parallel::GlobalRBFPartitioning;

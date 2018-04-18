@@ -67,50 +67,17 @@ sourcesPrecice = [
     Glob('precice/adapters/fortran/*.cpp')
 ]
 
-sourcesTarchMulticore = [
-    Glob('tarch/multicore/*.cpp')
-]
-
-sourcesTarchLogging = [
-    Glob('tarch/logging/*.cpp'),
-    Glob('tarch/logging/configurations/*.cpp')
-]
-
-sourcesTarch = [
-    Glob('tarch/configuration/*.cpp'),
-    Glob('tarch/irr/*.cpp'),
-    sourcesTarchMulticore,
-    sourcesTarchLogging,
-    Glob('tarch/services/*.cpp'),
-]
-
-sourcesTarchTests = [
-    Glob('tarch/tests/*.cpp'),
-    Glob('tarch/tests/configurations/*.cpp'),
-    Glob('action/tests/*.cpp'),
-    Glob('com/tests/*.cpp'),
-    Glob('cplscheme/tests/*.cpp'),
-    Glob('io/tests/*.cpp'),
-    Glob('m2n/tests/*.cpp'),
-    Glob('mapping/tests/*.cpp'),
-    Glob('mesh/tests/*.cpp'),
-    Glob('query/tests/*.cpp'),
-    Glob('precice/tests/*.cpp'),
-    Glob('precice/tests/couplingmode/*.cpp'),
-    Glob('precice/tests/servermode/*.cpp'),
-    Glob('tarch/la/tests/*.cpp'),
-    Glob('utils/tests/*.cpp')
-]
-
 sourcesTests = [
-    Glob('*/boosttests/*.cpp'),
+    Glob('*/tests/*.cpp'),
     File("testing/main.cpp")
 ]
 
 sourcesUtils = [
     Glob('utils/*.cpp'),
-    Glob('utils/xml/*.cpp'),
+]
 
+sourcesXml = [
+    Glob('xml/*.cpp'),
 ]
 
 sourcesAllNoMain = [
@@ -127,7 +94,7 @@ sourcesAllNoMain = [
     sourcesPrecice,
     sourcesQuery,
     sourcesUtils,
-    sourcesTarch,
+    sourcesXml,
 ]
 
-Return ('sourcesAllNoMain', 'sourcesMain', 'sourcesTests', 'sourcesTarchTests')
+Return ('sourcesAllNoMain', 'sourcesMain', 'sourcesTests')

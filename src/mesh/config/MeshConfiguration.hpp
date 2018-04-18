@@ -4,7 +4,7 @@
 #include "mesh/SharedPointer.hpp"
 #include "utils/Helpers.hpp"
 #include "logging/Logger.hpp"
-#include "utils/xml/XMLTag.hpp"
+#include "xml/XMLTag.hpp"
 #include <vector>
 #include <list>
 #include <map>
@@ -21,7 +21,7 @@ namespace precice {
 namespace precice {
 namespace mesh {
 
-class MeshConfiguration : public utils::XMLTag::Listener
+class MeshConfiguration : public xml::XMLTag::Listener
 {
 public:
 
@@ -32,7 +32,7 @@ public:
    * @brief Constructor, takes a valid data configuration as argument.
    */
   MeshConfiguration (
-    utils::XMLTag&       parent,
+    xml::XMLTag&       parent,
     PtrDataConfiguration config );
 
   void setDimensions ( int dimensions );
@@ -40,7 +40,7 @@ public:
   /**
    * @brief Parses the XML information to build up the mesh configuration.
    */
-  //bool parseSubtag ( utils::XMLTag::XMLReader* xmlReader );
+  //bool parseSubtag ( xml::XMLTag::XMLReader* xmlReader );
 
   /**
    * @brief Has to be called after parsing all mesh tags.
@@ -70,9 +70,9 @@ public:
    */
   mesh::PtrMesh getMesh ( const std::string& meshName ) const;
 
-  virtual void xmlTagCallback ( utils::XMLTag& callingTag );
+  virtual void xmlTagCallback ( xml::XMLTag& callingTag );
 
-  virtual void xmlEndTagCallback ( utils::XMLTag& callingTag );
+  virtual void xmlEndTagCallback ( xml::XMLTag& callingTag );
 
   const PtrDataConfiguration& getDataConfiguration() const;
 

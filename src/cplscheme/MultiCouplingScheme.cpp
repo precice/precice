@@ -56,9 +56,9 @@ void MultiCouplingScheme::initialize
   setupConvergenceMeasures(); // needs _couplingData configured
   setupDataMatrices(_allData); // Reserve memory and initialize data with zero
   if (getPostProcessing().get() != nullptr) {
-    preciceCheck(getPostProcessing()->getDataIDs().size()>=3 ,"initialize()",
-                 "For parallel coupling, the number of coupling data vectors has to be at least 3, not: "
-                 << getPostProcessing()->getDataIDs().size());
+    CHECK(getPostProcessing()->getDataIDs().size()>=3,
+          "For parallel coupling, the number of coupling data vectors has to be at least 3, not: "
+          << getPostProcessing()->getDataIDs().size());
     getPostProcessing()->initialize(_allData); // Reserve memory, initialize
   }
 
@@ -101,8 +101,8 @@ void MultiCouplingScheme::initializeData()
     return;
   }
 
-  preciceCheck(not (hasToSendInitData() && isActionRequired(constants::actionWriteInitialData())),
-               "initializeData()", "InitialData has to be written to preCICE before calling initializeData()");
+  CHECK(not (hasToSendInitData() && isActionRequired(constants::actionWriteInitialData())),
+        "InitialData has to be written to preCICE before calling initializeData()");
 
   setHasDataBeenExchanged(false);
 
@@ -146,8 +146,8 @@ void MultiCouplingScheme::advance()
   TRACE(getTimesteps(), getTime());
   checkCompletenessRequiredActions();
 
-  preciceCheck(!hasToReceiveInitData() && !hasToSendInitData(), "advance()",
-               "initializeData() needs to be called before advance if data has to be initialized!");
+  CHECK(!hasToReceiveInitData() && !hasToSendInitData(),
+        "initializeData() needs to be called before advance if data has to be initialized!");
 
   setHasDataBeenExchanged(false);
   setIsCouplingTimestepComplete(false);
@@ -300,9 +300,8 @@ void MultiCouplingScheme::setupConvergenceMeasures()
 {
   TRACE();
   assertion(not doesFirstStep());
-  preciceCheck(not _convergenceMeasures.empty(), "setupConvergenceMeasures()",
-         "At least one convergence measure has to be defined for "
-         << "an implicit coupling scheme!");
+  CHECK(not _convergenceMeasures.empty(),
+        "At least one convergence measure has to be defined for an implicit coupling scheme!");
   for (ConvergenceMeasure& convMeasure : _convergenceMeasures) {
     int dataID = convMeasure.dataID;
     convMeasure.data = getData(dataID);
