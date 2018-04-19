@@ -1,6 +1,6 @@
 # preCICE Change Log
 
-All notable changes to this project will be documented in this file.
+All notable changes to this project will be documented in this file. For future plans, see our [Roadmap](https://github.com/precice/precice/wiki/Roadmap).
 
 ## 1.1.0
 - Build system:
