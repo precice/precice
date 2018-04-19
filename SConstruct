@@ -96,11 +96,11 @@ print
 print_options(vars)
 
 if env["build"] == 'debug':
-    env["build"] == 'Debug'
+    env["build"] = 'Debug'
     print("WARNING: Lower-case build type 'debug' is deprecated, use 'Debug' instead!")
 
 if env["build"] == 'release':
-    env["build"] == 'Release'
+    env["build"] = 'Release'
     print("WARNING: Lower-case build type 'release' is deprecated, use 'Release' instead!")
 
 
