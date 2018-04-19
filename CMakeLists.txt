@@ -52,7 +52,7 @@ if (MPI)
   set(COMPILE_FLAGS  ${COMPILE_FLAGS} ${MPI_COMPILE_FLAGS})
   set(LINK_FLAGS ${LINK_FLAGS} ${MPI_LINK_FLAGS})
 else()
-  add_definitions(PRECICE_NO_MPI)
+  add_definitions(-DPRECICE_NO_MPI)
 endif()
 
 find_package(Eigen3 REQUIRED)
