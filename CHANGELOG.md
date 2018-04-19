@@ -2,6 +2,9 @@
 
 All notable changes to this project will be documented in this file. For future plans, see our [Roadmap](https://github.com/precice/precice/wiki/Roadmap).
 
+## 1.1.1
+- Fix SConstruct symlink build target failing when using lowercase build (debug, release) names.
+
 ## 1.1.0
 - Build system:
   - Remove the `staticlib` and `bin` from the default targets to reduce the building time and storage requirements.
