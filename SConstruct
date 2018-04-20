@@ -16,17 +16,17 @@ def checkAdd(lib = None, header = None, usage = ""):
     usage = " (needed for " + usage + ") " if usage else ""
     if lib and header:
         if not conf.CheckLibWithHeader(lib, header = header, autoadd=0, language="C++"):
-            print("ERROR: Library '" + lib + "' or header '" + header + "'" + usage + "not found.")
+            print("ERROR: Library '" + str(lib) + "' or header '" + str(header) + "'" + usage + "not found.")
             Exit(1)
         conf.env.AppendUnique(LIBS = [lib])
     elif lib:
         if not conf.CheckLib(lib, autoadd=0, language="C++"):
-            print("ERROR: Library '" + lib + "'" + usage + "not found!")
+            print("ERROR: Library '" + str(lib) + "'" + usage + "not found!")
             Exit(1)
         conf.env.AppendUnique(LIBS = [lib])
     elif header:
         if not conf.CheckCXXHeader(header):
-            print("ERROR: Header '" + header + "'" + usage + "not found!")
+            print("ERROR: Header '" + str(header) + "'" + usage + "not found!")
             Exit(1)
 
 
