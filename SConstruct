@@ -3,8 +3,11 @@ import subprocess
 import sys
 
 import sysconfig
+
+numpyAvailable = False
 try:
     import numpy as np
+    numpyAvailable = True
 except ImportError:
     pass
 
@@ -246,8 +249,11 @@ if env["python"]:
     pythonLibDefault = 'python'+str(sys.version_info.major)+'.'+str(sys.version_info.minor)
     pythonLibPathDefault = sysconfig.get_config_var('LIBDIR')
     pythonIncPathDefault = sysconfig.get_path('include', scheme=installation_scheme)
-    numpyIncPathDefault = np.get_include()
-
+    if numpyAvailable:
+        numpyIncPathDefault = np.get_include()
+    else:
+        print("ERROR: Python package numpy not found. If you don't need the Python action interface, specify 'python=no'.")
+        Exit(1)
     pythonLib = checkset_var('PRECICE_PYTHON_LIB', pythonLibDefault)
     pythonLibPath = checkset_var('PRECICE_PYTHON_LIB_PATH', pythonLibPathDefault)
     pythonIncPath = checkset_var('PRECICE_PYTHON_INC_PATH', pythonIncPathDefault)
