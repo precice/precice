@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file. For future plans, see our [Roadmap](https://github.com/precice/precice/wiki/Roadmap).
 
+## develop
+- Build system:
+  - Make `python=off` default.
+
 ## 1.1.1
 - Fix SConstruct symlink build target failing when using lowercase build (debug, release) names.
 
@@ -14,7 +18,7 @@ All notable changes to this project will be documented in this file. For future 
   - Use NumPy to figure out Python include paths.
   - Search for PETSc in more paths
   - Add experimental CMake build control files.
-  
+
 - Add a job command file for the SuperMUC HPC system in `tools`.
 - `compileAndTest.py` Change the `-b` option to `-t`, do not crash when ./tests do no exist, make `mpirun` command configurable
 - Use `libxml2` for XML parsing, this makes `libxml2-dev` a dependency.
@@ -25,7 +29,7 @@ All notable changes to this project will be documented in this file. For future 
 - Removed the `tarch` legacy library.
 - Use `boost::signal2` for implement observer pattern for the Mesh class.
 - Add contributer guidelines.
-	
+
 
 ## 1.0.3
 - Fix compilation for boost 1.66, see issue #93.
