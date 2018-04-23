@@ -5,7 +5,7 @@ import sys
 import sysconfig
 
 try:
-    import numpy as np
+    import numpy
 except ImportError:
     pass
 
@@ -244,17 +244,27 @@ if env["python"]:
     if installation_scheme is 'posix_local':  # for ubuntu with python 2.7 posix_local scheme points to an empty include path, fix this by using posix_prefix. See https://stackoverflow.com/questions/48826123/why-do-include-paths-in-python2-and-python3-differ
         installation_scheme = 'posix_prefix'
 
+    # Try to extract the default values for Python version and paths
     pythonLibDefault = 'python'+str(sys.version_info.major)+'.'+str(sys.version_info.minor)
     pythonLibPathDefault = sysconfig.get_config_var('LIBDIR')
     pythonIncPathDefault = sysconfig.get_path('include', scheme=installation_scheme)
-    try:
-        numpyIncPathDefault = np.get_include()
-    except NameError:
-        print("ERROR: Python package numpy not found. If you don't need the Python action interface, specify 'python=no'.")
-        Exit(1)
+
+    # Set the used values for Python version and paths, allowing the user to override them
     pythonLib = checkset_var('PRECICE_PYTHON_LIB', pythonLibDefault)
     pythonLibPath = checkset_var('PRECICE_PYTHON_LIB_PATH', pythonLibPathDefault)
     pythonIncPath = checkset_var('PRECICE_PYTHON_INC_PATH', pythonIncPathDefault)
+
+    # Set the used path for NumPy.
+    # As a default value, it tries to get the information from the imported
+    # package. However, we only need the path to the C++ NumPy header.
+    # If the user specifies a different path, then there should not be an error here.
+    # An error will be triggered later by checkAdd().
+    try:
+        numpyIncPathDefault = numpy.get_include()
+    except NameError:
+        print("WARNING: Python package numpy could not be imported by SCons. If you don't need the Python action interface, specify 'python=no'.")
+        numpyIncPathDefault = None
+
     numpyIncPath = checkset_var('PRECICE_NUMPY_INC_PATH', numpyIncPathDefault)
 
     # FIXME: Supresses NumPy deprecation warnings. Needs to converted to the newer API.
