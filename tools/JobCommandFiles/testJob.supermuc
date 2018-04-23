@@ -31,5 +31,5 @@ module load petsc/3.8
 ulimit -c unlimited
 export I_MPI_DEBUG_COREDUMP=1
 
-./tools/compileAndTest.py -b
+./tools/compileAndTest.py -t
 
