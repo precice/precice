@@ -4,11 +4,11 @@
 #include "mesh/Edge.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Quad.hpp"
-#include "utils/Globals.hpp"
 #include <Eigen/Core>
 #include <string>
 #include <fstream>
 #include <boost/filesystem.hpp>
+#include "utils/Helpers.hpp"
 
 namespace precice {
 namespace io {

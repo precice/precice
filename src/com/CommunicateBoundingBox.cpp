@@ -1,9 +1,5 @@
 #include "CommunicateBoundingBox.hpp"
-#include <map>
-#include <vector>
 #include "Communication.hpp"
-#include "com/SharedPointer.hpp"
-#include "mesh/Mesh.hpp"
 
 namespace precice
 {

@@ -10,6 +10,7 @@
 #include "com/MPIDirectCommunication.hpp"
 #include <Eigen/Core>
 #include "testing/Testing.hpp"
+#include "utils/Helpers.hpp"
 
 using namespace precice;
 using namespace precice::mesh;

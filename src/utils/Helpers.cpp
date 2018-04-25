@@ -1,5 +1,3 @@
-#include "utils/Globals.hpp"
-
 #include  <boost/algorithm/string/case_conv.hpp>
 
 namespace precice {

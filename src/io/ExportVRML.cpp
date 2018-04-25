@@ -5,12 +5,12 @@
 #include "mesh/Triangle.hpp"
 #include "mesh/PropertyContainer.hpp"
 #include "utils/String.hpp"
-#include "utils/Globals.hpp"
 #include <iostream>
 #include <Eigen/Core>
 #include <fstream>
 #include <map>
 #include <boost/filesystem.hpp>
+#include "utils/Helpers.hpp"
 
 namespace precice {
 namespace io {
