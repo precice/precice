@@ -6,7 +6,6 @@
 #include <string>
 #include "io/impl/VRML10Parser.hpp"
 #include "testing/Testing.hpp"
-#include "utils/Globals.hpp"
 
 BOOST_AUTO_TEST_SUITE(VRML10ParserTests)
 
@@ -17,7 +16,7 @@ namespace spirit = boost::spirit;
 BOOST_AUTO_TEST_CASE(ParseCube)
 {
   for (int dim = 2; dim <= 3; dim++) {
-    std::string file = utils::getPathToSources() + "/io/tests/ImportVRMLTest";
+    std::string file = testing::getPathToSources() + "/io/tests/ImportVRMLTest";
     if (dim == 2) {
       file += "2D.wrl";
     } else {

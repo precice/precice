@@ -8,7 +8,6 @@
 #include "mesh/config/DataConfiguration.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
 #include "testing/Testing.hpp"
-#include "utils/Globals.hpp"
 
 using namespace precice;
 
@@ -151,7 +150,7 @@ BOOST_AUTO_TEST_CASE(ScaleByComputedTimestepPartLength)
 BOOST_AUTO_TEST_CASE(Configuration)
 {
   {
-    std::string                filename = utils::getPathToSources() + "/action/tests/ScaleActionTest-testConfiguration-1.xml";
+    std::string                filename = testing::getPathToSources() + "/action/tests/ScaleActionTest-testConfiguration-1.xml";
     xml::XMLTag              tag      = xml::getRootTag();
     mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(tag));
     dataConfig->setDimensions(3);
@@ -164,7 +163,7 @@ BOOST_AUTO_TEST_CASE(Configuration)
     BOOST_TEST(action);
   }
   {
-    std::string                filename = utils::getPathToSources() + "/action/tests/ScaleActionTest-testConfiguration-2.xml";
+    std::string                filename = testing::getPathToSources() + "/action/tests/ScaleActionTest-testConfiguration-2.xml";
     xml::XMLTag              tag      = xml::getRootTag();
     mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(tag));
     dataConfig->setDimensions(3);
@@ -177,7 +176,7 @@ BOOST_AUTO_TEST_CASE(Configuration)
     BOOST_TEST(action);
   }
   {
-    std::string                filename = utils::getPathToSources() + "/action/tests/ScaleActionTest-testConfiguration-3.xml";
+    std::string                filename = testing::getPathToSources() + "/action/tests/ScaleActionTest-testConfiguration-3.xml";
     xml::XMLTag              tag      = xml::getRootTag();
     mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(tag));
     dataConfig->setDimensions(3);
@@ -190,7 +189,7 @@ BOOST_AUTO_TEST_CASE(Configuration)
     BOOST_TEST(action);
   }
   {
-    std::string                filename = utils::getPathToSources() + "/action/tests/ScaleActionTest-testConfiguration-4.xml";
+    std::string                filename = testing::getPathToSources() + "/action/tests/ScaleActionTest-testConfiguration-4.xml";
     xml::XMLTag              tag      = xml::getRootTag();
     mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(tag));
     dataConfig->setDimensions(3);

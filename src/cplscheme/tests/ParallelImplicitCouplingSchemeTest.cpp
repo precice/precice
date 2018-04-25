@@ -20,7 +20,6 @@
 #include "m2n/GatherScatterCommunication.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
 #include "m2n/M2N.hpp"
-#include "utils/Globals.hpp"
 #include "xml/XMLTag.hpp"
 #include <Eigen/Core>
 #include <string>
@@ -40,7 +39,7 @@ struct ParallelImplicitCouplingSchemeFixture  // TODO fixtures in cplscheme/test
   std::string _pathToTests;
 
   ParallelImplicitCouplingSchemeFixture(){
-    _pathToTests = utils::getPathToSources() + "/cplscheme/tests/";
+    _pathToTests = testing::getPathToSources() + "/cplscheme/tests/";
   }
 
   void connect( // TODO this function occurs in multiple tests. Move this to a common fixture? see https://github.com/precice/precice/issues/90

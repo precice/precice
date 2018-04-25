@@ -46,7 +46,8 @@ file(GLOB sourcesAllNoMain
   )
 
 file(GLOB sourcesTests
-  "*/tests/*.cpp")
+  "*/tests/*.cpp",
+  "testing/Testing.cpp")
 
 set (sourcesAllNoMain ${sourcesAllNoMain} PARENT_SCOPE)
 set (sourcesTests ${sourcesTests} PARENT_SCOPE) 

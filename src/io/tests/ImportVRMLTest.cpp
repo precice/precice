@@ -8,7 +8,6 @@
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Vertex.hpp"
 #include "testing/Testing.hpp"
-#include "utils/Globals.hpp"
 
 BOOST_AUTO_TEST_SUITE(IOTests)
 
@@ -19,7 +18,7 @@ struct SetPathFixture {
   std::string testPath;
 
   SetPathFixture()
-      : testPath(utils::getPathToSources() + "/io/tests/")
+      : testPath(testing::getPathToSources() + "/io/tests/")
   {
   }
 };

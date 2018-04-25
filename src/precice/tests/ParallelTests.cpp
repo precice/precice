@@ -9,7 +9,6 @@
 #include "precice/impl/Participant.hpp"
 #include "precice/config/Configuration.hpp"
 #include "utils/Parallel.hpp"
-#include "utils/Globals.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/EventTimings.hpp"
 
@@ -31,7 +30,7 @@ struct ParallelTestFixture {
   ParallelTestFixture()
   {
     reset();
-    _pathToTests = utils::getPathToSources() + "/precice/tests/";
+    _pathToTests = testing::getPathToSources() + "/precice/tests/";
     utils::Parallel::restrictGlobalCommunicator({0,1,2,3});
     assertion(utils::Parallel::getCommunicatorSize() == 4);
   }

@@ -1,18 +1,19 @@
-#include "utils/Globals.hpp"
+#include "Testing.hpp"
+#include "logging/LogMacros.hpp"
 #include <cstdlib>
-#include <string>
 
 namespace precice {
-namespace utils {
+namespace testing {
 
 std::string getPathToSources()
 {
-  logging::Logger _log("utils");
+  precice::logging::Logger _log("testin");
   char* preciceRoot = std::getenv("PRECICE_ROOT");
   CHECK(preciceRoot != nullptr,
         "Environment variable PRECICE_ROOT has not been set. Please set it to the precice directory.");
   return std::string(preciceRoot) + "/src";
 }
 
-}} // namespace precice, utils
 
+}
+}

@@ -12,7 +12,6 @@
 #include "m2n/GatherScatterCommunication.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
 #include "utils/Parallel.hpp"
-#include "utils/Globals.hpp"
 #include "xml/XMLTag.hpp"
 #include <Eigen/Core>
 
@@ -28,7 +27,7 @@ struct ExplicitCouplingSchemeFixture  // TODO fixtures in cplscheme/tests are a 
   std::string _pathToTests;
 
   ExplicitCouplingSchemeFixture(){
-    _pathToTests = utils::getPathToSources() + "/cplscheme/tests/";
+    _pathToTests = testing::getPathToSources() + "/cplscheme/tests/";
   }
 
   void runSimpleExplicitCoupling
