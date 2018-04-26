@@ -15,8 +15,6 @@
 namespace precice {
 namespace io {
 
-logging::Logger ExportVRML:: _log ("io::ExportVRML");
-
 ExportVRML:: ExportVRML
 (
   bool plotNormals )

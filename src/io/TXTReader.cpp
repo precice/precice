@@ -4,8 +4,6 @@
 namespace precice {
 namespace io {
 
-logging::Logger TXTReader:: _log ("io::TXTReader");
-
 TXTReader:: TXTReader
 (
   const std::string& filename )

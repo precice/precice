@@ -27,8 +27,6 @@ const std::string& SimulationStateIO:: standardFileExtension()
   return ext;
 }
 
-logging::Logger SimulationStateIO:: _log("io::SimulationStateIO");
-
 SimulationStateIO:: SimulationStateIO
 (
   const std::string& file)

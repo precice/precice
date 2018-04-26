@@ -8,9 +8,6 @@ namespace precice
 {
 namespace com
 {
-
-logging::Logger CommunicationConfiguration::_log("com::CommunicationConfiguration");
-
 PtrCommunication CommunicationConfiguration::createCommunication(
     const xml::XMLTag &tag) const
 {

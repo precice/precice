@@ -10,8 +10,6 @@ using precice::utils::Event;
 namespace precice {
 namespace partition {
 
-logging::Logger ProvidedPartition:: _log ( "partition::ProvidedPartition" );
-
 ProvidedPartition::ProvidedPartition
 (
     mesh::PtrMesh mesh,

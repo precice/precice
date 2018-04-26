@@ -45,8 +45,7 @@ struct VRML10Parser : public qi::grammar<ITERATOR_T, qi::space_type>
      std::vector<int> faces; // Can be edge (2D) or triangle (3D) indices
    };
 
-   // @brief Logging device.
-   static logging::Logger _log;
+  logging::Logger _log{"io::VRML10Parser"};
 
    // @brief The entry point for parsing.
    qi::rule<ITERATOR_T, qi::space_type> start;
@@ -159,9 +158,6 @@ struct VRML10Parser : public qi::grammar<ITERATOR_T, qi::space_type>
 
 // --------------------------------------------------------- HEADER DEFINITIONS
 
-
-template< typename ITERATOR_T >
-logging::Logger VRML10Parser<ITERATOR_T>:: _log ("io::impl::VRML10Parser");
 
 template< typename ITERATOR_T >
 VRML10Parser<ITERATOR_T>:: VRML10Parser

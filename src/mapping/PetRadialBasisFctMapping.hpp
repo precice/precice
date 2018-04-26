@@ -96,9 +96,7 @@ public:
 
 
 private:
-
-  /// Logging device.
-  static logging::Logger _log;
+  mutable logging::Logger _log{"mapping::PetRadialBasisFctMapping"};
 
   bool _hasComputedMapping;
 
@@ -174,9 +172,6 @@ private:
 };
 
 // --------------------------------------------------- HEADER IMPLEMENTATIONS
-
-template<typename RADIAL_BASIS_FUNCTION_T>
-logging::Logger PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::_log("mapping::PetRadialBasisFctMapping");
 
 template<typename RADIAL_BASIS_FUNCTION_T>
 PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping

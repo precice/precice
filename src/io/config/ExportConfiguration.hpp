@@ -67,9 +67,7 @@ public:
   void resetExports() { _contexts.clear(); }
 
 private:
-
-  // @brief Logging device.
-  static logging::Logger _log;
+  logging::Logger _log{"io::ExportConfiguration"};
 
   const std::string TAG;
 

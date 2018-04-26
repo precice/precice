@@ -71,7 +71,7 @@ protected:
 
 private:
 
-  static logging::Logger _log;
+  logging::Logger _log{"partition::Partition"};
 
 
 };

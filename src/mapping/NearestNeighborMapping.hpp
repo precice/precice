@@ -7,9 +7,7 @@
 namespace precice {
 namespace mapping {
 
-/**
- * @brief Mapping using nearest neighboring vertices.
- */
+/// Mapping using nearest neighboring vertices.
 class NearestNeighborMapping : public Mapping
 {
 public:
@@ -42,14 +40,12 @@ public:
   virtual void tagMeshSecondRound() override;
 
 private:
+  mutable logging::Logger _log{"mapping::NearestNeighborMapping"};
 
-  // @brief Logging device.
-  static logging::Logger _log;
-
-  // @brief Flag to indicate whether computeMapping() has been called.
+  /// Flag to indicate whether computeMapping() has been called.
   bool _hasComputedMapping;
 
-  // @brief Computed output vertex indices to map data from input vertices to.
+  /// Computed output vertex indices to map data from input vertices to.
   std::vector<int> _vertexIndices;
 };
 

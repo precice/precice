@@ -21,7 +21,7 @@ public:
   PtrCommunication createCommunication(const xml::XMLTag &tag) const;
 
 private:
-  static logging::Logger _log;
+  mutable logging::Logger _log{"com::CommunicationConfiguration"};
 };
 
 } // namespace com

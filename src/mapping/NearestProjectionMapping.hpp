@@ -49,8 +49,7 @@ public:
 
 
 private:
-
-  static logging::Logger _log;
+  logging::Logger _log{"mapping::NearestProjectionMapping"};
 
   typedef std::list<query::InterpolationElement> InterpolationElements;
   std::vector<InterpolationElements> _weights;

@@ -6,8 +6,6 @@
 namespace precice {
 namespace io {
 
-logging::Logger TXTTableWriter::_log ("io::TXTTableWriter");
-
 TXTTableWriter:: TXTTableWriter
 (
   const std::string& filename )

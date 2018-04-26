@@ -13,8 +13,6 @@
 namespace precice {
 namespace io {
 
-logging::Logger ExportVTKXML:: _log("io::ExportVTKXML");
-
 ExportVTKXML:: ExportVTKXML
 (
   bool writeNormals )

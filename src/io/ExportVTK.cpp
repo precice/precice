@@ -12,7 +12,6 @@
 namespace precice {
 namespace io {
 
-logging::Logger ExportVTK:: _log("io::ExportVTK");
 
 ExportVTK:: ExportVTK
 (
