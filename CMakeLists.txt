@@ -40,7 +40,7 @@ find_package (Threads REQUIRED)
 
 
 find_package(Boost 1.60.0 REQUIRED
-  COMPONENTS filesystem log log_setup program_options system thread unit_test_framework)
+  COMPONENTS filesystem log log_setup program_options signals system thread unit_test_framework)
 add_definitions(-DBOOST_SPIRIT_USE_PHOENIX_V3 -DBOOST_ALL_DYN_LINK -DBOOST_ASIO_ENABLE_OLD_SERVICES)
 
 
@@ -70,7 +70,9 @@ option(PYTHON "Python support" ON)
 if (PYTHON)
   set(Python_ADDITIONAL_VERSIONS "2.7")
   find_package(PythonLibs 2.7 REQUIRED)
+  find_package(NumPy REQUIRED)
   include_directories(${PYTHON_INCLUDE_DIRS})
+  include_directories(${NumPy_INCLUDE_DIRS})  
   add_definitions(-DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION)
 else()
   add_definitions(-DPRECICE_NO_PYTHON)
