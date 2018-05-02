@@ -1,6 +1,6 @@
 <!-- You are very welcome to open issues (mainly for bug reports) here! 
      If you need help building or using preCICE, please contact us:
-     http://www.precice.org/resources/#contact
+     https://www.precice.org/resources/#contact
      
      Don't forget to attach your preCICE configuration file!
      
