@@ -1,7 +1,7 @@
 # preCICE #
 
 <a style="text-decoration: none" href="https://www.precice.org/" target="_blank">
-    <img src="https://img.shields.io/website-up-down-green-red/http/www.precice.org.svg?label=website" alt="preCICE website status">
+    <img src="https://img.shields.io/website-up-down-green-red/https/www.precice.org.svg?label=website" alt="preCICE website status">
 </a>
 <a style="text-decoration: none" href="https://travis-ci.org/precice/precice" target="_blank">
     <img src="https://travis-ci.org/precice/precice.svg?branch=develop" alt="Build status">
