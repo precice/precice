@@ -3,6 +3,7 @@
 All notable changes to this project will be documented in this file. For future plans, see our [Roadmap](https://github.com/precice/precice/wiki/Roadmap).
 
 ## develop
+- Make `polynomial=separate` the default setting for PetRBF.
 - Build system:
   - Make `python=off` default.
 

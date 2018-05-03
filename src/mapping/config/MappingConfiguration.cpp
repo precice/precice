@@ -86,7 +86,7 @@ MappingConfiguration:: MappingConfiguration
   attrZDead.setDefaultValue(false);
   XMLAttribute<std::string> attrPolynomial("polynomial");
   attrPolynomial.setDocumentation("Toggles use of the global polynomial");
-  attrPolynomial.setDefaultValue("on");
+  attrPolynomial.setDefaultValue("separate");
 
   XMLAttribute<std::string> attrPreallocation("preallocation");
   attrPreallocation.setDocumentation("Sets kind of preallocaiton for PETSc RBF implementation");
