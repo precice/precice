@@ -748,7 +748,10 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
   }
 }
 
-
+/*
+ * For the re-partitioning process with RBF mappings, also compare Figure 69 in Benjamin U's thesis (page 89).
+ * https://mediatum.ub.tum.de/doc/1320661/document.pdf
+ */
 template<typename RADIAL_BASIS_FUNCTION_T>
 void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
 {
@@ -785,6 +788,11 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
   }
 }
 
+
+/*
+ * For the re-partitioning process with RBF mappings, also compare Figure 69 in Benjamin U's thesis (page 89).
+ * https://mediatum.ub.tum.de/doc/1320661/document.pdf
+ */
 template<typename RADIAL_BASIS_FUNCTION_T>
 void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
 {
