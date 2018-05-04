@@ -766,16 +766,19 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
 
   for(mesh::Vertex& v : filterMesh->vertices()){
     bool isInside = true;
-    // TODO: use as soon as PETSc bug fixed
-//    if(otherMesh->vertices().size()==0) isInside = false; //ranks not at the interface should never hold interface vertices
-//    if(_basisFunction.hasCompactSupport()){
-//      for (int d=0; d<getDimensions(); d++) {
-//        if (v.getCoords()[d] < otherMesh->getBoundingBox()[d].first - _basisFunction.getSupportRadius() ||
-//            v.getCoords()[d] > otherMesh->getBoundingBox()[d].second + _basisFunction.getSupportRadius() ) {
-//          isInside = false;
-//        }
-//      }
-//    }
+    #if PETSC_MAJOR >= 3 and PETSC_MINOR >= 8
+    if(otherMesh->vertices().size()==0) isInside = false; //ranks not at the interface should never hold interface vertices
+    if(_basisFunction.hasCompactSupport()){
+      for (int d=0; d<getDimensions(); d++) {
+        if (v.getCoords()[d] < otherMesh->getBoundingBox()[d].first - _basisFunction.getSupportRadius() ||
+            v.getCoords()[d] > otherMesh->getBoundingBox()[d].second + _basisFunction.getSupportRadius() ) {
+          isInside = false;
+        }
+      }
+    }
+    #else
+      #warning "Mesh filtering deactivated, due to PETSc version < 3.8. preCICE is fully functional, but performance for large cases is degraded."
+    #endif
     if(isInside) v.tag();
   }
 }
