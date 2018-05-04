@@ -22,6 +22,8 @@
 # For details see the accompanying COPYING-CMAKE-SCRIPTS file.
 #
 
+cmake_policy(VERSION 3.3)
+
 set(PETSC_VALID_COMPONENTS
   C
   CXX)
@@ -64,27 +66,30 @@ function (petsc_get_version)
     endforeach ()
     if (PETSC_VERSION_RELEASE)
       if ($(PETSC_VERSION_PATCH) GREATER 0)
-        set (PETSC_VERSION "${PETSC_VERSION_MAJOR}.${PETSC_VERSION_MINOR}.${PETSC_VERSION_SUBMINOR}p${PETSC_VERSION_PATCH}" PARENT_SCOPE)
+        set (PETSC_VERSION "${PETSC_VERSION_MAJOR}.${PETSC_VERSION_MINOR}.${PETSC_VERSION_SUBMINOR}p${PETSC_VERSION_PATCH}" CACHE INTERNAL "PETSc version")
       else ()
-        set (PETSC_VERSION "${PETSC_VERSION_MAJOR}.${PETSC_VERSION_MINOR}.${PETSC_VERSION_SUBMINOR}" PARENT_SCOPE)
+        set (PETSC_VERSION "${PETSC_VERSION_MAJOR}.${PETSC_VERSION_MINOR}.${PETSC_VERSION_SUBMINOR}" CACHE INTERNAL "PETSc version")
       endif ()
     else ()
       # make dev version compare higher than any patch level of a released version
-      set (PETSC_VERSION "${PETSC_VERSION_MAJOR}.${PETSC_VERSION_MINOR}.${PETSC_VERSION_SUBMINOR}.99" PARENT_SCOPE)
+      set (PETSC_VERSION "${PETSC_VERSION_MAJOR}.${PETSC_VERSION_MINOR}.${PETSC_VERSION_SUBMINOR}.99" CACHE INTERNAL "PETSc version")
     endif ()
   else ()
     message (SEND_ERROR "PETSC_DIR can not be used, ${PETSC_DIR}/include/petscversion.h does not exist")
   endif ()
 endfunction ()
 
+# Debian uses versioned paths e.g /usr/lib/petscdir/3.5/
+file (GLOB DEB_PATHS "/usr/lib/petscdir/*")
+
 find_path (PETSC_DIR include/petsc.h
   HINTS ENV PETSC_DIR
   PATHS
+  /usr/lib/petsc
   # Debian paths
-  /usr/lib/petscdir/3.5.1 /usr/lib/petscdir/3.5
-  /usr/lib/petscdir/3.4.2 /usr/lib/petscdir/3.4
-  /usr/lib/petscdir/3.3 /usr/lib/petscdir/3.2 /usr/lib/petscdir/3.1
-  /usr/lib/petscdir/3.0.0 /usr/lib/petscdir/2.3.3 /usr/lib/petscdir/2.3.2
+  ${DEB_PATHS}
+  # Arch Linux path
+  /opt/petsc/linux-c-opt
   # MacPorts path
   /opt/local/lib/petsc
   $ENV{HOME}/petsc
@@ -95,6 +100,7 @@ find_program (MAKE_EXECUTABLE NAMES make gmake)
 if (PETSC_DIR AND NOT PETSC_ARCH)
   set (_petsc_arches
     $ENV{PETSC_ARCH}                   # If set, use environment variable first
+    ""
     linux-gnu-c-debug linux-gnu-c-opt  # Debian defaults
     x86_64-unknown-linux-gnu i386-unknown-linux-gnu)
   set (petscconf "NOTFOUND" CACHE FILEPATH "Cleared" FORCE)
@@ -233,6 +239,13 @@ show :
   else ()
     set (PETSC_LIBRARY_VEC "NOTFOUND" CACHE INTERNAL "Cleared" FORCE) # There is no libpetscvec
     petsc_find_library (SINGLE petsc)
+    # Debian 9/Ubuntu 16.04 uses _real and _complex extensions when using libraries in /usr/lib/petsc.
+    if (NOT PETSC_LIBRARY_SINGLE)
+      petsc_find_library (SINGLE petsc_real)
+    endif()
+    if (NOT PETSC_LIBRARY_SINGLE)
+      petsc_find_library (SINGLE petsc_complex)
+    endif()
     foreach (pkg SYS VEC MAT DM KSP SNES TS ALL)
       set (PETSC_LIBRARIES_${pkg} "${PETSC_LIBRARY_SINGLE}")
     endforeach ()
