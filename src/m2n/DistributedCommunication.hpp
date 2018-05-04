@@ -33,15 +33,11 @@ class DistributedCommunication
 public:
   using SharedPointer = std::shared_ptr<DistributedCommunication>;
 
-public:
   explicit DistributedCommunication(mesh::PtrMesh mesh)
       : _mesh(mesh)
-  {
-  }
+  {}
 
-  /**
-   * @brief Destructor, empty.
-   */
+  /// Destructor, empty.
   virtual ~DistributedCommunication() {}
 
   /// Returns true, if a connection to a remote participant has been setup.

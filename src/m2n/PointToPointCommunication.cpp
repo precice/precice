@@ -31,7 +31,7 @@ void receive(std::vector<int> &    v,
   int size = 0;
   communication->receive(size, rankSender);
   v.resize(size);
-  communication->receive(&v[0], size, rankSender);
+  communication->receive(v.data(), size, rankSender);
 }
 
 void send(std::map<int, std::vector<int>> const &m,

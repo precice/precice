@@ -1,11 +1,9 @@
 #pragma once
 
 #include "DistributedComFactory.hpp"
-
 #include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include "mesh/SharedPointer.hpp"
-
 #include <map>
 
 namespace precice
@@ -76,6 +74,7 @@ public:
   /// Get the basic communication between the 2 masters.
   com::PtrCommunication getMasterCommunication();
 
+  /// Creates a new distributes communication for that mesh, stores the pointer in _distComs
   void createDistributedCommunication(mesh::PtrMesh mesh);
 
   /// Sends an array of double values from all slaves (different for each slave).
@@ -111,6 +110,7 @@ public:
 private:
   logging::Logger _log{"m2n::M2N"};
 
+  /// mesh::getID() -> Pointer to distributed communication
   std::map<int, DistributedCommunication::SharedPointer> _distComs;
 
   com::PtrCommunication _masterCom;

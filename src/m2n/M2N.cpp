@@ -1,9 +1,7 @@
 
 #include "M2N.hpp"
-
 #include "DistributedComFactory.hpp"
 #include "DistributedCommunication.hpp"
-#include "GatherScatterCommunication.hpp"
 #include "com/Communication.hpp"
 #include "mesh/Mesh.hpp"
 #include "utils/EventTimings.hpp"
