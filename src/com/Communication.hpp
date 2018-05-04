@@ -61,31 +61,68 @@ public:
   virtual size_t getRemoteCommunicatorSize() = 0;
 
   /**
-   * @brief Connects to another participant, which has to call requestConnection().
+   * @brief Connects to another communicator, which has to call requestConnection().
+   * Establishes a 1-to-N communication, whereas the acceptor's side is the "1". Contrary to
+   * "acceptConnectionAsServer", the other side needs to be a proper communicator with ranks
+   * from 0 to N-1. It is not necessary to know this "N" a-priori on the acceptor's side.
+   * This communication is used for the 1:1 communication between two master ranks, for the
+   * 1:N communication to a preCICE server, and for the master-slave communication. For the
+   * last case, "setRankOffset" has to be set.
    *
    * @param[in] nameAcceptor Name of calling participant.
    * @param[in] nameRequester Name of remote participant to connect to.
+   * @param[in] acceptorProcessRank Rank of the acceptor (typically 0)
+   * @param[in] acceptorCommunicatorSize Size of the acceptor (has to be 1 assumably)
    */
   virtual void acceptConnection(std::string const &nameAcceptor,
                                 std::string const &nameRequester,
                                 int                acceptorProcessRank,
                                 int                acceptorCommunicatorSize) = 0;
 
+  /**
+   * @brief Connects to another communicator, which has to call requestConnectionAsClient().
+   * Establishes a 1-to-N communication, whereas the acceptor's side is the "1". Contrary to
+   * "acceptConnection", the other side can have arbitrary ranks. However, we need to know its
+   * size "N" a-priori.
+   * This communication is only used in PointToPointCommunication, i.e. for the M-to-N communication
+   * between two participants.
+   *
+   * @param[in] nameAcceptor Name of calling participant.
+   * @param[in] nameRequester Name of remote participant to connect to.
+   * @param[in] requesterCommunicatorSize Size of the requestor (N)
+   */
   virtual void acceptConnectionAsServer(std::string const &nameAcceptor,
                                         std::string const &nameRequester,
                                         int                requesterCommunicatorSize) = 0;
 
   /**
-   * @brief Connects to another participant, which has to call acceptConnection().
+   * @brief Connects to another communicator, which has to call acceptConnection().
+   * Establishes a 1-to-N communication, whereas the requestor's side is the "N". Contrary to
+   * "requestConnectionAsClient", this side needs to be a proper communicator with ranks
+   * from 0 to N-1. All ranks need to call this function.
+   * This communication is used for the 1:1 communication between two master ranks, for the
+   * 1:N communication to a preCICE server, and for the master-slave communication.
    *
    * @param[in] nameAcceptor Name of remote participant to connect to.
    * @param[in] nameRequester Name of calling participant.
+   * @param[in] requesterProcessRank Rank of the requestor (has to go from 0 to N-1)
+   * @param[in] requesterCommunicatorSize Size of the requestor (N)
    */
   virtual void requestConnection(std::string const &nameAcceptor,
                                  std::string const &nameRequester,
                                  int                requesterProcessRank,
                                  int                requesterCommunicatorSize) = 0;
 
+  /**
+   * @brief Connects to another communicator, which has to call acceptConnectionAsServer().
+   * Establishes a 1-to-N communication, whereas the requestor's side is the "N". Contrary to
+   * "requestConnection", this side can have arbitrary ranks (e.g. 2,3,7). All ranks need to
+   * call this function. This communication is only used in PointToPointCommunication, i.e.
+   * for the M-to-N communication between two participants.
+   *
+   * @param[in] nameAcceptor Name of calling participant.
+   * @param[in] nameRequester Name of remote participant to connect to.
+   */
   virtual int requestConnectionAsClient(std::string const &nameAcceptor,
                                         std::string const &nameRequester) = 0;
 
