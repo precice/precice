@@ -380,7 +380,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV5,
 
 /// same as 2DV4, but strictly linear input values, converges and gives correct results
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV6,
-                     * testing::Deleted())
+                     * boost::unit_test::tolerance(1e-7))
 {
   assertion(utils::Parallel::getCommunicatorSize() == 4);
   ThinPlateSplines fct;
