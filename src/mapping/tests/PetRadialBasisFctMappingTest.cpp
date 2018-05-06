@@ -1257,7 +1257,7 @@ BOOST_AUTO_TEST_CASE(SolutionCaching)
 
   PetscInt its;
   KSPGetIterationNumber(mapping._solver, &its);
-  BOOST_TEST(its == 6);
+  BOOST_TEST(its == 2);
   BOOST_TEST(mapping.previousSolution.size() == 1);
   mapping.map(inDataID, outDataID);
   KSPGetIterationNumber(mapping._solver, &its);
