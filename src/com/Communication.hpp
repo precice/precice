@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Request.hpp"
-
 #include "logging/Logger.hpp"
 
 namespace precice
@@ -56,18 +55,19 @@ public:
   /**
    * @brief Returns the number of processes in the remote communicator.
    *
-   * Precondition: a connection to the remote participant has been setup.
+   * @pre A connection to the remote participant has been set up.
    */
   virtual size_t getRemoteCommunicatorSize() = 0;
 
   /**
-   * @brief Connects to another communicator, which has to call requestConnection().
+   * @brief Accepts connection from another communicator, which has to call requestConnection().
+   *
    * Establishes a 1-to-N communication, whereas the acceptor's side is the "1". Contrary to
-   * "acceptConnectionAsServer", the other side needs to be a proper communicator with ranks
+   * acceptConnectionAsServer(), the other side needs to be a proper communicator with ranks
    * from 0 to N-1. It is not necessary to know this "N" a-priori on the acceptor's side.
    * This communication is used for the 1:1 communication between two master ranks, for the
    * 1:N communication to a preCICE server, and for the master-slave communication. For the
-   * last case, "setRankOffset" has to be set.
+   * last case, setRankOffset() has to be set.
    *
    * @param[in] nameAcceptor Name of calling participant.
    * @param[in] nameRequester Name of remote participant to connect to.
@@ -80,9 +80,10 @@ public:
                                 int                acceptorCommunicatorSize) = 0;
 
   /**
-   * @brief Connects to another communicator, which has to call requestConnectionAsClient().
+   * @brief Accepts connection from another communicator, which has to call requestConnectionAsClient().
+   *
    * Establishes a 1-to-N communication, whereas the acceptor's side is the "1". Contrary to
-   * "acceptConnection", the other side can have arbitrary ranks. However, we need to know its
+   * acceptConnection(), the other side can have arbitrary ranks. However, we need to know its
    * size "N" a-priori.
    * This communication is only used in PointToPointCommunication, i.e. for the M-to-N communication
    * between two participants.
@@ -97,8 +98,9 @@ public:
 
   /**
    * @brief Connects to another communicator, which has to call acceptConnection().
+   *
    * Establishes a 1-to-N communication, whereas the requestor's side is the "N". Contrary to
-   * "requestConnectionAsClient", this side needs to be a proper communicator with ranks
+   * requestConnectionAsClient(), this side needs to be a proper communicator with ranks
    * from 0 to N-1. All ranks need to call this function.
    * This communication is used for the 1:1 communication between two master ranks, for the
    * 1:N communication to a preCICE server, and for the master-slave communication.
@@ -115,8 +117,9 @@ public:
 
   /**
    * @brief Connects to another communicator, which has to call acceptConnectionAsServer().
+   *
    * Establishes a 1-to-N communication, whereas the requestor's side is the "N". Contrary to
-   * "requestConnection", this side can have arbitrary ranks (e.g. 2,3,7). All ranks need to
+   * requestConnection(), this side can have arbitrary ranks (e.g. 2,3,7). All ranks need to
    * call this function. This communication is only used in PointToPointCommunication, i.e.
    * for the M-to-N communication between two participants.
    *
@@ -133,13 +136,15 @@ public:
    */
   virtual void closeConnection() = 0;
 
+  /// Performs a reduce summation on the rank given by rankMaster
   virtual void reduceSum(double *itemsToSend, double *itemsToReceive, int size, int rankMaster);
 
+  /// Performs a reduce summation on the master, every other rank has to call reduceSum
   virtual void reduceSum(double *itemsToSend, double *itemsToReceive, int size);
 
-  virtual void reduceSum(int &itemsToSend, int &itemsToReceive, int rankMaster);
+  virtual void reduceSum(int itemToSend, int &itemToReceive, int rankMaster);
 
-  virtual void reduceSum(int &itemsToSend, int &itemsToReceive);
+  virtual void reduceSum(int itemsToSend, int &itemsToReceive);
 
   virtual void allreduceSum();
 
@@ -147,16 +152,16 @@ public:
 
   virtual void allreduceSum(double *itemsToSend, double *itemsToReceive, int size);
 
-  virtual void allreduceSum(double &itemToSend, double &itemToReceive, int rankMaster);
+  virtual void allreduceSum(double itemToSend, double &itemToReceive, int rankMaster);
 
-  virtual void allreduceSum(double &itemToSend, double &itemToReceive);
+  virtual void allreduceSum(double itemToSend, double &itemToReceive);
 
-  virtual void allreduceSum(int &itemToSend, int &itemToReceive, int rankMaster);
+  virtual void allreduceSum(int itemToSend, int &itemToReceive, int rankMaster);
 
-  virtual void allreduceSum(int &itemToSend, int &itemToReceive);
+  virtual void allreduceSum(int itemToSend, int &itemToReceive);
 
   virtual void broadcast();
-
+  
   virtual void broadcast(int *itemsToSend, int size);
 
   virtual void broadcast(int *itemsToReceive, int size, int rankBroadcaster);
