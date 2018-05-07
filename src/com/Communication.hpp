@@ -146,8 +146,6 @@ public:
 
   virtual void reduceSum(int itemsToSend, int &itemsToReceive);
 
-  virtual void allreduceSum();
-
   virtual void allreduceSum(double *itemsToSend, double *itemsToReceive, int size, int rankMaster);
 
   virtual void allreduceSum(double *itemsToSend, double *itemsToReceive, int size);
@@ -160,8 +158,6 @@ public:
 
   virtual void allreduceSum(int itemToSend, int &itemToReceive);
 
-  virtual void broadcast();
-  
   virtual void broadcast(int *itemsToSend, int size);
 
   virtual void broadcast(int *itemsToReceive, int size, int rankBroadcaster);

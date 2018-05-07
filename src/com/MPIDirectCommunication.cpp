@@ -119,13 +119,6 @@ int MPIDirectCommunication::getLeaderRank(std::string const &accessorName)
   ERROR("Unknown accessor name \"" << accessorName << "\"!");
 }
 
-void MPIDirectCommunication::allreduceSum()
-{
-  TRACE();
-  // _comunicator did't work here as we seem to have two communicators, one with the master and one with the slaves
-  MPI_Allreduce(nullptr, nullptr, 0, MPI_DATATYPE_NULL, MPI_OP_NULL, _globalCommunicator);
-}
-
 void MPIDirectCommunication::reduceSum(double *itemsToSend, double *itemsToReceive, int size)
 {
   TRACE(size);
@@ -198,13 +191,6 @@ void MPIDirectCommunication::allreduceSum(int itemToSend, int &itemToReceive, in
   TRACE();
   // _comunicator did't work here as we seem to have two communicators, one with the master and one with the slaves
   MPI_Allreduce(&itemToSend, &itemToReceive, 1, MPI_INT, MPI_SUM, _globalCommunicator);
-}
-
-void MPIDirectCommunication::broadcast()
-{
-  TRACE();
-
-  MPI_Bcast(nullptr, 0, MPI_DATATYPE_NULL, MPI_PROC_NULL, _communicator);
 }
 
 void MPIDirectCommunication::broadcast(int *itemsToSend, int size)
