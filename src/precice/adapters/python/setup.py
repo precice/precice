@@ -26,7 +26,7 @@ for root, dirs, files in os.walk(".", topdown=False):
       if (name == "build"):
          shutil.rmtree(name)
 
-# determine flags using mpic++
+# determine which flags to use with mpic++
 if not os.getenv('PRECICE_MPI_IMPLEMENTATION'):
     print('please define PRECICE_MPI_IMPLEMENTATION')
     print('')
@@ -40,7 +40,7 @@ elif os.getenv('PRECICE_MPI_IMPLEMENTATION') == 'mpich':
     mpi_link_args = os.popen("mpic++ -link-info").read().strip().split(' ')[1::]
 elif os.getenv('PRECICE_MPI_IMPLEMENTATION') == 'openmpi':
     mpi_compile_args = os.popen("mpic++ -showme:compile").read().strip().split(' ')
-    mpi_link_args = os.popen("mpic++ --showme:link").read().strip().split(' ') 
+    mpi_link_args = os.popen("mpic++ --showme:link").read().strip().split(' ')
 else:
     print('use either mpich or openmpi for PRECICE_MPI_IMPLEMENTATION.')
     print('')
@@ -65,4 +65,3 @@ setup(
       )
    ]
 )
-

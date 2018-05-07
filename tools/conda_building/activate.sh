@@ -3,8 +3,9 @@ source ./config.sh
 
 ############
 
+export PRECICE_GIT_BRANCH
 export PRECICE_ROOT
-export ANACONDA_ROOT
+export CONDA_ROOT
 export SCONS_PARALLELJOBS
 export PRECICE_MPI_IMPLEMENTATION
 
@@ -16,7 +17,7 @@ export LD_LIBRARY_PATH=$CONDA_ENV_ROOT/lib
 
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PRECICE_ROOT/build/last
 
-export PATH=$PRECICE_ROOT/bin:$ANACONDA_ROOT/bin:$PATH
+export PATH=$PRECICE_ROOT/bin:$CONDA_ROOT/bin:$PATH
 
 ############
 
@@ -24,10 +25,8 @@ if [ -z $PRECICE_ROOT ]; then
     echo "please define PRECICE_ROOT"
 fi
 
-if [ -z $ANACONDA_ROOT ]; then
-    echo "please define ANACONDA_ROOT"
+if [ -z $CONDA_ROOT ]; then
+    echo "please define CONDA_ROOT"
 fi
 
-conda env create --force -f $PRECICE_ROOT/tools/anaconda_building/precice.yml
-
-source $ANACONDA_ROOT/bin/activate precice
+source $CONDA_ROOT/bin/activate precice
