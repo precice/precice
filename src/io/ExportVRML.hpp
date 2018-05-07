@@ -55,8 +55,7 @@ public:
 
 private:
 
-  /// @brief Logging device.
-  static logging::Logger _log;
+  mutable logging::Logger _log{"io::ExportVTML"};
 
   void openFile (
     std::ofstream&     outFile,

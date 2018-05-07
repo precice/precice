@@ -9,7 +9,6 @@
 #include "precice/impl/Participant.hpp"
 #include "precice/config/Configuration.hpp"
 #include "utils/Parallel.hpp"
-#include "utils/Globals.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/EventTimings.hpp"
 
@@ -31,7 +30,7 @@ struct ParallelTestFixture {
   ParallelTestFixture()
   {
     reset();
-    _pathToTests = utils::getPathToSources() + "/precice/tests/";
+    _pathToTests = testing::getPathToSources() + "/precice/tests/";
     utils::Parallel::restrictGlobalCommunicator({0,1,2,3});
     assertion(utils::Parallel::getCommunicatorSize() == 4);
   }
@@ -221,7 +220,6 @@ BOOST_AUTO_TEST_CASE(CouplingOnLine, * testing::OnSize(4))
     assertion(utils::Parallel::getCommunicatorSize() == 3);
     utils::Parallel::clearGroups();
     xml::configure(config.getXMLTag(), configFilename);
-
     SolverInterface interface ( "Ateles", utils::Parallel::getProcessRank(), 3 );
     interface._impl->configure(config.getSolverInterfaceConfiguration());
     int meshID = interface.getMeshID("Ateles_Mesh");
@@ -245,7 +243,6 @@ BOOST_AUTO_TEST_CASE(CouplingOnLine, * testing::OnSize(4))
     assertion(utils::Parallel::getCommunicatorSize() == 1);
     utils::Parallel::clearGroups();
     xml::configure(config.getXMLTag(), configFilename);
-
     SolverInterface interface ( "FASTEST", 0, 1 );
     interface._impl->configure(config.getSolverInterfaceConfiguration());
     int meshID = interface.getMeshID("FASTEST_Mesh");

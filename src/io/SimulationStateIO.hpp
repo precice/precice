@@ -38,7 +38,7 @@ public:
 
 private:
 
-  static logging::Logger _log;
+  logging::Logger _log{"io::SimulationStateIO"};
 
   std::string _file;
 };

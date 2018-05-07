@@ -94,9 +94,7 @@ public:
   }
 
 private:
-
-  // @brief Logging device.
-  static logging::Logger _log;
+  logging::Logger _log{"mapping::InverseMultiQuadrics"};
 
   double _cPow2;
 };
@@ -163,8 +161,7 @@ public:
   }
 
 private:
-
-  static logging::Logger _log;
+  logging::Logger _log{"mapping::Gaussian"};
 
   /// Below that value the function is supposed to be zero. Defines the support radius if not explicitely given
   const double cutoffThreshold = 1e-9;
@@ -216,8 +213,7 @@ public:
   }
 
 private:
-
-  static logging::Logger _log;
+  logging::Logger _log{"mapping::CompactThinPlateSplinesC2"};
 
   double _r;
 };
@@ -256,8 +252,7 @@ public:
   }
 
 private:
-
-  static logging::Logger _log;
+  logging::Logger _log{"mapping::CompactPolynomialC0"};
 
   double _r;
 };
@@ -298,8 +293,7 @@ public:
   }
 
 private:
-
-  static logging::Logger _log;
+  logging::Logger _log{"mapping::CompactPolynomialC6"};
 
   double _r;
 };

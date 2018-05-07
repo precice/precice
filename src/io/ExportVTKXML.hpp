@@ -59,7 +59,7 @@ public:
 
 private:
 
-   static logging::Logger _log;
+   logging::Logger _log{"io::ExportVTKXML"};
 
    /// By default set true: plot vertex normals, false: no normals plotting
    bool _writeNormals;

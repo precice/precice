@@ -68,7 +68,7 @@ private:
   Clock::duration duration = Clock::duration::zero();
   State state = State::STOPPED;
   bool _barrier = false;
-  static logging::Logger _log;
+  logging::Logger _log{"utils::Events"};
   
 };
 

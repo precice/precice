@@ -55,9 +55,7 @@ public:
     std::ostream& outFile );
 
 private:
-
-   // @brief Logging device.
-   static logging::Logger _log;
+  logging::Logger _log{"io::ExportVTK"};
 
    // @brief By default set true: plot vertex normals, false: no normals plotting
    bool _writeNormals;

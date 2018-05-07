@@ -86,18 +86,22 @@ struct M2NFixture {
 
 /// Fixture to split two participants such that both can interact in an integration test
 struct SplitParticipantsFixture {
+  int participantID;
+
   SplitParticipantsFixture()
   {
     if(utils::Parallel::getProcessRank()<=1){
       utils::Parallel::splitCommunicator( "ParticipantOne" );
       utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator());
       utils::Parallel::clearGroups(); //This is important, if the testcase uses MPI communication again
+      participantID = 1; 
     }
     else {
       assertion(utils::Parallel::getProcessRank() > 1 && utils::Parallel::getProcessRank() < 4);
       utils::Parallel::splitCommunicator( "ParticipantTwo" );
       utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator());
       utils::Parallel::clearGroups();
+      participantID = 2;
     }
   }
 
@@ -105,6 +109,7 @@ struct SplitParticipantsFixture {
   {
     utils::Parallel::setGlobalCommunicator(utils::Parallel::getCommunicatorWorld());
   }
+
 };
 
 }}

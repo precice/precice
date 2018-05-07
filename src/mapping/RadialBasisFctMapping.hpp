@@ -64,7 +64,7 @@ public:
 
 private:
 
-  static precice::logging::Logger _log;
+  precice::logging::Logger _log{"mapping::RadialBasisFctMapping"};
 
   bool _hasComputedMapping;
 
@@ -104,9 +104,6 @@ private:
 };
 
 // --------------------------------------------------- HEADER IMPLEMENTATIONS
-
-template<typename RADIAL_BASIS_FUNCTION_T>
-precice::logging::Logger RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::_log("mapping::RadialBasisFctMapping");
 
 template<typename RADIAL_BASIS_FUNCTION_T>
 RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: RadialBasisFctMapping

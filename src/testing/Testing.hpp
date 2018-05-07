@@ -224,5 +224,10 @@ typename std::enable_if<std::is_arithmetic<Scalar>::value, boost::test_tools::pr
   }
   return true;
 }
-}
-} // namespace precice, testing
+
+/// Returns $PRECICE_ROOT/src, the base path to the sources.
+std::string getPathToSources();
+
+} // namespace testing
+} // namespace precice
+

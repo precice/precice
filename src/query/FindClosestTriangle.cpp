@@ -9,7 +9,7 @@
 namespace precice {
 namespace query {
 
-logging::Logger FindClosestTriangle:: _log ( "precice::query::FindClosestTriangle" );
+logging::Logger FindClosestTriangle:: _log("query::FindClosestTriangle" );
 
 FindClosestTriangle:: FindClosestTriangle
 (

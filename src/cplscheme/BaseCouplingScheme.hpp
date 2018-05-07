@@ -6,7 +6,6 @@
 #include "CouplingData.hpp"
 #include "CouplingScheme.hpp"
 #include "SharedPointer.hpp"
-#include "com/Constants.hpp"
 #include "impl/SharedPointer.hpp"
 #include "io/TXTTableWriter.hpp"
 #include "logging/Logger.hpp"
@@ -267,7 +266,7 @@ protected:
   CouplingMode _couplingMode;
 
   /// Sets whether the solver evaluates the fine or the coarse model representation
-  bool _isCoarseModelOptimizationActive;
+  bool _isCoarseModelOptimizationActive = false;
 
   /// Updates internal state of coupling scheme for next timestep.
   void timestepCompleted();
@@ -498,7 +497,7 @@ protected:
   /// @brief Smallest number, taking validDigists into account: eps = std::pow(10.0, -1 * validDigits)
   const double _eps;
 
-  int _deletedColumnsPPFiltering;
+  int _deletedColumnsPPFiltering = 0;
 
   /// @brief Number of  coarse model optimization iterations in current time step.
   int _iterationsCoarseOptimization;
@@ -507,13 +506,12 @@ private:
   /// @brief Communication device to the other coupling participant.
   m2n::PtrM2N _m2n;
 
-  /// @brief Determines, if the timestep length is set by the participant.
-  bool _participantSetsDt;
+  /// Determines, if the timestep length is set by the participant.
+  bool _participantSetsDt = false;
 
-  /// @brief Determines, if the dt length is set received from the other participant
-  bool _participantReceivesDt;
+  /// Determines, if the dt length is set received from the other participant
+  bool _participantReceivesDt = false;
 
-  /// @brief Logging device.
   static logging::Logger _log;
 
   double _maxTime;
@@ -536,36 +534,36 @@ private:
 
   double _timestepLength;
 
-  double _time;
+  double _time = 0;
 
-  double _computedTimestepPart;
+  double _computedTimestepPart = 0;
 
   std::vector<double> _firstResiduumNorm;
 
   /// Extrapolation order of coupling data for first iteration of every dt.
-  int _extrapolationOrder;
+  int _extrapolationOrder = 0;
 
   int _validDigits;
 
   /// True, if local participant is the one starting the explicit scheme.
-  bool _doesFirstStep;
+  bool _doesFirstStep = false;
 
-  bool _isCouplingTimestepComplete;
+  bool _isCouplingTimestepComplete = false;
 
   /// Post-processing method to speedup iteration convergence.
   impl::PtrPostProcessing _postProcessing;
 
   /// To carry initData information from initialize to initData
-  bool _hasToSendInitData;
+  bool _hasToSendInitData = false;
 
   /// To carry initData information from initialize to initData
-  bool _hasToReceiveInitData;
+  bool _hasToReceiveInitData = false;
 
   /// True, if data has been exchanged between solvers.
-  bool _hasDataBeenExchanged;
+  bool _hasDataBeenExchanged = false;
 
   /// True, if coupling has been initialized.
-  bool _isInitialized;
+  bool _isInitialized = false;
 
   std::set<std::string> _actions;
 

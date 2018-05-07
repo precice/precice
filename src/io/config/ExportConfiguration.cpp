@@ -10,8 +10,6 @@
 namespace precice {
 namespace io {
 
-logging::Logger ExportConfiguration:: _log("io::ExportConfiguration");
-
 ExportConfiguration:: ExportConfiguration
 (
   xml::XMLTag& parent )

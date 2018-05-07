@@ -108,7 +108,7 @@ void ConfigParser::GenericErrorFunc(void *ctx, const char *msg, ...)
 
 int ConfigParser::readXmlFile(std::string const &filePath)
 {
-  xmlGenericErrorFunc handler = (xmlGenericErrorFunc) ConfigParser::GenericErrorFunc;
+  auto handler = static_cast<xmlGenericErrorFunc>(ConfigParser::GenericErrorFunc);
   initGenericErrorDefaultFunc(&handler);
 
   xmlSAXHandler SAXHandler;
@@ -197,8 +197,8 @@ void ConfigParser::OnStartElement(
 {
   CTag *pTag = new CTag();
 
-  pTag->m_Prefix      = prefix;
-  pTag->m_Name        = localname;
+  pTag->m_Prefix      = std::move(prefix);
+  pTag->m_Name        = std::move(localname);
   pTag->m_aAttributes = std::move(attributes);
 
   if (not m_CurrentTags.empty()) {

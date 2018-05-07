@@ -8,7 +8,7 @@ namespace precice {
 namespace action {
 
 logging::Logger ModifyCoordinatesAction::
-  _log ( "precice::action::ModifyCoordinatesAction" );
+  _log("action::ModifyCoordinatesAction" );
 
 
 ModifyCoordinatesAction:: ModifyCoordinatesAction

@@ -10,7 +10,7 @@
 namespace precice {
 namespace impl {
 
-logging::Logger Participant:: _log ( "precice::impl::Participant" );
+logging::Logger Participant:: _log("impl::Participant" );
 
 int Participant:: _participantsSize = 0;
 

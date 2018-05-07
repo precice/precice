@@ -42,10 +42,10 @@ public:
       int                      rankSender);
 
 private:
-  static logging::Logger _log;
-
+  logging::Logger _log{"com::CommunicateMesh"};
+  
   /// Communication means used for the transfer of the geometry.
   com::PtrCommunication _communication;
 };
-}
-} // namespace precice, com
+} // namespace com
+} // namespace precice

@@ -12,7 +12,7 @@
 
 #include <string>
 #include "utils/MasterSlave.hpp"
-
+#include "utils/prettyprint.hpp" // so that we can put std::vector et. al. on ostream
 
 #include "Tracer.hpp"
 

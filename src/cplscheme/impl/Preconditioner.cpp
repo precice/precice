@@ -7,7 +7,7 @@ namespace cplscheme
 namespace impl
 {
 
-logging::Logger Preconditioner::_log("precice::cplscheme::Preconditioner");
+logging::Logger Preconditioner::_log("cplscheme::Preconditioner");
 }
 }
 } // namespace precice, cplscheme

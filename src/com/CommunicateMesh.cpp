@@ -12,9 +12,6 @@ namespace precice
 {
 namespace com
 {
-
-logging::Logger CommunicateMesh::_log("precice::com::CommunicateMesh");
-
 CommunicateMesh::CommunicateMesh(
     com::PtrCommunication communication)
     : _communication(communication)
@@ -331,5 +328,5 @@ void CommunicateMesh::receiveBoundingBox(
     _communication->receive(bb[d].second, rankSender);
   }
 }
-}
-} // namespace precice, com
+} // namespace com
+} // namespace precice

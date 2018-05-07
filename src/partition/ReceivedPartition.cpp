@@ -19,8 +19,6 @@ using precice::utils::Event;
 namespace precice {
 namespace partition {
 
-logging::Logger ReceivedPartition:: _log ( "precice::partition::ReceivedPartition" );
-
 ReceivedPartition::ReceivedPartition
 (
     mesh::PtrMesh mesh, GeometricFilter geometricFilter, double safetyFactor )

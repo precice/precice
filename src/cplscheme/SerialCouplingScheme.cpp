@@ -90,10 +90,8 @@ void SerialCouplingScheme::initialize
   // second participant is done in initializeData() instead of initialize().
   if (not doesFirstStep() && not hasToSendInitData() && isCouplingOngoing()) {
     DEBUG("Receiving data");
-    getM2N()->startReceivePackage(0);
     receiveAndSetDt();
     receiveData(getM2N());
-    getM2N()->finishReceivePackage();
     setHasDataBeenExchanged(true);
   }
 
@@ -126,9 +124,7 @@ void SerialCouplingScheme::initializeData()
   if (hasToReceiveInitData() && isCouplingOngoing() )  {
     assertion(doesFirstStep());
     DEBUG("Receiving data");
-    getM2N()->startReceivePackage(0);
     receiveData(getM2N());
-    getM2N()->finishReceivePackage();
     setHasDataBeenExchanged(true);
   }
 
@@ -145,11 +141,9 @@ void SerialCouplingScheme::initializeData()
     // The second participant sends the initialized data to the first particpant
     // here, which receives the data on call of initialize().
     sendData(getM2N());
-    getM2N()->startReceivePackage(0);
     receiveAndSetDt();
     // This receive replaces the receive in initialize().
     receiveData(getM2N());
-    getM2N()->finishReceivePackage();
     setHasDataBeenExchanged(true);
   }
 
@@ -162,7 +156,7 @@ void SerialCouplingScheme::advance()
 {
   TRACE(getTimesteps(), getTime());
   #ifndef NDEBUG
-  for (DataMap::value_type & pair : getReceiveData()) {
+  for (const DataMap::value_type & pair : getReceiveData()) {
     Eigen::VectorXd& values = *pair.second->values;
     int max = values.size();
     std::ostringstream stream;
@@ -185,17 +179,13 @@ void SerialCouplingScheme::advance()
       setIsCouplingTimestepComplete(true);
       setTimesteps(getTimesteps() + 1);
       DEBUG("Sending data...");
-      getM2N()->startSendPackage(0);
       sendDt();
       sendData(getM2N());
-      getM2N()->finishSendPackage();
 
       if (isCouplingOngoing() || doesFirstStep()) {
         DEBUG("Receiving data...");
-        getM2N()->startReceivePackage(0);
         receiveAndSetDt();
         receiveData(getM2N());
-        getM2N()->finishReceivePackage();
         setHasDataBeenExchanged(true);
       }
       setComputedTimestepPart(0.0);
@@ -209,13 +199,9 @@ void SerialCouplingScheme::advance()
     if (math::equals(getThisTimestepRemainder(), 0.0, _eps)) {
       DEBUG("Computed full length of iteration");
       if (doesFirstStep()) {
-        getM2N()->startSendPackage(0);
         sendDt();
         sendData(getM2N());
-        getM2N()->finishSendPackage();
-        getM2N()->startReceivePackage(0);
         getM2N()->receive(convergence);
-        getM2N()->startReceivePackage(0);
         getM2N()->receive(_isCoarseModelOptimizationActive);
         if (convergence) {
           timestepCompleted();
@@ -223,7 +209,6 @@ void SerialCouplingScheme::advance()
         //if (isCouplingOngoing()) {
         receiveData(getM2N());
         //}
-        getM2N()->finishReceivePackage();
         setHasDataBeenExchanged(true);
       }
       else {
@@ -331,21 +316,16 @@ void SerialCouplingScheme::advance()
           }
         }
 
-        getM2N()->startSendPackage(0);
         getM2N()->send(convergence);
 
-        getM2N()->startSendPackage(0);
         getM2N()->send(_isCoarseModelOptimizationActive);
 
         sendData(getM2N());
-        getM2N()->finishSendPackage();
-
+        
         // the second participant does not want new data in the last iteration of the last timestep
         if (isCouplingOngoing() || not convergence) {
-          getM2N()->startReceivePackage(0);
           receiveAndSetDt();
           receiveData(getM2N());
-          getM2N()->finishReceivePackage();
           setHasDataBeenExchanged(true);
         }
       }

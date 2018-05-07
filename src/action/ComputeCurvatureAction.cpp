@@ -11,7 +11,7 @@ namespace precice {
 namespace action {
 
 logging::Logger ComputeCurvatureAction::
-  _log ( "precice::action::ComputeCurvatureAction" );
+  _log("action::ComputeCurvatureAction" );
 
 ComputeCurvatureAction:: ComputeCurvatureAction
 (

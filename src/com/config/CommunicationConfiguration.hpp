@@ -1,13 +1,12 @@
 #pragma once
 
-#include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include "xml/XMLTag.hpp"
 
-#include <string>
-
-namespace precice {
-namespace com {
+namespace precice
+{
+namespace com
+{
 
 /**
  * @brief Configuration for communication channels between server and clients or master and slaves.
@@ -16,35 +15,14 @@ namespace com {
 class CommunicationConfiguration
 {
 public:
+  virtual ~CommunicationConfiguration() {}
 
-   /**
-    * @brief Constructor
-    */
-   CommunicationConfiguration();
-
-   virtual ~CommunicationConfiguration() {}
-
-   /**
-    * @brief Returns a communication object of given type.
-    */
-   PtrCommunication createCommunication ( const xml::XMLTag& tag ) const;
+  /// Returns a communication object of given type.
+  PtrCommunication createCommunication(const xml::XMLTag &tag) const;
 
 private:
-
-   static logging::Logger _log;
-
-   const std::string TAG;
-   const std::string ATTR_TYPE;
-   const std::string ATTR_FROM;
-   const std::string ATTR_TO;
-   const std::string ATTR_PORT;
-   const std::string ATTR_NETWORK;
-   const std::string ATTR_EXCHANGE_DIRECTORY;
-
-   const std::string VALUE_MPI;
-   const std::string VALUE_MPI_SINGLE;
-   const std::string VALUE_SOCKETS;
-
+  mutable logging::Logger _log{"com::CommunicationConfiguration"};
 };
 
-}} // namespace precice, com
+} // namespace com
+} // namespace precice

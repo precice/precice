@@ -1,10 +1,10 @@
 #pragma once
 
-#include <cstdlib>
 #include <algorithm>
 #include <vector>
 #include <map>
 #include <set>
+#include <limits>
 
 namespace precice {
 namespace utils {

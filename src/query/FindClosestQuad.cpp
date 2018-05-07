@@ -7,7 +7,7 @@
 namespace precice {
 namespace query {
 
-logging::Logger FindClosestQuad:: _log ( "precice::query::FindClosestQuad" );
+logging::Logger FindClosestQuad:: _log("query::FindClosestQuad" );
 
 FindClosestQuad:: FindClosestQuad
 (

@@ -10,7 +10,7 @@ namespace impl
 {
 
 logging::Logger ResidualRelativeConvergenceMeasure::
-    _log("precice::cplscheme::ResidualRelativeConvergenceMeasure");
+    _log("cplscheme::ResidualRelativeConvergenceMeasure");
 
 ResidualRelativeConvergenceMeasure::ResidualRelativeConvergenceMeasure(
     double convergenceLimitPercent)

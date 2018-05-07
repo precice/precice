@@ -96,9 +96,7 @@ public:
 
 
 private:
-
-  /// Logging device.
-  static logging::Logger _log;
+  mutable logging::Logger _log{"mapping::PetRadialBasisFctMapping"};
 
   bool _hasComputedMapping;
 
@@ -174,9 +172,6 @@ private:
 };
 
 // --------------------------------------------------- HEADER IMPLEMENTATIONS
-
-template<typename RADIAL_BASIS_FUNCTION_T>
-logging::Logger PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::_log("mapping::PetRadialBasisFctMapping");
 
 template<typename RADIAL_BASIS_FUNCTION_T>
 PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
@@ -753,77 +748,91 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
   }
 }
 
-
+/*
+ * For the re-partitioning process with RBF mappings, also compare Figure 69 in Benjamin U's thesis (page 89).
+ * https://mediatum.ub.tum.de/doc/1320661/document.pdf
+ */
 template<typename RADIAL_BASIS_FUNCTION_T>
 void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
 {
   TRACE();
   mesh::PtrMesh filterMesh, otherMesh;
   if (getConstraint() == CONSISTENT){
-    filterMesh = input();
-    otherMesh = output();
+    filterMesh = input(); // remote
+    otherMesh = output(); // local
   }
-  else {
-    assertion(getConstraint() == CONSERVATIVE, getConstraint());
-    filterMesh = output();
-    otherMesh = input();
+  else if (getConstraint() == CONSERVATIVE) {
+    filterMesh = output(); // remote
+    otherMesh = input(); // local
   }
-
-  for(mesh::Vertex& v : filterMesh->vertices()){
+  
+  if (otherMesh->vertices().size() == 0)
+      return; // Ranks not at the interface should never hold interface vertices
+  
+  for(mesh::Vertex& v : filterMesh->vertices()) {
     bool isInside = true;
-    // TODO: use as soon as PETSc bug fixed
-//    if(otherMesh->vertices().size()==0) isInside = false; //ranks not at the interface should never hold interface vertices
-//    if(_basisFunction.hasCompactSupport()){
-//      for (int d=0; d<getDimensions(); d++) {
-//        if (v.getCoords()[d] < otherMesh->getBoundingBox()[d].first - _basisFunction.getSupportRadius() ||
-//            v.getCoords()[d] > otherMesh->getBoundingBox()[d].second + _basisFunction.getSupportRadius() ) {
-//          isInside = false;
-//        }
-//      }
-//    }
-    if(isInside) v.tag();
+    #if PETSC_MAJOR >= 3 and PETSC_MINOR >= 8
+    if (_basisFunction.hasCompactSupport()) {
+      for (int d = 0; d < getDimensions(); d++) {
+        if (v.getCoords()[d] < otherMesh->getBoundingBox()[d].first - _basisFunction.getSupportRadius() or
+            v.getCoords()[d] > otherMesh->getBoundingBox()[d].second + _basisFunction.getSupportRadius() ) {
+          isInside = false;
+        }
+      }
+    }
+    #else
+      #warning "Mesh filtering deactivated, due to PETSc version < 3.8. preCICE is fully functional, but performance for large cases is degraded."
+    #endif
+    if (isInside)
+      v.tag();
   }
 }
 
+
+/*
+ * For the re-partitioning process with RBF mappings, also compare Figure 69 in Benjamin U's thesis (page 89).
+ * https://mediatum.ub.tum.de/doc/1320661/document.pdf
+ */
 template<typename RADIAL_BASIS_FUNCTION_T>
 void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
 {
   TRACE();
 
-  if(not _basisFunction.hasCompactSupport()) return; //tags should not be changed
+  if (not _basisFunction.hasCompactSupport())
+    return; // Tags should not be changed
 
-  mesh::Mesh::BoundingBox bb(getDimensions(), std::make_pair(std::numeric_limits<double>::max(), std::numeric_limits<double>::lowest()));
+  mesh::Mesh::BoundingBox bb(getDimensions(),
+                             std::make_pair(std::numeric_limits<double>::max(),
+                                            std::numeric_limits<double>::lowest()));
 
-  mesh::PtrMesh mesh; //the mesh we want to filter
+  mesh::PtrMesh mesh; // The mesh we want to filter
 
-  if (getConstraint() == CONSISTENT){
+  if (getConstraint() == CONSISTENT)
     mesh = input();
-  }
-  else {
-    assertion(getConstraint() == CONSERVATIVE, getConstraint());
+  else if (getConstraint() == CONSERVATIVE)
     mesh = output();
-  }
-
-  // construct bounding box around all owned vertices
-  for(mesh::Vertex& v : mesh->vertices()){
-    if(v.isOwner()){
-      assertion(v.isTagged());
-      for (int d=0; d<getDimensions(); d++) {
-        if(v.getCoords()[d] < bb[d].first) bb[d].first = v.getCoords()[d];
-        if(v.getCoords()[d] > bb[d].second) bb[d].second = v.getCoords()[d];
+ 
+  // Construct bounding box around all owned vertices
+  for (mesh::Vertex& v : mesh->vertices()) {
+    if (v.isOwner()) {
+      assertion(v.isTagged()); // Should be tagged from the first round
+      for (int d = 0; d < getDimensions(); d++) {
+        bb[d].first  = std::min(v.getCoords()[d], bb[d].first);
+        bb[d].second = std::max(v.getCoords()[d], bb[d].second);
       }
     }
   }
-  // tag according to bounding box
-  for(mesh::Vertex& v : mesh->vertices()){
+  // Tag vertices that are inside the bounding box + support radius
+  for (mesh::Vertex& v : mesh->vertices()) {
     bool isInside = true;
-    for (int d=0; d<getDimensions(); d++) {
-      if (v.getCoords()[d] < bb[d].first - _basisFunction.getSupportRadius() ||
+    for (int d = 0; d < getDimensions(); d++) {
+      if (v.getCoords()[d] < bb[d].first - _basisFunction.getSupportRadius() or
           v.getCoords()[d] > bb[d].second + _basisFunction.getSupportRadius() ) {
         isInside = false;
       }
     }
-    if(isInside) v.tag();
+    if (isInside)
+      v.tag();
   }
 }
 

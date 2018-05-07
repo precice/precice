@@ -8,7 +8,7 @@
 namespace precice {
 namespace mesh {
 
-logging::Logger MeshConfiguration:: _log ( "precice::mesh::MeshConfiguration" );
+logging::Logger MeshConfiguration:: _log("mesh::MeshConfiguration" );
 
 
 MeshConfiguration:: MeshConfiguration

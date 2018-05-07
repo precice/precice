@@ -384,7 +384,6 @@ void XMLTag::resetAttributes()
     pair.second.setRead(false);
   }
 
-  std::vector<XMLTag *>::iterator subtagIter;
   for (XMLTag *tag : _subtags) {
     tag->_configured = false;
     tag->resetAttributes();

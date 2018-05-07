@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(ParallelClient,
                      *testing::OnSize(3))
 {
   SocketCommunication com;
-  int rank = utils::Parallel::getProcessRank();
+  int                 rank = utils::Parallel::getProcessRank();
   if (rank == 0) {
     com.acceptConnection("server", "client", 0, 1);
     BOOST_TEST(com.getRemoteCommunicatorSize() == 2);
@@ -140,4 +140,3 @@ BOOST_AUTO_TEST_CASE(ParallelClient,
 
 BOOST_AUTO_TEST_SUITE_END() // Socket
 BOOST_AUTO_TEST_SUITE_END() // Communication
-

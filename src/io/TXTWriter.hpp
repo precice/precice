@@ -38,9 +38,7 @@ public:
 
   
 private:
-
-  // @brief Logging device.
-  static logging::Logger _log;
+  logging::Logger _log{"io::TXTWriter"};
 
   // @brief Filestream.
   std::ofstream _file;

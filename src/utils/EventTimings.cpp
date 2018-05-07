@@ -24,8 +24,6 @@
 namespace precice {
 namespace utils {
 
-logging::Logger Event::_log("utils::Events");
-
 struct MPI_EventData
 {
   char name[255] = {'\0'};

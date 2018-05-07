@@ -52,9 +52,7 @@ public:
       bool               createMesh);
 
 private:
-
-   // @brief Logging device.
-   static logging::Logger _log;
+  logging::Logger _log{"io::ImportVRML"};
 
    bool _createMesh;
 

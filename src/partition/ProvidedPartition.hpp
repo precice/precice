@@ -33,7 +33,7 @@ private:
 
    virtual void createOwnerInformation();
 
-   static logging::Logger _log;
+   logging::Logger _log{"partition::ProvidedPartition"};
 
    bool _hasToSend;
 

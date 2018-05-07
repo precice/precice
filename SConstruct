@@ -1,11 +1,10 @@
 import os
 import subprocess
 import sys
-from os.path import join
-
 import sysconfig
+
 try:
-    import numpy as np
+    import numpy
 except ImportError:
     pass
 
@@ -17,17 +16,17 @@ def checkAdd(lib = None, header = None, usage = ""):
     usage = " (needed for " + usage + ") " if usage else ""
     if lib and header:
         if not conf.CheckLibWithHeader(lib, header = header, autoadd=0, language="C++"):
-            print("ERROR: Library '" + lib + "' or header '" + header + "'" + usage + "not found.")
+            print("ERROR: Library '" + str(lib) + "' or header '" + str(header) + "'" + usage + "not found.")
             Exit(1)
         conf.env.AppendUnique(LIBS = [lib])
     elif lib:
         if not conf.CheckLib(lib, autoadd=0, language="C++"):
-            print("ERROR: Library '" + lib + "'" + usage + "not found!")
+            print("ERROR: Library '" + str(lib) + "'" + usage + "not found!")
             Exit(1)
         conf.env.AppendUnique(LIBS = [lib])
     elif header:
         if not conf.CheckCXXHeader(header):
-            print("ERROR: Header '" + header + "'" + usage + "not found!")
+            print("ERROR: Header '" + str(header) + "'" + usage + "not found!")
             Exit(1)
 
 
@@ -79,11 +78,11 @@ vars = Variables(None, ARGUMENTS)
 vars.Add(PathVariable("builddir", "Directory holding build files.", "build", PathVariable.PathAccept))
 vars.Add(EnumVariable('build', 'Build type', "Debug", allowed_values=('release', 'debug', 'Release', 'Debug')))
 vars.Add(PathVariable("libprefix", "Path prefix for libraries", "/usr", PathVariable.PathIsDir))
-vars.Add("compiler", "Compiler to use.", "g++")
+vars.Add("compiler", "Compiler to use.", "mpicxx")
 vars.Add(BoolVariable("mpi", "Enables MPI-based communication and running coupling tests.", True))
 vars.Add(BoolVariable("spirit2", "Used for parsing VRML file geometries and checkpointing.", True))
 vars.Add(BoolVariable("petsc", "Enable use of the Petsc linear algebra library.", True))
-vars.Add(BoolVariable("python", "Used for Python scripted solver actions.", True))
+vars.Add(BoolVariable("python", "Used for Python scripted solver actions.", False))
 vars.Add(BoolVariable("gprof", "Used in detailed performance analysis.", False))
 vars.Add(EnumVariable('platform', 'Special configuration for certain platforms', "none", allowed_values=('none', 'supermuc', 'hazelhen')))
 
@@ -98,16 +97,16 @@ print
 print_options(vars)
 
 if env["build"] == 'debug':
-    env["build"] == 'Debug'
+    env["build"] = 'Debug'
     print("WARNING: Lower-case build type 'debug' is deprecated, use 'Debug' instead!")
 
 if env["build"] == 'release':
-    env["build"] == 'Release'
+    env["build"] = 'Release'
     print("WARNING: Lower-case build type 'release' is deprecated, use 'Release' instead!")
 
 
 prefix = env["libprefix"]
-buildpath = join(env["builddir"], "") # Ensures to have a trailing slash
+buildpath = os.path.join(env["builddir"], "") # Ensures to have a trailing slash
 
 print
 
@@ -141,8 +140,8 @@ env.Replace(CXX = env["compiler"])
 env.Replace(CC = env["compiler"])
 
 if prefix is not "/usr":  # explicitely add standard search paths
-    env.Append(CPPPATH = join( prefix, 'include'))
-    env.Append(LIBPATH = join( prefix, 'lib'))
+    env.Append(CPPPATH = os.path.join( prefix, 'include'))
+    env.Append(LIBPATH = os.path.join( prefix, 'lib'))
 
 if not conf.CheckCXX():
     Exit(1)
@@ -159,24 +158,24 @@ elif env["build"] == 'Release':
     env.Append(CCFLAGS = ['-O3'])
     buildpath += "release"
 
-    
+
 # ====== libpthread ======
 checkAdd("pthread")
 
-    
+
 # ====== PETSc ======
 if env["petsc"]:
     PETSC_DIR = checkset_var("PETSC_DIR", "")
     PETSC_ARCH = checkset_var("PETSC_ARCH", "")
-    
+
     if not env["mpi"]:
         print("PETSc requires MPI to be enabled.")
         Exit(1)
-       
-    env.Append(CPPPATH = [join(prefix, PETSC_DIR, "include"),
-                          join(prefix, PETSC_DIR, PETSC_ARCH, "include")])
-    env.Append(LIBPATH = [join(prefix, PETSC_DIR, PETSC_ARCH, "lib"),
-                          join(prefix, PETSC_DIR, "lib")])
+
+    env.Append(CPPPATH = [os.path.join(prefix, PETSC_DIR, "include"),
+                          os.path.join(prefix, PETSC_DIR, PETSC_ARCH, "include")])
+    env.Append(LIBPATH = [os.path.join(prefix, PETSC_DIR, PETSC_ARCH, "lib"),
+                          os.path.join(prefix, PETSC_DIR, "lib")])
     if env["platform"] == "hazelhen":
         checkAdd("craypetsc_gnu_real")
     else:
@@ -187,7 +186,7 @@ else:
 
 # ====== Eigen ======
 if prefix is not "/usr":
-    env.Append(CPPPATH = join(prefix, 'include/eigen3'))
+    env.Append(CPPPATH = os.path.join(prefix, 'include/eigen3'))
 
 checkAdd(header = "Eigen/Dense", usage = "Eigen")
 if env["build"] == "debug":
@@ -197,8 +196,8 @@ if env["build"] == "debug":
 # Needed for correct linking on Hazel Hen
 # Otherwise it would link partly to old system boost, partly to newer modules boost
 if env["platform"] == "hazelhen":
-    env.Append(CPPPATH = join( os.environ['BOOST_ROOT'], 'include'))
-    env.Append(LIBPATH = join( os.environ['BOOST_ROOT'], 'lib'))
+    env.Append(CPPPATH = os.path.join( os.environ['BOOST_ROOT'], 'include'))
+    env.Append(LIBPATH = os.path.join( os.environ['BOOST_ROOT'], 'lib'))
 
 env.Append(CPPDEFINES= ['BOOST_SPIRIT_USE_PHOENIX_V3',
                         'BOOST_ALL_DYN_LINK',
@@ -226,10 +225,10 @@ if env["mpi"]:
     if not conf.CheckCXXHeader("mpi.h"):
         print("mpi.h not found. Maybe try 'compiler=mpicxx' or 'compiler=mpic++' as scons argument?")
         Exit(1)
-        
+
     # Skip (deprecated) MPI C++ bindings.
     env.Append(CPPDEFINES = ['MPICH_SKIP_MPICXX'])
-        
+
 elif not env["mpi"]:
     env.Append(CPPDEFINES = ['PRECICE_NO_MPI'])
     buildpath += "-nompi"
@@ -240,14 +239,27 @@ if env["python"]:
     if installation_scheme is 'posix_local':  # for ubuntu with python 2.7 posix_local scheme points to an empty include path, fix this by using posix_prefix. See https://stackoverflow.com/questions/48826123/why-do-include-paths-in-python2-and-python3-differ
         installation_scheme = 'posix_prefix'
 
+    # Try to extract the default values for Python version and paths
     pythonLibDefault = 'python'+str(sys.version_info.major)+'.'+str(sys.version_info.minor)
     pythonLibPathDefault = sysconfig.get_config_var('LIBDIR')
     pythonIncPathDefault = sysconfig.get_path('include', scheme=installation_scheme)
-    numpyIncPathDefault = np.get_include()
 
+    # Set the used values for Python version and paths, allowing the user to override them
     pythonLib = checkset_var('PRECICE_PYTHON_LIB', pythonLibDefault)
     pythonLibPath = checkset_var('PRECICE_PYTHON_LIB_PATH', pythonLibPathDefault)
     pythonIncPath = checkset_var('PRECICE_PYTHON_INC_PATH', pythonIncPathDefault)
+
+    # Set the used path for NumPy.
+    # As a default value, it tries to get the information from the imported
+    # package. However, we only need the path to the C++ NumPy header.
+    # If the user specifies a different path, then there should not be an error here.
+    # An error will be triggered later by checkAdd().
+    try:
+        numpyIncPathDefault = numpy.get_include()
+    except NameError:
+        print("WARNING: Python package numpy could not be imported by SCons. If you don't need the Python action interface, specify 'python=no'.")
+        numpyIncPathDefault = None
+
     numpyIncPath = checkset_var('PRECICE_NUMPY_INC_PATH', numpyIncPathDefault)
 
     # FIXME: Supresses NumPy deprecation warnings. Needs to converted to the newer API.
@@ -275,7 +287,7 @@ elif env["platform"] == "hazelhen":
     env.Append(LINKFLAGS = ['-dynamic']) # Needed for correct linking against boost.log
 
 # ====== LibXML2 ======
-env.Append(CPPPATH = join(prefix, 'include/libxml2'))
+env.Append(CPPPATH = os.path.join(prefix, 'include/libxml2'))
 checkAdd("xml2")
 
 print
@@ -319,10 +331,10 @@ env.Alias("tests", tests)
 symlink = env.Command(
     target = "symlink",
     source = None,
-    action = "ln -fns {0} {1}".format(os.path.split(buildpath)[-1], join(os.path.split(buildpath)[0], "last"))
+    action = "ln -fns {0} {1}".format(os.path.split(buildpath)[-1], os.path.join(os.path.split(buildpath)[0], "last"))
 )
 
-Default(staticlib, bin, solib, tests, symlink)
+Default(solib, tests, symlink)
 
 AlwaysBuild(symlink)
 

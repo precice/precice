@@ -31,7 +31,7 @@ struct SerialTestFixture {
 
   SerialTestFixture()
   {
-    _pathToTests = utils::getPathToSources() + "/precice/tests/";
+    _pathToTests = testing::getPathToSources() + "/precice/tests/";
     reset();
   }
 };

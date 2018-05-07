@@ -11,9 +11,8 @@ BOOST_AUTO_TEST_SUITE(CommunicationTests)
 
 BOOST_AUTO_TEST_SUITE(MPIPorts)
 
-// Tests disabled because they fail on Travis, nowhere else
 BOOST_AUTO_TEST_CASE(SendReceiveTwoProcesses,
-                     * testing::MinRanks(2)
+                     *testing::MinRanks(2)
                      * boost::unit_test::fixture<testing::SyncProcessesFixture>()
                      * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1}))
                      * boost::unit_test::label("MPI_Ports"))

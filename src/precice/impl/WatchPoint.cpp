@@ -15,7 +15,7 @@
 namespace precice {
 namespace impl {
 
-logging::Logger WatchPoint:: _log ( "precice::impl::WatchPoint" );
+logging::Logger WatchPoint:: _log("impl::WatchPoint" );
 
 WatchPoint:: WatchPoint
 (

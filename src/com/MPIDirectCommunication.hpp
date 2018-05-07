@@ -2,11 +2,9 @@
 
 #pragma once
 
-#include "MPICommunication.hpp"
-
-#include "logging/Logger.hpp"
-
 #include <string>
+#include "MPICommunication.hpp"
+#include "logging/Logger.hpp"
 
 namespace precice
 {
@@ -31,81 +29,59 @@ public:
   virtual ~MPIDirectCommunication();
 
   /**
-   * @brief Returns true, if a connection to a remote participant has been
-   * setup.
-   */
-  virtual bool
-  isConnected()
-  {
-    return _isConnected;
-  }
-
-  /**
    * @brief Returns the number of processes in the remote communicator.
    *
-   * Precondition: a connection to the remote participant has been setup.
+   * @pre A connection to the remote participant has been setup.
    */
   virtual size_t getRemoteCommunicatorSize();
 
-  /**
-   * @brief See precice::com::Communication::acceptConnection().
-   */
+  /// See precice::com::Communication::acceptConnection().
   virtual void acceptConnection(std::string const &nameAcceptor,
                                 std::string const &nameRequester,
                                 int                acceptorProcessRank,
                                 int                acceptorCommunicatorSize);
 
-  virtual void
-  acceptConnectionAsServer(std::string const &nameAcceptor,
-                           std::string const &nameRequester,
-                           int                requesterCommunicatorSize)
+  virtual void acceptConnectionAsServer(std::string const &nameAcceptor,
+                                        std::string const &nameRequester,
+                                        int                requesterCommunicatorSize)
   {
     ERROR("Not implemented!");
   }
 
-  /**
-   * @brief See precice::com::Communication::requestConnection().
-   */
+  /// See precice::com::Communication::requestConnection().
   virtual void requestConnection(std::string const &nameAcceptor,
                                  std::string const &nameRequester,
                                  int                requesterProcessRank,
                                  int                requesterCommunicatorSize);
 
-  virtual int
-  requestConnectionAsClient(std::string const &nameAcceptor,
-                            std::string const &nameRequester)
+  virtual int requestConnectionAsClient(std::string const &nameAcceptor,
+                                        std::string const &nameRequester)
   {
     ERROR("Not implemented!");
   }
 
-  /**
-   * @brief See precice::com::Communication::closeConnection().
-   */
+  /// See precice::com::Communication::closeConnection().
   virtual void closeConnection();
 
   virtual void reduceSum(double *itemsToSend, double *itemsToReceive, int size, int rankMaster);
 
   virtual void reduceSum(double *itemsToSend, double *itemsToReceive, int size);
 
-  virtual void reduceSum(int &itemsToSend, int &itemsToReceive, int rankMaster);
+  virtual void reduceSum(int itemToSend, int &itemsToReceive, int rankMaster);
 
-  virtual void reduceSum(int &itemsToSend, int &itemsToReceive);
-
-  virtual void allreduceSum();
+  virtual void reduceSum(int itemToSend, int &itemsToReceive);
 
   virtual void allreduceSum(double *itemsToSend, double *itemsToReceive, int size, int rankMaster);
 
   virtual void allreduceSum(double *itemsToSend, double *itemsToReceive, int size);
 
-  virtual void allreduceSum(double &itemToSend, double &itemsToReceive, int rankMaster);
+  virtual void allreduceSum(double itemToSend, double &itemsToReceive, int rankMaster);
 
-  virtual void allreduceSum(double &itemToSend, double &itemsToReceive);
+  virtual void allreduceSum(double itemToSend, double &itemsToReceive);
 
-  virtual void allreduceSum(int &itemToSend, int &itemsToReceive, int rankMaster);
+  virtual void allreduceSum(int itemToSend, int &itemsToReceive, int rankMaster);
 
-  virtual void allreduceSum(int &itemToSend, int &itemsToReceive);
-
-  virtual void broadcast();
+  virtual void allreduceSum(int itemToSend, int &itemsToReceive);
 
   virtual void broadcast(int *itemsToSend, int size);
 
@@ -132,34 +108,32 @@ private:
 
   virtual int rank(int rank);
 
-  // @brief Logging device.
-  static logging::Logger _log;
+  logging::Logger _log{"com::MPIDirectCommunication"};
 
   MPI_Comm _communicator;
 
-  // @brief Global communicator, as given by utils::Parallel::getDefaultComm().
+  /// Global communicator, as given by utils::Parallel::getDefaultComm().
   MPI_Comm _globalCommunicator;
 
-  // @brief Communicator for communicator between process groups.
+  /// Communicator for communicator between process groups.
   MPI_Comm _localCommunicator;
-
-  bool _isConnected;
 
   /**
    * @brief Returns ID belonging to a group of processes.
    *
-   * Erroneous, if called before exchangeGroupInformation.
+   * @pre Call exchangeGroupInformation.
    */
   int getGroupID(std::string const &accessorName);
 
   /**
    * @brief Returns rank of leading process of a group.
    *
-   * Erroneous, if called before exchangeGroupInformation.
+   * @pre Call exchangeGroupInformation.
    */
   int getLeaderRank(std::string const &accessorName);
 };
-}
-} // namespace precice, com
+
+} // namespace com
+} // namespace precice
 
 #endif // not PRECICE_NO_MPI

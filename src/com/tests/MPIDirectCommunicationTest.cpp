@@ -12,9 +12,8 @@ BOOST_AUTO_TEST_SUITE(CommunicationTests)
 
 BOOST_AUTO_TEST_SUITE(MPIDirect)
 
-// Tests disabled because they fail on Travis, nowhere else
 BOOST_AUTO_TEST_CASE(SendReceiveTwoProcesses,
-                     * testing::MinRanks(2)
+                     *testing::MinRanks(2)
                      * boost::unit_test::fixture<testing::SyncProcessesFixture>()
                      * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1}))
                      * boost::unit_test::label("MPI_Ports"))
@@ -24,8 +23,8 @@ BOOST_AUTO_TEST_CASE(SendReceiveTwoProcesses,
 
   if (Par::getProcessRank() < 2) {
     MPIDirectCommunication communication;
-    std::string nameEven("even");
-    std::string nameOdd("odd");
+    std::string            nameEven("even");
+    std::string            nameOdd("odd");
 
     if (Par::getProcessRank() == 0) {
       Par::splitCommunicator(nameEven);

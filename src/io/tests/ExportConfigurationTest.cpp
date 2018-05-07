@@ -1,6 +1,5 @@
 #include "io/config/ExportConfiguration.hpp"
 #include "testing/Testing.hpp"
-#include "utils/Globals.hpp"
 #include "xml/XMLTag.hpp"
 
 BOOST_AUTO_TEST_SUITE(IOTests)
@@ -13,7 +12,7 @@ BOOST_AUTO_TEST_CASE(Configuration)
   XMLTag tag = xml::getRootTag();
   {
     io::ExportConfiguration config(tag);
-    xml::configure(tag, utils::getPathToSources() + "/io/tests/config1.xml");
+    xml::configure(tag, testing::getPathToSources() + "/io/tests/config1.xml");
     BOOST_TEST(config.exportContexts().size() == 1);
     const io::ExportContext &context = config.exportContexts().front();
     BOOST_TEST(context.type == "vtk");
@@ -23,7 +22,7 @@ BOOST_AUTO_TEST_CASE(Configuration)
   {
     tag.clear();
     io::ExportConfiguration config(tag);
-    xml::configure(tag, utils::getPathToSources() + "/io/tests/config2.xml");
+    xml::configure(tag, testing::getPathToSources() + "/io/tests/config2.xml");
     BOOST_TEST(config.exportContexts().size() == 1);
     const io::ExportContext &context = config.exportContexts().front();
     BOOST_TEST(context.type == "vtk");
@@ -34,7 +33,7 @@ BOOST_AUTO_TEST_CASE(Configuration)
   {
     tag.clear();
     io::ExportConfiguration config(tag);
-    xml::configure(tag, utils::getPathToSources() + "/io/tests/config3.xml");
+    xml::configure(tag, testing::getPathToSources() + "/io/tests/config3.xml");
     BOOST_TEST(config.exportContexts().size() == 1);
     const io::ExportContext &context = config.exportContexts().front();
     BOOST_TEST(context.type == "vrml");

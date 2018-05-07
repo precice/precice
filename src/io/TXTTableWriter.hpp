@@ -93,7 +93,7 @@ private:
     }
   };
 
-  static logging::Logger _log;
+  logging::Logger _log{"io::TXTTableWriter"};
 
   std::vector<Data> _data;
 

@@ -1,0 +1,36 @@
+/**
+@page releases Releases
+
+This page describes the process of preparing, packaging and distributing a new release.
+
+--
+
+Versioning
+==================
+We use versioning inspired by semantic versioning: https://semver.org/
+
+
+Guidelines
+------------------
+
+- Use ```git cherrypick``` to backport small bug fixes from develop to master. That consitutes an revision release, i.e. increment last digit.
+- For bigger bug fixes, branch from master, fix the bug and merge back into master. Then merge master to develop.
+- Use coding days to release.
+- Update ```CHANGELOG.md``` with all user notable changes. Whenever such a change is pushed to develop, update the changelog for the upcoming release.
+- Copy the changelog entries for the release to the GitHub releases page.
+- Changes that break the public API should only be made in a major release, i.e. first number increased.
+
+Minor or major release step-by-step
+------------------
+
+1. Merge master to develop
+2. Do regression tests (SU2/CalculiX, OpenFOAM, Alya, 1D-ElasticTube, SuperMUC, ...) at develop
+3. Look over CHANGELOG and add things if necessary
+4. Draft message to mailing list
+5. Update documentation
+6. Fix potential problems in develop
+7. Merge develop to master
+8. Tag release (on GitHub) and merge back to develop
+9. Send email and do marketing 
+
+*/

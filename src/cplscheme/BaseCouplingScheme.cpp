@@ -13,7 +13,6 @@
 #include "math/math.hpp"
 #include "mesh/Mesh.hpp"
 #include "utils/EigenHelperFunctions.hpp"
-#include "utils/Globals.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/MasterSlave.hpp"
 
@@ -30,15 +29,11 @@ BaseCouplingScheme::BaseCouplingScheme(
     double timestepLength,
     int    validDigits)
     : _couplingMode(Undefined),
-      _isCoarseModelOptimizationActive(false),
       _firstParticipant("unknown"),
       _secondParticipant("unknown"),
       _localParticipant("unknown"),
       _eps(std::pow(10.0, -1 * validDigits)),
-      _deletedColumnsPPFiltering(0),
       _iterationsCoarseOptimization(-1),
-      _participantSetsDt(false),
-      _participantReceivesDt(false),
       _maxTime(maxTime),
       _maxTimesteps(maxTimesteps),
       _iterations(-1),
@@ -47,22 +42,8 @@ BaseCouplingScheme::BaseCouplingScheme(
       _totalIterations(-1),
       _timesteps(0),
       _timestepLength(timestepLength),
-      _time(0.0),
-      _computedTimestepPart(0.0),
       _firstResiduumNorm(0),
-      _extrapolationOrder(0),
-      _validDigits(validDigits),
-      _doesFirstStep(false),
-      _isCouplingTimestepComplete(false),
-      _hasToSendInitData(false),
-      _hasToReceiveInitData(false),
-      _hasDataBeenExchanged(false),
-      _isInitialized(false),
-      _actions(),
-      _sendData(),
-      _receiveData(),
-      _iterationsWriter(),
-      _convergenceWriter()
+      _validDigits(validDigits)
 {
   CHECK(
       not((maxTime != UNDEFINED_TIME) && (maxTime < 0.0)),
@@ -88,17 +69,12 @@ BaseCouplingScheme::BaseCouplingScheme(
     m2n::PtrM2N                   m2n,
     int                           maxIterations,
     constants::TimesteppingMethod dtMethod)
-    : _isCoarseModelOptimizationActive(false),
-      _firstParticipant(firstParticipant),
+  :   _firstParticipant(firstParticipant),
       _secondParticipant(secondParticipant),
       _localParticipant(localParticipant),
-      _convergenceMeasures(),
       _eps(std::pow(10.0, -1 * validDigits)),
-      _deletedColumnsPPFiltering(0),
       _iterationsCoarseOptimization(1),
       _m2n(m2n),
-      _participantSetsDt(false),
-      _participantReceivesDt(false),
       _maxTime(maxTime),
       _maxTimesteps(maxTimesteps),
       _iterations(1),
@@ -107,23 +83,8 @@ BaseCouplingScheme::BaseCouplingScheme(
       _totalIterations(1),
       _timesteps(1),
       _timestepLength(timestepLength),
-      _time(0.0),
-      _computedTimestepPart(0.0),
       _firstResiduumNorm(0),
-      _extrapolationOrder(0),
-      _validDigits(validDigits),
-      _doesFirstStep(false),
-      _isCouplingTimestepComplete(false),
-      _postProcessing(),
-      _hasToSendInitData(false),
-      _hasToReceiveInitData(false),
-      _hasDataBeenExchanged(false),
-      _isInitialized(false),
-      _actions(),
-      _sendData(),
-      _receiveData(),
-      _iterationsWriter(),
-      _convergenceWriter()
+      _validDigits(validDigits)
 {
   CHECK(
       not((maxTime != UNDEFINED_TIME) && (maxTime < 0.0)),
@@ -222,7 +183,6 @@ void BaseCouplingScheme::sendState(
     int                   rankReceiver)
 {
   TRACE(rankReceiver);
-  communication->startSendPackage(rankReceiver);
   assertion(communication.get() != nullptr);
   assertion(communication->isConnected());
   communication->send(_maxTime, rankReceiver);
@@ -243,7 +203,6 @@ void BaseCouplingScheme::sendState(
   communication->send(_iterations, rankReceiver);
   communication->send(_iterationsCoarseOptimization, rankReceiver); // new, correct?? TODO
   communication->send(_totalIterations, rankReceiver);
-  communication->finishSendPackage();
 }
 
 void BaseCouplingScheme::receiveState(
@@ -251,7 +210,6 @@ void BaseCouplingScheme::receiveState(
     int                   rankSender)
 {
   TRACE(rankSender);
-  communication->startReceivePackage(rankSender);
   assertion(communication.get() != nullptr);
   assertion(communication->isConnected());
   communication->receive(_maxTime, rankSender);
@@ -279,18 +237,16 @@ void BaseCouplingScheme::receiveState(
   communication->receive(subIteration, rankSender); // new, correct?? TODO
   _iterationsCoarseOptimization = subIteration;     // new, correct? TODO
   communication->receive(_totalIterations, rankSender);
-  communication->finishReceivePackage();
 }
 
-std::vector<int> BaseCouplingScheme::sendData(
-    m2n::PtrM2N m2n)
+std::vector<int> BaseCouplingScheme::sendData(m2n::PtrM2N m2n)
 {
   TRACE();
 
   std::vector<int> sentDataIDs;
   assertion(m2n.get() != nullptr);
   assertion(m2n->isConnected());
-  for (DataMap::value_type &pair : _sendData) {
+  for (const DataMap::value_type &pair : _sendData) {
     //std::cout<<"\nsend data id="<<pair.first<<": "<<*(pair.second->values)<<std::endl;
     int size = pair.second->values->size();
     m2n->send(pair.second->values->data(), size, pair.second->mesh->getID(), pair.second->dimension);

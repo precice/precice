@@ -82,9 +82,7 @@ public:
    */
   virtual bool hasComputedMapping() const =0;
 
-  /**
-   * @brief Removes a computed mapping.
-   */
+  /// Removes a computed mapping.
   virtual void clear() = 0;
 
   /**
