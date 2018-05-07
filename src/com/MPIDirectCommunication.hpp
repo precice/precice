@@ -31,7 +31,7 @@ public:
   /**
    * @brief Returns the number of processes in the remote communicator.
    *
-   * Precondition: a connection to the remote participant has been setup.
+   * @pre a connection to the remote participant has been setup.
    */
   virtual size_t getRemoteCommunicatorSize();
 
@@ -67,9 +67,9 @@ public:
 
   virtual void reduceSum(double *itemsToSend, double *itemsToReceive, int size);
 
-  virtual void reduceSum(int &itemsToSend, int &itemsToReceive, int rankMaster);
+  virtual void reduceSum(int itemToSend, int &itemsToReceive, int rankMaster);
 
-  virtual void reduceSum(int &itemsToSend, int &itemsToReceive);
+  virtual void reduceSum(int itemToSend, int &itemsToReceive);
 
   virtual void allreduceSum();
 
@@ -77,13 +77,13 @@ public:
 
   virtual void allreduceSum(double *itemsToSend, double *itemsToReceive, int size);
 
-  virtual void allreduceSum(double &itemToSend, double &itemsToReceive, int rankMaster);
+  virtual void allreduceSum(double itemToSend, double &itemsToReceive, int rankMaster);
 
-  virtual void allreduceSum(double &itemToSend, double &itemsToReceive);
+  virtual void allreduceSum(double itemToSend, double &itemsToReceive);
 
-  virtual void allreduceSum(int &itemToSend, int &itemsToReceive, int rankMaster);
+  virtual void allreduceSum(int itemToSend, int &itemsToReceive, int rankMaster);
 
-  virtual void allreduceSum(int &itemToSend, int &itemsToReceive);
+  virtual void allreduceSum(int itemToSend, int &itemsToReceive);
 
   virtual void broadcast();
 
@@ -113,7 +113,6 @@ private:
   virtual int rank(int rank);
 
   logging::Logger _log{"com::MPIDirectCommunication"};
-  ;
 
   MPI_Comm _communicator;
 
@@ -126,17 +125,18 @@ private:
   /**
    * @brief Returns ID belonging to a group of processes.
    *
-   * Erroneous, if called before exchangeGroupInformation.
+   * @pre Call exchangeGroupInformation.
    */
   int getGroupID(std::string const &accessorName);
 
   /**
    * @brief Returns rank of leading process of a group.
    *
-   * Erroneous, if called before exchangeGroupInformation.
+   * @pre Call exchangeGroupInformation.
    */
   int getLeaderRank(std::string const &accessorName);
 };
+
 } // namespace com
 } // namespace precice
 

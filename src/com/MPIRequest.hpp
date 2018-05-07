@@ -2,7 +2,6 @@
 #ifndef PRECICE_NO_MPI
 
 #include "Request.hpp"
-
 #include <mpi.h>
 
 namespace precice
