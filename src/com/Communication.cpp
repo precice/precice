@@ -54,12 +54,6 @@ void Communication::reduceSum(int itemToSend, int &itemToReceive, int rankMaster
   request->wait();
 }
 
-void Communication::allreduceSum()
-{
-  ERROR("Not implemented!");
-  TRACE();
-}
-
 /**
  * @attention This method modifies the input buffer.
  */
@@ -162,11 +156,6 @@ void Communication::allreduceSum(int itemToSend, int &itemToReceive, int rankMas
   request->wait();
   // receive reduced data from master
   receive(&itemToReceive, 1, rankMaster + _rankOffset);
-}
-
-void Communication::broadcast()
-{
-  ERROR("Not implemented!");
 }
 
 void Communication::broadcast(int *itemsToSend, int size)

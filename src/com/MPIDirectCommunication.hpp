@@ -31,7 +31,7 @@ public:
   /**
    * @brief Returns the number of processes in the remote communicator.
    *
-   * @pre a connection to the remote participant has been setup.
+   * @pre A connection to the remote participant has been setup.
    */
   virtual size_t getRemoteCommunicatorSize();
 
@@ -71,8 +71,6 @@ public:
 
   virtual void reduceSum(int itemToSend, int &itemsToReceive);
 
-  virtual void allreduceSum();
-
   virtual void allreduceSum(double *itemsToSend, double *itemsToReceive, int size, int rankMaster);
 
   virtual void allreduceSum(double *itemsToSend, double *itemsToReceive, int size);
@@ -84,8 +82,6 @@ public:
   virtual void allreduceSum(int itemToSend, int &itemsToReceive, int rankMaster);
 
   virtual void allreduceSum(int itemToSend, int &itemsToReceive);
-
-  virtual void broadcast();
 
   virtual void broadcast(int *itemsToSend, int size);
 
