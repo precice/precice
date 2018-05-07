@@ -322,9 +322,8 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV4,
       );
 }
 
-// same as 2DV4, but all ranks have vertices, converges, but fails
-BOOST_AUTO_TEST_CASE(DistributedConsistent2DV5,
-                     * testing::Deleted())
+// same as 2DV4, but all ranks have vertices
+BOOST_AUTO_TEST_CASE(DistributedConsistent2DV5)
 {
   assertion(utils::Parallel::getCommunicatorSize() == 4);
   ThinPlateSplines fct;
