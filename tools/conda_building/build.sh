@@ -1,47 +1,35 @@
 #!/bin/bash
+set -e
 
-source activate.sh
+# This script uses SCons to build preCICE in an already set-up environment.
 
-# TODO: make parallel jobs variable
-SCONS_OPTIONS="petsc=no compiler=mpic++"
+# Clean any previous log files
+rm -f scons_clean.log scons.log
 
-# clean
-(cd $PRECICE_ROOT; scons --clean $SCONS_OPTIONS) &> scons_clean.log || exit &
-# create a spinner indicating progress. See https://stackoverflow.com/a/12498305/5158031
+# Clean any previous build
+(cd ${PRECICE_ROOT}; scons --clean ${SCONS_OPTIONS}) &> scons_clean.log 2>&1 || exit
+
+# Build preCICE using SCons
+
+(cd ${PRECICE_ROOT}; scons --config=force ${SCONS_OPTIONS})  &> scons.log 2>&1 || exit
+
+# Create a spinner indicating progress.
+# See https://stackoverflow.com/a/12498305/5158031
 pid=$! # Process Id of the previous running command
-
 spin='-\|/'
-
 i=0
-while kill -0 $pid 2>/dev/null
+while kill -0 ${pid} 2>/dev/null
 do
   i=$(( (i+1) %4 ))
-  printf "\rcleaning last build: ${spin:$i:1}"
+  printf "\rBuilding preCICE (see scons.log): ${spin:$i:1}"
   sleep .1
 done
+printf "\nBuilding done."
 
-printf "\ncleaning done."
-echo ""
+# Run the tests
+printf "\nRunning the tests:"
+(cd ${PRECICE_ROOT}; ./tools/compileAndTest.py -t) || exit
 
-# building
-(cd $PRECICE_ROOT; scons --config=force $SCONS_OPTIONS -j8)  &> scons.log || exit &
-# create a spinner indicating progress. See https://stackoverflow.com/a/12498305/5158031
-pid=$! # Process Id of the previous running command
-
-spin='-\|/'
-
-i=0
-while kill -0 $pid 2>/dev/null
-do
-  i=$(( (i+1) %4 ))
-  printf "\rbuilding precice: ${spin:$i:1}"
-  sleep .1
-done
-
-printf "\nbuilding done."
-
-# testing
-(cd $PRECICE_ROOT; ./tools/compileAndTest.py -b) || exit
-
-# refresh activate
-source $CONDA_ROOT/bin/activate precice
+# Refresh activate
+# TODO: Why?
+source ${CONDA_ROOT}/bin/activate precice

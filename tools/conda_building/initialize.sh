@@ -1,33 +1,11 @@
 #!/bin/bash
-source ./config.sh
+set -e
 
-############
+# This script creates a Conda environment named precice.
 
-export PRECICE_ROOT
-export CONDA_ROOT
-export SCONS_PARALLELJOBS
-export PRECICE_MPI_IMPLEMENTATION
+source config.sh
 
-CONDA_ENV=precice
-CONDA_ENV_ROOT=$CONDA_PREFIX
-
-export PKG_CONFIG_PATH=$CONDA_ENV_ROOT/lib/pkgconfig:$PKG_CONFIG_PATH
-export LD_LIBRARY_PATH=$CONDA_ENV_ROOT/lib
-
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PRECICE_ROOT/build/last
-
-export PATH=$PRECICE_ROOT/bin:$CONDA_ROOT/bin:$PATH
-
-############
-
-if [ -z $PRECICE_ROOT ]; then
-    echo "please define PRECICE_ROOT"
-fi
-
-if [ -z $CONDA_ROOT ]; then
-    echo "please define CONDA_ROOT"
-fi
-
-conda env create --force -f $PRECICE_ROOT/tools/conda_building/precice.yml
-
-source $CONDA_ROOT/bin/activate precice
+# Create the Conda environment from the precice.yml file.
+# This will overwrite any previous Conda environments named precice.
+# TODO: Rename precice.yml to precice_conda.yml to not confuse with simulations
+conda env create --force -f ${PRECICE_ROOT}/tools/conda_building/precice.yml

@@ -1,40 +1,14 @@
 name: precice
 channels:
   - conda-forge
-  - menpo
   - anaconda
+  - petsc
   - defaults
 dependencies:
-  - boost=1.65.1=py27_4
-  - bzip2=1.0.6=h9a117a8_4
-  - icu=58.2=h9c2bf20_1
-  - intel-openmp=2018.0.0=hc7b2577_8
-  - libboost=1.65.1=habcd387_4
-  - libgfortran-ng=7.2.0=h9f7466a_2
-  - libxml2=2.9.7=h26e45fe_0
-  - mkl=2018.0.1=h19d6760_4
-  - py-boost=1.65.1=py27hf484d3e_4
-  - xz=5.2.3=h55aa19d_2
-  - mpich=3.2=5
-  - ca-certificates=2017.08.26=h1d4fec5_0
-  - certifi=2018.1.18=py27_0
-  - libedit=3.1=heed3624_0
-  - libffi=3.2.1=hd88cf55_4
-  - libgcc=7.2.0=h69d50b8_2
-  - libgcc-ng=7.2.0=h7cc24e2_2
-  - libstdcxx-ng=7.2.0=h7a57d05_2
-  - ncurses=6.0=h9df7e31_2
-  - numpy=1.14.1=py27h3dfced4_1
-  - openssl=1.0.2n=hb7f436b_0
-  - pip=9.0.1=py27ha730c48_4
-  - python=2.7.14=h1571d57_29
-  - readline=7.0=ha6073c6_4
-  - scons=3.0.0=py27h8a56064_0
-  - setuptools=38.5.1=py27_0
-  - sqlite=3.22.0=h1bed415_0
-  - tk=8.6.7=hc745277_3
-  - wheel=0.30.0=py27h2bc6bb2_1
-  - zlib=1.2.11=ha838bed_2
-  - eigen=3.2.7=0
-prefix: /work_fast/ga25zih/anaconda2/envs/precice
-
+  - scons
+  - eigen=3.2.7
+  - libboost=1.65.1
+  - libxml2
+  - python=2.7.14
+  - numpy
+  - openmpi=1.10.2
