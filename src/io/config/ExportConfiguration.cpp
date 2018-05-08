@@ -19,13 +19,11 @@ ExportConfiguration:: ExportConfiguration
   ATTR_TYPE ( "type" ),
   ATTR_AUTO ( "auto" ),
   VALUE_VTK ( "vtk" ),
-  VALUE_VRML ( "vrml" ),
   ATTR_TIMESTEP_INTERVAL ( "timestep-interval" ),
   ATTR_NEIGHBORS ( "neighbors" ),
   ATTR_TRIGGER_SOLVER ( "trigger-solver" ),
   ATTR_NORMALS ( "normals" ),
   ATTR_EVERY_ITERATION("every-iteration"),
-  //_isValid ( false ),
   _contexts()
 {
   using namespace xml;
@@ -35,11 +33,6 @@ ExportConfiguration:: ExportConfiguration
   {
     XMLTag tag(*this, VALUE_VTK, occ, TAG);
     tag.setDocumentation("Exports meshes to VTK text files.");
-    tags.push_back(tag);
-  }
-  {
-    XMLTag tag(*this, VALUE_VRML, occ, TAG);
-    tag.setDocumentation("Exports meshes to VRML 1.0 text files.");
     tags.push_back(tag);
   }
 

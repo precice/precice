@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file. For future 
 
 ## develop
 - Make `polynomial=separate` the default setting for PetRBF.
+- Removed ExportVRML functionality
 - Build system:
   - Make `python=off` default.
 

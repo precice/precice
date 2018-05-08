@@ -107,7 +107,6 @@ private:
   const std::string VALUE_NO_FILTER;
 
   const std::string VALUE_VTK;
-  const std::string VALUE_VRML;
 
   int _dimensions;
 

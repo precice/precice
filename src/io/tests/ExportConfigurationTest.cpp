@@ -30,17 +30,6 @@ BOOST_AUTO_TEST_CASE(Configuration)
     BOOST_TEST(context.location == "somepath");
     BOOST_TEST(not context.triggerSolverPlot);
   }
-  {
-    tag.clear();
-    io::ExportConfiguration config(tag);
-    xml::configure(tag, testing::getPathToSources() + "/io/tests/config3.xml");
-    BOOST_TEST(config.exportContexts().size() == 1);
-    const io::ExportContext &context = config.exportContexts().front();
-    BOOST_TEST(context.type == "vrml");
-    BOOST_TEST(context.timestepInterval == 1);
-    BOOST_TEST(context.location == "");
-    BOOST_TEST(not context.triggerSolverPlot);
-  }
 }
 
 BOOST_AUTO_TEST_SUITE_END() // IOTests
