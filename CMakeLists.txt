@@ -11,8 +11,12 @@ if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
     "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
-
 message(STATUS "Build configuration: " ${CMAKE_BUILD_TYPE})
+
+
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+endif()
 
 
 set(Platform "none" CACHE STRING "Special configurations for certain platforms")
@@ -22,9 +26,8 @@ if (Platform STREQUAL "SuperMUC")
   add_definitions(-DSuperMUC_WORK)
 endif()
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
-endif()
+
+option(BUILD_SHARED_LIBS "Build a shared library" ON)
 
 
 option(MPI "Enables MPI-based communication and running coupling tests." ON)
