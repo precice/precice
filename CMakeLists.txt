@@ -27,8 +27,20 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" STRE
 endif()
 
 
+option(MPI "Enables MPI-based communication and running coupling tests." ON)
+if (MPI)
+  find_package(MPI REQUIRED)
+  include_directories(${MPI_INCLUDE_PATH})
+  set(COMPILE_FLAGS  ${COMPILE_FLAGS} ${MPI_COMPILE_FLAGS})
+  set(LINK_FLAGS ${LINK_FLAGS} ${MPI_LINK_FLAGS})
+else()
+  add_definitions(-DPRECICE_NO_MPI)
+  message(STATUS "MPI support disabled")
+endif()
+
+
 option(PETSC "Enable use of the PETSc linear algebra library." ON)
-if (PETSC)
+if (PETSC AND MPI)
   find_package(PETSc 3.6 REQUIRED)
   string(REGEX MATCHALL "[0-9]+" PETSC_VERSIONS ${PETSC_VERSION})
   list(GET PETSC_VERSIONS 0 PETSC_MAJOR)
@@ -48,26 +60,15 @@ find_package(Boost 1.60.0 REQUIRED
 add_definitions(-DBOOST_SPIRIT_USE_PHOENIX_V3 -DBOOST_ALL_DYN_LINK -DBOOST_ASIO_ENABLE_OLD_SERVICES)
 
 
-
-option(MPI "Enables MPI-based communication and running coupling tests." ON)
-if (MPI)
-  find_package(MPI REQUIRED)
-  include_directories(${MPI_INCLUDE_PATH})
-  set(COMPILE_FLAGS  ${COMPILE_FLAGS} ${MPI_COMPILE_FLAGS})
-  set(LINK_FLAGS ${LINK_FLAGS} ${MPI_LINK_FLAGS})
-else()
-  add_definitions(-DPRECICE_NO_MPI)
-endif()
-
 find_package(Eigen3 3.2 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR})
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
   add_definitions(-DEIGEN_INITIALIZE_MATRICES_BY_NAN)
 endif()
 
+
 find_package(LibXml2 REQUIRED)
 include_directories(${LIBXML2_INCLUDE_DIR})
-
 
 
 option(PYTHON "Python support" ON)
