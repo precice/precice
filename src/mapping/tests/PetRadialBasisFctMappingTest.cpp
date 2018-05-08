@@ -273,10 +273,8 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3)
 
 
 /// Some ranks are empty, does not converge
-BOOST_AUTO_TEST_CASE(DistributedConsistent2DV4,
-                     * testing::Deleted())
+BOOST_AUTO_TEST_CASE(DistributedConsistent2DV4)
 {
-  assertion(utils::Parallel::getCommunicatorSize() == 4);
   ThinPlateSplines fct;
   PetRadialBasisFctMapping<ThinPlateSplines> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
 
