@@ -80,7 +80,6 @@ vars.Add(PathVariable("builddir", "Directory holding build files.", "build", Pat
 vars.Add(EnumVariable('build', 'Build type', "Debug", allowed_values=('release', 'debug', 'Release', 'Debug')))
 vars.Add("compiler", "Compiler to use.", "mpicxx")
 vars.Add(BoolVariable("mpi", "Enables MPI-based communication and running coupling tests.", True))
-vars.Add(BoolVariable("spirit2", "Used for parsing VRML file geometries and checkpointing.", True))
 vars.Add(BoolVariable("petsc", "Enable use of the Petsc linear algebra library.", True))
 vars.Add(BoolVariable("python", "Used for Python scripted solver actions.", False))
 vars.Add(BoolVariable("gprof", "Used in detailed performance analysis.", False))
@@ -204,8 +203,7 @@ if env["platform"] == "hazelhen":
     env.Append(CPPPATH = os.path.join( os.environ['BOOST_ROOT'], 'include'))
     env.Append(LIBPATH = os.path.join( os.environ['BOOST_ROOT'], 'lib'))
 
-env.Append(CPPDEFINES= ['BOOST_SPIRIT_USE_PHOENIX_V3',
-                        'BOOST_ALL_DYN_LINK',
+env.Append(CPPDEFINES= ['BOOST_ALL_DYN_LINK',
                         'BOOST_ASIO_ENABLE_OLD_SERVICES']) # Interfaces have changed in 1.66
 
 checkAdd("boost_log")
@@ -219,11 +217,6 @@ checkAdd("boost_unit_test_framework")
 checkAdd(header = 'boost/vmd/is_empty.hpp', usage = 'Boost Variadic Macro Data Library')
 checkAdd(header = 'boost/geometry.hpp', usage = 'Boost Geometry Library')
 checkAdd(header = 'boost/signals2.hpp', usage = 'Boost Signals2')
-
-# ====== Spirit2 ======
-if not env["spirit2"]:
-    env.Append(CPPDEFINES = ['PRECICE_NO_SPIRIT2'])
-    buildpath += "-nospirit2"
 
 # ====== MPI ======
 if env["mpi"]:
