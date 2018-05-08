@@ -1,9 +1,11 @@
+// To compile use:
+// mpic++ -I$PRECICE_ROOT/src main.cpp -lprecice proxy
+
 #include <iostream>
 #include <sstream>
-#include <cstdlib>
-#include <stdio.h>
-#include "../../../src/precice/SolverInterface.hpp"
-#include "mpi.h"
+#include "precice/SolverInterface.hpp"
+#include "precice/Constants.hpp"
+#include <mpi.h>
 
 /**
  * @brief For printing to the command line.
@@ -91,8 +93,8 @@ int main (int argc, char **argv)
     dimensions = interface.getDimensions();
   }
 
-  if (interface.isActionRequired(actionReadSimulationCheckpoint())){
-    interface.fulfilledAction(actionReadSimulationCheckpoint());
+  if (interface.isActionRequired(actionReadIterationCheckpoint())){
+    interface.fulfilledAction(actionReadIterationCheckpoint());
   }
 
   int dataSize = -1;
@@ -182,8 +184,8 @@ int main (int argc, char **argv)
     double mpi_read_time_end = MPI_Wtime();
     mpi_read_time += mpi_read_time_end - mpi_read_time_start;
 
-    if (interface.isActionRequired(actionWriteSimulationCheckpoint())){
-      interface.fulfilledAction(actionWriteSimulationCheckpoint());
+    if (interface.isActionRequired(actionWriteIterationCheckpoint())){
+      interface.fulfilledAction(actionWriteIterationCheckpoint());
     }
 
     if (interface.isActionRequired(actionReadIterationCheckpoint())){
