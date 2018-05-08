@@ -21,7 +21,6 @@ sourcesMain = [
 
 sourcesIO = [
     Glob('io/*.cpp'),
-    Glob('io/impl/*.cpp'),
     Glob('io/config/*.cpp')
 ]
 

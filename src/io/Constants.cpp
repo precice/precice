@@ -9,11 +9,6 @@ int exportVTK()
   return 0;
 }
 
-int exportVRML()
-{
-  return 1;
-}
-
 int exportAll()
 {
   return 2;
