@@ -272,6 +272,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3)
 }
 
 
+#if PETSC_MAJOR >= 3 and PETSC_MINOR >= 8
 /// Some ranks are empty, does not converge
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV4)
 {
@@ -320,6 +321,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV4)
                     globalIndexOffsets[utils::Parallel::getProcessRank()]
       );
 }
+#endif
 
 // same as 2DV4, but all ranks have vertices
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV5)

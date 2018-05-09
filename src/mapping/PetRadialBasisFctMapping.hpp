@@ -781,7 +781,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
       }
     }
     #else
-      #warning "Mesh filtering deactivated, due to PETSc version < 3.8. preCICE is fully functional, but performance for large cases is degraded."
+      #warning "Mesh filtering deactivated, due to PETSc version < 3.8 or compiling with scons. \ 
+preCICE is fully functional, but performance for large cases is degraded."
     #endif
     if (isInside)
       v.tag();
