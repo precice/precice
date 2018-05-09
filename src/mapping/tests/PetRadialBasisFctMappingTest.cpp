@@ -550,6 +550,7 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV3)
     );
 }
 
+#if PETSC_MAJOR >= 3 and PETSC_MINOR >= 8
 /// Using meshes of different sizes, outMesh is smaller then inMesh
 BOOST_AUTO_TEST_CASE(DistributedConservative2DV4,
                      * boost::unit_test::tolerance(1e-6))
@@ -589,7 +590,9 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV4,
                   globalIndexOffsets[utils::Parallel::getProcessRank()]
     );
 }
-
+#else
+  #warning "Test case MappingTests/PetRadialBasisFunctionMapping/Parallel/DistributedConservative2DV4 deactivated, due to PETSc version < 3.8 or compiling with scons."
+#endif
 
 /// Tests a non-contigous owner distributed at the outMesh
 BOOST_AUTO_TEST_CASE(testDistributedConservative2DV5)
