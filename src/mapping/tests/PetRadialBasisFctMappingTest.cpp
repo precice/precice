@@ -72,7 +72,7 @@ void getDistributedMesh(MeshSpecification const & vertices,
         mesh->createVertex(Eigen::Vector3d(vertex.position.data()));
       else if (vertex.position.size() == 2) // 2-dimensional
         mesh->createVertex(Eigen::Vector2d(vertex.position.data()));
-      
+
       if (vertex.owner == Par::getProcessRank())
         mesh->vertices().back().setOwner(true);
       else
@@ -112,7 +112,7 @@ void testDistributed(Mapping& mapping,
   int outDataID = outData->getID();
 
   getDistributedMesh(outMeshSpec, outMesh, outData);
-  
+
   mapping.setMeshes(inMesh, outMesh);
   BOOST_TEST(mapping.hasComputedMapping() == false);
 
@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1)
 
   MPI_Comm comm = utils::Parallel::getRestrictedCommunicator( {0, 1, 2, 3} );
   utils::Parallel::setGlobalCommunicator(comm);
-  
+
   testDistributed(mapping,
                   { // Consistent mapping: The inMesh is communicated
                     {-1, 0, {0, 0}, {1}},
@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV2)
   assertion(utils::Parallel::getCommunicatorSize() == 4);
   Gaussian fct(5.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
-  
+
   testDistributed(mapping,
                   { // Consistent mapping: The inMesh is communicated, rank 2 owns no vertices
                     {-1, 0, {0, 0}, {1}},
@@ -230,7 +230,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3)
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
 
   std::vector<int> globalIndexOffsets = {0, 0, 0, 4};
-  
+
   testDistributed(mapping,
                   { // Rank 0 has part of the mesh, owns a subpart
                     {0,  0, {0, 0}, {1}}, {0,  0, {0, 1}, {2}},
@@ -321,6 +321,8 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV4)
                     globalIndexOffsets[utils::Parallel::getProcessRank()]
       );
 }
+#else
+  #warning "Test case MappingTests/PetRadialBasisFunctionMapping/Parallel/DistributedConsistent2DV4 deactivated, due to PETSc version < 3.8 or compiling with scons."
 #endif
 
 // same as 2DV4, but all ranks have vertices
@@ -435,7 +437,7 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV1)
   assertion(utils::Parallel::getCommunicatorSize() == 4);
   Gaussian fct(5.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
-  
+
   testDistributed(mapping,
                   { // Conservative mapping: The inMesh is local
                     {0, -1, {0, 0}, {1}},
@@ -476,7 +478,7 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV2)
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
 
   std::vector<int> globalIndexOffsets = {0, 0, 4, 6};
-  
+
   testDistributed(mapping,
                   { // Conservative mapping: The inMesh is local but rank 0 has no vertices
                     {1, -1, {0, 0}, {1}},
@@ -516,7 +518,7 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV3)
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
 
   std::vector<int> globalIndexOffsets = {0, 0, 3, 5};
-  
+
   testDistributed(mapping,
                   { // Conservative mapping: The inMesh is local but rank 0 has no vertices
                     {1, -1, {0, 0}, {1}},
@@ -556,7 +558,7 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV4,
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
 
   std::vector<int> globalIndexOffsets = {0, 2, 4, 6};
-  
+
   testDistributed(mapping,
                   { // Conservative mapping: The inMesh is local
                     {0, -1, {0, 0}, {1}},
@@ -594,7 +596,7 @@ BOOST_AUTO_TEST_CASE(testDistributedConservative2DV5)
 {
   Gaussian fct(5.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
-  
+
   testDistributed(mapping,
                   { // Conservative mapping: The inMesh is local
                     {0, -1, {0, 0}, {1}},
@@ -648,7 +650,7 @@ void perform2DTestConsistentMapping(Mapping& mapping)
   inMesh->createVertex ( Vector2d(0.0, 1.0) );
   inMesh->allocateDataValues ();
   addGlobalIndex(inMesh);
-  
+
   auto& values = inData->values();
   values << 1.0, 2.0, 2.0, 1.0;
 
@@ -731,7 +733,7 @@ void perform2DTestConsistentMapping(Mapping& mapping)
 void perform3DTestConsistentMapping(Mapping& mapping)
 {
   int dimensions = 3;
-  
+
   // Create mesh to map from
   mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, false));
   mesh::PtrData inData = inMesh->createData("InData", 1);
@@ -746,7 +748,7 @@ void perform3DTestConsistentMapping(Mapping& mapping)
   inMesh->createVertex(Eigen::Vector3d(1.0, 1.0, 1.0));
   inMesh->allocateDataValues();
   addGlobalIndex(inMesh);
-  
+
   auto& values = inData->values();
   values << 1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 2.0;
 
@@ -913,7 +915,7 @@ void perform2DTestConservativeMapping(Mapping& mapping)
   mapping.map ( inDataID, outDataID );
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST ( testing::equals(values, Eigen::Vector4d(0.0, 2.0, 0.0, 1.0), tolerance) );
-  
+
   vertex0.setCoords ( Vector2d(0.0, 0.0) );
   vertex1.setCoords ( Vector2d(1.0, 1.0) );
   mapping.computeMapping ();
@@ -945,7 +947,7 @@ void perform3DTestConservativeMapping(Mapping& mapping)
   inMesh->allocateDataValues();
   inData->values() << 1.0, 2.0;
   addGlobalIndex(inMesh);
-  
+
   // Create mesh to map to
   mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, false));
   mesh::PtrData outData = outMesh->createData("OutData", 1);
@@ -960,7 +962,7 @@ void perform3DTestConservativeMapping(Mapping& mapping)
   outMesh->createVertex(Vector3d(0.0, 1.0, 1.0));
   outMesh->allocateDataValues();
   addGlobalIndex(outMesh);
-  
+
   auto& values = outData->values();
   double expectedSum = inData->values().sum();
 
@@ -1114,7 +1116,7 @@ BOOST_AUTO_TEST_CASE(DeadAxis2)
 {
   using Eigen::Vector2d;
   int dimensions = 2;
-  
+
   bool xDead = false;
   bool yDead = true;
   bool zDead = false;
@@ -1133,7 +1135,7 @@ BOOST_AUTO_TEST_CASE(DeadAxis2)
   inMesh->createVertex ( Vector2d(3.0, 1.0) );
   inMesh->allocateDataValues ();
   addGlobalIndex(inMesh);
-  
+
   auto& values = inData->values();
   values << 1.0, 2.0, 2.0, 1.0;
 
@@ -1180,7 +1182,7 @@ BOOST_AUTO_TEST_CASE(DeadAxis3D)
   inMesh->createVertex ( Vector3d(1.0, 3.0, 1.0) );
   inMesh->allocateDataValues ();
   addGlobalIndex(inMesh);
-  
+
   auto& values = inData->values();
   values << 1.0, 2.0, 3.0, 4.0;
 
@@ -1213,7 +1215,7 @@ BOOST_AUTO_TEST_CASE(SolutionCaching)
 {
   using Eigen::Vector2d;
   int dimensions = 2;
-  
+
   bool xDead = false, yDead = true, zDead = false;
 
   ThinPlateSplines fct;
@@ -1228,7 +1230,7 @@ BOOST_AUTO_TEST_CASE(SolutionCaching)
   inMesh->createVertex ( Vector2d(2.0, 1.0) );  inMesh->createVertex ( Vector2d(3.0, 1.0) );
   inMesh->allocateDataValues();
   addGlobalIndex(inMesh);
-  
+
   inData->values() << 1.0, 2.0, 2.0, 1.0;
 
   // Create mesh to map to
@@ -1263,7 +1265,7 @@ BOOST_AUTO_TEST_CASE(ConsistentPolynomialSwitch,
 {
   using Eigen::Vector2d;
   int dimensions = 2;
-  
+
   bool xDead = false, yDead = false, zDead = false;
 
   Gaussian fct(1); // supportRadius = 4.55
@@ -1283,7 +1285,7 @@ BOOST_AUTO_TEST_CASE(ConsistentPolynomialSwitch,
   mesh::PtrData outData = outMesh->createData( "OutData", 1 );
   int outDataID = outData->getID();
   outMesh->createVertex(Vector2d(6, 6)); // Point is far outside the inMesh
-    
+
   outMesh->allocateDataValues();
   addGlobalIndex(outMesh);
 
@@ -1325,7 +1327,7 @@ BOOST_AUTO_TEST_CASE(ConservativePolynomialSwitch,
 {
   using Eigen::Vector2d;
   int dimensions = 2;
-  
+
   bool xDead = false, yDead = false, zDead = false;
 
   Gaussian fct(1); // supportRadius = 4.55
@@ -1347,7 +1349,7 @@ BOOST_AUTO_TEST_CASE(ConservativePolynomialSwitch,
   outMesh->createVertex(Vector2d(0.4, 0));
   outMesh->createVertex(Vector2d(6, 6));
   outMesh->createVertex(Vector2d(7, 7));
-                              
+
   outMesh->allocateDataValues();
   addGlobalIndex(outMesh);
 
@@ -1362,7 +1364,7 @@ BOOST_AUTO_TEST_CASE(ConservativePolynomialSwitch,
   BOOST_TEST ( outData->values()[0] == 2.119967 ); // Conservativness is not retained, because no polynomial
   BOOST_TEST ( outData->values()[1] == 0.0 ); // Mapping to 0 since no basis function at (5,5) and no polynomial
   BOOST_TEST ( outData->values()[2] == 0.0 ); // Mapping to 0 since no basis function at (5,5) and no polynomial
-  
+
 
   // Test integrated polynomial
   PetRadialBasisFctMapping<Gaussian> mappingOn(Mapping::CONSERVATIVE, dimensions, fct,
@@ -1376,8 +1378,8 @@ BOOST_AUTO_TEST_CASE(ConservativePolynomialSwitch,
   BOOST_TEST ( outData->values()[0] == 0 );
   BOOST_TEST ( outData->values()[1] == 26.0 );
   BOOST_TEST ( outData->values()[2] == -22.0 );
-  
-  
+
+
 
   // Test separated polynomial
   PetRadialBasisFctMapping<Gaussian> mappingSep(Mapping::CONSERVATIVE, dimensions, fct,
@@ -1391,7 +1393,7 @@ BOOST_AUTO_TEST_CASE(ConservativePolynomialSwitch,
   BOOST_TEST ( outData->values()[0] == 0 );
   BOOST_TEST ( outData->values()[1] == 26.0 );
   BOOST_TEST ( outData->values()[2] == -22.0 );
-  
+
 }
 
 
@@ -1404,7 +1406,7 @@ BOOST_AUTO_TEST_CASE(NoMapping)
    */
 
   ThinPlateSplines fct;
-  
+
   // Call neither computeMapping nor map
   {
     PetRadialBasisFctMapping<ThinPlateSplines> mapping1(Mapping::CONSISTENT, 3, fct,
@@ -1418,7 +1420,7 @@ BOOST_AUTO_TEST_CASE(NoMapping)
     inMesh->createVertex ( Eigen::Vector2d(0, 0) );
     inMesh->allocateDataValues();
     addGlobalIndex(inMesh);
-    
+
     mesh::PtrMesh outMesh( new mesh::Mesh("OutMesh", 2, false) );
     mesh::PtrData outData = outMesh->createData( "OutData", 1 );
     outMesh->createVertex( Eigen::Vector2d(0, 0));
@@ -1427,7 +1429,7 @@ BOOST_AUTO_TEST_CASE(NoMapping)
 
     PetRadialBasisFctMapping<ThinPlateSplines> mapping2(Mapping::CONSISTENT, 2, fct,
                                                         false, false, false);
-    
+
     mapping2.setMeshes(inMesh, outMesh);
     mapping2.computeMapping();
   }
