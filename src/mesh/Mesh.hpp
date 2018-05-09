@@ -91,29 +91,19 @@ public:
   /// Returns modifieable container holding all edges.
   EdgeContainer& edges();
 
-  /**
-   * @brief Returns const container holding all edges.
-   */
+  /// Returns const container holding all edges.
   const EdgeContainer& edges() const;
 
-  /**
-   * @brief Returns modifieable container holding all triangles.
-   */
+  /// Returns modifieable container holding all triangles.
   TriangleContainer& triangles();
 
-  /**
-   * @brief Returns const container holding all triangles.
-   */
+  /// Returns const container holding all triangles.
   const TriangleContainer& triangles() const;
 
-  /**
-   * @brief Returns modifieable container holding all quads.
-   */
+  /// Returns modifieable container holding all quads.
   QuadContainer& quads();
 
-  /**
-   * @brief Returns const container holding all quads.
-   */
+  /// Returns const container holding all quads.
   const QuadContainer& quads() const;
 
   PropertyContainerContainer& propertyContainers();
@@ -242,24 +232,30 @@ public:
    */
   void clear();
 
-  std::map<int,std::vector<int> >& getVertexDistribution(){
+  /// Returns a mapping from rank to used (not necessarily owned) vertex IDs
+  std::map<int,std::vector<int> >& getVertexDistribution()
+  {
     return _vertexDistribution;
   }
 
-  std::vector<int>& getVertexOffsets(){
+  std::vector<int>& getVertexOffsets()
+  {
     return _vertexOffsets;
   }
 
   /// Only used for tests
-  void setVertexOffsets(std::vector<int> & vertexOffsets){
+  void setVertexOffsets(std::vector<int> & vertexOffsets)
+  {
     _vertexOffsets = vertexOffsets;
   }
 
-  int getGlobalNumberOfVertices(){
+  int getGlobalNumberOfVertices()
+  {
     return _globalNumberOfVertices;
   }
 
-  void setGlobalNumberOfVertices(int num){
+  void setGlobalNumberOfVertices(int num)
+  {
     _globalNumberOfVertices = num;
   }
 
@@ -286,7 +282,7 @@ private:
   mutable logging::Logger _log{"mesh::Mesh"};
 
   /// Provides unique IDs for all geometry objects
-  static std::unique_ptr<utils::ManageUniqueIDs> _managerPropertyIDs;
+  static std::unique_ptr<utils::ManageUniqueIDs> _managePropertyIDs;
 
   /// Name of the mesh.
   std::string _name;
@@ -335,7 +331,7 @@ private:
    * @brief Number of unique vertices for complete distributed mesh.
    * Duplicated vertices are only accounted once.
    */
-  int _globalNumberOfVertices;
+  int _globalNumberOfVertices = -1;
 
   BoundingBox _boundingBox;
 

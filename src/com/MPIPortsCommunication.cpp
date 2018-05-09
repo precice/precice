@@ -216,8 +216,8 @@ void MPIPortsCommunication::requestConnection(std::string const &nameAcceptor,
   MPI_Send(&requesterCommunicatorSize, 1, MPI_INT, 0, 42, communicator);
 }
 
-int MPIPortsCommunication::requestConnectionAsClient(
-    std::string const &nameAcceptor, std::string const &nameRequester)
+int MPIPortsCommunication::requestConnectionAsClient(std::string const &nameAcceptor,
+                                                     std::string const &nameRequester)
 {
   TRACE(nameAcceptor, nameRequester);
 
