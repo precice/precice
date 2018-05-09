@@ -8,7 +8,6 @@ namespace mesh
 
 const int PropertyContainer::INDEX_GEOMETRY_ID = getFreePropertyID();
 
-logging::Logger PropertyContainer::_log("mesh::PropertyContainer");
 
 utils::ManageUniqueIDs *PropertyContainer::_manageUniqueIDs = nullptr;
 

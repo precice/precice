@@ -8,9 +8,6 @@
 namespace precice {
 namespace mesh {
 
-logging::Logger MeshConfiguration:: _log("mesh::MeshConfiguration" );
-
-
 MeshConfiguration:: MeshConfiguration
 (
   xml::XMLTag&       parent,

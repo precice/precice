@@ -283,8 +283,7 @@ public:
   
 private:
 
-  /// Logging device.
-  static logging::Logger _log;
+  mutable logging::Logger _log{"mesh::Mesh"};
 
   /// Provides unique IDs for all geometry objects
   static std::unique_ptr<utils::ManageUniqueIDs> _managerPropertyIDs;

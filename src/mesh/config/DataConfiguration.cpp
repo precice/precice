@@ -9,9 +9,6 @@
 namespace precice {
 namespace mesh {
 
-logging::Logger DataConfiguration:: _log("mesh::DataConfiguration");
-
-
 DataConfiguration:: DataConfiguration
 (
   xml::XMLTag& parent )

@@ -27,25 +27,16 @@ class Merge
 {
 public:
 
-  /**
-   * @brief Constructor.
-   */
   Merge();
 
-  /**
-   * @brief Destructor. Removes temporary property from merged objects.
-   */
+  /// Destructor. Removes temporary property from merged objects.
   ~Merge();
 
-  /**
-   * @brief Merges the content of a CONTAINER_T with already merged content.
-   */
+  /// Merges the content of a CONTAINER_T with already merged content.
   template<typename CONTAINER_T>
   Group& operator() ( CONTAINER_T& container );
 
-  /**
-   * @brief Returns the merged visitables
-   */
+  /// Returns the merged visitables
   Group& content();
 
 private:

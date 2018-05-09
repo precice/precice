@@ -5,9 +5,6 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/PropertyContainer.hpp"
 #include "mesh/Data.hpp"
-#include "utils/Parallel.hpp"
-#include "utils/MasterSlave.hpp"
-#include "com/MPIDirectCommunication.hpp"
 #include <Eigen/Core>
 #include "testing/Testing.hpp"
 #include "utils/Helpers.hpp"

@@ -4,8 +4,6 @@
 namespace precice {
 namespace mesh {
 
-logging::Logger Data:: _log("mesh::Data" );
-
 size_t Data:: _dataCount = 0;
 
 Data:: Data()

@@ -63,27 +63,19 @@ public:
     int                id,
     int                dimension );
 
-  /**
-   * @brief Destructor, decrements data count.
-   */
+  /// Destructor, decrements data count.
   ~Data();
 
-  /**
-   * @brief Returns a reference to the data values.
-   */
+  /// Returns a reference to the data values.
   Eigen::VectorXd& values ();
 
-  /**
-   * @rief Returns a const reference to the data values.
-   */
+  /// Returns a const reference to the data values.
   const Eigen::VectorXd& values () const;
 
   /// Returns the name of the data set, as set in the config file.
   const std::string& getName () const;
 
-  /**
-   * @brief Returns the ID of the data set (supposed to be unique).
-   */
+  /// Returns the ID of the data set (supposed to be unique).
   int getID () const;
 
   /**
@@ -91,36 +83,29 @@ public:
    */
 //  DataType getType () const;
 
-  /**
-   * @brief Returns the dimension (i.e., number of components) of one data value.
-   */
-  int getDimensions () const;
-
-  /**
-   * @brief Returns the name constant of the type of the data set.
-   */
-  //const std::string& getTypeName () const;
+  /// Returns the dimension (i.e., number of components) of one data value.
+     int getDimensions () const;
 
 
 private:
 
-  static logging::Logger _log;
+  logging::Logger _log{"mesh::Data"};
 
   /// Counter for existing Data objects.
   static size_t _dataCount;
 
   Eigen::VectorXd _values;
 
-  // @brief Name of the data set.
+  /// Name of the data set.
   std::string _name;
 
-  // @brief ID of the data set (supposed to be unique).
+  /// ID of the data set (supposed to be unique).
   int _id;
 
 //  // @brief Type of data (scalar or vector).
 //  DataType _type;
 
-  // @brief Dimensionality of one data value.
+  /// Dimensionality of one data value.
   int _dimensions;
 
 };

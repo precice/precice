@@ -1,7 +1,5 @@
-#ifndef PRECICE_MESH_DATACONFIGURATION_HPP_
-#define PRECICE_MESH_DATACONFIGURATION_HPP_
+#pragma once
 
-#include "mesh/SharedPointer.hpp"
 #include "mesh/Data.hpp"
 #include "xml/XMLTag.hpp"
 #include "logging/Logger.hpp"
@@ -11,9 +9,7 @@
 namespace precice {
 namespace mesh {
 
-/**
- * @brief Performs and provides configuration for Data objects from XML files.
- */
+/// Performs and provides configuration for Data objects from XML files.
 class DataConfiguration : public xml::XMLTag::Listener
 {
 public:
@@ -34,9 +30,6 @@ public:
    */
   //static const std::string& getTag();
 
-  /**
-   * @brief Constructor.
-   */
   DataConfiguration ( xml::XMLTag& parent );
 
   void setDimensions ( int dimensions );
@@ -57,8 +50,8 @@ public:
   /**
    * @brief Adds data manually.
    *
-   * @param name [IN] Unqiue name of the data.
-   * @param dataDimensions [IN] Dimensionality (1: scalar, 2,3: vector) of data.
+   * @param[in] name Unqiue name of the data.
+   * @param[in] dataDimensions Dimensionality (1: scalar, 2,3: vector) of data.
    */
   void addData (
     const std::string& name,
@@ -67,21 +60,16 @@ public:
   //int getDimensions() const;
 
 private:
-
-  static logging::Logger _log;
+  
+  mutable logging::Logger _log{"mesh::DataConfiguration"};
 
   const std::string TAG;
   const std::string ATTR_NAME;
-  //const std::string ATTR_TYPE;
   const std::string VALUE_VECTOR;
   const std::string VALUE_SCALAR;
 
-//  xml::XMLTag _tag;
-
-  // @brief Dimension of space.
+  /// Dimension of space.
   int _dimensions;
-
-  //bool _isValid;
 
   std::vector<ConfiguredData> _data;
 
@@ -91,5 +79,3 @@ private:
 };
 
 }} // namespace precice, mesh
-
-#endif /* PRECICE_MESH_DATACONFIGURATION_HPP_ */
