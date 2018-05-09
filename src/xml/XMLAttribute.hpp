@@ -5,9 +5,9 @@
 #include "Validator.hpp"
 #include "logging/Logger.hpp"
 #include "math/math.hpp"
-#include "utils/Helpers.hpp"
 #include "utils/TypeNames.hpp"
 #include "utils/assertion.hpp"
+#include "utils/String.hpp"
 
 namespace precice
 {

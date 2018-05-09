@@ -24,7 +24,7 @@
 #include "cplscheme/CouplingScheme.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
 #include "utils/EventTimings.hpp"
-#include "utils/Globals.hpp"
+#include "utils/Helpers.hpp"
 #include "utils/SignalHandler.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Petsc.hpp"

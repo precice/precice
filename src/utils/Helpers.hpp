@@ -22,13 +22,6 @@ inline bool xOR ( bool lhs, bool rhs )
    return (lhs && (!rhs)) || ((!lhs) && rhs);
 }
 
-/// Evaluates a string to find out if it represents a bool.
-/**
- * Returns True if string is yes, true, 1 or on. Otherwise False.
- * This function is case-insensitive.
- */
-bool convertStringToBool(std::string const & value);
-
 /**
  * @brief Returns true, if given element is in vector, otherwise false.
  *

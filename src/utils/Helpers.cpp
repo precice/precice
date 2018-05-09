@@ -1,4 +1,4 @@
-#include  <boost/algorithm/string/case_conv.hpp>
+#include <cstdint>
 
 namespace precice {
 namespace utils {
@@ -11,16 +11,6 @@ bool isMachineBigEndian()
    } bint = {0x01020304};
 
    return bint.c[0] == 1;
-}
-
-bool convertStringToBool(std::string const & value)
-{
-  std::string str = value;
-  boost::algorithm::to_lower(str);
-  if ( str=="1" or str=="yes" or str=="true" or str=="on" )
-    return true;
-  
-  return false;
 }
 
 }}

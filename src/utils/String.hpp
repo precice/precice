@@ -17,5 +17,13 @@ std::string wrapText (
  */
 std::string & checkAppendExtension(std::string& filename, const std::string& extension);
 
+/// Evaluates a string to find out if it represents a bool.
+/**
+ * Returns True if string is yes, true, 1 or on. Otherwise False.
+ * This function is case-insensitive.
+ */
+bool convertStringToBool(std::string const & value);
+
+
 }} // namespace precice, utils
 

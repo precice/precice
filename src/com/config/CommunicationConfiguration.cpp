@@ -3,6 +3,7 @@
 #include "com/MPIPortsCommunication.hpp"
 #include "com/SocketCommunication.hpp"
 #include "xml/XMLAttribute.hpp"
+#include "utils/Helpers.hpp"
 
 namespace precice
 {

@@ -10,6 +10,7 @@
 #include "xml/ValidatorEquals.hpp"
 #include "xml/ValidatorOr.hpp"
 #include "xml/XMLAttribute.hpp"
+#include "utils/Helpers.hpp"
 
 namespace precice
 {

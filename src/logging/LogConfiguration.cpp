@@ -15,7 +15,7 @@
 #include <boost/log/support/date_time.hpp>
 
 #include "utils/assertion.hpp"
-#include "utils/Helpers.hpp"
+#include "utils/String.hpp"
 
 namespace precice {
 namespace logging {

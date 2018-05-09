@@ -2,7 +2,7 @@
 #include "mesh/config/DataConfiguration.hpp"
 #include "mesh/Mesh.hpp"
 #include "xml/XMLAttribute.hpp"
-#include "utils/Globals.hpp"
+#include "utils/Helpers.hpp"
 #include <sstream>
 
 namespace precice {
