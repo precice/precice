@@ -40,7 +40,6 @@ size_t MPIPortsCommunication::getRemoteCommunicatorSize()
 
 void MPIPortsCommunication::acceptConnection(std::string const &nameAcceptor,
                                              std::string const &nameRequester,
-                                             int                acceptorProcessRank,
                                              int                acceptorCommunicatorSize)
 {
   TRACE(nameAcceptor, nameRequester);
@@ -48,7 +47,7 @@ void MPIPortsCommunication::acceptConnection(std::string const &nameAcceptor,
   assertion(not isConnected());
 
   _isAcceptor = true;
-  _rank       = acceptorProcessRank;
+  _rank       = 0;
 
   // BUG report from Alex:
   // It is extremely important that the call to `Parallel::initialize' follows

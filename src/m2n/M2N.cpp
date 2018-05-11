@@ -47,7 +47,7 @@ void M2N::acceptMasterConnection(
 
   if (not utils::MasterSlave::_slaveMode) {
     assertion(_masterCom.use_count() > 0);
-    _masterCom->acceptConnection(nameAcceptor, nameRequester, 0, 1);
+    _masterCom->acceptConnection(nameAcceptor, nameRequester, 1);
     _isMasterConnected = _masterCom->isConnected();
   }
 

@@ -134,7 +134,7 @@ void MVQNPostProcessing::initialize(
 #ifdef SuperMUC_WORK
         Publisher::ScopedPushDirectory spd1(std::string(".") + "cyclicComm-" + std::to_string(prevProc) + ".address");
 #endif
-        _cyclicCommLeft->acceptConnection("cyclicComm-" + std::to_string(prevProc), "", 0, 1);
+        _cyclicCommLeft->acceptConnection("cyclicComm-" + std::to_string(prevProc), "", 1);
 #ifdef SuperMUC_WORK
         Publisher::ScopedPushDirectory spd2(std::string(".") + "cyclicComm-" + std::to_string(utils::MasterSlave::_rank) + ".address");
 #endif
@@ -147,7 +147,7 @@ void MVQNPostProcessing::initialize(
 #ifdef SuperMUC_WORK
         Publisher::ScopedPushDirectory spd4(std::string(".") + "cyclicComm-" + std::to_string(prevProc) + ".address");
 #endif
-        _cyclicCommLeft->acceptConnection("cyclicComm-" + std::to_string(prevProc), "", 0, 1);
+        _cyclicCommLeft->acceptConnection("cyclicComm-" + std::to_string(prevProc), "", 1);
       }
     }
   }

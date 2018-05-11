@@ -71,12 +71,10 @@ public:
    *
    * @param[in] nameAcceptor Name of calling participant.
    * @param[in] nameRequester Name of remote participant to connect to.
-   * @param[in] acceptorProcessRank Rank of the acceptor (typically 0)
    * @param[in] acceptorCommunicatorSize Size of the acceptor (has to be 1 assumably)
    */
   virtual void acceptConnection(std::string const &nameAcceptor,
                                 std::string const &nameRequester,
-                                int                acceptorProcessRank,
                                 int                acceptorCommunicatorSize) = 0;
 
   /**

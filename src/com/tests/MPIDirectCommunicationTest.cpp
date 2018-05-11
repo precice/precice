@@ -28,7 +28,7 @@ BOOST_AUTO_TEST_CASE(SendReceiveTwoProcesses,
 
     if (Par::getProcessRank() == 0) {
       Par::splitCommunicator(nameEven);
-      communication.acceptConnection(nameEven, nameOdd, 0, 1);
+      communication.acceptConnection(nameEven, nameOdd, 1);
       int message = 1;
       communication.send(message, 0);
       communication.receive(message, 0);

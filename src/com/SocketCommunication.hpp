@@ -63,8 +63,7 @@ public:
    */
   virtual void acceptConnection(std::string const &nameAcceptor,
                                 std::string const &nameRequester,
-                                int                acceptorProcessRank,
-                                int                acceptorCommunicatorSize);
+                                int                acceptorCommunicatorSize) override;
 
   virtual void acceptConnectionAsServer(std::string const &nameAcceptor,
                                         std::string const &nameRequester,

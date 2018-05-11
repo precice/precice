@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(GatherScatterTest, *testing::OnSize(4))
     utils::MasterSlave::_size       = 3;
     utils::MasterSlave::_slaveMode  = false;
     utils::MasterSlave::_masterMode = true;
-    masterSlaveCom->acceptConnection("Part2Master", "Part2Slaves", 0, 1);
+    masterSlaveCom->acceptConnection("Part2Master", "Part2Slaves", 1);
     masterSlaveCom->setRankOffset(1);
   } else if (utils::Parallel::getProcessRank() == 2) { // Participant 2 - Slave1
     utils::Parallel::splitCommunicator("Part2Slaves");

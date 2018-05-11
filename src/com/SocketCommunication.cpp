@@ -53,7 +53,6 @@ size_t SocketCommunication::getRemoteCommunicatorSize()
 
 void SocketCommunication::acceptConnection(std::string const &nameAcceptor,
                                            std::string const &nameRequester,
-                                           int                acceptorProcessRank,
                                            int                acceptorCommunicatorSize)
 {
   TRACE(nameAcceptor, nameRequester);
@@ -61,7 +60,7 @@ void SocketCommunication::acceptConnection(std::string const &nameAcceptor,
 
   assertion(not isConnected());
 
-  _rank = acceptorProcessRank;
+  _rank = 0;
 
   std::string address;
   std::string addressFileName("." + nameRequester + "-" + nameAcceptor + ".address");
@@ -119,7 +118,7 @@ void SocketCommunication::acceptConnection(std::string const &nameAcceptor,
 
     _isConnected = true;
 
-    send(acceptorProcessRank, remoteRank);
+    send(_rank, remoteRank);
     send(acceptorCommunicatorSize, remoteRank);
 
     for (int i = 1; i < _remoteCommunicatorSize; ++i) {
@@ -140,7 +139,7 @@ void SocketCommunication::acceptConnection(std::string const &nameAcceptor,
 
       _isConnected = true;
 
-      send(acceptorProcessRank, remoteRank);
+      send(_rank, remoteRank);
       send(acceptorCommunicatorSize, remoteRank);
     }
 

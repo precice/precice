@@ -364,7 +364,7 @@ void PointToPointCommunication::acceptConnection(std::string const &nameAcceptor
     // Establish connection between participants' master processes.
     auto c = _communicationFactory->newCommunication();
 
-    c->acceptConnection(nameAcceptor, nameRequester, 0, 1);
+    c->acceptConnection(nameAcceptor, nameRequester, 1);
 
     int requesterMasterRank;
 
