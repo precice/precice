@@ -23,7 +23,7 @@ BOOST_AUTO_TEST_CASE(SendAndReceiveString)
   utils::Parallel::synchronizeProcesses();
   MPIPortsCommunication com;
   if (utils::Parallel::getProcessRank() == 0) {
-    com.acceptConnection("A", "R", 1);
+    com.acceptConnection("A", "R");
     std::string msg("testOne");
     com.send(msg, 0);
     com.receive(msg, 0);
@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(SendAndReceiveVector)
   utils::Parallel::synchronizeProcesses();
   MPIPortsCommunication com;
   if (utils::Parallel::getProcessRank() == 0) {
-    com.acceptConnection("A", "R", 1);
+    com.acceptConnection("A", "R");
     Eigen::Vector3d msg(1, 1, 1);
     com.send(msg.data(), msg.size(), 0);
     com.receive(msg.data(), msg.size(), 0);
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(SendAndReceiveInteger)
   utils::Parallel::synchronizeProcesses();
   MPIPortsCommunication com;
   if (utils::Parallel::getProcessRank() == 0) {
-    com.acceptConnection("A", "R", 1);
+    com.acceptConnection("A", "R");
     int msg = 1;
     com.send(msg, 0);
     com.receive(msg, 0);

@@ -49,7 +49,7 @@ void P2PComTest1(com::PtrCommunicationFactory cf)
     MasterSlave::_masterMode = true;
     MasterSlave::_slaveMode  = false;
 
-    MasterSlave::_communication->acceptConnection("A.Master", "A.Slave", 1);
+    MasterSlave::_communication->acceptConnection("A.Master", "A.Slave");
     MasterSlave::_communication->setRankOffset(1);
 
     mesh->setGlobalNumberOfVertices(10);
@@ -94,7 +94,7 @@ void P2PComTest1(com::PtrCommunicationFactory cf)
     MasterSlave::_masterMode = true;
     MasterSlave::_slaveMode  = false;
 
-    MasterSlave::_communication->acceptConnection("B.Master", "B.Slave", 1);
+    MasterSlave::_communication->acceptConnection("B.Master", "B.Slave");
     MasterSlave::_communication->setRankOffset(1);
 
     mesh->setGlobalNumberOfVertices(10);
@@ -186,7 +186,7 @@ void P2PComTest2(com::PtrCommunicationFactory cf)
     MasterSlave::_masterMode = true;
     MasterSlave::_slaveMode  = false;
 
-    MasterSlave::_communication->acceptConnection("A.Master", "A.Slave", 1);
+    MasterSlave::_communication->acceptConnection("A.Master", "A.Slave");
     MasterSlave::_communication->setRankOffset(1);
 
     mesh->setGlobalNumberOfVertices(10);
@@ -231,7 +231,7 @@ void P2PComTest2(com::PtrCommunicationFactory cf)
     MasterSlave::_masterMode = true;
     MasterSlave::_slaveMode  = false;
 
-    MasterSlave::_communication->acceptConnection("B.Master", "B.Slave", 1);
+    MasterSlave::_communication->acceptConnection("B.Master", "B.Slave");
     MasterSlave::_communication->setRankOffset(1);
 
     mesh->setGlobalNumberOfVertices(10);

@@ -31,8 +31,7 @@ size_t MPIDirectCommunication::getRemoteCommunicatorSize()
 }
 
 void MPIDirectCommunication::acceptConnection(std::string const &nameAcceptor,
-                                              std::string const &nameRequester,
-                                              int                acceptorCommunicatorSize)
+                                              std::string const &nameRequester)
 {
   TRACE(nameAcceptor, nameRequester);
   assertion(not isConnected());

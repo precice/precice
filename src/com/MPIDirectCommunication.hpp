@@ -37,8 +37,7 @@ public:
 
   /// See precice::com::Communication::acceptConnection().
   virtual void acceptConnection(std::string const &nameAcceptor,
-                                std::string const &nameRequester,
-                                int                acceptorCommunicatorSize) override;
+                                std::string const &nameRequester) override;
 
   virtual void acceptConnectionAsServer(std::string const &nameAcceptor,
                                         std::string const &nameRequester,

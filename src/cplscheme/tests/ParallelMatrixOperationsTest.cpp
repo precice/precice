@@ -158,11 +158,11 @@ BOOST_AUTO_TEST_CASE(ParallelMatrixMatrixOp,  * boost::unit_test::fixture<testin
   // initialize cyclic communication between successive slaves
   int prevProc = (utils::Parallel::getProcessRank() - 1 < 0) ? utils::Parallel::getCommunicatorSize() - 1 : utils::Parallel::getProcessRank() - 1;
   if ((utils::Parallel::getProcessRank() % 2) == 0) {
-    _cyclicCommLeft->acceptConnection("cyclicComm-" + std::to_string(prevProc), "", 1);
+    _cyclicCommLeft->acceptConnection("cyclicComm-" + std::to_string(prevProc), "");
     _cyclicCommRight->requestConnection("cyclicComm-" + std::to_string(utils::Parallel::getProcessRank()), "", 0, 1);
   } else {
     _cyclicCommRight->requestConnection("cyclicComm-" + std::to_string(utils::Parallel::getProcessRank()), "", 0, 1);
-    _cyclicCommLeft->acceptConnection("cyclicComm-" + std::to_string(prevProc), "", 1);
+    _cyclicCommLeft->acceptConnection("cyclicComm-" + std::to_string(prevProc), "");
   }
 
   int              n_global = 10, m_global = 5;

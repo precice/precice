@@ -71,11 +71,9 @@ public:
    *
    * @param[in] nameAcceptor Name of calling participant.
    * @param[in] nameRequester Name of remote participant to connect to.
-   * @param[in] acceptorCommunicatorSize Size of the acceptor (has to be 1 assumably)
    */
   virtual void acceptConnection(std::string const &nameAcceptor,
-                                std::string const &nameRequester,
-                                int                acceptorCommunicatorSize) = 0;
+                                std::string const &nameRequester) = 0;
 
   /**
    * @brief Accepts connection from another communicator, which has to call requestConnectionAsClient().

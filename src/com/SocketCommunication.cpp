@@ -52,11 +52,9 @@ size_t SocketCommunication::getRemoteCommunicatorSize()
 }
 
 void SocketCommunication::acceptConnection(std::string const &nameAcceptor,
-                                           std::string const &nameRequester,
-                                           int                acceptorCommunicatorSize)
+                                           std::string const &nameRequester)
 {
   TRACE(nameAcceptor, nameRequester);
-  CHECK(acceptorCommunicatorSize == 1, "Acceptor of socket connection can only have one process!");
 
   assertion(not isConnected());
 
@@ -119,7 +117,7 @@ void SocketCommunication::acceptConnection(std::string const &nameAcceptor,
     _isConnected = true;
 
     send(_rank, remoteRank);
-    send(acceptorCommunicatorSize, remoteRank);
+    send(1, remoteRank); // was: acceptorCommunicatorSize
 
     for (int i = 1; i < _remoteCommunicatorSize; ++i) {
       socket = PtrSocket(new Socket(*_ioService));
@@ -140,7 +138,7 @@ void SocketCommunication::acceptConnection(std::string const &nameAcceptor,
       _isConnected = true;
 
       send(_rank, remoteRank);
-      send(acceptorCommunicatorSize, remoteRank);
+      send(1, remoteRank); // was: acceptorCommunicatorSize
     }
 
     acceptor.close();

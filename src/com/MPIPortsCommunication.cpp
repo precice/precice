@@ -39,11 +39,9 @@ size_t MPIPortsCommunication::getRemoteCommunicatorSize()
 }
 
 void MPIPortsCommunication::acceptConnection(std::string const &nameAcceptor,
-                                             std::string const &nameRequester,
-                                             int                acceptorCommunicatorSize)
+                                             std::string const &nameRequester)
 {
   TRACE(nameAcceptor, nameRequester);
-  CHECK(acceptorCommunicatorSize == 1, "Acceptor of MPI port connection can only have one process!");
   assertion(not isConnected());
 
   _isAcceptor = true;

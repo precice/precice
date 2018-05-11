@@ -62,8 +62,7 @@ public:
    * @param[in] nameRequester Name of remote participant to connect to.
    */
   virtual void acceptConnection(std::string const &nameAcceptor,
-                                std::string const &nameRequester,
-                                int                acceptorCommunicatorSize) override;
+                                std::string const &nameRequester) override;
 
   virtual void acceptConnectionAsServer(std::string const &nameAcceptor,
                                         std::string const &nameRequester,

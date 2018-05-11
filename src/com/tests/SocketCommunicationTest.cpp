@@ -15,7 +15,7 @@ BOOST_AUTO_TEST_CASE(SendAndReceive,
 {
   SocketCommunication com;
   if (utils::Parallel::getProcessRank() == 0) {
-    com.acceptConnection("process0", "process1", 1);
+    com.acceptConnection("process0", "process1");
     {
       std::string msg("testOne");
       com.send(msg, 0);
@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(ParallelClient,
   SocketCommunication com;
   int                 rank = utils::Parallel::getProcessRank();
   if (rank == 0) {
-    com.acceptConnection("server", "client", 1);
+    com.acceptConnection("server", "client");
     BOOST_TEST(com.getRemoteCommunicatorSize() == 2);
     std::string msg;
     com.receive(msg, 0);

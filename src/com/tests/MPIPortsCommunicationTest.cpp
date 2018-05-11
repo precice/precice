@@ -27,7 +27,7 @@ BOOST_AUTO_TEST_CASE(SendReceiveTwoProcesses,
 
   switch (utils::Parallel::getProcessRank()) {
   case 0: {
-    communication.acceptConnection(nameEven, nameOdd, 1);
+    communication.acceptConnection(nameEven, nameOdd);
     int message = 1;
     communication.send(message, 0);
     communication.receive(message, 0);

@@ -32,7 +32,7 @@ struct MasterComFixture {
       utils::MasterSlave::_size = size;
       utils::MasterSlave::_slaveMode = false;
       utils::MasterSlave::_masterMode = true;
-      utils::MasterSlave::_communication->acceptConnection ( "Master", "Slaves", 1);
+      utils::MasterSlave::_communication->acceptConnection ( "Master", "Slaves" );
       utils::MasterSlave::_communication->setRankOffset(1);
     }
     else {//Slaves
