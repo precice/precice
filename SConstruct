@@ -109,7 +109,7 @@ buildpath = os.path.join(env["builddir"], "") # Ensures to have a trailing slash
 print
 
 env.Append(LIBPATH = [('#' + buildpath)])
-env.Append(CCFLAGS= ['-Wall', '-std=c++11'])
+env.Append(CCFLAGS= ['-Wall', '-Wextra', '-Wno-unused-parameter', '-std=c++11'])
 
 # ====== Compiler Settings ======
 

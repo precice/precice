@@ -376,8 +376,8 @@ BOOST_AUTO_TEST_CASE(WeigthsOfVertices)
 
   // Validate results
   BOOST_TEST(closest.interpolationElements.size() == 2);
-  mesh::Vertex *const pointerVertex1 = dynamic_cast<mesh::Vertex *const>(closest.interpolationElements[0].element);
-  mesh::Vertex *      pointerVertex2 = dynamic_cast<mesh::Vertex *>(closest.interpolationElements[1].element);
+  auto pointerVertex1 = closest.interpolationElements[0].element;
+  auto pointerVertex2 = closest.interpolationElements[1].element;
   BOOST_TEST(testing::equals(pointerVertex1->getCoords(), Eigen::Vector2d(0.0, 0.0)));
   BOOST_TEST(testing::equals(pointerVertex2->getCoords(), Eigen::Vector2d(1.0, 0.0)));
   BOOST_TEST(closest.interpolationElements[0].weight == 0.7);

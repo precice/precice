@@ -33,7 +33,7 @@ public:
    *
    * @pre A connection to the remote participant has been setup.
    */
-  virtual size_t getRemoteCommunicatorSize();
+  virtual size_t getRemoteCommunicatorSize() override;
 
   /// See precice::com::Communication::acceptConnection().
   virtual void acceptConnection(std::string const &nameAcceptor,
@@ -41,7 +41,7 @@ public:
 
   virtual void acceptConnectionAsServer(std::string const &nameAcceptor,
                                         std::string const &nameRequester,
-                                        int                requesterCommunicatorSize)
+                                        int                requesterCommunicatorSize) override
   {
     ERROR("Not implemented!");
   }
@@ -50,61 +50,61 @@ public:
   virtual void requestConnection(std::string const &nameAcceptor,
                                  std::string const &nameRequester,
                                  int                requesterProcessRank,
-                                 int                requesterCommunicatorSize);
+                                 int                requesterCommunicatorSize) override;
 
   virtual int requestConnectionAsClient(std::string const &nameAcceptor,
-                                        std::string const &nameRequester)
+                                        std::string const &nameRequester) override
   {
     ERROR("Not implemented!");
   }
 
   /// See precice::com::Communication::closeConnection().
-  virtual void closeConnection();
+  virtual void closeConnection() override;
 
-  virtual void reduceSum(double *itemsToSend, double *itemsToReceive, int size, int rankMaster);
+  virtual void reduceSum(double *itemsToSend, double *itemsToReceive, int size, int rankMaster) override;
 
-  virtual void reduceSum(double *itemsToSend, double *itemsToReceive, int size);
+  virtual void reduceSum(double *itemsToSend, double *itemsToReceive, int size) override;
 
-  virtual void reduceSum(int itemToSend, int &itemsToReceive, int rankMaster);
+  virtual void reduceSum(int itemToSend, int &itemsToReceive, int rankMaster) override;
 
-  virtual void reduceSum(int itemToSend, int &itemsToReceive);
+  virtual void reduceSum(int itemToSend, int &itemsToReceive) override;
 
-  virtual void allreduceSum(double *itemsToSend, double *itemsToReceive, int size, int rankMaster);
+  virtual void allreduceSum(double *itemsToSend, double *itemsToReceive, int size, int rankMaster) override;
 
-  virtual void allreduceSum(double *itemsToSend, double *itemsToReceive, int size);
+  virtual void allreduceSum(double *itemsToSend, double *itemsToReceive, int size) override;
 
-  virtual void allreduceSum(double itemToSend, double &itemsToReceive, int rankMaster);
+  virtual void allreduceSum(double itemToSend, double &itemsToReceive, int rankMaster) override;
 
-  virtual void allreduceSum(double itemToSend, double &itemsToReceive);
+  virtual void allreduceSum(double itemToSend, double &itemsToReceive) override;
 
-  virtual void allreduceSum(int itemToSend, int &itemsToReceive, int rankMaster);
+  virtual void allreduceSum(int itemToSend, int &itemsToReceive, int rankMaster) override;
 
-  virtual void allreduceSum(int itemToSend, int &itemsToReceive);
+  virtual void allreduceSum(int itemToSend, int &itemsToReceive) override;
 
-  virtual void broadcast(int *itemsToSend, int size);
+  virtual void broadcast(int *itemsToSend, int size) override;
 
-  virtual void broadcast(int *itemsToReceive, int size, int rankBroadcaster);
+  virtual void broadcast(int *itemsToReceive, int size, int rankBroadcaster) override;
 
-  virtual void broadcast(int itemToSend);
+  virtual void broadcast(int itemToSend) override;
 
-  virtual void broadcast(int &itemToReceive, int rankBroadcaster);
+  virtual void broadcast(int &itemToReceive, int rankBroadcaster) override;
 
-  virtual void broadcast(double *itemsToSend, int size);
+  virtual void broadcast(double *itemsToSend, int size) override;
 
-  virtual void broadcast(double *itemsToReceive, int size, int rankBroadcaster);
+  virtual void broadcast(double *itemsToReceive, int size, int rankBroadcaster) override;
 
-  virtual void broadcast(double itemToSend);
+  virtual void broadcast(double itemToSend) override;
 
-  virtual void broadcast(double &itemToReceive, int rankBroadcaster);
+  virtual void broadcast(double &itemToReceive, int rankBroadcaster) override;
 
-  virtual void broadcast(bool itemToSend);
+  virtual void broadcast(bool itemToSend) override;
 
-  virtual void broadcast(bool &itemToReceive, int rankBroadcaster);
+  virtual void broadcast(bool &itemToReceive, int rankBroadcaster) override;
 
 private:
-  virtual MPI_Comm &communicator(int rank = 0);
+  virtual MPI_Comm &communicator(int rank = 0) override;
 
-  virtual int rank(int rank);
+  virtual int rank(int rank) override;
 
   logging::Logger _log{"com::MPIDirectCommunication"};
 

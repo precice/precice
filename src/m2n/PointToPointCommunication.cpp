@@ -469,19 +469,15 @@ void PointToPointCommunication::acceptConnection(std::string const &nameAcceptor
 
     // NOTE:
     // Everything is moved (efficiency)!
-    _mappings.push_back(
-        {static_cast<int>(localRequesterRank),
-         globalRequesterRank,
-         std::move(indices),
-         // NOTE:
-         // On the acceptor participant side, the communication object `c'
-         // behaves as a server, i.e. it implicitly accepts multiple connections
-         // to requester processes (in the requester participant). As a result,
-         // only one communication object `c' is needed to satisfy
-         // `communicationMap', and, therefore, for data structure consistency
-         // of `_mappings' with the requester participant side, we simply
-         // duplicate references to the same communication object `c'.
-         c});
+    // On the acceptor participant side, the communication object `c'
+    // behaves as a server, i.e. it implicitly accepts multiple connections
+    // to requester processes (in the requester participant). As a result,
+    // only one communication object `c' is needed to satisfy
+    // `communicationMap', and, therefore, for data structure consistency
+    // of `_mappings' with the requester participant side, we simply
+    // duplicate references to the same communication object `c'.
+    _mappings.push_back({
+        static_cast<int>(localRequesterRank), globalRequesterRank, std::move(indices), c, com::PtrRequest(), 0});
   }
 
   _buffer.reserve(_totalIndexCount * _mesh->getDimensions());
@@ -609,15 +605,11 @@ void PointToPointCommunication::requestConnection(std::string const &nameAccepto
 
     // NOTE:
     // Everything is moved (efficiency)!
-    _mappings.push_back(
-        {0,
-         globalAcceptorRank,
-         std::move(indices),
-         // NOTE:
-         // On the requester participant side, the communication objects behave
-         // as clients, i.e. each of them requests only one connection to
-         // acceptor process (in the acceptor participant).
-         c});
+    // On the requester participant side, the communication objects behave
+    // as clients, i.e. each of them requests only one connection to
+    // acceptor process (in the acceptor participant).
+    _mappings.push_back({
+        0, globalAcceptorRank, std::move(indices), c, com::PtrRequest(), 0});
   }
 
   com::Request::wait(requests);
