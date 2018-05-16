@@ -53,7 +53,7 @@ class Matrix;
 class Vector
 {
 public:
-  Vec vector;
+  Vec vector = nullptr;
 
   enum LEFTRIGHT { LEFT, RIGHT };
   
@@ -118,7 +118,7 @@ public:
 class Matrix
 {
 public:
-  Mat matrix;
+  Mat matrix = nullptr;
 
   /// Delete copy and assignment constructor
   /** Copying and assignment of this class would involve copying the pointer to
