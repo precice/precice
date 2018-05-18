@@ -15,25 +15,6 @@ namespace precice
 namespace m2n
 {
 
-void send(std::vector<int> const &v,
-          int                     rankReceiver,
-          com::PtrCommunication   communication)
-{
-  communication->send(static_cast<int>(v.size()), rankReceiver);
-  communication->send(const_cast<int *>(&v[0]), v.size(), rankReceiver);
-}
-
-void receive(std::vector<int> &    v,
-             int                   rankSender,
-             com::PtrCommunication communication)
-{
-  v.clear();
-  int size = 0;
-  communication->receive(size, rankSender);
-  v.resize(size);
-  communication->receive(v.data(), size, rankSender);
-}
-
 void send(std::map<int, std::vector<int>> const &m,
           int                                    rankReceiver,
           com::PtrCommunication                  communication)
@@ -44,7 +25,7 @@ void send(std::map<int, std::vector<int>> const &m,
     auto const &rank    = i.first;
     auto const &indices = i.second;
     communication->send(rank, rankReceiver);
-    send(indices, rankReceiver, communication);
+    communication->send(indices, rankReceiver);
   }
 }
 
@@ -59,26 +40,8 @@ void receive(std::map<int, std::vector<int>> &m,
   while (size--) {
     int rank = -1;
     communication->receive(rank, rankSender);
-    receive(m[rank], rankSender, communication);
+    communication->receive(m[rank], rankSender);
   }
-}
-
-void broadcast(std::vector<int> const &v,
-               com::PtrCommunication   communication = utils::MasterSlave::_communication)
-{
-  communication->broadcast(static_cast<int>(v.size()));
-  communication->broadcast(const_cast<int *>(&v[0]), v.size());
-}
-
-void broadcast(std::vector<int> &    v,
-               int                   rankBroadcaster,
-               com::PtrCommunication communication = utils::MasterSlave::_communication)
-{
-  v.clear();
-  int size = 0;
-  communication->broadcast(size, rankBroadcaster);
-  v.resize(size);
-  communication->broadcast(&v[0], size, rankBroadcaster);
 }
 
 void broadcastSend(std::map<int, std::vector<int>> const &m,
@@ -90,7 +53,7 @@ void broadcastSend(std::map<int, std::vector<int>> const &m,
     auto const &rank    = i.first;
     auto const &indices = i.second;
     communication->broadcast(rank);
-    broadcast(indices, communication);
+    communication->broadcast(indices);
   }
 }
 
@@ -105,7 +68,7 @@ void broadcastReceive(std::map<int, std::vector<int>> &m,
   while (size--) {
     int rank = -1;
     communication->broadcast(rank, rankBroadcaster);
-    broadcast(m[rank], rankBroadcaster, communication);
+    communication->broadcast(m[rank], rankBroadcaster);
   }
 }
 

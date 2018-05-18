@@ -188,7 +188,6 @@ void Communication::broadcast(int itemToSend)
 
   for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
     auto request = aSend(&itemToSend, rank + _rankOffset);
-
     requests.push_back(request);
   }
 
@@ -260,5 +259,39 @@ void Communication::broadcast(bool &itemToReceive, int rankBroadcaster)
   broadcast(item, rankBroadcaster);
   itemToReceive = item;
 }
+
+void Communication::broadcast(std::vector<int> const &v)
+{
+  broadcast(static_cast<int>(v.size()));
+  broadcast(const_cast<int*>(v.data()), v.size()); // make it send vector
+}
+
+void Communication::broadcast(std::vector<int> &v, int rankBroadcaster)
+{
+  v.clear();
+  int size = 0;
+  broadcast(size, rankBroadcaster);
+  v.resize(size);
+  broadcast(v.data(), size, rankBroadcaster);
+}
+
+/// @todo Reimplement more efficiently for MPI, e.g. using MPI_Probe
+void Communication::send(std::vector<int> const &v, int rankReceiver)
+{
+  send(static_cast<int>(v.size()), rankReceiver);
+  send(const_cast<int*>(v.data()), v.size(), rankReceiver);
+}
+
+/// @todo Reimplement more efficiently for MPI, e.g. using MPI_Probe
+void Communication::receive(std::vector<int> &v, int rankSender)
+{
+  v.clear();
+  int size = -1;
+  receive(size, rankSender);
+  v.resize(size);
+  receive(v.data(), size, rankSender);
+}
+
+
 } // namespace com
 } // namespace precice

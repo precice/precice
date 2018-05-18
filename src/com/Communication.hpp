@@ -174,6 +174,10 @@ public:
 
   virtual void broadcast(bool &itemToReceive, int rankBroadcaster);
 
+  virtual void broadcast(std::vector<int> const &v);
+
+  virtual void broadcast(std::vector<int>& v, int rankBroadcaster);
+
   /// Sends a std::string to process with given rank.
   virtual void send(std::string const &itemToSend, int rankReceiver) = 0;
 
@@ -211,6 +215,8 @@ public:
 
   /// Asynchronously sends a bool to process with given rank.
   virtual PtrRequest aSend(bool *itemToSend, int rankReceiver) = 0;
+
+  virtual void send(std::vector<int> const &v, int rankReceiver);
 
   /// Receives a std::string from process with given rank.
   virtual void receive(std::string &itemToReceive, int rankSender) = 0;
@@ -251,6 +257,8 @@ public:
   /// Asynchronously receives a bool from process with given rank.
   virtual PtrRequest aReceive(bool *itemToReceive,
                               int   rankSender) = 0;
+
+  virtual void receive(std::vector<int> &v, int rankSender);
 
   /// Set rank offset.
   void setRankOffset(int rankOffset)
