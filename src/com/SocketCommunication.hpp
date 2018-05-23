@@ -50,7 +50,7 @@ public:
    *
    * Precondition: a connection to the remote participant has been setup.
    */
-  virtual size_t getRemoteCommunicatorSize();
+  virtual size_t getRemoteCommunicatorSize() override;
 
   /**
    * @brief Accepts connection from participant, which has to call requestConnection().
@@ -66,7 +66,7 @@ public:
 
   virtual void acceptConnectionAsServer(std::string const &nameAcceptor,
                                         std::string const &nameRequester,
-                                        int                requesterCommunicatorSize);
+                                        int                requesterCommunicatorSize) override;
 
   /**
    * @brief Requests connection from participant, which has to call acceptConnection().
@@ -80,92 +80,91 @@ public:
   virtual void requestConnection(std::string const &nameAcceptor,
                                  std::string const &nameRequester,
                                  int                requesterProcessRank,
-                                 int                requesterCommunicatorSize);
+                                 int                requesterCommunicatorSize) override;
 
   virtual int requestConnectionAsClient(std::string const &nameAcceptor,
-                                        std::string const &nameRequester);
+                                        std::string const &nameRequester) override;
 
   /**
    * @brief Disconnects from communication space, i.e. participant.
    *
    * This method is called on destruction.
    */
-  virtual void closeConnection();
+  virtual void closeConnection() override;
 
   /// Sends a std::string to process with given rank.
-  virtual void send(std::string const &itemToSend, int rankReceiver);
+  virtual void send(std::string const &itemToSend, int rankReceiver) override;
 
   /// Sends an array of integer values.
-  virtual void send(int *itemsToSend, int size, int rankReceiver);
+  virtual void send(int *itemsToSend, int size, int rankReceiver) override;
 
   /// Asynchronously sends an array of integer values.
   virtual PtrRequest aSend(int *itemsToSend,
                            int  size,
-                           int  rankReceiver);
+                           int  rankReceiver) override;
 
   /// Sends an array of double values.
-  virtual void send(double *itemsToSend, int size, int rankReceiver);
+  virtual void send(double *itemsToSend, int size, int rankReceiver) override;
 
   /// Asynchronously sends an array of double values.
   virtual PtrRequest aSend(double *itemsToSend,
                            int     size,
-                           int     rankReceiver);
+                           int     rankReceiver) override;
 
   /// Sends a double to process with given rank.
-  virtual void send(double itemToSend, int rankReceiver);
+  virtual void send(double itemToSend, int rankReceiver) override;
 
   /// Asynchronously sends a double to process with given rank.
-  virtual PtrRequest aSend(double *itemToSend, int rankReceiver);
+  virtual PtrRequest aSend(double itemToSend, int rankReceiver) override;
 
   /// Sends an int to process with given rank.
-  virtual void send(int itemToSend, int rankReceiver);
+  virtual void send(int itemToSend, int rankReceiver) override;
 
   /// Asynchronously sends an int to process with given rank.
-  virtual PtrRequest aSend(int *itemToSend, int rankReceiver);
+  virtual PtrRequest aSend(int itemToSend, int rankReceiver) override;
 
   /// Sends a bool to process with given rank.
-  virtual void send(bool itemToSend, int rankReceiver);
+  virtual void send(bool itemToSend, int rankReceiver) override;
 
   /// Asynchronously sends a bool to process with given rank.
-  virtual PtrRequest aSend(bool *itemToSend, int rankReceiver);
+  virtual PtrRequest aSend(bool itemToSend, int rankReceiver) override;
 
   /// Receives a std::string from process with given rank.
-  virtual void receive(std::string &itemToReceive, int rankSender);
+  virtual void receive(std::string &itemToReceive, int rankSender) override;
 
   /// Receives an array of integer values.
-  virtual void receive(int *itemsToReceive, int size, int rankSender);
+  virtual void receive(int *itemsToReceive, int size, int rankSender) override;
 
   /// Asynchronously receives an array of integer values.
   virtual PtrRequest aReceive(int *itemsToReceive,
                               int  size,
-                              int  rankSender);
+                              int  rankSender) override;
 
   /// Receives an array of double values.
-  virtual void receive(double *itemsToReceive, int size, int rankSender);
+  virtual void receive(double *itemsToReceive, int size, int rankSender) override;
 
   /// Asynchronously receives an array of double values.
   virtual PtrRequest aReceive(double *itemsToReceive,
                               int     size,
-                              int     rankSender);
+                              int     rankSender) override;
 
   /// Receives a double from process with given rank.
-  virtual void receive(double &itemToReceive, int rankSender);
+  virtual void receive(double &itemToReceive, int rankSender) override;
 
   /// Asynchronously receives a double from process with given rank.
-  virtual PtrRequest aReceive(double *itemToReceive,
-                              int     rankSender);
+  virtual PtrRequest aReceive(double &itemToReceive, int rankSender) override;
 
   /// Receives an int from process with given rank.
-  virtual void receive(int &itemToReceive, int rankSender);
+  virtual void receive(int &itemToReceive, int rankSender) override;
 
   /// Asynchronously receives an int from process with given rank.
-  virtual PtrRequest aReceive(int *itemToReceive, int rankSender);
+  virtual PtrRequest aReceive(int &itemToReceive, int rankSender) override;
 
   /// Receives a bool from process with given rank.
-  virtual void receive(bool &itemToReceive, int rankSender);
+  virtual void receive(bool &itemToReceive, int rankSender) override;
 
   /// Asynchronously receives a bool from process with given rank.
-  virtual PtrRequest aReceive(bool *itemToReceive, int rankSender);
+  virtual PtrRequest aReceive(bool &itemToReceive, int rankSender) override;
 
 private:
   logging::Logger _log{"com::SocketCommunication"};

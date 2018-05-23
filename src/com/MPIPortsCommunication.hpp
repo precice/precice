@@ -27,7 +27,7 @@ public:
    *
    * @pre A connection to the remote participant has been setup.
    */
-  virtual size_t getRemoteCommunicatorSize();
+  virtual size_t getRemoteCommunicatorSize() override;
 
   /// See precice::com::Communication::acceptConnection().
   virtual void acceptConnection(std::string const &nameAcceptor,
@@ -35,24 +35,24 @@ public:
 
   virtual void acceptConnectionAsServer(std::string const &nameAcceptor,
                                         std::string const &nameRequester,
-                                        int                requesterCommunicatorSize);
+                                        int                requesterCommunicatorSize) override;
 
   /// See precice::com::Communication::requestConnection().
   virtual void requestConnection(std::string const &nameAcceptor,
                                  std::string const &nameRequester,
                                  int                requesterProcessRank,
-                                 int                requesterCommunicatorSize);
+                                 int                requesterCommunicatorSize) override;
 
   virtual int requestConnectionAsClient(std::string const &nameAcceptor,
-                                        std::string const &nameRequester);
+                                        std::string const &nameRequester) override;
 
   /// See precice::com::Communication::closeConnection().
-  virtual void closeConnection();
+  virtual void closeConnection() override;
 
 private:
-  virtual MPI_Comm &communicator(int rank);
+  virtual MPI_Comm &communicator(int rank) override;
 
-  virtual int rank(int rank);
+  virtual int rank(int rank) override;
 
   logging::Logger _log{"com::MPIPortsCommunication"};
 

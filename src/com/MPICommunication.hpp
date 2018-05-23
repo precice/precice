@@ -30,109 +30,106 @@ public:
    *
    * Default MPI point-to-point communication is used.
    */
-  virtual void send(std::string const &itemToSend, int rankReceiver);
+  virtual void send(std::string const &itemToSend, int rankReceiver) override;
 
   /// Sends an array of integer values.
-  virtual void send(int *itemsToSend, int size, int rankReceiver);
+  virtual void send(int *itemsToSend, int size, int rankReceiver) override;
 
   /// Asynchronously sends an array of integer values.
   virtual PtrRequest aSend(int *itemsToSend,
                            int  size,
-                           int  rankReceiver);
+                           int  rankReceiver) override;
 
   /// Sends an array of double values.
-  virtual void send(double *itemsToSend, int size, int rankReceiver);
+  virtual void send(double *itemsToSend, int size, int rankReceiver) override;
 
   /// Asynchronously sends an array of double values.
   virtual PtrRequest aSend(double *itemsToSend,
                            int     size,
-                           int     rankReceiver);
+                           int     rankReceiver) override;
 
   /**
    * @brief Sends a double to process with given rank.
    *
    * Default MPI point-to-point communication is used.
    */
-  virtual void send(double itemToSend, int rankReceiver);
+  virtual void send(double itemToSend, int rankReceiver) override;
 
   /// Asynchronously sends a double to process with given rank.
-  virtual PtrRequest aSend(double *itemToSend, int rankReceiver);
+  virtual PtrRequest aSend(double itemToSend, int rankReceiver) override;
 
   /**
    * @brief Sends an int to process with given rank.
    *
    * Default MPI point-to-point communication is used.
    */
-  virtual void send(int itemToSend, int rankReceiver);
+  virtual void send(int itemToSend, int rankReceiver) override;
 
   /// Asynchronously sends an int to process with given rank.
-  virtual PtrRequest aSend(int *itemToSend, int rankReceiver);
+  virtual PtrRequest aSend(int itemToSend, int rankReceiver) override;
 
   /**
    * @brief Sends a bool to process with given rank.
    *
    * Default MPI point-to-point communication is used.
    */
-  virtual void send(bool itemToSend, int rankReceiver);
+  virtual void send(bool itemToSend, int rankReceiver) override;
 
   /// Asynchronously sends a bool to process with given rank.
-  virtual PtrRequest aSend(bool *itemToSend, int rankReceiver);
+  virtual PtrRequest aSend(bool itemToSend, int rankReceiver) override;
 
   /**
    * @brief Receives a std::string from process with given rank.
    *
    * Default MPI point-to-point communication is used.
    */
-  virtual void receive(std::string &itemToReceive, int rankSender);
+  virtual void receive(std::string &itemToReceive, int rankSender) override;
 
   /// Receives an array of integer values.
-  virtual void receive(int *itemsToReceive, int size, int rankSender);
+  virtual void receive(int *itemsToReceive, int size, int rankSender) override;
 
   /// Asynchronously receives an array of integer values.
   virtual PtrRequest aReceive(int *itemsToReceive,
                               int  size,
-                              int  rankSender);
+                              int  rankSender) override;
 
   /// Receives an array of double values.
-  virtual void receive(double *itemsToReceive, int size, int rankSender);
+  virtual void receive(double *itemsToReceive, int size, int rankSender) override;
 
   /// Asynchronously receives an array of double values.
   virtual PtrRequest aReceive(double *itemsToReceive,
                               int     size,
-                              int     rankSender);
+                              int     rankSender) override;
 
   /**
    * @brief Receives a double from process with given rank.
    *
    * Default MPI point-to-point communication is used.
    */
-  virtual void receive(double &itemToReceive, int rankSender);
+  virtual void receive(double &itemToReceive, int rankSender) override;
 
   /// Asynchronously receives a double from process with given rank.
-  virtual PtrRequest aReceive(double *itemToReceive,
-                              int     rankSender);
+  virtual PtrRequest aReceive(double &itemToReceive, int rankSender) override;
 
   /**
    * @brief Receives an int from process with given rank.
    *
    * Default MPI point-to-point communication is used.
    */
-  virtual void receive(int &itemToReceive, int rankSender);
+  virtual void receive(int &itemToReceive, int rankSender) override;
 
-  /**
-   * @brief Asynchronously receives an int from process with given rank.
-   */
-  virtual PtrRequest aReceive(int *itemToReceive, int rankSender);
+  /// Asynchronously receives an int from process with given rank.
+  virtual PtrRequest aReceive(int &itemToReceive, int rankSender) override;
 
   /**
    * @brief Receives a bool from process with given rank.
    *
    * Default MPI point-to-point communication is used.
    */
-  virtual void receive(bool &itemToReceive, int rankSender);
+  virtual void receive(bool &itemToReceive, int rankSender) override;
 
   /// Asynchronously receives a bool from process with given rank.
-  virtual PtrRequest aReceive(bool *itemToReceive, int rankSender);
+  virtual PtrRequest aReceive(bool &itemToReceive, int rankSender) override;
 
 protected:
   /// Returns the communicator.

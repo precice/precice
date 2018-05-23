@@ -532,9 +532,9 @@ void SocketCommunication::send(double itemToSend, int rankReceiver)
   }
 }
 
-PtrRequest SocketCommunication::aSend(double *itemToSend, int rankReceiver)
+PtrRequest SocketCommunication::aSend(double itemToSend, int rankReceiver)
 {
-  return aSend(itemToSend, 1, rankReceiver);
+  return aSend(&itemToSend, 1, rankReceiver);
 }
 
 void SocketCommunication::send(int itemToSend, int rankReceiver)
@@ -556,9 +556,9 @@ void SocketCommunication::send(int itemToSend, int rankReceiver)
   }
 }
 
-PtrRequest SocketCommunication::aSend(int *itemToSend, int rankReceiver)
+PtrRequest SocketCommunication::aSend(int itemToSend, int rankReceiver)
 {
-  return aSend(itemToSend, 1, rankReceiver);
+  return aSend(&itemToSend, 1, rankReceiver);
 }
 
 void SocketCommunication::send(bool itemToSend, int rankReceiver)
@@ -580,7 +580,7 @@ void SocketCommunication::send(bool itemToSend, int rankReceiver)
   }
 }
 
-PtrRequest SocketCommunication::aSend(bool *itemToSend, int rankReceiver)
+PtrRequest SocketCommunication::aSend(bool itemToSend, int rankReceiver)
 {
   TRACE(rankReceiver);
 
@@ -595,7 +595,7 @@ PtrRequest SocketCommunication::aSend(bool *itemToSend, int rankReceiver)
 
   try {
     asio::async_write(*_sockets[rankReceiver],
-                      asio::buffer(itemToSend, sizeof(bool)),
+                      asio::buffer(&itemToSend, sizeof(bool)),
                       [request](boost::system::error_code const &, std::size_t) {
                         static_cast<SocketRequest *>(request.get())->complete();
                       });
@@ -737,10 +737,9 @@ void SocketCommunication::receive(double &itemToReceive, int rankSender)
   }
 }
 
-PtrRequest
-SocketCommunication::aReceive(double *itemToReceive, int rankSender)
+PtrRequest SocketCommunication::aReceive(double &itemToReceive, int rankSender)
 {
-  return aReceive(itemToReceive, 1, rankSender);
+  return aReceive(&itemToReceive, 1, rankSender);
 }
 
 void SocketCommunication::receive(int &itemToReceive, int rankSender)
@@ -762,9 +761,9 @@ void SocketCommunication::receive(int &itemToReceive, int rankSender)
   }
 }
 
-PtrRequest SocketCommunication::aReceive(int *itemToReceive, int rankSender)
+PtrRequest SocketCommunication::aReceive(int &itemToReceive, int rankSender)
 {
-  return aReceive(itemToReceive, 1, rankSender);
+  return aReceive(&itemToReceive, 1, rankSender);
 }
 
 void SocketCommunication::receive(bool &itemToReceive, int rankSender)
@@ -786,22 +785,21 @@ void SocketCommunication::receive(bool &itemToReceive, int rankSender)
   }
 }
 
-PtrRequest SocketCommunication::aReceive(bool *itemToReceive, int rankSender)
+PtrRequest SocketCommunication::aReceive(bool &itemToReceive, int rankSender)
 {
   TRACE(rankSender);
 
   rankSender = rankSender - _rankOffset;
 
   assertion((rankSender >= 0) && (rankSender < (int) _sockets.size()),
-            rankSender,
-            _sockets.size());
+            rankSender, _sockets.size());
   assertion(isConnected());
 
   PtrRequest request(new SocketRequest);
 
   try {
     asio::async_read(*_sockets[rankSender],
-                     asio::buffer(itemToReceive, sizeof(bool)),
+                     asio::buffer(&itemToReceive, sizeof(bool)),
                      [request](boost::system::error_code const &, std::size_t) {
                        static_cast<SocketRequest *>(request.get())->complete();
                      });

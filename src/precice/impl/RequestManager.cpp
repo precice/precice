@@ -32,7 +32,7 @@ void RequestManager:: handleRequests()
   std::vector<int> requestIDs(clientCommSize,-1);
 
   for(int clientRank = 0; clientRank<clientCommSize; clientRank++){
-     requests[clientRank] = _com->aReceive(&(requestIDs[clientRank]), clientRank);
+     requests[clientRank] = _com->aReceive(requestIDs[clientRank], clientRank);
   }
 
   int rankSender = 0;
@@ -207,13 +207,13 @@ void RequestManager:: handleRequests()
     // open receive again and clean up
     if(singleRequest){
       requestIDs[rankSender] = -1;
-      requests[rankSender] = _com->aReceive(&(requestIDs[rankSender]), rankSender);
+      requests[rankSender] = _com->aReceive(requestIDs[rankSender], rankSender);
       singleRequest = false;
     }
     else if(collectiveRequest){
       assertion(clientRanks.size()== static_cast<size_t>(clientCommSize));
       for(int rank : clientRanks){
-        requests[rank] = _com->aReceive(&(requestIDs[rank]), rank);
+        requests[rank] = _com->aReceive(requestIDs[rank], rank);
       }
       clientCounter = 0;
       clientRanks.clear();

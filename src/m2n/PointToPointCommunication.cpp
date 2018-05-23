@@ -561,7 +561,7 @@ void PointToPointCommunication::requestConnection(std::string const &nameAccepto
     c->requestConnectionAsClient(nameAcceptor + "-" + std::to_string(globalAcceptorRank), nameRequester);
     // assertion(c->getRemoteCommunicatorSize() == 1);
 
-    auto request = c->aSend(&utils::MasterSlave::_rank, 0);
+    auto request = c->aSend(utils::MasterSlave::_rank, 0);
 
     requests.push_back(request);
 

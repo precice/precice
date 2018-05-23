@@ -201,20 +201,19 @@ public:
   virtual void send(double itemToSend, int rankReceiver) = 0;
 
   /// Asynchronously sends a double to process with given rank.
-  virtual PtrRequest aSend(double *itemToSend,
-                           int     rankReceiver) = 0;
+  virtual PtrRequest aSend(double itemToSend, int rankReceiver) = 0;
 
   /// Sends an int to process with given rank.
   virtual void send(int itemToSend, int rankReceiver) = 0;
 
   /// Asynchronously sends an int to process with given rank.
-  virtual PtrRequest aSend(int *itemToSend, int rankReceiver) = 0;
+  virtual PtrRequest aSend(int itemToSend, int rankReceiver) = 0;
 
   /// Sends a bool to process with given rank.
   virtual void send(bool itemToSend, int rankReceiver) = 0;
 
   /// Asynchronously sends a bool to process with given rank.
-  virtual PtrRequest aSend(bool *itemToSend, int rankReceiver) = 0;
+  virtual PtrRequest aSend(bool itemToSend, int rankReceiver) = 0;
 
   virtual void send(std::vector<int> const &v, int rankReceiver);
 
@@ -241,22 +240,19 @@ public:
   virtual void receive(double &itemToReceive, int rankSender) = 0;
 
   /// Asynchronously receives a double from process with given rank.
-  virtual PtrRequest aReceive(double *itemToReceive,
-                              int     rankSender) = 0;
+  virtual PtrRequest aReceive(double &itemToReceive, int rankSender) = 0;
 
   /// Receives an int from process with given rank.
   virtual void receive(int &itemToReceive, int rankSender) = 0;
 
   /// Asynchronously receives an int from process with given rank.
-  virtual PtrRequest aReceive(int *itemToReceive,
-                              int  rankSender) = 0;
+  virtual PtrRequest aReceive(int &itemToReceive, int rankSender) = 0;
 
   /// Receives a bool from process with given rank.
   virtual void receive(bool &itemToReceive, int rankSender) = 0;
 
   /// Asynchronously receives a bool from process with given rank.
-  virtual PtrRequest aReceive(bool *itemToReceive,
-                              int   rankSender) = 0;
+  virtual PtrRequest aReceive(bool &itemToReceive, int rankSender) = 0;
 
   virtual void receive(std::vector<int> &v, int rankSender);
 

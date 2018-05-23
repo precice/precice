@@ -187,7 +187,7 @@ void Communication::broadcast(int itemToSend)
   std::vector<PtrRequest> requests(getRemoteCommunicatorSize());
 
   for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
-    auto request = aSend(&itemToSend, rank + _rankOffset);
+    auto request = aSend(itemToSend, rank + _rankOffset);
     requests.push_back(request);
   }
 
@@ -197,7 +197,6 @@ void Communication::broadcast(int itemToSend)
 void Communication::broadcast(int &itemToReceive, int rankBroadcaster)
 {
   TRACE();
-
   receive(itemToReceive, rankBroadcaster + _rankOffset);
 }
 
@@ -231,7 +230,7 @@ void Communication::broadcast(double itemToSend)
   std::vector<PtrRequest> requests(getRemoteCommunicatorSize());
 
   for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
-    auto request = aSend(&itemToSend, rank + _rankOffset);
+    auto request = aSend(itemToSend, rank + _rankOffset);
 
     requests.push_back(request);
   }
