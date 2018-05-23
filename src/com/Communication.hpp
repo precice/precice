@@ -154,7 +154,7 @@ public:
 
   virtual void allreduceSum(int itemToSend, int &itemToReceive);
 
-  virtual void broadcast(int *itemsToSend, int size);
+  virtual void broadcast(const int *itemsToSend, int size);
 
   virtual void broadcast(int *itemsToReceive, int size, int rankBroadcaster);
 
@@ -162,7 +162,7 @@ public:
 
   virtual void broadcast(int &itemToReceive, int rankBroadcaster);
 
-  virtual void broadcast(double *itemsToSend, int size);
+  virtual void broadcast(const double *itemsToSend, int size);
 
   virtual void broadcast(double *itemsToReceive, int size, int rankBroadcaster);
 
@@ -175,9 +175,11 @@ public:
   virtual void broadcast(bool &itemToReceive, int rankBroadcaster);
 
   virtual void broadcast(std::vector<int> const &v);
-
   virtual void broadcast(std::vector<int>& v, int rankBroadcaster);
 
+  virtual void broadcast(std::vector<double> const &v);
+  virtual void broadcast(std::vector<double>& v, int rankBroadcaster);
+  
   /// Sends a std::string to process with given rank.
   virtual void send(std::string const &itemToSend, int rankReceiver) = 0;
 
@@ -185,17 +187,13 @@ public:
   virtual void send(const int *itemsToSend, int size, int rankReceiver) = 0;
 
   /// Asynchronously sends an array of integer values.
-  virtual PtrRequest aSend(int *itemsToSend,
-                           int  size,
-                           int  rankReceiver) = 0;
+  virtual PtrRequest aSend(const int *itemsToSend, int size, int rankReceiver) = 0;
 
   /// Sends an array of double values.
-  virtual void send(double *itemsToSend, int size, int rankReceiver) = 0;
+  virtual void send(const double *itemsToSend, int size, int rankReceiver) = 0;
 
   /// Asynchronously sends an array of double values.
-  virtual PtrRequest aSend(double *itemsToSend,
-                           int     size,
-                           int     rankReceiver) = 0;
+  virtual PtrRequest aSend(const double *itemsToSend, int size, int rankReceiver) = 0;
 
   /// Sends a double to process with given rank.
   virtual void send(double itemToSend, int rankReceiver) = 0;
@@ -214,8 +212,6 @@ public:
 
   /// Asynchronously sends a bool to process with given rank.
   virtual PtrRequest aSend(bool itemToSend, int rankReceiver) = 0;
-
-  virtual void send(std::vector<int> const &v, int rankReceiver) = 0;
 
   /// Receives a std::string from process with given rank.
   virtual void receive(std::string &itemToReceive, int rankSender) = 0;
@@ -254,7 +250,12 @@ public:
   /// Asynchronously receives a bool from process with given rank.
   virtual PtrRequest aReceive(bool &itemToReceive, int rankSender) = 0;
 
+  virtual void send(std::vector<int> const &v, int rankReceiver) = 0;
   virtual void receive(std::vector<int> &v, int rankSender) = 0;
+
+  virtual void send(std::vector<double> const &v, int rankReceiver) = 0;
+  virtual void receive(std::vector<double> &v, int rankSender) = 0;
+
 
   /// Set rank offset.
   void setRankOffset(int rankOffset)

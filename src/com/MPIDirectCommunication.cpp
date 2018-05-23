@@ -191,10 +191,10 @@ void MPIDirectCommunication::allreduceSum(int itemToSend, int &itemToReceive, in
   MPI_Allreduce(&itemToSend, &itemToReceive, 1, MPI_INT, MPI_SUM, _globalCommunicator);
 }
 
-void MPIDirectCommunication::broadcast(int *itemsToSend, int size)
+void MPIDirectCommunication::broadcast(const int *itemsToSend, int size)
 {
   TRACE(size);
-  MPI_Bcast(itemsToSend, size, MPI_INT, MPI_ROOT, _communicator);
+  MPI_Bcast(const_cast<int*>(itemsToSend), size, MPI_INT, MPI_ROOT, _communicator);
 }
 
 void MPIDirectCommunication::broadcast(int *itemsToReceive,
@@ -217,10 +217,10 @@ void MPIDirectCommunication::broadcast(int &itemToReceive, int rankBroadcaster)
   broadcast(&itemToReceive, 1, rankBroadcaster);
 }
 
-void MPIDirectCommunication::broadcast(double *itemsToSend, int size)
+void MPIDirectCommunication::broadcast(const double *itemsToSend, int size)
 {
   TRACE(size);
-  MPI_Bcast(itemsToSend, size, MPI_DOUBLE, MPI_ROOT, _communicator);
+  MPI_Bcast(const_cast<double*>(itemsToSend), size, MPI_DOUBLE, MPI_ROOT, _communicator);
 }
 
 void MPIDirectCommunication::broadcast(double *itemsToReceive,

@@ -36,17 +36,13 @@ public:
   virtual void send(const int *itemsToSend, int size, int rankReceiver) override;
 
   /// Asynchronously sends an array of integer values.
-  virtual PtrRequest aSend(int *itemsToSend,
-                           int  size,
-                           int  rankReceiver) override;
+  virtual PtrRequest aSend(const int *itemsToSend, int size, int rankReceiver) override;
 
   /// Sends an array of double values.
-  virtual void send(double *itemsToSend, int size, int rankReceiver) override;
+  virtual void send(const double *itemsToSend, int size, int rankReceiver) override;
 
   /// Asynchronously sends an array of double values.
-  virtual PtrRequest aSend(double *itemsToSend,
-                           int     size,
-                           int     rankReceiver) override;
+  virtual PtrRequest aSend(const double *itemsToSend, int size, int rankReceiver) override;
 
   /**
    * @brief Sends a double to process with given rank.
@@ -132,8 +128,10 @@ public:
   virtual PtrRequest aReceive(bool &itemToReceive, int rankSender) override;
 
   void send(std::vector<int> const &v, int rankReceiver) override;
-  
   void receive(std::vector<int> &v, int rankSender) override;
+
+  void send(std::vector<double> const &v, int rankReceiver) override;
+  void receive(std::vector<double> &v, int rankSender) override;
 
 
 protected:

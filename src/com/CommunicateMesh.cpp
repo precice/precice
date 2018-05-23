@@ -28,7 +28,7 @@ void CommunicateMesh::sendMesh(
   int numberOfVertices = mesh.vertices().size();
   _communication->send(numberOfVertices, rankReceiver);
   if (not mesh.vertices().empty()) {
-    double coords[numberOfVertices * dim];
+    std::vector<double> coords(numberOfVertices * dim);
     std::vector<int> globalIDs(numberOfVertices);
     for (int i = 0; i < numberOfVertices; i++) {
       for (int d = 0; d < dim; d++) {
@@ -36,7 +36,7 @@ void CommunicateMesh::sendMesh(
       }
       globalIDs[i] = mesh.vertices()[i].getGlobalIndex();
     }
-    _communication->send(coords, numberOfVertices * dim, rankReceiver);
+    _communication->send(coords, rankReceiver);
     _communication->send(globalIDs, rankReceiver);
   }
 
@@ -96,9 +96,9 @@ void CommunicateMesh::receiveMesh(
   DEBUG("Number of vertices to receive: " << numberOfVertices);
 
   if (numberOfVertices > 0) {
-    double vertexCoords[numberOfVertices * dim];
+    std::vector<double> vertexCoords;
     std::vector<int> globalIDs;
-    _communication->receive(vertexCoords, numberOfVertices * dim, rankSender);
+    _communication->receive(vertexCoords, rankSender);
     _communication->receive(globalIDs, rankSender);
     for (int i = 0; i < numberOfVertices; i++) {
       Eigen::VectorXd coords(dim);
@@ -172,7 +172,7 @@ void CommunicateMesh::broadcastSendMesh(const mesh::Mesh &mesh)
   int numberOfVertices = mesh.vertices().size();
   _communication->broadcast(numberOfVertices);
   if (numberOfVertices > 0) {
-    double coords[numberOfVertices * dim];
+    std::vector<double> coords(numberOfVertices * dim);
     std::vector<int> globalIDs(numberOfVertices);
     for (int i = 0; i < numberOfVertices; i++) {
       for (int d = 0; d < dim; d++) {
@@ -180,7 +180,7 @@ void CommunicateMesh::broadcastSendMesh(const mesh::Mesh &mesh)
       }
       globalIDs[i] = mesh.vertices()[i].getGlobalIndex();
     }
-    _communication->broadcast(coords, numberOfVertices * dim);
+    _communication->broadcast(coords);
     _communication->broadcast(globalIDs);
   }
 
@@ -239,9 +239,9 @@ void CommunicateMesh::broadcastReceiveMesh(
   _communication->broadcast(numberOfVertices, rankBroadcaster);
 
   if (numberOfVertices > 0) {
-    double vertexCoords[numberOfVertices * dim];
+    std::vector<double> vertexCoords;
     std::vector<int> globalIDs;
-    _communication->broadcast(vertexCoords, numberOfVertices * dim, rankBroadcaster);
+    _communication->broadcast(vertexCoords, rankBroadcaster);
     _communication->broadcast(globalIDs, rankBroadcaster);
     for (int i = 0; i < numberOfVertices; i++) {
       Eigen::VectorXd coords(dim);

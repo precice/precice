@@ -66,13 +66,13 @@ void MPICommunication::send(const int *itemsToSend, int size, int rankReceiver)
            communicator(rankReceiver));
 }
 
-PtrRequest MPICommunication::aSend(int *itemsToSend, int size, int rankReceiver)
+PtrRequest MPICommunication::aSend(const int *itemsToSend, int size, int rankReceiver)
 {
   TRACE(size);
   rankReceiver = rankReceiver - _rankOffset;
 
   MPI_Request request;
-  MPI_Isend(itemsToSend,
+  MPI_Isend(const_cast<int*>(itemsToSend),
             size,
             MPI_INT,
             rank(rankReceiver),
@@ -83,11 +83,11 @@ PtrRequest MPICommunication::aSend(int *itemsToSend, int size, int rankReceiver)
   return PtrRequest(new MPIRequest(request));
 }
 
-void MPICommunication::send(double *itemsToSend, int size, int rankReceiver)
+void MPICommunication::send(const double *itemsToSend, int size, int rankReceiver)
 {
   TRACE(size);
   rankReceiver = rankReceiver - _rankOffset;
-  MPI_Send(itemsToSend,
+  MPI_Send(const_cast<double*>(itemsToSend),
            size,
            MPI_DOUBLE,
            rank(rankReceiver),
@@ -95,7 +95,7 @@ void MPICommunication::send(double *itemsToSend, int size, int rankReceiver)
            communicator(rankReceiver));
 }
 
-PtrRequest MPICommunication::aSend(double *itemsToSend, int size, int rankReceiver)
+PtrRequest MPICommunication::aSend(const double *itemsToSend, int size, int rankReceiver)
 {
   TRACE(size, rankReceiver);
   rankReceiver = rankReceiver - _rankOffset;
@@ -354,6 +354,27 @@ void MPICommunication::receive(std::vector<int> &v, int rankSender)
   MPI_Get_count(&status, MPI_INT, &length);
   v.resize(length, '\0');
   MPI_Recv(v.data(), length, MPI_INT, rank(rankSender),
+           0, communicator(rankSender), MPI_STATUS_IGNORE);
+}
+
+void MPICommunication::send(std::vector<double> const &v, int rankReceiver)
+{
+  TRACE(rankReceiver);
+  rankReceiver = rankReceiver - _rankOffset;
+  MPI_Send(v.data(), v.size(), MPI_DOUBLE,
+           rank(rankReceiver), 0, communicator(rankReceiver));
+}
+
+void MPICommunication::receive(std::vector<double> &v, int rankSender)
+{
+  TRACE(rankSender);
+  rankSender = rankSender - _rankOffset;
+  int        length = -1;
+  MPI_Status status;
+  MPI_Probe(rank(rankSender), 0, communicator(rankSender), &status);
+  MPI_Get_count(&status, MPI_DOUBLE, &length);
+  v.resize(length, '\0');
+  MPI_Recv(v.data(), length, MPI_DOUBLE, rank(rankSender),
            0, communicator(rankSender), MPI_STATUS_IGNORE);
 }
 

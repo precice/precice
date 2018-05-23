@@ -81,7 +81,7 @@ public:
 
   virtual void allreduceSum(int itemToSend, int &itemsToReceive) override;
 
-  virtual void broadcast(int *itemsToSend, int size) override;
+  virtual void broadcast(const int *itemsToSend, int size) override;
 
   virtual void broadcast(int *itemsToReceive, int size, int rankBroadcaster) override;
 
@@ -89,7 +89,7 @@ public:
 
   virtual void broadcast(int &itemToReceive, int rankBroadcaster) override;
 
-  virtual void broadcast(double *itemsToSend, int size) override;
+  virtual void broadcast(const double *itemsToSend, int size) override;
 
   virtual void broadcast(double *itemsToReceive, int size, int rankBroadcaster) override;
 

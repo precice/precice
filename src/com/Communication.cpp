@@ -158,7 +158,7 @@ void Communication::allreduceSum(int itemToSend, int &itemToReceive, int rankMas
   receive(&itemToReceive, 1, rankMaster + _rankOffset);
 }
 
-void Communication::broadcast(int *itemsToSend, int size)
+void Communication::broadcast(const int *itemsToSend, int size)
 {
   TRACE(size);
 
@@ -200,7 +200,7 @@ void Communication::broadcast(int &itemToReceive, int rankBroadcaster)
   receive(itemToReceive, rankBroadcaster + _rankOffset);
 }
 
-void Communication::broadcast(double *itemsToSend, int size)
+void Communication::broadcast(const double *itemsToSend, int size)
 {
   TRACE(size);
 
@@ -266,6 +266,21 @@ void Communication::broadcast(std::vector<int> const &v)
 }
 
 void Communication::broadcast(std::vector<int> &v, int rankBroadcaster)
+{
+  v.clear();
+  int size = 0;
+  broadcast(size, rankBroadcaster);
+  v.resize(size);
+  broadcast(v.data(), size, rankBroadcaster);
+}
+
+void Communication::broadcast(std::vector<double> const &v)
+{
+  broadcast(static_cast<int>(v.size()));
+  broadcast(v.data(), v.size()); // make it send vector
+}
+
+void Communication::broadcast(std::vector<double> &v, int rankBroadcaster)
 {
   v.clear();
   int size = 0;

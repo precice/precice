@@ -443,7 +443,7 @@ void SocketCommunication::send(const int *itemsToSend, int size, int rankReceive
   }
 }
 
-PtrRequest SocketCommunication::aSend(int *itemsToSend, int size, int rankReceiver)
+PtrRequest SocketCommunication::aSend(const int *itemsToSend, int size, int rankReceiver)
 {
   TRACE(size, rankReceiver);
 
@@ -468,7 +468,7 @@ PtrRequest SocketCommunication::aSend(int *itemsToSend, int size, int rankReceiv
   return request;
 }
 
-void SocketCommunication::send(double *itemsToSend, int size, int rankReceiver)
+void SocketCommunication::send(const double *itemsToSend, int size, int rankReceiver)
 {
   TRACE(size, rankReceiver);
 
@@ -486,15 +486,14 @@ void SocketCommunication::send(double *itemsToSend, int size, int rankReceiver)
   }
 }
 
-PtrRequest SocketCommunication::aSend(double *itemsToSend, int size, int rankReceiver)
+PtrRequest SocketCommunication::aSend(const double *itemsToSend, int size, int rankReceiver)
 {
   TRACE(size, rankReceiver);
 
   rankReceiver = rankReceiver - _rankOffset;
 
   assertion((rankReceiver >= 0) && (rankReceiver < (int) _sockets.size()),
-            rankReceiver,
-            _sockets.size());
+            rankReceiver, _sockets.size());
   assertion(isConnected());
 
   PtrRequest request(new SocketRequest);
@@ -808,6 +807,36 @@ PtrRequest SocketCommunication::aReceive(bool &itemToReceive, int rankSender)
   return request;
 }
 
+void SocketCommunication::send(std::vector<int> const &v, int rankReceiver)
+{
+  send(static_cast<int>(v.size()), rankReceiver);
+  send(v.data(), v.size(), rankReceiver);
+}
+
+void SocketCommunication::receive(std::vector<int> &v, int rankSender)
+{
+  v.clear();
+  int size = -1;
+  receive(size, rankSender);
+  v.resize(size);
+  receive(v.data(), size, rankSender);
+}
+
+void SocketCommunication::send(std::vector<double> const &v, int rankReceiver)
+{
+  send(static_cast<int>(v.size()), rankReceiver);
+  send(v.data(), v.size(), rankReceiver);
+}
+
+void SocketCommunication::receive(std::vector<double> &v, int rankSender)
+{
+  v.clear();
+  int size = -1;
+  receive(size, rankSender);
+  v.resize(size);
+  receive(v.data(), size, rankSender);
+}
+
 std::string SocketCommunication::getIpAddress()
 {
   TRACE();
@@ -864,20 +893,6 @@ std::string SocketCommunication::getIpAddress()
   return oss.str(); 
 }
 
-void SocketCommunication::send(std::vector<int> const &v, int rankReceiver)
-{
-  send(static_cast<int>(v.size()), rankReceiver);
-  send(v.data(), v.size(), rankReceiver);
-}
-
-void SocketCommunication::receive(std::vector<int> &v, int rankSender)
-{
-  v.clear();
-  int size = -1;
-  receive(size, rankSender);
-  v.resize(size);
-  receive(v.data(), size, rankSender);
-}
 
 
 } // namespace com
