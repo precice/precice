@@ -274,23 +274,5 @@ void Communication::broadcast(std::vector<int> &v, int rankBroadcaster)
   broadcast(v.data(), size, rankBroadcaster);
 }
 
-/// @todo Reimplement more efficiently for MPI, e.g. using MPI_Probe
-void Communication::send(std::vector<int> const &v, int rankReceiver)
-{
-  send(static_cast<int>(v.size()), rankReceiver);
-  send(const_cast<int*>(v.data()), v.size(), rankReceiver);
-}
-
-/// @todo Reimplement more efficiently for MPI, e.g. using MPI_Probe
-void Communication::receive(std::vector<int> &v, int rankSender)
-{
-  v.clear();
-  int size = -1;
-  receive(size, rankSender);
-  v.resize(size);
-  receive(v.data(), size, rankSender);
-}
-
-
 } // namespace com
 } // namespace precice

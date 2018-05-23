@@ -425,7 +425,7 @@ void SocketCommunication::send(std::string const &itemToSend, int rankReceiver)
   }
 }
 
-void SocketCommunication::send(int *itemsToSend, int size, int rankReceiver)
+void SocketCommunication::send(const int *itemsToSend, int size, int rankReceiver)
 {
   TRACE(size, rankReceiver);
 
@@ -475,8 +475,7 @@ void SocketCommunication::send(double *itemsToSend, int size, int rankReceiver)
   rankReceiver = rankReceiver - _rankOffset;
 
   assertion((rankReceiver >= 0) && (rankReceiver < (int) _sockets.size()),
-            rankReceiver,
-            _sockets.size());
+            rankReceiver, _sockets.size());
   assertion(isConnected());
 
   try {
@@ -691,10 +690,9 @@ void SocketCommunication::receive(double *itemsToReceive, int size, int rankSend
   }
 }
 
-PtrRequest
-SocketCommunication::aReceive(double *itemsToReceive,
-                              int     size,
-                              int     rankSender)
+PtrRequest SocketCommunication::aReceive(double *itemsToReceive,
+                                         int     size,
+                                         int     rankSender)
 {
   TRACE(size, rankSender);
 
@@ -863,7 +861,24 @@ std::string SocketCommunication::getIpAddress()
   close(querySocket);
 #endif
 
-  return oss.str();
+  return oss.str(); 
 }
+
+void SocketCommunication::send(std::vector<int> const &v, int rankReceiver)
+{
+  send(static_cast<int>(v.size()), rankReceiver);
+  send(v.data(), v.size(), rankReceiver);
+}
+
+void SocketCommunication::receive(std::vector<int> &v, int rankSender)
+{
+  v.clear();
+  int size = -1;
+  receive(size, rankSender);
+  v.resize(size);
+  receive(v.data(), size, rankSender);
+}
+
+
 } // namespace com
 } // namespace precice

@@ -54,11 +54,11 @@ void MPICommunication::send(std::string const &itemToSend, int rankReceiver)
            communicator(rankReceiver));
 }
 
-void MPICommunication::send(int *itemsToSend, int size, int rankReceiver)
+void MPICommunication::send(const int *itemsToSend, int size, int rankReceiver)
 {
   TRACE(size);
   rankReceiver = rankReceiver - _rankOffset;
-  MPI_Send(itemsToSend,
+  MPI_Send(const_cast<int*>(itemsToSend),
            size,
            MPI_INT,
            rank(rankReceiver),
@@ -335,6 +335,29 @@ PtrRequest MPICommunication::aReceive(bool &itemToReceive, int rankSender)
 
   return PtrRequest(new MPIRequest(request));
 }
+
+void MPICommunication::send(std::vector<int> const &v, int rankReceiver)
+{
+  TRACE(rankReceiver);
+  rankReceiver = rankReceiver - _rankOffset;
+  MPI_Send(const_cast<int*>(v.data()), v.size(), MPI_INT,
+           rank(rankReceiver), 0, communicator(rankReceiver));
+}
+
+void MPICommunication::receive(std::vector<int> &v, int rankSender)
+{
+  TRACE(rankSender);
+  rankSender = rankSender - _rankOffset;
+  int        length = -1;
+  MPI_Status status;
+  MPI_Probe(rank(rankSender), 0, communicator(rankSender), &status);
+  MPI_Get_count(&status, MPI_INT, &length);
+  v.resize(length, '\0');
+  MPI_Recv(v.data(), length, MPI_INT, rank(rankSender),
+           0, communicator(rankSender), MPI_STATUS_IGNORE);
+}
+
+
 } // namespace com
 } // namespace precice
 

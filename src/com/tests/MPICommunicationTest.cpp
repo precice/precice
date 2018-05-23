@@ -11,7 +11,7 @@ using namespace precice::com;
 BOOST_AUTO_TEST_SUITE(CommunicationTests)
 
 BOOST_AUTO_TEST_SUITE(MPICommunication,
-                      *testing::MinRanks(2)
+                      * testing::MinRanks(2)
                       * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1}))
                       * boost::unit_test::label("MPI_Ports"))
 
@@ -40,7 +40,31 @@ BOOST_AUTO_TEST_CASE(SendAndReceiveString)
   utils::Parallel::clearGroups();
 }
 
-BOOST_AUTO_TEST_CASE(SendAndReceiveVector)
+BOOST_AUTO_TEST_CASE(SendAndReceiveStdVector)
+{
+  if (Par::getCommunicatorSize() != 2)
+    return;
+
+  utils::Parallel::synchronizeProcesses();
+  MPIPortsCommunication com;
+  std::vector<int> msg{1, 2, 3};
+  std::vector<int> recv;
+  if (utils::Parallel::getProcessRank() == 0) {
+    com.acceptConnection("A", "R");
+    com.send(msg, 0);
+    com.receive(recv, 0);
+    BOOST_TEST(recv == msg);
+  } else if (utils::Parallel::getProcessRank() == 1) {
+    com.requestConnection("A", "R", 0, 1);
+    com.receive(recv, 0);
+    BOOST_CHECK(recv == msg);
+    com.send(msg, 0);
+  }
+  utils::Parallel::clearGroups();
+}
+
+
+BOOST_AUTO_TEST_CASE(SendAndReceiveEigenVector)
 {
   if (Par::getCommunicatorSize() != 2)
     return;

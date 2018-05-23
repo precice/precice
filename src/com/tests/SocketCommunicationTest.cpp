@@ -37,6 +37,12 @@ BOOST_AUTO_TEST_CASE(SendAndReceive,
       com.send(msg.data(), msg.size(), 0);
     }
     {
+      std::vector<int> msg{1, 2, 3};
+      com.receive(msg, 0);
+      BOOST_CHECK(msg == std::vector<int>({1, 2, 3}));
+      com.send(msg, 0);
+    }
+    {
       double msg = 0.0;
       com.send(msg, 0);
       com.receive(msg, 0);
@@ -75,6 +81,12 @@ BOOST_AUTO_TEST_CASE(SendAndReceive,
       com.send(msg.data(), msg.size(), 0);
       com.receive(msg.data(), msg.size(), 0);
       BOOST_CHECK(testing::equals(msg, Eigen::Vector4i::Zero()));
+    }
+    {
+      std::vector<int> msg{1, 2, 3};
+      com.send(msg, 0);
+      com.receive(msg, 0);
+      BOOST_CHECK(msg == std::vector<int>({1, 2, 3}));
     }
     {
       double msg = 1.0;
