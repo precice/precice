@@ -19,17 +19,11 @@ namespace com
 class MPICommunication : public Communication
 {
 public:
-  /**
-   * @brief Constructor, takes communicator for default communication.
-   */
   MPICommunication();
 
-  /**
-   * @brief Destructor, empty.
-   */
+  /// Destructor, empty.
   virtual ~MPICommunication()
-  {
-  }
+  {}
 
   /**
    * @brief Sends a std::string to process with given rank.

@@ -194,7 +194,6 @@ void MPIDirectCommunication::allreduceSum(int itemToSend, int &itemToReceive, in
 void MPIDirectCommunication::broadcast(int *itemsToSend, int size)
 {
   TRACE(size);
-
   MPI_Bcast(itemsToSend, size, MPI_INT, MPI_ROOT, _communicator);
 }
 
@@ -203,28 +202,24 @@ void MPIDirectCommunication::broadcast(int *itemsToReceive,
                                        int  rankBroadcaster)
 {
   TRACE(size);
-
   MPI_Bcast(itemsToReceive, size, MPI_INT, rankBroadcaster, _communicator);
 }
 
 void MPIDirectCommunication::broadcast(int itemToSend)
 {
   TRACE();
-
   broadcast(&itemToSend, 1);
 }
 
 void MPIDirectCommunication::broadcast(int &itemToReceive, int rankBroadcaster)
 {
   TRACE();
-
   broadcast(&itemToReceive, 1, rankBroadcaster);
 }
 
 void MPIDirectCommunication::broadcast(double *itemsToSend, int size)
 {
   TRACE(size);
-
   MPI_Bcast(itemsToSend, size, MPI_DOUBLE, MPI_ROOT, _communicator);
 }
 
@@ -233,41 +228,33 @@ void MPIDirectCommunication::broadcast(double *itemsToReceive,
                                        int     rankBroadcaster)
 {
   TRACE(size);
-
   MPI_Bcast(itemsToReceive, size, MPI_DOUBLE, rankBroadcaster, _communicator);
 }
 
 void MPIDirectCommunication::broadcast(double itemToSend)
 {
   TRACE();
-
   broadcast(&itemToSend, 1);
 }
 
 void MPIDirectCommunication::broadcast(double &itemToReceive, int rankBroadcaster)
 {
   TRACE();
-
   broadcast(&itemToReceive, 1, rankBroadcaster);
 }
 
 void MPIDirectCommunication::broadcast(bool itemToSend)
 {
   TRACE();
-
   int item = itemToSend;
-
   broadcast(item);
 }
 
 void MPIDirectCommunication::broadcast(bool &itemToReceive, int rankBroadcaster)
 {
   TRACE();
-
   int item;
-
   broadcast(item, rankBroadcaster);
-
   itemToReceive = item;
 }
 

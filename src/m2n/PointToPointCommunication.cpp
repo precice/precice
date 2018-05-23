@@ -535,8 +535,7 @@ void PointToPointCommunication::requestConnection(std::string const &nameAccepto
     return;
   }
 
-  Publisher::ScopedSetEventNamePrefix ssenp(
-      _prefix + "PointToPointCommunication::requestConnection/request/");
+  Publisher::ScopedSetEventNamePrefix ssenp(_prefix + "PointToPointCommunication::requestConnection/request/");
 
   std::vector<com::PtrRequest> requests;
   requests.reserve(communicationMap.size());

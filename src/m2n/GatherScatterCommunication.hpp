@@ -1,5 +1,4 @@
-#ifndef PRECICE_M2N_GATHER_SCATTER_COMMUNICATION_HPP_
-#define PRECICE_M2N_GATHER_SCATTER_COMMUNICATION_HPP_
+#pragma once
 
 #include "DistributedCommunication.hpp"
 #include "com/SharedPointer.hpp"
@@ -36,8 +35,8 @@ public:
    * If several connections are going in to a server, the server has to call this
    * method, while the clients have to call requestConnection().
    *
-   * @param nameAcceptor [IN] Name of calling participant.
-   * @param nameRequester [IN] Name of remote participant to connect to.
+   * @param[in] nameAcceptor Name of calling participant.
+   * @param[in] nameRequester Name of remote participant to connect to.
    */
   virtual void acceptConnection(
       const std::string &nameAcceptor,
@@ -49,8 +48,8 @@ public:
    * If several connections are going in to a server, the clients have to call this
    * method, while the server has to call acceptConnection().
    *
-   * @param nameAcceptor [IN] Name of remote participant to connect to.
-   * @param nameReuester [IN] Name of calling participant.
+   * @param[in] nameAcceptor Name of remote participant to connect to.
+   * @param[in] nameReuester Name of calling participant.
    */
   virtual void requestConnection(
       const std::string &nameAcceptor,
@@ -87,5 +86,3 @@ private:
 
 } // namespace m2n
 } // namespace precice
-
-#endif /* PRECICE_M2N_GATHER_SCATTER_COMMUNICATION_HPP_ */

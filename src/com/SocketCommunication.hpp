@@ -74,8 +74,8 @@ public:
    * If several connections are going in to a server, the clients have to call
    * this method, while the server has to call acceptConnection().
    *
-   * @param nameAcceptor [IN] Name of remote participant to connect to.
-   * @param nameReuester [IN] Name of calling participant.
+   * @param[in] nameAcceptor Name of remote participant to connect to.
+   * @param[in] nameReuester Name of calling participant.
    */
   virtual void requestConnection(std::string const &nameAcceptor,
                                  std::string const &nameRequester,
