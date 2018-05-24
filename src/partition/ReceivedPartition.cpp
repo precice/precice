@@ -213,7 +213,7 @@ void ReceivedPartition::compute()
       for (int i=0; i<numberOfVertices; i++){
         vertexIDs[i] = _mesh->vertices()[i].getGlobalIndex();
       }
-      utils::MasterSlave::_communication->send(vertexIDs.data(),numberOfVertices,0);
+      utils::MasterSlave::_communication->send(vertexIDs, 0);
     }
     int globalNumberOfVertices = -1;
     utils::MasterSlave::_communication->broadcast(globalNumberOfVertices,0);
@@ -233,7 +233,7 @@ void ReceivedPartition::compute()
       utils::MasterSlave::_communication->receive(numberOfSlaveVertices,rankSlave);
       std::vector<int> slaveVertexIDs(numberOfSlaveVertices,-1);
       if (numberOfSlaveVertices!=0) {
-        utils::MasterSlave::_communication->receive(slaveVertexIDs.data(),numberOfSlaveVertices,rankSlave);
+        utils::MasterSlave::_communication->receive(slaveVertexIDs, rankSlave);
       }
       _mesh->getVertexDistribution()[rankSlave] = slaveVertexIDs;
     }
@@ -368,12 +368,12 @@ void ReceivedPartition:: createOwnerInformation(){
       }
       DEBUG("My tags: " << tags);
       DEBUG("My global IDs: " << globalIDs);
-      utils::MasterSlave::_communication->send(tags.data(),numberOfVertices,0);
-      utils::MasterSlave::_communication->send(globalIDs.data(),numberOfVertices,0);
-      utils::MasterSlave::_communication->send(atInterface,0);
+      utils::MasterSlave::_communication->send(tags, 0);
+      utils::MasterSlave::_communication->send(globalIDs, 0);
+      utils::MasterSlave::_communication->send(atInterface, 0);
 
       std::vector<int> ownerVec(numberOfVertices, -1);
-      utils::MasterSlave::_communication->receive(ownerVec.data(),numberOfVertices,0);
+      utils::MasterSlave::_communication->receive(ownerVec, 0);
       DEBUG("My owner information: " << ownerVec);
       setOwnerInformation(ownerVec);
     }
@@ -421,8 +421,8 @@ void ReceivedPartition:: createOwnerInformation(){
       slaveGlobalIDs[rank].resize(localNumberOfVertices, -1);
 
       if (localNumberOfVertices!=0) {
-        utils::MasterSlave::_communication->receive(slaveTags[rank].data(),localNumberOfVertices,rank);
-        utils::MasterSlave::_communication->receive(slaveGlobalIDs[rank].data(),localNumberOfVertices,rank);
+        utils::MasterSlave::_communication->receive(slaveTags[rank], rank);
+        utils::MasterSlave::_communication->receive(slaveGlobalIDs[rank], rank);
         DEBUG("Rank " << rank << " has this tags " << slaveTags[rank]);
         DEBUG("Rank " << rank << " has this global IDs " << slaveGlobalIDs[rank]);
         bool atInterface = false;
@@ -460,7 +460,7 @@ void ReceivedPartition:: createOwnerInformation(){
     for (int rank = 1; rank < utils::MasterSlave::_size; rank++){
       int localNumberOfVertices = slaveTags[rank].size();
       if (localNumberOfVertices!=0) {
-        utils::MasterSlave::_communication->send(slaveOwnerVecs[rank].data(),localNumberOfVertices,rank);
+        utils::MasterSlave::_communication->send(slaveOwnerVecs[rank], rank);
       }
     }
     // master data

@@ -633,13 +633,11 @@ void SocketCommunication::receive(int *itemsToReceive, int size, int rankSender)
   rankSender = rankSender - _rankOffset;
 
   assertion((rankSender >= 0) && (rankSender < (int) _sockets.size()),
-            rankSender,
-            _sockets.size());
+            rankSender, _sockets.size());
   assertion(isConnected());
 
   try {
-    asio::read(*_sockets[rankSender],
-               asio::buffer(itemsToReceive, size * sizeof(int)));
+    asio::read(*_sockets[rankSender], asio::buffer(itemsToReceive, size * sizeof(int)));
   } catch (std::exception &e) {
     ERROR("Receive failed: " << e.what());
   }
@@ -727,8 +725,7 @@ void SocketCommunication::receive(double &itemToReceive, int rankSender)
   assertion(isConnected());
 
   try {
-    asio::read(*_sockets[rankSender],
-               asio::buffer(&itemToReceive, sizeof(double)));
+    asio::read(*_sockets[rankSender], asio::buffer(&itemToReceive, sizeof(double)));
   } catch (std::exception &e) {
     ERROR("Receive failed: " << e.what());
   }
@@ -746,13 +743,11 @@ void SocketCommunication::receive(int &itemToReceive, int rankSender)
   rankSender = rankSender - _rankOffset;
 
   assertion((rankSender >= 0) && (rankSender < (int) _sockets.size()),
-            rankSender,
-            _sockets.size());
+            rankSender, _sockets.size());
   assertion(isConnected());
 
   try {
-    asio::read(*_sockets[rankSender],
-               asio::buffer(&itemToReceive, sizeof(int)));
+    asio::read(*_sockets[rankSender], asio::buffer(&itemToReceive, sizeof(int)));
   } catch (std::exception &e) {
     ERROR("Receive failed: " << e.what());
   }
@@ -770,13 +765,11 @@ void SocketCommunication::receive(bool &itemToReceive, int rankSender)
   rankSender = rankSender - _rankOffset;
 
   assertion((rankSender >= 0) && (rankSender < (int) _sockets.size()),
-            rankSender,
-            _sockets.size());
+            rankSender, _sockets.size());
   assertion(isConnected());
 
   try {
-    asio::read(*_sockets[rankSender],
-               asio::buffer(&itemToReceive, sizeof(bool)));
+    asio::read(*_sockets[rankSender], asio::buffer(&itemToReceive, sizeof(bool)));
   } catch (std::exception &e) {
     ERROR("Receive failed: " << e.what());
   }
@@ -809,32 +802,84 @@ PtrRequest SocketCommunication::aReceive(bool &itemToReceive, int rankSender)
 
 void SocketCommunication::send(std::vector<int> const &v, int rankReceiver)
 {
-  send(static_cast<int>(v.size()), rankReceiver);
-  send(v.data(), v.size(), rankReceiver);
+  TRACE(rankReceiver);
+
+  rankReceiver = rankReceiver - _rankOffset;
+
+  assertion((rankReceiver >= 0) && (rankReceiver < (int) _sockets.size()),
+            rankReceiver, _sockets.size());
+  assertion(isConnected());
+
+  size_t size = v.size();
+  try {
+    asio::write(*_sockets[rankReceiver], asio::buffer(&size, sizeof(size_t)));
+    asio::write(*_sockets[rankReceiver], asio::buffer(v.data(), size * sizeof(int)));
+  } catch (std::exception &e) {
+    ERROR("Send failed: " << e.what());
+  }
 }
 
 void SocketCommunication::receive(std::vector<int> &v, int rankSender)
 {
-  v.clear();
-  int size = -1;
-  receive(size, rankSender);
-  v.resize(size);
-  receive(v.data(), size, rankSender);
+  TRACE(rankSender);
+
+  rankSender = rankSender - _rankOffset;
+
+  assertion((rankSender >= 0) && (rankSender < (int) _sockets.size()),
+            rankSender, _sockets.size());
+  assertion(isConnected());
+
+  size_t size = 0;
+
+  try {
+    asio::read(*_sockets[rankSender], asio::buffer(&size, sizeof(size_t)));
+    int msg[size];
+    asio::read(*_sockets[rankSender], asio::buffer(msg, size * sizeof(int)));
+    v.assign(msg, msg+size);
+  } catch (std::exception &e) {
+    ERROR("Receive failed: " << e.what());
+  }
 }
 
 void SocketCommunication::send(std::vector<double> const &v, int rankReceiver)
 {
-  send(static_cast<int>(v.size()), rankReceiver);
-  send(v.data(), v.size(), rankReceiver);
+  TRACE(rankReceiver);
+
+  rankReceiver = rankReceiver - _rankOffset;
+
+  assertion((rankReceiver >= 0) && (rankReceiver < (int) _sockets.size()),
+            rankReceiver, _sockets.size());
+  assertion(isConnected());
+
+  size_t size = v.size();
+  try {
+    asio::write(*_sockets[rankReceiver], asio::buffer(&size, sizeof(size_t)));
+    asio::write(*_sockets[rankReceiver], asio::buffer(v.data(), size * sizeof(double)));
+  } catch (std::exception &e) {
+    ERROR("Send failed: " << e.what());
+  }
 }
 
 void SocketCommunication::receive(std::vector<double> &v, int rankSender)
 {
-  v.clear();
-  int size = -1;
-  receive(size, rankSender);
-  v.resize(size);
-  receive(v.data(), size, rankSender);
+  TRACE(rankSender);
+
+  rankSender = rankSender - _rankOffset;
+
+  assertion((rankSender >= 0) && (rankSender < (int) _sockets.size()),
+            rankSender, _sockets.size());
+  assertion(isConnected());
+
+  size_t size = 0;
+
+  try {
+    asio::read(*_sockets[rankSender], asio::buffer(&size, sizeof(size_t)));
+    double msg[size];
+    asio::read(*_sockets[rankSender], asio::buffer(msg, size * sizeof(double)));
+    v.assign(msg, msg+size);
+  } catch (std::exception &e) {
+    ERROR("Receive failed: " << e.what());
+  }
 }
 
 std::string SocketCommunication::getIpAddress()

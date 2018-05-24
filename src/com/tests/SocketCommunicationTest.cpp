@@ -6,12 +6,16 @@
 using namespace precice;
 using namespace precice::com;
 
+
+BOOST_TEST_SPECIALIZED_COLLECTION_COMPARE(std::vector<int>)
+
 BOOST_AUTO_TEST_SUITE(CommunicationTests)
 
 BOOST_AUTO_TEST_SUITE(Socket)
 
+
 BOOST_AUTO_TEST_CASE(SendAndReceive,
-                     *testing::OnSize(2))
+                     * testing::MinRanks(2))
 {
   SocketCommunication com;
   if (utils::Parallel::getProcessRank() == 0) {
@@ -38,14 +42,15 @@ BOOST_AUTO_TEST_CASE(SendAndReceive,
     }
     {
       std::vector<int> msg;
+      std::vector<int> recv{1, 2, 3};
       com.receive(msg, 0);
-      BOOST_CHECK(msg == std::vector<int>({1, 2, 3}));
+      BOOST_TEST(msg == recv);
       com.send(msg, 0);
     }
     {
       std::vector<double> msg;
       com.receive(msg, 0);
-      BOOST_CHECK(msg == std::vector<double>({1.1, 2.2, 3.3}));
+      BOOST_TEST(msg == std::vector<double>({1.1, 2.2, 3.3}));
       com.send(msg, 0);
     }
     {
