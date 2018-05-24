@@ -25,7 +25,6 @@ envCompile = Environment (
    ENV        = os.environ  # propagates environment variables to scons  
    )
   
-#envCompile.Object('SolverInterfaceForFortran.cpp')
 envCompile.Object('SolverProxy.f90')
 
 
