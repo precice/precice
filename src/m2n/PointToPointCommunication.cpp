@@ -15,7 +15,7 @@ namespace precice
 namespace m2n
 {
 
-void send(std::map<int, std::vector<int>> const &m,
+void send(mesh::Mesh::VertexDistribution const &m,
           int                                    rankReceiver,
           com::PtrCommunication                  communication)
 {
@@ -29,7 +29,7 @@ void send(std::map<int, std::vector<int>> const &m,
   }
 }
 
-void receive(std::map<int, std::vector<int>> &m,
+void receive(mesh::Mesh::VertexDistribution &m,
              int                              rankSender,
              com::PtrCommunication            communication)
 {
@@ -44,7 +44,7 @@ void receive(std::map<int, std::vector<int>> &m,
   }
 }
 
-void broadcastSend(std::map<int, std::vector<int>> const &m,
+void broadcastSend(mesh::Mesh::VertexDistribution const &m,
                    com::PtrCommunication                  communication = utils::MasterSlave::_communication)
 {
   communication->broadcast(static_cast<int>(m.size()));
@@ -57,7 +57,7 @@ void broadcastSend(std::map<int, std::vector<int>> const &m,
   }
 }
 
-void broadcastReceive(std::map<int, std::vector<int>> &m,
+void broadcastReceive(mesh::Mesh::VertexDistribution &m,
                       int                              rankBroadcaster,
                       com::PtrCommunication            communication = utils::MasterSlave::_communication)
 {
@@ -72,7 +72,7 @@ void broadcastReceive(std::map<int, std::vector<int>> &m,
   }
 }
 
-void broadcast(std::map<int, std::vector<int>> &m)
+void broadcast(mesh::Mesh::VertexDistribution &m)
 {
   if (utils::MasterSlave::_masterMode) {
     // Broadcast (send) vertex distributions.
@@ -223,9 +223,9 @@ std::map<int, std::vector<int>> buildCommunicationMap(
     // `localIndexCount' is the number of unique local indices for the current rank.
     size_t &localIndexCount,
     // `thisVertexDistribution' is input vertex distribution from this participant.
-    std::map<int, std::vector<int>> const &thisVertexDistribution,
+    mesh::Mesh::VertexDistribution const &thisVertexDistribution,
     // `otherVertexDistribution' is input vertex distribution from other participant.
-    std::map<int, std::vector<int>> const &otherVertexDistribution,
+    mesh::Mesh::VertexDistribution const &otherVertexDistribution,
     int                                    thisRank = utils::MasterSlave::_rank)
 {
 
@@ -320,8 +320,8 @@ void PointToPointCommunication::acceptConnection(std::string const &nameAcceptor
         "You can only use a point-to-point communication between two participants which both use a master. "
             << "Please use distribution-type gather-scatter instead.");
 
-  std::map<int, std::vector<int>> &vertexDistribution = _mesh->getVertexDistribution();
-  std::map<int, std::vector<int>>  requesterVertexDistribution;
+  mesh::Mesh::VertexDistribution &vertexDistribution = _mesh->getVertexDistribution();
+  mesh::Mesh::VertexDistribution  requesterVertexDistribution;
 
   if (utils::MasterSlave::_masterMode) {
     // Establish connection between participants' master processes.
@@ -456,8 +456,8 @@ void PointToPointCommunication::requestConnection(std::string const &nameAccepto
         "You can only use a point-to-point communication between two participants which both use a master. "
             << "Please use distribution-type gather-scatter instead.");
 
-  std::map<int, std::vector<int>> &vertexDistribution = _mesh->getVertexDistribution();
-  std::map<int, std::vector<int>>  acceptorVertexDistribution;
+  mesh::Mesh::VertexDistribution &vertexDistribution = _mesh->getVertexDistribution();
+  mesh::Mesh::VertexDistribution  acceptorVertexDistribution;
 
   if (utils::MasterSlave::_masterMode) {
     // Establish connection between participants' master processes.

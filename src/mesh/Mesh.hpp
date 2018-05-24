@@ -50,6 +50,9 @@ public:
   typedef std::vector<std::pair<double, double>> BoundingBox;
   typedef std::map<int,BoundingBox>              BoundingBoxMap;
 
+  /// A mapping from rank to used (not necessarily owned) vertex IDs
+  using VertexDistribution = std::map<int, std::vector<int>>;
+
   /// Signal is emitted when the mesh is changed
   boost::signals2::signal<void(Mesh &)> meshChanged;
 
@@ -233,7 +236,7 @@ public:
   void clear();
 
   /// Returns a mapping from rank to used (not necessarily owned) vertex IDs
-  std::map<int,std::vector<int> >& getVertexDistribution()
+  VertexDistribution & getVertexDistribution()
   {
     return _vertexDistribution;
   }
@@ -317,7 +320,7 @@ private:
    * @brief Vertex distribution for the master, holding for each slave all vertex IDs it owns.
    * For slaves, this data structure is empty and should not be used.
    */
-  std::map<int,std::vector<int> > _vertexDistribution;
+  VertexDistribution _vertexDistribution;
 
   /// Holds the index of the last vertex for each slave.
   /**

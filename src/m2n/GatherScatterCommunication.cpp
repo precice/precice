@@ -1,4 +1,3 @@
-
 #include "GatherScatterCommunication.hpp"
 #include "com/Communication.hpp"
 #include "mesh/Mesh.hpp"
@@ -75,7 +74,7 @@ void GatherScatterCommunication::send(
     }
   } else { //master
     assertion(utils::MasterSlave::_rank == 0);
-    std::map<int, std::vector<int>> &vertexDistribution = _mesh->getVertexDistribution();
+    mesh::Mesh::VertexDistribution        &vertexDistribution = _mesh->getVertexDistribution();
     int                              globalSize         = _mesh->getGlobalNumberOfVertices() * valueDimension;
     DEBUG("Global Size = " << globalSize);
     globalItemsToSend = new double[globalSize]();
@@ -146,7 +145,7 @@ void GatherScatterCommunication::receive(
     }
   } else { //master
     assertion(utils::MasterSlave::_rank == 0);
-    std::map<int, std::vector<int>> &vertexDistribution = _mesh->getVertexDistribution();
+    mesh::Mesh::VertexDistribution &vertexDistribution = _mesh->getVertexDistribution();
 
     //master data
     for (size_t i = 0; i < vertexDistribution[0].size(); i++) {
