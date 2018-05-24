@@ -101,7 +101,7 @@ PtrRequest MPICommunication::aSend(const double *itemsToSend, int size, int rank
   rankReceiver = rankReceiver - _rankOffset;
 
   MPI_Request request;
-  MPI_Isend(itemsToSend,
+  MPI_Isend(const_cast<double*>(itemsToSend),
             size,
             MPI_DOUBLE,
             rank(rankReceiver),
@@ -361,7 +361,7 @@ void MPICommunication::send(std::vector<double> const &v, int rankReceiver)
 {
   TRACE(rankReceiver);
   rankReceiver = rankReceiver - _rankOffset;
-  MPI_Send(v.data(), v.size(), MPI_DOUBLE,
+  MPI_Send(const_cast<double*>(v.data()), v.size(), MPI_DOUBLE,
            rank(rankReceiver), 0, communicator(rankReceiver));
 }
 
