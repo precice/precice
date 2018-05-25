@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(SendReceiveTwoProcessesServerClient,
 
   switch (utils::Parallel::getProcessRank()) {
   case 0: {
-    communication.acceptConnectionAsServer(nameEven, nameOdd, 1);
+    communication.acceptConnectionAsServer(nameEven, nameOdd, 0, 1);
     int message = 1;
     communication.send(message, 0);
     communication.receive(message, 0);
@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(SendReceiveTwoProcessesServerClient,
     break;
   }
   case 1: {
-    communication.requestConnectionAsClient(nameEven, nameOdd);
+    communication.requestConnectionAsClient(nameEven, nameOdd, 0);
     int message = -1;
     communication.receive(message, 0);
     BOOST_TEST(message == 1);
@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(SendReceiveFourProcessesServerClient,
 
   switch (utils::Parallel::getProcessRank()) {
   case 0: {
-    communication.acceptConnectionAsServer(nameEven, nameOdd, 2);
+    communication.acceptConnectionAsServer(nameEven, nameOdd, 0, 2);
 
     int requestorLocalRank = 0;
     int requestorGlobalRank = -1;
@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(SendReceiveFourProcessesServerClient,
     break;
   }
   case 2: {
-    communication.requestConnectionAsClient(nameEven, nameOdd);
+    communication.requestConnectionAsClient(nameEven, nameOdd, 0);
     int globalRank = 2;
     communication.send(globalRank,0);
 
@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(SendReceiveFourProcessesServerClient,
     break;
   }
   case 3: {
-    communication.requestConnectionAsClient(nameEven, nameOdd);
+    communication.requestConnectionAsClient(nameEven, nameOdd, 0);
     int globalRank = 3;
     communication.send(globalRank,0);
 

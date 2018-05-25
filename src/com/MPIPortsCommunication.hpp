@@ -35,8 +35,9 @@ public:
 
   virtual void acceptConnectionAsServer(std::string const &nameAcceptor,
                                         std::string const &nameRequester,
+                                        int                acceptorRank,
                                         int                requesterCommunicatorSize) override;
-
+  
   /// See precice::com::Communication::requestConnection().
   virtual void requestConnection(std::string const &nameAcceptor,
                                  std::string const &nameRequester,
@@ -44,7 +45,8 @@ public:
                                  int                requesterCommunicatorSize) override;
 
   virtual int requestConnectionAsClient(std::string const &nameAcceptor,
-                                        std::string const &nameRequester) override;
+                                        std::string const &nameRequester,
+                                        int                acceptorRank) override;
 
   /// See precice::com::Communication::closeConnection().
   virtual void closeConnection() override;

@@ -66,6 +66,7 @@ public:
 
   virtual void acceptConnectionAsServer(std::string const &nameAcceptor,
                                         std::string const &nameRequester,
+                                        int                acceptorRank,
                                         int                requesterCommunicatorSize) override;
 
   /**
@@ -83,7 +84,8 @@ public:
                                  int                requesterCommunicatorSize) override;
 
   virtual int requestConnectionAsClient(std::string const &nameAcceptor,
-                                        std::string const &nameRequester) override;
+                                        std::string const &nameRequester,
+                                        int                acceptorRank) override;
 
   /**
    * @brief Disconnects from communication space, i.e. participant.

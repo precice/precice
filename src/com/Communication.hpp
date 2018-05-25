@@ -86,12 +86,14 @@ public:
    *
    * @param[in] nameAcceptor Name of calling participant.
    * @param[in] nameRequester Name of remote participant to connect to.
+   * @param[in] acceptorRank Rank of accepting server, usually the rank of the current process.
    * @param[in] requesterCommunicatorSize Size of the requestor (N)
    */
-  virtual void acceptConnectionAsServer(std::string const &nameAcceptor,
-                                        std::string const &nameRequester,
-                                        int                requesterCommunicatorSize) = 0;
-
+   virtual void acceptConnectionAsServer(std::string const &nameAcceptor,
+                                         std::string const &nameRequester,
+                                         int                acceptorRank,
+                                         int                requesterCommunicatorSize) = 0;
+  
   /**
    * @brief Connects to another communicator, which has to call acceptConnection().
    *
@@ -120,11 +122,13 @@ public:
    * for the M-to-N communication between two participants.
    *
    * @param[in] nameAcceptor Name of calling participant.
-   * @param[in] nameRequester Name of remote participant to connect to.
+   * @param[in] nameRequester Name of remote participant to connect to
+   * @param[in] acceptorRank Rank of accepting server
    */
-  virtual int requestConnectionAsClient(std::string const &nameAcceptor,
-                                        std::string const &nameRequester) = 0;
-
+   virtual int requestConnectionAsClient(std::string const &nameAcceptor,
+                                         std::string const &nameRequester,
+                                         int                acceptorRank) = 0;
+  
   /**
    * @brief Disconnects from communication space, i.e. participant.
    *

@@ -414,8 +414,9 @@ void PointToPointCommunication::acceptConnection(std::string const &nameAcceptor
 #endif
 
   c->acceptConnectionAsServer(
-      nameAcceptor + "-" + std::to_string(utils::MasterSlave::_rank),
+      nameAcceptor,
       nameRequester,
+      utils::MasterSlave::_rank,
       communicationMap.size());
 
   // assertion(c->getRemoteCommunicatorSize() == communicationMap.size());
@@ -558,7 +559,7 @@ void PointToPointCommunication::requestConnection(std::string const &nameAccepto
                                        std::to_string(globalAcceptorRank) + ".address");
 #endif
 
-    c->requestConnectionAsClient(nameAcceptor + "-" + std::to_string(globalAcceptorRank), nameRequester);
+    c->requestConnectionAsClient(nameAcceptor, nameRequester, globalAcceptorRank);
     // assertion(c->getRemoteCommunicatorSize() == 1);
 
     auto request = c->aSend(utils::MasterSlave::_rank, 0);

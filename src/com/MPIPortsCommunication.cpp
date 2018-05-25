@@ -96,6 +96,7 @@ void MPIPortsCommunication::acceptConnection(std::string const &nameAcceptor,
 void MPIPortsCommunication::acceptConnectionAsServer(
     std::string const &nameAcceptor,
     std::string const &nameRequester,
+    int                acceptorRank,
     int                requesterCommunicatorSize)
 {
   TRACE(nameAcceptor, nameRequester);
@@ -113,7 +114,9 @@ void MPIPortsCommunication::acceptConnectionAsServer(
 
   MPI_Open_port(MPI_INFO_NULL, const_cast<char *>(_portName.data()));
 
-  std::string addressFileName("." + nameRequester + "-" + nameAcceptor + ".address");
+  std::string addressFileName("." + nameRequester + "-" +
+                              nameAcceptor + "-" + std::to_string(acceptorRank) + ".address");
+  WARN(addressFileName);
   Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
   ScopedPublisher                        p(addressFileName);
   p.write(_portName);
@@ -176,13 +179,16 @@ void MPIPortsCommunication::requestConnection(std::string const &nameAcceptor,
 }
 
 int MPIPortsCommunication::requestConnectionAsClient(std::string const &nameAcceptor,
-                                                     std::string const &nameRequester)
+                                                     std::string const &nameRequester,
+                                                     int acceptorRank)
 {
   TRACE(nameAcceptor, nameRequester);
   assertion(not isConnected());
   _isAcceptor = false;
 
-  std::string addressFileName("." + nameRequester + "-" + nameAcceptor + ".address");
+  std::string addressFileName("." + nameRequester + "-" +
+                              nameAcceptor + "-" + std::to_string(acceptorRank) + ".address");
+  WARN(addressFileName);
   Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
   Publisher p(addressFileName);
   _portName = p.read();

@@ -155,6 +155,7 @@ void SocketCommunication::acceptConnection(std::string const &nameAcceptor,
 
 void SocketCommunication::acceptConnectionAsServer(std::string const &nameAcceptor,
                                                    std::string const &nameRequester,
+                                                   int                acceptorRank,
                                                    int                requesterCommunicatorSize)
 {
   TRACE(nameAcceptor, nameRequester);
@@ -165,7 +166,8 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &nameAccept
   _rank                   = 0;
 
   std::string address;
-  std::string addressFileName("." + nameRequester + "-" + nameAcceptor + ".address");
+  std::string addressFileName("." + nameRequester + "-" +
+                              nameAcceptor + "-" + std::to_string(acceptorRank) + ".address");
 
   try {
     std::string ipAddress = getIpAddress();
@@ -310,13 +312,15 @@ void SocketCommunication::requestConnection(std::string const &nameAcceptor,
 }
 
 int SocketCommunication::requestConnectionAsClient(std::string const &nameAcceptor,
-                                                   std::string const &nameRequester)
+                                                   std::string const &nameRequester,
+                                                   int acceptorRank)
 {
   TRACE(nameAcceptor, nameRequester);
   assertion(not isConnected());
 
   std::string address;
-  std::string addressFileName("." + nameRequester + "-" + nameAcceptor + ".address");
+  std::string addressFileName("." + nameRequester + "-" +
+                              nameAcceptor + "-" + std::to_string(acceptorRank) + ".address");
 
   try {
     Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
