@@ -8,7 +8,6 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "testing/Testing.hpp"
-#include "utils/Helpers.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/Parallel.hpp"
 
@@ -43,7 +42,7 @@ BOOST_AUTO_TEST_CASE(GatherScatterTest, *testing::OnSize(4))
     utils::MasterSlave::_size       = 3;
     utils::MasterSlave::_slaveMode  = false;
     utils::MasterSlave::_masterMode = true;
-    masterSlaveCom->acceptConnection("Part2Master", "Part2Slaves");
+    masterSlaveCom->acceptConnection("Part2Master", "Part2Slaves", utils::Parallel::getProcessRank());
     masterSlaveCom->setRankOffset(1);
   } else if (utils::Parallel::getProcessRank() == 2) { // Participant 2 - Slave1
     utils::Parallel::splitCommunicator("Part2Slaves");

@@ -60,7 +60,7 @@ void setupParallelEnvironment(m2n::PtrM2N m2n){
   }
 
   if(utils::Parallel::getProcessRank() == 1){//Master
-    masterSlaveCom->acceptConnection ( "FluidMaster", "FluidSlaves");
+    masterSlaveCom->acceptConnection ( "FluidMaster", "FluidSlaves", utils::Parallel::getProcessRank());
     masterSlaveCom->setRankOffset(1);
   }
   else if(utils::Parallel::getProcessRank() == 2){//Slave1

@@ -62,7 +62,8 @@ public:
    * @param[in] nameRequester Name of remote participant to connect to.
    */
   virtual void acceptConnection(std::string const &nameAcceptor,
-                                std::string const &nameRequester) override;
+                                std::string const &nameRequester,
+                                int                acceptorProcessRank) override;
 
   virtual void acceptConnectionAsServer(std::string const &nameAcceptor,
                                         std::string const &nameRequester,
@@ -83,9 +84,11 @@ public:
                                  int                requesterProcessRank,
                                  int                requesterCommunicatorSize) override;
 
-  virtual int requestConnectionAsClient(std::string const &nameAcceptor,
-                                        std::string const &nameRequester,
-                                        int                acceptorRank) override;
+  virtual void requestConnectionAsClient(std::string   const &nameAcceptor,
+                                         std::string   const &nameRequester,
+                                         std::set<int> const &acceptorRanks,
+                                         int                  requesterRank) override;
+
 
   /**
    * @brief Disconnects from communication space, i.e. participant.
@@ -193,7 +196,9 @@ private:
   typedef boost::asio::stream_socket_service<TCP>              SocketService;
   typedef boost::asio::basic_stream_socket<TCP, SocketService> Socket;
   typedef std::shared_ptr<Socket>                              PtrSocket;
-  std::vector<PtrSocket>                                       _sockets;
+
+  /// Remote rank -> socket map
+  std::map<int, PtrSocket> _sockets;
 
   typedef boost::asio::io_service::work Work;
   typedef std::shared_ptr<Work>         PtrWork;

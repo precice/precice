@@ -4,8 +4,6 @@
 #include "utils/assertion.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Publisher.hpp"
-#include <chrono>
-#include <thread>
 
 using precice::utils::Publisher;
 using precice::utils::ScopedPublisher;
@@ -36,19 +34,14 @@ size_t MPIPortsCommunication::getRemoteCommunicatorSize()
 }
 
 void MPIPortsCommunication::acceptConnection(std::string const &nameAcceptor,
-                                             std::string const &nameRequester)
+                                             std::string const &nameRequester,
+                                             int                acceptorProcessRank)
 {
   TRACE(nameAcceptor, nameRequester);
   assertion(not isConnected());
 
   _isAcceptor = true;
   _rank       = 0;
-
-  // BUG report from Alex:
-  // It is extremely important that the call to `Parallel::initialize' follows
-  // *after* the call to `MPI_Open_port'. Otherwise, on Windows, even with the
-  // latest Intel MPI, the program hangs. Possibly `Parallel::initialize' is
-  // doing something weird inside?
 
   MPI_Open_port(MPI_INFO_NULL, const_cast<char *>(_portName.data()));
 
@@ -66,12 +59,13 @@ void MPIPortsCommunication::acceptConnection(std::string const &nameAcceptor,
   int    requesterProcessRank      = -1;
   size_t requesterCommunicatorSize = 0;
 
-  // Receive information to which rank I am connected and which size on the side
+  // Exchange information to which rank I am connected and which communicator size on the other side
   MPI_Recv(&requesterProcessRank, 1,      MPI_INT, 0, 42, communicator, MPI_STATUS_IGNORE);
   MPI_Recv(&requesterCommunicatorSize, 1, MPI_INT, 0, 42, communicator, MPI_STATUS_IGNORE);
+  MPI_Send(&acceptorProcessRank,       1, MPI_INT, 0, 42, communicator);
+  
 
   CHECK(requesterCommunicatorSize > 0, "Requester communicator size has to be > 0!");
-  _communicators.resize(requesterCommunicatorSize, MPI_COMM_NULL);
   _communicators[requesterProcessRank] = communicator;
   
   // Connect all other peers
@@ -99,56 +93,36 @@ void MPIPortsCommunication::acceptConnectionAsServer(
     int                acceptorRank,
     int                requesterCommunicatorSize)
 {
-  TRACE(nameAcceptor, nameRequester);
+  TRACE(nameAcceptor, nameRequester, acceptorRank, requesterCommunicatorSize);
   CHECK(requesterCommunicatorSize > 0, "Requester communicator size has to be > 0!");
   assertion(not isConnected());
 
   _isAcceptor = true;
   _rank       = 0;
 
-  // BUG report from Alex:
-  // It is extremely important that the call to `Parallel::initialize' follows
-  // *after* the call to `MPI_Open_port'. Otherwise, on Windows, even with the
-  // latest Intel MPI, the program hangs. Possibly `Parallel::initialize' is
-  // doing something weird inside?
-
   MPI_Open_port(MPI_INFO_NULL, const_cast<char *>(_portName.data()));
 
   std::string addressFileName("." + nameRequester + "-" +
                               nameAcceptor + "-" + std::to_string(acceptorRank) + ".address");
-  WARN(addressFileName);
   Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
   ScopedPublisher                        p(addressFileName);
   p.write(_portName);
   DEBUG("Accept connection at " << _portName);
 
-  _communicators.resize(requesterCommunicatorSize, MPI_COMM_NULL);
-
-  for (int requesterProcessRank = 0;
-       requesterProcessRank < requesterCommunicatorSize;
-       ++requesterProcessRank) {
-    
-    MPI_Comm communicator;
+  MPI_Comm communicator;
+  for (int connections = 0; connections < requesterCommunicatorSize; ++connections) {
     MPI_Comm_accept(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
 
     DEBUG("Accepted connection at " << _portName);
-    CHECK(_communicators[requesterProcessRank] == MPI_COMM_NULL,
-          "Duplicate request to connect by same rank (" << requesterProcessRank << ")!");
+        
+    int requesterRank = -1;
+     // Receive the real rank of requester
+    MPI_Recv(&requesterRank, 1, MPI_INT, 0, 42, communicator, MPI_STATUS_IGNORE);
 
-    _communicators[requesterProcessRank] = communicator;
-
-    _isConnected = true;
-
-    // BUG:
-    // On Windows, with Intel MPI, in point-to-point communication integration
-    // test, a deadlock happens because the following `MPI_Send' has no effect.
-    // This happens rarely and the nature of this phenomenon is still
-    // unknown. It looks as if the actual message (to be sent) is lost
-    // somehow. To me that one looks more like an implementation bug. Let's see
-    // how it goes in other environments (OS/MPI combinations).
-    MPI_Send(&requesterProcessRank, 1, MPI_INT, 0, 42, communicator);
-    // send(requesterProcessRank, requesterProcessRank);
+    _communicators[requesterRank] = communicator;
   }
+  _isConnected = true;
+
 }
 
 void MPIPortsCommunication::requestConnection(std::string const &nameAcceptor,
@@ -170,69 +144,44 @@ void MPIPortsCommunication::requestConnection(std::string const &nameAcceptor,
   MPI_Comm_connect(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
   DEBUG("Requested connection to " << _portName);
 
-  _communicators.push_back(communicator);
   _isConnected = true;
   _rank        = requesterProcessRank;
 
   MPI_Send(&requesterProcessRank,      1, MPI_INT, 0, 42, communicator);
   MPI_Send(&requesterCommunicatorSize, 1, MPI_INT, 0, 42, communicator);
+  int acceptorProcessRank;
+  MPI_Recv(&acceptorProcessRank,        1, MPI_INT, 0, 42, communicator, MPI_STATUS_IGNORE);
+  _communicators[acceptorProcessRank] = communicator;
 }
 
-int MPIPortsCommunication::requestConnectionAsClient(std::string const &nameAcceptor,
-                                                     std::string const &nameRequester,
-                                                     int acceptorRank)
+void MPIPortsCommunication::requestConnectionAsClient(std::string      const &nameAcceptor,
+                                                      std::string      const &nameRequester,
+                                                      std::set<int>    const &acceptorRanks,
+                                                      int                     requesterRank)
+                                                      
 {
-  TRACE(nameAcceptor, nameRequester);
+  TRACE(nameAcceptor, nameRequester, requesterRank);
   assertion(not isConnected());
   _isAcceptor = false;
 
-  std::string addressFileName("." + nameRequester + "-" +
-                              nameAcceptor + "-" + std::to_string(acceptorRank) + ".address");
-  WARN(addressFileName);
-  Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
-  Publisher p(addressFileName);
-  _portName = p.read();
-  DEBUG("Request connection to " << _portName);
+  for (auto const & acceptorRank : acceptorRanks) {
+    std::string addressFileName("." + nameRequester + "-" +
+                                nameAcceptor + "-" + std::to_string(acceptorRank) + ".address");
 
-  MPI_Comm communicator;
-  MPI_Comm_connect(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
-  DEBUG("Requested connection to " << _portName);
+    Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
+    Publisher p(addressFileName);
+    _portName = p.read();
+    DEBUG("Request connection to " << _portName);
 
-  _communicators.push_back(communicator);
-  _isConnected = true;
-
-  // BUG:
-  // On Windows, with Intel MPI, in point-to-point communication integration
-  // test, a deadlock happens because the following `MPI_Recv' never
-  // returns. This happens rarely and the nature of this phenomenon is still
-  // unknown. It looks as if the actual message (to be received) was lost
-  // somehow. To me that one looks more like an implementation bug. Let's see
-  // how it goes in other environments (OS/MPI combinations).
-  // MPI_Recv(&_rank, 1, MPI_INT, 0, 42, communicator, MPI_STATUS_IGNORE);
-  // receive(_rank, 0);
-
-  // NOTE:
-  // This is a partial solution. First of all, somehow it seems to lower the
-  // deadlock frequency. Secondly, it gives some time to ensure that there is a
-  // deadlock. Finally, when the deadlock really happens, it reports a proper
-  // error and terminates the application.
-  {
-    MPI_Request request;
-    MPI_Irecv(&_rank, 1, MPI_INT, 0, 42, communicator, &request);
-
-    int complete = 0;
+    MPI_Comm communicator;
+    MPI_Comm_connect(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
+    DEBUG("Requested connection to " << _portName);
+    _communicators[acceptorRank] = communicator;
     
-    for (int i = 0; not complete && i < 500; ++i) {
-      MPI_Test(&request, &complete, MPI_STATUS_IGNORE);
-      std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    }
-
-    if (not complete) {
-      ERROR("Oops, we have a deadlock here... Now terminating, retry please!");
-    }
-  }
-
-  return _rank;
+    // Rank 0 is always the peer, because we connected on COMM_SELF
+    MPI_Send(&requesterRank, 1, MPI_INT, 0, 42, communicator);    
+  }  
+  _isConnected = true;
 }
 
 void MPIPortsCommunication::closeConnection()
@@ -243,7 +192,7 @@ void MPIPortsCommunication::closeConnection()
     return;
 
   for (auto communicator : _communicators) {
-    MPI_Comm_disconnect(&communicator);
+    MPI_Comm_disconnect(&communicator.second);
   }
 
   DEBUG("Disconnected");

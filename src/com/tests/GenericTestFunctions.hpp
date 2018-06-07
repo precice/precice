@@ -12,7 +12,7 @@ void TestSendAndReceivePrimitiveTypes()
   T com;
 
   if (utils::Parallel::getProcessRank() == 0) {
-    com.acceptConnection("process0", "process1");
+    com.acceptConnection("process0", "process1", utils::Parallel::getProcessRank());
     {
       std::string msg("testOne");
       com.send(msg, 0);
@@ -79,7 +79,7 @@ void TestSendAndReceiveVectors()
 {
   T com;
   if (utils::Parallel::getProcessRank() == 0) {
-    com.acceptConnection("process0", "process1");
+    com.acceptConnection("process0", "process1", utils::Parallel::getProcessRank());
      {
       Eigen::Vector3d msg = Eigen::Vector3d::Constant(0);
       com.receive(msg.data(), msg.size(), 0);
@@ -157,14 +157,14 @@ void TestSendReceiveTwoProcessesServerClient()
   case 0: {
     communication.acceptConnectionAsServer(nameEven, nameOdd, 0, 1);
     int message = 1;
-    communication.send(message, 0);
-    communication.receive(message, 0);
+    communication.send(message, 1);
+    communication.receive(message, 1);
     BOOST_TEST(message == 2);
     communication.closeConnection();
     break;
   }
   case 1: {
-    communication.requestConnectionAsClient(nameEven, nameOdd, 0);
+    communication.requestConnectionAsClient(nameEven, nameOdd, {0}, 1);
     int message = -1;
     communication.receive(message, 0);
     BOOST_TEST(message == 1);
@@ -184,29 +184,19 @@ void TestSendReceiveFourProcessesServerClient()
   std::string nameEven("even");
   std::string nameOdd("odd");
 
+  int message = -1;
+  
   switch (utils::Parallel::getProcessRank()) {
   case 0: {
     communication.acceptConnectionAsServer(nameEven, nameOdd, 0, 2);
 
-    int requestorLocalRank = 0;
-    int requestorGlobalRank = -1;
-    communication.receive(requestorGlobalRank, requestorLocalRank);
-    BOOST_TEST(requestorGlobalRank >= 2);
-    BOOST_TEST(requestorGlobalRank <= 3);
-    int message = requestorGlobalRank * 10;
-    communication.send(message, requestorLocalRank);
-    communication.receive(message, requestorLocalRank);
-    BOOST_TEST(message == requestorGlobalRank * 10 + 2);
+    communication.send(10, 2);
+    communication.receive(message, 2);
+    BOOST_TEST(message == 20);
 
-    requestorLocalRank = 1;
-    requestorGlobalRank = -1;
-    communication.receive(requestorGlobalRank, requestorLocalRank);
-    BOOST_TEST(requestorGlobalRank >= 2);
-    BOOST_TEST(requestorGlobalRank <= 3);
-    message = requestorGlobalRank * 10;
-    communication.send(message, requestorLocalRank);
-    communication.receive(message, requestorLocalRank);
-    BOOST_TEST(message == requestorGlobalRank * 10 + 2);
+    communication.send(20, 3);
+    communication.receive(message, 3);
+    BOOST_TEST(message == 40);
 
     communication.closeConnection();
     break;
@@ -216,30 +206,24 @@ void TestSendReceiveFourProcessesServerClient()
     break;
   }
   case 2: {
-    communication.requestConnectionAsClient(nameEven, nameOdd, 0);
-    int globalRank = 2;
-    communication.send(globalRank,0);
-
-    int message = -1;
+    communication.requestConnectionAsClient(nameEven, nameOdd, {0}, 2);
+    
     communication.receive(message, 0);
-    BOOST_TEST(message == 20);
-    message += 2;
+    BOOST_TEST(message == 10);
+    message *= 2;
     communication.send(message, 0);
-
+    
     communication.closeConnection();
     break;
   }
   case 3: {
-    communication.requestConnectionAsClient(nameEven, nameOdd, 0);
-    int globalRank = 3;
-    communication.send(globalRank,0);
-
-    int message = -1;
+    communication.requestConnectionAsClient(nameEven, nameOdd, {0}, 3);
+    
     communication.receive(message, 0);
-    BOOST_TEST(message == 30);
-    message += 2;
+    BOOST_TEST(message == 20);
+    message *= 2;
     communication.send(message, 0);
-
+    
     communication.closeConnection();
     break;
   }

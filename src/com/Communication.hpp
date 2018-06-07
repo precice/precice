@@ -73,7 +73,8 @@ public:
    * @param[in] nameRequester Name of remote participant to connect to.
    */
   virtual void acceptConnection(std::string const &nameAcceptor,
-                                std::string const &nameRequester) = 0;
+                                std::string const &nameRequester,
+                                int                acceptorProcessRank) = 0;
 
   /**
    * @brief Accepts connection from another communicator, which has to call requestConnectionAsClient().
@@ -87,7 +88,7 @@ public:
    * @param[in] nameAcceptor Name of calling participant.
    * @param[in] nameRequester Name of remote participant to connect to.
    * @param[in] acceptorRank Rank of accepting server, usually the rank of the current process.
-   * @param[in] requesterCommunicatorSize Size of the requestor (N)
+   * @param[in] requesterCommunicatorSize Size of the requester (N)
    */
    virtual void acceptConnectionAsServer(std::string const &nameAcceptor,
                                          std::string const &nameRequester,
@@ -105,8 +106,8 @@ public:
    *
    * @param[in] nameAcceptor Name of remote participant to connect to.
    * @param[in] nameRequester Name of calling participant.
-   * @param[in] requesterProcessRank Rank of the requestor (has to go from 0 to N-1)
-   * @param[in] requesterCommunicatorSize Size of the requestor (N)
+   * @param[in] requesterProcessRank Rank of the requester (has to go from 0 to N-1)
+   * @param[in] requesterCommunicatorSize Size of the requester (N)
    */
   virtual void requestConnection(std::string const &nameAcceptor,
                                  std::string const &nameRequester,
@@ -123,11 +124,13 @@ public:
    *
    * @param[in] nameAcceptor Name of calling participant.
    * @param[in] nameRequester Name of remote participant to connect to
-   * @param[in] acceptorRank Rank of accepting server
+   * @param[in] acceptorRanks Set of ranks that accept a connection
+   * @param[in] requesterRank Rank that requests the connection, usually the caller's rank
    */
-   virtual int requestConnectionAsClient(std::string const &nameAcceptor,
-                                         std::string const &nameRequester,
-                                         int                acceptorRank) = 0;
+   virtual void requestConnectionAsClient(std::string   const &nameAcceptor,
+                                          std::string   const &nameRequester,
+                                          std::set<int> const &acceptorRanks,
+                                          int                  requesterRank) = 0;
   
   /**
    * @brief Disconnects from communication space, i.e. participant.

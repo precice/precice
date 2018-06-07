@@ -327,7 +327,7 @@ void PointToPointCommunication::acceptConnection(std::string const &nameAcceptor
     // Establish connection between participants' master processes.
     auto c = _communicationFactory->newCommunication();
 
-    c->acceptConnection(nameAcceptor, nameRequester);
+    c->acceptConnection(nameAcceptor, nameRequester, utils::MasterSlave::_rank);
 
     int requesterMasterRank;
 
@@ -419,29 +419,20 @@ void PointToPointCommunication::acceptConnection(std::string const &nameAcceptor
       utils::MasterSlave::_rank,
       communicationMap.size());
 
-  // assertion(c->getRemoteCommunicatorSize() == communicationMap.size());
+  assertion(c->getRemoteCommunicatorSize() == communicationMap.size());
 
   _mappings.reserve(communicationMap.size());
 
-  for (size_t localRequesterRank = 0; localRequesterRank < communicationMap.size(); ++localRequesterRank) {
-    int globalRequesterRank = -1;
-
-    c->receive(globalRequesterRank, localRequesterRank);
+  for (auto & comMap : communicationMap) {
+    int globalRequesterRank = comMap.first;
 
     auto indices = std::move(communicationMap[globalRequesterRank]);
     _totalIndexCount += indices.size();
 
     // NOTE:
     // Everything is moved (efficiency)!
-    // On the acceptor participant side, the communication object `c'
-    // behaves as a server, i.e. it implicitly accepts multiple connections
-    // to requester processes (in the requester participant). As a result,
-    // only one communication object `c' is needed to satisfy
-    // `communicationMap', and, therefore, for data structure consistency
-    // of `_mappings' with the requester participant side, we simply
-    // duplicate references to the same communication object `c'.
     _mappings.push_back({
-        static_cast<int>(localRequesterRank), globalRequesterRank, std::move(indices), c, com::PtrRequest(), 0});
+        globalRequesterRank, globalRequesterRank, std::move(indices), c, com::PtrRequest(), 0});
   }
 
   _buffer.reserve(_totalIndexCount * _mesh->getDimensions());
@@ -542,6 +533,14 @@ void PointToPointCommunication::requestConnection(std::string const &nameAccepto
   requests.reserve(communicationMap.size());
   _mappings.reserve(communicationMap.size());
 
+  std::set<int> acceptingRanks;
+  for (auto &i : communicationMap)
+    acceptingRanks.emplace(i.first);
+
+  auto c = _communicationFactory->newCommunication();
+  c->requestConnectionAsClient(nameAcceptor, nameRequester,
+                               acceptingRanks, utils::MasterSlave::_rank);
+
   // Request point-to-point connections (as client) between the current
   // requester process (in the current participant) and (multiple) acceptor
   // processes (in the acceptor participant) with ranks `globalAcceptorRank'
@@ -552,19 +551,12 @@ void PointToPointCommunication::requestConnection(std::string const &nameAccepto
 
     _totalIndexCount += indices.size();
 
-    auto c = _communicationFactory->newCommunication();
+    // auto c = _communicationFactory->newCommunication();
 
 #ifdef SuperMUC_WORK
     Publisher::ScopedPushDirectory spd("." + nameAcceptor + "-" + _mesh->getName() + "-" +
                                        std::to_string(globalAcceptorRank) + ".address");
 #endif
-
-    c->requestConnectionAsClient(nameAcceptor, nameRequester, globalAcceptorRank);
-    // assertion(c->getRemoteCommunicatorSize() == 1);
-
-    auto request = c->aSend(utils::MasterSlave::_rank, 0);
-
-    requests.push_back(request);
 
     // NOTE:
     // Everything is moved (efficiency)!
@@ -572,10 +564,8 @@ void PointToPointCommunication::requestConnection(std::string const &nameAccepto
     // as clients, i.e. each of them requests only one connection to
     // acceptor process (in the acceptor participant).
     _mappings.push_back({
-        0, globalAcceptorRank, std::move(indices), c, com::PtrRequest(), 0});
+        globalAcceptorRank, globalAcceptorRank, std::move(indices), c, com::PtrRequest(), 0});
   }
-
-  com::Request::wait(requests);
   _buffer.reserve(_totalIndexCount * _mesh->getDimensions());
   _isConnected = true;
 }

@@ -31,7 +31,8 @@ public:
 
   /// See precice::com::Communication::acceptConnection().
   virtual void acceptConnection(std::string const &nameAcceptor,
-                                std::string const &nameRequester) override;
+                                std::string const &nameRequester,
+                                int                acceptorProcessRank) override;
 
   virtual void acceptConnectionAsServer(std::string const &nameAcceptor,
                                         std::string const &nameRequester,
@@ -44,9 +45,10 @@ public:
                                  int                requesterProcessRank,
                                  int                requesterCommunicatorSize) override;
 
-  virtual int requestConnectionAsClient(std::string const &nameAcceptor,
-                                        std::string const &nameRequester,
-                                        int                acceptorRank) override;
+  virtual void requestConnectionAsClient(std::string      const &nameAcceptor,
+                                         std::string      const &nameRequester,
+                                         std::set<int>    const &acceptorRanks,
+                                         int                     requesterRank) override;
 
   /// See precice::com::Communication::closeConnection().
   virtual void closeConnection() override;
@@ -60,12 +62,14 @@ private:
 
   std::string _addressDirectory;
 
-  std::vector<MPI_Comm> _communicators;
+  /// Remote rank -> communicator map
+  std::map<int, MPI_Comm> _communicators;
 
   /// Name of the port used for connection.
   std::string _portName = std::string(MPI_MAX_PORT_NAME, '\0');
 
   bool _isAcceptor = false;
+
 };
 } // namespace com
 } // namespace precice

@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(twoSolvers,
 
       if (utils::Parallel::getProcessRank() == 0) {
         utils::Parallel::splitCommunicator(participant0);
-        com->acceptConnection(participant0, participant1);
+        com->acceptConnection(participant0, participant1, utils::Parallel::getProcessRank());
         comMesh.sendMesh(mesh, 0);
         BOOST_TEST(mesh.vertices().size() == 3);
         BOOST_TEST(mesh.edges().size() == 3);

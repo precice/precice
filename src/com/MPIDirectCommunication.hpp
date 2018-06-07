@@ -37,7 +37,8 @@ public:
 
   /// See precice::com::Communication::acceptConnection().
   virtual void acceptConnection(std::string const &nameAcceptor,
-                                std::string const &nameRequester) override;
+                                std::string const &nameRequester,
+                                int                acceptorProcessRank) override;
 
   virtual void acceptConnectionAsServer(std::string const &nameAcceptor,
                                         std::string const &nameRequester,
@@ -53,9 +54,10 @@ public:
                                  int                requesterProcessRank,
                                  int                requesterCommunicatorSize) override;
 
-  virtual int requestConnectionAsClient(std::string const &nameAcceptor,
-                                        std::string const &nameRequester,
-                                        int                acceptorRank) override
+  virtual void requestConnectionAsClient(std::string   const &nameAcceptor,
+                                         std::string   const &nameRequester,
+                                         std::set<int> const &acceptorRanks,
+                                         int                  requesterRank) override
   {
     ERROR("Not implemented!");
   }
