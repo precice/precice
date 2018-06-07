@@ -12,7 +12,9 @@ Please write us about your experience in [issue #125](https://github.com/precice
 * Build it with `fakeroot dpkg-deb --build debian/`. `fakeroot` is needed to assign the correct owner/permissions.
 * Check it for common (policy) errors with `mv debian.deb libprecice1_1.1.1-1_amd64.deb && lintian libprecice1_1.1.1-1_amd64.deb`
 
-Notes on building:
+Notes on building the package itself:
+* The directory structure is actually merged in the system directories. So, e.g. `libprecice.so` is installed as `/usr/lib/x86_64-linux-gnu/libprecice.so` as it is placed inside the `debian/usr/lib/x86_64-linux-gnu/libprecice.so` of the package source directory.
+* The same paths need also to be defined inside `debian/usr/lib/x86_64-linux-gnu/pkgconfig/precice.pc`. You can then use commands like `PKG_CONFIG_ALLOW_SYSTEM_CFLAGS=1 pkg-config --cflags precice` to get these paths.
 * The appropriate package name can be defined with this command (copy-paste from the Debian packaging manual): `objdump -p libprecice.so.1.1.1 | sed -n -e's/^[[:space:]]*SONAME[[:space:]]*//p' | sed -r -e's/([0-9])\.so\./\1-/; s/\.so(\.|$)//; y/_/-/; s/(.*)/\L&/'`
 * In order to read the symbols defined in the shared library, run `readelf -d libprecice.sorecice.so`.
 
@@ -26,7 +28,7 @@ Some helpful readings:
 
 You can install the result package with a double click (Ubuntu/Gnome Software), or with `sudo apt install ./libprecice1_1.1.1-1_amd64.deb`. This will install:
 
-* the shared library and some verion-related links into `/usr/lib/x86_64-linux-gnu/`,
+* the shared library and some version-related links into `/usr/lib/x86_64-linux-gnu/`,
 * the pkgconfig metadata into `/usr/lib/x86_64-linux-gnu/pkgconfig/`,
 * the header files `Constants.hpp`, `MeshHandle.hpp`, `SolverInterface.hpp` and the headers for the C, Fortran, Fortran2003 adapters (not the Python ones, as I was not sure) into `/usr/include/precice/`.
 * changelogs and a copyright file.
