@@ -2,7 +2,7 @@
 
 #include "com/MPIDirectCommunication.hpp"
 #include "testing/Testing.hpp"
-#include "SendAndReceive.hpp"
+#include "GenericTestFunctions.hpp"
 
 
 using Par = precice::utils::Parallel;
