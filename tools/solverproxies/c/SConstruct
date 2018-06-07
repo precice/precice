@@ -1,10 +1,25 @@
-# precice/src/adapters/c/SConstruct
+import os
+
+cpppath = ['.']
+libpath = []
+libs    = []
+
+preciceRootPath = os.getenv('PRECICE_ROOT')
+cpppath.append(preciceRootPath + '/src/precice/adapters/c')
+
+# Libs
+libpath.append(preciceRootPath + '/build/last/')
+libs.append('precice')
+
+fortranCompiler = 'gfortran'
 
 envCompile = Environment ( 
-   CPPPATH    = ['.'],
-   LIBPATH    = ['#../../../../build/debug-dim2-mpi-serial/'],
-   LIBS       = ['precice']
+   CPPPATH    = cpppath,
+   LIBPATH    = libpath,
+   LIBS       = libs,
+   ENV        = os.environ  # propagates environment variables to scons  
    )
+
   
 envCompile.Object ('SolverDummy.c')
 

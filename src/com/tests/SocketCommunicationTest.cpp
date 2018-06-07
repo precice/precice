@@ -1,6 +1,6 @@
 #include "com/SocketCommunication.hpp"
 #include "testing/Testing.hpp"
-#include "SendAndReceive.hpp"
+#include "GenericTestFunctions.hpp"
 
 using namespace precice;
 using namespace precice::com;
@@ -18,6 +18,21 @@ BOOST_AUTO_TEST_CASE(SendAndReceive,
 {
   TestSendAndReceive<SocketCommunication>();
 }
+
+BOOST_AUTO_TEST_CASE(SendReceiveTwoProcessesServerClient,
+                     * testing::MinRanks(2)
+                     * boost::unit_test::fixture<testing::SyncProcessesFixture>())
+{
+  TestSendReceiveTwoProcessesServerClient<SocketCommunication>();
+}
+
+BOOST_AUTO_TEST_CASE(SendReceiveFourProcessesServerClient,
+                     * testing::MinRanks(4)
+                     * boost::unit_test::fixture<testing::SyncProcessesFixture>())
+{
+  TestSendReceiveFourProcessesServerClient<SocketCommunication>();
+}
+
 
 BOOST_AUTO_TEST_SUITE_END() // Socket
 BOOST_AUTO_TEST_SUITE_END() // Communication
