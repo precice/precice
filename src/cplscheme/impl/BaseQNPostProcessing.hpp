@@ -145,40 +145,39 @@ public:
   virtual int getDeletedColumns();
 
 protected:
-  /// @brief Logging device.
-  static logging::Logger _log;
+  logging::Logger _log{"cplscheme::impl::BaseQNPostProcessing"};
 
-  /// @brief preconditioner for least-squares system if vectorial system is used.
+  /// Preconditioner for least-squares system if vectorial system is used.
   PtrPreconditioner _preconditioner;
 
-  /// @brief Cosntant relaxation factor used for first iteration.
+  /// Constant relaxation factor used for first iteration.
   double _initialRelaxation;
 
-  /// @brief Maximum number of old data iterations kept.
+  /// Maximum number of old data iterations kept.
   int _maxIterationsUsed;
 
-  /// @brief Maximum number of old timesteps (with data values) kept.
+  /// Maximum number of old timesteps (with data values) kept.
   int _timestepsReused;
 
-  /// @brief Data IDs of data to be involved in the IQN algorithm.
+  /// Data IDs of data to be involved in the IQN algorithm.
   std::vector<int> _dataIDs;
 
-  /// @brief Data IDs of data not involved in IQN coefficient computation.
+  /// Data IDs of data not involved in IQN coefficient computation.
   std::vector<int> _secondaryDataIDs;
 
-  /// @brief Indicates the first iteration, where constant relaxation is used.
-  bool _firstIteration;
+  /// Indicates the first iteration, where constant relaxation is used.
+  bool _firstIteration = true;
 
   /* @brief Indicates the first time step, where constant relaxation is used
     *        later, we replace the constant relaxation by a qN-update from last time step.
     */
-  bool _firstTimeStep;
+  bool _firstTimeStep = true;
 
   /*
     * @brief If in master-slave mode: True if this process has nodes at the coupling interface
     *        If in server mode: Always true.
     */
-  bool _hasNodesOnInterface;
+  bool _hasNodesOnInterface = true;
 
   /* @brief If true, the QN-scheme always performs a underrelaxation in the first iteration of
     *        a new time step. Otherwise, the LS system from the previous time step is used in the
@@ -189,7 +188,7 @@ protected:
   /** @brief If true, the LS system has been modified (reset or recomputed) in such a way, that mere
     *         updating of matrices _Wtil, Q, R etc.. is not feasible any more and need to be recomputed.
     */
-  bool _resetLS;
+  bool _resetLS = false;
 
   /// @brief Solver output from last iteration.
   Eigen::VectorXd _oldXTilde;
@@ -258,31 +257,31 @@ protected:
      */
   virtual void specializedIterationsConverged(DataMap &cplData) = 0;
 
-  /// @brief updates the V, W matrices (as well as the matrices for the secondary data)
+  /// Updates the V, W matrices (as well as the matrices for the secondary data)
   virtual void updateDifferenceMatrices(DataMap &cplData);
 
-  /// @brief concatenates all coupling data involved in the QN system in a single vector
+  /// Concatenates all coupling data involved in the QN system in a single vector
   virtual void concatenateCouplingData(DataMap &cplData);
 
-  /// @brief splits up QN system vector back into the coupling data
+  /// Splits up QN system vector back into the coupling data
   virtual void splitCouplingData(DataMap &cplData);
 
-  /// @brief applies the filter method for the least-squares system, defined in the configuration
+  /// Applies the filter method for the least-squares system, defined in the configuration
   virtual void applyFilter();
 
-  /// @brief computes underrelaxation for the secondary data
+  /// Computes underrelaxation for the secondary data
   virtual void computeUnderrelaxationSecondaryData(DataMap &cplData) = 0;
 
-  /// @brief computes the quasi-Newton update using the specified pp scheme (MVQN, IQNILS)
+  /// Computes the quasi-Newton update using the specified pp scheme (MVQN, IQNILS)
   virtual void computeQNUpdate(DataMap &cplData, Eigen::VectorXd &xUpdate) = 0;
 
-  /// @brief Removes one iteration from V,W matrices and adapts _matrixCols.
+  /// Removes one iteration from V,W matrices and adapts _matrixCols.
   virtual void removeMatrixColumn(int columnIndex);
 
-  /// @brief writes info to the _infostream (also in parallel)
+  /// Wwrites info to the _infostream (also in parallel)
   void writeInfo(std::string s, bool allProcs = false);
 
-  int its, tSteps;
+  int its = 0, tSteps = 0;
 
 private:
   /// @brief Concatenation of all coupling data involved in the QN system.
@@ -310,8 +309,8 @@ private:
   Eigen::MatrixXd _matrixWBackup;
   std::deque<int> _matrixColsBackup;
 
-  /// @ brief additional debugging info, is not important for computation:
-  int _nbDelCols;
+  /// Additional debugging info, is not important for computation:
+  int _nbDelCols = 0;
 };
 }
 }

@@ -8,7 +8,7 @@
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/Globals.hpp"
 #include "utils/MasterSlave.hpp"
-//#include "utils/NumericalCompare.hpp"
+#include "utils/Helpers.hpp"
 
 namespace precice
 {
@@ -16,9 +16,6 @@ namespace cplscheme
 {
 namespace impl
 {
-
-logging::Logger BaseQNPostProcessing::
-    _log("cplscheme::impl::BaseQNPostProcessing");
 
 /* ----------------------------------------------------------------------------
  *     Constructor
@@ -39,35 +36,11 @@ BaseQNPostProcessing::BaseQNPostProcessing(
       _maxIterationsUsed(maxIterationsUsed),
       _timestepsReused(timestepsReused),
       _dataIDs(dataIDs),
-      _secondaryDataIDs(),
-      _firstIteration(true),
-      _firstTimeStep(true),
-      _hasNodesOnInterface(true),
       _forceInitialRelaxation(forceInitialRelaxation),
-      _resetLS(false),
-      _oldXTilde(),
-      _residuals(),
-      _secondaryResiduals(),
-      _matrixV(),
-      _matrixW(),
       _qrV(filter),
       _filter(filter),
       _singularityLimit(singularityLimit),
-      _matrixCols(),
-      _dimOffsets(),
-      _infostringstream(std::ostringstream::ate),
-      _infostream(),
-      its(0),
-      tSteps(0),
-      _values(),
-      _oldValues(),
-      _oldResiduals(),
-      _designSpecification(),
-      _matrixVBackup(),
-      _matrixWBackup(),
-      _matrixColsBackup(),
-      _nbDelCols(0)
-//_debugOut()
+      _infostringstream(std::ostringstream::ate)
 {
   CHECK((_initialRelaxation > 0.0) && (_initialRelaxation <= 1.0),
         "Initial relaxation factor for QN post-processing has to "
@@ -115,8 +88,7 @@ void BaseQNPostProcessing::initialize(
 
   for (auto &elem : _dataIDs) {
     CHECK(utils::contained(elem, cplData),
-          "Data with ID " << elem << " is not contained in data "
-                                     "given at initialization!");
+          "Data with ID " << elem << " is not contained in data given at initialization!");
     entries += cplData[elem]->values->size();
     subVectorSizes.push_back(cplData[elem]->values->size());
   }
