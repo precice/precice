@@ -17,7 +17,6 @@
 #include "com/MPIPortsCommunication.hpp"
 #include "io/ExportVTK.hpp"
 #include "io/ExportVTKXML.hpp"
-#include "io/ExportVRML.hpp"
 #include "io/ExportContext.hpp"
 #include "io/SharedPointer.hpp"
 #include "partition/ReceivedPartition.hpp"
@@ -61,7 +60,6 @@ ParticipantConfiguration:: ParticipantConfiguration
   VALUE_BROADCAST_FILTER("broadcast-filter"),
   VALUE_NO_FILTER("no-filter"),
   VALUE_VTK ( "vtk" ),
-  VALUE_VRML ( "vrml" ),
   _dimensions(0),
   _meshConfig(meshConfiguration),
   _mappingConfig(),
@@ -631,10 +629,6 @@ void ParticipantConfiguration:: finishParticipantConfiguration
       else{
         exporter = io::PtrExport(new io::ExportVTK(context.plotNormals));
       }
-    }
-    else if (context.type == VALUE_VRML){
-      CHECK(not participant->useMaster(), "VRML exports while using a master is not yet supported");
-      exporter = io::PtrExport (new io::ExportVRML(context.plotNormals));
     }
     else {
       ERROR("Unknown export type!");

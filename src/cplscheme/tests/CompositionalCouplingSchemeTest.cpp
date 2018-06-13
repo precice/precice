@@ -29,7 +29,7 @@ struct CompositionalCouplingSchemeFixture  // TODO fixtures in cplscheme/tests a
   std::string _pathToTests;
 
   CompositionalCouplingSchemeFixture(){
-    _pathToTests = utils::getPathToSources() + "/cplscheme/tests/";
+    _pathToTests = testing::getPathToSources() + "/cplscheme/tests/";
   }
 
   void setupAndRunThreeSolverCoupling(const std::string& configFilename)

@@ -39,7 +39,7 @@ public:
 
 private:
 
-  static logging::Logger _log;
+  logging::Logger _log{"io::TXTReader"};
 
   /// @brief Filestream.
   std::ifstream _file;

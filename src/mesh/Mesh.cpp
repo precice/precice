@@ -3,24 +3,20 @@
 #include "Triangle.hpp"
 #include "Quad.hpp"
 #include "PropertyContainer.hpp"
-#include "com/Communication.hpp"
-#include "utils/Globals.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "math/math.hpp"
-#include <Eigen/Dense>
+#include <Eigen/Core>
 #include "RTree.hpp"
 
 namespace precice {
 namespace mesh {
 
-logging::Logger Mesh:: _log("mesh::Mesh");
-
-std::unique_ptr<utils::ManageUniqueIDs> Mesh::_managerPropertyIDs;
+std::unique_ptr<utils::ManageUniqueIDs> Mesh::_managePropertyIDs;
 
 void Mesh:: resetGeometryIDsGlobally()
 {
-  if (_managerPropertyIDs) {
-    _managerPropertyIDs->resetIDs();
+  if (_managePropertyIDs) {
+    _managePropertyIDs->resetIDs();
   }
 }
 
@@ -32,25 +28,14 @@ Mesh:: Mesh
 :
   _name(name),
   _dimensions(dimensions),
-  _flipNormals(flipNormals),
-  _nameIDPairs(),
-  _content(),
-  _data(),
-  _manageVertexIDs(),
-  _manageEdgeIDs(),
-  _manageTriangleIDs(),
-  _manageQuadIDs(),
-  _vertexDistribution(),
-  _vertexOffsets(),
-  _globalNumberOfVertices(-1),
-  _boundingBox()
+  _flipNormals(flipNormals)
 {
-  if (not _managerPropertyIDs){
-    _managerPropertyIDs.reset(new utils::ManageUniqueIDs);
+  if (not _managePropertyIDs) {
+    _managePropertyIDs.reset(new utils::ManageUniqueIDs);
   }
   assertion((_dimensions == 2) || (_dimensions == 3), _dimensions);
   assertion(_name != std::string(""));
-  _nameIDPairs[_name] = _managerPropertyIDs->getFreeID ();
+  _nameIDPairs[_name] = _managePropertyIDs->getFreeID ();
   setProperty(INDEX_GEOMETRY_ID, _nameIDPairs[_name]);
 
   meshChanged.connect(&rtree::clear);
@@ -64,7 +49,7 @@ Mesh:: ~Mesh()
   _content.edges().deleteElements();
   _content.vertices().deleteElements();
 
-  meshDestroyed(*this);
+  meshDestroyed(*this); // emit signal
 }
 
 const Group& Mesh:: content()
@@ -248,7 +233,7 @@ PropertyContainer& Mesh:: setSubID
   std::string idName(_name + "-" + subIDNamePostfix);
   CHECK(_nameIDPairs.count(idName) == 0,
       "Sub ID postfix of mesh \"" << _name << "\" is already in use!");
-  _nameIDPairs[idName] = _managerPropertyIDs->getFreeID();
+  _nameIDPairs[idName] = _managePropertyIDs->getFreeID();
   PropertyContainer * newPropertyContainer = new PropertyContainer();
   newPropertyContainer->setProperty<int>(PropertyContainer::INDEX_GEOMETRY_ID,
     _nameIDPairs[idName]);

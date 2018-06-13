@@ -13,7 +13,6 @@
 #include "com/MPIDirectCommunication.hpp"
 #include "m2n/M2N.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
-#include "utils/Globals.hpp"
 #include "xml/XMLTag.hpp"
 #include <Eigen/Core>
 
@@ -394,7 +393,7 @@ struct SerialImplicitCouplingSchemeFixture
   std::string _pathToTests;
 
   SerialImplicitCouplingSchemeFixture(){
-    _pathToTests = utils::getPathToSources() + "/cplscheme/tests/";
+    _pathToTests = testing::getPathToSources() + "/cplscheme/tests/";
   }
 };
 

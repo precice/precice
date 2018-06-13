@@ -8,8 +8,6 @@
 namespace precice {
 namespace mapping {
 
-logging::Logger NearestNeighborMapping::_log("mapping::NearestNeighborMapping");
-
 NearestNeighborMapping:: NearestNeighborMapping
 (
   Constraint constraint,

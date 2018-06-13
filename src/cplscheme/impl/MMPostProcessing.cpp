@@ -7,6 +7,7 @@
 #include "mesh/Vertex.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/Globals.hpp"
+#include "utils/Helpers.hpp"
 #include "utils/MasterSlave.hpp"
 //#include "utils/NumericalCompare.hpp"
 
@@ -104,16 +105,14 @@ void MMPostProcessing::initialize(
 
   for (auto &elem : _fineDataIDs) {
     CHECK(utils::contained(elem, cplData),
-          "Data with ID " << elem << " is not contained in data "
-                                     "given at initialization!");
+          "Data with ID " << elem << " is not contained in data given at initialization!");
     entries += cplData[elem]->values->size();
     subVectorSizes.push_back(cplData[elem]->values->size());
   }
 
   for (auto &elem : _coarseDataIDs) {
     CHECK(utils::contained(elem, cplData),
-          "Data with ID " << elem << " is not contained in data "
-                                     "given at initialization!");
+          "Data with ID " << elem << " is not contained in data given at initialization!");
     coarseEntries += cplData[elem]->values->size();
   }
 

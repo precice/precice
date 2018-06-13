@@ -9,13 +9,10 @@ currently implemented:
 
 Export:
 
-- Geometry VTK (geometry and data)
-- Geometry VRML 1.0 (full geometry state: geometry, data, and geometry IDs)
-- Simulation state TXT
+- Geometry VTK (geometry and data, for serial computations only)
+- Geometry VTKXML (geometry and data, for parallel computations only)
 
 Import:
 
-- Geometry VRML 1.0 (full geometry state)
-- Simulation state TXT
 
 */

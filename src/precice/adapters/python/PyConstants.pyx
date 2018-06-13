@@ -15,7 +15,6 @@ cdef extern from "./src/precice/Constants.hpp"  namespace "precice::constants":
    const string& actionPlotOutput()
 
    int exportVTK()
-   int exportVRML()
    int exportAll()
 
 cdef extern from "./src/cplscheme/Constants.hpp" namespace "precice::cplscheme::constants":
@@ -25,7 +24,6 @@ cdef extern from "./src/cplscheme/Constants.hpp" namespace "precice::cplscheme::
 
 cdef extern from "./src/io/Constants.hpp" namespace "precice::io::constants":
    int exportVTK()
-   int exportVRML()
    int exportAll()
 
 #cdef class PyConstants:
@@ -67,9 +65,6 @@ def PyActionPlotOutput ():
 
 def PyExportVTK ():
    return exportVTK()
-
-def PyExportVRML ():
-   return exportVRML()
 
 def PyExportAll ():
    return exportAll()

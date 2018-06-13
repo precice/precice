@@ -4,7 +4,6 @@
 #include <vector>
 #include "../SharedPointer.hpp"
 #include "utils/Globals.hpp"
-#include "utils/Helpers.hpp"
 #include "utils/MasterSlave.hpp"
 
 namespace precice
@@ -26,23 +25,13 @@ namespace impl
 class Preconditioner
 {
 public:
-  Preconditioner(
-      int maxNonConstTimesteps)
-      : _weights(),
-        _invWeights(),
-        _subVectorSizes(),
-        _maxNonConstTimesteps(maxNonConstTimesteps),
-        _nbNonConstTimesteps(0),
-        _requireNewQR(false),
-        _freezed(false)
-  {
-  }
-
-  /**
-   * @brief Destructor, empty.
-   */
+  Preconditioner(int maxNonConstTimesteps)
+    : _maxNonConstTimesteps(maxNonConstTimesteps)
+  {}
+      
+  /// Destructor, empty.
   virtual ~Preconditioner() {}
-
+  
   /**
    * @brief initialize the preconditioner
    * @param size of the pp system (e.g. rows of V)
@@ -223,13 +212,13 @@ public:
   }
 
 protected:
-  //@brief weights used to scale the matrix V and the residual
+  /// Weights used to scale the matrix V and the residual
   std::vector<double> _weights;
 
-  //@brief inverse weights (for efficiency reasons)
+  /// Inverse weights (for efficiency reasons)
   std::vector<double> _invWeights;
 
-  //@brief sizes of each sub-vector, i.e. each coupling data
+  /// Sizes of each sub-vector, i.e. each coupling data
   std::vector<size_t> _subVectorSizes;
 
   /** @brief maximum number of non-const time steps, i.e., after this number of time steps,
@@ -237,14 +226,14 @@ protected:
    */
   int _maxNonConstTimesteps;
 
-  /// @brief counts the number of completed time steps with a non-const weighting
-  int _nbNonConstTimesteps;
+  /// Counts the number of completed time steps with a non-const weighting
+  int _nbNonConstTimesteps = 0;
 
-  // true if a QR decomposition from scratch is necessary
-  bool _requireNewQR;
+  /// True if a QR decomposition from scratch is necessary
+  bool _requireNewQR = false;
 
-  /// @brief true if _nbNonConstTimesteps >= _maxNonConstTimesteps, i.e., preconditioner is not updated any more.
-  bool _freezed;
+  /// True if _nbNonConstTimesteps >= _maxNonConstTimesteps, i.e., preconditioner is not updated any more.
+  bool _freezed = false;
 
   /**
    * @brief Update the scaling after every FSI iteration and require a new QR decomposition (if necessary)

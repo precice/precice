@@ -9,6 +9,8 @@
 #include "mesh/Vertex.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/MasterSlave.hpp"
+#include "utils/Helpers.hpp"
+
 
 //#include "utils/NumericalCompare.hpp"
 

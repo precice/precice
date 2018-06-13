@@ -4,8 +4,9 @@ import sys
 from os.path import join
 
 import sysconfig
+
 try:
-    import numpy as np
+    import numpy
 except ImportError:
     pass
 
@@ -17,17 +18,17 @@ def checkAdd(lib = None, header = None, usage = ""):
     usage = " (needed for " + usage + ") " if usage else ""
     if lib and header:
         if not conf.CheckLibWithHeader(lib, header = header, autoadd=0, language="C++"):
-            print("ERROR: Library '" + lib + "' or header '" + header + "'" + usage + "not found.")
+            print("ERROR: Library '" + str(lib) + "' or header '" + str(header) + "'" + usage + "not found.")
             Exit(1)
         conf.env.AppendUnique(LIBS = [lib])
     elif lib:
         if not conf.CheckLib(lib, autoadd=0, language="C++"):
-            print("ERROR: Library '" + lib + "'" + usage + "not found!")
+            print("ERROR: Library '" + str(lib) + "'" + usage + "not found!")
             Exit(1)
         conf.env.AppendUnique(LIBS = [lib])
     elif header:
         if not conf.CheckCXXHeader(header):
-            print("ERROR: Header '" + header + "'" + usage + "not found!")
+            print("ERROR: Header '" + str(header) + "'" + usage + "not found!")
             Exit(1)
 
 
@@ -79,11 +80,10 @@ vars = Variables(None, ARGUMENTS)
 vars.Add(PathVariable("builddir", "Directory holding build files.", "build", PathVariable.PathAccept))
 vars.Add(EnumVariable('build', 'Build type', "Debug", allowed_values=('release', 'debug', 'Release', 'Debug')))
 vars.Add(PathVariable("libprefix", "Path prefix for libraries", "/usr", PathVariable.PathIsDir))
-vars.Add("compiler", "Compiler to use.", "g++")
+vars.Add("compiler", "Compiler to use.", "mpicxx")
 vars.Add(BoolVariable("mpi", "Enables MPI-based communication and running coupling tests.", True))
-vars.Add(BoolVariable("spirit2", "Used for parsing VRML file geometries and checkpointing.", True))
 vars.Add(BoolVariable("petsc", "Enable use of the Petsc linear algebra library.", True))
-vars.Add(BoolVariable("python", "Used for Python scripted solver actions.", True))
+vars.Add(BoolVariable("python", "Used for Python scripted solver actions.", False))
 vars.Add(BoolVariable("gprof", "Used in detailed performance analysis.", False))
 vars.Add(EnumVariable('platform', 'Special configuration for certain platforms', "none", allowed_values=('none', 'supermuc', 'hazelhen')))
 
@@ -98,11 +98,11 @@ print
 print_options(vars)
 
 if env["build"] == 'debug':
-    env["build"] == 'Debug'
+    env["build"] = 'Debug'
     print("WARNING: Lower-case build type 'debug' is deprecated, use 'Debug' instead!")
 
 if env["build"] == 'release':
-    env["build"] == 'Release'
+    env["build"] = 'Release'
     print("WARNING: Lower-case build type 'release' is deprecated, use 'Release' instead!")
 
 
@@ -112,7 +112,7 @@ buildpath = join(env["builddir"], "") # Ensures to have a trailing slash
 print
 
 env.Append(LIBPATH = [('#' + buildpath)])
-env.Append(CCFLAGS= ['-Wall', '-std=c++11'])
+env.Append(CCFLAGS= ['-Wall', '-Wextra', '-Wno-unused-parameter', '-std=c++11'])
 
 # ====== Compiler Settings ======
 
@@ -159,11 +159,11 @@ elif env["build"] == 'Release':
     env.Append(CCFLAGS = ['-O3'])
     buildpath += "release"
 
-    
+
 # ====== libpthread ======
 checkAdd("pthread")
 
-    
+
 # ====== PETSc ======
 if env["petsc"]:
     PETSC_DIR = checkset_var("PETSC_DIR", "")
@@ -200,8 +200,7 @@ if env["platform"] == "hazelhen":
     env.Append(CPPPATH = join( os.environ['BOOST_ROOT'], 'include'))
     env.Append(LIBPATH = join( os.environ['BOOST_ROOT'], 'lib'))
 
-env.Append(CPPDEFINES= ['BOOST_SPIRIT_USE_PHOENIX_V3',
-                        'BOOST_ALL_DYN_LINK',
+env.Append(CPPDEFINES= ['BOOST_ALL_DYN_LINK',
                         'BOOST_ASIO_ENABLE_OLD_SERVICES']) # Interfaces have changed in 1.66
 
 checkAdd("boost_log")
@@ -216,20 +215,15 @@ checkAdd(header = 'boost/vmd/is_empty.hpp', usage = 'Boost Variadic Macro Data L
 checkAdd(header = 'boost/geometry.hpp', usage = 'Boost Geometry Library')
 checkAdd(header = 'boost/signals2.hpp', usage = 'Boost Signals2')
 
-# ====== Spirit2 ======
-if not env["spirit2"]:
-    env.Append(CPPDEFINES = ['PRECICE_NO_SPIRIT2'])
-    buildpath += "-nospirit2"
-
 # ====== MPI ======
 if env["mpi"]:
     if not conf.CheckCXXHeader("mpi.h"):
         print("mpi.h not found. Maybe try 'compiler=mpicxx' or 'compiler=mpic++' as scons argument?")
         Exit(1)
-        
+
     # Skip (deprecated) MPI C++ bindings.
     env.Append(CPPDEFINES = ['MPICH_SKIP_MPICXX'])
-        
+
 elif not env["mpi"]:
     env.Append(CPPDEFINES = ['PRECICE_NO_MPI'])
     buildpath += "-nompi"
@@ -240,14 +234,27 @@ if env["python"]:
     if installation_scheme is 'posix_local':  # for ubuntu with python 2.7 posix_local scheme points to an empty include path, fix this by using posix_prefix. See https://stackoverflow.com/questions/48826123/why-do-include-paths-in-python2-and-python3-differ
         installation_scheme = 'posix_prefix'
 
+    # Try to extract the default values for Python version and paths
     pythonLibDefault = 'python'+str(sys.version_info.major)+'.'+str(sys.version_info.minor)
     pythonLibPathDefault = sysconfig.get_config_var('LIBDIR')
     pythonIncPathDefault = sysconfig.get_path('include', scheme=installation_scheme)
-    numpyIncPathDefault = np.get_include()
 
+    # Set the used values for Python version and paths, allowing the user to override them
     pythonLib = checkset_var('PRECICE_PYTHON_LIB', pythonLibDefault)
     pythonLibPath = checkset_var('PRECICE_PYTHON_LIB_PATH', pythonLibPathDefault)
     pythonIncPath = checkset_var('PRECICE_PYTHON_INC_PATH', pythonIncPathDefault)
+
+    # Set the used path for NumPy.
+    # As a default value, it tries to get the information from the imported
+    # package. However, we only need the path to the C++ NumPy header.
+    # If the user specifies a different path, then there should not be an error here.
+    # An error will be triggered later by checkAdd().
+    try:
+        numpyIncPathDefault = numpy.get_include()
+    except NameError:
+        print("WARNING: Python package numpy could not be imported by SCons. If you don't need the Python action interface, specify 'python=no'.")
+        numpyIncPathDefault = None
+
     numpyIncPath = checkset_var('PRECICE_NUMPY_INC_PATH', numpyIncPathDefault)
 
     # FIXME: Supresses NumPy deprecation warnings. Needs to converted to the newer API.
@@ -322,7 +329,7 @@ symlink = env.Command(
     action = "ln -fns {0} {1}".format(os.path.split(buildpath)[-1], join(os.path.split(buildpath)[0], "last"))
 )
 
-Default(staticlib, bin, solib, tests, symlink)
+Default(solib, tests, symlink)
 
 AlwaysBuild(symlink)
 

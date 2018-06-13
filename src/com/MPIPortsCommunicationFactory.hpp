@@ -23,7 +23,7 @@ public:
 private:
   std::string _addressDirectory;
 };
-}
-} // namespace precice, com
+} // namespace com
+} // namespace precice
 
 #endif // not PRECICE_NO_MPI

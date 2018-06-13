@@ -28,7 +28,7 @@ struct ServerTestFixture {
 
   ServerTestFixture()
   {
-    _pathToTests = utils::getPathToSources() + "/precice/tests/";
+    _pathToTests = testing::getPathToSources() + "/precice/tests/";
     reset();
   }
 };

@@ -9,12 +9,10 @@ Edge:: Edge
   Vertex& vertexTwo,
   int     id )
 :
-  PropertyContainer (),
   _vertices( {&vertexOne, &vertexTwo} ),
   _id ( id ),
   _normal ( Eigen::VectorXd::Constant(vertexOne.getDimensions(), 0.0) ),
-  _center ( Eigen::VectorXd::Constant(vertexOne.getDimensions(), 0.0) ),
-  _enclosingRadius ( 0.0 )
+  _center ( Eigen::VectorXd::Constant(vertexOne.getDimensions(), 0.0) )
 {
   assertion ( vertexOne.getDimensions() == vertexTwo.getDimensions(),
               vertexOne.getDimensions(), vertexTwo.getDimensions() );

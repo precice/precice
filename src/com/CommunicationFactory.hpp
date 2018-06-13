@@ -20,5 +20,5 @@ public:
     throw std::runtime_error("Not available!");
   }
 };
-}
-} // namespace precice, com
+} // namespace com
+} // namespace precice

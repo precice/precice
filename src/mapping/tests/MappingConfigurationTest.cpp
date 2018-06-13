@@ -4,7 +4,6 @@
 #include "mapping/config/MappingConfiguration.hpp"
 #include "mapping/Mapping.hpp"
 #include "xml/XMLTag.hpp"
-#include "utils/Globals.hpp"
 
 using namespace precice;
 using namespace precice::mapping;
@@ -15,7 +14,7 @@ BOOST_AUTO_TEST_SUITE(Configuration)
 BOOST_AUTO_TEST_CASE(Configuration)
 {
   
-  std::string pathToTests = utils::getPathToSources() + "/mapping/tests/";
+  std::string pathToTests = testing::getPathToSources() + "/mapping/tests/";
   std::string file(pathToTests + "mapping-config.xml");
   using xml::XMLTag;
   XMLTag tag = xml::getRootTag();

@@ -44,7 +44,7 @@ struct SetupMasterSlaveFixture {
 
     if (utils::Parallel::getProcessRank() == 0) {
       utils::Parallel::splitCommunicator("Master");
-      masterSlaveCom->acceptConnection("Master", "Slaves", 0, 1);
+      masterSlaveCom->acceptConnection("Master", "Slaves");
       masterSlaveCom->setRankOffset(1);
       utils::MasterSlave::_masterMode = true;
       utils::MasterSlave::_slaveMode  = false;

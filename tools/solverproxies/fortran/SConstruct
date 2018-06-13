@@ -1,5 +1,3 @@
-# precice/src/adapters/fortan/SConstruct
-
 import os
 
 cpppath = ['.']
@@ -9,20 +7,11 @@ libs    = []
 preciceRootPath = os.getenv('PRECICE_ROOT')
 cpppath.append(preciceRootPath + '/src/')
 
-# MPI
-mpiIncPath = '/usr/include/mpich2'
-cpppath.append(mpiIncPath) 
-
 # Libs
-libpath.append('/usr/lib/')
-libpath.append(preciceRootPath + '/build/debug/')
-libs.append('mpich')
-libs.append('mpl')
-libs.append('python2.7')
-libs.append('stdc++')
+libpath.append(preciceRootPath + '/build/last/')
 libs.append('precice')
 
-fortranCompiler = 'ifort'
+fortranCompiler = 'gfortran'
 
 envCompile = Environment ( 
    F90        = fortranCompiler,
@@ -34,11 +23,8 @@ envCompile = Environment (
    ENV        = os.environ  # propagates environment variables to scons  
    )
   
-#envCompile.Object('SolverInterfaceForFortran.cpp')
-envCompile.Object('SolverProxy.f')
+envCompile.Object('SolverProxy.f90')
 
 
 envLink = envCompile.Clone(tools=[fortranCompiler],F90=fortranCompiler,LINK=fortranCompiler)
-#envLink = envCompile.Clone(tools=['gfortran'],F90='gfortran',LINK='gfortran')
-#envLink.Program(target='test', source = ['SolverDummy', 'SolverInterfaceForFortranF77'])
 envLink.Program(target='SolverProxy', source = ['SolverProxy'])

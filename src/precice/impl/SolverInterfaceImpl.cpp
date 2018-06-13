@@ -14,11 +14,9 @@
 #include "mesh/Edge.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Merge.hpp"
-#include "io/ExportVRML.hpp"
 #include "io/ExportContext.hpp"
-#include "io/SimulationStateIO.hpp"
+#include "io/Export.hpp"
 #include "com/MPIPortsCommunication.hpp"
-#include "com/Constants.hpp"
 #include "com/MPIDirectCommunication.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
 #include "m2n/M2N.hpp"
@@ -26,7 +24,7 @@
 #include "cplscheme/CouplingScheme.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
 #include "utils/EventTimings.hpp"
-#include "utils/Globals.hpp"
+#include "utils/Helpers.hpp"
 #include "utils/SignalHandler.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Petsc.hpp"
@@ -431,24 +429,16 @@ void SolverInterfaceImpl:: finalize()
     for (auto &iter : _m2ns) {
       if( not utils::MasterSlave::_slaveMode){
         if(iter.second.isRequesting){
-          iter.second.m2n->getMasterCommunication()->startSendPackage(0);
           iter.second.m2n->getMasterCommunication()->send(ping,0);
-          iter.second.m2n->getMasterCommunication()->finishSendPackage();
           std::string receive = "init";
-          iter.second.m2n->getMasterCommunication()->startReceivePackage(0);
           iter.second.m2n->getMasterCommunication()->receive(receive,0);
-          iter.second.m2n->getMasterCommunication()->finishReceivePackage();
           assertion(receive==pong);
         }
         else{
           std::string receive = "init";
-          iter.second.m2n->getMasterCommunication()->startReceivePackage(0);
           iter.second.m2n->getMasterCommunication()->receive(receive,0);
-          iter.second.m2n->getMasterCommunication()->finishReceivePackage();
           assertion(receive==ping);
-          iter.second.m2n->getMasterCommunication()->startSendPackage(0);
           iter.second.m2n->getMasterCommunication()->send(pong,0);
-          iter.second.m2n->getMasterCommunication()->finishSendPackage();
         }
       }
       iter.second.m2n->closeConnection();
@@ -1753,8 +1743,7 @@ void SolverInterfaceImpl:: initializeClientServerCommunication()
   assertion(com.get() != nullptr);
   if ( _serverMode ){
     INFO("Setting up communication to client" );
-    com->acceptConnection ( _accessorName + "Server", _accessorName,
-                            _accessorProcessRank, _accessorCommunicatorSize );
+    com->acceptConnection ( _accessorName + "Server", _accessorName );
   }
   else {
     INFO("Setting up communication to server" );
@@ -1772,8 +1761,7 @@ void SolverInterfaceImpl:: initializeMasterSlaveCommunication()
   int rankOffset = 1;
   if ( utils::MasterSlave::_masterMode ){
     INFO("Setting up communication to slaves" );
-    utils::MasterSlave::_communication->acceptConnection ( _accessorName + "Master", _accessorName,
-                            _accessorProcessRank, 1);
+    utils::MasterSlave::_communication->acceptConnection ( _accessorName + "Master", _accessorName);
     utils::MasterSlave::_communication->setRankOffset(rankOffset);
   }
   else {

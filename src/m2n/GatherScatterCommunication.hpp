@@ -1,13 +1,13 @@
-#ifndef PRECICE_M2N_GATHER_SCATTER_COMMUNICATION_HPP_
-#define PRECICE_M2N_GATHER_SCATTER_COMMUNICATION_HPP_
+#pragma once
 
 #include "DistributedCommunication.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 
-
-namespace precice {
-namespace m2n {
+namespace precice
+{
+namespace m2n
+{
 
 /**
  * @brief Implements DistributedCommunication by using a gathering/scattering methodology.
@@ -18,10 +18,9 @@ namespace m2n {
 class GatherScatterCommunication : public DistributedCommunication
 {
 public:
-
-  GatherScatterCommunication (
-     com::PtrCommunication com,
-     mesh::PtrMesh mesh);
+  GatherScatterCommunication(
+      com::PtrCommunication com,
+      mesh::PtrMesh         mesh);
 
   virtual ~GatherScatterCommunication();
 
@@ -36,12 +35,12 @@ public:
    * If several connections are going in to a server, the server has to call this
    * method, while the clients have to call requestConnection().
    *
-   * @param nameAcceptor [IN] Name of calling participant.
-   * @param nameRequester [IN] Name of remote participant to connect to.
+   * @param[in] nameAcceptor Name of calling participant.
+   * @param[in] nameRequester Name of remote participant to connect to.
    */
-  virtual void acceptConnection (
-    const std::string& nameAcceptor,
-    const std::string& nameRequester);
+  virtual void acceptConnection(
+      const std::string &nameAcceptor,
+      const std::string &nameRequester);
 
   /**
    * @brief Requests connection from participant, which has to call acceptConnection().
@@ -49,12 +48,12 @@ public:
    * If several connections are going in to a server, the clients have to call this
    * method, while the server has to call acceptConnection().
    *
-   * @param nameAcceptor [IN] Name of remote participant to connect to.
-   * @param nameReuester [IN] Name of calling participant.
+   * @param[in] nameAcceptor Name of remote participant to connect to.
+   * @param[in] nameReuester Name of calling participant.
    */
-  virtual void requestConnection (
-    const std::string& nameAcceptor,
-    const std::string& nameRequester);
+  virtual void requestConnection(
+      const std::string &nameAcceptor,
+      const std::string &nameRequester);
 
   /**
    * @brief Disconnects from communication space, i.e. participant.
@@ -64,30 +63,26 @@ public:
   virtual void closeConnection();
 
   /// Sends an array of double values from all slaves (different for each slave).
-  virtual void send (
-    double* itemsToSend,
-    size_t     size,
-    int     valueDimension);
+  virtual void send(
+      double *itemsToSend,
+      size_t  size,
+      int     valueDimension);
 
   /// All slaves receive an array of doubles (different for each slave).
-  virtual void receive (
-    double* itemsToReceive,
-    size_t     size,
-    int     valueDimension);
+  virtual void receive(
+      double *itemsToReceive,
+      size_t  size,
+      int     valueDimension);
 
 private:
-
-  static logging::Logger _log;
+  logging::Logger _log{"m2n::GatherScatterCommunication"};
 
   /// master to master basic communication
   com::PtrCommunication _com;
 
-  /**
-   * @brief global communication is set up or not
-   */
+  /// Global communication is set up or not
   bool _isConnected;
 };
 
-}} // namespace precice, m2n
-
-#endif /* PRECICE_M2N_GATHER_SCATTER_COMMUNICATION_HPP_ */
+} // namespace m2n
+} // namespace precice

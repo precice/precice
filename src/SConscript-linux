@@ -21,7 +21,6 @@ sourcesMain = [
 
 sourcesIO = [
     Glob('io/*.cpp'),
-    Glob('io/impl/*.cpp'),
     Glob('io/config/*.cpp')
 ]
 
@@ -69,7 +68,8 @@ sourcesPrecice = [
 
 sourcesTests = [
     Glob('*/tests/*.cpp'),
-    File("testing/main.cpp")
+    File("testing/main.cpp"),
+    File("testing/Testing.cpp")
 ]
 
 sourcesUtils = [

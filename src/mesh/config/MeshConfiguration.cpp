@@ -2,14 +2,11 @@
 #include "mesh/config/DataConfiguration.hpp"
 #include "mesh/Mesh.hpp"
 #include "xml/XMLAttribute.hpp"
-#include "utils/Globals.hpp"
+#include "utils/Helpers.hpp"
 #include <sstream>
 
 namespace precice {
 namespace mesh {
-
-logging::Logger MeshConfiguration:: _log ( "precice::mesh::MeshConfiguration" );
-
 
 MeshConfiguration:: MeshConfiguration
 (

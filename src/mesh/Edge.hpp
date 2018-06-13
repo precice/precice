@@ -80,7 +80,7 @@ private:
   Eigen::VectorXd _center;
 
   /// Radius of the enclosing circle.
-  double _enclosingRadius;
+  double _enclosingRadius = 0;
 };
 
 // ------------------------------------------------------ HEADER IMPLEMENTATION

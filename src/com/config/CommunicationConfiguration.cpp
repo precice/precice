@@ -1,71 +1,53 @@
 #include "CommunicationConfiguration.hpp"
 #include "com/MPIDirectCommunication.hpp"
 #include "com/MPIPortsCommunication.hpp"
-#include "m2n/M2N.hpp"
 #include "com/SocketCommunication.hpp"
-#include "utils/Globals.hpp"
 #include "xml/XMLAttribute.hpp"
 #include "utils/Helpers.hpp"
 
-namespace precice {
-namespace com {
-
-logging::Logger CommunicationConfiguration::
-   _log("com::CommunicationConfiguration");
-
-CommunicationConfiguration:: CommunicationConfiguration()
-:
-  TAG("communication"),
-  ATTR_TYPE("type"),
-  ATTR_FROM("from"),
-  ATTR_TO("to"),
-  ATTR_PORT("port"),
-  ATTR_NETWORK("network"),
-  ATTR_EXCHANGE_DIRECTORY("exchange-directory"),
-  VALUE_MPI("mpi"),
-  VALUE_MPI_SINGLE("mpi-single"),
-  VALUE_SOCKETS("sockets")
-{}
-
-PtrCommunication CommunicationConfiguration:: createCommunication
-(
-  const xml::XMLTag& tag ) const
-{  
+namespace precice
+{
+namespace com
+{
+PtrCommunication CommunicationConfiguration::createCommunication(
+    const xml::XMLTag &tag) const
+{
   com::PtrCommunication com;
-  if (tag.getName() == VALUE_SOCKETS){
-    std::string network = tag.getStringAttributeValue(ATTR_NETWORK);
-    int port = tag.getIntAttributeValue(ATTR_PORT);
+  if (tag.getName() == "sockets") {
+    std::string network = tag.getStringAttributeValue("network");
+    int         port    = tag.getIntAttributeValue("port");
 
     CHECK(not utils::isTruncated<unsigned short>(port),
           "The value given for the \"port\" attribute is not a 16-bit unsigned integer: " << port);
 
-    std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
-    com = std::make_shared<com::SocketCommunication>(port, false, network, dir);
+    std::string dir = tag.getStringAttributeValue("exchange-directory");
+    com             = std::make_shared<com::SocketCommunication>(port, false, network, dir);
   }
-  else if (tag.getName() == VALUE_MPI){
-    std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
-#   ifdef PRECICE_NO_MPI
+  else if (tag.getName() == "mpi") {
+    std::string dir = tag.getStringAttributeValue("exchange-directory");
+#ifdef PRECICE_NO_MPI
     std::ostringstream error;
-    error << "Communication type \"" << VALUE_MPI << "\" can only be used "
+    error << "Communication type \"mpi\" can only be used "
           << "when preCICE is compiled with argument \"mpi=on\"";
     throw error.str();
-#   else
+#else
     com = std::make_shared<com::MPIPortsCommunication>(dir);
-#   endif
+#endif
   }
-  else if (tag.getName() == VALUE_MPI_SINGLE){
-#   ifdef PRECICE_NO_MPI
+  else if (tag.getName() == "mpi-single") {
+#ifdef PRECICE_NO_MPI
     std::ostringstream error;
-    error << "Communication type \"" << VALUE_MPI_SINGLE << "\" can only be used "
+    error << "Communication type \"mpi-single\" can only be used "
           << "when preCICE is compiled with argument \"mpi=on\"";
     throw error.str();
-#   else
+#else
     com = std::make_shared<com::MPIDirectCommunication>();
 
-#   endif
+#endif
   }
   assertion(com.get() != nullptr);
   return com;
 }
 
-}} // namespace precice, com
+} // namespace com
+} // namespace precice

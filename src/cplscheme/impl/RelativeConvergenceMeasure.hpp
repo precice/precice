@@ -4,7 +4,6 @@
 #include "ConvergenceMeasure.hpp"
 #include "logging/Logger.hpp"
 #include "math/math.hpp"
-#include "utils/Helpers.hpp"
 #include "utils/MasterSlave.hpp"
 
 namespace precice

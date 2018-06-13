@@ -51,4 +51,17 @@ BOOST_AUTO_TEST_CASE(StringAppendExtension)
   BOOST_TEST(result.compare(filename + extension + ".zyx" + extension) == 0);
 }
 
+BOOST_AUTO_TEST_CASE(ConvertStringToBool)
+{
+  BOOST_TEST(convertStringToBool("tRUe") == true);
+  BOOST_TEST(convertStringToBool("FALSE") == false);
+  BOOST_TEST(convertStringToBool("oN") == true);
+  BOOST_TEST(convertStringToBool("off") == false);
+  BOOST_TEST(convertStringToBool("1") == true);
+  BOOST_TEST(convertStringToBool("0") == false);
+  BOOST_TEST(convertStringToBool("yes") == true);
+  BOOST_TEST(convertStringToBool("no") == false);
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()

@@ -1,47 +1,41 @@
 #pragma once
 
-#include "mesh/PropertyContainer.hpp"
-#include "mesh/Edge.hpp"
-#include "utils/Helpers.hpp"
-#include "boost/noncopyable.hpp"
 #include <array>
+#include "boost/noncopyable.hpp"
+#include "mesh/Edge.hpp"
+#include "mesh/PropertyContainer.hpp"
 
-namespace precice {
-  namespace mesh {
-    class Vertex;
-  }
+namespace precice
+{
+namespace mesh
+{
+class Vertex;
 }
+} // namespace precice
 
 // ----------------------------------------------------------- CLASS DEFINITION
 
-namespace precice {
-namespace mesh {
+namespace precice
+{
+namespace mesh
+{
 
-/**
- * @brief Quadrilateral (or Quadrangle) geometric primitive.
- */
+/// Quadrilateral (or Quadrangle) geometric primitive.
 class Quad : public PropertyContainer, private boost::noncopyable
 {
 public:
+  /// Constructor, the order of edges defines the outer normal direction.
+  Quad(
+      Edge &edgeOne,
+      Edge &edgeTwo,
+      Edge &edgeThree,
+      Edge &edgeFour,
+      int   id);
 
-  /**
-   * @brief Constructor, the order of edges defines the outer normal direction.
-   */
-  Quad (
-    Edge& edgeOne,
-    Edge& edgeTwo,
-    Edge& edgeThree,
-    Edge& edgeFour,
-    int   id );
-
-  /**
-   * @brief Destructor, empty.
-   */
+  /// Destructor, empty.
   virtual ~Quad() {}
 
-  /**
-   * @brief Returns dimensionalty of space the quad is embedded in.
-   */
+  /// Returns dimensionalty of space the quad is embedded in.
   int getDimensions() const;
 
   /**
@@ -51,7 +45,7 @@ public:
    * edge 0. Vertex 2 is either the first or second vertex of edge 1, which
    * is determined on construction of the triangle.
    */
-  Vertex& vertex( int i );
+  Vertex &vertex(int i);
 
   /**
    * @brief Returns const quad vertex with index 0, 1, 2, or 3.
@@ -60,38 +54,28 @@ public:
    * edge 0. Vertex 2 is either the first or second vertex of edge 1, which
    * is determined on construction of the triangle.
    */
-  const Vertex& vertex( int i ) const;
+  const Vertex &vertex(int i) const;
 
   /**
    * @brief Returns quad edge with index 0, 1, 2, or 3.
    */
-  Edge& edge( int i );
+  Edge &edge(int i);
 
-  /**
-   * @brief Returns const quad edge with index 0, 1, 2, or 3.
-   */
-  const Edge& edge( int i ) const;
+  /// Returns const quad edge with index 0, 1, 2, or 3.
+  const Edge &edge(int i) const;
 
-  /**
-   * @brief Sets the outer normal of the quad.
-   */
-  template<typename VECTOR_T>
-  void setNormal( const VECTOR_T& normal );
+  /// Sets the outer normal of the quad.
+  template <typename VECTOR_T>
+  void setNormal(const VECTOR_T &normal);
 
-  /**
-   * @brief Sets the center of the quad.
-   */
-  template<typename VECTOR_T>
-  void setCenter( const VECTOR_T& center );
+  /// Sets the center of the quad.
+  template <typename VECTOR_T>
+  void setCenter(const VECTOR_T &center);
 
-  /**
-   * @brief Sets the radius of the circle enclosing the quad.
-   */
-  void setEnclosingRadius( double radius );
+  /// Sets the radius of the circle enclosing the quad.
+  void setEnclosingRadius(double radius);
 
-  /**
-   * @brief Returns a among quads globally unique ID.
-   */
+  /// Returns a among quads globally unique ID.
   int getID() const;
 
   /**
@@ -99,14 +83,14 @@ public:
    *
    * Prerequesits: The normal has to be computed and set from outside before.
    */
-  const Eigen::VectorXd& getNormal() const;
+  const Eigen::VectorXd &getNormal() const;
 
   /**
    * @brief Returns the barycenter of the quad.
    *
    * Prerequesits: The center has to be computed and set from outside before.
    */
-  const Eigen::VectorXd& getCenter() const;
+  const Eigen::VectorXd &getCenter() const;
 
   /**
    * @brief Returns the radius of the circle enclosing the quad.
@@ -116,14 +100,13 @@ public:
   double getEnclosingRadius() const;
 
 private:
+  /// Edges defining the quad.
+  std::array<Edge *, 4> _edges;
 
-  // @brief Edges defining the quad.
-  std::array<Edge*,4> _edges;
+  /// Decider for choosing unique vertices from _edges.
+  std::array<int, 4> _vertexMap;
 
-  // @brief Decider for choosing unique vertices from _edges.
-  std::array<int,4> _vertexMap;
-
-  // @brief ID of the edge.
+  /// ID of the edge.
   int _id;
 
   /// Normal vector of the quad.
@@ -132,64 +115,52 @@ private:
   /// Center point of the quad.
   Eigen::VectorXd _center;
 
-  // @brief Minimal radius of circle enclosing the quad.
-  double _enclosingRadius;
+  /// Minimal radius of circle enclosing the quad.
+  double _enclosingRadius = 0;
 };
 
 // --------------------------------------------------------- HEADER DEFINITIONS
 
-inline Vertex& Quad:: vertex
-(
-  int i )
+inline Vertex &Quad::vertex(int i)
 {
   assertion((i >= 0) && (i < 4), i);
   return edge(i).vertex(_vertexMap[i]);
 }
 
-inline const Vertex& Quad:: vertex
-(
-  int i ) const
+inline const Vertex &Quad::vertex(int i) const
 {
   assertion((i >= 0) && (i < 4), i);
   return edge(i).vertex(_vertexMap[i]);
 }
 
-inline Edge& Quad:: edge
-(
-  int i )
+inline Edge &Quad::edge(int i)
 {
   return *_edges[i];
 }
 
-inline const Edge& Quad:: edge
-(
-  int i ) const
+inline const Edge &Quad::edge(int i) const
 {
   return *_edges[i];
 }
 
-template<typename VECTOR_T>
-void Quad:: setNormal
-(
-  const VECTOR_T& normal )
+template <typename VECTOR_T>
+void Quad::setNormal(const VECTOR_T &normal)
 {
   assertion(normal.size() == getDimensions(), normal.size(), getDimensions());
   _normal = normal;
 }
 
-template<typename VECTOR_T>
-void Quad:: setCenter
-(
-  const VECTOR_T& center )
+template <typename VECTOR_T>
+void Quad::setCenter(const VECTOR_T &center)
 {
   assertion(center.size() == getDimensions(), center.size(), getDimensions());
   _center = center;
 }
 
-inline int Quad:: getID() const
+inline int Quad::getID() const
 {
   return _id;
 }
 
-}} // namespace precice, mesh
-
+} // namespace mesh
+} // namespace precice

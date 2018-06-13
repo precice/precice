@@ -1,8 +1,6 @@
-#ifndef PRECICE_MESH_MESHCONFIGURATION_HPP_
-#define PRECICE_MESH_MESHCONFIGURATION_HPP_
+#pragma once
 
 #include "mesh/SharedPointer.hpp"
-#include "utils/Helpers.hpp"
 #include "logging/Logger.hpp"
 #include "xml/XMLTag.hpp"
 #include <vector>
@@ -25,22 +23,12 @@ class MeshConfiguration : public xml::XMLTag::Listener
 {
 public:
 
-  // @brief Name of the XML Tag holding the mesh configuration.
-  //static const std::string& getTag();
-
-  /**
-   * @brief Constructor, takes a valid data configuration as argument.
-   */
+  /// Constructor, takes a valid data configuration as argument.
   MeshConfiguration (
     xml::XMLTag&       parent,
     PtrDataConfiguration config );
 
   void setDimensions ( int dimensions );
-
-  /**
-   * @brief Parses the XML information to build up the mesh configuration.
-   */
-  //bool parseSubtag ( xml::XMLTag::XMLReader* xmlReader );
 
   /**
    * @brief Has to be called after parsing all mesh tags.
@@ -50,24 +38,13 @@ public:
    */
   void setMeshSubIDs();
 
-  /**
-   * @brief Returns true, if the configuration has taken place and is valid.
-   */
-  //bool isValid() const;
-
-  /**
-   * @brief Returns all configured meshes.
-   */
+  /// Returns all configured meshes.
   const std::vector<PtrMesh>& meshes() const;
 
-  /**
-   * @brief Returns all configured meshes.
-   */
+  /// Returns all configured meshes.
   std::vector<PtrMesh>& meshes();
 
-  /**
-   * @brief Returns the configured mesh with given name, or NULL.
-   */
+  /// Returns the configured mesh with given name, or NULL.
   mesh::PtrMesh getMesh ( const std::string& meshName ) const;
 
   virtual void xmlTagCallback ( xml::XMLTag& callingTag );
@@ -88,9 +65,7 @@ public:
 
 private:
 
-  // @brief Logging device.
-  static logging::Logger _log;
-
+  logging::Logger _log{"mesh::MeshConfiguration"};
 
   const std::string TAG;
   const std::string ATTR_NAME;
@@ -104,20 +79,19 @@ private:
   // @brief Set to true, if configuration has taken place and is valid.
   //bool _isValid;
 
-  // @brief Data configuration.
+  /// Data configuration.
   PtrDataConfiguration _dataConfig;
 
-  // @brief Configured meshes.
+  /// Configured meshes.
   std::vector<PtrMesh> _meshes;
 
   bool _setMeshSubIDs;
 
   std::vector<std::list<std::string> > _meshSubIDs;
 
-  // @brief to check later if all meshes that any coupling scheme needs are actually used by the participants
+  /// to check later if all meshes that any coupling scheme needs are actually used by the participants
   std::map<std::string,std::vector<std::string> > _neededMeshes;
 };
 
 }} // namespace precice, mesh
 
-#endif /* PRECICE_MESH_MESHCONFIGURATION_HPP_ */

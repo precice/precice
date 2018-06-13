@@ -22,60 +22,50 @@ public:
 
   virtual ~MPIPortsCommunication();
 
-  /// Returns true, if a connection to a remote participant has been setup.
-  virtual bool isConnected();
-
   /**
    * @brief Returns the number of processes in the remote communicator.
    *
-   * Precondition: a connection to the remote participant has been setup.
+   * @pre A connection to the remote participant has been setup.
    */
-  virtual size_t getRemoteCommunicatorSize();
+  virtual size_t getRemoteCommunicatorSize() override;
 
   /// See precice::com::Communication::acceptConnection().
   virtual void acceptConnection(std::string const &nameAcceptor,
-                                std::string const &nameRequester,
-                                int                acceptorProcessRank,
-                                int                acceptorCommunicatorSize);
+                                std::string const &nameRequester) override;
 
   virtual void acceptConnectionAsServer(std::string const &nameAcceptor,
                                         std::string const &nameRequester,
-                                        int                requesterCommunicatorSize);
+                                        int                requesterCommunicatorSize) override;
 
   /// See precice::com::Communication::requestConnection().
   virtual void requestConnection(std::string const &nameAcceptor,
                                  std::string const &nameRequester,
                                  int                requesterProcessRank,
-                                 int                requesterCommunicatorSize);
+                                 int                requesterCommunicatorSize) override;
 
   virtual int requestConnectionAsClient(std::string const &nameAcceptor,
-                                        std::string const &nameRequester);
+                                        std::string const &nameRequester) override;
 
-  /**
-   * @brief See precice::com::Communication::closeConnection().
-   */
-  virtual void closeConnection();
+  /// See precice::com::Communication::closeConnection().
+  virtual void closeConnection() override;
 
 private:
-  virtual MPI_Comm &communicator(int rank);
+  virtual MPI_Comm &communicator(int rank) override;
 
-  virtual int rank(int rank);
+  virtual int rank(int rank) override;
 
-  static logging::Logger _log;
+  logging::Logger _log{"com::MPIPortsCommunication"};
 
   std::string _addressDirectory;
 
   std::vector<MPI_Comm> _communicators;
 
   /// Name of the port used for connection.
-  char _portName[MPI_MAX_PORT_NAME];
+  std::string _portName = std::string(MPI_MAX_PORT_NAME, '\0');
 
-  bool _isAcceptor;
-
-  /// Flag indicating a connection.
-  bool _isConnected;
+  bool _isAcceptor = false;
 };
-}
-} // namespace precice, com
+} // namespace com
+} // namespace precice
 
 #endif // not PRECICE_NO_MPI

@@ -67,9 +67,7 @@ public:
   void resetExports() { _contexts.clear(); }
 
 private:
-
-  // @brief Logging device.
-  static logging::Logger _log;
+  logging::Logger _log{"io::ExportConfiguration"};
 
   const std::string TAG;
 
@@ -77,16 +75,12 @@ private:
   const std::string ATTR_TYPE;
   const std::string ATTR_AUTO;
   const std::string VALUE_VTK;
-  const std::string VALUE_VRML;
 
   const std::string ATTR_TIMESTEP_INTERVAL;
   const std::string ATTR_NEIGHBORS;
   const std::string ATTR_TRIGGER_SOLVER;
   const std::string ATTR_NORMALS;
   const std::string ATTR_EVERY_ITERATION;
-
-  // @brief Flag indicating success of configuration.
-  //bool _isValid;
 
   std::list<ExportContext> _contexts;
 };

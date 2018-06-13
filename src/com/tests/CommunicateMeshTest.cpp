@@ -2,7 +2,6 @@
 
 #include "com/CommunicateMesh.hpp"
 #include "com/MPIDirectCommunication.hpp"
-#include "math/math.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/PropertyContainer.hpp"
@@ -18,7 +17,7 @@ BOOST_AUTO_TEST_SUITE(CommunicationTests)
 BOOST_AUTO_TEST_SUITE(MeshTests)
 
 BOOST_AUTO_TEST_CASE(twoSolvers,
-                     *testing::MinRanks(2))
+                     * testing::MinRanks(2))
 {
   utils::Parallel::synchronizeProcesses();
   assertion(utils::Parallel::getCommunicatorSize() > 1);
@@ -42,16 +41,16 @@ BOOST_AUTO_TEST_CASE(twoSolvers,
 
     // Create mesh communicator
     std::vector<int> involvedRanks = {0, 1};
-    MPI_Comm comm = utils::Parallel::getRestrictedCommunicator(involvedRanks);
+    MPI_Comm         comm          = utils::Parallel::getRestrictedCommunicator(involvedRanks);
     if (utils::Parallel::getProcessRank() < 2) {
       utils::Parallel::setGlobalCommunicator(comm);
       BOOST_TEST(utils::Parallel::getCommunicatorSize() == 2);
       com::PtrCommunication com(new com::MPIDirectCommunication());
-      CommunicateMesh comMesh(com);
+      CommunicateMesh       comMesh(com);
 
       if (utils::Parallel::getProcessRank() == 0) {
         utils::Parallel::splitCommunicator(participant0);
-        com->acceptConnection(participant0, participant1, 0, 1);
+        com->acceptConnection(participant0, participant1);
         comMesh.sendMesh(mesh, 0);
         BOOST_TEST(mesh.vertices().size() == 3);
         BOOST_TEST(mesh.edges().size() == 3);

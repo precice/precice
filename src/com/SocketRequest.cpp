@@ -33,5 +33,5 @@ void SocketRequest::wait()
 
   _completeCondition.wait(lock, [this] { return _complete; });
 }
-}
-} // namespace precice, com
+} // namespace com
+} // namespace precice

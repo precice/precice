@@ -9,7 +9,7 @@ namespace impl
 {
 
 logging::Logger ResidualSumPreconditioner::
-    _log("precice::cplscheme::ResidualSumPreconditioner");
+    _log("cplscheme::ResidualSumPreconditioner");
 
 ResidualSumPreconditioner::ResidualSumPreconditioner(
     int maxNonConstTimesteps)

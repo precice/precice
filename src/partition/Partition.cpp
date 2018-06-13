@@ -8,8 +8,6 @@
 namespace precice {
 namespace partition {
 
-logging::Logger Partition::_log ( "precice::partition::Partition" );
-
 Partition:: Partition
 (mesh::PtrMesh mesh)
 :

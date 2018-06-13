@@ -48,6 +48,10 @@ public:
   typedef std::vector<PtrData>                   DataContainer;
   typedef utils::ptr_vector<PropertyContainer>   PropertyContainerContainer;
   typedef std::vector<std::pair<double, double>> BoundingBox;
+  typedef std::map<int,BoundingBox>              BoundingBoxMap;
+
+  /// A mapping from rank to used (not necessarily owned) vertex IDs
+  using VertexDistribution = std::map<int, std::vector<int>>;
 
   /// Signal is emitted when the mesh is changed
   boost::signals2::signal<void(Mesh &)> meshChanged;
@@ -90,29 +94,19 @@ public:
   /// Returns modifieable container holding all edges.
   EdgeContainer& edges();
 
-  /**
-   * @brief Returns const container holding all edges.
-   */
+  /// Returns const container holding all edges.
   const EdgeContainer& edges() const;
 
-  /**
-   * @brief Returns modifieable container holding all triangles.
-   */
+  /// Returns modifieable container holding all triangles.
   TriangleContainer& triangles();
 
-  /**
-   * @brief Returns const container holding all triangles.
-   */
+  /// Returns const container holding all triangles.
   const TriangleContainer& triangles() const;
 
-  /**
-   * @brief Returns modifieable container holding all quads.
-   */
+  /// Returns modifieable container holding all quads.
   QuadContainer& quads();
 
-  /**
-   * @brief Returns const container holding all quads.
-   */
+  /// Returns const container holding all quads.
   const QuadContainer& quads() const;
 
   PropertyContainerContainer& propertyContainers();
@@ -241,24 +235,30 @@ public:
    */
   void clear();
 
-  std::map<int,std::vector<int> >& getVertexDistribution(){
+  /// Returns a mapping from rank to used (not necessarily owned) vertex IDs
+  VertexDistribution & getVertexDistribution()
+  {
     return _vertexDistribution;
   }
 
-  std::vector<int>& getVertexOffsets(){
+  std::vector<int>& getVertexOffsets()
+  {
     return _vertexOffsets;
   }
 
   /// Only used for tests
-  void setVertexOffsets(std::vector<int> & vertexOffsets){
+  void setVertexOffsets(std::vector<int> & vertexOffsets)
+  {
     _vertexOffsets = vertexOffsets;
   }
 
-  int getGlobalNumberOfVertices(){
+  int getGlobalNumberOfVertices()
+  {
     return _globalNumberOfVertices;
   }
 
-  void setGlobalNumberOfVertices(int num){
+  void setGlobalNumberOfVertices(int num)
+  {
     _globalNumberOfVertices = num;
   }
 
@@ -282,11 +282,10 @@ public:
   
 private:
 
-  /// Logging device.
-  static logging::Logger _log;
+  mutable logging::Logger _log{"mesh::Mesh"};
 
   /// Provides unique IDs for all geometry objects
-  static std::unique_ptr<utils::ManageUniqueIDs> _managerPropertyIDs;
+  static std::unique_ptr<utils::ManageUniqueIDs> _managePropertyIDs;
 
   /// Name of the mesh.
   std::string _name;
@@ -321,7 +320,7 @@ private:
    * @brief Vertex distribution for the master, holding for each slave all vertex IDs it owns.
    * For slaves, this data structure is empty and should not be used.
    */
-  std::map<int,std::vector<int> > _vertexDistribution;
+  VertexDistribution _vertexDistribution;
 
   /// Holds the index of the last vertex for each slave.
   /**
@@ -335,7 +334,7 @@ private:
    * @brief Number of unique vertices for complete distributed mesh.
    * Duplicated vertices are only accounted once.
    */
-  int _globalNumberOfVertices;
+  int _globalNumberOfVertices = -1;
 
   BoundingBox _boundingBox;
 

@@ -8,15 +8,7 @@ namespace mesh
 
 const int PropertyContainer::INDEX_GEOMETRY_ID = getFreePropertyID();
 
-logging::Logger PropertyContainer::_log("precice::mesh::PropertyContainer");
-
-utils::ManageUniqueIDs *PropertyContainer::_manageUniqueIDs = nullptr;
-
-PropertyContainer::PropertyContainer()
-    : _properties(),
-      _parents()
-{
-}
+std::unique_ptr<utils::ManageUniqueIDs> PropertyContainer::_manageUniqueIDs;
 
 const PropertyContainer &PropertyContainer::getParent(size_t index) const
 {
@@ -47,8 +39,8 @@ bool PropertyContainer::hasProperty(int propertyID) const
 
 int PropertyContainer::getFreePropertyID()
 {
-  if (_manageUniqueIDs == nullptr) {
-    _manageUniqueIDs = new utils::ManageUniqueIDs();
+  if (not _manageUniqueIDs) {
+    _manageUniqueIDs.reset(new utils::ManageUniqueIDs);
   }
   return _manageUniqueIDs->getFreeID();
 }

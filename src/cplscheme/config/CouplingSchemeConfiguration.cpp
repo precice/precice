@@ -18,6 +18,7 @@
 #include "precice/impl/Participant.hpp"
 #include "precice/impl/SharedPointer.hpp"
 #include "utils/Globals.hpp"
+#include "utils/Helpers.hpp"
 #include "xml/ValidatorEquals.hpp"
 #include "xml/ValidatorOr.hpp"
 #include "xml/XMLAttribute.hpp"

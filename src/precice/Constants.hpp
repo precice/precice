@@ -18,7 +18,6 @@ const std::string& actionReadIterationCheckpoint();
 const std::string& actionPlotOutput();
 
 int exportVTK();
-int exportVRML();
 int exportAll();
 
 }} // namespace precice, constants

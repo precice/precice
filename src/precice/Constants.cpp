@@ -55,11 +55,6 @@ int exportVTK()
   return io::constants::exportVTK();
 }
 
-int exportVRML()
-{
-  return io::constants::exportVRML();
-}
-
 int exportAll()
 {
   return io::constants::exportAll();
