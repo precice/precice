@@ -2,6 +2,7 @@ import os
 import subprocess
 import sys
 import sysconfig
+from os.path import join
 
 try:
     import numpy
@@ -105,7 +106,7 @@ if env["build"] == 'release':
 
 
 prefix = env["libprefix"]
-buildpath = os.path.join(env["builddir"], "") # Ensures to have a trailing slash
+buildpath = join(env["builddir"], "") # Ensures to have a trailing slash
 
 print
 
@@ -139,8 +140,8 @@ env.Replace(CXX = env["compiler"])
 env.Replace(CC = env["compiler"])
 
 if prefix is not "/usr":  # explicitely add standard search paths
-    env.Append(CPPPATH = os.path.join( prefix, 'include'))
-    env.Append(LIBPATH = os.path.join( prefix, 'lib'))
+    env.Append(CPPPATH = join( prefix, 'include'))
+    env.Append(LIBPATH = join( prefix, 'lib'))
 
 if not conf.CheckCXX():
     Exit(1)
@@ -184,7 +185,7 @@ else:
 
 # ====== Eigen ======
 if prefix is not "/usr":
-    env.Append(CPPPATH = os.path.join(prefix, 'include/eigen3'))
+    env.Append(CPPPATH = join(prefix, 'include/eigen3'))
 
 checkAdd(header = "Eigen/Dense", usage = "Eigen")
 if env["build"] == "debug":
@@ -194,8 +195,8 @@ if env["build"] == "debug":
 # Needed for correct linking on Hazel Hen
 # Otherwise it would link partly to old system boost, partly to newer modules boost
 if env["platform"] == "hazelhen":
-    env.Append(CPPPATH = os.path.join( os.environ['BOOST_ROOT'], 'include'))
-    env.Append(LIBPATH = os.path.join( os.environ['BOOST_ROOT'], 'lib'))
+    env.Append(CPPPATH = join( os.environ['BOOST_ROOT'], 'include'))
+    env.Append(LIBPATH = join( os.environ['BOOST_ROOT'], 'lib'))
 
 env.Append(CPPDEFINES= ['BOOST_ALL_DYN_LINK',
                         'BOOST_ASIO_ENABLE_OLD_SERVICES']) # Interfaces have changed in 1.66
@@ -279,7 +280,7 @@ elif env["platform"] == "hazelhen":
     env.Append(LINKFLAGS = ['-dynamic']) # Needed for correct linking against boost.log
 
 # ====== LibXML2 ======
-env.Append(CPPPATH = os.path.join(prefix, 'include/libxml2'))
+env.Append(CPPPATH = join(prefix, 'include/libxml2'))
 checkAdd("xml2")
 
 print
@@ -323,7 +324,7 @@ env.Alias("tests", tests)
 symlink = env.Command(
     target = "symlink",
     source = None,
-    action = "ln -fns {0} {1}".format(os.path.split(buildpath)[-1], os.path.join(os.path.split(buildpath)[0], "last"))
+    action = "ln -fns {0} {1}".format(os.path.split(buildpath)[-1], join(os.path.split(buildpath)[0], "last"))
 )
 
 Default(solib, tests, symlink)
