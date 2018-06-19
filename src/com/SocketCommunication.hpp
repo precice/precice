@@ -3,30 +3,9 @@
 #pragma once
 
 #include "com/Communication.hpp"
-
-#include <boost/asio/io_service.hpp>
+#include <boost/asio.hpp>
 #include "logging/Logger.hpp"
-
 #include <thread>
-
-namespace boost
-{
-namespace asio
-{
-namespace ip
-{
-class tcp;
-}
-template <typename Protocol>
-class stream_socket_service;
-template <typename Protocol, typename StreamSocketService>
-class basic_stream_socket;
-} // namespace asio
-namespace system
-{
-class error_code;
-}
-} // namespace boost
 
 namespace precice
 {
@@ -188,23 +167,19 @@ private:
   std::string _addressDirectory;
 
   int _remoteCommunicatorSize = 0;
-
-  typedef boost::asio::io_service IOService;
-  std::shared_ptr<IOService>      _ioService;
-
-  typedef boost::asio::ip::tcp                                 TCP;
-  typedef boost::asio::stream_socket_service<TCP>              SocketService;
-  typedef boost::asio::basic_stream_socket<TCP, SocketService> Socket;
-  typedef std::shared_ptr<Socket>                              PtrSocket;
-
-  /// Remote rank -> socket map
-  std::map<int, PtrSocket> _sockets;
-
-  typedef boost::asio::io_service::work Work;
-  typedef std::shared_ptr<Work>         PtrWork;
-  PtrWork                               _work;
-
+  
+  using IOService     = boost::asio::io_service;
+  using TCP           = boost::asio::ip::tcp;
+  using SocketService = boost::asio::stream_socket_service<TCP>;
+  using Socket        = boost::asio::basic_stream_socket<TCP, SocketService>;
+  using Work          = boost::asio::io_service::work;
+  
+  std::shared_ptr<IOService> _ioService;
+  std::shared_ptr<Work> _work;
   std::thread _thread;
+  
+  /// Remote rank -> socket map
+  std::map<int, std::shared_ptr<Socket>> _sockets;
 
   bool isClient();
   bool isServer();

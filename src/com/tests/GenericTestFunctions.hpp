@@ -229,3 +229,73 @@ void TestSendReceiveFourProcessesServerClient()
   }
   }
 }
+
+template<typename T>
+void TestSendReceiveFourProcessesServerClientV2()
+{
+  T communication;
+  int message = -1;
+
+  std::string nameEven("even");
+  std::string nameOdd("odd");
+
+  switch (utils::Parallel::getProcessRank()) {
+  case 0: {
+    communication.acceptConnectionAsServer(nameEven, nameOdd, 0, 2);
+
+    communication.send(10, 2);
+    communication.receive(message, 2);
+    BOOST_TEST(message == 20);
+
+    communication.send(100, 3);
+    communication.receive(message, 3);
+    BOOST_TEST(message == 200);
+
+    communication.closeConnection();
+    break;
+  }
+  case 1: {
+    communication.acceptConnectionAsServer(nameEven, nameOdd, 1, 2);
+
+    communication.send(20, 2);
+    communication.receive(message, 2);
+    BOOST_TEST(message == 40);
+
+    communication.send(200, 3);
+    communication.receive(message, 3);
+    BOOST_TEST(message == 400);
+
+    communication.closeConnection();
+    break;
+  }
+  case 2: {
+    communication.requestConnectionAsClient(nameEven, nameOdd, {0,1}, 2);
+    
+    communication.receive(message, 0);
+    BOOST_TEST(message == 10);
+    communication.send(20, 0);
+
+    communication.receive(message, 1);
+    BOOST_TEST(message == 20);
+    communication.send(40, 1);
+    
+    
+    communication.closeConnection();
+    break;
+  }
+  case 3: {
+    communication.requestConnectionAsClient(nameEven, nameOdd, {0,1}, 3);
+
+    communication.receive(message, 0);
+    BOOST_TEST(message == 100);
+    communication.send(200, 0);
+
+    communication.receive(message, 1);
+    BOOST_TEST(message == 200);
+    communication.send(400, 1);
+
+    communication.closeConnection();
+    break;
+  }
+  }
+}

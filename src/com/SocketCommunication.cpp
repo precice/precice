@@ -73,29 +73,24 @@ void SocketCommunication::acceptConnection(std::string const &nameAcceptor,
     using asio::ip::tcp;
 
     tcp::acceptor acceptor(*_ioService);
+    tcp::endpoint endpoint(tcp::v4(), _portNumber);
 
-    {
-      tcp::endpoint endpoint(tcp::v4(), _portNumber);
+    acceptor.open(endpoint.protocol());
+    acceptor.set_option(tcp::acceptor::reuse_address(_reuseAddress));
+    acceptor.bind(endpoint);
+    acceptor.listen();
 
-      acceptor.open(endpoint.protocol());
-      acceptor.set_option(tcp::acceptor::reuse_address(_reuseAddress));
-      acceptor.bind(endpoint);
-      acceptor.listen();
-
-      _portNumber = acceptor.local_endpoint().port();
-    }
+    _portNumber = acceptor.local_endpoint().port();
 
     address = ipAddress + ":" + std::to_string(_portNumber);
 
     Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
-
     ScopedPublisher p(addressFileName);
-
     p.write(address);
 
     DEBUG("Accept connection at " << address);
 
-    PtrSocket socket(new Socket(*_ioService));
+    auto socket = std::make_shared<Socket>(*_ioService);
 
     acceptor.accept(*socket);
 
@@ -107,20 +102,17 @@ void SocketCommunication::acceptConnection(std::string const &nameAcceptor,
     asio::read(*socket, asio::buffer(&remoteRank, sizeof(int)));
     asio::read(*socket, asio::buffer(&remoteSize, sizeof(int)));
 
-    CHECK(remoteSize > 0,
-          "Requester communicator size has to be > 0!");
+    CHECK(remoteSize > 0, "Requester communicator size has to be > 0!");
 
     _remoteCommunicatorSize = remoteSize;
-
     _sockets[remoteRank] = socket;
-
     _isConnected = true;
 
     send(_rank, remoteRank);
     send(1, remoteRank); // was: acceptorCommunicatorSize
 
     for (int i = 1; i < _remoteCommunicatorSize; ++i) {
-      socket = PtrSocket(new Socket(*_ioService));
+      socket = std::make_shared<Socket>(*_ioService);
 
       acceptor.accept(*socket);
 
@@ -147,9 +139,8 @@ void SocketCommunication::acceptConnection(std::string const &nameAcceptor,
   }
 
   // NOTE:
-  // Keep IO service running so that it fires asynchronous handlers from another
-  // thread.
-  _work   = PtrWork(new asio::io_service::work(*_ioService));
+  // Keep IO service running so that it fires asynchronous handlers from another thread.
+  _work   = std::make_shared<asio::io_service::work>(*_ioService);
   _thread = std::thread([this]() { _ioService->run(); });
 }
 
@@ -158,7 +149,7 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &nameAccept
                                                    int                acceptorRank,
                                                    int                requesterCommunicatorSize)
 {
-  TRACE(nameAcceptor, nameRequester);
+  TRACE(nameAcceptor, nameRequester, acceptorRank, requesterCommunicatorSize);
   CHECK(requesterCommunicatorSize > 0, "Requester communicator size has to be > 0!");
   assertion(not isConnected());
 
@@ -177,7 +168,6 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &nameAccept
     using asio::ip::tcp;
 
     tcp::acceptor acceptor(*_ioService);
-
     {
       tcp::endpoint endpoint(tcp::v4(), _portNumber);
 
@@ -195,23 +185,20 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &nameAccept
     ScopedPublisher p(addressFileName);
     p.write(address);
 
-    DEBUG("Accept connection at " << address);
+    DEBUG("Accepting connection at " << address);
 
-    // for (int remoteRank = 0; remoteRank < _remoteCommunicatorSize; ++remoteRank) {
-    for (int connections = 0; connections < requesterCommunicatorSize; ++connections) {
-      PtrSocket socket = PtrSocket(new Socket(*_ioService));
-
+    for (int connection = 0; connection < requesterCommunicatorSize; ++connection) {
+      auto socket = std::make_shared<Socket>(*_ioService);
+      WARN("About to accept connection #" << connection);
       acceptor.accept(*socket);
       DEBUG("Accepted connection at " << address);
 
-      // CHECK(_sockets[remoteRank].use_count() == 0,
-            // "Duplicate request to connect by same rank (" << remoteRank << ")!");
-
       int requesterRank;
+      WARN("ACS CHECKPOINT 1");
       asio::read(*socket, asio::buffer(&requesterRank, sizeof(int))); // receive requesters rank
+      WARN("ACS CHECKPOINT 2");
       WARN("Received requester rank " << requesterRank);
       _sockets[requesterRank] = socket;
-      WARN("ACS ADD SOCKET FOR " << requesterRank);
       _isConnected = true;
       
       send(requesterRank, requesterRank);
@@ -225,12 +212,9 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &nameAccept
   }
 
   // NOTE:
-  // Keep IO service running so that it fires asynchronous handlers from another
-  // thread.
-  _work   = PtrWork(new asio::io_service::work(*_ioService));
-  _thread = std::thread([this]() { _ioService->run(); });
-
-  
+  // Keep IO service running so that it fires asynchronous handlers from another thread.
+  _work   = std::make_shared<asio::io_service::work>(*_ioService);
+  _thread = std::thread([this]() { _ioService->run(); });  
 }
 
 void SocketCommunication::requestConnection(std::string const &nameAcceptor,
@@ -246,20 +230,17 @@ void SocketCommunication::requestConnection(std::string const &nameAcceptor,
 
   try {
     Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
-
     Publisher p(addressFileName);
-
     address = p.read();
 
     DEBUG("Request connection to " << address);
 
     std::string ipAddress  = address.substr(0, address.find(":"));
-    std::string portNumber = address.substr(
-        ipAddress.length() + 1, address.length() - ipAddress.length() - 1);
+    std::string portNumber = address.substr(ipAddress.length() + 1, address.length() - ipAddress.length() - 1);
 
     _portNumber = static_cast<unsigned short>(std::stoi(portNumber));
 
-    PtrSocket socket(new Socket(*_ioService));
+    auto socket = std::make_shared<Socket>(*_ioService);
 
     using asio::ip::tcp;
 
@@ -267,14 +248,11 @@ void SocketCommunication::requestConnection(std::string const &nameAcceptor,
 
     while (not isConnected()) {
       tcp::resolver resolver(*_ioService);
+      tcp::resolver::endpoint_type endpoint = *(resolver.resolve(query));
+      boost::system::error_code    error    = asio::error::host_not_found;
+      socket->connect(endpoint, error);
 
-      {
-        tcp::resolver::endpoint_type endpoint = *(resolver.resolve(query));
-        boost::system::error_code    error    = asio::error::host_not_found;
-        socket->connect(endpoint, error);
-
-        _isConnected = not error;
-      }
+      _isConnected = not error;
 
       if (not isConnected()) {
         // Wait a little, since after a couple of ten-thousand trials the system
@@ -310,7 +288,7 @@ void SocketCommunication::requestConnection(std::string const &nameAcceptor,
   // NOTE:
   // Keep IO service running so that it fires asynchronous handlers from another
   // thread.
-  _work   = PtrWork(new asio::io_service::work(*_ioService));
+  _work   = std::make_shared<asio::io_service::work>(*_ioService);
   _thread = std::thread([this]() { _ioService->run(); });
 }
 
@@ -320,9 +298,11 @@ void SocketCommunication::requestConnectionAsClient(std::string      const &name
                                                     int                     requesterRank)
                                                     
 {
-  TRACE(nameAcceptor, nameRequester);
+  TRACE(nameAcceptor, nameRequester, acceptorRanks, requesterRank);
   assertion(not isConnected());
+  
   for (auto const & acceptorRank : acceptorRanks) {
+    _isConnected = false;
     std::string address;
     std::string addressFileName("." + nameRequester + "-" +
                                 nameAcceptor + "-" + std::to_string(acceptorRank) + ".address");
@@ -330,29 +310,28 @@ void SocketCommunication::requestConnectionAsClient(std::string      const &name
     try {
       Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
       Publisher p(addressFileName);
-      std::string address = p.read();
-      DEBUG("Request connection to " << address);
-
+      address = p.read();
+      
       std::string ipAddress  = address.substr(0, address.find(":"));
       std::string portNumber = address.substr(ipAddress.length()+1, address.length() - ipAddress.length()-1);
 
       _portNumber = static_cast<unsigned short>(std::stoi(portNumber));
 
-      PtrSocket socket(new Socket(*_ioService));
+      auto socket = std::make_shared<Socket>(*_ioService);
 
       using asio::ip::tcp;
+
+      DEBUG("Requesting connection to " << ipAddress << ", port " << portNumber);
 
       tcp::resolver::query query(tcp::v4(), ipAddress, portNumber);
 
       while (not isConnected()) {
         tcp::resolver resolver(*_ioService);
-        {
-          tcp::resolver::endpoint_type endpoint = *(resolver.resolve(query));
-          boost::system::error_code    error    = asio::error::host_not_found;
-          socket->connect(endpoint, error);
+        tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
+        boost::system::error_code error = asio::error::host_not_found;
+        boost::asio::connect(*socket, endpoint_iterator, error);
           
-          _isConnected = not error;
-        }
+        _isConnected = not error;
 
         if (not isConnected()) {
           // Wait a little, since after a couple of ten-thousand trials the system
@@ -361,35 +340,33 @@ void SocketCommunication::requestConnectionAsClient(std::string      const &name
           timer.wait();
         }
       }
-
-      DEBUG("Requested connection to " << address);
-
-      WARN("RCC ADD SOCKET FOR " << acceptorRank);
+      
+      DEBUG("Requested connection to " << address << ", rank = " << acceptorRank);
       _sockets[acceptorRank] = socket;
-      send(requesterRank, acceptorRank); // send my rank
-
-      receive(_rank, acceptorRank);
-
+      WARN("CHECKPOINT 1 FOR RANK " << acceptorRank);
+      // send(requesterRank, acceptorRank); // send my rank
+      asio::write(*_sockets.at(acceptorRank), asio::buffer(&requesterRank, sizeof(int)));
+      WARN("CHECKPOINT 2 FOR RANK " << acceptorRank); // reached only for acceptorRank=0
+      receive(_rank, acceptorRank); // remove
+      
       int remoteSize = 0;
       int remoteRank = -1;
 
-      receive(remoteRank, acceptorRank);
-      receive(remoteSize, acceptorRank);
-
+      receive(remoteRank, acceptorRank); // remove
+      receive(remoteSize, acceptorRank); // replace by _remoteCommunicatorSize??
+            
       CHECK(remoteRank == 0, "Acceptor base rank has to be 0 but is " << remoteRank << "!");
       CHECK(remoteSize == 1, "Acceptor communicator size has to be 1!");
-      
+
       _remoteCommunicatorSize = remoteSize;
     } catch (std::exception &e) {
       ERROR("Requesting connection to " << address << " failed: " << e.what());
     }
-
-    // NOTE:
-    // Keep IO service running so that it fires asynchronous handlers from another
-    // thread.
-    _work   = PtrWork(new asio::io_service::work(*_ioService));
-    _thread = std::thread([this]() { _ioService->run(); });
   }
+  // NOTE:
+  // Keep IO service running so that it fires asynchronous handlers from another thread.
+  _work   = std::make_shared<asio::io_service::work>(*_ioService);
+  _thread = std::thread([this]() { _ioService->run(); });
 }
 
 void SocketCommunication::closeConnection()
@@ -443,8 +420,7 @@ void SocketCommunication::send(const int *itemsToSend, int size, int rankReceive
   assertion(isConnected());
 
   try {
-    asio::write(*_sockets[rankReceiver],
-                asio::buffer(itemsToSend, size * sizeof(int)));
+    asio::write(*_sockets[rankReceiver], asio::buffer(itemsToSend, size * sizeof(int)));
   } catch (std::exception &e) {
     ERROR("Send failed: " << e.what());
   }
@@ -484,8 +460,7 @@ void SocketCommunication::send(const double *itemsToSend, int size, int rankRece
   assertion(isConnected());
 
   try {
-    asio::write(*_sockets[rankReceiver],
-                asio::buffer(itemsToSend, size * sizeof(double)));
+    asio::write(*_sockets[rankReceiver], asio::buffer(itemsToSend, size * sizeof(double)));
   } catch (std::exception &e) {
     ERROR("Send failed: " << e.what());
   }
@@ -546,7 +521,7 @@ void SocketCommunication::send(int itemToSend, int rankReceiver)
   assertion(isConnected());
 
   try {
-    asio::write(*_sockets.at(rankReceiver), asio::buffer(&itemToSend, sizeof(int)));
+    asio::write(*_sockets[rankReceiver], asio::buffer(&itemToSend, sizeof(int)));
   } catch (std::exception &e) {
     ERROR("Send failed: " << e.what());
   }

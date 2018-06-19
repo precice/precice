@@ -33,6 +33,13 @@ BOOST_AUTO_TEST_CASE(SendReceiveFourProcessesServerClient,
   TestSendReceiveFourProcessesServerClient<SocketCommunication>();
 }
 
+BOOST_AUTO_TEST_CASE(SendReceiveFourProcessesServerClientV2,
+                     * testing::MinRanks(4)
+                     * boost::unit_test::fixture<testing::SyncProcessesFixture>())
+{
+  TestSendReceiveFourProcessesServerClientV2<SocketCommunication>();
+}
+
 
 BOOST_AUTO_TEST_SUITE_END() // Socket
 BOOST_AUTO_TEST_SUITE_END() // Communication

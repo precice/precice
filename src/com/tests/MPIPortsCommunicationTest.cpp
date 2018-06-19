@@ -40,6 +40,13 @@ BOOST_AUTO_TEST_CASE(SendReceiveFourProcessesServerClient,
   TestSendReceiveFourProcessesServerClient<MPIPortsCommunication>();
 }
 
+BOOST_AUTO_TEST_CASE(SendReceiveFourProcessesServerClientV2,
+                     * testing::MinRanks(4)
+                     * boost::unit_test::fixture<testing::SyncProcessesFixture>())
+{
+  TestSendReceiveFourProcessesServerClientV2<MPIPortsCommunication>();
+}
+
 
 BOOST_AUTO_TEST_SUITE_END() // MPIPortsCommunication
 

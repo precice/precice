@@ -160,7 +160,7 @@ void MPIPortsCommunication::requestConnectionAsClient(std::string      const &na
                                                       int                     requesterRank)
                                                       
 {
-  TRACE(nameAcceptor, nameRequester, requesterRank);
+  TRACE(nameAcceptor, nameRequester, acceptorRanks, requesterRank);
   assertion(not isConnected());
   _isAcceptor = false;
 
