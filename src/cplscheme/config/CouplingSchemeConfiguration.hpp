@@ -58,9 +58,7 @@ public:
       const mesh::PtrMeshConfiguration &          meshConfig,
       const m2n::M2NConfiguration::SharedPointer &m2nConfig);
 
-  /**
-   * @brief Destructor, empty.
-   */
+  /// Destructor, empty.
   virtual ~CouplingSchemeConfiguration() {}
 
   /// Check, if a coupling scheme is configured for a participant.
@@ -82,8 +80,8 @@ public:
   void addCouplingScheme(PtrCouplingScheme cplScheme, const std::string &participantName);
 
 private:
-  // @brief Logging device.
-  static logging::Logger _log;
+
+  mutable logging::Logger _log{"cplscheme::CouplingSchemeConfiguration"};
 
   const std::string TAG;
   const std::string TAG_PARTICIPANTS;
@@ -132,37 +130,19 @@ private:
     std::string                   name;
     std::vector<std::string>      participants;
     std::string                   controller;
-    bool                          setController;
-    double                        maxTime;
-    int                           maxTimesteps;
-    double                        timestepLength;
-    int                           validDigits;
-    constants::TimesteppingMethod dtMethod;
+    bool                          setController = false;
+    double                        maxTime = CouplingScheme::UNDEFINED_TIME;
+    int                           maxTimesteps = CouplingScheme::UNDEFINED_TIMESTEPS;
+    double                        timestepLength = CouplingScheme::UNDEFINED_TIMESTEP_LENGTH;
+    int                           validDigits = 16;
+    constants::TimesteppingMethod dtMethod = constants::FIXED_DT;
     /// Tuples of exchange data, mesh, and participant name.
     typedef std::tuple<mesh::PtrData, mesh::PtrMesh, std::string, std::string, bool> Exchange;
     std::vector<Exchange>                                                            exchanges;
     /// Tuples of data ID, mesh ID, and convergence measure.
     std::vector<std::tuple<int, bool, std::string, int, impl::PtrConvergenceMeasure>> convMeasures;
-    int                                                                               maxIterations;
-    int                                                                               extrapolationOrder;
-
-    Config()
-        : type(""),
-          name(""),
-          participants(),
-          controller(""),
-          setController(false),
-          maxTime(CouplingScheme::UNDEFINED_TIME),
-          maxTimesteps(CouplingScheme::UNDEFINED_TIMESTEPS),
-          timestepLength(CouplingScheme::UNDEFINED_TIMESTEP_LENGTH),
-          validDigits(16),
-          dtMethod(constants::FIXED_DT),
-          exchanges(),
-          convMeasures(),
-          maxIterations(-1),
-          extrapolationOrder(0)
-    {
-    }
+    int                                                                               maxIterations = -1;
+    int                                                                               extrapolationOrder = 0;
 
   } _config;
 

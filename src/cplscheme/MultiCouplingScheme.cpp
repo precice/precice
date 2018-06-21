@@ -11,8 +11,6 @@
 namespace precice {
 namespace cplscheme {
 
-logging::Logger MultiCouplingScheme::_log("cplscheme::MultiCouplingScheme" );
-
 MultiCouplingScheme::MultiCouplingScheme
 (
   double                maxTime,
@@ -26,10 +24,7 @@ MultiCouplingScheme::MultiCouplingScheme
   :
   BaseCouplingScheme(maxTime,maxTimesteps,timestepLength,validDigits,"neverFirstParticipant",
       localParticipant,localParticipant,m2n::PtrM2N(),maxIterations,dtMethod),
-  _communications(communications),
-  _allData (),
-  _receiveDataVector(),
-  _sendDataVector()
+  _communications(communications)
 {
   for(size_t i = 0; i < _communications.size(); ++i) {
     DataMap receiveMap;

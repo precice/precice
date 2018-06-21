@@ -49,7 +49,7 @@ public:
 
   virtual void advance();
 
-  static logging::Logger _log;
+  logging::Logger _log{"cplschemes::SerialCouplingSchemes"};
 
   friend struct CplSchemeTests::SerialImplicitCouplingSchemeTests::testExtrapolateData;  // For whitebox tests
 

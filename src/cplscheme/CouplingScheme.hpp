@@ -43,13 +43,13 @@ class CouplingScheme
 {
 public:
 
-  /// @brief Does not define a time limit for the coupled simulation.
+  /// Does not define a time limit for the coupled simulation.
   static const double UNDEFINED_TIME;
 
-  /// @brief Does not define a timestep limit for the coupled simulation.
+  /// Does not define a timestep limit for the coupled simulation.
   static const int UNDEFINED_TIMESTEPS;
 
-  /// @brief To be used, when the coupling timestep length is determined dynamically during the coupling.
+  /// To be used, when the coupling timestep length is determined dynamically during the coupling.
   static const double UNDEFINED_TIMESTEP_LENGTH;
 
   virtual ~CouplingScheme() {}
@@ -93,10 +93,10 @@ public:
    */
   virtual void advance() =0;
 
-  /// @brief Finalizes the coupling and disconnects communication.
+  /// Finalizes the coupling and disconnects communication.
   virtual void finalize() =0;
 
-  /// @brief Returns list of all coupling partners.
+  /// Returns list of all coupling partners.
   virtual std::vector<std::string> getCouplingPartners() const =0;
 
   /*
@@ -120,10 +120,10 @@ public:
   /// @brief Returns the currently computed timesteps of the coupling scheme.
   virtual int getTimesteps() const =0;
 
-  /// @brief Returns the maximal time to be computed.
+  /// Returns the maximal time to be computed.
   virtual double getMaxTime() const =0;
 
-  /// @brief Returns the maximal timesteps to be computed.
+  /// Returns the maximal timesteps to be computed.
   virtual int getMaxTimesteps() const =0;
 
   //
@@ -176,22 +176,22 @@ public:
   //
   //virtual int getValidDigits() const =0;
 
-  /// @brief Returns true, when the coupled simulation is still ongoing.
+  /// Returns true, when the coupled simulation is still ongoing.
   virtual bool isCouplingOngoing() const =0;
 
-  /// @brief Returns true, when the accessor can advance to the next timestep.
+  /// Returns true, when the accessor can advance to the next timestep.
   virtual bool isCouplingTimestepComplete() const =0;
 
-  /// @brief Returns true, if the given action has to be performed by the accessor.
+  /// Returns true, if the given action has to be performed by the accessor.
   virtual bool isActionRequired(const std::string& actionName) const =0;
 
-  /// @brief Tells the coupling scheme that the accessor has performed the given action.
+  /// Tells the coupling scheme that the accessor has performed the given action.
   virtual void performedAction(const std::string& actionName) =0;
 
-  /// @brief Sets an action required to be performed by the accessor.
+  /// Sets an action required to be performed by the accessor.
   virtual void requireAction(const std::string& actionName) =0;
 
-  /// @brief Returns a string representation of the current coupling state.
+  /// Returns a string representation of the current coupling state.
   virtual std::string printCouplingState() const =0;
 
   /**

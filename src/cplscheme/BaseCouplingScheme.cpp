@@ -21,8 +21,6 @@ namespace precice
 namespace cplscheme
 {
 
-logging::Logger BaseCouplingScheme::_log("cplscheme::BaseCouplingScheme");
-
 BaseCouplingScheme::BaseCouplingScheme(
     double maxTime,
     int    maxTimesteps,
@@ -42,18 +40,14 @@ BaseCouplingScheme::BaseCouplingScheme(
       _totalIterations(-1),
       _timesteps(0),
       _timestepLength(timestepLength),
-      _firstResiduumNorm(0),
       _validDigits(validDigits)
 {
-  CHECK(
-      not((maxTime != UNDEFINED_TIME) && (maxTime < 0.0)),
-      "Maximum time has to be larger than zero!");
-  CHECK(
-      not((maxTimesteps != UNDEFINED_TIMESTEPS) && (maxTimesteps < 0)),
-      "Maximum timestep number has to be larger than zero!");
-  CHECK(
-      not((timestepLength != UNDEFINED_TIMESTEP_LENGTH) && (timestepLength < 0.0)),
-      "Timestep length has to be larger than zero!");
+  CHECK(not((maxTime != UNDEFINED_TIME) && (maxTime < 0.0)),
+        "Maximum time has to be larger than zero!");
+  CHECK(not((maxTimesteps != UNDEFINED_TIMESTEPS) && (maxTimesteps < 0)),
+        "Maximum timestep number has to be larger than zero!");
+  CHECK(not((timestepLength != UNDEFINED_TIMESTEP_LENGTH) && (timestepLength < 0.0)),
+        "Timestep length has to be larger than zero!");
   CHECK((_validDigits >= 1) && (_validDigits < 17),
         "Valid digits of timestep length has to be between 1 and 16!");
 }
@@ -83,18 +77,14 @@ BaseCouplingScheme::BaseCouplingScheme(
       _totalIterations(1),
       _timesteps(1),
       _timestepLength(timestepLength),
-      _firstResiduumNorm(0),
       _validDigits(validDigits)
 {
-  CHECK(
-      not((maxTime != UNDEFINED_TIME) && (maxTime < 0.0)),
-      "Maximum time has to be larger than zero!");
-  CHECK(
-      not((maxTimesteps != UNDEFINED_TIMESTEPS) && (maxTimesteps < 0)),
-      "Maximum timestep number has to be larger than zero!");
-  CHECK(
-      not((timestepLength != UNDEFINED_TIMESTEP_LENGTH) && (timestepLength < 0.0)),
-      "Timestep length has to be larger than zero!");
+  CHECK(not((maxTime != UNDEFINED_TIME) && (maxTime < 0.0)),
+        "Maximum time has to be larger than zero!");
+  CHECK(not((maxTimesteps != UNDEFINED_TIMESTEPS) && (maxTimesteps < 0)),
+        "Maximum timestep number has to be larger than zero!");
+  CHECK(not((timestepLength != UNDEFINED_TIMESTEP_LENGTH) && (timestepLength < 0.0)),
+        "Timestep length has to be larger than zero!");
   CHECK((_validDigits >= 1) && (_validDigits < 17),
         "Valid digits of timestep length has to be between 1 and 16!");
   CHECK(_firstParticipant != _secondParticipant,
@@ -102,7 +92,7 @@ BaseCouplingScheme::BaseCouplingScheme(
   if (dtMethod == constants::FIXED_DT) {
     CHECK(hasTimestepLength(),
           "Timestep length value has to be given when the fixed timestep length method "
-              << "is chosen for an implicit coupling scheme!");
+          << "is chosen for an implicit coupling scheme!");
   }
   if (localParticipant == _firstParticipant) {
     _doesFirstStep = true;

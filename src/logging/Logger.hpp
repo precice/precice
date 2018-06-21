@@ -1,8 +1,6 @@
 #pragma once
 
-
 #include <string>
-
 #include <boost/log/trivial.hpp>
 
 namespace precice {

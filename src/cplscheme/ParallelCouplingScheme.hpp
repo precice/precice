@@ -22,7 +22,7 @@ public:
     CouplingMode          cplMode,
     int                   maxIterations = 1);
 
-  static logging::Logger _log;
+  logging::Logger _log{"cplscheme::ParallelCouplingScheme"};
 
   virtual void initialize(double startTime, int startTimestep);
 
@@ -37,14 +37,14 @@ protected:
 
   /// Returns all data (receive and send)
   DataMap& getAllData()
-    {
-      assertion(!doesFirstStep(), "Only the second participant should do the post processing." );
-      return _allData;
-    }
+  {
+    assertion(!doesFirstStep(), "Only the second participant should do the post processing." );
+    return _allData;
+  }
 
 
 private:
-  /// @brief Map from data ID -> all data (receive and send) with that ID
+  /// Map from data ID -> all data (receive and send) with that ID
   DataMap _allData;
 
   virtual void explicitAdvance();

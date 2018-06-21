@@ -13,10 +13,10 @@ struct CouplingData
 {
   typedef Eigen::MatrixXd DataMatrix;
 
-  ///  Data values of current iteration.
+  /// Data values of current iteration.
   Eigen::VectorXd* values;
 
-  ///  Data values of previous iteration (1st col) and previous timesteps.
+  /// Data values of previous iteration (1st col) and previous timesteps.
   DataMatrix oldValues;
 
   mesh::PtrMesh mesh;
@@ -44,7 +44,6 @@ struct CouplingData
     int               dimension)
     :
     values ( values ),
-    oldValues (),
     mesh(mesh),
     initialize ( initialize ),
     dimension(dimension)

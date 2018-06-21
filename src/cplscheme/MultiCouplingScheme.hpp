@@ -20,7 +20,7 @@ public:
     int                   maxIterations = 1)
     ;
 
-  static logging::Logger _log;
+  logging::Logger _log{"cplscheme::MultiCouplingScheme"};
 
   virtual void initialize(double startTime, int startTimestep);
 

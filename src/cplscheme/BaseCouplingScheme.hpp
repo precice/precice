@@ -263,7 +263,7 @@ public:
 
 protected:
   /// Sets whether explicit or implicit coupling is being done.
-  CouplingMode _couplingMode;
+  CouplingMode _couplingMode = Undefined;
 
   /// Sets whether the solver evaluates the fine or the coarse model representation
   bool _isCoarseModelOptimizationActive = false;
@@ -389,13 +389,13 @@ protected:
   std::string printActionsState() const;
 
   /// First participant name.
-  std::string _firstParticipant;
+  std::string _firstParticipant = "unknown";
 
   /// Second participant name.
-  std::string _secondParticipant;
+  std::string _secondParticipant = "unknown";
 
   /// Local participant name.
-  std::string _localParticipant;
+  std::string _localParticipant = "unknown";
 
   /// @return Communication device to the other coupling participant.
   m2n::PtrM2N getM2N()
@@ -434,7 +434,7 @@ protected:
     return _participantSetsDt;
   }
 
-  /// @brief Holds relevant variables to perform a convergence measurement.
+  /// Holds relevant variables to perform a convergence measurement.
   struct ConvergenceMeasure {
     int                         dataID;
     CouplingData *              data;
@@ -494,16 +494,16 @@ protected:
 
   bool maxIterationsReached();
 
-  /// @brief Smallest number, taking validDigists into account: eps = std::pow(10.0, -1 * validDigits)
+  /// Smallest number, taking validDigists into account: eps = std::pow(10.0, -1 * validDigits)
   const double _eps;
 
   int _deletedColumnsPPFiltering = 0;
 
-  /// @brief Number of  coarse model optimization iterations in current time step.
+  /// Number of  coarse model optimization iterations in current time step.
   int _iterationsCoarseOptimization;
 
 private:
-  /// @brief Communication device to the other coupling participant.
+  /// Communication device to the other coupling participant.
   m2n::PtrM2N _m2n;
 
   /// Determines, if the timestep length is set by the participant.
@@ -512,25 +512,25 @@ private:
   /// Determines, if the dt length is set received from the other participant
   bool _participantReceivesDt = false;
 
-  static logging::Logger _log;
+  mutable logging::Logger _log{"cplscheme::BaseCouplingScheme"};
 
   double _maxTime;
 
   int _maxTimesteps;
 
-  /// @brief Number of iterations in current time step.
-  int _iterations;
+  /// Number of iterations in current time step.
+  int _iterations = -1;
 
-  /// @brief Number of accumulated coarse model optimization iterations in current time step.
-  int _totalIterationsCoarseOptimization;
+  /// Number of accumulated coarse model optimization iterations in current time step.
+  int _totalIterationsCoarseOptimization = -1;
 
-  /// @brief Limit of iterations during one time step.
-  int _maxIterations;
+  /// Limit of iterations during one time step.
+  int _maxIterations = -1;
 
   /// Number of total iterations performed.
-  int _totalIterations;
+  int _totalIterations = -1;
 
-  int _timesteps;
+  int _timesteps = 0;
 
   double _timestepLength;
 
@@ -538,7 +538,7 @@ private:
 
   double _computedTimestepPart = 0;
 
-  std::vector<double> _firstResiduumNorm;
+  std::vector<double> _firstResiduumNorm = {0};
 
   /// Extrapolation order of coupling data for first iteration of every dt.
   int _extrapolationOrder = 0;

@@ -50,13 +50,13 @@ public:
   }
 
 private:
-  static logging::Logger _log;
+  logging::Logger _log{"cplscheme::MinIterationConvergenceMeasure"};
 
   int _minimumIterationCount;
 
-  int _currentIteration;
+  int _currentIteration = 0;
 
-  bool _isConvergence;
+  bool _isConvergence = false;
 };
 }
 }

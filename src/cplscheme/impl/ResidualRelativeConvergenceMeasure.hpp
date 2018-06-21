@@ -84,17 +84,17 @@ public:
   }
 
 private:
-  static logging::Logger _log;
+  logging::Logger _log{"cplscheme::ResidualRelativeConvergenceMeasure"};
 
   double _convergenceLimitPercent;
 
-  bool _isFirstIteration;
+  bool _isFirstIteration = true;
 
-  double _normFirstResidual;
+  double _normFirstResidual = std::numeric_limits<double>::max();
 
-  double _normDiff;
+  double _normDiff = 0;
 
-  bool _isConvergence;
+  bool _isConvergence = false;
 };
 }
 }

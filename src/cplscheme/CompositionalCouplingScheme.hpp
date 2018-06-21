@@ -3,15 +3,11 @@
 #include "CouplingScheme.hpp"
 #include "Constants.hpp"
 #include "SharedPointer.hpp"
-
 #include "com/SharedPointer.hpp"
-#include "mesh/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 
 #include <vector>
 #include <list>
-
-// ----------------------------------------------------------- CLASS DEFINITION
 
 namespace precice {
 namespace cplscheme {
@@ -62,14 +58,7 @@ class CompositionalCouplingScheme : public CouplingScheme
 {
 public:
 
-  /**
-   * @brief Constructor.
-   */
-  CompositionalCouplingScheme();
-
-  /**
-   * @brief Destructor, empty.
-   */
+  /// Destructor, empty.
   virtual ~CompositionalCouplingScheme() {}
 
   /**
@@ -92,9 +81,7 @@ public:
     double startTime,
     int    startTimesteps );
 
-  /**
-   * @brief Returns true, if initialize has been called.
-   */
+  /// Returns true, if initialize has been called.
   virtual bool isInitialized() const;
 
   /**
@@ -104,24 +91,16 @@ public:
    */
   virtual void initializeData();
 
-  /**
-   * @brief Adds newly computed time. Has to be called before every advance.
-   */
+  /// Adds newly computed time. Has to be called before every advance.
   virtual void addComputedTime(double timeToAdd);
 
-  /**
-   * @brief Exchanges data and updates the state of the coupling scheme.
-   */
+  /// Exchanges data and updates the state of the coupling scheme.
   virtual void advance();
 
-  /**
-   * @brief Finalizes the coupling and disconnects communication.
-   */
+  /// Finalizes the coupling and disconnects communication.
   virtual void finalize();
 
-  /*
-   * @brief returns list of all coupling partners
-   */
+  /// Returns list of all coupling partners
   virtual std::vector<std::string> getCouplingPartners() const;
 
   /**
@@ -135,9 +114,7 @@ public:
    */
   virtual bool willDataBeExchanged(double lastSolverTimestepLength) const;
 
-  /**
-   * @brief Returns true, if data has been exchanged in last call of advance().
-   */
+  /// Returns true, if data has been exchanged in last call of advance().
   virtual bool hasDataBeenExchanged() const;
 
   /**
@@ -161,14 +138,10 @@ public:
    */
   virtual double getMaxTime() const;
 
-  /**
-   * @brief Returns the maximal timesteps to be computed.
-   */
+  /// Returns the maximal timesteps to be computed.
   virtual int getMaxTimesteps() const;
 
-  /**
-   * @brief Returns current subiteration number in timestep.
-   */
+  /// Returns current subiteration number in timestep.
   //virtual int getSubIteration() const;
 
   /**
@@ -242,20 +215,13 @@ public:
    */
   virtual bool isActionRequired(const std::string& actionName) const;
 
-  /**
-   * @brief Tells the coupling scheme that the accessor has performed the given
-   *        action.
-   */
+  /// Tells the coupling scheme that the accessor has performed the given action.
   virtual void performedAction(const std::string& actionName);
 
-  /**
-   * @brief Sets an action required to be performed by the accessor.
-   */
+  /// Sets an action required to be performed by the accessor.
   virtual void requireAction(const std::string& actionName);
 
-  /**
-   * @brief Returns a string representation of the current coupling state.
-   */
+  /// Returns a string representation of the current coupling state.
   virtual std::string printCouplingState() const;
 
   /**
@@ -283,12 +249,12 @@ public:
    int                   rankSender );
 
 private:
+  mutable logging::Logger _log{"cplscheme::CompositionalCouplingScheme"};
 
-  /**
-   * @brief Groups a coupling scheme with additional associated variables.
-   */
+  /// Groups a coupling scheme with additional associated variables.
   struct Scheme {
-    // @brief The actual coupling scheme
+    
+    /// The actual coupling scheme
     PtrCouplingScheme scheme;
 
     // @brief Excludes converged implicit schemes from some operations.
@@ -301,9 +267,6 @@ private:
     // region again.
     bool onHold;
 
-    /**
-     * @brief Constructor.
-     */
     Scheme(PtrCouplingScheme scheme)
     : scheme(scheme), onHold(false) {}
   };
@@ -312,22 +275,19 @@ private:
   typedef std::list<Scheme>::iterator SchemesIt;
   //typedef std::list<PtrCouplingScheme>::const_iterator ConstSchemesIt;
 
-  // @brief Logging device.
-  static logging::Logger _log;
-
-  // @brief Coupling schemes to be executed in parallel.
+  /// Coupling schemes to be executed in parallel.
   Schemes _couplingSchemes;
 
   //Schemes _activeCouplingSchemes;
 
-  // @brief Iterator to begin of coupling schemes currently active.
-  SchemesIt _activeSchemesBegin;
+  /// Iterator to begin of coupling schemes currently active.
+  SchemesIt _activeSchemesBegin = _couplingSchemes.end();
 
-  // @brief Iterator to behind the end of coupling schemes currently active.
-  SchemesIt _activeSchemesEnd;
+  /// Iterator to behind the end of coupling schemes currently active.
+  SchemesIt _activeSchemesEnd  = _couplingSchemes.end();;
 
-  // @brief Stores time added since last call of advance.
-  double _lastAddedTime;
+  /// Stores time added since last call of advance.
+  double _lastAddedTime = 0;
 
   /**
    * @brief Determines the current set of active coupling schemes.

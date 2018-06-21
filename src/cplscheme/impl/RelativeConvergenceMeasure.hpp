@@ -110,15 +110,15 @@ public:
   }
 
 private:
-  static logging::Logger _log;
+  logging::Logger _log{"cplscheme::RelativeConvergenceMeasure"};
 
   double _convergenceLimitPercent;
 
-  double _normDiff;
+  double _normDiff = 0;
 
-  double _norm;
+  double _norm = 0;
 
-  bool _isConvergence;
+  bool _isConvergence = false;
 };
 }
 }

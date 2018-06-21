@@ -17,7 +17,6 @@
 #include "mesh/config/MeshConfiguration.hpp"
 #include "precice/impl/Participant.hpp"
 #include "precice/impl/SharedPointer.hpp"
-#include "utils/Globals.hpp"
 #include "utils/Helpers.hpp"
 #include "xml/ValidatorEquals.hpp"
 #include "xml/ValidatorOr.hpp"
@@ -30,9 +29,6 @@ namespace cplscheme
 {
 
 using precice::impl::PtrParticipant;
-
-logging::Logger CouplingSchemeConfiguration::
-    _log("cplscheme::CouplingSchemeConfiguration");
 
 CouplingSchemeConfiguration::CouplingSchemeConfiguration(
     xml::XMLTag &                               parent,

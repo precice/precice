@@ -25,9 +25,6 @@ namespace precice
 namespace cplscheme
 {
 
-logging::Logger PostProcessingConfiguration::
-    _log("cplscheme::PostProcessingConfiguration");
-
 //const std::string & PostProcessingConfiguration:: getTag ()
 //{
 //  static std::string tag ( "post-processing" );
