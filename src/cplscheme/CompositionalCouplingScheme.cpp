@@ -1,28 +1,17 @@
 #include "CompositionalCouplingScheme.hpp"
 #include "Constants.hpp"
-#include "utils/Globals.hpp"
 #include <limits>
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace cplscheme {
-
-logging::Logger CompositionalCouplingScheme::
-   _log("cplscheme::CompositionalCouplingScheme");
-
-CompositionalCouplingScheme:: CompositionalCouplingScheme()
-:
-  _couplingSchemes(),
-  _activeSchemesBegin(_couplingSchemes.end()),
-  _activeSchemesEnd(_couplingSchemes.end()),
-  _lastAddedTime(0.0)
-{}
 
 void CompositionalCouplingScheme:: addCouplingScheme
 (
   PtrCouplingScheme couplingScheme )
 {
   TRACE();
-  _couplingSchemes.push_back(Scheme(couplingScheme));
+  _couplingSchemes.emplace_back(couplingScheme);
 }
 
 void CompositionalCouplingScheme:: initialize
@@ -56,13 +45,11 @@ void CompositionalCouplingScheme:: initializeData()
   }
 }
 
-void CompositionalCouplingScheme:: addComputedTime
-(
-  double timeToAdd )
+void CompositionalCouplingScheme:: addComputedTime(double timeToAdd)
 {
   TRACE(timeToAdd);
   for (SchemesIt it = _activeSchemesBegin; it != _activeSchemesEnd; it++){
-    if (not it->onHold){
+    if (not it->onHold) {
       it->scheme->addComputedTime(timeToAdd);
     }
   }
@@ -75,12 +62,12 @@ void CompositionalCouplingScheme:: advance()
   bool moreSchemesToHandle = false;
   do {
     for (SchemesIt it = _activeSchemesBegin; it != _activeSchemesEnd; it++){
-      if (not it->onHold){
+      if (not it->onHold) {
         it->scheme->advance();
       }
     }
     moreSchemesToHandle = determineActiveCouplingSchemes();
-    if (moreSchemesToHandle){
+    if (moreSchemesToHandle) {
       // The new schemes to be handled in this advance also need the time that
       // has been computed so far. This time can't be added in the solver call
       // to addComputedTime(), since there the schemes are not active yet.
@@ -132,14 +119,12 @@ std::vector<std::string> CompositionalCouplingScheme:: getCouplingPartners() con
   return partners;
 }
 
-bool CompositionalCouplingScheme:: willDataBeExchanged
-(
-  double lastSolverTimestepLength ) const
+bool CompositionalCouplingScheme::willDataBeExchanged(double lastSolverTimestepLength) const
 {
   TRACE(lastSolverTimestepLength);
   bool willBeExchanged = false;
   for (SchemesIt it = _activeSchemesBegin; it != _activeSchemesEnd; it++){
-    if (not it->onHold){
+    if (not it->onHold) {
       willBeExchanged |= it->scheme->willDataBeExchanged(lastSolverTimestepLength);
     }
   }
@@ -153,7 +138,7 @@ bool CompositionalCouplingScheme:: hasDataBeenExchanged() const
   bool hasBeenExchanged = false;
   // Question: Does it suffice to only check the active ones?
   for (SchemesIt it = _activeSchemesBegin; it != _activeSchemesEnd; it++){
-    if (not it->onHold){
+    if (not it->onHold) {
       hasBeenExchanged |= it->scheme->hasDataBeenExchanged();
     }
   }
@@ -166,10 +151,8 @@ double CompositionalCouplingScheme:: getTime() const
   TRACE();
   double time = std::numeric_limits<double>::max();
   for (Scheme scheme : _couplingSchemes) {
-    if (not scheme.onHold){
-      if (scheme.scheme->getTime() < time){
-        time = scheme.scheme->getTime();
-      }
+    if (not scheme.onHold) {
+      time = std::min(time, scheme.scheme->getTime());
     }
   }
   DEBUG("return " << time);
@@ -181,10 +164,8 @@ int CompositionalCouplingScheme:: getTimesteps() const
   TRACE();
   int timesteps = std::numeric_limits<int>::max();
   for (Scheme scheme : _couplingSchemes) {
-    if (not scheme.onHold){
-      if (scheme.scheme->getTimesteps() < timesteps){
-        timesteps = scheme.scheme->getTimesteps();
-      }
+    if (not scheme.onHold) {
+      timesteps = std::min(timesteps, scheme.scheme->getTimesteps());
     }
   }
   DEBUG("return " << timesteps);
@@ -196,9 +177,7 @@ double CompositionalCouplingScheme:: getMaxTime() const
   TRACE();
   double maxTime = 0.0;
   for (Scheme scheme : _couplingSchemes) {
-    if (scheme.scheme->getMaxTime() > maxTime){
-      maxTime = scheme.scheme->getMaxTime();
-    }
+    maxTime = std::max(maxTime, scheme.scheme->getMaxTime());
   }
   DEBUG("return " << maxTime);
   return maxTime;
@@ -209,9 +188,7 @@ int CompositionalCouplingScheme:: getMaxTimesteps() const
   TRACE();
   int maxTimesteps = 0;
   for (Scheme scheme : _couplingSchemes) {
-    if (scheme.scheme->getMaxTimesteps() > maxTimesteps){
-      maxTimesteps = scheme.scheme->getMaxTimesteps();
-    }
+    maxTimesteps = std::max(maxTimesteps, scheme.scheme->getMaxTimesteps());
   }
   DEBUG("return " << maxTimesteps);
   return maxTimesteps;
@@ -271,10 +248,8 @@ double CompositionalCouplingScheme:: getComputedTimestepPart() const
   TRACE();
   double timestepPart = std::numeric_limits<double>::max();
   for (Scheme scheme : _couplingSchemes) {
-    if (not scheme.onHold){
-      if (scheme.scheme->getComputedTimestepPart() < timestepPart){
-        timestepPart = scheme.scheme->getComputedTimestepPart();
-      }
+    if (not scheme.onHold) {
+      timestepPart = std::min(timestepPart, scheme.scheme->getComputedTimestepPart());
     }
   }
   DEBUG("return " << timestepPart);
@@ -286,10 +261,8 @@ double CompositionalCouplingScheme:: getNextTimestepMaxLength() const
   TRACE();
   double maxLength = std::numeric_limits<double>::max();
   for (Scheme scheme : _couplingSchemes) {
-    if (not scheme.onHold){
-      if (scheme.scheme->getNextTimestepMaxLength() < maxLength){
-        maxLength = scheme.scheme->getNextTimestepMaxLength();
-      }
+    if (not scheme.onHold) {
+      maxLength = std::min(maxLength, scheme.scheme->getNextTimestepMaxLength());
     }
   }
   DEBUG("return " << maxLength);
@@ -325,7 +298,7 @@ bool CompositionalCouplingScheme:: isActionRequired
   TRACE(actionName);
   bool isRequired = false;
   for (Scheme scheme : _couplingSchemes) {
-    if (not scheme.onHold){
+    if (not scheme.onHold) {
       isRequired |= scheme.scheme->isActionRequired(actionName);
     }
   }
@@ -339,7 +312,7 @@ void CompositionalCouplingScheme:: performedAction
 {
   TRACE(actionName);
   for (Scheme scheme : _couplingSchemes) {
-    if (not scheme.onHold){
+    if (not scheme.onHold) {
       scheme.scheme->performedAction(actionName);
     }
   }

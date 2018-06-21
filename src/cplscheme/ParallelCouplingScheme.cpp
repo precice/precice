@@ -8,8 +8,6 @@
 namespace precice {
 namespace cplscheme {
 
-logging::Logger ParallelCouplingScheme::_log("cplscheme::ParallelCouplingScheme" );
-
 ParallelCouplingScheme::ParallelCouplingScheme
 (
   double                maxTime,
@@ -25,8 +23,7 @@ ParallelCouplingScheme::ParallelCouplingScheme
   int                   maxIterations)
   :
   BaseCouplingScheme(maxTime,maxTimesteps,timestepLength,validDigits,firstParticipant,
-                     secondParticipant,localParticipant,m2n,maxIterations,dtMethod),
-  _allData ()
+                     secondParticipant,localParticipant,m2n,maxIterations,dtMethod)
 {
   _couplingMode = cplMode;
   // Coupling mode must be either Explicit or Implicit when using SerialCouplingScheme.

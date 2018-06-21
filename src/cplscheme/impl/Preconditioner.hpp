@@ -3,8 +3,8 @@
 #include <Eigen/Core>
 #include <vector>
 #include "../SharedPointer.hpp"
-#include "utils/Globals.hpp"
 #include "utils/MasterSlave.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice
 {
@@ -101,9 +101,7 @@ public:
     }
   }
 
-  /**
-   * @brief To transform physical values to balanced values. Matrix version
-   */
+  /// To transform physical values to balanced values. Matrix version
   void apply(Eigen::MatrixXd &M)
   {
     TRACE();
@@ -117,9 +115,7 @@ public:
     }
   }
 
-  /**
-     * @brief To transform physical values to balanced values. Vector version
-     */
+  /// To transform physical values to balanced values. Vector version
   void apply(Eigen::VectorXd &v)
   {
     TRACE();
@@ -132,9 +128,7 @@ public:
     }
   }
 
-  /**
-     * @brief To transform balanced values back to physical values. Matrix version
-     */
+  /// To transform balanced values back to physical values. Matrix version
   void revert(Eigen::MatrixXd &M)
   {
     TRACE();
@@ -149,9 +143,7 @@ public:
     }
   }
 
-  /**
-     * @brief To transform balanced values back to physical values. Vector version
-     */
+  /// To transform balanced values back to physical values. Vector version
   void revert(Eigen::VectorXd &v)
   {
     TRACE();
@@ -188,14 +180,14 @@ public:
     _update_(timestepComplete, oldValues, res);
   }
 
-  //@brief: returns true if a QR decomposition from scratch is necessary
+  /// returns true if a QR decomposition from scratch is necessary
   bool requireNewQR()
   {
     TRACE(_requireNewQR);
     return _requireNewQR;
   }
 
-  //@brief to tell the preconditioner that QR-decomposition has been recomputed
+  /// to tell the preconditioner that QR-decomposition has been recomputed
   void newQRfulfilled()
   {
     _requireNewQR = false;
@@ -243,7 +235,7 @@ protected:
   virtual void _update_(bool timestepComplete, const Eigen::VectorXd &oldValues, const Eigen::VectorXd &res) = 0;
 
 private:
-  static logging::Logger _log;
+  logging::Logger _log{"cplscheme::Preconditioner"};
 };
 }
 }

@@ -8,8 +8,6 @@
 namespace precice {
 namespace cplscheme {
 
-logging::Logger SerialCouplingScheme::_log("cplscheme::SerialCouplingScheme" );
-
 SerialCouplingScheme::SerialCouplingScheme
 (
   double                      maxTime,

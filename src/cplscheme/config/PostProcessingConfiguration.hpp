@@ -52,7 +52,7 @@ public:
   }
 
 private:
-  static logging::Logger _log;
+  logging::Logger _log{"cplscheme::PostProcessingConfiguration"};
 
   const std::string TAG;
   const std::string TAG_RELAX;
@@ -118,42 +118,20 @@ private:
     std::vector<int>      dataIDs;
     std::map<int, double> scalings;
     std::string           type;
-    double                relaxationFactor;
-    bool                  forceInitialRelaxation;
-    int                   maxIterationsUsed;
-    int                   timestepsReused;
-    int                   filter;
-    int                   imvjRestartType;
-    int                   imvjChunkSize;
-    int                   imvjRSLS_reustedTimesteps;
-    int                   precond_nbNonConstTSteps;
-    double                singularityLimit;
-    double                imvjRSSVD_truncationEps;
-    bool                  estimateJacobian;
-    bool                  alwaysBuildJacobian;
+    double                relaxationFactor = 0;
+    bool                  forceInitialRelaxation = false;
+    int                   maxIterationsUsed = 0;
+    int                   timestepsReused = 0;
+    int                   filter = impl::PostProcessing::NOFILTER;
+    int                   imvjRestartType = 0;
+    int                   imvjChunkSize = 0;
+    int                   imvjRSLS_reustedTimesteps = 0;
+    int                   precond_nbNonConstTSteps = -1;
+    double                singularityLimit= 0;
+    double                imvjRSSVD_truncationEps = 0;
+    bool                  estimateJacobian = false;
+    bool                  alwaysBuildJacobian = false;
     std::string           preconditionerType;
-
-    ConfigurationData()
-        : dataIDs(),
-          scalings(),
-          type(""),
-          relaxationFactor(0.0),
-          forceInitialRelaxation(false),
-          maxIterationsUsed(0),
-          timestepsReused(0),
-          filter(impl::PostProcessing::NOFILTER),
-          imvjRestartType(0), // NO-RESTART
-          imvjChunkSize(0),
-          imvjRSLS_reustedTimesteps(0),
-          precond_nbNonConstTSteps(-1),
-          singularityLimit(0.0),
-          imvjRSSVD_truncationEps(0.0),
-          estimateJacobian(false),
-          alwaysBuildJacobian(false),
-          preconditionerType("")
-    {
-    }
-
   } _config;
 
   bool _isAddManifoldMappingTagAllowed;

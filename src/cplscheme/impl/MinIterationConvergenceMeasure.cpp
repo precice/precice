@@ -7,15 +7,10 @@ namespace cplscheme
 namespace impl
 {
 
-logging::Logger MinIterationConvergenceMeasure::
-    _log("cplscheme::MinIterationConvergenceMeasure");
-
 MinIterationConvergenceMeasure::MinIterationConvergenceMeasure(
     int minimumIterationCount)
     : ConvergenceMeasure(),
-      _minimumIterationCount(minimumIterationCount),
-      _currentIteration(0),
-      _isConvergence(false)
+      _minimumIterationCount(minimumIterationCount)
 {
 }
 

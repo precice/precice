@@ -1,8 +1,8 @@
 import os
 import subprocess
 import sys
-
 import sysconfig
+from os.path import join
 
 try:
     import numpy
@@ -78,6 +78,7 @@ vars = Variables(None, ARGUMENTS)
 
 vars.Add(PathVariable("builddir", "Directory holding build files.", "build", PathVariable.PathAccept))
 vars.Add(EnumVariable('build', 'Build type', "Debug", allowed_values=('release', 'debug', 'Release', 'Debug')))
+vars.Add(PathVariable("libprefix", "Path prefix for libraries", "/usr", PathVariable.PathIsDir))
 vars.Add("compiler", "Compiler to use.", "mpicxx")
 vars.Add(BoolVariable("mpi", "Enables MPI-based communication and running coupling tests.", True))
 vars.Add(BoolVariable("petsc", "Enable use of the Petsc linear algebra library.", True))
@@ -104,7 +105,8 @@ if env["build"] == 'release':
     print("WARNING: Lower-case build type 'release' is deprecated, use 'Release' instead!")
 
 
-buildpath = os.path.join(env["builddir"], "") # Ensures to have a trailing slash
+prefix = env["libprefix"]
+buildpath = join(env["builddir"], "") # Ensures to have a trailing slash
 
 print
 
@@ -137,9 +139,9 @@ elif real_compiler == "g++-mp-4.9":
 env.Replace(CXX = env["compiler"])
 env.Replace(CC = env["compiler"])
 
-if 'CONDA_PREFIX' in os.environ:  # building takes place in conda environment
-    env.Append(CPPPATH = os.path.join( os.environ['CONDA_PREFIX'], 'include'))
-    env.Append(LIBPATH = os.path.join( os.environ['CONDA_PREFIX'], 'lib'))
+if prefix is not "/usr":  # explicitely add standard search paths
+    env.Append(CPPPATH = join( prefix, 'include'))
+    env.Append(LIBPATH = join( prefix, 'lib'))
 
 if not conf.CheckCXX():
     Exit(1)
@@ -163,23 +165,16 @@ checkAdd("pthread")
 
 # ====== PETSc ======
 if env["petsc"]:
-    if 'CONDA_PREFIX' in os.environ:  # building takes place in conda environment
-        PETSC_DIR = ""  # todo determine path of petsc in conda environment
-        PETSC_ARCH = ""
-        print("using petsc with conda currently not supported!")
-        Exit(1)
-    else:
-        PETSC_DIR = checkset_var("PETSC_DIR", "")
-        PETSC_ARCH = checkset_var("PETSC_ARCH", "")
-
+    PETSC_DIR = checkset_var("PETSC_DIR", "")
+    PETSC_ARCH = checkset_var("PETSC_ARCH", "")
     if not env["mpi"]:
         print("PETSc requires MPI to be enabled.")
         Exit(1)
-
-    env.Append(CPPPATH = [os.path.join( PETSC_DIR, "include"),
-                          os.path.join( PETSC_DIR, PETSC_ARCH, "include")])
-    env.Append(LIBPATH = [os.path.join( PETSC_DIR, PETSC_ARCH, "lib"),
-                          os.path.join( PETSC_DIR, "lib")])
+       
+    env.Append(CPPPATH = [join(prefix, PETSC_DIR, "include"),
+                          join(prefix, PETSC_DIR, PETSC_ARCH, "include")])
+    env.Append(LIBPATH = [join(prefix, PETSC_DIR, PETSC_ARCH, "lib"),
+                          join(prefix, PETSC_DIR, "lib")])
     if env["platform"] == "hazelhen":
         checkAdd("craypetsc_gnu_real")
     else:
@@ -189,8 +184,8 @@ else:
     buildpath += "-nopetsc"
 
 # ====== Eigen ======
-if 'CONDA_PREFIX' in os.environ:  # building takes place in conda environment
-    env.Append(CPPPATH = os.path.join( os.environ['CONDA_PREFIX'], 'include/eigen3'))
+if prefix is not "/usr":
+    env.Append(CPPPATH = join(prefix, 'include/eigen3'))
 
 checkAdd(header = "Eigen/Dense", usage = "Eigen")
 if env["build"] == "debug":
@@ -200,8 +195,8 @@ if env["build"] == "debug":
 # Needed for correct linking on Hazel Hen
 # Otherwise it would link partly to old system boost, partly to newer modules boost
 if env["platform"] == "hazelhen":
-    env.Append(CPPPATH = os.path.join( os.environ['BOOST_ROOT'], 'include'))
-    env.Append(LIBPATH = os.path.join( os.environ['BOOST_ROOT'], 'lib'))
+    env.Append(CPPPATH = join( os.environ['BOOST_ROOT'], 'include'))
+    env.Append(LIBPATH = join( os.environ['BOOST_ROOT'], 'lib'))
 
 env.Append(CPPDEFINES= ['BOOST_ALL_DYN_LINK',
                         'BOOST_ASIO_ENABLE_OLD_SERVICES']) # Interfaces have changed in 1.66
@@ -285,10 +280,7 @@ elif env["platform"] == "hazelhen":
     env.Append(LINKFLAGS = ['-dynamic']) # Needed for correct linking against boost.log
 
 # ====== LibXML2 ======
-if 'CONDA_PREFIX' in os.environ:  # building takes place in conda environment
-    env.Append(CPPPATH = os.path.join( os.environ['CONDA_PREFIX'], 'include/libxml2'))
-else:
-    env.Append(CPPPATH = ['/usr/include/libxml2'])
+env.Append(CPPPATH = join(prefix, 'include/libxml2'))
 checkAdd("xml2")
 
 print
@@ -332,7 +324,7 @@ env.Alias("tests", tests)
 symlink = env.Command(
     target = "symlink",
     source = None,
-    action = "ln -fns {0} {1}".format(os.path.split(buildpath)[-1], os.path.join(os.path.split(buildpath)[0], "last"))
+    action = "ln -fns {0} {1}".format(os.path.split(buildpath)[-1], join(os.path.split(buildpath)[0], "last"))
 )
 
 Default(solib, tests, symlink)
