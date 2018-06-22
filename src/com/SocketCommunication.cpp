@@ -51,18 +51,18 @@ size_t SocketCommunication::getRemoteCommunicatorSize()
   return _remoteCommunicatorSize;
 }
 
-void SocketCommunication::acceptConnection(std::string const &nameAcceptor,
-                                           std::string const &nameRequester,
-                                           int                acceptorProcessRank)
+void SocketCommunication::acceptConnection(std::string const &acceptorName,
+                                           std::string const &requesterName,
+                                           int                acceptorRank)
 {
-  TRACE(nameAcceptor, nameRequester);
+  TRACE(acceptorName, requesterName);
 
   assertion(not isConnected());
 
   _rank = 0;
 
   std::string address;
-  std::string addressFileName("." + nameRequester + "-" + nameAcceptor + ".address");
+  std::string addressFileName("." + requesterName + "-" + acceptorName + ".address");
 
   try {
     std::string ipAddress = getIpAddress();
@@ -96,20 +96,20 @@ void SocketCommunication::acceptConnection(std::string const &nameAcceptor,
 
     DEBUG("Accepted connection at " << address);
 
-    int remoteRank = -1;
-    int remoteSize = 0;
+    int requesterRank = -1;
+    int requesterCommunicatorSize = 0;
 
-    asio::read(*socket, asio::buffer(&remoteRank, sizeof(int)));
-    asio::read(*socket, asio::buffer(&remoteSize, sizeof(int)));
+    asio::read(*socket, asio::buffer(&requesterRank, sizeof(int)));
+    asio::read(*socket, asio::buffer(&requesterCommunicatorSize, sizeof(int)));
 
-    CHECK(remoteSize > 0, "Requester communicator size has to be > 0!");
+    CHECK(requesterCommunicatorSize > 0, "Requester communicator size has to be > 0!");
 
-    _remoteCommunicatorSize = remoteSize;
-    _sockets[remoteRank] = socket;
+    _remoteCommunicatorSize = requesterCommunicatorSize;
+    _sockets[requesterRank] = socket;
     _isConnected = true;
 
-    send(_rank, remoteRank);
-    send(1, remoteRank); // was: acceptorCommunicatorSize
+    send(_rank, requesterRank);
+    send(1, requesterRank); // was: acceptorCommunicatorSize
 
     for (int i = 1; i < _remoteCommunicatorSize; ++i) {
       socket = std::make_shared<Socket>(*_ioService);
@@ -117,19 +117,19 @@ void SocketCommunication::acceptConnection(std::string const &nameAcceptor,
       acceptor.accept(*socket);
       DEBUG("Accepted connection at " << address);
 
-      asio::read(*socket, asio::buffer(&remoteRank, sizeof(int)));
-      asio::read(*socket, asio::buffer(&remoteSize, sizeof(int)));
+      asio::read(*socket, asio::buffer(&requesterRank, sizeof(int)));
+      asio::read(*socket, asio::buffer(&requesterCommunicatorSize, sizeof(int)));
 
-      CHECK(remoteSize == _remoteCommunicatorSize,
+      CHECK(requesterCommunicatorSize == _remoteCommunicatorSize,
             "Remote communicator sizes are inconsistent!");
-      CHECK(_sockets[remoteRank].use_count() == 0,
-            "Duplicate request to connect by same rank (" << remoteRank << ")!");
-      _sockets[remoteRank] = socket;
+      CHECK(_sockets[requesterRank].use_count() == 0,
+            "Duplicate request to connect by same rank (" << requesterRank << ")!");
+      _sockets[requesterRank] = socket;
 
       _isConnected = true;
 
-      send(_rank, remoteRank); // -> receive(remoteRank, 0);
-      send(1, remoteRank); // was: acceptorCommunicatorSize
+      send(_rank, requesterRank); // -> receive(remoteRank, 0);
+      send(1, requesterRank); // was: acceptorCommunicatorSize
     }
 
     acceptor.close();
@@ -143,12 +143,12 @@ void SocketCommunication::acceptConnection(std::string const &nameAcceptor,
   _thread = std::thread([this]() { _ioService->run(); });
 }
 
-void SocketCommunication::acceptConnectionAsServer(std::string const &nameAcceptor,
-                                                   std::string const &nameRequester,
+void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorName,
+                                                   std::string const &requesterName,
                                                    int                acceptorRank,
                                                    int                requesterCommunicatorSize)
 {
-  TRACE(nameAcceptor, nameRequester, acceptorRank, requesterCommunicatorSize);
+  TRACE(acceptorName, requesterName, acceptorRank, requesterCommunicatorSize);
   CHECK(requesterCommunicatorSize > 0, "Requester communicator size has to be > 0!");
   assertion(not isConnected());
 
@@ -156,8 +156,8 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &nameAccept
   _rank                   = 0;
 
   std::string address;
-  std::string addressFileName("." + nameRequester + "-" +
-                              nameAcceptor + "-" + std::to_string(acceptorRank) + ".address");
+  std::string addressFileName("." + requesterName + "-" +
+                              acceptorName + "-" + std::to_string(acceptorRank) + ".address");
 
   try {
     std::string ipAddress = getIpAddress();
@@ -216,16 +216,16 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &nameAccept
   _thread = std::thread([this]() { _ioService->run(); });  
 }
 
-void SocketCommunication::requestConnection(std::string const &nameAcceptor,
-                                            std::string const &nameRequester,
-                                            int                requesterProcessRank,
+void SocketCommunication::requestConnection(std::string const &acceptorName,
+                                            std::string const &requesterName,
+                                            int                requesterRank,
                                             int                requesterCommunicatorSize)
 {
-  TRACE(nameAcceptor, nameRequester);
+  TRACE(acceptorName, requesterName);
   assertion(not isConnected());
 
   std::string address;
-  std::string addressFileName("." + nameRequester + "-" + nameAcceptor + ".address");
+  std::string addressFileName("." + requesterName + "-" + acceptorName + ".address");
 
   try {
     Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
@@ -263,22 +263,22 @@ void SocketCommunication::requestConnection(std::string const &nameAcceptor,
 
     DEBUG("Requested connection to " << address);
 
-    _sockets[0] = socket; // should be acceptorProcessRank
-    _rank = requesterProcessRank;
+    _sockets[0] = socket; // should be acceptorRank
+    _rank = requesterRank;
 
-    send(requesterProcessRank, 0);
+    send(requesterRank, 0);
     send(requesterCommunicatorSize, 0);
 
-    int remoteSize = 0;
-    int remoteRank = -1;
+    int acceptorCommunicatorSize = 0;
+    int acceptorRank = -1;
 
-    receive(remoteRank, 0);
-    receive(remoteSize, 0);
+    receive(acceptorRank, 0);
+    receive(acceptorCommunicatorSize, 0);
 
-    CHECK(remoteRank == 0, "Acceptor base rank has to be 0 but is " << remoteRank << "!");
-    CHECK(remoteSize == 1, "Acceptor communicator size has to be 1!");
+    CHECK(acceptorRank == 0, "Acceptor base rank has to be 0 but is " << acceptorRank << "!");
+    CHECK(acceptorCommunicatorSize == 1, "Acceptor communicator size has to be 1!");
 
-    _remoteCommunicatorSize = remoteSize;
+    _remoteCommunicatorSize = acceptorCommunicatorSize;
   } catch (std::exception &e) {
     ERROR("Requesting connection to " << address << " failed: " << e.what());
   }
@@ -290,20 +290,20 @@ void SocketCommunication::requestConnection(std::string const &nameAcceptor,
   _thread = std::thread([this]() { _ioService->run(); });
 }
 
-void SocketCommunication::requestConnectionAsClient(std::string      const &nameAcceptor,
-                                                    std::string      const &nameRequester,
+void SocketCommunication::requestConnectionAsClient(std::string      const &acceptorName,
+                                                    std::string      const &requesterName,
                                                     std::set<int>    const &acceptorRanks,
                                                     int                     requesterRank)
                                                     
 {
-  TRACE(nameAcceptor, nameRequester, acceptorRanks, requesterRank);
+  TRACE(acceptorName, requesterName, acceptorRanks, requesterRank);
   assertion(not isConnected());
   
   for (auto const & acceptorRank : acceptorRanks) {
     _isConnected = false;
     std::string address;
-    std::string addressFileName("." + nameRequester + "-" +
-                                nameAcceptor + "-" + std::to_string(acceptorRank) + ".address");
+    std::string addressFileName("." + requesterName + "-" +
+                                acceptorName + "-" + std::to_string(acceptorRank) + ".address");
 
     try {
       Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
@@ -347,16 +347,16 @@ void SocketCommunication::requestConnectionAsClient(std::string      const &name
       WARN("CHECKPOINT 2 FOR RANK " << acceptorRank); // reached only for acceptorRank=0
       receive(_rank, acceptorRank); // remove
       
-      int remoteSize = 0;
+      int acceptorCommunicatorSize = 0;
       int remoteRank = -1;
 
       receive(remoteRank, acceptorRank); // remove
-      receive(remoteSize, acceptorRank); // replace by _remoteCommunicatorSize??
+      receive(acceptorCommunicatorSize, acceptorRank); // replace by _remoteCommunicatorSize??
             
-      CHECK(remoteRank == 0, "Acceptor base rank has to be 0 but is " << remoteRank << "!");
-      CHECK(remoteSize == 1, "Acceptor communicator size has to be 1!");
+      CHECK(remoteRank == 0, "Acceptor base rank has to be 0 but is " << acceptorRank << "!");
+      CHECK(acceptorCommunicatorSize == 1, "Acceptor communicator size has to be 1!");
 
-      _remoteCommunicatorSize = remoteSize;
+      _remoteCommunicatorSize = acceptorCommunicatorSize;
     } catch (std::exception &e) {
       ERROR("Requesting connection to " << address << " failed: " << e.what());
     }

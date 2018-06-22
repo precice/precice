@@ -29,19 +29,19 @@ bool GatherScatterCommunication::isConnected()
 }
 
 void GatherScatterCommunication::acceptConnection(
-    const std::string &nameAcceptor,
-    const std::string &nameRequester)
+    const std::string &acceptorName,
+    const std::string &requesterName)
 {
-  TRACE(nameAcceptor, nameRequester);
+  TRACE(acceptorName, requesterName);
   assertion(utils::MasterSlave::_slaveMode || _com->isConnected());
   _isConnected = true;
 }
 
 void GatherScatterCommunication::requestConnection(
-    const std::string &nameAcceptor,
-    const std::string &nameRequester)
+    const std::string &acceptorName,
+    const std::string &requesterName)
 {
-  TRACE(nameAcceptor, nameRequester);
+  TRACE(acceptorName, requesterName);
   assertion(utils::MasterSlave::_slaveMode || _com->isConnected());
   _isConnected = true;
 }

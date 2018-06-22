@@ -38,16 +38,16 @@ bool M2N::isConnected()
 }
 
 void M2N::acceptMasterConnection(
-    const std::string &nameAcceptor,
-    const std::string &nameRequester)
+    const std::string &acceptorName,
+    const std::string &requesterName)
 {
-  TRACE(nameAcceptor, nameRequester);
+  TRACE(acceptorName, requesterName);
 
   //Event e("M2N::acceptMasterConnection");
 
   if (not utils::MasterSlave::_slaveMode) {
     assertion(_masterCom.use_count() > 0);
-    _masterCom->acceptConnection(nameAcceptor, nameRequester, utils::MasterSlave::_rank);
+    _masterCom->acceptConnection(acceptorName, requesterName, utils::MasterSlave::_rank);
     _isMasterConnected = _masterCom->isConnected();
   }
 
@@ -55,10 +55,10 @@ void M2N::acceptMasterConnection(
 }
 
 void M2N::requestMasterConnection(
-    const std::string &nameAcceptor,
-    const std::string &nameRequester)
+    const std::string &acceptorName,
+    const std::string &requesterName)
 {
-  TRACE(nameAcceptor, nameRequester);
+  TRACE(acceptorName, requesterName);
 
   if (not utils::MasterSlave::_slaveMode) {
     assertion(_masterCom.use_count() > 0);
@@ -67,7 +67,7 @@ void M2N::requestMasterConnection(
         "M2N::requestMasterConnection"
         "/");
 
-    _masterCom->requestConnection(nameAcceptor, nameRequester, 0, 1);
+    _masterCom->requestConnection(acceptorName, requesterName, 0, 1);
     _isMasterConnected = _masterCom->isConnected();
   }
 
@@ -75,26 +75,26 @@ void M2N::requestMasterConnection(
 }
 
 void M2N::acceptSlavesConnection(
-    const std::string &nameAcceptor,
-    const std::string &nameRequester)
+    const std::string &acceptorName,
+    const std::string &requesterName)
 {
-  TRACE(nameAcceptor, nameRequester);
+  TRACE(acceptorName, requesterName);
   _areSlavesConnected = true;
   for (const auto &pair : _distComs) {
-    pair.second->acceptConnection(nameAcceptor, nameRequester);
+    pair.second->acceptConnection(acceptorName, requesterName);
     _areSlavesConnected = _areSlavesConnected && pair.second->isConnected();
   }
   assertion(_areSlavesConnected);
 }
 
 void M2N::requestSlavesConnection(
-    const std::string &nameAcceptor,
-    const std::string &nameRequester)
+    const std::string &acceptorName,
+    const std::string &requesterName)
 {
-  TRACE(nameAcceptor, nameRequester);
+  TRACE(acceptorName, requesterName);
   _areSlavesConnected = true;
   for (const auto &pair : _distComs) {
-    pair.second->requestConnection(nameAcceptor, nameRequester);
+    pair.second->requestConnection(acceptorName, requesterName);
     _areSlavesConnected = _areSlavesConnected && pair.second->isConnected();
   }
   assertion(_areSlavesConnected);

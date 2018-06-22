@@ -311,10 +311,10 @@ bool PointToPointCommunication::isConnected()
   return _isConnected;
 }
 
-void PointToPointCommunication::acceptConnection(std::string const &nameAcceptor,
-                                                 std::string const &nameRequester)
+void PointToPointCommunication::acceptConnection(std::string const &acceptorName,
+                                                 std::string const &requesterName)
 {
-  TRACE(nameAcceptor, nameRequester);
+  TRACE(acceptorName, requesterName);
   CHECK(not isConnected(), "Already connected!");
   CHECK(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode,
         "You can only use a point-to-point communication between two participants which both use a master. "
@@ -327,7 +327,7 @@ void PointToPointCommunication::acceptConnection(std::string const &nameAcceptor
     // Establish connection between participants' master processes.
     auto c = _communicationFactory->newCommunication();
 
-    c->acceptConnection(nameAcceptor, nameRequester, utils::MasterSlave::_rank);
+    c->acceptConnection(acceptorName, requesterName, utils::MasterSlave::_rank);
 
     int requesterMasterRank;
 
@@ -388,7 +388,7 @@ void PointToPointCommunication::acceptConnection(std::string const &nameAcceptor
       Event e(_prefix + "PointToPointCommunication::acceptConnection/createDirectories");
 
       for (int rank = 0; rank < utils::MasterSlave::_size; ++rank) {
-        Publisher::createDirectory(addressDirectory + "/" + "." + nameAcceptor + "-" + _mesh->getName() +
+        Publisher::createDirectory(addressDirectory + "/" + "." + acceptorName + "-" + _mesh->getName() +
                                    "-" + std::to_string(rank) + ".address");
       }
     }
@@ -409,13 +409,13 @@ void PointToPointCommunication::acceptConnection(std::string const &nameAcceptor
   auto c = _communicationFactory->newCommunication();
 
 #ifdef SuperMUC_WORK
-  Publisher::ScopedPushDirectory spd("." + nameAcceptor + "-" + _mesh->getName() + "-" +
+  Publisher::ScopedPushDirectory spd("." + acceptorName + "-" + _mesh->getName() + "-" +
                                      std::to_string(utils::MasterSlave::_rank) + ".address");
 #endif
 
   c->acceptConnectionAsServer(
-      nameAcceptor,
-      nameRequester,
+      acceptorName,
+      requesterName,
       utils::MasterSlave::_rank,
       communicationMap.size());
 
@@ -439,10 +439,10 @@ void PointToPointCommunication::acceptConnection(std::string const &nameAcceptor
   _isConnected = true;
 }
 
-void PointToPointCommunication::requestConnection(std::string const &nameAcceptor,
-                                                  std::string const &nameRequester)
+void PointToPointCommunication::requestConnection(std::string const &acceptorName,
+                                                  std::string const &requesterName)
 {
-  TRACE(nameAcceptor, nameRequester);
+  TRACE(acceptorName, requesterName);
   CHECK(not isConnected(), "Already connected!");
   CHECK(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode,
         "You can only use a point-to-point communication between two participants which both use a master. "
@@ -458,7 +458,7 @@ void PointToPointCommunication::requestConnection(std::string const &nameAccepto
       Publisher::ScopedSetEventNamePrefix ssenp(
           _prefix + "PointToPointCommunication::requestConnection/synchronize/");
 
-      c->requestConnection(nameAcceptor, nameRequester, 0, 1);
+      c->requestConnection(acceptorName, requesterName, 0, 1);
     }
 
     int acceptorMasterRank;
@@ -538,7 +538,7 @@ void PointToPointCommunication::requestConnection(std::string const &nameAccepto
     acceptingRanks.emplace(i.first);
 
   auto c = _communicationFactory->newCommunication();
-  c->requestConnectionAsClient(nameAcceptor, nameRequester,
+  c->requestConnectionAsClient(acceptorName, requesterName,
                                acceptingRanks, utils::MasterSlave::_rank);
 
   // Request point-to-point connections (as client) between the current
@@ -554,7 +554,7 @@ void PointToPointCommunication::requestConnection(std::string const &nameAccepto
     // auto c = _communicationFactory->newCommunication();
 
 #ifdef SuperMUC_WORK
-    Publisher::ScopedPushDirectory spd("." + nameAcceptor + "-" + _mesh->getName() + "-" +
+    Publisher::ScopedPushDirectory spd("." + acceptorName + "-" + _mesh->getName() + "-" +
                                        std::to_string(globalAcceptorRank) + ".address");
 #endif
 

@@ -33,11 +33,11 @@ size_t MPIPortsCommunication::getRemoteCommunicatorSize()
   return _communicators.size();
 }
 
-void MPIPortsCommunication::acceptConnection(std::string const &nameAcceptor,
-                                             std::string const &nameRequester,
-                                             int                acceptorProcessRank)
+void MPIPortsCommunication::acceptConnection(std::string const &acceptorName,
+                                             std::string const &requesterName,
+                                             int                acceptorRank)
 {
-  TRACE(nameAcceptor, nameRequester);
+  TRACE(acceptorName, requesterName);
   assertion(not isConnected());
 
   _isAcceptor = true;
@@ -45,7 +45,7 @@ void MPIPortsCommunication::acceptConnection(std::string const &nameAcceptor,
 
   MPI_Open_port(MPI_INFO_NULL, const_cast<char *>(_portName.data()));
 
-  std::string addressFileName("." + nameRequester + "-" + nameAcceptor + ".address");
+  std::string addressFileName("." + requesterName + "-" + acceptorName + ".address");
   Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
   ScopedPublisher                        p(addressFileName);
   p.write(_portName);
@@ -56,43 +56,43 @@ void MPIPortsCommunication::acceptConnection(std::string const &nameAcceptor,
   MPI_Comm_accept(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
   DEBUG("Accepted connection at " << _portName);
 
-  int    requesterProcessRank      = -1;
+  int    requesterRank      = -1;
   size_t requesterCommunicatorSize = 0;
 
   // Exchange information to which rank I am connected and which communicator size on the other side
-  MPI_Recv(&requesterProcessRank, 1,      MPI_INT, 0, 42, communicator, MPI_STATUS_IGNORE);
+  MPI_Recv(&requesterRank,      1, MPI_INT, 0, 42, communicator, MPI_STATUS_IGNORE);
   MPI_Recv(&requesterCommunicatorSize, 1, MPI_INT, 0, 42, communicator, MPI_STATUS_IGNORE);
-  MPI_Send(&acceptorProcessRank,       1, MPI_INT, 0, 42, communicator);
+  MPI_Send(&acceptorRank,              1, MPI_INT, 0, 42, communicator);
   
   CHECK(requesterCommunicatorSize > 0, "Requester communicator size has to be > 0!");
-  _communicators[requesterProcessRank] = communicator;
+  _communicators[requesterRank] = communicator;
   
   // Connect all other peers
   for (size_t i = 1; i < requesterCommunicatorSize; ++i) {
     MPI_Comm_accept(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
     DEBUG("Accepted connection at " << _portName);
 
-    MPI_Recv(&requesterProcessRank,      1, MPI_INT, 0, 42, communicator, MPI_STATUS_IGNORE);
+    MPI_Recv(&requesterRank,             1, MPI_INT, 0, 42, communicator, MPI_STATUS_IGNORE);
     MPI_Recv(&requesterCommunicatorSize, 1, MPI_INT, 0, 42, communicator, MPI_STATUS_IGNORE);
 
     CHECK(requesterCommunicatorSize == _communicators.size(),
           "Requester communicator sizes are inconsistent!");
-    CHECK(_communicators.count(requesterProcessRank) == 0,
-          "Duplicate request to connect by same rank (" << requesterProcessRank << ")!");
+    CHECK(_communicators.count(requesterRank) == 0,
+          "Duplicate request to connect by same rank (" << requesterRank << ")!");
 
-    _communicators[requesterProcessRank] = communicator;
+    _communicators[requesterRank] = communicator;
   }
   
   _isConnected = true;
 }
 
 void MPIPortsCommunication::acceptConnectionAsServer(
-    std::string const &nameAcceptor,
-    std::string const &nameRequester,
+    std::string const &acceptorName,
+    std::string const &requesterName,
     int                acceptorRank,
     int                requesterCommunicatorSize)
 {
-  TRACE(nameAcceptor, nameRequester, acceptorRank, requesterCommunicatorSize);
+  TRACE(acceptorName, requesterName, acceptorRank, requesterCommunicatorSize);
   CHECK(requesterCommunicatorSize > 0, "Requester communicator size has to be > 0!");
   assertion(not isConnected());
 
@@ -101,8 +101,8 @@ void MPIPortsCommunication::acceptConnectionAsServer(
 
   MPI_Open_port(MPI_INFO_NULL, const_cast<char *>(_portName.data()));
 
-  std::string addressFileName("." + nameRequester + "-" +
-                              nameAcceptor + "-" + std::to_string(acceptorRank) + ".address");
+  std::string addressFileName("." + requesterName + "-" +
+                              acceptorName + "-" + std::to_string(acceptorRank) + ".address");
   Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
   ScopedPublisher                        p(addressFileName);
   p.write(_portName);
@@ -111,7 +111,6 @@ void MPIPortsCommunication::acceptConnectionAsServer(
   MPI_Comm communicator;
   for (int connections = 0; connections < requesterCommunicatorSize; ++connections) {
     MPI_Comm_accept(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
-
     DEBUG("Accepted connection at " << _portName);
         
     int requesterRank = -1;
@@ -124,16 +123,16 @@ void MPIPortsCommunication::acceptConnectionAsServer(
 
 }
 
-void MPIPortsCommunication::requestConnection(std::string const &nameAcceptor,
-                                              std::string const &nameRequester,
-                                              int                requesterProcessRank,
+void MPIPortsCommunication::requestConnection(std::string const &acceptorName,
+                                              std::string const &requesterName,
+                                              int                requesterRank,
                                               int                requesterCommunicatorSize)
 {
-  TRACE(nameAcceptor, nameRequester);
+  TRACE(acceptorName, requesterName);
   assertion(not isConnected());
   _isAcceptor = false;
 
-  std::string addressFileName("." + nameRequester + "-" + nameAcceptor + ".address");
+  std::string addressFileName("." + requesterName + "-" + acceptorName + ".address");
   Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
   Publisher p(addressFileName);
   _portName = p.read();
@@ -144,28 +143,28 @@ void MPIPortsCommunication::requestConnection(std::string const &nameAcceptor,
   DEBUG("Requested connection to " << _portName);
 
   _isConnected = true;
-  _rank        = requesterProcessRank;
+  _rank        = requesterRank;
 
-  MPI_Send(&requesterProcessRank,      1, MPI_INT, 0, 42, communicator); // can likely be deleted
+  MPI_Send(&requesterRank,             1, MPI_INT, 0, 42, communicator); // can likely be deleted
   MPI_Send(&requesterCommunicatorSize, 1, MPI_INT, 0, 42, communicator); // can likely be deleted
-  int acceptorProcessRank;
-  MPI_Recv(&acceptorProcessRank,        1, MPI_INT, 0, 42, communicator, MPI_STATUS_IGNORE);
-  _communicators[0] = communicator; // should be acceptorProcessRank
+  int acceptorRank;
+  MPI_Recv(&acceptorRank,        1, MPI_INT, 0, 42, communicator, MPI_STATUS_IGNORE);
+  _communicators[0] = communicator; // should be acceptorRank
 }
 
-void MPIPortsCommunication::requestConnectionAsClient(std::string      const &nameAcceptor,
-                                                      std::string      const &nameRequester,
+void MPIPortsCommunication::requestConnectionAsClient(std::string      const &acceptorName,
+                                                      std::string      const &requesterName,
                                                       std::set<int>    const &acceptorRanks,
                                                       int                     requesterRank)
                                                       
 {
-  TRACE(nameAcceptor, nameRequester, acceptorRanks, requesterRank);
+  TRACE(acceptorName, requesterName, acceptorRanks, requesterRank);
   assertion(not isConnected());
   _isAcceptor = false;
 
   for (auto const & acceptorRank : acceptorRanks) {
-    std::string addressFileName("." + nameRequester + "-" +
-                                nameAcceptor + "-" + std::to_string(acceptorRank) + ".address");
+    std::string addressFileName("." + requesterName + "-" +
+                                acceptorName + "-" + std::to_string(acceptorRank) + ".address");
 
     Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
     Publisher p(addressFileName);

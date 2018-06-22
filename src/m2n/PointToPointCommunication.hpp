@@ -50,20 +50,20 @@ public:
    * @brief Accepts connection from participant, which has to call
    *        requestConnection().
    *
-   * @param[in] nameAcceptor  Name of calling participant.
-   * @param[in] nameRequester Name of remote participant to connect to.
+   * @param[in] acceptorName  Name of calling participant.
+   * @param[in] requesterName Name of remote participant to connect to.
    */
-  virtual void acceptConnection(std::string const &nameAcceptor,
-                                std::string const &nameRequester);
+  virtual void acceptConnection(std::string const &acceptorName,
+                                std::string const &requesterName);
 
   /**
    * @brief Requests connection from participant, which has to call acceptConnection().
    *
-   * @param[in] nameAcceptor Name of remote participant to connect to.
-   * @param[in] nameRequester Name of calling participant.
+   * @param[in] acceptorName Name of remote participant to connect to.
+   * @param[in] requesterName Name of calling participant.
    */
-  virtual void requestConnection(std::string const &nameAcceptor,
-                                 std::string const &nameRequester);
+  virtual void requestConnection(std::string const &acceptorName,
+                                 std::string const &requesterName);
 
   /**
    * @brief Disconnects from communication space, i.e. participant.

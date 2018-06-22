@@ -24,56 +24,28 @@ public:
 
   virtual ~SocketCommunication();
 
-  /**
-   * @brief Returns the number of processes in the remote communicator.
-   *
-   * Precondition: a connection to the remote participant has been setup.
-   */
   virtual size_t getRemoteCommunicatorSize() override;
 
-  /**
-   * @brief Accepts connection from participant, which has to call requestConnection().
-   *
-   * If several connections are going in to a server, the server has to call
-   * this method, while the clients have to call requestConnection().
-   *
-   * @param[in] nameAcceptor Name of calling participant.
-   * @param[in] nameRequester Name of remote participant to connect to.
-   */
-  virtual void acceptConnection(std::string const &nameAcceptor,
-                                std::string const &nameRequester,
-                                int                acceptorProcessRank) override;
+  virtual void acceptConnection(std::string const &acceptorName,
+                                std::string const &requesterName,
+                                int                acceptorRank) override;
 
-  virtual void acceptConnectionAsServer(std::string const &nameAcceptor,
-                                        std::string const &nameRequester,
+  virtual void acceptConnectionAsServer(std::string const &acceptorName,
+                                        std::string const &requesterName,
                                         int                acceptorRank,
                                         int                requesterCommunicatorSize) override;
 
-  /**
-   * @brief Requests connection from participant, which has to call acceptConnection().
-   *
-   * If several connections are going in to a server, the clients have to call
-   * this method, while the server has to call acceptConnection().
-   *
-   * @param[in] nameAcceptor Name of remote participant to connect to.
-   * @param[in] nameReuester Name of calling participant.
-   */
-  virtual void requestConnection(std::string const &nameAcceptor,
-                                 std::string const &nameRequester,
-                                 int                requesterProcessRank,
+  virtual void requestConnection(std::string const &acceptorName,
+                                 std::string const &requesterName,
+                                 int                requesterRank,
                                  int                requesterCommunicatorSize) override;
 
-  virtual void requestConnectionAsClient(std::string   const &nameAcceptor,
-                                         std::string   const &nameRequester,
+  virtual void requestConnectionAsClient(std::string   const &acceptorName,
+                                         std::string   const &requesterName,
                                          std::set<int> const &acceptorRanks,
                                          int                  requesterRank) override;
 
 
-  /**
-   * @brief Disconnects from communication space, i.e. participant.
-   *
-   * This method is called on destruction.
-   */
   virtual void closeConnection() override;
 
   /// Sends a std::string to process with given rank.

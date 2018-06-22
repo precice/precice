@@ -22,35 +22,27 @@ public:
 
   virtual ~MPIPortsCommunication();
 
-  /**
-   * @brief Returns the number of processes in the remote communicator.
-   *
-   * @pre A connection to the remote participant has been setup.
-   */
   virtual size_t getRemoteCommunicatorSize() override;
 
-  /// See precice::com::Communication::acceptConnection().
-  virtual void acceptConnection(std::string const &nameAcceptor,
-                                std::string const &nameRequester,
-                                int                acceptorProcessRank) override;
+  virtual void acceptConnection(std::string const &acceptorName,
+                                std::string const &requesterName,
+                                int                acceptorRank) override;
 
-  virtual void acceptConnectionAsServer(std::string const &nameAcceptor,
-                                        std::string const &nameRequester,
+  virtual void acceptConnectionAsServer(std::string const &acceptorName,
+                                        std::string const &requesterName,
                                         int                acceptorRank,
                                         int                requesterCommunicatorSize) override;
   
-  /// See precice::com::Communication::requestConnection().
-  virtual void requestConnection(std::string const &nameAcceptor,
-                                 std::string const &nameRequester,
-                                 int                requesterProcessRank,
+  virtual void requestConnection(std::string const &acceptorName,
+                                 std::string const &requesterName,
+                                 int                requesterRank,
                                  int                requesterCommunicatorSize) override;
 
-  virtual void requestConnectionAsClient(std::string      const &nameAcceptor,
-                                         std::string      const &nameRequester,
+  virtual void requestConnectionAsClient(std::string      const &acceptorName,
+                                         std::string      const &requesterName,
                                          std::set<int>    const &acceptorRanks,
                                          int                     requesterRank) override;
 
-  /// See precice::com::Communication::closeConnection().
   virtual void closeConnection() override;
 
 private:
