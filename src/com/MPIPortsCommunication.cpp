@@ -41,7 +41,6 @@ void MPIPortsCommunication::acceptConnection(std::string const &acceptorName,
   assertion(not isConnected());
 
   _isAcceptor = true;
-  _rank       = 0;
 
   MPI_Open_port(MPI_INFO_NULL, const_cast<char *>(_portName.data()));
 
@@ -60,7 +59,7 @@ void MPIPortsCommunication::acceptConnection(std::string const &acceptorName,
   size_t requesterCommunicatorSize = 0;
 
   // Exchange information to which rank I am connected and which communicator size on the other side
-  MPI_Recv(&requesterRank,      1, MPI_INT, 0, 42, communicator, MPI_STATUS_IGNORE);
+  MPI_Recv(&requesterRank,             1, MPI_INT, 0, 42, communicator, MPI_STATUS_IGNORE);
   MPI_Recv(&requesterCommunicatorSize, 1, MPI_INT, 0, 42, communicator, MPI_STATUS_IGNORE);
   MPI_Send(&acceptorRank,              1, MPI_INT, 0, 42, communicator);
   
@@ -74,6 +73,7 @@ void MPIPortsCommunication::acceptConnection(std::string const &acceptorName,
 
     MPI_Recv(&requesterRank,             1, MPI_INT, 0, 42, communicator, MPI_STATUS_IGNORE);
     MPI_Recv(&requesterCommunicatorSize, 1, MPI_INT, 0, 42, communicator, MPI_STATUS_IGNORE);
+    MPI_Send(&acceptorRank,              1, MPI_INT, 0, 42, communicator);
 
     CHECK(requesterCommunicatorSize == _communicators.size(),
           "Requester communicator sizes are inconsistent!");
@@ -97,7 +97,6 @@ void MPIPortsCommunication::acceptConnectionAsServer(
   assertion(not isConnected());
 
   _isAcceptor = true;
-  _rank       = 0;
 
   MPI_Open_port(MPI_INFO_NULL, const_cast<char *>(_portName.data()));
 
@@ -116,11 +115,9 @@ void MPIPortsCommunication::acceptConnectionAsServer(
     int requesterRank = -1;
      // Receive the real rank of requester
     MPI_Recv(&requesterRank, 1, MPI_INT, 0, 42, communicator, MPI_STATUS_IGNORE);
-
     _communicators[requesterRank] = communicator;
   }
   _isConnected = true;
-
 }
 
 void MPIPortsCommunication::requestConnection(std::string const &acceptorName,
@@ -143,12 +140,11 @@ void MPIPortsCommunication::requestConnection(std::string const &acceptorName,
   DEBUG("Requested connection to " << _portName);
 
   _isConnected = true;
-  _rank        = requesterRank;
 
-  MPI_Send(&requesterRank,             1, MPI_INT, 0, 42, communicator); // can likely be deleted
-  MPI_Send(&requesterCommunicatorSize, 1, MPI_INT, 0, 42, communicator); // can likely be deleted
   int acceptorRank;
-  MPI_Recv(&acceptorRank,        1, MPI_INT, 0, 42, communicator, MPI_STATUS_IGNORE);
+  MPI_Send(&requesterRank,             1, MPI_INT, 0, 42, communicator);
+  MPI_Send(&requesterCommunicatorSize, 1, MPI_INT, 0, 42, communicator);
+  MPI_Recv(&acceptorRank,              1, MPI_INT, 0, 42, communicator, MPI_STATUS_IGNORE);
   _communicators[0] = communicator; // should be acceptorRank
 }
 
@@ -160,6 +156,7 @@ void MPIPortsCommunication::requestConnectionAsClient(std::string      const &ac
 {
   TRACE(acceptorName, requesterName, acceptorRanks, requesterRank);
   assertion(not isConnected());
+  
   _isAcceptor = false;
 
   for (auto const & acceptorRank : acceptorRanks) {

@@ -271,14 +271,7 @@ public:
     _rankOffset = rankOffset;
   }
 
-  int rank()
-  {
-    return _rank;
-  }
-
 protected:
-  int _rank = -1;
-
   /// Rank offset for masters-slave communication, since ranks are from 0 to size - 2
   int _rankOffset = 0;
 
