@@ -846,7 +846,9 @@ BOOST_AUTO_TEST_CASE(testExplicitSchemeComposition1, * testing::MinRanks(3) * bo
 }
 
 /// Test that runs on 3 processors.
-BOOST_AUTO_TEST_CASE(testImplicitSchemeComposition, * testing::MinRanks(3) * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1, 2})))
+BOOST_AUTO_TEST_CASE(testImplicitSchemeComposition,
+                     * testing::MinRanks(3)
+                     * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1, 2})))
 {
   if (utils::Parallel::getCommunicatorSize() != 3) // only run test on ranks {0,1,2}, for other ranks return
     return;

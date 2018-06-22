@@ -22,6 +22,19 @@ BOOST_AUTO_TEST_CASE(SendAndReceive,
   TestSendAndReceive<MPIPortsCommunication>();
 }
 
+// BOOST_AUTO_TEST_CASE(SendReceiveFourProcesses,
+//                      * testing::MinRanks(4)
+//                      * boost::unit_test::fixture<testing::SyncProcessesFixture>())
+// {
+//   TestSendReceiveFourProcesses<MPIPortsCommunication>();
+// }
+
+// BOOST_AUTO_TEST_CASE(SendReceiveFourProcessesV2,
+//                      * testing::MinRanks(4)
+//                      * boost::unit_test::fixture<testing::SyncProcessesFixture>())
+// {
+//   TestSendReceiveFourProcessesV2<MPIPortsCommunication>();
+// }
 
 BOOST_AUTO_TEST_CASE(SendReceiveTwoProcessesServerClient,
                      * testing::MinRanks(2)
@@ -46,7 +59,6 @@ BOOST_AUTO_TEST_CASE(SendReceiveFourProcessesServerClientV2,
 {
   TestSendReceiveFourProcessesServerClientV2<MPIPortsCommunication>();
 }
-
 
 BOOST_AUTO_TEST_SUITE_END() // MPIPortsCommunication
 

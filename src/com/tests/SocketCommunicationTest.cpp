@@ -19,6 +19,20 @@ BOOST_AUTO_TEST_CASE(SendAndReceive,
   TestSendAndReceive<SocketCommunication>();
 }
 
+// BOOST_AUTO_TEST_CASE(SendReceiveFourProcesses,
+//                      * testing::MinRanks(4)
+//                      * boost::unit_test::fixture<testing::SyncProcessesFixture>())
+// {
+//   TestSendReceiveFourProcesses<SocketCommunication>();
+// }
+
+// BOOST_AUTO_TEST_CASE(SendReceiveFourProcessesV2,
+//                      * testing::MinRanks(4)
+//                      * boost::unit_test::fixture<testing::SyncProcessesFixture>())
+// {
+//   TestSendReceiveFourProcessesV2<SocketCommunication>();
+// }
+
 BOOST_AUTO_TEST_CASE(SendReceiveTwoProcessesServerClient,
                      * testing::MinRanks(2)
                      * boost::unit_test::fixture<testing::SyncProcessesFixture>())

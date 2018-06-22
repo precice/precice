@@ -64,7 +64,6 @@ void MPIPortsCommunication::acceptConnection(std::string const &nameAcceptor,
   MPI_Recv(&requesterCommunicatorSize, 1, MPI_INT, 0, 42, communicator, MPI_STATUS_IGNORE);
   MPI_Send(&acceptorProcessRank,       1, MPI_INT, 0, 42, communicator);
   
-
   CHECK(requesterCommunicatorSize > 0, "Requester communicator size has to be > 0!");
   _communicators[requesterProcessRank] = communicator;
   
@@ -78,7 +77,7 @@ void MPIPortsCommunication::acceptConnection(std::string const &nameAcceptor,
 
     CHECK(requesterCommunicatorSize == _communicators.size(),
           "Requester communicator sizes are inconsistent!");
-    CHECK(_communicators[requesterProcessRank] == MPI_COMM_NULL,
+    CHECK(_communicators.count(requesterProcessRank) == 0,
           "Duplicate request to connect by same rank (" << requesterProcessRank << ")!");
 
     _communicators[requesterProcessRank] = communicator;
@@ -147,11 +146,11 @@ void MPIPortsCommunication::requestConnection(std::string const &nameAcceptor,
   _isConnected = true;
   _rank        = requesterProcessRank;
 
-  MPI_Send(&requesterProcessRank,      1, MPI_INT, 0, 42, communicator);
-  MPI_Send(&requesterCommunicatorSize, 1, MPI_INT, 0, 42, communicator);
+  MPI_Send(&requesterProcessRank,      1, MPI_INT, 0, 42, communicator); // can likely be deleted
+  MPI_Send(&requesterCommunicatorSize, 1, MPI_INT, 0, 42, communicator); // can likely be deleted
   int acceptorProcessRank;
   MPI_Recv(&acceptorProcessRank,        1, MPI_INT, 0, 42, communicator, MPI_STATUS_IGNORE);
-  _communicators[acceptorProcessRank] = communicator;
+  _communicators[0] = communicator; // should be acceptorProcessRank
 }
 
 void MPIPortsCommunication::requestConnectionAsClient(std::string      const &nameAcceptor,

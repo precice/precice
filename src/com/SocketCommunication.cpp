@@ -115,7 +115,6 @@ void SocketCommunication::acceptConnection(std::string const &nameAcceptor,
       socket = std::make_shared<Socket>(*_ioService);
 
       acceptor.accept(*socket);
-
       DEBUG("Accepted connection at " << address);
 
       asio::read(*socket, asio::buffer(&remoteRank, sizeof(int)));
@@ -129,7 +128,7 @@ void SocketCommunication::acceptConnection(std::string const &nameAcceptor,
 
       _isConnected = true;
 
-      send(_rank, remoteRank);
+      send(_rank, remoteRank); // -> receive(remoteRank, 0);
       send(1, remoteRank); // was: acceptorCommunicatorSize
     }
 
@@ -264,8 +263,7 @@ void SocketCommunication::requestConnection(std::string const &nameAcceptor,
 
     DEBUG("Requested connection to " << address);
 
-    _sockets[requesterProcessRank] = socket;
-
+    _sockets[0] = socket; // should be acceptorProcessRank
     _rank = requesterProcessRank;
 
     send(requesterProcessRank, 0);

@@ -274,7 +274,9 @@ BOOST_FIXTURE_TEST_SUITE(ExplicitCouplingSchemeTests, ExplicitCouplingSchemeFixt
 #ifndef PRECICE_NO_MPI
 
 /// Test that runs on 2 processors.
-BOOST_AUTO_TEST_CASE(testSimpleExplicitCoupling, * testing::MinRanks(2) * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
+BOOST_AUTO_TEST_CASE(testSimpleExplicitCoupling,
+                     * testing::MinRanks(2)
+                     * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
 {
   if (utils::Parallel::getCommunicatorSize() != 2) // only run test on ranks {0,1}, for other ranks return
     return;
@@ -323,7 +325,9 @@ BOOST_AUTO_TEST_CASE(testSimpleExplicitCoupling, * testing::MinRanks(2) * boost:
 }
 
 /// Test that runs on 2 processors.
-BOOST_AUTO_TEST_CASE(testConfiguredSimpleExplicitCoupling, * testing::MinRanks(2) * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
+BOOST_AUTO_TEST_CASE(testConfiguredSimpleExplicitCoupling,
+                     * testing::MinRanks(2)
+                     * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
 {
   if (utils::Parallel::getCommunicatorSize() != 2) // only run test on ranks {0,1}, for other ranks return
     return;
@@ -334,7 +338,7 @@ BOOST_AUTO_TEST_CASE(testConfiguredSimpleExplicitCoupling, * testing::MinRanks(2
 
   std::string configurationPath ( _pathToTests + "explicit-coupling-scheme-1.xml" );
 
-  std::string localParticipant ( "" );
+  std::string localParticipant;
   if ( utils::Parallel::getProcessRank() == 0 ) {
     localParticipant = "participant0";
   }
@@ -361,8 +365,7 @@ BOOST_AUTO_TEST_CASE(testConfiguredSimpleExplicitCoupling, * testing::MinRanks(2
   meshConfig->meshes()[0]->allocateDataValues();
 
   connect ( "participant0", "participant1", localParticipant, m2n );
-  runSimpleExplicitCoupling ( *cplSchemeConfig.getCouplingScheme(localParticipant),
-      localParticipant, *meshConfig );
+  runSimpleExplicitCoupling(*cplSchemeConfig.getCouplingScheme(localParticipant), localParticipant, *meshConfig );
 }
 
 /// Test that runs on 2 processors.
