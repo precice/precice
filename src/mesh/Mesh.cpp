@@ -6,6 +6,7 @@
 #include "utils/EigenHelperFunctions.hpp"
 #include "math/math.hpp"
 #include <Eigen/Core>
+#include <Eigen/Geometry>
 #include "RTree.hpp"
 
 namespace precice {
