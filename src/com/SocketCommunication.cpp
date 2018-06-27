@@ -511,6 +511,32 @@ PtrRequest SocketCommunication::aSend(const double *itemsToSend, int size, int r
   return request;
 }
 
+PtrRequest SocketCommunication::aSend(std::vector<double> const & itemsToSend, int rankReceiver)
+{
+  TRACE(rankReceiver);
+
+  rankReceiver = rankReceiver - _rankOffset;
+
+  assertion((rankReceiver >= 0) && (rankReceiver < (int) _sockets.size()),
+            rankReceiver, _sockets.size());
+  assertion(isConnected());
+
+  PtrRequest request(new SocketRequest);
+
+  try {
+    asio::async_write(*_sockets[rankReceiver],
+                      asio::buffer(itemsToSend.data(), itemsToSend.size() * sizeof(double)),
+                      [request](boost::system::error_code const &, std::size_t) {
+                        static_cast<SocketRequest *>(request.get())->complete();
+                      });
+  } catch (std::exception &e) {
+    ERROR("Send failed: " << e.what());
+  }
+
+  return request;
+}
+
+
 void SocketCommunication::send(double itemToSend, int rankReceiver)
 {
   TRACE(itemToSend, rankReceiver);
@@ -704,6 +730,31 @@ PtrRequest SocketCommunication::aReceive(double *itemsToReceive,
   try {
     asio::async_read(*_sockets[rankSender],
                      asio::buffer(itemsToReceive, size * sizeof(double)),
+                     [request](boost::system::error_code const &, std::size_t) {
+                       static_cast<SocketRequest *>(request.get())->complete();
+                     });
+  } catch (std::exception &e) {
+    ERROR("Receive failed: " << e.what());
+  }
+
+  return request;
+}
+
+PtrRequest SocketCommunication::aReceive(std::vector<double> & itemsToReceive, int rankSender)
+{
+  TRACE(rankSender);
+
+  rankSender = rankSender - _rankOffset;
+
+  assertion((rankSender >= 0) && (rankSender < (int) _sockets.size()),
+            rankSender, _sockets.size());
+  assertion(isConnected());
+
+  PtrRequest request(new SocketRequest);
+
+  try {
+    asio::async_read(*_sockets[rankSender],
+                     asio::buffer(itemsToReceive.data(), itemsToReceive.size() * sizeof(double)),
                      [request](boost::system::error_code const &, std::size_t) {
                        static_cast<SocketRequest *>(request.get())->complete();
                      });
