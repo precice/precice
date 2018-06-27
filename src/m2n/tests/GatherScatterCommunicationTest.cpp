@@ -8,7 +8,6 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "testing/Testing.hpp"
-#include "utils/Helpers.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/Parallel.hpp"
 

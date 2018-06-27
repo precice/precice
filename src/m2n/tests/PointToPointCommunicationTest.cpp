@@ -12,7 +12,6 @@
 using precice::utils::MasterSlave;
 using precice::utils::Parallel;
 
-using std::rand;
 using std::vector;
 
 using namespace precice;
@@ -111,8 +110,7 @@ void P2PComTest1(com::PtrCommunicationFactory cf)
     mesh->getVertexDistribution()[1].push_back(5); // <-
     mesh->getVertexDistribution()[1].push_back(7);
 
-    data         = {static_cast<double>(rand()), static_cast<double>(rand()),
-            static_cast<double>(rand()), static_cast<double>(rand())};
+    data.assign(4, -1);
     expectedData = {2 * 20, 30, 2 * 60, 70};
 
     break;
@@ -127,9 +125,7 @@ void P2PComTest1(com::PtrCommunicationFactory cf)
 
     MasterSlave::_communication->requestConnection("B.Master", "B.Slave", 0, 1);
 
-    data         = {static_cast<double>(rand()), static_cast<double>(rand()),
-            static_cast<double>(rand()), static_cast<double>(rand()),
-            static_cast<double>(rand()), static_cast<double>(rand())};
+    data.assign(6, -1);
     expectedData = {10, 2 * 20, 40, 50, 2 * 60, 80};
 
     break;
@@ -248,8 +244,7 @@ void P2PComTest2(com::PtrCommunicationFactory cf)
     mesh->getVertexDistribution()[1].push_back(5); // <-
     mesh->getVertexDistribution()[1].push_back(7);
 
-    data         = {static_cast<double>(rand()), static_cast<double>(rand()),
-            static_cast<double>(rand()), static_cast<double>(rand())};
+    data.assign(4, -1);
     expectedData = {2 * 20, 40, 2 * 60, 70};
 
     break;
@@ -264,9 +259,7 @@ void P2PComTest2(com::PtrCommunicationFactory cf)
 
     MasterSlave::_communication->requestConnection("B.Master", "B.Slave", 0, 1);
 
-    data         = {static_cast<double>(rand()), static_cast<double>(rand()),
-            static_cast<double>(rand()), static_cast<double>(rand()),
-            static_cast<double>(rand()), static_cast<double>(rand())};
+    data.assign(6, -1);
     expectedData = {10, 2 * 20, 40, 50, 2 * 60, 80};
 
     break;
@@ -300,7 +293,7 @@ void P2PComTest2(com::PtrCommunicationFactory cf)
   utils::Parallel::clearGroups();
 }
 
-BOOST_AUTO_TEST_CASE(SocketCommunication, *testing::OnSize(4))
+BOOST_AUTO_TEST_CASE(SocketCommunication, * testing::OnSize(4))
 {
   com::PtrCommunicationFactory cf(new com::SocketCommunicationFactory);
   if (utils::Parallel::getProcessRank() < 4) {
@@ -310,8 +303,8 @@ BOOST_AUTO_TEST_CASE(SocketCommunication, *testing::OnSize(4))
 }
 
 BOOST_AUTO_TEST_CASE(MPIPortsCommunication,
-                     *testing::OnSize(4) *
-                         boost::unit_test::label("MPI_Ports"))
+                     * testing::OnSize(4)
+                     * boost::unit_test::label("MPI_Ports"))
 {
   com::PtrCommunicationFactory cf(new com::MPIPortsCommunicationFactory);
   if (utils::Parallel::getProcessRank() < 4) {
