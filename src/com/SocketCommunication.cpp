@@ -6,6 +6,7 @@
 #include <boost/bind.hpp>
 #include "utils/Publisher.hpp"
 #include "utils/assertion.hpp"
+#include "utils/BufferManager.hpp"
 
 #include <sstream>
 
@@ -390,6 +391,8 @@ void SocketCommunication::closeConnection()
   if (not isConnected())
     return;
 
+  utils::BufferManager::instance().wait(); // wait for all data to be sent
+  
   if (_thread.joinable()) {
     _work.reset();
     _ioService->stop();
@@ -629,6 +632,32 @@ PtrRequest SocketCommunication::aSend(bool itemToSend, int rankReceiver)
 
   return request;
 }
+
+void SocketCommunication::managedSend(std::shared_ptr<std::vector<double>> itemsToSend, int rankReceiver)
+{
+  TRACE(rankReceiver);
+
+  rankReceiver = rankReceiver - _rankOffset;
+
+  assertion((rankReceiver >= 0) && (rankReceiver < (int) _sockets.size()),
+            rankReceiver, _sockets.size());
+  assertion(isConnected());
+
+  auto ptrRequest = std::shared_ptr<Request>(new SocketRequest);
+  
+  try {
+    asio::async_write(*_sockets[rankReceiver],
+                      asio::buffer(itemsToSend->data(), itemsToSend->size() * sizeof(double)),
+                      [ptrRequest](boost::system::error_code const &, std::size_t) {
+                        static_cast<SocketRequest *>(ptrRequest.get())->complete();
+                      });
+  } catch (std::exception &e) {
+    ERROR("Send failed: " << e.what());
+  }
+  
+  utils::BufferManager::instance().put(ptrRequest, itemsToSend);
+}
+
 
 void SocketCommunication::receive(std::string &itemToReceive, int rankSender)
 {

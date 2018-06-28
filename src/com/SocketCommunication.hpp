@@ -127,6 +127,8 @@ public:
   /// Asynchronously sends a bool to process with given rank.
   virtual PtrRequest aSend(bool itemToSend, int rankReceiver) override;
 
+  virtual void managedSend(std::shared_ptr<std::vector<double>>, int rankReceiver) override;
+  
   /// Receives a std::string from process with given rank.
   virtual void receive(std::string &itemToReceive, int rankSender) override;
 

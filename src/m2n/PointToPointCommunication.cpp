@@ -608,23 +608,17 @@ void PointToPointCommunication::send(double *itemsToSend,
   }
 
   assertion(size == _localIndexCount * valueDimension, size, _localIndexCount * valueDimension);
-  std::vector<std::unique_ptr<std::vector<double>>> buffers;
   
   for (auto &mapping : _mappings) {
     mapping.offset = _buffer.size();
-    std::unique_ptr<std::vector<double>> buffer(new std::vector<double>);
+    auto buffer = std::make_shared<std::vector<double>>();
     buffer->reserve(mapping.indices.size() * valueDimension);
     for (auto index : mapping.indices) {
       for (int d = 0; d < valueDimension; ++d) {
         buffer->push_back(itemsToSend[index * valueDimension + d]);
       }
     }
-    mapping.request = mapping.communication->aSend(*buffer, mapping.localRemoteRank);
-    buffers.push_back(std::move(buffer));
-  }
-
-  for (auto &mapping : _mappings) {
-    mapping.request->wait();
+    mapping.communication->managedSend(buffer, mapping.localRemoteRank);
   }
 }
 

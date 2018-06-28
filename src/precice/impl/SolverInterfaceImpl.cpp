@@ -29,6 +29,7 @@
 #include "utils/Parallel.hpp"
 #include "utils/Petsc.hpp"
 #include "utils/MasterSlave.hpp"
+#include "utils/BufferManager.hpp"
 #include "mapping/Mapping.hpp"
 #include <set>
 #include <Eigen/Core>
@@ -90,6 +91,8 @@ SolverInterfaceImpl:: SolverInterfaceImpl
   // signal(SIGINT,  precice::utils::terminationSignalHandler);
 
   // precice::logging::setupLogging();
+
+  utils::BufferManager::instance().run();
 }
 
 SolverInterfaceImpl:: ~SolverInterfaceImpl()
