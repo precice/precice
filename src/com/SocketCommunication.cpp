@@ -669,32 +669,6 @@ void SocketCommunication::receive(int *itemsToReceive, int size, int rankSender)
   }
 }
 
-PtrRequest SocketCommunication::aReceive(int *itemsToReceive, int size, int rankSender)
-{
-  TRACE(size, rankSender);
-
-  rankSender = rankSender - _rankOffset;
-
-  assertion((rankSender >= 0) && (rankSender < (int) _sockets.size()),
-            rankSender,
-            _sockets.size());
-  assertion(isConnected());
-
-  PtrRequest request(new SocketRequest);
-
-  try {
-    asio::async_read(*_sockets[rankSender],
-                     asio::buffer(itemsToReceive, size * sizeof(int)),
-                     [request](boost::system::error_code const &, std::size_t) {
-                       static_cast<SocketRequest *>(request.get())->complete();
-                     });
-  } catch (std::exception &e) {
-    ERROR("Receive failed: " << e.what());
-  }
-
-  return request;
-}
-
 void SocketCommunication::receive(double *itemsToReceive, int size, int rankSender)
 {
   TRACE(size, rankSender);
@@ -806,7 +780,27 @@ void SocketCommunication::receive(int &itemToReceive, int rankSender)
 
 PtrRequest SocketCommunication::aReceive(int &itemToReceive, int rankSender)
 {
-  return aReceive(&itemToReceive, 1, rankSender);
+  TRACE(rankSender);
+
+  rankSender = rankSender - _rankOffset;
+
+  assertion((rankSender >= 0) && (rankSender < (int) _sockets.size()),
+            rankSender, _sockets.size());
+  assertion(isConnected());
+
+  PtrRequest request(new SocketRequest);
+
+  try {
+    asio::async_read(*_sockets[rankSender],
+                     asio::buffer(&itemToReceive, sizeof(int)),
+                     [request](boost::system::error_code const &, std::size_t) {
+                       static_cast<SocketRequest *>(request.get())->complete();
+                     });
+  } catch (std::exception &e) {
+    ERROR("Receive failed: " << e.what());
+  }
+
+  return request;
 }
 
 void SocketCommunication::receive(bool &itemToReceive, int rankSender)

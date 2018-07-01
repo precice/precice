@@ -221,11 +221,6 @@ public:
   /// Receives an array of integer values.
   virtual void receive(int *itemsToReceive, int size, int rankSender) = 0;
 
-  /// Asynchronously receives an array of integer values.
-  virtual PtrRequest aReceive(int *itemsToReceive,
-                              int  size,
-                              int  rankSender) = 0;
-
   /// Receives an array of double values.
   virtual void receive(double *itemsToReceive, int size, int rankSender) = 0;
 

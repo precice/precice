@@ -86,11 +86,6 @@ public:
   /// Receives an array of integer values.
   virtual void receive(int *itemsToReceive, int size, int rankSender) override;
 
-  /// Asynchronously receives an array of integer values.
-  virtual PtrRequest aReceive(int *itemsToReceive,
-                              int  size,
-                              int  rankSender) override;
-
   /// Receives an array of double values.
   virtual void receive(double *itemsToReceive, int size, int rankSender) override;
 

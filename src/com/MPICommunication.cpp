@@ -226,23 +226,6 @@ void MPICommunication::receive(int *itemsToReceive, int size, int rankSender)
            &status);
 }
 
-PtrRequest MPICommunication::aReceive(int *itemsToReceive, int size, int rankSender)
-{
-  TRACE(size);
-  rankSender = rankSender - _rankOffset;
-
-  MPI_Request request;
-  MPI_Irecv(itemsToReceive,
-            size,
-            MPI_INT,
-            rank(rankSender),
-            0,
-            communicator(rankSender),
-            &request);
-
-  return PtrRequest(new MPIRequest(request));
-}
-
 void MPICommunication::receive(double *itemsToReceive, int size, int rankSender)
 {
   TRACE(size);
@@ -332,7 +315,19 @@ void MPICommunication::receive(int &itemToReceive, int rankSender)
 
 PtrRequest MPICommunication::aReceive(int &itemToReceive, int rankSender)
 {
-  return aReceive(&itemToReceive, 1, rankSender);
+  TRACE(rankSender);
+  rankSender = rankSender - _rankOffset;
+
+  MPI_Request request;
+  MPI_Irecv(&itemToReceive,
+            1,
+            MPI_INT,
+            rank(rankSender),
+            0,
+            communicator(rankSender),
+            &request);
+
+  return PtrRequest(new MPIRequest(request));
 }
 
 void MPICommunication::receive(bool &itemToReceive, int rankSender)
