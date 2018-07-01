@@ -618,8 +618,11 @@ void PointToPointCommunication::send(double *itemsToSend,
         buffer->push_back(itemsToSend[index * valueDimension + d]);
       }
     }
-    mapping.communication->managedSend(buffer, mapping.localRemoteRank);
+    auto request = mapping.communication->aSend(*buffer, mapping.localRemoteRank);
+    bufferedRequests.emplace_back(request, buffer);
   }
+
+  checkBufferedRequests();
 }
 
 void PointToPointCommunication::receive(double *itemsToReceive,
@@ -660,5 +663,19 @@ void PointToPointCommunication::receive(double *itemsToReceive,
 
   _buffer.clear();
 }
+
+void PointToPointCommunication::checkBufferedRequests()
+{
+  for (auto it = bufferedRequests.begin(); it != bufferedRequests.end();) {
+      if (it->first->test()) {
+        it = bufferedRequests.erase(it);
+      }
+      else {
+        ++it;
+      }
+    }
+  }
+
+
 } // namespace m2n
 } // namespace precice

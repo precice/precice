@@ -4,7 +4,6 @@
 #include "utils/assertion.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Publisher.hpp"
-#include "utils/BufferManager.hpp"
 #include <chrono>
 #include <thread>
 
@@ -238,7 +237,6 @@ void MPIPortsCommunication::closeConnection()
     return;
 
   for (auto communicator : _communicators) {
-    utils::BufferManager::instance().wait(); // wait for all data to be sent
     MPI_Comm_disconnect(&communicator);
   }
 

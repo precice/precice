@@ -215,9 +215,6 @@ public:
   /// Asynchronously sends a bool to process with given rank.
   virtual PtrRequest aSend(bool itemToSend, int rankReceiver) = 0;
 
-  /// Fully asynchronous send data by handing off buffer mangement to a separate thread
-  virtual void managedSend(std::shared_ptr<std::vector<double>>, int rankReceiver) = 0;
-
   /// Receives a std::string from process with given rank.
   virtual void receive(std::string &itemToReceive, int rankSender) = 0;
 

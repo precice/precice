@@ -2,7 +2,6 @@
 
 #include "MPICommunication.hpp"
 #include "MPIRequest.hpp"
-#include "utils/BufferManager.hpp"
 
 template <size_t>
 struct MPI_Select_unsigned_integer_datatype;
@@ -190,24 +189,6 @@ PtrRequest MPICommunication::aSend(bool itemToSend, int rankReceiver)
             &request);
 
   return PtrRequest(new MPIRequest(request));
-}
-
-void MPICommunication::managedSend(std::shared_ptr<std::vector<double>> itemsToSend, int rankReceiver)
-{
-  TRACE();
-  rankReceiver = rankReceiver - _rankOffset;
-
-  MPI_Request request;
-  MPI_Isend(itemsToSend->data(),
-            itemsToSend->size(),
-            MPI_DOUBLE,
-            rank(rankReceiver),
-            0,
-            communicator(rankReceiver),
-            &request);
-
-  auto ptrRequest = std::shared_ptr<Request>(new MPIRequest(request));
-  utils::BufferManager::instance().put(ptrRequest, itemsToSend);
 }
 
 void MPICommunication::receive(std::string &itemToReceive, int rankSender)
