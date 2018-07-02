@@ -14,30 +14,11 @@
 namespace precice {
 namespace mapping {
 
-logging::Logger MappingConfiguration::_log("config::MappingConfiguration");
-
 MappingConfiguration:: MappingConfiguration
 (
   xml::XMLTag &                   parent,
   const mesh::PtrMeshConfiguration& meshConfiguration )
 :
-  TAG("mapping"),
-  ATTR_DIRECTION("direction"),
-  ATTR_FROM("from"),
-  ATTR_TO("to"),
-  ATTR_TIMING("timing"),
-  ATTR_TYPE("type"),
-  ATTR_CONSTRAINT("constraint"),
-  ATTR_SHAPE_PARAM("shape-parameter"),
-  ATTR_SUPPORT_RADIUS("support-radius"),
-  ATTR_SOLVER_RTOL("solver-rtol"),
-  ATTR_X_DEAD("x-dead"),
-  ATTR_Y_DEAD("y-dead"),
-  ATTR_Z_DEAD("z-dead"),
-  VALUE_WRITE("write"),
-  VALUE_READ("read"),
-  VALUE_CONSISTENT("consistent"),
-  VALUE_CONSERVATIVE("conservative"),
   VALUE_NEAREST_NEIGHBOR("nearest-neighbor"),
   VALUE_NEAREST_PROJECTION("nearest-projection"),
   VALUE_RBF_TPS("rbf-thin-plate-splines"),
@@ -58,11 +39,7 @@ MappingConfiguration:: MappingConfiguration
   VALUE_PETRBF_CPOLYNOMIAL_C0("petrbf-compact-polynomial-c0"),
   VALUE_PETRBF_CPOLYNOMIAL_C6("petrbf-compact-polynomial-c6"),
 
-  VALUE_TIMING_INITIAL("initial"),
-  VALUE_TIMING_ON_ADVANCE("onadvance"),
-  VALUE_TIMING_ON_DEMAND("ondemand"),
-  _meshConfig(meshConfiguration),
-  _mappings()
+  _meshConfig(meshConfiguration)
 {
   assertion (_meshConfig.use_count() > 0);
   using namespace xml;
