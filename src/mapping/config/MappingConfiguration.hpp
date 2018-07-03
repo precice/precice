@@ -110,27 +110,27 @@ public:
 
 private:
 
-  static logging::Logger _log;
+  mutable logging::Logger _log{"config:MappingConfiguration"};
 
-  const std::string TAG;
+  const std::string TAG = "mapping";
 
-  const std::string ATTR_DIRECTION;
-  const std::string ATTR_FROM;
-  const std::string ATTR_TO;
-  const std::string ATTR_TIMING;
-  const std::string ATTR_TYPE;
-  const std::string ATTR_CONSTRAINT;
-  const std::string ATTR_SHAPE_PARAM;
-  const std::string ATTR_SUPPORT_RADIUS;
-  const std::string ATTR_SOLVER_RTOL;
-  const std::string ATTR_X_DEAD;
-  const std::string ATTR_Y_DEAD;
-  const std::string ATTR_Z_DEAD;
+  const std::string ATTR_DIRECTION = "direction";
+  const std::string ATTR_FROM = "from";
+  const std::string ATTR_TO = "to";
+  const std::string ATTR_TIMING = "timing";
+  const std::string ATTR_TYPE = "type";
+  const std::string ATTR_CONSTRAINT = "constraint";
+  const std::string ATTR_SHAPE_PARAM = "shape-parameter";
+  const std::string ATTR_SUPPORT_RADIUS = "support-radius";
+  const std::string ATTR_SOLVER_RTOL = "solver-rtol";
+  const std::string ATTR_X_DEAD = "x-dead";
+  const std::string ATTR_Y_DEAD = "y-dead";
+  const std::string ATTR_Z_DEAD = "z-dead";
 
-  const std::string VALUE_WRITE;
-  const std::string VALUE_READ;
-  const std::string VALUE_CONSISTENT;
-  const std::string VALUE_CONSERVATIVE;
+  const std::string VALUE_WRITE = "write";
+  const std::string VALUE_READ = "read";
+  const std::string VALUE_CONSISTENT = "consistent";
+  const std::string VALUE_CONSERVATIVE = "conservative";
   const std::string VALUE_NEAREST_NEIGHBOR;
   const std::string VALUE_NEAREST_PROJECTION;
   const std::string VALUE_RBF_TPS;
@@ -151,9 +151,9 @@ private:
   const std::string VALUE_PETRBF_CPOLYNOMIAL_C0;
   const std::string VALUE_PETRBF_CPOLYNOMIAL_C6;
   
-  const std::string VALUE_TIMING_INITIAL;
-  const std::string VALUE_TIMING_ON_ADVANCE;
-  const std::string VALUE_TIMING_ON_DEMAND;
+  const std::string VALUE_TIMING_INITIAL = "initial";
+  const std::string VALUE_TIMING_ON_ADVANCE = "onadvance";
+  const std::string VALUE_TIMING_ON_DEMAND = "ondemand";
 
   mesh::PtrMeshConfiguration _meshConfig;
 

@@ -3,7 +3,6 @@
 #include "Mapping.hpp"
 #include "impl/BasisFunctions.hpp"
 #include "utils/MasterSlave.hpp"
-#include "io/TXTWriter.hpp"
 
 #include <Eigen/Core>
 #include <Eigen/QR>
@@ -31,7 +30,9 @@ public:
    * @brief Constructor.
    *
    * @param[in] constraint Specifies mapping to be consistent or conservative.
+   * @param[in] dimension Dimensionality of the meshes
    * @param[in] function Radial basis function used for mapping.
+   * @param[in] xDead, yDead, zDead Deactivates mapping along an axis
    */
   RadialBasisFctMapping (
     Constraint              constraint,
@@ -41,8 +42,6 @@ public:
     bool                    yDead,
     bool                    zDead);
 
-
-  virtual ~RadialBasisFctMapping();
 
   /// Computes the mapping coefficients from the in- and output mesh.
   virtual void computeMapping() override;
@@ -54,9 +53,7 @@ public:
   virtual void clear() override;
 
   /// Maps input data to output data from input mesh to output mesh.
-  virtual void map (
-    int inputDataID,
-    int outputDataID ) override;
+  virtual void map(int inputDataID, int outputDataID ) override;
 
   virtual void tagMeshFirstRound() override;
 
@@ -66,7 +63,7 @@ private:
 
   precice::logging::Logger _log{"mapping::RadialBasisFctMapping"};
 
-  bool _hasComputedMapping;
+  bool _hasComputedMapping = false;
 
   /// Radial basis function type used in interpolation.
   RADIAL_BASIS_FUNCTION_T _basisFunction;
@@ -76,13 +73,14 @@ private:
   Eigen::ColPivHouseholderQR<Eigen::MatrixXd> _qr;
   
   /// true if the mapping along some axis should be ignored
-  bool* _deadAxis;
+  std::vector<bool> _deadAxis;
 
   /// Deletes all dead directions from fullVector and returns a vector of reduced dimensionality.
   Eigen::VectorXd reduceVector(const Eigen::VectorXd& fullVector);
   
   void setDeadAxis(bool xDead, bool yDead, bool zDead)
   {
+    _deadAxis.resize(getDimensions());
     if (getDimensions() == 2) {
       _deadAxis[0] = xDead;
       _deadAxis[1] = yDead;
@@ -116,20 +114,11 @@ RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: RadialBasisFctMapping
   bool                    zDead)
   :
   Mapping ( constraint, dimensions ),
-  _hasComputedMapping ( false ),
-  _basisFunction ( function ),
-  _matrixA()
+  _basisFunction ( function )
 {
   setInputRequirement(VERTEX);
   setOutputRequirement(VERTEX);
-  _deadAxis = new bool[dimensions];
-  setDeadAxis(xDead,yDead,zDead);
-}
-
-template<typename RADIAL_BASIS_FUNCTION_T>
-RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: ~RadialBasisFctMapping()
-{
-  delete[] _deadAxis;
+  setDeadAxis(xDead, yDead, zDead);
 }
 
 template<typename RADIAL_BASIS_FUNCTION_T>
@@ -208,29 +197,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
     i++;
   }
 
-# ifdef PRECICE_STATISTICS
-  static int computeIndex = 0;
-  std::ostringstream streamC;
-  if (getConstraint() == CONSERVATIVE) {
-    streamC << "conservative-matrixC-" << computeIndex << ".mat";
-  }
-  else {
-    streamC << "consistent-matrixC-" << computeIndex << ".mat";
-  }
-  io::TXTWriter::write(_matrixCLU, streamC.str());
-  std::ostringstream streamA;
-  if (getConstraint() == CONSERVATIVE) {
-    streamA << "conservative-matrixA-" << computeIndex << ".mat";
-  }
-  else {
-    streamA << "consistent-matrixA-" << computeIndex << ".mat";
-  }
-  io::TXTWriter::write(_matrixA, streamA.str());
-  computeIndex++;
-# endif // PRECICE_STATISTICS
-
   _qr = matrixCLU.colPivHouseholderQr();
-  
   if (not _qr.isInvertible())
     ERROR("Interpolation matrix C is not invertible.");
   
@@ -291,21 +258,11 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
       for (int i = 0; i < in.size(); i++) { // Fill input data values
         in[i] = inValues(i*valueDim + dim);
       }
-#     ifdef PRECICE_STATISTICS
-      std::ostringstream stream;
-      stream << "invec-dim" << dim << "-" << mappingIndex << ".mat";
-      io::TXTWriter::write(in, stream.str());
-#     endif
 
       Au = _matrixA.transpose() * in;
       out = _qr.solve(Au);
 
       // Copy mapped data to output data values
-#     ifdef PRECICE_STATISTICS
-      std::ostringstream stream2;
-      stream2 << "outvec-dim" << dim << "-" << mappingIndex << ".mat";
-      io::TXTWriter::write(out, stream2.str());
-#     endif
       for (int i = 0; i < out.size()-polyparams; i++) {
         outValues(i*valueDim + dim) = out[i];
       }
