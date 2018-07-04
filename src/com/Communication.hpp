@@ -203,6 +203,8 @@ public:
   /// Asynchronously sends an array of double values.
   virtual PtrRequest aSend(const double *itemsToSend, int size, int rankReceiver) = 0;
 
+  virtual PtrRequest aSend(std::vector<double> const & itemsToSend, int rankReceiver) = 0;
+
   /// Sends a double to process with given rank.
   virtual void send(double itemToSend, int rankReceiver) = 0;
 
@@ -227,11 +229,6 @@ public:
   /// Receives an array of integer values.
   virtual void receive(int *itemsToReceive, int size, int rankSender) = 0;
 
-  /// Asynchronously receives an array of integer values.
-  virtual PtrRequest aReceive(int *itemsToReceive,
-                              int  size,
-                              int  rankSender) = 0;
-
   /// Receives an array of double values.
   virtual void receive(double *itemsToReceive, int size, int rankSender) = 0;
 
@@ -239,6 +236,8 @@ public:
   virtual PtrRequest aReceive(double *itemsToReceive,
                               int     size,
                               int     rankSender) = 0;
+
+  virtual PtrRequest aReceive(std::vector<double> & itemsToReceive, int rankSender) = 0;
 
   /// Receives a double from process with given rank.
   virtual void receive(double &itemToReceive, int rankSender) = 0;

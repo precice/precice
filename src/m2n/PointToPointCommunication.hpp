@@ -1,6 +1,7 @@
 #pragma once
 
 #include "DistributedCommunication.hpp"
+#include <list>
 #include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include "mesh/SharedPointer.hpp"
@@ -87,6 +88,10 @@ public:
                        int     valueDimension = 1);
 
 private:
+
+  /// Checks all stored requests for completion and removes associated buffers
+  void checkBufferedRequests();
+  
   logging::Logger _log{"m2n::PointToPointCommunication"};
 
   static std::string _prefix;
@@ -125,6 +130,10 @@ private:
   size_t _totalIndexCount = 0;
 
   bool _isConnected = false;
+
+  std::list<std::pair<std::shared_ptr<com::Request>,
+                      std::shared_ptr<std::vector<double>>>> bufferedRequests;
+
 };
 } // namespace m2n
 } // namespace precice

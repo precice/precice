@@ -599,25 +599,21 @@ void PointToPointCommunication::send(double *itemsToSend,
   }
 
   assertion(size == _localIndexCount * valueDimension, size, _localIndexCount * valueDimension);
-
+  
   for (auto &mapping : _mappings) {
     mapping.offset = _buffer.size();
-
+    auto buffer = std::make_shared<std::vector<double>>();
+    buffer->reserve(mapping.indices.size() * valueDimension);
     for (auto index : mapping.indices) {
       for (int d = 0; d < valueDimension; ++d) {
-        _buffer.push_back(itemsToSend[index * valueDimension + d]);
+        buffer->push_back(itemsToSend[index * valueDimension + d]);
       }
     }
-
-    mapping.request = mapping.communication->aSend(_buffer.data() + mapping.offset,
-                                                   mapping.indices.size() * valueDimension,
-                                                   mapping.localRemoteRank);
+    auto request = mapping.communication->aSend(*buffer, mapping.localRemoteRank);
+    bufferedRequests.emplace_back(request, buffer);
   }
 
-  for (auto &mapping : _mappings) {
-    mapping.request->wait();
-  }
-  _buffer.clear();
+  checkBufferedRequests();
 }
 
 void PointToPointCommunication::receive(double *itemsToReceive,
@@ -658,5 +654,19 @@ void PointToPointCommunication::receive(double *itemsToReceive,
 
   _buffer.clear();
 }
+
+void PointToPointCommunication::checkBufferedRequests()
+{
+  for (auto it = bufferedRequests.begin(); it != bufferedRequests.end();) {
+      if (it->first->test()) {
+        it = bufferedRequests.erase(it);
+      }
+      else {
+        ++it;
+      }
+    }
+  }
+
+
 } // namespace m2n
 } // namespace precice

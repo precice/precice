@@ -40,7 +40,7 @@ void Communication::reduceSum(int itemToSend, int &itemToReceive)
 
   // receive local results from slaves
   for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
-    auto request = aReceive(&itemToSend, 1, rank + _rankOffset);
+    auto request = aReceive(itemToSend, rank + _rankOffset);
     request->wait();
     itemToReceive += itemToSend;
   }
@@ -134,7 +134,7 @@ void Communication::allreduceSum(int itemToSend, int &itemToReceive)
 
   // receive local results from slaves
   for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
-    auto request = aReceive(&itemToSend, 1, rank + _rankOffset);
+    auto request = aReceive(itemToSend, rank + _rankOffset);
     request->wait();
     itemToReceive += itemToSend;
   }
