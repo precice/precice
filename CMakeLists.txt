@@ -102,12 +102,19 @@ add_subdirectory("src")
 include_directories("src")
 
 add_library(precice ${sourcesAllNoMain})
+set(headers
+  src/precice/SolverInterface.hpp
+  src/precice/MeshHandle.hpp
+  src/precice/Constants.hpp
+  src/precice/adapters/c/SolverInterfaceC.h
+  src/precice/adapters/c/Constants.h)
+set_target_properties(precice PROPERTIES PUBLIC_HEADER "${headers}")
+
 target_link_libraries(precice PRIVATE ${PYTHON_LIBRARIES})
 target_link_libraries(precice PUBLIC ${MPI_LIBRARIES})
 target_link_libraries(precice PUBLIC ${Boost_LIBRARIES})
 target_link_libraries(precice PUBLIC ${PETSC_LIBRARIES})
 target_link_libraries(precice PUBLIC ${LIBXML2_LIBRARIES})
-
 
 add_executable(binprecice "src/drivers/main.cpp")
 target_link_libraries(binprecice Threads::Threads)
@@ -118,15 +125,7 @@ add_executable(testprecice
 target_link_libraries(testprecice Threads::Threads)
 target_link_libraries(testprecice precice)
 
-
-install(TARGETS binprecice DESTINATION bin)
-install(TARGETS precice DESTINATION lib)
-
-install(FILES
-    src/precice/SolverInterface.hpp
-    src/precice/MeshHandle.hpp
-    src/precice/Constants.hpp
-    src/precice/adapters/c/SolverInterfaceC.h
-    DESTINATION include/precice)
-
-#-----------------------------------------------------------------------------
+install(TARGETS precice binprecice
+  LIBRARY DESTINATION lib
+  PUBLIC_HEADER DESTINATION include/precice
+  RUNTIME DESTINATION bin)
