@@ -76,7 +76,7 @@ void Communication::allreduceSum(double *itemsToSend, double *itemsToReceive, in
   std::vector<PtrRequest> requests(getRemoteCommunicatorSize());
   for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
     auto request = aSend(itemsToReceive, size, rank + _rankOffset);
-    requests.push_back(request);
+    requests[rank] = request;
   }
   Request::wait(requests);
 }
@@ -111,7 +111,7 @@ void Communication::allreduceSum(double itemToSend, double &itemToReceive)
   std::vector<PtrRequest> requests(getRemoteCommunicatorSize());
   for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
     auto request = aSend(&itemToReceive, 1, rank + _rankOffset);
-    requests.push_back(request);
+    requests[rank] = request;
   }
   Request::wait(requests);
 }
@@ -143,7 +143,7 @@ void Communication::allreduceSum(int itemToSend, int &itemToReceive)
   std::vector<PtrRequest> requests(getRemoteCommunicatorSize());
   for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
     auto request = aSend(&itemToReceive, 1, rank + _rankOffset);
-    requests.push_back(request);
+    requests[rank] = request;
   }
   Request::wait(requests);
 }
@@ -166,8 +166,7 @@ void Communication::broadcast(const int *itemsToSend, int size)
 
   for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
     auto request = aSend(itemsToSend, size, rank + _rankOffset);
-
-    requests.push_back(request);
+    requests[rank] = request;
   }
 
   Request::wait(requests);
@@ -188,7 +187,7 @@ void Communication::broadcast(int itemToSend)
 
   for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
     auto request = aSend(itemToSend, rank + _rankOffset);
-    requests.push_back(request);
+    requests[rank] = request;
   }
 
   Request::wait(requests);
@@ -208,8 +207,7 @@ void Communication::broadcast(const double *itemsToSend, int size)
 
   for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
     auto request = aSend(itemsToSend, size, rank + _rankOffset);
-
-    requests.push_back(request);
+    requests[rank] = request;
   }
 
   Request::wait(requests);
@@ -231,8 +229,7 @@ void Communication::broadcast(double itemToSend)
 
   for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
     auto request = aSend(itemToSend, rank + _rankOffset);
-
-    requests.push_back(request);
+    requests[rank] = request;
   }
 
   Request::wait(requests);
