@@ -1,4 +1,14 @@
+#------------------------------------------------------------------------------
 cmake_minimum_required (VERSION 3.5)
+
+# TODO
+# Fail if not using an out-of-source build
+# if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR)
+#     message(FATAL_ERROR
+#         "In-source builds are not supported.  Please create a build directory "
+#         "separate from the source directory")
+# endif()
+
 project(preCICE LANGUAGES CXX)
 
 list (APPEND CMAKE_MODULE_PATH "${preCICE_SOURCE_DIR}/tools/cmake-modules")
@@ -80,7 +90,7 @@ if (PYTHON)
   find_package(PythonLibs 2.7 REQUIRED)
   find_package(NumPy REQUIRED)
   include_directories(${PYTHON_INCLUDE_DIRS})
-  include_directories(${NumPy_INCLUDE_DIRS})  
+  include_directories(${NumPy_INCLUDE_DIRS})
   add_definitions(-DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION)
 else()
   add_definitions(-DPRECICE_NO_PYTHON)
@@ -107,3 +117,16 @@ add_executable(testprecice
   "src/testing/main.cpp" ${sourcesTests})
 target_link_libraries(testprecice Threads::Threads)
 target_link_libraries(testprecice precice)
+
+
+install(TARGETS binprecice DESTINATION bin)
+install(TARGETS precice DESTINATION lib)
+
+install(FILES
+    src/precice/SolverInterface.hpp
+    src/precice/MeshHandle.hpp
+    src/precice/Constants.hpp
+    src/precice/adapters/c/SolverInterfaceC.h
+    DESTINATION include/precice)
+
+#-----------------------------------------------------------------------------
