@@ -170,7 +170,7 @@ void TestSendReceiveFourProcesses()
     break;
   }
   case 2: {
-    communication.requestConnection("A", "B", {0}, 2);
+    communication.requestConnection("A", "B", rank, 2);
     
     communication.receive(message, 0);
     BOOST_TEST(message == 10);
@@ -181,7 +181,7 @@ void TestSendReceiveFourProcesses()
     break;
   }
   case 3: {
-    communication.requestConnection("A", "B", {0}, 2);
+    communication.requestConnection("A", "B", rank, 2);
     
     communication.receive(message, 0);
     BOOST_TEST(message == 20);

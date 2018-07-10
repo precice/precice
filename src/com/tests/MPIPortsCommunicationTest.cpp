@@ -22,19 +22,21 @@ BOOST_AUTO_TEST_CASE(SendAndReceive,
   TestSendAndReceive<MPIPortsCommunication>();
 }
 
-// BOOST_AUTO_TEST_CASE(SendReceiveFourProcesses,
-//                      * testing::MinRanks(4)
-//                      * boost::unit_test::fixture<testing::SyncProcessesFixture>())
-// {
-//   TestSendReceiveFourProcesses<MPIPortsCommunication>();
-// }
+BOOST_AUTO_TEST_CASE(SendReceiveFourProcesses,
+                     * testing::MinRanks(4)
+                     * boost::unit_test::fixture<testing::SyncProcessesFixture>())
+{
+  TestSendReceiveFourProcesses<MPIPortsCommunication>();
+}
 
-// BOOST_AUTO_TEST_CASE(SendReceiveFourProcessesV2,
-//                      * testing::MinRanks(4)
-//                      * boost::unit_test::fixture<testing::SyncProcessesFixture>())
-// {
-//   TestSendReceiveFourProcessesV2<MPIPortsCommunication>();
-// }
+/// Disabled because acceptConnection lost ability to accept multiple connections
+BOOST_AUTO_TEST_CASE(SendReceiveFourProcessesV2,
+                     * testing::MinRanks(4)
+                     * boost::unit_test::fixture<testing::SyncProcessesFixture>()
+                     * boost::unit_test::disabled())
+{
+  TestSendReceiveFourProcessesV2<MPIPortsCommunication>();
+}
 
 BOOST_AUTO_TEST_CASE(SendReceiveTwoProcessesServerClient,
                      * testing::MinRanks(2)

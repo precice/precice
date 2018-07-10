@@ -19,19 +19,21 @@ BOOST_AUTO_TEST_CASE(SendAndReceive,
   TestSendAndReceive<SocketCommunication>();
 }
 
-// BOOST_AUTO_TEST_CASE(SendReceiveFourProcesses,
-//                      * testing::MinRanks(4)
-//                      * boost::unit_test::fixture<testing::SyncProcessesFixture>())
-// {
-//   TestSendReceiveFourProcesses<SocketCommunication>();
-// }
+BOOST_AUTO_TEST_CASE(SendReceiveFourProcesses,
+                     * testing::MinRanks(4)
+                     * boost::unit_test::fixture<testing::SyncProcessesFixture>())
+{
+  TestSendReceiveFourProcesses<SocketCommunication>();
+}
 
-// BOOST_AUTO_TEST_CASE(SendReceiveFourProcessesV2,
-//                      * testing::MinRanks(4)
-//                      * boost::unit_test::fixture<testing::SyncProcessesFixture>())
-// {
-//   TestSendReceiveFourProcessesV2<SocketCommunication>();
-// }
+/// Disabled because acceptConnection lost ability to accept multiple connections
+BOOST_AUTO_TEST_CASE(SendReceiveFourProcessesV2,
+                     * testing::MinRanks(4)
+                     * boost::unit_test::fixture<testing::SyncProcessesFixture>()
+                     * boost::unit_test::disabled())
+{
+  TestSendReceiveFourProcessesV2<SocketCommunication>();
+}
 
 BOOST_AUTO_TEST_CASE(SendReceiveTwoProcessesServerClient,
                      * testing::MinRanks(2)

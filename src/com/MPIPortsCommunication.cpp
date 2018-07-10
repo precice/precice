@@ -75,8 +75,6 @@ void MPIPortsCommunication::acceptConnection(std::string const &acceptorName,
     MPI_Recv(&requesterCommunicatorSize, 1, MPI_INT, 0, 42, communicator, MPI_STATUS_IGNORE);
     MPI_Send(&acceptorRank,              1, MPI_INT, 0, 42, communicator);
 
-    CHECK(requesterCommunicatorSize == _communicators.size(),
-          "Requester communicator sizes are inconsistent!");
     CHECK(_communicators.count(requesterRank) == 0,
           "Duplicate request to connect by same rank (" << requesterRank << ")!");
 
