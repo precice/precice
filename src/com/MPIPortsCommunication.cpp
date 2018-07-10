@@ -108,7 +108,7 @@ void MPIPortsCommunication::acceptConnectionAsServer(
   DEBUG("Accept connection at " << _portName);
 
   MPI_Comm communicator;
-  for (int connections = 0; connections < requesterCommunicatorSize; ++connections) {
+  for (int connection = 0; connection < requesterCommunicatorSize; ++connection) {
     MPI_Comm_accept(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
     DEBUG("Accepted connection at " << _portName);
         

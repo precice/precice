@@ -668,7 +668,7 @@ void PointToPointCommunication::checkBufferedRequests(bool blocking)
     if (bufferedRequests.empty())
       return;
     if (blocking)
-      std::this_thread::yield(); // give up our time slice, so MPI way work
+      std::this_thread::yield(); // give up our time slice, so MPI may work
   } while (blocking);
 }
 
