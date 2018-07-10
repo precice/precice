@@ -1,5 +1,6 @@
 #include "PointToPointCommunication.hpp"
 #include <vector>
+#include <thread>
 #include "com/Communication.hpp"
 #include "com/CommunicationFactory.hpp"
 #include "mesh/Mesh.hpp"
@@ -551,8 +552,6 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
 
     _totalIndexCount += indices.size();
 
-    // auto c = _communicationFactory->newCommunication();
-
 #ifdef SuperMUC_WORK
     Publisher::ScopedPushDirectory spd("." + acceptorName + "-" + _mesh->getName() + "-" +
                                        std::to_string(globalAcceptorRank) + ".address");
@@ -576,6 +575,8 @@ void PointToPointCommunication::closeConnection()
 
   if (not isConnected())
     return;
+
+  checkBufferedRequests(true);
 
   for (auto &mapping : _mappings) {
     mapping.communication->closeConnection();
@@ -613,7 +614,7 @@ void PointToPointCommunication::send(double *itemsToSend,
     bufferedRequests.emplace_back(request, buffer);
   }
 
-  checkBufferedRequests();
+  checkBufferedRequests(false);
 }
 
 void PointToPointCommunication::receive(double *itemsToReceive,
@@ -655,17 +656,23 @@ void PointToPointCommunication::receive(double *itemsToReceive,
   _buffer.clear();
 }
 
-void PointToPointCommunication::checkBufferedRequests()
+void PointToPointCommunication::checkBufferedRequests(bool blocking)
 {
-  for (auto it = bufferedRequests.begin(); it != bufferedRequests.end();) {
-      if (it->first->test()) {
+  do {
+    for (auto it = bufferedRequests.begin(); it != bufferedRequests.end();) {
+      if (it->first->test())
         it = bufferedRequests.erase(it);
-      }
-      else {
+      else
         ++it;
-      }
     }
-  }
+    if (bufferedRequests.empty())
+      return;
+    if (blocking)
+      std::this_thread::yield(); // give up our time slice, so MPI way work
+  } while (blocking);
+}
+
+
 
 
 } // namespace m2n

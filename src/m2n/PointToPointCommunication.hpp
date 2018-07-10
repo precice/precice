@@ -90,7 +90,10 @@ public:
 private:
 
   /// Checks all stored requests for completion and removes associated buffers
-  void checkBufferedRequests();
+  /**
+   * @param[in] blocking False means that the function returns, even when there are requests left.
+   */  
+  void checkBufferedRequests(bool blocking);
   
   logging::Logger _log{"m2n::PointToPointCommunication"};
 
