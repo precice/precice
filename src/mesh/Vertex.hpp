@@ -5,12 +5,6 @@
 #include <Eigen/Core>
 
 namespace precice {
-  namespace mesh {
-    class Mesh;
-  }
-}
-
-namespace precice {
 namespace mesh {
 
 /// Vertex of a mesh.
@@ -18,23 +12,16 @@ class Vertex : public PropertyContainer, private boost::noncopyable
 {
 public:
 
-  /// Constructor for vertex, parent mesh is not assigned.
+  /// Constructor for vertex
   template<typename VECTOR_T>
   Vertex (
     const VECTOR_T& coordinates,
     int             id );
 
-  /// Constructor for vertex, parent mesh is assigned.
-  template<typename VECTOR_T>
-  Vertex (
-    const VECTOR_T& coordinates,
-    int             id,
-    Mesh&           mesh );
-
   /// Destructor, empty.
   virtual ~Vertex() {}
 
-  /// Returns spatial dimenionality of vertex.
+  /// Returns spatial dimensionality of vertex.
   int getDimensions() const;
 
   /// Sets the coordinates of the vertex.
@@ -53,12 +40,6 @@ public:
 
   /// Returns the normal of the vertex.
   const Eigen::VectorXd& getNormal() const;
-
-  /// Returns (possibly nullptr) pointer to parent const Mesh object.
-  const Mesh* mesh() const;
-
-  /// Returns possibly null pointer to parent Mesh object.
-  Mesh* mesh();
 
   int getGlobalIndex() const;
 
@@ -91,9 +72,6 @@ private:
 
   /// true if this vertex is tagged for partition
   bool _tagged = false;
-
-  /// Pointer to parent mesh, possibly NULL.
-  Mesh * _mesh = nullptr;
 };
 
 // ------------------------------------------------------ HEADER IMPLEMENTATION
@@ -103,18 +81,6 @@ Vertex:: Vertex
 (
   const VECTOR_T& coordinates,
   int             id )
-:
-  PropertyContainer (),
-  _id ( id ),
-  _coords ( coordinates ),
-  _normal ( Eigen::VectorXd::Constant(_coords.size(), 0.0) )
-{}
-
-template<typename VECTOR_T>
-Vertex:: Vertex (
-  const VECTOR_T& coordinates,
-  int             id,
-  Mesh&           mesh )
 :
   PropertyContainer (),
   _id ( id ),

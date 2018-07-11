@@ -119,7 +119,7 @@ public:
   Vertex& createVertex ( const VECTOR_T& coords )
   {
     assertion(coords.size() == _dimensions, coords.size(), _dimensions);
-    Vertex* newVertex = new Vertex(coords, _manageVertexIDs.getFreeID(), *this);
+    Vertex* newVertex = new Vertex(coords, _manageVertexIDs.getFreeID());
     newVertex->addParent(*this);
     _content.add(newVertex);
     return *newVertex;
