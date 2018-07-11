@@ -30,7 +30,9 @@ size_t MPISinglePortsCommunication::getRemoteCommunicatorSize()
 {
   TRACE();
   assertion(isConnected());
-  return _communicators.size();
+  int size = -1;
+  MPI_Comm_remote_size(_communicators[0], &size);
+  return size;
 }
 
 void MPISinglePortsCommunication::acceptConnection(std::string const &acceptorName,

@@ -89,41 +89,41 @@ void SocketCommunication::acceptConnection(std::string const &acceptorName,
 
     acceptor.accept(*socket);
     DEBUG("Accepted connection at " << address);
+    _isConnected = true;
 
     int requesterRank = -1;
     int requesterCommunicatorSize = 0;
 
     asio::read(*socket, asio::buffer(&requesterRank, sizeof(int)));
-    asio::read(*socket, asio::buffer(&requesterCommunicatorSize, sizeof(int)));
+    _sockets[requesterRank] = socket;
+    send(acceptorRank, requesterRank);
+    receive(requesterCommunicatorSize, requesterRank);
 
     CHECK(requesterCommunicatorSize > 0, "Requester communicator size has to be > 0!");
 
     _remoteCommunicatorSize = requesterCommunicatorSize;
-    _sockets[requesterRank] = socket;
-    _isConnected = true;
 
-    send(acceptorRank, requesterRank);
-    send(1, requesterRank); // received as acceptorCommunicatorSize
+    send(1, requesterRank); // remove?
 
     for (int i = 1; i < _remoteCommunicatorSize; ++i) {
       socket = std::make_shared<Socket>(*_ioService);
 
       acceptor.accept(*socket);
       DEBUG("Accepted connection at " << address);
+      _isConnected = true;
 
       asio::read(*socket, asio::buffer(&requesterRank, sizeof(int)));
-      asio::read(*socket, asio::buffer(&requesterCommunicatorSize, sizeof(int)));
-
-      CHECK(requesterCommunicatorSize == _remoteCommunicatorSize,
-            "Remote communicator sizes are inconsistent!");
       CHECK(_sockets.count(requesterRank) == 0,
-          "Duplicate request to connect by same rank (" << requesterRank << ")!");
+            "Duplicate request to connect by same rank (" << requesterRank << ")!");
 
       _sockets[requesterRank] = socket;
-
       send(acceptorRank, requesterRank);
-      send(1, requesterRank); // was: acceptorCommunicatorSize
-      _isConnected = true;
+      receive(requesterCommunicatorSize, requesterRank);
+      
+      CHECK(requesterCommunicatorSize == _remoteCommunicatorSize,
+            "Remote communicator sizes are inconsistent!");
+      
+      send(1, requesterRank); // remove?
     }
 
     acceptor.close();
@@ -186,9 +186,9 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorNa
       _isConnected = true;
 
       int requesterRank;
-      asio::read(*socket, asio::buffer(&requesterRank, sizeof(int))); // receive requesters rank
+      asio::read(*socket, asio::buffer(&requesterRank, sizeof(int)));
       _sockets[requesterRank] = socket;
-      send(1, requesterRank);
+      send(1, requesterRank); // remove?
     }
 
     acceptor.close();
@@ -249,16 +249,17 @@ void SocketCommunication::requestConnection(std::string const &acceptorName,
 
     DEBUG("Requested connection to " << address);
 
+    asio::write(*socket, asio::buffer(&requesterRank, sizeof(int)));
+    
+    int acceptorRank = -1;
+    asio::read(*socket, asio::buffer(&acceptorRank, sizeof(int)));
     _sockets[0] = socket; // should be acceptorRank instead of 0, likewise all communication below
-
-    send(requesterRank, 0);
+    
     send(requesterCommunicatorSize, 0);
 
     int acceptorCommunicatorSize = 0;
-    int acceptorRank = -1;
 
-    receive(acceptorRank, 0);
-    receive(acceptorCommunicatorSize, 0);
+    receive(acceptorCommunicatorSize, 0); // remove?
 
     // CHECK(acceptorRank == 0, "Acceptor base rank has to be 0 but is " << acceptorRank << "!");
     CHECK(acceptorCommunicatorSize == 1, "Acceptor communicator size has to be 1!");
@@ -326,7 +327,7 @@ void SocketCommunication::requestConnectionAsClient(std::string      const &acce
       DEBUG("Requested connection to " << address << ", rank = " << acceptorRank);
       _sockets[acceptorRank] = socket;
       send(requesterRank, acceptorRank); // send my rank
-      receive(_remoteCommunicatorSize, acceptorRank);
+      receive(_remoteCommunicatorSize, acceptorRank); // remove? We receive 1 anyway.
 
     } catch (std::exception &e) {
       ERROR("Requesting connection to " << address << " failed: " << e.what());

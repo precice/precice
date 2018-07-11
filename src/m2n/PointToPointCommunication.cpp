@@ -420,8 +420,6 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
       utils::MasterSlave::_rank,
       communicationMap.size());
 
-  assertion(c->getRemoteCommunicatorSize() == communicationMap.size());
-
   _mappings.reserve(communicationMap.size());
 
   for (auto & comMap : communicationMap) {

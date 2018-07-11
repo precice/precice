@@ -37,7 +37,7 @@ void MPIPortsCommunication::acceptConnection(std::string const &acceptorName,
                                              std::string const &requesterName,
                                              int                acceptorRank)
 {
-  TRACE(acceptorName, requesterName);
+  TRACE(acceptorName, requesterName, acceptorRank);
   assertion(not isConnected());
 
   _isAcceptor = true;
@@ -139,7 +139,7 @@ void MPIPortsCommunication::requestConnection(std::string const &acceptorName,
 
   _isConnected = true;
 
-  int acceptorRank;
+  int acceptorRank = -1;
   MPI_Send(&requesterRank,             1, MPI_INT, 0, 42, communicator);
   MPI_Send(&requesterCommunicatorSize, 1, MPI_INT, 0, 42, communicator);
   MPI_Recv(&acceptorRank,              1, MPI_INT, 0, 42, communicator, MPI_STATUS_IGNORE);
@@ -200,7 +200,9 @@ void MPIPortsCommunication::closeConnection()
 
 MPI_Comm &MPIPortsCommunication::communicator(int rank)
 {
-  return _communicators[rank];
+  TRACE(rank, _communicators, _isAcceptor);
+  // Use bounds checking here, because a std::map otherwise creates element
+  return _communicators.at(rank);
 }
 
 int MPIPortsCommunication::rank(int rank)
