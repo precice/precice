@@ -44,17 +44,17 @@ public:
 
 private:
 
-  static logging::Logger _log;
+  logging::Logger _log{"query::FindClosestEdge"};
 
   Eigen::VectorXd _searchPoint;
 
-  double _shortestDistance;
+  double _shortestDistance = std::numeric_limits<double>::max();
 
   Eigen::VectorXd _vectorToProjectionPoint;
 
   std::array<double,2> _parametersProjectionPoint;
 
-  mesh::Edge* _closestEdge;
+  mesh::Edge* _closestEdge = nullptr;
 
   void find ( mesh::Edge& edge );
 };

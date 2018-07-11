@@ -48,7 +48,7 @@ public:
   /**
    * @brief Returns the number of processes in the remote communicator.
    *
-   * Precondition: a connection to the remote participant has been setup.
+   * @pre A connection to the remote participant has been setup.
    */
   virtual size_t getRemoteCommunicatorSize() override;
 

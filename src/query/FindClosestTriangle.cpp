@@ -3,23 +3,18 @@
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
 #include "mesh/Mesh.hpp"
-#include "math/GeometryComputations.hpp"
 #include "math/math.hpp"
 
 namespace precice {
 namespace query {
-
-logging::Logger FindClosestTriangle:: _log("query::FindClosestTriangle" );
 
 FindClosestTriangle:: FindClosestTriangle
 (
   const Eigen::VectorXd& searchPoint )
 :
   _searchPoint ( searchPoint ),
-  _shortestDistance ( std::numeric_limits<double>::max() ),
   _vectorToProjectionPoint ( Eigen::VectorXd::Constant(_searchPoint.size(), std::numeric_limits<double>::max()) ),
-  _parametersProjectionPoint( {_shortestDistance, _shortestDistance, _shortestDistance } ),
-  _closestTriangle ( nullptr )
+  _parametersProjectionPoint( {_shortestDistance, _shortestDistance, _shortestDistance } )
 {}
 
 const Eigen::VectorXd& FindClosestTriangle:: getSearchPoint() const

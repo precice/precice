@@ -309,8 +309,7 @@ void MPICommunication::receive(int &itemToReceive, int rankSender)
            0,
            communicator(rankSender),
            &status);
-  DEBUG("Received " << itemToReceive << " from rank "
-                    << rankSender);
+  DEBUG("Received " << itemToReceive << " from rank " << rankSender);
 }
 
 PtrRequest MPICommunication::aReceive(int &itemToReceive, int rankSender)
@@ -343,8 +342,7 @@ void MPICommunication::receive(bool &itemToReceive, int rankSender)
            0,
            communicator(rankSender),
            &status);
-  DEBUG("Received " << itemToReceive << " from rank "
-                    << rankSender);
+  DEBUG("Received " << itemToReceive << " from rank " << rankSender);
 }
 
 PtrRequest MPICommunication::aReceive(bool &itemToReceive, int rankSender)

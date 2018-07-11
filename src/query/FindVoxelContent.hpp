@@ -54,7 +54,7 @@ public:
 
 private:
 
-  static logging::Logger _log;
+  mutable logging::Logger _log{"query::FindVoxelContent"};
 
   /// Center point of the voxel
   Eigen::VectorXd _voxelCenter;

@@ -84,16 +84,16 @@ private:
   Eigen::VectorXd _normal;
 
   /// global (unique) index for parallel simulations
-  int _globalIndex;
+  int _globalIndex = -1;
 
   /// true if this processors is the owner of the vertex (for parallel simulations)
-  bool _owner;
+  bool _owner = true;
 
   /// true if this vertex is tagged for partition
-  bool _tagged;
+  bool _tagged = false;
 
   /// Pointer to parent mesh, possibly NULL.
-  Mesh * _mesh;
+  Mesh * _mesh = nullptr;
 };
 
 // ------------------------------------------------------ HEADER IMPLEMENTATION
@@ -107,11 +107,7 @@ Vertex:: Vertex
   PropertyContainer (),
   _id ( id ),
   _coords ( coordinates ),
-  _normal ( Eigen::VectorXd::Constant(_coords.size(), 0.0) ),
-  _globalIndex(-1),
-  _owner(true),
-  _tagged(false),
-  _mesh ( NULL )
+  _normal ( Eigen::VectorXd::Constant(_coords.size(), 0.0) )
 {}
 
 template<typename VECTOR_T>
@@ -123,11 +119,7 @@ Vertex:: Vertex (
   PropertyContainer (),
   _id ( id ),
   _coords ( coordinates ),
-  _normal ( Eigen::VectorXd::Constant(_coords.size(), 0.0) ),
-  _globalIndex(-1),
-  _owner(true),
-  _tagged(false),
-  _mesh ( & mesh )
+  _normal ( Eigen::VectorXd::Constant(_coords.size(), 0.0) )
 {}
 
 template<typename VECTOR_T>

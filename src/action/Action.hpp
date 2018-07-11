@@ -1,10 +1,11 @@
-#ifndef PRECICE_ACTION_ACTION_HPP_
-#define PRECICE_ACTION_ACTION_HPP_
+#pragma once
 
 #include "mesh/SharedPointer.hpp"
 
-namespace precice {
-namespace action {
+namespace precice
+{
+namespace action
+{
 
 /**
  * @brief Abstract base class for configurable actions on data and/or meshes.
@@ -16,74 +17,58 @@ namespace action {
 class Action
 {
 public:
+  /// Defines the time and place of application of the action.
+  enum Timing {
+    ALWAYS_PRIOR,             // Everytime, before advancing cpl scheme
+    ALWAYS_POST,              // Everytime, after advancing cpl scheme
+    ON_EXCHANGE_PRIOR,        // On data exchange, before advancing cpl scheme
+    ON_EXCHANGE_POST,         // On data exchange, after advancing cpl scheme
+    ON_TIMESTEP_COMPLETE_POST // On advancing to next dt, after adv. cpl scheme
+  };
 
-   /**
-    * @brief Defines the time and place of application of the action.
-    */
-   enum Timing {
-      ALWAYS_PRIOR,             // Everytime, before advancing cpl scheme
-      ALWAYS_POST,              // Everytime, after advancing cpl scheme
-      ON_EXCHANGE_PRIOR,        // On data exchange, before advancing cpl scheme
-      ON_EXCHANGE_POST,         // On data exchange, after advancing cpl scheme
-      ON_TIMESTEP_COMPLETE_POST  // On advancing to next dt, after adv. cpl scheme
-   };
+  Action(
+      Timing               timing,
+      const mesh::PtrMesh &mesh)
+      : _timing(timing),
+        _mesh(mesh)
+  {
+  }
 
-   /**
-    * @brief Constructor.
-    */
-   Action (
-     Timing               timing,
-     const mesh::PtrMesh& mesh )
-   :
-     _timing(timing),
-     _mesh(mesh)
-   {}
+  /// Destructor, empty.
+  virtual ~Action() {}
 
-   /**
-    * @brief Destructor, empty.
-    */
-   virtual ~Action() {}
-
-   /**
+  /**
     * @brief Performs the action, to be overwritten by subclasses.
     *
-    * @param dt [IN] Length of last local timestep computed.
-    * @param computedPartFullDt [IN] Sum of all local timesteps of current
-    *        global timestep.
-    * @param fullDt [IN] Current global timestep length.
+    * @param[in] dt Length of last local timestep computed.
+    * @param[in] computedPartFullDt Sum of all local timesteps of current global timestep.
+    * @param fullDt[in] Current global timestep length.
     */
-   virtual void performAction (
-     double time,
-     double dt,
-     double computedPartFullDt,
-     double fullDt ) =0;
+  virtual void performAction(
+      double time,
+      double dt,
+      double computedPartFullDt,
+      double fullDt) = 0;
 
-   /**
-    * @brief Returns the timing of the action.
-    */
-   Timing getTiming() const
-   {
-      return _timing;
-   }
+  /// Returns the timing of the action.
+  Timing getTiming() const
+  {
+    return _timing;
+  }
 
-   /**
-    * @brief Returns the mesh carrying the data used in the action.
-    */
-   const mesh::PtrMesh& getMesh() const
-   {
-     return _mesh;
-   }
+  /// Returns the mesh carrying the data used in the action.
+  const mesh::PtrMesh &getMesh() const
+  {
+    return _mesh;
+  }
 
 private:
+  /// Determines when the action will be executed.
+  Timing _timing;
 
-   // @brief Determines when the action will be executed.
-   Timing _timing;
-
-   // @brief Mesh carrying the data used in the action.
-   mesh::PtrMesh _mesh;
+  /// Mesh carrying the data used in the action.
+  mesh::PtrMesh _mesh;
 };
 
-
-}} // namespace precice, action
-
-#endif /* PRECICE_ACTION_ACTION_HPP_ */
+} // namespace action
+} // namespace precice

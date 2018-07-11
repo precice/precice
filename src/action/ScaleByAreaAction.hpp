@@ -1,49 +1,45 @@
-#ifndef PRECICE_ACTION_SCALEBYAREAACTION_HPP_
-#define PRECICE_ACTION_SCALEBYAREAACTION_HPP_
+#pragma once
 
 #include "Action.hpp"
-#include "mesh/SharedPointer.hpp"
-#include "mesh/Vertex.hpp"
 #include "logging/Logger.hpp"
+#include "mesh/SharedPointer.hpp"
 
-namespace precice {
-  namespace mesh {
-    class Edge;
-    class Triangle;
-  }
-}
+namespace precice
+{
+namespace mesh
+{
+class Edge;
+class Triangle;
+} // namespace mesh
+} // namespace precice
 
-// ----------------------------------------------------------- CLASS DEFINITION
-
-namespace precice {
-namespace action {
+namespace precice
+{
+namespace action
+{
 
 class ScaleByAreaAction : public Action
 {
 public:
-
   enum Scaling {
-    // @brief Divides the data by the area of neighboring edges/triangles.
+    /// Divides the data by the area of neighboring edges/triangles.
     SCALING_DIVIDE_BY_AREA,
-    // @brief Multiplies the data by the area of neighboring edges/triangles.
+    /// Multiplies the data by the area of neighboring edges/triangles.
     SCALING_MULTIPLY_BY_AREA
   };
 
   /**
    * @brief Constructor.
    *
-   * @param data [IN] Data that should be scaled.
-   * @param scalingType [IN] Type of scaling to be performed.
+   * @param[in] data Data that should be scaled.
+   * @param[in] scalingType Type of scaling to be performed.
    */
-  ScaleByAreaAction (
-    Timing               timing,
-    int                  targetDataID,
-    const mesh::PtrMesh& mesh,
-    Scaling              scaling );
+  ScaleByAreaAction(
+      Timing               timing,
+      int                  targetDataID,
+      const mesh::PtrMesh &mesh,
+      Scaling              scaling);
 
-  /**
-   * @brief Destructor.
-   */
   virtual ~ScaleByAreaAction() {}
 
   /**
@@ -52,22 +48,19 @@ public:
    * At the moment, only a division of a property value by the associated area
    * of the neighboring edges (2D) is possible.
    */
-  virtual void performAction (
-    double time,
-    double dt,
-    double computedPartFullDt,
-    double fullDt );
+  virtual void performAction(
+      double time,
+      double dt,
+      double computedPartFullDt,
+      double fullDt);
 
 private:
-
-  // @brief Logging device
-  static logging::Logger _log;
+  logging::Logger _log{"action::ScaleByAreaAction"};
 
   mesh::PtrData _targetData;
 
   Scaling _scaling;
 };
 
-}} // namespace precice, action
-
-#endif /* PRECICE_ACTION_SCALEBYAREAACTION_HPP_ */
+} // namespace action
+} // namespace precice

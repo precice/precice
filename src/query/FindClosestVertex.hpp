@@ -7,9 +7,7 @@
 namespace precice {
 namespace query {
 
-/**
- * @brief Finds the closest Vertex object hold by Mesh objects.
- */
+/// Finds the closest Vertex object hold by Mesh objects.
 class FindClosestVertex
 {
 public:
@@ -30,9 +28,7 @@ public:
   template<typename CONTAINER_T>
   bool operator() ( CONTAINER_T& container );
 
-  /**
-   * @brief Returns the coordinates of the search point.
-   */
+  /// Returns the coordinates of the search point.
   const Eigen::VectorXd& getSearchPoint() const;
 
   bool hasFound() const;
@@ -40,27 +36,27 @@ public:
   /**
    * @brief Returns the euclidian distance to the closest vertex found.
    *
-   * Precondition: find() has been called and returned true.
+   * @pre find() has been called and returned true.
    */
   double getEuclidianDistance();
 
   /**
    * @brief Returns the closest vertex found.
    *
-   * Precondition: find() has been called and returned true.
+   * @pre find() has been called and returned true.
    */
   mesh::Vertex& getClosestVertex();
 
 private:
 
-  // @brief Origin of search for closest vertex.
+  /// Origin of search for closest vertex.
   Eigen::VectorXd _searchPoint;
 
-  // @brief Distance to closest Vertex object found.
-  double _shortestDistance;
+  /// Distance to closest Vertex object found.
+  double _shortestDistance = std::numeric_limits<double>::max();
 
-  // @brief Pointer to closest Vertex object found.
-  mesh::Vertex* _closestVertex;
+  /// Pointer to closest Vertex object found.
+  mesh::Vertex* _closestVertex = nullptr;
 };
 
 // --------------------------------------------------------- HEADER DEFINITIONS

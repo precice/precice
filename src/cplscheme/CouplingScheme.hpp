@@ -62,7 +62,7 @@ public:
     double startTime,
     int    startTimesteps ) =0;
 
-  /// @brief Returns true, if initialize has been called.
+  /// Returns true, if initialize has been called.
   virtual bool isInitialized() const =0;
 
   /**
@@ -86,8 +86,7 @@ public:
   /**
    * @brief Exchanges data and updates the state of the coupling scheme.
 
-   * Preconditions:
-   * - initialize() has been called.
+   * @pre initialize() has been called.
    *
    * Does not necessarily advances in time.
    */
@@ -114,10 +113,10 @@ public:
   /// actually, this only means that data has been received, data is always sent
   virtual bool hasDataBeenExchanged() const =0;
 
-  /// @brief Returns the currently computed time of the coupling scheme.
+  /// Returns the currently computed time of the coupling scheme.
   virtual double getTime() const =0;
 
-  /// @brief Returns the currently computed timesteps of the coupling scheme.
+  /// Returns the currently computed timesteps of the coupling scheme.
   virtual int getTimesteps() const =0;
 
   /// Returns the maximal time to be computed.

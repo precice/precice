@@ -8,17 +8,13 @@
 namespace precice {
 namespace query {
 
-logging::Logger FindClosestEdge::_log("query::FindClosestEdge");
-
 FindClosestEdge:: FindClosestEdge
 (
   const Eigen::VectorXd& searchPoint )
 :
   _searchPoint ( searchPoint ),
-  _shortestDistance ( std::numeric_limits<double>::max() ),
   _vectorToProjectionPoint ( Eigen::VectorXd::Constant(searchPoint.size(), std::numeric_limits<double>::max()) ),
-  _parametersProjectionPoint( {_shortestDistance , _shortestDistance} ),
-  _closestEdge ( NULL )
+  _parametersProjectionPoint( {_shortestDistance , _shortestDistance} )
 {
   assertion ( (_searchPoint.size() == 2) || (_searchPoint.size() == 3),
                _searchPoint.size() );

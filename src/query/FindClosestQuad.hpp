@@ -38,60 +38,54 @@ public:
   template<typename CONTAINER_T>
   bool operator() ( CONTAINER_T & container );
 
-  /**
-   * @brief Returns the coordinates of the search point.
-   */
+  /// Returns the coordinates of the search point.
   const Eigen::VectorXd& getSearchPoint() const;
 
-  /**
-   * @brief Returns true, if a closest quad has been found.
-   */
+  /// Returns true, if a closest quad has been found.
   bool hasFound() const;
 
   /**
    * @brief Returns the distance to the found quad.
    *
-   * Precondition: Find has been called and returned true.
+   * @pre Find has been called and returned true.
    */
   double getEuclidianDistance();
 
   /**
    * @brief Returns the found quad.
    *
-   * Precondition: Find has been called and returned true.
+   * @pre Find has been called and returned true.
    */
   mesh::Quad& getClosestQuad();
 
   /**
    * @brief Returns the vector from the search point to the projection point.
    *
-   * Precondition: Find has been called and returned true.
+   * @pre Find has been called and returned true.
    */
   const Eigen::VectorXd& getVectorToProjectionPoint() const;
 
-  /**
-   * @brief Returns parametric description value (index 0, 1, 2) of proj. point.
-   */
+  /// Returns parametric description value (index 0, 1, 2) of proj. point.
   double getProjectionPointParameter ( int index ) const;
 
 private:
 
-  static logging::Logger _log;
+  logging::Logger _log{"query::FindClosestQuad"};
 
   /// Search point coordinates.
   Eigen::VectorXd _searchPoint;
 
-  // @brief Shortest distance to the found Quad object.
-  double _shortestDistance;
+  /// Shortest distance to the found Quad object.
+  double _shortestDistance = std::numeric_limits<double>::max();
 
-  // @brief Vector from search point to projection point.
+  /// Vector from search point to projection point.
   Eigen::VectorXd _vectorToProjectionPoint;
 
-  // @brief Quad coordinates of the projection point.
+  /// Quad coordinates of the projection point.
   std::array<double,4> _parametersProjectionPoint; // Does this make sense?
 
-  // @brief Pointer to found Quad object.
-  mesh::Quad* _closestQuad;
+  /// Pointer to found Quad object.
+  mesh::Quad* _closestQuad = nullptr;
 
   void find ( mesh::Quad& quad );
 };

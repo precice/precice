@@ -9,34 +9,33 @@
 struct _object;
 using PyObject = _object;
 
-
-namespace precice {
-namespace action {
+namespace precice
+{
+namespace action
+{
 
 /// Action whose implementation is given in a Python file.
 class PythonAction : public Action
 {
 public:
-
-  PythonAction (
-    Timing               timing,
-    const std::string&   modulePath,
-    const std::string&   moduleName,
-    const mesh::PtrMesh& mesh,
-    int                  targetDataID,
-    int                  sourceDataID );
+  PythonAction(
+      Timing               timing,
+      const std::string &  modulePath,
+      const std::string &  moduleName,
+      const mesh::PtrMesh &mesh,
+      int                  targetDataID,
+      int                  sourceDataID);
 
   virtual ~PythonAction();
 
-  virtual void performAction (
-    double time,
-    double dt,
-    double computedPartFullDt,
-    double fullDt );
+  virtual void performAction(
+      double time,
+      double dt,
+      double computedPartFullDt,
+      double fullDt);
 
 private:
-
-  static logging::Logger _log;
+  logging::Logger _log{"action::PythonAction"};
 
   std::string _modulePath;
 
@@ -46,29 +45,30 @@ private:
 
   mesh::PtrData _sourceData;
 
-  int _numberArguments;
+  int _numberArguments = 2;
 
-  bool _isInitialized;
+  bool _isInitialized = false;
 
-  PyObject* _moduleNameObject;
+  PyObject *_moduleNameObject = nullptr;
 
-  PyObject* _module;
+  PyObject *_module = nullptr;
 
-  PyObject* _sourceValues;
+  PyObject *_sourceValues = nullptr;
 
-  PyObject* _targetValues;
+  PyObject *_targetValues = nullptr;
 
-  PyObject* _performAction;
+  PyObject *_performAction = nullptr;
 
-  PyObject* _vertexCallback;
+  PyObject *_vertexCallback = nullptr;
 
-  PyObject* _postAction;
+  PyObject *_postAction = nullptr; 
 
   void initialize();
 
   int makeNumPyArraysAvailable();
 };
 
-}} // namespace precice, action
+} // namespace action
+} // namespace precice
 
 #endif

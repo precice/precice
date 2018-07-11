@@ -80,21 +80,21 @@ public:
   /**
    * @brief Returns the outer normal of the triangle.
    *
-   * Prerequesits: The normal has to be computed and set from outside before.
+   * @pre The normal has to be computed and set from outside before.
    */
   const Eigen::VectorXd &getNormal() const;
 
   /**
    * @brief Returns the barycenter of the triangle.
    *
-   * Prerequesits: The center has to be computed and set from outside before.
+   * @pre The center has to be computed and set from outside before.
    */
   const Eigen::VectorXd &getCenter() const;
 
   /**
    * @brief Returns the radius of the circle enclosing the triangle.
    *
-   * Prerequesits: The radius has to be computed and set from outside before.
+   * @pre The radius has to be computed and set from outside before.
    */
   double getEnclosingRadius() const;
 

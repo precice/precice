@@ -55,10 +55,8 @@ struct CompositionalCouplingSchemeFixture  // TODO fixtures in cplscheme/tests a
 
     xml::configure(root, configurationPath);
     meshConfig->setMeshSubIDs();
-    m2n::PtrM2N m2n0 =
-        m2nConfig->getM2N(nameParticipant0, nameParticipant1);
-    m2n::PtrM2N m2n1 =
-        m2nConfig->getM2N(nameParticipant1, nameParticipant2);
+    m2n::PtrM2N m2n0 = m2nConfig->getM2N(nameParticipant0, nameParticipant1);
+    m2n::PtrM2N m2n1 = m2nConfig->getM2N(nameParticipant1, nameParticipant2);
 
     // some dummy mesh
     meshConfig->meshes()[0]->createVertex(Eigen::Vector3d(1.0, 1.0, 1.0));
@@ -197,12 +195,10 @@ struct CompositionalCouplingSchemeFixture  // TODO fixtures in cplscheme/tests a
     }
   }
 
-  void connect // TODO this function occurs in multiple tests. Move this to a common fixture? see https://github.com/precice/precice/issues/90
-  (
-      const std::string&     participant0,
-      const std::string&     participant1,
-      const std::string&     localParticipant,
-      m2n::PtrM2N& communication ) const
+  void connect(const std::string&     participant0,
+               const std::string&     participant1,
+               const std::string&     localParticipant,
+               m2n::PtrM2N communication ) const
   {
     assertion ( communication.use_count() > 0 );
     assertion ( not communication->isConnected() );
@@ -219,7 +215,7 @@ struct CompositionalCouplingSchemeFixture  // TODO fixtures in cplscheme/tests a
 
 BOOST_FIXTURE_TEST_SUITE(CompositionalCouplingSchemeTests, CompositionalCouplingSchemeFixture)
 
-// Test one explicit dummy coupling scheme
+/// Test one explicit dummy coupling scheme
 BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1)
 {
   std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint()); // TODO can we move this into a common fixture? See https://github.com/precice/precice/issues/90
@@ -836,7 +832,9 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionUntitled) // TODO give a better n
 }
 
 /// Test that runs on 3 processors.
-BOOST_AUTO_TEST_CASE(testExplicitSchemeComposition1, * testing::MinRanks(3) * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1, 2})))
+BOOST_AUTO_TEST_CASE(testExplicitSchemeComposition1,
+                     * testing::MinRanks(3)
+                     * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1, 2})))
 {
   if (utils::Parallel::getCommunicatorSize() != 3) // only run test on ranks {0,1,2}, for other ranks return
     return;

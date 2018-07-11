@@ -16,9 +16,7 @@ namespace precice {
 namespace precice {
 namespace query {
 
-/**
- * @brief Finds the closest Triangle object contained in a Mesh object.
- */
+/// Finds the closest Triangle object contained in a Mesh object.
 class FindClosestTriangle
 {
 public:
@@ -26,8 +24,7 @@ public:
   /**
    * @brief Constructor.
    *
-   * @param[in] searchPoint Origin from which the closest Triangle object
-   *        should be found.
+   * @param[in] searchPoint Origin from which the closest Triangle object should be found.
    */
   explicit FindClosestTriangle ( const Eigen::VectorXd& searchPoint );
 
@@ -39,51 +36,45 @@ public:
   template<typename CONTAINER_T>
   bool operator() ( CONTAINER_T & container );
 
-  /**
-   * @brief Returns the coordinates of the search point.
-   */
+  /// Returns the coordinates of the search point.
   const Eigen::VectorXd& getSearchPoint() const;
 
-  /**
-   * @brief Returns true, if a closest triangle has been found.
-   */
+  /// Returns true, if a closest triangle has been found.
   bool hasFound() const;
 
   /**
    * @brief Returns the distance to the found triangle.
    *
-   * Precondition: Find has been called and returned true.
+   * @pre Find has been called and returned true.
    */
   double getEuclidianDistance() const;
   
   /**
    * @brief Returns the found triangle.
    *
-   * Precondition: Find has been called and returned true.
+   * @pre Find has been called and returned true.
    */
   mesh::Triangle& getClosestTriangle();
 
   /**
    * @brief Returns the vector from the search point to the projection point.
    *
-   * Precondition: Find has been called and returned true.
+   * @pre Find has been called and returned true.
    */
   const Eigen::VectorXd& getVectorToProjectionPoint() const;
 
-  /**
-   * @brief Returns parametric description value (index 0, 1, 2) of proj. point.
-   */
+  /// Returns parametric description value (index 0, 1, 2) of proj. point.
   double getProjectionPointParameter ( int index ) const;
 
 private:
 
-  static logging::Logger _log;
+  logging::Logger _log{"query::FindClosestTriangle"};
 
   /// Search point coordinates.
   Eigen::VectorXd _searchPoint;
 
   /// Shortest distance to the found Triangle object.
-  double _shortestDistance;
+  double _shortestDistance = std::numeric_limits<double>::max();
 
   /// Vector from search point to projection point.
   Eigen::VectorXd _vectorToProjectionPoint;
@@ -92,7 +83,7 @@ private:
   std::array<double,3> _parametersProjectionPoint;
 
   /// Pointer to found Triangle object.
-  mesh::Triangle* _closestTriangle;
+  mesh::Triangle* _closestTriangle = nullptr;
 
   void find ( mesh::Triangle& triangle );
 };

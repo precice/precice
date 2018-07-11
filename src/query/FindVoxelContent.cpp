@@ -9,8 +9,6 @@
 namespace precice {
 namespace query {
 
-logging::Logger FindVoxelContent::_log("query::FindVoxelContent");
-
 FindVoxelContent:: FindVoxelContent
 (
   const Eigen::VectorXd&  voxelCenter,
@@ -20,8 +18,7 @@ FindVoxelContent:: FindVoxelContent
   _voxelCenter ( voxelCenter ),
   _voxelHalflengths ( halflengths ),
   _boundaryInclusion ( boundaryInclusion ),
-  _dimensions ( voxelCenter.size() ),
-  _content ()
+  _dimensions ( voxelCenter.size() )
 {
   TRACE(voxelCenter, halflengths, boundaryInclusion);
   assertion ( voxelCenter.size() == halflengths.size(),
@@ -350,7 +347,7 @@ bool FindVoxelContent:: computeIntersection
         firstPointSegment, secondPointSegment, countTouchingAsIntersection);
   
   assertion ( (squareNormalDirection >= 0) && (squareNormalDirection < 3) );
-  typedef math::GeometryComputations GeoComp;
+  using GeoComp = math::GeometryComputations;
   using Eigen::Vector2d;
   using Eigen::Vector3d;
   Vector3d normal = Vector3d::Zero();
@@ -465,7 +462,7 @@ bool FindVoxelContent:: computeIntersection
 {
   TRACE(triangle.vertex(0).getCoords(), triangle.vertex(1).getCoords(), triangle.vertex(2).getCoords(),
         firstPointEdge, secondPointEdge, countTouchingAsIntersection );
-  typedef math::GeometryComputations Geocomp;
+  using Geocomp = math::GeometryComputations;
   using Eigen::Vector2d;
   using Eigen::Vector3d;
   Vector3d pointOfIntersection;
