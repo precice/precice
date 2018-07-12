@@ -48,7 +48,7 @@ size_t SocketCommunication::getRemoteCommunicatorSize()
 {
   TRACE();
   assertion(isConnected());
-  return _remoteCommunicatorSize;
+  return _sockets.size();
 }
 
 void SocketCommunication::acceptConnection(std::string const &acceptorName,
@@ -101,11 +101,9 @@ void SocketCommunication::acceptConnection(std::string const &acceptorName,
 
     CHECK(requesterCommunicatorSize > 0, "Requester communicator size has to be > 0!");
 
-    _remoteCommunicatorSize = requesterCommunicatorSize;
+    int remoteCommunicatorSize = requesterCommunicatorSize;
 
-    send(1, requesterRank); // remove?
-
-    for (int i = 1; i < _remoteCommunicatorSize; ++i) {
+    for (int i = 1; i < remoteCommunicatorSize; ++i) {
       socket = std::make_shared<Socket>(*_ioService);
 
       acceptor.accept(*socket);
@@ -120,10 +118,8 @@ void SocketCommunication::acceptConnection(std::string const &acceptorName,
       send(acceptorRank, requesterRank);
       receive(requesterCommunicatorSize, requesterRank);
       
-      CHECK(requesterCommunicatorSize == _remoteCommunicatorSize,
+      CHECK(requesterCommunicatorSize == remoteCommunicatorSize,
             "Remote communicator sizes are inconsistent!");
-      
-      send(1, requesterRank); // remove?
     }
 
     acceptor.close();
@@ -145,8 +141,6 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorNa
   TRACE(acceptorName, requesterName, acceptorRank, requesterCommunicatorSize);
   CHECK(requesterCommunicatorSize > 0, "Requester communicator size has to be > 0!");
   assertion(not isConnected());
-
-  _remoteCommunicatorSize = requesterCommunicatorSize;
 
   std::string address;
   std::string addressFileName("." + requesterName + "-" +
@@ -188,7 +182,6 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorNa
       int requesterRank;
       asio::read(*socket, asio::buffer(&requesterRank, sizeof(int)));
       _sockets[requesterRank] = socket;
-      send(1, requesterRank); // remove?
     }
 
     acceptor.close();
@@ -257,14 +250,6 @@ void SocketCommunication::requestConnection(std::string const &acceptorName,
     
     send(requesterCommunicatorSize, 0);
 
-    int acceptorCommunicatorSize = 0;
-
-    receive(acceptorCommunicatorSize, 0); // remove?
-
-    // CHECK(acceptorRank == 0, "Acceptor base rank has to be 0 but is " << acceptorRank << "!");
-    CHECK(acceptorCommunicatorSize == 1, "Acceptor communicator size has to be 1!");
-
-    _remoteCommunicatorSize = acceptorCommunicatorSize;
   } catch (std::exception &e) {
     ERROR("Requesting connection to " << address << " failed: " << e.what());
   }
@@ -327,7 +312,6 @@ void SocketCommunication::requestConnectionAsClient(std::string      const &acce
       DEBUG("Requested connection to " << address << ", rank = " << acceptorRank);
       _sockets[acceptorRank] = socket;
       send(requesterRank, acceptorRank); // send my rank
-      receive(_remoteCommunicatorSize, acceptorRank); // remove? We receive 1 anyway.
 
     } catch (std::exception &e) {
       ERROR("Requesting connection to " << address << " failed: " << e.what());
@@ -358,7 +342,6 @@ void SocketCommunication::closeConnection()
     socket.second->close();
   }
 
-  _remoteCommunicatorSize = 0;
   _isConnected            = false;
 }
 

@@ -137,8 +137,6 @@ private:
   /// Directory where IP address is exchanged by file.
   std::string _addressDirectory;
 
-  int _remoteCommunicatorSize = 0;
-  
   using IOService     = boost::asio::io_service;
   using TCP           = boost::asio::ip::tcp;
   using SocketService = boost::asio::stream_socket_service<TCP>;
