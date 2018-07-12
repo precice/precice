@@ -1,12 +1,13 @@
-#include "GeometryComputations.hpp"
+#include "geometry.hpp"
 #include <Eigen/Dense>
 #include "math/math.hpp"
 #include "utils/Helpers.hpp"
 
 namespace precice {
 namespace math {
+namespace geometry {
 
-bool GeometryComputations::segmentsIntersect
+bool segmentsIntersect
 (
   const Eigen::Ref<const Eigen::Vector2d>& a,
   const Eigen::Ref<const Eigen::Vector2d>& b,
@@ -75,7 +76,7 @@ bool GeometryComputations::segmentsIntersect
   return isFirstSegmentBetween && isSecondSegmentBetween;
 }
 
-bool GeometryComputations::lineIntersection
+bool lineIntersection
 (
   const Eigen::Ref<const Eigen::Vector2d>& a,
   const Eigen::Ref<const Eigen::Vector2d>& b,
@@ -102,7 +103,7 @@ bool GeometryComputations::lineIntersection
    return true;
 }
 
-GeometryComputations::ResultConstants GeometryComputations:: segmentPlaneIntersection
+ResultConstants segmentPlaneIntersection
 (
   const Eigen::Vector3d & pointOnPlane,
   const Eigen::Vector3d & planeNormal,
@@ -155,7 +156,7 @@ GeometryComputations::ResultConstants GeometryComputations:: segmentPlaneInterse
    return INTERSECTION;
 }
 
-double GeometryComputations::triangleArea
+double triangleArea
 (
   const Eigen::VectorXd& a,
   const Eigen::VectorXd& b,
@@ -178,7 +179,7 @@ double GeometryComputations::triangleArea
   }
 }
 
-double GeometryComputations::tetraVolume
+double tetraVolume
 (
   const Eigen::Vector3d & a,
   const Eigen::Vector3d & b,
@@ -188,7 +189,7 @@ double GeometryComputations::tetraVolume
   return std::abs( (a-d).dot((b-d).cross(c-d)) ) / 6.0;
 }
 
-Eigen::Vector2d GeometryComputations::projectVector
+Eigen::Vector2d projectVector
 (
   const Eigen::Vector3d & vector,
   int indexDimensionToRemove )
@@ -207,7 +208,7 @@ Eigen::Vector2d GeometryComputations::projectVector
    return projectedVector;
 }
 
-int GeometryComputations::containedInTriangle
+int containedInTriangle
 (
   const Eigen::Vector2d & triangleVertex0,
   const Eigen::Vector2d & triangleVertex1,
@@ -251,4 +252,4 @@ int GeometryComputations::containedInTriangle
   return NOT_CONTAINED;
 }
 
-}} // namespace precice, utils
+}}} // namespace precice, utils, geometry

@@ -1,7 +1,7 @@
 #include "Structure0815.hpp"
 
 #include "math/math.hpp"
-#include "math/GeometryComputations.hpp"
+#include "math/geometry.hpp"
 
 using Eigen::VectorXd;
 using Eigen::Vector3d;
@@ -239,8 +239,7 @@ void Structure0815:: computeCharacteristics
         coords1[i] = _vertices[_faces[index+1] * _dim + i];
         coords1[i] += _displacements[_faces[index+1] * _dim + i];
       }
-      typedef precice::math::GeometryComputations GeoComp;
-      double area = GeoComp::triangleArea(zero, coords0, coords1);
+      double area = geometry::triangleArea(zero, coords0, coords1);
       area = std::abs(area); // since it comes out signed from cross-prod
       totalVolume += area;
       if (not precice::math::equals(area, 0.0)){
