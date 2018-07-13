@@ -380,7 +380,7 @@ void MPICommunication::receive(std::vector<int> &v, int rankSender)
   MPI_Status status;
   MPI_Probe(rank(rankSender), 0, communicator(rankSender), &status);
   MPI_Get_count(&status, MPI_INT, &length);
-  v.resize(length, '\0');
+  v.resize(length);
   MPI_Recv(v.data(), length, MPI_INT, rank(rankSender),
            0, communicator(rankSender), MPI_STATUS_IGNORE);
 }

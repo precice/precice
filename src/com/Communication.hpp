@@ -237,6 +237,10 @@ public:
                               int     size,
                               int     rankSender) = 0;
 
+  /// Asynchronously receives a vector of double values.
+  /*
+   * @attention All asynchronous receives methods require the vector to be appropriately sized
+   */
   virtual PtrRequest aReceive(std::vector<double> & itemsToReceive, int rankSender) = 0;
 
   /// Receives a double from process with given rank.
@@ -257,10 +261,13 @@ public:
   /// Asynchronously receives a bool from process with given rank.
   virtual PtrRequest aReceive(bool &itemToReceive, int rankSender) = 0;
 
+  
   virtual void send(std::vector<int> const &v, int rankReceiver) = 0;
+  /// Receives an std::vector of ints. The vector will be resized accordingly.
   virtual void receive(std::vector<int> &v, int rankSender) = 0;
 
   virtual void send(std::vector<double> const &v, int rankReceiver) = 0;
+  /// Receives an std::vector of doubles. The vector will be resized accordingly.
   virtual void receive(std::vector<double> &v, int rankSender) = 0;
 
 
