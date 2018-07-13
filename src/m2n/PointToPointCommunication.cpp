@@ -430,8 +430,7 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
 
     // NOTE:
     // Everything is moved (efficiency)!
-    _mappings.push_back({
-        globalRequesterRank, globalRequesterRank, std::move(indices), c, com::PtrRequest(), 0});
+    _mappings.push_back({globalRequesterRank, std::move(indices), c, com::PtrRequest(), 0});
   }
 
   _buffer.reserve(_totalIndexCount * _mesh->getDimensions());
@@ -560,8 +559,7 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
     // On the requester participant side, the communication objects behave
     // as clients, i.e. each of them requests only one connection to
     // acceptor process (in the acceptor participant).
-    _mappings.push_back({
-        globalAcceptorRank, globalAcceptorRank, std::move(indices), c, com::PtrRequest(), 0});
+    _mappings.push_back({globalAcceptorRank, std::move(indices), c, com::PtrRequest(), 0});
   }
   _buffer.reserve(_totalIndexCount * _mesh->getDimensions());
   _isConnected = true;
@@ -608,7 +606,7 @@ void PointToPointCommunication::send(double *itemsToSend,
         buffer->push_back(itemsToSend[index * valueDimension + d]);
       }
     }
-    auto request = mapping.communication->aSend(*buffer, mapping.localRemoteRank);
+    auto request = mapping.communication->aSend(*buffer, mapping.remoteRank);
     bufferedRequests.emplace_back(request, buffer);
   }
 
@@ -634,7 +632,7 @@ void PointToPointCommunication::receive(double *itemsToReceive,
     mapping.request =
         mapping.communication->aReceive(_buffer.data() + mapping.offset,
                                         mapping.indices.size() * valueDimension,
-                                        mapping.localRemoteRank);
+                                        mapping.remoteRank);
   }
 
   for (auto &mapping : _mappings) {

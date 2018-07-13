@@ -103,17 +103,15 @@ private:
 
   /**
    * @brief Defines mapping between:
-   *        1. local (to the current process) remote process rank;
-   *        2. global remote process rank;
-   *        3. local data indices, which define a subset of local (for process
+   *        1. global remote process rank;
+   *        2. local data indices, which define a subset of local (for process
    *           rank in the current participant) data to be communicated between
    *           the current process rank and the remote process rank;
-   *        4. communication object (provides point-to-point communication
+   *        3. communication object (provides point-to-point communication
    *           routines).
    */
   struct Mapping {
-    int                   localRemoteRank;
-    int                   globalRemoteRank;
+    int                   remoteRank;
     std::vector<int>      indices;
     com::PtrCommunication communication;
     com::PtrRequest       request;
