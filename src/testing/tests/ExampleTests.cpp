@@ -9,7 +9,7 @@ BOOST_AUTO_TEST_SUITE(TestingTests) // Use name of the module, e.g. subdirectory
 
 BOOST_AUTO_TEST_SUITE(Examples) // If your file contains multiple tests, put them in a test suite
 
-/// This test runs independently on all processors. Attention when doing io, the ranks may interfere
+/// This test runs independently on all processors. Attention when doing so, the ranks may interfere
 BOOST_AUTO_TEST_CASE(SingleProcessor)
 {
   /* Do not use DEBUG, TRACE, INFO calls inside tests, if you need to log a message use

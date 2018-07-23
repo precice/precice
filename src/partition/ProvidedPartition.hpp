@@ -3,9 +3,10 @@
 #include "Partition.hpp"
 #include "logging/Logger.hpp"
 
-namespace precice {
-namespace partition {
-
+namespace precice
+{
+namespace partition
+{
 
 /**
  * @brief A partition that is provided by the participant.
@@ -18,25 +19,24 @@ class ProvidedPartition : public Partition
 {
 public:
 
-   /// Constructor
-   ProvidedPartition (mesh::PtrMesh mesh, bool hasToSend);
+  ProvidedPartition(mesh::PtrMesh mesh, bool hasToSend);
 
-   virtual ~ProvidedPartition() {}
+  virtual ~ProvidedPartition() {}
 
-   /// The mesh is gathered and sent to another participant (if required)
-   virtual void communicate ();
+  /// The mesh is gathered and sent to another participant (if required)
+  virtual void communicate() override;
 
-   /// All distribution data structures are set up.
-   virtual void compute ();
+  /// All distribution data structures are set up.
+  virtual void compute() override;
 
 private:
+  /// Sets owner=True on all vertices
+  virtual void createOwnerInformation() override;
 
-   virtual void createOwnerInformation();
+  logging::Logger _log{"partition::ProvidedPartition"};
 
-   logging::Logger _log{"partition::ProvidedPartition"};
-
-   bool _hasToSend;
-
+  bool _hasToSend;
 };
 
-}} // namespace precice, partition
+} // namespace partition
+} // namespace precice

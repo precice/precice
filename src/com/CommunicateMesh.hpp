@@ -22,7 +22,7 @@ public:
       const mesh::Mesh &mesh,
       int               rankReceiver);
 
-  /// Copies a mesh from the sender with given rank.
+  /// Receives a mesh from the sender with given rank. Adds received mesh to mesh.
   void receiveMesh(
       mesh::Mesh &mesh,
       int         rankSender);

@@ -1474,27 +1474,27 @@ void SolverInterfaceImpl:: configurePartitions
         }
       }
       //@todo support offset??
-      context->partition = partition::PtrPartition ( new partition::ProvidedPartition( context->mesh, hasToSend) );
-      if(hasToSend){
+      context->partition = partition::PtrPartition(new partition::ProvidedPartition(context->mesh, hasToSend));
+      if (hasToSend) {
         assertion(m2n.use_count()>0);
-        context->partition->setm2n(m2n);
+        context->partition->setM2N(m2n);
       }
 
     }
     else { // Accessor receives mesh
-      CHECK ( not context->receiveMeshFrom.empty(), "Participant \"" << _accessorName << "\" must either provide or receive the mesh "
-          << context->mesh->getName() << "!")
-      CHECK ( not context->provideMesh, "Participant \"" << _accessorName << "\" cannot provide "
-                     << "and receive mesh " << context->mesh->getName() << "!" );
+      CHECK(not context->receiveMeshFrom.empty(),
+            "Participant \"" << _accessorName << "\" must either provide or receive the mesh " << context->mesh->getName() << "!")
+      CHECK(not context->provideMesh,
+            "Participant \"" << _accessorName << "\" cannot provide and receive mesh " << context->mesh->getName() << "!" );
       std::string receiver ( _accessorName );
       std::string provider ( context->receiveMeshFrom );
       DEBUG ( "Receiving mesh from " << provider );
       
-      context->partition = partition::PtrPartition ( new partition::ReceivedPartition( context->mesh, context->geoFilter, context->safetyFactor));
+      context->partition = partition::PtrPartition(new partition::ReceivedPartition(context->mesh, context->geoFilter, context->safetyFactor));
 
       m2n::PtrM2N m2n = m2nConfig->getM2N ( receiver, provider );
       m2n->createDistributedCommunication(context->mesh);
-      context->partition->setm2n(m2n);
+      context->partition->setM2N(m2n);
       context->partition->setFromMapping(context->fromMappingContext.mapping);
       context->partition->setToMapping(context->toMappingContext.mapping);
     }
