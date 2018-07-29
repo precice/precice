@@ -38,20 +38,19 @@ void ProvidedPartition::communicate()
 
     // Gather Mesh
     INFO("Gather mesh " << _mesh->getName());
-    if (utils::MasterSlave::_slaveMode or utils::MasterSlave::_masterMode) {
-      if (utils::MasterSlave::_slaveMode) {
+    if (utils::MasterSlave::_slaveMode ) {
         com::CommunicateMesh(utils::MasterSlave::_communication).sendMesh(*_mesh, 0);
-      } else { // Master
-        assertion(utils::MasterSlave::_rank == 0);
-        assertion(utils::MasterSlave::_size > 1);
+    }
+    if (utils::MasterSlave::_masterMode)  {
+      assertion(utils::MasterSlave::_rank == 0);
+      assertion(utils::MasterSlave::_size > 1);
 
-        for (int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++) {
-          com::CommunicateMesh(utils::MasterSlave::_communication).receiveMesh(globalMesh, rankSlave);
-          DEBUG("Received sub-mesh, from slave: " << rankSlave << ", global vertexCount: " << globalMesh.vertices().size());
-        }
+      for (int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++) {
+        com::CommunicateMesh(utils::MasterSlave::_communication).receiveMesh(globalMesh, rankSlave);
+        DEBUG("Received sub-mesh, from slave: " << rankSlave << ", global vertexCount: " << globalMesh.vertices().size());
       }
     }
-
+    
     // Set global index
     if (not utils::MasterSlave::_slaveMode) {
       int globalIndex = 0;
