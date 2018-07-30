@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file. For future 
   - Make `python=off` default.
 - Building with Conda:
   - The helper scripts are now placed in the directory `tools/conda_building`. All the terms refering to `Anaconda` have been changed to `Conda`.
+- Sending data exchange is now fully asynchronous, so that the sending participant never waits for the receiving one.
 
 ## 1.1.1
 - Fix SConstruct symlink build target failing when using lowercase build (debug, release) names.
