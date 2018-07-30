@@ -106,8 +106,8 @@ set(headers
   src/precice/SolverInterface.hpp
   src/precice/MeshHandle.hpp
   src/precice/Constants.hpp
-  src/precice/adapters/c/SolverInterfaceC.h
-  src/precice/adapters/c/Constants.h)
+  src/precice/bindings/c/SolverInterfaceC.h
+  src/precice/bindings/c/Constants.h)
 set_target_properties(precice PROPERTIES PUBLIC_HEADER "${headers}")
 
 target_link_libraries(precice PRIVATE ${PYTHON_LIBRARIES})

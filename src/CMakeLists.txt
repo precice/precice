@@ -37,8 +37,8 @@ file(GLOB sourcesAllNoMain
   "precice/*.cpp"
   "precice/impl/*.cpp"
   "precice/config/*.cpp"
-  "precice/adapters/c/*.cpp"
-  "precice/adapters/fortran/*.cpp"
+  "precice/bindings/c/*.cpp"
+  "precice/bindings/fortran/*.cpp"
 
   "utils/*.cpp"
 

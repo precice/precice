@@ -62,8 +62,8 @@ sourcesPrecice = [
     Glob('precice/*.cpp'),
     Glob('precice/impl/*.cpp'),
     Glob('precice/config/*.cpp'),
-    Glob('precice/adapters/c/*.cpp'),
-    Glob('precice/adapters/fortran/*.cpp')
+    Glob('precice/bindings/c/*.cpp'),
+    Glob('precice/bindings/fortran/*.cpp')
 ]
 
 sourcesTests = [

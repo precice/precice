@@ -5,7 +5,7 @@ libpath = []
 libs    = []
 
 preciceRootPath = os.getenv('PRECICE_ROOT')
-cpppath.append(preciceRootPath + '/src/precice/adapters/c')
+cpppath.append(preciceRootPath + '/src/precice/bindings/c')
 
 # Libs
 libpath.append(preciceRootPath + '/build/last/')

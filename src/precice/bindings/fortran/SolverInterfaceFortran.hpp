@@ -1,5 +1,4 @@
-#ifndef PRECICE_ADAPTERS_FORTRAN_SOLVERINTERFACEFORTRAN_HPP_
-#define PRECICE_ADAPTERS_FORTRAN_SOLVERINTERFACEFORTRAN_HPP_
+#pragma once
 
 /**
  * @file This file contains a Fortran 77 compatible interface written in C/C++.
@@ -477,5 +476,3 @@ void precicef_map_read_data_to_( const int* meshID );
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* PRECICE_ADAPTERS_FORTRAN_SOLVERINTERFACEFORTRAN_HPP_ */

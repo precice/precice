@@ -1,5 +1,4 @@
-#ifndef PRECICE_ADAPTERS_FORTRAN_CONSTANTS_HPP_
-#define PRECICE_ADAPTERS_FORTRAN_CONSTANTS_HPP_
+#pragma once
 
 #ifdef __cplusplus
 extern"C" {
@@ -49,4 +48,3 @@ void precicef_action_read_iter_checkp_(
 }
 #endif
 
-#endif /* PRECICE_ADAPTERS_FORTRAN_CONSTANTS_HPP_ */
