@@ -6,7 +6,7 @@ Simply type `scons`. Assumption: preCICE is available as a shared library in you
 
 You can test the proxy by coupling two instances with each other. Open two terminals and run
  * `./SolverDummy precice-config.xml SolverOne MeshOne`
- * `./SolverDummyp precice-config.xml SolverTwo MeshTwo`
+ * `./SolverDummy precice-config.xml SolverTwo MeshTwo`
 
 #Next Steps
 
