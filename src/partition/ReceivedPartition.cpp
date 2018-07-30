@@ -229,7 +229,7 @@ void ReceivedPartition::compute()
     for (int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++) {
       int numberOfSlaveVertices = -1;
       utils::MasterSlave::_communication->receive(numberOfSlaveVertices, rankSlave);
-      std::vector<int> slaveVertexIDs(numberOfSlaveVertices, -1);
+      std::vector<int> slaveVertexIDs;
       if (numberOfSlaveVertices != 0) {
         utils::MasterSlave::_communication->receive(slaveVertexIDs, rankSlave);
       }
@@ -417,8 +417,6 @@ void ReceivedPartition::createOwnerInformation()
       utils::MasterSlave::_communication->receive(localNumberOfVertices, rank);
       DEBUG("Rank " << rank << " has " << localNumberOfVertices << " vertices.");
       slaveOwnerVecs[rank].resize(localNumberOfVertices, 0);
-      slaveTags[rank].resize(localNumberOfVertices, -1);
-      slaveGlobalIDs[rank].resize(localNumberOfVertices, -1);
 
       if (localNumberOfVertices != 0) {
         utils::MasterSlave::_communication->receive(slaveTags[rank], rank);
@@ -433,7 +431,7 @@ void ReceivedPartition::createOwnerInformation()
     }
 
     // Decide upon owners,
-    int localGuess = _mesh->getGlobalNumberOfVertices() / ranksAtInterface; //guess for a decent load balancing
+    int localGuess = _mesh->getGlobalNumberOfVertices() / ranksAtInterface; // Guess for a decent load balancing
     // First round: every slave gets localGuess vertices
     for (int rank = 0; rank < utils::MasterSlave::_size; rank++) {
       int counter = 0;

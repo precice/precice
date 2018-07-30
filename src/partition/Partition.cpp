@@ -18,7 +18,6 @@ void Partition::computeVertexOffsets()
   TRACE();
   DEBUG("Generate vertex offsets");
   if (utils::MasterSlave::_slaveMode) {
-    _mesh->getVertexOffsets().resize(utils::MasterSlave::_size);
     utils::MasterSlave::_communication->broadcast(_mesh->getVertexOffsets(), 0);
     DEBUG("My vertex offsets: " << _mesh->getVertexOffsets());
     
