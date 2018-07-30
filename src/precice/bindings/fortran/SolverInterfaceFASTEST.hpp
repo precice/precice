@@ -1,5 +1,4 @@
-#ifndef PRECICE_ADAPTERS_FORTRAN_SOLVERINTERFACE_FASTEST_HPP_
-#define PRECICE_ADAPTERS_FORTRAN_SOLVERINTERFACE_FASTEST_HPP_
+#pragma once
 
 /**
  * @file This file contains a specific FASTEST Fortran 77 compatible interface written in C/C++.
@@ -381,5 +380,3 @@ void precice_fastest_read_sdata_(
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* PRECICE_ADAPTERS_FORTRAN_SOLVERINTERFACE_FASTEST_HPP_ */

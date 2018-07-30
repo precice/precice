@@ -1,5 +1,4 @@
-#ifndef PRECICE_ADAPTERS_C_SOLVERINTERFACEC_H_
-#define PRECICE_ADAPTERS_C_SOLVERINTERFACEC_H_
+#pragma once
 
 #ifdef __cplusplus
 extern "C" {
@@ -248,5 +247,3 @@ void precicec_mapReadDataTo ( int toMeshID );
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* PRECICE_ADAPTERS_C_SOLVERINTERFACEC_H_ */

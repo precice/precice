@@ -30,14 +30,14 @@ You can install the result package with a double click (Ubuntu/Gnome Software), 
 
 * the shared library and some version-related links into `/usr/lib/x86_64-linux-gnu/`,
 * the pkgconfig metadata into `/usr/lib/x86_64-linux-gnu/pkgconfig/`,
-* the header files `Constants.hpp`, `MeshHandle.hpp`, `SolverInterface.hpp` and the headers for the C, Fortran, Fortran2003 adapters (not the Python ones, as I was not sure) into `/usr/include/precice/`.
+* the header files `Constants.hpp`, `MeshHandle.hpp`, `SolverInterface.hpp` and the headers for the C, Fortran, Fortran2003 bindings (not the Python ones, as I was not sure) into `/usr/include/precice/`.
 * changelogs and a copyright file.
 
 You can also open it with your archive manager to see the contents.
 
 You can remove it with `sudo apt remove libprecice1`.
 
-## Compiling and Linking adapters
+## Compiling and Linking bindings
 
 In order to compile an adapter, the path `/usr/include/precice/` needs to
 be discoverable by your compiler. If this does not work by default,

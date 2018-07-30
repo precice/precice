@@ -15,10 +15,10 @@ Steps:
 
 This generates the PySolverInterface.so library. If you use preCICE as a static library, you have to manually add all thrid-party libraries (boost, python, petsc) that you use to setup.py. It is recommended to use preCICE as a shared library here. 
 
-4. Add the path PRECICE_ROOT/src/precice/adapters/python to python's import sources. This can be done by including the following lines in your python code:
+4. Add the path PRECICE_ROOT/src/precice/bindings/python to python's import sources. This can be done by including the following lines in your python code:
 
    precice_root = os.getenv('PRECICE_ROOT')
-   precice_python_adapter_root = precice_root+"/src/precice/adapters/python"
+   precice_python_adapter_root = precice_root+"/src/precice/bindings/python"
    sys.path.insert(0, precice_python_adapter_root)
 
 5. Import PySolverInterface into your code:

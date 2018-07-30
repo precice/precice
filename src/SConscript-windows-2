@@ -20,7 +20,7 @@ sourcesPrecice = [
    Glob('precice/tests/*.cpp'),
    Glob('precice/tests/couplingmode/*.cpp'),
    Glob('precice/tests/servermode/*.cpp'),
-   Glob('precice/adapters/c/*.cpp')
+   Glob('precice/bindings/c/*.cpp')
    ]
    
 sourcesAll = [ 

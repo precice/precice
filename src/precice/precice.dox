@@ -4,7 +4,7 @@
 
 This directory contains the API of preCICE. The main C++ interface to preCICE is
 formed by the class SolverInterface. Other classes can be used in combination
-with it. The directory $adapters$ contains additional interfaces to preCICE,
+with it. The directory $bindings$ contains additional interfaces to preCICE,
 currently there is only a C interface. SolverInterface combines the functionalities
 of all other components of preCICE and provides a high level interface to it,
 which is meant to be used in solver codes to make use of preCICE as coupling
