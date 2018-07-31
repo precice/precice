@@ -8,7 +8,7 @@ Running
 ------
 The ```tools/compileAndTest.py``` script simplifies running all tsts.
 
-- ```./tools/compileAndTest.py -b``` runs all tests on 4 MPI ranks.
+- ```./tools/compileAndTest.py -t``` runs all tests on 4 MPI ranks.
 - ```./build/last/testprecice -x``` runs boost test with colored output.
 - ```./build/last/testprecice -x -r detailed -t "+/+PetRadial+"``` (replace all + by *, due to Doxygen) runs all ```PetRadial*``` tests from all test suites using colored output and detailed reporting.
 
