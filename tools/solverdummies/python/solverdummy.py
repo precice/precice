@@ -7,11 +7,11 @@ import numpy as np
  
 # check if PRECICE_ROOT is defined
 if not os.getenv('PRECICE_ROOT'):
-   print "ERROR: PRECICE_ROOT not defined!"
+   print("ERROR: PRECICE_ROOT not defined!")
    exit(1)
 
 precice_root = os.getenv('PRECICE_ROOT')
-precice_python_adapter_root = precice_root+"/src/precice/adapters/python"
+precice_python_adapter_root = precice_root + "/src/precice/bindings/python"
 sys.path.insert(0, precice_python_adapter_root)
 
 import PySolverInterface
