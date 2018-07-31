@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(testResPreconditioner)
   impl::ResidualPreconditioner precond(-1);
 
   precond.initialize(svs);
-  Eigen::VectorXd backup = _data; // TODO get _data from fixture
+  Eigen::VectorXd backup = _data; /// @todo get _data from fixture
 
   //should change
   precond.update(false, _data, _res);

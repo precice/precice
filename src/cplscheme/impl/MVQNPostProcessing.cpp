@@ -104,11 +104,11 @@ void MVQNPostProcessing::initialize(
   if (not _imvjRestart) {
     if (utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode) {
     /*
-       * TODO: FIXME: This is a temporary and hacky realization of the cyclic commmunication between slaves
-       *        Therefore the requesterName and accessorName are not given (cf solverInterfaceImpl).
-       *        The master-slave communication should be modified such that direct communication between
-       *        slaves is possible (via MPIDirect)
-       */
+     * @todo: FIXME: This is a temporary and hacky realization of the cyclic commmunication between slaves
+     *        Therefore the requesterName and accessorName are not given (cf solverInterfaceImpl).
+     *        The master-slave communication should be modified such that direct communication between
+     *        slaves is possible (via MPIDirect)
+     */
 
 #ifdef SuperMUC_WORK
       try {

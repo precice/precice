@@ -288,7 +288,7 @@ void SerialCouplingScheme::advance()
           }
 
           /*
-          // TODO: (Edit: Done in the solver now) need to copy coarse old values to fine old values, as first solver always sends zeros to the second solver (as pressure vals)
+          /// @todo: (Edit: Done in the solver now) need to copy coarse old values to fine old values, as first solver always sends zeros to the second solver (as pressure vals)
           //       in the serial scheme, only the sendData is registered in MM PP, we also need to register the pressure values, i.e.
           //       old fine pressure vals = old coarse pressure vals TODO: find better solution,
           //auto fineIDs = getPostProcessing()->getDataIDs();

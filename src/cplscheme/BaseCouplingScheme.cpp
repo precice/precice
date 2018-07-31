@@ -314,7 +314,7 @@ void BaseCouplingScheme::setExtrapolationOrder(
   _extrapolationOrder = order;
 }
 
-// TODO: extrapolation of data should only be done for the fine cplData -> then copied to the coarse cplData
+// @todo extrapolation of data should only be done for the fine cplData -> then copied to the coarse cplData
 void BaseCouplingScheme::extrapolateData(DataMap &data)
 {
   TRACE(_timesteps);
@@ -471,7 +471,7 @@ void BaseCouplingScheme::requireAction(
   _actions.insert(actionName);
 }
 
-// TODO: insert _iterationsCoarseOptimization in print state
+/// @todo: insert _iterationsCoarseOptimization in print state
 std::string BaseCouplingScheme::printCouplingState() const
 {
   std::ostringstream os;
@@ -685,7 +685,7 @@ bool BaseCouplingScheme::measureConvergence(
   return allConverged || oneSuffices;
 }
 
-// TODO: ugly hack with design specifications, however, getting them here is not possible as
+/// @todo: ugly hack with design specifications, however, getting them here is not possible as
 // parallel coupling scheme and multi-coupling scheme  need allData and not only getSendData()
 bool BaseCouplingScheme::measureConvergenceCoarseModelOptimization(
     std::map<int, Eigen::VectorXd> &designSpecifications)

@@ -595,7 +595,7 @@ int SolverInterfaceImpl:: getMeshVertexSize
   return size;
 }
 
-//@todo Currently not supported as we would need to re-compute the re-partition
+/// @todo Currently not supported as we would need to re-compute the re-partition
 void SolverInterfaceImpl:: resetMesh
 (
   int meshID )
@@ -636,7 +636,7 @@ int SolverInterfaceImpl:: setMeshVertex
     index = _requestManager->requestSetMeshVertex ( meshID, internalPosition );
   }
   else {
-    //@todo testMode should be removed here as soon as all serial integration tests are ported and updated
+    /// @todo testMode should be removed here as soon as all serial integration tests are ported and updated
     CHECK(not _couplingScheme->isInitialized() ||
           precice::testMode, "Vertices can only be defined before initialize() is called");
 
@@ -661,7 +661,7 @@ void SolverInterfaceImpl:: setMeshVertices
     _requestManager->requestSetMeshVertices(meshID, size, positions, ids);
   }
   else { //couplingMode
-    //@todo testMode should be removed here as soon as all serial integration tests are ported and updated
+    /// @todo testMode should be removed here as soon as all serial integration tests are ported and updated
     CHECK(not _couplingScheme->isInitialized() ||
           precice::testMode, "Vertices can only be defined before initialize() is called");
     MeshContext& context = _accessor->meshContext(meshID);
@@ -1146,7 +1146,7 @@ void SolverInterfaceImpl:: writeBlockVectorData
   }
   else { //couplingMode
     CHECK(_accessor->isDataUsed(fromDataID),
-          "You try to write to data // TODO: hat is not defined for " << _accessor->getName());
+          "You try to write to data /// @todo: hat is not defined for " << _accessor->getName());
     DataContext& context = _accessor->dataContext(fromDataID);
 
     assertion(context.toData.get() != nullptr);
@@ -1455,7 +1455,7 @@ void SolverInterfaceImpl:: configurePartitions
               << "and receive mesh " << context->mesh->getName() << "!" );
 
 
-      bool hasToSend = false; //@todo multiple sends
+      bool hasToSend = false; /// @todo multiple sends
       m2n::PtrM2N m2n;
 
       for (PtrParticipant receiver : _participants ) {
@@ -1473,7 +1473,7 @@ void SolverInterfaceImpl:: configurePartitions
           }
         }
       }
-      //@todo support offset??
+      /// @todo support offset??
       context->partition = partition::PtrPartition(new partition::ProvidedPartition(context->mesh, hasToSend));
       if (hasToSend) {
         assertion(m2n.use_count()>0);

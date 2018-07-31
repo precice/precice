@@ -53,7 +53,7 @@ void FindClosestQuad:: find
   mesh::Quad& quad )
 {
   ERROR("Not implemented.");
-  // TODO implement functionality
+  /// @todo implement functionality
 
   // From triangle code:
 //  Vector3D barycentricCoords;

@@ -673,7 +673,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDisplacingGeometry,
   }
 }
 
-//@todo fails currently as action does not introduce mesh-requirement, cf. issue #81
+/// @todo fails currently as action does not introduce mesh-requirement, cf. issue #81
 /**
  * @brief Runs a coupled sim. with data scaling applied.
  *

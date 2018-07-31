@@ -280,7 +280,7 @@ private:
     // 	     it must be initialized with zeros, so zeros are added for those procs)
 
     // sum up blocks in master, reduce
-    Eigen::MatrixXd summarizedBlocks = Eigen::MatrixXd::Zero(p, r); // TODO: only master should allocate memory.
+    Eigen::MatrixXd summarizedBlocks = Eigen::MatrixXd::Zero(p, r); /// @todo: only master should allocate memory.
     utils::MasterSlave::reduceSum(block.data(), summarizedBlocks.data(), block.size());
 
     // slaves wait to receive their local result

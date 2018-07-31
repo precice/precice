@@ -353,7 +353,7 @@ void ParticipantConfiguration:: xmlTagCallback
     assertion(_dimensions != 0); // setDimensions() has been called
     std::string name = tag.getStringAttributeValue(ATTR_NAME);
     Eigen::VectorXd offset(_dimensions);
-    // @todo offset currently not supported
+    /// @todo offset currently not supported
     //offset = tag.getEigenVectorXdAttributeValue(ATTR_LOCAL_OFFSET, _dimensions);
     std::string from = tag.getStringAttributeValue(ATTR_FROM);
     double safetyFactor = tag.getDoubleAttributeValue(ATTR_SAFETY_FACTOR);
