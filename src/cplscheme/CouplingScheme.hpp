@@ -85,7 +85,7 @@ public:
 
   /**
    * @brief Exchanges data and updates the state of the coupling scheme.
-
+   *
    * @pre initialize() has been called.
    *
    * Does not necessarily advances in time.
@@ -130,7 +130,7 @@ public:
   //
   //virtual int getSubIteration() const =0;
 
-  /// @brief Returns true, if timestep length is prescribed by the cpl scheme.
+  /// Returns true, if timestep length is prescribed by the cpl scheme.
   virtual bool hasTimestepLength() const =0;
 
   /**
