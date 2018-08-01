@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file. For future plans, see our [Roadmap](https://github.com/precice/precice/wiki/Roadmap).
 
-## develop
+## 1.2.0
 - Make `polynomial=separate` the default setting for PetRBF.
 - Removed ExportVRML functionality
 - Build system:
