@@ -61,6 +61,11 @@ void ReceivedPartition::compute()
           << " needs a mapping, either from it, to it, or both. Maybe you don't want to receive this mesh at all?")
   }
 
+
+  // To understand the following steps, it is recommended to look at BU's thesis, especially Figure 69 on page 89 
+  // for RBF-based filtering. https://mediatum.ub.tum.de/doc/1320661/document.pdf
+
+
   // (0) set global number of vertices before filtering
   if (utils::MasterSlave::_masterMode) {
     _mesh->setGlobalNumberOfVertices(_mesh->vertices().size());
