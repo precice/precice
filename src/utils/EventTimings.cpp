@@ -78,6 +78,7 @@ void Event::stop(bool barrier)
     state = State::STOPPED;
     EventRegistry::instance().put(this);
     data.clear();
+    stateChanges.clear();
     duration = Clock::duration::zero();
     DEBUG("Stopped event " << name);
   }
@@ -453,7 +454,9 @@ void EventRegistry::printGlobalStats()
   auto stats = getGlobalStats(globalEvents);
   for (auto & e : stats) {
     auto & ev = e.second;
-    double rel = ev.max == Event::Clock::duration::zero() ? 0 : ev.min / ev.max; // Guard against division by zero
+    double rel = 0;
+    if (ev.max != Event::Clock::duration::zero()) // Guard against division by zero
+      rel = static_cast<double>(ev.min.count()) / ev.max.count();
     t.printLine(e.first, ev.max, ev.maxRank, ev.min, ev.minRank, rel);
   }
 }
