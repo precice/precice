@@ -1,5 +1,5 @@
 // To compile use:
-// mpic++ -I$PRECICE_ROOT/src main.cpp -lprecice proxy
+// mpic++ -I$PRECICE_ROOT/src main.cpp -lprecice solverdummy
 
 #include <iostream>
 #include <sstream>
@@ -31,7 +31,7 @@ void printData (const std::vector<double>& data)
 
 int main (int argc, char **argv)
 {
-  std::cout << "Starting solver dummy..." << std::endl;
+  std::cout << "Starting SolverDummy..." << std::endl;
   MPI_Init(&argc, &argv);
   int commRank = -1;
   int commSize = -1;
@@ -43,23 +43,23 @@ int main (int argc, char **argv)
   using namespace precice::constants;
 
   if (argc == 1 || (argc != 3 && argc != 8)){
-    PRINT("Usage: ./solverproxy configFile proxyName [meshName readDataName writeDataName computationTimeInSeconds N]");
+    PRINT("Usage: ./solverdummy configFile solverName [meshName readDataName writeDataName computationTimeInSeconds N]");
     PRINT("");
     PRINT("Parameters in [] are optional, but are needed together.");
-    PRINT("If optional parameters are given, the proxy writes and reads data.");
+    PRINT("If optional parameters are given, the SolverDummy writes and reads data.");
     PRINT("");
     PRINT("Parameter description");
     PRINT("  configurationFile: Path and filename of preCICE configuration");
-    PRINT("  proxyName:         Proxy participant name in preCICE configuration");
+    PRINT("  solverName:        SolverDummy participant name in preCICE configuration");
     PRINT("  meshName:          Mesh in preCICE configuration that carries read and write data");
-    PRINT("  readDataName:      Data in preCICE config. that is read by this proxy");
-    PRINT("  writeDataName:     Data in preCICE config. that is written by this proxy");
-    PRINT("  computationTimeInSeconds: Time waited by proxy in every computation cycle");
+    PRINT("  readDataName:      Data in preCICE config. that is read by this SolverDummy");
+    PRINT("  writeDataName:     Data in preCICE config. that is written by this SolverDummy");
+    PRINT("  computationTimeInSeconds: Time waited by SolverDummy in every computation cycle");
     PRINT("  N:                 Number of vertices");
     return 1;
   }
   std::string configFileName(argv[1]);
-  std::string proxyName(argv[2]);
+  std::string solverName(argv[2]);
   bool readWriteData = false;
   std::string meshName;
   std::string readDataName;
@@ -76,7 +76,7 @@ int main (int argc, char **argv)
     N = atoi(argv[7]);
   }
 
-  SolverInterface interface(proxyName, commRank, commSize);
+  SolverInterface interface(solverName, commRank, commSize);
   interface.configure(configFileName);
 
   double computedTime = 0.0;

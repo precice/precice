@@ -56,9 +56,7 @@ public:
    */
   const Vertex &vertex(int i) const;
 
-  /**
-   * @brief Returns quad edge with index 0, 1, 2, or 3.
-   */
+  /// Returns quad edge with index 0, 1, 2, or 3.
   Edge &edge(int i);
 
   /// Returns const quad edge with index 0, 1, 2, or 3.

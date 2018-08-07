@@ -123,7 +123,7 @@ void M2N::closeConnection()
 com::PtrCommunication M2N::getMasterCommunication()
 {
   assertion(not utils::MasterSlave::_slaveMode);
-  return _masterCom; //TODO maybe it would be a nicer design to not offer this
+  return _masterCom; /// @todo maybe it would be a nicer design to not offer this
 }
 
 void M2N::createDistributedCommunication(mesh::PtrMesh mesh)

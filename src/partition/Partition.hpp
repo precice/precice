@@ -1,15 +1,16 @@
 #pragma once
 
 #include "logging/Logger.hpp"
+#include "m2n/SharedPointer.hpp"
 #include "mapping/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
-#include "m2n/SharedPointer.hpp"
-
 
 // ----------------------------------------------------------- CLASS DEFINITION
 
-namespace precice {
-namespace partition {
+namespace precice
+{
+namespace partition
+{
 
 /**
  * @brief Abstract base class for partitions.
@@ -29,32 +30,33 @@ namespace partition {
 class Partition
 {
 public:
-
   /// Constructor.
-  Partition (mesh::PtrMesh mesh);
+  Partition(mesh::PtrMesh mesh);
 
   virtual ~Partition() {}
 
   /// The mesh is communicated between both master ranks (if required)
-  virtual void communicate () = 0;
+  virtual void communicate() = 0;
 
-  ///The partition is computed, i.e. the mesh re-partitioned if required and all data structures are set up.
-  virtual void compute () = 0;
+  /// The partition is computed, i.e. the mesh re-partitioned if required and all data structures are set up.
+  virtual void compute() = 0;
 
-  void setFromMapping(mapping::PtrMapping fromMapping){
+  void setFromMapping(mapping::PtrMapping fromMapping)
+  {
     _fromMapping = fromMapping;
   }
 
-  void setToMapping(mapping::PtrMapping toMapping){
+  void setToMapping(mapping::PtrMapping toMapping)
+  {
     _toMapping = toMapping;
   }
 
-  void setm2n(m2n::PtrM2N m2n){
+  void setM2N(m2n::PtrM2N m2n)
+  {
     _m2n = m2n;
   }
 
 protected:
-
   mesh::PtrMesh _mesh;
 
   mapping::PtrMapping _fromMapping;
@@ -70,11 +72,8 @@ protected:
   void computeVertexOffsets();
 
 private:
-
   logging::Logger _log{"partition::Partition"};
-
-
 };
 
-}} // namespace precice, partition
-
+} // namespace partition
+} // namespace precice

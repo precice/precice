@@ -45,8 +45,7 @@ public:
    *
    * @param[in] groupName MPI group in which the calling process will be put in
    */
-  static void splitCommunicator(
-      const std::string &groupName);
+  static void splitCommunicator(const std::string &groupName);
 
   /**
    * @brief Initializes the MPI environment.

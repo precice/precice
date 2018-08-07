@@ -24,7 +24,7 @@ using namespace precice::cplscheme;
 
 BOOST_AUTO_TEST_SUITE(CplSchemeTests)
 
-struct CompositionalCouplingSchemeFixture  // TODO fixtures in cplscheme/tests are a candidate for refactoring, lots of copy paste code.
+struct CompositionalCouplingSchemeFixture  /// @todo fixtures in cplscheme/tests are a candidate for refactoring, lots of copy paste code.
 {
   std::string _pathToTests;
 
@@ -55,10 +55,8 @@ struct CompositionalCouplingSchemeFixture  // TODO fixtures in cplscheme/tests a
 
     xml::configure(root, configurationPath);
     meshConfig->setMeshSubIDs();
-    m2n::PtrM2N m2n0 =
-        m2nConfig->getM2N(nameParticipant0, nameParticipant1);
-    m2n::PtrM2N m2n1 =
-        m2nConfig->getM2N(nameParticipant1, nameParticipant2);
+    m2n::PtrM2N m2n0 = m2nConfig->getM2N(nameParticipant0, nameParticipant1);
+    m2n::PtrM2N m2n1 = m2nConfig->getM2N(nameParticipant1, nameParticipant2);
 
     // some dummy mesh
     meshConfig->meshes()[0]->createVertex(Eigen::Vector3d(1.0, 1.0, 1.0));
@@ -197,12 +195,10 @@ struct CompositionalCouplingSchemeFixture  // TODO fixtures in cplscheme/tests a
     }
   }
 
-  void connect // TODO this function occurs in multiple tests. Move this to a common fixture? see https://github.com/precice/precice/issues/90
-  (
-      const std::string&     participant0,
-      const std::string&     participant1,
-      const std::string&     localParticipant,
-      m2n::PtrM2N& communication ) const
+  void connect(const std::string&     participant0,
+               const std::string&     participant1,
+               const std::string&     localParticipant,
+               m2n::PtrM2N communication ) const
   {
     assertion ( communication.use_count() > 0 );
     assertion ( not communication->isConnected() );
@@ -219,10 +215,10 @@ struct CompositionalCouplingSchemeFixture  // TODO fixtures in cplscheme/tests a
 
 BOOST_FIXTURE_TEST_SUITE(CompositionalCouplingSchemeTests, CompositionalCouplingSchemeFixture)
 
-// Test one explicit dummy coupling scheme
+/// Test one explicit dummy coupling scheme
 BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1)
 {
-  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint()); // TODO can we move this into a common fixture? See https://github.com/precice/precice/issues/90
+  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint()); /// @todo can we move this into a common fixture? See https://github.com/precice/precice/issues/90
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
 
   int numberIterations = 1;
@@ -244,7 +240,7 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1)
 // Test one implicit dummy coupling scheme
 BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit1)
 {
-  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint()); // TODO can we move this into a common fixture? See https://github.com/precice/precice/issues/90
+  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint()); /// @todo can we move this into a common fixture? See https://github.com/precice/precice/issues/90
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
   int numberIterations = 2;
   int maxTimesteps = 10;
@@ -265,7 +261,7 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit1)
 // Test two explicit dummy coupling schemes
 BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit2)
 {
-  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint()); // TODO can we move this into a common fixture? See https://github.com/precice/precice/issues/90
+  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint()); /// @todo can we move this into a common fixture? See https://github.com/precice/precice/issues/90
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
 
   int numberIterations = 1;
@@ -292,7 +288,7 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit2)
 // Test three explicit dummy coupling schemes
 BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit3)
 {
-  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint()); // TODO can we move this into a common fixture? See https://github.com/precice/precice/issues/90
+  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint()); /// @todo can we move this into a common fixture? See https://github.com/precice/precice/issues/90
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
 
   int numberIterations = 1;
@@ -323,7 +319,7 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit3)
 // Test two implicit dummy coupling schemes
 BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit2)
 {
-  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint()); // TODO can we move this into a common fixture? See https://github.com/precice/precice/issues/90
+  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint()); /// @todo can we move this into a common fixture? See https://github.com/precice/precice/issues/90
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
 
   int numberIterations = 2;
@@ -358,7 +354,7 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit2)
 // Test two implicit dummy coupling schemes with different iteration number
 BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit2DiffIteration)
 {
-  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint()); // TODO can we move this into a common fixture? See https://github.com/precice/precice/issues/90
+  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint()); /// @todo can we move this into a common fixture? See https://github.com/precice/precice/issues/90
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
 
   int numberIterations = 2;
@@ -396,7 +392,7 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit2DiffIteration)
 // Test three implicit dummy coupling schemes
 BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit3)
 {
-  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint()); // TODO can we move this into a common fixture? See https://github.com/precice/precice/issues/90
+  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint()); /// @todo can we move this into a common fixture? See https://github.com/precice/precice/issues/90
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
 
   int numberIterations = 2;
@@ -434,7 +430,7 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit3)
 // Test three implicit dummy coupling schemes with different iteration number
 BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit3DiffIteration)
 {
-  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint()); // TODO can we move this into a common fixture? See https://github.com/precice/precice/issues/90
+  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint()); /// @todo can we move this into a common fixture? See https://github.com/precice/precice/issues/90
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
 
   int numberIterations = 3;
@@ -484,7 +480,7 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit3DiffIteration)
 // Test E, I(2)
 BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1Implicit2)
 {
-  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint()); // TODO can we move this into a common fixture? See https://github.com/precice/precice/issues/90
+  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint()); /// @todo can we move this into a common fixture? See https://github.com/precice/precice/issues/90
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
 
   int numberIterations = 1;
@@ -518,7 +514,7 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1Implicit2)
 // Test I(2), E
 BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit2Explicit1)
 {
-  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint()); // TODO can we move this into a common fixture? See https://github.com/precice/precice/issues/90
+  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint()); /// @todo can we move this into a common fixture? See https://github.com/precice/precice/issues/90
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
 
   int numberIterations = 2;
@@ -552,7 +548,7 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit2Explicit1)
 // Test E, I(3)
 BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1Implicit3)
 {
-  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint()); // TODO can we move this into a common fixture? See https://github.com/precice/precice/issues/90
+  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint()); /// @todo can we move this into a common fixture? See https://github.com/precice/precice/issues/90
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
 
   int numberIterations = 1;
@@ -588,7 +584,7 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1Implicit3)
 // Test I(3), E
 BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit3Explicit1)
 {
-  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint()); // TODO can we move this into a common fixture? See https://github.com/precice/precice/issues/90
+  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint()); /// @todo can we move this into a common fixture? See https://github.com/precice/precice/issues/90
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
 
   int numberIterations = 3;
@@ -622,7 +618,7 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit3Explicit1)
 // Test E, I(2), I(2)
 BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1Implicit2Implicit2)
 {
-  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint()); // TODO can we move this into a common fixture? See https://github.com/precice/precice/issues/90
+  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint()); /// @todo can we move this into a common fixture? See https://github.com/precice/precice/issues/90
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
 
   int numberIterations = 1;
@@ -661,7 +657,7 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1Implicit2Implicit2)
 // Test E, I(2), I(3)
 BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1Implicit2Implicit3)
 {
-  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint()); // TODO can we move this into a common fixture? See https://github.com/precice/precice/issues/90
+  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint()); /// @todo can we move this into a common fixture? See https://github.com/precice/precice/issues/90
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
 
   int numberIterations = 1;
@@ -706,7 +702,7 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1Implicit2Implicit3)
 // Test I(2), I(2), E
 BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit2Implicit2Explicit1)
 {
-  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint()); // TODO can we move this into a common fixture? See https://github.com/precice/precice/issues/90
+  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint()); /// @todo can we move this into a common fixture? See https://github.com/precice/precice/issues/90
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
 
   int numberIterations = 2;
@@ -749,7 +745,7 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit2Implicit2Explicit1)
 // Test I(2), I(2), E
 BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit2Implicit2Explicit1DiffIterations)
 {
-  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint()); // TODO can we move this into a common fixture? See https://github.com/precice/precice/issues/90
+  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint()); /// @todo can we move this into a common fixture? See https://github.com/precice/precice/issues/90
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
 
   int numberIterations = 3;
@@ -797,9 +793,9 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit2Implicit2Explicit1DiffIt
   BOOST_TEST(scheme3->getTimesteps()-1 == 10);
 }
 
-BOOST_AUTO_TEST_CASE(testDummySchemeCompositionUntitled) // TODO give a better name, what is this test doing?
+BOOST_AUTO_TEST_CASE(testDummySchemeCompositionUntitled) /// @todo give a better name, what is this test doing?
 {
-  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint()); // TODO can we move this into a common fixture? See https://github.com/precice/precice/issues/90
+  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint()); /// @todo can we move this into a common fixture? See https://github.com/precice/precice/issues/90
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
 
   int numberIterations = 3;
@@ -836,7 +832,9 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionUntitled) // TODO give a better n
 }
 
 /// Test that runs on 3 processors.
-BOOST_AUTO_TEST_CASE(testExplicitSchemeComposition1, * testing::MinRanks(3) * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1, 2})))
+BOOST_AUTO_TEST_CASE(testExplicitSchemeComposition1,
+                     * testing::MinRanks(3)
+                     * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1, 2})))
 {
   if (utils::Parallel::getCommunicatorSize() != 3) // only run test on ranks {0,1,2}, for other ranks return
     return;

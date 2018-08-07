@@ -279,7 +279,7 @@ void MMPostProcessing::setDesignSpecification(
  *         manifold mapping cycle. This information is needed for convergence measurements in the
  *         coupling scheme.
  *  ---------------------------------------------------------------------------------------------
- */ // TODO: change to call by ref when Eigen is used.
+ */ /// @todo: change to call by ref when Eigen is used.
 std::map<int, Eigen::VectorXd> MMPostProcessing::getDesignSpecification(
     DataMap &cplData)
 {
@@ -424,7 +424,7 @@ void MMPostProcessing::performPostProcessing(
      */
     Eigen::VectorXd objective = _fineResiduals - _designSpecification;
     _preconditioner->update(false, _outputFineModel, objective);
-    // TODO: evaluate whether the pure residual should be used for updating the preconditioner or residual - design specification
+    /// @todo evaluate whether the pure residual should be used for updating the preconditioner or residual - design specification
     if (getLSSystemCols() > 0) {
       _preconditioner->apply(_matrixF);
       _preconditioner->apply(_matrixC);

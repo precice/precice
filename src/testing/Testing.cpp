@@ -7,7 +7,7 @@ namespace testing {
 
 std::string getPathToSources()
 {
-  precice::logging::Logger _log("testin");
+  precice::logging::Logger _log("testing");
   char* preciceRoot = std::getenv("PRECICE_ROOT");
   CHECK(preciceRoot != nullptr,
         "Environment variable PRECICE_ROOT has not been set. Please set it to the precice directory.");

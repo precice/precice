@@ -8,7 +8,7 @@ from Cython.Distutils import build_ext
 
 # check if PRECICE_ROOT is defined
 if not os.getenv('PRECICE_ROOT'):
-   print "ERROR: PRECICE_ROOT not defined!"
+   print("ERROR: PRECICE_ROOT not defined!")
    exit(1)
 
 precice_root = os.getenv('PRECICE_ROOT')

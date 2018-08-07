@@ -10,8 +10,6 @@
 namespace precice {
 namespace query {
 
-logging::Logger FindClosest:: _log("query::FindClosest");
-
 bool FindClosest:: hasFound() const
 {
   return not _closest.meshIDs.empty();

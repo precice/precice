@@ -13,16 +13,6 @@ const Eigen::VectorXd& Vertex::getNormal () const
   return _normal;
 }
 
-const Mesh* Vertex:: mesh () const
-{
-  return _mesh;
-}
-
-Mesh* Vertex:: mesh ()
-{
-  return _mesh;
-}
-
 int Vertex:: getGlobalIndex() const {
   return _globalIndex;
 }

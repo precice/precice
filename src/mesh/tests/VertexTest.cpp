@@ -18,9 +18,6 @@ BOOST_AUTO_TEST_CASE(Vertices)
 
   Eigen::Vector3d normal = vertex.getNormal();
   BOOST_TEST(testing::equals(normal, Eigen::Vector3d::Zero()));
-
-  void *mesh = static_cast<void *>(vertex.mesh());
-  BOOST_TEST(mesh == static_cast<void *>(nullptr));
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Mesh

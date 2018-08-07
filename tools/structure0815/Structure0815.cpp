@@ -1,7 +1,7 @@
 #include "Structure0815.hpp"
 
 #include "math/math.hpp"
-#include "math/GeometryComputations.hpp"
+#include "math/geometry.hpp"
 
 using Eigen::VectorXd;
 using Eigen::Vector3d;
@@ -164,8 +164,8 @@ void Structure0815:: iterate
     normR = r.norm();
 
     rotForce = totalTorque.cross(r);
-    //rotForce[0] = torque * -1.0 * r[1]; // TODO
-    //rotForce[1] = torque * r[0]; // TODO
+    //rotForce[0] = torque * -1.0 * r[1]; /// @todo
+    //rotForce[1] = torque * r[0]; /// @todo
     for (int i=0; i < _dim; i++){
       rotVelocityDelta[i] = (rotForce[i] / _totalMass) * dt;
     }
@@ -239,8 +239,7 @@ void Structure0815:: computeCharacteristics
         coords1[i] = _vertices[_faces[index+1] * _dim + i];
         coords1[i] += _displacements[_faces[index+1] * _dim + i];
       }
-      typedef precice::math::GeometryComputations GeoComp;
-      double area = GeoComp::triangleArea(zero, coords0, coords1);
+      double area = geometry::triangleArea(zero, coords0, coords1);
       area = std::abs(area); // since it comes out signed from cross-prod
       totalVolume += area;
       if (not precice::math::equals(area, 0.0)){

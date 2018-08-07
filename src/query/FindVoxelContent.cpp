@@ -1,5 +1,5 @@
 #include "FindVoxelContent.hpp"
-#include "math/GeometryComputations.hpp"
+#include "math/geometry.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Vertex.hpp"
@@ -8,8 +8,6 @@
 
 namespace precice {
 namespace query {
-
-logging::Logger FindVoxelContent::_log("query::FindVoxelContent");
 
 FindVoxelContent:: FindVoxelContent
 (
@@ -20,8 +18,7 @@ FindVoxelContent:: FindVoxelContent
   _voxelCenter ( voxelCenter ),
   _voxelHalflengths ( halflengths ),
   _boundaryInclusion ( boundaryInclusion ),
-  _dimensions ( voxelCenter.size() ),
-  _content ()
+  _dimensions ( voxelCenter.size() )
 {
   TRACE(voxelCenter, halflengths, boundaryInclusion);
   assertion ( voxelCenter.size() == halflengths.size(),
@@ -350,19 +347,19 @@ bool FindVoxelContent:: computeIntersection
         firstPointSegment, secondPointSegment, countTouchingAsIntersection);
   
   assertion ( (squareNormalDirection >= 0) && (squareNormalDirection < 3) );
-  typedef math::GeometryComputations GeoComp;
+  namespace geo = math::geometry;
   using Eigen::Vector2d;
   using Eigen::Vector3d;
   Vector3d normal = Vector3d::Zero();
   Vector3d intersection = Vector3d::Zero();
   normal[squareNormalDirection] = 1.0;
-  int result = GeoComp::segmentPlaneIntersection (
+  int result = geo::segmentPlaneIntersection (
       squareCenter, normal, firstPointSegment, secondPointSegment, intersection );
-  if ( result == GeoComp::NO_INTERSECTION ) {
+  if ( result == geo::NO_INTERSECTION ) {
 //    INFO ( "computeIntersection(): no square plane intersection" );
     return false;
   }
-  else if ( result == GeoComp::CONTAINED ) {
+  else if ( result == geo::CONTAINED ) {
     if ( not countTouchingAsIntersection ) {
       return false;
     }
@@ -412,17 +409,17 @@ bool FindVoxelContent:: computeIntersection
       Vector2d c ( center2D[0] + halflengths2D[0], center2D[1] + halflengths2D[1] );
       Vector2d d ( center2D[0] - halflengths2D[0], center2D[1] + halflengths2D[1] );
       bool intersect = false;
-      intersect |= GeoComp::segmentsIntersect(a, b, q, r, countTouchingAsIntersection);
-      intersect |= GeoComp::segmentsIntersect(b, c, q, r, countTouchingAsIntersection);
-      intersect |= GeoComp::segmentsIntersect(c, d, q, r, countTouchingAsIntersection);
-      intersect |= GeoComp::segmentsIntersect(d, a, q, r, countTouchingAsIntersection);
+      intersect |= geo::segmentsIntersect(a, b, q, r, countTouchingAsIntersection);
+      intersect |= geo::segmentsIntersect(b, c, q, r, countTouchingAsIntersection);
+      intersect |= geo::segmentsIntersect(c, d, q, r, countTouchingAsIntersection);
+      intersect |= geo::segmentsIntersect(d, a, q, r, countTouchingAsIntersection);
       return intersect;
     }
   }
-  else if ( (result == GeoComp::TOUCHING) && (! countTouchingAsIntersection) ) {
+  else if ( (result == geo::TOUCHING) && (! countTouchingAsIntersection) ) {
     return false;
   }
-  assertion ( (result == GeoComp::INTERSECTION) || (result == GeoComp::TOUCHING));
+  assertion ( (result == geo::INTERSECTION) || (result == geo::TOUCHING));
   // Segment intersects or touches plane of square, see if intersection point is
   // contained or touches square
   int indices[2];
@@ -465,17 +462,17 @@ bool FindVoxelContent:: computeIntersection
 {
   TRACE(triangle.vertex(0).getCoords(), triangle.vertex(1).getCoords(), triangle.vertex(2).getCoords(),
         firstPointEdge, secondPointEdge, countTouchingAsIntersection );
-  typedef math::GeometryComputations Geocomp;
+  namespace geo = math::geometry;
   using Eigen::Vector2d;
   using Eigen::Vector3d;
   Vector3d pointOfIntersection;
-  int result = Geocomp::segmentPlaneIntersection (
+  int result = geo::segmentPlaneIntersection (
     triangle.edge(0).getCenter(), triangle.getNormal(),
     firstPointEdge, secondPointEdge, pointOfIntersection );
-  if ( result == Geocomp::NO_INTERSECTION ) {
+  if ( result == geo::NO_INTERSECTION ) {
     return false;
   }
-  else if ( result == Geocomp::CONTAINED ) {
+  else if ( result == geo::CONTAINED ) {
     if ( not countTouchingAsIntersection ) {
       return false;
     }
@@ -486,46 +483,46 @@ bool FindVoxelContent:: computeIntersection
     Vector3d normal ( triangle.getNormal() );
     int indexMax;
     normal.cwiseAbs().maxCoeff(&indexMax);
-    Vector2d a (Geocomp::projectVector(triangle.vertex(0).getCoords(), indexMax));
-    Vector2d b (Geocomp::projectVector(triangle.vertex(1).getCoords(), indexMax));
-    Vector2d c (Geocomp::projectVector(triangle.vertex(2).getCoords(), indexMax));
-    Vector2d q (Geocomp::projectVector(firstPointEdge, indexMax));
-    int containedResult = Geocomp::containedInTriangle(a, b, c, q);
+    Vector2d a (geo::projectVector(triangle.vertex(0).getCoords(), indexMax));
+    Vector2d b (geo::projectVector(triangle.vertex(1).getCoords(), indexMax));
+    Vector2d c (geo::projectVector(triangle.vertex(2).getCoords(), indexMax));
+    Vector2d q (geo::projectVector(firstPointEdge, indexMax));
+    int containedResult = geo::containedInTriangle(a, b, c, q);
 
-    if  ( (containedResult == Geocomp::TOUCHING) &&  countTouchingAsIntersection ){
+    if  ( (containedResult == geo::TOUCHING) &&  countTouchingAsIntersection ){
       return true;
     }
-    Vector2d r (Geocomp::projectVector(secondPointEdge, indexMax));
-    containedResult = Geocomp::containedInTriangle(a, b, c, r);
-    if  ( (containedResult == Geocomp::TOUCHING) && countTouchingAsIntersection ){
+    Vector2d r (geo::projectVector(secondPointEdge, indexMax));
+    containedResult = geo::containedInTriangle(a, b, c, r);
+    if  ( (containedResult == geo::TOUCHING) && countTouchingAsIntersection ){
       return true;
     }
-    if ( Geocomp::segmentsIntersect(a, b, q, r, countTouchingAsIntersection) ||
-         Geocomp::segmentsIntersect(b, c, q, r, countTouchingAsIntersection) ||
-         Geocomp::segmentsIntersect(c, a, q, r, countTouchingAsIntersection) )
+    if ( geo::segmentsIntersect(a, b, q, r, countTouchingAsIntersection) ||
+         geo::segmentsIntersect(b, c, q, r, countTouchingAsIntersection) ||
+         geo::segmentsIntersect(c, a, q, r, countTouchingAsIntersection) )
     {
       return true;
     }
     return false;
   }
-  else if ( (result == Geocomp::TOUCHING) && (not countTouchingAsIntersection) ) {
+  else if ( (result == geo::TOUCHING) && (not countTouchingAsIntersection) ) {
     return false;
   }
 
-  assertion ((result == Geocomp::INTERSECTION) || (result == Geocomp::TOUCHING));
+  assertion ((result == geo::INTERSECTION) || (result == geo::TOUCHING));
   // Compute signed areas of triangle and intersection point
   Vector3d normal ( triangle.getNormal() );
   int indexMin;
   normal.cwiseAbs().maxCoeff(&indexMin);
-  result = Geocomp::containedInTriangle (
-      Geocomp::projectVector(triangle.vertex(0).getCoords(), indexMin),
-      Geocomp::projectVector(triangle.vertex(1).getCoords(), indexMin),
-      Geocomp::projectVector(triangle.vertex(2).getCoords(), indexMin),
-      Geocomp::projectVector ( pointOfIntersection, indexMin ) );
-  if ( result == Geocomp::NOT_CONTAINED ) {
+  result = geo::containedInTriangle (
+      geo::projectVector(triangle.vertex(0).getCoords(), indexMin),
+      geo::projectVector(triangle.vertex(1).getCoords(), indexMin),
+      geo::projectVector(triangle.vertex(2).getCoords(), indexMin),
+      geo::projectVector ( pointOfIntersection, indexMin ) );
+  if ( result == geo::NOT_CONTAINED ) {
     return false;
   }
-  else if ( (result == Geocomp::TOUCHING) && (not countTouchingAsIntersection) ) {
+  else if ( (result == geo::TOUCHING) && (not countTouchingAsIntersection) ) {
     return false;
   }
   return true;

@@ -13,11 +13,10 @@ Quad::Quad(
     Edge &edgeThree,
     Edge &edgeFour,
     int   id)
-    : PropertyContainer(),
-      _edges({&edgeOne, &edgeTwo, &edgeThree, &edgeFour}),
-      _id(id),
-      _normal(edgeOne.getDimensions()),
-      _center(edgeOne.getDimensions())
+  : _edges({&edgeOne, &edgeTwo, &edgeThree, &edgeFour}),
+    _id(id),
+    _normal(edgeOne.getDimensions()),
+    _center(edgeOne.getDimensions())
 {
   assertion(edgeOne.getDimensions() == edgeTwo.getDimensions(),
             edgeOne.getDimensions(), edgeTwo.getDimensions());

@@ -410,7 +410,7 @@ void BaseQNPostProcessing::performPostProcessing(
      */
     _values = _oldValues + xUpdate + _residuals; // = x^k + delta_x + r^k - q^k
 
-    // TODO: maybe add design specification. Though, residuals are overwritten in the next iteration this would be a clearer and nicer code
+    /// todo maybe add design specification. Though, residuals are overwritten in the next iteration this would be a clearer and nicer code
 
     // pending deletion: delete old V, W matrices if timestepsReused = 0
     // those were only needed for the first iteration (instead of underrelax.)
@@ -510,7 +510,7 @@ void BaseQNPostProcessing::splitCouplingData(
     int   size       = cplData[id]->values->size();
     auto &valuesPart = *(cplData[id]->values);
     //Eigen::VectorXd& oldValuesPart = cplData[id]->oldValues.col(0);
-    cplData[id]->oldValues.col(0) = _oldValues.segment(offset, size); // TODO: check if this is correct
+    cplData[id]->oldValues.col(0) = _oldValues.segment(offset, size); /// @todo: check if this is correct
     for (int i = 0; i < size; i++) {
       valuesPart(i) = _values(i + offset);
       //oldValuesPart(i) = _oldValues(i + offset);

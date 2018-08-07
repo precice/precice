@@ -73,7 +73,8 @@ void ConstantRelaxationPostProcessing::performPostProcessing(
  * @brief: Returns the design specification corresponding to the given coupling data.
  *         This information is needed for convergence measurements in the coupling scheme.
  *  ---------------------------------------------------------------------------------------------
- */ // TODO: change to call by ref when Eigen is used.
+ */
+/// @todo: change to call by ref when Eigen is used.
 std::map<int, Eigen::VectorXd> ConstantRelaxationPostProcessing::getDesignSpecification(
     DataMap &cplData)
 {

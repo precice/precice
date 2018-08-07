@@ -1,52 +1,39 @@
-#ifndef PRECICE_ACTION_SCALEBYDTACTION_HPP_
-#define PRECICE_ACTION_SCALEBYDTACTION_HPP_
+#pragma once
 
 #include "Action.hpp"
-#include "mesh/SharedPointer.hpp"
-#include "mesh/Vertex.hpp"
 #include "logging/Logger.hpp"
+#include "mesh/SharedPointer.hpp"
 
-namespace precice {
-   namespace mesh {
-      class Edge;
-      class Triangle;
-   }
-}
-
-// ----------------------------------------------------------- CLASS DEFINITION
-
-namespace precice {
-namespace action {
+namespace precice
+{
+namespace action
+{
 
 class ScaleByDtAction : public Action
 {
 public:
-
   enum Scaling {
-    // @brief Scales data by ratio of last computed timestep to full timestep length.
+    /// Scales data by ratio of last computed timestep to full timestep length.
     SCALING_BY_COMPUTED_DT_RATIO,
-    // @brief Scales data by last computed timestep
+    /// Scales data by last computed timestep
     SCALING_BY_DT,
-    // @brief Scales data by ratio of computed part of full timestep.
+    /// Scales data by ratio of computed part of full timestep.
     SCALING_BY_COMPUTED_DT_PART_RATIO
   };
 
   /**
    * @brief Constructor.
    *
-   * @param data [IN] Data that should be scaled.
-   * @param scalingType [IN] Type of scaling to be performed.
+   * @param[in] data Data that should be scaled.
+   * @param[in] scalingType Type of scaling to be performed.
    */
-  ScaleByDtAction (
-    Timing               timing,
-    int                  sourceDataID,
-    int                  targetDataID,
-    const mesh::PtrMesh& mesh,
-    Scaling              scaling );
+  ScaleByDtAction(
+      Timing               timing,
+      int                  sourceDataID,
+      int                  targetDataID,
+      const mesh::PtrMesh &mesh,
+      Scaling              scaling);
 
-  /**
-   * @brief Destructor.
-   */
   virtual ~ScaleByDtAction() {}
 
   /**
@@ -55,16 +42,14 @@ public:
    * At the moment, only a division of a property value by the associated area
    * of the neighboring edges (2D) is possible.
    */
-  virtual void performAction (
-    double time,
-    double dt,
-    double computedPartFullDt,
-    double fullDt );
+  virtual void performAction(
+      double time,
+      double dt,
+      double computedPartFullDt,
+      double fullDt);
 
 private:
-
-  // @brief Logging device
-  static logging::Logger _log;
+  logging::Logger _log{"action::ScaleByDtAction"};
 
   mesh::PtrData _sourceData;
 
@@ -73,6 +58,5 @@ private:
   Scaling _scaling;
 };
 
-}} // namespace precice, action
-
-#endif /* PRECICE_ACTION_SCALEBYDTACTION_HPP_ */
+} // namespace action
+} // namespace precice

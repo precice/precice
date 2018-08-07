@@ -95,7 +95,7 @@ public:
 
 private:
 
-  static logging::Logger _log;
+  logging::Logger _log{"query::FindClosest"};
 
   /// Finds closest distance to Vertex objects.
   FindClosestVertex _findClosestVertex;

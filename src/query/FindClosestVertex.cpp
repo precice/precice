@@ -9,9 +9,7 @@ FindClosestVertex:: FindClosestVertex
 (
   const Eigen::VectorXd& searchPoint )
 :
-  _searchPoint (searchPoint),
-  _shortestDistance (std::numeric_limits<double>::max()),
-  _closestVertex (NULL)
+  _searchPoint (searchPoint)
 {}
 
 const Eigen::VectorXd& FindClosestVertex:: getSearchPoint() const

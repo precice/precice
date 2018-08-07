@@ -23,8 +23,8 @@ envCompile = Environment (
    ENV        = os.environ  # propagates environment variables to scons  
    )
   
-envCompile.Object('SolverProxy.f90')
+envCompile.Object('SolverDummy.f90')
 
 
 envLink = envCompile.Clone(tools=[fortranCompiler],F90=fortranCompiler,LINK=fortranCompiler)
-envLink.Program(target='SolverProxy', source = ['SolverProxy'])
+envLink.Program(target='SolverDummy', source = ['SolverDummy'])

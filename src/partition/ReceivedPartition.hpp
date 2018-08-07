@@ -1,14 +1,15 @@
 #pragma once
 
+#include <vector>
 #include "Partition.hpp"
 #include "logging/Logger.hpp"
-#include <vector>
-#include "mesh/Vertex.hpp"
 #include "mesh/Mesh.hpp"
+#include "mesh/Vertex.hpp"
 
-namespace precice {
-namespace partition {
-
+namespace precice
+{
+namespace partition
+{
 
 /**
  * @brief A partition that is computed from a mesh received from another participant.
@@ -19,53 +20,57 @@ namespace partition {
 class ReceivedPartition : public Partition
 {
 public:
-
   /// Defines the typ of geometric filter used
   enum GeometricFilter {
-    // @brief undefined
+    /// undefined
     UNDEFINED,
-    // @brief No geometric filter used (e.g. for RBF mappings)
+    /// No geometric filter used (e.g. for RBF mappings)
     NO_FILTER,
-    // @brief Filter at master and communicate only filtered mesh.
+    /// Filter at master and communicate only filtered mesh.
     FILTER_FIRST,
-    // @brief Broadcast first and filter then
+    /// Broadcast first and filter then
     BROADCAST_FILTER
   };
 
-   /// Constructor
-   ReceivedPartition (mesh::PtrMesh mesh, GeometricFilter geometricFilter, double safetyFactor);
+  /// Constructor
+  ReceivedPartition(mesh::PtrMesh mesh, GeometricFilter geometricFilter, double safetyFactor);
 
-   virtual ~ReceivedPartition() {}
+  virtual ~ReceivedPartition() {}
 
-   /// The mesh is received from another participant.
-   virtual void communicate ();
+  virtual void communicate() override;
 
-   /// The mesh is re-partitioned and all distribution data structures are set up.
-   virtual void compute ();
+  virtual void compute() override;
 
 private:
+  /// Create filteredMesh from the filtered _mesh.
+  /*
+   * Copies all vertices/edges/triangles that are either contained in the bounding box
+   * or tagged to the filteredMesh. Edges and triangles are copied, when ALL vertices
+   * are part of the filteredMesh i.e. their IDs are contained in vertexMap.
+   */
+  void filterMesh(mesh::Mesh &filteredMesh, const bool filterByBB);
+  
+  /// Sets _bb to the union with the mesh from fromMapping resp. toMapping, also enlage by _safetyFactor
+  void prepareBoundingBox();
 
-   void filterMesh(mesh::Mesh& filteredMesh, const bool filterByBB);
+  /// Checks if vertex in contained in _bb
+  bool isVertexInBB(const mesh::Vertex &vertex);
 
-   void prepareBoundingBox();
+  virtual void createOwnerInformation() override;
 
-   bool isVertexInBB(const mesh::Vertex& vertex);
+  /// Helper function for 'createOwnerFunction' to set local owner information
+  void setOwnerInformation(const std::vector<int> &ownerVec);
 
-   virtual void createOwnerInformation();
+  GeometricFilter _geometricFilter;
 
-   /// Helper function for 'createOwnerFunction' to set local owner information
-   void setOwnerInformation(const std::vector<int> &ownerVec);
+  mesh::Mesh::BoundingBox _bb;
 
-   GeometricFilter _geometricFilter;
+  int _dimensions;
 
-   mesh::Mesh::BoundingBox _bb;
+  double _safetyFactor;
 
-   int _dimensions;
-
-   double _safetyFactor;
-
-   logging::Logger _log{"partition::ReceivedPartition"};
-
+  logging::Logger _log{"partition::ReceivedPartition"};
 };
 
-}} // namespace precice, partition
+} // namespace partition
+} // namespace precice

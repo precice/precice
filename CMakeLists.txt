@@ -1,4 +1,14 @@
+#------------------------------------------------------------------------------
 cmake_minimum_required (VERSION 3.5)
+
+# TODO
+# Fail if not using an out-of-source build
+# if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR)
+#     message(FATAL_ERROR
+#         "In-source builds are not supported.  Please create a build directory "
+#         "separate from the source directory")
+# endif()
+
 project(preCICE LANGUAGES CXX)
 
 list (APPEND CMAKE_MODULE_PATH "${preCICE_SOURCE_DIR}/tools/cmake-modules")
@@ -49,6 +59,7 @@ if (PETSC AND MPI)
   list(GET PETSC_VERSIONS 0 PETSC_MAJOR)
   list(GET PETSC_VERSIONS 1 PETSC_MINOR)
   add_definitions(-DPETSC_MAJOR=${PETSC_MAJOR} -DPETSC_MINOR=${PETSC_MINOR})
+  include_directories(${PETSC_INCLUDES})
 else()
   add_definitions(-DPRECICE_NO_PETSC)
   message(STATUS "PETSc support disabled")
@@ -80,7 +91,7 @@ if (PYTHON)
   find_package(PythonLibs 2.7 REQUIRED)
   find_package(NumPy REQUIRED)
   include_directories(${PYTHON_INCLUDE_DIRS})
-  include_directories(${NumPy_INCLUDE_DIRS})  
+  include_directories(${NumPy_INCLUDE_DIRS})
   add_definitions(-DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION)
 else()
   add_definitions(-DPRECICE_NO_PYTHON)
@@ -92,12 +103,19 @@ add_subdirectory("src")
 include_directories("src")
 
 add_library(precice ${sourcesAllNoMain})
+set(headers
+  src/precice/SolverInterface.hpp
+  src/precice/MeshHandle.hpp
+  src/precice/Constants.hpp
+  src/precice/bindings/c/SolverInterfaceC.h
+  src/precice/bindings/c/Constants.h)
+set_target_properties(precice PROPERTIES PUBLIC_HEADER "${headers}")
+
 target_link_libraries(precice PRIVATE ${PYTHON_LIBRARIES})
 target_link_libraries(precice PUBLIC ${MPI_LIBRARIES})
 target_link_libraries(precice PUBLIC ${Boost_LIBRARIES})
 target_link_libraries(precice PUBLIC ${PETSC_LIBRARIES})
 target_link_libraries(precice PUBLIC ${LIBXML2_LIBRARIES})
-
 
 add_executable(binprecice "src/drivers/main.cpp")
 target_link_libraries(binprecice Threads::Threads)
@@ -107,3 +125,8 @@ add_executable(testprecice
   "src/testing/main.cpp" ${sourcesTests})
 target_link_libraries(testprecice Threads::Threads)
 target_link_libraries(testprecice precice)
+
+install(TARGETS precice binprecice
+  LIBRARY DESTINATION lib
+  PUBLIC_HEADER DESTINATION include/precice
+  RUNTIME DESTINATION bin)

@@ -44,7 +44,7 @@ int main(int argc, char* argv[])
   }
   if (utils::Parallel::getCommunicatorSize() > 4) {
     if (utils::Parallel::getProcessRank() == 0)
-      std::cerr << "Running tests one more than 4 processors is not supported. Aborting." << std::endl;
+      std::cerr << "Running tests on more than 4 processors is not supported. Aborting." << std::endl;
     std::exit(-1);
   }
 

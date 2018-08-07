@@ -23,7 +23,8 @@
 /// Asserts that expr evaluates to true, prints all other arguments and calls assert(false).
 #define assertion(...) if (not (BOOST_PP_VARIADIC_ELEM(0, __VA_ARGS__))) { \
     std::cerr << "ASSERTION FAILED" << std::endl \
-              << "  Location:          " << __FILE__ << ":" << __LINE__ << std::endl \
+              << "  Location:          " << BOOST_CURRENT_FUNCTION << std::endl \
+              << "  File:              " << __FILE__ << ":" << __LINE__ << std::endl \
               << "  Rank:              " << precice::utils::Parallel::getProcessRank()  << std::endl \
               << "  Failed expression: " << BOOST_PP_STRINGIZE(BOOST_PP_VARIADIC_ELEM(0, __VA_ARGS__)) \
               <<  std::endl;                                            \

@@ -2,22 +2,17 @@
 #include "mesh/Quad.hpp"
 #include "mesh/Vertex.hpp"
 #include "mesh/Mesh.hpp"
-#include "math/GeometryComputations.hpp"
 
 namespace precice {
 namespace query {
-
-logging::Logger FindClosestQuad:: _log("query::FindClosestQuad" );
 
 FindClosestQuad:: FindClosestQuad
 (
   const Eigen::VectorXd& searchPoint )
 :
   _searchPoint ( searchPoint ),
-  _shortestDistance ( std::numeric_limits<double>::max() ),
   _vectorToProjectionPoint ( Eigen::VectorXd::Constant(_searchPoint.size(), std::numeric_limits<double>::max()) ),
-  _parametersProjectionPoint( {_shortestDistance ,_shortestDistance, _shortestDistance, _shortestDistance} ),
-  _closestQuad ( nullptr )
+  _parametersProjectionPoint( {_shortestDistance ,_shortestDistance, _shortestDistance, _shortestDistance} )
 {}
 
 const Eigen::VectorXd& FindClosestQuad:: getSearchPoint() const
@@ -58,7 +53,7 @@ void FindClosestQuad:: find
   mesh::Quad& quad )
 {
   ERROR("Not implemented.");
-  // TODO implement functionality
+  /// @todo implement functionality
 
   // From triangle code:
 //  Vector3D barycentricCoords;

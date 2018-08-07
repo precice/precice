@@ -94,7 +94,7 @@ struct SplitParticipantsFixture {
       utils::Parallel::splitCommunicator( "ParticipantOne" );
       utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator());
       utils::Parallel::clearGroups(); //This is important, if the testcase uses MPI communication again
-      participantID = 1; 
+      participantID = 1;
     }
     else {
       assertion(utils::Parallel::getProcessRank() > 1 && utils::Parallel::getProcessRank() < 4);
