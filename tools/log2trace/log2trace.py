@@ -12,15 +12,6 @@ import argparse
 import sys
 from io import open
 
-CATEGORIES = {
-    "advance": "Main Loop",
-    "initialize": "Initialization",
-    "initializeData": "Initialization",
-    "feedbackMesh": "Mesh",
-    "receive global mesh": "Mesh,Communication,Receive",
-    "send global mesh": "Mesh,Communication,Send",
-    "gather mesh": "Mesh,Communication,Gather",
-}
 DEFAULT_CATEGORY = "default"
 
 
@@ -54,8 +45,10 @@ def check_and_parse_args():
     parser.add_argument("-p", "--pretty",  action="store_true",
                         help="Print the JSON in a pretty format.")
     parser.add_argument("-d", "--default",  default=DEFAULT_CATEGORY, metavar="CATEGORY",
-                        help="The default category for unknown events. "
-                        "Known events are: " + ", ".join(CATEGORIES.keys()))
+                        help="The default category for unknown events.")
+    parser.add_argument("-m", "--mapping", metavar="FILE",
+                        help="The file containing mappings from event-names to categories."
+                        )
     if len(sys.argv) == 1:
         parser.print_help(sys.stderr)
         sys.exit(1)
@@ -92,6 +85,11 @@ def build_thread_name_entry(name, pid, tid):
 def main():
     args = check_and_parse_args()
 
+    event_mapping = {}
+    if args.mapping:
+        with open(args.mapping, 'rb') as jsonfile:
+            event_mapping = json.load(jsonfile)
+
     # The output will be in the JSONArray format described in the specification
     traces = []
     for pid, (participant, file) in enumerate(args.logs.items()):
@@ -110,7 +108,7 @@ def main():
                 # events which corresponds to the specified duration events
                 event = {
                     "name": row["Name"],
-                    "cat": CATEGORIES.get(row["Name"], args.default),
+                    "cat": event_mapping.get(row["Name"], args.default),
                     "tid": rank,
                     "pid": pid,
                     "ts": row["Timestamp"],
