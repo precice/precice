@@ -14,6 +14,7 @@
 #include <boost/log/utility/setup/console.hpp>
 #include <boost/log/support/date_time.hpp>
 
+#include "versions.hpp"
 #include "utils/assertion.hpp"
 #include "utils/String.hpp"
 
@@ -216,7 +217,13 @@ void setupLogging(LoggingConfiguration configs, bool enabled)
     sink->set_formatter(boost::log::parse_formatter(config.format));
     sink->set_filter(boost::log::parse_filter(config.filter));
     boost::log::core::get()->add_sink(sink);
-  }    
+  }
+
+  // Printing PRECICE_VERSION as first line of the log
+  auto t = std::time(nullptr);
+  auto tm = *std::localtime(&t);
+  BOOST_LOG_TRIVIAL(info)
+    << "This is preCICE version " << PRECICE_VERSION << ". Starting " << std::put_time(&tm, "%Y-%m-%d %H-%M-%S");
 }
 
 
