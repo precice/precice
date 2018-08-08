@@ -30,6 +30,14 @@ endif()
 
 option(BUILD_SHARED_LIBS "Build a shared library" ON)
 
+# Get preCICE version from git (that assumes you are compiling on a git checkout)
+execute_process(
+  COMMAND git describe --tags
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  OUTPUT_VARIABLE PRECICE_VERSION
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
 
 option(MPI "Enables MPI-based communication and running coupling tests." ON)
 if (MPI)
