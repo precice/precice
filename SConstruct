@@ -113,6 +113,13 @@ print
 env.Append(LIBPATH = [('#' + buildpath)])
 env.Append(CCFLAGS= ['-Wall', '-Wextra', '-Wno-unused-parameter', '-std=c++11'])
 
+# ====== PRECICE_VERSION number ======
+try:
+    PRECICE_VERSION = subprocess.check_output(["git", "describe", "--tags"]).rstrip()
+except:
+    PRECICE_VERSION = "NONE"
+
+
 # ====== Compiler Settings ======
 
 # Produce position independent code for dynamic linking
@@ -331,6 +338,7 @@ symlink = env.Command(
 versions = env.Substfile(
     "src/versions.hpp.in",
     SUBST_DICT =  {
+        "@PRECICE_VERSION@" : PRECICE_VERSION,
         "@PETSC_MAJOR@" : 0,
         "@PETSC_MINOR@" : 0}
 )
