@@ -20,3 +20,4 @@ src/Eigen/
 docs/source-code-documentation/
 CMakeFiles
 Makefile
+src/versions.hpp
