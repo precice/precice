@@ -1,17 +1,8 @@
-#------------------------------------------------------------------------------
 cmake_minimum_required (VERSION 3.5)
-
-# TODO
-# Fail if not using an out-of-source build
-# if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR)
-#     message(FATAL_ERROR
-#         "In-source builds are not supported.  Please create a build directory "
-#         "separate from the source directory")
-# endif()
 
 project(preCICE LANGUAGES CXX)
 
-list (APPEND CMAKE_MODULE_PATH "${preCICE_SOURCE_DIR}/tools/cmake-modules")
+list (APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/tools/cmake-modules")
 
 set (CMAKE_CXX_STANDARD 11)
 
