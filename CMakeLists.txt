@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 3.5)
 
-project(preCICE LANGUAGES CXX)
+project(preCICE VERSION 1.2.0 LANGUAGES CXX)
 
 list (APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/tools/cmake-modules")
 
@@ -29,14 +29,6 @@ endif()
 
 
 option(BUILD_SHARED_LIBS "Build a shared library" ON)
-
-# Get preCICE version from git (that assumes you are compiling on a git checkout)
-execute_process(
-  COMMAND git describe --tags
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-  OUTPUT_VARIABLE PRECICE_VERSION
-  OUTPUT_STRIP_TRAILING_WHITESPACE
-)
 
 
 option(MPI "Enables MPI-based communication and running coupling tests." ON)
@@ -97,7 +89,7 @@ endif()
 
 
 # Create versions.hpp and add binary dir to include dirs
-configure_file("${PROJECT_SOURCE_DIR}/src/versions.hpp.in" "${PROJECT_BINARY_DIR}/versions.hpp")
+configure_file("${PROJECT_SOURCE_DIR}/src/versions.hpp.in" "${PROJECT_BINARY_DIR}/versions.hpp" @ONLY)
 include_directories(${PROJECT_BINARY_DIR})
 
 add_subdirectory("src")
