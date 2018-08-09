@@ -1,0 +1,10 @@
+Some explanation for coupling_steering.pdf
+
+Differences between serial and parallel coupling in a nutshell.
+F and S refer to the first and the second participant, respectively.  
+Code parts that belong to the solver itself are marked in red. 
+Data exchange is marked in blue.  
+WID stands for WriteInitialData.
+
+More information in Benjamin's thesis, Section 3.5
+https://mediatum.ub.tum.de/doc/1320661/document.pdf
