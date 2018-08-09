@@ -428,7 +428,8 @@ void PointToPointCommunication::acceptConnection(std::string const &nameAcceptor
 
     c->receive(globalRequesterRank, localRequesterRank);
 
-    auto indices = std::move(communicationMap[globalRequesterRank]);
+    std::vector<int> indices;
+    indices.swap(communicationMap[globalRequesterRank]);
     _totalIndexCount += indices.size();
 
     // NOTE:
