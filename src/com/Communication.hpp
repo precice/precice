@@ -69,11 +69,11 @@ public:
    * 1:N communication to a preCICE server, and for the master-slave communication. For the
    * last case, setRankOffset() has to be set.
    *
-   * @param[in] nameAcceptor Name of calling participant.
+   * @param[in] acceptorName Name of calling participant.
    * @param[in] requesterName Name of remote participant to connect to.
    * @param[in] acceptorRank Rank of the accpeting process, usually the calling one.
    */
-  virtual void acceptConnection(std::string const &nameAcceptor,
+  virtual void acceptConnection(std::string const &acceptorName,
                                 std::string const &requesterName,
                                 int                acceptorRank) = 0;
 
@@ -86,12 +86,12 @@ public:
    * This communication is only used in PointToPointCommunication, i.e. for the M-to-N communication
    * between two participants.
    *
-   * @param[in] nameAcceptor Name of calling participant.
+   * @param[in] acceptorName Name of calling participant.
    * @param[in] requesterName Name of remote participant to connect to.
    * @param[in] acceptorRank Rank of accepting server, usually the rank of the current process.
    * @param[in] requesterCommunicatorSize Size of the requester (N)
    */
-   virtual void acceptConnectionAsServer(std::string const &nameAcceptor,
+   virtual void acceptConnectionAsServer(std::string const &acceptorName,
                                          std::string const &requesterName,
                                          int                acceptorRank,
                                          int                requesterCommunicatorSize) = 0;
@@ -105,12 +105,12 @@ public:
    * This communication is used for the 1:1 communication between two master ranks, for the
    * 1:N communication to a preCICE server, and for the master-slave communication.
    *
-   * @param[in] nameAcceptor Name of remote participant to connect to.
+   * @param[in] acceptorName Name of remote participant to connect to.
    * @param[in] requesterName Name of calling participant.
    * @param[in] requesterRank Rank of the requester (has to go from 0 to N-1)
    * @param[in] requesterCommunicatorSize Size of the requester (N)
    */
-  virtual void requestConnection(std::string const &nameAcceptor,
+  virtual void requestConnection(std::string const &acceptorName,
                                  std::string const &requesterName,
                                  int                requesterRank,
                                  int                requesterCommunicatorSize) = 0;
@@ -123,12 +123,12 @@ public:
    * call this function. This communication is only used in PointToPointCommunication, i.e.
    * for the M-to-N communication between two participants.
    *
-   * @param[in] nameAcceptor Name of calling participant.
+   * @param[in] acceptorName Name of calling participant.
    * @param[in] requesterName Name of remote participant to connect to
    * @param[in] acceptorRanks Set of ranks that accept a connection
    * @param[in] requesterRank Rank that requests the connection, usually the caller's rank
    */
-   virtual void requestConnectionAsClient(std::string   const &nameAcceptor,
+   virtual void requestConnectionAsClient(std::string   const &acceptorName,
                                           std::string   const &requesterName,
                                           std::set<int> const &acceptorRanks,
                                           int                  requesterRank) = 0;

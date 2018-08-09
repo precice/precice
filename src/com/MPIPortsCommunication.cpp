@@ -44,7 +44,7 @@ void MPIPortsCommunication::acceptConnection(std::string const &acceptorName,
 
   MPI_Open_port(MPI_INFO_NULL, const_cast<char *>(_portName.data()));
 
-  std::string addressFileName("." + requesterName + "-" + acceptorName + ".address");
+  const std::string addressFileName("." + requesterName + "-" + acceptorName + ".address");
   Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
   ScopedPublisher                        p(addressFileName);
   p.write(_portName);
@@ -98,8 +98,8 @@ void MPIPortsCommunication::acceptConnectionAsServer(
 
   MPI_Open_port(MPI_INFO_NULL, const_cast<char *>(_portName.data()));
 
-  std::string addressFileName("." + requesterName + "-" +
-                              acceptorName + "-" + std::to_string(acceptorRank) + ".address");
+  const std::string addressFileName("." + requesterName + "-" +
+                                    acceptorName + "-" + std::to_string(acceptorRank) + ".address");
   Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
   ScopedPublisher                        p(addressFileName);
   p.write(_portName);
@@ -127,7 +127,7 @@ void MPIPortsCommunication::requestConnection(std::string const &acceptorName,
   assertion(not isConnected());
   _isAcceptor = false;
 
-  std::string addressFileName("." + requesterName + "-" + acceptorName + ".address");
+  const std::string addressFileName("." + requesterName + "-" + acceptorName + ".address");
   Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
   Publisher p(addressFileName);
   _portName = p.read();
@@ -158,8 +158,8 @@ void MPIPortsCommunication::requestConnectionAsClient(std::string      const &ac
   _isAcceptor = false;
 
   for (auto const & acceptorRank : acceptorRanks) {
-    std::string addressFileName("." + requesterName + "-" +
-                                acceptorName + "-" + std::to_string(acceptorRank) + ".address");
+    const std::string addressFileName("." + requesterName + "-" +
+                                      acceptorName + "-" + std::to_string(acceptorRank) + ".address");
 
     Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
     Publisher p(addressFileName);
@@ -184,7 +184,7 @@ void MPIPortsCommunication::closeConnection()
   if (not isConnected())
     return;
 
-  for (auto communicator : _communicators) {
+  for (auto & communicator : _communicators) {
     MPI_Comm_disconnect(&communicator.second);
   }
 

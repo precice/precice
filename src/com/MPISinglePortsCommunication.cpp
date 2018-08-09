@@ -46,7 +46,7 @@ void MPISinglePortsCommunication::acceptConnection(std::string const &acceptorNa
 
   MPI_Open_port(MPI_INFO_NULL, const_cast<char *>(_portName.data()));
 
-  std::string addressFileName("." + requesterName + "-" + acceptorName + ".address");
+  const std::string addressFileName("." + requesterName + "-" + acceptorName + ".address");
   Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
   ScopedPublisher                        p(addressFileName);
   p.write(_portName);
@@ -100,7 +100,7 @@ void MPISinglePortsCommunication::acceptConnectionAsServer(
 
   _isAcceptor = true;
 
-  std::string addressFileName("." + requesterName + "-" + acceptorName + ".address");
+  const std::string addressFileName("." + requesterName + "-" + acceptorName + ".address");
   Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
   ScopedPublisher                        p(addressFileName);
   if (utils::MasterSlave::_rank == 0) { // only master opens a port
@@ -126,7 +126,7 @@ void MPISinglePortsCommunication::requestConnection(std::string const &acceptorN
   assertion(not isConnected());
   _isAcceptor = false;
 
-  std::string addressFileName("." + requesterName + "-" + acceptorName + ".address");
+  const std::string addressFileName("." + requesterName + "-" + acceptorName + ".address");
   Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
   Publisher p(addressFileName);
   _portName = p.read();
@@ -156,7 +156,7 @@ void MPISinglePortsCommunication::requestConnectionAsClient(std::string      con
   
   _isAcceptor = false;
 
-  std::string addressFileName("." + requesterName + "-" + acceptorName + ".address");
+  const std::string addressFileName("." + requesterName + "-" + acceptorName + ".address");
   Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
   Publisher p(addressFileName);
   _portName = p.read();
