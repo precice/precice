@@ -23,7 +23,7 @@ public:
   using M2NTuple      = std::tuple<m2n::PtrM2N, std::string, std::string>;
 
 public:
-  M2NConfiguration(xml::XMLTag &parent);
+  explicit M2NConfiguration(xml::XMLTag &parent);
 
   virtual ~M2NConfiguration() {}
 

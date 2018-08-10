@@ -16,9 +16,9 @@ class MPIPortsCommunicationFactory : public CommunicationFactory
 public:
   explicit MPIPortsCommunicationFactory(std::string const &addressDirectory = ".");
 
-  PtrCommunication newCommunication();
+  PtrCommunication newCommunication() override;
 
-  std::string addressDirectory();
+  std::string addressDirectory() override;
 
 private:
   std::string _addressDirectory;
