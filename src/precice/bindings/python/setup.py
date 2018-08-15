@@ -8,23 +8,27 @@ from Cython.Distutils import build_ext
 
 # check if PRECICE_ROOT is defined
 if not os.getenv('PRECICE_ROOT'):
-   print("ERROR: PRECICE_ROOT not defined!")
-   exit(1)
+    print("ERROR: PRECICE_ROOT not defined!")
+    exit(1)
 
 precice_root = os.getenv('PRECICE_ROOT')
-
+python_bindings_path = os.path.join(precice_root,'src','precice','bindings','python')
 
 # name of Interfacing API
 appname = "PySolverInterface"
 
 # clean previous build
-for root, dirs, files in os.walk(".", topdown=False):
-   for name in files:
-      if ((name.startswith(appname)) and not name.endswith(".pyx")):
-         os.remove(os.path.join(root, name))
-   for name in dirs:
-      if (name == "build"):
-         shutil.rmtree(name)
+for root, dirs, files in os.walk(python_bindings_path, topdown=False):
+    for name in files:
+        if ((name.startswith(appname)) and not name.endswith(".pyx")):
+            file_name = os.path.join(root, name)
+            print("removing file %s" % file_name)
+            os.remove(file_name)
+    for name in dirs:
+        if (name == "build"):
+            folder_name = os.path.join(root,name)
+            print("removing folder %s" % folder_name)
+            shutil.rmtree(folder_name)
 
 # determine which flags to use with mpic++
 if not os.getenv('PRECICE_MPI_IMPLEMENTATION'):
@@ -53,15 +57,16 @@ link_args = ["-L"+precice_root+"/build/last/", "-lprecice"] + mpi_link_args
 
 # build precice.so python extension to be added to "PYTHONPATH" later
 setup(
-   cmdclass = {'build_ext': build_ext},
-   ext_modules = [
-      Extension(appname,
-         sources=[appname+".pyx"],
-         libraries=[],
-         include_dirs=[precice_root],
-         language="c++",
-         extra_compile_args=compile_args,
-         extra_link_args=link_args
-      )
-   ]
+    cmdclass = {'build_ext': build_ext},
+    ext_modules = [
+        Extension(
+            appname,
+            sources=[os.path.join(python_bindings_path,appname)+".pyx"],
+            libraries=[],
+            include_dirs=[precice_root],
+            language="c++",
+            extra_compile_args=compile_args,
+            extra_link_args=link_args
+        )
+    ]
 )
