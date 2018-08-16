@@ -1,11 +1,6 @@
 #pragma once
 
-#include "mesh/Quad.hpp"
-#include "mesh/Triangle.hpp"
-#include "mesh/Vertex.hpp"
-
 #include <boost/iterator/iterator_facade.hpp>
-#include <boost/iterator/iterator_traits.hpp>
 
 namespace precice
 {
