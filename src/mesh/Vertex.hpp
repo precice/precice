@@ -53,6 +53,9 @@ public:
 
   void tag();
 
+  /// Equality comparison for vertices
+  bool operator==(const Vertex& other) const;
+
 private:
 
   /// Unique (among vertices in one mesh) ID of the vertex.
@@ -116,6 +119,9 @@ inline const Eigen::VectorXd& Vertex::getCoords() const
   return _coords;
 }
 
+inline bool Vertex::operator==(const Vertex& other) const {
+    return _id == other._id;
+}
 
 /// Make Vertex printable
 std::ostream & operator<<(std::ostream &os, Vertex const & v);
