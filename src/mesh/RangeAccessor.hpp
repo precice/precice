@@ -7,7 +7,7 @@ namespace precice
 namespace mesh
 {
 template <typename Source, typename Value>
-class IndexRangeIterator : boost::iterator_facade<
+class IndexRangeIterator : public boost::iterator_facade<
                                IndexRangeIterator<Source, Value>,
                                Value,
                                boost::random_access_traversal_tag>
@@ -18,7 +18,7 @@ public:
   IndexRangeIterator(Source *src, size_t index)
       : src_(src), idx_(index) {}
 
-  Value &dereference()
+  Value &dereference() const
   {
     return src_->vertex(idx_);
   }
