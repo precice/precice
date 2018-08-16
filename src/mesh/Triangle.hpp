@@ -5,6 +5,7 @@
 #include <boost/noncopyable.hpp>
 #include "mesh/Edge.hpp"
 #include "mesh/PropertyContainer.hpp"
+#include "mesh/RangeAccessor.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice
@@ -26,6 +27,12 @@ namespace mesh
 class Triangle : public PropertyContainer, private boost::noncopyable
 {
 public:
+  /// Type of the random access vertex iterator
+  using VertexIter = IndexRangeIterator<Triangle, Vertex>;
+
+  /// Type of the const random access vertex iterator
+  using ConstVertexIter = IndexRangeIterator<const Triangle, const Vertex>;
+
   /// Constructor, the order of edges defines the outer normal direction.
   Triangle(
       Edge &edgeOne,
@@ -62,6 +69,24 @@ public:
 
   /// Returns const triangle edge with index 0, 1 or 2.
   const Edge &edge(int i) const;
+
+  /// Returns a random access iterator to the begin (0) of the vertex range [0,1,2]
+  VertexIter begin();
+
+  /// Returns a random access iterator to the end (3) of the vertex range [0,1,2]
+  VertexIter end();
+
+  /// Returns a const random access iterator to the begin (0) of the vertex range [0,1,2]
+  ConstVertexIter begin() const;
+
+  /// Returns a const random access iterator to the end (3) of the vertex range [0,1,2]
+  ConstVertexIter end() const;
+
+  /// Returns a const random access iterator to the begin (0) of the vertex range [0,1,2]
+  ConstVertexIter cbegin() const;
+
+  /// Returns a const random access iterator to the end (3) of the vertex range [0,1,2]
+  ConstVertexIter cend() const;
 
   /// Sets the outer normal of the triangle.
   template <typename VECTOR_T>
@@ -141,6 +166,36 @@ inline Edge &Triangle::edge(int i)
 inline const Edge &Triangle::edge(int i) const
 {
   return *_edges[i];
+}
+
+inline Triangle::VertexIter Triangle::begin()
+{
+  return {this, 0};
+}
+
+inline Triangle::VertexIter Triangle::end()
+{
+  return {this, 3};
+}
+
+inline Triangle::ConstVertexIter Triangle::begin() const
+{
+  return {this, 0};
+}
+
+inline Triangle::ConstVertexIter Triangle::end() const
+{
+  return {this, 3};
+}
+
+inline Triangle::ConstVertexIter Triangle::cbegin() const
+{
+  return begin();
+}
+
+inline Triangle::ConstVertexIter Triangle::cend() const
+{
+  return end();
 }
 
 template <typename VECTOR_T>

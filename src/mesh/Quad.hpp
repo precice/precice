@@ -4,6 +4,7 @@
 #include "boost/noncopyable.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/PropertyContainer.hpp"
+#include "mesh/RangeAccessor.hpp"
 
 namespace precice
 {
@@ -24,6 +25,12 @@ namespace mesh
 class Quad : public PropertyContainer, private boost::noncopyable
 {
 public:
+  /// Type of the random access vertex iterator
+  using VertexIter = IndexRangeIterator<Quad, Vertex>;
+
+  /// Type of the const random access vertex iterator
+  using ConstVertexIter = IndexRangeIterator<const Quad, const Vertex>;
+
   /// Constructor, the order of edges defines the outer normal direction.
   Quad(
       Edge &edgeOne,
@@ -61,6 +68,24 @@ public:
 
   /// Returns const quad edge with index 0, 1, 2, or 3.
   const Edge &edge(int i) const;
+
+  /// Returns a random access iterator to the begin (0) of the vertex range [0,1,2,3]
+  VertexIter begin();
+
+  /// Returns a random access iterator to the end (4) of the vertex range [0,1,2,3]
+  VertexIter end();
+
+  /// Returns a const random access iterator to the begin (0) of the vertex range [0,1,2,3]
+  ConstVertexIter begin() const;
+
+  /// Returns a const random access iterator to the end (4) of the vertex range [0,1,2,3]
+  ConstVertexIter end() const;
+
+  /// Returns a const random access iterator to the begin (0) of the vertex range [0,1,2,3]
+  ConstVertexIter cbegin() const;
+
+  /// Returns a const random access iterator to the end (4) of the vertex range [0,1,2,3]
+  ConstVertexIter cend() const;
 
   /// Sets the outer normal of the quad.
   template <typename VECTOR_T>
@@ -129,6 +154,36 @@ inline const Vertex &Quad::vertex(int i) const
 {
   assertion((i >= 0) && (i < 4), i);
   return edge(i).vertex(_vertexMap[i]);
+}
+
+inline Quad::VertexIter Quad::begin()
+{
+  return {this, 0};
+}
+
+inline Quad::VertexIter Quad::end()
+{
+  return {this, 4};
+}
+
+inline Quad::ConstVertexIter Quad::begin() const
+{
+  return {this, 0};
+}
+
+inline Quad::ConstVertexIter Quad::end() const
+{
+  return {this, 4};
+}
+
+inline Quad::ConstVertexIter Quad::cbegin() const
+{
+    return begin();
+}
+
+inline Quad::ConstVertexIter Quad::cend() const
+{
+    return end();
 }
 
 inline Edge &Quad::edge(int i)
