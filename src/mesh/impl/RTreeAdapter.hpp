@@ -3,8 +3,19 @@
 #include <boost/geometry.hpp>
 #include <Eigen/Core>
 #include "mesh/Vertex.hpp"
+#include "mesh/Edge.hpp"
+
+namespace precice {
+namespace mesh {
+    class Triangle;
+    class Quad;
+}
+}
 
 using precice::mesh::Vertex;
+using precice::mesh::Edge;
+using precice::mesh::Triangle;
+using precice::mesh::Quad;
 
 namespace boost {
 namespace geometry {
