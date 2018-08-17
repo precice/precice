@@ -702,7 +702,7 @@ BOOST_AUTO_TEST_CASE(testConfiguredExplicitCouplingWithSubcycling, * testing::Mi
       *meshConfig );
 }
 
-# endif // not PRECICE_NO_MPI
+BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END()
 
-BOOST_AUTO_TEST_SUITE_END()
-BOOST_AUTO_TEST_SUITE_END()
+# endif // not PRECICE_NO_MPI
