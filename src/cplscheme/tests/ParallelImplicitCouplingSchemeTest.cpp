@@ -26,13 +26,14 @@
 #include "utils/EigenHelperFunctions.hpp"
 
 #include "testing/Testing.hpp"
+#include "testing/Fixtures.hpp"
 
 using namespace precice;
 using namespace precice::cplscheme;
 
 BOOST_AUTO_TEST_SUITE(CplSchemeTests)
 
-struct ParallelImplicitCouplingSchemeFixture  /// @todo fixtures in cplscheme/tests are a candidate for refactoring, lots of copy paste code.
+struct ParallelImplicitCouplingSchemeFixture
 {
   using DataMap = std::map<int,PtrCouplingData>;
 
@@ -40,24 +41,6 @@ struct ParallelImplicitCouplingSchemeFixture  /// @todo fixtures in cplscheme/te
 
   ParallelImplicitCouplingSchemeFixture(){
     _pathToTests = testing::getPathToSources() + "/cplscheme/tests/";
-  }
-
-  void connect( /// @todo this function occurs in multiple tests. Move this to a common fixture? see https://github.com/precice/precice/issues/90
-      const std::string&      participant0,
-      const std::string&      participant1,
-      const std::string&      localParticipant,
-      m2n::PtrM2N& communication )
-  {
-    assertion ( communication.use_count() > 0 );
-    assertion ( not communication->isConnected() );
-    utils::Parallel::splitCommunicator( localParticipant );
-    if ( participant0 == localParticipant ) {
-      communication->requestMasterConnection ( participant1, participant0);
-    }
-    else {
-      assertion ( participant1 == localParticipant );
-      communication->acceptMasterConnection ( participant1, participant0);
-    }
   }
 };
 
@@ -78,7 +61,6 @@ BOOST_AUTO_TEST_CASE(testParseConfigurationWithRelaxation)
   meshConfig->setDimensions(3);
   m2n::M2NConfiguration::SharedPointer m2nConfig(
       new m2n::M2NConfiguration(root));
-
   CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
 
   xml::configure(root, path);
@@ -281,7 +263,9 @@ BOOST_AUTO_TEST_CASE(testVIQNPP)
 }
 
 /// Test that runs on 2 processors.
-BOOST_AUTO_TEST_CASE(testInitializeData, * testing::MinRanks(2) * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
+BOOST_FIXTURE_TEST_CASE(testInitializeData, testing::M2NFixture,
+		              * testing::MinRanks(2)
+                      * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
 {
   if (utils::Parallel::getCommunicatorSize() != 2) // only run test on ranks {0,1}, for other ranks return
     return;
@@ -304,8 +288,6 @@ BOOST_AUTO_TEST_CASE(testInitializeData, * testing::MinRanks(2) * boost::unit_te
   meshConfig.addMesh(mesh);
 
   // Create all parameters necessary to create a ParallelImplicitCouplingScheme object
-  com::PtrCommunication communication(new com::MPIDirectCommunication);
-  m2n::PtrM2N globalCom(new m2n::M2N(communication, m2n::DistributedComFactory::SharedPointer()));
   double maxTime = 1.0;
   int maxTimesteps = 3;
   double timestepLength = 0.1;
@@ -331,7 +313,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData, * testing::MinRanks(2) * boost::unit_te
   // Create the coupling scheme object
   ParallelCouplingScheme cplScheme(
       maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
-      nameLocalParticipant, globalCom, constants::FIXED_DT, BaseCouplingScheme::Implicit, 100);
+      nameLocalParticipant, m2n, constants::FIXED_DT, BaseCouplingScheme::Implicit, 100);
   cplScheme.addDataToSend(mesh->data()[sendDataIndex], mesh, initData);
   cplScheme.addDataToReceive(mesh->data()[receiveDataIndex], mesh, initData);
 
@@ -345,7 +327,6 @@ BOOST_AUTO_TEST_CASE(testInitializeData, * testing::MinRanks(2) * boost::unit_te
       mesh->data()[1]->getID(), false, false, minIterationConvMeasure1 );
   cplScheme.addConvergenceMeasure (
       mesh->data()[0]->getID(), false, false, minIterationConvMeasure2 );
-  connect(nameParticipant0, nameParticipant1, nameLocalParticipant, globalCom);
 
   std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
