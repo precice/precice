@@ -16,11 +16,232 @@
 #include <Eigen/Core>
 
 #include "testing/Testing.hpp"
+#include "testing/Fixtures.hpp"
 
 using namespace precice;
 using namespace precice::cplscheme;
 
+#ifndef PRECICE_NO_MPI
+
 BOOST_AUTO_TEST_SUITE(CplSchemeTests)
+
+void runSimpleExplicitCoupling(
+      CouplingScheme&                cplScheme,
+      const std::string&             participantName,
+      const mesh::MeshConfiguration& meshConfig )
+{
+  BOOST_TEST(meshConfig.meshes().size() == 1);
+  mesh::PtrMesh mesh = meshConfig.meshes()[0];
+  BOOST_TEST(mesh->data().size() == 2);
+  auto& dataValues0 = mesh->data()[0]->values();
+  auto& dataValues1 = mesh->data()[1]->values();
+  BOOST_TEST(mesh->vertices().size() > 0);
+  mesh::Vertex& vertex = mesh->vertices()[0];
+  double valueData0 = 1.0;
+  Eigen::VectorXd valueData1 = Eigen::VectorXd::Constant(3, 1.0 );
+
+  double computedTime = 0.0;
+  int computedTimesteps = 0;
+
+  if ( participantName == std::string("participant0") ) {
+    cplScheme.initialize ( 0.0, 1 );
+    BOOST_TEST(not cplScheme.hasDataBeenExchanged());
+    BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
+    BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
+    BOOST_TEST(not cplScheme.isCouplingTimestepComplete());
+    BOOST_TEST(cplScheme.isCouplingOngoing());
+    while ( cplScheme.isCouplingOngoing() ) {
+      dataValues0(vertex.getID()) = valueData0;
+      computedTime += cplScheme.getNextTimestepMaxLength();
+      computedTimesteps ++;
+      cplScheme.addComputedTime ( cplScheme.getNextTimestepMaxLength() );
+      cplScheme.advance();
+      BOOST_TEST(cplScheme.isCouplingTimestepComplete());
+      BOOST_TEST(testing::equals(computedTime, cplScheme.getTime()));
+      BOOST_TEST(computedTimesteps == cplScheme.getTimesteps()-1);
+      BOOST_TEST(not cplScheme.isActionRequired("WriteIterationCheckpoint"));
+      BOOST_TEST(not cplScheme.isActionRequired("ReadIterationCheckpoint"));
+      BOOST_TEST(cplScheme.isCouplingTimestepComplete());
+      if ( cplScheme.isCouplingOngoing() ) {
+        // No receive takes place for the participant that has started the
+        // coupled simulation, in the last advance call
+        Eigen::VectorXd value = dataValues1.segment(vertex.getID() * 3, 3);
+        BOOST_TEST(testing::equals(value, valueData1));
+      }
+      BOOST_TEST(cplScheme.hasDataBeenExchanged());
+      // Increment data values, to test if send/receive operations are also
+      // correct in following timesteps.
+      valueData0 += 1.0;
+      valueData1 += Eigen::VectorXd::Constant(3, 1.0 );
+    }
+    cplScheme.finalize();
+    // Validate results
+    BOOST_TEST(testing::equals(computedTime, 1.0));
+    BOOST_TEST(computedTimesteps == 10);
+    BOOST_TEST(not cplScheme.isActionRequired("constants::actionWriteIterationCheckpoint()"));
+    BOOST_TEST(not cplScheme.isActionRequired("constants::actionReadIterationCheckpoint()"));
+    BOOST_TEST(cplScheme.isCouplingTimestepComplete());
+    BOOST_TEST(not cplScheme.isCouplingOngoing());
+    BOOST_TEST(cplScheme.getNextTimestepMaxLength() > 0.0);
+  }
+  else if ( participantName == std::string("participant1") ) {
+    cplScheme.initialize ( 0.0, 1 );
+    BOOST_TEST(cplScheme.hasDataBeenExchanged());
+    double value = dataValues0(vertex.getID());
+    BOOST_TEST(testing::equals(value, valueData0));
+    valueData0 += 1.0;
+    BOOST_TEST(not cplScheme.isActionRequired("constants::actionWriteIterationCheckpoint()"));
+    BOOST_TEST(not cplScheme.isActionRequired("constants::actionReadIterationCheckpoint()"));
+    BOOST_TEST(not cplScheme.isCouplingTimestepComplete());
+    BOOST_TEST(cplScheme.isCouplingOngoing());
+    while ( cplScheme.isCouplingOngoing() ) {
+      dataValues1.segment(vertex.getID()*3, 3) = valueData1;
+      computedTime += cplScheme.getNextTimestepMaxLength();
+      computedTimesteps ++;
+      cplScheme.addComputedTime ( cplScheme.getNextTimestepMaxLength() );
+      cplScheme.advance();
+      BOOST_TEST(testing::equals(computedTime, cplScheme.getTime()));
+      BOOST_TEST(computedTimesteps == cplScheme.getTimesteps()-1);
+      BOOST_TEST(not cplScheme.isActionRequired("constants::actionWriteIterationCheckpoint()"));
+      BOOST_TEST(not cplScheme.isActionRequired("constants::actionReadIterationCheckpoint()"));
+      BOOST_TEST(cplScheme.isCouplingTimestepComplete());
+      if ( cplScheme.isCouplingOngoing() ) {
+        // The participant not starting the coupled simulation does neither
+        // receive nor send data in the last call to advance
+        BOOST_TEST(cplScheme.hasDataBeenExchanged());
+        double value = dataValues0[vertex.getID()];
+        BOOST_TEST(testing::equals(value, valueData0));
+      }
+      valueData0 += 1.0;
+      valueData1 += Eigen::VectorXd::Constant(3, 1.0 );
+    }
+    cplScheme.finalize ();
+    // Validate results
+    BOOST_TEST(testing::equals(computedTime, 1.0));
+    BOOST_TEST(computedTimesteps == 10);
+    BOOST_TEST(not cplScheme.isActionRequired("constants::actionWriteIterationCheckpoint()"));
+    BOOST_TEST(not cplScheme.isActionRequired("constants::actionReadIterationCheckpoint()"));
+    BOOST_TEST(cplScheme.isCouplingTimestepComplete());
+    BOOST_TEST(not cplScheme.isCouplingOngoing());
+    BOOST_TEST(cplScheme.getNextTimestepMaxLength() > 0.0);
+  }
+}
+
+void runExplicitCouplingWithSubcycling(
+      CouplingScheme&                cplScheme,
+      const std::string&             participantName,
+      const mesh::MeshConfiguration& meshConfig )
+{
+  BOOST_TEST(meshConfig.meshes().size() == 1);
+  mesh::PtrMesh mesh = meshConfig.meshes()[0];
+  BOOST_TEST(mesh->data().size() == 2);
+  BOOST_TEST(mesh->vertices().size() > 0);
+  mesh::Vertex& vertex = mesh->vertices()[0];
+  double valueData0 = 1.0;
+  Eigen::VectorXd valueData1 = Eigen::VectorXd::Constant(3, 1.0);
+  auto& dataValues0 = mesh->data()[0]->values();
+  auto& dataValues1 = mesh->data()[1]->values();
+
+  double computedTime = 0.0;
+  int computedTimesteps = 0;
+  std::string nameParticipant0 ( "participant0" );
+  std::string nameParticipant1 ( "participant1" );
+  assertion ( (participantName == nameParticipant0) ||
+              (participantName == nameParticipant1) );
+  if ( participantName == nameParticipant0 ) {
+    cplScheme.initialize ( 0.0, 1 );
+    double dtDesired = cplScheme.getNextTimestepMaxLength() / 2.0;
+    double dtUsed = dtDesired;
+    BOOST_TEST(not cplScheme.hasDataBeenExchanged());
+    BOOST_TEST(not cplScheme.isActionRequired("constants::actionWriteIterationCheckpoint()"));
+    BOOST_TEST(not cplScheme.isActionRequired("constants::actionReadIterationCheckpoint()"));
+    BOOST_TEST(not cplScheme.isCouplingTimestepComplete());
+    BOOST_TEST(cplScheme.isCouplingOngoing());
+    while ( cplScheme.isCouplingOngoing() ) {
+      dataValues0(vertex.getID()) = valueData0;
+      computedTime += dtUsed;
+      computedTimesteps ++;
+      cplScheme.addComputedTime(dtUsed);
+      cplScheme.advance();
+      // If the dt from preCICE is larger than the desired one, do subcycling,
+      // else, use the dt from preCICE
+      dtUsed = cplScheme.getNextTimestepMaxLength() > dtDesired
+              ? dtDesired
+              : cplScheme.getNextTimestepMaxLength();
+      BOOST_TEST(testing::equals(computedTime, cplScheme.getTime()));
+      BOOST_TEST(not cplScheme.isActionRequired("constants::actionWriteIterationCheckpoint()"));
+      BOOST_TEST(not cplScheme.isActionRequired("constants::actionReadIterationCheckpoint()"));
+      if ( computedTimesteps % 2 == 0 ) {
+        // Data exchange takes only place at every second local timestep,
+        // since a subcycling of 2 is used.
+        BOOST_TEST(cplScheme.isCouplingTimestepComplete());
+        if ( cplScheme.isCouplingOngoing() ) {
+          // No receive takes place for the participant that has started the
+          // coupled simulation, in the last advance call.
+          Eigen::VectorXd value = dataValues1.segment(vertex.getID()*3, 3);
+          BOOST_TEST(testing::equals(value, valueData1));
+        }
+        BOOST_TEST(cplScheme.hasDataBeenExchanged());
+        // Increment data values, to test if send/receive operations are also
+        // correct in following timesteps.
+        valueData0 += 1.0;
+        valueData1 += Eigen::VectorXd::Constant(3, 1.0);
+      }
+      else {
+        BOOST_TEST(not cplScheme.isCouplingTimestepComplete());
+      }
+    }
+    cplScheme.finalize ();
+    BOOST_TEST(testing::equals(computedTime, 1.0));
+    BOOST_TEST(computedTimesteps == 20);
+    BOOST_TEST(not cplScheme.isActionRequired("constants::actionWriteIterationCheckpoint()"));
+    BOOST_TEST(not cplScheme.isActionRequired("constants::actionReadIterationCheckpoint()"));
+    BOOST_TEST(cplScheme.isCouplingTimestepComplete());
+    BOOST_TEST(not cplScheme.isCouplingOngoing());
+    BOOST_TEST(cplScheme.getNextTimestepMaxLength() > 0.0);
+  }
+  else if(participantName == nameParticipant1) {
+    // Start coupling
+    cplScheme.initialize ( 0.0, 1 );
+    // Validate current coupling status
+    BOOST_TEST(cplScheme.hasDataBeenExchanged());
+    BOOST_TEST(testing::equals(dataValues0(vertex.getID()), valueData0));
+    valueData0 += 1.0;
+    BOOST_TEST(not cplScheme.isActionRequired("constants::actionWriteIterationCheckpoint()"));
+    BOOST_TEST(not cplScheme.isActionRequired("constants::actionReadIterationCheckpoint()"));
+    BOOST_TEST(not cplScheme.isCouplingTimestepComplete());
+    BOOST_TEST(cplScheme.isCouplingOngoing());
+    while ( cplScheme.isCouplingOngoing() ) {
+      dataValues1.segment(vertex.getID()*3, 3) = valueData1;
+      computedTime += cplScheme.getNextTimestepMaxLength ();
+      computedTimesteps ++;
+      cplScheme.addComputedTime ( cplScheme.getNextTimestepMaxLength() );
+      cplScheme.advance();
+      BOOST_TEST(testing::equals(computedTime, cplScheme.getTime()));
+      BOOST_TEST(computedTimesteps == cplScheme.getTimesteps()-1);
+      BOOST_TEST(not cplScheme.isActionRequired("constants::actionWriteIterationCheckpoint()"));
+      BOOST_TEST(not cplScheme.isActionRequired("constants::actionReadIterationCheckpoint()"));
+      BOOST_TEST(cplScheme.isCouplingTimestepComplete());
+      if ( cplScheme.isCouplingOngoing() ) {
+        // The participant not starting the coupled simulation does neither
+        // receive nor send data in the last call to advance
+        BOOST_TEST(cplScheme.hasDataBeenExchanged());
+        BOOST_TEST(testing::equals(dataValues0(vertex.getID()), valueData0));
+        BOOST_TEST(cplScheme.hasDataBeenExchanged());
+      }
+      valueData0 += 1.0;
+      valueData1 += Eigen::VectorXd::Constant(3, 1.0);
+    }
+    cplScheme.finalize ();
+    BOOST_TEST(testing::equals(computedTime, 1.0));
+    BOOST_TEST(computedTimesteps == 10);
+    BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
+    BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
+    BOOST_TEST(cplScheme.isCouplingTimestepComplete());
+    BOOST_TEST(not cplScheme.isCouplingOngoing());
+    BOOST_TEST(cplScheme.getNextTimestepMaxLength() > 0.0);
+  }
+}
 
 struct ExplicitCouplingSchemeFixture  /// @todo fixtures in cplscheme/tests are a candidate for refactoring, lots of copy paste code.
 {
@@ -28,226 +249,6 @@ struct ExplicitCouplingSchemeFixture  /// @todo fixtures in cplscheme/tests are 
 
   ExplicitCouplingSchemeFixture(){
     _pathToTests = testing::getPathToSources() + "/cplscheme/tests/";
-  }
-
-  void runSimpleExplicitCoupling
-  (
-      CouplingScheme&                cplScheme,
-      const std::string&             participantName,
-      const mesh::MeshConfiguration& meshConfig )
-  {
-    BOOST_TEST(meshConfig.meshes().size() == 1);
-    mesh::PtrMesh mesh = meshConfig.meshes()[0];
-    BOOST_TEST(mesh->data().size() == 2);
-    auto& dataValues0 = mesh->data()[0]->values();
-    auto& dataValues1 = mesh->data()[1]->values();
-    BOOST_TEST(mesh->vertices().size() > 0);
-    mesh::Vertex& vertex = mesh->vertices()[0];
-    double valueData0 = 1.0;
-    Eigen::VectorXd valueData1 = Eigen::VectorXd::Constant(3, 1.0 );
-
-    double computedTime = 0.0;
-    int computedTimesteps = 0;
-
-    if ( participantName == std::string("participant0") ) {
-      cplScheme.initialize ( 0.0, 1 );
-      BOOST_TEST(not cplScheme.hasDataBeenExchanged());
-      BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
-      BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
-      BOOST_TEST(not cplScheme.isCouplingTimestepComplete());
-      BOOST_TEST(cplScheme.isCouplingOngoing());
-      while ( cplScheme.isCouplingOngoing() ) {
-        dataValues0(vertex.getID()) = valueData0;
-        computedTime += cplScheme.getNextTimestepMaxLength();
-        computedTimesteps ++;
-        cplScheme.addComputedTime ( cplScheme.getNextTimestepMaxLength() );
-        cplScheme.advance();
-        BOOST_TEST(cplScheme.isCouplingTimestepComplete());
-        BOOST_TEST(testing::equals(computedTime, cplScheme.getTime()));
-        BOOST_TEST(computedTimesteps == cplScheme.getTimesteps()-1);
-        BOOST_TEST(not cplScheme.isActionRequired("WriteIterationCheckpoint"));
-        BOOST_TEST(not cplScheme.isActionRequired("ReadIterationCheckpoint"));
-        BOOST_TEST(cplScheme.isCouplingTimestepComplete());
-        if ( cplScheme.isCouplingOngoing() ) {
-          // No receive takes place for the participant that has started the
-          // coupled simulation, in the last advance call
-          Eigen::VectorXd value = dataValues1.segment(vertex.getID() * 3, 3);
-          BOOST_TEST(testing::equals(value, valueData1));
-        }
-        BOOST_TEST(cplScheme.hasDataBeenExchanged());
-        // Increment data values, to test if send/receive operations are also
-        // correct in following timesteps.
-        valueData0 += 1.0;
-        valueData1 += Eigen::VectorXd::Constant(3, 1.0 );
-      }
-      cplScheme.finalize();
-      // Validate results
-      BOOST_TEST(testing::equals(computedTime, 1.0));
-      BOOST_TEST(computedTimesteps == 10);
-      BOOST_TEST(not cplScheme.isActionRequired("constants::actionWriteIterationCheckpoint()"));
-      BOOST_TEST(not cplScheme.isActionRequired("constants::actionReadIterationCheckpoint()"));
-      BOOST_TEST(cplScheme.isCouplingTimestepComplete());
-      BOOST_TEST(not cplScheme.isCouplingOngoing());
-      BOOST_TEST(cplScheme.getNextTimestepMaxLength() > 0.0);
-    }
-    else if ( participantName == std::string("participant1") ) {
-      cplScheme.initialize ( 0.0, 1 );
-      BOOST_TEST(cplScheme.hasDataBeenExchanged());
-      double value = dataValues0(vertex.getID());
-      BOOST_TEST(testing::equals(value, valueData0));
-      valueData0 += 1.0;
-      BOOST_TEST(not cplScheme.isActionRequired("constants::actionWriteIterationCheckpoint()"));
-      BOOST_TEST(not cplScheme.isActionRequired("constants::actionReadIterationCheckpoint()"));
-      BOOST_TEST(not cplScheme.isCouplingTimestepComplete());
-      BOOST_TEST(cplScheme.isCouplingOngoing());
-      while ( cplScheme.isCouplingOngoing() ) {
-        dataValues1.segment(vertex.getID()*3, 3) = valueData1;
-        computedTime += cplScheme.getNextTimestepMaxLength();
-        computedTimesteps ++;
-        cplScheme.addComputedTime ( cplScheme.getNextTimestepMaxLength() );
-        cplScheme.advance();
-        BOOST_TEST(testing::equals(computedTime, cplScheme.getTime()));
-        BOOST_TEST(computedTimesteps == cplScheme.getTimesteps()-1);
-        BOOST_TEST(not cplScheme.isActionRequired("constants::actionWriteIterationCheckpoint()"));
-        BOOST_TEST(not cplScheme.isActionRequired("constants::actionReadIterationCheckpoint()"));
-        BOOST_TEST(cplScheme.isCouplingTimestepComplete());
-        if ( cplScheme.isCouplingOngoing() ) {
-          // The participant not starting the coupled simulation does neither
-          // receive nor send data in the last call to advance
-          BOOST_TEST(cplScheme.hasDataBeenExchanged());
-          double value = dataValues0[vertex.getID()];
-          BOOST_TEST(testing::equals(value, valueData0));
-        }
-        valueData0 += 1.0;
-        valueData1 += Eigen::VectorXd::Constant(3, 1.0 );
-      }
-      cplScheme.finalize ();
-      // Validate results
-      BOOST_TEST(testing::equals(computedTime, 1.0));
-      BOOST_TEST(computedTimesteps == 10);
-      BOOST_TEST(not cplScheme.isActionRequired("constants::actionWriteIterationCheckpoint()"));
-      BOOST_TEST(not cplScheme.isActionRequired("constants::actionReadIterationCheckpoint()"));
-      BOOST_TEST(cplScheme.isCouplingTimestepComplete());
-      BOOST_TEST(not cplScheme.isCouplingOngoing());
-      BOOST_TEST(cplScheme.getNextTimestepMaxLength() > 0.0);
-    }
-  }
-
-  void runExplicitCouplingWithSubcycling
-  (
-      CouplingScheme&                cplScheme,
-      const std::string&             participantName,
-      const mesh::MeshConfiguration& meshConfig )
-  {
-    BOOST_TEST(meshConfig.meshes().size() == 1);
-    mesh::PtrMesh mesh = meshConfig.meshes()[0];
-    BOOST_TEST(mesh->data().size() == 2);
-    BOOST_TEST(mesh->vertices().size() > 0);
-    mesh::Vertex& vertex = mesh->vertices()[0];
-    double valueData0 = 1.0;
-    Eigen::VectorXd valueData1 = Eigen::VectorXd::Constant(3, 1.0);
-    auto& dataValues0 = mesh->data()[0]->values();
-    auto& dataValues1 = mesh->data()[1]->values();
-
-    double computedTime = 0.0;
-    int computedTimesteps = 0;
-    std::string nameParticipant0 ( "participant0" );
-    std::string nameParticipant1 ( "participant1" );
-    assertion ( (participantName == nameParticipant0) ||
-        (participantName == nameParticipant1) );
-    if ( participantName == nameParticipant0 ) {
-      cplScheme.initialize ( 0.0, 1 );
-      double dtDesired = cplScheme.getNextTimestepMaxLength() / 2.0;
-      double dtUsed = dtDesired;
-      BOOST_TEST(not cplScheme.hasDataBeenExchanged());
-      BOOST_TEST(not cplScheme.isActionRequired("constants::actionWriteIterationCheckpoint()"));
-      BOOST_TEST(not cplScheme.isActionRequired("constants::actionReadIterationCheckpoint()"));
-      BOOST_TEST(not cplScheme.isCouplingTimestepComplete());
-      BOOST_TEST(cplScheme.isCouplingOngoing());
-      while ( cplScheme.isCouplingOngoing() ) {
-        dataValues0(vertex.getID()) = valueData0;
-        computedTime += dtUsed;
-        computedTimesteps ++;
-        cplScheme.addComputedTime(dtUsed);
-        cplScheme.advance();
-        // If the dt from preCICE is larger than the desired one, do subcycling,
-        // else, use the dt from preCICE
-        dtUsed = cplScheme.getNextTimestepMaxLength() > dtDesired
-            ? dtDesired
-                : cplScheme.getNextTimestepMaxLength();
-        BOOST_TEST(testing::equals(computedTime, cplScheme.getTime()));
-        BOOST_TEST(not cplScheme.isActionRequired("constants::actionWriteIterationCheckpoint()"));
-        BOOST_TEST(not cplScheme.isActionRequired("constants::actionReadIterationCheckpoint()"));
-        if ( computedTimesteps % 2 == 0 ) {
-          // Data exchange takes only place at every second local timestep,
-          // since a subcycling of 2 is used.
-          BOOST_TEST(cplScheme.isCouplingTimestepComplete());
-          if ( cplScheme.isCouplingOngoing() ) {
-            // No receive takes place for the participant that has started the
-            // coupled simulation, in the last advance call.
-            Eigen::VectorXd value = dataValues1.segment(vertex.getID()*3, 3);
-            BOOST_TEST(testing::equals(value, valueData1));
-          }
-          BOOST_TEST(cplScheme.hasDataBeenExchanged());
-          // Increment data values, to test if send/receive operations are also
-          // correct in following timesteps.
-          valueData0 += 1.0;
-          valueData1 += Eigen::VectorXd::Constant(3, 1.0);
-        }
-        else {
-          BOOST_TEST(not cplScheme.isCouplingTimestepComplete());
-        }
-      }
-      cplScheme.finalize ();
-      BOOST_TEST(testing::equals(computedTime, 1.0));
-      BOOST_TEST(computedTimesteps == 20);
-      BOOST_TEST(not cplScheme.isActionRequired("constants::actionWriteIterationCheckpoint()"));
-      BOOST_TEST(not cplScheme.isActionRequired("constants::actionReadIterationCheckpoint()"));
-      BOOST_TEST(cplScheme.isCouplingTimestepComplete());
-      BOOST_TEST(not cplScheme.isCouplingOngoing());
-      BOOST_TEST(cplScheme.getNextTimestepMaxLength() > 0.0);
-    }
-    else if(participantName == nameParticipant1) {
-      // Start coupling
-      cplScheme.initialize ( 0.0, 1 );
-      // Validate current coupling status
-      BOOST_TEST(cplScheme.hasDataBeenExchanged());
-      BOOST_TEST(testing::equals(dataValues0(vertex.getID()), valueData0));
-      valueData0 += 1.0;
-      BOOST_TEST(not cplScheme.isActionRequired("constants::actionWriteIterationCheckpoint()"));
-      BOOST_TEST(not cplScheme.isActionRequired("constants::actionReadIterationCheckpoint()"));
-      BOOST_TEST(not cplScheme.isCouplingTimestepComplete());
-      BOOST_TEST(cplScheme.isCouplingOngoing());
-      while ( cplScheme.isCouplingOngoing() ) {
-        dataValues1.segment(vertex.getID()*3, 3) = valueData1;
-        computedTime += cplScheme.getNextTimestepMaxLength ();
-        computedTimesteps ++;
-        cplScheme.addComputedTime ( cplScheme.getNextTimestepMaxLength() );
-        cplScheme.advance();
-        BOOST_TEST(testing::equals(computedTime, cplScheme.getTime()));
-        BOOST_TEST(computedTimesteps == cplScheme.getTimesteps()-1);
-        BOOST_TEST(not cplScheme.isActionRequired("constants::actionWriteIterationCheckpoint()"));
-        BOOST_TEST(not cplScheme.isActionRequired("constants::actionReadIterationCheckpoint()"));
-        BOOST_TEST(cplScheme.isCouplingTimestepComplete());
-        if ( cplScheme.isCouplingOngoing() ) {
-          // The participant not starting the coupled simulation does neither
-          // receive nor send data in the last call to advance
-          BOOST_TEST(cplScheme.hasDataBeenExchanged());
-          BOOST_TEST(testing::equals(dataValues0(vertex.getID()), valueData0));
-          BOOST_TEST(cplScheme.hasDataBeenExchanged());
-        }
-        valueData0 += 1.0;
-        valueData1 += Eigen::VectorXd::Constant(3, 1.0);
-      }
-      cplScheme.finalize ();
-      BOOST_TEST(testing::equals(computedTime, 1.0));
-      BOOST_TEST(computedTimesteps == 10);
-      BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
-      BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
-      BOOST_TEST(cplScheme.isCouplingTimestepComplete());
-      BOOST_TEST(not cplScheme.isCouplingOngoing());
-      BOOST_TEST(cplScheme.getNextTimestepMaxLength() > 0.0);
-    }
   }
 
   void connect( /// @todo this function occurs in multiple tests. Move this to a common fixture? see https://github.com/precice/precice/issues/90
@@ -270,8 +271,6 @@ struct ExplicitCouplingSchemeFixture  /// @todo fixtures in cplscheme/tests are 
 };
 
 BOOST_FIXTURE_TEST_SUITE(ExplicitCouplingSchemeTests, ExplicitCouplingSchemeFixture)
-
-#ifndef PRECICE_NO_MPI
 
 /// Test that runs on 2 processors.
 BOOST_AUTO_TEST_CASE(testSimpleExplicitCoupling, * testing::MinRanks(2) * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
