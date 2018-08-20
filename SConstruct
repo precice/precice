@@ -184,8 +184,7 @@ else:
     buildpath += "-nopetsc"
 
 # ====== Eigen ======
-if prefix is not "/usr":
-    env.Append(CPPPATH = join(prefix, 'include/eigen3'))
+env.Append(CPPPATH = join(prefix, 'include/eigen3'))
 
 checkAdd(header = "Eigen/Dense", usage = "Eigen")
 if env["build"] == "debug":
