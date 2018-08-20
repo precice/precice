@@ -8,36 +8,31 @@ Download and install Cython from http://cython.org/#download or install it using
 # Building
 
 1. Open terminal in this folder.
-2. Define the environment variable `PRECICE_ROOT` as the path to preCICE on your system.
-3. Define the environment variable `PRECICE_MPI_IMPLEMENTATION` to either `openmpi` or `mpich`, depending on your MPI implementation. You can determine your implementation by typing `mpic++ -v` or `mpic++ --showme::version`.
-4. Execute the following command:
+2. (optional )Define the environment variable `PRECICE_MPI_IMPLEMENTATION` to either `openmpi` or `mpich`, depending on your MPI implementation. You can determine your implementation by typing `mpic++ -v` or `mpic++ --showme::version`. If you do not specify `PRECICE_MPI_IMPLEMENTATION`, we will assume you are using `openmpi`, if compilation breaks, try to define `PRECICE_MPI_IMPLEMENTATION` as `mpich`.
+3. Execute the following command:
 
 ```
-$ python setup.py build_ext --inplace
+$ python setup.py build
 ```
-(works with python 2 and 3)
+This creates a folder `./build` with the binaries.
+4. Run 
+```
+$ python setup.py install
+```
+to install the module on your system. You might need `sudo`, depending on the how you have installed python. You can use the option `--prefix=your/default/path` to install the module at an arbitrary path of your choice (for example, if you cannot or don't want to use `sudo`).
 
-
-This generates `PySolverInterface.so` and `PySolverInterface.cpp`. If you use preCICE as a static library, you have to manually add all third-party libraries (boost, python, petsc) that you use to setup.py. It is recommended to use preCICE as a shared library here.
+It is recommended to use preCICE as a shared library here.
 
 # Using
 
-1. Add the path `$PRECICE_ROOT/src/precice/bindings/python` to python's import sources. This can be done by including the following lines in your python code:
-
-```
-precice_root = os.getenv('PRECICE_ROOT')
-precice_python_adapter_root = precice_root + "/src/precice/bindings/python"
-sys.path.insert(0, precice_python_adapter_root)
-```
-
-2. Import `PySolverInterface` into your code:
+1. Import `PySolverInterface` into your code:
 
 ```
 import PySolverInterface
 from PySolverInterface import *
 ```
 
-3. If you use preCICE with MPI, you also have to add
+2. If you use preCICE with MPI, you also have to add
    
 ```   
 from mpi4py import MPI
