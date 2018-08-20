@@ -6,8 +6,8 @@ from distutils.core import setup
 from distutils.extension import Extension
 from Cython.Distutils import build_ext
 
-precice_root = "../../../../../precice"
-python_bindings_path = "."
+python_bindings_path = os.path.dirname(os.path.abspath(__file__))
+precice_root = os.path.join(python_bindings_path,"../../../../../precice")
 
 # name of Interfacing API
 appname = "PySolverInterface"
