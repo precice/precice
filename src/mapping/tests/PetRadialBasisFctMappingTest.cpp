@@ -1,6 +1,7 @@
 #ifndef PRECICE_NO_PETSC
 
 #include <Eigen/Core>
+#include "versions.hpp"
 #include "mapping/PetRadialBasisFctMapping.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Data.hpp"

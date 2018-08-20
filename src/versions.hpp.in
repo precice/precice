@@ -1,0 +1,6 @@
+#pragma once
+
+#define PRECICE_VERSION "@preCICE_VERSION@"
+
+#define PETSC_MAJOR @PETSC_MAJOR@
+#define PETSC_MINOR @PETSC_MINOR@
