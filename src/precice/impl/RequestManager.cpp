@@ -7,8 +7,6 @@
 namespace precice {
 namespace impl {
 
-logging::Logger RequestManager::_log("impl::RequestManager");
-
 RequestManager:: RequestManager
 (
   SolverInterfaceImpl&  solverInterfaceImpl,
@@ -41,7 +39,7 @@ void RequestManager:: handleRequests()
   bool singleRequest = false;
   while(true){
     if((std::find(clientRanks.begin(), clientRanks.end(), rankSender) == clientRanks.end()) &&
-                       requests[rankSender]->test()){
+       requests[rankSender]->test()){
       requestID = requestIDs[rankSender];
       CHECK(requestID != -1, "Receiving of request ID failed");
       DEBUG("Received request ID " << requestID << " from rank " << rankSender);
@@ -903,8 +901,7 @@ void RequestManager:: handleRequestMapWriteDataFrom
     int meshID;
     _com->receive(meshID, *iter);
     CHECK(meshID == oldMeshID,
-          "Ambiguous mesh ID when calling map written data from "
-          << "several processes!");
+          "Ambiguous mesh ID when calling map written data from several processes!");
     oldMeshID = meshID;
   }
   _interface.mapWriteDataFrom(oldMeshID);

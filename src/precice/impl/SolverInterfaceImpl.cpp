@@ -50,8 +50,6 @@ bool testMode = false;
 
 namespace impl {
 
-logging::Logger SolverInterfaceImpl::_log ("impl::SolverInterfaceImpl");
-
 SolverInterfaceImpl:: SolverInterfaceImpl
 (
   const std::string& participantName,
@@ -62,17 +60,7 @@ SolverInterfaceImpl:: SolverInterfaceImpl
   _accessorName(participantName),
   _accessorProcessRank(accessorProcessRank),
   _accessorCommunicatorSize(accessorCommunicatorSize),
-  _accessor(),
-  _dimensions(0),
-  _serverMode(serverMode),
-  _clientMode(false),
-  _meshIDs(),
-  _dataIDs(),
-  _exportVTKNeighbors(),
-  _m2ns(),
-  _participants(),
-  _numberAdvanceCalls(0),
-  _requestManager(nullptr)
+  _serverMode(serverMode)
 {
   CHECK(_accessorProcessRank >= 0, "Accessor process index has to be >= 0!");
   CHECK(_accessorCommunicatorSize >= 0, "Accessor process size has to be >= 0!");
@@ -88,17 +76,6 @@ SolverInterfaceImpl:: SolverInterfaceImpl
   signal(SIGABRT, precice::utils::terminationSignalHandler);
   signal(SIGTERM, precice::utils::terminationSignalHandler);
   // signal(SIGINT,  precice::utils::terminationSignalHandler);
-
-  // precice::logging::setupLogging();
-
-}
-
-SolverInterfaceImpl:: ~SolverInterfaceImpl()
-{
-  TRACE();
-  if (_requestManager != nullptr){
-    delete _requestManager;
-  }
 }
 
 void SolverInterfaceImpl:: configure
@@ -158,7 +135,7 @@ void SolverInterfaceImpl:: configure
   if (_serverMode || _clientMode){
     com::PtrCommunication com = _accessor->getClientServerCommunication();
     assertion(com.get() != nullptr);
-    _requestManager = new RequestManager(*this, com, _couplingScheme);
+    _requestManager = std::make_shared<RequestManager>(*this, com, _couplingScheme);
   }
 
   // Add meshIDs and data IDs

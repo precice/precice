@@ -15,8 +15,6 @@
 namespace precice {
 namespace impl {
 
-logging::Logger WatchPoint:: _log("impl::WatchPoint" );
-
 WatchPoint:: WatchPoint
 (
   const Eigen::VectorXd&  pointCoords,
@@ -25,12 +23,7 @@ WatchPoint:: WatchPoint
 :
   _point ( pointCoords ),
   _mesh ( meshToWatch ),
-  _txtWriter ( exportFilename ),
-  _shortestDistance ( std::numeric_limits<double>::max() ),
-  _weights (),
-  _vertices (),
-  _dataToExport (),
-  _isClosest(true)
+  _txtWriter ( exportFilename )
 {
   assertion ( _mesh.use_count() > 0 );
   assertion ( _point.size() == _mesh->getDimensions(), _point.size(),
