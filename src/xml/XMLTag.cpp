@@ -7,8 +7,6 @@ namespace precice
 namespace xml
 {
 
-logging::Logger precice::xml::XMLTag::_log("xml::XMLTag");
-
 XMLTag::XMLTag(
     Listener &         listener,
     const std::string &tagName,
@@ -17,18 +15,7 @@ XMLTag::XMLTag(
     : _listener(listener),
       _name(tagName),
       _namespace(xmlNamespace),
-      _fullName(),
-      _configured(false),
-      _occurrence(occurrence),
-      _namespaces(),
-      _subtags(),
-      _configuredNamespaces(),
-      _attributes(),
-      _doubleAttributes(),
-      _intAttributes(),
-      _stringAttributes(),
-      _booleanAttributes(),
-      _eigenVectorXdAttributes()
+      _occurrence(occurrence)
 {
   if (not _namespace.empty()) {
     _fullName = _namespace + ":" + _name;

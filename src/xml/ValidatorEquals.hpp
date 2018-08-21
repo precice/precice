@@ -51,7 +51,7 @@ public:
   }
 
 private:
-  static logging::Logger _log;
+  logging::Logger _log{"xml::ValidatorEquals"};
 
   ValidatorEquals(const ValidatorEquals<VALUE_T> &rhs);
 
@@ -60,7 +60,5 @@ private:
   VALUE_T _valueToEqual;
 };
 
-template <typename VALUE_T>
-logging::Logger ValidatorEquals<VALUE_T>::_log = logging::Logger("xml::ValidatorEquals");
 }
 } // namespace precice, xml
