@@ -8,7 +8,6 @@
 #include "mesh/config/DataConfiguration.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
 #include "mesh/Mesh.hpp"
-#include "mesh/Group.hpp"
 #include "mesh/PropertyContainer.hpp"
 #include "mesh/Vertex.hpp"
 #include "mesh/Edge.hpp"
@@ -16,11 +15,8 @@
 #include "mesh/Merge.hpp"
 #include "io/ExportContext.hpp"
 #include "io/Export.hpp"
-#include "com/MPIPortsCommunication.hpp"
-#include "com/MPIDirectCommunication.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
 #include "m2n/M2N.hpp"
-#include "m2n/PointToPointCommunication.hpp"
 #include "cplscheme/CouplingScheme.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
 #include "utils/EventTimings.hpp"
@@ -174,10 +170,8 @@ double SolverInterfaceImpl:: initialize()
   TRACE();
   Event e("initialize", not precice::testMode);
 
-  m2n::PointToPointCommunication::ScopedSetEventNamePrefix ssenp(
-      "initialize"
-      "/");
-
+  utils::ScopedEventPrefix sep("initialize/");
+  
   if (_clientMode){
     DEBUG("Request perform initializations");
     _requestManager->requestInitialize();
@@ -262,9 +256,7 @@ void SolverInterfaceImpl:: initializeData ()
   TRACE();
   Event e("initializeData", not precice::testMode);
 
-  m2n::PointToPointCommunication::ScopedSetEventNamePrefix ssenp(
-      "initializeData"
-      "/");
+  utils::ScopedEventPrefix sep("initializeData/");
 
   CHECK(_couplingScheme->isInitialized(),
         "initialize() has to be called before initializeData()");
@@ -304,9 +296,7 @@ double SolverInterfaceImpl:: advance
 
   Event e("advance", not precice::testMode);
 
-  m2n::PointToPointCommunication::ScopedSetEventNamePrefix ssenp(
-      "advance"
-      "/");
+  utils::ScopedEventPrefix sep("advance/");
 
   CHECK(_couplingScheme->isInitialized(), "initialize() has to be called before advance()");
   _numberAdvanceCalls++;

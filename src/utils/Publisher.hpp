@@ -19,14 +19,6 @@ namespace utils
 class Publisher
 {
 public:
-  struct ScopedSetEventNamePrefix {
-    explicit ScopedSetEventNamePrefix(std::string const &prefix);
-
-    ~ScopedSetEventNamePrefix();
-
-  private:
-    std::string _prefix;
-  };
 
   struct ScopedPushDirectory {
     explicit ScopedPushDirectory(std::string const &dp);
@@ -62,10 +54,6 @@ public:
 
   static std::string const &prefixDirectoryPath();
 
-  static void setEventNamePrefix(std::string const &prefix);
-
-  static std::string const &eventNamePrefix();
-
 public:
   explicit Publisher(std::string const &fp);
 
@@ -81,8 +69,6 @@ private:
   static std::string _pdp;
 
   static std::stack<std::string> _dps;
-
-  static std::string _prefix;
 
 private:
   std::string _fp;

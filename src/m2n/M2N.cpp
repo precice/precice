@@ -63,9 +63,7 @@ void M2N::requestMasterConnection(
   if (not utils::MasterSlave::_slaveMode) {
     assertion(_masterCom.use_count() > 0);
 
-    Publisher::ScopedSetEventNamePrefix ssenp(
-        "M2N::requestMasterConnection"
-        "/");
+    utils::ScopedEventPrefix sep("M2N::requestMasterConnection/");
 
     _masterCom->requestConnection(nameAcceptor, nameRequester, 0, 1);
     _isMasterConnected = _masterCom->isConnected();
