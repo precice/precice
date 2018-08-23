@@ -8,18 +8,22 @@ Download and install Cython from http://cython.org/#download or install it using
 # Building
 
 1. Open terminal in this folder.
-2. (optional )Define the environment variable `PRECICE_MPI_IMPLEMENTATION` to either `openmpi` or `mpich`, depending on your MPI implementation. You can determine your implementation by typing `mpic++ -v` or `mpic++ --showme::version`. If you do not specify `PRECICE_MPI_IMPLEMENTATION`, we will assume you are using `openmpi`, if compilation breaks, try to define `PRECICE_MPI_IMPLEMENTATION` as `mpich`.
-3. Execute the following command:
+2. Execute the following command:
 
 ```
 $ python setup.py build
 ```
-This creates a folder `./build` with the binaries.
-4. Run 
+This creates a folder `build` with the binaries.
+3. Run 
 ```
 $ python setup.py install
 ```
 to install the module on your system. You might need `sudo`, depending on the how you have installed python. You can use the option `--prefix=your/default/path` to install the module at an arbitrary path of your choice (for example, if you cannot or don't want to use `sudo`).
+4. Clean
+```
+$ python setup.py clean --all
+```
+again: depending on you system, you might need `sudo`.
 
 It is recommended to use preCICE as a shared library here.
 
