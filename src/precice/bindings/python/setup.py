@@ -37,11 +37,11 @@ PRECICE_MPI_IMPLEMENTATION = check_mpi_implementation()
 
 # determine which flags to use with mpic++
 if PRECICE_MPI_IMPLEMENTATION is MpiImplementations.OPENMPI:
-    mpi_compile_args = subprocess.check_output(["mpic++","-showme:compile"]).strip().split(' ')
-    mpi_link_args = subprocess.check_output(["mpic++","-showme:link"]).strip().split(' ')
+    mpi_compile_args = subprocess.check_output(["mpic++","-showme:compile"]).decode().strip().split(' ')
+    mpi_link_args = subprocess.check_output(["mpic++","-showme:link"]).decode().strip().split(' ')
 elif PRECICE_MPI_IMPLEMENTATION is MpiImplementations.MPICH:
-    mpi_compile_args = subprocess.check_output(["mpic++","-compile-info"]).strip().split(' ')[1::]
-    mpi_link_args = subprocess.check_output(["mpic++","-link-info"]).strip().split(' ')[1::]
+    mpi_compile_args = subprocess.check_output(["mpic++","-compile-info"]).decode().strip().split(' ')[1::]
+    mpi_link_args = subprocess.check_output(["mpic++","-link-info"]).decode().strip().split(' ')[1::]
 else:  # if PRECICE_MPI_IMPLEMENTATION is not mpich or openmpi quit.
     raise Exception("unknown/no mpi++. Could not build PySolverInterface.")
 
