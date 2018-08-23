@@ -2,6 +2,9 @@
 
 All notable changes to this project will be documented in this file. For future plans, see our [Roadmap](https://github.com/precice/precice/wiki/Roadmap).
 
+## develop
+- update of build procedure for python bindings (see `precice/src/bindings/python/README.md` for instructions). Note: you do not have to add `PySolverInterface.so` to `PYTHONPATH` manually anymore, if you want to use it in your adapter. Python should be able to find it automatically.
+
 ## 1.2.0
 - Make `polynomial=separate` the default setting for PetRBF.
 - Removed ExportVRML functionality
