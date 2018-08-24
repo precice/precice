@@ -25,7 +25,10 @@ $ python setup.py clean --all
 ```
 again: depending on you system, you might need `sudo`.
 
-It is recommended to use preCICE as a shared library here.
+It is recommended to use preCICE as a shared library here. `mpic++` is used as default compiler, if you want to use a different compiler, this can be done with the option `--mpicompiler=<yourcompiler>`. Example:
+```
+$ python setup.py build --mpicompiler=mpicc
+```
 
 # Using
 
