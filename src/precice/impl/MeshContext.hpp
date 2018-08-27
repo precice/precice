@@ -15,54 +15,44 @@ namespace impl {
 /// Stores a mesh and related objects and data.
 struct MeshContext
 {
-
-   // @brief Mesh holding the geometry data structure.
+  MeshContext ( int dimensions )
+   :
+    localOffset ( Eigen::VectorXd::Zero(dimensions) )
+  {}
+  
+   /// Mesh holding the geometry data structure.
    mesh::PtrMesh mesh;
 
-  // @brief Data IDs of properties the geometry does possess.
+   /// Data IDs of properties the geometry does possess.
    std::vector<int> associatedData;
 
-   // @brief Determines which mesh type has to be provided by the accessor.
-   mapping::Mapping::MeshRequirement meshRequirement;
+   /// Determines which mesh type has to be provided by the accessor.
+   mapping::Mapping::MeshRequirement meshRequirement = mapping::Mapping::UNDEFINED;
 
-   // @brief Name of participant that creats the mesh.
+   /// Name of participant that creats the mesh.
    std::string receiveMeshFrom;
 
-   // @brief bounding box to speed up decomposition of received mesh is increased by this safety factor
-   double safetyFactor;
+   /// bounding box to speed up decomposition of received mesh is increased by this safety factor
+   double safetyFactor = -1;
 
-   // @brief True, if accessor does create the mesh.
-   bool provideMesh;
+   /// True, if accessor does create the mesh.
+   bool provideMesh = false;
 
    /// type of geometric filter
-   partition::ReceivedPartition::GeometricFilter geoFilter;
+   partition::ReceivedPartition::GeometricFilter geoFilter = partition::ReceivedPartition::GeometricFilter::UNDEFINED;
 
    /// Offset only applied to meshes local to the accessor.
    Eigen::VectorXd localOffset;
 
-   // @brief Partition creating the parallel decomposition of the mesh
+   /// Partition creating the parallel decomposition of the mesh
    partition::PtrPartition partition;
 
-   // @brief Mapping used when mapping data from the mesh. Can be empty.
+   /// Mapping used when mapping data from the mesh. Can be empty.
    MappingContext fromMappingContext;
 
-   // @brief Mapping used when mapping data to the mesh. Can be empty.
+   /// Mapping used when mapping data to the mesh. Can be empty.
    MappingContext toMappingContext;
-
-   MeshContext ( int dimensions )
-   :
-     mesh (),
-     associatedData (),
-     meshRequirement ( mapping::Mapping::UNDEFINED ),
-     receiveMeshFrom ( "" ),
-     safetyFactor(-1.0),
-     provideMesh ( false ),
-     geoFilter (partition::ReceivedPartition::GeometricFilter::UNDEFINED),
-     localOffset ( Eigen::VectorXd::Zero(dimensions) ),
-     partition (),
-     fromMappingContext(),
-     toMappingContext()
-   {}
+   
 };
 
 }} // namespace precice, impl

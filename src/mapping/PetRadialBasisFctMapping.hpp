@@ -6,6 +6,7 @@
 #include <map>
 #include <numeric>
 
+#include "versions.hpp"
 #include "mesh/RTree.hpp"
 #include "math/math.hpp"
 #include "impl/BasisFunctions.hpp"

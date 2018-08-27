@@ -10,8 +10,6 @@
 namespace precice {
 namespace impl {
 
-logging::Logger Participant:: _log("impl::Participant" );
-
 int Participant:: _participantsSize = 0;
 
 void Participant:: resetParticipantCount()
@@ -26,20 +24,10 @@ Participant:: Participant
 :
   _name ( name ),
   _id ( _participantsSize ),
-  _watchPoints (),
-  _exportContexts(),
-  _actions (),
   _meshContexts ( meshConfig->meshes().size(), nullptr ),
-  _readMappingContexts(),
-  _writeMappingContexts(),
-  _usedMeshContexts (),
-  _dataContexts ( meshConfig->getDataConfiguration()->data().size()*meshConfig->meshes().size(), nullptr ),
-  _writeDataContexts (),
-  _readDataContexts (),
-  _clientServerCommunication (),
-  _useMaster(false)
+  _dataContexts ( meshConfig->getDataConfiguration()->data().size()*meshConfig->meshes().size(), nullptr )
 {
-  _participantsSize ++;
+  _participantsSize++;
 }
 
 Participant:: ~Participant()

@@ -2,7 +2,6 @@
 
 #include "MappingContext.hpp"
 #include "mesh/SharedPointer.hpp"
-#include "mapping/SharedPointer.hpp"
 
 namespace precice {
 namespace impl {
@@ -13,7 +12,7 @@ namespace impl {
  */
 struct DataContext
 {
-  bool used;
+  bool used = false;
 
   mesh::PtrData fromData;
 
@@ -22,14 +21,6 @@ struct DataContext
   mesh::PtrMesh mesh;
 
   MappingContext mappingContext;
-
-  DataContext():
-    used(false),
-    fromData(),
-    toData(),
-    //mesh(),
-    mappingContext()
-  {}
 };
 
 }} // namespace precice, impl

@@ -33,7 +33,7 @@ struct MPI_EventData
 };
 
 Event::Event(std::string eventName, Clock::duration initialDuration)
-  : name(eventName),
+  : name(EventRegistry::instance().prefix + eventName),
     duration(initialDuration)
 {
   EventRegistry::instance().put(this);
@@ -43,6 +43,9 @@ Event::Event(std::string eventName, bool barrier, bool autostart)
   : name(eventName),
     _barrier(barrier)
 {
+  // Set prefix here: workaround to omit data lock between instance() and Event ctor
+  if (eventName != "_GLOBAL")
+    name = EventRegistry::instance().prefix + eventName;
   if (autostart) {
     start(_barrier);
   }
@@ -275,7 +278,10 @@ void EventRegistry::signal_handler(int signal)
 
 void EventRegistry::put(Event* event)
 {
-  auto data = std::get<0>(events.emplace(event->name, event->name));
+  /// Construct or return EventData object with name as key and name as arg to ctor.
+  auto data = std::get<0>(events.emplace(std::piecewise_construct,
+                                         std::forward_as_tuple(event->name),
+                                         std::forward_as_tuple(event->name)));
   data->second.put(event);
 }
 
