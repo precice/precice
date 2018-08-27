@@ -279,7 +279,9 @@ void EventRegistry::signal_handler(int signal)
 void EventRegistry::put(Event* event)
 {
   /// Construct or return EventData object with name as key and name as arg to ctor.
-  auto data = std::get<0>(events.emplace(event->name, event->name));
+  auto data = std::get<0>(events.emplace(std::piecewise_construct,
+                                         std::forward_as_tuple(event->name),
+                                         std::forward_as_tuple(event->name)));
   data->second.put(event);
 }
 
