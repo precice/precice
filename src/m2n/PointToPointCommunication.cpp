@@ -623,6 +623,9 @@ void PointToPointCommunication::receive(double *itemsToReceive,
                                         mapping.localRemoteRank);
   }
 
+  auto & advanceEvent = utils::EventRegistry::instance().getStoredEvent("advance");
+  advanceEvent.pause();
+
   for (auto &mapping : _mappings) {
     mapping.request->wait();
 
@@ -636,7 +639,7 @@ void PointToPointCommunication::receive(double *itemsToReceive,
       i++;
     }
   }
-
+  advanceEvent.start();
   _buffer.clear();
 }
 
