@@ -1,21 +1,21 @@
 <?xml version="1.0"?>
 
 <configuration>
-   <data:scalar name="data0"/>
-   <data:vector name="data1"/>
-   <data:scalar name="data2"/>
-   <mesh name="mesh">
-      <use-data name="data0"/>
-      <use-data name="data1"/>
-      <use-data name="data2"/>
+   <data:scalar name="Data0"/>
+   <data:vector name="Data1"/>
+   <data:scalar name="Data2"/>
+   <mesh name="Mesh">
+      <use-data name="Data0"/>
+      <use-data name="Data1"/>
+      <use-data name="Data2"/>
    </mesh>
-   <m2n:mpi distribution-type="gather-scatter" from="participant0" to="participant1"/>
+   <m2n:mpi-single distribution-type="gather-scatter" from="Participant0" to="Participant1"/>
    <coupling-scheme:parallel-explicit>  
-      <participants first="participant0" second="participant1"/>
+      <participants first="Participant0" second="Participant1"/>
       <timestep-length value="0.1" method="fixed"/>
       <max-timesteps value="1"/>
-      <exchange data="data0" mesh="mesh" from="participant1" to="participant0"/>
-      <exchange data="data1" mesh="mesh" from="participant1" to="participant0" initialize="on"/>
-      <exchange data="data2" mesh="mesh" from="participant0" to="participant1" initialize="on"/>
+      <exchange data="Data0" mesh="Mesh" from="Participant1" to="Participant0"/>
+      <exchange data="Data1" mesh="Mesh" from="Participant1" to="Participant0" initialize="on"/>
+      <exchange data="Data2" mesh="Mesh" from="Participant0" to="Participant1" initialize="on"/>
    </coupling-scheme:parallel-explicit>
 </configuration>

@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(testMVQNPP)
   std::vector<double> factors;
   factors.resize(2,1.0);
   cplscheme::impl::PtrPreconditioner prec(new cplscheme::impl::ConstantPreconditioner(factors));
-  mesh::PtrMesh dummyMesh ( new mesh::Mesh("dummyMesh", 3, false) );
+  mesh::PtrMesh dummyMesh ( new mesh::Mesh("DummyMesh", 3, false) );
 
 
   cplscheme::impl::MVQNPostProcessing pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE(testVIQNPP)
   std::map<int, double> scalings;
   scalings.insert(std::make_pair(0,1.0));
   scalings.insert(std::make_pair(1,1.0));
-  mesh::PtrMesh dummyMesh ( new mesh::Mesh("dummyMesh", 3, false) );
+  mesh::PtrMesh dummyMesh ( new mesh::Mesh("DummyMesh", 3, false) );
 
   cplscheme::impl::IQNILSPostProcessing pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
       timestepsReused, filter, singularityLimit, dataIDs, prec);
@@ -291,8 +291,8 @@ BOOST_FIXTURE_TEST_CASE(testInitializeData, testing::M2NFixture,
   double maxTime = 1.0;
   int maxTimesteps = 3;
   double timestepLength = 0.1;
-  std::string nameParticipant0("participant0");
-  std::string nameParticipant1("participant1");
+  std::string nameParticipant0("Participant0");
+  std::string nameParticipant1("Participant1");
   std::string nameLocalParticipant("");
   int sendDataIndex = -1;
   int receiveDataIndex = -1;

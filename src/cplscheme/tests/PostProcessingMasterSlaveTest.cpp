@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(testVIQNILSpp, * testing::OnSize(4) * boost::unit_test::fix
   impl::PtrPreconditioner prec(new impl::ConstantPreconditioner(factors));
   std::vector<int> vertexOffsets {4, 8, 8 , 10};
 
-  mesh::PtrMesh dummyMesh(new mesh::Mesh("dummyMesh", 3, false));
+  mesh::PtrMesh dummyMesh(new mesh::Mesh("DummyMesh", 3, false));
   dummyMesh->setVertexOffsets(vertexOffsets);
 
   cplscheme::impl::IQNILSPostProcessing pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
@@ -287,7 +287,7 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp, * testing::OnSize(4) * boost::unit_test::fi
   impl::PtrPreconditioner prec(new impl::ConstantPreconditioner(factors));
   std::vector<int> vertexOffsets {4, 8, 8 , 10};
 
-  mesh::PtrMesh dummyMesh ( new mesh::Mesh("dummyMesh", 3, false) );
+  mesh::PtrMesh dummyMesh ( new mesh::Mesh("DummyMesh", 3, false) );
   dummyMesh->setVertexOffsets(vertexOffsets);
 
   cplscheme::impl::MVQNPostProcessing pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,

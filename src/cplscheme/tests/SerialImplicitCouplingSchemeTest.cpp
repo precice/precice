@@ -46,8 +46,8 @@ void runCoupling(
   Eigen::VectorXd stepsizeData1 = Eigen::VectorXd::Constant(3, 5.0);
   double computedTime = 0.0;
   int computedTimesteps = 0;
-  std::string nameParticipant0("participant0");
-  std::string nameParticipant1("participant1");
+  std::string nameParticipant0("Participant0");
+  std::string nameParticipant1("Participant1");
   assertion ((nameParticipant == nameParticipant0) || (nameParticipant == nameParticipant1));
   int iterationCount = 0;
   std::vector<int>::const_iterator iterValidIterations = validIterations.begin();
@@ -211,8 +211,8 @@ void runCouplingWithSubcycling
   Eigen::Vector3d stepsizeData1 = Eigen::Vector3d::Constant( 5.0);
   double computedTime = 0.0;
   int computedTimesteps = 0;
-  std::string nameParticipant0 ( "participant0");
-  std::string nameParticipant1 ( "participant1");
+  std::string nameParticipant0 ( "Participant0");
+  std::string nameParticipant1 ( "Participant1");
   assertion((nameParticipant == nameParticipant0) || (nameParticipant == nameParticipant1));
   int iterationCount = 0;
   std::vector<int>::const_iterator iterValidIterations =
@@ -527,7 +527,7 @@ BOOST_FIXTURE_TEST_CASE(testAbsConvergenceMeasureSynchronized, testing::M2NFixtu
 
   MeshConfiguration meshConfig(root, dataConfig);
   meshConfig.setDimensions(3);
-  mesh::PtrMesh mesh(new Mesh("mesh", 3, false));
+  mesh::PtrMesh mesh(new Mesh("Mesh", 3, false));
   mesh->createData("data0", 1);
   mesh->createData("data1", 3);
   mesh->createVertex(Eigen::Vector3d::Zero());
@@ -538,8 +538,8 @@ BOOST_FIXTURE_TEST_CASE(testAbsConvergenceMeasureSynchronized, testing::M2NFixtu
   double maxTime = 1.0;
   int maxTimesteps = 3;
   double timestepLength = 0.1;
-  std::string nameParticipant0("participant0");
-  std::string nameParticipant1("participant1");
+  std::string nameParticipant0("Participant0");
+  std::string nameParticipant1("Participant1");
   std::string nameLocalParticipant("");
   int sendDataIndex = -1;
   int receiveDataIndex = -1;
@@ -596,7 +596,7 @@ BOOST_AUTO_TEST_CASE(testConfiguredAbsConvergenceMeasureSynchronized,
 
   xml::configure(root, configurationPath);
   meshConfig->setMeshSubIDs();
-  m2n::PtrM2N m2n = m2nConfig->getM2N("participant0", "participant1");
+  m2n::PtrM2N m2n = m2nConfig->getM2N("Participant0", "Participant1");
 
   // some dummy mesh
   meshConfig->meshes()[0]->createVertex(Eigen::Vector3d(1.0, 1.0, 1.0));
@@ -609,14 +609,14 @@ BOOST_AUTO_TEST_CASE(testConfiguredAbsConvergenceMeasureSynchronized,
 
   std::string nameLocalParticipant ("");
   if (utils::Parallel::getProcessRank() == 0 ) {
-    nameLocalParticipant = "participant0";
+    nameLocalParticipant = "Participant0";
     utils::Parallel::splitCommunicator(nameLocalParticipant);
-    m2n->requestMasterConnection ("participant1", "participant0");
+    m2n->requestMasterConnection ("Participant1", "Participant0");
   }
   else if (utils::Parallel::getProcessRank() == 1 ) {
-    nameLocalParticipant = "participant1";
+    nameLocalParticipant = "Participant1";
     utils::Parallel::splitCommunicator(nameLocalParticipant);
-    m2n->acceptMasterConnection ("participant1", "participant0");
+    m2n->acceptMasterConnection ("Participant1", "Participant0");
   }
 
   runCoupling (*cplSchemeConfig.getCouplingScheme(nameLocalParticipant),
@@ -640,7 +640,7 @@ BOOST_FIXTURE_TEST_CASE(testMinIterConvergenceMeasureSynchronized, testing::M2NF
 
   mesh::MeshConfiguration meshConfig (root, dataConfig);
   meshConfig.setDimensions(3);
-  mesh::PtrMesh mesh (new mesh::Mesh("mesh", 3, false));
+  mesh::PtrMesh mesh (new mesh::Mesh("Mesh", 3, false));
   mesh->createData ("data0", 1);
   mesh->createData ("data1", 3);
   mesh->createVertex (Eigen::Vector3d::Zero());
@@ -651,8 +651,8 @@ BOOST_FIXTURE_TEST_CASE(testMinIterConvergenceMeasureSynchronized, testing::M2NF
   double maxTime = 1.0;
   int maxTimesteps = 3;
   double timestepLength = 0.1;
-  std::string nameParticipant0 ("participant0");
-  std::string nameParticipant1 ("participant1");
+  std::string nameParticipant0 ("Participant0");
+  std::string nameParticipant1 ("Participant1");
   std::string nameLocalParticipant ("");
   int sendDataIndex = -1;
   int receiveDataIndex = -1;
@@ -703,7 +703,7 @@ BOOST_FIXTURE_TEST_CASE(testMinIterConvergenceMeasureSynchronizedWithSubcycling,
 
   mesh::MeshConfiguration meshConfig ( root, dataConfig);
   meshConfig.setDimensions(3);
-  mesh::PtrMesh mesh ( new mesh::Mesh("mesh", 3, false));
+  mesh::PtrMesh mesh ( new mesh::Mesh("Mesh", 3, false));
   mesh->createData ( "data0", 1);
   mesh->createData ( "data1", 3);
   mesh->createVertex ( Eigen::Vector3d::Zero());
@@ -714,8 +714,8 @@ BOOST_FIXTURE_TEST_CASE(testMinIterConvergenceMeasureSynchronizedWithSubcycling,
   double maxTime = 1.0;
   int maxTimesteps = 3;
   double timestepLength = 0.1;
-  std::string nameParticipant0 ( "participant0");
-  std::string nameParticipant1 ( "participant1");
+  std::string nameParticipant0 ( "Participant0");
+  std::string nameParticipant1 ( "Participant1");
   std::string nameLocalParticipant ( "");
   int sendDataIndex = -1;
   int receiveDataIndex = -1;
@@ -780,8 +780,8 @@ BOOST_FIXTURE_TEST_CASE(testInitializeData, testing::M2NFixture,
   double maxTime = 1.0;
   int maxTimesteps = 3;
   double timestepLength = 0.1;
-  std::string nameParticipant0("participant0");
-  std::string nameParticipant1("participant1");
+  std::string nameParticipant0("Participant0");
+  std::string nameParticipant1("Participant1");
   std::string nameLocalParticipant("");
   int sendDataIndex = -1;
   int receiveDataIndex = -1;
