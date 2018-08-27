@@ -88,7 +88,7 @@ class my_build_ext(build_ext, object):
     def finalize_options(self):
         print("#####")
         print("calling my_build_ext")
-        print("using mpicompiler %s" % self.mpicompiler)
+        print("using --%s%s" % (opt_name, self.mpicompiler))
 
         if not self.distribution.ext_modules:
             print("adding extension")
@@ -117,7 +117,7 @@ class my_build(build, object):
     def finalize_options(self):
         print("#####")
         print("calling my_build")
-        print("using mpicompiler %s" % self.mpicompiler)
+        print("using --%s%s" % (opt_name, self.mpicompiler))
 
         if not self.distribution.ext_modules:
             print("adding extension")
