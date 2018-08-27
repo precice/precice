@@ -294,6 +294,10 @@ double SolverInterfaceImpl:: advance
 {
   TRACE(computedTimestepLength);
 
+  // Events for the solver time, stopped when we enter, restarted when we leave advance
+  auto & solverEvent = EventRegistry::instance().getStoredEvent("Solver");
+  solverEvent.stop();
+
   Event e("advance", not precice::testMode);
 
   utils::ScopedEventPrefix sep("advance/");
@@ -365,6 +369,7 @@ double SolverInterfaceImpl:: advance
     //resetWrittenData();
 
   }
+  solverEvent.start();
   return _couplingScheme->getNextTimestepMaxLength();
 }
 
