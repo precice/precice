@@ -173,7 +173,7 @@ public:
   void put(Event* event);
 
   /// Make this returning a reference or smart ptr?
-  Event & getStoredEvent(std::string name);
+  Event & getStoredEvent(std::string const & name);
 
   /// Returns the timestamp of the run, i.e. when the run finished
   std::chrono::system_clock::time_point getTimestamp();

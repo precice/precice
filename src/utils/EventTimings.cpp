@@ -285,12 +285,18 @@ void EventRegistry::put(Event* event)
   data->second.put(event);
 }
 
-Event & EventRegistry::getStoredEvent(std::string name)
+Event & EventRegistry::getStoredEvent(std::string const & name)
 {
+  // Reset the prefix for creation of a stored event. Using prefixes with stored events is possible
+  // but leads to unexpected results, such as not getting the event you want, because someone else up the
+  // stack set a prefix.
+  auto previousPrefix = prefix;
+  prefix = "";
   auto insertion = storedEvents.emplace(std::piecewise_construct,
                                         std::forward_as_tuple(name),
                                         std::forward_as_tuple(name, false, false));
 
+  prefix = previousPrefix;
   return std::get<0>(insertion)->second;
 }
 
