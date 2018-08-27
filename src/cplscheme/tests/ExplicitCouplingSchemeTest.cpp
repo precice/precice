@@ -243,7 +243,7 @@ void runExplicitCouplingWithSubcycling(
   }
 }
 
-struct ExplicitCouplingSchemeFixture  /// @todo fixtures in cplscheme/tests are a candidate for refactoring, lots of copy paste code.
+struct ExplicitCouplingSchemeFixture
 {
   std::string _pathToTests;
 
@@ -251,7 +251,7 @@ struct ExplicitCouplingSchemeFixture  /// @todo fixtures in cplscheme/tests are 
     _pathToTests = testing::getPathToSources() + "/cplscheme/tests/";
   }
 
-  void connect( /// @todo this function occurs in multiple tests. Move this to a common fixture? see https://github.com/precice/precice/issues/90
+  void connect(
       const std::string&      participant0,
       const std::string&      participant1,
       const std::string&      localParticipant,
@@ -324,10 +324,6 @@ BOOST_FIXTURE_TEST_CASE(testSimpleExplicitCoupling, testing::M2NFixture,
 BOOST_AUTO_TEST_CASE(testConfiguredSimpleExplicitCoupling,
                    * testing::MinRanks(2)
                    * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
-//@todo commented out code below represents the header how we would like it to be
-//BOOST_FIXTURE_TEST_CASE(testConfiguredSimpleExplicitCoupling, testing::M2NFixture,
-//                      * testing::MinRanks(2)
-//                      * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
 {
   if (utils::Parallel::getCommunicatorSize() != 2) // only run test on ranks {0,1}, for other ranks return
     return;
@@ -336,8 +332,6 @@ BOOST_AUTO_TEST_CASE(testConfiguredSimpleExplicitCoupling,
   assertion ( utils::Parallel::getCommunicatorSize() > 1 );
   mesh::PropertyContainer::resetPropertyIDCounter ();
 
-  //ExplicitCouplingSchemeFixture f;  // @todo can we avoid creating this object? Inside a BOOST_AUTO_TEST_CASE it magically works. See SerialImplicitCouplingSchemeTest.cpp::402
-  //std::string configurationPath ( f._pathToTests + "explicit-coupling-scheme-1.xml" );
   std::string configurationPath ( _pathToTests + "explicit-coupling-scheme-1.xml" );
   std::string nameParticipant0 ( "participant0" );
   std::string nameParticipant1 ( "participant1" );
@@ -358,7 +352,7 @@ BOOST_AUTO_TEST_CASE(testConfiguredSimpleExplicitCoupling,
 
   xml::configure(root, configurationPath);
   meshConfig->setMeshSubIDs();
-  m2n::PtrM2N m2n = m2nConfig->getM2N(nameParticipant0, nameParticipant1);  // @todo here we want to use m2n from M2NFixture, but this breaks
+  m2n::PtrM2N m2n = m2nConfig->getM2N(nameParticipant0, nameParticipant1);
 
   // some dummy mesh
   meshConfig->meshes()[0]->createVertex(Eigen::Vector3d(1.0, 1.0, 1.0));
@@ -367,8 +361,7 @@ BOOST_AUTO_TEST_CASE(testConfiguredSimpleExplicitCoupling,
   meshConfig->meshes()[0]->createVertex(Eigen::Vector3d(4.0, 1.0, -1.0));
   meshConfig->meshes()[0]->allocateDataValues();
 
-  //f.connect ( nameParticipant0, nameParticipant1, nameLocalParticipant, m2n );  // @todo here we still need connect. Why?
-  connect ( nameParticipant0, nameParticipant1, nameLocalParticipant, m2n );  // @todo here we still need connect, currently. Otherwise it break. Why?
+  connect ( nameParticipant0, nameParticipant1, nameLocalParticipant, m2n );
   runSimpleExplicitCoupling ( *cplSchemeConfig.getCouplingScheme(nameLocalParticipant),
                                nameLocalParticipant, *meshConfig );
 }
@@ -377,10 +370,6 @@ BOOST_AUTO_TEST_CASE(testConfiguredSimpleExplicitCoupling,
 BOOST_AUTO_TEST_CASE(testExplicitCouplingFirstParticipantSetsDt,
                    * testing::MinRanks(2)
                    * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
-//@todo commented out code below represents the header how we would like it to be
-//BOOST_FIXTURE_TEST_CASE(testExplicitCouplingFirstParticipantSetsDt, testing::M2NFixture,
-//                      * testing::MinRanks(2)
-//                      * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
 {
   if (utils::Parallel::getCommunicatorSize() != 2) // only run test on ranks {0,1}, for other ranks return
     return;
@@ -407,7 +396,7 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingFirstParticipantSetsDt,
 
   xml::configure(root, configurationPath);
   meshConfig->setMeshSubIDs();
-  m2n::PtrM2N m2n = m2nConfig->getM2N(nameParticipant0, nameParticipant1);  // @todo here we want to use m2n from M2NFixture, but this breaks
+  m2n::PtrM2N m2n = m2nConfig->getM2N(nameParticipant0, nameParticipant1);
 
   // some dummy mesh
   meshConfig->meshes()[0]->createVertex(Eigen::Vector3d(1.0, 1.0, 1.0));
@@ -416,7 +405,7 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingFirstParticipantSetsDt,
   meshConfig->meshes()[0]->createVertex(Eigen::Vector3d(4.0, 1.0, -1.0));
   meshConfig->meshes()[0]->allocateDataValues();
 
-  connect(nameParticipant0, nameParticipant1, nameLocalParticipant, m2n);  // @todo here we still need connect. Otherwise it break. Why?
+  connect(nameParticipant0, nameParticipant1, nameLocalParticipant, m2n);
   CouplingScheme& cplScheme = *cplSchemeConfig.getCouplingScheme(nameLocalParticipant);
 
   double computedTime = 0.0;
@@ -473,10 +462,6 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingFirstParticipantSetsDt,
 BOOST_AUTO_TEST_CASE(testSerialDataInitialization,
                    * testing::MinRanks(2)
                    * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
-//@todo commented out code below represents the header how we would like it to be
-//BOOST_FIXTURE_TEST_CASE(testSerialDataInitialization, testing::M2NFixture,
-//                      * testing::MinRanks(2)
-//                      * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
 {
   if (utils::Parallel::getCommunicatorSize() != 2) // only run test on ranks {0,1}, for other ranks return
     return;
@@ -504,7 +489,7 @@ BOOST_AUTO_TEST_CASE(testSerialDataInitialization,
 
   xml::configure(root, configurationPath);
   meshConfig->setMeshSubIDs();
-  m2n::PtrM2N m2n = m2nConfig->getM2N(nameParticipant0, nameParticipant1);  // @todo here we want to use m2n from M2NFixture, but this breaks
+  m2n::PtrM2N m2n = m2nConfig->getM2N(nameParticipant0, nameParticipant1);
 
   // some dummy mesh
   meshConfig->meshes()[0]->createVertex(Eigen::Vector2d(1.0, 1.0));
@@ -513,7 +498,7 @@ BOOST_AUTO_TEST_CASE(testSerialDataInitialization,
   meshConfig->meshes()[0]->createVertex(Eigen::Vector2d(4.0,-1.0));
   meshConfig->meshes()[0]->allocateDataValues();
 
-  connect(nameParticipant0, nameParticipant1, nameLocalParticipant, m2n);  // @todo here we still need connect. Otherwise it break. Why?
+  connect(nameParticipant0, nameParticipant1, nameLocalParticipant, m2n);
   CouplingScheme& cplScheme = *cplSchemeConfig.getCouplingScheme(nameLocalParticipant);
 
   BOOST_TEST(meshConfig->meshes().size() == 1);
@@ -555,10 +540,6 @@ BOOST_AUTO_TEST_CASE(testSerialDataInitialization,
 BOOST_AUTO_TEST_CASE(testParallelDataInitialization,
                    * testing::MinRanks(2)
                    * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
-//@todo commented out code below represents the header how we would like it to be
-//BOOST_FIXTURE_TEST_CASE(testParallelDataInitialization, testing::M2NFixture,
-//                      * testing::MinRanks(2)
-//                      * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
 {
   if (utils::Parallel::getCommunicatorSize() != 2) // only run test on ranks {0,1}, for other ranks return
     return;
@@ -586,7 +567,7 @@ BOOST_AUTO_TEST_CASE(testParallelDataInitialization,
 
   xml::configure(root, configurationPath);
   meshConfig->setMeshSubIDs();
-  m2n::PtrM2N m2n = m2nConfig->getM2N(nameParticipant0, nameParticipant1);  // @todo here we want to use m2n from M2NFixture, but this breaks
+  m2n::PtrM2N m2n = m2nConfig->getM2N(nameParticipant0, nameParticipant1);
 
   // some dummy mesh
   meshConfig->meshes()[0]->createVertex(Eigen::Vector2d(1.0, 1.0));
@@ -595,7 +576,7 @@ BOOST_AUTO_TEST_CASE(testParallelDataInitialization,
   meshConfig->meshes()[0]->createVertex(Eigen::Vector2d(4.0,-1.0));
   meshConfig->meshes()[0]->allocateDataValues();
 
-  connect(nameParticipant0, nameParticipant1, nameLocalParticipant, m2n);  // @todo here we still need connect. Otherwise it break. Why?
+  connect(nameParticipant0, nameParticipant1, nameLocalParticipant, m2n);
   CouplingScheme& cplScheme = *cplSchemeConfig.getCouplingScheme(nameLocalParticipant);
 
   BOOST_TEST(meshConfig->meshes().size() == 1);
@@ -693,10 +674,6 @@ BOOST_FIXTURE_TEST_CASE(testExplicitCouplingWithSubcycling, testing::M2NFixture,
 BOOST_AUTO_TEST_CASE(testConfiguredExplicitCouplingWithSubcycling,
                    * testing::MinRanks(2)
                    * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
-//@todo commented out code below represents the header how we would like it to be
-//BOOST_FIXTURE_TEST_CASE(testConfiguredExplicitCouplingWithSubcycling, testing::M2NFixture,
-//                      * testing::MinRanks(2)
-//                      * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
 {
   if (utils::Parallel::getCommunicatorSize() != 2) // only run test on ranks {0,1}, for other ranks return
     return;
@@ -724,7 +701,7 @@ BOOST_AUTO_TEST_CASE(testConfiguredExplicitCouplingWithSubcycling,
 
   xml::configure(root, configurationPath);
   meshConfig->setMeshSubIDs();
-  m2n::PtrM2N m2n = m2nConfig->getM2N(nameParticipant0, nameParticipant1);  // @todo here we want to use m2n from M2NFixture, but this breaks
+  m2n::PtrM2N m2n = m2nConfig->getM2N(nameParticipant0, nameParticipant1);
   // some dummy mesh
   meshConfig->meshes()[0]->createVertex(Eigen::Vector3d(1.0, 1.0, 1.0));
   meshConfig->meshes()[0]->createVertex(Eigen::Vector3d(2.0,-1.0, 1.0));
@@ -732,7 +709,7 @@ BOOST_AUTO_TEST_CASE(testConfiguredExplicitCouplingWithSubcycling,
   meshConfig->meshes()[0]->createVertex(Eigen::Vector3d(4.0,-1.0, 1.0));
   meshConfig->meshes()[0]->allocateDataValues();
 
-  connect ( nameParticipant0, nameParticipant1, nameLocalParticipant, m2n );  // @todo here we still need connect. Otherwise it break. Why?
+  connect ( nameParticipant0, nameParticipant1, nameLocalParticipant, m2n );
   runExplicitCouplingWithSubcycling (
       *cplSchemeConfig.getCouplingScheme(nameLocalParticipant), nameLocalParticipant,
       *meshConfig );
