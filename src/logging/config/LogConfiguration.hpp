@@ -17,7 +17,7 @@ public:
   virtual void xmlEndTagCallback(xml::XMLTag& tag);
 
 private:
-  static precice::logging::Logger _log;
+  precice::logging::Logger _log{"logging::config::LogConfiguration"};
 
   precice::logging::LoggingConfiguration _logconfig;
 };

@@ -8,7 +8,6 @@
 #include "mesh/config/DataConfiguration.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
 #include "mesh/Mesh.hpp"
-#include "mesh/Group.hpp"
 #include "mesh/PropertyContainer.hpp"
 #include "mesh/Vertex.hpp"
 #include "mesh/Edge.hpp"
@@ -16,11 +15,8 @@
 #include "mesh/Merge.hpp"
 #include "io/ExportContext.hpp"
 #include "io/Export.hpp"
-#include "com/MPIPortsCommunication.hpp"
-#include "com/MPIDirectCommunication.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
 #include "m2n/M2N.hpp"
-#include "m2n/PointToPointCommunication.hpp"
 #include "cplscheme/CouplingScheme.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
 #include "utils/EventTimings.hpp"
@@ -50,8 +46,6 @@ bool testMode = false;
 
 namespace impl {
 
-logging::Logger SolverInterfaceImpl::_log ("impl::SolverInterfaceImpl");
-
 SolverInterfaceImpl:: SolverInterfaceImpl
 (
   const std::string& participantName,
@@ -62,17 +56,7 @@ SolverInterfaceImpl:: SolverInterfaceImpl
   _accessorName(participantName),
   _accessorProcessRank(accessorProcessRank),
   _accessorCommunicatorSize(accessorCommunicatorSize),
-  _accessor(),
-  _dimensions(0),
-  _serverMode(serverMode),
-  _clientMode(false),
-  _meshIDs(),
-  _dataIDs(),
-  _exportVTKNeighbors(),
-  _m2ns(),
-  _participants(),
-  _numberAdvanceCalls(0),
-  _requestManager(nullptr)
+  _serverMode(serverMode)
 {
   CHECK(_accessorProcessRank >= 0, "Accessor process index has to be >= 0!");
   CHECK(_accessorCommunicatorSize >= 0, "Accessor process size has to be >= 0!");
@@ -88,17 +72,6 @@ SolverInterfaceImpl:: SolverInterfaceImpl
   signal(SIGABRT, precice::utils::terminationSignalHandler);
   signal(SIGTERM, precice::utils::terminationSignalHandler);
   // signal(SIGINT,  precice::utils::terminationSignalHandler);
-
-  // precice::logging::setupLogging();
-
-}
-
-SolverInterfaceImpl:: ~SolverInterfaceImpl()
-{
-  TRACE();
-  if (_requestManager != nullptr){
-    delete _requestManager;
-  }
 }
 
 void SolverInterfaceImpl:: configure
@@ -158,7 +131,7 @@ void SolverInterfaceImpl:: configure
   if (_serverMode || _clientMode){
     com::PtrCommunication com = _accessor->getClientServerCommunication();
     assertion(com.get() != nullptr);
-    _requestManager = new RequestManager(*this, com, _couplingScheme);
+    _requestManager = std::make_shared<RequestManager>(*this, com, _couplingScheme);
   }
 
   // Add meshIDs and data IDs
@@ -197,10 +170,8 @@ double SolverInterfaceImpl:: initialize()
   TRACE();
   Event e("initialize", not precice::testMode);
 
-  m2n::PointToPointCommunication::ScopedSetEventNamePrefix ssenp(
-      "initialize"
-      "/");
-
+  utils::ScopedEventPrefix sep("initialize/");
+  
   if (_clientMode){
     DEBUG("Request perform initializations");
     _requestManager->requestInitialize();
@@ -285,9 +256,7 @@ void SolverInterfaceImpl:: initializeData ()
   TRACE();
   Event e("initializeData", not precice::testMode);
 
-  m2n::PointToPointCommunication::ScopedSetEventNamePrefix ssenp(
-      "initializeData"
-      "/");
+  utils::ScopedEventPrefix sep("initializeData/");
 
   CHECK(_couplingScheme->isInitialized(),
         "initialize() has to be called before initializeData()");
@@ -327,9 +296,7 @@ double SolverInterfaceImpl:: advance
 
   Event e("advance", not precice::testMode);
 
-  m2n::PointToPointCommunication::ScopedSetEventNamePrefix ssenp(
-      "advance"
-      "/");
+  utils::ScopedEventPrefix sep("advance/");
 
   CHECK(_couplingScheme->isInitialized(), "initialize() has to be called before advance()");
   _numberAdvanceCalls++;

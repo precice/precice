@@ -24,21 +24,6 @@ namespace m2n
 class PointToPointCommunication : public DistributedCommunication
 {
 public:
-  struct ScopedSetEventNamePrefix {
-    explicit ScopedSetEventNamePrefix(std::string const &prefix);
-
-    ~ScopedSetEventNamePrefix();
-
-  private:
-    std::string _prefix;
-  };
-
-public:
-  static void setEventNamePrefix(std::string const &prefix);
-
-  static std::string const &eventNamePrefix();
-
-public:
   PointToPointCommunication(com::PtrCommunicationFactory communicationFactory,
                             mesh::PtrMesh                mesh);
 
@@ -96,8 +81,6 @@ private:
   void checkBufferedRequests(bool blocking);
   
   logging::Logger _log{"m2n::PointToPointCommunication"};
-
-  static std::string _prefix;
 
   com::PtrCommunicationFactory _communicationFactory;
 

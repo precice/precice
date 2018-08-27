@@ -16,20 +16,6 @@ std::string Publisher::_pdp;
 
 std::stack<std::string> Publisher::_dps;
 
-std::string Publisher::_prefix;
-
-Publisher::ScopedSetEventNamePrefix::ScopedSetEventNamePrefix(
-    std::string const &prefix)
-    : _prefix(Publisher::eventNamePrefix())
-{
-  Publisher::setEventNamePrefix(prefix);
-}
-
-Publisher::ScopedSetEventNamePrefix::~ScopedSetEventNamePrefix()
-{
-  Publisher::setEventNamePrefix(_prefix);
-}
-
 Publisher::ScopedPushDirectory::ScopedPushDirectory(std::string const &dp)
 {
   Publisher::pushDirectory(dp);
@@ -109,16 +95,6 @@ void Publisher::changePrefixDirectory(std::string const &pdp)
 std::string const & Publisher::prefixDirectoryPath()
 {
   return _pdp;
-}
-
-void Publisher::setEventNamePrefix(std::string const &prefix)
-{
-  _prefix = prefix;
-}
-
-std::string const & Publisher::eventNamePrefix()
-{
-  return _prefix;
 }
 
 Publisher::Publisher(std::string const &fp)
