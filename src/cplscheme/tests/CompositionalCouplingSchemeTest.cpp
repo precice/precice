@@ -24,7 +24,7 @@ using namespace precice::cplscheme;
 
 BOOST_AUTO_TEST_SUITE(CplSchemeTests)
 
-struct CompositionalCouplingSchemeFixture  /// @todo fixtures in cplscheme/tests are a candidate for refactoring, lots of copy paste code.
+struct CompositionalCouplingSchemeFixture
 {
   std::string _pathToTests;
 
@@ -213,7 +213,7 @@ struct CompositionalCouplingSchemeFixture  /// @todo fixtures in cplscheme/tests
   }
 };
 
-BOOST_FIXTURE_TEST_SUITE(CompositionalCouplingSchemeTests, CompositionalCouplingSchemeFixture)
+BOOST_AUTO_TEST_SUITE(DummySchemeCompositionTests)
 
 /// Test one explicit dummy coupling scheme
 BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1)
@@ -831,8 +831,11 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionUntitled) /// @todo give a better
   BOOST_TEST(scheme3->getTimesteps()-1 == 10);
 }
 
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_FIXTURE_TEST_SUITE(CompositionalCouplingSchemeTests, CompositionalCouplingSchemeFixture)
+
 /// Test that runs on 3 processors.
-/// @todo can we also use the M2N fixture for tests with three solvers (i.e. using setupAndRunThreeSolverCoupling)? Or does it only work for coupling two processes?
 BOOST_AUTO_TEST_CASE(testExplicitSchemeComposition1,
                      * testing::MinRanks(3)
                      * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1, 2})))
