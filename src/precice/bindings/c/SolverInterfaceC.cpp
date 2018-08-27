@@ -2,11 +2,8 @@ extern "C" {
 #include "SolverInterfaceC.h"
 }
 #include "precice/impl/SolverInterfaceImpl.hpp"
-#include "utils/Globals.hpp"
-#include "utils/Dimensions.hpp"
+#include "utils/assertion.hpp"
 #include <string>
-#include "boost/smart_ptr.hpp"
-#include <vector>
 
 static precice::impl::SolverInterfaceImpl* impl = nullptr;
 
