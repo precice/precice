@@ -52,7 +52,7 @@ void FindClosestQuad:: find
 (
   mesh::Quad& quad )
 {
-  ERROR("Not implemented.");
+  assertion(false, "Not implemented.");
   /// @todo implement functionality
 
   // From triangle code:

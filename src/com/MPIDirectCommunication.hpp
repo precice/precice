@@ -4,6 +4,7 @@
 
 #include <string>
 #include "MPICommunication.hpp"
+#include "utils/assertion.hpp"
 #include "logging/Logger.hpp"
 
 namespace precice
@@ -45,7 +46,7 @@ public:
                                         int                acceptorRank,
                                         int                requesterCommunicatorSize) override
   {
-    ERROR("Not implemented!");
+    assertion(false, "Not implemented!");
   }
 
   /// See precice::com::Communication::requestConnection().
@@ -59,7 +60,7 @@ public:
                                          std::set<int> const &acceptorRanks,
                                          int                  requesterRank) override
   {
-    ERROR("Not implemented!");
+    assertion(false, "Not implemented!");
   }
 
   /// See precice::com::Communication::closeConnection().
