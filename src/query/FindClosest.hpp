@@ -4,6 +4,7 @@
 #include "FindClosestEdge.hpp"
 #include "FindClosestTriangle.hpp"
 #include "FindClosestQuad.hpp"
+#include <vector>
 
 namespace precice {
    namespace mesh {
@@ -28,6 +29,9 @@ struct InterpolationElement
   : element(NULL), weight(0.0) {}
 };
 
+/// A vector of InterpolationElement
+using typename InterpolationElements = std::vector<InterpolationElement>;
+
 /**
  * @brief Closest element to all objects with given mesh ID
  */
@@ -36,7 +40,7 @@ struct ClosestElement
   std::vector<int> meshIDs;
   double distance;
   Eigen::VectorXd vectorToElement;
-  std::vector<InterpolationElement> interpolationElements;
+  InterpolationElements interpolationElements;
 
   ClosestElement (int dim)
   : meshIDs(),
@@ -45,6 +49,22 @@ struct ClosestElement
     interpolationElements() {}
 };
 
+
+InterpolationElements generateInterpolationElements(
+    const mesh::Vertex &location,
+    const mesh::Vertex &element);
+
+InterpolationElements generateInterpolationElements(
+    const mesh::Vertex &location,
+    const mesh::Edge &  element);
+
+InterpolationElements generateInterpolationElements(
+    const mesh::Vertex &  location,
+    const mesh::Triangle &element);
+
+InterpolationElements generateInterpolationElements(
+    const mesh::Vertex &location,
+    const mesh::Quad &  element);
 
 /**
  * @brief Determines closest Triangle, Edge, or Vertex object to a given point.

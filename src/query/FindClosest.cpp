@@ -10,6 +10,60 @@
 namespace precice {
 namespace query {
 
+InterpolationElements generateInterpolationElements(
+        const mesh::Vertex& /*location*/,
+        const mesh::Vertex& element,
+        )
+{
+    return {{element, 1.0}};
+}
+
+InterpolationElements generateInterpolationElements(
+        const mesh::Vertex& location,
+        const mesh::Edge& element,
+        )
+{
+    InterpolationElements elems;
+
+    // @todo: implement interpolation for edges
+    elems.emplace_back(element, 1.0);
+    elems.emplace_back(element, 1.0);
+
+    return elems;
+}
+
+InterpolationElements generateInterpolationElements(
+        const mesh::Vertex& location,
+        const mesh::Triangle& element,
+        )
+
+{
+    InterpolationElements elems;
+
+    // @todo: implement interpolation for triangles
+    elems.emplace_back(element, 1.0);
+    elems.emplace_back(element, 1.0);
+    elems.emplace_back(element, 1.0);
+
+    return elems;
+}
+
+InterpolationElements generateInterpolationElements(
+        const mesh::Vertex& location,
+        const mesh::Quad& element,
+        )
+{
+    InterpolationElements elems;
+
+    // @todo: implement interpolation for quads
+    elems.emplace_back(element, 1.0);
+    elems.emplace_back(element, 1.0);
+    elems.emplace_back(element, 1.0);
+    elems.emplace_back(element, 1.0);
+
+    return elems;
+}
+
 bool FindClosest:: hasFound() const
 {
   return not _closest.meshIDs.empty();
