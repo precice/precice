@@ -1,6 +1,6 @@
 # Compilation
 
-Don't forget to build the python bindings! See `precice/src/precice/bindings/python` for instructions
+Don't forget to build the Python bindings! See `precice/src/precice/bindings/python` for instructions
 
 # Run
 
