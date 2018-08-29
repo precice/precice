@@ -179,7 +179,7 @@ public:
   void readAttributes(std::map<std::string, std::string> &aAttributes);
 
 private:
-  static logging::Logger _log;
+  mutable logging::Logger _log{"xml::XMLTag"};
 
   Listener &_listener;
 
@@ -194,7 +194,7 @@ private:
 
   std::string _doc;
 
-  bool _configured;
+  bool _configured = false;
 
   Occurrence _occurrence;
 

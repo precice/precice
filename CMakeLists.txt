@@ -1,17 +1,8 @@
-#------------------------------------------------------------------------------
 cmake_minimum_required (VERSION 3.5)
 
-# TODO
-# Fail if not using an out-of-source build
-# if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR)
-#     message(FATAL_ERROR
-#         "In-source builds are not supported.  Please create a build directory "
-#         "separate from the source directory")
-# endif()
+project(preCICE VERSION 1.2.0 LANGUAGES CXX)
 
-project(preCICE LANGUAGES CXX)
-
-list (APPEND CMAKE_MODULE_PATH "${preCICE_SOURCE_DIR}/tools/cmake-modules")
+list (APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/tools/cmake-modules")
 
 set (CMAKE_CXX_STANDARD 11)
 
@@ -58,19 +49,17 @@ if (PETSC AND MPI)
   string(REGEX MATCHALL "[0-9]+" PETSC_VERSIONS ${PETSC_VERSION})
   list(GET PETSC_VERSIONS 0 PETSC_MAJOR)
   list(GET PETSC_VERSIONS 1 PETSC_MINOR)
-  add_definitions(-DPETSC_MAJOR=${PETSC_MAJOR} -DPETSC_MINOR=${PETSC_MINOR})
   include_directories(${PETSC_INCLUDES})
 else()
   add_definitions(-DPRECICE_NO_PETSC)
   message(STATUS "PETSc support disabled")
 endif()
 
-
 find_package (Threads REQUIRED)
 
 
 find_package(Boost 1.60.0 REQUIRED
-  COMPONENTS filesystem log log_setup program_options signals system thread unit_test_framework)
+  COMPONENTS filesystem log log_setup program_options system thread unit_test_framework)
 add_definitions(-DBOOST_ALL_DYN_LINK -DBOOST_ASIO_ENABLE_OLD_SERVICES)
 
 
@@ -98,6 +87,10 @@ else()
   message(STATUS "Python support disabled")
 endif()
 
+
+# Create versions.hpp and add binary dir to include dirs
+configure_file("${PROJECT_SOURCE_DIR}/src/versions.hpp.in" "${PROJECT_BINARY_DIR}/versions.hpp" @ONLY)
+include_directories(${PROJECT_BINARY_DIR})
 
 add_subdirectory("src")
 include_directories("src")

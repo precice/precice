@@ -79,7 +79,7 @@ class EventData
 {
 public:
   // Do not add explicit here, it fails on some (older?) compilers
-  EventData(std::string _name);
+  explicit EventData(std::string _name);
   
   EventData(std::string _name, int _rank, long _count, long _total,
             long _max, long _min, std::vector<int> _data, Event::StateChanges stateChanges);
@@ -173,7 +173,7 @@ public:
   void put(Event* event);
 
   /// Make this returning a reference or smart ptr?
-  Event & getStoredEvent(std::string name);
+  Event & getStoredEvent(std::string const & name);
 
   /// Returns the timestamp of the run, i.e. when the run finished
   std::chrono::system_clock::time_point getTimestamp();
@@ -196,6 +196,9 @@ public:
   void writeEventLogs(std::string filename);
   
   void printGlobalStats();
+
+  /// Currently active prefix. Changing that applies to newly created events.
+  std::string prefix;
 
 private:
   /// Private, empty constructor for singleton pattern
@@ -230,4 +233,27 @@ private:
   /// A name that is added to the logfile to distinguish different participants
   std::string applicationName;
 };
+
+
+/// Class that changes the prefix in its scope
+class ScopedEventPrefix
+{
+public:
+  
+  ScopedEventPrefix(const std::string & name)
+  {
+    previousName = EventRegistry::instance().prefix;
+    EventRegistry::instance().prefix += name;
+  }
+
+  ~ScopedEventPrefix()
+  {
+    EventRegistry::instance().prefix = previousName;
+  }
+  
+private:
+
+  std::string previousName = "";
+};
+
 }} // namespace precice::utils
