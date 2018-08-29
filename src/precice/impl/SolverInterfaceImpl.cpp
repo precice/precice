@@ -95,6 +95,9 @@ void SolverInterfaceImpl:: configure
   const config::SolverInterfaceConfiguration& config )
 {
   TRACE();
+
+  Event e("configure", not precice::testMode);
+  utils::ScopedEventPrefix sep("configure/");
   _dimensions = config.getDimensions();
   _accessor = determineAccessingParticipant(config);
 
@@ -169,7 +172,6 @@ double SolverInterfaceImpl:: initialize()
 {
   TRACE();
   Event e("initialize", not precice::testMode);
-
   utils::ScopedEventPrefix sep("initialize/");
   
   if (_clientMode){
@@ -255,7 +257,6 @@ void SolverInterfaceImpl:: initializeData ()
 {
   TRACE();
   Event e("initializeData", not precice::testMode);
-
   utils::ScopedEventPrefix sep("initializeData/");
 
   CHECK(_couplingScheme->isInitialized(),
@@ -299,7 +300,6 @@ double SolverInterfaceImpl:: advance
   solverEvent.stop();
 
   Event e("advance", not precice::testMode);
-
   utils::ScopedEventPrefix sep("advance/");
 
   CHECK(_couplingScheme->isInitialized(), "initialize() has to be called before advance()");
