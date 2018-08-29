@@ -54,5 +54,5 @@ sudo pip install mpi4py
 
 
 NOTE: 
-- For an example of how the `PySolverInterface` can be used, refer to the 1D tutorial. (https://github.com/precice/elastictube1d/tree/master/PythonTube)
+- For an example of how the `PySolverInterface` can be used, refer to the 1D tutorial. (https://github.com/precice/precice/wiki/Using-the-Python-API)
 - In case the compilation fails with `shared_ptr.pxd not found` messages, check if you use the latest version of Cython.
