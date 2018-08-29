@@ -78,10 +78,6 @@ void SolverInterfaceImpl:: configure
 (
   const std::string& configurationFileName )
 {
-  mesh::Mesh::resetGeometryIDsGlobally();
-  mesh::Data::resetDataCount();
-  Participant::resetParticipantCount();
-
   config::Configuration config;
   xml::configure(config.getXMLTag(), configurationFileName);
   if(_accessorProcessRank==0){
@@ -95,6 +91,11 @@ void SolverInterfaceImpl:: configure
   const config::SolverInterfaceConfiguration& config )
 {
   TRACE();
+
+  mesh::Mesh::resetGeometryIDsGlobally();
+  mesh::Data::resetDataCount();
+  Participant::resetParticipantCount();
+
   _dimensions = config.getDimensions();
   _accessor = determineAccessingParticipant(config);
 
