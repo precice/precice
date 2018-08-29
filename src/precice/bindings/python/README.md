@@ -1,4 +1,4 @@
-Python Interface for preCICE
+Python language bindings for preCICE
 ----------------------------
 
 # Dependencies
