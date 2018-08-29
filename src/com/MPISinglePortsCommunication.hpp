@@ -14,7 +14,21 @@ namespace com
  *
  * The two participants to be connected can be run in two process groups started
  * up individually, i.e. not within the same process group.
- */
+ *
+ * Notes on the implementation:
+ *
+ * acceptConnection / requestConnection still uses one communicator per connection, created on MPI_COMM_SELF.
+ *
+ * acceptConnectionAsServer / requestConnectionAsClient just uses communicator[0], so it actually creates just one comm.
+ *
+ * The reason of that is that the first variant is called in various different ways, mostly just from the accepting/receiving rank.
+ * In order to just use a single communicator, accept/request must be called on the entire global communicator.
+ * This would require quite some rework of the calling code. The gains would also be minuscule, because accept/request is mainly used for 1:1 connection anyways.
+ *
+ * The latter, in contrast, is only called from m2n::PointToPointCommunication, due to that the p2p class was also heavily modified. But this connection method is the most important, because it does the m2n heavy lifiting.
+ *
+ * If we agree, that acceptConnection / requestConnection just does 1:1 connection, we can rewrite and simplifiy the code.
+**/
 class MPISinglePortsCommunication : public MPICommunication
 {
 public:
@@ -32,7 +46,7 @@ public:
                                         std::string const &requesterName,
                                         int                acceptorRank,
                                         int                requesterCommunicatorSize) override;
-  
+
   virtual void requestConnection(std::string const &acceptorName,
                                  std::string const &requesterName,
                                  int                requesterRank,
