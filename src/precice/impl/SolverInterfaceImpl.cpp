@@ -298,9 +298,7 @@ double SolverInterfaceImpl:: advance
   auto & solverEvent = EventRegistry::instance().getStoredEvent("Solver");
   solverEvent.stop();
 
-  // Retrieve advance from getStoredEvent. So we can pause it, if we are waiting for e.g. a receive to complete
-  auto & advanceEvent = EventRegistry::instance().getStoredEvent("advance");
-  advanceEvent.start(not precice::testMode);
+  Event e("advance", not precice::testMode);
 
   utils::ScopedEventPrefix sep("advance/");
 
@@ -371,7 +369,6 @@ double SolverInterfaceImpl:: advance
     //resetWrittenData();
 
   }
-  advanceEvent.stop(not precice::testMode);
   solverEvent.start();
   return _couplingScheme->getNextTimestepMaxLength();
 }
