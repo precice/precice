@@ -49,6 +49,8 @@ public:
   /// See precice::com::Communication::closeConnection().
   virtual void closeConnection() override;
 
+  virtual void barrier() override;
+
 private:
   virtual MPI_Comm &communicator(int rank) override;
 

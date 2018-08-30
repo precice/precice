@@ -61,6 +61,8 @@ public:
   /// See precice::com::Communication::closeConnection().
   virtual void closeConnection() override;
 
+  virtual void barrier() override;
+  
   virtual void reduceSum(double *itemsToSend, double *itemsToReceive, int size, int rankMaster) override;
 
   virtual void reduceSum(double *itemsToSend, double *itemsToReceive, int size) override;

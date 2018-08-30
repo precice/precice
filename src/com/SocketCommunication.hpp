@@ -92,6 +92,8 @@ public:
    */
   virtual void closeConnection() override;
 
+  virtual void barrier() override;
+  
   /// Sends a std::string to process with given rank.
   virtual void send(std::string const &itemToSend, int rankReceiver) override;
 

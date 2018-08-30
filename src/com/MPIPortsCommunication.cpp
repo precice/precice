@@ -260,6 +260,17 @@ int MPIPortsCommunication::rank(int rank)
   return 0;
 }
 
+void MPIPortsCommunication::barrier()
+{
+  TRACE();
+  std::vector<MPI_Request> requests;
+  for (auto com : _communicators) {
+    requests.emplace_back();
+    MPI_Ibarrier(com, &requests.back());
+  }
+  MPI_Waitall(requests.size(), requests.data(), MPI_STATUS_IGNORE);
+}
+
 } // namespace com
 } // namespace precice
 

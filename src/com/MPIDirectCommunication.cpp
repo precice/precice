@@ -64,6 +64,12 @@ void MPIDirectCommunication::closeConnection()
   _isConnected = false;
 }
 
+void MPIDirectCommunication::barrier()
+{
+  TRACE();
+  MPI_Barrier(_communicator);
+}
+
 void MPIDirectCommunication::requestConnection(std::string const &nameAcceptor,
                                                std::string const &nameRequester,
                                                int                requesterProcessRank,

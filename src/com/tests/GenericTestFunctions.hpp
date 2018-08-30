@@ -37,6 +37,9 @@ void TestSendAndReceivePrimitiveTypes()
       com.receive(msg, 0);
       BOOST_TEST(msg == false);
     }
+    {
+      com.barrier();  // also a check
+    }
     com.closeConnection();
   } else if (utils::Parallel::getProcessRank() == 1) {
     com.requestConnection("process0", "process1", 0, 1);
@@ -67,6 +70,9 @@ void TestSendAndReceivePrimitiveTypes()
       BOOST_TEST(msg == true);
       msg = false;
       com.send(msg, 0);
+    }
+    {
+      com.barrier(); // also a check
     }
     com.closeConnection();
   }
@@ -245,3 +251,4 @@ void TestSendReceiveFourProcessesServerClient()
   }
   }
 }
+

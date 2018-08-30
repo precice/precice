@@ -406,6 +406,18 @@ void SocketCommunication::closeConnection()
   _isConnected            = false;
 }
 
+void SocketCommunication::barrier()
+{
+  std::cout << "BARRIER CALLED, REMOTE SIZE = " << getRemoteCommunicatorSize() << std::endl;
+  // for (size_t i = 1; i < getRemoteCommunicatorSize(); ++i) {
+  //   bool ack = true;
+  //   aSend(ack, i);
+  //   receive(ack, i);
+  // }
+  // How to find out the current rank here?
+  broadcast(true); // collective operation abused as a barrier
+}
+
 void SocketCommunication::send(std::string const &itemToSend, int rankReceiver)
 {
   TRACE(itemToSend, rankReceiver);

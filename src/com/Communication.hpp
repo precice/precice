@@ -132,6 +132,14 @@ public:
    */
   virtual void closeConnection() = 0;
 
+  /**
+   * @brief barrier on the communicator
+   *
+   * For protocols that don't natively support barriers, such as TCP/IP, it is emulated by 
+   * almost no-op collect operation.
+   */
+  virtual void barrier() = 0;
+
   /// Performs a reduce summation on the rank given by rankMaster
   virtual void reduceSum(double *itemsToSend, double *itemsToReceive, int size, int rankMaster);
 

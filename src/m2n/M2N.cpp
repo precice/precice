@@ -146,11 +146,8 @@ void M2N::send(
       //      Event e("M2N::send/synchronize", true);
 
       if (not utils::MasterSlave::_slaveMode) {
-        bool ack;
-
-        _masterCom->send(ack, 0);
-        _masterCom->receive(ack, 0);
-        _masterCom->send(ack, 0);
+        assert(_masterCom->getRemoteCommunicatorSize() == 1);
+        _masterCom->barrier();
       }
     }
 #endif
@@ -193,11 +190,7 @@ void M2N::receive(double *itemsToReceive,
       //      Event e("M2N::receive/synchronize", true);
 
       if (not utils::MasterSlave::_slaveMode) {
-        bool ack;
-
-        _masterCom->receive(ack, 0);
-        _masterCom->send(ack, 0);
-        _masterCom->receive(ack, 0);
+        _masterCom->barrier();
       }
     }
 #endif

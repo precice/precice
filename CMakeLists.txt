@@ -30,6 +30,8 @@ endif()
 
 option(BUILD_SHARED_LIBS "Build a shared library" ON)
 
+add_definitions(-DM2N_PRE_SYNCHRONIZE)
+
 
 option(MPI "Enables MPI-based communication and running coupling tests." ON)
 if (MPI)
