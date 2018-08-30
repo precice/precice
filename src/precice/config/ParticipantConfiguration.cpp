@@ -652,9 +652,8 @@ void ParticipantConfiguration:: finishParticipantConfiguration
           << "\" defines watchpoint \"" << config.name
           << "\" for mesh \"" << config.nameMesh
           << "\" which is not used by him!" );
-    std::string filename = config.name + ".watchpoint.txt";
-    impl::PtrWatchPoint watchPoint (
-        new impl::WatchPoint(config.coordinates, mesh, filename) );
+    std::string filename = "precice-" + participant->getName() + "-watchpoint-" + config.name + ".log";
+    impl::PtrWatchPoint watchPoint( new impl::WatchPoint(config.coordinates, mesh, filename) );
     participant->addWatchPoint ( watchPoint );
   }
   _watchPointConfigs.clear ();
