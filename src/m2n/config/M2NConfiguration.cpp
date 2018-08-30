@@ -40,7 +40,8 @@ M2NConfiguration::M2NConfiguration(xml::XMLTag &parent)
     doc = "Interface name to be used for socket communiation. ";
     doc += "Default is \"lo\", i.e., the local host loopback. ";
     doc += "Might be different on supercomputing systems, e.g. \"ib0\" ";
-    doc += "for the InfiniBand on SuperMUC";
+    doc += "for the InfiniBand on SuperMUC. ";
+    doc += "For macOS use \"lo0\". ";
     attrNetwork.setDocumentation(doc);
     attrNetwork.setDefaultValue("lo");
     tag.addAttribute(attrNetwork);
