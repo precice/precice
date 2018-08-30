@@ -324,8 +324,8 @@ void EventRegistry::printAll()
     logFile = "Events.log";
   }
   else {
-    csvFile = "EventTimings-" + applicationName + ".log";
-    logFile = "Events-" + applicationName + ".log";
+    csvFile = applicationName + "-eventTimings.log";
+    logFile = applicationName + "-events.log";
   }
   writeCSV(csvFile);
   writeEventLogs(logFile);

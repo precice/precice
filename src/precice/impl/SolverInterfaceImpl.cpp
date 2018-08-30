@@ -155,7 +155,7 @@ void SolverInterfaceImpl:: configure
   
   utils::Parallel::initializeMPI(nullptr, nullptr);
   precice::logging::setMPIRank(utils::Parallel::getProcessRank());
-  precice::utils::EventRegistry::instance().initialize(_accessorName);
+  precice::utils::EventRegistry::instance().initialize("precice-" + _accessorName);
   
   // Setup communication to server
   if (_clientMode){
