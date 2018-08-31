@@ -1116,7 +1116,8 @@ void SolverInterfaceImpl:: writeBlockVectorData
     CHECK(_accessor->isDataUsed(fromDataID),
           "You try to write to data /// @todo: hat is not defined for " << _accessor->getName());
     DataContext& context = _accessor->dataContext(fromDataID);
-
+    CHECK(context.fromData->getDimensions()==_dimensions,
+        "You cannot call writeBlockVectorData on the scalar data type " << context.fromData->getName());
     assertion(context.toData.get() != nullptr);
     auto& valuesInternal = context.fromData->values();
     for (int i=0; i < size; i++){
@@ -1154,6 +1155,8 @@ void SolverInterfaceImpl:: writeVectorData
     CHECK(_accessor->isDataUsed(fromDataID), "You try to write to data that is not defined for " << _accessor->getName());
 
     DataContext& context = _accessor->dataContext(fromDataID);
+    CHECK(context.fromData->getDimensions()==_dimensions,
+        "You cannot call writeVectorData on the scalar data type " << context.fromData->getName());
     assertion(context.toData.get() != nullptr);
     auto& values = context.fromData->values();
     assertion(valueIndex >= 0, valueIndex);
@@ -1184,6 +1187,8 @@ void SolverInterfaceImpl:: writeBlockScalarData
     CHECK(_accessor->isDataUsed(fromDataID),
           "You try to write to data that is not defined for " << _accessor->getName());
     DataContext& context = _accessor->dataContext(fromDataID);
+    CHECK(context.fromData->getDimensions()==1,
+        "You cannot call writeBlockScalarData on the vector data type " << context.fromData->getName());
     assertion(context.toData.get() != nullptr);
     auto& valuesInternal = context.fromData->values();
     for (int i=0; i < size; i++){
@@ -1208,6 +1213,8 @@ void SolverInterfaceImpl:: writeScalarData
     CHECK(_accessor->isDataUsed(fromDataID),
           "You try to write to data that is not defined for " << _accessor->getName());
     DataContext& context = _accessor->dataContext(fromDataID);
+    CHECK(context.fromData->getDimensions()==1,
+        "You cannot call writeScalarData on the vector data type " << context.fromData->getName());
     assertion(context.toData.use_count() > 0);
     auto& values = context.fromData->values();
     assertion(valueIndex >= 0, valueIndex);
@@ -1235,6 +1242,8 @@ void SolverInterfaceImpl:: readBlockVectorData
     CHECK(_accessor->isDataUsed(toDataID),
           "You try to read from data that is not defined for " << _accessor->getName());
     DataContext& context = _accessor->dataContext(toDataID);
+    CHECK(context.toData->getDimensions()==_dimensions,
+        "You cannot call readBlockVectorData on the scalar data type " << context.toData->getName());
     assertion(context.fromData.get() != nullptr);
     auto& valuesInternal = context.toData->values();
     for (int i=0; i < size; i++){
@@ -1264,6 +1273,8 @@ void SolverInterfaceImpl:: readVectorData
     CHECK(_accessor->isDataUsed(toDataID),
           "You try to read from data that is not defined for " << _accessor->getName());
     DataContext& context = _accessor->dataContext(toDataID);
+    CHECK(context.toData->getDimensions()==_dimensions,
+        "You cannot call readVectorData on the scalar data type " << context.toData->getName());
     assertion(context.fromData.use_count() > 0);
     auto& values = context.toData->values();
     assertion (valueIndex >= 0, valueIndex);
@@ -1299,6 +1310,8 @@ void SolverInterfaceImpl:: readBlockScalarData
     CHECK(_accessor->isDataUsed(toDataID),
           "You try to read from data that is not defined for " << _accessor->getName());
     DataContext& context = _accessor->dataContext(toDataID);
+    CHECK(context.toData->getDimensions()==1,
+        "You cannot call readBlockScalarData on the vector data type " << context.toData->getName());
     assertion(context.fromData.get() != nullptr);
     auto& valuesInternal = context.toData->values();
     for (int i=0; i < size; i++){
@@ -1324,6 +1337,8 @@ void SolverInterfaceImpl:: readScalarData
     CHECK(_accessor->isDataUsed(toDataID),
           "You try to read from data that is not defined for " << _accessor->getName());
     DataContext& context = _accessor->dataContext(toDataID);
+    CHECK(context.toData->getDimensions()==1,
+        "You cannot call readScalarData on the vector data type " << context.toData->getName());
     assertion(context.fromData.use_count() > 0);
     auto& values = context.toData->values();
     value = values[valueIndex];
