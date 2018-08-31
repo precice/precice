@@ -4,6 +4,9 @@
 #include "mesh/RTree.hpp"
 #include <Eigen/Core>
 #include <boost/function_output_iterator.hpp>
+#include "utils/EventTimings.hpp"
+
+
 
 namespace precice {
 namespace mapping {
@@ -24,8 +27,11 @@ NearestNeighborMapping:: NearestNeighborMapping
 void NearestNeighborMapping:: computeMapping()
 {
   TRACE(input()->vertices().size());
+
   assertion(input().get() != nullptr);
   assertion(output().get() != nullptr);
+
+  precice::utils::Event e("map.nn.computeMapping.From" + input()->getName() + "To" + output()->getName());
   
   if (getConstraint() == CONSISTENT){
     DEBUG("Compute consistent mapping");
@@ -80,6 +86,9 @@ void NearestNeighborMapping:: map
   int outputDataID )
 {
   TRACE(inputDataID, outputDataID);
+
+  precice::utils::Event e("map.nn.mapData.From" + input()->getName() + "To" + output()->getName());
+
   const Eigen::VectorXd& inputValues = input()->data(inputDataID)->values();
   Eigen::VectorXd& outputValues = output()->data(outputDataID)->values();
   //assign(outputValues) = 0.0;

@@ -96,7 +96,7 @@ void SolverInterfaceImpl:: configure
 {
   TRACE();
 
-  Event e("configure", not precice::testMode);
+  Event e("configure");
   utils::ScopedEventPrefix sep("configure/");
   _dimensions = config.getDimensions();
   _accessor = determineAccessingParticipant(config);
@@ -166,12 +166,17 @@ void SolverInterfaceImpl:: configure
   if (utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode){
     initializeMasterSlaveCommunication();
   }
+
+  auto & solverInitEvent = EventRegistry::instance().getStoredEvent("solver.initialize");
+  solverInitEvent.start();
 }
 
 double SolverInterfaceImpl:: initialize()
 {
   TRACE();
-  Event e("initialize", not precice::testMode);
+  auto & solverInitEvent = EventRegistry::instance().getStoredEvent("solver.initialize");
+  solverInitEvent.pause();
+  Event e("initialize");
   utils::ScopedEventPrefix sep("initialize/");
   
   if (_clientMode){
@@ -250,13 +255,20 @@ double SolverInterfaceImpl:: initialize()
 
     INFO(_couplingScheme->printCouplingState());
   }
+
+  solverInitEvent.start();
+
   return _couplingScheme->getNextTimestepMaxLength();
 }
 
 void SolverInterfaceImpl:: initializeData ()
 {
   TRACE();
-  Event e("initializeData", not precice::testMode);
+
+  auto & solverInitEvent = EventRegistry::instance().getStoredEvent("solver.initialize");
+  solverInitEvent.pause();
+
+  Event e("initializeData");
   utils::ScopedEventPrefix sep("initializeData/");
 
   CHECK(_couplingScheme->isInitialized(),
@@ -287,6 +299,7 @@ void SolverInterfaceImpl:: initializeData ()
       }
     }
   }
+  solverInitEvent.start();
 }
 
 double SolverInterfaceImpl:: advance
@@ -296,10 +309,12 @@ double SolverInterfaceImpl:: advance
   TRACE(computedTimestepLength);
 
   // Events for the solver time, stopped when we enter, restarted when we leave advance
-  auto & solverEvent = EventRegistry::instance().getStoredEvent("Solver");
+  auto & solverEvent = EventRegistry::instance().getStoredEvent("solver.advance");
   solverEvent.stop();
+  auto & solverInitEvent = EventRegistry::instance().getStoredEvent("solver.initialize");
+  solverInitEvent.stop();
 
-  Event e("advance", not precice::testMode);
+  Event e("advance");
   utils::ScopedEventPrefix sep("advance/");
 
   CHECK(_couplingScheme->isInitialized(), "initialize() has to be called before advance()");
@@ -376,6 +391,14 @@ double SolverInterfaceImpl:: advance
 void SolverInterfaceImpl:: finalize()
 {
   TRACE();
+
+  // Events for the solver time, finally stopped here
+  auto & solverEvent = EventRegistry::instance().getStoredEvent("solver.advance");
+  solverEvent.stop();
+
+  Event e("finalize");
+  utils::ScopedEventPrefix sep("finalize/");
+
   CHECK(_couplingScheme->isInitialized(), "initialize() has to be called before finalize()");
   _couplingScheme->finalize();
   _couplingScheme.reset();
@@ -1728,6 +1751,8 @@ void SolverInterfaceImpl:: initializeClientServerCommunication()
 void SolverInterfaceImpl:: initializeMasterSlaveCommunication()
 {
   TRACE();
+
+  Event e("com.initializeMasterSlaveCom");
   //slaves create new communicator with ranks 0 to size-2
   //therefore, the master uses a rankOffset and the slaves have to call request
   // with that offset

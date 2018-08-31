@@ -2,11 +2,9 @@
 
 #include "SVDFactorization.hpp"
 #include "utils/EigenHelperFunctions.hpp"
-#include "utils/EventTimings.hpp"
 #include "utils/Globals.hpp"
 #include "utils/MasterSlave.hpp"
 
-using precice::utils::Event;
 
 namespace precice
 {
@@ -101,7 +99,6 @@ void SVDFactorization::computeQRdecomposition(
     Matrix &      R)
 {
   TRACE();
-  //  Event e("compute_QR-dec_for-SVD-update", true, true); // time measurement, barrier
 
   // if nothing is linear dependent, the dimensions stay like this
   Q         = Matrix::Zero(A.rows(), A.cols());

@@ -9,6 +9,9 @@
 #include "utils/Globals.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/Helpers.hpp"
+#include "utils/EventTimings.hpp"
+
+using precice::utils::Event;
 
 namespace precice
 {
@@ -303,6 +306,8 @@ void BaseQNPostProcessing::performPostProcessing(
 {
   TRACE(_dataIDs.size(), cplData.size());
   
+  Event e("cpl.computeQuasiNewtonUpdate");
+
   assertion(_oldResiduals.size() == _oldXTilde.size(), _oldResiduals.size(), _oldXTilde.size());
   assertion(_values.size() == _oldXTilde.size(), _values.size(), _oldXTilde.size());
   assertion(_oldValues.size() == _oldXTilde.size(), _oldValues.size(), _oldXTilde.size());

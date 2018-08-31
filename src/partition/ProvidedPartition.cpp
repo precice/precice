@@ -24,10 +24,10 @@ void ProvidedPartition::communicate()
 {
   TRACE();
 
-  //TODO communication to more than one participant
+  //@todo communication to more than one participant
 
   if (_hasToSend) {
-    Event e1("gather mesh");
+    Event e1("partition.gatherMesh." + _mesh->getName());
 
     // Temporary globalMesh such that the master also keeps his local mesh
     mesh::Mesh globalMesh(_mesh->getName(), _mesh->getDimensions(), _mesh->isFlipNormals());
@@ -37,7 +37,7 @@ void ProvidedPartition::communicate()
     }
 
     // Gather Mesh
-    INFO("Gather mesh " << _mesh->getName());
+    INFO("Gather mesh " + _mesh->getName());
     if (utils::MasterSlave::_slaveMode ) {
         com::CommunicateMesh(utils::MasterSlave::_communication).sendMesh(*_mesh, 0);
     }
@@ -64,7 +64,7 @@ void ProvidedPartition::communicate()
 
     // Send (global) Mesh
     INFO("Send global mesh " << _mesh->getName());
-    Event e2("send global mesh");
+    Event e2("partition.sendGlobalMesh." + _mesh->getName());
     if (not utils::MasterSlave::_slaveMode) {
       CHECK(globalMesh.vertices().size() > 0, "The provided mesh " << globalMesh.getName() << " is invalid (possibly empty).");
       com::CommunicateMesh(_m2n->getMasterCommunication()).sendMesh(globalMesh, 0);
@@ -78,7 +78,7 @@ void ProvidedPartition::compute()
 {
   TRACE();
   INFO("Compute partition for mesh " << _mesh->getName());
-  Event e6("feedback mesh");
+  Event e6("partition.feedbackMesh." + _mesh->getName());
 
   int numberOfVertices = _mesh->vertices().size();
 

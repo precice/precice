@@ -17,10 +17,7 @@
 #include "QRFactorization.hpp"
 #include "SharedPointer.hpp"
 #include "logging/Logger.hpp"
-#include "utils/EventTimings.hpp"
 #include "utils/MasterSlave.hpp"
-
-using precice::utils::Event;
 
 // ------- CLASS DEFINITION
 
@@ -65,7 +62,6 @@ public:
       const Eigen::MatrixBase<Derived2> &B)
   {
     TRACE();
-    //     utils::Event e("SVD-update", true, true);
     assertion(_initialized);
     /** updates the truncated svd factorization of the Jacobian with a rank-1 modification
       *
@@ -85,7 +81,6 @@ public:
       _sigma = Vector::Zero(0);
     }
 
-    //     utils::Event e_orthModes("SVD-update::orthogonalModes", true, true);
     /** (1): compute orthogonal basis P of (I-\psi\psi^T)A
       */
     Matrix Atil(_psi.cols(), A.cols()); // Atil is of size (K_bar x m)
@@ -124,7 +119,6 @@ public:
       *      [    0    0]   [ R_A  ]   [ R_B  ]
       *  (stored local on each proc).
       */
-    //     utils::Event e_matK("SVD-update::build-svd-K", true, true);
     Matrix K = Matrix::Zero(_psi.cols() + R_A.rows(), _psi.cols() + R_B.rows());
     Matrix K_A(_psi.cols() + R_A.rows(), Atil.cols());
     Matrix K_B(_phi.cols() + R_B.rows(), Btil.cols());
@@ -147,7 +141,6 @@ public:
 
     /** (4) rotate left and right subspaces
       */
-    //     utils::Event e_rot("SVD-update::rot-eigenspaces", true, true);
     Matrix rotLeft(_rows, _psi.cols() + P.cols());
     Matrix rotRight(_rows, _phi.cols() + Q.cols());
 

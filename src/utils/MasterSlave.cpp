@@ -2,7 +2,6 @@
 
 #include "MasterSlave.hpp"
 
-#include "EventTimings.hpp"
 #include "Globals.hpp"
 #include "com/Communication.hpp"
 
@@ -135,8 +134,6 @@ MasterSlave::reduceSum(double* sendData, double* rcvData, int size) {
   assertion(_communication.get() != nullptr);
   assertion(_communication->isConnected());
 
-  //Event e("MasterSlave::allreduce_sum");
-
   if (_slaveMode) {
     // send local result to master
     _communication->reduceSum(sendData, rcvData, size, 0);
@@ -158,8 +155,6 @@ MasterSlave::reduceSum(int& sendData, int& rcvData, int size) {
 
   assertion(_communication.get() != nullptr);
   assertion(_communication->isConnected());
-
-  //Event e("MasterSlave::allreduce_sum");
 
   if (_slaveMode) {
     // send local result to master
@@ -183,8 +178,6 @@ MasterSlave::allreduceSum(double* sendData, double* rcvData, int size) {
   assertion(_communication.get() != nullptr);
   assertion(_communication->isConnected());
 
-  //Event e("MasterSlave::allreduce_sum");
-
   if (_slaveMode) {
     // send local result to master, receive reduced result from master
     _communication->allreduceSum(sendData, rcvData, size, 0);
@@ -206,8 +199,6 @@ MasterSlave::allreduceSum(double& sendData, double& rcvData, int size) {
 
   assertion(_communication.get() != nullptr);
   assertion(_communication->isConnected());
-
-  //Event e("MasterSlave::allreduce_sum");
 
   if (_slaveMode) {
     // send local result to master, receive reduced result from master
@@ -231,8 +222,6 @@ MasterSlave::allreduceSum(int& sendData, int& rcvData, int size) {
   assertion(_communication.get() != nullptr);
   assertion(_communication->isConnected());
 
-  //Event e("MasterSlave::allreduce_sum");
-
   if (_slaveMode) {
     // send local result to master, receive reduced result from master
     _communication->allreduceSum(sendData, rcvData, 0);
@@ -254,8 +243,6 @@ MasterSlave::broadcast(bool& value) {
 
   assertion(_communication.get() != nullptr);
   assertion(_communication->isConnected());
-
-  //Event e("MasterSlave::broadcast");
 
   if (_masterMode) {
     // Broadcast (send) value.
@@ -280,8 +267,6 @@ MasterSlave::broadcast(double& value) {
   assertion(_communication.get() != nullptr);
   assertion(_communication->isConnected());
 
-  //Event e("MasterSlave::broadcast");
-
   if (_masterMode) {
     // Broadcast (send) value.
     _communication->broadcast(value);
@@ -303,8 +288,6 @@ MasterSlave::broadcast(double* values, int size) {
 
   assertion(_communication.get() != nullptr);
   assertion(_communication->isConnected());
-
-  //Event e("MasterSlave::broadcast");
 
   if (_masterMode) {
     // Broadcast (send) value.

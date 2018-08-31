@@ -1,4 +1,3 @@
-
 #include "M2N.hpp"
 #include "DistributedComFactory.hpp"
 #include "DistributedCommunication.hpp"
@@ -13,8 +12,6 @@ using precice::utils::Publisher;
 
 namespace precice
 {
-
-extern bool testMode;
 
 namespace m2n
 {
@@ -43,7 +40,7 @@ void M2N::acceptMasterConnection(
 {
   TRACE(nameAcceptor, nameRequester);
 
-  //Event e("M2N::acceptMasterConnection");
+  Event e("m2n.acceptMasterConnection");
 
   if (not utils::MasterSlave::_slaveMode) {
     assertion(_masterCom.use_count() > 0);
@@ -59,6 +56,8 @@ void M2N::requestMasterConnection(
     const std::string &nameRequester)
 {
   TRACE(nameAcceptor, nameRequester);
+
+  Event e("m2n.requestMasterConnection");
 
   if (not utils::MasterSlave::_slaveMode) {
     assertion(_masterCom.use_count() > 0);
@@ -77,6 +76,9 @@ void M2N::acceptSlavesConnection(
     const std::string &nameRequester)
 {
   TRACE(nameAcceptor, nameRequester);
+
+  Event e("m2n.acceptSlavesConnection");
+
   _areSlavesConnected = true;
   for (const auto &pair : _distComs) {
     pair.second->acceptConnection(nameAcceptor, nameRequester);
@@ -90,6 +92,9 @@ void M2N::requestSlavesConnection(
     const std::string &nameRequester)
 {
   TRACE(nameAcceptor, nameRequester);
+
+  Event e("m2n.requestSlavesConnection");
+
   _areSlavesConnected = true;
   for (const auto &pair : _distComs) {
     pair.second->requestConnection(nameAcceptor, nameRequester);

@@ -361,7 +361,7 @@ void PointToPointCommunication::acceptConnection(std::string const &nameAcceptor
     auto addressDirectory = _communicationFactory->addressDirectory();
 
     if (utils::MasterSlave::_masterMode) {
-      Event e("PointToPointCommunication::acceptConnection/createDirectories");
+      Event e("m2n.createDirectories");
 
       for (int rank = 0; rank < utils::MasterSlave::_size; ++rank) {
         Publisher::createDirectory(addressDirectory + "/" + "." + nameAcceptor + "-" + _mesh->getName() +
@@ -439,7 +439,6 @@ void PointToPointCommunication::requestConnection(std::string const &nameAccepto
     // Establish connection between participants' master processes.
     auto c = _communicationFactory->newCommunication();
     {
-      utils::ScopedEventPrefix sep("PointToPointCommunication::requestConnection/synchronize/");
       c->requestConnection(nameAcceptor, nameRequester, 0, 1);
     }
 
@@ -508,8 +507,6 @@ void PointToPointCommunication::requestConnection(std::string const &nameAccepto
     _isConnected = true;
     return;
   }
-
-  utils::ScopedEventPrefix spe("PointToPointCommunication::requestConnection/request/");
 
   std::vector<com::PtrRequest> requests;
   requests.reserve(communicationMap.size());

@@ -1,6 +1,7 @@
 #include "NearestProjectionMapping.hpp"
 #include "query/FindClosest.hpp"
 #include <Eigen/Core>
+#include "utils/EventTimings.hpp"
 
 namespace precice {
 namespace mapping {
@@ -28,6 +29,9 @@ NearestProjectionMapping:: NearestProjectionMapping
 void NearestProjectionMapping:: computeMapping()
 {
   TRACE(input()->vertices().size(), output()->vertices().size());
+
+  precice::utils::Event e("map.np.computeMapping.From" + input()->getName() + "To" + output()->getName());
+
   if (getConstraint() == CONSISTENT){
     DEBUG("Compute consistent mapping");
     _weights.resize(output()->vertices().size());
@@ -78,6 +82,9 @@ void NearestProjectionMapping:: map
   int outputDataID )
 {
   TRACE(inputDataID, outputDataID);
+
+  precice::utils::Event e("map.np.mapData.From" + input()->getName() + "To" + output()->getName());
+
   mesh::PtrData inData = input()->data(inputDataID);
   mesh::PtrData outData = output()->data(outputDataID);
   const Eigen::VectorXd& inValues = inData->values();
