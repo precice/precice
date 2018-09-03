@@ -23,9 +23,6 @@ class SolverInterfaceConfiguration : public xml::XMLTag::Listener
 {
 public:
 
-  /**
-   * @brief Constructor.
-   */
   SolverInterfaceConfiguration(xml::XMLTag& parent);
 
   /**
@@ -99,15 +96,10 @@ public:
 
 private:
 
-  // @brief Logging device.
-  static logging::Logger _log;
+  logging::Logger _log{"config::SolverInterfaceConfiguration"};
 
-  // Tag and subtag names used within this configuration.
-  const std::string TAG;
-  const std::string ATTR_DIMENSIONS;
-  
-  // @brief Spatial dimension of problem to be solved. Either 2 or 3.
-  int _dimensions;
+  /// Spatial dimension of problem to be solved. Either 2 or 3.
+  int _dimensions = -1;
 
   // @brief Participating solvers in the coupled simulation.
   //std::vector<impl::PtrParticipant> _participants;

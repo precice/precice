@@ -76,7 +76,6 @@ CouplingSchemeConfiguration::CouplingSchemeConfiguration(
       _config(),
       _meshConfig(meshConfig),
       _m2nConfig(m2nConfig),
-      _isValid(false),
       _couplingSchemes(),
       _couplingSchemeCompositions()
 {

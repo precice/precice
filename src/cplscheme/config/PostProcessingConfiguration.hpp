@@ -16,12 +16,9 @@ namespace cplscheme
 class PostProcessingConfiguration : public xml::XMLTag::Listener
 {
 public:
-  // @brief Name of the XML tag holding post-processing information.
-  //static const std::string& getTag();
-
   PostProcessingConfiguration(const mesh::PtrMeshConfiguration &meshConfig);
 
-  /// Returns the configured (to be checked by isValid()) coupling scheme.
+  /// Returns the configured coupling scheme.
   impl::PtrPostProcessing getPostProcessing();
 
   /**
@@ -97,8 +94,6 @@ private:
   const std::string VALUE_SVD_RESTART;
   const std::string VALUE_SLIDE_RESTART;
   const std::string VALUE_NO_RESTART;
-
-  //bool _isValid;
 
   const mesh::PtrMeshConfiguration _meshConfig;
 

@@ -25,19 +25,9 @@ public:
     : name(name), dimensions(dimensions) {}
   };
 
-  /**
-   * @brief Returns the name of the main XML-tag of this configuration.
-   */
-  //static const std::string& getTag();
-
   DataConfiguration ( xml::XMLTag& parent );
 
   void setDimensions ( int dimensions );
-
-  /**
-   * @brief Returns true, if configuration was successfull.
-   */
-  //bool isValid() const;
 
   const std::vector<ConfiguredData>& data() const;
 

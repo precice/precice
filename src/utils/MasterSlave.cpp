@@ -2,7 +2,7 @@
 
 #include "MasterSlave.hpp"
 
-#include "Globals.hpp"
+#include "utils/assertion.hpp"
 #include "com/Communication.hpp"
 
 namespace precice {

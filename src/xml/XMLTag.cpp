@@ -107,43 +107,6 @@ bool XMLTag::hasAttribute(const std::string &attributeName)
   return utils::contained(attributeName, _attributes);
 }
 
-//void XMLTag:: removeAttribute
-//(
-//  const std::string& attributeName )
-//{
-//  using utils::contained;
-//  if (contained(attributeName, _intAttributes))
-//    _intAttributes.erase (attributeName);
-//  else if (contained(attributeName, _doubleAttributes))
-//    _doubleAttributes.erase (attributeName);
-//  else if (contained(attributeName, _stringAttributes))
-//    _stringAttributes.erase (attributeName);
-//  else if (contained(attributeName, _booleanAttributes))
-//    _booleanAttributes.erase ( attributeName );
-//  else if (contained(attributeName, _vector2DAttributes))
-//    _vector2DAttributes.erase (attributeName);
-//  else if (contained(attributeName, _vector3DAttributes))
-//    _vector3DAttributes.erase (attributeName);
-//  else if (contained(attributeName, _dynVectorAttributes))
-//    _dynVectorAttributes.erase (attributeName);
-//  else {
-//    ERROR(
-//                   "Attribute \"" << attributeName << "\" does not exist!" );
-//  }
-//}
-
-//const XMLTag& XMLTag:: getTag
-//(
-//  const std::string& tagName ) const
-//{
-//  for (size_t i=0; i < _subtags.size(); i++) {
-//    if (_subtags.at(i)->getName() == tagName)
-//      return *_subtags.at(i);
-//  }
-//  ERROR("Tag with name " << tagName
-//      << " does not exist for tag " << _name );
-//}
-
 double XMLTag::getDoubleAttributeValue(const std::string &name) const
 {
   std::map<std::string, XMLAttribute<double>>::const_iterator iter;

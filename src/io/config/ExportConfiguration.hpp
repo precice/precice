@@ -20,31 +20,10 @@ class ExportConfiguration : public xml::XMLTag::Listener
 {
 public:
 
-  /**
-   * @brief Name of the xml-tag corresponding to the ExportConfiguration.
-   */
-  //static const std::string& getTag();
-
-  /**
-   * @brief Constructor.
-   */
   ExportConfiguration ( xml::XMLTag& parent );
 
   /**
-   * @brief Parses the export configuration xml-tag.
-   *
-   * Requirements:
-   * - xmlReader has to point to the tag corresponding to ExportConfiguration
-   */
-  //bool parseSubtag ( xml::XMLTag::XMLReader* xmlReader );
-
-  /**
-   * @brief Returns true, if xml-tag has been parsed successfully.
-   */
-  //bool isValid() const { return _isValid; }
-
-  /**
-   * @brief Returns the configured export context, valid if isValid() is true.
+   * @brief Returns the configured export context
    */
   std::list<ExportContext>& exportContexts() { return _contexts; }
 
@@ -53,8 +32,8 @@ public:
    *
    * Is called by xml::XMLTag on automatic configuration every time an xml
    * tag and its attributes have been read.
-   * @param callingTag [IN] XML tag currently read.
-   * @param xmlReader  [IN] XML Reader responsible for reading the tag.
+   * @param[in] callingTag XML tag currently read.
+   * @param[in] xmlReader XML Reader responsible for reading the tag.
    * @return True, if the corresponding actions could be successfully performed.
    */
   virtual void xmlTagCallback ( xml::XMLTag& callingTag );

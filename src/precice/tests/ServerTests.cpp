@@ -186,7 +186,6 @@ BOOST_AUTO_TEST_CASE(testCouplingModeParallelWithOneServer, * testing::OnSize(4)
     impl::Participant::resetParticipantCount();
     config::Configuration config;
     xml::configure(config.getXMLTag(), configFile);
-    //validate ( config.isValid() );
     server.configure(config.getSolverInterfaceConfiguration());
     server.runServer();
   }

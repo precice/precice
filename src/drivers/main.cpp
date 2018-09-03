@@ -1,15 +1,9 @@
-#include "utils/Globals.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Petsc.hpp"
 #include "precice/impl/SolverInterfaceImpl.hpp"
 #include "precice/config/Configuration.hpp"
-
 #include <iostream>
-
 #include "logging/Logger.hpp"
-namespace precice {
-extern bool testMode;
-}
 
 void printUsage()
 {
