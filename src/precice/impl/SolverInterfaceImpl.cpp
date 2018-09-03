@@ -26,7 +26,6 @@
 #include "utils/Petsc.hpp"
 #include "utils/MasterSlave.hpp"
 #include "mapping/Mapping.hpp"
-#include <set>
 #include <Eigen/Core>
 #include "partition/ReceivedPartition.hpp"
 #include "partition/ProvidedPartition.hpp"
@@ -42,7 +41,11 @@ using precice::utils::EventRegistry;
 
 namespace precice {
 
+/// Set to true if unit/integration tests are executed
 bool testMode = false;
+
+/// Enabled further inter- and intra-solver synchronisation
+bool syncMode = false;
 
 namespace impl {
 
