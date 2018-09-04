@@ -198,7 +198,7 @@ void EventData::writeCSV(std::ostream &out)
   std::time_t ts = system_clock::to_time_t(now);
   auto ms = duration_cast<milliseconds>(now.time_since_epoch()) % 1000;
         
-  out << std::put_time(std::localtime(&ts), "%F %T") << "." << std::setw(3) << ms.count() << ","
+  out << std::put_time(std::localtime(&ts), "%FT%T") << "." << std::setw(3) << ms.count() << ","
       << rank << ","
       << getName() << ","
       << getCount() << ","
@@ -226,7 +226,7 @@ void EventData::writeEventLog(std::ostream &out)
   auto ms = duration_cast<milliseconds>(now.time_since_epoch()) % 1000;
   
   for (auto & sc : stateChanges) {
-    out << std::put_time(std::localtime(&ts), "%F %T") << "." << std::setw(3) << ms.count() << ","
+    out << std::put_time(std::localtime(&ts), "%FT%T") << "." << std::setw(3) << ms.count() << ","
         << name << ","
         << rank << ","
         << duration_cast<milliseconds>(std::get<1>(sc).time_since_epoch()).count() << ","
