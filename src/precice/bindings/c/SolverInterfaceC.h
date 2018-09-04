@@ -9,10 +9,10 @@ extern "C" {
  *
  * Has to be called before any other method of this interface.
  *
- * @param participantName [IN] Name of the participant accessing the interface. Has to
+ * @param[in] participantName Name of the participant accessing the interface. Has to
  *                          match one of the names specified in the
  *                          configuration xml file.
- * @param configFileName [IN] (Path and) name of the xml configuration file
+ * @param[in] configFileName (Path and) name of the xml configuration file
  *                            containing the precice configuration.
  */
 void precicec_createSolverInterface (
@@ -138,9 +138,9 @@ void precicec_setMeshTriangleWithEdges (
  * values = (d0x, d0y, d0z, d1x, d1y, d1z, ...., dnx, dny, dnz), where n is
  * the number of vector values. In 2D, the z-components are removed.
  *
- * @param dataID [IN] ID of the data to be written.
- * @param size [IN] Number of indices, and number of values * dimensions.
- * @param values [IN] Values of the data to be written.
+ * @param[in] dataID ID of the data to be written.
+ * @param[in] size Number of indices, and number of values * dimensions.
+ * @param[in] values Values of the data to be written.
  */
 void precicec_writeBlockVectorData (
   int     dataID,
@@ -151,9 +151,9 @@ void precicec_writeBlockVectorData (
 /**
  * @brief Writes vectorial foating point data to the coupling mesh.
  *
- * @param dataID [IN] ID of the data to be written. Obtained by getDataID().
- * @param dataPosition [IN] Spatial position of the data to be written.
- * @param dataValue [IN] Vectorial data value to be written.
+ * @param[in] dataID ID of the data to be written. Obtained by getDataID().
+ * @param[in] dataPosition Spatial position of the data to be written.
+ * @param[in] dataValue Vectorial data value to be written.
  */
 void precicec_writeVectorData (
   int           dataID,
@@ -172,9 +172,9 @@ void precicec_writeBlockScalarData (
 /**
  * @brief Writes scalar floating point data to the coupling mesh.
  *
- * @param dataID [IN] ID of the data to be written. Obtained by getDataID().
- * @param dataPosition [IN] Spatial position of the data to be written.
- * @param dataValue [IN] Scalar data value to be written.
+ * @param[in] dataID ID of the data to be written. Obtained by getDataID().
+ * @param[in] dataPosition Spatial position of the data to be written.
+ * @param[in] dataValue Scalar data value to be written.
  */
 void precicec_writeScalarData (
   int    dataID,
@@ -188,10 +188,10 @@ void precicec_writeScalarData (
  * values = (d0x, d0y, d0z, d1x, d1y, d1z, ...., dnx, dny, dnz), where n is
  * the number of vector values. In 2D, the z-components are removed.
  *
- * @param dataID [IN] ID of the data to be read.
- * @param size [IN] Number of indices, and number of values * dimensions.
- * @param valueIndices [IN] Indices (from setReadPosition()) of data values.
- * @param values [IN] Values of the data to be read.
+ * @param[in] dataID ID of the data to be read.
+ * @param[in] size  Number of indices, and number of values * dimensions.
+ * @param[in] valueIndices Indices (from setReadPosition()) of data values.
+ * @param[in] values Values of the data to be read.
  */
 void precicec_readBlockVectorData (
   int     dataID,
@@ -202,9 +202,9 @@ void precicec_readBlockVectorData (
 /**
  * @brief Reads vectorial foating point data from the coupling mesh.
  *
- * @param dataID [IN] ID of the data to be read. Obtained by getDataID().
- * @param dataPosition [IN] Position where the read data should be mapped to.
- * @param dataValue [OUT] Vectorial data value read.
+ * @param[in] dataID ID of the data to be read. Obtained by getDataID().
+ * @param[in] dataPosition Position where the read data should be mapped to.
+ * @param[out] dataValue Vectorial data value read.
  */
 void precicec_readVectorData (
   int     dataID,
@@ -223,9 +223,9 @@ void precicec_readBlockScalarData (
 /**
  * @brief Reads scalar foating point data from the coupling mesh.
  *
- * @param dataID [IN] ID of the data to be read. Obtained by getDataID().
- * @param dataPosition [IN] Position where the read data should be mapped to.
- * @param dataValue [OUT] Scalar data value read.
+ * @param[in] dataID ID of the data to be read. Obtained by getDataID().
+ * @param[in] dataPosition Position where the read data should be mapped to.
+ * @param[out] dataValue Scalar data value read.
  */
 void precicec_readScalarData (
   int     dataID,
@@ -234,7 +234,6 @@ void precicec_readScalarData (
 
 /**
  * @brief Computes and maps all write data mapped from mesh with given ID.
- *
  */
 void precicec_mapWriteDataFrom ( int fromMeshID );
 

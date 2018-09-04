@@ -5,6 +5,8 @@ All notable changes to this project will be documented in this file. For future 
 ## develop
 - update of build procedure for python bindings (see `precice/src/bindings/python/README.md` for instructions). Note: you do not have to add `PySolverInterface.so` to `PYTHONPATH` manually anymore, if you want to use it in your adapter. Python should be able to find it automatically.   
 **REMEMBER FOR NEXT RELEASE:** test and merge branch [updatedPythonBindingsBuildProcess](https://github.com/precice/elastictube1d/tree/updatedPythonBindingsBuildProcess) into master in elastictube1d.
+- removed anaconda helper scripts in [elastictube1d/PythonTube/building](https://github.com/precice/elastictube1d/tree/master/PythonTube/building) **REMEMBER FOR NEXT RELEASE:** actually do this and remove corresponding documentation in wiki (https://github.com/precice/precice/wiki/Using-the-Python-API#setup-and-running-using-anaconda-experimental).
+- Make naming of log files consistent, following the pattern `precice-SOLVERNAME-logtype.log`, example: `precice-FLUID-eventTimings.log`
 
 ## 1.2.0
 - Make `polynomial=separate` the default setting for PetRBF.

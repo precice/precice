@@ -1,4 +1,4 @@
-Python Interface for preCICE
+Python language bindings for preCICE
 ----------------------------
 
 # Dependencies
@@ -18,7 +18,7 @@ This creates a folder `build` with the binaries.
 ```
 $ python setup.py install
 ```
-to install the module on your system. You might need `sudo`, depending on the how you have installed python. You can use the option `--prefix=your/default/path` to install the module at an arbitrary path of your choice (for example, if you cannot or don't want to use `sudo`).
+to install the module on your system. You might need `sudo`, depending on the how you have installed Python. You can use the option `--prefix=your/default/path` to install the module at an arbitrary path of your choice (for example, if you cannot or don't want to use `sudo`).
 4. Clean
 ```
 $ python setup.py clean --all
@@ -54,5 +54,5 @@ sudo pip install mpi4py
 
 
 NOTE: 
-- For an example of how the `PySolverInterface` can be used, refer to the 1D tutorial. (https://github.com/precice/elastictube1d/tree/master/PythonTube)
+- For an example of how the `PySolverInterface` can be used, refer to the [1D elastic tube example](https://github.com/precice/precice/wiki/1D-elastic-tube-using-the-Python-API).
 - In case the compilation fails with `shared_ptr.pxd not found` messages, check if you use the latest version of Cython.

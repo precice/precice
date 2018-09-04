@@ -764,9 +764,10 @@ void MVQNPostProcessing::specializedIterationsConverged(
     } else if ((int) _matrixCols_RSLS.size() > _RSLSreusedTimesteps) {
       int toRemove = _matrixCols_RSLS.back();
       assertion(toRemove > 0, toRemove);
-      if (_matrixV_RSLS.size() > 0)
+      if (_matrixV_RSLS.size() > 0) {
         assertion(_matrixV_RSLS.cols() > toRemove, _matrixV_RSLS.cols(), toRemove);
-
+      }
+      
       // remove columns
       for (int i = 0; i < toRemove; i++) {
         utils::removeColumnFromMatrix(_matrixV_RSLS, _matrixV_RSLS.cols() - 1);

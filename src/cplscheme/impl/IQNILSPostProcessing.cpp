@@ -172,8 +172,9 @@ void IQNILSPostProcessing::computeQNUpdate(PostProcessing::DataMap &cplData, Eig
   } else {
     assertion(utils::MasterSlave::_communication.get() != nullptr);
     assertion(utils::MasterSlave::_communication->isConnected());
-    if (_hasNodesOnInterface)
+    if (_hasNodesOnInterface) {
       assertion(Q.cols() == getLSSystemCols(), Q.cols(), getLSSystemCols());
+    }
     assertion(_local_b.size() == getLSSystemCols(), _local_b.size(), getLSSystemCols());
 
     if (utils::MasterSlave::_masterMode) {

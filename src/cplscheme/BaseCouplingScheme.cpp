@@ -731,9 +731,9 @@ void BaseCouplingScheme::initializeTXTWriters()
 {
   if (not utils::MasterSlave::_slaveMode) {
 
-    _iterationsWriter = std::make_shared<io::TXTTableWriter>("iterations-" + _localParticipant + ".txt");
+    _iterationsWriter = std::make_shared<io::TXTTableWriter>("precice-" + _localParticipant + "-iterations.log");
     if (not doesFirstStep()) {
-      _convergenceWriter = std::make_shared<io::TXTTableWriter>("convergence-" + _localParticipant + ".txt");
+      _convergenceWriter = std::make_shared<io::TXTTableWriter>("precice-" + _localParticipant + "-convergence.log");
     }
 
     // check if coarse model optimization exists

@@ -56,7 +56,7 @@ void ExportVTK::exportMesh
   TRACE(mesh.getName());
 
   // Plot vertices
-  outFile << "POINTS " << mesh.vertices().size() << " float "<<std::endl << std::endl;
+  outFile << "POINTS " << mesh.vertices().size() << " float "<< std::endl << std::endl;
   for (mesh::Vertex& vertex : mesh.vertices()) {
     writeVertex(vertex.getCoords(), outFile);
   }
