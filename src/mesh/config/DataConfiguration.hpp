@@ -53,17 +53,17 @@ private:
   
   mutable logging::Logger _log{"mesh::DataConfiguration"};
 
-  const std::string TAG;
-  const std::string ATTR_NAME;
-  const std::string VALUE_VECTOR;
-  const std::string VALUE_SCALAR;
+  const std::string TAG = "data";
+  const std::string ATTR_NAME = "name";
+  const std::string VALUE_VECTOR = "vector";
+  const std::string VALUE_SCALAR = "scalar";
 
   /// Dimension of space.
-  int _dimensions;
+  int _dimensions = 0;
 
   std::vector<ConfiguredData> _data;
 
-  int _indexLastConfigured;
+  int _indexLastConfigured = -1;
 
   int getDataDimensions(const std::string& typeName) const;
 };

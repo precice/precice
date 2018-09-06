@@ -3,12 +3,6 @@
 namespace precice {
 namespace utils {
 
-ManageUniqueIDs:: ManageUniqueIDs ()
-:
-   _ids (),
-   _lowerLimit (0)
-{}
-
 int ManageUniqueIDs:: getFreeID ()
 {
    bool notFound = true;

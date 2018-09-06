@@ -34,15 +34,13 @@ struct InterpolationElement
 struct ClosestElement
 {
   std::vector<int> meshIDs;
-  double distance;
+  double distance = 0;
   Eigen::VectorXd vectorToElement;
   std::vector<InterpolationElement> interpolationElements;
 
   ClosestElement (int dim)
-  : meshIDs(),
-    distance(0.0),
-    vectorToElement(Eigen::VectorXd::Zero(dim)),
-    interpolationElements() {}
+    : vectorToElement(Eigen::VectorXd::Zero(dim))
+  {}
 };
 
 

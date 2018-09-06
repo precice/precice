@@ -6,12 +6,9 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
 #include "utils/EigenHelperFunctions.hpp"
-#include "utils/Globals.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/EventTimings.hpp"
-
-using precice::utils::Event;
 
 namespace precice
 {
@@ -33,8 +30,7 @@ BaseQNPostProcessing::BaseQNPostProcessing(
     double            singularityLimit,
     std::vector<int>  dataIDs,
     PtrPreconditioner preconditioner)
-    : PostProcessing(),
-      _preconditioner(preconditioner),
+  :   _preconditioner(preconditioner),
       _initialRelaxation(initialRelaxation),
       _maxIterationsUsed(maxIterationsUsed),
       _timestepsReused(timestepsReused),
@@ -49,11 +45,9 @@ BaseQNPostProcessing::BaseQNPostProcessing(
         "Initial relaxation factor for QN post-processing has to "
             << "be larger than zero and smaller or equal than one!");
   CHECK(_maxIterationsUsed > 0,
-        "Maximal iterations used for QN post-processing has to "
-            << "be larger than zero!");
+        "Maximal iterations used for QN post-processing has to be larger than zero!");
   CHECK(_timestepsReused >= 0,
-        "Number of old timesteps to be reused for QN "
-            << "post-processing has to be >= 0!");
+        "Number of old timesteps to be reused for QN post-processing has to be >= 0!");
 }
 
 /** ---------------------------------------------------------------------------------------------
@@ -306,7 +300,7 @@ void BaseQNPostProcessing::performPostProcessing(
 {
   TRACE(_dataIDs.size(), cplData.size());
   
-  Event e("cpl.computeQuasiNewtonUpdate");
+  utils::Event e("cpl.computeQuasiNewtonUpdate");
 
   assertion(_oldResiduals.size() == _oldXTilde.size(), _oldResiduals.size(), _oldXTilde.size());
   assertion(_values.size() == _oldXTilde.size(), _values.size(), _oldXTilde.size());

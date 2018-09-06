@@ -16,9 +16,7 @@ NearestNeighborMapping:: NearestNeighborMapping
   Constraint constraint,
   int        dimensions)
 :
-  Mapping(constraint, dimensions),
-  _hasComputedMapping(false),
-  _vertexIndices()
+  Mapping(constraint, dimensions)
 {
   setInputRequirement(VERTEX);
   setOutputRequirement(VERTEX);

@@ -1,5 +1,4 @@
 #include "Petsc.hpp"
-#include "utils/Globals.hpp"
 
 #ifndef PRECICE_NO_PETSC
 #include "petsc.h"

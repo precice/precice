@@ -7,7 +7,6 @@
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
 #include "testing/Testing.hpp"
-#include "utils/Globals.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/Parallel.hpp"
 

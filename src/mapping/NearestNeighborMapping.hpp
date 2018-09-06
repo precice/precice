@@ -43,7 +43,7 @@ private:
   mutable logging::Logger _log{"mapping::NearestNeighborMapping"};
 
   /// Flag to indicate whether computeMapping() has been called.
-  bool _hasComputedMapping;
+  bool _hasComputedMapping = false;
 
   /// Computed output vertex indices to map data from input vertices to.
   std::vector<int> _vertexIndices;

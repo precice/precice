@@ -6,7 +6,6 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
 #include "utils/EigenHelperFunctions.hpp"
-#include "utils/Globals.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/MasterSlave.hpp"
 //#include "utils/NumericalCompare.hpp"
@@ -17,9 +16,6 @@ namespace cplscheme
 {
 namespace impl
 {
-
-logging::Logger MMPostProcessing::
-    _log("cplscheme::impl::MMPostProcessing");
 
 /* ----------------------------------------------------------------------------
  *     Constructor
@@ -44,35 +40,11 @@ MMPostProcessing::MMPostProcessing(
       _singularityLimit(singularityLimit),
       _designSpecification(),
       _coarseModel_designSpecification(),
-      _isCoarseModelOptimizationActive(nullptr),
       _fineDataIDs(fineDataIDs),
       _coarseDataIDs(coarseDataIDs),
-      _dataIDs(),
-      _secondaryDataIDs(),
-      //_scalings(scalings),
-      _firstIteration(true),
-      _firstTimeStep(true),
       _estimateJacobian(estimateJacobian),
-      _fineResiduals(),
-      _coarseResiduals(),
-      _fineOldResiduals(),
-      _coarseOldResiduals(),
-      _outputFineModel(),
-      _outputCoarseModel(),
-      _input_Xstar(),
-      _matrixF(),
-      _matrixC(),
-      _MMMappingMatrix(),
-      _MMMappingMatrix_prev(),
-      _matrixCols(),
-      _dimOffsets(),
-      _iterCoarseModelOpt(0),
       _maxIterCoarseModelOpt(maxIterationsUsed),
-      its(0),
-      tSteps(0),
-      deletedColumns(0),
-      _filter(filter),
-      _notConvergedWithinMaxIter(false)
+      _filter(filter)
 {
   CHECK(_maxIterationsUsed > 0,
         "Maximal iterations used for MM post-processing has to be larger than zero!");
@@ -89,8 +61,7 @@ MMPostProcessing::MMPostProcessing(
  * @brief: Initializes all the needed variables and data
  *  ---------------------------------------------------------------------------------------------
  */
-void MMPostProcessing::initialize(
-    DataMap &cplData)
+void MMPostProcessing::initialize(DataMap &cplData)
 {
   TRACE(cplData.size());
   size_t              entries       = 0;

@@ -4,7 +4,6 @@
 #include "precice/impl/SolverInterfaceImpl.hpp"
 #include "precice/SolverInterface.hpp"
 #include "precice/Constants.hpp"
-#include "utils/Globals.hpp"
 #include "precice/config/Configuration.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/EventTimings.hpp"

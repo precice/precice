@@ -8,7 +8,6 @@
 #include "Preconditioner.hpp"
 #include "QRFactorization.hpp"
 #include "logging/Logger.hpp"
-#include "mesh/SharedPointer.hpp"
 
 /* ****************************************************************************
  * 
@@ -59,9 +58,7 @@ namespace impl
 class BaseQNPostProcessing : public PostProcessing
 {
 public:
-  /**
-   * @brief Constructor.
-   */
+
   BaseQNPostProcessing(
       double            initialRelaxation,
       bool              forceInitialRelaxation,

@@ -1,6 +1,5 @@
 #include "ExportVTKVoxelQueries.hpp"
-//#include "tarch/plotter/griddata/unstructured/vtk/VTKTextFileWriter.h"
-#include "utils/Globals.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace query {

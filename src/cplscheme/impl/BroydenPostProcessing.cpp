@@ -1,10 +1,6 @@
 #include "BroydenPostProcessing.hpp"
 #include <Eigen/Core>
 #include "cplscheme/CouplingData.hpp"
-#include "mesh/Mesh.hpp"
-#include "mesh/Vertex.hpp"
-#include "utils/EigenHelperFunctions.hpp"
-#include "utils/Globals.hpp"
 
 namespace precice
 {
@@ -27,12 +23,8 @@ BroydenPostProcessing::BroydenPostProcessing(
     PtrPreconditioner preconditioner)
     : BaseQNPostProcessing(initialRelaxation, forceInitialRelaxation, maxIterationsUsed, timestepsReused,
                            filter, singularityLimit, dataIDs, preconditioner),
-      _invJacobian(),
-      _oldInvJacobian(),
-      _maxColumns(maxIterationsUsed),
-      _currentColumns(0)
-{
-}
+      _maxColumns(maxIterationsUsed)
+{}
 
 void BroydenPostProcessing::initialize(
     DataMap &cplData)

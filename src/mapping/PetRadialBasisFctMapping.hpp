@@ -99,7 +99,7 @@ public:
 private:
   mutable logging::Logger _log{"mapping::PetRadialBasisFctMapping"};
 
-  bool _hasComputedMapping;
+  bool _hasComputedMapping = false;
 
   /// Radial basis function type used in interpolation.
   RADIAL_BASIS_FUNCTION_T _basisFunction;
@@ -188,7 +188,6 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
   Preallocation           preallocation)
   :
   Mapping ( constraint, dimensions ),
-  _hasComputedMapping ( false ),
   _basisFunction ( function ),
   _matrixC("C"),
   _matrixQ("Q"),

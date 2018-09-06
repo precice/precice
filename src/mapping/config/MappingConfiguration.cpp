@@ -5,7 +5,6 @@
 #include "mapping/PetRadialBasisFctMapping.hpp"
 #include "mapping/impl/BasisFunctions.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
-#include "utils/Globals.hpp"
 #include "xml/XMLTag.hpp"
 #include "xml/XMLAttribute.hpp"
 #include "xml/ValidatorEquals.hpp"

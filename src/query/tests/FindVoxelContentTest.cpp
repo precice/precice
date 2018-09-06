@@ -6,7 +6,6 @@
 #include "query/ExportVTKVoxelQueries.hpp"
 #include "query/FindVoxelContent.hpp"
 #include "testing/Testing.hpp"
-#include "utils/Globals.hpp"
 
 using namespace precice;
 using namespace precice::query;

@@ -1,7 +1,6 @@
 #include "QRFactorization.hpp"
 #include "com/Communication.hpp"
 #include "cplscheme/impl/BaseQNPostProcessing.hpp"
-#include "utils/Globals.hpp"
 
 #include <algorithm> // std::sort
 #include <cmath>
@@ -15,11 +14,6 @@ namespace cplscheme
 namespace impl
 {
 
-logging::Logger QRFactorization::_log("cplscheme::impl::QRFactorization");
-
-/**
- * Constructor
- */
 QRFactorization::QRFactorization(
     Eigen::MatrixXd Q,
     Eigen::MatrixXd R,

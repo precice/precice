@@ -11,9 +11,7 @@ NearestProjectionMapping:: NearestProjectionMapping
   Constraint constraint,
   int        dimensions)
 :
-  Mapping(constraint, dimensions),
-  _weights(),
-  _hasComputedMapping(false)
+  Mapping(constraint, dimensions)
 {
   if (constraint == CONSISTENT){
     setInputRequirement(FULL);

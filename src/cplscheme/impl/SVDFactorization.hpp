@@ -1,3 +1,4 @@
+#pragma once
 /*
  * SVDFactorization.hpp
  *
@@ -7,9 +8,6 @@
 
 #ifndef PRECICE_NO_MPI
 
-#ifndef SVDFACTORIZATION_HPP_
-#define SVDFACTORIZATION_HPP_
-
 #include <Eigen/Dense>
 #include <fstream>
 #include "ParallelMatrixOperations.hpp"
@@ -17,7 +15,6 @@
 #include "QRFactorization.hpp"
 #include "SharedPointer.hpp"
 #include "logging/Logger.hpp"
-#include "utils/MasterSlave.hpp"
 
 // ------- CLASS DEFINITION
 
@@ -236,7 +233,7 @@ public:
 
   bool isSVDinitialized();
 
-  // @brief optional file-stream for logging output
+  /// Optional file-stream for logging output
   void setfstream(std::fstream *stream);
 
 private:
@@ -254,56 +251,54 @@ private:
    */
   void computeQRdecomposition(Matrix const &A, Matrix &Q, Matrix &R);
 
-  /// @brief: Logging device.
-  static logging::Logger _log;
+  logging::Logger _log{"cplscheme::impl::SVDFactorization"};
 
   /// @brief: preconditioner for least-squares system if vectorial system is used.
   PtrPreconditioner _preconditioner;
 
   /// @brief: object for parallel matrix operations, i.e., parallel mat-mat/ mat-vec multiplications
-  PtrParMatrixOps _parMatrixOps;
+  PtrParMatrixOps _parMatrixOps = nullptr;
 
   /// @brief: SVD factorization of the matrix J = _psi * _sigma * _phi^T
   Matrix _psi;
   Matrix _phi;
   Vector _sigma;
 
-  /// @brief: number of rows (on each proc, i.e., local)
-  int _rows;
+  /// Number of rows (on each proc, i.e., local)
+  int _rows = 0;
 
-  /// @brief number of columns, i.e., rank of the truncated svd
-  int _cols;
+  /// Number of columns, i.e., rank of the truncated svd
+  int _cols = 0;
 
-  /// @brief: number of global rows, i.e., sum of _rows for all procs
-  int _globalRows;
+  /// Number of global rows, i.e., sum of _rows for all procs
+  int _globalRows = 0;
 
-  // @brief total number of truncated modes after last call to method getWaste()
-  int _waste;
+  // Total number of truncated modes after last call to method getWaste()
+  int _waste = 0;
 
-  ///@brief: Truncation parameter for the updated SVD decomposition
+  /// Truncation parameter for the updated SVD decomposition
   double _truncationEps;
 
-  /// @brief threshold for the QR2 filter for the QR decomposition.
-  double _epsQR2;
+  /// Threshold for the QR2 filter for the QR decomposition.
+  double _epsQR2 = 1e-3;
 
-  /// @brief: true if the preconditioner has been applied appropriate to the updated SVD decomposition
-  bool _preconditionerApplied;
+  /// true if the preconditioner has been applied appropriate to the updated SVD decomposition
+  bool _preconditionerApplied = false;
 
-  /// @brief: true, if ParallelMatrixOperations object is set, i.e., initialized
-  bool _initialized;
+  /// true, if ParallelMatrixOperations object is set, i.e., initialized
+  bool _initialized = false;
 
-  /// @brief: true, if at least one update has been made, i.e., the number of rows is known and a initial rank is given.
-  bool _initialSVD;
+  /// true, if at least one update has been made, i.e., the number of rows is known and a initial rank is given.
+  bool _initialSVD = false;
 
-  bool _applyFilterQR;
+  bool _applyFilterQR = false;
 
-  // @brief optional infostream that writes information to file
+  /// Optional infostream that writes information to file
   std::fstream *_infostream;
-  bool          _fstream_set;
+  bool          _fstream_set = false;
 };
 }
 }
 } // namespace precice, cplscheme, impl
 
-#endif /* SVDFACTORIZATION_HPP_ */
 #endif /* PRECICE_NO_MPI */

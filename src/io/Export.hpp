@@ -1,5 +1,4 @@
-#ifndef PRECICE_IO_EXPORT_HPP_
-#define PRECICE_IO_EXPORT_HPP_
+#pragma once
 
 #include "Constants.hpp"
 #include <string>
@@ -48,5 +47,3 @@ public:
 };
 
 }} // namespace precice, io
-
-#endif /* PRECICE_IO_EXPORT_HPP_ */

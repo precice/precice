@@ -34,12 +34,8 @@ IQNILSPostProcessing::IQNILSPostProcessing(
     std::vector<int>  dataIDs,
     PtrPreconditioner preconditioner)
     : BaseQNPostProcessing(initialRelaxation, forceInitialRelaxation, maxIterationsUsed, timestepsReused,
-                           filter, singularityLimit, dataIDs, preconditioner),
-      _secondaryOldXTildes(),
-      _secondaryMatricesW(),
-      _secondaryMatricesWBackup()
-{
-}
+                           filter, singularityLimit, dataIDs, preconditioner)
+{}
 
 void IQNILSPostProcessing::initialize(
     DataMap &cplData)
