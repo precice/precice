@@ -1,4 +1,5 @@
 #include "Petsc.hpp"
+#include "utils/Parallel.hpp"
 
 #ifndef PRECICE_NO_PETSC
 #include "petsc.h"
@@ -7,7 +8,7 @@
 namespace precice {
 namespace utils {
 
-logging::Logger Petsc:: _log("utils::Petsc" );
+logging::Logger Petsc::_log("utils::Petsc");
 
 bool Petsc::weInitialized = false;
 
