@@ -142,7 +142,7 @@ private:
    * @brief Sets whether the solver has to evaluate the coarse or the fine model representation
    * steers the coupling scheme and the post processing.
    */
-  bool _isCoarseModelOptimizationActive = false;
+  bool *_isCoarseModelOptimizationActive = nullptr;
 
   /// @brief Data IDs of data to be involved in the MM algorithm.
   std::vector<int> _fineDataIDs;

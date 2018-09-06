@@ -364,7 +364,7 @@ void MMPostProcessing::performPostProcessing(
    * using input and output datafrom the coarse and the fine model of the previous iterates (time steps)
    * Also updating mapping matrix (if jacobian_estimation = enabled)
    */
-  if (not _isCoarseModelOptimizationActive) {
+  if (not(*_isCoarseModelOptimizationActive)) {
 
     /**
      * assume the coarse model and the fine model has been evaluated for the new coarse model
@@ -444,7 +444,7 @@ void MMPostProcessing::performPostProcessing(
      * model optimization problem are updated (also Jacobian of MM mapping matrix if required).
      * next step: coarse model optimization, set the steering variable accordingly
      */
-    _isCoarseModelOptimizationActive = true;
+    (*_isCoarseModelOptimizationActive) = true;
 
     /** Undo of cplData scaling is not necessary, as we only read information from the cpl data.
      * The write back step is done in registerSolutionCoarseModelOptimization
@@ -458,7 +458,7 @@ void MMPostProcessing::performPostProcessing(
   /**
     * coarse model optimization cycle for the problem x_star = argmin_x|| c(x) - q_k ||
     */
-  if (_isCoarseModelOptimizationActive) {
+  if (*_isCoarseModelOptimizationActive) {
     // view on coarse coupling data only
     DataMap coarseCplData;
     for (int id : _coarseDataIDs) {
@@ -694,7 +694,7 @@ void MMPostProcessing::iterationsConverged(
    * optimization in next cycle.
    * next step: coarse model optimization, set the steering variable accordingly
    */
-  _isCoarseModelOptimizationActive = true;
+  (*_isCoarseModelOptimizationActive) = true;
 
   // reset the coarse model design specification
   _coarseModel_designSpecification = _designSpecification;
