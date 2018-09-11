@@ -873,7 +873,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::estimatePreallocationMat
       meshArea *= bbox[d].second - bbox[d].first;
 
   // supportVolume = math::PI * 4.0/3.0 * std::pow(supportRadius, 3);
-  double supportVolume;
+  double supportVolume = 0;
   if (getDimensions() == 2)
     supportVolume = 2 * supportRadius;
   else if (getDimensions() == 3)
@@ -918,7 +918,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::estimatePreallocationMat
       meshArea *= bbox[d].second - bbox[d].first;
 
   // supportVolume = math::PI * 4.0/3.0 * std::pow(supportRadius, 3);
-  double supportVolume;
+  double supportVolume = 0;
   if (getDimensions() == 2)
     supportVolume = 2 * supportRadius;
   else if (getDimensions() == 3)

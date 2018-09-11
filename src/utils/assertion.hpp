@@ -12,7 +12,7 @@
 
 #ifdef NDEBUG
 
-#define assertion(...)
+#define assertion(...) {}
 
 #else
 
