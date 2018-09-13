@@ -30,7 +30,6 @@ void printMPITestWarning(){
 
 int main ( int argc, char** argv )
 {
-  bool runTests = false;
   bool runServer = false;
   bool runHelp = false;
   bool runDtd = false;
@@ -74,7 +73,6 @@ int main ( int argc, char** argv )
   precice::utils::Petsc::initialize(&argc, &argv);
 
   if ( runServer ){
-    assertion(not runTests);
     assertion(not runHelp);
     std::cout << "PreCICE running server..." << std::endl;
     std::string participantName ( argv[2] );
@@ -92,13 +90,11 @@ int main ( int argc, char** argv )
   }
   else if (runHelp){
     assertion(not runServer);
-    assertion(not runTests);
     precice::config::Configuration config;
     std::cout << config.getXMLTag().printDocumentation(0) << std::endl << std::endl;
   }
   else if (runDtd) {
 	assertion(not runServer);
-    assertion(not runTests);
     precice::config::Configuration config;
     std::cout << config.getXMLTag().printDTD(true) << std::endl << std::endl;
   }
