@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Constants.hpp"
 #include <string>
 
 namespace precice {

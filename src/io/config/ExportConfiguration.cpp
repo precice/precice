@@ -2,8 +2,6 @@
 #include "io/Export.hpp"
 #include "xml/XMLTag.hpp"
 #include "xml/XMLAttribute.hpp"
-#include "xml/ValidatorEquals.hpp"
-#include "xml/ValidatorOr.hpp"
 
 namespace precice {
 namespace io {

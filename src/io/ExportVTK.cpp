@@ -4,6 +4,7 @@
 #include "mesh/Edge.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Quad.hpp"
+#include "Constants.hpp"
 #include <Eigen/Core>
 #include <iostream>
 #include <fstream>

@@ -23,15 +23,6 @@ public:
    */
   std::list<ExportContext>& exportContexts() { return _contexts; }
 
-  /**
-   * @brief Callback function required for use of automatic configuration.
-   *
-   * Is called by xml::XMLTag on automatic configuration every time an xml
-   * tag and its attributes have been read.
-   * @param[in] callingTag XML tag currently read.
-   * @param[in] xmlReader XML Reader responsible for reading the tag.
-   * @return True, if the corresponding actions could be successfully performed.
-   */
   virtual void xmlTagCallback ( xml::XMLTag& callingTag );
 
   /// Callback from automatic configuration. Not utilitzed here.
@@ -53,7 +44,7 @@ private:
   const std::string ATTR_NEIGHBORS = "neighbors";
   const std::string ATTR_TRIGGER_SOLVER = "trigger-solver";
   const std::string ATTR_NORMALS = "normals";
-  const std::string ATTR_EVERY_ITERATION = "every-iteration ";
+  const std::string ATTR_EVERY_ITERATION = "every-iteration";
 
   std::list<ExportContext> _contexts;
 };
