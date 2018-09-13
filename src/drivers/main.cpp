@@ -13,22 +13,6 @@ void printUsage()
   std::cout << "Print DTD for XML config :  binprecice dtd" << std::endl;
 }
 
-void printMPITestWarning(){
-# ifdef PRECICE_NO_MPI
-  std::cout << "WARNING: tests that need MPI will be skipped since preCICE was ";
-  std::cout << "compiled without MPI." << std::endl;
-# else
-  PRECICE_MASTER_ONLY{
-    if (precice::utils::Parallel::getCommunicatorSize() < 4) {
-      std::cout << "WARNING: to run all implemented tests, MPI has to be executed with ";
-      std::cout << "at least 4 processes. If you did execute MPI with";
-      std::cout << " 4 processes, be sure that you use the same MPI implementation";
-      std::cout << " for compiling AND running preCICE." << std::endl;
-    }
-  }
-# endif // not PRECICE_NO_MPI
-}
-
 int main ( int argc, char** argv )
 {
   bool runServer = false;
