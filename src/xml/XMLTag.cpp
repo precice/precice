@@ -42,24 +42,8 @@ void XMLTag::addSubtag(const XMLTag &tag)
     _configuredNamespaces[tag._namespace] = false;
   }
 
-  XMLTag *copy = new XMLTag(tag); // resolves mingw problem
-  _subtags.push_back(copy);
+  _subtags.push_back(std::make_shared<XMLTag>(tag));
 }
-
-//void XMLTag:: removeSubtag
-//(
-//  const std::string& tagName )
-//{
-//  std::vector<XMLTag*>::iterator iter;
-//  for ( iter=_subtags.begin(); iter != _subtags.end(); iter++ ){
-//    if ((*iter)->getName() == tagName) {
-//      delete *iter;  // MARK Bernhard, mingw
-//      _subtags.erase(iter);
-//      return;
-//    }
-//  }
-//  ERROR("Subtag \"" << tagName << "\" does not exist!" );
-//}
 
 void XMLTag::addAttribute(const XMLAttribute<double> &attribute)
 {
@@ -282,7 +266,7 @@ void XMLTag::areAllSubtagsConfigured() const
 {
   std::ostringstream stream;
 
-  for (XMLTag *tag : _subtags) {
+  for (auto tag : _subtags) {
     std::string ns         = tag->_namespace;
     bool        configured = tag->isConfigured();
 
@@ -334,7 +318,7 @@ void XMLTag::resetAttributes()
     pair.second.setRead(false);
   }
 
-  for (XMLTag *tag : _subtags) {
+  for (auto tag : _subtags) {
     tag->_configured = false;
     tag->resetAttributes();
   }
@@ -363,7 +347,7 @@ std::string XMLTag::printDTD(const bool start) const
     dtd << "(";
 
     bool first = true;
-    for (const XMLTag *subtag : _subtags) {
+    for (auto const subtag : _subtags) {
 
       std::string OccurrenceChar = "";
 
@@ -406,7 +390,7 @@ std::string XMLTag::printDTD(const bool start) const
   }
 
   if (not _subtags.empty()) {
-    for (const XMLTag *subtag : _subtags) {
+    for (auto const subtag : _subtags) {
       dtd << subtag->printDTD();
     }
   }
@@ -509,16 +493,13 @@ std::string XMLTag::printDocumentation(int indentation) const
   doc << utils::wrapText(tagHead.str(), linewidth, indentation + 3);
 
   if (not _subtags.empty()) {
-    doc << ">" << std::endl
-        << std::endl;
-    for (const XMLTag *subtag : _subtags) {
+    doc << ">" << std::endl << std::endl;
+    for (auto const subtag : _subtags) {
       doc << subtag->printDocumentation(indentation + 3);
     }
-    doc << indent << "</" << _fullName << ">" << std::endl
-        << std::endl;
+    doc << indent << "</" << _fullName << ">" << std::endl << std::endl;
   } else {
-    doc << "/>" << std::endl
-        << std::endl;
+    doc << "/>" << std::endl << std::endl;
   }
 
   return doc.str();
@@ -546,7 +527,7 @@ void configure(
   NoPListener nopListener;
   XMLTag      root(nopListener, "", XMLTag::OCCUR_ONCE);
 
-  precice::xml::ConfigParser p(configurationFilename, &tag);
+  precice::xml::ConfigParser p(configurationFilename, std::make_shared<XMLTag>(tag));
 
   root.addSubtag(tag);
 }

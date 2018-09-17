@@ -196,7 +196,7 @@ private:
 
   std::vector<std::string> _namespaces;
 
-  std::vector<XMLTag *> _subtags;
+  std::vector<std::shared_ptr<XMLTag>> _subtags;
 
   std::map<std::string, bool> _configuredNamespaces;
 
