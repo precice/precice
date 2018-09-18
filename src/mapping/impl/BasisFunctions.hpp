@@ -38,7 +38,7 @@ public:
  *
  * To be used as template parameter for RadialBasisFctMapping.
  *
- * Evaluates to: sqrt(shape + radius^2).
+ * Evaluates to: sqrt(shape^2 + radius^2).
  */
 class Multiquadrics
 {
@@ -118,7 +118,7 @@ public:
 
   double evaluate ( double radius ) const
   {
-    return radius;
+    return std::abs(radius);
   }
 };
 
@@ -182,8 +182,9 @@ private:
  * Takes the support radius (> 0.0) on construction.
  *
  *
- * Evaluates to: 1 - 30*rn^2 - 10*rn^3 + 45*rn^4 - 6*rn^5 - 60*log(rn^3),
+ * Evaluates to: 1 - 30*rn^2 - 10*rn^3 + 45*rn^4 - 6*rn^5 - 60*rn^3 * log(rn),
  * where rn is the radius r normalized over the support radius sr: rn = r/sr.
+ * To work around the issue of log(0), the equation is formulated differently in the last term.
  */
 class CompactThinPlateSplinesC2
 {

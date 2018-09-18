@@ -4,7 +4,6 @@
 #include "precice/impl/SolverInterfaceImpl.hpp"
 #include "precice/SolverInterface.hpp"
 #include "precice/Constants.hpp"
-#include "utils/Globals.hpp"
 #include "precice/config/Configuration.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/EventTimings.hpp"
@@ -186,7 +185,6 @@ BOOST_AUTO_TEST_CASE(testCouplingModeParallelWithOneServer, * testing::OnSize(4)
     impl::Participant::resetParticipantCount();
     config::Configuration config;
     xml::configure(config.getXMLTag(), configFile);
-    //validate ( config.isValid() );
     server.configure(config.getSolverInterfaceConfiguration());
     server.runServer();
   }

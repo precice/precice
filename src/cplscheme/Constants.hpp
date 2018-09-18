@@ -1,5 +1,4 @@
-#ifndef PRECICE_CPLSCHEME_CONSTANTS
-#define PRECICE_CPLSCHEME_CONSTANTS
+#pragma once
 
 #include <string>
 
@@ -21,5 +20,3 @@ enum TimesteppingMethod
 
 
 }}} // namespace precice, cplscheme, constants
-
-#endif // PRECICE_CPLSCHEME_CONSTANTS

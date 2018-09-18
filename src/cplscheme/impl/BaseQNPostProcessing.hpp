@@ -8,7 +8,6 @@
 #include "Preconditioner.hpp"
 #include "QRFactorization.hpp"
 #include "logging/Logger.hpp"
-#include "mesh/SharedPointer.hpp"
 
 /* ****************************************************************************
  * 
@@ -59,9 +58,7 @@ namespace impl
 class BaseQNPostProcessing : public PostProcessing
 {
 public:
-  /**
-   * @brief Constructor.
-   */
+
   BaseQNPostProcessing(
       double            initialRelaxation,
       bool              forceInitialRelaxation,
@@ -79,7 +76,7 @@ public:
   {
     // not necessary for user, only for developer, if needed, this should be configurable
     //     if (utils::MasterSlave::_masterMode || (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode)){
-    //       _infostream.open("postProcessingInfo.txt", std::ios_base::out);
+    //       _infostream.open("precice-postProcessingInfo.log", std::ios_base::out);
     //       _infostream << std::setprecision(16);
     //       _infostream << _infostringstream.str();
     //     }

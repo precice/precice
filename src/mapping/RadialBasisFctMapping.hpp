@@ -3,6 +3,7 @@
 #include "Mapping.hpp"
 #include "impl/BasisFunctions.hpp"
 #include "utils/MasterSlave.hpp"
+#include "utils/EventTimings.hpp"
 
 #include <Eigen/Core>
 #include <Eigen/QR>
@@ -126,6 +127,8 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
 {
   TRACE();
 
+  precice::utils::Event e("map.rbf.computeMapping.From" + input()->getName() + "To" + output()->getName());
+
   CHECK(not utils::MasterSlave::_slaveMode && not utils::MasterSlave::_masterMode,
         "RBF mapping is not supported for a participant in master mode, use petrbf instead");
 
@@ -226,6 +229,9 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
   int outputDataID )
 {
   TRACE(inputDataID, outputDataID);
+
+  precice::utils::Event e("map.rbf.mapData.From" + input()->getName() + "To" + output()->getName());
+
   assertion(_hasComputedMapping);
   assertion(input()->getDimensions() == output()->getDimensions(),
              input()->getDimensions(), output()->getDimensions());

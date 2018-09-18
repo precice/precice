@@ -1,10 +1,12 @@
 #include "Configuration.hpp"
-#include "utils/Globals.hpp"
+#include "xml/XMLAttribute.hpp"
+
 
 namespace precice {
-namespace config {
 
-logging::Logger Configuration:: _log("config::Configuration");
+extern bool syncMode;
+
+namespace config {
 
 Configuration:: Configuration()
 :
@@ -21,6 +23,13 @@ Configuration:: Configuration()
   _tag.addNamespace("server");
   _tag.addNamespace("coupling-scheme");
   _tag.addNamespace("post-processing");
+
+  xml::XMLAttribute<bool> attrSyncMode("sync-mode");
+  std::string doc = "sync-mode enabled additional inter- and intra-participant synchronizations";
+  attrSyncMode.setDefaultValue(false);
+  attrSyncMode.setDocumentation(doc);
+  _tag.addAttribute(attrSyncMode);
+
 }
 
 xml::XMLTag& Configuration:: getXMLTag()
@@ -28,11 +37,12 @@ xml::XMLTag& Configuration:: getXMLTag()
   return _tag;
 }
 
-void Configuration:: xmlTagCallback
-(
-  xml::XMLTag& tag )
+void Configuration::xmlTagCallback(xml::XMLTag& tag)
 {
   TRACE(tag.getName());
+  if (tag.getName() == "precice-configuration") {
+    precice::syncMode = tag.getBooleanAttributeValue("sync-mode");
+  }
 }
 
 void Configuration:: xmlEndTagCallback

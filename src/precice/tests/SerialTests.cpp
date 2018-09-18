@@ -7,13 +7,11 @@
 #include "precice/impl/DataContext.hpp"
 #include "precice/SolverInterface.hpp"
 #include "precice/Constants.hpp"
-#include "utils/Globals.hpp"
 #include "utils/Parallel.hpp"
 #include "precice/Constants.hpp"
 #include "precice/impl/Participant.hpp"
 #include "precice/config/Configuration.hpp"
 #include "utils/MasterSlave.hpp"
-#include "utils/EventTimings.hpp"
 
 using namespace precice;
 

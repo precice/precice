@@ -1,6 +1,5 @@
 #include "precice/SolverInterface.hpp"
 #include "precice/impl/SolverInterfaceImpl.hpp"
-#include "utils/Globals.hpp"
 
 namespace precice {
 

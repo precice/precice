@@ -59,16 +59,18 @@ void OnCharacters(void *ctx, const xmlChar *ch, int len)
 
 precice::logging::Logger ConfigParser::_log("xml::XMLParser");
 
-ConfigParser::ConfigParser(const std::string &filePath, precice::xml::XMLTag *pXmlTag)
+ConfigParser::ConfigParser(const std::string &filePath, std::shared_ptr<precice::xml::XMLTag> pXmlTag)
 {
   m_pXmlTag = pXmlTag;
   readXmlFile(filePath);
 
-  std::vector<XMLTag *> DefTags;
+  std::vector<std::shared_ptr<XMLTag>> DefTags;
   DefTags.push_back(m_pXmlTag);
 
-  std::vector<CTag *> SubTags;
-  SubTags.push_back(getRootTag());
+  CTagPtrVec SubTags;
+  // Initialize with the root tag, if any.
+  if (not m_AllTags.empty())
+    SubTags.push_back(m_AllTags[0]);
 
   try {
     connectTags(DefTags, SubTags);
@@ -80,17 +82,6 @@ ConfigParser::ConfigParser(const std::string &filePath, precice::xml::XMLTag *pX
 ConfigParser::ConfigParser(const std::string &filePath)
 {
   readXmlFile(filePath);
-}
-
-ConfigParser::~ConfigParser()
-{
-  while (!m_AllTags.empty()) {
-    CTag *pTag = m_AllTags.back();
-
-    delete pTag;
-
-    m_AllTags.pop_back();
-  }
 }
 
 void ConfigParser::GenericErrorFunc(void *ctx, const char *msg, ...)
@@ -137,27 +128,17 @@ int ConfigParser::readXmlFile(std::string const &filePath)
   return 0;
 }
 
-ConfigParser::CTag *ConfigParser::getRootTag()
-{
-  if (m_AllTags.empty())
-    return nullptr;
-
-  return m_AllTags[0];
-}
-
-void ConfigParser::connectTags(std::vector<XMLTag *> &DefTags, std::vector<CTag *> &SubTags)
+void ConfigParser::connectTags(std::vector<std::shared_ptr<XMLTag>> &DefTags, CTagPtrVec &SubTags)
 {
   std::vector<std::string> usedTags;
 
   for (auto subtag : SubTags) {
-    CTag *pSubTag = (CTag *) subtag;
 
     bool found = false;
 
-    for (auto defSubtag : DefTags) {
-      XMLTag *pDefSubTag = defSubtag;
-
-      if (pDefSubTag->_fullName == ((pSubTag->m_Prefix.length() ? pSubTag->m_Prefix + ":" : "") + pSubTag->m_Name)) {
+    for (auto pDefSubTag : DefTags) {
+      
+      if (pDefSubTag->_fullName == ((subtag->m_Prefix.length() ? subtag->m_Prefix + ":" : "") + subtag->m_Name)) {
         found = true;
         pDefSubTag->resetAttributes();
 
@@ -165,16 +146,15 @@ void ConfigParser::connectTags(std::vector<XMLTag *> &DefTags, std::vector<CTag 
           if (std::find(usedTags.begin(), usedTags.end(), pDefSubTag->_fullName) != usedTags.end()) {
             ERROR("Tag <" + pDefSubTag->_fullName + "> is already used");
           }
-
           usedTags.push_back(pDefSubTag->_fullName);
         }
 
         pDefSubTag->_configuredNamespaces[pDefSubTag->_namespace] = true;
-        pDefSubTag->readAttributes(pSubTag->m_aAttributes);
+        pDefSubTag->readAttributes(subtag->m_aAttributes);
         pDefSubTag->_listener.xmlTagCallback(*pDefSubTag);
         pDefSubTag->_configured = true;
 
-        connectTags(pDefSubTag->_subtags, pSubTag->m_aSubTags);
+        connectTags(pDefSubTag->_subtags, subtag->m_aSubTags);
 
         if (!pDefSubTag->_subtags.empty()) {
           pDefSubTag->areAllSubtagsConfigured();
@@ -186,7 +166,7 @@ void ConfigParser::connectTags(std::vector<XMLTag *> &DefTags, std::vector<CTag 
     }
 
     if (!found)
-      ERROR("Tag <" + ((pSubTag->m_Prefix.length() ? pSubTag->m_Prefix + ":" : "") + pSubTag->m_Name) + "> is unknown");
+      ERROR("Tag <" + ((subtag->m_Prefix.length() ? subtag->m_Prefix + ":" : "") + subtag->m_Name) + "> is unknown");
   }
 }
 
@@ -195,14 +175,14 @@ void ConfigParser::OnStartElement(
     std::string         prefix,
     CTag::AttributePair attributes)
 {
-  CTag *pTag = new CTag();
+  auto pTag = std::make_shared<CTag>();
 
   pTag->m_Prefix      = std::move(prefix);
   pTag->m_Name        = std::move(localname);
   pTag->m_aAttributes = std::move(attributes);
 
   if (not m_CurrentTags.empty()) {
-    CTag *pParentTag = m_CurrentTags.back();
+    auto pParentTag = m_CurrentTags.back();
     pParentTag->m_aSubTags.push_back(pTag);
   }
 

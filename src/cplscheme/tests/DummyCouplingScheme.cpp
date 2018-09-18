@@ -1,4 +1,3 @@
-
 #include "DummyCouplingScheme.hpp"
 #include "../Constants.hpp"
 
@@ -7,20 +6,13 @@ namespace precice {
 namespace cplscheme {
 namespace tests {
 
-logging::Logger DummyCouplingScheme::
-   _log("cplscheme::tests::DummyCouplingScheme");
-
 DummyCouplingScheme:: DummyCouplingScheme
 (
   int numberIterations,
   int maxTimesteps )
 :
   _numberIterations(numberIterations),
-  _iterations(0),
-  _maxTimesteps(maxTimesteps),
-  _timesteps(0),
-  _isInitialized(false),
-  _isOngoing(false)
+  _maxTimesteps(maxTimesteps)
 {}
 
 void DummyCouplingScheme:: initialize

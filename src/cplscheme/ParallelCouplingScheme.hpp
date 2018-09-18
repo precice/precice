@@ -28,8 +28,6 @@ public:
     CouplingMode          cplMode,
     int                   maxIterations = 1);
 
-  logging::Logger _log{"cplscheme::ParallelCouplingScheme"};
-
   virtual void initialize(double startTime, int startTimestep);
 
   virtual void initializeData();
@@ -50,6 +48,8 @@ protected:
 
 
 private:
+  logging::Logger _log{"cplscheme::ParallelCouplingScheme"};
+  
   /// Map from data ID -> all data (receive and send) with that ID
   DataMap _allData;
 

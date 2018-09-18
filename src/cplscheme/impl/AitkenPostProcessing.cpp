@@ -17,26 +17,18 @@ namespace cplscheme
 namespace impl
 {
 
-logging::Logger AitkenPostProcessing::_log("cplscheme::AitkenPostProcessing");
-
-AitkenPostProcessing::AitkenPostProcessing(
-    double           initialRelaxation,
-    std::vector<int> dataIDs)
-    : PostProcessing(),
-      _initialRelaxation(initialRelaxation),
-      _dataIDs(dataIDs),
-      _aitkenFactor(initialRelaxation),
-      _iterationCounter(0),
-      _residuals(),
-      _designSpecification()
+AitkenPostProcessing::AitkenPostProcessing(double initialRelaxation,
+                                           std::vector<int> dataIDs)
+  :_initialRelaxation(initialRelaxation),
+   _dataIDs(dataIDs),
+   _aitkenFactor(initialRelaxation)
 {
   CHECK((_initialRelaxation > 0.0) && (_initialRelaxation <= 1.0),
         "Initial relaxation factor for aitken post processing has to "
-            << "be larger than zero and smaller or equal than one!");
+        << "be larger than zero and smaller or equal than one!");
 }
 
-void AitkenPostProcessing::initialize(
-    DataMap &cplData)
+void AitkenPostProcessing::initialize(DataMap &cplData)
 {
   CHECK(utils::contained(*_dataIDs.begin(), cplData),
         "Data with ID " << *_dataIDs.begin() << " is not contained in data given at initialization!");

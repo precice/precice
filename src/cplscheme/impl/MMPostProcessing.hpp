@@ -108,8 +108,7 @@ public:
   }
 
 private:
-  /// Logging device.
-  static logging::Logger _log;
+  logging::Logger _log{"cplscheme::impl::MMPostProcessing"};
 
   /// Coarse model optimization method
   impl::PtrPostProcessing _coarseModelOptimization;
@@ -143,7 +142,7 @@ private:
    * @brief Sets whether the solver has to evaluate the coarse or the fine model representation
    * steers the coupling scheme and the post processing.
    */
-  bool *_isCoarseModelOptimizationActive;
+  bool *_isCoarseModelOptimizationActive = nullptr;
 
   /// @brief Data IDs of data to be involved in the MM algorithm.
   std::vector<int> _fineDataIDs;
@@ -161,11 +160,11 @@ private:
   std::map<int, double> _scalings;
 
   // @brief Indicates the first iteration, where constant relaxation is used.
-  bool _firstIteration;
+  bool _firstIteration = true;
 
   // @brief Indicates the first time step, where constant relaxation is used
   //        later, we replace the constant relaxation by a qN-update from last time step.
-  bool _firstTimeStep;
+  bool _firstTimeStep = true;
 
   /** @brief Indicates whether the Jacobian is stored explicitly (multi-vector method) or
    *         if a matrix-vector update is used without explicit representation of the Jacobian.
@@ -223,19 +222,19 @@ private:
    */
   std::vector<int> _dimOffsets;
 
-  int _iterCoarseModelOpt;
+  int _iterCoarseModelOpt = 0;
   int _maxIterCoarseModelOpt;
 
   /// only debugging info, remove this:
-  int its, tSteps;
-  int deletedColumns;
+  int its = 0, tSteps = 0;
+  int deletedColumns = 0;
 
   /** @brief filter method that is used to maintain good conditioning of the least-squares system
    *		Either of two types: QR1FILTER or QR2Filter
    */
   int _filter;
 
-  bool _notConvergedWithinMaxIter;
+  bool _notConvergedWithinMaxIter = false;
 
   /** @brief: computes number of cols in least squares system, i.e, number of cols in
    * 		  _matrixV, _matrixW, _qrV, etc..

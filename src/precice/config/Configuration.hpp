@@ -18,9 +18,6 @@ class Configuration : public xml::XMLTag::Listener
 {
 public:
 
-  /**
-   * @brief Constructor.
-   */
   Configuration();
 
   /**
@@ -54,8 +51,7 @@ public:
 
 private:
 
-  // @brief Logging device.
-  static logging::Logger _log;
+  logging::Logger _log{"config::Configuration"};
 
   // @brief Root tag of preCICE configuration.
   xml::XMLTag _tag;

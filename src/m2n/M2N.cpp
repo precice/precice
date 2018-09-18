@@ -1,4 +1,3 @@
-
 #include "M2N.hpp"
 #include "DistributedComFactory.hpp"
 #include "DistributedCommunication.hpp"
@@ -13,8 +12,8 @@ using precice::utils::Publisher;
 
 namespace precice
 {
-
 extern bool testMode;
+extern bool syncMode;
 
 namespace m2n
 {
@@ -43,7 +42,7 @@ void M2N::acceptMasterConnection(
 {
   TRACE(acceptorName, requesterName);
 
-  //Event e("M2N::acceptMasterConnection");
+  Event e("m2n.acceptMasterConnection");
 
   if (not utils::MasterSlave::_slaveMode) {
     assertion(_masterCom.use_count() > 0);
@@ -59,6 +58,8 @@ void M2N::requestMasterConnection(
     const std::string &requesterName)
 {
   TRACE(acceptorName, requesterName);
+
+  Event e("m2n.requestMasterConnection");
 
   if (not utils::MasterSlave::_slaveMode) {
     assertion(_masterCom.use_count() > 0);
@@ -77,6 +78,8 @@ void M2N::acceptSlavesConnection(
     const std::string &requesterName)
 {
   TRACE(acceptorName, requesterName);
+  Event e("m2n.acceptSlavesConnection");
+
   _areSlavesConnected = true;
   for (const auto &pair : _distComs) {
     pair.second->acceptConnection(acceptorName, requesterName);
@@ -90,6 +93,8 @@ void M2N::requestSlavesConnection(
     const std::string &requesterName)
 {
   TRACE(acceptorName, requesterName);
+  Event e("m2n.requestSlavesConnection");
+
   _areSlavesConnected = true;
   for (const auto &pair : _distComs) {
     pair.second->requestConnection(acceptorName, requesterName);
@@ -141,19 +146,14 @@ void M2N::send(
     assertion(_distComs.find(meshID) != _distComs.end());
     assertion(_distComs[meshID].get() != nullptr);
 
-#ifdef M2N_PRE_SYNCHRONIZE
-    if (not precice::testMode) {
-      //      Event e("M2N::send/synchronize", true);
-
+    if (precice::syncMode and not precice::testMode) {
       if (not utils::MasterSlave::_slaveMode) {
-        bool ack;
-
+        bool ack = true;
         _masterCom->send(ack, 0);
         _masterCom->receive(ack, 0);
         _masterCom->send(ack, 0);
       }
     }
-#endif
 
     _distComs[meshID]->send(itemsToSend, size, valueDimension);
   } else { //coupling mode
@@ -188,10 +188,7 @@ void M2N::receive(double *itemsToReceive,
     assertion(_distComs.find(meshID) != _distComs.end());
     assertion(_distComs[meshID].get() != nullptr);
 
-#ifdef M2N_PRE_SYNCHRONIZE
-    if (not precice::testMode) {
-      //      Event e("M2N::receive/synchronize", true);
-
+    if (precice::syncMode and not precice::testMode) {
       if (not utils::MasterSlave::_slaveMode) {
         bool ack;
 
@@ -200,7 +197,6 @@ void M2N::receive(double *itemsToReceive,
         _masterCom->receive(ack, 0);
       }
     }
-#endif
 
     _distComs[meshID]->receive(itemsToReceive, size, valueDimension);
   } else { //coupling mode

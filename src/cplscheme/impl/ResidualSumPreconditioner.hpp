@@ -16,8 +16,7 @@ namespace impl
 class ResidualSumPreconditioner : public Preconditioner
 {
 public:
-  ResidualSumPreconditioner(
-      int maxNonConstTimesteps);
+  ResidualSumPreconditioner(int maxNonConstTimesteps);
   /**
    * @brief Destructor, empty.
    */
@@ -29,11 +28,11 @@ private:
   /**
    * @brief Update the scaling after every FSI iteration.
    *
-   * @param timestepComplete [IN] True if this FSI iteration also completed a timestep
+   * @param[in] timestepComplete True if this FSI iteration also completed a timestep
    */
   virtual void _update_(bool timestepComplete, const Eigen::VectorXd &oldValues, const Eigen::VectorXd &res);
 
-  static logging::Logger _log;
+  logging::Logger _log{"cplscheme::ResidualSumPreconditioner"};
 
   std::vector<double> _residualSum;
 };

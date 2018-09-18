@@ -261,7 +261,7 @@ if env["python"]:
     # FIXME: Supresses NumPy deprecation warnings. Needs to converted to the newer API.
     env.Append(CPPDEFINES = ['NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION'])
     env.AppendUnique(CPPPATH = [pythonIncPath, numpyIncPath])
-    env.AppendUnique(LIBPATH = [pythonLib])
+    env.AppendUnique(LIBPATH = [pythonLibPath])
     checkAdd(lib = pythonLib, header = "Python.h")
     # Check for numpy header needs python header first to compile
     checkAdd( header = ['Python.h', 'numpy/arrayobject.h'], usage = "NumPy")

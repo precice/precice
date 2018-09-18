@@ -8,13 +8,9 @@ namespace cplscheme
 namespace impl
 {
 
-logging::Logger ResidualSumPreconditioner::
-    _log("cplscheme::ResidualSumPreconditioner");
-
 ResidualSumPreconditioner::ResidualSumPreconditioner(
     int maxNonConstTimesteps)
-    : Preconditioner(
-          maxNonConstTimesteps)
+    : Preconditioner(maxNonConstTimesteps)
 {
 }
 
@@ -26,7 +22,9 @@ void ResidualSumPreconditioner::initialize(std::vector<size_t> &svs)
   _residualSum.resize(_subVectorSizes.size(), 0.0);
 }
 
-void ResidualSumPreconditioner::_update_(bool timestepComplete, const Eigen::VectorXd &oldValues, const Eigen::VectorXd &res)
+void ResidualSumPreconditioner::_update_(bool timestepComplete,
+                                         const Eigen::VectorXd &oldValues,
+                                         const Eigen::VectorXd &res)
 {
   if (not timestepComplete) {
     std::vector<double> norms(_subVectorSizes.size(), 0.0);

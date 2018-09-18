@@ -14,14 +14,11 @@
 namespace precice {
 namespace action {
 
-logging::Logger ActionConfiguration:: _log("config::ActionConfiguration");
-
 ActionConfiguration:: ActionConfiguration
 (
   xml::XMLTag&                    parent,
   const mesh::PtrMeshConfiguration& meshConfig )
 :
-  TAG("action"),
   NAME_DIVIDE_BY_AREA ( "divide-by-area" ),
   NAME_MULTIPLY_BY_AREA ( "multiply-by-area" ),
   NAME_SCALE_BY_COMPUTED_DT_RATIO ( "scale-by-computed-dt-ratio" ),
@@ -37,19 +34,12 @@ ActionConfiguration:: ActionConfiguration
   TAG_MAX_ITERATIONS ( "max-iterations" ),
   TAG_MODULE_PATH ( "path" ),
   TAG_MODULE_NAME ( "module" ),
-  ATTR_TYPE ( "type" ),
-  ATTR_TIMING ( "timing" ),
-  ATTR_NAME ( "name" ),
-  ATTR_VALUE ( "value" ),
-  ATTR_MESH ( "mesh" ),
   VALUE_REGULAR_PRIOR ( "regular-prior" ),
   VALUE_REGULAR_POST ( "regular-post" ),
   VALUE_ON_EXCHANGE_PRIOR ( "on-exchange-prior" ),
   VALUE_ON_EXCHANGE_POST ( "on-exchange-post" ),
   VALUE_ON_TIMESTEP_COMPLETE_POST("on-timestep-complete-post"),
-  _meshConfig ( meshConfig ),
-  _configuredAction(),
-  _actions()
+  _meshConfig ( meshConfig )
 {
   using namespace xml;
   std::string doc;

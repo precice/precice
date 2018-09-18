@@ -25,12 +25,6 @@ namespace precice
 namespace cplscheme
 {
 
-//const std::string & PostProcessingConfiguration:: getTag ()
-//{
-//  static std::string tag ( "post-processing" );
-//  return tag;
-//}
-
 PostProcessingConfiguration::PostProcessingConfiguration(
     const mesh::PtrMeshConfiguration &meshConfig)
     : TAG("post-processing"),
@@ -74,7 +68,6 @@ PostProcessingConfiguration::PostProcessingConfiguration(
       VALUE_SVD_RESTART("RS-SVD"),
       VALUE_SLIDE_RESTART("RS-SLIDE"),
       VALUE_NO_RESTART("no-restart"),
-      //_isValid(false),
       _meshConfig(meshConfig),
       _postProcessing(),
       _coarseModelOptimizationConfig(),
