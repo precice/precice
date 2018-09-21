@@ -26,10 +26,10 @@ class Quad : public PropertyContainer, private boost::noncopyable
 {
 public:
   /// Type of the random access vertex iterator
-  using VertexIter = IndexRangeIterator<Quad, Vertex>;
+  using iterator = IndexRangeIterator<Quad, Eigen::Vector3d>;
 
   /// Type of the const random access vertex iterator
-  using ConstVertexIter = IndexRangeIterator<const Quad, const Vertex>;
+  using const_iterator = IndexRangeIterator<const Quad, const Eigen::Vector3d>;
 
   /// Constructor, the order of edges defines the outer normal direction.
   Quad(
@@ -70,22 +70,22 @@ public:
   const Edge &edge(int i) const;
 
   /// Returns a random access iterator to the begin (0) of the vertex range [0,1,2,3]
-  VertexIter begin();
+  iterator begin();
 
   /// Returns a random access iterator to the end (4) of the vertex range [0,1,2,3]
-  VertexIter end();
+  iterator end();
 
   /// Returns a const random access iterator to the begin (0) of the vertex range [0,1,2,3]
-  ConstVertexIter begin() const;
+  const_iterator begin() const;
 
   /// Returns a const random access iterator to the end (4) of the vertex range [0,1,2,3]
-  ConstVertexIter end() const;
+  const_iterator end() const;
 
   /// Returns a const random access iterator to the begin (0) of the vertex range [0,1,2,3]
-  ConstVertexIter cbegin() const;
+  const_iterator cbegin() const;
 
   /// Returns a const random access iterator to the end (4) of the vertex range [0,1,2,3]
-  ConstVertexIter cend() const;
+  const_iterator cend() const;
 
   /// Sets the outer normal of the quad.
   template <typename VECTOR_T>
@@ -156,32 +156,32 @@ inline const Vertex &Quad::vertex(int i) const
   return edge(i).vertex(_vertexMap[i]);
 }
 
-inline Quad::VertexIter Quad::begin()
+inline Quad::iterator Quad::begin()
 {
   return {this, 0};
 }
 
-inline Quad::VertexIter Quad::end()
+inline Quad::iterator Quad::end()
 {
   return {this, 4};
 }
 
-inline Quad::ConstVertexIter Quad::begin() const
+inline Quad::const_iterator Quad::begin() const
 {
   return {this, 0};
 }
 
-inline Quad::ConstVertexIter Quad::end() const
+inline Quad::const_iterator Quad::end() const
 {
   return {this, 4};
 }
 
-inline Quad::ConstVertexIter Quad::cbegin() const
+inline Quad::const_iterator Quad::cbegin() const
 {
     return begin();
 }
 
-inline Quad::ConstVertexIter Quad::cend() const
+inline Quad::const_iterator Quad::cend() const
 {
     return end();
 }

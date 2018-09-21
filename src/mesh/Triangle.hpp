@@ -28,10 +28,10 @@ class Triangle : public PropertyContainer, private boost::noncopyable
 {
 public:
   /// Type of the random access vertex iterator
-  using VertexIter = IndexRangeIterator<Triangle, Vertex>;
+  using iterator = IndexRangeIterator<Triangle, Eigen::VectorXd>;
 
   /// Type of the const random access vertex iterator
-  using ConstVertexIter = IndexRangeIterator<const Triangle, const Vertex>;
+  using const_iterator = IndexRangeIterator<const Triangle, const Eigen::VectorXd>;
 
   /// Constructor, the order of edges defines the outer normal direction.
   Triangle(
@@ -71,22 +71,22 @@ public:
   const Edge &edge(int i) const;
 
   /// Returns a random access iterator to the begin (0) of the vertex range [0,1,2]
-  VertexIter begin();
+  iterator begin();
 
   /// Returns a random access iterator to the end (3) of the vertex range [0,1,2]
-  VertexIter end();
+  iterator end();
 
   /// Returns a const random access iterator to the begin (0) of the vertex range [0,1,2]
-  ConstVertexIter begin() const;
+  const_iterator begin() const;
 
   /// Returns a const random access iterator to the end (3) of the vertex range [0,1,2]
-  ConstVertexIter end() const;
+  const_iterator end() const;
 
   /// Returns a const random access iterator to the begin (0) of the vertex range [0,1,2]
-  ConstVertexIter cbegin() const;
+  const_iterator cbegin() const;
 
   /// Returns a const random access iterator to the end (3) of the vertex range [0,1,2]
-  ConstVertexIter cend() const;
+  const_iterator cend() const;
 
   /// Sets the outer normal of the triangle.
   template <typename VECTOR_T>
@@ -168,32 +168,32 @@ inline const Edge &Triangle::edge(int i) const
   return *_edges[i];
 }
 
-inline Triangle::VertexIter Triangle::begin()
+inline Triangle::iterator Triangle::begin()
 {
   return {this, 0};
 }
 
-inline Triangle::VertexIter Triangle::end()
+inline Triangle::iterator Triangle::end()
 {
   return {this, 3};
 }
 
-inline Triangle::ConstVertexIter Triangle::begin() const
+inline Triangle::const_iterator Triangle::begin() const
 {
   return {this, 0};
 }
 
-inline Triangle::ConstVertexIter Triangle::end() const
+inline Triangle::const_iterator Triangle::end() const
 {
   return {this, 3};
 }
 
-inline Triangle::ConstVertexIter Triangle::cbegin() const
+inline Triangle::const_iterator Triangle::cbegin() const
 {
   return begin();
 }
 
-inline Triangle::ConstVertexIter Triangle::cend() const
+inline Triangle::const_iterator Triangle::cend() const
 {
   return end();
 }

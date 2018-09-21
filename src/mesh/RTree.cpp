@@ -28,24 +28,18 @@ rtree::PtrRTree rtree::getVertexRTree(PtrMesh mesh)
   return tree;
 }
 
-PtrGeometryRTree rtree::getGeometryRTree(PtrMesh mesh)
+PtrPrimitiveRTree rtree::getGeometryRTree(PtrMesh mesh)
 {
-  auto iter = cache.find(mesh.getID());
-  if (iter != cache.end()) {
+  REQUIRE(mesh, "Empty meshes are not allowed.");
+  auto iter = primitive_trees_.find(mesh->getID());
+  if (iter != primitive_trees_.end()) {
     return iter->second;
   } else {
-    RTreeParameters     params;
-    GeometryIndexGetter ind(
-        mesh->vertices(),
-        mesh->edges(),
-        mesh->triangles(),
-        mesh->quads());
-    auto result = cache.emplace(std::piecewise_construct,
-                                std::forward_as_tuple(mesh->getID()),
-                                std::forward_as_tuple(std::make_shared<VertexRTree>(params, ind)));
-    auto tree   = std::get<0>(result)->second;
-    for (size_t i = 0; i < mesh->vertices().size(); ++i)
-      tree->insert(i); // <<< TODO
+      auto tree = indexMesh(*mesh);
+    primitive_trees_->insert(std::make_pair(
+                mesh->getID(),
+                tree
+                ));
     return tree;
   }
 }
@@ -53,7 +47,7 @@ PtrGeometryRTree rtree::getGeometryRTree(PtrMesh mesh)
 void rtree::clear(Mesh &mesh)
 {
   trees.erase(mesh.getID());
-  cache.erase(mesh.getID());
+  primitive_trees_.erase(mesh.getID());
 }
 
 Box3d getEnclosingBox(Vertex const &middlePoint, double sphereRadius)

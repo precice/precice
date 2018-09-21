@@ -20,7 +20,7 @@ public:
 
   Value &dereference() const
   {
-    return src_->vertex(idx_);
+    return src_->vertex(idx_).getCoords();
   }
 
   size_t equal(const IndexRangeIterator<Source, Value> &other) const

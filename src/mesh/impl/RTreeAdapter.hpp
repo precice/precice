@@ -75,19 +75,19 @@ struct tag<Edge> {
 };
 template <>
 struct point_type<Edge> {
-  using type = Vertex;
+  using type = Eigen::Vector3d;
 };
 
 template <size_t Index, size_t Dimension>
 struct indexed_access<Edge, Index, Dimension> {
   static double get(Edge const &e)
   {
-    return access<Vertex, Dimension>::get(e.vertex(Index));
+    return access<Eigen::Vector3d, Dimension>::get(e.vertex(Index).getCoords());
   }
 
   static void set(Edge &e, double const &value)
   {
-    return access<Vertex, Dimension>::set(e.vertex(Index), value);
+    return access<Eigen::Vector3d, Dimension>::set(e.vertex(Index), value);
   }
 };
 

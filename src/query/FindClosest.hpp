@@ -30,7 +30,7 @@ struct InterpolationElement
 };
 
 /// A vector of InterpolationElement
-using typename InterpolationElements = std::vector<InterpolationElement>;
+using InterpolationElements = std::vector<InterpolationElement>;
 
 /**
  * @brief Closest element to all objects with given mesh ID

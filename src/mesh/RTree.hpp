@@ -33,36 +33,20 @@ struct as_primitive_enum {
 };
 template <>
 struct as_primitive_enum<mesh::Vertex> {
-  static const Primitive value
-  {
-    Primitive::Vertex
-  }
+  static constexpr Primitive value = Primitive::Vertex;
 };
 template <>
 struct as_primitive_enum<mesh::Edge> {
-  static const Primitive value
-  {
-    Primitive::Edge
-  }
+  static constexpr Primitive value = Primitive::Edge;
 };
 template <>
 struct as_primitive_enum<mesh::Triangle> {
-  static const Primitive value
-  {
-    Primitive::Triangle
-  }
+  static constexpr Primitive value = Primitive::Triangle;
 };
 template <>
 struct as_primitive_enum<mesh::Quad> {
-  static const Primitive value
-  {
-    Primitive::Quad
-  }
+  static constexpr Primitive value = Primitive::Quad;
 };
-
-/// convenience wrapper for the as_primitive_enum trait
-template <class T>
-using as_primitive_enum_v = as_primitive_enum<T>::value;
 
 /// Binds an Index and Primitive into a type
 struct PrimitiveIndex {
@@ -77,7 +61,8 @@ struct PrimitiveIndex {
 };
 
 /// The axis aligned bounding box based on the Vertex Type
-using AABB = boost::geometry::model::box<precice::mesh::Vertex>;
+using AABB = boost::geometry::model::box<Eigen::VectorXd>;
+//using AABB = boost::geometry::model::box<mesh::Vertex>;
 
 /** Holding a reference to a Mesh it is a functor for packing
  *  PrimitiveIndex into AABBs.
@@ -92,13 +77,13 @@ public:
   {
     switch (pi.type) {
     case (Primitive::Vertex):
-      return boost::geometry::return_envelop<AABB>(mesh.vertices()[pi.index]);
+      return boost::geometry::return_envelope<AABB>(mesh_.vertices()[pi.index]);
     case (Primitive::Edge):
-      return boost::geometry::return_envelop<AABB>(mesh.edges()[pi.index]);
+      return boost::geometry::return_envelope<AABB>(mesh_.edges()[pi.index]);
     case (Primitive::Triangle):
-      return boost::geometry::return_envelop<AABB>(mesh.traingles()[pi.index]);
+      return boost::geometry::return_envelope<AABB>(mesh_.triangles()[pi.index]);
     case (Primitive::Quad):
-      return boost::geometry::return_envelop<AABB>(mesh.quads()[pi.index]);
+      return boost::geometry::return_envelope<AABB>(mesh_.quads()[pi.index]);
     }
   }
 
@@ -115,11 +100,11 @@ using PtrPrimitiveRTree = std::shared_ptr<PrimitiveRTree>;
 
 /// Indexes a given ptr_container of a mesh into a given rtree.
 template <typename Container>
-void indexPrimitive(PrimitiveRTree &rtree, const Container &conti)
+void indexPrimitive(PrimitiveRTree &rtree, const AABBGenerator& gen, const Container &conti)
 {
-  using ValueType = std::remove_cv_ref<conti::value_type>::type;
+  using ValueType = typename std::remove_reference<typename std::remove_cv<typename Container::value_type>::type>::type;
   for (size_t i = 0; i <= conti.count(); ++i) {
-    PrimitiveIndex index{as_primitive_enum_v<ValueType>, i};
+    PrimitiveIndex index{as_primitive_enum<ValueType>::value, i};
     rtree.insert(std::make_pair(gen(index), index));
   }
 }
@@ -129,10 +114,10 @@ inline PrimitiveRTree indexMesh(const Mesh &mesh)
 {
   AABBGenerator  gen{mesh};
   PrimitiveRTree tree;
-  indexPrimitive(tree, mesh.vertices());
-  indexPrimitive(tree, mesh.edges());
-  indexPrimitive(tree, mesh.triangles());
-  indexPrimitive(tree, mesh.quads());
+  indexPrimitive(tree, gen, mesh.vertices());
+  indexPrimitive(tree, gen, mesh.edges());
+  indexPrimitive(tree, gen, mesh.triangles());
+  indexPrimitive(tree, gen, mesh.quads());
   return tree;
 }
 
@@ -156,7 +141,7 @@ public:
   /*
    * Creates and fills the tree, if it wasn't requested before, otherwise it returns the cached tree.
    */
-  static PtrGeometryRTree getGeometryRTree(PtrMesh mesh);
+  static PtrPrimitiveRTree getPrimitiveRTree(PtrMesh mesh);
 
   /// Only clear the tree of that specific mesh
   static void clear(Mesh &mesh);
@@ -164,7 +149,7 @@ public:
   friend struct MeshTests::RTree::CacheClearing;
 
 private:
-  static std::map<int, PtrGeometryRTree> cache; ///< Cache for the geometry trees
+  static std::map<int, PtrPrimitiveRTree> primitive_trees_; ///< Cache for the geometry trees
   static std::map<int, PtrRTree>         trees;
 };
 
