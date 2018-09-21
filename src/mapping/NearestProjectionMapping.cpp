@@ -37,7 +37,7 @@ void NearestProjectionMapping::computeMapping()
       const Eigen::VectorXd &coords = oVertices[i].getCoords();
       // Search for the output vertex inside the input mesh
       rtree.query(boost::geometry::index::nearest(coords, 1),
-                  boost::make_function_output_iterator([&](const &nearest) {
+                  boost::make_function_output_iterator([&](const PrimitiveIndex &nearest) {
                     // fill the weights
                     switch (nearest::type) {
                     case (Primitive::Vertex):
