@@ -22,11 +22,8 @@ namespace query {
  */
 struct InterpolationElement
 {
-  mesh::Vertex* element;
-  double weight;
-
-  InterpolationElement ()
-  : element(NULL), weight(0.0) {}
+  mesh::Vertex* element = nullptr;
+  double weight = 0.0;
 };
 
 /// A vector of InterpolationElement

@@ -64,7 +64,7 @@ void NearestProjectionMapping::computeMapping()
                           "No interpolation elements for current vertex!");
                   }));
     }
-    assertion(std::none_of(_weights.cbegin(), _weights.cend(), [](auto &elements) {
+    assertion(std::none_of(_weights.cbegin(), _weights.cend(), [](const mesh::InterpolationElements &elements) {
               return elements.empty();
             }),
             "The mapping is incomplete as there are vertices with no interpolation elements assigned to them.");
@@ -104,7 +104,7 @@ void NearestProjectionMapping::computeMapping()
                           "No interpolation elements for current vertex!");
                   }));
     }
-    assertion(std::none_of(_weights.cbegin(), _weights.cend(), [](auto &elements) {
+    assertion(std::none_of(_weights.cbegin(), _weights.cend(), [](const mesh::InterpolationElements &elements) {
               return elements.empty();
             }),
             "The mapping is incomplete as there are vertices with no interpolation elements assigned to them.");
