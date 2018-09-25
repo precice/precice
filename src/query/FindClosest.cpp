@@ -6,6 +6,7 @@
 #include "utils/Globals.hpp"
 #include "math/math.hpp"
 #include <limits>
+#include <utility>
 
 namespace precice {
 namespace query {
@@ -15,7 +16,10 @@ InterpolationElements generateInterpolationElements(
         const mesh::Vertex& element
         )
 {
-    return {InterpolationElement{element, 1.0}};
+    InterpolationElement ielem;
+    ielem.element = element;
+    ielem.weight = 1.0;
+    return {std::move(ielem)};
 }
 
 InterpolationElements generateInterpolationElements(
