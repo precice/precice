@@ -16,7 +16,7 @@ struct BarycentricCoordsAndProjected {
   Eigen::VectorXd barycentricCoords;
   /// The projected location vertex
   Eigen::VectorXd projected;
-}
+};
 
 /** Takes the corner vertices of an edge and its norm.
  *  It then calculates the projection of a location vector and generates the barycentric coordinates for the corner points.
@@ -61,8 +61,8 @@ BarycentricCoordsAndProjected calcBarycentricCoordsForEdge(
   } else { // 3D
     assertion(dimensions == 3, dimensions);
     // Get parameters for parametric triangle representation: p(s) = a + s(b-a)
-    Vector3d a3D  = edge.vertex(0).getCoords();
-    Vector3d b3D  = edge.vertex(1).getCoords();
+    Vector3d a3D  = edgeA;
+    Vector3d b3D  = edgeB;
     Vector3d c3D  = location;
     Vector3d ab3D = b3D - a3D;
     Vector3d ac3D = c3D - a3D;
@@ -137,7 +137,7 @@ BarycentricCoordsAndProjected calcBarycentricCoordsForEdge(
 /** Takes the corner vertices of a triangle and its norm.
  *  It then calculates the projection of a location vector and generates the barycentric coordinates for the corner points.
  */
-template <class DerivedA, class DerivedB, class DerivedC, class DerivedNorm class DerivedLoc>
+template <class DerivedA, class DerivedB, class DerivedC, class DerivedNorm, class DerivedLoc>
 BarycentricCoordsAndProjected calcBarycentricCoordsForTriangle(
     const Eigen::MatrixBase<DerivedA> &   a,
     const Eigen::MatrixBase<DerivedB> &   b,
@@ -148,7 +148,7 @@ BarycentricCoordsAndProjected calcBarycentricCoordsForTriangle(
 /** Takes the corner vertices of a quad and its norm.
  *  It then calculates the projection of a location vector and generates the barycentric coordinates for the corner points.
  */
-template <class DerivedA, class DerivedB, class DerivedC, class DerivedD, class DerivedNorm class DerivedLoc>
+template <class DerivedA, class DerivedB, class DerivedC, class DerivedD, class DerivedNorm, class DerivedLoc>
 BarycentricCoordsAndProjected calcBarycentricCoordsForQuad(
     const Eigen::MatrixBase<DerivedA> &   a,
     const Eigen::MatrixBase<DerivedB> &   b,

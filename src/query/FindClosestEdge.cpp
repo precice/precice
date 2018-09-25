@@ -75,10 +75,10 @@ void FindClosestEdge:: find ( mesh::Edge& edge )
   auto& b = edge.vertex(1).getCoords();
   auto& norm = edge.getNormal();
 
-  auto ret = math::barycentre::calculateBarycentricCoords(a, b, norm, _searchpoint);
+  auto ret = math::barycentre::calcBarycentricCoordsForEdge(a, b, norm, _searchPoint);
   assertion(ret.barycentricCoords.size() == 2);
 
-  bool inside = not (ret.barycentricCoords < - math::NUMERICAL_ZERO_DIFFERENCE).any()
+  bool inside = not (ret.barycentricCoords.array() < - math::NUMERICAL_ZERO_DIFFERENCE).any();
 
   // if valid, compute distance to triangle and evtl. store distance
   if (inside) {
