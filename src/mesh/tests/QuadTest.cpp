@@ -135,13 +135,13 @@ BOOST_AUTO_TEST_CASE(Quads)
       auto       ibegin = quad.begin();
       const auto iend   = quad.end();
       BOOST_TEST(std::distance(ibegin, iend) == 4);
-      BOOST_TEST(*ibegin == v0);
+      BOOST_TEST(*ibegin == v0.getCoords());
       ++ibegin;
-      BOOST_TEST(*ibegin == v1);
+      BOOST_TEST(*ibegin == v1.getCoords());
       ++ibegin;
-      BOOST_TEST(*ibegin == v2);
+      BOOST_TEST(*ibegin == v2.getCoords());
       ++ibegin;
-      BOOST_TEST(*ibegin == v3);
+      BOOST_TEST(*ibegin == v3.getCoords());
       ++ibegin;
       BOOST_TEST((ibegin == iend));
     }
@@ -151,13 +151,13 @@ BOOST_AUTO_TEST_CASE(Quads)
       auto            ibegin    = cquad.begin();
       const auto      iend      = cquad.end();
       BOOST_TEST(std::distance(ibegin, iend) == 4);
-      BOOST_TEST(*ibegin == v0);
+      BOOST_TEST(*ibegin == v0.getCoords());
       ++ibegin;
-      BOOST_TEST(*ibegin == v1);
+      BOOST_TEST(*ibegin == v1.getCoords());
       ++ibegin;
-      BOOST_TEST(*ibegin == v2);
+      BOOST_TEST(*ibegin == v2.getCoords());
       ++ibegin;
-      BOOST_TEST(*ibegin == v3);
+      BOOST_TEST(*ibegin == v3.getCoords());
       ++ibegin;
       BOOST_TEST((ibegin == iend));
     }
@@ -166,13 +166,13 @@ BOOST_AUTO_TEST_CASE(Quads)
       auto       ibegin = quad.cbegin();
       const auto iend   = quad.cend();
       BOOST_TEST(std::distance(ibegin, iend) == 4);
-      BOOST_TEST(*ibegin == v0);
+      BOOST_TEST(*ibegin == v0.getCoords());
       ++ibegin;
-      BOOST_TEST(*ibegin == v1);
+      BOOST_TEST(*ibegin == v1.getCoords());
       ++ibegin;
-      BOOST_TEST(*ibegin == v2);
+      BOOST_TEST(*ibegin == v2.getCoords());
       ++ibegin;
-      BOOST_TEST(*ibegin == v3);
+      BOOST_TEST(*ibegin == v3.getCoords());
       ++ibegin;
       BOOST_TEST((ibegin == iend));
     }
