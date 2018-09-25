@@ -22,8 +22,12 @@ namespace query {
  */
 struct InterpolationElement
 {
-  mesh::Vertex* element = nullptr;
+  const mesh::Vertex* element = nullptr;
   double weight = 0.0;
+
+  InterpolationElement() = default;
+  InterpolationElement(const mesh::Vertex* element_, double weight_): element(element_), weight(weight_) {}
+  InterpolationElement(const mesh::Vertex& element_, double weight_): element(&element_), weight(weight_) {}
 };
 
 /// A vector of InterpolationElement
@@ -49,22 +53,22 @@ struct ClosestElement
 /// Generates the InterpolationElements for directly projecting a vertex on another vertex
 InterpolationElements generateInterpolationElements(
     const mesh::Vertex &location,
-    const mesh::Vertex &element);
+    mesh::Vertex &element);
 
 /// Generates the InterpolationElements for projecting a vertex on an eadge
 InterpolationElements generateInterpolationElements(
     const mesh::Vertex &location,
-    const mesh::Edge &  element);
+    mesh::Edge &  element);
 
 /// Generates the InterpolationElements for projecting a vertex on a Triangle
 InterpolationElements generateInterpolationElements(
     const mesh::Vertex &  location,
-    const mesh::Triangle &element);
+    mesh::Triangle &element);
 
 /// Generates the InterpolationElements for projecting a vertex on a Quad
 InterpolationElements generateInterpolationElements(
     const mesh::Vertex &location,
-    const mesh::Quad &  element);
+    mesh::Quad &  element);
 
 /**
  * @brief Determines closest Triangle, Edge, or Vertex object to a given point.
