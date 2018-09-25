@@ -37,9 +37,12 @@ void NearestProjectionMapping::computeMapping()
       const Eigen::VectorXd &coords = oVertices[i].getCoords();
       // Search for the output vertex inside the input mesh
       rtree.query(boost::geometry::index::nearest(coords, 1),
-                  boost::make_function_output_iterator([&](const PrimitiveIndex &nearest) {
+                  boost::make_function_output_iterator([&](const mesh::PrimitiveRTree::value_type &pnearest) {
+                      using query::generateInterpolationElements;
+                      using mesh::Primitive;
+                    const auto& nearest = pnearest.second;
                     // fill the weights
-                    switch (nearest::type) {
+                    switch (nearest.type) {
                     case (Primitive::Vertex):
                       _weights[i] = generateInterpolationElements(oVertices[i],
                                                                   input()->vertices()[nearest.index]);
@@ -61,7 +64,7 @@ void NearestProjectionMapping::computeMapping()
                           "No interpolation elements for current vertex!");
                   }));
     }
-    REQUIRE(std::none_of(_weights.cbegin(), _weights.cend(), [](auto &elements) {
+    assertion(std::none_of(_weights.cbegin(), _weights.cend(), [](auto &elements) {
               return elements.empty();
             }),
             "The mapping is incomplete as there are vertices with no interpolation elements assigned to them.");
@@ -75,21 +78,24 @@ void NearestProjectionMapping::computeMapping()
       const Eigen::VectorXd &coords = iVertices[i].getCoords();
       // Search for the output vertex inside the input mesh
       rtree.query(boost::geometry::index::nearest(coords, 1),
-                  boost::make_function_output_iterator([&](const &nearest) {
-                    switch (nearest::type) {
+                  boost::make_function_output_iterator([&](const mesh::PrimitiveRTree::value_type &pnearest) {
+                      using query::generateInterpolationElements;
+                      using mesh::Primitive;
+                    const auto& nearest = pnearest.second;
+                    switch (nearest.type) {
                     case (Primitive::Vertex):
                       _weights[i] = generateInterpolationElements(iVertices[i],
                                                                   input()->vertices()[nearest.index]);
                       break;
-                    case (Primitive::Edge):
+                      case (Primitive::Edge):
                       _weights[i] = generateInterpolationElements(iVertices[i],
                                                                   input()->edges()[nearest.index]);
                       break;
-                    case (Primitive::Triangle):
+                      case (Primitive::Triangle):
                       _weights[i] = generateInterpolationElements(iVertices[i],
                                                                   input()->triangles()[nearest.index]);
                       break;
-                    case (Primitive::Quad):
+                      case (Primitive::Quad):
                       _weights[i] = generateInterpolationElements(iVertices[i],
                                                                   input()->quads()[nearest.index]);
                       break;
@@ -98,8 +104,8 @@ void NearestProjectionMapping::computeMapping()
                           "No interpolation elements for current vertex!");
                   }));
     }
-    REQUIRE(std::none_of(_weights.cbegin(), _weights.cend(), [](auto &elements) {
-              return elemements.empty();
+    assertion(std::none_of(_weights.cbegin(), _weights.cend(), [](auto &elements) {
+              return elements.empty();
             }),
             "The mapping is incomplete as there are vertices with no interpolation elements assigned to them.");
   }

@@ -25,11 +25,11 @@ namespace mesh
 class Quad : public PropertyContainer, private boost::noncopyable
 {
 public:
-  /// Type of the random access vertex iterator
-  using iterator = IndexRangeIterator<Quad, Eigen::Vector3d>;
-
   /// Type of the const random access vertex iterator
-  using const_iterator = IndexRangeIterator<const Quad, const Eigen::Vector3d>;
+  using const_iterator = IndexRangeIterator<const Quad, const Eigen::VectorXd>;
+
+  /// Type of the random access vertex iterator
+  using iterator = const_iterator; //IndexRangeIterator<Quad, Eigen::Vector3d>;
 
   /// Constructor, the order of edges defines the outer normal direction.
   Quad(
@@ -214,6 +214,11 @@ inline int Quad::getID() const
 {
   return _id;
 }
+
+BOOST_CONCEPT_ASSERT((boost::RandomAccessIteratorConcept<Quad::iterator>));
+BOOST_CONCEPT_ASSERT((boost::RandomAccessIteratorConcept<Quad::const_iterator>));
+BOOST_CONCEPT_ASSERT((boost::RandomAccessRangeConcept<Quad>));
+BOOST_CONCEPT_ASSERT((boost::RandomAccessRangeConcept<const Quad>));
 
 } // namespace mesh
 } // namespace precice

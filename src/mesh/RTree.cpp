@@ -8,7 +8,7 @@ namespace mesh
 // Initialize static member
 std::map<int, rtree::PtrRTree> precice::mesh::rtree::trees;
 // Initialize static member
-std::map<int, PtrGeometryRTree> precice::mesh::rtree::cache;
+std::map<int, PtrPrimitiveRTree> precice::mesh::rtree::primitive_trees_;
 
 rtree::PtrRTree rtree::getVertexRTree(PtrMesh mesh)
 {
@@ -28,19 +28,18 @@ rtree::PtrRTree rtree::getVertexRTree(PtrMesh mesh)
   return tree;
 }
 
-PtrPrimitiveRTree rtree::getGeometryRTree(PtrMesh mesh)
+PtrPrimitiveRTree rtree::getPrimitiveRTree(PtrMesh mesh)
 {
-  REQUIRE(mesh, "Empty meshes are not allowed.");
+  assertion(mesh, "Empty meshes are not allowed.");
   auto iter = primitive_trees_.find(mesh->getID());
   if (iter != primitive_trees_.end()) {
     return iter->second;
   } else {
-      auto tree = indexMesh(*mesh);
-    primitive_trees_->insert(std::make_pair(
-                mesh->getID(),
-                tree
-                ));
-    return tree;
+    auto treeptr = std::make_shared<PrimitiveRTree>(indexMesh(*mesh));
+    primitive_trees_.insert(std::make_pair(
+        mesh->getID(),
+        treeptr));
+    return treeptr;
   }
 }
 

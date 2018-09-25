@@ -8,19 +8,25 @@ namespace mesh
 {
 template <typename Source, typename Value>
 class IndexRangeIterator : public boost::iterator_facade<
-                               IndexRangeIterator<Source, Value>,
-                               Value,
+                               IndexRangeIterator<Source, const Value>,
+                               const Value,
                                boost::random_access_traversal_tag>
 {
 public:
-  IndexRangeIterator()
-      : src_(nullptr), idx_(0) {}
+  IndexRangeIterator() = default;
   IndexRangeIterator(Source *src, size_t index)
       : src_(src), idx_(index) {}
 
-  Value &dereference() const
+  const Value &dereference() const
   {
-    return src_->vertex(idx_).getCoords();
+    using Coord = decltype(src_->vertex(idx_).getCoords());
+    static_assert(
+            std::is_reference<Coord>::value,
+            "Coordinate type must be a reference!");
+    static_assert(
+            std::is_convertible<Coord, Value>::value,
+            "Exposed and accessed types must match!");
+    return static_cast<const Value &>(src_->vertex(idx_).getCoords());
   }
 
   size_t equal(const IndexRangeIterator<Source, Value> &other) const
@@ -45,8 +51,8 @@ public:
   }
 
 private:
-  Source *src_;
-  size_t  idx_;
+  Source *src_{nullptr};
+  size_t  idx_{0};
 };
 
 template <typename Source, typename Value, size_t begin_idx, size_t end_idx>

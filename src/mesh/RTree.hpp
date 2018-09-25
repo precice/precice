@@ -2,8 +2,11 @@
 
 #include <boost/geometry.hpp>
 #include <map>
+#include <memory>
 #include "mesh/Mesh.hpp"
 #include "mesh/impl/RTreeAdapter.hpp"
+#include "mesh/Triangle.hpp"
+#include "mesh/Quad.hpp"
 
 // Forward declaration to friend the boost test struct
 namespace MeshTests
@@ -103,7 +106,7 @@ template <typename Container>
 void indexPrimitive(PrimitiveRTree &rtree, const AABBGenerator& gen, const Container &conti)
 {
   using ValueType = typename std::remove_reference<typename std::remove_cv<typename Container::value_type>::type>::type;
-  for (size_t i = 0; i <= conti.count(); ++i) {
+  for (size_t i = 0; i <= conti.size(); ++i) {
     PrimitiveIndex index{as_primitive_enum<ValueType>::value, i};
     rtree.insert(std::make_pair(gen(index), index));
   }
