@@ -13,7 +13,7 @@ namespace query {
 
 InterpolationElements generateInterpolationElements(
         const mesh::Vertex& /*location*/,
-        const mesh::Vertex& element
+        mesh::Vertex& element
         )
 {
     return {{element, 1.0}};
@@ -21,7 +21,7 @@ InterpolationElements generateInterpolationElements(
 
 InterpolationElements generateInterpolationElements(
         const mesh::Vertex& location,
-        const mesh::Edge& element
+        mesh::Edge& element
         )
 {
     InterpolationElements elems;
@@ -35,7 +35,7 @@ InterpolationElements generateInterpolationElements(
 
 InterpolationElements generateInterpolationElements(
         const mesh::Vertex& location,
-        const mesh::Triangle& element
+        mesh::Triangle& element
         )
 
 {
@@ -51,7 +51,7 @@ InterpolationElements generateInterpolationElements(
 
 InterpolationElements generateInterpolationElements(
         const mesh::Vertex& location,
-        const mesh::Quad& element
+        mesh::Quad& element
         )
 {
     InterpolationElements elems;
