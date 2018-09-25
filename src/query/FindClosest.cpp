@@ -16,10 +16,7 @@ InterpolationElements generateInterpolationElements(
         const mesh::Vertex& element
         )
 {
-    InterpolationElement ielem;
-    ielem.element = element;
-    ielem.weight = 1.0;
-    return {std::move(ielem)};
+    return {{element, 1.0}};
 }
 
 InterpolationElements generateInterpolationElements(
@@ -30,8 +27,8 @@ InterpolationElements generateInterpolationElements(
     InterpolationElements elems;
 
     // @todo: implement interpolation for edges
-    elems.emplace_back(element, 1.0);
-    elems.emplace_back(element, 1.0);
+    elems.emplace_back(element.vertex(0), 1.0);
+    elems.emplace_back(element.vertex(1), 1.0);
 
     return elems;
 }
@@ -45,9 +42,9 @@ InterpolationElements generateInterpolationElements(
     InterpolationElements elems;
 
     // @todo: implement interpolation for triangles
-    elems.emplace_back(element, 1.0);
-    elems.emplace_back(element, 1.0);
-    elems.emplace_back(element, 1.0);
+    elems.emplace_back(element.vertex(0), 1.0);
+    elems.emplace_back(element.vertex(1), 1.0);
+    elems.emplace_back(element.vertex(2), 1.0);
 
     return elems;
 }
@@ -60,10 +57,10 @@ InterpolationElements generateInterpolationElements(
     InterpolationElements elems;
 
     // @todo: implement interpolation for quads
-    elems.emplace_back(element, 1.0);
-    elems.emplace_back(element, 1.0);
-    elems.emplace_back(element, 1.0);
-    elems.emplace_back(element, 1.0);
+    elems.emplace_back(element.vertex(0), 1.0);
+    elems.emplace_back(element.vertex(1), 1.0);
+    elems.emplace_back(element.vertex(2), 1.0);
+    elems.emplace_back(element.vertex(3), 1.0);
 
     return elems;
 }
