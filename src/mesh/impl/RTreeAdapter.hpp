@@ -150,6 +150,10 @@ struct access<Eigen::VectorXd, Dimension> {
 
   static void set(Eigen::VectorXd &p, double const &value)
   {
+    // This handles default initialized VectorXd
+    if (Dimension >= static_cast<size_t>(p.rows())) {
+        p.resize(Dimension+1);
+    }
     p[Dimension] = value;
   }
 };
