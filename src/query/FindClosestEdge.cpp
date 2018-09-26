@@ -88,8 +88,8 @@ void FindClosestEdge:: find ( mesh::Edge& edge )
     if ( _shortestDistance > distance ) {
       _shortestDistance = distance;
       _vectorToProjectionPoint = distanceVector;
-      _parametersProjectionPoint[0] = ret.barycentricCoords[1];
-      _parametersProjectionPoint[1] = ret.barycentricCoords[0];
+      _parametersProjectionPoint[0] = ret.barycentricCoords[0];
+      _parametersProjectionPoint[1] = ret.barycentricCoords[1];
       _closestEdge = &edge;
     }
   }

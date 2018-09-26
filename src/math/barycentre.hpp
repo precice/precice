@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <Eigen/Dense>
 #include "math/geometry.hpp"
 
 namespace precice
@@ -20,21 +21,24 @@ struct BarycentricCoordsAndProjected {
 
 /** Takes the corner vertices of an edge and its norm.
  *  It then calculates the projection of a location vector and generates the barycentric coordinates for the corner points.
+ *
+ * @note Methodology of book "Computational Geometry", Joseph O' Rourke, Chapter 7.2
  */
 template <class DerivedA, class DerivedB, class DerivedNorm, class DerivedLoc>
 BarycentricCoordsAndProjected calcBarycentricCoordsForEdge(
-        const Eigen::MatrixBase<DerivedA> &edgeA,
-        const Eigen::MatrixBase<DerivedB> &edgeB,
-        const Eigen::MatrixBase<DerivedNorm> &edgeNormal,
-        const Eigen::MatrixBase<DerivedLoc> &location)
+    const Eigen::MatrixBase<DerivedA> &   edgeA,
+    const Eigen::MatrixBase<DerivedB> &   edgeB,
+    const Eigen::MatrixBase<DerivedNorm> &edgeNormal,
+    const Eigen::MatrixBase<DerivedLoc> & location)
 {
   using Eigen::Vector2d;
   using Eigen::Vector3d;
+  using Eigen::VectorXd;
   Vector2d barycentricCoords;
   int      dimensions = edgeA.size();
   assertion(edgeA.size() == edgeB.size() == location.size());
   assertion((dimensions == 2) || (dimensions == 3), dimensions);
-  Eigen::VectorXd projected = Eigen::VectorXd::Zero(dimensions);
+  VectorXd projected = VectorXd::Zero(dimensions);
   Vector2d        a, b, ab, c, d;
   bool            collinear = false;
 
@@ -131,6 +135,8 @@ BarycentricCoordsAndProjected calcBarycentricCoordsForEdge(
       projected += edgeA;                // = a + bary0 * (b - a)
     }
   }
+
+  std::swap(barycentricCoords(0), barycentricCoords(1));
   return {barycentricCoords, projected};
 }
 
@@ -143,7 +149,62 @@ BarycentricCoordsAndProjected calcBarycentricCoordsForTriangle(
     const Eigen::MatrixBase<DerivedB> &   b,
     const Eigen::MatrixBase<DerivedC> &   c,
     const Eigen::MatrixBase<DerivedNorm> &normal,
-    const Eigen::MatrixBase<DerivedLoc> & location);
+    const Eigen::MatrixBase<DerivedLoc> & location) {
+  using Eigen::Vector2d;
+  using Eigen::Vector3d;
+
+  // Methodology of book "Computational Geometry", Joseph O' Rourke, Chapter 7.3
+  // with the barycentric coordinates method and real projection into 2D, instead
+  // of outprojecting one coordinate
+
+  // Parametric representation for triangle plane:
+  // (x, y, z) * normal = d
+  const double d = normal.dot(a);
+
+  // Parametric description of line from searchpoint orthogonal to triangle:
+  // location + t * normal = x     (where t is parameter)
+  // Determine t such that x lies on triangle plane:
+  const double t = d - location.dot(normal) / normal.dot(normal);
+
+  // Compute projected point with parameter t:
+  Vector3d projected = normal;
+  projected *= t;
+  projected += location;
+
+  // Project everything to 2D
+  int iMax;
+  normal.cwiseAbs().maxCoeff(&iMax);
+  int indices[2];
+  if (iMax == 0){
+    indices[0] = 1;
+    indices[1] = 2;
+  }
+  else if (iMax == 1){
+    indices[0] = 0;
+    indices[1] = 2;
+  }
+  else {
+    assertion(iMax == 2, iMax);
+    indices[0] = 0;
+    indices[1] = 1;
+  }
+  Vector2d a2D(a[indices[0]],
+               a[indices[1]]);
+  Vector2d b2D(b[indices[0]],
+               b[indices[1]]);
+  Vector2d c2D(c[indices[0]],
+               c[indices[1]]);
+  Vector2d projected2D(projected[indices[0]], projected[indices[1]]);
+  // Compute barycentric coordinates by solving linear 3x3 system
+  Vector3d rhs (projected2D(0), projected2D(1), 1);
+  Eigen::Matrix<double, 3,3> A;
+  A << a2D(0), b2D(0), c2D(0),
+    a2D(1), b2D(1), c2D(1),
+    1,      1,      1;
+  Vector3d barycentricCoords = A.colPivHouseholderQr().solve(rhs);
+
+  return {barycentricCoords, projected};
+}
 
 /** Takes the corner vertices of a quad and its norm.
  *  It then calculates the projection of a location vector and generates the barycentric coordinates for the corner points.
@@ -155,8 +216,10 @@ BarycentricCoordsAndProjected calcBarycentricCoordsForQuad(
     const Eigen::MatrixBase<DerivedC> &   c,
     const Eigen::MatrixBase<DerivedD> &   d,
     const Eigen::MatrixBase<DerivedNorm> &normal,
-    const Eigen::MatrixBase<DerivedLoc> & location);
-
+    const Eigen::MatrixBase<DerivedLoc> & location) {
+    /// @todo: Implemente interpolation on Quad
+    throw std::runtime_error("Interpolation on Quad not implemented!");
+}
 } // namespace barycentre
 } // namespace math
 } // namespace precice
