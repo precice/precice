@@ -50,22 +50,22 @@ struct ClosestElement
     interpolationElements() {}
 };
 
-/// Generates the InterpolationElements for directly projecting a vertex on another vertex
+/// Generates the InterpolationElements for directly projecting a Vertex on another Vertex
 InterpolationElements generateInterpolationElements(
     const mesh::Vertex &location,
     mesh::Vertex &element);
 
-/// Generates the InterpolationElements for projecting a vertex on an eadge
+/// Generates the InterpolationElements for projecting a Vertex on an Edge
 InterpolationElements generateInterpolationElements(
     const mesh::Vertex &location,
     mesh::Edge &  element);
 
-/// Generates the InterpolationElements for projecting a vertex on a Triangle
+/// Generates the InterpolationElements for projecting a Vertex on a Triangle
 InterpolationElements generateInterpolationElements(
     const mesh::Vertex &  location,
     mesh::Triangle &element);
 
-/// Generates the InterpolationElements for projecting a vertex on a Quad
+/// Generates the InterpolationElements for projecting a Vertex on a Quad
 InterpolationElements generateInterpolationElements(
     const mesh::Vertex &location,
     mesh::Quad &  element);

@@ -22,6 +22,10 @@ struct BarycentricCoordsAndProjected {
 /** Takes the corner vertices of an edge and its norm.
  *  It then calculates the projection of a location vector and generates the barycentric coordinates for the corner points.
  *
+ *  \param edgeA point A of the edge AB
+ *  \param edgeNormal the normal of the edge
+ *  \param location the location to compute the barycentric coordinates for
+ *
  * @note Methodology of book "Computational Geometry", Joseph O' Rourke, Chapter 7.2
  */
 template <class DerivedA, class DerivedB, class DerivedNorm, class DerivedLoc>
@@ -143,6 +147,17 @@ BarycentricCoordsAndProjected calcBarycentricCoordsForEdge(
 
 /** Takes the corner vertices of a triangle and its norm.
  *  It then calculates the projection of a location vector and generates the barycentric coordinates for the corner points.
+ *
+ *  \param a point A of the triangle ABC
+ *  \param b point B of the triangle ABC
+ *  \param c point C of the triangle ABC
+ *  \param normal the normal of the triangle
+ *  \param location the location to compute the barycentric coordinates for
+ *
+ * \note
+ * Methodology of book "Computational Geometry", Joseph O' Rourke, Chapter 7.3
+ * with the barycentric coordinates method and real projection into 2D, instead
+ * of outprojecting one coordinate
  */
 template <class DerivedA, class DerivedB, class DerivedC, class DerivedNorm, class DerivedLoc>
 BarycentricCoordsAndProjected calcBarycentricCoordsForTriangle(
@@ -153,10 +168,6 @@ BarycentricCoordsAndProjected calcBarycentricCoordsForTriangle(
     const Eigen::MatrixBase<DerivedLoc> & location) {
   using Eigen::Vector2d;
   using Eigen::Vector3d;
-
-  // Methodology of book "Computational Geometry", Joseph O' Rourke, Chapter 7.3
-  // with the barycentric coordinates method and real projection into 2D, instead
-  // of outprojecting one coordinate
 
   // Parametric representation for triangle plane:
   // (x, y, z) * normal = d
@@ -209,6 +220,15 @@ BarycentricCoordsAndProjected calcBarycentricCoordsForTriangle(
 
 /** Takes the corner vertices of a quad and its norm.
  *  It then calculates the projection of a location vector and generates the barycentric coordinates for the corner points.
+ *
+ *  \param a point A of the quad ABCD
+ *  \param b point B of the quad ABCD
+ *  \param c point C of the quad ABCD
+ *  \param d point D of the quad ABCD
+ *  \param normal the normal of the quad
+ *  \param location the location to compute the barycentric coordinates for
+ *
+ *   @todo: Interpolation on quads is currently not implemented
  */
 template <class DerivedA, class DerivedB, class DerivedC, class DerivedD, class DerivedNorm, class DerivedLoc>
 BarycentricCoordsAndProjected calcBarycentricCoordsForQuad(
@@ -218,7 +238,6 @@ BarycentricCoordsAndProjected calcBarycentricCoordsForQuad(
     const Eigen::MatrixBase<DerivedD> &   d,
     const Eigen::MatrixBase<DerivedNorm> &normal,
     const Eigen::MatrixBase<DerivedLoc> & location) {
-    /// @todo: Implemente interpolation on Quad
     throw std::runtime_error("Interpolation on Quad not implemented!");
 }
 } // namespace barycentre

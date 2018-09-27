@@ -22,7 +22,10 @@ namespace precice
 namespace mesh
 {
 
-/// The enumeration of various primitive types.
+/** The enumeration of various primitive types.
+ * \see PrimitiveIndex
+ * \see as_primitve_enum
+ */
 enum class Primitive {
   Vertex,
   Edge,
@@ -51,7 +54,10 @@ struct as_primitive_enum<mesh::Quad> {
   static constexpr Primitive value = Primitive::Quad;
 };
 
-/// Binds an Index and Primitive into a type
+/** Binds an Index and Primitive into a type
+ * \see AABBGenerator
+ * \see indexPrimitives
+ */
 struct PrimitiveIndex {
   Primitive type;
   size_t    index;
