@@ -177,7 +177,7 @@ void MPISinglePortsCommunication::closeConnection()
   if (not isConnected())
     return;
 
-  for (auto communicator : _communicators) {
+  for (auto & communicator : _communicators) {
     MPI_Comm_disconnect(&communicator.second);
   }
 
