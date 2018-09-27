@@ -7,17 +7,13 @@ namespace cplscheme
 namespace impl
 {
 
-logging::Logger ConstantPreconditioner::
-    _log("cplscheme::ConstantPreconditioner");
-
-ConstantPreconditioner::ConstantPreconditioner(
-    std::vector<double> factors)
+ConstantPreconditioner::ConstantPreconditioner(std::vector<double> factors)
     : Preconditioner(-1),
       _factors(factors)
 {
 }
 
-void ConstantPreconditioner::initialize(std::vector<size_t> &svs)
+void ConstantPreconditioner::initialize(std::vector<size_t> & svs)
 {
   TRACE();
   Preconditioner::initialize(svs);
@@ -38,7 +34,9 @@ void ConstantPreconditioner::initialize(std::vector<size_t> &svs)
   }
 }
 
-void ConstantPreconditioner::_update_(bool timestepComplete, const Eigen::VectorXd &oldValues, const Eigen::VectorXd &res)
+void ConstantPreconditioner::_update_(bool timestepComplete,
+                                      const Eigen::VectorXd &oldValues,
+                                      const Eigen::VectorXd &res)
 {
 
   //nothing to do here

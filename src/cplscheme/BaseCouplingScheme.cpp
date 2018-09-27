@@ -146,8 +146,7 @@ void BaseCouplingScheme::addDataToSend(
     DataMap::value_type pair = std::make_pair(id, ptrCplData);
     _sendData.insert(pair);
   } else {
-    ERROR("Data \"" << data->getName()
-                    << "\" cannot be added twice for sending!");
+    ERROR("Data \"" << data->getName() << "\" cannot be added twice for sending!");
   }
 }
 
@@ -163,8 +162,7 @@ void BaseCouplingScheme::addDataToReceive(
     DataMap::value_type pair = std::make_pair(id, ptrCplData);
     _receiveData.insert(pair);
   } else {
-    ERROR("Data \"" << data->getName()
-                    << "\" cannot be added twice for receiving!");
+    ERROR("Data \"" << data->getName() << "\" cannot be added twice for receiving!");
   }
 }
 
@@ -536,8 +534,7 @@ void BaseCouplingScheme::checkCompletenessRequiredActions()
       }
       stream << action;
     }
-    ERROR(
-        "Unfulfilled required actions: " << stream.str() << "!");
+    ERROR("Unfulfilled required actions: " << stream.str() << "!");
   }
 }
 
