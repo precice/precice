@@ -39,15 +39,13 @@ using InterpolationElements = std::vector<InterpolationElement>;
 struct ClosestElement
 {
   std::vector<int> meshIDs;
-  double distance;
+  double distance = 0;
   Eigen::VectorXd vectorToElement;
   InterpolationElements interpolationElements;
 
   ClosestElement (int dim)
-  : meshIDs(),
-    distance(0.0),
-    vectorToElement(Eigen::VectorXd::Zero(dim)),
-    interpolationElements() {}
+    : vectorToElement(Eigen::VectorXd::Zero(dim))
+  {}
 };
 
 /// Generates the InterpolationElements for directly projecting a Vertex on another Vertex

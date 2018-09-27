@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE(HierarchicalAitkenPostProcessingTest)
   temp *= 4.0;
   values += temp;
   bool            initializeValues = false;
-  mesh::PtrMesh   dummyMesh(new mesh::Mesh("dummyMesh", 3, false));
+  mesh::PtrMesh   dummyMesh(new mesh::Mesh("DummyMesh", 3, false));
   PtrCouplingData ptrCplData = PtrCouplingData(new CouplingData(
       &values, dummyMesh, initializeValues, 1));
   temp                       = values;

@@ -8,18 +8,16 @@ namespace cplscheme
 namespace impl
 {
 
-logging::Logger ValuePreconditioner::
-    _log("cplscheme::ValuePreconditioner");
-
 ValuePreconditioner::ValuePreconditioner(
     int maxNonConstTimesteps)
-    : Preconditioner(
-          maxNonConstTimesteps),
+    : Preconditioner(maxNonConstTimesteps),
       _firstTimestep(true)
 {
 }
 
-void ValuePreconditioner::_update_(bool timestepComplete, const Eigen::VectorXd &oldValues, const Eigen::VectorXd &res)
+void ValuePreconditioner::_update_(bool timestepComplete,
+                                   const Eigen::VectorXd &oldValues,
+                                   const Eigen::VectorXd &res)
 {
   if (timestepComplete || _firstTimestep) {
 

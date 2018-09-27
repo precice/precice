@@ -268,31 +268,6 @@ std::map<int, std::vector<int>> buildCommunicationMap(
   return communicationMap;
 }
 
-std::string PointToPointCommunication::_prefix;
-
-PointToPointCommunication::ScopedSetEventNamePrefix::ScopedSetEventNamePrefix(
-    std::string const &prefix)
-    : _prefix(PointToPointCommunication::eventNamePrefix())
-{
-  PointToPointCommunication::setEventNamePrefix(prefix);
-}
-
-PointToPointCommunication::ScopedSetEventNamePrefix::~ScopedSetEventNamePrefix()
-{
-  PointToPointCommunication::setEventNamePrefix(_prefix);
-}
-
-void PointToPointCommunication::setEventNamePrefix(std::string const &prefix)
-{
-  _prefix = prefix;
-}
-
-std::string const &PointToPointCommunication::eventNamePrefix()
-{
-  return _prefix;
-}
-
-
 PointToPointCommunication::PointToPointCommunication(
     com::PtrCommunicationFactory communicationFactory,
     mesh::PtrMesh                mesh)
@@ -386,7 +361,7 @@ void PointToPointCommunication::acceptConnection(std::string const &nameAcceptor
     auto addressDirectory = _communicationFactory->addressDirectory();
 
     if (utils::MasterSlave::_masterMode) {
-      Event e(_prefix + "PointToPointCommunication::acceptConnection/createDirectories");
+      Event e("m2n.createDirectories");
 
       for (int rank = 0; rank < utils::MasterSlave::_size; ++rank) {
         Publisher::createDirectory(addressDirectory + "/" + "." + nameAcceptor + "-" + _mesh->getName() +
@@ -464,9 +439,6 @@ void PointToPointCommunication::requestConnection(std::string const &nameAccepto
     // Establish connection between participants' master processes.
     auto c = _communicationFactory->newCommunication();
     {
-      Publisher::ScopedSetEventNamePrefix ssenp(
-          _prefix + "PointToPointCommunication::requestConnection/synchronize/");
-
       c->requestConnection(nameAcceptor, nameRequester, 0, 1);
     }
 
@@ -535,8 +507,6 @@ void PointToPointCommunication::requestConnection(std::string const &nameAccepto
     _isConnected = true;
     return;
   }
-
-  Publisher::ScopedSetEventNamePrefix ssenp(_prefix + "PointToPointCommunication::requestConnection/request/");
 
   std::vector<com::PtrRequest> requests;
   requests.reserve(communicationMap.size());

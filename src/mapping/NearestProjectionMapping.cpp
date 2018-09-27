@@ -2,18 +2,19 @@
 #include <mesh/RTree.hpp>
 #include "NearestProjectionMapping.hpp"
 #include "query/FindClosest.hpp"
+#include "utils/EventTimings.hpp"
 
 namespace precice
 {
 namespace mapping
 {
 
-NearestProjectionMapping::NearestProjectionMapping(
-    Constraint constraint,
-    int        dimensions)
-    : Mapping(constraint, dimensions),
-      _weights(),
-      _hasComputedMapping(false)
+NearestProjectionMapping:: NearestProjectionMapping
+(
+  Constraint constraint,
+  int        dimensions)
+:
+  Mapping(constraint, dimensions)
 {
   if (constraint == CONSISTENT) {
     setInputRequirement(FULL);
@@ -28,7 +29,9 @@ NearestProjectionMapping::NearestProjectionMapping(
 void NearestProjectionMapping::computeMapping()
 {
   TRACE(input()->vertices().size(), output()->vertices().size());
-  if (getConstraint() == CONSISTENT) {
+  precice::utils::Event e("map.np.computeMapping.From" + input()->getName() + "To" + output()->getName());
+
+  if (getConstraint() == CONSISTENT){
     DEBUG("Compute consistent mapping");
     auto        rtree     = indexMesh(*input());
     const auto &oVertices = output()->vertices();
@@ -129,11 +132,12 @@ void NearestProjectionMapping::map(
     int outputDataID)
 {
   TRACE(inputDataID, outputDataID);
-  mesh::PtrData          inData    = input()->data(inputDataID);
-  mesh::PtrData          outData   = output()->data(outputDataID);
-  const Eigen::VectorXd &inValues  = inData->values();
-  Eigen::VectorXd &      outValues = outData->values();
-  //assign(outValues) = 0.0;
+  precice::utils::Event e("map.np.mapData.From" + input()->getName() + "To" + output()->getName());
+
+  mesh::PtrData inData = input()->data(inputDataID);
+  mesh::PtrData outData = output()->data(outputDataID);
+  const Eigen::VectorXd& inValues = inData->values();
+  Eigen::VectorXd& outValues = outData->values();
   int dimensions = inData->getDimensions();
   assertion(dimensions == outData->getDimensions());
 

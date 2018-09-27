@@ -5,13 +5,7 @@
 #include "logging/Logger.hpp"
 
 #ifndef PRECICE_NO_MPI
-
 #include <mpi.h>
-
-#define PRECICE_MASTER_ONLY \
-  if (precice::utils::Parallel::getProcessRank() == 0)
-#else
-#define PRECICE_MASTER_ONLY
 #endif // not PRECICE_NO_MPI
 
 namespace precice

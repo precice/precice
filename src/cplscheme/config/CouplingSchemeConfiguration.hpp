@@ -64,7 +64,7 @@ public:
   /// Check, if a coupling scheme is configured for a participant.
   bool hasCouplingScheme(const std::string &participantName) const;
 
-  /// Returns the configured (to be checked by isValid()) coupling scheme.
+  /// Returns the configured coupling scheme.
   const PtrCouplingScheme &getCouplingScheme(const std::string &participantName) const;
 
   /// Returns the name of one dataset exchanged in the coupling scheme.
@@ -151,8 +151,6 @@ private:
   m2n::M2NConfiguration::SharedPointer _m2nConfig;
 
   PtrPostProcessingConfiguration _postProcConfig;
-
-  bool _isValid;
 
   /// Map from participant name to coupling scheme (composition).
   std::map<std::string, PtrCouplingScheme> _couplingSchemes;

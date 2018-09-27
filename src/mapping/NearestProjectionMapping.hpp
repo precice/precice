@@ -54,7 +54,7 @@ private:
   using InterpolationElements = std::vector<query::InterpolationElement>;
   std::vector<InterpolationElements> _weights;
 
-  bool _hasComputedMapping;
+  bool _hasComputedMapping = false;
 };
 
 }} // namespace precice, mapping

@@ -39,7 +39,7 @@ public:
   }
 
 private:
-  static logging::Logger _log;
+  logging::Logger _log{"cplscheme::ConstantRelaxationPostProcessing"};
 
   double _relaxation;
 

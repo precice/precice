@@ -13,24 +13,18 @@ namespace cplscheme
 namespace impl
 {
 
-logging::Logger ConstantRelaxationPostProcessing::
-    _log("cplscheme::ConstantRelaxationPostProcessing");
-
 ConstantRelaxationPostProcessing::ConstantRelaxationPostProcessing(
     double           relaxation,
     std::vector<int> dataIDs)
-    : PostProcessing(),
-      _relaxation(relaxation),
-      _dataIDs(dataIDs),
-      _designSpecification()
+  : _relaxation(relaxation),
+    _dataIDs(dataIDs)
 {
   CHECK((relaxation > 0.0) && (relaxation <= 1.0),
         "Relaxation factor for constant relaxation post processing "
-            << "has to be larger than zero and smaller or equal than one!");
+        << "has to be larger than zero and smaller or equal than one!");
 }
 
-void ConstantRelaxationPostProcessing::initialize(
-    DataMap &cplData)
+void ConstantRelaxationPostProcessing::initialize(DataMap &cplData)
 {
   CHECK(_dataIDs.size() == 0 || utils::contained(*_dataIDs.begin(), cplData),
         "Data with ID " << *_dataIDs.begin()
@@ -52,8 +46,7 @@ void ConstantRelaxationPostProcessing::initialize(
   }
 }
 
-void ConstantRelaxationPostProcessing::performPostProcessing(
-    DataMap &cplData)
+void ConstantRelaxationPostProcessing::performPostProcessing(DataMap &cplData)
 {
   TRACE();
   double omega         = _relaxation;
@@ -67,14 +60,12 @@ void ConstantRelaxationPostProcessing::performPostProcessing(
   }
 }
 
-/** ---------------------------------------------------------------------------------------------
- *         getDesignSpecification()
- *
- * @brief: Returns the design specification corresponding to the given coupling data.
- *         This information is needed for convergence measurements in the coupling scheme.
- *  ---------------------------------------------------------------------------------------------
+/*
+ * Returns the design specification corresponding to the given coupling data. 
+ * 
+ * This information is needed for convergence measurements in the coupling scheme.
+ * @todo: Change to call by ref when Eigen is used.
  */
-/// @todo: change to call by ref when Eigen is used.
 std::map<int, Eigen::VectorXd> ConstantRelaxationPostProcessing::getDesignSpecification(
     DataMap &cplData)
 {
@@ -94,11 +85,10 @@ std::map<int, Eigen::VectorXd> ConstantRelaxationPostProcessing::getDesignSpecif
   return designSpecifications;
 }
 
-void ConstantRelaxationPostProcessing::setDesignSpecification(
-    Eigen::VectorXd &q)
+void ConstantRelaxationPostProcessing::setDesignSpecification(Eigen::VectorXd &q)
 {
   _designSpecification = q;
-  ERROR("design specification for constant relaxation is not supported yet.");
+  ERROR("Design specification for constant relaxation is not supported yet.");
 }
 }
 }

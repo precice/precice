@@ -109,8 +109,6 @@ public:
 
   bool hasAttribute(const std::string &attributeName);
 
-  //void removeAttribute ( const std::string& attributeName );
-
   /**
    * @brief Returns name (without namespace).
    *
@@ -132,8 +130,6 @@ public:
   {
     return _fullName;
   }
-
-  //const XMLTag& getTag ( const std::string& tagName ) const;
 
   double getDoubleAttributeValue(const std::string &name) const;
 
@@ -179,7 +175,7 @@ public:
   void readAttributes(std::map<std::string, std::string> &aAttributes);
 
 private:
-  static logging::Logger _log;
+  mutable logging::Logger _log{"xml::XMLTag"};
 
   Listener &_listener;
 
@@ -194,13 +190,13 @@ private:
 
   std::string _doc;
 
-  bool _configured;
+  bool _configured = false;
 
   Occurrence _occurrence;
 
   std::vector<std::string> _namespaces;
 
-  std::vector<XMLTag *> _subtags;
+  std::vector<std::shared_ptr<XMLTag>> _subtags;
 
   std::map<std::string, bool> _configuredNamespaces;
 

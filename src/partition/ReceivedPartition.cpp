@@ -33,7 +33,7 @@ void ReceivedPartition::communicate()
 {
   TRACE();
   INFO("Receive global mesh " << _mesh->getName());
-  Event e("receive global mesh");
+  Event e("partition.receiveGlobalMesh." + _mesh->getName());
   if (not utils::MasterSlave::_slaveMode) {
     assertion(_mesh->vertices().size() == 0);
     com::CommunicateMesh(_m2n->getMasterCommunication()).receiveMesh(*_mesh, 0);
@@ -76,7 +76,7 @@ void ReceivedPartition::compute()
   if (_geometricFilter == FILTER_FIRST) { //pre-filter-post-filter
 
     INFO("Pre-filter mesh " << _mesh->getName() << " by bounding-box");
-    Event e("pre-filter mesh by bounding box");
+    Event e("partition.preFilterMesh." + _mesh->getName());
 
     if (utils::MasterSlave::_slaveMode) {
       prepareBoundingBox();
@@ -133,7 +133,7 @@ void ReceivedPartition::compute()
     }
   } else {
     INFO("Broadcast mesh " << _mesh->getName());
-    Event e1("broadcast mesh");
+    Event e1("partition.broadcastMesh." + _mesh->getName());
 
     if (utils::MasterSlave::_slaveMode) {
       com::CommunicateMesh(utils::MasterSlave::_communication).broadcastReceiveMesh(*_mesh);
@@ -148,7 +148,7 @@ void ReceivedPartition::compute()
     if (_geometricFilter == BROADCAST_FILTER) {
 
       INFO("Filter mesh " << _mesh->getName() << " by bounding-box");
-      Event e2("filter mesh by bounding box");
+      Event e2("partition.filterMeshBB." + _mesh->getName());
 
       prepareBoundingBox();
       mesh::Mesh filteredMesh("FilteredMesh", _dimensions, _mesh->isFlipNormals());
@@ -197,7 +197,7 @@ void ReceivedPartition::compute()
 
   // (5) Filter mesh according to tag
   INFO("Filter mesh " << _mesh->getName() << " by mappings");
-  Event      e5("filter mesh by mappings");
+  Event e5("partition.filterMeshMappings" + _mesh->getName());
   mesh::Mesh filteredMesh("FilteredMesh", _dimensions, _mesh->isFlipNormals());
   filterMesh(filteredMesh, false);
   DEBUG("Mapping filter, filtered from " << _mesh->vertices().size() << " vertices to " << filteredMesh.vertices().size() << " vertices.");
@@ -208,7 +208,7 @@ void ReceivedPartition::compute()
 
   // (6) Compute distribution
   INFO("Feedback distribution for mesh " << _mesh->getName());
-  Event e6("feedback mesh");
+  Event e6("partition.feedbackMesh." + _mesh->getName());
   if (utils::MasterSlave::_slaveMode) {
     int numberOfVertices = _mesh->vertices().size();
     utils::MasterSlave::_communication->send(numberOfVertices, 0);

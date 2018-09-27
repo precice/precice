@@ -1,4 +1,3 @@
-#import os
 from cpython       cimport array
 from libcpp        cimport bool
 from libc.stdlib   cimport free
@@ -9,11 +8,24 @@ from libcpp.string cimport string
 from libcpp.memory cimport unique_ptr
 from libcpp.vector cimport vector
 
+from cpython.version cimport PY_MAJOR_VERSION  # important for determining python version in order to properly normalize string input. See http://docs.cython.org/en/latest/src/tutorial/strings.html#general-notes-about-c-strings and https://github.com/precice/precice/issues/68 . 
+
+cdef bytes convert(s):
+    """
+    source code from http://docs.cython.org/en/latest/src/tutorial/strings.html#general-notes-about-c-strings
+    """
+    if type(s) is bytes:
+        return s
+    elif type(s) is str:
+        return s.encode()
+    else:
+        raise TypeError("Could not convert.")
+
 include "PyConstants.pyx"
 
 cdef extern from "./src/precice/SolverInterface.hpp"  namespace "precice":
    cdef cppclass SolverInterface:
-      SolverInterface (string, int, int) except +
+      SolverInterface (const string&, int, int) except +
 
       void configure (const string&)
 
@@ -90,18 +102,20 @@ cdef extern from "./src/precice/SolverInterface.hpp"  namespace "precice":
 
 cdef class PySolverInterface:
    cdef SolverInterface *thisptr # hold a C++ instance being wrapped
-
+   
    # constructor
-   def __cinit__ (self, string solverName, int solverProcessIndex, int solverProcessSize):
-      self.thisptr = new SolverInterface (solverName, solverProcessIndex, solverProcessSize)
+
+   def __cinit__ (self, solverName, int solverProcessIndex, int solverProcessSize):
+      self.thisptr = new SolverInterface (convert(solverName), solverProcessIndex, solverProcessSize)      
+      pass
 
    # destructor
    def __dealloc__ (self):
       del self.thisptr
 
    # configure
-   def configure (self, string configurationFileName):
-      self.thisptr.configure (configurationFileName)
+   def configure (self, configurationFileName):
+      self.thisptr.configure (convert(configurationFileName))
 
    # initialize
    def initialize (self):
@@ -141,23 +155,19 @@ cdef class PySolverInterface:
 
    # check if action is needed
    def isActionRequired (self, action):
-      cdef string action_ = action
-      return self.thisptr.isActionRequired (action_)
+      return self.thisptr.isActionRequired (action)
 
    # notify of action being fulfilled
    def fulfilledAction (self, action):
-      cdef string action_ = action
-      self.thisptr.fulfilledAction (action_)
+      self.thisptr.fulfilledAction (action)
 
    # hasMesh
    def hasMesh(self, meshName):
-      cdef string meshName_ = meshName
-      return self.thisptr.hasMesh (meshName_)
+      return self.thisptr.hasMesh (convert(meshName))
 
    # get mesh ID
    def getMeshID (self, meshName):
-      cdef string meshName_ = meshName
-      return self.thisptr.getMeshID (meshName_)
+      return self.thisptr.getMeshID (convert(meshName))
 
    # get mesh IDs
    def getMeshIDs (self):
@@ -165,12 +175,10 @@ cdef class PySolverInterface:
 
    # hasData
    def hasData (self, dataName, meshID):
-      cdef string dataName_ = dataName
-      return self.thisptr.hasData(dataName_, meshID)
+      return self.thisptr.hasData(convert(dataName), meshID)
 
    def getDataID (self, dataName, meshID):
-      cdef string dataName_ = dataName
-      return self.thisptr.getDataID (dataName_, meshID)
+      return self.thisptr.getDataID (convert(dataName), meshID)
 
    def setMeshVertices (self, meshID, size, positions, ids):
       cdef int* ids_

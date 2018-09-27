@@ -78,8 +78,7 @@ private:
 class EventData
 {
 public:
-  // Do not add explicit here, it fails on some (older?) compilers
-  EventData(std::string _name);
+  explicit EventData(std::string _name);
   
   EventData(std::string _name, int _rank, long _count, long _total,
             long _max, long _min, std::vector<int> _data, Event::StateChanges stateChanges);
@@ -117,13 +116,14 @@ public:
 
   Event::Clock::duration max = Event::Clock::duration::min();
   Event::Clock::duration min = Event::Clock::duration::max();
+  Event::Clock::duration total = Event::Clock::duration::zero();
+  
   int rank;
   Event::StateChanges stateChanges;
   
 private:
   std::string name;
   long count = 0;
-  Event::Clock::duration total = Event::Clock::duration::zero();
   std::vector<int> data;
 };
 
@@ -157,8 +157,9 @@ public:
   /// Sets the global start time
   /**
    * @param[in] applicationName A name that is added to the logfile to distinguish different participants
+   * @param[in] run A name of the run, will be printed as a separate column with each Event.
    */
-  void initialize(std::string appName = "");
+  void initialize(std::string appName = "", std::string run = "");
 
   /// Sets the global end time
   void finalize();
@@ -173,7 +174,7 @@ public:
   void put(Event* event);
 
   /// Make this returning a reference or smart ptr?
-  Event & getStoredEvent(std::string name);
+  Event & getStoredEvent(std::string const & name);
 
   /// Returns the timestamp of the run, i.e. when the run finished
   std::chrono::system_clock::time_point getTimestamp();
@@ -197,6 +198,12 @@ public:
   
   void printGlobalStats();
 
+  /// Currently active prefix. Changing that applies to newly created events.
+  std::string prefix;
+  
+  /// A name that is added to the logfile to identify a run
+  std::string runName;
+
 private:
   /// Private, empty constructor for singleton pattern
   EventRegistry()
@@ -213,8 +220,6 @@ private:
   Event globalEvent;
   
   bool initialized = false;
-  Event::Clock::time_point starttime;
-  Event::Clock::duration duration;
   
   /// Timestamp when the run finished
   std::chrono::system_clock::time_point timestamp;
@@ -230,4 +235,27 @@ private:
   /// A name that is added to the logfile to distinguish different participants
   std::string applicationName;
 };
+
+
+/// Class that changes the prefix in its scope
+class ScopedEventPrefix
+{
+public:
+  
+  ScopedEventPrefix(const std::string & name)
+  {
+    previousName = EventRegistry::instance().prefix;
+    EventRegistry::instance().prefix += name;
+  }
+
+  ~ScopedEventPrefix()
+  {
+    EventRegistry::instance().prefix = previousName;
+  }
+  
+private:
+
+  std::string previousName = "";
+};
+
 }} // namespace precice::utils

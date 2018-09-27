@@ -86,7 +86,7 @@ vars.Add(BoolVariable("python", "Used for Python scripted solver actions.", Fals
 vars.Add(BoolVariable("gprof", "Used in detailed performance analysis.", False))
 vars.Add(EnumVariable('platform', 'Special configuration for certain platforms', "none", allowed_values=('none', 'supermuc', 'hazelhen')))
 
-env = Environment(variables = vars, ENV = os.environ)   # For configuring build variables
+env = Environment(variables = vars, ENV = os.environ, tools = ["default", "textfile"])
 
 conf = Configure(env) # For checking libraries, headers, ...
 
@@ -112,6 +112,10 @@ print
 
 env.Append(LIBPATH = [('#' + buildpath)])
 env.Append(CCFLAGS= ['-Wall', '-Wextra', '-Wno-unused-parameter', '-std=c++11'])
+
+# ====== PRECICE_VERSION number ======
+PRECICE_VERSION = "1.2.0"
+
 
 # ====== Compiler Settings ======
 
@@ -184,8 +188,7 @@ else:
     buildpath += "-nopetsc"
 
 # ====== Eigen ======
-if prefix is not "/usr":
-    env.Append(CPPPATH = join(prefix, 'include/eigen3'))
+env.Append(CPPPATH = join(prefix, 'include/eigen3'))
 
 checkAdd(header = "Eigen/Dense", usage = "Eigen")
 if env["build"] == "debug":
@@ -258,7 +261,7 @@ if env["python"]:
     # FIXME: Supresses NumPy deprecation warnings. Needs to converted to the newer API.
     env.Append(CPPDEFINES = ['NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION'])
     env.AppendUnique(CPPPATH = [pythonIncPath, numpyIncPath])
-    env.AppendUnique(LIBPATH = [pythonLib])
+    env.AppendUnique(LIBPATH = [pythonLibPath])
     checkAdd(lib = pythonLib, header = "Python.h")
     # Check for numpy header needs python header first to compile
     checkAdd( header = ['Python.h', 'numpy/arrayobject.h'], usage = "NumPy")
@@ -327,9 +330,19 @@ symlink = env.Command(
     action = "ln -fns {0} {1}".format(os.path.split(buildpath)[-1], join(os.path.split(buildpath)[0], "last"))
 )
 
-Default(solib, tests, symlink)
+# Substitute strings in version.hpp.in, save it as version.hpp
+versions = env.Substfile(
+    "src/versions.hpp.in",
+    SUBST_DICT =  {
+        "@preCICE_VERSION@" : PRECICE_VERSION,
+        "@PETSC_MAJOR@" : 0,
+        "@PETSC_MINOR@" : 0}
+)
 
-AlwaysBuild(symlink)
+
+Default(versions, solib, tests, symlink)
+
+AlwaysBuild(versions, symlink)
 
 print("Targets:   " + ", ".join([str(i) for i in BUILD_TARGETS]))
 print("Buildpath: " + buildpath)

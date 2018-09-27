@@ -34,12 +34,8 @@ IQNILSPostProcessing::IQNILSPostProcessing(
     std::vector<int>  dataIDs,
     PtrPreconditioner preconditioner)
     : BaseQNPostProcessing(initialRelaxation, forceInitialRelaxation, maxIterationsUsed, timestepsReused,
-                           filter, singularityLimit, dataIDs, preconditioner),
-      _secondaryOldXTildes(),
-      _secondaryMatricesW(),
-      _secondaryMatricesWBackup()
-{
-}
+                           filter, singularityLimit, dataIDs, preconditioner)
+{}
 
 void IQNILSPostProcessing::initialize(
     DataMap &cplData)
@@ -172,8 +168,9 @@ void IQNILSPostProcessing::computeQNUpdate(PostProcessing::DataMap &cplData, Eig
   } else {
     assertion(utils::MasterSlave::_communication.get() != nullptr);
     assertion(utils::MasterSlave::_communication->isConnected());
-    if (_hasNodesOnInterface)
+    if (_hasNodesOnInterface) {
       assertion(Q.cols() == getLSSystemCols(), Q.cols(), getLSSystemCols());
+    }
     assertion(_local_b.size() == getLSSystemCols(), _local_b.size(), getLSSystemCols());
 
     if (utils::MasterSlave::_masterMode) {

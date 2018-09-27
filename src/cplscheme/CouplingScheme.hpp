@@ -1,9 +1,6 @@
 #pragma once
 
-#include "SharedPointer.hpp"
-
 #include "com/SharedPointer.hpp"
-
 #include <string>
 #include <vector>
 #include <map>
@@ -142,7 +139,7 @@ public:
   virtual double getTimestepLength() const =0;
 
 
-  // default is false, i.e., no multilevel PP
+  /// Defaults to false, i.e., no multilevel PP
   virtual bool isCoarseModelOptimizationActive()
   {
     return false;
@@ -159,7 +156,7 @@ public:
    */
   virtual double getThisTimestepRemainder() const =0;
 
-  /// @brief Returns part of the current timestep that has been computed already.
+  /// Returns part of the current timestep that has been computed already.
   virtual double getComputedTimestepPart() const =0;
 
   /**

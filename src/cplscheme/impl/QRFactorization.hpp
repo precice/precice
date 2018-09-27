@@ -2,10 +2,8 @@
 
 #include <Eigen/Core>
 #include <fstream>
-#include <limits>
 #include "logging/Logger.hpp"
 #include "mesh/SharedPointer.hpp"
-#include "utils/MasterSlave.hpp"
 
 namespace precice
 {
@@ -205,8 +203,7 @@ private:
   */
   void applyReflector(const givensRot &grot, int k, int l, Eigen::VectorXd &p, Eigen::VectorXd &q);
 
-  // @brief Logging device.
-  static logging::Logger _log;
+  logging::Logger _log{"cplscheme::impl::QRFactorization"};
 
   Eigen::MatrixXd _Q;
   Eigen::MatrixXd _R;

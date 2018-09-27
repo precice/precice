@@ -2,8 +2,8 @@
 #include <boost/filesystem.hpp>
 #include "utils/Parallel.hpp"
 #include "utils/Petsc.hpp"
-#include "utils/Globals.hpp"
 #include "logging/LogConfiguration.hpp"
+#include <iostream>
 
 namespace precice {
 extern bool testMode;

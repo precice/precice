@@ -42,7 +42,7 @@ public:
       DataMap &cpldata);
 
 private:
-  static logging::Logger _log;
+  logging::Logger _log{"cplscheme::AitkenPostProcessing"};
 
   double _initialRelaxation;
 
@@ -50,7 +50,7 @@ private:
 
   double _aitkenFactor;
 
-  int _iterationCounter;
+  int _iterationCounter = 0;
 
   Eigen::VectorXd _residuals;
 

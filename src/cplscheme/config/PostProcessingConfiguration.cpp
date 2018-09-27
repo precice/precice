@@ -25,12 +25,6 @@ namespace precice
 namespace cplscheme
 {
 
-//const std::string & PostProcessingConfiguration:: getTag ()
-//{
-//  static std::string tag ( "post-processing" );
-//  return tag;
-//}
-
 PostProcessingConfiguration::PostProcessingConfiguration(
     const mesh::PtrMeshConfiguration &meshConfig)
     : TAG("post-processing"),
@@ -74,7 +68,6 @@ PostProcessingConfiguration::PostProcessingConfiguration(
       VALUE_SVD_RESTART("RS-SVD"),
       VALUE_SLIDE_RESTART("RS-SLIDE"),
       VALUE_NO_RESTART("no-restart"),
-      //_isValid(false),
       _meshConfig(meshConfig),
       _postProcessing(),
       _coarseModelOptimizationConfig(),
@@ -380,13 +373,6 @@ void PostProcessingConfiguration::addTypeSpecificSubtags(
     XMLAttribute<double> attrValue(ATTR_VALUE);
     tagRelax.addAttribute(attrValue);
     tag.addSubtag(tagRelax);
-
-    //    XMLTag tagData(*this, TAG_DATA, XMLTag::OCCUR_ONCE_OR_MORE );
-    //    XMLAttribute<std::string> attrName(ATTR_NAME);
-    //    XMLAttribute<std::string> attrMesh(ATTR_MESH);
-    //    tagData.addAttribute(attrName);
-    //    tagData.addAttribute(attrMesh);
-    //    tag.addSubtag(tagData);
   } else if (tag.getName() == VALUE_AITKEN) {
     XMLTag               tagInitRelax(*this, TAG_INIT_RELAX, XMLTag::OCCUR_ONCE);
     XMLAttribute<double> attrValue(ATTR_VALUE);

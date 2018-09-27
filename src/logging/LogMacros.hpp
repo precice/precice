@@ -44,8 +44,8 @@
 
 #ifdef NDEBUG 
 
-#define DEBUG(...)
-#define TRACE(...)
+#define DEBUG(...) {}
+#define TRACE(...) {}
 
 #else // NDEBUG
 

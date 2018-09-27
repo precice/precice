@@ -85,23 +85,23 @@ public:
   std::string printDTD(const std::string &ElementName) const;
 
 private:
-  static logging::Logger _log;
+  logging::Logger _log{"xml::XMLAttribute"};
 
   std::string _name;
 
   std::string _doc;
 
-  bool _read;
+  bool _read = false;
 
   ATTRIBUTE_T _value;
 
-  bool _hasDefaultValue;
+  bool _hasDefaultValue = false;
 
   ATTRIBUTE_T _defaultValue;
 
-  bool _hasValidation;
+  bool _hasValidation = false;
 
-  Validator<ATTRIBUTE_T> *_validator;
+  Validator<ATTRIBUTE_T> *_validator = nullptr;
 
   /// Sets non Eigen::VectorXd type values.
   template <typename VALUE_T>
@@ -117,57 +117,41 @@ private:
 };
 
 template <typename ATTRIBUTE_T>
-logging::Logger XMLAttribute<ATTRIBUTE_T>::_log("xml::XMLAttribute");
-
-template <typename ATTRIBUTE_T>
 XMLAttribute<ATTRIBUTE_T>::XMLAttribute()
 {
   assertion(false);
 }
 
 template <typename ATTRIBUTE_T>
-XMLAttribute<ATTRIBUTE_T>::XMLAttribute(
-    const std::string &name)
-    : _name(name),
-      _doc(),
-      _read(false),
-      _value(),
-      _hasDefaultValue(false),
-      _defaultValue(),
-      _hasValidation(false),
-      _validator(NULL)
+XMLAttribute<ATTRIBUTE_T>::XMLAttribute(const std::string &name)
+    : _name(name)
 {
 }
 
 template <typename ATTRIBUTE_T>
-XMLAttribute<ATTRIBUTE_T>::XMLAttribute(
-    const XMLAttribute<ATTRIBUTE_T> &rhs)
+XMLAttribute<ATTRIBUTE_T>::XMLAttribute(const XMLAttribute<ATTRIBUTE_T> &rhs)
     : _name(rhs._name),
       _doc(rhs._doc),
       _read(rhs._read),
       _value(rhs._value),
       _hasDefaultValue(rhs._hasDefaultValue),
-      _defaultValue(rhs._defaultValue),
-      _hasValidation(false),
-      _validator(NULL)
+      _defaultValue(rhs._defaultValue)
 {
   if (rhs._hasValidation) {
-    assertion(rhs._validator != NULL);
+    assertion(rhs._validator != nullptr);
     _validator     = &((rhs._validator)->clone());
     _hasValidation = true;
   }
 }
 
 template <typename ATTRIBUTE_T>
-void XMLAttribute<ATTRIBUTE_T>::setDocumentation(
-    const std::string &documentation)
+void XMLAttribute<ATTRIBUTE_T>::setDocumentation(const std::string &documentation)
 {
   _doc = documentation;
 }
 
 template <typename ATTRIBUTE_T>
-void XMLAttribute<ATTRIBUTE_T>::setValidator(
-    const Validator<ATTRIBUTE_T> &validator)
+void XMLAttribute<ATTRIBUTE_T>::setValidator(const Validator<ATTRIBUTE_T> &validator)
 {
   if (_validator) {
     delete _validator;
@@ -177,8 +161,7 @@ void XMLAttribute<ATTRIBUTE_T>::setValidator(
 }
 
 template <typename ATTRIBUTE_T>
-void XMLAttribute<ATTRIBUTE_T>::setDefaultValue(
-    const ATTRIBUTE_T &defaultValue)
+void XMLAttribute<ATTRIBUTE_T>::setDefaultValue(const ATTRIBUTE_T &defaultValue)
 {
   TRACE(defaultValue);
   _hasDefaultValue = true;

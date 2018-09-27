@@ -150,7 +150,7 @@ public:
 
 private:
 
-  static logging::Logger _log;
+  logging::Logger _log{"impl::Participant"};
 
   static int _participantsSize;
 
@@ -187,7 +187,7 @@ private:
 
   com::PtrCommunication _clientServerCommunication;
 
-  bool _useMaster;
+  bool _useMaster = false;
 
   template<typename ELEMENT_T>
   bool isDataValid (

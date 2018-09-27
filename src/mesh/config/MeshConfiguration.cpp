@@ -141,7 +141,6 @@ void MeshConfiguration:: addMesh
 
 void MeshConfiguration:: setMeshSubIDs()
 {
-  //assertion ( _isValid );
   assertion ( _meshes.size() == _meshSubIDs.size() );
   assertion ( not _setMeshSubIDs );
   for ( size_t i=0; i < _meshes.size(); i++ ) {
@@ -151,11 +150,6 @@ void MeshConfiguration:: setMeshSubIDs()
   }
   _setMeshSubIDs = true;
 }
-
-//bool MeshConfiguration:: isValid() const
-//{
-//  return _isValid;
-//}
 
 const std::vector<PtrMesh>& MeshConfiguration:: meshes() const
 {

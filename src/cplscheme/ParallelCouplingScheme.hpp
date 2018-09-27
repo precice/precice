@@ -6,6 +6,12 @@
 namespace precice {
 namespace cplscheme {
 
+/**
+ * @brief Coupling scheme for parallel coupling, i.e. simultaneous execution of two coupled participants
+ *
+ * For more information, look into Benjamin's thesis, Section 3.5. 
+ * https://mediatum.ub.tum.de/doc/1320661/document.pdf
+ */ 	
 class ParallelCouplingScheme : public BaseCouplingScheme
 {
 public:
@@ -21,8 +27,6 @@ public:
     constants::TimesteppingMethod dtMethod,
     CouplingMode          cplMode,
     int                   maxIterations = 1);
-
-  logging::Logger _log{"cplscheme::ParallelCouplingScheme"};
 
   virtual void initialize(double startTime, int startTimestep);
 
@@ -44,6 +48,8 @@ protected:
 
 
 private:
+  logging::Logger _log{"cplscheme::ParallelCouplingScheme"};
+  
   /// Map from data ID -> all data (receive and send) with that ID
   DataMap _allData;
 

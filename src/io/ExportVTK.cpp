@@ -4,6 +4,7 @@
 #include "mesh/Edge.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Quad.hpp"
+#include "Constants.hpp"
 #include <Eigen/Core>
 #include <iostream>
 #include <fstream>
@@ -56,7 +57,7 @@ void ExportVTK::exportMesh
   TRACE(mesh.getName());
 
   // Plot vertices
-  outFile << "POINTS " << mesh.vertices().size() << " float "<<std::endl << std::endl;
+  outFile << "POINTS " << mesh.vertices().size() << " float "<< std::endl << std::endl;
   for (mesh::Vertex& vertex : mesh.vertices()) {
     writeVertex(vertex.getCoords(), outFile);
   }

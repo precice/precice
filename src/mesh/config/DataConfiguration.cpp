@@ -4,22 +4,11 @@
 #include "xml/XMLAttribute.hpp"
 #include "xml/ValidatorEquals.hpp"
 #include "xml/ValidatorOr.hpp"
-#include "utils/Globals.hpp"
 
 namespace precice {
 namespace mesh {
 
-DataConfiguration:: DataConfiguration
-(
-  xml::XMLTag& parent )
-:
-  TAG("data"),
-  ATTR_NAME("name"),
-  VALUE_VECTOR("vector"),
-  VALUE_SCALAR("scalar"),
-  _dimensions(0),
-  _data(),
-  _indexLastConfigured(-1)
+DataConfiguration:: DataConfiguration(xml::XMLTag& parent)
 {
   using namespace xml;
   std::string doc;
