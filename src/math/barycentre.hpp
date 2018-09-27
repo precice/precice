@@ -35,12 +35,13 @@ BarycentricCoordsAndProjected calcBarycentricCoordsForEdge(
   using Eigen::Vector3d;
   using Eigen::VectorXd;
   Vector2d barycentricCoords;
-  int      dimensions = edgeA.size();
-  assertion(edgeA.size() == edgeB.size() == location.size());
+  const int dimensions = edgeA.size();
+  assertion(dimensions == edgeB.size() && dimensions == location.size(),
+          "The inputs need to have the same dimensions.");
   assertion((dimensions == 2) || (dimensions == 3), dimensions);
   VectorXd projected = VectorXd::Zero(dimensions);
-  Vector2d        a, b, ab, c, d;
-  bool            collinear = false;
+  Vector2d a, b, ab, c, d;
+  bool     collinear = false;
 
   if (dimensions == 2) {
     // Get parameters for parametric edge representation: p(s) = a + s(b-a)
