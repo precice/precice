@@ -85,19 +85,19 @@ void NearestProjectionMapping::computeMapping()
                     switch (nearest.type) {
                     case (Primitive::Vertex):
                       _weights[i] = generateInterpolationElements(iVertices[i],
-                                                                  input()->vertices()[nearest.index]);
+                                                                  output()->vertices()[nearest.index]);
                       break;
                       case (Primitive::Edge):
                       _weights[i] = generateInterpolationElements(iVertices[i],
-                                                                  input()->edges()[nearest.index]);
+                                                                  output()->edges()[nearest.index]);
                       break;
                       case (Primitive::Triangle):
                       _weights[i] = generateInterpolationElements(iVertices[i],
-                                                                  input()->triangles()[nearest.index]);
+                                                                  output()->triangles()[nearest.index]);
                       break;
                       case (Primitive::Quad):
                       _weights[i] = generateInterpolationElements(iVertices[i],
-                                                                  input()->quads()[nearest.index]);
+                                                                  output()->quads()[nearest.index]);
                       break;
                     }
                     CHECK(!_weights[i].empty(),
