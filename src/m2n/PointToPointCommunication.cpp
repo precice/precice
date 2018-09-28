@@ -415,11 +415,10 @@ void PointToPointCommunication::acceptConnection(std::string const &nameAcceptor
     // `communicationMap', and, therefore, for data structure consistency
     // of `_mappings' with the requester participant side, we simply
     // duplicate references to the same communication object `c'.
-    _mappings.push_back({
-        static_cast<int>(localRequesterRank), globalRequesterRank, std::move(indices), c, com::PtrRequest(), 0});
+    _mappings.push_back({static_cast<int>(localRequesterRank), globalRequesterRank,
+                         std::move(indices), c, com::PtrRequest(), {}});
   }
 
-  _buffer.reserve(_totalIndexCount * _mesh->getDimensions());
   _isConnected = true;
 }
 
@@ -430,7 +429,7 @@ void PointToPointCommunication::requestConnection(std::string const &nameAccepto
   CHECK(not isConnected(), "Already connected!");
   CHECK(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode,
         "You can only use a point-to-point communication between two participants which both use a master. "
-            << "Please use distribution-type gather-scatter instead.");
+        << "Please use distribution-type gather-scatter instead.");
 
   mesh::Mesh::VertexDistribution &vertexDistribution = _mesh->getVertexDistribution();
   mesh::Mesh::VertexDistribution  acceptorVertexDistribution;
@@ -541,12 +540,11 @@ void PointToPointCommunication::requestConnection(std::string const &nameAccepto
     // On the requester participant side, the communication objects behave
     // as clients, i.e. each of them requests only one connection to
     // acceptor process (in the acceptor participant).
-    _mappings.push_back({
-        0, globalAcceptorRank, std::move(indices), c, com::PtrRequest(), 0});
+    _mappings.push_back({0, globalAcceptorRank,
+                         std::move(indices), c, com::PtrRequest(), {}});
   }
 
   com::Request::wait(requests);
-  _buffer.reserve(_totalIndexCount * _mesh->getDimensions());
   _isConnected = true;
 }
 
@@ -564,7 +562,6 @@ void PointToPointCommunication::closeConnection()
   }
 
   _mappings.clear();
-  _buffer.clear();
   _localIndexCount = 0;
   _totalIndexCount = 0;
   _isConnected     = false;
@@ -583,7 +580,6 @@ void PointToPointCommunication::send(double *itemsToSend,
   assertion(size == _localIndexCount * valueDimension, size, _localIndexCount * valueDimension);
   
   for (auto &mapping : _mappings) {
-    mapping.offset = _buffer.size();
     auto buffer = std::make_shared<std::vector<double>>();
     buffer->reserve(mapping.indices.size() * valueDimension);
     for (auto index : mapping.indices) {
@@ -611,30 +607,21 @@ void PointToPointCommunication::receive(double *itemsToReceive,
   std::fill(itemsToReceive, itemsToReceive + size, 0);
 
   for (auto &mapping : _mappings) {
-    mapping.offset = _buffer.size();
-    _buffer.resize(_buffer.size() + mapping.indices.size() * valueDimension);
-
-    mapping.request =
-        mapping.communication->aReceive(_buffer.data() + mapping.offset,
-                                        mapping.indices.size() * valueDimension,
-                                        mapping.localRemoteRank);
+    mapping.recvBuffer.resize(mapping.indices.size() * valueDimension);
+    mapping.request = mapping.communication->aReceive(mapping.recvBuffer, mapping.localRemoteRank);
   }
 
   for (auto &mapping : _mappings) {
     mapping.request->wait();
 
     int i = 0;
-
     for (auto index : mapping.indices) {
       for (int d = 0; d < valueDimension; ++d) {
-        itemsToReceive[index * valueDimension + d] += _buffer[mapping.offset + i * valueDimension + d];
+        itemsToReceive[index * valueDimension + d] += mapping.recvBuffer[i * valueDimension + d];
       }
-
       i++;
     }
   }
-
-  _buffer.clear();
 }
 
 void PointToPointCommunication::checkBufferedRequests(bool blocking)

@@ -73,6 +73,7 @@ public:
                        int     valueDimension = 1);
 
 private:
+  logging::Logger _log{"m2n::PointToPointCommunication"};
 
   /// Checks all stored requests for completion and removes associated buffers
   /**
@@ -80,8 +81,6 @@ private:
    */  
   void checkBufferedRequests(bool blocking);
   
-  logging::Logger _log{"m2n::PointToPointCommunication"};
-
   com::PtrCommunicationFactory _communicationFactory;
 
   /**
@@ -91,8 +90,8 @@ private:
    *        3. local data indices, which define a subset of local (for process
    *           rank in the current participant) data to be communicated between
    *           the current process rank and the remote process rank;
-   *        4. communication object (provides point-to-point communication
-   *           routines).
+   *        4. communication object (provides point-to-point communication routines).
+   *        5. Appropriatly sized buffer to receive elements
    */
   struct Mapping {
     int                   localRemoteRank;
@@ -100,7 +99,7 @@ private:
     std::vector<int>      indices;
     com::PtrCommunication communication;
     com::PtrRequest       request;
-    size_t                offset;
+    std::vector<double>   recvBuffer;
   };
 
   /**
@@ -108,8 +107,6 @@ private:
    *        mappings (one to service each point-to-point connection).
    */
   std::vector<Mapping> _mappings;
-
-  std::vector<double> _buffer;
 
   size_t _localIndexCount = 0;
 
