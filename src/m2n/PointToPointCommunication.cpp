@@ -639,6 +639,7 @@ void PointToPointCommunication::receive(double *itemsToReceive,
 
 void PointToPointCommunication::checkBufferedRequests(bool blocking)
 {
+  TRACE(bufferedRequests.size());
   do {
     for (auto it = bufferedRequests.begin(); it != bufferedRequests.end();) {
       if (it->first->test())
