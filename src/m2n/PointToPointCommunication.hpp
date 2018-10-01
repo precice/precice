@@ -108,10 +108,6 @@ private:
    */
   std::vector<Mapping> _mappings;
 
-  size_t _localIndexCount = 0;
-
-  size_t _totalIndexCount = 0;
-
   bool _isConnected = false;
 
   std::list<std::pair<std::shared_ptr<com::Request>,

@@ -221,17 +221,12 @@ void printLocalIndexCountStats(std::map<int, std::vector<int>> const &m)
 // indices for the current rank in `thisVertexDistribution') * (total number of
 // data indices for all ranks in `otherVertexDistribution')).
 std::map<int, std::vector<int>> buildCommunicationMap(
-    // `localIndexCount' is the number of unique local indices for the current rank.
-    size_t &localIndexCount,
     // `thisVertexDistribution' is input vertex distribution from this participant.
     mesh::Mesh::VertexDistribution const &thisVertexDistribution,
     // `otherVertexDistribution' is input vertex distribution from other participant.
     mesh::Mesh::VertexDistribution const &otherVertexDistribution,
     int                                    thisRank = utils::MasterSlave::_rank)
 {
-
-  localIndexCount = 0;
-
   std::map<int, std::vector<int>> communicationMap;
 
   auto iterator = thisVertexDistribution.find(thisRank);
@@ -254,16 +249,6 @@ std::map<int, std::vector<int>> buildCommunicationMap(
     }
     ++index;
   }
-
-  // CAUTION:
-  // This prevents point-to-point communication from considering those process
-  // ranks, which don't have matching indices in the remote participant
-  // (i.e. are not supposed to have any communication partners at all). For
-  // instance, this happens a lot in case of unstructured grids on the
-  // interface, or because user did a mistake and did not define the interface
-  // boundary properly.
-  if (communicationMap.size() > 0)
-    localIndexCount = indices.size();
 
   return communicationMap;
 }
@@ -339,7 +324,7 @@ void PointToPointCommunication::acceptConnection(std::string const &nameAcceptor
   // - has to communicate (send/receive) data with local indices 0 and 2 with
   //   the remote process with rank 4.
   std::map<int, std::vector<int>> communicationMap = m2n::buildCommunicationMap(
-      _localIndexCount, vertexDistribution, requesterVertexDistribution);
+    vertexDistribution, requesterVertexDistribution);
 
 // Print `communicationMap'.
 #ifdef P2P_LCM_PRINT
@@ -374,7 +359,6 @@ void PointToPointCommunication::acceptConnection(std::string const &nameAcceptor
 #endif
 
   if (communicationMap.empty()) {
-    assertion(_localIndexCount == 0);
     _isConnected = true;
     return;
   }
@@ -404,7 +388,6 @@ void PointToPointCommunication::acceptConnection(std::string const &nameAcceptor
     c->receive(globalRequesterRank, localRequesterRank);
 
     auto indices = std::move(communicationMap[globalRequesterRank]);
-    _totalIndexCount += indices.size();
 
     // NOTE:
     // Everything is moved (efficiency)!
@@ -475,7 +458,7 @@ void PointToPointCommunication::requestConnection(std::string const &nameAccepto
   // - has to communicate (send/receive) data with local indices 0 and 2 with
   //   the remote process with rank 4.
   std::map<int, std::vector<int>> communicationMap = m2n::buildCommunicationMap(
-      _localIndexCount, vertexDistribution, acceptorVertexDistribution);
+    vertexDistribution, acceptorVertexDistribution);
 
 // Print `communicationMap'.
 #ifdef P2P_LCM_PRINT
@@ -502,7 +485,6 @@ void PointToPointCommunication::requestConnection(std::string const &nameAccepto
 #endif
 
   if (communicationMap.empty()) {
-    assertion(_localIndexCount == 0);
     _isConnected = true;
     return;
   }
@@ -518,9 +500,6 @@ void PointToPointCommunication::requestConnection(std::string const &nameAccepto
   for (auto &i : communicationMap) {
     auto globalAcceptorRank = i.first;
     auto indices            = std::move(i.second);
-
-    _totalIndexCount += indices.size();
-
     auto c = _communicationFactory->newCommunication();
 
 #ifdef SuperMUC_WORK
@@ -562,8 +541,6 @@ void PointToPointCommunication::closeConnection()
   }
 
   _mappings.clear();
-  _localIndexCount = 0;
-  _totalIndexCount = 0;
   _isConnected     = false;
 }
 
@@ -572,13 +549,10 @@ void PointToPointCommunication::send(double *itemsToSend,
                                      int     valueDimension)
 {
 
-  if (_mappings.size() == 0) {
-    assertion(_localIndexCount == 0);
+  if (_mappings.empty()) {
     return;
   }
 
-  assertion(size == _localIndexCount * valueDimension, size, _localIndexCount * valueDimension);
-  
   for (auto &mapping : _mappings) {
     auto buffer = std::make_shared<std::vector<double>>();
     buffer->reserve(mapping.indices.size() * valueDimension);
@@ -598,11 +572,9 @@ void PointToPointCommunication::receive(double *itemsToReceive,
                                         size_t  size,
                                         int     valueDimension)
 {
-  if (_mappings.size() == 0) {
-    assertion(_localIndexCount == 0);
+  if (_mappings.empty()) {
     return;
   }
-  assertion(size == _localIndexCount * valueDimension, size, _localIndexCount * valueDimension);
 
   std::fill(itemsToReceive, itemsToReceive + size, 0);
 
