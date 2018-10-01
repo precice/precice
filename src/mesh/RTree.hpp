@@ -1,26 +1,21 @@
 #pragma once
 
-#include <boost/geometry.hpp>
 #include <map>
 #include <memory>
-#include "mesh/Mesh.hpp"
 #include "mesh/impl/RTreeAdapter.hpp"
+#include "mesh/Mesh.hpp"
+#include <boost/geometry.hpp>
 #include "mesh/Triangle.hpp"
 #include "mesh/Quad.hpp"
 
 // Forward declaration to friend the boost test struct
-namespace MeshTests
-{
-namespace RTree
-{
+namespace MeshTests {
+namespace RTree {
 struct CacheClearing;
-}
-} // namespace MeshTests
+}}
 
-namespace precice
-{
-namespace mesh
-{
+namespace precice {
+namespace mesh {
 
 /** The enumeration of various primitive types.
  * \see PrimitiveIndex
@@ -153,22 +148,21 @@ inline PrimitiveRTree indexMesh(const Mesh &mesh)
   return tree;
 }
 
-class rtree
-{
+class rtree {
 public:
   using VertexIndexGetter = impl::PtrVectorIndexable<Mesh::VertexContainer>;
   using RTreeParameters   = boost::geometry::index::rstar<16>;
   using VertexRTree       = boost::geometry::index::rtree<Mesh::VertexContainer::container::size_type,
-                                                    RTreeParameters,
-                                                    VertexIndexGetter>;
-  using PtrRTree          = std::shared_ptr<VertexRTree>;
+                                                          RTreeParameters,
+                                                          VertexIndexGetter>;
+  using PtrRTree = std::shared_ptr<VertexRTree>;
 
   /// Returns the pointer to boost::geometry::rtree for the given mesh vertices
   /*
    * Creates and fills the tree, if it wasn't requested before, otherwise it returns the cached tree.
    */
   static PtrRTree getVertexRTree(PtrMesh mesh);
-
+  
   /// Returns the pointer to boost::geometry::rtree for the given mesh primitives
   /*
    * Creates and fills the tree, if it wasn't requested before, otherwise it returns the cached tree.
@@ -176,19 +170,19 @@ public:
   static PtrPrimitiveRTree getPrimitiveRTree(PtrMesh mesh);
 
   /// Only clear the trees of that specific mesh
-  static void clear(Mesh &mesh);
+  static void clear(Mesh & mesh);
 
   friend struct MeshTests::RTree::CacheClearing;
-
+  
 private:
   static std::map<int, PtrPrimitiveRTree> primitive_trees_; ///< Cache for the primitive trees
-  static std::map<int, PtrRTree>         trees; ///< Cache for the vertex trees
+  static std::map<int, PtrRTree>          trees; ///< Cache for the vertex trees
 };
+
 
 using Box3d = boost::geometry::model::box<boost::geometry::model::point<double, 3, boost::geometry::cs::cartesian>>;
 
 /// Returns a boost::geometry box that encloses a sphere of given radius around a middle point
-Box3d getEnclosingBox(Vertex const &middlePoint, double sphereRadius);
+Box3d getEnclosingBox(Vertex const & middlePoint, double sphereRadius);
 
-} // namespace mesh
-} // namespace precice
+}}
