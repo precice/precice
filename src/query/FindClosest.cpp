@@ -7,7 +7,6 @@
 #include "mesh/Quad.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
-#include "utils/Globals.hpp"
 
 namespace precice
 {
