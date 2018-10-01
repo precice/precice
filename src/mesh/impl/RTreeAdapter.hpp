@@ -101,7 +101,7 @@ struct tag<Triangle> {
   using type = ring_tag;
 };
 template <>
-struct traits::closure<Triangle> {
+struct closure<Triangle> {
   static const closure_selector value = closed;
 };
 
@@ -114,7 +114,7 @@ struct tag<Quad> {
   using type = ring_tag;
 };
 template <>
-struct traits::closure<Quad> {
+struct closure<Quad> {
   static const closure_selector value = closed;
 };
 
