@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 3.5)
 
-project(PRECICE VERSION 1.2.0 LANGUAGES CXX)
+project(preCICE VERSION 1.2.0 LANGUAGES CXX)
 
 #
 # PREAMBLE
@@ -72,9 +72,12 @@ endif()
 
 # Add PRECICE as an empty target 
 add_library(PRECICE)
-
-# PRECICE is a C++11 project
-set_property(TARGET PRECICE PROPERTY CXX_STANDARD 11)
+set_target_properties(PRECICE PROPERTIES
+    # PRECICE is a C++11 project
+    CXX_STANDARD 11
+    # Set the binary name
+    OUTPUT_NAME precice
+    )
 
 # Setup Boost
 target_compile_definitions(PRECICE PRIVATE BOOST_ALL_DYN_LINK BOOST_ASIO_ENABLE_OLD_SERVICES)
@@ -125,8 +128,8 @@ configure_file("${PROJECT_SOURCE_DIR}/src/versions.hpp.in" "${PROJECT_BINARY_DIR
 
 # add_subdirectory("src")
 target_include_directories(PRECICE PUBLIC 
-    $<BUILD_INTERFACE:${PRECICE_SOURCE_DIR}/src>
-    $<BUILD_INTERFACE:${PRECICE_BINARY_DIR}>
+    $<BUILD_INTERFACE:${preCICE_SOURCE_DIR}/src>
+    $<BUILD_INTERFACE:${preCICE_BINARY_DIR}>
     $<INSTALL_INTERFACE:include>
     )
 
@@ -144,6 +147,12 @@ target_link_libraries(PRECICEBIN
     PRECICE
     Eigen3::Eigen
     )
+set_target_properties(PRECICEBIN PROPERTIES
+    # PRECICE is a C++11 project
+    CXX_STANDARD 11
+    # Set the binary name
+    OUTPUT_NAME binprecice
+    )
 copy_target_property(PRECICE PRECICEBIN COMPILE_DEFINITIONS)
 
 #
@@ -156,6 +165,12 @@ target_link_libraries(PRECICETEST
     Threads::Threads
     PRECICE
     Eigen3::Eigen
+    )
+set_target_properties(PRECICETEST PROPERTIES
+    # PRECICE is a C++11 project
+    CXX_STANDARD 11
+    # Set the binary name
+    OUTPUT_NAME testprecice
     )
 copy_target_property(PRECICE PRECICETEST COMPILE_DEFINITIONS)
 copy_target_property(PRECICE PRECICETEST COMPILE_OPTIONS)
@@ -184,11 +199,18 @@ install(TARGETS PRECICE PRECICEBIN PRECICETEST
   INCLUDES DESTINATION include/precice
   )
 
+# Install the resources necessary for the tests
+install(DIRECTORY src
+    DESTINATION share/precice
+    FILES_MATCHING
+    PATTERN "*.xml"
+    )
+
 # Export the Targets to install
 install(EXPORT PRECICETargets
     FILE PRECICETargets.cmake
     NAMESPACE PRECICE::
-    DESTINATION lib/cmake/Foo
+    DESTINATION lib/cmake/precice
     )
 
 # Generate a Package Config File for PRECICE
@@ -199,6 +221,6 @@ write_basic_package_version_file("PRECICEConfigVersion.cmake"
     )
 
 # Install the Config and the ConfigVersion files
-install(FILES "PRECICEConfig.cmake" "PRECICEConfigVersion.cmake"
+install(FILES "PRECICEConfig.cmake" "${preCICE_BINARY_DIR}/PRECICEConfigVersion.cmake"
     DESTINATION lib/cmake/precice
     )
