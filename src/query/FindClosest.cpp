@@ -3,7 +3,6 @@
 #include "mesh/Edge.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Quad.hpp"
-#include "utils/Globals.hpp"
 #include "math/math.hpp"
 #include <limits>
 

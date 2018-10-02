@@ -83,13 +83,13 @@ public:
   }
 
 private:
-  static logging::Logger _log;
+  logging::Logger _log{"cplscheme::AbsoluteConvergenceMeasure"};
 
   double _convergenceLimit;
 
-  double _normDiff;
+  double _normDiff = 0;
 
-  bool _isConvergence;
+  bool _isConvergence = false;
 };
 }
 }

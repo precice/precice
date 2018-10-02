@@ -223,7 +223,7 @@ void setupLogging(LoggingConfiguration configs, bool enabled)
   auto t = std::time(nullptr);
   auto tm = *std::localtime(&t);
   BOOST_LOG_TRIVIAL(info)
-    << "This is preCICE version " << PRECICE_VERSION << ". Starting " << std::put_time(&tm, "%Y-%m-%d %H-%M-%S");
+    << "This is preCICE version " << PRECICE_VERSION << ". Starting " << std::put_time(&tm, "%F %T");
 }
 
 

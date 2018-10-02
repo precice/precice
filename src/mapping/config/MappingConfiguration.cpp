@@ -5,7 +5,6 @@
 #include "mapping/PetRadialBasisFctMapping.hpp"
 #include "mapping/impl/BasisFunctions.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
-#include "utils/Globals.hpp"
 #include "xml/XMLTag.hpp"
 #include "xml/XMLAttribute.hpp"
 #include "xml/ValidatorEquals.hpp"
@@ -66,9 +65,8 @@ MappingConfiguration:: MappingConfiguration
   attrPolynomial.setDefaultValue("separate");
 
   XMLAttribute<std::string> attrPreallocation("preallocation");
-  attrPreallocation.setDocumentation("Sets kind of preallocaiton for PETSc RBF implementation");
-  attrPreallocation.setDefaultValue("off");
-
+  attrPreallocation.setDocumentation("Sets kind of preallocation for PETSc RBF implementation");
+  attrPreallocation.setDefaultValue("tree");
 
   XMLTag::Occurrence occ = XMLTag::OCCUR_ARBITRARY;
   std::list<XMLTag> tags;
@@ -236,7 +234,7 @@ void MappingConfiguration:: xmlTagCallback
     double solverRtol = 1e-9;
     bool xDead = false, yDead = false, zDead = false;
     Polynomial polynomial = Polynomial::ON;
-    Preallocation preallocation = Preallocation::OFF;
+    Preallocation preallocation = Preallocation::TREE;
     
     if (tag.hasAttribute(ATTR_SHAPE_PARAM)){
       shapeParameter = tag.getDoubleAttributeValue(ATTR_SHAPE_PARAM);
@@ -269,11 +267,11 @@ void MappingConfiguration:: xmlTagCallback
         preallocation = Preallocation::ESTIMATE;
       else if (strPrealloc == "compute")
         preallocation = Preallocation::COMPUTE;
-      else if (strPrealloc == "saved")
-        preallocation = Preallocation::SAVED;
+      else if (strPrealloc == "save")
+        preallocation = Preallocation::SAVE;
       else if (strPrealloc == "tree")
         preallocation = Preallocation::TREE;
-      else
+      else if (strPrealloc == "off")
         preallocation = Preallocation::OFF;
     }     
           

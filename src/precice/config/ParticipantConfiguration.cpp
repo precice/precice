@@ -8,7 +8,6 @@
 #include "mesh/config/MeshConfiguration.hpp"
 #include "mapping/Mapping.hpp"
 #include "mapping/config/MappingConfiguration.hpp"
-#include "utils/Globals.hpp"
 #include "xml/XMLAttribute.hpp"
 #include "xml/ValidatorEquals.hpp"
 #include "xml/ValidatorOr.hpp"
@@ -24,48 +23,12 @@
 namespace precice {
 namespace config {
 
-logging::Logger ParticipantConfiguration::
-    _log("config::ParticipantConfiguration");
-
 ParticipantConfiguration:: ParticipantConfiguration
 (
-  xml::XMLTag&                              parent,
-  const mesh::PtrMeshConfiguration&           meshConfiguration)
+  xml::XMLTag&                      parent,
+  const mesh::PtrMeshConfiguration& meshConfiguration)
 :
-  TAG("participant"),
-  TAG_WRITE("write-data"),
-  TAG_READ("read-data"),
-  TAG_DATA_ACTION("data-action"),
-  TAG_USE_MESH("use-mesh"),
-  TAG_WATCH_POINT("watch-point"),
-  TAG_SERVER("server"),
-  TAG_MASTER("master"),
-  ATTR_NAME("name"),
-  ATTR_SOURCE_DATA("source-data"),
-  ATTR_TARGET_DATA("target-data"),
-  ATTR_TIMING("timing"),
-  ATTR_LOCAL_OFFSET("offset"),
-  ATTR_ACTION_TYPE("type"),
-  ATTR_FROM("from"),
-  ATTR_SAFETY_FACTOR("safety-factor"),
-  ATTR_GEOMETRIC_FILTER("geometric-filter"),
-  ATTR_PROVIDE("provide"),
-  ATTR_MESH("mesh"),
-  ATTR_COORDINATE("coordinate"),
-  ATTR_COMMUNICATION("communication"),
-  ATTR_CONTEXT("context"),
-  ATTR_NETWORK("network"),
-  ATTR_EXCHANGE_DIRECTORY("exchange-directory"),
-  VALUE_FILTER_FIRST("filter-first"),
-  VALUE_BROADCAST_FILTER("broadcast-filter"),
-  VALUE_NO_FILTER("no-filter"),
-  VALUE_VTK ( "vtk" ),
-  _dimensions(0),
-  _meshConfig(meshConfiguration),
-  _mappingConfig(),
-  _actionConfig(),
-  _participants(),
-  _watchPointConfigs()
+  _meshConfig(meshConfiguration)
 {
   assertion(_meshConfig.use_count() > 0);
   using namespace xml;
@@ -652,9 +615,8 @@ void ParticipantConfiguration:: finishParticipantConfiguration
           << "\" defines watchpoint \"" << config.name
           << "\" for mesh \"" << config.nameMesh
           << "\" which is not used by him!" );
-    std::string filename = config.name + ".watchpoint.txt";
-    impl::PtrWatchPoint watchPoint (
-        new impl::WatchPoint(config.coordinates, mesh, filename) );
+    std::string filename = "precice-" + participant->getName() + "-watchpoint-" + config.name + ".log";
+    impl::PtrWatchPoint watchPoint( new impl::WatchPoint(config.coordinates, mesh, filename) );
     participant->addWatchPoint ( watchPoint );
   }
   _watchPointConfigs.clear ();

@@ -76,9 +76,6 @@ private:
 
   int _dimensions;
 
-  // @brief Set to true, if configuration has taken place and is valid.
-  //bool _isValid;
-
   /// Data configuration.
   PtrDataConfiguration _dataConfig;
 

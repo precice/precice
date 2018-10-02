@@ -1,5 +1,4 @@
-#ifndef PRECICE_UTILS_MANAGEUNIQUEIDS_HPP_
-#define PRECICE_UTILS_MANAGEUNIQUEIDS_HPP_
+#pragma once
 
 #include <set>
 
@@ -12,11 +11,6 @@ namespace utils {
 class ManageUniqueIDs
 {
 public:
-
-   /**
-    * @brief Constructor.
-    */
-   ManageUniqueIDs ();
 
    /**
     * @brief Returns the next free, i.e. unique, ID.
@@ -42,9 +36,7 @@ private:
    std::set<int> _ids;
 
    // @brief Marks next ID to be given, from lower to higher values.
-   int _lowerLimit;
+   int _lowerLimit = 0;
 };
 
 }} // namespace precice, utils
-
-#endif /* PRECICE_UTILS_MANAGEUNIQUEIDS_HPP_ */

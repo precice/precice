@@ -14,28 +14,14 @@
 namespace precice {
 namespace config {
 
-logging::Logger SolverInterfaceConfiguration:: _log("config::SolverInterfaceConfiguration");
-
-SolverInterfaceConfiguration:: SolverInterfaceConfiguration
-(
-  xml::XMLTag& parent )
-:
-  TAG("solver-interface"),
-  ATTR_DIMENSIONS("dimensions"),
-  _dimensions(-1),
-  _dataConfiguration(),
-  _meshConfiguration(),
-  _m2nConfiguration(),
-  _participantConfiguration(),
-  _couplingSchemeConfiguration()
+SolverInterfaceConfiguration:: SolverInterfaceConfiguration(xml::XMLTag& parent )
 {
   using namespace xml;
-  std::string doc;
-  XMLTag tag(*this, TAG, XMLTag::OCCUR_ONCE);
+  XMLTag tag(*this, "solver-interface", XMLTag::OCCUR_ONCE);
   tag.setDocumentation("Configuration of simulation relevant features.");
 
-  XMLAttribute<int> attrDimensions(ATTR_DIMENSIONS);
-  doc = "Determines the spatial dimensionality of the configuration";
+  XMLAttribute<int> attrDimensions("dimensions");
+  std::string doc = "Determines the spatial dimensionality of the configuration";
   attrDimensions.setDocumentation(doc);
   ValidatorEquals<int> validDim2(2);
   ValidatorEquals<int> validDim3(3);
@@ -62,8 +48,8 @@ void SolverInterfaceConfiguration:: xmlTagCallback
   xml::XMLTag& tag )
 {
   TRACE();
-  if (tag.getName() == TAG){
-    _dimensions = tag.getIntAttributeValue(ATTR_DIMENSIONS);
+  if (tag.getName() == "solver-interface"){
+    _dimensions = tag.getIntAttributeValue("dimensions");
     _dataConfiguration->setDimensions(_dimensions);
     _meshConfiguration->setDimensions(_dimensions);
     _participantConfiguration->setDimensions(_dimensions);
@@ -78,7 +64,7 @@ void SolverInterfaceConfiguration:: xmlEndTagCallback
   xml::XMLTag& tag )
 {
   TRACE();
-  if (tag.getName() == TAG){
+  if (tag.getName() == "solver-interface"){
     _meshConfiguration->setMeshSubIDs();
 
     //test if both participants do have the exchange meshes

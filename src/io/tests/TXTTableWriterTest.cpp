@@ -7,7 +7,7 @@ using namespace precice::io;
 
 BOOST_AUTO_TEST_CASE(TXTTableWriterTest, * precice::testing::OnMaster())
 {
-  TXTTableWriter writer("io-TXTTableWriterTest.txt");
+  TXTTableWriter writer("io-TXTTableWriterTest.log");
   writer.addData("Timestep", TXTTableWriter::INT);
   writer.addData("Flowrate", TXTTableWriter::DOUBLE);
   writer.addData("Force2D", TXTTableWriter::VECTOR2D);

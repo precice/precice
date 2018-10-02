@@ -12,31 +12,22 @@ namespace cplscheme
 namespace impl
 {
 
-logging::Logger HierarchicalAitkenPostProcessing::
-    _log("cplscheme::HierarchicalAitkenPostProcessing");
-
 HierarchicalAitkenPostProcessing::HierarchicalAitkenPostProcessing(
     double           initialRelaxation,
     std::vector<int> dataIDs)
     : _initialRelaxation(initialRelaxation),
-      _dataIDs(dataIDs),
-      _aitkenFactors(),
-      _iterationCounter(),
-      _residual(),
-      _designSpecification()
+      _dataIDs(dataIDs)
 {
   CHECK((_initialRelaxation > 0.0) && (_initialRelaxation <= 1.0),
         "Initial relaxation factor for aitken post processing has to "
-            << "be larger than zero and smaller or equal than one!");
+        << "be larger than zero and smaller or equal than one!");
 }
 
-void HierarchicalAitkenPostProcessing::initialize(
-    DataMap &cplData)
+void HierarchicalAitkenPostProcessing::initialize(DataMap &cplData)
 {
   TRACE();
   CHECK(utils::contained(*_dataIDs.begin(), cplData),
-        "Data with ID " << *_dataIDs.begin()
-                        << " is not contained in data given at initialization!");
+        "Data with ID " << *_dataIDs.begin() << " is not contained in data given at initialization!");
   size_t entries = cplData[*_dataIDs.begin()]->values->size(); // Add zero boundaries
   assertion((entries - 1) % 2 == 0);                           // entries has to be an odd number
   double          initializer = std::numeric_limits<double>::max();

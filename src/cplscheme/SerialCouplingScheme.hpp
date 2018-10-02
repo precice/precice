@@ -26,14 +26,14 @@ public:
 /**
  * @brief Constructor.
  *
- * @param maxTime [IN] Simulation time limit, or UNDEFINED_TIME.
- * @param maxTimesteps [IN] Simulation timestep limit, or UNDEFINED_TIMESTEPS.
- * @param timestepLength [IN] Simulation timestep length.
- * @param firstParticipant [IN] Name of participant starting simulation.
- * @param secondParticipant [IN] Name of second participant in coupling.
- * @param localParticipant [IN] Name of participant using this coupling scheme.
- * @param communication [IN] Communication object for com. between participants.
- * @param monitorIterations [IN] If true, a txt file monitoring iterations is written.
+ * @param[in] maxTime Simulation time limit, or UNDEFINED_TIME.
+ * @param[in] maxTimesteps Simulation timestep limit, or UNDEFINED_TIMESTEPS.
+ * @param[in] timestepLength Simulation timestep length.
+ * @param[in] firstParticipant Name of participant starting simulation.
+ * @param[in] secondParticipant Name of second participant in coupling.
+ * @param[in] localParticipant Name of participant using this coupling scheme.
+ * @param[in] communication Communication object for com. between participants.
+ * @param[in] monitorIterations If true, a txt file monitoring iterations is written.
  */
   SerialCouplingScheme (
     double                      maxTime,

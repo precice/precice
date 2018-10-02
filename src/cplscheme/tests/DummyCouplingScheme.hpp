@@ -1,9 +1,8 @@
-#ifndef PRECICE_CPLSCHEME_TESTS_DUMMYCOUPLINGSCHEME_HPP_
-#define PRECICE_CPLSCHEME_TESTS_DUMMYCOUPLINGSCHEME_HPP_
+#pragma once
 
 #include "../CouplingScheme.hpp"
 #include "logging/Logger.hpp"
-#include "utils/Globals.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace cplscheme {
@@ -19,7 +18,7 @@ public:
   /**
    * @brief Constructor.
    *
-   * @param numberIterations [IN] If 1, models and explicit coupling scheme,
+   * @param[in] numberIterations If 1, models and explicit coupling scheme,
    *        otherwise and implicit one.
    */
   DummyCouplingScheme(
@@ -184,28 +183,25 @@ public:
 
 private:
 
-  // @brief Logging device.
-  static logging::Logger _log;
+  mutable logging::Logger _log{"cplscheme::tests::DummyCouplingScheme"};
 
   // @brief Number of iterations performed per timestep. 1 --> explicit.
   int _numberIterations;
 
   // @brief Performed iterations in the current timestep.
-  int _iterations;
+  int _iterations = 0;
 
   // @brief Maximal number of timesteps to be performed.
   int _maxTimesteps;
 
   // @brief Performed number of timesteps.
-  int _timesteps;
+  int _timesteps = 0;
 
   // @brief True, if initialize has been called.
-  bool _isInitialized;
+  bool _isInitialized = false;
 
   // @brief True, if timesteps are left to be performed.
-  bool _isOngoing;
+  bool _isOngoing = false;
 };
 
 }}} // namespace precice, cplscheme, tests
-
-#endif /* PRECICE_CPLSCHEME_TESTS_DUMMYCOUPLINGSCHEME_HPP_ */

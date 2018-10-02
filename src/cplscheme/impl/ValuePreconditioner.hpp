@@ -21,6 +21,8 @@ public:
   virtual ~ValuePreconditioner() {}
 
 private:
+  logging::Logger _log{"cplscheme::ValuePreconditioner"};
+  
   /**
    * @brief Update the scaling after every FSI iteration.
    *
@@ -28,9 +30,7 @@ private:
    */
   virtual void _update_(bool timestepComplete, const Eigen::VectorXd &oldValues, const Eigen::VectorXd &res);
 
-  static logging::Logger _log;
-
-  bool _firstTimestep;
+  bool _firstTimestep = true;
 };
 }
 }

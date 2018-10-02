@@ -109,8 +109,6 @@ public:
 
   bool hasAttribute(const std::string &attributeName);
 
-  //void removeAttribute ( const std::string& attributeName );
-
   /**
    * @brief Returns name (without namespace).
    *
@@ -132,8 +130,6 @@ public:
   {
     return _fullName;
   }
-
-  //const XMLTag& getTag ( const std::string& tagName ) const;
 
   double getDoubleAttributeValue(const std::string &name) const;
 
@@ -200,7 +196,7 @@ private:
 
   std::vector<std::string> _namespaces;
 
-  std::vector<XMLTag *> _subtags;
+  std::vector<std::shared_ptr<XMLTag>> _subtags;
 
   std::map<std::string, bool> _configuredNamespaces;
 

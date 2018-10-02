@@ -4,14 +4,13 @@
 #include "utils/assertion.hpp"
 #include "mesh/Data.hpp"
 #include <Eigen/Core>
-#include <vector>
 
 namespace precice {
 namespace cplscheme {
 
 struct CouplingData
 {
-  typedef Eigen::MatrixXd DataMatrix;
+  using DataMatrix = Eigen::MatrixXd;
 
   /// Data values of current iteration.
   Eigen::VectorXd* values;

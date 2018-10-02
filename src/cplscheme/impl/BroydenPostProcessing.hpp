@@ -69,7 +69,7 @@ private:
   Eigen::MatrixXd _oldInvJacobian;
 
   int _maxColumns;
-  int _currentColumns;
+  int _currentColumns = 0;
 
   // @brief comptes the MVQN update using QR decomposition of V,
   //        furthermore it updates the inverse of the system jacobian

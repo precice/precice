@@ -1,30 +1,12 @@
 #include "ExportConfiguration.hpp"
 #include "io/Export.hpp"
-#include "utils/Globals.hpp"
-#include "utils/Helpers.hpp"
 #include "xml/XMLTag.hpp"
 #include "xml/XMLAttribute.hpp"
-#include "xml/ValidatorEquals.hpp"
-#include "xml/ValidatorOr.hpp"
 
 namespace precice {
 namespace io {
 
-ExportConfiguration:: ExportConfiguration
-(
-  xml::XMLTag& parent )
-:
-  TAG("export"),
-  ATTR_LOCATION ( "directory" ),
-  ATTR_TYPE ( "type" ),
-  ATTR_AUTO ( "auto" ),
-  VALUE_VTK ( "vtk" ),
-  ATTR_TIMESTEP_INTERVAL ( "timestep-interval" ),
-  ATTR_NEIGHBORS ( "neighbors" ),
-  ATTR_TRIGGER_SOLVER ( "trigger-solver" ),
-  ATTR_NORMALS ( "normals" ),
-  ATTR_EVERY_ITERATION("every-iteration"),
-  _contexts()
+ExportConfiguration:: ExportConfiguration(xml::XMLTag& parent)
 {
   using namespace xml;
   std::string doc;

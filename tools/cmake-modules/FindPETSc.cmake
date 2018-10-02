@@ -100,7 +100,6 @@ find_program (MAKE_EXECUTABLE NAMES make gmake)
 if (PETSC_DIR AND NOT PETSC_ARCH)
   set (_petsc_arches
     $ENV{PETSC_ARCH}                   # If set, use environment variable first
-    ""
     linux-gnu-c-debug linux-gnu-c-opt  # Debian defaults
     x86_64-unknown-linux-gnu i386-unknown-linux-gnu)
   set (petscconf "NOTFOUND" CACHE FILEPATH "Cleared" FORCE)

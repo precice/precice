@@ -1,5 +1,4 @@
-#ifndef PRECICE_IO_CONSTANTS_HPP_
-#define PRECICE_IO_CONSTANTS_HPP_
+#pragma once
 
 namespace precice {
 namespace io {
@@ -10,5 +9,3 @@ int exportAll();
 int exportVTKXML();
 
 }}} // namespace precice, io, constants
-
-#endif /* PRECICE_IO_CONSTANTS_HPP_ */

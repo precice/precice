@@ -5,8 +5,8 @@
 #include "com/MPIPortsCommunication.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
-#include "utils/Globals.hpp"
 #include "utils/MasterSlave.hpp"
+#include "utils/assertion.hpp"
 #include <Eigen/Core>
 
 namespace precice
@@ -19,8 +19,6 @@ namespace impl
 class ParallelMatrixOperations
 {
 public:
-  ParallelMatrixOperations();
-
   /// Destructor, empty.
   virtual ~ParallelMatrixOperations(){};
 
@@ -111,8 +109,7 @@ public:
   }
 
 private:
-  // @brief Logging device.
-  static logging::Logger _log;
+  logging::Logger _log{"cplscheme::impl::ParallelMatrixOperations"};
 
   // @brief multiplies matrices based on a cyclic communication and block-wise matrix multiplication with a quadratic result matrix
   template <typename Derived1, typename Derived2>
@@ -309,12 +306,12 @@ private:
   }
 
   /// Communication between neighboring slaves, backwards
-  com::PtrCommunication _cyclicCommLeft;
+  com::PtrCommunication _cyclicCommLeft = nullptr;
 
   /// Communication between neighboring slaves, forward
-  com::PtrCommunication _cyclicCommRight;
+  com::PtrCommunication _cyclicCommRight = nullptr;
 
-  bool _needCycliclComm;
+  bool _needCycliclComm = true;
 };
 }
 }

@@ -2,11 +2,8 @@
 
 #include "SVDFactorization.hpp"
 #include "utils/EigenHelperFunctions.hpp"
-#include "utils/EventTimings.hpp"
-#include "utils/Globals.hpp"
 #include "utils/MasterSlave.hpp"
 
-using precice::utils::Event;
 
 namespace precice
 {
@@ -15,31 +12,12 @@ namespace cplscheme
 namespace impl
 {
 
-logging::Logger SVDFactorization::
-    _log("cplscheme::impl::SVDFactorization");
-
 SVDFactorization::SVDFactorization(
     double            eps,
     PtrPreconditioner preconditioner)
     : _preconditioner(preconditioner),
-      _parMatrixOps(nullptr),
-      _psi(),
-      _phi(),
-      _sigma(),
-      _rows(0),
-      _cols(0),
-      _globalRows(0),
-      _waste(0),
-      _truncationEps(eps),
-      _epsQR2(1e-3),
-      _preconditionerApplied(false),
-      _initialized(false),
-      _initialSVD(false),
-      _applyFilterQR(false),
-      _infostream(),
-      _fstream_set(false)
-{
-}
+      _truncationEps(eps)
+{}
 
 void SVDFactorization::initialize(
     PtrParMatrixOps parOps,
@@ -101,7 +79,6 @@ void SVDFactorization::computeQRdecomposition(
     Matrix &      R)
 {
   TRACE();
-  //  Event e("compute_QR-dec_for-SVD-update", true, true); // time measurement, barrier
 
   // if nothing is linear dependent, the dimensions stay like this
   Q         = Matrix::Zero(A.rows(), A.cols());

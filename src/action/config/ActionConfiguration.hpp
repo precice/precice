@@ -1,5 +1,4 @@
-#ifndef PRECICE_CONFIG_ACTIONCONFIGURATION_HPP_
-#define PRECICE_CONFIG_ACTIONCONFIGURATION_HPP_
+#pragma once
 
 #include "action/Action.hpp"
 #include "action/SharedPointer.hpp"
@@ -19,22 +18,9 @@ class ActionConfiguration : public xml::XMLTag::Listener
 {
 public:
 
-  /**
-   * @brief Returns the name of the enclosing XML-tag.
-   */
-  //static const std::string& getTag();
-
-  /**
-   * @brief Constructor.
-   */
   ActionConfiguration (
     xml::XMLTag&                    parent,
     const mesh::PtrMeshConfiguration& meshConfig );
-
-//  /**
-//   * @brief Reads the information parsed from an xml-file.
-//   */
-//  bool parseSubtag ( xml::XMLTag::XMLReader* xmlReader );
 
   /**
    * @brief Callback function required for use of automatic configuration.
@@ -49,11 +35,6 @@ public:
    * @return True, if successful.
    */
   virtual void xmlEndTagCallback ( xml::XMLTag& callingTag );
-
-  /**
-   * @brief Returns true, if configuration has validly taken place.
-   */
-  //bool isValid() const;
 
   /**
    * @brief Returns the id of the mesh used in the data action.
@@ -85,20 +66,15 @@ private:
     std::string sourceData;
     std::string targetData;
     std::string mesh;
-    double convergenceTolerance;
-    int maxIterations;
+    double convergenceTolerance = 0;
+    int maxIterations = 0;
     std::string path;
     std::string module;
-
-    ConfiguredAction ()
-    : type (), timing(), sourceData(), targetData(), mesh(),
-      convergenceTolerance(0.0), maxIterations(0), path(), module()
-    {}
   };
 
-  static logging::Logger _log;
+  mutable logging::Logger _log{"config::ActionConfiguration"};
 
-  const std::string TAG;
+  const std::string TAG = "action";
 
   const std::string NAME_DIVIDE_BY_AREA;
   const std::string NAME_MULTIPLY_BY_AREA;
@@ -117,19 +93,17 @@ private:
   const std::string TAG_MODULE_PATH;
   const std::string TAG_MODULE_NAME;
 
-  const std::string ATTR_TYPE;
-  const std::string ATTR_TIMING;
-  const std::string ATTR_NAME;
-  const std::string ATTR_VALUE;
-  const std::string ATTR_MESH;
+  const std::string ATTR_TYPE = "type";
+  const std::string ATTR_TIMING = "timing";
+  const std::string ATTR_NAME = "name";
+  const std::string ATTR_VALUE = "value";
+  const std::string ATTR_MESH = "mesh";
 
   const std::string VALUE_REGULAR_PRIOR;
   const std::string VALUE_REGULAR_POST;
   const std::string VALUE_ON_EXCHANGE_PRIOR;
   const std::string VALUE_ON_EXCHANGE_POST;
   const std::string VALUE_ON_TIMESTEP_COMPLETE_POST;
-
-  //bool _isValid;
 
   mesh::PtrMeshConfiguration _meshConfig;
 
@@ -153,5 +127,3 @@ private:
 };
 
 }} // namespace precice, action
-
-#endif /* PRECICE_CONFIG_ACTIONCONFIGURATION_HPP_ */

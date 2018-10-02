@@ -1,4 +1,3 @@
-#include "utils/Globals.hpp"
 #include "utils/MasterSlave.hpp"
 #include "mesh/Mesh.hpp"
 #include "utils/Parallel.hpp"

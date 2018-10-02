@@ -2,7 +2,6 @@
 
 #include "ParallelMatrixOperations.hpp"
 #include "com/MPIPortsCommunication.hpp"
-#include "logging/Logger.hpp"
 #include "utils/MasterSlave.hpp"
 
 namespace precice
@@ -11,16 +10,6 @@ namespace cplscheme
 {
 namespace impl
 {
-
-logging::Logger ParallelMatrixOperations::
-    _log("cplscheme::impl::ParallelMatrixOperations");
-
-ParallelMatrixOperations::ParallelMatrixOperations()
-    : _cyclicCommLeft(nullptr),
-      _cyclicCommRight(nullptr),
-      _needCycliclComm(true)
-{
-}
 
 void ParallelMatrixOperations::initialize(
     com::PtrCommunication leftComm,

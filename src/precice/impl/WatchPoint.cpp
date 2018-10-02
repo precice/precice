@@ -7,7 +7,6 @@
 #include "mesh/Edge.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Data.hpp"
-#include "utils/Globals.hpp"
 #include "utils/MasterSlave.hpp"
 #include "com/Communication.hpp"
 #include <limits>

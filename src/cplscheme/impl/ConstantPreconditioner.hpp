@@ -20,7 +20,7 @@ public:
    */
   virtual ~ConstantPreconditioner() {}
 
-  virtual void initialize(std::vector<size_t> &svs);
+  virtual void initialize(std::vector<size_t> & svs);
 
 private:
   /**
@@ -30,7 +30,7 @@ private:
    */
   virtual void _update_(bool timestepComplete, const Eigen::VectorXd &oldValues, const Eigen::VectorXd &res);
 
-  static logging::Logger _log;
+  logging::Logger _log{"cplscheme::ConstantPreconditioner"};
 
   /// Constant user-defined factors to scale the quasi-Newton system
   std::vector<double> _factors;
