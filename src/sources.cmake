@@ -295,7 +295,7 @@ target_sources(PRECICE
 # Select headers to install
 #
 
-set_target_properties(PRECICE PROPERTIES PUBLIC_HEADER
+set_property(TARGET PRECICE PROPERTY PUBLIC_HEADER
     src/precice/SolverInterface.hpp
     src/precice/MeshHandle.hpp
     src/precice/Constants.hpp
