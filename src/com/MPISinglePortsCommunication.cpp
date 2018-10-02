@@ -50,40 +50,38 @@ void MPISinglePortsCommunication::acceptConnection(std::string const &acceptorNa
   Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
   ScopedPublisher                        p(addressFileName);
   p.write(_portName);
-  DEBUG("Accept connection at " << _portName);
 
-  // Connect the first peer, s.t. we can exchange some information about the other side
-  MPI_Comm communicator;
-  MPI_Comm_accept(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
-  DEBUG("Accepted connection at " << _portName);
-
-  int    requesterRank      = -1;
+  size_t peerCurrent = 0; // current peer to connect to
+  size_t peerCount   = 0; // The total count of peers (initialized in the first iteration)
   size_t requesterCommunicatorSize = 0;
 
-  // Exchange information to which rank I am connected and which communicator size on the other side
-  MPI_Recv(&requesterRank,             1, MPI_INT, 0, 42, communicator, MPI_STATUS_IGNORE);
-  MPI_Recv(&requesterCommunicatorSize, 1, MPI_INT, 0, 42, communicator, MPI_STATUS_IGNORE);
-  MPI_Send(&acceptorRank,              1, MPI_INT, 0, 42, communicator);
-  
-  CHECK(requesterCommunicatorSize > 0, "Requester communicator size has to be > 0!");
-  _communicators[requesterRank] = communicator;
-  
-  // Connect all other peers
-  for (size_t i = 1; i < requesterCommunicatorSize; ++i) {
+  do {
+    // Connection
+    MPI_Comm communicator;
     MPI_Comm_accept(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
-    DEBUG("Accepted connection at " << _portName);
+    DEBUG("Accepted connection at " << _portName << " for peer " << peerCurrent);
 
+    int requesterRank = -1;
+    // Exchange information to which rank I am connected and which communicator size on the other side
     MPI_Recv(&requesterRank,             1, MPI_INT, 0, 42, communicator, MPI_STATUS_IGNORE);
     MPI_Recv(&requesterCommunicatorSize, 1, MPI_INT, 0, 42, communicator, MPI_STATUS_IGNORE);
     MPI_Send(&acceptorRank,              1, MPI_INT, 0, 42, communicator);
-
-    CHECK(requesterCommunicatorSize == _communicators.size(),
+    
+    // Initialize the count of peers to connect to
+    if (peerCurrent == 0) {
+      peerCount = requesterCommunicatorSize;
+    }
+    
+    CHECK(requesterCommunicatorSize > 0,
+          "Requester communicator size has to be > 0!");
+    CHECK(requesterCommunicatorSize == peerCount,
           "Requester communicator sizes are inconsistent!");
     CHECK(_communicators.count(requesterRank) == 0,
           "Duplicate request to connect by same rank (" << requesterRank << ")!");
-
+    
     _communicators[requesterRank] = communicator;
-  }
+
+  } while (++peerCurrent < requesterCommunicatorSize);
   
   _isConnected = true;
 }

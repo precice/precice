@@ -85,43 +85,39 @@ void SocketCommunication::acceptConnection(std::string const &acceptorName,
     p.write(address);
     DEBUG("Accept connection at " << address);
 
-    auto socket = std::make_shared<Socket>(*_ioService);
-
-    acceptor.accept(*socket);
-    DEBUG("Accepted connection at " << address);
-    _isConnected = true;
-
-    int requesterRank = -1;
-    int requesterCommunicatorSize = 0;
-
-    asio::read(*socket, asio::buffer(&requesterRank, sizeof(int)));
-    _sockets[requesterRank] = socket;
-    send(acceptorRank, requesterRank);
-    receive(requesterCommunicatorSize, requesterRank);
-
-    CHECK(requesterCommunicatorSize > 0, "Requester communicator size has to be > 0!");
-
-    int remoteCommunicatorSize = requesterCommunicatorSize;
-
-    for (int i = 1; i < remoteCommunicatorSize; ++i) {
-      socket = std::make_shared<Socket>(*_ioService);
-
+    int peerCurrent = 0; // Current peer to connect to
+    int peerCount   = -1; // The total count of peers (initialized in the first iteration)
+    int requesterCommunicatorSize = -1;
+        
+    do {
+      auto socket = std::make_shared<Socket>(*_ioService);
+      
       acceptor.accept(*socket);
       DEBUG("Accepted connection at " << address);
       _isConnected = true;
-
+      
+      int requesterRank = -1;
+      
       asio::read(*socket, asio::buffer(&requesterRank, sizeof(int)));
+      
       CHECK(_sockets.count(requesterRank) == 0,
             "Duplicate request to connect by same rank (" << requesterRank << ")!");
-
+      
       _sockets[requesterRank] = socket;
       send(acceptorRank, requesterRank);
       receive(requesterCommunicatorSize, requesterRank);
-      
-      CHECK(requesterCommunicatorSize == remoteCommunicatorSize,
-            "Remote communicator sizes are inconsistent!");
-    }
 
+      // Initialize the count of peers to connect to
+      if (peerCurrent == 0) {
+        peerCount = requesterCommunicatorSize;
+      }
+    
+      CHECK(requesterCommunicatorSize == peerCount,
+            "Requester communicator sizes are inconsistent!");
+      CHECK(requesterCommunicatorSize > 0,
+            "Requester communicator size has to be > 0!");
+    } while (++peerCurrent < requesterCommunicatorSize);
+    
     acceptor.close();
   } catch (std::exception &e) {
     ERROR("Accepting connection at " << address << " failed: " << e.what());
