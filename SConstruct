@@ -183,6 +183,18 @@ if env["petsc"]:
         checkAdd("craypetsc_gnu_real")
     else:
         checkAdd("petsc")
+    # Set PETSC_VERSION to correct values 
+    PETSC_VERSION_MAJOR = 0
+    PETSC_VERSION_MINOR = 0
+    with open(PETSC_DIR + "/include/petscversion.h", "r") as versionfile:
+        for line in versionfile:
+            tokens = line.split()
+            if len(tokens) < 3:
+                continue
+            if tokens[1] == "PETSC_VERSION_MAJOR":
+                PETSC_VERSION_MAJOR = tokens[2]
+            if tokens[1] == "PETSC_VERSION_MINOR":
+                PETSC_VERSION_MINOR = tokens[2]
 else:
     env.Append(CPPDEFINES = ['PRECICE_NO_PETSC'])
     buildpath += "-nopetsc"
@@ -335,8 +347,8 @@ versions = env.Substfile(
     "src/versions.hpp.in",
     SUBST_DICT =  {
         "@preCICE_VERSION@" : PRECICE_VERSION,
-        "@PETSC_MAJOR@" : 0,
-        "@PETSC_MINOR@" : 0}
+        "@PETSC_MAJOR@" : PETSC_VERSION_MAJOR,
+        "@PETSC_MINOR@" : PETSC_VERSION_MINOR}
 )
 
 
