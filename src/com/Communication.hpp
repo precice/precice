@@ -36,6 +36,10 @@ namespace com
  *    (see point-to-point communication).
  * 2. Efficiency --- allows one to perform some useful computational work while
  *    sending is happening on the background.
+ *
+ * @attention All receive methods, that accept a raw array, expect it to be 
+ * sized appropriatly. Asynchronous receive methods also expect the vector
+ * be sized correctly.
  */
 class Communication
 {

@@ -38,7 +38,7 @@ public:
   virtual void iterationsConverged(DataMap &cplData);
 
 private:
-  static logging::Logger _log;
+  logging::Logger _log{"cplscheme::HierarchicalAitkenPostProcessing"};
 
   double _initialRelaxation;
 
@@ -46,7 +46,7 @@ private:
 
   std::vector<double> _aitkenFactors;
 
-  int _iterationCounter;
+  int _iterationCounter = 0;
 
   Eigen::VectorXd _residual;
 

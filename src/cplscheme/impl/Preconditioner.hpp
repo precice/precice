@@ -3,7 +3,6 @@
 #include <Eigen/Core>
 #include <vector>
 #include "../SharedPointer.hpp"
-#include "utils/MasterSlave.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice
@@ -36,7 +35,7 @@ public:
    * @brief initialize the preconditioner
    * @param size of the pp system (e.g. rows of V)
    */
-  virtual void initialize(std::vector<size_t> &svs)
+  virtual void initialize(std::vector<size_t> & svs)
   {
     TRACE();
 
