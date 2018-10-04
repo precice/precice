@@ -101,23 +101,20 @@ public:
    *   data are created, but not necessarily filled with data.
    * - If a server is used, communication to that server is established.
    *
-   * @param configurationFileName [IN] Name (with path) of the xml configuration
-   *        file to be read.
+   * @param[in] configurationFileName Name (with path) of the xml configuration file to be read.
    */
   void configure ( const std::string& configurationFileName );
 
   /**
    * @brief Fully initializes preCICE to be used.
    *
-   * Preconditions:
-   * - configure() has been called successfully.
+   * @pre configure() has been called successfully.
    *
-   * Postconditions:
-   * - Communication to the coupling partner/s is setup.
-   * - Meshes are are sent/received to/from coupling partners and the parallel partitions are created.
-   * - If the solver is not starting the simulation, coupling data is received
-   *   from the coupling partner's first computation.
-   * - The length limitation of the first solver timestep is computed and returned.
+   * @post Communication to the coupling partner/s is setup.
+   * @post Meshes are are sent/received to/from coupling partners and the parallel partitions are created.
+   * @post If the solver is not starting the simulation, coupling data is received
+   * from the coupling partner's first computation.
+   * @post The length limitation of the first solver timestep is computed and returned.
    *
    * @return Maximum length of first timestep to be computed by the solver.
    */
@@ -134,42 +131,38 @@ public:
    * receives the values on calling initialize(). For parallel coupling, values in
    * both directions are exchanged. Both participants need to call initializeData then.
    *
-   * Preconditions:
-   * - initialize() has been called successfully.
-   * - The coupling data to be set is written.
-   * - advance() has not yet been called.
-   * - finalize() has not yet been called.
+   * @pre initialize() has been called successfully.
+   * @pre The coupling data to be set is written.
+   * @pre advance() has not yet been called.
+   * @pre finalize() has not yet been called.
    *
-   * Postconditions:
-   * - Initial coupling data values are sent to the coupling partner.
-   * - Written coupling data values are reset to zero, in order to allow writing
-   *   of values of first computed timestep.
+   * @post Initial coupling data values are sent to the coupling partner.
+   * @post Written coupling data values are reset to zero, in order to allow writing 
+   * of values of first computed timestep.
    */
   void initializeData();
 
   /**
    * @brief Advances preCICE after the solver has computed one timestep.
+   * @param[in] computedTimestepLength Length of timestep computed by solver.
    *
-   * Preconditions:
-   * - initialize() has been called successfully.
-   * - The solver calling advance() has computed one timestep.
-   * - The solver has read and written all coupling data.
-   * - The solver has the length of the timestep used available to be passed to
-   *   preCICE.
-   * - finalize() has not yet been called.
    *
-   * Postconditions:
-   * - Coupling data values specified to be exchanged in the configuration are
+   * @pre initialize() has been called successfully.
+   * @pre The solver calling advance() has computed one timestep.
+   * @pre The solver has read and written all coupling data.
+   * @pre The solver has the length of the timestep used available to be passed to preCICE.
+   * @pre finalize() has not yet been called.
+   *
+   * @post Coupling data values specified to be exchanged in the configuration are
    *   exchanged with coupling partner/s.
-   * - Coupling scheme state (computed time, computed timesteps, ...) is updated.
-   * - For staggered coupling schemes, the coupling partner has computed one
+   * @post Coupling scheme state (computed time, computed timesteps, ...) is updated.
+   * @post For staggered coupling schemes, the coupling partner has computed one
    *   timestep/iteration with the coupling data written by this participant
    *   available.
-   * - The coupling state is printed.
-   * - Meshes with data are exported to files if specified in the configuration.
-   * - The length limitation of the next solver timestep is computed and returned.
+   * @post The coupling state is printed.
+   * @post Meshes with data are exported to files if specified in the configuration.
+   * @post The length limitation of the next solver timestep is computed and returned.
    *
-   * @param computedTimestepLength [IN] Length of timestep computed by solver.
    * @return Maximum length of next timestep to be computed by solver.
    */
   double advance ( double computedTimestepLength );
@@ -177,13 +170,11 @@ public:
   /**
    * @brief Finalizes preCICE.
    *
-   * Preconditions:
-   * - initialize() has been called successfully.
-   * - isCouplingOngoing() has returned false.
+   * @pre initialize() has been called successfully.
+   * @pre isCouplingOngoing() has returned false.
    *
-   * Postconditions:
-   * - Communication channels are closed.
-   * - Meshes and data are deallocated
+   * @post Communication channels are closed.
+   * @post Meshes and data are deallocated
    */
   void finalize();
 
@@ -193,16 +184,14 @@ public:
    * Currently, two and three dimensional problems can be solved using preCICE.
    * The dimension is specified in the XML configuration.
    *
-   * Preconditions:
-   * - configure() has been called successfully.
+   * @pre configure() has been called successfully.
    */
   int getDimensions() const;
 
   /**
    * @brief Returns true, if the coupled simulation is still ongoing.
    *
-   * Preconditions:
-   * - initialize() has been called successfully.
+   * @pre initialize() has been called successfully.
    */
   bool isCouplingOngoing();
 
@@ -215,8 +204,7 @@ public:
    * choosing smaller timesteps than the limits returned in intitialize() and
    * advance().
    *
-   * Preconditions:
-   * - initialize() has been called successfully.
+   * @pre initialize() has been called successfully.
    */
   bool isReadDataAvailable();
 
@@ -227,8 +215,7 @@ public:
    * choosing smaller timesteps than the limits returned in intitialize() and
    * advance().
    *
-   * Preconditions:
-   * - initialize() has been called successfully.
+   * @pre initialize() has been called successfully.
    */
   bool isWriteDataRequired ( double computedTimestepLength );
 
@@ -240,8 +227,7 @@ public:
    * - A solver chooses to perform subcycling.
    * - An implicit coupling timestep iteration is not yet converged.
    *
-   * Preconditions:
-   * - initialize() has been called successfully.
+   * @pre initialize() has been called successfully.
    */
   bool isTimestepComplete();
 
@@ -254,7 +240,7 @@ public:
    * performing them on demand, and calling fulfilledAction() to signalize
    * preCICE the correct behavior of the solver.
    */
-  bool isActionRequired (	const std::string& action );
+  bool isActionRequired ( const std::string& action );
 
   /**
    * @brief Tells preCICE that a required action has been fulfilled by a solver.
@@ -273,7 +259,7 @@ public:
    *
    * The existing names are determined from the configuration.
    */
-  int getMeshID (	const std::string& meshName );
+  int getMeshID ( const std::string& meshName );
 
   /**
    * @brief Returns all mesh IDs (besides sub-ids).
@@ -476,9 +462,9 @@ public:
   /**
    * @brief Writes scalar data values given as block.
    *
-   * @param dataID [IN] ID of the data to be written.
-   * @param size [IN] Number of valueIndices, and number of values.
-   * @param values [IN] Values of the data to be written.
+   * @param[in] dataID ID of the data to be written.
+   * @param[in] size   Number of valueIndices, and number of values.
+   * @param[in] values Values of the data to be written.
    */
   void writeBlockScalarData (
     int     dataID,
@@ -491,9 +477,9 @@ public:
    *
    * The exact mapping and communication must be specified in XYZ.
    *
-   * @param dataID       [IN] ID of the data to be written (2 = temperature, e.g.)
-   * @param dataPosition [IN] Position (coordinate, e.g.) of data to be written
-   * @param dataValue    [IN] Value of the data to be written
+   * @param[in] dataID       ID of the data to be written (2 = temperature, e.g.)
+   * @param[in] dataPosition Position (coordinate, e.g.) of data to be written
+   * @param[in] dataValue    Value of the data to be written
    */
   void writeScalarData (
     int    dataID,
@@ -507,10 +493,10 @@ public:
    * values = (d0x, d0y, d0z, d1x, d1y, d1z, ...., dnx, dny, dnz), where n is
    * the number of vector values. In 2D, the z-components are removed.
    *
-   * @param[in] dataID ID of the data to be read.
-   * @param[in] size Number n of points to be read, not size of array values.
+   * @param[in] dataID       ID of the data to be read.
+   * @param[in] size         Number n of points to be read, not size of array values.
    * @param[in] valueIndices Indices (from setReadPosition()) of data values.
-   * @param[out] values Values of the data to be read.
+   * @param[out] values      Values of the data to be read.
    */
   void readBlockVectorData (
     int     dataID,
@@ -521,9 +507,9 @@ public:
   /**
    * @brief Reads vector data from the coupling mesh.
    *
-   * @param dataID       [IN]  ID of the data to be read, e.g. 1 = forces
-   * @param dataPosition [IN]  Position (coordinate, e.g.) of data to be read
-   * @param dataValue    [OUT] Read data value
+   * @param[in]  dataID ID of the data to be read, e.g. 1 = forces
+   * @param[in]  dataPosition Position (coordinate, e.g.) of data to be read
+   * @param[out] dataValue Read data value
    */
   void readVectorData (
     int     dataID,
@@ -533,8 +519,8 @@ public:
   /**
    * @brief Reads scalar data values given as block.
    *
-   * @param dataID [IN] ID of the data to be written.
-   * @param size [IN] Number of valueIndices, and number of values.
+   * @param[in]  dataID ID of the data to be written.
+   * @param[in]  size Number of valueIndices, and number of values.
    * @param[out] values Values of the data to be read.
    */
   void readBlockScalarData (
@@ -548,33 +534,27 @@ public:
    *
    * The exact mapping and communication must be specified in XYZ.
    *
-   * @param dataID       [IN]  ID of the data to be read, e.g. 2 = temperatures
-   * @param dataPosition [IN]  Position (coordinate, e.g.) of data to be read
-   * @param dataValue    [OUT] Read data value
+   * @param[in]  dataID ID of the data to be read, e.g. 2 = temperatures
+   * @param[in]  dataPosition Position (coordinate, e.g.) of data to be read
+   * @param[out] dataValue Read data value
    */
   void readScalarData (
     int     dataID,
     int     valueIndex,
     double& value );
 
-  /**
-   * @brief Returns a handle to a created mesh.
-   */
+  /// Returns a handle to a created mesh.
   MeshHandle getMeshHandle ( const std::string& meshName );
 
 private:
 
-  // @brief Pointer to implementation of SolverInterface behavior.
+  /// Pointer to implementation of SolverInterface.
   std::unique_ptr<impl::SolverInterfaceImpl> _impl;
 
-  /**
-   * @brief Disable copy construction by making copy constructor private.
-   */
+  /// Disable copy construction by making copy constructor private.
   SolverInterface ( const SolverInterface& copy );
 
-  /**
-   * @brief Disable assignment construction by making assign. constructor private.
-   */
+  /// Disable assignment construction by making assign. constructor private.
   SolverInterface& operator= ( const SolverInterface& assign );
 
   // @brief To allow white box tests.
