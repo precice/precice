@@ -347,8 +347,8 @@ versions = env.Substfile(
     "src/versions.hpp.in",
     SUBST_DICT =  {
         "@preCICE_VERSION@" : PRECICE_VERSION,
-        "@PETSC_MAJOR@" : PETSC_VERSION_MAJOR,
-        "@PETSC_MINOR@" : PETSC_VERSION_MINOR}
+        "@PETSC_VERSION_MAJOR@" : PETSC_VERSION_MAJOR,
+        "@PETSC_VERSION_MINOR@" : PETSC_VERSION_MINOR}
 )
 
 
