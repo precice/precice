@@ -168,6 +168,8 @@ checkAdd("pthread")
 
 
 # ====== PETSc ======
+PETSC_VERSION_MAJOR = 0
+PETSC_VERSION_MINOR = 0
 if env["petsc"]:
     PETSC_DIR = checkset_var("PETSC_DIR", "")
     PETSC_ARCH = checkset_var("PETSC_ARCH", "")
@@ -184,8 +186,6 @@ if env["petsc"]:
     else:
         checkAdd("petsc")
     # Set PETSC_VERSION to correct values 
-    PETSC_VERSION_MAJOR = 0
-    PETSC_VERSION_MINOR = 0
     with open(PETSC_DIR + "/include/petscversion.h", "r") as versionfile:
         for line in versionfile:
             tokens = line.split()
