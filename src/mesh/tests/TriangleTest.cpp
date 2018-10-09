@@ -3,6 +3,8 @@
 #include "mesh/Vertex.hpp"
 #include "testing/Testing.hpp"
 
+#include <iterator>
+
 using namespace precice::mesh;
 
 BOOST_AUTO_TEST_SUITE(MeshTests)
@@ -108,6 +110,58 @@ BOOST_AUTO_TEST_CASE(Triangles)
 
     int id = triangle.getID();
     BOOST_TEST(id == 0);
+  }
+  {
+    Vertex v0(coords1, 0);
+    Vertex v1(coords2, 1);
+    Vertex v2(coords3, 2);
+
+    Edge e0(v0, v1, 0);
+    Edge e1(v1, v2, 1);
+    Edge e2(v2, v0, 2);
+
+    Triangle triangle(e0, e1, e2, 0);
+
+    {
+      // Test begin(), end()
+      auto       ibegin = triangle.begin();
+      const auto iend   = triangle.end();
+      BOOST_TEST(std::distance(ibegin, iend) == 3);
+      BOOST_TEST(*ibegin == v0.getCoords());
+      ++ibegin;
+      BOOST_TEST(*ibegin == v1.getCoords());
+      ++ibegin;
+      BOOST_TEST(*ibegin == v2.getCoords());
+      ++ibegin;
+      BOOST_TEST((ibegin == iend));
+    }
+    {
+      // Test begin(), end() for const
+      const Triangle &ctriangle = triangle;
+      auto            ibegin    = ctriangle.begin();
+      const auto      iend      = ctriangle.end();
+      BOOST_TEST(std::distance(ibegin, iend) == 3);
+      BOOST_TEST(*ibegin == v0.getCoords());
+      ++ibegin;
+      BOOST_TEST(*ibegin == v1.getCoords());
+      ++ibegin;
+      BOOST_TEST(*ibegin == v2.getCoords());
+      ++ibegin;
+      BOOST_TEST((ibegin == iend));
+    }
+    {
+      // Test cbegin(), cend()
+      auto       ibegin = triangle.cbegin();
+      const auto iend   = triangle.cend();
+      BOOST_TEST(std::distance(ibegin, iend) == 3);
+      BOOST_TEST(*ibegin == v0.getCoords());
+      ++ibegin;
+      BOOST_TEST(*ibegin == v1.getCoords());
+      ++ibegin;
+      BOOST_TEST(*ibegin == v2.getCoords());
+      ++ibegin;
+      BOOST_TEST((ibegin == iend));
+    }
   }
 }
 
