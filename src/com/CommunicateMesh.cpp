@@ -213,7 +213,7 @@ void CommunicateMesh::broadcastSendMesh(const mesh::Mesh &mesh)
       for (int i = 0; i < numberOfEdges; i++) {
         edgeIDs[i] = mesh.edges()[i].getID();
       }
-      _communication->broadcast(edgeIDs, numberOfEdges);
+      _communication->broadcast(edgeIDs);
 
       std::vector<int> triangleIDs(numberOfTriangles * 3);
       for (int i = 0; i < numberOfTriangles; i++) {

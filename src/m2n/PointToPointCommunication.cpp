@@ -221,17 +221,12 @@ void printLocalIndexCountStats(std::map<int, std::vector<int>> const &m)
 // indices for the current rank in `thisVertexDistribution') * (total number of
 // data indices for all ranks in `otherVertexDistribution')).
 std::map<int, std::vector<int>> buildCommunicationMap(
-    // `localIndexCount' is the number of unique local indices for the current rank.
-    size_t &localIndexCount,
     // `thisVertexDistribution' is input vertex distribution from this participant.
     mesh::Mesh::VertexDistribution const &thisVertexDistribution,
     // `otherVertexDistribution' is input vertex distribution from other participant.
     mesh::Mesh::VertexDistribution const &otherVertexDistribution,
     int                                    thisRank = utils::MasterSlave::_rank)
 {
-
-  localIndexCount = 0;
-
   std::map<int, std::vector<int>> communicationMap;
 
   auto iterator = thisVertexDistribution.find(thisRank);
@@ -254,16 +249,6 @@ std::map<int, std::vector<int>> buildCommunicationMap(
     }
     ++index;
   }
-
-  // CAUTION:
-  // This prevents point-to-point communication from considering those process
-  // ranks, which don't have matching indices in the remote participant
-  // (i.e. are not supposed to have any communication partners at all). For
-  // instance, this happens a lot in case of unstructured grids on the
-  // interface, or because user did a mistake and did not define the interface
-  // boundary properly.
-  if (communicationMap.size() > 0)
-    localIndexCount = indices.size();
 
   return communicationMap;
 }
@@ -339,7 +324,7 @@ void PointToPointCommunication::acceptConnection(std::string const &nameAcceptor
   // - has to communicate (send/receive) data with local indices 0 and 2 with
   //   the remote process with rank 4.
   std::map<int, std::vector<int>> communicationMap = m2n::buildCommunicationMap(
-      _localIndexCount, vertexDistribution, requesterVertexDistribution);
+    vertexDistribution, requesterVertexDistribution);
 
 // Print `communicationMap'.
 #ifdef P2P_LCM_PRINT
@@ -374,7 +359,6 @@ void PointToPointCommunication::acceptConnection(std::string const &nameAcceptor
 #endif
 
   if (communicationMap.empty()) {
-    assertion(_localIndexCount == 0);
     _isConnected = true;
     return;
   }
@@ -404,7 +388,6 @@ void PointToPointCommunication::acceptConnection(std::string const &nameAcceptor
     c->receive(globalRequesterRank, localRequesterRank);
 
     auto indices = std::move(communicationMap[globalRequesterRank]);
-    _totalIndexCount += indices.size();
 
     // NOTE:
     // Everything is moved (efficiency)!
@@ -415,11 +398,10 @@ void PointToPointCommunication::acceptConnection(std::string const &nameAcceptor
     // `communicationMap', and, therefore, for data structure consistency
     // of `_mappings' with the requester participant side, we simply
     // duplicate references to the same communication object `c'.
-    _mappings.push_back({
-        static_cast<int>(localRequesterRank), globalRequesterRank, std::move(indices), c, com::PtrRequest(), 0});
+    _mappings.push_back({static_cast<int>(localRequesterRank), globalRequesterRank,
+                         std::move(indices), c, com::PtrRequest(), {}});
   }
 
-  _buffer.reserve(_totalIndexCount * _mesh->getDimensions());
   _isConnected = true;
 }
 
@@ -430,7 +412,7 @@ void PointToPointCommunication::requestConnection(std::string const &nameAccepto
   CHECK(not isConnected(), "Already connected!");
   CHECK(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode,
         "You can only use a point-to-point communication between two participants which both use a master. "
-            << "Please use distribution-type gather-scatter instead.");
+        << "Please use distribution-type gather-scatter instead.");
 
   mesh::Mesh::VertexDistribution &vertexDistribution = _mesh->getVertexDistribution();
   mesh::Mesh::VertexDistribution  acceptorVertexDistribution;
@@ -476,7 +458,7 @@ void PointToPointCommunication::requestConnection(std::string const &nameAccepto
   // - has to communicate (send/receive) data with local indices 0 and 2 with
   //   the remote process with rank 4.
   std::map<int, std::vector<int>> communicationMap = m2n::buildCommunicationMap(
-      _localIndexCount, vertexDistribution, acceptorVertexDistribution);
+    vertexDistribution, acceptorVertexDistribution);
 
 // Print `communicationMap'.
 #ifdef P2P_LCM_PRINT
@@ -503,7 +485,6 @@ void PointToPointCommunication::requestConnection(std::string const &nameAccepto
 #endif
 
   if (communicationMap.empty()) {
-    assertion(_localIndexCount == 0);
     _isConnected = true;
     return;
   }
@@ -519,9 +500,6 @@ void PointToPointCommunication::requestConnection(std::string const &nameAccepto
   for (auto &i : communicationMap) {
     auto globalAcceptorRank = i.first;
     auto indices            = std::move(i.second);
-
-    _totalIndexCount += indices.size();
-
     auto c = _communicationFactory->newCommunication();
 
 #ifdef SuperMUC_WORK
@@ -541,12 +519,11 @@ void PointToPointCommunication::requestConnection(std::string const &nameAccepto
     // On the requester participant side, the communication objects behave
     // as clients, i.e. each of them requests only one connection to
     // acceptor process (in the acceptor participant).
-    _mappings.push_back({
-        0, globalAcceptorRank, std::move(indices), c, com::PtrRequest(), 0});
+    _mappings.push_back({0, globalAcceptorRank,
+                         std::move(indices), c, com::PtrRequest(), {}});
   }
 
   com::Request::wait(requests);
-  _buffer.reserve(_totalIndexCount * _mesh->getDimensions());
   _isConnected = true;
 }
 
@@ -564,9 +541,6 @@ void PointToPointCommunication::closeConnection()
   }
 
   _mappings.clear();
-  _buffer.clear();
-  _localIndexCount = 0;
-  _totalIndexCount = 0;
   _isConnected     = false;
 }
 
@@ -575,15 +549,11 @@ void PointToPointCommunication::send(double *itemsToSend,
                                      int     valueDimension)
 {
 
-  if (_mappings.size() == 0) {
-    assertion(_localIndexCount == 0);
+  if (_mappings.empty()) {
     return;
   }
 
-  assertion(size == _localIndexCount * valueDimension, size, _localIndexCount * valueDimension);
-  
   for (auto &mapping : _mappings) {
-    mapping.offset = _buffer.size();
     auto buffer = std::make_shared<std::vector<double>>();
     buffer->reserve(mapping.indices.size() * valueDimension);
     for (auto index : mapping.indices) {
@@ -595,50 +565,52 @@ void PointToPointCommunication::send(double *itemsToSend,
     bufferedRequests.emplace_back(request, buffer);
   }
 
-  checkBufferedRequests(false);
+  /* Disable asynchronous sending
+   * For SocketCommunuication, an async send request is given to asio::async_write and from that
+   * written to the operating system TCP queues using multiple function calls. 
+   * Problem 1) Simultaneous invocations of async_write on the same socket could be problematic.
+   * Problem 2) Writes from async_write to the OS queues could interfere with other writes
+   * (asio::write or asio::async_write) on the same sockets and thus changing order or requests.
+   * Since preCICE does not implement its own method to ensure correct ordering, this can lead to
+   * garbled data.
+   * See:
+   * https://lists.boost.org/Archives/boost/2018/10/243612.php
+   * https://www.boost.org/doc/libs/1_68_0/doc/html/boost_asio/reference/async_write/overload1.html
+   */
+  checkBufferedRequests(true);
 }
 
 void PointToPointCommunication::receive(double *itemsToReceive,
                                         size_t  size,
                                         int     valueDimension)
 {
-  if (_mappings.size() == 0) {
-    assertion(_localIndexCount == 0);
+  if (_mappings.empty()) {
     return;
   }
-  assertion(size == _localIndexCount * valueDimension, size, _localIndexCount * valueDimension);
 
   std::fill(itemsToReceive, itemsToReceive + size, 0);
 
   for (auto &mapping : _mappings) {
-    mapping.offset = _buffer.size();
-    _buffer.resize(_buffer.size() + mapping.indices.size() * valueDimension);
-
-    mapping.request =
-        mapping.communication->aReceive(_buffer.data() + mapping.offset,
-                                        mapping.indices.size() * valueDimension,
-                                        mapping.localRemoteRank);
+    mapping.recvBuffer.resize(mapping.indices.size() * valueDimension);
+    mapping.request = mapping.communication->aReceive(mapping.recvBuffer, mapping.localRemoteRank);
   }
 
   for (auto &mapping : _mappings) {
     mapping.request->wait();
 
     int i = 0;
-
     for (auto index : mapping.indices) {
       for (int d = 0; d < valueDimension; ++d) {
-        itemsToReceive[index * valueDimension + d] += _buffer[mapping.offset + i * valueDimension + d];
+        itemsToReceive[index * valueDimension + d] += mapping.recvBuffer[i * valueDimension + d];
       }
-
       i++;
     }
   }
-
-  _buffer.clear();
 }
 
 void PointToPointCommunication::checkBufferedRequests(bool blocking)
 {
+  TRACE(bufferedRequests.size());
   do {
     for (auto it = bufferedRequests.begin(); it != bufferedRequests.end();) {
       if (it->first->test())
