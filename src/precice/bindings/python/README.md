@@ -3,7 +3,7 @@ Python language bindings for preCICE
 
 # Dependencies
 
-Download and install Cython from http://cython.org/#download or install it using your package manager.
+Download and install Cython from http://cython.org/#download or install it using your package manager (e.g. `pip install Cython` or `pip3 install Cython`).
 
 # Building
 
