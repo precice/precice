@@ -53,7 +53,7 @@ Mesh:: ~Mesh()
   meshDestroyed(*this); // emit signal
 }
 
-const Group& Mesh:: content()
+const Group& Mesh:: content() const
 {
   return _content;
 }
@@ -582,6 +582,43 @@ const std::vector<double> Mesh::getCOG() const
     cog[d] = (_boundingBox[d].second - _boundingBox[d].first) / 2.0 + _boundingBox[d].first;
   }
   return cog;
+}
+
+std::ostream& operator<<(std::ostream& os, const Mesh& m)
+{
+  os << "Mesh " << m.getName() << " consisting the Vertices:\n";
+  for (auto& vertex : m.content().edges())
+      os << "\t" << vertex;
+  os << "And the Edges:\n";
+  for (auto& edge : m.content().edges())
+      os << "\t" << edge;
+  os << "And the Triangles:\n";
+  for (auto& triangle : m.content().edges())
+      os << "\t" << triangle;
+  os << "And the Quads:\n";
+  for (auto& quad : m.content().quads())
+      os << "\t" << quad;
+  return os;
+}
+
+bool Mesh::operator==(const Mesh& other) const
+{
+    auto& myContent = _content;
+    auto& otherContent = other._content;
+    bool equal = true;
+    equal &= myContent.vertices().size() == otherContent.vertices().size() &&
+        std::is_permutation(myContent.vertices().begin(), myContent.vertices().end(), otherContent.vertices().begin());
+    equal &= myContent.edges().size() == otherContent.edges().size() &&
+        std::is_permutation(myContent.edges().begin(), myContent.edges().end(), otherContent.edges().begin());
+    equal &= myContent.triangles().size() == otherContent.triangles().size() && 
+        std::is_permutation(myContent.triangles().begin(), myContent.triangles().end(), otherContent.triangles().begin());
+    equal &= myContent.quads().size() == otherContent.quads().size() &&
+        std::is_permutation(myContent.quads().begin(), myContent.quads().end(), otherContent.quads().begin());
+    return equal;
+}
+bool Mesh::operator!=(const Mesh& other) const
+{
+    return !(*this == other);
 }
 
 }} // namespace precice, mesh

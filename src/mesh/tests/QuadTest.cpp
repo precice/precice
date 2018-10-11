@@ -117,5 +117,46 @@ BOOST_AUTO_TEST_CASE(Quads)
     BOOST_TEST(id == 0);
   }
 }
+BOOST_AUTO_TEST_CASE(QuadEquality)
+{
+  using Eigen::Vector3d;
+  Vector3d coords0(0.0, 0.0, 0.0);
+  Vector3d coords1(1.0, 0.0, 0.0);
+  Vector3d coords2(1.0, 1.0, 0.0);
+  Vector3d coords3(0.0, 1.0, 0.0);
+  Vector3d coords4(2.0, 0.0, 0.0);
+  Vector3d coords5(2.0, 1.0, 0.0);
 
+  Vertex v0(coords0, 0);
+  Vertex v1(coords1, 1);
+  Vertex v2(coords2, 2);
+  Vertex v3(coords3, 3);
+  Vertex v4(coords4, 0);
+  Vertex v5(coords5, 1);
+
+  Edge e0(v0, v1, 0);
+  Edge e1(v2, v1, 1);
+  Edge e2(v2, v3, 2);
+  Edge e3(v0, v3, 3);
+  Edge e4(v0, v4, 0);
+  Edge e5(v4, v5, 1);
+  Edge e6(v5, v3, 2);
+  Edge e7(v3, v0, 3);
+
+  //*  *
+  //
+  //*  *
+  Quad quad1(e0, e1, e2, e3, 0);
+  Quad quad1rev(e3, e2, e1, e0, 0);
+  BOOST_TEST(quad1 == quad1rev);
+
+  //*    *
+  //
+  //*    *
+  Quad quad2(e4, e5, e6, e7, 0);
+  Quad quad2n(e4, e5, e6, e7, 0);
+  quad2n.setNormal(Vector3d(0.,0.,1.));
+  BOOST_TEST(quad2 != quad1);
+  BOOST_TEST(quad2 != quad2n);
+}
 BOOST_AUTO_TEST_SUITE_END() // Mesh

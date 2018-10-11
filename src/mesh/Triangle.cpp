@@ -15,7 +15,7 @@ Triangle::Triangle(
     : PropertyContainer(),
       _edges({&edgeOne, &edgeTwo, &edgeThree}),
       _id(id),
-      _normal(edgeOne.getDimensions()),
+      _normal(Eigen::VectorXd::Zero(edgeOne.getDimensions())),
       _center(edgeOne.getDimensions())
 {
   assertion(edgeOne.getDimensions() == edgeTwo.getDimensions(),
