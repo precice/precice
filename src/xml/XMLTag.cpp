@@ -360,7 +360,7 @@ std::string XMLTag::printDTD(const bool start) const
       else if (occ == OCCUR_ONCE_OR_MORE)
         occurrenceChar = "+";
 
-      dtd << (first ? "" : ", ") << subtag->getFullName() << OccurrenceChar;
+      dtd << (first ? "" : ", ") << subtag->getFullName() << occurrenceChar;
       first = false;
     }
 
