@@ -221,11 +221,5 @@ inline int Triangle::getID() const
   return _id;
 }
 
-
-BOOST_CONCEPT_ASSERT((boost::RandomAccessIteratorConcept<Triangle::iterator>));
-BOOST_CONCEPT_ASSERT((boost::RandomAccessIteratorConcept<Triangle::const_iterator>));
-BOOST_CONCEPT_ASSERT((boost::RandomAccessRangeConcept<Triangle>));
-BOOST_CONCEPT_ASSERT((boost::RandomAccessRangeConcept<const Triangle>));
-
 } // namespace mesh
 } // namespace precice

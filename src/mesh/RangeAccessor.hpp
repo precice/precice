@@ -8,10 +8,10 @@ namespace mesh
 {
 /** random access iterator over an indexable Source.
  * 
- * \tparam Source the underlying container to intex into
- * \tparam Value the resulting value
+ * @tparam Source the underlying container to intex into
+ * @tparam Value the resulting value
  *
- *  @note This version currently only supports Sources with a const `src.vertex(index).getCoords()` access.
+ * @note This version currently only supports Sources with a const `src.vertex(index).getCoords()` access.
  */
 template <typename Source, typename Value>
 class IndexRangeIterator : public boost::iterator_facade<
