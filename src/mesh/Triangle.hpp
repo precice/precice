@@ -3,7 +3,6 @@
 #include <Eigen/Core>
 #include <array>
 #include <boost/noncopyable.hpp>
-#include <boost/range/concepts.hpp>
 #include "mesh/Edge.hpp"
 #include "mesh/PropertyContainer.hpp"
 #include "mesh/RangeAccessor.hpp"
@@ -28,11 +27,11 @@ namespace mesh
 class Triangle : public PropertyContainer, private boost::noncopyable
 {
 public:
-  /// Type of the const random access vertex iterator
+  /// Type of the read-only random access vertex iterator
   using const_iterator = IndexRangeIterator<const Triangle, const Eigen::VectorXd>;
 
-  /// Type of the random access vertex iterator
-  using iterator = const_iterator; // IndexRangeIterator<Triangle, Eigen::VectorXd>;
+  /// Type of the read-only random access vertex iterator
+  using iterator = const_iterator;
 
 
   /// Constructor, the order of edges defines the outer normal direction.

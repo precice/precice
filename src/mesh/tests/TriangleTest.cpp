@@ -9,15 +9,6 @@ using namespace precice::mesh;
 
 BOOST_AUTO_TEST_SUITE(MeshTests)
 
-BOOST_AUTO_TEST_CASE(TriangleCompileTimeAsserts)
-{
-  BOOST_CONCEPT_ASSERT((boost::RandomAccessIteratorConcept<Triangle::iterator>));
-  BOOST_CONCEPT_ASSERT((boost::RandomAccessIteratorConcept<Triangle::const_iterator>));
-  BOOST_CONCEPT_ASSERT((boost::RandomAccessRangeConcept<Triangle>));
-  BOOST_CONCEPT_ASSERT((boost::RandomAccessRangeConcept<const Triangle>));
-}
-
-
 BOOST_AUTO_TEST_CASE(Triangles)
 {
   using Eigen::Vector3d;

@@ -9,13 +9,6 @@ using namespace precice::mesh;
 
 BOOST_AUTO_TEST_SUITE(MeshTests)
 
-BOOST_AUTO_TEST_CASE(QuadCompileTimeAsserts)
-{
-  BOOST_CONCEPT_ASSERT((boost::RandomAccessIteratorConcept<Quad::iterator>));
-  BOOST_CONCEPT_ASSERT((boost::RandomAccessIteratorConcept<Quad::const_iterator>));
-  BOOST_CONCEPT_ASSERT((boost::RandomAccessRangeConcept<Quad>));
-  BOOST_CONCEPT_ASSERT((boost::RandomAccessRangeConcept<const Quad>));
-}
 
 BOOST_AUTO_TEST_CASE(Quads)
 {
