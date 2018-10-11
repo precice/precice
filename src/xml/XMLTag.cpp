@@ -349,16 +349,16 @@ std::string XMLTag::printDTD(const bool start) const
     bool first = true;
     for (auto const subtag : _subtags) {
 
-      std::string OccurrenceChar = "";
+      std::string occurrenceChar = "";
 
       Occurrence occ = subtag->getOccurrence();
 
       if (occ == OCCUR_ARBITRARY)
-        OccurrenceChar = "*";
+        occurrenceChar = "*";
       else if (occ == OCCUR_NOT_OR_ONCE)
-        OccurrenceChar = "?";
+        occurrenceChar = "?";
       else if (occ == OCCUR_ONCE_OR_MORE)
-        OccurrenceChar = "+";
+        occurrenceChar = "+";
 
       dtd << (first ? "" : ", ") << subtag->getFullName() << OccurrenceChar;
       first = false;

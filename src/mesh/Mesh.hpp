@@ -70,6 +70,7 @@ public:
    * @brief Constructor.
    *
    * @param[in] name Unique name of the mesh.
+   * @param[in] dimensions Dimensionalty of the mesh.
    * @param[in] flipNormals Inverts the standard direction of normals.
    */
   Mesh (
@@ -130,7 +131,6 @@ public:
    *
    * @param[in] vertexOne Reference to first Vertex defining the Edge.
    * @param[in] vertexTwo Reference to second Vertex defining the Edge.
-   * @param[in] meshIsParent If true, the mesh is set as Property parent.
    */
   Edge& createEdge (
     Vertex& vertexOne,
@@ -142,7 +142,6 @@ public:
    * @param[in] edgeOne Reference to first edge defining the Triangle.
    * @param[in] edgeTwo Reference to second edge defining the Triangle.
    * @param[in] edgeThree Reference to third edge defining the Triangle.
-   * @param[in] meshIsParent If true, the mesh is set as Property parent.
    */
   Triangle& createTriangle (
     Edge& edgeOne,
@@ -156,7 +155,6 @@ public:
    * @param[in] edgeTwo Reference to second edge defining the Quad.
    * @param[in] edgeThree Reference to third edge defining the Quad.
    * @param[in] edgeFour Reference to fourth edge defining the Quad.
-   * @param[in] meshIsParent If true, the mesh is set as Property parent.
    */
   Quad& createQuad (
     Edge& edgeOne,

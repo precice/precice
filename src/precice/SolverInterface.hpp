@@ -337,6 +337,8 @@ public:
   /**
    * @brief Gets spatial vertex positions for given IDs.
    *
+   * @param[in] meshID ID of the mesh to retrieve positions from
+   * @param[in] size Number of positions and ids
    * @param[in] ids IDs obtained when setting write positions.
    * @param[in] positions Positions corresponding to IDs.
    */
@@ -349,7 +351,8 @@ public:
   /**
    * @brief Gets mesh vertex IDs from positions.
    *
-   * @param[in] size Number of positions, ids.
+   * @param[in] meshID ID of the mesh to retrieve positions from
+   * @param[in] size Number of positions and ids.
    * @param[in] positions Positions (x,y,z,x,y,z,...) to find ids for.
    * @param[in] ids IDs corresponding to positions.
    */
@@ -449,9 +452,9 @@ public:
    *
    * The exact mapping and communication must be specified in XYZ.
    *
-   * @param[in] dataID       ID of the data to be written, e.g. 1 = forces
-   * @param[in] dataPosition Position (coordinate, e.g.) of data to be written
-   * @param[in] dataValu     Value of the data to be written
+   * @param[in] dataID     ID of the data to be written, e.g. 1 = forces
+   * @param[in] valueIndex Position (coordinate, e.g.) of data to be written
+   * @param[in] value      Value of the data to be written
    */
   void writeVectorData (
     int           dataID,
@@ -535,8 +538,8 @@ public:
    * The exact mapping and communication must be specified in XYZ.
    *
    * @param[in]  dataID ID of the data to be read, e.g. 2 = temperatures
-   * @param[in]  dataPosition Position (coordinate, e.g.) of data to be read
-   * @param[out] dataValue Read data value
+   * @param[in]  valueIndex Position (coordinate, e.g.) of data to be read
+   * @param[out] Value Read data value
    */
   void readScalarData (
     int     dataID,

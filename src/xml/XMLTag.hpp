@@ -68,7 +68,7 @@ public:
   XMLTag(
       Listener &         listener,
       const std::string &name,
-      Occurrence         Occurrence,
+      Occurrence         occurrence,
       const std::string &xmlNamespace = "");
 
   /**

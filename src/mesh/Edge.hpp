@@ -22,7 +22,7 @@ public:
    * @brief Constructor.
    *
    * @param[in] vertexOne First Vertex object defining the edge.
-   * @param[in] vertexOne Second Vertex object defining the edge.
+   * @param[in] vertexTwo Second Vertex object defining the edge.
    * @param[in] id Unique (among edges in one mesh) ID.
    */
   Edge (

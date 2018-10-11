@@ -54,7 +54,7 @@ public:
    * @brief Constructor.
    *
    * @param[in] constraint Specifies mapping to be consistent or conservative.
-   * @param[in] dimension Dimensionality of the meshes
+   * @param[in] dimensions Dimensionality of the meshes
    * @param[in] function Radial basis function used for mapping.
    * @param[in] xDead, yDead, zDead Deactivates mapping along an axis
    * @param[in] solverRtol Relative tolerance for the linear solver.
