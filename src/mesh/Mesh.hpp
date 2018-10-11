@@ -84,7 +84,7 @@ public:
   virtual ~Mesh();
 
   /// Returns group object with all Triangle, Edge, Vertex objects.
-  const Group& content();
+  const Group& content() const;
 
   /// Returns modifieable container holding all vertices.
   VertexContainer& vertices();
@@ -278,6 +278,10 @@ public:
    */
   const std::vector<double> getCOG() const;
   
+  bool operator==(const Mesh& other) const;
+  
+  bool operator!=(const Mesh& other) const;
+
 private:
 
   mutable logging::Logger _log{"mesh::Mesh"};
@@ -337,5 +341,7 @@ private:
   BoundingBox _boundingBox;
 
 };
+
+std::ostream& operator<<(std::ostream& os, const Mesh& q);
 
 }} // namespace precice, mesh

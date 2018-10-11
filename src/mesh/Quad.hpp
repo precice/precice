@@ -1,20 +1,11 @@
 #pragma once
 
-#include <array>
+#include <iostream>
+#include <algorithm>
 #include "boost/noncopyable.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/PropertyContainer.hpp"
 #include "mesh/RangeAccessor.hpp"
-
-namespace precice
-{
-namespace mesh
-{
-class Vertex;
-}
-} // namespace precice
-
-// ----------------------------------------------------------- CLASS DEFINITION
 
 namespace precice
 {
@@ -132,6 +123,10 @@ public:
    */
   double getEnclosingRadius() const;
 
+  bool operator==(const Quad& other) const;
+
+  bool operator!=(const Quad& other) const;
+
 private:
   /// Edges defining the quad.
   std::array<Edge *, 4> _edges;
@@ -225,5 +220,6 @@ inline int Quad::getID() const
   return _id;
 }
 
+std::ostream& operator<<(std::ostream& os, const Quad& q);
 } // namespace mesh
 } // namespace precice

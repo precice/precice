@@ -1,12 +1,15 @@
 #pragma once
 
 #include <Eigen/Core>
-#include <array>
 #include <boost/noncopyable.hpp>
+#include <iostream>
+#include <algorithm>
+
 #include "mesh/Edge.hpp"
 #include "mesh/PropertyContainer.hpp"
 #include "mesh/RangeAccessor.hpp"
 #include "utils/assertion.hpp"
+#include "math/differences.hpp"
 
 namespace precice
 {
@@ -134,6 +137,10 @@ public:
    */
   double getEnclosingRadius() const;
 
+  bool operator==(const Triangle& other) const;
+
+  bool operator!=(const Triangle& other) const;
+
 private:
   /// Edges defining the triangle.
   std::array<Edge *, 3> _edges;
@@ -229,6 +236,8 @@ inline int Triangle::getID() const
 {
   return _id;
 }
+
+std::ostream& operator<<(std::ostream& os, const Triangle& t);
 
 } // namespace mesh
 } // namespace precice

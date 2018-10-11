@@ -20,4 +20,15 @@ BOOST_AUTO_TEST_CASE(Vertices)
   BOOST_TEST(testing::equals(normal, Eigen::Vector3d::Zero()));
 }
 
+BOOST_AUTO_TEST_CASE(VertexEquality)
+{
+    using namespace mesh;
+    using namespace Eigen;
+    Vertex v1(Vector3d::Constant(4.0), 0);
+    Vertex v2(Vector3d::Constant(4.0), 1);
+    Vertex v3(Vector3d::Constant(2.0), 0);
+    BOOST_TEST(v1 == v2);
+    BOOST_TEST(v1 != v3);
+    BOOST_TEST(v2 != v3);
+}
 BOOST_AUTO_TEST_SUITE_END() // Mesh

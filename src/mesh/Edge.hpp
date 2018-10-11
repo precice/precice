@@ -1,10 +1,12 @@
 #pragma once
 
+#include <Eigen/Core>
+#include <iostream>
+
 #include "mesh/PropertyContainer.hpp"
 #include "mesh/Vertex.hpp"
-#include <array>
 #include "boost/noncopyable.hpp"
-#include <Eigen/Core>
+#include "math/differences.hpp"
 
 namespace precice {
 namespace mesh {
@@ -64,6 +66,10 @@ public:
 
   /// Returns the radius of the enclosing circle of the edge.
   double getEnclosingRadius () const;
+
+  bool operator==(const Edge& other) const;
+
+  bool operator!=(const Edge& other) const;
 
 private:
 
@@ -130,5 +136,7 @@ inline const Eigen::VectorXd& Edge::getNormal () const
 {
   return _normal;
 }
+
+std::ostream& operator<<(std::ostream& stream, const Edge& edge);
 
 }} // namespace precice, mesh

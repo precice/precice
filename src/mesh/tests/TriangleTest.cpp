@@ -165,4 +165,40 @@ BOOST_AUTO_TEST_CASE(Triangles)
   }
 }
 
+BOOST_AUTO_TEST_CASE(TriangleEquality)
+{
+  using Eigen::Vector3d;
+  Vector3d coords1(0.0, 0.0, 0.0);
+  Vector3d coords2(1.0, 0.0, 0.0);
+  Vector3d coords3(1.0, 1.0, 0.0);  
+  Vector3d coords4(2.0, 0.0, 0.0);
+ 
+  Vertex v1(coords1, 0);
+  Vertex v2(coords2, 1);
+  Vertex v3(coords3, 2);
+  Vertex v4(coords4, 0);
+
+  Edge e1(v1, v2, 0);
+  Edge e2(v3, v2, 1);
+  Edge e3(v3, v1, 2);
+  Edge e4(v2, v4, 0);
+  Edge e5(v4, v3, 1);
+
+  //    *
+  //  * *
+  // ****
+  Triangle triangle1(e1, e3, e2, 0);
+  Triangle triangle2(e1, e2, e3, 1);
+  BOOST_TEST(triangle1 == triangle2);
+  //    *
+  //    * *
+  //    ****
+  Triangle triangle3(e2, e4, e5, 0);
+  Triangle triangle4(e2, e4, e5, 0);
+  triangle4.setNormal(Vector3d(0.,0.,1.));
+  BOOST_TEST(triangle1 == triangle2);
+  BOOST_TEST(triangle1 != triangle3);
+  BOOST_TEST(triangle4 != triangle3);
+}
+
 BOOST_AUTO_TEST_SUITE_END() // Mesh

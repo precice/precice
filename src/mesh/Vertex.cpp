@@ -40,8 +40,8 @@ void Vertex:: tag() {
 
 std::ostream & operator<<(std::ostream &os, Vertex const & v)
 {
-  return os << v.getCoords().transpose(); // transpose, so output is on one line
+  // transpose, so output is on one line
+  return os << "Vertex " << v.getID() << ": " << v.getCoords().transpose() << "\n"; 
 }
-
 
 }} // namespace precice, mesh

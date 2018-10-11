@@ -21,7 +21,7 @@ Triangle::Triangle(
     : PropertyContainer(),
       _edges({&edgeOne, &edgeTwo, &edgeThree}),
       _id(id),
-      _normal(edgeOne.getDimensions()),
+      _normal(Eigen::VectorXd::Zero(edgeOne.getDimensions())),
       _center(edgeOne.getDimensions())
 {
   assertion(edgeOne.getDimensions() == edgeTwo.getDimensions(),
@@ -96,6 +96,25 @@ const Eigen::VectorXd &Triangle::getCenter() const
 double Triangle::getEnclosingRadius() const
 {
   return _enclosingRadius;
+}
+
+std::ostream& operator<<(std::ostream& os, const Triangle& t)
+{
+  return os << "Triangle " << t.getID() << " defined by:\n"
+      << "\t" << t.edge(0) << "\t" << t.edge(1)
+      << "\t" << t.edge(2);
+}
+
+bool Triangle::operator==(const Triangle& other) const
+{
+    return math::equals(_normal, other._normal) &&
+        std::is_permutation(_edges.begin(), _edges.end(), other._edges.begin(),
+                [](const Edge* e1, const Edge* e2){return *e1 == *e2;});
+}
+
+bool Triangle::operator!=(const Triangle& other) const
+{
+    return !(*this == other);
 }
 
 } // namespace mesh

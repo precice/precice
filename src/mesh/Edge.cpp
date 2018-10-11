@@ -40,4 +40,19 @@ double Edge:: getEnclosingRadius () const
   return _enclosingRadius;
 }
 
+std::ostream& operator<<(std::ostream& stream, const Edge& edge){
+    return stream << "Edge " << edge.getID() << " defined by\n"
+        << "\t" << edge.vertex(0) << "\t" << edge.vertex(1);
+}
+
+bool Edge::operator==(const Edge& other) const
+{
+    return math::equals(_normal, other._normal) &&
+        std::is_permutation(_vertices.begin(), _vertices.end(), other._vertices.begin(),
+                [](const Vertex* a, const Vertex* b){return *a == *b;});
+}
+bool Edge::operator!=(const Edge& other) const
+{
+  return !(*this == other);
+}
 }} // namespace precice, mesh
