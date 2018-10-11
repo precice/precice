@@ -343,13 +343,11 @@ void Matrix::setColumn(Vector &v, int col)
   const PetscScalar *vec;
   PetscInt range_start, range_end;
   VecGetOwnershipRange(v.vector, &range_start, &range_end);
-  PetscInt irow[range_end - range_start];
-  for (PetscInt i = range_start; i < range_end; i++) {
-    irow[i - range_start] = i;
-  }
+  std::vector<PetscInt> irow(range_end - range_start);
+  std::iota(irow.begin(), irow.end(), range_start);
       
   ierr = VecGetArrayRead(v.vector, &vec); CHKERRV(ierr);
-  ierr = MatSetValues(matrix, range_end - range_start, irow, 1, &col, vec, INSERT_VALUES); CHKERRV(ierr);
+  ierr = MatSetValues(matrix, range_end - range_start, irow.data(), 1, &col, vec, INSERT_VALUES); CHKERRV(ierr);
   ierr = VecRestoreArrayRead(v.vector, &vec); CHKERRV(ierr);
   ierr = MatAssemblyBegin(matrix, MAT_FINAL_ASSEMBLY); CHKERRV(ierr); 
   ierr = MatAssemblyEnd(matrix, MAT_FINAL_ASSEMBLY); CHKERRV(ierr); 
