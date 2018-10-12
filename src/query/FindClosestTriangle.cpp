@@ -4,7 +4,7 @@
 #include "mesh/Vertex.hpp"
 #include "mesh/Mesh.hpp"
 #include "math/math.hpp"
-#include "math/barycentre.hpp"
+#include "math/barycenter.hpp"
 
 namespace precice {
 namespace query {
@@ -55,7 +55,7 @@ void FindClosestTriangle:: find
 {
   using Eigen::Vector2d; using Eigen::Vector3d;
   
-  auto ret = math::barycentre::calcBarycentricCoordsForTriangle(
+  auto ret = math::barycenter::calcBarycentricCoordsForTriangle(
           triangle.vertex(0).getCoords(),
           triangle.vertex(1).getCoords(),
           triangle.vertex(2).getCoords(),

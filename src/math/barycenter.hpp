@@ -8,7 +8,7 @@ namespace precice
 {
 namespace math
 {
-namespace barycentre
+namespace barycenter
 {
 
 /// The result of calculating the barycentric coordinates.
@@ -240,6 +240,6 @@ BarycentricCoordsAndProjected calcBarycentricCoordsForQuad(
     const Eigen::MatrixBase<DerivedLoc> & location) {
     throw std::runtime_error("Interpolation on Quad not implemented!");
 }
-} // namespace barycentre
+} // namespace barycenter
 } // namespace math
 } // namespace precice

@@ -3,7 +3,7 @@
 #include "mesh/Vertex.hpp"
 #include "mesh/Mesh.hpp"
 #include <Eigen/Dense>
-#include "math/barycentre.hpp"
+#include "math/barycenter.hpp"
 
 namespace precice {
 namespace query {
@@ -63,7 +63,7 @@ void FindClosestQuad:: find
   auto& d = quad.vertex(3).getCoords();
   auto& norm = quad.getNormal();
 
-  auto ret = math::barycentre::calcBarycentricCoordsForQuad(a, b, c, d, norm, _searchPoint);
+  auto ret = math::barycenter::calcBarycentricCoordsForQuad(a, b, c, d, norm, _searchPoint);
   assertion(ret.barycentricCoords.size() == 4);
 
   const bool inside = not (ret.barycentricCoords.array() < - math::NUMERICAL_ZERO_DIFFERENCE).any();

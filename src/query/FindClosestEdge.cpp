@@ -4,7 +4,7 @@
 #include "mesh/Edge.hpp"
 #include "mesh/Mesh.hpp"
 #include "math/geometry.hpp"
-#include "math/barycentre.hpp"
+#include "math/barycenter.hpp"
 #include <utility>
 #include <array>
 
@@ -75,7 +75,7 @@ void FindClosestEdge:: find ( mesh::Edge& edge )
   auto& b = edge.vertex(1).getCoords();
   auto& norm = edge.getNormal();
 
-  auto ret = math::barycentre::calcBarycentricCoordsForEdge(a, b, norm, _searchPoint);
+  auto ret = math::barycenter::calcBarycentricCoordsForEdge(a, b, norm, _searchPoint);
   assertion(ret.barycentricCoords.size() == 2);
 
   bool inside = not (ret.barycentricCoords.array() < - math::NUMERICAL_ZERO_DIFFERENCE).any();

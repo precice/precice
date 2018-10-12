@@ -3,7 +3,7 @@
 #include "mesh/Edge.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Quad.hpp"
-#include "math/barycentre.hpp"
+#include "math/barycenter.hpp"
 #include "math/math.hpp"
 #include <limits>
 #include <utility>
@@ -25,7 +25,7 @@ InterpolationElements generateInterpolationElements(
   auto &A = element.vertex(0);
   auto &B = element.vertex(1);
 
-  const auto bcoords = math::barycentre::calcBarycentricCoordsForEdge(
+  const auto bcoords = math::barycenter::calcBarycentricCoordsForEdge(
       A.getCoords(),
       B.getCoords(),
       element.getNormal(),
@@ -46,7 +46,7 @@ InterpolationElements generateInterpolationElements(
   auto &B = element.vertex(1);
   auto &C = element.vertex(2);
 
-  const auto bcoords = math::barycentre::calcBarycentricCoordsForTriangle(
+  const auto bcoords = math::barycenter::calcBarycentricCoordsForTriangle(
       A.getCoords(),
       B.getCoords(),
       C.getCoords(),
@@ -69,7 +69,7 @@ InterpolationElements generateInterpolationElements(
   auto &C = element.vertex(2);
   auto &D = element.vertex(3);
 
-  const auto bcoords = math::barycentre::calcBarycentricCoordsForQuad(
+  const auto bcoords = math::barycenter::calcBarycentricCoordsForQuad(
       A.getCoords(),
       B.getCoords(),
       C.getCoords(),
