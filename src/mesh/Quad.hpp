@@ -25,7 +25,12 @@ namespace mesh
 class Quad : public PropertyContainer, private boost::noncopyable
 {
 public:
-  /// Type of the const random access vertex iterator
+  /// Type of the read-only const random-access iterator over Vertex coords
+  /**
+   * This index-based iterator iterates over the vertices of this Quad.
+   * The returned value is the forwarded result of Vertex::getCoords.
+   * It is thus a read-only random-access iterator.
+   */
   using const_iterator = IndexRangeIterator<const Quad, const Eigen::VectorXd>;
 
   /// Type of the random access vertex iterator
@@ -69,23 +74,28 @@ public:
   /// Returns const quad edge with index 0, 1, 2, or 3.
   const Edge &edge(int i) const;
 
-  /// Returns a random access iterator to the begin (0) of the vertex range [0,1,2,3]
+  ///@name Iterators
+  ///@{
+
+  /// Returns a read-only random-access iterator to the begin (0) of the vertex range [0,1,2,3]
   iterator begin();
 
-  /// Returns a random access iterator to the end (4) of the vertex range [0,1,2,3]
+  /// Returns a read-only random-access iterator to the end (4) of the vertex range [0,1,2,3]
   iterator end();
 
-  /// Returns a const random access iterator to the begin (0) of the vertex range [0,1,2,3]
+  /// Returns a read-only random-access iterator to the begin (0) of the vertex range [0,1,2,3]
   const_iterator begin() const;
 
-  /// Returns a const random access iterator to the end (4) of the vertex range [0,1,2,3]
+  /// Returns a read-only random-access iterator to the end (4) of the vertex range [0,1,2,3]
   const_iterator end() const;
 
-  /// Returns a const random access iterator to the begin (0) of the vertex range [0,1,2,3]
+  /// Returns a read-only random-access iterator to the begin (0) of the vertex range [0,1,2,3]
   const_iterator cbegin() const;
 
-  /// Returns a const random access iterator to the end (4) of the vertex range [0,1,2,3]
+  /// Returns a read-only random-access iterator to the end (4) of the vertex range [0,1,2,3]
   const_iterator cend() const;
+
+  ///@}
 
   /// Sets the outer normal of the quad.
   template <typename VECTOR_T>
