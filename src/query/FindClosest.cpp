@@ -5,6 +5,7 @@
 #include "mesh/Quad.hpp"
 #include "math/math.hpp"
 #include <limits>
+#include <utility>
 
 namespace precice {
 namespace query {
