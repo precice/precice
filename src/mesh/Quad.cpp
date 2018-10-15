@@ -1,11 +1,17 @@
 #include "Quad.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Vertex.hpp"
+#include <boost/range/concepts.hpp>
 
 namespace precice
 {
 namespace mesh
 {
+
+BOOST_CONCEPT_ASSERT((boost::RandomAccessIteratorConcept<Quad::iterator>) );
+BOOST_CONCEPT_ASSERT((boost::RandomAccessIteratorConcept<Quad::const_iterator>) );
+BOOST_CONCEPT_ASSERT((boost::RandomAccessRangeConcept<Quad>) );
+BOOST_CONCEPT_ASSERT((boost::RandomAccessRangeConcept<const Quad>) );
 
 Quad::Quad(
     Edge &edgeOne,

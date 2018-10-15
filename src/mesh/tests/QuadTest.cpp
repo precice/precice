@@ -3,9 +3,12 @@
 #include "mesh/Vertex.hpp"
 #include "testing/Testing.hpp"
 
+#include <vector>
+
 using namespace precice::mesh;
 
 BOOST_AUTO_TEST_SUITE(MeshTests)
+
 
 BOOST_AUTO_TEST_CASE(Quads)
 {
@@ -115,6 +118,65 @@ BOOST_AUTO_TEST_CASE(Quads)
 
     int id = quad.getID();
     BOOST_TEST(id == 0);
+  }
+  {
+    Vertex v0(coords0, 0);
+    Vertex v1(coords1, 1);
+    Vertex v2(coords2, 2);
+    Vertex v3(coords3, 3);
+
+    Edge e0(v0, v1, 0);
+    Edge e1(v1, v2, 1);
+    Edge e2(v2, v3, 2);
+    Edge e3(v3, v0, 3);
+
+    Quad quad(e0, e1, e2, e3, 0);
+    {
+      // Test begin(), end()
+      auto       ibegin = quad.begin();
+      const auto iend   = quad.end();
+      BOOST_TEST(std::distance(ibegin, iend) == 4);
+      BOOST_TEST(*ibegin == v0.getCoords());
+      ++ibegin;
+      BOOST_TEST(*ibegin == v1.getCoords());
+      ++ibegin;
+      BOOST_TEST(*ibegin == v2.getCoords());
+      ++ibegin;
+      BOOST_TEST(*ibegin == v3.getCoords());
+      ++ibegin;
+      BOOST_TEST((ibegin == iend));
+    }
+    {
+      // Test begin(), end() for const
+      const Quad &cquad = quad;
+      auto            ibegin    = cquad.begin();
+      const auto      iend      = cquad.end();
+      BOOST_TEST(std::distance(ibegin, iend) == 4);
+      BOOST_TEST(*ibegin == v0.getCoords());
+      ++ibegin;
+      BOOST_TEST(*ibegin == v1.getCoords());
+      ++ibegin;
+      BOOST_TEST(*ibegin == v2.getCoords());
+      ++ibegin;
+      BOOST_TEST(*ibegin == v3.getCoords());
+      ++ibegin;
+      BOOST_TEST((ibegin == iend));
+    }
+    {
+      // Test cbegin(), cend()
+      auto       ibegin = quad.cbegin();
+      const auto iend   = quad.cend();
+      BOOST_TEST(std::distance(ibegin, iend) == 4);
+      BOOST_TEST(*ibegin == v0.getCoords());
+      ++ibegin;
+      BOOST_TEST(*ibegin == v1.getCoords());
+      ++ibegin;
+      BOOST_TEST(*ibegin == v2.getCoords());
+      ++ibegin;
+      BOOST_TEST(*ibegin == v3.getCoords());
+      ++ibegin;
+      BOOST_TEST((ibegin == iend));
+    }
   }
 }
 
