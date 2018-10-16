@@ -118,5 +118,24 @@ double Quad::getEnclosingRadius() const
   return _enclosingRadius;
 }
 
+std::ostream& operator<<(std::ostream& os, const Quad& q)
+{
+  return os << "Quad " << q.getID() << " defined by:\n"
+      << "\t" << q.edge(0) << "\t" << q.edge(1)
+      << "\t" << q.edge(2) << "\t" << q.edge(3);
+}
+
+bool Quad::operator==(const Quad& other) const
+{
+    return math::equals(_normal, other._normal) &&
+        std::is_permutation(_edges.begin(), _edges.end(), other._edges.begin(),
+                [](const Edge* e1, const Edge* e2){return *e1 == *e2;});
+}
+
+bool Quad::operator!=(const Quad& other) const
+{
+  return !(*this == other);
+}
+
 } // namespace mesh
 } // namespace precice

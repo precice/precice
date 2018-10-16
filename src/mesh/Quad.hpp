@@ -99,11 +99,9 @@ public:
    */
   double getEnclosingRadius() const;
 
-  friend std::ostream& operator<<(std::ostream& os, const Quad& q);
+  bool operator==(const Quad& other) const;
 
-  inline bool operator==(const Quad& other) const;
-
-  inline bool operator!=(const Quad& other) const;
+  bool operator!=(const Quad& other) const;
 
 private:
   /// Edges defining the quad.
@@ -168,23 +166,6 @@ inline int Quad::getID() const
   return _id;
 }
 
-inline std::ostream& operator<<(std::ostream& os, const Quad& q)
-{
-  return os << "Quad " << q._id << " defined by:\n"
-      << "\t" << *q._edges[0] << "\t" << *q._edges[1] 
-      << "\t" << *q._edges[2] << "\t" << *q._edges[3];
-}
-
-inline bool Quad::operator==(const Quad& other) const
-{
-    return math::equals(_normal, other._normal) &&
-        std::is_permutation(_edges.begin(), _edges.end(), other._edges.begin(), 
-                [](const Edge* e1, const Edge* e2){return *e1 == *e2;});
-}
-
-inline bool Quad::operator!=(const Quad& other) const
-{
-  return !(*this == other);
-}
+std::ostream& operator<<(std::ostream& os, const Quad& q);
 } // namespace mesh
 } // namespace precice

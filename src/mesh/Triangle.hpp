@@ -101,11 +101,9 @@ public:
    */
   double getEnclosingRadius() const;
 
-  friend std::ostream& operator<<(std::ostream& os, const Triangle& t);
+  bool operator==(const Triangle& other) const;
 
-  inline bool operator==(const Triangle& other) const;
-
-  inline bool operator!=(const Triangle& other) const;
+  bool operator!=(const Triangle& other) const;
 
 private:
   /// Edges defining the triangle.
@@ -173,23 +171,7 @@ inline int Triangle::getID() const
   return _id;
 }
 
-inline std::ostream& operator<<(std::ostream& os, const Triangle& t)
-{
-  return os << "Triangle " << t._id << " defined by:\n" 
-      << "\t" << *t._edges[0] << "\t" << *t._edges[1] 
-      << "\t" << *t._edges[2];
-}
-
-inline bool Triangle::operator==(const Triangle& other) const
-{
-    return math::equals(_normal, other._normal) &&
-        std::is_permutation(_edges.begin(), _edges.end(), other._edges.begin(), 
-                [](const Edge* e1, const Edge* e2){return *e1 == *e2;});
-}
-inline bool Triangle::operator!=(const Triangle& other) const
-{
-    return !(*this == other);
-}
+std::ostream& operator<<(std::ostream& os, const Triangle& t);
 
 } // namespace mesh
 } // namespace precice

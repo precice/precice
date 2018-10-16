@@ -67,11 +67,9 @@ public:
   /// Returns the radius of the enclosing circle of the edge.
   double getEnclosingRadius () const;
 
-  friend std::ostream& operator<<(std::ostream& stream, const Edge& edge); 
+  bool operator==(const Edge& other) const;
 
-  inline bool operator==(const Edge& other) const;
-
-  inline bool operator!=(const Edge& other) const;
+  bool operator!=(const Edge& other) const;
 
 private:
 
@@ -139,19 +137,6 @@ inline const Eigen::VectorXd& Edge::getNormal () const
   return _normal;
 }
 
-inline std::ostream& operator<<(std::ostream& stream, const Edge& edge){
-    return stream << "Edge " << edge._id << " defined by\n" 
-        << "\t" << *edge._vertices[0] << "\t" << *edge._vertices[1];
-}
+std::ostream& operator<<(std::ostream& stream, const Edge& edge);
 
-inline bool Edge::operator==(const Edge& other) const
-{
-    return math::equals(_normal, other._normal) &&
-        std::is_permutation(_vertices.begin(), _vertices.end(), other._vertices.begin(),
-                [](const Vertex* a, const Vertex* b){return *a == *b;});
-}
-inline bool Edge::operator!=(const Edge& other) const
-{
-  return !(*this == other);
-}
 }} // namespace precice, mesh

@@ -5,6 +5,7 @@
 #include <iostream>
 
 #include "mesh/PropertyContainer.hpp"
+#include "math/differences.hpp"
 
 namespace precice {
 namespace mesh {
@@ -132,7 +133,7 @@ inline bool Vertex::operator!=(const Vertex& rhs) const
 }
 inline bool Vertex::operator==(const Vertex& rhs) const 
 {
-    return this->_coords.isApprox(rhs._coords, 1e-9);
+    return math::equals(_coords, rhs._coords);
 }
 
 }} // namespace precice, mesh
