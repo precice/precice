@@ -1,5 +1,7 @@
 #include "CommunicateBoundingBox.hpp"
 #include "Communication.hpp"
+#include <vector>
+
 
 namespace precice
 {
@@ -57,6 +59,33 @@ void CommunicateBoundingBox::receiveBoundingBoxMap(
   }
 }
 
+void CommunicateBoundingBox::sendFeedbackMap(
+  mesh::Mesh::FeedbackMap &fbm,
+  int                         rankReceiver)
+{
+  TRACE(rankReceiver);
+
+  for (const auto &vect : fbm) {
+   _communication->send(vect.first, rankReceiver);
+   _communication->send(vect.second, rankReceiver);
+  }  
+}
+
+void CommunicateBoundingBox::receiveFeedbackMap(
+  mesh::Mesh::FeedbackMap &fbm,
+  int                         rankSender)
+{
+  TRACE(rankSender);
+
+  for (const auto &vect : fbm) {
+    int rank;
+    std::vector<int> connected_ranks;
+    _communication->receive(rank, rankSender);
+    _communication->receive(connected_ranks, rankSender);
+    fbm[rank]=connected_ranks;
+  }  
+}
+
 void CommunicateBoundingBox::broadcastSendBoundingBoxMap(
     mesh::Mesh::BoundingBoxMap &bbm)
 {
@@ -77,6 +106,22 @@ void CommunicateBoundingBox::broadcastReceiveBoundingBoxMap(
       _communication->broadcast(dimension.first, 0);
       _communication->broadcast(dimension.second, 0);
     }
+  }
+}
+
+void CommunicateBoundingBox::broadcastSendFeedbackMap(
+    mesh::Mesh::FeedbackMap &fbm)
+{
+  for (auto &rank : fbm) {
+    _communication->broadcast(rank.second);
+  }
+}
+
+void CommunicateBoundingBox::broadcastReceiveFeedbackMap(
+    mesh::Mesh::FeedbackMap &fbm)
+{
+  for (auto &rank : fbm) {
+    _communication->broadcast(rank.second,0);
   }
 }
 

@@ -32,12 +32,26 @@ public:
       mesh::Mesh::BoundingBoxMap &bbm,
       int                         rankSender);
 
+  void sendFeedbackMap(
+      mesh::Mesh::FeedbackMap &fbm,
+      int                         rankReceiver);
+
+  void receiveFeedbackMap(
+      mesh::Mesh::FeedbackMap &fbm,
+      int                         rankSender);
+
   void broadcastSendBoundingBoxMap(
       mesh::Mesh::BoundingBoxMap &bbm);
 
   void broadcastReceiveBoundingBoxMap(
       mesh::Mesh::BoundingBoxMap &bbm);
 
+  void broadcastSendFeedbackMap(
+    mesh::Mesh::FeedbackMap &fbm);
+
+  void broadcastReceiveFeedbackMap(
+    mesh::Mesh::FeedbackMap &fbm);
+  
 private:
   logging::Logger _log{"com::CommunicateBoundingBox"};
 

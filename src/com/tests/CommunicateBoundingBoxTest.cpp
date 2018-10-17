@@ -138,6 +138,100 @@ BOOST_AUTO_TEST_CASE(BroadcastSendAndReceiveBoundingBoxMap,
   }
 }
 
+BOOST_FIXTURE_TEST_CASE(SendAndReceiveFeedbackMap, testing::M2NFixture,
+                        * testing::MinRanks(2)
+                        * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
+{
+  if (utils::Parallel::getCommunicatorSize() != 2)
+    return;
+  
+    std::vector<int> fb;
+    mesh::Mesh::FeedbackMap fbm;
+
+    for (int rank = 0; rank < 3; rank++) {
+
+      for (int i = 0; i < 3; i++) {
+        fb.push_back(i+1);
+      }
+
+      fbm[rank] = fb;
+      fb.clear();
+    }
+
+    CommunicateBoundingBox comBB(m2n->getMasterCommunication());
+
+    if (utils::Parallel::getProcessRank() == 0) {
+      comBB.sendFeedbackMap(fbm, 0);
+    } else if (utils::Parallel::getProcessRank() == 1) {
+
+      std::vector<int> fbCompare;
+      mesh::Mesh::FeedbackMap fbmCompare;
+
+      for (int rank = 0; rank < 3; rank++) {
+
+        for (int i = 0; i < 3; i++) {
+          fbCompare.push_back(-1);
+        }
+
+        fbmCompare[rank] = fbCompare;
+        fbCompare.clear();
+      }
+
+      comBB.receiveFeedbackMap(fbmCompare, 0);
+
+      for (int rank = 0; rank < 3; rank++) {
+
+        BOOST_TEST(fbm[rank] == fbmCompare[rank]);
+        
+      }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(BroadcastSendAndReceiveFeedbackMap,
+                     *testing::OnSize(4)
+                     * boost::unit_test::fixture<testing::MasterComFixture>())
+{
+
+    std::vector<int> fb;
+    mesh::Mesh::FeedbackMap fbm;
+
+    for (int rank = 0; rank < 3; rank++) {
+
+      for (int i = 0; i < 3; i++) {
+        fb.push_back(i+1);
+      }
+
+      fbm[rank] = fb;
+      fb.clear();
+    }
+
+  CommunicateBoundingBox comBB(utils::MasterSlave::_communication);
+
+  if (utils::Parallel::getProcessRank() == 0) {
+    comBB.broadcastSendFeedbackMap(fbm);
+  } else {
+
+    std::vector<int> fbCompare;
+    mesh::Mesh::FeedbackMap fbmCompare;   
+
+    for (int rank = 0; rank < 3; rank++) {
+      for (int i = 0; i < 3; i++) {
+        fbCompare.push_back(-1);
+      }
+      fbmCompare[rank] = fbCompare;
+      fbCompare.clear();
+    }
+
+    comBB.broadcastReceiveFeedbackMap(fbmCompare);
+
+    for (int rank = 0; rank < 3; rank++) {
+
+      BOOST_TEST(fbm[rank] == fbmCompare[rank]);
+    }
+  }
+}
+
+
 BOOST_AUTO_TEST_SUITE_END() // BB
 
 BOOST_AUTO_TEST_SUITE_END() // Communication
