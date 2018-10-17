@@ -5,7 +5,6 @@
 #include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include "mesh/SharedPointer.hpp"
-#include "mesh/Mesh.hpp"
 
 namespace precice
 {
@@ -52,24 +51,6 @@ public:
   virtual void requestConnection(std::string const &nameAcceptor,
                                  std::string const &nameRequester);
 
-  /** same as acceptconnection, but this one does not need vertex distribution
-      and instead gets communication map directly from mesh. 
-   
-   *  This one is used only to create initial communication Map.    
-   */
-  virtual void acceptPreConnection(
-    std::string const &nameAcceptor,
-    std::string const &nameRequester);
-  
-  /** same as requestConnection, but this one does not need vertex distribution
-      and instead gets communication map directly from mesh. 
-   
-   *  This one is used only to create initial communication Map.    
-   */
-  virtual void requestPreConnection(
-    std::string const &nameAcceptor,
-    std::string const &nameRequester);
-
   /**
    * @brief Disconnects from communication space, i.e. participant.
    *
@@ -90,22 +71,6 @@ public:
   virtual void receive(double *itemsToReceive,
                        size_t  size,
                        int     valueDimension = 1);
-
-  /// All ranks Send their partition to remote local ranks.
-  virtual void sendMesh(
-    mesh::Mesh &mesh);
-  
-  /// All ranks receive mesh partition from remote local ranks.
-  virtual void receiveMesh(
-    mesh::Mesh &mesh);
-
-  /// All ranks Send their local communication maps to connected ranks
-  virtual void sendCommunicationMap(
-    mesh::Mesh::FeedbackMap &localCommunicationMap);
-
-  /// Each rank revives local communication maps from connected ranks
-  virtual void receiveCommunicationMap(
-    mesh::Mesh::FeedbackMap &localCommunicationMap) ;
 
 private:
   logging::Logger _log{"m2n::PointToPointCommunication"};
@@ -144,8 +109,6 @@ private:
   std::vector<Mapping> _mappings;
 
   bool _isConnected = false;
-
-  std::map<int, std::vector<int>> _localCommunicationMap;
 
   std::list<std::pair<std::shared_ptr<com::Request>,
                       std::shared_ptr<std::vector<double>>>> bufferedRequests;

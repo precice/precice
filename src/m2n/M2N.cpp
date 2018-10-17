@@ -105,32 +105,6 @@ void M2N::requestSlavesConnection(
   assertion(_areSlavesConnected);
 }
 
-void M2N::acceptSlavesPreConnection(
-    const std::string &nameAcceptor,
-    const std::string &nameRequester)
-{
-  TRACE(nameAcceptor, nameRequester);
-  _areSlavesConnected = true;
-  for (const auto &pair : _distComs) {
-    pair.second->acceptPreConnection(nameAcceptor, nameRequester);
-    _areSlavesConnected = _areSlavesConnected && pair.second->isConnected();
-    }
-  assertion(_areSlavesConnected);
-}
-
-void M2N::requestSlavesPreConnection(
-    const std::string &nameAcceptor,
-    const std::string &nameRequester)
-{
-  TRACE(nameAcceptor, nameRequester);
-  _areSlavesConnected = true;
-  for (const auto &pair : _distComs) {
-    pair.second->requestPreConnection(nameAcceptor, nameRequester);
-    _areSlavesConnected = _areSlavesConnected && pair.second->isConnected();
-    }
-  assertion(_areSlavesConnected);
-}
-
 void M2N::closeConnection()
 {
   TRACE();
@@ -206,29 +180,6 @@ void M2N::send(double itemToSend)
   }
 }
 
-void M2N::broadcastSendLocalMesh(mesh::Mesh &mesh)
-{
-  int meshID = mesh.getID();
-  if (utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode) {
-    assertion(_areSlavesConnected);
-//    assertion(_distComs.find(meshID) != _distComs.end());
-    assertion(_distComs[meshID].get() != nullptr);
-    
-    _distComs[meshID]->sendMesh(mesh);
-  } else { //coupling mode
-  }
-}
-
-void M2N::sendCommunicationMap(mesh::Mesh::FeedbackMap &localCommunicationMap, mesh::Mesh &mesh)
-{ 
-  if (utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode) {
-    int meshID = mesh.getID();
-    assertion(_areSlavesConnected);
-    _distComs[meshID]->sendCommunicationMap(localCommunicationMap);
-  } else { //coupling mode
-  }
-}
-
 void M2N::receive(double *itemsToReceive,
                   int     size,
                   int     meshID,
@@ -278,29 +229,6 @@ void M2N::receive(double &itemToReceive)
   utils::MasterSlave::broadcast(itemToReceive);
 
   DEBUG("receive(double): " << itemToReceive);
-}
-
-void M2N::broadcastReceiveLocalMesh(mesh::Mesh &mesh)
-{
-  int meshID = mesh.getID();
-  if (utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode) {
-    assertion(_areSlavesConnected);
-//    assertion(_distComs.find(meshID) != _distComs.end());
-    assertion(_distComs[meshID].get() != nullptr);
-
-    _distComs[meshID]->receiveMesh(mesh);
-  } else { //coupling mode
-  }
-}
-
-void M2N::receiveCommunicationMap(mesh::Mesh::FeedbackMap &localCommunicationMap, mesh::Mesh &mesh)
-{
-  if (utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode) {
-    int meshID = mesh.getID();
-    assertion(_areSlavesConnected);
-    _distComs[meshID]->receiveCommunicationMap(localCommunicationMap);
-  } else { //coupling mode
-  }
 }
 
 } // namespace m2n

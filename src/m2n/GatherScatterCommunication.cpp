@@ -46,15 +46,6 @@ void GatherScatterCommunication::requestConnection(
   _isConnected = true;
 }
 
-void GatherScatterCommunication::acceptPreConnection(
-  std::string const &nameAcceptor, std::string const &nameRequester)
-{}
-  
-void GatherScatterCommunication::requestPreConnection(
-  std::string const &nameAcceptor, std::string const &nameRequester)
-{}
-
-
 void GatherScatterCommunication::closeConnection()
 {
   TRACE();
@@ -183,24 +174,5 @@ void GatherScatterCommunication::receive(
   } //master
 }
 
-void GatherScatterCommunication::sendMesh(
-  mesh::Mesh &mesh)
-{}
-
-void GatherScatterCommunication::receiveMesh(
-  mesh::Mesh &mesh)
-{}
-
-void GatherScatterCommunication::sendCommunicationMap(
-  mesh::Mesh::FeedbackMap &localCommunicationMap)
-{}
-
-void GatherScatterCommunication::receiveCommunicationMap(
-  mesh::Mesh::FeedbackMap &localCommunicationMap)
-{}
-
-
 } // namespace m2n
 } // namespace precice
-
-
