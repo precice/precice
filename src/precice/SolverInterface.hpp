@@ -68,6 +68,9 @@ class SolverInterface
 {
 public:
 
+    ///@name Construction and Configuration
+    ///@{
+
   /**
    * @brief Constructor.
    *
@@ -104,6 +107,11 @@ public:
    * @param[in] configurationFileName Name (with path) of the xml configuration file to be read.
    */
   void configure ( const std::string& configurationFileName );
+
+  ///@}
+
+  /// @name Steering Methods
+  ///@{
 
   /**
    * @brief Fully initializes preCICE to be used.
@@ -178,6 +186,11 @@ public:
    */
   void finalize();
 
+  ///@}
+  
+  ///@name Status Queries
+  ///@{
+
   /**
    * @brief Returns the number of spatial dimensions configured.
    *
@@ -232,6 +245,25 @@ public:
   bool isTimestepComplete();
 
   /**
+   * @brief Returns whether the solver has to evaluate the surrogate model representation
+   *        It does not automatically imply, that the solver does not have to evaluate the
+   *        fine model representation
+   */
+  bool hasToEvaluateSurrogateModel();
+
+  /**
+   * @brief Returns whether the solver has to evaluate the fine model representation
+   *        It does not automatically imply, that the solver does not have to evaluate the
+   *        surrogate model representation
+   */
+  bool hasToEvaluateFineModel();
+
+  ///@}
+
+  ///@name Action Methods
+  ///@{
+
+  /**
    * @brief Returns true, if provided name of action is required.
    *
    * Some features of preCICE require a solver to perform specific actions, in
@@ -248,6 +280,20 @@ public:
    * For more details see method requireAction().
    */
   void fulfilledAction ( const std::string& action );
+
+  ///@}
+
+  ///@name Mesh Access
+  ///@{
+
+  /**
+   * @brief Resets mesh with given ID.
+   *
+   * Has to be called, everytime the positions for data to be mapped
+   * changes. Only has an effect, if the mapping used is non-stationary and
+   * non-incremental.
+   */
+//  void resetMesh ( int meshID );
 
   /**
    * @brief Returns true, if the mesh with given name is used.
@@ -266,39 +312,8 @@ public:
    */
   std::set<int> getMeshIDs();
 
-  /**
-   * @brief Returns true, if the data with given name is used.
-   */
-  bool hasData ( const std::string& dataName, int meshID ) const;
-
-  /**
-   * @brief Returns data id corresponding to the given name (from configuration)
-   */
-  int getDataID ( const std::string& dataName, int meshID );
-
-
-  /**
-   * @brief Returns whether the solver has to evaluate the surrogate model representation
-   *        It does not automatically imply, that the solver does not have to evaluate the
-   *        fine model representation
-   */
-  bool hasToEvaluateSurrogateModel();
-
-  /**
-   * @brief Returns whether the solver has to evaluate the fine model representation
-   *        It does not automatically imply, that the solver does not have to evaluate the
-   *        surrogate model representation
-   */
-  bool hasToEvaluateFineModel();
-
-  /**
-   * @brief Resets mesh with given ID.
-   *
-   * Has to be called, everytime the positions for data to be mapped
-   * changes. Only has an effect, if the mapping used is non-stationary and
-   * non-incremental.
-   */
-//  void resetMesh ( int meshID );
+  /// Returns a handle to a created mesh.
+  MeshHandle getMeshHandle ( const std::string& meshName );
 
   /**
    * @brief Sets position of surface mesh vertex, returns ID.
@@ -414,6 +429,22 @@ public:
     int secondVertexID,
     int thirdVertexID,
     int fourthVertexID );
+
+  ///@}
+
+  ///@name Data Access
+  ///@{
+
+  /**
+   * @brief Returns true, if the data with given name is used.
+   */
+  bool hasData ( const std::string& dataName, int meshID ) const;
+
+  /**
+   * @brief Returns data id corresponding to the given name (from configuration)
+   */
+  int getDataID ( const std::string& dataName, int meshID );
+
 
   /**
    * @brief Computes and maps all read data mapped to the mesh with given ID.
@@ -543,8 +574,7 @@ public:
     int     valueIndex,
     double& value );
 
-  /// Returns a handle to a created mesh.
-  MeshHandle getMeshHandle ( const std::string& meshName );
+  ///@}
 
 private:
 
