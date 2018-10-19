@@ -306,7 +306,7 @@ void Mesh:: computeState()
       }
       double length = normal.norm();
       assertion(math::greater(length, 0.0));
-      normal /= length;   // Scale normal vector to length 1
+      normal.normalize();   // Scale normal vector to length 1
       edge.setNormal(normal);
 
       // Accumulate normal in associated vertices
@@ -323,13 +323,11 @@ void Mesh:: computeState()
     // Compute triangle centers, radius, and normals
     for (Triangle& triangle : _content.triangles()) {
       assertion(not math::equals(triangle.vertex(0).getCoords(), triangle.vertex(1).getCoords()),
-                triangle.vertex(0).getCoords(),
-                triangle.getID());
-      assertion(not math::equals(triangle.vertex(1).getCoords(), triangle.vertex(2).getCoords()), triangle.vertex(1).getCoords(),
-                triangle.getID());
+                triangle.vertex(0).getCoords(), triangle.getID());
+      assertion(not math::equals(triangle.vertex(1).getCoords(), triangle.vertex(2).getCoords()),
+                triangle.vertex(1).getCoords(), triangle.getID());
       assertion(not math::equals(triangle.vertex(2).getCoords(), triangle.vertex(0).getCoords()),
-                triangle.vertex(2).getCoords(),
-                triangle.getID());
+                triangle.vertex(2).getCoords(), triangle.getID());
 
       // Compute normals
       if (computeNormals){
@@ -348,9 +346,7 @@ void Mesh:: computeState()
         }
 
         // Normalize triangle normal
-        double length = normal.norm();
-        normal /= length;
-        triangle.setNormal(normal);
+        triangle.setNormal(normal.normalized());
       }
     }
 
@@ -402,20 +398,15 @@ void Mesh:: computeState()
           quad.vertex(i).setNormal(quad.vertex(i).getNormal() + normal);
         }
 
-        // Normalize quad normal
-        normal = normal.normalized();
-        quad.setNormal(normal);
+        quad.setNormal(normal.normalized());
       }
     }
 
     // Normalize edge normals (only done in 3D)
     if (computeNormals){
       for (Edge& edge : _content.edges()) {
-        double length = edge.getNormal().norm();
         // there can be cases when an edge has no adjacent triangle though triangles exist in general (e.g. after filtering)
-        if(math::greater(length,0.0)){
-          edge.setNormal(edge.getNormal() / length);
-        }
+        edge.setNormal(edge.getNormal().normalized());
       }
     }
   }
@@ -427,11 +418,8 @@ void Mesh:: computeState()
 
   for (Vertex& vertex : _content.vertices()) {
     if (computeNormals) {
-      double length = vertex.getNormal().norm();
       // there can be cases when a vertex has no edge though edges exist in general (e.g. after filtering)
-      if(math::greater(length,0.0)){
-        vertex.setNormal(vertex.getNormal() / length);
-      }
+      vertex.setNormal(vertex.getNormal().normalized());
     }
     
     for (int d = 0; d < _dimensions; d++) {
