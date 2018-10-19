@@ -21,8 +21,7 @@ Quad::Quad(
     int   id)
   : _edges({&edgeOne, &edgeTwo, &edgeThree, &edgeFour}),
     _id(id),
-    _normal(Eigen::VectorXd::Zero(edgeOne.getDimensions())),
-    _center(edgeOne.getDimensions())
+    _normal(Eigen::VectorXd::Zero(edgeOne.getDimensions()))
 {
   assertion(edgeOne.getDimensions() == edgeTwo.getDimensions(),
             edgeOne.getDimensions(), edgeTwo.getDimensions());
@@ -114,9 +113,9 @@ const Eigen::VectorXd &Quad::getNormal() const
   return _normal;
 }
 
-const Eigen::VectorXd &Quad::getCenter() const
+const Eigen::VectorXd Quad::getCenter() const
 {
-  return _center;
+  return (_edges[0]->getCenter() + _edges[1]->getCenter() + _edges[2]->getCenter() + _edges[3]->getCenter()) / 4;
 }
 
 double Quad::getEnclosingRadius() const

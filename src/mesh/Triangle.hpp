@@ -106,10 +106,6 @@ public:
   template <typename VECTOR_T>
   void setNormal(const VECTOR_T &normal);
 
-  /// Sets the barycenter of the triangle.
-  template <typename VECTOR_T>
-  void setCenter(const VECTOR_T &center);
-
   /// Sets the radius of the circle enclosing the triangle.
   void setEnclosingRadius(double radius);
 
@@ -123,12 +119,8 @@ public:
    */
   const Eigen::VectorXd &getNormal() const;
 
-  /**
-   * @brief Returns the barycenter of the triangle.
-   *
-   * @pre The center has to be computed and set from outside before.
-   */
-  const Eigen::VectorXd &getCenter() const;
+  /// Returns the barycenter of the triangle.
+  const Eigen::VectorXd getCenter() const;
 
   /**
    * @brief Returns the radius of the circle enclosing the triangle.
@@ -161,9 +153,6 @@ private:
 
   /// Normal vector of the triangle.
   Eigen::VectorXd _normal;
-
-  /// Center point of the triangle.
-  Eigen::VectorXd _center;
 
   /// Minimal radius of circle enclosing the triangle.
   double _enclosingRadius = 0;
@@ -231,13 +220,6 @@ void Triangle::setNormal(
   _normal = normal;
 }
 
-template <typename VECTOR_T>
-void Triangle::setCenter(
-    const VECTOR_T &center)
-{
-  assertion(center.size() == getDimensions(), center.size(), getDimensions());
-  _center = center;
-}
 
 inline int Triangle::getID() const
 {

@@ -92,10 +92,6 @@ public:
   template <typename VECTOR_T>
   void setNormal(const VECTOR_T &normal);
 
-  /// Sets the center of the quad.
-  template <typename VECTOR_T>
-  void setCenter(const VECTOR_T &center);
-
   /// Sets the radius of the circle enclosing the quad.
   void setEnclosingRadius(double radius);
 
@@ -109,12 +105,8 @@ public:
    */
   const Eigen::VectorXd &getNormal() const;
 
-  /**
-   * @brief Returns the barycenter of the quad.
-   *
-   * @pre The center has to be computed and set from outside before.
-   */
-  const Eigen::VectorXd &getCenter() const;
+  /// Returns the barycenter of the quad.
+  const Eigen::VectorXd getCenter() const;
 
   /**
    * @brief Returns the radius of the circle enclosing the quad.
@@ -146,9 +138,6 @@ private:
 
   /// Normal vector of the quad.
   Eigen::VectorXd _normal;
-
-  /// Center point of the quad.
-  Eigen::VectorXd _center;
 
   /// Minimal radius of circle enclosing the quad.
   double _enclosingRadius = 0;
@@ -213,13 +202,6 @@ void Quad::setNormal(const VECTOR_T &normal)
 {
   assertion(normal.size() == getDimensions(), normal.size(), getDimensions());
   _normal = normal;
-}
-
-template <typename VECTOR_T>
-void Quad::setCenter(const VECTOR_T &center)
-{
-  assertion(center.size() == getDimensions(), center.size(), getDimensions());
-  _center = center;
 }
 
 inline int Quad::getID() const

@@ -298,10 +298,6 @@ void Mesh:: computeState()
   Eigen::VectorXd center(_dimensions);
   Eigen::VectorXd distanceToCenter(_dimensions);
   for (Edge& edge : _content.edges()) {
-    center = edge.vertex(0).getCoords();
-    center += edge.vertex(1).getCoords();
-    center *= 0.5;
-    edge.setCenter(center);
     distanceToCenter = edge.vertex(0).getCoords();
     distanceToCenter -= edge.getCenter();
     edge.setEnclosingRadius(distanceToCenter.norm());
@@ -339,14 +335,6 @@ void Mesh:: computeState()
       assertion(not math::equals(triangle.vertex(2).getCoords(), triangle.vertex(0).getCoords()),
                 triangle.vertex(2).getCoords(),
                 triangle.getID());
-
-      // Compute barycenter by using edge centers, since vertex order is not
-      // guaranteed.
-      auto center = triangle.edge(0).getCenter();
-      center += triangle.edge(1).getCenter();
-      center += triangle.edge(2).getCenter();
-      center /= 3.0;
-      triangle.setCenter(center);
 
       // Compute enclosing radius centered at barycenter
       Eigen::Vector3d toCenter = triangle.getCenter() - triangle.vertex(0).getCoords();
@@ -398,15 +386,6 @@ void Mesh:: computeState()
       assertion(not math::equals(quad.vertex(3).getCoords(), quad.vertex(0).getCoords()),
                 quad.vertex(3).getCoords(),
                 quad.getID());
-
-      // Compute barycenter by using edge centers, since vertex order is not
-      // guaranteed.
-      Eigen::VectorXd center = quad.edge(0).getCenter() +
-        quad.edge(1).getCenter() +
-        quad.edge(2).getCenter() +
-        quad.edge(3).getCenter();
-      center /= 4.0;
-      quad.setCenter(center);
 
       // Compute enclosing radius centered at barycenter
       Eigen::Vector3d toCenter = quad.getCenter() - quad.vertex(0).getCoords();

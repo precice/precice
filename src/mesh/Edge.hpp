@@ -48,10 +48,6 @@ public:
   template<typename VECTOR_T>
   void setNormal ( const VECTOR_T& normal );
 
-  /// Sets the center of the edge.
-  template<typename VECTOR_T>
-  void setCenter ( const VECTOR_T& center );
-
   /// Sets the radius of the circle enclosing the edge.
   void setEnclosingRadius ( double radius );
 
@@ -62,7 +58,7 @@ public:
   const Eigen::VectorXd& getNormal () const;
 
   /// Returns the center of the edge.
-  const Eigen::VectorXd& getCenter () const;
+  const Eigen::VectorXd getCenter () const;
 
   /// Returns the radius of the enclosing circle of the edge.
   double getEnclosingRadius () const;
@@ -88,9 +84,6 @@ private:
 
   /// Normal of the edge.
   Eigen::VectorXd _normal;
-
-  /// Center of the edge.
-  Eigen::VectorXd _center;
 
   /// Radius of the enclosing circle.
   double _enclosingRadius = 0;
@@ -127,16 +120,6 @@ void Edge:: setNormal
   assertion ( normal.size() == _vertices[0]->getDimensions(), normal,
                _vertices[0]->getDimensions() );
   _normal = normal;
-}
-
-template<typename VECTOR_T>
-void Edge:: setCenter
-(
-  const VECTOR_T& center )
-{
-  assertion ( center.size() == _vertices[0]->getDimensions(), center,
-               _vertices[0]->getDimensions() );
-  _center = center;
 }
 
 inline const Eigen::VectorXd& Edge::getNormal () const
