@@ -1,3 +1,5 @@
+#include <sstream>
+
 #include "mesh/Edge.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
@@ -199,6 +201,21 @@ BOOST_AUTO_TEST_CASE(TriangleEquality)
   BOOST_TEST(triangle1 == triangle2);
   BOOST_TEST(triangle1 != triangle3);
   BOOST_TEST(triangle4 != triangle3);
+}
+
+BOOST_AUTO_TEST_CASE(TriangleWKTPrint)
+{
+    Vertex v1(Eigen::Vector3d(0.,0.,0.), 0);
+    Vertex v2(Eigen::Vector3d(0.,1.,0.), 0);
+    Vertex v3(Eigen::Vector3d(1.,0.,0.), 0);
+    Edge e1(v1, v2, 0);
+    Edge e2(v2, v3, 0);
+    Edge e3(v3, v1, 0);
+    Triangle t1(e1, e2, e3, 0);
+    std::stringstream stream;
+    stream << t1;
+    std::string t1string("POLYGON ((0 0 0, 0 1 0, 1 0 0, 0 0 0))");
+    BOOST_TEST(t1string == stream.str());
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Mesh

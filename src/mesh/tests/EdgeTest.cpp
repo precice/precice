@@ -18,6 +18,7 @@ BOOST_AUTO_TEST_CASE(Edges)
    BOOST_TEST ( coords1 == Eigen::Vector3d::Constant(0.0) );
    BOOST_TEST ( coords2 == Eigen::Vector3d::Constant(1.0) );
 }
+
 BOOST_AUTO_TEST_CASE(EdgeEquality)
 {
    Vertex v1 (Eigen::Vector3d(0,0,0), 0);
@@ -33,4 +34,21 @@ BOOST_AUTO_TEST_CASE(EdgeEquality)
    BOOST_TEST(edge3 != edge4);
 }
 
+BOOST_AUTO_TEST_CASE(EdgeWKTPrint)
+{
+    Vertex v1(Eigen::Vector2d(1., 2.), 0);
+    Vertex v2(Eigen::Vector2d(2., 3.), 0);
+    Edge e1(v1, v2, 0);
+    std::stringstream e1stream;
+    e1stream << e1;
+    std::string e1str("LINESTRING (1 2, 2 3)");
+    BOOST_TEST(e1str == e1stream.str());
+    Vertex v3(Eigen::Vector3d(1.,2.,3.), 0);
+    Vertex v4(Eigen::Vector3d(3.,2.,1.), 0);
+    Edge e2(v3, v4, 0);
+    std::stringstream e2stream;
+    e2stream << e2;
+    std::string e2str("LINESTRING (1 2 3, 3 2 1)");
+    BOOST_TEST(e2str == e2stream.str());
+}
 BOOST_AUTO_TEST_SUITE_END() // Mesh

@@ -100,9 +100,13 @@ double Triangle::getEnclosingRadius() const
 
 std::ostream& operator<<(std::ostream& os, const Triangle& t)
 {
-  return os << "Triangle " << t.getID() << " defined by:\n"
-      << "\t" << t.edge(0) << "\t" << t.edge(1)
-      << "\t" << t.edge(2);
+    os << "POLYGON ((";
+    for (int i = 0; i < 3; i++){
+        os << t.vertex(i).getCoords().transpose();
+        if (i < 2)
+            os << ", ";
+    }
+    return os <<", " << t.vertex(0).getCoords().transpose() << "))";
 }
 
 bool Triangle::operator==(const Triangle& other) const

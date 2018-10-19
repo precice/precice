@@ -126,9 +126,13 @@ double Quad::getEnclosingRadius() const
 
 std::ostream& operator<<(std::ostream& os, const Quad& q)
 {
-  return os << "Quad " << q.getID() << " defined by:\n"
-      << "\t" << q.edge(0) << "\t" << q.edge(1)
-      << "\t" << q.edge(2) << "\t" << q.edge(3);
+    os << "POLYGON ((";
+    for (int i = 0; i < 4; i++){
+        os << q.vertex(i).getCoords().transpose();
+        if (i < 3)
+            os << ", ";
+    }
+    return os <<", " << q.vertex(0).getCoords().transpose() << "))";
 }
 
 bool Quad::operator==(const Quad& other) const
