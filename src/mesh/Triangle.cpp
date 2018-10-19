@@ -76,12 +76,6 @@ int Triangle::getDimensions() const
   return _edges[0]->getDimensions();
 }
 
-void Triangle::setEnclosingRadius(
-    double radius)
-{
-  _enclosingRadius = radius;
-}
-
 const Eigen::VectorXd &Triangle::getNormal() const
 {
   return _normal;
@@ -94,7 +88,10 @@ const Eigen::VectorXd Triangle::getCenter() const
 
 double Triangle::getEnclosingRadius() const
 {
-  return _enclosingRadius;
+  auto center = getCenter();
+  return std::max({(center - vertex(0).getCoords()).norm(),
+                   (center - vertex(1).getCoords()).norm(),
+                   (center - vertex(2).getCoords()).norm()});
 }
 
 bool Triangle::operator==(const Triangle& other) const

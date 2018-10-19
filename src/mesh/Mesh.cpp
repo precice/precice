@@ -295,12 +295,7 @@ void Mesh:: computeState()
   }
 
   // Compute edge centers, enclosing radius, and (in 2D) edge normals
-  Eigen::VectorXd center(_dimensions);
-  Eigen::VectorXd distanceToCenter(_dimensions);
   for (Edge& edge : _content.edges()) {
-    distanceToCenter = edge.vertex(0).getCoords();
-    distanceToCenter -= edge.getCenter();
-    edge.setEnclosingRadius(distanceToCenter.norm());
     if (_dimensions == 2 && computeNormals){
       // Compute normal
       Eigen::VectorXd vectorA = edge.vertex(1).getCoords();
@@ -335,19 +330,6 @@ void Mesh:: computeState()
       assertion(not math::equals(triangle.vertex(2).getCoords(), triangle.vertex(0).getCoords()),
                 triangle.vertex(2).getCoords(),
                 triangle.getID());
-
-      // Compute enclosing radius centered at barycenter
-      Eigen::Vector3d toCenter = triangle.getCenter() - triangle.vertex(0).getCoords();
-      double distance0 = toCenter.norm();
-      toCenter = triangle.getCenter() - triangle.vertex(1).getCoords();
-      double distance1 = toCenter.norm();
-      toCenter = triangle.getCenter() - triangle.vertex(2).getCoords();
-      double distance2 = toCenter.norm();
-      double maxDistance = std::max( {distance0, distance1, distance2} );
-      // maxDistance = distance1 > maxDistance ? distance1 : maxDistance;
-      // maxDistance = distance2 > maxDistance ? distance2 : maxDistance;
-      
-      triangle.setEnclosingRadius(maxDistance);
 
       // Compute normals
       if (computeNormals){
@@ -387,22 +369,6 @@ void Mesh:: computeState()
                 quad.vertex(3).getCoords(),
                 quad.getID());
 
-      // Compute enclosing radius centered at barycenter
-      Eigen::Vector3d toCenter = quad.getCenter() - quad.vertex(0).getCoords();
-      double distance0 = toCenter.norm();
-      toCenter = quad.getCenter() - quad.vertex(1).getCoords();
-      double distance1 = toCenter.norm();
-      toCenter = quad.getCenter() - quad.vertex(2).getCoords();
-      double distance2 = toCenter.norm();
-      toCenter = quad.getCenter() - quad.vertex(3).getCoords();
-      double distance3 = toCenter.norm();
-      double maxDistance = std::max( {distance0, distance1, distance2, distance3} );
-      // maxDistance = distance1 > maxDistance ? distance1 : maxDistance;
-      // maxDistance = distance2 > maxDistance ? distance2 : maxDistance;
-      // maxDistance = distance3 > maxDistance ? distance3 : maxDistance;
-      quad.setEnclosingRadius(maxDistance);
-
-
       // Compute normals (assuming all vertices are on same plane)
       if (computeNormals){
         // Two triangles are thought by splitting the quad from vertex 0 to 2.
@@ -437,8 +403,6 @@ void Mesh:: computeState()
         }
 
         // Normalize quad normal
-        // double length = normal.norm();
-        // normal /= length;
         normal = normal.normalized();
         quad.setNormal(normal);
       }

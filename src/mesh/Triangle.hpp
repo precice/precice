@@ -106,9 +106,6 @@ public:
   template <typename VECTOR_T>
   void setNormal(const VECTOR_T &normal);
 
-  /// Sets the radius of the circle enclosing the triangle.
-  void setEnclosingRadius(double radius);
-
   /// Returns a among triangles globally unique ID.
   int getID() const;
 
@@ -122,11 +119,7 @@ public:
   /// Returns the barycenter of the triangle.
   const Eigen::VectorXd getCenter() const;
 
-  /**
-   * @brief Returns the radius of the circle enclosing the triangle.
-   *
-   * @pre The radius has to be computed and set from outside before.
-   */
+  /// Returns the radius of the circle enclosing the triangle.
   double getEnclosingRadius() const;
 
   /**
@@ -153,9 +146,6 @@ private:
 
   /// Normal vector of the triangle.
   Eigen::VectorXd _normal;
-
-  /// Minimal radius of circle enclosing the triangle.
-  double _enclosingRadius = 0;
 };
 
 // --------------------------------------------------------- HEADER DEFINITIONS

@@ -103,11 +103,6 @@ int Quad::getDimensions() const
   return _edges[0]->getDimensions();
 }
 
-void Quad::setEnclosingRadius(double radius)
-{
-  _enclosingRadius = radius;
-}
-
 const Eigen::VectorXd &Quad::getNormal() const
 {
   return _normal;
@@ -120,7 +115,11 @@ const Eigen::VectorXd Quad::getCenter() const
 
 double Quad::getEnclosingRadius() const
 {
-  return _enclosingRadius;
+  auto center = getCenter();
+  return std::max({(center - vertex(0).getCoords()).norm(),
+                   (center - vertex(1).getCoords()).norm(),
+                   (center - vertex(2).getCoords()).norm(),
+                   (center - vertex(3).getCoords()).norm()});
 }
 
 bool Quad::operator==(const Quad& other) const
