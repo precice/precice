@@ -584,23 +584,6 @@ const std::vector<double> Mesh::getCOG() const
   return cog;
 }
 
-std::ostream& operator<<(std::ostream& os, const Mesh& m)
-{
-  os << "Mesh " << m.getName() << " consisting the Vertices:\n";
-  for (auto& vertex : m.content().edges())
-      os << "\t" << vertex;
-  os << "And the Edges:\n";
-  for (auto& edge : m.content().edges())
-      os << "\t" << edge;
-  os << "And the Triangles:\n";
-  for (auto& triangle : m.content().edges())
-      os << "\t" << triangle;
-  os << "And the Quads:\n";
-  for (auto& quad : m.content().quads())
-      os << "\t" << quad;
-  return os;
-}
-
 bool Mesh::operator==(const Mesh& other) const
 {
     auto& myContent = _content;
@@ -619,6 +602,23 @@ bool Mesh::operator==(const Mesh& other) const
 bool Mesh::operator!=(const Mesh& other) const
 {
     return !(*this == other);
+}
+
+std::ostream& operator<<(std::ostream& os, const Mesh& m)
+{
+  os << "Mesh " << m.getName() << " consisting the Vertices:\n";
+  for (auto& vertex : m.content().edges())
+      os << "\t" << vertex;
+  os << "And the Edges:\n";
+  for (auto& edge : m.content().edges())
+      os << "\t" << edge;
+  os << "And the Triangles:\n";
+  for (auto& triangle : m.content().edges())
+      os << "\t" << triangle;
+  os << "And the Quads:\n";
+  for (auto& quad : m.content().quads())
+      os << "\t" << quad;
+  return os;
 }
 
 }} // namespace precice, mesh
