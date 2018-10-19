@@ -48,9 +48,6 @@ public:
   template<typename VECTOR_T>
   void setNormal ( const VECTOR_T& normal );
 
-  /// Sets the radius of the circle enclosing the edge.
-  void setEnclosingRadius ( double radius );
-
   /// Returns the (among edges) unique ID of the edge.
   int getID () const;
 
@@ -84,9 +81,6 @@ private:
 
   /// Normal of the edge.
   Eigen::VectorXd _normal;
-
-  /// Radius of the enclosing circle.
-  double _enclosingRadius = 0;
 };
 
 // ------------------------------------------------------ HEADER IMPLEMENTATION

@@ -17,13 +17,6 @@ Edge:: Edge
               vertexOne.getDimensions(), vertexTwo.getDimensions() );
 }
 
-void Edge:: setEnclosingRadius
-(
-  double radius )
-{
-  _enclosingRadius = radius;
-}
-
 int Edge:: getID () const
 {
   return _id;
@@ -36,7 +29,7 @@ const Eigen::VectorXd Edge::getCenter () const
 
 double Edge:: getEnclosingRadius () const
 {
-  return _enclosingRadius;
+  return (_vertices[0]->getCoords() - getCenter()).norm();
 }
 
 bool Edge::operator==(const Edge& other) const
