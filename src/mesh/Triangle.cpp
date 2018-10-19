@@ -21,8 +21,7 @@ Triangle::Triangle(
     : PropertyContainer(),
       _edges({&edgeOne, &edgeTwo, &edgeThree}),
       _id(id),
-      _normal(Eigen::VectorXd::Zero(edgeOne.getDimensions())),
-      _center(edgeOne.getDimensions())
+      _normal(Eigen::VectorXd::Zero(edgeOne.getDimensions()))
 {
   assertion(edgeOne.getDimensions() == edgeTwo.getDimensions(),
             edgeOne.getDimensions(), edgeTwo.getDimensions());
@@ -88,9 +87,9 @@ const Eigen::VectorXd &Triangle::getNormal() const
   return _normal;
 }
 
-const Eigen::VectorXd &Triangle::getCenter() const
+const Eigen::VectorXd Triangle::getCenter() const
 {
-  return _center;
+  return (_edges[0]->getCenter() +_edges[1]->getCenter() + _edges[2]->getCenter()) / 3.0;
 }
 
 double Triangle::getEnclosingRadius() const

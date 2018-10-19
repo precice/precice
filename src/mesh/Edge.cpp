@@ -11,8 +11,7 @@ Edge:: Edge
 :
   _vertices( {&vertexOne, &vertexTwo} ),
   _id ( id ),
-  _normal ( Eigen::VectorXd::Constant(vertexOne.getDimensions(), 0.0) ),
-  _center ( Eigen::VectorXd::Constant(vertexOne.getDimensions(), 0.0) )
+  _normal ( Eigen::VectorXd::Constant(vertexOne.getDimensions(), 0.0) )
 {
   assertion ( vertexOne.getDimensions() == vertexTwo.getDimensions(),
               vertexOne.getDimensions(), vertexTwo.getDimensions() );
@@ -30,9 +29,9 @@ int Edge:: getID () const
   return _id;
 }
 
-const Eigen::VectorXd& Edge::getCenter () const
+const Eigen::VectorXd Edge::getCenter () const
 {
-  return _center;
+  return 0.5 * (_vertices[0]->getCoords() + _vertices[1]->getCoords());
 }
 
 double Edge:: getEnclosingRadius () const
