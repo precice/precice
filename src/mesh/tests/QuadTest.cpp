@@ -1,3 +1,5 @@
+#include <sstream>
+
 #include "mesh/Edge.hpp"
 #include "mesh/Quad.hpp"
 #include "mesh/Vertex.hpp"
@@ -158,5 +160,21 @@ BOOST_AUTO_TEST_CASE(QuadEquality)
   quad2n.setNormal(Vector3d(0.,0.,1.));
   BOOST_TEST(quad2 != quad1);
   BOOST_TEST(quad2 != quad2n);
+}
+BOOST_AUTO_TEST_CASE(QuadWKTPrint)
+{
+    Vertex v1(Eigen::Vector3d(0.,0.,0.), 0);
+    Vertex v2(Eigen::Vector3d(0.,1.,0.), 0);
+    Vertex v3(Eigen::Vector3d(1.,1.,0.), 0);
+    Vertex v4(Eigen::Vector3d(1.,0.,0.), 0);
+    Edge e1(v1, v2, 0);
+    Edge e2(v2, v3, 0);
+    Edge e3(v3, v4, 0);
+    Edge e4(v4, v1, 0);
+    Quad q1(e1, e2, e3, e4, 0);
+    std::stringstream stream;
+    stream << q1;
+    std::string q1string("POLYGON ((0 0 0, 0 1 0, 1 1 0, 1 0 0, 0 0 0))");
+    BOOST_TEST(q1string == stream.str());
 }
 BOOST_AUTO_TEST_SUITE_END() // Mesh

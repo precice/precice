@@ -41,8 +41,13 @@ double Edge:: getEnclosingRadius () const
 }
 
 std::ostream& operator<<(std::ostream& stream, const Edge& edge){
-    return stream << "Edge " << edge.getID() << " defined by\n"
-        << "\t" << edge.vertex(0) << "\t" << edge.vertex(1);
+    stream << "LINESTRING (";
+    for (int i = 0; i < 2; i++){
+        stream << edge.vertex(i).getCoords().transpose();
+        if (i < 1)
+            stream << ", ";
+    }
+    return stream << ")";
 }
 
 bool Edge::operator==(const Edge& other) const

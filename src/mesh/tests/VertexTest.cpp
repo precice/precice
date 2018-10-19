@@ -31,4 +31,18 @@ BOOST_AUTO_TEST_CASE(VertexEquality)
     BOOST_TEST(v1 != v3);
     BOOST_TEST(v2 != v3);
 }
+BOOST_AUTO_TEST_CASE(VertexWKTPrint)
+{
+    using namespace mesh;
+    Vertex v1(Eigen::Vector2d(1., 2.), 0);
+    std::stringstream v1stream;
+    v1stream << v1;
+    std::string v1str("POINT (1 2)");
+    BOOST_TEST(v1str == v1stream.str());
+    Vertex v2(Eigen::Vector3d(1., 2., 3.), 0);
+    std::stringstream v2stream;
+    v2stream << v2;
+    std::string v2str("POINT (1 2 3)");
+    BOOST_TEST(v2str == v2stream.str());
+}
 BOOST_AUTO_TEST_SUITE_END() // Mesh
