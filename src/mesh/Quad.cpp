@@ -124,17 +124,6 @@ double Quad::getEnclosingRadius() const
   return _enclosingRadius;
 }
 
-std::ostream& operator<<(std::ostream& os, const Quad& q)
-{
-    os << "POLYGON ((";
-    for (int i = 0; i < 4; i++){
-        os << q.vertex(i).getCoords().transpose();
-        if (i < 3)
-            os << ", ";
-    }
-    return os <<", " << q.vertex(0).getCoords().transpose() << "))";
-}
-
 bool Quad::operator==(const Quad& other) const
 {
     return math::equals(_normal, other._normal) &&
@@ -145,6 +134,17 @@ bool Quad::operator==(const Quad& other) const
 bool Quad::operator!=(const Quad& other) const
 {
   return !(*this == other);
+}
+
+std::ostream& operator<<(std::ostream& os, const Quad& q)
+{
+    os << "POLYGON ((";
+    for (int i = 0; i < 4; i++){
+        os << q.vertex(i).getCoords().transpose();
+        if (i < 3)
+            os << ", ";
+    }
+    return os <<", " << q.vertex(0).getCoords().transpose() << "))";
 }
 
 } // namespace mesh

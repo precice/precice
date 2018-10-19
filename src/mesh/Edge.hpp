@@ -67,8 +67,15 @@ public:
   /// Returns the radius of the enclosing circle of the edge.
   double getEnclosingRadius () const;
 
+  /**
+   * @brief Compares two Edges for equality
+   *
+   * Two Edges are equal if their normal vector is equal AND
+   * if the two vertices are equal, whereas the order of vertices is NOT important.
+   */
   bool operator==(const Edge& other) const;
 
+  /// Not equal, implemented in terms of equal.
   bool operator!=(const Edge& other) const;
 
 private:

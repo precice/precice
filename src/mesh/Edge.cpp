@@ -40,16 +40,6 @@ double Edge:: getEnclosingRadius () const
   return _enclosingRadius;
 }
 
-std::ostream& operator<<(std::ostream& stream, const Edge& edge){
-    stream << "LINESTRING (";
-    for (int i = 0; i < 2; i++){
-        stream << edge.vertex(i).getCoords().transpose();
-        if (i < 1)
-            stream << ", ";
-    }
-    return stream << ")";
-}
-
 bool Edge::operator==(const Edge& other) const
 {
     return math::equals(_normal, other._normal) &&
@@ -60,4 +50,15 @@ bool Edge::operator!=(const Edge& other) const
 {
   return !(*this == other);
 }
+
+std::ostream& operator<<(std::ostream& stream, const Edge& edge){
+    stream << "LINESTRING (";
+    for (int i = 0; i < 2; i++){
+        stream << edge.vertex(i).getCoords().transpose();
+        if (i < 1)
+            stream << ", ";
+    }
+    return stream << ")";
+}
+
 }} // namespace precice, mesh

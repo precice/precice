@@ -124,17 +124,18 @@ inline const Eigen::VectorXd& Vertex::getCoords() const
 }
 
 
-/// Make Vertex printable
-std::ostream& operator<<(std::ostream& os, const Vertex& v);
+inline bool Vertex::operator==(const Vertex& rhs) const 
+{
+    return math::equals(_coords, rhs._coords);
+}
 
 inline bool Vertex::operator!=(const Vertex& rhs) const
 {
     return !(*this == rhs);
 }
-inline bool Vertex::operator==(const Vertex& rhs) const 
-{
-    return math::equals(_coords, rhs._coords);
-}
+
+/// Make Vertex printable
+std::ostream& operator<<(std::ostream& os, const Vertex& v);
 
 }} // namespace precice, mesh
 

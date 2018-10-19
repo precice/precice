@@ -105,26 +105,33 @@ public:
   /**
    * @brief Returns the outer normal of the quad.
    *
-   * Prerequesits: The normal has to be computed and set from outside before.
+   * @pre The normal has to be computed and set from outside before.
    */
   const Eigen::VectorXd &getNormal() const;
 
   /**
    * @brief Returns the barycenter of the quad.
    *
-   * Prerequesits: The center has to be computed and set from outside before.
+   * @pre The center has to be computed and set from outside before.
    */
   const Eigen::VectorXd &getCenter() const;
 
   /**
    * @brief Returns the radius of the circle enclosing the quad.
    *
-   * Prerequesits: The radius has to be computed and set from outside before.
+   * @pre The radius has to be computed and set from outside before.
    */
   double getEnclosingRadius() const;
 
+  /**
+   * @brief Compares two Quads for equality
+   *
+   * Two Quads are equal if their normal vector is equal AND
+   * if the four edges are equal, whereas the order of edges is NOT important.
+   */
   bool operator==(const Quad& other) const;
 
+  /// Not equal, implemented in terms of equal.
   bool operator!=(const Quad& other) const;
 
 private:
@@ -221,5 +228,6 @@ inline int Quad::getID() const
 }
 
 std::ostream& operator<<(std::ostream& os, const Quad& q);
+
 } // namespace mesh
 } // namespace precice

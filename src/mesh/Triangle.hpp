@@ -137,8 +137,15 @@ public:
    */
   double getEnclosingRadius() const;
 
+  /**
+   * @brief Compares two Triangles for equality
+   *
+   * Two Triangles are equal if their normal vector is equal AND
+   * if the three edges are equal, whereas the order of edges is NOT important.
+   */
   bool operator==(const Triangle& other) const;
 
+  /// Not equal, implemented in terms of equal.
   bool operator!=(const Triangle& other) const;
 
 private:

@@ -98,17 +98,6 @@ double Triangle::getEnclosingRadius() const
   return _enclosingRadius;
 }
 
-std::ostream& operator<<(std::ostream& os, const Triangle& t)
-{
-    os << "POLYGON ((";
-    for (int i = 0; i < 3; i++){
-        os << t.vertex(i).getCoords().transpose();
-        if (i < 2)
-            os << ", ";
-    }
-    return os <<", " << t.vertex(0).getCoords().transpose() << "))";
-}
-
 bool Triangle::operator==(const Triangle& other) const
 {
     return math::equals(_normal, other._normal) &&
@@ -119,6 +108,17 @@ bool Triangle::operator==(const Triangle& other) const
 bool Triangle::operator!=(const Triangle& other) const
 {
     return !(*this == other);
+}
+
+std::ostream& operator<<(std::ostream& os, const Triangle& t)
+{
+    os << "POLYGON ((";
+    for (int i = 0; i < 3; i++){
+        os << t.vertex(i).getCoords().transpose();
+        if (i < 2)
+            os << ", ";
+    }
+    return os <<", " << t.vertex(0).getCoords().transpose() << "))";
 }
 
 } // namespace mesh
