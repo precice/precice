@@ -47,8 +47,13 @@ public:
   typedef utils::ptr_vector<Quad>                QuadContainer;
   typedef std::vector<PtrData>                   DataContainer;
   typedef utils::ptr_vector<PropertyContainer>   PropertyContainerContainer;
+  /// a vector of pairs that represents the physical range of vertices owned by a rank. 
   typedef std::vector<std::pair<double, double>> BoundingBox;
+  /// set of boundingboxes owned by each rank gathered in the master rank.
+  /// A map : each rank -> boundingbox around it's mesh partition.
   typedef std::map<int,BoundingBox>              BoundingBoxMap;
+  /// a map from rank -> a vector of ranks : shows each rank is connected
+  /// to which ranks of the other participant. 
   typedef std::map<int, std::vector<int>>        FeedbackMap; 
 
   /// A mapping from rank to used (not necessarily owned) vertex IDs

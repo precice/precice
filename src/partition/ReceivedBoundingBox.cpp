@@ -7,9 +7,6 @@
 #include "utils/EventTimings.hpp"
 #include "mapping/Mapping.hpp"
 #include "mesh/Mesh.hpp"
-#include "mesh/Vertex.hpp"
-#include "mesh/Edge.hpp"
-#include "mesh/Triangle.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/MasterSlave.hpp"
 #include <vector>
@@ -19,8 +16,6 @@ using precice::utils::Event;
 
 namespace precice {
 namespace partition {
-
-logging::Logger ReceivedBoundingBox:: _log ( "precice::partition::ReceivedBoundingBox" );
 
 ReceivedBoundingBox::ReceivedBoundingBox
 (
@@ -60,40 +55,14 @@ void ReceivedBoundingBox::communicateBoundingBox()
 void ReceivedBoundingBox::computeBoundingBox()
 {
   // handle coupling mode first (i.e. serial participant)
+
+
   if (not utils::MasterSlave::_slaveMode && not utils::MasterSlave::_masterMode)
   { 
     //some code here
   }
 
-  if (utils::MasterSlave::_slaveMode)
-  {
-    utils::MasterSlave::_communication->broadcast(_remoteParComSize, 0);
-
-    // initializing the _globalBB
-    for (int remoteRank = 0; remoteRank < _remoteParComSize; remoteRank++ )
-    {
-      _globalBB[remoteRank]= _bb;
-    }
-    
-    // receive _globalBB from master
-    com::CommunicateBoundingBox(utils::MasterSlave::_communication).broadcastReceiveBoundingBoxMap(_globalBB);
-    _numberOfRemoteRanks = _globalBB.size();      
-
-    // received bounding boxes are comapred with each rank bb
-    if (_numberOfRemoteRanks>0)
-    {
-      for (auto &other_rank: _globalBB)
-      {
-        if (compareBoundingBox(_bb,other_rank.second)) {
-          _feedback.push_back(other_rank.first);            
-        }
-      }
-    } 
-
-    //send feedback to master
-    utils::MasterSlave::_communication->send(_feedback, 0);     
-  }
-  else if (utils::MasterSlave::_masterMode)
+  if (utils::MasterSlave::_masterMode)
   { // Master
     assertion(utils::MasterSlave::_rank==0);
     assertion(utils::MasterSlave::_size>1);
@@ -101,7 +70,6 @@ void ReceivedBoundingBox::computeBoundingBox()
     _m2n->getMasterCommunication()->send(utils::MasterSlave::_size , 0);
     utils::MasterSlave::_communication->broadcast(_remoteParComSize);
     com::CommunicateBoundingBox(utils::MasterSlave::_communication).broadcastSendBoundingBoxMap(_globalBB);
-    _numberOfRemoteRanks = _globalBB.size();
 
     // initializing _feedbackmap
     for (int rank_slave=1; rank_slave < utils::MasterSlave::_size ; rank_slave++)
@@ -109,7 +77,7 @@ void ReceivedBoundingBox::computeBoundingBox()
       _feedbackMap[rank_slave].push_back(-1);        
     }
 
-    // master produces its own feedback
+    // master produces its own feedback  //*** Amin : check to see this is necessary!!
     for (auto &other_rank: _globalBB)
     {
       if (compareBoundingBox(_bb,other_rank.second))
@@ -131,24 +99,83 @@ void ReceivedBoundingBox::computeBoundingBox()
     // master sends feedbackmap to other master
     com::CommunicateBoundingBox(_m2n->getMasterCommunication()).sendFeedbackMap(_feedbackMap,0);             
   }
-
-
-  if (utils::MasterSlave::_masterMode)
-  {
-    for (int i = 0; i < _remoteParComSize; i++)
-    {
-      int counter=0;
-      _m2n->getMasterCommunication()->receive(counter, 0);
-      _vertexCounters.push_back(counter);
-    }   
-    utils::MasterSlave::_communication->broadcast(_vertexCounters);
-  }
   else if (utils::MasterSlave::_slaveMode)
-  {    
-    utils::MasterSlave::_communication->broadcast(_vertexCounters, 0);  
+  {
+    utils::MasterSlave::_communication->broadcast(_remoteParComSize, 0);
+
+    // initializing the _globalBB
+    for (int remoteRank = 0; remoteRank < _remoteParComSize; remoteRank++ )
+    {
+      _globalBB[remoteRank]= _bb;
+    }
+    
+    // receive _globalBB from master
+    com::CommunicateBoundingBox(utils::MasterSlave::_communication).broadcastReceiveBoundingBoxMap(_globalBB);
+
+
+    for (auto &other_rank: _globalBB)
+    {
+      if (compareBoundingBox(_bb,other_rank.second)) {
+        _feedback.push_back(other_rank.first);            
+      }
+    }   
+
+    //send feedback to master
+    utils::MasterSlave::_communication->send(_feedback, 0);     
   }  
 }
 
+bool ReceivedBoundingBox::compareBoundingBox(mesh::Mesh::BoundingBox currentBB, mesh::Mesh::BoundingBox receivedBB)
+{
+  //int sizeofBB = currentBB.size();
+  bool intersect=1;
+
+  for (int i=0; i < _dimensions; i++) {
+
+    if ((currentBB[i].first < receivedBB[i].first && currentBB[i].second < receivedBB[i].first) || (receivedBB[i].first < currentBB[i].first && receivedBB[i].second < currentBB[i].first) ) {
+
+      intersect = 0;
+      i=_dimensions;
+    }
+  }
+  return intersect;
+}
+
+void ReceivedBoundingBox::prepareBoundingBox(){
+  TRACE(_safetyFactor);
+
+  _bb.resize(_dimensions, std::make_pair(std::numeric_limits<double>::max(), std::numeric_limits<double>::lowest()));
+
+  //create BB around both "other" meshes
+  if (_fromMapping.use_count()>0) {
+    auto other_bb = _fromMapping->getOutputMesh()->getBoundingBox();
+    for (int d=0; d < _dimensions; d++) {
+      if (_bb[d].first > other_bb[d].first) _bb[d].first = other_bb[d].first;
+      if (_bb[d].second < other_bb[d].second) _bb[d].second = other_bb[d].second;
+    }
+  }
+  if (_toMapping.use_count()>0) {
+    auto other_bb = _toMapping->getInputMesh()->getBoundingBox();
+    for (int d=0; d<_dimensions; d++) {
+      if (_bb[d].first > other_bb[d].first) _bb[d].first = other_bb[d].first;
+      if (_bb[d].second < other_bb[d].second) _bb[d].second = other_bb[d].second;
+    }
+  }
+
+  //enlarge BB
+  assertion(_safetyFactor>=0.0);
+
+  double maxSideLength = 1e-6; // we need some minimum > 0 here
+
+  for (int d=0; d<_dimensions; d++) {
+    maxSideLength = std::max(maxSideLength, _bb[d].second - _bb[d].first);
+  }
+  for (int d=0; d<_dimensions; d++) {
+    _bb[d].second += _safetyFactor * maxSideLength;
+    _bb[d].first -= _safetyFactor * maxSideLength;
+    DEBUG("Merged BoundingBox, dim: " << d << ", first: " << _bb[d].first << ", second: " << _bb[d].second);
+  }
+}
 
 
 }}

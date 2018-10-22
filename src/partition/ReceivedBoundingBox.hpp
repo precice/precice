@@ -9,22 +9,6 @@
 
 // Forward delcration to friend the boost test struct
 
-namespace PartitionTests {
-namespace ReceivedBoundingBoxTests {
-struct TestReceivedBoundingBox2D;
-struct TestReceivedBoundingBox3D;
-struct TestM2NMeshExchange;
-}
-}
-
-namespace PartitionTests {
-namespace ProvidedBoundingBoxTests {
-struct TestProvidedBoundingBox2D;
-struct TestProvidedBoundingBox3D;
-struct TestM2NMeshExchange;
-}
-}
-
 namespace precice {
 namespace partition {
 /**
@@ -58,21 +42,16 @@ public:
 //  virtual void compute ();
   virtual void communicateBoundingBox();
   virtual void computeBoundingBox();  
-  friend struct PartitionTests::ReceivedBoundingBoxTests::TestReceivedBoundingBox2D;
-  friend struct PartitionTests::ReceivedBoundingBoxTests::TestReceivedBoundingBox3D;
-  friend struct PartitionTests::ProvidedBoundingBoxTests::TestProvidedBoundingBox2D;
-  friend struct PartitionTests::ProvidedBoundingBoxTests::TestProvidedBoundingBox3D;
-  friend struct PartitionTests::ProvidedBoundingBoxTests::TestM2NMeshExchange;
-
   
 private:
 
+  logging::Logger _log{"partition::ReceivedBoundingBox"};
   
-  // bool compareBoundingBox(mesh::Mesh::BoundingBox currentBB, mesh::Mesh::BoundingBox receivedBB);
+  bool compareBoundingBox(mesh::Mesh::BoundingBox currentBB, mesh::Mesh::BoundingBox receivedBB);
 
   // void filterMesh(mesh::Mesh& filteredMesh, const bool filterByBB);
 
-  // void prepareBoundingBox();
+  void prepareBoundingBox();
 
   // bool isVertexInBB(const mesh::Vertex& vertex);
 
@@ -81,6 +60,7 @@ private:
   // /// Helper function for 'createOwnerFunction' to set local owner information
   // void setOwnerInformation(const std::vector<int> &ownerVec);
 
+  // number of other particpant ranks
   int _remoteParComSize = 0;
   
   mesh::Mesh::BoundingBoxMap _globalBB;
@@ -100,11 +80,7 @@ private:
 
   double _safetyFactor;
 
-  int _numberOfVertices = 0;
-
-  int _numberOfRemoteRanks = 0;
-
-  static logging::Logger _log;
+  int _numberOfVertices = 0;  
 
   // each element shows the max id of vertices,
   // e.g. vertexcounters[5]= 25 shows the last global id of rank 6 vertices is 25. 
