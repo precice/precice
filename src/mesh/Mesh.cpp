@@ -294,7 +294,7 @@ void Mesh:: computeState()
     computeNormals = false;
   }
 
-  // Compute edge centers, enclosing radius, and (in 2D) edge normals
+  // Compute (in 2D) edge normals
   for (Edge& edge : _content.edges()) {
     if (_dimensions == 2 && computeNormals){
       // Compute normal
@@ -320,14 +320,14 @@ void Mesh:: computeState()
   }
 
   if (_dimensions == 3){
-    // Compute triangle centers, radius, and normals
+    // Compute normals
     for (Triangle& triangle : _content.triangles()) {
-      assertion(not math::equals(triangle.vertex(0).getCoords(), triangle.vertex(1).getCoords()),
-                triangle.vertex(0).getCoords(), triangle.getID());
-      assertion(not math::equals(triangle.vertex(1).getCoords(), triangle.vertex(2).getCoords()),
-                triangle.vertex(1).getCoords(), triangle.getID());
-      assertion(not math::equals(triangle.vertex(2).getCoords(), triangle.vertex(0).getCoords()),
-                triangle.vertex(2).getCoords(), triangle.getID());
+      assertion(triangle.vertex(0) != triangle.vertex(1),
+                triangle.vertex(0), triangle.getID());
+      assertion(triangle.vertex(1) != triangle.vertex(2),
+                triangle.vertex(1), triangle.getID());
+      assertion(triangle.vertex(2) != triangle.vertex(0),
+                triangle.vertex(2), triangle.getID());
 
       // Compute normals
       if (computeNormals){
@@ -350,23 +350,15 @@ void Mesh:: computeState()
       }
     }
 
-    // Compute quad centers, radius, and normals
+    // Compute quad normals
     for (Quad& quad : _content.quads()) {
-      assertion(not math::equals(quad.vertex(0).getCoords(), quad.vertex(1).getCoords()),
-                quad.vertex(0).getCoords(),
-                quad.getID());
-      assertion(not math::equals(quad.vertex(1).getCoords(), quad.vertex(2).getCoords()),
-                quad.vertex(1).getCoords(),
-                quad.getID());
-      assertion(not math::equals(quad.vertex(2).getCoords(), quad.vertex(3).getCoords()),
-                quad.vertex(2).getCoords(),
-                quad.getID());
-      assertion(not math::equals(quad.vertex(3).getCoords(), quad.vertex(0).getCoords()),
-                quad.vertex(3).getCoords(),
-                quad.getID());
+      assertion(quad.vertex(0) != quad.vertex(1), quad.vertex(0).getCoords(), quad.getID());
+      assertion(quad.vertex(1) != quad.vertex(2), quad.vertex(1).getCoords(), quad.getID());
+      assertion(quad.vertex(2) != quad.vertex(3), quad.vertex(2).getCoords(), quad.getID());
+      assertion(quad.vertex(3) != quad.vertex(0), quad.vertex(3).getCoords(), quad.getID());
 
       // Compute normals (assuming all vertices are on same plane)
-      if (computeNormals){
+      if (computeNormals) {
         // Two triangles are thought by splitting the quad from vertex 0 to 2.
         // The cross prodcut of the outer edges of the triangles is used to compute
         // the normal direction and area of the triangles. The direction must be
@@ -530,6 +522,7 @@ bool Mesh::operator==(const Mesh& other) const
         std::is_permutation(myContent.quads().begin(), myContent.quads().end(), otherContent.quads().begin());
     return equal;
 }
+
 bool Mesh::operator!=(const Mesh& other) const
 {
     return !(*this == other);
