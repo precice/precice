@@ -132,6 +132,10 @@ bool ReceivedBoundingBox::compareBoundingBox(mesh::Mesh::BoundingBox currentBB, 
 
   for (int i=0; i < _dimensions; i++) {
 
+    /*
+     * here two boundingboxs are compared to check there is an intersection or not! comparison is done for 
+     * all dimensions and in order to have intersection, at all dimensions there should be a common region!
+     */
     if ((currentBB[i].first < receivedBB[i].first && currentBB[i].second < receivedBB[i].first) || (receivedBB[i].first < currentBB[i].first && receivedBB[i].second < currentBB[i].first) ) {
 
       intersect = false;
