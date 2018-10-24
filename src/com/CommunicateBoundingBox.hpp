@@ -40,13 +40,11 @@ public:
       mesh::Mesh::FeedbackMap &fbm,
       int                         rankSender);
 
-  /// This method sends the set of bounding boxes (gathered in the master rank) to the other particpants master.
-  /// Here we assume that the receiving particpant already knows about the size of sending participant's communicator.
+  /// This method broadcasts the set of bounding boxes (gathered in the master rank) to the slaves.  
   void broadcastSendBoundingBoxMap(
       mesh::Mesh::BoundingBoxMap &bbm);
 
-  /// Receiveing participant's master calls this method to receive the set of bounding boxes sent by other
-  /// participant's master. 
+  /// Slaves call this method to receive the set of bounding boxes sent by the master. 
   void broadcastReceiveBoundingBoxMap(
       mesh::Mesh::BoundingBoxMap &bbm);
 
