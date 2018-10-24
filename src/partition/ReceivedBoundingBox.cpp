@@ -128,13 +128,13 @@ void ReceivedBoundingBox::computeBoundingBox()
 bool ReceivedBoundingBox::compareBoundingBox(mesh::Mesh::BoundingBox currentBB, mesh::Mesh::BoundingBox receivedBB)
 {
   //int sizeofBB = currentBB.size();
-  bool intersect=1;
+  bool intersect= true;
 
   for (int i=0; i < _dimensions; i++) {
 
     if ((currentBB[i].first < receivedBB[i].first && currentBB[i].second < receivedBB[i].first) || (receivedBB[i].first < currentBB[i].first && receivedBB[i].second < currentBB[i].first) ) {
 
-      intersect = 0;
+      intersect = false;
       i=_dimensions;
     }
   }
