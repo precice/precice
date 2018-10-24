@@ -69,7 +69,6 @@ void ProvidedBoundingBox::computeBoundingBox()
   mesh::Mesh::FeedbackMap receivedFeedbackMap;
   if (not utils::MasterSlave::_slaveMode) {//Master
     assertion(utils::MasterSlave::_size>1);
-    int vertexCounter = 0;
     //master receives other partition communicator size and also a feedback which is a map:  list of other participant ranks -> connected ranks at this participant  
     _m2n->getMasterCommunication()->receive(remoteParComSize, 0);
     utils::MasterSlave::_communication->broadcast(remoteParComSize);

@@ -42,8 +42,6 @@ private:
   
   double _safetyFactor;
   
-  std::vector<int> _vertexCounters;  
-  
 };
 
 }} // namespace precice, partition

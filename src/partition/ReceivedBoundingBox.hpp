@@ -20,20 +20,8 @@ namespace partition {
 class ReceivedBoundingBox : public Partition
 {
 public:
-
-  /// Defines the typ of geometric filter used
-  enum GeometricFilter {
-    // @brief undefined
-    UNDEFINED,
-    // @brief No geometric filter used (e.g. for RBF mappings)
-    NO_FILTER,
-    // @brief Filter at master and communicate only filtered mesh.
-    FILTER_FIRST,
-    // @brief Broadcast first and filter then
-    BROADCAST_FILTER
-  };
-
-   /// Constructor
+  
+  /// Constructor
   ReceivedBoundingBox (mesh::PtrMesh mesh, double safetyFactor, GeometricFilter geometricFilter);
   virtual ~ReceivedBoundingBox() {}
   /// The mesh is received from another participant.
@@ -81,12 +69,6 @@ private:
   double _safetyFactor;
 
   int _numberOfVertices = 0;  
-
-  // each element shows the max id of vertices,
-  // e.g. vertexcounters[5]= 25 shows the last global id of rank 6 vertices is 25. 
-  std::vector<int> _vertexCounters; 
-
-  GeometricFilter _geometricFilter;  
   
 };
 
