@@ -139,7 +139,7 @@ bool ReceivedBoundingBox::compareBoundingBox(mesh::Mesh::BoundingBox currentBB, 
     if ((currentBB[i].first < receivedBB[i].first && currentBB[i].second < receivedBB[i].first) || (receivedBB[i].first < currentBB[i].first && receivedBB[i].second < currentBB[i].first) ) {
 
       intersect = false;
-      i=_dimensions;
+      break;
     }
   }
   return intersect;
