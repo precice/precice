@@ -269,6 +269,12 @@ public:
     _globalNumberOfVertices = num;
   }
 
+  /// Returns a vector of connected ranks
+  std::vector<int> & getInitialCommunicationMap()
+  {
+    return _initialCommunicationMap;           
+  }
+  
   /// Returns a mapping from remote local connected ranks to the corresponding vertex IDs
   CommunicationMap & getCommunicationMap()
   {
@@ -348,6 +354,12 @@ private:
    * Duplicated vertices are only accounted once.
    */
   int _globalNumberOfVertices = -1;
+
+  /**
+   * @brief each rank stores list of connected ranks. 
+   * Later in M2N package, this will be used to create initial communication channels. 
+   */
+  std::vector<int> _initialCommunicationMap;
 
   /**
    * @brief each rank stores list of connected ranks and corresponding vertex IDs here. 

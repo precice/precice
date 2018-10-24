@@ -87,7 +87,7 @@ void ProvidedBoundingBox::computeBoundingBox()
       for (auto &includedRank: otherRank.second) {
         if (utils::MasterSlave::_rank == includedRank) {
           _connectedRanks.push_back(otherRank.first);
-          _mesh->getCommunicationMap()[otherRank.first].push_back(-1);
+          _mesh->getInitialCommunicationMap().push_back(otherRank.first);
         }
       }
     }    
@@ -110,7 +110,7 @@ void ProvidedBoundingBox::computeBoundingBox()
         if (utils::MasterSlave::_rank == includedRanks)
         {
           _connectedRanks.push_back(otherRank.first);
-          _mesh->getCommunicationMap()[otherRank.first].push_back(-1);
+          _mesh->getInitialCommunicationMap().push_back(otherRank.first);
         }
       }
     }
