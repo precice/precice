@@ -107,7 +107,7 @@ private:
   /// Interpolation system matrix. Evaluated basis function on the input mesh
   petsc::Matrix _matrixC;
 
-  /// Vandermonde Matrix, constructed from vertices of the input mesh
+  /// Vandermonde Matrix for linear polynomial, constructed from vertices of the input mesh
   petsc::Matrix _matrixQ;
 
   /// Interpolation evaluation matrix. Evaluated basis function on the output mesh
@@ -118,6 +118,7 @@ private:
 
   petsc::Vector rescalingCoeffs;
 
+  /// Used to solve matrixC for the RBF weighting factors
   petsc::KSPSolver _solver;
 
   /// Used to solve the under-determined system for the separated polynomial.
@@ -769,19 +770,21 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
   if (otherMesh->vertices().size() == 0)
       return; // Ranks not at the interface should never hold interface vertices
 
+  // Tags all vertices that are inside otherMesh's bounding box, enlarged by the support radius
   for(mesh::Vertex& v : filterMesh->vertices()) {
     bool isInside = true;
     #if PETSC_MAJOR >= 3 and PETSC_MINOR >= 8
     if (_basisFunction.hasCompactSupport()) {
-      for (int d = 0; d < getDimensions(); d++) {
+      for (int d = 0; d < v.getDimensions(); d++) {
         if (v.getCoords()[d] < otherMesh->getBoundingBox()[d].first - _basisFunction.getSupportRadius() or
             v.getCoords()[d] > otherMesh->getBoundingBox()[d].second + _basisFunction.getSupportRadius() ) {
           isInside = false;
+          break;
         }
       }
     }
     #else
-      #warning "Mesh filtering deactivated, due to PETSc version < 3.8 or compiling with scons. \
+      #warning "Mesh filtering deactivated, due to PETSc version < 3.8. \
 preCICE is fully functional, but performance for large cases is degraded."
     #endif
     if (isInside)
@@ -802,10 +805,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
   if (not _basisFunction.hasCompactSupport())
     return; // Tags should not be changed
 
-  mesh::Mesh::BoundingBox bb(getDimensions(),
-                             std::make_pair(std::numeric_limits<double>::max(),
-                                            std::numeric_limits<double>::lowest()));
-
   mesh::PtrMesh mesh; // The mesh we want to filter
 
   if (getConstraint() == CONSISTENT)
@@ -813,11 +812,15 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
   else if (getConstraint() == CONSERVATIVE)
     mesh = output();
 
+  mesh::Mesh::BoundingBox bb(mesh->getDimensions(),
+                             std::make_pair(std::numeric_limits<double>::max(),
+                                            std::numeric_limits<double>::lowest()));
+
   // Construct bounding box around all owned vertices
   for (mesh::Vertex& v : mesh->vertices()) {
     if (v.isOwner()) {
       assertion(v.isTagged()); // Should be tagged from the first round
-      for (int d = 0; d < getDimensions(); d++) {
+      for (int d = 0; d < v.getDimensions(); d++) {
         bb[d].first  = std::min(v.getCoords()[d], bb[d].first);
         bb[d].second = std::max(v.getCoords()[d], bb[d].second);
       }
@@ -826,10 +829,11 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
   // Tag vertices that are inside the bounding box + support radius
   for (mesh::Vertex& v : mesh->vertices()) {
     bool isInside = true;
-    for (int d = 0; d < getDimensions(); d++) {
+    for (int d = 0; d < v.getDimensions(); d++) {
       if (v.getCoords()[d] < bb[d].first - _basisFunction.getSupportRadius() or
           v.getCoords()[d] > bb[d].second + _basisFunction.getSupportRadius() ) {
         isInside = false;
+        break;
       }
     }
     if (isInside)
