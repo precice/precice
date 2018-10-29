@@ -1,8 +1,11 @@
 #pragma once
 
-#include "mesh/PropertyContainer.hpp"
 #include <boost/noncopyable.hpp>
 #include <Eigen/Core>
+#include <iostream>
+
+#include "mesh/PropertyContainer.hpp"
+#include "math/differences.hpp"
 
 namespace precice {
 namespace mesh {
@@ -52,6 +55,10 @@ public:
   bool isTagged() const;
 
   void tag();
+
+  inline bool operator==(const Vertex& rhs) const;
+
+  inline bool operator!=(const Vertex& rhs) const;
 
 private:
 
@@ -117,8 +124,18 @@ inline const Eigen::VectorXd& Vertex::getCoords() const
 }
 
 
+inline bool Vertex::operator==(const Vertex& rhs) const 
+{
+    return math::equals(_coords, rhs._coords);
+}
+
+inline bool Vertex::operator!=(const Vertex& rhs) const
+{
+    return !(*this == rhs);
+}
+
 /// Make Vertex printable
-std::ostream & operator<<(std::ostream &os, Vertex const & v);
+std::ostream& operator<<(std::ostream& os, const Vertex& v);
 
 }} // namespace precice, mesh
 

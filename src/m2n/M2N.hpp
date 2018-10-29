@@ -41,7 +41,7 @@ public:
    * @brief Connects to another participant, which has to call acceptConnection().
    *
    * @param[in] acceptorName Name of remote participant to connect to.
-   * @param[in] nameReuester Name of calling participant.
+   * @param[in] requesterName Name of calling participant.
    */
   void requestMasterConnection(const std::string &acceptorName,
                                const std::string &requesterName);
@@ -59,7 +59,7 @@ public:
    * @brief Connects to another participant, which has to call acceptConnection().
    *
    * @param[in] acceptorName Name of remote participant to connect to.
-   * @param[in] nameReuester Name of calling participant.
+   * @param[in] requesterName Name of calling participant.
    */
   void requestSlavesConnection(const std::string &acceptorName,
                                const std::string &requesterName);

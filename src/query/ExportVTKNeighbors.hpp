@@ -1,5 +1,4 @@
-#ifndef PRECICE_QUERY_EXPORTVTKNEIGHBORS_HPP_
-#define PRECICE_QUERY_EXPORTVTKNEIGHBORS_HPP_
+#pragma once
 
 #include "FindClosest.hpp"
 #include <string>
@@ -24,7 +23,7 @@ public:
     * @brief Adds a neighborhood relation already computed.
     *
     * @param[in] queryPoint Point whose next neighbor was determined.
-    * @param[in] neighborPoint ClosestNeighbor of queryPoint.
+    * @param[in] closestNeighbor ClosestNeighbor of queryPoint.
     */
    void addNeighbors (
      const Eigen::VectorXd&  queryPoint,
@@ -48,4 +47,3 @@ private:
 
 }} // namespace precice, query
 
-#endif /* PRECICE_QUERY_EXPORTVTKNEIGHBORS_HPP_ */

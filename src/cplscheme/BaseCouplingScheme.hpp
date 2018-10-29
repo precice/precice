@@ -221,9 +221,8 @@ public:
   /**
    * @brief Initializes data with written values.
    *
-   * Preconditions:
-   * - initialize() has been called.
-   * - advance() has NOT yet been called.
+   * @pre initialize() has been called.
+   * @pre advance() has NOT yet been called.
    */
   virtual void initializeData() = 0;
 

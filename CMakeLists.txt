@@ -46,10 +46,9 @@ endif()
 option(PETSC "Enable use of the PETSc linear algebra library." ON)
 if (PETSC AND MPI)
   find_package(PETSc 3.6 REQUIRED)
-  string(REGEX MATCHALL "[0-9]+" PETSC_VERSIONS ${PETSC_VERSION})
-  list(GET PETSC_VERSIONS 0 PETSC_MAJOR)
-  list(GET PETSC_VERSIONS 1 PETSC_MINOR)
   include_directories(${PETSC_INCLUDES})
+  set (PETSC_VERSION_MAJOR ${PETSC_VERSION_MAJOR} CACHE STRING "Petsc Major version")
+  set (PETSC_VERSION_MINOR ${PETSC_VERSION_MINOR} CACHE STRING "Petsc Minor version")
 else()
   add_definitions(-DPRECICE_NO_PETSC)
   message(STATUS "PETSc support disabled")
@@ -118,6 +117,10 @@ add_executable(testprecice
   "src/testing/main.cpp" ${sourcesTests})
 target_link_libraries(testprecice Threads::Threads)
 target_link_libraries(testprecice precice)
+
+# Create a symlink to the last build from build/last directory.
+add_custom_target(symlink ALL
+  COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_BINARY_DIR} ${PROJECT_SOURCE_DIR}/build/last)
 
 install(TARGETS precice binprecice
   LIBRARY DESTINATION lib
