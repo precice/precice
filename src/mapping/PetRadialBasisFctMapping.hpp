@@ -274,7 +274,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   // Indizes that are used to build the Petsc Index set
   std::vector<int> myIndizes;
 
-  // Indizes for Q^T, holding the polynom
+  // Indizes for Q^T, holding the polynomial
   if (utils::Parallel::getProcessRank() <= 0) // Rank 0 or not in MasterSlave mode
     for (size_t i = 0; i < polyparams; i++)
       myIndizes.push_back(i); // polyparams reside in the first rows (which are always on rank 0)
@@ -298,11 +298,11 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   ierr = MatSetOption(_matrixC, MAT_SYMMETRIC, PETSC_TRUE); CHKERRV(ierr);
   ierr = MatSetOption(_matrixC, MAT_SYMMETRY_ETERNAL, PETSC_TRUE); CHKERRV(ierr);
 
-  // Matrix Q: Dense, holds the input mesh for the polynom if set to SEPERATE. Zero size otherwise
+  // Matrix Q: Dense, holds the input mesh for the polynomial if set to SEPERATE. Zero size otherwise
   _matrixQ.init(n, PETSC_DETERMINE, PETSC_DETERMINE, sepPolyparams, MATDENSE);
   DEBUG("Set matrix Q to local size " << n << " x " << sepPolyparams);
 
-  // Matrix V: Dense, holds the output mesh for polynom if set to SEPERATE. Zero size otherwise
+  // Matrix V: Dense, holds the output mesh for polynomial if set to SEPERATE. Zero size otherwise
   _matrixV.init(outputSize, PETSC_DETERMINE, PETSC_DETERMINE, sepPolyparams, MATDENSE);
   DEBUG("Set matrix V to local size " << outputSize << " x " << sepPolyparams);
 
@@ -328,7 +328,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   ierr = ISAllGather(ISidentity, &ISidentityGlobal); CHKERRV(ierr);
   ierr = ISLocalToGlobalMappingCreateIS(ISidentityGlobal, &ISidentityMapping); CHKERRV(ierr);
 
-  // Create another identity mapping for the polynomial parameters
+  // Create another identity mapping for the polynomialial parameters
   ierr = ISCreateStride(PETSC_COMM_SELF, sepPolyparams, 0, 1, &ISpolyparams); CHKERRV(ierr);
   ierr = ISSetIdentity(ISpolyparams); CHKERRV(ierr);
   ierr = ISLocalToGlobalMappingCreateIS(ISpolyparams, &ISpolyparamsMapping); CHKERRV(ierr);
@@ -387,7 +387,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     PetscInt colIdx[_matrixC.getSize().second];     // holds the columns indices of the entries
     PetscScalar rowVals[_matrixC.getSize().second]; // holds the values of the entries
 
-    // -- SETS THE POLYNOM PART OF THE MATRIX --
+    // -- SETS THE POLYNOMIAL PART OF THE MATRIX --
     if (_polynomial == Polynomial::ON or _polynomial == Polynomial::SEPARATE) {
       colIdx[colNum] = colNum;
       rowVals[colNum++] = 1;
@@ -473,7 +473,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     PetscScalar rowVals[_matrixA.getSize().second]; // holds the values of the entries
     const mesh::Vertex& oVertex = outMesh->vertices()[row - _matrixA.ownerRange().first];
 
-    // -- SET THE POLYNOM PART OF THE MATRIX --
+    // -- SET THE POLYNOMIAL PART OF THE MATRIX --
     if (_polynomial == Polynomial::ON or _polynomial == Polynomial::SEPARATE) {
       Mat m = _polynomial == Polynomial::ON ? _matrixA : _matrixV;
 
@@ -614,14 +614,16 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
   if (getConstraint() == CONSERVATIVE) {
     petsc::Vector au(_matrixA, "au", petsc::Vector::RIGHT);
     petsc::Vector in(_matrixA, "in");
-
-    // Fill input from input data values
+    int inRangeStart, inRangeEnd;
+    std::tie(inRangeStart, inRangeEnd) = in.ownerRange();
     for (int dim = 0; dim < valueDim; dim++) {
       printMappingInfo(inputDataID, dim);
 
+      // Fill input from input data values
       for (size_t i = 0; i < input()->vertices().size(); i++ ) {
-        int globalIndex = input()->vertices()[i].getGlobalIndex();
-        VecSetValue(in, globalIndex, inValues[i*valueDim + dim], INSERT_VALUES);
+        int globalIndex = input()->vertices()[i].getGlobalIndex(); // globalIndex is target row
+        if (globalIndex >= inRangeStart and globalIndex < inRangeEnd) // only fill local rows
+          VecSetValue(in, globalIndex, inValues[i*valueDim + dim], INSERT_VALUES);
       }
       in.assemble();
 
@@ -680,7 +682,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
   else { // Map CONSISTENT
     petsc::Vector out(_matrixA, "out");
     petsc::Vector in(_matrixC, "in");
-    petsc::Vector a(_matrixQ, "a", petsc::Vector::RIGHT); // holds the solution of the LS polynom
+    petsc::Vector a(_matrixQ, "a", petsc::Vector::RIGHT); // holds the solution of the LS polynomial
 
     ierr = VecSetLocalToGlobalMapping(in, _ISmapping); CHKERRV(ierr);
     const PetscScalar *vecArray;
@@ -733,7 +735,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
       }
 
       if (_polynomial == Polynomial::SEPARATE) {
-        ierr = VecScale(a, -1); // scale it back, so wie add the polynom
+        ierr = VecScale(a, -1); // scale it back, so wie add the polynomial
         ierr = MatMultAdd(_matrixV, a, out, out); CHKERRV(ierr);
       }
       VecChop(out, 1e-9);
