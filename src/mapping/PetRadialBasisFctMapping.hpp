@@ -328,7 +328,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   ierr = ISAllGather(ISidentity, &ISidentityGlobal); CHKERRV(ierr);
   ierr = ISLocalToGlobalMappingCreateIS(ISidentityGlobal, &ISidentityMapping); CHKERRV(ierr);
 
-  // Create another identity mapping for the polynomialial parameters
+  // Create another identity mapping for the polynomial parameters.
+  // That is not needed, but its set, so we can exchange matrixV and matrixA when filling polyparams,
+  // i.e. use VecSetValuesLocal on both
   ierr = ISCreateStride(PETSC_COMM_SELF, sepPolyparams, 0, 1, &ISpolyparams); CHKERRV(ierr);
   ierr = ISSetIdentity(ISpolyparams); CHKERRV(ierr);
   ierr = ISLocalToGlobalMappingCreateIS(ISpolyparams, &ISpolyparamsMapping); CHKERRV(ierr);
@@ -421,7 +423,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       for (const mesh::Vertex& vj : inMesh->vertices()) {
         int col = vj.getGlobalIndex() + polyparams;
         if (row > col)
-          continue;
+          continue; // matrix is symmetric
         distance = inVertex.getCoords() - vj.getCoords();
         for (int d = 0; d < dimensions; d++) {
           if (_deadAxis[d]) {
@@ -623,7 +625,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
       for (size_t i = 0; i < input()->vertices().size(); i++ ) {
         int globalIndex = input()->vertices()[i].getGlobalIndex(); // globalIndex is target row
         if (globalIndex >= inRangeStart and globalIndex < inRangeEnd) // only fill local rows
-          VecSetValue(in, globalIndex, inValues[i*valueDim + dim], INSERT_VALUES);
+          ierr = VecSetValue(in, globalIndex, inValues[i*valueDim + dim], INSERT_VALUES); CHKERRV(ierr);
       }
       in.assemble();
 
