@@ -87,13 +87,11 @@ public:
     int                dimensions,
     bool               flipNormals );
 
-  /**
-   * @brief Destructor, deletes created objects.
-   */
+  /// Destructor, deletes created objects.
   virtual ~Mesh();
 
   /// Returns group object with all Triangle, Edge, Vertex objects.
-  const Group& content();
+  const Group& content() const;
 
   /// Returns modifieable container holding all vertices.
   VertexContainer& vertices();
@@ -101,19 +99,19 @@ public:
   /// Returns const container holding all vertices.
   const VertexContainer& vertices() const;
 
-  /// Returns modifieable container holding all edges.
+  /// Returns modifiable container holding all edges.
   EdgeContainer& edges();
 
   /// Returns const container holding all edges.
   const EdgeContainer& edges() const;
 
-  /// Returns modifieable container holding all triangles.
+  /// Returns modifiable container holding all triangles.
   TriangleContainer& triangles();
 
   /// Returns const container holding all triangles.
   const TriangleContainer& triangles() const;
 
-  /// Returns modifieable container holding all quads.
+  /// Returns modifiable container holding all quads.
   QuadContainer& quads();
 
   /// Returns const container holding all quads.
@@ -299,6 +297,10 @@ public:
    */
   const std::vector<double> getCOG() const;
   
+  bool operator==(const Mesh& other) const;
+  
+  bool operator!=(const Mesh& other) const;
+
 private:
 
   mutable logging::Logger _log{"mesh::Mesh"};
@@ -337,6 +339,7 @@ private:
 
   /**
    * @brief Vertex distribution for the master, holding for each slave all vertex IDs it owns.
+   *
    * For slaves, this data structure is empty and should not be used.
    */
   VertexDistribution _vertexDistribution;
@@ -351,6 +354,7 @@ private:
 
   /**
    * @brief Number of unique vertices for complete distributed mesh.
+   *
    * Duplicated vertices are only accounted once.
    */
   int _globalNumberOfVertices = -1;
@@ -370,5 +374,7 @@ private:
   BoundingBox _boundingBox;
 
 };
+
+std::ostream& operator<<(std::ostream& os, const Mesh& q);
 
 }} // namespace precice, mesh

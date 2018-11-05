@@ -1,10 +1,12 @@
 #pragma once
 
+#include <Eigen/Core>
+#include <iostream>
+
 #include "mesh/PropertyContainer.hpp"
 #include "mesh/Vertex.hpp"
-#include <array>
 #include "boost/noncopyable.hpp"
-#include <Eigen/Core>
+#include "math/differences.hpp"
 
 namespace precice {
 namespace mesh {
@@ -46,13 +48,6 @@ public:
   template<typename VECTOR_T>
   void setNormal ( const VECTOR_T& normal );
 
-  /// Sets the center of the edge.
-  template<typename VECTOR_T>
-  void setCenter ( const VECTOR_T& center );
-
-  /// Sets the radius of the circle enclosing the edge.
-  void setEnclosingRadius ( double radius );
-
   /// Returns the (among edges) unique ID of the edge.
   int getID () const;
 
@@ -60,10 +55,21 @@ public:
   const Eigen::VectorXd& getNormal () const;
 
   /// Returns the center of the edge.
-  const Eigen::VectorXd& getCenter () const;
+  const Eigen::VectorXd getCenter () const;
 
   /// Returns the radius of the enclosing circle of the edge.
   double getEnclosingRadius () const;
+
+  /**
+   * @brief Compares two Edges for equality
+   *
+   * Two Edges are equal if their normal vector is equal AND
+   * if the two vertices are equal, whereas the order of vertices is NOT important.
+   */
+  bool operator==(const Edge& other) const;
+
+  /// Not equal, implemented in terms of equal.
+  bool operator!=(const Edge& other) const;
 
 private:
 
@@ -75,12 +81,6 @@ private:
 
   /// Normal of the edge.
   Eigen::VectorXd _normal;
-
-  /// Center of the edge.
-  Eigen::VectorXd _center;
-
-  /// Radius of the enclosing circle.
-  double _enclosingRadius = 0;
 };
 
 // ------------------------------------------------------ HEADER IMPLEMENTATION
@@ -116,19 +116,11 @@ void Edge:: setNormal
   _normal = normal;
 }
 
-template<typename VECTOR_T>
-void Edge:: setCenter
-(
-  const VECTOR_T& center )
-{
-  assertion ( center.size() == _vertices[0]->getDimensions(), center,
-               _vertices[0]->getDimensions() );
-  _center = center;
-}
-
 inline const Eigen::VectorXd& Edge::getNormal () const
 {
   return _normal;
 }
+
+std::ostream& operator<<(std::ostream& stream, const Edge& edge);
 
 }} // namespace precice, mesh

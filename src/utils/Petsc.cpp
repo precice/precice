@@ -328,10 +328,12 @@ void Matrix::fillWithRandoms()
   PetscErrorCode ierr = 0;
   PetscRandom rctx;
 
-  unsigned long seed = (double) std::rand()/RAND_MAX * std::numeric_limits<unsigned long>::max();
+  std::random_device rd;
+  std::uniform_real_distribution<double> dist(0, 1);
+
   PetscRandomCreate(getCommunicator(matrix), &rctx);
   PetscRandomSetType(rctx, PETSCRAND48);
-  PetscRandomSetSeed(rctx, seed);
+  PetscRandomSetSeed(rctx, dist(rd));
   PetscRandomSeed(rctx);     
   ierr = MatSetRandom(matrix, rctx); CHKERRV(ierr);
   PetscRandomDestroy(&rctx);

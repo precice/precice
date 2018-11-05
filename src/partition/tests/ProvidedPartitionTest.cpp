@@ -52,8 +52,8 @@ void setupParallelEnvironment(m2n::PtrM2N m2n)
     utils::MasterSlave::_masterMode = false;
   }
 
-  if (utils::Parallel::getProcessRank() == 1) { //Master
-    masterSlaveCom->acceptConnection("SolidMaster", "SolidSlaves");
+  if(utils::Parallel::getProcessRank() == 1){//Master
+    masterSlaveCom->acceptConnection ( "SolidMaster", "SolidSlaves", utils::Parallel::getProcessRank());
     masterSlaveCom->setRankOffset(1);
   } else if (utils::Parallel::getProcessRank() == 2) { //Slave1
     masterSlaveCom->requestConnection("SolidMaster", "SolidSlaves", 0, 2);

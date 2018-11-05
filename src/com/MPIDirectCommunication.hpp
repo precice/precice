@@ -4,6 +4,7 @@
 
 #include <string>
 #include "MPICommunication.hpp"
+#include "utils/assertion.hpp"
 #include "logging/Logger.hpp"
 
 namespace precice
@@ -36,26 +37,30 @@ public:
   virtual size_t getRemoteCommunicatorSize() override;
 
   /// See precice::com::Communication::acceptConnection().
-  virtual void acceptConnection(std::string const &nameAcceptor,
-                                std::string const &nameRequester) override;
+  virtual void acceptConnection(std::string const &acceptorName,
+                                std::string const &requesterName,
+                                int                acceptorRank) override;
 
-  virtual void acceptConnectionAsServer(std::string const &nameAcceptor,
-                                        std::string const &nameRequester,
+  virtual void acceptConnectionAsServer(std::string const &acceptorName,
+                                        std::string const &requesterName,
+                                        int                acceptorRank,
                                         int                requesterCommunicatorSize) override
   {
-    ERROR("Not implemented!");
+    assertion(false, "Not implemented!");
   }
 
   /// See precice::com::Communication::requestConnection().
-  virtual void requestConnection(std::string const &nameAcceptor,
-                                 std::string const &nameRequester,
-                                 int                requesterProcessRank,
+  virtual void requestConnection(std::string const &acceptorName,
+                                 std::string const &requesterName,
+                                 int                requesterRank,
                                  int                requesterCommunicatorSize) override;
 
-  virtual int requestConnectionAsClient(std::string const &nameAcceptor,
-                                        std::string const &nameRequester) override
+  virtual void requestConnectionAsClient(std::string   const &acceptorName,
+                                         std::string   const &requesterName,
+                                         std::set<int> const &acceptorRanks,
+                                         int                  requesterRank) override
   {
-    ERROR("Not implemented!");
+    assertion(false, "Not implemented!");
   }
 
   /// See precice::com::Communication::closeConnection().

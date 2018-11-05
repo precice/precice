@@ -20,11 +20,10 @@ class M2NConfiguration : public xml::XMLTag::Listener
 {
 public:
   using SharedPointer = std::shared_ptr<M2NConfiguration>;
-
-  typedef std::tuple<m2n::PtrM2N, std::string, std::string> M2NTuple;
+  using M2NTuple      = std::tuple<m2n::PtrM2N, std::string, std::string>;
 
 public:
-  M2NConfiguration(xml::XMLTag &parent);
+  explicit M2NConfiguration(xml::XMLTag &parent);
 
   virtual ~M2NConfiguration() {}
 
@@ -52,17 +51,8 @@ private:
   logging::Logger _log{"m2n::M2NConfiguration"};
 
   const std::string TAG                     = "m2n";
-  const std::string ATTR_TYPE               = "type";
   const std::string ATTR_DISTRIBUTION_TYPE  = "distribution-type";
-  const std::string ATTR_FROM               = "from";
-  const std::string ATTR_TO                 = "to";
-  const std::string ATTR_PORT               = "ports";
-  const std::string ATTR_NETWORK            = "network";
   const std::string ATTR_EXCHANGE_DIRECTORY = "exchange-directory";
-
-  const std::string VALUE_MPI        = "mpi";
-  const std::string VALUE_MPI_SINGLE = "mpi-single";
-  const std::string VALUE_SOCKETS    = "sockets";
 
   const std::string VALUE_GATHER_SCATTER = "gather-scatter";
   const std::string VALUE_POINT_TO_POINT = "point-to-point";

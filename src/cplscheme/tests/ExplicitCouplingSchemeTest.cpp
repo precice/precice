@@ -273,6 +273,7 @@ struct ExplicitCouplingSchemeFixture
 BOOST_FIXTURE_TEST_SUITE(ExplicitCouplingSchemeTests, ExplicitCouplingSchemeFixture)
 
 /// Test that runs on 2 processors.
+
 BOOST_FIXTURE_TEST_CASE(testSimpleExplicitCoupling, testing::M2NFixture,
                       * testing::MinRanks(2)
                       * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
@@ -333,9 +334,11 @@ BOOST_AUTO_TEST_CASE(testConfiguredSimpleExplicitCoupling,
   mesh::PropertyContainer::resetPropertyIDCounter ();
 
   std::string configurationPath ( _pathToTests + "explicit-coupling-scheme-1.xml" );
+
   std::string nameParticipant0 ( "Participant0" );
   std::string nameParticipant1 ( "Participant1" );
   std::string nameLocalParticipant ( "" );
+
   if ( utils::Parallel::getProcessRank() == 0 ) {
     nameLocalParticipant = nameParticipant0;
   }

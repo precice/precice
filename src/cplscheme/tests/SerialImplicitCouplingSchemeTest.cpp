@@ -770,8 +770,8 @@ BOOST_FIXTURE_TEST_CASE(testInitializeData, testing::M2NFixture,
   mesh::MeshConfiguration meshConfig(root, dataConfig);
   meshConfig.setDimensions(3);
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, false));
-  mesh->createData("Data0", 1);
-  mesh->createData("Data1", 3);
+  const auto dataID0 = mesh->createData("Data0", 1)->getID();
+  const auto dataID1 = mesh->createData("Data1", 3)->getID();;
   mesh->createVertex(Eigen::Vector3d::Zero());
   mesh->allocateDataValues();
   meshConfig.addMesh(mesh);
@@ -821,9 +821,9 @@ BOOST_FIXTURE_TEST_CASE(testInitializeData, testing::M2NFixture,
   if (nameLocalParticipant == nameParticipant0){
     cplScheme.initializeData();
     BOOST_TEST(cplScheme.hasDataBeenExchanged());
-    auto& values = mesh->data(1)->values();
+    auto& values = mesh->data(dataID1)->values();
     BOOST_TEST(testing::equals(values, Eigen::Vector3d(1.0, 2.0, 3.0)));
-    mesh->data(0)->values() = Eigen::VectorXd::Constant(mesh->data(0)->values().size(), 4.0);
+    mesh->data(dataID0)->values() = Eigen::VectorXd::Constant(mesh->data(dataID0)->values().size(), 4.0);
     while (cplScheme.isCouplingOngoing()){
       if (cplScheme.isActionRequired(writeIterationCheckpoint)){
         cplScheme.performedAction(writeIterationCheckpoint);
@@ -839,10 +839,10 @@ BOOST_FIXTURE_TEST_CASE(testInitializeData, testing::M2NFixture,
     assertion(nameLocalParticipant == nameParticipant1);
     BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteInitialData()));
     cplScheme.performedAction(constants::actionWriteInitialData());
-    auto& values = mesh->data(0)->values();
+    auto& values = mesh->data(dataID0)->values();
     BOOST_TEST(testing::equals(values(0), 0.0));
     Eigen::VectorXd v(3); v << 1.0, 2.0, 3.0;
-    mesh->data(1)->values() = v;
+    mesh->data(dataID1)->values() = v;
     cplScheme.initializeData();
     BOOST_TEST(cplScheme.hasDataBeenExchanged());
     BOOST_TEST(testing::equals(values(0), 4.0));

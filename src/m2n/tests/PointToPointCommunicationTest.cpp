@@ -48,7 +48,7 @@ void P2PComTest1(com::PtrCommunicationFactory cf)
     MasterSlave::_masterMode = true;
     MasterSlave::_slaveMode  = false;
 
-    MasterSlave::_communication->acceptConnection("A.Master", "A.Slave");
+    MasterSlave::_communication->acceptConnection("A.Master", "A.Slave", 0);
     MasterSlave::_communication->setRankOffset(1);
 
     mesh->setGlobalNumberOfVertices(10);
@@ -78,7 +78,7 @@ void P2PComTest1(com::PtrCommunicationFactory cf)
     MasterSlave::_masterMode = false;
     MasterSlave::_slaveMode  = true;
 
-    MasterSlave::_communication->requestConnection("A.Master", "A.Slave", 0, 1);
+    MasterSlave::_communication->requestConnection("A.Master", "A.Slave", 1, 1);
 
     data         = {20, 30, 50, 60, 70};
     expectedData = {4 * 20 + 3, 30 + 1, 50 + 2, 4 * 60 + 3, 70 + 1};
@@ -93,7 +93,7 @@ void P2PComTest1(com::PtrCommunicationFactory cf)
     MasterSlave::_masterMode = true;
     MasterSlave::_slaveMode  = false;
 
-    MasterSlave::_communication->acceptConnection("B.Master", "B.Slave");
+    MasterSlave::_communication->acceptConnection("B.Master", "B.Slave", 0);
     MasterSlave::_communication->setRankOffset(1);
 
     mesh->setGlobalNumberOfVertices(10);
@@ -123,7 +123,7 @@ void P2PComTest1(com::PtrCommunicationFactory cf)
     MasterSlave::_masterMode = false;
     MasterSlave::_slaveMode  = true;
 
-    MasterSlave::_communication->requestConnection("B.Master", "B.Slave", 0, 1);
+    MasterSlave::_communication->requestConnection("B.Master", "B.Slave", 1, 1);
 
     data.assign(6, -1);
     expectedData = {10, 2 * 20, 40, 50, 2 * 60, 80};
@@ -136,7 +136,6 @@ void P2PComTest1(com::PtrCommunicationFactory cf)
     c.requestConnection("B", "A");
 
     c.send(data.data(), data.size());
-
     c.receive(data.data(), data.size());
 
     BOOST_TEST(data == expectedData);
@@ -144,11 +143,8 @@ void P2PComTest1(com::PtrCommunicationFactory cf)
     c.acceptConnection("B", "A");
 
     c.receive(data.data(), data.size());
-
     BOOST_TEST(data == expectedData);
-
     process(data);
-
     c.send(data.data(), data.size());
   }
 
@@ -182,7 +178,7 @@ void P2PComTest2(com::PtrCommunicationFactory cf)
     MasterSlave::_masterMode = true;
     MasterSlave::_slaveMode  = false;
 
-    MasterSlave::_communication->acceptConnection("A.Master", "A.Slave");
+    MasterSlave::_communication->acceptConnection("A.Master", "A.Slave", utils::Parallel::getProcessRank());
     MasterSlave::_communication->setRankOffset(1);
 
     mesh->setGlobalNumberOfVertices(10);
@@ -227,7 +223,7 @@ void P2PComTest2(com::PtrCommunicationFactory cf)
     MasterSlave::_masterMode = true;
     MasterSlave::_slaveMode  = false;
 
-    MasterSlave::_communication->acceptConnection("B.Master", "B.Slave");
+    MasterSlave::_communication->acceptConnection("B.Master", "B.Slave", utils::Parallel::getProcessRank());
     MasterSlave::_communication->setRankOffset(1);
 
     mesh->setGlobalNumberOfVertices(10);
@@ -270,19 +266,14 @@ void P2PComTest2(com::PtrCommunicationFactory cf)
     c.requestConnection("B", "A");
 
     c.send(data.data(), data.size());
-
     c.receive(data.data(), data.size());
-
     BOOST_TEST(data == expectedData);
   } else {
     c.acceptConnection("B", "A");
 
     c.receive(data.data(), data.size());
-
     BOOST_TEST(data == expectedData);
-
     process(data);
-
     c.send(data.data(), data.size());
   }
 
@@ -293,7 +284,8 @@ void P2PComTest2(com::PtrCommunicationFactory cf)
   utils::Parallel::clearGroups();
 }
 
-BOOST_AUTO_TEST_CASE(SocketCommunication, * testing::OnSize(4))
+BOOST_AUTO_TEST_CASE(SocketCommunication,
+                     * testing::OnSize(4))
 {
   com::PtrCommunicationFactory cf(new com::SocketCommunicationFactory);
   if (utils::Parallel::getProcessRank() < 4) {

@@ -31,38 +31,38 @@ public:
   /**
    * @brief Connects to another participant, which has to call requestConnection().
    *
-   * @param[in] nameAcceptor Name of calling participant.
-   * @param[in] nameRequester Name of remote participant to connect to.
+   * @param[in] acceptorName Name of calling participant.
+   * @param[in] requesterName Name of remote participant to connect to.
    */
-  void acceptMasterConnection(const std::string &nameAcceptor,
-                              const std::string &nameRequester);
+  void acceptMasterConnection(const std::string &acceptorName,
+                              const std::string &requesterName);
 
   /**
    * @brief Connects to another participant, which has to call acceptConnection().
    *
-   * @param[in] nameAcceptor Name of remote participant to connect to.
-   * @param[in] nameRequester Name of calling participant.
+   * @param[in] acceptorName Name of remote participant to connect to.
+   * @param[in] requesterName Name of calling participant.
    */
-  void requestMasterConnection(const std::string &nameAcceptor,
-                               const std::string &nameRequester);
+  void requestMasterConnection(const std::string &acceptorName,
+                               const std::string &requesterName);
 
   /**
    * @brief Connects to another participant, which has to call requestConnection().
    *
-   * @param[in] nameAcceptor Name of calling participant.
-   * @param[in] nameRequester Name of remote participant to connect to.
+   * @param[in] acceptorName Name of calling participant.
+   * @param[in] requesterName Name of remote participant to connect to.
    */
-  void acceptSlavesConnection(const std::string &nameAcceptor,
-                              const std::string &nameRequester);
+  void acceptSlavesConnection(const std::string &acceptorName,
+                              const std::string &requesterName);
 
   /**
    * @brief Connects to another participant, which has to call acceptConnection().
    *
-   * @param[in] nameAcceptor Name of remote participant to connect to.
-   * @param[in] nameRequester Name of calling participant.
+   * @param[in] acceptorName Name of remote participant to connect to.
+   * @param[in] requesterName Name of calling participant.
    */
-  void requestSlavesConnection(const std::string &nameAcceptor,
-                               const std::string &nameRequester);
+  void requestSlavesConnection(const std::string &acceptorName,
+                               const std::string &requesterName);
 
   /**
    * @brief Disconnects from communication space, i.e. participant.

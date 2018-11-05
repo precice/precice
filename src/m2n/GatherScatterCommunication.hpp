@@ -35,12 +35,12 @@ public:
    * If several connections are going in to a server, the server has to call this
    * method, while the clients have to call requestConnection().
    *
-   * @param[in] nameAcceptor Name of calling participant.
-   * @param[in] nameRequester Name of remote participant to connect to.
+   * @param[in] acceptorName Name of calling participant.
+   * @param[in] requesterName Name of remote participant to connect to.
    */
   virtual void acceptConnection(
-      const std::string &nameAcceptor,
-      const std::string &nameRequester);
+      const std::string &acceptorName,
+      const std::string &requesterName);
 
   /**
    * @brief Requests connection from participant, which has to call acceptConnection().
@@ -48,12 +48,12 @@ public:
    * If several connections are going in to a server, the clients have to call this
    * method, while the server has to call acceptConnection().
    *
-   * @param[in] nameAcceptor Name of remote participant to connect to.
+   * @param[in] acceptorName Name of remote participant to connect to.
    * @param[in] nameReuester Name of calling participant.
    */
   virtual void requestConnection(
-      const std::string &nameAcceptor,
-      const std::string &nameRequester);
+      const std::string &acceptorName,
+      const std::string &requesterName);
 
   /**
    * @brief Disconnects from communication space, i.e. participant.

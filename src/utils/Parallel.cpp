@@ -46,8 +46,7 @@ void Parallel::initializeMPI(
 #endif // not PRECICE_NO_MPI
 }
 
-void Parallel::splitCommunicator(
-    const std::string &groupName)
+void Parallel::splitCommunicator(const std::string &groupName)
 {
 #ifndef PRECICE_NO_MPI
   TRACE(groupName);
