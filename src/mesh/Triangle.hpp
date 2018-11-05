@@ -41,6 +41,8 @@ public:
   /// Type of the read-only random access vertex iterator
   using iterator = const_iterator;
 
+  /// Fix for the Boost.Test versions 1.65.1 - 1.67
+  using value_type = Eigen::VectorXd;
 
   /// Constructor, the order of edges defines the outer normal direction.
   Triangle(

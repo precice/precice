@@ -27,6 +27,9 @@ public:
   /// Type of the random access vertex iterator
   using iterator = const_iterator; //IndexRangeIterator<Quad, Eigen::Vector3d>;
 
+  /// Fix for the Boost.Test versions 1.65 - 1.67.1
+  using value_type = Eigen::VectorXd;
+
   /// Constructor, the order of edges defines the outer normal direction.
   Quad(
       Edge &edgeOne,
