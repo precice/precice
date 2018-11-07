@@ -66,6 +66,7 @@ void ReceivedBoundingBox::computeBoundingBox()
   { // Master
     assertion(utils::MasterSlave::_rank==0);
     assertion(utils::MasterSlave::_size>1);
+
     // sending this participant communicator size to other master
     _m2n->getMasterCommunication()->send(utils::MasterSlave::_size , 0);
     utils::MasterSlave::_communication->broadcast(_remoteParComSize);
@@ -77,7 +78,7 @@ void ReceivedBoundingBox::computeBoundingBox()
       _feedbackMap[rank_slave].push_back(-1);        
     }
 
-    // master produces its own feedback  //*** Amin : check to see this is necessary!!
+    // master produces its own feedback
     for (auto &other_rank: _globalBB)
     {
       if (compareBoundingBox(_bb,other_rank.second))
@@ -92,8 +93,8 @@ void ReceivedBoundingBox::computeBoundingBox()
     // master receives feedbacks from slaves and put them into the feedbackmap
     for (int rank_slave=1; rank_slave < utils::MasterSlave::_size ; rank_slave++)
     {
-      utils::MasterSlave::_communication->receive(_feedback, rank_slave);
-      _feedbackMap[rank_slave]=_feedback;        
+      utils::MasterSlave::_communication->receive(_feedback, rank_slave);         
+      _feedbackMap[rank_slave]=_feedback;
     }
 
     // master sends feedbackmap to other master
@@ -118,10 +119,17 @@ void ReceivedBoundingBox::computeBoundingBox()
       if (compareBoundingBox(_bb,other_rank.second)) {
         _feedback.push_back(other_rank.first);            
       }
-    }   
+    }
+
+    // to prevent sending empty vector!
+    if(_feedback.size() == 0)
+    {
+      _feedback.push_back(-1);
+    }
 
     //send feedback to master
-    utils::MasterSlave::_communication->send(_feedback, 0);     
+    utils::MasterSlave::_communication->send(_feedback, 0);
+    
   }  
 }
 
@@ -181,5 +189,12 @@ void ReceivedBoundingBox::prepareBoundingBox(){
   }
 }
 
+
+void ReceivedBoundingBox::communicate()
+{}
+void ReceivedBoundingBox::compute()
+{}
+void ReceivedBoundingBox::createOwnerInformation()
+{}
 
 }}

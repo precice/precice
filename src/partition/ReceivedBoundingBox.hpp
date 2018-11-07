@@ -36,13 +36,21 @@ public:
    /// Constructor
   ReceivedBoundingBox (mesh::PtrMesh mesh, double safetyFactor, GeometricFilter geometricFilter);
   virtual ~ReceivedBoundingBox() {}
-  /// The mesh is received from another participant.
-//  virtual void communicate ();
-  /// The mesh is re-partitioned and all distribution data structures are set up.
-//  virtual void compute ();
+
+  /// bounding box set is received from other participant
   virtual void communicateBoundingBox();
-  virtual void computeBoundingBox();  
+
+  /* bounding boxes are compared and feedback sent to other
+     master to construct initial communication map
+  */
+  virtual void computeBoundingBox();
   
+  /// The mesh is received from another participant.
+  virtual void communicate ();
+  
+  /// The mesh is compared and all distribution data structures are set up.
+  virtual void compute (); 
+    
 private:
 
   logging::Logger _log{"partition::ReceivedBoundingBox"};
@@ -55,7 +63,7 @@ private:
 
   // bool isVertexInBB(const mesh::Vertex& vertex);
 
-  // virtual void createOwnerInformation();
+  virtual void createOwnerInformation();
 
   // /// Helper function for 'createOwnerFunction' to set local owner information
   // void setOwnerInformation(const std::vector<int> &ownerVec);

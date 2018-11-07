@@ -27,36 +27,41 @@ ProvidedBoundingBox::ProvidedBoundingBox
 
 void ProvidedBoundingBox::communicateBoundingBox()
 {
-
   if (_hasToSend) {
-
-    mesh::Mesh::BoundingBox boundingBox; // use this to gather the bbs in the master rank
+    
     // each rank sends its bb to master
-    if (utils::MasterSlave::_slaveMode) {//slave
-      boundingBox = _mesh->getBoundingBox();
-      com::CommunicateBoundingBox(utils::MasterSlave::_communication).sendBoundingBox(boundingBox, 0); 
+    if (utils::MasterSlave::_slaveMode) {//slave            
+      com::CommunicateBoundingBox(utils::MasterSlave::_communication).sendBoundingBox(_mesh->getBoundingBox(), 0); 
     }
     else
     { // Master
+
       assertion(utils::MasterSlave::_rank==0);
-      assertion(utils::MasterSlave::_size>1);
+      assertion(utils::MasterSlave::_size>1);      
+
+      // master receives bbs from other ranks and store them into globabb
+      mesh::Mesh::BoundingBoxMap globalBB;
+      mesh::Mesh::BoundingBox initialBB;
+      for (int i=0; i < _dimensions; i++) {        
+        initialBB.push_back(std::make_pair(-1,-1));
+      }
+      for (int remoteRank = 0; remoteRank < utils::MasterSlave::_size; remoteRank++ )
+      {
+        globalBB[remoteRank]= initialBB;
+      }
 
       // master stores its bb into gloabalBB
-      mesh::Mesh::BoundingBoxMap globalBB;
-      globalBB[0] = _mesh->getBoundingBox();
+      globalBB[0] = _mesh->getBoundingBox();     
 
       // master receives bbs from slaves and store them in global bb
       if (utils::MasterSlave::_size>1) {  
         for (int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++) {
-          com::CommunicateBoundingBox(utils::MasterSlave::_communication).receiveBoundingBox(boundingBox, rankSlave);       
-          DEBUG("From slave " << rankSlave << ", bounding mesh: " << boundingBox[0].first
-                << ", " << boundingBox[0].second << " and " << boundingBox[1].first << ", " << boundingBox[1].second);        
-          globalBB[rankSlave] = boundingBox;
+          com::CommunicateBoundingBox(utils::MasterSlave::_communication).receiveBoundingBox(globalBB[rankSlave], rankSlave);                    
         }
       }
       
-      //master sends set of boundingboxes (globalBB) to the other master
-      _m2n->getMasterCommunication()->send(utils::MasterSlave::_size , 0);
+      // master sends set of boundingboxes (globalBB) to the other master
+      _m2n->getMasterCommunication()->send(utils::MasterSlave::_size , 0);      
       com::CommunicateBoundingBox(_m2n->getMasterCommunication()).sendBoundingBoxMap(globalBB,0);
     }                  
   }   
@@ -69,7 +74,8 @@ void ProvidedBoundingBox::computeBoundingBox()
   mesh::Mesh::FeedbackMap receivedFeedbackMap;
   if (not utils::MasterSlave::_slaveMode) {//Master
     assertion(utils::MasterSlave::_size>1);
-    //master receives other partition communicator size and also a feedback which is a map:  list of other participant ranks -> connected ranks at this participant  
+
+    // master receives other partition communicator size
     _m2n->getMasterCommunication()->receive(remoteParComSize, 0);
     utils::MasterSlave::_communication->broadcast(remoteParComSize);
     for (int i=0; i < remoteParComSize; i++)
@@ -78,6 +84,9 @@ void ProvidedBoundingBox::computeBoundingBox()
       initialFeedback.push_back(-1);
       receivedFeedbackMap[i]=initialFeedback;
     }
+
+    // master receives feedback map (list of other participant ranks -> connected ranks at this participant)
+    // from other participants master
     com::CommunicateBoundingBox(_m2n->getMasterCommunication()).receiveFeedbackMap(receivedFeedbackMap, 0 ); 
     com::CommunicateBoundingBox(utils::MasterSlave::_communication).broadcastSendFeedbackMap(receivedFeedbackMap);     
 
@@ -115,5 +124,16 @@ void ProvidedBoundingBox::computeBoundingBox()
     }
   }
 }
+
+// these functions will be implemented in package 3
+void ProvidedBoundingBox::communicate()
+{}
+
+void ProvidedBoundingBox::compute()
+{}
+
+void ProvidedBoundingBox::createOwnerInformation()
+{}
+
 
 }}

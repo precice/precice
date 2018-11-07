@@ -22,10 +22,15 @@ public:
 
   virtual ~ProvidedBoundingBox() {}
 
+  // These functions will be iplemented in 3rd package
+  virtual void communicate();
+  virtual void compute();
+  virtual void createOwnerInformation();
+  
   /// The boundingbox is gathered and sent to another participant (if required)
-  // virtual void communicate();
-  // virtual void compute();
   virtual void communicateBoundingBox();
+
+  /// The feedback from other participants received here and initial communication map is build 
   virtual void computeBoundingBox();
 
 private:
