@@ -11,10 +11,10 @@ namespace precice
 {
 namespace com
 {
-class MPIPortsCommunicationFactory : public CommunicationFactory
+class MPISinglePortsCommunicationFactory : public CommunicationFactory
 {
 public:
-  explicit MPIPortsCommunicationFactory(std::string const &addressDirectory = ".");
+  explicit MPISinglePortsCommunicationFactory(std::string const &addressDirectory = ".");
 
   PtrCommunication newCommunication() override;
 

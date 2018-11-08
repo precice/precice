@@ -93,7 +93,7 @@ public:
      * This allows temporary variables for container objects.
      * Gives an error, when the property does not exist.
      *
-     * @param[in] index Index of the property to delete
+     * @param[in] propertyID ID of the property to delete
      * @return true, if property existed, false if not
      */
   bool deleteProperty(int propertyID);

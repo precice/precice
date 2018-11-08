@@ -1,11 +1,17 @@
 #include "Triangle.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Vertex.hpp"
+#include <boost/range/concepts.hpp>
 
 namespace precice
 {
 namespace mesh
 {
+
+BOOST_CONCEPT_ASSERT((boost::RandomAccessIteratorConcept<Triangle::iterator>));
+BOOST_CONCEPT_ASSERT((boost::RandomAccessIteratorConcept<Triangle::const_iterator>));
+BOOST_CONCEPT_ASSERT((boost::RandomAccessRangeConcept<Triangle>));
+BOOST_CONCEPT_ASSERT((boost::RandomAccessRangeConcept<const Triangle>));
 
 Triangle::Triangle(
     Edge &edgeOne,
@@ -15,8 +21,7 @@ Triangle::Triangle(
     : PropertyContainer(),
       _edges({&edgeOne, &edgeTwo, &edgeThree}),
       _id(id),
-      _normal(edgeOne.getDimensions()),
-      _center(edgeOne.getDimensions())
+      _normal(Eigen::VectorXd::Zero(edgeOne.getDimensions()))
 {
   assertion(edgeOne.getDimensions() == edgeTwo.getDimensions(),
             edgeOne.getDimensions(), edgeTwo.getDimensions());
@@ -71,25 +76,45 @@ int Triangle::getDimensions() const
   return _edges[0]->getDimensions();
 }
 
-void Triangle::setEnclosingRadius(
-    double radius)
-{
-  _enclosingRadius = radius;
-}
-
 const Eigen::VectorXd &Triangle::getNormal() const
 {
   return _normal;
 }
 
-const Eigen::VectorXd &Triangle::getCenter() const
+const Eigen::VectorXd Triangle::getCenter() const
 {
-  return _center;
+  return (_edges[0]->getCenter() +_edges[1]->getCenter() + _edges[2]->getCenter()) / 3.0;
 }
 
 double Triangle::getEnclosingRadius() const
 {
-  return _enclosingRadius;
+  auto center = getCenter();
+  return std::max({(center - vertex(0).getCoords()).norm(),
+                   (center - vertex(1).getCoords()).norm(),
+                   (center - vertex(2).getCoords()).norm()});
+}
+
+bool Triangle::operator==(const Triangle& other) const
+{
+    return math::equals(_normal, other._normal) &&
+        std::is_permutation(_edges.begin(), _edges.end(), other._edges.begin(),
+                [](const Edge* e1, const Edge* e2){return *e1 == *e2;});
+}
+
+bool Triangle::operator!=(const Triangle& other) const
+{
+    return !(*this == other);
+}
+
+std::ostream& operator<<(std::ostream& os, const Triangle& t)
+{
+    os << "POLYGON ((";
+    for (int i = 0; i < 3; i++){
+        os << t.vertex(i).getCoords().transpose();
+        if (i < 2)
+            os << ", ";
+    }
+    return os <<", " << t.vertex(0).getCoords().transpose() << "))";
 }
 
 } // namespace mesh

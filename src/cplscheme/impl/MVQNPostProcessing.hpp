@@ -76,43 +76,43 @@ public:
   virtual void specializedIterationsConverged(DataMap &cplData);
 
 private:
-  /// @brief: stores the approximation of the inverse Jacobian of the system at current time step.
+  /// @brief stores the approximation of the inverse Jacobian of the system at current time step.
   Eigen::MatrixXd _invJacobian;
 
-  /// @brief: stores the approximation of the inverse Jacobian from the previous time step.
+  /// @brief stores the approximation of the inverse Jacobian from the previous time step.
   Eigen::MatrixXd _oldInvJacobian;
 
-  /// @brief: stores the sub result (W-J_prev*V) for the current iteration
+  /// @brief stores the sub result (W-J_prev*V) for the current iteration
   Eigen::MatrixXd _Wtil;
 
-  /// @brief: stores all Wtil matrices within the current chunk of the imvj restart mode, disabled if _imvjRestart = false.
+  /// @brief stores all Wtil matrices within the current chunk of the imvj restart mode, disabled if _imvjRestart = false.
   std::vector<Eigen::MatrixXd> _WtilChunk;
 
-  /// @brief_ stores all pseudo inverses within the current chunk of the imvj restart mode, disabled if _imvjRestart = false.
+  /// @brief stores all pseudo inverses within the current chunk of the imvj restart mode, disabled if _imvjRestart = false.
   std::vector<Eigen::MatrixXd> _pseudoInverseChunk;
 
-  /// @brief: stores columns from previous  #_RSLSreusedTimesteps time steps if RS-LS restart-mode is active
+  /// @brief stores columns from previous  #_RSLSreusedTimesteps time steps if RS-LS restart-mode is active
   Eigen::MatrixXd _matrixV_RSLS;
 
-  /// @brief: stores columns from previous  #_RSLSreusedTimesteps time steps if RS-LS restart-mode is active
+  /// @brief stores columns from previous  #_RSLSreusedTimesteps time steps if RS-LS restart-mode is active
   Eigen::MatrixXd _matrixW_RSLS;
 
-  /// @brief: number of cols per time step
+  /// @brief number of cols per time step
   std::deque<int> _matrixCols_RSLS;
 
-  /// @brief: Communication between neighboring slaves, backwards
+  /// @brief Communication between neighboring slaves, backwards
   com::PtrCommunication _cyclicCommLeft;
 
-  /// @brief: Communication between neighboring slaves, forward
+  /// @brief Communication between neighboring slaves, forward
   com::PtrCommunication _cyclicCommRight;
 
-  /// @brief: encapsulates matrix-matrix and matrix-vector multiplications for serial and parallel execution
+  /// @brief encapsulates matrix-matrix and matrix-vector multiplications for serial and parallel execution
   PtrParMatrixOps _parMatrixOps;
 
   /// @brief holds and maintains a truncated SVD decomposition of the Jacobian matrix
   SVDFactorization _svdJ;
 
-  /** @brief: If true, the less efficient method to compute the quasi-Newton update is used,
+  /** @brief If true, the less efficient method to compute the quasi-Newton update is used,
    *   that explicitly builds the Jacobian in each iteration. If set to false this is only done
    *   in the very last iteration and the update is computed based on MATVEC products.
    */

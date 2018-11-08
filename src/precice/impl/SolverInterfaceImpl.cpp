@@ -1758,7 +1758,7 @@ void SolverInterfaceImpl:: initializeClientServerCommunication()
   assertion(com.get() != nullptr);
   if ( _serverMode ){
     INFO("Setting up communication to client" );
-    com->acceptConnection ( _accessorName + "Server", _accessorName );
+    com->acceptConnection ( _accessorName + "Server", _accessorName, 0);
   }
   else {
     INFO("Setting up communication to server" );
@@ -1778,7 +1778,7 @@ void SolverInterfaceImpl:: initializeMasterSlaveCommunication()
   int rankOffset = 1;
   if ( utils::MasterSlave::_masterMode ){
     INFO("Setting up communication to slaves" );
-    utils::MasterSlave::_communication->acceptConnection ( _accessorName + "Master", _accessorName);
+    utils::MasterSlave::_communication->acceptConnection ( _accessorName + "Master", _accessorName, utils::MasterSlave::_rank);
     utils::MasterSlave::_communication->setRankOffset(rankOffset);
   }
   else {

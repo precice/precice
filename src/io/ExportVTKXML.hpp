@@ -28,7 +28,7 @@ public:
   /**
    * @brief Standard constructor
    *
-   * @param exportNormals  [IN] boolean: write normals to file?
+   * @param[in] writeNormals write normals to file?
    */
   ExportVTKXML ( bool writeNormals);
 

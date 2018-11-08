@@ -16,6 +16,7 @@ public:
    * @brief Constructor.
    *
    * @param[in] constraint Specifies mapping to be consistent or conservative.
+   * @param[in] dimensions Dimensionality of the meshes
    */
   NearestNeighborMapping ( Constraint constraint, int dimensions );
 

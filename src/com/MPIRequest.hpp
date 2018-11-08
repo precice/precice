@@ -11,11 +11,11 @@ namespace com
 class MPIRequest : public Request
 {
 public:
-  MPIRequest(MPI_Request request);
+  explicit MPIRequest(MPI_Request request);
 
-  bool test();
+  bool test() override;
 
-  void wait();
+  void wait() override;
 
 private:
   MPI_Request _request;

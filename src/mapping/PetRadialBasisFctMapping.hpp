@@ -54,7 +54,7 @@ public:
    * @brief Constructor.
    *
    * @param[in] constraint Specifies mapping to be consistent or conservative.
-   * @param[in] dimension Dimensionality of the meshes
+   * @param[in] dimensions Dimensionality of the meshes
    * @param[in] function Radial basis function used for mapping.
    * @param[in] xDead, yDead, zDead Deactivates mapping along an axis
    * @param[in] solverRtol Relative tolerance for the linear solver.
@@ -72,7 +72,7 @@ public:
     bool                    zDead,
     double                  solverRtol = 1e-9,
     Polynomial              polynomial = Polynomial::SEPARATE,
-    Preallocation           preallocation = Preallocation::OFF);
+    Preallocation           preallocation = Preallocation::TREE);
 
   /// Deletes the PETSc objects and the _deadAxis array
   virtual ~PetRadialBasisFctMapping();
@@ -107,7 +107,7 @@ private:
   /// Interpolation system matrix. Evaluated basis function on the input mesh
   petsc::Matrix _matrixC;
 
-  /// Vandermonde Matrix, constructed from vertices of the input mesh
+  /// Vandermonde Matrix for linear polynomial, constructed from vertices of the input mesh
   petsc::Matrix _matrixQ;
 
   /// Interpolation evaluation matrix. Evaluated basis function on the output mesh
@@ -118,6 +118,7 @@ private:
 
   petsc::Vector rescalingCoeffs;
 
+  /// Used to solve matrixC for the RBF weighting factors
   petsc::KSPSolver _solver;
 
   /// Used to solve the under-determined system for the separated polynomial.
@@ -273,7 +274,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   // Indizes that are used to build the Petsc Index set
   std::vector<int> myIndizes;
 
-  // Indizes for Q^T, holding the polynom
+  // Indizes for Q^T, holding the polynomial
   if (utils::Parallel::getProcessRank() <= 0) // Rank 0 or not in MasterSlave mode
     for (size_t i = 0; i < polyparams; i++)
       myIndizes.push_back(i); // polyparams reside in the first rows (which are always on rank 0)
@@ -297,11 +298,11 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   ierr = MatSetOption(_matrixC, MAT_SYMMETRIC, PETSC_TRUE); CHKERRV(ierr);
   ierr = MatSetOption(_matrixC, MAT_SYMMETRY_ETERNAL, PETSC_TRUE); CHKERRV(ierr);
 
-  // Matrix Q: Dense, holds the input mesh for the polynom if set to SEPERATE. Zero size otherwise
+  // Matrix Q: Dense, holds the input mesh for the polynomial if set to SEPERATE. Zero size otherwise
   _matrixQ.init(n, PETSC_DETERMINE, PETSC_DETERMINE, sepPolyparams, MATDENSE);
   DEBUG("Set matrix Q to local size " << n << " x " << sepPolyparams);
 
-  // Matrix V: Dense, holds the output mesh for polynom if set to SEPERATE. Zero size otherwise
+  // Matrix V: Dense, holds the output mesh for polynomial if set to SEPERATE. Zero size otherwise
   _matrixV.init(outputSize, PETSC_DETERMINE, PETSC_DETERMINE, sepPolyparams, MATDENSE);
   DEBUG("Set matrix V to local size " << outputSize << " x " << sepPolyparams);
 
@@ -327,7 +328,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   ierr = ISAllGather(ISidentity, &ISidentityGlobal); CHKERRV(ierr);
   ierr = ISLocalToGlobalMappingCreateIS(ISidentityGlobal, &ISidentityMapping); CHKERRV(ierr);
 
-  // Create another identity mapping for the polynomial parameters
+  // Create another identity mapping for the polynomial parameters.
+  // That is not needed, but its set, so we can exchange matrixV and matrixA when filling polyparams,
+  // i.e. use VecSetValuesLocal on both
   ierr = ISCreateStride(PETSC_COMM_SELF, sepPolyparams, 0, 1, &ISpolyparams); CHKERRV(ierr);
   ierr = ISSetIdentity(ISpolyparams); CHKERRV(ierr);
   ierr = ISLocalToGlobalMappingCreateIS(ISpolyparams, &ISpolyparamsMapping); CHKERRV(ierr);
@@ -386,7 +389,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     PetscInt colIdx[_matrixC.getSize().second];     // holds the columns indices of the entries
     PetscScalar rowVals[_matrixC.getSize().second]; // holds the values of the entries
 
-    // -- SETS THE POLYNOM PART OF THE MATRIX --
+    // -- SETS THE POLYNOMIAL PART OF THE MATRIX --
     if (_polynomial == Polynomial::ON or _polynomial == Polynomial::SEPARATE) {
       colIdx[colNum] = colNum;
       rowVals[colNum++] = 1;
@@ -420,7 +423,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       for (const mesh::Vertex& vj : inMesh->vertices()) {
         int col = vj.getGlobalIndex() + polyparams;
         if (row > col)
-          continue;
+          continue; // matrix is symmetric
         distance = inVertex.getCoords() - vj.getCoords();
         for (int d = 0; d < dimensions; d++) {
           if (_deadAxis[d]) {
@@ -472,7 +475,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     PetscScalar rowVals[_matrixA.getSize().second]; // holds the values of the entries
     const mesh::Vertex& oVertex = outMesh->vertices()[row - _matrixA.ownerRange().first];
 
-    // -- SET THE POLYNOM PART OF THE MATRIX --
+    // -- SET THE POLYNOMIAL PART OF THE MATRIX --
     if (_polynomial == Polynomial::ON or _polynomial == Polynomial::SEPARATE) {
       Mat m = _polynomial == Polynomial::ON ? _matrixA : _matrixV;
 
@@ -613,14 +616,16 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
   if (getConstraint() == CONSERVATIVE) {
     petsc::Vector au(_matrixA, "au", petsc::Vector::RIGHT);
     petsc::Vector in(_matrixA, "in");
-
-    // Fill input from input data values
+    int inRangeStart, inRangeEnd;
+    std::tie(inRangeStart, inRangeEnd) = in.ownerRange();
     for (int dim = 0; dim < valueDim; dim++) {
       printMappingInfo(inputDataID, dim);
 
+      // Fill input from input data values
       for (size_t i = 0; i < input()->vertices().size(); i++ ) {
-        int globalIndex = input()->vertices()[i].getGlobalIndex();
-        VecSetValue(in, globalIndex, inValues[i*valueDim + dim], INSERT_VALUES);
+        int globalIndex = input()->vertices()[i].getGlobalIndex(); // globalIndex is target row
+        if (globalIndex >= inRangeStart and globalIndex < inRangeEnd) // only fill local rows
+          ierr = VecSetValue(in, globalIndex, inValues[i*valueDim + dim], INSERT_VALUES); CHKERRV(ierr);
       }
       in.assemble();
 
@@ -679,7 +684,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
   else { // Map CONSISTENT
     petsc::Vector out(_matrixA, "out");
     petsc::Vector in(_matrixC, "in");
-    petsc::Vector a(_matrixQ, "a", petsc::Vector::RIGHT); // holds the solution of the LS polynom
+    petsc::Vector a(_matrixQ, "a", petsc::Vector::RIGHT); // holds the solution of the LS polynomial
 
     ierr = VecSetLocalToGlobalMapping(in, _ISmapping); CHKERRV(ierr);
     const PetscScalar *vecArray;
@@ -722,17 +727,17 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
 
       if (useRescaling and (_polynomial == Polynomial::SEPARATE)) {
         petsc::Vector temp(_matrixA);
-        PetscReal max;
-        ierr = MatMult(_matrixA, rescalingCoeffs, temp); CHKERRV(ierr);
-        ierr = VecNorm(temp, NORM_INFINITY, &max); // Test for zero elements before dividing
-        if (max < 1e-6)
+        PetscReal min;
+        ierr = MatMult(_matrixA, rescalingCoeffs, temp); CHKERRV(ierr); // get the output of g(x) = 1
+        ierr = VecMin(temp, nullptr, &min); CHKERRV(ierr); // check for zeros before devision
+        if (min < 1e-6)
           WARN("Zero elements found in rescaling, omit rescaling.");
         else
           ierr = VecPointwiseDivide(out, out, temp); CHKERRV(ierr);
       }
 
       if (_polynomial == Polynomial::SEPARATE) {
-        ierr = VecScale(a, -1); // scale it back, so wie add the polynom
+        ierr = VecScale(a, -1); // scale it back to add the polynomial
         ierr = MatMultAdd(_matrixV, a, out, out); CHKERRV(ierr);
       }
       VecChop(out, 1e-9);
@@ -769,19 +774,21 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
   if (otherMesh->vertices().size() == 0)
       return; // Ranks not at the interface should never hold interface vertices
 
+  // Tags all vertices that are inside otherMesh's bounding box, enlarged by the support radius
   for(mesh::Vertex& v : filterMesh->vertices()) {
     bool isInside = true;
     #if PETSC_MAJOR >= 3 and PETSC_MINOR >= 8
     if (_basisFunction.hasCompactSupport()) {
-      for (int d = 0; d < getDimensions(); d++) {
+      for (int d = 0; d < v.getDimensions(); d++) {
         if (v.getCoords()[d] < otherMesh->getBoundingBox()[d].first - _basisFunction.getSupportRadius() or
             v.getCoords()[d] > otherMesh->getBoundingBox()[d].second + _basisFunction.getSupportRadius() ) {
           isInside = false;
+          break;
         }
       }
     }
     #else
-      #warning "Mesh filtering deactivated, due to PETSc version < 3.8 or compiling with scons. \
+      #warning "Mesh filtering deactivated, due to PETSc version < 3.8. \
 preCICE is fully functional, but performance for large cases is degraded."
     #endif
     if (isInside)
@@ -802,10 +809,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
   if (not _basisFunction.hasCompactSupport())
     return; // Tags should not be changed
 
-  mesh::Mesh::BoundingBox bb(getDimensions(),
-                             std::make_pair(std::numeric_limits<double>::max(),
-                                            std::numeric_limits<double>::lowest()));
-
   mesh::PtrMesh mesh; // The mesh we want to filter
 
   if (getConstraint() == CONSISTENT)
@@ -813,11 +816,15 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
   else if (getConstraint() == CONSERVATIVE)
     mesh = output();
 
+  mesh::Mesh::BoundingBox bb(mesh->getDimensions(),
+                             std::make_pair(std::numeric_limits<double>::max(),
+                                            std::numeric_limits<double>::lowest()));
+
   // Construct bounding box around all owned vertices
   for (mesh::Vertex& v : mesh->vertices()) {
     if (v.isOwner()) {
       assertion(v.isTagged()); // Should be tagged from the first round
-      for (int d = 0; d < getDimensions(); d++) {
+      for (int d = 0; d < v.getDimensions(); d++) {
         bb[d].first  = std::min(v.getCoords()[d], bb[d].first);
         bb[d].second = std::max(v.getCoords()[d], bb[d].second);
       }
@@ -826,10 +833,11 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
   // Tag vertices that are inside the bounding box + support radius
   for (mesh::Vertex& v : mesh->vertices()) {
     bool isInside = true;
-    for (int d = 0; d < getDimensions(); d++) {
+    for (int d = 0; d < v.getDimensions(); d++) {
       if (v.getCoords()[d] < bb[d].first - _basisFunction.getSupportRadius() or
           v.getCoords()[d] > bb[d].second + _basisFunction.getSupportRadius() ) {
         isInside = false;
+        break;
       }
     }
     if (isInside)

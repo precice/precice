@@ -30,13 +30,14 @@ size_t MPIDirectCommunication::getRemoteCommunicatorSize()
   return remoteSize;
 }
 
-void MPIDirectCommunication::acceptConnection(std::string const &nameAcceptor,
-                                              std::string const &nameRequester)
+void MPIDirectCommunication::acceptConnection(std::string const &acceptorName,
+                                              std::string const &requesterName,
+                                              int                acceptorRank)
 {
-  TRACE(nameAcceptor, nameRequester);
+  TRACE(acceptorName, requesterName);
   assertion(not isConnected());
 
-  utils::Parallel::splitCommunicator(nameAcceptor);
+  utils::Parallel::splitCommunicator(acceptorName);
 
   CHECK(utils::Parallel::getCommunicatorSize() > 1,
         "MPI communication direct (i.e. single) can be only used with more than one process in base communicator!");
@@ -47,7 +48,7 @@ void MPIDirectCommunication::acceptConnection(std::string const &nameAcceptor,
       _localCommunicator,
       0, // Local communicator, local leader rank
       _globalCommunicator,
-      getLeaderRank(nameRequester), // Peer communicator, remote leader rank
+      getLeaderRank(requesterName), // Peer communicator, remote leader rank
       0,
       &communicator()); // Tag, intercommunicator to be created
   _isConnected = true;
@@ -64,15 +65,15 @@ void MPIDirectCommunication::closeConnection()
   _isConnected = false;
 }
 
-void MPIDirectCommunication::requestConnection(std::string const &nameAcceptor,
-                                               std::string const &nameRequester,
-                                               int                requesterProcessRank,
+void MPIDirectCommunication::requestConnection(std::string const &acceptorName,
+                                               std::string const &requesterName,
+                                               int                requesterRank,
                                                int                requesterCommunicatorSize)
 {
-  TRACE(nameAcceptor, nameRequester);
+  TRACE(acceptorName, requesterName);
   assertion(not isConnected());
 
-  utils::Parallel::splitCommunicator(nameRequester);
+  utils::Parallel::splitCommunicator(requesterName);
 
   CHECK(utils::Parallel::getCommunicatorSize() > 1,
         "MPI communication direct (i.e. single) can be only used with more than one process in base communicator!");
@@ -83,7 +84,7 @@ void MPIDirectCommunication::requestConnection(std::string const &nameAcceptor,
       _localCommunicator,
       0, // Local communicator, local leader rank
       _globalCommunicator,
-      getLeaderRank(nameAcceptor), // Peer communicator, remote leader rank
+      getLeaderRank(acceptorName), // Peer communicator, remote leader rank
       0,
       &communicator()); // Tag, intercommunicator to be created
   _isConnected = true;
