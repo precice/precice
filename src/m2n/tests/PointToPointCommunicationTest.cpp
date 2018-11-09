@@ -313,7 +313,8 @@ BOOST_AUTO_TEST_CASE(P2PComMeshTest, * testing::OnSize(4))
   // com::PtrCommunicationFactory cf(new com::SocketCommunicationFactory);
   com::PtrCommunicationFactory cf(new com::MPIPortsCommunicationFactory); 
   utils::MasterSlave::_communication = std::make_shared<com::MPIDirectCommunication>();
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 2, true));  
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 2, true));
+  int dimensions = 2;
 
   switch (utils::Parallel::getProcessRank()) {
   case 0: {
