@@ -3,6 +3,7 @@
 #include <thread>
 #include "com/Communication.hpp"
 #include "com/CommunicationFactory.hpp"
+#include "com/CommunicateMesh.hpp"
 #include "mesh/Mesh.hpp"
 #include "utils/EventTimings.hpp"
 #include "utils/MasterSlave.hpp"
@@ -401,6 +402,113 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
   _isConnected = true;
 }
 
+void PointToPointCommunication::acceptPreConnection(std::string const &acceptorName,
+                                                 std::string const &requesterName)
+{
+  TRACE(acceptorName, requesterName);
+  CHECK(not isConnected(), "Already connected!");
+  CHECK(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode,
+        "You can only use a point-to-point communication between two participants which both use a master. "
+            << "Please use distribution-type gather-scatter instead.");
+
+  if (utils::MasterSlave::_masterMode) {
+    // Establish connection between participants' master processes.
+    auto c = _communicationFactory->newCommunication();
+
+    c->acceptConnection(acceptorName, requesterName, utils::MasterSlave::_rank);
+
+    int requesterMasterRank;
+
+    // Exchange ranks of participants' master processes.
+    c->send(utils::MasterSlave::_masterRank, 0);
+    c->receive(requesterMasterRank, 0);
+
+  } else {
+    assertion(utils::MasterSlave::_slaveMode);
+  }
+
+  std::vector<int> localCommunicationMap = _mesh->getInitialCommunicationMap();
+
+// Print `communicationMap'.
+#ifdef P2P_LCM_PRINT
+  e.stop(true);
+  print(localCommunicationMap);
+  e.start(true);
+#endif
+
+// Print statistics of `communicationMap'.
+#ifdef P2P_LCM_PRINT_STATS
+  e.stop(true);
+  printCommunicationPartnerCountStats(localCommunicationMap);
+  printLocalIndexCountStats(localCommunicationMap);
+  e.start(true);
+#endif
+
+#ifdef SuperMUC_WORK
+  try {
+    auto addressDirectory = _communicationFactory->addressDirectory();
+
+    if (utils::MasterSlave::_masterMode) {
+      Event e("m2n.createDirectories");
+
+      for (int rank = 0; rank < utils::MasterSlave::_size; ++rank) {
+        Publisher::createDirectory(addressDirectory + "/" + "." + acceptorName + "-" + _mesh->getName() +
+                                   "-" + std::to_string(rank) + ".address");
+      }
+    }
+    utils::Parallel::synchronizeProcesses();
+  } catch (...) {
+  }
+#endif
+
+  if (localCommunicationMap.empty()) {
+    _isConnected = true;
+    return;
+  }
+
+  // Accept point-to-point connections (as server) between the current acceptor
+  // process (in the current participant) with rank `utils::MasterSlave::_rank'
+  // and (multiple) requester processes (in the requester participant).
+  auto c = _communicationFactory->newCommunication();
+
+#ifdef SuperMUC_WORK
+  Publisher::ScopedPushDirectory spd("." + acceptorName + "-" + _mesh->getName() + "-" +
+                                     std::to_string(utils::MasterSlave::_rank) + ".address");
+#endif
+
+  c->acceptConnectionAsServer(
+      acceptorName,
+      requesterName,
+      utils::MasterSlave::_rank,
+      localCommunicationMap.size());
+
+  _mappings.reserve(localCommunicationMap.size());
+
+  // we need to create dummyindices because at this point we neither need list
+  // of indices nor have them, But we want to keep using same _mappings data structure
+  std::vector<int> dummyIndices;
+  dummyIndices.push_back(-1);
+
+  for (auto & comMap : localCommunicationMap) {
+    int globalRequesterRank = comMap;
+    
+    auto indices = std::move(dummyIndices);
+
+    /*
+      NOTE:
+      Everything is moved (efficiency)!
+      On the acceptor participant side, the communication object `c' behaves as a server, i.e. it 
+      implicitly accepts multiple connections to requester processes (in the requester participant). 
+      As a result, only one communication object `c' is needed to satisfy `communicationMap', and, 
+      therefore, for data structure consistency of `_mappings' with the requester participant side, 
+      we simply duplicate references to the same communication object `c'.
+    */
+    _mappings.push_back({globalRequesterRank, std::move(indices), c, com::PtrRequest(), {}});
+  }
+
+  _isConnected = true;
+}
+
 void PointToPointCommunication::requestConnection(std::string const &acceptorName,
                                                   std::string const &requesterName)
 {
@@ -518,6 +626,116 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
   _isConnected = true;
 }
 
+void PointToPointCommunication::requestPreConnection(std::string const &acceptorName,
+                                                     std::string const &requesterName)
+{
+  TRACE(acceptorName, requesterName);
+  CHECK(not isConnected(), "Already connected!");
+  CHECK(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode,
+        "You can only use a point-to-point communication between two participants which both use a master. "
+        << "Please use distribution-type gather-scatter instead.");
+
+  if (utils::MasterSlave::_masterMode) {
+    // Establish connection between participants' master processes.
+    auto c = _communicationFactory->newCommunication();
+    c->requestConnection(acceptorName, requesterName, 0, 1);
+
+    int acceptorMasterRank;
+
+    // Exchange ranks of participants' master processes.
+    c->receive(acceptorMasterRank, 0);
+    c->send(utils::MasterSlave::_masterRank, 0);
+
+  } else {
+    assertion(utils::MasterSlave::_slaveMode);
+  }
+
+  std::vector<int> localCommunicationMap = _mesh->getInitialCommunicationMap();
+
+// Print `communicationMap'.
+#ifdef P2P_LCM_PRINT
+  e.stop(true);
+  print(localCommunicationMap);
+  e.start(true);
+#endif
+
+// Print statistics of `communicationMap'.
+#ifdef P2P_LCM_PRINT_STATS
+  e.stop(true);
+  printCommunicationPartnerCountStats(localCommunicationMap);
+  printLocalIndexCountStats(localCommunicationMap);
+  e.start(true);
+#endif
+
+#ifdef SuperMUC_WORK
+  try {
+    auto addressDirectory = _communicationFactory->addressDirectory();
+
+    utils::Parallel::synchronizeProcesses();
+  } catch (...) {
+  }
+#endif
+
+  if (localCommunicationMap.empty()) {
+    _isConnected = true;
+    return;
+  }
+
+  std::vector<com::PtrRequest> requests;
+  requests.reserve(localCommunicationMap.size());
+  _mappings.reserve(localCommunicationMap.size());
+
+  std::set<int> acceptingRanks;
+  for (auto &i : localCommunicationMap)
+    acceptingRanks.emplace(i);
+
+  auto c = _communicationFactory->newCommunication();
+  c->requestConnectionAsClient(acceptorName, requesterName,
+                               acceptingRanks, utils::MasterSlave::_rank);
+
+  // Request point-to-point connections (as client) between the current
+  // requester process (in the current participant) and (multiple) acceptor
+  // processes (in the acceptor participant) with ranks `globalAcceptorRank'
+  // according to communication map.
+  // we need to create dummyindices because at this point we neither need list
+  // of indices nor have them, But we want to keep using same _mappings data structure  
+  std::vector<int> dummyIndices;
+  dummyIndices.push_back(-1);
+  for (auto &i : localCommunicationMap) {
+    auto globalAcceptorRank = i;
+    auto indices            = std::move(dummyIndices);
+
+#ifdef SuperMUC_WORK
+    Publisher::ScopedPushDirectory spd("." + acceptorName + "-" + _mesh->getName() + "-" +
+                                       std::to_string(globalAcceptorRank) + ".address");
+#endif
+
+    // NOTE:
+    // Everything is moved (efficiency)!
+    // On the requester participant side, the communication objects behave
+    // as clients, i.e. each of them requests only one connection to
+    // acceptor process (in the acceptor participant).
+    _mappings.push_back({globalAcceptorRank, std::move(indices), c, com::PtrRequest(), {}});
+  }
+  _isConnected = true;
+}
+
+void PointToPointCommunication::updateAcceptorCommunicationMap()
+{
+  std::map<int, std::vector<int>> localCommunicationMap = _mesh->getCommunicationMap();  
+  for (size_t localRequesterRank = 0; localRequesterRank < localCommunicationMap.size(); ++localRequesterRank) {
+    _mappings[localRequesterRank].indices = std::move(localCommunicationMap[localRequesterRank]);    
+  }  
+}
+
+void PointToPointCommunication::updateRequesterCommunicationMap()
+{
+  std::map<int, std::vector<int>> localCommunicationMap = _mesh->getCommunicationMap();
+  for (size_t localAcceptorRank = 0; localAcceptorRank < localCommunicationMap.size(); ++localAcceptorRank) {
+    _mappings[localAcceptorRank].indices = std::move(localCommunicationMap[localAcceptorRank]);    
+  }  
+}
+
 void PointToPointCommunication::closeConnection()
 {
   TRACE();
@@ -599,6 +817,35 @@ void PointToPointCommunication::receive(double *itemsToReceive,
   }
 }
 
+void PointToPointCommunication::sendMesh(mesh::Mesh &mesh)
+{  
+  for (auto &mapping : _mappings) {
+    com::CommunicateMesh(mapping.communication).sendMesh(mesh, mapping.remoteRank);
+  }  
+}
+
+void PointToPointCommunication::receiveMesh(mesh::Mesh &mesh)
+{  
+  for (auto &mapping : _mappings) {
+    com::CommunicateMesh(mapping.communication).receiveMesh(mesh, mapping.remoteRank);
+  }  
+}
+
+
+void PointToPointCommunication::sendCommunicationMap(mesh::Mesh::FeedbackMap &localCommunicationMap)
+{
+  for (auto &mapping : _mappings) {
+    mapping.communication->send(localCommunicationMap[mapping.remoteRank], mapping.remoteRank);
+  }
+}
+
+void PointToPointCommunication::receiveCommunicationMap(mesh::Mesh::FeedbackMap &localCommunicationMap)
+{
+  for (auto &mapping : _mappings) {
+    mapping.communication->receive(localCommunicationMap[mapping.remoteRank], mapping.remoteRank);
+  }
+}
+
 void PointToPointCommunication::checkBufferedRequests(bool blocking)
 {
   TRACE(bufferedRequests.size());
@@ -615,9 +862,6 @@ void PointToPointCommunication::checkBufferedRequests(bool blocking)
       std::this_thread::yield(); // give up our time slice, so MPI may work
   } while (blocking);
 }
-
-
-
 
 } // namespace m2n
 } // namespace precice

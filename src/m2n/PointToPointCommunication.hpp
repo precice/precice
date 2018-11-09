@@ -5,6 +5,7 @@
 #include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "mesh/Mesh.hpp"
 
 namespace precice
 {
@@ -51,6 +52,40 @@ public:
   virtual void requestConnection(std::string const &acceptorName,
                                  std::string const &requesterName);
 
+  /** same as acceptconnection, but this one does not need vertex distribution
+      and instead gets communication map directly from mesh. 
+   
+   *  This one is used only to create initial communication Map.    
+   */
+  virtual void acceptPreConnection(std::string const &acceptorName,
+                                   std::string const &requesterName);
+  
+  /** same as requestConnection, but this one does not need vertex distribution
+      and instead gets communication map directly from mesh. 
+   
+   *  This one is used only to create initial communication Map.    
+   */
+  virtual void requestPreConnection(std::string const &acceptorName,
+                                    std::string const &requesterName);
+
+
+  /** This function should be called by connection accepter to update the vertex list in the 
+      communication map, which has be filled previously with demo 
+      rank (-1)
+  */
+  virtual void updateAcceptorCommunicationMap();
+
+  /** This function should be called by connection requester to update the vertex list in the 
+      communication map, which has be filled previously with demo 
+      rank (-1)
+  */
+  virtual void updateRequesterCommunicationMap();
+
+  /**
+   * @brief Disconnects from communication space, i.e. participant.
+   *
+   * This method is called on destruction.
+   */
   /**
    * @brief Disconnects from communication space, i.e. participant.
    *
@@ -71,6 +106,29 @@ public:
   virtual void receive(double *itemsToReceive,
                        size_t  size,
                        int     valueDimension = 1);
+  
+  /**
+   * All ranks Send their partition to remote local ranks.
+   */
+  virtual void sendMesh(mesh::Mesh &mesh);
+  
+  /**
+   * All ranks receive mesh partition from remote local ranks.
+   */
+  virtual void receiveMesh(
+    mesh::Mesh &mesh);
+
+  /**
+   * All ranks Send their local communication maps to connected ranks
+   */
+  virtual void sendCommunicationMap(
+    mesh::Mesh::FeedbackMap &localCommunicationMap);
+
+  /**
+   * Each rank revives local communication maps from connected ranks
+   */
+  virtual void receiveCommunicationMap(
+    mesh::Mesh::FeedbackMap &localCommunicationMap) ;
 
 private:
   logging::Logger _log{"m2n::PointToPointCommunication"};
