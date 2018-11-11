@@ -69,7 +69,6 @@ void ProvidedBoundingBox::communicateBoundingBox()
 
 void ProvidedBoundingBox::computeBoundingBox()
 {
-  int numberOfVertices = _mesh->vertices().size();
   int remoteParComSize = -1;
   mesh::Mesh::FeedbackMap receivedFeedbackMap;
   if (not utils::MasterSlave::_slaveMode) {//Master
@@ -125,9 +124,11 @@ void ProvidedBoundingBox::computeBoundingBox()
   }
 }
 
-// these functions will be implemented in package 3
 void ProvidedBoundingBox::communicate()
-{}
+{
+  // each rank send its mesh partition to connected ranks at other participant
+  _m2n->broadcastSendLocalMesh(*_mesh);  
+}
 
 void ProvidedBoundingBox::compute()
 {}
