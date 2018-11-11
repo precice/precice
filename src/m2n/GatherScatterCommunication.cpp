@@ -162,5 +162,32 @@ void GatherScatterCommunication::receive(
   } // Master
 }
 
+
+void GatherScatterCommunication::acceptPreConnection(std::string const &acceptorName,
+                                 std::string const &requesterName)
+{}
+
+void GatherScatterCommunication::requestPreConnection(std::string const &acceptorName,
+                                  std::string const &requesterName)
+{}
+
+void GatherScatterCommunication::updateAcceptorCommunicationMap()
+{}
+
+void GatherScatterCommunication::updateRequesterCommunicationMap()
+{}
+
+void GatherScatterCommunication::sendMesh(mesh::Mesh &mesh)
+{}
+ 
+void GatherScatterCommunication::receiveMesh(mesh::Mesh &mesh)
+{}
+
+void GatherScatterCommunication::sendCommunicationMap(mesh::Mesh::FeedbackMap &localCommunicationMap)
+{}
+
+void GatherScatterCommunication::receiveCommunicationMap(mesh::Mesh::FeedbackMap &localCommunicationMap)
+{}
+
 } // namespace m2n
 } // namespace precice

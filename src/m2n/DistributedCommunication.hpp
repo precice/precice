@@ -1,6 +1,7 @@
 #pragma once
 
 #include "mesh/SharedPointer.hpp"
+#include "mesh/Mesh.hpp"
 
 namespace precice
 {
@@ -63,6 +64,37 @@ public:
       const std::string &acceptorName,
       const std::string &requesterName) = 0;
 
+  /** same as acceptconnection, but this one does not need vertex distribution
+      and instead gets communication map directly from mesh. 
+   
+   *  This one is used only to create initial communication Map.    
+   */
+  virtual void acceptPreConnection(
+    std::string const &acceptorName,
+    std::string const &requesterName) = 0;
+  
+  /** same as requestConnection, but this one does not need vertex distribution
+      and instead gets communication map directly from mesh. 
+   
+   *  This one is used only to create initial communication Map.    
+   */
+  virtual void requestPreConnection(
+    std::string const &acceptorName,
+    std::string const &requesterName) = 0;
+
+
+  /** This function should be called by connection accepter to update the vertex list in the 
+      communication map, which has be filled previously with demo 
+      rank (-1)
+  */
+  virtual void updateAcceptorCommunicationMap() = 0;
+
+  /** This function should be called by connection requester to update the vertex list in the 
+      communication map, which has be filled previously with demo 
+      rank (-1)
+  */
+  virtual void updateRequesterCommunicationMap() = 0;
+
   /**
    * @brief Disconnects from communication space, i.e. participant.
    *
@@ -81,6 +113,27 @@ public:
       double *itemsToReceive,
       size_t  size,
       int     valueDimension) = 0;
+
+  virtual void sendMesh(
+    mesh::Mesh &mesh) = 0;
+  
+  /**
+   * All ranks receive mesh partition from remote local ranks.
+   */
+  virtual void receiveMesh(
+    mesh::Mesh &mesh) = 0;
+
+  /**
+   * All ranks Send their local communication maps to connected ranks
+   */
+  virtual void sendCommunicationMap(
+    mesh::Mesh::FeedbackMap &localCommunicationMap) = 0;
+
+  /**
+   * Each rank revives local communication maps from connected ranks
+   */
+  virtual void receiveCommunicationMap(
+    mesh::Mesh::FeedbackMap &localCommunicationMap) = 0;
 
 protected:
   /**
