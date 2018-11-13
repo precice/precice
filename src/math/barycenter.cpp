@@ -192,6 +192,7 @@ BarycentricCoordsAndProjected calcBarycentricCoordsForQuad(
     const Eigen::VectorXd &location)
 {
   assertion("Interpolation on Quads is not implemented!");
+  return {};
 }
 } // namespace barycenter
 } // namespace math
