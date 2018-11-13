@@ -323,7 +323,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV4)
       );
 }
 #else
-  #warning "Test case MappingTests/PetRadialBasisFunctionMapping/Parallel/DistributedConsistent2DV4 deactivated, due to PETSc version < 3.8 or compiling with scons."
+  #warning "Test case MappingTests/PetRadialBasisFunctionMapping/Parallel/DistributedConsistent2DV4 deactivated, due to PETSc version < 3.8"
 #endif
 
 // same as 2DV4, but all ranks have vertices
@@ -592,7 +592,7 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV4,
     );
 }
 #else
-  #warning "Test case MappingTests/PetRadialBasisFunctionMapping/Parallel/DistributedConservative2DV4 deactivated, due to PETSc version < 3.8 or compiling with scons."
+  #warning "Test case MappingTests/PetRadialBasisFunctionMapping/Parallel/DistributedConservative2DV4 deactivated, due to PETSc version < 3.8."
 #endif
 
 /// Tests a non-contigous owner distributed at the outMesh
