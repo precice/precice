@@ -154,7 +154,7 @@ void M2N::send(
         _masterCom->send(ack, 0);
       }
     }
-
+    Event e("m2n.sendData");
     _distComs[meshID]->send(itemsToSend, size, valueDimension);
   } else { //coupling mode
     assertion(_isMasterConnected);
@@ -197,7 +197,7 @@ void M2N::receive(double *itemsToReceive,
         _masterCom->receive(ack, 0);
       }
     }
-
+    Event e("m2n.receiveData");
     _distComs[meshID]->receive(itemsToReceive, size, valueDimension);
   } else { //coupling mode
     assertion(_isMasterConnected);

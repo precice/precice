@@ -285,6 +285,7 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
   mesh::Mesh::VertexDistribution  requesterVertexDistribution;
 
   if (utils::MasterSlave::_masterMode) {
+    Event e0("m2n.exchangeVertexDistribution");
     // Establish connection between participants' master processes.
     auto c = _communicationFactory->newCommunication();
 
@@ -303,8 +304,10 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
     assertion(utils::MasterSlave::_slaveMode);
   }
 
+  Event e1("m2n.broadcastVertexDistributions");
   m2n::broadcast(vertexDistribution);
   m2n::broadcast(requesterVertexDistribution);
+  e1.stop();
 
   // Local (for process rank in the current participant) communication map that
   // defines a mapping from a process rank in the remote participant to an array
@@ -323,22 +326,20 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
   //   the remote process with rank 1;
   // - has to communicate (send/receive) data with local indices 0 and 2 with
   //   the remote process with rank 4.
+  Event e2("m2n.buildCommunicationMap");
   std::map<int, std::vector<int>> communicationMap = m2n::buildCommunicationMap(
     vertexDistribution, requesterVertexDistribution);
+  e2.stop();
 
 // Print `communicationMap'.
 #ifdef P2P_LCM_PRINT
-  e.stop(true);
   print(communicationMap);
-  e.start(true);
 #endif
 
 // Print statistics of `communicationMap'.
 #ifdef P2P_LCM_PRINT_STATS
-  e.stop(true);
   printCommunicationPartnerCountStats(communicationMap);
   printLocalIndexCountStats(communicationMap);
-  e.start(true);
 #endif
 
 #ifdef SuperMUC_WORK
@@ -346,7 +347,7 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
     auto addressDirectory = _communicationFactory->addressDirectory();
 
     if (utils::MasterSlave::_masterMode) {
-      Event e("m2n.createDirectories");
+      Event e3("m2n.createDirectories");
 
       for (int rank = 0; rank < utils::MasterSlave::_size; ++rank) {
         Publisher::createDirectory(addressDirectory + "/" + "." + acceptorName + "-" + _mesh->getName() +
@@ -366,6 +367,7 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
   // Accept point-to-point connections (as server) between the current acceptor
   // process (in the current participant) with rank `utils::MasterSlave::_rank'
   // and (multiple) requester processes (in the requester participant).
+  Event e4("m2n.createCommunications");
   auto c = _communicationFactory->newCommunication();
 
 #ifdef SuperMUC_WORK
@@ -397,7 +399,7 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
     */
     _mappings.push_back({globalRequesterRank, std::move(indices), c, com::PtrRequest(), {}});
   }
-
+  e4.stop();
   _isConnected = true;
 }
 
@@ -414,6 +416,7 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
   mesh::Mesh::VertexDistribution  acceptorVertexDistribution;
 
   if (utils::MasterSlave::_masterMode) {
+    Event e0("m2n.exchangeVertexDistribution");
     // Establish connection between participants' master processes.
     auto c = _communicationFactory->newCommunication();
     c->requestConnection(acceptorName, requesterName, 0, 1);
@@ -431,8 +434,10 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
     assertion(utils::MasterSlave::_slaveMode);
   }
 
+  Event e1("m2n.broadcastVertexDistributions");
   m2n::broadcast(vertexDistribution);
   m2n::broadcast(acceptorVertexDistribution);
+  e1.stop();
 
   // Local (for process rank in the current participant) communication map that
   // defines a mapping from a process rank in the remote participant to an array
@@ -451,22 +456,20 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
   //   the remote process with rank 1;
   // - has to communicate (send/receive) data with local indices 0 and 2 with
   //   the remote process with rank 4.
+  Event e2("m2n.buildCommunicationMap");
   std::map<int, std::vector<int>> communicationMap = m2n::buildCommunicationMap(
     vertexDistribution, acceptorVertexDistribution);
+  e2.stop();
 
 // Print `communicationMap'.
 #ifdef P2P_LCM_PRINT
-  e.stop(true);
   print(communicationMap);
-  e.start(true);
 #endif
 
 // Print statistics of `communicationMap'.
 #ifdef P2P_LCM_PRINT_STATS
-  e.stop(true);
   printCommunicationPartnerCountStats(communicationMap);
   printLocalIndexCountStats(communicationMap);
-  e.start(true);
 #endif
 
 #ifdef SuperMUC_WORK
@@ -491,6 +494,7 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
   for (auto &i : communicationMap)
     acceptingRanks.emplace(i.first);
 
+  Event e4("m2n.createCommunications");
   auto c = _communicationFactory->newCommunication();
   c->requestConnectionAsClient(acceptorName, requesterName,
                                acceptingRanks, utils::MasterSlave::_rank);
@@ -515,6 +519,7 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
     // acceptor process (in the acceptor participant).
     _mappings.push_back({globalAcceptorRank, std::move(indices), c, com::PtrRequest(), {}});
   }
+  e4.stop();
   _isConnected = true;
 }
 
