@@ -515,12 +515,10 @@ void ParticipantConfiguration:: finishParticipantConfiguration
       participant->addReadMappingContext(mappingContext);
     }
 
-    if (map->getInputRequirement() > fromMeshContext.meshRequirement){
-      fromMeshContext.meshRequirement = map->getInputRequirement();
-    }
-    if (map->getOutputRequirement() > toMeshContext.meshRequirement){
-      toMeshContext.meshRequirement = map->getOutputRequirement();
-    }
+    fromMeshContext.meshRequirement = std::max(
+            fromMeshContext.meshRequirement, map->getInputRequirement());
+    toMeshContext.meshRequirement = std::max(
+            toMeshContext.meshRequirement, map->getOutputRequirement());
 
     fromMeshContext.fromMappingContext = *mappingContext;
     toMeshContext.toMappingContext = *mappingContext;
