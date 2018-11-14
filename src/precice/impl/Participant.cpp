@@ -243,6 +243,8 @@ void Participant:: addAction
   const action::PtrAction& action )
 {
   _actions.push_back ( action );
+  auto& context = meshContext(action->getMesh()->getID());
+  context.require(action->getMeshRequirement());
 }
 
 std::vector<action::PtrAction>& Participant:: actions()
