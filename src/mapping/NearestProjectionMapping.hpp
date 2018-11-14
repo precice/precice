@@ -51,7 +51,7 @@ public:
 private:
   logging::Logger _log{"mapping::NearestProjectionMapping"};
 
-  typedef std::list<query::InterpolationElement> InterpolationElements;
+  using InterpolationElements = std::list<query::InterpolationElement>;
   std::vector<InterpolationElements> _weights;
 
   bool _hasComputedMapping = false;

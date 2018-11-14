@@ -41,14 +41,14 @@ class Mesh : public PropertyContainer, private boost::noncopyable
 public:
 
 
-  typedef utils::ptr_vector<Vertex>              VertexContainer;
-  typedef utils::ptr_vector<Edge>                EdgeContainer;
-  typedef utils::ptr_vector<Triangle>            TriangleContainer;
-  typedef utils::ptr_vector<Quad>                QuadContainer;
-  typedef std::vector<PtrData>                   DataContainer;
-  typedef utils::ptr_vector<PropertyContainer>   PropertyContainerContainer;
-  typedef std::vector<std::pair<double, double>> BoundingBox;
-  typedef std::map<int,BoundingBox>              BoundingBoxMap;
+  using VertexContainer            = utils::ptr_vector<Vertex>;
+  using EdgeContainer              = utils::ptr_vector<Edge>;
+  using TriangleContainer          = utils::ptr_vector<Triangle>;
+  using QuadContainer              = utils::ptr_vector<Quad>;
+  using DataContainer              = std::vector<PtrData>;
+  using PropertyContainerContainer = utils::ptr_vector<PropertyContainer>;
+  using BoundingBox                = std::vector<std::pair<double, double>>;
+  using BoundingBoxMap             = std::map<int,BoundingBox>; 
 
   /// A mapping from rank to used (not necessarily owned) vertex IDs
   using VertexDistribution = std::map<int, std::vector<int>>;

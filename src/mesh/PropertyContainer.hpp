@@ -36,7 +36,7 @@ public:
   virtual ~PropertyContainer(){};
 
   // Shortform for the type of a property.
-  typedef boost::any PropertyType;
+  using PropertyType = boost::any;
 
   /// ID for the property labeling geometry IDs.
   static const int INDEX_GEOMETRY_ID;
