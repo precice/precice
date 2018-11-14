@@ -480,7 +480,7 @@ void SocketCommunication::send(double itemToSend, int rankReceiver)
   }
 }
 
-PtrRequest SocketCommunication::aSend(double itemToSend, int rankReceiver)
+PtrRequest SocketCommunication::aSend(const double & itemToSend, int rankReceiver)
 {
   return aSend(&itemToSend, 1, rankReceiver);
 }
@@ -501,7 +501,7 @@ void SocketCommunication::send(int itemToSend, int rankReceiver)
   }
 }
 
-PtrRequest SocketCommunication::aSend(int itemToSend, int rankReceiver)
+PtrRequest SocketCommunication::aSend(const int& itemToSend, int rankReceiver)
 {
   return aSend(&itemToSend, 1, rankReceiver);
 }
@@ -522,7 +522,7 @@ void SocketCommunication::send(bool itemToSend, int rankReceiver)
   }
 }
 
-PtrRequest SocketCommunication::aSend(bool itemToSend, int rankReceiver)
+PtrRequest SocketCommunication::aSend(const bool & itemToSend, int rankReceiver)
 {
   TRACE(rankReceiver);
 

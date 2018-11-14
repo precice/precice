@@ -199,33 +199,39 @@ public:
   virtual void send(const int *itemsToSend, int size, int rankReceiver) = 0;
 
   /// Asynchronously sends an array of integer values.
+  /// @attention The caller must guarantee that the lifetime of the item extends to the completion of the request!
   virtual PtrRequest aSend(const int *itemsToSend, int size, int rankReceiver) = 0;
 
   /// Sends an array of double values.
   virtual void send(const double *itemsToSend, int size, int rankReceiver) = 0;
 
   /// Asynchronously sends an array of double values.
+  /// @attention The caller must guarantee that the lifetime of the item extends to the completion of the request!
   virtual PtrRequest aSend(const double *itemsToSend, int size, int rankReceiver) = 0;
 
+  /// @attention The caller must guarantee that the lifetime of the item extends to the completion of the request!
   virtual PtrRequest aSend(std::vector<double> const & itemsToSend, int rankReceiver) = 0;
 
   /// Sends a double to process with given rank.
   virtual void send(double itemToSend, int rankReceiver) = 0;
 
   /// Asynchronously sends a double to process with given rank.
-  virtual PtrRequest aSend(double itemToSend, int rankReceiver) = 0;
+  /// @attention The caller must guarantee that the lifetime of the item extends to the completion of the request!
+  virtual PtrRequest aSend(const double & itemToSend, int rankReceiver) = 0;
 
   /// Sends an int to process with given rank.
   virtual void send(int itemToSend, int rankReceiver) = 0;
 
   /// Asynchronously sends an int to process with given rank.
-  virtual PtrRequest aSend(int itemToSend, int rankReceiver) = 0;
+  /// @attention The caller must guarantee that the lifetime of the item extends to the completion of the request!
+  virtual PtrRequest aSend(const int & itemToSend, int rankReceiver) = 0;
 
   /// Sends a bool to process with given rank.
   virtual void send(bool itemToSend, int rankReceiver) = 0;
 
   /// Asynchronously sends a bool to process with given rank.
-  virtual PtrRequest aSend(bool itemToSend, int rankReceiver) = 0;
+  /// @attention The caller must guarantee that the lifetime of the item extends to the completion of the request!
+  virtual PtrRequest aSend( const bool & itemToSend, int rankReceiver) = 0;
 
   /// Receives a std::string from process with given rank.
   virtual void receive(std::string &itemToReceive, int rankSender) = 0;
