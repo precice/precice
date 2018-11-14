@@ -9,6 +9,8 @@
 #include <Eigen/QR>
 
 namespace precice {
+extern bool syncMode;
+
 namespace mapping {
 
 /**
@@ -127,7 +129,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
 {
   TRACE();
 
-  precice::utils::Event e("map.rbf.computeMapping.From" + input()->getName() + "To" + output()->getName());
+  precice::utils::Event e("map.rbf.computeMapping.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
 
   CHECK(not utils::MasterSlave::_slaveMode && not utils::MasterSlave::_masterMode,
         "RBF mapping is not supported for a participant in master mode, use petrbf instead");
@@ -230,7 +232,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
 {
   TRACE(inputDataID, outputDataID);
 
-  precice::utils::Event e("map.rbf.mapData.From" + input()->getName() + "To" + output()->getName());
+  precice::utils::Event e("map.rbf.mapData.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
 
   assertion(_hasComputedMapping);
   assertion(input()->getDimensions() == output()->getDimensions(),

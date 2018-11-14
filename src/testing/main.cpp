@@ -8,6 +8,7 @@
 
 namespace precice {
 extern bool testMode;
+extern bool syncMode;
 }
 
 
@@ -34,6 +35,7 @@ int main(int argc, char* argv[])
   using namespace precice;
 
   precice::testMode = true;
+  precice::syncMode = false;
   logging::setupLogging();
   utils::Parallel::initializeMPI(&argc, &argv);
   logging::setMPIRank(utils::Parallel::getProcessRank());

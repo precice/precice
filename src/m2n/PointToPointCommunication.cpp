@@ -13,6 +13,7 @@ using precice::utils::Publisher;
 
 namespace precice
 {
+bool extern syncMode;
 namespace m2n
 {
 
@@ -304,7 +305,7 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
     assertion(utils::MasterSlave::_slaveMode);
   }
 
-  Event e1("m2n.broadcastVertexDistributions");
+  Event e1("m2n.broadcastVertexDistributions", precice::syncMode);
   m2n::broadcast(vertexDistribution);
   m2n::broadcast(requesterVertexDistribution);
   e1.stop();
@@ -326,7 +327,7 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
   //   the remote process with rank 1;
   // - has to communicate (send/receive) data with local indices 0 and 2 with
   //   the remote process with rank 4.
-  Event e2("m2n.buildCommunicationMap");
+  Event e2("m2n.buildCommunicationMap", precice::syncMode);
   std::map<int, std::vector<int>> communicationMap = m2n::buildCommunicationMap(
     vertexDistribution, requesterVertexDistribution);
   e2.stop();
@@ -359,6 +360,7 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
   }
 #endif
 
+  Event e4("m2n.createCommunications");
   if (communicationMap.empty()) {
     _isConnected = true;
     return;
@@ -367,7 +369,7 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
   // Accept point-to-point connections (as server) between the current acceptor
   // process (in the current participant) with rank `utils::MasterSlave::_rank'
   // and (multiple) requester processes (in the requester participant).
-  Event e4("m2n.createCommunications");
+
   auto c = _communicationFactory->newCommunication();
 
 #ifdef SuperMUC_WORK
@@ -434,7 +436,7 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
     assertion(utils::MasterSlave::_slaveMode);
   }
 
-  Event e1("m2n.broadcastVertexDistributions");
+  Event e1("m2n.broadcastVertexDistributions", precice::syncMode);
   m2n::broadcast(vertexDistribution);
   m2n::broadcast(acceptorVertexDistribution);
   e1.stop();
@@ -456,7 +458,7 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
   //   the remote process with rank 1;
   // - has to communicate (send/receive) data with local indices 0 and 2 with
   //   the remote process with rank 4.
-  Event e2("m2n.buildCommunicationMap");
+  Event e2("m2n.buildCommunicationMap", precice::syncMode);
   std::map<int, std::vector<int>> communicationMap = m2n::buildCommunicationMap(
     vertexDistribution, acceptorVertexDistribution);
   e2.stop();
@@ -481,6 +483,7 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
   }
 #endif
 
+  Event e4("m2n.createCommunications");
   if (communicationMap.empty()) {
     _isConnected = true;
     return;
@@ -494,7 +497,6 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
   for (auto &i : communicationMap)
     acceptingRanks.emplace(i.first);
 
-  Event e4("m2n.createCommunications");
   auto c = _communicationFactory->newCommunication();
   c->requestConnectionAsClient(acceptorName, requesterName,
                                acceptingRanks, utils::MasterSlave::_rank);
