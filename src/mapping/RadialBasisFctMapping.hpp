@@ -328,13 +328,15 @@ Eigen::VectorXd RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::reduceVector
 template<typename RADIAL_BASIS_FUNCTION_T>
 void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
 {
-  assertion(false); //Serial RBF should only be used in coupling mode. This is already handled in the configuration.
+  CHECK(not utils::MasterSlave::_slaveMode && not utils::MasterSlave::_masterMode,
+        "RBF mapping is not supported for a participant in master mode, use petrbf instead");
 }
 
 template<typename RADIAL_BASIS_FUNCTION_T>
 void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
 {
-  assertion(false); //Serial RBF should only be used in coupling mode. This is already handled in the configuration.
+  CHECK(not utils::MasterSlave::_slaveMode && not utils::MasterSlave::_masterMode,
+        "RBF mapping is not supported for a participant in master mode, use petrbf instead");
 }
 
 
