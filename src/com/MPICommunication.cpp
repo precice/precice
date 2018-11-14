@@ -140,7 +140,7 @@ void MPICommunication::send(double itemToSend, int rankReceiver)
            communicator(rankReceiver));
 }
 
-PtrRequest MPICommunication::aSend(double itemToSend, int rankReceiver)
+PtrRequest MPICommunication::aSend(const double& itemToSend, int rankReceiver)
 {
   return aSend(&itemToSend, 1, rankReceiver);
 }
@@ -157,7 +157,7 @@ void MPICommunication::send(int itemToSend, int rankReceiver)
            communicator(rankReceiver));
 }
 
-PtrRequest MPICommunication::aSend(int itemToSend, int rankReceiver)
+PtrRequest MPICommunication::aSend(const int& itemToSend, int rankReceiver)
 {
   return aSend(&itemToSend, 1, rankReceiver);
 }
@@ -174,13 +174,13 @@ void MPICommunication::send(bool itemToSend, int rankReceiver)
            communicator(rankReceiver));
 }
 
-PtrRequest MPICommunication::aSend(bool itemToSend, int rankReceiver)
+PtrRequest MPICommunication::aSend(const bool& itemToSend, int rankReceiver)
 {
   TRACE();
   rankReceiver = rankReceiver - _rankOffset;
 
   MPI_Request request;
-  MPI_Isend(&itemToSend,
+  MPI_Isend(const_cast<bool*>(&itemToSend),
             1,
             MPI_BOOL,
             rank(rankReceiver),
