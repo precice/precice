@@ -141,4 +141,12 @@ private:
   int _dimensions;
 };
 
+
+/** Defines an ordering for MeshRequirement in terms of specificality
+* @param[in] lhs the left-hand side of the binary operator
+* @param[in] rhs the right-hand side of the binary operator
+*/
+bool operator<(Mapping::MeshRequirement lhs, Mapping::MeshRequirement rhs);
+
+
 }} // namespace precice, mapping
