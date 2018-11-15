@@ -6,7 +6,7 @@
 #include "WatchPoint.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
 #include "mesh/config/DataConfiguration.hpp"
-#include <utitlity>
+#include <utility>
 
 namespace precice {
 namespace impl {
