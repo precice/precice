@@ -16,13 +16,13 @@ NearestProjectionMapping:: NearestProjectionMapping
   Mapping(constraint, dimensions)
 {
   if (constraint == CONSISTENT){
-    setInputRequirement(FULL);
-    setOutputRequirement(VERTEX);
+    setInputRequirement(Mapping::MeshRequirement::FULL);
+    setOutputRequirement(Mapping::MeshRequirement::VERTEX);
   }
   else {
     assertion(constraint == CONSERVATIVE, constraint);
-    setInputRequirement(VERTEX);
-    setOutputRequirement(FULL);
+    setInputRequirement(Mapping::MeshRequirement::VERTEX);
+    setOutputRequirement(Mapping::MeshRequirement::FULL);
   }
 }
 

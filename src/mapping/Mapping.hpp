@@ -35,7 +35,7 @@ public:
    * connected by edges and faces. VERTEX requires a mesh consisting of vertices
    * only.
    */
-  enum MeshRequirement {
+  enum class MeshRequirement {
     UNDEFINED = 0,
     /// Vertices only.
     VERTEX = 1,
@@ -148,5 +148,10 @@ private:
 */
 bool operator<(Mapping::MeshRequirement lhs, Mapping::MeshRequirement rhs);
 
+/** Defines the output operation to streams
+* @param[inout] out stream to output to.
+* @param[in] val the value to output.
+*/
+std::ostream& operator<<(std::ostream& out, Mapping::MeshRequirement val);
 
 }} // namespace precice, mapping
