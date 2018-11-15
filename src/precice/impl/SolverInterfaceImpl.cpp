@@ -1715,7 +1715,7 @@ void SolverInterfaceImpl:: handleExports()
 
   if (_couplingScheme->isCouplingTimestepComplete()){
     // Export watch point data
-    for (PtrWatchPoint watchPoint : _accessor->watchPoints()) {
+    for (const PtrWatchPoint& watchPoint : _accessor->watchPoints()) {
       watchPoint->exportPointData(_couplingScheme->getTime());
     }
   }
