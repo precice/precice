@@ -6,6 +6,7 @@
 #include "WatchPoint.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
 #include "mesh/config/DataConfiguration.hpp"
+#include <utitlity>
 
 namespace precice {
 namespace impl {
@@ -19,10 +20,10 @@ void Participant:: resetParticipantCount()
 
 Participant:: Participant
 (
-  const std::string&          name,
+  std::string                 name,
   mesh::PtrMeshConfiguration& meshConfig )
 :
-  _name ( name ),
+  _name (std::move(name)),
   _id ( _participantsSize ),
   _meshContexts ( meshConfig->meshes().size(), nullptr ),
   _dataContexts ( meshConfig->getDataConfiguration()->data().size()*meshConfig->meshes().size(), nullptr )
