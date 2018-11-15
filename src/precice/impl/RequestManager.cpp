@@ -4,6 +4,7 @@
 #include "precice/impl/SolverInterfaceImpl.hpp"
 #include <algorithm>
 #include <utility>
+#include <vector>
 
 namespace precice {
 namespace impl {
@@ -660,13 +661,11 @@ void RequestManager:: handleRequestSetMeshVertices
   int size = -1;
   _com->receive(size, rankSender);
   CHECK(size > 0, "You cannot call setMeshVertices with size=0.");
-  double* positions = new double[size*_interface.getDimensions()];
-  _com->receive(positions, size*_interface.getDimensions(), rankSender);
-  int* ids = new int[size];
-  _interface.setMeshVertices(meshID, size, positions, ids);
-  _com->send(ids, size, rankSender);
-  delete[] positions;
-  delete[] ids;
+  std::vector<double> positions(size*_interface.getDimensions());
+  _com->receive(positions.data(), size*_interface.getDimensions(), rankSender);
+  std::vector<int> ids(size);
+  _interface.setMeshVertices(meshID, size, positions.data(), ids.data());
+  _com->send(ids.data(), size, rankSender);
 }
 
 void RequestManager:: handleRequestGetMeshVertices
@@ -679,13 +678,11 @@ void RequestManager:: handleRequestGetMeshVertices
   _com->receive(meshID, rankSender);
   _com->receive(size, rankSender);
   assertion(size > 0, size);
-  int* ids = new int[size];
-  double* positions = new double[size*_interface.getDimensions()];
-  _com->receive(ids, size, rankSender);
-  _interface.getMeshVertices(meshID, size, ids, positions);
-  _com->send(positions, size*_interface.getDimensions(), rankSender);
-  delete[] ids;
-  delete[] positions;
+  std::vector<int> ids(size);
+  std::vector<double> positions(size*_interface.getDimensions());
+  _com->receive(ids.data(), size, rankSender);
+  _interface.getMeshVertices(meshID, size, ids.data(), positions.data());
+  _com->send(positions.data(), size*_interface.getDimensions(), rankSender);
 }
 
 void RequestManager:: handleRequestGetMeshVertexIDsFromPositions
@@ -698,13 +695,11 @@ void RequestManager:: handleRequestGetMeshVertexIDsFromPositions
   _com->receive(meshID, rankSender);
   _com->receive(size, rankSender);
   assertion(size > 0, size);
-  int* ids = new int[size];
-  double* positions = new double[size*_interface.getDimensions()];
-  _com->receive(positions, size*_interface.getDimensions(), rankSender);
-  _interface.getMeshVertexIDsFromPositions(meshID, size, positions, ids);
-  _com->send(ids, size, rankSender);
-  delete[] ids;
-  delete[] positions;
+  std::vector<int> ids(size);
+  std::vector<double> positions(size*_interface.getDimensions());
+  _com->receive(positions.data(), size*_interface.getDimensions(), rankSender);
+  _interface.getMeshVertexIDsFromPositions(meshID, size, positions.data(), ids.data());
+  _com->send(ids.data(), size, rankSender);
 }
 
 void RequestManager:: handleRequestSetMeshEdge
@@ -781,13 +776,11 @@ void RequestManager:: handleRequestWriteBlockScalarData
   _com->receive(dataID, rankSender);
   int size = -1;
   _com->receive(size, rankSender);
-  int* indices = new int[size];
-  _com->receive(indices, size, rankSender);
-  double* data = new double[size];
-  _com->receive(data, size, rankSender);
-  _interface.writeBlockScalarData(dataID, size, indices, data);
-  delete[] indices;
-  delete[] data;
+  std::vector<int> indices(size);
+  _com->receive(indices.data(), size, rankSender);
+  std::vector<double> data(size);
+  _com->receive(data.data(), size, rankSender);
+  _interface.writeBlockScalarData(dataID, size, indices.data(), data.data());
 }
 
 void RequestManager:: handleRequestWriteBlockVectorData
@@ -799,13 +792,11 @@ void RequestManager:: handleRequestWriteBlockVectorData
   _com->receive(dataID, rankSender);
   int size = -1;
   _com->receive(size, rankSender);
-  int* indices = new int[size];
-  _com->receive(indices, size, rankSender);
-  double* data = new double[size*_interface.getDimensions()];
-  _com->receive(data, size*_interface.getDimensions(), rankSender);
-  _interface.writeBlockVectorData(dataID, size, indices, data);
-  delete[] indices;
-  delete[] data;
+  std::vector<int> indices(size);
+  _com->receive(indices.data(), size, rankSender);
+  std::vector<double> data(size*_interface.getDimensions());
+  _com->receive(data.data(), size*_interface.getDimensions(), rankSender);
+  _interface.writeBlockVectorData(dataID, size, indices.data(), data.data());
 }
 
 void RequestManager:: handleRequestWriteVectorData
@@ -845,13 +836,11 @@ void RequestManager:: handleRequestReadBlockScalarData
   _com->receive(dataID, rankSender);
   int size = -1;
   _com->receive(size, rankSender);
-  int* indices = new int[size];
-  _com->receive(indices, size, rankSender);
-  double* data = new double[size];
-  _interface.readBlockScalarData(dataID, size, indices, data);
-  _com->send(data, size, rankSender);
-  delete[] indices;
-  delete[] data;
+  std::vector<int> indices(size);
+  _com->receive(indices.data(), size, rankSender);
+  std::vector<double> data(size);
+  _interface.readBlockScalarData(dataID, size, indices.data(), data.data());
+  _com->send(data.data(), size, rankSender);
 }
 
 void RequestManager:: handleRequestReadBlockVectorData
@@ -863,13 +852,11 @@ void RequestManager:: handleRequestReadBlockVectorData
   _com->receive(dataID, rankSender);
   int size = -1;
   _com->receive(size, rankSender);
-  int* indices = new int[size];
-  _com->receive(indices, size, rankSender);
-  double* data = new double[size*_interface.getDimensions()];
-  _interface.readBlockVectorData(dataID, size, indices, data);
-  _com->send(data, size*_interface.getDimensions(), rankSender);
-  delete[] indices;
-  delete[] data;
+  std::vector<int> indices(size);
+  _com->receive(indices.data(), size, rankSender);
+  std::vector<double> data(size*_interface.getDimensions());
+  _interface.readBlockVectorData(dataID, size, indices.data(), data.data());
+  _com->send(data.data(), size*_interface.getDimensions(), rankSender);
 }
 
 void RequestManager:: handleRequestReadVectorData
