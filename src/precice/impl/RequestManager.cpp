@@ -3,6 +3,7 @@
 #include "cplscheme/CouplingScheme.hpp"
 #include "precice/impl/SolverInterfaceImpl.hpp"
 #include <algorithm>
+#include <utility>
 
 namespace precice {
 namespace impl {
@@ -14,8 +15,8 @@ RequestManager:: RequestManager
   cplscheme::PtrCouplingScheme couplingScheme)
 :
   _interface(solverInterfaceImpl),
-  _com(clientServerCommunication),
-  _couplingScheme(couplingScheme)
+  _com(std::move(clientServerCommunication)),
+  _couplingScheme(std::move(couplingScheme))
 {}
 
 void RequestManager:: handleRequests()
