@@ -582,7 +582,7 @@ void RequestManager:: handleRequestAdvance
   const std::list<int>& clientRanks )
 {
   TRACE();
-  std::list<int>::const_iterator iter = clientRanks.begin();
+  auto iter = clientRanks.begin();
   double oldDt;
   _com->receive(oldDt, *iter);
   iter++;
@@ -891,7 +891,7 @@ void RequestManager:: handleRequestMapWriteDataFrom
   const std::list<int>& clientRanks )
 {
   TRACE();
-  std::list<int>::const_iterator iter = clientRanks.begin();
+  auto iter = clientRanks.begin();
   int ping = 0;
   _com->send(ping, *iter);
   int oldMeshID;
@@ -913,7 +913,7 @@ void RequestManager:: handleRequestMapReadDataTo
   const std::list<int>& clientRanks )
 {
   TRACE();
-  std::list<int>::const_iterator iter = clientRanks.begin();
+  auto iter = clientRanks.begin();
   int ping = 0;
   _com->send(ping, *iter);
   int oldMeshID;
