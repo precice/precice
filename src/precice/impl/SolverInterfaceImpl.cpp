@@ -1408,7 +1408,7 @@ MeshHandle SolverInterfaceImpl:: getMeshHandle
   assertion(not _clientMode);
   for (MeshContext* context : _accessor->usedMeshContexts()){
     if (context->mesh->getName() == meshName){
-      return MeshHandle(context->mesh->content());
+      return {context->mesh->content()};
     }
   }
   ERROR("Participant \"" << _accessorName
