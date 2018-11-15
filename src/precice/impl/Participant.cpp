@@ -301,7 +301,7 @@ void Participant:: setClientServerCommunication
   com::PtrCommunication communication )
 {
   assertion ( communication.use_count() > 0 );
-  _clientServerCommunication = communication;
+  _clientServerCommunication = std::move(communication);
 }
 
 com::PtrCommunication Participant:: getClientServerCommunication() const
