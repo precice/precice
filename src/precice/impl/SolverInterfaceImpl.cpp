@@ -31,6 +31,7 @@
 #include "partition/ProvidedPartition.hpp"
 
 #include <csignal> // used for installing crash handler
+#include <utility>
 
 #include "logging/Logger.hpp"
 #include "logging/LogConfiguration.hpp"
@@ -51,12 +52,12 @@ namespace impl {
 
 SolverInterfaceImpl:: SolverInterfaceImpl
 (
-  const std::string& participantName,
-  int                accessorProcessRank,
-  int                accessorCommunicatorSize,
-  bool               serverMode )
+  std::string participantName,
+  int         accessorProcessRank,
+  int         accessorCommunicatorSize,
+  bool        serverMode )
 :
-  _accessorName(participantName),
+  _accessorName(std::move(participantName)),
   _accessorProcessRank(accessorProcessRank),
   _accessorCommunicatorSize(accessorCommunicatorSize),
   _serverMode(serverMode)

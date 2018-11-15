@@ -51,10 +51,10 @@ public:
    *                            xml configuration file.
    */
   SolverInterfaceImpl (
-    const std::string& participantName,
-    int                accessorProcessRank,
-    int                accessorCommunicatorSize,
-    bool               serverMode );
+    std::string participantName,
+    int         accessorProcessRank,
+    int         accessorCommunicatorSize,
+    bool        serverMode );
 
   /**
    * @brief Configures the coupling interface from the given xml file.
