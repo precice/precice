@@ -79,7 +79,7 @@ void Participant:: useMesh
   TRACE(_name,  mesh->getName(), mesh->getID() );
   checkDuplicatedUse(mesh);
   assertion ( mesh->getID() < (int)_meshContexts.size() );
-  MeshContext* context = new MeshContext(mesh->getDimensions());
+  auto context = new MeshContext(mesh->getDimensions());
   context->mesh = mesh;
   context->localOffset = localOffset;
   assertion ( mesh->getDimensions() == context->localOffset.size(),
@@ -105,7 +105,7 @@ void Participant:: addWriteData
 {
   checkDuplicatedData ( data );
   assertion ( data->getID() < (int)_dataContexts.size() );
-  DataContext* context = new DataContext ();
+  auto context = new DataContext ();
   context->fromData = data;
   context->mesh = mesh;
   // will be overwritten later if a mapping exists
@@ -121,7 +121,7 @@ void Participant:: addReadData
 {
   checkDuplicatedData ( data );
   assertion ( data->getID() < (int)_dataContexts.size() );
-  DataContext* context = new DataContext ();
+  auto context = new DataContext ();
   context->toData = data;
   context->mesh = mesh;
   // will be overwritten later if a mapping exists
