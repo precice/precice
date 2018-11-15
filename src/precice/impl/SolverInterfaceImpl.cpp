@@ -30,7 +30,7 @@
 #include "partition/ReceivedPartition.hpp"
 #include "partition/ProvidedPartition.hpp"
 
-#include <signal.h> // used for installing crash handler
+#include <csignal> // used for installing crash handler
 
 #include "logging/Logger.hpp"
 #include "logging/LogConfiguration.hpp"
