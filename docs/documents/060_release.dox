@@ -26,12 +26,12 @@ Minor or major release step-by-step
 1. Merge master to develop
 2. Do regression tests (SU2/CalculiX, OpenFOAM, Alya, 1D-ElasticTube, SuperMUC, ...) at develop
 3. Look over CHANGELOG and add things if necessary
-4. Bump version in CMakeLists.txt
+4. Bump version in CMakeLists.txt and SConstruct.
 5. Draft message to mailing list
 6. Update documentation
 7. Fix potential problems in develop
 8. Merge develop to master
 9. Tag release (on GitHub) and merge back to develop
-10. Send email and do marketing 
+10. Send email and do marketing
 
 */
