@@ -143,7 +143,7 @@ void SolverInterfaceImpl:: configure
   }
 
   // Add meshIDs and data IDs
-  for (MeshContext* meshContext : _accessor->usedMeshContexts()) {
+  for (const MeshContext* meshContext : _accessor->usedMeshContexts()) {
     const mesh::PtrMesh& mesh = meshContext->mesh;
     for (std::pair<std::string,int> nameID : mesh->getNameIDPairs()) {
       assertion(not utils::contained(nameID.first, _meshIDs));
@@ -191,9 +191,8 @@ double SolverInterfaceImpl:: initialize()
   else {
     // Setup communication
 
-    typedef std::map<std::string,M2NWrap>::value_type M2NPair;
     INFO("Setting up master communication to coupling partner/s " );
-    for (M2NPair& m2nPair : _m2ns) {
+    for (auto& m2nPair : _m2ns) {
       m2n::PtrM2N& m2n = m2nPair.second.m2n;
       std::string localName = _accessorName;
       if (_serverMode) localName += "Server";
@@ -216,9 +215,8 @@ double SolverInterfaceImpl:: initialize()
 
     computePartitions();
 
-    typedef std::map<std::string,M2NWrap>::value_type M2NPair;
     INFO("Setting up slaves communication to coupling partner/s " );
-    for (M2NPair& m2nPair : _m2ns) {
+    for (const auto& m2nPair : _m2ns) {
       m2n::PtrM2N& m2n = m2nPair.second.m2n;
       std::string localName = _accessorName;
       std::string remoteName(m2nPair.first);
@@ -1392,7 +1390,7 @@ void SolverInterfaceImpl:: exportMesh
     bool exportAll = exportType == constants::exportAll();
     bool exportThis = context.exporter->getType() == exportType;
     if ( exportAll || exportThis ){
-      for (MeshContext* meshContext : _accessor->usedMeshContexts()) {
+      for (const MeshContext* meshContext : _accessor->usedMeshContexts()) {
         std::string name = meshContext->mesh->getName() + "-" + filenameSuffix;
         DEBUG ( "Exporting mesh to file \"" << name << "\" at location \"" << context.location << "\"" );
         context.exporter->doExport ( name, context.location, *(meshContext->mesh) );
@@ -1429,8 +1427,7 @@ void SolverInterfaceImpl:: configureM2Ns
   const m2n::M2NConfiguration::SharedPointer& config )
 {
   TRACE();
-  typedef m2n::M2NConfiguration::M2NTuple M2NTuple;
-  for (M2NTuple m2nTuple : config->m2ns()) {
+  for (const auto& m2nTuple : config->m2ns()) {
     std::string comPartner("");
     bool isRequesting = false;
     if (std::get<1>(m2nTuple) == _accessorName){
@@ -1473,8 +1470,8 @@ void SolverInterfaceImpl:: configurePartitions
       bool hasToSend = false; /// @todo multiple sends
       m2n::PtrM2N m2n;
 
-      for (PtrParticipant receiver : _participants ) {
-        for (MeshContext* receiverContext : receiver->usedMeshContexts()) {
+      for (auto& receiver : _participants ) {
+        for (auto& receiverContext : receiver->usedMeshContexts()) {
           if(receiverContext->receiveMeshFrom == _accessorName && receiverContext->mesh->getName() == context->mesh->getName()){
             CHECK( not hasToSend, "Mesh " << context->mesh->getName() << " can currently only be received once.")
             hasToSend = true;
