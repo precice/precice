@@ -1738,8 +1738,7 @@ PtrParticipant SolverInterfaceImpl:: determineAccessingParticipant
 (
    const config::SolverInterfaceConfiguration& config )
 {
-  config::PtrParticipantConfiguration partConfig =
-      config.getParticipantConfiguration ();
+  const auto& partConfig = config.getParticipantConfiguration();
   for (const PtrParticipant& participant : partConfig->getParticipants()) {
     if ( participant->getName() == _accessorName ) {
       return participant;
