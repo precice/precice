@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 3.5)
 
-project(preCICE VERSION 1.2.0 LANGUAGES CXX)
+project(preCICE VERSION 1.3.0 LANGUAGES CXX)
 
 list (APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/tools/cmake-modules")
 

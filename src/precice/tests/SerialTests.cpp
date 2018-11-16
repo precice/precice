@@ -671,7 +671,6 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDisplacingGeometry,
   }
 }
 
-/// @todo fails currently as action does not introduce mesh-requirement, cf. issue #81
 /**
  * @brief Runs a coupled sim. with data scaling applied.
  *
@@ -680,7 +679,6 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDisplacingGeometry,
  * values activated and reads the scaled values.
  */
 BOOST_AUTO_TEST_CASE(testExplicitWithDataScaling,
-                     * testing::Deleted()
                      * testing::MinRanks(2)
                      * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
 {

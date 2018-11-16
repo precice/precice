@@ -1144,7 +1144,7 @@ void SolverInterfaceImpl:: writeBlockVectorData
   }
   else { //couplingMode
     CHECK(_accessor->isDataUsed(fromDataID),
-          "You try to write to data /// @todo: hat is not defined for " << _accessor->getName());
+          "You try to write to data that is not defined for " << _accessor->getName());
     DataContext& context = _accessor->dataContext(fromDataID);
     CHECK(context.fromData->getDimensions()==_dimensions,
         "You cannot call writeBlockVectorData on the scalar data type " << context.fromData->getName());
