@@ -216,7 +216,7 @@ double SolverInterfaceImpl:: initialize()
     computePartitions();
 
     INFO("Setting up slaves communication to coupling partner/s " );
-    for (const auto& m2nPair : _m2ns) {
+    for (auto& m2nPair : _m2ns) {
       m2n::PtrM2N& m2n = m2nPair.second.m2n;
       std::string localName = _accessorName;
       std::string remoteName(m2nPair.first);
