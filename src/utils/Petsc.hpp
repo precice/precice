@@ -159,7 +159,7 @@ public:
   
   void fillWithRandoms();
   
-  void setColumn(Vector &v, int col);
+  void setColumn(Vector &v, PetscInt col);
 
   /// Returns (rows, cols) global size
   std::pair<PetscInt, PetscInt> getSize();
