@@ -202,8 +202,8 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
   _polynomial(polynomial),
   _preallocation(preallocation)
 {
-  setInputRequirement(VERTEX);
-  setOutputRequirement(VERTEX);
+  setInputRequirement(Mapping::MeshRequirement::VERTEX);
+  setOutputRequirement(Mapping::MeshRequirement::VERTEX);
   _deadAxis = new bool[dimensions];
 
   if (getDimensions()==2) {
