@@ -17,6 +17,7 @@
 # Setting these changes the behavior of the search
 #  PETSC_DIR - directory in which PETSc resides
 #  PETSC_ARCH - build architecture
+#  PETSC_MPI_INCLUDE - includes of mpi
 #
 # Redistribution and use is allowed according to the terms of the BSD license.
 # For details see the accompanying COPYING-CMAKE-SCRIPTS file.
@@ -94,6 +95,12 @@ find_path (PETSC_DIR include/petsc.h
   /opt/local/lib/petsc
   $ENV{HOME}/petsc
   DOC "PETSc Directory")
+
+if (NOT PETSC_MPI_INCLUDE) 
+    find_path (PETSC_MPI_INCLUDE mpi.h
+        PATH_SUFFIXES openmpi mpi mpich
+        DOC "The MPI include PETSc should use")
+endif()
 
 find_program (MAKE_EXECUTABLE NAMES make gmake)
 
@@ -289,7 +296,7 @@ int main(int argc,char *argv[]) {
   find_path (PETSC_INCLUDE_DIR petscts.h HINTS "${PETSC_DIR}" PATH_SUFFIXES include NO_DEFAULT_PATH)
   find_path (PETSC_INCLUDE_CONF petscconf.h HINTS "${PETSC_DIR}" PATH_SUFFIXES "${PETSC_ARCH}/include" "bmake/${PETSC_ARCH}" NO_DEFAULT_PATH)
   mark_as_advanced (PETSC_INCLUDE_DIR PETSC_INCLUDE_CONF)
-  set (petsc_includes_minimal ${PETSC_INCLUDE_CONF} ${PETSC_INCLUDE_DIR})
+  set (petsc_includes_minimal "${PETSC_INCLUDE_CONF};${PETSC_INCLUDE_DIR};${PETSC_MPI_INCLUDE}")
 
   petsc_test_runs ("${petsc_includes_minimal}" "${PETSC_LIBRARIES_TS}" petsc_works_minimal)
   if (petsc_works_minimal)

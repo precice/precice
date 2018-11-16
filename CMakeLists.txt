@@ -45,6 +45,7 @@ endif()
 
 option(PETSC "Enable use of the PETSc linear algebra library." ON)
 if (PETSC AND MPI)
+  set (PETSC_MPI_INCLUDE ${MPI_INCLUDE_PATH})
   find_package(PETSc 3.6 REQUIRED)
   include_directories(${PETSC_INCLUDES})
   set (PETSC_VERSION_MAJOR ${PETSC_VERSION_MAJOR} CACHE STRING "Petsc Major version")
