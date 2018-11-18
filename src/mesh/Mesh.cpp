@@ -528,19 +528,30 @@ bool Mesh::operator!=(const Mesh& other) const
 
 std::ostream& operator<<(std::ostream& os, const Mesh& m)
 {
-  os << "Mesh \"" << m.getName() << "\", dimensionality = " << m.getDimensions() << ":";
-  os << "\n\tVertices:";
-  for (auto& vertex : m.content().vertices())
-      os << "\t" << vertex;
-  os << "\n\tEdges:";
-  for (auto& edge : m.content().edges())
-      os << "\t" << edge;
-  os << "\n\tTriangles:";
-  for (auto& triangle : m.content().triangles())
-      os << "\t" << triangle;
-  os << "\n\tQuads:";
-  for (auto& quad : m.content().quads())
-      os << "\t" << quad;
+  os << "Mesh \"" << m.getName() << "\", dimensionality = " << m.getDimensions() << ":\n";
+  os << "GEOMETRYCOLLECTION(\n";
+  const auto token = ", ";
+  const auto* sep = "";
+  for (auto& vertex : m.content().vertices()){
+      os << sep << vertex; 
+      sep = token;
+  }
+  sep = ",\n";
+  for (auto& edge : m.content().edges()){
+      os << sep << edge;
+      sep = token;
+  }
+  sep = ",\n";
+  for (auto& triangle : m.content().triangles()){
+      os << sep << triangle;
+      sep = token;
+  }
+  sep = ",\n";
+  for (auto& quad : m.content().quads()){
+      os << sep << quad;
+      sep = token;
+  }
+  os << "\n)";
   return os;
 }
 
