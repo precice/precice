@@ -679,6 +679,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDisplacingGeometry,
  * values activated and reads the scaled values.
  */
 BOOST_AUTO_TEST_CASE(testExplicitWithDataScaling,
+                     * testing::Deleted()
                      * testing::MinRanks(2)
                      * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
 {
