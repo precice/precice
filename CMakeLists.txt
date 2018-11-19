@@ -119,6 +119,7 @@ target_link_libraries(testprecice Threads::Threads)
 target_link_libraries(testprecice precice)
 
 # Create a symlink to the last build from build/last directory.
+file(MAKE_DIRECTORY "${PROJECT_SOURCE_DIR}/build")
 add_custom_target(symlink ALL
   COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_BINARY_DIR} ${PROJECT_SOURCE_DIR}/build/last)
 
