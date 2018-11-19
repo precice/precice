@@ -339,7 +339,7 @@ void Matrix::fillWithRandoms()
   PetscRandomDestroy(&rctx);
 }
 
-void Matrix::setColumn(Vector &v, int col)
+void Matrix::setColumn(Vector &v, PetscInt col)
 {
   PetscErrorCode ierr = 0;
   const PetscScalar *vec;

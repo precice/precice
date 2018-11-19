@@ -273,7 +273,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   }
 
   // Indizes that are used to build the Petsc Index set
-  std::vector<int> myIndizes;
+  std::vector<PetscInt> myIndizes;
 
   // Indizes for Q^T, holding the polynomial
   if (utils::Parallel::getProcessRank() <= 0) // Rank 0 or not in MasterSlave mode
@@ -311,8 +311,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   _matrixA.init(outputSize, n, PETSC_DETERMINE, PETSC_DETERMINE, MATAIJ);
   DEBUG("Set matrix A to local size " << outputSize << " x " << n);
 
-  const int ownerRangeABegin = _matrixA.ownerRange().first;
-  const int ownerRangeAEnd = _matrixA.ownerRange().second;
+  auto const ownerRangeABegin = _matrixA.ownerRange().first;
+  auto const ownerRangeAEnd = _matrixA.ownerRange().second;
 
   IS ISlocal, ISlocalInv, ISglobal, ISidentity, ISidentityGlobal, ISpolyparams;
   ISLocalToGlobalMapping ISidentityMapping, ISpolyparamsMapping;
@@ -385,7 +385,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     if (not inVertex.isOwner())
       continue;
 
-    int row = inVertex.getGlobalIndex() + polyparams;
+    PetscInt const row = inVertex.getGlobalIndex() + polyparams;
     PetscInt colNum = 0;  // holds the number of columns
     PetscInt colIdx[_matrixC.getSize().second];     // holds the columns indices of the entries
     PetscScalar rowVals[_matrixC.getSize().second]; // holds the values of the entries
@@ -470,7 +470,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   DEBUG("Begin filling matrix A.");
   precice::utils::Event eFillA("map.pet.fillA.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
 
-  for (int row = ownerRangeABegin; row < ownerRangeAEnd; row++) {
+  for (PetscInt row = ownerRangeABegin; row < ownerRangeAEnd; row++) {
     PetscInt colNum = 0;
     PetscInt colIdx[_matrixA.getSize().second];     // holds the columns indices of the entries
     PetscScalar rowVals[_matrixA.getSize().second]; // holds the values of the entries
