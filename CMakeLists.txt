@@ -88,8 +88,8 @@ endif()
 
 
 # Create versions.hpp and add binary dir to include dirs
-configure_file("${PROJECT_SOURCE_DIR}/src/versions.hpp.in" "${PROJECT_BINARY_DIR}/versions.hpp" @ONLY)
-include_directories(${PROJECT_BINARY_DIR})
+configure_file("${PROJECT_SOURCE_DIR}/src/versions.hpp.in" "${PROJECT_BINARY_DIR}/src/versions.hpp" @ONLY)
+include_directories("${PROJECT_BINARY_DIR}/src")
 
 add_subdirectory("src")
 include_directories("src")
