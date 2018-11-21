@@ -6,12 +6,12 @@ namespace precice
 {
 namespace mesh
 {
-/** random access iterator over an indexable Source.
+/** random-access iterator over an indexable Source.
  * 
- * \tparam Source the underlying container to intex into
- * \tparam Value the resulting value
+ * @tparam Source the underlying container to index into
+ * @tparam Value the resulting value
  *
- *  @note This version currently only supports Sources with a const `src.vertex(index).getCoords()` access.
+ * @note This version currently only supports Sources with a const `src.vertex(index).getCoords()` access.
  */
 template <typename Source, typename Value>
 class IndexRangeIterator : public boost::iterator_facade<
@@ -40,18 +40,22 @@ public:
   {
     return other.idx_ == idx_ && other.src_ == src_;
   }
+
   void increment()
   {
     ++idx_;
   }
+
   void decrement()
   {
     --idx_;
   }
+
   void advance(size_t n)
   {
     idx_ += n;
   }
+
   size_t distance_to(const IndexRangeIterator<Source, Value> &other) const
   {
     return other.idx_ - idx_;

@@ -438,6 +438,39 @@ BOOST_AUTO_TEST_CASE(Demonstration)
   }
 }
 
+BOOST_AUTO_TEST_CASE(MeshEquality)
+{
+    int dim = 3;
+    Mesh mesh1 ( "Mesh1", dim, false );
+    Mesh mesh1flipped ( "Mesh1flipped", dim, true );
+    Mesh mesh2 ( "Mesh2", dim, false );
+    Mesh *meshes[3] = {&mesh1, &mesh1flipped, &mesh2};
+    for (auto ptr : meshes){
+        auto& mesh = *ptr;
+        Eigen::VectorXd coords0(dim);
+        Eigen::VectorXd coords1(dim);
+        Eigen::VectorXd coords2(dim);
+        Eigen::VectorXd coords3(dim);
+        coords0 << 0.0, 0.0, 0.0;
+        coords1 << 1.0, 0.0, 0.0;
+        coords2 << 0.0, 0.0, 1.0;
+        coords3 << 1.0, 0.0, 1.0;
+        Vertex& v0 = mesh.createVertex(coords0);
+        Vertex& v1 = mesh.createVertex(coords1);
+        Vertex& v2 = mesh.createVertex(coords2);
+        Vertex& v3 = mesh.createVertex(coords3);
+        Edge& e0 = mesh.createEdge ( v0, v1 ); // LINESTRING (0 0 0, 1 0 0)
+        Edge& e1 = mesh.createEdge ( v1, v2 ); // LINESTRING (1 0 0, 0 0 1)
+        Edge& e2 = mesh.createEdge ( v2, v0 ); // LINESTRING (0 0 1, 0 0 0)
+        Edge& e3 = mesh.createEdge ( v1, v3 ); // LINESTRING (1 0 0, 1 0 1)
+        Edge& e4 = mesh.createEdge ( v3, v2 ); // LINESTRING (1 0 1, 0 0 1)
+        mesh.createTriangle ( e0, e1, e2 );
+        mesh.createQuad (e0, e3, e4, e2);
+        mesh.computeState();
+    }
+    BOOST_TEST(mesh1 != mesh1flipped);
+    BOOST_TEST(mesh1 == mesh2);
+}
 
 BOOST_AUTO_TEST_SUITE_END() // Mesh
 BOOST_AUTO_TEST_SUITE_END() // Mesh

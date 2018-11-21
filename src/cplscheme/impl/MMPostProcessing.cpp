@@ -250,7 +250,7 @@ void MMPostProcessing::setDesignSpecification(
  *         manifold mapping cycle. This information is needed for convergence measurements in the
  *         coupling scheme.
  *  ---------------------------------------------------------------------------------------------
- */ /// @todo: change to call by ref when Eigen is used.
+ */
 std::map<int, Eigen::VectorXd> MMPostProcessing::getDesignSpecification(
     DataMap &cplData)
 {

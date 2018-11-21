@@ -36,7 +36,7 @@ public:
   virtual ~PropertyContainer(){};
 
   // Shortform for the type of a property.
-  typedef boost::any PropertyType;
+  using PropertyType = boost::any;
 
   /// ID for the property labeling geometry IDs.
   static const int INDEX_GEOMETRY_ID;
@@ -93,7 +93,7 @@ public:
      * This allows temporary variables for container objects.
      * Gives an error, when the property does not exist.
      *
-     * @param[in] index Index of the property to delete
+     * @param[in] propertyID ID of the property to delete
      * @return true, if property existed, false if not
      */
   bool deleteProperty(int propertyID);

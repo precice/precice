@@ -77,5 +77,16 @@ int Mapping:: getDimensions() const
   return _dimensions;
 }
 
+bool operator<(Mapping::MeshRequirement lhs, Mapping::MeshRequirement rhs) {
+    switch(lhs) {
+        case(Mapping::MeshRequirement::UNDEFINED):
+            return rhs != Mapping::MeshRequirement::UNDEFINED;
+        case(Mapping::MeshRequirement::VERTEX):
+            return rhs == Mapping::MeshRequirement::FULL;
+        case(Mapping::MeshRequirement::FULL):
+                return false;
+    };
+}
+
 }} // namespace precice, mapping
 

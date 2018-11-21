@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE(MapThinPlaceSplinesC2)
   bool yDead = false;
   bool zDead = false;
   CompactThinPlateSplinesC2 fct(supportRadius);
-  typedef RadialBasisFctMapping<CompactThinPlateSplinesC2> Mapping;
+  using Mapping = RadialBasisFctMapping<CompactThinPlateSplinesC2>;
   Mapping consistentMap2D(Mapping::CONSISTENT, 2, fct, xDead, yDead, zDead);
   perform2DTestConsistentMapping(consistentMap2D);
   Mapping consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead);
@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(MapCompactPolynomialC0)
   bool yDead = false;
   bool zDead = false;
   CompactPolynomialC0 fct(supportRadius);
-  typedef RadialBasisFctMapping<CompactPolynomialC0> Mapping;
+  using Mapping = RadialBasisFctMapping<CompactPolynomialC0>;
   Mapping consistentMap2D(Mapping::CONSISTENT, 2, fct, xDead, yDead, zDead);
   perform2DTestConsistentMapping(consistentMap2D);
   Mapping consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead);
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(MapCompactPolynomialC6)
   bool yDead = false;
   bool zDead = false;
   CompactPolynomialC6 fct(supportRadius);
-  typedef RadialBasisFctMapping<CompactPolynomialC6> Mapping;
+  using Mapping = RadialBasisFctMapping<CompactPolynomialC6>;
   Mapping consistentMap2D(Mapping::CONSISTENT, 2, fct, xDead, yDead, zDead);
   perform2DTestConsistentMapping(consistentMap2D);
   Mapping consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead);
@@ -205,7 +205,7 @@ BOOST_AUTO_TEST_CASE(DeadAxis3D)
   bool xDead = false;
   bool yDead = true;
   bool zDead = false;
-  typedef RadialBasisFctMapping<CompactPolynomialC6> Mapping;
+  using Mapping = RadialBasisFctMapping<CompactPolynomialC6>;
   Mapping mapping(Mapping::CONSISTENT, dimensions, fct, xDead, yDead, zDead);
 
   // Create mesh to map from

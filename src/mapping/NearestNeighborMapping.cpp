@@ -9,6 +9,8 @@
 
 
 namespace precice {
+extern bool syncMode;
+
 namespace mapping {
 
 NearestNeighborMapping:: NearestNeighborMapping
@@ -29,7 +31,7 @@ void NearestNeighborMapping:: computeMapping()
   assertion(input().get() != nullptr);
   assertion(output().get() != nullptr);
 
-  precice::utils::Event e("map.nn.computeMapping.From" + input()->getName() + "To" + output()->getName());
+  precice::utils::Event e("map.nn.computeMapping.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
   
   if (getConstraint() == CONSISTENT){
     DEBUG("Compute consistent mapping");
@@ -85,7 +87,7 @@ void NearestNeighborMapping:: map
 {
   TRACE(inputDataID, outputDataID);
 
-  precice::utils::Event e("map.nn.mapData.From" + input()->getName() + "To" + output()->getName());
+  precice::utils::Event e("map.nn.mapData.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
 
   const Eigen::VectorXd& inputValues = input()->data(inputDataID)->values();
   Eigen::VectorXd& outputValues = output()->data(outputDataID)->values();

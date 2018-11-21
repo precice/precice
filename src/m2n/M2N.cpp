@@ -12,7 +12,6 @@ using precice::utils::Publisher;
 
 namespace precice
 {
-extern bool testMode;
 extern bool syncMode;
 
 namespace m2n
@@ -37,16 +36,16 @@ bool M2N::isConnected()
 }
 
 void M2N::acceptMasterConnection(
-    const std::string &nameAcceptor,
-    const std::string &nameRequester)
+    const std::string &acceptorName,
+    const std::string &requesterName)
 {
-  TRACE(nameAcceptor, nameRequester);
+  TRACE(acceptorName, requesterName);
 
-  Event e("m2n.acceptMasterConnection");
+  Event e("m2n.acceptMasterConnection", precice::syncMode);
 
   if (not utils::MasterSlave::_slaveMode) {
     assertion(_masterCom.use_count() > 0);
-    _masterCom->acceptConnection(nameAcceptor, nameRequester);
+    _masterCom->acceptConnection(acceptorName, requesterName, utils::MasterSlave::_rank);
     _isMasterConnected = _masterCom->isConnected();
   }
 
@@ -54,19 +53,17 @@ void M2N::acceptMasterConnection(
 }
 
 void M2N::requestMasterConnection(
-    const std::string &nameAcceptor,
-    const std::string &nameRequester)
+    const std::string &acceptorName,
+    const std::string &requesterName)
 {
-  TRACE(nameAcceptor, nameRequester);
+  TRACE(acceptorName, requesterName);
 
-  Event e("m2n.requestMasterConnection");
+  Event e("m2n.requestMasterConnection", precice::syncMode);
 
   if (not utils::MasterSlave::_slaveMode) {
     assertion(_masterCom.use_count() > 0);
 
-    utils::ScopedEventPrefix sep("M2N::requestMasterConnection/");
-
-    _masterCom->requestConnection(nameAcceptor, nameRequester, 0, 1);
+    _masterCom->requestConnection(acceptorName, requesterName, 0, 1);
     _isMasterConnected = _masterCom->isConnected();
   }
 
@@ -74,32 +71,30 @@ void M2N::requestMasterConnection(
 }
 
 void M2N::acceptSlavesConnection(
-    const std::string &nameAcceptor,
-    const std::string &nameRequester)
+    const std::string &acceptorName,
+    const std::string &requesterName)
 {
-  TRACE(nameAcceptor, nameRequester);
-
-  Event e("m2n.acceptSlavesConnection");
+  TRACE(acceptorName, requesterName);
+  Event e("m2n.acceptSlavesConnection", precice::syncMode);
 
   _areSlavesConnected = true;
   for (const auto &pair : _distComs) {
-    pair.second->acceptConnection(nameAcceptor, nameRequester);
+    pair.second->acceptConnection(acceptorName, requesterName);
     _areSlavesConnected = _areSlavesConnected && pair.second->isConnected();
   }
   assertion(_areSlavesConnected);
 }
 
 void M2N::requestSlavesConnection(
-    const std::string &nameAcceptor,
-    const std::string &nameRequester)
+    const std::string &acceptorName,
+    const std::string &requesterName)
 {
-  TRACE(nameAcceptor, nameRequester);
-
-  Event e("m2n.requestSlavesConnection");
+  TRACE(acceptorName, requesterName);
+  Event e("m2n.requestSlavesConnection", precice::syncMode);
 
   _areSlavesConnected = true;
   for (const auto &pair : _distComs) {
-    pair.second->requestConnection(nameAcceptor, nameRequester);
+    pair.second->requestConnection(acceptorName, requesterName);
     _areSlavesConnected = _areSlavesConnected && pair.second->isConnected();
   }
   assertion(_areSlavesConnected);
@@ -148,7 +143,7 @@ void M2N::send(
     assertion(_distComs.find(meshID) != _distComs.end());
     assertion(_distComs[meshID].get() != nullptr);
 
-    if (precice::syncMode and not precice::testMode) {
+    if (precice::syncMode) {
       if (not utils::MasterSlave::_slaveMode) {
         bool ack = true;
         _masterCom->send(ack, 0);
@@ -156,7 +151,7 @@ void M2N::send(
         _masterCom->send(ack, 0);
       }
     }
-
+    Event e("m2n.sendData", precice::syncMode);
     _distComs[meshID]->send(itemsToSend, size, valueDimension);
   } else { //coupling mode
     assertion(_isMasterConnected);
@@ -190,7 +185,7 @@ void M2N::receive(double *itemsToReceive,
     assertion(_distComs.find(meshID) != _distComs.end());
     assertion(_distComs[meshID].get() != nullptr);
 
-    if (precice::syncMode and not precice::testMode) {
+    if (precice::syncMode) {
       if (not utils::MasterSlave::_slaveMode) {
         bool ack;
 
@@ -199,7 +194,7 @@ void M2N::receive(double *itemsToReceive,
         _masterCom->receive(ack, 0);
       }
     }
-
+    Event e("m2n.receiveData", precice::syncMode);
     _distComs[meshID]->receive(itemsToReceive, size, valueDimension);
   } else { //coupling mode
     assertion(_isMasterConnected);

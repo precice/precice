@@ -3,30 +3,9 @@
 #pragma once
 
 #include "com/Communication.hpp"
-
-#include <boost/asio/io_service.hpp>
+#include <boost/asio.hpp>
 #include "logging/Logger.hpp"
-
 #include <thread>
-
-namespace boost
-{
-namespace asio
-{
-namespace ip
-{
-class tcp;
-}
-template <typename Protocol>
-class stream_socket_service;
-template <typename Protocol, typename StreamSocketService>
-class basic_stream_socket;
-} // namespace asio
-namespace system
-{
-class error_code;
-}
-} // namespace boost
 
 namespace precice
 {
@@ -45,51 +24,28 @@ public:
 
   virtual ~SocketCommunication();
 
-  /**
-   * @brief Returns the number of processes in the remote communicator.
-   *
-   * @pre A connection to the remote participant has been setup.
-   */
   virtual size_t getRemoteCommunicatorSize() override;
 
-  /**
-   * @brief Accepts connection from participant, which has to call requestConnection().
-   *
-   * If several connections are going in to a server, the server has to call
-   * this method, while the clients have to call requestConnection().
-   *
-   * @param[in] nameAcceptor Name of calling participant.
-   * @param[in] nameRequester Name of remote participant to connect to.
-   */
-  virtual void acceptConnection(std::string const &nameAcceptor,
-                                std::string const &nameRequester) override;
+  virtual void acceptConnection(std::string const &acceptorName,
+                                std::string const &requesterName,
+                                int                acceptorRank) override;
 
-  virtual void acceptConnectionAsServer(std::string const &nameAcceptor,
-                                        std::string const &nameRequester,
+  virtual void acceptConnectionAsServer(std::string const &acceptorName,
+                                        std::string const &requesterName,
+                                        int                acceptorRank,
                                         int                requesterCommunicatorSize) override;
 
-  /**
-   * @brief Requests connection from participant, which has to call acceptConnection().
-   *
-   * If several connections are going in to a server, the clients have to call
-   * this method, while the server has to call acceptConnection().
-   *
-   * @param[in] nameAcceptor Name of remote participant to connect to.
-   * @param[in] nameReuester Name of calling participant.
-   */
-  virtual void requestConnection(std::string const &nameAcceptor,
-                                 std::string const &nameRequester,
-                                 int                requesterProcessRank,
+  virtual void requestConnection(std::string const &acceptorName,
+                                 std::string const &requesterName,
+                                 int                requesterRank,
                                  int                requesterCommunicatorSize) override;
 
-  virtual int requestConnectionAsClient(std::string const &nameAcceptor,
-                                        std::string const &nameRequester) override;
+  virtual void requestConnectionAsClient(std::string   const &acceptorName,
+                                         std::string   const &requesterName,
+                                         std::set<int> const &acceptorRanks,
+                                         int                  requesterRank) override;
 
-  /**
-   * @brief Disconnects from communication space, i.e. participant.
-   *
-   * This method is called on destruction.
-   */
+
   virtual void closeConnection() override;
 
   /// Sends a std::string to process with given rank.
@@ -113,19 +69,19 @@ public:
   virtual void send(double itemToSend, int rankReceiver) override;
 
   /// Asynchronously sends a double to process with given rank.
-  virtual PtrRequest aSend(double itemToSend, int rankReceiver) override;
+  virtual PtrRequest aSend(const double & itemToSend, int rankReceiver) override;
 
   /// Sends an int to process with given rank.
   virtual void send(int itemToSend, int rankReceiver) override;
 
   /// Asynchronously sends an int to process with given rank.
-  virtual PtrRequest aSend(int itemToSend, int rankReceiver) override;
+  virtual PtrRequest aSend(const int & itemToSend, int rankReceiver) override;
 
   /// Sends a bool to process with given rank.
   virtual void send(bool itemToSend, int rankReceiver) override;
 
   /// Asynchronously sends a bool to process with given rank.
-  virtual PtrRequest aSend(bool itemToSend, int rankReceiver) override;
+  virtual PtrRequest aSend(const bool & itemToSend, int rankReceiver) override;
 
   /// Receives a std::string from process with given rank.
   virtual void receive(std::string &itemToReceive, int rankSender) override;
@@ -181,22 +137,18 @@ private:
   /// Directory where IP address is exchanged by file.
   std::string _addressDirectory;
 
-  int _remoteCommunicatorSize = 0;
-
-  typedef boost::asio::io_service IOService;
-  std::shared_ptr<IOService>      _ioService;
-
-  typedef boost::asio::ip::tcp                                 TCP;
-  typedef boost::asio::stream_socket_service<TCP>              SocketService;
-  typedef boost::asio::basic_stream_socket<TCP, SocketService> Socket;
-  typedef std::shared_ptr<Socket>                              PtrSocket;
-  std::vector<PtrSocket>                                       _sockets;
-
-  typedef boost::asio::io_service::work Work;
-  typedef std::shared_ptr<Work>         PtrWork;
-  PtrWork                               _work;
-
+  using IOService     = boost::asio::io_service;
+  using TCP           = boost::asio::ip::tcp;
+  using SocketService = boost::asio::stream_socket_service<TCP>;
+  using Socket        = boost::asio::basic_stream_socket<TCP, SocketService>;
+  using Work          = boost::asio::io_service::work;
+  
+  std::shared_ptr<IOService> _ioService;
+  std::shared_ptr<Work> _work;
   std::thread _thread;
+  
+  /// Remote rank -> socket map
+  std::map<int, std::shared_ptr<Socket>> _sockets;
 
   bool isClient();
   bool isServer();

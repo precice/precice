@@ -1,6 +1,7 @@
 #pragma once
 
 #include "mesh/SharedPointer.hpp"
+#include "mapping/Mapping.hpp"
 
 namespace precice
 {
@@ -28,7 +29,18 @@ public:
 
   Action(
       Timing               timing,
-      const mesh::PtrMesh &mesh)
+      const mesh::PtrMesh &mesh,
+      mapping::Mapping::MeshRequirement requirement)
+      : _timing(timing),
+        _mesh(mesh),
+        _meshRequirement(requirement)
+  {
+  }
+
+  Action(
+      Timing               timing,
+      const mesh::PtrMesh &mesh
+      )
       : _timing(timing),
         _mesh(mesh)
   {
@@ -62,12 +74,21 @@ public:
     return _mesh;
   }
 
+  /// Returns the mesh requirement of this action
+  mapping::Mapping::MeshRequirement getMeshRequirement() const
+  {
+    return _meshRequirement;
+  }
+
 private:
   /// Determines when the action will be executed.
   Timing _timing;
 
   /// Mesh carrying the data used in the action.
   mesh::PtrMesh _mesh;
+
+  /// The mesh requirements for the mesh
+  mapping::Mapping::MeshRequirement _meshRequirement = mapping::Mapping::MeshRequirement::UNDEFINED;
 };
 
 } // namespace action

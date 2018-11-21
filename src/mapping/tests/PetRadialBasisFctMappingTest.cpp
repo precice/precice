@@ -323,7 +323,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV4)
       );
 }
 #else
-  #warning "Test case MappingTests/PetRadialBasisFunctionMapping/Parallel/DistributedConsistent2DV4 deactivated, due to PETSc version < 3.8 or compiling with scons."
+  #warning "Test case MappingTests/PetRadialBasisFunctionMapping/Parallel/DistributedConsistent2DV4 deactivated, due to PETSc version < 3.8"
 #endif
 
 // same as 2DV4, but all ranks have vertices
@@ -592,7 +592,7 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV4,
     );
 }
 #else
-  #warning "Test case MappingTests/PetRadialBasisFunctionMapping/Parallel/DistributedConservative2DV4 deactivated, due to PETSc version < 3.8 or compiling with scons."
+  #warning "Test case MappingTests/PetRadialBasisFunctionMapping/Parallel/DistributedConservative2DV4 deactivated, due to PETSc version < 3.8."
 #endif
 
 /// Tests a non-contigous owner distributed at the outMesh
@@ -1069,7 +1069,7 @@ BOOST_AUTO_TEST_CASE(MapCompactThinPlateSplinesC2)
   bool yDead = false;
   bool zDead = false;
   CompactThinPlateSplinesC2 fct(supportRadius);
-  typedef PetRadialBasisFctMapping<CompactThinPlateSplinesC2> Mapping;
+  using Mapping = PetRadialBasisFctMapping<CompactThinPlateSplinesC2>;
   Mapping consistentMap2D(Mapping::CONSISTENT, 2, fct, xDead, yDead, zDead);
   perform2DTestConsistentMapping(consistentMap2D);
   Mapping consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead);
@@ -1087,7 +1087,7 @@ BOOST_AUTO_TEST_CASE(MapPetCompactPolynomialC0)
   bool yDead = false;
   bool zDead = false;
   CompactPolynomialC0 fct(supportRadius);
-  typedef PetRadialBasisFctMapping<CompactPolynomialC0> Mapping;
+  using Mapping = PetRadialBasisFctMapping<CompactPolynomialC0>;
   Mapping consistentMap2D(Mapping::CONSISTENT, 2, fct, xDead, yDead, zDead);
   perform2DTestConsistentMapping(consistentMap2D);
   Mapping consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead);
@@ -1105,7 +1105,7 @@ BOOST_AUTO_TEST_CASE(MapPetCompactPolynomialC6)
   bool yDead = false;
   bool zDead = false;
   CompactPolynomialC6 fct(supportRadius);
-  typedef PetRadialBasisFctMapping<CompactPolynomialC6> Mapping;
+  using Mapping = PetRadialBasisFctMapping<CompactPolynomialC6>;
   Mapping consistentMap2D(Mapping::CONSISTENT, 2, fct, xDead, yDead, zDead);
   perform2DTestConsistentMapping(consistentMap2D);
   Mapping consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead);
@@ -1173,7 +1173,7 @@ BOOST_AUTO_TEST_CASE(DeadAxis3D)
   bool xDead = false;
   bool yDead = true;
   bool zDead = false;
-  typedef PetRadialBasisFctMapping<CompactPolynomialC6> Mapping;
+  using Mapping = PetRadialBasisFctMapping<CompactPolynomialC6>;
   Mapping mapping(Mapping::CONSISTENT, dimensions, fct, xDead, yDead, zDead);
 
   // Create mesh to map from

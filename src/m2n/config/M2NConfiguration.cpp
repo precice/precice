@@ -2,6 +2,7 @@
 #include <list>
 #include "com/MPIDirectCommunication.hpp"
 #include "com/MPIPortsCommunicationFactory.hpp"
+#include "com/MPISinglePortsCommunicationFactory.hpp"
 #include "com/SocketCommunicationFactory.hpp"
 #include "m2n/DistributedComFactory.hpp"
 #include "m2n/GatherScatterComFactory.hpp"
@@ -23,20 +24,20 @@ M2NConfiguration::M2NConfiguration(xml::XMLTag &parent)
   std::list<XMLTag>  tags;
   XMLTag::Occurrence occ = XMLTag::OCCUR_ARBITRARY;
   {
-    XMLTag tag(*this, VALUE_SOCKETS, occ, TAG);
+    XMLTag tag(*this, "sockets", occ, TAG);
     doc = "Communication via Sockets.";
     tag.setDocumentation(doc);
 
-    XMLAttribute<int> attrPort(ATTR_PORT);
+    XMLAttribute<int> attrPort("port");
     doc = "Port number (16-bit unsigned integer) to be used for socket ";
-    doc += "communiation. The default is \"0\", what means that the OS will ";
+    doc += "communication. The default is \"0\", what means that the OS will ";
     doc += "dynamically search for a free port (if at least one exists) and ";
     doc += "bind it automatically.";
     attrPort.setDocumentation(doc);
     attrPort.setDefaultValue(0);
     tag.addAttribute(attrPort);
 
-    XMLAttribute<std::string> attrNetwork(ATTR_NETWORK);
+    XMLAttribute<std::string> attrNetwork("network");
     doc = "Interface name to be used for socket communiation. ";
     doc += "Default is \"lo\", i.e., the local host loopback. ";
     doc += "Might be different on supercomputing systems, e.g. \"ib0\" ";
@@ -53,12 +54,11 @@ M2NConfiguration::M2NConfiguration(xml::XMLTag &parent)
     attrExchangeDirectory.setDocumentation(doc);
     attrExchangeDirectory.setDefaultValue("");
     tag.addAttribute(attrExchangeDirectory);
-
     tags.push_back(tag);
   }
   {
-    XMLTag tag(*this, VALUE_MPI, occ, TAG);
-    doc = "Communication via MPI with startup in separated communication spaces.";
+    XMLTag tag(*this, "mpi", occ, TAG);
+    doc = "Communication via MPI with startup in separated communication spaces, using multiple communicators.";
     tag.setDocumentation(doc);
 
     XMLAttribute<std::string> attrExchangeDirectory(ATTR_EXCHANGE_DIRECTORY);
@@ -68,12 +68,25 @@ M2NConfiguration::M2NConfiguration(xml::XMLTag &parent)
     attrExchangeDirectory.setDocumentation(doc);
     attrExchangeDirectory.setDefaultValue("");
     tag.addAttribute(attrExchangeDirectory);
-
     tags.push_back(tag);
   }
-  
   {
-    XMLTag tag(*this, VALUE_MPI_SINGLE, occ, TAG);
+    XMLTag tag(*this, "mpi-singleports", occ, TAG);
+    doc = "Communication via MPI with startup in separated communication spaces, using a single communicator";
+    tag.setDocumentation(doc);
+
+    XMLAttribute<std::string> attrExchangeDirectory(ATTR_EXCHANGE_DIRECTORY);
+    doc = "Directory where connection information is exchanged. By default, the ";
+    doc += "directory of startup is chosen, and both solvers have to be started ";
+    doc += "in the same directory.";
+    attrExchangeDirectory.setDocumentation(doc);
+    attrExchangeDirectory.setDefaultValue("");
+    tag.addAttribute(attrExchangeDirectory);
+    tags.push_back(tag);
+  }
+
+  {
+    XMLTag tag(*this, "mpi-single", occ, TAG);
     doc = "Communication via MPI with startup in common communication space.";
     tag.setDocumentation(doc);
     tags.push_back(tag);
@@ -99,18 +112,18 @@ M2NConfiguration::M2NConfiguration(xml::XMLTag &parent)
   attrDistrTypeOnly.setValidator(validDistrGatherScatter);
   attrDistrTypeOnly.setDefaultValue(VALUE_GATHER_SCATTER);
 
-  XMLAttribute<std::string> attrFrom(ATTR_FROM);
+  XMLAttribute<std::string> attrFrom("from");
   doc = "First participant name involved in communication. For performance reasons, we recommend to use ";
   doc += "the participant with less ranks at the coupling interface as \"from\" in the m2n communication.";
   attrFrom.setDocumentation(doc);
-  XMLAttribute<std::string> attrTo(ATTR_TO);
+  XMLAttribute<std::string> attrTo("to");
   doc = "Second participant name involved in communication.";
   attrTo.setDocumentation(doc);
 
   for (XMLTag &tag : tags) {
     tag.addAttribute(attrFrom);
     tag.addAttribute(attrTo);
-    if (tag.getName() == VALUE_MPI || tag.getName() == VALUE_SOCKETS) {
+    if (tag.getName() == "mpi" || tag.getName() == "mpi-singleports" || tag.getName() == "sockets") {
       tag.addAttribute(attrDistrTypeBoth);
     } else {
       tag.addAttribute(attrDistrTypeOnly);
@@ -119,9 +132,7 @@ M2NConfiguration::M2NConfiguration(xml::XMLTag &parent)
   }
 }
 
-m2n::PtrM2N M2NConfiguration::getM2N(
-    const std::string &from,
-    const std::string &to)
+m2n::PtrM2N M2NConfiguration::getM2N(const std::string &from, const std::string &to)
 {
   using std::get;
   for (M2NTuple &tuple : _m2ns) {
@@ -132,25 +143,23 @@ m2n::PtrM2N M2NConfiguration::getM2N(
     }
   }
   std::ostringstream error;
-  error << "No m2n communication configured between \"" << from << "\" and \""
-        << to << "\"!";
+  error << "No m2n communication configured between \"" << from << "\" and \"" << to << "\"!";
   throw error.str();
 }
 
-void M2NConfiguration::xmlTagCallback(
-    xml::XMLTag &tag)
+void M2NConfiguration::xmlTagCallback(xml::XMLTag &tag)
 {
   if (tag.getNamespace() == TAG) {
-    std::string from = tag.getStringAttributeValue(ATTR_FROM);
-    std::string to   = tag.getStringAttributeValue(ATTR_TO);
+    std::string from = tag.getStringAttributeValue("from");
+    std::string to   = tag.getStringAttributeValue("to");
     checkDuplicates(from, to);
     std::string distrType = tag.getStringAttributeValue(ATTR_DISTRIBUTION_TYPE);
 
     com::PtrCommunicationFactory comFactory;
     com::PtrCommunication        com;
-    if (tag.getName() == VALUE_SOCKETS) {
-      std::string network = tag.getStringAttributeValue(ATTR_NETWORK);
-      int         port    = tag.getIntAttributeValue(ATTR_PORT);
+    if (tag.getName() == "sockets") {
+      std::string network = tag.getStringAttributeValue("network");
+      int         port    = tag.getIntAttributeValue("port");
 
       CHECK(not utils::isTruncated<unsigned short>(port),
             "The value given for the \"port\" attribute is not a 16-bit unsigned integer: " << port);
@@ -158,21 +167,32 @@ void M2NConfiguration::xmlTagCallback(
       std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
       comFactory      = std::make_shared<com::SocketCommunicationFactory>(port, false, network, dir);
       com             = comFactory->newCommunication();
-    } else if (tag.getName() == VALUE_MPI) {
+    } else if (tag.getName() == "mpi") {
       std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
 #ifdef PRECICE_NO_MPI
       std::ostringstream error;
-      error << "Communication type \"" << VALUE_MPI << "\" can only be used "
+      error << "Communication type \"mpi\" can only be used"
             << "when preCICE is compiled with argument \"mpi=on\"";
       throw error.str();
 #else
       comFactory = std::make_shared<com::MPIPortsCommunicationFactory>(dir);
       com        = comFactory->newCommunication();
 #endif
-    } else if (tag.getName() == VALUE_MPI_SINGLE) {
+    } else if (tag.getName() == "mpi-singleports") {
+      std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
 #ifdef PRECICE_NO_MPI
       std::ostringstream error;
-      error << "Communication type \"" << VALUE_MPI_SINGLE << "\" can only be used "
+      error << "Communication type \mpi-singleports\ can only be used "
+            << "when preCICE is compiled with argument \"mpi=on\"";
+      throw error.str();
+#else
+      comFactory = std::make_shared<com::MPISinglePortsCommunicationFactory>(dir);
+      com        = comFactory->newCommunication();
+#endif
+    } else if (tag.getName() == "mpi-single") {
+#ifdef PRECICE_NO_MPI
+      std::ostringstream error;
+      error << "Communication type \"" << "mpi-single" << "\" can only be used "
             << "when preCICE is compiled with argument \"mpi=on\"";
       throw error.str();
 #else
@@ -183,11 +203,11 @@ void M2NConfiguration::xmlTagCallback(
     assertion(com.get() != nullptr);
 
     DistributedComFactory::SharedPointer distrFactory;
-    if (tag.getName() == VALUE_MPI_SINGLE || distrType == VALUE_GATHER_SCATTER) {
+    if (tag.getName() == "mpi-single" || distrType == VALUE_GATHER_SCATTER) {
       assertion(distrType == VALUE_GATHER_SCATTER);
       distrFactory = std::make_shared<GatherScatterComFactory>(com);
     } else if (distrType == VALUE_POINT_TO_POINT) {
-      assertion(tag.getName() == VALUE_MPI or tag.getName() == "mpi-singleports" or tag.getName() == VALUE_SOCKETS);
+      assertion(tag.getName() == "mpi" or tag.getName() == "mpi-singleports" or tag.getName() == "sockets");
       distrFactory = std::make_shared<PointToPointComFactory>(comFactory);
     }
     assertion(distrFactory.get() != nullptr);

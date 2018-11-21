@@ -21,9 +21,9 @@ public:
 
   explicit SocketCommunicationFactory(std::string const &addressDirectory);
 
-  PtrCommunication newCommunication();
+  PtrCommunication newCommunication() override;
 
-  std::string addressDirectory();
+  std::string addressDirectory() override;
 
 private:
   unsigned short _portNumber;

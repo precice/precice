@@ -414,9 +414,9 @@ public:
    *
    * The exact mapping and communication must be specified in XYZ.
    *
-   * @param toDataID       [IN]  ID of the data to be read, e.g. 2 = temperatures
-   * @param dataPosition [IN]  Position (coordinate, e.g.) of data to be read
-   * @param dataValue    [OUT] Read data value
+   * @param[in] toDataID     ID of the data to be read, e.g. 2 = temperatures
+   * @param[in] dataPosition Position (coordinate, e.g.) of data to be read
+   * @param[in] dataValue    Read data value
    */
   void readScalarData (
     int     toDataID,
@@ -439,7 +439,7 @@ public:
    * The plotting path has to be specified in the configuration of the
    * accessing participant.
    *
-   * @param filenamePrefix [IN] Prefix of all plotted files
+   * @param[in] filenameSuffix Suffix of all plotted files
    */
   void exportMesh (
     const std::string& filenameSuffix,

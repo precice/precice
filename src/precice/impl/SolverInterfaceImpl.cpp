@@ -95,7 +95,7 @@ void SolverInterfaceImpl:: configure
 {
   TRACE();
 
-  Event e("configure");
+  Event e("configure"); // no precice::syncMode as this is not yet configured here
   utils::ScopedEventPrefix sep("configure/");
 
   mesh::Mesh::resetGeometryIDsGlobally();
@@ -172,15 +172,15 @@ void SolverInterfaceImpl:: configure
   }
 
   auto & solverInitEvent = EventRegistry::instance().getStoredEvent("solver.initialize");
-  solverInitEvent.start();
+  solverInitEvent.start(precice::syncMode);
 }
 
 double SolverInterfaceImpl:: initialize()
 {
   TRACE();
   auto & solverInitEvent = EventRegistry::instance().getStoredEvent("solver.initialize");
-  solverInitEvent.pause();
-  Event e("initialize");
+  solverInitEvent.pause(precice::syncMode);
+  Event e("initialize", precice::syncMode);
   utils::ScopedEventPrefix sep("initialize/");
   
   if (_clientMode){
@@ -260,7 +260,7 @@ double SolverInterfaceImpl:: initialize()
     INFO(_couplingScheme->printCouplingState());
   }
 
-  solverInitEvent.start();
+  solverInitEvent.start(precice::syncMode);
 
   return _couplingScheme->getNextTimestepMaxLength();
 }
@@ -270,9 +270,9 @@ void SolverInterfaceImpl:: initializeData ()
   TRACE();
 
   auto & solverInitEvent = EventRegistry::instance().getStoredEvent("solver.initialize");
-  solverInitEvent.pause();
+  solverInitEvent.pause(precice::syncMode);
 
-  Event e("initializeData");
+  Event e("initializeData", precice::syncMode);
   utils::ScopedEventPrefix sep("initializeData/");
 
   CHECK(_couplingScheme->isInitialized(),
@@ -303,7 +303,7 @@ void SolverInterfaceImpl:: initializeData ()
       }
     }
   }
-  solverInitEvent.start();
+  solverInitEvent.start(precice::syncMode);
 }
 
 double SolverInterfaceImpl:: advance
@@ -314,11 +314,11 @@ double SolverInterfaceImpl:: advance
 
   // Events for the solver time, stopped when we enter, restarted when we leave advance
   auto & solverEvent = EventRegistry::instance().getStoredEvent("solver.advance");
-  solverEvent.stop();
+  solverEvent.stop(precice::syncMode);
   auto & solverInitEvent = EventRegistry::instance().getStoredEvent("solver.initialize");
-  solverInitEvent.stop();
+  solverInitEvent.stop(precice::syncMode);
 
-  Event e("advance");
+  Event e("advance", precice::syncMode);
   utils::ScopedEventPrefix sep("advance/");
 
   CHECK(_couplingScheme->isInitialized(), "initialize() has to be called before advance()");
@@ -388,7 +388,7 @@ double SolverInterfaceImpl:: advance
     //resetWrittenData();
 
   }
-  solverEvent.start();
+  solverEvent.start(precice::syncMode);
   return _couplingScheme->getNextTimestepMaxLength();
 }
 
@@ -398,9 +398,9 @@ void SolverInterfaceImpl:: finalize()
 
   // Events for the solver time, finally stopped here
   auto & solverEvent = EventRegistry::instance().getStoredEvent("solver.advance");
-  solverEvent.stop();
+  solverEvent.stop(precice::syncMode);
 
-  Event e("finalize");
+  Event e("finalize"); // no precice::syncMode here as MPI is already finalized at destruction of this event
   utils::ScopedEventPrefix sep("finalize/");
 
   CHECK(_couplingScheme->isInitialized(), "initialize() has to be called before finalize()");
@@ -1145,7 +1145,7 @@ void SolverInterfaceImpl:: writeBlockVectorData
   }
   else { //couplingMode
     CHECK(_accessor->isDataUsed(fromDataID),
-          "You try to write to data /// @todo: hat is not defined for " << _accessor->getName());
+          "You try to write to data that is not defined for " << _accessor->getName());
     DataContext& context = _accessor->dataContext(fromDataID);
     CHECK(context.fromData->getDimensions()==_dimensions,
         "You cannot call writeBlockVectorData on the scalar data type " << context.fromData->getName());
@@ -1758,7 +1758,7 @@ void SolverInterfaceImpl:: initializeClientServerCommunication()
   assertion(com.get() != nullptr);
   if ( _serverMode ){
     INFO("Setting up communication to client" );
-    com->acceptConnection ( _accessorName + "Server", _accessorName );
+    com->acceptConnection ( _accessorName + "Server", _accessorName, 0);
   }
   else {
     INFO("Setting up communication to server" );
@@ -1771,14 +1771,14 @@ void SolverInterfaceImpl:: initializeMasterSlaveCommunication()
 {
   TRACE();
 
-  Event e("com.initializeMasterSlaveCom");
+  Event e("com.initializeMasterSlaveCom", precice::syncMode);
   //slaves create new communicator with ranks 0 to size-2
   //therefore, the master uses a rankOffset and the slaves have to call request
   // with that offset
   int rankOffset = 1;
   if ( utils::MasterSlave::_masterMode ){
     INFO("Setting up communication to slaves" );
-    utils::MasterSlave::_communication->acceptConnection ( _accessorName + "Master", _accessorName);
+    utils::MasterSlave::_communication->acceptConnection ( _accessorName + "Master", _accessorName, utils::MasterSlave::_rank);
     utils::MasterSlave::_communication->setRankOffset(rankOffset);
   }
   else {

@@ -12,6 +12,7 @@
 
 namespace precice
 {
+extern bool syncMode;
 namespace cplscheme
 {
 namespace impl
@@ -300,7 +301,7 @@ void BaseQNPostProcessing::performPostProcessing(
 {
   TRACE(_dataIDs.size(), cplData.size());
   
-  utils::Event e("cpl.computeQuasiNewtonUpdate");
+  utils::Event e("cpl.computeQuasiNewtonUpdate", precice::syncMode);
 
   assertion(_oldResiduals.size() == _oldXTilde.size(), _oldResiduals.size(), _oldXTilde.size());
   assertion(_values.size() == _oldXTilde.size(), _values.size(), _oldXTilde.size());

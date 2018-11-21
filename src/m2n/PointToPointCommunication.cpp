@@ -13,6 +13,7 @@ using precice::utils::Publisher;
 
 namespace precice
 {
+bool extern syncMode;
 namespace m2n
 {
 
@@ -272,10 +273,10 @@ bool PointToPointCommunication::isConnected()
   return _isConnected;
 }
 
-void PointToPointCommunication::acceptConnection(std::string const &nameAcceptor,
-                                                 std::string const &nameRequester)
+void PointToPointCommunication::acceptConnection(std::string const &acceptorName,
+                                                 std::string const &requesterName)
 {
-  TRACE(nameAcceptor, nameRequester);
+  TRACE(acceptorName, requesterName);
   CHECK(not isConnected(), "Already connected!");
   CHECK(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode,
         "You can only use a point-to-point communication between two participants which both use a master. "
@@ -285,10 +286,11 @@ void PointToPointCommunication::acceptConnection(std::string const &nameAcceptor
   mesh::Mesh::VertexDistribution  requesterVertexDistribution;
 
   if (utils::MasterSlave::_masterMode) {
+    Event e0("m2n.exchangeVertexDistribution");
     // Establish connection between participants' master processes.
     auto c = _communicationFactory->newCommunication();
 
-    c->acceptConnection(nameAcceptor, nameRequester);
+    c->acceptConnection(acceptorName, requesterName, utils::MasterSlave::_rank);
 
     int requesterMasterRank;
 
@@ -303,8 +305,10 @@ void PointToPointCommunication::acceptConnection(std::string const &nameAcceptor
     assertion(utils::MasterSlave::_slaveMode);
   }
 
+  Event e1("m2n.broadcastVertexDistributions", precice::syncMode);
   m2n::broadcast(vertexDistribution);
   m2n::broadcast(requesterVertexDistribution);
+  e1.stop();
 
   // Local (for process rank in the current participant) communication map that
   // defines a mapping from a process rank in the remote participant to an array
@@ -323,22 +327,20 @@ void PointToPointCommunication::acceptConnection(std::string const &nameAcceptor
   //   the remote process with rank 1;
   // - has to communicate (send/receive) data with local indices 0 and 2 with
   //   the remote process with rank 4.
+  Event e2("m2n.buildCommunicationMap", precice::syncMode);
   std::map<int, std::vector<int>> communicationMap = m2n::buildCommunicationMap(
     vertexDistribution, requesterVertexDistribution);
+  e2.stop();
 
 // Print `communicationMap'.
 #ifdef P2P_LCM_PRINT
-  e.stop(true);
   print(communicationMap);
-  e.start(true);
 #endif
 
 // Print statistics of `communicationMap'.
 #ifdef P2P_LCM_PRINT_STATS
-  e.stop(true);
   printCommunicationPartnerCountStats(communicationMap);
   printLocalIndexCountStats(communicationMap);
-  e.start(true);
 #endif
 
 #ifdef SuperMUC_WORK
@@ -346,10 +348,10 @@ void PointToPointCommunication::acceptConnection(std::string const &nameAcceptor
     auto addressDirectory = _communicationFactory->addressDirectory();
 
     if (utils::MasterSlave::_masterMode) {
-      Event e("m2n.createDirectories");
+      Event e3("m2n.createDirectories");
 
       for (int rank = 0; rank < utils::MasterSlave::_size; ++rank) {
-        Publisher::createDirectory(addressDirectory + "/" + "." + nameAcceptor + "-" + _mesh->getName() +
+        Publisher::createDirectory(addressDirectory + "/" + "." + acceptorName + "-" + _mesh->getName() +
                                    "-" + std::to_string(rank) + ".address");
       }
     }
@@ -358,6 +360,7 @@ void PointToPointCommunication::acceptConnection(std::string const &nameAcceptor
   }
 #endif
 
+  Event e4("m2n.createCommunications");
   if (communicationMap.empty()) {
     _isConnected = true;
     return;
@@ -366,49 +369,46 @@ void PointToPointCommunication::acceptConnection(std::string const &nameAcceptor
   // Accept point-to-point connections (as server) between the current acceptor
   // process (in the current participant) with rank `utils::MasterSlave::_rank'
   // and (multiple) requester processes (in the requester participant).
+
   auto c = _communicationFactory->newCommunication();
 
 #ifdef SuperMUC_WORK
-  Publisher::ScopedPushDirectory spd("." + nameAcceptor + "-" + _mesh->getName() + "-" +
+  Publisher::ScopedPushDirectory spd("." + acceptorName + "-" + _mesh->getName() + "-" +
                                      std::to_string(utils::MasterSlave::_rank) + ".address");
 #endif
 
   c->acceptConnectionAsServer(
-      nameAcceptor + "-" + std::to_string(utils::MasterSlave::_rank),
-      nameRequester,
+      acceptorName,
+      requesterName,
+      utils::MasterSlave::_rank,
       communicationMap.size());
-
-  // assertion(c->getRemoteCommunicatorSize() == communicationMap.size());
 
   _mappings.reserve(communicationMap.size());
 
-  for (size_t localRequesterRank = 0; localRequesterRank < communicationMap.size(); ++localRequesterRank) {
-    int globalRequesterRank = -1;
-
-    c->receive(globalRequesterRank, localRequesterRank);
+  for (auto & comMap : communicationMap) {
+    int globalRequesterRank = comMap.first;
 
     auto indices = std::move(communicationMap[globalRequesterRank]);
 
-    // NOTE:
-    // Everything is moved (efficiency)!
-    // On the acceptor participant side, the communication object `c'
-    // behaves as a server, i.e. it implicitly accepts multiple connections
-    // to requester processes (in the requester participant). As a result,
-    // only one communication object `c' is needed to satisfy
-    // `communicationMap', and, therefore, for data structure consistency
-    // of `_mappings' with the requester participant side, we simply
-    // duplicate references to the same communication object `c'.
-    _mappings.push_back({static_cast<int>(localRequesterRank), globalRequesterRank,
-                         std::move(indices), c, com::PtrRequest(), {}});
+    /*
+      NOTE:
+      Everything is moved (efficiency)!
+      On the acceptor participant side, the communication object `c' behaves as a server, i.e. it 
+      implicitly accepts multiple connections to requester processes (in the requester participant). 
+      As a result, only one communication object `c' is needed to satisfy `communicationMap', and, 
+      therefore, for data structure consistency of `_mappings' with the requester participant side, 
+      we simply duplicate references to the same communication object `c'.
+    */
+    _mappings.push_back({globalRequesterRank, std::move(indices), c, com::PtrRequest(), {}});
   }
-
+  e4.stop();
   _isConnected = true;
 }
 
-void PointToPointCommunication::requestConnection(std::string const &nameAcceptor,
-                                                  std::string const &nameRequester)
+void PointToPointCommunication::requestConnection(std::string const &acceptorName,
+                                                  std::string const &requesterName)
 {
-  TRACE(nameAcceptor, nameRequester);
+  TRACE(acceptorName, requesterName);
   CHECK(not isConnected(), "Already connected!");
   CHECK(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode,
         "You can only use a point-to-point communication between two participants which both use a master. "
@@ -418,11 +418,10 @@ void PointToPointCommunication::requestConnection(std::string const &nameAccepto
   mesh::Mesh::VertexDistribution  acceptorVertexDistribution;
 
   if (utils::MasterSlave::_masterMode) {
+    Event e0("m2n.exchangeVertexDistribution");
     // Establish connection between participants' master processes.
     auto c = _communicationFactory->newCommunication();
-    {
-      c->requestConnection(nameAcceptor, nameRequester, 0, 1);
-    }
+    c->requestConnection(acceptorName, requesterName, 0, 1);
 
     int acceptorMasterRank;
 
@@ -437,8 +436,10 @@ void PointToPointCommunication::requestConnection(std::string const &nameAccepto
     assertion(utils::MasterSlave::_slaveMode);
   }
 
+  Event e1("m2n.broadcastVertexDistributions", precice::syncMode);
   m2n::broadcast(vertexDistribution);
   m2n::broadcast(acceptorVertexDistribution);
+  e1.stop();
 
   // Local (for process rank in the current participant) communication map that
   // defines a mapping from a process rank in the remote participant to an array
@@ -457,22 +458,20 @@ void PointToPointCommunication::requestConnection(std::string const &nameAccepto
   //   the remote process with rank 1;
   // - has to communicate (send/receive) data with local indices 0 and 2 with
   //   the remote process with rank 4.
+  Event e2("m2n.buildCommunicationMap", precice::syncMode);
   std::map<int, std::vector<int>> communicationMap = m2n::buildCommunicationMap(
     vertexDistribution, acceptorVertexDistribution);
+  e2.stop();
 
 // Print `communicationMap'.
 #ifdef P2P_LCM_PRINT
-  e.stop(true);
   print(communicationMap);
-  e.start(true);
 #endif
 
 // Print statistics of `communicationMap'.
 #ifdef P2P_LCM_PRINT_STATS
-  e.stop(true);
   printCommunicationPartnerCountStats(communicationMap);
   printLocalIndexCountStats(communicationMap);
-  e.start(true);
 #endif
 
 #ifdef SuperMUC_WORK
@@ -484,6 +483,7 @@ void PointToPointCommunication::requestConnection(std::string const &nameAccepto
   }
 #endif
 
+  Event e4("m2n.createCommunications");
   if (communicationMap.empty()) {
     _isConnected = true;
     return;
@@ -493,6 +493,14 @@ void PointToPointCommunication::requestConnection(std::string const &nameAccepto
   requests.reserve(communicationMap.size());
   _mappings.reserve(communicationMap.size());
 
+  std::set<int> acceptingRanks;
+  for (auto &i : communicationMap)
+    acceptingRanks.emplace(i.first);
+
+  auto c = _communicationFactory->newCommunication();
+  c->requestConnectionAsClient(acceptorName, requesterName,
+                               acceptingRanks, utils::MasterSlave::_rank);
+
   // Request point-to-point connections (as client) between the current
   // requester process (in the current participant) and (multiple) acceptor
   // processes (in the acceptor participant) with ranks `globalAcceptorRank'
@@ -500,30 +508,20 @@ void PointToPointCommunication::requestConnection(std::string const &nameAccepto
   for (auto &i : communicationMap) {
     auto globalAcceptorRank = i.first;
     auto indices            = std::move(i.second);
-    auto c = _communicationFactory->newCommunication();
 
 #ifdef SuperMUC_WORK
-    Publisher::ScopedPushDirectory spd("." + nameAcceptor + "-" + _mesh->getName() + "-" +
+    Publisher::ScopedPushDirectory spd("." + acceptorName + "-" + _mesh->getName() + "-" +
                                        std::to_string(globalAcceptorRank) + ".address");
 #endif
-
-    c->requestConnectionAsClient(nameAcceptor + "-" + std::to_string(globalAcceptorRank), nameRequester);
-    // assertion(c->getRemoteCommunicatorSize() == 1);
-
-    auto request = c->aSend(utils::MasterSlave::_rank, 0);
-
-    requests.push_back(request);
 
     // NOTE:
     // Everything is moved (efficiency)!
     // On the requester participant side, the communication objects behave
     // as clients, i.e. each of them requests only one connection to
     // acceptor process (in the acceptor participant).
-    _mappings.push_back({0, globalAcceptorRank,
-                         std::move(indices), c, com::PtrRequest(), {}});
+    _mappings.push_back({globalAcceptorRank, std::move(indices), c, com::PtrRequest(), {}});
   }
-
-  com::Request::wait(requests);
+  e4.stop();
   _isConnected = true;
 }
 
@@ -561,7 +559,7 @@ void PointToPointCommunication::send(double *itemsToSend,
         buffer->push_back(itemsToSend[index * valueDimension + d]);
       }
     }
-    auto request = mapping.communication->aSend(*buffer, mapping.localRemoteRank);
+    auto request = mapping.communication->aSend(*buffer, mapping.remoteRank);
     bufferedRequests.emplace_back(request, buffer);
   }
 
@@ -592,7 +590,7 @@ void PointToPointCommunication::receive(double *itemsToReceive,
 
   for (auto &mapping : _mappings) {
     mapping.recvBuffer.resize(mapping.indices.size() * valueDimension);
-    mapping.request = mapping.communication->aReceive(mapping.recvBuffer, mapping.localRemoteRank);
+    mapping.request = mapping.communication->aReceive(mapping.recvBuffer, mapping.remoteRank);
   }
 
   for (auto &mapping : _mappings) {
@@ -621,7 +619,7 @@ void PointToPointCommunication::checkBufferedRequests(bool blocking)
     if (bufferedRequests.empty())
       return;
     if (blocking)
-      std::this_thread::yield(); // give up our time slice, so MPI way work
+      std::this_thread::yield(); // give up our time slice, so MPI may work
   } while (blocking);
 }
 
