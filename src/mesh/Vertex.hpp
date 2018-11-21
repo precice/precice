@@ -31,9 +31,19 @@ public:
   template<typename VECTOR_T>
   void setCoords ( const VECTOR_T& coordinates );
 
+  /// Sets the coordinates of the vertex.
+  /// RValue variant
+  template<typename VECTOR_T>
+  void setCoords ( VECTOR_T&& coordinates );
+
   /// Sets the normal of the vertex.
   template<typename VECTOR_T>
   void setNormal ( const VECTOR_T& normal );
+
+  /// Sets the normal of the vertex.
+  /// RValue variant
+  template<typename VECTOR_T>
+  void setNormal ( VECTOR_T&& normal );
 
   /// Returns the unique (among vertices of one mesh) ID of the vertex.
   int getID() const;
@@ -105,12 +115,30 @@ void Vertex:: setCoords
 }
 
 template<typename VECTOR_T>
+void Vertex:: setCoords
+(
+  VECTOR_T&& coordinates )
+{
+  assertion ( coordinates.size() == _coords.size(), coordinates.size(), _coords.size() );
+  _coords = std::forward<VECTOR_T>(coordinates);
+}
+
+template<typename VECTOR_T>
 void Vertex:: setNormal
 (
   const VECTOR_T& normal )
 {
   assertion ( normal.size() == _normal.size(), normal.size(), _normal.size() );
   _normal = normal;
+}
+
+template<typename VECTOR_T>
+void Vertex:: setNormal
+(
+  VECTOR_T&& normal )
+{
+  assertion ( normal.size() == _normal.size(), normal.size(), _normal.size() );
+  _normal = std::forward<VECTOR_T>(normal);
 }
 
 inline int Vertex:: getID() const
