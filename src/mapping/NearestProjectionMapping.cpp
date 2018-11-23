@@ -27,6 +27,36 @@ NearestProjectionMapping:: NearestProjectionMapping
   }
 }
 
+namespace {
+class InterpolationElementsGenerator {
+public:
+  InterpolationElementsGenerator(const mesh::Mesh &mesh)
+      : _mesh(mesh){};
+
+  query::InterpolationElements operator()(const mesh::Vertex& pos, mesh::PrimitiveIndex pi) const
+  {
+    using query::generateInterpolationElements;
+    using mesh::Primitive;
+    const auto idx = pi.index;
+    switch (pi.type) {
+    case (Primitive::Vertex):
+      return generateInterpolationElements(pos, _mesh.vertices()[idx]);
+    case (Primitive::Edge):
+      return generateInterpolationElements(pos, _mesh.edges()[idx]);
+    case (Primitive::Triangle):
+      return generateInterpolationElements(pos, _mesh.triangles()[idx]);
+    case (Primitive::Quad):
+      return generateInterpolationElements(pos, _mesh.quads()[idx]);
+    default:
+      assertion(false, "Primitive is unknown");
+    }
+  }
+
+private:
+  const mesh::Mesh &_mesh;
+};
+} // namespace
+
 void NearestProjectionMapping:: computeMapping()
 {
   TRACE(input()->vertices().size(), output()->vertices().size());
@@ -36,6 +66,7 @@ void NearestProjectionMapping:: computeMapping()
   if (getConstraint() == CONSISTENT){
     DEBUG("Compute consistent mapping");
     auto        rtree     = indexMesh(*input());
+    InterpolationElementsGenerator gen(*input());
     const auto &oVertices = output()->vertices();
     _weights.resize(oVertices.size());
     for (size_t i = 0; i < oVertices.size(); i++) {
@@ -47,24 +78,7 @@ void NearestProjectionMapping:: computeMapping()
                       using mesh::Primitive;
                     const auto& nearest = pnearest.second;
                     // fill the weights
-                    switch (nearest.type) {
-                    case (Primitive::Vertex):
-                      _weights[i] = generateInterpolationElements(oVertices[i],
-                                                                  input()->vertices()[nearest.index]);
-                      break;
-                    case (Primitive::Edge):
-                      _weights[i] = generateInterpolationElements(oVertices[i],
-                                                                  input()->edges()[nearest.index]);
-                      break;
-                    case (Primitive::Triangle):
-                      _weights[i] = generateInterpolationElements(oVertices[i],
-                                                                  input()->triangles()[nearest.index]);
-                      break;
-                    case (Primitive::Quad):
-                      _weights[i] = generateInterpolationElements(oVertices[i],
-                                                                  input()->quads()[nearest.index]);
-                      break;
-                    }
+                    _weights[i] = gen(oVertices[i], nearest);
                     CHECK(!_weights[i].empty(),
                           "No interpolation elements for current vertex!");
                   }));
@@ -77,6 +91,7 @@ void NearestProjectionMapping:: computeMapping()
     assertion(getConstraint() == CONSERVATIVE, getConstraint());
     DEBUG("Compute conservative mapping");
     auto        rtree     = indexMesh(*output());
+    InterpolationElementsGenerator gen(*output());
     const auto &iVertices = input()->vertices();
     _weights.resize(iVertices.size());
     for (size_t i = 0; i < iVertices.size(); i++) {
@@ -87,24 +102,7 @@ void NearestProjectionMapping:: computeMapping()
                       using query::generateInterpolationElements;
                       using mesh::Primitive;
                     const auto& nearest = pnearest.second;
-                    switch (nearest.type) {
-                    case (Primitive::Vertex):
-                      _weights[i] = generateInterpolationElements(iVertices[i],
-                                                                  output()->vertices()[nearest.index]);
-                      break;
-                      case (Primitive::Edge):
-                      _weights[i] = generateInterpolationElements(iVertices[i],
-                                                                  output()->edges()[nearest.index]);
-                      break;
-                      case (Primitive::Triangle):
-                      _weights[i] = generateInterpolationElements(iVertices[i],
-                                                                  output()->triangles()[nearest.index]);
-                      break;
-                      case (Primitive::Quad):
-                      _weights[i] = generateInterpolationElements(iVertices[i],
-                                                                  output()->quads()[nearest.index]);
-                      break;
-                    }
+                    _weights[i] = gen(iVertices[i], nearest);
                     CHECK(!_weights[i].empty(),
                           "No interpolation elements for current vertex!");
                   }));
