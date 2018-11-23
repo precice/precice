@@ -6,7 +6,7 @@ namespace mesh {
 // Initialize static member
 std::map<int, rtree::PtrRTree> precice::mesh::rtree::trees;
 // Initialize static member
-std::map<int, PtrPrimitiveRTree> precice::mesh::rtree::primitive_trees_;
+std::map<int, PtrPrimitiveRTree> precice::mesh::rtree::_primitive_trees;
 
 rtree::PtrRTree rtree::getVertexRTree(PtrMesh mesh)
 {
@@ -29,12 +29,12 @@ rtree::PtrRTree rtree::getVertexRTree(PtrMesh mesh)
 PtrPrimitiveRTree rtree::getPrimitiveRTree(PtrMesh mesh)
 {
   assertion(mesh, "Empty meshes are not allowed.");
-  auto iter = primitive_trees_.find(mesh->getID());
-  if (iter != primitive_trees_.end()) {
+  auto iter = _primitive_trees.find(mesh->getID());
+  if (iter != _primitive_trees.end()) {
     return iter->second;
   } else {
     auto treeptr = std::make_shared<PrimitiveRTree>(indexMesh(*mesh));
-    primitive_trees_.insert(std::make_pair(
+    _primitive_trees.insert(std::make_pair(
         mesh->getID(),
         treeptr));
     return treeptr;
@@ -44,7 +44,7 @@ PtrPrimitiveRTree rtree::getPrimitiveRTree(PtrMesh mesh)
 void rtree::clear(Mesh &mesh)
 {
   trees.erase(mesh.getID());
-  primitive_trees_.erase(mesh.getID());
+  _primitive_trees.erase(mesh.getID());
 }
 
 
@@ -63,6 +63,41 @@ Box3d getEnclosingBox(Vertex const & middlePoint, double sphereRadius)
   bg::set<bg::max_corner, 2>(box, bg::get<2>(coords) + sphereRadius);
   
   return box;
+}
+
+
+std::ostream &operator<<(std::ostream &out, Primitive val)
+{
+  switch (val) {
+  case (Primitive::Vertex):
+    out << "Vertex";
+    break;
+  case (Primitive::Edge):
+    out << "Edge";
+    break;
+  case (Primitive::Triangle):
+    out << "Triangle";
+    break;
+  case (Primitive::Quad):
+    out << "Quad";
+    break;
+  }
+  return out;
+}
+
+std::ostream& operator<<(std::ostream& out, PrimitiveIndex val) {
+    return out << val.type << ":" << val.index;
+}
+
+bool operator==(const PrimitiveIndex& lhs, const PrimitiveIndex& rhs)
+{
+    return lhs.type == rhs.type && lhs.index == rhs.index;
+}
+
+/// Standard non-equality test for PrimitiveIndex
+bool operator!=(const PrimitiveIndex& lhs, const PrimitiveIndex& rhs)
+{
+    return !(lhs == rhs);
 }
 
 }}

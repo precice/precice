@@ -28,6 +28,9 @@ enum class Primitive {
   Quad
 };
 
+/// A standard print operator for Primitive
+std::ostream& operator<<(std::ostream& out, Primitive val);
+
 /// The type traits to return the enum value of a primitive type.
 template <class T>
 struct as_primitive_enum {
@@ -56,13 +59,16 @@ struct as_primitive_enum<mesh::Quad> {
 struct PrimitiveIndex {
   Primitive type;
   size_t    index;
-
-  /// Standard equality test
-  bool operator==(const PrimitiveIndex &other)
-  {
-    return type == other.type && index == other.index;
-  };
 };
+
+/// Standard equality test for PrimitiveIndex
+bool operator==(const PrimitiveIndex& lhs, const PrimitiveIndex& rhs);
+
+/// Standard non-equality test for PrimitiveIndex
+bool operator!=(const PrimitiveIndex& lhs, const PrimitiveIndex& rhs);
+
+/// A standard print operator for PrimitiveIndex
+std::ostream& operator<<(std::ostream& out, PrimitiveIndex val);
 
 /// The axis aligned bounding box based on the Vertex Type
 using AABB = boost::geometry::model::box<Eigen::VectorXd>;
@@ -96,6 +102,8 @@ public:
       return boost::geometry::return_envelope<AABB>(mesh_.triangles()[pi.index]);
     case (Primitive::Quad):
       return boost::geometry::return_envelope<AABB>(mesh_.quads()[pi.index]);
+    default:
+      assertion(false, "AABB generation for this Primitive is not implemented!")
     }
   }
 
@@ -111,7 +119,7 @@ using PrimitiveRTree = boost::geometry::index::rtree<std::pair<AABB, PrimitiveIn
 using PtrPrimitiveRTree = std::shared_ptr<PrimitiveRTree>;
 
 /** indexes a container of primitives into an rtree.
- * 
+ *
  * The algorithm indexes every primitive of the given container using the passed generator.
  * It inserts its result and the PrimitiveIndex into the rtree as a std::pair.
  *
@@ -175,7 +183,7 @@ public:
   friend struct MeshTests::RTree::CacheClearing;
   
 private:
-  static std::map<int, PtrPrimitiveRTree> primitive_trees_; ///< Cache for the primitive trees
+  static std::map<int, PtrPrimitiveRTree> _primitive_trees; ///< Cache for the primitive trees
   static std::map<int, PtrRTree>          trees; ///< Cache for the vertex trees
 };
 

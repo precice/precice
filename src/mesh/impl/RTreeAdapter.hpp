@@ -65,6 +65,9 @@ struct point_type<Edge> {
 
 template <size_t Index, size_t Dimension>
 struct indexed_access<Edge, Index, Dimension> {
+  static_assert((Index <= 1), "Valid Indices are {0, 1}");
+  static_assert((Dimension <= 2), "Valid Dimensions are {0, 1, 2}");
+
   static double get(Edge const &e)
   {
     return access<Eigen::VectorXd, Dimension>::get(e.vertex(Index).getCoords());
@@ -72,7 +75,9 @@ struct indexed_access<Edge, Index, Dimension> {
 
   static void set(Edge &e, double const &value)
   {
-    return access<Eigen::VectorXd, Dimension>::set(e.vertex(Index), value);
+    Eigen::VectorXd v = e.vertex(Index).getCoords();
+    access<Eigen::VectorXd, Dimension>::set(v, value);
+    e.vertex(Index).setCoords(std::move(v));
   }
 };
 
