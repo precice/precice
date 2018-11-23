@@ -12,15 +12,15 @@ namespace precice {
 namespace query {
 
 InterpolationElements generateInterpolationElements(
-    const mesh::Vertex & /*location*/,
-    mesh::Vertex &element)
+    const mesh::Vertex& /*location*/,
+    const mesh::Vertex& element)
 {
   return {{element, 1.0}};
 }
 
 InterpolationElements generateInterpolationElements(
-    const mesh::Vertex &location,
-    mesh::Edge &        element)
+    const mesh::Vertex& location,
+    const mesh::Edge&   element)
 {
   auto &A = element.vertex(0);
   auto &B = element.vertex(1);
@@ -38,9 +38,8 @@ InterpolationElements generateInterpolationElements(
 }
 
 InterpolationElements generateInterpolationElements(
-    const mesh::Vertex &location,
-    mesh::Triangle &    element)
-
+    const mesh::Vertex&   location,
+    const mesh::Triangle& element)
 {
   auto &A = element.vertex(0);
   auto &B = element.vertex(1);
@@ -61,8 +60,8 @@ InterpolationElements generateInterpolationElements(
 }
 
 InterpolationElements generateInterpolationElements(
-    const mesh::Vertex &location,
-    mesh::Quad &        element)
+    const mesh::Vertex& location,
+    const mesh::Quad&   element)
 {
   auto &A = element.vertex(0);
   auto &B = element.vertex(1);
