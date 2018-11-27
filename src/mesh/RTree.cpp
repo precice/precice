@@ -32,13 +32,12 @@ PtrPrimitiveRTree rtree::getPrimitiveRTree(PtrMesh mesh)
   auto iter = _primitive_trees.find(mesh->getID());
   if (iter != _primitive_trees.end()) {
     return iter->second;
-  } else {
-    auto treeptr = std::make_shared<PrimitiveRTree>(indexMesh(*mesh));
-    _primitive_trees.insert(std::make_pair(
-        mesh->getID(),
-        treeptr));
-    return treeptr;
   }
+  auto treeptr = std::make_shared<PrimitiveRTree>(indexMesh(*mesh));
+  _primitive_trees.emplace(std::piecewise_construct,
+          std::forward_as_tuple(mesh->getID()),
+          std::forward_as_tuple(treeptr));
+  return treeptr;
 }
 
 void rtree::clear(Mesh &mesh)
