@@ -1,6 +1,7 @@
 cmake_minimum_required (VERSION 3.5)
 
-project(preCICE VERSION 1.2.0 LANGUAGES CXX)
+project(preCICE VERSION 1.3.0 LANGUAGES CXX)
+
 
 #
 # PREAMBLE
@@ -20,8 +21,32 @@ if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 endif()
 message(STATUS "Build configuration: " ${CMAKE_BUILD_TYPE})
 
+
 #
-# Options and Dependancy Discovery
+# Prepare Source and Binary Directories
+#
+
+# Create a symlink to the last build from build/last directory.
+file(MAKE_DIRECTORY "${PROJECT_SOURCE_DIR}/build")
+add_custom_target(symlink ALL
+  COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_BINARY_DIR} ${PROJECT_SOURCE_DIR}/build/last)
+
+
+#
+# Setup Options
+#
+
+set(Platform "none" CACHE STRING "Special configurations for certain platforms")
+set_property(CACHE Platform PROPERTY STRINGS none "SuperMUC")
+message(STATUS "Special platform settings: " ${Platform})
+
+option(MPI "Enables MPI-based communication and running coupling tests." ON)
+option(PETSC "Enable use of the PETSc linear algebra library." ON)
+option(PYTHON "Python support" ON)
+
+
+#
+# Find Mandatory Dependencies
 #
 
 find_package (Threads REQUIRED)
@@ -33,19 +58,17 @@ find_package(Eigen3 3.2 REQUIRED)
 
 find_package(LibXml2 REQUIRED)
 
-# Option: Platform
-set(Platform "none" CACHE STRING "Special configurations for certain platforms")
-set_property(CACHE Platform PROPERTY STRINGS none "SuperMUC")
-message(STATUS "Special platform settings: " ${Platform})
+
+#
+# Find Configurable Dependencies
+#
 
 # Option: MPI
-option(MPI "Enables MPI-based communication and running coupling tests." ON)
 if (MPI)
     find_package(MPI REQUIRED)
 endif()
 
 # Option: PETSC
-option(PETSC "Enable use of the PETSc linear algebra library." ON)
 if (PETSC AND MPI)
   find_package(PETSc 3.6 REQUIRED)
   string(REGEX MATCHALL "[0-9]+" PETSC_VERSIONS ${PETSC_VERSION})
@@ -56,7 +79,6 @@ else()
 endif()
 
 # Option Python
-option(PYTHON "Python support" ON)
 if (PYTHON)
     set(Python_ADDITIONAL_VERSIONS "2.7")
     find_package(PythonLibs 2.7 REQUIRED)
@@ -87,7 +109,7 @@ target_link_libraries(PRECICE PUBLIC ${Boost_LIBRARIES})
 target_link_libraries(PRECICE PRIVATE Eigen3::Eigen)
 target_compile_definitions(PRECICE PRIVATE "$<$<CONFIG:DEBUG>:EIGEN_INITIALIZE_MATRICES_BY_NAN>")
 
-# Setup LIBXML"
+# Setup LIBXML2
 target_include_directories(PRECICE PRIVATE ${LIBXML2_INCLUDE_DIR})
 target_link_libraries(PRECICE PUBLIC ${LIBXML2_LIBRARIES})
 
@@ -123,18 +145,19 @@ else()
     target_compile_definitions(PRECICE PRIVATE PRECICE_NO_PYTHON)
 endif()
 
-# Configure the versions.hpp 
-configure_file("${PROJECT_SOURCE_DIR}/src/versions.hpp.in" "${PROJECT_BINARY_DIR}/versions.hpp" @ONLY)
+# File Configuration
+configure_file("${PROJECT_SOURCE_DIR}/src/versions.hpp.in" "${PROJECT_BINARY_DIR}/src/versions.hpp" @ONLY)
 
-# add_subdirectory("src")
+# Includes Configuration
 target_include_directories(PRECICE PUBLIC 
     $<BUILD_INTERFACE:${preCICE_SOURCE_DIR}/src>
     $<BUILD_INTERFACE:${preCICE_BINARY_DIR}>
     $<INSTALL_INTERFACE:include>
     )
 
-# Add the actual sources
+# Sources Configuration
 include(${CMAKE_CURRENT_LIST_DIR}/src/sources.cmake)
+
 
 #
 # Configuration of Target PRECICEBIN
@@ -204,6 +227,7 @@ install(DIRECTORY src
     DESTINATION share/precice
     FILES_MATCHING
     PATTERN "*.xml"
+    PATTERN "*.py"
     )
 
 # Export the Targets to install

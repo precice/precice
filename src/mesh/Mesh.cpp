@@ -53,7 +53,7 @@ Mesh:: ~Mesh()
   meshDestroyed(*this); // emit signal
 }
 
-const Group& Mesh:: content()
+const Group& Mesh:: content() const
 {
   return _content;
 }
@@ -294,28 +294,17 @@ void Mesh:: computeState()
     computeNormals = false;
   }
 
-  // Compute edge centers, enclosing radius, and (in 2D) edge normals
-  Eigen::VectorXd center(_dimensions);
-  Eigen::VectorXd distanceToCenter(_dimensions);
+  // Compute (in 2D) edge normals
   for (Edge& edge : _content.edges()) {
-    center = edge.vertex(0).getCoords();
-    center += edge.vertex(1).getCoords();
-    center *= 0.5;
-    edge.setCenter(center);
-    distanceToCenter = edge.vertex(0).getCoords();
-    distanceToCenter -= edge.getCenter();
-    edge.setEnclosingRadius(distanceToCenter.norm());
-    if (_dimensions == 2 && computeNormals){
+    if (_dimensions == 2 && computeNormals) {
       // Compute normal
-      Eigen::VectorXd vectorA = edge.vertex(1).getCoords();
-      vectorA -= edge.vertex(0).getCoords();
-      Eigen::Vector2d normal(-1.0 *vectorA[1], vectorA[0]);
+      Eigen::VectorXd edgeVector = edge.vertex(1).getCoords() - edge.vertex(0).getCoords();
+      Eigen::VectorXd normal = Eigen::Vector2d(-edgeVector[1], edgeVector[0]);
       if (not _flipNormals){
         normal *= -1.0; // Invert direction if counterclockwise
       }
-      double length = normal.norm();
-      assertion(math::greater(length, 0.0));
-      normal /= length;   // Scale normal vector to length 1
+      assertion(math::greater(normal.norm(), 0.0));
+      normal.normalize();   // Scale normal vector to length 1
       edge.setNormal(normal);
 
       // Accumulate normal in associated vertices
@@ -329,37 +318,14 @@ void Mesh:: computeState()
   }
 
   if (_dimensions == 3){
-    // Compute triangle centers, radius, and normals
+    // Compute normals
     for (Triangle& triangle : _content.triangles()) {
-      assertion(not math::equals(triangle.vertex(0).getCoords(), triangle.vertex(1).getCoords()),
-                triangle.vertex(0).getCoords(),
-                triangle.getID());
-      assertion(not math::equals(triangle.vertex(1).getCoords(), triangle.vertex(2).getCoords()), triangle.vertex(1).getCoords(),
-                triangle.getID());
-      assertion(not math::equals(triangle.vertex(2).getCoords(), triangle.vertex(0).getCoords()),
-                triangle.vertex(2).getCoords(),
-                triangle.getID());
-
-      // Compute barycenter by using edge centers, since vertex order is not
-      // guaranteed.
-      auto center = triangle.edge(0).getCenter();
-      center += triangle.edge(1).getCenter();
-      center += triangle.edge(2).getCenter();
-      center /= 3.0;
-      triangle.setCenter(center);
-
-      // Compute enclosing radius centered at barycenter
-      Eigen::Vector3d toCenter = triangle.getCenter() - triangle.vertex(0).getCoords();
-      double distance0 = toCenter.norm();
-      toCenter = triangle.getCenter() - triangle.vertex(1).getCoords();
-      double distance1 = toCenter.norm();
-      toCenter = triangle.getCenter() - triangle.vertex(2).getCoords();
-      double distance2 = toCenter.norm();
-      double maxDistance = std::max( {distance0, distance1, distance2} );
-      // maxDistance = distance1 > maxDistance ? distance1 : maxDistance;
-      // maxDistance = distance2 > maxDistance ? distance2 : maxDistance;
-      
-      triangle.setEnclosingRadius(maxDistance);
+      assertion(triangle.vertex(0) != triangle.vertex(1),
+                triangle.vertex(0), triangle.getID());
+      assertion(triangle.vertex(1) != triangle.vertex(2),
+                triangle.vertex(1), triangle.getID());
+      assertion(triangle.vertex(2) != triangle.vertex(0),
+                triangle.vertex(2), triangle.getID());
 
       // Compute normals
       if (computeNormals){
@@ -378,54 +344,19 @@ void Mesh:: computeState()
         }
 
         // Normalize triangle normal
-        double length = normal.norm();
-        normal /= length;
-        triangle.setNormal(normal);
+        triangle.setNormal(normal.normalized());
       }
     }
 
-    // Compute quad centers, radius, and normals
+    // Compute quad normals
     for (Quad& quad : _content.quads()) {
-      assertion(not math::equals(quad.vertex(0).getCoords(), quad.vertex(1).getCoords()),
-                quad.vertex(0).getCoords(),
-                quad.getID());
-      assertion(not math::equals(quad.vertex(1).getCoords(), quad.vertex(2).getCoords()),
-                quad.vertex(1).getCoords(),
-                quad.getID());
-      assertion(not math::equals(quad.vertex(2).getCoords(), quad.vertex(3).getCoords()),
-                quad.vertex(2).getCoords(),
-                quad.getID());
-      assertion(not math::equals(quad.vertex(3).getCoords(), quad.vertex(0).getCoords()),
-                quad.vertex(3).getCoords(),
-                quad.getID());
-
-      // Compute barycenter by using edge centers, since vertex order is not
-      // guaranteed.
-      Eigen::VectorXd center = quad.edge(0).getCenter() +
-        quad.edge(1).getCenter() +
-        quad.edge(2).getCenter() +
-        quad.edge(3).getCenter();
-      center /= 4.0;
-      quad.setCenter(center);
-
-      // Compute enclosing radius centered at barycenter
-      Eigen::Vector3d toCenter = quad.getCenter() - quad.vertex(0).getCoords();
-      double distance0 = toCenter.norm();
-      toCenter = quad.getCenter() - quad.vertex(1).getCoords();
-      double distance1 = toCenter.norm();
-      toCenter = quad.getCenter() - quad.vertex(2).getCoords();
-      double distance2 = toCenter.norm();
-      toCenter = quad.getCenter() - quad.vertex(3).getCoords();
-      double distance3 = toCenter.norm();
-      double maxDistance = std::max( {distance0, distance1, distance2, distance3} );
-      // maxDistance = distance1 > maxDistance ? distance1 : maxDistance;
-      // maxDistance = distance2 > maxDistance ? distance2 : maxDistance;
-      // maxDistance = distance3 > maxDistance ? distance3 : maxDistance;
-      quad.setEnclosingRadius(maxDistance);
-
+      assertion(quad.vertex(0) != quad.vertex(1), quad.vertex(0).getCoords(), quad.getID());
+      assertion(quad.vertex(1) != quad.vertex(2), quad.vertex(1).getCoords(), quad.getID());
+      assertion(quad.vertex(2) != quad.vertex(3), quad.vertex(2).getCoords(), quad.getID());
+      assertion(quad.vertex(3) != quad.vertex(0), quad.vertex(3).getCoords(), quad.getID());
 
       // Compute normals (assuming all vertices are on same plane)
-      if (computeNormals){
+      if (computeNormals) {
         // Two triangles are thought by splitting the quad from vertex 0 to 2.
         // The cross prodcut of the outer edges of the triangles is used to compute
         // the normal direction and area of the triangles. The direction must be
@@ -457,22 +388,15 @@ void Mesh:: computeState()
           quad.vertex(i).setNormal(quad.vertex(i).getNormal() + normal);
         }
 
-        // Normalize quad normal
-        // double length = normal.norm();
-        // normal /= length;
-        normal = normal.normalized();
-        quad.setNormal(normal);
+        quad.setNormal(normal.normalized());
       }
     }
 
     // Normalize edge normals (only done in 3D)
     if (computeNormals){
       for (Edge& edge : _content.edges()) {
-        double length = edge.getNormal().norm();
         // there can be cases when an edge has no adjacent triangle though triangles exist in general (e.g. after filtering)
-        if(math::greater(length,0.0)){
-          edge.setNormal(edge.getNormal() / length);
-        }
+        edge.setNormal(edge.getNormal().normalized());
       }
     }
   }
@@ -484,11 +408,8 @@ void Mesh:: computeState()
 
   for (Vertex& vertex : _content.vertices()) {
     if (computeNormals) {
-      double length = vertex.getNormal().norm();
       // there can be cases when a vertex has no edge though edges exist in general (e.g. after filtering)
-      if(math::greater(length,0.0)){
-        vertex.setNormal(vertex.getNormal() / length);
-      }
+      vertex.setNormal(vertex.getNormal().normalized());
     }
     
     for (int d = 0; d < _dimensions; d++) {
@@ -582,6 +503,56 @@ const std::vector<double> Mesh::getCOG() const
     cog[d] = (_boundingBox[d].second - _boundingBox[d].first) / 2.0 + _boundingBox[d].first;
   }
   return cog;
+}
+
+bool Mesh::operator==(const Mesh& other) const
+{
+    auto& myContent = _content;
+    auto& otherContent = other._content;
+    bool equal = true;
+    equal &= myContent.vertices().size() == otherContent.vertices().size() &&
+        std::is_permutation(myContent.vertices().begin(), myContent.vertices().end(), otherContent.vertices().begin());
+    equal &= myContent.edges().size() == otherContent.edges().size() &&
+        std::is_permutation(myContent.edges().begin(), myContent.edges().end(), otherContent.edges().begin());
+    equal &= myContent.triangles().size() == otherContent.triangles().size() &&
+        std::is_permutation(myContent.triangles().begin(), myContent.triangles().end(), otherContent.triangles().begin());
+    equal &= myContent.quads().size() == otherContent.quads().size() &&
+        std::is_permutation(myContent.quads().begin(), myContent.quads().end(), otherContent.quads().begin());
+    return equal;
+}
+
+bool Mesh::operator!=(const Mesh& other) const
+{
+    return !(*this == other);
+}
+
+std::ostream& operator<<(std::ostream& os, const Mesh& m)
+{
+  os << "Mesh \"" << m.getName() << "\", dimensionality = " << m.getDimensions() << ":\n";
+  os << "GEOMETRYCOLLECTION(\n";
+  const auto token = ", ";
+  const auto* sep = "";
+  for (auto& vertex : m.content().vertices()){
+      os << sep << vertex; 
+      sep = token;
+  }
+  sep = ",\n";
+  for (auto& edge : m.content().edges()){
+      os << sep << edge;
+      sep = token;
+  }
+  sep = ",\n";
+  for (auto& triangle : m.content().triangles()){
+      os << sep << triangle;
+      sep = token;
+  }
+  sep = ",\n";
+  for (auto& quad : m.content().quads()){
+      os << sep << quad;
+      sep = token;
+  }
+  os << "\n)";
+  return os;
 }
 
 }} // namespace precice, mesh

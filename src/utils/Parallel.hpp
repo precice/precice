@@ -45,7 +45,7 @@ public:
    * @brief Initializes the MPI environment.
    *
    * @param[in] argc Parameter count
-   * @param[in] argc Parameter values, is passed to MPI_Init
+   * @param[in] argv Parameter values, is passed to MPI_Init
    */
   static void initializeMPI(
       int *argc,
@@ -112,7 +112,7 @@ public:
    * @attention Has to be called by every process in the communicator to be
    *            restricted, otherwise, a deadlock is achieved!
    *
-   * @param[in] ids Process ranks to be selected for restricted comm.
+   * @param[in] ranks Process ranks to be selected for restricted comm.
    */
   static Communicator getRestrictedCommunicator(const std::vector<int> &ranks);
 
@@ -120,6 +120,9 @@ public:
   /**
    * Set the new, restricted communicator on all ranks that are contained in
    * that new communicator. Leaves the other ranks untouched.
+   *
+   * @param[in] ranks Process ranks to be selected for restricted comm.
+   *
    */
   static void restrictGlobalCommunicator(const std::vector<int> &ranks);
 

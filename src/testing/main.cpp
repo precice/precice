@@ -2,11 +2,13 @@
 #include <boost/filesystem.hpp>
 #include "utils/Parallel.hpp"
 #include "utils/Petsc.hpp"
+#include "utils/EventTimings.hpp"
 #include "logging/LogConfiguration.hpp"
 #include <iostream>
 
 namespace precice {
 extern bool testMode;
+extern bool syncMode;
 }
 
 
@@ -33,6 +35,7 @@ int main(int argc, char* argv[])
   using namespace precice;
 
   precice::testMode = true;
+  precice::syncMode = false;
   logging::setupLogging();
   utils::Parallel::initializeMPI(&argc, &argv);
   logging::setMPIRank(utils::Parallel::getProcessRank());
@@ -50,6 +53,7 @@ int main(int argc, char* argv[])
 
   int retCode = boost::unit_test::unit_test_main( &init_unit_test, argc, argv );
 
+  utils::EventRegistry::instance().finalize();
   utils::Petsc::finalize();
   utils::Parallel::finalizeMPI();
   return retCode;

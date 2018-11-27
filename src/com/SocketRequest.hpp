@@ -17,9 +17,9 @@ public:
 
   void complete();
 
-  bool test();
+  bool test() override;
 
-  void wait();
+  void wait() override;
 
 private:
   bool _complete;

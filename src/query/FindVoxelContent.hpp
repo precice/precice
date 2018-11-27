@@ -20,9 +20,9 @@ public:
   /**
    * @brief Constructor.
    *
-   * @param[in] voxelCenter      Coordinates of the voxel center
-   * @param[in] halflengths      Half of the sidelengths of the voxel
-   * @param[in] includeTouching  Decides whether touching objects are included
+   * @param[in] voxelCenter       Coordinates of the voxel center
+   * @param[in] halflengths       Half of the sidelengths of the voxel
+   * @param[in] boundaryInclusion Decides if boundaries should be included or excluded
    */
   FindVoxelContent(
     const Eigen::VectorXd&  voxelCenter,

@@ -114,7 +114,7 @@ env.Append(LIBPATH = [('#' + buildpath)])
 env.Append(CCFLAGS= ['-Wall', '-Wextra', '-Wno-unused-parameter', '-std=c++11'])
 
 # ====== PRECICE_VERSION number ======
-PRECICE_VERSION = "1.2.0"
+PRECICE_VERSION = "1.3.0"
 
 
 # ====== Compiler Settings ======
@@ -168,6 +168,8 @@ checkAdd("pthread")
 
 
 # ====== PETSc ======
+PETSC_VERSION_MAJOR = 0
+PETSC_VERSION_MINOR = 0
 if env["petsc"]:
     PETSC_DIR = checkset_var("PETSC_DIR", "")
     PETSC_ARCH = checkset_var("PETSC_ARCH", "")
@@ -183,6 +185,17 @@ if env["petsc"]:
         checkAdd("craypetsc_gnu_real")
     else:
         checkAdd("petsc")
+    # Set PETSC_VERSION to correct values 
+    with open(PETSC_DIR + "/include/petscversion.h", "r") as versionfile:
+        for line in versionfile:
+            tokens = line.split()
+            try:
+                if tokens[1] == "PETSC_VERSION_MAJOR":
+                    PETSC_VERSION_MAJOR = tokens[2]
+                if tokens[1] == "PETSC_VERSION_MINOR":
+                    PETSC_VERSION_MINOR = tokens[2]
+            except IndexError:
+                continue
 else:
     env.Append(CPPDEFINES = ['PRECICE_NO_PETSC'])
     buildpath += "-nopetsc"
@@ -335,8 +348,8 @@ versions = env.Substfile(
     "src/versions.hpp.in",
     SUBST_DICT =  {
         "@preCICE_VERSION@" : PRECICE_VERSION,
-        "@PETSC_MAJOR@" : 0,
-        "@PETSC_MINOR@" : 0}
+        "@PETSC_VERSION_MAJOR@" : PETSC_VERSION_MAJOR,
+        "@PETSC_VERSION_MINOR@" : PETSC_VERSION_MINOR}
 )
 
 

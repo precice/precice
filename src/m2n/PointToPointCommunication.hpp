@@ -36,20 +36,20 @@ public:
    * @brief Accepts connection from participant, which has to call
    *        requestConnection().
    *
-   * @param[in] nameAcceptor  Name of calling participant.
-   * @param[in] nameRequester Name of remote participant to connect to.
+   * @param[in] acceptorName  Name of calling participant.
+   * @param[in] requesterName Name of remote participant to connect to.
    */
-  virtual void acceptConnection(std::string const &nameAcceptor,
-                                std::string const &nameRequester);
+  virtual void acceptConnection(std::string const &acceptorName,
+                                std::string const &requesterName);
 
   /**
    * @brief Requests connection from participant, which has to call acceptConnection().
    *
-   * @param[in] nameAcceptor Name of remote participant to connect to.
-   * @param[in] nameRequester Name of calling participant.
+   * @param[in] acceptorName Name of remote participant to connect to.
+   * @param[in] requesterName Name of calling participant.
    */
-  virtual void requestConnection(std::string const &nameAcceptor,
-                                 std::string const &nameRequester);
+  virtual void requestConnection(std::string const &acceptorName,
+                                 std::string const &requesterName);
 
   /**
    * @brief Disconnects from communication space, i.e. participant.
@@ -73,6 +73,7 @@ public:
                        int     valueDimension = 1);
 
 private:
+  logging::Logger _log{"m2n::PointToPointCommunication"};
 
   /// Checks all stored requests for completion and removes associated buffers
   /**
@@ -80,27 +81,23 @@ private:
    */  
   void checkBufferedRequests(bool blocking);
   
-  logging::Logger _log{"m2n::PointToPointCommunication"};
-
   com::PtrCommunicationFactory _communicationFactory;
 
   /**
    * @brief Defines mapping between:
-   *        1. local (to the current process) remote process rank;
-   *        2. global remote process rank;
-   *        3. local data indices, which define a subset of local (for process
+   *        1. global remote process rank;
+   *        2. local data indices, which define a subset of local (for process
    *           rank in the current participant) data to be communicated between
    *           the current process rank and the remote process rank;
-   *        4. communication object (provides point-to-point communication
-   *           routines).
+   *        3. communication object (provides point-to-point communication routines).
+   *        5. Appropriatly sized buffer to receive elements
    */
   struct Mapping {
-    int                   localRemoteRank;
-    int                   globalRemoteRank;
+    int                   remoteRank;
     std::vector<int>      indices;
     com::PtrCommunication communication;
     com::PtrRequest       request;
-    size_t                offset;
+    std::vector<double>   recvBuffer;
   };
 
   /**
@@ -108,12 +105,6 @@ private:
    *        mappings (one to service each point-to-point connection).
    */
   std::vector<Mapping> _mappings;
-
-  std::vector<double> _buffer;
-
-  size_t _localIndexCount = 0;
-
-  size_t _totalIndexCount = 0;
 
   bool _isConnected = false;
 

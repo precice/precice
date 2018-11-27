@@ -4,6 +4,8 @@
 #include "utils/EventTimings.hpp"
 
 namespace precice {
+extern bool syncMode;
+
 namespace mapping {
 
 NearestProjectionMapping:: NearestProjectionMapping
@@ -14,13 +16,13 @@ NearestProjectionMapping:: NearestProjectionMapping
   Mapping(constraint, dimensions)
 {
   if (constraint == CONSISTENT){
-    setInputRequirement(FULL);
-    setOutputRequirement(VERTEX);
+    setInputRequirement(Mapping::MeshRequirement::FULL);
+    setOutputRequirement(Mapping::MeshRequirement::VERTEX);
   }
   else {
     assertion(constraint == CONSERVATIVE, constraint);
-    setInputRequirement(VERTEX);
-    setOutputRequirement(FULL);
+    setInputRequirement(Mapping::MeshRequirement::VERTEX);
+    setOutputRequirement(Mapping::MeshRequirement::FULL);
   }
 }
 
@@ -28,7 +30,7 @@ void NearestProjectionMapping:: computeMapping()
 {
   TRACE(input()->vertices().size(), output()->vertices().size());
 
-  precice::utils::Event e("map.np.computeMapping.From" + input()->getName() + "To" + output()->getName());
+  precice::utils::Event e("map.np.computeMapping.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
 
   if (getConstraint() == CONSISTENT){
     DEBUG("Compute consistent mapping");
@@ -81,7 +83,7 @@ void NearestProjectionMapping:: map
 {
   TRACE(inputDataID, outputDataID);
 
-  precice::utils::Event e("map.np.mapData.From" + input()->getName() + "To" + output()->getName());
+  precice::utils::Event e("map.np.mapData.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
 
   mesh::PtrData inData = input()->data(inputDataID);
   mesh::PtrData outData = output()->data(outputDataID);

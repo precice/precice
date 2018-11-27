@@ -1,19 +1,11 @@
 #pragma once
 
-#include <array>
+#include <iostream>
+#include <algorithm>
 #include "boost/noncopyable.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/PropertyContainer.hpp"
-
-namespace precice
-{
-namespace mesh
-{
-class Vertex;
-}
-} // namespace precice
-
-// ----------------------------------------------------------- CLASS DEFINITION
+#include "mesh/RangeAccessor.hpp"
 
 namespace precice
 {
@@ -24,6 +16,20 @@ namespace mesh
 class Quad : public PropertyContainer, private boost::noncopyable
 {
 public:
+  /// Type of the read-only const random-access iterator over Vertex coords
+  /**
+   * This index-based iterator iterates over the vertices of this Quad.
+   * The returned value is the forwarded result of Vertex::getCoords.
+   * It is thus a read-only random-access iterator.
+   */
+  using const_iterator = IndexRangeIterator<const Quad, const Eigen::VectorXd>;
+
+  /// Type of the random access vertex iterator
+  using iterator = const_iterator; //IndexRangeIterator<Quad, Eigen::Vector3d>;
+
+  /// Fix for the Boost.Test versions 1.65 - 1.67.1
+  using value_type = Eigen::VectorXd;
+
   /// Constructor, the order of edges defines the outer normal direction.
   Quad(
       Edge &edgeOne,
@@ -62,16 +68,32 @@ public:
   /// Returns const quad edge with index 0, 1, 2, or 3.
   const Edge &edge(int i) const;
 
+  ///@name Iterators
+  ///@{
+
+  /// Returns a read-only random-access iterator to the begin (0) of the vertex range [0,1,2,3]
+  iterator begin();
+
+  /// Returns a read-only random-access iterator to the end (4) of the vertex range [0,1,2,3]
+  iterator end();
+
+  /// Returns a read-only random-access iterator to the begin (0) of the vertex range [0,1,2,3]
+  const_iterator begin() const;
+
+  /// Returns a read-only random-access iterator to the end (4) of the vertex range [0,1,2,3]
+  const_iterator end() const;
+
+  /// Returns a read-only random-access iterator to the begin (0) of the vertex range [0,1,2,3]
+  const_iterator cbegin() const;
+
+  /// Returns a read-only random-access iterator to the end (4) of the vertex range [0,1,2,3]
+  const_iterator cend() const;
+
+  ///@}
+
   /// Sets the outer normal of the quad.
   template <typename VECTOR_T>
   void setNormal(const VECTOR_T &normal);
-
-  /// Sets the center of the quad.
-  template <typename VECTOR_T>
-  void setCenter(const VECTOR_T &center);
-
-  /// Sets the radius of the circle enclosing the quad.
-  void setEnclosingRadius(double radius);
 
   /// Returns a among quads globally unique ID.
   int getID() const;
@@ -79,23 +101,26 @@ public:
   /**
    * @brief Returns the outer normal of the quad.
    *
-   * Prerequesits: The normal has to be computed and set from outside before.
+   * @pre The normal has to be computed and set from outside before.
    */
   const Eigen::VectorXd &getNormal() const;
 
-  /**
-   * @brief Returns the barycenter of the quad.
-   *
-   * Prerequesits: The center has to be computed and set from outside before.
-   */
-  const Eigen::VectorXd &getCenter() const;
+  /// Returns the barycenter of the quad.
+  const Eigen::VectorXd getCenter() const;
+
+  /// Returns the radius of the circle enclosing the quad.
+  double getEnclosingRadius() const;
 
   /**
-   * @brief Returns the radius of the circle enclosing the quad.
+   * @brief Compares two Quads for equality
    *
-   * Prerequesits: The radius has to be computed and set from outside before.
+   * Two Quads are equal if their normal vector is equal AND
+   * if the four edges are equal, whereas the order of edges is NOT important.
    */
-  double getEnclosingRadius() const;
+  bool operator==(const Quad& other) const;
+
+  /// Not equal, implemented in terms of equal.
+  bool operator!=(const Quad& other) const;
 
 private:
   /// Edges defining the quad.
@@ -109,12 +134,6 @@ private:
 
   /// Normal vector of the quad.
   Eigen::VectorXd _normal;
-
-  /// Center point of the quad.
-  Eigen::VectorXd _center;
-
-  /// Minimal radius of circle enclosing the quad.
-  double _enclosingRadius = 0;
 };
 
 // --------------------------------------------------------- HEADER DEFINITIONS
@@ -129,6 +148,36 @@ inline const Vertex &Quad::vertex(int i) const
 {
   assertion((i >= 0) && (i < 4), i);
   return edge(i).vertex(_vertexMap[i]);
+}
+
+inline Quad::iterator Quad::begin()
+{
+  return {this, 0};
+}
+
+inline Quad::iterator Quad::end()
+{
+  return {this, 4};
+}
+
+inline Quad::const_iterator Quad::begin() const
+{
+  return {this, 0};
+}
+
+inline Quad::const_iterator Quad::end() const
+{
+  return {this, 4};
+}
+
+inline Quad::const_iterator Quad::cbegin() const
+{
+    return begin();
+}
+
+inline Quad::const_iterator Quad::cend() const
+{
+    return end();
 }
 
 inline Edge &Quad::edge(int i)
@@ -148,17 +197,12 @@ void Quad::setNormal(const VECTOR_T &normal)
   _normal = normal;
 }
 
-template <typename VECTOR_T>
-void Quad::setCenter(const VECTOR_T &center)
-{
-  assertion(center.size() == getDimensions(), center.size(), getDimensions());
-  _center = center;
-}
-
 inline int Quad::getID() const
 {
   return _id;
 }
+
+std::ostream& operator<<(std::ostream& os, const Quad& q);
 
 } // namespace mesh
 } // namespace precice

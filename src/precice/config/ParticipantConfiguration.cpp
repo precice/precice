@@ -460,7 +460,7 @@ void ParticipantConfiguration:: finishParticipantConfiguration
   TRACE(participant->getName());
 
   // Set input/output meshes for data mappings and mesh requirements
-  typedef mapping::MappingConfiguration::ConfiguredMapping ConfMapping;
+  using ConfMapping = mapping::MappingConfiguration::ConfiguredMapping;
   for (const ConfMapping& confMapping : _mappingConfig->mappings()){
     int fromMeshID = confMapping.fromMesh->getID();
     int toMeshID = confMapping.toMesh->getID();
@@ -515,12 +515,10 @@ void ParticipantConfiguration:: finishParticipantConfiguration
       participant->addReadMappingContext(mappingContext);
     }
 
-    if (map->getInputRequirement() > fromMeshContext.meshRequirement){
-      fromMeshContext.meshRequirement = map->getInputRequirement();
-    }
-    if (map->getOutputRequirement() > toMeshContext.meshRequirement){
-      toMeshContext.meshRequirement = map->getOutputRequirement();
-    }
+    fromMeshContext.meshRequirement = std::max(
+            fromMeshContext.meshRequirement, map->getInputRequirement());
+    toMeshContext.meshRequirement = std::max(
+            toMeshContext.meshRequirement, map->getOutputRequirement());
 
     fromMeshContext.fromMappingContext = *mappingContext;
     toMeshContext.toMappingContext = *mappingContext;
