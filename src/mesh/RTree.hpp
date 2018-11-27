@@ -102,13 +102,13 @@ public:
   /*
    * Creates and fills the tree, if it wasn't requested before, otherwise it returns the cached tree.
    */
-  static PtrRTree getVertexRTree(PtrMesh mesh);
+  static PtrRTree getVertexRTree(const PtrMesh& mesh);
   
   /// Returns the pointer to boost::geometry::rtree for the given mesh primitives
   /*
    * Creates and fills the tree, if it wasn't requested before, otherwise it returns the cached tree.
    */
-  static PtrPrimitiveRTree getPrimitiveRTree(PtrMesh mesh);
+  static PtrPrimitiveRTree getPrimitiveRTree(const PtrMesh& mesh);
 
   /// Only clear the trees of that specific mesh
   static void clear(Mesh & mesh);

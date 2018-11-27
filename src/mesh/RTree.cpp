@@ -10,7 +10,7 @@ std::map<int, rtree::PtrRTree> precice::mesh::rtree::_vertex_trees;
 // Initialize static member
 std::map<int, PtrPrimitiveRTree> precice::mesh::rtree::_primitive_trees;
 
-rtree::PtrRTree rtree::getVertexRTree(PtrMesh mesh)
+rtree::PtrRTree rtree::getVertexRTree(const PtrMesh& mesh)
 {
   RTreeParameters params;
   VertexIndexGetter ind(mesh->vertices());
@@ -28,7 +28,7 @@ rtree::PtrRTree rtree::getVertexRTree(PtrMesh mesh)
   return tree;
 }
 
-PtrPrimitiveRTree rtree::getPrimitiveRTree(PtrMesh mesh)
+PtrPrimitiveRTree rtree::getPrimitiveRTree(const PtrMesh& mesh)
 {
   assertion(mesh, "Empty meshes are not allowed.");
   auto iter = _primitive_trees.find(mesh->getID());
