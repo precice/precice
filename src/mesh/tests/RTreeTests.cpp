@@ -310,19 +310,19 @@ BOOST_AUTO_TEST_CASE(CacheClearing)
   // The Cache should clear whenever a mesh changes
   auto vTree1 = rtree::getVertexRTree(mesh);
   auto pTree1 = rtree::getPrimitiveRTree(mesh);
-  BOOST_TEST(rtree::trees.size() == 1);
+  BOOST_TEST(rtree::_vertex_trees.size() == 1);
   BOOST_TEST(rtree::_primitive_trees.size() == 1);
   mesh->meshChanged(*mesh); // Emit signal, that mesh has changed
-  BOOST_TEST(rtree::trees.size() == 0);
+  BOOST_TEST(rtree::_vertex_trees.size() == 0);
   BOOST_TEST(rtree::_primitive_trees.size() == 0);
 
   // The Cache should clear whenever we destroy the Mesh
   auto vTree2 = rtree::getVertexRTree(mesh);
   auto pTree2 = rtree::getPrimitiveRTree(mesh);
-  BOOST_TEST(rtree::trees.size() == 1);
+  BOOST_TEST(rtree::_vertex_trees.size() == 1);
   BOOST_TEST(rtree::_primitive_trees.size() == 1);
   mesh.reset(); // Destroy mesh object, signal is emitted to clear cache
-  BOOST_TEST(rtree::trees.size() == 0);
+  BOOST_TEST(rtree::_vertex_trees.size() == 0);
   BOOST_TEST(rtree::_primitive_trees.size() == 0);
 }
 

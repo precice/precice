@@ -117,7 +117,7 @@ public:
   
 private:
   static std::map<int, PtrPrimitiveRTree> _primitive_trees; ///< Cache for the primitive trees
-  static std::map<int, PtrRTree>          trees; ///< Cache for the vertex trees
+  static std::map<int, PtrRTree>          _vertex_trees; ///< Cache for the vertex trees
 };
 
 
