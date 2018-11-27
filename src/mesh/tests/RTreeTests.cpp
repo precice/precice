@@ -1,5 +1,6 @@
 #include "testing/Testing.hpp"
 #include "mesh/RTree.hpp"
+#include "mesh/impl/RTree.hpp"
 #include "mesh/impl/RTreeAdapter.hpp"
 #include "math/geometry.hpp"
 
@@ -339,8 +340,9 @@ BOOST_AUTO_TEST_CASE(PrimitveIndexComparison) {
 
 BOOST_FIXTURE_TEST_CASE(IndexSinglePrimitiveType, MeshFixture) {
   PrimitiveRTree rtree;
-  AABBGenerator gen{mesh};
+  impl::AABBGenerator gen{mesh};
 
+  using impl::indexPrimitive;
   BOOST_TEST(rtree.empty());
   indexPrimitive(rtree, gen, mesh.vertices());
   BOOST_TEST(rtree.size() == vertex_cnt);

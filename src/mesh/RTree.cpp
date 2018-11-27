@@ -1,3 +1,5 @@
+#include "impl/RTree.hpp"
+
 #include "RTree.hpp"
 
 namespace precice {
@@ -64,6 +66,18 @@ Box3d getEnclosingBox(Vertex const & middlePoint, double sphereRadius)
   return box;
 }
 
+PrimitiveRTree indexMesh(const Mesh &mesh)
+{
+  using namespace impl;
+
+  AABBGenerator  gen{mesh};
+  PrimitiveRTree tree;
+  indexPrimitive(tree, gen, mesh.vertices());
+  indexPrimitive(tree, gen, mesh.edges());
+  indexPrimitive(tree, gen, mesh.triangles());
+  indexPrimitive(tree, gen, mesh.quads());
+  return tree;
+}
 
 std::ostream &operator<<(std::ostream &out, Primitive val)
 {
