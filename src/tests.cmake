@@ -1,7 +1,7 @@
 #
 # This file lists all tests sources that will be compiled into the test executable
 #
-target_sources(PRECICETEST
+target_sources(testprecice
     PRIVATE
     src/action/tests/ModifyCoordinatesActionTest.cpp
     src/action/tests/PythonActionTest.cpp

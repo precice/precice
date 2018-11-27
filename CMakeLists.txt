@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.5)
+cmake_minimum_required (VERSION 3.9.6)
 
 project(preCICE VERSION 1.3.0 LANGUAGES CXX)
 
@@ -89,69 +89,70 @@ endif()
 
 
 #
-# Configuration of Target PRECICE
+# Configuration of Target precice
 #
 
-# Add PRECICE as an empty target 
-add_library(PRECICE)
-set_target_properties(PRECICE PROPERTIES
-    # PRECICE is a C++11 project
+# Add a dummy to silence add_library warning for cmake < 3.11.
+file(WRITE dummy.cpp "")
+
+# Add precice as an empty target 
+add_library(precice dummy.cpp)
+set_target_properties(precice PROPERTIES
+    # precice is a C++11 project
     CXX_STANDARD 11
-    # Set the binary name
-    OUTPUT_NAME precice
     )
 
 # Setup Boost
-target_compile_definitions(PRECICE PRIVATE BOOST_ALL_DYN_LINK BOOST_ASIO_ENABLE_OLD_SERVICES)
-target_link_libraries(PRECICE PUBLIC ${Boost_LIBRARIES})
+target_compile_definitions(precice PRIVATE BOOST_ALL_DYN_LINK BOOST_ASIO_ENABLE_OLD_SERVICES)
+target_link_libraries(precice PUBLIC ${Boost_LIBRARIES})
 
 # Setup Eigen3
-target_link_libraries(PRECICE PRIVATE Eigen3::Eigen)
-target_compile_definitions(PRECICE PRIVATE "$<$<CONFIG:DEBUG>:EIGEN_INITIALIZE_MATRICES_BY_NAN>")
+target_link_libraries(precice PRIVATE Eigen3::Eigen)
+target_compile_definitions(precice PRIVATE "$<$<CONFIG:DEBUG>:EIGEN_INITIALIZE_MATRICES_BY_NAN>")
 
 # Setup LIBXML2
-target_include_directories(PRECICE PRIVATE ${LIBXML2_INCLUDE_DIR})
-target_link_libraries(PRECICE PUBLIC ${LIBXML2_LIBRARIES})
+target_include_directories(precice PRIVATE ${LIBXML2_INCLUDE_DIR})
+target_link_libraries(precice PUBLIC ${LIBXML2_LIBRARIES})
 
 if (Platform STREQUAL "SuperMUC")
-    target_compile_definitions(PRECICE PRIVATE SuperMUC_WORK)
+    target_compile_definitions(precice PRIVATE SuperMUC_WORK)
 endif()
 
 # Setup MPI
 if (MPI)
-    target_link_libraries(PRECICE PRIVATE MPI::MPI_CXX)
-    target_compile_options(PRECICE PRIVATE ${MPI_COMPILE_FLAGS})
-    target_link_libraries(PRECICE PRIVATE ${MPI_LINK_FLAGS})
-    target_link_libraries(PRECICE PUBLIC ${MPI_LIBRARIES})
+    target_link_libraries(precice PRIVATE MPI::MPI_CXX)
+    target_compile_options(precice PRIVATE ${MPI_COMPILE_FLAGS})
+    target_link_libraries(precice PRIVATE ${MPI_LINK_FLAGS})
+    target_link_libraries(precice PUBLIC ${MPI_LIBRARIES})
 else()
-    target_compile_definitions(PRECICE PRIVATE PRECICE_NO_MPI)
+    target_compile_definitions(precice PRIVATE PRECICE_NO_MPI)
 endif()
 
 # Setup PETSC
 if (PETSC AND MPI)
-    target_include_directories(PRECICE PUBLIC ${PETSC_INCLUDES})
-    target_link_libraries(PRECICE PUBLIC ${PETSC_LIBRARIES})
+    target_include_directories(precice PUBLIC ${PETSC_INCLUDES})
+    target_link_libraries(precice PUBLIC ${PETSC_LIBRARIES})
 else()
-    target_compile_definitions(PRECICE PRIVATE PRECICE_NO_PETSC)
+    target_compile_definitions(precice PRIVATE PRECICE_NO_PETSC)
 endif()
 
 # Option Python
 if (PYTHON)
-    target_include_directories(PRECICE PRIVATE ${PYTHON_INCLUDE_DIRS})
-    target_include_directories(PRECICE PRIVATE ${NumPy_INCLUDE_DIRS})
-    target_compile_definitions(PRECICE PRIVATE NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION)
-    target_link_libraries(PRECICE PRIVATE ${PYTHON_LIBRARIES})
+    target_include_directories(precice PRIVATE ${PYTHON_INCLUDE_DIRS})
+    target_include_directories(precice PRIVATE ${NumPy_INCLUDE_DIRS})
+    target_compile_definitions(precice PRIVATE NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION)
+    target_link_libraries(precice PRIVATE ${PYTHON_LIBRARIES})
 else()
-    target_compile_definitions(PRECICE PRIVATE PRECICE_NO_PYTHON)
+    target_compile_definitions(precice PRIVATE PRECICE_NO_PYTHON)
 endif()
 
 # File Configuration
 configure_file("${PROJECT_SOURCE_DIR}/src/versions.hpp.in" "${PROJECT_BINARY_DIR}/src/versions.hpp" @ONLY)
 
 # Includes Configuration
-target_include_directories(PRECICE PUBLIC 
+target_include_directories(precice PUBLIC 
     $<BUILD_INTERFACE:${preCICE_SOURCE_DIR}/src>
-    $<BUILD_INTERFACE:${preCICE_BINARY_DIR}>
+    $<BUILD_INTERFACE:${preCICE_BINARY_DIR}/src>
     $<INSTALL_INTERFACE:include>
     )
 
@@ -160,61 +161,57 @@ include(${CMAKE_CURRENT_LIST_DIR}/src/sources.cmake)
 
 
 #
-# Configuration of Target PRECICEBIN
+# Configuration of Target binprecice
 #
 
-add_executable(PRECICEBIN "src/drivers/main.cpp")
-target_link_libraries(PRECICEBIN 
+add_executable(binprecice "src/drivers/main.cpp")
+target_link_libraries(binprecice 
     PRIVATE
     Threads::Threads
-    PRECICE
+    precice
     Eigen3::Eigen
     )
-set_target_properties(PRECICEBIN PROPERTIES
-    # PRECICE is a C++11 project
+set_target_properties(binprecice PROPERTIES
+    # precice is a C++11 project
     CXX_STANDARD 11
-    # Set the binary name
-    OUTPUT_NAME binprecice
     )
-copy_target_property(PRECICE PRECICEBIN COMPILE_DEFINITIONS)
+copy_target_property(precice binprecice COMPILE_DEFINITIONS)
 
 #
-# Configuration of Target PRECICETEST
+# Configuration of Target testprecice
 #
 
-add_executable(PRECICETEST "src/testing/main.cpp")
-target_link_libraries(PRECICETEST
+add_executable(testprecice "src/testing/main.cpp")
+target_link_libraries(testprecice
     PRIVATE
     Threads::Threads
-    PRECICE
+    precice
     Eigen3::Eigen
     )
-set_target_properties(PRECICETEST PROPERTIES
-    # PRECICE is a C++11 project
+set_target_properties(testprecice PROPERTIES
+    # precice is a C++11 project
     CXX_STANDARD 11
-    # Set the binary name
-    OUTPUT_NAME testprecice
     )
-copy_target_property(PRECICE PRECICETEST COMPILE_DEFINITIONS)
-copy_target_property(PRECICE PRECICETEST COMPILE_OPTIONS)
+copy_target_property(precice testprecice COMPILE_DEFINITIONS)
+copy_target_property(precice testprecice COMPILE_OPTIONS)
 
 # Add the tests
 include(${CMAKE_CURRENT_LIST_DIR}/src/tests.cmake)
 
 # Register the test using CTest
 enable_testing()
-add_test(NAME PRECICE.All COMMAND PRECICETEST)
+add_test(NAME precice.All COMMAND testprecice)
 
 #
-# Install Targets for PRECICE
+# Install Targets for precice
 #
 
 # Setup General Install for:
-# PRECICE - the library
+# precice - the library
 # binprecice - the precice binary
 # testprecice - the test for smoke testing
-install(TARGETS PRECICE PRECICEBIN PRECICETEST
-  EXPORT PRECICETargets
+install(TARGETS precice binprecice testprecice
+  EXPORT preciceTargets
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
   RUNTIME DESTINATION bin
@@ -231,20 +228,20 @@ install(DIRECTORY src
     )
 
 # Export the Targets to install
-install(EXPORT PRECICETargets
-    FILE PRECICETargets.cmake
-    NAMESPACE PRECICE::
+install(EXPORT preciceTargets
+    FILE preciceTargets.cmake
+    NAMESPACE precice::
     DESTINATION lib/cmake/precice
     )
 
-# Generate a Package Config File for PRECICE
+# Generate a Package Config File for precice
 include(CMakePackageConfigHelpers)
-write_basic_package_version_file("PRECICEConfigVersion.cmake"
-    VERSION ${PRECICE_VERSION}
+write_basic_package_version_file("preciceConfigVersion.cmake"
+    VERSION ${preCICE_VERSION}
     COMPATIBILITY SameMajorVersion
     )
 
 # Install the Config and the ConfigVersion files
-install(FILES "PRECICEConfig.cmake" "${preCICE_BINARY_DIR}/PRECICEConfigVersion.cmake"
+install(FILES "preciceConfig.cmake" "${preCICE_BINARY_DIR}/preciceConfigVersion.cmake"
     DESTINATION lib/cmake/precice
     )

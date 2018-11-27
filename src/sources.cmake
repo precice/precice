@@ -1,7 +1,7 @@
 #
 # This file lists all sources that will be compiles into the precice library
 #
-target_sources(PRECICE
+target_sources(precice
     PRIVATE
     src/math/geometry.cpp
     src/math/constants.hpp
@@ -295,7 +295,7 @@ target_sources(PRECICE
 # Select headers to install
 #
 
-set_property(TARGET PRECICE PROPERTY PUBLIC_HEADER
+set_property(TARGET precice PROPERTY PUBLIC_HEADER
     src/precice/SolverInterface.hpp
     src/precice/MeshHandle.hpp
     src/precice/Constants.hpp
