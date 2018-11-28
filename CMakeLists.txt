@@ -83,6 +83,12 @@ if (PYTHON)
     set(Python_ADDITIONAL_VERSIONS "2.7")
     find_package(PythonLibs 2.7 REQUIRED)
     find_package(NumPy REQUIRED)
+
+    # Create Target for PythonLibs
+    add_library(PythonLibs INTERFACE IMPORTED)
+    set_property(TARGET PythonLibs PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${PYTHON_INCLUDE_DIRS})
+    set_property(TARGET PythonLibs PROPERTY INTERFACE_COMPILE_DEFINITIONS NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION)
+    set_property(TARGET PythonLibs PROPERTY INTERFACE_LINK_LIBRARIES ${PYTHON_LIBRARIES})
 else()
     message(STATUS "Python support disabled")
 endif()
@@ -103,7 +109,7 @@ set_target_properties(precice PROPERTIES
     )
 
 # Setup Boost
-target_compile_definitions(precice PRIVATE BOOST_ALL_DYN_LINK BOOST_ASIO_ENABLE_OLD_SERVICES)
+target_compile_definitions(precice PUBLIC BOOST_ALL_DYN_LINK BOOST_ASIO_ENABLE_OLD_SERVICES)
 target_link_libraries(precice PUBLIC ${Boost_LIBRARIES})
 
 # Setup Eigen3
@@ -120,12 +126,9 @@ endif()
 
 # Setup MPI
 if (MPI)
-    target_link_libraries(precice PRIVATE MPI::MPI_CXX)
-    target_compile_options(precice PRIVATE ${MPI_COMPILE_FLAGS})
-    target_link_libraries(precice PRIVATE ${MPI_LINK_FLAGS})
-    target_link_libraries(precice PUBLIC ${MPI_LIBRARIES})
+    target_link_libraries(precice PUBLIC MPI::MPI_CXX)
 else()
-    target_compile_definitions(precice PRIVATE PRECICE_NO_MPI)
+    target_compile_definitions(precice PUBLIC PRECICE_NO_MPI)
 endif()
 
 # Setup PETSC
@@ -133,17 +136,15 @@ if (PETSC AND MPI)
     target_include_directories(precice PUBLIC ${PETSC_INCLUDES})
     target_link_libraries(precice PUBLIC ${PETSC_LIBRARIES})
 else()
-    target_compile_definitions(precice PRIVATE PRECICE_NO_PETSC)
+    target_compile_definitions(precice PUBLIC PRECICE_NO_PETSC)
 endif()
 
 # Option Python
 if (PYTHON)
-    target_include_directories(precice PRIVATE ${PYTHON_INCLUDE_DIRS})
-    target_include_directories(precice PRIVATE ${NumPy_INCLUDE_DIRS})
-    target_compile_definitions(precice PRIVATE NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION)
-    target_link_libraries(precice PRIVATE ${PYTHON_LIBRARIES})
+    target_link_libraries(precice PRIVATE PythonLibs)
+    target_link_libraries(precice PRIVATE NumPy::NumPy)
 else()
-    target_compile_definitions(precice PRIVATE PRECICE_NO_PYTHON)
+    target_compile_definitions(precice PUBLIC PRECICE_NO_PYTHON)
 endif()
 
 # File Configuration
@@ -176,6 +177,7 @@ set_target_properties(binprecice PROPERTIES
     CXX_STANDARD 11
     )
 copy_target_property(precice binprecice COMPILE_DEFINITIONS)
+copy_target_property(precice binprecice COMPILE_OPTIONS)
 
 #
 # Configuration of Target testprecice
