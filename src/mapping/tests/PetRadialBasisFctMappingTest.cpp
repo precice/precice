@@ -1439,6 +1439,45 @@ BOOST_AUTO_TEST_CASE(NoMapping)
   }
 }
 
+BOOST_AUTO_TEST_CASE(TestNonHomongenousGlobalIndex)
+{
+  using Eigen::Vector2d;
+  int dimensions = 2;
+
+  bool xDead = false, yDead = false, zDead = false;
+
+  Gaussian fct(1); // supportRadius = 4.55
+
+  // Create mesh to map from
+  mesh::PtrMesh inMesh ( new mesh::Mesh("InMesh", dimensions, false) );
+  mesh::PtrData inData = inMesh->createData ( "InData", 1 );
+  int inDataID = inData->getID ();
+  inMesh->createVertex ( Vector2d(1, 1) ).setGlobalIndex(2);
+  inMesh->createVertex ( Vector2d(1, 0) ).setGlobalIndex(3);
+  inMesh->createVertex ( Vector2d(0, 0) ).setGlobalIndex(6);
+  inMesh->createVertex ( Vector2d(0, 1) ).setGlobalIndex(5);
+  inMesh->allocateDataValues();
+
+  inData->values() << 1, 1, 1, 1;
+
+  // Create mesh to map to
+  mesh::PtrMesh outMesh( new mesh::Mesh("OutMesh", dimensions, false) );
+  mesh::PtrData outData = outMesh->createData( "OutData", 1 );
+  int outDataID = outData->getID();
+  outMesh->createVertex(Vector2d(0.5, 0.5));
+
+  outMesh->allocateDataValues();
+  addGlobalIndex(outMesh);
+
+  PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, dimensions, fct,
+                                             xDead, yDead, zDead);
+  mapping.setMeshes(inMesh, outMesh);
+  mapping.computeMapping();
+  mapping.map(inDataID, outDataID);
+
+  BOOST_TEST ( outData->values()[0] == 1 );
+}
+
 BOOST_AUTO_TEST_SUITE_END() // Serial
 
 BOOST_AUTO_TEST_SUITE_END() // PetRadialBasisFunctionMapping
