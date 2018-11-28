@@ -662,10 +662,10 @@ void RequestManager:: handleRequestSetMeshVertices
   _com->receive(size, rankSender);
   CHECK(size > 0, "You cannot call setMeshVertices with size=0.");
   std::vector<double> positions(size*_interface.getDimensions());
-  _com->receive(positions.data(), size*_interface.getDimensions(), rankSender);
+  _com->receive(positions, rankSender);
   std::vector<int> ids(size);
   _interface.setMeshVertices(meshID, size, positions.data(), ids.data());
-  _com->send(ids.data(), size, rankSender);
+  _com->send(ids, rankSender);
 }
 
 void RequestManager:: handleRequestGetMeshVertices
@@ -680,9 +680,9 @@ void RequestManager:: handleRequestGetMeshVertices
   assertion(size > 0, size);
   std::vector<int> ids(size);
   std::vector<double> positions(size*_interface.getDimensions());
-  _com->receive(ids.data(), size, rankSender);
+  _com->receive(ids, rankSender);
   _interface.getMeshVertices(meshID, size, ids.data(), positions.data());
-  _com->send(positions.data(), size*_interface.getDimensions(), rankSender);
+  _com->send(positions, rankSender);
 }
 
 void RequestManager:: handleRequestGetMeshVertexIDsFromPositions
@@ -697,9 +697,9 @@ void RequestManager:: handleRequestGetMeshVertexIDsFromPositions
   assertion(size > 0, size);
   std::vector<int> ids(size);
   std::vector<double> positions(size*_interface.getDimensions());
-  _com->receive(positions.data(), size*_interface.getDimensions(), rankSender);
+  _com->receive(positions, rankSender);
   _interface.getMeshVertexIDsFromPositions(meshID, size, positions.data(), ids.data());
-  _com->send(ids.data(), size, rankSender);
+  _com->send(ids, rankSender);
 }
 
 void RequestManager:: handleRequestSetMeshEdge
@@ -777,9 +777,9 @@ void RequestManager:: handleRequestWriteBlockScalarData
   int size = -1;
   _com->receive(size, rankSender);
   std::vector<int> indices(size);
-  _com->receive(indices.data(), size, rankSender);
+  _com->receive(indices, rankSender);
   std::vector<double> data(size);
-  _com->receive(data.data(), size, rankSender);
+  _com->receive(data, rankSender);
   _interface.writeBlockScalarData(dataID, size, indices.data(), data.data());
 }
 
@@ -793,9 +793,9 @@ void RequestManager:: handleRequestWriteBlockVectorData
   int size = -1;
   _com->receive(size, rankSender);
   std::vector<int> indices(size);
-  _com->receive(indices.data(), size, rankSender);
+  _com->receive(indices, rankSender);
   std::vector<double> data(size*_interface.getDimensions());
-  _com->receive(data.data(), size*_interface.getDimensions(), rankSender);
+  _com->receive(data, rankSender);
   _interface.writeBlockVectorData(dataID, size, indices.data(), data.data());
 }
 
@@ -837,10 +837,10 @@ void RequestManager:: handleRequestReadBlockScalarData
   int size = -1;
   _com->receive(size, rankSender);
   std::vector<int> indices(size);
-  _com->receive(indices.data(), size, rankSender);
+  _com->receive(indices, rankSender);
   std::vector<double> data(size);
   _interface.readBlockScalarData(dataID, size, indices.data(), data.data());
-  _com->send(data.data(), size, rankSender);
+  _com->send(data, rankSender);
 }
 
 void RequestManager:: handleRequestReadBlockVectorData
@@ -853,10 +853,10 @@ void RequestManager:: handleRequestReadBlockVectorData
   int size = -1;
   _com->receive(size, rankSender);
   std::vector<int> indices(size);
-  _com->receive(indices.data(), size, rankSender);
+  _com->receive(indices, rankSender);
   std::vector<double> data(size*_interface.getDimensions());
   _interface.readBlockVectorData(dataID, size, indices.data(), data.data());
-  _com->send(data.data(), size*_interface.getDimensions(), rankSender);
+  _com->send(data, rankSender);
 }
 
 void RequestManager:: handleRequestReadVectorData
