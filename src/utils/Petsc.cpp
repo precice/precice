@@ -488,6 +488,16 @@ void destroy(ISLocalToGlobalMapping * IS)
   }
 }
 
+void destroy(AO * ao)
+{
+  PetscErrorCode ierr = 0;
+  PetscBool petscIsInitialized;
+  PetscInitialized(&petscIsInitialized);
+  
+  if (ao and petscIsInitialized) {
+    ierr = AODestroy(ao); CHKERRV(ierr);
+  }
+}
 
 }}} // namespace precice, utils, petsc
 

@@ -41,6 +41,7 @@ private:
 #include "petscmat.h"
 #include "petscksp.h"
 #include "petscis.h"
+#include "petscao.h"
 
 namespace precice {
 namespace utils {
@@ -224,6 +225,9 @@ void destroy(KSP * ksp);
 
 /// Destroys an ISLocalToGlobalMapping, if IS is not null and PetscIsInitialized
 void destroy(ISLocalToGlobalMapping * IS);
+
+/// Destroys an application ordering, if ao is not null and PetscIsInitialized
+void destroy(AO * ao);
 
 
 }}} // namespace precice, utils, petsc
