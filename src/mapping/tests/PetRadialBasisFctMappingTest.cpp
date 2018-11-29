@@ -1469,13 +1469,26 @@ BOOST_AUTO_TEST_CASE(TestNonHomongenousGlobalIndex)
   outMesh->allocateDataValues();
   addGlobalIndex(outMesh);
 
-  PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, dimensions, fct,
-                                             xDead, yDead, zDead);
-  mapping.setMeshes(inMesh, outMesh);
-  mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  PetRadialBasisFctMapping<Gaussian> mapping1(Mapping::CONSISTENT, dimensions, fct,
+                                              xDead, yDead, zDead);
+  mapping1.setMeshes(inMesh, outMesh);
+  mapping1.computeMapping();
+  mapping1.map(inDataID, outDataID);
 
   BOOST_TEST ( outData->values()[0] == 1 );
+
+  PetRadialBasisFctMapping<Gaussian> mapping2(Mapping::CONSERVATIVE, dimensions, fct,
+                                              xDead, yDead, zDead);
+  inData->values() << 0, 0, 0, 0; // reset
+  outData->values() << 4; // used as inData here
+  mapping2.setMeshes(outMesh, inMesh);
+  mapping2.computeMapping();
+  mapping2.map(outDataID, inDataID);
+
+  BOOST_TEST ( inData->values()[0] == 1.0 );
+  BOOST_TEST ( inData->values()[1] == 1.0 );
+  BOOST_TEST ( inData->values()[2] == 1.0 );
+  BOOST_TEST ( inData->values()[3] == 1.0 );
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Serial

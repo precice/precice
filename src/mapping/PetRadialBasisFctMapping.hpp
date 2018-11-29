@@ -346,20 +346,21 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   }
 
   // -- BEGIN FILL LOOP FOR MATRIX C --
+  DEBUG("Begin filling matrix C");
   precice::utils::Event eFillC("map.pet.fillC.From" + input()->getName() + "To"+ output()->getName(), precice::syncMode);
+
   // We collect entries for each row and set them blockwise using MatSetValues.
   int preallocRow = 0;
+  PetscInt row = _matrixC.ownerRange().first + localPolyparams;
   for (const mesh::Vertex& inVertex : inMesh->vertices()) {
     if (not inVertex.isOwner())
       continue;
 
-    PetscInt row = inVertex.getGlobalIndex() + polyparams;
+    PetscInt const idxSize = std::max(_matrixC.getSize().second, _matrixQ.getSize().second);
     PetscInt colNum = 0;  // holds the number of columns
-    PetscInt colIdx[_matrixC.getSize().second];     // holds the columns indices of the entries
-    PetscScalar rowVals[_matrixC.getSize().second]; // holds the values of the entries
+    PetscInt colIdx[idxSize];     // holds the columns indices of the entries
+    PetscScalar rowVals[idxSize]; // holds the values of the entries
     
-    ierr = AOApplicationToPetsc(_AOmapping, 1, &row); CHKERRV(ierr);
-
     // -- SETS THE POLYNOMIAL PART OF THE MATRIX --
     if (_polynomial == Polynomial::ON or _polynomial == Polynomial::SEPARATE) {
       colIdx[colNum] = colNum;
@@ -411,6 +412,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     }
     ierr = AOApplicationToPetsc(_AOmapping, colNum, colIdx); CHKERRV(ierr);
     ierr = MatSetValues(_matrixC, 1, &row, colNum, colIdx, rowVals, INSERT_VALUES); CHKERRV(ierr);
+    ++row;
   }
   DEBUG("Finished filling Matrix C");
   eFillC.stop();
@@ -443,29 +445,32 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   precice::utils::Event eFillA("map.pet.fillA.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
 
   for (PetscInt row = ownerRangeABegin; row < ownerRangeAEnd; row++) {
-    PetscInt colNum = 0;
-    PetscInt colIdx[_matrixA.getSize().second];     // holds the columns indices of the entries
-    PetscScalar rowVals[_matrixA.getSize().second]; // holds the values of the entries
-    const mesh::Vertex& oVertex = outMesh->vertices()[row - _matrixA.ownerRange().first];
+    mesh::Vertex const & oVertex = outMesh->vertices()[row - _matrixA.ownerRange().first];
 
     // -- SET THE POLYNOMIAL PART OF THE MATRIX --
     if (_polynomial == Polynomial::ON or _polynomial == Polynomial::SEPARATE) {
-      Mat m = _polynomial == Polynomial::ON ? _matrixA : _matrixV;
+        petsc::Matrix * m = _polynomial == Polynomial::ON ? &_matrixA : &_matrixV;
+        PetscInt colNum = 0;
+        PetscInt colIdx[m->getSize().second];     // holds the columns indices of the entries
+        PetscScalar rowVals[m->getSize().second]; // holds the values of the entries
 
-      colIdx[colNum] = colNum;
-      rowVals[colNum++] = 1;
+        colIdx[colNum] = colNum;
+        rowVals[colNum++] = 1;
 
-      for (int dim = 0; dim < dimensions; dim++) {
-        if (not _deadAxis[dim]) {
-          colIdx[colNum] = colNum;
-          rowVals[colNum++] = oVertex.getCoords()[dim];
+        for (int dim = 0; dim < dimensions; dim++) {
+          if (not _deadAxis[dim]) {
+            colIdx[colNum] = colNum;
+            rowVals[colNum++] = oVertex.getCoords()[dim];
+          }
         }
-      }
-      ierr = MatSetValues(m, 1, &row, colNum, colIdx, rowVals, INSERT_VALUES); CHKERRV(ierr);
-      colNum = 0;
+        ierr = MatSetValues(*m, 1, &row, colNum, colIdx, rowVals, INSERT_VALUES); CHKERRV(ierr);
     }
-
+    
     // -- SETS THE COEFFICIENTS --
+    PetscInt colNum = 0;
+    PetscInt colIdx[_matrixA.getSize().second];     // holds the columns indices of the entries
+    PetscScalar rowVals[_matrixA.getSize().second]; // holds the values of the entries
+
     if (_preallocation == Preallocation::SAVE or _preallocation == Preallocation::TREE) {
       const auto & rowVertices = vertexData[row - ownerRangeABegin];
       for (const auto & vertex : rowVertices) {
@@ -662,21 +667,21 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
     const PetscScalar *vecArray;
 
     // For every data dimension, perform mapping
-    for (int dim=0; dim < valueDim; dim++) {
+    for (int dim = 0; dim < valueDim; dim++) {
       printMappingInfo(inputDataID, dim);
 
       // Fill input from input data values
       std::vector<PetscScalar> inVals; inVals.reserve(input()->vertices().size());
       std::vector<PetscInt> inIdx; inIdx.reserve(input()->vertices().size());
-      int count = 0;
+      int count = -1;
       for (const auto& vertex : input()->vertices()) {
-        inVals.push_back(inValues[count * valueDim + dim]);
-        inIdx.push_back(vertex.getGlobalIndex() + polyparams);
         count++;
+        if (not vertex.isOwner())
+          continue;       
+        inVals.emplace_back(inValues[count * valueDim + dim]);
+        inIdx.emplace_back(inIdx.size() + in.ownerRange().first + localPolyparams);
       }
-      ierr = AOApplicationToPetsc(_AOmapping, inIdx.size(), inIdx.data()); CHKERRV(ierr);
       ierr = VecSetValues(in, inIdx.size(), inIdx.data(), inVals.data(), INSERT_VALUES); CHKERRV(ierr);
-      
       in.assemble();
 
       if (_polynomial == Polynomial::SEPARATE) {
