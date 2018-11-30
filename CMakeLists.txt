@@ -2,6 +2,18 @@ cmake_minimum_required (VERSION 3.5)
 
 project(preCICE VERSION 1.3.0 LANGUAGES CXX)
 
+# CMake Policies
+
+# CMP0074: find_package() uses <PackageName>_ROOT variables.
+if(POLICY CMP0074)
+    cmake_policy(SET CMP0074 NEW)
+endif()
+# CMP0075 Include file check macros honor CMAKE_REQUIRED_LIBRARIES
+if(POLICY CMP0075)
+    cmake_policy(SET CMP0075 NEW)
+endif()
+
+
 list (APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/tools/cmake-modules")
 
 set (CMAKE_CXX_STANDARD 11)
