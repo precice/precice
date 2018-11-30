@@ -2,6 +2,8 @@
 
 #include <vector>
 #include <cstddef>
+#include <iterator>
+#include <memory>
 
 namespace precice {
   namespace mesh {
@@ -25,34 +27,41 @@ namespace precice {
 class VertexIterator
 {
 public:
+  using value_type        = VertexIterator;
+  using reference         = VertexIterator &;
+  using pointer           = VertexIterator *;
+  using difference_type   = std::size_t;
+  using iterator_category = std::forward_iterator_tag;
+
+  VertexIterator();
 
   VertexIterator (
     const mesh::Group& content,
     bool               begin );
 
-  VertexIterator ( const VertexIterator& toCopy );
+  VertexIterator ( const VertexIterator& other );
 
-  VertexIterator& operator= ( const VertexIterator& toAssign );
-
-  ~VertexIterator();
+  VertexIterator& operator= ( const VertexIterator& other );
 
   /// Postfix operator
-  VertexIterator& operator++(int unused);
+  VertexIterator operator++(int unused);
 
   /// Prefix operator
   VertexIterator& operator++();
 
-  VertexIterator& operator*();
+  const VertexIterator operator*() const;
 
-  int vertexID();
+  int vertexID() const;
 
-  const double* vertexCoords();
+  const double* vertexCoords() const;
 
-  bool operator!= ( const VertexIterator& vertexIterator );
+  bool operator== ( const VertexIterator& other ) const;
+
+  bool operator!= ( const VertexIterator& other ) const;
 
 private:
-
-  impl::VertexIteratorImplementation* _impl;
+  using Impl = impl::VertexIteratorImplementation;
+  std::unique_ptr<Impl> _impl;
 };
 
 /// Offers methods begin() and end() to iterate over all vertices.
@@ -82,24 +91,40 @@ private:
 class EdgeIterator
 {
 public:
+  using value_type        = EdgeIterator;
+  using reference         = EdgeIterator &;
+  using pointer           = EdgeIterator *;
+  using difference_type   = std::size_t;
+  using iterator_category = std::forward_iterator_tag;
+
+  EdgeIterator ();
 
   EdgeIterator (
     const mesh::Group& mesh,
     bool              begin );
 
-  ~EdgeIterator();
 
-  EdgeIterator& operator++(int);
+  EdgeIterator (const EdgeIterator& other);
 
-  const double* vertexCoords ( int vertexIndex );
+  EdgeIterator& operator=(const EdgeIterator& other);
 
-  int vertexID ( int vertexIndex );
+  EdgeIterator operator++(int);
 
-  bool operator!= ( const EdgeIterator& edgeIterator );
+  EdgeIterator& operator++();
+
+  const EdgeIterator operator*() const;
+
+  const double* vertexCoords ( int vertexIndex ) const;
+
+  int vertexID ( int vertexIndex ) const;
+
+  bool operator== ( const EdgeIterator& other ) const;
+
+  bool operator!= ( const EdgeIterator& other ) const;
 
 private:
-
-  impl::EdgeIteratorImplementation* _impl;
+  using Impl = impl::EdgeIteratorImplementation;
+  std::unique_ptr<Impl> _impl;
 };
 
 /**
@@ -138,24 +163,39 @@ private:
 class TriangleIterator
 {
 public:
+  using value_type        = TriangleIterator;
+  using reference         = TriangleIterator &;
+  using pointer           = TriangleIterator *;
+  using difference_type   = std::size_t;
+  using iterator_category = std::forward_iterator_tag;
+
+  TriangleIterator();
 
   TriangleIterator (
     const mesh::Group& content,
     bool               begin );
 
-  ~TriangleIterator();
+  TriangleIterator (const TriangleIterator& other);
 
-  TriangleIterator& operator++(int);
+  TriangleIterator& operator=(const TriangleIterator& other);
 
-  const double* vertexCoords ( int vertexIndex );
+  TriangleIterator operator++(int);
 
-  int vertexID ( int vertexIndex );
+  TriangleIterator& operator++();
 
-  bool operator!= ( const TriangleIterator& triangleIterator );
+  const TriangleIterator operator*() const;
+
+  const double* vertexCoords ( int vertexIndex ) const;
+
+  int vertexID ( int vertexIndex ) const;
+
+  bool operator== ( const TriangleIterator& other ) const;
+
+  bool operator!= ( const TriangleIterator& other ) const;
 
 private:
-
-  impl::TriangleIteratorImplementation* _impl;
+  using Impl = impl::TriangleIteratorImplementation;
+  std::unique_ptr<Impl> _impl;
 };
 
 /**
