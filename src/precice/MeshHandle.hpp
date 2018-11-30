@@ -35,6 +35,8 @@ public:
 
   VertexIterator();
 
+  ~VertexIterator();
+
   VertexIterator (
     const mesh::Group& content,
     bool               begin );
@@ -59,10 +61,14 @@ public:
 
   bool operator!= ( const VertexIterator& other ) const;
 
+  void swap(VertexIterator& other) noexcept;
+
 private:
   using Impl = impl::VertexIteratorImplementation;
   std::unique_ptr<Impl> _impl;
 };
+
+void swap(VertexIterator& lhs, VertexIterator& rhs) noexcept;
 
 /// Offers methods begin() and end() to iterate over all vertices.
 class VertexHandle
@@ -99,6 +105,8 @@ public:
 
   EdgeIterator ();
 
+  ~EdgeIterator ();
+
   EdgeIterator (
     const mesh::Group& mesh,
     bool              begin );
@@ -122,10 +130,14 @@ public:
 
   bool operator!= ( const EdgeIterator& other ) const;
 
+  void swap(EdgeIterator& other) noexcept;
+
 private:
   using Impl = impl::EdgeIteratorImplementation;
   std::unique_ptr<Impl> _impl;
 };
+
+void swap(EdgeIterator& lhs, EdgeIterator& rhs) noexcept;
 
 /**
  * @brief Offers methods begin() and end() to iterate over all edges.
@@ -171,6 +183,8 @@ public:
 
   TriangleIterator();
 
+  ~TriangleIterator();
+
   TriangleIterator (
     const mesh::Group& content,
     bool               begin );
@@ -193,10 +207,14 @@ public:
 
   bool operator!= ( const TriangleIterator& other ) const;
 
+  void swap(TriangleIterator& other) noexcept;
+
 private:
   using Impl = impl::TriangleIteratorImplementation;
   std::unique_ptr<Impl> _impl;
 };
+
+void swap(TriangleIterator& lhs, TriangleIterator& rhs) noexcept;
 
 /**
  * @brief Offers methods begin() and end() to iterate over all triangles.

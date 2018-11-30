@@ -25,7 +25,8 @@ namespace precice {
 
 // VertexIterator
 
-VertexIterator:: VertexIterator(){}
+VertexIterator::VertexIterator() = default;
+VertexIterator::~VertexIterator() = default;
 
 VertexIterator:: VertexIterator
 (
@@ -100,6 +101,16 @@ int VertexIterator:: vertexID() const
   return (*_impl->iterator).getID();
 }
 
+void VertexIterator::swap(VertexIterator& other) noexcept
+{
+    std::swap(_impl, other._impl);
+}
+
+void swap(VertexIterator& lhs, VertexIterator& rhs) noexcept
+{
+    lhs.swap(rhs);
+}
+
 // VertexHandle
 
 VertexHandle:: VertexHandle
@@ -126,7 +137,9 @@ std::size_t VertexHandle:: size() const
 
 // EdgeIterator
 
-EdgeIterator:: EdgeIterator(){}
+EdgeIterator::EdgeIterator() = default;
+
+EdgeIterator::~EdgeIterator() = default;
 
 EdgeIterator:: EdgeIterator
 (
@@ -198,6 +211,16 @@ int EdgeIterator:: vertexID(int vertexIndex) const
   return (*_impl->iterator).vertex(vertexIndex).getID();
 }
 
+void EdgeIterator::swap(EdgeIterator& other) noexcept
+{
+    std::swap(_impl, other._impl);
+}
+
+void swap(EdgeIterator& lhs, EdgeIterator& rhs) noexcept
+{
+    lhs.swap(rhs);
+}
+
 // EdgeHandle
 
 EdgeHandle:: EdgeHandle
@@ -224,7 +247,9 @@ std::size_t EdgeHandle:: size () const
 
 // TriangleIterator
 
-TriangleIterator:: TriangleIterator(){}
+TriangleIterator::TriangleIterator() = default;
+
+TriangleIterator::~TriangleIterator() = default;
 
 TriangleIterator:: TriangleIterator
 (
@@ -294,6 +319,16 @@ const double* TriangleIterator:: vertexCoords ( int vertexIndex ) const
 int TriangleIterator:: vertexID ( int vertexIndex ) const
 {
   return (*_impl->iterator).vertex(vertexIndex).getID();
+}
+
+void TriangleIterator::swap(TriangleIterator& other) noexcept
+{
+    std::swap(_impl, other._impl);
+}
+
+void swap(TriangleIterator& lhs, TriangleIterator& rhs) noexcept
+{
+    lhs.swap(rhs);
 }
 
 // TriangleHandle
