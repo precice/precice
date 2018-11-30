@@ -93,8 +93,11 @@ public:
 
   virtual void tagMeshSecondRound() override;
 
-
 private:
+
+  /// Stores col -> value for each row. Used to return the already computed values from the preconditioning
+  using VertexData = std::vector<std::vector<std::pair<int, double>>>;
+  
   mutable logging::Logger _log{"mapping::PetRadialBasisFctMapping"};
 
   bool _hasComputedMapping = false;
@@ -167,14 +170,14 @@ private:
 
   void computePreallocationMatrixA(const mesh::PtrMesh inMesh, const mesh::PtrMesh outMesh);
 
-  std::vector<std::vector<std::pair<int, double>>> savedPreallocationMatrixC(const mesh::PtrMesh inMesh);
+  VertexData savedPreallocationMatrixC(const mesh::PtrMesh inMesh);
 
-  std::vector<std::vector<std::pair<int, double>>> savedPreallocationMatrixA(const mesh::PtrMesh inMesh, const mesh::PtrMesh outMesh);
+  VertexData savedPreallocationMatrixA(const mesh::PtrMesh inMesh, const mesh::PtrMesh outMesh);
 
   /// Preallocate matrix C and saves the coefficients using a boost::geometry spatial tree for neighbor search
-  std::vector<std::vector<std::pair<int, double>>> bgPreallocationMatrixC(const mesh::PtrMesh inMesh);
+  VertexData bgPreallocationMatrixC(const mesh::PtrMesh inMesh);
 
-  std::vector<std::vector<std::pair<int, double>>> bgPreallocationMatrixA(const mesh::PtrMesh inMesh, const mesh::PtrMesh outMesh);
+  VertexData bgPreallocationMatrixA(const mesh::PtrMesh inMesh, const mesh::PtrMesh outMesh);
 
 };
 
@@ -208,19 +211,19 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
 {
   setInputRequirement(Mapping::MeshRequirement::VERTEX);
   setOutputRequirement(Mapping::MeshRequirement::VERTEX);
+  
   _deadAxis = new bool[dimensions];
-
   if (getDimensions()==2) {
     _deadAxis[0] = xDead;
     _deadAxis[1] = yDead;
-    CHECK(not (xDead && yDead), "You cannot choose all axis to be dead for a RBF mapping");
-    CHECK(not zDead, "You cannot dead out the z axis if dimension is set to 2");
+    CHECK(not (xDead and yDead), "You cannot choose all axes to be dead for a RBF mapping");
+    CHECK(not zDead, "You cannot dead out the z-axis if dimension is set to 2");
   }
   else if (getDimensions()==3) {
     _deadAxis[0] = xDead;
     _deadAxis[1] = yDead;
     _deadAxis[2] = zDead;
-    CHECK(not (xDead && yDead && zDead), "You cannot choose all axis to be dead for a RBF mapping");
+    CHECK(not (xDead and yDead and zDead), "You cannot choose all axes to be dead for a RBF mapping");
   }
   else {
     assertion(false);
@@ -276,7 +279,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     outMesh = output();
   }
 
-  // Indizes that are used to build the Petsc Index set
+  // Indizes that are used to build the Petsc AO mapping
   std::vector<PetscInt> myIndizes;
 
   // Indizes for Q^T, holding the polynomial
@@ -330,7 +333,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   // preallocate the matrix. In the second phase we actually fill the matrix.
 
   // Stores col -> value for each row;
-  std::vector<std::vector<std::pair<int, double>>> vertexData;
+  VertexData vertexData;
 
   if (_preallocation == Preallocation::SAVE) {
     vertexData = savedPreallocationMatrixC(inMesh);
@@ -444,7 +447,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   DEBUG("Begin filling matrix A.");
   precice::utils::Event eFillA("map.pet.fillA.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
 
-  for (PetscInt row = ownerRangeABegin; row < ownerRangeAEnd; row++) {
+  for (PetscInt row = ownerRangeABegin; row < ownerRangeAEnd; ++row) {
     mesh::Vertex const & oVertex = outMesh->vertices()[row - _matrixA.ownerRange().first];
 
     // -- SET THE POLYNOMIAL PART OF THE MATRIX --
@@ -551,13 +554,13 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 }
 
 template<typename RADIAL_BASIS_FUNCTION_T>
-bool PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: hasComputedMapping() const
+bool PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::hasComputedMapping() const
 {
   return _hasComputedMapping;
 }
 
 template<typename RADIAL_BASIS_FUNCTION_T>
-void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: clear()
+void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::clear()
 {
   _matrixC.reset();
   _matrixA.reset();
@@ -584,8 +587,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
             input()->getDimensions(), output()->getDimensions());
 
   PetscErrorCode ierr = 0;
-  auto& inValues = input()->data(inputDataID)->values();
-  auto& outValues = output()->data(outputDataID)->values();
+  auto const & inValues = input()->data(inputDataID)->values();
+  auto & outValues = output()->data(outputDataID)->values();
 
   int valueDim = input()->data(inputDataID)->getDimensions();
   assertion(valueDim == output()->data(outputDataID)->getDimensions(),
@@ -601,7 +604,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
 
       // Fill input from input data values
       for (size_t i = 0; i < input()->vertices().size(); i++ ) {
-        int globalIndex = input()->vertices()[i].getGlobalIndex(); // globalIndex is target row
+        auto const globalIndex = input()->vertices()[i].getGlobalIndex(); // globalIndex is target row
         if (globalIndex >= inRangeStart and globalIndex < inRangeEnd) // only fill local rows
           ierr = VecSetValue(in, globalIndex, inValues[i*valueDim + dim], INSERT_VALUES); CHKERRV(ierr);
       }
@@ -664,7 +667,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
     petsc::Vector in(_matrixC, "in");
     petsc::Vector a(_matrixQ, "a", petsc::Vector::RIGHT); // holds the solution of the LS polynomial
 
-    const PetscScalar *vecArray;
+    PetscScalar const * vecArray;
 
     // For every data dimension, perform mapping
     for (int dim = 0; dim < valueDim; dim++) {
@@ -673,12 +676,10 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
       // Fill input from input data values
       std::vector<PetscScalar> inVals; inVals.reserve(input()->vertices().size());
       std::vector<PetscInt> inIdx; inIdx.reserve(input()->vertices().size());
-      int count = -1;
-      for (const auto& vertex : input()->vertices()) {
-        count++;
-        if (not vertex.isOwner())
+      for (size_t i = 0; i < input()->vertices().size(); ++i) {
+        if (not input()->vertices()[i].isOwner())
           continue;       
-        inVals.emplace_back(inValues[count * valueDim + dim]);
+        inVals.emplace_back(inValues[i * valueDim + dim]);
         inIdx.emplace_back(inIdx.size() + in.ownerRange().first + localPolyparams);
       }
       ierr = VecSetValues(in, inIdx.size(), inIdx.data(), inVals.data(), INSERT_VALUES); CHKERRV(ierr);
@@ -728,7 +729,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
       // Copy mapped data to output data values
       ierr = VecGetArrayRead(out, &vecArray);
       int size = out.getLocalSize();
-      for (int i=0; i < size; i++) {
+      for (int i = 0; i < size; i++) {
         outValues[i*valueDim + dim] = vecArray[i];
       }
       VecRestoreArrayRead(out, &vecArray);
@@ -1087,8 +1088,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computePreallocationMatr
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::savedPreallocationMatrixC(
-  const mesh::PtrMesh inMesh)
+typename PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::VertexData
+PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::savedPreallocationMatrixC(mesh::PtrMesh const inMesh)
 {
   precice::utils::Event ePreallocC("map.pet.preallocC.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
 
@@ -1102,7 +1103,7 @@ std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL
   PetscInt colOwnerRangeCBegin, colOwnerRangeCEnd;
   std::tie(colOwnerRangeCBegin, colOwnerRangeCEnd) = _matrixC.ownerRangeColumn();
 
-  std::vector<std::vector<std::pair<int, double>>> vertexData(n - localPolyparams);
+  VertexData vertexData(n - localPolyparams);
 
   size_t local_row = 0;
   // -- PREALLOCATES THE POLYNOMIAL PART OF THE MATRIX --
@@ -1165,8 +1166,8 @@ std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::savedPreallocationMatrixA(
-  const mesh::PtrMesh inMesh, const mesh::PtrMesh outMesh)
+typename PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::VertexData
+PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::savedPreallocationMatrixA(mesh::PtrMesh const inMesh, mesh::PtrMesh const outMesh)
 {
   INFO("Using saved preallocation");
   precice::utils::Event ePreallocA("map.pet.preallocA.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
@@ -1183,7 +1184,7 @@ std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL
   Eigen::VectorXd distance(dimensions);
 
   // Contains localRow<localCols<colPosition, distance>>>
-  std::vector<std::vector<std::pair<int, double>>> vertexData(outputSize);
+  VertexData vertexData(outputSize);
 
   for (int localRow = 0; localRow < ownerRangeAEnd - ownerRangeABegin; localRow++) {
     d_nnz[localRow] = 0;
@@ -1247,8 +1248,8 @@ std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL
 
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixC(
-  const mesh::PtrMesh inMesh)
+typename PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::VertexData
+PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixC(mesh::PtrMesh const inMesh)
 {
   INFO("Using tree-based preallocation for matrix C");
   precice::utils::Event ePreallocC("map.pet.preallocC.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
@@ -1267,7 +1268,7 @@ std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL
   PetscInt colOwnerRangeCBegin, colOwnerRangeCEnd;
   std::tie(colOwnerRangeCBegin, colOwnerRangeCEnd) = _matrixC.ownerRangeColumn();
 
-  std::vector<std::vector<std::pair<int, double>>> vertexData(n - localPolyparams);
+  VertexData vertexData(n - localPolyparams);
 
   size_t local_row = 0;
   // -- PREALLOCATES THE POLYNOMIAL PART OF THE MATRIX --
@@ -1282,8 +1283,8 @@ std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL
     if (not inVertex.isOwner())
       continue;
 
-    PetscInt col = polyparams - 1;
-    const int global_row = local_row + _matrixC.ownerRange().first;
+    PetscInt col = polyparams;
+    PetscInt const global_row = local_row + _matrixC.ownerRange().first;
     d_nnz[local_row] = 0;
     o_nnz[local_row] = 0;
 
@@ -1298,7 +1299,6 @@ std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL
     // for (mesh::Vertex& vj : inMesh->vertices()) {
     for (auto i : results) {
       const mesh::Vertex & vj = inMesh->vertices()[i];
-      col++;
 
       PetscInt mappedCol = vj.getGlobalIndex() + polyparams;
       AOApplicationToPetsc(_AOmapping, 1, &mappedCol); // likely not efficient in the inner loop
@@ -1318,6 +1318,7 @@ std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL
         else
           o_nnz[local_row]++;
       }
+      col++;
     }
     local_row++;
   }
@@ -1336,19 +1337,18 @@ std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixA(
-  const mesh::PtrMesh inMesh, const mesh::PtrMesh outMesh)
+typename PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::VertexData
+PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixA(mesh::PtrMesh const inMesh, mesh::PtrMesh const outMesh)
 {
   INFO("Using tree-based preallocation for matrix A");
   precice::utils::Event ePreallocA("map.pet.preallocA.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
   namespace bg = boost::geometry;
 
   PetscInt ownerRangeABegin, ownerRangeAEnd, colOwnerRangeABegin, colOwnerRangeAEnd;
-  PetscInt outputSize;
+  PetscInt const outputSize = _matrixA.getLocalSize().first;
   auto tree = mesh::rtree::getVertexRTree(inMesh);
   double const supportRadius = _basisFunction.getSupportRadius();
 
-  std::tie(outputSize, std::ignore) = _matrixA.getLocalSize();
   std::tie(ownerRangeABegin, ownerRangeAEnd) = _matrixA.ownerRange();
   std::tie(colOwnerRangeABegin, colOwnerRangeAEnd) = _matrixA.ownerRangeColumn();
   int dimensions = input()->getDimensions();
@@ -1357,13 +1357,13 @@ std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL
   Eigen::VectorXd distance(dimensions);
 
   // Contains localRow<localCols<colPosition, distance>>>
-  std::vector<std::vector<std::pair<int, double>>> vertexData(outputSize);
+  VertexData vertexData(outputSize);
 
   for (int localRow = 0; localRow < ownerRangeAEnd - ownerRangeABegin; localRow++) {
     d_nnz[localRow] = 0;
     o_nnz[localRow] = 0;
     PetscInt col = 0;
-    const mesh::Vertex& oVertex = outMesh->vertices()[localRow];
+    mesh::Vertex const & oVertex = outMesh->vertices()[localRow];
 
     // -- PREALLOCATE THE POLYNOM PART OF THE MATRIX --
     // col does not need mapping here, because the first polyparams col are always identity mapped
