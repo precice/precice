@@ -49,7 +49,8 @@ VertexIterator:: VertexIterator
     if (toCopy._impl) {
         cpy._impl = std::unique_ptr<Impl>(new Impl{toCopy._impl->iterator});
     }
-    std::swap(*this, cpy);
+    using std::swap;
+    swap(*this, cpy);
 }
 
 VertexIterator & VertexIterator:: operator=
@@ -57,7 +58,8 @@ VertexIterator & VertexIterator:: operator=
   const VertexIterator& toAssign )
 {
     VertexIterator cpy(toAssign);
-    std::swap(*this, cpy);
+    using std::swap;
+    swap(*this, cpy);
     return *this;
 }
 
@@ -158,13 +160,15 @@ EdgeIterator:: EdgeIterator(const EdgeIterator& toCopy)
     if (toCopy._impl) {
         cpy._impl = std::unique_ptr<Impl>(new Impl{toCopy._impl->iterator});
     }
-    std::swap(*this, cpy);
+    using std::swap;
+    swap(*this, cpy);
 }
 
 EdgeIterator & EdgeIterator:: operator=(const EdgeIterator& other)
 {
     EdgeIterator cpy(other);
-    std::swap(*this, cpy);
+    using std::swap;
+    swap(*this, cpy);
     return *this;
 }
 
@@ -266,13 +270,15 @@ TriangleIterator:: TriangleIterator(const TriangleIterator& toCopy)
     if (toCopy._impl) {
         cpy._impl = std::unique_ptr<Impl>(new Impl{toCopy._impl->iterator});
     }
-    std::swap(*this, cpy);
+    using std::swap;
+    swap(*this, cpy);
 }
 
 TriangleIterator & TriangleIterator:: operator=(const TriangleIterator& other)
 {
     TriangleIterator cpy(other);
-    std::swap(*this, cpy);
+    using std::swap;
+    swap(*this, cpy);
     return *this;
 }
 
