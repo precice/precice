@@ -75,7 +75,7 @@ class VertexHandle
 {
 public:
 
-  typedef VertexIterator const_iterator;
+  using const_iterator = VertexIterator;
 
   /// Constructor, reference to mesh object holding vertices required.
   VertexHandle ( const mesh::Group& content );
@@ -146,8 +146,7 @@ class EdgeHandle
 {
 public:
 
-   // @brief Necessary to be used by boost::foreach.
-   typedef EdgeIterator const_iterator;
+  using const_iterator = EdgeIterator;
 
    /**
     * @brief Constructor, reference to mesh object holding edges required.
@@ -223,7 +222,7 @@ class TriangleHandle
 {
 public:
 
-   typedef TriangleIterator const_iterator;
+  using const_iterator = TriangleIterator;
 
    /**
     * @brief Constructor, reference to mesh object holding triangles required.
@@ -244,7 +243,7 @@ public:
 
 private:
 
-   // @brief Mesh instance holding triangles.
+   /// Mesh instance holding triangles.
    const mesh::Group& _content;
 };
 
@@ -270,7 +269,7 @@ public:
    /**
     * @brief Standard constructor, not meant to be used by a solver.
     *
-    * @param mesh [IN] The mesh representing the geometry.
+    * @param[in] mesh The mesh representing the geometry.
     */
    MeshHandle ( const mesh::Group& content );
 
@@ -291,13 +290,13 @@ public:
 
 private:
 
-   // @brief Handle for vertices.
+   /// Handle for vertices.
    VertexHandle _vertexHandle;
 
-   // @brief Handle for edges.
+   /// Handle for edges.
    EdgeHandle _edgeHandle;
 
-   // @brief Handle for triangles.
+   /// Handle for triangles.
    TriangleHandle _triangleHandle;
 };
 
