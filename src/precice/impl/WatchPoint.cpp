@@ -16,12 +16,12 @@ namespace impl {
 
 WatchPoint:: WatchPoint
 (
-  const Eigen::VectorXd&  pointCoords,
-  const mesh::PtrMesh&    meshToWatch,
-  const std::string&      exportFilename )
+  Eigen::VectorXd    pointCoords,
+  mesh::PtrMesh      meshToWatch,
+  const std::string& exportFilename )
 :
-  _point ( pointCoords ),
-  _mesh ( meshToWatch ),
+  _point(std::move(pointCoords)),
+  _mesh(std::move(meshToWatch)),
   _txtWriter ( exportFilename )
 {
   assertion ( _mesh.use_count() > 0 );
