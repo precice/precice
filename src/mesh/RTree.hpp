@@ -96,13 +96,13 @@ public:
   using VertexRTree       = boost::geometry::index::rtree<Mesh::VertexContainer::container::size_type,
                                                           RTreeParameters,
                                                           VertexIndexGetter>;
-  using PtrRTree = std::shared_ptr<VertexRTree>;
+  using PtrVertexRTree = std::shared_ptr<VertexRTree>;
 
   /// Returns the pointer to boost::geometry::rtree for the given mesh vertices
   /*
    * Creates and fills the tree, if it wasn't requested before, otherwise it returns the cached tree.
    */
-  static PtrRTree getVertexRTree(const PtrMesh& mesh);
+  static PtrVertexRTree getVertexRTree(const PtrMesh& mesh);
   
   /// Returns the pointer to boost::geometry::rtree for the given mesh primitives
   /*
@@ -117,7 +117,7 @@ public:
   
 private:
   static std::map<int, PtrPrimitiveRTree> _primitive_trees; ///< Cache for the primitive trees
-  static std::map<int, PtrRTree>          _vertex_trees; ///< Cache for the vertex trees
+  static std::map<int, PtrVertexRTree>    _vertex_trees; ///< Cache for the vertex trees
 };
 
 
