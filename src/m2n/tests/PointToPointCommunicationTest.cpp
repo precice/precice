@@ -335,7 +335,7 @@ BOOST_AUTO_TEST_CASE(P2PComMeshTest, * testing::OnSize(4))
     mesh::Vertex& v2 = mesh->createVertex(position);
     mesh->createEdge(v1, v2);
 
-    mesh->getInitialCommunicationMap().push_back(0);
+    mesh->getInitialConnectionMap().push_back(0);
 //    mesh->getCommunicationMap()[1].push_back(-1);    
     
     break;
@@ -357,7 +357,7 @@ BOOST_AUTO_TEST_CASE(P2PComMeshTest, * testing::OnSize(4))
     mesh::Vertex& v2 = mesh->createVertex(position);
     mesh->createEdge(v1, v2);
 
-    mesh->getInitialCommunicationMap().push_back(1);
+    mesh->getInitialConnectionMap().push_back(1);
     
     break;
   }
@@ -379,7 +379,7 @@ BOOST_AUTO_TEST_CASE(P2PComMeshTest, * testing::OnSize(4))
     mesh::Vertex& v2 = mesh->createVertex(position);
     mesh->createEdge(v1, v2);
 
-    mesh->getInitialCommunicationMap().push_back(0);
+    mesh->getInitialConnectionMap().push_back(0);
     //mesh->getCommunicationMap()[1].push_back(-1);     
 
     break;
@@ -401,7 +401,7 @@ BOOST_AUTO_TEST_CASE(P2PComMeshTest, * testing::OnSize(4))
     mesh::Vertex& v2 = mesh->createVertex(position);
     mesh->createEdge(v1, v2);
   
-    mesh->getInitialCommunicationMap().push_back(1);
+    mesh->getInitialConnectionMap().push_back(1);
 
     break;
   }
@@ -450,7 +450,7 @@ BOOST_AUTO_TEST_CASE(P2PComLCMTest, * testing::OnSize(4))
   com::PtrCommunicationFactory cf(new com::MPIPortsCommunicationFactory);  
   utils::MasterSlave::_communication = std::make_shared<com::MPIDirectCommunication>();
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 2, true));
-  mesh::Mesh::FeedbackMap localCommunicationMap;
+  std::map<int, std::vector<int>> localCommunicationMap;
 
   switch (utils::Parallel::getProcessRank()) {
   case 0: {
@@ -465,8 +465,8 @@ BOOST_AUTO_TEST_CASE(P2PComLCMTest, * testing::OnSize(4))
     utils::MasterSlave::_communication->setRankOffset(1);
     
 
-    mesh->getInitialCommunicationMap().push_back(0);
-    mesh->getInitialCommunicationMap().push_back(1);
+    mesh->getInitialConnectionMap().push_back(0);
+    mesh->getInitialConnectionMap().push_back(1);
     localCommunicationMap[0].push_back(102);
     localCommunicationMap[0].push_back(1022);
     localCommunicationMap[0].push_back(10222);
@@ -486,8 +486,8 @@ BOOST_AUTO_TEST_CASE(P2PComLCMTest, * testing::OnSize(4))
 
     utils::MasterSlave::_communication->requestConnection("Fluid.Master", "Fluid.Slave", 0, 1);
     
-    mesh->getInitialCommunicationMap().push_back(0);
-    mesh->getInitialCommunicationMap().push_back(1);
+    mesh->getInitialConnectionMap().push_back(0);
+    mesh->getInitialConnectionMap().push_back(1);
     localCommunicationMap[0].push_back(112);
     localCommunicationMap[0].push_back(1122);
     localCommunicationMap[0].push_back(11222);
@@ -508,8 +508,8 @@ BOOST_AUTO_TEST_CASE(P2PComLCMTest, * testing::OnSize(4))
     utils::MasterSlave::_communication->acceptConnection("Solid.Master", "Solid.Slave", utils::Parallel::getProcessRank());
     utils::MasterSlave::_communication->setRankOffset(1);
     
-    mesh->getInitialCommunicationMap().push_back(0);
-    mesh->getInitialCommunicationMap().push_back(1);  
+    mesh->getInitialConnectionMap().push_back(0);
+    mesh->getInitialConnectionMap().push_back(1);  
 
     break;
   }
@@ -523,8 +523,8 @@ BOOST_AUTO_TEST_CASE(P2PComLCMTest, * testing::OnSize(4))
 
     utils::MasterSlave::_communication->requestConnection("Solid.Master", "Solid.Slave", 0, 1);
 
-    mesh->getInitialCommunicationMap().push_back(0);
-    mesh->getInitialCommunicationMap().push_back(1);
+    mesh->getInitialConnectionMap().push_back(0);
+    mesh->getInitialConnectionMap().push_back(1);
 
     break;
   }

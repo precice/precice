@@ -427,7 +427,7 @@ void PointToPointCommunication::acceptPreConnection(std::string const &acceptorN
     assertion(utils::MasterSlave::_slaveMode);
   }
 
-  std::vector<int> localCommunicationMap = _mesh->getInitialCommunicationMap();
+  std::vector<int> localCommunicationMap = _mesh->getInitialConnectionMap();
 
 // Print `communicationMap'.
 #ifdef P2P_LCM_PRINT
@@ -650,7 +650,7 @@ void PointToPointCommunication::requestPreConnection(std::string const &acceptor
     assertion(utils::MasterSlave::_slaveMode);
   }
 
-  std::vector<int> localCommunicationMap = _mesh->getInitialCommunicationMap();
+  std::vector<int> localCommunicationMap = _mesh->getInitialConnectionMap();
 
 // Print `communicationMap'.
 #ifdef P2P_LCM_PRINT
@@ -832,14 +832,14 @@ void PointToPointCommunication::receiveMesh(mesh::Mesh &mesh)
 }
 
 
-void PointToPointCommunication::sendCommunicationMap(mesh::Mesh::FeedbackMap &localCommunicationMap)
+void PointToPointCommunication::sendCommunicationMap(std::map<int, std::vector<int>> &localCommunicationMap)
 {
   for (auto &mapping : _mappings) {
     mapping.communication->send(localCommunicationMap[mapping.remoteRank], mapping.remoteRank);
   }
 }
 
-void PointToPointCommunication::receiveCommunicationMap(mesh::Mesh::FeedbackMap &localCommunicationMap)
+void PointToPointCommunication::receiveCommunicationMap(std::map<int, std::vector<int>> &localCommunicationMap)
 {
   for (auto &mapping : _mappings) {
     mapping.communication->receive(localCommunicationMap[mapping.remoteRank], mapping.remoteRank);

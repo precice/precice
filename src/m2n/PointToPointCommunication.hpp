@@ -122,13 +122,13 @@ public:
    * All ranks Send their local communication maps to connected ranks
    */
   virtual void sendCommunicationMap(
-    mesh::Mesh::FeedbackMap &localCommunicationMap);
+    std::map<int, std::vector<int>> &localCommunicationMap);
 
   /**
    * Each rank revives local communication maps from connected ranks
    */
   virtual void receiveCommunicationMap(
-    mesh::Mesh::FeedbackMap &localCommunicationMap) ;
+    std::map<int, std::vector<int>> &localCommunicationMap) ;
 
 private:
   logging::Logger _log{"m2n::PointToPointCommunication"};
