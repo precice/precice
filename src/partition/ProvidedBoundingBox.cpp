@@ -39,7 +39,7 @@ void ProvidedBoundingBox::communicateBoundingBox()
       assertion(utils::MasterSlave::_rank==0);
       assertion(utils::MasterSlave::_size>1);      
 
-      // master receives bbs from other ranks and store them into globabb
+      // master receives bbs from other ranks and store them into globalBB
       mesh::Mesh::BoundingBoxMap globalBB;
       mesh::Mesh::BoundingBox initialBB;
       for (int i=0; i < _dimensions; i++) {        
@@ -69,56 +69,63 @@ void ProvidedBoundingBox::communicateBoundingBox()
 
 void ProvidedBoundingBox::computeBoundingBox()
 {
-  int numberOfVertices = _mesh->vertices().size();
-  int remoteParComSize = -1;
-  mesh::Mesh::FeedbackMap receivedFeedbackMap;
+  // size of the feedbackmap that is received here
+  int receivedFeedbackMapSize = 0;  
+  std::map<int, std::vector<int>> receivedFeedbackMap;
+  
   if (not utils::MasterSlave::_slaveMode) {//Master
-    assertion(utils::MasterSlave::_size>1);
-
-    // master receives other partition communicator size
-    _m2n->getMasterCommunication()->receive(remoteParComSize, 0);
-    utils::MasterSlave::_communication->broadcast(remoteParComSize);
-    for (int i=0; i < remoteParComSize; i++)
+    assertion(utils::MasterSlave::_size>1);  
+    
+    // master receives feedback map (list of other participant ranks -> connected ranks at this participant)
+    // from other participants master    
+    _m2n->getMasterCommunication()->receive(receivedFeedbackMapSize, 0 );    
+    if (receivedFeedbackMapSize != 0)
     {
-      std::vector<int> initialFeedback;
-      initialFeedback.push_back(-1);
-      receivedFeedbackMap[i]=initialFeedback;
+      for (int i=0; i < receivedFeedbackMapSize; i++)
+      {        
+        receivedFeedbackMap[i]={-1};
+      }
+      
+      com::CommunicateBoundingBox(_m2n->getMasterCommunication()).receiveFeedbackMap(receivedFeedbackMap, 0 );
     }
 
-    // master receives feedback map (list of other participant ranks -> connected ranks at this participant)
-    // from other participants master
-    com::CommunicateBoundingBox(_m2n->getMasterCommunication()).receiveFeedbackMap(receivedFeedbackMap, 0 ); 
-    com::CommunicateBoundingBox(utils::MasterSlave::_communication).broadcastSendFeedbackMap(receivedFeedbackMap);     
-
+    // master broadcasts the reveived feedbackmap to slaves! 
+    utils::MasterSlave::_communication->broadcast(receivedFeedbackMapSize);
+    if (receivedFeedbackMapSize != 0)
+    {
+      com::CommunicateBoundingBox(utils::MasterSlave::_communication).broadcastSendFeedbackMap(receivedFeedbackMap);      
+    }
+    
+    
     // master checks which ranks are connected to it
     for (auto &otherRank : receivedFeedbackMap) {
       for (auto &includedRank: otherRank.second) {
-        if (utils::MasterSlave::_rank == includedRank) {
-          _connectedRanks.push_back(otherRank.first);
-          _mesh->getInitialCommunicationMap().push_back(otherRank.first);
+        if (utils::MasterSlave::_rank == includedRank) {          
+          _mesh->getInitialConnectionMap().push_back(otherRank.first);
         }
       }
     }    
   }
   else
   { // Slave
-    utils::MasterSlave::_communication->broadcast(remoteParComSize, 0);
-    for (int i=0; i < remoteParComSize; i++)
+    
+    utils::MasterSlave::_communication->broadcast(receivedFeedbackMapSize, 0);
+    if (receivedFeedbackMapSize != 0)
     {
-      std::vector<int> initialFeedback;
-      initialFeedback.push_back(-1);
-      receivedFeedbackMap[i]=initialFeedback;
+      for (int i=0; i < receivedFeedbackMapSize; i++)
+      {
+        receivedFeedbackMap[i]={-1};
+      }
+      com::CommunicateBoundingBox(utils::MasterSlave::_communication).broadcastReceiveFeedbackMap(receivedFeedbackMap);      
     }
-    com::CommunicateBoundingBox(utils::MasterSlave::_communication).broadcastReceiveFeedbackMap(receivedFeedbackMap);
-
+       
     for (auto &otherRank : receivedFeedbackMap)
     {
       for (auto &includedRanks: otherRank.second)
       {
         if (utils::MasterSlave::_rank == includedRanks)
         {
-          _connectedRanks.push_back(otherRank.first);
-          _mesh->getInitialCommunicationMap().push_back(otherRank.first);
+          _mesh->getInitialConnectionMap().push_back(otherRank.first);
         }
       }
     }

@@ -75,21 +75,13 @@ private:
   
   mesh::Mesh::BoundingBox _bb;
 
-  // feedback from each rank which contains list of connected ranks of the other solver
-  std::vector<int> _feedback; 
-
-  // int : each rank, vect: connected ranks
-  mesh::Mesh::FeedbackMap  _feedbackMap; 
-
-  // list of connected ranks -> list of vertices
-  mesh::Mesh::FeedbackMap _localCommunicationMap; 
+    // list of connected ranks -> list of vertices
+  std::map<int, std::vector<int>> _localCommunicationMap; 
 
   int _dimensions;
 
   double _safetyFactor;
-
-  int _numberOfVertices = 0;  
-
+  
   GeometricFilter _geometricFilter;  
   
 };

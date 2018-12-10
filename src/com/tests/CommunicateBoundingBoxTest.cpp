@@ -146,7 +146,7 @@ BOOST_FIXTURE_TEST_CASE(SendAndReceiveFeedbackMap, testing::M2NFixture,
     return;
   
     std::vector<int> fb;
-    mesh::Mesh::FeedbackMap fbm;
+    std::map<int, std::vector<int>> fbm;
 
     for (int rank = 0; rank < 3; rank++) {
 
@@ -165,7 +165,7 @@ BOOST_FIXTURE_TEST_CASE(SendAndReceiveFeedbackMap, testing::M2NFixture,
     } else if (utils::Parallel::getProcessRank() == 1) {
 
       std::vector<int> fbCompare;
-      mesh::Mesh::FeedbackMap fbmCompare;
+      std::map<int, std::vector<int>> fbmCompare;
 
       for (int rank = 0; rank < 3; rank++) {
 
@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(BroadcastSendAndReceiveFeedbackMap,
 {
 
     std::vector<int> fb;
-    mesh::Mesh::FeedbackMap fbm;
+    std::map<int, std::vector<int>> fbm;
 
     for (int rank = 0; rank < 3; rank++) {
 
@@ -212,7 +212,7 @@ BOOST_AUTO_TEST_CASE(BroadcastSendAndReceiveFeedbackMap,
   } else {
 
     std::vector<int> fbCompare;
-    mesh::Mesh::FeedbackMap fbmCompare;   
+    std::map<int, std::vector<int>> fbmCompare;   
 
     for (int rank = 0; rank < 3; rank++) {
       for (int i = 0; i < 3; i++) {
