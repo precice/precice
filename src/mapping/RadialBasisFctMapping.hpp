@@ -119,8 +119,8 @@ RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: RadialBasisFctMapping
   Mapping ( constraint, dimensions ),
   _basisFunction ( function )
 {
-  setInputRequirement(VERTEX);
-  setOutputRequirement(VERTEX);
+  setInputRequirement(Mapping::MeshRequirement::VERTEX);
+  setOutputRequirement(Mapping::MeshRequirement::VERTEX);
   setDeadAxis(xDead, yDead, zDead);
 }
 

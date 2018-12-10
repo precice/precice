@@ -53,8 +53,6 @@ void SerialCouplingScheme::initialize
         setupDataMatrices(getSendData()); // Reserve memory and initialize data with zero
       }
       if (getPostProcessing().get() != nullptr) {
-        CHECK(getPostProcessing()->getDataIDs().size()<2,
-              "For serial coupling, the number of post-processing data vectors has to be 1 (or 0 for constant underrelaxation)");
         getPostProcessing()->initialize(getSendData()); // Reserve memory, initialize
       }
     }

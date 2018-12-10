@@ -31,8 +31,7 @@ public:
   template<typename VECTOR_T>
   void setCoords ( const VECTOR_T& coordinates );
 
-  /// Sets the coordinates of the vertex.
-  /// RValue variant
+  /// Sets the coordinates of the vertex, rvalue variant
   template<typename VECTOR_T>
   void setCoords ( VECTOR_T&& coordinates );
 
@@ -40,8 +39,7 @@ public:
   template<typename VECTOR_T>
   void setNormal ( const VECTOR_T& normal );
 
-  /// Sets the normal of the vertex.
-  /// RValue variant
+  /// Sets the normal of the vertex, rvalue variant
   template<typename VECTOR_T>
   void setNormal ( VECTOR_T&& normal );
 

@@ -472,5 +472,33 @@ BOOST_AUTO_TEST_CASE(MeshEquality)
     BOOST_TEST(mesh1 == mesh2);
 }
 
+BOOST_AUTO_TEST_CASE(MeshWKTPrint)
+{
+    Mesh mesh ("WKTMesh", 3, false);
+    Vertex& v0 = mesh.createVertex(Eigen::Vector3d(0., 0., 0.));
+    Vertex& v1 = mesh.createVertex(Eigen::Vector3d(1., 0., 0.));
+    Vertex& v2 = mesh.createVertex(Eigen::Vector3d(0., 0., 1.));
+    Vertex& v3 = mesh.createVertex(Eigen::Vector3d(1., 0., 1.));
+    Edge& e0 = mesh.createEdge ( v0, v1 ); // LINESTRING (0 0 0, 1 0 0)
+    Edge& e1 = mesh.createEdge ( v1, v2 ); // LINESTRING (1 0 0, 0 0 1)
+    Edge& e2 = mesh.createEdge ( v2, v0 ); // LINESTRING (0 0 1, 0 0 0)
+    Edge& e3 = mesh.createEdge ( v1, v3 ); // LINESTRING (1 0 0, 1 0 1)
+    Edge& e4 = mesh.createEdge ( v3, v2 ); // LINESTRING (1 0 1, 0 0 1)
+    mesh.createTriangle ( e0, e1, e2 );
+    mesh.createQuad (e0, e3, e4, e2);
+    mesh.computeState();
+    std::stringstream sstream;
+    sstream << mesh;
+    std::string reference(
+            "Mesh \"WKTMesh\", dimensionality = 3:\n"
+            "GEOMETRYCOLLECTION(\n"
+            "POINT (0 0 0), POINT (1 0 0), POINT (0 0 1), POINT (1 0 1),\n"
+            "LINESTRING (0 0 0, 1 0 0), LINESTRING (1 0 0, 0 0 1), LINESTRING (0 0 1, 0 0 0), LINESTRING (1 0 0, 1 0 1), LINESTRING (1 0 1, 0 0 1),\n"
+            "POLYGON ((0 0 0, 1 0 0, 0 0 1, 0 0 0)),\n"
+            "POLYGON ((0 0 0, 1 0 0, 1 0 1, 0 0 1, 0 0 0))\n"
+            ")");
+    BOOST_TEST(reference == sstream.str());
+}
+
 BOOST_AUTO_TEST_SUITE_END() // Mesh
 BOOST_AUTO_TEST_SUITE_END() // Mesh

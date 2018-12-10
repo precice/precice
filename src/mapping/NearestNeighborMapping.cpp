@@ -20,8 +20,8 @@ NearestNeighborMapping:: NearestNeighborMapping
 :
   Mapping(constraint, dimensions)
 {
-  setInputRequirement(VERTEX);
-  setOutputRequirement(VERTEX);
+  setInputRequirement(Mapping::MeshRequirement::VERTEX);
+  setOutputRequirement(Mapping::MeshRequirement::VERTEX);
 }
 
 void NearestNeighborMapping:: computeMapping()

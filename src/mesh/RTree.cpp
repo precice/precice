@@ -1,19 +1,21 @@
+#include "impl/RTree.hpp"
+
 #include "RTree.hpp"
 
 namespace precice {
 namespace mesh {
 
 // Initialize static member
-std::map<int, rtree::PtrRTree> precice::mesh::rtree::trees;
+std::map<int, rtree::PtrRTree> precice::mesh::rtree::_vertex_trees;
 // Initialize static member
 std::map<int, PtrPrimitiveRTree> precice::mesh::rtree::_primitive_trees;
 
-rtree::PtrRTree rtree::getVertexRTree(PtrMesh mesh)
+rtree::PtrRTree rtree::getVertexRTree(const PtrMesh& mesh)
 {
   RTreeParameters params;
   VertexIndexGetter ind(mesh->vertices());
     
-  auto result = trees.emplace(std::piecewise_construct,
+  auto result = _vertex_trees.emplace(std::piecewise_construct,
                               std::forward_as_tuple(mesh->getID()),
                               std::forward_as_tuple(std::make_shared<VertexRTree>(params, ind)));
     
@@ -26,24 +28,23 @@ rtree::PtrRTree rtree::getVertexRTree(PtrMesh mesh)
   return tree;
 }
 
-PtrPrimitiveRTree rtree::getPrimitiveRTree(PtrMesh mesh)
+PtrPrimitiveRTree rtree::getPrimitiveRTree(const PtrMesh& mesh)
 {
   assertion(mesh, "Empty meshes are not allowed.");
   auto iter = _primitive_trees.find(mesh->getID());
   if (iter != _primitive_trees.end()) {
     return iter->second;
-  } else {
-    auto treeptr = std::make_shared<PrimitiveRTree>(indexMesh(*mesh));
-    _primitive_trees.insert(std::make_pair(
-        mesh->getID(),
-        treeptr));
-    return treeptr;
   }
+  auto treeptr = std::make_shared<PrimitiveRTree>(indexMesh(*mesh));
+  _primitive_trees.emplace(std::piecewise_construct,
+          std::forward_as_tuple(mesh->getID()),
+          std::forward_as_tuple(treeptr));
+  return treeptr;
 }
 
 void rtree::clear(Mesh &mesh)
 {
-  trees.erase(mesh.getID());
+  _vertex_trees.erase(mesh.getID());
   _primitive_trees.erase(mesh.getID());
 }
 
@@ -65,6 +66,18 @@ Box3d getEnclosingBox(Vertex const & middlePoint, double sphereRadius)
   return box;
 }
 
+PrimitiveRTree indexMesh(const Mesh &mesh)
+{
+  using namespace impl;
+
+  AABBGenerator  gen{mesh};
+  PrimitiveRTree tree;
+  indexPrimitive(tree, gen, mesh.vertices());
+  indexPrimitive(tree, gen, mesh.edges());
+  indexPrimitive(tree, gen, mesh.triangles());
+  indexPrimitive(tree, gen, mesh.quads());
+  return tree;
+}
 
 std::ostream &operator<<(std::ostream &out, Primitive val)
 {
