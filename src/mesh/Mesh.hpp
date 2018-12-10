@@ -52,9 +52,6 @@ public:
   /// set of boundingboxes owned by each rank gathered in the master rank.
   /// A map : each rank -> boundingbox around it's mesh partition.
   typedef std::map<int,BoundingBox>              BoundingBoxMap;
-  /// a map from rank -> a vector of ranks : shows each rank is connected
-  /// to which ranks of the other participant. 
-  typedef std::map<int, std::vector<int>>        FeedbackMap; 
 
   /// A mapping from rank to used (not necessarily owned) vertex IDs
   using VertexDistribution = std::map<int, std::vector<int>>;
@@ -268,9 +265,9 @@ public:
   }
 
   /// Returns a vector of connected ranks
-  std::vector<int> & getInitialCommunicationMap()
+  std::vector<int> & getInitialConnectionMap()
   {
-    return _initialCommunicationMap;           
+    return _initialConnectionMap;           
   }
   
   /// Returns a mapping from remote local connected ranks to the corresponding vertex IDs
@@ -363,7 +360,7 @@ private:
    * @brief each rank stores list of connected ranks. 
    * Later in M2N package, this will be used to create initial communication channels. 
    */
-  std::vector<int> _initialCommunicationMap;
+  std::vector<int> _initialConnectionMap;
 
   /**
    * @brief each rank stores list of connected ranks and corresponding vertex IDs here. 

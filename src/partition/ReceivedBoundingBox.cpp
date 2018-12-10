@@ -57,6 +57,12 @@ void ReceivedBoundingBox::computeBoundingBox()
   // handle coupling mode first (i.e. serial participant)
 
 
+  // feedback from each rank which contains list of connected ranks of the other solver
+  std::vector<int> _feedback; 
+
+  // int : each rank, vect: connected ranks
+  std::map<int, std::vector<int>>  _feedbackMap; 
+  
   if (not utils::MasterSlave::_slaveMode && not utils::MasterSlave::_masterMode)
   { 
     //some code here
@@ -66,9 +72,7 @@ void ReceivedBoundingBox::computeBoundingBox()
   { // Master
     assertion(utils::MasterSlave::_rank==0);
     assertion(utils::MasterSlave::_size>1);
-
-    // sending this participant communicator size to other master
-    _m2n->getMasterCommunication()->send(utils::MasterSlave::_size , 0);
+    
     utils::MasterSlave::_communication->broadcast(_remoteParComSize);
     com::CommunicateBoundingBox(utils::MasterSlave::_communication).broadcastSendBoundingBoxMap(_globalBB);
 
@@ -88,17 +92,30 @@ void ReceivedBoundingBox::computeBoundingBox()
     }
 
     // master first adds ist feedback to feedbackmap
-    _feedbackMap[0]=_feedback;
+    if(_feedback.size() != 0)
+    {
+      _feedbackMap[0]=_feedback;      
+    }    
 
     // master receives feedbacks from slaves and put them into the feedbackmap
     for (int rank_slave=1; rank_slave < utils::MasterSlave::_size ; rank_slave++)
     {
-      utils::MasterSlave::_communication->receive(_feedback, rank_slave);         
-      _feedbackMap[rank_slave]=_feedback;
+      int feedbackSize = 0;
+      utils::MasterSlave::_communication->receive(feedbackSize, rank_slave);
+      if (feedbackSize != 0)
+      {
+        utils::MasterSlave::_communication->receive(_feedback, rank_slave);         
+        _feedbackMap[rank_slave]=_feedback;
+      }        
     }
 
     // master sends feedbackmap to other master
-    com::CommunicateBoundingBox(_m2n->getMasterCommunication()).sendFeedbackMap(_feedbackMap,0);             
+    int feedbackSize = _feedbackMap.size();
+    _m2n->getMasterCommunication()->send(feedbackSize, 0);
+    if (_feedbackMap.size() != 0)
+    {
+      com::CommunicateBoundingBox(_m2n->getMasterCommunication()).sendFeedbackMap(_feedbackMap,0);
+    }
   }
   else if (utils::MasterSlave::_slaveMode)
   {
@@ -121,21 +138,22 @@ void ReceivedBoundingBox::computeBoundingBox()
       }
     }
 
+    // send feedback size to master
+    int feedbackSize = _feedback.size();
+    utils::MasterSlave::_communication->send(feedbackSize, 0);
+    
     // to prevent sending empty vector!
-    if(_feedback.size() == 0)
+    if(_feedback.size() != 0)
     {
-      _feedback.push_back(-1);
-    }
-
-    //send feedback to master
-    utils::MasterSlave::_communication->send(_feedback, 0);
+      //send feedback to master
+      utils::MasterSlave::_communication->send(_feedback, 0);
+    }   
     
   }  
 }
 
 bool ReceivedBoundingBox::compareBoundingBox(mesh::Mesh::BoundingBox currentBB, mesh::Mesh::BoundingBox receivedBB)
 {
-  //int sizeofBB = currentBB.size();
   bool intersect= true;
 
   for (int i=0; i < _dimensions; i++) {

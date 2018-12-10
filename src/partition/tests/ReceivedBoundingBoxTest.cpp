@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(TestCommunicateBoundingBox, * testing::OnSize(4))
   if (utils::Parallel::getProcessRank() == 0)
   {
     int remoteParComSize = 0;
-    mesh::Mesh::FeedbackMap receivedFeedbackMap;
+    std::map<int, std::vector<int>> receivedFeedbackMap;
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals));     
     m2n->getMasterCommunication()->send(3, 0);     
     com::CommunicateBoundingBox(m2n->getMasterCommunication()).sendBoundingBoxMap(sendGlobalBB, 0 );

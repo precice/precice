@@ -43,8 +43,6 @@ private:
    
   int _dimensions;
   
-  std::vector<int> _connectedRanks;
-  
   double _safetyFactor;
   
 };

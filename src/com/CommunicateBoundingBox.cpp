@@ -1,6 +1,6 @@
 #include "CommunicateBoundingBox.hpp"
 #include "Communication.hpp"
-#include <vector>
+
 
 
 namespace precice
@@ -60,7 +60,7 @@ void CommunicateBoundingBox::receiveBoundingBoxMap(
 }
 
 void CommunicateBoundingBox::sendFeedbackMap(
-  mesh::Mesh::FeedbackMap &fbm,
+  std::map<int, std::vector<int>> &fbm,
   int                         rankReceiver)
 {
   TRACE(rankReceiver);
@@ -72,7 +72,7 @@ void CommunicateBoundingBox::sendFeedbackMap(
 }
 
 void CommunicateBoundingBox::receiveFeedbackMap(
-  mesh::Mesh::FeedbackMap &fbm,
+  std::map<int, std::vector<int>> &fbm,
   int                         rankSender)
 {
   TRACE(rankSender);
@@ -110,7 +110,7 @@ void CommunicateBoundingBox::broadcastReceiveBoundingBoxMap(
 }
 
 void CommunicateBoundingBox::broadcastSendFeedbackMap(
-    mesh::Mesh::FeedbackMap &fbm)
+  std::map<int, std::vector<int>> &fbm)
 {
   for (auto &rank : fbm) {
     _communication->broadcast(rank.second);
@@ -118,7 +118,7 @@ void CommunicateBoundingBox::broadcastSendFeedbackMap(
 }
 
 void CommunicateBoundingBox::broadcastReceiveFeedbackMap(
-    mesh::Mesh::FeedbackMap &fbm)
+  std::map<int, std::vector<int>> &fbm)
 {
   for (auto &rank : fbm) {
     _communication->broadcast(rank.second,0);

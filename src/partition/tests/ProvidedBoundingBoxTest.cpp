@@ -310,7 +310,7 @@ BOOST_AUTO_TEST_CASE(TestComputeBoundingBox, * testing::OnSize(4))
     m2n->getMasterCommunication()->send(3, 0);
 
     // construct feedbackmap
-    mesh::Mesh::FeedbackMap sendFeedbackMap;
+    std::map<int, std::vector<int>> sendFeedbackMap;
     sendFeedbackMap[0].push_back(1);
     sendFeedbackMap[0].push_back(2);
     sendFeedbackMap[1].push_back(0);
@@ -335,21 +335,21 @@ BOOST_AUTO_TEST_CASE(TestComputeBoundingBox, * testing::OnSize(4))
 
     if(utils::Parallel::getProcessRank() == 1)
     {//Master
-      BOOST_TEST(pSolidzMesh->getInitialCommunicationMap().size() == 2);
-      BOOST_TEST(pSolidzMesh->getInitialCommunicationMap()[0] == 1);
-      BOOST_TEST(pSolidzMesh->getInitialCommunicationMap()[1] == 2);    
+      BOOST_TEST(pSolidzMesh->getInitialConnectionMap().size() == 2);
+      BOOST_TEST(pSolidzMesh->getInitialConnectionMap()[0] == 1);
+      BOOST_TEST(pSolidzMesh->getInitialConnectionMap()[1] == 2);    
     }   
     else if(utils::Parallel::getProcessRank() == 2)
     {//Slave1
-      BOOST_TEST(pSolidzMesh->getInitialCommunicationMap().size() == 2);
-      BOOST_TEST(pSolidzMesh->getInitialCommunicationMap()[0] == 0);
-      BOOST_TEST(pSolidzMesh->getInitialCommunicationMap()[1] == 2);    
+      BOOST_TEST(pSolidzMesh->getInitialConnectionMap().size() == 2);
+      BOOST_TEST(pSolidzMesh->getInitialConnectionMap()[0] == 0);
+      BOOST_TEST(pSolidzMesh->getInitialConnectionMap()[1] == 2);    
     }
     else if(utils::Parallel::getProcessRank() == 3)
     {//Slave2
-      BOOST_TEST(pSolidzMesh->getInitialCommunicationMap().size() == 2);
-      BOOST_TEST(pSolidzMesh->getInitialCommunicationMap()[0] == 0);
-      BOOST_TEST(pSolidzMesh->getInitialCommunicationMap()[1] == 1);    
+      BOOST_TEST(pSolidzMesh->getInitialConnectionMap().size() == 2);
+      BOOST_TEST(pSolidzMesh->getInitialConnectionMap()[0] == 0);
+      BOOST_TEST(pSolidzMesh->getInitialConnectionMap()[1] == 1);    
     }
     
   }  
