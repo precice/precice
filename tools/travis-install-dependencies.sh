@@ -4,7 +4,6 @@
 # if not already cached by Travis.
 
 set -x
-set -e
 
 LOCAL_INSTALL=$1
 

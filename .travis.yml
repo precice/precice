@@ -1,5 +1,5 @@
 language: cpp
-dist: trusty
+dist: xenial
 sudo: false
 
 compiler:
@@ -8,15 +8,21 @@ compiler:
 
 addons:
   apt:
-    sources:
-      - ubuntu-toolchain-r-test
     packages:
-      - g++-6
-      - libopenmpi-dev
-      - openmpi-bin
-      - python-numpy
+      - cmake
+      - clang
+      - mpich
+      - libmpich-dev
+      - pkg-config
       - libblas-dev
       - liblapack-dev
+      - libeigen3-dev
+      - libxml2-dev
+      - python-dev
+      - python-numpy
+cache:
+  directories:
+    - $LOCAL_INSTALL
 
 env:
   global:
@@ -25,23 +31,15 @@ env:
     - LOCAL_INSTALL="$HOME/local"
     - PETSC_ARCH=arch-linux2-c-debug
     - PETSC_DIR=$LOCAL_INSTALL/petsc
-    - CPLUS_INCLUDE_PATH="$PETSC_DIR/include:$PETSC_DIR/$PETSC_ARCH/include:$LOCAL_INSTALL/include:$CPLUS_INCLUDE_PATH"
-    - LD_LIBRARY_PATH="$PETSC_DIR/$PETSC_ARCH/lib:$LOCAL_INSTALL/lib:$LD_LIBRARY_PATH"
-    - LIBRARY_PATH="$PETSC_DIR/$PETSC_ARCH/lib:$LOCAL_INSTALL/lib:$LIBRARY_PATH"
-    - PYTHONPATH="$PETSC_DIR/$PETSC_ARCH/lib:/usr/lib/python2.7:/usr/lib/python2.7/dist-packages:/usr/lib/python2.7/plat-x86_64-linux-gnu"
+    - BOOST_ROOT=$LOCAL_INSTALL
 
   matrix:
     - MPI=on PETSC=on
     - MPI=on PETSC=off
     - MPI=off PETSC=off
 
-cache:
-  directories:
-    - $LOCAL_INSTALL
 
 before_install:
-  - if [ "$CXX" = "g++" ]; then export CXX="g++-6" && export CC="gcc-6"; fi
-  - export OMPI_CXX=$CXX
   - if [ "$MPI" = "on" ]; then export CXX="mpicxx"; fi
 
 install:
@@ -52,12 +50,13 @@ before_script:
 
 script:
   - cd $TRAVIS_BUILD_DIR
-  - scons -j 2 petsc=$PETSC mpi=$MPI python=on compiler=$CXX staticlib bin solib tests symlink
+  - cmake $PRECICE_ROOT
+  - make -j 2
   - cd tests
-  - if [ "$MPI" = "off" ]; then ../build/last/testprecice -x -r detailed > boost-test-output; fi
-  - if [ "$MPI" = "on"  ]; then mpirun.openmpi --mca btl_base_warn_component_unused 0 -n 4 --output-filename boost-test-output  ../build/last/testprecice -r detailed; fi
+  - if [ "$MPI" = "off" ]; then ../build/testprecice -x -r detailed > boost-test-output; fi
+  - if [ "$MPI" = "on"  ]; then mpirun -n 4 ../build/testprecice -x -r detailed > boost-test-output 2> boost-test-error; fi
 
 after_failure:
   - cd $TRAVIS_BUILD_DIR
   - cat config.log
-  - cat -n ./tests/boost-test-output*
+  - cat -n ./tests/boost-test-*

@@ -1,0 +1,9 @@
+get_filename_component(PRECICE_CMAKE_DIR ${CMAKE_CURRENT_LIST_FILE} PATH)
+include(CMakeFindDependencyMacro)
+
+list(APPEND CMAKE_MODULE_PATH ${PRECICE_CMAKE_DIR})
+find_dependency(Eigen3 3.2 REQUIRED)
+
+if (NOT TARGET preCICE)
+    include("${PRECICE_CMAKE_DIR}/preCICETargets.cmake")
+endif()
