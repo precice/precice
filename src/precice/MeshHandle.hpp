@@ -3,7 +3,6 @@
 #include <vector>
 #include <cstddef>
 #include <iterator>
-#include <memory>
 
 namespace precice {
   namespace mesh {
@@ -61,14 +60,14 @@ public:
 
   bool operator!= ( const VertexIterator& other ) const;
 
-  void swap(VertexIterator& other) noexcept;
+  void swap(VertexIterator& other);
 
 private:
   using Impl = impl::VertexIteratorImplementation;
-  std::unique_ptr<Impl> _impl;
+  Impl* _impl;
 };
 
-void swap(VertexIterator& lhs, VertexIterator& rhs) noexcept;
+void swap(VertexIterator& lhs, VertexIterator& rhs);
 
 /// Offers methods begin() and end() to iterate over all vertices.
 class VertexHandle
@@ -130,14 +129,14 @@ public:
 
   bool operator!= ( const EdgeIterator& other ) const;
 
-  void swap(EdgeIterator& other) noexcept;
+  void swap(EdgeIterator& other);
 
 private:
   using Impl = impl::EdgeIteratorImplementation;
-  std::unique_ptr<Impl> _impl;
+  Impl* _impl;
 };
 
-void swap(EdgeIterator& lhs, EdgeIterator& rhs) noexcept;
+void swap(EdgeIterator& lhs, EdgeIterator& rhs);
 
 /**
  * @brief Offers methods begin() and end() to iterate over all edges.
@@ -206,14 +205,14 @@ public:
 
   bool operator!= ( const TriangleIterator& other ) const;
 
-  void swap(TriangleIterator& other) noexcept;
+  void swap(TriangleIterator& other);
 
 private:
   using Impl = impl::TriangleIteratorImplementation;
-  std::unique_ptr<Impl> _impl;
+  Impl* _impl;
 };
 
-void swap(TriangleIterator& lhs, TriangleIterator& rhs) noexcept;
+void swap(TriangleIterator& lhs, TriangleIterator& rhs);
 
 /**
  * @brief Offers methods begin() and end() to iterate over all triangles.
