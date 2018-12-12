@@ -477,6 +477,10 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping
     configuredMapping.mapping = PtrMapping (new PetRadialBasisFctMapping<CompactPolynomialC6>(constraintValue, dimensions, CompactPolynomialC6(supportRadius),
                                                                                               xDead, yDead, zDead, solverRtol, polynomial, preallocation) );
   }
+# else
+  else if (type.find("petrbf-") == 0) {
+    ERROR("PETRBF mappings are not available as preCICE was built without PETSc.");
+  }
 # endif
   else {
     ERROR("Unknown mapping type!");
