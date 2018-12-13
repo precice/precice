@@ -427,20 +427,20 @@ void PointToPointCommunication::acceptPreConnection(std::string const &acceptorN
     assertion(utils::MasterSlave::_slaveMode);
   }
 
-  std::vector<int> localCommunicationMap = _mesh->getInitialConnectionMap();
+  std::vector<int> localConnectionMap = _mesh->getInitialConnectionMap();
 
 // Print `communicationMap'.
 #ifdef P2P_LCM_PRINT
   e.stop(true);
-  print(localCommunicationMap);
+  print(localConnectionMap);
   e.start(true);
 #endif
 
 // Print statistics of `communicationMap'.
 #ifdef P2P_LCM_PRINT_STATS
   e.stop(true);
-  printCommunicationPartnerCountStats(localCommunicationMap);
-  printLocalIndexCountStats(localCommunicationMap);
+  printCommunicationPartnerCountStats(localConnectionMap);
+  printLocalIndexCountStats(localConnectionMap);
   e.start(true);
 #endif
 
@@ -461,7 +461,7 @@ void PointToPointCommunication::acceptPreConnection(std::string const &acceptorN
   }
 #endif
 
-  if (localCommunicationMap.empty()) {
+  if (localConnectionMap.empty()) {
     _isConnected = true;
     return;
   }
@@ -480,16 +480,16 @@ void PointToPointCommunication::acceptPreConnection(std::string const &acceptorN
       acceptorName,
       requesterName,
       utils::MasterSlave::_rank,
-      localCommunicationMap.size());
+      localConnectionMap.size());
 
-  _mappings.reserve(localCommunicationMap.size());
+  _mappings.reserve(localConnectionMap.size());
 
   // we need to create dummyindices because at this point we neither need list
   // of indices nor have them, But we want to keep using same _mappings data structure
   std::vector<int> dummyIndices;
   dummyIndices.push_back(-1);
 
-  for (auto & comMap : localCommunicationMap) {
+  for (auto & comMap : localConnectionMap) {
     int globalRequesterRank = comMap;
     
     auto indices = std::move(dummyIndices);
@@ -650,20 +650,20 @@ void PointToPointCommunication::requestPreConnection(std::string const &acceptor
     assertion(utils::MasterSlave::_slaveMode);
   }
 
-  std::vector<int> localCommunicationMap = _mesh->getInitialConnectionMap();
+  std::vector<int> localConnectionMap = _mesh->getInitialConnectionMap();
 
 // Print `communicationMap'.
 #ifdef P2P_LCM_PRINT
   e.stop(true);
-  print(localCommunicationMap);
+  print(localConnectionMap);
   e.start(true);
 #endif
 
 // Print statistics of `communicationMap'.
 #ifdef P2P_LCM_PRINT_STATS
   e.stop(true);
-  printCommunicationPartnerCountStats(localCommunicationMap);
-  printLocalIndexCountStats(localCommunicationMap);
+  printCommunicationPartnerCountStats(localConnectionMap);
+  printLocalIndexCountStats(localConnectionMap);
   e.start(true);
 #endif
 
@@ -676,17 +676,17 @@ void PointToPointCommunication::requestPreConnection(std::string const &acceptor
   }
 #endif
 
-  if (localCommunicationMap.empty()) {
+  if (localConnectionMap.empty()) {
     _isConnected = true;
     return;
   }
 
   std::vector<com::PtrRequest> requests;
-  requests.reserve(localCommunicationMap.size());
-  _mappings.reserve(localCommunicationMap.size());
+  requests.reserve(localConnectionMap.size());
+  _mappings.reserve(localConnectionMap.size());
 
   std::set<int> acceptingRanks;
-  for (auto &i : localCommunicationMap)
+  for (auto &i : localConnectionMap)
     acceptingRanks.emplace(i);
 
   auto c = _communicationFactory->newCommunication();
@@ -701,7 +701,7 @@ void PointToPointCommunication::requestPreConnection(std::string const &acceptor
   // of indices nor have them, But we want to keep using same _mappings data structure  
   std::vector<int> dummyIndices;
   dummyIndices.push_back(-1);
-  for (auto &i : localCommunicationMap) {
+  for (auto &i : localConnectionMap) {
     auto globalAcceptorRank = i;
     auto indices            = std::move(dummyIndices);
 
@@ -718,22 +718,6 @@ void PointToPointCommunication::requestPreConnection(std::string const &acceptor
     _mappings.push_back({globalAcceptorRank, std::move(indices), c, com::PtrRequest(), {}});
   }
   _isConnected = true;
-}
-
-void PointToPointCommunication::updateAcceptorCommunicationMap()
-{
-  std::map<int, std::vector<int>> localCommunicationMap = _mesh->getCommunicationMap();  
-  for (size_t localRequesterRank = 0; localRequesterRank < localCommunicationMap.size(); ++localRequesterRank) {
-    _mappings[localRequesterRank].indices = std::move(localCommunicationMap[localRequesterRank]);    
-  }  
-}
-
-void PointToPointCommunication::updateRequesterCommunicationMap()
-{
-  std::map<int, std::vector<int>> localCommunicationMap = _mesh->getCommunicationMap();
-  for (size_t localAcceptorRank = 0; localAcceptorRank < localCommunicationMap.size(); ++localAcceptorRank) {
-    _mappings[localAcceptorRank].indices = std::move(localCommunicationMap[localAcceptorRank]);    
-  }  
 }
 
 void PointToPointCommunication::closeConnection()
@@ -814,35 +798,6 @@ void PointToPointCommunication::receive(double *itemsToReceive,
       }
       i++;
     }
-  }
-}
-
-void PointToPointCommunication::sendMesh(mesh::Mesh &mesh)
-{  
-  for (auto &mapping : _mappings) {
-    com::CommunicateMesh(mapping.communication).sendMesh(mesh, mapping.remoteRank);
-  }  
-}
-
-void PointToPointCommunication::receiveMesh(mesh::Mesh &mesh)
-{  
-  for (auto &mapping : _mappings) {
-    com::CommunicateMesh(mapping.communication).receiveMesh(mesh, mapping.remoteRank);
-  }  
-}
-
-
-void PointToPointCommunication::sendCommunicationMap(std::map<int, std::vector<int>> &localCommunicationMap)
-{
-  for (auto &mapping : _mappings) {
-    mapping.communication->send(localCommunicationMap[mapping.remoteRank], mapping.remoteRank);
-  }
-}
-
-void PointToPointCommunication::receiveCommunicationMap(std::map<int, std::vector<int>> &localCommunicationMap)
-{
-  for (auto &mapping : _mappings) {
-    mapping.communication->receive(localCommunicationMap[mapping.remoteRank], mapping.remoteRank);
   }
 }
 

@@ -68,19 +68,6 @@ public:
   virtual void requestPreConnection(std::string const &acceptorName,
                                     std::string const &requesterName);
 
-
-  /** This function should be called by connection accepter to update the vertex list in the 
-      communication map, which has be filled previously with demo 
-      rank (-1)
-  */
-  virtual void updateAcceptorCommunicationMap();
-
-  /** This function should be called by connection requester to update the vertex list in the 
-      communication map, which has be filled previously with demo 
-      rank (-1)
-  */
-  virtual void updateRequesterCommunicationMap();
-
   /**
    * @brief Disconnects from communication space, i.e. participant.
    *
@@ -106,29 +93,6 @@ public:
   virtual void receive(double *itemsToReceive,
                        size_t  size,
                        int     valueDimension = 1);
-  
-  /**
-   * All ranks Send their partition to remote local ranks.
-   */
-  virtual void sendMesh(mesh::Mesh &mesh);
-  
-  /**
-   * All ranks receive mesh partition from remote local ranks.
-   */
-  virtual void receiveMesh(
-    mesh::Mesh &mesh);
-
-  /**
-   * All ranks Send their local communication maps to connected ranks
-   */
-  virtual void sendCommunicationMap(
-    std::map<int, std::vector<int>> &localCommunicationMap);
-
-  /**
-   * Each rank revives local communication maps from connected ranks
-   */
-  virtual void receiveCommunicationMap(
-    std::map<int, std::vector<int>> &localCommunicationMap) ;
 
 private:
   logging::Logger _log{"m2n::PointToPointCommunication"};
