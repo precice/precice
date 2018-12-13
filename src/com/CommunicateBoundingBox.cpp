@@ -1,8 +1,6 @@
 #include "CommunicateBoundingBox.hpp"
 #include "Communication.hpp"
 
-
-
 namespace precice
 {
 namespace com
@@ -42,6 +40,7 @@ void CommunicateBoundingBox::sendBoundingBoxMap(
     int                         rankReceiver)
 {
   TRACE(rankReceiver);
+  _communication->send((int) bbm.size(), rankReceiver);
 
   for (const auto &bb : bbm) {
     sendBoundingBox(bb.second, rankReceiver);
@@ -53,6 +52,9 @@ void CommunicateBoundingBox::receiveBoundingBoxMap(
     int                         rankSender)
 {
   TRACE(rankSender);
+  int sizeOfReceivingMap;
+  _communication->receive(sizeOfReceivingMap, rankSender);
+  assertion(sizeOfReceivingMap == (int) bbm.size());
 
   for (auto &bb : bbm) {
     receiveBoundingBox(bb.second, rankSender);
@@ -60,35 +62,43 @@ void CommunicateBoundingBox::receiveBoundingBoxMap(
 }
 
 void CommunicateBoundingBox::sendFeedbackMap(
-  std::map<int, std::vector<int>> &fbm,
-  int                         rankReceiver)
+    std::map<int, std::vector<int>> &fbm,
+    int                              rankReceiver)
 {
   TRACE(rankReceiver);
+  _communication->send((int) fbm.size(), rankReceiver);
 
   for (const auto &vect : fbm) {
-   _communication->send(vect.first, rankReceiver);
-   _communication->send(vect.second, rankReceiver);
-  }  
+    _communication->send(vect.first, rankReceiver);
+    _communication->send(vect.second, rankReceiver);
+  }
 }
 
+///@todo needs some rewrite eventually. do we assume that the ranks are ordered or not? maybe change to vector
 void CommunicateBoundingBox::receiveFeedbackMap(
-  std::map<int, std::vector<int>> &fbm,
-  int                         rankSender)
+    std::map<int, std::vector<int>> &fbm,
+    int                              rankSender)
 {
   TRACE(rankSender);
+  int sizeOfReceivingMap;
+  _communication->receive(sizeOfReceivingMap, rankSender);
+  assertion(sizeOfReceivingMap == (int) fbm.size());
 
-  for (const auto &vect : fbm) {
-    int rank;
+  for (size_t i = 0; i < fbm.size(); ++i) {
+    int              rank;
     std::vector<int> connected_ranks;
     _communication->receive(rank, rankSender);
+    assertion((int) i == rank);
     _communication->receive(connected_ranks, rankSender);
-    fbm[rank]=connected_ranks;
-  }  
+    fbm[rank] = connected_ranks;
+  }
 }
 
 void CommunicateBoundingBox::broadcastSendBoundingBoxMap(
     mesh::Mesh::BoundingBoxMap &bbm)
 {
+  TRACE();
+  _communication->broadcast((int) bbm.size());
 
   for (const auto &rank : bbm) {
     for (const auto &dimension : rank.second) {
@@ -101,6 +111,11 @@ void CommunicateBoundingBox::broadcastSendBoundingBoxMap(
 void CommunicateBoundingBox::broadcastReceiveBoundingBoxMap(
     mesh::Mesh::BoundingBoxMap &bbm)
 {
+  TRACE();
+  int sizeOfReceivingMap;
+  _communication->broadcast(sizeOfReceivingMap, 0);
+  assertion(sizeOfReceivingMap == (int) bbm.size());
+
   for (auto &rank : bbm) {
     for (auto &dimension : rank.second) {
       _communication->broadcast(dimension.first, 0);
@@ -110,18 +125,26 @@ void CommunicateBoundingBox::broadcastReceiveBoundingBoxMap(
 }
 
 void CommunicateBoundingBox::broadcastSendFeedbackMap(
-  std::map<int, std::vector<int>> &fbm)
+    std::map<int, std::vector<int>> &fbm)
 {
+  TRACE();
+  _communication->broadcast((int) fbm.size());
+
   for (auto &rank : fbm) {
     _communication->broadcast(rank.second);
   }
 }
 
 void CommunicateBoundingBox::broadcastReceiveFeedbackMap(
-  std::map<int, std::vector<int>> &fbm)
+    std::map<int, std::vector<int>> &fbm)
 {
+  TRACE();
+  int sizeOfReceivingMap;
+  _communication->broadcast(sizeOfReceivingMap, 0);
+  assertion(sizeOfReceivingMap == (int) fbm.size());
+
   for (auto &rank : fbm) {
-    _communication->broadcast(rank.second,0);
+    _communication->broadcast(rank.second, 0);
   }
 }
 
