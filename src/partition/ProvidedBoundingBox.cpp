@@ -30,40 +30,40 @@ void ProvidedBoundingBox::communicateBoundingBox()
 {
   TRACE();
 
-  if (_hasToSend) {
+  if (!_hasToSend)
+    return;
 
-    // each rank sends its bb to master
-    if (utils::MasterSlave::_slaveMode) { //slave
-      com::CommunicateBoundingBox(utils::MasterSlave::_communication).sendBoundingBox(_mesh->getBoundingBox(), 0);
-    } else { // Master
+  // each rank sends its bb to master
+  if (utils::MasterSlave::_slaveMode) { //slave
+    com::CommunicateBoundingBox(utils::MasterSlave::_communication).sendBoundingBox(_mesh->getBoundingBox(), 0);
+  } else { // Master
 
-      assertion(utils::MasterSlave::_rank == 0);
-      assertion(utils::MasterSlave::_size > 1);
+    assertion(utils::MasterSlave::_rank == 0);
+    assertion(utils::MasterSlave::_size > 1);
 
-      // to store the collection of bounding boxes
-      mesh::Mesh::BoundingBoxMap bbm;
+    // to store the collection of bounding boxes
+    mesh::Mesh::BoundingBoxMap bbm;
 
-      // initialize bbm with dummy data
-      mesh::Mesh::BoundingBox initialBB;
-      for (int i = 0; i < _dimensions; i++) {
-        initialBB.push_back(std::make_pair(-1, -1));
-      }
-      for (int rank = 0; rank < utils::MasterSlave::_size; rank++) {
-        bbm[rank] = initialBB;
-      }
-
-      // master stores its bb into bbm
-      bbm[0] = _mesh->getBoundingBox();
-
-      // master receives bbs from slaves and stores them in bbm
-      for (int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++) {
-        com::CommunicateBoundingBox(utils::MasterSlave::_communication).receiveBoundingBox(bbm[rankSlave], rankSlave);
-      }
-
-      // master sends number of ranks and bbm to the other master
-      _m2n->getMasterCommunication()->send(utils::MasterSlave::_size, 0);
-      com::CommunicateBoundingBox(_m2n->getMasterCommunication()).sendBoundingBoxMap(bbm, 0);
+    // initialize bbm with dummy data
+    mesh::Mesh::BoundingBox initialBB;
+    for (int i = 0; i < _dimensions; i++) {
+      initialBB.push_back(std::make_pair(-1, -1));
     }
+    for (int rank = 0; rank < utils::MasterSlave::_size; rank++) {
+      bbm[rank] = initialBB;
+    }
+
+    // master stores its bb into bbm
+    bbm[0] = _mesh->getBoundingBox();
+
+    // master receives bbs from slaves and stores them in bbm
+    for (int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++) {
+      com::CommunicateBoundingBox(utils::MasterSlave::_communication).receiveBoundingBox(bbm[rankSlave], rankSlave);
+    }
+
+    // master sends number of ranks and bbm to the other master
+    _m2n->getMasterCommunication()->send(utils::MasterSlave::_size, 0);
+    com::CommunicateBoundingBox(_m2n->getMasterCommunication()).sendBoundingBoxMap(bbm, 0);
   }
 }
 
