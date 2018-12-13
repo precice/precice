@@ -72,50 +72,51 @@ void ProvidedBoundingBox::computeBoundingBox()
   TRACE();
 
   // size of the feedbackmap that is received here
-  int                             receivedFeedbackMapSize = 0;
-  std::map<int, std::vector<int>> receivedFeedbackMap;
+  int remoteConnectionMapSize = 0;
+
+  std::map<int, std::vector<int>> remoteConnectionMap;
 
   if (not utils::MasterSlave::_slaveMode) { //Master
     assertion(utils::MasterSlave::_size > 1);
 
     // master receives feedback map (map of other participant ranks -> connected ranks at this participant)
     // from other participants master
-    _m2n->getMasterCommunication()->receive(receivedFeedbackMapSize, 0);
-    for (int i = 0; i < receivedFeedbackMapSize; i++) {
-      receivedFeedbackMap[i] = {-1};
+    _m2n->getMasterCommunication()->receive(remoteConnectionMapSize, 0);
+    for (int i = 0; i < remoteConnectionMapSize; i++) {
+      remoteConnectionMap[i] = {-1};
     }
-    if (receivedFeedbackMapSize != 0)
-      com::CommunicateBoundingBox(_m2n->getMasterCommunication()).receiveFeedbackMap(receivedFeedbackMap, 0);
+    if (remoteConnectionMapSize != 0)
+      com::CommunicateBoundingBox(_m2n->getMasterCommunication()).receiveConnectionMap(remoteConnectionMap, 0);
 
     // broadcast the received feedbackMap
-    utils::MasterSlave::_communication->broadcast(receivedFeedbackMapSize);
-    if (receivedFeedbackMapSize != 0) {
-      com::CommunicateBoundingBox(utils::MasterSlave::_communication).broadcastSendFeedbackMap(receivedFeedbackMap);
+    utils::MasterSlave::_communication->broadcast(remoteConnectionMapSize);
+    if (remoteConnectionMapSize != 0) {
+      com::CommunicateBoundingBox(utils::MasterSlave::_communication).broadcastSendConnectionMap(remoteConnectionMap);
     }
 
     // master checks which ranks are connected to it
-    for (auto &remoteRank : receivedFeedbackMap) {
+    for (auto &remoteRank : remoteConnectionMap) {
       for (auto &includedRank : remoteRank.second) {
         if (utils::MasterSlave::_rank == includedRank) {
-          _mesh->getInitialConnectionMap().push_back(remoteRank.first);
+          _mesh->getConnectedRanks().push_back(remoteRank.first);
         }
       }
     }
 
   } else { // Slave
 
-    utils::MasterSlave::_communication->broadcast(receivedFeedbackMapSize, 0);
+    utils::MasterSlave::_communication->broadcast(remoteConnectionMapSize, 0);
 
-    for (int i = 0; i < receivedFeedbackMapSize; i++) {
-      receivedFeedbackMap[i] = {-1};
+    for (int i = 0; i < remoteConnectionMapSize; i++) {
+      remoteConnectionMap[i] = {-1};
     }
-    if (receivedFeedbackMapSize != 0)
-      com::CommunicateBoundingBox(utils::MasterSlave::_communication).broadcastReceiveFeedbackMap(receivedFeedbackMap);
+    if (remoteConnectionMapSize != 0)
+      com::CommunicateBoundingBox(utils::MasterSlave::_communication).broadcastReceiveConnectionMap(remoteConnectionMap);
 
-    for (auto &remoteRank : receivedFeedbackMap) {
+    for (auto &remoteRank : remoteConnectionMap) {
       for (auto &includedRanks : remoteRank.second) {
         if (utils::MasterSlave::_rank == includedRanks) {
-          _mesh->getInitialConnectionMap().push_back(remoteRank.first);
+          _mesh->getConnectedRanks().push_back(remoteRank.first);
         }
       }
     }

@@ -9,7 +9,6 @@
 #include "utils/Helpers.hpp"
 #include "utils/MasterSlave.hpp"
 
-
 namespace precice
 {
 namespace partition
@@ -61,39 +60,37 @@ void ReceivedBoundingBox::computeBoundingBox()
     utils::MasterSlave::_communication->broadcast(_remoteParComSize);
     com::CommunicateBoundingBox(utils::MasterSlave::_communication).broadcastSendBoundingBoxMap(_remoteBBM);
 
-    // map from local rank to connected remote ranks
-    std::map<int, std::vector<int>> feedbackMap;
+    std::map<int, std::vector<int>> connectionMap;
 
-    // initialize _feedbackmap
+    // initialize feedbackmap
     for (int rank_slave = 1; rank_slave < utils::MasterSlave::_size; rank_slave++) {
-      feedbackMap[rank_slave].push_back(-1);
+      connectionMap[rank_slave].push_back(-1);
     }
 
-    // feedback for master rank
-    std::vector<int> feedback;
+    // connected ranks for master
     for (auto &remoteBB : _remoteBBM) {
       if (overlapping(_bb, remoteBB.second)) {
-        feedback.push_back(remoteBB.first);
+        _mesh->getConnectedRanks().push_back(remoteBB.first);
       }
     }
-    if (feedback.size() != 0)
-      feedbackMap[0] = feedback;
+    if (_mesh->getConnectedRanks().size() != 0)
+      connectionMap[0] = _mesh->getConnectedRanks();
 
-    // receive feedback from slaves and add them to feedbackMap
+    // receive connected ranks from slaves and add them to the connection map
     for (int rank = 1; rank < utils::MasterSlave::_size; rank++) {
-      int feedbackSize = 0;
-      utils::MasterSlave::_communication->receive(feedbackSize, rank);
-      if (feedbackSize != 0) {
-        std::vector<int> slaveFeedback;
-        utils::MasterSlave::_communication->receive(slaveFeedback, rank);
-        feedbackMap[rank] = slaveFeedback;
+      int connectedRanksSize = 0;
+      utils::MasterSlave::_communication->receive(connectedRanksSize, rank);
+      if (connectedRanksSize != 0) {
+        std::vector<int> slaveConnectedRanks;
+        utils::MasterSlave::_communication->receive(slaveConnectedRanks, rank);
+        connectionMap[rank] = slaveConnectedRanks;
       }
     }
 
-    // send feedbackMap to other master
-    _m2n->getMasterCommunication()->send((int) feedbackMap.size(), 0);
-    if (feedbackMap.size() != 0) { // @todo we need an error message here instead
-      com::CommunicateBoundingBox(_m2n->getMasterCommunication()).sendFeedbackMap(feedbackMap, 0);
+    // send connectionMap to other master
+    _m2n->getMasterCommunication()->send((int) connectionMap.size(), 0);
+    if (connectionMap.size() != 0) { // @todo we need an error message here instead
+      com::CommunicateBoundingBox(_m2n->getMasterCommunication()).sendConnectionMap(connectionMap, 0);
     }
 
   } else if (utils::MasterSlave::_slaveMode) {
@@ -111,19 +108,18 @@ void ReceivedBoundingBox::computeBoundingBox()
     // receive _remoteBBM from master
     com::CommunicateBoundingBox(utils::MasterSlave::_communication).broadcastReceiveBoundingBoxMap(_remoteBBM);
 
-    std::vector<int> feedback;
     for (auto &remoteBB : _remoteBBM) {
       if (overlapping(_bb, remoteBB.second)) {
-        feedback.push_back(remoteBB.first);
+        _mesh->getConnectedRanks().push_back(remoteBB.first);
       }
     }
 
     // send feedback size to master
-    utils::MasterSlave::_communication->send((int) feedback.size(), 0);
+    utils::MasterSlave::_communication->send((int) _mesh->getConnectedRanks().size(), 0);
 
     // to prevent sending empty vector!
-    if (feedback.size() != 0)
-      utils::MasterSlave::_communication->send(feedback, 0);
+    if (_mesh->getConnectedRanks().size() != 0)
+      utils::MasterSlave::_communication->send(_mesh->getConnectedRanks(), 0);
   }
 }
 
@@ -137,7 +133,8 @@ bool ReceivedBoundingBox::overlapping(mesh::Mesh::BoundingBox currentBB, mesh::M
    * due to empty bounding boxes.
    */
   for (int i = 0; i < _dimensions; i++) {
-    if ((currentBB[i].first < receivedBB[i].first && currentBB[i].second < receivedBB[i].first) || (receivedBB[i].first < currentBB[i].first && receivedBB[i].second < currentBB[i].first)) {
+    if ((currentBB[i].first < receivedBB[i].first && currentBB[i].second < receivedBB[i].first) ||
+        (receivedBB[i].first < currentBB[i].first && receivedBB[i].second < currentBB[i].first)) {
       return false;
     }
   }

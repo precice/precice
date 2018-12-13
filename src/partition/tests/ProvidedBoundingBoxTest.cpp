@@ -309,16 +309,16 @@ BOOST_AUTO_TEST_CASE(TestComputeBoundingBox, * testing::OnSize(4))
   {
     m2n->getMasterCommunication()->send(3, 0);
 
-    // construct feedbackmap
-    std::map<int, std::vector<int>> sendFeedbackMap;
-    sendFeedbackMap[0].push_back(1);
-    sendFeedbackMap[0].push_back(2);
-    sendFeedbackMap[1].push_back(0);
-    sendFeedbackMap[1].push_back(2);
-    sendFeedbackMap[2].push_back(0);
-    sendFeedbackMap[2].push_back(1);
+    // construct connection map
+    std::map<int, std::vector<int>> sendConnectionMap;
+    sendConnectionMap[0].push_back(1);
+    sendConnectionMap[0].push_back(2);
+    sendConnectionMap[1].push_back(0);
+    sendConnectionMap[1].push_back(2);
+    sendConnectionMap[2].push_back(0);
+    sendConnectionMap[2].push_back(1);
     
-    com::CommunicateBoundingBox(m2n->getMasterCommunication()).sendFeedbackMap(sendFeedbackMap, 0 ); 
+    com::CommunicateBoundingBox(m2n->getMasterCommunication()).sendConnectionMap(sendConnectionMap, 0 );
   }
   else
   { //NASTIN
@@ -335,21 +335,21 @@ BOOST_AUTO_TEST_CASE(TestComputeBoundingBox, * testing::OnSize(4))
 
     if(utils::Parallel::getProcessRank() == 1)
     {//Master
-      BOOST_TEST(pSolidzMesh->getInitialConnectionMap().size() == 2);
-      BOOST_TEST(pSolidzMesh->getInitialConnectionMap()[0] == 1);
-      BOOST_TEST(pSolidzMesh->getInitialConnectionMap()[1] == 2);    
+      BOOST_TEST(pSolidzMesh->getConnectedRanks().size() == 2);
+      BOOST_TEST(pSolidzMesh->getConnectedRanks()[0] == 1);
+      BOOST_TEST(pSolidzMesh->getConnectedRanks()[1] == 2);
     }   
     else if(utils::Parallel::getProcessRank() == 2)
     {//Slave1
-      BOOST_TEST(pSolidzMesh->getInitialConnectionMap().size() == 2);
-      BOOST_TEST(pSolidzMesh->getInitialConnectionMap()[0] == 0);
-      BOOST_TEST(pSolidzMesh->getInitialConnectionMap()[1] == 2);    
+      BOOST_TEST(pSolidzMesh->getConnectedRanks().size() == 2);
+      BOOST_TEST(pSolidzMesh->getConnectedRanks()[0] == 0);
+      BOOST_TEST(pSolidzMesh->getConnectedRanks()[1] == 2);
     }
     else if(utils::Parallel::getProcessRank() == 3)
     {//Slave2
-      BOOST_TEST(pSolidzMesh->getInitialConnectionMap().size() == 2);
-      BOOST_TEST(pSolidzMesh->getInitialConnectionMap()[0] == 0);
-      BOOST_TEST(pSolidzMesh->getInitialConnectionMap()[1] == 1);    
+      BOOST_TEST(pSolidzMesh->getConnectedRanks().size() == 2);
+      BOOST_TEST(pSolidzMesh->getConnectedRanks()[0] == 0);
+      BOOST_TEST(pSolidzMesh->getConnectedRanks()[1] == 1);
     }
     
   }  

@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(TestCommunicateBoundingBox, * testing::OnSize(4))
   if (utils::Parallel::getProcessRank() == 0)
   {
     int remoteParComSize = 0;
-    std::map<int, std::vector<int>> receivedFeedbackMap;
+    std::map<int, std::vector<int>> receivedConnectionMap;
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals));     
     m2n->getMasterCommunication()->send(3, 0);     
     com::CommunicateBoundingBox(m2n->getMasterCommunication()).sendBoundingBoxMap(sendGlobalBB, 0 );
@@ -155,16 +155,16 @@ BOOST_AUTO_TEST_CASE(TestCommunicateBoundingBox, * testing::OnSize(4))
     
     for (int i=0; i < remoteParComSize; i++)
     {
-      std::vector<int> initialFeedback;
-      initialFeedback.push_back(-1);
-      receivedFeedbackMap[i]=initialFeedback;
+      std::vector<int> connectedRanks;
+      connectedRanks.push_back(-1);
+      receivedConnectionMap[i]=connectedRanks;
     }    
-    com::CommunicateBoundingBox(m2n->getMasterCommunication()).receiveFeedbackMap(receivedFeedbackMap, 0 );
+    com::CommunicateBoundingBox(m2n->getMasterCommunication()).receiveConnectionMap(receivedConnectionMap, 0 );
 
-    // test wether we receive correct freedback map!
-    BOOST_TEST(receivedFeedbackMap[0][0] == 2);
-    BOOST_TEST(receivedFeedbackMap[1][0] == 1);
-    BOOST_TEST(receivedFeedbackMap[2][0] == 0);
+    // test whether we receive correct connection map
+    BOOST_TEST(receivedConnectionMap[0][0] == 2);
+    BOOST_TEST(receivedConnectionMap[1][0] == 1);
+    BOOST_TEST(receivedConnectionMap[2][0] == 0);
 
   }  
   else

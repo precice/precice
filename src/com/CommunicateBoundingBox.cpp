@@ -61,7 +61,7 @@ void CommunicateBoundingBox::receiveBoundingBoxMap(
   }
 }
 
-void CommunicateBoundingBox::sendFeedbackMap(
+void CommunicateBoundingBox::sendConnectionMap(
     std::map<int, std::vector<int>> &fbm,
     int                              rankReceiver)
 {
@@ -75,7 +75,7 @@ void CommunicateBoundingBox::sendFeedbackMap(
 }
 
 ///@todo needs some rewrite eventually. do we assume that the ranks are ordered or not? maybe change to vector
-void CommunicateBoundingBox::receiveFeedbackMap(
+void CommunicateBoundingBox::receiveConnectionMap(
     std::map<int, std::vector<int>> &fbm,
     int                              rankSender)
 {
@@ -124,7 +124,7 @@ void CommunicateBoundingBox::broadcastReceiveBoundingBoxMap(
   }
 }
 
-void CommunicateBoundingBox::broadcastSendFeedbackMap(
+void CommunicateBoundingBox::broadcastSendConnectionMap(
     std::map<int, std::vector<int>> &fbm)
 {
   TRACE();
@@ -135,7 +135,7 @@ void CommunicateBoundingBox::broadcastSendFeedbackMap(
   }
 }
 
-void CommunicateBoundingBox::broadcastReceiveFeedbackMap(
+void CommunicateBoundingBox::broadcastReceiveConnectionMap(
     std::map<int, std::vector<int>> &fbm)
 {
   TRACE();
