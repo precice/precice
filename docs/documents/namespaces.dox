@@ -1,17 +1,17 @@
 /** @namespace precice
- *  @brief main namespace of the precice library
+ *  @brief Main namespace of the precice library.
  */
 
 /** @namespace precice::action
- *  @brief contains actions to modify exchanged data
+ *  @brief contains actions to modify exchanged data.
  */
 
 /** @namespace precice::com
- *  @brief contains the data communication abstraction layer
+ *  @brief contains the data communication abstraction layer.
  */
 
 /** @namespace precice::constants
- *  @brief contains names for files and common value types
+ *  @brief contains names for files and common value types.
  */
 
 /** @namespace precice::cplscheme
@@ -19,13 +19,11 @@
  */
 
 /** @namespace precice::io
- *  @brief provides import and export of the coupling mesh and data.
- *  
- *  @see preice::mesh
+ *  @brief provides Import and Export of the coupling \ref mesh::Mesh "mesh" and \ref mesh::Data "data".
  */
 
 /** @namespace precice::logging
- *  @brief contains the logging framework
+ *  @brief contains the logging framework.
  */
 
 /** @namespace precice::m2n
@@ -33,10 +31,7 @@
  */
 
 /** @namespace precice::mapping
- *  @brief contains data mapping from points to meshes
- *
- *  @see precice::query
- *  @see precice::mesh
+ *  @brief contains data mapping from \ref mesh::Vertex "points" to \ref mesh::Mesh "meshes".
  */
 
 /** @namespace precice::math
@@ -44,28 +39,27 @@
  */
 
 /** @namespace precice::mesh
- *  @brief provides Mesh and primitives
- *
+ *  @brief provides Mesh, Data and primitives.
  */
 
 /** @namespace precice::partition
- *  @brief contains the partitioning of distributed meshes
+ *  @brief contains the partitioning of distributed meshes.
  */
 
 /** @namespace precice::query
- *  @brief contains geometrical queries
+ *  @brief contains geometrical queries.
  */
 
 /** @namespace precice::testing
- *  @brief contains the testing framework
+ *  @brief contains the testing framework.
  */
 
 /** @namespace precice::utils
- *  @brief contains precice-related utilites
+ *  @brief contains precice-related utilites.
  */
 
 /** @namespace precice::xml
- *  @brief contains the XML configuration parser
+ *  @brief contains the XML configuration parser.
  */
 
 // vim: ft=cpp
