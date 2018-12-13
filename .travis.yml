@@ -53,8 +53,8 @@ script:
   - cmake $PRECICE_ROOT
   - make -j 2
   - cd tests
-  - if [ "$MPI" = "off" ]; then ../build/testprecice -x -r detailed > boost-test-output; fi
-  - if [ "$MPI" = "on"  ]; then mpirun -n 4 ../build/testprecice -x -r detailed > boost-test-output 2> boost-test-error; fi
+  - if [ "$MPI" = "off" ]; then ../testprecice -x -r detailed > boost-test-output; fi
+  - if [ "$MPI" = "on"  ]; then mpirun -n 4 ../testprecice -x -r detailed > boost-test-output 2> boost-test-error; fi
 
 after_failure:
   - cd $TRAVIS_BUILD_DIR
