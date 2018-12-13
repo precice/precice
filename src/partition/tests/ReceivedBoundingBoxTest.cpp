@@ -185,7 +185,7 @@ BOOST_AUTO_TEST_CASE(TestCommunicateBoundingBox, * testing::OnSize(4))
 
     double safetyFactor = 0.0;
     
-    ReceivedBoundingBox part(pSolidzMesh, safetyFactor, ReceivedBoundingBox::FILTER_FIRST);    
+    ReceivedBoundingBox part(pSolidzMesh, safetyFactor);
     part.setM2N(m2n);
     part.setFromMapping(boundingFromMapping);
     part.setToMapping(boundingToMapping);

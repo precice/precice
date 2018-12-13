@@ -2,130 +2,120 @@
 #include "com/CommunicateBoundingBox.hpp"
 #include "com/CommunicateMesh.hpp"
 #include "com/Communication.hpp"
-#include "utils/MasterSlave.hpp"
 #include "m2n/M2N.hpp"
-#include "utils/EventTimings.hpp"
-#include "utils/Parallel.hpp"
-#include "mesh/Mesh.hpp"
 #include "mapping/Mapping.hpp"
+#include "mesh/Mesh.hpp"
+#include "utils/EventTimings.hpp"
+#include "utils/MasterSlave.hpp"
+#include "utils/Parallel.hpp"
 
 using precice::utils::Event;
 
-namespace precice {
-namespace partition {
+namespace precice
+{
+namespace partition
+{
 
-ProvidedBoundingBox::ProvidedBoundingBox
-(mesh::PtrMesh mesh,
- bool hasToSend,
- double safetyFactor)
-:
-    Partition (mesh),
-    _hasToSend(hasToSend),
-    _dimensions(mesh->getDimensions()),
-    _safetyFactor(safetyFactor)
-{}
+ProvidedBoundingBox::ProvidedBoundingBox(mesh::PtrMesh mesh,
+                                         bool          hasToSend,
+                                         double        safetyFactor)
+    : Partition(mesh),
+      _hasToSend(hasToSend),
+      _dimensions(mesh->getDimensions()),
+      _safetyFactor(safetyFactor)
+{
+}
 
 void ProvidedBoundingBox::communicateBoundingBox()
 {
+  TRACE();
+
   if (_hasToSend) {
-    
+
     // each rank sends its bb to master
-    if (utils::MasterSlave::_slaveMode) {//slave            
-      com::CommunicateBoundingBox(utils::MasterSlave::_communication).sendBoundingBox(_mesh->getBoundingBox(), 0); 
-    }
-    else
-    { // Master
+    if (utils::MasterSlave::_slaveMode) { //slave
+      com::CommunicateBoundingBox(utils::MasterSlave::_communication).sendBoundingBox(_mesh->getBoundingBox(), 0);
+    } else { // Master
 
-      assertion(utils::MasterSlave::_rank==0);
-      assertion(utils::MasterSlave::_size>1);      
+      assertion(utils::MasterSlave::_rank == 0);
+      assertion(utils::MasterSlave::_size > 1);
 
-      // master receives bbs from other ranks and store them into globalBB
-      mesh::Mesh::BoundingBoxMap globalBB;
+      // to store the collection of bounding boxes
+      mesh::Mesh::BoundingBoxMap bbm;
+
+      // initialize bbm with dummy data
       mesh::Mesh::BoundingBox initialBB;
-      for (int i=0; i < _dimensions; i++) {        
-        initialBB.push_back(std::make_pair(-1,-1));
+      for (int i = 0; i < _dimensions; i++) {
+        initialBB.push_back(std::make_pair(-1, -1));
       }
-      for (int remoteRank = 0; remoteRank < utils::MasterSlave::_size; remoteRank++ )
-      {
-        globalBB[remoteRank]= initialBB;
+      for (int rank = 0; rank < utils::MasterSlave::_size; rank++) {
+        bbm[rank] = initialBB;
       }
 
-      // master stores its bb into gloabalBB
-      globalBB[0] = _mesh->getBoundingBox();     
+      // master stores its bb into bbm
+      bbm[0] = _mesh->getBoundingBox();
 
-      // master receives bbs from slaves and store them in global bb
-      if (utils::MasterSlave::_size>1) {  
-        for (int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++) {
-          com::CommunicateBoundingBox(utils::MasterSlave::_communication).receiveBoundingBox(globalBB[rankSlave], rankSlave);                    
-        }
+      // master receives bbs from slaves and stores them in bbm
+      for (int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++) {
+        com::CommunicateBoundingBox(utils::MasterSlave::_communication).receiveBoundingBox(bbm[rankSlave], rankSlave);
       }
-      
-      // master sends set of boundingboxes (globalBB) to the other master
-      _m2n->getMasterCommunication()->send(utils::MasterSlave::_size , 0);      
-      com::CommunicateBoundingBox(_m2n->getMasterCommunication()).sendBoundingBoxMap(globalBB,0);
-    }                  
-  }   
+
+      // master sends number of ranks and bbm to the other master
+      _m2n->getMasterCommunication()->send(utils::MasterSlave::_size, 0);
+      com::CommunicateBoundingBox(_m2n->getMasterCommunication()).sendBoundingBoxMap(bbm, 0);
+    }
+  }
 }
 
 void ProvidedBoundingBox::computeBoundingBox()
 {
+  TRACE();
+
   // size of the feedbackmap that is received here
-  int receivedFeedbackMapSize = 0;  
+  int                             receivedFeedbackMapSize = 0;
   std::map<int, std::vector<int>> receivedFeedbackMap;
-  
-  if (not utils::MasterSlave::_slaveMode) {//Master
-    assertion(utils::MasterSlave::_size>1);  
-    
-    // master receives feedback map (list of other participant ranks -> connected ranks at this participant)
-    // from other participants master    
-    _m2n->getMasterCommunication()->receive(receivedFeedbackMapSize, 0 );    
+
+  if (not utils::MasterSlave::_slaveMode) { //Master
+    assertion(utils::MasterSlave::_size > 1);
+
+    // master receives feedback map (map of other participant ranks -> connected ranks at this participant)
+    // from other participants master
+    _m2n->getMasterCommunication()->receive(receivedFeedbackMapSize, 0);
+    for (int i = 0; i < receivedFeedbackMapSize; i++) {
+      receivedFeedbackMap[i] = {-1};
+    }
     if (receivedFeedbackMapSize != 0)
-    {
-      for (int i=0; i < receivedFeedbackMapSize; i++)
-      {        
-        receivedFeedbackMap[i]={-1};
-      }
-      
-      com::CommunicateBoundingBox(_m2n->getMasterCommunication()).receiveFeedbackMap(receivedFeedbackMap, 0 );
+      com::CommunicateBoundingBox(_m2n->getMasterCommunication()).receiveFeedbackMap(receivedFeedbackMap, 0);
+
+    // broadcast the received feedbackMap
+    utils::MasterSlave::_communication->broadcast(receivedFeedbackMapSize);
+    if (receivedFeedbackMapSize != 0) {
+      com::CommunicateBoundingBox(utils::MasterSlave::_communication).broadcastSendFeedbackMap(receivedFeedbackMap);
     }
 
-    // master broadcasts the reveived feedbackmap to slaves! 
-    utils::MasterSlave::_communication->broadcast(receivedFeedbackMapSize);
-    if (receivedFeedbackMapSize != 0)
-    {
-      com::CommunicateBoundingBox(utils::MasterSlave::_communication).broadcastSendFeedbackMap(receivedFeedbackMap);      
-    }
-    
-    
     // master checks which ranks are connected to it
-    for (auto &otherRank : receivedFeedbackMap) {
-      for (auto &includedRank: otherRank.second) {
-        if (utils::MasterSlave::_rank == includedRank) {          
-          _mesh->getInitialConnectionMap().push_back(otherRank.first);
+    for (auto &remoteRank : receivedFeedbackMap) {
+      for (auto &includedRank : remoteRank.second) {
+        if (utils::MasterSlave::_rank == includedRank) {
+          _mesh->getInitialConnectionMap().push_back(remoteRank.first);
         }
       }
-    }    
-  }
-  else
-  { // Slave
-    
-    utils::MasterSlave::_communication->broadcast(receivedFeedbackMapSize, 0);
-    if (receivedFeedbackMapSize != 0)
-    {
-      for (int i=0; i < receivedFeedbackMapSize; i++)
-      {
-        receivedFeedbackMap[i]={-1};
-      }
-      com::CommunicateBoundingBox(utils::MasterSlave::_communication).broadcastReceiveFeedbackMap(receivedFeedbackMap);      
     }
-       
-    for (auto &otherRank : receivedFeedbackMap)
-    {
-      for (auto &includedRanks: otherRank.second)
-      {
-        if (utils::MasterSlave::_rank == includedRanks)
-        {
-          _mesh->getInitialConnectionMap().push_back(otherRank.first);
+
+  } else { // Slave
+
+    utils::MasterSlave::_communication->broadcast(receivedFeedbackMapSize, 0);
+
+    for (int i = 0; i < receivedFeedbackMapSize; i++) {
+      receivedFeedbackMap[i] = {-1};
+    }
+    if (receivedFeedbackMapSize != 0)
+      com::CommunicateBoundingBox(utils::MasterSlave::_communication).broadcastReceiveFeedbackMap(receivedFeedbackMap);
+
+    for (auto &remoteRank : receivedFeedbackMap) {
+      for (auto &includedRanks : remoteRank.second) {
+        if (utils::MasterSlave::_rank == includedRanks) {
+          _mesh->getInitialConnectionMap().push_back(remoteRank.first);
         }
       }
     }
@@ -134,13 +124,16 @@ void ProvidedBoundingBox::computeBoundingBox()
 
 // these functions will be implemented in package 3
 void ProvidedBoundingBox::communicate()
-{}
+{
+}
 
 void ProvidedBoundingBox::compute()
-{}
+{
+}
 
 void ProvidedBoundingBox::createOwnerInformation()
-{}
+{
+}
 
-
-}}
+} // namespace partition
+} // namespace precice
