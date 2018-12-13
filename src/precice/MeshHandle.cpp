@@ -25,8 +25,13 @@ namespace precice {
 
 // VertexIterator
 
-VertexIterator::VertexIterator() = default;
-VertexIterator::~VertexIterator() = default;
+VertexIterator::VertexIterator()
+    : _impl(NULL) {};
+
+VertexIterator::~VertexIterator()
+{
+  delete _impl;
+}
 
 VertexIterator:: VertexIterator
 (
@@ -34,23 +39,20 @@ VertexIterator:: VertexIterator
   bool               begin )
 {
   if ( begin ) {
-    _impl= std::unique_ptr<Impl>(new Impl{content.vertices().begin()});
+    _impl = new Impl{content.vertices().begin()};
   }
   else  {
-    _impl= std::unique_ptr<Impl>(new Impl{content.vertices().end()});
+    _impl = new Impl{content.vertices().end()};
   }
 }
 
 VertexIterator:: VertexIterator
 (
-  const VertexIterator& toCopy )
+  const VertexIterator& toCopy ) : _impl(NULL)
 {
-    VertexIterator cpy;
     if (toCopy._impl) {
-        cpy._impl = std::unique_ptr<Impl>(new Impl{toCopy._impl->iterator});
+        this->_impl = new Impl{toCopy._impl->iterator};
     }
-    using std::swap;
-    swap(*this, cpy);
 }
 
 VertexIterator & VertexIterator:: operator=
@@ -101,12 +103,12 @@ int VertexIterator:: vertexID() const
   return (*_impl->iterator).getID();
 }
 
-void VertexIterator::swap(VertexIterator& other) noexcept
+void VertexIterator::swap(VertexIterator& other)
 {
     std::swap(_impl, other._impl);
 }
 
-void swap(VertexIterator& lhs, VertexIterator& rhs) noexcept
+void swap(VertexIterator& lhs, VertexIterator& rhs)
 {
     lhs.swap(rhs);
 }
@@ -137,9 +139,13 @@ std::size_t VertexHandle:: size() const
 
 // EdgeIterator
 
-EdgeIterator::EdgeIterator() = default;
+EdgeIterator::EdgeIterator()
+    : _impl(NULL) {}
 
-EdgeIterator::~EdgeIterator() = default;
+EdgeIterator::~EdgeIterator()
+{
+  delete _impl;
+}
 
 EdgeIterator:: EdgeIterator
 (
@@ -147,21 +153,18 @@ EdgeIterator:: EdgeIterator
   bool               begin )
 {
   if ( begin ) {
-    _impl=std::unique_ptr<Impl>(new Impl{content.edges().begin()});
+    _impl=new Impl{content.edges().begin()};
   }
   else  {
-    _impl=std::unique_ptr<Impl>(new Impl{content.edges().end()});
+    _impl=new Impl{content.edges().end()};
   }
 }
 
-EdgeIterator:: EdgeIterator(const EdgeIterator& toCopy)
+EdgeIterator:: EdgeIterator(const EdgeIterator& toCopy) : _impl(NULL)
 {
-    EdgeIterator cpy;
     if (toCopy._impl) {
-        cpy._impl = std::unique_ptr<Impl>(new Impl{toCopy._impl->iterator});
+        this->_impl = new Impl{toCopy._impl->iterator};
     }
-    using std::swap;
-    swap(*this, cpy);
 }
 
 EdgeIterator & EdgeIterator:: operator=(const EdgeIterator& other)
@@ -211,12 +214,12 @@ int EdgeIterator:: vertexID(int vertexIndex) const
   return (*_impl->iterator).vertex(vertexIndex).getID();
 }
 
-void EdgeIterator::swap(EdgeIterator& other) noexcept
+void EdgeIterator::swap(EdgeIterator& other)
 {
     std::swap(_impl, other._impl);
 }
 
-void swap(EdgeIterator& lhs, EdgeIterator& rhs) noexcept
+void swap(EdgeIterator& lhs, EdgeIterator& rhs)
 {
     lhs.swap(rhs);
 }
@@ -247,9 +250,13 @@ std::size_t EdgeHandle:: size () const
 
 // TriangleIterator
 
-TriangleIterator::TriangleIterator() = default;
+TriangleIterator::TriangleIterator()
+    : _impl(NULL) {}
 
-TriangleIterator::~TriangleIterator() = default;
+TriangleIterator::~TriangleIterator()
+{
+  delete _impl;
+}
 
 TriangleIterator:: TriangleIterator
 (
@@ -257,21 +264,18 @@ TriangleIterator:: TriangleIterator
   bool               begin )
 {
   if ( begin ) {
-    _impl=std::unique_ptr<Impl>(new Impl{content.triangles().begin()});
+    _impl = new Impl{content.triangles().begin()};
   }
   else  {
-    _impl=std::unique_ptr<Impl>(new Impl{content.triangles().end()});
+    _impl = new Impl{content.triangles().end()};
   }
 }
 
-TriangleIterator:: TriangleIterator(const TriangleIterator& toCopy)
+TriangleIterator:: TriangleIterator(const TriangleIterator& toCopy) : _impl(NULL)
 {
-    TriangleIterator cpy;
     if (toCopy._impl) {
-        cpy._impl = std::unique_ptr<Impl>(new Impl{toCopy._impl->iterator});
+        this->_impl = new Impl{toCopy._impl->iterator};
     }
-    using std::swap;
-    swap(*this, cpy);
 }
 
 TriangleIterator & TriangleIterator:: operator=(const TriangleIterator& other)
@@ -321,12 +325,12 @@ int TriangleIterator:: vertexID ( int vertexIndex ) const
   return (*_impl->iterator).vertex(vertexIndex).getID();
 }
 
-void TriangleIterator::swap(TriangleIterator& other) noexcept
+void TriangleIterator::swap(TriangleIterator& other)
 {
     std::swap(_impl, other._impl);
 }
 
-void swap(TriangleIterator& lhs, TriangleIterator& rhs) noexcept
+void swap(TriangleIterator& lhs, TriangleIterator& rhs)
 {
     lhs.swap(rhs);
 }
