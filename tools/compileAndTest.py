@@ -37,6 +37,7 @@ parser.add_argument('-r', '--removebuild', help="Remove build/ and .scon* files 
 parser.add_argument('-k', '--keeptest', help="Do not remove test directory for earch test run", dest='keep_test', action='store_true')
 parser.add_argument('-t', help="Run tests.", dest='run_tests', action="store_true")
 parser.add_argument('-j', help="Number of CPUs to compile on", dest='compile_cpus', default=4)
+parser.add_argument('-b', '--buildfolder', help="Specify build folder", default="build/last")
 parser.add_argument('-p', help="Number of MPI procs. Setting to 1 means to not use MPI at all. This does not affect the build process.", type=int, dest='mpi_procs', default=4)
 parser.add_argument("-s", "--split", help="Redirect output to a process-unique file testout.N", dest="split_output", action="store_true")
 parser.add_argument('--logconfig', "-l", help="Log config file", default = "")
@@ -84,5 +85,5 @@ if args.run_tests:
         print("Copy", args.logconfig, "to tests/log.conf")
         shutil.copyfile(args.logconfig, "tests/log.conf")
 
-    run_cmd = "{mpi} ../build/last/testprecice --color_output {args}".format(mpi = mpi_cmd, args = " ".join(remainder))
+    run_cmd = "{mpi} ../{buildfolder}/testprecice --color_output {args}".format(mpi = mpi_cmd, args = " ".join(remainder), buildfolder = args.buildfolder)
     run_test(run_cmd)
