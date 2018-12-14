@@ -1,4 +1,6 @@
 #include "Mapping.hpp"
+#include "utils/assertion.hpp"
+#include <boost/config.hpp>
 
 namespace precice {
 namespace mapping {
@@ -86,6 +88,7 @@ bool operator<(Mapping::MeshRequirement lhs, Mapping::MeshRequirement rhs) {
         case(Mapping::MeshRequirement::FULL):
                 return false;
     };
+    BOOST_UNREACHABLE_RETURN(false);
 }
 
 std::ostream &operator<<(std::ostream &out, Mapping::MeshRequirement val) {
@@ -99,6 +102,8 @@ std::ostream &operator<<(std::ostream &out, Mapping::MeshRequirement val) {
         case (Mapping::MeshRequirement::FULL):
             out << "FULL";
             break;
+        default:
+            assertion(false, "Implementation does not cover all cases");
     };
     return out;
 }
