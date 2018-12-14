@@ -1,7 +1,7 @@
 #pragma once
 
-/**
- * @file This file contains a Fortran 77 compatible interface written in C/C++.
+/** @file
+ * This file contains a Fortran 77 compatible interface written in C/C++.
  *
  * It has been tested with: gfortran 4.4.3, ifort 12.1.0
  *

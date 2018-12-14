@@ -108,7 +108,7 @@ public:
 
     //     e_orthModes.stop(true);
 
-    /** (3) construct matrix K \in (K_bar + m -x) x (K_bar +m -y) if
+    /** (3) construct matrix \f$ K \in (K_bar + m -x) x (K_bar +m -y) \f$ if
       *      x .. deleted columns in P -> (m-x) new modes from A (rows of R_A)
       *      y .. deleted columns in Q -> (m-y) new modes from B (rows of R_B)
       *

@@ -54,26 +54,26 @@ namespace PreciceTests {
 namespace precice {
 
 /**
- * @brief Interface to be used by solvers when using preCICE.
+ * @brief Main Application Programming Interface of preCICE
  *
- * A solver, i.e. simulation program, using preCICE has to use SolverInterface such
+ * To adapt a solver to preCICE, follow the following main structure:
  *
  * -# Create an object of SolverInterface with SolverInterface()
  * -# Configure the object with SolverInterface::configure()
  * -# Initialize preCICE with SolverInterface::initialize()
  * -# Advance to the next (time)step with SolverInterface::advance()
  * -# Finalize preCICE with SolverInterface::finalize()
+ *
+ *  \note We use solver, simulation code, and participant as synonyms
  */
 class SolverInterface
 {
 public:
 
-    ///@name Construction and Configuration
-    ///@{
+  ///@name Construction and Configuration
+  ///@{
 
   /**
-   * @brief Constructor.
-   *
    * @param[in] participantName Name of the participant using the interface. Has to
    *        match the name given for a participant in the xml configuration file.
    * @param[in] solverProcessIndex If the solver code runs with several processes,
@@ -86,9 +86,6 @@ public:
     int                solverProcessIndex,
     int                solverProcessSize );
 
-  /**
-   * @brief Destructor.
-   */
   ~SolverInterface();
 
   /**
@@ -102,7 +99,9 @@ public:
    * In configure, the following is done:
    * - The XML configuration for preCICE is parsed and all objects containing
    *   data are created, but not necessarily filled with data.
-   * - If a server is used, communication to that server is established.
+   * - Communication between master and slaves is established.
+   *
+   * @pre configure() has not yet been called
    *
    * @param[in] configurationFileName Name (with path) of the xml configuration file to be read.
    */
@@ -114,15 +113,15 @@ public:
   ///@{
 
   /**
-   * @brief Fully initializes preCICE to be used.
+   * @brief Fully initializes preCICE
    *
    * @pre configure() has been called successfully.
+   * @pre initialize() has not yet bee called.
    *
-   * @post Communication to the coupling partner/s is setup.
-   * @post Meshes are are sent/received to/from coupling partners and the parallel partitions are created.
-   * @post If the solver is not starting the simulation, coupling data is received
+   * @post Parallel communication to the coupling partner/s is setup.
+   * @post Meshes are exchanged between coupling partners and the parallel partitions are created.
+   * @post [Serial Coupling Scheme] If the solver is not starting the simulation, coupling data is received
    * from the coupling partner's first computation.
-   * @post The length limitation of the first solver timestep is computed and returned.
    *
    * @return Maximum length of first timestep to be computed by the solver.
    */
@@ -131,45 +130,46 @@ public:
   /**
    * @brief Initializes coupling data.
    *
-   * When in a coupled simulation an implicit coupling scheme is used, the
-   * starting values for the coupling data are assumed to be zero by default. If
-   * this is not the desired behavior, this method can be used to specify values
-   * different from zero using the write data methods. Only the first participant
-   * of the coupled simulation has to call this method, the second participant
-   * receives the values on calling initialize(). For parallel coupling, values in
-   * both directions are exchanged. Both participants need to call initializeData then.
+   * In an implicit coupling scheme, the starting values for the coupling data are zero by default.
+   *
+   * To provide custom values, first set the data using the Data Access methods and
+   * call this method to finally exchange the data.
+   *
+   * \par Serial Coupling Scheme
+   * Only the first participant has to call this method, the second participant
+   * receives the values on calling initialize().
+   *
+   * \par Parallel Coupling Scheme
+   * Values in both directions are exchanged.
+   * Both participants need to call initializeData().
    *
    * @pre initialize() has been called successfully.
-   * @pre The coupling data to be set is written.
    * @pre advance() has not yet been called.
    * @pre finalize() has not yet been called.
    *
-   * @post Initial coupling data values are sent to the coupling partner.
-   * @post Written coupling data values are reset to zero, in order to allow writing 
-   * of values of first computed timestep.
+   * @post Initial coupling data was exchanged.
+   *
+   * @see isActionRequired  
+   * @see precice::constants::actionWriteInitialData
    */
   void initializeData();
 
   /**
    * @brief Advances preCICE after the solver has computed one timestep.
-   * @param[in] computedTimestepLength Length of timestep computed by solver.
    *
+   * @param[in] computedTimestepLength Length of timestep used by the solver.
    *
    * @pre initialize() has been called successfully.
-   * @pre The solver calling advance() has computed one timestep.
-   * @pre The solver has read and written all coupling data.
-   * @pre The solver has the length of the timestep used available to be passed to preCICE.
+   * @pre The solver has computed one timestep.
+   * @pre The solver has written all coupling data.
    * @pre finalize() has not yet been called.
    *
-   * @post Coupling data values specified to be exchanged in the configuration are
-   *   exchanged with coupling partner/s.
+   * @post Coupling data values specified in the configuration are exchanged.
    * @post Coupling scheme state (computed time, computed timesteps, ...) is updated.
-   * @post For staggered coupling schemes, the coupling partner has computed one
-   *   timestep/iteration with the coupling data written by this participant
-   *   available.
-   * @post The coupling state is printed.
-   * @post Meshes with data are exported to files if specified in the configuration.
-   * @post The length limitation of the next solver timestep is computed and returned.
+   * @post The coupling state is logged.
+   * @post Configured data mapping schemes are applied.
+   * @post [Second Participant] Configured post processing schemes are applied.
+   * @post Meshes with data are exported to files if configured.
    *
    * @return Maximum length of next timestep to be computed by solver.
    */
@@ -179,10 +179,11 @@ public:
    * @brief Finalizes preCICE.
    *
    * @pre initialize() has been called successfully.
-   * @pre isCouplingOngoing() has returned false.
    *
    * @post Communication channels are closed.
    * @post Meshes and data are deallocated
+   *
+   * @see isCouplingOngoing()
    */
   void finalize();
 
@@ -498,6 +499,7 @@ public:
    *
    * @param[in] dataID ID of the data to be written.
    * @param[in] size   Number of valueIndices, and number of values.
+   * @param[in] valueIndices Indices of the data to be written.
    * @param[in] values Values of the data to be written.
    */
   void writeBlockScalarData (
@@ -542,8 +544,8 @@ public:
    * @brief Reads vector data from the coupling mesh.
    *
    * @param[in]  dataID ID of the data to be read, e.g. 1 = forces
-   * @param[in]  dataPosition Position (coordinate, e.g.) of data to be read
-   * @param[out] dataValue Read data value
+   * @param[in]  valueIndex Index of vertex to read the data from
+   * @param[out] value Read data values of the vertex
    */
   void readVectorData (
     int     dataID,
@@ -555,6 +557,7 @@ public:
    *
    * @param[in]  dataID ID of the data to be written.
    * @param[in]  size Number of valueIndices, and number of values.
+   * @param[out] valueIndices Indices of data values to be read.
    * @param[out] values Values of the data to be read.
    */
   void readBlockScalarData (
@@ -570,7 +573,7 @@ public:
    *
    * @param[in]  dataID ID of the data to be read, e.g. 2 = temperatures
    * @param[in]  valueIndex Position (coordinate, e.g.) of data to be read
-   * @param[out] Value Read data value
+   * @param[out] value Read data value
    */
   void readScalarData (
     int     dataID,
