@@ -150,13 +150,13 @@ BOOST_AUTO_TEST_CASE(TestCommunicateBoundingBox2D, * testing::OnSize(4))
     mesh::Mesh::BoundingBox localBB;
 
     // we receive other participants communicator size
-    int remoteParComSize = 3;    
-    m2n->getMasterCommunication()->receive(remoteParComSize, 0);
+    int receivedFeedbackSize = 3;    
+    m2n->getMasterCommunication()->receive(receivedFeedbackSize, 0);
 
     for (int j=0; j < dimensions; j++) {
       localBB.push_back(std::make_pair(-1,-1));
     }
-    for (int i=0; i < remoteParComSize; i++) {
+    for (int i=0; i < receivedFeedbackSize; i++) {
       receivedGlobalBB[i]=localBB;      
     } 
 
@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE(TestCommunicateBoundingBox2D, * testing::OnSize(4))
      com::CommunicateBoundingBox(m2n->getMasterCommunication()).receiveBoundingBoxMap(receivedGlobalBB, 0 );
 
     // check wether we have received the correct com size
-    BOOST_TEST(remoteParComSize == 3);
+    BOOST_TEST(receivedFeedbackSize == 3);
 
     //check the validity of received golbal bounding box (globalBB) 
     BOOST_TEST(receivedGlobalBB[0][0].first == -1);
