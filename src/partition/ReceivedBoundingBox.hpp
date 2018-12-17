@@ -35,9 +35,11 @@ public:
 private:
 
   logging::Logger _log{"partition::ReceivedBoundingBox"};
-  
+
+  /// compares to bounding box and if they have intersection, returns true, otherwise flase!
   bool overlapping(mesh::Mesh::BoundingBox currentBB, mesh::Mesh::BoundingBox receivedBB);
 
+  /// Sets _bb to the union with the mesh from fromMapping resp. toMapping, also enlage by _safetyFactor
   void prepareBoundingBox();
 
   /// will be implemented in 3rd work package
