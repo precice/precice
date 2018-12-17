@@ -34,7 +34,7 @@ parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFo
 
 parser.add_argument('-c', '--compile', help="Compile preCICE", dest='compile', action='store_true')
 parser.add_argument('-r', '--removebuild', help="Remove build/ and .scon* files before compiling", dest='remove_build', action='store_true')
-parser.add_argument('-k', '--keeptest', help="Do not remove test directory for earch test run", dest='keep_test', action='store_true')
+parser.add_argument('-k', '--keeptest', help="Do not remove test directory for each test run", dest='keep_test', action='store_true')
 parser.add_argument('-t', help="Run tests.", dest='run_tests', action="store_true")
 parser.add_argument('-j', help="Number of CPUs to compile on", dest='compile_cpus', default=4)
 parser.add_argument('-b', '--binary', help="testprecice binary, relative to given root or absolute", default="build/last/testprecice")
@@ -55,10 +55,10 @@ try:
     os.chdir(args.root)
 except TypeError:
     print("The preCICE root directory is not defined. Have you set the $PRECICE_ROOT environment variable?")
-    sys.exit(1)
+    sys.exit(-1)
 except FileNotFoundError:
     print("$PRECICE_ROOT directory does not exist. Please set the $PRECICE_ROOT environment variable to a valid directory.")
-    sys.exit(1)
+    sys.exit(-1)
 
 if args.compile:
     if args.remove_build:
