@@ -35,7 +35,7 @@ void NearestNeighborMapping:: computeMapping()
   
   if (getConstraint() == CONSISTENT){
     DEBUG("Compute consistent mapping");
-    mesh::rtree::PtrRTree rtree = mesh::rtree::getVertexRTree(input());
+    mesh::rtree::PtrVertexRTree rtree = mesh::rtree::getVertexRTree(input());
     size_t verticesSize = output()->vertices().size();
     _vertexIndices.resize(verticesSize);
     const mesh::Mesh::VertexContainer& outputVertices = output()->vertices();
@@ -51,7 +51,7 @@ void NearestNeighborMapping:: computeMapping()
   else {
     assertion(getConstraint() == CONSERVATIVE, getConstraint());
     DEBUG("Compute conservative mapping");
-    mesh::rtree::PtrRTree rtree = mesh::rtree::getVertexRTree(output());
+    mesh::rtree::PtrVertexRTree rtree = mesh::rtree::getVertexRTree(output());
     size_t verticesSize = input()->vertices().size();
     _vertexIndices.resize(verticesSize);
     const mesh::Mesh::VertexContainer& inputVertices = input()->vertices();

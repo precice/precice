@@ -6,11 +6,11 @@ namespace precice {
 namespace mesh {
 
 // Initialize static member
-std::map<int, rtree::PtrRTree> precice::mesh::rtree::_vertex_trees;
+std::map<int, rtree::PtrVertexRTree> precice::mesh::rtree::_vertex_trees;
 // Initialize static member
 std::map<int, PtrPrimitiveRTree> precice::mesh::rtree::_primitive_trees;
 
-rtree::PtrRTree rtree::getVertexRTree(const PtrMesh& mesh)
+rtree::PtrVertexRTree rtree::getVertexRTree(const PtrMesh& mesh)
 {
   RTreeParameters params;
   VertexIndexGetter ind(mesh->vertices());
@@ -19,7 +19,7 @@ rtree::PtrRTree rtree::getVertexRTree(const PtrMesh& mesh)
                               std::forward_as_tuple(mesh->getID()),
                               std::forward_as_tuple(std::make_shared<VertexRTree>(params, ind)));
     
-  PtrRTree tree = std::get<0>(result)->second;
+  PtrVertexRTree tree = std::get<0>(result)->second;
     
   if (std::get<1>(result)) // insertion took place, fill tree
     for (size_t i = 0; i < mesh->vertices().size(); ++i)
