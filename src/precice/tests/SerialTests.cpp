@@ -1363,6 +1363,107 @@ BOOST_AUTO_TEST_CASE(testMultiCoupling, * testing::OnSize(4))
 
 }
 
+/**
+ * @brief Tests the Nearest Projection Mapping between two participants
+ *
+ * A mapping is employed for the second solver, i.e., at the end of
+ * initializeData(), the mapping needs to be invoked.
+ */
+BOOST_AUTO_TEST_CASE(testMappingNearestProjection,
+                     * testing::MinRanks(2)
+                     * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
+{
+  if (utils::Parallel::getCommunicatorSize() != 2)
+    return;
+
+  mesh::Mesh::resetGeometryIDsGlobally();
+  using Eigen::Vector3d;
+
+  const std::string configFile = _pathToTests + "mapping-nearest-projection.xml";
+
+  const double z = 0.3;
+
+  // MeshOne
+  Vector3d coordOneA{0.0, 0.0, z};
+  Vector3d coordOneB{1.0, 0.0, z};
+  Vector3d coordOneC{1.0, 1.0, z};
+  Vector3d coordOneD{0.0, 1.0, z};
+  double valOneA = 1.0;
+  double valOneB = 3.0;
+  double valOneC = 5.0;
+  double valOneD = 7.0;
+
+  // MeshTwo
+  Vector3d coordTwoA{0.0, 0.0, z+0.1}; // Maps to vertex A
+  Vector3d coordTwoB{0.0, 0.5, z-0.01}; // Maps to edge AD
+  Vector3d coordTwoC{0.666, 0.333, z+0.001}; // Maps to triangle ABC
+  Vector3d barycenterABC{0.3798734633239789, 0.24025307335204216, 0.3798734633239789};
+  double expectedValTwoA = 1.0;
+  double expectedValTwoB = 4.0;
+  double expectedValTwoC = Vector3d{valOneA, valOneB, valOneC}.dot(barycenterABC);
+
+  if (utils::Parallel::getProcessRank() == 0){
+    SolverInterface cplInterface("SolverOne", 0, 1);
+    config::Configuration config;
+    xml::configure(config.getXMLTag(), configFile);
+    cplInterface._impl->configure(config.getSolverInterfaceConfiguration());
+    const int meshOneID = cplInterface.getMeshID("MeshOne");
+
+    int idA = cplInterface.setMeshVertex(meshOneID, coordOneA.data());
+    int idB = cplInterface.setMeshVertex(meshOneID, coordOneB.data());
+    int idC = cplInterface.setMeshVertex(meshOneID, coordOneC.data());
+    int idD = cplInterface.setMeshVertex(meshOneID, coordOneD.data());
+
+    int idAB = cplInterface.setMeshEdge(meshOneID, idA, idB);
+    int idBC = cplInterface.setMeshEdge(meshOneID, idB, idC);
+    int idCD = cplInterface.setMeshEdge(meshOneID, idC, idD);
+    int idDA = cplInterface.setMeshEdge(meshOneID, idD, idA);
+    int idCA = cplInterface.setMeshEdge(meshOneID, idC, idA);
+
+    cplInterface.setMeshTriangle(meshOneID, idAB, idBC, idCA);
+    cplInterface.setMeshTriangle(meshOneID, idCD, idDA, idCA);
+
+    double maxDt = cplInterface.initialize();
+    int dataAID = cplInterface.getDataID("DataOne",meshOneID);
+    cplInterface.writeScalarData(dataAID, idA, valOneA);
+    cplInterface.writeScalarData(dataAID, idB, valOneB);
+    cplInterface.writeScalarData(dataAID, idC, valOneC);
+    cplInterface.writeScalarData(dataAID, idD, valOneD);
+    cplInterface.fulfilledAction(precice::constants::actionWriteInitialData());
+    cplInterface.initializeData();
+
+    BOOST_TEST(cplInterface.isCouplingOngoing());
+    maxDt = cplInterface.advance(maxDt);
+    BOOST_TEST(!cplInterface.isCouplingOngoing());
+    cplInterface.finalize();
+  }
+  else if (utils::Parallel::getProcessRank() == 1){
+    SolverInterface cplInterface("SolverTwo", 0, 1);
+    config::Configuration config;
+    xml::configure(config.getXMLTag(), configFile);
+    cplInterface._impl->configure(config.getSolverInterfaceConfiguration());
+    int meshTwoID = cplInterface.getMeshID("MeshTwo");
+
+    int idA = cplInterface.setMeshVertex(meshTwoID, coordTwoA.data());
+    int idB = cplInterface.setMeshVertex(meshTwoID, coordTwoB.data());
+    int idC = cplInterface.setMeshVertex(meshTwoID, coordTwoC.data());
+
+    double maxDt = cplInterface.initialize();
+    int dataAID = cplInterface.getDataID("DataOne",meshTwoID);
+    double valueA, valueB, valueC;
+    cplInterface.readScalarData(dataAID, idA, valueA);
+    cplInterface.readScalarData(dataAID, idB, valueB);
+    cplInterface.readScalarData(dataAID, idC, valueC);
+
+    BOOST_TEST(valueA == expectedValTwoA);
+    BOOST_TEST(valueB == expectedValTwoB);
+    BOOST_TEST(valueC == expectedValTwoC);
+
+    BOOST_TEST(!cplInterface.isCouplingOngoing());
+    cplInterface.finalize();
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
 #endif // PRECICE_NO_MPI

@@ -42,6 +42,7 @@ namespace PreciceTests {
     struct testBug;
     struct testThreeSolvers;
     struct testMultiCoupling;
+    struct testMappingNearestProjection;
   }
   namespace Server {
     struct testCouplingModeWithOneServer;
@@ -612,6 +613,7 @@ private:
   friend struct PreciceTests::Serial::testBug;
   friend struct PreciceTests::Serial::testThreeSolvers;
   friend struct PreciceTests::Serial::testMultiCoupling;
+  friend struct PreciceTests::Serial::testMappingNearestProjection;
   friend struct PreciceTests::Server::testCouplingModeWithOneServer;
   friend struct PreciceTests::Server::testCouplingModeParallelWithOneServer;
 
