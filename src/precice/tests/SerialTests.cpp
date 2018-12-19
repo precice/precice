@@ -1396,7 +1396,8 @@ BOOST_AUTO_TEST_CASE(testMappingNearestProjection,
   // MeshTwo
   Vector3d coordTwoA{0.0, 0.0, z+0.1}; // Maps to vertex A
   Vector3d coordTwoB{0.0, 0.5, z-0.01}; // Maps to edge AD
-  Vector3d coordTwoC{0.666, 0.333, z+0.001}; // Maps to triangle ABC
+  Vector3d coordTwoC{2.0/3.0, 1.0/3.0, z+0.001}; // Maps to triangle ABC
+  // This corresponds to the point C from mesh two on the triangle ABC on mesh one.
   Vector3d barycenterABC{0.3798734633239789, 0.24025307335204216, 0.3798734633239789};
   double expectedValTwoA = 1.0;
   double expectedValTwoB = 4.0;
@@ -1409,6 +1410,7 @@ BOOST_AUTO_TEST_CASE(testMappingNearestProjection,
     cplInterface._impl->configure(config.getSolverInterfaceConfiguration());
     const int meshOneID = cplInterface.getMeshID("MeshOne");
 
+    // Setup mesh one.
     int idA = cplInterface.setMeshVertex(meshOneID, coordOneA.data());
     int idB = cplInterface.setMeshVertex(meshOneID, coordOneB.data());
     int idC = cplInterface.setMeshVertex(meshOneID, coordOneC.data());
@@ -1423,18 +1425,20 @@ BOOST_AUTO_TEST_CASE(testMappingNearestProjection,
     cplInterface.setMeshTriangle(meshOneID, idAB, idBC, idCA);
     cplInterface.setMeshTriangle(meshOneID, idCD, idDA, idCA);
 
+    // Initialize, thus sending the mesh.
     double maxDt = cplInterface.initialize();
+    BOOST_TEST(cplInterface.isCouplingOngoing(), "Sending participant should have to advance once!");
+
+    // Write the data to be send.
     int dataAID = cplInterface.getDataID("DataOne",meshOneID);
     cplInterface.writeScalarData(dataAID, idA, valOneA);
     cplInterface.writeScalarData(dataAID, idB, valOneB);
     cplInterface.writeScalarData(dataAID, idC, valOneC);
     cplInterface.writeScalarData(dataAID, idD, valOneD);
-    cplInterface.fulfilledAction(precice::constants::actionWriteInitialData());
-    cplInterface.initializeData();
 
-    BOOST_TEST(cplInterface.isCouplingOngoing());
-    maxDt = cplInterface.advance(maxDt);
-    BOOST_TEST(!cplInterface.isCouplingOngoing());
+    // Advance, thus send the data to the receiving partner.
+    cplInterface.advance(maxDt);
+    BOOST_TEST(!cplInterface.isCouplingOngoing(), "Sending participant should have to advance once!");
     cplInterface.finalize();
   }
   else if (utils::Parallel::getProcessRank() == 1){
@@ -1444,11 +1448,16 @@ BOOST_AUTO_TEST_CASE(testMappingNearestProjection,
     cplInterface._impl->configure(config.getSolverInterfaceConfiguration());
     int meshTwoID = cplInterface.getMeshID("MeshTwo");
 
+    // Setup receiving mesh.
     int idA = cplInterface.setMeshVertex(meshTwoID, coordTwoA.data());
     int idB = cplInterface.setMeshVertex(meshTwoID, coordTwoB.data());
     int idC = cplInterface.setMeshVertex(meshTwoID, coordTwoC.data());
 
+    // Initialize, thus receive the data and map.
     double maxDt = cplInterface.initialize();
+    BOOST_TEST(cplInterface.isCouplingOngoing(), "Receiving participant should have to advance once!");
+
+    // Read the mapped data from the mesh.
     int dataAID = cplInterface.getDataID("DataOne",meshTwoID);
     double valueA, valueB, valueC;
     cplInterface.readScalarData(dataAID, idA, valueA);
@@ -1459,7 +1468,9 @@ BOOST_AUTO_TEST_CASE(testMappingNearestProjection,
     BOOST_TEST(valueB == expectedValTwoB);
     BOOST_TEST(valueC == expectedValTwoC);
 
-    BOOST_TEST(!cplInterface.isCouplingOngoing());
+    // Verify that there is only one time step necessary.
+    cplInterface.advance(maxDt);
+    BOOST_TEST(!cplInterface.isCouplingOngoing(), "Receiving participant should have to advance once!");
     cplInterface.finalize();
   }
 }
