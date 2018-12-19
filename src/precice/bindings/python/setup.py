@@ -55,7 +55,7 @@ def get_extensions(mpi_compiler_wrapper):
 
     # need to include libs here, because distutils messes up the order
     compile_args = ["-I" + PRECICE_ROOT, "-Wall", "-std=c++11"] + mpi_compile_args
-    link_args = ["-lprecice"] + mpi_link_args
+    link_args = ["-L" + os.path.join(PRECICE_ROOT, "build/last/"), "-lprecice"] + mpi_link_args
 
     return [
         Extension(
