@@ -21,7 +21,12 @@ This creates a folder `build` with the binaries.
 ```
 $ python setup.py install
 ```
-to install the module on your system. You might need `sudo`, depending on the how you have installed Python. You can use the option `--prefix=your/default/path` to install the module at an arbitrary path of your choice (for example, if you cannot or don't want to use `sudo`).
+to install the module on your system. 
+
+You might need `sudo -E`, depending on the how you have installed Python. The `-E` option makes `PRECICE_ROOT` visible for `sudo`.
+
+You can use the option `--prefix=your/default/path` to install the module at an arbitrary path of your choice (for example, if you cannot or don't want to use `sudo`).
+
 4. Clean
 ```
 $ python setup.py clean --all

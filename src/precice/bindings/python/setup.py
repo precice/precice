@@ -1,4 +1,5 @@
 import os
+import sys
 import subprocess
 from enum import Enum
 
@@ -12,8 +13,14 @@ from distutils.command.build import build
 APPNAME = "PySolverInterface"
 
 PYTHON_BINDINGS_PATH = os.path.dirname(os.path.abspath(__file__))
-PRECICE_ROOT = os.path.join(PYTHON_BINDINGS_PATH, "../../../../../precice")
+PRECICE_ROOT = os.getenv("PRECICE_ROOT")
 
+if not PRECICE_ROOT:
+    print("The preCICE root directory is not defined. Have you set the $PRECICE_ROOT environment variable? Hint: If you are running this script as sudo, try the -E option.")
+    sys.exit(-1)
+elif not os.path.exists(PRECICE_ROOT):
+    print("The directory PRECICE_ROOT = {precice_root} does not exist. Please set the $PRECICE_ROOT environment variable to a valid directory.".format(precice_root=PRECICE_ROOT))
+    sys.exit(-1)
 
 class MpiImplementations(Enum):
     OPENMPI = 1
