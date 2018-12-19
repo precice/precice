@@ -1366,8 +1366,6 @@ BOOST_AUTO_TEST_CASE(testMultiCoupling, * testing::OnSize(4))
 /**
  * @brief Tests the Nearest Projection Mapping between two participants
  *
- * A mapping is employed for the second solver, i.e., at the end of
- * initializeData(), the mapping needs to be invoked.
  */
 BOOST_AUTO_TEST_CASE(testMappingNearestProjection,
                      * testing::MinRanks(2)
