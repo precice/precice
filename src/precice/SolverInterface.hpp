@@ -64,7 +64,9 @@ namespace precice {
  * -# Advance to the next (time)step with SolverInterface::advance()
  * -# Finalize preCICE with SolverInterface::finalize()
  *
- *  \note We use solver, simulation code, and participant as synonyms
+ *  @note
+ *  We use solver, simulation code, and participant as synonyms.
+ *  The preferred name in the documentation is participant.
  */
 class SolverInterface
 {
@@ -77,7 +79,7 @@ public:
    * @param[in] participantName Name of the participant using the interface. Has to
    *        match the name given for a participant in the xml configuration file.
    * @param[in] solverProcessIndex If the solver code runs with several processes,
-   *        each process using preCICE has specify its index, which has to start
+   *        each process using preCICE has to specify its index, which has to start
    *        from 0 and end with solverProcessSize - 1.
    * @param[in] solverProcessSize The number of solver processes using preCICE.
    */
@@ -195,6 +197,8 @@ public:
   /**
    * @brief Returns the number of spatial dimensions configured.
    *
+   * @returns the configured dimension
+   *
    * Currently, two and three dimensional problems can be solved using preCICE.
    * The dimension is specified in the XML configuration.
    *
@@ -203,14 +207,27 @@ public:
   int getDimensions() const;
 
   /**
-   * @brief Returns true, if the coupled simulation is still ongoing.
+   * @brief Checks if the coupled simulation is still ongoing.
+   *
+   * @returns whether the coupling is ongoing.
+   *
+   * A coupling is ongoing as long as
+   * - the maximum number of timesteps has not been reached, and
+   * - the final time has not been reached.
    *
    * @pre initialize() has been called successfully.
+   *
+   * @see advance()
+   *
+   * @note
+   * The user should call finalize() after this function returns false.
    */
   bool isCouplingOngoing();
 
   /**
-   * @brief Returns true, if new data to be read is available.
+   * @brief Checks if new data to be read is available.
+   *
+   * @returns whether new data is available to be read.
    *
    * Data is classified to be new, if it has been received while calling
    * initialize() and before calling advance(), or in the last call of advance().
@@ -219,22 +236,38 @@ public:
    * advance().
    *
    * @pre initialize() has been called successfully.
+   *
+   * @note
+   * It is allowed to read data even if this function returns false.
+   * This is not recommended due to performance reasons.
+   * Use this function to prevent unnecessary reads.
    */
   bool isReadDataAvailable();
 
   /**
-   * @brief Returns true, if new data has to be written before calling advance().
+   * @brief Checks if new data has to be written before calling advance().
+   *
+   * @param[in] computedTimestepLength Length of timestep used by the solver.
+   *
+   * @return whether new data has to be written.
    *
    * This is always true, if a participant does not make use of subcycling, i.e.
    * choosing smaller timesteps than the limits returned in intitialize() and
    * advance().
    *
    * @pre initialize() has been called successfully.
+   *
+   * @note
+   * It is allowed to write data even if this function returns false.
+   * This is not recommended due to performance reasons.
+   * Use this function to prevent unnecessary writes.
    */
   bool isWriteDataRequired ( double computedTimestepLength );
 
   /**
-   * @brief Returns true, if the current coupling timestep is completed.
+   * @brief Checks if the current coupling timestep is completed.
+   *
+   * @returns whether the timestep is complete.
    *
    * The following reasons require several solver time steps per coupling time
    * step:
@@ -246,16 +279,32 @@ public:
   bool isTimestepComplete();
 
   /**
-   * @brief Returns whether the solver has to evaluate the surrogate model representation
-   *        It does not automatically imply, that the solver does not have to evaluate the
-   *        fine model representation
+   * @brief Returns whether the solver has to evaluate the surrogate model representation.
+   *
+   * @deprecated
+   * Only necessary for deprecated manifold mapping.
+   *
+   * @returns whether the surrogate model has to be evaluated.
+   *
+   * @note
+   * The solver may still have to evaluate the fine model representation.
+   *
+   * @see hasToEvaluateFineModel()
    */
   bool hasToEvaluateSurrogateModel();
 
   /**
-   * @brief Returns whether the solver has to evaluate the fine model representation
-   *        It does not automatically imply, that the solver does not have to evaluate the
-   *        surrogate model representation
+   * @brief Checks if the solver has to evaluate the fine model representation.
+   *
+   * @deprecated
+   * Only necessary for deprecated manifold mapping.
+   *
+   * @returns whether the fine model has to be evaluated.
+   *
+   * @note
+   * The solver may still have to evaluate the surrogate model representation.
+   *
+   * @see hasToEvaluateSurrogateModel()
    */
   bool hasToEvaluateFineModel();
 
@@ -265,20 +314,31 @@ public:
   ///@{
 
   /**
-   * @brief Returns true, if provided name of action is required.
+   * @brief Checks if the provided action is required.
+   *
+   * @param[in] action the name of the action
+   * @returns whether the action is required
    *
    * Some features of preCICE require a solver to perform specific actions, in
    * order to be in valid state for a coupled simulation. A solver is made
    * eligible to use those features, by querying for the required actions,
    * performing them on demand, and calling fulfilledAction() to signalize
    * preCICE the correct behavior of the solver.
+   *
+   * @see fulfilledAction()
+   * @see cplscheme::constants
    */
   bool isActionRequired ( const std::string& action );
 
   /**
-   * @brief Tells preCICE that a required action has been fulfilled by a solver.
+   * @brief Indicates preCICE that a required action has been fulfilled by a solver.
    *
-   * For more details see method requireAction().
+   * @pre The solver fulfilled the specified action.
+   *
+   * @param[in] action the name of the action
+   *
+   * @see requireAction()
+   * @see cplscheme::constants
    */
   void fulfilledAction ( const std::string& action );
 
@@ -287,7 +347,7 @@ public:
   ///@name Mesh Access
   ///@{
 
-  /**
+  /*
    * @brief Resets mesh with given ID.
    *
    * Has to be called, everytime the positions for data to be mapped
@@ -297,27 +357,49 @@ public:
 //  void resetMesh ( int meshID );
 
   /**
-   * @brief Returns true, if the mesh with given name is used.
+   * @brief Checks if the mesh with given name is used by a solver.
+   *
+   * @param[in] meshName the name of the mesh
+   * @returns whether the mesh is used.
    */
   bool hasMesh ( const std::string& meshName ) const;
 
   /**
    * @brief Returns the ID belonging to the mesh with given name.
-   *
-   * The existing names are determined from the configuration.
+   * 
+   * @param[in] meshName the name of the mesh
+   * @returns the id of the corresponding mesh
    */
   int getMeshID ( const std::string& meshName );
 
   /**
-   * @brief Returns all mesh IDs (besides sub-ids).
+   * @brief Returns a id-set of all used meshes by this participant.
+   *
+   * @returns the set of ids.
    */
   std::set<int> getMeshIDs();
 
-  /// Returns a handle to a created mesh.
+  /**
+   * @brief Returns a handle to a created mesh.
+   * 
+   * @param[in] meshName the name of the mesh
+   * @returns the handle to the mesh
+   *
+   * @see precice::MeshHandle
+   */
   MeshHandle getMeshHandle ( const std::string& meshName );
 
   /**
-   * @brief Sets position of surface mesh vertex, returns ID.
+   * @brief Creates a mesh vertex
+   *
+   * @param[in] meshID the id of the mesh to add the vertex to.
+   * @param[in] position a pointer to the coordinates of the vertex.
+   * @returns the id of the created vertex
+   *
+   * @pre initialize() has not yet been called
+   * @pre count of available elements at position matches the configured dimension
+   *
+   * @see getDimensions()
    */
   int setMeshVertex (
     int           meshID,
@@ -325,24 +407,28 @@ public:
 
   /**
    * @brief Returns the number of vertices of a mesh.
+   *
+   * @param[in] meshID the id of the mesh
+   * @returns the amount of the vertices of the mesh
    */
   int getMeshVertexSize(int meshID);
 
   /**
-   * @brief Sets several spatial vertex positions.
+   * @brief Creates multiple mesh vertices
    *
-   * Pre-conditions:
-   * - A not incremental write-mapping is configured for the mesh with given
-   *   meshID.
-   * Post-conditions:
-   * - If no write mapping is configured, the ids are not changed.
-   * - If a (not incremental) write mapping is configured, the ids are filled.
+   * @param[in] meshID the id of the mesh to add the vertices to.
+   * @param[in] size Number of vertices to create
+   * @param[in] positions a pointer to the coordinates of the vertices
+   *            The 2D-format is (d0x, d0y, d1x, d1y, ..., dnx, dny)
+   *            The 3D-format is (d0x, d0y, d0z, d1x, d1y, d1z, ..., dnx, dny, dnz)
    *
-   * @param[in] meshID ID of mesh on which the vertices live
-   * @param[in] size Number of vertices
-   * @param[in] positions Positions of vertics, Format is (d0x, d0y, d0z, d1x, d1y, d1z, ...., dnx, dny, dnz), 
-   *                      where n * the number of vector values. In 2D, the z-components are removed.
-   * @param[out] ids IDs for data to be written from given positions.
+   * @param[out] ids The ids of the created vertices
+   *
+   * @pre initialize() has not yet been called
+   * @pre count of available elements at positions matches the configured dimension * size
+   * @pre count of available elements at ids matches size
+   *
+   * @see getDimensions()
    */
   void setMeshVertices (
     int     meshID,
@@ -351,12 +437,19 @@ public:
     int*    ids );
 
   /**
-   * @brief Gets spatial vertex positions for given IDs.
+   * @brief Get vertex positions for multiple vertex ids from a given mesh
    *
-   * @param[in] meshID ID of the mesh to retrieve positions from
-   * @param[in] size Number of positions and ids
-   * @param[in] ids IDs obtained when setting write positions.
-   * @param[in] positions Positions corresponding to IDs.
+   * @param[in] meshID the id of the mesh to read the vertices from.
+   * @param[in] size Number of vertices to lookup
+   * @param[in] ids The ids of the vertices to lookup
+   * @param[out] positions a pointer to memory to write the coordinates to
+   *            The 2D-format is (d0x, d0y, d1x, d1y, ..., dnx, dny)
+   *            The 3D-format is (d0x, d0y, d0z, d1x, d1y, d1z, ..., dnx, dny, dnz)
+   *
+   * @pre count of available elements at positions matches the configured dimension * size
+   * @pre count of available elements at ids matches size
+   *
+   * @see getDimensions()
    */
   void getMeshVertices (
     int     meshID,
