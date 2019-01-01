@@ -307,7 +307,8 @@ BOOST_AUTO_TEST_CASE(TestComputeBoundingBox, * testing::OnSize(4))
 
   if (utils::Parallel::getProcessRank() == 0)
   {
-    m2n->getMasterCommunication()->send(3, 0);
+    std::vector<int> connectedRanks = {0, 1, 2};
+    m2n->getMasterCommunication()->send(connectedRanks, 0);
 
     // construct connection map
     std::map<int, std::vector<int>> sendConnectionMap;

@@ -73,6 +73,7 @@ void ProvidedBoundingBox::computeBoundingBox()
 
   // size of the feedbackmap that is received here
   int remoteConnectionMapSize = 0;
+  std::vector<int> connectedRanksList;
 
   std::map<int, std::vector<int>> remoteConnectionMap;
 
@@ -81,9 +82,11 @@ void ProvidedBoundingBox::computeBoundingBox()
 
     // master receives feedback map (map of other participant ranks -> connected ranks at this participant)
     // from other participants master
-    _m2n->getMasterCommunication()->receive(remoteConnectionMapSize, 0);
-    for (int i = 0; i < remoteConnectionMapSize; i++) {
-      remoteConnectionMap[i] = {-1};
+    _m2n->getMasterCommunication()->receive(connectedRanksList, 0);
+    remoteConnectionMapSize = connectedRanksList.size();
+    
+    for (auto &rank : connectedRanksList) {
+      remoteConnectionMap[rank] = {-1};
     }
     if (remoteConnectionMapSize != 0)
       com::CommunicateBoundingBox(_m2n->getMasterCommunication()).receiveConnectionMap(remoteConnectionMap, 0);

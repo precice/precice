@@ -61,11 +61,7 @@ void ReceivedBoundingBox::computeBoundingBox()
     com::CommunicateBoundingBox(utils::MasterSlave::_communication).broadcastSendBoundingBoxMap(_remoteBBM);
 
     std::map<int, std::vector<int>> connectionMap;
-
-    // initialize feedbackmap
-    for (int rank_slave = 1; rank_slave < utils::MasterSlave::_size; rank_slave++) {
-      connectionMap[rank_slave].push_back(-1);
-    }
+    std::vector<int> connectedRanksList;
 
     // connected ranks for master
     for (auto &remoteBB : _remoteBBM) {
@@ -74,23 +70,32 @@ void ReceivedBoundingBox::computeBoundingBox()
       }
     }
     if (_mesh->getConnectedRanks().size() != 0)
-      connectionMap[0] = _mesh->getConnectedRanks();
-
+    {
+     connectionMap[0] = _mesh->getConnectedRanks();
+     connectedRanksList.push_back(0);
+    }
+      
     // receive connected ranks from slaves and add them to the connection map
+    std::vector<int> slaveConnectedRanks;
     for (int rank = 1; rank < utils::MasterSlave::_size; rank++) {
       int connectedRanksSize = 0;
       utils::MasterSlave::_communication->receive(connectedRanksSize, rank);
       if (connectedRanksSize != 0) {
-        std::vector<int> slaveConnectedRanks;
+        connectedRanksList.push_back(rank);
+        connectionMap[rank].push_back(-1);        
         utils::MasterSlave::_communication->receive(slaveConnectedRanks, rank);
         connectionMap[rank] = slaveConnectedRanks;
+        slaveConnectedRanks.clear();
       }
     }
 
     // send connectionMap to other master
-    _m2n->getMasterCommunication()->send((int) connectionMap.size(), 0);
-    if (connectionMap.size() != 0) { // @todo we need an error message here instead
+    _m2n->getMasterCommunication()->send(connectedRanksList, 0);
+    if (connectionMap.size() != 0) { // @todo we need an error message here instea
       com::CommunicateBoundingBox(_m2n->getMasterCommunication()).sendConnectionMap(connectionMap, 0);
+    } else
+    {
+      ERROR("This participant has no rank in the interface! Please check your test case and make sure that the mesh partition given to preCICE is loacted in the interface");
     }
 
   } else if (utils::MasterSlave::_slaveMode) {
