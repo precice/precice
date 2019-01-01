@@ -88,9 +88,9 @@ void CommunicateBoundingBox::receiveConnectionMap(
     int              rank;
     std::vector<int> connected_ranks;
     _communication->receive(rank, rankSender);
-    assertion((int) i == rank);
     _communication->receive(connected_ranks, rankSender);
     fbm[rank] = connected_ranks;
+    connected_ranks.clear();
   }
 }
 
