@@ -10,8 +10,11 @@
 namespace precice {
 namespace partition {
 /**
- * @brief A partition that is computed from a mesh received from another participant.
- *
+ * @brief this class is supposed to:
+ * 1- receive a set of bounding boxes from other solver
+ * 2- each rank compares its bounding box with received set of boundingboxs
+ * 3- if there is intersection, local rank is added to the connection map
+ * 4- connection map sent to the other participant  
  * @todo add documentation
  */
 class ReceivedBoundingBox : public Partition
