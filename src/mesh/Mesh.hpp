@@ -265,9 +265,9 @@ public:
   }
 
   /// Returns a vector of connected ranks
-  std::vector<int> & getInitialConnectionMap()
+  std::vector<int> & getConnectedRanks()
   {
-    return _initialConnectionMap;           
+    return _connectedRanks;
   }
   
   /// Returns a mapping from remote local connected ranks to the corresponding vertex IDs
@@ -357,14 +357,14 @@ private:
   int _globalNumberOfVertices = -1;
 
   /**
-   * @brief each rank stores list of connected ranks. 
-   * Later in M2N package, this will be used to create initial communication channels. 
+   * @brief each rank stores list of connected remote ranks.
+   * In the m2n package, this is used to create the initial communication channels.
    */
-  std::vector<int> _initialConnectionMap;
+  std::vector<int> _connectedRanks;
 
   /**
    * @brief each rank stores list of connected ranks and corresponding vertex IDs here. 
-   * Later in M2N package, this will be used to create communication channels. 
+   * In the m2n package, this is used to create the final communication channels.
    */
   CommunicationMap _communicationMap;
 

@@ -3,7 +3,6 @@
 #include "logging/Logger.hpp"
 #include "mesh/Mesh.hpp"
 
-
 namespace precice
 {
 namespace com
@@ -18,43 +17,43 @@ public:
       com::PtrCommunication communication);
 
   void sendBoundingBox(
-    const mesh::Mesh::BoundingBox &bb,
+      const mesh::Mesh::BoundingBox &bb,
       int                            rankReceiver);
 
   void receiveBoundingBox(
-    mesh::Mesh::BoundingBox &bb,
+      mesh::Mesh::BoundingBox &bb,
       int                      rankSender);
 
   void sendBoundingBoxMap(
-    mesh::Mesh::BoundingBoxMap &bbm,
+      mesh::Mesh::BoundingBoxMap &bbm,
       int                         rankReceiver);
 
   void receiveBoundingBoxMap(
-    mesh::Mesh::BoundingBoxMap &bbm,
+      mesh::Mesh::BoundingBoxMap &bbm,
       int                         rankSender);
 
-  void sendFeedbackMap(
-    std::map<int, std::vector<int>> &fbm,
-      int                         rankReceiver);
+  void sendConnectionMap(
+      std::map<int, std::vector<int>> &fbm,
+      int                              rankReceiver);
 
-  void receiveFeedbackMap(
-    std::map<int, std::vector<int>> &fbm,
-      int                         rankSender);
+  void receiveConnectionMap(
+      std::map<int, std::vector<int>> &fbm,
+      int                              rankSender);
 
-  /// This method broadcasts the set of bounding boxes (gathered in the master rank) to the slaves.  
+  /// This method broadcasts the set of bounding boxes (gathered in the master rank) to the slaves.
   void broadcastSendBoundingBoxMap(
-    mesh::Mesh::BoundingBoxMap &bbm);
+      mesh::Mesh::BoundingBoxMap &bbm);
 
-  /// Slaves call this method to receive the set of bounding boxes sent by the master. 
+  /// Slaves call this method to receive the set of bounding boxes sent by the master.
   void broadcastReceiveBoundingBoxMap(
-    mesh::Mesh::BoundingBoxMap &bbm);
+      mesh::Mesh::BoundingBoxMap &bbm);
 
-  void broadcastSendFeedbackMap(
-    std::map<int, std::vector<int>> &fbm);
+  void broadcastSendConnectionMap(
+      std::map<int, std::vector<int>> &fbm);
 
-  void broadcastReceiveFeedbackMap(
-    std::map<int, std::vector<int>> &fbm);
-  
+  void broadcastReceiveConnectionMap(
+      std::map<int, std::vector<int>> &fbm);
+
 private:
   logging::Logger _log{"com::CommunicateBoundingBox"};
 
