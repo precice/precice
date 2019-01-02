@@ -428,12 +428,10 @@ void PointToPointCommunication::acceptPreConnection(std::string const &acceptorN
 
   std::vector<int> localConnectedRanks = _mesh->getConnectedRanks();
 
-// Print `communicationMap'.
-#ifdef P2P_LCM_PRINT
-  e.stop(true);
-  print(localConnectionMap);
-  e.start(true);
-#endif
+  if (localConnectedRanks.empty()) {
+    _isConnected = true;
+    return;
+  }
 
 #ifdef SuperMUC_WORK
   try {
@@ -450,12 +448,7 @@ void PointToPointCommunication::acceptPreConnection(std::string const &acceptorN
     utils::Parallel::synchronizeProcesses();
   } catch (...) {
   }
-#endif
-
-  if (localConnectedRanks.empty()) {
-    _isConnected = true;
-    return;
-  }
+#endif  
 
   // Accept point-to-point connections (as server) between the current acceptor
   // process (in the current participant) with rank `utils::MasterSlave::_rank'
@@ -636,6 +629,11 @@ void PointToPointCommunication::requestPreConnection(std::string const &acceptor
 
   std::vector<int> localConnectedRanks = _mesh->getConnectedRanks();
 
+  if (localConnectedRanks.empty()) {
+    _isConnected = true;
+    return;
+  }
+
 #ifdef SuperMUC_WORK
   try {
     auto addressDirectory = _communicationFactory->addressDirectory();
@@ -643,12 +641,7 @@ void PointToPointCommunication::requestPreConnection(std::string const &acceptor
     utils::Parallel::synchronizeProcesses();
   } catch (...) {
   }
-#endif
-
-  if (localConnectedRanks.empty()) {
-    _isConnected = true;
-    return;
-  }
+#endif  
 
   std::vector<com::PtrRequest> requests;
   requests.reserve(localConnectedRanks.size());
