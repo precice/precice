@@ -61,5 +61,3 @@
 /** @namespace precice::xml
  *  @brief contains the XML configuration parser.
  */
-
-// vim: ft=cpp
