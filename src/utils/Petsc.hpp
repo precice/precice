@@ -45,6 +45,7 @@ private:
 
 namespace precice {
 namespace utils {
+/// PETSc related utilities
 namespace petsc {
 
 enum VIEWERFORMAT { ASCII, BINARY };

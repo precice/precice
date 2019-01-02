@@ -8,6 +8,7 @@ namespace precice
 {
 namespace math
 {
+/// Provides operations to calculate barycentric coordinates and projection from a point to a primitive.
 namespace barycenter
 {
 
