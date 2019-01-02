@@ -82,6 +82,16 @@ public:
       size_t  size,
       int     valueDimension) = 0;
 
+  /**
+   * @brief Sends a double to connected ranks       
+   */
+  virtual void broadcastSend(double &itemToSend) = 0;
+
+  /**
+   * @brief Receives a double from a connected rank
+   */
+  virtual void broadcastReceive(double &itemToReceive) = 0;
+
 protected:
   /**
    * @brief mesh that dictates the distribution of this mapping

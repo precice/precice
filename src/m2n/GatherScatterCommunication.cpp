@@ -162,5 +162,13 @@ void GatherScatterCommunication::receive(
   } // Master
 }
 
+void GatherScatterCommunication::broadcastSend(double &itemToSend)
+{  
+}
+
+void GatherScatterCommunication::broadcastReceive(double &itemToReceive)
+{
+}
+
 } // namespace m2n
 } // namespace precice

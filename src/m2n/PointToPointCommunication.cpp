@@ -4,7 +4,6 @@
 #include "com/Communication.hpp"
 #include "com/CommunicationFactory.hpp"
 #include "com/CommunicateMesh.hpp"
-#include "mesh/Mesh.hpp"
 #include "utils/EventTimings.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/Publisher.hpp"
@@ -406,7 +405,7 @@ void PointToPointCommunication::acceptPreConnection(std::string const &acceptorN
                                                  std::string const &requesterName)
 {
   TRACE(acceptorName, requesterName);
-  CHECK(not isConnected(), "Already connected!");
+  assertion(not isConnected(), "Already connected!");
   CHECK(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode,
         "You can only use a point-to-point communication between two participants which both use a master. "
             << "Please use distribution-type gather-scatter instead.");
@@ -427,20 +426,12 @@ void PointToPointCommunication::acceptPreConnection(std::string const &acceptorN
     assertion(utils::MasterSlave::_slaveMode);
   }
 
-  std::vector<int> localConnectionMap = _mesh->getInitialConnectionMap();
+  std::vector<int> localConnectedRanks = _mesh->getConnectedRanks();
 
 // Print `communicationMap'.
 #ifdef P2P_LCM_PRINT
   e.stop(true);
   print(localConnectionMap);
-  e.start(true);
-#endif
-
-// Print statistics of `communicationMap'.
-#ifdef P2P_LCM_PRINT_STATS
-  e.stop(true);
-  printCommunicationPartnerCountStats(localConnectionMap);
-  printLocalIndexCountStats(localConnectionMap);
   e.start(true);
 #endif
 
@@ -461,7 +452,7 @@ void PointToPointCommunication::acceptPreConnection(std::string const &acceptorN
   }
 #endif
 
-  if (localConnectionMap.empty()) {
+  if (localConnectedRanks.empty()) {
     _isConnected = true;
     return;
   }
@@ -480,19 +471,12 @@ void PointToPointCommunication::acceptPreConnection(std::string const &acceptorN
       acceptorName,
       requesterName,
       utils::MasterSlave::_rank,
-      localConnectionMap.size());
+      localConnectedRanks.size());
 
-  _mappings.reserve(localConnectionMap.size());
+  _connectionData.reserve(localConnectedRanks.size());
 
-  // we need to create dummyindices because at this point we neither need list
-  // of indices nor have them, But we want to keep using same _mappings data structure
-  std::vector<int> dummyIndices;
-  dummyIndices.push_back(-1);
-
-  for (auto & comMap : localConnectionMap) {
+  for (auto & comMap : localConnectedRanks) {
     int globalRequesterRank = comMap;
-    
-    auto indices = std::move(dummyIndices);
 
     /*
       NOTE:
@@ -503,7 +487,7 @@ void PointToPointCommunication::acceptPreConnection(std::string const &acceptorN
       therefore, for data structure consistency of `_mappings' with the requester participant side, 
       we simply duplicate references to the same communication object `c'.
     */
-    _mappings.push_back({globalRequesterRank, std::move(indices), c, com::PtrRequest(), {}});
+    _connectionData.push_back({globalRequesterRank, c, com::PtrRequest(), {}});
   }
 
   _isConnected = true;
@@ -650,22 +634,7 @@ void PointToPointCommunication::requestPreConnection(std::string const &acceptor
     assertion(utils::MasterSlave::_slaveMode);
   }
 
-  std::vector<int> localConnectionMap = _mesh->getInitialConnectionMap();
-
-// Print `communicationMap'.
-#ifdef P2P_LCM_PRINT
-  e.stop(true);
-  print(localConnectionMap);
-  e.start(true);
-#endif
-
-// Print statistics of `communicationMap'.
-#ifdef P2P_LCM_PRINT_STATS
-  e.stop(true);
-  printCommunicationPartnerCountStats(localConnectionMap);
-  printLocalIndexCountStats(localConnectionMap);
-  e.start(true);
-#endif
+  std::vector<int> localConnectedRanks = _mesh->getConnectedRanks();
 
 #ifdef SuperMUC_WORK
   try {
@@ -676,17 +645,17 @@ void PointToPointCommunication::requestPreConnection(std::string const &acceptor
   }
 #endif
 
-  if (localConnectionMap.empty()) {
+  if (localConnectedRanks.empty()) {
     _isConnected = true;
     return;
   }
 
   std::vector<com::PtrRequest> requests;
-  requests.reserve(localConnectionMap.size());
-  _mappings.reserve(localConnectionMap.size());
+  requests.reserve(localConnectedRanks.size());
+  _connectionData.reserve(localConnectedRanks.size());
 
   std::set<int> acceptingRanks;
-  for (auto &i : localConnectionMap)
+  for (auto &i : localConnectedRanks)
     acceptingRanks.emplace(i);
 
   auto c = _communicationFactory->newCommunication();
@@ -697,13 +666,8 @@ void PointToPointCommunication::requestPreConnection(std::string const &acceptor
   // requester process (in the current participant) and (multiple) acceptor
   // processes (in the acceptor participant) with ranks `globalAcceptorRank'
   // according to communication map.
-  // we need to create dummyindices because at this point we neither need list
-  // of indices nor have them, But we want to keep using same _mappings data structure  
-  std::vector<int> dummyIndices;
-  dummyIndices.push_back(-1);
-  for (auto &i : localConnectionMap) {
+  for (auto &i : localConnectedRanks) {
     auto globalAcceptorRank = i;
-    auto indices            = std::move(dummyIndices);
 
 #ifdef SuperMUC_WORK
     Publisher::ScopedPushDirectory spd("." + acceptorName + "-" + _mesh->getName() + "-" +
@@ -715,7 +679,7 @@ void PointToPointCommunication::requestPreConnection(std::string const &acceptor
     // On the requester participant side, the communication objects behave
     // as clients, i.e. each of them requests only one connection to
     // acceptor process (in the acceptor participant).
-    _mappings.push_back({globalAcceptorRank, std::move(indices), c, com::PtrRequest(), {}});
+    _connectionData.push_back({globalAcceptorRank, c, com::PtrRequest(), {}});
   }
   _isConnected = true;
 }
@@ -799,6 +763,21 @@ void PointToPointCommunication::receive(double *itemsToReceive,
       i++;
     }
   }
+}
+
+void PointToPointCommunication::broadcastSend(double &itemToSend)
+{  
+  for (auto &mapping : _connectionData) {
+    mapping.communication->send(itemToSend, mapping.remoteRank);
+  }  
+}
+
+void PointToPointCommunication::broadcastReceive(double &itemToReceive)
+                                
+{  
+  for (auto &mapping : _connectionData) {
+    mapping.communication->receive(itemToReceive, mapping.remoteRank);
+  }  
 }
 
 void PointToPointCommunication::checkBufferedRequests(bool blocking)

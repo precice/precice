@@ -74,6 +74,16 @@ public:
       size_t  size,
       int     valueDimension);
 
+   /**
+   * @brief Sends a double to connected ranks       
+   */
+  virtual void broadcastSend(double &itemToSend);
+
+  /**
+   * @brief Receives a double from a connected rank
+   */
+  virtual void broadcastReceive(double &itemToReceive);
+
 private:
   logging::Logger _log{"m2n::GatherScatterCommunication"};
 

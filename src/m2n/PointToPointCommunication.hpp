@@ -53,7 +53,7 @@ public:
                                  std::string const &requesterName);
 
   /** same as acceptconnection, but this one does not need vertex distribution
-      and instead gets communication map directly from mesh. 
+      and instead gets connected ranks directly from mesh. 
    
    *  This one is used only to create initial communication Map.    
    */
@@ -61,18 +61,13 @@ public:
                                    std::string const &requesterName);
   
   /** same as requestConnection, but this one does not need vertex distribution
-      and instead gets communication map directly from mesh. 
+      and instead gets connected ranks directly from mesh. 
    
    *  This one is used only to create initial communication Map.    
    */
   virtual void requestPreConnection(std::string const &acceptorName,
                                     std::string const &requesterName);
 
-  /**
-   * @brief Disconnects from communication space, i.e. participant.
-   *
-   * This method is called on destruction.
-   */
   /**
    * @brief Disconnects from communication space, i.e. participant.
    *
@@ -93,6 +88,16 @@ public:
   virtual void receive(double *itemsToReceive,
                        size_t  size,
                        int     valueDimension = 1);
+
+  /**
+   * @brief Sends a double to connected ranks       
+   */
+  virtual void broadcastSend(double &itemToSend);
+
+  /**
+   * @brief Receives a double from a connected rank
+   */
+  virtual void broadcastReceive(double &itemToReceive);
 
 private:
   logging::Logger _log{"m2n::PointToPointCommunication"};
@@ -127,6 +132,26 @@ private:
    *        mappings (one to service each point-to-point connection).
    */
   std::vector<Mapping> _mappings;
+
+   /**
+   * @brief this data structure is used to store m2n communication information for the 1 step of 
+   *        bounding box initialization. It stores:
+   *        1. global remote process rank;
+   *        2. communication object (provides point-to-point communication routines).
+   *        3. Appropriatly sized buffer to receive elements
+   */
+  struct ConnectionData {
+    int                   remoteRank;
+    com::PtrCommunication communication;
+    com::PtrRequest       request;
+    std::vector<double>   recvBuffer;
+  };
+
+  /**
+   * @brief Local (for process rank in the current participant) vector of
+   *        ConnectionData (one to service each point-to-point connection).
+   */
+  std::vector<ConnectionData> _connectionData;
 
   bool _isConnected = false;
 
