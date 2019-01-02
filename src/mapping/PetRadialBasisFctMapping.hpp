@@ -401,9 +401,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
             distance[d] = 0;
           }
         }
-        if (_basisFunction.getSupportRadius() > distance.norm()) {
-          double coeff = _basisFunction.evaluate(distance.norm());
-          rowVals[colNum] = coeff;
+        double const norm = distance.norm();
+        if (_basisFunction.getSupportRadius() > norm) {
+          rowVals[colNum] = _basisFunction.evaluate(norm);
           colIdx[colNum++] = col; // column of entry is the globalIndex
         }
       }
@@ -483,9 +483,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
           if (_deadAxis[d])
             distance[d] = 0;
         }
-        if (_basisFunction.getSupportRadius() > distance.norm()) {
-          double coeff = _basisFunction.evaluate(distance.norm());
-          rowVals[colNum] = coeff;
+        double const norm = distance.norm();
+        if (_basisFunction.getSupportRadius() > norm) {
+          rowVals[colNum] = _basisFunction.evaluate(norm);
           colIdx[colNum++] = inVertex.getGlobalIndex() + polyparams;
         }
       }
@@ -1133,8 +1133,9 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::savedPreallocationMatrixC(mes
         if (_deadAxis[d])
           distance[d] = 0;
 
-      if (_basisFunction.getSupportRadius() > distance.norm() or col == global_row) {
-        vertexData[local_row - localPolyparams].emplace_back( vj.getGlobalIndex() + polyparams, distance.norm() );
+      double const norm = distance.norm();
+      if (_basisFunction.getSupportRadius() > norm or col == global_row) {
+        vertexData[local_row - localPolyparams].emplace_back(vj.getGlobalIndex() + polyparams, norm);
         if (mappedCol >= colOwnerRangeCBegin and mappedCol < colOwnerRangeCEnd)
           d_nnz[local_row]++;
         else
@@ -1213,10 +1214,11 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::savedPreallocationMatrixA(mes
       for (int d = 0; d < dimensions; d++)
         if (_deadAxis[d])
           distance[d] = 0;
-
-      if (_basisFunction.getSupportRadius() > distance.norm()) {
+      
+      double const norm = distance.norm();
+      if (_basisFunction.getSupportRadius() > norm) {
         col = inVertex.getGlobalIndex() + polyparams;
-        vertexData[localRow].emplace_back(col, distance.norm());
+        vertexData[localRow].emplace_back(col, norm);
 
         AOApplicationToPetsc(_AOmapping, 1, &col);
         if (col >= colOwnerRangeABegin and col < colOwnerRangeAEnd)
@@ -1306,8 +1308,9 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixC(mesh::
         if (_deadAxis[d])
           distance[d] = 0;
 
-      if (supportRadius > distance.norm() or col == global_row) {
-        vertexData[local_row - localPolyparams].emplace_back( vj.getGlobalIndex() + polyparams, distance.norm() );
+      double const norm = distance.norm();
+      if (supportRadius > norm or col == global_row) {
+        vertexData[local_row - localPolyparams].emplace_back(vj.getGlobalIndex() + polyparams, norm);
         if (mappedCol >= colOwnerRangeCBegin and mappedCol < colOwnerRangeCEnd)
           d_nnz[local_row]++;
         else
@@ -1396,9 +1399,10 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixA(mesh::
           if (_deadAxis[d])
             distance[d] = 0;
 
-        if (supportRadius > distance.norm()) {
+        double const norm = distance.norm();
+        if (supportRadius > norm) {
           col = inVertex.getGlobalIndex() + polyparams;
-          vertexData[localRow].emplace_back(col, distance.norm());
+          vertexData[localRow].emplace_back(col, norm);
 
           AOApplicationToPetsc(_AOmapping, 1, &col);
           if (col >= colOwnerRangeABegin and col < colOwnerRangeAEnd)
