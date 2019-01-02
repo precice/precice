@@ -212,17 +212,13 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
   setInputRequirement(Mapping::MeshRequirement::VERTEX);
   setOutputRequirement(Mapping::MeshRequirement::VERTEX);
   
-  _deadAxis.resize(dimensions);
   if (getDimensions()==2) {
-    _deadAxis[0] = xDead;
-    _deadAxis[1] = yDead;
+    _deadAxis = {xDead, yDead};
     CHECK(not (xDead and yDead), "You cannot choose all axes to be dead for a RBF mapping");
     CHECK(not zDead, "You cannot dead out the z-axis if dimension is set to 2");
   }
   else if (getDimensions()==3) {
-    _deadAxis[0] = xDead;
-    _deadAxis[1] = yDead;
-    _deadAxis[2] = zDead;
+    _deadAxis = {xDead, yDead, zDead};
     CHECK(not (xDead and yDead and zDead), "You cannot choose all axes to be dead for a RBF mapping");
   }
   else {
