@@ -131,7 +131,7 @@ private:
   const double _solverRtol;
 
   /// true if the mapping along some axis should be ignored
-  bool* _deadAxis;
+  std::vector<bool> _deadAxis;
 
   /// Toggles the use of the additonal polynomial
   Polynomial _polynomial;
@@ -212,7 +212,7 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
   setInputRequirement(Mapping::MeshRequirement::VERTEX);
   setOutputRequirement(Mapping::MeshRequirement::VERTEX);
   
-  _deadAxis = new bool[dimensions];
+  _deadAxis.resize(dimensions);
   if (getDimensions()==2) {
     _deadAxis[0] = xDead;
     _deadAxis[1] = yDead;
@@ -242,7 +242,6 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
 template<typename RADIAL_BASIS_FUNCTION_T>
 PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::~PetRadialBasisFctMapping()
 {
-  delete[] _deadAxis;
   petsc::destroy(&_AOmapping);
 }
 
