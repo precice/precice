@@ -419,6 +419,148 @@ BOOST_AUTO_TEST_CASE(ConnectionTest, * testing::OnSize(4))
   
 }
 
+BOOST_AUTO_TEST_CASE(P2PMeshBroadcastTest, * testing::OnSize(4))
+{
+
+  assertion(utils::Parallel::getCommunicatorSize() == 4);
+
+  // com::PtrCommunicationFactory cf(new com::SocketCommunicationFactory);
+  com::PtrCommunicationFactory cf(new com::MPIPortsCommunicationFactory); 
+  utils::MasterSlave::_communication = std::make_shared<com::MPIDirectCommunication>();
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 2, true));
+  int dimensions = 2;
+
+  switch (utils::Parallel::getProcessRank()) {
+  case 0: {
+    utils::Parallel::splitCommunicator("Fluid.Master");
+
+    utils::MasterSlave::_rank       = 0;
+    utils::MasterSlave::_size       = 2;
+    utils::MasterSlave::_masterMode = true;
+    utils::MasterSlave::_slaveMode  = false;
+
+    utils::MasterSlave::_communication->acceptConnection("Fluid.Master", "Fluid.Slave", utils::Parallel::getProcessRank());
+    utils::MasterSlave::_communication->setRankOffset(1);
+
+    Eigen::VectorXd position(dimensions);
+    position <<5.5, 0.0;
+    mesh::Vertex& v1 = mesh->createVertex(position);
+    position << 1.0, 2.0;
+    mesh::Vertex& v2 = mesh->createVertex(position);
+    mesh->createEdge(v1, v2);
+
+    mesh->getConnectedRanks().push_back(0);
+//    mesh->getCommunicationMap()[1].push_back(-1);    
+    
+    break;
+  }
+  case 1: {
+    utils::Parallel::splitCommunicator("Fluid.Slave");
+
+    utils::MasterSlave::_rank       = 1;
+    utils::MasterSlave::_size       = 2;
+    utils::MasterSlave::_masterMode = false;
+    utils::MasterSlave::_slaveMode  = true;
+
+    utils::MasterSlave::_communication->requestConnection("Fluid.Master", "Fluid.Slave", 0, 1);
+
+    Eigen::VectorXd position(dimensions);
+    position <<1.5, 0.0;
+    mesh::Vertex& v1 = mesh->createVertex(position);
+    position << 1.5, 2.0;
+    mesh::Vertex& v2 = mesh->createVertex(position);
+    mesh->createEdge(v1, v2);
+
+    mesh->getConnectedRanks().push_back(1);
+    
+    break;
+  }
+  case 2: {
+    utils::Parallel::splitCommunicator("Solid.Master");
+
+    utils::MasterSlave::_rank       = 0;
+    utils::MasterSlave::_size       = 2;
+    utils::MasterSlave::_masterMode = true;
+    utils::MasterSlave::_slaveMode  = false;
+
+    utils::MasterSlave::_communication->acceptConnection("Solid.Master", "Solid.Slave", utils::Parallel::getProcessRank());
+    utils::MasterSlave::_communication->setRankOffset(1);
+
+    Eigen::VectorXd position(dimensions);
+    position << 1.5, 0.0;
+    mesh::Vertex& v1 = mesh->createVertex(position);
+    position << 1.0, 2.0;
+    mesh::Vertex& v2 = mesh->createVertex(position);
+    mesh->createEdge(v1, v2);
+
+    mesh->getConnectedRanks().push_back(0);
+    //mesh->getCommunicationMap()[1].push_back(-1);     
+
+    break;
+  }
+  case 3: {
+    utils::Parallel::splitCommunicator("Solid.Slave");
+
+    utils::MasterSlave::_rank       = 1;
+    utils::MasterSlave::_size       = 2;
+    utils::MasterSlave::_masterMode = false;
+    utils::MasterSlave::_slaveMode  = true;
+
+    utils::MasterSlave::_communication->requestConnection("Solid.Master", "Solid.Slave", 0, 1);
+
+    Eigen::VectorXd position(dimensions);
+    position <<1.0, 0.0;
+    mesh::Vertex& v1 = mesh->createVertex(position);
+    position << 1.0, 2.0;
+    mesh::Vertex& v2 = mesh->createVertex(position);
+    mesh->createEdge(v1, v2);
+  
+    mesh->getConnectedRanks().push_back(1);
+
+    break;
+  }
+  }
+
+  m2n::PointToPointCommunication c(cf, mesh);
+
+  if (utils::Parallel::getProcessRank() < 2) {
+  
+    c.requestPreConnection("Solid", "Fluid");
+    c.broadcastSendMesh(*mesh);
+  } else {
+
+    c.acceptPreConnection("Solid", "Fluid");    
+    c.broadcastReceiveMesh(*mesh);
+
+      if(utils::Parallel::getProcessRank() ==2 )
+      {     
+        BOOST_TEST(mesh->vertices().size()==4);
+        BOOST_TEST(mesh->vertices()[2].getCoords()[0]==5.50);
+        BOOST_TEST(mesh->vertices()[2].getCoords()[1]==0.0);
+        BOOST_TEST(mesh->vertices()[3].getCoords()[0]==1.0);
+        BOOST_TEST(mesh->vertices()[3].getCoords()[1]==2.0);        
+      }
+
+      if(utils::Parallel::getProcessRank() ==3 )
+      {      
+        BOOST_TEST(mesh->vertices().size()==4);
+        BOOST_TEST(mesh->vertices()[2].getCoords()[0]==1.50);
+        BOOST_TEST(mesh->vertices()[2].getCoords()[1]==0.0);
+        BOOST_TEST(mesh->vertices()[3].getCoords()[0]==1.50);
+        BOOST_TEST(mesh->vertices()[3].getCoords()[1]==2.0);
+      }
+    
+  }
+  
+  utils::MasterSlave::_communication = nullptr;
+  utils::MasterSlave::reset();
+  utils::Parallel::synchronizeProcesses();
+  utils::Parallel::clearGroups();
+  mesh::Mesh::resetGeometryIDsGlobally();
+  mesh::Data::resetDataCount();
+  utils::Parallel::setGlobalCommunicator(utils::Parallel::getCommunicatorWorld());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 #endif // not PRECICE_NO_MPI
