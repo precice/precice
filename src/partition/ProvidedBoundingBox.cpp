@@ -126,7 +126,7 @@ void ProvidedBoundingBox::computeBoundingBox()
   }
 }
 
-// these functions will be implemented in package 3
+
 void ProvidedBoundingBox::communicate()
 {
   // each rank send its mesh partition to connected ranks at other participant

@@ -30,9 +30,9 @@ public:
 
   /// bounding boxes are compared and feedback sent to master of other participant
   virtual void computeBoundingBox();
-  
-  /// These functions will be implemented in 3rd package
+    
   virtual void communicate ();
+  
   virtual void compute (); 
     
 private:
