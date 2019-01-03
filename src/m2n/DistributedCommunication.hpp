@@ -63,6 +63,24 @@ public:
       const std::string &acceptorName,
       const std::string &requesterName) = 0;
 
+  /** same as acceptconnection, but this one does not need vertex distribution
+      and instead gets communication map directly from mesh. 
+   
+   *  This one is used only to create initial communication Map.    
+   */
+  virtual void acceptPreConnection(
+    std::string const &acceptorName,
+    std::string const &requesterName) = 0;
+  
+  /** same as requestConnection, but this one does not need vertex distribution
+      and instead gets communication map directly from mesh. 
+   
+   *  This one is used only to create initial communication Map.    
+   */
+  virtual void requestPreConnection(
+    std::string const &acceptorName,
+    std::string const &requesterName) = 0;
+
   /**
    * @brief Disconnects from communication space, i.e. participant.
    *

@@ -162,6 +162,16 @@ void GatherScatterCommunication::receive(
   } // Master
 }
 
+void GatherScatterCommunication::acceptPreConnection(
+  std::string const &acceptorName,
+  std::string const &requesterName)
+{}
+ 
+void GatherScatterCommunication::requestPreConnection(
+  std::string const &acceptorName,
+  std::string const &requesterName)
+{}
+
 void GatherScatterCommunication::broadcastSend(double &itemToSend)
 {}
 
