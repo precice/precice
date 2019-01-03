@@ -99,6 +99,16 @@ public:
    */
   virtual void broadcastReceive(double &itemToReceive);
 
+  /**
+   * All ranks send their mesh partition to remote local  connected ranks.
+   */
+  virtual void broadcastSendMesh(mesh::Mesh &mesh);
+  
+  /**
+   * All ranks receive mesh partition from remote local ranks.
+   */
+  virtual void broadcastReceiveMesh(mesh::Mesh &mesh);
+
 private:
   logging::Logger _log{"m2n::PointToPointCommunication"};
 

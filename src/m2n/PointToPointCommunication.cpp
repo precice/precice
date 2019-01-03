@@ -773,6 +773,20 @@ void PointToPointCommunication::broadcastReceive(double &itemToReceive)
   }  
 }
 
+void PointToPointCommunication::broadcastSendMesh(mesh::Mesh &mesh)
+{  
+  for (auto &mapping : _connectionData) {
+    com::CommunicateMesh(mapping.communication).sendMesh(mesh, mapping.remoteRank);
+  }  
+}
+
+void PointToPointCommunication::broadcastReceiveMesh(mesh::Mesh &mesh)
+{  
+  for (auto &mapping : _connectionData) {
+    com::CommunicateMesh(mapping.communication).receiveMesh(mesh, mapping.remoteRank);
+  }  
+}
+
 void PointToPointCommunication::checkBufferedRequests(bool blocking)
 {
   TRACE(bufferedRequests.size());

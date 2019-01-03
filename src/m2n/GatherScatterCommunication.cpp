@@ -163,12 +163,16 @@ void GatherScatterCommunication::receive(
 }
 
 void GatherScatterCommunication::broadcastSend(double &itemToSend)
-{  
-}
+{}
 
 void GatherScatterCommunication::broadcastReceive(double &itemToReceive)
-{
-}
+{}
+
+void GatherScatterCommunication::broadcastSendMesh(mesh::Mesh &mesh)
+{}
+
+void GatherScatterCommunication::broadcastReceiveMesh(mesh::Mesh &mesh)
+{}
 
 } // namespace m2n
 } // namespace precice
