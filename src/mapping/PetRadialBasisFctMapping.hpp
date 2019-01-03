@@ -117,7 +117,8 @@ private:
   /// Coordinates of the output mesh to evaluate the separated polynomial
   petsc::Matrix _matrixV;
 
-  petsc::Vector rescalingCoeffs;
+  /// Interpolant of g(x) = 1 evaluated at output sites, used for rescaling
+  petsc::Vector oneInterpolant;
 
   /// Used to solve matrixC for the RBF weighting factors
   petsc::KSPSolver _solver;
@@ -137,7 +138,7 @@ private:
   Polynomial _polynomial;
 
   /// Toggles use of rescaled basis functions, only active when Polynomial == SEPARATE
-  const bool useRescaling = true;
+  bool const useRescaling = true;
 
   /// Number of coefficients for the integrated polynomial. Depends on dimension and number of dead dimensions
   size_t polyparams;
@@ -262,7 +263,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
   assertion(input()->getDimensions() == output()->getDimensions(),
             input()->getDimensions(), output()->getDimensions());
-  int dimensions = input()->getDimensions();
+  int const dimensions = input()->getDimensions();
   mesh::PtrMesh inMesh;
   mesh::PtrMesh outMesh;
   if (getConstraint() == CONSERVATIVE) {
@@ -383,7 +384,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
     // -- SETS THE COEFFICIENTS --
     if (_preallocation == Preallocation::SAVE or _preallocation == Preallocation::TREE) {
-      const auto & rowVertices = vertexData[preallocRow];
+      auto const & rowVertices = vertexData[preallocRow];
       for (const auto & vertex : rowVertices) {
         rowVals[colNum] = _basisFunction.evaluate(vertex.second);
         colIdx[colNum++] = vertex.first;
@@ -392,7 +393,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     }
     else {
       for (const mesh::Vertex& vj : inMesh->vertices()) {
-        int col = vj.getGlobalIndex() + polyparams;
+        int const col = vj.getGlobalIndex() + polyparams;
         if (row > col)
           continue; // matrix is symmetric
         distance = inVertex.getCoords() - vj.getCoords();
@@ -470,7 +471,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     PetscScalar rowVals[_matrixA.getSize().second]; // holds the values of the entries
 
     if (_preallocation == Preallocation::SAVE or _preallocation == Preallocation::TREE) {
-      const auto & rowVertices = vertexData[row - ownerRangeABegin];
+      auto const & rowVertices = vertexData[row - ownerRangeABegin];
       for (const auto & vertex : rowVertices) {
         rowVals[colNum] = _basisFunction.evaluate(vertex.second);
         colIdx[colNum++] = vertex.first;
@@ -531,13 +532,14 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   //   PCFactorSetShiftType(prec, MAT_SHIFT_NONZERO);
   // }
 
-  // -- COMPUTE RESCALING COEFFICIENTS USING THE SYSTEM MATRIX SOLVER --
+  // -- COMPUTE RESCALING COEFFICIENTS USING THE SYSTEM MATRIX C SOLVER --
   if (useRescaling and (_polynomial == Polynomial::SEPARATE)) {
-    petsc::Vector rhs(_matrixC);
-    ierr = MatCreateVecs(_matrixC, nullptr, &rescalingCoeffs.vector); CHKERRV(ierr);
+    petsc::Vector rhs(_matrixC), rescalingCoeffs(_matrixC);
     VecSet(rhs, 1);
     rhs.assemble();
     _solver.solve(rhs, rescalingCoeffs);
+    ierr = MatCreateVecs(_matrixA, nullptr, &oneInterpolant.vector); CHKERRV(ierr);
+    ierr = MatMult(_matrixA, rescalingCoeffs, oneInterpolant); CHKERRV(ierr); // get the output of g(x) = 1
   }
 
   _hasComputedMapping = true;
@@ -585,7 +587,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
   auto const & inValues = input()->data(inputDataID)->values();
   auto & outValues = output()->data(outputDataID)->values();
 
-  int valueDim = input()->data(inputDataID)->getDimensions();
+  int const valueDim = input()->data(inputDataID)->getDimensions();
   assertion(valueDim == output()->data(outputDataID)->getDimensions(),
             valueDim, output()->data(outputDataID)->getDimensions());
 
@@ -704,15 +706,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
 
       ierr = MatMult(_matrixA, p, out); CHKERRV(ierr);
 
-      if (useRescaling and (_polynomial == Polynomial::SEPARATE)) {
-        petsc::Vector temp(_matrixA);
-        PetscReal min;
-        ierr = MatMult(_matrixA, rescalingCoeffs, temp); CHKERRV(ierr); // get the output of g(x) = 1
-        ierr = VecMin(temp, nullptr, &min); CHKERRV(ierr); // check for zeros before devision
-        if (min < 1e-6)
-          WARN("Zero elements found in rescaling, omit rescaling.");
-        else
-          ierr = VecPointwiseDivide(out, out, temp); CHKERRV(ierr);
+      if (useRescaling and _polynomial == Polynomial::SEPARATE) {
+        ierr = VecPointwiseDivide(out, out, oneInterpolant); CHKERRV(ierr);
       }
 
       if (_polynomial == Polynomial::SEPARATE) {

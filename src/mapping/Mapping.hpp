@@ -149,7 +149,7 @@ private:
 bool operator<(Mapping::MeshRequirement lhs, Mapping::MeshRequirement rhs);
 
 /** Defines the output operation to streams
-* @param[inout] out stream to output to.
+* @param[in,out] out stream to output to.
 * @param[in] val the value to output.
 */
 std::ostream& operator<<(std::ostream& out, Mapping::MeshRequirement val);

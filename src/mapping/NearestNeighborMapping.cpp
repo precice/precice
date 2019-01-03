@@ -101,7 +101,7 @@ void NearestNeighborMapping:: map
                outputValues.size(), valueDimensions, output()->vertices().size() );
   if (getConstraint() == CONSISTENT){
     DEBUG("Map consistent");
-    size_t outSize = output()->vertices().size();
+    size_t const outSize = output()->vertices().size();
     for ( size_t i=0; i < outSize; i++ ){
       int inputIndex = _vertexIndices[i] * valueDimensions;
       for ( int dim=0; dim < valueDimensions; dim++ ){
@@ -112,9 +112,9 @@ void NearestNeighborMapping:: map
   else {
     assertion(getConstraint() == CONSERVATIVE, getConstraint());
     DEBUG("Map conservative");
-    size_t inSize = input()->vertices().size();
+    size_t const inSize = input()->vertices().size();
     for ( size_t i=0; i < inSize; i++ ){
-      int outputIndex = _vertexIndices[i] * valueDimensions;
+      int const outputIndex = _vertexIndices[i] * valueDimensions;
       for ( int dim=0; dim < valueDimensions; dim++ ){
         outputValues(outputIndex+dim) += inputValues((i*valueDimensions)+dim);
       }
