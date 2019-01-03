@@ -64,6 +64,20 @@ public:
   void requestSlavesConnection(const std::string &acceptorName,
                                const std::string &requesterName);
 
+    /**
+   * Same as acceptSlavesConnection except this only creates the channels, 
+   * no vertex list needed!
+   */
+  void acceptSlavesPreConnection(const std::string &acceptorName,
+                                 const std::string &requesterName);
+
+  /** 
+   * Same as requestSlavesConnection except this only creates the channels, 
+   * no vertex list needed!
+   */
+  void requestSlavesPreConnection(const std::string &acceptorName,
+                                  const std::string &requesterName);
+
   /**
    * @brief Disconnects from communication space, i.e. participant.
    *
@@ -95,6 +109,11 @@ public:
    */
   void send(double itemToSend);
 
+  /** 
+   * each rank send its mesh partition to connected ranks
+   */
+  void broadcastSendLocalMesh(mesh::Mesh &mesh);
+
   /// All slaves receive an array of doubles (different for each slave).
   void receive(double *itemsToReceive,
                int     size,
@@ -106,6 +125,11 @@ public:
 
   /// All slaves receive a double (the same for each slave).
   void receive(double &itemToReceive);
+
+  /** 
+   * each rank receives mesh partition from connected ranks
+   */
+  void broadcastReceiveLocalMesh(mesh::Mesh &mesh);
 
 private:
   logging::Logger _log{"m2n::M2N"};

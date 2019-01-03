@@ -103,6 +103,32 @@ void M2N::requestSlavesConnection(
   assertion(_areSlavesConnected);
 }
 
+void M2N::acceptSlavesPreConnection(
+    const std::string &acceptorName,
+    const std::string &requesterName)
+{
+  TRACE(acceptorName, requesterName);
+  _areSlavesConnected = true;
+  for (const auto &pair : _distComs) {
+    pair.second->acceptPreConnection(acceptorName, requesterName);
+    _areSlavesConnected = _areSlavesConnected && pair.second->isConnected();
+    }
+  assertion(_areSlavesConnected);
+}
+
+void M2N::requestSlavesPreConnection(
+  const std::string &acceptorName,
+  const std::string &requesterName)
+{
+  TRACE(acceptorName, requesterName);
+  _areSlavesConnected = true;
+  for (const auto &pair : _distComs) {
+    pair.second->requestPreConnection(acceptorName, requesterName);
+    _areSlavesConnected = _areSlavesConnected && pair.second->isConnected();
+    }
+  assertion(_areSlavesConnected);
+}
+
 void M2N::closeConnection()
 {
   TRACE();
@@ -178,6 +204,18 @@ void M2N::send(double itemToSend)
   }
 }
 
+void M2N::broadcastSendLocalMesh(mesh::Mesh &mesh)
+{
+  int meshID = mesh.getID();
+  if (utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode) {
+    assertion(_areSlavesConnected);
+    assertion(_distComs.find(meshID) != _distComs.end());
+    assertion(_distComs[meshID].get() != nullptr);    
+    _distComs[meshID]->broadcastSendMesh(mesh);
+  } else { //coupling mode
+  }
+}
+
 void M2N::receive(double *itemsToReceive,
                   int     size,
                   int     meshID,
@@ -227,6 +265,18 @@ void M2N::receive(double &itemToReceive)
   utils::MasterSlave::broadcast(itemToReceive);
 
   DEBUG("receive(double): " << itemToReceive);
+}
+
+void M2N::broadcastReceiveLocalMesh(mesh::Mesh &mesh)
+{
+  int meshID = mesh.getID();
+  if (utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode) {
+    assertion(_areSlavesConnected);
+    assertion(_distComs.find(meshID) != _distComs.end());
+    assertion(_distComs[meshID].get() != nullptr);
+    _distComs[meshID]->broadcastReceiveMesh(mesh);
+  } else { //coupling mode
+  }
 }
 
 } // namespace m2n
