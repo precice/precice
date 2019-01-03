@@ -487,6 +487,15 @@ private:
   /// If true, the interface uses a server to operate on coupling data.
   bool _clientMode = false;
 
+  /** If true, mesh definition can be changed.
+   *
+   * To enter this state, call resetMesh() or configure().
+   * To leave this state, call initialize() or advance().
+   *
+   * @see the \ref precice-mesh-access "mesh access functions" in the SolverInterface
+   */
+  bool _canSetMesh = false;
+
   /// Communication when for client-server mode.
   //com::Communication::SharedPointer _clientServerCommunication;
 

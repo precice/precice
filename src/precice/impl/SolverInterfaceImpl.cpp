@@ -176,6 +176,8 @@ void SolverInterfaceImpl:: configure
 
   auto & solverInitEvent = EventRegistry::instance().getStoredEvent("solver.initialize");
   solverInitEvent.start(precice::syncMode);
+
+  _canSetMesh = true;
 }
 
 double SolverInterfaceImpl:: initialize()
@@ -262,6 +264,8 @@ double SolverInterfaceImpl:: initialize()
   }
 
   solverInitEvent.start(precice::syncMode);
+
+  _canSetMesh = false;
 
   return _couplingScheme->getNextTimestepMaxLength();
 }
@@ -620,6 +624,7 @@ void SolverInterfaceImpl:: resetMesh
     DEBUG ( "Clear mesh positions for mesh \"" << context.mesh->getName() << "\"" );
     context.mesh->clear ();
   }
+  _canSetMesh = true; /// @TODO keep track of individual mesh state
 }
 
 int SolverInterfaceImpl:: setMeshVertex
@@ -628,6 +633,9 @@ int SolverInterfaceImpl:: setMeshVertex
   const double* position )
 {
   TRACE(meshID);
+  if(!_canSetMesh) {
+      ERROR("Cannot set the mesh in the current state!");
+  }
   Eigen::VectorXd internalPosition(_dimensions);
   for ( int dim=0; dim < _dimensions; dim++ ){
     internalPosition[dim] = position[dim];
@@ -659,6 +667,9 @@ void SolverInterfaceImpl:: setMeshVertices
   int*    ids )
 {
   TRACE(meshID, size);
+  if(!_canSetMesh) {
+      ERROR("Cannot set the mesh in the current state!");
+  }
   if (_clientMode){
     _requestManager->requestSetMeshVertices(meshID, size, positions, ids);
   }
@@ -751,6 +762,9 @@ int SolverInterfaceImpl:: setMeshEdge
   int secondVertexID )
 {
   TRACE(meshID, firstVertexID, secondVertexID );
+  if(!_canSetMesh) {
+      ERROR("Cannot set the mesh in the current state!");
+  }
   if ( _clientMode ){
     return _requestManager->requestSetMeshEdge ( meshID, firstVertexID, secondVertexID );
   }
@@ -783,6 +797,9 @@ void SolverInterfaceImpl:: setMeshTriangle
 {
   TRACE(meshID, firstEdgeID,
                   secondEdgeID, thirdEdgeID );
+  if(!_canSetMesh) {
+      ERROR("Cannot set the mesh in the current state!");
+  }
   if ( _clientMode ){
     _requestManager->requestSetMeshTriangle ( meshID, firstEdgeID, secondEdgeID, thirdEdgeID );
   }
@@ -814,6 +831,9 @@ void SolverInterfaceImpl:: setMeshTriangleWithEdges
 {
   TRACE(meshID, firstVertexID,
                 secondVertexID, thirdVertexID);
+  if(!_canSetMesh) {
+      ERROR("Cannot set the mesh in the current state!");
+  }
   if (_clientMode){
     _requestManager->requestSetMeshTriangleWithEdges(meshID,
                                                      firstVertexID,
@@ -910,6 +930,9 @@ void SolverInterfaceImpl:: setMeshQuad
 {
   TRACE(meshID, firstEdgeID, secondEdgeID, thirdEdgeID,
                 fourthEdgeID);
+  if(!_canSetMesh) {
+      ERROR("Cannot set the mesh in the current state!");
+  }
   if (_clientMode){
     _requestManager->requestSetMeshQuad(meshID, firstEdgeID, secondEdgeID,
                                         thirdEdgeID, fourthEdgeID);
@@ -946,6 +969,9 @@ void SolverInterfaceImpl:: setMeshQuadWithEdges
 {
   TRACE(meshID, firstVertexID,
                 secondVertexID, thirdVertexID, fourthVertexID);
+  if(!_canSetMesh) {
+      ERROR("Cannot set the mesh in the current state!");
+  }
   if (_clientMode){
     _requestManager->requestSetMeshQuadWithEdges(
         meshID, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID);

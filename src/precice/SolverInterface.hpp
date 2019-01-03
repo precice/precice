@@ -285,6 +285,7 @@ public:
   ///@}
 
   ///@name Mesh Access
+  ///@anchor precice-mesh-access
   ///@{
 
   /**
