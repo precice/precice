@@ -521,7 +521,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   KSPSetOperators(_solver, _matrixC, _matrixC); CHKERRV(ierr);
   KSPSetTolerances(_solver, _solverRtol, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT);
   KSPSetInitialGuessNonzero(_solver, PETSC_TRUE); CHKERRV(ierr); // Reuse the results from the last iteration, held in the out vector.
-  KSPSetOptionsPrefix(_solver, "sys_"); // s.t. options for only this solver can be set on the command line
+  KSPSetOptionsPrefix(_solver, "solverC_"); // s.t. options for only this solver can be set on the command line
   KSPSetFromOptions(_solver);
 
   // if (totalNNZ > static_cast<size_t>(20*n)) {
@@ -541,9 +541,12 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     _solver.solve(rhs, rescalingCoeffs);
     ierr = MatCreateVecs(_matrixA, nullptr, &oneInterpolant.vector); CHKERRV(ierr);
     ierr = MatMult(_matrixA, rescalingCoeffs, oneInterpolant); CHKERRV(ierr); // get the output of g(x) = 1
+    // set values close to zero to exactly 0.0, s.t. PointwiseDevide does not to devision on these entries
+    ierr = VecChop(oneInterpolant, 1e-6); CHKERRV(ierr);
   }
 
   _hasComputedMapping = true;
+  ePostFill.stop();
 
   DEBUG("Number of mallocs for matrix C = " << _matrixC.getInfo(MAT_LOCAL).mallocs);
   DEBUG("Non-zeros allocated / used / unused for matrix C = " << _matrixC.getInfo(MAT_LOCAL).nz_allocated << " / " << _matrixC.getInfo(MAT_LOCAL).nz_used << " / " << _matrixC.getInfo(MAT_LOCAL).nz_unneeded);
