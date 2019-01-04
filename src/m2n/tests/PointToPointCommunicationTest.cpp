@@ -561,6 +561,134 @@ BOOST_AUTO_TEST_CASE(P2PMeshBroadcastTest, * testing::OnSize(4))
   utils::Parallel::setGlobalCommunicator(utils::Parallel::getCommunicatorWorld());
 }
 
+BOOST_AUTO_TEST_CASE(P2PComLCMTest, * testing::OnSize(4))
+{
+  
+  assertion(utils::Parallel::getCommunicatorSize() == 4);
+
+//  com::PtrCommunicationFactory cf(new com::SocketCommunicationFactory);
+  com::PtrCommunicationFactory cf(new com::MPIPortsCommunicationFactory);
+  
+  utils::MasterSlave::_communication = std::make_shared<com::MPIDirectCommunication>();
+
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 2, true));
+  std::map<int, std::vector<int>> localCommunicationMap;
+
+  switch (utils::Parallel::getProcessRank()) {
+  case 0: {
+    utils::Parallel::splitCommunicator("Fluid.Master");
+
+    utils::MasterSlave::_rank       = 0;
+    utils::MasterSlave::_size       = 2;
+    utils::MasterSlave::_masterMode = true;
+    utils::MasterSlave::_slaveMode  = false;
+
+    utils::MasterSlave::_communication->acceptConnection("Fluid.Master", "Fluid.Slave", utils::Parallel::getProcessRank());
+    utils::MasterSlave::_communication->setRankOffset(1);   
+
+    mesh->getConnectedRanks().push_back(0);    
+    localCommunicationMap[0].push_back(102);
+    localCommunicationMap[0].push_back(1022);
+    localCommunicationMap[0].push_back(10222);
+    localCommunicationMap[1].push_back(103);
+    localCommunicationMap[1].push_back(1033);
+    localCommunicationMap[1].push_back(10333);
+   
+    break;
+  }
+  case 1: {
+    utils::Parallel::splitCommunicator("Fluid.Slave");
+
+    utils::MasterSlave::_rank       = 1;
+    utils::MasterSlave::_size       = 2;
+    utils::MasterSlave::_masterMode = false;
+    utils::MasterSlave::_slaveMode  = true;
+
+    utils::MasterSlave::_communication->requestConnection("Fluid.Master", "Fluid.Slave", 0, 1);
+    
+    mesh->getConnectedRanks().push_back(1);    
+    localCommunicationMap[0].push_back(112);
+    localCommunicationMap[0].push_back(1122);
+    localCommunicationMap[0].push_back(11222);
+    localCommunicationMap[1].push_back(113);
+    localCommunicationMap[1].push_back(1133);
+    localCommunicationMap[1].push_back(11333);
+
+    break;
+  }
+  case 2: {
+    utils::Parallel::splitCommunicator("Solid.Master");
+
+    utils::MasterSlave::_rank       = 0;
+    utils::MasterSlave::_size       = 2;
+    utils::MasterSlave::_masterMode = true;
+    utils::MasterSlave::_slaveMode  = false;
+
+    utils::MasterSlave::_communication->acceptConnection("Solid.Master", "Solid.Slave", utils::Parallel::getProcessRank());
+    utils::MasterSlave::_communication->setRankOffset(1); 
+
+    mesh->getConnectedRanks().push_back(0);
+    
+    break;
+  }
+  case 3: {
+    utils::Parallel::splitCommunicator("Solid.Slave");
+
+    utils::MasterSlave::_rank       = 1;
+    utils::MasterSlave::_size       = 2;
+    utils::MasterSlave::_masterMode = false;
+    utils::MasterSlave::_slaveMode  = true;
+
+    utils::MasterSlave::_communication->requestConnection("Solid.Master", "Solid.Slave", 0, 1);
+
+    mesh->getConnectedRanks().push_back(1);
+    
+    break;
+  }
+  }
+
+  m2n::PointToPointCommunication c(cf, mesh);
+
+  if (utils::Parallel::getProcessRank() < 2) {
+  
+    c.requestPreConnection("Solid", "Fluid");
+    c.broadcastSendLCM(localCommunicationMap);
+    BOOST_TEST(mesh->getID()==0);
+   
+  } else
+  {
+    c.acceptPreConnection("Solid", "Fluid");
+    c.broadcastReceiveLCM(localCommunicationMap);
+    BOOST_TEST(mesh->getID()==0);
+  }
+
+ if(utils::Parallel::getProcessRank() == 2 )
+  {    
+    BOOST_TEST(localCommunicationMap.size() == 1);
+    BOOST_TEST(localCommunicationMap[0].size() ==3);
+    BOOST_TEST(localCommunicationMap[0][0] ==102);
+    BOOST_TEST(localCommunicationMap[0][1] ==1022);
+    BOOST_TEST(localCommunicationMap[0][2] ==10222);
+    
+  } else if(utils::Parallel::getProcessRank() == 3 )
+  {
+    BOOST_TEST(localCommunicationMap.size() == 1);    
+    BOOST_TEST(localCommunicationMap[1].size() ==3);
+    BOOST_TEST(localCommunicationMap[1][0] ==113);
+    BOOST_TEST(localCommunicationMap[1][1] ==1133);
+    BOOST_TEST(localCommunicationMap[1][2] ==11333);   
+  }
+  
+  utils::MasterSlave::_communication = nullptr;
+  utils::MasterSlave::reset();
+  utils::Parallel::synchronizeProcesses();
+  utils::Parallel::clearGroups();
+  mesh::Mesh::resetGeometryIDsGlobally();
+  mesh::Data::resetDataCount();
+  utils::Parallel::setGlobalCommunicator(utils::Parallel::getCommunicatorWorld());
+  
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 #endif // not PRECICE_NO_MPI

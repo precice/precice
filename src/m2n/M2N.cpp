@@ -216,6 +216,17 @@ void M2N::broadcastSendLocalMesh(mesh::Mesh &mesh)
   }
 }
 
+void M2N::broadcastSendLCM(std::map<int, std::vector<int>> &localCommunicationMap,
+                        mesh::Mesh &mesh)
+{
+  if (utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode) {
+    int meshID = mesh.getID();
+    assertion(_areSlavesConnected);
+    _distComs[meshID]->broadcastSendLCM(localCommunicationMap);
+  } else { //coupling mode
+  }  
+}
+
 void M2N::receive(double *itemsToReceive,
                   int     size,
                   int     meshID,
@@ -277,6 +288,16 @@ void M2N::broadcastReceiveLocalMesh(mesh::Mesh &mesh)
     _distComs[meshID]->broadcastReceiveMesh(mesh);
   } else { //coupling mode
   }
+}
+
+void M2N::broadcastReceiveLCM(std::map<int, std::vector<int>> &localCommunicationMap, mesh::Mesh &mesh)
+{
+  if (utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode) {
+    int meshID = mesh.getID();
+    assertion(_areSlavesConnected);
+    _distComs[meshID]->broadcastReceiveLCM(localCommunicationMap);
+  } else { //coupling mode
+  }  
 }
 
 } // namespace m2n

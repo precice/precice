@@ -112,6 +112,18 @@ public:
    */
   virtual void broadcastReceiveMesh(mesh::Mesh &mesh);
 
+  /**
+   *  All ranks Send their local communication maps to connected ranks
+   */
+  virtual void broadcastSendLCM(
+    std::map<int, std::vector<int>> &localCommunicationMap);
+
+  /*
+   *  Each rank revives local communication maps from connected ranks
+   */
+  virtual void broadcastReceiveLCM(
+    std::map<int, std::vector<int>> &localCommunicationMap);
+
 private:
   logging::Logger _log{"m2n::GatherScatterCommunication"};
 

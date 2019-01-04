@@ -1,6 +1,8 @@
 #pragma once
 
 #include "mesh/SharedPointer.hpp"
+#include <map>
+#include <vector>
 
 namespace precice
 {
@@ -122,6 +124,18 @@ public:
   virtual void broadcastReceiveMesh(
     mesh::Mesh &mesh) = 0;
 
+  /**
+   *  All ranks Send their local communication maps to connected ranks
+   */
+  virtual void broadcastSendLCM(
+    std::map<int, std::vector<int>> &localCommunicationMap)=0;
+
+  /*
+   *  Each rank revives local communication maps from connected ranks
+   */
+  virtual void broadcastReceiveLCM(
+    std::map<int, std::vector<int>> &localCommunicationMap)=0 ;
+  
 protected:
   /**
    * @brief mesh that dictates the distribution of this mapping

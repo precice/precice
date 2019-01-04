@@ -184,5 +184,11 @@ void GatherScatterCommunication::broadcastSendMesh(mesh::Mesh &mesh)
 void GatherScatterCommunication::broadcastReceiveMesh(mesh::Mesh &mesh)
 {}
 
+void GatherScatterCommunication::broadcastSendLCM(std::map<int, std::vector<int>> &localCommunicationMap)
+{}
+
+void GatherScatterCommunication::broadcastReceiveLCM(std::map<int, std::vector<int>> &localCommunicationMap)
+{}
+
 } // namespace m2n
 } // namespace precice

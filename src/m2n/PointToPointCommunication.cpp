@@ -787,6 +787,20 @@ void PointToPointCommunication::broadcastReceiveMesh(mesh::Mesh &mesh)
   }  
 }
 
+void PointToPointCommunication::broadcastSendLCM(std::map<int, std::vector<int>> &localCommunicationMap)
+{
+ for (auto &mapping : _connectionData) {
+    mapping.communication->send(localCommunicationMap[mapping.remoteRank], mapping.remoteRank);
+  } 
+}
+
+void PointToPointCommunication::broadcastReceiveLCM(std::map<int, std::vector<int>> &localCommunicationMap)
+{
+  for (auto &mapping : _connectionData) {
+    mapping.communication->receive(localCommunicationMap[mapping.remoteRank], mapping.remoteRank);
+  }
+}
+
 void PointToPointCommunication::checkBufferedRequests(bool blocking)
 {
   TRACE(bufferedRequests.size());
