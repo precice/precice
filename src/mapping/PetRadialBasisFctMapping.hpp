@@ -233,7 +233,6 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
   }
   polyparams =    (_polynomial == Polynomial::ON      ) ? 1 + dimensions - deadDimensions : 0;
   sepPolyparams = (_polynomial == Polynomial::SEPARATE) ? 1 + dimensions - deadDimensions : 0;
-  localPolyparams = utils::Parallel::getProcessRank() > 0 ? 0 : polyparams;
 }
 
 template<typename RADIAL_BASIS_FUNCTION_T>
@@ -274,6 +273,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     inMesh = input();
     outMesh = output();
   }
+
+  // do not put that in the c'tor, getProcessRank always returns 0 there
+  localPolyparams = utils::Parallel::getProcessRank() > 0 ? 0 : polyparams;
 
   // Indizes that are used to build the Petsc AO mapping
   std::vector<PetscInt> myIndizes;
@@ -516,7 +518,10 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     KSPSetType(_QRsolver, KSPLSQR);
     KSPSetOperators(_QRsolver, _matrixQ, _matrixQ);
   }
+  ePostFill.stop();
 
+  precice::utils::Event eSolverInit("map.pet.solverInit.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
+  
   // -- CONFIGURE SOLVER FOR SYSTEM MATRIX --
   KSPSetOperators(_solver, _matrixC, _matrixC); CHKERRV(ierr);
   KSPSetTolerances(_solver, _solverRtol, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT);
@@ -544,9 +549,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     // set values close to zero to exactly 0.0, s.t. PointwiseDevide does not to devision on these entries
     ierr = VecChop(oneInterpolant, 1e-6); CHKERRV(ierr);
   }
+  eSolverInit.stop();
 
   _hasComputedMapping = true;
-  ePostFill.stop();
 
   DEBUG("Number of mallocs for matrix C = " << _matrixC.getInfo(MAT_LOCAL).mallocs);
   DEBUG("Non-zeros allocated / used / unused for matrix C = " << _matrixC.getInfo(MAT_LOCAL).nz_allocated << " / " << _matrixC.getInfo(MAT_LOCAL).nz_used << " / " << _matrixC.getInfo(MAT_LOCAL).nz_unneeded);
@@ -1252,15 +1257,16 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixC(mesh::
   namespace bg = boost::geometry;
 
   PetscInt n;
+  std::tie(n, std::ignore) = _matrixC.getLocalSize();
+  std::vector<PetscInt> d_nnz(n), o_nnz(n);
 
   auto tree = mesh::rtree::getVertexRTree(inMesh);
+
   double const supportRadius = _basisFunction.getSupportRadius();
 
   int dimensions = input()->getDimensions();
   Eigen::VectorXd distance(dimensions);
-
-  std::tie(n, std::ignore) = _matrixC.getLocalSize();
-  std::vector<PetscInt> d_nnz(n), o_nnz(n);
+  
   PetscInt colOwnerRangeCBegin, colOwnerRangeCEnd;
   std::tie(colOwnerRangeCBegin, colOwnerRangeCEnd) = _matrixC.ownerRangeColumn();
 
@@ -1293,7 +1299,7 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixC(mesh::
       std::back_inserter(results));
 
     // for (mesh::Vertex& vj : inMesh->vertices()) {
-    for (auto i : results) {
+    for (auto const i : results) {
       const mesh::Vertex & vj = inMesh->vertices()[i];
 
       PetscInt mappedCol = vj.getGlobalIndex() + polyparams;
