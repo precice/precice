@@ -138,7 +138,7 @@ private:
   Polynomial _polynomial;
 
   /// Toggles use of rescaled basis functions, only active when Polynomial == SEPARATE
-  bool const useRescaling = true;
+  bool useRescaling = true;
 
   /// Number of coefficients for the integrated polynomial. Depends on dimension and number of dead dimensions
   size_t polyparams;
@@ -509,6 +509,10 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   ierr = MatAssemblyEnd(_matrixA, MAT_FINAL_ASSEMBLY); CHKERRV(ierr);
   _matrixQ.assemble();
   _matrixV.assemble();
+  
+  ePostFill.stop();
+
+  precice::utils::Event eSolverInit("map.pet.solverInit.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
 
   // -- CONFIGURE SOLVER FOR POLYNOMIAL --
   if (_polynomial == Polynomial::SEPARATE) {
@@ -518,16 +522,15 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     KSPSetType(_QRsolver, KSPLSQR);
     KSPSetOperators(_QRsolver, _matrixQ, _matrixQ);
   }
-  ePostFill.stop();
 
-  precice::utils::Event eSolverInit("map.pet.solverInit.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
-  
   // -- CONFIGURE SOLVER FOR SYSTEM MATRIX --
   KSPSetOperators(_solver, _matrixC, _matrixC); CHKERRV(ierr);
   KSPSetTolerances(_solver, _solverRtol, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT);
   KSPSetInitialGuessNonzero(_solver, PETSC_TRUE); CHKERRV(ierr); // Reuse the results from the last iteration, held in the out vector.
   KSPSetOptionsPrefix(_solver, "solverC_"); // s.t. options for only this solver can be set on the command line
   KSPSetFromOptions(_solver);
+
+  eSolverInit.stop();
 
   // if (totalNNZ > static_cast<size_t>(20*n)) {
   //   DEBUG("Using Cholesky decomposition as direct solver for dense matrix.");
@@ -540,16 +543,19 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
   // -- COMPUTE RESCALING COEFFICIENTS USING THE SYSTEM MATRIX C SOLVER --
   if (useRescaling and (_polynomial == Polynomial::SEPARATE)) {
+    precice::utils::Event eRescaling("map.pet.computeRescaling.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);    
     petsc::Vector rhs(_matrixC), rescalingCoeffs(_matrixC);
     VecSet(rhs, 1);
     rhs.assemble();
-    _solver.solve(rhs, rescalingCoeffs);
+    if (not _solver.solve(rhs, rescalingCoeffs)) {
+      WARN("RBF rescaling linear system has not converged. Deactivating rescaling!");
+      useRescaling = false;
+    }
     ierr = MatCreateVecs(_matrixA, nullptr, &oneInterpolant.vector); CHKERRV(ierr);
     ierr = MatMult(_matrixA, rescalingCoeffs, oneInterpolant); CHKERRV(ierr); // get the output of g(x) = 1
     // set values close to zero to exactly 0.0, s.t. PointwiseDevide does not to devision on these entries
     ierr = VecChop(oneInterpolant, 1e-6); CHKERRV(ierr);
   }
-  eSolverInit.stop();
 
   _hasComputedMapping = true;
 
@@ -635,7 +641,10 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
         petsc::Vector tau(_matrixQ, "tau", petsc::Vector::RIGHT);
         ierr = MatMultTransposeAdd(_matrixQ, mu, epsilon, tau); CHKERRV(ierr);
         petsc::Vector sigma(_matrixQ, "sigma", petsc::Vector::LEFT);
-        ierr = KSPSolveTranspose(_QRsolver, tau, sigma); CHKERRV(ierr);
+        if (not _QRsolver.solveTranspose(tau, sigma)) {
+          KSPView(_QRsolver, PETSC_VIEWER_STDOUT_WORLD);
+          ERROR("RBF Polynomial linear system has not converged.");
+        }
         VecWAXPY(out, -1, sigma, mu);
       }
       else {
