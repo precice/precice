@@ -3,7 +3,7 @@
 #include <boost/filesystem.hpp>
 #include "utils/Parallel.hpp"
 #include "utils/Petsc.hpp"
-#include "utils/EventTimings.hpp"
+#include "utils/EventUtils.hpp"
 #include "logging/LogConfiguration.hpp"
 #include <iostream>
 
@@ -87,7 +87,8 @@ int main(int argc, char* argv[])
   utils::Parallel::initializeMPI(&argc, &argv);
   logging::setMPIRank(utils::Parallel::getProcessRank());
   utils::Petsc::initialize(&argc, &argv);
-  
+  utils::EventRegistry::instance().initialize("precice-Tests", "", utils::Parallel::getGlobalCommunicator());
+    
   if (utils::Parallel::getCommunicatorSize() < 4) {
     if (utils::Parallel::getProcessRank() == 0)
       std::cerr << "Running tests on less than four processors. Not all tests are executed." << std::endl;

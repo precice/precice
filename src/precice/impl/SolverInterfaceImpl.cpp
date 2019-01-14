@@ -19,7 +19,7 @@
 #include "m2n/M2N.hpp"
 #include "cplscheme/CouplingScheme.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
-#include "utils/EventTimings.hpp"
+#include "utils/EventUtils.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/SignalHandler.hpp"
 #include "utils/Parallel.hpp"
@@ -161,8 +161,8 @@ void SolverInterfaceImpl:: configure
   }
   
   utils::Parallel::initializeMPI(nullptr, nullptr);
-  precice::logging::setMPIRank(utils::Parallel::getProcessRank());
-  precice::utils::EventRegistry::instance().initialize("precice-" + _accessorName);
+  logging::setMPIRank(utils::Parallel::getProcessRank());
+  utils::EventRegistry::instance().initialize("precice-" + _accessorName, "", utils::Parallel::getGlobalCommunicator());
   
   // Setup communication to server
   if (_clientMode){
@@ -453,9 +453,10 @@ void SolverInterfaceImpl:: finalize()
   }
 
   // Stop and print Event logging
-  precice::utils::EventRegistry::instance().finalize();
+  e.stop();
+  utils::EventRegistry::instance().finalize();
   if (not precice::testMode and not precice::utils::MasterSlave::_slaveMode) {
-    precice::utils::EventRegistry::instance().printAll();
+    utils::EventRegistry::instance().printAll();
   }
 
   // Tear down MPI and PETSc
@@ -464,6 +465,7 @@ void SolverInterfaceImpl:: finalize()
     utils::Parallel::finalizeMPI();
   }
   utils::Parallel::clearGroups();
+  utils::EventRegistry::instance().clear();
 }
 
 int SolverInterfaceImpl:: getDimensions() const

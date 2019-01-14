@@ -1,7 +1,7 @@
 #include "NearestProjectionMapping.hpp"
 #include "query/FindClosest.hpp"
 #include <Eigen/Core>
-#include "utils/EventTimings.hpp"
+#include "utils/Event.hpp"
 #include "mesh/RTree.hpp"
 
 namespace precice {

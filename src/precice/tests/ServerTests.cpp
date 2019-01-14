@@ -6,7 +6,7 @@
 #include "precice/Constants.hpp"
 #include "precice/config/Configuration.hpp"
 #include "utils/MasterSlave.hpp"
-#include "utils/EventTimings.hpp"
+#include "utils/Event.hpp"
 
 using namespace precice;
 
