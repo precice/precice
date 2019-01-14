@@ -13,7 +13,7 @@
 #include "config/MappingConfiguration.hpp"
 #include "utils/Petsc.hpp"
 namespace petsc = precice::utils::petsc;
-#include "utils/EventTimings.hpp"
+#include "utils/Event.hpp"
 
 // Forward declaration to friend the boost test struct
 namespace MappingTests {
