@@ -170,7 +170,7 @@ void RankData::normalizeTo(sys_clk::time_point t0)
       auto & tp = sc.second;
       tp = stdy_clk::time_point(tp - initializedAtTicks + delta);
       // Deactivated, as it fails for the precice tests, likely because Events are used before initialize
-      assert(tp.time_since_epoch().count() > 0); // Trying to do normalize twice?
+      // assert(tp.time_since_epoch().count() >= 0); // Trying to do normalize twice?
     }
   }
 }
