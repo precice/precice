@@ -1439,6 +1439,58 @@ BOOST_AUTO_TEST_CASE(NoMapping)
   }
 }
 
+BOOST_AUTO_TEST_CASE(TestNonHomongenousGlobalIndex)
+{
+  using Eigen::Vector2d;
+  int dimensions = 2;
+
+  bool xDead = false, yDead = false, zDead = false;
+
+  Gaussian fct(1); // supportRadius = 4.55
+
+  // Create mesh to map from
+  mesh::PtrMesh inMesh ( new mesh::Mesh("InMesh", dimensions, false) );
+  mesh::PtrData inData = inMesh->createData ( "InData", 1 );
+  int inDataID = inData->getID ();
+  inMesh->createVertex ( Vector2d(1, 1) ).setGlobalIndex(2);
+  inMesh->createVertex ( Vector2d(1, 0) ).setGlobalIndex(3);
+  inMesh->createVertex ( Vector2d(0, 0) ).setGlobalIndex(6);
+  inMesh->createVertex ( Vector2d(0, 1) ).setGlobalIndex(5);
+  inMesh->allocateDataValues();
+
+  inData->values() << 1, 1, 1, 1;
+
+  // Create mesh to map to
+  mesh::PtrMesh outMesh( new mesh::Mesh("OutMesh", dimensions, false) );
+  mesh::PtrData outData = outMesh->createData( "OutData", 1 );
+  int outDataID = outData->getID();
+  outMesh->createVertex(Vector2d(0.5, 0.5));
+
+  outMesh->allocateDataValues();
+  addGlobalIndex(outMesh);
+
+  PetRadialBasisFctMapping<Gaussian> mapping1(Mapping::CONSISTENT, dimensions, fct,
+                                              xDead, yDead, zDead);
+  mapping1.setMeshes(inMesh, outMesh);
+  mapping1.computeMapping();
+  mapping1.map(inDataID, outDataID);
+
+  BOOST_TEST ( outData->values()[0] == 1 );
+
+  PetRadialBasisFctMapping<Gaussian> mapping2(Mapping::CONSERVATIVE, dimensions, fct,
+                                              xDead, yDead, zDead);
+  inData->values() << 0, 0, 0, 0; // reset
+  outData->values() << 4; // used as inData here
+  mapping2.setMeshes(outMesh, inMesh);
+  mapping2.computeMapping();
+  mapping2.map(outDataID, inDataID);
+
+  BOOST_TEST ( inData->values()[0] == 1.0 );
+  BOOST_TEST ( inData->values()[1] == 1.0 );
+  BOOST_TEST ( inData->values()[2] == 1.0 );
+  BOOST_TEST ( inData->values()[3] == 1.0 );
+}
+
 BOOST_AUTO_TEST_SUITE_END() // Serial
 
 BOOST_AUTO_TEST_SUITE_END() // PetRadialBasisFunctionMapping

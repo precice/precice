@@ -27,6 +27,9 @@ struct BackendConfiguration
 /// Holds the configuration of the logging system
 using LoggingConfiguration = std::vector<BackendConfiguration>;
 
+/// Reads a log configuration file, returns vector of BackEndConfiguration
+LoggingConfiguration readLogConfFile(std::string const & filename);
+
 /// Configures the logging from a log file
 void setupLogging(std::string const & logConfigFile = "log.conf");
 

@@ -32,7 +32,7 @@ struct MeshContext
    std::vector<int> associatedData;
 
    /// Determines which mesh type has to be provided by the accessor.
-   mapping::Mapping::MeshRequirement meshRequirement = mapping::Mapping::UNDEFINED;
+   mapping::Mapping::MeshRequirement meshRequirement = mapping::Mapping::MeshRequirement::UNDEFINED;
 
    /// Name of participant that creats the mesh.
    std::string receiveMeshFrom;

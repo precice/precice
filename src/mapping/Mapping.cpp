@@ -1,4 +1,6 @@
 #include "Mapping.hpp"
+#include "utils/assertion.hpp"
+#include <boost/config.hpp>
 
 namespace precice {
 namespace mapping {
@@ -9,8 +11,8 @@ Mapping:: Mapping
   int             dimensions)
 :
   _constraint(constraint),
-  _inputRequirement(UNDEFINED),
-  _outputRequirement(UNDEFINED),
+  _inputRequirement(MeshRequirement::UNDEFINED),
+  _outputRequirement(MeshRequirement::UNDEFINED),
   _input(),
   _output(),
   _dimensions(dimensions)
@@ -86,6 +88,24 @@ bool operator<(Mapping::MeshRequirement lhs, Mapping::MeshRequirement rhs) {
         case(Mapping::MeshRequirement::FULL):
                 return false;
     };
+    BOOST_UNREACHABLE_RETURN(false);
+}
+
+std::ostream &operator<<(std::ostream &out, Mapping::MeshRequirement val) {
+    switch (val) {
+        case (Mapping::MeshRequirement::UNDEFINED):
+            out << "UNDEFINED";
+            break;
+        case (Mapping::MeshRequirement::VERTEX):
+            out << "VERTEX";
+            break;
+        case (Mapping::MeshRequirement::FULL):
+            out << "FULL";
+            break;
+        default:
+            assertion(false, "Implementation does not cover all cases");
+    };
+    return out;
 }
 
 }} // namespace precice, mapping
