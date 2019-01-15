@@ -398,6 +398,7 @@ MPI_Comm & EventRegistry::getMPIComm()
 
 void EventRegistry::collect()
 {
+  #ifndef PRECICE_NO_MPI
   // Register MPI datatype
   MPI_Datatype MPI_EVENTDATA;
   int blocklengths[] = {255, 1, 3, 2};
@@ -499,6 +500,9 @@ void EventRegistry::collect()
   }
   MPI_Waitall(requests.size(), requests.data(), MPI_STATUSES_IGNORE);
   MPI_Type_free(&MPI_EVENTDATA);
+  #else
+  globalRankData.push_back(localRankData);
+  #endif
 }
 
 
