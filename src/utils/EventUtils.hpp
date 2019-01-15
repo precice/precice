@@ -5,7 +5,12 @@
 #include <map>
 #include <vector>
 #include <string>
-#include <mpi.h>
+
+#ifndef PRECICE_NO_MPI
+  #include <mpi.h>
+#else
+  #include "utils/MPI_Mock.hpp"
+#endif
 
 namespace precice {
 namespace utils {
