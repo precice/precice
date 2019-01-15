@@ -182,7 +182,7 @@ void M2NConfiguration::xmlTagCallback(xml::XMLTag &tag)
       std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
 #ifdef PRECICE_NO_MPI
       std::ostringstream error;
-      error << "Communication type \mpi-singleports\ can only be used "
+      error << "Communication type \"mpi-singleports\" can only be used "
             << "when preCICE is compiled with argument \"mpi=on\"";
       throw error.str();
 #else

@@ -520,7 +520,7 @@ EventRegistry::collectInitAndFinalize()
   long minTicks;
   MPI_Reduce(&ticks, &minTicks, 1, MPI_LONG, MPI_MIN, 0, EventRegistry::instance().getMPIComm());
 
-  ticks = localRankData.initializedAt.time_since_epoch().count();
+  ticks = localRankData.finalizedAt.time_since_epoch().count();
   long maxTicks;
   MPI_Reduce(&ticks, &maxTicks, 1, MPI_LONG, MPI_MAX, 0, EventRegistry::instance().getMPIComm());
 
