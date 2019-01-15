@@ -485,6 +485,14 @@ bool KSPSolver::solveTranspose(Vector &b, Vector &x)
   return (convReason > 0);
 }
 
+PetscInt KSPSolver::getIterationNumber()
+{
+  PetscErrorCode ierr = 0;
+  PetscInt its;
+  ierr = KSPGetIterationNumber(ksp, &its); CHKERRQ(ierr);
+  return its;
+}
+
 
 /////////////////////////////////////////////////////////////////////////
 
