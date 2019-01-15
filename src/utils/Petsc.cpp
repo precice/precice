@@ -156,17 +156,19 @@ void Vector::init(PetscInt rows)
   ierr = VecSetFromOptions(vector); CHKERRV(ierr);
 }
 
-int Vector::getSize()
+PetscInt Vector::getSize() const
 {
+  PetscErrorCode ierr = 0;
   PetscInt size;
-  VecGetSize(vector, &size);
+  ierr = VecGetSize(vector, &size); CHKERRQ(ierr);
   return size;
 }
 
-int Vector::getLocalSize()
+PetscInt Vector::getLocalSize() const
 {
+  PetscErrorCode ierr = 0;
   PetscInt size;
-  VecGetLocalSize(vector, &size);
+  ierr = VecGetLocalSize(vector, &size); CHKERRQ(ierr);
   return size;
 }
 
@@ -226,14 +228,14 @@ void Vector::assemble()
 }
 
 
-std::pair<PetscInt, PetscInt> Vector::ownerRange()
+std::pair<PetscInt, PetscInt> Vector::ownerRange() const
 {
   PetscInt range_start, range_end;
   VecGetOwnershipRange(vector, &range_start, &range_end);
   return std::make_pair(range_start, range_end);
 }
   
-void Vector::write(std::string filename, VIEWERFORMAT format)
+void Vector::write(std::string filename, VIEWERFORMAT format) const
 {
   PetscErrorCode ierr = 0;
   PetscViewer viewer;
@@ -251,7 +253,7 @@ void Vector::read(std::string filename, VIEWERFORMAT format)
    PetscViewerDestroy(&viewer);
 }
 
-void Vector::view()
+void Vector::view() const
 {
   PetscErrorCode ierr;
   ierr = VecView(vector, PETSC_VIEWER_STDOUT_WORLD); CHKERRV(ierr);
@@ -310,7 +312,7 @@ void Matrix::reset()
   setName(matrix, name);
 }
 
-MatInfo Matrix::getInfo(MatInfoType flag)
+MatInfo Matrix::getInfo(MatInfoType flag) const
 {
   MatInfo info;
   MatGetInfo(matrix, flag, &info);
@@ -355,28 +357,28 @@ void Matrix::setColumn(Vector &v, PetscInt col)
   ierr = MatAssemblyEnd(matrix, MAT_FINAL_ASSEMBLY); CHKERRV(ierr); 
 }
 
-std::pair<PetscInt, PetscInt> Matrix::getSize()
+std::pair<PetscInt, PetscInt> Matrix::getSize() const
 {
   PetscInt m, n;
   MatGetSize(matrix, &m, &n);
   return std::make_pair(m, n);
 }
 
-std::pair<PetscInt, PetscInt> Matrix::getLocalSize()
+std::pair<PetscInt, PetscInt> Matrix::getLocalSize() const
 {
   PetscInt m, n;
   MatGetLocalSize(matrix, &m, &n);
   return std::make_pair(m, n);
 }
 
-std::pair<PetscInt, PetscInt> Matrix::ownerRange()
+std::pair<PetscInt, PetscInt> Matrix::ownerRange() const
 {
   PetscInt range_start, range_end;
   MatGetOwnershipRange(matrix, &range_start, &range_end);
   return std::make_pair(range_start, range_end);
 }
 
-std::pair<PetscInt, PetscInt> Matrix::ownerRangeColumn()
+std::pair<PetscInt, PetscInt> Matrix::ownerRangeColumn() const
 {
   PetscInt range_start, range_end;
   MatGetOwnershipRangeColumn(matrix, &range_start, &range_end);
@@ -391,7 +393,7 @@ PetscInt Matrix::blockSize() const
   return bs;
 }
 
-void Matrix::write(std::string filename, VIEWERFORMAT format)
+void Matrix::write(std::string filename, VIEWERFORMAT format) const
 {
   PetscErrorCode ierr = 0;
   PetscViewer viewer;
@@ -409,7 +411,7 @@ void Matrix::read(std::string filename)
    PetscViewerDestroy(&viewer);
 }
 
-void Matrix::view()
+void Matrix::view() const
 {
   PetscErrorCode ierr = 0;
   PetscViewer viewer;
@@ -421,7 +423,7 @@ void Matrix::view()
   ierr = PetscViewerDestroy(&viewer); CHKERRV(ierr); 
 }
 
-void Matrix::viewDraw()
+void Matrix::viewDraw() const
 {
   PetscErrorCode ierr = 0;
   PetscViewer viewer;
@@ -474,6 +476,15 @@ bool KSPSolver::solve(Vector &b, Vector &x)
   return (convReason > 0);
 }
 
+bool KSPSolver::solveTranspose(Vector &b, Vector &x)
+{
+  PetscErrorCode ierr = 0;
+  KSPConvergedReason convReason;
+  KSPSolveTranspose(ksp, b, x);
+  ierr = KSPGetConvergedReason(ksp, &convReason); CHKERRQ(ierr);
+  return (convReason > 0);
+}
+
 
 /////////////////////////////////////////////////////////////////////////
 
@@ -488,6 +499,16 @@ void destroy(ISLocalToGlobalMapping * IS)
   }
 }
 
+void destroy(AO * ao)
+{
+  PetscErrorCode ierr = 0;
+  PetscBool petscIsInitialized;
+  PetscInitialized(&petscIsInitialized);
+  
+  if (ao and petscIsInitialized) {
+    ierr = AODestroy(ao); CHKERRV(ierr);
+  }
+}
 
 }}} // namespace precice, utils, petsc
 

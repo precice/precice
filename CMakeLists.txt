@@ -2,7 +2,6 @@ cmake_minimum_required (VERSION 3.9.6)
 
 project(preCICE VERSION 1.3.0 LANGUAGES CXX)
 
-
 #
 # PREAMBLE
 #
@@ -12,6 +11,17 @@ list (APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/tools/cmake-modules")
 
 include(CopyTargetProperty)
 
+# CMake Policies
+
+# CMP0074: find_package() uses <PackageName>_ROOT variables.
+if(POLICY CMP0074)
+    cmake_policy(SET CMP0074 NEW)
+endif()
+# CMP0075 Include file check macros honor CMAKE_REQUIRED_LIBRARIES
+if(POLICY CMP0075)
+    cmake_policy(SET CMP0075 NEW)
+endif()
+
 # Enforce a build type
 if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Choose the type of build." FORCE)
@@ -20,16 +30,6 @@ if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
 message(STATUS "Build configuration: " ${CMAKE_BUILD_TYPE})
-
-
-#
-# Prepare Source and Binary Directories
-#
-
-# Create a symlink to the last build from build/last directory.
-file(MAKE_DIRECTORY "${PROJECT_SOURCE_DIR}/build")
-add_custom_target(symlink ALL
-  COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_BINARY_DIR} ${PROJECT_SOURCE_DIR}/build/last)
 
 
 #

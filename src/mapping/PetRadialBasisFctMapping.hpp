@@ -15,9 +15,6 @@
 namespace petsc = precice::utils::petsc;
 #include "utils/EventTimings.hpp"
 
-#include "petscmat.h"
-#include "petscksp.h"
-
 // Forward declaration to friend the boost test struct
 namespace MappingTests {
 namespace PetRadialBasisFunctionMapping {
@@ -96,8 +93,11 @@ public:
 
   virtual void tagMeshSecondRound() override;
 
-
 private:
+
+  /// Stores col -> value for each row. Used to return the already computed values from the preconditioning
+  using VertexData = std::vector<std::vector<std::pair<int, double>>>;
+  
   mutable logging::Logger _log{"mapping::PetRadialBasisFctMapping"};
 
   bool _hasComputedMapping = false;
@@ -117,7 +117,8 @@ private:
   /// Coordinates of the output mesh to evaluate the separated polynomial
   petsc::Matrix _matrixV;
 
-  petsc::Vector rescalingCoeffs;
+  /// Interpolant of g(x) = 1 evaluated at output sites, used for rescaling
+  petsc::Vector oneInterpolant;
 
   /// Used to solve matrixC for the RBF weighting factors
   petsc::KSPSolver _solver;
@@ -125,18 +126,19 @@ private:
   /// Used to solve the under-determined system for the separated polynomial.
   petsc::KSPSolver _QRsolver;
 
-  ISLocalToGlobalMapping _ISmapping;
+  /// Maps globalIndex to local index
+  AO _AOmapping;
 
   const double _solverRtol;
 
   /// true if the mapping along some axis should be ignored
-  bool* _deadAxis;
+  std::vector<bool> _deadAxis;
 
   /// Toggles the use of the additonal polynomial
   Polynomial _polynomial;
 
   /// Toggles use of rescaled basis functions, only active when Polynomial == SEPARATE
-  const bool useRescaling = true;
+  bool useRescaling = true;
 
   /// Number of coefficients for the integrated polynomial. Depends on dimension and number of dead dimensions
   size_t polyparams;
@@ -160,17 +162,23 @@ private:
 
   void estimatePreallocationMatrixA(int rows, int cols, mesh::PtrMesh mesh);
 
+  /// Preallocate matrix C by only deriving the preallocation pattern
+  /*
+   * This actually involves computing the coefficients. They are not saved and thus need to be computed
+   * twice. Therefore, this is not really efficient.
+   */
   void computePreallocationMatrixC(const mesh::PtrMesh inMesh);
 
   void computePreallocationMatrixA(const mesh::PtrMesh inMesh, const mesh::PtrMesh outMesh);
 
-  std::vector<std::vector<std::pair<int, double>>> savedPreallocationMatrixC(const mesh::PtrMesh inMesh);
+  VertexData savedPreallocationMatrixC(const mesh::PtrMesh inMesh);
 
-  std::vector<std::vector<std::pair<int, double>>> savedPreallocationMatrixA(const mesh::PtrMesh inMesh, const mesh::PtrMesh outMesh);
+  VertexData savedPreallocationMatrixA(const mesh::PtrMesh inMesh, const mesh::PtrMesh outMesh);
 
-  std::vector<std::vector<std::pair<int, double>>> bgPreallocationMatrixC(const mesh::PtrMesh inMesh);
+  /// Preallocate matrix C and saves the coefficients using a boost::geometry spatial tree for neighbor search
+  VertexData bgPreallocationMatrixC(const mesh::PtrMesh inMesh);
 
-  std::vector<std::vector<std::pair<int, double>>> bgPreallocationMatrixA(const mesh::PtrMesh inMesh, const mesh::PtrMesh outMesh);
+  VertexData bgPreallocationMatrixA(const mesh::PtrMesh inMesh, const mesh::PtrMesh outMesh);
 
 };
 
@@ -197,26 +205,22 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
   _matrixV("V"),
   _solver("Coefficient Solver"),
   _QRsolver("QR Solver"),
-  _ISmapping(nullptr),
+  _AOmapping(nullptr),
   _solverRtol(solverRtol),
   _polynomial(polynomial),
   _preallocation(preallocation)
 {
   setInputRequirement(Mapping::MeshRequirement::VERTEX);
   setOutputRequirement(Mapping::MeshRequirement::VERTEX);
-  _deadAxis = new bool[dimensions];
-
+  
   if (getDimensions()==2) {
-    _deadAxis[0] = xDead;
-    _deadAxis[1] = yDead;
-    CHECK(not (xDead && yDead), "You cannot choose all axis to be dead for a RBF mapping");
-    CHECK(not zDead, "You cannot dead out the z axis if dimension is set to 2");
+    _deadAxis = {xDead, yDead};
+    CHECK(not (xDead and yDead), "You cannot choose all axes to be dead for a RBF mapping");
+    CHECK(not zDead, "You cannot dead out the z-axis if dimension is set to 2");
   }
   else if (getDimensions()==3) {
-    _deadAxis[0] = xDead;
-    _deadAxis[1] = yDead;
-    _deadAxis[2] = zDead;
-    CHECK(not (xDead && yDead && zDead), "You cannot choose all axis to be dead for a RBF mapping");
+    _deadAxis = {xDead, yDead, zDead};
+    CHECK(not (xDead and yDead and zDead), "You cannot choose all axes to be dead for a RBF mapping");
   }
   else {
     assertion(false);
@@ -229,14 +233,12 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
   }
   polyparams =    (_polynomial == Polynomial::ON      ) ? 1 + dimensions - deadDimensions : 0;
   sepPolyparams = (_polynomial == Polynomial::SEPARATE) ? 1 + dimensions - deadDimensions : 0;
-  localPolyparams = utils::Parallel::getProcessRank() > 0 ? 0 : polyparams;
 }
 
 template<typename RADIAL_BASIS_FUNCTION_T>
 PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::~PetRadialBasisFctMapping()
 {
-  delete[] _deadAxis;
-  petsc::destroy(&_ISmapping);
+  petsc::destroy(&_AOmapping);
 }
 
 
@@ -260,7 +262,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
   assertion(input()->getDimensions() == output()->getDimensions(),
             input()->getDimensions(), output()->getDimensions());
-  int dimensions = input()->getDimensions();
+  int const dimensions = input()->getDimensions();
   mesh::PtrMesh inMesh;
   mesh::PtrMesh outMesh;
   if (getConstraint() == CONSERVATIVE) {
@@ -272,7 +274,10 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     outMesh = output();
   }
 
-  // Indizes that are used to build the Petsc Index set
+  // do not put that in the c'tor, getProcessRank always returns 0 there
+  localPolyparams = utils::Parallel::getProcessRank() > 0 ? 0 : polyparams;
+
+  // Indizes that are used to build the Petsc AO mapping
   std::vector<PetscInt> myIndizes;
 
   // Indizes for Q^T, holding the polynomial
@@ -314,46 +319,10 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   auto const ownerRangeABegin = _matrixA.ownerRange().first;
   auto const ownerRangeAEnd = _matrixA.ownerRange().second;
 
-  IS ISlocal, ISlocalInv, ISglobal, ISidentity, ISidentityGlobal, ISpolyparams;
-  ISLocalToGlobalMapping ISidentityMapping, ISpolyparamsMapping;
-  // Create an index set which maps myIndizes to continous chunks of matrix rows.
-  ierr = ISCreateGeneral(utils::Parallel::getGlobalCommunicator(), myIndizes.size(), myIndizes.data(), PETSC_COPY_VALUES, &ISlocal); CHKERRV(ierr);
-  ierr = ISSetPermutation(ISlocal); CHKERRV(ierr);
-  ierr = ISInvertPermutation(ISlocal, myIndizes.size(), &ISlocalInv); CHKERRV(ierr);
-  ierr = ISAllGather(ISlocalInv, &ISglobal); CHKERRV(ierr); // Gather the IS from all processors
-  ierr = ISLocalToGlobalMappingCreateIS(ISglobal, &_ISmapping); CHKERRV(ierr); // Make it a mapping
 
-  // Create an identity mapping and use that for the rows of matrixA.
-  ierr = ISCreateStride(utils::Parallel::getGlobalCommunicator(), ownerRangeAEnd - ownerRangeABegin, ownerRangeABegin, 1, &ISidentity); CHKERRV(ierr);
-  ierr = ISSetIdentity(ISidentity); CHKERRV(ierr);
-  ierr = ISAllGather(ISidentity, &ISidentityGlobal); CHKERRV(ierr);
-  ierr = ISLocalToGlobalMappingCreateIS(ISidentityGlobal, &ISidentityMapping); CHKERRV(ierr);
-
-  // Create another identity mapping for the polynomial parameters.
-  // That is not needed, but its set, so we can exchange matrixV and matrixA when filling polyparams,
-  // i.e. use VecSetValuesLocal on both
-  ierr = ISCreateStride(PETSC_COMM_SELF, sepPolyparams, 0, 1, &ISpolyparams); CHKERRV(ierr);
-  ierr = ISSetIdentity(ISpolyparams); CHKERRV(ierr);
-  ierr = ISLocalToGlobalMappingCreateIS(ISpolyparams, &ISpolyparamsMapping); CHKERRV(ierr);
-
-  // Sets the mappings on the matrices
-  ierr = MatSetLocalToGlobalMapping(_matrixC, _ISmapping, _ISmapping); CHKERRV(ierr); // Set mapping for rows and cols
-  ierr = MatSetLocalToGlobalMapping(_matrixA, ISidentityMapping, _ISmapping); CHKERRV(ierr); // Set mapping only for cols, use identity for rows
-  ierr = MatSetLocalToGlobalMapping(_matrixQ, _ISmapping, ISpolyparamsMapping); CHKERRV(ierr);
-  ierr = MatSetLocalToGlobalMapping(_matrixV, ISidentityMapping, ISpolyparamsMapping); CHKERRV(ierr);
-
-  // Destroy all local index sets and mappings
-  ierr = ISDestroy(&ISlocal); CHKERRV(ierr);
-  ierr = ISDestroy(&ISlocalInv); CHKERRV(ierr);
-  ierr = ISDestroy(&ISglobal); CHKERRV(ierr);
-  ierr = ISDestroy(&ISidentity); CHKERRV(ierr);
-  ierr = ISDestroy(&ISidentityGlobal); CHKERRV(ierr);
-  ierr = ISLocalToGlobalMappingDestroy(&ISidentityMapping); CHKERRV(ierr);
-  ierr = ISDestroy(&ISpolyparams); CHKERRV(ierr);
-  ierr = ISLocalToGlobalMappingDestroy(&ISpolyparamsMapping); CHKERRV(ierr);
-
-  const PetscInt *mapIndizes;
-  ISLocalToGlobalMappingGetIndices(_ISmapping, &mapIndizes);
+  // A mapping from globalIndex -> local col/row
+  ierr = AOCreateMapping(utils::Parallel::getGlobalCommunicator(),
+                         myIndizes.size(), myIndizes.data(), nullptr, &_AOmapping); CHKERRV(ierr);
 
   Eigen::VectorXd distance(dimensions);
 
@@ -362,7 +331,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   // preallocate the matrix. In the second phase we actually fill the matrix.
 
   // Stores col -> value for each row;
-  std::vector<std::vector<std::pair<int, double>>> vertexData;
+  VertexData vertexData;
 
   if (_preallocation == Preallocation::SAVE) {
     vertexData = savedPreallocationMatrixC(inMesh);
@@ -378,18 +347,21 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   }
 
   // -- BEGIN FILL LOOP FOR MATRIX C --
+  DEBUG("Begin filling matrix C");
   precice::utils::Event eFillC("map.pet.fillC.From" + input()->getName() + "To"+ output()->getName(), precice::syncMode);
+
   // We collect entries for each row and set them blockwise using MatSetValues.
   int preallocRow = 0;
+  PetscInt row = _matrixC.ownerRange().first + localPolyparams;
   for (const mesh::Vertex& inVertex : inMesh->vertices()) {
     if (not inVertex.isOwner())
       continue;
 
-    PetscInt const row = inVertex.getGlobalIndex() + polyparams;
+    PetscInt const idxSize = std::max(_matrixC.getSize().second, _matrixQ.getSize().second);
     PetscInt colNum = 0;  // holds the number of columns
-    PetscInt colIdx[_matrixC.getSize().second];     // holds the columns indices of the entries
-    PetscScalar rowVals[_matrixC.getSize().second]; // holds the values of the entries
-
+    PetscInt colIdx[idxSize];     // holds the columns indices of the entries
+    PetscScalar rowVals[idxSize]; // holds the values of the entries
+    
     // -- SETS THE POLYNOMIAL PART OF THE MATRIX --
     if (_polynomial == Polynomial::ON or _polynomial == Polynomial::SEPARATE) {
       colIdx[colNum] = colNum;
@@ -402,18 +374,19 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
         }
       }
 
+      // cols are always the first ones for the polynomial, no need to translate
       if (_polynomial == Polynomial::ON) {
-        ierr = MatSetValuesLocal(_matrixC, colNum, colIdx, 1, &row, rowVals, INSERT_VALUES); CHKERRV(ierr);
+        ierr = MatSetValues(_matrixC, colNum, colIdx, 1, &row, rowVals, INSERT_VALUES); CHKERRV(ierr);
       }
       else if (_polynomial == Polynomial::SEPARATE) {
-        ierr = MatSetValuesLocal(_matrixQ, 1, &row, colNum, colIdx, rowVals, INSERT_VALUES); CHKERRV(ierr);
+        ierr = MatSetValues(_matrixQ, 1, &row, colNum, colIdx, rowVals, INSERT_VALUES); CHKERRV(ierr);
       }
       colNum = 0;
     }
 
     // -- SETS THE COEFFICIENTS --
     if (_preallocation == Preallocation::SAVE or _preallocation == Preallocation::TREE) {
-      const auto & rowVertices = vertexData[preallocRow];
+      auto const & rowVertices = vertexData[preallocRow];
       for (const auto & vertex : rowVertices) {
         rowVals[colNum] = _basisFunction.evaluate(vertex.second);
         colIdx[colNum++] = vertex.first;
@@ -422,7 +395,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     }
     else {
       for (const mesh::Vertex& vj : inMesh->vertices()) {
-        int col = vj.getGlobalIndex() + polyparams;
+        int const col = vj.getGlobalIndex() + polyparams;
         if (row > col)
           continue; // matrix is symmetric
         distance = inVertex.getCoords() - vj.getCoords();
@@ -431,14 +404,16 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
             distance[d] = 0;
           }
         }
-        if (_basisFunction.getSupportRadius() > distance.norm()) {
-          double coeff = _basisFunction.evaluate(distance.norm());
-          rowVals[colNum] = coeff;
+        double const norm = distance.norm();
+        if (_basisFunction.getSupportRadius() > norm) {
+          rowVals[colNum] = _basisFunction.evaluate(norm);
           colIdx[colNum++] = col; // column of entry is the globalIndex
         }
       }
     }
-    ierr = MatSetValuesLocal(_matrixC, 1, &row, colNum, colIdx, rowVals, INSERT_VALUES); CHKERRV(ierr);
+    ierr = AOApplicationToPetsc(_AOmapping, colNum, colIdx); CHKERRV(ierr);
+    ierr = MatSetValues(_matrixC, 1, &row, colNum, colIdx, rowVals, INSERT_VALUES); CHKERRV(ierr);
+    ++row;
   }
   DEBUG("Finished filling Matrix C");
   eFillC.stop();
@@ -470,32 +445,35 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   DEBUG("Begin filling matrix A.");
   precice::utils::Event eFillA("map.pet.fillA.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
 
-  for (PetscInt row = ownerRangeABegin; row < ownerRangeAEnd; row++) {
-    PetscInt colNum = 0;
-    PetscInt colIdx[_matrixA.getSize().second];     // holds the columns indices of the entries
-    PetscScalar rowVals[_matrixA.getSize().second]; // holds the values of the entries
-    const mesh::Vertex& oVertex = outMesh->vertices()[row - _matrixA.ownerRange().first];
+  for (PetscInt row = ownerRangeABegin; row < ownerRangeAEnd; ++row) {
+    mesh::Vertex const & oVertex = outMesh->vertices()[row - _matrixA.ownerRange().first];
 
     // -- SET THE POLYNOMIAL PART OF THE MATRIX --
     if (_polynomial == Polynomial::ON or _polynomial == Polynomial::SEPARATE) {
-      Mat m = _polynomial == Polynomial::ON ? _matrixA : _matrixV;
+        petsc::Matrix * m = _polynomial == Polynomial::ON ? &_matrixA : &_matrixV;
+        PetscInt colNum = 0;
+        PetscInt colIdx[m->getSize().second];     // holds the columns indices of the entries
+        PetscScalar rowVals[m->getSize().second]; // holds the values of the entries
 
-      colIdx[colNum] = colNum;
-      rowVals[colNum++] = 1;
+        colIdx[colNum] = colNum;
+        rowVals[colNum++] = 1;
 
-      for (int dim = 0; dim < dimensions; dim++) {
-        if (not _deadAxis[dim]) {
-          colIdx[colNum] = colNum;
-          rowVals[colNum++] = oVertex.getCoords()[dim];
+        for (int dim = 0; dim < dimensions; dim++) {
+          if (not _deadAxis[dim]) {
+            colIdx[colNum] = colNum;
+            rowVals[colNum++] = oVertex.getCoords()[dim];
+          }
         }
-      }
-      ierr = MatSetValuesLocal(m, 1, &row, colNum, colIdx, rowVals, INSERT_VALUES); CHKERRV(ierr);
-      colNum = 0;
+        ierr = MatSetValues(*m, 1, &row, colNum, colIdx, rowVals, INSERT_VALUES); CHKERRV(ierr);
     }
-
+    
     // -- SETS THE COEFFICIENTS --
+    PetscInt colNum = 0;
+    PetscInt colIdx[_matrixA.getSize().second];     // holds the columns indices of the entries
+    PetscScalar rowVals[_matrixA.getSize().second]; // holds the values of the entries
+
     if (_preallocation == Preallocation::SAVE or _preallocation == Preallocation::TREE) {
-      const auto & rowVertices = vertexData[row - ownerRangeABegin];
+      auto const & rowVertices = vertexData[row - ownerRangeABegin];
       for (const auto & vertex : rowVertices) {
         rowVals[colNum] = _basisFunction.evaluate(vertex.second);
         colIdx[colNum++] = vertex.first;
@@ -508,14 +486,15 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
           if (_deadAxis[d])
             distance[d] = 0;
         }
-        if (_basisFunction.getSupportRadius() > distance.norm()) {
-          double coeff = _basisFunction.evaluate(distance.norm());
-          rowVals[colNum] = coeff;
+        double const norm = distance.norm();
+        if (_basisFunction.getSupportRadius() > norm) {
+          rowVals[colNum] = _basisFunction.evaluate(norm);
           colIdx[colNum++] = inVertex.getGlobalIndex() + polyparams;
         }
       }
     }
-    ierr = MatSetValuesLocal(_matrixA, 1, &row, colNum, colIdx, rowVals, INSERT_VALUES); CHKERRV(ierr);
+    ierr = AOApplicationToPetsc(_AOmapping, colNum, colIdx); CHKERRV(ierr);
+    ierr = MatSetValues(_matrixA, 1, &row, colNum, colIdx, rowVals, INSERT_VALUES); CHKERRV(ierr);
   }
   DEBUG("Finished filling Matrix A");
   eFillA.stop();
@@ -525,12 +504,15 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
   ierr = MatAssemblyBegin(_matrixA, MAT_FINAL_ASSEMBLY); CHKERRV(ierr);
 
-  ISLocalToGlobalMappingRestoreIndices(_ISmapping, &mapIndizes);
   ierr = MatAssemblyEnd(_matrixC, MAT_FINAL_ASSEMBLY); CHKERRV(ierr);
   ierr = MatAssemblyEnd(_matrixQ, MAT_FINAL_ASSEMBLY); CHKERRV(ierr);
   ierr = MatAssemblyEnd(_matrixA, MAT_FINAL_ASSEMBLY); CHKERRV(ierr);
   _matrixQ.assemble();
   _matrixV.assemble();
+  
+  ePostFill.stop();
+
+  precice::utils::Event eSolverInit("map.pet.solverInit.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
 
   // -- CONFIGURE SOLVER FOR POLYNOMIAL --
   if (_polynomial == Polynomial::SEPARATE) {
@@ -545,7 +527,10 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   KSPSetOperators(_solver, _matrixC, _matrixC); CHKERRV(ierr);
   KSPSetTolerances(_solver, _solverRtol, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT);
   KSPSetInitialGuessNonzero(_solver, PETSC_TRUE); CHKERRV(ierr); // Reuse the results from the last iteration, held in the out vector.
+  KSPSetOptionsPrefix(_solver, "solverC_"); // s.t. options for only this solver can be set on the command line
   KSPSetFromOptions(_solver);
+
+  eSolverInit.stop();
 
   // if (totalNNZ > static_cast<size_t>(20*n)) {
   //   DEBUG("Using Cholesky decomposition as direct solver for dense matrix.");
@@ -556,13 +541,20 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   //   PCFactorSetShiftType(prec, MAT_SHIFT_NONZERO);
   // }
 
-  // -- COMPUTE RESCALING COEFFICIENTS USING THE SYSTEM MATRIX SOLVER --
+  // -- COMPUTE RESCALING COEFFICIENTS USING THE SYSTEM MATRIX C SOLVER --
   if (useRescaling and (_polynomial == Polynomial::SEPARATE)) {
-    petsc::Vector rhs(_matrixC);
-    ierr = MatCreateVecs(_matrixC, nullptr, &rescalingCoeffs.vector); CHKERRV(ierr);
+    precice::utils::Event eRescaling("map.pet.computeRescaling.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);    
+    petsc::Vector rhs(_matrixC), rescalingCoeffs(_matrixC);
     VecSet(rhs, 1);
     rhs.assemble();
-    _solver.solve(rhs, rescalingCoeffs);
+    if (not _solver.solve(rhs, rescalingCoeffs)) {
+      WARN("RBF rescaling linear system has not converged. Deactivating rescaling!");
+      useRescaling = false;
+    }
+    ierr = MatCreateVecs(_matrixA, nullptr, &oneInterpolant.vector); CHKERRV(ierr);
+    ierr = MatMult(_matrixA, rescalingCoeffs, oneInterpolant); CHKERRV(ierr); // get the output of g(x) = 1
+    // set values close to zero to exactly 0.0, s.t. PointwiseDevide does not to devision on these entries
+    ierr = VecChop(oneInterpolant, 1e-6); CHKERRV(ierr);
   }
 
   _hasComputedMapping = true;
@@ -574,13 +566,13 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 }
 
 template<typename RADIAL_BASIS_FUNCTION_T>
-bool PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: hasComputedMapping() const
+bool PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::hasComputedMapping() const
 {
   return _hasComputedMapping;
 }
 
 template<typename RADIAL_BASIS_FUNCTION_T>
-void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: clear()
+void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::clear()
 {
   _matrixC.reset();
   _matrixA.reset();
@@ -590,7 +582,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: clear()
   _solver.reset();
   _QRsolver.reset();
 
-  petsc::destroy(&_ISmapping);
+  petsc::destroy(&_AOmapping);
 
   previousSolution.clear();
   _hasComputedMapping = false;
@@ -607,10 +599,10 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
             input()->getDimensions(), output()->getDimensions());
 
   PetscErrorCode ierr = 0;
-  auto& inValues = input()->data(inputDataID)->values();
-  auto& outValues = output()->data(outputDataID)->values();
+  auto const & inValues = input()->data(inputDataID)->values();
+  auto & outValues = output()->data(outputDataID)->values();
 
-  int valueDim = input()->data(inputDataID)->getDimensions();
+  int const valueDim = input()->data(inputDataID)->getDimensions();
   assertion(valueDim == output()->data(outputDataID)->getDimensions(),
             valueDim, output()->data(outputDataID)->getDimensions());
 
@@ -624,7 +616,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
 
       // Fill input from input data values
       for (size_t i = 0; i < input()->vertices().size(); i++ ) {
-        int globalIndex = input()->vertices()[i].getGlobalIndex(); // globalIndex is target row
+        auto const globalIndex = input()->vertices()[i].getGlobalIndex(); // globalIndex is target row
         if (globalIndex >= inRangeStart and globalIndex < inRangeEnd) // only fill local rows
           ierr = VecSetValue(in, globalIndex, inValues[i*valueDim + dim], INSERT_VALUES); CHKERRV(ierr);
       }
@@ -649,7 +641,10 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
         petsc::Vector tau(_matrixQ, "tau", petsc::Vector::RIGHT);
         ierr = MatMultTransposeAdd(_matrixQ, mu, epsilon, tau); CHKERRV(ierr);
         petsc::Vector sigma(_matrixQ, "sigma", petsc::Vector::LEFT);
-        ierr = KSPSolveTranspose(_QRsolver, tau, sigma); CHKERRV(ierr);
+        if (not _QRsolver.solveTranspose(tau, sigma)) {
+          KSPView(_QRsolver, PETSC_VIEWER_STDOUT_WORLD);
+          ERROR("RBF Polynomial linear system has not converged.");
+        }
         VecWAXPY(out, -1, sigma, mu);
       }
       else {
@@ -687,19 +682,22 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
     petsc::Vector in(_matrixC, "in");
     petsc::Vector a(_matrixQ, "a", petsc::Vector::RIGHT); // holds the solution of the LS polynomial
 
-    ierr = VecSetLocalToGlobalMapping(in, _ISmapping); CHKERRV(ierr);
-    const PetscScalar *vecArray;
+    PetscScalar const * vecArray;
 
     // For every data dimension, perform mapping
-    for (int dim=0; dim < valueDim; dim++) {
+    for (int dim = 0; dim < valueDim; dim++) {
       printMappingInfo(inputDataID, dim);
 
       // Fill input from input data values
-      int count = 0;
-      for (const auto& vertex : input()->vertices()) {
-        ierr = VecSetValueLocal(in, vertex.getGlobalIndex()+polyparams, inValues[count*valueDim + dim], INSERT_VALUES); CHKERRV(ierr);
-        count++;
+      std::vector<PetscScalar> inVals; inVals.reserve(input()->vertices().size());
+      std::vector<PetscInt> inIdx; inIdx.reserve(input()->vertices().size());
+      for (size_t i = 0; i < input()->vertices().size(); ++i) {
+        if (not input()->vertices()[i].isOwner())
+          continue;       
+        inVals.emplace_back(inValues[i * valueDim + dim]);
+        inIdx.emplace_back(inIdx.size() + in.ownerRange().first + localPolyparams);
       }
+      ierr = VecSetValues(in, inIdx.size(), inIdx.data(), inVals.data(), INSERT_VALUES); CHKERRV(ierr);
       in.assemble();
 
       if (_polynomial == Polynomial::SEPARATE) {
@@ -726,15 +724,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
 
       ierr = MatMult(_matrixA, p, out); CHKERRV(ierr);
 
-      if (useRescaling and (_polynomial == Polynomial::SEPARATE)) {
-        petsc::Vector temp(_matrixA);
-        PetscReal min;
-        ierr = MatMult(_matrixA, rescalingCoeffs, temp); CHKERRV(ierr); // get the output of g(x) = 1
-        ierr = VecMin(temp, nullptr, &min); CHKERRV(ierr); // check for zeros before devision
-        if (min < 1e-6)
-          WARN("Zero elements found in rescaling, omit rescaling.");
-        else
-          ierr = VecPointwiseDivide(out, out, temp); CHKERRV(ierr);
+      if (useRescaling and _polynomial == Polynomial::SEPARATE) {
+        ierr = VecPointwiseDivide(out, out, oneInterpolant); CHKERRV(ierr);
       }
 
       if (_polynomial == Polynomial::SEPARATE) {
@@ -746,7 +737,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
       // Copy mapped data to output data values
       ierr = VecGetArrayRead(out, &vecArray);
       int size = out.getLocalSize();
-      for (int i=0; i < size; i++) {
+      for (int i = 0; i < size; i++) {
         outValues[i*valueDim + dim] = vecArray[i];
       }
       VecRestoreArrayRead(out, &vecArray);
@@ -959,9 +950,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computePreallocationMatr
 
   PetscInt n, ierr;
 
-  const PetscInt *mapIndizes;
-  ISLocalToGlobalMappingGetIndices(_ISmapping, &mapIndizes);
-
   int dimensions = input()->getDimensions();
   Eigen::VectorXd distance(dimensions);
 
@@ -992,8 +980,11 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computePreallocationMatr
     for (mesh::Vertex& vj : inMesh->vertices()) {
       col++;
 
-      const int mapped_col = mapIndizes[vj.getGlobalIndex() + polyparams];
-      if (global_row > mapped_col) // Skip, since we are below the diagonal
+      // the actual col where the vertex end up
+      PetscInt mappedCol = vj.getGlobalIndex() + polyparams;
+      ierr = AOApplicationToPetsc(_AOmapping, 1, &mappedCol); CHKERRV(ierr); // likely not efficient in the inner loop
+
+      if (global_row > mappedCol) // Skip, since we are below the diagonal
         continue;
 
       distance = inVertex.getCoords() - vj.getCoords();
@@ -1004,7 +995,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computePreallocationMatr
       }
 
       if (_basisFunction.getSupportRadius() > distance.norm() or col == global_row) {
-        if (mapped_col >= colOwnerRangeCBegin and mapped_col < colOwnerRangeCEnd)
+        if (mappedCol >= colOwnerRangeCBegin and mappedCol < colOwnerRangeCEnd)
           d_nnz[local_row]++;
         else
           o_nnz[local_row]++;
@@ -1024,8 +1015,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computePreallocationMatr
   }
   MatSetOption(_matrixC, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_TRUE);
 
-  ISLocalToGlobalMappingRestoreIndices(_ISmapping, &mapIndizes);
-
   ePreallocC.stop();
 }
 
@@ -1037,9 +1026,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computePreallocationMatr
 
   PetscInt ownerRangeABegin, ownerRangeAEnd, colOwnerRangeABegin, colOwnerRangeAEnd;
   PetscInt outputSize, ierr;
-
-  const PetscInt *mapIndizes;
-  ISLocalToGlobalMappingGetIndices(_ISmapping, &mapIndizes);
 
   std::tie(outputSize, std::ignore) = _matrixA.getLocalSize();
 
@@ -1058,8 +1044,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computePreallocationMatr
     const mesh::Vertex& oVertex = outMesh->vertices()[localRow];
 
     // -- PREALLOCATE THE POLYNOM PART OF THE MATRIX --
+    // col does not need mapping here, because the first polyparams col are always identity mapped
     if (_polynomial == Polynomial::ON) {
-      if (mapIndizes[col] >= colOwnerRangeABegin and mapIndizes[col] < colOwnerRangeAEnd)
+      if (col >= colOwnerRangeABegin and col < colOwnerRangeAEnd)
         d_nnz[localRow]++;
       else
         o_nnz[localRow]++;
@@ -1067,7 +1054,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computePreallocationMatr
 
       for (int dim = 0; dim < dimensions; dim++) {
         if (not _deadAxis[dim]) {
-          if (mapIndizes[col] >= colOwnerRangeABegin and mapIndizes[col] < colOwnerRangeAEnd)
+          if (col >= colOwnerRangeABegin and col < colOwnerRangeAEnd)
             d_nnz[localRow]++;
           else
             o_nnz[localRow]++;
@@ -1086,7 +1073,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computePreallocationMatr
 
       if (_basisFunction.getSupportRadius() > distance.norm()) {
         col = inVertex.getGlobalIndex() + polyparams;
-        if (mapIndizes[col] >= colOwnerRangeABegin and mapIndizes[col] < colOwnerRangeAEnd)
+        AOApplicationToPetsc(_AOmapping, 1, &col);
+        if (col >= colOwnerRangeABegin and col < colOwnerRangeAEnd)
           d_nnz[localRow]++;
         else
           o_nnz[localRow]++;
@@ -1104,21 +1092,16 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computePreallocationMatr
   }
   MatSetOption(_matrixA, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_TRUE);
 
-  ISLocalToGlobalMappingRestoreIndices(_ISmapping, &mapIndizes);
-
   ePreallocA.stop();
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::savedPreallocationMatrixC(
-  const mesh::PtrMesh inMesh)
+typename PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::VertexData
+PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::savedPreallocationMatrixC(mesh::PtrMesh const inMesh)
 {
   precice::utils::Event ePreallocC("map.pet.preallocC.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
 
   PetscInt n;
-
-  const PetscInt *mapIndizes;
-  ISLocalToGlobalMappingGetIndices(_ISmapping, &mapIndizes);
 
   int dimensions = input()->getDimensions();
   Eigen::VectorXd distance(dimensions);
@@ -1128,7 +1111,7 @@ std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL
   PetscInt colOwnerRangeCBegin, colOwnerRangeCEnd;
   std::tie(colOwnerRangeCBegin, colOwnerRangeCEnd) = _matrixC.ownerRangeColumn();
 
-  std::vector<std::vector<std::pair<int, double>>> vertexData(n - localPolyparams);
+  VertexData vertexData(n - localPolyparams);
 
   size_t local_row = 0;
   // -- PREALLOCATES THE POLYNOMIAL PART OF THE MATRIX --
@@ -1152,8 +1135,10 @@ std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL
     for (mesh::Vertex& vj : inMesh->vertices()) {
       col++;
 
-      const int mapped_col = mapIndizes[vj.getGlobalIndex() + polyparams];
-      if (global_row > mapped_col) // Skip, since we are below the diagonal
+      PetscInt mappedCol = vj.getGlobalIndex() + polyparams;
+      AOApplicationToPetsc(_AOmapping, 1, &mappedCol); // likely not efficient in the inner loop
+      
+      if (global_row > mappedCol) // Skip, since we are below the diagonal
         continue;
 
       distance = inVertex.getCoords() - vj.getCoords();
@@ -1161,9 +1146,10 @@ std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL
         if (_deadAxis[d])
           distance[d] = 0;
 
-      if (_basisFunction.getSupportRadius() > distance.norm() or col == global_row) {
-        vertexData[local_row - localPolyparams].emplace_back( vj.getGlobalIndex() + polyparams, distance.norm() );
-        if (mapped_col >= colOwnerRangeCBegin and mapped_col < colOwnerRangeCEnd)
+      double const norm = distance.norm();
+      if (_basisFunction.getSupportRadius() > norm or col == global_row) {
+        vertexData[local_row - localPolyparams].emplace_back(vj.getGlobalIndex() + polyparams, norm);
+        if (mappedCol >= colOwnerRangeCBegin and mappedCol < colOwnerRangeCEnd)
           d_nnz[local_row]++;
         else
           o_nnz[local_row]++;
@@ -1182,7 +1168,6 @@ std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL
     MatMPISBAIJSetPreallocation(_matrixC, _matrixC.blockSize(), 0, d_nnz.data(), 0, o_nnz.data());
   }
   MatSetOption(_matrixC, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_TRUE);
-  ISLocalToGlobalMappingRestoreIndices(_ISmapping, &mapIndizes);
 
   ePreallocC.stop();
 
@@ -1190,19 +1175,16 @@ std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::savedPreallocationMatrixA(
-  const mesh::PtrMesh inMesh, const mesh::PtrMesh outMesh)
+typename PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::VertexData
+PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::savedPreallocationMatrixA(mesh::PtrMesh const inMesh, mesh::PtrMesh const outMesh)
 {
   INFO("Using saved preallocation");
   precice::utils::Event ePreallocA("map.pet.preallocA.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
 
   PetscInt ownerRangeABegin, ownerRangeAEnd, colOwnerRangeABegin, colOwnerRangeAEnd;
-  PetscInt outputSize, n;
+  PetscInt outputSize;
 
-  const PetscInt *mapIndizes;
-  ISLocalToGlobalMappingGetIndices(_ISmapping, &mapIndizes);
-
-  std::tie(outputSize, n) = _matrixA.getLocalSize(); // n hier nehmen
+  std::tie(outputSize, std::ignore) = _matrixA.getLocalSize(); // n hier nehmen
   std::tie(ownerRangeABegin, ownerRangeAEnd) = _matrixA.ownerRange();
   std::tie(colOwnerRangeABegin, colOwnerRangeAEnd) = _matrixA.ownerRangeColumn();
   int dimensions = input()->getDimensions();
@@ -1211,7 +1193,7 @@ std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL
   Eigen::VectorXd distance(dimensions);
 
   // Contains localRow<localCols<colPosition, distance>>>
-  std::vector<std::vector<std::pair<int, double>>> vertexData(outputSize);
+  VertexData vertexData(outputSize);
 
   for (int localRow = 0; localRow < ownerRangeAEnd - ownerRangeABegin; localRow++) {
     d_nnz[localRow] = 0;
@@ -1220,8 +1202,9 @@ std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL
     const mesh::Vertex& oVertex = outMesh->vertices()[localRow];
 
     // -- PREALLOCATE THE POLYNOM PART OF THE MATRIX --
+    // col does not need mapping here, because the first polyparams col are always identity mapped
     if (_polynomial == Polynomial::ON) {
-      if (mapIndizes[col] >= colOwnerRangeABegin and mapIndizes[col] < colOwnerRangeAEnd)
+      if (col >= colOwnerRangeABegin and col < colOwnerRangeAEnd)
         d_nnz[localRow]++;
       else
         o_nnz[localRow]++;
@@ -1229,7 +1212,7 @@ std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL
 
       for (int dim = 0; dim < dimensions; dim++) {
         if (not _deadAxis[dim]) {
-          if (mapIndizes[col] >= colOwnerRangeABegin and mapIndizes[col] < colOwnerRangeAEnd)
+          if (col >= colOwnerRangeABegin and col < colOwnerRangeAEnd)
             d_nnz[localRow]++;
           else
             o_nnz[localRow]++;
@@ -1244,12 +1227,14 @@ std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL
       for (int d = 0; d < dimensions; d++)
         if (_deadAxis[d])
           distance[d] = 0;
-
-      if (_basisFunction.getSupportRadius() > distance.norm()) {
+      
+      double const norm = distance.norm();
+      if (_basisFunction.getSupportRadius() > norm) {
         col = inVertex.getGlobalIndex() + polyparams;
-        vertexData[localRow].emplace_back(col, distance.norm());
+        vertexData[localRow].emplace_back(col, norm);
 
-        if (mapIndizes[col] >= colOwnerRangeABegin and mapIndizes[col] < colOwnerRangeAEnd)
+        AOApplicationToPetsc(_AOmapping, 1, &col);
+        if (col >= colOwnerRangeABegin and col < colOwnerRangeAEnd)
           d_nnz[localRow]++;
         else
           o_nnz[localRow]++;
@@ -1267,37 +1252,34 @@ std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL
   }
   MatSetOption(_matrixA, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_TRUE);
 
-  ISLocalToGlobalMappingRestoreIndices(_ISmapping, &mapIndizes);
   ePreallocA.stop();
   return vertexData;
 }
 
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixC(
-  const mesh::PtrMesh inMesh)
+typename PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::VertexData
+PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixC(mesh::PtrMesh const inMesh)
 {
   INFO("Using tree-based preallocation for matrix C");
   precice::utils::Event ePreallocC("map.pet.preallocC.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
   namespace bg = boost::geometry;
 
   PetscInt n;
+  std::tie(n, std::ignore) = _matrixC.getLocalSize();
+  std::vector<PetscInt> d_nnz(n), o_nnz(n);
 
   auto tree = mesh::rtree::getVertexRTree(inMesh);
-  double supportRadius = _basisFunction.getSupportRadius();
 
-  const PetscInt *mapIndizes;
-  ISLocalToGlobalMappingGetIndices(_ISmapping, &mapIndizes);
+  double const supportRadius = _basisFunction.getSupportRadius();
 
   int dimensions = input()->getDimensions();
   Eigen::VectorXd distance(dimensions);
-
-  std::tie(n, std::ignore) = _matrixC.getLocalSize();
-  std::vector<PetscInt> d_nnz(n), o_nnz(n);
+  
   PetscInt colOwnerRangeCBegin, colOwnerRangeCEnd;
   std::tie(colOwnerRangeCBegin, colOwnerRangeCEnd) = _matrixC.ownerRangeColumn();
 
-  std::vector<std::vector<std::pair<int, double>>> vertexData(n - localPolyparams);
+  VertexData vertexData(n - localPolyparams);
 
   size_t local_row = 0;
   // -- PREALLOCATES THE POLYNOMIAL PART OF THE MATRIX --
@@ -1312,8 +1294,8 @@ std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL
     if (not inVertex.isOwner())
       continue;
 
-    PetscInt col = polyparams - 1;
-    const int global_row = local_row + _matrixC.ownerRange().first;
+    PetscInt col = polyparams;
+    PetscInt const global_row = local_row + _matrixC.ownerRange().first;
     d_nnz[local_row] = 0;
     o_nnz[local_row] = 0;
 
@@ -1326,12 +1308,13 @@ std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL
       std::back_inserter(results));
 
     // for (mesh::Vertex& vj : inMesh->vertices()) {
-    for (auto i : results) {
+    for (auto const i : results) {
       const mesh::Vertex & vj = inMesh->vertices()[i];
-      col++;
 
-      const int mapped_col = mapIndizes[vj.getGlobalIndex() + polyparams];
-      if (global_row > mapped_col) // Skip, since we are below the diagonal
+      PetscInt mappedCol = vj.getGlobalIndex() + polyparams;
+      AOApplicationToPetsc(_AOmapping, 1, &mappedCol); // likely not efficient in the inner loop
+        
+      if (global_row > mappedCol) // Skip, since we are below the diagonal
         continue;
 
       distance = inVertex.getCoords() - vj.getCoords();
@@ -1339,13 +1322,15 @@ std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL
         if (_deadAxis[d])
           distance[d] = 0;
 
-      if (_basisFunction.getSupportRadius() > distance.norm() or col == global_row) {
-        vertexData[local_row - localPolyparams].emplace_back( vj.getGlobalIndex() + polyparams, distance.norm() );
-        if (mapped_col >= colOwnerRangeCBegin and mapped_col < colOwnerRangeCEnd)
+      double const norm = distance.norm();
+      if (supportRadius > norm or col == global_row) {
+        vertexData[local_row - localPolyparams].emplace_back(vj.getGlobalIndex() + polyparams, norm);
+        if (mappedCol >= colOwnerRangeCBegin and mappedCol < colOwnerRangeCEnd)
           d_nnz[local_row]++;
         else
           o_nnz[local_row]++;
       }
+      col++;
     }
     local_row++;
   }
@@ -1357,7 +1342,6 @@ std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL
     MatMPISBAIJSetPreallocation(_matrixC, _matrixC.blockSize(), 0, d_nnz.data(), 0, o_nnz.data());
   }
   MatSetOption(_matrixC, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_TRUE);
-  ISLocalToGlobalMappingRestoreIndices(_ISmapping, &mapIndizes);
 
   ePreallocC.stop();
 
@@ -1365,22 +1349,18 @@ std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixA(
-  const mesh::PtrMesh inMesh, const mesh::PtrMesh outMesh)
+typename PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::VertexData
+PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixA(mesh::PtrMesh const inMesh, mesh::PtrMesh const outMesh)
 {
   INFO("Using tree-based preallocation for matrix A");
   precice::utils::Event ePreallocA("map.pet.preallocA.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
   namespace bg = boost::geometry;
 
   PetscInt ownerRangeABegin, ownerRangeAEnd, colOwnerRangeABegin, colOwnerRangeAEnd;
-  PetscInt outputSize, n;
+  PetscInt const outputSize = _matrixA.getLocalSize().first;
   auto tree = mesh::rtree::getVertexRTree(inMesh);
-  double supportRadius = _basisFunction.getSupportRadius();
+  double const supportRadius = _basisFunction.getSupportRadius();
 
-  const PetscInt *mapIndizes;
-  ISLocalToGlobalMappingGetIndices(_ISmapping, &mapIndizes);
-
-  std::tie(outputSize, n) = _matrixA.getLocalSize(); // n hier nehmen
   std::tie(ownerRangeABegin, ownerRangeAEnd) = _matrixA.ownerRange();
   std::tie(colOwnerRangeABegin, colOwnerRangeAEnd) = _matrixA.ownerRangeColumn();
   int dimensions = input()->getDimensions();
@@ -1389,17 +1369,18 @@ std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL
   Eigen::VectorXd distance(dimensions);
 
   // Contains localRow<localCols<colPosition, distance>>>
-  std::vector<std::vector<std::pair<int, double>>> vertexData(outputSize);
+  VertexData vertexData(outputSize);
 
   for (int localRow = 0; localRow < ownerRangeAEnd - ownerRangeABegin; localRow++) {
     d_nnz[localRow] = 0;
     o_nnz[localRow] = 0;
     PetscInt col = 0;
-    const mesh::Vertex& oVertex = outMesh->vertices()[localRow];
+    mesh::Vertex const & oVertex = outMesh->vertices()[localRow];
 
     // -- PREALLOCATE THE POLYNOM PART OF THE MATRIX --
+    // col does not need mapping here, because the first polyparams col are always identity mapped
     if (_polynomial == Polynomial::ON) {
-      if (mapIndizes[col] >= colOwnerRangeABegin and mapIndizes[col] < colOwnerRangeAEnd)
+      if (col >= colOwnerRangeABegin and col < colOwnerRangeAEnd)
         d_nnz[localRow]++;
       else
         o_nnz[localRow]++;
@@ -1407,7 +1388,7 @@ std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL
 
       for (int dim = 0; dim < dimensions; dim++) {
         if (not _deadAxis[dim]) {
-          if (mapIndizes[col] >= colOwnerRangeABegin and mapIndizes[col] < colOwnerRangeAEnd)
+          if (col >= colOwnerRangeABegin and col < colOwnerRangeAEnd)
             d_nnz[localRow]++;
           else
             o_nnz[localRow]++;
@@ -1432,11 +1413,13 @@ std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL
           if (_deadAxis[d])
             distance[d] = 0;
 
-        if (_basisFunction.getSupportRadius() > distance.norm()) {
+        double const norm = distance.norm();
+        if (supportRadius > norm) {
           col = inVertex.getGlobalIndex() + polyparams;
-          vertexData[localRow].emplace_back(col, distance.norm());
+          vertexData[localRow].emplace_back(col, norm);
 
-          if (mapIndizes[col] >= colOwnerRangeABegin and mapIndizes[col] < colOwnerRangeAEnd)
+          AOApplicationToPetsc(_AOmapping, 1, &col);
+          if (col >= colOwnerRangeABegin and col < colOwnerRangeAEnd)
             d_nnz[localRow]++;
           else
             o_nnz[localRow]++;
@@ -1451,7 +1434,6 @@ std::vector<std::vector<std::pair<int, double>>> PetRadialBasisFctMapping<RADIAL
   }
   MatSetOption(_matrixA, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_TRUE);
 
-  ISLocalToGlobalMappingRestoreIndices(_ISmapping, &mapIndizes);
   ePreallocA.stop();
   return vertexData;
 }

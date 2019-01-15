@@ -41,9 +41,11 @@ private:
 #include "petscmat.h"
 #include "petscksp.h"
 #include "petscis.h"
+#include "petscao.h"
 
 namespace precice {
 namespace utils {
+/// PETSc related utilities
 namespace petsc {
 
 enum VIEWERFORMAT { ASCII, BINARY };
@@ -87,9 +89,9 @@ public:
   /// Sets the size and calls VecSetFromOptions
   void init(PetscInt rows);
 
-  int getSize();
+  PetscInt getSize() const;
 
-  int getLocalSize();
+  PetscInt getLocalSize() const;
   
   void setValue(PetscInt row, PetscScalar value);
 
@@ -103,15 +105,16 @@ public:
   void assemble();
 
   /// Returns a pair that mark the beginning and end of the vectors ownership range. Use first und second to access.
-  std::pair<PetscInt, PetscInt> ownerRange();
+  std::pair<PetscInt, PetscInt> ownerRange() const;
 
   /// Writes the vector to file.
-  void write(std::string filename, VIEWERFORMAT format = ASCII);
+  void write(std::string filename, VIEWERFORMAT format = ASCII) const;
 
   /// Reads the vector from file.
   void read(std::string filename, VIEWERFORMAT format = ASCII);
 
-  void view();
+  /// Prints the vector
+  void view() const;
 };
 
   
@@ -153,7 +156,7 @@ public:
   
   /// Get the MatInfo struct for the matrix.
   /** See http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatInfo.html for description of fields. */
-  MatInfo getInfo(MatInfoType flag);
+  MatInfo getInfo(MatInfoType flag) const;
   
   void setValue(PetscInt row, PetscInt col, PetscScalar value);
   
@@ -162,30 +165,31 @@ public:
   void setColumn(Vector &v, PetscInt col);
 
   /// Returns (rows, cols) global size
-  std::pair<PetscInt, PetscInt> getSize();
+  std::pair<PetscInt, PetscInt> getSize() const;
 
   /// Returns (rows, cols) local size
-  std::pair<PetscInt, PetscInt> getLocalSize();
+  std::pair<PetscInt, PetscInt> getLocalSize() const;
   
   /// Returns a pair that mark the beginning and end of the matrix' ownership range.
-  std::pair<PetscInt, PetscInt> ownerRange();
+  std::pair<PetscInt, PetscInt> ownerRange() const;
   
   /// Returns a pair that mark the beginning and end of the matrix' column ownership range.
-  std::pair<PetscInt, PetscInt> ownerRangeColumn();
+  std::pair<PetscInt, PetscInt> ownerRangeColumn() const;
 
   /// Returns the block size of the matrix
   PetscInt blockSize() const;
   
   /// Writes the matrix to file.
-  void write(std::string filename, VIEWERFORMAT format = ASCII);
+  void write(std::string filename, VIEWERFORMAT format = ASCII) const;
 
   /// Reads the matrix from file, stored in PETSc binary format
   void read(std::string filename);
 
   /// Prints the matrix
-  void view();
+  void view() const;
 
-  void viewDraw();
+  /// Graphically draws the matrix structure
+  void viewDraw() const;
 
 };
 
@@ -216,6 +220,9 @@ public:
 
   /// Solves the linear system, returns false it not converged
   bool solve(Vector &b, Vector &x);
+
+  /// Solves the transposed linear system, returns false it not converged
+  bool solveTranspose(Vector &b, Vector &x);
 };
 
 
@@ -224,6 +231,9 @@ void destroy(KSP * ksp);
 
 /// Destroys an ISLocalToGlobalMapping, if IS is not null and PetscIsInitialized
 void destroy(ISLocalToGlobalMapping * IS);
+
+/// Destroys an application ordering, if ao is not null and PetscIsInitialized
+void destroy(AO * ao);
 
 
 }}} // namespace precice, utils, petsc
