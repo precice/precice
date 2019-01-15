@@ -223,6 +223,9 @@ public:
 
   /// Solves the transposed linear system, returns false it not converged
   bool solveTranspose(Vector &b, Vector &x);
+
+  /// Returns the iteration number of solver, either during or after the solve call.
+  PetscInt getIterationNumber();
 };
 
 
