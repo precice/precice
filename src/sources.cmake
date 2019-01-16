@@ -1,8 +1,11 @@
 #
 # This file lists all sources that will be compiles into the precice library
 #
+
 target_sources(precice
     PRIVATE
+    src/math/barycenter.hpp
+    src/math/barycenter.cpp
     src/math/geometry.cpp
     src/math/constants.hpp
     src/math/differences.hpp
@@ -41,12 +44,12 @@ target_sources(precice
     src/m2n/DistributedComFactory.hpp
     src/m2n/DistributedCommunication.hpp
     src/m2n/PointToPointCommunication.cpp
-    src/m2n/config/M2NConfiguration.hpp
-    src/m2n/config/M2NConfiguration.cpp
     src/m2n/PointToPointCommunication.hpp
     src/m2n/PointToPointComFactory.hpp
     src/m2n/SharedPointer.hpp
     src/m2n/GatherScatterComFactory.cpp
+    src/m2n/config/M2NConfiguration.hpp
+    src/m2n/config/M2NConfiguration.cpp
     src/cplscheme/BaseCouplingScheme.hpp
     src/cplscheme/CouplingData.hpp
     src/cplscheme/Constants.hpp
@@ -58,6 +61,11 @@ target_sources(precice
     src/cplscheme/Constants.cpp
     src/cplscheme/ParallelCouplingScheme.hpp
     src/cplscheme/CouplingScheme.hpp
+    src/cplscheme/CouplingScheme.cpp
+    src/cplscheme/CompositionalCouplingScheme.cpp
+    src/cplscheme/SharedPointer.hpp
+    src/cplscheme/MultiCouplingScheme.cpp
+    src/cplscheme/MultiCouplingScheme.hpp
     src/cplscheme/impl/ResidualSumPreconditioner.hpp
     src/cplscheme/impl/ConvergenceMeasure.hpp
     src/cplscheme/impl/ParallelMatrixOperations.cpp
@@ -100,15 +108,10 @@ target_sources(precice
     src/cplscheme/impl/IQNILSPostProcessing.hpp
     src/cplscheme/impl/MVQNPostProcessing.cpp
     src/cplscheme/impl/MVQNPostProcessing.hpp
-    src/cplscheme/CouplingScheme.cpp
     src/cplscheme/config/CouplingSchemeConfiguration.cpp
     src/cplscheme/config/PostProcessingConfiguration.hpp
     src/cplscheme/config/PostProcessingConfiguration.cpp
     src/cplscheme/config/CouplingSchemeConfiguration.hpp
-    src/cplscheme/CompositionalCouplingScheme.cpp
-    src/cplscheme/SharedPointer.hpp
-    src/cplscheme/MultiCouplingScheme.cpp
-    src/cplscheme/MultiCouplingScheme.hpp
     src/action/Action.hpp
     src/action/PythonAction.hpp
     src/action/ScaleByAreaAction.cpp
@@ -116,13 +119,13 @@ target_sources(precice
     src/action/ScaleByAreaAction.hpp
     src/action/PythonAction.cpp
     src/action/ScaleByDtAction.hpp
-    src/action/config/ActionConfiguration.cpp
-    src/action/config/ActionConfiguration.hpp
     src/action/ModifyCoordinatesAction.hpp
     src/action/ModifyCoordinatesAction.cpp
     src/action/SharedPointer.hpp
     src/action/ScaleByDtAction.cpp
     src/action/ComputeCurvatureAction.hpp
+    src/action/config/ActionConfiguration.cpp
+    src/action/config/ActionConfiguration.hpp
     src/utils/EigenHelperFunctions.cpp
     src/utils/SignalHandler.hpp
     src/utils/Dimensions.cpp
@@ -164,21 +167,25 @@ target_sources(precice
     src/io/TXTReader.cpp
     src/io/TXTTableWriter.hpp
     src/io/TXTWriter.cpp
-    src/io/config/ExportConfiguration.cpp
-    src/io/config/ExportConfiguration.hpp
     src/io/ExportVTK.cpp
     src/io/ExportVTKXML.cpp
     src/io/SharedPointer.hpp
     src/io/TXTReader.hpp
+    src/io/config/ExportConfiguration.cpp
+    src/io/config/ExportConfiguration.hpp
     src/com/MPIPortsCommunication.cpp
     src/com/Communication.cpp
     src/com/MPIDirectCommunication.hpp
     src/com/MPIDirectCommunication.cpp
     src/com/SocketCommunication.hpp
     src/com/SocketCommunicationFactory.hpp
+    src/com/MPISinglePortsCommunication.hpp
     src/com/MPICommunication.cpp
     src/com/MPIRequest.cpp
+    src/com/MPISinglePortsCommunicationFactory.cpp
     src/com/CommunicationFactory.hpp
+    src/com/MPISinglePortsCommunicationFactory.hpp
+    src/com/MPISinglePortsCommunication.cpp
     src/com/MPIPortsCommunicationFactory.cpp
     src/com/Communication.hpp
     src/com/SocketRequest.hpp
@@ -188,8 +195,6 @@ target_sources(precice
     src/com/CommunicateMesh.hpp
     src/com/MPIPortsCommunicationFactory.hpp
     src/com/MPIPortsCommunication.hpp
-    src/com/config/CommunicationConfiguration.cpp
-    src/com/config/CommunicationConfiguration.hpp
     src/com/MPIRequest.hpp
     src/com/Request.cpp
     src/com/SocketRequest.cpp
@@ -198,6 +203,8 @@ target_sources(precice
     src/com/CommunicateMesh.cpp
     src/com/Request.hpp
     src/com/CommunicateBoundingBox.cpp
+    src/com/config/CommunicationConfiguration.cpp
+    src/com/config/CommunicationConfiguration.hpp
     src/mesh/Data.cpp
     src/mesh/Triangle.cpp
     src/mesh/Merge.hpp
@@ -211,19 +218,21 @@ target_sources(precice
     src/mesh/PropertyContainer.hpp
     src/mesh/Data.hpp
     src/mesh/Vertex.cpp
+    src/mesh/RangeAccessor.hpp
     src/mesh/Quad.hpp
     src/mesh/Edge.cpp
     src/mesh/Edge.hpp
-    src/mesh/impl/RTreeAdapter.hpp
     src/mesh/Group.cpp
-    src/mesh/config/MeshConfiguration.cpp
-    src/mesh/config/DataConfiguration.cpp
-    src/mesh/config/MeshConfiguration.hpp
-    src/mesh/config/DataConfiguration.hpp
     src/mesh/Mesh.hpp
     src/mesh/Triangle.hpp
     src/mesh/PropertyContainer.cpp
     src/mesh/SharedPointer.hpp
+    src/mesh/impl/RTree.hpp
+    src/mesh/impl/RTreeAdapter.hpp
+    src/mesh/config/MeshConfiguration.cpp
+    src/mesh/config/DataConfiguration.cpp
+    src/mesh/config/MeshConfiguration.hpp
+    src/mesh/config/DataConfiguration.hpp
     src/xml/ValidatorOr.hpp
     src/xml/XMLTag.cpp
     src/xml/XMLTag.hpp
@@ -232,21 +241,20 @@ target_sources(precice
     src/xml/ValidatorEquals.hpp
     src/xml/XMLAttribute.hpp
     src/xml/ConfigParser.cpp
-
     src/precice/Constants.hpp
     src/precice/SolverInterface.cpp
-    src/precice/bindings/c/Constants.h
-    src/precice/bindings/c/SolverInterfaceC.h
-
+    src/precice/SolverInterface.hpp
+    src/precice/Constants.cpp
+    src/precice/MeshHandle.cpp
+    src/precice/MeshHandle.hpp
     src/precice/bindings/fortran/ConstantsFortran.cpp
     src/precice/bindings/fortran/SolverInterfaceFASTEST.hpp
     src/precice/bindings/fortran/SolverInterfaceFortran.cpp
+    src/precice/bindings/fortran/SolverInterfaceFASTEST.cpp
     src/precice/bindings/fortran/SolverInterfaceFortran.hpp
     src/precice/bindings/fortran/ConstantsFortran.hpp
     src/precice/bindings/c/SolverInterfaceC.cpp
     src/precice/bindings/c/Constants.cpp
-    src/precice/SolverInterface.hpp
-    src/precice/Constants.cpp
     src/precice/impl/SolverInterfaceImpl.hpp
     src/precice/impl/MeshContext.hpp
     src/precice/impl/SolverInterfaceImpl.cpp
@@ -259,7 +267,6 @@ target_sources(precice
     src/precice/impl/Participant.hpp
     src/precice/impl/SharedPointer.hpp
     src/precice/impl/RequestManager.cpp
-    src/precice/MeshHandle.cpp
     src/precice/config/Configuration.hpp
     src/precice/config/Configuration.cpp
     src/precice/config/ParticipantConfiguration.cpp
@@ -267,28 +274,27 @@ target_sources(precice
     src/precice/config/SharedPointer.hpp
     src/precice/config/SolverInterfaceConfiguration.hpp
     src/precice/config/SolverInterfaceConfiguration.cpp
-    src/precice/MeshHandle.hpp
     src/logging/Logger.hpp
     src/logging/Logger.cpp
     src/logging/LogConfiguration.cpp
     src/logging/LogMacros.hpp
     src/logging/Tracer.cpp
     src/logging/Tracer.hpp
+    src/logging/LogConfiguration.hpp
     src/logging/config/LogConfiguration.cpp
     src/logging/config/LogConfiguration.hpp
-    src/logging/LogConfiguration.hpp
     src/mapping/NearestNeighborMapping.hpp
     src/mapping/NearestProjectionMapping.hpp
     src/mapping/Mapping.hpp
     src/mapping/NearestProjectionMapping.cpp
     src/mapping/RadialBasisFctMapping.hpp
     src/mapping/NearestNeighborMapping.cpp
-    src/mapping/impl/BasisFunctions.hpp
     src/mapping/Mapping.cpp
-    src/mapping/config/MappingConfiguration.hpp
-    src/mapping/config/MappingConfiguration.cpp
     src/mapping/SharedPointer.hpp
     src/mapping/PetRadialBasisFctMapping.hpp
+    src/mapping/impl/BasisFunctions.hpp
+    src/mapping/config/MappingConfiguration.hpp
+    src/mapping/config/MappingConfiguration.cpp
     )
 
 #
@@ -296,9 +302,9 @@ target_sources(precice
 #
 
 set_property(TARGET precice PROPERTY PUBLIC_HEADER
+    src/precice/Constants.hpp
     src/precice/SolverInterface.hpp
     src/precice/MeshHandle.hpp
-    src/precice/Constants.hpp
-    src/precice/bindings/c/SolverInterfaceC.h
     src/precice/bindings/c/Constants.h
+    src/precice/bindings/c/SolverInterfaceC.h
     )
