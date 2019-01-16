@@ -677,6 +677,16 @@ void PointToPointCommunication::requestPreConnection(std::string const &acceptor
   _isConnected = true;
 }
 
+void PointToPointCommunication::updateVertexList()
+{
+  mesh::Mesh::CommunicationMap localCommunicationMap = _mesh->getCommunicationMap();
+
+  for(auto &i : _connectionData)
+  {
+    _mappings.push_back({i.remoteRank, std::move(localCommunicationMap[i.remoteRank]), i.communication, i.request, {}});
+  }
+}
+
 void PointToPointCommunication::closeConnection()
 {
   TRACE();

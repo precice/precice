@@ -73,6 +73,11 @@ public:
     std::string const &acceptorName,
     std::string const &requesterName);
 
+  /** This function must be called by both accepter and requester to update the vertex list in the 
+   *  mapping
+  */
+  virtual void updateVertexList();
+  
   /**
    * @brief Disconnects from communication space, i.e. participant.
    *

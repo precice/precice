@@ -129,6 +129,13 @@ void M2N::requestSlavesPreConnection(
   assertion(_areSlavesConnected);
 }
 
+void M2N::updateVertexList()
+{
+  for (const auto &pair : _distComs) {
+    pair.second->updateVertexList();
+  }
+}
+
 void M2N::closeConnection()
 {
   TRACE();

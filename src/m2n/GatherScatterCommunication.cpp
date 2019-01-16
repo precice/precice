@@ -190,5 +190,8 @@ void GatherScatterCommunication::broadcastSendLCM(std::map<int, std::vector<int>
 void GatherScatterCommunication::broadcastReceiveLCM(std::map<int, std::vector<int>> &localCommunicationMap)
 {}
 
+void GatherScatterCommunication::updateVertexList()
+{}
+
 } // namespace m2n
 } // namespace precice

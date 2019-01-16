@@ -79,6 +79,11 @@ public:
                                   const std::string &requesterName);
 
   /**
+   * Both participants must call this function to update vertex list
+   */
+  void updateVertexList();
+
+  /**
    * @brief Disconnects from communication space, i.e. participant.
    *
    * This method is called on destruction.
