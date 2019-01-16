@@ -205,7 +205,22 @@ include(${CMAKE_CURRENT_LIST_DIR}/src/tests.cmake)
 
 # Register the test using CTest
 enable_testing()
-add_test(NAME precice.All COMMAND testprecice)
+set(PRECICE_TEST_DIR "${preCICE_BINARY_DIR}/TestOutput")
+file(MAKE_DIRECTORY ${PRECICE_TEST_DIR})
+add_test(NAME precice.Base
+    COMMAND "$<TARGET_FILE:testprecice>"
+    WORKING_DIRECTORY "${PRECICE_TEST_DIR}"
+    )
+if(MPI AND MPIEXEC_EXECUTABLE)
+  add_test(NAME precice.MPI2
+    COMMAND "${MPIEXEC_EXECUTABLE}" -np 2 "$<TARGET_FILE:testprecice>"
+    WORKING_DIRECTORY "${PRECICE_TEST_DIR}"
+    )
+  add_test(NAME precice.MPI4
+    COMMAND "${MPIEXEC_EXECUTABLE}" -np 4 "$<TARGET_FILE:testprecice>"
+    WORKING_DIRECTORY "${PRECICE_TEST_DIR}"
+    )
+endif()
 
 #
 # Install Targets for precice
