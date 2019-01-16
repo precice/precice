@@ -1,4 +1,13 @@
-import os, glob
+#!/bin/python3
+
+import os
+import glob
+import sys
+
+
+def file_extension(name):
+    _, ext = os.path.splitext(name)
+    return ext
 
 
 def get_cmake_file_paths(root):
@@ -16,30 +25,34 @@ def is_precice_root(root):
 def get_file_lists(root):
     src_dir = os.path.join(root, "src")
 
-    sources, public, tests = [], [], []
-
-    # Find headers of the interface
-    public += glob.glob(os.path.join(src_dir, "precice", "*.hpp"))
-    public += glob.glob(os.path.join(src_dir, "precice", "bindings", "c", "*.h"))
+    # Find interface headers
+    public = glob.glob(os.path.join(src_dir, "precice", "*.hpp"))
     public = [os.path.relpath(p, root) for p in public]
 
+    # Find interface c bindings
+    bindings = glob.glob(os.path.join(src_dir, "precice", "bindings", "c", "*.h"))
+    bindings = [os.path.relpath(b, root) for b in bindings]
+
     # Find all test and source cpp files
+    sources, tests = [], []
     exts = [".cpp", ".c", ".hpp", ".h"]
     for dir, _, filenames in os.walk(src_dir):
-        files = []
-        for name in filenames:
-            _, ext = os.path.splitext(name)
-            if ext in exts:
-                files.append(os.path.relpath(os.path.join(dir, name), root))
+        if "drivers" in dir:
+            continue
+        files = [
+            os.path.relpath(os.path.join(dir, name), root)
+            for name in filenames
+            if file_extension(name) in exts
+        ]
         if "test" in dir:
             tests += files
         else:
             sources += files
 
-    # Remove interface headers from the sources
-    sources = [source for source in sources if source not in public]
+    # Remove bindings from the sources
+    sources = [source for source in sources if source not in bindings]
 
-    return sources, public, tests
+    return sources, (public + bindings), tests
 
 
 SOURCES_BASE = """#
@@ -82,11 +95,11 @@ def generate_cmake_files(sources, public, tests):
 
 def main():
     root = os.curdir
-    if is_precice_root(root):
+    if not is_precice_root(root):
         print("Current dir {} is not the root of the precice repository!".format(root))
         return 1
     sources, public, tests = get_file_lists(root)
-    print("Detected:\n sources: {}\npublic: {}\ntests: {}".format(len(sources), len(public), len(tests)))
+    print("Detected:\n sources: {}\n public: {}\n tests: {}".format(len(sources), len(public), len(tests)))
 
     print("Generating CMake files")
     sources_file, tests_file = get_cmake_file_paths(root)
@@ -105,4 +118,4 @@ def main():
 
 
 if __name__ == "__main__":
-    os.exit(main())
+    sys.exit(main())
