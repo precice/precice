@@ -72,6 +72,7 @@ public:
   /// Adds a new event
   void put(Event* event);
 
+  /// Adds aggregated data for a specific event
   void addEventData(EventData ed);
 
   /// Normalizes all Events to zero time of t0
@@ -100,7 +101,6 @@ private:
 /// Holds data aggregated from all MPI ranks for one event
 struct GlobalEventStats
 {
-  // std::string name;
   int maxRank, minRank;
   Event::Clock::duration max   = Event::Clock::duration::min();
   Event::Clock::duration min   = Event::Clock::duration::max();
@@ -120,6 +120,7 @@ public:
   /// Deleted assigment operator for singleton pattern
   void operator=(EventRegistry const &) = delete;
 
+  /// Returns the only instance (singleton) of the EventRegistry class
   static EventRegistry & instance();
 
   /// Sets the global start time
@@ -142,7 +143,7 @@ public:
   /// Records the event.
   void put(Event* event);
 
-  /// Make this returning a reference or smart ptr?
+  /// Returns or creates a stored event, i.e., an event with life beyond the current scope
   Event & getStoredEvent(std::string const & name);
 
   /// Prints a pretty report to stdout and a JSON report to appName-events.json
@@ -155,7 +156,7 @@ public:
   
   void printGlobalStats();
 
-  MPI_Comm & getMPIComm();
+  MPI_Comm const & getMPIComm() const;
 
   /// Currently active prefix. Changing that applies only to newly created events.
   std::string prefix;

@@ -66,7 +66,7 @@ void Event::pause(bool barrier)
       MPI_Barrier(EventRegistry::instance().getMPIComm());
 
     auto stoptime = Clock::now();
-    stateChanges.push_back(std::make_pair(State::PAUSED, Clock::now()));
+    stateChanges.emplace_back(State::PAUSED, Clock::now());
     state = State::PAUSED;
     duration += Clock::duration(stoptime - starttime);
     DEBUG("Paused event " << name);

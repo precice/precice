@@ -295,13 +295,13 @@ void EventRegistry::writeTimings(std::ostream &out)
     using std::left; using std::right;
 
     std::time_t ts = sys_clk::to_time_t(localRankData.finalizedAt);
-    auto totalDuration = localRankData.evData.at("_GLOBAL").getTotal();
-
+    double const duration = std::chrono::duration_cast<std::chrono::milliseconds>(localRankData.getDuration()).count();
+    
     out << "Run finished at " << std::asctime(std::localtime(&ts));
 
     out << "Global runtime       = "
-        << totalDuration << "ms / "
-        << totalDuration / 1000 << "s" << std::endl
+        << duration << "ms / "
+        << duration / 1000 << "s" << std::endl
         << "Number of processors = " << size << std::endl
         << "# Rank: " << rank << std::endl << std::endl;
 
@@ -315,11 +315,11 @@ void EventRegistry::writeTimings(std::ostream &out)
         {10, "T[%]"}
       });
     table.printHeader();
-
+    
     for (auto & e : localRankData.evData) {
       auto & ev = e.second;
       table.printLine(ev.getName(), ev.getCount(), ev.getTotal(), ev.getMax(),  ev.getMin(), ev.getAvg(),
-                      ev.getTotal() / localRankData.getDuration().count() * 100);
+                      ev.getTotal() / duration * 100);
     }
 
     out << endl;
@@ -345,13 +345,14 @@ void EventRegistry::writeLog(std::ostream & out)
   for (auto const & rank : globalRankData) {
     auto jTimings = json::object();
     auto jStateChanges = json::array();
+    double const duration = duration_cast<milliseconds>(rank.getDuration()).count();
     for (auto const & events : rank.evData) {
       auto const & e = events.second;
       jTimings[events.second.getName()] = {
           {"Count", e.getCount()},
           {"Max", e.getMax()},
           {"Min", e.getMin()},
-          {"T%", e.getTotal() / localRankData.getDuration().count() * 100},
+          {"T%", e.getTotal() / duration * 100},
           {"Data" , e.getData()}
         };
       for (auto const & sc : e.stateChanges) {
@@ -390,7 +391,7 @@ void EventRegistry::printGlobalStats()
   }
 }
 
-MPI_Comm & EventRegistry::getMPIComm()
+MPI_Comm const & EventRegistry::getMPIComm() const
 {
   return comm;
 }
@@ -530,11 +531,8 @@ EventRegistry::collectInitAndFinalize()
 
   // This assumes the same epoch and ticks rep, should be true for system time
 
-  return std::make_pair(
-    sys_clk::time_point{sys_clk::duration{minTicks}},
-    sys_clk::time_point{sys_clk::duration{maxTicks}}
-    );
-      
+  return {sys_clk::time_point{sys_clk::duration{minTicks}},
+          sys_clk::time_point{sys_clk::duration{maxTicks}}};
 
 }
 
