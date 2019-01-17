@@ -7,6 +7,7 @@
 #include "mapping/Mapping.hpp"
 #include "SharedPointer.hpp"
 #include "partition/ReceivedPartition.hpp"
+#include "partition/ReceivedBoundingBox.hpp"
 #include <vector>
 
 namespace precice {

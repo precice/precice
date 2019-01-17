@@ -29,6 +29,9 @@ public:
   /// All distribution data structures are set up.
   virtual void compute() override;
 
+  virtual void communicateBoundingBox();
+  virtual void computeBoundingBox();
+
 private:
   /// Sets owner=True on all vertices
   virtual void createOwnerInformation() override;

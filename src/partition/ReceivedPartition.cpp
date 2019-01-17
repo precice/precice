@@ -247,6 +247,11 @@ void ReceivedPartition::compute()
   computeVertexOffsets();
 }
 
+void ReceivedPartition::communicateBoundingBox()
+{}
+void ReceivedPartition::computeBoundingBox()
+{}
+
 void ReceivedPartition::filterMesh(mesh::Mesh &filteredMesh, const bool filterByBB)
 {
   TRACE(filterByBB);

@@ -19,6 +19,7 @@
 #include "io/ExportContext.hpp"
 #include "io/SharedPointer.hpp"
 #include "partition/ReceivedPartition.hpp"
+#include "partition/ReceivedBoundingBox.hpp"
 
 namespace precice {
 namespace config {

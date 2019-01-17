@@ -36,6 +36,12 @@ public:
   virtual ~Partition() {}
 
   /// The mesh is communicated between both master ranks (if required)
+  virtual void communicateBoundingBox() = 0;
+
+  /// The partition is computed, i.e. the mesh re-partitioned if required and all data structures are set up.
+  virtual void computeBoundingBox() = 0;
+  
+  /// The mesh is communicated between both master ranks (if required)
   virtual void communicate() = 0;
 
   /// The partition is computed, i.e. the mesh re-partitioned if required and all data structures are set up.

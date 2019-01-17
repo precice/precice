@@ -128,6 +128,11 @@ void ProvidedPartition::compute()
   computeVertexOffsets();
 }
 
+void ProvidedPartition::communicateBoundingBox()
+{}
+void ProvidedPartition::computeBoundingBox()
+{}
+
 void ProvidedPartition::createOwnerInformation()
 {
   TRACE();
