@@ -11,4 +11,4 @@ find_dependency(PETSc 3.6)
 find_dependency(PythonLibs 2.7)
 find_dependency(NumPy)
 
-include("${CMAKE_CURRENT_LIST_DIR}/PRECICETargets.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/preciceTargets.cmake")
