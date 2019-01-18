@@ -272,3 +272,92 @@ write_basic_package_version_file("preciceConfigVersion.cmake"
 install(FILES "preciceConfig.cmake" "${preCICE_BINARY_DIR}/preciceConfigVersion.cmake"
     DESTINATION lib/cmake/precice
     )
+
+# Install doc files
+install(FILES tools/packaging/debian/copyright
+  DESTINATION share/doc/precice
+  )
+
+# Compress and install changelog and manpages
+find_program(GZIP_EXE gzip DOC "The gzip executable")
+if(GZIP_EXE)
+  set(PRECICE_PACKAGING_DIR "${CMAKE_CURRENT_BINARY_DIR}/packaging")
+  message(STATUS "Compressing changelog")
+  file(COPY CHANGELOG.md DESTINATION packaging)
+  execute_process(COMMAND "${GZIP_EXE}" "-9nf" "${PRECICE_PACKAGING_DIR}/CHANGELOG.md")
+  install(FILES ${PRECICE_PACKAGING_DIR}/CHANGELOG.md.gz
+    DESTINATION share/doc/precice
+    RENAME changelog.gz
+    )
+
+  file(COPY tools/packaging/man1 DESTINATION packaging)
+  file(GLOB PRECICE_MAN_PAGES "${PRECICE_PACKAGING_DIR}/man1/*.1")
+  foreach(manpage ${PRECICE_MAN_PAGES})
+    message(STATUS "Compressing manpage: ${manpage}")
+    execute_process(COMMAND "${GZIP_EXE}" "-9nf" "${manpage}")
+  endforeach()
+  install(DIRECTORY ${PRECICE_PACKAGING_DIR}/man1
+    DESTINATION share/man
+  )
+else()
+  message(WARNING "Installing uncompressed changelog and manpages")
+  install(FILES CHANGELOG.md
+    DESTINATION share/doc/precice
+    RENAME changelog
+    )
+  install(DIRECTORY tools/packaging/man1
+    DESTINATION share/man
+    )
+endif()
+
+
+#
+# Packaging Settings for CPack
+#
+# Variable References:
+#  General https://cmake.org/cmake/help/latest/module/CPack.html#module:CPack
+#  Debian Packages https://cmake.org/cmake/help/latest/cpack_gen/deb.html#cpack_gen:CPack%20DEB%20Generator
+#
+
+# General
+set(CPACK_PACKAGE_NAME "libprecice")
+set(CPACK_PACKAGE_VENDOR "precice.org")
+set(CPACK_PACKAGE_CONTACT "The precice developers <precice@mailman.informatik.uni-stuttgart.de>")
+set(CPACK_PACKAGE_MAINTAINER "The precice developers <precice@mailman.informatik.uni-stuttgart.de>")
+set(CPACK_PACKAGE_DESCRIPTION "preCICE (Precise Code Interaction Coupling Environment) is a coupling library for partitioned multi-physics simulations, including, but not restricted to fluid-structure interaction and conjugate heat transfer simulations. Partitioned means that preCICE couples existing programs (solvers) capable of simulating a subpart of the complete physics involved in a simulation. This allows for the high flexibility that is needed to keep a decent time-to-solution for complex multi-physics scenarios.")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Precise Code Interaction Coupling Environment")
+set(CPACK_PACKAGE_EXECUTABLES "testprecice;binprecice")
+set(CPACK_PACKAGE_HOMEPAGE_URL "www.precice.org")
+#set(CPACK_PACKAGE_ICON "")
+set(CPACK_PACKAGE_CHECKSUM "SHA256")
+set(CPACK_RESOURCE_FILE_LICENSE "${preCICE_SOURCE_DIR}/LICENSE")
+set(CPACK_MONOLITHIC_INSTALL TRUE)
+set(CPACK_GENERATOR "DEB;TGZ;ZIP")
+set(CPACK_STRIP_FILES TRUE)
+
+#set(CPACK_SOURCE_PACKAGE_FILE_NAME "")
+set(CPACK_SOURCE_GENERATOR ${CPACK_GENERATOR})
+set(CPACK_SOURCE_IGNORE_FILES
+  "/build/"
+  "/.git/"
+  ".gitignore"
+  )
+
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6, petsc-dev (>= 3.8), libboost-dev (>= 1.68), libboost-log-dev (>= 1.68), libboost-thread-dev (>= 1.68), libboost-system-dev (>= 1.68), libboost-filesystem-dev (>= 1.68), libboost-program-options-dev (>= 1.68), libboost-test-dev (>= 1.68), libeigen3-dev, libxml2-dev, python-dev, python-numpy")
+set(CPACK_DEBIAN_PACKAGE_SECTION "libs")
+set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "\
+Precise Code Interaction Coupling Environment\n\
+ preCICE (Precise Code Interaction Coupling Environment) is a coupling library\n\
+ for partitioned multi-physics simulations, including, but not restricted to\n\
+ fluid-structure interaction and conjugate heat transfer simulations.\n\
+ Partitioned means that preCICE couples existing programs (solvers) capable of\n\
+ simulating a subpart of the complete physics involved in a simulation.\n\
+ This allows for the high flexibility that is needed to keep a decent\n\
+ time-to-solution for complex multi-physics scenarios.\
+")
+set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${preCICE_SOURCE_DIR}/tools/packaging/debian/postinst;${preCICE_SOURCE_DIR}/tools/packaging/debian/postrm")
+set(CPACK_DEBIAN_PACKAGE_CONTROL_STRUCT_PERMISSION TRUE)
+set(CPACK_DEBIAN_PACKAGE_GENERATE_SHLIBS TRUE)
+set(CPACK_DEBIAN_PACKAGE_GENERATE_SHLIBS_POLICY "=")
+
+include(CPack)
