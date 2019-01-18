@@ -102,10 +102,15 @@ endif()
 #
 
 # Add a dummy to silence add_library warning for cmake < 3.11.
-file(WRITE dummy.cpp "")
+if(CMAKE_VERSION VERSION_LESS "3.11")
+    set(preCICE_DUMMY "${CMAKE_CURRENT_BINARY_DIR}/dummy.cpp")
+    if(NOT EXISTS "${preCICE_DUMMY}")
+        file(WRITE "${preCICE_DUMMY}" "")
+    endif()
+endif()
 
 # Add precice as an empty target 
-add_library(precice dummy.cpp)
+add_library(precice ${preCICE_DUMMY})
 set_target_properties(precice PROPERTIES
     # precice is a C++11 project
     CXX_STANDARD 11
