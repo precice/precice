@@ -51,7 +51,7 @@ option(PYTHON "Python support" ON)
 
 find_package (Threads REQUIRED)
 
-find_package(Boost 1.60.0 REQUIRED
+find_package(Boost 1.65.1 REQUIRED
   COMPONENTS filesystem log log_setup program_options system thread unit_test_framework)
 
 find_package(Eigen3 3.2 REQUIRED)
