@@ -146,6 +146,7 @@ public:
    * Both participants need to call initializeData().
    *
    * @pre initialize() has been called successfully.
+   * @pre The action WriteInitialData is required 
    * @pre advance() has not yet been called.
    * @pre finalize() has not yet been called.
    *
