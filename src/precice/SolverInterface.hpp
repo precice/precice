@@ -132,7 +132,7 @@ public:
   /**
    * @brief Initializes coupling data.
    *
-   * In an implicit coupling scheme, the starting values for the coupling data are zero by default.
+   * The starting values for coupling data are zero by default.
    *
    * To provide custom values, first set the data using the Data Access methods and
    * call this method to finally exchange the data.
