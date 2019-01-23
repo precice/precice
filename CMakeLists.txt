@@ -275,7 +275,7 @@ install(FILES "preciceConfig.cmake" "${preCICE_BINARY_DIR}/preciceConfigVersion.
 
 # Install doc files
 install(FILES tools/packaging/debian/copyright
-  DESTINATION share/doc/precice
+  DESTINATION share/doc/libprecice
   )
 
 # Compress and install changelog and manpages
@@ -286,7 +286,7 @@ if(GZIP_EXE)
   file(COPY CHANGELOG.md DESTINATION packaging)
   execute_process(COMMAND "${GZIP_EXE}" "-9nf" "${PRECICE_PACKAGING_DIR}/CHANGELOG.md")
   install(FILES ${PRECICE_PACKAGING_DIR}/CHANGELOG.md.gz
-    DESTINATION share/doc/precice
+    DESTINATION share/doc/libprecice
     RENAME changelog.gz
     )
 
@@ -302,7 +302,7 @@ if(GZIP_EXE)
 else()
   message(WARNING "Installing uncompressed changelog and manpages")
   install(FILES CHANGELOG.md
-    DESTINATION share/doc/precice
+    DESTINATION share/doc/libprecice
     RENAME changelog
     )
   install(DIRECTORY tools/packaging/man1
