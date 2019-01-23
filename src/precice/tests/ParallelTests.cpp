@@ -369,7 +369,8 @@ BOOST_AUTO_TEST_CASE(TestQN, * testing::OnSize(4))
       }
     }
     interface.finalize();
-    BOOST_TEST(iterations == correctIterations[k]);
+    BOOST_TEST(iterations <= correctIterations[k] + 1);
+    BOOST_TEST(iterations >= correctIterations[k] - 1);
   }
 }
 
