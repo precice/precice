@@ -114,6 +114,7 @@ add_library(precice ${preCICE_DUMMY})
 set_target_properties(precice PROPERTIES
     # precice is a C++11 project
     CXX_STANDARD 11
+    SOVERSION ${preCICE_VERSION}
     )
 
 # Setup Boost
@@ -275,7 +276,7 @@ install(FILES "preciceConfig.cmake" "${preCICE_BINARY_DIR}/preciceConfigVersion.
 
 # Install doc files
 install(FILES tools/packaging/debian/copyright
-  DESTINATION share/doc/libprecice
+    DESTINATION share/doc/libprecice${preCICE_VERSION}
   )
 
 # Compress and install changelog and manpages
@@ -286,7 +287,7 @@ if(GZIP_EXE)
   file(COPY CHANGELOG.md DESTINATION packaging)
   execute_process(COMMAND "${GZIP_EXE}" "-9nf" "${PRECICE_PACKAGING_DIR}/CHANGELOG.md")
   install(FILES ${PRECICE_PACKAGING_DIR}/CHANGELOG.md.gz
-    DESTINATION share/doc/libprecice
+    DESTINATION share/doc/libprecice${preCICE_VERSION}
     RENAME changelog.gz
     )
 
@@ -302,7 +303,7 @@ if(GZIP_EXE)
 else()
   message(WARNING "Installing uncompressed changelog and manpages")
   install(FILES CHANGELOG.md
-    DESTINATION share/doc/libprecice
+    DESTINATION share/doc/libprecice${preCICE_VERSION}
     RENAME changelog
     )
   install(DIRECTORY tools/packaging/man1
@@ -319,8 +320,18 @@ endif()
 #  Debian Packages https://cmake.org/cmake/help/latest/cpack_gen/deb.html#cpack_gen:CPack%20DEB%20Generator
 #
 
+# Detect the system name
+if(WIN32)
+    set(CPACK_SYSTEM_NAME "win32")
+elseif(WIN64)
+    set(CPACK_SYSTEM_NAME "win64")
+else()
+    set(CPACK_SYSTEM_NAME "${CMAKE_SYSTEM_NAME}")
+endif()
+
 # General
-set(CPACK_PACKAGE_NAME "libprecice")
+set(CPACK_PACKAGE_NAME "libprecice${preCICE_VERSION}")
+set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_SYSTEM_NAME}")
 set(CPACK_PACKAGE_VENDOR "precice.org")
 set(CPACK_PACKAGE_CONTACT "The precice developers <precice@mailman.informatik.uni-stuttgart.de>")
 set(CPACK_PACKAGE_MAINTAINER "The precice developers <precice@mailman.informatik.uni-stuttgart.de>")
@@ -344,7 +355,7 @@ set(CPACK_SOURCE_IGNORE_FILES
   )
 
 set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6, petsc-dev (>= 3.8), libboost-dev (>= 1.68), libboost-log-dev (>= 1.68), libboost-thread-dev (>= 1.68), libboost-system-dev (>= 1.68), libboost-filesystem-dev (>= 1.68), libboost-program-options-dev (>= 1.68), libboost-test-dev (>= 1.68), libeigen3-dev, libxml2-dev, python-dev, python-numpy")
-set(CPACK_DEBIAN_PACKAGE_SECTION "libs")
+set(CPACK_DEBIAN_PACKAGE_SECTION "devel")
 set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "\
 Precise Code Interaction Coupling Environment\n\
  preCICE (Precise Code Interaction Coupling Environment) is a coupling library\n\
