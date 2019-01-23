@@ -369,6 +369,7 @@ BOOST_AUTO_TEST_CASE(TestQN, * testing::OnSize(4))
       }
     }
     interface.finalize();
+    // Depending on the hardware, QN can be slighly faster or slower leading to an iteration more or less.
     BOOST_TEST(iterations <= correctIterations[k] + 1);
     BOOST_TEST(iterations >= correctIterations[k] - 1);
   }
