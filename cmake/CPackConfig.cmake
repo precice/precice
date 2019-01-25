@@ -63,4 +63,10 @@ set(CPACK_DEBIAN_PACKAGE_CONTROL_STRUCT_PERMISSION TRUE)
 set(CPACK_DEBIAN_PACKAGE_GENERATE_SHLIBS TRUE)
 set(CPACK_DEBIAN_PACKAGE_GENERATE_SHLIBS_POLICY "=")
 
+file(WRITE "${CPACK_PACKAGE_NAME} binary: non-dev-pkg-with-shlib-symlink" "${PRECICE_PACKAGING_DIR}/lintian-override"
+install(FILE "${PRECICE_PACKAGING_DIR}/lintian-override" 
+    DESTINATION share/lintian/overrides
+    RENAME ${CPACK_PACKAGE_NAME}
+    )
+
 include(CPack)

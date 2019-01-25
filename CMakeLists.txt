@@ -279,9 +279,9 @@ install(FILES "preciceConfig.cmake" "${preCICE_BINARY_DIR}/preciceConfigVersion.
     )
 
 # Compress and install changelog and manpages
+set(PRECICE_PACKAGING_DIR "${CMAKE_CURRENT_BINARY_DIR}/packaging")
 find_program(GZIP_EXE gzip DOC "The gzip executable")
 if(GZIP_EXE)
-  set(PRECICE_PACKAGING_DIR "${CMAKE_CURRENT_BINARY_DIR}/packaging")
   message(STATUS "Compressing changelog")
   file(COPY CHANGELOG.md DESTINATION packaging)
   execute_process(COMMAND "${GZIP_EXE}" "-9nf" "${PRECICE_PACKAGING_DIR}/CHANGELOG.md")
@@ -299,7 +299,6 @@ if(GZIP_EXE)
   install(DIRECTORY ${PRECICE_PACKAGING_DIR}/man1
     DESTINATION share/man
   )
-  unset(PRECICE_PACKAGING_DIR)
 else()
   message(WARNING "Installing uncompressed changelog and manpages")
   install(FILES CHANGELOG.md
@@ -317,3 +316,4 @@ endif()
 if (PRECICE_Packages)
   include(${CMAKE_CURRENT_LIST_DIR}/cmake/CPackConfig.cmake)
 endif()
+unset(PRECICE_PACKAGING_DIR)
