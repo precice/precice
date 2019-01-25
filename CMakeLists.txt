@@ -88,12 +88,6 @@ if (PYTHON)
     set(Python_ADDITIONAL_VERSIONS "2.7")
     find_package(PythonLibs 2.7 REQUIRED)
     find_package(NumPy REQUIRED)
-
-    # Create Target for PythonLibs
-    add_library(PythonLibs INTERFACE IMPORTED)
-    set_property(TARGET PythonLibs PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${PYTHON_INCLUDE_DIRS})
-    set_property(TARGET PythonLibs PROPERTY INTERFACE_COMPILE_DEFINITIONS NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION)
-    set_property(TARGET PythonLibs PROPERTY INTERFACE_LINK_LIBRARIES ${PYTHON_LIBRARIES})
 else()
     message(STATUS "Python support disabled")
 endif()
@@ -137,7 +131,7 @@ endif()
 
 # Setup MPI
 if (MPI)
-    target_link_libraries(precice PUBLIC MPI::MPI_CXX)
+  target_link_libraries(precice PUBLIC MPI::MPI_CXX)
 else()
     target_compile_definitions(precice PUBLIC PRECICE_NO_MPI)
 endif()
@@ -152,8 +146,10 @@ endif()
 
 # Option Python
 if (PYTHON)
-    target_link_libraries(precice PRIVATE PythonLibs)
-    target_link_libraries(precice PRIVATE NumPy::NumPy)
+    target_link_libraries(precice PUBLIC NumPy::NumPy)
+    target_include_directories(precice PRIVATE ${PYTHON_INCLUDE_DIRS})
+    target_compile_definitions(precice PUBLIC NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION)
+    target_link_libraries(precice PUBLIC ${PYTHON_LIBRARIES})
 else()
     target_compile_definitions(precice PUBLIC PRECICE_NO_PYTHON)
 endif()
@@ -263,6 +259,12 @@ install(EXPORT preciceTargets
     NAMESPACE precice::
     DESTINATION lib/cmake/precice
     )
+
+# Export the FindModules
+install(DIRECTORY cmake/modules/
+    DESTINATION lib/cmake/precice/
+    )
+
 
 # Generate a Package Config File for precice
 include(CMakePackageConfigHelpers)
