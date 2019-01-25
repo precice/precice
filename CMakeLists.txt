@@ -114,8 +114,8 @@ set_target_properties(precice PROPERTIES
     )
 
 # Setup Boost
-target_compile_definitions(precice PUBLIC BOOST_ALL_DYN_LINK BOOST_ASIO_ENABLE_OLD_SERVICES)
-target_link_libraries(precice PUBLIC ${Boost_LIBRARIES})
+target_compile_definitions(precice PRIVATE BOOST_ALL_DYN_LINK BOOST_ASIO_ENABLE_OLD_SERVICES)
+target_link_libraries(precice PRIVATE ${Boost_LIBRARIES})
 
 # Setup Eigen3
 target_link_libraries(precice PRIVATE Eigen3::Eigen)
@@ -123,7 +123,7 @@ target_compile_definitions(precice PRIVATE "$<$<CONFIG:DEBUG>:EIGEN_INITIALIZE_M
 
 # Setup LIBXML2
 target_include_directories(precice PRIVATE ${LIBXML2_INCLUDE_DIR})
-target_link_libraries(precice PUBLIC ${LIBXML2_LIBRARIES})
+target_link_libraries(precice PRIVATE ${LIBXML2_LIBRARIES})
 
 if (Platform STREQUAL "SuperMUC")
     target_compile_definitions(precice PRIVATE SuperMUC_WORK)
@@ -131,27 +131,27 @@ endif()
 
 # Setup MPI
 if (MPI)
-  target_link_libraries(precice PUBLIC MPI::MPI_CXX)
+  target_link_libraries(precice PRIVATE MPI::MPI_CXX)
 else()
-    target_compile_definitions(precice PUBLIC PRECICE_NO_MPI)
+  target_compile_definitions(precice PRIVATE PRECICE_NO_MPI)
 endif()
 
 # Setup PETSC
 if (PETSC AND MPI)
-    target_include_directories(precice PUBLIC ${PETSC_INCLUDES})
-    target_link_libraries(precice PUBLIC ${PETSC_LIBRARIES})
+  target_include_directories(precice PRIVATE ${PETSC_INCLUDES})
+  target_link_libraries(precice PRIVATE ${PETSC_LIBRARIES})
 else()
-    target_compile_definitions(precice PUBLIC PRECICE_NO_PETSC)
+  target_compile_definitions(precice PRIVATE PRECICE_NO_PETSC)
 endif()
 
 # Option Python
 if (PYTHON)
-    target_link_libraries(precice PUBLIC NumPy::NumPy)
+  target_link_libraries(precice PRIVATE NumPy::NumPy)
     target_include_directories(precice PRIVATE ${PYTHON_INCLUDE_DIRS})
-    target_compile_definitions(precice PUBLIC NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION)
-    target_link_libraries(precice PUBLIC ${PYTHON_LIBRARIES})
+    target_compile_definitions(precice PRIVATE NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION)
+    target_link_libraries(precice PRIVATE ${PYTHON_LIBRARIES})
 else()
-    target_compile_definitions(precice PUBLIC PRECICE_NO_PYTHON)
+  target_compile_definitions(precice PRIVATE PRECICE_NO_PYTHON)
 endif()
 
 # File Configuration
@@ -178,6 +178,7 @@ target_link_libraries(binprecice
     Threads::Threads
     precice
     Eigen3::Eigen
+    ${Boost_LIBRARIES}
     )
 set_target_properties(binprecice PROPERTIES
     # precice is a C++11 project
@@ -185,6 +186,13 @@ set_target_properties(binprecice PROPERTIES
     )
 copy_target_property(precice binprecice COMPILE_DEFINITIONS)
 copy_target_property(precice binprecice COMPILE_OPTIONS)
+if(MPI)
+  target_link_libraries(binprecice PRIVATE MPI::MPI_CXX)
+endif()
+if(MPI AND PETSC)
+  target_include_directories(binprecice PRIVATE ${PETSC_INCLUDES})
+  target_link_libraries(binprecice PRIVATE ${PETSC_LIBRARIES})
+endif()
 
 #
 # Configuration of Target testprecice
@@ -196,6 +204,7 @@ target_link_libraries(testprecice
     Threads::Threads
     precice
     Eigen3::Eigen
+    ${Boost_LIBRARIES}
     )
 set_target_properties(testprecice PROPERTIES
     # precice is a C++11 project
@@ -203,6 +212,13 @@ set_target_properties(testprecice PROPERTIES
     )
 copy_target_property(precice testprecice COMPILE_DEFINITIONS)
 copy_target_property(precice testprecice COMPILE_OPTIONS)
+if(MPI)
+  target_link_libraries(testprecice PRIVATE MPI::MPI_CXX)
+endif()
+if(MPI AND PETSC)
+  target_include_directories(testprecice PRIVATE ${PETSC_INCLUDES})
+  target_link_libraries(testprecice PRIVATE ${PETSC_LIBRARIES})
+endif()
 
 # Add the tests
 include(${CMAKE_CURRENT_LIST_DIR}/src/tests.cmake)
