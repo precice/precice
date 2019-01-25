@@ -1,0 +1,66 @@
+#
+# Packaging Settings for CPack
+#
+# Variable References:
+#  General https://cmake.org/cmake/help/latest/module/CPack.html#module:CPack
+#  Debian Packages https://cmake.org/cmake/help/latest/cpack_gen/deb.html#cpack_gen:CPack%20DEB%20Generator
+#
+
+# Install doc files
+install(FILES tools/packaging/debian/copyright
+    DESTINATION share/doc/libprecice${preCICE_VERSION}
+  )
+
+# Detect the system name
+if(WIN32)
+    set(CPACK_SYSTEM_NAME "win32")
+elseif(WIN64)
+    set(CPACK_SYSTEM_NAME "win64")
+else()
+    set(CPACK_SYSTEM_NAME "${CMAKE_SYSTEM_NAME}")
+endif()
+
+# General
+set(CPACK_PACKAGE_DIRECTORY "CPackOutput")
+set(CPACK_PACKAGE_NAME "libprecice${preCICE_VERSION}")
+set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_SYSTEM_NAME}")
+set(CPACK_PACKAGE_VENDOR "precice.org")
+set(CPACK_PACKAGE_CONTACT "The precice developers <precice@mailman.informatik.uni-stuttgart.de>")
+set(CPACK_PACKAGE_MAINTAINER "The precice developers <precice@mailman.informatik.uni-stuttgart.de>")
+set(CPACK_PACKAGE_DESCRIPTION "preCICE (Precise Code Interaction Coupling Environment) is a coupling library for partitioned multi-physics simulations, including, but not restricted to fluid-structure interaction and conjugate heat transfer simulations. Partitioned means that preCICE couples existing programs (solvers) capable of simulating a subpart of the complete physics involved in a simulation. This allows for the high flexibility that is needed to keep a decent time-to-solution for complex multi-physics scenarios.")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Precise Code Interaction Coupling Environment")
+set(CPACK_PACKAGE_EXECUTABLES "testprecice;binprecice")
+set(CPACK_PACKAGE_HOMEPAGE_URL "www.precice.org")
+#set(CPACK_PACKAGE_ICON "")
+set(CPACK_PACKAGE_CHECKSUM "SHA256")
+set(CPACK_RESOURCE_FILE_LICENSE "${preCICE_SOURCE_DIR}/LICENSE")
+set(CPACK_MONOLITHIC_INSTALL TRUE)
+set(CPACK_GENERATOR "DEB;TGZ;ZIP")
+set(CPACK_STRIP_FILES TRUE)
+
+#set(CPACK_SOURCE_PACKAGE_FILE_NAME "")
+set(CPACK_SOURCE_GENERATOR ${CPACK_GENERATOR})
+set(CPACK_SOURCE_IGNORE_FILES
+  "/build/"
+  "/.git/"
+  ".gitignore"
+  )
+
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6, petsc-dev (>= 3.8), libboost-dev (>= 1.68), libboost-log-dev (>= 1.68), libboost-thread-dev (>= 1.68), libboost-system-dev (>= 1.68), libboost-filesystem-dev (>= 1.68), libboost-program-options-dev (>= 1.68), libboost-test-dev (>= 1.68), libeigen3-dev, libxml2-dev, python-dev, python-numpy")
+set(CPACK_DEBIAN_PACKAGE_SECTION "devel")
+set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "\
+Precise Code Interaction Coupling Environment\n\
+ preCICE (Precise Code Interaction Coupling Environment) is a coupling library\n\
+ for partitioned multi-physics simulations, including, but not restricted to\n\
+ fluid-structure interaction and conjugate heat transfer simulations.\n\
+ Partitioned means that preCICE couples existing programs (solvers) capable of\n\
+ simulating a subpart of the complete physics involved in a simulation.\n\
+ This allows for the high flexibility that is needed to keep a decent\n\
+ time-to-solution for complex multi-physics scenarios.\
+")
+set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${preCICE_SOURCE_DIR}/tools/packaging/debian/postinst;${preCICE_SOURCE_DIR}/tools/packaging/debian/postrm")
+set(CPACK_DEBIAN_PACKAGE_CONTROL_STRUCT_PERMISSION TRUE)
+set(CPACK_DEBIAN_PACKAGE_GENERATE_SHLIBS TRUE)
+set(CPACK_DEBIAN_PACKAGE_GENERATE_SHLIBS_POLICY "=")
+
+include(CPack)
