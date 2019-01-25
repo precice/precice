@@ -21,7 +21,6 @@ else()
 endif()
 
 # General
-set(CPACK_PACKAGE_DIRECTORY "CPackOutput")
 set(CPACK_PACKAGE_NAME "libprecice${preCICE_VERSION}")
 set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_SYSTEM_NAME}")
 set(CPACK_PACKAGE_VENDOR "precice.org")
