@@ -276,12 +276,6 @@ install(EXPORT preciceTargets
     DESTINATION lib/cmake/precice
     )
 
-# Export the FindModules
-install(DIRECTORY cmake/modules/
-    DESTINATION lib/cmake/precice/
-    )
-
-
 # Generate a Package Config File for precice
 include(CMakePackageConfigHelpers)
 write_basic_package_version_file("preciceConfigVersion.cmake"
