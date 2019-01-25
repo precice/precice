@@ -46,7 +46,7 @@ set(CPACK_SOURCE_IGNORE_FILES
   ".gitignore"
   )
 
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6, petsc-dev (>= 3.8), libboost-dev (>= 1.68), libboost-log-dev (>= 1.68), libboost-thread-dev (>= 1.68), libboost-system-dev (>= 1.68), libboost-filesystem-dev (>= 1.68), libboost-program-options-dev (>= 1.68), libboost-test-dev (>= 1.68), libeigen3-dev, libxml2-dev, python-dev, python-numpy")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6, petsc-dev (>= 3.6), libboost-dev (>= 1.65), libboost-log-dev (>= 1.65), libboost-thread-dev (>= 1.65), libboost-system-dev (>= 1.65), libboost-filesystem-dev (>= 1.65), libboost-program-options-dev (>= 1.65), libboost-test-dev (>= 1.65), libeigen3-dev, libxml2-dev, python-dev, python-numpy")
 set(CPACK_DEBIAN_PACKAGE_SECTION "devel")
 set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "\
 Precise Code Interaction Coupling Environment\n\
