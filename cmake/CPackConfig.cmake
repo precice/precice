@@ -59,7 +59,6 @@ Precise Code Interaction Coupling Environment\n\
  This allows for the high flexibility that is needed to keep a decent\n\
  time-to-solution for complex multi-physics scenarios.\
 ")
-set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${preCICE_SOURCE_DIR}/tools/packaging/debian/postinst;${preCICE_SOURCE_DIR}/tools/packaging/debian/postrm")
 set(CPACK_DEBIAN_PACKAGE_CONTROL_STRUCT_PERMISSION TRUE)
 set(CPACK_DEBIAN_PACKAGE_GENERATE_SHLIBS TRUE)
 set(CPACK_DEBIAN_PACKAGE_GENERATE_SHLIBS_POLICY "=")
