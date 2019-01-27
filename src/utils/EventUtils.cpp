@@ -82,15 +82,15 @@ EventData::EventData(std::string _name, long _count, long _total,
 {}
 
 
-void EventData::put(Event* event)
+void EventData::put(Event const & event)
 {
   count++;
-  stdy_clk::duration duration = event->getDuration();
+  stdy_clk::duration duration = event.getDuration();
   total += duration;
   min = std::min(duration, min);
   max = std::max(duration, max);
-  data.insert(std::end(data), std::begin(event->data), std::end(event->data));
-  stateChanges.insert(std::end(stateChanges), std::begin(event->stateChanges), std::end(event->stateChanges));
+  data.insert(std::end(data), std::begin(event.data), std::end(event.data));
+  stateChanges.insert(std::end(stateChanges), std::begin(event.stateChanges), std::end(event.stateChanges));
 }
 
 std::string EventData::getName() const
@@ -135,21 +135,23 @@ void RankData::initialize()
 {
   initializedAt = sys_clk::now();
   initializedAtTicks = stdy_clk::now();
+  isFinalized = false;
 }
 
 void RankData::finalize()
 {
   finalizedAt = sys_clk::now();
   finalizedAtTicks = stdy_clk::now();
+  isFinalized = true;
 }
 
 
-void RankData::put(Event* event)
+void RankData::put(Event const & event)
 {
   /// Construct or return EventData object with name as key and name as arg to ctor.
   auto data = std::get<0>(evData.emplace(std::piecewise_construct,
-                                         std::forward_as_tuple(event->name),
-                                         std::forward_as_tuple(event->name)));
+                                         std::forward_as_tuple(event.name),
+                                         std::forward_as_tuple(event.name)));
   data->second.put(event);
 }
 
@@ -180,12 +182,12 @@ void RankData::clear()
   evData.clear();
 }
 
-stdy_clk::duration RankData::getDuration() const
+sys_clk::duration RankData::getDuration() const
 {
   if (isFinalized)
-    return finalizedAtTicks - initializedAtTicks;
+    return finalizedAt - initializedAt;
   else
-    return stdy_clk::now() - initializedAtTicks;
+    return sys_clk::now() - initializedAt;
 }
 
 
@@ -242,7 +244,7 @@ void EventRegistry::signal_handler(int signal)
   }
 }
 
-void EventRegistry::put(Event* event)
+void EventRegistry::put(Event const & event)
 {
   localRankData.put(event);
 }
@@ -277,13 +279,13 @@ void EventRegistry::printAll()
   else
     logFile = applicationName + "-events.json";
 
-  writeTimings(std::cout);
+  writeSummary(std::cout);
   std::ofstream ofs(logFile);
-  writeLog(ofs);
+  writeJSON(ofs);
 }
 
 
-void EventRegistry::writeTimings(std::ostream &out)
+void EventRegistry::writeSummary(std::ostream &out)
 {
   int rank, size;
   MPI_Comm_rank(comm, &rank);
@@ -291,45 +293,60 @@ void EventRegistry::writeTimings(std::ostream &out)
 
   if (rank == 0) {
     using std::endl;
-    using std::setw; using std::setprecision;
-    using std::left; using std::right;
-
-    std::time_t ts = sys_clk::to_time_t(localRankData.finalizedAt);
-    double const duration = std::chrono::duration_cast<std::chrono::milliseconds>(localRankData.getDuration()).count();
+    { // Print per event stats
+      std::time_t ts = sys_clk::to_time_t(localRankData.finalizedAt);
+      double const duration = std::chrono::duration_cast<std::chrono::milliseconds>(localRankData.getDuration()).count();
     
-    out << "Run finished at " << std::asctime(std::localtime(&ts));
+      out << "Run finished at " << std::asctime(std::localtime(&ts));
 
-    out << "Global runtime       = "
-        << duration << "ms / "
-        << duration / 1000 << "s" << std::endl
-        << "Number of processors = " << size << std::endl
-        << "# Rank: " << rank << std::endl << std::endl;
+      out << "Global runtime       = "
+          << duration << "ms / "
+          << duration / 1000 << "s" << endl
+          << "Number of processors = " << size << endl
+          << "# Rank: " << rank << endl << endl;
 
-    Table table( {
-        {getMaxNameWidth(), "Event"},
-        {10, "Count"},
-        {10, "Total[ms]"},
-        {10, "Max[ms]"},
-        {10, "Min[ms]"},
-        {10, "Avg[ms]"},
-        {10, "T[%]"}
-      });
-    table.printHeader();
+      Table table(out);
+      table.addColumn("Event", getMaxNameWidth());
+      table.addColumn("Count", 10);
+      table.addColumn("Total[ms]", 10);
+      table.addColumn("Max[ms]", 10);
+      table.addColumn("Min[ms]", 10);
+      table.addColumn("Avg[ms]", 10);
+      table.addColumn("Time Ratio", 6, 3);
+      table.printHeader();
     
-    for (auto & e : localRankData.evData) {
-      auto & ev = e.second;
-      table.printLine(ev.getName(), ev.getCount(), ev.getTotal(), ev.getMax(),  ev.getMin(), ev.getAvg(),
-                      ev.getTotal() / duration * 100);
+      for (auto & e : localRankData.evData) {
+        auto & ev = e.second;
+        table.printRow(ev.getName(), ev.getCount(), ev.getTotal(), ev.getMax(),  ev.getMin(), ev.getAvg(),
+                       ev.getTotal() / duration);
+      }
     }
+    out << endl << endl;
+    { // Print aggregated states
+      Table t(out);
+      t.addColumn("Name", getMaxNameWidth());
+      t.addColumn("Max", 10);
+      t.addColumn("MaxOnRank", 10);
+      t.addColumn("Min", 10);
+      t.addColumn("MinOnRank", 10);
+      t.addColumn("Min/Max", 10);
+      t.printHeader();
 
-    out << endl;
-    printGlobalStats();
-    out << endl << std::flush;
+      auto stats = getGlobalStats(globalRankData);
+      for (auto & e : stats) {
+        auto & ev = e.second;
+        double rel = 0;
+        if (ev.max != stdy_clk::duration::zero()) // Guard against division by zero
+          rel = static_cast<double>(ev.min.count()) / ev.max.count();
+      
+        t.printRow(e.first, ev.max, ev.maxRank, ev.min, ev.minRank, rel);
+      }
+    }
   }
 }
 
 
-void EventRegistry::writeLog(std::ostream & out)
+void EventRegistry::writeJSON(std::ostream & out)
 {
   using json = nlohmann::json;
   using namespace std::chrono;
@@ -349,12 +366,13 @@ void EventRegistry::writeLog(std::ostream & out)
     for (auto const & events : rank.evData) {
       auto const & e = events.second;
       jTimings[events.second.getName()] = {
-          {"Count", e.getCount()},
-          {"Max", e.getMax()},
-          {"Min", e.getMin()},
-          {"T%", e.getTotal() / duration * 100},
-          {"Data" , e.getData()}
-        };
+        {"Count", e.getCount()},
+        {"Total", e.getTotal()},
+        {"Max", e.getMax()},
+        {"Min", e.getMin()},
+        {"TimeRatio", e.getTotal() / duration},
+        {"Data" , e.getData()}
+      };
       for (auto const & sc : e.stateChanges) {
         jStateChanges.push_back({
             {"Name", events.second.getName()},
@@ -374,22 +392,6 @@ void EventRegistry::writeLog(std::ostream & out)
   out << std::setw(2) << js << std::endl;
 }
 
-
-void EventRegistry::printGlobalStats()
-{
-  Table t({ {getMaxNameWidth(), "Name"},
-      {10, "Max"}, {10, "MaxOnRank"}, {10, "Min"}, {10, "MinOnRank"}, {10, "Min/Max"} });
-  t.printHeader();
-
-  auto stats = getGlobalStats(globalRankData);
-  for (auto & e : stats) {
-    auto & ev = e.second;
-    double rel = 0;
-    if (ev.max != stdy_clk::duration::zero()) // Guard against division by zero
-      rel = static_cast<double>(ev.min.count()) / ev.max.count();
-    t.printLine(e.first, ev.max, ev.maxRank, ev.min, ev.minRank, rel);
-  }
-}
 
 MPI_Comm const & EventRegistry::getMPIComm() const
 {
@@ -553,8 +555,8 @@ std::pair<sys_clk::time_point, sys_clk::time_point> EventRegistry::findFirstAndL
                                 [] (T a, T b)
                                 { return a.initializedAt < b.initializedAt; });
   auto last = std::max_element(std::begin(globalRankData), std::end(globalRankData),
-                                [] (T a, T b)
-                                { return a.finalizedAt < b.finalizedAt; });
+                               [] (T a, T b)
+                               { return a.finalizedAt < b.finalizedAt; });
 
   return std::make_pair(first->initializedAt, last->finalizedAt);
  

@@ -25,7 +25,7 @@ public:
             long _max, long _min, std::vector<int> _data, Event::StateChanges stateChanges);
 
   /// Adds an Events data.
-  void put(Event* event);
+  void put(Event const & event);
 
   std::string getName() const;
 
@@ -70,7 +70,7 @@ public:
   void finalize();
 
   /// Adds a new event
-  void put(Event* event);
+  void put(Event const & event);
 
   /// Adds aggregated data for a specific event
   void addEventData(EventData ed);
@@ -84,7 +84,7 @@ public:
   /// Map of EventName -> EventData, should be private later
   std::map<std::string, EventData> evData;
 
-  std::chrono::steady_clock::duration getDuration() const;
+  std::chrono::system_clock::duration getDuration() const;
 
   std::chrono::system_clock::time_point initializedAt;
   std::chrono::system_clock::time_point finalizedAt;
@@ -93,7 +93,7 @@ private:
   std::chrono::steady_clock::time_point initializedAtTicks;
   std::chrono::steady_clock::time_point finalizedAtTicks;
 
-  bool isFinalized = false;
+  bool isFinalized = true;
   int rank = 0;
 
 };
@@ -141,7 +141,7 @@ public:
   void signal_handler(int signal);
 
   /// Records the event.
-  void put(Event* event);
+  void put(Event const & event);
 
   /// Returns or creates a stored event, i.e., an event with life beyond the current scope
   Event & getStoredEvent(std::string const & name);
@@ -149,13 +149,12 @@ public:
   /// Prints a pretty report to stdout and a JSON report to appName-events.json
   void printAll();
 
-  /// Prints the result table to an arbitrary stream.
-  void writeTimings(std::ostream &out);
+  /// Prints the result table to an arbitrary stream, only prints at rank 0.
+  void writeSummary(std::ostream & out);
 
-  void writeLog(std::ostream & out);
+  /// Writes the aggregated timings and state changes at JSON, only at rank 0.
+  void writeJSON(std::ostream & out);
   
-  void printGlobalStats();
-
   MPI_Comm const & getMPIComm() const;
 
   /// Currently active prefix. Changing that applies only to newly created events.
