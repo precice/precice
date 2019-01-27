@@ -53,7 +53,7 @@ public:
   void pause(bool barrier = false);
 
   /// Gets the duration of the event.
-  Clock::duration getDuration();
+  Clock::duration getDuration() const;
 
   std::vector<int> data;
 
