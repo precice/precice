@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file. For future 
 - Actions can now specify a `MeshRequirement`, such as the `ScaleByAreaAction`.
 - Many events have been reworked and are now uniformly named. 
 - There is a `syncMode` for events (for detailed performance measurements), configurable and off by default. 
+- Use boost stacktrace for cross platform stacktrace printing. This requires Boost 1.65
 
 ## 1.2.0
 - Make `polynomial=separate` the default setting for PetRBF.
