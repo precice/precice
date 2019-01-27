@@ -228,6 +228,7 @@ checkAdd("boost_unit_test_framework")
 checkAdd(header = 'boost/vmd/is_empty.hpp', usage = 'Boost Variadic Macro Data Library')
 checkAdd(header = 'boost/geometry.hpp', usage = 'Boost Geometry Library')
 checkAdd(header = 'boost/signals2.hpp', usage = 'Boost Signals2')
+checkAdd(lib = 'dl', usage = 'Boost Stacktrace Requirement')
 
 # ====== MPI ======
 if env["mpi"]:

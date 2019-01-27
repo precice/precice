@@ -6,6 +6,7 @@
 #include "mesh/Quad.hpp"
 #include "Constants.hpp"
 #include <Eigen/Core>
+#include <iomanip>
 #include <iostream>
 #include <fstream>
 #include <boost/filesystem.hpp>
