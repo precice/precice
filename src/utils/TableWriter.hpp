@@ -10,10 +10,13 @@ struct Column
 {
   std::string name;
   int width;
+  int precision = 6;
 
-  explicit Column(std::string const & colName);
-  
-  Column(std::string const & colName, int colWidth);
+  explicit Column(std::string const & name);
+
+  Column(std::string const & name, int width);
+
+  Column(std::string const & name, int width, int precision);
 };
 
 
@@ -23,54 +26,56 @@ public:
 
   std::vector<Column> cols;
   std::string sepChar = "|";
-  std::string padding = " ";
-  std::ostream* out = &std::cout;
+  char padding = ' ';
+  std::ostream & out = std::cout;
 
-  Table() {};
+  Table();
+  
+  Table(std::ostream & out);
 
-  /// Initialize the Table with a list of table headers
-  explicit Table(std::initializer_list<std::string> headers);
-
-  /// Initialize the Table with a list of pairs of table headers and width
-  explicit Table(std::initializer_list<std::pair<int, std::string>> headers);
+  /// Adds a column of given name, width and float precision
+  template<class... T>
+  void addColumn(T&&... arg)
+  {
+    cols.emplace_back(std::forward<T>(arg)...);
+  }
 
   /// Prints the formatted header
   void printHeader();
 
   /// Prints a line, accepting arbitrary arguments
   template<class ... Ts>
-  void printLine(Ts... args)
+  void printRow(Ts... args)
   {
-    printLine(static_cast<size_t>(0), args...);    
+    printRow(static_cast<size_t>(0), args...);
   }
 
   /// Prints a ostream convertible type
   template<class T, class ... Ts>
-  void printLine(size_t index, T a, Ts... args)
+  void printRow(size_t index, T a, Ts... args)
   {
-    int width = index < cols.size() ? cols[index].width : 0;
-    *out << padding << std::setw(width) << a << padding << sepChar;
-    printLine(index+1, args...);    
+    out << padding << std::setw(cols[index].width) << std::setprecision(cols[index].precision)
+         << a << padding << sepChar;
+    printRow(index+1, args...);
   }
 
   /// Prints a duration as milliseconds
   template<class Rep, class Period, class ... Ts>
-  void printLine(size_t index, std::chrono::duration<Rep, Period> duration, Ts... args)
+  void printRow(size_t index, std::chrono::duration<Rep, Period> duration, Ts... args)
   {
-    int width = index < cols.size() ? cols[index].width : 0;
     double ms = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
-    *out << padding << std::setw(width) << ms << padding << sepChar;
-    printLine(index+1, args...);    
-  }
-    
-  /// Recursion anchor, prints the last entry and the endl
-  template<class T>
-  void printLine(size_t index, T a)
-  {
-    int width = index < cols.size() ? cols[index].width : 0;
-    *out << padding << std::setw(width) << a << padding << sepChar
-         << std::endl;
+    out << padding << std::setw(cols[index].width) << std::setprecision(cols[index].precision)
+         << ms << padding << sepChar;
+    printRow(index+1, args...);
   }
 
-    
+  /// Recursion anchor, prints the last entry and the endl
+  template<class T>
+  void printRow(size_t index, T a)
+  {
+    out << padding << std::setw(cols[index].width) << std::setprecision(cols[index].precision)
+         << a << padding << sepChar << std::endl;
+  }
+
+
 };

@@ -7,7 +7,7 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
-#include "utils/EventTimings.hpp"
+#include "utils/Event.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/MasterSlave.hpp"
 
