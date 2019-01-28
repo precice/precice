@@ -48,6 +48,16 @@ option(PYTHON "Python support" ON)
 option(PRECICE_Packages "Configure package generation." ON)
 option(PRECICE_InstallTest "Add test binary and necessary files to install target." ON)
 
+include(PrintHelper)
+print_configuration(
+  ADDITIONAL
+  "MPI;Build with MPI"
+  "PETSC;Build with PETSC"
+  "PYTHON;Build with PYTHON"
+  "Platform;Special platform settings"
+  "PRECICE_Packages;Configure package generation"
+  "PRECICE_InstallTest;Install tests/testfiles"
+)
 
 #
 # Find Mandatory Dependencies
