@@ -462,9 +462,16 @@ public:
    * @brief Gets mesh vertex IDs from positions.
    *
    * @param[in] meshID ID of the mesh to retrieve positions from
-   * @param[in] size Number of positions and ids.
-   * @param[in] positions Positions (x,y,z,x,y,z,...) to find ids for.
-   * @param[in] ids IDs corresponding to positions.
+   * @param[in] size Number of vertices to lookup.
+   * @param[in] positions Positions to find ids for.
+   *            The 2D-format is (d0x, d0y, d1x, d1y, ..., dnx, dny)
+   *            The 3D-format is (d0x, d0y, d0z, d1x, d1y, d1z, ..., dnx, dny, dnz)
+   * @param[out] ids IDs corresponding to positions.
+   *
+   * @pre count of available elements at positions matches the configured dimension * size
+   * @pre count of available elements at ids matches size
+   *
+   * @note prefer to reuse the IDs returned from calls to setMeshVertex() and setMeshVertices().
    */
   void getMeshVertexIDsFromPositions (
     int     meshID,
@@ -473,7 +480,15 @@ public:
     int*    ids );
 
   /**
-   * @brief Sets surface mesh edge from vertex IDs, returns edge ID.
+   * @brief Sets mesh edge from vertex IDs, returns edge ID.
+   *
+   * @param[in] meshID ID of the mesh to add the edge to
+   * @param[in] firstVertexID ID of the first vertex of the edge
+   * @param[in] secondVertexID ID of the second vertex of the edge
+   *
+   * @return the ID of the edge
+   *
+   * @pre vertices with firstVertexID and secondVertexID were added to the mesh with the ID meshID
    */
   int setMeshEdge (
     int meshID,
@@ -481,7 +496,14 @@ public:
     int secondVertexID );
 
   /**
-   * @brief Sets surface mesh triangle from edge IDs.
+   * @brief Sets mesh triangle from edge IDs
+   *
+   * @param[in] meshID ID of the mesh to add the triangle to
+   * @param[in] firstEdgeID ID of the first edge of the triangle
+   * @param[in] secondEdgeID ID of the second edge of the triangle
+   * @param[in] thirdEdgeID ID of the third edge of the triangle
+   *
+   * @pre edges with firstEdgeID, secondEdgeID, and thirdEdgeID were added to the mesh with the ID meshID
    */
   void setMeshTriangle (
     int meshID,
@@ -490,12 +512,20 @@ public:
     int thirdEdgeID );
 
   /**
-   * @brief Sets surface mesh triangle from vertex IDs.
+   * @brief Sets mesh triangle from vertex IDs.
    *
+   * @warning
    * This routine is supposed to be used, when no edge information is available
    * per se. Edges are created on the fly within preCICE. This routine is
    * significantly slower than the one using edge IDs, since it needs to check,
    * whether an edge is created already or not.
+   * 
+   * @param[in] meshID ID of the mesh to add the triangle to
+   * @param[in] firstVertexID ID of the first vertex of the triangle
+   * @param[in] secondVertexID ID of the second vertex of the triangle
+   * @param[in] thirdVertexID ID of the third vertex of the triangle
+   *
+   * @pre edges with firstVertexID, secondVertexID, and thirdVertexID were added to the mesh with the ID meshID
    */
   void setMeshTriangleWithEdges (
     int meshID,
@@ -504,7 +534,17 @@ public:
     int thirdVertexID );
 
   /**
-   * @brief Sets surface mesh quadrangle from edge IDs.
+   * @brief Sets mesh Quad from edge IDs.
+   *
+   * @param[in] meshID ID of the mesh to add the Quad to
+   * @param[in] firstEdgeID ID of the first edge of the Quad
+   * @param[in] secondEdgeID ID of the second edge of the Quad
+   * @param[in] thirdEdgeID ID of the third edge of the Quad
+   * @param[in] fourthEdgeID ID of the forth edge of the Quad
+   *
+   * @pre edges with firstEdgeID, secondEdgeID, thirdEdgeID, and fourthEdgeID were added to the mesh with the ID meshID
+   *
+   * @warning Quads are not fully implemented yet.
    */
   void setMeshQuad (
     int meshID,
@@ -516,10 +556,20 @@ public:
   /**
    * @brief Sets surface mesh quadrangle from vertex IDs.
    *
+   * @warning
    * This routine is supposed to be used, when no edge information is available
    * per se. Edges are created on the fly within preCICE. This routine is
    * significantly slower than the one using edge IDs, since it needs to check,
    * whether an edge is created already or not.
+   * 
+   * @param[in] meshID ID of the mesh to add the Quad to
+   * @param[in] firstVertexID ID of the first vertex of the Quad
+   * @param[in] secondVertexID ID of the second vertex of the Quad
+   * @param[in] thirdVertexID ID of the third vertex of the Quad
+   * @param[in] fourthVertexID ID of the fourth vertex of the Quad
+   *
+   * @pre edges with firstVertexID, secondVertexID, thirdVertexID, and fourthVertexID were added to the mesh with the ID meshID
+   *
    */
   void setMeshQuadWithEdges (
     int meshID,
