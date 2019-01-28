@@ -45,6 +45,7 @@ option(MPI "Enables MPI-based communication and running coupling tests." ON)
 option(PETSC "Enable use of the PETSc linear algebra library." ON)
 option(PYTHON "Python support" ON)
 option(PRECICE_Packages "Configure package generation." ON)
+option(PRECICE_InstallTest "Add test binary and necessary files to install target." ON)
 
 
 #
@@ -251,8 +252,7 @@ endif()
 # Setup General Install for:
 # precice - the library
 # binprecice - the precice binary
-# testprecice - the test for smoke testing
-install(TARGETS precice binprecice testprecice
+install(TARGETS precice binprecice
   EXPORT preciceTargets
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
@@ -261,13 +261,21 @@ install(TARGETS precice binprecice testprecice
   INCLUDES DESTINATION include/precice
   )
 
-# Install the resources necessary for the tests
-install(DIRECTORY src
-    DESTINATION share/precice
-    FILES_MATCHING
-    PATTERN "*.xml"
-    PATTERN "*.py"
+if(PRECICE_InstallTest)
+  # Install the testprecice target
+  install(TARGETS testprecice
+    EXPORT preciceTargets
+    RUNTIME DESTINATION bin
     )
+
+  # Install the resources necessary for the tests
+  install(DIRECTORY src
+      DESTINATION share/precice
+      FILES_MATCHING
+      PATTERN "*.xml"
+      PATTERN "*.py"
+      )
+endif()
 
 # Export the Targets to install
 install(EXPORT preciceTargets
@@ -300,7 +308,10 @@ if(GZIP_EXE)
     RENAME changelog.gz
     )
 
-  file(COPY docs/man/man1 DESTINATION packaging)
+  file(COPY docs/man/man1/binprecice.1 DESTINATION packaging/man1)
+  if(PRECICE_TEST)
+    file(COPY docs/man/man1/testprecice.1 DESTINATION packaging/man1)
+  endif()
   file(GLOB PRECICE_MAN_PAGES "${PRECICE_PACKAGING_DIR}/man1/*.1")
   foreach(manpage ${PRECICE_MAN_PAGES})
     message(STATUS "Compressing manpage: ${manpage}")
