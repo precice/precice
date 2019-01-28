@@ -2,6 +2,7 @@ cmake_minimum_required (VERSION 3.9.6)
 
 project(preCICE VERSION 1.3.0 LANGUAGES CXX)
 
+
 #
 # PREAMBLE
 #
@@ -195,6 +196,7 @@ if(MPI AND PETSC)
   target_link_libraries(binprecice PRIVATE ${PETSC_LIBRARIES})
 endif()
 
+
 #
 # Configuration of Target testprecice
 #
@@ -244,6 +246,7 @@ if(MPI AND MPIEXEC_EXECUTABLE)
     WORKING_DIRECTORY "${PRECICE_TEST_DIR}/MPI4"
     )
 endif()
+
 
 #
 # Install Targets for precice
@@ -331,9 +334,11 @@ else()
     )
 endif()
 
+
 #
 # CPack
 #
+
 if (PRECICE_Packages)
   include(${CMAKE_CURRENT_LIST_DIR}/cmake/CPackConfig.cmake)
 endif()
