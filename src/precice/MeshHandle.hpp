@@ -37,8 +37,8 @@ public:
   ~VertexIterator();
 
   /** Constructs a vertex iterator from a given group.
-   * @param[IN] content the group of a mesh
-   * @param[IN] begin true for the begin, and false for the end-iterator
+   * @param[in] content the group of a mesh
+   * @param[in] begin true for the begin, and false for the end-iterator
    */
   VertexIterator (
     const mesh::Group& content,
@@ -113,8 +113,8 @@ public:
   ~EdgeIterator ();
 
   /** Constructs a edge iterator from a given group.
-   * @param[IN] content the group of a mesh
-   * @param[IN] begin true for the begin, and false for the end-iterator
+   * @param[in] content the group of a mesh
+   * @param[in] begin true for the begin, and false for the end-iterator
    */
   EdgeIterator (
     const mesh::Group& mesh,
@@ -132,12 +132,12 @@ public:
   const EdgeIterator operator*() const;
 
   /** Returns the vertex coordinates of a vertex of the current edge
-   * @param[IN] vertexIndex index of the vertex (0 or 1)
+   * @param[in] vertexIndex index of the vertex (0 or 1)
    */
   const double* vertexCoords ( int vertexIndex ) const;
 
   /** Returns the vertex ID of a vertex of the current edge
-   * @param[IN] vertexIndex index of the vertex (0 or 1)
+   * @param[in] vertexIndex index of the vertex (0 or 1)
    */
   int vertexID ( int vertexIndex ) const;
 
@@ -200,8 +200,8 @@ public:
   ~TriangleIterator();
 
   /** Constructs a triangle iterator from a given group.
-   * @param[IN] content the group of a mesh
-   * @param[IN] begin true for the begin, and false for the end-iterator
+   * @param[in] content the group of a mesh
+   * @param[in] begin true for the begin, and false for the end-iterator
    */
   TriangleIterator (
     const mesh::Group& content,
@@ -218,12 +218,12 @@ public:
   const TriangleIterator operator*() const;
 
   /** Returns the vertex coordinates of a vertex of the current traingle
-   * @param[IN] vertexIndex index of the vertex (0, 1 or 2)
+   * @param[in] vertexIndex index of the vertex (0, 1 or 2)
    */
   const double* vertexCoords ( int vertexIndex ) const;
 
   /** Returns the vertex ID of a vertex of the current triangle
-   * @param[IN] vertexIndex index of the vertex (0, 1 or 2)
+   * @param[in] vertexIndex index of the vertex (0, 1 or 2)
    */
   int vertexID ( int vertexIndex ) const;
 
