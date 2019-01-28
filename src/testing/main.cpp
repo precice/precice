@@ -44,11 +44,7 @@ bool init_unit_test()
   auto logConfigs = logging::readLogConfFile("log.conf");
   
   if (logConfigs.empty()) { // nothing has been read from log.conf
-    #if BOOST_VERSION >= 106400
     auto logLevel = runtime_config::get<log_level>(runtime_config::btrt_log_level);
-    #else
-    auto logLevel = runtime_config::get<log_level>(runtime_config::LOG_LEVEL);
-    #endif
     logging::BackendConfiguration config;
     if (logLevel == log_successful_tests or logLevel == log_test_units)
       config.filter = "%Severity% >= debug";
