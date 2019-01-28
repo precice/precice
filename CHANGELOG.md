@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file. For future plans, see our [Roadmap](https://github.com/precice/precice/wiki/Roadmap).
 
+## develop
+- Use boost stacktrace for cross platform stacktrace printing. This requires Boost 1.65.1
+- Reimplemented the internals of the nearest-projection mapping to signifantly reduce its initialization time.
+
 ## 1.3.0
 - Update of build procedure for python bindings (see [`precice/src/bindings/python/README.md`](https://github.com/precice/precice/blob/develop/src/precice/bindings/python/README.md) for instructions). Note: you do not have to add `PySolverInterface.so` to `PYTHONPATH` manually anymore, if you want to use it in your adapter. Python should be able to find it automatically.   
 - Make naming of log files consistent, following the pattern `precice-SOLVERNAME-logtype.log`, example: `precice-FLUID-eventTimings.log`
@@ -9,7 +13,6 @@ All notable changes to this project will be documented in this file. For future 
 - Actions can now specify a `MeshRequirement`, such as the `ScaleByAreaAction`.
 - Many events have been reworked and are now uniformly named. 
 - There is a `syncMode` for events (for detailed performance measurements), configurable and off by default. 
-- Use boost stacktrace for cross platform stacktrace printing. This requires Boost 1.65
 
 ## 1.2.0
 - Make `polynomial=separate` the default setting for PetRBF.
