@@ -2,6 +2,20 @@ cmake_minimum_required (VERSION 3.9.6)
 
 project(preCICE VERSION 1.3.0 LANGUAGES CXX)
 
+#
+# Overview of this configuration
+# 
+# PREAMBLE
+# Setup Options
+# Find Mandatory Dependencies
+# Find Configurable Dependencies
+# Configuration of Target precice
+# Configuration of Target binprecice
+# Configuration of Target testprecice
+# Install Targets for precice
+# CPack
+#
+
 
 #
 # PREAMBLE
@@ -48,6 +62,7 @@ option(PYTHON "Python support" ON)
 option(PRECICE_Packages "Configure package generation." ON)
 option(PRECICE_InstallTest "Add test binary and necessary files to install target." ON)
 
+# Print information about this configuration
 include(PrintHelper)
 print_configuration(
   ADDITIONAL
@@ -58,6 +73,7 @@ print_configuration(
   "PRECICE_Packages;Configure package generation"
   "PRECICE_InstallTest;Install tests/testfiles"
 )
+
 
 #
 # Find Mandatory Dependencies
@@ -196,6 +212,8 @@ set_target_properties(binprecice PROPERTIES
     # precice is a C++11 project
     CXX_STANDARD 11
     )
+# Copy needed properties from the lib to the executatble. This is necessary as
+# this executable uses the library source, not only the interface.
 copy_target_property(precice binprecice COMPILE_DEFINITIONS)
 copy_target_property(precice binprecice COMPILE_OPTIONS)
 if(MPI)
@@ -223,8 +241,12 @@ set_target_properties(testprecice PROPERTIES
     # precice is a C++11 project
     CXX_STANDARD 11
     )
+# Copy needed properties from the lib to the executatble. This is necessary as
+# this executable uses the library source, not only the interface.
 copy_target_property(precice testprecice COMPILE_DEFINITIONS)
 copy_target_property(precice testprecice COMPILE_OPTIONS)
+
+# Testprecice fully depends on MPI and PETSc.
 if(MPI)
   target_link_libraries(testprecice PRIVATE MPI::MPI_CXX)
 endif()
@@ -233,11 +255,17 @@ if(MPI AND PETSC)
   target_link_libraries(testprecice PRIVATE ${PETSC_LIBRARIES})
 endif()
 
-# Add the tests
+# Test Sources Configuration
 include(${CMAKE_CURRENT_LIST_DIR}/src/tests.cmake)
 
-# Register the test using CTest
+
+#
+# CTest
+#
+
 enable_testing()
+
+# Register the Base test
 set(PRECICE_TEST_DIR "${preCICE_BINARY_DIR}/TestOutput")
 file(MAKE_DIRECTORY ${PRECICE_TEST_DIR})
 add_test(NAME precice.Base
@@ -245,11 +273,13 @@ add_test(NAME precice.Base
     WORKING_DIRECTORY "${PRECICE_TEST_DIR}"
     )
 if(MPI AND MPIEXEC_EXECUTABLE)
+  # Register the MPI test for 2 Ranks
   file(MAKE_DIRECTORY "${PRECICE_TEST_DIR}/MPI2")
   add_test(NAME precice.MPI2
     COMMAND "${MPIEXEC_EXECUTABLE}" -np 2 "$<TARGET_FILE:testprecice>"
     WORKING_DIRECTORY "${PRECICE_TEST_DIR}/MPI2"
     )
+  # Register the MPI test for 4 Ranks
   file(MAKE_DIRECTORY "${PRECICE_TEST_DIR}/MPI4")
   add_test(NAME precice.MPI4
     COMMAND "${MPIEXEC_EXECUTABLE}" -np 4 "$<TARGET_FILE:testprecice>"
@@ -309,18 +339,23 @@ install(FILES "preciceConfig.cmake" "${preCICE_BINARY_DIR}/preciceConfigVersion.
     DESTINATION lib/cmake/precice
     )
 
-# Compress and install changelog and manpages
+# Set the directory used to prepare files for packaging
 set(PRECICE_PACKAGING_DIR "${CMAKE_CURRENT_BINARY_DIR}/packaging")
+
+# Compress and install changelog and manpages
 find_program(GZIP_EXE gzip DOC "The gzip executable")
 if(GZIP_EXE)
+  # Process the changelog
   message(STATUS "Compressing changelog")
   file(COPY CHANGELOG.md DESTINATION packaging)
   execute_process(COMMAND "${GZIP_EXE}" "-9nf" "${PRECICE_PACKAGING_DIR}/CHANGELOG.md")
+  # Install compressed changelog
   install(FILES ${PRECICE_PACKAGING_DIR}/CHANGELOG.md.gz
     DESTINATION share/doc/libprecice${preCICE_VERSION}
     RENAME changelog.gz
     )
 
+  # Process manpages for binaries
   file(COPY docs/man/man1/binprecice.1 DESTINATION packaging/man1)
   if(PRECICE_TEST)
     file(COPY docs/man/man1/testprecice.1 DESTINATION packaging/man1)
@@ -330,15 +365,18 @@ if(GZIP_EXE)
     message(STATUS "Compressing manpage: ${manpage}")
     execute_process(COMMAND "${GZIP_EXE}" "-9nf" "${manpage}")
   endforeach()
+  # Install compressed manpages
   install(DIRECTORY ${PRECICE_PACKAGING_DIR}/man1
     DESTINATION share/man
   )
 else()
   message(WARNING "Installing uncompressed changelog and manpages")
+  # Install uncompressed changelog
   install(FILES CHANGELOG.md
     DESTINATION share/doc/libprecice${preCICE_VERSION}
     RENAME changelog
     )
+  # Install uncompressed manpages
   install(DIRECTORY docs/man/man1
     DESTINATION share/man
     )
