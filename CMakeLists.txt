@@ -363,7 +363,7 @@ if(GZIP_EXE)
 
   # Process manpages for binaries
   file(COPY docs/man/man1/binprecice.1 DESTINATION packaging/man1)
-  if(PRECICE_TEST)
+  if(PRECICE_InstallTest)
     file(COPY docs/man/man1/testprecice.1 DESTINATION packaging/man1)
   endif()
   file(GLOB PRECICE_MAN_PAGES "${PRECICE_PACKAGING_DIR}/man1/*.1")
