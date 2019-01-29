@@ -285,6 +285,11 @@ if(MPI AND MPIEXEC_EXECUTABLE)
     COMMAND "${MPIEXEC_EXECUTABLE}" -np 4 "$<TARGET_FILE:testprecice>"
     WORKING_DIRECTORY "${PRECICE_TEST_DIR}/MPI4"
     )
+  set_tests_properties( precice.MPI2 precice.MPI4
+    PROPERTIES
+    RUN_SERIAL TRUE # Do not run this test in parallel with others
+    TIMEOUT 60 # Set the timeout to 60 seconds on this test
+    )
 endif()
 
 
