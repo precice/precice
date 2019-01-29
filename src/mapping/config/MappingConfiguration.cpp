@@ -63,10 +63,20 @@ MappingConfiguration:: MappingConfiguration
   XMLAttribute<std::string> attrPolynomial("polynomial");
   attrPolynomial.setDocumentation("Toggles use of the global polynomial");
   attrPolynomial.setDefaultValue("separate");
+  attrPolynomial.setValidator(ValidatorEquals<std::string>("on")
+                              || ValidatorEquals<std::string>("off")
+                              || ValidatorEquals<std::string>("separate"));
+
 
   XMLAttribute<std::string> attrPreallocation("preallocation");
   attrPreallocation.setDocumentation("Sets kind of preallocation for PETSc RBF implementation");
   attrPreallocation.setDefaultValue("tree");
+  attrPreallocation.setValidator(ValidatorEquals<std::string>("estimate")
+                              || ValidatorEquals<std::string>("compute")
+                              || ValidatorEquals<std::string>("off")
+                              || ValidatorEquals<std::string>("save")
+                              || ValidatorEquals<std::string>("tree"));
+
 
   XMLTag::Occurrence occ = XMLTag::OCCUR_ARBITRARY;
   std::list<XMLTag> tags;
@@ -207,7 +217,7 @@ MappingConfiguration:: MappingConfiguration
   attrTiming.setValidator(validInitial || validOnAdvance || validOnDemand);
 
   // Add tags that all mappings use and add to parent tag
-  for (XMLTag & tag : tags) {\
+  for (XMLTag & tag : tags) {
     tag.addAttribute(attrDirection);
     tag.addAttribute(attrFromMesh);
     tag.addAttribute(attrToMesh);
@@ -258,8 +268,10 @@ void MappingConfiguration:: xmlTagCallback
       std::string strPolynomial = tag.getStringAttributeValue("polynomial");
       if (strPolynomial == "separate")
         polynomial = Polynomial::SEPARATE;
-      else
-        polynomial = utils::convertStringToBool(strPolynomial) ? Polynomial::ON : Polynomial::OFF;
+      else if (strPolynomial == "on")
+        polynomial = Polynomial::ON;
+      else if (strPolynomial == "off")
+        polynomial = Polynomial::OFF;
     }
     if (tag.hasAttribute("preallocation")){
       std::string strPrealloc = tag.getStringAttributeValue("preallocation");
