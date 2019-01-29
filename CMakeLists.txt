@@ -353,7 +353,7 @@ find_program(GZIP_EXE gzip DOC "The gzip executable")
 if(GZIP_EXE)
   # Process the changelog
   message(STATUS "Compressing changelog")
-  file(COPY CHANGELOG.md DESTINATION packaging)
+  file(COPY CHANGELOG.md DESTINATION ${PRECICE_PACKAGING_DIR})
   execute_process(COMMAND "${GZIP_EXE}" "-9nf" "${PRECICE_PACKAGING_DIR}/CHANGELOG.md")
   # Install compressed changelog
   install(FILES ${PRECICE_PACKAGING_DIR}/CHANGELOG.md.gz
