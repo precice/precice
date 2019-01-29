@@ -346,6 +346,7 @@ install(FILES "preciceConfig.cmake" "${preCICE_BINARY_DIR}/preciceConfigVersion.
 
 # Set the directory used to prepare files for packaging
 set(PRECICE_PACKAGING_DIR "${CMAKE_CURRENT_BINARY_DIR}/packaging")
+mark_as_advanced(PRECICE_PACKAGING_DIR)
 
 # Compress and install changelog and manpages
 find_program(GZIP_EXE gzip DOC "The gzip executable")
@@ -395,4 +396,3 @@ endif()
 if (PRECICE_Packages)
   include(${CMAKE_CURRENT_LIST_DIR}/cmake/CPackConfig.cmake)
 endif()
-unset(PRECICE_PACKAGING_DIR)
