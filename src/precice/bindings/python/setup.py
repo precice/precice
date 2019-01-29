@@ -12,7 +12,7 @@ from distutils.command.build import build
 APPNAME = "PySolverInterface"
 
 PYTHON_BINDINGS_PATH = os.path.dirname(os.path.abspath(__file__))
-PRECICE_ROOT = os.path.join(PYTHON_BINDINGS_PATH, "../../../../../precice")
+PRECICE_ROOT = os.path.join(PYTHON_BINDINGS_PATH, "../../../..")
 
 
 class MpiImplementations(Enum):
