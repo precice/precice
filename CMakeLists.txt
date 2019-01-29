@@ -39,16 +39,6 @@ if(POLICY CMP0075)
   cmake_policy(SET CMP0075 NEW)
 endif()
 
-# Enforce a build type
-if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
-  set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Choose the type of build." FORCE)
-  # Set the possible values of build type for cmake-gui
-  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
-    "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
-endif()
-message(STATUS "Build configuration: " ${CMAKE_BUILD_TYPE})
-
-
 #
 # Setup Options
 #
@@ -61,6 +51,8 @@ option(PRECICE_InstallTest "Add test binary and necessary files to install targe
 option(BUILD_SHARED_LIBS "Build shared libraries by default" OFF)
 
 set(PRECICE_CTEST_MPI_FLAGS "" CACHE STRING "Add additional flags to mpiexec for running tests via CTest.")
+
+include(XSDKOptions)
 
 # Print information about this configuration
 include(PrintHelper)
