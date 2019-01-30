@@ -8,14 +8,14 @@
 
 # Install doc files
 install(FILES tools/packaging/debian/copyright
-    DESTINATION share/doc/libprecice${preCICE_VERSION}
+  DESTINATION share/doc/libprecice${preCICE_VERSION}
   )
 
 # Detect the system name
 if(WIN32)
-    set(CPACK_SYSTEM_NAME "win32")
+  set(CPACK_SYSTEM_NAME "win32")
 elseif(WIN64)
-    set(CPACK_SYSTEM_NAME "win64")
+  set(CPACK_SYSTEM_NAME "win64")
 else()
   # Try to detect the codename of the distro using lsb_release
   find_program(LSB_RELEASE_EXE lsb_release)
@@ -62,13 +62,13 @@ set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6, petsc-dev (>= 3.6), libboost-dev (>= 1.
 set(CPACK_DEBIAN_PACKAGE_SECTION "devel")
 set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "\
 Precise Code Interaction Coupling Environment\n\
- preCICE (Precise Code Interaction Coupling Environment) is a coupling library\n\
- for partitioned multi-physics simulations, including, but not restricted to\n\
- fluid-structure interaction and conjugate heat transfer simulations.\n\
- Partitioned means that preCICE couples existing programs (solvers) capable of\n\
- simulating a subpart of the complete physics involved in a simulation.\n\
- This allows for the high flexibility that is needed to keep a decent\n\
- time-to-solution for complex multi-physics scenarios.\
+preCICE (Precise Code Interaction Coupling Environment) is a coupling library\n\
+for partitioned multi-physics simulations, including, but not restricted to\n\
+fluid-structure interaction and conjugate heat transfer simulations.\n\
+Partitioned means that preCICE couples existing programs (solvers) capable of\n\
+simulating a subpart of the complete physics involved in a simulation.\n\
+This allows for the high flexibility that is needed to keep a decent\n\
+time-to-solution for complex multi-physics scenarios.\
 ")
 set(CPACK_DEBIAN_PACKAGE_CONTROL_STRUCT_PERMISSION TRUE)
 set(CPACK_DEBIAN_PACKAGE_GENERATE_SHLIBS TRUE)
@@ -76,8 +76,8 @@ set(CPACK_DEBIAN_PACKAGE_GENERATE_SHLIBS_POLICY "=")
 
 file(WRITE "${PRECICE_PACKAGING_DIR}/lintian-override" "${CPACK_PACKAGE_NAME} binary: non-dev-pkg-with-shlib-symlink")
 install(FILES "${PRECICE_PACKAGING_DIR}/lintian-override" 
-    DESTINATION share/lintian/overrides
-    RENAME ${CPACK_PACKAGE_NAME}
-    )
+  DESTINATION share/lintian/overrides
+  RENAME ${CPACK_PACKAGE_NAME}
+  )
 
 include(CPack)

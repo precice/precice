@@ -31,11 +31,11 @@ include(CopyTargetProperty)
 
 # CMP0074: find_package() uses <PackageName>_ROOT variables.
 if(POLICY CMP0074)
-    cmake_policy(SET CMP0074 NEW)
+  cmake_policy(SET CMP0074 NEW)
 endif()
 # CMP0075 Include file check macros honor CMAKE_REQUIRED_LIBRARIES
 if(POLICY CMP0075)
-    cmake_policy(SET CMP0075 NEW)
+  cmake_policy(SET CMP0075 NEW)
 endif()
 
 # Enforce a build type
@@ -72,7 +72,7 @@ print_configuration(
   "Platform;Special platform settings"
   "PRECICE_Packages;Configure package generation"
   "PRECICE_InstallTest;Install tests/testfiles"
-)
+  )
 
 
 #
@@ -95,7 +95,7 @@ find_package(LibXml2 REQUIRED)
 
 # Option: MPI
 if (MPI)
-    find_package(MPI REQUIRED)
+  find_package(MPI REQUIRED)
 endif()
 
 # Option: PETSC
@@ -108,16 +108,16 @@ if (PETSC AND MPI)
   list(GET PETSC_VERSIONS 0 PETSC_VERSION_MAJOR)
   list(GET PETSC_VERSIONS 1 PETSC_VERSION_MINOR)
 else()
-    message(STATUS "PETSc support disabled")
+  message(STATUS "PETSc support disabled")
 endif()
 
 # Option Python
 if (PYTHON)
-    set(Python_ADDITIONAL_VERSIONS "2.7")
-    find_package(PythonLibs 2.7 REQUIRED)
-    find_package(NumPy REQUIRED)
+  set(Python_ADDITIONAL_VERSIONS "2.7")
+  find_package(PythonLibs 2.7 REQUIRED)
+  find_package(NumPy REQUIRED)
 else()
-    message(STATUS "Python support disabled")
+  message(STATUS "Python support disabled")
 endif()
 
 
@@ -127,19 +127,19 @@ endif()
 
 # Add a dummy to silence add_library warning for cmake < 3.11.
 if(CMAKE_VERSION VERSION_LESS "3.11")
-    set(preCICE_DUMMY "${CMAKE_CURRENT_BINARY_DIR}/dummy.cpp")
-    if(NOT EXISTS "${preCICE_DUMMY}")
-        file(WRITE "${preCICE_DUMMY}" "")
-    endif()
+  set(preCICE_DUMMY "${CMAKE_CURRENT_BINARY_DIR}/dummy.cpp")
+  if(NOT EXISTS "${preCICE_DUMMY}")
+    file(WRITE "${preCICE_DUMMY}" "")
+  endif()
 endif()
 
 # Add precice as an empty target 
 add_library(precice ${preCICE_DUMMY})
 set_target_properties(precice PROPERTIES
-    # precice is a C++11 project
-    CXX_STANDARD 11
-    SOVERSION ${preCICE_VERSION}
-    )
+  # precice is a C++11 project
+  CXX_STANDARD 11
+  SOVERSION ${preCICE_VERSION}
+  )
 
 # Setup Boost
 target_compile_definitions(precice PRIVATE BOOST_ALL_DYN_LINK BOOST_ASIO_ENABLE_OLD_SERVICES)
@@ -154,7 +154,7 @@ target_include_directories(precice PRIVATE ${LIBXML2_INCLUDE_DIR})
 target_link_libraries(precice PRIVATE ${LIBXML2_LIBRARIES})
 
 if (Platform STREQUAL "SuperMUC")
-    target_compile_definitions(precice PRIVATE SuperMUC_WORK)
+  target_compile_definitions(precice PRIVATE SuperMUC_WORK)
 endif()
 
 # Setup MPI
@@ -175,9 +175,9 @@ endif()
 # Option Python
 if (PYTHON)
   target_link_libraries(precice PRIVATE NumPy::NumPy)
-    target_include_directories(precice PRIVATE ${PYTHON_INCLUDE_DIRS})
-    target_compile_definitions(precice PRIVATE NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION)
-    target_link_libraries(precice PRIVATE ${PYTHON_LIBRARIES})
+  target_include_directories(precice PRIVATE ${PYTHON_INCLUDE_DIRS})
+  target_compile_definitions(precice PRIVATE NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION)
+  target_link_libraries(precice PRIVATE ${PYTHON_LIBRARIES})
 else()
   target_compile_definitions(precice PRIVATE PRECICE_NO_PYTHON)
 endif()
@@ -187,10 +187,10 @@ configure_file("${PROJECT_SOURCE_DIR}/src/versions.hpp.in" "${PROJECT_BINARY_DIR
 
 # Includes Configuration
 target_include_directories(precice PUBLIC 
-    $<BUILD_INTERFACE:${preCICE_SOURCE_DIR}/src>
-    $<BUILD_INTERFACE:${preCICE_BINARY_DIR}/src>
-    $<INSTALL_INTERFACE:include>
-    )
+  $<BUILD_INTERFACE:${preCICE_SOURCE_DIR}/src>
+  $<BUILD_INTERFACE:${preCICE_BINARY_DIR}/src>
+  $<INSTALL_INTERFACE:include>
+  )
 
 # Sources Configuration
 include(${CMAKE_CURRENT_LIST_DIR}/src/sources.cmake)
@@ -202,16 +202,16 @@ include(${CMAKE_CURRENT_LIST_DIR}/src/sources.cmake)
 
 add_executable(binprecice "src/drivers/main.cpp")
 target_link_libraries(binprecice 
-    PRIVATE
-    Threads::Threads
-    precice
-    Eigen3::Eigen
-    ${Boost_LIBRARIES}
-    )
+  PRIVATE
+  Threads::Threads
+  precice
+  Eigen3::Eigen
+  ${Boost_LIBRARIES}
+  )
 set_target_properties(binprecice PROPERTIES
-    # precice is a C++11 project
-    CXX_STANDARD 11
-    )
+  # precice is a C++11 project
+  CXX_STANDARD 11
+  )
 # Copy needed properties from the lib to the executatble. This is necessary as
 # this executable uses the library source, not only the interface.
 copy_target_property(precice binprecice COMPILE_DEFINITIONS)
@@ -231,16 +231,16 @@ endif()
 
 add_executable(testprecice "src/testing/main.cpp")
 target_link_libraries(testprecice
-    PRIVATE
-    Threads::Threads
-    precice
-    Eigen3::Eigen
-    ${Boost_LIBRARIES}
-    )
+  PRIVATE
+  Threads::Threads
+  precice
+  Eigen3::Eigen
+  ${Boost_LIBRARIES}
+  )
 set_target_properties(testprecice PROPERTIES
-    # precice is a C++11 project
-    CXX_STANDARD 11
-    )
+  # precice is a C++11 project
+  CXX_STANDARD 11
+  )
 # Copy needed properties from the lib to the executatble. This is necessary as
 # this executable uses the library source, not only the interface.
 copy_target_property(precice testprecice COMPILE_DEFINITIONS)
@@ -269,9 +269,9 @@ enable_testing()
 set(PRECICE_TEST_DIR "${preCICE_BINARY_DIR}/TestOutput")
 file(MAKE_DIRECTORY ${PRECICE_TEST_DIR})
 add_test(NAME precice.Base
-    COMMAND "$<TARGET_FILE:testprecice>"
-    WORKING_DIRECTORY "${PRECICE_TEST_DIR}"
-    )
+  COMMAND "$<TARGET_FILE:testprecice>"
+  WORKING_DIRECTORY "${PRECICE_TEST_DIR}"
+  )
 if(MPI AND MPIEXEC_EXECUTABLE)
   # Register the MPI test for 2 Ranks
   file(MAKE_DIRECTORY "${PRECICE_TEST_DIR}/MPI2")
@@ -318,31 +318,31 @@ if(PRECICE_InstallTest)
 
   # Install the resources necessary for the tests
   install(DIRECTORY src
-      DESTINATION share/precice
-      FILES_MATCHING
-      PATTERN "*.xml"
-      PATTERN "*.py"
-      )
+    DESTINATION share/precice
+    FILES_MATCHING
+    PATTERN "*.xml"
+    PATTERN "*.py"
+    )
 endif()
 
 # Export the Targets to install
 install(EXPORT preciceTargets
-    FILE preciceTargets.cmake
-    NAMESPACE precice::
-    DESTINATION lib/cmake/precice
-    )
+  FILE preciceTargets.cmake
+  NAMESPACE precice::
+  DESTINATION lib/cmake/precice
+  )
 
 # Generate a Package Config File for precice
 include(CMakePackageConfigHelpers)
 write_basic_package_version_file("preciceConfigVersion.cmake"
-    VERSION ${preCICE_VERSION}
-    COMPATIBILITY SameMajorVersion
-    )
+  VERSION ${preCICE_VERSION}
+  COMPATIBILITY SameMajorVersion
+  )
 
 # Install the Config and the ConfigVersion files
 install(FILES "preciceConfig.cmake" "${preCICE_BINARY_DIR}/preciceConfigVersion.cmake"
-    DESTINATION lib/cmake/precice
-    )
+  DESTINATION lib/cmake/precice
+  )
 
 # Set the directory used to prepare files for packaging
 set(PRECICE_PACKAGING_DIR "${CMAKE_CURRENT_BINARY_DIR}/packaging")
@@ -374,7 +374,7 @@ if(GZIP_EXE)
   # Install compressed manpages
   install(DIRECTORY ${PRECICE_PACKAGING_DIR}/man1
     DESTINATION share/man
-  )
+    )
 else()
   message(WARNING "Installing uncompressed changelog and manpages")
   # Install uncompressed changelog
