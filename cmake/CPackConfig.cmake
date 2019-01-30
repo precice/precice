@@ -17,7 +17,18 @@ if(WIN32)
 elseif(WIN64)
     set(CPACK_SYSTEM_NAME "win64")
 else()
+  # Try to detect the codename of the distro using lsb_release
+  find_program(LSB_RELEASE_EXE lsb_release)
+  if(LSB_RELEASE_EXE)
+    execute_process(COMMAND ${LSB_RELEASE_EXE} -cs
+      OUTPUT_VARIABLE DISTRO_CODENAME
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+      )
+    set(CPACK_SYSTEM_NAME "${DISTRO_CODENAME}")
+  else()
+    # Use the target system name of cmake as fallback
     set(CPACK_SYSTEM_NAME "${CMAKE_SYSTEM_NAME}")
+  endif()
 endif()
 
 # General
