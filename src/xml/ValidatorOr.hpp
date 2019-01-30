@@ -13,14 +13,40 @@ class ValidatorOr
 {
 public:
   ValidatorOr(
-      const Validator<VALUE_T> &lhs,
-      const Validator<VALUE_T> &rhs)
+      const std::unique_ptr<Validator<VALUE_T>> &lhs,
+      const std::unique_ptr<Validator<VALUE_T>> &rhs)
+:
+    _lhs(lhs->clone()),
+    _rhs(rhs->clone())
   {
-    _lhs = &lhs.clone();
-    _rhs = &rhs.clone();
   }
 
-  ~ValidatorOr() override {};
+  ValidatorOr(
+      std::unique_ptr<Validator<VALUE_T>> &&lhs,
+      const std::unique_ptr<Validator<VALUE_T>> &rhs):
+    _lhs(lhs),
+    _rhs(rhs->clone())
+  {
+  }
+
+  ValidatorOr(
+      const std::unique_ptr<Validator<VALUE_T>> &lhs,
+      std::unique_ptr<Validator<VALUE_T>> &&rhs):
+    _lhs(lhs->clone()),
+    _rhs(rhs)
+  {
+  }
+
+  ValidatorOr(
+      std::unique_ptr<Validator<VALUE_T>> &&lhs,
+      std::unique_ptr<Validator<VALUE_T>> &&rhs):
+    _lhs(lhs),
+    _rhs(rhs)
+  {
+  }
+
+
+  ~ValidatorOr() override {}
 
   ValidatorOr(const ValidatorOr &other) = delete;
 
@@ -31,9 +57,9 @@ public:
     return _lhs->validateValue(value) || _rhs->validateValue(value);
   }
 
-  ValidatorPtr &clone() const override
+  std::unique_ptr<Validator<VALUE_T>> clone() const override
   {
-    return std::unique_ptr<ValidatorOr>(*_lhs, *_rhs)
+    return std::unique_ptr<ValidatorOr>(new ValidatorOr(_lhs, _rhs));
   }
 
   std::string getErrorMessage() const override
@@ -47,16 +73,18 @@ public:
   }
 
 private:
-  ValidatorPtr _lhs;
-  ValidatorPtr _rhs;
+  std::unique_ptr<Validator<VALUE_T>> _lhs;
+  std::unique_ptr<Validator<VALUE_T>> _rhs;
 };
 
 template <typename VALUE_T>
-const ValidatorPtr<VALUE_T> operator||(
-    const Validator<VALUE_T> &lhs,
-    const Validator<VALUE_T> &rhs)
+const std::unique_ptr<Validator<VALUE_T>> operator||(
+    const std::unique_ptr<Validator<VALUE_T>> &lhs,
+    const std::unique_ptr<Validator<VALUE_T>> &rhs)
 {
-  return std::unique_ptr<ValidatorOr<VALUE_T>>(lhs, rhs);
+    using VAL = ValidatorOr<VALUE_T>;
+    return std::unique_ptr<VAL>(new VAL(lhs, rhs));
 }
 
-} // namespace precice, xml
+} // namespace xml
+} // namespace precice

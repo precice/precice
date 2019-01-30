@@ -29,10 +29,7 @@ public:
 
   XMLAttribute(const XMLAttribute<ATTRIBUTE_T> &rhs);
 
-  virtual ~XMLAttribute()
-  {
-    delete _validator;
-  };
+  virtual ~XMLAttribute() {};
 
   /// Sets a documentation string for the attribute.
   void setDocumentation(const std::string &documentation);
@@ -42,7 +39,9 @@ public:
     return _doc;
   }
 
-  void setValidator(const Validator<ATTRIBUTE_T> &validator);
+  void setValidator(std::unique_ptr<Validator<ATTRIBUTE_T>> &&validator);
+
+  void setValidator(const std::unique_ptr<Validator<ATTRIBUTE_T>>& validator);
 
   void setDefaultValue(const ATTRIBUTE_T &defaultValue);
 
@@ -101,7 +100,7 @@ private:
 
   bool _hasValidation = false;
 
-  Validator<ATTRIBUTE_T> *_validator = nullptr;
+  std::unique_ptr<Validator<ATTRIBUTE_T>> _validator = nullptr;
 
   /// Sets non Eigen::VectorXd type values.
   template <typename VALUE_T>
@@ -139,7 +138,7 @@ XMLAttribute<ATTRIBUTE_T>::XMLAttribute(const XMLAttribute<ATTRIBUTE_T> &rhs)
 {
   if (rhs._hasValidation) {
     assertion(rhs._validator != nullptr);
-    _validator     = &((rhs._validator)->clone());
+    _validator     = rhs._validator->clone();
     _hasValidation = true;
   }
 }
@@ -151,12 +150,16 @@ void XMLAttribute<ATTRIBUTE_T>::setDocumentation(const std::string &documentatio
 }
 
 template <typename ATTRIBUTE_T>
-void XMLAttribute<ATTRIBUTE_T>::setValidator(const Validator<ATTRIBUTE_T> &validator)
+void XMLAttribute<ATTRIBUTE_T>::setValidator(std::unique_ptr<Validator<ATTRIBUTE_T>> &&validator)
 {
-  if (_validator) {
-    delete _validator;
-  }
-  _validator     = &(validator.clone());
+  _validator     = validator;
+  _hasValidation = true;
+}
+
+template <typename ATTRIBUTE_T>
+void XMLAttribute<ATTRIBUTE_T>::setValidator(const std::unique_ptr<Validator<ATTRIBUTE_T>>& validator)
+{
+  _validator     = validator->clone();
   _hasValidation = true;
 }
 

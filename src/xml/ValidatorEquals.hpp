@@ -30,9 +30,9 @@ public:
     return value == _valueToEqual;
   }
 
-  ValidatorPtr &clone() const override
+  std::unique_ptr<Validator<VALUE_T>> clone() const override
   {
-    return std::unique_ptr<ValudatorEquals>(_valueToEqual);
+    return std::unique_ptr<ValidatorEquals>(new ValidatorEquals(_valueToEqual));
   }
 
   std::string getErrorMessage() const override
@@ -55,5 +55,19 @@ private:
   VALUE_T _valueToEqual;
 };
 
+template <typename VALUE_T>
+std::unique_ptr<Validator<VALUE_T>> makeValidatorEquals(const VALUE_T& value)
+{
+    using VAL = ValidatorEquals<VALUE_T>;
+    return std::unique_ptr<VAL>(new VAL(value));
 }
-} // namespace precice, xml
+
+template <typename VALUE_T>
+std::unique_ptr<Validator<VALUE_T>> makeValidatorEquals(VALUE_T&& value)
+{
+    using VAL = ValidatorEquals<VALUE_T>;
+    return std::unique_ptr<VAL>(new VAL(std::forward<VALUE_T>(value)));
+}
+
+} // namespace xml
+} // namespace precice

@@ -12,8 +12,6 @@ template <typename VALUE_T>
 class Validator
 {
 public:
-  using ValidatorPtr = std::unique_ptr<Validator>;
-
   Validator() = default;
 
   Validator(const Validator &other) = delete;
@@ -24,12 +22,11 @@ public:
 
   virtual bool validateValue(const VALUE_T &value) = 0;
 
-  virtual ValidatorPtr clone() const = 0;
+  virtual std::unique_ptr<Validator> clone() const = 0;
 
   virtual std::string getErrorMessage() const = 0;
 
   virtual std::string getDocumentation() const = 0;
-
 };
 }
 } // namespace precice, xml
