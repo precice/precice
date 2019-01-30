@@ -7,6 +7,29 @@ All notable changes to this project will be documented in this file. For future 
 - Reimplemented the internals of the nearest-projection mapping to signifantly reduce its initialization time.
 - The EventTimings now do a time normalization among all ranks, i.e., the the first event is considered to happen at t=0, all other events are adapted thereto.
 - The old CSV format of the EventTimings log files, split among two files was replaced by a single file, structured JSON format.
+- Add manpages for binprecice and testprecice
+- CMake overhaul:
+  - Convert to target-based system: precice, testprecice, binprecice
+  - New Options:
+    - `PRECICE_Packages` (default ON) to configure CPack
+    - `PRECICE_InstallTest` (default ON) to configure installation of tests.  
+      This includes the binary `testprecice` and necessary files.
+      Use `PREFIX/share/precice` as `PRECICE_ROOT`.
+  - Move CMake files from `tools/cmake-modules` to `cmake/` (general scripts) and `cmake/modules` (find modules).
+  - Migration from file-globbing to explicit source/interface/test-file lists.  
+    Use `tools/updateSourceFiles.py` from project-root to update all necessary files.
+  - `install` target installs:
+     - the library `PREFIX/lib`.
+     - the binaries `PREFIX/bin` and their manfiles `PREFIX/share/man/man1`.
+     - the cmake configuration files `PREFIX/lib/cmake/precice`.
+     - the necessary files to run testprecice `PREFIX/share/precice`. Use this as `PRECICE_ROOT` on installed system.
+  - CTest definition of tests run in isolated working directories:
+    - `precice.Base` for the base test suite
+    - `precice.MPI2` run on 2 MPI ranks
+    - `precice.MPI4` run on 4 MPI ranks
+  - CPack configuration of target `package` to generate binary debian, tar and zip packages.
+  - Add `CMakeLists.txt` to `tools/solverdummy/cpp`. It is an example of how to link to precice with CMake.
+  - Extend the displayed information when configuring.
 
 ## 1.3.0
 - Update of build procedure for python bindings (see [`precice/src/bindings/python/README.md`](https://github.com/precice/precice/blob/develop/src/precice/bindings/python/README.md) for instructions). Note: you do not have to add `PySolverInterface.so` to `PYTHONPATH` manually anymore, if you want to use it in your adapter. Python should be able to find it automatically.   
