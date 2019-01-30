@@ -75,6 +75,8 @@ SolverInterfaceImpl:: SolverInterfaceImpl
   // signal(SIGSEGV, precice::utils::terminationSignalHandler);
   signal(SIGABRT, precice::utils::terminationSignalHandler);
   signal(SIGTERM, precice::utils::terminationSignalHandler);
+  // SIGXCPU is emitted when the job is killed due to walltime limit on SuperMUC
+  signal(SIGXCPU, precice::utils::terminationSignalHandler);
   // signal(SIGINT,  precice::utils::terminationSignalHandler);
 }
 
