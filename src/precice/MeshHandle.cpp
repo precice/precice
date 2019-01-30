@@ -26,7 +26,7 @@ namespace precice {
 // VertexIterator
 
 VertexIterator::VertexIterator()
-    : _impl(NULL) {};
+    : _impl(NULL) {}
 
 VertexIterator::~VertexIterator()
 {
