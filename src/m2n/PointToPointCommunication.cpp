@@ -4,6 +4,7 @@
 #include "com/Communication.hpp"
 #include "com/CommunicationFactory.hpp"
 #include "com/CommunicateMesh.hpp"
+#include "com/CommunicateBoundingBox.hpp"
 #include "utils/EventTimings.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/Publisher.hpp"

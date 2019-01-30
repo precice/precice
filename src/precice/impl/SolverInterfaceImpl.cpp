@@ -29,6 +29,8 @@
 #include <Eigen/Core>
 #include "partition/ReceivedPartition.hpp"
 #include "partition/ProvidedPartition.hpp"
+#include "partition/ReceivedBoundingBox.hpp"
+#include "partition/ProvidedBoundingBox.hpp"
 
 #include <signal.h> // used for installing crash handler
 
@@ -209,12 +211,10 @@ double SolverInterfaceImpl:: initialize()
     }
     INFO("Coupling partner/s are connected " );
 
+    INFO("Perform initializations");
 
-    DEBUG("Perform initializations");
-
-
-    computePartitions();
-
+    computeBoundingBoxs();
+/*
     typedef std::map<std::string,M2NWrap>::value_type M2NPair;
     INFO("Setting up slaves communication to coupling partner/s " );
     for (M2NPair& m2nPair : _m2ns) {
@@ -225,13 +225,15 @@ double SolverInterfaceImpl:: initialize()
                    "Communication from " << localName << " to participant "
                    << remoteName << " could not be created! Check compile flags used!");
       if (m2nPair.second.isRequesting){
-        m2n->requestSlavesConnection(remoteName, localName);
+        m2n->requestSlavesPreConnection(remoteName, localName);
       }
       else {
-        m2n->acceptSlavesConnection(localName, remoteName);
+        m2n->acceptSlavesPreConnection(localName, remoteName);
       }
     }
     INFO("Slaves are connected" );
+
+    computePartitions();
 
     std::set<action::Action::Timing> timings;
     double dt = 0.0;
@@ -258,6 +260,7 @@ double SolverInterfaceImpl:: initialize()
     performDataActions(timings, 0.0, 0.0, 0.0, dt);
 
     INFO(_couplingScheme->printCouplingState());
+*/
   }
 
   solverInitEvent.start();
@@ -1463,7 +1466,7 @@ void SolverInterfaceImpl:: configurePartitions
 {
   TRACE();
   for (MeshContext* context : _accessor->usedMeshContexts()) {
-    if ( context->provideMesh ) { // Accessor provides mesh
+    if ( context->provideMesh ) { // Accessor provides mesh      
       CHECK ( context->receiveMeshFrom.empty(),
               "Participant \"" << _accessorName << "\" cannot provide "
               << "and receive mesh " << context->mesh->getName() << "!" );
@@ -1483,12 +1486,13 @@ void SolverInterfaceImpl:: configurePartitions
               context->meshRequirement = receiverContext->meshRequirement;
             }
             m2n = m2nConfig->getM2N( receiver->getName(), _accessorName );
-            m2n->createDistributedCommunication(context->mesh);
+            m2n->createDistributedCommunication(context->mesh);            
           }
         }
       }
       /// @todo support offset??
-      context->partition = partition::PtrPartition(new partition::ProvidedPartition(context->mesh, hasToSend));
+      //context->partition = partition::PtrPartition(new partition::ProvidedPartition(context->mesh, hasToSend));
+      context->partition = partition::PtrPartition(new partition::ProvidedBoundingBox(context->mesh, hasToSend, context->safetyFactor));
       if (hasToSend) {
         assertion(m2n.use_count()>0);
         context->partition->setM2N(m2n);
@@ -1504,7 +1508,8 @@ void SolverInterfaceImpl:: configurePartitions
       std::string provider ( context->receiveMeshFrom );
       DEBUG ( "Receiving mesh from " << provider );
       
-      context->partition = partition::PtrPartition(new partition::ReceivedPartition(context->mesh, context->geoFilter, context->safetyFactor));
+      //context->partition = partition::PtrPartition(new partition::ReceivedPartition(context->mesh, context->geoFilter, context->safetyFactor));
+      context->partition = partition::PtrPartition(new partition::ReceivedBoundingBox(context->mesh, context->safetyFactor));
 
       m2n::PtrM2N m2n = m2nConfig->getM2N ( receiver, provider );
       m2n->createDistributedCommunication(context->mesh);
@@ -1513,6 +1518,44 @@ void SolverInterfaceImpl:: configurePartitions
       context->partition->setToMapping(context->toMappingContext.mapping);
     }
   }
+}
+
+void SolverInterfaceImpl:: computeBoundingBoxs()
+{
+  //We need to do this in two loops: First, communicate the mesh and later compute the partition.
+  //Originally, this was done in one loop. This however gave deadlock if two meshes needed to be communicated cross-wise.
+  //Both loops need a different sorting
+  
+  // sort meshContexts by name, for communication in right order.
+  std::sort (_accessor->usedMeshContexts().begin(), _accessor->usedMeshContexts().end(),
+      []( MeshContext* lhs, const MeshContext* rhs) -> bool
+      {
+        return lhs->mesh->getName() < rhs->mesh->getName();
+      } );
+  
+  for (MeshContext* meshContext : _accessor->usedMeshContexts()){
+    meshContext->mesh->computeState();
+    meshContext->partition->communicateBoundingBox();
+  }
+  
+  // now sort provided meshes up front, to have them ready for the decomposition
+  std::sort (_accessor->usedMeshContexts().begin(), _accessor->usedMeshContexts().end(),
+      []( MeshContext* lhs, const MeshContext* rhs) -> bool
+      {
+        if(lhs->provideMesh && not rhs->provideMesh){
+          return true;
+        }
+        if(not lhs->provideMesh && rhs->provideMesh){
+          return false;
+        }
+        return lhs->mesh->getName() < rhs->mesh->getName();
+      } ); 
+  
+  for (MeshContext* meshContext : _accessor->usedMeshContexts()){    
+    meshContext->partition->computeBoundingBox();
+    WARN("communicatebb 2");
+  }
+  INFO("end computebb");
 }
 
 void SolverInterfaceImpl:: computePartitions()

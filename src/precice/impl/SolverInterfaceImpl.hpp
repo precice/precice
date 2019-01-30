@@ -558,6 +558,9 @@ private:
     const m2n::M2NConfiguration::SharedPointer& m2nConfig );
 
   /// Communicate meshes and create partition
+  void computeBoundingBoxs();
+  
+  /// Communicate meshes and create partition
   void computePartitions();
 
   /// Computes, performs, and resets all suitable write mappings.

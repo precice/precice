@@ -28,6 +28,7 @@ ReceivedBoundingBox::ReceivedBoundingBox(
 
 void ReceivedBoundingBox::communicateBoundingBox()
 {
+  WARN("received bb commbb starts");
   TRACE();
 
   if (not utils::MasterSlave::_slaveMode) {
@@ -45,6 +46,7 @@ void ReceivedBoundingBox::communicateBoundingBox()
     // master receives global_bb from other master
     com::CommunicateBoundingBox(_m2n->getMasterCommunication()).receiveBoundingBoxMap(_remoteBBM, 0);
   }
+  WARN("received bb commbb ends");
 }
 
 void ReceivedBoundingBox::computeBoundingBox()

@@ -28,6 +28,7 @@ ProvidedBoundingBox::ProvidedBoundingBox(mesh::PtrMesh mesh,
 
 void ProvidedBoundingBox::communicateBoundingBox()
 {
+  WARN("provided bb commbb starts");
   TRACE();
 
   if (!_hasToSend)
@@ -65,6 +66,7 @@ void ProvidedBoundingBox::communicateBoundingBox()
     _m2n->getMasterCommunication()->send(utils::MasterSlave::_size, 0);
     com::CommunicateBoundingBox(_m2n->getMasterCommunication()).sendBoundingBoxMap(bbm, 0);
   }
+  WARN("provided bb commbb ends");
 }
 
 void ProvidedBoundingBox::computeBoundingBox()
