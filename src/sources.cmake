@@ -126,6 +126,7 @@ target_sources(precice
     src/action/ComputeCurvatureAction.hpp
     src/action/config/ActionConfiguration.cpp
     src/action/config/ActionConfiguration.hpp
+    src/utils/json.hpp
     src/utils/EigenHelperFunctions.cpp
     src/utils/SignalHandler.hpp
     src/utils/Dimensions.cpp
@@ -134,9 +135,10 @@ target_sources(precice
     src/utils/Dimensions.hpp
     src/utils/String.hpp
     src/utils/ManageUniqueIDs.hpp
-    src/utils/EventTimings.cpp
+    src/utils/Event.hpp
+    src/utils/MPI_Mock.hpp
     src/utils/Helpers.cpp
-    src/utils/EventTimings.hpp
+    src/utils/Event.cpp
     src/utils/Petsc.hpp
     src/utils/Publisher.hpp
     src/utils/Publisher.cpp
@@ -147,12 +149,15 @@ target_sources(precice
     src/utils/Parallel.hpp
     src/utils/TableWriter.cpp
     src/utils/PointerVector.hpp
+    src/utils/EventUtils.cpp
     src/utils/MasterSlave.cpp
     src/utils/TypeNames.hpp
     src/utils/Petsc.cpp
+    src/utils/stacktrace.cpp
     src/utils/MasterSlave.hpp
     src/utils/ManageUniqueIDs.cpp
     src/utils/prettyprint.hpp
+    src/utils/EventUtils.hpp
     src/utils/EigenHelperFunctions.hpp
     src/io/Import.hpp
     src/io/Constants.hpp
