@@ -8,55 +8,55 @@ namespace xml
 {
 
 template <typename VALUE_T>
-class ValidatorOr;
-
-template <typename VALUE_T>
-const Validator<VALUE_T> &operator||(
-    const Validator<VALUE_T> &lhs,
-    const Validator<VALUE_T> &rhs);
-}
-}
-
-// ----------------------------------------------------------- CLASS DEFINITION
-
-namespace precice
-{
-namespace xml
-{
-
-template <typename VALUE_T>
 class ValidatorOr
     : public Validator<VALUE_T>
 {
 public:
   ValidatorOr(
       const Validator<VALUE_T> &lhs,
-      const Validator<VALUE_T> &rhs);
-
-  virtual ~ValidatorOr()
+      const Validator<VALUE_T> &rhs)
   {
-    delete _lhs;
-    delete _rhs;
+    _lhs = &lhs.clone();
+    _rhs = &rhs.clone();
   }
 
-  virtual bool validateValue(const VALUE_T &value);
+  ~ValidatorOr() override {};
 
-  virtual Validator<VALUE_T> &clone() const;
+  ValidatorOr(const ValidatorOr &other) = delete;
 
-  virtual std::string getErrorMessage() const;
+  ValidatorOr &operator=(const ValidatorOr &other) = delete;
 
-  virtual std::string getDocumentation() const;
+  bool validateValue(const VALUE_T &value) override
+  {
+    return _lhs->validateValue(value) || _rhs->validateValue(value);
+  }
+
+  ValidatorPtr &clone() const override
+  {
+    return std::unique_ptr<ValidatorOr>(*_lhs, *_rhs)
+  }
+
+  std::string getErrorMessage() const override
+  {
+    return _lhs->getErrorMessage() + " or " + _rhs->getErrorMessage();
+  }
+
+  std::string getDocumentation() const override
+  {
+    return _lhs->getDocumentation() + " or " + _rhs->getDocumentation();
+  }
 
 private:
-  ValidatorOr(const ValidatorOr<VALUE_T> &rhs);
-
-  ValidatorOr<VALUE_T> &operator=(const ValidatorOr<VALUE_T> &rhs);
-
-  Validator<VALUE_T> *_lhs;
-
-  Validator<VALUE_T> *_rhs;
+  ValidatorPtr _lhs;
+  ValidatorPtr _rhs;
 };
 
-#include "ValidatorOr.cpph"
+template <typename VALUE_T>
+const ValidatorPtr<VALUE_T> operator||(
+    const Validator<VALUE_T> &lhs,
+    const Validator<VALUE_T> &rhs)
+{
+  return std::unique_ptr<ValidatorOr<VALUE_T>>(lhs, rhs);
 }
+
 } // namespace precice, xml
