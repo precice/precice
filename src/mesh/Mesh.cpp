@@ -49,6 +49,7 @@ Mesh:: ~Mesh()
   _content.triangles().deleteElements();
   _content.edges().deleteElements();
   _content.vertices().deleteElements();
+  _propertyContainers.deleteElements();
 
   meshDestroyed(*this); // emit signal
 }
@@ -425,6 +426,7 @@ void Mesh:: computeState()
     
 void Mesh:: clear()
 {
+  _content.quads().deleteElements();
   _content.triangles().deleteElements();
   _content.edges().deleteElements();
   _content.vertices().deleteElements();
