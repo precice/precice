@@ -18,12 +18,7 @@ template <typename ATTRIBUTE_T>
 class XMLAttribute
 {
 public:
-  /**
-   * @brief Constructor for compatibility with map::operator[]. Not to be used!
-   *
-   * Gives an assertion on use.
-   */
-  XMLAttribute();
+  XMLAttribute() = delete;
 
   XMLAttribute(const std::string &name);
 
@@ -114,12 +109,6 @@ private:
       std::is_same<VALUE_T, ATTRIBUTE_T>::value && std::is_same<VALUE_T, Eigen::VectorXd>::value, void>::type
   set(ATTRIBUTE_T &toSet, const VALUE_T &setter);
 };
-
-template <typename ATTRIBUTE_T>
-XMLAttribute<ATTRIBUTE_T>::XMLAttribute()
-{
-  assertion(false);
-}
 
 template <typename ATTRIBUTE_T>
 XMLAttribute<ATTRIBUTE_T>::XMLAttribute(const std::string &name)
