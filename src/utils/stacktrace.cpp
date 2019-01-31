@@ -1,3 +1,5 @@
+#include "stacktrace.hpp"
+
 #include <boost/stacktrace.hpp>
 #include <sstream>
 #include <string>
