@@ -4,7 +4,7 @@ Its main component is a library that can be used by simulation programs to be co
 
 If you are new to preCICE, please have a look at our wiki https://github.com/precice/precice/wiki and at precice.org https://www.precice.org.
 
-preCICE is an academic project, developed at the Technical University of Munich https://www5.in.tum.de/ and at the University of Stuttgart https://www.ipvs.uni-stuttgart.de/.
+preCICE is an academic project, developed at the Technical University of Munich https://www5.in.tum.de/, the University of Stuttgart https://www.ipvs.uni-stuttgart.de/, and the EIndhoven University of Technology https://www.tue.nl/en/research/research-groups/energy-technology/.
 
 If you use preCICE, please cite us!
 For a selection of publications please visit https://www.precice.org/publications/.
