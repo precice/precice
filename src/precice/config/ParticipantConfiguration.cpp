@@ -134,9 +134,9 @@ ParticipantConfiguration:: ParticipantConfiguration
   doc += "processors. Both result in the same distribution (if the safety factor is sufficiently large).";
   doc += "For very asymmetric cases, the filter can also be switched off completely (\"no-filter\").";
   attrGeoFilter.setDocumentation(doc);
-  auto valid1  = makeValidatorEquals<std::string>( VALUE_FILTER_FIRST );
-  auto valid2  = makeValidatorEquals<std::string>( VALUE_BROADCAST_FILTER);
-  auto valid3  = makeValidatorEquals<std::string>( VALUE_NO_FILTER);
+  auto valid1  = makeValidatorEquals( VALUE_FILTER_FIRST );
+  auto valid2  = makeValidatorEquals( VALUE_BROADCAST_FILTER);
+  auto valid3  = makeValidatorEquals( VALUE_NO_FILTER);
   attrGeoFilter.setValidator ( valid1 || valid2 || valid3);
   attrGeoFilter.setDefaultValue(VALUE_BROADCAST_FILTER);
   tagUseMesh.addAttribute(attrGeoFilter);

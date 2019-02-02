@@ -37,10 +37,10 @@ BOOST_AUTO_TEST_CASE(AttributeConcatenation)
   XMLTag       testTag(cb, "test", XMLTag::OCCUR_ONCE_OR_MORE);
 
   XMLAttribute<std::string>    attr("attribute");
-  auto equalsOne = makeValidatorEquals<std::string>("value-one");
-  auto equalsTwo = makeValidatorEquals<std::string>("value-two");
+  auto equalsOne = makeValidatorEquals("value-one");
+  auto equalsTwo = makeValidatorEquals("value-two");
 
-  auto equalsThree = makeValidatorEquals<std::string>("value-three");
+  auto equalsThree = makeValidatorEquals("value-three");
   attr.setValidator(equalsOne || equalsTwo || equalsThree);
   testTag.addAttribute(attr);
 

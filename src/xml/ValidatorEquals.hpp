@@ -55,6 +55,12 @@ private:
   VALUE_T _valueToEqual;
 };
 
+inline std::unique_ptr<Validator<std::string>> makeValidatorEquals(const char * value)
+{
+    using VAL = ValidatorEquals<std::string>;
+    return std::unique_ptr<VAL>(new VAL(value));
+}
+
 template <typename VALUE_T>
 std::unique_ptr<Validator<VALUE_T>> makeValidatorEquals(const VALUE_T& value)
 {

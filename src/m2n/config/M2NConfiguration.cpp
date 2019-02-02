@@ -98,8 +98,8 @@ M2NConfiguration::M2NConfiguration(xml::XMLTag &parent)
   doc += "\"" + VALUE_GATHER_SCATTER + "\" should only be used if at least one serial participant is used ";
   doc += "or for troubleshooting.";
   attrDistrTypeBoth.setDocumentation(doc);
-  auto validDistrGatherScatter = makeValidatorEquals<std::string>(VALUE_GATHER_SCATTER);
-  auto validDistrP2P = makeValidatorEquals<std::string>(VALUE_POINT_TO_POINT);
+  auto validDistrGatherScatter = makeValidatorEquals(VALUE_GATHER_SCATTER);
+  auto validDistrP2P = makeValidatorEquals(VALUE_POINT_TO_POINT);
   attrDistrTypeBoth.setValidator(validDistrGatherScatter || validDistrP2P);
   attrDistrTypeBoth.setDefaultValue(VALUE_POINT_TO_POINT);
 

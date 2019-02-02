@@ -153,11 +153,11 @@ ActionConfiguration:: ActionConfiguration
   XMLAttribute<std::string> attrTiming ( ATTR_TIMING );
   doc = "Determines when (relative to advancing the coupling scheme) the action is executed.";
   attrTiming.setDocumentation(doc);
-  auto validRegularPrior = makeValidatorEquals<std::string>( VALUE_REGULAR_PRIOR );
-  auto validRegularPost = makeValidatorEquals<std::string>( VALUE_REGULAR_POST );
-  auto validOnExchangePrior = makeValidatorEquals<std::string>( VALUE_ON_EXCHANGE_PRIOR );
-  auto validOnExchangePost = makeValidatorEquals<std::string>( VALUE_ON_EXCHANGE_POST );
-  auto validOnTimestepCompletePost = makeValidatorEquals<std::string>(VALUE_ON_TIMESTEP_COMPLETE_POST);
+  auto validRegularPrior = makeValidatorEquals( VALUE_REGULAR_PRIOR );
+  auto validRegularPost = makeValidatorEquals( VALUE_REGULAR_POST );
+  auto validOnExchangePrior = makeValidatorEquals( VALUE_ON_EXCHANGE_PRIOR );
+  auto validOnExchangePost = makeValidatorEquals( VALUE_ON_EXCHANGE_POST );
+  auto validOnTimestepCompletePost = makeValidatorEquals(VALUE_ON_TIMESTEP_COMPLETE_POST);
   attrTiming.setValidator(validRegularPrior || validRegularPost ||
                           validOnExchangePrior || validOnExchangePost ||
                           validOnTimestepCompletePost);
