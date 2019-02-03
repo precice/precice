@@ -23,8 +23,8 @@ SolverInterfaceConfiguration:: SolverInterfaceConfiguration(xml::XMLTag& parent 
   XMLAttribute<int> attrDimensions("dimensions");
   std::string doc = "Determines the spatial dimensionality of the configuration";
   attrDimensions.setDocumentation(doc);
-  ValidatorEquals<int> validDim2(2);
-  ValidatorEquals<int> validDim3(3);
+  auto validDim2 = makeValidatorEquals<int>(2);
+  auto validDim3 = makeValidatorEquals<int>(3);
   attrDimensions.setValidator(validDim2 || validDim3);
   tag.addAttribute(attrDimensions);
 

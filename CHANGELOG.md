@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file. For future 
 - Reimplemented the internals of the nearest-projection mapping to signifantly reduce its initialization time.
 - The EventTimings now do a time normalization among all ranks, i.e., the the first event is considered to happen at t=0, all other events are adapted thereto.
 - The old CSV format of the EventTimings log files, split among two files was replaced by a single file, structured JSON format.
+- Fix memory leaks in the XML Attributes and Verificators
 
 ## 1.3.0
 - Update of build procedure for python bindings (see [`precice/src/bindings/python/README.md`](https://github.com/precice/precice/blob/develop/src/precice/bindings/python/README.md) for instructions). Note: you do not have to add `PySolverInterface.so` to `PYTHONPATH` manually anymore, if you want to use it in your adapter. Python should be able to find it automatically.   

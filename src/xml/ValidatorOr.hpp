@@ -8,55 +8,83 @@ namespace xml
 {
 
 template <typename VALUE_T>
-class ValidatorOr;
-
-template <typename VALUE_T>
-const Validator<VALUE_T> &operator||(
-    const Validator<VALUE_T> &lhs,
-    const Validator<VALUE_T> &rhs);
-}
-}
-
-// ----------------------------------------------------------- CLASS DEFINITION
-
-namespace precice
-{
-namespace xml
-{
-
-template <typename VALUE_T>
 class ValidatorOr
     : public Validator<VALUE_T>
 {
 public:
   ValidatorOr(
-      const Validator<VALUE_T> &lhs,
-      const Validator<VALUE_T> &rhs);
-
-  virtual ~ValidatorOr()
+      const std::unique_ptr<Validator<VALUE_T>> &lhs,
+      const std::unique_ptr<Validator<VALUE_T>> &rhs)
+:
+    _lhs(lhs->clone()),
+    _rhs(rhs->clone())
   {
-    delete _lhs;
-    delete _rhs;
   }
 
-  virtual bool validateValue(const VALUE_T &value);
+  ValidatorOr(
+      std::unique_ptr<Validator<VALUE_T>> &&lhs,
+      const std::unique_ptr<Validator<VALUE_T>> &rhs):
+    _lhs(lhs),
+    _rhs(rhs->clone())
+  {
+  }
 
-  virtual Validator<VALUE_T> &clone() const;
+  ValidatorOr(
+      const std::unique_ptr<Validator<VALUE_T>> &lhs,
+      std::unique_ptr<Validator<VALUE_T>> &&rhs):
+    _lhs(lhs->clone()),
+    _rhs(rhs)
+  {
+  }
 
-  virtual std::string getErrorMessage() const;
+  ValidatorOr(
+      std::unique_ptr<Validator<VALUE_T>> &&lhs,
+      std::unique_ptr<Validator<VALUE_T>> &&rhs):
+    _lhs(lhs),
+    _rhs(rhs)
+  {
+  }
 
-  virtual std::string getDocumentation() const;
+
+  ~ValidatorOr() override {}
+
+  ValidatorOr(const ValidatorOr &other) = delete;
+
+  ValidatorOr &operator=(const ValidatorOr &other) = delete;
+
+  bool validateValue(const VALUE_T &value) override
+  {
+    return _lhs->validateValue(value) || _rhs->validateValue(value);
+  }
+
+  std::unique_ptr<Validator<VALUE_T>> clone() const override
+  {
+    return std::unique_ptr<ValidatorOr>(new ValidatorOr(_lhs, _rhs));
+  }
+
+  std::string getErrorMessage() const override
+  {
+    return _lhs->getErrorMessage() + " or " + _rhs->getErrorMessage();
+  }
+
+  std::string getDocumentation() const override
+  {
+    return _lhs->getDocumentation() + " or " + _rhs->getDocumentation();
+  }
 
 private:
-  ValidatorOr(const ValidatorOr<VALUE_T> &rhs);
-
-  ValidatorOr<VALUE_T> &operator=(const ValidatorOr<VALUE_T> &rhs);
-
-  Validator<VALUE_T> *_lhs;
-
-  Validator<VALUE_T> *_rhs;
+  std::unique_ptr<Validator<VALUE_T>> _lhs;
+  std::unique_ptr<Validator<VALUE_T>> _rhs;
 };
 
-#include "ValidatorOr.cpph"
+template <typename VALUE_T>
+const std::unique_ptr<Validator<VALUE_T>> operator||(
+    const std::unique_ptr<Validator<VALUE_T>> &lhs,
+    const std::unique_ptr<Validator<VALUE_T>> &rhs)
+{
+    using VAL = ValidatorOr<VALUE_T>;
+    return std::unique_ptr<VAL>(new VAL(lhs, rhs));
 }
-} // namespace precice, xml
+
+} // namespace xml
+} // namespace precice

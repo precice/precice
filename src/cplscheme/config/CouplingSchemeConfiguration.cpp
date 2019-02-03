@@ -412,9 +412,9 @@ void CouplingSchemeConfiguration::addTransientLimitTags(
   tagTimestepLength.addAttribute(attrValidDigits);
   XMLAttribute<std::string> attrMethod(ATTR_METHOD);
   attrMethod.setDefaultValue(VALUE_FIXED);
-  ValidatorEquals<std::string> validFixed(VALUE_FIXED);
-  ValidatorEquals<std::string> validFirst(VALUE_FIRST_PARTICIPANT);
-  //  ValidatorEquals<std::string> validSec ( TagTimestepLength::VALUE_SECOND_PARTICIPANT );
+  auto validFixed = makeValidatorEquals(VALUE_FIXED);
+  auto validFirst = makeValidatorEquals(VALUE_FIRST_PARTICIPANT);
+  //  auto validSec  = makeValidatorEquals( TagTimestepLength::VALUE_SECOND_PARTICIPANT );
   attrMethod.setValidator(validFixed || validFirst);
   tagTimestepLength.addAttribute(attrMethod);
   tag.addSubtag(tagTimestepLength);

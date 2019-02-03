@@ -42,7 +42,6 @@ MappingConfiguration:: MappingConfiguration
 {
   assertion (_meshConfig.use_count() > 0);
   using namespace xml;
-  using ValidString = ValidatorEquals<std::string>;
 
   XMLAttribute<double> attrShapeParam ( ATTR_SHAPE_PARAM );
   attrShapeParam.setDocumentation("Specific shape parameter for RBF basis function.");
@@ -63,19 +62,19 @@ MappingConfiguration:: MappingConfiguration
   XMLAttribute<std::string> attrPolynomial("polynomial");
   attrPolynomial.setDocumentation("Toggles use of the global polynomial");
   attrPolynomial.setDefaultValue("separate");
-  attrPolynomial.setValidator(ValidatorEquals<std::string>("on")
-                              || ValidatorEquals<std::string>("off")
-                              || ValidatorEquals<std::string>("separate"));
+  attrPolynomial.setValidator(makeValidatorEquals("on")
+                              || makeValidatorEquals("off")
+                              || makeValidatorEquals("separate"));
 
 
   XMLAttribute<std::string> attrPreallocation("preallocation");
   attrPreallocation.setDocumentation("Sets kind of preallocation for PETSc RBF implementation");
   attrPreallocation.setDefaultValue("tree");
-  attrPreallocation.setValidator(ValidatorEquals<std::string>("estimate")
-                              || ValidatorEquals<std::string>("compute")
-                              || ValidatorEquals<std::string>("off")
-                              || ValidatorEquals<std::string>("save")
-                              || ValidatorEquals<std::string>("tree"));
+  attrPreallocation.setValidator(makeValidatorEquals("estimate")
+                              || makeValidatorEquals("compute")
+                              || makeValidatorEquals("off")
+                              || makeValidatorEquals("save")
+                              || makeValidatorEquals("tree"));
 
 
   XMLTag::Occurrence occ = XMLTag::OCCUR_ARBITRARY;
@@ -197,23 +196,23 @@ MappingConfiguration:: MappingConfiguration
   }
   
   XMLAttribute<std::string> attrDirection ( ATTR_DIRECTION );
-  ValidatorEquals<std::string> validDirectionWrite ( VALUE_WRITE );
-  ValidatorEquals<std::string> validDirectionRead ( VALUE_READ );
+  auto validDirectionWrite  = makeValidatorEquals( VALUE_WRITE );
+  auto validDirectionRead  = makeValidatorEquals( VALUE_READ );
   attrDirection.setValidator ( validDirectionWrite || validDirectionRead );
 
   XMLAttribute<std::string> attrFromMesh(ATTR_FROM);
   XMLAttribute<std::string> attrToMesh(ATTR_TO);
 
   XMLAttribute<std::string> attrConstraint(ATTR_CONSTRAINT);
-  ValidString validConservative(VALUE_CONSERVATIVE);
-  ValidString validConsistent(VALUE_CONSISTENT);
+  auto validConservative = makeValidatorEquals(VALUE_CONSERVATIVE);
+  auto validConsistent = makeValidatorEquals(VALUE_CONSISTENT);
   attrConstraint.setValidator(validConservative || validConsistent);
 
   XMLAttribute<std::string> attrTiming(ATTR_TIMING);
   attrTiming.setDefaultValue(VALUE_TIMING_INITIAL);
-  ValidString validInitial(VALUE_TIMING_INITIAL);
-  ValidString validOnAdvance(VALUE_TIMING_ON_ADVANCE);
-  ValidString validOnDemand(VALUE_TIMING_ON_DEMAND);
+  auto validInitial = makeValidatorEquals(VALUE_TIMING_INITIAL);
+  auto validOnAdvance = makeValidatorEquals(VALUE_TIMING_ON_ADVANCE);
+  auto validOnDemand = makeValidatorEquals(VALUE_TIMING_ON_DEMAND);
   attrTiming.setValidator(validInitial || validOnAdvance || validOnDemand);
 
   // Add tags that all mappings use and add to parent tag

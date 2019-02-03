@@ -9,9 +9,6 @@ namespace xml
 {
 
 template <typename VALUE_T>
-class ValidatorEquals;
-
-template <typename VALUE_T>
 class ValidatorEquals : public Validator<VALUE_T>
 {
 public:
@@ -21,29 +18,31 @@ public:
   {
   }
 
-  virtual ~ValidatorEquals() {}
+  ValidatorEquals(const ValidatorEquals &other) = delete;
 
-  virtual bool validateValue(const VALUE_T &value)
+  ValidatorEquals& operator=(const ValidatorEquals &other) = delete;
+
+  ~ValidatorEquals() override {}
+
+  bool validateValue(const VALUE_T &value) override
   {
     TRACE(value);
     return value == _valueToEqual;
   }
 
-  virtual Validator<VALUE_T> &clone() const
+  std::unique_ptr<Validator<VALUE_T>> clone() const override
   {
-    ValidatorEquals<VALUE_T> *validator =
-        new ValidatorEquals<VALUE_T>(_valueToEqual);
-    return *validator;
+    return std::unique_ptr<ValidatorEquals>(new ValidatorEquals(_valueToEqual));
   }
 
-  virtual std::string getErrorMessage() const
+  std::string getErrorMessage() const override
   {
     std::ostringstream stream;
     stream << _valueToEqual;
     return std::string("value must be \"" + stream.str() + "\"");
   }
 
-  virtual std::string getDocumentation() const
+  std::string getDocumentation() const override
   {
     std::ostringstream stream;
     stream << "'" << _valueToEqual << "'";
@@ -53,12 +52,28 @@ public:
 private:
   logging::Logger _log{"xml::ValidatorEquals"};
 
-  ValidatorEquals(const ValidatorEquals<VALUE_T> &rhs);
-
-  ValidatorEquals<VALUE_T> &operator=(const ValidatorEquals<VALUE_T> &rhs);
-
   VALUE_T _valueToEqual;
 };
 
+inline std::unique_ptr<Validator<std::string>> makeValidatorEquals(const char * value)
+{
+    using VAL = ValidatorEquals<std::string>;
+    return std::unique_ptr<VAL>(new VAL(value));
 }
-} // namespace precice, xml
+
+template <typename VALUE_T>
+std::unique_ptr<Validator<VALUE_T>> makeValidatorEquals(const VALUE_T& value)
+{
+    using VAL = ValidatorEquals<VALUE_T>;
+    return std::unique_ptr<VAL>(new VAL(value));
+}
+
+template <typename VALUE_T>
+std::unique_ptr<Validator<VALUE_T>> makeValidatorEquals(VALUE_T&& value)
+{
+    using VAL = ValidatorEquals<VALUE_T>;
+    return std::unique_ptr<VAL>(new VAL(std::forward<VALUE_T>(value)));
+}
+
+} // namespace xml
+} // namespace precice
