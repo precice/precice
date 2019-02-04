@@ -17,14 +17,15 @@ namespace config {
 SolverInterfaceConfiguration:: SolverInterfaceConfiguration(xml::XMLTag& parent )
 {
   using namespace xml;
+  using namespace xml::literals;
   XMLTag tag(*this, "solver-interface", XMLTag::OCCUR_ONCE);
   tag.setDocumentation("Configuration of simulation relevant features.");
 
   XMLAttribute<int> attrDimensions("dimensions");
   std::string doc = "Determines the spatial dimensionality of the configuration";
   attrDimensions.setDocumentation(doc);
-  auto validDim2 = makeValidatorEquals<int>(2);
-  auto validDim3 = makeValidatorEquals<int>(3);
+  auto validDim2 = 2_eq;
+  auto validDim3 = 3_eq;
   attrDimensions.setValidator(validDim2 || validDim3);
   tag.addAttribute(attrDimensions);
 

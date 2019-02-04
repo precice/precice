@@ -42,6 +42,7 @@ MappingConfiguration:: MappingConfiguration
 {
   assertion (_meshConfig.use_count() > 0);
   using namespace xml;
+  using namespace xml::literals;
 
   XMLAttribute<double> attrShapeParam ( ATTR_SHAPE_PARAM );
   attrShapeParam.setDocumentation("Specific shape parameter for RBF basis function.");
@@ -62,19 +63,19 @@ MappingConfiguration:: MappingConfiguration
   XMLAttribute<std::string> attrPolynomial("polynomial");
   attrPolynomial.setDocumentation("Toggles use of the global polynomial");
   attrPolynomial.setDefaultValue("separate");
-  attrPolynomial.setValidator(makeValidatorEquals("on")
-                              || makeValidatorEquals("off")
-                              || makeValidatorEquals("separate"));
+  attrPolynomial.setValidator("on"_eq
+                           || "off"_eq
+                           || "separate"_eq);
 
 
   XMLAttribute<std::string> attrPreallocation("preallocation");
   attrPreallocation.setDocumentation("Sets kind of preallocation for PETSc RBF implementation");
   attrPreallocation.setDefaultValue("tree");
-  attrPreallocation.setValidator(makeValidatorEquals("estimate")
-                              || makeValidatorEquals("compute")
-                              || makeValidatorEquals("off")
-                              || makeValidatorEquals("save")
-                              || makeValidatorEquals("tree"));
+  attrPreallocation.setValidator("estimate"_eq
+                              || "compute"_eq
+                              || "off"_eq
+                              || "save"_eq
+                              || "tree"_eq);
 
 
   XMLTag::Occurrence occ = XMLTag::OCCUR_ARBITRARY;

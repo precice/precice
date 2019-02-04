@@ -15,6 +15,7 @@ LogConfiguration::LogConfiguration
   precice::logging::setupLogging();
   
   using namespace xml;
+  using namespace xml::literals;
   XMLTag tagLog(*this, "log", XMLTag::OCCUR_NOT_OR_ONCE);
   tagLog.setDocumentation("Configures logging");
 
@@ -26,7 +27,7 @@ LogConfiguration::LogConfiguration
   XMLTag tagSink(*this, "sink", XMLTag::OCCUR_ARBITRARY);
   XMLAttribute<std::string> attrType("type");
   attrType.setDocumentation("Type of sink");
-  attrType.setValidator ( makeValidatorEquals("stream") || makeValidatorEquals("file") );
+  attrType.setValidator ( "stream"_eq || "file"_eq );
   attrType.setDefaultValue(precice::logging::BackendConfiguration::default_type);
   tagSink.addAttribute(attrType);
 

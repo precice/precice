@@ -7,6 +7,7 @@
 
 
 using namespace precice::xml;
+using namespace precice::xml::literals;
 using precice::testing::getPathToSources;
 
 BOOST_AUTO_TEST_SUITE(XML)
@@ -37,10 +38,10 @@ BOOST_AUTO_TEST_CASE(AttributeConcatenation)
   XMLTag       testTag(cb, "test", XMLTag::OCCUR_ONCE_OR_MORE);
 
   XMLAttribute<std::string>    attr("attribute");
-  auto equalsOne = makeValidatorEquals("value-one");
-  auto equalsTwo = makeValidatorEquals("value-two");
+  auto equalsOne = "value-one"_eq;
+  auto equalsTwo = "value-two"_eq;
 
-  auto equalsThree = makeValidatorEquals("value-three");
+  auto equalsThree = "value-three"_eq;
   attr.setValidator(equalsOne || equalsTwo || equalsThree);
   testTag.addAttribute(attr);
 
