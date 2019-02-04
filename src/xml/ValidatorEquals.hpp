@@ -1,7 +1,9 @@
 #pragma once
 
+#include <limits>
 #include "Validator.hpp"
 #include "logging/Logger.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice
 {
@@ -74,6 +76,22 @@ std::unique_ptr<Validator<VALUE_T>> makeValidatorEquals(VALUE_T&& value)
     using VAL = ValidatorEquals<VALUE_T>;
     return std::unique_ptr<VAL>(new VAL(std::forward<VALUE_T>(value)));
 }
+
+namespace literals
+{
+
+inline std::unique_ptr<Validator<std::string>> operator""_eq(const char *str, size_t)
+{
+  return makeValidatorEquals(str);
+}
+
+inline std::unique_ptr<Validator<int>> operator""_eq(unsigned long long val)
+{
+  assertion(val <= std::numeric_limits<int>::max());
+  return makeValidatorEquals((int) val);
+}
+
+} // namespace literals
 
 } // namespace xml
 } // namespace precice
