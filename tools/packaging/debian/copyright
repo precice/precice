@@ -1,6 +1,6 @@
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: preCICE
-Upstream-Contact: preCICE mailing-list <precice@mailman.informatik.uni-stuttgart.de>
+Upstream-Contact: preCICE mailing-list <info@precice.org>
 Copyright: (c) 2019 the preCICE developers <info@precice.org>
 Source: https://github.com/precice/precice
 
