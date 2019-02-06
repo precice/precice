@@ -6,6 +6,7 @@
 #include <boost/asio.hpp>
 #include "logging/Logger.hpp"
 #include <thread>
+#include "com/SocketSendQueue.hpp"
 
 namespace precice
 {
@@ -149,6 +150,8 @@ private:
   
   /// Remote rank -> socket map
   std::map<int, std::shared_ptr<Socket>> _sockets;
+
+  SendQueue _queue;
 
   bool isClient();
   bool isServer();
