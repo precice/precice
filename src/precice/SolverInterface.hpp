@@ -43,6 +43,7 @@ namespace PreciceTests {
     struct testThreeSolvers;
     struct testMultiCoupling;
     struct testMappingNearestProjection;
+    struct testMappingAxialGeoMultiscale;
   }
   namespace Server {
     struct testCouplingModeWithOneServer;
@@ -614,6 +615,7 @@ private:
   friend struct PreciceTests::Serial::testThreeSolvers;
   friend struct PreciceTests::Serial::testMultiCoupling;
   friend struct PreciceTests::Serial::testMappingNearestProjection;
+  friend struct PreciceTests::Serial::testMappingAxialGeoMultiscale;
   friend struct PreciceTests::Server::testCouplingModeWithOneServer;
   friend struct PreciceTests::Server::testCouplingModeParallelWithOneServer;
 

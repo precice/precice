@@ -1473,6 +1473,83 @@ BOOST_AUTO_TEST_CASE(testMappingNearestProjection,
   }
 }
 
+/**
+ * @brief Tests the axial geometric multiscale mapping between a 1D and a 3D participant
+ *
+ */
+BOOST_AUTO_TEST_CASE(testMappingAxialGeoMultiscale,
+                     * testing::MinRanks(2)
+                     * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
+{
+  if (utils::Parallel::getCommunicatorSize() != 2)
+    return;
+
+  mesh::Mesh::resetGeometryIDsGlobally();
+  using Eigen::Vector3d;
+
+  const std::string configFile = _pathToTests + "mapping-axial-geo-multiscale.xml";
+
+  if (utils::Parallel::getProcessRank() == 0){
+    SolverInterface cplInterface("Solver1D", 0, 1);
+    config::Configuration config;
+    xml::configure(config.getXMLTag(), configFile);
+    cplInterface._impl->configure(config.getSolverInterfaceConfiguration());
+    const int meshOneID = cplInterface.getMeshID("MeshOne");
+
+    // Setup mesh one.
+    Vector3d v{0.5, 0.0, 0.0};
+    int idA = cplInterface.setMeshVertex(meshOneID, v.data());
+
+    // Initialize, thus sending the mesh.
+    double maxDt = cplInterface.initialize();
+    BOOST_TEST(cplInterface.isCouplingOngoing(), "Sending participant should have to advance once!");
+
+    // Write the data to be send.
+    int dataAID = cplInterface.getDataID("DataOne",meshOneID);
+    cplInterface.writeScalarData(dataAID, idA, 5.0);
+
+    // Advance, thus send the data to the receiving partner.
+    cplInterface.advance(maxDt);
+    BOOST_TEST(!cplInterface.isCouplingOngoing(), "Sending participant should have to advance once!");
+    cplInterface.finalize();
+  }
+  else if (utils::Parallel::getProcessRank() == 1){
+    SolverInterface cplInterface("Solver3D", 0, 1);
+    config::Configuration config;
+    xml::configure(config.getXMLTag(), configFile);
+    cplInterface._impl->configure(config.getSolverInterfaceConfiguration());
+    int meshTwoID = cplInterface.getMeshID("MeshTwo");
+
+    Vector3d coordTwoA{0.5, 0.0, 0.0}; // max of the parabola
+    Vector3d coordTwoB{0.5, 0.5, 0.0}; // should give 0
+    Vector3d coordTwoC{0.5, -0.1, 0.0}; // sth in between
+
+    int idA = cplInterface.setMeshVertex(meshTwoID, coordTwoA.data());
+    int idB = cplInterface.setMeshVertex(meshTwoID, coordTwoB.data());
+    int idC = cplInterface.setMeshVertex(meshTwoID, coordTwoC.data());
+
+    // Initialize, thus receive the data and map.
+    double maxDt = cplInterface.initialize();
+    BOOST_TEST(cplInterface.isCouplingOngoing(), "Receiving participant should have to advance once!");
+
+    // Read the mapped data from the mesh.
+    int dataAID = cplInterface.getDataID("DataOne",meshTwoID);
+    double valueA, valueB, valueC;
+    cplInterface.readScalarData(dataAID, idA, valueA);
+    cplInterface.readScalarData(dataAID, idB, valueB);
+    cplInterface.readScalarData(dataAID, idC, valueC);
+
+    BOOST_TEST(valueA == 7.5);
+    BOOST_TEST(valueB == 0.0);
+    BOOST_TEST(valueC == 0.96 * 5.0 * 1.5);
+
+    // Verify that there is only one time step necessary.
+    cplInterface.advance(maxDt);
+    BOOST_TEST(!cplInterface.isCouplingOngoing(), "Receiving participant should have to advance once!");
+    cplInterface.finalize();
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
 #endif // PRECICE_NO_MPI

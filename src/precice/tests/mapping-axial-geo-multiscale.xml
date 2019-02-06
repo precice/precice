@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+
+<precice-configuration>
+   <solver-interface dimensions="3" >   
+      <data:scalar name="DataOne"/>
+   
+      <mesh name="MeshOne">
+         <use-data name="DataOne"/>
+      </mesh>
+      
+      <mesh name="MeshTwo">
+         <use-data name="DataOne"/>
+      </mesh>
+      
+      <participant name="Solver1D">
+         <use-mesh name="MeshOne" provide="on"/>
+         <write-data name="DataOne" mesh="MeshOne"/>
+      </participant>
+      
+      <participant name="Solver3D">
+         <use-mesh name="MeshOne" from="Solver1D"/>
+         <use-mesh name="MeshTwo" provide="on"/>
+         <mapping:axial-geometric-multiscale type="spread" radius="0.5" direction="read" from="MeshOne" to="MeshTwo"
+                  constraint="consistent" timing="initial"/>
+         <read-data  name="DataOne" mesh="MeshTwo"/>
+      </participant>
+      
+      <m2n:mpi-single from="Solver1D" to="Solver3D" />
+      
+      <coupling-scheme:serial-explicit> 
+         <participants first="Solver1D" second="Solver3D"/> 
+         <max-timesteps value="1"/>
+         <timestep-length value="1.0"/>
+         <exchange data="DataOne" mesh="MeshOne" from="Solver1D" to="Solver3D"/>
+      </coupling-scheme:serial-explicit>                           
+                  
+   </solver-interface>
+
+</precice-configuration>

@@ -123,6 +123,7 @@ private:
   const std::string VALUE_CONSERVATIVE = "conservative";
   const std::string VALUE_NEAREST_NEIGHBOR;
   const std::string VALUE_NEAREST_PROJECTION;
+  const std::string VALUE_AXIAL_GEOMETRIC_MULTISCALE = "axial-geometric-multiscale";
   const std::string VALUE_RBF_TPS;
   const std::string VALUE_RBF_MULTIQUADRICS;
   const std::string VALUE_RBF_INV_MULTIQUADRICS;
@@ -163,7 +164,9 @@ private:
     bool               yDead,
     bool               zDead,
     Polynomial         polynomial,
-    Preallocation      preallocation) const;
+    Preallocation      preallocation,
+    double             radius,
+    const std::string& multiscaleType) const;
 
   void checkDuplicates ( const ConfiguredMapping& mapping );
 

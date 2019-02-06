@@ -1,6 +1,7 @@
 #include "MappingConfiguration.hpp"
 #include "mapping/NearestNeighborMapping.hpp"
 #include "mapping/NearestProjectionMapping.hpp"
+#include "mapping/AxialGeoMultiscaleMapping.hpp"
 #include "mapping/RadialBasisFctMapping.hpp"
 #include "mapping/PetRadialBasisFctMapping.hpp"
 #include "mapping/impl/BasisFunctions.hpp"
@@ -75,6 +76,14 @@ MappingConfiguration:: MappingConfiguration
                               || makeValidatorEquals("off")
                               || makeValidatorEquals("save")
                               || makeValidatorEquals("tree"));
+
+  XMLAttribute<double> attrRadius ( "radius" );
+  attrRadius.setDocumentation("Radius for 1D participants in a geometric multiscale mapping.");
+
+  XMLAttribute<std::string> attrMultiScaleType("type");
+  attrMultiScaleType.setDocumentation("Type of a geometric multiscale mapping (spread or collect).");
+  attrMultiScaleType.setValidator(makeValidatorEquals("spread")
+                               || makeValidatorEquals("collect"));
 
 
   XMLTag::Occurrence occ = XMLTag::OCCUR_ARBITRARY;
@@ -194,6 +203,12 @@ MappingConfiguration:: MappingConfiguration
     XMLTag tag(*this, VALUE_NEAREST_PROJECTION, occ, TAG);
     tags.push_back(tag);
   }
+  {
+    XMLTag tag(*this, VALUE_AXIAL_GEOMETRIC_MULTISCALE, occ, TAG);
+    tag.addAttribute(attrRadius);
+    tag.addAttribute(attrMultiScaleType);
+    tags.push_back(tag);
+  }
   
   XMLAttribute<std::string> attrDirection ( ATTR_DIRECTION );
   auto validDirectionWrite  = makeValidatorEquals( VALUE_WRITE );
@@ -244,6 +259,8 @@ void MappingConfiguration:: xmlTagCallback
     bool xDead = false, yDead = false, zDead = false;
     Polynomial polynomial = Polynomial::ON;
     Preallocation preallocation = Preallocation::TREE;
+    double radius = 0.0;
+    std::string multiscaleType = "undefined";
     
     if (tag.hasAttribute(ATTR_SHAPE_PARAM)){
       shapeParameter = tag.getDoubleAttributeValue(ATTR_SHAPE_PARAM);
@@ -284,12 +301,19 @@ void MappingConfiguration:: xmlTagCallback
         preallocation = Preallocation::TREE;
       else if (strPrealloc == "off")
         preallocation = Preallocation::OFF;
-    }     
+    }
+    if (tag.hasAttribute("radius")){
+      radius= tag.getDoubleAttributeValue("radius");
+    }
+    if (tag.hasAttribute("type")){
+      multiscaleType = tag.getStringAttributeValue("type");
+    }
           
     ConfiguredMapping configuredMapping = createMapping(dir, type, constraint,
                                                         fromMesh, toMesh, timing,
                                                         shapeParameter, supportRadius, solverRtol,
-                                                        xDead, yDead, zDead, polynomial, preallocation);
+                                                        xDead, yDead, zDead, polynomial, preallocation,
+                                                        radius, multiscaleType);
     checkDuplicates ( configuredMapping );
     _mappings.push_back ( configuredMapping );
   }
@@ -339,7 +363,9 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping
   bool               yDead,
   bool               zDead,
   Polynomial         polynomial,
-  Preallocation      preallocation) const
+  Preallocation      preallocation,
+  double             radius,
+  const std::string& multiscaleType) const
 {
   TRACE(direction, type, timing, shapeParameter, supportRadius);
   using namespace mapping;
@@ -392,6 +418,23 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping
   else if (type == VALUE_NEAREST_PROJECTION){
     configuredMapping.mapping = PtrMapping (
       new NearestProjectionMapping(constraintValue, dimensions) );
+    configuredMapping.isRBF = false;
+  }
+  else if (type == VALUE_AXIAL_GEOMETRIC_MULTISCALE){
+
+    AxialGeoMultiscaleMapping::MultiscaleType multiscaleTypeValue;
+    if (multiscaleType == "spread"){
+      multiscaleTypeValue = AxialGeoMultiscaleMapping::SPREAD;
+    }
+    else if (multiscaleType == "collect"){
+      multiscaleTypeValue = AxialGeoMultiscaleMapping::COLLECT;
+    }
+    else {
+      ERROR("Unknown geometric multiscale type \"" << multiscaleType << "\"!");
+    }
+
+    configuredMapping.mapping = PtrMapping (
+      new AxialGeoMultiscaleMapping(constraintValue, dimensions, multiscaleTypeValue, radius) );
     configuredMapping.isRBF = false;
   }
   else if (type == VALUE_RBF_TPS){
