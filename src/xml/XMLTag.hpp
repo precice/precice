@@ -223,8 +223,8 @@ private:
 
 /// No operation listener for tests.
 struct NoPListener : public XMLTag::Listener {
-  virtual void xmlTagCallback(XMLTag &callingTag) {}
-  virtual void xmlEndTagCallback(XMLTag &callingTag) {}
+  void xmlTagCallback(XMLTag &callingTag) override {}
+  void xmlEndTagCallback(XMLTag &callingTag) override {}
 };
 
 /**

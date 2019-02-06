@@ -435,9 +435,9 @@ void PostProcessingConfiguration::addTypeSpecificSubtags(
 
     XMLTag                       tagFilter(*this, TAG_FILTER, XMLTag::OCCUR_NOT_OR_ONCE);
     XMLAttribute<std::string>    attrFilterName(ATTR_TYPE);
-    ValidatorEquals<std::string> validQR1(VALUE_QR1FILTER);
-    ValidatorEquals<std::string> validQR1abs(VALUE_QR1_ABSFILTER);
-    ValidatorEquals<std::string> validQR2(VALUE_QR2FILTER);
+    auto validQR1 = makeValidatorEquals(VALUE_QR1FILTER);
+    auto validQR1abs = makeValidatorEquals(VALUE_QR1_ABSFILTER);
+    auto validQR2 = makeValidatorEquals(VALUE_QR2FILTER);
     attrFilterName.setValidator(validQR1 || validQR1abs || validQR2);
     tagFilter.addAttribute(attrFilterName);
     XMLAttribute<double> attrSingularityLimit(ATTR_SINGULARITYLIMIT);
@@ -455,10 +455,10 @@ void PostProcessingConfiguration::addTypeSpecificSubtags(
 
     XMLTag                       tagPreconditioner(*this, TAG_PRECONDITIONER, XMLTag::OCCUR_NOT_OR_ONCE);
     XMLAttribute<std::string>    attrPreconditionerType(ATTR_TYPE);
-    ValidatorEquals<std::string> valid1(VALUE_CONSTANT_PRECONDITIONER);
-    ValidatorEquals<std::string> valid2(VALUE_VALUE_PRECONDITIONER);
-    ValidatorEquals<std::string> valid3(VALUE_RESIDUAL_PRECONDITIONER);
-    ValidatorEquals<std::string> valid4(VALUE_RESIDUAL_SUM_PRECONDITIONER);
+    auto valid1 = makeValidatorEquals(VALUE_CONSTANT_PRECONDITIONER);
+    auto valid2 = makeValidatorEquals(VALUE_VALUE_PRECONDITIONER);
+    auto valid3 = makeValidatorEquals(VALUE_RESIDUAL_PRECONDITIONER);
+    auto valid4 = makeValidatorEquals(VALUE_RESIDUAL_SUM_PRECONDITIONER);
     attrPreconditionerType.setValidator(valid1 || valid2 || valid3 || valid4);
     attrPreconditionerType.setDocumentation("To improve the performance of a parallel or a multi coupling schemes a preconditioner"
                                             " can be applied. A constant preconditioner scales every post-processing data by a constant value, which you can define as"
@@ -484,11 +484,11 @@ void PostProcessingConfiguration::addTypeSpecificSubtags(
 
     XMLTag                       tagIMVJRESTART(*this, TAG_IMVJRESTART, XMLTag::OCCUR_NOT_OR_ONCE);
     XMLAttribute<std::string>    attrRestartName(ATTR_TYPE);
-    ValidatorEquals<std::string> validNO_RS(VALUE_NO_RESTART);
-    ValidatorEquals<std::string> validRS_ZERO(VALUE_ZERO_RESTART);
-    ValidatorEquals<std::string> validRS_LS(VALUE_LS_RESTART);
-    ValidatorEquals<std::string> validRS_SVD(VALUE_SVD_RESTART);
-    ValidatorEquals<std::string> validRS_SLIDE(VALUE_SLIDE_RESTART);
+    auto validNO_RS = makeValidatorEquals(VALUE_NO_RESTART);
+    auto validRS_ZERO = makeValidatorEquals(VALUE_ZERO_RESTART);
+    auto validRS_LS = makeValidatorEquals(VALUE_LS_RESTART);
+    auto validRS_SVD = makeValidatorEquals(VALUE_SVD_RESTART);
+    auto validRS_SLIDE = makeValidatorEquals(VALUE_SLIDE_RESTART);
     attrRestartName.setValidator(validNO_RS || validRS_ZERO || validRS_LS || validRS_SVD || validRS_SLIDE);
     attrRestartName.setDefaultValue(VALUE_SVD_RESTART);
     tagIMVJRESTART.addAttribute(attrRestartName);
@@ -538,9 +538,9 @@ void PostProcessingConfiguration::addTypeSpecificSubtags(
     attrSingularityLimit.setDefaultValue(1e-16);
     tagFilter.addAttribute(attrSingularityLimit);
     XMLAttribute<std::string>    attrFilterName(ATTR_TYPE);
-    ValidatorEquals<std::string> validQR1(VALUE_QR1FILTER);
-    ValidatorEquals<std::string> validQR1abs(VALUE_QR1_ABSFILTER);
-    ValidatorEquals<std::string> validQR2(VALUE_QR2FILTER);
+    auto validQR1 = makeValidatorEquals(VALUE_QR1FILTER);
+    auto validQR1abs = makeValidatorEquals(VALUE_QR1_ABSFILTER);
+    auto validQR2 = makeValidatorEquals(VALUE_QR2FILTER);
     attrFilterName.setValidator(validQR1 || validQR1abs || validQR2);
     tagFilter.addAttribute(attrFilterName);
     tagFilter.setDocumentation("Type of filtering technique that is used to "
@@ -555,10 +555,10 @@ void PostProcessingConfiguration::addTypeSpecificSubtags(
 
     XMLTag                       tagPreconditioner(*this, TAG_PRECONDITIONER, XMLTag::OCCUR_NOT_OR_ONCE);
     XMLAttribute<std::string>    attrPreconditionerType(ATTR_TYPE);
-    ValidatorEquals<std::string> valid1(VALUE_CONSTANT_PRECONDITIONER);
-    ValidatorEquals<std::string> valid2(VALUE_VALUE_PRECONDITIONER);
-    ValidatorEquals<std::string> valid3(VALUE_RESIDUAL_PRECONDITIONER);
-    ValidatorEquals<std::string> valid4(VALUE_RESIDUAL_SUM_PRECONDITIONER);
+    auto valid1 = makeValidatorEquals(VALUE_CONSTANT_PRECONDITIONER);
+    auto valid2 = makeValidatorEquals(VALUE_VALUE_PRECONDITIONER);
+    auto valid3 = makeValidatorEquals(VALUE_RESIDUAL_PRECONDITIONER);
+    auto valid4 = makeValidatorEquals(VALUE_RESIDUAL_SUM_PRECONDITIONER);
     attrPreconditionerType.setValidator(valid1 || valid2 || valid3 || valid4);
     attrPreconditionerType.setDocumentation("To improve the performance of a parallel or a multi coupling schemes a preconditioner"
                                             " can be applied. A constant preconditioner scales every post-processing data by a constant value, which you can define as"
@@ -615,9 +615,9 @@ void PostProcessingConfiguration::addTypeSpecificSubtags(
 
     XMLTag                       tagFilter(*this, TAG_FILTER, XMLTag::OCCUR_NOT_OR_ONCE);
     XMLAttribute<std::string>    attrFilterName(ATTR_TYPE);
-    ValidatorEquals<std::string> validQR1(VALUE_QR1FILTER);
-    ValidatorEquals<std::string> validQR1abs(VALUE_QR1_ABSFILTER);
-    ValidatorEquals<std::string> validQR2(VALUE_QR2FILTER);
+    auto validQR1 = makeValidatorEquals(VALUE_QR1FILTER);
+    auto validQR1abs = makeValidatorEquals(VALUE_QR1_ABSFILTER);
+    auto validQR2 = makeValidatorEquals(VALUE_QR2FILTER);
     attrFilterName.setValidator(validQR1 || validQR1abs || validQR2);
     tagFilter.addAttribute(attrFilterName);
     XMLAttribute<double> attrSingularityLimit(ATTR_SINGULARITYLIMIT);
@@ -635,10 +635,10 @@ void PostProcessingConfiguration::addTypeSpecificSubtags(
 
     XMLTag                       tagPreconditioner(*this, TAG_PRECONDITIONER, XMLTag::OCCUR_NOT_OR_ONCE);
     XMLAttribute<std::string>    attrPreconditionerType(ATTR_TYPE);
-    ValidatorEquals<std::string> valid1(VALUE_CONSTANT_PRECONDITIONER);
-    ValidatorEquals<std::string> valid2(VALUE_VALUE_PRECONDITIONER);
-    ValidatorEquals<std::string> valid3(VALUE_RESIDUAL_PRECONDITIONER);
-    ValidatorEquals<std::string> valid4(VALUE_RESIDUAL_SUM_PRECONDITIONER);
+    auto valid1 = makeValidatorEquals(VALUE_CONSTANT_PRECONDITIONER);
+    auto valid2 = makeValidatorEquals(VALUE_VALUE_PRECONDITIONER);
+    auto valid3 = makeValidatorEquals(VALUE_RESIDUAL_PRECONDITIONER);
+    auto valid4 = makeValidatorEquals(VALUE_RESIDUAL_SUM_PRECONDITIONER);
     attrPreconditionerType.setValidator(valid1 || valid2 || valid3 || valid4);
     attrPreconditionerType.setDocumentation("To improve the performance of a parallel or a multi coupling schemes a preconditioner"
                                             " can be applied. A constant preconditioner scales every post-processing data by a constant value, which you can define as"

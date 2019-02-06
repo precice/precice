@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file. For future 
 - Reimplemented the internals of the nearest-projection mapping to signifantly reduce its initialization time.
 - The EventTimings now do a time normalization among all ranks, i.e., the the first event is considered to happen at t=0, all other events are adapted thereto.
 - The old CSV format of the EventTimings log files, split among two files was replaced by a single file, structured JSON format.
+- Fix memory leaks in the XML Attributes and Verificators
 - Add manpages for binprecice and testprecice
 - CMake overhaul:
   - Convert to target-based system: precice, testprecice, binprecice
