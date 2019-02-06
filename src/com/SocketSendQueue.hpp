@@ -35,7 +35,7 @@ class SendQueue
     };
 
     std::deque<SendItem> _itemQueue;
-    std::mutex _queueMutex;
+    std::mutex _sendMutex;
     bool _ready = true;
 };
 
