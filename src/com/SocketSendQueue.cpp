@@ -18,7 +18,7 @@ void SendQueue::push(std::shared_ptr<Socket> sock,
 /// but enough times to ensure the queue makes progress.
 void SendQueue::process()
 {
-  std::lock_guard<std::mutex> lock(_queueMutex);
+  std::lock_guard<std::mutex> lock(_sendMutex);
   if (!_ready || _itemQueue.empty())
     return;
   auto item = _itemQueue.front();
