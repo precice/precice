@@ -386,16 +386,11 @@ PtrRequest SocketCommunication::aSend(const int *itemsToSend, int size, int rank
 
   PtrRequest request(new SocketRequest);
 
-  try {
-    _queue.push(_sockets[rankReceiver],
-                asio::buffer(itemsToSend, size * sizeof(int)),
-                  [request] {
-                    std::static_pointer_cast<SocketRequest>(request)->complete();
-                  });
-  } catch (std::exception &e) {
-    ERROR("Send failed: " << e.what());
-  }
-
+  _queue.push(_sockets[rankReceiver],
+              asio::buffer(itemsToSend, size * sizeof(int)),
+                [request] {
+                  std::static_pointer_cast<SocketRequest>(request)->complete();
+                });
   return request;
 }
 
@@ -426,16 +421,11 @@ PtrRequest SocketCommunication::aSend(const double *itemsToSend, int size, int r
 
   PtrRequest request(new SocketRequest);
 
-  try {
-    _queue.push(_sockets[rankReceiver],
-                asio::buffer(itemsToSend, size * sizeof(double)),
-                  [request] {
-                    std::static_pointer_cast<SocketRequest>(request)->complete();
-                  });
-  } catch (std::exception &e) {
-    ERROR("Send failed: " << e.what());
-  }
-
+  _queue.push(_sockets[rankReceiver],
+              asio::buffer(itemsToSend, size * sizeof(double)),
+                [request] {
+                  std::static_pointer_cast<SocketRequest>(request)->complete();
+                });
   return request;
 }
 
@@ -450,16 +440,11 @@ PtrRequest SocketCommunication::aSend(std::vector<double> const & itemsToSend, i
 
   PtrRequest request(new SocketRequest);
 
-  try {
-    _queue.push(_sockets[rankReceiver],
-                asio::buffer(itemsToSend),
-                  [request] {
-                    std::static_pointer_cast<SocketRequest>(request)->complete();
-                  });
-  } catch (std::exception &e) {
-    ERROR("Send failed: " << e.what());
-  }
-
+  _queue.push(_sockets[rankReceiver],
+              asio::buffer(itemsToSend),
+                [request] {
+                  std::static_pointer_cast<SocketRequest>(request)->complete();
+                });
   return request;
 }
 
@@ -533,16 +518,11 @@ PtrRequest SocketCommunication::aSend(const bool & itemToSend, int rankReceiver)
 
   PtrRequest request(new SocketRequest);
 
-  try {
-    _queue.push(_sockets[rankReceiver],
-                asio::buffer(&itemToSend, sizeof(bool)),
-                  [request] {
-                    std::static_pointer_cast<SocketRequest>(request)->complete();
-                  });
-  } catch (std::exception &e) {
-    ERROR("Send failed: " << e.what());
-  }
-
+  _queue.push(_sockets[rankReceiver],
+              asio::buffer(&itemToSend, sizeof(bool)),
+                [request] {
+                  std::static_pointer_cast<SocketRequest>(request)->complete();
+                });
   return request;
 }
 
