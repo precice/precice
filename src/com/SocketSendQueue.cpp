@@ -11,12 +11,12 @@ void SendQueue::push(std::shared_ptr<Socket> sock,
         std::function<void()> callback)
 {
   _itemQueue.push_back({sock, data, callback});
-  process(); //If queue was previously empty, start it now.
+  dispatch(); //If queue was previously empty, start it now.
 }
 
 /// This method can be called arbitrarily many times, 
 /// but enough times to ensure the queue makes progress.
-void SendQueue::process()
+void SendQueue::dispatch()
 {
   std::lock_guard<std::mutex> lock(_sendMutex);
   if (!_ready || _itemQueue.empty())
@@ -29,7 +29,7 @@ void SendQueue::process()
                     [item, this](boost::system::error_code const &, std::size_t) {
                       item.callback();
                       this->_ready = true;
-                      this->process();
+                      this->dispatch();
                     });
 }
 }}

@@ -25,7 +25,7 @@ class SendQueue
 
   private:
 
-    void process();
+    void dispatch();
 
     struct SendItem
     {
