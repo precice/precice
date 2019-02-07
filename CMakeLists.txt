@@ -115,6 +115,7 @@ set(headers
   src/precice/bindings/c/Constants.h)
 set_target_properties(precice PROPERTIES PUBLIC_HEADER "${headers}")
 
+target_include_directories(precice PUBLIC ${Boost_INCLUDE_DIRS})
 target_link_libraries(precice PRIVATE ${PYTHON_LIBRARIES})
 target_link_libraries(precice PUBLIC ${MPI_LIBRARIES})
 target_link_libraries(precice PUBLIC ${Boost_LIBRARIES})

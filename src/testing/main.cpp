@@ -67,8 +67,11 @@ bool init_unit_test()
   // Can be overwritten on a per-test or per-suite basis using decators
   // boost::unit_test::decorator::collector::instance() * boost::unit_test::tolerance(0.001);
   * tolerance(1e-9); // Stores the decorator in the collector singleton
+#if BOOST_VERSION >= 106900
+  decorator::collector_t::instance().store_in(master_suite);
+#else
   decorator::collector::instance().store_in(master_suite);
-  
+#endif
   return true;
 }
 
