@@ -13,13 +13,10 @@ class AxialGeoMultiscaleMapping : public Mapping
 public:
 
   /**
-   * @brief Specifies additional constraints for a mapping.
+   * @brief Geometric multiscale nature of the mapping (spread or collect).
    *
-   * A consistent mapping retains mean values. When mapping displacements, e.g.
-   * rigid body motions are retained. A conservative mapping retains the sum of
-   * the values. Values integrated over some area should be mapped conservative,
-   * while area independent values such as pressure or stresses should be mapped
-   * consistent.
+   * A geometric multiscale mapping can either go from the 1D to the 2D/3D solver. Then, we call it "spread".
+   * Or from the 2D/3D to the 1D solver, which we call "collect".
    */
   enum MultiscaleType {
     SPREAD,
@@ -31,6 +28,8 @@ public:
    *
    * @param[in] constraint Specifies mapping to be consistent or conservative.
    * @param[in] dimensions Dimensionality of the meshes
+   * @param[in] type Geometric multiscale type of the mapping
+   * @param[in] radius Radius of the 1D solver "tube"
    */
   AxialGeoMultiscaleMapping ( Constraint constraint, int dimensions, MultiscaleType type, double radius );
 
@@ -62,7 +61,11 @@ private:
 
   MultiscaleType _type;
 
+  /// radius of the 1D "tube" from or to which the data is mapped
   double _radius;
+
+  /// scaling to make up for difference between max and avg value for a certain shape function
+  double _scaling = 0.0;
 };
 
 }} // namespace precice, mapping

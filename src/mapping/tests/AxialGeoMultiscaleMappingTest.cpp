@@ -44,15 +44,15 @@ BOOST_AUTO_TEST_CASE(testConsistentSpread)
   mapping.map(inDataID, outDataID);
   Eigen::VectorXd& outValues = outData->values();
   BOOST_TEST(outValues.size() = dimensions * 3);
-  BOOST_TEST(outValues[0] == inValues[0] * 3.0 / 2.0);
-  BOOST_TEST(outValues[1] == inValues[1] * 3.0 / 2.0);
-  BOOST_TEST(outValues[2] == inValues[2] * 3.0 / 2.0);
+  BOOST_TEST(outValues[0] == inValues[0] * 2.0);
+  BOOST_TEST(outValues[1] == inValues[1] * 2.0);
+  BOOST_TEST(outValues[2] == inValues[2] * 2.0);
   BOOST_TEST(outValues[3] == 0.0);
   BOOST_TEST(outValues[4] == 0.0);
   BOOST_TEST(outValues[5] == 0.0);
-  BOOST_TEST(outValues[6] == inValues[0] * 9.0 / 8.0);
-  BOOST_TEST(outValues[7] == inValues[1] * 9.0 / 8.0);
-  BOOST_TEST(outValues[8] == inValues[2] * 9.0 / 8.0);
+  BOOST_TEST(outValues[6] == inValues[0] * 3.0 / 2.0);
+  BOOST_TEST(outValues[7] == inValues[1] * 3.0 / 2.0);
+  BOOST_TEST(outValues[8] == inValues[2] * 3.0 / 2.0);
 }
 
 

@@ -1539,9 +1539,9 @@ BOOST_AUTO_TEST_CASE(testMappingAxialGeoMultiscale,
     cplInterface.readScalarData(dataAID, idB, valueB);
     cplInterface.readScalarData(dataAID, idC, valueC);
 
-    BOOST_TEST(valueA == 7.5);
+    BOOST_TEST(valueA == 10.0);
     BOOST_TEST(valueB == 0.0);
-    BOOST_TEST(valueC == 0.96 * 5.0 * 1.5);
+    BOOST_TEST(valueC == 0.96 * 5.0 * 2.0);
 
     // Verify that there is only one time step necessary.
     cplInterface.advance(maxDt);

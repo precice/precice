@@ -18,6 +18,13 @@ AxialGeoMultiscaleMapping:: AxialGeoMultiscaleMapping
 {
   setInputRequirement(Mapping::MeshRequirement::VERTEX);
   setOutputRequirement(Mapping::MeshRequirement::VERTEX);
+
+  assertion(dimensions == 2 || dimensions == 3);
+  if(dimensions == 2){
+    _scaling = 1.5;
+  } else if(dimensions == 3){
+    _scaling = 2.0;
+  }
 }
 
 void AxialGeoMultiscaleMapping:: computeMapping()
@@ -95,7 +102,7 @@ void AxialGeoMultiscaleMapping:: map
 
       for ( int dim=0; dim < valueDimensions; dim++ ){
         // only parabolic shape supported
-        outputValues((i*valueDimensions)+dim) = inputValues(dim) * (1.0 - distance*distance) * (3.0 / 2.0);
+        outputValues((i*valueDimensions)+dim) = inputValues(dim) * (1.0 - distance*distance) * _scaling;
       }
     }
   }
