@@ -44,7 +44,13 @@ bool init_unit_test()
   auto logConfigs = logging::readLogConfFile("log.conf");
   
   if (logConfigs.empty()) { // nothing has been read from log.conf
+    #if BOOST_VERSION == 106900
+    std::cerr << "Boost 1.69 get log_level is broken, preCICE log level set to debug." << std::endl;
+    auto logLevel = log_successful_tests;
+    #else
     auto logLevel = runtime_config::get<log_level>(runtime_config::btrt_log_level);
+    #endif
+    
     logging::BackendConfiguration config;
     if (logLevel == log_successful_tests or logLevel == log_test_units)
       config.filter = "%Severity% >= debug";
@@ -67,7 +73,11 @@ bool init_unit_test()
   // Can be overwritten on a per-test or per-suite basis using decators
   // boost::unit_test::decorator::collector::instance() * boost::unit_test::tolerance(0.001);
   * tolerance(1e-9); // Stores the decorator in the collector singleton
+  #if BOOST_VERSION < 106900
   decorator::collector::instance().store_in(master_suite);
+  #else
+  decorator::collector_t::instance().store_in(master_suite);
+  #endif
   
   return true;
 }
