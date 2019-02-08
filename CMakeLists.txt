@@ -144,6 +144,7 @@ set_target_properties(precice PROPERTIES
 # Setup Boost
 target_compile_definitions(precice PRIVATE BOOST_ALL_DYN_LINK BOOST_ASIO_ENABLE_OLD_SERVICES)
 target_link_libraries(precice PRIVATE ${Boost_LIBRARIES})
+target_include_directories(precice PRIVATE ${Boost_INCLUDE_DIRS})
 
 # Setup Eigen3
 target_link_libraries(precice PRIVATE Eigen3::Eigen)
