@@ -44,8 +44,13 @@ bool init_unit_test()
   auto logConfigs = logging::readLogConfFile("log.conf");
   
   if (logConfigs.empty()) { // nothing has been read from log.conf
-    auto logLevel = runtime_config::get<log_level>(runtime_config::btrt_log_level);
     logging::BackendConfiguration config;
+#if BOOST_VERSION == 106900
+    std::cerr << "Boost Version 1.69 log_level is broken, set to debug." << std::endl;
+    auto logLevel = log_successful_tests;
+#else
+    auto logLevel = runtime_config::get<log_level>(runtime_config::btrt_log_level);
+#endif
     if (logLevel == log_successful_tests or logLevel == log_test_units)
       config.filter = "%Severity% >= debug";
     if (logLevel == log_messages)
@@ -54,7 +59,6 @@ bool init_unit_test()
       config.filter = "%Severity% >= warning";
     if (logLevel >= log_all_errors)
       config.filter = "%Severity% >= warning"; // log warnings in any case
-    
     logConfigs.push_back(config);
   }
 
