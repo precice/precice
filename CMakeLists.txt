@@ -267,10 +267,10 @@ enable_testing()
 
 # Register the Base test
 set(PRECICE_TEST_DIR "${preCICE_BINARY_DIR}/TestOutput")
-file(MAKE_DIRECTORY ${PRECICE_TEST_DIR})
+file(MAKE_DIRECTORY ${PRECICE_TEST_DIR}/Base)
 add_test(NAME precice.Base
   COMMAND "$<TARGET_FILE:testprecice>"
-  WORKING_DIRECTORY "${PRECICE_TEST_DIR}"
+  WORKING_DIRECTORY "${PRECICE_TEST_DIR}/Base"
   )
 if(MPI AND MPIEXEC_EXECUTABLE)
   # Register the MPI test for 2 Ranks
