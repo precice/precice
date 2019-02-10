@@ -18,30 +18,22 @@ ExportConfiguration:: ExportConfiguration(xml::XMLTag& parent)
     tags.push_back(tag);
   }
 
-  XMLAttribute<std::string> attrLocation(ATTR_LOCATION);
-  attrLocation.setDocumentation("Directory to export the files to.");
-  attrLocation.setDefaultValue("");
+ auto attrLocation = XMLAttribute<std::string>(ATTR_LOCATION, "")
+      .setDocumentation("Directory to export the files to.");
 
-  XMLAttribute<int> attrTimestepInterval(ATTR_TIMESTEP_INTERVAL);
-  doc = "preCICE timestep interval for export of files. Choose -1 for no exports.";
-  attrTimestepInterval.setDocumentation(doc);
-  attrTimestepInterval.setDefaultValue(1);
+  auto attrTimestepInterval = makeXMLAttribute(ATTR_TIMESTEP_INTERVAL, 1)
+      .setDocumentation("preCICE timestep interval for export of files. Choose -1 for no exports.");
 
-  XMLAttribute<bool> attrTriggerSolver(ATTR_TRIGGER_SOLVER);
-  doc = "If set to on/yes, an action requirement is set for the participant ";
-  doc += "with frequency defined by attribute " + ATTR_TIMESTEP_INTERVAL + ".";
-  attrTriggerSolver.setDocumentation(doc);
-  attrTriggerSolver.setDefaultValue(false);
+  auto attrTriggerSolver = makeXMLAttribute(ATTR_TRIGGER_SOLVER, false)
+      .setDocumentation(
+              std::string("If set to on/yes, an action requirement is set for the participant ") +
+              "with frequency defined by attribute " + ATTR_TIMESTEP_INTERVAL + ".");
 
-  XMLAttribute<bool> attrNormals(ATTR_NORMALS);
-  doc = "If set to on/yes, mesh normals (if available) are added to the export.";
-  attrNormals.setDocumentation(doc);
-  attrNormals.setDefaultValue(true);
+  auto attrNormals = makeXMLAttribute(ATTR_NORMALS, true)
+      .setDocumentation("If set to on/yes, mesh normals (if available) are added to the export.");
 
-  XMLAttribute<bool> attrEveryIteration(ATTR_EVERY_ITERATION);
-  doc = "Exports in every coupling (sub)iteration. For debug purposes.";
-  attrEveryIteration.setDocumentation(doc);
-  attrEveryIteration.setDefaultValue(false);
+  auto attrEveryIteration = makeXMLAttribute(ATTR_EVERY_ITERATION, false)
+  .setDocumentation("Exports in every coupling (sub)iteration. For debug purposes.");
 
   for (XMLTag& tag : tags){
     tag.addAttribute(attrLocation);

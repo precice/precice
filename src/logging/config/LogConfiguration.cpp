@@ -1,6 +1,4 @@
 #include "LogConfiguration.hpp"
-#include "xml/ValidatorEquals.hpp"
-#include "xml/ValidatorOr.hpp"
 
 namespace precice {
 namespace config {
@@ -18,36 +16,34 @@ LogConfiguration::LogConfiguration
   XMLTag tagLog(*this, "log", XMLTag::OCCUR_NOT_OR_ONCE);
   tagLog.setDocumentation("Configures logging");
 
-  XMLAttribute<bool> attrLogEnabled("enabled");
-  attrLogEnabled.setDocumentation("Enables logging");
-  attrLogEnabled.setDefaultValue(true);
+  auto attrLogEnabled = makeXMLAttribute("enabled", true)
+      .setDocumentation("Enables logging");
   tagLog.addAttribute(attrLogEnabled);
   
   XMLTag tagSink(*this, "sink", XMLTag::OCCUR_ARBITRARY);
-  XMLAttribute<std::string> attrType("type");
-  attrType.setDocumentation("Type of sink");
-  attrType.setValidator ( makeValidatorEquals("stream") || makeValidatorEquals("file") );
-  attrType.setDefaultValue(precice::logging::BackendConfiguration::default_type);
+ auto attrType = XMLAttribute<std::string>("type")
+      .setDocumentation("Type of sink")
+      .setValidator({"stream", "file"})
+      .setDefaultValue(precice::logging::BackendConfiguration::default_type);
   tagSink.addAttribute(attrType);
 
-  XMLAttribute<std::string> attrOutput("output");
-  attrOutput.setDocumentation("Output. If type=stream it can be stdout or stderr. Otherwise it is a filename");
-  attrOutput.setDefaultValue(precice::logging::BackendConfiguration::default_output);
+ auto attrOutput = XMLAttribute<std::string>("output")
+      .setDocumentation("Output. If type=stream it can be stdout or stderr. Otherwise it is a filename")
+      .setDefaultValue(precice::logging::BackendConfiguration::default_output);
   tagSink.addAttribute(attrOutput);
 
-  XMLAttribute<std::string> attrFormat("format");
-  attrFormat.setDocumentation("Boost Log Format String");
-  attrFormat.setDefaultValue(precice::logging::BackendConfiguration::default_formatter);
+ auto attrFormat = XMLAttribute<std::string>("format")
+      .setDocumentation("Boost Log Format String")
+      .setDefaultValue(precice::logging::BackendConfiguration::default_formatter);
   tagSink.addAttribute(attrFormat);
 
-  XMLAttribute<std::string> attrFilter("filter");
-  attrFilter.setDocumentation("Boost Log Filter String");
-  attrFilter.setDefaultValue(precice::logging::BackendConfiguration::default_filter);
+ auto attrFilter = XMLAttribute<std::string>("filter")
+      .setDocumentation("Boost Log Filter String")
+      .setDefaultValue(precice::logging::BackendConfiguration::default_filter);
   tagSink.addAttribute(attrFilter);
   
-  XMLAttribute<bool> attrEnabled("enabled");
-  attrEnabled.setDocumentation("Enables the sink");
-  attrEnabled.setDefaultValue(true);
+  auto attrEnabled = makeXMLAttribute("enabled", true)
+      .setDocumentation("Enables the sink");
   tagSink.addAttribute(attrEnabled);
   
   tagLog.addSubtag(tagSink);

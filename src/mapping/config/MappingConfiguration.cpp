@@ -7,8 +7,6 @@
 #include "mesh/config/MeshConfiguration.hpp"
 #include "xml/XMLTag.hpp"
 #include "xml/XMLAttribute.hpp"
-#include "xml/ValidatorEquals.hpp"
-#include "xml/ValidatorOr.hpp"
 
 namespace precice {
 namespace mapping {
@@ -43,39 +41,25 @@ MappingConfiguration:: MappingConfiguration
   assertion (_meshConfig.use_count() > 0);
   using namespace xml;
 
-  XMLAttribute<double> attrShapeParam ( ATTR_SHAPE_PARAM );
-  attrShapeParam.setDocumentation("Specific shape parameter for RBF basis function.");
-  XMLAttribute<double> attrSupportRadius ( ATTR_SUPPORT_RADIUS );
-  attrSupportRadius.setDocumentation("Support radius of each RBF basis function (global choice).");
-  XMLAttribute<double> attrSolverRtol ( ATTR_SOLVER_RTOL );
-  attrSolverRtol.setDocumentation("Solver relative tolerance for convergence");
-  attrSolverRtol.setDefaultValue(1e-9);
-  XMLAttribute<bool> attrXDead(ATTR_X_DEAD);
-  attrXDead.setDocumentation("If set to true, the x axis will be ignored for the mapping");
-  attrXDead.setDefaultValue(false);
-  XMLAttribute<bool> attrYDead(ATTR_Y_DEAD);
-  attrYDead.setDocumentation("If set to true, the y axis will be ignored for the mapping");
-  attrYDead.setDefaultValue(false);
-  XMLAttribute<bool> attrZDead(ATTR_Z_DEAD);
-  attrZDead.setDocumentation("If set to true, the z axis will be ignored for the mapping");
-  attrZDead.setDefaultValue(false);
-  XMLAttribute<std::string> attrPolynomial("polynomial");
-  attrPolynomial.setDocumentation("Toggles use of the global polynomial");
-  attrPolynomial.setDefaultValue("separate");
-  attrPolynomial.setValidator(makeValidatorEquals("on")
-                              || makeValidatorEquals("off")
-                              || makeValidatorEquals("separate"));
+ auto attrShapeParam  = XMLAttribute<double>( ATTR_SHAPE_PARAM )
+      .setDocumentation("Specific shape parameter for RBF basis function.");
+ auto attrSupportRadius  = XMLAttribute<double>( ATTR_SUPPORT_RADIUS )
+      .setDocumentation("Support radius of each RBF basis function (global choice).");
+  auto attrSolverRtol  = makeXMLAttribute( ATTR_SOLVER_RTOL, 1e-9)
+      .setDocumentation("Solver relative tolerance for convergence");
+  auto attrXDead = makeXMLAttribute(ATTR_X_DEAD, false)
+      .setDocumentation("If set to true, the x axis will be ignored for the mapping");
+  auto attrYDead = makeXMLAttribute(ATTR_Y_DEAD, false)
+      .setDocumentation("If set to true, the y axis will be ignored for the mapping");
+  auto attrZDead = makeXMLAttribute(ATTR_Z_DEAD, false)
+      .setDocumentation("If set to true, the z axis will be ignored for the mapping");
+  auto attrPolynomial = makeXMLAttribute("polynomial", "separate")
+      .setDocumentation("Toggles use of the global polynomial")
+      .setValidator({"on", "off", "separate"});
 
-
-  XMLAttribute<std::string> attrPreallocation("preallocation");
-  attrPreallocation.setDocumentation("Sets kind of preallocation for PETSc RBF implementation");
-  attrPreallocation.setDefaultValue("tree");
-  attrPreallocation.setValidator(makeValidatorEquals("estimate")
-                              || makeValidatorEquals("compute")
-                              || makeValidatorEquals("off")
-                              || makeValidatorEquals("save")
-                              || makeValidatorEquals("tree"));
-
+  auto attrPreallocation = makeXMLAttribute("preallocation", "tree")
+      .setDocumentation("Sets kind of preallocation for PETSc RBF implementation")
+      .setValidator({"estimate", "compute", "off", "save", "tree"});
 
   XMLTag::Occurrence occ = XMLTag::OCCUR_ARBITRARY;
   std::list<XMLTag> tags;
@@ -195,25 +179,17 @@ MappingConfiguration:: MappingConfiguration
     tags.push_back(tag);
   }
   
-  XMLAttribute<std::string> attrDirection ( ATTR_DIRECTION );
-  auto validDirectionWrite  = makeValidatorEquals( VALUE_WRITE );
-  auto validDirectionRead  = makeValidatorEquals( VALUE_READ );
-  attrDirection.setValidator ( validDirectionWrite || validDirectionRead );
+  auto attrDirection = XMLAttribute<std::string>( ATTR_DIRECTION)
+      .setValidator({ VALUE_WRITE, VALUE_READ });
 
   XMLAttribute<std::string> attrFromMesh(ATTR_FROM);
   XMLAttribute<std::string> attrToMesh(ATTR_TO);
 
-  XMLAttribute<std::string> attrConstraint(ATTR_CONSTRAINT);
-  auto validConservative = makeValidatorEquals(VALUE_CONSERVATIVE);
-  auto validConsistent = makeValidatorEquals(VALUE_CONSISTENT);
-  attrConstraint.setValidator(validConservative || validConsistent);
+  auto attrConstraint = XMLAttribute<std::string>(ATTR_CONSTRAINT)
+      .setValidator({VALUE_CONSERVATIVE, VALUE_CONSISTENT});
 
-  XMLAttribute<std::string> attrTiming(ATTR_TIMING);
-  attrTiming.setDefaultValue(VALUE_TIMING_INITIAL);
-  auto validInitial = makeValidatorEquals(VALUE_TIMING_INITIAL);
-  auto validOnAdvance = makeValidatorEquals(VALUE_TIMING_ON_ADVANCE);
-  auto validOnDemand = makeValidatorEquals(VALUE_TIMING_ON_DEMAND);
-  attrTiming.setValidator(validInitial || validOnAdvance || validOnDemand);
+  auto attrTiming = makeXMLAttribute(ATTR_TIMING, VALUE_TIMING_INITIAL)
+      .setValidator({VALUE_TIMING_INITIAL, VALUE_TIMING_ON_ADVANCE, VALUE_TIMING_ON_DEMAND});
 
   // Add tags that all mappings use and add to parent tag
   for (XMLTag & tag : tags) {
