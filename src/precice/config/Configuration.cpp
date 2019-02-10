@@ -24,10 +24,8 @@ Configuration:: Configuration()
   _tag.addNamespace("coupling-scheme");
   _tag.addNamespace("post-processing");
 
-  xml::XMLAttribute<bool> attrSyncMode("sync-mode");
-  std::string doc = "sync-mode enabled additional inter- and intra-participant synchronizations";
-  attrSyncMode.setDefaultValue(false);
-  attrSyncMode.setDocumentation(doc);
+  auto attrSyncMode = xml::makeXMLAttribute("sync-mode", false)
+      .setDocumentation("sync-mode enabled additional inter- and intra-participant synchronizations");
   _tag.addAttribute(attrSyncMode);
 
 }
