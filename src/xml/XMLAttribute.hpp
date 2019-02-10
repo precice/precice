@@ -2,7 +2,10 @@
 
 #include <iostream>
 #include <string>
-#include "Validator.hpp"
+#include <vector>
+#include <type_traits>
+#include <initializer_list>
+
 #include "logging/Logger.hpp"
 #include "math/math.hpp"
 #include "utils/TypeNames.hpp"
@@ -20,25 +23,33 @@ class XMLAttribute
 public:
   XMLAttribute() = delete;
 
-  XMLAttribute(const std::string &name);
+  explicit XMLAttribute(std::string name) : _name(std::move(name)) {};
 
-  XMLAttribute(const XMLAttribute<ATTRIBUTE_T> &rhs);
+  XMLAttribute(std::string name, ATTRIBUTE_T defaultValue): _name(std::move(name)), _hasDefaultValue(true), _defaultValue(std::move(defaultValue)) {};
 
-  virtual ~XMLAttribute() {};
+  XMLAttribute(const XMLAttribute<ATTRIBUTE_T> &other) = default;
+
+  XMLAttribute& operator=(const XMLAttribute<ATTRIBUTE_T> &other) = default;
 
   /// Sets a documentation string for the attribute.
-  void setDocumentation(const std::string &documentation);
+  XMLAttribute& setDocumentation(std::string documentation);
 
   const std::string &getUserDocumentation() const
   {
     return _doc;
   }
 
-  void setValidator(std::unique_ptr<Validator<ATTRIBUTE_T>> &&validator);
+  XMLAttribute& setValidator(std::vector<ATTRIBUTE_T> options);
 
-  void setValidator(const std::unique_ptr<Validator<ATTRIBUTE_T>>& validator);
 
-  void setDefaultValue(const ATTRIBUTE_T &defaultValue);
+  template<class T>
+  XMLAttribute& setValidator(std::initializer_list<T>&& options)
+  {
+    static_assert(std::is_convertible<T, ATTRIBUTE_T>::value, "Type of initializer_list must be converible to ATTRIBUTE_T!");
+    return setValidator(std::vector<ATTRIBUTE_T>(options.begin(), options.end()));
+  }
+
+  XMLAttribute& setDefaultValue(const ATTRIBUTE_T &defaultValue);
 
   void readValue(std::map<std::string, std::string> &aAttributes);
 
@@ -76,6 +87,7 @@ public:
 
   /// Returns a documentation string about the attribute.
   std::string printDocumentation() const;
+
   std::string printDTD(const std::string &ElementName) const;
 
 private:
@@ -95,7 +107,7 @@ private:
 
   bool _hasValidation = false;
 
-  std::unique_ptr<Validator<ATTRIBUTE_T>> _validator = nullptr;
+  std::vector<ATTRIBUTE_T> _validator;
 
   /// Sets non Eigen::VectorXd type values.
   template <typename VALUE_T>
@@ -111,53 +123,28 @@ private:
 };
 
 template <typename ATTRIBUTE_T>
-XMLAttribute<ATTRIBUTE_T>::XMLAttribute(const std::string &name)
-    : _name(name)
+XMLAttribute<ATTRIBUTE_T>& XMLAttribute<ATTRIBUTE_T>::setDocumentation(std::string documentation)
 {
+  _doc = std::move(documentation);
+  return *this;
 }
 
 template <typename ATTRIBUTE_T>
-XMLAttribute<ATTRIBUTE_T>::XMLAttribute(const XMLAttribute<ATTRIBUTE_T> &rhs)
-    : _name(rhs._name),
-      _doc(rhs._doc),
-      _read(rhs._read),
-      _value(rhs._value),
-      _hasDefaultValue(rhs._hasDefaultValue),
-      _defaultValue(rhs._defaultValue)
+XMLAttribute<ATTRIBUTE_T>& XMLAttribute<ATTRIBUTE_T>::setValidator(std::vector<ATTRIBUTE_T> options)
 {
-  if (rhs._hasValidation) {
-    assertion(rhs._validator != nullptr);
-    _validator     = rhs._validator->clone();
-    _hasValidation = true;
-  }
-}
-
-template <typename ATTRIBUTE_T>
-void XMLAttribute<ATTRIBUTE_T>::setDocumentation(const std::string &documentation)
-{
-  _doc = documentation;
-}
-
-template <typename ATTRIBUTE_T>
-void XMLAttribute<ATTRIBUTE_T>::setValidator(std::unique_ptr<Validator<ATTRIBUTE_T>> &&validator)
-{
-  _validator     = validator;
+  const auto iter = std::unique(options.begin(), options.end());
+  _validator     = std::vector<ATTRIBUTE_T>(options.begin(), iter);
   _hasValidation = true;
+  return *this;
 }
 
 template <typename ATTRIBUTE_T>
-void XMLAttribute<ATTRIBUTE_T>::setValidator(const std::unique_ptr<Validator<ATTRIBUTE_T>>& validator)
-{
-  _validator     = validator->clone();
-  _hasValidation = true;
-}
-
-template <typename ATTRIBUTE_T>
-void XMLAttribute<ATTRIBUTE_T>::setDefaultValue(const ATTRIBUTE_T &defaultValue)
+XMLAttribute<ATTRIBUTE_T>& XMLAttribute<ATTRIBUTE_T>::setDefaultValue(const ATTRIBUTE_T &defaultValue)
 {
   TRACE(defaultValue);
   _hasDefaultValue = true;
   set(_defaultValue, defaultValue);
+  return *this;
 }
 
 template <typename ATTRIBUTE_T>
@@ -177,11 +164,19 @@ void XMLAttribute<ATTRIBUTE_T>::readValue(std::map<std::string, std::string> &aA
     set(_value, _defaultValue);
   } else {
     readValueSpecific(aAttributes[getName()], _value);
-    if (_validator) {
-      if (not _validator->validateValue(_value)) {
+    if (_hasValidation) {
+      if (std::find(_validator.begin(), _validator.end(), _value) == _validator.end()) {
         std::ostringstream stream;
         stream << "Invalid value \"" << _value << "\" of attribute \""
-               << getName() << "\": " << _validator->getErrorMessage();
+               << getName() << "\": ";
+        // print first
+        auto first = _validator.begin();
+        stream << "value must be \"" << *first << '"';
+        ++first;
+        // print the remaining with separator
+        for(;first != _validator.end();++first) {
+            stream << " or value must be \"" << *first << '"';
+        }
 
         std::cout << stream.str() << std::endl;
         throw stream.str();
@@ -322,7 +317,16 @@ std::string XMLAttribute<ATTRIBUTE_T>::printDocumentation() const
   std::ostringstream doc;
   doc << _name << "=\"{" << utils::getTypeName(_value);
   if (_hasValidation) {
-    doc << ":" << _validator->getDocumentation();
+    assertion(!_validator.empty());
+    doc << ":";
+    // print the first item
+    auto first = _validator.begin();
+    doc << '\'' << *first << '\'';
+    ++first;
+    // print the remaining items with separator
+    for(;first != _validator.end(); ++first) {
+        doc << " or '" << *first << '\'';
+    }
   }
   doc << "}";
   if (_hasDefaultValue) {
@@ -353,5 +357,27 @@ XMLAttribute<ATTRIBUTE_T>::set(
 {
   toSet = setter;
 }
+
+/** creates an XMLAttribute given a name and a default value.
+ *  
+ *  @param[in] name the name of the attribute
+ *  @param[in] defaultValue the default value of the attribute
+ *  @return an XMLAttribute with the above settings
+ */
+inline XMLAttribute<std::string> makeXMLAttribute(std::string name, const char * defaultValue) {
+    return XMLAttribute<std::string>(std::move(name), defaultValue);
+}
+
+/** creates an XMLAttribute given a name and a default value.
+ *  
+ *  @param[in] name the name of the attribute
+ *  @param[in] defaultValue the default value of the attribute
+ *  @return an XMLAttribute with the above settings
+ */
+template<typename T>
+XMLAttribute<T> makeXMLAttribute(std::string name, T defaultValue) {
+    return XMLAttribute<T>(std::move(name), std::move(defaultValue));
+}
+
 }
 } // namespace precice, xml
