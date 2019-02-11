@@ -367,24 +367,20 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
     return;
   }
 
-  // Accept point-to-point connections (as server) between the current acceptor
-  // process (in the current participant) with rank `utils::MasterSlave::_rank'
-  // and (multiple) requester processes (in the requester participant).
-
-  auto c = _communicationFactory->newCommunication();
+  _communication = _communicationFactory->newCommunication();
 
 #ifdef SuperMUC_WORK
   Publisher::ScopedPushDirectory spd("." + acceptorName + "-" + _mesh->getName() + "-" +
                                      std::to_string(utils::MasterSlave::_rank) + ".address");
 #endif
 
-  c->acceptConnectionAsServer(
-      acceptorName,
-      requesterName,
-      utils::MasterSlave::_rank,
-      communicationMap.size());
-
-  _mappings.reserve(communicationMap.size());
+  // Accept point-to-point connections (as server) between the current acceptor
+  // process (in the current participant) with rank `utils::MasterSlave::_rank'
+  // and (multiple) requester processes (in the requester participant).
+  _communication->acceptConnectionAsServer(acceptorName,
+                                           requesterName,
+                                           utils::MasterSlave::_rank,
+                                           communicationMap.size());
 
   for (auto & comMap : communicationMap) {
     int globalRequesterRank = comMap.first;
@@ -400,7 +396,7 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
       therefore, for data structure consistency of `_mappings' with the requester participant side, 
       we simply duplicate references to the same communication object `c'.
     */
-    _mappings.push_back({globalRequesterRank, std::move(indices), c, com::PtrRequest(), {}});
+    _mappings.push_back({globalRequesterRank, std::move(indices), com::PtrRequest(), {}});
   }
   e4.stop();
   _isConnected = true;
@@ -492,20 +488,19 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
 
   std::vector<com::PtrRequest> requests;
   requests.reserve(communicationMap.size());
-  _mappings.reserve(communicationMap.size());
 
   std::set<int> acceptingRanks;
   for (auto &i : communicationMap)
     acceptingRanks.emplace(i.first);
 
-  auto c = _communicationFactory->newCommunication();
-  c->requestConnectionAsClient(acceptorName, requesterName,
-                               acceptingRanks, utils::MasterSlave::_rank);
-
+  _communication = _communicationFactory->newCommunication();
   // Request point-to-point connections (as client) between the current
   // requester process (in the current participant) and (multiple) acceptor
-  // processes (in the acceptor participant) with ranks `globalAcceptorRank'
-  // according to communication map.
+  // processes (in the acceptor participant) to ranks `accceptingRanks'
+  // according to `communicationMap`.
+  _communication->requestConnectionAsClient(acceptorName, requesterName,
+                                            acceptingRanks, utils::MasterSlave::_rank);
+
   for (auto &i : communicationMap) {
     auto globalAcceptorRank = i.first;
     auto indices            = std::move(i.second);
@@ -515,12 +510,7 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
                                        std::to_string(globalAcceptorRank) + ".address");
 #endif
 
-    // NOTE:
-    // Everything is moved (efficiency)!
-    // On the requester participant side, the communication objects behave
-    // as clients, i.e. each of them requests only one connection to
-    // acceptor process (in the acceptor participant).
-    _mappings.push_back({globalAcceptorRank, std::move(indices), c, com::PtrRequest(), {}});
+    _mappings.push_back({globalAcceptorRank, std::move(indices), com::PtrRequest(), {}});
   }
   e4.stop();
   _isConnected = true;
@@ -535,12 +525,9 @@ void PointToPointCommunication::closeConnection()
 
   checkBufferedRequests(true);
 
-  for (auto &mapping : _mappings) {
-    mapping.communication->closeConnection();
-  }
-
+  _communication.reset();
   _mappings.clear();
-  _isConnected     = false;
+  _isConnected = false;
 }
 
 void PointToPointCommunication::send(double *itemsToSend,
@@ -560,7 +547,7 @@ void PointToPointCommunication::send(double *itemsToSend,
         buffer->push_back(itemsToSend[index * valueDimension + d]);
       }
     }
-    auto request = mapping.communication->aSend(*buffer, mapping.remoteRank);
+    auto request = _communication->aSend(*buffer, mapping.remoteRank);
     bufferedRequests.emplace_back(request, buffer);
   }
 
@@ -591,7 +578,7 @@ void PointToPointCommunication::receive(double *itemsToReceive,
 
   for (auto &mapping : _mappings) {
     mapping.recvBuffer.resize(mapping.indices.size() * valueDimension);
-    mapping.request = mapping.communication->aReceive(mapping.recvBuffer, mapping.remoteRank);
+    mapping.request = _communication->aReceive(mapping.recvBuffer, mapping.remoteRank);
   }
 
   for (auto &mapping : _mappings) {
