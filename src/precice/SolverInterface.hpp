@@ -584,12 +584,21 @@ public:
   ///@{
 
   /**
-   * @brief Returns true, if the data with given name is used.
+   * @brief Checks if the data with given name is used by a solver and mesh.
+   *
+   * @param[in] dataName the name of the data
+   * @param[in] meshID the id of the associated mesh
+   * @returns whether the mesh is used.
    */
   bool hasData ( const std::string& dataName, int meshID ) const;
 
   /**
-   * @brief Returns data id corresponding to the given name (from configuration)
+   * @brief Returns the ID of the data associated with the given name and mesh.
+   * 
+   * @param[in] dataName the name of the data
+   * @param[in] meshID the id of the associated mesh
+   *
+   * @returns the id of the corresponding data
    */
   int getDataID ( const std::string& dataName, int meshID );
 
@@ -597,25 +606,38 @@ public:
   /**
    * @brief Computes and maps all read data mapped to the mesh with given ID.
    *
+   * @TODO
+   *
    */
   void mapReadDataTo ( int toMeshID );
 
   /**
    * @brief Computes and maps all write data mapped from the mesh with given ID.
+   *
+   * @TODO
    */
   void mapWriteDataFrom ( int fromMeshID );
 
   /**
-   * @brief Writes vector data values given as block.
+   * @brief Writes vector data given as block.
    *
-   * The block must contain the vector values in the following form:
-   * values = (d0x, d0y, d0z, d1x, d1y, d1z, ...., dnx, dny, dnz), where n is
-   * the number of vector values. In 2D, the z-components are removed.
+   * This function writes values of specified vertices to a dataID.
+   * Values are provided as a block of continuous memory.
+   * valueIndices contains the indices of the vertices
    *
-   * @param[in] dataID ID of the data to be written.
-   * @param[in] size Number n of points to be written, not size of array values.
-   * @param[in] valueIndices Indizes of vertices, from SolverInterface::setMeshVertex() e.g.
-   * @param[in] values Values of the data to be written.
+   * The 2D-format of values is (d0x, d0y, d1x, d1y, ..., dnx, dny)
+   * The 3D-format of values is (d0x, d0y, d0z, d1x, d1y, d1z, ..., dnx, dny, dnz)
+   *
+   * @param[in] dataID ID to write to.
+   * @param[in] size Number n of vertices.
+   * @param[in] valueIndices Indices of the vertices.
+   * @param[in] values pointer to the vector values.
+   *
+   * @pre count of available elements at values matches the configured dimension * size
+   * @pre count of available elements at valueIndices matches the given size
+   * @pre initialize() has been called
+   *
+   * @see SolverInterface::setMeshVertex()
    */
   void writeBlockVectorData (
     int     dataID,
@@ -624,13 +646,22 @@ public:
     double* values );
 
   /**
-   * @brief Write vectorial data to the interface mesh
+   * @brief Writes vector data to a vertex
    *
-   * The exact mapping and communication must be specified in XYZ.
+   * This function writes a value of a specified vertex to a dataID.
+   * Values are provided as a block of continuous memory.
    *
-   * @param[in] dataID     ID of the data to be written, e.g. 1 = forces
-   * @param[in] valueIndex Position (coordinate, e.g.) of data to be written
-   * @param[in] value      Value of the data to be written
+   * The 2D-format of value is (x, y)
+   * The 3D-format of value is (x, y, z)
+   *
+   * @param[in] dataID ID to write to.
+   * @param[in] valueIndex Index of the vertex.
+   * @param[in] value pointer to the vector value.
+   *
+   * @pre count of available elements at value matches the configured dimension
+   * @pre initialize() has been called
+   *
+   * @see SolverInterface::setMeshVertex()
    */
   void writeVectorData (
     int           dataID,
@@ -639,12 +670,22 @@ public:
 
 
   /**
-   * @brief Writes scalar data values given as block.
+   * @brief Writes scalar data given as block.
    *
-   * @param[in] dataID ID of the data to be written.
-   * @param[in] size   Number of valueIndices, and number of values.
-   * @param[in] valueIndices Indices of the data to be written.
-   * @param[in] values Values of the data to be written.
+   * This function writes values of specified vertices to a dataID.
+   * Values are provided as a block of continuous memory.
+   * valueIndices contains the indices of the vertices
+   *
+   * @param[in] dataID ID to write to.
+   * @param[in] size Number n of vertices.
+   * @param[in] valueIndices Indices of the vertices.
+   * @param[in] values pointer to the values.
+   *
+   * @pre count of available elements at values matches the given size
+   * @pre count of available elements at valueIndices matches the given size
+   * @pre initialize() has been called
+   *
+   * @see SolverInterface::setMeshVertex()
    */
   void writeBlockScalarData (
     int     dataID,
@@ -653,13 +694,17 @@ public:
     double* values );
 
   /**
-   * @brief Write scalar data to the interface mesh
+   * @brief Writes scalar data to a vertex
    *
-   * The exact mapping and communication must be specified in XYZ.
+   * This function writes a value of a specified vertex to a dataID.
    *
-   * @param[in] dataID       ID of the data to be written (2 = temperature, e.g.)
-   * @param[in] dataPosition Position (coordinate, e.g.) of data to be written
-   * @param[in] dataValue    Value of the data to be written
+   * @param[in] dataID ID to write to.
+   * @param[in] valueIndex Index of the vertex.
+   * @param[in] value the value to write.
+   *
+   * @pre initialize() has been called
+   *
+   * @see SolverInterface::setMeshVertex()
    */
   void writeScalarData (
     int    dataID,
@@ -667,16 +712,27 @@ public:
     double value );
 
   /**
-   * @brief Reads vector data values given as block.
+   * @brief Reads vector data into a provided block.
    *
-   * The block contains the vector values in the following form:
-   * values = (d0x, d0y, d0z, d1x, d1y, d1z, ...., dnx, dny, dnz), where n is
-   * the number of vector values. In 2D, the z-components are removed.
+   * This function reads values of specified vertices from a dataID.
+   * Values are read into a block of continuous memory.
+   * valueIndices contains the indices of the vertices.
    *
-   * @param[in] dataID       ID of the data to be read.
-   * @param[in] size         Number n of points to be read, not size of array values.
-   * @param[in] valueIndices Indices (from setReadPosition()) of data values.
-   * @param[out] values      Values of the data to be read.
+   * The 2D-format of values is (d0x, d0y, d1x, d1y, ..., dnx, dny)
+   * The 3D-format of values is (d0x, d0y, d0z, d1x, d1y, d1z, ..., dnx, dny, dnz)
+   *
+   * @param[in] dataID ID to read from.
+   * @param[in] size Number n of vertices.
+   * @param[in] valueIndices Indices of the vertices.
+   * @param[inout] values pointer to read destination.
+   *
+   * @pre count of available elements at values matches the configured dimension * size
+   * @pre count of available elements at valueIndices matches the given size
+   * @pre initialize() has been called
+   *
+   * @post values contain the read data as specified in the above format.
+   *
+   * @see SolverInterface::setMeshVertex()
    */
   void readBlockVectorData (
     int     dataID,
@@ -685,11 +741,24 @@ public:
     double* values );
 
   /**
-   * @brief Reads vector data from the coupling mesh.
+   * @brief Reads vector data form a vertex
    *
-   * @param[in]  dataID ID of the data to be read, e.g. 1 = forces
-   * @param[in]  valueIndex Index of vertex to read the data from
-   * @param[out] value Read data values of the vertex
+   * This function reads a value of a specified vertex from a dataID.
+   * Values are provided as a block of continuous memory.
+   *
+   * The 2D-format of value is (x, y)
+   * The 3D-format of value is (x, y, z)
+   *
+   * @param[in] dataID ID to read from.
+   * @param[in] valueIndex Index of the vertex.
+   * @param[inout] value pointer to the vector value.
+   *
+   * @pre count of available elements at value matches the configured dimension
+   * @pre initialize() has been called
+   *
+   * @post value contains the read data as specified in the above format.
+   *
+   * @see SolverInterface::setMeshVertex()
    */
   void readVectorData (
     int     dataID,
@@ -697,12 +766,24 @@ public:
     double* value );
 
   /**
-   * @brief Reads scalar data values given as block.
+   * @brief Reads scalar data as a block.
    *
-   * @param[in]  dataID ID of the data to be written.
-   * @param[in]  size Number of valueIndices, and number of values.
-   * @param[out] valueIndices Indices of data values to be read.
-   * @param[out] values Values of the data to be read.
+   * This function reads values of specified vertices from a dataID.
+   * Values are provided as a block of continuous memory.
+   * valueIndices contains the indices of the vertices.
+   *
+   * @param[in] dataID ID to read from.
+   * @param[in] size Number n of vertices.
+   * @param[in] valueIndices Indices of the vertices.
+   * @param[inout] values pointer to the read destination.
+   *
+   * @pre count of available elements at values matches the given size
+   * @pre count of available elements at valueIndices matches the given size
+   * @pre initialize() has been called
+   *
+   * @post values contains the read data.
+   *
+   * @see SolverInterface::setMeshVertex()
    */
   void readBlockScalarData (
     int     dataID,
@@ -711,13 +792,19 @@ public:
     double* values );
 
   /**
-   * @brief Read scalar data from the interface mesh.
+   * @brief Reads scalar data of a vertex.
    *
-   * The exact mapping and communication must be specified in XYZ.
+   * This function reads a value of a specified vertex from a dataID.
    *
-   * @param[in]  dataID ID of the data to be read, e.g. 2 = temperatures
-   * @param[in]  valueIndex Position (coordinate, e.g.) of data to be read
-   * @param[out] value Read data value
+   * @param[in] dataID ID to read from.
+   * @param[in] valueIndex Index of the vertex.
+   * @param[inout] value read destination of the value.
+   *
+   * @pre initialize() has been called
+   *
+   * @post value contains the read data.
+   *
+   * @see SolverInterface::setMeshVertex()
    */
   void readScalarData (
     int     dataID,
