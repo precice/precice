@@ -443,7 +443,7 @@ public:
    * @param[in] meshID the id of the mesh to read the vertices from.
    * @param[in] size Number of vertices to lookup
    * @param[in] ids The ids of the vertices to lookup
-   * @param[out] positions a pointer to memory to write the coordinates to
+   * @param[inout] positions a pointer to memory to write the coordinates to
    *            The 2D-format is (d0x, d0y, d1x, d1y, ..., dnx, dny)
    *            The 3D-format is (d0x, d0y, d0z, d1x, d1y, d1z, ..., dnx, dny, dnz)
    *
@@ -466,7 +466,7 @@ public:
    * @param[in] positions Positions to find ids for.
    *            The 2D-format is (d0x, d0y, d1x, d1y, ..., dnx, dny)
    *            The 3D-format is (d0x, d0y, d0z, d1x, d1y, d1z, ..., dnx, dny, dnz)
-   * @param[out] ids IDs corresponding to positions.
+   * @param[inout] ids IDs corresponding to positions.
    *
    * @pre count of available elements at positions matches the configured dimension * size
    * @pre count of available elements at ids matches size
