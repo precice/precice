@@ -602,7 +602,6 @@ public:
    */
   int getDataID ( const std::string& dataName, int meshID );
 
-
   /**
    * @brief Computes and maps all read data mapped to the mesh with given ID.
    *
