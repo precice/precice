@@ -429,7 +429,7 @@ void PostProcessingConfiguration::addTypeSpecificSubtags(
 
     XMLTag                       tagFilter(*this, TAG_FILTER, XMLTag::OCCUR_NOT_OR_ONCE);
    auto attrFilterName = XMLAttribute<std::string>(ATTR_TYPE)
-        .setValidator({
+        .setOptions({
                 VALUE_QR1FILTER,
                 VALUE_QR1_ABSFILTER,
                 VALUE_QR2FILTER});
@@ -455,7 +455,7 @@ void PostProcessingConfiguration::addTypeSpecificSubtags(
                 " A value preconditioner scales every post-processing data by the norm of the data in the previous timestep."
                 " A residual preconditioner scales every post-processing data by the current residual."
                 " A residual-sum preconditioner scales every post-processing data by the sum of the residuals from the current timestep.")
-        .setValidator({
+        .setOptions({
                 VALUE_CONSTANT_PRECONDITIONER,
                 VALUE_VALUE_PRECONDITIONER,
                 VALUE_RESIDUAL_PRECONDITIONER,
@@ -478,7 +478,7 @@ void PostProcessingConfiguration::addTypeSpecificSubtags(
 
     XMLTag                       tagIMVJRESTART(*this, TAG_IMVJRESTART, XMLTag::OCCUR_NOT_OR_ONCE);
    auto attrRestartName = XMLAttribute<std::string>(ATTR_TYPE)
-        .setValidator({
+        .setOptions({
                 VALUE_NO_RESTART,
                 VALUE_ZERO_RESTART,
                 VALUE_LS_RESTART,
@@ -528,7 +528,7 @@ void PostProcessingConfiguration::addTypeSpecificSubtags(
     XMLAttribute<double> attrSingularityLimit(ATTR_SINGULARITYLIMIT, 1e-16);
     tagFilter.addAttribute(attrSingularityLimit);
    auto attrFilterName = XMLAttribute<std::string>(ATTR_TYPE)
-        .setValidator({
+        .setOptions({
                 VALUE_QR1FILTER,
                 VALUE_QR1_ABSFILTER,
                 VALUE_QR2FILTER});
@@ -545,7 +545,7 @@ void PostProcessingConfiguration::addTypeSpecificSubtags(
 
     XMLTag                       tagPreconditioner(*this, TAG_PRECONDITIONER, XMLTag::OCCUR_NOT_OR_ONCE);
    auto attrPreconditionerType = XMLAttribute<std::string>(ATTR_TYPE)
-        .setValidator({
+        .setOptions({
                 VALUE_CONSTANT_PRECONDITIONER,
                 VALUE_VALUE_PRECONDITIONER,
                 VALUE_RESIDUAL_PRECONDITIONER,
@@ -606,7 +606,7 @@ void PostProcessingConfiguration::addTypeSpecificSubtags(
 
     XMLTag                       tagFilter(*this, TAG_FILTER, XMLTag::OCCUR_NOT_OR_ONCE);
    auto attrFilterName = XMLAttribute<std::string>(ATTR_TYPE)
-        .setValidator({
+        .setOptions({
                 VALUE_QR1FILTER,
                 VALUE_QR1_ABSFILTER,
                 VALUE_QR2FILTER});
@@ -632,7 +632,7 @@ void PostProcessingConfiguration::addTypeSpecificSubtags(
                 " A value preconditioner scales every post-processing data by the norm of the data in the previous timestep."
                 " A residual preconditioner scales every post-processing data by the current residual."
                 " A residual-sum preconditioner scales every post-processing data by the sum of the residuals from the current timestep.")
-    .setValidator({
+    .setOptions({
             VALUE_CONSTANT_PRECONDITIONER,
             VALUE_VALUE_PRECONDITIONER,
             VALUE_RESIDUAL_PRECONDITIONER,

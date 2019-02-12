@@ -39,14 +39,14 @@ public:
     return _doc;
   }
 
-  XMLAttribute& setValidator(std::vector<ATTRIBUTE_T> options);
+  XMLAttribute& setOptions(std::vector<ATTRIBUTE_T> options);
 
 
   template<class T>
-  XMLAttribute& setValidator(std::initializer_list<T>&& options)
+  XMLAttribute& setOptions(std::initializer_list<T>&& options)
   {
     static_assert(std::is_convertible<T, ATTRIBUTE_T>::value, "Type of initializer_list must be converible to ATTRIBUTE_T!");
-    return setValidator(std::vector<ATTRIBUTE_T>(options.begin(), options.end()));
+    return setOptions(std::vector<ATTRIBUTE_T>(options.begin(), options.end()));
   }
 
   XMLAttribute& setDefaultValue(const ATTRIBUTE_T &defaultValue);
@@ -107,7 +107,7 @@ private:
 
   bool _hasValidation = false;
 
-  std::vector<ATTRIBUTE_T> _validator;
+  std::vector<ATTRIBUTE_T> _options;
 
   /// Sets non Eigen::VectorXd type values.
   template <typename VALUE_T>
@@ -130,10 +130,10 @@ XMLAttribute<ATTRIBUTE_T>& XMLAttribute<ATTRIBUTE_T>::setDocumentation(std::stri
 }
 
 template <typename ATTRIBUTE_T>
-XMLAttribute<ATTRIBUTE_T>& XMLAttribute<ATTRIBUTE_T>::setValidator(std::vector<ATTRIBUTE_T> options)
+XMLAttribute<ATTRIBUTE_T>& XMLAttribute<ATTRIBUTE_T>::setOptions(std::vector<ATTRIBUTE_T> options)
 {
   const auto iter = std::unique(options.begin(), options.end());
-  _validator     = std::vector<ATTRIBUTE_T>(options.begin(), iter);
+  _options     = std::vector<ATTRIBUTE_T>(options.begin(), iter);
   _hasValidation = true;
   return *this;
 }
@@ -165,16 +165,16 @@ void XMLAttribute<ATTRIBUTE_T>::readValue(std::map<std::string, std::string> &aA
   } else {
     readValueSpecific(aAttributes[getName()], _value);
     if (_hasValidation) {
-      if (std::find(_validator.begin(), _validator.end(), _value) == _validator.end()) {
+      if (std::find(_options.begin(), _options.end(), _value) == _options.end()) {
         std::ostringstream stream;
         stream << "Invalid value \"" << _value << "\" of attribute \""
                << getName() << "\": ";
         // print first
-        auto first = _validator.begin();
+        auto first = _options.begin();
         stream << "value must be \"" << *first << '"';
         ++first;
         // print the remaining with separator
-        for(;first != _validator.end();++first) {
+        for(;first != _options.end();++first) {
             stream << " or value must be \"" << *first << '"';
         }
 
@@ -317,14 +317,14 @@ std::string XMLAttribute<ATTRIBUTE_T>::printDocumentation() const
   std::ostringstream doc;
   doc << _name << "=\"{" << utils::getTypeName(_value);
   if (_hasValidation) {
-    assertion(!_validator.empty());
+    assertion(!_options.empty());
     doc << ":";
     // print the first item
-    auto first = _validator.begin();
+    auto first = _options.begin();
     doc << '\'' << *first << '\'';
     ++first;
     // print the remaining items with separator
-    for(;first != _validator.end(); ++first) {
+    for(;first != _options.end(); ++first) {
         doc << " or '" << *first << '\'';
     }
   }

@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(AttributeConcatenation)
   XMLTag       testcaseTag(cb, "test-attribute-concatenation", XMLTag::OCCUR_ONCE);
   XMLTag       testTag(cb, "test", XMLTag::OCCUR_ONCE_OR_MORE);
 
-  auto attr = makeXMLAttribute("attribute", "").setValidator({"value-one", "value-two", "value-three"});
+  auto attr = makeXMLAttribute("attribute", "").setOptions({"value-one", "value-two", "value-three"});
   testTag.addAttribute(attr);
 
   testcaseTag.addSubtag(testTag);

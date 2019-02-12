@@ -407,7 +407,7 @@ void CouplingSchemeConfiguration::addTransientLimitTags(
   XMLAttribute<int> attrValidDigits(ATTR_VALID_DIGITS, 10);
   tagTimestepLength.addAttribute(attrValidDigits);
   auto attrMethod = makeXMLAttribute(ATTR_METHOD, VALUE_FIXED)
-      .setValidator({ VALUE_FIXED, VALUE_FIRST_PARTICIPANT});
+      .setOptions({ VALUE_FIXED, VALUE_FIRST_PARTICIPANT});
   tagTimestepLength.addAttribute(attrMethod);
   tag.addSubtag(tagTimestepLength);
 }
