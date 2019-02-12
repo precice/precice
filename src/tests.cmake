@@ -33,6 +33,7 @@ target_sources(testprecice
     src/utils/tests/ParallelTest.cpp
     src/utils/tests/StringTest.cpp
     src/utils/tests/DimensionsTest.cpp
+    src/utils/tests/MultiLockTest.cpp
     src/utils/tests/ManageUniqueIDsTest.cpp
     src/utils/tests/PointerVectorTest.cpp
     src/io/tests/ExportConfigurationTest.cpp

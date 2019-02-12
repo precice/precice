@@ -128,6 +128,7 @@ target_sources(precice
     src/action/config/ActionConfiguration.hpp
     src/utils/json.hpp
     src/utils/EigenHelperFunctions.cpp
+    src/utils/MultiLock.hpp
     src/utils/SignalHandler.hpp
     src/utils/Dimensions.cpp
     src/utils/TableWriter.hpp
