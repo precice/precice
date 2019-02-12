@@ -459,7 +459,7 @@ void EventRegistry::collect()
     requests.push_back(req);
 
     // Send the integer data associated with an event
-    MPI_Isend(ev.getData().data(), ev.getData().size(), MPI_INT, 0, 0, comm, &req);
+    MPI_Isend(const_cast<int*>(ev.getData().data()), ev.getData().size(), MPI_INT, 0, 0, comm, &req);
     requests.push_back(req);
     
     ++i;
