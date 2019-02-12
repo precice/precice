@@ -78,6 +78,11 @@ void NearestNeighborMapping:: clear()
   TRACE();
   _vertexIndices.clear();
   _hasComputedMapping = false;
+  if (getConstraint() == CONSISTENT){
+    mesh::rtree::clear(*input()); 
+  } else {
+    mesh::rtree::clear(*output()); 
+  }
 }
 
 void NearestNeighborMapping:: map
