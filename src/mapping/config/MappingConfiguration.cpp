@@ -55,11 +55,11 @@ MappingConfiguration:: MappingConfiguration
       .setDocumentation("If set to true, the z axis will be ignored for the mapping");
   auto attrPolynomial = makeXMLAttribute("polynomial", "separate")
       .setDocumentation("Toggles use of the global polynomial")
-      .setValidator({"on", "off", "separate"});
+      .setOptions({"on", "off", "separate"});
 
   auto attrPreallocation = makeXMLAttribute("preallocation", "tree")
       .setDocumentation("Sets kind of preallocation for PETSc RBF implementation")
-      .setValidator({"estimate", "compute", "off", "save", "tree"});
+      .setOptions({"estimate", "compute", "off", "save", "tree"});
 
   XMLTag::Occurrence occ = XMLTag::OCCUR_ARBITRARY;
   std::list<XMLTag> tags;
@@ -180,16 +180,16 @@ MappingConfiguration:: MappingConfiguration
   }
   
   auto attrDirection = XMLAttribute<std::string>( ATTR_DIRECTION)
-      .setValidator({ VALUE_WRITE, VALUE_READ });
+      .setOptions({ VALUE_WRITE, VALUE_READ });
 
   XMLAttribute<std::string> attrFromMesh(ATTR_FROM);
   XMLAttribute<std::string> attrToMesh(ATTR_TO);
 
   auto attrConstraint = XMLAttribute<std::string>(ATTR_CONSTRAINT)
-      .setValidator({VALUE_CONSERVATIVE, VALUE_CONSISTENT});
+      .setOptions({VALUE_CONSERVATIVE, VALUE_CONSISTENT});
 
   auto attrTiming = makeXMLAttribute(ATTR_TIMING, VALUE_TIMING_INITIAL)
-      .setValidator({VALUE_TIMING_INITIAL, VALUE_TIMING_ON_ADVANCE, VALUE_TIMING_ON_DEMAND});
+      .setOptions({VALUE_TIMING_INITIAL, VALUE_TIMING_ON_ADVANCE, VALUE_TIMING_ON_DEMAND});
 
   // Add tags that all mappings use and add to parent tag
   for (XMLTag & tag : tags) {

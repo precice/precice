@@ -91,7 +91,7 @@ M2NConfiguration::M2NConfiguration(xml::XMLTag &parent)
               "\"" + VALUE_POINT_TO_POINT + "\" uses a pure point to point communication and is recommended. "
               "\"" + VALUE_GATHER_SCATTER + "\" should only be used if at least one serial participant is used "
               "or for troubleshooting.")
-      .setValidator({VALUE_GATHER_SCATTER, VALUE_POINT_TO_POINT})
+      .setOptions({VALUE_GATHER_SCATTER, VALUE_POINT_TO_POINT})
       .setDefaultValue(VALUE_POINT_TO_POINT);
 
  auto attrDistrTypeOnly = XMLAttribute<std::string>(ATTR_DISTRIBUTION_TYPE)
@@ -100,7 +100,7 @@ M2NConfiguration::M2NConfiguration(xml::XMLTag &parent)
               "\"" + VALUE_POINT_TO_POINT + "\" uses a pure point to point communication and is recommended. "
               "\"" + VALUE_GATHER_SCATTER + "\" should only be used if at least one serial participant is used "
               "or for troubleshooting.")
-      .setValidator({VALUE_GATHER_SCATTER, VALUE_POINT_TO_POINT})
+      .setOptions({VALUE_GATHER_SCATTER, VALUE_POINT_TO_POINT})
       .setDefaultValue(VALUE_GATHER_SCATTER);
 
  auto attrFrom = XMLAttribute<std::string>("from")

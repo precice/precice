@@ -23,7 +23,7 @@ LogConfiguration::LogConfiguration
   XMLTag tagSink(*this, "sink", XMLTag::OCCUR_ARBITRARY);
  auto attrType = XMLAttribute<std::string>("type")
       .setDocumentation("Type of sink")
-      .setValidator({"stream", "file"})
+      .setOptions({"stream", "file"})
       .setDefaultValue(precice::logging::BackendConfiguration::default_type);
   tagSink.addAttribute(attrType);
 

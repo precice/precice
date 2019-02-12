@@ -129,7 +129,7 @@ ParticipantConfiguration:: ParticipantConfiguration
               "\"broadcast/filter\" strategy, which performs better for a very high number of "
               "processors. Both result in the same distribution (if the safety factor is sufficiently large)."
               "For very asymmetric cases, the filter can also be switched off completely (\"no-filter\").")
-      .setValidator({ VALUE_FILTER_FIRST, VALUE_BROADCAST_FILTER, VALUE_NO_FILTER })
+      .setOptions({ VALUE_FILTER_FIRST, VALUE_BROADCAST_FILTER, VALUE_NO_FILTER })
       .setDefaultValue(VALUE_BROADCAST_FILTER);
   tagUseMesh.addAttribute(attrGeoFilter);
 

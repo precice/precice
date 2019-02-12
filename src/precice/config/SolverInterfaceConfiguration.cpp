@@ -19,7 +19,7 @@ SolverInterfaceConfiguration:: SolverInterfaceConfiguration(xml::XMLTag& parent 
   tag.setDocumentation("Configuration of simulation relevant features.");
   auto attrDimensions = makeXMLAttribute("dimensions", 2)
                              .setDocumentation("Determines the spatial dimensionality of the configuration")
-                             .setValidator({2, 3});
+                             .setOptions({2, 3});
   tag.addAttribute(attrDimensions);
 
   _dataConfiguration = mesh::PtrDataConfiguration (

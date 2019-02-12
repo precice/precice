@@ -149,7 +149,7 @@ ActionConfiguration:: ActionConfiguration
  auto attrTiming  = XMLAttribute<std::string>( ATTR_TIMING )
       .setDocumentation(
               "Determines when (relative to advancing the coupling scheme) the action is executed.")
-      .setValidator({
+      .setOptions({
               VALUE_REGULAR_PRIOR, VALUE_REGULAR_POST,
               VALUE_ON_EXCHANGE_PRIOR, VALUE_ON_EXCHANGE_POST,
               VALUE_ON_TIMESTEP_COMPLETE_POST});
