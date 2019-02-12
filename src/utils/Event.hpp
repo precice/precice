@@ -16,7 +16,7 @@ class Event
 {
 public:
 
-  enum class State {
+  enum class State : int {
     STOPPED = 0,
     STARTED = 1,
     PAUSED  = 2,
