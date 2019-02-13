@@ -1,6 +1,6 @@
 import warnings
 
-warnings.warn("PySolverInterface is deprecated and will be removed in preCICE version 2.0.0, please use the python module precice instead", DeprecationWarning, stacklevel=2)
+warnings.warn("PySolverInterface is deprecated and will be removed in preCICE version 2.0.0, please use the python module precice instead", Warning, stacklevel=2)
 
 from precice import Interface as PySolverInterface
 from precice import nameConfiguration as PyNameConfiguration

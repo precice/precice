@@ -2,7 +2,7 @@ import os
 import subprocess
 from enum import Enum
 
-from distutils.core import setup
+from setuptools import setup
 from distutils.extension import Extension
 from Cython.Distutils.build_ext import new_build_ext as build_ext
 from distutils.command.install import install
@@ -134,15 +134,6 @@ setup(
     description='Python language bindings for preCICE coupling library',
     cmdclass={'build_ext': my_build_ext,
               'build': my_build,
-              'install': my_install}
+              'install': my_install},
+    python_requires='>=3'
 )
-
-"""
-setup(
-    name="PySolverInterface",
-    description='Wrapper for Python language bindings in order to not break the API',
-    cmdclass={'build_ext': my_build_ext,
-              'build': my_build,
-              'install': my_install}
-)
-"""
