@@ -2,14 +2,14 @@ import warnings
 
 warnings.warn("PySolverInterface is deprecated and will be removed in preCICE version 2.0.0, please use the python module precice instead", Warning, stacklevel=2)
 
-from precice import Interface as PySolverInterface
-from precice import nameConfiguration as PyNameConfiguration
-from precice import dataDisplacements as PyDataDisplacements
-from precice import dataForces as PyDataForces
-from precice import dataVelocities as PyDataVelocities
-from precice import actionWriteInitialData as PyActionWriteInitialData
-from precice import actionWriteIterationCheckpoint as PyActionWriteIterationCheckpoint
-from precice import actionReadIterationCheckpoint as PyActionReadIterationCheckpoint
-from precice import actionPlotOutput as PyActionPlotOutput
-from precice import exportVTK as PyExportVTK
-from precice import exportAll as PyExportAll
+from PySolverInterface import PySolverInterface
+from precice import name_configuration as PyNameConfiguration
+from precice import data_displacements as PyDataDisplacements
+from precice import data_forces as PyDataForces
+from precice import data_velocities as PyDataVelocities
+from precice import action_write_initial_data as PyActionWriteInitialData
+from precice import action_write_iteration_checkpoint as PyActionWriteIterationCheckpoint
+from precice import action_read_iteration_checkpoint as PyActionReadIterationCheckpoint
+from precice import action_plot_output as PyActionPlotOutput
+from precice import export_vtk as PyExportVTK
+from precice import export_all as PyExportAll
