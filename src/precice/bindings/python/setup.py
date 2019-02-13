@@ -9,7 +9,7 @@ from distutils.command.install import install
 from distutils.command.build import build
 
 # name of Interfacing API
-APPNAME = "PySolverInterface"
+APPNAME = "precice"
 
 PYTHON_BINDINGS_PATH = os.path.dirname(os.path.abspath(__file__))
 PRECICE_ROOT = os.path.join(PYTHON_BINDINGS_PATH, "../../../..")
@@ -136,3 +136,13 @@ setup(
               'build': my_build,
               'install': my_install}
 )
+
+"""
+setup(
+    name="PySolverInterface",
+    description='Wrapper for Python language bindings in order to not break the API',
+    cmdclass={'build_ext': my_build_ext,
+              'build': my_build,
+              'install': my_install}
+)
+"""

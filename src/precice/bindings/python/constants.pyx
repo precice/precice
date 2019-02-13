@@ -26,45 +26,32 @@ cdef extern from "./src/io/Constants.hpp" namespace "precice::io::constants":
    int exportVTK()
    int exportAll()
 
-#cdef class PyConstants:
-#   cdef Constants *thisptr # hold a C++ instance being wrapped
-#   cdef Spacetree *spacetreeptr
-
-   # constructor
-#   def __cinit__ (self):
-#      self.thisptr = new Constants ()
-#      self.spacetreepts = new Spacetree ()
-
-#   # destructor
-#   def __dealloc__ (self):
-#      del self.thisptr
-
-def PyNameConfiguration ():
+def NameConfiguration ():
    return nameConfiguration()
 
-def PyDataDisplacements ():
+def DataDisplacements ():
    return dataDisplacements()
 
-def PyDataForces ():
+def DataForces ():
    return dataForces()
 
-def PyDataVelocities ():
+def DataVelocities ():
    return dataVelocities()
 
-def PyActionWriteInitialData ():
+def ActionWriteInitialData ():
    return actionWriteInitialData()
    
-def PyActionWriteIterationCheckpoint ():
+def ActionWriteIterationCheckpoint ():
    return actionWriteIterationCheckpoint()
 
-def PyActionReadIterationCheckpoint ():
+def ActionReadIterationCheckpoint ():
    return actionReadIterationCheckpoint()
 
-def PyActionPlotOutput ():
+def ActionPlotOutput ():
    return actionPlotOutput()
 
-def PyExportVTK ():
+def ExportVTK ():
    return exportVTK()
 
-def PyExportAll ():
+def ExportAll ():
    return exportAll()

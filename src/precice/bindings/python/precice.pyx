@@ -21,7 +21,7 @@ cdef bytes convert(s):
     else:
         raise TypeError("Could not convert.")
 
-include "PyConstants.pyx"
+include "constants.pyx"
 
 cdef extern from "./src/precice/SolverInterface.hpp"  namespace "precice":
    cdef cppclass SolverInterface:
@@ -100,7 +100,7 @@ cdef extern from "./src/precice/SolverInterface.hpp"  namespace "precice":
 #      MeshHandle getMeshHandle (const string& meshName)
 
 
-cdef class PySolverInterface:
+cdef class SolverInterface:
    cdef SolverInterface *thisptr # hold a C++ instance being wrapped
    
    # constructor
