@@ -97,10 +97,8 @@ cdef extern from "./src/precice/SolverInterface.hpp"  namespace "precice":
 
       void readScalarData (int dataID, int valueIndex, double& value)
 
-#      MeshHandle getMeshHandle (const string& meshName)
 
-
-cdef class SolverInterface:
+cdef class Interface:
    cdef SolverInterface *thisptr # hold a C++ instance being wrapped
    
    # constructor
@@ -388,7 +386,3 @@ cdef class SolverInterface:
 
    def readScalarData (self, int dataID, int valueIndex, double& value):
       self.thisptr.readScalarData (dataID, valueIndex, value)
-
-#   def getMeshHandle (self, meshName):
-#      return self.thisptr.getMeshHandle (meshName)
-   
