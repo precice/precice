@@ -52,7 +52,7 @@ def get_file_lists(root):
     # Remove bindings from the sources
     sources = [source for source in sources if source not in bindings]
 
-    return sources, (public + bindings), tests
+    return sorted(sources), sorted(public + bindings), sorted(tests)
 
 
 SOURCES_BASE = """#
