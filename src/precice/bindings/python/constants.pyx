@@ -26,32 +26,32 @@ cdef extern from "./src/io/Constants.hpp" namespace "precice::io::constants":
    int exportVTK()
    int exportAll()
 
-def NameConfiguration ():
+def nameConfiguration ():
    return nameConfiguration()
 
-def DataDisplacements ():
+def dataDisplacements ():
    return dataDisplacements()
 
-def DataForces ():
+def dataForces ():
    return dataForces()
 
-def DataVelocities ():
+def dataVelocities ():
    return dataVelocities()
 
-def ActionWriteInitialData ():
+def actionWriteInitialData ():
    return actionWriteInitialData()
    
-def ActionWriteIterationCheckpoint ():
+def actionWriteIterationCheckpoint ():
    return actionWriteIterationCheckpoint()
 
-def ActionReadIterationCheckpoint ():
+def actionReadIterationCheckpoint ():
    return actionReadIterationCheckpoint()
 
-def ActionPlotOutput ():
+def actionPlotOutput ():
    return actionPlotOutput()
 
-def ExportVTK ():
+def exportVTK ():
    return exportVTK()
 
-def ExportAll ():
+def exportAll ():
    return exportAll()
