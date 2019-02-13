@@ -103,8 +103,8 @@ cdef class Interface:
    
    # constructor
 
-   def __cinit__ (self, solverName, int solverProcessIndex, int solverProcessSize):
-      self.thisptr = new SolverInterface (convert(solverName), solverProcessIndex, solverProcessSize)      
+   def __cinit__ (self, solver_name, int solver_process_index, int solver_process_size):
+      self.thisptr = new SolverInterface (convert(solver_name), solver_process_index, solver_process_size)
       pass
 
    # destructor
@@ -112,73 +112,73 @@ cdef class Interface:
       del self.thisptr
 
    # configure
-   def configure (self, configurationFileName):
-      self.thisptr.configure (convert(configurationFileName))
+   def configure (self, configuration_file_name):
+      self.thisptr.configure (convert(configuration_file_name))
 
    # initialize
    def initialize (self):
       return self.thisptr.initialize ()
 
    # initialize data
-   def initializeData (self):
+   def initialize_data (self):
       self.thisptr.initializeData ()
 
    # advance in time
-   def advance (self, double computedTimestepLength):
-      return self.thisptr.advance (computedTimestepLength)
+   def advance (self, double computed_timestep_length):
+      return self.thisptr.advance (computed_timestep_length)
 
    # finalize preCICE
    def finalize (self):
       self.thisptr.finalize ()
 
    # get dimensions
-   def getDimensions (self):
+   def get_dimensions (self):
       return self.thisptr.getDimensions ()
 
    # check if coupling is going on
-   def isCouplingOngoing (self):
+   def is_coupling_ongoing (self):
       return self.thisptr.isCouplingOngoing ()
 
    # check if data is available to be read
-   def isReadDataAvailable (self):
+   def is_read_data_available (self):
       return self.thisptr.isReadDataAvailable ()
 
    # check if write data is needed
-   def isWriteDataRequired (self, double computedTimestepLength):
-      return self.thisptr.isWriteDataRequired (computedTimestepLength)
+   def is_write_data_required (self, double computed_timestep_length):
+      return self.thisptr.isWriteDataRequired (computed_timestep_length)
 
    # check if time-step is complete
-   def isTimestepComplete (self):
+   def is_timestep_complete (self):
       return self.thisptr.isTimestepComplete ()
 
    # check if action is needed
-   def isActionRequired (self, action):
+   def is_action_required (self, action):
       return self.thisptr.isActionRequired (action)
 
    # notify of action being fulfilled
-   def fulfilledAction (self, action):
+   def fulfilled_action (self, action):
       self.thisptr.fulfilledAction (action)
 
    # hasMesh
-   def hasMesh(self, meshName):
-      return self.thisptr.hasMesh (convert(meshName))
+   def has_mesh(self, mesh_name):
+      return self.thisptr.hasMesh (convert(mesh_name))
 
    # get mesh ID
-   def getMeshID (self, meshName):
-      return self.thisptr.getMeshID (convert(meshName))
+   def get_mesh_id (self, mesh_name):
+      return self.thisptr.getMeshID (convert(mesh_name))
 
    # get mesh IDs
-   def getMeshIDs (self):
+   def get_mesh_ids (self):
       return self.thisptr.getMeshIDs ()
 
    # hasData
-   def hasData (self, dataName, meshID):
-      return self.thisptr.hasData(convert(dataName), meshID)
+   def has_data (self, data_name, mesh_id):
+      return self.thisptr.hasData(convert(data_name), mesh_id)
 
-   def getDataID (self, dataName, meshID):
-      return self.thisptr.getDataID (convert(dataName), meshID)
+   def get_data_id (self, data_name, mesh_id):
+      return self.thisptr.getDataID (convert(data_name), mesh_id)
 
-   def setMeshVertices (self, meshID, size, positions, ids):
+   def set_mesh_vertices (self, mesh_id, size, positions, ids):
       cdef int* ids_
       cdef double* positions_
       ids_ = <int*> malloc(len(ids) * sizeof(int))
@@ -192,7 +192,7 @@ cdef class Interface:
       for i in xrange(len(positions)):
          positions_[i] = positions[i]
 
-      self.thisptr.setMeshVertices (meshID, size, positions_, ids_)
+      self.thisptr.setMeshVertices (mesh_id, size, positions_, ids_)
 
       for i in xrange(len(ids)):
          ids[i] = ids_[i]
@@ -202,10 +202,10 @@ cdef class Interface:
       free(ids_)
       free(positions_)
 
-   def getMeshVertexSize (self, meshID):
-      return self.thisptr.getMeshVertexSize(meshID)
+   def get_mesh_vertex_size (self, mesh_id):
+      return self.thisptr.getMeshVertexSize(mesh_id)
 
-   def getMeshVertexIDsFromPositions (self, meshID, size, positions, ids):
+   def get_mesh_vertex_ids_from_positions (self, mesh_id, size, positions, ids):
       cdef int* ids_
       cdef double* positions_
 
@@ -220,7 +220,7 @@ cdef class Interface:
       for i in xrange(len(positions)):
          positions_[i] = positions[i]
 
-      self.thisptr.getMeshVertexIDsFromPositions (meshID, size, positions_, ids_)
+      self.thisptr.getMeshVertexIDsFromPositions (mesh_id, size, positions_, ids_)
 
       for i in xrange(len(ids)):
          ids[i] = ids_[i]
@@ -230,52 +230,52 @@ cdef class Interface:
       free(ids_)
       free(positions_)
 
-   def setMeshEdge (self, meshID, firstVertexID, secondVertexID):
-      return self.thisptr.setMeshEdge (meshID, firstVertexID, secondVertexID)
+   def set_mesh_edge (self, mesh_id, first_vertex_id, second_vertex_id):
+      return self.thisptr.setMeshEdge (mesh_id, first_vertex_id, second_vertex_id)
 
-   def setMeshTriangle (self, meshID, firstEdgeID, secondEdgeID, thirdEdgeID):
-      self.thisptr.setMeshTriangle (meshID, firstEdgeID, secondEdgeID, thirdEdgeID)
+   def set_mesh_triangle (self, mesh_id, first_edge_id, second_edge_id, third_edge_id):
+      self.thisptr.setMeshTriangle (mesh_id, first_edge_id, second_edge_id, third_edge_id)
 
-   def setMeshTriangleWithEdges (self, meshID, firstVertexID, secondVertexID, thirdVertexID):
-      self.thisptr.setMeshTriangleWithEdges (meshID, firstVertexID, secondVertexID, thirdVertexID)
+   def set_mesh_triangle_with_edges (self, mesh_id, first_vertex_id, second_vertex_id, third_vertex_id):
+      self.thisptr.setMeshTriangleWithEdges (mesh_id, first_vertex_id, second_vertex_id, third_vertex_id)
 
-   def setMeshQuad (self, int meshID, firstEdgeID, secondEdgeID, thirdEdgeID, fourthEdgeID):
-      self.thisptr.setMeshQuad (meshID, firstEdgeID, secondEdgeID, thirdEdgeID, fourthEdgeID)
+   def set_mesh_quad (self, int mesh_id, first_edge_id, second_edge_id, third_edge_id, fourth_edge_id):
+      self.thisptr.setMeshQuad (mesh_id, first_edge_id, second_edge_id, third_edge_id, fourth_edge_id)
 
-   def setMeshQuadWithEdges (self, meshID, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID):
-      self.thisptr.setMeshQuadWithEdges (meshID, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID)
+   def set_mesh_quad_with_edges (self, mesh_id, first_vertex_id, second_vertex_id, third_vertex_id, fourth_vertex_id):
+      self.thisptr.setMeshQuadWithEdges (mesh_id, first_vertex_id, second_vertex_id, third_vertex_id, fourth_vertex_id)
 
-   def mapReadDataTo (self, toMeshID):
-      self.thisptr.mapReadDataTo (toMeshID)
+   def map_read_data_to (self, to_mesh_id):
+      self.thisptr.mapReadDataTo (to_mesh_id)
 
-   def mapWriteDataFrom (self, fromMeshID):
-      self.thisptr.mapWriteDataFrom (fromMeshID)
+   def map_write_data_from (self, from_mesh_id):
+      self.thisptr.mapWriteDataFrom (from_mesh_id)
 
-   def writeBlockVectorData (self, dataID, size, valueIndices, values):
-      cdef int* valueIndices_
+   def write_block_vector_data (self, data_id, size, value_indices, values):
+      cdef int* value_indices_
       cdef double* values_
-      valueIndices_ = <int*> malloc(len(valueIndices) * sizeof(int))
+      value_indices_ = <int*> malloc(len(value_indices) * sizeof(int))
       values_ = <double*> malloc(len(values) * sizeof(double))
 
-      if valueIndices_ is NULL or values_ is NULL:
+      if value_indices_ is NULL or values_ is NULL:
          raise MemoryError()
       
-      for i in xrange(len(valueIndices)):
-         valueIndices_[i] = valueIndices[i]
+      for i in xrange(len(value_indices)):
+         value_indices_[i] = value_indices[i]
       for i in xrange(len(values)):
          values_[i] = values[i]
 
-      self.thisptr.writeBlockVectorData (dataID, size, valueIndices_, values_)
+      self.thisptr.writeBlockVectorData (data_id, size, value_indices_, values_)
 
-      for i in xrange(len(valueIndices)):
-         valueIndices[i] = valueIndices_[i]
+      for i in xrange(len(value_indices)):
+         value_indices[i] = value_indices_[i]
       for i in xrange(len(values)):
          values[i] = values_[i]
 
-      free(valueIndices_)
+      free(value_indices_)
       free(values_)
 
-   def writeVectorData (self, dataID, valueIndex, value):
+   def write_vector_data (self, data_id, value_index, value):
       cdef double* value_
       value_ = <double*> malloc(len(value) * sizeof(double))
 
@@ -285,65 +285,65 @@ cdef class Interface:
       for i in xrange(len(value)):
          value_[i] = value[i]
 
-      self.thisptr.writeVectorData (dataID, valueIndex, value_)
+      self.thisptr.writeVectorData (data_id, value_index, value_)
 
       for i in xrange(len(value)):
          value[i] = value_[i]
 
       free(value_)
 
-   def writeBlockScalarData (self, dataID, size, valueIndices, values):
-      cdef int* valueIndices_
+   def write_block_scalar_data (self, data_id, size, value_indices, values):
+      cdef int* value_indices_
       cdef double* values_
-      valueIndices_ = <int*> malloc(len(valueIndices) * sizeof(int))
+      value_indices_ = <int*> malloc(len(value_indices) * sizeof(int))
       values_ = <double*> malloc(len(values) * sizeof(double))
 
-      if valueIndices_ is NULL or values_ is NULL:
+      if value_indices_ is NULL or values_ is NULL:
          raise MemoryError()
       
-      for i in xrange(len(valueIndices)):
-         valueIndices_[i] = valueIndices[i]
+      for i in xrange(len(value_indices)):
+         value_indices_[i] = value_indices[i]
       for i in xrange(len(values)):
          values_[i] = values[i]
 
-      self.thisptr.writeBlockScalarData (dataID, size, valueIndices_, values_)
+      self.thisptr.writeBlockScalarData (data_id, size, value_indices_, values_)
 
-      for i in xrange(len(valueIndices)):
-         valueIndices[i] = valueIndices_[i]
+      for i in xrange(len(value_indices)):
+         value_indices[i] = value_indices_[i]
       for i in xrange(len(values)):
          values[i] = values_[i]
 
-      free(valueIndices_)
+      free(value_indices_)
       free(values_)
 
-   def writeScalarData (self, dataID, valueIndex, value):
-      self.thisptr.writeScalarData (dataID, valueIndex, value)
+   def write_scalar_data (self, data_id, value_index, value):
+      self.thisptr.writeScalarData (data_id, value_index, value)
 
-   def readBlockVectorData (self, dataID, size, valueIndices, values):
-      cdef int* valueIndices_
+   def read_block_vector_data (self, data_id, size, value_indices, values):
+      cdef int* value_indices_
       cdef double* values_
-      valueIndices_ = <int*> malloc(len(valueIndices) * sizeof(int))
+      value_indices_ = <int*> malloc(len(value_indices) * sizeof(int))
       values_ = <double*> malloc(len(values) * sizeof(double))
 
-      if valueIndices_ is NULL or values_ is NULL:
+      if value_indices_ is NULL or values_ is NULL:
          raise MemoryError()
       
-      for i in xrange(len(valueIndices)):
-         valueIndices_[i] = valueIndices[i]
+      for i in xrange(len(value_indices)):
+         value_indices_[i] = value_indices[i]
       for i in xrange(len(values)):
          values_[i] = values[i]
 
-      self.thisptr.readBlockVectorData (dataID, size, valueIndices_, values_)
+      self.thisptr.readBlockVectorData (data_id, size, value_indices_, values_)
 
-      for i in xrange(len(valueIndices)):
-         valueIndices[i] = valueIndices_[i]
+      for i in xrange(len(value_indices)):
+         value_indices[i] = value_indices_[i]
       for i in xrange(len(values)):
          values[i] = values_[i]
 
-      free(valueIndices_)
+      free(value_indices_)
       free(values_)
 
-   def readVectorData (self, dataID, valueIndex, value):
+   def read_vector_data (self, data_id, value_index, value):
       cdef double* value_
       value_ = <double*> malloc(len(value) * sizeof(double))
 
@@ -353,36 +353,36 @@ cdef class Interface:
       for i in xrange(len(value)):
          value_[i] = value[i]
 
-      self.thisptr.readVectorData (dataID, valueIndex, value_)
+      self.thisptr.readVectorData (data_id, value_index, value_)
 
       for i in xrange(len(value)):
          value[i] = value_[i]
 
       free(value_)
 
-   def readBlockScalarData (self, dataID, size, valueIndices, values):
-      cdef int* valueIndices_
+   def read_block_scalar_data (self, data_id, size, value_indices, values):
+      cdef int* value_indices_
       cdef double* values_
-      valueIndices_ = <int*> malloc(len(valueIndices) * sizeof(int))
+      value_indices_ = <int*> malloc(len(value_indices) * sizeof(int))
       values_ = <double*> malloc(len(values) * sizeof(double))
 
-      if valueIndices_ is NULL or values_ is NULL:
+      if value_indices_ is NULL or values_ is NULL:
          raise MemoryError()
       
-      for i in xrange(len(valueIndices)):
-         valueIndices_[i] = valueIndices[i]
+      for i in xrange(len(value_indices)):
+         value_indices_[i] = value_indices[i]
       for i in xrange(len(values)):
          values_[i] = values[i]
 
-      self.thisptr.readBlockScalarData (dataID, size, valueIndices_, values_)
+      self.thisptr.readBlockScalarData (data_id, size, value_indices_, values_)
 
-      for i in xrange(len(valueIndices)):
-         valueIndices[i] = valueIndices_[i]
+      for i in xrange(len(value_indices)):
+         value_indices[i] = value_indices_[i]
       for i in xrange(len(values)):
          values[i] = values_[i]
 
-      free(valueIndices_)
+      free(value_indices_)
       free(values_)
 
-   def readScalarData (self, int dataID, int valueIndex, double& value):
-      self.thisptr.readScalarData (dataID, valueIndex, value)
+   def read_scalar_data (self, int data_id, int value_index, double& value):
+      self.thisptr.readScalarData (data_id, value_index, value)
