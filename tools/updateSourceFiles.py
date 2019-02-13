@@ -3,6 +3,25 @@
 import os
 import glob
 import sys
+import subprocess
+
+""" Files matching this pattern will be filtered out """
+IGNORE_PATTERNS = ["drivers", "PySolverInterface"]
+
+""" Configured files, which should be ignored by git """
+CONFIGURED_SOURCES = ["src/versions.hpp"]
+
+
+def get_gitfiles():
+    ret = subprocess.run(["git", "ls-files", "--full-name"],
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE,
+                         check=False
+                         )
+    if ret.returncode != 0:
+        return None
+    else:
+        return ret.stdout.decode().split()
 
 
 def file_extension(name):
@@ -32,13 +51,12 @@ def get_file_lists(root):
     # Find interface c bindings
     bindings = glob.glob(os.path.join(src_dir, "precice", "bindings", "c", "*.h"))
     bindings = [os.path.relpath(b, root) for b in bindings]
-    ignore = ["drivers", "PySolverInterface"]
 
     # Find all test and source cpp files
     sources, tests = [], []
     exts = [".cpp", ".c", ".hpp", ".h"]
     for dir, _, filenames in os.walk(src_dir):
-        if any([elem in dir for elem in ignore]):
+        if any([elem in dir for elem in IGNORE_PATTERNS]):
             continue
         files = [
             os.path.relpath(os.path.join(dir, name), root)
@@ -101,6 +119,27 @@ def main():
         return 1
     sources, public, tests = get_file_lists(root)
     print("Detected:\n sources: {}\n public: {}\n tests: {}".format(len(sources), len(public), len(tests)))
+
+    gitfiles = get_gitfiles()
+    if gitfiles:
+        not_tracked = list(
+            set(sources + public + tests) - set(gitfiles + CONFIGURED_SOURCES)
+        )
+        if not_tracked:
+            print("The source tree contains files not tracked by git.")
+            print("Please do one of the following with them:")
+            print("  - track them using 'git add'")
+            print("  - add them to IGNORE_PATTERNS in this script")
+            print("  - add them to CONFIGURED_SOURCES in this script!")
+            print("Files:")
+            for file in not_tracked:
+                print("  {}".format(file))
+            print("VERIFICATION FAILED")
+            return 1
+        else:
+            print("Verification with git succeeded.")
+    else:
+        print("Git did not run successfully.\nThese sources are UNVERIFIED!")
 
     print("Generating CMake files")
     sources_file, tests_file = get_cmake_file_paths(root)
