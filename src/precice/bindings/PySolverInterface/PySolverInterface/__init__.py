@@ -2,7 +2,7 @@ import warnings
 
 warnings.warn("PySolverInterface is deprecated and will be removed in preCICE version 2.0.0, please use the python module precice instead", Warning, stacklevel=2)
 
-from PySolverInterface import PySolverInterface
+from PySolverInterface.PySolverInterface import PySolverInterface as PySolverInterface  # black magic, but works and will be deprecated in 2.0.0
 from precice import name_configuration as PyNameConfiguration
 from precice import data_displacements as PyDataDisplacements
 from precice import data_forces as PyDataForces
