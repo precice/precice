@@ -45,6 +45,7 @@ private:
 
 namespace precice {
 namespace utils {
+/// PETSc related utilities
 namespace petsc {
 
 enum VIEWERFORMAT { ASCII, BINARY };
@@ -219,6 +220,12 @@ public:
 
   /// Solves the linear system, returns false it not converged
   bool solve(Vector &b, Vector &x);
+
+  /// Solves the transposed linear system, returns false it not converged
+  bool solveTranspose(Vector &b, Vector &x);
+
+  /// Returns the iteration number of solver, either during or after the solve call.
+  PetscInt getIterationNumber();
 };
 
 

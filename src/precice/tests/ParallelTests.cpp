@@ -10,7 +10,7 @@
 #include "precice/config/Configuration.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/MasterSlave.hpp"
-#include "utils/EventTimings.hpp"
+#include "utils/Event.hpp"
 
 using namespace precice;
 
@@ -369,7 +369,9 @@ BOOST_AUTO_TEST_CASE(TestQN, * testing::OnSize(4))
       }
     }
     interface.finalize();
-    BOOST_TEST(iterations == correctIterations[k]);
+    // Depending on the hardware, QN can be slighly faster or slower leading to an iteration more or less.
+    BOOST_TEST(iterations <= correctIterations[k] + 1);
+    BOOST_TEST(iterations >= correctIterations[k] - 1);
   }
 }
 

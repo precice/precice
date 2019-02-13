@@ -90,17 +90,22 @@ find_path(NumPy_INCLUDE_DIR
   PATH_SUFFIXES numpy/core/include
   )
 
-set(NumPy_INCLUDE_DIRS ${NumPy_INCLUDE_DIR})
-
 # handle the QUIETLY and REQUIRED arguments and set NumPy_FOUND to TRUE if
 # all listed variables are TRUE
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(NumPy
-                                  REQUIRED_VARS
-                                    NumPy_INCLUDE_DIR
-                                    NumPy_CONV_TEMPLATE_EXECUTABLE
-                                    NumPy_FROM_TEMPLATE_EXECUTABLE
-                                  VERSION_VAR NumPy_VERSION
-                                  )
+find_package_handle_standard_args( NumPy
+    REQUIRED_VARS NumPy_INCLUDE_DIR NumPy_CONV_TEMPLATE_EXECUTABLE NumPy_FROM_TEMPLATE_EXECUTABLE
+    VERSION_VAR NumPy_VERSION
+    )
+
+
+if(NumPy_FOUND)
+    set(NumPy_INCLUDE_DIRS ${NumPy_INCLUDE_DIR})
+
+    if(NOT TARGET NumPy::NumPy)
+        add_library(NumPy::NumPy INTERFACE IMPORTED)
+        set_property(TARGET NumPy::NumPy PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${NumPy_INCLUDE_DIR}")
+    endif()
+endif()
 
 mark_as_advanced(NumPy_INCLUDE_DIR)

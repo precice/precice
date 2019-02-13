@@ -3,7 +3,7 @@
 #include "Mapping.hpp"
 #include "impl/BasisFunctions.hpp"
 #include "utils/MasterSlave.hpp"
-#include "utils/EventTimings.hpp"
+#include "utils/Event.hpp"
 
 #include <Eigen/Core>
 #include <Eigen/QR>

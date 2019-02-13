@@ -476,6 +476,23 @@ bool KSPSolver::solve(Vector &b, Vector &x)
   return (convReason > 0);
 }
 
+bool KSPSolver::solveTranspose(Vector &b, Vector &x)
+{
+  PetscErrorCode ierr = 0;
+  KSPConvergedReason convReason;
+  KSPSolveTranspose(ksp, b, x);
+  ierr = KSPGetConvergedReason(ksp, &convReason); CHKERRQ(ierr);
+  return (convReason > 0);
+}
+
+PetscInt KSPSolver::getIterationNumber()
+{
+  PetscErrorCode ierr = 0;
+  PetscInt its;
+  ierr = KSPGetIterationNumber(ksp, &its); CHKERRQ(ierr);
+  return its;
+}
+
 
 /////////////////////////////////////////////////////////////////////////
 

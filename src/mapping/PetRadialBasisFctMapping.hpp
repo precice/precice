@@ -13,7 +13,7 @@
 #include "config/MappingConfiguration.hpp"
 #include "utils/Petsc.hpp"
 namespace petsc = precice::utils::petsc;
-#include "utils/EventTimings.hpp"
+#include "utils/Event.hpp"
 
 // Forward declaration to friend the boost test struct
 namespace MappingTests {
@@ -117,7 +117,8 @@ private:
   /// Coordinates of the output mesh to evaluate the separated polynomial
   petsc::Matrix _matrixV;
 
-  petsc::Vector rescalingCoeffs;
+  /// Interpolant of g(x) = 1 evaluated at output sites, used for rescaling
+  petsc::Vector oneInterpolant;
 
   /// Used to solve matrixC for the RBF weighting factors
   petsc::KSPSolver _solver;
@@ -131,13 +132,13 @@ private:
   const double _solverRtol;
 
   /// true if the mapping along some axis should be ignored
-  bool* _deadAxis;
+  std::vector<bool> _deadAxis;
 
   /// Toggles the use of the additonal polynomial
   Polynomial _polynomial;
 
   /// Toggles use of rescaled basis functions, only active when Polynomial == SEPARATE
-  const bool useRescaling = true;
+  bool useRescaling = true;
 
   /// Number of coefficients for the integrated polynomial. Depends on dimension and number of dead dimensions
   size_t polyparams;
@@ -212,17 +213,13 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
   setInputRequirement(Mapping::MeshRequirement::VERTEX);
   setOutputRequirement(Mapping::MeshRequirement::VERTEX);
   
-  _deadAxis = new bool[dimensions];
   if (getDimensions()==2) {
-    _deadAxis[0] = xDead;
-    _deadAxis[1] = yDead;
+    _deadAxis = {xDead, yDead};
     CHECK(not (xDead and yDead), "You cannot choose all axes to be dead for a RBF mapping");
     CHECK(not zDead, "You cannot dead out the z-axis if dimension is set to 2");
   }
   else if (getDimensions()==3) {
-    _deadAxis[0] = xDead;
-    _deadAxis[1] = yDead;
-    _deadAxis[2] = zDead;
+    _deadAxis = {xDead, yDead, zDead};
     CHECK(not (xDead and yDead and zDead), "You cannot choose all axes to be dead for a RBF mapping");
   }
   else {
@@ -236,13 +233,11 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
   }
   polyparams =    (_polynomial == Polynomial::ON      ) ? 1 + dimensions - deadDimensions : 0;
   sepPolyparams = (_polynomial == Polynomial::SEPARATE) ? 1 + dimensions - deadDimensions : 0;
-  localPolyparams = utils::Parallel::getProcessRank() > 0 ? 0 : polyparams;
 }
 
 template<typename RADIAL_BASIS_FUNCTION_T>
 PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::~PetRadialBasisFctMapping()
 {
-  delete[] _deadAxis;
   petsc::destroy(&_AOmapping);
 }
 
@@ -267,7 +262,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
   assertion(input()->getDimensions() == output()->getDimensions(),
             input()->getDimensions(), output()->getDimensions());
-  int dimensions = input()->getDimensions();
+  int const dimensions = input()->getDimensions();
   mesh::PtrMesh inMesh;
   mesh::PtrMesh outMesh;
   if (getConstraint() == CONSERVATIVE) {
@@ -278,6 +273,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     inMesh = input();
     outMesh = output();
   }
+
+  // do not put that in the c'tor, getProcessRank always returns 0 there
+  localPolyparams = utils::Parallel::getProcessRank() > 0 ? 0 : polyparams;
 
   // Indizes that are used to build the Petsc AO mapping
   std::vector<PetscInt> myIndizes;
@@ -388,7 +386,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
     // -- SETS THE COEFFICIENTS --
     if (_preallocation == Preallocation::SAVE or _preallocation == Preallocation::TREE) {
-      const auto & rowVertices = vertexData[preallocRow];
+      auto const & rowVertices = vertexData[preallocRow];
       for (const auto & vertex : rowVertices) {
         rowVals[colNum] = _basisFunction.evaluate(vertex.second);
         colIdx[colNum++] = vertex.first;
@@ -397,7 +395,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     }
     else {
       for (const mesh::Vertex& vj : inMesh->vertices()) {
-        int col = vj.getGlobalIndex() + polyparams;
+        int const col = vj.getGlobalIndex() + polyparams;
         if (row > col)
           continue; // matrix is symmetric
         distance = inVertex.getCoords() - vj.getCoords();
@@ -406,9 +404,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
             distance[d] = 0;
           }
         }
-        if (_basisFunction.getSupportRadius() > distance.norm()) {
-          double coeff = _basisFunction.evaluate(distance.norm());
-          rowVals[colNum] = coeff;
+        double const norm = distance.norm();
+        if (_basisFunction.getSupportRadius() > norm) {
+          rowVals[colNum] = _basisFunction.evaluate(norm);
           colIdx[colNum++] = col; // column of entry is the globalIndex
         }
       }
@@ -475,7 +473,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     PetscScalar rowVals[_matrixA.getSize().second]; // holds the values of the entries
 
     if (_preallocation == Preallocation::SAVE or _preallocation == Preallocation::TREE) {
-      const auto & rowVertices = vertexData[row - ownerRangeABegin];
+      auto const & rowVertices = vertexData[row - ownerRangeABegin];
       for (const auto & vertex : rowVertices) {
         rowVals[colNum] = _basisFunction.evaluate(vertex.second);
         colIdx[colNum++] = vertex.first;
@@ -488,9 +486,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
           if (_deadAxis[d])
             distance[d] = 0;
         }
-        if (_basisFunction.getSupportRadius() > distance.norm()) {
-          double coeff = _basisFunction.evaluate(distance.norm());
-          rowVals[colNum] = coeff;
+        double const norm = distance.norm();
+        if (_basisFunction.getSupportRadius() > norm) {
+          rowVals[colNum] = _basisFunction.evaluate(norm);
           colIdx[colNum++] = inVertex.getGlobalIndex() + polyparams;
         }
       }
@@ -511,6 +509,10 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   ierr = MatAssemblyEnd(_matrixA, MAT_FINAL_ASSEMBLY); CHKERRV(ierr);
   _matrixQ.assemble();
   _matrixV.assemble();
+  
+  ePostFill.stop();
+
+  precice::utils::Event eSolverInit("map.pet.solverInit.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
 
   // -- CONFIGURE SOLVER FOR POLYNOMIAL --
   if (_polynomial == Polynomial::SEPARATE) {
@@ -525,7 +527,10 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   KSPSetOperators(_solver, _matrixC, _matrixC); CHKERRV(ierr);
   KSPSetTolerances(_solver, _solverRtol, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT);
   KSPSetInitialGuessNonzero(_solver, PETSC_TRUE); CHKERRV(ierr); // Reuse the results from the last iteration, held in the out vector.
+  KSPSetOptionsPrefix(_solver, "solverC_"); // s.t. options for only this solver can be set on the command line
   KSPSetFromOptions(_solver);
+
+  eSolverInit.stop();
 
   // if (totalNNZ > static_cast<size_t>(20*n)) {
   //   DEBUG("Using Cholesky decomposition as direct solver for dense matrix.");
@@ -536,13 +541,21 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   //   PCFactorSetShiftType(prec, MAT_SHIFT_NONZERO);
   // }
 
-  // -- COMPUTE RESCALING COEFFICIENTS USING THE SYSTEM MATRIX SOLVER --
+  // -- COMPUTE RESCALING COEFFICIENTS USING THE SYSTEM MATRIX C SOLVER --
   if (useRescaling and (_polynomial == Polynomial::SEPARATE)) {
-    petsc::Vector rhs(_matrixC);
-    ierr = MatCreateVecs(_matrixC, nullptr, &rescalingCoeffs.vector); CHKERRV(ierr);
+    precice::utils::Event eRescaling("map.pet.computeRescaling.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);    
+    petsc::Vector rhs(_matrixC), rescalingCoeffs(_matrixC);
     VecSet(rhs, 1);
     rhs.assemble();
-    _solver.solve(rhs, rescalingCoeffs);
+    if (not _solver.solve(rhs, rescalingCoeffs)) {
+      WARN("RBF rescaling linear system has not converged. Deactivating rescaling!");
+      useRescaling = false;
+    }
+    eRescaling.data.push_back(_solver.getIterationNumber());
+    ierr = MatCreateVecs(_matrixA, nullptr, &oneInterpolant.vector); CHKERRV(ierr);
+    ierr = MatMult(_matrixA, rescalingCoeffs, oneInterpolant); CHKERRV(ierr); // get the output of g(x) = 1
+    // set values close to zero to exactly 0.0, s.t. PointwiseDevide does not to devision on these entries
+    ierr = VecChop(oneInterpolant, 1e-6); CHKERRV(ierr);
   }
 
   _hasComputedMapping = true;
@@ -590,7 +603,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
   auto const & inValues = input()->data(inputDataID)->values();
   auto & outValues = output()->data(outputDataID)->values();
 
-  int valueDim = input()->data(inputDataID)->getDimensions();
+  int const valueDim = input()->data(inputDataID)->getDimensions();
   assertion(valueDim == output()->data(outputDataID)->getDimensions(),
             valueDim, output()->data(outputDataID)->getDimensions());
 
@@ -629,7 +642,10 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
         petsc::Vector tau(_matrixQ, "tau", petsc::Vector::RIGHT);
         ierr = MatMultTransposeAdd(_matrixQ, mu, epsilon, tau); CHKERRV(ierr);
         petsc::Vector sigma(_matrixQ, "sigma", petsc::Vector::LEFT);
-        ierr = KSPSolveTranspose(_QRsolver, tau, sigma); CHKERRV(ierr);
+        if (not _QRsolver.solveTranspose(tau, sigma)) {
+          KSPView(_QRsolver, PETSC_VIEWER_STDOUT_WORLD);
+          ERROR("RBF Polynomial linear system has not converged.");
+        }
         VecWAXPY(out, -1, sigma, mu);
       }
       else {
@@ -639,6 +655,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
           KSPView(_solver, PETSC_VIEWER_STDOUT_WORLD);
           ERROR("RBF linear system has not converged.");
         }
+        eSolve.data.push_back(_solver.getIterationNumber());
         eSolve.stop();
 
       }
@@ -705,19 +722,13 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
         KSPView(_solver, PETSC_VIEWER_STDOUT_WORLD);
         ERROR("RBF linear system has not converged.");
       }
+      eSolve.data.push_back(_solver.getIterationNumber());
       eSolve.stop();
 
       ierr = MatMult(_matrixA, p, out); CHKERRV(ierr);
 
-      if (useRescaling and (_polynomial == Polynomial::SEPARATE)) {
-        petsc::Vector temp(_matrixA);
-        PetscReal min;
-        ierr = MatMult(_matrixA, rescalingCoeffs, temp); CHKERRV(ierr); // get the output of g(x) = 1
-        ierr = VecMin(temp, nullptr, &min); CHKERRV(ierr); // check for zeros before devision
-        if (min < 1e-6)
-          WARN("Zero elements found in rescaling, omit rescaling.");
-        else
-          ierr = VecPointwiseDivide(out, out, temp); CHKERRV(ierr);
+      if (useRescaling and _polynomial == Polynomial::SEPARATE) {
+        ierr = VecPointwiseDivide(out, out, oneInterpolant); CHKERRV(ierr);
       }
 
       if (_polynomial == Polynomial::SEPARATE) {
@@ -1138,8 +1149,9 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::savedPreallocationMatrixC(mes
         if (_deadAxis[d])
           distance[d] = 0;
 
-      if (_basisFunction.getSupportRadius() > distance.norm() or col == global_row) {
-        vertexData[local_row - localPolyparams].emplace_back( vj.getGlobalIndex() + polyparams, distance.norm() );
+      double const norm = distance.norm();
+      if (_basisFunction.getSupportRadius() > norm or col == global_row) {
+        vertexData[local_row - localPolyparams].emplace_back(vj.getGlobalIndex() + polyparams, norm);
         if (mappedCol >= colOwnerRangeCBegin and mappedCol < colOwnerRangeCEnd)
           d_nnz[local_row]++;
         else
@@ -1218,10 +1230,11 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::savedPreallocationMatrixA(mes
       for (int d = 0; d < dimensions; d++)
         if (_deadAxis[d])
           distance[d] = 0;
-
-      if (_basisFunction.getSupportRadius() > distance.norm()) {
+      
+      double const norm = distance.norm();
+      if (_basisFunction.getSupportRadius() > norm) {
         col = inVertex.getGlobalIndex() + polyparams;
-        vertexData[localRow].emplace_back(col, distance.norm());
+        vertexData[localRow].emplace_back(col, norm);
 
         AOApplicationToPetsc(_AOmapping, 1, &col);
         if (col >= colOwnerRangeABegin and col < colOwnerRangeAEnd)
@@ -1256,15 +1269,16 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixC(mesh::
   namespace bg = boost::geometry;
 
   PetscInt n;
+  std::tie(n, std::ignore) = _matrixC.getLocalSize();
+  std::vector<PetscInt> d_nnz(n), o_nnz(n);
 
   auto tree = mesh::rtree::getVertexRTree(inMesh);
+
   double const supportRadius = _basisFunction.getSupportRadius();
 
   int dimensions = input()->getDimensions();
   Eigen::VectorXd distance(dimensions);
-
-  std::tie(n, std::ignore) = _matrixC.getLocalSize();
-  std::vector<PetscInt> d_nnz(n), o_nnz(n);
+  
   PetscInt colOwnerRangeCBegin, colOwnerRangeCEnd;
   std::tie(colOwnerRangeCBegin, colOwnerRangeCEnd) = _matrixC.ownerRangeColumn();
 
@@ -1297,7 +1311,7 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixC(mesh::
       std::back_inserter(results));
 
     // for (mesh::Vertex& vj : inMesh->vertices()) {
-    for (auto i : results) {
+    for (auto const i : results) {
       const mesh::Vertex & vj = inMesh->vertices()[i];
 
       PetscInt mappedCol = vj.getGlobalIndex() + polyparams;
@@ -1311,8 +1325,9 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixC(mesh::
         if (_deadAxis[d])
           distance[d] = 0;
 
-      if (supportRadius > distance.norm() or col == global_row) {
-        vertexData[local_row - localPolyparams].emplace_back( vj.getGlobalIndex() + polyparams, distance.norm() );
+      double const norm = distance.norm();
+      if (supportRadius > norm or col == global_row) {
+        vertexData[local_row - localPolyparams].emplace_back(vj.getGlobalIndex() + polyparams, norm);
         if (mappedCol >= colOwnerRangeCBegin and mappedCol < colOwnerRangeCEnd)
           d_nnz[local_row]++;
         else
@@ -1401,9 +1416,10 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixA(mesh::
           if (_deadAxis[d])
             distance[d] = 0;
 
-        if (supportRadius > distance.norm()) {
+        double const norm = distance.norm();
+        if (supportRadius > norm) {
           col = inVertex.getGlobalIndex() + polyparams;
-          vertexData[localRow].emplace_back(col, distance.norm());
+          vertexData[localRow].emplace_back(col, norm);
 
           AOApplicationToPetsc(_AOmapping, 1, &col);
           if (col >= colOwnerRangeABegin and col < colOwnerRangeAEnd)

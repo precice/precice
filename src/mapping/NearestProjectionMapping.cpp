@@ -1,7 +1,7 @@
 #include "NearestProjectionMapping.hpp"
 #include "query/FindClosest.hpp"
 #include <Eigen/Core>
-#include "utils/EventTimings.hpp"
+#include "utils/Event.hpp"
 #include "mesh/RTree.hpp"
 
 namespace precice {
@@ -125,6 +125,11 @@ void NearestProjectionMapping:: clear()
   TRACE();
   _weights.clear();
   _hasComputedMapping = false;
+  if (getConstraint() == CONSISTENT){
+    mesh::rtree::clear(*input()); 
+  } else {
+    mesh::rtree::clear(*output()); 
+  }
 }
 
 void NearestProjectionMapping:: map
