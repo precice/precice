@@ -224,7 +224,6 @@ target_sources(precice
     src/precice/bindings/fortran/SolverInterfaceFASTEST.hpp
     src/precice/bindings/fortran/SolverInterfaceFortran.cpp
     src/precice/bindings/fortran/SolverInterfaceFortran.hpp
-    src/precice/bindings/python/PySolverInterface.cpp
     src/precice/config/Configuration.cpp
     src/precice/config/Configuration.hpp
     src/precice/config/ParticipantConfiguration.cpp
