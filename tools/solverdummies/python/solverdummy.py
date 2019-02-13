@@ -6,8 +6,8 @@ import argparse
 import numpy as np
  
 from mpi4py import MPI
-import PySolverInterface
-from PySolverInterface import *
+import precice
+from precice import *
 
 parser = argparse.ArgumentParser()
 parser.add_argument("configurationFileName", help="Name of the xml config file.", type=str)
@@ -30,30 +30,30 @@ N = 1
 solverProcessIndex = 0
 solverProcessSize = 1
 
-interface = PySolverInterface(participantName, solverProcessIndex, solverProcessSize)
+interface = Interface(participantName, solverProcessIndex, solverProcessSize)
 interface.configure(configFileName)
     
-meshID = interface.getMeshID(meshName)
+meshID = interface.get_mesh_id(meshName)
 
-dimensions = interface.getDimensions()
+dimensions = interface.get_dimensions()
 vertex = np.zeros(dimensions)
 dataIndices = np.zeros(N)
 
-interface.setMeshVertices(meshID, N, vertex, dataIndices)
+interface.set_mesh_vertices(meshID, N, vertex, dataIndices)
 
 dt = interface.initialize()
     
-while interface.isCouplingOngoing():
+while interface.is_coupling_ongoing():
    
-    if interface.isActionRequired(PyActionWriteIterationCheckpoint()):
+    if interface.is_action_required(action_write_iteration_checkpoint()):
         print("DUMMY: Writing iteration checkpoint")
-        interface.fulfilledAction(PyActionWriteIterationCheckpoint())
+        interface.fulfilled_action(action_write_iteration_checkpoint())
     
     dt = interface.advance(dt)
     
-    if interface.isActionRequired(PyActionReadIterationCheckpoint()):
+    if interface.is_action_required(action_read_iteration_checkpoint()):
         print("DUMMY: Reading iteration checkpoint")
-        interface.fulfilledAction(PyActionReadIterationCheckpoint())
+        interface.fulfilled_action(action_read_iteration_checkpoint())
     else:
         print("DUMMY: Advancing in time")
     
