@@ -88,8 +88,8 @@ void SolverInterfaceImpl:: configure
   config::Configuration config;
   xml::configure(config.getXMLTag(), configurationFileName);
   if(_accessorProcessRank==0){
-    INFO("Configuring preCICE with configuration: \"" << configurationFileName << "\"" );
     INFO("This is preCICE version " << PRECICE_VERSION);
+    INFO("Configuring preCICE with configuration: \"" << configurationFileName << "\"" );
   }
   configure(config.getSolverInterfaceConfiguration());
 }
