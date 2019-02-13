@@ -35,11 +35,11 @@ $ python setup.py build --mpicompiler=mpicc
 
 # Using
 
-1. Import `PySolverInterface` into your code:
+1. Import `precice` into your code:
 
 ```
-import PySolverInterface
-from PySolverInterface import *
+import precice
+from precice import *
 ```
 
 2. If you use preCICE with MPI, you also have to add
@@ -57,5 +57,6 @@ sudo pip install mpi4py
 
 
 NOTE: 
-- For an example of how the `PySolverInterface` can be used, refer to the [1D elastic tube example](https://github.com/precice/precice/wiki/1D-elastic-tube-using-the-Python-API).
+- For an example of how the `precice` can be used, refer to the [1D elastic tube example](https://github.com/precice/precice/wiki/1D-elastic-tube-using-the-Python-API).
 - In case the compilation fails with `shared_ptr.pxd not found` messages, check if you use the latest version of Cython.
+- If you want to use the old interface (precice version < 1.4.0), please also install the corresponding wrapper [`PySolverInterface`](https://github.com/precice/precice/tree/changingNameOfPySolverInterface/src/precice/bindings/PySolverInterface) using `setup.py install`
