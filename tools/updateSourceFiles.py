@@ -32,12 +32,13 @@ def get_file_lists(root):
     # Find interface c bindings
     bindings = glob.glob(os.path.join(src_dir, "precice", "bindings", "c", "*.h"))
     bindings = [os.path.relpath(b, root) for b in bindings]
+    ignore = ["drivers", "PySolverInterface"]
 
     # Find all test and source cpp files
     sources, tests = [], []
     exts = [".cpp", ".c", ".hpp", ".h"]
     for dir, _, filenames in os.walk(src_dir):
-        if "drivers" in dir:
+        if any([elem in dir for elem in ignore]):
             continue
         files = [
             os.path.relpath(os.path.join(dir, name), root)
