@@ -444,7 +444,7 @@ public:
    * @param[in] meshID the id of the mesh to read the vertices from.
    * @param[in] size Number of vertices to lookup
    * @param[in] ids The ids of the vertices to lookup
-   * @param[inout] positions a pointer to memory to write the coordinates to
+   * @param[out] positions a pointer to memory to write the coordinates to
    *            The 2D-format is (d0x, d0y, d1x, d1y, ..., dnx, dny)
    *            The 3D-format is (d0x, d0y, d0z, d1x, d1y, d1z, ..., dnx, dny, dnz)
    *
@@ -467,7 +467,7 @@ public:
    * @param[in] positions Positions to find ids for.
    *            The 2D-format is (d0x, d0y, d1x, d1y, ..., dnx, dny)
    *            The 3D-format is (d0x, d0y, d0z, d1x, d1y, d1z, ..., dnx, dny, dnz)
-   * @param[inout] ids IDs corresponding to positions.
+   * @param[out] ids IDs corresponding to positions.
    *
    * @pre count of available elements at positions matches the configured dimension * size
    * @pre count of available elements at ids matches size
@@ -729,7 +729,7 @@ public:
    * @param[in] dataID ID to read from.
    * @param[in] size Number n of vertices.
    * @param[in] valueIndices Indices of the vertices.
-   * @param[inout] values pointer to read destination.
+   * @param[out] values pointer to read destination.
    *
    * @pre count of available elements at values matches the configured dimension * size
    * @pre count of available elements at valueIndices matches the given size
@@ -756,7 +756,7 @@ public:
    *
    * @param[in] dataID ID to read from.
    * @param[in] valueIndex Index of the vertex.
-   * @param[inout] value pointer to the vector value.
+   * @param[out] value pointer to the vector value.
    *
    * @pre count of available elements at value matches the configured dimension
    * @pre initialize() has been called
@@ -780,7 +780,7 @@ public:
    * @param[in] dataID ID to read from.
    * @param[in] size Number n of vertices.
    * @param[in] valueIndices Indices of the vertices.
-   * @param[inout] values pointer to the read destination.
+   * @param[out] values pointer to the read destination.
    *
    * @pre count of available elements at values matches the given size
    * @pre count of available elements at valueIndices matches the given size
@@ -803,7 +803,7 @@ public:
    *
    * @param[in] dataID ID to read from.
    * @param[in] valueIndex Index of the vertex.
-   * @param[inout] value read destination of the value.
+   * @param[out] value read destination of the value.
    *
    * @pre initialize() has been called
    *
