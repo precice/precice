@@ -31,6 +31,7 @@ All notable changes to this project will be documented in this file. For future 
   - CPack configuration of target `package` to generate binary debian, tar and zip packages.
   - Add `CMakeLists.txt` to `tools/solverdummy/cpp`. It is an example of how to link to precice with CMake.
   - Extend the displayed information when configuring.
+- Extend `updateSourceFiles.py` to verify the sources using `git ls-files --full-name` if available.
 - Fix the VTK XML exporter not to write VertexNormals
 
 ## 1.3.0
