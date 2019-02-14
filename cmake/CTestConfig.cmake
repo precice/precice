@@ -29,7 +29,7 @@ function(add_precice_test)
   set_tests_properties(${PAT_FULL_NAME}
     PROPERTIES
     RUN_SERIAL TRUE # Do not run this test in parallel with others
-    TIMEOUT 20 # Set the timeout to 60 seconds on this test
+    TIMEOUT 60 # Set the timeout to 60 seconds on this test
     WORKING_DIRECTORY "${PAT_WDIR}"
     )
   if(PAT_CANFAIL)
