@@ -1,8 +1,14 @@
 # Compilation
 
-**TODO: How do we build it with cmake? What do we have to set?...**
+## With CMake
 
-Do some cmake things...
+* preCICE has to be built using CMake! Otherwise it does not work.
+* Postpone for now **TODO**
+
+## Without CMake
+
+Add command `export LIBRARY_PATH=$PRECICE_ROOT/build/last:$LIBARY_PATH` to `~/.bashrc` and run `source ~/.bashrc`
+before running compilation command  
 
 # Run
 
