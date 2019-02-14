@@ -54,7 +54,7 @@ void ExportVTKXML::processDataNamesAndDimensions
   _vectorDataNames.clear();
   _scalarDataNames.clear();
   if (_writeNormals) {
-    _vectorDataNames.push_back("VertexNormals ");
+    _vectorDataNames.push_back("VertexNormals");
   }
   for (mesh::PtrData data : mesh.data()) {
     int dataDimensions = data->getDimensions();
@@ -258,6 +258,26 @@ void ExportVTKXML:: exportData
   }
   outFile << "\">" << std::endl;
 
+
+  // Print VertexNormals
+  if (_writeNormals) {
+    const auto dimensions = mesh.getDimensions();
+    outFile << "            <DataArray type=\"Float32\" Name=\"VertexNormals\" NumberOfComponents=\"";
+    outFile << std::max(3, dimensions) << "\" format=\"ascii\">" << std::endl;
+    outFile << "               ";
+    for (const auto& vertex : mesh.vertices()) {
+        const auto normal = vertex.getNormal();
+        for(int i=0; i < std::max(3, dimensions); i++){
+            if (i < dimensions) {
+                outFile << normal[i] << ' ';
+            } else {
+                outFile << "0.0 ";
+            }
+            outFile << ' ';
+        }
+    }
+    outFile << std::endl << "            </DataArray>" << std::endl;
+  }
   for (mesh::PtrData data : mesh.data()) { // Plot vertex data
     Eigen::VectorXd& values = data->values();
     int dataDimensions = data->getDimensions();
