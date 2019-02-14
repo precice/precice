@@ -269,40 +269,6 @@ include(${CMAKE_CURRENT_LIST_DIR}/src/tests.cmake)
 
 
 #
-# CTest
-#
-
-enable_testing()
-
-# Register the Base test
-set(PRECICE_TEST_DIR "${preCICE_BINARY_DIR}/TestOutput")
-file(MAKE_DIRECTORY ${PRECICE_TEST_DIR}/Base)
-add_test(NAME precice.Base
-  COMMAND "$<TARGET_FILE:testprecice>"
-  WORKING_DIRECTORY "${PRECICE_TEST_DIR}/Base"
-  )
-if(MPI AND MPIEXEC_EXECUTABLE)
-  # Register the MPI test for 2 Ranks
-  file(MAKE_DIRECTORY "${PRECICE_TEST_DIR}/MPI2")
-  add_test(NAME precice.MPI2
-    COMMAND "${MPIEXEC_EXECUTABLE}" -np 2 "$<TARGET_FILE:testprecice>"
-    WORKING_DIRECTORY "${PRECICE_TEST_DIR}/MPI2"
-    )
-  # Register the MPI test for 4 Ranks
-  file(MAKE_DIRECTORY "${PRECICE_TEST_DIR}/MPI4")
-  add_test(NAME precice.MPI4
-    COMMAND "${MPIEXEC_EXECUTABLE}" -np 4 "$<TARGET_FILE:testprecice>"
-    WORKING_DIRECTORY "${PRECICE_TEST_DIR}/MPI4"
-    )
-  set_tests_properties( precice.MPI2 precice.MPI4
-    PROPERTIES
-    RUN_SERIAL TRUE # Do not run this test in parallel with others
-    TIMEOUT 60 # Set the timeout to 60 seconds on this test
-    )
-endif()
-
-
-#
 # Install Targets for precice
 #
 
@@ -396,6 +362,13 @@ else()
     DESTINATION share/man
     )
 endif()
+
+
+#
+# CTest
+#
+
+include(${CMAKE_CURRENT_LIST_DIR}/cmake/CTestConfig.cmake)
 
 
 #
