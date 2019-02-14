@@ -70,6 +70,6 @@ if(MPI AND MPIEXEC_EXECUTABLE)
 else()
   # Configured without MPI
   add_precice_test(
-    NAME NoMPI
+    NAME Base
     )
 endif()
