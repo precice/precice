@@ -12,7 +12,7 @@ namespace action
  * @brief Abstract base class for configurable actions on data and/or meshes.
  *
  * Actions are executed on call of precice::SolverInterface::initialize(),
- * ::initializeData(), and ::advance(). They can change meshes and in particular
+ * precice::SolverInterface::initializeData(), and precice::SolverInterface::advance(). They can change meshes and in particular
  * data values.
  */
 class Action
@@ -52,6 +52,7 @@ public:
   /**
     * @brief Performs the action, to be overwritten by subclasses.
     *
+    * @param[in] time the current total simulation time. 
     * @param[in] dt Length of last local timestep computed.
     * @param[in] computedPartFullDt Sum of all local timesteps of current global timestep.
     * @param fullDt[in] Current global timestep length.

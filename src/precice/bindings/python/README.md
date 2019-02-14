@@ -8,6 +8,8 @@ Python language bindings for preCICE
 
 *Note:* If you installed Cython using `apt install Cython` under Ubuntu 16.04, you might face problems. Try installing using `pip2/3` instead.
 
+*Note:* If you have both Python 2 and Python 3 in your system, make sure that you use the correct version with `python2` or `python3` (the default `python` command may invoke the wrong version, giving you errors such as  not being able to find packages). You may actually want to change your default python version to Python 3 e.g. by setting up an alias (it has already been a while since Python 3 is around, that's probably a good idea!).
+
 # Building
 
 1. Open terminal in this folder.
@@ -17,16 +19,18 @@ Python language bindings for preCICE
 $ python setup.py build
 ```
 This creates a folder `build` with the binaries.
+
 3. Run 
 ```
 $ python setup.py install
 ```
 to install the module on your system. You might need `sudo`, depending on the how you have installed Python. You can use the option `--prefix=your/default/path` to install the module at an arbitrary path of your choice (for example, if you cannot or don't want to use `sudo`).
+
 4. Clean
 ```
 $ python setup.py clean --all
 ```
-again: depending on you system, you might need `sudo`.
+This will clean the (user's) build directory (you probably don't need these files as you already installed them elsewhere).
 
 It is recommended to use preCICE as a shared library here. `mpic++` is used as default compiler, if you want to use a different compiler, this can be done with the option `--mpicompiler=<yourcompiler>`. Example:
 ```

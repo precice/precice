@@ -36,6 +36,10 @@ public:
 
   ~VertexIterator();
 
+  /** Constructs a vertex iterator from a given group.
+   * @param[in] content the group of a mesh
+   * @param[in] begin true for the begin, and false for the end-iterator
+   */
   VertexIterator (
     const mesh::Group& content,
     bool               begin );
@@ -52,8 +56,10 @@ public:
 
   const VertexIterator operator*() const;
 
+  /// Returns the vertex id of the current vertex
   int vertexID() const;
 
+  /// Returns the coordinates of the current vertex
   const double* vertexCoords() const;
 
   bool operator== ( const VertexIterator& other ) const;
@@ -106,6 +112,10 @@ public:
 
   ~EdgeIterator ();
 
+  /** Constructs a edge iterator from a given group.
+   * @param[in] content the group of a mesh
+   * @param[in] begin true for the begin, and false for the end-iterator
+   */
   EdgeIterator (
     const mesh::Group& mesh,
     bool              begin );
@@ -121,8 +131,14 @@ public:
 
   const EdgeIterator operator*() const;
 
+  /** Returns the vertex coordinates of a vertex of the current edge
+   * @param[in] vertexIndex index of the vertex (0 or 1)
+   */
   const double* vertexCoords ( int vertexIndex ) const;
 
+  /** Returns the vertex ID of a vertex of the current edge
+   * @param[in] vertexIndex index of the vertex (0 or 1)
+   */
   int vertexID ( int vertexIndex ) const;
 
   bool operator== ( const EdgeIterator& other ) const;
@@ -183,6 +199,10 @@ public:
 
   ~TriangleIterator();
 
+  /** Constructs a triangle iterator from a given group.
+   * @param[in] content the group of a mesh
+   * @param[in] begin true for the begin, and false for the end-iterator
+   */
   TriangleIterator (
     const mesh::Group& content,
     bool               begin );
@@ -197,8 +217,14 @@ public:
 
   const TriangleIterator operator*() const;
 
+  /** Returns the vertex coordinates of a vertex of the current traingle
+   * @param[in] vertexIndex index of the vertex (0, 1 or 2)
+   */
   const double* vertexCoords ( int vertexIndex ) const;
 
+  /** Returns the vertex ID of a vertex of the current triangle
+   * @param[in] vertexIndex index of the vertex (0, 1 or 2)
+   */
   int vertexID ( int vertexIndex ) const;
 
   bool operator== ( const TriangleIterator& other ) const;
@@ -268,7 +294,9 @@ public:
    /**
     * @brief Standard constructor, not meant to be used by a solver.
     *
-    * @param[in] mesh The mesh representing the geometry.
+    * @param[in] content The mesh representing the geometry.
+    *
+    * @API precice::SolverInterface::getMeshHandle()
     */
    MeshHandle ( const mesh::Group& content );
 

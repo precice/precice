@@ -29,6 +29,7 @@
 #include <Eigen/Core>
 #include "partition/ReceivedPartition.hpp"
 #include "partition/ProvidedPartition.hpp"
+#include "versions.hpp"
 
 #include <csignal> // used for installing crash handler
 #include <utility>
@@ -87,6 +88,7 @@ void SolverInterfaceImpl:: configure
   config::Configuration config;
   xml::configure(config.getXMLTag(), configurationFileName);
   if(_accessorProcessRank==0){
+    INFO("This is preCICE version " << PRECICE_VERSION);
     INFO("Configuring preCICE with configuration: \"" << configurationFileName << "\"" );
   }
   configure(config.getSolverInterfaceConfiguration());
