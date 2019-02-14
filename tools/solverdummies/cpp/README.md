@@ -7,7 +7,8 @@
 
 ## Without CMake
 
-Add command `export LIBRARY_PATH=$PRECICE_ROOT/build/last:$LIBARY_PATH` to `~/.bashrc` and run `source ~/.bashrc`
+Add command `export LIBRARY_PATH=$PRECICE_ROOT/build/last:$LIBARY_PATH` and
+`export LIBRARY_PATH=$PRECICE_ROOT/build/last:$LIBARY_PATH` to `~/.bashrc` and run `source ~/.bashrc`
 before running compilation command  
 
 # Run
