@@ -22,6 +22,7 @@ Python language bindings for preCICE
 $ python setup.py build_ext --include-dirs=$PRECICE_ROOT/src --library-dirs=$PRECICE_ROOT/build/last
 ```
 This creates a folder `build` with the binaries.
+If you build preCICE using CMake, you can pass the path to the CMake binary directory using `--library-dirs`.
 4. Run 
 ```
 $ python setup.py install
