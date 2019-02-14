@@ -97,8 +97,8 @@ void precicef_ongoing_
 
 void precicef_write_data_required_
 (
-  double* computedTimestepLength,
-  int*    isRequired )
+  const double* computedTimestepLength,
+  int*          isRequired )
 {
   CHECK(impl != nullptr,errormsg);
   if (impl->isWriteDataRequired(*computedTimestepLength)){
