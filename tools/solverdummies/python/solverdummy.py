@@ -1,13 +1,9 @@
 from __future__ import division
 
-import os
-import sys
 import argparse
 import numpy as np
- 
-from mpi4py import MPI
 import precice
-from precice import *
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument("configurationFileName", help="Name of the xml config file.", type=str)
@@ -21,39 +17,39 @@ except SystemExit:
     print("Usage: python ./solverdummy precice-config participant-name mesh-name")    
     quit()
 
-configFileName = args.configurationFileName
-participantName = args.participantName
-meshName = args.meshName
+configuration_file_name = args.configurationFileName
+participant_name = args.participantName
+mesh_name = args.meshName
 
-N = 1
+n = 1
 
-solverProcessIndex = 0
-solverProcessSize = 1
+solver_process_index = 0
+solver_process_size = 1
 
-interface = Interface(participantName, solverProcessIndex, solverProcessSize)
-interface.configure(configFileName)
+interface = precice.Interface(participant_name, solver_process_index, solver_process_size)
+interface.configure(configuration_file_name)
     
-meshID = interface.get_mesh_id(meshName)
+mesh_id = interface.get_mesh_id(mesh_name)
 
 dimensions = interface.get_dimensions()
 vertex = np.zeros(dimensions)
-dataIndices = np.zeros(N)
+data_indices = np.zeros(n)
 
-interface.set_mesh_vertices(meshID, N, vertex, dataIndices)
+interface.set_mesh_vertices(mesh_id, n, vertex, data_indices)
 
 dt = interface.initialize()
     
 while interface.is_coupling_ongoing():
    
-    if interface.is_action_required(action_write_iteration_checkpoint()):
+    if interface.is_action_required(precice.action_write_iteration_checkpoint()):
         print("DUMMY: Writing iteration checkpoint")
-        interface.fulfilled_action(action_write_iteration_checkpoint())
+        interface.fulfilled_action(precice.action_write_iteration_checkpoint())
     
     dt = interface.advance(dt)
     
-    if interface.is_action_required(action_read_iteration_checkpoint()):
+    if interface.is_action_required(precice.action_read_iteration_checkpoint()):
         print("DUMMY: Reading iteration checkpoint")
-        interface.fulfilled_action(action_read_iteration_checkpoint())
+        interface.fulfilled_action(precice.action_read_iteration_checkpoint())
     else:
         print("DUMMY: Advancing in time")
     
