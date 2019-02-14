@@ -6,7 +6,7 @@ import sys
 import subprocess
 
 """ Files matching this pattern will be filtered out """
-IGNORE_PATTERNS = ["drivers", "PySolverInterface"]
+IGNORE_PATTERNS = ["drivers", "bindings/python"]
 
 """ Configured files, which should be ignored by git """
 CONFIGURED_SOURCES = ["src/versions.hpp"]
@@ -67,6 +67,7 @@ def get_file_lists(root):
             tests += files
         else:
             sources += files
+    sources += CONFIGURED_SOURCES
 
     # Remove bindings from the sources
     sources = [source for source in sources if source not in bindings]
@@ -118,7 +119,7 @@ def main():
         print("Current dir {} is not the root of the precice repository!".format(root))
         return 1
     sources, public, tests = get_file_lists(root)
-    print("Detected:\n sources: {}\n public: {}\n tests: {}".format(len(sources), len(public), len(tests)))
+    print("Detected:\n  sources: {}\n  public: {}\n  tests: {}".format(len(sources), len(public), len(tests)))
 
     gitfiles = get_gitfiles()
     if gitfiles:
@@ -134,12 +135,12 @@ def main():
             print("Files:")
             for file in not_tracked:
                 print("  {}".format(file))
-            print("VERIFICATION FAILED")
-            return 1
+            print("Verification FAILED")
         else:
-            print("Verification with git succeeded.")
+            print("Verification SUCCEEDED")
     else:
-        print("Git did not run successfully.\nThese sources are UNVERIFIED!")
+        print("Git did not run successfully.")
+        print("Verification SKIPPED")
 
     print("Generating CMake files")
     sources_file, tests_file = get_cmake_file_paths(root)
