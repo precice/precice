@@ -7,7 +7,7 @@ Python language bindings for preCICE
 
 # Dependencies
 
-* Download and install Cython from http://cython.org/#download or install it using your package manager (e.g. `pip install Cython` or `pip3 install Cython`). 
+* Download and install Cython from http://cython.org/#download or install it using your package manager (e.g. `pip install --user Cython` or `pip3 install --user Cython`). 
 * Only necessary, if your are using python2: Install Enum using your package manager (e.g. `sudo apt install python-enum34`)
 
 *Note:* If you installed Cython using `apt install Cython` under Ubuntu 16.04, you might face problems. Try installing using `pip2/3` instead.
