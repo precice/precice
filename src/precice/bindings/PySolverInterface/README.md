@@ -19,7 +19,7 @@ Python language bindings for preCICE
 3. Execute the following command:
 
 ```
-$ python setup.py build
+$ python setup.py build_ext --include-dirs=$PRECICE_ROOT/src --library-dirs=$PRECICE_ROOT/build/last
 ```
 This creates a folder `build` with the binaries.
 4. Run 
