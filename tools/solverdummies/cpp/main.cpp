@@ -41,7 +41,7 @@ int main (int argc, char **argv)
 
   using namespace precice;
   using namespace precice::constants;
-
+/*
   if (argc == 1 || (argc != 3 && argc != 8)){
     PRINT("Usage: ./solverdummy configFile solverName [meshName readDataName writeDataName computationTimeInSeconds N]");
     PRINT("");
@@ -58,20 +58,16 @@ int main (int argc, char **argv)
     PRINT("  N:                 Number of vertices");
     return 1;
   }
+*/
   std::string configFileName(argv[1]);
   std::string solverName(argv[2]);
   bool readWriteData = false;
   std::string meshName;
-  std::string readDataName;
-  std::string writeDataName;
   double computationTime = 0.0;
   int N = -1;
   if (argc > 3){
-    readWriteData = true;
     PRINT("Reading and writing data");
     meshName = argv[3];
-    readDataName = argv[4];
-    writeDataName = argv[5];
     computationTime = atof(argv[6]);
     N = atoi(argv[7]);
   }
@@ -83,13 +79,9 @@ int main (int argc, char **argv)
   int computedTimeSteps = 0;
 
   int meshID = -1;
-  int readDataID = -1;
-  int writeDataID = -1;
   int dimensions = -1;
   if (readWriteData){
     meshID = interface.getMeshID(meshName);
-    readDataID = interface.getDataID(readDataName, meshID);
-    writeDataID = interface.getDataID(writeDataName, meshID);
     dimensions = interface.getDimensions();
   }
 
@@ -141,10 +133,6 @@ int main (int argc, char **argv)
   double mpi_read_time = 0.0;
   double mpi_write_time = 0.0;
 
-  if (readWriteData && interface.isReadDataAvailable()){
-    interface.readBlockVectorData(readDataID, dataSize, dataIndices, data);
-  }
-
   while (interface.isCouplingOngoing()){
     // When an implicit coupling scheme is used, checkpointing is required
     if (interface.isActionRequired(actionWriteIterationCheckpoint())){
@@ -166,7 +154,6 @@ int main (int argc, char **argv)
     double mpi_write_time_start = MPI_Wtime();
     if (readWriteData){
       data[dataSize*dimensions-1] = computedTimeSteps;
-      interface.writeBlockVectorData(writeDataID, dataSize, dataIndices, data);
     }
     double mpi_write_time_end = MPI_Wtime();
     mpi_write_time += mpi_write_time_end - mpi_write_time_start;
@@ -178,7 +165,6 @@ int main (int argc, char **argv)
 
     double mpi_read_time_start = MPI_Wtime();
     if (readWriteData && interface.isReadDataAvailable()){
-      interface.readBlockVectorData(readDataID, dataSize, dataIndices, data);
       PRINT("data = " << data[dataSize*dimensions-1]);
     }
     double mpi_read_time_end = MPI_Wtime();
