@@ -1,3 +1,8 @@
+"""precice
+
+The python module precice offers python language bindings to the C++ coupling library precice. Please refer to precice.org for further information.
+"""
+
 from cpython       cimport array
 from libcpp        cimport bool
 from libc.stdlib   cimport free
