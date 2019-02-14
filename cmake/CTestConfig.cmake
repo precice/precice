@@ -73,3 +73,13 @@ else()
     NAME Base
     )
 endif()
+
+
+# Add a separate target to test only the base
+add_custom_target(
+  test_base
+  COMMAND ctest -V -R precice.Base
+  DEPENDS testprecice
+  WORKING_DIRECTORY ${preCICE_BINARY_DIR}
+  USES_TERMINAL
+  )
