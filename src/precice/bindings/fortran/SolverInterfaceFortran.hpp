@@ -1,9 +1,8 @@
 #pragma once
 
-/**
- * @file This file contains a Fortran 77 compatible interface written in C/C++.
+/** @file
+ * This file contains a Fortran 77 compatible interface written in C/C++.
  *
- * It has been tested with: gfortran 4.4.3, ifort 12.1.0
  *
  * Every method has a Fortran syntax equivalent in the method comment, and a
  * listing for input and output variables. A variable can be input and output

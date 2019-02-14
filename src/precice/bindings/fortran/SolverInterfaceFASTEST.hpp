@@ -1,7 +1,8 @@
 #pragma once
 
 /**
- * @file This file contains a specific FASTEST Fortran 77 compatible interface
+ * @file 
+ * This file contains a specific FASTEST Fortran 77 compatible interface
  * written in C/C++. The specialty is that we offer here 2 interfaces. We need
  * this since FASTEST uses an internal subcycling, coupling the FASTEST fluid
  * solver to a structure solver at big timesteps and the FASTEST acoustic solver
