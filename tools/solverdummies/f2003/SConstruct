@@ -1,0 +1,31 @@
+import os
+
+cpppath = ['.']
+libpath = []
+libs    = []
+
+preciceRootPath = os.getenv('PRECICE_ROOT')
+cpppath.append(preciceRootPath + '/src/')
+
+# Libs
+libpath.append(preciceRootPath + '/build/last/')
+libs.append('precice')
+
+fortranCompiler = 'gfortran'
+
+envCompile = Environment (
+   F2003      = fortranCompiler, 
+   F90        = fortranCompiler,
+   F77        = fortranCompiler,
+   FORTRAN    = fortranCompiler,
+   CPPPATH    = cpppath,
+   LIBPATH    = libpath,
+   LIBS       = libs,
+   ENV        = os.environ  # propagates environment variables to scons  
+   )
+  
+envCompile.Object('SolverDummy.f03')
+
+
+envLink = envCompile.Clone(tools=[fortranCompiler],F2003=fortranCompiler,LINK=fortranCompiler)
+envLink.Program(target='SolverDummy', source = ['SolverDummy'])
