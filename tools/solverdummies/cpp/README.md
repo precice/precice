@@ -3,8 +3,8 @@
 For building the C++ solverdummies you first have to modify your `LIBRARY_PATH` and `LD_LIBRARY_PATH` such that `libprecice.so` can be found. You can, for example add the following lines to your `~/.bashrc`:
 
 ```
-export LIBRARY_PATH=$PRECICE_ROOT/build/last:$LIBARY_PATH
-export LD_LIBRARY_PATH=$PRECICE_ROOT/build/last:$LD_LIBARY_PATH
+export LIBRARY_PATH=$PRECICE_ROOT/build/last:$LIBRARY_PATH
+export LD_LIBRARY_PATH=$PRECICE_ROOT/build/last:$LD_LIBRARY_PATH
 export CPLUS_INCLUDE_PATH=$PRECICE_ROOT/src:$CPLUS_INCLUDE_PATH
 ```
 

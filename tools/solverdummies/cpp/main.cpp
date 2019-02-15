@@ -65,7 +65,7 @@ int main (int argc, char **argv)
   }
 
   interface.finalize();
-  std::cout << "DUMMY: Closing python solver dummy..." << std::endl;
+  std::cout << "DUMMY: Closing C++ solver dummy..." << std::endl;
 
   return 0;
 }
