@@ -79,4 +79,15 @@ install(FILES "${PRECICE_PACKAGING_DIR}/lintian-override"
   RENAME ${CPACK_PACKAGE_NAME}
   )
 
+# Configure a pkg-config file for the debian package
+configure_file(
+  "${PROJECT_SOURCE_DIR}/tools/packaging/debian/precice.pc.in"
+  "${PRECICE_PACKAGING_DIR}/pkgconfig/${CPACK_PACKAGE_NAME}.pc"
+  @ONLY
+  )
+install(DIRECTORY "${PRECICE_PACKAGING_DIR}/pkgconfig" 
+  DESTINATION lib/${CMAKE_CXX_LIBRARY_ARCHITECTURE}
+)
+
+
 include(CPack)
