@@ -1,7 +1,7 @@
 #import os
 from libcpp.string cimport string
 
-cdef extern from "./src/precice/Constants.hpp"  namespace "precice::constants":
+cdef extern from "precice/Constants.hpp"  namespace "precice::constants":
 
    const string& nameConfiguration()
 
@@ -14,15 +14,6 @@ cdef extern from "./src/precice/Constants.hpp"  namespace "precice::constants":
    const string& actionReadIterationCheckpoint()
    const string& actionPlotOutput()
 
-   int exportVTK()
-   int exportAll()
-
-cdef extern from "./src/cplscheme/Constants.hpp" namespace "precice::cplscheme::constants":
-   const string& actionWriteIterationCheckpoint()
-   const string& actionReadIterationCheckpoint()
-   const string& actionWriteInitialData()
-
-cdef extern from "./src/io/Constants.hpp" namespace "precice::io::constants":
    int exportVTK()
    int exportAll()
 

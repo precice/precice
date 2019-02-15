@@ -28,7 +28,7 @@ cdef bytes convert(s):
 
 include "constants.pyx"
 
-cdef extern from "./src/precice/SolverInterface.hpp"  namespace "precice":
+cdef extern from "precice/SolverInterface.hpp"  namespace "precice":
    cdef cppclass SolverInterface:
       SolverInterface (const string&, int, int) except +
 

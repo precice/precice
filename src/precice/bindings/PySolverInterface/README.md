@@ -19,24 +19,25 @@ Python language bindings for preCICE
 3. Execute the following command:
 
 ```
-$ python setup.py build_ext --include-dirs=$PRECICE_ROOT/src --library-dirs=$PRECICE_ROOT/build/last
+$ python3 setup.py build
 ```
 This creates a folder `build` with the binaries.
-If you build preCICE using CMake, you can pass the path to the CMake binary directory using `--library-dirs`.
+
 4. Run 
 ```
-$ python setup.py install
+$ python3 setup.py install --user
 ```
 to install the module on your system. You might need `sudo`, depending on the how you have installed Python. You can use the option `--prefix=your/default/path` to install the module at an arbitrary path of your choice (for example, if you cannot or don't want to use `sudo`).
+
 5. Clean
 ```
-$ python setup.py clean --all
+$ python3 setup.py clean --all
 ```
 again: depending on you system, you might need `sudo`.
 
 It is recommended to use preCICE as a shared library here. `mpic++` is used as default compiler, if you want to use a different compiler, this can be done with the option `--mpicompiler=<yourcompiler>`. Example:
 ```
-$ python setup.py build --mpicompiler=mpicc
+$ python3 setup.py build --mpicompiler=mpicc
 ```
 
 # Using
@@ -62,6 +63,6 @@ sudo pip install mpi4py
 ```
 
 
-NOTE: 
+**NOTE:**
 - For an example of how the `PySolverInterface` can be used, refer to the [1D elastic tube example](https://github.com/precice/precice/wiki/1D-elastic-tube-using-the-Python-API).
 - In case the compilation fails with `shared_ptr.pxd not found` messages, check if you use the latest version of Cython.

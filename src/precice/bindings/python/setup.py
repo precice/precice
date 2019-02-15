@@ -12,8 +12,6 @@ from distutils.command.build import build
 APPNAME = "precice"
 
 PYTHON_BINDINGS_PATH = os.path.dirname(os.path.abspath(__file__))
-PRECICE_ROOT = os.path.join(PYTHON_BINDINGS_PATH, "../../../..")
-
 
 class MpiImplementations(Enum):
     OPENMPI = 1
@@ -23,9 +21,9 @@ class MpiImplementations(Enum):
 def check_mpi_implementation(mpi_compiler_wrapper):
     FNULL = open(os.devnull, 'w')  # used to supress output of subprocess.call
 
-    if subprocess.call([mpi_compiler_wrapper,"-showme:compile"], stdout=FNULL, stderr=FNULL) == 0:
+    if subprocess.call([mpi_compiler_wrapper, "-showme:compile"], stdout=FNULL, stderr=FNULL) == 0:
         PRECICE_MPI_IMPLEMENTATION = MpiImplementations.OPENMPI
-    elif subprocess.call([mpi_compiler_wrapper,"-compile-info"], stdout=FNULL, stderr=FNULL) == 0:
+    elif subprocess.call([mpi_compiler_wrapper, "-compile-info"], stdout=FNULL, stderr=FNULL) == 0:
         PRECICE_MPI_IMPLEMENTATION = MpiImplementations.MPICH
     else:
         raise Exception("unknown/no mpi++")
@@ -52,17 +50,15 @@ def determine_mpi_args(mpi_compiler_wrapper):
 
 def get_extensions(mpi_compiler_wrapper):
     mpi_compile_args, mpi_link_args = determine_mpi_args(mpi_compiler_wrapper)
-
-    # need to include libs here, because distutils messes up the order
-    compile_args = ["-I" + PRECICE_ROOT, "-Wall", "-std=c++11"] + mpi_compile_args
-    link_args = ["-L" + os.path.join(PRECICE_ROOT, "build/last/"), "-lprecice"] + mpi_link_args
+    
+    compile_args = ["-Wall", "-std=c++11"] + mpi_compile_args
+    link_args = ["-lprecice"] + mpi_link_args
 
     return [
         Extension(
                 APPNAME,
                 sources=[os.path.join(PYTHON_BINDINGS_PATH, APPNAME) + ".pyx"],
                 libraries=[],
-                include_dirs=[PRECICE_ROOT],
                 language="c++",
                 extra_compile_args=compile_args,
                 extra_link_args=link_args
