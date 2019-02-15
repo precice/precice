@@ -7,5 +7,5 @@ Name: preCICE
 Description: preCICE coupling library
 Version: @preCICE_VERSION@
 URL: https://www.precice.org
-Libs: -L${libdir} -lprecice@preCICE_VERSION@
+Libs: -L${libdir} -lprecice
 Cflags: -I${includedir}
