@@ -6,7 +6,7 @@ set(PRECICE_TEST_DIR "${preCICE_BINARY_DIR}/TestOutput")
 mark_as_advanced(PRECICE_TEST_DIR)
 
 function(add_precice_test)
-  cmake_parse_arguments(PARSE_ARGV 0 PAT "MPI;CANFAIL" "NAME;ARGUMENTS" "")
+  cmake_parse_arguments(PARSE_ARGV 0 PAT "MPI;CANFAIL" "NAME;ARGUMENTS;TIMEOUT" "")
   if(NOT PAT_NAME)
     message(FATAL_ERROR "Argument NAME not passed")
   endif()
@@ -29,9 +29,11 @@ function(add_precice_test)
   set_tests_properties(${PAT_FULL_NAME}
     PROPERTIES
     RUN_SERIAL TRUE # Do not run this test in parallel with others
-    TIMEOUT 60 # Set the timeout to 60 seconds on this test
     WORKING_DIRECTORY "${PAT_WDIR}"
     )
+  if(PAT_TIMEOUT)
+    set_tests_properties(${PAT_FULL_NAME} PROPERTIES TIMEOUT ${PAT_TIMEOUT} )
+  endif()
   if(PAT_CANFAIL)
     set_tests_properties(${PAT_FULL_NAME} PROPERTIES LABELS "canfail")
   endif()
@@ -45,22 +47,26 @@ if(MPI AND MPIEXEC_EXECUTABLE)
   add_precice_test(
     NAME Base
     ARGUMENTS "--run_test=\!@MPI_Ports:\!MappingTests/PetRadialBasisFunctionMapping/Parallel/\*"
+    TIMEOUT 180
     MPI
     )
   add_precice_test(
     NAME MPI_Ports
     ARGUMENTS "--run_test=@MPI_Ports"
+    TIMEOUT 20
     MPI
     CANFAIL
     )
   add_precice_test(
     NAME PetRBFParallel
     ARGUMENTS "--run_test=MappingTests/PetRadialBasisFunctionMapping/Parallel/\*"
+    TIMEOUT 20
     MPI
     CANFAIL
     )
   add_precice_test(
     NAME Full
+    TIMEOUT 180
     MPI
     CANFAIL
     )
