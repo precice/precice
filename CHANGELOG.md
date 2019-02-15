@@ -3,6 +3,7 @@
 All notable changes to this project will be documented in this file. For future plans, see our [Roadmap](https://github.com/precice/precice/wiki/Roadmap).
 
 ## develop
+- The python module for the preCICE bindings `PySolverInterface` is renamed to `precice`. This change does not break old code. Please refer to DOCUMENTATION.
 - Use boost stacktrace for cross platform stacktrace printing. This requires Boost 1.65.1
 - Reimplemented the internals of the nearest-projection mapping to signifantly reduce its initialization time.
 - The EventTimings now do a time normalization among all ranks, i.e., the the first event is considered to happen at t=0, all other events are adapted thereto.

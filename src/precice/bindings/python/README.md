@@ -1,5 +1,5 @@
 Python language bindings for preCICE
-----------------------------
+------------------------------------
 
 # Dependencies
 
@@ -16,34 +16,37 @@ Python language bindings for preCICE
 2. Execute the following command:
 
 ```
-$ python setup.py build
+$ python3 setup.py build_ext --include-dirs=$PRECICE_ROOT/src --library-dirs=$PRECICE_ROOT/build/last
 ```
 This creates a folder `build` with the binaries.
+If you build preCICE using CMake, you can pass the path to the CMake binary directory using `--library-dirs`.
 
 3. Run 
 ```
-$ python setup.py install
+$ python3 setup.py install --user
 ```
 to install the module on your system. You might need `sudo`, depending on the how you have installed Python. You can use the option `--prefix=your/default/path` to install the module at an arbitrary path of your choice (for example, if you cannot or don't want to use `sudo`).
 
 4. Clean
 ```
-$ python setup.py clean --all
+$ python3 setup.py clean --all
 ```
 This will clean the (user's) build directory (you probably don't need these files as you already installed them elsewhere).
 
 It is recommended to use preCICE as a shared library here. `mpic++` is used as default compiler, if you want to use a different compiler, this can be done with the option `--mpicompiler=<yourcompiler>`. Example:
 ```
-$ python setup.py build --mpicompiler=mpicc
+$ python3 setup.py build --mpicompiler=mpicc
 ```
+
+**NOTE:** If you used scons for building precice and `PRECICE_ROOT` is defined, you can also use the script `build_and_install.sh`.
 
 # Using
 
-1. Import `PySolverInterface` into your code:
+1. Import `precice` into your code:
 
 ```
-import PySolverInterface
-from PySolverInterface import *
+import precice
+from precice import *
 ```
 
 2. If you use preCICE with MPI, you also have to add
@@ -60,6 +63,7 @@ sudo pip install mpi4py
 ```
 
 
-NOTE: 
-- For an example of how the `PySolverInterface` can be used, refer to the [1D elastic tube example](https://github.com/precice/precice/wiki/1D-elastic-tube-using-the-Python-API).
+**NOTE:**
+- For an example of how the `precice` can be used, refer to the [1D elastic tube example](https://github.com/precice/precice/wiki/1D-elastic-tube-using-the-Python-API).
 - In case the compilation fails with `shared_ptr.pxd not found` messages, check if you use the latest version of Cython.
+- If you want to use the old interface (precice version < 1.4.0), please also install the corresponding wrapper [`PySolverInterface`](https://github.com/precice/precice/tree/changingNameOfPySolverInterface/src/precice/bindings/PySolverInterface) using `setup.py install`.
