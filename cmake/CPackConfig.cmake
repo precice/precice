@@ -86,7 +86,7 @@ configure_file(
   @ONLY
   )
 install(DIRECTORY "${PRECICE_PACKAGING_DIR}/pkgconfig" 
-  DESTINATION lib/${CMAKE_CXX_LIBRARY_ARCHITECTURE}
+  DESTINATION lib
 )
 
 
