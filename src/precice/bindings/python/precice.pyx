@@ -1,3 +1,8 @@
+"""precice
+
+The python module precice offers python language bindings to the C++ coupling library precice. Please refer to precice.org for further information.
+"""
+
 from cpython       cimport array
 from libcpp        cimport bool
 from libc.stdlib   cimport free
@@ -23,7 +28,7 @@ cdef bytes convert(s):
 
 include "constants.pyx"
 
-cdef extern from "./src/precice/SolverInterface.hpp"  namespace "precice":
+cdef extern from "precice/SolverInterface.hpp"  namespace "precice":
    cdef cppclass SolverInterface:
       SolverInterface (const string&, int, int) except +
 
