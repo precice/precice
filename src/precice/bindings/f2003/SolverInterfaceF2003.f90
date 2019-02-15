@@ -174,7 +174,7 @@ module PreCICE_solver_if_module
       integer(kind=c_int) :: size
       real(kind=c_double) :: positions(*)
       integer(kind=c_int) :: ids(*)
-    end subroutine precicef_get_vertices_from_positions   
+    end subroutine precicef_get_vertex_ids_from_positions   
 
     subroutine precicef_set_edge(meshID, firstVertexID, secondVertexID, &
       &                          edgeID) &
