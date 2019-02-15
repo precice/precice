@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file. For future 
 
 ## develop
 - The python module for the preCICE bindings `PySolverInterface` is renamed to `precice`. This change does not break old code. Please refer to [`precice/src/precice/bindings/python/README.md`](https://github.com/precice/precice/blob/develop/src/precice/bindings/python/README.md) for more informaiton.
+- Add a pkgconfig for libprecice
 - Use boost stacktrace for cross platform stacktrace printing. This requires Boost 1.65.1
 - Add explicit linking to `libdl` for `boost::stacktrace`
 - Reimplemented the internals of the nearest-projection mapping to signifantly reduce its initialization time.
