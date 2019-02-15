@@ -186,7 +186,7 @@ if env["petsc"]:
     else:
         checkAdd("petsc")
     # Set PETSC_VERSION to correct values 
-    with open(join(PETSC_DIR, "include/petscversion.h"), "r") as versionfile:
+    with open(join( join(PETSC_DIR, PETSC_ARCH), "include/petscversion.h"), "r") as versionfile:
         for line in versionfile:
             tokens = line.split()
             try:
