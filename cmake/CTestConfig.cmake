@@ -65,12 +65,6 @@ if(MPI AND MPIEXEC_EXECUTABLE)
     CANFAIL
     )
   add_precice_test(
-    NAME Full
-    TIMEOUT 180
-    MPI
-    CANFAIL
-    )
-  add_precice_test(
     NAME NoMPI
     )
 else()
