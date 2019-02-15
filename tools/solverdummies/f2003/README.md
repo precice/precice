@@ -1,6 +1,12 @@
+This is an experimental example of a Fortran2003 solver dummy. Please contribute your suggestions for improvements on GitHub.
+
 # Compilation
 
-Simply type `scons`. Assumption: preCICE is available as a shared library in your `LD_LIBRARY_PATH`.
+```
+gfortran [path_to]/ConstantsF2003.f90 [path_to]/SolverInterfaceF2003.f90 -o SolverDummy SolverDummy.f03 -L[path_to_preCICE_lib] -lprecice
+```
+
+Note that you need preCICE build as a static library.
 
 # Run
 
