@@ -4,7 +4,6 @@ import argparse
 import numpy as np
 import precice
 
-
 parser = argparse.ArgumentParser()
 parser.add_argument("configurationFileName", help="Name of the xml config file.", type=str)
 parser.add_argument("participantName", help="Name of the solver.", type=str)
