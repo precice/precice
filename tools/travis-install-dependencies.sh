@@ -26,7 +26,7 @@ if [ ! -d $LOCAL_INSTALL/include ]; then
     git clone -b maint https://bitbucket.org/petsc/petsc petsc
     cd petsc
     export PETSC_ARCH=arch-linux2-c-debug
-    python2 configure --with-debugging=1 > ~/petsc.configure
+    python2 configure --with-debugging=1 --with-64-bit-indices > ~/petsc.configure
     make > ~/petsc.make
 fi
 
