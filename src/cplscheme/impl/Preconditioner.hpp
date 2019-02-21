@@ -39,7 +39,7 @@ public:
   {
     TRACE();
 
-    assertion(_weights.size() == 0);
+    assertion(_weights.empty());
     _subVectorSizes = svs;
 
     size_t N = 0;
