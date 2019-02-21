@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(TestConfiguration)
   BOOST_TEST(interfacePeano.getDimensions() == 2);
 
   impl::PtrParticipant peano = interfacePeano._impl->_participants[0];
-  BOOST_TEST(peano.use_count() > 0);
+  BOOST_TEST(peano);
   BOOST_TEST(peano->getName() == "Peano");
   BOOST_TEST(peano->getID() == 0);
 
@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(TestConfiguration)
   BOOST_TEST(interfaceComsol.getDimensions() == 2);
 
   impl::PtrParticipant comsol = interfaceComsol._impl->_participants[1];
-  BOOST_TEST(comsol.use_count() > 0);
+  BOOST_TEST(comsol);
   BOOST_TEST(comsol->getName() == "Comsol");
   BOOST_TEST(comsol->getID()== 1);
 

@@ -28,7 +28,7 @@ ParticipantConfiguration:: ParticipantConfiguration
 :
   _meshConfig(meshConfiguration)
 {
-  assertion(_meshConfig.use_count() > 0);
+  assertion(_meshConfig);
   using namespace xml;
   std::string doc;
   XMLTag tag(*this, TAG, XMLTag::OCCUR_ONCE_OR_MORE);
@@ -330,7 +330,7 @@ void ParticipantConfiguration:: xmlTagCallback
     std::string dataName = tag.getStringAttributeValue(ATTR_NAME);
     std::string meshName = tag.getStringAttributeValue(ATTR_MESH);
     mesh::PtrMesh mesh = _meshConfig->getMesh ( meshName );
-    CHECK(mesh.use_count() > 0, "Participant "
+    CHECK(mesh, "Participant "
           << "\"" << _participants.back()->getName() << "\" has to use "
           << "mesh \"" << meshName << "\" in order to write data to it!" );
     mesh::PtrData data = getData ( mesh, dataName );
@@ -340,7 +340,7 @@ void ParticipantConfiguration:: xmlTagCallback
     std::string dataName = tag.getStringAttributeValue(ATTR_NAME);
     std::string meshName = tag.getStringAttributeValue(ATTR_MESH);
     mesh::PtrMesh mesh = _meshConfig->getMesh ( meshName );
-    CHECK(mesh.use_count() > 0, "Participant "
+    CHECK(mesh, "Participant "
           << "\"" << _participants.back()->getName() << "\" has to use "
           << "mesh \"" << meshName << "\" in order to read data from it!" );
     mesh::PtrData data = getData ( mesh, dataName );
@@ -591,7 +591,7 @@ void ParticipantConfiguration:: finishParticipantConfiguration
         mesh = context->mesh;
       }
     }
-    CHECK(mesh.use_count() > 0,
+    CHECK(mesh,
           "Participant \"" << participant->getName()
           << "\" defines watchpoint \"" << config.name
           << "\" for mesh \"" << config.nameMesh

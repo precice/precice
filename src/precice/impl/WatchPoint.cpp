@@ -24,7 +24,7 @@ WatchPoint:: WatchPoint
   _mesh(std::move(meshToWatch)),
   _txtWriter ( exportFilename )
 {
-  assertion ( _mesh.use_count() > 0 );
+  assertion ( _mesh );
   assertion ( _point.size() == _mesh->getDimensions(), _point.size(),
                _mesh->getDimensions() );
 }

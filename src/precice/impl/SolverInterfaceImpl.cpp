@@ -610,8 +610,8 @@ void SolverInterfaceImpl:: resetMesh
   }
   else {
     impl::MeshContext& context = _accessor->meshContext(meshID);
-    bool hasMapping = context.fromMappingContext.mapping.use_count() > 0
-              || context.toMappingContext.mapping.use_count() > 0;
+    bool hasMapping = context.fromMappingContext.mapping
+              || context.toMappingContext.mapping;
     bool isStationary =
           context.fromMappingContext.timing == mapping::MappingConfiguration::INITIAL &&
               context.toMappingContext.timing == mapping::MappingConfiguration::INITIAL;
@@ -1251,7 +1251,7 @@ void SolverInterfaceImpl:: writeScalarData
     DataContext& context = _accessor->dataContext(fromDataID);
     CHECK(context.fromData->getDimensions()==1,
         "You cannot call writeScalarData on the vector data type " << context.fromData->getName());
-    assertion(context.toData.use_count() > 0);
+    assertion(context.toData);
     auto& values = context.fromData->values();
     assertion(valueIndex >= 0, valueIndex);
     values[valueIndex] = value;
@@ -1311,7 +1311,7 @@ void SolverInterfaceImpl:: readVectorData
     DataContext& context = _accessor->dataContext(toDataID);
     CHECK(context.toData->getDimensions()==_dimensions,
         "You cannot call readVectorData on the scalar data type " << context.toData->getName());
-    assertion(context.fromData.use_count() > 0);
+    assertion(context.fromData);
     auto& values = context.toData->values();
     assertion (valueIndex >= 0, valueIndex);
     int offset = valueIndex * _dimensions;
@@ -1375,7 +1375,7 @@ void SolverInterfaceImpl:: readScalarData
     DataContext& context = _accessor->dataContext(toDataID);
     CHECK(context.toData->getDimensions()==1,
         "You cannot call readScalarData on the vector data type " << context.toData->getName());
-    assertion(context.fromData.use_count() > 0);
+    assertion(context.fromData);
     auto& values = context.toData->values();
     value = values[valueIndex];
 
@@ -1450,7 +1450,7 @@ void SolverInterfaceImpl:: configureM2Ns
             comPartner += "Server";
           }
           assertion(not utils::contained(comPartner, _m2ns), comPartner);
-          assertion(std::get<0>(m2nTuple).use_count() > 0);
+          assertion(std::get<0>(m2nTuple));
           M2NWrap m2nWrap;
           m2nWrap.m2n = std::get<0>(m2nTuple);
           m2nWrap.isRequesting = isRequesting;

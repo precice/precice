@@ -38,7 +38,7 @@ MappingConfiguration:: MappingConfiguration
 
   _meshConfig(meshConfiguration)
 {
-  assertion (_meshConfig.use_count() > 0);
+  assertion (_meshConfig);
   using namespace xml;
 
  auto attrShapeParam  = XMLAttribute<double>( ATTR_SHAPE_PARAM )
@@ -472,7 +472,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping
   else {
     ERROR("Unknown mapping type!");
   }
-  assertion ( configuredMapping.mapping.use_count() > 0 );
+  assertion (configuredMapping.mapping);
   #ifndef PRECICE_NO_PETSC
     delete[] arg;
   #endif
