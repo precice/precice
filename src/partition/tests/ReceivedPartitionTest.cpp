@@ -80,7 +80,7 @@ void tearDownParallelEnvironment()
 void createSolidzMesh2D(mesh::PtrMesh pSolidzMesh)
 {
   int dimensions = 2;
-  assertion(pSolidzMesh.use_count() > 0);
+  assertion(pSolidzMesh);
   assertion(pSolidzMesh->getDimensions() == dimensions);
   Eigen::VectorXd position(dimensions);
 
@@ -112,7 +112,7 @@ void createSolidzMesh2D(mesh::PtrMesh pSolidzMesh)
 void createSolidzMesh2DSmall(mesh::PtrMesh pSolidzMesh)
 {
   int dimensions = 2;
-  assertion(pSolidzMesh.use_count() > 0);
+  assertion(pSolidzMesh);
   assertion(pSolidzMesh->getDimensions() == dimensions);
   Eigen::VectorXd position(dimensions);
 
@@ -129,7 +129,7 @@ void createSolidzMesh2DSmall(mesh::PtrMesh pSolidzMesh)
 void createNastinMesh2D(mesh::PtrMesh pNastinMesh)
 {
   int dimensions = 2;
-  assertion(pNastinMesh.use_count() > 0);
+  assertion(pNastinMesh);
   assertion(pNastinMesh->getDimensions() == dimensions);
 
   if (utils::Parallel::getProcessRank() == 1) {
@@ -155,7 +155,7 @@ void createSolidzMesh3D(mesh::PtrMesh pSolidzMesh)
 {
   int             dimensions = 3;
   Eigen::VectorXd position(dimensions);
-  assertion(pSolidzMesh.use_count() > 0);
+  assertion(pSolidzMesh);
   assertion(pSolidzMesh->getDimensions() == dimensions);
 
   position << 0.0, 0.0, -0.1;
@@ -186,7 +186,7 @@ void createSolidzMesh3D(mesh::PtrMesh pSolidzMesh)
 void createNastinMesh3D(mesh::PtrMesh pNastinMesh)
 {
   int dimensions = 3;
-  assertion(pNastinMesh.use_count() > 0);
+  assertion(pNastinMesh);
   assertion(pNastinMesh->getDimensions() == dimensions);
 
   if (utils::Parallel::getProcessRank() == 1) { //Master

@@ -293,14 +293,14 @@ void Participant:: checkDuplicatedData
 
 bool Participant:: useServer()
 {
-  return _clientServerCommunication.use_count() > 0;
+  return static_cast<bool>(_clientServerCommunication);
 }
 
 void Participant:: setClientServerCommunication
 (
   com::PtrCommunication communication )
 {
-  assertion ( communication.use_count() > 0 );
+  assertion ( communication );
   _clientServerCommunication = std::move(communication);
 }
 
