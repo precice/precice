@@ -35,7 +35,7 @@ void ReceivedPartition::communicate()
   INFO("Receive global mesh " << _mesh->getName());
   Event e("partition.receiveGlobalMesh." + _mesh->getName(), precice::syncMode);
   if (not utils::MasterSlave::_slaveMode) {
-    assertion(_mesh->vertices().size() == 0);
+    assertion(_mesh->vertices().empty());
     com::CommunicateMesh(_m2n->getMasterCommunication()).receiveMesh(*_mesh, 0);
   }
 }

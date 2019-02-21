@@ -1250,7 +1250,7 @@ BOOST_AUTO_TEST_CASE(SolutionCaching)
   BOOST_TEST(mapping.hasComputedMapping() == false );
 
   mapping.computeMapping();
-  BOOST_TEST(mapping.previousSolution.size() == 0);
+  BOOST_TEST(mapping.previousSolution.empty());
   mapping.map(inDataID, outDataID);
   BOOST_TEST(mapping.hasComputedMapping() == true );
   BOOST_TEST ( outData->values()[0] == 1.0 );
