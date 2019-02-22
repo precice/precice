@@ -70,6 +70,11 @@ public:
     }
   }
 
+  void clear() noexcept
+  {
+      _locks.clear();
+  }
+
   bool check(const Key &name) const
   {
     auto iter = _locks.find(name);
