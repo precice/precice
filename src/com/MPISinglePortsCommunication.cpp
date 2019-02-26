@@ -50,7 +50,8 @@ void MPISinglePortsCommunication::acceptConnection(std::string const &acceptorNa
   Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
   ScopedPublisher                        p(addressFileName);
   p.write(_portName);
-
+  writeConnectionInfo(acceptorName, requesterName, -1, _addressDirectory, _portName);
+  
   size_t peerCurrent = 0; // current peer to connect to
   size_t peerCount   = 0; // The total count of peers (initialized in the first iteration)
   size_t requesterCommunicatorSize = 0;
@@ -104,6 +105,7 @@ void MPISinglePortsCommunication::acceptConnectionAsServer(
   if (utils::MasterSlave::_rank == 0) { // only master opens a port
     MPI_Open_port(MPI_INFO_NULL, const_cast<char *>(_portName.data()));
     p.write(_portName);
+    writeConnectionInfo(acceptorName, requesterName, -1, _addressDirectory, _portName);
     DEBUG("Accept connection at " << _portName);
   }
   
@@ -127,7 +129,10 @@ void MPISinglePortsCommunication::requestConnection(std::string const &acceptorN
   const std::string addressFileName("." + requesterName + "-" + acceptorName + ".address");
   Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
   Publisher p(addressFileName);
-  _portName = p.read();
+  std::string oldPortName = p.read();
+  _portName = readConnectionInfo(acceptorName, requesterName, -1, _addressDirectory);
+  assertion(_portName == oldPortName, _portName, oldPortName, acceptorName, requesterName);
+
   DEBUG("Request connection to " << _portName);
 
   MPI_Comm communicator;
@@ -157,7 +162,10 @@ void MPISinglePortsCommunication::requestConnectionAsClient(std::string      con
   const std::string addressFileName("." + requesterName + "-" + acceptorName + ".address");
   Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
   Publisher p(addressFileName);
-  _portName = p.read();
+  std::string oldPortName = p.read();
+  _portName = readConnectionInfo(acceptorName, requesterName, -1, _addressDirectory);
+  assertion(_portName == oldPortName, _portName, oldPortName, acceptorName, requesterName);
+    
   DEBUG("Request connection to " << _portName);
 
   MPI_Comm communicator;
