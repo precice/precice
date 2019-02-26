@@ -309,13 +309,13 @@ void Communication::writeConnectionInfo(std::string const & acceptorName,
   boost::uuids::name_generator gen{ns};
   std::string s = acceptorName + requesterName + std::to_string(rank);
   std::string hash = boost::uuids::to_string(gen(s));
-  std::remove(hash.begin(), hash.end(), '-');
+  hash.erase(std::remove(hash.begin(), hash.end(), '-'), hash.end());
 
   path p = path(addressDirectory) / path(".precice") / path(hash.substr(0, firstLevelLen));
   create_directories(p);
 
   p /= hash.substr(firstLevelLen);
-  std::cout << "Writing to file:  " << p << " for "
+  std::cout << "Writing to file:   " << p << " for "
             << acceptorName << ", " << requesterName << ", " << rank << ", " << addressDirectory << std::endl;
 
   std::ofstream ofs(p.string());
@@ -337,8 +337,8 @@ std::string Communication::readConnectionInfo(std::string const & acceptorName,
   boost::uuids::name_generator gen{ns};
   std::string s = acceptorName + requesterName + std::to_string(rank);
   std::string hash = boost::uuids::to_string(gen(s));
-  std::remove(hash.begin(), hash.end(), '-');
-  
+  hash.erase(std::remove(hash.begin(), hash.end(), '-'), hash.end());
+    
   // cout << "Hash = " << hash << endl;
   path p = path(addressDirectory) / path(".precice") / path(hash.substr(0, firstLevelLen));
   
