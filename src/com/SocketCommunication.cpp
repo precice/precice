@@ -207,9 +207,9 @@ void SocketCommunication::requestConnection(std::string const &acceptorName,
   try {
     Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
     Publisher p(addressFileName);
-    address = p.read();
-    auto newAddress = readConnectionInfo(acceptorName, requesterName, -1, _addressDirectory);
-    assertion(address == newAddress, address, newAddress, acceptorName, requesterName);
+    std::string oldAddress = p.read();
+    auto address = readConnectionInfo(acceptorName, requesterName, -1, _addressDirectory);
+    assertion(address == oldAddress, address, oldAddress, acceptorName, requesterName);
 
     DEBUG("Request connection to " << address);
 
@@ -278,9 +278,9 @@ void SocketCommunication::requestConnectionAsClient(std::string      const &acce
     try {
       Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
       Publisher p(addressFileName);
-      address = p.read();
-      auto newAddress = readConnectionInfo(acceptorName, requesterName, acceptorRank, _addressDirectory);
-      assert(address == newAddress);
+      std::string oldAddress = p.read();
+      address = readConnectionInfo(acceptorName, requesterName, acceptorRank, _addressDirectory);
+      assert(address == oldAddress);
       
       std::string ipAddress  = address.substr(0, address.find(":"));
       std::string portNumber = address.substr(ipAddress.length()+1, address.length() - ipAddress.length()-1);
