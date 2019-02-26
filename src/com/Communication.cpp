@@ -1,5 +1,13 @@
 #include "Communication.hpp"
 #include "Request.hpp"
+#include <thread>
+#include <chrono>
+#include <boost/uuid/name_generator.hpp>
+#include <boost/uuid/string_generator.hpp>
+#include <boost/uuid/uuid_io.hpp>
+#include <boost/filesystem.hpp>
+
+#include <iostream>
 
 namespace precice
 {
@@ -285,6 +293,71 @@ void Communication::broadcast(std::vector<double> &v, int rankBroadcaster)
   v.resize(size);
   broadcast(v.data(), size, rankBroadcaster);
 }
+
+void Communication::writeConnectionInfo(std::string const & acceptorName,
+                                        std::string const & requesterName,
+                                        int rank,
+                                        std::string addressDirectory,
+                                        std::string addressData)
+{
+  using namespace boost::filesystem;
+  int const firstLevelLen = 2;
+
+  boost::uuids::string_generator ns_gen;
+  auto ns = ns_gen("af7ce8f2-a9ee-46cb-38ee-71c318aa3580"); // md5 hash of precice.org as namespace
+  
+  boost::uuids::name_generator_latest gen{ns};
+  std::string s = acceptorName + requesterName + std::to_string(rank);
+  std::string hash = boost::uuids::to_string(gen(s));
+  std::remove(hash.begin(), hash.end(), '-');
+
+  path p = path(addressDirectory) / path(".precice") / path(hash.substr(0, firstLevelLen));
+  create_directories(p);
+
+  p /= hash.substr(firstLevelLen);
+  std::cout << "Writing to file:  " << p << " for "
+            << acceptorName << ", " << requesterName << ", " << rank << ", " << addressDirectory << std::endl;
+
+  std::ofstream ofs(p.string());
+  ofs << addressData;
+}
+
+
+std::string Communication::readConnectionInfo(std::string const & acceptorName,
+                                              std::string const & requesterName,
+                                              int rank,
+                                              std::string addressDirectory)
+{
+  using namespace boost::filesystem;
+  int const firstLevelLen = 2;
+
+  boost::uuids::string_generator ns_gen;
+  auto ns = ns_gen("af7ce8f2-a9ee-46cb-38ee-71c318aa3580"); // md5 hash of precice.org as namespace
+  
+  boost::uuids::name_generator_latest gen{ns};
+  std::string s = acceptorName + requesterName + std::to_string(rank);
+  std::string hash = boost::uuids::to_string(gen(s));
+  std::remove(hash.begin(), hash.end(), '-');
+  
+  // cout << "Hash = " << hash << endl;
+  path p = path(addressDirectory) / path(".precice") / path(hash.substr(0, firstLevelLen));
+  
+  p /= hash.substr(firstLevelLen);
+  std::cout << "Reading from file: " << p << " for "
+            << acceptorName << ", " << requesterName << ", " << rank << ", " << addressDirectory << std::endl;
+
+  std::string addressData;
+  std::ifstream ifs;
+  do {
+    ifs.open(p.string(), std::ifstream::in);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  } while (not ifs);
+
+  ifs >> addressData;
+  return addressData;
+}
+
+
 
 } // namespace com
 } // namespace precice

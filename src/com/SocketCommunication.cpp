@@ -83,6 +83,7 @@ void SocketCommunication::acceptConnection(std::string const &acceptorName,
     Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
     ScopedPublisher p(addressFileName);
     p.write(address);
+    writeConnectionInfo(acceptorName, requesterName, -1, _addressDirectory, address);
     DEBUG("Accept connection at " << address);
 
     int peerCurrent = 0; // Current peer to connect to
@@ -166,6 +167,7 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorNa
     Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
     ScopedPublisher p(addressFileName);
     p.write(address);
+    writeConnectionInfo(acceptorName, requesterName, acceptorRank, _addressDirectory, address);
 
     DEBUG("Accepting connection at " << address);
 
@@ -206,6 +208,8 @@ void SocketCommunication::requestConnection(std::string const &acceptorName,
     Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
     Publisher p(addressFileName);
     address = p.read();
+    auto newAddress = readConnectionInfo(acceptorName, requesterName, -1, _addressDirectory);
+    assertion(address == newAddress, address, newAddress, acceptorName, requesterName);
 
     DEBUG("Request connection to " << address);
 
@@ -275,6 +279,8 @@ void SocketCommunication::requestConnectionAsClient(std::string      const &acce
       Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
       Publisher p(addressFileName);
       address = p.read();
+      auto newAddress = readConnectionInfo(acceptorName, requesterName, acceptorRank, _addressDirectory);
+      assert(address == newAddress);
       
       std::string ipAddress  = address.substr(0, address.find(":"));
       std::string portNumber = address.substr(ipAddress.length()+1, address.length() - ipAddress.length()-1);
