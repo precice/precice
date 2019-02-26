@@ -48,6 +48,8 @@ void MPIPortsCommunication::acceptConnection(std::string const &acceptorName,
   Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
   ScopedPublisher                        p(addressFileName);
   p.write(_portName);
+  writeConnectionInfo(acceptorName, requesterName, -1, _addressDirectory, _portName);
+  
   DEBUG("Accept connection at " << _portName);
 
   size_t peerCurrent = 0; // Current peer to connect to
@@ -104,6 +106,8 @@ void MPIPortsCommunication::acceptConnectionAsServer(
   Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
   ScopedPublisher                        p(addressFileName);
   p.write(_portName);
+  writeConnectionInfo(acceptorName, requesterName, acceptorRank, _addressDirectory, _portName);
+  
   DEBUG("Accept connection at " << _portName);
 
   for (int connection = 0; connection < requesterCommunicatorSize; ++connection) {
@@ -131,7 +135,10 @@ void MPIPortsCommunication::requestConnection(std::string const &acceptorName,
   const std::string addressFileName("." + requesterName + "-" + acceptorName + ".address");
   Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
   Publisher p(addressFileName);
-  _portName = p.read();
+  std::string oldPortName = p.read();
+  auto _portName = readConnectionInfo(acceptorName, requesterName, -1, _addressDirectory);
+  assertion(_portName == oldPortName, _portName, oldPortName, acceptorName, requesterName);
+
   DEBUG("Request connection to " << _portName);
 
   MPI_Comm communicator;
@@ -164,7 +171,10 @@ void MPIPortsCommunication::requestConnectionAsClient(std::string      const &ac
 
     Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
     Publisher p(addressFileName);
-    _portName = p.read();
+    std::string oldPortName = p.read();
+    auto _portName = readConnectionInfo(acceptorName, requesterName, acceptorRank, _addressDirectory);
+    assertion(_portName == oldPortName, _portName, oldPortName, acceptorName, requesterName);
+
     DEBUG("Request connection to " << _portName);
 
     MPI_Comm communicator;
