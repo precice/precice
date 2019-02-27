@@ -470,6 +470,19 @@ void ParticipantConfiguration:: finishParticipantConfiguration
     impl::MeshContext& fromMeshContext = participant->meshContext(fromMeshID);
     impl::MeshContext& toMeshContext = participant->meshContext(toMeshID);
 
+    if(confMapping.direction == mapping::MappingConfiguration::READ){
+      CHECK(toMeshContext.provideMesh, "A read mapping needs to map to a provided mesh. "
+          "Mesh " << confMapping.toMesh->getName() << " is not provided.");
+      CHECK(not fromMeshContext.receiveMeshFrom.empty(), "A read mapping needs to map from a received mesh. "
+          "Mesh " << confMapping.fromMesh->getName() << " is not received.");
+    }
+    else{
+      CHECK(fromMeshContext.provideMesh, "A write mapping needs to map from a provided mesh. "
+          "Mesh " << confMapping.fromMesh->getName() << " is not provided.");
+      CHECK(not toMeshContext.receiveMeshFrom.empty(), "A write mapping needs to map to a received mesh. "
+          "Mesh " << confMapping.toMesh->getName() << " is not received.");
+    }
+
     if(confMapping.isRBF){
       fromMeshContext.geoFilter = partition::ReceivedPartition::GeometricFilter::NO_FILTER;
       toMeshContext.geoFilter = partition::ReceivedPartition::GeometricFilter::NO_FILTER;
