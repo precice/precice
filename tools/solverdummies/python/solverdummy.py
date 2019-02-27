@@ -3,6 +3,7 @@ from __future__ import division
 import argparse
 import numpy as np
 import precice
+from mpi4py import MPI
 
 parser = argparse.ArgumentParser()
 parser.add_argument("configurationFileName", help="Name of the xml config file.", type=str)
