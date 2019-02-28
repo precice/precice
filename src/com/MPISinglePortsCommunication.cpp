@@ -3,10 +3,6 @@
 #include "MPISinglePortsCommunication.hpp"
 #include "utils/assertion.hpp"
 #include "utils/Parallel.hpp"
-#include "utils/Publisher.hpp"
-
-using precice::utils::Publisher;
-using precice::utils::ScopedPublisher;
 
 namespace precice
 {
@@ -46,10 +42,6 @@ void MPISinglePortsCommunication::acceptConnection(std::string const &acceptorNa
 
   MPI_Open_port(MPI_INFO_NULL, const_cast<char *>(_portName.data()));
 
-  const std::string addressFileName("." + requesterName + "-" + acceptorName + ".address");
-  Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
-  ScopedPublisher                        p(addressFileName);
-  p.write(_portName);
   writeConnectionInfo(acceptorName, requesterName, -1, _addressDirectory, _portName);
   
   size_t peerCurrent = 0; // current peer to connect to
@@ -100,12 +92,8 @@ void MPISinglePortsCommunication::acceptConnectionAsServer(
 
   _isAcceptor = true;
 
-  const std::string addressFileName("." + requesterName + "-" + acceptorName + ".address");
-  Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
-  ScopedPublisher                        p(addressFileName);
   if (utils::MasterSlave::_rank == 0) { // only master opens a port
     MPI_Open_port(MPI_INFO_NULL, const_cast<char *>(_portName.data()));
-    p.write(_portName);
     writeConnectionInfo(acceptorName, requesterName, -1, _addressDirectory, _portName);
     DEBUG("Accept connection at " << _portName);
   }
@@ -129,13 +117,7 @@ void MPISinglePortsCommunication::requestConnection(std::string const &acceptorN
   assertion(not isConnected());
   _isAcceptor = false;
 
-  const std::string addressFileName("." + requesterName + "-" + acceptorName + ".address");
-  Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
-  Publisher p(addressFileName);
-  std::string oldPortName = p.read();
   _portName = readConnectionInfo(acceptorName, requesterName, -1, _addressDirectory);
-  assertion(_portName == oldPortName, _portName, oldPortName, acceptorName, requesterName);
-
   DEBUG("Request connection to " << _portName);
 
   MPI_Comm communicator;
@@ -162,13 +144,7 @@ void MPISinglePortsCommunication::requestConnectionAsClient(std::string      con
   
   _isAcceptor = false;
 
-  const std::string addressFileName("." + requesterName + "-" + acceptorName + ".address");
-  Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
-  Publisher p(addressFileName);
-  std::string oldPortName = p.read();
   _portName = readConnectionInfo(acceptorName, requesterName, -1, _addressDirectory);
-  assertion(_portName == oldPortName, _portName, oldPortName, acceptorName, requesterName);
-    
   DEBUG("Request connection to " << _portName);
 
   MPI_Comm communicator;

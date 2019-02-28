@@ -10,12 +10,8 @@
 #include "mesh/Vertex.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/MasterSlave.hpp"
-#include "utils/Publisher.hpp"
-
 #include <fstream>
 #include <sstream>
-
-using precice::utils::Publisher;
 
 namespace precice
 {
@@ -108,20 +104,6 @@ void MVQNPostProcessing::initialize(
      *        The master-slave communication should be modified such that direct communication between
      *        slaves is possible (via MPIDirect)
      */
-
-#ifdef SuperMUC_WORK
-      try {
-        // auto addressDirectory = std::to_string(".");
-        if (utils::MasterSlave::_masterMode) {
-          for (int rank = 0; rank < utils::MasterSlave::_size; ++rank) {
-            Publisher::createDirectory(std::string(".") + "/" + "." + "cyclicComm-" + std::to_string(rank) + ".address");
-          }
-        }
-        utils::Parallel::synchronizeProcesses();
-      } catch (...) {
-      }
-#endif
-
       _cyclicCommLeft  = com::PtrCommunication(new com::MPIPortsCommunication());
       _cyclicCommRight = com::PtrCommunication(new com::MPIPortsCommunication());
       //_cyclicCommLeft = com::Communication::SharedPointer(new com::SocketCommunication(0, false, "ib0", "."));
@@ -130,22 +112,10 @@ void MVQNPostProcessing::initialize(
       // initialize cyclic communication between successive slaves
       int prevProc = (utils::MasterSlave::_rank - 1 < 0) ? utils::MasterSlave::_size - 1 : utils::MasterSlave::_rank - 1;
       if ((utils::MasterSlave::_rank % 2) == 0) {
-#ifdef SuperMUC_WORK
-        Publisher::ScopedPushDirectory spd1(std::string(".") + "cyclicComm-" + std::to_string(prevProc) + ".address");
-#endif
         _cyclicCommLeft->acceptConnection("cyclicComm-" + std::to_string(prevProc), "", utils::MasterSlave::_rank);
-#ifdef SuperMUC_WORK
-        Publisher::ScopedPushDirectory spd2(std::string(".") + "cyclicComm-" + std::to_string(utils::MasterSlave::_rank) + ".address");
-#endif
         _cyclicCommRight->requestConnection("cyclicComm-" + std::to_string(utils::MasterSlave::_rank), "", 0, 1);
       } else {
-#ifdef SuperMUC_WORK
-        Publisher::ScopedPushDirectory spd3(std::string(".") + "cyclicComm-" + std::to_string(utils::MasterSlave::_rank) + ".address");
-#endif
         _cyclicCommRight->requestConnection("cyclicComm-" + std::to_string(utils::MasterSlave::_rank), "", 0, 1);
-#ifdef SuperMUC_WORK
-        Publisher::ScopedPushDirectory spd4(std::string(".") + "cyclicComm-" + std::to_string(prevProc) + ".address");
-#endif
         _cyclicCommLeft->acceptConnection("cyclicComm-" + std::to_string(prevProc), "", utils::MasterSlave::_rank);
       }
     }

@@ -1,16 +1,9 @@
 #include "SocketCommunication.hpp"
-
 #include "SocketRequest.hpp"
-
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
-#include "utils/Publisher.hpp"
 #include "utils/assertion.hpp"
-
 #include <sstream>
-
-using precice::utils::Publisher;
-using precice::utils::ScopedPublisher;
 
 namespace precice
 {
@@ -60,7 +53,6 @@ void SocketCommunication::acceptConnection(std::string const &acceptorName,
   assertion(not isConnected());
 
   std::string address;
-  const std::string addressFileName("." + requesterName + "-" + acceptorName + ".address");
 
   try {
     std::string ipAddress = getIpAddress();
@@ -77,12 +69,7 @@ void SocketCommunication::acceptConnection(std::string const &acceptorName,
     acceptor.listen();
 
     _portNumber = acceptor.local_endpoint().port();
-
     address = ipAddress + ":" + std::to_string(_portNumber);
-
-    Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
-    ScopedPublisher p(addressFileName);
-    p.write(address);
     writeConnectionInfo(acceptorName, requesterName, -1, _addressDirectory, address);
     DEBUG("Accept connection at " << address);
 
@@ -142,8 +129,6 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorNa
   assertion(not isConnected());
 
   std::string address;
-  const std::string addressFileName("." + requesterName + "-" +
-                                    acceptorName + "-" + std::to_string(acceptorRank) + ".address");
 
   try {
     std::string ipAddress = getIpAddress();
@@ -165,10 +150,6 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorNa
     }
 
     address = ipAddress + ":" + std::to_string(_portNumber);
-
-    Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
-    ScopedPublisher p(addressFileName);
-    p.write(address);
     writeConnectionInfo(acceptorName, requesterName, acceptorRank, _addressDirectory, address);
 
     DEBUG("Accepting connection at " << address);
@@ -206,15 +187,9 @@ void SocketCommunication::requestConnection(std::string const &acceptorName,
   assertion(not isConnected());
 
   std::string address;
-  const std::string addressFileName("." + requesterName + "-" + acceptorName + ".address");
 
   try {
-    Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
-    Publisher p(addressFileName);
-    std::string oldAddress = p.read();
     auto address = readConnectionInfo(acceptorName, requesterName, -1, _addressDirectory);
-    assertion(address == oldAddress, address, oldAddress, acceptorName, requesterName);
-
     DEBUG("Request connection to " << address);
 
     std::string ipAddress  = address.substr(0, address.find(":"));
@@ -276,15 +251,10 @@ void SocketCommunication::requestConnectionAsClient(std::string      const &acce
   for (auto const & acceptorRank : acceptorRanks) {
     _isConnected = false;
     std::string address;
-    const std::string addressFileName("." + requesterName + "-" +
-                                      acceptorName + "-" + std::to_string(acceptorRank) + ".address");
 
     try {
-      Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
-      Publisher p(addressFileName);
-      std::string oldAddress = p.read();
       address = readConnectionInfo(acceptorName, requesterName, acceptorRank, _addressDirectory);
-      assert(address == oldAddress);
+      WARN(address);
       
       std::string ipAddress  = address.substr(0, address.find(":"));
       std::string portNumber = address.substr(ipAddress.length()+1, address.length() - ipAddress.length()-1);

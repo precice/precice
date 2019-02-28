@@ -7,10 +7,8 @@
 #include "mesh/Mesh.hpp"
 #include "utils/Event.hpp"
 #include "utils/MasterSlave.hpp"
-#include "utils/Publisher.hpp"
 
 using precice::utils::Event;
-using precice::utils::Publisher;
 
 namespace precice
 {
@@ -344,23 +342,6 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
   printLocalIndexCountStats(communicationMap);
 #endif
 
-#ifdef SuperMUC_WORK
-  try {
-    auto addressDirectory = _communicationFactory->addressDirectory();
-
-    if (utils::MasterSlave::_masterMode) {
-      Event e3("m2n.createDirectories");
-
-      for (int rank = 0; rank < utils::MasterSlave::_size; ++rank) {
-        Publisher::createDirectory(addressDirectory + "/" + "." + acceptorName + "-" + _mesh->getName() +
-                                   "-" + std::to_string(rank) + ".address");
-      }
-    }
-    utils::Parallel::synchronizeProcesses();
-  } catch (...) {
-  }
-#endif
-
   Event e4("m2n.createCommunications");
   if (communicationMap.empty()) {
     _isConnected = true;
@@ -368,11 +349,6 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
   }
 
   _communication = _communicationFactory->newCommunication();
-
-#ifdef SuperMUC_WORK
-  Publisher::ScopedPushDirectory spd("." + acceptorName + "-" + _mesh->getName() + "-" +
-                                     std::to_string(utils::MasterSlave::_rank) + ".address");
-#endif
 
   // Accept point-to-point connections (as server) between the current acceptor
   // process (in the current participant) with rank `utils::MasterSlave::_rank'
@@ -504,11 +480,6 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
   for (auto &i : communicationMap) {
     auto globalAcceptorRank = i.first;
     auto indices            = std::move(i.second);
-
-#ifdef SuperMUC_WORK
-    Publisher::ScopedPushDirectory spd("." + acceptorName + "-" + _mesh->getName() + "-" +
-                                       std::to_string(globalAcceptorRank) + ".address");
-#endif
 
     _mappings.push_back({globalAcceptorRank, std::move(indices), com::PtrRequest(), {}});
   }

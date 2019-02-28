@@ -5,10 +5,8 @@
 #include "mesh/Mesh.hpp"
 #include "utils/Event.hpp"
 #include "utils/MasterSlave.hpp"
-#include "utils/Publisher.hpp"
 
 using precice::utils::Event;
-using precice::utils::Publisher;
 
 namespace precice
 {
