@@ -29,6 +29,7 @@ env:
     - LD_LIBRARY_PATH="$PETSC_DIR/$PETSC_ARCH/lib:$LOCAL_INSTALL/lib:$LD_LIBRARY_PATH"
     - LIBRARY_PATH="$PETSC_DIR/$PETSC_ARCH/lib:$LOCAL_INSTALL/lib:$LIBRARY_PATH"
     - PYTHONPATH="$PETSC_DIR/$PETSC_ARCH/lib:/usr/lib/python2.7:/usr/lib/python2.7/dist-packages:/usr/lib/python2.7/plat-x86_64-linux-gnu"
+    - CXXFLAGS="-Wall -Wextra -Wno-unused-parameter"
 
   matrix:
     - MPI=on PETSC=on
@@ -40,7 +41,7 @@ cache:
     - $LOCAL_INSTALL
 
 before_install:
-  - if [ "$CXX" = "g++" ]; then export CXX="g++-6" && export CC="gcc-6"; fi
+  - if [ "$CXX" = "g++" ]; then export CXX="g++-6" && export CC="gcc-6" && export CXXFLAGS="$CXXFLAGS -Wno-literal-suffix"; fi
   - export OMPI_CXX=$CXX
   - if [ "$MPI" = "on" ]; then export CXX="mpicxx"; fi
 

@@ -131,7 +131,7 @@ if real_compiler == 'icc':
     elif env["build"] == 'release':
         env.Append(CCFLAGS = ['-w', '-fast', '-align', '-ansi-alias'])
 elif real_compiler == 'g++':
-    pass
+    env.Append(CCFLAGS= ['-Wno-literal-suffix'])
 elif real_compiler == "clang++":
     env.Append(CCFLAGS= ['-Wsign-compare']) # sign-compare not enabled in Wall with clang.
 elif real_compiler == "g++-mp-4.9":
