@@ -128,6 +128,8 @@ void SocketCommunication::acceptConnection(std::string const &acceptorName,
   // Keep IO service running so that it fires asynchronous handlers from another thread.
   _work   = std::make_shared<asio::io_service::work>(*_ioService);
   _thread = std::thread([this]() { _ioService->run(); });
+
+  removeConnectionInfo(acceptorName, requesterName, -1, _addressDirectory);
 }
 
 void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorName,
@@ -190,7 +192,9 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorNa
   // NOTE:
   // Keep IO service running so that it fires asynchronous handlers from another thread.
   _work   = std::make_shared<asio::io_service::work>(*_ioService);
-  _thread = std::thread([this]() { _ioService->run(); });  
+  _thread = std::thread([this]() { _ioService->run(); });
+
+  removeConnectionInfo(acceptorName, requesterName, acceptorRank, _addressDirectory);
 }
 
 void SocketCommunication::requestConnection(std::string const &acceptorName,

@@ -83,7 +83,8 @@ void MPISinglePortsCommunication::acceptConnection(std::string const &acceptorNa
     _communicators[requesterRank] = communicator;
 
   } while (++peerCurrent < requesterCommunicatorSize);
-  
+
+  removeConnectionInfo(acceptorName, requesterName, -1, _addressDirectory);
   _isConnected = true;
 }
 
@@ -114,6 +115,8 @@ void MPISinglePortsCommunication::acceptConnectionAsServer(
                   utils::Parallel::getGlobalCommunicator(), &communicator);
   DEBUG("Accepted connection at " << _portName);
   _communicators[0] = communicator; // all comms are the same
+  
+  removeConnectionInfo(acceptorName, requesterName, -1, _addressDirectory);
   _isConnected = true;
 }
 
