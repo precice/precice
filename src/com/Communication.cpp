@@ -318,8 +318,10 @@ void Communication::writeConnectionInfo(std::string const & acceptorName,
   std::cout << "Writing to file:   " << p << " for "
             << acceptorName << ", " << requesterName << ", " << rank << ", " << addressDirectory << std::endl;
 
-  std::ofstream ofs(p.string());
+  std::ofstream ofs(p.string() + "~");
   ofs << addressData;
+  ofs.close();
+  rename(p.string() + "~", p);
 }
 
 
