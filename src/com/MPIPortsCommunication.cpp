@@ -1,6 +1,7 @@
 #ifndef PRECICE_NO_MPI
 
 #include "MPIPortsCommunication.hpp"
+#include "ConnectionInfoPublisher.hpp"
 #include "utils/assertion.hpp"
 #include "utils/Parallel.hpp"
 
@@ -40,7 +41,8 @@ void MPIPortsCommunication::acceptConnection(std::string const &acceptorName,
 
   MPI_Open_port(MPI_INFO_NULL, const_cast<char *>(_portName.data()));
 
-  writeConnectionInfo(acceptorName, requesterName, -1, _addressDirectory, _portName);
+  ConnectionInfoWriter conInfo(acceptorName, requesterName, _addressDirectory);
+  conInfo.write(_portName);
   DEBUG("Accept connection at " << _portName);
 
   size_t peerCurrent = 0; // Current peer to connect to
@@ -75,15 +77,13 @@ void MPIPortsCommunication::acceptConnection(std::string const &acceptorName,
 
   } while (++peerCurrent < requesterCommunicatorSize);
 
-  removeConnectionInfo(acceptorName, requesterName, -1, _addressDirectory);
   _isConnected = true;
 }
 
-void MPIPortsCommunication::acceptConnectionAsServer(
-    std::string const &acceptorName,
-    std::string const &requesterName,
-    int                acceptorRank,
-    int                requesterCommunicatorSize)
+void MPIPortsCommunication::acceptConnectionAsServer(std::string const &acceptorName,
+                                                     std::string const &requesterName,
+                                                     int                acceptorRank,
+                                                     int                requesterCommunicatorSize)
 {
   TRACE(acceptorName, requesterName, acceptorRank, requesterCommunicatorSize);
   CHECK(requesterCommunicatorSize > 0, "Requester communicator size has to be > 0!");
@@ -93,7 +93,8 @@ void MPIPortsCommunication::acceptConnectionAsServer(
 
   MPI_Open_port(MPI_INFO_NULL, const_cast<char *>(_portName.data()));
 
-  writeConnectionInfo(acceptorName, requesterName, acceptorRank, _addressDirectory, _portName);
+  ConnectionInfoWriter conInfo(acceptorName, requesterName, acceptorRank, _addressDirectory);
+  conInfo.write(_portName);
   DEBUG("Accept connection at " << _portName);
 
   for (int connection = 0; connection < requesterCommunicatorSize; ++connection) {
@@ -107,7 +108,6 @@ void MPIPortsCommunication::acceptConnectionAsServer(
     _communicators[requesterRank] = communicator;
   }
   _isConnected = true;
-  removeConnectionInfo(acceptorName, requesterName, acceptorRank, _addressDirectory);
 }
 
 void MPIPortsCommunication::requestConnection(std::string const &acceptorName,
@@ -119,7 +119,9 @@ void MPIPortsCommunication::requestConnection(std::string const &acceptorName,
   assertion(not isConnected());
   _isAcceptor = false;
 
-  auto _portName = readConnectionInfo(acceptorName, requesterName, -1, _addressDirectory);
+  ConnectionInfoReader conInfo(acceptorName, requesterName, _addressDirectory);
+  _portName = conInfo.read();
+      
   DEBUG("Request connection to " << _portName);
 
   MPI_Comm communicator;
@@ -147,7 +149,8 @@ void MPIPortsCommunication::requestConnectionAsClient(std::string      const &ac
   _isAcceptor = false;
 
   for (auto const & acceptorRank : acceptorRanks) {
-    auto _portName = readConnectionInfo(acceptorName, requesterName, acceptorRank, _addressDirectory);
+    ConnectionInfoReader conInfo(acceptorName, requesterName, acceptorRank, _addressDirectory);
+    _portName = conInfo.read();
     DEBUG("Request connection to " << _portName);
 
     MPI_Comm communicator;

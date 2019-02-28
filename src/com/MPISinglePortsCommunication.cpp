@@ -1,6 +1,7 @@
 #ifndef PRECICE_NO_MPI
 
 #include "MPISinglePortsCommunication.hpp"
+#include "ConnectionInfoPublisher.hpp"
 #include "utils/assertion.hpp"
 #include "utils/Parallel.hpp"
 
@@ -42,8 +43,9 @@ void MPISinglePortsCommunication::acceptConnection(std::string const &acceptorNa
 
   MPI_Open_port(MPI_INFO_NULL, const_cast<char *>(_portName.data()));
 
-  writeConnectionInfo(acceptorName, requesterName, -1, _addressDirectory, _portName);
-  
+  ConnectionInfoWriter conPub(acceptorName, requesterName, _addressDirectory);
+  conPub.write(_portName);
+    
   size_t peerCurrent = 0; // current peer to connect to
   size_t peerCount   = 0; // The total count of peers (initialized in the first iteration)
   size_t requesterCommunicatorSize = 0;
@@ -76,7 +78,6 @@ void MPISinglePortsCommunication::acceptConnection(std::string const &acceptorNa
 
   } while (++peerCurrent < requesterCommunicatorSize);
 
-  removeConnectionInfo(acceptorName, requesterName, -1, _addressDirectory);
   _isConnected = true;
 }
 
@@ -90,11 +91,13 @@ void MPISinglePortsCommunication::acceptConnectionAsServer(
   TRACE(acceptorName, requesterName, acceptorRank, requesterCommunicatorSize);
   assertion(not isConnected());
 
+  ConnectionInfoWriter conInfo(acceptorName, requesterName, _addressDirectory);
+  
   _isAcceptor = true;
 
   if (utils::MasterSlave::_rank == 0) { // only master opens a port
     MPI_Open_port(MPI_INFO_NULL, const_cast<char *>(_portName.data()));
-    writeConnectionInfo(acceptorName, requesterName, -1, _addressDirectory, _portName);
+    conInfo.write(_portName);
     DEBUG("Accept connection at " << _portName);
   }
   
@@ -104,7 +107,6 @@ void MPISinglePortsCommunication::acceptConnectionAsServer(
   DEBUG("Accepted connection at " << _portName);
   _communicators[0] = communicator; // all comms are the same
   
-  removeConnectionInfo(acceptorName, requesterName, -1, _addressDirectory);
   _isConnected = true;
 }
 
@@ -117,7 +119,8 @@ void MPISinglePortsCommunication::requestConnection(std::string const &acceptorN
   assertion(not isConnected());
   _isAcceptor = false;
 
-  _portName = readConnectionInfo(acceptorName, requesterName, -1, _addressDirectory);
+  ConnectionInfoReader conInfo(acceptorName, requesterName, _addressDirectory);
+  _portName = conInfo.read();
   DEBUG("Request connection to " << _portName);
 
   MPI_Comm communicator;
@@ -144,7 +147,8 @@ void MPISinglePortsCommunication::requestConnectionAsClient(std::string      con
   
   _isAcceptor = false;
 
-  _portName = readConnectionInfo(acceptorName, requesterName, -1, _addressDirectory);
+  ConnectionInfoReader conInfo(acceptorName, requesterName, _addressDirectory);
+  _portName = conInfo.read();
   DEBUG("Request connection to " << _portName);
 
   MPI_Comm communicator;

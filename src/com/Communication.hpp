@@ -294,22 +294,6 @@ protected:
 
   bool _isConnected = false;
 
-  void writeConnectionInfo(std::string const & acceptorName,
-                           std::string const & requesterName,
-                           int rank,
-                           std::string addressDirectory,
-                           std::string addressData);
-
-  std::string readConnectionInfo(std::string const & acceptorName,
-                                 std::string const & requesterName,
-                                 int rank,
-                                 std::string addressDirectory);
-
-  void removeConnectionInfo(std::string const & acceptorName,
-                            std::string const & requesterName,
-                            int rank,
-                            std::string addressDirectory);
-
 private:
   logging::Logger _log{"com::Communication"};
   

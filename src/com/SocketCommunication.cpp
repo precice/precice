@@ -1,5 +1,6 @@
 #include "SocketCommunication.hpp"
 #include "SocketRequest.hpp"
+#include "ConnectionInfoPublisher.hpp"
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 #include "utils/assertion.hpp"
@@ -70,7 +71,8 @@ void SocketCommunication::acceptConnection(std::string const &acceptorName,
 
     _portNumber = acceptor.local_endpoint().port();
     address = ipAddress + ":" + std::to_string(_portNumber);
-    writeConnectionInfo(acceptorName, requesterName, -1, _addressDirectory, address);
+    ConnectionInfoWriter conInfo(acceptorName, requesterName, _addressDirectory);
+    conInfo.write(address);
     DEBUG("Accept connection at " << address);
 
     int peerCurrent = 0; // Current peer to connect to
@@ -115,8 +117,6 @@ void SocketCommunication::acceptConnection(std::string const &acceptorName,
   // Keep IO service running so that it fires asynchronous handlers from another thread.
   _work   = std::make_shared<asio::io_service::work>(*_ioService);
   _thread = std::thread([this]() { _ioService->run(); });
-
-  removeConnectionInfo(acceptorName, requesterName, -1, _addressDirectory);
 }
 
 void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorName,
@@ -150,7 +150,8 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorNa
     }
 
     address = ipAddress + ":" + std::to_string(_portNumber);
-    writeConnectionInfo(acceptorName, requesterName, acceptorRank, _addressDirectory, address);
+    ConnectionInfoWriter conInfo(acceptorName, requesterName, acceptorRank, _addressDirectory);
+    conInfo.write(address);
 
     DEBUG("Accepting connection at " << address);
 
@@ -170,12 +171,9 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorNa
     ERROR("Accepting connection at " << address << " failed: " << e.what());
   }
 
-  // NOTE:
-  // Keep IO service running so that it fires asynchronous handlers from another thread.
+  // NOTE: Keep IO service running so that it fires asynchronous handlers from another thread.
   _work   = std::make_shared<asio::io_service::work>(*_ioService);
   _thread = std::thread([this]() { _ioService->run(); });
-
-  removeConnectionInfo(acceptorName, requesterName, acceptorRank, _addressDirectory);
 }
 
 void SocketCommunication::requestConnection(std::string const &acceptorName,
@@ -189,7 +187,8 @@ void SocketCommunication::requestConnection(std::string const &acceptorName,
   std::string address;
 
   try {
-    auto address = readConnectionInfo(acceptorName, requesterName, -1, _addressDirectory);
+    ConnectionInfoReader conInfo(acceptorName, requesterName, _addressDirectory);
+    address = conInfo.read();
     DEBUG("Request connection to " << address);
 
     std::string ipAddress  = address.substr(0, address.find(":"));
@@ -233,8 +232,7 @@ void SocketCommunication::requestConnection(std::string const &acceptorName,
     ERROR("Requesting connection to " << address << " failed: " << e.what());
   }
 
-  // NOTE:
-  // Keep IO service running so that it fires asynchronous handlers from another thread.
+  // NOTE: Keep IO service running so that it fires asynchronous handlers from another thread.
   _work   = std::make_shared<asio::io_service::work>(*_ioService);
   _thread = std::thread([this]() { _ioService->run(); });
 }
@@ -253,8 +251,8 @@ void SocketCommunication::requestConnectionAsClient(std::string      const &acce
     std::string address;
 
     try {
-      address = readConnectionInfo(acceptorName, requesterName, acceptorRank, _addressDirectory);
-      WARN(address);
+      ConnectionInfoReader conInfo(acceptorName, requesterName, acceptorRank, _addressDirectory);
+      address = conInfo.read();
       
       std::string ipAddress  = address.substr(0, address.find(":"));
       std::string portNumber = address.substr(ipAddress.length()+1, address.length() - ipAddress.length()-1);
@@ -293,8 +291,7 @@ void SocketCommunication::requestConnectionAsClient(std::string      const &acce
       ERROR("Requesting connection to " << address << " failed: " << e.what());
     }
   }
-  // NOTE:
-  // Keep IO service running so that it fires asynchronous handlers from another thread.
+  // NOTE: Keep IO service running so that it fires asynchronous handlers from another thread.
   _work   = std::make_shared<asio::io_service::work>(*_ioService);
   _thread = std::thread([this]() { _ioService->run(); });
 }
