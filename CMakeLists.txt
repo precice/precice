@@ -84,11 +84,6 @@ find_package (Threads REQUIRED)
 find_package(Boost 1.65.1 REQUIRED
   COMPONENTS filesystem log log_setup program_options system thread unit_test_framework)
 
-if (UNIX OR APPLE OR MINGW)
-  # Used for boost stacktrace on POSIX and MINGW
-  find_package(DL REQUIRED)
-endif()
-
 find_package(Eigen3 3.2 REQUIRED)
 
 find_package(LibXml2 REQUIRED)
@@ -151,7 +146,7 @@ target_compile_definitions(precice PRIVATE BOOST_ALL_DYN_LINK BOOST_ASIO_ENABLE_
 target_link_libraries(precice PRIVATE ${Boost_LIBRARIES})
 target_include_directories(precice PRIVATE ${Boost_INCLUDE_DIRS})
 if(UNIX OR APPLE OR MINGW)
-  target_link_libraries(precice PRIVATE DL::DL)
+  target_link_libraries(precice PRIVATE ${CMAKE_DL_LIBS})
 endif()
 
 # Setup Eigen3
