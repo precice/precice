@@ -314,6 +314,14 @@ install(FILES "preciceConfig.cmake" "${preCICE_BINARY_DIR}/preciceConfigVersion.
   DESTINATION lib/cmake/precice
   )
 
+# Setup the config in the build directory
+export(EXPORT preciceTargets
+  NAMESPACE precice::
+  FILE "preciceTargets.cmake")
+file(COPY "preciceConfig.cmake"
+  DESTINATION "${preCICE_BINARY_DIR}")
+
+
 # Set the directory used to prepare files for packaging
 set(PRECICE_PACKAGING_DIR "${CMAKE_CURRENT_BINARY_DIR}/packaging")
 mark_as_advanced(PRECICE_PACKAGING_DIR)
