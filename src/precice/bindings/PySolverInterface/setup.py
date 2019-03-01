@@ -9,6 +9,7 @@ setup(
     author_email='info@precice.org',
     license='LGPL-3.0',
     python_requires='>=3',
+    packages=['PySolverInterface'],
     install_requires=[
         'precice'
     ]
