@@ -10,7 +10,7 @@ from distutils.command.build import build
 
 # name of Interfacing API
 APPNAME = "precice"
-APPVERSION = "1.0"
+APPVERSION = "1.3"
 
 PYTHON_BINDINGS_PATH = os.path.dirname(os.path.abspath(__file__))
 
