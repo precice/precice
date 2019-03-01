@@ -132,7 +132,6 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorNa
 
   try {
     std::string ipAddress = getIpAddress();
-
     CHECK(not ipAddress.empty(), "Network \"" << _networkName << "\" not found for socket connection!");
 
     using asio::ip::tcp;
@@ -184,18 +183,14 @@ void SocketCommunication::requestConnection(std::string const &acceptorName,
   TRACE(acceptorName, requesterName);
   assertion(not isConnected());
 
-  std::string address;
+  ConnectionInfoReader conInfo(acceptorName, requesterName, _addressDirectory);
+  std::string address = conInfo.read();
+  DEBUG("Request connection to " << address);
+  std::string ipAddress  = address.substr(0, address.find(":"));
+  std::string portNumber = address.substr(ipAddress.length() + 1, address.length() - ipAddress.length() - 1);
+  _portNumber = static_cast<unsigned short>(std::stoi(portNumber));
 
   try {
-    ConnectionInfoReader conInfo(acceptorName, requesterName, _addressDirectory);
-    address = conInfo.read();
-    DEBUG("Request connection to " << address);
-
-    std::string ipAddress  = address.substr(0, address.find(":"));
-    std::string portNumber = address.substr(ipAddress.length() + 1, address.length() - ipAddress.length() - 1);
-
-    _portNumber = static_cast<unsigned short>(std::stoi(portNumber));
-
     auto socket = std::make_shared<Socket>(*_ioService);
 
     using asio::ip::tcp;
@@ -248,17 +243,14 @@ void SocketCommunication::requestConnectionAsClient(std::string      const &acce
   
   for (auto const & acceptorRank : acceptorRanks) {
     _isConnected = false;
-    std::string address;
+    ConnectionInfoReader conInfo(acceptorName, requesterName, acceptorRank, _addressDirectory);
+    std::string address = conInfo.read();
+    std::string ipAddress  = address.substr(0, address.find(":"));
+    std::string portNumber = address.substr(ipAddress.length()+1, address.length() - ipAddress.length()-1);
+    _portNumber = static_cast<unsigned short>(std::stoi(portNumber));
 
     try {
-      ConnectionInfoReader conInfo(acceptorName, requesterName, acceptorRank, _addressDirectory);
-      address = conInfo.read();
       
-      std::string ipAddress  = address.substr(0, address.find(":"));
-      std::string portNumber = address.substr(ipAddress.length()+1, address.length() - ipAddress.length()-1);
-
-      _portNumber = static_cast<unsigned short>(std::stoi(portNumber));
-
       auto socket = std::make_shared<Socket>(*_ioService);
 
       using asio::ip::tcp;
