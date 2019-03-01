@@ -59,7 +59,7 @@ public:
     if (iter == _locks.end()) {
       throw LockNotFoundException{};
     } else {
-      iter->second = true;
+      iter->second = false;
     }
   }
 
