@@ -11,6 +11,11 @@
 #include <list>
 #include <vector>
 #include <boost/signals2.hpp>
+#include <boost/geometry/geometries/concepts/box_concept.hpp>
+#include <boost/concept/assert.hpp>
+#include <boost/geometry/geometries/box.hpp>
+#include <boost/geometry.hpp>
+
 
 namespace precice {
   namespace mesh {
@@ -345,3 +350,55 @@ private:
 std::ostream& operator<<(std::ostream& os, const Mesh& q);
 
 }} // namespace precice, mesh
+
+//Type traits for Mesh: Make BoundingBox fulfill bg::Box concept
+
+namespace boost { 
+namespace geometry {
+namespace traits {
+using BoundingBox = ::precice::mesh::Mesh::BoundingBox;
+
+template <>
+struct tag<BoundingBox>
+{
+  using type = box_tag;
+};
+
+namespace bg = ::boost::geometry;
+template <>
+struct point_type<BoundingBox>
+{
+  using point_t = bg::model::point<double, 3, bg::cs::cartesian>; //fake point type.
+  using type = point_t; //BoundingBox does not consist of this point type, actually.
+};
+
+template <std::size_t Dimension>
+struct indexed_access<BoundingBox, min_corner, Dimension>
+{
+  static inline double get(const BoundingBox& bb)
+  {
+    return bb[Dimension].first;
+  }
+  static inline void set(BoundingBox& bb, double value)
+  {
+    bb[Dimension].first = value;
+  }
+};
+
+template <std::size_t Dimension>
+struct indexed_access<BoundingBox, max_corner, Dimension>
+{
+  static inline double get(const BoundingBox& bb)
+  {
+    return bb[Dimension].second;
+  }
+  static inline void set(BoundingBox& bb, const double& value)
+  {
+    bb[Dimension].second = value;
+  }
+}; 
+BOOST_CONCEPT_ASSERT( (bg::concepts::Box<BoundingBox>) );
+}}}
+//namespace bg = ::boost::geometry;
+//typedef bg::model::point<double, 2, bg::cs::cartesian> point_t;
+//BOOST_CONCEPT_ASSERT( (bg::concepts::Box<bg::model::box<point_t>) );
