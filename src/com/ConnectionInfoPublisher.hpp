@@ -47,7 +47,7 @@ class ConnectionInfoWriter : public ConnectionInfoPublisher
 public:
   using ConnectionInfoPublisher::ConnectionInfoPublisher; // to inherit the constructor
 
-  /// Removes the connection info file.
+  /// Removes the connection info file and the directories .precice/[hash], is empty.
   ~ConnectionInfoWriter();
 
   /// Write the string info, e.g. IP:port to the connection info file

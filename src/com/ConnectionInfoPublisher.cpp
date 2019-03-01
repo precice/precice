@@ -67,7 +67,16 @@ std::string ConnectionInfoReader::read()
 
 ConnectionInfoWriter::~ConnectionInfoWriter()
 {
+  namespace fs = boost::filesystem;
+  fs::path p(getFilename());
   boost::filesystem::remove(getFilename());
+  try {
+    fs::remove(p.parent_path()); // try to also remove parent dir, i.e, first part of hash
+    fs::remove(p.parent_path().parent_path()); // and also the .precice, only if empty
+  }
+  catch (fs::filesystem_error) {
+    // directory not empty, no problem
+  }
 }
 
 
