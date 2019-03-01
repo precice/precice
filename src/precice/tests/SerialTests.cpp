@@ -1157,6 +1157,8 @@ BOOST_AUTO_TEST_CASE(testThreeSolvers,
       config::Configuration config;
       xml::configure(config.getXMLTag(), configs[k]);
       precice._impl->configure(config.getSolverInterfaceConfiguration());
+      int meshID = precice.getMeshID("MeshC");
+      precice.setMeshVertex(meshID, Eigen::Vector2d(0, 0).data());
       double dt = precice.initialize();
 
       if (precice.isActionRequired(writeInitData)){
@@ -1183,6 +1185,8 @@ BOOST_AUTO_TEST_CASE(testThreeSolvers,
       config::Configuration config;
       xml::configure(config.getXMLTag(), configs[k]);
       precice._impl->configure(config.getSolverInterfaceConfiguration());
+      int meshID = precice.getMeshID("MeshD");
+      precice.setMeshVertex(meshID, Eigen::Vector2d(0, 0).data());
       double dt = precice.initialize();
 
       if (precice.isActionRequired(writeInitData)){
