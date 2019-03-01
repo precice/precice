@@ -26,6 +26,7 @@ list (APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 list (APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/modules")
 
 include(CopyTargetProperty)
+include(EnvFile)
 
 # CMake Policies
 
@@ -278,6 +279,14 @@ install(TARGETS precice binprecice
   PUBLIC_HEADER DESTINATION include/precice
   INCLUDES DESTINATION include/precice
   )
+
+write_env_file(
+  FILE "${preCICE_BINARY_DIR}/precice.env"
+  PREFIX "${CMAKE_INSTALL_PREFIX}"
+  LIBRARY lib
+  RUNTIME bin
+  INTERFACE include 
+)
 
 if(PRECICE_InstallTest)
   # Install the testprecice target
