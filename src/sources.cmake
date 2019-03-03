@@ -281,6 +281,7 @@ target_sources(precice
     src/utils/PointerVector.hpp
     src/utils/Publisher.cpp
     src/utils/Publisher.hpp
+    src/utils/SignalHandler.cpp
     src/utils/SignalHandler.hpp
     src/utils/String.cpp
     src/utils/String.hpp
@@ -292,6 +293,7 @@ target_sources(precice
     src/utils/prettyprint.hpp
     src/utils/stacktrace.cpp
     src/utils/stacktrace.hpp
+    src/versions.hpp
     src/versions.hpp
     src/xml/ConfigParser.cpp
     src/xml/ConfigParser.hpp
