@@ -77,7 +77,7 @@ before_scipt:
   - mkdir $TRAVIS_BUILD_DIR/tests
 
 script:
-  - tools/travis-build-test.sh
+  - $TRAVIS_BUILD_DIR/tools/travis-build-test.sh
 
 after_failure:
   - cd $TRAVIS_BUILD_DIR
