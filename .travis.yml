@@ -31,6 +31,7 @@ env:
     - PYTHONPATH="$PETSC_DIR/$PETSC_ARCH/lib:/usr/lib/python2.7:/usr/lib/python2.7/dist-packages:/usr/lib/python2.7/plat-x86_64-linux-gnu"
     - EIGEN3_ROOT_DIR=${LOCAL_INSTALL}
     - BOOST_ROOT=${LOCAL_INSTALL}
+    - BUILD_TYPE=CMAKE
 
   matrix:
     - MPI=on PETSC=on
@@ -72,8 +73,7 @@ install:
   - $TRAVIS_BUILD_DIR/tools/travis-install-dependencies.sh $LOCAL_INSTALL
   - export PATH=${LOCAL_INSTALL}/cmake/bin:${PATH}
 
-before_script:
-  - mkdir $TRAVIS_BUILD_DIR/build
+before_scipt:
   - mkdir $TRAVIS_BUILD_DIR/tests
 
 script: |
@@ -81,15 +81,18 @@ script: |
       export PRECICE_BUILD_DIR=$TRAVIS_BUILD_DIR/build/last
       cd $TRAVIS_BUILD_DIR
       scons -j 2 petsc=$PETSC mpi=$MPI python=on compiler=$CXX staticlib bin solib tests symlink
+      cd $TRAVIS_BUILD_DIR/tests
+      if [ "$MPI" = "on" ]; then
+        mpirun.openmpi -n 4 --output-filename boost-test-output  $PRECICE_BUILD_DIR/testprecice -r detailed;
+      else
+        $PRECICE_BUILD_DIR/testprecice -x -r detailed > boost-test-output;
+      fi
     else
-      export PRECICE_BUILD_DIR=$TRAVIS_BUILD_DIR/build
-      cd $TRAVIS_BUILD_DIR/build
-      cmake -DPETSC=$PETSC -DMPI=$MPI -DPYTHON=on -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX ..
-      cmake --build .
+      mkdir build && cd build
+      cmake -DPETSC=$PETSC -DMPI=$MPI -DPYTHON=on -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Debug ..
+      cmake --build . -- -j 2
+      ctest -V > $TRAVIS_BUILD_DIR/tests/boost-test-output
     fi
-    cd $TRAVIS_BUILD_DIR/tests
-    if [ "$MPI" = "off" ]; then $PRECICE_BUILD_DIR/testprecice -x -r detailed > boost-test-output; fi
-    if [ "$MPI" = "on"  ]; then mpirun.openmpi -n 4 --output-filename boost-test-output  $PRECICE_BUILD_DIR/testprecice -r detailed; fi
 
 after_failure:
   - cd $TRAVIS_BUILD_DIR
