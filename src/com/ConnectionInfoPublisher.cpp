@@ -28,7 +28,7 @@ ConnectionInfoPublisher::ConnectionInfoPublisher(std::string acceptorName,
 {}
 
 
-std::string ConnectionInfoPublisher::getFilename()
+std::string ConnectionInfoPublisher::getFilename() const
 {
   using namespace boost::filesystem;
   
@@ -37,7 +37,7 @@ std::string ConnectionInfoPublisher::getFilename()
   auto ns = ns_gen("af7ce8f2-a9ee-46cb-38ee-71c318aa3580"); // md5 hash of precice.org as namespace
   
   boost::uuids::name_generator gen{ns};
-  std::string s = acceptorName + requesterName + std::to_string(rank);
+  std::string const s = acceptorName + requesterName + std::to_string(rank);
   std::string hash = boost::uuids::to_string(gen(s));
   hash.erase(std::remove(hash.begin(), hash.end(), '-'), hash.end());
   
@@ -46,20 +46,20 @@ std::string ConnectionInfoPublisher::getFilename()
     / path(hash.substr(0, firstLevelLen))
     / hash.substr(firstLevelLen);
   
-  return p.string();  
+  return p.string();
 }
 
 
-std::string ConnectionInfoReader::read()
+std::string ConnectionInfoReader::read() const
 {
-  std::string addressData;
   std::ifstream ifs;
   auto path = getFilename();
   do {
     ifs.open(path, std::ifstream::in);
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
   } while (not ifs);
-
+  
+  std::string addressData;
   ifs >> addressData;
   return addressData;
 }
@@ -69,8 +69,8 @@ ConnectionInfoWriter::~ConnectionInfoWriter()
 {
   namespace fs = boost::filesystem;
   fs::path p(getFilename());
-  boost::filesystem::remove(getFilename());
   try {
+    fs::remove(getFilename());
     fs::remove(p.parent_path()); // try to also remove parent dir, i.e, first part of hash
     fs::remove(p.parent_path().parent_path()); // and also the .precice, only if empty
   }
@@ -80,7 +80,7 @@ ConnectionInfoWriter::~ConnectionInfoWriter()
 }
 
 
-void ConnectionInfoWriter::write(std::string const & info)
+void ConnectionInfoWriter::write(std::string const & info) const
 {
   namespace fs = boost::filesystem;
   auto path = getFilename();

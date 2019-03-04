@@ -184,11 +184,11 @@ void SocketCommunication::requestConnection(std::string const &acceptorName,
   assertion(not isConnected());
 
   ConnectionInfoReader conInfo(acceptorName, requesterName, _addressDirectory);
-  std::string address = conInfo.read();
+  std::string const address = conInfo.read();
   DEBUG("Request connection to " << address);
-  std::string ipAddress  = address.substr(0, address.find(":"));
-  std::string portNumber = address.substr(ipAddress.length() + 1, address.length() - ipAddress.length() - 1);
-  _portNumber = static_cast<unsigned short>(std::stoi(portNumber));
+  std::string const ipAddress  = address.substr(0, address.find(":"));
+  std::string const portNumber = address.substr(ipAddress.length() + 1, address.length() - ipAddress.length() - 1);
+  _portNumber = static_cast<unsigned short>(std::stoul(portNumber));
 
   try {
     auto socket = std::make_shared<Socket>(*_ioService);
@@ -244,13 +244,12 @@ void SocketCommunication::requestConnectionAsClient(std::string      const &acce
   for (auto const & acceptorRank : acceptorRanks) {
     _isConnected = false;
     ConnectionInfoReader conInfo(acceptorName, requesterName, acceptorRank, _addressDirectory);
-    std::string address = conInfo.read();
-    std::string ipAddress  = address.substr(0, address.find(":"));
-    std::string portNumber = address.substr(ipAddress.length()+1, address.length() - ipAddress.length()-1);
-    _portNumber = static_cast<unsigned short>(std::stoi(portNumber));
+    std::string const address = conInfo.read();
+    std::string const ipAddress  = address.substr(0, address.find(":"));
+    std::string const portNumber = address.substr(ipAddress.length()+1, address.length() - ipAddress.length()-1);
+    _portNumber = static_cast<unsigned short>(std::stoul(portNumber));
 
     try {
-      
       auto socket = std::make_shared<Socket>(*_ioService);
 
       using asio::ip::tcp;

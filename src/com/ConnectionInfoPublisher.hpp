@@ -25,7 +25,7 @@ protected:
    * It has the form addressDirectory/.precice/first two letters from hash of 
    * (acceptorName, requesterName, rank)/rest of hash.
    */
-  std::string getFilename();  
+  std::string getFilename() const;
 };
 
 /// Reads the connection info for the given participant/rank information
@@ -35,7 +35,7 @@ public:
   using ConnectionInfoPublisher::ConnectionInfoPublisher; // to inherit the constructor
 
   /// Reads the info from the connection info file. Will block, if the the file is not present.
-  std::string read();
+  std::string read() const;
 };
 
 /// Writes the connection info for the given participant/rank information.
@@ -55,5 +55,5 @@ public:
    * which is determined by acceptorName, requesterName, rank, addressDirectory
    * set at construction.
    */
-  void write(std::string const & info);
+  void write(std::string const & info) const;
 };
