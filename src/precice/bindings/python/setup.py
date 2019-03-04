@@ -123,7 +123,9 @@ class my_build(build, object):
         print("#####")
 
         super(my_build, self).finalize_options()
-        
+
+dependencies = ['cython']
+dependencies.append('mpi4py')  # only needed, if preCICE was compiled with MPI, see https://github.com/precice/precice/issues/311
 
 # build precice.so python extension to be added to "PYTHONPATH" later
 setup(
@@ -135,9 +137,7 @@ setup(
     author_email='info@precice.org',
     license='LGPL-3.0',
     python_requires='>=3',
-    install_requires=[
-        'cython'
-    ],
+    install_requires=dependencies,
     cmdclass={'build_ext': my_build_ext,
               'build': my_build,
               'install': my_install},
