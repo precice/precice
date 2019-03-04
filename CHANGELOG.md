@@ -3,13 +3,21 @@
 All notable changes to this project will be documented in this file. For future plans, see our [Roadmap](https://github.com/precice/precice/wiki/Roadmap).
 
 ## develop
+- Fix CMake now importable from binary dir
 - The python module for the preCICE bindings `PySolverInterface` is renamed to `precice`. This change does not break old code. Please refer to [`precice/src/precice/bindings/python/README.md`](https://github.com/precice/precice/blob/develop/src/precice/bindings/python/README.md) for more informaiton.
 - Use boost stacktrace for cross platform stacktrace printing. This requires Boost 1.65.1
+- Add explicit linking to `libdl` for `boost::stacktrace`
 - Reimplemented the internals of the nearest-projection mapping to signifantly reduce its initialization time.
 - The EventTimings now do a time normalization among all ranks, i.e., the the first event is considered to happen at t=0, all other events are adapted thereto.
 - The old CSV format of the EventTimings log files, split among two files was replaced by a single file, structured JSON format.
-- Fix memory leaks in the XML Attributes and Verificators
-- Add manpages for binprecice and testprecice
+- Fix memory leaks in the `xml::XMLAttributes` and `xml::Validator*`
+- Remove `xml::Validator*` classes and replace them in `xml::XMLAttribute` with a set of "options".
+- Make `xml::XMLAttribute` and `xml::XMLTag` chainable.
+- Add manpages for binprecice and testprecice.
+- Fix memory leaks in `mesh::Mesh`.
+- Fix mapping classes not flushing the underlying caches on `clear()`.
+- Fix format of version logging (first preCICE log message).j
+- Add tollerance of iterations in quasi-Newton tests.
 - CMake overhaul:
   - Convert to target-based system: precice, testprecice, binprecice
   - New Options:
@@ -33,7 +41,7 @@ All notable changes to this project will be documented in this file. For future 
   - Add `CMakeLists.txt` to `tools/solverdummy/cpp`. It is an example of how to link to precice with CMake.
   - Extend the displayed information when configuring.
 - Extend `updateSourceFiles.py` to verify the sources using `git ls-files --full-name` if available.
-- Fix the VTK XML exporter not to write VertexNormals
+- Fix the `io::VTKXMLExporter` not to write VertexNormals
 - Improve the user-friendliness of the tests.
   - `make test` will run all tests.
   - `make test_base` only a unproblematic base-set.

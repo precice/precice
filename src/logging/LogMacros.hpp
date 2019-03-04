@@ -13,11 +13,12 @@
 #include <string>
 #include "utils/MasterSlave.hpp"
 #include "utils/prettyprint.hpp" // so that we can put std::vector et. al. on ostream
+#include "utils/SignalHandler.hpp"
 
 #include "Tracer.hpp"
 
 
-#define WARN(message) do {                                  \
+#define WARN(message) do {                                              \
     LOG_LOCATION;                                                       \
     BOOST_LOG_SEV(_log, boost::log::trivial::severity_level::warning)   \
       << message;                                                       \
@@ -33,9 +34,10 @@
 #define ERROR(message) do {                                             \
     LOG_LOCATION;                                                       \
     BOOST_LOG_SEV(_log, boost::log::trivial::severity_level::error)     \
-      << message;                                                       \
-    std::exit(-1);                                                        \
-  } while (false)
+    << message;                                                         \
+    precice::utils::terminationSignalHandler(6);                        \
+    std::exit(-1);                                                      \
+} while (false)
 
 #define CHECK(check, message)                      \
   if ( !(check) ) {                                \
