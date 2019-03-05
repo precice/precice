@@ -186,8 +186,9 @@ void SocketCommunication::requestConnection(std::string const &acceptorName,
   ConnectionInfoReader conInfo(acceptorName, requesterName, _addressDirectory);
   std::string const address = conInfo.read();
   DEBUG("Request connection to " << address);
-  std::string const ipAddress  = address.substr(0, address.find(":"));
-  std::string const portNumber = address.substr(ipAddress.length() + 1, address.length() - ipAddress.length() - 1);
+  auto const sepidx = address.find(':');
+  std::string const ipAddress  = address.substr(0, sepidx);
+  std::string const portNumber = address.substr(sepidx + 1);
   _portNumber = static_cast<unsigned short>(std::stoul(portNumber));
 
   try {
@@ -245,8 +246,9 @@ void SocketCommunication::requestConnectionAsClient(std::string      const &acce
     _isConnected = false;
     ConnectionInfoReader conInfo(acceptorName, requesterName, acceptorRank, _addressDirectory);
     std::string const address = conInfo.read();
-    std::string const ipAddress  = address.substr(0, address.find(":"));
-    std::string const portNumber = address.substr(ipAddress.length()+1, address.length() - ipAddress.length()-1);
+    auto const sepidx = address.find(':');
+    std::string const ipAddress  = address.substr(0, sepidx);
+    std::string const portNumber = address.substr(sepidx + 1);
     _portNumber = static_cast<unsigned short>(std::stoul(portNumber));
 
     try {
