@@ -14,5 +14,5 @@ else
     mkdir build && cd build
     cmake -DPETSC=$PETSC -DMPI=$MPI -DPYTHON=on -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Debug ..
     cmake --build . -- -j 2
-    ctest -V -O $TRAVIS_BUILD_DIR/tests/boost-test-output
+    ctest --output-on-failure -O $TRAVIS_BUILD_DIR/tests/boost-test-output
 fi
