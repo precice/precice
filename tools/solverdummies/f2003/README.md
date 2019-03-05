@@ -11,8 +11,8 @@ Note that you need preCICE build as a static library.
 # Run
 
 You can test the dummy solver by coupling two instances with each other. Open two terminals and run
- * `./SolverDummy precice-config.xml SolverOne MeshOne`
- * `./SolverDummy precice-config.xml SolverTwo MeshTwo`
+ * `./SolverDummy ../precice-config.xml SolverOne MeshOne`
+ * `./SolverDummy ../precice-config.xml SolverTwo MeshTwo`
 
 # Next Steps
 

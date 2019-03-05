@@ -29,8 +29,8 @@ Now run `scons`.
 
 You can test the dummy solver by coupling two instances with each other. Open two terminals and run
 
-* `./solverdummy precice-config.xml SolverOne MeshOne`
-* `./solverdummy precice-config.xml SolverTwo MeshTwo`
+* `./solverdummy ../precice-config.xml SolverOne MeshOne`
+* `./solverdummy ../precice-config.xml SolverTwo MeshTwo`
 
 # Next Steps
 
