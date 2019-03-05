@@ -1,0 +1,4 @@
+precice>=1.3
+argparse>=1.4
+numpy>=1.16
+mpi4py>=3
