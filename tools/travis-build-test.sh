@@ -15,7 +15,7 @@ if [ "$BUILD_TYPE" = "SCONS" ]; then
     fi
 else
     mkdir $TRAVIS_BUILD_DIR/build && cd $TRAVIS_BUILD_DIR/build
-    cmake -DPETSC=$PETSC -DMPI=$MPI -DPYTHON=on -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Debug ..
+    cmake -DPETSC=$PETSC -DMPI=$MPI -DPYTHON=on -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Debug $TRAVIS_BUILD_DIR
     cmake --build . -- -j 2
     ctest --output-on-failure -O $TRAVIS_BUILD_DIR/tests/boost-test-output
 fi
