@@ -58,13 +58,15 @@ if(MPI AND MPIEXEC_EXECUTABLE)
     MPI
     CANFAIL
     )
-  add_precice_test(
-    NAME PetRBFParallel
-    ARGUMENTS "--run_test=MappingTests/PetRadialBasisFunctionMapping/Parallel/\*"
-    TIMEOUT 20
-    MPI
-    CANFAIL
-    )
+  if(PETSC)
+    add_precice_test(
+      NAME PetRBFParallel
+      ARGUMENTS "--run_test=MappingTests/PetRadialBasisFunctionMapping/Parallel/\*"
+      TIMEOUT 20
+      MPI
+      CANFAIL
+      )
+  endif()
   add_precice_test(
     NAME NoMPI
     )
