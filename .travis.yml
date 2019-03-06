@@ -29,7 +29,7 @@ env:
     - LD_LIBRARY_PATH="$PETSC_DIR/$PETSC_ARCH/lib:$LOCAL_INSTALL/lib:$LD_LIBRARY_PATH"
     - LIBRARY_PATH="$PETSC_DIR/$PETSC_ARCH/lib:$LOCAL_INSTALL/lib:$LIBRARY_PATH"
     - PYTHONPATH="$PETSC_DIR/$PETSC_ARCH/lib:/usr/lib/python2.7:/usr/lib/python2.7/dist-packages:/usr/lib/python2.7/plat-x86_64-linux-gnu"
-    - EIGEN3_ROOT_DIR=${LOCAL_INSTALL}/eigen3
+    - EIGEN3_ROOT_DIR=${LOCAL_INSTALL}
     - BOOST_ROOT=${LOCAL_INSTALL}
     - BUILD_TYPE=CMAKE
     - CXXFLAGS="-Wall -Wextra -Wno-unused-parameter"

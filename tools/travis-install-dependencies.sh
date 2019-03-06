@@ -13,8 +13,10 @@ if [ ! -d $LOCAL_INSTALL/include ]; then
     mkdir -p $LOCAL_INSTALL/include $LOCAL_INSTALL/lib
 
     # Download and extract Eigen
-    mkdir -p $LOCAL_INSTALL/eigen3
-    wget -nv http://bitbucket.org/eigen/eigen/get/3.3.2.tar.bz2 -O - | tar xj -C $LOCAL_INSTALL/eigen3 --strip-components=1 eigen-eigen-da9b4e14c255
+    mkdir -p $LOCAL_INSTALL/eigen3-src
+    wget -nv http://bitbucket.org/eigen/eigen/get/3.3.2.tar.bz2 -O - | tar xj -C $LOCAL_INSTALL/eigen3-src --strip-components=1 eigen-eigen-da9b4e14c255
+    mv $LOCAL_INSTALL/eigen3-src/Eigen $LOCAL_INSTALL/include/
+    rm -r $LOCAL_INSTALL/eigen3-src
 
     # Download, compile and install Boost
     wget -nv 'https://dl.bintray.com/boostorg/release/1.65.1/source/boost_1_65_1.tar.bz2' -O - | tar xj
