@@ -43,22 +43,22 @@ matrix:
   include:
 
       # testing builds on scons
-    - if: type = cron or branch = develop
+    - if: type = cron or branch = master
       compiler: gcc
       env: BUILD_TYPE=SCONS MPI=on PETSC=on
-    - if: type = cron or branch = develop
+    - if: type = cron or branch = master
       compiler: gcc
       env: BUILD_TYPE=SCONS MPI=on PETSC=off
-    - if: type = cron or branch = develop
+    - if: type = cron or branch = master
       compiler: gcc
       env: BUILD_TYPE=SCONS MPI=off PETSC=off
-    - if: type = cron or branch = develop
+    - if: type = cron or branch = master
       compiler: clang
       env: BUILD_TYPE=SCONS MPI=on PETSC=on
-    - if: type = cron or branch = develop
+    - if: type = cron or branch = master
       compiler: clang
       env: BUILD_TYPE=SCONS MPI=on PETSC=off
-    - if: type = cron or branch = develop
+    - if: type = cron or branch = master
       compiler: clang
       env: BUILD_TYPE=SCONS MPI=off PETSC=off
 cache:
