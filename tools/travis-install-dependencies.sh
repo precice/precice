@@ -31,6 +31,9 @@ if [ ! -d $LOCAL_INSTALL/include ]; then
     export PETSC_ARCH=arch-linux2-c-debug
     python2 configure --with-debugging=1 --with-64-bit-indices > ~/petsc.configure
     make > ~/petsc.make
+
+    ls -l $LOCAL_INSTALL/include
+    ls -l $LOCAL_INSTALL/lib
 fi
 
 # get modern cmake
