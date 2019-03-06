@@ -1,12 +1,17 @@
-# Compilation
+# Install Dependencies
 
-Don't forget to build the Python bindings! Go [here](https://github.com/precice/precice/blob/develop/src/precice/bindings/python/README.md) for instructions.
+Run in this directory:
+```
+pip3 install --user -r requirements.txt
+```
+
+Don't forget to install the precice [python bindings](../../../src/precice/bindings/python/README.md).
 
 # Run
 
 You can test the dummy solver by coupling two instances with each other. Open two terminals and run
- * `python solverdummy.py precice-config.xml SolverOne MeshOne`
- * `python solverdummy.py precice-config.xml SolverTwo MeshTwo`
+ * `python3 solverdummy.py precice-config.xml SolverOne MeshOne`
+ * `python3 solverdummy.py precice-config.xml SolverTwo MeshTwo`
 
 # Next Steps
 

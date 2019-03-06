@@ -10,6 +10,7 @@ from distutils.command.build import build
 
 # name of Interfacing API
 APPNAME = "precice"
+APPVERSION = "1.3"  # todo: should be replaced with precice.get_version() as soon as it exists , see https://github.com/precice/precice/issues/261
 
 PYTHON_BINDINGS_PATH = os.path.dirname(os.path.abspath(__file__))
 
@@ -127,9 +128,17 @@ class my_build(build, object):
 # build precice.so python extension to be added to "PYTHONPATH" later
 setup(
     name=APPNAME,
+    version=APPVERSION,
     description='Python language bindings for preCICE coupling library',
+    url='https://github.com/precice/precice',
+    author='the preCICE developers',
+    author_email='info@precice.org',
+    license='LGPL-3.0',
+    python_requires='>=3',
+    install_requires=[
+        'cython'
+    ],
     cmdclass={'build_ext': my_build_ext,
               'build': my_build,
               'install': my_install},
-    python_requires='>=3'
 )

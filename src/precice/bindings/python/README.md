@@ -1,69 +1,85 @@
 Python language bindings for preCICE
 ------------------------------------
 
-# Dependencies
+These are the python bindings for preCICE.
 
-* Download and install Cython from http://cython.org/#download or install it using your package manager (e.g. `pip install Cython` or `pip3 install Cython`). 
-* Only necessary, if your are using python2: Install Enum using your package manager (e.g. `sudo apt install python-enum34`)
+# Installing the package
 
-*Note:* If you installed Cython using `apt install Cython` under Ubuntu 16.04, you might face problems. Try installing using `pip2/3` instead.
+We recommend using `pip3 install --user` for the sake of simplicity.
 
-*Note:* If you have both Python 2 and Python 3 in your system, make sure that you use the correct version with `python2` or `python3` (the default `python` command may invoke the wrong version, giving you errors such as  not being able to find packages). You may actually want to change your default python version to Python 3 e.g. by setting up an alias (it has already been a while since Python 3 is around, that's probably a good idea!).
+For system installs of preCICE, this works out of the box.
 
-# Building
+If preCICE was installed in a custom prefix, or not installed at all, you have to extend the following environment variables:
+- `LIBRARY_PATH`, `LD_LIBRARY_PATH` to the library location, or `$prefix/lib`
+- `CPATH` either to the `src` directory or the `$prefix/include`
 
-1. Open terminal in this folder.
-2. Execute the following command:
+## Using pip3
+
+In this directory, execute:
+```
+$ pip3 install --user .
+```
+
+This will fetch cython, compile the bindings and finally install the precice package.
+
+## With explicit include path, library path, or mpicompiler
+
+1. Install cython via pip3
+```
+$ pip3 install --user cython
+```
+2. Open terminal in this folder.
+3. Build the bindings
 
 ```
-$ python3 setup.py build_ext --include-dirs=$PRECICE_ROOT/src --library-dirs=$PRECICE_ROOT/build/last
+$ python3 setup.py build_ext --mpicompiler=mpicc --include-dirs=$PRECICE_ROOT/src --library-dirs=$PRECICE_ROOT/build/last 
 ```
-This creates a folder `build` with the binaries.
-If you build preCICE using CMake, you can pass the path to the CMake binary directory using `--library-dirs`.
 
-3. Run 
+**Options:**
+- `--include-dirs=`, default: `''`   
+  Path to the headers of preCICE, point to the sources `$PRECICE_ROOT/src`, or the your custom install prefix `$prefix/include`.
+- `--library-dirs=`, default: `''`  
+  Path to the libary of preCICE, point to the build directory (scons: `$PRECICE_ROOT/build/last`, cmake: wherever you configured the build), or to the custom install prefix `$prefix/lib`.
+- `--mpicompiler=`, default: `mpic++`  
+  MPI compiler wrapper of choice.
+
+**NOTES:**
+
+- If you build preCICE using CMake, you can pass the path to the CMake binary directory using `--library-dirs`.
+- It is recommended to use preCICE as a shared library here.
+- If you used scons for building precice and `PRECICE_ROOT` is defined, you can also use the script `build_and_install.sh`.
+
+4. Install the bindings
 ```
 $ python3 setup.py install --user
 ```
-to install the module on your system. You might need `sudo`, depending on the how you have installed Python. You can use the option `--prefix=your/default/path` to install the module at an arbitrary path of your choice (for example, if you cannot or don't want to use `sudo`).
 
-4. Clean
+4. Clean-up _optional_
 ```
 $ python3 setup.py clean --all
 ```
-This will clean the (user's) build directory (you probably don't need these files as you already installed them elsewhere).
 
-It is recommended to use preCICE as a shared library here. `mpic++` is used as default compiler, if you want to use a different compiler, this can be done with the option `--mpicompiler=<yourcompiler>`. Example:
+# Test the installation
+
+Run the following to test the installation:
 ```
-$ python3 setup.py build --mpicompiler=mpicc
-```
-
-**NOTE:** If you used scons for building precice and `PRECICE_ROOT` is defined, you can also use the script `build_and_install.sh`.
-
-# Using
-
-1. Import `precice` into your code:
-
-```
-import precice
-from precice import *
+$ python3 -c "import precice"
 ```
 
-2. If you use preCICE with MPI, you also have to add
-   
-```   
-from mpi4py import MPI
-```
+# Using with MPI
 
-To install mpi4py, you can e.g. (you need MPI already installed, e.g. libopenmpi-dev) 
+If precice was compiled with MPI, you have to initialize MPI prior to configuring a SolverInterface.
+To do so, install the package `mpi4py` and import `MPI` in your python module.
 
 ```
-sudo apt-get install python-pip
-sudo pip install mpi4py
+$ pip3 install --user mpi4py
 ```
 
+```python
+from mpi4py import MPI # Initialize MPI 
+```
 
 **NOTE:**
 - For an example of how the `precice` can be used, refer to the [1D elastic tube example](https://github.com/precice/precice/wiki/1D-elastic-tube-using-the-Python-API).
 - In case the compilation fails with `shared_ptr.pxd not found` messages, check if you use the latest version of Cython.
-- If you want to use the old interface (precice version < 1.4.0), please also install the corresponding wrapper [`PySolverInterface`](https://github.com/precice/precice/tree/changingNameOfPySolverInterface/src/precice/bindings/PySolverInterface) using `setup.py install`.
+- If you want to use the old interface (precice version < 1.4.0), please also install the corresponding wrapper [`PySolverInterface`](https://github.com/precice/precice/tree/changingNameOfPySolverInterface/src/precice/bindings/PySolverInterface).

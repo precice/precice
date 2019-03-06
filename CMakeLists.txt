@@ -366,6 +366,16 @@ else()
     )
 endif()
 
+# Configure a pkg-config file
+configure_file(
+  "${PROJECT_SOURCE_DIR}/tools/packaging/debian/precice.pc.in"
+  "lib/pkgconfig/libprecice.pc"
+  @ONLY
+  )
+install(DIRECTORY "${preCICE_BINARY_DIR}/lib/pkgconfig" 
+  DESTINATION lib
+)
+
 
 #
 # CTest
