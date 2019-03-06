@@ -1,5 +1,8 @@
 #!/bin/bash
 
+set -x
+set -e
+
 if [ "$BUILD_TYPE" = "SCONS" ]; then
     export PRECICE_BUILD_DIR=$TRAVIS_BUILD_DIR/build/last
     cd $TRAVIS_BUILD_DIR
