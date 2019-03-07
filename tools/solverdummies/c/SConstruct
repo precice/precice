@@ -21,7 +21,7 @@ envCompile = Environment (
    )
 
   
-envCompile.Object ('SolverDummy.c')
+envCompile.Object ('solverdummy.c')
 
 envLink = envCompile.Clone (CC='g++')
-envLink.Program('SolverDummy.o')
+envLink.Program('solverdummy.o')

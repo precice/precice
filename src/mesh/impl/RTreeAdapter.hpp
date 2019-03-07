@@ -49,6 +49,8 @@ struct access<Vertex, Dimension>
   }
 };
 
+BOOST_CONCEPT_ASSERT( (concepts::Point<Vertex>));
+
 /** @brief Provides the necessary template specialisations to adapt precice's Edge to boost.geometry
 *
 * This adapts every Edge to the segment concept of boost.geometry.
@@ -137,6 +139,8 @@ struct access<Eigen::VectorXd, Dimension>
     p[Dimension] = value;
   }
 };
+
+BOOST_CONCEPT_ASSERT( (concepts::Point<Eigen::VectorXd>));
 
 }}}
 

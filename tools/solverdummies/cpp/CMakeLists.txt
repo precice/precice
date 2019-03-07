@@ -3,6 +3,6 @@ project(SolverdummyCPP LANGUAGES CXX DESCRIPTION "preCICE CPP solver dummy")
 
 find_package(precice REQUIRED CONFIG)
 
-add_executable(dummycpp main.cpp)
-set_target_properties(dummycpp PROPERTIES CXX_STANDARD 11)
-target_link_libraries(dummycpp PRIVATE precice::precice)
+add_executable(solverdummy solverdummy.cpp)
+set_target_properties(solverdummy PROPERTIES CXX_STANDARD 11)
+target_link_libraries(solverdummy PRIVATE precice::precice)

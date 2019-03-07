@@ -30,6 +30,7 @@ function(add_precice_test)
     PROPERTIES
     RUN_SERIAL TRUE # Do not run this test in parallel with others
     WORKING_DIRECTORY "${PAT_WDIR}"
+    ENVIRONMENT PRECICE_ROOT=${preCICE_SOURCE_DIR}
     )
   if(PAT_TIMEOUT)
     set_tests_properties(${PAT_FULL_NAME} PROPERTIES TIMEOUT ${PAT_TIMEOUT} )
@@ -57,13 +58,15 @@ if(MPI AND MPIEXEC_EXECUTABLE)
     MPI
     CANFAIL
     )
-  add_precice_test(
-    NAME PetRBFParallel
-    ARGUMENTS "--run_test=MappingTests/PetRadialBasisFunctionMapping/Parallel/\*"
-    TIMEOUT 20
-    MPI
-    CANFAIL
-    )
+  if(PETSC)
+    add_precice_test(
+      NAME PetRBFParallel
+      ARGUMENTS "--run_test=MappingTests/PetRadialBasisFunctionMapping/Parallel/\*"
+      TIMEOUT 20
+      MPI
+      CANFAIL
+      )
+  endif()
   add_precice_test(
     NAME NoMPI
     )

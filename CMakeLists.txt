@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 3.9.6)
 
-project(preCICE VERSION 1.3.0 LANGUAGES CXX)
+project(preCICE VERSION 1.4.0 LANGUAGES CXX)
 
 #
 # Overview of this configuration
@@ -356,6 +356,16 @@ else()
     DESTINATION share/man
     )
 endif()
+
+# Configure a pkg-config file
+configure_file(
+  "${PROJECT_SOURCE_DIR}/tools/packaging/debian/precice.pc.in"
+  "lib/pkgconfig/libprecice.pc"
+  @ONLY
+  )
+install(DIRECTORY "${preCICE_BINARY_DIR}/lib/pkgconfig" 
+  DESTINATION lib
+)
 
 
 #

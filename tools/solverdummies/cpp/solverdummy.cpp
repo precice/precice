@@ -5,12 +5,10 @@
 #include <sstream>
 #include "precice/SolverInterface.hpp"
 #include "precice/Constants.hpp"
-#include <mpi.h>
 
 int main (int argc, char **argv)
 {
   std::cout << "Starting SolverDummy..." << std::endl;
-  MPI_Init(&argc, &argv);
   int commRank = 0;
   int commSize = 1;
 

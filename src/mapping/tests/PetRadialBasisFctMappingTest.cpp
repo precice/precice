@@ -1288,7 +1288,7 @@ BOOST_AUTO_TEST_CASE(ConsistentPolynomialSwitch,
   mesh::PtrMesh outMesh( new mesh::Mesh("OutMesh", dimensions, false) );
   mesh::PtrData outData = outMesh->createData( "OutData", 1 );
   int outDataID = outData->getID();
-  outMesh->createVertex(Vector2d(6, 6)); // Point is far outside the inMesh
+  outMesh->createVertex(Vector2d(3, 3)); // Point is outside the inMesh
 
   outMesh->allocateDataValues();
   addGlobalIndex(outMesh);
@@ -1301,7 +1301,7 @@ BOOST_AUTO_TEST_CASE(ConsistentPolynomialSwitch,
   mappingOff.computeMapping();
   mappingOff.map(inDataID, outDataID);
 
-  BOOST_TEST ( outData->values()[0] == 0.0 ); // Mapping to 0 since no basis function at (5,5) and no polynomial
+  BOOST_TEST ( outData->values()[0] <= 0.01 ); // Mapping to almost 0 since almost no basis function at (3,3) and no polynomial
 
   // Test integrated polynomial
   PetRadialBasisFctMapping<Gaussian> mappingOn(Mapping::CONSISTENT, dimensions, fct,
