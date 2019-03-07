@@ -25,6 +25,7 @@ fi
 # Download, compile and install Boost
 if [ ! -f $CACHE_BOOST_TOKEN ]; then
     rm -rf $LOCAL_INSTALL/boost
+    mkdir $LOCAL_INSTALL/boost
     wget -nv 'https://dl.bintray.com/boostorg/release/1.65.1/source/boost_1_65_1.tar.bz2' -O - | tar xj -C $LOCAL_INSTALL/boost
     cd $LOCAL_INSTALL/boost/boost_1_65_1
     ./bootstrap.sh --prefix=$LOCAL_INSTALL > ~/boost.bootstrap
