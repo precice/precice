@@ -30,6 +30,7 @@ if [ ! -f $CACHE_BOOST_TOKEN ]; then
     cd $LOCAL_INSTALL/boost/boost_1_65_1
     ./bootstrap.sh --prefix=$LOCAL_INSTALL > ~/boost.bootstrap
     ./b2 -j2 --with-program_options --with-test --with-filesystem --with-log install > ~/boost.b2
+    cd $LOCAL_INSTALL
     rm -rf $LOCAL_INSTALL/boost
     touch $CACHE_BOOST_TOKEN
 fi
@@ -37,17 +38,20 @@ fi
 # Download and compile PETSc
 if [ ! -f $CACHE_PETSC_TOKEN ]; then
     rm -rf $LOCAL_INSTALL/petsc
+    cd $LOCAL_INSTALL
     git clone -b maint https://bitbucket.org/petsc/petsc $LOCAL_INSTALL/petsc
     cd $LOCAL_INSTALL/petsc
     export PETSC_ARCH=arch-linux2-c-debug
     python2 configure --with-debugging=1 --with-64-bit-indices > ~/petsc.configure
     make > ~/petsc.make
+    cd $LOCAL_INSTALL
     rm -rf $LOCAL_INSTALL/petsc
     touch $CACHE_PETSC_TOKEN
 fi
 
 # Download CMake 3.10.1
 if [ ! -f $CACHE_CMAKE_TOKEN ]; then
+    cd $LOCAL_INSTALL
     rm -rf $LOCAL_INSTALL/cmake
     CMAKE_URL="http://www.cmake.org/files/v3.10/cmake-3.10.1-Linux-x86_64.tar.gz"
     mkdir ${LOCAL_INSTALL}/cmake
