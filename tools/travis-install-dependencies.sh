@@ -37,15 +37,15 @@ fi
 
 # Download and compile PETSc
 if [ ! -f $CACHE_PETSC_TOKEN ]; then
-    rm -rf $LOCAL_INSTALL/petsc
+    rm -rf $LOCAL_INSTALL/petsc-src
     cd $LOCAL_INSTALL
-    git clone -b maint https://bitbucket.org/petsc/petsc $LOCAL_INSTALL/petsc
-    cd $LOCAL_INSTALL/petsc
+    git clone -b maint https://bitbucket.org/petsc/petsc $LOCAL_INSTALL/petsc-src
+    cd $LOCAL_INSTALL/petsc-src
     export PETSC_ARCH=arch-linux2-c-debug
     python2 configure --with-debugging=1 --with-64-bit-indices > ~/petsc.configure
     make > ~/petsc.make
     cd $LOCAL_INSTALL
-    rm -rf $LOCAL_INSTALL/petsc
+    rm -rf $LOCAL_INSTALL/petsc-src
     touch $CACHE_PETSC_TOKEN
 fi
 
