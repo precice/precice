@@ -32,6 +32,10 @@
 #include "versions.hpp"
 
 #include <csignal> // used for installing crash handler
+#ifndef SIGXCPU
+#define SIGXCPU 24 /* exceeded CPU time limit */
+#endif
+
 #include <utility>
 
 #include "logging/Logger.hpp"
