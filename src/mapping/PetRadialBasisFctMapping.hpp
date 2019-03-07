@@ -770,24 +770,25 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
       return; // Ranks not at the interface should never hold interface vertices
 
   // Tags all vertices that are inside otherMesh's bounding box, enlarged by the support radius
-  for(mesh::Vertex& v : filterMesh->vertices()) {
-    bool isInside = true;
+  auto rtree = mesh::rtree::getVertexRTree(filterMesh);
+  mesh::Mesh::VertexContainer insideVerts;
+  if (not _basisFunction.hasCompactSupport()) {
+      insideVerts = filterMesh->vertices();
+  }
+  else {
     #if PETSC_MAJOR >= 3 and PETSC_MINOR >= 8
-    if (_basisFunction.hasCompactSupport()) {
-      for (int d = 0; d < v.getDimensions(); d++) {
-        if (v.getCoords()[d] < otherMesh->getBoundingBox()[d].first - _basisFunction.getSupportRadius() or
-            v.getCoords()[d] > otherMesh->getBoundingBox()[d].second + _basisFunction.getSupportRadius() ) {
-          isInside = false;
-          break;
-        }
-      }
-    }
+      namespace bgi = boost::geometry::index;
+      rtree->query(bgi::within(otherMesh->getBoundingBox()),
+          boost::make_function_output_iterator([&filterMesh, &insideVerts](size_t idx){
+            insideVerts.push_back(&filterMesh->vertices()[idx]);
+          }));
     #else
       #warning "Mesh filtering deactivated, due to PETSc version < 3.8. \
 preCICE is fully functional, but performance for large cases is degraded."
     #endif
-    if (isInside)
-      v.tag();
+  }
+  for (auto& vert : insideVerts){
+    vert.tag();
   }
 }
 
@@ -825,18 +826,20 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
       }
     }
   }
-  // Tag vertices that are inside the bounding box + support radius
-  for (mesh::Vertex& v : mesh->vertices()) {
-    bool isInside = true;
-    for (int d = 0; d < v.getDimensions(); d++) {
-      if (v.getCoords()[d] < bb[d].first - _basisFunction.getSupportRadius() or
-          v.getCoords()[d] > bb[d].second + _basisFunction.getSupportRadius() ) {
-        isInside = false;
-        break;
-      }
-    }
-    if (isInside)
-      v.tag();
+
+  // Enlarge bb by support radius
+  for (int d = 0; d < mesh->getDimensions(); d++){
+    bb[d].first -= _basisFunction.getSupportRadius();
+    bb[d].second += _basisFunction.getSupportRadius();
+  }
+  auto rtree = mesh::rtree::getVertexRTree(mesh);
+  mesh::Mesh::VertexContainer insideVerts;
+  rtree->query(boost::geometry::index::within(bb),
+      boost::make_function_output_iterator([&mesh, &insideVerts](size_t idx){
+        insideVerts.push_back(&mesh->vertices()[idx]);
+      }));
+  for (auto& vert : insideVerts){
+    vert.tag();
   }
 }
 
