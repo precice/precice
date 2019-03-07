@@ -32,4 +32,12 @@ void SendQueue::dispatch()
                       this->dispatch();
                     });
 }
+
+/// If Items are left in the queue upon destruction, something went really wrong.
+SendQueue::~SendQueue()
+{
+    if (not _itemQueue.empty())
+        ERROR("The SocketSendQueue is not empty upon destruction.\n"
+              "Make sure it always outlives all the requests pushed onto it");
+}
 }}
