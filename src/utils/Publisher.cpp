@@ -1,6 +1,6 @@
 #include "Publisher.hpp"
 
-#include "EventTimings.hpp"
+#include "Event.hpp"
 
 #include <boost/filesystem.hpp>
 

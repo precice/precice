@@ -25,7 +25,7 @@ Indention & Formatting
 ----------------------
 As a rule of thumb again: Orient yourself on the already written code!
 
-There is a settings file for ```clang-format```. You can use the tool to format your code: ```clang-format -style=file -i FILES```
+There is a settings file for ```clang-format```. See the page on \ref tooling for more information on clang-format.
 
 Regarding indention, we follow the BSD-style.
 
@@ -66,6 +66,8 @@ For a one-line documentation you should use
 void eat(Apple a);
 @endverbatim
 
+For more information, see the page on \ref tooling.
+
 
 Dimension-Ordering
 ==================
@@ -80,10 +82,5 @@ dim 2 |-------|
   |   ---------  
    --> dim 1
 ```
-
-Static Analysis
-==============
-Running a tool like Cppcheck is quick, easy and can detect some errors and bad programming practice. Simply run ```cppcheck --enable=all .``` inside ```precice/src``` or inside the directory you're working.
-
 
 */

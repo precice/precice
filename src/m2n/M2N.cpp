@@ -3,7 +3,7 @@
 #include "DistributedCommunication.hpp"
 #include "com/Communication.hpp"
 #include "mesh/Mesh.hpp"
-#include "utils/EventTimings.hpp"
+#include "utils/Event.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/Publisher.hpp"
 
@@ -44,7 +44,7 @@ void M2N::acceptMasterConnection(
   Event e("m2n.acceptMasterConnection", precice::syncMode);
 
   if (not utils::MasterSlave::_slaveMode) {
-    assertion(_masterCom.use_count() > 0);
+    assertion(_masterCom);
     _masterCom->acceptConnection(acceptorName, requesterName, utils::MasterSlave::_rank);
     _isMasterConnected = _masterCom->isConnected();
   }
@@ -61,7 +61,7 @@ void M2N::requestMasterConnection(
   Event e("m2n.requestMasterConnection", precice::syncMode);
 
   if (not utils::MasterSlave::_slaveMode) {
-    assertion(_masterCom.use_count() > 0);
+    assertion(_masterCom);
 
     _masterCom->requestConnection(acceptorName, requesterName, 0, 1);
     _isMasterConnected = _masterCom->isConnected();

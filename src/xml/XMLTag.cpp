@@ -24,17 +24,19 @@ XMLTag::XMLTag(
   }
 }
 
-void XMLTag::setDocumentation(const std::string &documentation)
+XMLTag& XMLTag::setDocumentation(const std::string &documentation)
 {
   _doc = documentation;
+  return *this;
 }
 
-void XMLTag::addNamespace(const std::string &namespaceName)
+XMLTag& XMLTag::addNamespace(const std::string &namespaceName)
 {
   _namespaces.push_back(namespaceName);
+  return *this;
 }
 
-void XMLTag::addSubtag(const XMLTag &tag)
+XMLTag& XMLTag::addSubtag(const XMLTag &tag)
 {
   TRACE(tag._fullName);
   assertion(tag._name != std::string(""));
@@ -43,47 +45,53 @@ void XMLTag::addSubtag(const XMLTag &tag)
   }
 
   _subtags.push_back(std::make_shared<XMLTag>(tag));
+  return *this;
 }
 
-void XMLTag::addAttribute(const XMLAttribute<double> &attribute)
+XMLTag& XMLTag::addAttribute(const XMLAttribute<double> &attribute)
 {
   TRACE(attribute.getName());
   assertion(not utils::contained(attribute.getName(), _attributes));
   _attributes.insert(attribute.getName());
   _doubleAttributes.insert(std::pair<std::string, XMLAttribute<double>>(attribute.getName(), attribute));
+  return *this;
 }
 
-void XMLTag::addAttribute(const XMLAttribute<int> &attribute)
+XMLTag& XMLTag::addAttribute(const XMLAttribute<int> &attribute)
 {
   TRACE(attribute.getName());
   assertion(not utils::contained(attribute.getName(), _attributes));
   _attributes.insert(attribute.getName());
   _intAttributes.insert(std::pair<std::string, XMLAttribute<int>>(attribute.getName(), attribute));
+  return *this;
 }
 
-void XMLTag::addAttribute(const XMLAttribute<std::string> &attribute)
+XMLTag& XMLTag::addAttribute(const XMLAttribute<std::string> &attribute)
 {
   TRACE(attribute.getName());
   assertion(not utils::contained(attribute.getName(), _attributes));
   _attributes.insert(attribute.getName());
   _stringAttributes.insert(std::pair<std::string, XMLAttribute<std::string>>(attribute.getName(), attribute));
+  return *this;
 }
 
-void XMLTag::addAttribute(const XMLAttribute<bool> &attribute)
+XMLTag& XMLTag::addAttribute(const XMLAttribute<bool> &attribute)
 {
   TRACE(attribute.getName());
   assertion(not utils::contained(attribute.getName(), _attributes));
   _attributes.insert(attribute.getName());
   _booleanAttributes.insert(std::pair<std::string, XMLAttribute<bool>>(attribute.getName(), attribute));
+  return *this;
 }
 
-void XMLTag::addAttribute(const XMLAttribute<Eigen::VectorXd> &attribute)
+XMLTag& XMLTag::addAttribute(const XMLAttribute<Eigen::VectorXd> &attribute)
 {
   TRACE(attribute.getName());
   assertion(not utils::contained(attribute.getName(), _attributes));
   _attributes.insert(attribute.getName());
   _eigenVectorXdAttributes.insert(
       std::pair<std::string, XMLAttribute<Eigen::VectorXd>>(attribute.getName(), attribute));
+  return *this;
 }
 
 bool XMLTag::hasAttribute(const std::string &attributeName)

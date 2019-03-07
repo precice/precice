@@ -8,7 +8,7 @@
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/Helpers.hpp"
-#include "utils/EventTimings.hpp"
+#include "utils/Event.hpp"
 
 namespace precice
 {

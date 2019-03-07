@@ -81,7 +81,7 @@ vars.Add(EnumVariable('build', 'Build type', "Debug", allowed_values=('release',
 vars.Add(PathVariable("libprefix", "Path prefix for libraries", "/usr", PathVariable.PathIsDir))
 vars.Add("compiler", "Compiler to use.", "mpicxx")
 vars.Add(BoolVariable("mpi", "Enables MPI-based communication and running coupling tests.", True))
-vars.Add(BoolVariable("petsc", "Enable use of the Petsc linear algebra library.", True))
+vars.Add(BoolVariable("petsc", "Enable use of the PETSc linear algebra library.", True))
 vars.Add(BoolVariable("python", "Used for Python scripted solver actions.", False))
 vars.Add(BoolVariable("gprof", "Used in detailed performance analysis.", False))
 vars.Add(EnumVariable('platform', 'Special configuration for certain platforms', "none", allowed_values=('none', 'supermuc', 'hazelhen')))
@@ -114,7 +114,7 @@ env.Append(LIBPATH = [('#' + buildpath)])
 env.Append(CCFLAGS= ['-Wall', '-Wextra', '-Wno-unused-parameter', '-std=c++11'])
 
 # ====== PRECICE_VERSION number ======
-PRECICE_VERSION = "1.3.0"
+PRECICE_VERSION = "1.4.0"
 
 
 # ====== Compiler Settings ======
@@ -123,16 +123,16 @@ PRECICE_VERSION = "1.3.0"
 env.Append(CCFLAGS = ['-fPIC'])
 
 real_compiler = get_real_compiler(env["compiler"])
-if real_compiler == 'icc':
+if real_compiler.startswith('icc'):
     env.AppendUnique(LIBPATH = ['/usr/lib/'])
     env.Append(LIBS = ['stdc++'])
     if env["build"] == 'debug':
         env.Append(CCFLAGS = ['-align'])
     elif env["build"] == 'release':
         env.Append(CCFLAGS = ['-w', '-fast', '-align', '-ansi-alias'])
-elif real_compiler == 'g++':
-    pass
-elif real_compiler == "clang++":
+elif real_compiler.startswith('g++'):
+    env.Append(CCFLAGS= ['-Wno-literal-suffix'])
+elif real_compiler.startswith("clang++"):
     env.Append(CCFLAGS= ['-Wsign-compare']) # sign-compare not enabled in Wall with clang.
 elif real_compiler == "g++-mp-4.9":
     # Some special treatment that seems to be necessary for Mac OS.
@@ -186,7 +186,7 @@ if env["petsc"]:
     else:
         checkAdd("petsc")
     # Set PETSC_VERSION to correct values 
-    with open(PETSC_DIR + "/include/petscversion.h", "r") as versionfile:
+    with open(join(PETSC_DIR, "include/petscversion.h"), "r") as versionfile:
         for line in versionfile:
             tokens = line.split()
             try:
@@ -228,6 +228,7 @@ checkAdd("boost_unit_test_framework")
 checkAdd(header = 'boost/vmd/is_empty.hpp', usage = 'Boost Variadic Macro Data Library')
 checkAdd(header = 'boost/geometry.hpp', usage = 'Boost Geometry Library')
 checkAdd(header = 'boost/signals2.hpp', usage = 'Boost Signals2')
+checkAdd(lib = 'dl', usage = 'Boost Stacktrace Requirement')
 
 # ====== MPI ======
 if env["mpi"]:

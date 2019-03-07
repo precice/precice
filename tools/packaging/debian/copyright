@@ -1,0 +1,9 @@
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: preCICE
+Upstream-Contact: preCICE mailing-list <info@precice.org>
+Copyright: (c) 2019 the preCICE developers <info@precice.org>
+Source: https://github.com/precice/precice
+
+Files: *
+Copyright: (c) 2019 the preCICE developers <info@precice.org>
+License: LGPL-3

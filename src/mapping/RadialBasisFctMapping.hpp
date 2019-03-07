@@ -3,7 +3,7 @@
 #include "Mapping.hpp"
 #include "impl/BasisFunctions.hpp"
 #include "utils/MasterSlave.hpp"
-#include "utils/EventTimings.hpp"
+#include "utils/Event.hpp"
 
 #include <Eigen/Core>
 #include <Eigen/QR>
@@ -119,8 +119,8 @@ RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: RadialBasisFctMapping
   Mapping ( constraint, dimensions ),
   _basisFunction ( function )
 {
-  setInputRequirement(VERTEX);
-  setOutputRequirement(VERTEX);
+  setInputRequirement(Mapping::MeshRequirement::VERTEX);
+  setOutputRequirement(Mapping::MeshRequirement::VERTEX);
   setDeadAxis(xDead, yDead, zDead);
 }
 

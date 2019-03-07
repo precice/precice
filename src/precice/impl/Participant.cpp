@@ -6,6 +6,7 @@
 #include "WatchPoint.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
 #include "mesh/config/DataConfiguration.hpp"
+#include <utility>
 
 namespace precice {
 namespace impl {
@@ -19,10 +20,10 @@ void Participant:: resetParticipantCount()
 
 Participant:: Participant
 (
-  const std::string&          name,
+  std::string                 name,
   mesh::PtrMeshConfiguration& meshConfig )
 :
-  _name ( name ),
+  _name (std::move(name)),
   _id ( _participantsSize ),
   _meshContexts ( meshConfig->meshes().size(), nullptr ),
   _dataContexts ( meshConfig->getDataConfiguration()->data().size()*meshConfig->meshes().size(), nullptr )
@@ -78,7 +79,7 @@ void Participant:: useMesh
   TRACE(_name,  mesh->getName(), mesh->getID() );
   checkDuplicatedUse(mesh);
   assertion ( mesh->getID() < (int)_meshContexts.size() );
-  MeshContext* context = new MeshContext(mesh->getDimensions());
+  auto context = new MeshContext(mesh->getDimensions());
   context->mesh = mesh;
   context->localOffset = localOffset;
   assertion ( mesh->getDimensions() == context->localOffset.size(),
@@ -104,7 +105,7 @@ void Participant:: addWriteData
 {
   checkDuplicatedData ( data );
   assertion ( data->getID() < (int)_dataContexts.size() );
-  DataContext* context = new DataContext ();
+  auto context = new DataContext ();
   context->fromData = data;
   context->mesh = mesh;
   // will be overwritten later if a mapping exists
@@ -120,7 +121,7 @@ void Participant:: addReadData
 {
   checkDuplicatedData ( data );
   assertion ( data->getID() < (int)_dataContexts.size() );
-  DataContext* context = new DataContext ();
+  auto context = new DataContext ();
   context->toData = data;
   context->mesh = mesh;
   // will be overwritten later if a mapping exists
@@ -292,15 +293,15 @@ void Participant:: checkDuplicatedData
 
 bool Participant:: useServer()
 {
-  return _clientServerCommunication.use_count() > 0;
+  return static_cast<bool>(_clientServerCommunication);
 }
 
 void Participant:: setClientServerCommunication
 (
   com::PtrCommunication communication )
 {
-  assertion ( communication.use_count() > 0 );
-  _clientServerCommunication = communication;
+  assertion ( communication );
+  _clientServerCommunication = std::move(communication);
 }
 
 com::PtrCommunication Participant:: getClientServerCommunication() const

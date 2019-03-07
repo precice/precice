@@ -2,7 +2,7 @@
 #include "com/CommunicateMesh.hpp"
 #include "com/Communication.hpp"
 #include "m2n/M2N.hpp"
-#include "utils/EventTimings.hpp"
+#include "utils/Event.hpp"
 #include "utils/MasterSlave.hpp"
 
 using precice::utils::Event;

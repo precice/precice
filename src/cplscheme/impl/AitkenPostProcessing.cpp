@@ -123,7 +123,7 @@ void AitkenPostProcessing::iterationsConverged(
  * @brief: Returns the design specification corresponding to the given coupling data.
  *         This information is needed for convergence measurements in the coupling scheme.
  *  ---------------------------------------------------------------------------------------------
- */ /// @todo: change to call by ref when Eigen is used.
+ */
 std::map<int, Eigen::VectorXd> AitkenPostProcessing::getDesignSpecification(
     DataMap &cplData)
 {

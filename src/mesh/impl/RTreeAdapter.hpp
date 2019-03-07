@@ -3,7 +3,18 @@
 #include <boost/geometry.hpp>
 #include <Eigen/Core>
 #include "mesh/Vertex.hpp"
+#include "mesh/Edge.hpp"
 
+namespace precice {
+namespace mesh {
+class Triangle;
+class Quad;
+} // namespace mesh
+} // namespace precice
+
+using precice::mesh::Edge;
+using precice::mesh::Quad;
+using precice::mesh::Triangle;
 using precice::mesh::Vertex;
 
 namespace boost {
@@ -38,6 +49,67 @@ struct access<Vertex, Dimension>
   }
 };
 
+BOOST_CONCEPT_ASSERT( (concepts::Point<Vertex>));
+
+/** @brief Provides the necessary template specialisations to adapt precice's Edge to boost.geometry
+*
+* This adapts every Edge to the segment concept of boost.geometry.
+* Include impl/RangeAdapter.hpp for full support.
+*/
+template <>
+struct tag<Edge> {
+  using type = segment_tag;
+};
+template <>
+struct point_type<Edge> {
+  using type = Eigen::VectorXd;
+};
+
+template <size_t Index, size_t Dimension>
+struct indexed_access<Edge, Index, Dimension> {
+  static_assert((Index <= 1), "Valid Indices are {0, 1}");
+  static_assert((Dimension <= 2), "Valid Dimensions are {0, 1, 2}");
+
+  static double get(Edge const &e)
+  {
+    return access<Eigen::VectorXd, Dimension>::get(e.vertex(Index).getCoords());
+  }
+
+  static void set(Edge &e, double const &value)
+  {
+    Eigen::VectorXd v = e.vertex(Index).getCoords();
+    access<Eigen::VectorXd, Dimension>::set(v, value);
+    e.vertex(Index).setCoords(std::move(v));
+  }
+};
+
+/** @brief Provides the necessary template specialisations to adapt precice's Triangle to boost.geometry
+*
+* This adapts every Triangle to the ring concept (filled planar polygone) of boost.geometry.
+* Include impl/RangeAdapter.hpp for full support.
+*/
+template <>
+struct tag<Triangle> {
+  using type = ring_tag;
+};
+template <>
+struct closure<Triangle> {
+  static const closure_selector value = closed;
+};
+
+/** @brief Provides the necessary template specialisations to adapt precice's Quad to boost.geometry
+*
+* This adapts every Quad to the ring concept (filled planar polygone) of boost.geometry.
+*/
+template <>
+struct tag<Quad> {
+  using type = ring_tag;
+};
+template <>
+struct closure<Quad> {
+  static const closure_selector value = closed;
+};
+
 /// Adapts Eigen::VectorXd to boost.geometry
 /*
  * This adapts every VectorXd to a 3d point. For non-existing dimensions, zero is returned.
@@ -60,9 +132,15 @@ struct access<Eigen::VectorXd, Dimension>
   
   static void set(Eigen::VectorXd& p, double const& value)
   {
+    // This handles default initialized VectorXd
+    if (p.size() == 0) {
+        p.resize(3);
+    }
     p[Dimension] = value;
   }
 };
+
+BOOST_CONCEPT_ASSERT( (concepts::Point<Eigen::VectorXd>));
 
 }}}
 

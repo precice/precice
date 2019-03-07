@@ -7,8 +7,6 @@
 #include "mesh/config/MeshConfiguration.hpp"
 #include "xml/XMLTag.hpp"
 #include "xml/XMLAttribute.hpp"
-#include "xml/ValidatorEquals.hpp"
-#include "xml/ValidatorOr.hpp"
 
 namespace precice {
 namespace mapping {
@@ -40,33 +38,28 @@ MappingConfiguration:: MappingConfiguration
 
   _meshConfig(meshConfiguration)
 {
-  assertion (_meshConfig.use_count() > 0);
+  assertion (_meshConfig);
   using namespace xml;
-  using ValidString = ValidatorEquals<std::string>;
 
-  XMLAttribute<double> attrShapeParam ( ATTR_SHAPE_PARAM );
-  attrShapeParam.setDocumentation("Specific shape parameter for RBF basis function.");
-  XMLAttribute<double> attrSupportRadius ( ATTR_SUPPORT_RADIUS );
-  attrSupportRadius.setDocumentation("Support radius of each RBF basis function (global choice).");
-  XMLAttribute<double> attrSolverRtol ( ATTR_SOLVER_RTOL );
-  attrSolverRtol.setDocumentation("Solver relative tolerance for convergence");
-  attrSolverRtol.setDefaultValue(1e-9);
-  XMLAttribute<bool> attrXDead(ATTR_X_DEAD);
-  attrXDead.setDocumentation("If set to true, the x axis will be ignored for the mapping");
-  attrXDead.setDefaultValue(false);
-  XMLAttribute<bool> attrYDead(ATTR_Y_DEAD);
-  attrYDead.setDocumentation("If set to true, the y axis will be ignored for the mapping");
-  attrYDead.setDefaultValue(false);
-  XMLAttribute<bool> attrZDead(ATTR_Z_DEAD);
-  attrZDead.setDocumentation("If set to true, the z axis will be ignored for the mapping");
-  attrZDead.setDefaultValue(false);
-  XMLAttribute<std::string> attrPolynomial("polynomial");
-  attrPolynomial.setDocumentation("Toggles use of the global polynomial");
-  attrPolynomial.setDefaultValue("separate");
+ auto attrShapeParam  = XMLAttribute<double>( ATTR_SHAPE_PARAM )
+      .setDocumentation("Specific shape parameter for RBF basis function.");
+ auto attrSupportRadius  = XMLAttribute<double>( ATTR_SUPPORT_RADIUS )
+      .setDocumentation("Support radius of each RBF basis function (global choice).");
+  auto attrSolverRtol  = makeXMLAttribute( ATTR_SOLVER_RTOL, 1e-9)
+      .setDocumentation("Solver relative tolerance for convergence");
+  auto attrXDead = makeXMLAttribute(ATTR_X_DEAD, false)
+      .setDocumentation("If set to true, the x axis will be ignored for the mapping");
+  auto attrYDead = makeXMLAttribute(ATTR_Y_DEAD, false)
+      .setDocumentation("If set to true, the y axis will be ignored for the mapping");
+  auto attrZDead = makeXMLAttribute(ATTR_Z_DEAD, false)
+      .setDocumentation("If set to true, the z axis will be ignored for the mapping");
+  auto attrPolynomial = makeXMLAttribute("polynomial", "separate")
+      .setDocumentation("Toggles use of the global polynomial")
+      .setOptions({"on", "off", "separate"});
 
-  XMLAttribute<std::string> attrPreallocation("preallocation");
-  attrPreallocation.setDocumentation("Sets kind of preallocation for PETSc RBF implementation");
-  attrPreallocation.setDefaultValue("tree");
+  auto attrPreallocation = makeXMLAttribute("preallocation", "tree")
+      .setDocumentation("Sets kind of preallocation for PETSc RBF implementation")
+      .setOptions({"estimate", "compute", "off", "save", "tree"});
 
   XMLTag::Occurrence occ = XMLTag::OCCUR_ARBITRARY;
   std::list<XMLTag> tags;
@@ -186,28 +179,20 @@ MappingConfiguration:: MappingConfiguration
     tags.push_back(tag);
   }
   
-  XMLAttribute<std::string> attrDirection ( ATTR_DIRECTION );
-  ValidatorEquals<std::string> validDirectionWrite ( VALUE_WRITE );
-  ValidatorEquals<std::string> validDirectionRead ( VALUE_READ );
-  attrDirection.setValidator ( validDirectionWrite || validDirectionRead );
+  auto attrDirection = XMLAttribute<std::string>( ATTR_DIRECTION)
+      .setOptions({ VALUE_WRITE, VALUE_READ });
 
   XMLAttribute<std::string> attrFromMesh(ATTR_FROM);
   XMLAttribute<std::string> attrToMesh(ATTR_TO);
 
-  XMLAttribute<std::string> attrConstraint(ATTR_CONSTRAINT);
-  ValidString validConservative(VALUE_CONSERVATIVE);
-  ValidString validConsistent(VALUE_CONSISTENT);
-  attrConstraint.setValidator(validConservative || validConsistent);
+  auto attrConstraint = XMLAttribute<std::string>(ATTR_CONSTRAINT)
+      .setOptions({VALUE_CONSERVATIVE, VALUE_CONSISTENT});
 
-  XMLAttribute<std::string> attrTiming(ATTR_TIMING);
-  attrTiming.setDefaultValue(VALUE_TIMING_INITIAL);
-  ValidString validInitial(VALUE_TIMING_INITIAL);
-  ValidString validOnAdvance(VALUE_TIMING_ON_ADVANCE);
-  ValidString validOnDemand(VALUE_TIMING_ON_DEMAND);
-  attrTiming.setValidator(validInitial || validOnAdvance || validOnDemand);
+  auto attrTiming = makeXMLAttribute(ATTR_TIMING, VALUE_TIMING_INITIAL)
+      .setOptions({VALUE_TIMING_INITIAL, VALUE_TIMING_ON_ADVANCE, VALUE_TIMING_ON_DEMAND});
 
   // Add tags that all mappings use and add to parent tag
-  for (XMLTag & tag : tags) {\
+  for (XMLTag & tag : tags) {
     tag.addAttribute(attrDirection);
     tag.addAttribute(attrFromMesh);
     tag.addAttribute(attrToMesh);
@@ -258,8 +243,10 @@ void MappingConfiguration:: xmlTagCallback
       std::string strPolynomial = tag.getStringAttributeValue("polynomial");
       if (strPolynomial == "separate")
         polynomial = Polynomial::SEPARATE;
-      else
-        polynomial = utils::convertStringToBool(strPolynomial) ? Polynomial::ON : Polynomial::OFF;
+      else if (strPolynomial == "on")
+        polynomial = Polynomial::ON;
+      else if (strPolynomial == "off")
+        polynomial = Polynomial::OFF;
     }
     if (tag.hasAttribute("preallocation")){
       std::string strPrealloc = tag.getStringAttributeValue("preallocation");
@@ -477,11 +464,15 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping
     configuredMapping.mapping = PtrMapping (new PetRadialBasisFctMapping<CompactPolynomialC6>(constraintValue, dimensions, CompactPolynomialC6(supportRadius),
                                                                                               xDead, yDead, zDead, solverRtol, polynomial, preallocation) );
   }
+# else
+  else if (type.find("petrbf-") == 0) {
+    ERROR("PETRBF mappings are not available as preCICE was built without PETSc.");
+  }
 # endif
   else {
     ERROR("Unknown mapping type!");
   }
-  assertion ( configuredMapping.mapping.use_count() > 0 );
+  assertion (configuredMapping.mapping);
   #ifndef PRECICE_NO_PETSC
     delete[] arg;
   #endif

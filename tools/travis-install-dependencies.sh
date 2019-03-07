@@ -16,8 +16,8 @@ if [ ! -d $LOCAL_INSTALL/include ]; then
     wget -nv http://bitbucket.org/eigen/eigen/get/3.3.2.tar.bz2 -O - | tar xj -C $LOCAL_INSTALL/include --strip-components=1 eigen-eigen-da9b4e14c255/Eigen
 
     # Download, compile and install Boost
-    wget -nv 'http://downloads.sourceforge.net/project/boost/boost/1.60.0/boost_1_60_0.tar.bz2' -O - | tar xj
-    cd boost_1_60_0
+    wget -nv 'https://dl.bintray.com/boostorg/release/1.65.1/source/boost_1_65_1.tar.bz2' -O - | tar xj
+    cd boost_1_65_1
     ./bootstrap.sh --prefix=$LOCAL_INSTALL > ~/boost.bootstrap
     ./b2 -j2 --with-program_options --with-test --with-filesystem --with-log install > ~/boost.b2
 
@@ -26,7 +26,7 @@ if [ ! -d $LOCAL_INSTALL/include ]; then
     git clone -b maint https://bitbucket.org/petsc/petsc petsc
     cd petsc
     export PETSC_ARCH=arch-linux2-c-debug
-    python2 configure --with-debugging=1 > ~/petsc.configure
+    python2 configure --with-debugging=1 --with-64-bit-indices > ~/petsc.configure
     make > ~/petsc.make
 fi
 

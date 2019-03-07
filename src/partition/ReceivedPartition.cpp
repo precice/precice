@@ -7,7 +7,7 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
-#include "utils/EventTimings.hpp"
+#include "utils/Event.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/MasterSlave.hpp"
 
@@ -35,7 +35,7 @@ void ReceivedPartition::communicate()
   INFO("Receive global mesh " << _mesh->getName());
   Event e("partition.receiveGlobalMesh." + _mesh->getName(), precice::syncMode);
   if (not utils::MasterSlave::_slaveMode) {
-    assertion(_mesh->vertices().size() == 0);
+    assertion(_mesh->vertices().empty());
     com::CommunicateMesh(_m2n->getMasterCommunication()).receiveMesh(*_mesh, 0);
   }
 }
@@ -56,7 +56,7 @@ void ReceivedPartition::compute()
 
   // check to prevent false configuration
   if (not utils::MasterSlave::_slaveMode) {
-    CHECK(_fromMapping.use_count() > 0 || _toMapping.use_count() > 0,
+    CHECK(_fromMapping || _toMapping,
           "The received mesh " << _mesh->getName()
           << " needs a mapping, either from it, to it, or both. Maybe you don't want to receive this mesh at all?")
   }
@@ -83,8 +83,8 @@ void ReceivedPartition::compute()
       com::CommunicateMesh(utils::MasterSlave::_communication).sendBoundingBox(_bb, 0);
       com::CommunicateMesh(utils::MasterSlave::_communication).receiveMesh(*_mesh, 0);
 
-      if ((_fromMapping.use_count() > 0 && _fromMapping->getOutputMesh()->vertices().size() > 0) ||
-          (_toMapping.use_count() > 0 && _toMapping->getInputMesh()->vertices().size() > 0)) {
+      if ((_fromMapping && not _fromMapping->getOutputMesh()->vertices().empty() ||
+           (_toMapping && not _toMapping->getInputMesh()->vertices().empty()))) {
         // this rank has vertices at the coupling interface
         // then, also the filtered mesh should still have vertices
         std::string msg = "The re-partitioning completely filtered out the mesh " + _mesh->getName() +
@@ -93,7 +93,7 @@ void ReceivedPartition::compute()
           "Please check your geometry setup again. Small overlaps or gaps are no problem. "
           "If your geometry setup is correct and if you have very different mesh resolutions on both sides, increasing the safety-factor "
           "of the decomposition strategy might be necessary.";
-        CHECK(_mesh->vertices().size() > 0, msg);
+        CHECK(not _mesh->vertices().empty(), msg);
       }
 
     } else { // Master
@@ -119,8 +119,8 @@ void ReceivedPartition::compute()
       _mesh->computeState();
       DEBUG("Master mesh after filtering, #vertices " << _mesh->vertices().size());
 
-      if ((_fromMapping.use_count() > 0 && _fromMapping->getOutputMesh()->vertices().size() > 0) ||
-          (_toMapping.use_count() > 0 && _toMapping->getInputMesh()->vertices().size() > 0)) {
+      if ((_fromMapping && not _fromMapping->getOutputMesh()->vertices().empty()) ||
+          (_toMapping && not _toMapping->getInputMesh()->vertices().empty())) {
         // this rank has vertices at the coupling interface
         // then, also the filtered mesh should still have vertices
         std::string msg = "The re-partitioning completely filtered out the mesh " + _mesh->getName() + " received on this rank at the coupling interface. "
@@ -128,7 +128,7 @@ void ReceivedPartition::compute()
           "Please check your geometry setup again. Small overlaps or gaps are no problem. "
           "If your geometry setup is correct and if you have very different mesh resolutions on both sides, increasing the safety-factor "
           "of the decomposition strategy might be necessary.";
-        CHECK(_mesh->vertices().size() > 0, msg);
+        CHECK(not _mesh->vertices().empty(), msg);
       }
     }
   } else {
@@ -154,8 +154,8 @@ void ReceivedPartition::compute()
       mesh::Mesh filteredMesh("FilteredMesh", _dimensions, _mesh->isFlipNormals());
       filterMesh(filteredMesh, true);
 
-      if ((_fromMapping.use_count() > 0 && _fromMapping->getOutputMesh()->vertices().size() > 0) ||
-          (_toMapping.use_count() > 0 && _toMapping->getInputMesh()->vertices().size() > 0)) {
+      if ((_fromMapping && not _fromMapping->getOutputMesh()->vertices().empty()) ||
+          (_toMapping && not _toMapping->getInputMesh()->vertices().empty())) {
         // this rank has vertices at the coupling interface
         // then, also the filtered mesh should still have vertices
         std::string msg = "The re-partitioning completely filtered out the mesh " + _mesh->getName() + " received on this rank at the coupling interface. "
@@ -163,7 +163,7 @@ void ReceivedPartition::compute()
           "Please check your geometry setup again. Small overlaps or gaps are no problem. "
           "If your geometry setup is correct and if you have very different mesh resolutions on both sides, increasing the safety-factor "
           "of the decomposition strategy might be necessary.";
-        CHECK(filteredMesh.vertices().size() > 0, msg);
+        CHECK(not filteredMesh.vertices().empty(), msg);
       }
 
       DEBUG("Bounding box filter, filtered from " << _mesh->vertices().size() << " vertices to " << filteredMesh.vertices().size() << " vertices.");
@@ -179,9 +179,9 @@ void ReceivedPartition::compute()
   // (2) Tag vertices 1st round (i.e. who could be owned by this rank)
   DEBUG("Tag vertices for filtering: 1st round.");
   // go to both meshes, vertex is tagged if already one mesh tags him
-  if (_fromMapping.use_count() > 0)
+  if (_fromMapping)
     _fromMapping->tagMeshFirstRound();
-  if (_toMapping.use_count() > 0)
+  if (_toMapping)
     _toMapping->tagMeshFirstRound();
 
   // (3) Define which vertices are owned by this rank
@@ -190,9 +190,9 @@ void ReceivedPartition::compute()
 
   // (4) Tag vertices 2nd round (what should be filtered out)
   DEBUG("Tag vertices for filtering: 2nd round.");
-  if (_fromMapping.use_count() > 0)
+  if (_fromMapping)
     _fromMapping->tagMeshSecondRound();
-  if (_toMapping.use_count() > 0)
+  if (_toMapping)
     _toMapping->tagMeshSecondRound();
 
   // (5) Filter mesh according to tag
@@ -312,14 +312,14 @@ void ReceivedPartition::prepareBoundingBox()
              std::make_pair(std::numeric_limits<double>::max(), std::numeric_limits<double>::lowest()));
 
   // Create BB around both "other" meshes
-  if (_fromMapping.use_count() > 0) {
+  if (_fromMapping) {
     auto other_bb = _fromMapping->getOutputMesh()->getBoundingBox();
     for (int d = 0; d < _dimensions; d++) {
       _bb[d].first = std::min(_bb[d].first, other_bb[d].first);
       _bb[d].second = std::max(_bb[d].second, other_bb[d].second);
     }
   }
-  if (_toMapping.use_count() > 0) {
+  if (_toMapping) {
     auto other_bb = _toMapping->getInputMesh()->getBoundingBox();
       for (int d = 0; d < _dimensions; d++) {
         _bb[d].first = std::min(_bb[d].first, other_bb[d].first);
