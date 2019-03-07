@@ -61,7 +61,7 @@ def get_real_compiler(compiler):
     """ Gets the compiler behind the MPI compiler wrapper. """
     if compiler.startswith("mpi"):
         try:
-            output = subprocess.check_output("%s -show" % compiler, shell=True)
+            output = subprocess.check_output("%s -show" % compiler, shell=True).decode()
         except (OSError, subprocess.CalledProcessError) as e:
             print("Error getting wrapped compiler from MPI compiler")
             print("Command was:", e.cmd, "Output was:", e.output)
