@@ -3,14 +3,6 @@
 set -x
 set -e
 
-
-echo "LOCAL_INSTALL: $LOCAL_INSTALL"
-ls -l $LOCAL_INSTALL
-ls -l $LOCAL_INSTALL/include
-ls -l $LOCAL_INSTALL/lib
-ls -l $LOCAL_INSTALL/eigen3
-echo "EIGEN3_ROOT_DIR: $EIGEN3_ROOT_DIR"
-
 if [ "$BUILD_TYPE" = "SCONS" ]; then
     export PRECICE_BUILD_DIR=$TRAVIS_BUILD_DIR/build/last
     cd $TRAVIS_BUILD_DIR
