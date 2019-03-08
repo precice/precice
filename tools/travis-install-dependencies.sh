@@ -13,46 +13,60 @@ CACHE_BOOST_TOKEN=$LOCAL_INSTALL/done-boost
 CACHE_PETSC_TOKEN=$LOCAL_INSTALL/done-petsc
 CACHE_CMAKE_TOKEN=$LOCAL_INSTALL/done-cmake
 
+# Download and extract Eigen
 if [ ! -f $CACHE_EIGEN_TOKEN ]; then
-    # Download and extract Eigen
+    # Cleanup
     rm -rf $LOCAL_INSTALL/eigen3
     mkdir $LOCAL_INSTALL/eigen3
+    # Download
     wget -nv http://bitbucket.org/eigen/eigen/get/3.3.2.tar.bz2 -O - | tar xj -C $LOCAL_INSTALL/eigen3 --strip-components=1 eigen-eigen-da9b4e14c255
+    # Create token
     touch $CACHE_EIGEN_TOKEN
 fi
 
 # Download, compile and install Boost
 if [ ! -f $CACHE_BOOST_TOKEN ]; then
+    # Cleanup
     rm -rf $LOCAL_INSTALL/boost
     mkdir $LOCAL_INSTALL/boost
+    # Download
     wget -nv 'https://dl.bintray.com/boostorg/release/1.65.1/source/boost_1_65_1.tar.bz2' -O - | tar xj -C $LOCAL_INSTALL/boost
-    cd $LOCAL_INSTALL/boost/boost_1_65_1
+    # Compile and install
+    pushd $LOCAL_INSTALL/boost/boost_1_65_1 > /dev/null
     ./bootstrap.sh --prefix=$LOCAL_INSTALL > ~/boost.bootstrap
     ./b2 -j2 --with-program_options --with-test --with-filesystem --with-log install > ~/boost.b2
-    cd $LOCAL_INSTALL
+    popd > /dev/null
+    # Cleanup
     rm -rf $LOCAL_INSTALL/boost
+    # Create token
     touch $CACHE_BOOST_TOKEN
 fi
 
 # Download and compile PETSc
 if [ ! -f $CACHE_PETSC_TOKEN ]; then
+    # Cleanup
     rm -rf $LOCAL_INSTALL/petsc
-    cd $LOCAL_INSTALL
+    # Download
     git clone -b maint https://bitbucket.org/petsc/petsc $LOCAL_INSTALL/petsc
+    # Configure and compile
     cd $LOCAL_INSTALL/petsc
     export PETSC_ARCH=arch-linux2-c-debug
     python2 configure --with-debugging=1 --with-64-bit-indices > ~/petsc.configure
     make > ~/petsc.make
+    # Create token
     touch $CACHE_PETSC_TOKEN
 fi
 
 # Download CMake 3.10.1
 if [ ! -f $CACHE_CMAKE_TOKEN ]; then
-    cd $LOCAL_INSTALL
+    # Cleanup
     rm -rf $LOCAL_INSTALL/cmake
-    CMAKE_URL="http://www.cmake.org/files/v3.10/cmake-3.10.1-Linux-x86_64.tar.gz"
     mkdir ${LOCAL_INSTALL}/cmake
+    # Download
+    CMAKE_URL="http://www.cmake.org/files/v3.10/cmake-3.10.1-Linux-x86_64.tar.gz"
     wget --no-check-certificate --quiet -O - ${CMAKE_URL} | tar --strip-components=1 -xz -C ${LOCAL_INSTALL}/cmake
+    # Check version
     $LOCAL_INSTALL/cmake/bin/cmake --version
+    # Create token
     touch $CACHE_CMAKE_TOKEN
 fi
