@@ -6,27 +6,10 @@
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/filesystem.hpp>
 
-ConnectionInfoPublisher::ConnectionInfoPublisher(std::string acceptorName,
-                                                 std::string requesterName,
-                                                 int rank,
-                                                 std::string addressDirectory)
-  :
-  acceptorName(acceptorName),
-  requesterName(requesterName),
-  rank(rank),
-  addressDirectory(addressDirectory)
-{}
-  
-
-ConnectionInfoPublisher::ConnectionInfoPublisher(std::string acceptorName,
-                                                 std::string requesterName,
-                                                 std::string addressDirectory)
-  :
-  acceptorName(acceptorName),
-  requesterName(requesterName),
-  addressDirectory(addressDirectory)
-{}
-
+namespace precice
+{
+namespace com
+{
 
 std::string ConnectionInfoPublisher::getFilename() const
 {
@@ -71,11 +54,13 @@ ConnectionInfoWriter::~ConnectionInfoWriter()
   fs::path p(getFilename());
   try {
     fs::remove(getFilename());
-    fs::remove(p.parent_path()); // try to also remove parent dir, i.e, first part of hash
-    fs::remove(p.parent_path().parent_path()); // and also the .precice, only if empty
+    if (fs::is_empty(p.parent_path()))
+      fs::remove(p.parent_path()); // also remove parent dir, i.e, first part of hash
+    if (fs::is_empty(p.parent_path().parent_path()))
+      fs::remove(p.parent_path().parent_path()); // and also the .precice, only if empty
   }
-  catch (fs::filesystem_error) {
-    // directory not empty, no problem
+  catch (fs::filesystem_error const & e) {
+    WARN("Filesystem error when deleting connection info files: " << e.what());
   }
 }
 
@@ -91,3 +76,5 @@ void ConnectionInfoWriter::write(std::string const & info) const
   fs::rename(path + "~", path);
 }
 
+}
+}
