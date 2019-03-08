@@ -32,10 +32,10 @@ if [ ! -f $CACHE_BOOST_TOKEN ]; then
     # Download
     wget -nv 'https://dl.bintray.com/boostorg/release/1.65.1/source/boost_1_65_1.tar.bz2' -O - | tar xj -C $LOCAL_INSTALL/boost
     # Compile and install
-    pushd $LOCAL_INSTALL/boost/boost_1_65_1 > /dev/null
+    cd $LOCAL_INSTALL/boost/boost_1_65_1
     ./bootstrap.sh --prefix=$LOCAL_INSTALL > ~/boost.bootstrap
     ./b2 -j2 --with-program_options --with-test --with-filesystem --with-log install > ~/boost.b2
-    popd > /dev/null
+    cd $LOCAL_INSTALL
     # Cleanup
     rm -rf $LOCAL_INSTALL/boost
     # Create token
@@ -53,6 +53,7 @@ if [ ! -f $CACHE_PETSC_TOKEN ]; then
     export PETSC_ARCH=arch-linux2-c-debug
     python2 configure --with-debugging=1 --with-64-bit-indices > ~/petsc.configure
     make > ~/petsc.make
+    cd $LOCAL_INSTALL
     # Create token
     touch $CACHE_PETSC_TOKEN
 fi
