@@ -74,7 +74,7 @@ install:
   - $TRAVIS_BUILD_DIR/tools/travis-install-dependencies.sh $LOCAL_INSTALL
   - export PATH=${LOCAL_INSTALL}/cmake/bin:${PATH}
 
-before_scipt:
+before_script:
   - mkdir $TRAVIS_BUILD_DIR/tests
 
 script:
