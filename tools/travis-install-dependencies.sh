@@ -18,7 +18,6 @@ if [ ! -f $CACHE_EIGEN_TOKEN ]; then
     rm -rf $LOCAL_INSTALL/eigen3
     mkdir $LOCAL_INSTALL/eigen3
     wget -nv http://bitbucket.org/eigen/eigen/get/3.3.2.tar.bz2 -O - | tar xj -C $LOCAL_INSTALL/eigen3 --strip-components=1 eigen-eigen-da9b4e14c255
-    ls -hl $LOCAL_INSTALL/eigen3
     touch $CACHE_EIGEN_TOKEN
 fi
 
