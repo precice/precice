@@ -3,6 +3,7 @@
 #include <chrono>
 #include <vector>
 #include <string>
+#include <map>
 #include "logging/Logger.hpp"
 
 namespace precice {
@@ -26,6 +27,8 @@ public:
   using Clock = std::chrono::steady_clock;
 
   using StateChanges = std::vector<std::pair<State, Clock::time_point>>;
+
+  using Data = std::map<std::string, std::vector<int>>;
 
   /// An Event can't be copied.
   Event(const Event & other) = delete;
@@ -55,8 +58,11 @@ public:
   /// Gets the duration of the event.
   Clock::duration getDuration() const;
 
-  std::vector<int> data;
+  /// Adds named integer data, associated to an event.
+  void addData(std::string key, int value);
 
+  Data data;
+  
   StateChanges stateChanges;
 
 private:

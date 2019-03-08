@@ -551,7 +551,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       WARN("RBF rescaling linear system has not converged. Deactivating rescaling!");
       useRescaling = false;
     }
-    eRescaling.data.push_back(_solver.getIterationNumber());
+    eRescaling.addData("Iterations", _solver.getIterationNumber());
     ierr = MatCreateVecs(_matrixA, nullptr, &oneInterpolant.vector); CHKERRV(ierr);
     ierr = MatMult(_matrixA, rescalingCoeffs, oneInterpolant); CHKERRV(ierr); // get the output of g(x) = 1
     // set values close to zero to exactly 0.0, s.t. PointwiseDevide does not to devision on these entries
@@ -655,7 +655,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
           KSPView(_solver, PETSC_VIEWER_STDOUT_WORLD);
           ERROR("RBF linear system has not converged.");
         }
-        eSolve.data.push_back(_solver.getIterationNumber());
+        eSolve.addData("Iterations", _solver.getIterationNumber());
         eSolve.stop();
 
       }
@@ -722,7 +722,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
         KSPView(_solver, PETSC_VIEWER_STDOUT_WORLD);
         ERROR("RBF linear system has not converged.");
       }
-      eSolve.data.push_back(_solver.getIterationNumber());
+      eSolve.addData("Iterations", _solver.getIterationNumber());
       eSolve.stop();
 
       ierr = MatMult(_matrixA, p, out); CHKERRV(ierr);
