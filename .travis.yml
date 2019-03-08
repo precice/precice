@@ -8,10 +8,8 @@ compiler:
 
 addons:
   apt:
-    sources:
-      - ubuntu-toolchain-r-test
     packages:
-      - g++-6
+      - scons
       - libopenmpi-dev
       - openmpi-bin
       - python-numpy
@@ -81,7 +79,7 @@ cache:
     - $LOCAL_INSTALL
 
 before_install:
-  - if [ "$CXX" = "g++" ]; then export CXX="g++-6" && export CC="gcc-6" && export CXXFLAGS="$CXXFLAGS -Wno-literal-suffix"; fi
+  - if [ "$CXX" = "g++" ]; then export CXXFLAGS="$CXXFLAGS -Wno-literal-suffix"; fi
   - export OMPI_CXX=$CXX
   - if [ "$MPI" = "on" ]; then export CXX="mpicxx"; fi
 
