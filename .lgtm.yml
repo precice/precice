@@ -1,0 +1,11 @@
+extraction:
+  cpp:
+    prepare:
+      packages:
+        - petsc-dev
+        - libboost-all-dev
+        - libopenmpi-dev
+        - lbixml2-dev
+        - libeigen3-dev
+        - python-dev
+        - python-numpy
