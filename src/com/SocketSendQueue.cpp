@@ -6,17 +6,17 @@ namespace com
 {
 namespace asio = boost::asio;
 
-void SendQueue::push(std::shared_ptr<Socket> sock, 
+void SendQueue::dispatch(std::shared_ptr<Socket> sock, 
         boost::asio::const_buffers_1 data, 
         std::function<void()> callback)
 {
   _itemQueue.push_back({sock, data, callback});
-  dispatch(); //If queue was previously empty, start it now.
+  process(); //If queue was previously empty, start it now.
 }
 
 /// This method can be called arbitrarily many times, 
 /// but enough times to ensure the queue makes progress.
-void SendQueue::dispatch()
+void SendQueue::process()
 {
   std::lock_guard<std::mutex> lock(_sendMutex);
   if (!_ready || _itemQueue.empty())
@@ -29,7 +29,7 @@ void SendQueue::dispatch()
                     [item, this](boost::system::error_code const &, std::size_t) {
                       item.callback();
                       this->_ready = true;
-                      this->dispatch();
+                      this->process();
                     });
 }
 
