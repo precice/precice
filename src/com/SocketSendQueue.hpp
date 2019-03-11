@@ -26,13 +26,13 @@ class SendQueue
     SendQueue(const SendQueue&) =delete;
     SendQueue& operator=(const SendQueue&) =delete;
 
-    void push(std::shared_ptr<Socket> sock, boost::asio::const_buffers_1 data, std::function<void()> callback);
+    void dispatch(std::shared_ptr<Socket> sock, boost::asio::const_buffers_1 data, std::function<void()> callback);
     ~SendQueue();
 
   private:
     logging::Logger _log{"com::SendQueue"};
 
-    void dispatch();
+    void process();
 
     struct SendItem
     {
