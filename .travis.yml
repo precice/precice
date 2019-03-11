@@ -29,6 +29,9 @@ env:
     - LD_LIBRARY_PATH="$PETSC_DIR/$PETSC_ARCH/lib:$LOCAL_INSTALL/lib:$LD_LIBRARY_PATH"
     - LIBRARY_PATH="$PETSC_DIR/$PETSC_ARCH/lib:$LOCAL_INSTALL/lib:$LIBRARY_PATH"
     - PYTHONPATH="$PETSC_DIR/$PETSC_ARCH/lib:/usr/lib/python2.7:/usr/lib/python2.7/dist-packages:/usr/lib/python2.7/plat-x86_64-linux-gnu"
+    - EIGEN3_ROOT_DIR=${LOCAL_INSTALL}/eigen3
+    - BOOST_ROOT=${LOCAL_INSTALL}
+    - BUILD_TYPE=CMAKE
     - CXXFLAGS="-Wall -Wextra -Wno-unused-parameter"
 
   matrix:
@@ -36,6 +39,28 @@ env:
     - MPI=on PETSC=off
     - MPI=off PETSC=off
 
+matrix:
+  include:
+
+      # testing builds on scons
+    - if: type = cron or branch = master
+      compiler: gcc
+      env: BUILD_TYPE=SCONS MPI=on PETSC=on
+    - if: type = cron or branch = master
+      compiler: gcc
+      env: BUILD_TYPE=SCONS MPI=on PETSC=off
+    - if: type = cron or branch = master
+      compiler: gcc
+      env: BUILD_TYPE=SCONS MPI=off PETSC=off
+    - if: type = cron or branch = master
+      compiler: clang
+      env: BUILD_TYPE=SCONS MPI=on PETSC=on
+    - if: type = cron or branch = master
+      compiler: clang
+      env: BUILD_TYPE=SCONS MPI=on PETSC=off
+    - if: type = cron or branch = master
+      compiler: clang
+      env: BUILD_TYPE=SCONS MPI=off PETSC=off
 cache:
   directories:
     - $LOCAL_INSTALL
@@ -47,16 +72,13 @@ before_install:
 
 install:
   - $TRAVIS_BUILD_DIR/tools/travis-install-dependencies.sh $LOCAL_INSTALL
+  - export PATH=${LOCAL_INSTALL}/cmake/bin:${PATH}
 
 before_script:
   - mkdir $TRAVIS_BUILD_DIR/tests
 
 script:
-  - cd $TRAVIS_BUILD_DIR
-  - scons -j 2 petsc=$PETSC mpi=$MPI python=on compiler=$CXX staticlib bin solib tests symlink
-  - cd tests
-  - if [ "$MPI" = "off" ]; then ../build/last/testprecice -x -r detailed > boost-test-output; fi
-  - if [ "$MPI" = "on"  ]; then mpirun.openmpi --mca btl_base_warn_component_unused 0 -n 4 --output-filename boost-test-output  ../build/last/testprecice -r detailed; fi
+  - $TRAVIS_BUILD_DIR/tools/travis-build-test.sh
 
 after_failure:
   - cd $TRAVIS_BUILD_DIR
