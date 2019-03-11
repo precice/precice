@@ -17,6 +17,7 @@ addons:
       - python-numpy
       - libblas-dev
       - liblapack-dev
+      - lcov
 
 env:
   global:
@@ -65,14 +66,8 @@ matrix:
     # Test coverage
     - name: "Test Coverage"
       compiler: gcc
-      addons:
-        apt:
-          packages:
-            - lcov
-
       script:
         - $TRAVIS_BUILD_DIR/tools/travis-coverage.sh
-
       after_success:
         - lcov --capture --directory "$TRAVIS_BUILD_DIR/build" --output-file coverage.info
         - lcov --remove coverage.info '/usr/*' "$LOCAL_INSTALL/*" --output-file coverage.info # filter system-files and local-dependencies
