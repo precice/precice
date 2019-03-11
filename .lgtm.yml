@@ -5,7 +5,7 @@ extraction:
         - petsc-dev
         - libboost-all-dev
         - libopenmpi-dev
-        - lbixml2-dev
+        - libxml2-dev
         - libeigen3-dev
         - python-dev
         - python-numpy
