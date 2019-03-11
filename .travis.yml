@@ -63,7 +63,8 @@ matrix:
       env: BUILD_TYPE=SCONS MPI=off PETSC=off
 
     # Test coverage
-    - compiler: gcc
+    - name: "Test Coverage"
+      compiler: gcc
       addons:
         apt:
           packages:
