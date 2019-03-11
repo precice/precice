@@ -773,22 +773,21 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
   auto rtree = mesh::rtree::getVertexRTree(filterMesh);
   mesh::Mesh::VertexContainer insideVerts;
   if (not _basisFunction.hasCompactSupport()) {
-      insideVerts = filterMesh->vertices();
+      for (auto& vert : filterMesh->vertices()){
+        vert.tag();
+      }
   }
   else {
     #if PETSC_MAJOR >= 3 and PETSC_MINOR >= 8
       namespace bgi = boost::geometry::index;
       rtree->query(bgi::within(otherMesh->getBoundingBox()),
-          boost::make_function_output_iterator([&filterMesh, &insideVerts](size_t idx){
-            insideVerts.push_back(&filterMesh->vertices()[idx]);
+          boost::make_function_output_iterator([&filterMesh](size_t idx){
+            filterMesh->vertices()[idx].tag();
           }));
     #else
       #warning "Mesh filtering deactivated, due to PETSc version < 3.8. \
 preCICE is fully functional, but performance for large cases is degraded."
     #endif
-  }
-  for (auto& vert : insideVerts){
-    vert.tag();
   }
 }
 
@@ -833,14 +832,10 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
     bb[d].second += _basisFunction.getSupportRadius();
   }
   auto rtree = mesh::rtree::getVertexRTree(mesh);
-  mesh::Mesh::VertexContainer insideVerts;
   rtree->query(boost::geometry::index::within(bb),
-      boost::make_function_output_iterator([&mesh, &insideVerts](size_t idx){
-        insideVerts.push_back(&mesh->vertices()[idx]);
+      boost::make_function_output_iterator([&mesh](size_t idx){
+        mesh->vertices()[idx].tag();
       }));
-  for (auto& vert : insideVerts){
-    vert.tag();
-  }
 }
 
 
