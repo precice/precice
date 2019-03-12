@@ -1,5 +1,6 @@
 #include "Petsc.hpp"
 #include "utils/Parallel.hpp"
+#include <utility>
 
 #ifndef PRECICE_NO_PETSC
 #include "petsc.h"
@@ -96,6 +97,33 @@ std::string getName(T obj)
 
 /////////////////////////////////////////////////////////////////////////
 
+Vector::Vector(const Vector &v)
+{
+  PetscErrorCode ierr = 0;
+  ierr = VecDuplicate(v.vector, &vector); CHKERRV(ierr);
+  setName(vector, getName(v.vector));
+}
+
+Vector& Vector::operator=(Vector s)
+{
+    swap(s);
+    return *this;
+}
+
+Vector::Vector(Vector&& other) {
+  vector = other.vector;
+  other.vector = nullptr;
+}
+
+Vector& Vector::operator=(Vector&& other)
+{
+  PetscErrorCode ierr = 0;
+  ierr = VecDestroy(&vector); [&]{ CHKERRV(ierr); }();
+  vector = other.vector;
+  other.vector = nullptr;
+  return *this;
+}
+
 Vector::Vector(std::string name)
 {
   int size;
@@ -147,6 +175,12 @@ Vector::~Vector()
 Vector::operator Vec&()
 {
   return vector;
+}
+
+void Vector::swap(Vector& other) noexcept
+{
+    using std::swap;
+    swap(vector, other.vector);
 }
 
 void Vector::init(PetscInt rows)
@@ -257,6 +291,11 @@ void Vector::view() const
 {
   PetscErrorCode ierr;
   ierr = VecView(vector, PETSC_VIEWER_STDOUT_WORLD); CHKERRV(ierr);
+}
+
+void swap(Vector& lhs, Vector& rhs) noexcept
+{
+    lhs.swap(rhs);
 }
 
 /////////////////////////////////////////////////////////////////////////

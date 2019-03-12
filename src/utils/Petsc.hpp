@@ -62,11 +62,31 @@ public:
   /// Creates a new vector on the given MPI communicator.
   explicit Vector(std::string name = "");
 
-  /// Use Vec v as vector.
-  Vector(Vec &v, std::string name = "");
+  /** Copy construction from another vector
+   * Duplicates the vector and copies the name
+   */
+  Vector(const Vector& other);
+
+  /** Copy assignement
+   * Destroys the current vector and takes ownership of the other.
+   */
+  Vector& operator=(Vector other);
+
+  /** Move construction
+   * Takes ownership of the other vector.
+   */
+  Vector(Vector&& other);
+
+  /** Move assignement
+   * Destroys the current vector and takes ownership of the other vector.
+   */
+  Vector& operator=(Vector&& other);
 
   /// Duplicates type, row layout etc. (not values) of v.
-  Vector(Vector &v, std::string name = "");  
+  Vector(Vector &v, std::string name);  
+
+  /// Use Vec v as vector.
+  Vector(Vec &v, std::string name = "");
 
   /// Constructs a vector with the same number of rows (default) or columns.
   Vector(Mat &m, std::string name = "", LEFTRIGHT type = LEFT);
@@ -74,12 +94,8 @@ public:
   /// Constructs a vector with the same number of rows (default) or columns.
   Vector(Matrix &m, std::string name = "", LEFTRIGHT type = LEFT);
 
-  /// Delete copy and assignment constructor
-  /** Copying and assignement of this class would involve copying the pointer to
-      the PETSc object and finallly cause double destruction of it.
-   */
-  Vector(const Vector&) = delete;
-  Vector& operator=(const Vector&) = delete;
+  /// Swaps the ownership of two vectors
+  void swap(Vector& other) noexcept;
 
   ~Vector();
 
@@ -117,6 +133,7 @@ public:
   void view() const;
 };
 
+void swap(Vector& lhs, Vector& rhs) noexcept;
   
 class Matrix
 {
