@@ -37,7 +37,7 @@ public:
     case (Primitive::Quad):
       return boost::geometry::return_envelope<AABB>(mesh_.quads()[pi.index]);
     default:
-      assertion(false, "AABB generation for this Primitive is not implemented!")
+      throw std::invalid_argument{"AABB generation for this Primitive is not implemented!"};
     }
   }
 
