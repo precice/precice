@@ -1,16 +1,12 @@
-# MATLAB solverdummy - experimental
+# MATLAB solverdummy
 
-This dummy marks the first successful attempts to get preCICE working with MATLAB. Right now, it is not much more than a copy of the cpp solverdummy refactored to work with the [C data API](https://de.mathworks.com/help/matlab/cc-mx-matrix-library.html).
+This dummy illustrates the use of precice with MATLAB using the MATLAB bindings based on the C data API.
+
+**Please note:** Currently, the MATLAB solverdummy can't be coupled with other solvers unless an exchange directory is specified with its full path in the config file. So, if you wish to couple with a different solver, please make sure to modify the config file accordingly.
 
 ## Compilation
 
-First, you need a C++ compiler that is compatible with MATLAB mex. Use the `mex -setup c++` command to check the configuration of your MEX. If necessary, change the compiler. Find more details in [MATLABs documentation](https://de.mathworks.com/help/matlab/matlab_external/choose-c-or-c-compilers.html).
-
-Then, you can compile the solverdummy by calling
-
-`mex solverdummy.cpp -lprecice -output solverdummy`
-
-in MATLAB. This will create a file named `solverdummy.mexa64` which can be called like every other MATLAB function.
+No compiling is necessary. You only have to compile the MATLAB bindings.
 
 ## Run
 
