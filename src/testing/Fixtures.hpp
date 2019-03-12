@@ -60,10 +60,8 @@ struct M2NFixture {
 
   M2NFixture()
   {
-    com::PtrCommunication participantCom =
-          com::PtrCommunication(new com::MPIDirectCommunication());
-    m2n::DistributedComFactory::SharedPointer distrFactory = m2n::DistributedComFactory::SharedPointer(
-        new m2n::GatherScatterComFactory(participantCom));
+    auto participantCom = com::PtrCommunication(new com::MPIDirectCommunication());
+    auto distrFactory = m2n::DistributedComFactory::SharedPointer(new m2n::GatherScatterComFactory(participantCom));
     m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory));
 
     if (utils::Parallel::getProcessRank() == 0){
