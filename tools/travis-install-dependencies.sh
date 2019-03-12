@@ -87,6 +87,7 @@ if [ ! -f $CACHE_CCACHE_TOKEN ]; then
     ./configure --prefix=$LOCAL_INSTALL --disable-man
     make -j $(nproc)
     make install
+    strip $LOCAL_INSTALL/bin/ccache
     cd $LOCAL_INSTALL
     # Cleanup
     rm -rf $LOCAL_INSTALL/ccache
