@@ -24,11 +24,11 @@ int main ( int argc, char** argv )
 
   if (argc >= 2) {
     std::string action(argv[1]);
-    if ( action == "dtd" and argc >= 2 ) {
+    if ( action == "dtd" ) {
       wrongParameters = false;
       runDtd = true;
     }
-    if ( action == "xml" and argc >= 2 ) {
+    if ( action == "xml" ) {
       wrongParameters = false;
       runHelp = true;
     }
