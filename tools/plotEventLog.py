@@ -40,7 +40,10 @@ df = df[df.Name != "_GLOBAL"]
 if args.filter:
     try:
         df.query(args.filter, inplace = True)
-    except:
+    except pd.core.computation.ops.UndefinedVariableError as e:
+        print(e)
+        sys.exit(-1)
+    except KeyError:
         print("There is something wrong with the filter string you supplied.")
         sys.exit(-1)
 
