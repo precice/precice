@@ -20,13 +20,6 @@ TXTWriter:: TXTWriter
   _file << std::setprecision(16);
 }
 
-TXTWriter:: ~TXTWriter()
-{
-  if (_file){
-    _file.close ();
-  }
-}
-
 void TXTWriter::flush()
 {
     _file.flush();
