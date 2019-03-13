@@ -105,9 +105,8 @@ Vector::Vector(const Vector &v)
   setName(vector, getName(v.vector));
 }
 
-Vector& Vector::operator=(const Vector& other)
+Vector& Vector::operator=(Vector other)
 {
-    Vector copy(other);
     swap(other);
     return *this;
 }
@@ -115,12 +114,6 @@ Vector& Vector::operator=(const Vector& other)
 Vector::Vector(Vector&& other) {
   vector = other.vector;
   other.vector = nullptr;
-}
-
-Vector& Vector::operator=(Vector&& other)
-{
-  swap(other);
-  return *this;
 }
 
 Vector::Vector(std::string name)

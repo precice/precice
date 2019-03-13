@@ -70,17 +70,12 @@ public:
   /** Copy assignement
    * Destroys the current vector and takes ownership of the other.
    */
-  Vector& operator=(const Vector& other);
+  Vector& operator=(Vector other);
 
   /** Move construction
    * Takes ownership of the other vector.
    */
   Vector(Vector&& other);
-
-  /** Move assignement
-   * Destroys the current vector and takes ownership of the other vector.
-   */
-  Vector& operator=(Vector&& other);
 
   /// Duplicates type, row layout etc. (not values) of v.
   Vector(Vector &v, std::string name);  
