@@ -70,7 +70,7 @@ public:
   /** Copy assignement
    * Destroys the current vector and takes ownership of the other.
    */
-  Vector& operator=(Vector other);
+  Vector& operator=(const Vector& other);
 
   /** Move construction
    * Takes ownership of the other vector.
