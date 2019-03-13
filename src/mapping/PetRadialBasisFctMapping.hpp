@@ -770,24 +770,32 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
       return; // Ranks not at the interface should never hold interface vertices
 
   // Tags all vertices that are inside otherMesh's bounding box, enlarged by the support radius
-  auto rtree = mesh::rtree::getVertexRTree(filterMesh);
-  mesh::Mesh::VertexContainer insideVerts;
-  if (not _basisFunction.hasCompactSupport()) {
-      for (auto& vert : filterMesh->vertices()){
-        vert.tag();
-      }
-  }
-  else {
-    #if PETSC_MAJOR >= 3 and PETSC_MINOR >= 8
+  if (
+#if PETSC_MAJOR >= 3 and PETSC_MINOR >= 8
+          _basisFunction.hasCompactSupport()
+#else
+          false
+#warning "Mesh filtering deactivated, due to PETSc version < 3.8. \
+          preCICE is fully functional, but performance for large cases is degraded."
+#endif
+     )
+  {
+      auto rtree = mesh::rtree::getVertexRTree(filterMesh);
       namespace bgi = boost::geometry::index;
-      rtree->query(bgi::within(otherMesh->getBoundingBox()),
+      auto bb = otherMesh->getBoundingBox();
+      // Enlarge by support radius
+      for (int d = 0; d < otherMesh->getDimensions(); d++){
+        bb[d].first -= _basisFunction.getSupportRadius();
+        bb[d].second += _basisFunction.getSupportRadius();
+      }
+      rtree->query(bgi::within(bb),
           boost::make_function_output_iterator([&filterMesh](size_t idx){
             filterMesh->vertices()[idx].tag();
           }));
-    #else
-      #warning "Mesh filtering deactivated, due to PETSc version < 3.8. \
-preCICE is fully functional, but performance for large cases is degraded."
-    #endif
+  }
+  else {
+      for (auto& vert : filterMesh->vertices())
+        vert.tag();
   }
 }
 
