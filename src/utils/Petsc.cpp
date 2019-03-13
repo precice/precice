@@ -101,6 +101,7 @@ Vector::Vector(const Vector &v)
 {
   PetscErrorCode ierr = 0;
   ierr = VecDuplicate(v.vector, &vector); CHKERRV(ierr);
+  ierr = VecCopy(v.vector, vector); CHKERRV(ierr);
   setName(vector, getName(v.vector));
 }
 
