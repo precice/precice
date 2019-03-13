@@ -27,4 +27,9 @@ TXTWriter:: ~TXTWriter()
   }
 }
 
+void TXTWriter::flush()
+{
+    _file.flush();
+}
+
 }} // namespace precice, io

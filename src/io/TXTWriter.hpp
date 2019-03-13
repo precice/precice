@@ -36,6 +36,9 @@ public:
     _file << '\n';
   }
 
+  ///Flush the buffer to file
+  void flush();
+
   
 private:
   logging::Logger _log{"io::TXTWriter"};
