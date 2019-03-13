@@ -291,7 +291,7 @@ void SerialCouplingScheme::advance()
           //       old fine pressure vals = old coarse pressure vals TODO: find better solution,
           //auto fineIDs = getPostProcessing()->getDataIDs();
           //for(auto id: fineIDs){
-          //  std::cout<<"id: "<<id<<", fineIds.size(): "<<fineIDs.size()<<std::endl;
+          //  std::cout<<"id: "<<id<<", fineIds.size(): "<<fineIDs.size()<<'\n';
           //  getReceiveData(id)->oldValues.column(0) = getReceiveData(id+fineIDs.size())->oldValues.column(0);
           //}
            */

@@ -129,7 +129,7 @@ void TransformToVRML:: eliminateRedundancy ()
   std::vector<int> deleteList;
 
   std::cout << "before elemination: " << stringCoordinate3.size() << " points "
-            << std::endl;
+            << '\n';
 
   size_t j = 0;
   for ( size_t i=0; i < stringCoordinate3.size (); i++ ) {
@@ -145,7 +145,7 @@ void TransformToVRML:: eliminateRedundancy ()
     }
   }
 
-  std::cout << "after elemination: " << oneMap.size() << " points " << std::endl;
+  std::cout << "after elemination: " << oneMap.size() << " points \n";
 
   // eliminate redundancy
   for ( size_t i=deleteList.size ()-1; i >= 0; i-- ) {
@@ -186,39 +186,39 @@ void TransformToVRML:: eliminateRedundancy ()
   fp.open ( _outputFileName.c_str(), std::ios_base::out );
 
   for ( size_t i=0; i < vrmlText.size(); i++ ) {
-    fp << vrmlText [ i ] << endl;
+    fp << vrmlText [ i ] << '\n';
   }
 
   for ( size_t i=0; i < stringCoordinate3.size()-1; i++ ) {
-    fp << stringCoordinate3[i] << "," << std::endl;
+    fp << stringCoordinate3[i] << ",\n";
   }
 
-  fp << stringCoordinate3[stringCoordinate3.size()-1] << " ]" << std::endl;
+  fp << stringCoordinate3[stringCoordinate3.size()-1] << " ]\n";
 
-  fp << "}"                 << std::endl;
-  fp << "ShapeHints {"      << std::endl;
-  fp << "}"                 << std::endl;
-  fp << "IndexedFaceSet {"  << std::endl;
-  fp << "coordIndex ["      << std::endl;
+  fp << "}\n";
+  fp << "ShapeHints {\n";
+  fp << "}\n";
+  fp << "IndexedFaceSet {\n";
+  fp << "coordIndex [\n";
 
   for ( size_t i=0; i < vectorFaceIndices.size() - 1; i += 3 ) {
     fp << vectorFaceIndices [ i + 0 ] << ","
     << vectorFaceIndices [ i + 1 ] << ","
     << vectorFaceIndices [ i + 2 ] << ","
-    << "-1," << std::endl;
+    << "-1,\n";
   }
 
   fp << vectorFaceIndices [ vectorFaceIndices.size() - 3 ] << ","
   << vectorFaceIndices [ vectorFaceIndices.size() - 2 ] << ","
   << vectorFaceIndices [ vectorFaceIndices.size() - 1 ] << ","
-  << "-1" << std::endl;
+  << "-1\n";
 
-  fp << "]"  << std::endl;
-  fp << "}"  << std::endl;
-  fp << "}"  << std::endl;
-  fp << "}"  << std::endl;
-  fp << "}"  << std::endl;
-  fp << "}"  << std::endl;
+  fp << "]\n";
+  fp << "}\n";
+  fp << "}\n";
+  fp << "}\n";
+  fp << "}\n";
+  fp << "}\n";
 
   return;
 }

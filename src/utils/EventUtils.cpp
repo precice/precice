@@ -297,7 +297,6 @@ void EventRegistry::writeSummary(std::ostream &out)
   MPI_Comm_size(comm, &size);
 
   if (rank == 0) {
-    using std::endl;
     { // Print per event stats
       std::time_t ts = sys_clk::to_time_t(localRankData.finalizedAt);
       double const duration = std::chrono::duration_cast<std::chrono::milliseconds>(localRankData.getDuration()).count();
@@ -306,9 +305,9 @@ void EventRegistry::writeSummary(std::ostream &out)
 
       out << "Global runtime       = "
           << duration << "ms / "
-          << duration / 1000 << "s" << endl
-          << "Number of processors = " << size << endl
-          << "# Rank: " << rank << endl << endl;
+          << duration / 1000 << "s\n"
+          << "Number of processors = " << size << '\n'
+          << "# Rank: " << rank << "\n\n";
 
       Table table(out);
       table.addColumn("Event", getMaxNameWidth());
@@ -326,7 +325,7 @@ void EventRegistry::writeSummary(std::ostream &out)
                        ev.getTotal() / duration);
       }
     }
-    out << endl << endl;
+    out << '\n' << '\n';
     { // Print aggregated states
       Table t(out);
       t.addColumn("Name", getMaxNameWidth());
@@ -394,7 +393,7 @@ void EventRegistry::writeJSON(std::ostream & out)
       });
   }
   
-  out << std::setw(2) << js << std::endl;
+  out << std::setw(2) << js << '\n';
 }
 
 

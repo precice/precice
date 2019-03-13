@@ -41,8 +41,8 @@ void precice_fastest_create_
   string stringAccessorNameFluid(participantNameFluid, strippedLength);
   strippedLength = precice::impl::strippedLength(configFileName,lengthConfigFileName);
   string stringConfigFileName(configFileName, strippedLength);
-  //cout << "Accessor: " << stringAccessorName << "!" << endl;
-  //cout << "Config  : " << stringConfigFileName << "!" << endl;
+  //cout << "Accessor: " << stringAccessorName << "!" << '\n';
+  //cout << "Config  : " << stringConfigFileName << "!" << '\n';
   if(isAcousticUsed){
     implAcoustic = new precice::impl::SolverInterfaceImpl (stringAccessorNameAcoustic,
            *solverProcessIndex, *solverProcessSize, false);

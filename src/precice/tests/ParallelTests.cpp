@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(GlobalRBFPartitioning, * testing::OnSize(4))
     double values[2];
     interface.advance(1.0);
     interface.readBlockScalarData(dataID, 2, vertexIDs, values);
-//    std::cout << utils::Parallel::getProcessRank() <<": " << values << std::endl;
+//    std::cout << utils::Parallel::getProcessRank() <<": " << values << '\n';
     interface.finalize();
   }
   else {

@@ -30,10 +30,10 @@ public:
   {
     for (long i = 0; i < matrix.rows(); i++) {
       for (long j = 0; j < matrix.cols(); j++) {
-        _file << matrix(i, j) << " ";
+        _file << matrix(i, j) << ' ';
       }
     }
-    _file << std::endl;
+    _file << '\n';
   }
 
   
