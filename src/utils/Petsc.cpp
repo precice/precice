@@ -118,10 +118,7 @@ Vector::Vector(Vector&& other) {
 
 Vector& Vector::operator=(Vector&& other)
 {
-  PetscErrorCode ierr = 0;
-  ierr = VecDestroy(&vector); [&]{ CHKERRV(ierr); }();
-  vector = other.vector;
-  other.vector = nullptr;
+  swap(other);
   return *this;
 }
 
