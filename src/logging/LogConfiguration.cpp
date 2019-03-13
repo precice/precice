@@ -127,8 +127,8 @@ LoggingConfiguration readLogConfFile(std::string const & filename)
     po::store(parsed, vm);
     po::notify(vm);
     for (auto const & opt : parsed.options) {
-      std::string section = opt.string_key.substr(0, opt.string_key.find("."));
-      std::string key = opt.string_key.substr(opt.string_key.find(".")+1);
+      std::string section = opt.string_key.substr(0, opt.string_key.find('.'));
+      std::string key = opt.string_key.substr(opt.string_key.find('.')+1);
       configs[section].setOption(key, opt.value[0]);        
     }
   }

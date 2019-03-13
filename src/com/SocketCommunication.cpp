@@ -209,7 +209,7 @@ void SocketCommunication::requestConnection(std::string const &acceptorName,
 
     DEBUG("Request connection to " << address);
 
-    std::string ipAddress  = address.substr(0, address.find(":"));
+    std::string ipAddress  = address.substr(0, address.find(':'));
     std::string portNumber = address.substr(ipAddress.length() + 1, address.length() - ipAddress.length() - 1);
 
     _portNumber = static_cast<unsigned short>(std::stoi(portNumber));
@@ -276,7 +276,7 @@ void SocketCommunication::requestConnectionAsClient(std::string      const &acce
       Publisher p(addressFileName);
       address = p.read();
       
-      std::string ipAddress  = address.substr(0, address.find(":"));
+      std::string ipAddress  = address.substr(0, address.find(':'));
       std::string portNumber = address.substr(ipAddress.length()+1, address.length() - ipAddress.length()-1);
 
       _portNumber = static_cast<unsigned short>(std::stoi(portNumber));

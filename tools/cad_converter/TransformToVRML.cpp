@@ -109,7 +109,7 @@ void TransformToVRML:: eliminateRedundancy ()
   while ( fp.getline ( buf, sizeof ( buf ) ) ) {
     std::string str = buf;
     // not last line
-    if ( str.find("]") == std::string::npos ) {
+    if ( str.find(']') == std::string::npos ) {
       str.erase ( str.length()-1 );
       stringCoordinate3.push_back ( str );
     }

@@ -190,9 +190,9 @@ template <typename ATTRIBUTE_T>
 void XMLAttribute<ATTRIBUTE_T>::readValueSpecific(std::string &rawValue, double &value)
 {
   try {
-    if (rawValue.find("/") != std::string::npos) {
-      std::string left  = rawValue.substr(0, rawValue.find("/"));
-      std::string right = rawValue.substr(rawValue.find("/") + 1, rawValue.size() - rawValue.find("/") - 1);
+    if (rawValue.find('/') != std::string::npos) {
+      std::string left  = rawValue.substr(0, rawValue.find('/'));
+      std::string right = rawValue.substr(rawValue.find('/') + 1, rawValue.size() - rawValue.find('/') - 1);
 
       value = std::stod(left) / std::stod(right);
     } else {
@@ -237,16 +237,16 @@ void XMLAttribute<ATTRIBUTE_T>::readValueSpecific(std::string &rawValue, Eigen::
     std::string tmp1(rawValue);
     // erase entries before i-th entry
     for (int j = 0; j < i; j++) {
-      if (tmp1.find(";") != std::string::npos) {
-        tmp1.erase(0, tmp1.find(";") + 1);
+      if (tmp1.find(';') != std::string::npos) {
+        tmp1.erase(0, tmp1.find(';') + 1);
       } else {
         componentsLeft = false;
       }
     }
     // if we are not in the last vector component...
-    if (tmp1.find(";") != std::string::npos) {
+    if (tmp1.find(';') != std::string::npos) {
       // ..., erase entries after i-th entry
-      tmp1.erase(tmp1.find(";"), tmp1.size());
+      tmp1.erase(tmp1.find(';'), tmp1.size());
     }
 
     if (componentsLeft) {
@@ -272,17 +272,17 @@ Eigen::VectorXd XMLAttribute<Eigen::VectorXd>::getAttributeValueAsEigenVectorXd(
 	std::string tmp1(rawValue);
 	// erase entries before i-th entry
 	for (int j = 0; j < i; j++){
-	  if (tmp1.find(";") != std::string::npos){
-		tmp1.erase(0,tmp1.find(";")+1);
+	  if (tmp1.find(';') != std::string::npos){
+		tmp1.erase(0,tmp1.find(';')+1);
 	  }
 	  else {
 		componentsLeft = false;
 	  }
 	}
 	// if we are not in the last vector component...
-	if (tmp1.find(";") != std::string::npos){
+	if (tmp1.find(';') != std::string::npos){
 	  // ..., erase entries after i-th entry
-	  tmp1.erase(tmp1.find(";"),tmp1.size());
+	  tmp1.erase(tmp1.find(';'),tmp1.size());
 	}
 	if (componentsLeft){
 	   
