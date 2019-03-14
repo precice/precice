@@ -21,6 +21,9 @@ classdef SolverInterface < handle
             %SOLVERINTERFACE Construct an instance of this class
             %   Detailed explanation goes here
             obj.interfaceID = 0;
+            if ischar(SolverName)
+                SolverName = string(SolverName);
+            end
             preciceGateway(uint8(0),SolverName);
         end
         
@@ -31,6 +34,9 @@ classdef SolverInterface < handle
         
         function configure(obj,configFileName)
             obj.interfaceID = 0;
+            if ischar(configFileName)
+                configFileName = string(configFileName);
+            end
             preciceGateway(uint8(2),configFileName);
         end
         
@@ -60,16 +66,25 @@ classdef SolverInterface < handle
         end
         
         function bool = isActionRequired(obj,action)
+            if ischar(action)
+                action = string(action);
+            end
             obj.interfaceID = 0;
             bool = preciceGateway(uint8(30),action);
         end
         
         function fulfilledAction(obj,action)
+            if ischar(action)
+                action = string(action);
+            end
             obj.interfaceID = 0;
             preciceGateway(uint8(31),action);
         end
         
         function id = getMeshID(obj,meshName)
+            if ischar(meshName)
+                meshName = string(meshName);
+            end
             obj.interfaceID = 0;
             id = preciceGateway(uint8(41),meshName);
         end
@@ -89,6 +104,9 @@ classdef SolverInterface < handle
         
         function id = getDataID(obj,dataName,meshID)
             obj.interfaceID = 0;
+            if ischar(dataName)
+                dataName = string(meshName);
+            end
             id = preciceGateway(uint8(61),dataName,int32(meshID));
         end
         

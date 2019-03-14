@@ -43,8 +43,8 @@ private:
     }
     
     bool constructInterface(ArgumentList& inputs, ArgumentList& outputs) {
-        CharArray solverName = inputs[1];
-        interface = new SolverInterface(solverName.toAscii(),0,1);
+        const StringArray solverName = inputs[1];
+        interface = new SolverInterface(solverName[0],0,1);
         constructed = true;
         return true;
     }
@@ -56,8 +56,8 @@ private:
     }
     
     bool configure(ArgumentList& inputs, ArgumentList& outputs) {
-        CharArray configFileName = inputs[1];
-        interface->configure(configFileName.toAscii());
+        const StringArray configFileName = inputs[1];
+        interface->configure(configFileName[0]);
         return true;
     }
     
@@ -92,28 +92,28 @@ private:
     }
     
     bool isActionRequired(ArgumentList& inputs, ArgumentList& outputs) {
-        CharArray action = inputs[1];
-        bool result = interface->isActionRequired(action.toAscii());
+        const StringArray action = inputs[1];
+        bool result = interface->isActionRequired(action[0]);
         outputs[0] = factory.createArray<bool>({1,1}, {result});
         return true;
     }
     
     bool fulfilledAction(ArgumentList& inputs, ArgumentList& outputs) {
-        CharArray action = inputs[1];
-        interface->fulfilledAction(action.toAscii());
+        const StringArray action = inputs[1];
+        interface->fulfilledAction(action[0]);
         return true;
     }
     
     bool getMeshID(ArgumentList& inputs, ArgumentList& outputs) {
-        CharArray meshName = inputs[1];
-        int id = interface->getMeshID(meshName.toAscii());
+        const StringArray meshName = inputs[1];
+        int id = interface->getMeshID(meshName[0]);
         outputs[0] = factory.createArray<int32_t>({1,1}, {id});
         return true;
     }
     
     bool setMeshVertex(ArgumentList& inputs, ArgumentList& outputs) {
         TypedArray<int32_t> meshID = std::move(inputs[1]);
-        TypedArray<double> position = std::move(inputs[2]);
+        const TypedArray<double> position = std::move(inputs[2]);
         int id = interface->setMeshVertex(meshID[0],&*position.begin());
         outputs[0] = factory.createArray<int32_t>({1,1}, {id});
         return true;
@@ -131,9 +131,9 @@ private:
     }
     
     bool getDataID(ArgumentList& inputs, ArgumentList& outputs) {
-        CharArray dataName = inputs[1];
+        const StringArray dataName = inputs[1];
         TypedArray<int32_t> meshID = std::move(inputs[2]);
-        int id = interface->getDataID(dataName.toAscii(),meshID[0]);
+        int id = interface->getDataID(dataName[0],meshID[0]);
         outputs[0] = factory.createArray<int32_t>({1,1}, {id});
         return true;
     }
@@ -200,7 +200,7 @@ public:
             // 60-79: Data Access
             case 0: //construction
                 ninputs = 1;
-                types = new ArrayType [ninputs] {ArrayType::CHAR};
+                types = new ArrayType [ninputs] {ArrayType::MATLAB_STRING};
                 functionName = &MexFunction::constructInterface;
                 break;
             case 1: //destruction
@@ -208,7 +208,7 @@ public:
                 break;
             case 2: //configuration
                 ninputs = 1;
-                types = new ArrayType [ninputs] {ArrayType::CHAR};
+                types = new ArrayType [ninputs] {ArrayType::MATLAB_STRING};
                 functionName = &MexFunction::configure;
                 break;
             case 10: //initialization
@@ -234,18 +234,18 @@ public:
                 break;
             case 30: //isActionRequired
                 ninputs = 1;
-                types = new ArrayType [ninputs] {ArrayType::CHAR};
+                types = new ArrayType [ninputs] {ArrayType::MATLAB_STRING};
                 noutputs = 1;
                 functionName = &MexFunction::isActionRequired;
                 break;
             case 31: //fulfilledAction
                 ninputs = 1;
-                types = new ArrayType [ninputs] {ArrayType::CHAR};
+                types = new ArrayType [ninputs] {ArrayType::MATLAB_STRING};
                 functionName = &MexFunction::fulfilledAction;
                 break;
             case 41: //getMeshID
                 ninputs = 1;
-                types = new ArrayType [ninputs] {ArrayType::CHAR};
+                types = new ArrayType [ninputs] {ArrayType::MATLAB_STRING};
                 noutputs = 1;
                 functionName = &MexFunction::getMeshID;
                 break;
@@ -263,7 +263,7 @@ public:
                 break;
             case 61: //getDataID
                 ninputs = 2;
-                types = new ArrayType [ninputs] {ArrayType::CHAR,ArrayType::INT32};
+                types = new ArrayType [ninputs] {ArrayType::MATLAB_STRING,ArrayType::INT32};
                 functionName = &MexFunction::getDataID;
                 noutputs = 1;
                 break;
