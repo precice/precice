@@ -19,7 +19,7 @@ if [ ! -d $LOCAL_INSTALL/include ]; then
     wget -nv 'https://dl.bintray.com/boostorg/release/1.65.1/source/boost_1_65_1.tar.bz2' -O - | tar xj
     cd boost_1_65_1
     ./bootstrap.sh --prefix=$LOCAL_INSTALL > ~/boost.bootstrap
-    ./b2 -j2 --with-program_options --with-test --with-filesystem --with-log install > ~/boost.b2
+    ./b2 -j2 --with-program_options --with-test --with-filesystem --with-log --with-iostreams install > ~/boost.b2
 
     # Download and compile PETSc
     cd $LOCAL_INSTALL

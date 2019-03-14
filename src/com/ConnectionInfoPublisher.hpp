@@ -107,7 +107,7 @@ public:
 
 private:
 
-  logging::Logger _log{"com::ConnectionInfoPublisher"};
+  mutable logging::Logger _log{"com::ConnectionInfoPublisher"};
 };
 
 

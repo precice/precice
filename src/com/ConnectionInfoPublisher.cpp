@@ -55,8 +55,9 @@ ConnectionInfoWriter::~ConnectionInfoWriter()
 {
   namespace fs = boost::filesystem;
   fs::path p(getFilename());
-  try {
-    fs::remove(getFilename());
+  DEBUG("Deleting connection file " << p.string());
+  fs::remove(p);
+  /*try {
     if (fs::is_empty(p.parent_path()))
       fs::remove(p.parent_path()); // also remove parent dir, i.e, first part of hash
     if (fs::is_empty(p.parent_path().parent_path()))
@@ -64,7 +65,7 @@ ConnectionInfoWriter::~ConnectionInfoWriter()
   }
   catch (fs::filesystem_error const & e) {
     WARN("Filesystem error when deleting connection info files: " << e.what());
-  }
+    }*/
 }
 
 
@@ -73,6 +74,7 @@ void ConnectionInfoWriter::write(std::string const & info) const
   namespace fs = boost::filesystem;
   auto path = getFilename();
   auto tmp = fs::path(path + "~");
+  DEBUG("Writing connection file " << path);
   fs::create_directories(tmp.parent_path());
   boost::iostreams::stream<boost::iostreams::file_descriptor_sink> ofs(tmp);
   ofs << info;
