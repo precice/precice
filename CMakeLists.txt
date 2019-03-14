@@ -77,7 +77,7 @@ print_configuration(
 find_package (Threads REQUIRED)
 
 find_package(Boost 1.65.1 REQUIRED
-  COMPONENTS filesystem log log_setup program_options system thread unit_test_framework)
+  COMPONENTS filesystem iostreams log log_setup program_options system thread unit_test_framework)
 
 find_package(Eigen3 3.2 REQUIRED)
 
