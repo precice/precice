@@ -10,7 +10,10 @@ classdef SolverInterface < handle
     %   access it by invoking the mex function.
     
     properties(Access=private)
+        % This is currently just a dummy variable. It will be given meaning
+        % later.
         interfaceID;
+        
     end
     
     methods
@@ -46,28 +49,65 @@ classdef SolverInterface < handle
             preciceGateway(uint8(13));
         end
         
-        function dims = getDimensions(~)
+        function dims = getDimensions(obj)
+            obj.interfaceID = 0;
             dims = preciceGateway(uint8(20));
         end
         
-        function bool = isCouplingOngoing(~)
+        function bool = isCouplingOngoing(obj)
+            obj.interfaceID = 0;
             bool = preciceGateway(uint8(21));
         end
         
-        function bool = isActionRequired(~,action)
+        function bool = isActionRequired(obj,action)
+            obj.interfaceID = 0;
             bool = preciceGateway(uint8(30),action);
         end
         
-        function fulfilledAction(~,action)
+        function fulfilledAction(obj,action)
+            obj.interfaceID = 0;
             preciceGateway(uint8(31),action);
         end
         
-        function id = getMeshID(~,meshName)
+        function id = getMeshID(obj,meshName)
+            obj.interfaceID = 0;
             id = preciceGateway(uint8(41),meshName);
         end
         
-        function vertexId = setMeshVertex(~,meshID,position)
-            vertexId = preciceGateway(uint8(44),meshID,position);
+        function vertexId = setMeshVertex(obj,meshID,position)
+            obj.interfaceID = 0;
+            vertexId = preciceGateway(uint8(44),int32(meshID),position);
+        end
+        
+        function vertexIds = setMeshVertices(obj,meshID,inSize,positions)
+            if size(positions,2) ~= inSize
+                error('Number of columns in position vector must match size!');
+            end
+            obj.interfaceID = 0;
+            vertexIds = preciceGateway(uint8(46),int32(meshID),uint64(inSize),positions);
+        end
+        
+        function id = getDataID(obj,dataName,meshID)
+            obj.interfaceID = 0;
+            id = preciceGateway(uint8(61),dataName,int32(meshID));
+        end
+        
+        function writeBlockScalarData(obj,dataID,inSize,valueIndices,values)
+            obj.interfaceID = 0;
+            if ~isa(valueIndices,'int32')
+                warning('valueIndices should be allocated as int32 to prevent copying.');
+                valueIndices = int32(valueIndices);
+            end
+            preciceGateway(uint8(66),int32(dataID),uint64(inSize),valueIndices,values);
+        end
+        
+        function values = readBlockScalarData(obj,dataID,inSize,valueIndices)
+            obj.interfaceID = 0;
+            if ~isa(valueIndices,'int32')
+                warning('valueIndices should be allocated as int32 to prevent copying.');
+                valueIndices = int32(valueIndices);
+            end
+            values = preciceGateway(uint8(70),int32(dataID),uint64(inSize),valueIndices);
         end
     end
 end

@@ -107,15 +107,54 @@ private:
     bool getMeshID(ArgumentList& inputs, ArgumentList& outputs) {
         CharArray meshName = inputs[1];
         int id = interface->getMeshID(meshName.toAscii());
-        outputs[0] = factory.createArray<uint64_t>({1,1}, {(uint64_t)id});
+        outputs[0] = factory.createArray<int32_t>({1,1}, {id});
         return true;
     }
     
     bool setMeshVertex(ArgumentList& inputs, ArgumentList& outputs) {
-        TypedArray<uint64_t> meshID = std::move(inputs[1]);
+        TypedArray<int32_t> meshID = std::move(inputs[1]);
         TypedArray<double> position = std::move(inputs[2]);
         int id = interface->setMeshVertex(meshID[0],&*position.begin());
-        outputs[0] = factory.createArray<uint64_t>({1,1}, {(uint64_t) id});
+        outputs[0] = factory.createArray<int32_t>({1,1}, {id});
+        return true;
+    }
+    
+    bool setMeshVertices(ArgumentList& inputs, ArgumentList& outputs) {
+        TypedArray<int32_t> meshID = std::move(inputs[1]);
+        TypedArray<uint64_t> size = std::move(inputs[2]);
+        TypedArray<double> positions = std::move(inputs[3]);
+        buffer_ptr_t<int32_t> ids_ptr = factory.createBuffer<int32_t>(size[0]);
+        int32_t* ids = ids_ptr.get();
+        interface->setMeshVertices(meshID[0],size[0],&*positions.begin(),ids);
+        outputs[0] = factory.createArrayFromBuffer<int32_t>({1,size[0]}, std::move(ids_ptr));
+        return true;
+    }
+    
+    bool getDataID(ArgumentList& inputs, ArgumentList& outputs) {
+        CharArray dataName = inputs[1];
+        TypedArray<int32_t> meshID = std::move(inputs[2]);
+        int id = interface->getDataID(dataName.toAscii(),meshID[0]);
+        outputs[0] = factory.createArray<int32_t>({1,1}, {id});
+        return true;
+    }
+    
+    bool writeBlockScalarData(ArgumentList& inputs, ArgumentList& outputs) {
+        TypedArray<int32_t> dataID = std::move(inputs[1]);
+        TypedArray<uint64_t> size = std::move(inputs[2]);
+        TypedArray<int32_t> vertexIDs = std::move(inputs[3]);
+        TypedArray<double> values = std::move(inputs[4]);
+        interface->writeBlockScalarData(dataID[0],size[0],&*vertexIDs.begin(),&*values.begin());
+        return true;
+    }
+    
+    bool readBlockScalarData(ArgumentList& inputs, ArgumentList& outputs) {
+        TypedArray<int32_t> dataID = std::move(inputs[1]);
+        TypedArray<uint64_t> size = std::move(inputs[2]);
+        TypedArray<int32_t> valueIndices = std::move(inputs[3]);
+        buffer_ptr_t<double> values_ptr = factory.createBuffer<double>(size[0]);
+        double* values = values_ptr.get();
+        interface->readBlockScalarData(dataID[0],size[0],&*valueIndices.begin(),values);
+        outputs[0] = factory.createArrayFromBuffer<double>({1,size[0]}, std::move(values_ptr));
         return true;
     }
 
@@ -212,9 +251,31 @@ public:
                 break;
             case 44: //setMeshVertex
                 ninputs = 2;
-                types = new ArrayType [ninputs] {ArrayType::UINT64,ArrayType::DOUBLE};
+                types = new ArrayType [ninputs] {ArrayType::INT32,ArrayType::DOUBLE};
                 noutputs = 1;
                 functionName = &MexFunction::setMeshVertex;
+                break;
+            case 46: //setMeshVertices
+                ninputs = 3;
+                types = new ArrayType [ninputs] {ArrayType::INT32,ArrayType::UINT64,ArrayType::DOUBLE};
+                noutputs = 1;
+                functionName = &MexFunction::setMeshVertices;
+                break;
+            case 61: //getDataID
+                ninputs = 2;
+                types = new ArrayType [ninputs] {ArrayType::CHAR,ArrayType::INT32};
+                functionName = &MexFunction::getDataID;
+                noutputs = 1;
+                break;
+            case 66: //writeBlockScalarData
+                ninputs = 4;
+                types = new ArrayType [ninputs] {ArrayType::INT32,ArrayType::UINT64,ArrayType::INT32,ArrayType::DOUBLE};
+                functionName = &MexFunction::writeBlockScalarData;
+                break;
+            case 70: //readBlockScalarData
+                ninputs = 3;
+                types = new ArrayType [ninputs] {ArrayType::INT32,ArrayType::UINT64,ArrayType::INT32};
+                functionName = &MexFunction::readBlockScalarData;
                 break;
             default:
                 myMexPrint("An unknown ID was passed.");

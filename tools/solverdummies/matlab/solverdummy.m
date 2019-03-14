@@ -3,7 +3,7 @@
 % the path
 function solverdummy(configFileName,solverName,meshName)
     if nargin~=3
-        disp('Usage: ./solverdummy configFile solverName meshName');
+        disp('Usage: solverdummy configFile solverName meshName');
         disp('');
         disp('Parameter description');
         disp('  configurationFile: Path and filename of preCICE configuration');
