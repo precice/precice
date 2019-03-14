@@ -12,6 +12,7 @@ CACHE_EIGEN_TOKEN=$LOCAL_INSTALL/done-eigen3
 CACHE_BOOST_TOKEN=$LOCAL_INSTALL/done-boost
 CACHE_PETSC_TOKEN=$LOCAL_INSTALL/done-petsc
 CACHE_CMAKE_TOKEN=$LOCAL_INSTALL/done-cmake
+CACHE_CCACHE_TOKEN=$LOCAL_INSTALL/done-ccache
 
 # Download and extract Eigen
 if [ ! -f $CACHE_EIGEN_TOKEN ]; then
@@ -70,4 +71,28 @@ if [ ! -f $CACHE_CMAKE_TOKEN ]; then
     $LOCAL_INSTALL/cmake/bin/cmake --version
     # Create token
     touch $CACHE_CMAKE_TOKEN
+fi
+
+
+# Download and compile ccache 3.6
+if [ ! -f $CACHE_CCACHE_TOKEN ]; then
+    # Cleanup
+    rm -rf $LOCAL_INSTALL/ccache
+    mkdir ${LOCAL_INSTALL}/ccache
+    # Download
+    CCACHE_URL="https://www.samba.org/ftp/ccache/ccache-3.6.tar.gz"
+    wget --no-check-certificate --quiet -O - ${CCACHE_URL} | tar --strip-components=1 -xz -C ${LOCAL_INSTALL}/ccache
+    # Configure and compile
+    cd $LOCAL_INSTALL/ccache
+    ./configure --prefix=$LOCAL_INSTALL --disable-man
+    make -j $(nproc)
+    make install
+    strip $LOCAL_INSTALL/bin/ccache
+    cd $LOCAL_INSTALL
+    # Cleanup
+    rm -rf $LOCAL_INSTALL/ccache
+    # Check version
+    $LOCAL_INSTALL/bin/ccache --version
+    # Create token
+    touch $CACHE_CCACHE_TOKEN
 fi
