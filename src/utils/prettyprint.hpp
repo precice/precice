@@ -362,7 +362,7 @@ namespace pretty_print
 
 
     // A wrapper for a C-style array given as pointer-plus-size.
-    // Usage: std::cout << pretty_print_array(arr, n) << '\n';
+    // Usage: std::cout << pretty_print_array(arr, n) << std::endl;
 
     template<typename T>
     struct array_wrapper_n
@@ -381,7 +381,7 @@ namespace pretty_print
 
 
     // A wrapper for hash-table based containers that offer local iterators to each bucket.
-    // Usage: std::cout << bucket_print(m, 4) << '\n';  (Prints bucket 5 of container m.)
+    // Usage: std::cout << bucket_print(m, 4) << std::endl;  (Prints bucket 5 of container m.)
 
     template <typename T>
     struct bucket_print_wrapper
