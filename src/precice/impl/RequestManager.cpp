@@ -661,7 +661,7 @@ void RequestManager:: handleRequestSetMeshVertices
   int size = -1;
   _com->receive(size, rankSender);
   CHECK(size > 0, "You cannot call setMeshVertices with size=0.");
-  std::vector<double> positions(size*_interface.getDimensions());
+  std::vector<double> positions(static_cast<size_t>(size)*_interface.getDimensions());
   _com->receive(positions, rankSender);
   std::vector<int> ids(size);
   _interface.setMeshVertices(meshID, size, positions.data(), ids.data());
@@ -679,7 +679,7 @@ void RequestManager:: handleRequestGetMeshVertices
   _com->receive(size, rankSender);
   assertion(size > 0, size);
   std::vector<int> ids(size);
-  std::vector<double> positions(size*_interface.getDimensions());
+  std::vector<double> positions(static_cast<size_t>(size)*_interface.getDimensions());
   _com->receive(ids, rankSender);
   _interface.getMeshVertices(meshID, size, ids.data(), positions.data());
   _com->send(positions, rankSender);
@@ -696,7 +696,7 @@ void RequestManager:: handleRequestGetMeshVertexIDsFromPositions
   _com->receive(size, rankSender);
   assertion(size > 0, size);
   std::vector<int> ids(size);
-  std::vector<double> positions(size*_interface.getDimensions());
+  std::vector<double> positions(static_cast<size_t>(size)*_interface.getDimensions());
   _com->receive(positions, rankSender);
   _interface.getMeshVertexIDsFromPositions(meshID, size, positions.data(), ids.data());
   _com->send(ids, rankSender);
@@ -794,7 +794,7 @@ void RequestManager:: handleRequestWriteBlockVectorData
   _com->receive(size, rankSender);
   std::vector<int> indices(size);
   _com->receive(indices, rankSender);
-  std::vector<double> data(size*_interface.getDimensions());
+  std::vector<double> data(static_cast<size_t>(size)*_interface.getDimensions());
   _com->receive(data, rankSender);
   _interface.writeBlockVectorData(dataID, size, indices.data(), data.data());
 }
@@ -854,7 +854,7 @@ void RequestManager:: handleRequestReadBlockVectorData
   _com->receive(size, rankSender);
   std::vector<int> indices(size);
   _com->receive(indices, rankSender);
-  std::vector<double> data(size*_interface.getDimensions());
+  std::vector<double> data(static_cast<size_t>(size)*_interface.getDimensions());
   _interface.readBlockVectorData(dataID, size, indices.data(), data.data());
   _com->send(data, rankSender);
 }

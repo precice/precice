@@ -56,11 +56,8 @@ void BroydenPostProcessing::computeUnderrelaxationSecondaryData(
 void BroydenPostProcessing::updateDifferenceMatrices(
     DataMap &cplData)
 {
-  if (_firstIteration && _firstTimeStep) {
-  } else {
-    if (not _firstIteration) {
+  if (not _firstIteration) {
       _currentColumns++;
-    }
   }
 
   // call the base method for common update of V, W matrices
