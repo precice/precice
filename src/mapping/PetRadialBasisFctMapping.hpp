@@ -62,15 +62,15 @@ public:
    * For description on convergence testing and meaning of solverRtol see http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPConvergedDefault.html#KSPConvergedDefault
    */
   PetRadialBasisFctMapping (
-    Constraint              constraint,
-    int                     dimensions,
-    RADIAL_BASIS_FUNCTION_T function,
-    bool                    xDead,
-    bool                    yDead,
-    bool                    zDead,
-    double                  solverRtol = 1e-9,
-    Polynomial              polynomial = Polynomial::SEPARATE,
-    Preallocation           preallocation = Preallocation::TREE);
+    Constraint                     constraint,
+    int                            dimensions,
+    const RADIAL_BASIS_FUNCTION_T& function,
+    bool                           xDead,
+    bool                           yDead,
+    bool                           zDead,
+    double                         solverRtol = 1e-9,
+    Polynomial                     polynomial = Polynomial::SEPARATE,
+    Preallocation                  preallocation = Preallocation::TREE);
 
   /// Deletes the PETSc objects and the _deadAxis array
   virtual ~PetRadialBasisFctMapping();
@@ -187,15 +187,15 @@ private:
 template<typename RADIAL_BASIS_FUNCTION_T>
 PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
 (
-  Constraint              constraint,
-  int                     dimensions,
-  RADIAL_BASIS_FUNCTION_T function,
-  bool                    xDead,
-  bool                    yDead,
-  bool                    zDead,
-  double                  solverRtol,
-  Polynomial              polynomial,
-  Preallocation           preallocation)
+  Constraint                     constraint,
+  int                            dimensions,
+  const RADIAL_BASIS_FUNCTION_T& function,
+  bool                           xDead,
+  bool                           yDead,
+  bool                           zDead,
+  double                         solverRtol,
+  Polynomial                     polynomial,
+  Preallocation                  preallocation)
   :
   Mapping ( constraint, dimensions ),
   _basisFunction ( function ),

@@ -3,6 +3,7 @@
 #include <Eigen/Core>
 #include "utils/Event.hpp"
 #include "mesh/RTree.hpp"
+#include <stdexcept>
 
 namespace precice {
 extern bool syncMode;
@@ -48,7 +49,7 @@ public:
     case (Primitive::Quad):
       return generateInterpolationElements(pos, _mesh.quads()[idx]);
     default:
-      assertion(false, "Primitive is unknown");
+      throw std::invalid_argument{"Primitve is unknown"};
     }
   }
 

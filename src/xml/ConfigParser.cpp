@@ -74,7 +74,7 @@ ConfigParser::ConfigParser(const std::string &filePath, std::shared_ptr<precice:
 
   try {
     connectTags(DefTags, SubTags);
-  } catch (std::string error) {
+  } catch (const std::string& error) {
     ERROR(error);
   }
 }
