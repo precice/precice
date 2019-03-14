@@ -10,8 +10,8 @@ addons:
   apt:
     packages:
       - scons
-      - libopenmpi-dev
-      - openmpi-bin
+      - libmpich-dev
+      - mpich
       - python-numpy
       - libblas-dev
       - liblapack-dev
