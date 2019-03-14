@@ -167,10 +167,14 @@ struct indexed_access<BoundingBox, min_corner, Dimension>
 {
   static inline double get(const BoundingBox& bb)
   {
+    if (Dimension >= bb.size())
+        return std::numeric_limits<double>::lowest();
     return bb[Dimension].first;
   }
   static inline void set(BoundingBox& bb, double value)
   {
+    if (Dimension >= bb.size())
+        return;
     bb[Dimension].first = value;
   }
 };
@@ -180,10 +184,14 @@ struct indexed_access<BoundingBox, max_corner, Dimension>
 {
   static inline double get(const BoundingBox& bb)
   {
+    if (Dimension >= bb.size())
+        return std::numeric_limits<double>::max();
     return bb[Dimension].second;
   }
   static inline void set(BoundingBox& bb, const double& value)
   {
+    if (Dimension >= bb.size())
+        return;
     bb[Dimension].second = value;
   }
 };
