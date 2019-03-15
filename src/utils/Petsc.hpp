@@ -77,9 +77,6 @@ public:
    */
   Vector(Vector&& other);
 
-  /// Duplicates type, row layout etc. (not values) of v.
-  Vector(Vector &v, std::string name);  
-
   /// Use Vec v as vector.
   Vector(Vec &v, std::string name = "");
 
@@ -88,6 +85,11 @@ public:
 
   /// Constructs a vector with the same number of rows (default) or columns.
   Vector(Matrix &m, std::string name = "", LEFTRIGHT type = LEFT);
+
+  /** Creates an uninitialized vector of identical shape.
+   * Duplicates type, row layout etc. (not values) of v.
+   */
+  Vector makeSimilar(const std::string& name = "") const;
 
   /// Swaps the ownership of two vectors
   void swap(Vector& other) noexcept;

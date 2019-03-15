@@ -131,13 +131,6 @@ Vector::Vector(Vec &v, std::string name)
   setName(vector, name);
 }
 
-Vector::Vector(Vector &v, std::string name)
-{
-  PetscErrorCode ierr = 0;
-  ierr = VecDuplicate(v.vector, &vector); CHKERRV(ierr);
-  setName(vector, name);
-}
-
 Vector::Vector(Mat &m, std::string name, LEFTRIGHT type)
 {
   // MatGetVecs is deprecated, we keep it due to the old PETSc version at the SuperMUC.
@@ -154,6 +147,14 @@ Vector::Vector(Mat &m, std::string name, LEFTRIGHT type)
 Vector::Vector(Matrix &m, std::string name, LEFTRIGHT type) :
   Vector(m.matrix, name, type)
 {}
+
+Vector Vector::makeSimilar(const std::string& name) const
+{
+  Vec newvector;
+  PetscErrorCode ierr = 0;
+  ierr = VecDuplicate(vector, &newvector); [&]{CHKERRV(ierr);}();
+  return Vector{newvector, name};
+}
 
 Vector::~Vector()
 {
