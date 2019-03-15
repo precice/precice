@@ -218,11 +218,6 @@ void setupLogging(LoggingConfiguration configs, bool enabled)
     sink->set_filter(boost::log::parse_filter(config.filter));
     boost::log::core::get()->add_sink(sink);
   }
-
-  // Printing PRECICE_VERSION as first line of the log
-  auto t = std::time(nullptr);
-  BOOST_LOG_TRIVIAL(info)
-    << "This is preCICE version " << PRECICE_VERSION << ". Starting " << std::put_time(std::localtime(&t), "%F %T");
 }
 
 

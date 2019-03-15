@@ -51,6 +51,7 @@ function(print_configuration)
     "BUILD_SHARED_LIBS;Build shared libraries"
     "CMAKE_SYSTEM;Target system"
     "CMAKE_HOST_SYSTEM;Host system"
+    "CMAKE_CXX_LIBRARY_ARCHITECTURE;Library architecture"
     "CMAKE_CXX_COMPILER;CXX compiler"
     "CMAKE_CXX_FLAGS;CXX compiler flags"
     "CMAKE_LINKER;CXX linker"

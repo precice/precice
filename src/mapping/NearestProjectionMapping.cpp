@@ -125,6 +125,11 @@ void NearestProjectionMapping:: clear()
   TRACE();
   _weights.clear();
   _hasComputedMapping = false;
+  if (getConstraint() == CONSISTENT){
+    mesh::rtree::clear(*input()); 
+  } else {
+    mesh::rtree::clear(*output()); 
+  }
 }
 
 void NearestProjectionMapping:: map

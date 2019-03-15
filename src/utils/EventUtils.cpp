@@ -70,15 +70,15 @@ EventData::EventData(std::string _name) :
   name(_name)
 {}
 
-EventData::EventData(std::string _name, long _count, long _total,
-                     long _max, long _min, std::vector<int> _data, Event::StateChanges _stateChanges)
+EventData::EventData(std::string _name, long _count, long _total, long _max, long _min,
+                     Event::Data data, Event::StateChanges _stateChanges)
   :  max(std::chrono::milliseconds(_max)),
      min(std::chrono::milliseconds(_min)),
      total(std::chrono::milliseconds(_total)),
      stateChanges(_stateChanges),
      name(_name),
      count(_count),
-     data(_data)
+     data(data)
 {}
 
 
@@ -89,7 +89,11 @@ void EventData::put(Event const & event)
   total += duration;
   min = std::min(duration, min);
   max = std::max(duration, max);
-  data.insert(std::end(data), std::begin(event.data), std::end(event.data));
+  for (auto const & d : event.data) {
+    auto & source = std::get<1>(d);
+    auto & target = data[std::get<0>(d)];
+    target.insert(target.begin(), source.begin(), source.end());
+  }
   stateChanges.insert(std::end(stateChanges), std::begin(event.stateChanges), std::end(event.stateChanges));
 }
 
@@ -123,10 +127,11 @@ long EventData::getCount() const
   return count;
 }
 
-std::vector<int> const & EventData::getData() const
+Event::Data const & EventData::getData() const
 {
   return data;
 }
+
 
 
 // -----------------------------------------------------------------------
@@ -421,51 +426,53 @@ void EventRegistry::collect()
   MPI_Gather(&eventsSize, 1, MPI_INT, eventsPerRank.data(), 1, MPI_INT, 0, comm);
 
   std::vector<MPI_EventData> eventSendBuf(eventsSize);
-  std::vector<std::unique_ptr<char[]>> packSendBuf(eventsSize);
+  std::vector<std::vector<long>> stateChangesBuf(eventsSize);
   int i = 0;
 
   MPI_Request req;
+  
   // Send the times from the local RankData
   std::array<long, 2> times= {localRankData.initializedAt.time_since_epoch().count(),
                               localRankData.finalizedAt.time_since_epoch().count()};
   MPI_Isend(&times, times.size(), MPI_LONG, 0, 0, comm, &req);
   requests.push_back(req);  
 
-  // Send all events from all ranks, including rank 0
-  for (auto const & ev : localRankData.evData) {
+  // Send all events from all ranks, including rank 0, to rank 0
+  for (auto const & evData : localRankData.evData) {
+    const auto & ev = evData.second;
     MPI_EventData eventdata;
 
     // Send aggregated EventData
-    assert(ev.first.size() <= sizeof(eventdata.name));
-    ev.first.copy(eventSendBuf[i].name, sizeof(eventdata.name));
-    eventSendBuf[i].count = ev.second.getCount();
-    eventSendBuf[i].total = ev.second.getTotal();
-    eventSendBuf[i].max = ev.second.getMax();
-    eventSendBuf[i].min = ev.second.getMin();
-    eventSendBuf[i].dataSize = ev.second.getData().size();
-    eventSendBuf[i].stateChangesSize = ev.second.stateChanges.size();
-
-    int packSize = 0, pSize = 0;
-    MPI_Pack_size(ev.second.getData().size(), MPI_INT, comm, &pSize);
-    packSize += pSize;
-    MPI_Pack_size(ev.second.stateChanges.size() * sizeof(Event::StateChanges::value_type),
-                  MPI_BYTE, comm, &pSize);
-    packSize += pSize;
-
-    packSendBuf[i] = std::unique_ptr<char[]>(new char[packSize]);
-    int position = 0;
-    // Pack data attached to an Event
-    MPI_Pack(const_cast<int*>(ev.second.getData().data()), ev.second.getData().size(),
-             MPI_INT, packSendBuf[i].get(), packSize, &position, comm);
-    // Pack state changes with associated time_points
-    MPI_Pack(const_cast<Event::StateChanges::pointer>(ev.second.stateChanges.data()),
-             ev.second.stateChanges.size() * sizeof(Event::StateChanges::value_type),
-             MPI_BYTE, packSendBuf[i].get(), packSize, &position, comm);
-
+    assert(evData.first.size() <= sizeof(eventdata.name));
+    evData.first.copy(eventSendBuf[i].name, sizeof(eventdata.name));
+    eventSendBuf[i].count = ev.getCount();
+    eventSendBuf[i].total = ev.getTotal();
+    eventSendBuf[i].max = ev.getMax();
+    eventSendBuf[i].min = ev.getMin();
+    eventSendBuf[i].dataSize = ev.getData().size();
+    eventSendBuf[i].stateChangesSize = ev.stateChanges.size();
     MPI_Isend(&eventSendBuf[i], 1, MPI_EVENTDATA, 0, 0, comm, &req);
     requests.push_back(req);
-    MPI_Isend(packSendBuf[i].get(), position, MPI_PACKED, 0, 0, comm, &req);
+    
+    // Send the state changes 
+    for (auto const & sc : ev.stateChanges) {
+      stateChangesBuf[i].push_back(static_cast<long>(sc.first)); // state
+      stateChangesBuf[i].push_back(
+        std::chrono::duration_cast<std::chrono::milliseconds>(sc.second.time_since_epoch()).count());
+    }
+    MPI_Isend(stateChangesBuf[i].data(), ev.stateChanges.size() * 2, MPI_LONG, 0, 0, comm, &req);
     requests.push_back(req);
+
+    // Send the map that stores the data associated with an event
+    for (auto const & md : ev.getData()) {
+      auto & key = std::get<0>(md);
+      auto & val = std::get<1>(md);
+      MPI_Isend(const_cast<char*>(key.c_str()), key.size(), MPI_CHAR, 0, 0, comm, &req);
+      requests.push_back(req);
+      MPI_Isend(const_cast<int*>(val.data()), val.size(), MPI_INT, 0, 0, comm, &req);
+      requests.push_back(req);
+    }
+    
     ++i;
   }
 
@@ -479,23 +486,40 @@ void EventRegistry::collect()
       data.initializedAt = sys_clk::time_point(sys_clk::duration(recvTimes[0]));
       data.finalizedAt = sys_clk::time_point(sys_clk::duration(recvTimes[1]));
 
-      // Receive all state changes
+      // Receive all events from this rank
       for (int j = 0; j < eventsPerRank[i]; ++j) {
+        // Receive aggregated EventData
         MPI_EventData ev;
         MPI_Recv(&ev, 1, MPI_EVENTDATA, i, MPI_ANY_TAG, comm, MPI_STATUS_IGNORE);
-        std::vector<int> recvData(ev.dataSize);
-        Event::StateChanges recvStateChanges(ev.stateChangesSize);
-        MPI_Status status;
-        int packSize = 0, position = 0;
-        MPI_Probe(i, MPI_ANY_TAG, comm, &status);
-        MPI_Get_count(&status, MPI_PACKED, &packSize);
-        char packBuffer[packSize];
-        MPI_Recv(packBuffer, packSize, MPI_PACKED, i, MPI_ANY_TAG, comm, MPI_STATUS_IGNORE);
-        MPI_Unpack(packBuffer, packSize, &position, recvData.data(), ev.dataSize, MPI_INT, comm);
-        MPI_Unpack(packBuffer, packSize, &position, recvStateChanges.data(),
-                   ev.stateChangesSize * sizeof(Event::StateChanges::value_type), MPI_BYTE, comm);
 
-        EventData ed(ev.name, ev.count, ev.total, ev.max, ev.min, recvData, recvStateChanges);
+        // Receive all state changes for this event
+        std::vector<long> recvStateChanges(ev.stateChangesSize * 2);
+        MPI_Recv(recvStateChanges.data(), recvStateChanges.size(),
+                 MPI_LONG, i, MPI_ANY_TAG, comm, MPI_STATUS_IGNORE);
+        Event::StateChanges stateChanges; // evtl. reserve
+        for (size_t i = 0; i < recvStateChanges.size(); i += 2) {
+          stateChanges.emplace_back(static_cast<Event::State>(recvStateChanges[i]),
+                                    stdy_clk::time_point(std::chrono::milliseconds(recvStateChanges[i+1])));
+        }
+
+        // Receive the map that stores the data associated with an event
+        Event::Data dataMap;
+        for (int j = 0; j < ev.dataSize; j++) {
+          MPI_Status status;
+          int count = 0;
+          MPI_Probe(i, MPI_ANY_TAG, comm, &status);
+          MPI_Get_count(&status, MPI_CHAR, &count);
+          std::string key(count, '\0');
+          MPI_Recv(&key[0], count, MPI_CHAR, i, MPI_ANY_TAG, comm, MPI_STATUS_IGNORE);
+          MPI_Probe(i, MPI_ANY_TAG, comm, &status);
+          MPI_Get_count(&status, MPI_INT, &count);
+          std::vector<int> val(count);
+          MPI_Recv(val.data(), count, MPI_INT, i, MPI_ANY_TAG, comm, MPI_STATUS_IGNORE);
+          dataMap[key] = val;
+        }
+
+        // Create the EventData
+        EventData ed(ev.name, ev.count, ev.total, ev.max, ev.min, dataMap, stateChanges);
         data.addEventData(std::move(ed));
       }
       globalRankData.push_back(data);      

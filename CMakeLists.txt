@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 3.9.6)
 
-project(preCICE VERSION 1.3.0 LANGUAGES CXX)
+project(preCICE VERSION 1.4.0 LANGUAGES CXX)
 
 #
 # Overview of this configuration
@@ -145,6 +145,9 @@ set_target_properties(precice PROPERTIES
 target_compile_definitions(precice PRIVATE BOOST_ALL_DYN_LINK BOOST_ASIO_ENABLE_OLD_SERVICES)
 target_link_libraries(precice PRIVATE ${Boost_LIBRARIES})
 target_include_directories(precice PRIVATE ${Boost_INCLUDE_DIRS})
+if(UNIX OR APPLE OR MINGW)
+  target_link_libraries(precice PRIVATE ${CMAKE_DL_LIBS})
+endif()
 
 # Setup Eigen3
 target_link_libraries(precice PRIVATE Eigen3::Eigen)
@@ -261,40 +264,6 @@ include(${CMAKE_CURRENT_LIST_DIR}/src/tests.cmake)
 
 
 #
-# CTest
-#
-
-enable_testing()
-
-# Register the Base test
-set(PRECICE_TEST_DIR "${preCICE_BINARY_DIR}/TestOutput")
-file(MAKE_DIRECTORY ${PRECICE_TEST_DIR}/Base)
-add_test(NAME precice.Base
-  COMMAND "$<TARGET_FILE:testprecice>"
-  WORKING_DIRECTORY "${PRECICE_TEST_DIR}/Base"
-  )
-if(MPI AND MPIEXEC_EXECUTABLE)
-  # Register the MPI test for 2 Ranks
-  file(MAKE_DIRECTORY "${PRECICE_TEST_DIR}/MPI2")
-  add_test(NAME precice.MPI2
-    COMMAND "${MPIEXEC_EXECUTABLE}" -np 2 "$<TARGET_FILE:testprecice>"
-    WORKING_DIRECTORY "${PRECICE_TEST_DIR}/MPI2"
-    )
-  # Register the MPI test for 4 Ranks
-  file(MAKE_DIRECTORY "${PRECICE_TEST_DIR}/MPI4")
-  add_test(NAME precice.MPI4
-    COMMAND "${MPIEXEC_EXECUTABLE}" -np 4 "$<TARGET_FILE:testprecice>"
-    WORKING_DIRECTORY "${PRECICE_TEST_DIR}/MPI4"
-    )
-  set_tests_properties( precice.MPI2 precice.MPI4
-    PROPERTIES
-    RUN_SERIAL TRUE # Do not run this test in parallel with others
-    TIMEOUT 60 # Set the timeout to 60 seconds on this test
-    )
-endif()
-
-
-#
 # Install Targets for precice
 #
 
@@ -345,6 +314,14 @@ install(FILES "preciceConfig.cmake" "${preCICE_BINARY_DIR}/preciceConfigVersion.
   DESTINATION lib/cmake/precice
   )
 
+# Setup the config in the build directory
+export(EXPORT preciceTargets
+  NAMESPACE precice::
+  FILE "preciceTargets.cmake")
+file(COPY "preciceConfig.cmake"
+  DESTINATION "${preCICE_BINARY_DIR}")
+
+
 # Set the directory used to prepare files for packaging
 set(PRECICE_PACKAGING_DIR "${CMAKE_CURRENT_BINARY_DIR}/packaging")
 mark_as_advanced(PRECICE_PACKAGING_DIR)
@@ -388,6 +365,23 @@ else()
     DESTINATION share/man
     )
 endif()
+
+# Configure a pkg-config file
+configure_file(
+  "${PROJECT_SOURCE_DIR}/tools/packaging/debian/precice.pc.in"
+  "lib/pkgconfig/libprecice.pc"
+  @ONLY
+  )
+install(DIRECTORY "${preCICE_BINARY_DIR}/lib/pkgconfig" 
+  DESTINATION lib
+)
+
+
+#
+# CTest
+#
+
+include(${CMAKE_CURRENT_LIST_DIR}/cmake/CTestConfig.cmake)
 
 
 #

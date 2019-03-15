@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
 
   mesh.computeState();
 
-  bool             exportNormals = false;
+  bool             exportNormals = true;
   io::ExportVTKXML exportVTKXML(exportNormals);
   std::string      filename = "io-ExportVTKXMLTest-testExportPolygonalMesh";
   std::string      location = "";

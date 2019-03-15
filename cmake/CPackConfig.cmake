@@ -47,8 +47,13 @@ set(CPACK_RESOURCE_FILE_LICENSE "${preCICE_SOURCE_DIR}/LICENSE")
 set(CPACK_RESOURCE_FILE_README  "${preCICE_SOURCE_DIR}/tools/packaging/README.txt")
 set(CPACK_RESOURCE_FILE_WELCOME "${preCICE_SOURCE_DIR}/tools/packaging/WELCOME.txt")
 set(CPACK_MONOLITHIC_INSTALL TRUE)
-set(CPACK_GENERATOR "DEB;TGZ;ZIP")
 set(CPACK_STRIP_FILES TRUE)
+set(CPACK_GENERATOR "TGZ")
+if("${CMAKE_INSTALL_PREFIX}" STREQUAL "/usr")
+  list(APPEND CPACK_GENERATOR "DEB")
+else()
+  message("Debian package generator disabled: Install prefix is not \"/usr\"")
+endif()
 
 #set(CPACK_SOURCE_PACKAGE_FILE_NAME "")
 set(CPACK_SOURCE_GENERATOR ${CPACK_GENERATOR})
@@ -60,15 +65,14 @@ set(CPACK_SOURCE_IGNORE_FILES
 
 set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6, petsc-dev (>= 3.6), libboost-dev (>= 1.65), libboost-log-dev (>= 1.65), libboost-thread-dev (>= 1.65), libboost-system-dev (>= 1.65), libboost-filesystem-dev (>= 1.65), libboost-program-options-dev (>= 1.65), libboost-test-dev (>= 1.65), libeigen3-dev, libxml2-dev, python-dev, python-numpy")
 set(CPACK_DEBIAN_PACKAGE_SECTION "devel")
-set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "\
-Precise Code Interaction Coupling Environment\n\
-preCICE (Precise Code Interaction Coupling Environment) is a coupling library\n\
-for partitioned multi-physics simulations, including, but not restricted to\n\
-fluid-structure interaction and conjugate heat transfer simulations.\n\
-Partitioned means that preCICE couples existing programs (solvers) capable of\n\
-simulating a subpart of the complete physics involved in a simulation.\n\
-This allows for the high flexibility that is needed to keep a decent\n\
-time-to-solution for complex multi-physics scenarios.\
+set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "Precise Code Interaction Coupling Environment\n\
+ preCICE (Precise Code Interaction Coupling Environment) is a coupling library\n\
+ for partitioned multi-physics simulations, including, but not restricted to\n\
+ fluid-structure interaction and conjugate heat transfer simulations.\n\
+ Partitioned means that preCICE couples existing programs (solvers) capable of\n\
+ simulating a subpart of the complete physics involved in a simulation.\n\
+ This allows for the high flexibility that is needed to keep a decent\n\
+ time-to-solution for complex multi-physics scenarios.\
 ")
 set(CPACK_DEBIAN_PACKAGE_CONTROL_STRUCT_PERMISSION TRUE)
 set(CPACK_DEBIAN_PACKAGE_GENERATE_SHLIBS TRUE)

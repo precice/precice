@@ -69,7 +69,7 @@ void MMPostProcessing::initialize(DataMap &cplData)
   std::vector<size_t> subVectorSizes; //needed for preconditioner
 
   assertion(_fineDataIDs.size() == _coarseDataIDs.size(), _fineDataIDs.size(), _coarseDataIDs.size());
-  assertion(_dataIDs.size() == 0, _dataIDs.size());
+  assertion(_dataIDs.empty(), _dataIDs.size());
 
   _dataIDs.insert(_dataIDs.end(), _fineDataIDs.begin(), _fineDataIDs.end());
   _dataIDs.insert(_dataIDs.end(), _coarseDataIDs.begin(), _coarseDataIDs.end());

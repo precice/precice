@@ -3,6 +3,25 @@
 import os
 import glob
 import sys
+import subprocess
+
+""" Files matching this pattern will be filtered out """
+IGNORE_PATTERNS = ["drivers", "bindings/python"]
+
+""" Configured files, which should be ignored by git """
+CONFIGURED_SOURCES = ["src/versions.hpp"]
+
+
+def get_gitfiles():
+    ret = subprocess.run(["git", "ls-files", "--full-name"],
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE,
+                         check=False
+                         )
+    if ret.returncode != 0:
+        return None
+    else:
+        return ret.stdout.decode().split()
 
 
 def file_extension(name):
@@ -37,7 +56,7 @@ def get_file_lists(root):
     sources, tests = [], []
     exts = [".cpp", ".c", ".hpp", ".h"]
     for dir, _, filenames in os.walk(src_dir):
-        if "drivers" in dir:
+        if any([elem in dir for elem in IGNORE_PATTERNS]):
             continue
         files = [
             os.path.relpath(os.path.join(dir, name), root)
@@ -48,11 +67,12 @@ def get_file_lists(root):
             tests += files
         else:
             sources += files
+    sources += CONFIGURED_SOURCES
 
     # Remove bindings from the sources
     sources = [source for source in sources if source not in bindings]
 
-    return sources, (public + bindings), tests
+    return sorted(sources), sorted(public + bindings), sorted(tests)
 
 
 SOURCES_BASE = """#
@@ -99,7 +119,28 @@ def main():
         print("Current dir {} is not the root of the precice repository!".format(root))
         return 1
     sources, public, tests = get_file_lists(root)
-    print("Detected:\n sources: {}\n public: {}\n tests: {}".format(len(sources), len(public), len(tests)))
+    print("Detected:\n  sources: {}\n  public: {}\n  tests: {}".format(len(sources), len(public), len(tests)))
+
+    gitfiles = get_gitfiles()
+    if gitfiles:
+        not_tracked = list(
+            set(sources + public + tests) - set(gitfiles + CONFIGURED_SOURCES)
+        )
+        if not_tracked:
+            print("The source tree contains files not tracked by git.")
+            print("Please do one of the following with them:")
+            print("  - track them using 'git add'")
+            print("  - add them to IGNORE_PATTERNS in this script")
+            print("  - add them to CONFIGURED_SOURCES in this script!")
+            print("Files:")
+            for file in not_tracked:
+                print("  {}".format(file))
+            print("Verification FAILED")
+        else:
+            print("Verification SUCCEEDED")
+    else:
+        print("Git did not run successfully.")
+        print("Verification SKIPPED")
 
     print("Generating CMake files")
     sources_file, tests_file = get_cmake_file_paths(root)

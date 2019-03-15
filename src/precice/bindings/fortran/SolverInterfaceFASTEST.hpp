@@ -1,15 +1,18 @@
 #pragma once
 
 /**
- * @file This file contains a specific FASTEST Fortran 77 compatible interface written in C/C++.
- * The specialty is that we offer here 2 interfaces. We needed this since FASTEST uses an internal subcycling,
- * coupling to a structure solver at big timesteps and to a pure acoustic solver at small timesteps
+ * @file 
+ * This file contains a specific FASTEST Fortran 77 compatible interface
+ * written in C/C++. The specialty is that we offer here 2 interfaces. We need
+ * this since FASTEST uses an internal subcycling, coupling the FASTEST fluid
+ * solver to a structure solver at big timesteps and the FASTEST acoustic solver
+ * to an external pure acoustic solver at small timesteps. So, we need these
+ * bindings to handle two participants, FASTEST-Acoustic and FASTEST-Fluid,
+ * creating two C++ SolverInterfaces.
  *
- * It has been tested with: gfortran 4.4.3, ifort 12.1.0
- *
- * Every method has a Fortran syntax equivalent in the method comment, and a
- * listing for input and output variables. A variable can be input and output
- * at the same time.
+ * As for the "normal" Fortran bindings, every method has a Fortran syntax
+ * equivalent in the method comment, and a listing for input and output
+ * variables. A variable can be input and output at the same time.
  */
 
 #ifdef __cplusplus
@@ -21,69 +24,79 @@ extern"C" {
  *
  * Fortran syntax:
  * precicef_create(
- *   CHARACTER participantNameA(*),
- *   CHARACTER participantNameF(*),
+ *   CHARACTER participantNameAcoustic(*),
+ *   INTEGER   isAcousticUsed,
+ *   CHARACTER participantNameFluid(*),
+ *   INTEGER   isFluidUsed,
  *   CHARACTER configFileName(*),
  *   INTEGER   solverProcessIndex,
  *   INTEGER   solverProcessSize )
  *
- * IN:  participantNameA, participantNameF, configFileName, solverProcessIndex, solverProcessSize
+ * IN:  participantNameA
+ * IN:  isAcousticUsed: Acoustic solver is used (0 or 1)
+ * IN:  participantNameF
+ * IN:  isFluidUsed: Fluid solver is used (0 or 1)
+ * IN:  configFileName
+ * IN:  solverProcessIndex
+ * IN:  solverProcessSize
  * OUT: -
  */
 void precice_fastest_create_(
-  const char* participantNameA,
-  const char* participantNameF,
+  const char* participantNameAcoustic,
+  const int*  isAcousticUsed,
+  const char*  participantNameFluid,
+  const int*  isFluidUsed,
   const char* configFileName,
   const int*  solverProcessIndex,
   const int*  solverProcessSize,
-  int   lengthAccessorNameA,
-  int   lengthAccessorNameF,
-  int   lengthConfigFileName );
+  int   lengthAccessorNameAcoustic,
+  int   lengthAccessorNameFluid,
+  int   lengthConfigFileName);
 
 /**
  * @brief See precice::SolverInterface::initialize().
  *
  * Fortran syntax:
- * precicef_initialize( DOUBLE PRECISION timstepLengthLimit, INTEGER useF )
+ * precicef_initialize( DOUBLE PRECISION timstepLengthLimit, INTEGER useFluid )
  *
- * IN: useF (1: this is the F interface , 0: this is the A interface)
+ * IN: useFluid (1: use the Fluid interface , 0: use the Acoustic interface)
  * OUT: timestepLengthLimit
  */
-void precice_fastest_initialize_( double* timestepLengthLimit, const int*  useF );
+void precice_fastest_initialize_( double* timestepLengthLimit, const int*  useFluid );
 
 /**
  * @brief See precice::SolverInterface::initializeData().
  *
  * Fortran syntax:
- * precicef_intialize_data(INTEGER useF)
+ * precicef_intialize_data(INTEGER useFluid)
  *
- * IN: useF (1: this is the F interface , 0: this is the A interface)
+ * IN: useFluid (1: use the Fluid interface , 0: use the Acoustic interface)
  * OUT: -
  */
-void precice_fastest_initialize_data_(const int*  useF);
+void precice_fastest_initialize_data_(const int*  useFluid);
 
 /**
  * @brief See precice::SolverInterface::advance().
  *
  * Fortran syntax:
- * precicef_advance( DOUBLE PRECISION timstepLengthLimit, INTEGER useF )
+ * precicef_advance( DOUBLE PRECISION timstepLengthLimit, INTEGER useFluid )
  *
  * IN:  timestepLengthLimit
- * IN:  useF (1: this is the F interface , 0: this is the A interface)
+ * IN:  useFluid (1: use the Fluid interface , 0: use the Acoustic interface)
  * OUT: timestepLengthLimit
  */
-void precice_fastest_advance_( double* timestepLengthLimit, const int*  useF );
+void precice_fastest_advance_( double* timestepLengthLimit, const int*  useFluid );
 
 
 /**
  * @brief See precice::SolverInterface::finalize().
  *
  * Fortran syntax:
- * precicef_finalize(INTEGER useF);
+ * precicef_finalize(INTEGER useFluid);
  *
- * IN:  useF (1: this is the F interface , 0: this is the A interface)
+ * IN:  useFluid (1: use the Fluid interface , 0: use the Acoustic interface)
  */
-void precice_fastest_finalize_(const int*  useF);
+void precice_fastest_finalize_(const int*  useFluid);
 
 /**
  * @brief See precice::SolverInterface::isActionRequired().
@@ -92,31 +105,31 @@ void precice_fastest_finalize_(const int*  useF);
  * precicef_action_required(
  *   CHARACTER action(*),
  *   INTEGER   isRequired,
- *   INTEGER   useF )
+ *   INTEGER   useFluid )
  *
  * IN:  action
- * IN:  useF (1: this is the F interface , 0: this is the A interface)
+ * IN:  useFluid (1: use the Fluid interface , 0: use the Acoustic interface)
  * OUT: isRequired(1:true, 0:false)
  */
 void precice_fastest_action_required_(
   const char* action,
   int*        isRequired,
-  const int*  useF,
+  const int*  useFluid,
   int         lengthAction );
 
 /**
  * @brief See precice::SolverInterface::fulfilledAction().
  *
  * Fortran syntax:
- * precicef_fulfilled_action( CHARACTER action(*), INTEGER useF )
+ * precicef_fulfilled_action( CHARACTER action(*), INTEGER useFluid )
  *
  * IN:  action
- * IN:  useF (1: this is the F interface , 0: this is the A interface)
+ * IN:  useFluid (1: use the Fluid interface , 0: use the Acoustic interface)
  * OUT: -
  */
 void precice_fastest_fulfilled_action_(
   const char* action,
-  const int*  useF,
+  const int*  useFluid,
   int         lengthAction );
 
 /**
@@ -126,16 +139,16 @@ void precice_fastest_fulfilled_action_(
  * precicef_get_mesh_id(
  *   CHARACTER meshName(*),
  *   INTEGER   meshID,
- *   INTEGER   useF )
+ *   INTEGER   useFluid )
  *
  * IN:  meshName
- * IN:  useF (1: this is the F interface , 0: this is the A interface)
+ * IN:  useFluid (1: use the Fluid interface , 0: use the Acoustic interface)
  * OUT: meshID
  */
 void precice_fastest_get_mesh_id_(
   const char* meshName,
   int*        meshID,
-  const int*  useF,
+  const int*  useFluid,
   int         lengthMeshName );
 
 
@@ -151,18 +164,18 @@ void precice_fastest_get_mesh_id_(
  *   CHARACTER dataName(*),
  *   INTEGER   meshID,
  *   INTEGER   dataID,
- *   INTEGER   useF)
+ *   INTEGER   useFluid)
  *
  * IN:  dataName
  * IN:  meshID
- * IN:  useF (1: this is the F interface , 0: this is the A interface)
+ * IN:  useFluid (1: use the Fluid interface , 0: use the Acoustic interface)
  * OUT: dataID
  */
 void precice_fastest_get_data_id_(
   const char* dataName,
   const int*  meshID,
   int*        dataID,
-  const int*  useF,
+  const int*  useFluid,
   int         lengthDataName);
 
 /**
@@ -173,17 +186,17 @@ void precice_fastest_get_data_id_(
  *   INTEGER          meshID,
  *   DOUBLE PRECISION position(dim),
  *   INTEGER          vertexID,
- *   INTEGER          useF )
+ *   INTEGER          useFluid )
  *
  * IN:  meshID, position
- * IN:  useF (1: this is the F interface , 0: this is the A interface)
+ * IN:  useFluid (1: use the Fluid interface , 0: use the Acoustic interface)
  * OUT: vertexID
  */
 void precice_fastest_set_vertex_(
   const int*    meshID,
   const double* position,
   int*          vertexID,
-  const int*    useF);
+  const int*    useFluid);
 
 /**
  * @brief See precice::SolverInterface::setMeshVertices().
@@ -194,10 +207,10 @@ void precice_fastest_set_vertex_(
  *   INTEGER          size,
  *   DOUBLE PRECISION positions(dim*size),
  *   INTEGER          positionIDs(size),
- *   INTEGER          useF )
+ *   INTEGER          useFluid )
  *
  * IN:  meshID, size, positions
- * IN:  useF (1: this is the F interface , 0: this is the A interface)
+ * IN:  useFluid (1: use the Fluid interface , 0: use the Acoustic interface)
  * OUT: positionIDs
  */
 void precice_fastest_set_vertices_(
@@ -205,7 +218,7 @@ void precice_fastest_set_vertices_(
   const int*    size,
   double*       positions,
   int*          positionIDs,
-  const int*    useF);
+  const int*    useFluid);
 
 
 /**
@@ -217,10 +230,10 @@ void precice_fastest_set_vertices_(
  *   INTEGER size,
  *   INTEGER valueIndices,
  *   DOUBLE PRECISION values(dim*size),
- *   INTEGER useF )
+ *   INTEGER useFluid )
  *
  * IN:  dataID, size, valueIndices, values
- * IN:  useF (1: this is the F interface , 0: this is the A interface)
+ * IN:  useFluid (1: use the Fluid interface , 0: use the Acoustic interface)
  * OUT: -
  */
 void precice_fastest_write_bvdata_(
@@ -228,7 +241,7 @@ void precice_fastest_write_bvdata_(
   const int* size,
   int*       valueIndices,
   double*    values,
-  const int* useF);
+  const int* useFluid);
 
 /**
  * @brief precice::SolverInterface::writeVectorData.
@@ -238,17 +251,17 @@ void precice_fastest_write_bvdata_(
  *   INTEGER dataID,
  *   INTEGER valueIndex,
  *   DOUBLE PRECISION dataValue(dim),
- *   INTEGER useF )
+ *   INTEGER useFluid )
  *
  * IN:  dataID, valueIndex, dataValue
- * IN:  useF (1: this is the F interface , 0: this is the A interface)
+ * IN:  useFluid (1: use the Fluid interface , 0: use the Acoustic interface)
  * OUT: -
  */
 void precice_fastest_write_vdata_(
   const int*    dataID,
   const int*    valueIndex,
   const double* dataValue,
-  const int*    useF);
+  const int*    useFluid);
 
 /**
  * @brief See precice::SolverInterface::writeBlockScalarData.
@@ -259,10 +272,10 @@ void precice_fastest_write_vdata_(
  *   INTEGER size,
  *   INTEGER valueIndices,
  *   DOUBLE PRECISION values(size),
- *   INTEGER useF )
+ *   INTEGER useFluid )
  *
  * IN:  dataID, size, valueIndices, values
- * IN:  useF (1: this is the F interface , 0: this is the A interface)
+ * IN:  useFluid (1: use the Fluid interface , 0: use the Acoustic interface)
  * OUT: -
  */
 void precice_fastest_write_bsdata_(
@@ -270,7 +283,7 @@ void precice_fastest_write_bsdata_(
   const int* size,
   int*       valueIndices,
   double*    values,
-  const int* useF);
+  const int* useFluid);
 
 /**
  * @brief precice::SolverInterface::writeScalarData.
@@ -280,17 +293,17 @@ void precice_fastest_write_bsdata_(
  *   INTEGER dataID,
  *   INTEGER valueIndex,
  *   DOUBLE PRECISION dataValue,
- *   INTEGER useF )
+ *   INTEGER useFluid )
  *
  * IN:  dataID, valueIndex, dataValue
- * IN:  useF (1: this is the F interface , 0: this is the A interface)
+ * IN:  useFluid (1: use the Fluid interface , 0: use the Acoustic interface)
  * OUT: -
  */
 void precice_fastest_write_sdata_(
   const int*    dataID,
   const int*    valueIndex,
   const double* dataValue,
-  const int*    useF);
+  const int*    useFluid);
 
 /**
  * @brief See precice::SolverInterface::readBlockVectorData.
@@ -301,10 +314,10 @@ void precice_fastest_write_sdata_(
  *   INTEGER size,
  *   INTEGER valueIndices,
  *   DOUBLE PRECISION values(dim*size),
- *   INTEGER useF )
+ *   INTEGER useFluid )
  *
  * IN:  dataID, size, valueIndices
- * IN:  useF (1: this is the F interface , 0: this is the A interface)
+ * IN:  useFluid (1: use the Fluid interface , 0: use the Acoustic interface)
  * OUT: values
  */
 void precice_fastest_read_bvdata_(
@@ -312,7 +325,7 @@ void precice_fastest_read_bvdata_(
   const int* size,
   int*       valueIndices,
   double*    values,
-  const int* useF);
+  const int* useFluid);
 
 /**
  * @brief precice::SolverInterface::readVectorData.
@@ -322,17 +335,17 @@ void precice_fastest_read_bvdata_(
  *   INTEGER dataID,
  *   INTEGER valueIndex,
  *   DOUBLE PRECISION dataValue(dim),
- *   INTEGER useF )
+ *   INTEGER useFluid )
  *
  * IN:  dataID, valueIndex
- * IN:  useF (1: this is the F interface , 0: this is the A interface)
+ * IN:  useFluid (1: use the Fluid interface , 0: use the Acoustic interface)
  * OUT: dataValue
  */
 void precice_fastest_read_vdata_(
   const int* dataID,
   const int* valueIndex,
   double*    dataValue,
-  const int* useF);
+  const int* useFluid);
 
 /**
  * @brief See precice::SolverInterface::readBlockScalarData.
@@ -343,10 +356,10 @@ void precice_fastest_read_vdata_(
  *   INTEGER size,
  *   INTEGER valueIndices,
  *   DOUBLE PRECISION values(size),
- *   INTEGER useF )
+ *   INTEGER useFluid )
  *
  * IN:  dataID, size, valueIndices
- * IN:  useF (1: this is the F interface , 0: this is the A interface)
+ * IN:  useFluid (1: use the Fluid interface , 0: use the Acoustic interface)
  * OUT: values
  */
 void precice_fastest_read_bsdata_(
@@ -354,7 +367,7 @@ void precice_fastest_read_bsdata_(
   const int* size,
   int*       valueIndices,
   double*    values,
-  const int* useF);
+  const int* useFluid);
 
 /**
  * @brief precice::SolverInterface::readScalarData.
@@ -364,17 +377,17 @@ void precice_fastest_read_bsdata_(
  *   INTEGER dataID,
  *   INTEGER valueIndex,
  *   DOUBLE PRECISION dataValue,
- *   INTEGER useF )
+ *   INTEGER useFluid )
  *
  * IN:  dataID, valueIndex
- * IN:  useF (1: this is the F interface , 0: this is the A interface)
+ * IN:  useFluid (1: use the Fluid interface , 0: use the Acoustic interface)
  * OUT: dataValue
  */
 void precice_fastest_read_sdata_(
   const int* dataID,
   const int* valueIndex,
   double*    dataValue,
-  const int* useF);
+  const int* useFluid);
 
 
 #ifdef __cplusplus

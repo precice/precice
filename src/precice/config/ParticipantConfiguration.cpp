@@ -9,8 +9,6 @@
 #include "mapping/Mapping.hpp"
 #include "mapping/config/MappingConfiguration.hpp"
 #include "xml/XMLAttribute.hpp"
-#include "xml/ValidatorEquals.hpp"
-#include "xml/ValidatorOr.hpp"
 #include "utils/MasterSlave.hpp"
 #include "com/MPIDirectCommunication.hpp"
 #include "com/MPIPortsCommunication.hpp"
@@ -30,7 +28,7 @@ ParticipantConfiguration:: ParticipantConfiguration
 :
   _meshConfig(meshConfiguration)
 {
-  assertion(_meshConfig.use_count() > 0);
+  assertion(_meshConfig);
   using namespace xml;
   std::string doc;
   XMLTag tag(*this, TAG, XMLTag::OCCUR_ONCE_OR_MORE);
@@ -38,10 +36,10 @@ ParticipantConfiguration:: ParticipantConfiguration
   doc += "participants have to be defined.";
   tag.setDocumentation(doc);
 
-  XMLAttribute<std::string> attrName(ATTR_NAME);
-  doc = "Name of the participant. Has to match the name given on construction ";
-  doc += "of the precice::SolverInterface object used by the participant.";
-  attrName.setDocumentation(doc);
+ auto attrName = XMLAttribute<std::string>(ATTR_NAME)
+      .setDocumentation(
+              "Name of the participant. Has to match the name given on construction "
+              "of the precice::SolverInterface object used by the participant.");
   tag.addAttribute(attrName);
 
   XMLTag tagWriteData(*this, TAG_WRITE, XMLTag::OCCUR_ARBITRARY);
@@ -52,15 +50,14 @@ ParticipantConfiguration:: ParticipantConfiguration
   doc = "Sets data to be read by the participant from preCICE. ";
   doc += "Data is defined by using the <data> tag.";
   tagReadData.setDocumentation(doc);
-  XMLAttribute<std::string> attrDataName(ATTR_NAME);
-  doc = "Name of the data.";
-  attrDataName.setDocumentation(doc);
+ auto attrDataName = XMLAttribute<std::string>(ATTR_NAME)
+      .setDocumentation("Name of the data.");
   tagWriteData.addAttribute(attrDataName);
   tagReadData.addAttribute(attrDataName);
-  XMLAttribute<std::string> attrMesh(ATTR_MESH);
-  doc = "Mesh the data belongs to. If data should be read/written to several ";
-  doc += "meshes, this has to be specified separately for each mesh.";
-  attrMesh.setDocumentation(doc);
+ auto attrMesh = XMLAttribute<std::string>(ATTR_MESH)
+      .setDocumentation(
+              "Mesh the data belongs to. If data should be read/written to several "
+              "meshes, this has to be specified separately for each mesh.");
   tagWriteData.addAttribute(attrMesh);
   tagReadData.addAttribute(attrMesh);
   tag.addSubtag(tagWriteData);
@@ -85,12 +82,12 @@ ParticipantConfiguration:: ParticipantConfiguration
   doc = "Mesh to be watched.";
   attrMesh.setDocumentation(doc);
   tagWatchPoint.addAttribute(attrMesh);
-  XMLAttribute<Eigen::VectorXd> attrCoordinate(ATTR_COORDINATE);
-  doc = "The coordinates of the watch point. If the watch point is not put exactly ";
-  doc += "on the mesh to observe, the closest projection of the point onto the ";
-  doc += "mesh is considered instead, and values/coordinates are interpolated ";
-  doc += "linearly to that point.";
-  attrCoordinate.setDocumentation(doc);
+ auto attrCoordinate = XMLAttribute<Eigen::VectorXd>(ATTR_COORDINATE)
+      .setDocumentation(
+              "The coordinates of the watch point. If the watch point is not put exactly "
+              "on the mesh to observe, the closest projection of the point onto the "
+              "mesh is considered instead, and values/coordinates are interpolated "
+              "linearly to that point.");
   tagWatchPoint.addAttribute(attrCoordinate);
   tag.addSubtag(tagWatchPoint);
 
@@ -106,46 +103,40 @@ ParticipantConfiguration:: ParticipantConfiguration
 //  attrLocalOffset.setDefaultValue(Eigen::VectorXd::Constant(3, 0));
 //  tagUseMesh.addAttribute(attrLocalOffset);
 
-  XMLAttribute<std::string> attrFrom(ATTR_FROM);
-  doc += "If a created mesh should be used by ";
-  doc += "another solver, this attribute has to specify the creating participant's";
-  doc += " name. The creator has to use the attribute \"provide\" to signal he is ";
-  doc += "providing the mesh geometry.";
-  attrFrom.setDocumentation(doc);
-  attrFrom.setDefaultValue("");
+ auto attrFrom = XMLAttribute<std::string>(ATTR_FROM, "")
+      .setDocumentation(
+              "If a created mesh should be used by "
+              "another solver, this attribute has to specify the creating participant's"
+              " name. The creator has to use the attribute \"provide\" to signal he is "
+              "providing the mesh geometry.");
   tagUseMesh.addAttribute(attrFrom);
-  XMLAttribute<double> attrSafetyFactor(ATTR_SAFETY_FACTOR);
-  doc = "If a mesh is received from another partipant (see tag <from>), it needs to be";
-  doc += "decomposed at the receiving participant. To speed up this process, ";
-  doc += "a geometric filter (see tag <geometric-filter>), i.e. filtering by bounding boxes around the local mesh, can be used. ";
-  doc += "This safety factor defines by which factor this local information is ";
-  doc += "increased. An example: 0.1 means that the bounding box is 110% of its original size.";
-  attrSafetyFactor.setDocumentation(doc);
-  attrSafetyFactor.setDefaultValue(0.1);
+  auto attrSafetyFactor = makeXMLAttribute(ATTR_SAFETY_FACTOR, 0.1)
+      .setDocumentation(
+              "If a mesh is received from another partipant (see tag <from>), it needs to be"
+              "decomposed at the receiving participant. To speed up this process, "
+              "a geometric filter (see tag <geometric-filter>), i.e. filtering by bounding boxes around the local mesh, can be used. "
+              "This safety factor defines by which factor this local information is "
+              "increased. An example: 0.1 means that the bounding box is 110% of its original size.");
   tagUseMesh.addAttribute(attrSafetyFactor);
 
-  XMLAttribute<std::string> attrGeoFilter(ATTR_GEOMETRIC_FILTER);
-  doc = "If a mesh is received from another partipant (see tag <from>), it needs to be";
-  doc += "decomposed at the receiving participant. To speed up this process, ";
-  doc += "a geometric filter, i.e. filtering by bounding boxes around the local mesh, can be used. ";
-  doc += "2 different variants are implemented: a \"filter-first\" strategy, ";
-  doc += "which is beneficial for a huge mesh and a low number of processors, and a ";
-  doc += "\"broadcast/filter\" strategy, which performs better for a very high number of ";
-  doc += "processors. Both result in the same distribution (if the safety factor is sufficiently large).";
-  doc += "For very asymmetric cases, the filter can also be switched off completely (\"no-filter\").";
-  attrGeoFilter.setDocumentation(doc);
-  auto valid1  = makeValidatorEquals( VALUE_FILTER_FIRST );
-  auto valid2  = makeValidatorEquals( VALUE_BROADCAST_FILTER);
-  auto valid3  = makeValidatorEquals( VALUE_NO_FILTER);
-  attrGeoFilter.setValidator ( valid1 || valid2 || valid3);
-  attrGeoFilter.setDefaultValue(VALUE_BROADCAST_FILTER);
+ auto attrGeoFilter = XMLAttribute<std::string>(ATTR_GEOMETRIC_FILTER)
+      .setDocumentation(
+              "If a mesh is received from another partipant (see tag <from>), it needs to be"
+              "decomposed at the receiving participant. To speed up this process, "
+              "a geometric filter, i.e. filtering by bounding boxes around the local mesh, can be used. "
+              "2 different variants are implemented: a \"filter-first\" strategy, "
+              "which is beneficial for a huge mesh and a low number of processors, and a "
+              "\"broadcast/filter\" strategy, which performs better for a very high number of "
+              "processors. Both result in the same distribution (if the safety factor is sufficiently large)."
+              "For very asymmetric cases, the filter can also be switched off completely (\"no-filter\").")
+      .setOptions({ VALUE_FILTER_FIRST, VALUE_BROADCAST_FILTER, VALUE_NO_FILTER })
+      .setDefaultValue(VALUE_BROADCAST_FILTER);
   tagUseMesh.addAttribute(attrGeoFilter);
 
-  XMLAttribute<bool> attrProvide(ATTR_PROVIDE);
-  doc += "If this attribute is set to \"on\", the ";
-  doc += "participant has to create the mesh geometry before initializing preCICE.";
-  attrProvide.setDocumentation(doc);
-  attrProvide.setDefaultValue(false);
+  auto attrProvide = makeXMLAttribute(ATTR_PROVIDE, false)
+      .setDocumentation(
+              "If this attribute is set to \"on\", the "
+              "participant has to create the mesh geometry before initializing preCICE.");
   tagUseMesh.addAttribute(attrProvide);
   tag.addSubtag(tagUseMesh);
 
@@ -158,28 +149,25 @@ ParticipantConfiguration:: ParticipantConfiguration
     doc += "The communication between participant and server is done by sockets.";
     tagServer.setDocumentation(doc);
 
-    XMLAttribute<int> attrPort("port");
-    doc = "Port number (16-bit unsigned integer) to be used for socket ";
-    doc += "communiation. The default is \"0\", what means that OS will ";
-    doc += "dynamically search for a free port (if at least one exists) and ";
-    doc += "bind it automatically.";
-    attrPort.setDocumentation(doc);
-    attrPort.setDefaultValue(0);
+    auto attrPort = makeXMLAttribute("port", 0)
+        .setDocumentation(
+                "Port number (16-bit unsigned integer) to be used for socket "
+                "communiation. The default is \"0\", what means that OS will "
+                "dynamically search for a free port (if at least one exists) and "
+                "bind it automatically.");
     tagServer.addAttribute(attrPort);
 
-    XMLAttribute<std::string> attrNetwork(ATTR_NETWORK);
-    doc = "Network name to be used for socket communiation. ";
-    doc += "Default is \"lo\", i.e., the local host loopback.";
-    attrNetwork.setDocumentation(doc);
-    attrNetwork.setDefaultValue("lo");
+    auto attrNetwork = makeXMLAttribute(ATTR_NETWORK, "lo")
+        .setDocumentation(
+                "Network name to be used for socket communiation. "
+                "Default is \"lo\", i.e., the local host loopback.");
     tagServer.addAttribute(attrNetwork);
 
-    XMLAttribute<std::string> attrExchangeDirectory(ATTR_EXCHANGE_DIRECTORY);
-    doc = "Directory where connection information is exchanged. By default, the ";
-    doc += "directory of startup is chosen, and both solvers have to be started ";
-    doc += "in the same directory.";
-    attrExchangeDirectory.setDocumentation(doc);
-    attrExchangeDirectory.setDefaultValue("");
+   auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, "")
+        .setDocumentation(
+                "Directory where connection information is exchanged. By default, the "
+                "directory of startup is chosen, and both solvers have to be started "
+                "in the same directory.");
     tagServer.addAttribute(attrExchangeDirectory);
 
     serverTags.push_back(tagServer);
@@ -192,12 +180,11 @@ ParticipantConfiguration:: ParticipantConfiguration
     doc += "with startup in separated communication spaces.";
     tagServer.setDocumentation(doc);
 
-    XMLAttribute<std::string> attrExchangeDirectory(ATTR_EXCHANGE_DIRECTORY);
-    doc = "Directory where connection information is exchanged. By default, the ";
-    doc += "directory of startup is chosen, and both solvers have to be started ";
-    doc += "in the same directory.";
-    attrExchangeDirectory.setDocumentation(doc);
-    attrExchangeDirectory.setDefaultValue("");
+   auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, "")
+        .setDocumentation(
+                "Directory where connection information is exchanged. By default, the "
+                "directory of startup is chosen, and both solvers have to be started "
+                "in the same directory.");
     tagServer.addAttribute(attrExchangeDirectory);
 
     serverTags.push_back(tagServer);
@@ -227,27 +214,24 @@ ParticipantConfiguration:: ParticipantConfiguration
     doc += "The communication between Master and slaves is done by sockets.";
     tagMaster.setDocumentation(doc);
 
-    XMLAttribute<int> attrPort("port");
-    doc = "Port number (16-bit unsigned integer) to be used for socket ";
-    doc += "communiation. The default is \"0\", what means that OS will ";
-    doc += "dynamically search for a free port (if at least one exists) and ";
-    doc += "bind it automatically.";
-    attrPort.setDocumentation(doc);
-    attrPort.setDefaultValue(0);
+    auto attrPort = makeXMLAttribute("port", 0)
+        .setDocumentation(
+                "Port number (16-bit unsigned integer) to be used for socket "
+                "communiation. The default is \"0\", what means that OS will "
+                "dynamically search for a free port (if at least one exists) and "
+                "bind it automatically.");
     tagMaster.addAttribute(attrPort);
 
-    XMLAttribute<std::string> attrNetwork(ATTR_NETWORK);
-    doc = "Network name to be used for socket communiation. ";
-    doc += "Default is \"lo\", i.e., the local host loopback.";
-    attrNetwork.setDocumentation(doc);
-    attrNetwork.setDefaultValue("lo");
+    auto attrNetwork = makeXMLAttribute(ATTR_NETWORK, "lo")
+        .setDocumentation(
+          "Network name to be used for socket communiation. "
+          "Default is \"lo\", i.e., the local host loopback.");
     tagMaster.addAttribute(attrNetwork);
 
-    XMLAttribute<std::string> attrExchangeDirectory(ATTR_EXCHANGE_DIRECTORY);
-    doc = "Directory where connection information is exchanged. By default, the ";
-    doc += "directory of startup is chosen.";
-    attrExchangeDirectory.setDocumentation(doc);
-    attrExchangeDirectory.setDefaultValue("");
+   auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, "")
+        .setDocumentation(
+                "Directory where connection information is exchanged. By default, the "
+                "directory of startup is chosen.");
     tagMaster.addAttribute(attrExchangeDirectory);
 
     masterTags.push_back(tagMaster);
@@ -263,11 +247,10 @@ ParticipantConfiguration:: ParticipantConfiguration
     doc += "with startup in separated communication spaces.";
     tagMaster.setDocumentation(doc);
 
-    XMLAttribute<std::string> attrExchangeDirectory(ATTR_EXCHANGE_DIRECTORY);
-    doc = "Directory where connection information is exchanged. By default, the ";
-    doc += "directory of startup is chosen.";
-    attrExchangeDirectory.setDocumentation(doc);
-    attrExchangeDirectory.setDefaultValue("");
+   auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, "")
+        .setDocumentation(
+                "Directory where connection information is exchanged. By default, the "
+                "directory of startup is chosen.");
     tagMaster.addAttribute(attrExchangeDirectory);
 
     masterTags.push_back(tagMaster);
@@ -347,7 +330,7 @@ void ParticipantConfiguration:: xmlTagCallback
     std::string dataName = tag.getStringAttributeValue(ATTR_NAME);
     std::string meshName = tag.getStringAttributeValue(ATTR_MESH);
     mesh::PtrMesh mesh = _meshConfig->getMesh ( meshName );
-    CHECK(mesh.use_count() > 0, "Participant "
+    CHECK(mesh, "Participant "
           << "\"" << _participants.back()->getName() << "\" has to use "
           << "mesh \"" << meshName << "\" in order to write data to it!" );
     mesh::PtrData data = getData ( mesh, dataName );
@@ -357,7 +340,7 @@ void ParticipantConfiguration:: xmlTagCallback
     std::string dataName = tag.getStringAttributeValue(ATTR_NAME);
     std::string meshName = tag.getStringAttributeValue(ATTR_MESH);
     mesh::PtrMesh mesh = _meshConfig->getMesh ( meshName );
-    CHECK(mesh.use_count() > 0, "Participant "
+    CHECK(mesh, "Participant "
           << "\"" << _participants.back()->getName() << "\" has to use "
           << "mesh \"" << meshName << "\" in order to read data from it!" );
     mesh::PtrData data = getData ( mesh, dataName );
@@ -487,6 +470,19 @@ void ParticipantConfiguration:: finishParticipantConfiguration
     impl::MeshContext& fromMeshContext = participant->meshContext(fromMeshID);
     impl::MeshContext& toMeshContext = participant->meshContext(toMeshID);
 
+    if(confMapping.direction == mapping::MappingConfiguration::READ){
+      CHECK(toMeshContext.provideMesh, "A read mapping needs to map to a provided mesh. "
+          "Mesh " << confMapping.toMesh->getName() << " is not provided.");
+      CHECK(not fromMeshContext.receiveMeshFrom.empty(), "A read mapping needs to map from a received mesh. "
+          "Mesh " << confMapping.fromMesh->getName() << " is not received.");
+    }
+    else{
+      CHECK(fromMeshContext.provideMesh, "A write mapping needs to map from a provided mesh. "
+          "Mesh " << confMapping.fromMesh->getName() << " is not provided.");
+      CHECK(not toMeshContext.receiveMeshFrom.empty(), "A write mapping needs to map to a received mesh. "
+          "Mesh " << confMapping.toMesh->getName() << " is not received.");
+    }
+
     if(confMapping.isRBF){
       fromMeshContext.geoFilter = partition::ReceivedPartition::GeometricFilter::NO_FILTER;
       toMeshContext.geoFilter = partition::ReceivedPartition::GeometricFilter::NO_FILTER;
@@ -608,7 +604,7 @@ void ParticipantConfiguration:: finishParticipantConfiguration
         mesh = context->mesh;
       }
     }
-    CHECK(mesh.use_count() > 0,
+    CHECK(mesh,
           "Participant \"" << participant->getName()
           << "\" defines watchpoint \"" << config.name
           << "\" for mesh \"" << config.nameMesh

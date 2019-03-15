@@ -11,6 +11,8 @@ testprecice \- runs the test suite of libprecice
 .SH DESCRIPTION
 This program is a Boost.test module containing unit tests for the library libprecice.
 The test suite consists of parts, run based on the MPI environment they run in.
+The majority of the tests require configuration files which are located in the repository.
+This program loads these files using the environment variable PRECICE_ROOT.
 
 .TP
 .B 1 Rank | No MPI
@@ -39,6 +41,7 @@ Non zero is returned otherwise.
 .TP
 .B PRECICE_ROOT
 the path of the project root used to access configuration files for the integration tests.
+If you installed the debian package, set this to /usr/share/precice .
 
 .SH EXAMPLES
 .TP
@@ -55,8 +58,7 @@ Runs the complete test suite.
 .TP
 .B MPIPorts tests fail using OpenMPI
 This is due to the non-conformoning implementation of OpenMPI.
-Use the following to disable the tests:
-.B --run_test="\!@MPI_Ports"
+Use the following to disable the tests: --run_test="\\!@MPI_Ports"
 .TP
 .B SocketCommunicationTests fail
 This is most likely due to a polluted environment.

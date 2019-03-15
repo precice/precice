@@ -1,8 +1,22 @@
 /**
 
-@mainpage preCICE Source Code Documentation
+@mainpage notitle
 
-The directory $src$ contains the sources of preCICE. The library API of preCICE
+# For Adapter Developers
+
+Please refer to the github wiki and the documentation of the \ref precice::SolverInterface SolverInterface.
+
+# For Library Developers
+
+- \ref eventtimings
+- \ref optimization
+- \ref tests
+- \ref conventions
+- \ref logging
+- \ref tooling
+- \ref releases
+
+The directory `src` contains the sources of preCICE. The library API of preCICE
 is contained in the directory $precice$, which brings together the functionalities
 contained in the other components of preCICE. Every component has its own
 directory and namespace.

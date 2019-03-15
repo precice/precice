@@ -362,6 +362,7 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
 #endif
 
   Event e4("m2n.createCommunications");
+  e4.addData("Connections", communicationMap.size());
   if (communicationMap.empty()) {
     _isConnected = true;
     return;
@@ -481,6 +482,7 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
 #endif
 
   Event e4("m2n.createCommunications");
+  e4.addData("Connections", communicationMap.size());
   if (communicationMap.empty()) {
     _isConnected = true;
     return;
