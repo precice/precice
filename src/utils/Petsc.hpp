@@ -91,10 +91,10 @@ public:
    */
   Vector makeSimilar(const std::string& name = "") const;
 
+  ~Vector();
+
   /// Swaps the ownership of two vectors
   void swap(Vector& other) noexcept;
-
-  ~Vector();
 
   /// Enables implicit conversion into a reference to a PETSc Vec type
   operator Vec&();

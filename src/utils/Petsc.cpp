@@ -165,15 +165,15 @@ Vector::~Vector()
     ierr = VecDestroy(&vector); CHKERRV(ierr);
 }
 
-Vector::operator Vec&()
-{
-  return vector;
-}
-
 void Vector::swap(Vector& other) noexcept
 {
     using std::swap;
     swap(vector, other.vector);
+}
+
+Vector::operator Vec&()
+{
+  return vector;
 }
 
 void Vector::init(PetscInt rows)
