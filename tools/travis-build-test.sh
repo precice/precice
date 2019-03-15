@@ -10,7 +10,7 @@ if [ "$BUILD_TYPE" = "SCONS" ]; then
     scons -j $(nproc) petsc=$PETSC mpi=$MPI python=on compiler=$CXX staticlib bin solib tests symlink
     cd $TRAVIS_BUILD_DIR/tests
     if [ "$MPI" = "on" ]; then
-        mpirun.openmpi -n 4 --output-filename boost-test-output  $PRECICE_BUILD_DIR/testprecice -r detailed
+        mpirun.mpich -n 4 --output-filename boost-test-output  $PRECICE_BUILD_DIR/testprecice -r detailed
     else
         $PRECICE_BUILD_DIR/testprecice -x -r detailed > boost-test-output
     fi
