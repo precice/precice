@@ -56,6 +56,9 @@ private:
   /// Checks if vertex in contained in _bb
   bool isVertexInBB(const mesh::Vertex &vertex);
 
+  /// Checks whether this rank has vertices at the coupling interface
+  bool hasVerticesAtCouplingInterface() const;
+
   virtual void createOwnerInformation() override;
 
   /// Helper function for 'createOwnerFunction' to set local owner information

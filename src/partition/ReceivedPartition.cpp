@@ -83,10 +83,8 @@ void ReceivedPartition::compute()
       com::CommunicateMesh(utils::MasterSlave::_communication).sendBoundingBox(_bb, 0);
       com::CommunicateMesh(utils::MasterSlave::_communication).receiveMesh(*_mesh, 0);
 
-      if ((_fromMapping && not _fromMapping->getOutputMesh()->vertices().empty() ||
-           (_toMapping && not _toMapping->getInputMesh()->vertices().empty()))) {
-        // this rank has vertices at the coupling interface
-        // then, also the filtered mesh should still have vertices
+      if(hasVerticesAtCouplingInterface()) {
+        // the filtered mesh should still have vertices
         std::string msg = "The re-partitioning completely filtered out the mesh " + _mesh->getName() +
           " received on this rank at the coupling interface. "
           "Most probably, the coupling interfaces of your coupled participants do not match geometry-wise. "
@@ -119,10 +117,8 @@ void ReceivedPartition::compute()
       _mesh->computeState();
       DEBUG("Master mesh after filtering, #vertices " << _mesh->vertices().size());
 
-      if ((_fromMapping && not _fromMapping->getOutputMesh()->vertices().empty()) ||
-          (_toMapping && not _toMapping->getInputMesh()->vertices().empty())) {
-        // this rank has vertices at the coupling interface
-        // then, also the filtered mesh should still have vertices
+      if(hasVerticesAtCouplingInterface()) {
+        // the filtered mesh should still have vertices
         std::string msg = "The re-partitioning completely filtered out the mesh " + _mesh->getName() + " received on this rank at the coupling interface. "
           "Most probably, the coupling interfaces of your coupled participants do not match geometry-wise. "
           "Please check your geometry setup again. Small overlaps or gaps are no problem. "
@@ -154,10 +150,8 @@ void ReceivedPartition::compute()
       mesh::Mesh filteredMesh("FilteredMesh", _dimensions, _mesh->isFlipNormals());
       filterMesh(filteredMesh, true);
 
-      if ((_fromMapping && not _fromMapping->getOutputMesh()->vertices().empty()) ||
-          (_toMapping && not _toMapping->getInputMesh()->vertices().empty())) {
-        // this rank has vertices at the coupling interface
-        // then, also the filtered mesh should still have vertices
+      if(hasVerticesAtCouplingInterface()) {
+        // the filtered mesh should still have vertices
         std::string msg = "The re-partitioning completely filtered out the mesh " + _mesh->getName() + " received on this rank at the coupling interface. "
           "Most probably, the coupling interfaces of your coupled participants do not match geometry-wise. "
           "Please check your geometry setup again. Small overlaps or gaps are no problem. "
@@ -480,6 +474,11 @@ void ReceivedPartition::createOwnerInformation()
     }
 #endif
   }
+}
+
+bool ReceivedPartition::hasVerticesAtCouplingInterface() const {
+    return (_fromMapping && not _fromMapping->getOutputMesh()->vertices().empty()) ||
+           (_toMapping   && not _toMapping->getInputMesh()->vertices().empty());
 }
 
 void ReceivedPartition::setOwnerInformation(const std::vector<int> &ownerVec)
