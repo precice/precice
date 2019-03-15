@@ -623,9 +623,9 @@ void RequestManager:: handleRequestSetMeshVertex
   TRACE(rankSender);
   int meshID = -1;
   _com->receive(meshID, rankSender);
-  double position[_interface.getDimensions()];
-  _com->receive(position, _interface.getDimensions(), rankSender);
-  int index = _interface.setMeshVertex(meshID, position);
+  std::vector<double> position(_interface.getDimensions());
+  _com->receive(position.data(), _interface.getDimensions(), rankSender);
+  int index = _interface.setMeshVertex(meshID, position.data());
   _com->send(index, rankSender);
 }
 
@@ -808,9 +808,9 @@ void RequestManager:: handleRequestWriteVectorData
   _com->receive(dataID, rankSender);
   int index = -1;
   _com->receive( index, rankSender);
-  double data[_interface.getDimensions()];
-  _com->receive(data, _interface.getDimensions(), rankSender);
-  _interface.writeVectorData(dataID, index, data);
+  std::vector<double> data(_interface.getDimensions());
+  _com->receive(data.data(), _interface.getDimensions(), rankSender);
+  _interface.writeVectorData(dataID, index, data.data());
 }
 
 void RequestManager:: handleRequestReadScalarData
@@ -868,9 +868,9 @@ void RequestManager:: handleRequestReadVectorData
   _com->receive(dataID, rankSender);
   int index = -1;
   _com->receive(index, rankSender);
-  double data[_interface.getDimensions()];
-  _interface.readVectorData(dataID, index, data);
-  _com->send(data, _interface.getDimensions(), rankSender);
+  std::vector<double> data(_interface.getDimensions());
+  _interface.readVectorData(dataID, index, data.data());
+  _com->send(data.data(), _interface.getDimensions(), rankSender);
 }
 
 void RequestManager:: handleRequestMapWriteDataFrom

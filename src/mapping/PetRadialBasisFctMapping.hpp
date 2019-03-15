@@ -5,6 +5,7 @@
 
 #include <map>
 #include <numeric>
+#include <vector>
 
 #include "versions.hpp"
 #include "mesh/RTree.hpp"
@@ -359,8 +360,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
     PetscInt const idxSize = std::max(_matrixC.getSize().second, _matrixQ.getSize().second);
     PetscInt colNum = 0;  // holds the number of columns
-    PetscInt colIdx[idxSize];     // holds the columns indices of the entries
-    PetscScalar rowVals[idxSize]; // holds the values of the entries
+    std::vector<PetscInt> colIdx(idxSize);     // holds the columns indices of the entries
+    std::vector<PetscScalar> rowVals(idxSize); // holds the values of the entries
     
     // -- SETS THE POLYNOMIAL PART OF THE MATRIX --
     if (_polynomial == Polynomial::ON or _polynomial == Polynomial::SEPARATE) {
@@ -376,10 +377,10 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
       // cols are always the first ones for the polynomial, no need to translate
       if (_polynomial == Polynomial::ON) {
-        ierr = MatSetValues(_matrixC, colNum, colIdx, 1, &row, rowVals, INSERT_VALUES); CHKERRV(ierr);
+        ierr = MatSetValues(_matrixC, colNum, colIdx.data(), 1, &row, rowVals.data(), INSERT_VALUES); CHKERRV(ierr);
       }
       else if (_polynomial == Polynomial::SEPARATE) {
-        ierr = MatSetValues(_matrixQ, 1, &row, colNum, colIdx, rowVals, INSERT_VALUES); CHKERRV(ierr);
+        ierr = MatSetValues(_matrixQ, 1, &row, colNum, colIdx.data(), rowVals.data(), INSERT_VALUES); CHKERRV(ierr);
       }
       colNum = 0;
     }
@@ -411,8 +412,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
         }
       }
     }
-    ierr = AOApplicationToPetsc(_AOmapping, colNum, colIdx); CHKERRV(ierr);
-    ierr = MatSetValues(_matrixC, 1, &row, colNum, colIdx, rowVals, INSERT_VALUES); CHKERRV(ierr);
+    ierr = AOApplicationToPetsc(_AOmapping, colNum, colIdx.data()); CHKERRV(ierr);
+    ierr = MatSetValues(_matrixC, 1, &row, colNum, colIdx.data(), rowVals.data(), INSERT_VALUES); CHKERRV(ierr);
     ++row;
   }
   DEBUG("Finished filling Matrix C");
@@ -452,8 +453,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     if (_polynomial == Polynomial::ON or _polynomial == Polynomial::SEPARATE) {
         petsc::Matrix * m = _polynomial == Polynomial::ON ? &_matrixA : &_matrixV;
         PetscInt colNum = 0;
-        PetscInt colIdx[m->getSize().second];     // holds the columns indices of the entries
-        PetscScalar rowVals[m->getSize().second]; // holds the values of the entries
+        std::vector<PetscInt> colIdx(m->getSize().second);     // holds the columns indices of the entries
+        std::vector<PetscScalar> rowVals(m->getSize().second); // holds the values of the entries
 
         colIdx[colNum] = colNum;
         rowVals[colNum++] = 1;
@@ -464,13 +465,13 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
             rowVals[colNum++] = oVertex.getCoords()[dim];
           }
         }
-        ierr = MatSetValues(*m, 1, &row, colNum, colIdx, rowVals, INSERT_VALUES); CHKERRV(ierr);
+        ierr = MatSetValues(*m, 1, &row, colNum, colIdx.data(), rowVals.data(), INSERT_VALUES); CHKERRV(ierr);
     }
     
     // -- SETS THE COEFFICIENTS --
     PetscInt colNum = 0;
-    PetscInt colIdx[_matrixA.getSize().second];     // holds the columns indices of the entries
-    PetscScalar rowVals[_matrixA.getSize().second]; // holds the values of the entries
+    std::vector<PetscInt> colIdx(_matrixA.getSize().second);     // holds the columns indices of the entries
+    std::vector<PetscScalar> rowVals(_matrixA.getSize().second); // holds the values of the entries
 
     if (_preallocation == Preallocation::SAVE or _preallocation == Preallocation::TREE) {
       auto const & rowVertices = vertexData[row - ownerRangeABegin];
@@ -493,8 +494,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
         }
       }
     }
-    ierr = AOApplicationToPetsc(_AOmapping, colNum, colIdx); CHKERRV(ierr);
-    ierr = MatSetValues(_matrixA, 1, &row, colNum, colIdx, rowVals, INSERT_VALUES); CHKERRV(ierr);
+    ierr = AOApplicationToPetsc(_AOmapping, colNum, colIdx.data()); CHKERRV(ierr);
+    ierr = MatSetValues(_matrixA, 1, &row, colNum, colIdx.data(), rowVals.data(), INSERT_VALUES); CHKERRV(ierr);
   }
   DEBUG("Finished filling Matrix A");
   eFillA.stop();
