@@ -87,7 +87,7 @@ before_install:
 
 install:
   - $TRAVIS_BUILD_DIR/tools/travis-install-dependencies.sh $LOCAL_INSTALL
-  - export PATH=${LOCAL_INSTALL}/cmake/bin:${PATH}
+  - export PATH=${LOCAL_INSTALL}/cmake/bin:${LOCAL_INSTALL}/bin:${PATH}
 
 before_script:
   - mkdir $TRAVIS_BUILD_DIR/tests

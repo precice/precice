@@ -38,8 +38,10 @@ print 'Plot command:', plotstring
 gnuplot.write ( plotstring )
 gnuplot.write ( 'set autoscale;' )
 gnuplot.flush ()
-while True:
-    time.sleep ( options.interval / 1000.0 )
-    gnuplot.write ( 'replot\n' )
-    gnuplot.flush ()
-gnuplot.close ()
+try:
+    while True:
+        time.sleep ( options.interval / 1000.0 )
+        gnuplot.write ( 'replot\n' )
+        gnuplot.flush ()
+finally:
+    gnuplot.close ()
