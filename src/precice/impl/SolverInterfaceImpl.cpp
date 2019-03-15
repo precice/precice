@@ -638,9 +638,7 @@ int SolverInterfaceImpl:: setMeshVertex
   const double* position )
 {
   TRACE(meshID);
-  if (_meshLock.check(meshID)) {
-      ERROR("Cannot set the mesh (id:" << meshID << ") in the current state!");
-  }
+  CHECK(_meshLock.check(meshID), "Cannot modify a locked mesh! " << makeMeshInfo(meshID));
   Eigen::VectorXd internalPosition(_dimensions);
   for ( int dim=0; dim < _dimensions; dim++ ){
     internalPosition[dim] = position[dim];
@@ -672,9 +670,7 @@ void SolverInterfaceImpl:: setMeshVertices
   int*    ids )
 {
   TRACE(meshID, size);
-  if (_meshLock.check(meshID)) {
-      ERROR("Cannot set the mesh (id:" << meshID << ") in the current state!");
-  }
+  CHECK(_meshLock.check(meshID), "Cannot modify a locked mesh! " << makeMeshInfo(meshID));
   if (_clientMode){
     _requestManager->requestSetMeshVertices(meshID, size, positions, ids);
   }
@@ -767,9 +763,7 @@ int SolverInterfaceImpl:: setMeshEdge
   int secondVertexID )
 {
   TRACE(meshID, firstVertexID, secondVertexID );
-  if (_meshLock.check(meshID)) {
-      ERROR("Cannot set the mesh (id:" << meshID << ") in the current state!");
-  }
+  CHECK(_meshLock.check(meshID), "Cannot modify a locked mesh! " << makeMeshInfo(meshID));
   if ( _clientMode ){
     return _requestManager->requestSetMeshEdge ( meshID, firstVertexID, secondVertexID );
   }
@@ -802,9 +796,7 @@ void SolverInterfaceImpl:: setMeshTriangle
 {
   TRACE(meshID, firstEdgeID,
                   secondEdgeID, thirdEdgeID );
-  if (_meshLock.check(meshID)) {
-      ERROR("Cannot set the mesh (id:" << meshID << ") in the current state!");
-  }
+  CHECK(_meshLock.check(meshID), "Cannot modify a locked mesh! " << makeMeshInfo(meshID));
   if ( _clientMode ){
     _requestManager->requestSetMeshTriangle ( meshID, firstEdgeID, secondEdgeID, thirdEdgeID );
   }
@@ -836,9 +828,7 @@ void SolverInterfaceImpl:: setMeshTriangleWithEdges
 {
   TRACE(meshID, firstVertexID,
                 secondVertexID, thirdVertexID);
-  if (_meshLock.check(meshID)) {
-      ERROR("Cannot set the mesh (id:" << meshID << ") in the current state!");
-  }
+  CHECK(_meshLock.check(meshID), "Cannot modify a locked mesh! " << makeMeshInfo(meshID));
   if (_clientMode){
     _requestManager->requestSetMeshTriangleWithEdges(meshID,
                                                      firstVertexID,
@@ -935,9 +925,7 @@ void SolverInterfaceImpl:: setMeshQuad
 {
   TRACE(meshID, firstEdgeID, secondEdgeID, thirdEdgeID,
                 fourthEdgeID);
-  if (_meshLock.check(meshID)) {
-      ERROR("Cannot set the mesh (id:" << meshID << ") in the current state!");
-  }
+  CHECK(_meshLock.check(meshID), "Cannot modify a locked mesh! " << makeMeshInfo(meshID));
   if (_clientMode){
     _requestManager->requestSetMeshQuad(meshID, firstEdgeID, secondEdgeID,
                                         thirdEdgeID, fourthEdgeID);
@@ -974,9 +962,7 @@ void SolverInterfaceImpl:: setMeshQuadWithEdges
 {
   TRACE(meshID, firstVertexID,
                 secondVertexID, thirdVertexID, fourthVertexID);
-  if (_meshLock.check(meshID)) {
-      ERROR("Cannot set the mesh (id:" << meshID << ") in the current state!");
-  }
+  CHECK(_meshLock.check(meshID), "Cannot modify a locked mesh! " << makeMeshInfo(meshID));
   if (_clientMode){
     _requestManager->requestSetMeshQuadWithEdges(
         meshID, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID);
@@ -1836,6 +1822,25 @@ void SolverInterfaceImpl:: syncTimestep(double computedTimestepLength)
   }
 }
 
+void SolverInterfaceImpl::MeshInf::print(std::ostream& out) const
+{
+    const auto & idmap = interface._meshIDs;
+    auto iter = std::find_if(idmap.cbegin(), idmap.cend(), [meshID](typename idmap::value_type& kv){
+            return kv.second == meshID;
+            });
+    out << meshpID << ":";
+    if(iter == idmap.cend()) {
+        out << "<unknown>";
+    } else {
+        out << '"' << iter->first << '"';
+    }
+}
+
+std::ostream & operator<<(std:ostream& out, const SolverInterfaceImpl::MeshInfo& info) 
+{
+    info.print(out);
+    return out;
+}
 
 }} // namespace precice, impl
 

@@ -604,6 +604,29 @@ private:
 
   /// To allow white box tests.
   friend struct PreciceTests::Serial::TestConfiguration;
+
+  // A helper object used to safely print info from a meshID
+  struct MeshInfo {
+    /// The meshID to print
+    int meshID;
+    /// The SolverInterface used to look up the name of the corresponding meshID
+    const SolverInterfaceImpl& interface;
+
+    /** Prints a short info about the given meshID.
+     * Prints the meshID followed ';' and the name of the coresponding mesh.
+     * It prints "<unknown>" if the meshID is unknown to this SolverInterface.
+     * @param[in] out the stream to write to.
+     */
+    void print(std::ostream& out) const;
+  };
+
+  /// Calls MeshInfo::print()
+  std::ostream & operator<<(std:ostream& out, const MeshInfo& info);
+
+  /// Makes a MeshInfo bound to this SolverInterface
+  MeshInfo makeMeshInfo(int meshID) const {
+      return {meshID, *this};
+  }
 };
 
 }} // namespace precice, impl
