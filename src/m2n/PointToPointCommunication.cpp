@@ -552,20 +552,7 @@ void PointToPointCommunication::send(double *itemsToSend,
     auto request = _communication->aSend(*buffer, mapping.remoteRank);
     bufferedRequests.emplace_back(request, buffer);
   }
-
-  /* Disable asynchronous sending
-   * For SocketCommunuication, an async send request is given to asio::async_write and from that
-   * written to the operating system TCP queues using multiple function calls. 
-   * Problem 1) Simultaneous invocations of async_write on the same socket could be problematic.
-   * Problem 2) Writes from async_write to the OS queues could interfere with other writes
-   * (asio::write or asio::async_write) on the same sockets and thus changing order or requests.
-   * Since preCICE does not implement its own method to ensure correct ordering, this can lead to
-   * garbled data.
-   * See:
-   * https://lists.boost.org/Archives/boost/2018/10/243612.php
-   * https://www.boost.org/doc/libs/1_68_0/doc/html/boost_asio/reference/async_write/overload1.html
-   */
-  checkBufferedRequests(true);
+  checkBufferedRequests(false);
 }
 
 void PointToPointCommunication::receive(double *itemsToReceive,

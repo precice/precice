@@ -48,6 +48,8 @@ target_sources(precice
     src/com/SocketCommunicationFactory.hpp
     src/com/SocketRequest.cpp
     src/com/SocketRequest.hpp
+    src/com/SocketSendQueue.cpp
+    src/com/SocketSendQueue.hpp
     src/com/config/CommunicationConfiguration.cpp
     src/com/config/CommunicationConfiguration.hpp
     src/cplscheme/BaseCouplingScheme.cpp
