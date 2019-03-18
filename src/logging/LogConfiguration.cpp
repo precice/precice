@@ -173,6 +173,8 @@ void BackendConfiguration::setOption(std::string key, std::string value)
 
 void setupLogging(LoggingConfiguration configs, bool enabled)
 {
+  if (_precice_logging_config_lock) return;
+
   namespace bl = boost::log;
   bl::register_formatter_factory("TimeStamp", boost::make_shared<timestamp_formatter_factory>());
   bl::register_formatter_factory("ColorizedSeverity", boost::make_shared<colorized_severity_formatter_factory>());
@@ -229,6 +231,12 @@ void setupLogging(std::string const & logConfigFile)
 
 void setMPIRank(int const rank) {
   boost::log::attribute_cast<boost::log::attributes::mutable_constant<int>>(boost::log::core::get()->get_global_attributes()["Rank"]).set(rank);
+}
+
+bool _precice_logging_config_lock{false};
+
+void lockConf() {
+    _precice_logging_config_lock = true;
 }
 
 }} // namespace precice, logging

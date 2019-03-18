@@ -67,6 +67,7 @@ bool init_unit_test()
   // Initialize either with empty logConfig -> default, configs that are read from file
   // or from the Boost Test log level.
   logging::setupLogging(logConfigs);
+  logging::lockConf();
   
 
   // Sets the default tolerance for floating point comparisions
