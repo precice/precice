@@ -39,4 +39,12 @@ void setupLogging(LoggingConfiguration configs, bool enabled = true);
 /// Sets the current MPI rank as a logging attribute
 void setMPIRank(int const rank);
 
+/// Locks the configuration, ignoring any future calls to setupLogging()
+void lockConf();
+
+/** The global lock for the log configuration.
+ * This variable is always initialized to false and can only be modified by calling lockConf()
+ */
+extern bool _precice_logging_config_lock;
+
 }} // namespace precice, logging
