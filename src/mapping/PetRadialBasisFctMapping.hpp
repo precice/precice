@@ -770,24 +770,32 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
       return; // Ranks not at the interface should never hold interface vertices
 
   // Tags all vertices that are inside otherMesh's bounding box, enlarged by the support radius
-  for(mesh::Vertex& v : filterMesh->vertices()) {
-    bool isInside = true;
-    #if PETSC_MAJOR >= 3 and PETSC_MINOR >= 8
-    if (_basisFunction.hasCompactSupport()) {
-      for (int d = 0; d < v.getDimensions(); d++) {
-        if (v.getCoords()[d] < otherMesh->getBoundingBox()[d].first - _basisFunction.getSupportRadius() or
-            v.getCoords()[d] > otherMesh->getBoundingBox()[d].second + _basisFunction.getSupportRadius() ) {
-          isInside = false;
-          break;
-        }
-      }
+  if (
+#if PETSC_MAJOR >= 3 and PETSC_MINOR >= 8
+      _basisFunction.hasCompactSupport()
+#else
+      false
+#warning "Mesh filtering deactivated, due to PETSc version < 3.8. \
+      preCICE is fully functional, but performance for large cases is degraded."
+#endif
+     )
+  {
+    auto rtree = mesh::rtree::getVertexRTree(filterMesh);
+    namespace bgi = boost::geometry::index;
+    auto bb = otherMesh->getBoundingBox();
+    // Enlarge by support radius
+    for (int d = 0; d < otherMesh->getDimensions(); d++){
+      bb[d].first -= _basisFunction.getSupportRadius();
+      bb[d].second += _basisFunction.getSupportRadius();
     }
-    #else
-      #warning "Mesh filtering deactivated, due to PETSc version < 3.8. \
-preCICE is fully functional, but performance for large cases is degraded."
-    #endif
-    if (isInside)
-      v.tag();
+    rtree->query(bgi::within(bb),
+        boost::make_function_output_iterator([&filterMesh](size_t idx){
+          filterMesh->vertices()[idx].tag();
+          }));
+  }
+  else {
+    for (auto& vert : filterMesh->vertices())
+      vert.tag();
   }
 }
 
@@ -825,19 +833,17 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
       }
     }
   }
-  // Tag vertices that are inside the bounding box + support radius
-  for (mesh::Vertex& v : mesh->vertices()) {
-    bool isInside = true;
-    for (int d = 0; d < v.getDimensions(); d++) {
-      if (v.getCoords()[d] < bb[d].first - _basisFunction.getSupportRadius() or
-          v.getCoords()[d] > bb[d].second + _basisFunction.getSupportRadius() ) {
-        isInside = false;
-        break;
-      }
-    }
-    if (isInside)
-      v.tag();
+
+  // Enlarge bb by support radius
+  for (int d = 0; d < mesh->getDimensions(); d++){
+    bb[d].first -= _basisFunction.getSupportRadius();
+    bb[d].second += _basisFunction.getSupportRadius();
   }
+  auto rtree = mesh::rtree::getVertexRTree(mesh);
+  rtree->query(boost::geometry::index::within(bb),
+      boost::make_function_output_iterator([&mesh](size_t idx){
+        mesh->vertices()[idx].tag();
+      }));
 }
 
 
