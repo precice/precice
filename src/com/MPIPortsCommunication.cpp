@@ -206,7 +206,7 @@ MPI_Comm &MPIPortsCommunication::communicator(int rank)
   return _communicators.at(rank);
 }
 
-int MPIPortsCommunication::rank(int rank)
+int MPIPortsCommunication::rank(int /* rank */)
 {
   return 0;
 }

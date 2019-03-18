@@ -271,7 +271,7 @@ void MappingConfiguration:: xmlTagCallback
   }
 }
 
-void MappingConfiguration::xmlEndTagCallback(xml::XMLTag& tag)
+void MappingConfiguration::xmlEndTagCallback(xml::XMLTag& /* tag */)
 {
 }
 

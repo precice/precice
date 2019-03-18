@@ -146,7 +146,7 @@ MasterSlave::reduceSum(double* sendData, double* rcvData, int size) {
 }
 
 void
-MasterSlave::reduceSum(int& sendData, int& rcvData, int size) {
+MasterSlave::reduceSum(int& sendData, int& rcvData, int /* size */) {
   TRACE();
 
   if (not _masterMode && not _slaveMode) {
@@ -190,7 +190,7 @@ MasterSlave::allreduceSum(double* sendData, double* rcvData, int size) {
 }
 
 void
-MasterSlave::allreduceSum(double& sendData, double& rcvData, int size) {
+MasterSlave::allreduceSum(double& sendData, double& rcvData, int /* size */) {
   TRACE();
 
   if (not _masterMode && not _slaveMode) {
@@ -212,7 +212,7 @@ MasterSlave::allreduceSum(double& sendData, double& rcvData, int size) {
 }
 
 void
-MasterSlave::allreduceSum(int& sendData, int& rcvData, int size) {
+MasterSlave::allreduceSum(int& sendData, int& rcvData, int /* size */) {
   TRACE();
 
   if (not _masterMode && not _slaveMode) {

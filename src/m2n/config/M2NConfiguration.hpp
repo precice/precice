@@ -45,7 +45,7 @@ public:
 
   virtual void xmlTagCallback(xml::XMLTag &callingTag);
 
-  virtual void xmlEndTagCallback(xml::XMLTag &callingTag) {}
+  virtual void xmlEndTagCallback(xml::XMLTag &/* callingTag */) {}
 
 private:
   logging::Logger _log{"m2n::M2NConfiguration"};

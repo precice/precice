@@ -20,10 +20,10 @@ ComputeCurvatureAction::ComputeCurvatureAction(
 }
 
 void ComputeCurvatureAction::performAction(
-    double time,
-    double dt,
-    double computedPartFullDt,
-    double fullDt)
+    double /* time */,
+    double /* dt */,
+    double /* computedPartFullDt */,
+    double /* fullDt */)
 {
   TRACE();
   auto &dataValues = _data->values();

@@ -70,7 +70,7 @@ void Participant:: useMesh
 (
   const mesh::PtrMesh&                          mesh,
   const Eigen::VectorXd&                        localOffset,
-  bool                                          remote,
+  bool                                          /* remote */,
   const std::string&                            fromParticipant,
   double                                        safetyFactor,
   bool                                          provideMesh,

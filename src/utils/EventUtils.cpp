@@ -241,7 +241,7 @@ void EventRegistry::clear()
   storedEvents.clear();
 }
 
-void EventRegistry::signal_handler(int signal)
+void EventRegistry::signal_handler(int /* signal */)
 {
   if (initialized) {
     finalize();

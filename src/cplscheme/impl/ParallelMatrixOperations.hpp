@@ -89,7 +89,7 @@ public:
       const Eigen::MatrixBase<Derived1> &leftMatrix,
       const Eigen::MatrixBase<Derived2> &rightMatrix,
       Eigen::PlainObjectBase<Derived3> & result,
-      int p, int q, int r)
+      int p, int /* q */, int r)
   {
     TRACE();
     assertion(leftMatrix.rows() == p, leftMatrix.rows(), p);
@@ -118,7 +118,7 @@ private:
       Eigen::PlainObjectBase<Derived2> &rightMatrix,
       Eigen::PlainObjectBase<Derived2> &result,
       const std::vector<int> &          offsets,
-      int p, int q, int r)
+      int p, int q, int /* r */)
   {
     TRACE();
     /*
@@ -222,7 +222,7 @@ private:
       Eigen::PlainObjectBase<Derived2> &rightMatrix,
       Eigen::PlainObjectBase<Derived2> &result,
       const std::vector<int> &          offsets,
-      int p, int q, int r)
+      int /* p */, int /* q */, int r)
   {
     TRACE();
     for (int i = 0; i < leftMatrix.rows(); i++) {
@@ -259,7 +259,7 @@ private:
       Eigen::PlainObjectBase<Derived2> &rightMatrix,
       Eigen::PlainObjectBase<Derived2> &result,
       const std::vector<int> &          offsets,
-      int p, int q, int r)
+      int p, int /* q */, int r)
   {
     TRACE();
 

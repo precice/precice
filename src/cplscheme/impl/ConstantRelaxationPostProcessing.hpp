@@ -34,7 +34,7 @@ public:
 
   virtual void performPostProcessing(DataMap &cplData);
 
-  virtual void iterationsConverged(DataMap &cplData)
+  virtual void iterationsConverged(DataMap & /* cplData */)
   {
   }
 

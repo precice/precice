@@ -65,11 +65,11 @@ public:
    * @brief Sets whether the solver has to evaluate the coarse or the fine model representation
    *        steers the coupling scheme and the post processing. Only needed for multilevel based PPs.
    */
-  virtual void setCoarseModelOptimizationActive(bool *coarseOptimizationActive){};
+  virtual void setCoarseModelOptimizationActive(bool * /* coarseOptimizationActive */){};
 
-  virtual void exportState(io::TXTWriter &writer) {}
+  virtual void exportState(io::TXTWriter & /* writer */) {}
 
-  virtual void importState(io::TXTReader &reader) {}
+  virtual void importState(io::TXTReader & /* reader */) {}
 
   /**
    * @brief performs one optimization step of the optimization problem

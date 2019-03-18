@@ -44,7 +44,7 @@ class colorized_severity_formatter_factory :
     public boost::log::formatter_factory<char>
 {
 public:
-  formatter_type create_formatter(boost::log::attribute_name const& name, args_map const& args)
+  formatter_type create_formatter(boost::log::attribute_name const& /* name */, args_map const& /* args */)
   {
     namespace expr = boost::log::expressions;
     auto severity = expr::attr<boost::log::trivial::severity_level>("Severity");
@@ -69,7 +69,7 @@ class severity_formatter_factory :
     public boost::log::formatter_factory<char>
 {
 public:
-  formatter_type create_formatter(boost::log::attribute_name const& name, args_map const& args)
+  formatter_type create_formatter(boost::log::attribute_name const& /* name */, args_map const& /* args */)
   {
     namespace expr = boost::log::expressions;
     auto severity = expr::attr<boost::log::trivial::severity_level>("Severity");
@@ -105,7 +105,7 @@ private:
 public:
   explicit StreamBackend(boost::shared_ptr<std::ostream> ostream) : _ostream(ostream) {}
   
-  void consume(boost::log::record_view const& rec, string_type const& formatted_record)
+  void consume(boost::log::record_view const& /* rec */, string_type const& formatted_record)
   {
     *_ostream << formatted_record << std::endl << std::flush;
   }

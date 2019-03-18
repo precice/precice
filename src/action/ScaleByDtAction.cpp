@@ -24,7 +24,7 @@ ScaleByDtAction::ScaleByDtAction(
 }
 
 void ScaleByDtAction::performAction(
-    double time,
+    double /* time */,
     double dt,
     double computedPartFullDt,
     double fullDt)

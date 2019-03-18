@@ -184,12 +184,12 @@ BarycentricCoordsAndProjected calcBarycentricCoordsForTriangle(
 }
 
 BarycentricCoordsAndProjected calcBarycentricCoordsForQuad(
-    const Eigen::VectorXd &a,
-    const Eigen::VectorXd &b,
-    const Eigen::VectorXd &c,
-    const Eigen::VectorXd &d,
-    const Eigen::VectorXd &normal,
-    const Eigen::VectorXd &location)
+    const Eigen::VectorXd & /* a */,
+    const Eigen::VectorXd & /* b */,
+    const Eigen::VectorXd & /* c */,
+    const Eigen::VectorXd & /* d */,
+    const Eigen::VectorXd & /* normal */,
+    const Eigen::VectorXd & /* location */)
 {
   assertion("Interpolation on Quads is not implemented!");
   return {};

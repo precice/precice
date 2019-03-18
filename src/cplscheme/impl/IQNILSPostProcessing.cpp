@@ -232,7 +232,7 @@ void IQNILSPostProcessing::computeQNUpdate(PostProcessing::DataMap &cplData, Eig
 }
 
 void IQNILSPostProcessing::specializedIterationsConverged(
-    DataMap &cplData)
+    DataMap & /* cplData */)
 {
   if (_matrixCols.front() == 0) { // Did only one iteration
     _matrixCols.pop_front();

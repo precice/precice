@@ -41,10 +41,10 @@ public:
                                 std::string const &requesterName,
                                 int                acceptorRank) override;
 
-  virtual void acceptConnectionAsServer(std::string const &acceptorName,
-                                        std::string const &requesterName,
-                                        int                acceptorRank,
-                                        int                requesterCommunicatorSize) override
+  virtual void acceptConnectionAsServer(std::string const & /* acceptorName */,
+                                        std::string const & /* requesterName */,
+                                        int                 /* acceptorRank */,
+                                        int                 /* requesterCommunicatorSize */) override
   {
     assertion(false, "Not implemented!");
   }
@@ -55,10 +55,10 @@ public:
                                  int                requesterRank,
                                  int                requesterCommunicatorSize) override;
 
-  virtual void requestConnectionAsClient(std::string   const &acceptorName,
-                                         std::string   const &requesterName,
-                                         std::set<int> const &acceptorRanks,
-                                         int                  requesterRank) override
+  virtual void requestConnectionAsClient(std::string   const & /* acceptorName */,
+                                         std::string   const & /* requesterName */,
+                                         std::set<int> const & /* acceptorRanks */,
+                                         int                   /* requesterRank */) override
   {
     assertion(false, "Not implemented!");
   }

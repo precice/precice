@@ -23,7 +23,7 @@ void ResidualSumPreconditioner::initialize(std::vector<size_t> &svs)
 }
 
 void ResidualSumPreconditioner::_update_(bool timestepComplete,
-                                         const Eigen::VectorXd &oldValues,
+                                         const Eigen::VectorXd & /* oldValues */,
                                          const Eigen::VectorXd &res)
 {
   if (not timestepComplete) {

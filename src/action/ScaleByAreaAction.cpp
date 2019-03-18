@@ -20,10 +20,10 @@ ScaleByAreaAction::ScaleByAreaAction(
 }
 
 void ScaleByAreaAction::performAction(
-    double time,
-    double dt,
-    double computedPartFullDt,
-    double fullDt)
+    double /* time */,
+    double /* dt */,
+    double /* computedPartFullDt */,
+    double /* fullDt */)
 {
   TRACE();
   CHECK(getMesh()->getDimensions() == 2, "Not implemented for dimension != 2!");

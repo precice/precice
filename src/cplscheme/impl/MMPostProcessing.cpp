@@ -288,7 +288,7 @@ std::map<int, Eigen::VectorXd> MMPostProcessing::getDesignSpecification(
  *  ---------------------------------------------------------------------------------------------
  */
 void MMPostProcessing::updateDifferenceMatrices(
-    DataMap &cplData)
+    DataMap & /* cplData */)
 {
   TRACE();
 
@@ -784,12 +784,12 @@ void MMPostProcessing::removeMatrixColumn(
 }
 
 void MMPostProcessing::exportState(
-    io::TXTWriter &writer)
+    io::TXTWriter & /* writer */)
 {
 }
 
 void MMPostProcessing::importState(
-    io::TXTReader &reader)
+    io::TXTReader & /* reader */)
 {
 }
 

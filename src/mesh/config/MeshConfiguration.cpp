@@ -110,7 +110,7 @@ void MeshConfiguration:: xmlTagCallback
 
 void MeshConfiguration:: xmlEndTagCallback
 (
-  xml::XMLTag& tag )
+  xml::XMLTag& /* tag */ )
 {
 }
 

@@ -425,7 +425,7 @@ void MVQNPostProcessing::buildJacobian()
 
 // ==================================================================================
 void MVQNPostProcessing::computeNewtonUpdateEfficient(
-    PostProcessing::DataMap &cplData,
+    PostProcessing::DataMap & /* cplData */,
     Eigen::VectorXd &        xUpdate)
 {
   TRACE();
@@ -524,7 +524,7 @@ void MVQNPostProcessing::computeNewtonUpdateEfficient(
 }
 
 // ==================================================================================
-void MVQNPostProcessing::computeNewtonUpdate(PostProcessing::DataMap &cplData, Eigen::VectorXd &xUpdate)
+void MVQNPostProcessing::computeNewtonUpdate(PostProcessing::DataMap & /* cplData */, Eigen::VectorXd &xUpdate)
 {
   TRACE();
   
@@ -747,7 +747,7 @@ void MVQNPostProcessing::restartIMVJ()
 
 // ==================================================================================
 void MVQNPostProcessing::specializedIterationsConverged(
-    DataMap &cplData)
+    DataMap & /* cplData */)
 {
   TRACE();
   

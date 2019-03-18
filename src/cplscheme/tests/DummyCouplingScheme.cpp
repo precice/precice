@@ -17,7 +17,7 @@ DummyCouplingScheme:: DummyCouplingScheme
 
 void DummyCouplingScheme:: initialize
 (
-  double startTime,
+  double  /* startTime */,
   int    startTimesteps )
 {
   assertion(not _isInitialized);

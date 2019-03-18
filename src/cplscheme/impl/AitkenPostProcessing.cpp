@@ -111,7 +111,7 @@ void AitkenPostProcessing::performPostProcessing(
 }
 
 void AitkenPostProcessing::iterationsConverged(
-    DataMap &cplData)
+    DataMap & /* cplData */)
 {
   _iterationCounter = 0;
   _residuals        = Eigen::VectorXd::Constant(_residuals.size(), std::numeric_limits<double>::max());

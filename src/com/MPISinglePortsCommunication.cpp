@@ -145,8 +145,8 @@ void MPISinglePortsCommunication::requestConnection(std::string const &acceptorN
 
 void MPISinglePortsCommunication::requestConnectionAsClient(std::string      const &acceptorName,
                                                             std::string      const &requesterName,
-                                                            std::set<int>    const &acceptorRanks,
-                                                            int                     requesterRank)
+                                                            std::set<int>    const & /* acceptorRanks */,
+                                                            int                      /* requesterRank */)
                                                       
 {
   TRACE(acceptorName, requesterName);
@@ -189,7 +189,7 @@ void MPISinglePortsCommunication::closeConnection()
   _isConnected = false;
 }
 
-MPI_Comm &MPISinglePortsCommunication::communicator(int rank)
+MPI_Comm &MPISinglePortsCommunication::communicator(int /* rank */)
 {
   return _communicators[0];
 }

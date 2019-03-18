@@ -20,10 +20,10 @@ ModifyCoordinatesAction::ModifyCoordinatesAction(
 }
 
 void ModifyCoordinatesAction::performAction(
-    double time,
-    double dt,
-    double computedPartFullDt,
-    double fullDt)
+    double /* time */,
+    double /* dt */,
+    double /* computedPartFullDt */,
+    double /* fullDt */)
 {
   TRACE();
   auto &          values = _data->values();

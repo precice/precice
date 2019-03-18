@@ -64,7 +64,7 @@ void BroydenPostProcessing::updateDifferenceMatrices(
   BaseQNPostProcessing::updateDifferenceMatrices(cplData);
 }
 
-void BroydenPostProcessing::computeQNUpdate(PostProcessing::DataMap &cplData, Eigen::VectorXd &xUpdate)
+void BroydenPostProcessing::computeQNUpdate(PostProcessing::DataMap & /* cplData */, Eigen::VectorXd &xUpdate)
 {
   TRACE();
 
@@ -111,7 +111,7 @@ void BroydenPostProcessing::computeQNUpdate(PostProcessing::DataMap &cplData, Ei
 }
 
 void BroydenPostProcessing::specializedIterationsConverged(
-    DataMap &cplData)
+    DataMap & /* cplData */)
 {
   _currentColumns = 0;
   // store old Jacobian

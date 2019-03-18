@@ -32,7 +32,7 @@ size_t MPIDirectCommunication::getRemoteCommunicatorSize()
 
 void MPIDirectCommunication::acceptConnection(std::string const &acceptorName,
                                               std::string const &requesterName,
-                                              int                acceptorRank)
+                                              int             /* acceptorRank */)
 {
   TRACE(acceptorName, requesterName);
   assertion(not isConnected());
@@ -67,8 +67,8 @@ void MPIDirectCommunication::closeConnection()
 
 void MPIDirectCommunication::requestConnection(std::string const &acceptorName,
                                                std::string const &requesterName,
-                                               int                requesterRank,
-                                               int                requesterCommunicatorSize)
+                                               int             /* requesterRank */,
+                                               int             /* requesterCommunicatorSize */)
 {
   TRACE(acceptorName, requesterName);
   assertion(not isConnected());
@@ -157,7 +157,7 @@ void MPIDirectCommunication::allreduceSum(double *itemsToSend, double *itemsToRe
   MPI_Allreduce(itemsToSend, itemsToReceive, size, MPI_DOUBLE, MPI_SUM, _globalCommunicator);
 }
 
-void MPIDirectCommunication::allreduceSum(double *itemsToSend, double *itemsToReceive, int size, int rankMaster)
+void MPIDirectCommunication::allreduceSum(double *itemsToSend, double *itemsToReceive, int size, int /* rankMaster */)
 {
   TRACE(size);
   // _comunicator did't work here as we seem to have two communicators, one with the master and one with the slaves
@@ -171,7 +171,7 @@ void MPIDirectCommunication::allreduceSum(double itemToSend, double &itemToRecei
   MPI_Allreduce(&itemToSend, &itemToReceive, 1, MPI_DOUBLE, MPI_SUM, _globalCommunicator);
 }
 
-void MPIDirectCommunication::allreduceSum(double itemToSend, double &itemToReceive, int rankMaster)
+void MPIDirectCommunication::allreduceSum(double itemToSend, double &itemToReceive, int /* rankMaster */)
 {
   TRACE();
   // _comunicator did't work here as we seem to have two communicators, one with the master and one with the slaves
@@ -185,7 +185,7 @@ void MPIDirectCommunication::allreduceSum(int itemToSend, int &itemToReceive)
   MPI_Allreduce(&itemToSend, &itemToReceive, 1, MPI_INT, MPI_SUM, _globalCommunicator);
 }
 
-void MPIDirectCommunication::allreduceSum(int itemToSend, int &itemToReceive, int rankMaster)
+void MPIDirectCommunication::allreduceSum(int itemToSend, int &itemToReceive, int /* rankMaster */)
 {
   TRACE();
   // _comunicator did't work here as we seem to have two communicators, one with the master and one with the slaves
@@ -259,7 +259,7 @@ void MPIDirectCommunication::broadcast(bool &itemToReceive, int rankBroadcaster)
   itemToReceive = item;
 }
 
-MPI_Comm &MPIDirectCommunication::communicator(int rank)
+MPI_Comm &MPIDirectCommunication::communicator(int /* rank */)
 {
   return _communicator;
 }

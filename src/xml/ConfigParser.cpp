@@ -13,11 +13,11 @@ void OnStartElementNs(
     void *          ctx,
     const xmlChar * localname,
     const xmlChar * prefix,
-    const xmlChar * URI,
-    int             nb_namespaces,
-    const xmlChar **namespaces,
+    const xmlChar * /* URI */,
+    int             /* nb_namespaces */,
+    const xmlChar ** /* namespaces */,
     int             nb_attributes,
-    int             nb_defaulted,
+    int             /* nb_defaulted */,
     const xmlChar **attributes)
 {
   ConfigParser::CTag::AttributePair attributesMap;
@@ -41,9 +41,9 @@ void OnStartElementNs(
 
 void OnEndElementNs(
     void *         ctx,
-    const xmlChar *localname,
-    const xmlChar *prefix,
-    const xmlChar *URI)
+    const xmlChar * /* localname */,
+    const xmlChar * /* prefix */,
+    const xmlChar * /* URI */)
 {
   ConfigParser *pParser = static_cast<ConfigParser *>(ctx);
   pParser->OnEndElement();
@@ -84,7 +84,7 @@ ConfigParser::ConfigParser(const std::string &filePath)
   readXmlFile(filePath);
 }
 
-void ConfigParser::GenericErrorFunc(void *ctx, const char *msg, ...)
+void ConfigParser::GenericErrorFunc(void * /* ctx */, const char *msg, ...)
 {
   const int TMP_BUF_SIZE = 256;
 
@@ -195,7 +195,7 @@ void ConfigParser::OnEndElement()
   m_CurrentTags.pop_back();
 }
 
-void ConfigParser::OnTextSection(std::string ch)
+void ConfigParser::OnTextSection(std::string /* ch */)
 {
   // This page intentionally left blank
 }

@@ -12,7 +12,7 @@ ResidualPreconditioner::ResidualPreconditioner(int maxNonConstTimesteps)
 {}
 
 void ResidualPreconditioner::_update_(bool timestepComplete,
-                                      const Eigen::VectorXd &oldValues,
+                                      const Eigen::VectorXd & /* oldValues */,
                                       const Eigen::VectorXd &res)
 {
   if (not timestepComplete) {

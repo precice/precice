@@ -12,27 +12,27 @@
 namespace precice {
 namespace utils {
 
-inline std::string getTypeName(const double& var)
+inline std::string getTypeName(const double&)
 {
   return "float";
 }
 
-inline std::string getTypeName(const std::string& var)
+inline std::string getTypeName(const std::string&)
 {
   return "string";
 }
 
-inline std::string getTypeName(const bool& var)
+inline std::string getTypeName(const bool&)
 {
   return "boolean";
 }
 
-inline std::string getTypeName(const int& var)
+inline std::string getTypeName(const int&)
 {
   return "integer";
 }
 
-inline std::string getTypeName(Eigen::VectorXd const & var)
+inline std::string getTypeName(Eigen::VectorXd const &)
 {
   return "vector";
 }

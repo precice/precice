@@ -26,7 +26,7 @@ public:
   virtual void xmlTagCallback ( xml::XMLTag& callingTag );
 
   /// Callback from automatic configuration. Not utilitzed here.
-  virtual void xmlEndTagCallback ( xml::XMLTag& callingTag ) {}
+  virtual void xmlEndTagCallback ( xml::XMLTag& /* callingTag */ ) {}
 
   void resetExports() { _contexts.clear(); }
 

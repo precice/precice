@@ -69,7 +69,7 @@ void DataConfiguration:: xmlTagCallback
 
 void DataConfiguration:: xmlEndTagCallback
 (
-  xml::XMLTag& tag )
+  xml::XMLTag& /* tag */ )
 {
 }
 

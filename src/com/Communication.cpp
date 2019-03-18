@@ -24,7 +24,7 @@ void Communication::reduceSum(double *itemsToSend, double *itemsToReceive, int s
   }
 }
 
-void Communication::reduceSum(double *itemsToSend, double *itemsToReceive, int size, int rankMaster)
+void Communication::reduceSum(double *itemsToSend, double * /* itemsToReceive */, int size, int rankMaster)
 {
   TRACE(size);
 
@@ -46,7 +46,7 @@ void Communication::reduceSum(int itemToSend, int &itemToReceive)
   }
 }
 
-void Communication::reduceSum(int itemToSend, int &itemToReceive, int rankMaster)
+void Communication::reduceSum(int itemToSend, int & /* itemToReceive */, int rankMaster)
 {
   TRACE();
 

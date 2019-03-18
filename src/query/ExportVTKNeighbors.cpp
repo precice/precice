@@ -6,15 +6,15 @@ namespace query {
 
 void ExportVTKNeighbors:: addNeighbors
 (
-  const Eigen::VectorXd& queryPoint,
-  const ClosestElement&  closestNeighbor )
+  const Eigen::VectorXd& /* queryPoint */,
+  const ClosestElement&  /* closestNeighbor */ )
 {
 //  _neighbors += std::pair<utils::DynVector,ClosestElement>(queryPoint,closestNeighbor);
 }
 
 void ExportVTKNeighbors:: exportNeighbors
 (
-  const std::string& filename )
+  const std::string& /* filename */ )
 {
   //  using tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter;
   //  using tarch::plotter::griddata::unstructured::UnstructuredGridWriter;

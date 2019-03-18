@@ -65,7 +65,7 @@ VertexIterator & VertexIterator:: operator=
     return *this;
 }
 
-VertexIterator VertexIterator:: operator++(int unused)
+VertexIterator VertexIterator:: operator++(int)
 {
   VertexIterator cpy(*this);
   this->operator++();
@@ -175,7 +175,7 @@ EdgeIterator & EdgeIterator:: operator=(const EdgeIterator& other)
     return *this;
 }
 
-EdgeIterator EdgeIterator:: operator++(int unused)
+EdgeIterator EdgeIterator:: operator++(int)
 {
   EdgeIterator cpy(*this);
   this->operator++();
@@ -286,7 +286,7 @@ TriangleIterator & TriangleIterator:: operator=(const TriangleIterator& other)
     return *this;
 }
 
-TriangleIterator TriangleIterator:: operator++(int unused)
+TriangleIterator TriangleIterator:: operator++(int)
 {
   TriangleIterator cpy(*this);
   this->operator++();

@@ -223,7 +223,7 @@ std::map<int, Eigen::VectorXd> BaseQNPostProcessing::getDesignSpecification(
  *  ---------------------------------------------------------------------------------------------
  */
 void BaseQNPostProcessing::updateDifferenceMatrices(
-    DataMap &cplData)
+    DataMap & /* cplData */)
 {
   TRACE();
   
@@ -646,12 +646,12 @@ void BaseQNPostProcessing::removeMatrixColumn(
 }
 
 void BaseQNPostProcessing::exportState(
-    io::TXTWriter &writer)
+    io::TXTWriter & /* writer */)
 {
 }
 
 void BaseQNPostProcessing::importState(
-    io::TXTReader &reader)
+    io::TXTReader & /* reader */)
 {
 }
 

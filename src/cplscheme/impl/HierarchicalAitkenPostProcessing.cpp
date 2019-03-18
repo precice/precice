@@ -209,7 +209,7 @@ void HierarchicalAitkenPostProcessing::performPostProcessing(
 }
 
 void HierarchicalAitkenPostProcessing::iterationsConverged(
-    DataMap &cplData)
+    DataMap & /* cplData */)
 {
   _iterationCounter = 0;
   _residual         = Eigen::VectorXd::Constant(_residual.size(), std::numeric_limits<double>::max());

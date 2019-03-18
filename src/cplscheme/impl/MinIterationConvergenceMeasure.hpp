@@ -21,9 +21,9 @@ public:
   virtual void newMeasurementSeries();
 
   virtual void measure(
-      const Eigen::VectorXd &oldValues,
-      const Eigen::VectorXd &newValues,
-      const Eigen::VectorXd &designSpecification)
+      const Eigen::VectorXd & /* oldValues */,
+      const Eigen::VectorXd & /* newValues */,
+      const Eigen::VectorXd & /* designSpecification */)
   {
     TRACE();
     _currentIteration++;

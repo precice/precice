@@ -17,7 +17,7 @@ void ExportVTKVoxelQueries:: addQuery
 
 void ExportVTKVoxelQueries:: exportQueries
 (
-  std::string filename )
+  std::string /* filename */ )
 {
 //  using tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter;
 //  using tarch::plotter::griddata::unstructured::UnstructuredGridWriter;

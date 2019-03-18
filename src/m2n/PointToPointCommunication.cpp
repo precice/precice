@@ -533,7 +533,7 @@ void PointToPointCommunication::closeConnection()
 }
 
 void PointToPointCommunication::send(double *itemsToSend,
-                                     size_t  size,
+                                     size_t  /* size */,
                                      int     valueDimension)
 {
 

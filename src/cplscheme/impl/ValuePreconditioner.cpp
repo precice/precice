@@ -17,7 +17,7 @@ ValuePreconditioner::ValuePreconditioner(
 
 void ValuePreconditioner::_update_(bool timestepComplete,
                                    const Eigen::VectorXd &oldValues,
-                                   const Eigen::VectorXd &res)
+                                   const Eigen::VectorXd & /* res */)
 {
   if (timestepComplete || _firstTimestep) {
 
