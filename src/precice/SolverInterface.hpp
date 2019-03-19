@@ -48,6 +48,9 @@ namespace PreciceTests {
     struct testCouplingModeWithOneServer;
     struct testCouplingModeParallelWithOneServer;
   }
+  namespace SolverInterfaceImpl {
+      struct MeshInfo;
+  }
 }
 
 // ----------------------------------------------------------- CLASS DEFINITION
@@ -855,6 +858,7 @@ private:
   friend struct PreciceTests::Serial::testMappingNearestProjection;
   friend struct PreciceTests::Server::testCouplingModeWithOneServer;
   friend struct PreciceTests::Server::testCouplingModeParallelWithOneServer;
+  friend struct PreciceTests::SolverInterfaceImpl::MeshInfo;
 
 };
 

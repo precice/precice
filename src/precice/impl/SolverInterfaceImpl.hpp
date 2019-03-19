@@ -30,6 +30,9 @@ namespace PreciceTests {
   namespace Serial {
     struct TestConfiguration;
   }
+  namespace SolverInterfaceImpl {
+    struct MeshInfo;
+  }
 }
 
 namespace precice {
@@ -619,6 +622,7 @@ private:
 
   /// To allow white box tests.
   friend struct PreciceTests::Serial::TestConfiguration;
+  friend struct PreciceTests::SolverInterfaceImpl::MeshInfo;
 
   /// Makes a MeshInfo bound to this SolverInterface
   MeshInfo makeMeshInfo(int meshID) const {
