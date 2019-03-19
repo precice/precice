@@ -15,7 +15,7 @@ extern bool testMode;
 }
 
 
-struct ServerTestFixture {
+struct ServerTestFixture : testing::WhiteboxFixture {
   std::string _pathToTests;
 
   void reset(){
@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(testCouplingModeWithOneServer,
     SolverInterface interface("ParticipantA", 0, 1);
     config::Configuration config;
     xml::configure(config.getXMLTag(), configFile);
-    interface._impl->configure(config.getSolverInterfaceConfiguration());
+    impl(interface).configure(config.getSolverInterfaceConfiguration());
     double time = 0.0;
     int timesteps = 0;
 
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(testCouplingModeWithOneServer,
     SolverInterface interface("ParticipantB", 0, 1);
     config::Configuration config;
     xml::configure(config.getXMLTag(), configFile);
-    interface._impl->configure(config.getSolverInterfaceConfiguration());
+    impl(interface).configure(config.getSolverInterfaceConfiguration());
     double time = 0.0;
     int timesteps = 0;
     double dt = interface.initialize();
@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(testCouplingModeParallelWithOneServer, * testing::OnSize(4)
     SolverInterface interface("ParticipantA", 0, 1);
     config::Configuration config;
     xml::configure(config.getXMLTag(), configFile);
-    interface._impl->configure(config.getSolverInterfaceConfiguration());
+    impl(interface).configure(config.getSolverInterfaceConfiguration());
     double time = 0.0;
     int timesteps = 0;
 
@@ -151,7 +151,7 @@ BOOST_AUTO_TEST_CASE(testCouplingModeParallelWithOneServer, * testing::OnSize(4)
     SolverInterface interface("ParticipantB", rank-1, 2);
     config::Configuration config;
     xml::configure(config.getXMLTag(), configFile);
-    interface._impl->configure(config.getSolverInterfaceConfiguration());
+    impl(interface).configure(config.getSolverInterfaceConfiguration());
     double time = 0.0;
     int timesteps = 0;
     double dt = interface.initialize();
