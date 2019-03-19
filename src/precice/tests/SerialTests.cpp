@@ -16,7 +16,7 @@
 using namespace precice;
 
 
-struct SerialTestFixture {
+struct SerialTestFixture : testing::WhiteboxFixture {
 
   std::string _pathToTests;
 
@@ -46,12 +46,12 @@ BOOST_AUTO_TEST_CASE(TestConfiguration)
   SolverInterface interfacePeano ("Peano", 0, 1);
   config::Configuration config;
   xml::configure(config.getXMLTag(), filename);
-  interfacePeano._impl->configure(config.getSolverInterfaceConfiguration());
+  impl(interfacePeano).configure(config.getSolverInterfaceConfiguration());
 
-  BOOST_TEST(interfacePeano._impl->_participants.size() == 2);
+  BOOST_TEST(impl(interfacePeano)._participants.size() == 2);
   BOOST_TEST(interfacePeano.getDimensions() == 2);
 
-  impl::PtrParticipant peano = interfacePeano._impl->_participants[0];
+  impl::PtrParticipant peano = impl(interfacePeano)._participants[0];
   BOOST_TEST(peano);
   BOOST_TEST(peano->getName() == "Peano");
   BOOST_TEST(peano->getID() == 0);
@@ -65,11 +65,11 @@ BOOST_AUTO_TEST_CASE(TestConfiguration)
 
   // Test configuration for accessor "Comsol"
   SolverInterface interfaceComsol ("Comsol", 0, 1);
-  interfaceComsol._impl->configure(config.getSolverInterfaceConfiguration());
-  BOOST_TEST(interfaceComsol._impl->_participants.size() == 2);
+  impl(interfaceComsol).configure(config.getSolverInterfaceConfiguration());
+  BOOST_TEST(impl(interfaceComsol)._participants.size() == 2);
   BOOST_TEST(interfaceComsol.getDimensions() == 2);
 
-  impl::PtrParticipant comsol = interfaceComsol._impl->_participants[1];
+  impl::PtrParticipant comsol = impl(interfaceComsol)._participants[1];
   BOOST_TEST(comsol);
   BOOST_TEST(comsol->getName() == "Comsol");
   BOOST_TEST(comsol->getID()== 1);
@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(TestExplicit,
 
     config::Configuration config;
     xml::configure(config.getXMLTag(), configurationFileName);
-    couplingInterface._impl->configure(config.getSolverInterfaceConfiguration());
+    impl(couplingInterface).configure(config.getSolverInterfaceConfiguration());
 
     //was necessary to replace pre-defined geometries
     if(solverName=="SolverOne" && couplingInterface.hasMesh("MeshOne")){
@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithSubcycling,
     SolverInterface precice("SolverOne", 0, 1);
     config::Configuration config;
     xml::configure(config.getXMLTag(), _pathToTests + "explicit-mpi-single.xml");
-    precice._impl->configure(config.getSolverInterfaceConfiguration());
+    impl(precice).configure(config.getSolverInterfaceConfiguration());
 
     double maxDt = precice.initialize();
     int timestep = 0;
@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithSubcycling,
     SolverInterface precice("SolverTwo", 0, 1);
     config::Configuration config;
     xml::configure(config.getXMLTag(), _pathToTests + "explicit-mpi-single.xml");
-    precice._impl->configure(config.getSolverInterfaceConfiguration());
+    impl(precice).configure(config.getSolverInterfaceConfiguration());
     int meshID = precice.getMeshID("Test-Square");
     precice.setMeshVertex(meshID, Eigen::Vector3d(0.0,0.0,0.0).data());
     precice.setMeshVertex(meshID, Eigen::Vector3d(1.0,0.0,0.0).data());
@@ -204,7 +204,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDataExchange,
     SolverInterface cplInterface("SolverOne", 0, 1);
     config::Configuration config;
     xml::configure(config.getXMLTag(), _pathToTests + "explicit-mpi-single.xml");
-    cplInterface._impl->configure(config.getSolverInterfaceConfiguration());
+    impl(cplInterface).configure(config.getSolverInterfaceConfiguration());
 
     int meshOneID = cplInterface.getMeshID("MeshOne");
     /* int squareID = */ cplInterface.getMeshID("Test-Square");
@@ -220,7 +220,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDataExchange,
 
     VertexHandle vertices = cplInterface.getMeshHandle("Test-Square").vertices();
     while (cplInterface.isCouplingOngoing()){
-      cplInterface._impl->resetMesh(meshOneID);
+      impl(cplInterface).resetMesh(meshOneID);
       i = 0;
       for (VertexIterator it = vertices.begin(); it != vertices.end(); it++){
         int index = cplInterface.setMeshVertex(meshOneID, it.vertexCoords());
@@ -251,7 +251,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDataExchange,
     SolverInterface cplInterface("SolverTwo", 0, 1);
     config::Configuration config;
     xml::configure(config.getXMLTag(), _pathToTests + "explicit-mpi-single.xml");
-    cplInterface._impl->configure(config.getSolverInterfaceConfiguration());
+    impl(cplInterface).configure(config.getSolverInterfaceConfiguration());
     int meshID = cplInterface.getMeshID("Test-Square");
     cplInterface.setMeshVertex(meshID, Eigen::Vector3d(0.0,0.0,0.0).data());
     cplInterface.setMeshVertex(meshID, Eigen::Vector3d(1.0,0.0,0.0).data());
@@ -309,7 +309,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDataInitialization,
     SolverInterface cplInterface("SolverOne", 0, 1);
     config::Configuration config;
     xml::configure(config.getXMLTag(), _pathToTests + "explicit-data-init.xml");
-    cplInterface._impl->configure(config.getSolverInterfaceConfiguration());
+    impl(cplInterface).configure(config.getSolverInterfaceConfiguration());
     int meshOneID = cplInterface.getMeshID("MeshOne");
     cplInterface.setMeshVertex(meshOneID, Vector3d(1.0,2.0,3.0).data());
     double maxDt = cplInterface.initialize();
@@ -332,7 +332,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDataInitialization,
     SolverInterface cplInterface("SolverTwo", 0, 1);
     config::Configuration config;
     xml::configure(config.getXMLTag(), _pathToTests + "explicit-data-init.xml");
-    cplInterface._impl->configure(config.getSolverInterfaceConfiguration());
+    impl(cplInterface).configure(config.getSolverInterfaceConfiguration());
     int meshTwoID = cplInterface.getMeshID("MeshTwo");
     Vector3d pos = Vector3d::Zero();
     cplInterface.setMeshVertex(meshTwoID, pos.data());
@@ -372,7 +372,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithBlockDataExchange,
     SolverInterface cplInterface("SolverOne", 0, 1);
     config::Configuration config;
     xml::configure(config.getXMLTag(), _pathToTests + "explicit-mpi-single-non-inc.xml");
-    cplInterface._impl->configure(config.getSolverInterfaceConfiguration());
+    impl(cplInterface).configure(config.getSolverInterfaceConfiguration());
     int meshOneID = cplInterface.getMeshID("MeshOne");
     double maxDt = cplInterface.initialize();
     int forcesID = cplInterface.getDataID("Forces", meshOneID);
@@ -397,7 +397,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithBlockDataExchange,
     Eigen::VectorXi getReadIDs(size);
 
     while (cplInterface.isCouplingOngoing()){
-      cplInterface._impl->resetMesh(meshOneID);
+      impl(cplInterface).resetMesh(meshOneID);
       for (VertexIterator it = vertices.begin(); it != vertices.end(); it++){
         for (int dim=0; dim < 3; dim++){
           writePositions[it.vertexID()*3 + dim] = it.vertexCoords()[dim];
@@ -433,7 +433,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithBlockDataExchange,
           }
           expectedTemperatures[it.vertexID()] = counter + it.vertexCoords()[0];
         }
-        cplInterface._impl->resetMesh(meshOneID);
+        impl(cplInterface).resetMesh(meshOneID);
         cplInterface.setMeshVertices(meshOneID, size, readPositions.data(), readIDs.data());
         cplInterface.mapReadDataTo(meshOneID);
         cplInterface.readBlockVectorData(velocitiesID, size, readIDs.data(),
@@ -452,7 +452,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithBlockDataExchange,
     SolverInterface cplInterface ( "SolverTwo", 0, 1 );
     config::Configuration config;
     xml::configure(config.getXMLTag(), _pathToTests + "explicit-mpi-single-non-inc.xml");
-    cplInterface._impl->configure(config.getSolverInterfaceConfiguration());
+    impl(cplInterface).configure(config.getSolverInterfaceConfiguration());
     int squareID = cplInterface.getMeshID("Test-Square");
     int forcesID = cplInterface.getDataID ( "Forces", squareID );
     int pressuresID = cplInterface.getDataID("Pressures", squareID );
@@ -525,7 +525,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithSolverGeometry,
     SolverInterface couplingInterface("SolverOne", 0, 1);
     config::Configuration config;
     xml::configure(config.getXMLTag(), _pathToTests + "explicit-solvergeometry.xml");
-    couplingInterface._impl->configure(config.getSolverInterfaceConfiguration());
+    impl(couplingInterface).configure(config.getSolverInterfaceConfiguration());
 
     //was necessary to replace pre-defined geometries
     int meshID = couplingInterface.getMeshID("MeshOne");
@@ -545,7 +545,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithSolverGeometry,
     SolverInterface cplInterface ( "SolverTwo", 0, 1 );
     config::Configuration config;
     xml::configure(config.getXMLTag(), _pathToTests + "explicit-solvergeometry.xml");
-    cplInterface._impl->configure(config.getSolverInterfaceConfiguration());
+    impl(cplInterface).configure(config.getSolverInterfaceConfiguration());
     BOOST_TEST(cplInterface.getDimensions() == 3);
     int meshID = cplInterface.getMeshID ( "SolverGeometry" );
     int i0 = cplInterface.setMeshVertex(meshID, Eigen::Vector3d(0.0,0.0,0.0).data());
@@ -592,7 +592,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDisplacingGeometry,
     SolverInterface cplInterface ( "SolverOne", 0, 1 );
     config::Configuration config;
     xml::configure(config.getXMLTag(), _pathToTests + "explicit-solvergeometry.xml");
-    cplInterface._impl->configure(config.getSolverInterfaceConfiguration());
+    impl(cplInterface).configure(config.getSolverInterfaceConfiguration());
     double dt = cplInterface.initialize();
 
     int meshID = cplInterface.getMeshID("SolverGeometry");
@@ -628,7 +628,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDisplacingGeometry,
     SolverInterface cplInterface ( "SolverTwo", 0, 1 );
     config::Configuration config;
     xml::configure(config.getXMLTag(), _pathToTests + "explicit-solvergeometry.xml");
-    cplInterface._impl->configure(config.getSolverInterfaceConfiguration());
+    impl(cplInterface).configure(config.getSolverInterfaceConfiguration());
     int meshID = cplInterface.getMeshID("SolverGeometry");
     int i0 = cplInterface.setMeshVertex(meshID, zero.data());
     int i1 = cplInterface.setMeshVertex(meshID, one.data());
@@ -691,7 +691,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDataScaling,
     SolverInterface cplInterface ( "SolverOne", 0, 1 );
     config::Configuration config;
     xml::configure(config.getXMLTag(), _pathToTests + "explicit-datascaling.xml");
-    cplInterface._impl->configure(config.getSolverInterfaceConfiguration());
+    impl(cplInterface).configure(config.getSolverInterfaceConfiguration());
     BOOST_TEST ( cplInterface.getDimensions() == 2 );
 
     int meshID = cplInterface.getMeshID("Test-Square");
@@ -719,7 +719,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDataScaling,
     SolverInterface cplInterface ( "SolverTwo", 0, 1 );
     config::Configuration config;
     xml::configure(config.getXMLTag(), _pathToTests + "explicit-datascaling.xml");
-    cplInterface._impl->configure(config.getSolverInterfaceConfiguration());
+    impl(cplInterface).configure(config.getSolverInterfaceConfiguration());
     BOOST_TEST ( cplInterface.getDimensions() == 2 );
     dt = cplInterface.initialize();
     int meshID = cplInterface.getMeshID("Test-Square");
@@ -759,7 +759,7 @@ BOOST_AUTO_TEST_CASE(testImplicit,
     SolverInterface couplingInterface("SolverOne", 0, 1);
     config::Configuration config;
     xml::configure(config.getXMLTag(), _pathToTests + "implicit.xml");
-    couplingInterface._impl->configure(config.getSolverInterfaceConfiguration());
+    impl(couplingInterface).configure(config.getSolverInterfaceConfiguration());
 
     int meshID = couplingInterface.getMeshID("Square");
     double pos[3];
@@ -799,7 +799,7 @@ BOOST_AUTO_TEST_CASE(testImplicit,
     SolverInterface couplingInterface("SolverTwo", 0, 1);
     config::Configuration config;
     xml::configure(config.getXMLTag(), _pathToTests + "implicit.xml");
-    couplingInterface._impl->configure(config.getSolverInterfaceConfiguration());
+    impl(couplingInterface).configure(config.getSolverInterfaceConfiguration());
     double maxDt = couplingInterface.initialize();
     while (couplingInterface.isCouplingOngoing()){
       if (couplingInterface.isActionRequired(actionWriteIterationCheckpoint())){
@@ -851,12 +851,12 @@ BOOST_AUTO_TEST_CASE(testStationaryMappingWithSolverMesh,
     if (dim == 2){
       config::Configuration config;
       xml::configure(config.getXMLTag(), config2D);
-      interface._impl->configure(config.getSolverInterfaceConfiguration());
+      impl(interface).configure(config.getSolverInterfaceConfiguration());
     }
     else {
       config::Configuration config;
       xml::configure(config.getXMLTag(), config3D);
-      interface._impl->configure(config.getSolverInterfaceConfiguration());
+      impl(interface).configure(config.getSolverInterfaceConfiguration());
     }
     BOOST_TEST(interface.getDimensions() == dim);
 
@@ -1020,7 +1020,7 @@ BOOST_AUTO_TEST_CASE(testBug,
     SolverInterface precice("Flite", 0, 1);
     config::Configuration config;
     xml::configure(config.getXMLTag(), configName);
-    precice._impl->configure(config.getSolverInterfaceConfiguration());
+    impl(precice).configure(config.getSolverInterfaceConfiguration());
     int meshID = precice.getMeshID("FliteNodes");
     int forcesID = precice.getDataID(precice::constants::dataForces(), meshID);
     int displacementsID = precice.getDataID(precice::constants::dataDisplacements(), meshID);
@@ -1053,7 +1053,7 @@ BOOST_AUTO_TEST_CASE(testBug,
     SolverInterface precice("Calculix", 0, 1);
     config::Configuration config;
     xml::configure(config.getXMLTag(), configName);
-    precice._impl->configure(config.getSolverInterfaceConfiguration());
+    impl(precice).configure(config.getSolverInterfaceConfiguration());
     int meshID = precice.getMeshID("CalculixNodes");
     for (Vector3d& coord : coords){
       precice.setMeshVertex(meshID, coord.data());
@@ -1127,7 +1127,7 @@ BOOST_AUTO_TEST_CASE(testThreeSolvers,
       SolverInterface precice(solverName, 0, 1);
       config::Configuration config;
       xml::configure(config.getXMLTag(), configs[k]);
-      precice._impl->configure(config.getSolverInterfaceConfiguration());
+      impl(precice).configure(config.getSolverInterfaceConfiguration());
       int meshAID = precice.getMeshID("MeshA");
       int meshBID = precice.getMeshID("MeshB");
       precice.setMeshVertex(meshAID, Eigen::Vector2d(0, 0).data());
@@ -1156,7 +1156,7 @@ BOOST_AUTO_TEST_CASE(testThreeSolvers,
       SolverInterface precice(solverName, 0, 1);
       config::Configuration config;
       xml::configure(config.getXMLTag(), configs[k]);
-      precice._impl->configure(config.getSolverInterfaceConfiguration());
+      impl(precice).configure(config.getSolverInterfaceConfiguration());
       int meshID = precice.getMeshID("MeshC");
       precice.setMeshVertex(meshID, Eigen::Vector2d(0, 0).data());
       double dt = precice.initialize();
@@ -1184,7 +1184,7 @@ BOOST_AUTO_TEST_CASE(testThreeSolvers,
       SolverInterface precice(solverName, 0, 1);
       config::Configuration config;
       xml::configure(config.getXMLTag(), configs[k]);
-      precice._impl->configure(config.getSolverInterfaceConfiguration());
+      impl(precice).configure(config.getSolverInterfaceConfiguration());
       int meshID = precice.getMeshID("MeshD");
       precice.setMeshVertex(meshID, Eigen::Vector2d(0, 0).data());
       double dt = precice.initialize();
@@ -1258,7 +1258,7 @@ BOOST_AUTO_TEST_CASE(testMultiCoupling, * testing::OnSize(4))
     SolverInterface precice(participant, 0, 1);
     config::Configuration config;
     xml::configure(config.getXMLTag(), _pathToTests + "/multi.xml");
-    precice._impl->configure(config.getSolverInterfaceConfiguration());
+    impl(precice).configure(config.getSolverInterfaceConfiguration());
     BOOST_TEST(precice.getDimensions() == 2);
 
     if (utils::Parallel::getProcessRank() == 0){
@@ -1319,7 +1319,7 @@ BOOST_AUTO_TEST_CASE(testMultiCoupling, * testing::OnSize(4))
     SolverInterface precice("NASTIN", 0, 1);
     config::Configuration config;
     xml::configure(config.getXMLTag(), _pathToTests + "/multi.xml");
-    precice._impl->configure(config.getSolverInterfaceConfiguration());
+    impl(precice).configure(config.getSolverInterfaceConfiguration());
     BOOST_TEST(precice.getDimensions() == 2);
     int meshID1 = precice.getMeshID("NASTIN_Mesh1");
     int meshID2 = precice.getMeshID("NASTIN_Mesh2");
@@ -1409,7 +1409,7 @@ BOOST_AUTO_TEST_CASE(testMappingNearestProjection,
     SolverInterface cplInterface("SolverOne", 0, 1);
     config::Configuration config;
     xml::configure(config.getXMLTag(), configFile);
-    cplInterface._impl->configure(config.getSolverInterfaceConfiguration());
+    impl(cplInterface).configure(config.getSolverInterfaceConfiguration());
     const int meshOneID = cplInterface.getMeshID("MeshOne");
 
     // Setup mesh one.
@@ -1447,7 +1447,7 @@ BOOST_AUTO_TEST_CASE(testMappingNearestProjection,
     SolverInterface cplInterface("SolverTwo", 0, 1);
     config::Configuration config;
     xml::configure(config.getXMLTag(), configFile);
-    cplInterface._impl->configure(config.getSolverInterfaceConfiguration());
+    impl(cplInterface).configure(config.getSolverInterfaceConfiguration());
     int meshTwoID = cplInterface.getMeshID("MeshTwo");
 
     // Setup receiving mesh.
