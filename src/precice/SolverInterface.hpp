@@ -15,7 +15,7 @@ namespace precice {
     class SolverInterfaceImpl;
   }
   namespace testing {
-      struct WhiteboxFixture;
+      struct WhiteboxAccessor;
   }
 }
 
@@ -799,7 +799,7 @@ private:
   SolverInterface& operator= ( const SolverInterface& assign );
 
   // @brief To allow white box tests.
-  friend struct testing::WhiteboxFixture;
+  friend struct testing::WhiteboxAccessor;
 };
 
 } // namespace precice
