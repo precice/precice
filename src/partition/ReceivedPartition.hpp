@@ -56,8 +56,12 @@ private:
   /// Checks if vertex in contained in _bb
   bool isVertexInBB(const mesh::Vertex &vertex);
 
-  /// Checks whether this rank has vertices at the coupling interface
-  bool hasVerticesAtCouplingInterface() const;
+  /** Checks whether provided meshes are empty.
+   * 
+   * Empty provided meshes mean that the re-partitioning completely filtered
+   * out the mesh received on this rank at the coupling interface.
+   */
+  bool areProvidedMeshesEmpty() const;
 
   virtual void createOwnerInformation() override;
 
