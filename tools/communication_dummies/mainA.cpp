@@ -147,8 +147,7 @@ main(int argc, char** argv) {
 
     c.requestConnection("B", "A");
 
-    cout << utils::MasterSlave::_rank << ": "
-         << "Connected!" << '\n';
+    cout << utils::MasterSlave::_rank << ": " << "Connected!\n";
 
     std::vector<double> data = getData();
 
@@ -157,13 +156,11 @@ main(int argc, char** argv) {
     c.receive(data.data(), data.size());
 
     if (validate(data))
-      cout << utils::MasterSlave::_rank << ": "
-           << "Success!" << '\n';
+      cout << utils::MasterSlave::_rank << ": " << "Success!\n";
     else
-      cout << utils::MasterSlave::_rank << ": "
-           << "Failure!" << '\n';
+      cout << utils::MasterSlave::_rank << ": " << "Failure!\n";
 
-    cout << "----------" << '\n';
+    cout << "----------\n";
   }
 
   utils::MasterSlave::_communication.reset();

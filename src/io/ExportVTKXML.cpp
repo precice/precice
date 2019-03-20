@@ -99,12 +99,12 @@ void ExportVTKXML::writeMasterFile
   // write scalar data names
   outMasterFile << "      <PPointData Scalars=\"";
   for (size_t i = 0; i < _scalarDataNames.size(); ++i) {
-    outMasterFile << _scalarDataNames[i] << " ";
+    outMasterFile << _scalarDataNames[i] << ' ';
   }
   // write vector data names
   outMasterFile << "\" Vectors=\"";
   for (size_t i = 0; i < _vectorDataNames.size(); ++i) {
-    outMasterFile << _vectorDataNames[i] << " ";
+    outMasterFile << _vectorDataNames[i] << ' ';
   }
   outMasterFile << "\">\n";
 
@@ -162,7 +162,7 @@ void ExportVTKXML::writeSubFile
     writeVertex(vertex.getCoords(), outSubFile);
   }
   outSubFile << "            </DataArray>\n";
-  outSubFile << "         </Points> \n' << '\n";
+  outSubFile << "         </Points> \n\n";
 
   // Write Mesh
   exportMesh(outSubFile, mesh);
@@ -250,11 +250,11 @@ void ExportVTKXML:: exportData
 {
   outFile << "         <PointData Scalars=\"";
   for (size_t i = 0; i < _scalarDataNames.size(); i++) {
-    outFile << _scalarDataNames[i] << " ";
+    outFile << _scalarDataNames[i] << ' ';
   }
   outFile << "\" Vectors=\"";
   for (size_t i = 0; i < _vectorDataNames.size(); i++) {
-    outFile << _vectorDataNames[i] << " ";
+    outFile << _vectorDataNames[i] << ' ';
   }
   outFile << "\">\n";
 
@@ -294,17 +294,17 @@ void ExportVTKXML:: exportData
           viewTemp[i] = values(offset + i);
         }
         for(int i = 0; i < dataDimensions; i++){
-          outFile << viewTemp[i] << " ";
+          outFile << viewTemp[i] << ' ';
         }
         if(dataDimensions == 2){
-          outFile << "0.0" << " "; //2D data needs to be 3D for vtk
+          outFile << "0.0" << ' '; //2D data needs to be 3D for vtk
         }
-        outFile << " ";
+        outFile << ' ';
       }
     }
     else if(dataDimensions == 1) {
       for (size_t count = 0; count < mesh.vertices().size(); count++) {
-        outFile << values(count) << " ";
+        outFile << values(count) << ' ';
       }
     }
     outFile << '\n' << "            </DataArray>\n";

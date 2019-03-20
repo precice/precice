@@ -58,7 +58,7 @@ void ExportVTK::exportMesh
   TRACE(mesh.getName());
 
   // Plot vertices
-  outFile << "POINTS " << mesh.vertices().size() << " float \n' << '\n";
+  outFile << "POINTS " << mesh.vertices().size() << " float \n\n";
   for (mesh::Vertex& vertex : mesh.vertices()) {
     writeVertex(vertex.getCoords(), outFile);
   }
@@ -67,7 +67,7 @@ void ExportVTK::exportMesh
 
   // Plot edges
   if(mesh.getDimensions() == 2) {
-    outFile << "CELLS " << mesh.edges().size() << " " << mesh.edges().size() * 3
+    outFile << "CELLS " << mesh.edges().size() << ' ' << mesh.edges().size() * 3
             << '\n' << '\n';
     for (mesh::Edge & edge : mesh.edges()) {
       int internalIndices[2];
@@ -75,8 +75,7 @@ void ExportVTK::exportMesh
       internalIndices[1] = edge.vertex(1).getID();
       writeLine(internalIndices, outFile);
     }
-    outFile << '\n' << "CELL_TYPES " << mesh.edges().size()
-            << '\n' << '\n';
+    outFile << "\nCELL_TYPES " << mesh.edges().size() << "\n\n";
     for(size_t i = 0; i < mesh.edges().size(); ++i) {
       outFile << "3\n";
     }
@@ -86,8 +85,8 @@ void ExportVTK::exportMesh
   if(mesh.getDimensions() == 3) {
     size_t sizeTriangles = mesh.triangles().size();
     size_t sizeQuads = mesh.quads().size();
-    outFile << "CELLS " << sizeTriangles + sizeQuads << " "
-            << sizeTriangles * 4 + sizeQuads * 5 << '\n' << '\n';
+    outFile << "CELLS " << sizeTriangles + sizeQuads << ' '
+            << sizeTriangles * 4 + sizeQuads * 5 << "\n\n";
     for (mesh::Triangle& triangle : mesh.triangles()) {
       int internalIndices[3];
       internalIndices[0] = triangle.vertex(0).getID();
@@ -104,8 +103,7 @@ void ExportVTK::exportMesh
       writeQuadrangle(internalIndices, outFile);
     }
 
-    outFile << '\n' << "CELL_TYPES " << sizeTriangles + sizeQuads
-            << '\n' << '\n';
+    outFile << "\nCELL_TYPES " << sizeTriangles + sizeQuads << "\n\n";
     for(size_t i=0; i < sizeTriangles; i++){
       outFile << "5\n";
     }
@@ -115,8 +113,8 @@ void ExportVTK::exportMesh
 
 
     // OLD
-//    outFile << "CELLS " << mesh.triangles().size() << " "
-//            << mesh.triangles().size() * 4  << '\n' << '\n';
+//    outFile << "CELLS " << mesh.triangles().size() << ' '
+//            << mesh.triangles().size() * 4  << "\n\n";
 //    for (mesh::Triangle & triangle : mesh.triangles()){
 //      int internalIndices[3];
 //      internalIndices[0] = triangle.vertex(0).getID();
@@ -124,8 +122,7 @@ void ExportVTK::exportMesh
 //      internalIndices[2] = triangle.vertex(2).getID();
 //      writeTriangle(internalIndices, outFile);
 //    }
-//    outFile << '\n' << "CELL_TYPES " << mesh.triangles().size()
-//            << '\n' << '\n';
+//    outFile << "\nCELL_TYPES " << mesh.triangles().size() << "\n\n";
 //    for(size_t i=0; i < mesh.triangles().size(); i++){
 //      outFile << "5\n";
 //    }
@@ -149,10 +146,10 @@ void ExportVTK:: exportData
     for (mesh::Vertex& vertex : mesh.vertices()) {
       int i = 0;
       for(; i < mesh.getDimensions(); i++){
-        outFile << vertex.getNormal()[i] << " ";
+        outFile << vertex.getNormal()[i] << ' ';
       }
       if(i < 3){
-        outFile << "0";
+        outFile << '0';
       }
       outFile << '\n';
     }
@@ -187,10 +184,10 @@ void ExportVTK:: exportData
         }
         int i = 0;
         for(; i < data->getDimensions(); i++){
-          outFile << viewTemp[i] << " ";
+          outFile << viewTemp[i] << ' ';
         }
         if(i < 3){
-          outFile << "0";
+          outFile << '0';
         }
         outFile << '\n';
       }
@@ -224,9 +221,9 @@ void ExportVTK:: writeHeader
 (
   std::ostream& outFile)
 {
-  outFile << "# vtk DataFile Version 2.0\n' << '\n"
-          << "ASCII\n' << '\n"
-          << "DATASET UNSTRUCTURED_GRID\n' << '\n";
+  outFile << "# vtk DataFile Version 2.0\n\n"
+          << "ASCII\n\n"
+          << "DATASET UNSTRUCTURED_GRID\n\n";
 }
 
 void ExportVTK:: writeVertex
@@ -249,9 +246,9 @@ void ExportVTK:: writeTriangle
   int           vertexIndices[3],
   std::ostream& outFile)
 {
-  outFile << 3 << " ";
+  outFile << 3 << ' ';
   for(int i=0; i < 3; i++) {
-    outFile << vertexIndices[i] << " ";
+    outFile << vertexIndices[i] << ' ';
   }
   outFile << '\n';
 }
@@ -261,9 +258,9 @@ void ExportVTK:: writeQuadrangle
   int           vertexIndices[4],
   std::ostream& outFile)
 {
-  outFile << 4 << " ";
+  outFile << 4 << ' ';
   for(int i=0; i < 4; i++) {
-    outFile << vertexIndices[i] << " ";
+    outFile << vertexIndices[i] << ' ';
   }
   outFile << '\n';
 }
@@ -273,9 +270,9 @@ void ExportVTK:: writeLine
   int           vertexIndices[2],
   std::ostream& outFile)
 {
-  outFile << 2 << " ";
+  outFile << 2 << ' ';
   for(int i=0; i<2; i++) {
-    outFile << vertexIndices[i] << " ";
+    outFile << vertexIndices[i] << ' ';
   }
   outFile << '\n';
 }

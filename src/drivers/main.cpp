@@ -7,10 +7,10 @@
 
 void printUsage()
 {
-  std::cout << "Usage:\n' << '\n";
+  std::cout << "Usage:\n\n";
   std::cout << "Run server (deprecated)  :  binprecice server ParticipantName ConfigurationName [LogConfFile]\n";
   std::cout << "Print XML reference      :  binprecice xml\n";
-  std::cout << "Print DTD for XML config :  binprecice dtd\n";
+  std::cout << "Print DTD for XML config :  binprecice dtd" << std::endl;
 }
 
 int main ( int argc, char** argv )
@@ -71,17 +71,17 @@ int main ( int argc, char** argv )
     precice::impl::SolverInterfaceImpl server ( participantName, 0, 1, true );
     server.configure(configFile);
     server.runServer();
-    std::cout << '\n' << '\n' << "...finished running server\n";
+    std::cout << "\n\n...finished running server\n";
   }
   else if (runHelp){
     assertion(not runServer);
     precice::config::Configuration config;
-    std::cout << config.getXMLTag().printDocumentation(0) << '\n' << '\n';
+    std::cout << config.getXMLTag().printDocumentation(0) << "\n\n";
   }
   else if (runDtd) {
 	assertion(not runServer);
     precice::config::Configuration config;
-    std::cout << config.getXMLTag().printDTD(true) << '\n' << '\n';
+    std::cout << config.getXMLTag().printDTD(true) << "\n\n";
   }
   else {
     assertion ( false );

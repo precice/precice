@@ -501,13 +501,13 @@ std::string XMLTag::printDocumentation(int indentation) const
   doc << utils::wrapText(tagHead.str(), linewidth, indentation + 3);
 
   if (not _subtags.empty()) {
-    doc << ">\n' << '\n";
+    doc << ">\n\n";
     for (auto const subtag : _subtags) {
       doc << subtag->printDocumentation(indentation + 3);
     }
-    doc << indent << "</" << _fullName << ">\n' << '\n";
+    doc << indent << "</" << _fullName << ">\n\n";
   } else {
-    doc << "/>\n' << '\n";
+    doc << "/>\n\n";
   }
 
   return doc.str();
