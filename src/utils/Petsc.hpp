@@ -60,7 +60,7 @@ public:
   enum LEFTRIGHT { LEFT, RIGHT };
   
   /// Creates a new vector on the given MPI communicator.
-  explicit Vector(std::string name = "");
+  explicit Vector(const std::string& name = "");
 
   /** Copy construction from another vector
    * Duplicates the vector and copies the name
@@ -77,21 +77,35 @@ public:
    */
   Vector(Vector&& other);
 
-  /// Use Vec v as vector.
-  Vector(Vec &v, std::string name = "");
-
-  /// Constructs a vector with the same number of rows (default) or columns.
-  Vector(Mat &m, std::string name = "", LEFTRIGHT type = LEFT);
-
-  /// Constructs a vector with the same number of rows (default) or columns.
-  Vector(Matrix &m, std::string name = "", LEFTRIGHT type = LEFT);
-
-  /** Creates an uninitialized vector of identical shape.
-   * Duplicates type, row layout etc. (not values) of v.
+  /** Constructs the object from another Vec
+   * Takes ownership of the other Vec
    */
-  Vector makeSimilar(const std::string& name = "") const;
+  Vector(Vec& other, const std::string& name = "");
+
 
   ~Vector();
+
+  ///@name Allocation
+  ///@{
+
+  /// Allocates a new vector on the given MPI communicator.
+  static Vector allocate(const std::string& name = "");
+
+  /** Allocated an uninitialized vector of identical shape.
+   * Duplicates type, row layout etc. (not values) of v.
+   */
+  static Vector allocate(Vector& other, const std::string& name = "");
+
+  /// Allocated an uninitialized vector of identical shape.
+  static Vector allocate(Vec& other, const std::string& name = "");
+
+  /// Allocates a vector with the same number of rows (default) or columns.
+  static Vector allocate(Matrix& m, const std::string& name = "", LEFTRIGHT type = LEFT);
+
+  /// Allocates a vector with the same number of rows (default) or columns.
+  static Vector allocate(Mat& m, const std::string& name = "", LEFTRIGHT type = LEFT);
+
+  ///@}
 
   /// Swaps the ownership of two vectors
   void swap(Vector& other) noexcept;
