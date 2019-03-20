@@ -655,10 +655,6 @@ int SolverInterfaceImpl:: setMeshVertex
     index = _requestManager->requestSetMeshVertex ( meshID, internalPosition );
   }
   else {
-    /// @todo testMode should be removed here as soon as all serial integration tests are ported and updated
-    CHECK(not _couplingScheme->isInitialized() ||
-          precice::testMode, "Vertices can only be defined before initialize() is called");
-
     MeshContext& context = _accessor->meshContext(meshID);
     mesh::PtrMesh mesh(context.mesh);
     DEBUG("MeshRequirement: " << context.meshRequirement);
@@ -681,9 +677,6 @@ void SolverInterfaceImpl:: setMeshVertices
     _requestManager->requestSetMeshVertices(meshID, size, positions, ids);
   }
   else { //couplingMode
-    /// @todo testMode should be removed here as soon as all serial integration tests are ported and updated
-    CHECK(not _couplingScheme->isInitialized() ||
-          precice::testMode, "Vertices can only be defined before initialize() is called");
     MeshContext& context = _accessor->meshContext(meshID);
     mesh::PtrMesh mesh(context.mesh);
     Eigen::VectorXd internalPosition(_dimensions);
@@ -774,7 +767,6 @@ int SolverInterfaceImpl:: setMeshEdge
     return _requestManager->requestSetMeshEdge ( meshID, firstVertexID, secondVertexID );
   }
   else {
-    CHECK(not _couplingScheme->isInitialized(), "Edges can only be defined before initialize() is called");
     MeshContext& context = _accessor->meshContext(meshID);
     if ( context.meshRequirement == mapping::Mapping::MeshRequirement::FULL ){
       DEBUG("Full mesh required.");
@@ -807,7 +799,6 @@ void SolverInterfaceImpl:: setMeshTriangle
     _requestManager->requestSetMeshTriangle ( meshID, firstEdgeID, secondEdgeID, thirdEdgeID );
   }
   else {
-    CHECK(not _couplingScheme->isInitialized(), "Triangles can only be defined before initialize() is called");
     MeshContext& context = _accessor->meshContext(meshID);
     if ( context.meshRequirement == mapping::Mapping::MeshRequirement::FULL ){
       mesh::PtrMesh& mesh = context.mesh;
@@ -842,7 +833,6 @@ void SolverInterfaceImpl:: setMeshTriangleWithEdges
                                                      thirdVertexID);
     return;
   }
-  CHECK(not _couplingScheme->isInitialized(), "Triangles can only be defined before initialize() is called");
   MeshContext& context = _accessor->meshContext(meshID);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL){
     mesh::PtrMesh& mesh = context.mesh;
@@ -937,7 +927,6 @@ void SolverInterfaceImpl:: setMeshQuad
                                         thirdEdgeID, fourthEdgeID);
   }
   else {
-    CHECK(not _couplingScheme->isInitialized(), "Quads can only be defined before initialize() is called");
     MeshContext& context = _accessor->meshContext(meshID);
     if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL){
       mesh::PtrMesh& mesh = context.mesh;
@@ -974,7 +963,6 @@ void SolverInterfaceImpl:: setMeshQuadWithEdges
         meshID, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID);
     return;
   }
-  CHECK(not _couplingScheme->isInitialized(), "Quads can only be defined before initialize() is called");
   MeshContext& context = _accessor->meshContext(meshID);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL){
     mesh::PtrMesh& mesh = context.mesh;
