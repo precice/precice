@@ -28,7 +28,7 @@ void CommunicateMesh::sendMesh(
   int numberOfVertices = mesh.vertices().size();
   _communication->send(numberOfVertices, rankReceiver);
   if (not mesh.vertices().empty()) {
-    std::vector<double> coords(numberOfVertices * dim);
+    std::vector<double> coords(static_cast<size_t>(numberOfVertices) * dim);
     std::vector<int> globalIDs(numberOfVertices);
     for (int i = 0; i < numberOfVertices; i++) {
       for (int d = 0; d < dim; d++) {
@@ -172,7 +172,7 @@ void CommunicateMesh::broadcastSendMesh(const mesh::Mesh &mesh)
   int numberOfVertices = mesh.vertices().size();
   _communication->broadcast(numberOfVertices);
   if (numberOfVertices > 0) {
-    std::vector<double> coords(numberOfVertices * dim);
+    std::vector<double> coords(static_cast<size_t>(numberOfVertices) * dim);
     std::vector<int> globalIDs(numberOfVertices);
     for (int i = 0; i < numberOfVertices; i++) {
       for (int d = 0; d < dim; d++) {

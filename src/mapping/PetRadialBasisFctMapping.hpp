@@ -5,6 +5,7 @@
 
 #include <map>
 #include <numeric>
+#include <vector>
 
 #include "versions.hpp"
 #include "mesh/RTree.hpp"
@@ -62,15 +63,15 @@ public:
    * For description on convergence testing and meaning of solverRtol see http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPConvergedDefault.html#KSPConvergedDefault
    */
   PetRadialBasisFctMapping (
-    Constraint              constraint,
-    int                     dimensions,
-    RADIAL_BASIS_FUNCTION_T function,
-    bool                    xDead,
-    bool                    yDead,
-    bool                    zDead,
-    double                  solverRtol = 1e-9,
-    Polynomial              polynomial = Polynomial::SEPARATE,
-    Preallocation           preallocation = Preallocation::TREE);
+    Constraint                     constraint,
+    int                            dimensions,
+    const RADIAL_BASIS_FUNCTION_T& function,
+    bool                           xDead,
+    bool                           yDead,
+    bool                           zDead,
+    double                         solverRtol = 1e-9,
+    Polynomial                     polynomial = Polynomial::SEPARATE,
+    Preallocation                  preallocation = Preallocation::TREE);
 
   /// Deletes the PETSc objects and the _deadAxis array
   virtual ~PetRadialBasisFctMapping();
@@ -187,15 +188,15 @@ private:
 template<typename RADIAL_BASIS_FUNCTION_T>
 PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
 (
-  Constraint              constraint,
-  int                     dimensions,
-  RADIAL_BASIS_FUNCTION_T function,
-  bool                    xDead,
-  bool                    yDead,
-  bool                    zDead,
-  double                  solverRtol,
-  Polynomial              polynomial,
-  Preallocation           preallocation)
+  Constraint                     constraint,
+  int                            dimensions,
+  const RADIAL_BASIS_FUNCTION_T& function,
+  bool                           xDead,
+  bool                           yDead,
+  bool                           zDead,
+  double                         solverRtol,
+  Polynomial                     polynomial,
+  Preallocation                  preallocation)
   :
   Mapping ( constraint, dimensions ),
   _basisFunction ( function ),
@@ -359,8 +360,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
     PetscInt const idxSize = std::max(_matrixC.getSize().second, _matrixQ.getSize().second);
     PetscInt colNum = 0;  // holds the number of columns
-    PetscInt colIdx[idxSize];     // holds the columns indices of the entries
-    PetscScalar rowVals[idxSize]; // holds the values of the entries
+    std::vector<PetscInt> colIdx(idxSize);     // holds the columns indices of the entries
+    std::vector<PetscScalar> rowVals(idxSize); // holds the values of the entries
     
     // -- SETS THE POLYNOMIAL PART OF THE MATRIX --
     if (_polynomial == Polynomial::ON or _polynomial == Polynomial::SEPARATE) {
@@ -376,10 +377,10 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
       // cols are always the first ones for the polynomial, no need to translate
       if (_polynomial == Polynomial::ON) {
-        ierr = MatSetValues(_matrixC, colNum, colIdx, 1, &row, rowVals, INSERT_VALUES); CHKERRV(ierr);
+        ierr = MatSetValues(_matrixC, colNum, colIdx.data(), 1, &row, rowVals.data(), INSERT_VALUES); CHKERRV(ierr);
       }
       else if (_polynomial == Polynomial::SEPARATE) {
-        ierr = MatSetValues(_matrixQ, 1, &row, colNum, colIdx, rowVals, INSERT_VALUES); CHKERRV(ierr);
+        ierr = MatSetValues(_matrixQ, 1, &row, colNum, colIdx.data(), rowVals.data(), INSERT_VALUES); CHKERRV(ierr);
       }
       colNum = 0;
     }
@@ -411,8 +412,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
         }
       }
     }
-    ierr = AOApplicationToPetsc(_AOmapping, colNum, colIdx); CHKERRV(ierr);
-    ierr = MatSetValues(_matrixC, 1, &row, colNum, colIdx, rowVals, INSERT_VALUES); CHKERRV(ierr);
+    ierr = AOApplicationToPetsc(_AOmapping, colNum, colIdx.data()); CHKERRV(ierr);
+    ierr = MatSetValues(_matrixC, 1, &row, colNum, colIdx.data(), rowVals.data(), INSERT_VALUES); CHKERRV(ierr);
     ++row;
   }
   DEBUG("Finished filling Matrix C");
@@ -452,8 +453,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     if (_polynomial == Polynomial::ON or _polynomial == Polynomial::SEPARATE) {
         petsc::Matrix * m = _polynomial == Polynomial::ON ? &_matrixA : &_matrixV;
         PetscInt colNum = 0;
-        PetscInt colIdx[m->getSize().second];     // holds the columns indices of the entries
-        PetscScalar rowVals[m->getSize().second]; // holds the values of the entries
+        std::vector<PetscInt> colIdx(m->getSize().second);     // holds the columns indices of the entries
+        std::vector<PetscScalar> rowVals(m->getSize().second); // holds the values of the entries
 
         colIdx[colNum] = colNum;
         rowVals[colNum++] = 1;
@@ -464,13 +465,13 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
             rowVals[colNum++] = oVertex.getCoords()[dim];
           }
         }
-        ierr = MatSetValues(*m, 1, &row, colNum, colIdx, rowVals, INSERT_VALUES); CHKERRV(ierr);
+        ierr = MatSetValues(*m, 1, &row, colNum, colIdx.data(), rowVals.data(), INSERT_VALUES); CHKERRV(ierr);
     }
     
     // -- SETS THE COEFFICIENTS --
     PetscInt colNum = 0;
-    PetscInt colIdx[_matrixA.getSize().second];     // holds the columns indices of the entries
-    PetscScalar rowVals[_matrixA.getSize().second]; // holds the values of the entries
+    std::vector<PetscInt> colIdx(_matrixA.getSize().second);     // holds the columns indices of the entries
+    std::vector<PetscScalar> rowVals(_matrixA.getSize().second); // holds the values of the entries
 
     if (_preallocation == Preallocation::SAVE or _preallocation == Preallocation::TREE) {
       auto const & rowVertices = vertexData[row - ownerRangeABegin];
@@ -493,8 +494,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
         }
       }
     }
-    ierr = AOApplicationToPetsc(_AOmapping, colNum, colIdx); CHKERRV(ierr);
-    ierr = MatSetValues(_matrixA, 1, &row, colNum, colIdx, rowVals, INSERT_VALUES); CHKERRV(ierr);
+    ierr = AOApplicationToPetsc(_AOmapping, colNum, colIdx.data()); CHKERRV(ierr);
+    ierr = MatSetValues(_matrixA, 1, &row, colNum, colIdx.data(), rowVals.data(), INSERT_VALUES); CHKERRV(ierr);
   }
   DEBUG("Finished filling Matrix A");
   eFillA.stop();
@@ -771,24 +772,32 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
       return; // Ranks not at the interface should never hold interface vertices
 
   // Tags all vertices that are inside otherMesh's bounding box, enlarged by the support radius
-  for(mesh::Vertex& v : filterMesh->vertices()) {
-    bool isInside = true;
-    #if PETSC_MAJOR >= 3 and PETSC_MINOR >= 8
-    if (_basisFunction.hasCompactSupport()) {
-      for (int d = 0; d < v.getDimensions(); d++) {
-        if (v.getCoords()[d] < otherMesh->getBoundingBox()[d].first - _basisFunction.getSupportRadius() or
-            v.getCoords()[d] > otherMesh->getBoundingBox()[d].second + _basisFunction.getSupportRadius() ) {
-          isInside = false;
-          break;
-        }
-      }
+  if (
+#if PETSC_MAJOR >= 3 and PETSC_MINOR >= 8
+      _basisFunction.hasCompactSupport()
+#else
+      false
+#warning "Mesh filtering deactivated, due to PETSc version < 3.8. \
+      preCICE is fully functional, but performance for large cases is degraded."
+#endif
+     )
+  {
+    auto rtree = mesh::rtree::getVertexRTree(filterMesh);
+    namespace bgi = boost::geometry::index;
+    auto bb = otherMesh->getBoundingBox();
+    // Enlarge by support radius
+    for (int d = 0; d < otherMesh->getDimensions(); d++){
+      bb[d].first -= _basisFunction.getSupportRadius();
+      bb[d].second += _basisFunction.getSupportRadius();
     }
-    #else
-      #warning "Mesh filtering deactivated, due to PETSc version < 3.8. \
-preCICE is fully functional, but performance for large cases is degraded."
-    #endif
-    if (isInside)
-      v.tag();
+    rtree->query(bgi::within(bb),
+        boost::make_function_output_iterator([&filterMesh](size_t idx){
+          filterMesh->vertices()[idx].tag();
+          }));
+  }
+  else {
+    for (auto& vert : filterMesh->vertices())
+      vert.tag();
   }
 }
 
@@ -826,19 +835,17 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
       }
     }
   }
-  // Tag vertices that are inside the bounding box + support radius
-  for (mesh::Vertex& v : mesh->vertices()) {
-    bool isInside = true;
-    for (int d = 0; d < v.getDimensions(); d++) {
-      if (v.getCoords()[d] < bb[d].first - _basisFunction.getSupportRadius() or
-          v.getCoords()[d] > bb[d].second + _basisFunction.getSupportRadius() ) {
-        isInside = false;
-        break;
-      }
-    }
-    if (isInside)
-      v.tag();
+
+  // Enlarge bb by support radius
+  for (int d = 0; d < mesh->getDimensions(); d++){
+    bb[d].first -= _basisFunction.getSupportRadius();
+    bb[d].second += _basisFunction.getSupportRadius();
   }
+  auto rtree = mesh::rtree::getVertexRTree(mesh);
+  rtree->query(boost::geometry::index::within(bb),
+      boost::make_function_output_iterator([&mesh](size_t idx){
+        mesh->vertices()[idx].tag();
+      }));
 }
 
 
