@@ -16,7 +16,7 @@
 using namespace precice;
 
 
-struct SerialTestFixture : testing::WhiteboxFixture {
+struct SerialTestFixture : testing::WhiteboxAccessor {
 
   std::string _pathToTests;
 

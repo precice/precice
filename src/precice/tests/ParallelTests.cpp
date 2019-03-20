@@ -23,7 +23,7 @@ void reset ()
   utils::MasterSlave::reset();
 }
 
-struct ParallelTestFixture : testing::WhiteboxFixture {
+struct ParallelTestFixture : testing::WhiteboxAccessor {
 
   std::string _pathToTests;
 

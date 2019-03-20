@@ -15,7 +15,7 @@ extern bool testMode;
 }
 
 
-struct ServerTestFixture : testing::WhiteboxFixture {
+struct ServerTestFixture : testing::WhiteboxAccessor {
   std::string _pathToTests;
 
   void reset(){
