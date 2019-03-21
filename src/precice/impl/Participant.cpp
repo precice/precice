@@ -112,6 +112,7 @@ void Participant:: addWriteData
   context->toData = context->fromData;
   _dataContexts[data->getID()] = context;
   _writeDataContexts.push_back ( context );
+  _writeDataIDs.insert(data->getID());
 }
 
 void Participant:: addReadData
@@ -128,6 +129,7 @@ void Participant:: addReadData
   context->fromData = context->toData;
   _dataContexts[data->getID()] = context;
   _readDataContexts.push_back ( context );
+  _readDataIDs.insert(data->getID());
 }
 
 void Participant::addReadMappingContext
@@ -207,6 +209,20 @@ bool Participant:: isDataUsed
 {
   assertion ( (dataID >= 0) && (dataID < (int)_dataContexts.size()), dataID, (int)_dataContexts.size() );
   return _dataContexts[dataID] != nullptr;
+}
+
+bool Participant:: isDataRead
+(
+  int dataID ) const
+{
+    return _readDataIDs.count(dataID) == 1;
+}
+
+bool Participant:: isDataWrite
+(
+  int dataID ) const
+{
+    return _writeDataIDs.count(dataID) == 1;
 }
 
 const MeshContext& Participant:: meshContext

@@ -13,6 +13,7 @@
 #include "partition/ReceivedPartition.hpp"
 #include "utils/MasterSlave.hpp"
 #include <string>
+#include <set>
 
 namespace precice {
   namespace impl {
@@ -85,6 +86,10 @@ public:
   bool isMeshUsed ( int meshID ) const;
 
   bool isDataUsed ( int dataID ) const;
+
+  bool isDataRead ( int dataID ) const;
+
+  bool isDataWrite ( int dataID ) const;
 
   const MeshContext& meshContext ( int meshID ) const;
 
@@ -181,7 +186,13 @@ private:
 
   utils::ptr_vector<DataContext> _writeDataContexts;
 
+  /// Data IDs available to write
+  std::set<int> _writeDataIDs;
+
   utils::ptr_vector<DataContext> _readDataContexts;
+
+  /// Data IDs available to read
+  std::set<int> _readDataIDs;
 
   //io::ExportContext _exportContext;
 

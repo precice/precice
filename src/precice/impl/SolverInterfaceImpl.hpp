@@ -599,6 +599,29 @@ private:
   /// Syncs the timestep between slaves and master (all timesteps should be the same!)
   void syncTimestep(double computedTimestepLength);
 
+  ///@name Validation and Requirement Functions
+  ///@{
+
+  /// Validates the existence of a given meshID
+  void validateMeshID(int meshID);
+
+  /// Validates the existence of a given meshID and whether read operations are permitted
+  void requireMeshRead(int meshID);
+
+  /// Validates the existence of a given meshID and whether write operations are permitted
+  void requireMeshWrite(int meshID);
+
+  /// Validates the existence of a given dataID
+  void validateDataID(int dataID);
+
+  /// Validates the existence of a given dataID and whether read operations are permitted
+  void requireDataRead(int dataID);
+
+  /// Validates the existence of a given dataID and whether write operations are permitted
+  void requireDataWrite(int dataID);
+
+  ///@}
+
   /// To allow white box tests.
   friend struct PreciceTests::Serial::TestConfiguration;
 };
