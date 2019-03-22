@@ -30,9 +30,6 @@ namespace PreciceTests {
   namespace Serial {
     struct TestConfiguration;
   }
-  namespace SolverInterfaceImpl {
-    struct MeshInfo;
-  }
 }
 
 namespace precice {
@@ -465,21 +462,6 @@ public:
   /// Runs the solver interface in server mode.
   void runServer();
 
-  /// A helper object used to safely print info from a meshID
-  struct MeshInfo {
-    /// The meshID to print
-    int meshID;
-    /// The SolverInterface used to look up the name of the corresponding meshID
-    const SolverInterfaceImpl& interface;
-
-    /** Prints a short info about the given meshID.
-     * Prints the meshID followed ';' and the name of the coresponding mesh.
-     * It prints "<unknown>" if the meshID is unknown to this SolverInterface.
-     * @param[in] out the stream to write to.
-     */
-    void print(std::ostream& out) const;
-  };
-
 private:
 
   struct M2NWrap {
@@ -622,15 +604,7 @@ private:
 
   /// To allow white box tests.
   friend struct PreciceTests::Serial::TestConfiguration;
-  friend struct PreciceTests::SolverInterfaceImpl::MeshInfo;
 
-  /// Makes a MeshInfo bound to this SolverInterface
-  MeshInfo makeMeshInfo(int meshID) const {
-      return {meshID, *this};
-  }
 };
-
-/// Calls MeshInfo::print()
-std::ostream& operator<<(std::ostream& out, const SolverInterfaceImpl::MeshInfo& info);
 
 }} // namespace precice, impl

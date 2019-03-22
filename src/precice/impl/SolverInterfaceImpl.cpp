@@ -644,7 +644,7 @@ int SolverInterfaceImpl:: setMeshVertex
   const double* position )
 {
   TRACE(meshID);
-  CHECK(!_meshLock.check(meshID), "Cannot modify a locked mesh! " << makeMeshInfo(meshID));
+  CHECK(!_meshLock.check(meshID), "Cannot modify a locked mesh! " << meshID);
   Eigen::VectorXd internalPosition(_dimensions);
   for ( int dim=0; dim < _dimensions; dim++ ){
     internalPosition[dim] = position[dim];
@@ -672,7 +672,7 @@ void SolverInterfaceImpl:: setMeshVertices
   int*    ids )
 {
   TRACE(meshID, size);
-  CHECK(!_meshLock.check(meshID), "Cannot modify a locked mesh! " << makeMeshInfo(meshID));
+  CHECK(!_meshLock.check(meshID), "Cannot modify a locked mesh! " << meshID);
   if (_clientMode){
     _requestManager->requestSetMeshVertices(meshID, size, positions, ids);
   }
@@ -762,7 +762,7 @@ int SolverInterfaceImpl:: setMeshEdge
   int secondVertexID )
 {
   TRACE(meshID, firstVertexID, secondVertexID );
-  CHECK(!_meshLock.check(meshID), "Cannot modify a locked mesh! " << makeMeshInfo(meshID));
+  CHECK(!_meshLock.check(meshID), "Cannot modify a locked mesh! " << meshID);
   if ( _clientMode ){
     return _requestManager->requestSetMeshEdge ( meshID, firstVertexID, secondVertexID );
   }
@@ -794,7 +794,7 @@ void SolverInterfaceImpl:: setMeshTriangle
 {
   TRACE(meshID, firstEdgeID,
                   secondEdgeID, thirdEdgeID );
-  CHECK(!_meshLock.check(meshID), "Cannot modify a locked mesh! " << makeMeshInfo(meshID));
+  CHECK(!_meshLock.check(meshID), "Cannot modify a locked mesh! " << meshID);
   if ( _clientMode ){
     _requestManager->requestSetMeshTriangle ( meshID, firstEdgeID, secondEdgeID, thirdEdgeID );
   }
@@ -825,7 +825,7 @@ void SolverInterfaceImpl:: setMeshTriangleWithEdges
 {
   TRACE(meshID, firstVertexID,
                 secondVertexID, thirdVertexID);
-  CHECK(!_meshLock.check(meshID), "Cannot modify a locked mesh! " << makeMeshInfo(meshID));
+  CHECK(!_meshLock.check(meshID), "Cannot modify a locked mesh! " << meshID);
   if (_clientMode){
     _requestManager->requestSetMeshTriangleWithEdges(meshID,
                                                      firstVertexID,
@@ -921,7 +921,7 @@ void SolverInterfaceImpl:: setMeshQuad
 {
   TRACE(meshID, firstEdgeID, secondEdgeID, thirdEdgeID,
                 fourthEdgeID);
-  CHECK(!_meshLock.check(meshID), "Cannot modify a locked mesh! " << makeMeshInfo(meshID));
+  CHECK(!_meshLock.check(meshID), "Cannot modify a locked mesh! " << meshID);
   if (_clientMode){
     _requestManager->requestSetMeshQuad(meshID, firstEdgeID, secondEdgeID,
                                         thirdEdgeID, fourthEdgeID);
@@ -957,7 +957,7 @@ void SolverInterfaceImpl:: setMeshQuadWithEdges
 {
   TRACE(meshID, firstVertexID,
                 secondVertexID, thirdVertexID, fourthVertexID);
-  CHECK(!_meshLock.check(meshID), "Cannot modify a locked mesh! " << makeMeshInfo(meshID));
+  CHECK(!_meshLock.check(meshID), "Cannot modify a locked mesh! " << meshID);
   if (_clientMode){
     _requestManager->requestSetMeshQuadWithEdges(
         meshID, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID);
@@ -1814,27 +1814,6 @@ void SolverInterfaceImpl:: syncTimestep(double computedTimestepLength)
             "Ambiguous timestep length when calling request advance from several processes!");
     }
   }
-}
-
-void SolverInterfaceImpl::MeshInfo::print(std::ostream& out) const
-{
-    const auto & idmap = interface._meshIDs;
-    using KV = typename decltype(interface._meshIDs)::value_type;
-    auto iter = std::find_if(idmap.cbegin(), idmap.cend(), [&](const KV& kv){
-            return kv.second == meshID;
-            });
-    out << meshID << ":";
-    if(iter == idmap.cend()) {
-        out << "<unknown>";
-    } else {
-        out << '"' << iter->first << '"';
-    }
-}
-
-std::ostream& operator<<(std::ostream& out, const SolverInterfaceImpl::MeshInfo& info) 
-{
-    info.print(out);
-    return out;
 }
 
 }} // namespace precice, impl
