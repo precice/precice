@@ -7,6 +7,7 @@
 #include "mesh/config/MeshConfiguration.hpp"
 #include "mesh/config/DataConfiguration.hpp"
 #include <utility>
+#include <algorithm>
 
 namespace precice {
 namespace impl {
@@ -112,7 +113,6 @@ void Participant:: addWriteData
   context->toData = context->fromData;
   _dataContexts[data->getID()] = context;
   _writeDataContexts.push_back ( context );
-  _writeDataIDs.insert(data->getID());
 }
 
 void Participant:: addReadData
@@ -129,7 +129,6 @@ void Participant:: addReadData
   context->fromData = context->toData;
   _dataContexts[data->getID()] = context;
   _readDataContexts.push_back ( context );
-  _readDataIDs.insert(data->getID());
 }
 
 void Participant::addReadMappingContext
@@ -215,14 +214,18 @@ bool Participant:: isDataRead
 (
   int dataID ) const
 {
-    return _readDataIDs.count(dataID) == 1;
+    return std::any_of(_readDataContexts.begin(), _readDataContexts.end(), [dataID](const DataContext& context) {
+            return context.toData->getID() == dataID;
+            });
 }
 
 bool Participant:: isDataWrite
 (
   int dataID ) const
 {
-    return _writeDataIDs.count(dataID) == 1;
+    return std::any_of(_writeDataContexts.begin(), _writeDataContexts.end(), [dataID](const DataContext& context) {
+            return context.fromData->getID() == dataID;
+            });
 }
 
 const MeshContext& Participant:: meshContext

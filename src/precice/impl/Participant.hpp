@@ -13,7 +13,6 @@
 #include "partition/ReceivedPartition.hpp"
 #include "utils/MasterSlave.hpp"
 #include <string>
-#include <set>
 
 namespace precice {
   namespace impl {
@@ -186,13 +185,7 @@ private:
 
   utils::ptr_vector<DataContext> _writeDataContexts;
 
-  /// Data IDs available to write
-  std::set<int> _writeDataIDs;
-
   utils::ptr_vector<DataContext> _readDataContexts;
-
-  /// Data IDs available to read
-  std::set<int> _readDataIDs;
 
   //io::ExportContext _exportContext;
 
