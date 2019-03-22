@@ -241,6 +241,7 @@ target_sources(precice
     src/precice/impl/SharedPointer.hpp
     src/precice/impl/SolverInterfaceImpl.cpp
     src/precice/impl/SolverInterfaceImpl.hpp
+    src/precice/impl/ValidationMacros.hpp
     src/precice/impl/WatchPoint.cpp
     src/precice/impl/WatchPoint.hpp
     src/query/ExportVTKNeighbors.cpp
@@ -293,7 +294,6 @@ target_sources(precice
     src/utils/prettyprint.hpp
     src/utils/stacktrace.cpp
     src/utils/stacktrace.hpp
-    src/versions.hpp
     src/versions.hpp
     src/xml/ConfigParser.cpp
     src/xml/ConfigParser.hpp
