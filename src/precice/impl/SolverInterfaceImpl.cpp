@@ -644,7 +644,6 @@ int SolverInterfaceImpl:: setMeshVertex
   const double* position )
 {
   TRACE(meshID);
-  CHECK(!_meshLock.check(meshID), "Cannot modify a locked mesh! " << meshID);
   Eigen::VectorXd internalPosition(_dimensions);
   for ( int dim=0; dim < _dimensions; dim++ ){
     internalPosition[dim] = position[dim];
@@ -655,6 +654,7 @@ int SolverInterfaceImpl:: setMeshVertex
     index = _requestManager->requestSetMeshVertex ( meshID, internalPosition );
   }
   else {
+    CHECK(!_meshLock.check(meshID), "Cannot modify a locked mesh! " << meshID);
     MeshContext& context = _accessor->meshContext(meshID);
     mesh::PtrMesh mesh(context.mesh);
     DEBUG("MeshRequirement: " << context.meshRequirement);
@@ -672,11 +672,11 @@ void SolverInterfaceImpl:: setMeshVertices
   int*    ids )
 {
   TRACE(meshID, size);
-  CHECK(!_meshLock.check(meshID), "Cannot modify a locked mesh! " << meshID);
   if (_clientMode){
     _requestManager->requestSetMeshVertices(meshID, size, positions, ids);
   }
   else { //couplingMode
+    CHECK(!_meshLock.check(meshID), "Cannot modify a locked mesh! " << meshID);
     MeshContext& context = _accessor->meshContext(meshID);
     mesh::PtrMesh mesh(context.mesh);
     Eigen::VectorXd internalPosition(_dimensions);
@@ -762,11 +762,11 @@ int SolverInterfaceImpl:: setMeshEdge
   int secondVertexID )
 {
   TRACE(meshID, firstVertexID, secondVertexID );
-  CHECK(!_meshLock.check(meshID), "Cannot modify a locked mesh! " << meshID);
   if ( _clientMode ){
     return _requestManager->requestSetMeshEdge ( meshID, firstVertexID, secondVertexID );
   }
   else {
+    CHECK(!_meshLock.check(meshID), "Cannot modify a locked mesh! " << meshID);
     MeshContext& context = _accessor->meshContext(meshID);
     if ( context.meshRequirement == mapping::Mapping::MeshRequirement::FULL ){
       DEBUG("Full mesh required.");
@@ -794,11 +794,11 @@ void SolverInterfaceImpl:: setMeshTriangle
 {
   TRACE(meshID, firstEdgeID,
                   secondEdgeID, thirdEdgeID );
-  CHECK(!_meshLock.check(meshID), "Cannot modify a locked mesh! " << meshID);
   if ( _clientMode ){
     _requestManager->requestSetMeshTriangle ( meshID, firstEdgeID, secondEdgeID, thirdEdgeID );
   }
   else {
+    CHECK(!_meshLock.check(meshID), "Cannot modify a locked mesh! " << meshID);
     MeshContext& context = _accessor->meshContext(meshID);
     if ( context.meshRequirement == mapping::Mapping::MeshRequirement::FULL ){
       mesh::PtrMesh& mesh = context.mesh;
@@ -825,7 +825,6 @@ void SolverInterfaceImpl:: setMeshTriangleWithEdges
 {
   TRACE(meshID, firstVertexID,
                 secondVertexID, thirdVertexID);
-  CHECK(!_meshLock.check(meshID), "Cannot modify a locked mesh! " << meshID);
   if (_clientMode){
     _requestManager->requestSetMeshTriangleWithEdges(meshID,
                                                      firstVertexID,
@@ -833,6 +832,7 @@ void SolverInterfaceImpl:: setMeshTriangleWithEdges
                                                      thirdVertexID);
     return;
   }
+  CHECK(!_meshLock.check(meshID), "Cannot modify a locked mesh! " << meshID);
   MeshContext& context = _accessor->meshContext(meshID);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL){
     mesh::PtrMesh& mesh = context.mesh;
@@ -921,12 +921,12 @@ void SolverInterfaceImpl:: setMeshQuad
 {
   TRACE(meshID, firstEdgeID, secondEdgeID, thirdEdgeID,
                 fourthEdgeID);
-  CHECK(!_meshLock.check(meshID), "Cannot modify a locked mesh! " << meshID);
   if (_clientMode){
     _requestManager->requestSetMeshQuad(meshID, firstEdgeID, secondEdgeID,
                                         thirdEdgeID, fourthEdgeID);
   }
   else {
+    CHECK(!_meshLock.check(meshID), "Cannot modify a locked mesh! " << meshID);
     MeshContext& context = _accessor->meshContext(meshID);
     if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL){
       mesh::PtrMesh& mesh = context.mesh;
@@ -957,12 +957,12 @@ void SolverInterfaceImpl:: setMeshQuadWithEdges
 {
   TRACE(meshID, firstVertexID,
                 secondVertexID, thirdVertexID, fourthVertexID);
-  CHECK(!_meshLock.check(meshID), "Cannot modify a locked mesh! " << meshID);
   if (_clientMode){
     _requestManager->requestSetMeshQuadWithEdges(
         meshID, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID);
     return;
   }
+  CHECK(!_meshLock.check(meshID), "Cannot modify a locked mesh! " << meshID);
   MeshContext& context = _accessor->meshContext(meshID);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL){
     mesh::PtrMesh& mesh = context.mesh;
