@@ -62,11 +62,11 @@ public:
       const Eigen::VectorXd &designSpecification)
   {
     /*
-     std::cout<<"\n-------"<<std::endl;
-     std::cout<<"   old val: \n"<<oldValues<<std::endl;
-     std::cout<<"   new val: \n"<<newValues<<"\n"<<std::endl;
-     std::cout<<"   design spec: \n"<<designSpecification<<"\n"<<std::endl;
-     std::cout<<"-------\n"<<std::endl;
+     std::cout<<"\n-------\n";
+     std::cout<<"   old val: \n"<<oldValues<<'\n';
+     std::cout<<"   new val: \n"<<newValues<<"\n\n";
+     std::cout<<"   design spec: \n"<<designSpecification<<"\n\n";
+     std::cout<<"-------\n\n";
 */
 
     _normDiff      = utils::MasterSlave::l2norm((newValues - oldValues) - designSpecification);

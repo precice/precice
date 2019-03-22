@@ -1015,12 +1015,12 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computePreallocationMatr
   }
 
   if (utils::Parallel::getCommunicatorSize() == 1) {
-    // std::cout << "Computed Preallocation C Seq diagonal = " << std::accumulate(d_nnz.begin(), d_nnz.end(), 0) << std::endl;
+    // std::cout << "Computed Preallocation C Seq diagonal = " << std::accumulate(d_nnz.begin(), d_nnz.end(), 0) << '\n';
     ierr = MatSeqSBAIJSetPreallocation(_matrixC, _matrixC.blockSize(), 0, d_nnz.data()); CHKERRV(ierr);
   }
   else {
     // std::cout << "Computed Preallocation C MPI diagonal = " << std::accumulate(d_nnz.begin(), d_nnz.end(), 0)
-    // << ", off-diagonal = " << std::accumulate(o_nnz.begin(), o_nnz.end(), 0) << std::endl;
+    // << ", off-diagonal = " << std::accumulate(o_nnz.begin(), o_nnz.end(), 0) << '\n';
     ierr = MatMPISBAIJSetPreallocation(_matrixC, _matrixC.blockSize(), 0, d_nnz.data(), 0, o_nnz.data()); CHKERRV(ierr);
   }
   MatSetOption(_matrixC, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_TRUE);
@@ -1092,12 +1092,12 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computePreallocationMatr
     }
   }
   if (utils::Parallel::getCommunicatorSize() == 1) {
-    // std::cout << "Preallocation A Seq diagonal = " << std::accumulate(d_nnz.begin(), d_nnz.end(), 0) << std::endl;
+    // std::cout << "Preallocation A Seq diagonal = " << std::accumulate(d_nnz.begin(), d_nnz.end(), 0) << '\n';
     ierr = MatSeqAIJSetPreallocation(_matrixA, 0, d_nnz.data()); CHKERRV(ierr);
   }
   else {
     // std::cout << "Preallocation A MPI diagonal = " << std::accumulate(d_nnz.begin(), d_nnz.end(), 0)
-    // << ", off-diagonal = " << std::accumulate(o_nnz.begin(), o_nnz.end(), 0) << std::endl;
+    // << ", off-diagonal = " << std::accumulate(o_nnz.begin(), o_nnz.end(), 0) << '\n';
     ierr = MatMPIAIJSetPreallocation(_matrixA, 0, d_nnz.data(), 0, o_nnz.data()); CHKERRV(ierr);
   }
   MatSetOption(_matrixA, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_TRUE);
@@ -1169,12 +1169,12 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::savedPreallocationMatrixC(mes
   }
 
   if (utils::Parallel::getCommunicatorSize() == 1) {
-    // std::cout << "Computed Preallocation C Seq diagonal = " << std::accumulate(d_nnz.begin(), d_nnz.end(), 0) << std::endl;
+    // std::cout << "Computed Preallocation C Seq diagonal = " << std::accumulate(d_nnz.begin(), d_nnz.end(), 0) << '\n';
     MatSeqSBAIJSetPreallocation(_matrixC, _matrixC.blockSize(), 0, d_nnz.data());
   }
   else {
     // std::cout << "Computed Preallocation C MPI diagonal = " << std::accumulate(d_nnz.begin(), d_nnz.end(), 0)
-    //           << ", off-diagonal = " << std::accumulate(o_nnz.begin(), o_nnz.end(), 0) << std::endl;
+    //           << ", off-diagonal = " << std::accumulate(o_nnz.begin(), o_nnz.end(), 0) << '\n';
     MatMPISBAIJSetPreallocation(_matrixC, _matrixC.blockSize(), 0, d_nnz.data(), 0, o_nnz.data());
   }
   MatSetOption(_matrixC, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_TRUE);
@@ -1252,12 +1252,12 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::savedPreallocationMatrixA(mes
     }
   }
   if (utils::Parallel::getCommunicatorSize() == 1) {
-    // std::cout << "Preallocation A Seq diagonal = " << std::accumulate(d_nnz.begin(), d_nnz.end(), 0) << std::endl;
+    // std::cout << "Preallocation A Seq diagonal = " << std::accumulate(d_nnz.begin(), d_nnz.end(), 0) << '\n';
     MatSeqAIJSetPreallocation(_matrixA, 0, d_nnz.data());
   }
   else {
     // std::cout << "Preallocation A MPI diagonal = " << std::accumulate(d_nnz.begin(), d_nnz.end(), 0)
-    //           << ", off-diagonal = " << std::accumulate(o_nnz.begin(), o_nnz.end(), 0) << std::endl;
+    //           << ", off-diagonal = " << std::accumulate(o_nnz.begin(), o_nnz.end(), 0) << '\n';
     MatMPIAIJSetPreallocation(_matrixA, 0, d_nnz.data(), 0, o_nnz.data());
   }
   MatSetOption(_matrixA, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_TRUE);

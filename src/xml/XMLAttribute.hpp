@@ -152,13 +152,13 @@ void XMLAttribute<ATTRIBUTE_T>::readValue(std::map<std::string, std::string> &aA
 {
   TRACE(_name);
   if (_read) {
-    std::cout << "Attribute \"" + _name + "\" is defined multiple times" << std::endl;
+    std::cout << "Attribute \"" + _name + "\" is defined multiple times\n";
     throw "Attribute \"" + _name + "\" is defined multiple times";
   }
 
   if (aAttributes.find(getName()) == aAttributes.end()) {
     if (not _hasDefaultValue) {
-      std::cout << "Attribute \"" + _name + "\" missing" << std::endl;
+      std::cout << "Attribute \"" + _name + "\" missing\n";
       throw "Attribute \"" + _name + "\" missing";
     }
     set(_value, _defaultValue);
@@ -178,7 +178,7 @@ void XMLAttribute<ATTRIBUTE_T>::readValue(std::map<std::string, std::string> &aA
             stream << " or value must be \"" << *first << '"';
         }
 
-        std::cout << stream.str() << std::endl;
+        std::cout << stream.str() << '\n';
         throw stream.str();
       }
     }
@@ -306,7 +306,7 @@ std::string XMLAttribute<ATTRIBUTE_T>::printDTD(const std::string &ElementName) 
     dtd << "#REQUIRED";
   }
 
-  dtd << ">" << std::endl;
+  dtd << ">\n";
 
   return dtd.str();
 }

@@ -76,7 +76,7 @@ public:
   void printRow(size_t index, T a)
   {
     out << padding << std::setw(cols[index].width) << std::setprecision(cols[index].precision)
-         << a << padding << sepChar << std::endl;
+         << a << padding << sepChar << '\n';
   }
 
 

@@ -70,13 +70,13 @@ void BaseQNPostProcessing::initialize(
 
   Eigen::IOFormat CommaInitFmt(Eigen::StreamPrecision, Eigen::DontAlignCols, ", ", ", ", "", "", " << ", ";");
 
-  _debugOut<<"initialization:"<<std::endl;
+  _debugOut<<"initialization:\n";
   for (int id : _dataIDs) {
       const auto& values = *cplData[id]->values;
       const auto& oldValues = cplData[id]->oldValues.col(0);
 
-      _debugOut<<"id: "<<id<<" dim: "<<cplData[id]->dimension<<"     values: "<<values.format(CommaInitFmt)<<std::endl;
-      _debugOut<<"id: "<<id<<" dim: "<<cplData[id]->dimension<<" old values: "<<oldValues.format(CommaInitFmt)<<std::endl;
+      _debugOut<<"id: "<<id<<" dim: "<<cplData[id]->dimension<<"     values: "<<values.format(CommaInitFmt)<<'\n';
+      _debugOut<<"id: "<<id<<" dim: "<<cplData[id]->dimension<<" old values: "<<oldValues.format(CommaInitFmt)<<'\n';
     }
   _debugOut<<"\n";
   */
@@ -128,7 +128,7 @@ void BaseQNPostProcessing::initialize(
     _dimOffsets.resize(utils::MasterSlave::_size + 1);
     _dimOffsets[0] = 0;
     //for (auto & elem : _dataIDs) {
-    //	std::cout<<" Offsets:(vertex) \n"<<cplData[elem]->mesh->getVertexOffsets()<<std::endl;
+    //	std::cout<<" Offsets:(vertex) \n"<<cplData[elem]->mesh->getVertexOffsets()<<'\n';
     //}
     for (size_t i = 0; i < _dimOffsets.size() - 1; i++) {
       int accumulatedNumberOfUnknowns = 0;
@@ -140,14 +140,14 @@ void BaseQNPostProcessing::initialize(
     }
     DEBUG("Number of unknowns at the interface (global): " << _dimOffsets.back());
     if (utils::MasterSlave::_masterMode) {
-      _infostringstream << "\n--------\n DOFs (global): " << _dimOffsets.back() << "\n offsets: " << _dimOffsets << std::endl;
+      _infostringstream << "\n--------\n DOFs (global): " << _dimOffsets.back() << "\n offsets: " << _dimOffsets << '\n';
     }
 
     // test that the computed number of unknown per proc equals the number of entries actually present on that proc
     size_t unknowns = _dimOffsets[utils::MasterSlave::_rank + 1] - _dimOffsets[utils::MasterSlave::_rank];
     assertion(entries == unknowns, entries, unknowns);
   } else {
-    _infostringstream << "\n--------\n DOFs (global): " << entries << std::endl;
+    _infostringstream << "\n--------\n DOFs (global): " << entries << '\n';
   }
 
   // set the number of global rows in the QRFactorization. This is essential for the correctness in master-slave mode!
@@ -310,13 +310,13 @@ void BaseQNPostProcessing::performPostProcessing(
 
   /*
   Eigen::IOFormat CommaInitFmt(Eigen::StreamPrecision, Eigen::DontAlignCols, ", ", ", ", "", "", " << ", ";");
-  _debugOut<<"iteration: "<<its<<" tStep: "<<tSteps<<"   cplData entry:"<<std::endl;
+  _debugOut<<"iteration: "<<its<<" tStep: "<<tSteps<<"   cplData entry:\n";
   for (int id : _dataIDs) {
       const auto& values = *cplData[id]->values;
       const auto& oldValues = cplData[id]->oldValues.col(0);
 
-      _debugOut<<"id: "<<id<<"     values: "<<values.format(CommaInitFmt)<<std::endl;
-      _debugOut<<"id: "<<id<<" old values: "<<oldValues.format(CommaInitFmt)<<std::endl;
+      _debugOut<<"id: "<<id<<"     values: "<<values.format(CommaInitFmt)<<'\n';
+      _debugOut<<"id: "<<id<<" old values: "<<oldValues.format(CommaInitFmt)<<'\n';
     }
   _debugOut<<"\n";
   */
@@ -445,13 +445,13 @@ void BaseQNPostProcessing::performPostProcessing(
   splitCouplingData(cplData);
 
   /*
-  _debugOut<<"finished update: "<<std::endl;
+  _debugOut<<"finished update: \n";
   for (int id : _dataIDs) {
       const auto& values = *cplData[id]->values;
       const auto& oldValues = cplData[id]->oldValues.col(0);
 
-      _debugOut<<"id: "<<id<<"norm: "<<values.norm()<<"     values: "<<values.format(CommaInitFmt)<<std::endl;
-      _debugOut<<"id: "<<id<<"norm: "<<oldValues.norm()<<" old values: "<<oldValues.format(CommaInitFmt)<<std::endl;
+      _debugOut<<"id: "<<id<<"norm: "<<values.norm()<<"     values: "<<values.format(CommaInitFmt)<<'\n';
+      _debugOut<<"id: "<<id<<"norm: "<<oldValues.norm()<<" old values: "<<oldValues.format(CommaInitFmt)<<'\n';
     }
   _debugOut<<"\n";
   */
@@ -534,7 +534,7 @@ void BaseQNPostProcessing::iterationsConverged(
   
   if (utils::MasterSlave::_masterMode || (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode))
     _infostringstream << "# time step " << tSteps << " converged #\n iterations: " << its
-                      << "\n used cols: " << getLSSystemCols() << "\n del cols: " << _nbDelCols << std::endl;
+                      << "\n used cols: " << getLSSystemCols() << "\n del cols: " << _nbDelCols << '\n';
 
   its = 0;
   tSteps++;
