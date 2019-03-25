@@ -3,6 +3,7 @@
 All notable changes to this project will be documented in this file. For future plans, see our [Roadmap](https://github.com/precice/precice/wiki/Roadmap).
 
 ## develop
+- Add Libs.private field to the pkg-config file
 
 ## 1.4.0
 - The python modules are now proper packages tracking dependencies etc.
