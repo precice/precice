@@ -25,6 +25,11 @@
     PRECICE_REQUIRE_MESH_USE_IMPL(id) \
     CHECK(context.provideMesh, "This participant is required to provide Mesh \"" << context.mesh->getName() << "\"!");
 
+/// Implementation of PRECICE_REQUIRE_MESH_MODIFY
+#define PRECICE_REQUIRE_MESH_MODIFY_IMPL(id) \
+    PRECICE_REQUIRE_MESH_PROVIDE_IMPL(id) \
+    CHECK(!_meshLock.check(meshID), "This participant attempted to modify the locked Mesh \"" << context.mesh->getName() << "\"!");
+
 /// Validates a given meshID
 #define PRECICE_VALIDATE_MESH_ID(meshID) \
     do { \
@@ -44,6 +49,13 @@
     do { \
         const auto id = (meshID); \
         PRECICE_REQUIRE_MESH_PROVIDE_IMPL(id) \
+    } while(false)
+
+/// Validates a given meshID and checks if the mesh is provided by the current participant and unlocked
+#define PRECICE_REQUIRE_MESH_MODIFY(meshID) \
+    do { \
+        const auto id = (meshID); \
+        PRECICE_REQUIRE_MESH_MODIFY_IMPL(id) \
     } while(false)
 
 //
