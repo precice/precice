@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file. For future 
 
 ## develop
 - The SolverInterface is now hardened against invalid IDs and misconfiguration using a consitent mechanism to express requirements.
+- The SolverInterface now keeps track of the Mesh states, which results more informative error messages for mesh related functions.
 
 ## 1.4.0
 - The python modules are now proper packages tracking dependencies etc.

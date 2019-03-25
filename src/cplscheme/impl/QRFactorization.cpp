@@ -524,7 +524,7 @@ int QRFactorization::orthogonalize_stable(
         WARN("The new column is in the range of Q, thus not possible to orthogonalize. Try to insert a unit vector that is orthogonal to the columns space of Q.");
         //DEBUG("[QR-dec] - reorthogonalization");
         if (_fstream_set)
-          (*_infostream) << "[QR-dec] - reorthogonalization" << std::endl;
+          (*_infostream) << "[QR-dec] - reorthogonalization\n";
 
         restart = true;
 
@@ -575,7 +575,7 @@ int QRFactorization::orthogonalize_stable(
             }
           }
           if (_fstream_set)
-            (*_infostream) << "           global u(k):" << global_uk << ",  global k: " << global_k << ",  rank: " << rank << std::endl;
+            (*_infostream) << "           global u(k):" << global_uk << ",  global k: " << global_k << ",  rank: " << rank << '\n';
         }
 
         // take correct action if v is null

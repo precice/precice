@@ -11,7 +11,7 @@
    { \
       std::ostringstream conv; \
       conv << message; \
-      std::cout << conv.str() << std::endl; \
+      std::cout << conv.str() << '\n'; \
    }
 #else
 #define STRUCTURE_DEBUG(message)
@@ -21,7 +21,7 @@
    { \
       std::ostringstream conv; \
       conv << message; \
-      std::cout << conv.str() << std::endl; \
+      std::cout << conv.str() << '\n'; \
    }
 
 #endif /* GLOBALS_HPP_ */

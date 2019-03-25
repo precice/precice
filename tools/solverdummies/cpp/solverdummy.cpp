@@ -8,7 +8,7 @@
 
 int main (int argc, char **argv)
 {
-  std::cout << "Starting SolverDummy..." << std::endl;
+  std::cout << "Starting SolverDummy...\n";
   int commRank = 0;
   int commSize = 1;
 
@@ -16,12 +16,12 @@ int main (int argc, char **argv)
   using namespace precice::constants;
 
   if (argc != 4){
-    std::cout << "Usage: ./solverdummy configFile solverName meshName" << std::endl;
-    std::cout << std::endl;
-    std::cout << "Parameter description" << std::endl;
-    std::cout << "  configurationFile: Path and filename of preCICE configuration" << std::endl;
-    std::cout << "  solverName:        SolverDummy participant name in preCICE configuration" << std::endl;
-    std::cout << "  meshName:          Mesh in preCICE configuration that carries read and write data" << std::endl;
+    std::cout << "Usage: ./solverdummy configFile solverName meshName\n";
+    std::cout << '\n';
+    std::cout << "Parameter description\n";
+    std::cout << "  configurationFile: Path and filename of preCICE configuration\n";
+    std::cout << "  solverName:        SolverDummy participant name in preCICE configuration\n";
+    std::cout << "  meshName:          Mesh in preCICE configuration that carries read and write data\n";
     return 1;
 }
 
@@ -47,23 +47,23 @@ int main (int argc, char **argv)
   while (interface.isCouplingOngoing()){
 
     if (interface.isActionRequired(actionWriteIterationCheckpoint())){
-      std::cout << "DUMMY: Writing iteration checkpoint" << std::endl;
+      std::cout << "DUMMY: Writing iteration checkpoint\n";
       interface.fulfilledAction(actionWriteIterationCheckpoint());
     }
 
     dt = interface.advance(dt);
 
     if (interface.isActionRequired(actionReadIterationCheckpoint())){
-      std::cout << "DUMMY: Writing iteration checkpoint" << std::endl;
+      std::cout << "DUMMY: Writing iteration checkpoint\n";
       interface.fulfilledAction(actionReadIterationCheckpoint());
     }
     else{
-      std::cout << "DUMMY: Advancing in time" << std::endl;
+      std::cout << "DUMMY: Advancing in time\n";
     }
   }
 
   interface.finalize();
-  std::cout << "DUMMY: Closing C++ solver dummy..." << std::endl;
+  std::cout << "DUMMY: Closing C++ solver dummy...\n";
 
   return 0;
 }

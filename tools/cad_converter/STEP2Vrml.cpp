@@ -26,7 +26,7 @@ bool STEP2Vrml:: readFile ( const std::string & inputFileName )
 void STEP2Vrml:: loadReport ( void )
 {
    if ( !mySTEPFileName || ( mySTEPFileName [0] == '\0' ) ) {
-      cout << "no input Filename" << endl;
+      cout << "no input Filename" << '\n';
       return;
    }
 

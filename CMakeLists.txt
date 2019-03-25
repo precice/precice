@@ -310,7 +310,7 @@ write_basic_package_version_file("preciceConfigVersion.cmake"
   )
 
 # Install the Config and the ConfigVersion files
-install(FILES "preciceConfig.cmake" "${preCICE_BINARY_DIR}/preciceConfigVersion.cmake"
+install(FILES "cmake/preciceConfig.cmake" "${preCICE_BINARY_DIR}/preciceConfigVersion.cmake"
   DESTINATION lib/cmake/precice
   )
 
@@ -318,7 +318,7 @@ install(FILES "preciceConfig.cmake" "${preCICE_BINARY_DIR}/preciceConfigVersion.
 export(EXPORT preciceTargets
   NAMESPACE precice::
   FILE "preciceTargets.cmake")
-file(COPY "preciceConfig.cmake"
+file(COPY "cmake/preciceConfig.cmake"
   DESTINATION "${preCICE_BINARY_DIR}")
 
 

@@ -275,6 +275,7 @@ target_sources(precice
     src/utils/ManageUniqueIDs.hpp
     src/utils/MasterSlave.cpp
     src/utils/MasterSlave.hpp
+    src/utils/MultiLock.hpp
     src/utils/Parallel.cpp
     src/utils/Parallel.hpp
     src/utils/Petsc.cpp

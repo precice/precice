@@ -1,5 +1,6 @@
 #include "Petsc.hpp"
 #include "utils/Parallel.hpp"
+#include <utility>
 
 #ifndef PRECICE_NO_PETSC
 #include "petsc.h"
@@ -96,7 +97,26 @@ std::string getName(T obj)
 
 /////////////////////////////////////////////////////////////////////////
 
-Vector::Vector(std::string name)
+Vector::Vector(const Vector &v)
+{
+  PetscErrorCode ierr = 0;
+  ierr = VecDuplicate(v.vector, &vector); CHKERRV(ierr);
+  ierr = VecCopy(v.vector, vector); CHKERRV(ierr);
+  setName(vector, getName(v.vector));
+}
+
+Vector& Vector::operator=(Vector other)
+{
+    swap(other);
+    return *this;
+}
+
+Vector::Vector(Vector&& other) {
+  vector = other.vector;
+  other.vector = nullptr;
+}
+
+Vector::Vector(const std::string& name)
 {
   int size;
   MPI_Comm_size(utils::Parallel::getGlobalCommunicator(), &size);
@@ -105,35 +125,10 @@ Vector::Vector(std::string name)
   setName(vector, name);
 }
 
-Vector::Vector(Vec &v, std::string name)
+Vector::Vector(Vec& v, const std::string& name) : vector(v)
 {
-  VecCopy(v, vector);
   setName(vector, name);
 }
-
-Vector::Vector(Vector &v, std::string name)
-{
-  PetscErrorCode ierr = 0;
-  ierr = VecDuplicate(v.vector, &vector); CHKERRV(ierr);
-  setName(vector, name);
-}
-
-Vector::Vector(Mat &m, std::string name, LEFTRIGHT type)
-{
-  // MatGetVecs is deprecated, we keep it due to the old PETSc version at the SuperMUC.
-  PetscErrorCode ierr = 0;
-  if (type == LEFTRIGHT::LEFT) {
-    ierr = MatCreateVecs(m, nullptr, &vector); CHKERRV(ierr); // a vector with the same number of rows
-  }
-  else {
-    ierr = MatCreateVecs(m, &vector, nullptr); CHKERRV(ierr); // a vector with the same number of cols
-  }
-  setName(vector, name);
-}
-
-Vector::Vector(Matrix &m, std::string name, LEFTRIGHT type) :
-  Vector(m.matrix, name, type)
-{}
 
 Vector::~Vector()
 {
@@ -142,6 +137,51 @@ Vector::~Vector()
   PetscInitialized(&petscIsInitialized);
   if (petscIsInitialized) // If PetscFinalize is called before ~Vector
     ierr = VecDestroy(&vector); CHKERRV(ierr);
+}
+
+
+Vector Vector::allocate(const std::string& name)
+{
+    return Vector{name};
+}
+
+Vector Vector::allocate(Vector& other, const std::string& name)
+{
+  return allocate(other.vector, name);
+}
+
+Vector Vector::allocate(Vec& other, const std::string& name) 
+{
+  Vec newvector;
+  PetscErrorCode ierr = 0;
+  ierr = VecDuplicate(other, &newvector); [&]{CHKERRV(ierr);}();
+  return Vector{newvector, name};
+}
+
+Vector Vector::allocate(Matrix& m, const std::string& name, LEFTRIGHT type)
+{
+  return allocate(m.matrix, name, type);
+}
+
+Vector Vector::allocate(Mat& m, const std::string& name, LEFTRIGHT type)
+{
+  Vec newvector;
+  // MatGetVecs is deprecated, we keep it due to the old PETSc version at the SuperMUC.
+  PetscErrorCode ierr = 0;
+  if (type == LEFTRIGHT::LEFT) {
+    ierr = MatCreateVecs(m, nullptr, &newvector);// a vector with the same number of rows
+  }
+  else {
+    ierr = MatCreateVecs(m, &newvector, nullptr); // a vector with the same number of cols
+  }
+  [&]{CHKERRV(ierr);}(); 
+  return Vector{newvector, name};
+}
+
+void Vector::swap(Vector& other) noexcept
+{
+    using std::swap;
+    swap(vector, other.vector);
 }
 
 Vector::operator Vec&()
@@ -257,6 +297,11 @@ void Vector::view() const
 {
   PetscErrorCode ierr;
   ierr = VecView(vector, PETSC_VIEWER_STDOUT_WORLD); CHKERRV(ierr);
+}
+
+void swap(Vector& lhs, Vector& rhs) noexcept
+{
+    lhs.swap(rhs);
 }
 
 /////////////////////////////////////////////////////////////////////////

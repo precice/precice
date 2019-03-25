@@ -20,11 +20,19 @@ TXTWriter:: TXTWriter
   _file << std::setprecision(16);
 }
 
-TXTWriter:: ~TXTWriter()
+void TXTWriter::flush()
 {
-  if (_file){
-    _file.close ();
+    _file.flush();
+}
+
+void TXTWriter::write(const Eigen::MatrixXd& matrix)
+{
+  for (long i = 0; i < matrix.rows(); i++) {
+    for (long j = 0; j < matrix.cols(); j++) {
+      _file << matrix(i, j) << ' ';
+    }
   }
+  _file << '\n';
 }
 
 }} // namespace precice, io

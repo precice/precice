@@ -7,9 +7,9 @@
 
 void printUsage()
 {
-  std::cout << "Usage:" << std::endl << std::endl;
-  std::cout << "Run server (deprecated)  :  binprecice server ParticipantName ConfigurationName [LogConfFile]" << std::endl;
-  std::cout << "Print XML reference      :  binprecice xml" << std::endl;
+  std::cout << "Usage:\n\n";
+  std::cout << "Run server (deprecated)  :  binprecice server ParticipantName ConfigurationName [LogConfFile]\n";
+  std::cout << "Print XML reference      :  binprecice xml\n";
   std::cout << "Print DTD for XML config :  binprecice dtd" << std::endl;
 }
 
@@ -59,37 +59,37 @@ int main ( int argc, char** argv )
 
   if ( runServer ){
     assertion(not runHelp);
-    std::cout << "PreCICE running server..." << std::endl;
+    std::cout << "PreCICE running server...\n";
     std::string participantName ( argv[2] );
     std::string configFile ( argv[3] );
-    std::cout << "  Participant = " << participantName << std::endl;
-    std::cout << "  Configuration = " << configFile << std::endl;
+    std::cout << "  Participant = " << participantName << '\n';
+    std::cout << "  Configuration = " << configFile << '\n';
     int size = precice::utils::Parallel::getCommunicatorSize();
     if ( size != 1 ){
-      std::cerr << "Server can be run with only one process!" << std::endl;
+      std::cerr << "Server can be run with only one process!\n";
     }
     precice::impl::SolverInterfaceImpl server ( participantName, 0, 1, true );
     server.configure(configFile);
     server.runServer();
-    std::cout << std::endl << std::endl << "...finished running server" << std::endl;
+    std::cout << "\n\n...finished running server\n";
   }
   else if (runHelp){
     assertion(not runServer);
     precice::config::Configuration config;
-    std::cout << config.getXMLTag().printDocumentation(0) << std::endl << std::endl;
+    std::cout << config.getXMLTag().printDocumentation(0) << "\n\n";
   }
   else if (runDtd) {
 	assertion(not runServer);
     precice::config::Configuration config;
-    std::cout << config.getXMLTag().printDTD(true) << std::endl << std::endl;
+    std::cout << config.getXMLTag().printDTD(true) << "\n\n";
   }
   else {
     assertion ( false );
   }
   precice::utils::Petsc::finalize();
   //precice::utils::Parallel::synchronizeProcesses();
-  //std::cout << "close: " << precice::utils::Parallel::getProcessRank() << std::endl;
+  //std::cout << "close: " << precice::utils::Parallel::getProcessRank() << '\n';
   precice::utils::Parallel::finalizeMPI();
-  //std::cout << "done" << std::endl;
+  //std::cout << "done\n";
   return 0;
 }
