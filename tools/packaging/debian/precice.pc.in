@@ -8,4 +8,5 @@ Description: preCICE coupling library
 Version: @preCICE_VERSION@
 URL: https://www.precice.org
 Libs: -L${libdir} -lprecice
+Libs.private: @PRECICE_PKG_PRIVATE_LIBS@
 Cflags: -I${includedir}

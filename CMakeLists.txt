@@ -140,13 +140,17 @@ set_target_properties(precice PROPERTIES
   CXX_STANDARD 11
   SOVERSION ${preCICE_VERSION}
   )
+# Initialize list of private libraries for the pkg-config Libs.private field
+set(PRECICE_PKG_PRIVATE_LIBS "")
 
 # Setup Boost
 target_compile_definitions(precice PRIVATE BOOST_ALL_DYN_LINK BOOST_ASIO_ENABLE_OLD_SERVICES)
 target_link_libraries(precice PRIVATE ${Boost_LIBRARIES})
 target_include_directories(precice PRIVATE ${Boost_INCLUDE_DIRS})
+list(APPEND PRECICE_PKG_PRIVATE_LIBS -lboost_filesystem -lboost_log -lboost_log_setup -lboost_program_options -lboost_system -lboost_thread -lboost_unit_test_framework -lboost_date_time -lboost_regex -lboost_chrono -lboost_atomic)
 if(UNIX OR APPLE OR MINGW)
   target_link_libraries(precice PRIVATE ${CMAKE_DL_LIBS})
+  list(APPEND PRECICE_PKG_PRIVATE_LIBS -ldl)
 endif()
 
 # Setup Eigen3
@@ -156,6 +160,7 @@ target_compile_definitions(precice PRIVATE "$<$<CONFIG:DEBUG>:EIGEN_INITIALIZE_M
 # Setup LIBXML2
 target_include_directories(precice PRIVATE ${LIBXML2_INCLUDE_DIR})
 target_link_libraries(precice PRIVATE ${LIBXML2_LIBRARIES})
+list(APPEND PRECICE_PKG_PRIVATE_LIBS -lxml2)
 
 if (Platform STREQUAL "SuperMUC")
   target_compile_definitions(precice PRIVATE SuperMUC_WORK)
@@ -164,6 +169,7 @@ endif()
 # Setup MPI
 if (MPI)
   target_link_libraries(precice PRIVATE MPI::MPI_CXX)
+  list(APPEND PRECICE_PKG_PRIVATE_LIBS ${MPI_CXX_LIB_NAMES})
 else()
   target_compile_definitions(precice PRIVATE PRECICE_NO_MPI)
 endif()
@@ -172,6 +178,7 @@ endif()
 if (PETSC AND MPI)
   target_include_directories(precice PRIVATE ${PETSC_INCLUDES})
   target_link_libraries(precice PRIVATE ${PETSC_LIBRARIES})
+  list(APPEND PRECICE_PKG_PRIVATE_LIBS -lpetsc)
 else()
   target_compile_definitions(precice PRIVATE PRECICE_NO_PETSC)
 endif()
@@ -182,6 +189,7 @@ if (PYTHON)
   target_include_directories(precice PRIVATE ${PYTHON_INCLUDE_DIRS})
   target_compile_definitions(precice PRIVATE NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION)
   target_link_libraries(precice PRIVATE ${PYTHON_LIBRARIES})
+  list(APPEND PRECICE_PKG_PRIVATE_LIBS -lpython2.7)
 else()
   target_compile_definitions(precice PRIVATE PRECICE_NO_PYTHON)
 endif()
@@ -367,6 +375,8 @@ else()
 endif()
 
 # Configure a pkg-config file
+# Turn the Libs.private list from a semicolon-separated to a space-separated list 
+string(REPLACE ";" " " PRECICE_PKG_PRIVATE_LIBS "${PRECICE_PKG_PRIVATE_LIBS}")
 configure_file(
   "${PROJECT_SOURCE_DIR}/tools/packaging/debian/precice.pc.in"
   "lib/pkgconfig/libprecice.pc"
