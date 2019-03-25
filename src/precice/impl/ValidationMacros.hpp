@@ -14,14 +14,14 @@
 #define PRECICE_VALIDATE_MESH_ID_IMPL(id) \
     CHECK(_dataIDs.find(id) != _dataIDs.end(), "There is no Mesh with ID:" << id);
 
-/// Implementation of PRECICE_REQUIRE_MESH_READ
-#define PRECICE_REQUIRE_MESH_READ_IMPL(id) \
+/// Implementation of PRECICE_REQUIRE_MESH_USE
+#define PRECICE_REQUIRE_MESH_USE_IMPL(id) \
     PRECICE_VALIDATE_MESH_ID_IMPL(id) \
     CHECK(_accessor->isMeshUsed(id), "Mesh is not used by this participant! ID:" << id);
 
-/// Implementation of PRECICE_REQUIRE_MESH_WRITE
-#define PRECICE_REQUIRE_MESH_WRITE_IMPL(id) \
-    PRECICE_REQUIRE_MESH_READ_IMPL(id) \
+/// Implementation of PRECICE_REQUIRE_MESH_PROVIDE
+#define PRECICE_REQUIRE_MESH_PROVIDE_IMPL(id) \
+    PRECICE_REQUIRE_MESH_USE_IMPL(id) \
     MeshContext& context = _accessor->meshContext(id); \
     CHECK(context.provideMesh, "Can only write to provided meshes! " << id);
 
@@ -32,18 +32,18 @@
         PRECICE_VALIDATE_MESH_ID_IMPL(id) \
     } while(false)
 
-/// Validates a given meshID and checks for read access
-#define PRECICE_REQUIRE_MESH_READ(meshID) \
+/// Validates a given meshID and checks if the mesh is used by the current participant
+#define PRECICE_REQUIRE_MESH_USE(meshID) \
     do { \
         const auto id = (meshID); \
-        PRECICE_REQUIRE_MESH_READ_IMPL(id) \
+        PRECICE_REQUIRE_MESH_USE_IMPL(id) \
     } while(false)
 
-/// Validates a given meshID and checks for write access
-#define PRECICE_REQUIRE_MESH_WRITE(meshID) \
+/// Validates a given meshID and checks if the mesh is provided by the current participant
+#define PRECICE_REQUIRE_MESH_PROVIDE(meshID) \
     do { \
         const auto id = (meshID); \
-        PRECICE_REQUIRE_MESH_WRITE_IMPL(id) \
+        PRECICE_REQUIRE_MESH_PROVIDE_IMPL(id) \
     } while(false)
 
 //

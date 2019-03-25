@@ -599,7 +599,7 @@ int SolverInterfaceImpl:: getMeshVertexSize
     size = _requestManager->requestGetMeshVertexSize(meshID);
   }
   else {
-    PRECICE_REQUIRE_MESH_READ(meshID);
+    PRECICE_REQUIRE_MESH_USE(meshID);
     MeshContext& context = _accessor->meshContext(meshID);
     assertion(context.mesh.get() != nullptr);
     size = context.mesh->vertices().size();
@@ -651,7 +651,7 @@ int SolverInterfaceImpl:: setMeshVertex
     index = _requestManager->requestSetMeshVertex ( meshID, internalPosition );
   }
   else {
-    PRECICE_REQUIRE_MESH_WRITE(meshID);
+    PRECICE_REQUIRE_MESH_PROVIDE(meshID);
     MeshContext& context = _accessor->meshContext(meshID);
     mesh::PtrMesh mesh(context.mesh);
     DEBUG("MeshRequirement: " << context.meshRequirement);
@@ -674,7 +674,7 @@ void SolverInterfaceImpl:: setMeshVertices
     _requestManager->requestSetMeshVertices(meshID, size, positions, ids);
   }
   else { //couplingMode
-    PRECICE_REQUIRE_MESH_WRITE(meshID);
+    PRECICE_REQUIRE_MESH_PROVIDE(meshID);
     MeshContext& context = _accessor->meshContext(meshID);
     mesh::PtrMesh mesh(context.mesh);
     Eigen::VectorXd internalPosition(_dimensions);
@@ -702,7 +702,7 @@ void SolverInterfaceImpl:: getMeshVertices
     _requestManager->requestGetMeshVertices(meshID, size, ids, positions);
   }
   else {
-    PRECICE_REQUIRE_MESH_READ(meshID);
+    PRECICE_REQUIRE_MESH_USE(meshID);
     MeshContext& context = _accessor->meshContext(meshID);
     mesh::PtrMesh mesh(context.mesh);
     Eigen::VectorXd internalPosition(_dimensions);
@@ -731,7 +731,7 @@ void SolverInterfaceImpl:: getMeshVertexIDsFromPositions (
     _requestManager->requestGetMeshVertexIDsFromPositions(meshID, size, positions, ids);
   }
   else {
-    PRECICE_REQUIRE_MESH_READ(meshID);
+    PRECICE_REQUIRE_MESH_USE(meshID);
     MeshContext& context = _accessor->meshContext(meshID);
     mesh::PtrMesh mesh(context.mesh);
     DEBUG("Get IDs");
@@ -769,7 +769,7 @@ int SolverInterfaceImpl:: setMeshEdge
     return _requestManager->requestSetMeshEdge ( meshID, firstVertexID, secondVertexID );
   }
   else {
-    PRECICE_REQUIRE_MESH_WRITE(meshID);
+    PRECICE_REQUIRE_MESH_PROVIDE(meshID);
     MeshContext& context = _accessor->meshContext(meshID);
     if ( context.meshRequirement == mapping::Mapping::MeshRequirement::FULL ){
       DEBUG("Full mesh required.");
@@ -802,7 +802,7 @@ void SolverInterfaceImpl:: setMeshTriangle
     _requestManager->requestSetMeshTriangle ( meshID, firstEdgeID, secondEdgeID, thirdEdgeID );
   }
   else {
-    PRECICE_REQUIRE_MESH_WRITE(meshID);
+    PRECICE_REQUIRE_MESH_PROVIDE(meshID);
     MeshContext& context = _accessor->meshContext(meshID);
     if ( context.meshRequirement == mapping::Mapping::MeshRequirement::FULL ){
       mesh::PtrMesh& mesh = context.mesh;
@@ -837,7 +837,7 @@ void SolverInterfaceImpl:: setMeshTriangleWithEdges
                                                      thirdVertexID);
     return;
   }
-  PRECICE_REQUIRE_MESH_WRITE(meshID);
+  PRECICE_REQUIRE_MESH_PROVIDE(meshID);
   MeshContext& context = _accessor->meshContext(meshID);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL){
     mesh::PtrMesh& mesh = context.mesh;
@@ -932,7 +932,7 @@ void SolverInterfaceImpl:: setMeshQuad
                                         thirdEdgeID, fourthEdgeID);
   }
   else {
-    PRECICE_REQUIRE_MESH_WRITE(meshID);
+    PRECICE_REQUIRE_MESH_PROVIDE(meshID);
     MeshContext& context = _accessor->meshContext(meshID);
     if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL){
       mesh::PtrMesh& mesh = context.mesh;
@@ -969,7 +969,7 @@ void SolverInterfaceImpl:: setMeshQuadWithEdges
         meshID, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID);
     return;
   }
-  PRECICE_REQUIRE_MESH_WRITE(meshID);
+  PRECICE_REQUIRE_MESH_PROVIDE(meshID);
   MeshContext& context = _accessor->meshContext(meshID);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL){
     mesh::PtrMesh& mesh = context.mesh;
