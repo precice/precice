@@ -593,7 +593,6 @@ int SolverInterfaceImpl:: getMeshVertexSize
   int meshID )
 {
   TRACE(meshID);
-  PRECICE_VALIDATE_MESH_ID(meshID);
   int size = 0;
   if (_clientMode){
     size = _requestManager->requestGetMeshVertexSize(meshID);
@@ -614,11 +613,11 @@ void SolverInterfaceImpl:: resetMesh
   int meshID )
 {
   TRACE(meshID);
-  PRECICE_VALIDATE_MESH_ID(meshID);
   if (_clientMode){
     _requestManager->requestResetMesh(meshID);
   }
   else {
+    PRECICE_VALIDATE_MESH_ID(meshID);
     impl::MeshContext& context = _accessor->meshContext(meshID);
     bool hasMapping = context.fromMappingContext.mapping
               || context.toMappingContext.mapping;
@@ -640,7 +639,6 @@ int SolverInterfaceImpl:: setMeshVertex
   const double* position )
 {
   TRACE(meshID);
-  PRECICE_VALIDATE_MESH_ID(meshID);
   Eigen::VectorXd internalPosition(_dimensions);
   for ( int dim=0; dim < _dimensions; dim++ ){
     internalPosition[dim] = position[dim];
@@ -669,7 +667,6 @@ void SolverInterfaceImpl:: setMeshVertices
   int*    ids )
 {
   TRACE(meshID, size);
-  PRECICE_VALIDATE_MESH_ID(meshID);
   if (_clientMode){
     _requestManager->requestSetMeshVertices(meshID, size, positions, ids);
   }
@@ -697,7 +694,6 @@ void SolverInterfaceImpl:: getMeshVertices
   double* positions )
 {
   TRACE(meshID, size);
-  PRECICE_VALIDATE_MESH_ID(meshID);
   if (_clientMode){
     _requestManager->requestGetMeshVertices(meshID, size, ids, positions);
   }
@@ -726,7 +722,6 @@ void SolverInterfaceImpl:: getMeshVertexIDsFromPositions (
   int*    ids )
 {
   TRACE(meshID, size);
-  PRECICE_VALIDATE_MESH_ID(meshID);
   if (_clientMode){
     _requestManager->requestGetMeshVertexIDsFromPositions(meshID, size, positions, ids);
   }
@@ -764,7 +759,6 @@ int SolverInterfaceImpl:: setMeshEdge
   int secondVertexID )
 {
   TRACE(meshID, firstVertexID, secondVertexID );
-  PRECICE_VALIDATE_MESH_ID(meshID);
   if ( _clientMode ){
     return _requestManager->requestSetMeshEdge ( meshID, firstVertexID, secondVertexID );
   }
@@ -798,7 +792,6 @@ void SolverInterfaceImpl:: setMeshTriangle
 {
   TRACE(meshID, firstEdgeID,
                   secondEdgeID, thirdEdgeID );
-  PRECICE_VALIDATE_MESH_ID(meshID);
   if ( _clientMode ){
     _requestManager->requestSetMeshTriangle ( meshID, firstEdgeID, secondEdgeID, thirdEdgeID );
   }
@@ -831,7 +824,6 @@ void SolverInterfaceImpl:: setMeshTriangleWithEdges
 {
   TRACE(meshID, firstVertexID,
                 secondVertexID, thirdVertexID);
-  PRECICE_VALIDATE_MESH_ID(meshID);
   if (_clientMode){
     _requestManager->requestSetMeshTriangleWithEdges(meshID,
                                                      firstVertexID,
@@ -929,7 +921,6 @@ void SolverInterfaceImpl:: setMeshQuad
 {
   TRACE(meshID, firstEdgeID, secondEdgeID, thirdEdgeID,
                 fourthEdgeID);
-  PRECICE_VALIDATE_MESH_ID(meshID);
   if (_clientMode){
     _requestManager->requestSetMeshQuad(meshID, firstEdgeID, secondEdgeID,
                                         thirdEdgeID, fourthEdgeID);
@@ -967,7 +958,6 @@ void SolverInterfaceImpl:: setMeshQuadWithEdges
 {
   TRACE(meshID, firstVertexID,
                 secondVertexID, thirdVertexID, fourthVertexID);
-  PRECICE_VALIDATE_MESH_ID(meshID);
   if (_clientMode){
     _requestManager->requestSetMeshQuadWithEdges(
         meshID, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID);
@@ -1080,11 +1070,11 @@ void SolverInterfaceImpl:: mapWriteDataFrom
   int fromMeshID )
 {
   TRACE(fromMeshID);
-  PRECICE_VALIDATE_MESH_ID(fromMeshID);
   if (_clientMode){
     _requestManager->requestMapWriteDataFrom(fromMeshID);
     return;
   }
+  PRECICE_VALIDATE_MESH_ID(fromMeshID);
   impl::MeshContext& context = _accessor->meshContext(fromMeshID);
   impl::MappingContext& mappingContext = context.fromMappingContext;
   if (mappingContext.mapping.use_count() == 0){
@@ -1117,11 +1107,11 @@ void SolverInterfaceImpl:: mapReadDataTo
   int toMeshID )
 {
   TRACE(toMeshID);
-  PRECICE_VALIDATE_MESH_ID(toMeshID);
   if (_clientMode){
     _requestManager->requestMapReadDataTo(toMeshID);
     return;
   }
+  PRECICE_VALIDATE_MESH_ID(toMeshID);
   impl::MeshContext& context = _accessor->meshContext(toMeshID);
   impl::MappingContext& mappingContext = context.toMappingContext;
   if (mappingContext.mapping.use_count() == 0){
