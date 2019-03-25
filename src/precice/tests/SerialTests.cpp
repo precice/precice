@@ -963,7 +963,7 @@ BOOST_AUTO_TEST_CASE(testStationaryMappingWithSolverMesh,
         interface.writeVectorData(dataDisplID, i, displ.data());
       }
       Eigen::VectorXd expected = Eigen::VectorXd::Constant(dim, size);
-      BOOST_TEST(totalForce == expected);
+      BOOST_TEST(equals(totalForce, expected));
       maxDt = interface.advance(maxDt);
 
       BOOST_TEST(interface.isWriteDataRequired(maxDt));
@@ -976,7 +976,7 @@ BOOST_AUTO_TEST_CASE(testStationaryMappingWithSolverMesh,
         interface.writeVectorData(dataDisplID, i, displ.data());
       }
       expected.setConstant(2.0 * (double)size);
-      BOOST_TEST(totalForce == expected);
+      BOOST_TEST(equals(totalForce, expected));
       maxDt = interface.advance(maxDt);
 
       BOOST_TEST(interface.isWriteDataRequired(maxDt));
