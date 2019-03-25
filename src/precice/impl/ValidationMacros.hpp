@@ -17,13 +17,13 @@
 /// Implementation of PRECICE_REQUIRE_MESH_USE
 #define PRECICE_REQUIRE_MESH_USE_IMPL(id) \
     PRECICE_VALIDATE_MESH_ID_IMPL(id) \
-    CHECK(_accessor->isMeshUsed(id), "Mesh is not used by this participant! ID:" << id);
+    MeshContext& context = _accessor->meshContext(id); \
+    CHECK(_accessor->isMeshUsed(id), "This participant is required to use Mesh \"" << context.mesh->getName() << "\"!");
 
 /// Implementation of PRECICE_REQUIRE_MESH_PROVIDE
 #define PRECICE_REQUIRE_MESH_PROVIDE_IMPL(id) \
     PRECICE_REQUIRE_MESH_USE_IMPL(id) \
-    MeshContext& context = _accessor->meshContext(id); \
-    CHECK(context.provideMesh, "Can only write to provided meshes! " << id);
+    CHECK(context.provideMesh, "This participant is required to provide Mesh \"" << context.mesh->getName() << "\"!");
 
 /// Validates a given meshID
 #define PRECICE_VALIDATE_MESH_ID(meshID) \
