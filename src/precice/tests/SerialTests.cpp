@@ -846,7 +846,7 @@ BOOST_AUTO_TEST_CASE(testStationaryMappingWithSolverMesh,
   std::string dataDispl = constants::dataDisplacements();
   using math::equals;
 
-  for (int dim=2; dim <= 3; dim++){
+  for (int dim: {2, 3}){
     // @todo this should normally happen in finalize and should not be necessary
     mesh::Mesh::resetGeometryIDsGlobally();
     mesh::Data::resetDataCount();
