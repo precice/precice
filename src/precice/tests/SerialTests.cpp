@@ -844,7 +844,7 @@ BOOST_AUTO_TEST_CASE(testStationaryMappingWithSolverMesh,
   std::string meshDisplB = "MeshDisplacementsB";
   std::string dataForces = constants::dataForces();
   std::string dataDispl = constants::dataDisplacements();
-  using math::equals;
+  using testing::equals;
 
   for (int dim: {2, 3}){
     // @todo this should normally happen in finalize and should not be necessary
