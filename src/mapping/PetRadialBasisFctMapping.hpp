@@ -422,7 +422,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
   // PETSc requires that all diagonal entries are set, even if set to zero.
   _matrixC.assemble(MAT_FLUSH_ASSEMBLY);
-  petsc::Vector zeros(_matrixC);
+  auto zeros = petsc::Vector::allocate(_matrixC);
   MatDiagonalSet(_matrixC, zeros, ADD_VALUES);
 
   // Begin assembly here, all assembly is ended at the end of this function.
@@ -545,7 +545,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   // -- COMPUTE RESCALING COEFFICIENTS USING THE SYSTEM MATRIX C SOLVER --
   if (useRescaling and (_polynomial == Polynomial::SEPARATE)) {
     precice::utils::Event eRescaling("map.pet.computeRescaling.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);    
-    petsc::Vector rhs(_matrixC), rescalingCoeffs(_matrixC);
+    auto rhs = petsc::Vector::allocate(_matrixC);
+    auto rescalingCoeffs =petsc::Vector::allocate(_matrixC);
     VecSet(rhs, 1);
     rhs.assemble();
     if (not _solver.solve(rhs, rescalingCoeffs)) {
@@ -609,8 +610,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
             valueDim, output()->data(outputDataID)->getDimensions());
 
   if (getConstraint() == CONSERVATIVE) {
-    petsc::Vector au(_matrixA, "au", petsc::Vector::RIGHT);
-    petsc::Vector in(_matrixA, "in");
+    auto au = petsc::Vector::allocate(_matrixA, "au", petsc::Vector::RIGHT);
+    auto in = petsc::Vector::allocate(_matrixA, "in");
     int inRangeStart, inRangeEnd;
     std::tie(inRangeStart, inRangeEnd) = in.ownerRange();
     for (int dim = 0; dim < valueDim; dim++) {
@@ -629,20 +630,20 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
       petsc::Vector& out = std::get<0>(
         previousSolution.emplace(std::piecewise_construct,
                                  std::forward_as_tuple(inputDataID + outputDataID * 10 + dim * 100),
-                                 std::forward_as_tuple(_matrixC, "out"))
+                                 std::forward_as_tuple(petsc::Vector::allocate(_matrixC, "out")))
         )->second;
 
       if (_polynomial == Polynomial::SEPARATE) {
-        petsc::Vector epsilon(_matrixV, "epsilon", petsc::Vector::RIGHT);
+        auto epsilon = petsc::Vector::allocate(_matrixV, "epsilon", petsc::Vector::RIGHT);
         ierr = MatMultTranspose(_matrixV, in, epsilon); CHKERRV(ierr);
-        petsc::Vector eta(_matrixA, "eta", petsc::Vector::RIGHT);
+        auto eta = petsc::Vector::allocate(_matrixA, "eta", petsc::Vector::RIGHT);
         ierr = MatMultTranspose(_matrixA, in, eta); CHKERRV(ierr);
-        petsc::Vector mu(_matrixC, "mu", petsc::Vector::LEFT);
+        auto mu = petsc::Vector::allocate(_matrixC, "mu", petsc::Vector::LEFT);
         _solver.solve(eta, mu);
         VecScale(epsilon, -1);
-        petsc::Vector tau(_matrixQ, "tau", petsc::Vector::RIGHT);
+        auto tau = petsc::Vector::allocate(_matrixQ, "tau", petsc::Vector::RIGHT);
         ierr = MatMultTransposeAdd(_matrixQ, mu, epsilon, tau); CHKERRV(ierr);
-        petsc::Vector sigma(_matrixQ, "sigma", petsc::Vector::LEFT);
+        auto sigma = petsc::Vector::allocate(_matrixQ, "sigma", petsc::Vector::LEFT);
         if (not _QRsolver.solveTranspose(tau, sigma)) {
           KSPView(_QRsolver, PETSC_VIEWER_STDOUT_WORLD);
           ERROR("RBF Polynomial linear system has not converged.");
@@ -681,9 +682,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
     }
   }
   else { // Map CONSISTENT
-    petsc::Vector out(_matrixA, "out");
-    petsc::Vector in(_matrixC, "in");
-    petsc::Vector a(_matrixQ, "a", petsc::Vector::RIGHT); // holds the solution of the LS polynomial
+    auto out = petsc::Vector::allocate(_matrixA, "out");
+    auto in = petsc::Vector::allocate(_matrixC, "in");
+    auto a = petsc::Vector::allocate(_matrixQ, "a", petsc::Vector::RIGHT); // holds the solution of the LS polynomial
 
     PetscScalar const * vecArray;
 
@@ -715,7 +716,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
       petsc::Vector& p = std::get<0>(  // Save and reuse the solution from the previous iteration
         previousSolution.emplace(std::piecewise_construct,
                                  std::forward_as_tuple(inputDataID + outputDataID * 10 + dim * 100),
-                                 std::forward_as_tuple(_matrixC, "p"))
+                                 std::forward_as_tuple(petsc::Vector::allocate(_matrixC, "p")))
         )->second;
 
       utils::Event eSolve("map.pet.solveConsistent.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
