@@ -3,6 +3,7 @@
 All notable changes to this project will be documented in this file. For future plans, see our [Roadmap](https://github.com/precice/precice/wiki/Roadmap).
 
 ## develop
+- The SolverInterface now keeps track of the Mesh states, which results more informative error messages for mesh related functions.
 
 ## 1.4.0
 - The python modules are now proper packages tracking dependencies etc.
