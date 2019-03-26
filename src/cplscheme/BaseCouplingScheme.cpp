@@ -235,7 +235,7 @@ std::vector<int> BaseCouplingScheme::sendData(m2n::PtrM2N m2n)
   assertion(m2n.get() != nullptr);
   assertion(m2n->isConnected());
   for (const DataMap::value_type &pair : _sendData) {
-    //std::cout<<"\nsend data id="<<pair.first<<": "<<*(pair.second->values)<<std::endl;
+    //std::cout<<"\nsend data id="<<pair.first<<": "<<*(pair.second->values)<<'\n';
     int size = pair.second->values->size();
     m2n->send(pair.second->values->data(), size, pair.second->mesh->getID(), pair.second->dimension);
     sentDataIDs.push_back(pair.first);
@@ -254,7 +254,7 @@ std::vector<int> BaseCouplingScheme::receiveData(
 
   for (DataMap::value_type &pair : _receiveData) {
     int size = pair.second->values->size();
-    //std::cout<<"\nreceive data id="<<pair.first<<": "<<*(pair.second->values)<<std::endl;
+    //std::cout<<"\nreceive data id="<<pair.first<<": "<<*(pair.second->values)<<'\n';
     m2n->receive(pair.second->values->data(), size, pair.second->mesh->getID(), pair.second->dimension);
     receivedDataIDs.push_back(pair.first);
   }
@@ -697,7 +697,7 @@ bool BaseCouplingScheme::measureConvergenceCoarseModelOptimization(
     if (convMeasure.level == 0)
       continue;
 
-    std::cout << "  measure convergence coarse measure, id:" << convMeasure.dataID << std::endl;
+    std::cout << "  measure convergence coarse measure, id:" << convMeasure.dataID << '\n';
     assertion(convMeasure.data != nullptr);
     assertion(convMeasure.measure.get() != nullptr);
     const auto &    oldValues = convMeasure.data->oldValues.col(0);

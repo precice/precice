@@ -13,7 +13,6 @@
 using namespace precice;
 
 using std::cout;
-using std::endl;
 using std::vector;
 
 vector<double>
@@ -66,7 +65,7 @@ validate(vector<double> const& data) {
 
 int
 main(int argc, char** argv) {
-  std::cout << "Running communication dummy" << std::endl;
+  std::cout << "Running communication dummy\n";
 
   int provided;
 
@@ -76,7 +75,7 @@ main(int argc, char** argv) {
   MPI_Comm_rank(MPI_COMM_WORLD, &utils::MasterSlave::_rank);
 
   if (utils::MasterSlave::_size != 3) {
-    std::cout << "Please run with 3 mpi processes" << std::endl;
+    std::cout << "Please run with 3 mpi processes\n";
     return 1;
   }
 
@@ -148,8 +147,7 @@ main(int argc, char** argv) {
 
     c.requestConnection("B", "A");
 
-    cout << utils::MasterSlave::_rank << ": "
-         << "Connected!" << endl;
+    cout << utils::MasterSlave::_rank << ": " << "Connected!\n";
 
     std::vector<double> data = getData();
 
@@ -158,18 +156,16 @@ main(int argc, char** argv) {
     c.receive(data.data(), data.size());
 
     if (validate(data))
-      cout << utils::MasterSlave::_rank << ": "
-           << "Success!" << endl;
+      cout << utils::MasterSlave::_rank << ": " << "Success!\n";
     else
-      cout << utils::MasterSlave::_rank << ": "
-           << "Failure!" << endl;
+      cout << utils::MasterSlave::_rank << ": " << "Failure!\n";
 
-    cout << "----------" << endl;
+    cout << "----------\n";
   }
 
   utils::MasterSlave::_communication.reset();
 
   MPI_Finalize();
 
-  std::cout << "Stop communication dummy" << std::endl;
+  std::cout << "Stop communication dummy\n";
 }

@@ -50,10 +50,10 @@ void Table::printHeader()
     out << padding << setw(h.width) << h.name << padding << sepChar;
   }
 
-  out << endl;
+  out << '\n';
   int headerLength = std::accumulate(cols.begin(), cols.end(), 0, [this](int count, Column col){
     return count + col.width + sepChar.size() + 2;
     });
   std::string sepLine(headerLength, '-');
-  out << sepLine << endl;
+  out << sepLine << '\n';
 }

@@ -545,7 +545,7 @@ void MMPostProcessing::computeCoarseModelDesignSpecifiaction()
 
       for (int i = 0; i < singularValues.rows(); i++) {
         if (std::abs(singularValues(i)) <= _singularityLimit) {
-          std::cout << "singular value: " << singularValues(i) << std::endl;
+          std::cout << "singular value: " << singularValues(i) << '\n';
 
           // Remove the column from _matrixC and _matrixF
           removeMatrixColumn(i - nbRemoveCols);

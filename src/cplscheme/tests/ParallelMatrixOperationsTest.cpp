@@ -140,9 +140,9 @@ BOOST_AUTO_TEST_CASE(ParVectorOperations, * boost::unit_test::fixture<testing::M
   double normVec2   = utils::MasterSlave::l2norm(vec2_local);
   double dotproduct = utils::MasterSlave::dot(vec1_local, vec2_local);
 
-  //  std::cout<<"l2norm vec1: "<<normVec1<<std::endl;
-  //  std::cout<<"l2norm vec2: "<<normVec2<<std::endl;
-  //  std::cout<<"dotproduct: "<<dotproduct<<std::endl;
+  //  std::cout<<"l2norm vec1: "<<normVec1<<'\n';
+  //  std::cout<<"l2norm vec2: "<<normVec2<<'\n';
+  //  std::cout<<"dotproduct: "<<dotproduct<<'\n';
 
   // validate
   BOOST_TEST(testing::equals(normVec1, 1.502540907218387));

@@ -11,6 +11,7 @@
 #include "cplscheme/SharedPointer.hpp"
 #include "com/Communication.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
+#include "utils/MultiLock.hpp"
 #include <string>
 #include <vector>
 #include <set>
@@ -487,6 +488,8 @@ private:
   /// If true, the interface uses a server to operate on coupling data.
   bool _clientMode = false;
 
+  utils::MultiLock<int> _meshLock;
+
   /// Communication when for client-server mode.
   //com::Communication::SharedPointer _clientServerCommunication;
 
@@ -601,6 +604,7 @@ private:
 
   /// To allow white box tests.
   friend struct PreciceTests::Serial::TestConfiguration;
+
 };
 
 }} // namespace precice, impl
