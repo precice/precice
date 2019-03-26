@@ -336,7 +336,7 @@ private:
   /// Holds the index of the last vertex for each slave.
   /**
    * The last entry holds the total number of vertices.
-   * Needed for the matrix-matrix multiplication of the IMVJ postprocessing.
+   * Needed for the matrix-matrix multiplication of the IMVJ acceleration.
    */
   std::vector<int> _vertexOffsets;
 

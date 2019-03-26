@@ -2,6 +2,10 @@
  *  @brief Main namespace of the precice library.
  */
 
+/** @namespace precice::acceleration
+ *  @brief contains implementations of acceleration schemes.
+ */
+
 /** @namespace precice::action
  *  @brief contains actions to modify exchanged data.
  */

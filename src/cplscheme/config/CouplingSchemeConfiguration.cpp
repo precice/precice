@@ -4,11 +4,11 @@
 #include "cplscheme/ParallelCouplingScheme.hpp"
 #include "cplscheme/SerialCouplingScheme.hpp"
 #include "cplscheme/SharedPointer.hpp"
-#include "cplscheme/config/PostProcessingConfiguration.hpp"
+#include "acceleration/config/AccelerationConfiguration.hpp"
 #include "cplscheme/impl/AbsoluteConvergenceMeasure.hpp"
 #include "cplscheme/impl/ConvergenceMeasure.hpp"
 #include "cplscheme/impl/MinIterationConvergenceMeasure.hpp"
-#include "cplscheme/impl/PostProcessing.hpp"
+#include "acceleration/Acceleration.hpp"
 #include "cplscheme/impl/RelativeConvergenceMeasure.hpp"
 #include "cplscheme/impl/ResidualRelativeConvergenceMeasure.hpp"
 #include "m2n/M2N.hpp"
@@ -102,7 +102,7 @@ CouplingSchemeConfiguration::CouplingSchemeConfiguration(
   {
     XMLTag tag(*this, VALUE_SERIAL_IMPLICIT, occ, TAG);
     doc = "Implicit coupling scheme according to block Gauss-Seidel iterations (S-System).";
-    doc += " Improved implicit iterations are achieved by using a post-processing (recommended!).";
+    doc += " Improved implicit iterations are achieved by using a acceleration (recommended!).";
     tag.setDocumentation(doc);
     addTypespecifcSubtags(VALUE_SERIAL_IMPLICIT, tag);
     tags.push_back(tag);
@@ -110,7 +110,7 @@ CouplingSchemeConfiguration::CouplingSchemeConfiguration(
   {
     XMLTag tag(*this, VALUE_PARALLEL_IMPLICIT, occ, TAG);
     doc = "Parallel Implicit coupling scheme according to block Jacobi iterations (V-System).";
-    doc += " Improved implicit iterations are achieved by using a post-processing (recommended!).";
+    doc += " Improved implicit iterations are achieved by using a acceleration (recommended!).";
     tag.setDocumentation(doc);
     addTypespecifcSubtags(VALUE_PARALLEL_IMPLICIT, tag);
     tags.push_back(tag);
@@ -118,7 +118,7 @@ CouplingSchemeConfiguration::CouplingSchemeConfiguration(
   {
     XMLTag tag(*this, VALUE_MULTI, occ, TAG);
     doc = "Multi coupling scheme according to block Jacobi iterations.";
-    doc += " Improved implicit iterations are achieved by using a post-processing (recommended!).";
+    doc += " Improved implicit iterations are achieved by using a acceleration (recommended!).";
     tag.setDocumentation(doc);
     addTypespecifcSubtags(VALUE_MULTI, tag);
     tags.push_back(tag);
@@ -355,7 +355,7 @@ void CouplingSchemeConfiguration::addTypespecifcSubtags(
   } else if (type == VALUE_PARALLEL_IMPLICIT) {
     addTagParticipants(tag);
     addTagExchange(tag);
-    addTagPostProcessing(tag);
+    addTagAcceleration(tag);
     addTagAbsoluteConvergenceMeasure(tag);
     addTagRelativeConvergenceMeasure(tag);
     addTagResidualRelativeConvergenceMeasure(tag);
@@ -365,7 +365,7 @@ void CouplingSchemeConfiguration::addTypespecifcSubtags(
   } else if (type == VALUE_MULTI) {
     addTagParticipant(tag);
     addTagExchange(tag);
-    addTagPostProcessing(tag);
+    addTagAcceleration(tag);
     addTagAbsoluteConvergenceMeasure(tag);
     addTagRelativeConvergenceMeasure(tag);
     addTagResidualRelativeConvergenceMeasure(tag);
@@ -375,7 +375,7 @@ void CouplingSchemeConfiguration::addTypespecifcSubtags(
   } else if (type == VALUE_SERIAL_IMPLICIT) {
     addTagParticipants(tag);
     addTagExchange(tag);
-    addTagPostProcessing(tag);
+    addTagAcceleration(tag);
     addTagAbsoluteConvergenceMeasure(tag);
     addTagRelativeConvergenceMeasure(tag);
     addTagResidualRelativeConvergenceMeasure(tag);
@@ -538,13 +538,13 @@ void CouplingSchemeConfiguration::addTagExtrapolation(
   tag.addSubtag(tagExtrapolation);
 }
 
-void CouplingSchemeConfiguration::addTagPostProcessing(
+void CouplingSchemeConfiguration::addTagAcceleration(
     xml::XMLTag &tag)
 {
   PRECICE_TRACE(tag.getFullName());
   if (_postProcConfig.get() == nullptr) {
-    _postProcConfig = PtrPostProcessingConfiguration(
-        new PostProcessingConfiguration(_meshConfig));
+    _postProcConfig = acceleration::PtrAccelerationConfiguration(
+        new acceleration::AccelerationConfiguration(_meshConfig));
   }
   _postProcConfig->setIsAddManifoldMappingTagAllowed(true);
   _postProcConfig->connectTags(tag);
@@ -680,14 +680,14 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialImplicitCouplingSchem
   }
 
   // Set relaxation parameters
-  if (_postProcConfig->getPostProcessing().get() != nullptr) {
+  if (_postProcConfig->getAcceleration().get() != nullptr) {
     for (std::string &neededMesh : _postProcConfig->getNeededMeshes()) {
       _meshConfig->addNeededMesh(_config.participants[1], neededMesh);
     }
-    for (const int dataID : _postProcConfig->getPostProcessing()->getDataIDs()) {
+    for (const int dataID : _postProcConfig->getAcceleration()->getDataIDs()) {
       checkIfDataIsExchanged(dataID);
     }
-    scheme->setIterationPostProcessing(_postProcConfig->getPostProcessing());
+    scheme->setIterationAcceleration(_postProcConfig->getAcceleration());
   }
   return PtrCouplingScheme(scheme);
 }
@@ -721,14 +721,14 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelImplicitCouplingSch
   }
 
   // Set relaxation parameters
-  if (_postProcConfig->getPostProcessing().get() != nullptr) {
+  if (_postProcConfig->getAcceleration().get() != nullptr) {
     for (std::string &neededMesh : _postProcConfig->getNeededMeshes()) {
       _meshConfig->addNeededMesh(_config.participants[1], neededMesh);
     }
-    for (const int dataID : _postProcConfig->getPostProcessing()->getDataIDs()) {
+    for (const int dataID : _postProcConfig->getAcceleration()->getDataIDs()) {
       checkIfDataIsExchanged(dataID);
     }
-    scheme->setIterationPostProcessing(_postProcConfig->getPostProcessing());
+    scheme->setIterationAcceleration(_postProcConfig->getAcceleration());
   }
   return PtrCouplingScheme(scheme);
 }
@@ -782,15 +782,15 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
   }
 
   // Set relaxation parameters
-  if (_postProcConfig->getPostProcessing().get() != nullptr) {
+  if (_postProcConfig->getAcceleration().get() != nullptr) {
     for (std::string &neededMesh : _postProcConfig->getNeededMeshes()) {
       _meshConfig->addNeededMesh(_config.controller, neededMesh);
     }
-    for (const int dataID : _postProcConfig->getPostProcessing()->getDataIDs()) {
+    for (const int dataID : _postProcConfig->getAcceleration()->getDataIDs()) {
       checkIfDataIsExchanged(dataID);
     }
 
-    scheme->setIterationPostProcessing(_postProcConfig->getPostProcessing());
+    scheme->setIterationAcceleration(_postProcConfig->getAcceleration());
   }
   return PtrCouplingScheme(scheme);
 }
@@ -904,7 +904,7 @@ void CouplingSchemeConfiguration::checkIfDataIsExchanged(
   }
   PRECICE_CHECK(hasFound,
         "You need to exchange every data that you use for convergence measures"
-            << " and/or the iteration post-processing");
+            << " and/or the iteration acceleration");
 }
 
 bool CouplingSchemeConfiguration::checkIfDataIsCoarse(
@@ -912,12 +912,12 @@ bool CouplingSchemeConfiguration::checkIfDataIsCoarse(
 {
   bool isCoarse = false;
   bool err      = false;
-  // check if post processing is defined.
-  if (_postProcConfig->getPostProcessing().get() == nullptr)
+  // check if acceleration is defined.
+  if (_postProcConfig->getAcceleration().get() == nullptr)
     return false;
 
   // check if id is contained within fine Data IDs
-  const std::vector<int> &fineIDs = _postProcConfig->getPostProcessing()->getDataIDs();
+  const std::vector<int> &fineIDs = _postProcConfig->getAcceleration()->getDataIDs();
   isCoarse                        = not utils::contained(id, fineIDs);
 
   std::cout << " fineIDs = [";
@@ -932,8 +932,8 @@ bool CouplingSchemeConfiguration::checkIfDataIsCoarse(
 
   if (isCoarse) {
     if (_postProcConfig->getCoarseModelOptimizationConfig().get() != nullptr &&
-        _postProcConfig->getCoarseModelOptimizationConfig()->getPostProcessing().get() != nullptr) {
-      const std::vector<int> &coarseIDs = _postProcConfig->getCoarseModelOptimizationConfig()->getPostProcessing()->getDataIDs();
+        _postProcConfig->getCoarseModelOptimizationConfig()->getAcceleration().get() != nullptr) {
+      const std::vector<int> &coarseIDs = _postProcConfig->getCoarseModelOptimizationConfig()->getAcceleration()->getDataIDs();
       isCoarse                          = utils::contained(id, coarseIDs);
 
       std::cout << " coarseIDs = [";
