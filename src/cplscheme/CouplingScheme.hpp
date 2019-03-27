@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <set>
 
 namespace precice {
 namespace cplscheme {
@@ -94,6 +95,9 @@ public:
 
   /// Returns list of all coupling partners.
   virtual std::vector<std::string> getCouplingPartners() const =0;
+
+  /// Returns list of all participants.
+  virtual std::set<std::string> getParticipants() const =0;
 
   /*
    * @brief Returns true, if data will be exchanged when calling advance().

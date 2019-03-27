@@ -103,6 +103,9 @@ public:
   /// Returns list of all coupling partners
   virtual std::vector<std::string> getCouplingPartners() const;
 
+  /// Returns list of all coupled participants
+  virtual std::set<std::string> getParticipants() const;
+
   /**
    * @brief Returns true, if data will be exchanged when calling advance().
    *

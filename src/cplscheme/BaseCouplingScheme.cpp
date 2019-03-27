@@ -416,6 +416,11 @@ std::vector<std::string> BaseCouplingScheme::getCouplingPartners() const
   return partnerNames;
 }
 
+std::set<std::string> BaseCouplingScheme::getParticipants() const
+{
+    return {_firstParticipant, _secondParticipant};
+}
+
 double BaseCouplingScheme::getThisTimestepRemainder() const
 {
   TRACE();

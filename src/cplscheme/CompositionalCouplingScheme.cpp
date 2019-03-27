@@ -119,6 +119,17 @@ std::vector<std::string> CompositionalCouplingScheme:: getCouplingPartners() con
   return partners;
 }
 
+std::set<std::string> CompositionalCouplingScheme:: getParticipants() const
+{
+  TRACE();
+  std::set<std::string> participants;
+  for (Scheme scheme : _couplingSchemes) {
+    const auto& subparticipants = scheme.scheme->getParticipants();
+    participants.insert(subparticipants.begin(), subparticipants.end());
+  }
+  return participants;
+}
+
 bool CompositionalCouplingScheme::willDataBeExchanged(double lastSolverTimestepLength) const
 {
   TRACE(lastSolverTimestepLength);

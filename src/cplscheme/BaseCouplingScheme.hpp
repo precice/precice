@@ -148,6 +148,9 @@ public:
   /// returns list of all coupling partners
   virtual std::vector<std::string> getCouplingPartners() const;
 
+  /// returns list of all coupling partners
+  virtual std::set<std::string> getParticipants() const;
+
   /**
    * @brief Returns the remaining timestep length of the current time step.
    *

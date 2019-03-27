@@ -67,6 +67,11 @@ public:
    */
   virtual std::vector<std::string> getCouplingPartners() const { assertion(false); return std::vector<std::string>(); }
 
+  /*
+   * @brief Not implemented.
+   */
+  virtual std::set<std::string> getParticipants() const { return {}; }
+
   /**
    * @brief Not implemented.
    */
