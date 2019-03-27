@@ -426,10 +426,10 @@ void RequestManager:: requestSetMeshQuadWithEdges
 }
 
 void RequestManager:: requestWriteBlockScalarData (
-  int     dataID,
-  int     size,
-  int*    valueIndices,
-  double* values )
+  int           dataID,
+  int           size,
+  int*          valueIndices,
+  const double* values )
 {
   TRACE(dataID, size);
   _com->send(REQUEST_WRITE_BLOCK_SCALAR_DATA, 0);
@@ -441,9 +441,9 @@ void RequestManager:: requestWriteBlockScalarData (
 
 void RequestManager:: requestWriteScalarData
 (
-  int    dataID,
-  int    valueIndex,
-  double value )
+  int           dataID,
+  int           valueIndex,
+  const double& value )
 {
   TRACE();
   _com->send(REQUEST_WRITE_SCALAR_DATA, 0);
@@ -453,10 +453,10 @@ void RequestManager:: requestWriteScalarData
 }
 
 void RequestManager:: requestWriteBlockVectorData (
-  int     dataID,
-  int     size,
-  int*    valueIndices,
-  double* values )
+  int           dataID,
+  int           size,
+  int*          valueIndices,
+  const double* values )
 {
   TRACE(dataID);
   _com->send(REQUEST_WRITE_BLOCK_VECTOR_DATA, 0);
@@ -468,9 +468,9 @@ void RequestManager:: requestWriteBlockVectorData (
 
 void RequestManager:: requestWriteVectorData
 (
-  int     dataID,
-  int     valueIndex,
-  double* value )
+  int           dataID,
+  int           valueIndex,
+  const double* value )
 {
   TRACE();
   _com->send(REQUEST_WRITE_VECTOR_DATA, 0);

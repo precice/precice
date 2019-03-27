@@ -249,10 +249,10 @@ void SolverInterface:: mapWriteDataFrom
 
 void SolverInterface:: writeBlockVectorData
 (
-  int     dataID,
-  int     size,
-  int*    valueIndices,
-  double* values )
+  int           dataID,
+  int           size,
+  int*          valueIndices,
+  const double* values )
 {
   _impl->writeBlockVectorData(dataID, size, valueIndices, values);
 }
@@ -268,19 +268,19 @@ void SolverInterface:: writeVectorData
 
 void SolverInterface:: writeBlockScalarData
 (
-  int     dataID,
-  int     size,
-  int*    valueIndices,
-  double* values )
+  int           dataID,
+  int           size,
+  int*          valueIndices,
+  const double* values )
 {
   _impl->writeBlockScalarData(dataID, size, valueIndices, values);
 }
 
 void SolverInterface:: writeScalarData
 (
-  int    dataID,
-  int    valueIndex,
-  double value )
+  int           dataID,
+  int           valueIndex,
+  const double& value )
 {
   _impl->writeScalarData ( dataID, valueIndex, value );
 }

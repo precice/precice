@@ -142,7 +142,7 @@ private:
         TypedArray<int32_t> dataID = std::move(inputs[1]);
         TypedArray<uint64_t> size = std::move(inputs[2]);
         TypedArray<int32_t> vertexIDs = std::move(inputs[3]);
-        TypedArray<double> values = std::move(inputs[4]);
+        const TypedArray<double> values = std::move(inputs[4]);
         interface->writeBlockScalarData(dataID[0],size[0],&*vertexIDs.begin(),&*values.begin());
         return true;
     }

@@ -105,7 +105,7 @@ classdef SolverInterface < handle
         function id = getDataID(obj,dataName,meshID)
             obj.interfaceID = 0;
             if ischar(dataName)
-                dataName = string(meshName);
+                dataName = string(dataName);
             end
             id = preciceGateway(uint8(61),dataName,int32(meshID));
         end

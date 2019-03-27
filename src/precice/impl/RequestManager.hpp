@@ -117,29 +117,29 @@ public:
 
   /// Requests write block scalar data from server.
   void requestWriteBlockScalarData (
-    int     dataID,
-    int     size,
-    int*    valueIndices,
-    double* values );
+    int           dataID,
+    int           size,
+    int*          valueIndices,
+    const double* values );
 
   /// Requests write scalar data from server.
   void requestWriteScalarData (
-    int    dataID,
-    int    valueIndex,
-    double value );
+    int           dataID,
+    int           valueIndex,
+    const double& value );
 
   /// Requests write block vector data from server.
   void requestWriteBlockVectorData (
-    int     dataID,
-    int     size,
-    int*    valueIndices,
-    double* values );
+    int           dataID,
+    int           size,
+    int*          valueIndices,
+    const double* values );
 
   /// Requests write vector data from server.
   void requestWriteVectorData (
-    int     dataID,
-    int     valueIndex,
-    double* value );
+    int           dataID,
+    int           valueIndex,
+    const double* value );
 
   /// Requests read block scalar data from server.
   void requestReadBlockScalarData (

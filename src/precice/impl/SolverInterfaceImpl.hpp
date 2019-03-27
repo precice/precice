@@ -320,10 +320,10 @@ public:
    * @param[in] values Values of the data to be written.
    */
   void writeBlockVectorData (
-    int     fromDataID,
-    int     size,
-    int*    valueIndices,
-    double* values );
+    int           fromDataID,
+    int           size,
+    int*          valueIndices,
+    const double* values );
 
 
   /**
@@ -348,10 +348,10 @@ public:
    * @param values [IN] Values of the data to be written.
    */
   void writeBlockScalarData (
-    int     fromDataID,
-    int     size,
-    int*    valueIndices,
-    double* values );
+    int           fromDataID,
+    int           size,
+    int*          valueIndices,
+    const double* values );
 
   /**
    * @brief Write scalar data to the interface mesh
@@ -363,9 +363,9 @@ public:
    * @param dataValue    [IN] Value of the data to be written
    */
   void writeScalarData(
-    int    fromDataID,
-    int    valueIndex,
-    double value );
+    int           fromDataID,
+    int           valueIndex,
+    const double& value );
 
   /**
    * @brief Reads vector data values given as block.

@@ -1144,10 +1144,10 @@ void SolverInterfaceImpl:: mapReadDataTo
 
 void SolverInterfaceImpl:: writeBlockVectorData
 (
-  int     fromDataID,
-  int     size,
-  int*    valueIndices,
-  double* values )
+  int           fromDataID,
+  int           size,
+  int*          valueIndices,
+  const double* values )
 {
   TRACE(fromDataID, size);
   if (size == 0)
@@ -1190,11 +1190,7 @@ void SolverInterfaceImpl:: writeVectorData
 # endif
   CHECK(valueIndex >= -1, "Invalid value index (" << valueIndex << ") when writing vector data!" );
   if (_clientMode){
-    Eigen::VectorXd valueCopy(_dimensions);
-    for (int dim=0; dim < _dimensions; dim++){
-      valueCopy[dim] = value[dim];
-    }
-    _requestManager->requestWriteVectorData(fromDataID, valueIndex, valueCopy.data());
+    _requestManager->requestWriteVectorData(fromDataID, valueIndex, value);
   }
   else {
     CHECK(_accessor->isDataUsed(fromDataID), "You try to write to data that is not defined for " << _accessor->getName());
@@ -1215,10 +1211,10 @@ void SolverInterfaceImpl:: writeVectorData
 
 void SolverInterfaceImpl:: writeBlockScalarData
 (
-  int     fromDataID,
-  int     size,
-  int*    valueIndices,
-  double* values )
+  int           fromDataID,
+  int           size,
+  int*          valueIndices,
+  const double* values )
 {
   TRACE(fromDataID, size);
   if (size == 0)
@@ -1245,9 +1241,9 @@ void SolverInterfaceImpl:: writeBlockScalarData
 
 void SolverInterfaceImpl:: writeScalarData
 (
-  int    fromDataID,
-  int    valueIndex,
-  double value )
+  int           fromDataID,
+  int           valueIndex,
+  const double& value )
 {
   TRACE(fromDataID, valueIndex, value );
   CHECK(valueIndex >= -1, "Invalid value index (" << valueIndex << ") when writing scalar data!");

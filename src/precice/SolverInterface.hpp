@@ -615,10 +615,10 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void writeBlockVectorData (
-    int     dataID,
-    int     size,
-    int*    valueIndices,
-    double* values );
+    int           dataID,
+    int           size,
+    int*          valueIndices,
+    const double* values );
 
   /**
    * @brief Writes vector data to a vertex
@@ -663,10 +663,10 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void writeBlockScalarData (
-    int     dataID,
-    int     size,
-    int*    valueIndices,
-    double* values );
+    int           dataID,
+    int           size,
+    int*          valueIndices,
+    const double* values );
 
   /**
    * @brief Writes scalar data to a vertex
@@ -682,9 +682,9 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void writeScalarData (
-    int    dataID,
-    int    valueIndex,
-    double value );
+    int           dataID,
+    int           valueIndex,
+    const double& value );
 
   /**
    * @brief Reads vector data into a provided block.
