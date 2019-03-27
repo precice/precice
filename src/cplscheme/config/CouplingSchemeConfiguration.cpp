@@ -314,6 +314,11 @@ void CouplingSchemeConfiguration::addCouplingScheme(
   TRACE(participantName);
   if (utils::contained(participantName, _couplingSchemes)) {
     DEBUG("Coupling scheme exists already for participant");
+    const auto participants = cplScheme->getParticipants();
+    CHECK(std::none_of(_couplingSchemes.begin(), _couplingSchemes.end(),
+                [&participants](const typename decltype(_couplingSchemes)::value_type& kv){
+                    return participants == kv.second->getParticipants();
+                }), "A coupling scheme already exists for these participants!");
     if (utils::contained(participantName, _couplingSchemeCompositions)) {
       DEBUG("Coupling scheme composition exists already for participant");
       // Fetch the composition and add the new scheme.
