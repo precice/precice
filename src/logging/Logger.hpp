@@ -1,15 +1,35 @@
 #pragma once
 
 #include <string>
-#include <boost/log/trivial.hpp>
+#include <memory>
 
 namespace precice {
 namespace logging {
 
-class Logger : public boost::log::sources::severity_logger<boost::log::trivial::severity_level>
-{
+struct LogLocation {
+    const char * file;
+    int line;
+    const char * func;
+};
+
+class Logger {
 public:
   explicit Logger(std::string module);
+  Logger(const Logger& other);
+  Logger& operator=(Logger other);
+  ~Logger();
+
+  void swap(Logger& other) noexcept;
+
+  void error(LogLocation loc, const std::string& mess);
+  void warning(LogLocation loc, const std::string& mess);
+  void info(LogLocation loc, const std::string& mess);
+  void debug(LogLocation loc, const std::string& mess);
+  void trace(LogLocation loc, const std::string& mess);
+
+private:
+  class LoggerImpl;
+  std::unique_ptr<LoggerImpl> _impl;
 };
 
 }} // namespace precice, logging

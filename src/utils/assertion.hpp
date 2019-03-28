@@ -6,6 +6,7 @@
 #include <boost/preprocessor/variadic/to_seq.hpp>
 #include <boost/preprocessor/seq/for_each_i.hpp>
 #include <boost/preprocessor/stringize.hpp>
+#include <boost/current_function.hpp>
 
 #include "stacktrace.hpp"
 #include "Parallel.hpp"
