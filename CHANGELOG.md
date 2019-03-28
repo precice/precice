@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file. For future 
 
 ## develop
 - The SolverInterface now keeps track of the Mesh states, which results more informative error messages for mesh related functions.
+- Sending data between participants is now fully asynchronous. This is relevant in one-way coupling scenarios, where the sending participant doesn't need to wait for the receiving one.
 
 ## 1.4.0
 - The python modules are now proper packages tracking dependencies etc.
