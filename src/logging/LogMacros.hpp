@@ -59,7 +59,7 @@
 
 /// Helper macro, used by TRACE
 #define LOG_ARGUMENT(r, data, i, elem)                                  \
-  << std::endl << "  Argument " << i << ": " << BOOST_PP_STRINGIZE(elem) << " == " << elem
+  << '\n' << "  Argument " << i << ": " << BOOST_PP_STRINGIZE(elem) << " == " << elem
 
 // Do not put do {...} while (false) here, it will destroy the _tracer_ right after creation
 #define TRACE(...)                                                      \

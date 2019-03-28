@@ -95,7 +95,7 @@ void print(std::map<int, std::vector<int>> const &m)
 
   for (auto &i : m) {
     for (auto &j : i.second) {
-      oss << i.first << ":" << j << std::endl; // prints rank:index
+      oss << i.first << ":" << j << '\n'; // prints rank:index
     }
   }
 
@@ -157,7 +157,7 @@ void printCommunicationPartnerCountStats(std::map<int, std::vector<int>> const &
               << "  Minimum: " << minimum << "\n"
               << "  Average: " << average << "\n"
               << "Number of Interface Processes: " << count << "\n"
-              << std::endl;
+              << '\n';
   } else {
     assertion(utils::MasterSlave::_slaveMode);
     utils::MasterSlave::_communication->send(size, 0);
@@ -211,7 +211,7 @@ void printLocalIndexCountStats(std::map<int, std::vector<int>> const &m)
               << "  Minimum: " << minimum << "\n"
               << "  Average: " << average << "\n"
               << "Number of Interface Processes: " << count << "\n"
-              << std::endl;
+              << '\n';
   } else {
     assertion(utils::MasterSlave::_slaveMode);
 

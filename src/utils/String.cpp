@@ -18,21 +18,21 @@ std::string wrapText (
   std::string wrapped;
   int length = 0;
   while (text[length] == ' '){
-    wrapped += " ";
+    wrapped += ' ';
     length++;
   }
   for (int i=0; i < (int)tokens.size()-1; i++){
     length += (int)tokens[i].length();
     wrapped += tokens[i];
     if (length + (int)tokens[i+1].length() + 1 > linewidth){
-      wrapped += "\n";
+      wrapped += '\n';
       for (int ws=0; ws < indentation; ws++){
-        wrapped += " ";
+        wrapped += ' ';
       }
       length = indentation;
     }
     else {
-      wrapped += " ";
+      wrapped += ' ';
       length += 1;
     }
   }

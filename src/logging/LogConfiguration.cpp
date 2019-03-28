@@ -107,7 +107,7 @@ public:
   
   void consume(boost::log::record_view const& rec, string_type const& formatted_record)
   {
-    *_ostream << formatted_record << std::endl << std::flush;
+    *_ostream << formatted_record << '\n' << std::flush;
   }
 };
 

@@ -163,12 +163,12 @@ void XMLTag::readAttributes(std::map<std::string, std::string> &aAttributes)
     if (not utils::contained(name, _attributes)) {
       std::string error = "Wrong attribute \"" + name + "\"";
 
-      std::cout << error << std::endl;
+      std::cout << error << '\n';
       throw error;
     }
 
     auto value = element.second;
-    //std::cout << name << " :: " << value << std::endl;
+    //std::cout << name << " :: " << value << '\n';
   }
 
   for (auto &pair : _doubleAttributes) {
@@ -346,7 +346,7 @@ std::string XMLTag::printDTD(const bool start) const
   std::ostringstream dtd;
 
   if (start)
-    dtd << "<!DOCTYPE " << _fullName << " [" << std::endl;
+    dtd << "<!DOCTYPE " << _fullName << " [\n";
 
   dtd << "<!ELEMENT " << _fullName << " ";
 
@@ -372,9 +372,9 @@ std::string XMLTag::printDTD(const bool start) const
       first = false;
     }
 
-    dtd << ")>" << std::endl;
+    dtd << ")>\n";
   } else {
-    dtd << "EMPTY>" << std::endl;
+    dtd << "EMPTY>\n";
   }
 
   for (const auto &pair : _doubleAttributes) {
@@ -403,10 +403,10 @@ std::string XMLTag::printDTD(const bool start) const
     }
   }
 
-  dtd << std::endl;
+  dtd << '\n';
 
   if (start)
-    dtd << "]>" << std::endl;
+    dtd << "]>\n";
 
   return dtd.str();
 }
@@ -421,17 +421,17 @@ std::string XMLTag::printDocumentation(int indentation) const
   }
 
   std::ostringstream doc;
-  doc << indent << "<!-- TAG " << _fullName << std::endl;
+  doc << indent << "<!-- TAG " << _fullName << '\n';
   if (not _doc.empty()) {
     std::string indentedDoc = indent + "         " + _doc;
     doc << utils::wrapText(indentedDoc, linewidth, indentation + 9);
-    doc << std::endl;
+    doc << '\n';
   }
   doc << indent << "         (can occur " << getOccurrenceString(_occurrence) << " times)";
 
   for (const auto &pair : _doubleAttributes) {
     std::ostringstream attrDoc;
-    doc << std::endl;
+    doc << '\n';
     attrDoc << indent << "     ATTR " << pair.first << ": "
             << pair.second.getUserDocumentation();
     doc << utils::wrapText(attrDoc.str(), linewidth, indentation + 10);
@@ -439,7 +439,7 @@ std::string XMLTag::printDocumentation(int indentation) const
 
   for (const auto &pair : _intAttributes) {
     std::ostringstream attrDoc;
-    doc << std::endl;
+    doc << '\n';
     attrDoc << indent << "     ATTR " << pair.first << ": "
             << pair.second.getUserDocumentation();
     doc << utils::wrapText(attrDoc.str(), linewidth, indentation + 10);
@@ -447,7 +447,7 @@ std::string XMLTag::printDocumentation(int indentation) const
 
   for (const auto &pair : _stringAttributes) {
     std::ostringstream attrDoc;
-    doc << std::endl;
+    doc << '\n';
     attrDoc << indent << "     ATTR " << pair.first << ": "
             << pair.second.getUserDocumentation();
     doc << utils::wrapText(attrDoc.str(), linewidth, indentation + 10);
@@ -455,7 +455,7 @@ std::string XMLTag::printDocumentation(int indentation) const
 
   for (const auto &pair : _booleanAttributes) {
     std::ostringstream attrDoc;
-    doc << std::endl;
+    doc << '\n';
     attrDoc << indent << "     ATTR " << pair.first << ": "
             << pair.second.getUserDocumentation();
     doc << utils::wrapText(attrDoc.str(), linewidth, indentation + 10);
@@ -463,13 +463,13 @@ std::string XMLTag::printDocumentation(int indentation) const
 
   for (const auto &pair : _eigenVectorXdAttributes) {
     std::ostringstream attrDoc;
-    doc << std::endl;
+    doc << '\n';
     attrDoc << indent << "     ATTR " << pair.first << ": "
             << pair.second.getUserDocumentation();
     doc << utils::wrapText(attrDoc.str(), linewidth, indentation + 10);
   }
 
-  doc << " -->" << std::endl;
+  doc << " -->\n";
   std::ostringstream tagHead;
   tagHead << indent << "<" << _fullName;
 
@@ -501,13 +501,13 @@ std::string XMLTag::printDocumentation(int indentation) const
   doc << utils::wrapText(tagHead.str(), linewidth, indentation + 3);
 
   if (not _subtags.empty()) {
-    doc << ">" << std::endl << std::endl;
+    doc << ">\n\n";
     for (auto const subtag : _subtags) {
       doc << subtag->printDocumentation(indentation + 3);
     }
-    doc << indent << "</" << _fullName << ">" << std::endl << std::endl;
+    doc << indent << "</" << _fullName << ">\n\n";
   } else {
-    doc << "/>" << std::endl << std::endl;
+    doc << "/>\n\n";
   }
 
   return doc.str();

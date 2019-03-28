@@ -19,12 +19,4 @@ TXTReader:: TXTReader
   //_file << std::setprecision(16);
 }
 
-TXTReader:: ~TXTReader()
-{
-  if (_file){
-    _file.close();
-  }
-}
-
-
 }} // namespace precice, io

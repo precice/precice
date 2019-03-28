@@ -185,8 +185,15 @@ if env["petsc"]:
         checkAdd("craypetsc_gnu_real")
     else:
         checkAdd("petsc")
+        
+    petsc_path = []
+    if ( FindFile( "petscversion.h", join( PETSC_DIR, PETSC_ARCH, "include/" ) ) == None ):
+      petsc_path = PETSC_DIR
+    else:
+      petsc_path = join( PETSC_DIR, PETSC_ARCH )
+
     # Set PETSC_VERSION to correct values 
-    with open(join(PETSC_DIR, "include/petscversion.h"), "r") as versionfile:
+    with open(join( petsc_path, "include/petscversion.h"), "r") as versionfile:
         for line in versionfile:
             tokens = line.split()
             try:

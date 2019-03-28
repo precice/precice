@@ -45,7 +45,7 @@ bool init_unit_test()
   
   if (logConfigs.empty()) { // nothing has been read from log.conf
     #if BOOST_VERSION == 106900
-    std::cerr << "Boost 1.69 get log_level is broken, preCICE log level set to debug." << std::endl;
+    std::cerr << "Boost 1.69 get log_level is broken, preCICE log level set to debug.\n";
     auto logLevel = log_successful_tests;
     #else
     auto logLevel = runtime_config::get<log_level>(runtime_config::btrt_log_level);
@@ -98,11 +98,11 @@ int main(int argc, char* argv[])
     
   if (utils::Parallel::getCommunicatorSize() < 4) {
     if (utils::Parallel::getProcessRank() == 0)
-      std::cerr << "Running tests on less than four processors. Not all tests are executed." << std::endl;
+      std::cerr << "Running tests on less than four processors. Not all tests are executed.\n";
   }
   if (utils::Parallel::getCommunicatorSize() > 4) {
     if (utils::Parallel::getProcessRank() == 0)
-      std::cerr << "Running tests on more than 4 processors is not supported. Aborting." << std::endl;
+      std::cerr << "Running tests on more than 4 processors is not supported. Aborting.\n";
     std::exit(-1);
   }
 

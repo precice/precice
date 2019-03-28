@@ -110,6 +110,7 @@ void SolverInterfaceImpl:: configure
   mesh::Mesh::resetGeometryIDsGlobally();
   mesh::Data::resetDataCount();
   Participant::resetParticipantCount();
+  _meshLock.clear();
 
   _dimensions = config.getDimensions();
   _accessor = determineAccessingParticipant(config);
@@ -166,6 +167,11 @@ void SolverInterfaceImpl:: configure
     }
     std::string meshName = mesh->getName();
     mesh::PtrMeshConfiguration meshConfig = config.getMeshConfiguration();
+  }
+  // Register all MeshIds to the lock, but unlock them straight away as
+  // writing is allowed after configuration.
+  for (const auto& meshID : _meshIDs) {
+      _meshLock.add(meshID.second, false);
   }
   
   utils::Parallel::initializeMPI(nullptr, nullptr);
@@ -268,6 +274,8 @@ double SolverInterfaceImpl:: initialize()
   }
 
   solverInitEvent.start(precice::syncMode);
+
+  _meshLock.lockAll();
 
   return _couplingScheme->getNextTimestepMaxLength();
 }
@@ -395,6 +403,7 @@ double SolverInterfaceImpl:: advance
     //resetWrittenData();
 
   }
+  _meshLock.lockAll();
   solverEvent.start(precice::syncMode);
   return _couplingScheme->getNextTimestepMaxLength();
 }
@@ -624,6 +633,7 @@ void SolverInterfaceImpl:: resetMesh
     CHECK(hasMapping, "A mesh with no mappings must not be reseted");
 
     DEBUG ( "Clear mesh positions for mesh \"" << context.mesh->getName() << "\"" );
+    _meshLock.unlock(meshID);
     context.mesh->clear ();
   }
 }
@@ -644,12 +654,9 @@ int SolverInterfaceImpl:: setMeshVertex
     index = _requestManager->requestSetMeshVertex ( meshID, internalPosition );
   }
   else {
-    /// @todo testMode should be removed here as soon as all serial integration tests are ported and updated
-    CHECK(not _couplingScheme->isInitialized() ||
-          precice::testMode, "Vertices can only be defined before initialize() is called");
-
     MeshContext& context = _accessor->meshContext(meshID);
     mesh::PtrMesh mesh(context.mesh);
+    CHECK(!_meshLock.check(meshID), "Cannot modify the locked mesh " << mesh->getName());
     DEBUG("MeshRequirement: " << context.meshRequirement);
     index = mesh->createVertex(internalPosition).getID();
     mesh->allocateDataValues();
@@ -669,11 +676,9 @@ void SolverInterfaceImpl:: setMeshVertices
     _requestManager->requestSetMeshVertices(meshID, size, positions, ids);
   }
   else { //couplingMode
-    /// @todo testMode should be removed here as soon as all serial integration tests are ported and updated
-    CHECK(not _couplingScheme->isInitialized() ||
-          precice::testMode, "Vertices can only be defined before initialize() is called");
     MeshContext& context = _accessor->meshContext(meshID);
     mesh::PtrMesh mesh(context.mesh);
+    CHECK(!_meshLock.check(meshID), "Cannot modify the locked mesh " << mesh->getName());
     Eigen::VectorXd internalPosition(_dimensions);
     DEBUG("Set positions");
     for (int i=0; i < size; i++){
@@ -761,8 +766,8 @@ int SolverInterfaceImpl:: setMeshEdge
     return _requestManager->requestSetMeshEdge ( meshID, firstVertexID, secondVertexID );
   }
   else {
-    CHECK(not _couplingScheme->isInitialized(), "Edges can only be defined before initialize() is called");
     MeshContext& context = _accessor->meshContext(meshID);
+    CHECK(!_meshLock.check(meshID), "Cannot modify the locked mesh " << context.mesh->getName());
     if ( context.meshRequirement == mapping::Mapping::MeshRequirement::FULL ){
       DEBUG("Full mesh required.");
       mesh::PtrMesh& mesh = context.mesh;
@@ -793,8 +798,8 @@ void SolverInterfaceImpl:: setMeshTriangle
     _requestManager->requestSetMeshTriangle ( meshID, firstEdgeID, secondEdgeID, thirdEdgeID );
   }
   else {
-    CHECK(not _couplingScheme->isInitialized(), "Triangles can only be defined before initialize() is called");
     MeshContext& context = _accessor->meshContext(meshID);
+    CHECK(!_meshLock.check(meshID), "Cannot modify the locked mesh " << context.mesh->getName());
     if ( context.meshRequirement == mapping::Mapping::MeshRequirement::FULL ){
       mesh::PtrMesh& mesh = context.mesh;
       assertion ( firstEdgeID >= 0 );
@@ -827,8 +832,8 @@ void SolverInterfaceImpl:: setMeshTriangleWithEdges
                                                      thirdVertexID);
     return;
   }
-  CHECK(not _couplingScheme->isInitialized(), "Triangles can only be defined before initialize() is called");
   MeshContext& context = _accessor->meshContext(meshID);
+  CHECK(!_meshLock.check(meshID), "Cannot modify the locked mesh " << context.mesh->getName());
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL){
     mesh::PtrMesh& mesh = context.mesh;
     assertion(firstVertexID >= 0, firstVertexID);
@@ -921,8 +926,8 @@ void SolverInterfaceImpl:: setMeshQuad
                                         thirdEdgeID, fourthEdgeID);
   }
   else {
-    CHECK(not _couplingScheme->isInitialized(), "Quads can only be defined before initialize() is called");
     MeshContext& context = _accessor->meshContext(meshID);
+    CHECK(!_meshLock.check(meshID), "Cannot modify the locked mesh " << context.mesh->getName());
     if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL){
       mesh::PtrMesh& mesh = context.mesh;
       assertion(firstEdgeID >= 0);
@@ -957,8 +962,8 @@ void SolverInterfaceImpl:: setMeshQuadWithEdges
         meshID, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID);
     return;
   }
-  CHECK(not _couplingScheme->isInitialized(), "Quads can only be defined before initialize() is called");
   MeshContext& context = _accessor->meshContext(meshID);
+  CHECK(!_meshLock.check(meshID), "Cannot modify the locked mesh " << context.mesh->getName());
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL){
     mesh::PtrMesh& mesh = context.mesh;
     assertion(firstVertexID >= 0, firstVertexID);
@@ -1810,7 +1815,6 @@ void SolverInterfaceImpl:: syncTimestep(double computedTimestepLength)
     }
   }
 }
-
 
 }} // namespace precice, impl
 

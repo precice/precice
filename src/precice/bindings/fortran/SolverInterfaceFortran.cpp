@@ -30,16 +30,16 @@ void precicef_create_
   int   lengthAccessorName,
   int   lengthConfigFileName )
 {
-  //cout << "lengthAccessorName: " << lengthAccessorName << endl;
-  //cout << "lengthConfigFileName: " << lengthConfigFileName << endl;
-  //cout << "solverProcessIndex: " << *solverProcessIndex << endl;
-  //cout << "solverProcessSize: " << *solverProcessSize << endl;
+  //cout << "lengthAccessorName: " << lengthAccessorName << '\n';
+  //cout << "lengthConfigFileName: " << lengthConfigFileName << '\n';
+  //cout << "solverProcessIndex: " << *solverProcessIndex << '\n';
+  //cout << "solverProcessSize: " << *solverProcessSize << '\n';
   int strippedLength = precice::impl::strippedLength(participantName,lengthAccessorName);
   string stringAccessorName(participantName, strippedLength);
   strippedLength = precice::impl::strippedLength(configFileName,lengthConfigFileName);
   string stringConfigFileName(configFileName, strippedLength);
-  //cout << "Accessor: " << stringAccessorName << "!" << endl;
-  //cout << "Config  : " << stringConfigFileName << "!" << endl;
+  //cout << "Accessor: " << stringAccessorName << "!" << '\n';
+  //cout << "Config  : " << stringConfigFileName << "!" << '\n';
   impl = new precice::impl::SolverInterfaceImpl (stringAccessorName,
          *solverProcessIndex, *solverProcessSize, false);
   impl->configure(stringConfigFileName);
@@ -166,14 +166,14 @@ void precicef_action_required_
 {
   CHECK(impl != nullptr,errormsg);
   //assertion(lengthAction > 1);
-  //std::cout << "lengthAction: " << lengthAction << std::endl;
+  //std::cout << "lengthAction: " << lengthAction << '\n';
   //std::cout << "Action:";
   //for (int i=0; i < lengthAction; i++){
   //  std::cout << " a[" << i << "]=\"" << action[i] << "\"";
   //}
-  //std::cout << std::endl;
+  //std::cout << '\n';
   int strippedLength = precice::impl::strippedLength(action, lengthAction);
-  //std::cout << "strippedLength: " << strippedLength << std::endl;
+  //std::cout << "strippedLength: " << strippedLength << '\n';
   //assertion(strippedLength > 1);
   string stringAction(action, strippedLength);
   if (impl->isActionRequired(stringAction)){
