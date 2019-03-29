@@ -153,13 +153,13 @@ void XMLAttribute<ATTRIBUTE_T>::readValue(std::map<std::string, std::string> &aA
   TRACE(_name);
   if (_read) {
     std::cout << "Attribute \"" + _name + "\" is defined multiple times\n";
-    throw "Attribute \"" + _name + "\" is defined multiple times";
+    ERROR("Attribute \"" + _name + "\" is defined multiple times");
   }
 
   if (aAttributes.find(getName()) == aAttributes.end()) {
     if (not _hasDefaultValue) {
       std::cout << "Attribute \"" + _name + "\" missing\n";
-      throw "Attribute \"" + _name + "\" missing";
+      ERROR("Attribute \"" + _name + "\" missing");
     }
     set(_value, _defaultValue);
   } else {
@@ -179,7 +179,7 @@ void XMLAttribute<ATTRIBUTE_T>::readValue(std::map<std::string, std::string> &aA
         }
 
         std::cout << stream.str() << '\n';
-        throw stream.str();
+        ERROR(stream.str());
       }
     }
   }
@@ -199,7 +199,7 @@ void XMLAttribute<ATTRIBUTE_T>::readValueSpecific(std::string &rawValue, double 
       value = std::stod(rawValue);
     }
   } catch (...) {
-    throw "String to Double error";
+    ERROR("String to Double error");
   }
 }
 
@@ -209,7 +209,7 @@ void XMLAttribute<ATTRIBUTE_T>::readValueSpecific(std::string &rawValue, int &va
   try {
     value = std::stoi(rawValue);
   } catch (...) {
-    throw "String to Int error";
+    ERROR("String to Int error");
   }
 }
 
