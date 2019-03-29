@@ -161,14 +161,8 @@ void XMLTag::readAttributes(std::map<std::string, std::string> &aAttributes)
     auto name = element.first;
 
     if (not utils::contained(name, _attributes)) {
-      std::string error = "Wrong attribute \"" + name + "\"";
-
-      std::cout << error << '\n';
-      throw error;
+      ERROR("Wrong attribute \"" << name << '\"');
     }
-
-    auto value = element.second;
-    //std::cout << name << " :: " << value << '\n';
   }
 
   for (auto &pair : _doubleAttributes) {
@@ -272,8 +266,6 @@ void XMLTag::readAttributes(std::map<std::string, std::string> &aAttributes)
 
 void XMLTag::areAllSubtagsConfigured() const
 {
-  std::ostringstream stream;
-
   for (auto tag : _subtags) {
     std::string ns         = tag->_namespace;
     bool        configured = tag->isConfigured();
@@ -289,11 +281,10 @@ void XMLTag::areAllSubtagsConfigured() const
     if ((not configured) && (occurOnce || occurOnceOrMore)) {
 
       if (tag->getNamespace().empty()) {
-        stream << "Tag <" << tag->getName() << "> is missing";
+        ERROR("Tag <" << tag->getName() << "> is missing");
       } else {
-        stream << "Tag <" << tag->getNamespace() << ":...> is missing";
+        ERROR("Tag <" << tag->getNamespace() << ":...> is missing");
       }
-      throw stream.str();
     }
   }
 }
