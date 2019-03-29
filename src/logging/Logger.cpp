@@ -12,9 +12,16 @@
 namespace precice {
 namespace logging {
 
+/** The implementation of logging::Logger
+ *
+ * @note The point of using a pimpl for the logger is to remove boost::log from logger.hpp
+ */
 class Logger::LoggerImpl : public boost::log::sources::severity_logger<boost::log::trivial::severity_level>
 {
 public:
+  /** Creates a Boost logger for the said module.
+   * @param[in] module the name of the module.
+   */
   explicit LoggerImpl(std::string module);
 };
 
@@ -34,8 +41,10 @@ Logger::LoggerImpl::LoggerImpl(std::string module)
 
 Logger::Logger(std::string module) : _impl(new LoggerImpl{std::move(module)}) {}
 
+// This is required for the std::unique_ptr.
 Logger::~Logger() = default;
 
+// Extracts the name saved in the attribute "Module"
 Logger::Logger(const Logger& other)
     : Logger{other._impl->get_attributes().find("Module")->second.get_value().extract_or_throw<std::string>()}
 {

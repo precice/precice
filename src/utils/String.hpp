@@ -25,7 +25,7 @@ std::string & checkAppendExtension(std::string& filename, const std::string& ext
  */
 bool convertStringToBool(std::string const & value);
 
-
+/// Turns stream-like code into a std::string.
 #define PRECICE_AS_STRING(message) [&]{ \
         std::ostringstream oss;        \
         oss << message;                \
