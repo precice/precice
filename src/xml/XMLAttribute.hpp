@@ -152,14 +152,14 @@ void XMLAttribute<ATTRIBUTE_T>::readValue(std::map<std::string, std::string> &aA
 {
   TRACE(_name);
   if (_read) {
-    std::cout << "Attribute \"" + _name + "\" is defined multiple times" << std::endl;
-    throw "Attribute \"" + _name + "\" is defined multiple times";
+    std::cout << "Attribute \"" + _name + "\" is defined multiple times\n";
+    ERROR("Attribute \"" + _name + "\" is defined multiple times");
   }
 
   if (aAttributes.find(getName()) == aAttributes.end()) {
     if (not _hasDefaultValue) {
-      std::cout << "Attribute \"" + _name + "\" missing" << std::endl;
-      throw "Attribute \"" + _name + "\" missing";
+      std::cout << "Attribute \"" + _name + "\" missing\n";
+      ERROR("Attribute \"" + _name + "\" missing");
     }
     set(_value, _defaultValue);
   } else {
@@ -178,8 +178,8 @@ void XMLAttribute<ATTRIBUTE_T>::readValue(std::map<std::string, std::string> &aA
             stream << " or value must be \"" << *first << '"';
         }
 
-        std::cout << stream.str() << std::endl;
-        throw stream.str();
+        std::cout << stream.str() << '\n';
+        ERROR(stream.str());
       }
     }
   }
@@ -190,16 +190,16 @@ template <typename ATTRIBUTE_T>
 void XMLAttribute<ATTRIBUTE_T>::readValueSpecific(std::string &rawValue, double &value)
 {
   try {
-    if (rawValue.find("/") != std::string::npos) {
-      std::string left  = rawValue.substr(0, rawValue.find("/"));
-      std::string right = rawValue.substr(rawValue.find("/") + 1, rawValue.size() - rawValue.find("/") - 1);
+    if (rawValue.find('/') != std::string::npos) {
+      std::string left  = rawValue.substr(0, rawValue.find('/'));
+      std::string right = rawValue.substr(rawValue.find('/') + 1, rawValue.size() - rawValue.find('/') - 1);
 
       value = std::stod(left) / std::stod(right);
     } else {
       value = std::stod(rawValue);
     }
   } catch (...) {
-    throw "String to Double error";
+    ERROR("String to Double error");
   }
 }
 
@@ -209,7 +209,7 @@ void XMLAttribute<ATTRIBUTE_T>::readValueSpecific(std::string &rawValue, int &va
   try {
     value = std::stoi(rawValue);
   } catch (...) {
-    throw "String to Int error";
+    ERROR("String to Int error");
   }
 }
 
@@ -237,16 +237,16 @@ void XMLAttribute<ATTRIBUTE_T>::readValueSpecific(std::string &rawValue, Eigen::
     std::string tmp1(rawValue);
     // erase entries before i-th entry
     for (int j = 0; j < i; j++) {
-      if (tmp1.find(";") != std::string::npos) {
-        tmp1.erase(0, tmp1.find(";") + 1);
+      if (tmp1.find(';') != std::string::npos) {
+        tmp1.erase(0, tmp1.find(';') + 1);
       } else {
         componentsLeft = false;
       }
     }
     // if we are not in the last vector component...
-    if (tmp1.find(";") != std::string::npos) {
+    if (tmp1.find(';') != std::string::npos) {
       // ..., erase entries after i-th entry
-      tmp1.erase(tmp1.find(";"), tmp1.size());
+      tmp1.erase(tmp1.find(';'), tmp1.size());
     }
 
     if (componentsLeft) {
@@ -272,17 +272,17 @@ Eigen::VectorXd XMLAttribute<Eigen::VectorXd>::getAttributeValueAsEigenVectorXd(
 	std::string tmp1(rawValue);
 	// erase entries before i-th entry
 	for (int j = 0; j < i; j++){
-	  if (tmp1.find(";") != std::string::npos){
-		tmp1.erase(0,tmp1.find(";")+1);
+	  if (tmp1.find(';') != std::string::npos){
+		tmp1.erase(0,tmp1.find(';')+1);
 	  }
 	  else {
 		componentsLeft = false;
 	  }
 	}
 	// if we are not in the last vector component...
-	if (tmp1.find(";") != std::string::npos){
+	if (tmp1.find(';') != std::string::npos){
 	  // ..., erase entries after i-th entry
-	  tmp1.erase(tmp1.find(";"),tmp1.size());
+	  tmp1.erase(tmp1.find(';'),tmp1.size());
 	}
 	if (componentsLeft){
 	   
@@ -306,7 +306,7 @@ std::string XMLAttribute<ATTRIBUTE_T>::printDTD(const std::string &ElementName) 
     dtd << "#REQUIRED";
   }
 
-  dtd << ">" << std::endl;
+  dtd << ">\n";
 
   return dtd.str();
 }

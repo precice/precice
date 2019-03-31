@@ -150,7 +150,7 @@ void MVQNPostProcessing::initialize(
 
   if (utils::MasterSlave::_masterMode || (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode))
     _infostringstream << " IMVJ restart mode: " << _imvjRestart << "\n chunk size: " << _chunkSize << "\n trunc eps: " << _svdJ.getThreshold() << "\n R_RS: " << _RSLSreusedTimesteps << "\n--------\n"
-                      << std::endl;
+                      << '\n';
 }
 
 // ==================================================================================
@@ -598,7 +598,7 @@ void MVQNPostProcessing::restartIMVJ()
     //double percentage = 100.0*used_storage/(double)theoreticalJ_storage;
     if (utils::MasterSlave::_masterMode || (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode))
       _infostringstream << " - MVJ-RESTART " << _nbRestarts << ", mode= SVD -\n  new modes: " << rankAfter - rankBefore << "\n  rank svd: " << rankAfter << "\n  avg rank: " << _avgRank / _nbRestarts << "\n  truncated modes: " << waste << "\n"
-                        << std::endl;
+                        << '\n';
 
     //        ------------ RESTART LEAST SQUARES ------------
   } else if (_imvjRestartType == MVQNPostProcessing::RS_LS) {
@@ -675,7 +675,7 @@ void MVQNPostProcessing::restartIMVJ()
     DEBUG("MVJ-RESTART, mode=LS. Restart with " << _matrixV_RSLS.cols() << " columns from " << _RSLSreusedTimesteps << " time steps.");
     if (utils::MasterSlave::_masterMode || (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode))
       _infostringstream << " - MVJ-RESTART" << _nbRestarts << ", mode= LS -\n  used cols: " << _matrixV_RSLS.cols() << "\n  R_RS: " << _RSLSreusedTimesteps << "\n"
-                        << std::endl;
+                        << '\n';
 
     //            ------------ RESTART ZERO ------------
   } else if (_imvjRestartType == MVQNPostProcessing::RS_ZERO) {
@@ -747,7 +747,7 @@ void MVQNPostProcessing::specializedIterationsConverged(
     _matrixCols_RSLS.push_front(0);
   }
 
-  //_info2<<std::endl;
+  //_info2<<'\n';
 
   // if efficient update of imvj is enabled
   if (not _alwaysBuildJacobian || _imvjRestart) {

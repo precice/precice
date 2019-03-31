@@ -5,6 +5,7 @@
 
 #include <map>
 #include <numeric>
+#include <vector>
 
 #include "versions.hpp"
 #include "mesh/RTree.hpp"
@@ -62,15 +63,15 @@ public:
    * For description on convergence testing and meaning of solverRtol see http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPConvergedDefault.html#KSPConvergedDefault
    */
   PetRadialBasisFctMapping (
-    Constraint              constraint,
-    int                     dimensions,
-    RADIAL_BASIS_FUNCTION_T function,
-    bool                    xDead,
-    bool                    yDead,
-    bool                    zDead,
-    double                  solverRtol = 1e-9,
-    Polynomial              polynomial = Polynomial::SEPARATE,
-    Preallocation           preallocation = Preallocation::TREE);
+    Constraint                     constraint,
+    int                            dimensions,
+    const RADIAL_BASIS_FUNCTION_T& function,
+    bool                           xDead,
+    bool                           yDead,
+    bool                           zDead,
+    double                         solverRtol = 1e-9,
+    Polynomial                     polynomial = Polynomial::SEPARATE,
+    Preallocation                  preallocation = Preallocation::TREE);
 
   /// Deletes the PETSc objects and the _deadAxis array
   virtual ~PetRadialBasisFctMapping();
@@ -187,15 +188,15 @@ private:
 template<typename RADIAL_BASIS_FUNCTION_T>
 PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
 (
-  Constraint              constraint,
-  int                     dimensions,
-  RADIAL_BASIS_FUNCTION_T function,
-  bool                    xDead,
-  bool                    yDead,
-  bool                    zDead,
-  double                  solverRtol,
-  Polynomial              polynomial,
-  Preallocation           preallocation)
+  Constraint                     constraint,
+  int                            dimensions,
+  const RADIAL_BASIS_FUNCTION_T& function,
+  bool                           xDead,
+  bool                           yDead,
+  bool                           zDead,
+  double                         solverRtol,
+  Polynomial                     polynomial,
+  Preallocation                  preallocation)
   :
   Mapping ( constraint, dimensions ),
   _basisFunction ( function ),
@@ -359,8 +360,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
     PetscInt const idxSize = std::max(_matrixC.getSize().second, _matrixQ.getSize().second);
     PetscInt colNum = 0;  // holds the number of columns
-    PetscInt colIdx[idxSize];     // holds the columns indices of the entries
-    PetscScalar rowVals[idxSize]; // holds the values of the entries
+    std::vector<PetscInt> colIdx(idxSize);     // holds the columns indices of the entries
+    std::vector<PetscScalar> rowVals(idxSize); // holds the values of the entries
     
     // -- SETS THE POLYNOMIAL PART OF THE MATRIX --
     if (_polynomial == Polynomial::ON or _polynomial == Polynomial::SEPARATE) {
@@ -376,10 +377,10 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
       // cols are always the first ones for the polynomial, no need to translate
       if (_polynomial == Polynomial::ON) {
-        ierr = MatSetValues(_matrixC, colNum, colIdx, 1, &row, rowVals, INSERT_VALUES); CHKERRV(ierr);
+        ierr = MatSetValues(_matrixC, colNum, colIdx.data(), 1, &row, rowVals.data(), INSERT_VALUES); CHKERRV(ierr);
       }
       else if (_polynomial == Polynomial::SEPARATE) {
-        ierr = MatSetValues(_matrixQ, 1, &row, colNum, colIdx, rowVals, INSERT_VALUES); CHKERRV(ierr);
+        ierr = MatSetValues(_matrixQ, 1, &row, colNum, colIdx.data(), rowVals.data(), INSERT_VALUES); CHKERRV(ierr);
       }
       colNum = 0;
     }
@@ -411,8 +412,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
         }
       }
     }
-    ierr = AOApplicationToPetsc(_AOmapping, colNum, colIdx); CHKERRV(ierr);
-    ierr = MatSetValues(_matrixC, 1, &row, colNum, colIdx, rowVals, INSERT_VALUES); CHKERRV(ierr);
+    ierr = AOApplicationToPetsc(_AOmapping, colNum, colIdx.data()); CHKERRV(ierr);
+    ierr = MatSetValues(_matrixC, 1, &row, colNum, colIdx.data(), rowVals.data(), INSERT_VALUES); CHKERRV(ierr);
     ++row;
   }
   DEBUG("Finished filling Matrix C");
@@ -421,7 +422,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
   // PETSc requires that all diagonal entries are set, even if set to zero.
   _matrixC.assemble(MAT_FLUSH_ASSEMBLY);
-  petsc::Vector zeros(_matrixC);
+  auto zeros = petsc::Vector::allocate(_matrixC);
   MatDiagonalSet(_matrixC, zeros, ADD_VALUES);
 
   // Begin assembly here, all assembly is ended at the end of this function.
@@ -452,8 +453,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     if (_polynomial == Polynomial::ON or _polynomial == Polynomial::SEPARATE) {
         petsc::Matrix * m = _polynomial == Polynomial::ON ? &_matrixA : &_matrixV;
         PetscInt colNum = 0;
-        PetscInt colIdx[m->getSize().second];     // holds the columns indices of the entries
-        PetscScalar rowVals[m->getSize().second]; // holds the values of the entries
+        std::vector<PetscInt> colIdx(m->getSize().second);     // holds the columns indices of the entries
+        std::vector<PetscScalar> rowVals(m->getSize().second); // holds the values of the entries
 
         colIdx[colNum] = colNum;
         rowVals[colNum++] = 1;
@@ -464,13 +465,13 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
             rowVals[colNum++] = oVertex.getCoords()[dim];
           }
         }
-        ierr = MatSetValues(*m, 1, &row, colNum, colIdx, rowVals, INSERT_VALUES); CHKERRV(ierr);
+        ierr = MatSetValues(*m, 1, &row, colNum, colIdx.data(), rowVals.data(), INSERT_VALUES); CHKERRV(ierr);
     }
     
     // -- SETS THE COEFFICIENTS --
     PetscInt colNum = 0;
-    PetscInt colIdx[_matrixA.getSize().second];     // holds the columns indices of the entries
-    PetscScalar rowVals[_matrixA.getSize().second]; // holds the values of the entries
+    std::vector<PetscInt> colIdx(_matrixA.getSize().second);     // holds the columns indices of the entries
+    std::vector<PetscScalar> rowVals(_matrixA.getSize().second); // holds the values of the entries
 
     if (_preallocation == Preallocation::SAVE or _preallocation == Preallocation::TREE) {
       auto const & rowVertices = vertexData[row - ownerRangeABegin];
@@ -493,8 +494,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
         }
       }
     }
-    ierr = AOApplicationToPetsc(_AOmapping, colNum, colIdx); CHKERRV(ierr);
-    ierr = MatSetValues(_matrixA, 1, &row, colNum, colIdx, rowVals, INSERT_VALUES); CHKERRV(ierr);
+    ierr = AOApplicationToPetsc(_AOmapping, colNum, colIdx.data()); CHKERRV(ierr);
+    ierr = MatSetValues(_matrixA, 1, &row, colNum, colIdx.data(), rowVals.data(), INSERT_VALUES); CHKERRV(ierr);
   }
   DEBUG("Finished filling Matrix A");
   eFillA.stop();
@@ -544,7 +545,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   // -- COMPUTE RESCALING COEFFICIENTS USING THE SYSTEM MATRIX C SOLVER --
   if (useRescaling and (_polynomial == Polynomial::SEPARATE)) {
     precice::utils::Event eRescaling("map.pet.computeRescaling.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);    
-    petsc::Vector rhs(_matrixC), rescalingCoeffs(_matrixC);
+    auto rhs = petsc::Vector::allocate(_matrixC);
+    auto rescalingCoeffs =petsc::Vector::allocate(_matrixC);
     VecSet(rhs, 1);
     rhs.assemble();
     if (not _solver.solve(rhs, rescalingCoeffs)) {
@@ -608,8 +610,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
             valueDim, output()->data(outputDataID)->getDimensions());
 
   if (getConstraint() == CONSERVATIVE) {
-    petsc::Vector au(_matrixA, "au", petsc::Vector::RIGHT);
-    petsc::Vector in(_matrixA, "in");
+    auto au = petsc::Vector::allocate(_matrixA, "au", petsc::Vector::RIGHT);
+    auto in = petsc::Vector::allocate(_matrixA, "in");
     int inRangeStart, inRangeEnd;
     std::tie(inRangeStart, inRangeEnd) = in.ownerRange();
     for (int dim = 0; dim < valueDim; dim++) {
@@ -628,20 +630,20 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
       petsc::Vector& out = std::get<0>(
         previousSolution.emplace(std::piecewise_construct,
                                  std::forward_as_tuple(inputDataID + outputDataID * 10 + dim * 100),
-                                 std::forward_as_tuple(_matrixC, "out"))
+                                 std::forward_as_tuple(petsc::Vector::allocate(_matrixC, "out")))
         )->second;
 
       if (_polynomial == Polynomial::SEPARATE) {
-        petsc::Vector epsilon(_matrixV, "epsilon", petsc::Vector::RIGHT);
+        auto epsilon = petsc::Vector::allocate(_matrixV, "epsilon", petsc::Vector::RIGHT);
         ierr = MatMultTranspose(_matrixV, in, epsilon); CHKERRV(ierr);
-        petsc::Vector eta(_matrixA, "eta", petsc::Vector::RIGHT);
+        auto eta = petsc::Vector::allocate(_matrixA, "eta", petsc::Vector::RIGHT);
         ierr = MatMultTranspose(_matrixA, in, eta); CHKERRV(ierr);
-        petsc::Vector mu(_matrixC, "mu", petsc::Vector::LEFT);
+        auto mu = petsc::Vector::allocate(_matrixC, "mu", petsc::Vector::LEFT);
         _solver.solve(eta, mu);
         VecScale(epsilon, -1);
-        petsc::Vector tau(_matrixQ, "tau", petsc::Vector::RIGHT);
+        auto tau = petsc::Vector::allocate(_matrixQ, "tau", petsc::Vector::RIGHT);
         ierr = MatMultTransposeAdd(_matrixQ, mu, epsilon, tau); CHKERRV(ierr);
-        petsc::Vector sigma(_matrixQ, "sigma", petsc::Vector::LEFT);
+        auto sigma = petsc::Vector::allocate(_matrixQ, "sigma", petsc::Vector::LEFT);
         if (not _QRsolver.solveTranspose(tau, sigma)) {
           KSPView(_QRsolver, PETSC_VIEWER_STDOUT_WORLD);
           ERROR("RBF Polynomial linear system has not converged.");
@@ -680,9 +682,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
     }
   }
   else { // Map CONSISTENT
-    petsc::Vector out(_matrixA, "out");
-    petsc::Vector in(_matrixC, "in");
-    petsc::Vector a(_matrixQ, "a", petsc::Vector::RIGHT); // holds the solution of the LS polynomial
+    auto out = petsc::Vector::allocate(_matrixA, "out");
+    auto in = petsc::Vector::allocate(_matrixC, "in");
+    auto a = petsc::Vector::allocate(_matrixQ, "a", petsc::Vector::RIGHT); // holds the solution of the LS polynomial
 
     PetscScalar const * vecArray;
 
@@ -714,7 +716,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
       petsc::Vector& p = std::get<0>(  // Save and reuse the solution from the previous iteration
         previousSolution.emplace(std::piecewise_construct,
                                  std::forward_as_tuple(inputDataID + outputDataID * 10 + dim * 100),
-                                 std::forward_as_tuple(_matrixC, "p"))
+                                 std::forward_as_tuple(petsc::Vector::allocate(_matrixC, "p")))
         )->second;
 
       utils::Event eSolve("map.pet.solveConsistent.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
@@ -770,24 +772,32 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
       return; // Ranks not at the interface should never hold interface vertices
 
   // Tags all vertices that are inside otherMesh's bounding box, enlarged by the support radius
-  for(mesh::Vertex& v : filterMesh->vertices()) {
-    bool isInside = true;
-    #if PETSC_MAJOR >= 3 and PETSC_MINOR >= 8
-    if (_basisFunction.hasCompactSupport()) {
-      for (int d = 0; d < v.getDimensions(); d++) {
-        if (v.getCoords()[d] < otherMesh->getBoundingBox()[d].first - _basisFunction.getSupportRadius() or
-            v.getCoords()[d] > otherMesh->getBoundingBox()[d].second + _basisFunction.getSupportRadius() ) {
-          isInside = false;
-          break;
-        }
-      }
+  if (
+#if PETSC_MAJOR >= 3 and PETSC_MINOR >= 8
+      _basisFunction.hasCompactSupport()
+#else
+      false
+#warning "Mesh filtering deactivated, due to PETSc version < 3.8. \
+      preCICE is fully functional, but performance for large cases is degraded."
+#endif
+     )
+  {
+    auto rtree = mesh::rtree::getVertexRTree(filterMesh);
+    namespace bgi = boost::geometry::index;
+    auto bb = otherMesh->getBoundingBox();
+    // Enlarge by support radius
+    for (int d = 0; d < otherMesh->getDimensions(); d++){
+      bb[d].first -= _basisFunction.getSupportRadius();
+      bb[d].second += _basisFunction.getSupportRadius();
     }
-    #else
-      #warning "Mesh filtering deactivated, due to PETSc version < 3.8. \
-preCICE is fully functional, but performance for large cases is degraded."
-    #endif
-    if (isInside)
-      v.tag();
+    rtree->query(bgi::within(bb),
+        boost::make_function_output_iterator([&filterMesh](size_t idx){
+          filterMesh->vertices()[idx].tag();
+          }));
+  }
+  else {
+    for (auto& vert : filterMesh->vertices())
+      vert.tag();
   }
 }
 
@@ -825,19 +835,17 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
       }
     }
   }
-  // Tag vertices that are inside the bounding box + support radius
-  for (mesh::Vertex& v : mesh->vertices()) {
-    bool isInside = true;
-    for (int d = 0; d < v.getDimensions(); d++) {
-      if (v.getCoords()[d] < bb[d].first - _basisFunction.getSupportRadius() or
-          v.getCoords()[d] > bb[d].second + _basisFunction.getSupportRadius() ) {
-        isInside = false;
-        break;
-      }
-    }
-    if (isInside)
-      v.tag();
+
+  // Enlarge bb by support radius
+  for (int d = 0; d < mesh->getDimensions(); d++){
+    bb[d].first -= _basisFunction.getSupportRadius();
+    bb[d].second += _basisFunction.getSupportRadius();
   }
+  auto rtree = mesh::rtree::getVertexRTree(mesh);
+  rtree->query(boost::geometry::index::within(bb),
+      boost::make_function_output_iterator([&mesh](size_t idx){
+        mesh->vertices()[idx].tag();
+      }));
 }
 
 
@@ -1008,12 +1016,12 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computePreallocationMatr
   }
 
   if (utils::Parallel::getCommunicatorSize() == 1) {
-    // std::cout << "Computed Preallocation C Seq diagonal = " << std::accumulate(d_nnz.begin(), d_nnz.end(), 0) << std::endl;
+    // std::cout << "Computed Preallocation C Seq diagonal = " << std::accumulate(d_nnz.begin(), d_nnz.end(), 0) << '\n';
     ierr = MatSeqSBAIJSetPreallocation(_matrixC, _matrixC.blockSize(), 0, d_nnz.data()); CHKERRV(ierr);
   }
   else {
     // std::cout << "Computed Preallocation C MPI diagonal = " << std::accumulate(d_nnz.begin(), d_nnz.end(), 0)
-    // << ", off-diagonal = " << std::accumulate(o_nnz.begin(), o_nnz.end(), 0) << std::endl;
+    // << ", off-diagonal = " << std::accumulate(o_nnz.begin(), o_nnz.end(), 0) << '\n';
     ierr = MatMPISBAIJSetPreallocation(_matrixC, _matrixC.blockSize(), 0, d_nnz.data(), 0, o_nnz.data()); CHKERRV(ierr);
   }
   MatSetOption(_matrixC, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_TRUE);
@@ -1085,12 +1093,12 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computePreallocationMatr
     }
   }
   if (utils::Parallel::getCommunicatorSize() == 1) {
-    // std::cout << "Preallocation A Seq diagonal = " << std::accumulate(d_nnz.begin(), d_nnz.end(), 0) << std::endl;
+    // std::cout << "Preallocation A Seq diagonal = " << std::accumulate(d_nnz.begin(), d_nnz.end(), 0) << '\n';
     ierr = MatSeqAIJSetPreallocation(_matrixA, 0, d_nnz.data()); CHKERRV(ierr);
   }
   else {
     // std::cout << "Preallocation A MPI diagonal = " << std::accumulate(d_nnz.begin(), d_nnz.end(), 0)
-    // << ", off-diagonal = " << std::accumulate(o_nnz.begin(), o_nnz.end(), 0) << std::endl;
+    // << ", off-diagonal = " << std::accumulate(o_nnz.begin(), o_nnz.end(), 0) << '\n';
     ierr = MatMPIAIJSetPreallocation(_matrixA, 0, d_nnz.data(), 0, o_nnz.data()); CHKERRV(ierr);
   }
   MatSetOption(_matrixA, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_TRUE);
@@ -1162,12 +1170,12 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::savedPreallocationMatrixC(mes
   }
 
   if (utils::Parallel::getCommunicatorSize() == 1) {
-    // std::cout << "Computed Preallocation C Seq diagonal = " << std::accumulate(d_nnz.begin(), d_nnz.end(), 0) << std::endl;
+    // std::cout << "Computed Preallocation C Seq diagonal = " << std::accumulate(d_nnz.begin(), d_nnz.end(), 0) << '\n';
     MatSeqSBAIJSetPreallocation(_matrixC, _matrixC.blockSize(), 0, d_nnz.data());
   }
   else {
     // std::cout << "Computed Preallocation C MPI diagonal = " << std::accumulate(d_nnz.begin(), d_nnz.end(), 0)
-    //           << ", off-diagonal = " << std::accumulate(o_nnz.begin(), o_nnz.end(), 0) << std::endl;
+    //           << ", off-diagonal = " << std::accumulate(o_nnz.begin(), o_nnz.end(), 0) << '\n';
     MatMPISBAIJSetPreallocation(_matrixC, _matrixC.blockSize(), 0, d_nnz.data(), 0, o_nnz.data());
   }
   MatSetOption(_matrixC, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_TRUE);
@@ -1245,12 +1253,12 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::savedPreallocationMatrixA(mes
     }
   }
   if (utils::Parallel::getCommunicatorSize() == 1) {
-    // std::cout << "Preallocation A Seq diagonal = " << std::accumulate(d_nnz.begin(), d_nnz.end(), 0) << std::endl;
+    // std::cout << "Preallocation A Seq diagonal = " << std::accumulate(d_nnz.begin(), d_nnz.end(), 0) << '\n';
     MatSeqAIJSetPreallocation(_matrixA, 0, d_nnz.data());
   }
   else {
     // std::cout << "Preallocation A MPI diagonal = " << std::accumulate(d_nnz.begin(), d_nnz.end(), 0)
-    //           << ", off-diagonal = " << std::accumulate(o_nnz.begin(), o_nnz.end(), 0) << std::endl;
+    //           << ", off-diagonal = " << std::accumulate(o_nnz.begin(), o_nnz.end(), 0) << '\n';
     MatMPIAIJSetPreallocation(_matrixA, 0, d_nnz.data(), 0, o_nnz.data());
   }
   MatSetOption(_matrixA, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_TRUE);

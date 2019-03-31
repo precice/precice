@@ -116,7 +116,7 @@ void SocketCommunication::acceptConnection(std::string const &acceptorName,
   // NOTE:
   // Keep IO service running so that it fires asynchronous handlers from another thread.
   _work   = std::make_shared<asio::io_service::work>(*_ioService);
-  _thread = std::thread([this]() { _ioService->run(); });
+  _thread = std::thread([this] { _ioService->run(); });
 }
 
 void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorName,
@@ -172,7 +172,7 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorNa
 
   // NOTE: Keep IO service running so that it fires asynchronous handlers from another thread.
   _work   = std::make_shared<asio::io_service::work>(*_ioService);
-  _thread = std::thread([this]() { _ioService->run(); });
+  _thread = std::thread([this] { _ioService->run(); });  
 }
 
 void SocketCommunication::requestConnection(std::string const &acceptorName,
@@ -230,7 +230,7 @@ void SocketCommunication::requestConnection(std::string const &acceptorName,
 
   // NOTE: Keep IO service running so that it fires asynchronous handlers from another thread.
   _work   = std::make_shared<asio::io_service::work>(*_ioService);
-  _thread = std::thread([this]() { _ioService->run(); });
+  _thread = std::thread([this] { _ioService->run(); });
 }
 
 void SocketCommunication::requestConnectionAsClient(std::string      const &acceptorName,
@@ -286,7 +286,7 @@ void SocketCommunication::requestConnectionAsClient(std::string      const &acce
   }
   // NOTE: Keep IO service running so that it fires asynchronous handlers from another thread.
   _work   = std::make_shared<asio::io_service::work>(*_ioService);
-  _thread = std::thread([this]() { _ioService->run(); });
+  _thread = std::thread([this] { _ioService->run(); });
 }
 
 void SocketCommunication::closeConnection()
@@ -356,16 +356,11 @@ PtrRequest SocketCommunication::aSend(const int *itemsToSend, int size, int rank
 
   PtrRequest request(new SocketRequest);
 
-  try {
-    asio::async_write(*_sockets[rankReceiver],
-                      asio::buffer(itemsToSend, size * sizeof(int)),
-                      [request](boost::system::error_code const &, std::size_t) {
-                        std::static_pointer_cast<SocketRequest>(request)->complete();
-                      });
-  } catch (std::exception &e) {
-    ERROR("Send failed: " << e.what());
-  }
-
+  _queue.dispatch(_sockets[rankReceiver],
+              asio::buffer(itemsToSend, size * sizeof(int)),
+                [request] {
+                  std::static_pointer_cast<SocketRequest>(request)->complete();
+                });
   return request;
 }
 
@@ -396,16 +391,11 @@ PtrRequest SocketCommunication::aSend(const double *itemsToSend, int size, int r
 
   PtrRequest request(new SocketRequest);
 
-  try {
-    asio::async_write(*_sockets[rankReceiver],
-                      asio::buffer(itemsToSend, size * sizeof(double)),
-                      [request](boost::system::error_code const &, std::size_t) {
-                        std::static_pointer_cast<SocketRequest>(request)->complete();
-                      });
-  } catch (std::exception &e) {
-    ERROR("Send failed: " << e.what());
-  }
-
+  _queue.dispatch(_sockets[rankReceiver],
+              asio::buffer(itemsToSend, size * sizeof(double)),
+                [request] {
+                  std::static_pointer_cast<SocketRequest>(request)->complete();
+                });
   return request;
 }
 
@@ -420,16 +410,11 @@ PtrRequest SocketCommunication::aSend(std::vector<double> const & itemsToSend, i
 
   PtrRequest request(new SocketRequest);
 
-  try {
-    asio::async_write(*_sockets[rankReceiver],
-                      asio::buffer(itemsToSend),
-                      [request](boost::system::error_code const &, std::size_t) {
-                        std::static_pointer_cast<SocketRequest>(request)->complete();
-                      });
-  } catch (std::exception &e) {
-    ERROR("Send failed: " << e.what());
-  }
-
+  _queue.dispatch(_sockets[rankReceiver],
+              asio::buffer(itemsToSend),
+                [request] {
+                  std::static_pointer_cast<SocketRequest>(request)->complete();
+                });
   return request;
 }
 
@@ -503,16 +488,11 @@ PtrRequest SocketCommunication::aSend(const bool & itemToSend, int rankReceiver)
 
   PtrRequest request(new SocketRequest);
 
-  try {
-    asio::async_write(*_sockets[rankReceiver],
-                      asio::buffer(&itemToSend, sizeof(bool)),
-                      [request](boost::system::error_code const &, std::size_t) {
-                        std::static_pointer_cast<SocketRequest>(request)->complete();
-                      });
-  } catch (std::exception &e) {
-    ERROR("Send failed: " << e.what());
-  }
-
+  _queue.dispatch(_sockets[rankReceiver],
+              asio::buffer(&itemToSend, sizeof(bool)),
+                [request] {
+                  std::static_pointer_cast<SocketRequest>(request)->complete();
+                });
   return request;
 }
 
@@ -529,9 +509,9 @@ void SocketCommunication::receive(std::string &itemToReceive, int rankSender)
 
   try {
     asio::read(*_sockets[rankSender], asio::buffer(&size, sizeof(size_t)));
-    char msg[size];
-    asio::read(*_sockets[rankSender], asio::buffer(msg, size));
-    itemToReceive = msg;
+    std::vector<char> msg(size);
+    asio::read(*_sockets[rankSender], asio::buffer(msg.data(), size));
+    itemToReceive = msg.data();
   } catch (std::exception &e) {
     ERROR("Receive failed: " << e.what());
   }

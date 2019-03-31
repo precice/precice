@@ -5,7 +5,7 @@ These are the python bindings for preCICE.
 
 # Installing the package
 
-We recommend using `pip3 install --user` for the sake of simplicity.
+We recommend [using pip3](https://github.com/precice/precice/blob/develop/src/precice/bindings/python/README.md#using-pip3) for the sake of simplicity.
 
 For system installs of preCICE, this works out of the box.
 

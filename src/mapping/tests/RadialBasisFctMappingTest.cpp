@@ -335,6 +335,7 @@ void perform2DTestConsistentMapping(Mapping& mapping )
 
 void perform2DTestConservativeMapping(Mapping& mapping)
 {
+  using testing::equals;
   int dimensions = 2;
   
   // Create mesh to map from
@@ -365,28 +366,28 @@ void perform2DTestConservativeMapping(Mapping& mapping)
   mapping.computeMapping ();
   mapping.map ( inDataID, outDataID );
   BOOST_CHECK ( mapping.hasComputedMapping() );
-  BOOST_CHECK ( math::equals(values, Eigen::Vector4d(0.5, 0.5, 1.0, 1.0)) );
+  BOOST_CHECK ( equals(values, Eigen::Vector4d(0.5, 0.5, 1.0, 1.0)) );
 
   vertex0.setCoords ( Eigen::Vector2d(0.0, 0.5) );
   vertex1.setCoords ( Eigen::Vector2d(1.0, 0.5) );
   mapping.computeMapping ();
   mapping.map ( inDataID, outDataID );
   BOOST_CHECK ( mapping.hasComputedMapping() );
-  BOOST_CHECK ( math::equals( values, Eigen::Vector4d(0.5, 1.0, 1.0, 0.5)) );
+  BOOST_CHECK ( equals( values, Eigen::Vector4d(0.5, 1.0, 1.0, 0.5)) );
 
   vertex0.setCoords ( Eigen::Vector2d(0.0, 1.0) );
   vertex1.setCoords ( Eigen::Vector2d(1.0, 0.0) );
   mapping.computeMapping ();
   mapping.map ( inDataID, outDataID );
   BOOST_CHECK ( mapping.hasComputedMapping() );
-  BOOST_CHECK ( math::equals(values, Eigen::Vector4d(0.0, 2.0, 0.0, 1.0)) );
+  BOOST_CHECK ( equals(values, Eigen::Vector4d(0.0, 2.0, 0.0, 1.0)) );
 
   vertex0.setCoords ( Eigen::Vector2d(0.0, 0.0) );
   vertex1.setCoords ( Eigen::Vector2d(1.0, 1.0) );
   mapping.computeMapping ();
   mapping.map ( inDataID, outDataID );
   BOOST_CHECK ( mapping.hasComputedMapping() );
-  BOOST_CHECK ( math::equals(values, Eigen::Vector4d(1.0, 0.0, 2.0, 0.0)) );
+  BOOST_CHECK ( equals(values, Eigen::Vector4d(1.0, 0.0, 2.0, 0.0)) );
 
   vertex0.setCoords ( Eigen::Vector2d(0.4, 0.5) );
   vertex1.setCoords ( Eigen::Vector2d(0.6, 0.5) );

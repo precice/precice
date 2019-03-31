@@ -928,7 +928,7 @@ bool CouplingSchemeConfiguration::checkIfDataIsCoarse(
   for (int i = 0; i < (int) fineIDs.size(); i++) {
     std::cout << fineIDs.at(i) << ", ";
   }
-  std::cout << "], id: " << id << std::endl;
+  std::cout << "], id: " << id << '\n';
 
   // if id is contained within fine data IDs return with isCoarse = false
   if (not isCoarse)
@@ -944,11 +944,11 @@ bool CouplingSchemeConfiguration::checkIfDataIsCoarse(
       for (auto &coarseID : coarseIDs) {
         std::cout << coarseID << ", ";
       }
-      std::cout << "], id: " << id << std::endl;
+      std::cout << "], id: " << id << '\n';
 
       err = not isCoarse;
     } else {
-      std::cout << "There is no coarse model optkmaiimization defined." << std::endl;
+      std::cout << "There is no coarse model optkmaiimization defined.\n";
       err = true;
     }
   }
