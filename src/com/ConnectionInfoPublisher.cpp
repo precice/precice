@@ -5,8 +5,6 @@
 #include <boost/uuid/string_generator.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/iostreams/device/file_descriptor.hpp>
-#include <boost/iostreams/stream.hpp>
 
 
 namespace precice
@@ -68,7 +66,6 @@ ConnectionInfoWriter::~ConnectionInfoWriter()
     }*/
 }
 
-
 void ConnectionInfoWriter::write(std::string const & info) const
 {
   namespace fs = boost::filesystem;
@@ -76,10 +73,10 @@ void ConnectionInfoWriter::write(std::string const & info) const
   auto tmp = fs::path(path + "~");
   DEBUG("Writing connection file " << path);
   fs::create_directories(tmp.parent_path());
-  boost::iostreams::stream<boost::iostreams::file_descriptor_sink> ofs(tmp);
-  ofs << info;
-  ::fdatasync(ofs->handle());
-  ofs.close();
+  {
+    std::ofstream ofs(tmp.string(), std::ofstream::out);
+    ofs << info;
+  }
   fs::rename(tmp, path);
 }
 
