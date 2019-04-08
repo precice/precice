@@ -35,8 +35,6 @@
 [![CodeFactor](https://www.codefactor.io/repository/github/precice/precice/badge)](https://www.codefactor.io/repository/github/precice/precice)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/498adf8b3dcb4543b828e443396eb66c)](https://www.codacy.com/app/fsimonis/precice?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=precice/precice&amp;utm_campaign=Badge_Grade)
 [![Language grade: C/C++](https://img.shields.io/lgtm/grade/cpp/g/precice/precice.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/precice/precice/context:cpp)
-
-**Code Coverage**  
 [![codecov](https://codecov.io/gh/precice/precice/branch/develop/graph/badge.svg)](https://codecov.io/gh/precice/precice)
 
 preCICE stands for Precise Code Interaction Coupling Environment. Its main component is a library that can be used by simulation programs to be coupled together in a partitioned way, enabling multi-physics simulations, such as fluid-structure interaction.
