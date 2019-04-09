@@ -383,20 +383,10 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
                                            utils::MasterSlave::_rank,
                                            communicationMap.size());
 
-  for (auto & comMap : communicationMap) {
+  for (auto const & comMap : communicationMap) {
     int globalRequesterRank = comMap.first;
-
     auto indices = std::move(communicationMap[globalRequesterRank]);
 
-    /*
-      NOTE:
-      Everything is moved (efficiency)!
-      On the acceptor participant side, the communication object `c' behaves as a server, i.e. it 
-      implicitly accepts multiple connections to requester processes (in the requester participant). 
-      As a result, only one communication object `c' is needed to satisfy `communicationMap', and, 
-      therefore, for data structure consistency of `_mappings' with the requester participant side, 
-      we simply duplicate references to the same communication object `c'.
-    */
     _mappings.push_back({globalRequesterRank, std::move(indices), com::PtrRequest(), {}});
   }
   e4.stop();
