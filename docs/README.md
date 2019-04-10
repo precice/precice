@@ -1,17 +1,5 @@
 # preCICE #
 
-<p>
-<a style="text-decoration: none" href="https://www.precice.org/" target="_blank">
-    <img src="https://img.shields.io/website-up-down-green-red/https/www.precice.org.svg?label=website" alt="preCICE website status">
-</a>
-<a style="text-decoration: none" href="https://github.com/precice/precice/releases/latest" target="_blank">
-    <img src="https://img.shields.io/github/release/precice/precice.svg" alt="Release">
-</a>
-<a style="text-decoration: none" href="https://github.com/precice/precice/blob/develop/LICENSE" target="_blank">
-    <img src="https://img.shields.io/github/license/precice/precice.svg" alt="GNU LGPL license">
-</a>
-</p>
-
 **Communication**  
 <a style="text-decoration: none" href="https://gitter.im/precice/Lobby" target="_blank">
     <img src="https://img.shields.io/badge/chat-on%20gitter-9c3375.svg" alt="Gitter chat">
@@ -22,8 +10,14 @@
 <a style="text-decoration: none" href="https://twitter.com/preCICE_org" target="_blank">
     <img src="https://img.shields.io/badge/twitter-%40preCICE__org-1da1f2.svg" alt="Twitter">
 </a>
+<a style="text-decoration: none" href="https://www.precice.org/" target="_blank">
+    <img src="https://img.shields.io/website-up-down-green-red/https/www.precice.org.svg?label=website" alt="preCICE website status">
+</a>
 
-**Build Status**  
+**Project Status**  
+<a style="text-decoration: none" href="https://github.com/precice/precice/releases/latest" target="_blank">
+    <img src="https://img.shields.io/github/release/precice/precice.svg" alt="Release">
+</a>
 <a style="text-decoration: none" href="https://travis-ci.org/precice/precice" target="_blank">
     <img src="https://travis-ci.org/precice/precice.svg?branch=develop" alt="Build status">
 </a>
