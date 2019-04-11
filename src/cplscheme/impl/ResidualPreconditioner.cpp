@@ -1,4 +1,5 @@
 #include "ResidualPreconditioner.hpp"
+#include "utils/MasterSlave.hpp"
 
 namespace precice
 {

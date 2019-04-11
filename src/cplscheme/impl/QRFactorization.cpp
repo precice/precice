@@ -1,6 +1,7 @@
 #include "QRFactorization.hpp"
 #include "com/Communication.hpp"
 #include "cplscheme/impl/BaseQNPostProcessing.hpp"
+#include "utils/MasterSlave.hpp"
 
 #include <algorithm> // std::sort
 #include <cmath>
