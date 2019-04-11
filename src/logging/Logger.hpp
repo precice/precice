@@ -22,7 +22,7 @@ public:
   explicit Logger(std::string module);
 
   Logger(const Logger& other);
-  Logger(Logger&& other) = default;
+  Logger(Logger&& other);
   Logger& operator=(Logger other);
   ~Logger();
 
