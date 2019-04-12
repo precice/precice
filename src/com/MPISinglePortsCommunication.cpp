@@ -3,6 +3,7 @@
 #include "MPISinglePortsCommunication.hpp"
 #include "utils/assertion.hpp"
 #include "utils/Parallel.hpp"
+#include "utils/MasterSlave.hpp"
 #include "utils/Publisher.hpp"
 
 using precice::utils::Publisher;

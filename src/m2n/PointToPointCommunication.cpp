@@ -383,20 +383,10 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
                                            utils::MasterSlave::_rank,
                                            communicationMap.size());
 
-  for (auto & comMap : communicationMap) {
+  for (auto const & comMap : communicationMap) {
     int globalRequesterRank = comMap.first;
-
     auto indices = std::move(communicationMap[globalRequesterRank]);
 
-    /*
-      NOTE:
-      Everything is moved (efficiency)!
-      On the acceptor participant side, the communication object `c' behaves as a server, i.e. it 
-      implicitly accepts multiple connections to requester processes (in the requester participant). 
-      As a result, only one communication object `c' is needed to satisfy `communicationMap', and, 
-      therefore, for data structure consistency of `_mappings' with the requester participant side, 
-      we simply duplicate references to the same communication object `c'.
-    */
     _mappings.push_back({globalRequesterRank, std::move(indices), com::PtrRequest(), {}});
   }
   e4.stop();
@@ -552,20 +542,7 @@ void PointToPointCommunication::send(double *itemsToSend,
     auto request = _communication->aSend(*buffer, mapping.remoteRank);
     bufferedRequests.emplace_back(request, buffer);
   }
-
-  /* Disable asynchronous sending
-   * For SocketCommunuication, an async send request is given to asio::async_write and from that
-   * written to the operating system TCP queues using multiple function calls. 
-   * Problem 1) Simultaneous invocations of async_write on the same socket could be problematic.
-   * Problem 2) Writes from async_write to the OS queues could interfere with other writes
-   * (asio::write or asio::async_write) on the same sockets and thus changing order or requests.
-   * Since preCICE does not implement its own method to ensure correct ordering, this can lead to
-   * garbled data.
-   * See:
-   * https://lists.boost.org/Archives/boost/2018/10/243612.php
-   * https://www.boost.org/doc/libs/1_68_0/doc/html/boost_asio/reference/async_write/overload1.html
-   */
-  checkBufferedRequests(true);
+  checkBufferedRequests(false);
 }
 
 void PointToPointCommunication::receive(double *itemsToReceive,

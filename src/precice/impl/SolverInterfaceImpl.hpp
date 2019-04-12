@@ -216,10 +216,10 @@ public:
    * @param[out] ids IDs for data from given positions.
    */
   void setMeshVertices (
-    int     meshID,
-    int     size,
-    double* positions,
-    int*    ids );
+    int           meshID,
+    int           size,
+    const double* positions,
+    int*          ids );
 
   /**
    * @brief Gets spatial positions of vertices for given IDs.
@@ -228,10 +228,10 @@ public:
    * @param[in] positions Positions corresponding to IDs.
    */
   void getMeshVertices (
-    int     meshID,
-    size_t  size,
-    int*    ids,
-    double* positions );
+    int        meshID,
+    size_t     size,
+    const int* ids,
+    double*    positions );
 
   /**
    * @brief Gets vertex data ids from positions.
@@ -241,10 +241,10 @@ public:
    * @param[out] ids IDs corresponding to positions.
    */
   void getMeshVertexIDsFromPositions (
-    int     meshID,
-    size_t  size,
-    double* positions,
-    int*    ids );
+    int           meshID,
+    size_t        size,
+    const double* positions,
+    int*          ids );
 
   /// Returns the number of nodes of a mesh.
   int getMeshVertexSize ( int meshID );
@@ -322,7 +322,7 @@ public:
   void writeBlockVectorData (
     int           fromDataID,
     int           size,
-    int*          valueIndices,
+    const int*    valueIndices,
     const double* values );
 
 
@@ -350,7 +350,7 @@ public:
   void writeBlockScalarData (
     int           fromDataID,
     int           size,
-    int*          valueIndices,
+    const int*    valueIndices,
     const double* values );
 
   /**
@@ -380,10 +380,10 @@ public:
    * @param values [IN] Values of the data to be read.
    */
   void readBlockVectorData (
-    int     toDataID,
-    int     size,
-    int*    valueIndices,
-    double* values );
+    int        toDataID,
+    int        size,
+    const int* valueIndices,
+    double*    values );
 
   /**
    * @brief Reads vector data from the coupling mesh.
@@ -405,10 +405,10 @@ public:
    * @param[in] values Values of the data to be written.
    */
   void readBlockScalarData (
-    int     toDataID,
-    int     size,
-    int*    valueIndices,
-    double* values );
+    int        toDataID,
+    int        size,
+    const int* valueIndices,
+    double*    values );
 
   /**
    * @brief Read scalar data from the interface mesh.

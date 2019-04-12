@@ -86,6 +86,10 @@ public:
 
   bool isDataUsed ( int dataID ) const;
 
+  bool isDataRead ( int dataID ) const;
+
+  bool isDataWrite ( int dataID ) const;
+
   const MeshContext& meshContext ( int meshID ) const;
 
   MeshContext& meshContext ( int meshID );

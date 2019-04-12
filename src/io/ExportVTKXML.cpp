@@ -10,6 +10,7 @@
 #include <fstream>
 #include <boost/filesystem.hpp>
 #include "utils/Helpers.hpp"
+#include "utils/MasterSlave.hpp"
 
 namespace precice {
 namespace io {

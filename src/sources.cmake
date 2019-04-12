@@ -48,6 +48,8 @@ target_sources(precice
     src/com/SocketCommunicationFactory.hpp
     src/com/SocketRequest.cpp
     src/com/SocketRequest.hpp
+    src/com/SocketSendQueue.cpp
+    src/com/SocketSendQueue.hpp
     src/com/config/CommunicationConfiguration.cpp
     src/com/config/CommunicationConfiguration.hpp
     src/cplscheme/BaseCouplingScheme.cpp
@@ -241,6 +243,7 @@ target_sources(precice
     src/precice/impl/SharedPointer.hpp
     src/precice/impl/SolverInterfaceImpl.cpp
     src/precice/impl/SolverInterfaceImpl.hpp
+    src/precice/impl/ValidationMacros.hpp
     src/precice/impl/WatchPoint.cpp
     src/precice/impl/WatchPoint.hpp
     src/query/ExportVTKNeighbors.cpp

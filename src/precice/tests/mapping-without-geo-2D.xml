@@ -28,10 +28,10 @@
          <use-mesh name="MeshDisplacementsB" from="SolverB"/>
          <mapping:rbf-thin-plate-splines direction="write" 
                   constraint="conservative" from="MeshForcesA" 
-                  to="MeshForcesB" timing="initial"/>
+                  to="MeshForcesB" timing="ondemand"/>
          <mapping:rbf-thin-plate-splines direction="read" 
                   constraint="consistent" from="MeshDisplacementsB"
-                  to="MeshDisplacementsA" timing="initial"/>
+                  to="MeshDisplacementsA" timing="ondemand"/>
          <write-data name="Forces"        mesh="MeshForcesA"/>
          <read-data  name="Displacements" mesh="MeshDisplacementsA"/>
       </participant>

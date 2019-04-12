@@ -844,9 +844,13 @@ BOOST_AUTO_TEST_CASE(testStationaryMappingWithSolverMesh,
   std::string meshDisplB = "MeshDisplacementsB";
   std::string dataForces = constants::dataForces();
   std::string dataDispl = constants::dataDisplacements();
-  using math::equals;
+  using testing::equals;
 
-  for (int dim=2; dim < 3; dim++){
+  for (int dim: {2, 3}){
+    // @todo this should normally happen in finalize and should not be necessary
+    mesh::Mesh::resetGeometryIDsGlobally();
+    mesh::Data::resetDataCount();
+    impl::Participant::resetParticipantCount();
     SolverInterface interface(solverName, 0, 1);
     if (dim == 2){
       config::Configuration config;
@@ -908,22 +912,24 @@ BOOST_AUTO_TEST_CASE(testStationaryMappingWithSolverMesh,
       for (size_t i=0; i < size; i++){
         interface.writeVectorData(dataForcesID, i, force.data());
       }
+      interface.mapWriteDataFrom(meshForcesID);
       maxDt = interface.advance(maxDt);
+      interface.mapReadDataTo(meshDisplID);
 
       BOOST_TEST(interface.isWriteDataRequired(maxDt));
       BOOST_TEST(interface.isReadDataAvailable());
-      interface.mapReadDataTo(meshDisplID);
       force.array() += 1.0;
       for (size_t i=0; i < size; i++){
         interface.readVectorData(dataDisplID, i, displ.data());
         BOOST_TEST(displ[0] == positions[i][0] + 0.1);
         interface.writeVectorData(dataForcesID, i, force.data());
       }
+      interface.mapWriteDataFrom(meshForcesID);
       maxDt = interface.advance(maxDt);
+      interface.mapReadDataTo(meshDisplID);
 
       BOOST_TEST(interface.isWriteDataRequired(maxDt));
       BOOST_TEST(interface.isReadDataAvailable());
-      interface.mapReadDataTo(meshDisplID);
       for (size_t i=0; i < size; i++){
         interface.readVectorData(dataDisplID, i, displ.data());
         BOOST_TEST(displ[0] == 2.0*(positions[i][0] + 0.1));
@@ -957,7 +963,7 @@ BOOST_AUTO_TEST_CASE(testStationaryMappingWithSolverMesh,
         interface.writeVectorData(dataDisplID, i, displ.data());
       }
       Eigen::VectorXd expected = Eigen::VectorXd::Constant(dim, size);
-      BOOST_TEST(totalForce == expected);
+      BOOST_TEST(equals(totalForce, expected));
       maxDt = interface.advance(maxDt);
 
       BOOST_TEST(interface.isWriteDataRequired(maxDt));
@@ -970,13 +976,13 @@ BOOST_AUTO_TEST_CASE(testStationaryMappingWithSolverMesh,
         interface.writeVectorData(dataDisplID, i, displ.data());
       }
       expected.setConstant(2.0 * (double)size);
-      BOOST_TEST(totalForce == expected);
+      BOOST_TEST(equals(totalForce, expected));
       maxDt = interface.advance(maxDt);
 
       BOOST_TEST(interface.isWriteDataRequired(maxDt));
       BOOST_TEST(not interface.isReadDataAvailable()); //second participant has no new data after last advance
       for (size_t i=0; i < size; i++){
-        interface.readVectorData(dataDisplID, i, force.data());
+        interface.readVectorData(dataForcesID, i, force.data());
       }
       interface.finalize();
     }
