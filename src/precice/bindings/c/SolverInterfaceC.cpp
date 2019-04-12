@@ -137,10 +137,10 @@ int precicec_setMeshVertex
 
 void precicec_getMeshVertices
 (
-  int     meshID,
-  int     size,
-  int*    ids,
-  double* positions )
+  int        meshID,
+  int        size,
+  const int* ids,
+  double*    positions )
 {
   assertion(impl != nullptr);
   impl->getMeshVertices(meshID, size, ids, positions);
@@ -148,10 +148,10 @@ void precicec_getMeshVertices
 
 void precicec_setMeshVertices
 (
-  int     meshID,
-  int     size,
-  double* positions,
-  int*    ids)
+  int           meshID,
+  int           size,
+  const double* positions,
+  int*          ids)
 {
   assertion(impl != nullptr);
   impl->setMeshVertices(meshID, size, positions, ids );
@@ -199,10 +199,10 @@ void precicec_setMeshTriangleWithEdges
 
 void precicec_writeBlockVectorData
 (
-  int     dataID,
-  int     size,
-  int*    valueIndices,
-  double* values )
+  int           dataID,
+  int           size,
+  const int*    valueIndices,
+  const double* values )
 {
   assertion(impl != nullptr);
   impl->writeBlockVectorData(dataID, size, valueIndices, values);
@@ -220,10 +220,10 @@ void precicec_writeVectorData
 
 void precicec_writeBlockScalarData
 (
-  int     dataID,
-  int     size,
-  int*    valueIndices,
-  double* values )
+  int           dataID,
+  int           size,
+  const int*    valueIndices,
+  const double* values )
 {
   assertion(impl != nullptr);
   impl->writeBlockScalarData(dataID, size, valueIndices, values);
@@ -231,9 +231,9 @@ void precicec_writeBlockScalarData
 
 void precicec_writeScalarData
 (
-  int    dataID,
-  int    valueIndex,
-  double dataValue )
+  int           dataID,
+  int           valueIndex,
+  const double& dataValue )
 {
   assertion ( impl != nullptr );
   impl->writeScalarData ( dataID, valueIndex, dataValue );
@@ -241,10 +241,10 @@ void precicec_writeScalarData
 
 void precicec_readBlockVectorData
 (
-  int     dataID,
-  int     size,
-  int*    valueIndices,
-  double* values )
+  int        dataID,
+  int        size,
+  const int* valueIndices,
+  double*    values )
 {
   assertion(impl != nullptr);
   impl->readBlockVectorData(dataID, size, valueIndices, values);
@@ -262,10 +262,10 @@ void precicec_readVectorData
 
 void precicec_readBlockScalarData
 (
-  int     dataID,
-  int     size,
-  int*    valueIndices,
-  double* values )
+  int        dataID,
+  int        size,
+  const int* valueIndices,
+  double*    values )
 {
   assertion(impl != nullptr);
   impl->readBlockScalarData(dataID, size, valueIndices, values);
