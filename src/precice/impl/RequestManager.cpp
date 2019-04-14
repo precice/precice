@@ -441,9 +441,9 @@ void RequestManager:: requestWriteBlockScalarData (
 
 void RequestManager:: requestWriteScalarData
 (
-  int           dataID,
-  int           valueIndex,
-  const double& value )
+  int    dataID,
+  int    valueIndex,
+  double value )
 {
   TRACE();
   _com->send(REQUEST_WRITE_SCALAR_DATA, 0);

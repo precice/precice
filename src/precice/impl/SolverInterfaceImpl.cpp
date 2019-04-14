@@ -1254,9 +1254,9 @@ void SolverInterfaceImpl:: writeBlockScalarData
 
 void SolverInterfaceImpl:: writeScalarData
 (
-  int           fromDataID,
-  int           valueIndex,
-  const double& value )
+  int    fromDataID,
+  int    valueIndex,
+  double value)
 {
   TRACE(fromDataID, valueIndex, value );
   PRECICE_VALIDATE_DATA_ID(fromDataID);
