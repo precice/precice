@@ -201,6 +201,9 @@ public:
   /// Returns data id corresponding to the given name (from configuration) and mesh.
   int getDataID ( const std::string& dataName, int meshID );
 
+  /// Returns the number of nodes of a mesh.
+  int getMeshVertexSize ( int meshID );
+
   /**
    * @brief Resets mesh with given ID.
    *
@@ -209,6 +212,15 @@ public:
    * non-incremental.
    */
   void resetMesh ( int meshID );
+
+  /**
+   * @brief Set the position of a solver mesh vertex.
+   *
+   * @return Vertex ID to be used when setting an edge.
+   */
+  int setMeshVertex (
+    int           meshID,
+    const double* position );
 
   /**
    * @brief Sets several spatial positions for a mesh.
@@ -245,18 +257,6 @@ public:
     size_t        size,
     const double* positions,
     int*          ids );
-
-  /// Returns the number of nodes of a mesh.
-  int getMeshVertexSize ( int meshID );
-
-  /**
-   * @brief Set the position of a solver mesh vertex.
-   *
-   * @return Vertex ID to be used when setting an edge.
-   */
-  int setMeshVertex (
-    int           meshID,
-    const double* position );
 
   /**
    * @brief Set an edge of a solver mesh.
@@ -363,9 +363,9 @@ public:
    * @param dataValue    [IN] Value of the data to be written
    */
   void writeScalarData(
-    int           fromDataID,
-    int           valueIndex,
-    const double& value );
+    int    fromDataID,
+    int    valueIndex,
+    double value);
 
   /**
    * @brief Reads vector data values given as block.

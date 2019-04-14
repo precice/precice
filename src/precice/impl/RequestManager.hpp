@@ -124,9 +124,9 @@ public:
 
   /// Requests write scalar data from server.
   void requestWriteScalarData (
-    int           dataID,
-    int           valueIndex,
-    const double& value );
+    int    dataID,
+    int    valueIndex,
+    double value );
 
   /// Requests write block vector data from server.
   void requestWriteBlockVectorData (
