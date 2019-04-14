@@ -177,9 +177,9 @@ void precicec_writeBlockScalarData (
  * @param[in] dataValue Scalar data value to be written.
  */
 void precicec_writeScalarData (
-  int           dataID,
-  int           valueIndex,
-  const double& dataValue );
+  int    dataID,
+  int    valueIndex,
+  double dataValue );
 
 /**
  * @brief Reads vector data values given as block.
