@@ -1130,14 +1130,7 @@ void SolverInterfaceImpl:: mapReadDataTo
                    << "\" to mesh \"" << context.mesh->getName() << "\"");
       assertion(mappingContext.mapping==context.mappingContext.mapping);
       mappingContext.mapping->map(inDataID, outDataID);
-#     ifndef NDEBUG
-      int max = context.toData->values().size();
-      std::ostringstream stream;
-      for (int i=0; (i < max) && (i < 10); i++){
-        stream << context.toData->values()[i] << " ";
-      }
-      DEBUG("First mapped values = " << stream.str());
-#     endif
+      DEBUG("First mapped values = " << context.toData->values());
     }
   }
   mappingContext.hasMappedData = true;
@@ -1594,14 +1587,7 @@ void SolverInterfaceImpl:: mapWrittenData()
       context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
       DEBUG("Map from dataID " << inDataID << " to dataID: " << outDataID);
       context.mappingContext.mapping->map(inDataID, outDataID);
-#     ifndef NDEBUG
-      int max = context.toData->values().size();
-      std::ostringstream stream;
-      for (int i=0; (i < max) && (i < 10); i++){
-        stream << context.toData->values()[i] << " ";
-      }
-      DEBUG("First mapped values = " << stream.str() );
-#     endif
+      DEBUG("First mapped values = " << context.toData->values());
     }
   }
 
@@ -1651,14 +1637,7 @@ void SolverInterfaceImpl:: mapReadData()
       DEBUG("Map read data \"" << context.fromData->getName()
                    << "\" to mesh \"" << context.mesh->getName() << "\"");
       context.mappingContext.mapping->map(inDataID, outDataID);
-#     ifndef NDEBUG
-      int max = context.toData->values().size();
-      std::ostringstream stream;
-      for (int i=0; (i < max) && (i < 10); i++){
-        stream << context.toData->values()[i] << " ";
-      }
-      DEBUG("First mapped values = " << stream.str());
-#     endif
+      DEBUG("First mapped values = " << context.toData->values());
     }
   }
 
