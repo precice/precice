@@ -838,62 +838,9 @@ void SolverInterfaceImpl:: setMeshTriangleWithEdges
     vertices[1] = &mesh->vertices()[secondVertexID];
     vertices[2] = &mesh->vertices()[thirdVertexID];
     mesh::Edge* edges[3];
-    edges[0] = nullptr;
-    edges[1] = nullptr;
-    edges[2] = nullptr;
-    for (mesh::Edge& edge : mesh->edges()) {
-      // Check edge 0
-      bool foundEdge = edge.vertex(0).getID() == vertices[0]->getID();
-      foundEdge &= edge.vertex(1).getID() == vertices[1]->getID();
-      if (foundEdge){
-        edges[0] = &edge;
-        continue;
-      }
-      foundEdge = edge.vertex(0).getID() == vertices[1]->getID();
-      foundEdge &= edge.vertex(1).getID() == vertices[0]->getID();
-      if (foundEdge){
-        edges[0] = &edge;
-        continue;
-      }
-
-      // Check edge 1
-      foundEdge = edge.vertex(0).getID() == vertices[1]->getID();
-      foundEdge &= edge.vertex(1).getID() == vertices[2]->getID();
-      if (foundEdge){
-        edges[1] = &edge;
-        continue;
-      }
-      foundEdge = edge.vertex(0).getID() == vertices[2]->getID();
-      foundEdge &= edge.vertex(1).getID() == vertices[1]->getID();
-      if (foundEdge){
-        edges[1] = &edge;
-        continue;
-      }
-
-      // Check edge 2
-      foundEdge = edge.vertex(0).getID() == vertices[2]->getID();
-      foundEdge &= edge.vertex(1).getID() == vertices[0]->getID();
-      if (foundEdge){
-        edges[2] = &edge;
-        continue;
-      }
-      foundEdge = edge.vertex(0).getID() == vertices[0]->getID();
-      foundEdge &= edge.vertex(1).getID() == vertices[2]->getID();
-      if (foundEdge){
-        edges[2] = &edge;
-        continue;
-      }
-    }
-    // Create missing edges
-    if (edges[0] == nullptr){
-      edges[0] = & mesh->createEdge(*vertices[0], *vertices[1]);
-    }
-    if (edges[1] == nullptr){
-      edges[1] = & mesh->createEdge(*vertices[1], *vertices[2]);
-    }
-    if (edges[2] == nullptr){
-      edges[2] = & mesh->createEdge(*vertices[2], *vertices[0]);
-    }
+    edges[0] = & mesh->createUniqueEdge(*vertices[0], *vertices[1]);
+    edges[1] = & mesh->createUniqueEdge(*vertices[1], *vertices[2]);
+    edges[2] = & mesh->createUniqueEdge(*vertices[2], *vertices[0]);
 
     mesh->createTriangle(*edges[0], *edges[1], *edges[2]);
   }
@@ -960,80 +907,10 @@ void SolverInterfaceImpl:: setMeshQuadWithEdges
     vertices[2] = &mesh->vertices()[thirdVertexID];
     vertices[3] = &mesh->vertices()[fourthVertexID];
     mesh::Edge* edges[4];
-    edges[0] = nullptr;
-    edges[1] = nullptr;
-    edges[2] = nullptr;
-    edges[3] = nullptr;
-    for (mesh::Edge& edge : mesh->edges()) {
-      // Check edge 0
-      bool foundEdge = edge.vertex(0).getID() == vertices[0]->getID();
-      foundEdge &= edge.vertex(1).getID() == vertices[1]->getID();
-      if ( foundEdge ){
-        edges[0] = &edge;
-        continue;
-      }
-      foundEdge = edge.vertex(0).getID() == vertices[1]->getID();
-      foundEdge &= edge.vertex(1).getID() == vertices[0]->getID();
-      if (foundEdge){
-        edges[0] = &edge;
-        continue;
-      }
-
-      // Check edge 1
-      foundEdge = edge.vertex(0).getID() == vertices[1]->getID();
-      foundEdge &= edge.vertex(1).getID() == vertices[2]->getID();
-      if ( foundEdge ){
-        edges[1] = &edge;
-        continue;
-      }
-      foundEdge = edge.vertex(0).getID() == vertices[2]->getID();
-      foundEdge &= edge.vertex(1).getID() == vertices[1]->getID();
-      if ( foundEdge ){
-        edges[1] = &edge;
-        continue;
-      }
-
-      // Check edge 2
-      foundEdge = edge.vertex(0).getID() == vertices[2]->getID();
-      foundEdge &= edge.vertex(1).getID() == vertices[3]->getID();
-      if ( foundEdge ){
-        edges[2] = &edge;
-        continue;
-      }
-      foundEdge = edge.vertex(0).getID() == vertices[3]->getID();
-      foundEdge &= edge.vertex(1).getID() == vertices[2]->getID();
-      if ( foundEdge ){
-        edges[2] = &edge;
-        continue;
-      }
-
-      // Check edge 3
-      foundEdge = edge.vertex(0).getID() == vertices[3]->getID();
-      foundEdge &= edge.vertex(1).getID() == vertices[0]->getID();
-      if ( foundEdge ){
-        edges[3] = &edge;
-        continue;
-      }
-      foundEdge = edge.vertex(0).getID() == vertices[0]->getID();
-      foundEdge &= edge.vertex(1).getID() == vertices[3]->getID();
-      if ( foundEdge ){
-        edges[3] = &edge;
-        continue;
-      }
-    }
-    // Create missing edges
-    if (edges[0] == nullptr){
-      edges[0] = & mesh->createEdge(*vertices[0], *vertices[1]);
-    }
-    if (edges[1] == nullptr){
-      edges[1] = & mesh->createEdge(*vertices[1], *vertices[2]);
-    }
-    if (edges[2] == nullptr){
-      edges[2] = & mesh->createEdge(*vertices[2], *vertices[3]);
-    }
-    if (edges[3] == nullptr){
-      edges[3] = & mesh->createEdge(*vertices[3], *vertices[0]);
-    }
+    edges[0] = & mesh->createUniqueEdge(*vertices[0], *vertices[1]);
+    edges[1] = & mesh->createUniqueEdge(*vertices[1], *vertices[2]);
+    edges[2] = & mesh->createUniqueEdge(*vertices[2], *vertices[3]);
+    edges[3] = & mesh->createUniqueEdge(*vertices[3], *vertices[0]);
 
     mesh->createQuad(*edges[0], *edges[1], *edges[2], *edges[3]);
   }
