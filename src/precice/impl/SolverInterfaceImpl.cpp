@@ -772,12 +772,8 @@ int SolverInterfaceImpl:: setMeshEdge
     if ( context.meshRequirement == mapping::Mapping::MeshRequirement::FULL ){
       DEBUG("Full mesh required.");
       mesh::PtrMesh& mesh = context.mesh;
-      assertion(firstVertexID >= 0, firstVertexID);
-      assertion(secondVertexID >= 0, secondVertexID);
-      assertion(firstVertexID < (int)mesh->vertices().size(),
-                 firstVertexID, mesh->vertices().size());
-      assertion(secondVertexID < (int)mesh->vertices().size(),
-                 secondVertexID, mesh->vertices().size());
+      CHECK(mesh->isValidVertexID(firstVertexID),  " Given VertexID is invalid!");
+      CHECK(mesh->isValidVertexID(secondVertexID), " Given VertexID is invalid!");
       mesh::Vertex& v0 = mesh->vertices()[firstVertexID];
       mesh::Vertex& v1 = mesh->vertices()[secondVertexID];
       return mesh->createEdge(v0, v1).getID ();
@@ -803,12 +799,9 @@ void SolverInterfaceImpl:: setMeshTriangle
     MeshContext& context = _accessor->meshContext(meshID);
     if ( context.meshRequirement == mapping::Mapping::MeshRequirement::FULL ){
       mesh::PtrMesh& mesh = context.mesh;
-      assertion ( firstEdgeID >= 0 );
-      assertion ( secondEdgeID >= 0 );
-      assertion ( thirdEdgeID >= 0 );
-      assertion ( (int)mesh->edges().size() > firstEdgeID );
-      assertion ( (int)mesh->edges().size() > secondEdgeID );
-      assertion ( (int)mesh->edges().size() > thirdEdgeID );
+      CHECK(mesh->isValidEdgeID(firstEdgeID),  " Given EdgeID is invalid!");
+      CHECK(mesh->isValidEdgeID(secondEdgeID), " Given EdgeID is invalid!");
+      CHECK(mesh->isValidEdgeID(thirdEdgeID),  " Given EdgeID is invalid!");
       mesh::Edge& e0 = mesh->edges()[firstEdgeID];
       mesh::Edge& e1 = mesh->edges()[secondEdgeID];
       mesh::Edge& e2 = mesh->edges()[thirdEdgeID];
@@ -837,15 +830,9 @@ void SolverInterfaceImpl:: setMeshTriangleWithEdges
   MeshContext& context = _accessor->meshContext(meshID);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL){
     mesh::PtrMesh& mesh = context.mesh;
-    assertion(firstVertexID >= 0, firstVertexID);
-    assertion(secondVertexID >= 0, secondVertexID);
-    assertion(thirdVertexID >= 0, thirdVertexID);
-    assertion((int)mesh->vertices().size() > firstVertexID,
-                mesh->vertices().size(), firstVertexID);
-    assertion((int)mesh->vertices().size() > secondVertexID,
-                mesh->vertices().size(), secondVertexID);
-    assertion((int)mesh->vertices().size() > thirdVertexID,
-                 mesh->vertices().size(), thirdVertexID);
+    CHECK(mesh->isValidVertexID(firstVertexID),  " Given VertexID is invalid!");
+    CHECK(mesh->isValidVertexID(secondVertexID), " Given VertexID is invalid!");
+    CHECK(mesh->isValidVertexID(thirdVertexID),  " Given VertexID is invalid!");
     mesh::Vertex* vertices[3];
     vertices[0] = &mesh->vertices()[firstVertexID];
     vertices[1] = &mesh->vertices()[secondVertexID];
@@ -931,14 +918,10 @@ void SolverInterfaceImpl:: setMeshQuad
     MeshContext& context = _accessor->meshContext(meshID);
     if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL){
       mesh::PtrMesh& mesh = context.mesh;
-      assertion(firstEdgeID >= 0);
-      assertion(secondEdgeID >= 0);
-      assertion(thirdEdgeID >= 0);
-      assertion(fourthEdgeID >= 0);
-      assertion((int)mesh->edges().size() > firstEdgeID);
-      assertion((int)mesh->edges().size() > secondEdgeID);
-      assertion((int)mesh->edges().size() > thirdEdgeID);
-      assertion((int)mesh->quads().size() > fourthEdgeID);
+      CHECK(mesh->isValidEdgeID(firstEdgeID),  " Given EdgeID is invalid!");
+      CHECK(mesh->isValidEdgeID(secondEdgeID), " Given EdgeID is invalid!");
+      CHECK(mesh->isValidEdgeID(thirdEdgeID),  " Given EdgeID is invalid!");
+      CHECK(mesh->isValidEdgeID(fourthEdgeID), " Given EdgeID is invalid!");
       mesh::Edge& e0 = mesh->edges()[firstEdgeID];
       mesh::Edge& e1 = mesh->edges()[secondEdgeID];
       mesh::Edge& e2 = mesh->edges()[thirdEdgeID];
@@ -967,18 +950,10 @@ void SolverInterfaceImpl:: setMeshQuadWithEdges
   MeshContext& context = _accessor->meshContext(meshID);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL){
     mesh::PtrMesh& mesh = context.mesh;
-    assertion(firstVertexID >= 0, firstVertexID);
-    assertion(secondVertexID >= 0, secondVertexID);
-    assertion(thirdVertexID >= 0, thirdVertexID);
-    assertion(fourthVertexID >= 0, fourthVertexID);
-    assertion((int)mesh->vertices().size() > firstVertexID,
-                 mesh->vertices().size(), firstVertexID);
-    assertion((int)mesh->vertices().size() > secondVertexID,
-                 mesh->vertices().size(), secondVertexID);
-    assertion((int)mesh->vertices().size() > thirdVertexID,
-                 mesh->vertices().size(), thirdVertexID);
-    assertion((int)mesh->vertices().size() > fourthVertexID,
-                 mesh->vertices().size(), fourthVertexID);
+    CHECK(mesh->isValidVertexID(firstVertexID),  " Given VertexID is invalid!");
+    CHECK(mesh->isValidVertexID(secondVertexID), " Given VertexID is invalid!");
+    CHECK(mesh->isValidVertexID(thirdVertexID),  " Given VertexID is invalid!");
+    CHECK(mesh->isValidVertexID(fourthVertexID), " Given VertexID is invalid!");
     mesh::Vertex* vertices[4];
     vertices[0] = &mesh->vertices()[firstVertexID];
     vertices[1] = &mesh->vertices()[secondVertexID];
