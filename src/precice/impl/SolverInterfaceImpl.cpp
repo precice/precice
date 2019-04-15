@@ -1186,10 +1186,7 @@ void SolverInterfaceImpl:: writeVectorData
 {
   TRACE(fromDataID, valueIndex );
   PRECICE_VALIDATE_DATA_ID(fromDataID);
-# ifndef NDEBUG
-  if (_dimensions == 2) DEBUG("value = " << Eigen::Map<const Eigen::Vector2d>(value));
-  if (_dimensions == 3) DEBUG("value = " << Eigen::Map<const Eigen::Vector3d>(value));
-# endif
+  DEBUG("value = " << Eigen::Map<const Eigen::VectorXd>(value, _dimensions));
   CHECK(valueIndex >= -1, "Invalid value index (" << valueIndex << ") when writing vector data!" );
   if (_clientMode){
     _requestManager->requestWriteVectorData(fromDataID, valueIndex, value);
@@ -1326,10 +1323,7 @@ void SolverInterfaceImpl:: readVectorData
     }
 
   }
-# ifndef NDEBUG
-  if (_dimensions == 2) DEBUG("read value = " << Eigen::Map<const Eigen::Vector2d>(value));
-  if (_dimensions == 3) DEBUG("read value = " << Eigen::Map<const Eigen::Vector3d>(value));
-# endif
+  DEBUG("read value = " << Eigen::Map<const Eigen::VectorXd>(value, _dimensions));
 }
 
 void SolverInterfaceImpl:: readBlockScalarData
