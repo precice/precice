@@ -1090,7 +1090,6 @@ void SolverInterfaceImpl:: mapWriteDataFrom
       int inDataID = context.fromData->getID();
       int outDataID = context.toData->getID();
       context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
-      //assign(context.toData->values()) = 0.0;
       DEBUG("Map data \"" << context.fromData->getName()
                    << "\" from mesh \"" << context.mesh->getName() << "\"");
       assertion(mappingContext.mapping==context.mappingContext.mapping);
@@ -1127,7 +1126,6 @@ void SolverInterfaceImpl:: mapReadDataTo
       int inDataID = context.fromData->getID();
       int outDataID = context.toData->getID();
       context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
-      //assign(context.toData->values()) = 0.0;
       DEBUG("Map data \"" << context.fromData->getName()
                    << "\" to mesh \"" << context.mesh->getName() << "\"");
       assertion(mappingContext.mapping==context.mappingContext.mapping);
@@ -1593,7 +1591,6 @@ void SolverInterfaceImpl:: mapWrittenData()
       DEBUG("Map data \"" << context.fromData->getName()
                    << "\" from mesh \"" << context.mesh->getName() << "\"");
       context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
-      //assign(context.toData->values()) = 0.0;
       DEBUG("Map from dataID " << inDataID << " to dataID: " << outDataID);
       context.mappingContext.mapping->map(inDataID, outDataID);
 #     ifndef NDEBUG
@@ -1650,7 +1647,6 @@ void SolverInterfaceImpl:: mapReadData()
       int inDataID = context.fromData->getID();
       int outDataID = context.toData->getID();
       context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
-      //assign(context.toData->values()) = 0.0;
       DEBUG("Map read data \"" << context.fromData->getName()
                    << "\" to mesh \"" << context.mesh->getName() << "\"");
       context.mappingContext.mapping->map(inDataID, outDataID);
@@ -1733,10 +1729,8 @@ void SolverInterfaceImpl:: resetWrittenData()
   TRACE();
   for (DataContext& context : _accessor->writeDataContexts()) {
     context.fromData->values() = Eigen::VectorXd::Zero(context.fromData->values().size());
-    //assign(context.fromData->values()) = 0.0;
     if (context.toData != context.fromData){
       context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
-      //assign(context.toData->values()) = 0.0;
     }
   }
 }
