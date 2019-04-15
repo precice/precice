@@ -263,6 +263,16 @@ int Mesh:: getID() const
   return iter->second;
 }
 
+bool Mesh::isValidVertexID(int vertexID) const
+{
+    return (0 <= vertexID) && ( vertexID < vertices().size());
+}
+
+bool Mesh::isValidEdgeID(int edgeID) const
+{
+    return (0 <= edgeID) && ( edgeID < edges().size());
+}
+
 void Mesh:: allocateDataValues()
 {
   TRACE(_content.vertices().size());

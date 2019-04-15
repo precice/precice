@@ -206,6 +206,12 @@ public:
   /// Returns the base ID of the mesh.
   int getID() const;
 
+  /// Returns true if the given vertexID is valid
+  bool isValidVertexID(int vertexID) const;
+
+  /// Returns true if the given edgeID is valid
+  bool isValidEdgeID(int edgeID) const;
+
   /// Allocates memory for the vertex data values.
   void allocateDataValues();
 
