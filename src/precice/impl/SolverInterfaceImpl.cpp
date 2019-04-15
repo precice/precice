@@ -649,14 +649,12 @@ int SolverInterfaceImpl:: setMeshVertex
   const double* position )
 {
   TRACE(meshID);
-  Eigen::VectorXd internalPosition(_dimensions);
-  for ( int dim=0; dim < _dimensions; dim++ ){
-    internalPosition[dim] = position[dim];
-  }
+  Eigen::VectorXd internalPosition{
+      Eigen::Map<const Eigen::VectorXd>{position, _dimensions}};
   DEBUG("Position = " << internalPosition);
   int index = -1;
   if ( _clientMode ){
-    index = _requestManager->requestSetMeshVertex ( meshID, internalPosition );
+    index = _requestManager->requestSetMeshVertex ( meshID, internalPosition);
   }
   else {
     PRECICE_REQUIRE_MESH_MODIFY(meshID);
@@ -684,13 +682,12 @@ void SolverInterfaceImpl:: setMeshVertices
     PRECICE_REQUIRE_MESH_MODIFY(meshID);
     MeshContext& context = _accessor->meshContext(meshID);
     mesh::PtrMesh mesh(context.mesh);
-    Eigen::VectorXd internalPosition(_dimensions);
     DEBUG("Set positions");
-    for (int i=0; i < size; i++){
-      for (int dim=0; dim < _dimensions; dim++){
-        internalPosition[dim] = positions[i*_dimensions + dim];
-      }
-      ids[i] = mesh->createVertex(internalPosition).getID();
+    const Eigen::Map<const Eigen::MatrixXd> posMatrix{
+        positions, _dimensions, static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(size)};
+    for (int i=0; i < size; ++i){
+      Eigen::VectorXd current(posMatrix.col(i));
+      ids[i] = mesh->createVertex(current).getID();
     }
     mesh->allocateDataValues();
   }
@@ -711,16 +708,15 @@ void SolverInterfaceImpl:: getMeshVertices
     PRECICE_REQUIRE_MESH_USE(meshID);
     MeshContext& context = _accessor->meshContext(meshID);
     mesh::PtrMesh mesh(context.mesh);
-    Eigen::VectorXd internalPosition(_dimensions);
     DEBUG("Get positions");
-    assertion(mesh->vertices().size() <= size, mesh->vertices().size(), size);
+    auto & vertices = mesh->vertices();
+    assertion(vertices.size() <= size, vertices.size(), size);
+    Eigen::Map<Eigen::MatrixXd> posMatrix{
+        positions, _dimensions, static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(size)};
     for (size_t i=0; i < size; i++){
-      size_t id = ids[i];
-      assertion(id < mesh->vertices().size(), mesh->vertices().size(), id);
-      internalPosition = mesh->vertices()[id].getCoords();
-      for (int dim=0; dim < _dimensions; dim++){
-        positions[id*_dimensions + dim] = internalPosition[dim];
-      }
+      const size_t id = ids[i];
+      assertion(id < vertices.size(), vertices.size(), id);
+      posMatrix.col(i) = vertices[id].getCoords();
     }
   }
 }
@@ -740,22 +736,20 @@ void SolverInterfaceImpl:: getMeshVertexIDsFromPositions (
     MeshContext& context = _accessor->meshContext(meshID);
     mesh::PtrMesh mesh(context.mesh);
     DEBUG("Get IDs");
-    Eigen::VectorXd internalPosition(_dimensions);
-    Eigen::VectorXd position(_dimensions);
-    assertion(mesh->vertices().size() <= size, mesh->vertices().size(), size);
-    for (size_t i=0; i < size; i++){
-      for (int dim=0; dim < _dimensions; dim++){
-        position[dim] = positions[i*_dimensions+dim];
-      }
+    const auto &vertices = mesh->vertices();
+    assertion(vertices.size() <= size, vertices.size(), size);
+    Eigen::Map<const Eigen::MatrixXd> posMatrix{
+        positions, _dimensions, static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(size)};
+    const auto vsize = vertices.size();
+    for (size_t i = 0; i < size; i++) {
       size_t j=0;
-      for (j=0; j < mesh->vertices().size(); j++){
-        internalPosition = mesh->vertices()[j].getCoords();
-        if (math::equals(internalPosition, position)){
-          ids[i] = j;
-          break;
-        }
+      for (; j < vsize; j++) {
+          if(math::equals(posMatrix.col(i), vertices[j].getCoords())) {
+              break;
+          }
       }
-      CHECK(j < mesh->vertices().size(), "Position " << i << "=" << position << " unknown!");
+      CHECK(j != vsize, "Position " << i << "=" << ids[i] << " unknown!");
+      ids[i] = j;
     }
   }
 }
@@ -1200,11 +1194,7 @@ void SolverInterfaceImpl:: writeVectorData
 # endif
   CHECK(valueIndex >= -1, "Invalid value index (" << valueIndex << ") when writing vector data!" );
   if (_clientMode){
-    Eigen::VectorXd valueCopy(_dimensions);
-    for (int dim=0; dim < _dimensions; dim++){
-      valueCopy[dim] = value[dim];
-    }
-    _requestManager->requestWriteVectorData(fromDataID, valueIndex, valueCopy.data());
+    _requestManager->requestWriteVectorData(fromDataID, valueIndex, value);
   }
   else {
     PRECICE_REQUIRE_DATA_WRITE(fromDataID);
