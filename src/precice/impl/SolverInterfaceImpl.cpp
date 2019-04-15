@@ -211,11 +211,10 @@ double SolverInterfaceImpl:: initialize()
     }
     INFO("Coupling partner/s are connected " );
 
-    INFO("Perform initializations");
+    WARN("Perform initializations");
 
     computeBoundingBoxs();
 
-/*
     typedef std::map<std::string,M2NWrap>::value_type M2NPair;
     INFO("Setting up slaves communication to coupling partner/s " );
     for (M2NPair& m2nPair : _m2ns) {
@@ -233,8 +232,13 @@ double SolverInterfaceImpl:: initialize()
       }
     }
     INFO("Slaves are connected" );
-
+    
     computePartitions();
+
+    for (M2NPair& m2nPair : _m2ns) {
+      m2n::PtrM2N& m2n = m2nPair.second.m2n;
+      m2n->updateVertexList();     
+    }
 
     std::set<action::Action::Timing> timings;
     double dt = 0.0;
@@ -248,11 +252,11 @@ double SolverInterfaceImpl:: initialize()
     int timestep = 1;
 
     _couplingScheme->initialize(time, timestep);
-
+    
     dt = _couplingScheme->getNextTimestepMaxLength();
-
+    
     timings.insert(action::Action::ALWAYS_POST);
-
+    
     if (_couplingScheme->hasDataBeenExchanged()){
       timings.insert(action::Action::ON_EXCHANGE_POST);
       mapReadData();
@@ -261,13 +265,15 @@ double SolverInterfaceImpl:: initialize()
     performDataActions(timings, 0.0, 0.0, 0.0, dt);
 
     INFO(_couplingScheme->printCouplingState());
-*/
   }
 
   solverInitEvent.start();
 
-  return _couplingScheme->getNextTimestepMaxLength();
+  WARN("Initialization done!" );
+  return _couplingScheme->getNextTimestepMaxLength(); 
+
 }
+
 
 void SolverInterfaceImpl:: initializeData ()
 {
@@ -281,6 +287,7 @@ void SolverInterfaceImpl:: initializeData ()
 
   CHECK(_couplingScheme->isInitialized(),
         "initialize() has to be called before initializeData()");
+
   if (_clientMode){
     _requestManager->requestInitialzeData();
   }
@@ -307,6 +314,7 @@ void SolverInterfaceImpl:: initializeData ()
       }
     }
   }
+  
   solverInitEvent.start();
 }
 
@@ -1527,17 +1535,26 @@ void SolverInterfaceImpl:: computeBoundingBoxs()
   std::sort (_accessor->usedMeshContexts().begin(), _accessor->usedMeshContexts().end(),
       []( MeshContext* lhs, const MeshContext* rhs) -> bool
       {
-        return lhs->mesh->getName() < rhs->mesh->getName();
+        return lhs->mesh->getName() > rhs->mesh->getName();
         } );
-  
+
+ 
   for (MeshContext* meshContext : _accessor->usedMeshContexts()){
-    meshContext->mesh->computeState();
-    meshContext->partition->communicateBoundingBox();    
+    meshContext->mesh->buildBoundingBox();
+    meshContext->partition->communicateBoundingBox();
   }
+
+    // std::sort (_accessor->usedMeshContexts().begin(), _accessor->usedMeshContexts().end(),
+    //   []( MeshContext* lhs, const MeshContext* rhs) -> bool
+    //   {
+    //     return lhs->mesh->getName() > rhs->mesh->getName();
+    //     } );
+
   
   for (MeshContext* meshContext : _accessor->usedMeshContexts()){
     meshContext->partition->computeBoundingBox();
   }
+
 }
 
 void SolverInterfaceImpl:: computePartitions()
@@ -1547,16 +1564,18 @@ void SolverInterfaceImpl:: computePartitions()
   //Both loops need a different sorting
 
   // sort meshContexts by name, for communication in right order.
+  /*
   std::sort (_accessor->usedMeshContexts().begin(), _accessor->usedMeshContexts().end(),
       []( MeshContext* lhs, const MeshContext* rhs) -> bool
       {
         return lhs->mesh->getName() < rhs->mesh->getName();
       } );
-
+  */
   for (MeshContext* meshContext : _accessor->usedMeshContexts()){
     meshContext->partition->communicate();
   }
-
+  WARN("communicate done");
+/*
   // now sort provided meshes up front, to have them ready for the decomposition
   std::sort (_accessor->usedMeshContexts().begin(), _accessor->usedMeshContexts().end(),
       []( MeshContext* lhs, const MeshContext* rhs) -> bool
@@ -1569,12 +1588,14 @@ void SolverInterfaceImpl:: computePartitions()
         }
         return lhs->mesh->getName() < rhs->mesh->getName();
       } );
-
+*/
   for (MeshContext* meshContext : _accessor->usedMeshContexts()){
+    meshContext->mesh->buildBoundingBox();
     meshContext->partition->compute();
     meshContext->mesh->computeState();
     meshContext->mesh->allocateDataValues();
-  }
+    }
+  WARN("compute done");
 }
 
 
@@ -1656,6 +1677,7 @@ void SolverInterfaceImpl:: mapReadData()
               << "\".");
 
       context.mapping->computeMapping();
+
     }
   }
 
@@ -1683,8 +1705,8 @@ void SolverInterfaceImpl:: mapReadData()
       DEBUG("First mapped values = " << stream.str());
 #     endif
     }
-  }
 
+  }
   // Clear non-initial, non-incremental mappings
   for (impl::MappingContext& context : _accessor->readMappingContexts()) {
     bool isStationary = context.timing
@@ -1695,6 +1717,7 @@ void SolverInterfaceImpl:: mapReadData()
     context.hasMappedData = false;
   }
 }
+
 
 void SolverInterfaceImpl:: performDataActions
 (
