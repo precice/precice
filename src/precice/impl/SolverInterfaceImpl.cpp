@@ -1542,32 +1542,25 @@ void SolverInterfaceImpl:: computePartitions()
   //We need to do this in two loops: First, communicate the mesh and later compute the partition.
   //Originally, this was done in one loop. This however gave deadlock if two meshes needed to be communicated cross-wise.
   //Both loops need a different sorting
+  auto &contexts = _accessor->usedMeshContexts();
 
   // sort meshContexts by name, for communication in right order.
-  std::sort (_accessor->usedMeshContexts().begin(), _accessor->usedMeshContexts().end(),
-      []( MeshContext* lhs, const MeshContext* rhs) -> bool
-      {
-        return lhs->mesh->getName() < rhs->mesh->getName();
-      } );
+  std::sort(contexts.begin(), contexts.end(),
+            [](MeshContext const *const lhs, MeshContext const *const rhs) -> bool {
+              return lhs->mesh->getName() < rhs->mesh->getName();
+            });
 
-  for (MeshContext* meshContext : _accessor->usedMeshContexts()){
+  for (MeshContext *meshContext : contexts) {
     meshContext->partition->communicate();
   }
 
-  // now sort provided meshes up front, to have them ready for the decomposition
-  std::sort (_accessor->usedMeshContexts().begin(), _accessor->usedMeshContexts().end(),
-      []( MeshContext* lhs, const MeshContext* rhs) -> bool
-      {
-        if(lhs->provideMesh && not rhs->provideMesh){
-          return true;
-        }
-        if(not lhs->provideMesh && rhs->provideMesh){
-          return false;
-        }
-        return lhs->mesh->getName() < rhs->mesh->getName();
-      } );
+  // pull provided meshes up front, to have them ready for the decomposition
+  std::stable_partition(contexts.begin(), contexts.end(),
+                        [](MeshContext const *const meshContext) -> bool {
+                          return meshContext->provideMesh;
+                        });
 
-  for (MeshContext* meshContext : _accessor->usedMeshContexts()){
+  for (MeshContext *meshContext : contexts) {
     meshContext->partition->compute();
     meshContext->mesh->computeState();
     meshContext->mesh->allocateDataValues();
