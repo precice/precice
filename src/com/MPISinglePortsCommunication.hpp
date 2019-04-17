@@ -1,7 +1,7 @@
 #pragma once
 #ifndef PRECICE_NO_MPI
 
-#include <vector>
+#include <map>
 #include "MPICommunication.hpp"
 #include "logging/Logger.hpp"
 

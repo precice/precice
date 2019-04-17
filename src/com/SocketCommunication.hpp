@@ -6,6 +6,8 @@
 #include <boost/asio.hpp>
 #include "logging/Logger.hpp"
 #include <thread>
+#include <vector>
+#include <map>
 #include "com/SocketSendQueue.hpp"
 
 namespace precice

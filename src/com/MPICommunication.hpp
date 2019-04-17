@@ -5,6 +5,7 @@
 #include <mpi.h>
 #include "com/Communication.hpp"
 #include "logging/Logger.hpp"
+#include <vector>
 
 namespace precice
 {
