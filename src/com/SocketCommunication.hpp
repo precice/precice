@@ -151,7 +151,7 @@ private:
   /// Remote rank -> socket map
   std::map<int, std::shared_ptr<Socket>> _sockets;
 
-  SendQueue _queue;
+  SocketSendQueue _queue;
 
   bool isClient();
   bool isServer();
