@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file. For future 
 
 ## develop
 
+## 1.4.1
+
+- Bug in re-partitioning fixed, occured for OpenFOAM and empty ranks in parallel. 
+
 ## 1.4.0
 - The python modules are now proper packages tracking dependencies etc.
 - Fix CMake now importable from binary directory.
