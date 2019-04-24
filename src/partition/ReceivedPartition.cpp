@@ -333,7 +333,8 @@ void ReceivedPartition::prepareBoundingBox()
   double maxSideLength = 1e-6; // we need some minimum > 0 here
 
   for (int d = 0; d < _dimensions; d++) {
-    maxSideLength = std::max(maxSideLength, _bb[d].second - _bb[d].first);
+    if(_bb[d].second > _bb[d].first)
+      maxSideLength = std::max(maxSideLength, _bb[d].second - _bb[d].first);
   }
   for (int d = 0; d < _dimensions; d++) {
     _bb[d].second += _safetyFactor * maxSideLength;
