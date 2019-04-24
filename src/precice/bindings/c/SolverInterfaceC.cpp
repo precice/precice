@@ -231,9 +231,9 @@ void precicec_writeBlockScalarData
 
 void precicec_writeScalarData
 (
-  int           dataID,
-  int           valueIndex,
-  const double& dataValue )
+  int    dataID,
+  int    valueIndex,
+  double dataValue )
 {
   assertion ( impl != nullptr );
   impl->writeScalarData ( dataID, valueIndex, dataValue );

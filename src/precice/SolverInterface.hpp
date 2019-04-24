@@ -403,10 +403,10 @@ public:
    * @see getDimensions()
    */
   void setMeshVertices (
-    int     meshID,
-    int     size,
-    double* positions,
-    int*    ids );
+    int           meshID,
+    int           size,
+    const double* positions,
+    int*          ids );
 
   /**
    * @brief Get vertex positions for multiple vertex ids from a given mesh
@@ -424,10 +424,10 @@ public:
    * @see getDimensions()
    */
   void getMeshVertices (
-    int     meshID,
-    int     size,
-    int*    ids,
-    double* positions );
+    int        meshID,
+    int        size,
+    const int* ids,
+    double*    positions );
 
   /**
    * @brief Gets mesh vertex IDs from positions.
@@ -445,10 +445,10 @@ public:
    * @note prefer to reuse the IDs returned from calls to setMeshVertex() and setMeshVertices().
    */
   void getMeshVertexIDsFromPositions (
-    int     meshID,
-    int     size,
-    double* positions,
-    int*    ids );
+    int           meshID,
+    int           size,
+    const double* positions,
+    int*          ids );
 
   /**
    * @brief Sets mesh edge from vertex IDs, returns edge ID.
@@ -617,7 +617,7 @@ public:
   void writeBlockVectorData (
     int           dataID,
     int           size,
-    int*          valueIndices,
+    const int*    valueIndices,
     const double* values );
 
   /**
@@ -665,7 +665,7 @@ public:
   void writeBlockScalarData (
     int           dataID,
     int           size,
-    int*          valueIndices,
+    const int*    valueIndices,
     const double* values );
 
   /**
@@ -710,10 +710,10 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void readBlockVectorData (
-    int     dataID,
-    int     size,
-    int*    valueIndices,
-    double* values );
+    int        dataID,
+    int        size,
+    const int* valueIndices,
+    double*    values );
 
   /**
    * @brief Reads vector data form a vertex
@@ -761,10 +761,10 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void readBlockScalarData (
-    int     dataID,
-    int     size,
-    int*    valueIndices,
-    double* values );
+    int        dataID,
+    int        size,
+    const int* valueIndices,
+    double*    values );
 
   /**
    * @brief Reads scalar data of a vertex.
