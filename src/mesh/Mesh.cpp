@@ -387,18 +387,19 @@ void Mesh:: computeNormals()
 void Mesh:: computeBoundingBox()
 {
   TRACE(_name);
-  _boundingBox = BoundingBox (_dimensions,
+  BoundingBox boundingBox(_dimensions,
                               std::make_pair(std::numeric_limits<double>::max(),
                                              std::numeric_limits<double>::lowest()));
-  for (Vertex& vertex : _content.vertices()) {
+  for (const Vertex& vertex : _content.vertices()) {
     for (int d = 0; d < _dimensions; d++) {
-      _boundingBox[d].first  = std::min(vertex.getCoords()[d], _boundingBox[d].first);
-      _boundingBox[d].second = std::max(vertex.getCoords()[d], _boundingBox[d].second);
+      boundingBox[d].first  = std::min(vertex.getCoords()[d], boundingBox[d].first);
+      boundingBox[d].second = std::max(vertex.getCoords()[d], boundingBox[d].second);
     }
   }
   for (int d = 0; d < _dimensions; d++) {
-    DEBUG("BoundingBox, dim: " << d << ", first: " << _boundingBox[d].first << ", second: " << _boundingBox[d].second);
+    DEBUG("BoundingBox, dim: " << d << ", first: " << boundingBox[d].first << ", second: " << boundingBox[d].second);
   }
+  _boundingBox = std::move(boundingBox);
 }
 
 void Mesh:: computeState()
