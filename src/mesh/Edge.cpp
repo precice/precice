@@ -22,6 +22,19 @@ int Edge:: getID () const
   return _id;
 }
 
+const Eigen::VectorXd Edge::computeNormal(bool flip)
+{
+    // Compute normal
+    Eigen::VectorXd edgeVector = vertex(1).getCoords() - vertex(0).getCoords();
+    Eigen::VectorXd normal = Eigen::Vector2d(-edgeVector[1], edgeVector[0]);
+    if (not flip){
+        normal *= -1.0; // Invert direction if counterclockwise
+    }
+    _normal = normal.normalized();   // Scale normal vector to length 1
+
+    return normal * getEnclosingRadius() * 2.0; // Weight by length
+}
+
 const Eigen::VectorXd Edge::getCenter () const
 {
   return 0.5 * (_vertices[0]->getCoords() + _vertices[1]->getCoords());

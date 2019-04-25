@@ -48,6 +48,9 @@ public:
   template<typename VECTOR_T>
   void setNormal ( const VECTOR_T& normal );
 
+  /// Computes and sets the normal of the edge, returns the area-weighted normal.
+  const Eigen::VectorXd computeNormal(bool flip = false);
+
   /// Returns the (among edges) unique ID of the edge.
   int getID () const;
 
