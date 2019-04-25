@@ -298,21 +298,12 @@ void Mesh:: computeState()
   // Compute (in 2D) edge normals
   for (Edge& edge : _content.edges()) {
     if (_dimensions == 2 && computeNormals) {
-      // Compute normal
-      Eigen::VectorXd edgeVector = edge.vertex(1).getCoords() - edge.vertex(0).getCoords();
-      Eigen::VectorXd normal = Eigen::Vector2d(-edgeVector[1], edgeVector[0]);
-      if (not _flipNormals){
-        normal *= -1.0; // Invert direction if counterclockwise
-      }
-      assertion(math::greater(normal.norm(), 0.0));
-      normal.normalize();   // Scale normal vector to length 1
-      edge.setNormal(normal);
+      Eigen::VectorXd weightednormal = edge.computeNormal(_flipNormals);
 
       // Accumulate normal in associated vertices
-      normal *= edge.getEnclosingRadius() * 2.0; // Weight by length
       for (int i=0; i < 2; i++){
         Eigen::VectorXd vertexNormal = edge.vertex(i).getNormal();
-        vertexNormal += normal;
+        vertexNormal += weightednormal;
         edge.vertex(i).setNormal(vertexNormal);
       }
     }
