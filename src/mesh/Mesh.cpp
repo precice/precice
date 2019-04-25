@@ -308,11 +308,9 @@ void Mesh:: allocateDataValues()
   }
 }
 
-void Mesh:: computeState()
+void Mesh:: computeNormals()
 {
   TRACE(_name);
-  assertion(_dimensions==2 || _dimensions==3, _dimensions);
-
   // Compute normals only if faces to derive normal information are available
   bool computeNormals = true;
   size_t size2DFaces = _content.edges().size();
@@ -390,17 +388,21 @@ void Mesh:: computeState()
     }
   }
 
-  // Normalize vertex normals & compute bounding box
-  _boundingBox = BoundingBox (_dimensions,
-                              std::make_pair(std::numeric_limits<double>::max(),
-                                             std::numeric_limits<double>::lowest()));
-
   for (Vertex& vertex : _content.vertices()) {
     if (computeNormals) {
       // there can be cases when a vertex has no edge though edges exist in general (e.g. after filtering)
       vertex.setNormal(vertex.getNormal().normalized());
     }
-    
+  }
+}
+
+void Mesh:: computeBoundingBox()
+{
+  TRACE(_name);
+  _boundingBox = BoundingBox (_dimensions,
+                              std::make_pair(std::numeric_limits<double>::max(),
+                                             std::numeric_limits<double>::lowest()));
+  for (Vertex& vertex : _content.vertices()) {
     for (int d = 0; d < _dimensions; d++) {
       _boundingBox[d].first  = std::min(vertex.getCoords()[d], _boundingBox[d].first);
       _boundingBox[d].second = std::max(vertex.getCoords()[d], _boundingBox[d].second);
@@ -409,6 +411,15 @@ void Mesh:: computeState()
   for (int d = 0; d < _dimensions; d++) {
     DEBUG("BoundingBox, dim: " << d << ", first: " << _boundingBox[d].first << ", second: " << _boundingBox[d].second);
   }
+}
+
+void Mesh:: computeState()
+{
+  TRACE(_name);
+  assertion(_dimensions==2 || _dimensions==3, _dimensions);
+
+  computeNormals();
+  computeBoundingBox();
 }
 
     
