@@ -353,22 +353,13 @@ void Mesh:: computeState()
 
       // Compute normals
       if (computeNormals){
-        Eigen::Vector3d vectorA = triangle.edge(1).getCenter() - triangle.edge(0).getCenter(); // edge() is faster than vertex()
-        Eigen::Vector3d vectorB = triangle.edge(2).getCenter() - triangle.edge(0).getCenter();
-        // Compute cross-product of vector A and vector B
-        auto normal = vectorA.cross(vectorB);
-        if ( _flipNormals ){
-          normal *= -1.0; // Invert direction if counterclockwise
-        }
+        Eigen::VectorXd weightednormal = triangle.computeNormal(_flipNormals);
 
         // Accumulate area-weighted normal in associated vertices and edges
         for (int i=0; i < 3; i++){
-          triangle.edge(i).setNormal(triangle.edge(i).getNormal() + normal);
-          triangle.vertex(i).setNormal(triangle.vertex(i).getNormal() + normal);
+          triangle.edge(i).setNormal(triangle.edge(i).getNormal() + weightednormal);
+          triangle.vertex(i).setNormal(triangle.vertex(i).getNormal() + weightednormal);
         }
-
-        // Normalize triangle normal
-        triangle.setNormal(normal.normalized());
       }
     }
 
