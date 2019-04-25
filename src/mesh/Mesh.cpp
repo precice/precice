@@ -372,38 +372,12 @@ void Mesh:: computeState()
 
       // Compute normals (assuming all vertices are on same plane)
       if (computeNormals) {
-        // Two triangles are thought by splitting the quad from vertex 0 to 2.
-        // The cross prodcut of the outer edges of the triangles is used to compute
-        // the normal direction and area of the triangles. The direction must be
-        // the same, while the areas differ in general. The normals are added up
-        // and divided by 2 to get the area of the overall quad, since the length
-        // does correspond to the parallelogram spanned by the vectors of the
-        // cross product, which is twice the area of the corresponding triangles.
-        Eigen::Vector3d vectorA = quad.vertex(2).getCoords() - quad.vertex(1).getCoords();
-        Eigen::Vector3d vectorB = quad.vertex(0).getCoords() - quad.vertex(1).getCoords();
-        // Compute cross-product of vector A and vector B
-        auto normal = vectorA.cross(vectorB);
-        
-        vectorA = quad.vertex(0).getCoords() - quad.vertex(3).getCoords();
-        vectorB = quad.vertex(2).getCoords() - quad.vertex(3).getCoords();
-        auto normalSecondPart = vectorA.cross(vectorB);
-        
-        assertion(math::equals(normal.normalized(), normalSecondPart.normalized()),
-                  normal, normalSecondPart);
-        normal += normalSecondPart;
-        normal *= 0.5;
-
-        if ( _flipNormals ){
-          normal *= -1.0; // Invert direction if counterclockwise
-        }
-
+        Eigen::VectorXd weightednormal = quad.computeNormal(_flipNormals);
         // Accumulate area-weighted normal in associated vertices and edges
         for (int i=0; i < 4; i++){
-          quad.edge(i).setNormal(quad.edge(i).getNormal() + normal);
-          quad.vertex(i).setNormal(quad.vertex(i).getNormal() + normal);
+          quad.edge(i).setNormal(quad.edge(i).getNormal() + weightednormal);
+          quad.vertex(i).setNormal(quad.vertex(i).getNormal() + weightednormal);
         }
-
-        quad.setNormal(normal.normalized());
       }
     }
 
