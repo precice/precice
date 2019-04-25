@@ -47,4 +47,15 @@ void append(
   }
 }
 
+/** Maps the first at most n values of an Eigen object to a row vector
+ *
+ * @param[in] val the Eigen object to map from
+ * @returns the mapped const row vector
+ */
+template<typename Derived>
+auto firstN(const Eigen::PlainObjectBase<Derived>& val, unsigned n) -> const Eigen::Map<const Eigen::Matrix<typename Derived::Scalar, 1, Eigen::Dynamic>> 
+{
+    return {val.data(), std::min<Eigen::Index>(n,val.size())};
+}
+
 }}
