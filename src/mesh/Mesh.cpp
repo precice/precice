@@ -312,87 +312,75 @@ void Mesh:: computeNormals()
 {
   TRACE(_name);
   // Compute normals only if faces to derive normal information are available
-  bool computeNormals = true;
   size_t size2DFaces = _content.edges().size();
   size_t size3DFaces = _content.triangles().size() + _content.quads().size();
-  if (_dimensions == 2){
-    if (size2DFaces == 0){
-      computeNormals = false;
-    }
+  if (_dimensions == 2 && size2DFaces == 0){
+      return;
   }
-  else if (size3DFaces == 0){
-    assertion(_dimensions == 3, _dimensions);
-    computeNormals = false;
+  if (_dimensions == 3 && size3DFaces == 0){
+    return;
   }
 
   // Compute (in 2D) edge normals
-  for (Edge& edge : _content.edges()) {
-    if (_dimensions == 2 && computeNormals) {
-      Eigen::VectorXd weightednormal = edge.computeNormal(_flipNormals);
+  if (_dimensions == 2) {
+      for (Edge& edge : _content.edges()) {
+          Eigen::VectorXd weightednormal = edge.computeNormal(_flipNormals);
 
-      // Accumulate normal in associated vertices
-      for (int i=0; i < 2; i++){
-        Eigen::VectorXd vertexNormal = edge.vertex(i).getNormal();
-        vertexNormal += weightednormal;
-        edge.vertex(i).setNormal(vertexNormal);
+          // Accumulate normal in associated vertices
+          for (int i=0; i < 2; i++){
+              Eigen::VectorXd vertexNormal = edge.vertex(i).getNormal();
+              vertexNormal += weightednormal;
+              edge.vertex(i).setNormal(vertexNormal);
+          }
       }
-    }
   }
 
   if (_dimensions == 3){
-    // Compute normals
-    for (Triangle& triangle : _content.triangles()) {
-      assertion(triangle.vertex(0) != triangle.vertex(1),
-                triangle.vertex(0), triangle.getID());
-      assertion(triangle.vertex(1) != triangle.vertex(2),
-                triangle.vertex(1), triangle.getID());
-      assertion(triangle.vertex(2) != triangle.vertex(0),
-                triangle.vertex(2), triangle.getID());
-
       // Compute normals
-      if (computeNormals){
-        Eigen::VectorXd weightednormal = triangle.computeNormal(_flipNormals);
+      for (Triangle& triangle : _content.triangles()) {
+          assertion(triangle.vertex(0) != triangle.vertex(1),
+                  triangle.vertex(0), triangle.getID());
+          assertion(triangle.vertex(1) != triangle.vertex(2),
+                  triangle.vertex(1), triangle.getID());
+          assertion(triangle.vertex(2) != triangle.vertex(0),
+                  triangle.vertex(2), triangle.getID());
 
-        // Accumulate area-weighted normal in associated vertices and edges
-        for (int i=0; i < 3; i++){
-          triangle.edge(i).setNormal(triangle.edge(i).getNormal() + weightednormal);
-          triangle.vertex(i).setNormal(triangle.vertex(i).getNormal() + weightednormal);
-        }
+          // Compute normals
+          Eigen::VectorXd weightednormal = triangle.computeNormal(_flipNormals);
+
+          // Accumulate area-weighted normal in associated vertices and edges
+          for (int i=0; i < 3; i++){
+              triangle.edge(i).setNormal(triangle.edge(i).getNormal() + weightednormal);
+              triangle.vertex(i).setNormal(triangle.vertex(i).getNormal() + weightednormal);
+          }
       }
-    }
 
-    // Compute quad normals
-    for (Quad& quad : _content.quads()) {
-      assertion(quad.vertex(0) != quad.vertex(1), quad.vertex(0).getCoords(), quad.getID());
-      assertion(quad.vertex(1) != quad.vertex(2), quad.vertex(1).getCoords(), quad.getID());
-      assertion(quad.vertex(2) != quad.vertex(3), quad.vertex(2).getCoords(), quad.getID());
-      assertion(quad.vertex(3) != quad.vertex(0), quad.vertex(3).getCoords(), quad.getID());
+      // Compute quad normals
+      for (Quad& quad : _content.quads()) {
+          assertion(quad.vertex(0) != quad.vertex(1), quad.vertex(0).getCoords(), quad.getID());
+          assertion(quad.vertex(1) != quad.vertex(2), quad.vertex(1).getCoords(), quad.getID());
+          assertion(quad.vertex(2) != quad.vertex(3), quad.vertex(2).getCoords(), quad.getID());
+          assertion(quad.vertex(3) != quad.vertex(0), quad.vertex(3).getCoords(), quad.getID());
 
-      // Compute normals (assuming all vertices are on same plane)
-      if (computeNormals) {
-        Eigen::VectorXd weightednormal = quad.computeNormal(_flipNormals);
-        // Accumulate area-weighted normal in associated vertices and edges
-        for (int i=0; i < 4; i++){
-          quad.edge(i).setNormal(quad.edge(i).getNormal() + weightednormal);
-          quad.vertex(i).setNormal(quad.vertex(i).getNormal() + weightednormal);
-        }
+          // Compute normals (assuming all vertices are on same plane)
+          Eigen::VectorXd weightednormal = quad.computeNormal(_flipNormals);
+          // Accumulate area-weighted normal in associated vertices and edges
+          for (int i=0; i < 4; i++){
+              quad.edge(i).setNormal(quad.edge(i).getNormal() + weightednormal);
+              quad.vertex(i).setNormal(quad.vertex(i).getNormal() + weightednormal);
+          }
       }
-    }
 
-    // Normalize edge normals (only done in 3D)
-    if (computeNormals){
+      // Normalize edge normals (only done in 3D)
       for (Edge& edge : _content.edges()) {
-        // there can be cases when an edge has no adjacent triangle though triangles exist in general (e.g. after filtering)
-        edge.setNormal(edge.getNormal().normalized());
+          // there can be cases when an edge has no adjacent triangle though triangles exist in general (e.g. after filtering)
+          edge.setNormal(edge.getNormal().normalized());
       }
-    }
   }
 
   for (Vertex& vertex : _content.vertices()) {
-    if (computeNormals) {
       // there can be cases when a vertex has no edge though edges exist in general (e.g. after filtering)
       vertex.setNormal(vertex.getNormal().normalized());
-    }
   }
 }
 
