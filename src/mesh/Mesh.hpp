@@ -225,6 +225,8 @@ public:
    * Circumcircles of edges and triangles are computed.
    */
   void computeState();
+  
+  void buildBoundingBox();
 
   /**
    * @brief Removes all mesh elements and data values (does not remove data).
