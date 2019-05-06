@@ -13,7 +13,7 @@ void terminationSignalHandler(int signal)
 
   // Remove connection info files. This is just a guess and will only
   // work if the address directory is ".".
-  boost::filesystem::remove_all(".precice");
+  boost::filesystem::remove_all("precice-run");
 }
 
 }

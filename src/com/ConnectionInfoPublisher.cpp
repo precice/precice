@@ -26,7 +26,7 @@ std::string ConnectionInfoPublisher::getFilename() const
   hash.erase(std::remove(hash.begin(), hash.end(), '-'), hash.end());
   
   path p = path(addressDirectory)
-    / path(".precice")
+    / path("precice-run")
     / path(hash.substr(0, firstLevelLen))
     / hash.substr(firstLevelLen);
   
@@ -55,15 +55,6 @@ ConnectionInfoWriter::~ConnectionInfoWriter()
   fs::path p(getFilename());
   DEBUG("Deleting connection file " << p.string());
   fs::remove(p);
-  /*try {
-    if (fs::is_empty(p.parent_path()))
-      fs::remove(p.parent_path()); // also remove parent dir, i.e, first part of hash
-    if (fs::is_empty(p.parent_path().parent_path()))
-      fs::remove(p.parent_path().parent_path()); // and also the .precice, only if empty
-  }
-  catch (fs::filesystem_error const & e) {
-    WARN("Filesystem error when deleting connection info files: " << e.what());
-    }*/
 }
 
 void ConnectionInfoWriter::write(std::string const & info) const

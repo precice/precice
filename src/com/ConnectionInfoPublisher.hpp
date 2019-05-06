@@ -41,7 +41,7 @@ protected:
 
   /// Returns the file name for the connection information.
   /**
-   * It has the form addressDirectory/.precice/first two letters from hash of 
+   * It has the form addressDirectory/precice-run/first two letters from hash of 
    * (acceptorName, requesterName, rank)/rest of hash.
    */
   std::string getFilename() const;
@@ -96,7 +96,7 @@ public:
   {}
 
 
-  /// Removes the connection info file and the directories .precice/[hash], is empty.
+  /// Removes the connection info file and the directories ./precice-run/[hash], is empty.
   ~ConnectionInfoWriter();
 
   /// Write the string info, e.g. IP:port to the connection info file
