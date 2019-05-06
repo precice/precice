@@ -66,7 +66,8 @@ void ConnectionInfoWriter::write(std::string const & info) const
   fs::create_directories(tmp.parent_path());
   {
     std::ofstream ofs(tmp.string(), std::ofstream::out);
-    ofs << info;
+    ofs << info << "\n";
+    ofs << "Acceptor: " << acceptorName << ", Requester: " << requesterName << ", Rank: " << rank << "\n";
   }
   fs::rename(tmp, path);
 }
