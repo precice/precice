@@ -33,7 +33,7 @@ def checkAdd(lib = None, header = None, usage = ""):
 
 
 def print_options(vars):
-    """ Print all build option and if they have been modified from their default value. """
+    """ Print all build options and if they have been modified from their default value. """
     for opt in vars.options:
         try:
             is_default = vars.args[opt.key] == opt.default
@@ -45,7 +45,7 @@ def vprint(name, value, default=True, description = None):
     """ Pretty prints an environment variabe with value and modified or not. """
     mod = "(default)" if default else "(modified)"
     desc = "   " + description if description else ""
-    print("{0:10} {1:10} = {2!s:8}{3}".format(mod, name, value, desc))
+    print("{0:10} {1:10} = {2!s:12}{3}".format(mod, name, value, desc))
 
 def checkset_var(varname, default):
     """ Checks if environment variable is set, use default otherwise and print the value. """
@@ -77,7 +77,7 @@ def get_real_compiler(compiler):
 vars = Variables(None, ARGUMENTS)
 
 vars.Add(PathVariable("builddir", "Directory holding build files.", "build", PathVariable.PathAccept))
-vars.Add(EnumVariable('build', 'Build type', "Debug", allowed_values=('release', 'debug', 'Release', 'Debug')))
+vars.Add(EnumVariable('build', 'Build type', "Debug", allowed_values=('release', 'debug', 'Release', 'Debug', 'RelWithDebInfo')))
 vars.Add(PathVariable("libprefix", "Path prefix for libraries", "/usr", PathVariable.PathIsDir))
 vars.Add("compiler", "Compiler to use.", "mpicxx")
 vars.Add(BoolVariable("mpi", "Enables MPI-based communication and running coupling tests.", True))
@@ -114,7 +114,7 @@ env.Append(LIBPATH = [('#' + buildpath)])
 env.Append(CCFLAGS= ['-Wall', '-Wextra', '-Wno-unused-parameter', '-std=c++11'])
 
 # ====== PRECICE_VERSION number ======
-PRECICE_VERSION = "1.4.0"
+PRECICE_VERSION = "1.4.1"
 
 
 # ====== Compiler Settings ======
@@ -161,6 +161,10 @@ elif env["build"] == 'Release':
     env.Append(CPPDEFINES = ['NDEBUG']) # Standard C++ macro which disables all asserts, also used by Eigen
     env.Append(CCFLAGS = ['-O3'])
     buildpath += "release"
+elif env["build"] == 'RelWithDebInfo':
+    env.Append(CPPDEFINES = ['NDEBUG']) # Standard C++ macro which disables all asserts, also used by Eigen
+    env.Append(CCFLAGS = ['-O3', '-g'])
+    buildpath += "relwithdebinfo"
 
 
 # ====== libpthread ======

@@ -644,12 +644,10 @@ void testTagging(MeshSpecification inMeshSpec,
 
   mesh::PtrMesh inMesh ( new mesh::Mesh("InMesh", meshDimension, false) );
   mesh::PtrData inData = inMesh->createData("InData", valueDimension);
-  int inDataID = inData->getID();
   getDistributedMesh(inMeshSpec, inMesh, inData);
 
   mesh::PtrMesh outMesh ( new mesh::Mesh("outMesh", meshDimension, false) );
   mesh::PtrData outData = outMesh->createData( "OutData", valueDimension);
-  int outDataID = outData->getID();
   getDistributedMesh(outMeshSpec, outMesh, outData);
 
   Gaussian fct(4.5); //Support radius approx. 1
@@ -667,10 +665,10 @@ void testTagging(MeshSpecification inMeshSpec,
           return std::equal(spec.position.data(), spec.position.data() + meshDimension, v.getCoords().data());
         });
     bool found = pos != shouldTagFirstRound.end();
-    BOOST_TEST(found >= v.isTagged(), "FirstRound: Vertex " << v
-        << " is tagged, but should not be.");
-    BOOST_TEST(found <= v.isTagged(), "FirstRound: Vertex " << v
-        << " is not tagged, but should be.");
+    BOOST_TEST(found >= v.isTagged(),
+               "FirstRound: Vertex " << v << " is tagged, but should not be.");
+    BOOST_TEST(found <= v.isTagged(),
+               "FirstRound: Vertex " << v << " is not tagged, but should be.");
   }
 
   mapping.tagMeshSecondRound();
@@ -696,8 +694,7 @@ void testTagging(MeshSpecification inMeshSpec,
 }
 
 BOOST_AUTO_TEST_CASE(testTagFirstRound){
-  using Par = utils::Parallel;
-  assertion(Par::getCommunicatorSize() == 4);
+  assertion(utils::Parallel::getCommunicatorSize() == 4);
   //    *
   //    + <-- owned
   //* * x * *

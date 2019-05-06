@@ -6,17 +6,23 @@ namespace com
 {
 namespace asio = boost::asio;
 
-void SendQueue::dispatch(std::shared_ptr<Socket> sock,
-        boost::asio::const_buffers_1 data,
-        std::function<void()> callback)
+/// If items are left in the queue upon destruction, something went really wrong.
+SocketSendQueue::~SocketSendQueue()
 {
-  _itemQueue.push_back({std::move(sock), std::move(data), callback});
-  process(); //If queue was previously empty, start it now.
+  if (not _itemQueue.empty())
+    ERROR("The SocketSendQueue is not empty upon destruction.\n"
+          "Make sure it always outlives all the requests pushed onto it");
 }
 
-/// This method can be called arbitrarily many times,
-/// but enough times to ensure the queue makes progress.
-void SendQueue::process()
+void SocketSendQueue::dispatch(std::shared_ptr<Socket> sock,
+                               boost::asio::const_buffers_1 data,
+                               std::function<void()> callback)
+{
+  _itemQueue.push_back({std::move(sock), std::move(data), callback});
+  process(); // if queue was previously empty, start it now.
+}
+
+void SocketSendQueue::process()
 {
   std::lock_guard<std::mutex> lock(_sendMutex);
   if (!_ready || _itemQueue.empty())
@@ -33,11 +39,5 @@ void SendQueue::process()
                     });
 }
 
-/// If Items are left in the queue upon destruction, something went really wrong.
-SendQueue::~SendQueue()
-{
-    if (not _itemQueue.empty())
-        ERROR("The SocketSendQueue is not empty upon destruction.\n"
-              "Make sure it always outlives all the requests pushed onto it");
-}
+
 }}

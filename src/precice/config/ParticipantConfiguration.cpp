@@ -471,15 +471,15 @@ void ParticipantConfiguration:: finishParticipantConfiguration
     impl::MeshContext& toMeshContext = participant->meshContext(toMeshID);
 
     if(confMapping.direction == mapping::MappingConfiguration::READ){
-      CHECK(toMeshContext.provideMesh, "A read mapping needs to map to a provided mesh. "
+      CHECK(toMeshContext.provideMesh, "A read mapping of participant " << participant->getName() << " needs to map TO a provided mesh. "
           "Mesh " << confMapping.toMesh->getName() << " is not provided.");
-      CHECK(not fromMeshContext.receiveMeshFrom.empty(), "A read mapping needs to map from a received mesh. "
+      CHECK(not fromMeshContext.receiveMeshFrom.empty(), "A read mapping of participant " << participant->getName() << " needs to map FROM a received mesh. "
           "Mesh " << confMapping.fromMesh->getName() << " is not received.");
     }
     else{
-      CHECK(fromMeshContext.provideMesh, "A write mapping needs to map from a provided mesh. "
+      CHECK(fromMeshContext.provideMesh, "A write mapping of participant " << participant->getName() << " needs to map FROM a provided mesh. "
           "Mesh " << confMapping.fromMesh->getName() << " is not provided.");
-      CHECK(not toMeshContext.receiveMeshFrom.empty(), "A write mapping needs to map to a received mesh. "
+      CHECK(not toMeshContext.receiveMeshFrom.empty(), "A write mapping of participant " << participant->getName() << " needs to map TO a received mesh. "
           "Mesh " << confMapping.toMesh->getName() << " is not received.");
     }
 

@@ -15,35 +15,39 @@ namespace com
 
 /// This Queue is intended for SocketCommunication to push requests which should be sent onto it.
 /// It ensures that the invocations of asio::aSend are done serially.
-class SendQueue
+class SocketSendQueue
 {
-  public:
+public:
 
-    using TCP           = boost::asio::ip::tcp;
-    using SocketService = boost::asio::stream_socket_service<TCP>;
-    using Socket   = boost::asio::basic_stream_socket<TCP, SocketService>;
-    SendQueue() =default;
-    SendQueue(const SendQueue&) =delete;
-    SendQueue& operator=(const SendQueue&) =delete;
+  using TCP           = boost::asio::ip::tcp;
+  using SocketService = boost::asio::stream_socket_service<TCP>;
+  using Socket        = boost::asio::basic_stream_socket<TCP, SocketService>;
 
-    void dispatch(std::shared_ptr<Socket> sock, boost::asio::const_buffers_1 data, std::function<void()> callback);
-    ~SendQueue();
+  SocketSendQueue() = default;
+  ~SocketSendQueue();
 
-  private:
-    logging::Logger _log{"com::SendQueue"};
+  SocketSendQueue(SocketSendQueue const &) =delete;
+  SocketSendQueue& operator=(SocketSendQueue const &) =delete;
 
-    void process();
+  /// Put data in the queue, start processing the queue.
+  void dispatch(std::shared_ptr<Socket> sock, boost::asio::const_buffers_1 data, std::function<void()> callback);
 
-    struct SendItem
-    {
-      std::shared_ptr<Socket> sock;
-      boost::asio::const_buffers_1 data;
-      std::function<void()> callback;
-    };
+private:
+  logging::Logger _log{"com::SocketSendQueue"};
 
-    std::deque<SendItem> _itemQueue;
-    std::mutex _sendMutex;
-    bool _ready = true;
+  /// This method can be called arbitrarily many times, but enough times to ensure the queue makes progress.
+  void process();
+
+  struct SendItem
+  {
+    std::shared_ptr<Socket> sock;
+    boost::asio::const_buffers_1 data;
+    std::function<void()> callback;
+  };
+
+  std::deque<SendItem> _itemQueue;
+  std::mutex _sendMutex;
+  bool _ready = true;
 };
 
 }}

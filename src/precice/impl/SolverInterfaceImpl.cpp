@@ -26,6 +26,7 @@
 #include "utils/Parallel.hpp"
 #include "utils/Petsc.hpp"
 #include "utils/MasterSlave.hpp"
+#include "utils/EigenHelperFunctions.hpp"
 #include "mapping/Mapping.hpp"
 #include <Eigen/Core>
 #include "partition/ReceivedPartition.hpp"
@@ -649,14 +650,12 @@ int SolverInterfaceImpl:: setMeshVertex
   const double* position )
 {
   TRACE(meshID);
-  Eigen::VectorXd internalPosition(_dimensions);
-  for ( int dim=0; dim < _dimensions; dim++ ){
-    internalPosition[dim] = position[dim];
-  }
+  Eigen::VectorXd internalPosition{
+      Eigen::Map<const Eigen::VectorXd>{position, _dimensions}};
   DEBUG("Position = " << internalPosition);
   int index = -1;
   if ( _clientMode ){
-    index = _requestManager->requestSetMeshVertex ( meshID, internalPosition );
+    index = _requestManager->requestSetMeshVertex ( meshID, internalPosition);
   }
   else {
     PRECICE_REQUIRE_MESH_MODIFY(meshID);
@@ -671,10 +670,10 @@ int SolverInterfaceImpl:: setMeshVertex
 
 void SolverInterfaceImpl:: setMeshVertices
 (
-  int     meshID,
-  int     size,
-  double* positions,
-  int*    ids )
+  int           meshID,
+  int           size,
+  const double* positions,
+  int*          ids )
 {
   TRACE(meshID, size);
   if (_clientMode){
@@ -684,13 +683,12 @@ void SolverInterfaceImpl:: setMeshVertices
     PRECICE_REQUIRE_MESH_MODIFY(meshID);
     MeshContext& context = _accessor->meshContext(meshID);
     mesh::PtrMesh mesh(context.mesh);
-    Eigen::VectorXd internalPosition(_dimensions);
     DEBUG("Set positions");
-    for (int i=0; i < size; i++){
-      for (int dim=0; dim < _dimensions; dim++){
-        internalPosition[dim] = positions[i*_dimensions + dim];
-      }
-      ids[i] = mesh->createVertex(internalPosition).getID();
+    const Eigen::Map<const Eigen::MatrixXd> posMatrix{
+        positions, _dimensions, static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(size)};
+    for (int i=0; i < size; ++i){
+      Eigen::VectorXd current(posMatrix.col(i));
+      ids[i] = mesh->createVertex(current).getID();
     }
     mesh->allocateDataValues();
   }
@@ -698,10 +696,10 @@ void SolverInterfaceImpl:: setMeshVertices
 
 void SolverInterfaceImpl:: getMeshVertices
 (
-  int     meshID,
-  size_t  size,
-  int*    ids,
-  double* positions )
+  int        meshID,
+  size_t     size,
+  const int* ids,
+  double*    positions )
 {
   TRACE(meshID, size);
   if (_clientMode){
@@ -711,25 +709,24 @@ void SolverInterfaceImpl:: getMeshVertices
     PRECICE_REQUIRE_MESH_USE(meshID);
     MeshContext& context = _accessor->meshContext(meshID);
     mesh::PtrMesh mesh(context.mesh);
-    Eigen::VectorXd internalPosition(_dimensions);
     DEBUG("Get positions");
-    assertion(mesh->vertices().size() <= size, mesh->vertices().size(), size);
+    auto & vertices = mesh->vertices();
+    assertion(vertices.size() <= size, vertices.size(), size);
+    Eigen::Map<Eigen::MatrixXd> posMatrix{
+        positions, _dimensions, static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(size)};
     for (size_t i=0; i < size; i++){
-      size_t id = ids[i];
-      assertion(id < mesh->vertices().size(), mesh->vertices().size(), id);
-      internalPosition = mesh->vertices()[id].getCoords();
-      for (int dim=0; dim < _dimensions; dim++){
-        positions[id*_dimensions + dim] = internalPosition[dim];
-      }
+      const size_t id = ids[i];
+      assertion(id < vertices.size(), vertices.size(), id);
+      posMatrix.col(i) = vertices[id].getCoords();
     }
   }
 }
 
 void SolverInterfaceImpl:: getMeshVertexIDsFromPositions (
-  int     meshID,
-  size_t  size,
-  double* positions,
-  int*    ids )
+  int           meshID,
+  size_t        size,
+  const double* positions,
+  int*          ids )
 {
   TRACE(meshID, size);
   if (_clientMode){
@@ -740,22 +737,20 @@ void SolverInterfaceImpl:: getMeshVertexIDsFromPositions (
     MeshContext& context = _accessor->meshContext(meshID);
     mesh::PtrMesh mesh(context.mesh);
     DEBUG("Get IDs");
-    Eigen::VectorXd internalPosition(_dimensions);
-    Eigen::VectorXd position(_dimensions);
-    assertion(mesh->vertices().size() <= size, mesh->vertices().size(), size);
-    for (size_t i=0; i < size; i++){
-      for (int dim=0; dim < _dimensions; dim++){
-        position[dim] = positions[i*_dimensions+dim];
-      }
+    const auto &vertices = mesh->vertices();
+    assertion(vertices.size() <= size, vertices.size(), size);
+    Eigen::Map<const Eigen::MatrixXd> posMatrix{
+        positions, _dimensions, static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(size)};
+    const auto vsize = vertices.size();
+    for (size_t i = 0; i < size; i++) {
       size_t j=0;
-      for (j=0; j < mesh->vertices().size(); j++){
-        internalPosition = mesh->vertices()[j].getCoords();
-        if (math::equals(internalPosition, position)){
-          ids[i] = j;
-          break;
-        }
+      for (; j < vsize; j++) {
+          if(math::equals(posMatrix.col(i), vertices[j].getCoords())) {
+              break;
+          }
       }
-      CHECK(j < mesh->vertices().size(), "Position " << i << "=" << position << " unknown!");
+      CHECK(j != vsize, "Position " << i << "=" << ids[i] << " unknown!");
+      ids[i] = j;
     }
   }
 }
@@ -778,12 +773,8 @@ int SolverInterfaceImpl:: setMeshEdge
     if ( context.meshRequirement == mapping::Mapping::MeshRequirement::FULL ){
       DEBUG("Full mesh required.");
       mesh::PtrMesh& mesh = context.mesh;
-      assertion(firstVertexID >= 0, firstVertexID);
-      assertion(secondVertexID >= 0, secondVertexID);
-      assertion(firstVertexID < (int)mesh->vertices().size(),
-                 firstVertexID, mesh->vertices().size());
-      assertion(secondVertexID < (int)mesh->vertices().size(),
-                 secondVertexID, mesh->vertices().size());
+      CHECK(mesh->isValidVertexID(firstVertexID),  " Given VertexID is invalid!");
+      CHECK(mesh->isValidVertexID(secondVertexID), " Given VertexID is invalid!");
       mesh::Vertex& v0 = mesh->vertices()[firstVertexID];
       mesh::Vertex& v1 = mesh->vertices()[secondVertexID];
       return mesh->createEdge(v0, v1).getID ();
@@ -809,12 +800,9 @@ void SolverInterfaceImpl:: setMeshTriangle
     MeshContext& context = _accessor->meshContext(meshID);
     if ( context.meshRequirement == mapping::Mapping::MeshRequirement::FULL ){
       mesh::PtrMesh& mesh = context.mesh;
-      assertion ( firstEdgeID >= 0 );
-      assertion ( secondEdgeID >= 0 );
-      assertion ( thirdEdgeID >= 0 );
-      assertion ( (int)mesh->edges().size() > firstEdgeID );
-      assertion ( (int)mesh->edges().size() > secondEdgeID );
-      assertion ( (int)mesh->edges().size() > thirdEdgeID );
+      CHECK(mesh->isValidEdgeID(firstEdgeID),  " Given EdgeID is invalid!");
+      CHECK(mesh->isValidEdgeID(secondEdgeID), " Given EdgeID is invalid!");
+      CHECK(mesh->isValidEdgeID(thirdEdgeID),  " Given EdgeID is invalid!");
       mesh::Edge& e0 = mesh->edges()[firstEdgeID];
       mesh::Edge& e1 = mesh->edges()[secondEdgeID];
       mesh::Edge& e2 = mesh->edges()[thirdEdgeID];
@@ -843,76 +831,17 @@ void SolverInterfaceImpl:: setMeshTriangleWithEdges
   MeshContext& context = _accessor->meshContext(meshID);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL){
     mesh::PtrMesh& mesh = context.mesh;
-    assertion(firstVertexID >= 0, firstVertexID);
-    assertion(secondVertexID >= 0, secondVertexID);
-    assertion(thirdVertexID >= 0, thirdVertexID);
-    assertion((int)mesh->vertices().size() > firstVertexID,
-                mesh->vertices().size(), firstVertexID);
-    assertion((int)mesh->vertices().size() > secondVertexID,
-                mesh->vertices().size(), secondVertexID);
-    assertion((int)mesh->vertices().size() > thirdVertexID,
-                 mesh->vertices().size(), thirdVertexID);
+    CHECK(mesh->isValidVertexID(firstVertexID),  " Given VertexID is invalid!");
+    CHECK(mesh->isValidVertexID(secondVertexID), " Given VertexID is invalid!");
+    CHECK(mesh->isValidVertexID(thirdVertexID),  " Given VertexID is invalid!");
     mesh::Vertex* vertices[3];
     vertices[0] = &mesh->vertices()[firstVertexID];
     vertices[1] = &mesh->vertices()[secondVertexID];
     vertices[2] = &mesh->vertices()[thirdVertexID];
     mesh::Edge* edges[3];
-    edges[0] = nullptr;
-    edges[1] = nullptr;
-    edges[2] = nullptr;
-    for (mesh::Edge& edge : mesh->edges()) {
-      // Check edge 0
-      bool foundEdge = edge.vertex(0).getID() == vertices[0]->getID();
-      foundEdge &= edge.vertex(1).getID() == vertices[1]->getID();
-      if (foundEdge){
-        edges[0] = &edge;
-        continue;
-      }
-      foundEdge = edge.vertex(0).getID() == vertices[1]->getID();
-      foundEdge &= edge.vertex(1).getID() == vertices[0]->getID();
-      if (foundEdge){
-        edges[0] = &edge;
-        continue;
-      }
-
-      // Check edge 1
-      foundEdge = edge.vertex(0).getID() == vertices[1]->getID();
-      foundEdge &= edge.vertex(1).getID() == vertices[2]->getID();
-      if (foundEdge){
-        edges[1] = &edge;
-        continue;
-      }
-      foundEdge = edge.vertex(0).getID() == vertices[2]->getID();
-      foundEdge &= edge.vertex(1).getID() == vertices[1]->getID();
-      if (foundEdge){
-        edges[1] = &edge;
-        continue;
-      }
-
-      // Check edge 2
-      foundEdge = edge.vertex(0).getID() == vertices[2]->getID();
-      foundEdge &= edge.vertex(1).getID() == vertices[0]->getID();
-      if (foundEdge){
-        edges[2] = &edge;
-        continue;
-      }
-      foundEdge = edge.vertex(0).getID() == vertices[0]->getID();
-      foundEdge &= edge.vertex(1).getID() == vertices[2]->getID();
-      if (foundEdge){
-        edges[2] = &edge;
-        continue;
-      }
-    }
-    // Create missing edges
-    if (edges[0] == nullptr){
-      edges[0] = & mesh->createEdge(*vertices[0], *vertices[1]);
-    }
-    if (edges[1] == nullptr){
-      edges[1] = & mesh->createEdge(*vertices[1], *vertices[2]);
-    }
-    if (edges[2] == nullptr){
-      edges[2] = & mesh->createEdge(*vertices[2], *vertices[0]);
-    }
+    edges[0] = & mesh->createUniqueEdge(*vertices[0], *vertices[1]);
+    edges[1] = & mesh->createUniqueEdge(*vertices[1], *vertices[2]);
+    edges[2] = & mesh->createUniqueEdge(*vertices[2], *vertices[0]);
 
     mesh->createTriangle(*edges[0], *edges[1], *edges[2]);
   }
@@ -937,14 +866,10 @@ void SolverInterfaceImpl:: setMeshQuad
     MeshContext& context = _accessor->meshContext(meshID);
     if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL){
       mesh::PtrMesh& mesh = context.mesh;
-      assertion(firstEdgeID >= 0);
-      assertion(secondEdgeID >= 0);
-      assertion(thirdEdgeID >= 0);
-      assertion(fourthEdgeID >= 0);
-      assertion((int)mesh->edges().size() > firstEdgeID);
-      assertion((int)mesh->edges().size() > secondEdgeID);
-      assertion((int)mesh->edges().size() > thirdEdgeID);
-      assertion((int)mesh->quads().size() > fourthEdgeID);
+      CHECK(mesh->isValidEdgeID(firstEdgeID),  " Given EdgeID is invalid!");
+      CHECK(mesh->isValidEdgeID(secondEdgeID), " Given EdgeID is invalid!");
+      CHECK(mesh->isValidEdgeID(thirdEdgeID),  " Given EdgeID is invalid!");
+      CHECK(mesh->isValidEdgeID(fourthEdgeID), " Given EdgeID is invalid!");
       mesh::Edge& e0 = mesh->edges()[firstEdgeID];
       mesh::Edge& e1 = mesh->edges()[secondEdgeID];
       mesh::Edge& e2 = mesh->edges()[thirdEdgeID];
@@ -973,98 +898,20 @@ void SolverInterfaceImpl:: setMeshQuadWithEdges
   MeshContext& context = _accessor->meshContext(meshID);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL){
     mesh::PtrMesh& mesh = context.mesh;
-    assertion(firstVertexID >= 0, firstVertexID);
-    assertion(secondVertexID >= 0, secondVertexID);
-    assertion(thirdVertexID >= 0, thirdVertexID);
-    assertion(fourthVertexID >= 0, fourthVertexID);
-    assertion((int)mesh->vertices().size() > firstVertexID,
-                 mesh->vertices().size(), firstVertexID);
-    assertion((int)mesh->vertices().size() > secondVertexID,
-                 mesh->vertices().size(), secondVertexID);
-    assertion((int)mesh->vertices().size() > thirdVertexID,
-                 mesh->vertices().size(), thirdVertexID);
-    assertion((int)mesh->vertices().size() > fourthVertexID,
-                 mesh->vertices().size(), fourthVertexID);
+    CHECK(mesh->isValidVertexID(firstVertexID),  " Given VertexID is invalid!");
+    CHECK(mesh->isValidVertexID(secondVertexID), " Given VertexID is invalid!");
+    CHECK(mesh->isValidVertexID(thirdVertexID),  " Given VertexID is invalid!");
+    CHECK(mesh->isValidVertexID(fourthVertexID), " Given VertexID is invalid!");
     mesh::Vertex* vertices[4];
     vertices[0] = &mesh->vertices()[firstVertexID];
     vertices[1] = &mesh->vertices()[secondVertexID];
     vertices[2] = &mesh->vertices()[thirdVertexID];
     vertices[3] = &mesh->vertices()[fourthVertexID];
     mesh::Edge* edges[4];
-    edges[0] = nullptr;
-    edges[1] = nullptr;
-    edges[2] = nullptr;
-    edges[3] = nullptr;
-    for (mesh::Edge& edge : mesh->edges()) {
-      // Check edge 0
-      bool foundEdge = edge.vertex(0).getID() == vertices[0]->getID();
-      foundEdge &= edge.vertex(1).getID() == vertices[1]->getID();
-      if ( foundEdge ){
-        edges[0] = &edge;
-        continue;
-      }
-      foundEdge = edge.vertex(0).getID() == vertices[1]->getID();
-      foundEdge &= edge.vertex(1).getID() == vertices[0]->getID();
-      if (foundEdge){
-        edges[0] = &edge;
-        continue;
-      }
-
-      // Check edge 1
-      foundEdge = edge.vertex(0).getID() == vertices[1]->getID();
-      foundEdge &= edge.vertex(1).getID() == vertices[2]->getID();
-      if ( foundEdge ){
-        edges[1] = &edge;
-        continue;
-      }
-      foundEdge = edge.vertex(0).getID() == vertices[2]->getID();
-      foundEdge &= edge.vertex(1).getID() == vertices[1]->getID();
-      if ( foundEdge ){
-        edges[1] = &edge;
-        continue;
-      }
-
-      // Check edge 2
-      foundEdge = edge.vertex(0).getID() == vertices[2]->getID();
-      foundEdge &= edge.vertex(1).getID() == vertices[3]->getID();
-      if ( foundEdge ){
-        edges[2] = &edge;
-        continue;
-      }
-      foundEdge = edge.vertex(0).getID() == vertices[3]->getID();
-      foundEdge &= edge.vertex(1).getID() == vertices[2]->getID();
-      if ( foundEdge ){
-        edges[2] = &edge;
-        continue;
-      }
-
-      // Check edge 3
-      foundEdge = edge.vertex(0).getID() == vertices[3]->getID();
-      foundEdge &= edge.vertex(1).getID() == vertices[0]->getID();
-      if ( foundEdge ){
-        edges[3] = &edge;
-        continue;
-      }
-      foundEdge = edge.vertex(0).getID() == vertices[0]->getID();
-      foundEdge &= edge.vertex(1).getID() == vertices[3]->getID();
-      if ( foundEdge ){
-        edges[3] = &edge;
-        continue;
-      }
-    }
-    // Create missing edges
-    if (edges[0] == nullptr){
-      edges[0] = & mesh->createEdge(*vertices[0], *vertices[1]);
-    }
-    if (edges[1] == nullptr){
-      edges[1] = & mesh->createEdge(*vertices[1], *vertices[2]);
-    }
-    if (edges[2] == nullptr){
-      edges[2] = & mesh->createEdge(*vertices[2], *vertices[3]);
-    }
-    if (edges[3] == nullptr){
-      edges[3] = & mesh->createEdge(*vertices[3], *vertices[0]);
-    }
+    edges[0] = & mesh->createUniqueEdge(*vertices[0], *vertices[1]);
+    edges[1] = & mesh->createUniqueEdge(*vertices[1], *vertices[2]);
+    edges[2] = & mesh->createUniqueEdge(*vertices[2], *vertices[3]);
+    edges[3] = & mesh->createUniqueEdge(*vertices[3], *vertices[0]);
 
     mesh->createQuad(*edges[0], *edges[1], *edges[2], *edges[3]);
   }
@@ -1096,7 +943,6 @@ void SolverInterfaceImpl:: mapWriteDataFrom
       int inDataID = context.fromData->getID();
       int outDataID = context.toData->getID();
       context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
-      //assign(context.toData->values()) = 0.0;
       DEBUG("Map data \"" << context.fromData->getName()
                    << "\" from mesh \"" << context.mesh->getName() << "\"");
       assertion(mappingContext.mapping==context.mappingContext.mapping);
@@ -1133,19 +979,11 @@ void SolverInterfaceImpl:: mapReadDataTo
       int inDataID = context.fromData->getID();
       int outDataID = context.toData->getID();
       context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
-      //assign(context.toData->values()) = 0.0;
       DEBUG("Map data \"" << context.fromData->getName()
                    << "\" to mesh \"" << context.mesh->getName() << "\"");
       assertion(mappingContext.mapping==context.mappingContext.mapping);
       mappingContext.mapping->map(inDataID, outDataID);
-#     ifndef NDEBUG
-      int max = context.toData->values().size();
-      std::ostringstream stream;
-      for (int i=0; (i < max) && (i < 10); i++){
-        stream << context.toData->values()[i] << " ";
-      }
-      DEBUG("First mapped values = " << stream.str());
-#     endif
+      DEBUG("First mapped values = " << utils::firstN(context.toData->values(), 10));
     }
   }
   mappingContext.hasMappedData = true;
@@ -1153,10 +991,10 @@ void SolverInterfaceImpl:: mapReadDataTo
 
 void SolverInterfaceImpl:: writeBlockVectorData
 (
-  int     fromDataID,
-  int     size,
-  int*    valueIndices,
-  double* values )
+  int           fromDataID,
+  int           size,
+  const int*    valueIndices,
+  const double* values )
 {
   TRACE(fromDataID, size);
   PRECICE_VALIDATE_DATA_ID(fromDataID);
@@ -1194,17 +1032,10 @@ void SolverInterfaceImpl:: writeVectorData
 {
   TRACE(fromDataID, valueIndex );
   PRECICE_VALIDATE_DATA_ID(fromDataID);
-# ifndef NDEBUG
-  if (_dimensions == 2) DEBUG("value = " << Eigen::Map<const Eigen::Vector2d>(value));
-  if (_dimensions == 3) DEBUG("value = " << Eigen::Map<const Eigen::Vector3d>(value));
-# endif
+  DEBUG("value = " << Eigen::Map<const Eigen::VectorXd>(value, _dimensions));
   CHECK(valueIndex >= -1, "Invalid value index (" << valueIndex << ") when writing vector data!" );
   if (_clientMode){
-    Eigen::VectorXd valueCopy(_dimensions);
-    for (int dim=0; dim < _dimensions; dim++){
-      valueCopy[dim] = value[dim];
-    }
-    _requestManager->requestWriteVectorData(fromDataID, valueIndex, valueCopy.data());
+    _requestManager->requestWriteVectorData(fromDataID, valueIndex, value);
   }
   else {
     PRECICE_REQUIRE_DATA_WRITE(fromDataID);
@@ -1224,10 +1055,10 @@ void SolverInterfaceImpl:: writeVectorData
 
 void SolverInterfaceImpl:: writeBlockScalarData
 (
-  int     fromDataID,
-  int     size,
-  int*    valueIndices,
-  double* values )
+  int           fromDataID,
+  int           size,
+  const int*    valueIndices,
+  const double* values )
 {
   TRACE(fromDataID, size);
   PRECICE_VALIDATE_DATA_ID(fromDataID);
@@ -1256,7 +1087,7 @@ void SolverInterfaceImpl:: writeScalarData
 (
   int    fromDataID,
   int    valueIndex,
-  double value )
+  double value)
 {
   TRACE(fromDataID, valueIndex, value );
   PRECICE_VALIDATE_DATA_ID(fromDataID);
@@ -1279,10 +1110,10 @@ void SolverInterfaceImpl:: writeScalarData
 
 void SolverInterfaceImpl:: readBlockVectorData
 (
-  int     toDataID,
-  int     size,
-  int*    valueIndices,
-  double* values )
+  int        toDataID,
+  int        size,
+  const int* valueIndices,
+  double*    values )
 {
   TRACE(toDataID, size);
   PRECICE_VALIDATE_DATA_ID(toDataID);
@@ -1338,18 +1169,15 @@ void SolverInterfaceImpl:: readVectorData
     }
 
   }
-# ifndef NDEBUG
-  if (_dimensions == 2) DEBUG("read value = " << Eigen::Map<const Eigen::Vector2d>(value));
-  if (_dimensions == 3) DEBUG("read value = " << Eigen::Map<const Eigen::Vector3d>(value));
-# endif
+  DEBUG("read value = " << Eigen::Map<const Eigen::VectorXd>(value, _dimensions));
 }
 
 void SolverInterfaceImpl:: readBlockScalarData
 (
-  int     toDataID,
-  int     size,
-  int*    valueIndices,
-  double* values )
+  int        toDataID,
+  int        size,
+  const int* valueIndices,
+  double*    values )
 {
   TRACE(toDataID, size);
   PRECICE_VALIDATE_DATA_ID(toDataID);
@@ -1542,32 +1370,25 @@ void SolverInterfaceImpl:: computePartitions()
   //We need to do this in two loops: First, communicate the mesh and later compute the partition.
   //Originally, this was done in one loop. This however gave deadlock if two meshes needed to be communicated cross-wise.
   //Both loops need a different sorting
+  auto &contexts = _accessor->usedMeshContexts();
 
   // sort meshContexts by name, for communication in right order.
-  std::sort (_accessor->usedMeshContexts().begin(), _accessor->usedMeshContexts().end(),
-      []( MeshContext* lhs, const MeshContext* rhs) -> bool
-      {
-        return lhs->mesh->getName() < rhs->mesh->getName();
-      } );
+  std::sort(contexts.begin(), contexts.end(),
+            [](MeshContext const *const lhs, MeshContext const *const rhs) -> bool {
+              return lhs->mesh->getName() < rhs->mesh->getName();
+            });
 
-  for (MeshContext* meshContext : _accessor->usedMeshContexts()){
+  for (MeshContext *meshContext : contexts) {
     meshContext->partition->communicate();
   }
 
-  // now sort provided meshes up front, to have them ready for the decomposition
-  std::sort (_accessor->usedMeshContexts().begin(), _accessor->usedMeshContexts().end(),
-      []( MeshContext* lhs, const MeshContext* rhs) -> bool
-      {
-        if(lhs->provideMesh && not rhs->provideMesh){
-          return true;
-        }
-        if(not lhs->provideMesh && rhs->provideMesh){
-          return false;
-        }
-        return lhs->mesh->getName() < rhs->mesh->getName();
-      } );
+  // pull provided meshes up front, to have them ready for the decomposition
+  std::stable_partition(contexts.begin(), contexts.end(),
+                        [](MeshContext const *const meshContext) -> bool {
+                          return meshContext->provideMesh;
+                        });
 
-  for (MeshContext* meshContext : _accessor->usedMeshContexts()){
+  for (MeshContext *meshContext : contexts) {
     meshContext->partition->compute();
     meshContext->mesh->computeState();
     meshContext->mesh->allocateDataValues();
@@ -1610,17 +1431,9 @@ void SolverInterfaceImpl:: mapWrittenData()
       DEBUG("Map data \"" << context.fromData->getName()
                    << "\" from mesh \"" << context.mesh->getName() << "\"");
       context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
-      //assign(context.toData->values()) = 0.0;
       DEBUG("Map from dataID " << inDataID << " to dataID: " << outDataID);
       context.mappingContext.mapping->map(inDataID, outDataID);
-#     ifndef NDEBUG
-      int max = context.toData->values().size();
-      std::ostringstream stream;
-      for (int i=0; (i < max) && (i < 10); i++){
-        stream << context.toData->values()[i] << " ";
-      }
-      DEBUG("First mapped values = " << stream.str() );
-#     endif
+      DEBUG("First mapped values = " << utils::firstN(context.toData->values(), 10));
     }
   }
 
@@ -1667,18 +1480,10 @@ void SolverInterfaceImpl:: mapReadData()
       int inDataID = context.fromData->getID();
       int outDataID = context.toData->getID();
       context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
-      //assign(context.toData->values()) = 0.0;
       DEBUG("Map read data \"" << context.fromData->getName()
                    << "\" to mesh \"" << context.mesh->getName() << "\"");
       context.mappingContext.mapping->map(inDataID, outDataID);
-#     ifndef NDEBUG
-      int max = context.toData->values().size();
-      std::ostringstream stream;
-      for (int i=0; (i < max) && (i < 10); i++){
-        stream << context.toData->values()[i] << " ";
-      }
-      DEBUG("First mapped values = " << stream.str());
-#     endif
+      DEBUG("First mapped values = " << utils::firstN(context.toData->values(), 10));
     }
   }
 
@@ -1750,10 +1555,8 @@ void SolverInterfaceImpl:: resetWrittenData()
   TRACE();
   for (DataContext& context : _accessor->writeDataContexts()) {
     context.fromData->values() = Eigen::VectorXd::Zero(context.fromData->values().size());
-    //assign(context.fromData->values()) = 0.0;
     if (context.toData != context.fromData){
       context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
-      //assign(context.toData->values()) = 0.0;
     }
   }
 }

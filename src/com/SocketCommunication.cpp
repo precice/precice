@@ -357,10 +357,10 @@ PtrRequest SocketCommunication::aSend(const int *itemsToSend, int size, int rank
   PtrRequest request(new SocketRequest);
 
   _queue.dispatch(_sockets[rankReceiver],
-              asio::buffer(itemsToSend, size * sizeof(int)),
-                [request] {
-                  std::static_pointer_cast<SocketRequest>(request)->complete();
-                });
+                  asio::buffer(itemsToSend, size * sizeof(int)),
+                  [request] {
+                    std::static_pointer_cast<SocketRequest>(request)->complete();
+                  });
   return request;
 }
 
@@ -392,10 +392,10 @@ PtrRequest SocketCommunication::aSend(const double *itemsToSend, int size, int r
   PtrRequest request(new SocketRequest);
 
   _queue.dispatch(_sockets[rankReceiver],
-              asio::buffer(itemsToSend, size * sizeof(double)),
-                [request] {
-                  std::static_pointer_cast<SocketRequest>(request)->complete();
-                });
+                  asio::buffer(itemsToSend, size * sizeof(double)),
+                  [request] {
+                    std::static_pointer_cast<SocketRequest>(request)->complete();
+                  });
   return request;
 }
 
@@ -411,10 +411,10 @@ PtrRequest SocketCommunication::aSend(std::vector<double> const & itemsToSend, i
   PtrRequest request(new SocketRequest);
 
   _queue.dispatch(_sockets[rankReceiver],
-              asio::buffer(itemsToSend),
-                [request] {
-                  std::static_pointer_cast<SocketRequest>(request)->complete();
-                });
+                  asio::buffer(itemsToSend),
+                  [request] {
+                    std::static_pointer_cast<SocketRequest>(request)->complete();
+                  });
   return request;
 }
 

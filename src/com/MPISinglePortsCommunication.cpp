@@ -4,6 +4,7 @@
 #include "ConnectionInfoPublisher.hpp"
 #include "utils/assertion.hpp"
 #include "utils/Parallel.hpp"
+#include "utils/MasterSlave.hpp"
 
 namespace precice
 {

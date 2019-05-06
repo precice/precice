@@ -281,25 +281,6 @@ MappingConfiguration:: mappings()
   return _mappings;
 }
 
-void MappingConfiguration::addMapping
-(
-  const PtrMapping&    mapping,
-  const mesh::PtrMesh& fromMesh,
-  const mesh::PtrMesh& toMesh,
-  Direction            direction,
-  Timing               timing )
-{
-  TRACE(fromMesh, direction, timing);
-  ConfiguredMapping configuredMapping;
-  configuredMapping.mapping = mapping;
-  configuredMapping.fromMesh = fromMesh;
-  configuredMapping.toMesh = toMesh;
-  configuredMapping.direction = direction;
-  configuredMapping.timing = timing;
-  checkDuplicates ( configuredMapping );
-  _mappings.push_back ( configuredMapping );
-}
-
 MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping
 (
   const std::string& direction,

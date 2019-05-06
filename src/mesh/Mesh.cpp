@@ -8,6 +8,8 @@
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 #include "RTree.hpp"
+#include <array>
+#include <algorithm>
 
 namespace precice {
 namespace mesh {
@@ -123,6 +125,26 @@ Edge& Mesh:: createEdge
   newEdge->addParent(*this);
   _content.add(newEdge);
   return *newEdge;
+}
+
+Edge& Mesh::createUniqueEdge
+(
+    Vertex& vertexOne,
+    Vertex& vertexTwo
+)
+{ 
+    const std::array<int, 2> vids{vertexOne.getID(), vertexTwo.getID()};
+    const auto eend = edges().end();
+    auto pos = std::find_if(edges().begin(), eend,
+            [&vids](const Edge& e) -> bool {
+                const std::array<int, 2> eids{e.vertex(0).getID(), e.vertex(1).getID()};
+                return std::is_permutation(vids.begin(), vids.end(), eids.begin());
+            });
+    if (pos != eend) {
+        return *pos;
+    } else {
+        return createEdge(vertexOne, vertexTwo);
+    }
 }
 
 Triangle& Mesh:: createTriangle
@@ -261,6 +283,16 @@ int Mesh:: getID() const
   std::map<std::string,int>::const_iterator iter = _nameIDPairs.find(_name);
   assertion(iter != _nameIDPairs.end());
   return iter->second;
+}
+
+bool Mesh::isValidVertexID(int vertexID) const
+{
+    return (0 <= vertexID) && (static_cast<size_t>(vertexID) < vertices().size());
+}
+
+bool Mesh::isValidEdgeID(int edgeID) const
+{
+    return (0 <= edgeID) && (static_cast<size_t>(edgeID) < edges().size());
 }
 
 void Mesh:: allocateDataValues()
