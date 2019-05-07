@@ -438,15 +438,6 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
   printLocalIndexCountStats(communicationMap);
 #endif
 
-#ifdef SuperMUC_WORK
-  try {
-    auto addressDirectory = _communicationFactory->addressDirectory();
-
-    utils::Parallel::synchronizeProcesses();
-  } catch (...) {
-  }
-#endif
-
   Event e4("m2n.createCommunications");
   e4.addData("Connections", communicationMap.size());
   if (communicationMap.empty()) {
