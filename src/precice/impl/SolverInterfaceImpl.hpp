@@ -237,7 +237,7 @@ public:
    * @brief Gets spatial positions of vertices for given IDs.
    *
    * @param[in] ids IDs obtained when setting write positions.
-   * @param[in] positions Positions corresponding to IDs.
+   * @param[out] positions Positions corresponding to IDs.
    */
   void getMeshVertices (
     int        meshID,
