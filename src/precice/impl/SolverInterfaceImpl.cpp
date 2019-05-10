@@ -64,7 +64,8 @@ SolverInterfaceImpl:: SolverInterfaceImpl
   std::string participantName,
   int         accessorProcessRank,
   int         accessorCommunicatorSize,
-  bool        serverMode )
+  bool        serverMode,
+  void*       communicator)
 :
   _accessorName(std::move(participantName)),
   _accessorProcessRank(accessorProcessRank),
@@ -89,8 +90,27 @@ SolverInterfaceImpl:: SolverInterfaceImpl
   signal(SIGXCPU, precice::utils::terminationSignalHandler);
   // signal(SIGINT,  precice::utils::terminationSignalHandler);
 
+  // Set the global communicator to the passed communicator.
+  // This is a noop if preCICE is not configured with MPI.
+  // nullpointer signals to use MPI_COMM_WORLD
+  #ifndef PRECICE_NO_MPI
+  if (communicator != nullptr) {
+      auto commptr = static_cast<utils::Parallel::Communicator*>(communicator);
+      utils::Parallel::setGlobalCommunicator(*commptr);
+  }
+  #endif
+
   logging::setParticipant(_accessorName);
 }
+
+SolverInterfaceImpl:: SolverInterfaceImpl
+(
+  std::string participantName,
+  int         accessorProcessRank,
+  int         accessorCommunicatorSize,
+  bool        serverMode )
+    : SolverInterfaceImpl::SolverInterfaceImpl(std::move(participantName), accessorProcessRank, accessorCommunicatorSize, serverMode, nullptr)
+{}
 
 void SolverInterfaceImpl:: configure
 (
