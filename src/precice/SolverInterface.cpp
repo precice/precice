@@ -1,5 +1,6 @@
 #include "precice/SolverInterface.hpp"
 #include "precice/impl/SolverInterfaceImpl.hpp"
+#include "versions.hpp"
 
 namespace precice {
 
@@ -329,5 +330,15 @@ MeshHandle SolverInterface:: getMeshHandle
 {
   return _impl->getMeshHandle ( meshName );
 }
+
+SolverInterface::Version SolverInterface::getVersion()
+{
+    return {
+        PRECICE_VERSION_MAJOR,
+        PRECICE_VERSION_MINOR,
+        PRECICE_VERSION_PATCH
+    };
+}
+
 
 } // namespace precice

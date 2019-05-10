@@ -54,6 +54,7 @@ target_sources(testprecice
     src/partition/tests/ProvidedPartitionTest.cpp
     src/partition/tests/ReceivedPartitionTest.cpp
     src/precice/tests/MeshHandleTest.cpp
+    src/precice/tests/MiscellaneousTests.cpp
     src/precice/tests/ParallelTests.cpp
     src/precice/tests/SerialTests.cpp
     src/precice/tests/ServerTests.cpp

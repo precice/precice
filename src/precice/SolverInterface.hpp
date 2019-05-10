@@ -787,6 +787,19 @@ public:
     double& value );
 
   ///@}
+  
+  ///@name Miscellaneous
+  ///@{
+  /// Holds the major, minor and patch components of a version
+  struct Version {
+      int major;
+      int minor;
+      int patch;
+  };
+  
+  /// Returns the version of preCICE
+  static Version getVersion();
+  ///@}
 
 private:
 
