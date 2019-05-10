@@ -244,15 +244,14 @@ cdef class Interface:
 
     def read_block_vector_data (self, data_id, size, value_indices, values):
         cdef np.ndarray[np.int_t] value_indices_ = np.array(value_indices, dtype=np.int)
-        cdef np.ndarray[np.double_t] values_ = np.array(values, dtype=np.double)
+        cdef np.ndarray[np.double_t] values_ = np.empty_like(values, dtype=np.double)
 
         self.thisptr.readBlockVectorData (data_id, size, <int*> value_indices_.data, <double*> values_.data)
 
-        value_indices[:] = value_indices_[:]
         values[:] = values_[:]
 
     def read_vector_data (self, data_id, value_index, value):
-        cdef np.ndarray[np.double_t] value_ = np.array(value, dtype=np.double)
+        cdef np.ndarray[np.double_t] value_ = np.empty_like(value, dtype=np.double)
 
         self.thisptr.readVectorData (data_id, value_index, <double*> value_.data)
 
@@ -260,11 +259,10 @@ cdef class Interface:
 
     def read_block_scalar_data (self, data_id, size, value_indices, values):
         cdef np.ndarray[np.int_t] value_indices_ = np.array(value_indices, dtype=np.int)
-        cdef np.ndarray[np.double_t] values_ = np.array(values, dtype=np.double)
+        cdef np.ndarray[np.double_t] values_ = np.empty_like(values, dtype=np.double)
 
         self.thisptr.readBlockScalarData (data_id, size, <int*> value_indices_.data, <double*> values_.data)
 
-        value_indices[:] = value_indices_[:]
         values[:] = values_[:]
 
     def read_scalar_data (self, int data_id, int value_index, double& value):
