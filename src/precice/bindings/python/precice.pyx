@@ -6,13 +6,8 @@ The python module precice offers python language bindings to the C++ coupling li
 import numpy as np
 cimport numpy as np
 from libcpp        cimport bool
-from libc.stdlib   cimport free
-from libc.stdlib   cimport malloc
 from libcpp.set    cimport set
-from libcpp.memory cimport shared_ptr
 from libcpp.string cimport string
-from libcpp.memory cimport unique_ptr
-from libcpp.vector cimport vector
 from mpi4py import MPI
 
 from cpython.version cimport PY_MAJOR_VERSION  # important for determining python version in order to properly normalize string input. See http://docs.cython.org/en/latest/src/tutorial/strings.html#general-notes-about-c-strings and https://github.com/precice/precice/issues/68 .
