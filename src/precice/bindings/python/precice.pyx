@@ -228,24 +228,16 @@ cdef class Interface:
 
         self.thisptr.writeBlockVectorData (data_id, size, <int*> value_indices_.data, <double*> values_.data)
 
-        value_indices[:] = value_indices_[:]
-        values[:] = values_[:]
-
     def write_vector_data (self, data_id, value_index, value):
         cdef np.ndarray[np.double_t] value_ = np.array(value, dtype=np.double)
 
         self.thisptr.writeVectorData (data_id, value_index, <double*> value_.data)
-
-        value[:] = value_[:]
 
     def write_block_scalar_data (self, data_id, size, value_indices, values):
         cdef np.ndarray[np.int_t] value_indices_ = np.array(value_indices, dtype=np.int)
         cdef np.ndarray[np.double_t] values_ = np.array(values, dtype=np.double)
 
         self.thisptr.writeBlockScalarData (data_id, size, <int*> value_indices_.data, <double*> values_.data)
-
-        value_indices[:] = value_indices_[:]
-        values[:] = values_[:]
 
     def write_scalar_data (self, data_id, value_index, value):
         self.thisptr.writeScalarData (data_id, value_index, value)
