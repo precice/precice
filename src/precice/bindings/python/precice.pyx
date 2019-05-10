@@ -3,7 +3,8 @@
 The python module precice offers python language bindings to the C++ coupling library precice. Please refer to precice.org for further information.
 """
 
-from cpython       cimport array
+import numpy as np
+cimport numpy as np
 from libcpp        cimport bool
 from libc.stdlib   cimport free
 from libc.stdlib   cimport malloc
@@ -185,58 +186,25 @@ cdef class Interface:
         return self.thisptr.getDataID (convert(data_name), mesh_id)
 
     def set_mesh_vertices (self, mesh_id, size, positions, ids):
-        cdef int* ids_
-        cdef double* positions_
-        ids_ = <int*> malloc(len(ids) * sizeof(int))
-        positions_ = <double*> malloc(len(positions) * sizeof(double))
+        cdef np.ndarray[np.int_t] ids_ = np.array(ids, dtype=np.int)
+        cdef np.ndarray[np.double_t] positions_ = np.array(positions, dtype=np.double)
 
-        if ids_ is NULL or positions_ is NULL:
-            raise MemoryError()
+        self.thisptr.setMeshVertices (mesh_id, size, <double*> positions_.data, <int*> ids_.data)
 
-        for i in xrange(len(ids)):
-            ids_[i] = ids[i]
-        for i in xrange(len(positions)):
-            positions_[i] = positions[i]
-
-        self.thisptr.setMeshVertices (mesh_id, size, positions_, ids_)
-
-        for i in xrange(len(ids)):
-            ids[i] = ids_[i]
-        for i in xrange(len(positions)):
-            positions[i] = positions_[i]
-
-        free(ids_)
-        free(positions_)
+        ids[:] = ids_[:]
+        positions[:] = positions_[:]
 
     def get_mesh_vertex_size (self, mesh_id):
         return self.thisptr.getMeshVertexSize(mesh_id)
 
     def get_mesh_vertex_ids_from_positions (self, mesh_id, size, positions, ids):
-        cdef int* ids_
-        ids_ = <int*> malloc(len(ids) * sizeof(int))
-        if ids_ is NULL or positions_ is NULL:
-            raise MemoryError()
-        for i in xrange(len(ids)):
-            ids_[i] = ids[i]
+        cdef np.ndarray[np.int_t] ids_ = np.array(ids, dtype=np.int)
+        cdef np.ndarray[np.double_t] positions_ = np.array(positions, dtype=np.double)
 
-        cdef double* positions_
-        positions_ = <double*> malloc(len(positions) * sizeof(double))
-        if ids_ is NULL or positions_ is NULL:
-            raise MemoryError()
+        self.thisptr.getMeshVertexIDsFromPositions (mesh_id, size, <double*> positions_.data, <int*> ids_.data)
 
-
-        for i in xrange(len(positions)):
-            positions_[i] = positions[i]
-
-        self.thisptr.getMeshVertexIDsFromPositions (mesh_id, size, positions_, ids_)
-
-        for i in xrange(len(ids)):
-            ids[i] = ids_[i]
-        for i in xrange(len(positions)):
-            positions[i] = positions_[i]
-
-        free(ids_)
-        free(positions_)
+        ids[:] = ids_[:]
+        positions[:] = positions_[:]
 
     def set_mesh_edge (self, mesh_id, first_vertex_id, second_vertex_id):
         return self.thisptr.setMeshEdge (mesh_id, first_vertex_id, second_vertex_id)
@@ -260,137 +228,57 @@ cdef class Interface:
         self.thisptr.mapWriteDataFrom (from_mesh_id)
 
     def write_block_vector_data (self, data_id, size, value_indices, values):
-        cdef int* value_indices_
-        cdef double* values_
-        value_indices_ = <int*> malloc(len(value_indices) * sizeof(int))
-        values_ = <double*> malloc(len(values) * sizeof(double))
+        cdef np.ndarray[np.int_t] value_indices_ = np.array(value_indices, dtype=np.int)
+        cdef np.ndarray[np.double_t] values_ = np.array(values, dtype=np.double)
 
-        if value_indices_ is NULL or values_ is NULL:
-            raise MemoryError()
+        self.thisptr.writeBlockVectorData (data_id, size, <int*> value_indices_.data, <double*> values_.data)
 
-        for i in xrange(len(value_indices)):
-            value_indices_[i] = value_indices[i]
-         for i in xrange(len(values)):
-            values_[i] = values[i]
-
-        self.thisptr.writeBlockVectorData (data_id, size, value_indices_, values_)
-
-        for i in xrange(len(value_indices)):
-            value_indices[i] = value_indices_[i]
-        for i in xrange(len(values)):
-            values[i] = values_[i]
-
-        free(value_indices_)
-        free(values_)
+        value_indices[:] = value_indices_[:]
+        values[:] = values_[:]
 
     def write_vector_data (self, data_id, value_index, value):
-        cdef double* value_
-        value_ = <double*> malloc(len(value) * sizeof(double))
+        cdef np.ndarray[np.double_t] value_ = np.array(value, dtype=np.double)
 
-        if value_ is NULL:
-            raise MemoryError()
+        self.thisptr.writeVectorData (data_id, value_index, <double*> value_.data)
 
-        for i in xrange(len(value)):
-            value_[i] = value[i]
-
-        self.thisptr.writeVectorData (data_id, value_index, value_)
-
-        for i in xrange(len(value)):
-            value[i] = value_[i]
-
-        free(value_)
+        value[:] = value_[:]
 
     def write_block_scalar_data (self, data_id, size, value_indices, values):
-        cdef int* value_indices_
-        cdef double* values_
-        value_indices_ = <int*> malloc(len(value_indices) * sizeof(int))
-        values_ = <double*> malloc(len(values) * sizeof(double))
+        cdef np.ndarray[np.int_t] value_indices_ = np.array(value_indices, dtype=np.int)
+        cdef np.ndarray[np.double_t] values_ = np.array(values, dtype=np.double)
 
-        if value_indices_ is NULL or values_ is NULL:
-            raise MemoryError()
+        self.thisptr.writeBlockScalarData (data_id, size, <int*> value_indices_.data, <double*> values_.data)
 
-        for i in xrange(len(value_indices)):
-            value_indices_[i] = value_indices[i]
-        for i in xrange(len(values)):
-            values_[i] = values[i]
-
-        self.thisptr.writeBlockScalarData (data_id, size, value_indices_, values_)
-
-        for i in xrange(len(value_indices)):
-            value_indices[i] = value_indices_[i]
-        for i in xrange(len(values)):
-            values[i] = values_[i]
-
-        free(value_indices_)
-        free(values_)
+        value_indices[:] = value_indices_[:]
+        values[:] = values_[:]
 
     def write_scalar_data (self, data_id, value_index, value):
         self.thisptr.writeScalarData (data_id, value_index, value)
 
     def read_block_vector_data (self, data_id, size, value_indices, values):
-        cdef int* value_indices_
-        cdef double* values_
-        value_indices_ = <int*> malloc(len(value_indices) * sizeof(int))
-        values_ = <double*> malloc(len(values) * sizeof(double))
+        cdef np.ndarray[np.int_t] value_indices_ = np.array(value_indices, dtype=np.int)
+        cdef np.ndarray[np.double_t] values_ = np.array(values, dtype=np.double)
 
-        if value_indices_ is NULL or values_ is NULL:
-            raise MemoryError()
+        self.thisptr.readBlockVectorData (data_id, size, <int*> value_indices_.data, <double*> values_.data)
 
-        for i in xrange(len(value_indices)):
-            value_indices_[i] = value_indices[i]
-        for i in xrange(len(values)):
-            values_[i] = values[i]
-
-        self.thisptr.readBlockVectorData (data_id, size, value_indices_, values_)
-
-        for i in xrange(len(value_indices)):
-            value_indices[i] = value_indices_[i]
-        for i in xrange(len(values)):
-            values[i] = values_[i]
-
-        free(value_indices_)
-        free(values_)
+        value_indices[:] = value_indices_[:]
+        values[:] = values_[:]
 
     def read_vector_data (self, data_id, value_index, value):
-        cdef double* value_
-        value_ = <double*> malloc(len(value) * sizeof(double))
+        cdef np.ndarray[np.double_t] value_ = np.array(value, dtype=np.double)
 
-        if value_ is NULL:
-            raise MemoryError()
+        self.thisptr.readVectorData (data_id, value_index, <double*> value_.data)
 
-        for i in xrange(len(value)):
-            value_[i] = value[i]
-
-        self.thisptr.readVectorData (data_id, value_index, value_)
-
-        for i in xrange(len(value)):
-            value[i] = value_[i]
-
-        free(value_)
+        value[:] = value_[:]
 
     def read_block_scalar_data (self, data_id, size, value_indices, values):
-        cdef int* value_indices_
-        cdef double* values_
-        value_indices_ = <int*> malloc(len(value_indices) * sizeof(int))
-        values_ = <double*> malloc(len(values) * sizeof(double))
+        cdef np.ndarray[np.int_t] value_indices_ = np.array(value_indices, dtype=np.int)
+        cdef np.ndarray[np.double_t] values_ = np.array(values, dtype=np.double)
 
-        if value_indices_ is NULL or values_ is NULL:
-            raise MemoryError()
+        self.thisptr.readBlockScalarData (data_id, size, <int*> value_indices_.data, <double*> values_.data)
 
-        for i in xrange(len(value_indices)):
-            value_indices_[i] = value_indices[i]
-        for i in xrange(len(values)):
-            values_[i] = values[i]
-  
-        self.thisptr.readBlockScalarData (data_id, size, value_indices_, values_)
-
-        for i in xrange(len(value_indices)):
-            value_indices[i] = value_indices_[i]
-        for i in xrange(len(values)):
-            values[i] = values_[i]
-
-        free(value_indices_)
-        free(values_)
+        value_indices[:] = value_indices_[:]
+        values[:] = values_[:]
 
     def read_scalar_data (self, int data_id, int value_index, double& value):
         self.thisptr.readScalarData (data_id, value_index, value)
