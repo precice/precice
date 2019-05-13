@@ -92,6 +92,10 @@ void SolverInterfaceImpl:: configure
 (
   const std::string& configurationFileName )
 {
+  mesh::Mesh::resetGeometryIDsGlobally();
+  mesh::Data::resetDataCount();
+  Participant::resetParticipantCount();
+
   config::Configuration config;
   xml::configure(config.getXMLTag(), configurationFileName);
   if(_accessorProcessRank==0){
@@ -110,9 +114,6 @@ void SolverInterfaceImpl:: configure
   Event e("configure"); // no precice::syncMode as this is not yet configured here
   utils::ScopedEventPrefix sep("configure/");
 
-  mesh::Mesh::resetGeometryIDsGlobally();
-  mesh::Data::resetDataCount();
-  Participant::resetParticipantCount();
   _meshLock.clear();
 
   _dimensions = config.getDimensions();
@@ -176,11 +177,11 @@ void SolverInterfaceImpl:: configure
   for (const auto& meshID : _meshIDs) {
       _meshLock.add(meshID.second, false);
   }
-  
+
   utils::Parallel::initializeMPI(nullptr, nullptr);
   logging::setMPIRank(utils::Parallel::getProcessRank());
   utils::EventRegistry::instance().initialize("precice-" + _accessorName, "", utils::Parallel::getGlobalCommunicator());
-  
+
   // Setup communication to server
   if (_clientMode){
     initializeClientServerCommunication();
@@ -200,7 +201,7 @@ double SolverInterfaceImpl:: initialize()
   solverInitEvent.pause(precice::syncMode);
   Event e("initialize", precice::syncMode);
   utils::ScopedEventPrefix sep("initialize/");
-  
+
   if (_clientMode){
     DEBUG("Request perform initializations");
     _requestManager->requestInitialize();
@@ -1353,7 +1354,7 @@ void SolverInterfaceImpl:: configurePartitions
       std::string receiver ( _accessorName );
       std::string provider ( context->receiveMeshFrom );
       DEBUG ( "Receiving mesh from " << provider );
-      
+
       context->partition = partition::PtrPartition(new partition::ReceivedPartition(context->mesh, context->geoFilter, context->safetyFactor));
 
       m2n::PtrM2N m2n = m2nConfig->getM2N ( receiver, provider );
