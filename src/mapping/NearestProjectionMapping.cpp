@@ -78,10 +78,14 @@ void NearestProjectionMapping:: computeMapping()
                       using query::generateInterpolationElements;
                       using mesh::Primitive;
                     const auto& nearest = pnearest.second;
+                    auto& weights = _weights[i];
                     // fill the weights
-                    _weights[i] = gen(oVertices[i], nearest);
-                    CHECK(!_weights[i].empty(),
+                    weights = gen(oVertices[i], nearest);
+                    CHECK(!weights.empty(),
                           "No interpolation elements for current vertex!");
+                    if(std::any_of(weights.begin(), weights.end(), [](const query::InterpolationElement& elem){return elem.weight < 0;})) {
+                        WARN("Mapping \"" << input()->getName() << "\" contains vertex (" << oVertices[i] << ") which has negative weights indicating non-matching meshes!");
+                    }
                   }));
     }
     assertion(std::none_of(_weights.cbegin(), _weights.cend(), [](const query::InterpolationElements &elements) {
@@ -103,9 +107,13 @@ void NearestProjectionMapping:: computeMapping()
                       using query::generateInterpolationElements;
                       using mesh::Primitive;
                     const auto& nearest = pnearest.second;
-                    _weights[i] = gen(iVertices[i], nearest);
-                    CHECK(!_weights[i].empty(),
+                    auto& weights = _weights[i];
+                    weights = gen(iVertices[i], nearest);
+                    CHECK(!weights.empty(),
                           "No interpolation elements for current vertex!");
+                    if(std::any_of(weights.begin(), weights.end(), [](const query::InterpolationElement& elem){return elem.weight < 0;})) {
+                        WARN("Mapping \"" << input()->getName() << "\" contains vertex (" << iVertices[i] << ") which has negative weights indicating non-matching meshes!");
+                    }
                   }));
     }
     assertion(std::none_of(_weights.cbegin(), _weights.cend(), [](const query::InterpolationElements &elements) {
