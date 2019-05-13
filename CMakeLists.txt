@@ -388,6 +388,13 @@ include(${CMAKE_CURRENT_LIST_DIR}/cmake/CTestConfig.cmake)
 
 
 #
+# Add test_install
+#
+
+include(${CMAKE_CURRENT_LIST_DIR}/cmake/TestInstall.cmake)
+
+
+#
 # CPack
 #
 
