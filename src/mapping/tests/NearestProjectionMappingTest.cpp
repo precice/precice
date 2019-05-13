@@ -229,6 +229,50 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncrementalPseudo3D)
   BOOST_TEST ( outData->values()[2] == (valueVertex1 + valueVertex2) * 0.5 );
 }
 
+BOOST_AUTO_TEST_CASE(AxisAlignedTriangles)
+{
+  using namespace precice::mesh;
+  constexpr int dimensions = 3;
+
+  // Create mesh to map from with Triangles ABD and BDC
+  PtrMesh inMesh(new Mesh("InMesh", dimensions, false));
+  PtrData inData = inMesh->createData("InData", 1);
+  Vertex& inVA = inMesh->createVertex(Eigen::Vector3d{0,0,0});
+  Vertex& inVB = inMesh->createVertex(Eigen::Vector3d{0,1,0});
+  Vertex& inVC = inMesh->createVertex(Eigen::Vector3d{1,1,0});
+  Vertex& inVD = inMesh->createVertex(Eigen::Vector3d{1,0,0});
+
+  Edge& inEDA = inMesh->createEdge(inVD, inVA);
+  Edge& inEAB = inMesh->createEdge(inVA, inVB);
+  Edge& inEBD = inMesh->createEdge(inVB, inVD);
+  Edge& inEDC = inMesh->createEdge(inVD, inVC);
+  Edge& inECB = inMesh->createEdge(inVC, inVB);
+
+  inMesh->createTriangle(inEAB, inEBD, inEDA);
+  inMesh->createTriangle(inEBD, inEDC, inECB);
+  inMesh->allocateDataValues();
+  inData->values() << 1.0, 1.0, 1.0, 1.0;
+
+  // Create mesh to map to with one vertex per defined traingle
+  PtrMesh outMesh(new Mesh("OutMesh", dimensions, false));
+  PtrData outData = outMesh->createData("OutData", 1);
+  outMesh->createVertex(Eigen::Vector3d{0.33, 0.33, 0});
+  outMesh->createVertex(Eigen::Vector3d{0.66, 0.66, 0});
+  outMesh->allocateDataValues();
+  outData->values() << 0.0, 0.0;
+
+  // Setup mapping with mapping coordinates and geometry used
+  precice::mapping::NearestProjectionMapping mapping(mapping::Mapping::CONSISTENT, dimensions);
+  mapping.setMeshes(inMesh, outMesh);
+  BOOST_TEST(mapping.hasComputedMapping() == false);
+
+  mapping.computeMapping();
+  BOOST_TEST(mapping.hasComputedMapping() == true);
+  mapping.map(inData->getID(), outData->getID());
+  BOOST_TEST(outData->values() == outData->values().cwiseAbs());
+}
+
+
 
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
