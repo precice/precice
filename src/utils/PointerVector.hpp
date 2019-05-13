@@ -34,6 +34,9 @@ public:
               CONTENT_T &
            > const_iterator;
 
+   /// Sizetype of the wrapped container
+  using size_type = typename container::size_type;
+
   /// Returns iterator to first element in vector.
   iterator begin ()
    {
