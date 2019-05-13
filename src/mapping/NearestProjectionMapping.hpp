@@ -55,6 +55,12 @@ private:
   std::vector<InterpolationElements> _weights;
 
   bool _hasComputedMapping = false;
+
+  /// Computes the consistent mapping
+  void computeMappingConsistent();
+
+  /// Computes the conservative mapping
+  void computeMappingConservative();
 };
 
 }} // namespace precice, mapping
