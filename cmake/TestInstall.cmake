@@ -9,7 +9,7 @@ add_custom_target(test_install
   COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_CURRENT_BINARY_DIR}/TestInstall/CMakeFiles
   COMMAND ${CMAKE_COMMAND} -Dprecice_DIR=${CMAKE_INSTALL_PREFIX}/lib/cmake/precice ${preCICE_SOURCE_DIR}/tools/solverdummies/cpp
   COMMAND ${CMAKE_COMMAND} --build . --target all
-  COMMAND ${CMAKE_CTEST_COMMAND}
+  COMMAND ${CMAKE_CTEST_COMMAND} -V
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/TestInstall
   COMMENT "Testing the installation using the C++ solverdummy"
   VERBATIM
