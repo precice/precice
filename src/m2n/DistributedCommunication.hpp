@@ -44,6 +44,13 @@ public:
   virtual bool isConnected() = 0;
 
   /**
+   * @brief Request the communication objects to cleanup
+   *
+   * @see com::Communication::cleanup()
+   */
+  virtual void cleanup() {};
+
+  /**
    * @brief Connects to another participant, which has to call requestConnection().
    *
    * @param[in] acceptorName Name of calling participant.

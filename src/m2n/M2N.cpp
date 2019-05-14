@@ -120,6 +120,15 @@ void M2N::closeConnection()
   }
 }
 
+void M2N::cleanup()
+{
+  TRACE();
+  _masterCom->cleanup();
+  for (auto &pair : _distComs) {
+      pair.second->cleanup();
+  }
+}
+
 com::PtrCommunication M2N::getMasterCommunication()
 {
   assertion(not utils::MasterSlave::_slaveMode);

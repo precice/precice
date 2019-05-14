@@ -71,6 +71,13 @@ public:
    */
   void closeConnection();
 
+  /**
+   * @brief Request the communication objects to cleanup
+   *
+   * @see com::Communication::cleanup()
+   */
+  void cleanup();
+
   /// Get the basic communication between the 2 masters.
   com::PtrCommunication getMasterCommunication();
 

@@ -145,6 +145,11 @@ public:
    */
   virtual void closeConnection() = 0;
 
+  /**
+   * @brief Clean-up artefacts used to establish the communication.
+   */
+  virtual void cleanup() {}
+
   /// Performs a reduce summation on the rank given by rankMaster
   virtual void reduceSum(double *itemsToSend, double *itemsToReceive, int size, int rankMaster);
 

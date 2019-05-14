@@ -247,6 +247,10 @@ double SolverInterfaceImpl:: initialize()
         m2n->acceptSlavesConnection(localName, remoteName);
       }
     }
+    DEBUG("Cleaning up" );
+    for (auto& m2nPair : _m2ns) {
+        m2nPair.second.m2n->cleanup();
+    }
     INFO("Slaves are connected" );
 
     std::set<action::Action::Timing> timings;
