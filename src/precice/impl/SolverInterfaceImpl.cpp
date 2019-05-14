@@ -18,6 +18,7 @@
 #include "io/Export.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
 #include "m2n/M2N.hpp"
+#include "m2n/BoundM2N.hpp"
 #include "cplscheme/CouplingScheme.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
 #include "utils/EventUtils.hpp"
@@ -210,19 +211,7 @@ double SolverInterfaceImpl:: initialize()
 
     INFO("Setting up master communication to coupling partner/s " );
     for (auto& m2nPair : _m2ns) {
-      m2n::PtrM2N& m2n = m2nPair.second.m2n;
-      std::string localName = _accessorName;
-      if (_serverMode) localName += "Server";
-      std::string remoteName(m2nPair.first);
-      CHECK(m2n.get() != nullptr,
-            "M2N communication from " << localName << " to participant "
-            << remoteName << " could not be created! Check compile flags used!");
-      if (m2nPair.second.isRequesting){
-        m2n->requestMasterConnection(remoteName, localName);
-      }
-      else {
-        m2n->acceptMasterConnection(localName, remoteName);
-      }
+        m2nPair.second.connectMasters();
     }
     INFO("Coupling partner/s are connected " );
 
@@ -234,18 +223,7 @@ double SolverInterfaceImpl:: initialize()
 
     INFO("Setting up slaves communication to coupling partner/s " );
     for (auto& m2nPair : _m2ns) {
-      m2n::PtrM2N& m2n = m2nPair.second.m2n;
-      std::string localName = _accessorName;
-      std::string remoteName(m2nPair.first);
-      CHECK(m2n.get() != nullptr,
-                   "Communication from " << localName << " to participant "
-                   << remoteName << " could not be created! Check compile flags used!");
-      if (m2nPair.second.isRequesting){
-        m2n->requestSlavesConnection(remoteName, localName);
-      }
-      else {
-        m2n->acceptSlavesConnection(localName, remoteName);
-      }
+      m2nPair.second.connectSlaves();
     }
     INFO("Slaves are connected" );
 
@@ -1297,10 +1275,16 @@ void SolverInterfaceImpl:: configureM2Ns
           }
           assertion(not utils::contained(comPartner, _m2ns), comPartner);
           assertion(std::get<0>(m2nTuple));
-          M2NWrap m2nWrap;
-          m2nWrap.m2n = std::get<0>(m2nTuple);
-          m2nWrap.isRequesting = isRequesting;
-          _m2ns[comPartner] = m2nWrap;
+
+          _m2ns[comPartner] = [&]{
+              m2n::BoundM2N bound;
+              bound.m2n = std::get<0>(m2nTuple);
+              bound.localName = _accessorName;
+              bound.remoteName = comPartner;
+              bound.isRequesting = isRequesting;
+              bound.localServer = _serverMode;
+              return bound;
+          }();
         }
       }
     }

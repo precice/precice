@@ -11,6 +11,7 @@
 #include "cplscheme/SharedPointer.hpp"
 #include "com/Communication.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
+#include "m2n/BoundM2N.hpp"
 #include "utils/MultiLock.hpp"
 #include <string>
 #include <vector>
@@ -464,11 +465,6 @@ public:
 
 private:
 
-  struct M2NWrap {
-    m2n::PtrM2N m2n;
-    bool isRequesting;
-  };
-
   mutable logging::Logger _log{"impl::SolverInterfaceImpl"};
 
   std::string _accessorName;
@@ -502,7 +498,7 @@ private:
   /// For plotting of used mesh neighbor-relations
   query::ExportVTKNeighbors _exportVTKNeighbors;
 
-  std::map<std::string,M2NWrap> _m2ns;
+  std::map<std::string,m2n::BoundM2N> _m2ns;
 
   /// Holds information about solvers participating in the coupled simulation.
   std::vector<impl::PtrParticipant> _participants;

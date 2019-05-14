@@ -142,6 +142,8 @@ target_sources(precice
     src/logging/Tracer.hpp
     src/logging/config/LogConfiguration.cpp
     src/logging/config/LogConfiguration.hpp
+    src/m2n/BoundM2N.cpp
+    src/m2n/BoundM2N.hpp
     src/m2n/DistributedComFactory.hpp
     src/m2n/DistributedCommunication.hpp
     src/m2n/GatherScatterComFactory.cpp
