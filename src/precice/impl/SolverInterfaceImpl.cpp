@@ -209,23 +209,21 @@ double SolverInterfaceImpl:: initialize()
   else {
     // Setup communication
 
-    INFO("Setting up master communication to coupling partner/s " );
+    INFO("Setting up master communication to coupling partner/s" );
     for (auto& m2nPair : _m2ns) {
+        m2nPair.second.prepareEstablishment();
         m2nPair.second.connectMasters();
     }
-    INFO("Coupling partner/s are connected " );
-
-
-    DEBUG("Perform initializations");
-
+    INFO("Masters are connected");
 
     computePartitions();
 
-    INFO("Setting up slaves communication to coupling partner/s " );
+    INFO("Setting up slaves communication to coupling partner/s" );
     for (auto& m2nPair : _m2ns) {
       m2nPair.second.connectSlaves();
+      m2nPair.second.cleanupEstablishment();
     }
-    INFO("Slaves are connected" );
+    INFO("Slaves are connected");
 
     std::set<action::Action::Timing> timings;
     double dt = 0.0;

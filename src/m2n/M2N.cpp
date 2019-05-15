@@ -100,6 +100,18 @@ void M2N::requestSlavesConnection(
   assertion(_areSlavesConnected);
 }
 
+void M2N::prepareEstablishment()
+{
+  TRACE();
+  _masterCom->prepareEstablishment();
+}
+
+void M2N::cleanupEstablishment()
+{
+  TRACE();
+  _masterCom->cleanupEstablishment();
+}
+
 void M2N::closeConnection()
 {
   TRACE();
