@@ -5,9 +5,13 @@
 namespace precice {
 namespace m2n {
 
+void BoundM2N::prepareEstablishment()
+{
+    m2n->prepareEstablishment();
+}
+
 void BoundM2N::connectMasters()
 {
-    m2n->getMasterCommunication()->prepareEstablishment();
     std::string fullLocalName = localName;
     if (localServer) fullLocalName += "Server";
 
@@ -27,7 +31,11 @@ void BoundM2N::connectSlaves()
     else {
         m2n->acceptSlavesConnection(localName, remoteName);
     }
-    m2n->getMasterCommunication()->cleanupEstablishment();
+}
+
+void BoundM2N::cleanupEstablishment()
+{
+    m2n->prepareEstablishment();
 }
 
 } // namespace m2n
