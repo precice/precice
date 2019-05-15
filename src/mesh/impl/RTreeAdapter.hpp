@@ -4,111 +4,16 @@
 #include <Eigen/Core>
 #include "mesh/Vertex.hpp"
 #include "mesh/Edge.hpp"
+#include "mesh/Triangle.hpp"
+#include "mesh/Quad.hpp"
 
-namespace precice {
-namespace mesh {
-class Triangle;
-class Quad;
-} // namespace mesh
-} // namespace precice
+namespace bg = ::boost::geometry;
+namespace pm = ::precice::mesh;
 
-using precice::mesh::Edge;
-using precice::mesh::Quad;
-using precice::mesh::Triangle;
-using precice::mesh::Vertex;
 
 namespace boost {
 namespace geometry {
 namespace traits {
-
-/// Provides the necessary template specialisations to adapt precice's Vertex to boost.geometry
-/*
-* This adapts every Vertex to a 3d point. For non-existing dimensions, zero is returned.
-*/
-template<> struct tag<Vertex>               { using type = point_tag; };
-template<> struct coordinate_type<Vertex>   { using type = double; };
-template<> struct coordinate_system<Vertex> { using type = cs::cartesian; };
-template<> struct dimension<Vertex> : boost::mpl::int_<3> {};
-
-template<size_t Dimension>
-struct access<Vertex, Dimension>
-{
-  static double get(Vertex const& p)
-  {
-    if (Dimension > static_cast<size_t>(p.getDimensions())-1)
-      return 0;
-   
-    return p.getCoords()[Dimension];
-  }
-  
-  static void set(Vertex& p, double const& value)
-  {
-    Eigen::VectorXd vec = p.getCoords();
-    vec[Dimension] = value;
-    p.setCoords(vec);
-  }
-};
-
-BOOST_CONCEPT_ASSERT( (concepts::Point<Vertex>));
-
-/** @brief Provides the necessary template specialisations to adapt precice's Edge to boost.geometry
-*
-* This adapts every Edge to the segment concept of boost.geometry.
-* Include impl/RangeAdapter.hpp for full support.
-*/
-template <>
-struct tag<Edge> {
-  using type = segment_tag;
-};
-template <>
-struct point_type<Edge> {
-  using type = Eigen::VectorXd;
-};
-
-template <size_t Index, size_t Dimension>
-struct indexed_access<Edge, Index, Dimension> {
-  static_assert((Index <= 1), "Valid Indices are {0, 1}");
-  static_assert((Dimension <= 2), "Valid Dimensions are {0, 1, 2}");
-
-  static double get(Edge const &e)
-  {
-    return access<Eigen::VectorXd, Dimension>::get(e.vertex(Index).getCoords());
-  }
-
-  static void set(Edge &e, double const &value)
-  {
-    Eigen::VectorXd v = e.vertex(Index).getCoords();
-    access<Eigen::VectorXd, Dimension>::set(v, value);
-    e.vertex(Index).setCoords(std::move(v));
-  }
-};
-
-/** @brief Provides the necessary template specialisations to adapt precice's Triangle to boost.geometry
-*
-* This adapts every Triangle to the ring concept (filled planar polygone) of boost.geometry.
-* Include impl/RangeAdapter.hpp for full support.
-*/
-template <>
-struct tag<Triangle> {
-  using type = ring_tag;
-};
-template <>
-struct closure<Triangle> {
-  static const closure_selector value = closed;
-};
-
-/** @brief Provides the necessary template specialisations to adapt precice's Quad to boost.geometry
-*
-* This adapts every Quad to the ring concept (filled planar polygone) of boost.geometry.
-*/
-template <>
-struct tag<Quad> {
-  using type = ring_tag;
-};
-template <>
-struct closure<Quad> {
-  static const closure_selector value = closed;
-};
 
 /// Adapts Eigen::VectorXd to boost.geometry
 /*
@@ -140,7 +45,102 @@ struct access<Eigen::VectorXd, Dimension>
   }
 };
 
-BOOST_CONCEPT_ASSERT( (concepts::Point<Eigen::VectorXd>));
+BOOST_CONCEPT_ASSERT( (bg::concepts::Point<Eigen::VectorXd>));
+
+/// Provides the necessary template specialisations to adapt precice's Vertex to boost.geometry
+/*
+* This adapts every Vertex to a 3d point. For non-existing dimensions, zero is returned.
+*/
+template<> struct tag<pm::Vertex>               { using type = point_tag; };
+template<> struct coordinate_type<pm::Vertex>   { using type = double; };
+template<> struct coordinate_system<pm::Vertex> { using type = cs::cartesian; };
+template<> struct dimension<pm::Vertex> : boost::mpl::int_<3> {};
+
+template<size_t Dimension>
+struct access<pm::Vertex, Dimension>
+{
+  static double get(pm::Vertex const& p)
+  {
+    if (Dimension > static_cast<size_t>(p.getDimensions())-1)
+      return 0;
+   
+    return p.getCoords()[Dimension];
+  }
+  
+  static void set(pm::Vertex& p, double const& value)
+  {
+    Eigen::VectorXd vec = p.getCoords();
+    vec[Dimension] = value;
+    p.setCoords(vec);
+  }
+};
+
+BOOST_CONCEPT_ASSERT( (bg::concepts::Point<pm::Vertex>));
+
+/** @brief Provides the necessary template specialisations to adapt precice's Edge to boost.geometry
+*
+* This adapts every Edge to the segment concept of boost.geometry.
+* Include impl/RangeAdapter.hpp for full support.
+*/
+template <>
+struct tag<pm::Edge> {
+  using type = segment_tag;
+};
+template <>
+struct point_type<pm::Edge> {
+  using type = Eigen::VectorXd;
+};
+
+template <size_t Index, size_t Dimension>
+struct indexed_access<pm::Edge, Index, Dimension> {
+  static_assert((Index <= 1), "Valid Indices are {0, 1}");
+  static_assert((Dimension <= 2), "Valid Dimensions are {0, 1, 2}");
+
+  static double get(pm::Edge const &e)
+  {
+    return access<Eigen::VectorXd, Dimension>::get(e.vertex(Index).getCoords());
+  }
+
+  static void set(pm::Edge &e, double const &value)
+  {
+    Eigen::VectorXd v = e.vertex(Index).getCoords();
+    access<Eigen::VectorXd, Dimension>::set(v, value);
+    e.vertex(Index).setCoords(std::move(v));
+  }
+};
+
+BOOST_CONCEPT_ASSERT( (bg::concepts::Segment<pm::Edge>));
+
+/** @brief Provides the necessary template specialisations to adapt precice's Triangle to boost.geometry
+*
+* This adapts every Triangle to the ring concept (filled planar polygone) of boost.geometry.
+* Include impl/RangeAdapter.hpp for full support.
+*/
+template <>
+struct tag<pm::Triangle> {
+  using type = ring_tag;
+};
+template <>
+struct closure<pm::Triangle> {
+  static const closure_selector value = closed;
+};
+
+BOOST_CONCEPT_ASSERT( (bg::concepts::Ring<pm::Triangle>));
+
+/** @brief Provides the necessary template specialisations to adapt precice's Quad to boost.geometry
+*
+* This adapts every Quad to the ring concept (filled planar polygone) of boost.geometry.
+*/
+template <>
+struct tag<pm::Quad> {
+  using type = ring_tag;
+};
+template <>
+struct closure<pm::Quad> {
+  static const closure_selector value = closed;
+};
+
+BOOST_CONCEPT_ASSERT( (bg::concepts::Ring<pm::Quad>));
 
 /// Adapts precice's Mesh::BoundingBox to boost.geometry
 /*
@@ -154,7 +154,6 @@ struct tag<BoundingBox>
   using type = box_tag;
 };
 
-namespace bg = ::boost::geometry;
 template <>
 struct point_type<BoundingBox>
 {
