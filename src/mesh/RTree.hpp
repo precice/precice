@@ -89,20 +89,29 @@ using PtrPrimitiveRTree = std::shared_ptr<PrimitiveRTree>;
  */
 PrimitiveRTree indexMesh(const Mesh &mesh);
 
+using RTreeParameters = boost::geometry::index::rstar<16>;
+template<class PrimitiveContainer>
+struct RTreeTraits {
+  using IndexGetter = impl::PtrVectorIndexable<PrimitiveContainer>;
+  using RTree = boost::geometry::index::rtree<typename PrimitiveContainer::size_type, RTreeParameters, IndexGetter>;
+  using Ptr = std::shared_ptr<RTree>;
+};
+
 class rtree {
 public:
-  using VertexIndexGetter = impl::PtrVectorIndexable<Mesh::VertexContainer>;
-  using RTreeParameters   = boost::geometry::index::rstar<16>;
-  using VertexRTree       = boost::geometry::index::rtree<Mesh::VertexContainer::container::size_type,
-                                                          RTreeParameters,
-                                                          VertexIndexGetter>;
-  using PtrVertexRTree = std::shared_ptr<VertexRTree>;
+  using vertex_traits   = RTreeTraits<Mesh::VertexContainer>;
+  using edge_traits     = RTreeTraits<Mesh::EdgeContainer>;
+  using triangle_traits = RTreeTraits<Mesh::TriangleContainer>;
 
   /// Returns the pointer to boost::geometry::rtree for the given mesh vertices
   /*
    * Creates and fills the tree, if it wasn't requested before, otherwise it returns the cached tree.
    */
-  static PtrVertexRTree getVertexRTree(const PtrMesh& mesh);
+  static vertex_traits::Ptr getVertexRTree(const PtrMesh& mesh);
+
+  static edge_traits::Ptr getEdgeRTree(const PtrMesh& mesh);
+
+  static triangle_traits::Ptr getTriangleRTree(const PtrMesh& mesh);
   
   /// Returns the pointer to boost::geometry::rtree for the given mesh primitives
   /*
@@ -114,10 +123,17 @@ public:
   static void clear(Mesh & mesh);
 
   friend struct MeshTests::RTree::CacheClearing;
-  
 private:
+  struct MeshIndices {
+      vertex_traits::Ptr vertices;
+      edge_traits::Ptr edges;
+      triangle_traits::Ptr triangles;
+  };
+
+  static MeshIndices& cacheEntry(int MeshID);
+
+  static std::map<int, MeshIndices> _cached_trees; ///< Cache for all index trees
   static std::map<int, PtrPrimitiveRTree> _primitive_trees; ///< Cache for the primitive trees
-  static std::map<int, PtrVertexRTree>    _vertex_trees; ///< Cache for the vertex trees
 };
 
 
