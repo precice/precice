@@ -16,10 +16,10 @@ void BoundM2N::connectMasters()
     if (localServer) fullLocalName += "Server";
 
     if (isRequesting){
-        m2n->requestMasterConnection(remoteName, localName);
+        m2n->requestMasterConnection(remoteName, fullLocalName);
     }
     else {
-        m2n->acceptMasterConnection(localName, remoteName);
+        m2n->acceptMasterConnection(fullLocalName, remoteName);
     }
 }
 
