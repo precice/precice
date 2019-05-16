@@ -86,6 +86,8 @@ SolverInterfaceImpl:: SolverInterfaceImpl
   // SIGXCPU is emitted when the job is killed due to walltime limit on SuperMUC
   signal(SIGXCPU, precice::utils::terminationSignalHandler);
   // signal(SIGINT,  precice::utils::terminationSignalHandler);
+
+  logging::setParticipant(_accessorName);
 }
 
 void SolverInterfaceImpl:: configure

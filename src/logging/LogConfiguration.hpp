@@ -39,6 +39,9 @@ void setupLogging(LoggingConfiguration configs, bool enabled = true);
 /// Sets the current MPI rank as a logging attribute
 void setMPIRank(int const rank);
 
+/// Sets the name of the current participant as a logging attribute
+void setParticipant(std::string const & name);
+
 /// Locks the configuration, ignoring any future calls to setupLogging()
 void lockConf();
 
