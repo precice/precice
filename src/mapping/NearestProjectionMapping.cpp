@@ -307,7 +307,7 @@ void NearestProjectionMapping::tagMeshFirstRound()
       for (size_t i=0; i < output()->vertices().size(); i++) {
         const InterpolationElements& elems = _weights[i];
         for (const query::InterpolationElement& elem : elems) {
-          if (elem.element->getID()==v.getID() && elem.weight!=0.0) {
+          if (elem.element->getID()==v.getID() && !math::equals(elem.weight,0.0)) {
             v.tag();
           }
         }
@@ -320,7 +320,7 @@ void NearestProjectionMapping::tagMeshFirstRound()
       for (size_t i=0; i < input()->vertices().size(); i++) {
         const InterpolationElements& elems = _weights[i];
         for (const query::InterpolationElement& elem : elems) {
-          if (elem.element->getID()==v.getID() && elem.weight!=0.0) {
+          if (elem.element->getID()==v.getID() && !math::equals(elem.weight,0.0)) {
             v.tag();
           }
         }
