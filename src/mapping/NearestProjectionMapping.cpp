@@ -100,18 +100,31 @@ void NearestProjectionMapping:: computeMappingConsistent()
         const auto &iTriangles = input()->triangles();
         CHECK(!iTriangles.empty(), "Mesh \"" << input()->getName() << "\" does not contain Triangles to project onto.");
         _weights.resize(oVertices.size());
+        using IndexType = typename mesh::rtree::triangle_traits::IndexType;
+        std::vector<IndexType> matches;
+        matches.reserve(10);
         for (size_t i = 0; i < oVertices.size(); i++) {
             const Eigen::VectorXd &coords = oVertices[i].getCoords();
             // Search for the output vertex inside the input mesh
-            rtree->query(boost::geometry::index::nearest(coords, 1),
-                     boost::make_function_output_iterator([&](size_t eid) {
-                         auto& weights = _weights[i];
-                         weights = query::generateInterpolationElements(oVertices[i], iTriangles[eid]);
-                         CHECK(!weights.empty(), "No interpolation elements for current vertex!");
-                         if (std::any_of(weights.begin(), weights.end(), [](const query::InterpolationElement& elem){return elem.weight < 0;})) {
-                            WARN("Mapping \"" << input()->getName() << "\" contains vertex (" << oVertices[i] << ") which has negative weights indicating non-matching meshes!");
-                         }
-                    }));
+            rtree->query(boost::geometry::index::nearest(coords, 10), std::back_inserter(matches));
+            auto closestId = std::min_element(matches.begin(), matches.end(), 
+                    [&](const IndexType& lhs, const IndexType& rhs) {
+                    using boost::geometry::comparable_distance;
+                    auto distLhs = comparable_distance(
+                            coords, iTriangles[lhs.second]
+                            );
+                    auto distRhs = comparable_distance(
+                            coords, iTriangles[lhs.second]
+                            );
+                    return distLhs < distRhs;
+                    })->second;
+             matches.clear();
+             auto& weights = _weights[i];
+             weights = query::generateInterpolationElements(oVertices[i], iTriangles[closestId]);
+             CHECK(!weights.empty(), "No interpolation elements for current vertex!");
+             if (std::any_of(weights.begin(), weights.end(), [](const query::InterpolationElement& elem){return elem.weight < 0;})) {
+                WARN("Mapping \"" << input()->getName() << "\" contains vertex (" << oVertices[i] << ") which has negative weights indicating non-matching meshes!");
+             }
         }
     }
     _hasComputedMapping = true;
@@ -148,18 +161,30 @@ void NearestProjectionMapping:: computeMappingConservative()
         const auto &oTriangles = output()->triangles();
         CHECK(!oTriangles.empty(), "Mesh \"" << output()->getName() << "\" does not contain Triangles to project onto.");
         _weights.resize(iVertices.size());
+        using IndexType = typename mesh::rtree::triangle_traits::IndexType;
+        std::vector<IndexType> matches;
         for (size_t i = 0; i < iVertices.size(); i++) {
             const Eigen::VectorXd &coords = iVertices[i].getCoords();
             // Search for the output vertex inside the input mesh
-            rtree->query(boost::geometry::index::nearest(coords, 1),
-                     boost::make_function_output_iterator([&](size_t eid) {
-                         auto& weights = _weights[i];
-                         weights = query::generateInterpolationElements(iVertices[i], oTriangles[eid]);
-                         CHECK(!weights.empty(), "No interpolation elements for current vertex!");
-                         if (std::any_of(weights.begin(), weights.end(), [](const query::InterpolationElement& elem){return elem.weight < 0;})) {
-                            WARN("Mesh \"" << output()->getName() << "\" contains vertex (" << iVertices[i] << ") which has negative weights indicating non-matching meshes!");
-                         }
-                    }));
+            rtree->query(boost::geometry::index::nearest(coords, 10), std::back_inserter(matches));
+            auto closestId = std::min_element(matches.begin(), matches.end(), 
+                    [&](const IndexType& lhs, const IndexType& rhs) {
+                    using boost::geometry::comparable_distance;
+                    auto distLhs = comparable_distance(
+                            coords, oTriangles[lhs.second]
+                            );
+                    auto distRhs = comparable_distance(
+                            coords, oTriangles[lhs.second]
+                            );
+                    return distLhs < distRhs;
+                    })->second;
+             matches.clear();
+             auto& weights = _weights[i];
+             weights = query::generateInterpolationElements(iVertices[i], oTriangles[closestId]);
+             CHECK(!weights.empty(), "No interpolation elements for current vertex!");
+             if (std::any_of(weights.begin(), weights.end(), [](const query::InterpolationElement& elem){return elem.weight < 0;})) {
+                 WARN("Mesh \"" << output()->getName() << "\" contains vertex (" << iVertices[i] << ") which has negative weights indicating non-matching meshes!");
+             }
         }
     }
     _hasComputedMapping = true;

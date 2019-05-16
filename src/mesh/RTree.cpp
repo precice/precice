@@ -6,6 +6,8 @@
 namespace precice {
 namespace mesh {
 
+namespace bg = boost::geometry;
+
 // Initialize static member
 std::map<int, rtree::MeshIndices> precice::mesh::rtree::_cached_trees;
 std::map<int, PtrPrimitiveRTree> precice::mesh::rtree::_primitive_trees;
@@ -66,10 +68,11 @@ rtree::triangle_traits::Ptr rtree::getTriangleRTree(const PtrMesh& mesh)
   }
 
   RTreeParameters params;
-  triangle_traits::IndexGetter ind(mesh->triangles());
+  triangle_traits::IndexGetter ind;
   auto tree = std::make_shared<triangle_traits::RTree>(params, ind);
   for (size_t i = 0; i < mesh->triangles().size(); ++i) {
-      tree->insert(i);
+      auto box = bg::return_envelope<RTreeBox>(mesh->triangles()[i]);
+      tree->insert(std::make_pair(std::move(box) , i));
   }
 
   cache.triangles = tree;

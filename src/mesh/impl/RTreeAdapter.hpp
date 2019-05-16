@@ -125,7 +125,7 @@ struct closure<pm::Triangle> {
   static const closure_selector value = closed;
 };
 
-BOOST_CONCEPT_ASSERT( (bg::concepts::Ring<pm::Triangle>));
+// BOOST_CONCEPT_ASSERT( (bg::concepts::Ring<pm::Triangle>));
 
 /** @brief Provides the necessary template specialisations to adapt precice's Quad to boost.geometry
 *
@@ -140,7 +140,7 @@ struct closure<pm::Quad> {
   static const closure_selector value = closed;
 };
 
-BOOST_CONCEPT_ASSERT( (bg::concepts::Ring<pm::Quad>));
+// BOOST_CONCEPT_ASSERT( (bg::concepts::Ring<pm::Quad>));
 
 /// Adapts precice's Mesh::BoundingBox to boost.geometry
 /*
