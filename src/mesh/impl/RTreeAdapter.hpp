@@ -122,7 +122,7 @@ struct tag<pm::Triangle> {
 };
 template <>
 struct closure<pm::Triangle> {
-  static const closure_selector value = closed;
+  static const closure_selector value = open;
 };
 
 // BOOST_CONCEPT_ASSERT( (bg::concepts::Ring<pm::Triangle>));
@@ -137,7 +137,7 @@ struct tag<pm::Quad> {
 };
 template <>
 struct closure<pm::Quad> {
-  static const closure_selector value = closed;
+  static const closure_selector value = open;
 };
 
 // BOOST_CONCEPT_ASSERT( (bg::concepts::Ring<pm::Quad>));
