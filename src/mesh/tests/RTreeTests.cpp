@@ -98,6 +98,28 @@ BOOST_AUTO_TEST_CASE(QuadAdapter)
             )));
 }
 
+BOOST_AUTO_TEST_CASE(DistanceTest)
+{
+  precice::mesh::Mesh mesh("MyMesh", 3, false);
+  auto & v1 = mesh.createVertex(Eigen::Vector3d(0, 0, 0));
+  auto & v2 = mesh.createVertex(Eigen::Vector3d(0, 1, 0));
+  auto & v3 = mesh.createVertex(Eigen::Vector3d(1, 0, 0));
+  auto & v4 = mesh.createVertex(Eigen::Vector3d(1, 1, 0));
+  auto & v5 = mesh.createVertex(Eigen::Vector3d(0.2, 0.2, 0));
+  auto & e1 = mesh.createEdge(v1, v2);
+  auto & e2 = mesh.createEdge(v2, v3);
+  auto & e3 = mesh.createEdge(v3, v1);
+  auto & t = mesh.createTriangle(e1, e2, e3);
+
+  BOOST_TEST(bg::comparable_distance(v1, v2) > 0.5);
+  BOOST_TEST(bg::comparable_distance(v1, v1) < 0.01);
+  BOOST_TEST(bg::comparable_distance(e1, v2) < 0.01);
+  BOOST_TEST(bg::comparable_distance(e1, v3) > 0.2);
+  BOOST_TEST(bg::comparable_distance(t, v3) < 0.1);
+  BOOST_TEST(bg::comparable_distance(t, v4) > 0.2);
+  BOOST_TEST(bg::comparable_distance(t, v5) < 0.01);
+}
+
 BOOST_AUTO_TEST_SUITE_END() // BG Adapters
 
 struct MeshFixture {
