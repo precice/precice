@@ -73,6 +73,13 @@ matrix:
         - lcov --remove coverage.info '/usr/*' "$LOCAL_INSTALL/*" --output-file coverage.info # filter system-files and local-dependencies
         - lcov --list coverage.info # debug info
         - bash <(curl -s https://codecov.io/bash) -f coverage.info || echo "Codecov did not collect coverage reports"
+    # Additional checks of code quality, etc
+    - name: "Pull request check"
+      if: type = pull_request
+      include:
+      script: bash tools/travis-pr-check.sh
+      after_success:
+      after_failure:
 
 
 cache:
