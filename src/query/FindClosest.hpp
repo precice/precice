@@ -30,6 +30,8 @@ struct InterpolationElement
   InterpolationElement(const mesh::Vertex& element_, double weight_): element(&element_), weight(weight_) {}
 };
 
+std::ostream& operator<<(std::ostream& out, const InterpolationElement& val);
+
 /// A vector of InterpolationElement
 using InterpolationElements = std::vector<InterpolationElement>;
 
