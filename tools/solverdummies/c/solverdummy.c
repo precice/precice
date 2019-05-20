@@ -1,4 +1,4 @@
-#include "SolverInterfaceC.h"
+#include "precice/SolverInterfaceC.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,7 +28,6 @@ int main(int argc, char **argv)
 
   const char* writeItCheckp = precicec_actionWriteIterationCheckpoint();
   const char* readItCheckp = precicec_actionReadIterationCheckpoint();
-
 
   precicec_createSolverInterface(participantName, configFileName, solverProcessIndex, solverProcessSize);
 
