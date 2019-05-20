@@ -121,6 +121,10 @@ struct tag<pm::Triangle> {
   using type = ring_tag;
 };
 template <>
+struct point_order<pm::Triangle> {
+  static const order_selector value = clockwise;
+};
+template <>
 struct closure<pm::Triangle> {
   static const closure_selector value = open;
 };
@@ -134,6 +138,9 @@ struct closure<pm::Triangle> {
 template <>
 struct tag<pm::Quad> {
   using type = ring_tag;
+};
+struct point_order<pm::Quad> {
+  static const order_selector value = clockwise;
 };
 template <>
 struct closure<pm::Quad> {
