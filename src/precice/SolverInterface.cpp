@@ -1,7 +1,6 @@
 #include "precice/SolverInterface.hpp"
 #include "precice/impl/SolverInterfaceImpl.hpp"
 #include "cplscheme/Constants.hpp"
-#include "io/Constants.hpp"
 
 namespace precice {
 
@@ -347,22 +346,6 @@ const std::string& actionWriteIterationCheckpoint()
 const std::string& actionReadIterationCheckpoint()
 {
   return cplscheme::constants::actionReadIterationCheckpoint();
-}
-
-const std::string& actionPlotOutput()
-{
-  static std::string plotOutput("plot-output");
-  return plotOutput;
-}
-
-int exportVTK()
-{
-  return io::constants::exportVTK();
-}
-
-int exportAll()
-{
-  return io::constants::exportAll();
 }
 
 } // namespace precice, constants

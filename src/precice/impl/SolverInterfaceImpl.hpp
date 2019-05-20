@@ -432,7 +432,7 @@ public:
    */
 //  void setExportLocation (
 //    const std::string& location,
-//    int                exportType = constants::exportAll() );
+//    int                exportType = io::constants::exportAll() );
 
   /**
    * @brief Writes a mesh to vtk file.
@@ -444,7 +444,7 @@ public:
    */
   void exportMesh (
     const std::string& filenameSuffix,
-    int                exportType = constants::exportAll() );
+    int                exportType = io::constants::exportAll() );
 
 
   /**

@@ -807,10 +807,6 @@ namespace constants {
 const std::string& actionWriteInitialData();
 const std::string& actionWriteIterationCheckpoint();
 const std::string& actionReadIterationCheckpoint();
-const std::string& actionPlotOutput();
-
-int exportVTK();
-int exportAll();
 
 } // namespace constants
 
