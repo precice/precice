@@ -1,7 +1,7 @@
 extern"C" {
 #include "ConstantsFortran.hpp"
 }
-#include "precice/Constants.hpp"
+#include "precice/SolverInterface.hpp"
 #include "utils/assertion.hpp"
 
 void precicef_name_config_
