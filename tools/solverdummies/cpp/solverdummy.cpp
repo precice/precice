@@ -4,7 +4,6 @@
 #include <iostream>
 #include <sstream>
 #include "precice/SolverInterface.hpp"
-#include "precice/Constants.hpp"
 
 int main (int argc, char **argv)
 {

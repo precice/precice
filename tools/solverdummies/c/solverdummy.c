@@ -1,5 +1,4 @@
 #include "SolverInterfaceC.h"
-#include "Constants.h"
 
 #include <stdio.h>
 #include <stdlib.h>
