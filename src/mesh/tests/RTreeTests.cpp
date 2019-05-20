@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(QuadAdapter)
             )));
 }
 
-BOOST_AUTO_TEST_CASE(DistanceTest)
+BOOST_AUTO_TEST_CASE(DistanceTestFlatSingleTriangle)
 {
   precice::mesh::Mesh mesh("MyMesh", 3, false);
   auto & v1 = mesh.createVertex(Eigen::Vector3d(0, 0, 0));
@@ -118,6 +118,101 @@ BOOST_AUTO_TEST_CASE(DistanceTest)
   BOOST_TEST(bg::comparable_distance(t, v3) < 0.1);
   BOOST_TEST(bg::comparable_distance(t, v4) > 0.2);
   BOOST_TEST(bg::comparable_distance(t, v5) < 0.01);
+}
+
+BOOST_AUTO_TEST_CASE(DistanceTestFlatDoubleTriangle)
+{
+  precice::mesh::Mesh mesh("MyMesh", 3, false);
+  auto & lv1 = mesh.createVertex(Eigen::Vector3d(-1, 1, 0.1));
+  auto & lv2 = mesh.createVertex(Eigen::Vector3d( 0,-1, 0));
+  auto & lv3 = mesh.createVertex(Eigen::Vector3d(-2, 0,-0.1));
+  auto & le1 = mesh.createEdge(lv1, lv2);
+  auto & le2 = mesh.createEdge(lv2, lv3);
+  auto & le3 = mesh.createEdge(lv3, lv1);
+  auto & lt = mesh.createTriangle(le1, le2, le3);
+
+  auto & rv1 = mesh.createVertex(Eigen::Vector3d(0, 1, 0.1));
+  auto & rv2 = mesh.createVertex(Eigen::Vector3d(2, 0,-0.1));
+  auto & rv3 = mesh.createVertex(Eigen::Vector3d(1,-1, 0));
+  auto & re1 = mesh.createEdge(rv1, rv2);
+  auto & re2 = mesh.createEdge(rv2, rv3);
+  auto & re3 = mesh.createEdge(rv3, rv1);
+  auto & rt = mesh.createTriangle(re1, re2, re3);
+
+  auto & v1 = mesh.createVertex(Eigen::Vector3d(-2, 1, 0));
+  auto & v2 = mesh.createVertex(Eigen::Vector3d( 2,-1, 0));
+  auto & v3 = mesh.createVertex(Eigen::Vector3d( 0, 0, 0));
+
+  auto lt_v1 = bg::comparable_distance(lt, v1);
+  auto lt_v2 = bg::comparable_distance(lt, v2);
+
+  auto rt_v1 = bg::comparable_distance(rt, v1);
+  auto rt_v3 = bg::comparable_distance(rt, v3);
+
+  BOOST_TEST(precice::testing::equals(lt_v1, 0.5));
+  BOOST_TEST(lt_v2 > 0);
+  BOOST_TEST(rt_v1 > 1);
+  BOOST_TEST(rt_v3 > 0);
+}
+
+BOOST_AUTO_TEST_CASE(DistanceTestSlopedTriangle)
+{
+  precice::mesh::Mesh mesh("MyMesh", 3, false);
+  auto & v1 = mesh.createVertex(Eigen::Vector3d(0, 1, 0));
+  auto & v2 = mesh.createVertex(Eigen::Vector3d(1, 1, 1));
+  auto & v3 = mesh.createVertex(Eigen::Vector3d(0, 0, 1));
+  auto & v4 = mesh.createVertex(Eigen::Vector3d(0, 1, 1));
+  auto & v5 = mesh.createVertex(Eigen::Vector3d(1, 0, 0));
+  auto & e1 = mesh.createEdge(v1, v2);
+  auto & e2 = mesh.createEdge(v2, v3);
+  auto & e3 = mesh.createEdge(v3, v1);
+  auto & t = mesh.createTriangle(e1, e2, e3);
+
+  auto t_v4 = bg::comparable_distance(t, v4);
+  auto v4_t = bg::comparable_distance(v4, t);
+  BOOST_TEST(t_v4 > 0.01);
+  BOOST_TEST(v4_t > 0.01);
+  BOOST_TEST(v4_t == t_v4);
+
+  auto t_v5 = bg::comparable_distance(t, v5);
+  auto v5_t = bg::comparable_distance(v5, t);
+  BOOST_TEST(t_v5 > 0.01);
+  BOOST_TEST(v5_t > 0.01);
+  BOOST_TEST(v5_t == t_v5);
+
+  BOOST_TEST(v4_t < t_v5);
+}
+
+BOOST_AUTO_TEST_CASE(EnvelopeTriangleClockWise)
+{
+  using precice::testing::equals;
+  precice::mesh::Mesh mesh("MyMesh", 3, false);
+  auto & v1 = mesh.createVertex(Eigen::Vector3d(0, 1, 0));
+  auto & v2 = mesh.createVertex(Eigen::Vector3d(1, 1, 1));
+  auto & v3 = mesh.createVertex(Eigen::Vector3d(0, 0, 1));
+  auto & e1 = mesh.createEdge(v1, v2);
+  auto & e2 = mesh.createEdge(v2, v3);
+  auto & e3 = mesh.createEdge(v3, v1);
+  auto & t = mesh.createTriangle(e1, e2, e3);
+  auto box = bg::return_envelope<precice::mesh::RTreeBox>(t);
+  BOOST_TEST(equals(box.min_corner(), Eigen::Vector3d{0,0,0}));
+  BOOST_TEST(equals(box.max_corner(), Eigen::Vector3d{1,1,1}));
+}
+
+BOOST_AUTO_TEST_CASE(EnvelopeTriangleCounterclockWise)
+{
+  using precice::testing::equals;
+  precice::mesh::Mesh mesh("MyMesh", 3, false);
+  auto & v1 = mesh.createVertex(Eigen::Vector3d(0, 1, 0));
+  auto & v2 = mesh.createVertex(Eigen::Vector3d(1, 1, 1));
+  auto & v3 = mesh.createVertex(Eigen::Vector3d(0, 0, 1));
+  auto & e1 = mesh.createEdge(v1, v3);
+  auto & e2 = mesh.createEdge(v3, v2);
+  auto & e3 = mesh.createEdge(v2, v1);
+  auto & t = mesh.createTriangle(e1, e2, e3);
+  auto box = bg::return_envelope<precice::mesh::RTreeBox>(t);
+  BOOST_TEST(equals(box.min_corner(), Eigen::Vector3d{0,0,0}));
+  BOOST_TEST(equals(box.max_corner(), Eigen::Vector3d{1,1,1}));
 }
 
 BOOST_AUTO_TEST_SUITE_END() // BG Adapters
