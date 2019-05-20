@@ -1,7 +1,6 @@
 #pragma once
 
 #include "MeshHandle.hpp"
-#include "Constants.hpp"
 #include <string>
 #include <vector>
 #include <set>
@@ -802,5 +801,17 @@ private:
   // @brief To allow white box tests.
   friend struct testing::WhiteboxAccessor;
 };
+
+namespace constants {
+
+const std::string& actionWriteInitialData();
+const std::string& actionWriteIterationCheckpoint();
+const std::string& actionReadIterationCheckpoint();
+const std::string& actionPlotOutput();
+
+int exportVTK();
+int exportAll();
+
+} // namespace precice, constants
 
 } // namespace precice
