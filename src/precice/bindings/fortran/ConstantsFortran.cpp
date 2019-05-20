@@ -4,18 +4,6 @@ extern"C" {
 #include "precice/SolverInterface.hpp"
 #include "utils/assertion.hpp"
 
-void precicef_name_config_
-(
-  char*  nameConfig,
-  int lengthNameConfig )
-{
-  const std::string& name = precice::constants::nameConfiguration();
-  assertion(name.size() < (size_t) lengthNameConfig, name.size(), lengthNameConfig);
-  for (size_t i=0; i < name.size(); i++){
-    nameConfig[i] = name[i];
-  }
-}
-
 void precicef_action_write_iter_checkp_
 (
   char*  nameAction,
