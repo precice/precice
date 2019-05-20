@@ -7,7 +7,7 @@
 #include <memory>
 
 /**
- * Pre-declarations.
+ * forward declarations.
  */
 namespace precice {
   namespace impl {
@@ -812,6 +812,6 @@ const std::string& actionPlotOutput();
 int exportVTK();
 int exportAll();
 
-} // namespace precice, constants
+} // namespace constants
 
 } // namespace precice
