@@ -12,6 +12,4 @@ from PySolverInterface.PySolverInterface import PySolverInterface as PySolverInt
 from precice import action_write_initial_data as PyActionWriteInitialData
 from precice import action_write_iteration_checkpoint as PyActionWriteIterationCheckpoint
 from precice import action_read_iteration_checkpoint as PyActionReadIterationCheckpoint
-from precice import action_plot_output as PyActionPlotOutput
-from precice import export_vtk as PyExportVTK
-from precice import export_all as PyExportAll
+

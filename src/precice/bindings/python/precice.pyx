@@ -106,10 +106,6 @@ cdef extern from "precice/SolverInterface.hpp"  namespace "precice::constants":
    const string& actionWriteInitialData()
    const string& actionWriteIterationCheckpoint()
    const string& actionReadIterationCheckpoint()
-   const string& actionPlotOutput()
-
-   int exportVTK()
-   int exportAll()
 
 
 cdef class Interface:
@@ -410,11 +406,3 @@ def action_write_iteration_checkpoint ():
 def action_read_iteration_checkpoint ():
    return actionReadIterationCheckpoint()
 
-def action_plot_output ():
-   return actionPlotOutput()
-
-def export_vtk ():
-   return exportVTK()
-
-def export_all ():
-   return exportAll()
