@@ -7,7 +7,6 @@
 #include "precice/impl/DataContext.hpp"
 #include "precice/SolverInterface.hpp"
 #include "utils/Parallel.hpp"
-#include "precice/Constants.hpp"
 #include "precice/impl/Participant.hpp"
 #include "precice/config/Configuration.hpp"
 #include "utils/MasterSlave.hpp"
