@@ -33,6 +33,16 @@ void MasterSlave:: configure(int rank, int size)
   DEBUG("slaveMode: " << _slaveMode <<", masterMode: " << _masterMode);
 }
 
+int MasterSlave::getRank()
+{
+  return _rank;
+}
+
+int MasterSlave::getSize()
+{
+  return _size;
+}
+
 double MasterSlave:: l2norm(const Eigen::VectorXd& vec)
 {
   TRACE();

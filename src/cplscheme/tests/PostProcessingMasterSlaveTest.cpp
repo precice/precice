@@ -64,8 +64,7 @@ BOOST_AUTO_TEST_CASE(testVIQNILSpp, * testing::OnSize(4) * boost::unit_test::fix
   DataMap data;
 
   if (utils::Parallel::getProcessRank() == 0) { //Master
-    utils::MasterSlave::_rank = 0;
-    utils::MasterSlave::_size = 4;
+    utils::MasterSlave::configure(0, 4);
     utils::MasterSlave::_slaveMode = false;
     utils::MasterSlave::_masterMode = true;
 
@@ -98,8 +97,7 @@ BOOST_AUTO_TEST_CASE(testVIQNILSpp, * testing::OnSize(4) * boost::unit_test::fix
     fpcd->oldValues.col(0) = fcol1;
 
   } else if (utils::Parallel::getProcessRank() == 1) { //Slave1
-    utils::MasterSlave::_rank = 1;
-    utils::MasterSlave::_size = 4;
+    utils::MasterSlave::configure(1, 4);
     utils::MasterSlave::_slaveMode = true;
     utils::MasterSlave::_masterMode = false;
 
@@ -132,8 +130,7 @@ BOOST_AUTO_TEST_CASE(testVIQNILSpp, * testing::OnSize(4) * boost::unit_test::fix
     fpcd->oldValues.col(0) = fcol1;
 
   } else if (utils::Parallel::getProcessRank() == 2) { //Slave2
-    utils::MasterSlave::_rank = 2;
-    utils::MasterSlave::_size = 4;
+    utils::MasterSlave::configure(2, 4);
     utils::MasterSlave::_slaveMode = true;
     utils::MasterSlave::_masterMode = false;
 
@@ -156,8 +153,7 @@ BOOST_AUTO_TEST_CASE(testVIQNILSpp, * testing::OnSize(4) * boost::unit_test::fix
     fpcd->oldValues.col(0) = fcol1;
 
   } else if (utils::Parallel::getProcessRank() == 3) { //Slave3
-    utils::MasterSlave::_rank = 3;
-    utils::MasterSlave::_size = 4;
+    utils::MasterSlave::configure(3, 4);
     utils::MasterSlave::_slaveMode = true;
     utils::MasterSlave::_masterMode = false;
 
@@ -301,8 +297,7 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp, * testing::OnSize(4) * boost::unit_test::fi
   DataMap data;
 
   if (utils::Parallel::getProcessRank() == 0) { //Master
-    utils::MasterSlave::_rank = 0;
-    utils::MasterSlave::_size = 4;
+    utils::MasterSlave::configure(0, 4);
     utils::MasterSlave::_slaveMode = false;
     utils::MasterSlave::_masterMode = true;
 
@@ -335,8 +330,7 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp, * testing::OnSize(4) * boost::unit_test::fi
     fpcd->oldValues.col(0) = fcol1;
 
   } else if (utils::Parallel::getProcessRank() == 1) { //Slave1
-    utils::MasterSlave::_rank = 1;
-    utils::MasterSlave::_size = 4;
+    utils::MasterSlave::configure(1, 4);
     utils::MasterSlave::_slaveMode = true;
     utils::MasterSlave::_masterMode = false;
 
@@ -369,8 +363,7 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp, * testing::OnSize(4) * boost::unit_test::fi
     fpcd->oldValues.col(0) = fcol1;
 
   } else if (utils::Parallel::getProcessRank() == 2) { //Slave2
-    utils::MasterSlave::_rank = 2;
-    utils::MasterSlave::_size = 4;
+    utils::MasterSlave::configure(2, 4);
     utils::MasterSlave::_slaveMode = true;
     utils::MasterSlave::_masterMode = false;
 
@@ -393,8 +386,7 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp, * testing::OnSize(4) * boost::unit_test::fi
     fpcd->oldValues.col(0) = fcol1;
 
   } else if (utils::Parallel::getProcessRank() == 3) { //Slave3
-    utils::MasterSlave::_rank = 3;
-    utils::MasterSlave::_size = 4;
+    utils::MasterSlave::configure(3, 4);
     utils::MasterSlave::_slaveMode = true;
     utils::MasterSlave::_masterMode = false;
 

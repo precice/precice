@@ -1604,7 +1604,7 @@ void SolverInterfaceImpl:: initializeMasterSlaveCommunication()
   int rankOffset = 1;
   if ( utils::MasterSlave::_masterMode ){
     INFO("Setting up communication to slaves" );
-    utils::MasterSlave::_communication->acceptConnection ( _accessorName + "Master", _accessorName, utils::MasterSlave::_rank);
+    utils::MasterSlave::_communication->acceptConnection ( _accessorName + "Master", _accessorName, utils::MasterSlave::getRank());
     utils::MasterSlave::_communication->setRankOffset(rankOffset);
   }
   else {

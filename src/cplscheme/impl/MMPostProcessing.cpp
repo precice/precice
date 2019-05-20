@@ -123,7 +123,7 @@ void MMPostProcessing::initialize(DataMap &cplData)
 
   /**
    *  make dimensions public to all procs,
-   *  last entry _dimOffsets[MasterSlave::_size] holds the global dimension, global,n
+   *  last entry _dimOffsets[MasterSlave::getSize()] holds the global dimension, global,n
    */
   if (utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode) {
     assertion(utils::MasterSlave::_communication.get() != NULL);
@@ -134,7 +134,7 @@ void MMPostProcessing::initialize(DataMap &cplData)
      *  This information needs to be gathered for all meshes. To get the number of respective unknowns of a specific processor
      *  we need to multiply the number of vertices with the dimensionality of the vector-valued data for each coupling data.
      */
-    _dimOffsets.resize(utils::MasterSlave::_size + 1);
+    _dimOffsets.resize(utils::MasterSlave::getSize() + 1);
     _dimOffsets[0] = 0;
     for (size_t i = 0; i < _dimOffsets.size() - 1; i++) {
       int accumulatedNumberOfUnknowns = 0;
@@ -146,7 +146,7 @@ void MMPostProcessing::initialize(DataMap &cplData)
     }
 
     // test that the computed number of unknown per proc equals the number of entries actually present on that proc
-    size_t unknowns = _dimOffsets[utils::MasterSlave::_rank + 1] - _dimOffsets[utils::MasterSlave::_rank];
+    size_t unknowns = _dimOffsets[utils::MasterSlave::getRank() + 1] - _dimOffsets[utils::MasterSlave::getRank()];
     assertion(entries == unknowns, entries, unknowns);
   }
 

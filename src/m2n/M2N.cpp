@@ -45,7 +45,7 @@ void M2N::acceptMasterConnection(
 
   if (not utils::MasterSlave::_slaveMode) {
     assertion(_masterCom);
-    _masterCom->acceptConnection(acceptorName, requesterName, utils::MasterSlave::_rank);
+    _masterCom->acceptConnection(acceptorName, requesterName, utils::MasterSlave::getRank());
     _isMasterConnected = _masterCom->isConnected();
   }
 
@@ -161,7 +161,7 @@ void M2N::send(
 
 void M2N::send(bool itemToSend)
 {
-  TRACE(utils::MasterSlave::_rank);
+  TRACE(utils::MasterSlave::getRank());
   if (not utils::MasterSlave::_slaveMode) {
     _masterCom->send(itemToSend, 0);
   }
@@ -169,7 +169,7 @@ void M2N::send(bool itemToSend)
 
 void M2N::send(double itemToSend)
 {
-  TRACE(utils::MasterSlave::_rank);
+  TRACE(utils::MasterSlave::getRank());
   if (not utils::MasterSlave::_slaveMode) {
     _masterCom->send(itemToSend, 0);
   }
@@ -204,7 +204,7 @@ void M2N::receive(double *itemsToReceive,
 
 void M2N::receive(bool &itemToReceive)
 {
-  TRACE(utils::MasterSlave::_rank);
+  TRACE(utils::MasterSlave::getRank());
   if (not utils::MasterSlave::_slaveMode) {
     _masterCom->receive(itemToReceive, 0);
   }
@@ -216,7 +216,7 @@ void M2N::receive(bool &itemToReceive)
 
 void M2N::receive(double &itemToReceive)
 {
-  TRACE(utils::MasterSlave::_rank);
+  TRACE(utils::MasterSlave::getRank());
   if (not utils::MasterSlave::_slaveMode) { //coupling mode
     _masterCom->receive(itemToReceive, 0);
   }

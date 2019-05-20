@@ -74,7 +74,7 @@ MVQNPostProcessing::~MVQNPostProcessing()
   // close and shut down cyclic communication connections
   if (not _imvjRestart) {
     if (_cyclicCommRight != nullptr || _cyclicCommLeft != nullptr) {
-      if ((utils::MasterSlave::_rank % 2) == 0) {
+      if ((utils::MasterSlave::getRank() % 2) == 0) {
         _cyclicCommLeft->closeConnection();
         _cyclicCommRight->closeConnection();
       } else {
@@ -113,7 +113,7 @@ void MVQNPostProcessing::initialize(
       try {
         // auto addressDirectory = std::to_string(".");
         if (utils::MasterSlave::_masterMode) {
-          for (int rank = 0; rank < utils::MasterSlave::_size; ++rank) {
+          for (int rank = 0; rank < utils::MasterSlave::getSize(); ++rank) {
             Publisher::createDirectory(std::string(".") + "/" + "." + "cyclicComm-" + std::to_string(rank) + ".address");
           }
         }
@@ -128,25 +128,25 @@ void MVQNPostProcessing::initialize(
       //_cyclicCommRight = com::Communication::SharedPointer(new com::SocketCommunication(0, false, "ib0", "."));
 
       // initialize cyclic communication between successive slaves
-      int prevProc = (utils::MasterSlave::_rank - 1 < 0) ? utils::MasterSlave::_size - 1 : utils::MasterSlave::_rank - 1;
-      if ((utils::MasterSlave::_rank % 2) == 0) {
+      int prevProc = (utils::MasterSlave::getRank() - 1 < 0) ? utils::MasterSlave::getSize() - 1 : utils::MasterSlave::getRank() - 1;
+      if ((utils::MasterSlave::getRank() % 2) == 0) {
 #ifdef SuperMUC_WORK
         Publisher::ScopedPushDirectory spd1(std::string(".") + "cyclicComm-" + std::to_string(prevProc) + ".address");
 #endif
-        _cyclicCommLeft->acceptConnection("cyclicComm-" + std::to_string(prevProc), "", utils::MasterSlave::_rank);
+        _cyclicCommLeft->acceptConnection("cyclicComm-" + std::to_string(prevProc), "", utils::MasterSlave::getRank());
 #ifdef SuperMUC_WORK
-        Publisher::ScopedPushDirectory spd2(std::string(".") + "cyclicComm-" + std::to_string(utils::MasterSlave::_rank) + ".address");
+        Publisher::ScopedPushDirectory spd2(std::string(".") + "cyclicComm-" + std::to_string(utils::MasterSlave::getRank()) + ".address");
 #endif
-        _cyclicCommRight->requestConnection("cyclicComm-" + std::to_string(utils::MasterSlave::_rank), "", 0, 1);
+        _cyclicCommRight->requestConnection("cyclicComm-" + std::to_string(utils::MasterSlave::getRank()), "", 0, 1);
       } else {
 #ifdef SuperMUC_WORK
-        Publisher::ScopedPushDirectory spd3(std::string(".") + "cyclicComm-" + std::to_string(utils::MasterSlave::_rank) + ".address");
+        Publisher::ScopedPushDirectory spd3(std::string(".") + "cyclicComm-" + std::to_string(utils::MasterSlave::getRank()) + ".address");
 #endif
-        _cyclicCommRight->requestConnection("cyclicComm-" + std::to_string(utils::MasterSlave::_rank), "", 0, 1);
+        _cyclicCommRight->requestConnection("cyclicComm-" + std::to_string(utils::MasterSlave::getRank()), "", 0, 1);
 #ifdef SuperMUC_WORK
         Publisher::ScopedPushDirectory spd4(std::string(".") + "cyclicComm-" + std::to_string(prevProc) + ".address");
 #endif
-        _cyclicCommLeft->acceptConnection("cyclicComm-" + std::to_string(prevProc), "", utils::MasterSlave::_rank);
+        _cyclicCommLeft->acceptConnection("cyclicComm-" + std::to_string(prevProc), "", utils::MasterSlave::getRank());
       }
     }
   }

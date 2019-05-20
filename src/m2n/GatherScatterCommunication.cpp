@@ -62,8 +62,8 @@ void GatherScatterCommunication::send(
   assertion(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode);
   assertion(utils::MasterSlave::_communication.get() != nullptr);
   assertion(utils::MasterSlave::_communication->isConnected());
-  assertion(utils::MasterSlave::_size > 1);
-  assertion(utils::MasterSlave::_rank != -1);
+  assertion(utils::MasterSlave::getSize() > 1);
+  assertion(utils::MasterSlave::getRank() != -1);
 
   // Gather data
   if (utils::MasterSlave::_slaveMode) { // Slave
@@ -71,7 +71,7 @@ void GatherScatterCommunication::send(
       utils::MasterSlave::_communication->send(itemsToSend, size, 0);
     }
   } else { // Master
-    assertion(utils::MasterSlave::_rank == 0);
+    assertion(utils::MasterSlave::getRank() == 0);
     mesh::Mesh::VertexDistribution  &vertexDistribution = _mesh->getVertexDistribution();
     int                              globalSize         = _mesh->getGlobalNumberOfVertices() * valueDimension;
     DEBUG("Global Size = " << globalSize);
@@ -85,7 +85,7 @@ void GatherScatterCommunication::send(
     }
 
     // Slaves data
-    for (int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++) {
+    for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
       int slaveSize = vertexDistribution[rankSlave].size() * valueDimension;
       DEBUG("Slave Size = " << slaveSize);
       if (slaveSize > 0) {
@@ -113,8 +113,8 @@ void GatherScatterCommunication::receive(
   assertion(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode);
   assertion(utils::MasterSlave::_communication.get() != nullptr);
   assertion(utils::MasterSlave::_communication->isConnected());
-  assertion(utils::MasterSlave::_size > 1);
-  assertion(utils::MasterSlave::_rank != -1);
+  assertion(utils::MasterSlave::getSize() > 1);
+  assertion(utils::MasterSlave::getRank() != -1);
 
   std::vector<double> globalItemsToReceive;
 
@@ -134,7 +134,7 @@ void GatherScatterCommunication::receive(
       DEBUG("itemsToRec[0] = " << itemsToReceive[0]);
     }
   } else { // Master
-    assertion(utils::MasterSlave::_rank == 0);
+    assertion(utils::MasterSlave::getRank() == 0);
     mesh::Mesh::VertexDistribution &vertexDistribution = _mesh->getVertexDistribution();
 
     // Master data
@@ -145,7 +145,7 @@ void GatherScatterCommunication::receive(
     }
 
     // Slaves data
-    for (int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++) {
+    for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
       int slaveSize = vertexDistribution[rankSlave].size() * valueDimension;
       DEBUG("Slave Size = " << slaveSize);
       if (slaveSize > 0) {

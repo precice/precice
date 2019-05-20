@@ -91,7 +91,7 @@ void print(std::map<int, std::vector<int>> const &m)
 {
   std::ostringstream oss;
 
-  oss << "rank: " << utils::MasterSlave::_rank << "\n";
+  oss << "rank: " << utils::MasterSlave::getRank() << "\n";
 
   for (auto &i : m) {
     for (auto &j : i.second) {
@@ -102,7 +102,7 @@ void print(std::map<int, std::vector<int>> const &m)
   if (utils::MasterSlave::_masterMode) {
     std::string s;
 
-    for (int rank = 1; rank < utils::MasterSlave::_size; ++rank) {
+    for (int rank = 1; rank < utils::MasterSlave::getSize(); ++rank) {
       utils::MasterSlave::_communication->receive(s, rank);
 
       oss << s;
@@ -132,7 +132,7 @@ void printCommunicationPartnerCountStats(std::map<int, std::vector<int>> const &
       count++;
     }
 
-    for (int rank = 1; rank < utils::MasterSlave::_size; ++rank) {
+    for (int rank = 1; rank < utils::MasterSlave::getSize(); ++rank) {
       utils::MasterSlave::_communication->receive(size, rank);
 
       total += size;
@@ -185,7 +185,7 @@ void printLocalIndexCountStats(std::map<int, std::vector<int>> const &m)
       count++;
     }
 
-    for (int rank = 1; rank < utils::MasterSlave::_size; ++rank) {
+    for (int rank = 1; rank < utils::MasterSlave::getSize(); ++rank) {
       utils::MasterSlave::_communication->receive(size, rank);
 
       total += size;
@@ -227,7 +227,7 @@ std::map<int, std::vector<int>> buildCommunicationMap(
     mesh::Mesh::VertexDistribution const &thisVertexDistribution,
     // `otherVertexDistribution' is input vertex distribution from other participant.
     mesh::Mesh::VertexDistribution const &otherVertexDistribution,
-    int                                    thisRank = utils::MasterSlave::_rank)
+    int                                    thisRank = utils::MasterSlave::getRank())
 {
   std::map<int, std::vector<int>> communicationMap;
 
@@ -291,7 +291,7 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
     // Establish connection between participants' master processes.
     auto c = _communicationFactory->newCommunication();
 
-    c->acceptConnection(acceptorName, requesterName, utils::MasterSlave::_rank);
+    c->acceptConnection(acceptorName, requesterName, utils::MasterSlave::getRank());
 
     int requesterMasterRank;
 
@@ -351,7 +351,7 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
     if (utils::MasterSlave::_masterMode) {
       Event e3("m2n.createDirectories");
 
-      for (int rank = 0; rank < utils::MasterSlave::_size; ++rank) {
+      for (int rank = 0; rank < utils::MasterSlave::getSize(); ++rank) {
         Publisher::createDirectory(addressDirectory + "/" + "." + acceptorName + "-" + _mesh->getName() +
                                    "-" + std::to_string(rank) + ".address");
       }
@@ -372,15 +372,15 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
 
 #ifdef SuperMUC_WORK
   Publisher::ScopedPushDirectory spd("." + acceptorName + "-" + _mesh->getName() + "-" +
-                                     std::to_string(utils::MasterSlave::_rank) + ".address");
+                                     std::to_string(utils::MasterSlave::getRank()) + ".address");
 #endif
 
   // Accept point-to-point connections (as server) between the current acceptor
-  // process (in the current participant) with rank `utils::MasterSlave::_rank'
+  // process (in the current participant) with rank `utils::MasterSlave::getRank()'
   // and (multiple) requester processes (in the requester participant).
   _communication->acceptConnectionAsServer(acceptorName,
                                            requesterName,
-                                           utils::MasterSlave::_rank,
+                                           utils::MasterSlave::getRank(),
                                            communicationMap.size());
 
   for (auto const & comMap : communicationMap) {
@@ -491,7 +491,7 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
   // processes (in the acceptor participant) to ranks `accceptingRanks'
   // according to `communicationMap`.
   _communication->requestConnectionAsClient(acceptorName, requesterName,
-                                            acceptingRanks, utils::MasterSlave::_rank);
+                                            acceptingRanks, utils::MasterSlave::getRank());
 
   for (auto &i : communicationMap) {
     auto globalAcceptorRank = i.first;

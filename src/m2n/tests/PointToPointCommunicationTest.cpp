@@ -22,7 +22,7 @@ BOOST_AUTO_TEST_SUITE(M2NTests)
 void process(vector<double> &data)
 {
   for (auto &elem : data) {
-    elem += MasterSlave::_rank + 1;
+    elem += MasterSlave::getRank() + 1;
   }
 }
 
@@ -43,8 +43,7 @@ void P2PComTest1(com::PtrCommunicationFactory cf)
   case 0: {
     Parallel::splitCommunicator("A.Master");
 
-    MasterSlave::_rank       = 0;
-    MasterSlave::_size       = 2;
+    utils::MasterSlave::configure(0, 2);
     MasterSlave::_masterMode = true;
     MasterSlave::_slaveMode  = false;
 
@@ -72,9 +71,7 @@ void P2PComTest1(com::PtrCommunicationFactory cf)
   }
   case 1: {
     Parallel::splitCommunicator("A.Slave");
-
-    MasterSlave::_rank       = 1;
-    MasterSlave::_size       = 2;
+    MasterSlave::configure(1, 2);
     MasterSlave::_masterMode = false;
     MasterSlave::_slaveMode  = true;
 
@@ -87,9 +84,7 @@ void P2PComTest1(com::PtrCommunicationFactory cf)
   }
   case 2: {
     Parallel::splitCommunicator("B.Master");
-
-    MasterSlave::_rank       = 0;
-    MasterSlave::_size       = 2;
+    MasterSlave::configure(0, 2);
     MasterSlave::_masterMode = true;
     MasterSlave::_slaveMode  = false;
 
@@ -117,9 +112,7 @@ void P2PComTest1(com::PtrCommunicationFactory cf)
   }
   case 3: {
     Parallel::splitCommunicator("B.Slave");
-
-    MasterSlave::_rank       = 1;
-    MasterSlave::_size       = 2;
+    MasterSlave::configure(1, 2);
     MasterSlave::_masterMode = false;
     MasterSlave::_slaveMode  = true;
 
@@ -172,9 +165,7 @@ void P2PComTest2(com::PtrCommunicationFactory cf)
   switch (Parallel::getProcessRank()) {
   case 0: {
     Parallel::splitCommunicator("A.Master");
-
-    MasterSlave::_rank       = 0;
-    MasterSlave::_size       = 2;
+    MasterSlave::configure(0, 2);
     MasterSlave::_masterMode = true;
     MasterSlave::_slaveMode  = false;
 
@@ -202,9 +193,7 @@ void P2PComTest2(com::PtrCommunicationFactory cf)
   }
   case 1: {
     Parallel::splitCommunicator("A.Slave");
-
-    MasterSlave::_rank       = 1;
-    MasterSlave::_size       = 2;
+    utils::MasterSlave::configure(1, 2);
     MasterSlave::_masterMode = false;
     MasterSlave::_slaveMode  = true;
 
@@ -217,9 +206,7 @@ void P2PComTest2(com::PtrCommunicationFactory cf)
   }
   case 2: {
     Parallel::splitCommunicator("B.Master");
-
-    MasterSlave::_rank       = 0;
-    MasterSlave::_size       = 2;
+    utils::MasterSlave::configure(0, 2);
     MasterSlave::_masterMode = true;
     MasterSlave::_slaveMode  = false;
 
@@ -247,9 +234,7 @@ void P2PComTest2(com::PtrCommunicationFactory cf)
   }
   case 3: {
     Parallel::splitCommunicator("B.Slave");
-
-    MasterSlave::_rank       = 1;
-    MasterSlave::_size       = 2;
+    MasterSlave::configure(1, 2);
     MasterSlave::_masterMode = false;
     MasterSlave::_slaveMode  = true;
 

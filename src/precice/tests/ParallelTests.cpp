@@ -67,8 +67,8 @@ BOOST_AUTO_TEST_CASE(TestMasterSlaveSetup, * testing::OnSize(4))
     BOOST_TEST(utils::MasterSlave::_slaveMode == true);
   }
 
-  BOOST_TEST(utils::MasterSlave::_rank == utils::Parallel::getProcessRank());
-  BOOST_TEST(utils::MasterSlave::_size == 4);
+  BOOST_TEST(utils::MasterSlave::getRank() == utils::Parallel::getProcessRank());
+  BOOST_TEST(utils::MasterSlave::getSize() == 4);
   BOOST_TEST(utils::MasterSlave::_communication.use_count()>0);
   BOOST_TEST(utils::MasterSlave::_communication->isConnected());
 
@@ -111,7 +111,6 @@ BOOST_AUTO_TEST_CASE(GlobalRBFPartitioning, * testing::OnSize(4))
 {
   std::string configFilename = _pathToTests + "globalRBFPartitioning.xml";
   config::Configuration config;
-  utils::MasterSlave::_rank = utils::Parallel::getProcessRank();
   
   if(utils::Parallel::getProcessRank()<=2){
     utils::Parallel::splitCommunicator( "SolverOne" );

@@ -47,28 +47,26 @@ struct SetupMasterSlaveFixture {
       masterSlaveCom->setRankOffset(1);
       utils::MasterSlave::_masterMode = true;
       utils::MasterSlave::_slaveMode  = false;
-      utils::MasterSlave::_rank       = 0;
+      utils::MasterSlave::configure(0, 4);
     } else if (utils::Parallel::getProcessRank() == 1) {
       utils::Parallel::splitCommunicator("Slaves");
       masterSlaveCom->requestConnection("Master", "Slaves", 0, 3);
       utils::MasterSlave::_masterMode = false;
       utils::MasterSlave::_slaveMode  = true;
-      utils::MasterSlave::_rank       = 1;
+      utils::MasterSlave::configure(1, 4);
     } else if (utils::Parallel::getProcessRank() == 2) {
       utils::Parallel::splitCommunicator("Slaves");
       masterSlaveCom->requestConnection("Master", "Slaves", 1, 3);
       utils::MasterSlave::_masterMode = false;
       utils::MasterSlave::_slaveMode  = true;
-      utils::MasterSlave::_rank       = 2;
+      utils::MasterSlave::configure(2, 4);
     } else if (utils::Parallel::getProcessRank() == 3) {
       utils::Parallel::splitCommunicator("Slaves");
       masterSlaveCom->requestConnection("Master", "Slaves", 2, 3);
       utils::MasterSlave::_masterMode = false;
       utils::MasterSlave::_slaveMode  = true;
-      utils::MasterSlave::_rank       = 3;
+      utils::MasterSlave::configure(3, 4);
     }
-
-    utils::MasterSlave::_size = 4;
   }
 
   ~SetupMasterSlaveFixture()
@@ -76,8 +74,6 @@ struct SetupMasterSlaveFixture {
     utils::Parallel::synchronizeProcesses();
     utils::MasterSlave::_slaveMode  = false;
     utils::MasterSlave::_masterMode = false;
-    utils::MasterSlave::_rank       = -1;
-    utils::MasterSlave::_size       = -1;
     utils::Parallel::clearGroups();
     utils::MasterSlave::_communication.reset();
   }

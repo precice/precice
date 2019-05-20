@@ -18,7 +18,7 @@ using std::rand;
 
 vector<double>
 getData() {
-  int rank = utils::MasterSlave::_rank;
+  int rank = utils::MasterSlave::getRank();
 
   static double data_0[] = {rand(), rand()};
   static double data_1[] = {rand(), rand(), rand()};
@@ -38,7 +38,7 @@ getData() {
 
 vector<double>
 getExpectedData() {
-  int rank = utils::MasterSlave::_rank;
+  int rank = utils::MasterSlave::getRank();
 
   static double data_0[] = {20.0, 50.0};
   static double data_1[] = {10.0, 30.0, 40.0};
@@ -75,7 +75,7 @@ validate(vector<double> const& data) {
 void
 process(vector<double>& data) {
   for (int i = 0; i < data.size(); ++i) {
-    data[i] += utils::MasterSlave::_rank + 1;
+    data[i] += utils::MasterSlave::getRank() + 1;
   }
 }
 
@@ -87,15 +87,15 @@ main(int argc, char** argv) {
 
   MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
 
-  MPI_Comm_size(MPI_COMM_WORLD, &utils::MasterSlave::_size);
-  MPI_Comm_rank(MPI_COMM_WORLD, &utils::MasterSlave::_rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &utils::MasterSlave::getSize());
+  MPI_Comm_rank(MPI_COMM_WORLD, &utils::MasterSlave::getRank());
 
-  if (utils::MasterSlave::_size != 5) {
+  if (utils::MasterSlave::getSize() != 5) {
     std::cout << "Please run with 5 mpi processes\n";
     return 1;
   }
 
-  if (utils::MasterSlave::_rank == 0) {
+  if (utils::MasterSlave::getRank() == 0) {
     utils::MasterSlave::_masterMode = true;
     utils::MasterSlave::_slaveMode = false;
   } else {
@@ -119,15 +119,15 @@ main(int argc, char** argv) {
 
   if (utils::MasterSlave::_masterMode) {
     utils::MasterSlave::_communication->acceptConnection(
-        "Master", "Slave", utils::MasterSlave::_rank, 1);
+        "Master", "Slave", utils::MasterSlave::getRank(), 1);
     utils::MasterSlave::_communication->setRankOffset(rankOffset);
   } else {
     assertion(utils::MasterSlave::_slaveMode);
     utils::MasterSlave::_communication->requestConnection(
         "Master",
         "Slave",
-        utils::MasterSlave::_rank - rankOffset,
-        utils::MasterSlave::_size - rankOffset);
+        utils::MasterSlave::getRank() - rankOffset,
+        utils::MasterSlave::getSize() - rankOffset);
   }
 
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 2, true));
@@ -166,7 +166,7 @@ main(int argc, char** argv) {
 
     c.acceptConnection("B", "A");
 
-    cout << utils::MasterSlave::_rank << ": "
+    cout << utils::MasterSlave::getRank() << ": "
          << "Connected!" << '\n';
 
     std::vector<double> data = getData();
@@ -174,10 +174,10 @@ main(int argc, char** argv) {
     c.receive(data.data(), data.size());
 
     if (validate(data))
-      cout << utils::MasterSlave::_rank << ": "
+      cout << utils::MasterSlave::getRank() << ": "
            << "Success!" << '\n';
     else
-      cout << utils::MasterSlave::_rank << ": "
+      cout << utils::MasterSlave::getRank() << ": "
            << "Failure!" << '\n';
 
     process(data);

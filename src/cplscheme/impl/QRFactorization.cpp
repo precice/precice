@@ -317,7 +317,7 @@ int QRFactorization::orthogonalize(
   if (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode) {
     assertion(_globalRows == _rows, _globalRows, _rows);
   } else {
-    assertion(_globalRows != _rows, _globalRows, _rows, utils::MasterSlave::_rank);
+    assertion(_globalRows != _rows, _globalRows, _rows, utils::MasterSlave::getRank());
   }
 
   bool            null        = false;
@@ -436,7 +436,7 @@ int QRFactorization::orthogonalize_stable(
     assertion(_globalRows == _rows, _globalRows, _rows);
     // master-slave case
   } else {
-    assertion(_globalRows != _rows, _globalRows, _rows, utils::MasterSlave::_rank);
+    assertion(_globalRows != _rows, _globalRows, _rows, utils::MasterSlave::getRank());
   }
 
   bool            restart     = false;
@@ -566,7 +566,7 @@ int QRFactorization::orthogonalize_stable(
 
         if (utils::MasterSlave::_masterMode) {
           global_uk = u(k);
-          for (int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++) {
+          for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
             utils::MasterSlave::_communication->receive(local_k, rankSlave);
             utils::MasterSlave::_communication->receive(local_uk, rankSlave);
             if (local_uk < global_uk) {
@@ -591,7 +591,7 @@ int QRFactorization::orthogonalize_stable(
         if (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode) {
           v(k) = rho1;
         } else {
-          if (utils::MasterSlave::_rank == rank)
+          if (utils::MasterSlave::getRank() == rank)
             v(global_k) = rho1;
         }
         k = 0;

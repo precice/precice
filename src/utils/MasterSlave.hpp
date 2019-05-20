@@ -13,11 +13,6 @@ class MasterSlave
 {
 public:
 
-  static int _rank;
-
-  /// Number of ranks. This includes ranks from both participants, e.g. minimal size is 2.
-  static int _size;
-
   /// The rank of the master. At this time it is hardcoded to 0.
   static int _masterRank;
 
@@ -31,6 +26,12 @@ public:
 
   /// Configures the master-slave communication.
   static void configure(int rank, int size);
+
+  /// Current rank
+  static int getRank();
+
+  /// Number of ranks. This includes ranks from both participants, e.g. minimal size is 2.
+  static int getSize();
 
   /// The l2 norm of a vector is calculated on distributed data.
   static double l2norm(const Eigen::VectorXd& vec);
@@ -56,10 +57,17 @@ public:
   
   static void broadcast(double* values, int size);
 
+  /// Current rank
+  static int _rank;
+
+  /// Number of ranks. This includes ranks from both participants, e.g. minimal size is 2.
+  static int _size;
+
 private:
 
   static logging::Logger _log;
 
+  
 };
 
 

@@ -42,10 +42,10 @@ void ProvidedPartition::communicate()
         com::CommunicateMesh(utils::MasterSlave::_communication).sendMesh(*_mesh, 0);
     }
     if (utils::MasterSlave::_masterMode)  {
-      assertion(utils::MasterSlave::_rank == 0);
-      assertion(utils::MasterSlave::_size > 1);
+      assertion(utils::MasterSlave::getRank() == 0);
+      assertion(utils::MasterSlave::getSize() > 1);
 
-      for (int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++) {
+      for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
         com::CommunicateMesh(utils::MasterSlave::_communication).receiveMesh(globalMesh, rankSlave);
         DEBUG("Received sub-mesh, from slave: " << rankSlave << ", global vertexCount: " << globalMesh.vertices().size());
       }
@@ -95,7 +95,7 @@ void ProvidedPartition::compute()
     assertion(globalNumberOfVertices != -1);
     _mesh->setGlobalNumberOfVertices(globalNumberOfVertices);
   } else if (utils::MasterSlave::_masterMode) {
-    assertion(utils::MasterSlave::_size > 1);
+    assertion(utils::MasterSlave::getSize() > 1);
     int vertexCounter = 0;
 
     // Add master vertices
@@ -105,7 +105,7 @@ void ProvidedPartition::compute()
       vertexCounter++;
     }
 
-    for (int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++) {
+    for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
       utils::MasterSlave::_communication->receive(numberOfVertices, rankSlave);
       utils::MasterSlave::_communication->send(vertexCounter, rankSlave);
 

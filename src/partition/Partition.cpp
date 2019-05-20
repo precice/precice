@@ -22,9 +22,9 @@ void Partition::computeVertexOffsets()
     DEBUG("My vertex offsets: " << _mesh->getVertexOffsets());
     
   } else if (utils::MasterSlave::_masterMode) {
-    _mesh->getVertexOffsets().resize(utils::MasterSlave::_size);
+    _mesh->getVertexOffsets().resize(utils::MasterSlave::getSize());
     _mesh->getVertexOffsets()[0] = _mesh->getVertexDistribution()[0].size();
-    for (int rank = 1; rank < utils::MasterSlave::_size; rank++) {
+    for (int rank = 1; rank < utils::MasterSlave::getSize(); rank++) {
       _mesh->getVertexOffsets()[rank] = _mesh->getVertexDistribution()[rank].size() + _mesh->getVertexOffsets()[rank - 1];
     }
     DEBUG("My vertex offsets: " << _mesh->getVertexOffsets());
