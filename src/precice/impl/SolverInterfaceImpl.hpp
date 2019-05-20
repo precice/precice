@@ -1,7 +1,7 @@
 #pragma once
 
 #include "precice/MeshHandle.hpp"
-#include "precice/Constants.hpp"
+#include "precice/SolverInterface.hpp"
 #include "precice/impl/SharedPointer.hpp"
 #include "precice/impl/DataContext.hpp"
 #include "action/Action.hpp"
