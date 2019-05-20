@@ -8,6 +8,7 @@ const char* precicec_nameConfiguration();
 
 const char* precicec_actionWriteIterationCheckpoint();
 const char* precicec_actionReadIterationCheckpoint();
+const char* precicec_actionWriteInitialData();
 
 #ifdef __cplusplus
 }

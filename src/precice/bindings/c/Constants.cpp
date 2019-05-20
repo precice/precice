@@ -19,3 +19,8 @@ const char* precicec_actionReadIterationCheckpoint()
   return precice::constants::actionReadIterationCheckpoint().c_str();
 }
 
+const char* precicec_actionWriteInitialData()
+{
+  return precice::constants::actionWriteInitialData().c_str();
+}
+
