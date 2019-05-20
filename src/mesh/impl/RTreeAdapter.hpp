@@ -139,6 +139,7 @@ template <>
 struct tag<pm::Quad> {
   using type = ring_tag;
 };
+template <>
 struct point_order<pm::Quad> {
   static const order_selector value = clockwise;
 };
