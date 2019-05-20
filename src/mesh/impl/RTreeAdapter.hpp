@@ -39,7 +39,7 @@ struct access<Eigen::VectorXd, Dimension>
   {
     // This handles default initialized VectorXd
     if (p.size() == 0) {
-        p.resize(3);
+        p = Eigen::VectorXd::Zero(3);
     }
     p[Dimension] = value;
   }
