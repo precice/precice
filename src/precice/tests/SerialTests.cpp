@@ -6,7 +6,6 @@
 #include "precice/impl/MeshContext.hpp"
 #include "precice/impl/DataContext.hpp"
 #include "precice/SolverInterface.hpp"
-#include "precice/Constants.hpp"
 #include "utils/Parallel.hpp"
 #include "precice/Constants.hpp"
 #include "precice/impl/Participant.hpp"
