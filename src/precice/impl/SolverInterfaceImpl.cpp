@@ -187,7 +187,7 @@ void SolverInterfaceImpl:: configure
   if (_clientMode){
     initializeClientServerCommunication();
   }
-  if (utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode){
+  if (utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave()){
     initializeMasterSlaveCommunication();
   }
 
@@ -348,7 +348,7 @@ double SolverInterfaceImpl:: advance
   }
   else {
 #   ifndef NDEBUG
-    if(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode){
+    if(utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave()){
       syncTimestep(computedTimestepLength);
     }
 #   endif
@@ -448,7 +448,7 @@ void SolverInterfaceImpl:: finalize()
     std::string ping = "ping";
     std::string pong = "pong";
     for (auto &iter : _m2ns) {
-      if( not utils::MasterSlave::_slaveMode){
+      if( not utils::MasterSlave::isSlave()){
         if(iter.second.isRequesting){
           iter.second.m2n->getMasterCommunication()->send(ping,0);
           std::string receive = "init";
@@ -465,7 +465,7 @@ void SolverInterfaceImpl:: finalize()
       iter.second.m2n->closeConnection();
     }
   }
-  if(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode){
+  if(utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster()){
     utils::MasterSlave::_communication->closeConnection();
     utils::MasterSlave::_communication = nullptr;
   }
@@ -477,7 +477,7 @@ void SolverInterfaceImpl:: finalize()
   // Stop and print Event logging
   e.stop();
   utils::EventRegistry::instance().finalize();
-  if (not precice::testMode and not precice::utils::MasterSlave::_slaveMode) {
+  if (not precice::testMode and not precice::utils::MasterSlave::isSlave()) {
     utils::EventRegistry::instance().printAll();
   }
 
@@ -1602,13 +1602,13 @@ void SolverInterfaceImpl:: initializeMasterSlaveCommunication()
   //therefore, the master uses a rankOffset and the slaves have to call request
   // with that offset
   int rankOffset = 1;
-  if ( utils::MasterSlave::_masterMode ){
+  if ( utils::MasterSlave::isMaster() ){
     INFO("Setting up communication to slaves" );
-    utils::MasterSlave::_communication->acceptConnection ( _accessorName + "Master", _accessorName, utils::MasterSlave::_rank);
+    utils::MasterSlave::_communication->acceptConnection ( _accessorName + "Master", _accessorName, utils::MasterSlave::getRank());
     utils::MasterSlave::_communication->setRankOffset(rankOffset);
   }
   else {
-    assertion(utils::MasterSlave::_slaveMode);
+    assertion(utils::MasterSlave::isSlave());
     utils::MasterSlave::_communication->requestConnection( _accessorName + "Master", _accessorName,
                             _accessorProcessRank-rankOffset, _accessorCommunicatorSize-rankOffset );
   }
@@ -1616,11 +1616,11 @@ void SolverInterfaceImpl:: initializeMasterSlaveCommunication()
 
 void SolverInterfaceImpl:: syncTimestep(double computedTimestepLength)
 {
-  assertion(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode);
-  if(utils::MasterSlave::_slaveMode){
+  assertion(utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave());
+  if(utils::MasterSlave::isSlave()){
     utils::MasterSlave::_communication->send(computedTimestepLength, 0);
   }
-  else if(utils::MasterSlave::_masterMode){
+  else if(utils::MasterSlave::isMaster()){
     for(int rankSlave = 1; rankSlave < _accessorCommunicatorSize; rankSlave++){
       double dt;
       utils::MasterSlave::_communication->receive(dt, rankSlave);
