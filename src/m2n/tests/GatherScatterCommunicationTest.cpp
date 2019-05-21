@@ -124,8 +124,7 @@ BOOST_AUTO_TEST_CASE(GatherScatterTest, *testing::OnSize(4))
 
   utils::MasterSlave::_communication.reset();
   utils::MasterSlave::configure(utils::Parallel::getProcessRank(), utils::Parallel::getCommunicatorSize());
-  utils::MasterSlave::_isSlave  = false;
-  utils::MasterSlave::_isMaster = false;
+  utils::MasterSlave::reset();
 
   utils::Parallel::synchronizeProcesses();
   utils::Parallel::clearGroups();
