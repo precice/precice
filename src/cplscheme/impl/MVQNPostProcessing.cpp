@@ -69,12 +69,12 @@ MVQNPostProcessing::MVQNPostProcessing(
 // ==================================================================================
 MVQNPostProcessing::~MVQNPostProcessing()
 {
-  //if(utils::MasterSlave::_masterMode ||utils::MasterSlave::_slaveMode){ // not possible because of tests, MasterSlave is deactivated when PP is killed
+  //if(utils::MasterSlave::isMaster() ||utils::MasterSlave::isSlave()){ // not possible because of tests, MasterSlave is deactivated when PP is killed
 
   // close and shut down cyclic communication connections
   if (not _imvjRestart) {
     if (_cyclicCommRight != nullptr || _cyclicCommLeft != nullptr) {
-      if ((utils::MasterSlave::_rank % 2) == 0) {
+      if ((utils::MasterSlave::getRank() % 2) == 0) {
         _cyclicCommLeft->closeConnection();
         _cyclicCommRight->closeConnection();
       } else {
@@ -101,7 +101,7 @@ void MVQNPostProcessing::initialize(
 
   // only need cyclic communication if no MVJ restart mode is used
   if (not _imvjRestart) {
-    if (utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode) {
+    if (utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave()) {
     /*
      * @todo: FIXME: This is a temporary and hacky realization of the cyclic commmunication between slaves
      *        Therefore the requesterName and accessorName are not given (cf solverInterfaceImpl).
@@ -112,8 +112,8 @@ void MVQNPostProcessing::initialize(
 #ifdef SuperMUC_WORK
       try {
         // auto addressDirectory = std::to_string(".");
-        if (utils::MasterSlave::_masterMode) {
-          for (int rank = 0; rank < utils::MasterSlave::_size; ++rank) {
+        if (utils::MasterSlave::isMaster()) {
+          for (int rank = 0; rank < utils::MasterSlave::getSize(); ++rank) {
             Publisher::createDirectory(std::string(".") + "/" + "." + "cyclicComm-" + std::to_string(rank) + ".address");
           }
         }
@@ -128,25 +128,25 @@ void MVQNPostProcessing::initialize(
       //_cyclicCommRight = com::Communication::SharedPointer(new com::SocketCommunication(0, false, "ib0", "."));
 
       // initialize cyclic communication between successive slaves
-      int prevProc = (utils::MasterSlave::_rank - 1 < 0) ? utils::MasterSlave::_size - 1 : utils::MasterSlave::_rank - 1;
-      if ((utils::MasterSlave::_rank % 2) == 0) {
+      int prevProc = (utils::MasterSlave::getRank() - 1 < 0) ? utils::MasterSlave::getSize() - 1 : utils::MasterSlave::getRank() - 1;
+      if ((utils::MasterSlave::getRank() % 2) == 0) {
 #ifdef SuperMUC_WORK
         Publisher::ScopedPushDirectory spd1(std::string(".") + "cyclicComm-" + std::to_string(prevProc) + ".address");
 #endif
-        _cyclicCommLeft->acceptConnection("cyclicComm-" + std::to_string(prevProc), "", utils::MasterSlave::_rank);
+        _cyclicCommLeft->acceptConnection("cyclicComm-" + std::to_string(prevProc), "", utils::MasterSlave::getRank());
 #ifdef SuperMUC_WORK
-        Publisher::ScopedPushDirectory spd2(std::string(".") + "cyclicComm-" + std::to_string(utils::MasterSlave::_rank) + ".address");
+        Publisher::ScopedPushDirectory spd2(std::string(".") + "cyclicComm-" + std::to_string(utils::MasterSlave::getRank()) + ".address");
 #endif
-        _cyclicCommRight->requestConnection("cyclicComm-" + std::to_string(utils::MasterSlave::_rank), "", 0, 1);
+        _cyclicCommRight->requestConnection("cyclicComm-" + std::to_string(utils::MasterSlave::getRank()), "", 0, 1);
       } else {
 #ifdef SuperMUC_WORK
-        Publisher::ScopedPushDirectory spd3(std::string(".") + "cyclicComm-" + std::to_string(utils::MasterSlave::_rank) + ".address");
+        Publisher::ScopedPushDirectory spd3(std::string(".") + "cyclicComm-" + std::to_string(utils::MasterSlave::getRank()) + ".address");
 #endif
-        _cyclicCommRight->requestConnection("cyclicComm-" + std::to_string(utils::MasterSlave::_rank), "", 0, 1);
+        _cyclicCommRight->requestConnection("cyclicComm-" + std::to_string(utils::MasterSlave::getRank()), "", 0, 1);
 #ifdef SuperMUC_WORK
         Publisher::ScopedPushDirectory spd4(std::string(".") + "cyclicComm-" + std::to_string(prevProc) + ".address");
 #endif
-        _cyclicCommLeft->acceptConnection("cyclicComm-" + std::to_string(prevProc), "", utils::MasterSlave::_rank);
+        _cyclicCommLeft->acceptConnection("cyclicComm-" + std::to_string(prevProc), "", utils::MasterSlave::getRank());
       }
     }
   }
@@ -159,7 +159,7 @@ void MVQNPostProcessing::initialize(
   int entries  = _residuals.size();
   int global_n = 0;
 
-  if (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode) {
+  if (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()) {
     global_n = entries;
   } else {
     global_n = _dimOffsets.back();
@@ -178,7 +178,7 @@ void MVQNPostProcessing::initialize(
   }
   _Wtil = Eigen::MatrixXd::Zero(entries, 0);
 
-  if (utils::MasterSlave::_masterMode || (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode))
+  if (utils::MasterSlave::isMaster() || (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()))
     _infostringstream << " IMVJ restart mode: " << _imvjRestart << "\n chunk size: " << _chunkSize << "\n trunc eps: " << _svdJ.getThreshold() << "\n R_RS: " << _RSLSreusedTimesteps << "\n--------\n"
                       << '\n';
 }
@@ -626,7 +626,7 @@ void MVQNPostProcessing::restartIMVJ()
 
     DEBUG("MVJ-RESTART, mode=SVD. Rank of truncated SVD of Jacobian " << rankAfter << ", new modes: " << rankAfter - rankBefore << ", truncated modes: " << waste << " avg rank: " << _avgRank / _nbRestarts);
     //double percentage = 100.0*used_storage/(double)theoreticalJ_storage;
-    if (utils::MasterSlave::_masterMode || (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode))
+    if (utils::MasterSlave::isMaster() || (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()))
       _infostringstream << " - MVJ-RESTART " << _nbRestarts << ", mode= SVD -\n  new modes: " << rankAfter - rankBefore << "\n  rank svd: " << rankAfter << "\n  avg rank: " << _avgRank / _nbRestarts << "\n  truncated modes: " << waste << "\n"
                         << '\n';
 
@@ -703,7 +703,7 @@ void MVQNPostProcessing::restartIMVJ()
     }
 
     DEBUG("MVJ-RESTART, mode=LS. Restart with " << _matrixV_RSLS.cols() << " columns from " << _RSLSreusedTimesteps << " time steps.");
-    if (utils::MasterSlave::_masterMode || (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode))
+    if (utils::MasterSlave::isMaster() || (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()))
       _infostringstream << " - MVJ-RESTART" << _nbRestarts << ", mode= LS -\n  used cols: " << _matrixV_RSLS.cols() << "\n  R_RS: " << _RSLSreusedTimesteps << "\n"
                         << '\n';
 

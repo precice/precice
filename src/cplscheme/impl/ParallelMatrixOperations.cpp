@@ -19,7 +19,7 @@ void ParallelMatrixOperations::initialize(
   TRACE();
 
   _needCycliclComm = needCyclicComm;
-  if (utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode) {
+  if (utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave()) {
 
     _cyclicCommLeft  = leftComm;
     _cyclicCommRight = rightComm;
