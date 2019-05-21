@@ -804,8 +804,13 @@ private:
 
 namespace constants {
 
+// @brief TODO
 const std::string& actionWriteInitialData();
+
+// @brief TODO
 const std::string& actionWriteIterationCheckpoint();
+
+// @brief TODO
 const std::string& actionReadIterationCheckpoint();
 
 } // namespace constants
