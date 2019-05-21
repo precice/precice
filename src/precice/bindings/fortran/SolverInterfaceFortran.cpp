@@ -1,5 +1,5 @@
 #include "SolverInterfaceFortran.hpp"
-#include "precice/impl/SolverInterfaceImpl.hpp"
+#include "precice/SolverInterface.hpp"
 #include <iostream>
 #include <string>
 #include "logging/Logger.hpp"
