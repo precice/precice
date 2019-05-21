@@ -34,27 +34,29 @@ dimensions = interface.get_dimensions()
 vertex = np.random.rand((n + 1) * dimensions)
 data_indices = np.zeros(n)
 
+# add n vertices
 interface.set_mesh_vertices(mesh_id, n, vertex[:dimensions*n], data_indices)
-
 for i, idx in enumerate(data_indices):
     assert(idx == i)  # data_indices are initialized in ascending order: [0, 1, ..., n-1]
 
+# add one more vertex
 idx = interface.set_mesh_vertex(mesh_id, vertex[dimensions*n:dimensions*(n+1)])
 assert(idx == n)  # if we add one more vertex, we get id = n
 
+# make sure that vertex has been appended
 n_vertices = interface.get_mesh_vertex_size(mesh_id)
 assert(n_vertices == n+1)
 
-print(vertex)
-
+# get all vertex positions
 position = np.zeros(dimensions * (n+1))
 interface.get_mesh_vertices(mesh_id, n+1, np.array(range(n+1)), position)
+assert(np.array_equal(position, vertex))   
 
+# get individual positions
 for idx in range(n+1):
     position = np.zeros(dimensions)
-    print(idx)
     interface.get_mesh_vertices(mesh_id, 1, [idx], position)  # TODO: Here we have a failing assertion. This is behavior is incorrect!
-    assert(np.array_equal(position, np.array(idx * dimensions) + np.array(range(dimensions))))   
+    assert(np.array_equal(position, vertex[idx*dimensions:(idx+1)*dimensions]))   
 
 dt = interface.initialize()
     
