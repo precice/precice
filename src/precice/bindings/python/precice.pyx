@@ -214,7 +214,7 @@ cdef class Interface:
 
    # returns a handle to a created mesh
    def get_mesh_handle(self, mesh_name):
-      raise Exception("not implemented!")
+      raise Exception("The API method get_mesh_handle is not yet available for the Python bindings.")
 
    # creates a mesh vertex
    def set_mesh_vertex(self, mesh_id, position):
