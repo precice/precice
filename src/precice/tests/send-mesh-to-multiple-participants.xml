@@ -2,7 +2,7 @@
 
 <precice-configuration>
    <solver-interface dimensions="2">   
-      <data:vector name="Data"/>
+      <data:scalar name="Data"/>
    
       <mesh name="MeshA">
          <use-data name="Data"/>
@@ -40,14 +40,14 @@
       
       <coupling-scheme:serial-explicit> 
          <participants first="SolverOne" second="SolverTwo"/> 
-         <max-timesteps value="10"/>
+         <max-timesteps value="1"/>
          <timestep-length value="1.0"/>
          <exchange data="Data" mesh="MeshA" from="SolverOne" to="SolverTwo"/>
       </coupling-scheme:serial-explicit>   
       
       <coupling-scheme:serial-explicit> 
          <participants first="SolverOne" second="SolverThree"/> 
-         <max-timesteps value="10"/>
+         <max-timesteps value="1"/>
          <timestep-length value="1.0"/>
          <exchange data="Data" mesh="MeshA" from="SolverOne" to="SolverThree"/>
       </coupling-scheme:serial-explicit>                  
