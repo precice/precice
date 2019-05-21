@@ -201,20 +201,18 @@ double SolverInterfaceImpl:: initialize()
       std::string remoteName(m2nPair.first);
       CHECK(m2n.get() != nullptr,
             "M2N communication from " << localName << " to participant "
-            << remoteName << " could not be created! Check compile flags used!");
+            << remoteName << " could not be created! Check compile flags used!");           
       if (m2nPair.second.isRequesting){
         m2n->requestMasterConnection(remoteName, localName);
       }
       else {
         m2n->acceptMasterConnection(localName, remoteName);
       }
-    }
+    }    
     INFO("Coupling partner/s are connected " );
 
-    WARN("Perform initializations");
-
     computeBoundingBoxs();
-
+    
     typedef std::map<std::string,M2NWrap>::value_type M2NPair;
     INFO("Setting up slaves communication to coupling partner/s " );
     for (M2NPair& m2nPair : _m2ns) {
@@ -224,21 +222,24 @@ double SolverInterfaceImpl:: initialize()
       CHECK(m2n.get() != nullptr,
                    "Communication from " << localName << " to participant "
                    << remoteName << " could not be created! Check compile flags used!");
-      if (m2nPair.second.isRequesting){
+   
+      if (m2nPair.second.isRequesting){        
         m2n->requestSlavesPreConnection(remoteName, localName);
       }
-      else {
+      else {  
         m2n->acceptSlavesPreConnection(localName, remoteName);
       }
     }
-    INFO("Slaves are connected" );
     
+    INFO("Slaves are connected" );      
     computePartitions();
 
     for (M2NPair& m2nPair : _m2ns) {
       m2n::PtrM2N& m2n = m2nPair.second.m2n;
       m2n->updateVertexList();     
     }
+
+    INFO("Vertex lists are updated!" );
 
     std::set<action::Action::Timing> timings;
     double dt = 0.0;
@@ -268,10 +269,8 @@ double SolverInterfaceImpl:: initialize()
   }
 
   solverInitEvent.start();
-
-  WARN("Initialization done!" );
+  INFO("preCICE is initialized successfully");
   return _couplingScheme->getNextTimestepMaxLength(); 
-
 }
 
 
@@ -314,7 +313,6 @@ void SolverInterfaceImpl:: initializeData ()
       }
     }
   }
-  
   solverInitEvent.start();
 }
 
@@ -323,13 +321,11 @@ double SolverInterfaceImpl:: advance
   double computedTimestepLength )
 {
   TRACE(computedTimestepLength);
-
   // Events for the solver time, stopped when we enter, restarted when we leave advance
   auto & solverEvent = EventRegistry::instance().getStoredEvent("solver.advance");
   solverEvent.stop();
   auto & solverInitEvent = EventRegistry::instance().getStoredEvent("solver.initialize");
   solverInitEvent.stop();
-
   Event e("advance");
   utils::ScopedEventPrefix sep("advance/");
 
@@ -348,8 +344,7 @@ double SolverInterfaceImpl:: advance
     double timestepLength = 0.0; // Length of (full) current dt
     double timestepPart = 0.0;   // Length of computed part of (full) curr. dt
     double time = 0.0;
-
-
+    
     // Update the coupling scheme time state. Necessary to get correct remainder.
     _couplingScheme->addComputedTime(computedTimestepLength);
 
@@ -363,7 +358,6 @@ double SolverInterfaceImpl:: advance
     timestepPart = timestepLength - _couplingScheme->getThisTimestepRemainder();
     time = _couplingScheme->getTime();
 
-
     mapWrittenData();
 
     std::set<action::Action::Timing> timings;
@@ -374,9 +368,10 @@ double SolverInterfaceImpl:: advance
     }
     performDataActions(timings, time, computedTimestepLength, timestepPart, timestepLength);
 
+    
     DEBUG("Advancing coupling scheme");
     _couplingScheme->advance();
-
+    
     timings.clear();
     timings.insert(action::Action::ALWAYS_POST);
     if (_couplingScheme->hasDataBeenExchanged()){
@@ -1533,22 +1528,18 @@ void SolverInterfaceImpl:: computeBoundingBoxs()
 {  
   // sort meshContexts by name, for communication in right order.
   std::sort (_accessor->usedMeshContexts().begin(), _accessor->usedMeshContexts().end(),
-      []( MeshContext* lhs, const MeshContext* rhs) -> bool
-      {
-        return lhs->mesh->getName() > rhs->mesh->getName();
-        } );
-
- 
-  for (MeshContext* meshContext : _accessor->usedMeshContexts()){
+             []( MeshContext* lhs, const MeshContext* rhs) -> bool
+             {
+               return lhs->mesh->getName() < rhs->mesh->getName();
+             }
+    );
+  
+  
+  for (MeshContext* meshContext : _accessor->usedMeshContexts())
+  {
     meshContext->mesh->buildBoundingBox();
-    meshContext->partition->communicateBoundingBox();
+    meshContext->partition->communicateBoundingBox();    
   }
-
-    // std::sort (_accessor->usedMeshContexts().begin(), _accessor->usedMeshContexts().end(),
-    //   []( MeshContext* lhs, const MeshContext* rhs) -> bool
-    //   {
-    //     return lhs->mesh->getName() > rhs->mesh->getName();
-    //     } );
 
   
   for (MeshContext* meshContext : _accessor->usedMeshContexts()){
@@ -1559,45 +1550,26 @@ void SolverInterfaceImpl:: computeBoundingBoxs()
 
 void SolverInterfaceImpl:: computePartitions()
 {
-  //We need to do this in two loops: First, communicate the mesh and later compute the partition.
-  //Originally, this was done in one loop. This however gave deadlock if two meshes needed to be communicated cross-wise.
-  //Both loops need a different sorting
 
-  // sort meshContexts by name, for communication in right order.
-  /*
-  std::sort (_accessor->usedMeshContexts().begin(), _accessor->usedMeshContexts().end(),
-      []( MeshContext* lhs, const MeshContext* rhs) -> bool
-      {
-        return lhs->mesh->getName() < rhs->mesh->getName();
-      } );
-  */
+// sort meshContexts by name, for communication in right order.
+  std::sort
+    (_accessor->usedMeshContexts().begin(), _accessor->usedMeshContexts().end(),
+     []( MeshContext* lhs, const MeshContext* rhs) -> bool
+     {
+       return lhs->mesh->getName() < rhs->mesh->getName();
+     }
+      );
+
   for (MeshContext* meshContext : _accessor->usedMeshContexts()){
     meshContext->partition->communicate();
   }
-  WARN("communicate done");
-/*
-  // now sort provided meshes up front, to have them ready for the decomposition
-  std::sort (_accessor->usedMeshContexts().begin(), _accessor->usedMeshContexts().end(),
-      []( MeshContext* lhs, const MeshContext* rhs) -> bool
-      {
-        if(lhs->provideMesh && not rhs->provideMesh){
-          return true;
-        }
-        if(not lhs->provideMesh && rhs->provideMesh){
-          return false;
-        }
-        return lhs->mesh->getName() < rhs->mesh->getName();
-      } );
-*/
+   
   for (MeshContext* meshContext : _accessor->usedMeshContexts()){
-    meshContext->mesh->buildBoundingBox();
     meshContext->partition->compute();
     meshContext->mesh->computeState();
     meshContext->mesh->allocateDataValues();
-    }
-  WARN("compute done");
+  }
 }
-
 
 void SolverInterfaceImpl:: mapWrittenData()
 {

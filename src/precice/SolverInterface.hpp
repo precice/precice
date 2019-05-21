@@ -26,6 +26,8 @@ namespace PreciceTests {
     struct TestQN;
     struct testDistributedCommunications;
     struct CouplingOnLine;
+    struct testBoundingBoxInitialization;
+    struct testBoundingBoxInitializationTwoWay;
   }
   namespace Serial {
     struct TestExplicit;
@@ -598,6 +600,8 @@ private:
   friend struct PreciceTests::Parallel::TestQN;
   friend struct PreciceTests::Parallel::testDistributedCommunications;
   friend struct PreciceTests::Parallel::CouplingOnLine;
+  friend struct PreciceTests::Parallel::testBoundingBoxInitialization;
+  friend struct PreciceTests::Parallel::testBoundingBoxInitializationTwoWay;
   friend struct PreciceTests::Serial::TestExplicit;
   friend struct PreciceTests::Serial::TestConfiguration;
   friend struct PreciceTests::Serial::testExplicitWithSubcycling;

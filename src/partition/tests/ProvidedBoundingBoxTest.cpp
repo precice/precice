@@ -565,13 +565,7 @@ BOOST_AUTO_TEST_CASE(TestCompute2D, * testing::OnSize(4))
     position << -1.0, 1.0;
     mesh->createVertex(position);
     position << -2.0, 1.0;
-    mesh->createVertex(position);
-    position << -2.0, 2.0;
-    mesh->createVertex(position);
-    position << -1.0, 2.0;
-    mesh->createVertex(position);
-    position <<  0.0, 2.0;
-    mesh->createVertex(position);           
+    mesh->createVertex(position);   
     break;
   }
   case 1: {
@@ -585,11 +579,6 @@ BOOST_AUTO_TEST_CASE(TestCompute2D, * testing::OnSize(4))
     position <<  2.0, 1.0;
     mesh->createVertex(position);
     position <<  1.0, 1.0;
-    mesh->createVertex(position);
-    position <<  1.0, 2.0;
-    mesh->createVertex(position);
-    position <<  2.0, 2.0;
-    mesh->createVertex(position);
     break;
   }
   case 2: { 
@@ -676,9 +665,9 @@ BOOST_AUTO_TEST_CASE(TestCompute2D, * testing::OnSize(4))
     }
     else
     {
-      BOOST_TEST(mesh->getCommunicationMap()[0][0] == 8);
-      BOOST_TEST(mesh->getCommunicationMap()[1][0] == 9);
-      BOOST_TEST(mesh->getCommunicationMap()[1][1] == 10);
+      BOOST_TEST(mesh->getCommunicationMap()[0][0] == 0);
+      BOOST_TEST(mesh->getCommunicationMap()[1][0] == 1);
+      BOOST_TEST(mesh->getCommunicationMap()[1][1] == 2);
     } 
     
   }
@@ -829,9 +818,9 @@ BOOST_AUTO_TEST_CASE(TestCompute3D, * testing::OnSize(4))
     }
     else
     {
-      BOOST_TEST(mesh->getCommunicationMap()[0][0] == 5);
-      BOOST_TEST(mesh->getCommunicationMap()[1][0] == 6);
-      BOOST_TEST(mesh->getCommunicationMap()[1][1] == 7);
+      BOOST_TEST(mesh->getCommunicationMap()[0][0] == 0);
+      BOOST_TEST(mesh->getCommunicationMap()[1][0] == 1);
+      BOOST_TEST(mesh->getCommunicationMap()[1][1] == 2);
     }     
   }
   else

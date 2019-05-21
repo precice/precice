@@ -395,22 +395,7 @@ BOOST_AUTO_TEST_CASE(testDistributedCommunications, * testing::OnSize(4))
     std::vector<Eigen::VectorXd> expectedData;
 
     Eigen::Vector3d position;
-    Eigen::Vector3d datum;
-
-    for( int i=0; i<4; i++){
-      position[0] = i*1.0;
-      position[1] = 0.0;
-      position[2] = 0.0;
-      positions.push_back(position);
-      datum[0] = i*1.0;
-      datum[1] = i*1.0;
-      datum[2] = 0.0;
-      data.push_back(datum);
-      datum[0] = i*2.0+1.0;
-      datum[1] = i*2.0+1.0;
-      datum[2] = 1.0;
-      expectedData.push_back(datum);
-    }
+    Eigen::Vector3d datum;  
 
     if (utils::Parallel::getProcessRank() == 0){
       solverName = "Fluid";
@@ -434,14 +419,14 @@ BOOST_AUTO_TEST_CASE(testDistributedCommunications, * testing::OnSize(4))
       size = 2;
       meshName = "StructureMesh";
       i1 = 0;
-      i2 = 1;
+      i2 = 2;
     }
     else if(utils::Parallel::getProcessRank() == 3){
       solverName = "Structure";
       rank = 1;
       size = 2;
       meshName = "StructureMesh";
-      i1 = 1;
+      i1 = 2;
       i2 = 4;
     }
 
@@ -469,7 +454,7 @@ BOOST_AUTO_TEST_CASE(testDistributedCommunications, * testing::OnSize(4))
     else if (utils::Parallel::getProcessRank() >= 2){ //Structure
       for( size_t i=0; i<vertexIDs.size(); i++){
         precice.readVectorData(forcesID, vertexIDs[i], data[i].data());
-        data[i] = (data[i]*2).array() + 1.0;
+        data[i] = (data[i]*2).array() + 1.0 ;
         precice.writeVectorData(velocID, vertexIDs[i], data[i].data());
       }
     }
@@ -484,10 +469,296 @@ BOOST_AUTO_TEST_CASE(testDistributedCommunications, * testing::OnSize(4))
         }
       }
     }
-
+    
     precice.finalize();
   }
 }
+
+BOOST_AUTO_TEST_CASE(testBoundingBoxInitialization, * testing::OnSize(4))
+{
+  reset();
+
+  std::string solverName;
+  int rank = -1, size = -1;
+  std::string meshName;
+  int i1 = -1 ,i2 = -1; //indices for data and positions
+
+  std::vector<Eigen::VectorXd> positions;
+  std::vector<Eigen::VectorXd> data;
+  std::vector<Eigen::VectorXd> expectedData;
+
+  Eigen::Vector3d position;
+  Eigen::Vector3d datum;
+  
+  if (utils::Parallel::getProcessRank() <= 1){
+      for( int i=0; i<4; i++){
+        position[0] = i*1.0;
+        position[1] = i*0.1;
+        position[2] = -i*10.0;
+        positions.push_back(position);
+        datum[0] = i*1.0;
+        datum[1] = i*2.0;
+        datum[2] = i*3.0;
+        data.push_back(datum);        
+      }
+    }
+
+
+    if (utils::Parallel::getProcessRank() > 1){
+
+      for( int i=0; i<4; i++){
+        position[0] = i*1.0;
+        position[1] = i*0.1;
+        position[2] = -i*10.0;
+        positions.push_back(position);
+        datum[0] = -i*1.0;
+        datum[1] = -i*2.0;
+        datum[2] = -i*3.0;
+        data.push_back(datum);
+        datum[0] = i*1.0;
+        datum[1] = i*2.0;
+        datum[2] = i*3.0;
+        expectedData.push_back(datum);
+      }
+    }
+  
+
+  if (utils::Parallel::getProcessRank() == 0){
+      solverName = "Fluid";
+      rank = 0;
+      size = 2;
+      meshName = "FluidMesh";
+      i1 = 2;
+      i2 = 4;     
+  }
+  else if(utils::Parallel::getProcessRank() == 1){
+      solverName = "Fluid";
+      rank = 1;
+      size = 2;
+      meshName = "FluidMesh";
+      i1 = 0;
+      i2 = 2;
+  }
+  else if(utils::Parallel::getProcessRank() == 2){
+      solverName = "Structure";
+      rank = 0;
+      size = 2;
+      meshName = "StructureMesh";
+      i1 = 0;
+      i2 = 2;
+  }
+  else if(utils::Parallel::getProcessRank() == 3){
+      solverName = "Structure";
+      rank = 1;
+      size = 2;
+      meshName = "StructureMesh";
+      i1 = 2;
+      i2 = 4;
+  }
+
+
+    SolverInterface precice(solverName, rank, size);
+    std::string configFilename = _pathToTests + "BB-sockets-explicit-oneway.xml";
+    config::Configuration config;
+    xml::configure(config.getXMLTag(), configFilename);
+    precice._impl->configure(config.getSolverInterfaceConfiguration());
+    int meshID = precice.getMeshID(meshName);
+    int forcesID = precice.getDataID("Forces", meshID);
+
+    std::vector<int> vertexIDs;
+    for(int i=i1; i<i2; i++){
+      int vertexID = precice.setMeshVertex(meshID, positions[i].data());
+      vertexIDs.push_back(vertexID);
+    }
+
+      
+    precice.initialize();
+
+    if (utils::Parallel::getProcessRank() <= 1){ //Fluid      
+      for( size_t i=0; i<vertexIDs.size(); i++){
+        precice.writeVectorData(forcesID, vertexIDs[i], data[i+i1].data());
+      }
+    }   
+
+    precice.advance(1.0);
+
+    if (utils::Parallel::getProcessRank() > 1){ //Structure
+      
+      for( size_t i=0; i<vertexIDs.size(); i++){
+        precice.readVectorData(forcesID, vertexIDs[i], data[i+i1].data());        
+      }
+    }
+
+    if (utils::Parallel::getProcessRank() > 1){ //Fluid
+      for( size_t i=0; i<vertexIDs.size(); i++){
+        for (size_t d=0; d<3; d++){
+          BOOST_TEST(expectedData[i+i1][d] == data[i+i1][d]);
+        }
+      }
+    }
+
+    precice.finalize();
+   
+}
+
+BOOST_AUTO_TEST_CASE(testBoundingBoxInitializationTwoWay, * testing::OnSize(4))
+{
+  reset();
+
+  std::string solverName;
+  int rank = -1, size = -1;
+  std::string meshName;
+  int i1 = -1 ,i2 = -1; //indices for data and positions
+
+  std::vector<Eigen::VectorXd> positions;
+  std::vector<Eigen::VectorXd> data;
+  std::vector<Eigen::VectorXd> expectedData;
+
+  Eigen::Vector3d position;
+  Eigen::Vector3d datum;
+  
+  if (utils::Parallel::getProcessRank() <= 1){
+      for( int i=0; i<4; i++){
+        position[0] = i*1.0;
+        position[1] = 0;
+        position[2] = 0;
+        positions.push_back(position);
+        datum[0] = i*1.0;
+        datum[1] = i*2.0;
+        datum[2] = i*3.0;
+        data.push_back(datum);
+        datum[0] = -i*1.0;
+        datum[1] = -i*2.0;
+        datum[2] = -i*3.0;
+        expectedData.push_back(datum);
+      }
+    }
+
+
+    if (utils::Parallel::getProcessRank() > 1){
+
+      for( int i=0; i<4; i++){
+        position[0] = i*1.0;
+        position[1] = 0.0;
+        position[2] = 0.0;
+        positions.push_back(position);
+        datum[0] = -1.0;
+        datum[1] = -1.0;
+        datum[2] = -1.0;
+        data.push_back(datum);
+        datum[0] = i*1.0;
+        datum[1] = i*2.0;
+        datum[2] = i*3.0;
+        expectedData.push_back(datum);
+      }
+    }
+  
+
+  if (utils::Parallel::getProcessRank() == 0){
+      solverName = "Fluid";
+      rank = 0;
+      size = 2;
+      meshName = "FluidMesh";
+      i1 = 0;
+      i2 = 2;     
+  }
+  else if(utils::Parallel::getProcessRank() == 1){
+      solverName = "Fluid";
+      rank = 1;
+      size = 2;
+      meshName = "FluidMesh";
+      i1 = 2;
+      i2 = 4;
+  }
+  else if(utils::Parallel::getProcessRank() == 2){
+      solverName = "Structure";
+      rank = 0;
+      size = 2;
+      meshName = "StructureMesh";
+      i1 = 2;
+      i2 = 4;
+  }
+  else if(utils::Parallel::getProcessRank() == 3){
+      solverName = "Structure";
+      rank = 1;
+      size = 2;
+      meshName = "StructureMesh";
+      i1 = 0;
+      i2 = 2;
+  }
+
+
+    SolverInterface precice(solverName, rank, size);
+    std::string configFilename = _pathToTests + "BB-sockets-explicit-twoway.xml";
+    config::Configuration config;
+    xml::configure(config.getXMLTag(), configFilename);
+    precice._impl->configure(config.getSolverInterfaceConfiguration());
+    int meshID = precice.getMeshID(meshName);
+    int forcesID = precice.getDataID("Forces", meshID);
+    int velocitiesID = precice.getDataID("Velocities", meshID);
+
+    std::vector<int> vertexIDs;
+    for(int i=i1; i<i2; i++){
+      int vertexID = precice.setMeshVertex(meshID, positions[i].data());
+      vertexIDs.push_back(vertexID);
+    }
+
+      
+    precice.initialize();
+
+    if (utils::Parallel::getProcessRank() <= 1){ //Fluid      
+      for( size_t i=0; i<vertexIDs.size(); i++){
+        precice.writeVectorData(forcesID, vertexIDs[i], data[i+i1].data());
+      }
+    }   
+
+    precice.advance(1.0);
+
+    if (utils::Parallel::getProcessRank() > 1){ //Structure
+
+      for( size_t i=0; i<vertexIDs.size(); i++){
+        precice.readVectorData(forcesID, vertexIDs[i], data[i+i1].data());        
+      }
+
+      
+
+      for( size_t j=0; j<vertexIDs.size(); j++){
+        for (size_t d=0; d<3; d++){
+          BOOST_TEST(expectedData[j+i1][d] == data[j+i1][d]);
+        }
+      }
+
+      for( size_t j=0; j<4; j++){
+        data[j] = -data[j].array();
+      }
+
+      for( size_t i=0; i<vertexIDs.size(); i++){
+        precice.writeVectorData(velocitiesID, vertexIDs[i], data[i+i1].data());        
+      }
+    }
+
+    precice.advance(1.0);
+
+    if (utils::Parallel::getProcessRank() <= 1){ //fluid
+      
+      for( size_t i=0; i<vertexIDs.size(); i++){
+        precice.readVectorData(velocitiesID, vertexIDs[i], data[i+i1].data());        
+      }
+    }
+
+    if (utils::Parallel::getProcessRank() <= 1){ //fluid
+      for( size_t j=0; j<vertexIDs.size(); j++){
+        for (size_t d=0; d<3; d++){
+          BOOST_TEST(expectedData[j+i1][d] == data[j+i1][d]);
+        }
+      }
+    }
+
+    precice.finalize();
+   
+}
+
+
 
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()

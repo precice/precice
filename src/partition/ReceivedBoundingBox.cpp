@@ -28,12 +28,11 @@ ReceivedBoundingBox::ReceivedBoundingBox(
 
 void ReceivedBoundingBox::communicateBoundingBox()
 {
-  WARN("received bb commbb starts");
   TRACE();
 
   if (not utils::MasterSlave::_slaveMode) {
-    _m2n->getMasterCommunication()->receive(_remoteParComSize, 0);
 
+    _m2n->getMasterCommunication()->receive(_remoteParComSize, 0);
     // construct and initialize _remoteBBM
     mesh::Mesh::BoundingBox initialBB;
     for (int i = 0; i < _dimensions; i++) {
@@ -46,7 +45,6 @@ void ReceivedBoundingBox::communicateBoundingBox()
     // master receives global_bb from other master
     com::CommunicateBoundingBox(_m2n->getMasterCommunication()).receiveBoundingBoxMap(_remoteBBM, 0);
   }
-  WARN("received bb commbb ends");
 }
 
 void ReceivedBoundingBox::computeBoundingBox()
@@ -58,6 +56,7 @@ void ReceivedBoundingBox::computeBoundingBox()
   prepareBoundingBox();
 
   if (utils::MasterSlave::_masterMode) { // Master
+
     assertion(utils::MasterSlave::_rank == 0);
     assertion(utils::MasterSlave::_size > 1);
 
@@ -68,18 +67,21 @@ void ReceivedBoundingBox::computeBoundingBox()
     std::map<int, std::vector<int>> connectionMap;
     std::vector<int> connectedRanksList;
 
+
     // connected ranks for master
     for (auto &remoteBB : _remoteBBM) {
       if (overlapping(_bb, remoteBB.second)) {
         _mesh->getConnectedRanks().push_back(remoteBB.first);
       }
     }
+  
+
     if (_mesh->getConnectedRanks().size() != 0)
     {
      connectionMap[0] = _mesh->getConnectedRanks();
      connectedRanksList.push_back(0);
     }
-      
+
     // receive connected ranks from slaves and add them to the connection map
     std::vector<int> slaveConnectedRanks;
     for (int rank = 1; rank < utils::MasterSlave::_size; rank++) {
@@ -93,10 +95,12 @@ void ReceivedBoundingBox::computeBoundingBox()
         slaveConnectedRanks.clear();
       }
     }
-
+  
     // send connectionMap to other master
     _m2n->getMasterCommunication()->send(connectedRanksList, 0);
-    if (connectionMap.size() != 0) { // @todo we need an error message here instea
+
+      
+    if (connectionMap.size() != 0) {
       com::CommunicateBoundingBox(_m2n->getMasterCommunication()).sendConnectionMap(connectionMap, 0);
     } else
     {
@@ -104,7 +108,8 @@ void ReceivedBoundingBox::computeBoundingBox()
     }
 
   } else if (utils::MasterSlave::_slaveMode) {
-    utils::MasterSlave::_communication->broadcast(_remoteParComSize, 0);
+
+    utils::MasterSlave::_communication->broadcast(_remoteParComSize, 0);    
 
     // construct and initialize _remoteBBM
     mesh::Mesh::BoundingBox initialBB;
@@ -117,12 +122,12 @@ void ReceivedBoundingBox::computeBoundingBox()
 
     // receive _remoteBBM from master
     com::CommunicateBoundingBox(utils::MasterSlave::_communication).broadcastReceiveBoundingBoxMap(_remoteBBM);
-
+    
     for (auto &remoteBB : _remoteBBM) {
       if (overlapping(_bb, remoteBB.second)) {
-        _mesh->getConnectedRanks().push_back(remoteBB.first);
+        _mesh->getConnectedRanks().push_back(remoteBB.first); 
       }
-    }    
+    }
 
     // send feedback size to master
     utils::MasterSlave::_communication->send((int) _mesh->getConnectedRanks().size(), 0);
@@ -130,16 +135,27 @@ void ReceivedBoundingBox::computeBoundingBox()
     // to prevent sending empty vector!
     if (_mesh->getConnectedRanks().size() != 0)
       utils::MasterSlave::_communication->send(_mesh->getConnectedRanks(), 0);
-  }
+   }
+  
 }
 
 void ReceivedBoundingBox::communicate()
 {
+
+  
+  if (utils::MasterSlave::_masterMode)
+  {
+    int globalNumberOfVertices = -1;
+    _m2n->getMasterCommunication()->receive(globalNumberOfVertices, 0);
+    _mesh->setGlobalNumberOfVertices(globalNumberOfVertices);
+  }
+
   // each rank receives max/min global vertex indexes from connected remote ranks
   _m2n->broadcastReceiveLCM(_maxVertexGlobalIndexDomain, *_mesh);
-  
+
   // each rank receives mesh partition from connected ranks
   _m2n->broadcastReceiveLocalMesh(*_mesh);
+
 }
 
 void ReceivedBoundingBox::compute()
@@ -149,11 +165,15 @@ void ReceivedBoundingBox::compute()
           "The received mesh " << _mesh->getName()
           << " needs a mapping, either from it, to it, or both. Maybe you don't want to receive this mesh at all?")
   }
-
+  
+  // _mesh->buildBoundingBox();
+  prepareBoundingBox();  
+  
   // (1) Bounding Box Filter
 
-  INFO("Filter mesh " << _mesh->getName() << " by bounding-box");    
+  INFO("Filter mesh " << _mesh->getName() << " by bounding-box");  
   mesh::Mesh filteredMesh("FilteredMesh", _dimensions, _mesh->isFlipNormals());
+  
   filterMesh(filteredMesh, true);
     
   if ((_fromMapping.use_count() > 0 && _fromMapping->getOutputMesh()->vertices().size() > 0) ||
@@ -166,13 +186,13 @@ void ReceivedBoundingBox::compute()
       "Please check your geometry setup again. Small overlaps or gaps are no problem. "
       "If your geometry setup is correct and if you have very different mesh resolutions on both sides, increasing the safety-factor "
       "of the decomposition strategy might be necessary.";
-    CHECK(filteredMesh.vertices().size() > 0, msg);
+    //CHECK(filteredMesh.vertices().size() > 0, msg);
   }
   DEBUG("Bounding box filter, filtered from " << _mesh->vertices().size() << " vertices to " << filteredMesh.vertices().size() << " vertices.");
   _mesh->clear();
   _mesh->addMesh(filteredMesh);
   _mesh->computeState();
-  
+
   // (2) Tag vertices 1st round (i.e. who could be owned by this rank)
 
   DEBUG("Tag vertices for filtering: 1st round.");
@@ -202,7 +222,7 @@ void ReceivedBoundingBox::compute()
   _mesh->clear();
   _mesh->addMesh(filteredMesh);
   _mesh->computeState();
-  
+
   // (6) Compute and feedback local communication map
   INFO("Feedback Communicatin Map "); 
   std::map<int, std::vector<int>> localCommunicationMap;
@@ -218,16 +238,57 @@ void ReceivedBoundingBox::compute()
    * If global index of a vertex is between min/max global index of a specific 
    * remore rank, this vertex belongs to that rank
    */
+
+  std::vector<int> vertexIDs;  
+
+  int index= 0;
   for (auto &remoteVertex : _mesh->vertices()) {
+      vertexIDs.push_back(remoteVertex.getGlobalIndex());
     for (auto &remoteRank : _maxVertexGlobalIndexDomain) {
       if (remoteVertex.getGlobalIndex() <= remoteRank.second[1] && remoteVertex.getGlobalIndex() >= remoteRank.second[0]) {
-        localCommunicationMap[remoteRank.first].push_back(remoteVertex.getGlobalIndex());
-        break;
+        localCommunicationMap[remoteRank.first].push_back(remoteVertex.getGlobalIndex() - remoteRank.second[0]);
+        _mesh->getCommunicationMap()[remoteRank.first].push_back(index);
       }
     }
+    index++;
   }
   
-  _m2n->broadcastSendLCM(localCommunicationMap, *_mesh);   
+
+  _m2n->broadcastSendLCM(localCommunicationMap, *_mesh);
+
+  
+  if (not utils::MasterSlave::_slaveMode)
+  {
+    _mesh->getVertexDistribution()[0] = vertexIDs;
+
+    for (int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++) {
+      int numberOfSlaveVertices = 0;
+      utils::MasterSlave::_communication->receive(numberOfSlaveVertices, rankSlave);
+      vertexIDs.clear();
+      if (numberOfSlaveVertices != 0) {
+        utils::MasterSlave::_communication->receive(vertexIDs, rankSlave);
+      }
+      _mesh->getVertexDistribution()[rankSlave] = vertexIDs;
+    }
+    utils::MasterSlave::_communication->broadcast(_mesh->getGlobalNumberOfVertices());
+  } else
+  {  
+    int numberOfVertices = _mesh->vertices().size();
+    utils::MasterSlave::_communication->send(numberOfVertices, 0);
+    if (numberOfVertices != 0) {
+      for (int i = 0; i < numberOfVertices; i++) {
+        vertexIDs[i] = _mesh->vertices()[i].getID();
+      }
+      utils::MasterSlave::_communication->send(vertexIDs, 0);
+    }
+    int globalNumberOfVertices = -1;
+    utils::MasterSlave::_communication->broadcast(globalNumberOfVertices, 0);
+    assertion(globalNumberOfVertices != -1);
+    _mesh->setGlobalNumberOfVertices(globalNumberOfVertices);
+  }
+
+  computeVertexOffsets();    
+  
 }
 
 bool ReceivedBoundingBox::overlapping(mesh::Mesh::BoundingBox currentBB, mesh::Mesh::BoundingBox receivedBB)
@@ -239,9 +300,10 @@ bool ReceivedBoundingBox::overlapping(mesh::Mesh::BoundingBox currentBB, mesh::M
    * We need to check if first AND second is smaller than first of the other BB to prevent false negatives
    * due to empty bounding boxes.
    */
+  
   for (int i = 0; i < _dimensions; i++) {
     if ((currentBB[i].first < receivedBB[i].first && currentBB[i].second < receivedBB[i].first) ||
-        (receivedBB[i].first < currentBB[i].first && receivedBB[i].second < currentBB[i].first)) {
+        (receivedBB[i].first < currentBB[i].first && receivedBB[i].second < currentBB[i].first)) {      
       return false;
     }
   }
@@ -264,6 +326,8 @@ void ReceivedBoundingBox::prepareBoundingBox()
         _bb[d].second = other_bb[d].second;
     }
   }
+
+  
   if (_toMapping.use_count() > 0) {
     auto other_bb = _toMapping->getInputMesh()->getBoundingBox();
     for (int d = 0; d < _dimensions; d++) {
@@ -274,6 +338,7 @@ void ReceivedBoundingBox::prepareBoundingBox()
     }
   }
 
+  
   //enlarge BB
   assertion(_safetyFactor >= 0.0);
 
@@ -281,8 +346,6 @@ void ReceivedBoundingBox::prepareBoundingBox()
 
   for (int d = 0; d < _dimensions; d++) {
     maxSideLength = std::max(maxSideLength, _bb[d].second - _bb[d].first);
-  }
-  for (int d = 0; d < _dimensions; d++) {
     _bb[d].second += _safetyFactor * maxSideLength;
     _bb[d].first -= _safetyFactor * maxSideLength;
     DEBUG("Merged BoundingBox, dim: " << d << ", first: " << _bb[d].first << ", second: " << _bb[d].second);

@@ -109,8 +109,9 @@ void M2N::acceptSlavesPreConnection(
 {
   TRACE(acceptorName, requesterName);
   _areSlavesConnected = true;
-  for (const auto &pair : _distComs) {
-    pair.second->acceptPreConnection(acceptorName, requesterName);
+  
+  for (const auto &pair : _distComs) {  
+    pair.second->acceptPreConnection(acceptorName, requesterName); 
     _areSlavesConnected = _areSlavesConnected && pair.second->isConnected();
     }
   assertion(_areSlavesConnected);
@@ -122,10 +123,11 @@ void M2N::requestSlavesPreConnection(
 {
   TRACE(acceptorName, requesterName);
   _areSlavesConnected = true;
+
   for (const auto &pair : _distComs) {
-    pair.second->requestPreConnection(acceptorName, requesterName);
+    pair.second->requestPreConnection(acceptorName, requesterName);    
     _areSlavesConnected = _areSlavesConnected && pair.second->isConnected();
-    }
+  }
   assertion(_areSlavesConnected);
 }
 

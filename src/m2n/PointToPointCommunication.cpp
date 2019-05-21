@@ -8,6 +8,7 @@
 #include "utils/EventTimings.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/Publisher.hpp"
+#include "logging/Logger.hpp"
 
 using precice::utils::Event;
 using precice::utils::Publisher;
@@ -405,12 +406,16 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
 void PointToPointCommunication::acceptPreConnection(std::string const &acceptorName,
                                                  std::string const &requesterName)
 {
+  
   TRACE(acceptorName, requesterName);
   assertion(not isConnected(), "Already connected!");
   CHECK(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode,
         "You can only use a point-to-point communication between two participants which both use a master. "
             << "Please use distribution-type gather-scatter instead.");
 
+  mesh::Mesh::VertexDistribution &vertexDistribution = _mesh->getVertexDistribution();
+  mesh::Mesh::VertexDistribution  requesterVertexDistribution;
+  
   if (utils::MasterSlave::_masterMode) {
     // Establish connection between participants' master processes.
     auto c = _communicationFactory->newCommunication();
@@ -423,16 +428,27 @@ void PointToPointCommunication::acceptPreConnection(std::string const &acceptorN
     c->send(utils::MasterSlave::_masterRank, 0);
     c->receive(requesterMasterRank, 0);
 
+     // Exchange vertex distributions.
+    m2n::send(vertexDistribution, 0, c);
+    m2n::receive(requesterVertexDistribution, 0, c);
+    
   } else {
     assertion(utils::MasterSlave::_slaveMode);
   }
 
+
+  m2n::broadcast(vertexDistribution);
+  m2n::broadcast(requesterVertexDistribution);
+
+
   std::vector<int> localConnectedRanks = _mesh->getConnectedRanks();
+
 
   if (localConnectedRanks.empty()) {
     _isConnected = true;
     return;
   }
+
 
 #ifdef SuperMUC_WORK
   try {
@@ -471,7 +487,7 @@ void PointToPointCommunication::acceptPreConnection(std::string const &acceptorN
 
   for (auto & comMap : localConnectedRanks) {
     int globalRequesterRank = comMap;
-
+    
     /*
       NOTE:
       Everything is moved (efficiency)!
@@ -613,6 +629,9 @@ void PointToPointCommunication::requestPreConnection(std::string const &acceptor
         "You can only use a point-to-point communication between two participants which both use a master. "
         << "Please use distribution-type gather-scatter instead.");
 
+   mesh::Mesh::VertexDistribution &vertexDistribution = _mesh->getVertexDistribution();
+   mesh::Mesh::VertexDistribution  acceptorVertexDistribution;
+   
   if (utils::MasterSlave::_masterMode) {
     // Establish connection between participants' master processes.
     auto c = _communicationFactory->newCommunication();
@@ -624,11 +643,20 @@ void PointToPointCommunication::requestPreConnection(std::string const &acceptor
     c->receive(acceptorMasterRank, 0);
     c->send(utils::MasterSlave::_masterRank, 0);
 
+     // Exchange vertex distributions.
+    m2n::receive(acceptorVertexDistribution, 0, c);
+    m2n::send(vertexDistribution, 0, c);
+
   } else {
     assertion(utils::MasterSlave::_slaveMode);
   }
 
+
+  m2n::broadcast(vertexDistribution);
+  m2n::broadcast(acceptorVertexDistribution);
+
   std::vector<int> localConnectedRanks = _mesh->getConnectedRanks();
+
 
   if (localConnectedRanks.empty()) {
     _isConnected = true;
@@ -662,7 +690,7 @@ void PointToPointCommunication::requestPreConnection(std::string const &acceptor
   // according to communication map.
   for (auto &i : localConnectedRanks) {
     auto globalAcceptorRank = i;
-
+     
 #ifdef SuperMUC_WORK
     Publisher::ScopedPushDirectory spd("." + acceptorName + "-" + _mesh->getName() + "-" +
                                        std::to_string(globalAcceptorRank) + ".address");
@@ -675,6 +703,7 @@ void PointToPointCommunication::requestPreConnection(std::string const &acceptor
     // acceptor process (in the acceptor participant).
     _connectionData.push_back({globalAcceptorRank, c, com::PtrRequest(), {}});
   }
+
   _isConnected = true;
 }
 
