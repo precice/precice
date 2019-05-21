@@ -101,6 +101,11 @@ void rtree::clear(Mesh &mesh)
   _primitive_trees.erase(mesh.getID());
 }
 
+void rtree::clear()
+{
+  _cached_trees.clear();
+  _primitive_trees.clear();
+}
 
 Box3d getEnclosingBox(Vertex const & middlePoint, double sphereRadius)
 {

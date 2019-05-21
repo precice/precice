@@ -201,6 +201,9 @@ public:
   /// Only clear the trees of that specific mesh
   static void clear(Mesh & mesh);
 
+  /// Clear the complete cache
+  static void clear();
+
   friend struct MeshTests::RTree::CacheClearing;
 private:
   struct MeshIndices {

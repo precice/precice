@@ -4,6 +4,7 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
 #include "mesh/Edge.hpp"
+#include "mesh/RTree.hpp"
 
 using namespace precice;
 
@@ -25,13 +26,12 @@ BOOST_AUTO_TEST_CASE(testConservativeNonIncremental)
   outMesh->computeState();
   outMesh->allocateDataValues();
 
+  // Setup mapping with mapping coordinates and geometry used
+  mapping::NearestProjectionMapping mapping(mapping::Mapping::CONSERVATIVE, dimensions);
+
   PtrMesh inMesh ( new Mesh("InMesh", dimensions, false) );
   PtrData inData = inMesh->createData ( "Data", 1 );
   int inDataID = inData->getID();
-
-  // Setup mapping with mapping coordinates and geometry used
-  mapping::NearestProjectionMapping mapping(mapping::Mapping::CONSERVATIVE, dimensions);
-  mapping.setMeshes(inMesh, outMesh);
 
   // Map value 1.0 from middle of edge to geometry. Expect half of the
   // value to be added to vertex1 and half of it to vertex2.
@@ -47,12 +47,16 @@ BOOST_AUTO_TEST_CASE(testConservativeNonIncremental)
   double value = 1.0;
   //assign(inData->values()) = value;
   inData->values() = Eigen::VectorXd::Constant(inData->values().size(), value);
+
+  mapping.setMeshes(inMesh, outMesh);
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   Eigen::VectorXd& values = outData->values();
   BOOST_TEST(values(0) == value * 1.5);
   BOOST_TEST(values(1) == value * 1.5);
 
+  BOOST_TEST_PASSPOINT();
+  // TODO Split here --- 8< ----
   // Change in-vertex coordinates and recompute mapping
   inv1.setCoords (Eigen::Vector2d(-1.0, -1.0));
   inv2.setCoords (Eigen::Vector2d(-1.0, -1.0));
@@ -60,11 +64,13 @@ BOOST_AUTO_TEST_CASE(testConservativeNonIncremental)
   //assign(values) = 0.0;
   values = Eigen::VectorXd::Constant(values.size(), 0.0);
 
+  mapping.clear();
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   BOOST_TEST(values(0) == value * 2.0);
   BOOST_TEST(values(1) == value * 1.0);
 
+  BOOST_TEST_PASSPOINT();
   // reset output value and remap
   //assign(values) = 0.0;
   values = Eigen::VectorXd::Constant(values.size(), 0.0);
@@ -135,6 +141,7 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncremental2D)
   //assign(outData->values()) = 0.0;
   outData->values() = Eigen::VectorXd::Constant(outData->values().size(), 0.0);
 
+  mapping.clear();
   mapping.computeMapping();
   mapping.map ( inDataID, outDataID );
   BOOST_TEST ( outData->values()[0] == valueVertex1 );
@@ -213,6 +220,7 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncrementalPseudo3D)
   //assign(outData->values()) = 0.0;
   outData->values() = Eigen::VectorXd::Constant(outData->values().size(), 0.0);
 
+  mapping.clear();
   mapping.computeMapping();
   mapping.map ( inDataID, outDataID );
   BOOST_TEST ( outData->values()[0] == valueVertex1 );

@@ -355,6 +355,88 @@ BOOST_AUTO_TEST_CASE(Query_3D)
   }
 }
 
+BOOST_AUTO_TEST_CASE(Query_3D_FullMesh)
+{
+  PtrMesh mesh(new precice::mesh::Mesh("MyMesh", 3, false));
+  const double z1 = 0.1;
+  const double z2 = -0.1;
+  auto& v00 = mesh->createVertex(Eigen::Vector3d(0, 0, 0));
+  auto& v01 = mesh->createVertex(Eigen::Vector3d(0, 1, 0));
+  auto& v10 = mesh->createVertex(Eigen::Vector3d(1, 0, z1));
+  auto& v11 = mesh->createVertex(Eigen::Vector3d(1, 1, z1));
+  auto& v20 = mesh->createVertex(Eigen::Vector3d(2, 0, z2));
+  auto& v21 = mesh->createVertex(Eigen::Vector3d(2, 1, z2));
+  auto& ell = mesh->createEdge(v00, v01);
+  auto& elt = mesh->createEdge(v01, v11);
+  auto& elr = mesh->createEdge(v11, v10);
+  auto& elb = mesh->createEdge(v10, v00);
+  auto& eld = mesh->createEdge(v00, v11);
+  auto& erl = elr;
+  auto& ert = mesh->createEdge(v11, v21);
+  auto& err = mesh->createEdge(v21, v20);
+  auto& erb = mesh->createEdge(v20, v10);
+  auto& erd = mesh->createEdge(v10, v21);
+  auto& tlt = mesh->createTriangle(ell, elt, eld);
+  auto& tlb = mesh->createTriangle(eld, elb, elr);
+  auto& trt = mesh->createTriangle(erl, ert, erd);
+  auto& trb = mesh->createTriangle(erd, erb, err);
+
+  {
+    auto tree = rtree::getVertexRTree(mesh);
+
+    BOOST_TEST(tree->size() == 6);
+
+    Eigen::VectorXd searchVector(Eigen::Vector3d(0.8, 0.0, 0.8));
+    std::vector<size_t> results;
+
+    tree->query(bgi::nearest(searchVector, 1), std::back_inserter(results));
+
+    BOOST_TEST_INFO(results);
+    BOOST_TEST(results.size() == 1);
+  }
+  {
+    auto tree = rtree::getEdgeRTree(mesh);
+
+    BOOST_TEST(tree->size() == 9);
+
+    Eigen::VectorXd searchVector(Eigen::Vector3d(0.8, 0.5, 0.0));
+    std::set<size_t> results;
+
+    tree->query(bgi::nearest(searchVector, 2), std::inserter(results, results.begin()));
+
+    BOOST_TEST_INFO(results);
+    BOOST_TEST(results.size() == 2);
+    BOOST_TEST(results.count(eld.getID()) == 1);
+    BOOST_TEST(results.count(elr.getID()) == 1);
+  }
+  {
+    auto tree = rtree::getTriangleRTree(mesh);
+
+    BOOST_TEST(tree->size() == 4);
+
+    Eigen::VectorXd searchVector(Eigen::Vector3d(0.7, 0.5, 0.0));
+    std::vector<std::pair<double, size_t>> results;
+
+    tree->query(bgi::nearest(searchVector, 3), boost::make_function_output_iterator([&](const precice::mesh::rtree::triangle_traits::IndexType & val){
+                results.push_back(std::make_pair(
+                            boost::geometry::distance(
+                                searchVector,
+                                mesh->triangles()[val.second]
+                                ),
+                            val.second));
+                }));
+
+    std::sort(results.begin(), results.end());
+    BOOST_TEST_INFO(results);
+    BOOST_TEST(results.size() == 3);
+    BOOST_TEST(results[0].second == tlb.getID());
+    BOOST_TEST(results[1].second == tlt.getID());
+    BOOST_TEST(results[2].second == trt.getID());
+    BOOST_TEST(results[2].second != trb.getID());
+  }
+}
+
+
 /// Resembles how boost geometry is used inside the PetRBF
 BOOST_AUTO_TEST_CASE(QueryWithBox)
 {
