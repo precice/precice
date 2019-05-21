@@ -28,6 +28,8 @@ set(PETSC_VALID_COMPONENTS
   C
   CXX)
 
+find_package(MPI QUIET)
+
 if(NOT PETSc_FIND_COMPONENTS)
   get_property (_enabled_langs GLOBAL PROPERTY ENABLED_LANGUAGES)
   if ("C" IN_LIST _enabled_langs)
@@ -289,7 +291,7 @@ int main(int argc,char *argv[]) {
   find_path (PETSC_INCLUDE_DIR petscts.h HINTS "${PETSC_DIR}" PATH_SUFFIXES include NO_DEFAULT_PATH)
   find_path (PETSC_INCLUDE_CONF petscconf.h HINTS "${PETSC_DIR}" PATH_SUFFIXES "${PETSC_ARCH}/include" "bmake/${PETSC_ARCH}" NO_DEFAULT_PATH)
   mark_as_advanced (PETSC_INCLUDE_DIR PETSC_INCLUDE_CONF)
-  set (petsc_includes_minimal ${PETSC_INCLUDE_CONF} ${PETSC_INCLUDE_DIR})
+  set (petsc_includes_minimal ${PETSC_INCLUDE_CONF} ${MPI_CXX_INCLUDE_DIRS} ${PETSC_INCLUDE_DIR})
 
   petsc_test_runs ("${petsc_includes_minimal}" "${PETSC_LIBRARIES_TS}" petsc_works_minimal)
   if (petsc_works_minimal)
