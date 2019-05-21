@@ -218,7 +218,20 @@ cdef class Interface:
 
    # creates a mesh vertex
    def set_mesh_vertex(self, mesh_id, position):
-      raise Exception("not implemented!")
+      cdef double* position_
+      position_ = <double*> malloc(len(position) * sizeof(double))
+
+      if position_ is NULL:
+         raise MemoryError()
+
+      for i in xrange(len(position)):
+         position_[i] = position[i]
+
+      vertex_id = self.thisptr.setMeshVertex(mesh_id, position_)
+
+      free(position_)
+
+      return vertex_id
 
    # returns the number of vertices of a mesh
    def get_mesh_vertex_size (self, mesh_id):
@@ -235,7 +248,7 @@ cdef class Interface:
          raise MemoryError()
       
       for i in xrange(len(ids)):
-         ids_[i] = ids[i]
+         ids_[i] = ids[i]  # TODO: remove this and initialize ids_ empty. ids_ is used as return buffer.
       for i in xrange(len(positions)):
          positions_[i] = positions[i]
 
@@ -244,14 +257,33 @@ cdef class Interface:
       for i in xrange(len(ids)):
          ids[i] = ids_[i]
       for i in xrange(len(positions)):
-         positions[i] = positions_[i]
+         positions[i] = positions_[i]  # TODO: remove this. Writing positions_ back to positions is unnecessary. positions_ are const!
 
       free(ids_)
       free(positions_)
 
    # get vertex positions for multiple vertex ids from a given mesh
    def get_mesh_vertices(self, mesh_id, size, ids, positions):
-      raise Exception("not implemented!")
+      cdef int* ids_
+      cdef double* positions_
+      ids_ = <int*> malloc(len(ids) * sizeof(int))
+      positions_ = <double*> malloc(len(positions) * sizeof(double))
+
+      if ids_ is NULL or positions_ is NULL:
+         raise MemoryError()
+      
+      for i in xrange(len(ids)):
+         ids_[i] = ids[i]
+      for i in xrange(len(positions)):
+         positions_[i] = 0  # TODO: initialize empty: positions_ are used as return buffer.
+
+      self.thisptr.getMeshVertices (mesh_id, size, ids_, positions_)
+
+      for i in xrange(len(positions)):
+         positions[i] = positions_[i]
+
+      free(ids_)
+      free(positions_)
 
    # gets mesh vertex IDs from positions
    def get_mesh_vertex_ids_from_positions (self, mesh_id, size, positions, ids):
