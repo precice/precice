@@ -125,7 +125,7 @@ void MMPostProcessing::initialize(DataMap &cplData)
    *  make dimensions public to all procs,
    *  last entry _dimOffsets[MasterSlave::getSize()] holds the global dimension, global,n
    */
-  if (utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode) {
+  if (utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave()) {
     assertion(utils::MasterSlave::_communication.get() != NULL);
     assertion(utils::MasterSlave::_communication->isConnected());
 
@@ -814,7 +814,7 @@ int MMPostProcessing::getLSSystemCols()
 
 int MMPostProcessing::getLSSystemRows()
 {
-  if (utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode) {
+  if (utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave()) {
     return _dimOffsets.back();
   }
   return _fineResiduals.size();

@@ -17,11 +17,11 @@ void Partition::computeVertexOffsets()
 {
   TRACE();
   DEBUG("Generate vertex offsets");
-  if (utils::MasterSlave::_slaveMode) {
+  if (utils::MasterSlave::isSlave()) {
     utils::MasterSlave::_communication->broadcast(_mesh->getVertexOffsets(), 0);
     DEBUG("My vertex offsets: " << _mesh->getVertexOffsets());
     
-  } else if (utils::MasterSlave::_masterMode) {
+  } else if (utils::MasterSlave::isMaster()) {
     _mesh->getVertexOffsets().resize(utils::MasterSlave::getSize());
     _mesh->getVertexOffsets()[0] = _mesh->getVertexDistribution()[0].size();
     for (int rank = 1; rank < utils::MasterSlave::getSize(); rank++) {

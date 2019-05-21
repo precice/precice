@@ -65,8 +65,6 @@ BOOST_AUTO_TEST_CASE(testVIQNILSpp, * testing::OnSize(4) * boost::unit_test::fix
 
   if (utils::Parallel::getProcessRank() == 0) { //Master
     utils::MasterSlave::configure(0, 4);
-    utils::MasterSlave::_slaveMode = false;
-    utils::MasterSlave::_masterMode = true;
 
     /**
      * processor with 4 vertices
@@ -98,8 +96,6 @@ BOOST_AUTO_TEST_CASE(testVIQNILSpp, * testing::OnSize(4) * boost::unit_test::fix
 
   } else if (utils::Parallel::getProcessRank() == 1) { //Slave1
     utils::MasterSlave::configure(1, 4);
-    utils::MasterSlave::_slaveMode = true;
-    utils::MasterSlave::_masterMode = false;
 
     /**
      * processor with 4 vertices
@@ -131,8 +127,6 @@ BOOST_AUTO_TEST_CASE(testVIQNILSpp, * testing::OnSize(4) * boost::unit_test::fix
 
   } else if (utils::Parallel::getProcessRank() == 2) { //Slave2
     utils::MasterSlave::configure(2, 4);
-    utils::MasterSlave::_slaveMode = true;
-    utils::MasterSlave::_masterMode = false;
 
     /**
      * processor with no vertices
@@ -154,8 +148,6 @@ BOOST_AUTO_TEST_CASE(testVIQNILSpp, * testing::OnSize(4) * boost::unit_test::fix
 
   } else if (utils::Parallel::getProcessRank() == 3) { //Slave3
     utils::MasterSlave::configure(3, 4);
-    utils::MasterSlave::_slaveMode = true;
-    utils::MasterSlave::_masterMode = false;
 
     /**
      * processor with 2 vertices
@@ -298,8 +290,6 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp, * testing::OnSize(4) * boost::unit_test::fi
 
   if (utils::Parallel::getProcessRank() == 0) { //Master
     utils::MasterSlave::configure(0, 4);
-    utils::MasterSlave::_slaveMode = false;
-    utils::MasterSlave::_masterMode = true;
 
     /**
      * processor with 4 vertices
@@ -331,8 +321,6 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp, * testing::OnSize(4) * boost::unit_test::fi
 
   } else if (utils::Parallel::getProcessRank() == 1) { //Slave1
     utils::MasterSlave::configure(1, 4);
-    utils::MasterSlave::_slaveMode = true;
-    utils::MasterSlave::_masterMode = false;
 
     /**
      * processor with 4 vertices
@@ -364,8 +352,6 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp, * testing::OnSize(4) * boost::unit_test::fi
 
   } else if (utils::Parallel::getProcessRank() == 2) { //Slave2
     utils::MasterSlave::configure(2, 4);
-    utils::MasterSlave::_slaveMode = true;
-    utils::MasterSlave::_masterMode = false;
 
     /**
      * processor with no vertices
@@ -387,8 +373,6 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp, * testing::OnSize(4) * boost::unit_test::fi
 
   } else if (utils::Parallel::getProcessRank() == 3) { //Slave3
     utils::MasterSlave::configure(3, 4);
-    utils::MasterSlave::_slaveMode = true;
-    utils::MasterSlave::_masterMode = false;
 
     /**
      * processor with 2 vertices

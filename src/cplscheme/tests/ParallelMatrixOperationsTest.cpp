@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(ParVectorOperations, * boost::unit_test::fixture<testing::M
   BOOST_TEST(testing::equals(res2[0], 10.));
   BOOST_TEST(testing::equals(res2[1], 10.));
 
-  if (utils::MasterSlave::_masterMode) {
+  if (utils::MasterSlave::isMaster()) {
     BOOST_TEST(testing::equals(res3[0], 10.));
     BOOST_TEST(testing::equals(res3[1], 10.));
     BOOST_TEST(testing::equals(ires1, 10));

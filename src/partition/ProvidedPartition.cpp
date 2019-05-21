@@ -32,16 +32,16 @@ void ProvidedPartition::communicate()
     // Temporary globalMesh such that the master also keeps his local mesh
     mesh::Mesh globalMesh(_mesh->getName(), _mesh->getDimensions(), _mesh->isFlipNormals());
 
-    if (not utils::MasterSlave::_slaveMode) {
+    if (not utils::MasterSlave::isSlave()) {
       globalMesh.addMesh(*_mesh); // Add local master mesh to global mesh
     }
 
     // Gather Mesh
     INFO("Gather mesh " + _mesh->getName());
-    if (utils::MasterSlave::_slaveMode ) {
+    if (utils::MasterSlave::isSlave() ) {
         com::CommunicateMesh(utils::MasterSlave::_communication).sendMesh(*_mesh, 0);
     }
-    if (utils::MasterSlave::_masterMode)  {
+    if (utils::MasterSlave::isMaster())  {
       assertion(utils::MasterSlave::getRank() == 0);
       assertion(utils::MasterSlave::getSize() > 1);
 
@@ -52,7 +52,7 @@ void ProvidedPartition::communicate()
     }
     
     // Set global index
-    if (not utils::MasterSlave::_slaveMode) {
+    if (not utils::MasterSlave::isSlave()) {
       int globalIndex = 0;
       for (mesh::Vertex &v : globalMesh.vertices()) {
         v.setGlobalIndex(globalIndex);
@@ -65,7 +65,7 @@ void ProvidedPartition::communicate()
     // Send (global) Mesh
     INFO("Send global mesh " << _mesh->getName());
     Event e2("partition.sendGlobalMesh." + _mesh->getName(), precice::syncMode);
-    if (not utils::MasterSlave::_slaveMode) {
+    if (not utils::MasterSlave::isSlave()) {
       CHECK(globalMesh.vertices().size() > 0, "The provided mesh " << globalMesh.getName() << " is invalid (possibly empty).");
       com::CommunicateMesh(_m2n->getMasterCommunication()).sendMesh(globalMesh, 0);
     }
@@ -83,7 +83,7 @@ void ProvidedPartition::compute()
   int numberOfVertices = _mesh->vertices().size();
 
   // Set global indices at every slave and vertexDistribution at master
-  if (utils::MasterSlave::_slaveMode) {
+  if (utils::MasterSlave::isSlave()) {
     int globalVertexCounter = -1;
     utils::MasterSlave::_communication->send(numberOfVertices, 0);
     utils::MasterSlave::_communication->receive(globalVertexCounter, 0);
@@ -94,7 +94,7 @@ void ProvidedPartition::compute()
     utils::MasterSlave::_communication->broadcast(globalNumberOfVertices, 0);
     assertion(globalNumberOfVertices != -1);
     _mesh->setGlobalNumberOfVertices(globalNumberOfVertices);
-  } else if (utils::MasterSlave::_masterMode) {
+  } else if (utils::MasterSlave::isMaster()) {
     assertion(utils::MasterSlave::getSize() > 1);
     int vertexCounter = 0;
 

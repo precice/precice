@@ -37,9 +37,9 @@ void ExportVTKXML:: doExport
   mesh::Mesh&        mesh)
 {
   TRACE(name, location, mesh.getName());
-  assertion(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode);
+  assertion(utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster());
   processDataNamesAndDimensions(mesh);
-  if (utils::MasterSlave::_masterMode) {
+  if (utils::MasterSlave::isMaster()) {
     writeMasterFile(name, location, mesh);
   }
   if(mesh.vertices().size()>0){ //only procs at the coupling interface should write output (for performance reasons)

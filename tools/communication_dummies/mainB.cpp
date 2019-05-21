@@ -96,18 +96,18 @@ main(int argc, char** argv) {
   }
 
   if (utils::MasterSlave::getRank() == 0) {
-    utils::MasterSlave::_masterMode = true;
-    utils::MasterSlave::_slaveMode = false;
+    utils::MasterSlave::isMaster() = true;
+    utils::MasterSlave::isSlave() = false;
   } else {
-    utils::MasterSlave::_masterMode = false;
-    utils::MasterSlave::_slaveMode = true;
+    utils::MasterSlave::isMaster() = false;
+    utils::MasterSlave::isSlave() = true;
   }
 
-  if (utils::MasterSlave::_masterMode) {
+  if (utils::MasterSlave::isMaster()) {
     utils::Parallel::initializeMPI(NULL, NULL);
     utils::Parallel::splitCommunicator("Master");
   } else {
-    assertion(utils::MasterSlave::_slaveMode);
+    assertion(utils::MasterSlave::isSlave());
     utils::Parallel::initializeMPI(NULL, NULL);
     utils::Parallel::splitCommunicator("Slave");
   }
@@ -117,12 +117,12 @@ main(int argc, char** argv) {
 
   int rankOffset = 1;
 
-  if (utils::MasterSlave::_masterMode) {
+  if (utils::MasterSlave::isMaster()) {
     utils::MasterSlave::_communication->acceptConnection(
         "Master", "Slave", utils::MasterSlave::getRank(), 1);
     utils::MasterSlave::_communication->setRankOffset(rankOffset);
   } else {
-    assertion(utils::MasterSlave::_slaveMode);
+    assertion(utils::MasterSlave::isSlave());
     utils::MasterSlave::_communication->requestConnection(
         "Master",
         "Slave",
@@ -132,7 +132,7 @@ main(int argc, char** argv) {
 
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 2, true));
 
-  if (utils::MasterSlave::_masterMode) {
+  if (utils::MasterSlave::isMaster()) {
     mesh->setGlobalNumberOfVertices(10);
 
     mesh->getVertexDistribution()[0].push_back(1);

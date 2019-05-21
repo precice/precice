@@ -46,12 +46,12 @@ void WatchPoint:: initialize()
     _weights.push_back ( 1.0 );
   }
 
-  if(utils::MasterSlave::_slaveMode){
+  if(utils::MasterSlave::isSlave()){
     utils::MasterSlave::_communication->send(_shortestDistance, 0);
     utils::MasterSlave::_communication->receive(_isClosest, 0);
   }
 
-  if(utils::MasterSlave::_masterMode){
+  if(utils::MasterSlave::isMaster()){
     int closestRank = 0;
     double closestDistanceGlobal = _shortestDistance;
     double closestDistanceLocal = std::numeric_limits<double>::max();

@@ -77,11 +77,11 @@ void broadcastReceive(mesh::Mesh::VertexDistribution &m,
 
 void broadcast(mesh::Mesh::VertexDistribution &m)
 {
-  if (utils::MasterSlave::_masterMode) {
+  if (utils::MasterSlave::isMaster()) {
     // Broadcast (send) vertex distributions.
     m2n::broadcastSend(m);
   } else {
-    assertion(utils::MasterSlave::_slaveMode);
+    assertion(utils::MasterSlave::isSlave());
     // Broadcast (receive) vertex distributions.
     m2n::broadcastReceive(m, 0);
   }
@@ -99,7 +99,7 @@ void print(std::map<int, std::vector<int>> const &m)
     }
   }
 
-  if (utils::MasterSlave::_masterMode) {
+  if (utils::MasterSlave::isMaster()) {
     std::string s;
 
     for (int rank = 1; rank < utils::MasterSlave::getSize(); ++rank) {
@@ -110,7 +110,7 @@ void print(std::map<int, std::vector<int>> const &m)
 
     std::cout << oss.str();
   } else {
-    assertion(utils::MasterSlave::_slaveMode);
+    assertion(utils::MasterSlave::isSlave());
 
     utils::MasterSlave::_communication->send(oss.str(), 0);
   }
@@ -120,7 +120,7 @@ void printCommunicationPartnerCountStats(std::map<int, std::vector<int>> const &
 {
   int size = m.size();
 
-  if (utils::MasterSlave::_masterMode) {
+  if (utils::MasterSlave::isMaster()) {
     size_t count   = 0;
     size_t maximum = std::numeric_limits<size_t>::min();
     size_t minimum = std::numeric_limits<size_t>::max();
@@ -159,7 +159,7 @@ void printCommunicationPartnerCountStats(std::map<int, std::vector<int>> const &
               << "Number of Interface Processes: " << count << "\n"
               << '\n';
   } else {
-    assertion(utils::MasterSlave::_slaveMode);
+    assertion(utils::MasterSlave::isSlave());
     utils::MasterSlave::_communication->send(size, 0);
   }
 }
@@ -172,7 +172,7 @@ void printLocalIndexCountStats(std::map<int, std::vector<int>> const &m)
     size += i.second.size();
   }
 
-  if (utils::MasterSlave::_masterMode) {
+  if (utils::MasterSlave::isMaster()) {
     size_t count   = 0;
     size_t maximum = std::numeric_limits<size_t>::min();
     size_t minimum = std::numeric_limits<size_t>::max();
@@ -213,7 +213,7 @@ void printLocalIndexCountStats(std::map<int, std::vector<int>> const &m)
               << "Number of Interface Processes: " << count << "\n"
               << '\n';
   } else {
-    assertion(utils::MasterSlave::_slaveMode);
+    assertion(utils::MasterSlave::isSlave());
 
     utils::MasterSlave::_communication->send(size, 0);
   }
@@ -279,14 +279,14 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
 {
   TRACE(acceptorName, requesterName);
   CHECK(not isConnected(), "Already connected!");
-  CHECK(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode,
+  CHECK(utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave(),
         "You can only use a point-to-point communication between two participants which both use a master. "
             << "Please use distribution-type gather-scatter instead.");
 
   mesh::Mesh::VertexDistribution &vertexDistribution = _mesh->getVertexDistribution();
   mesh::Mesh::VertexDistribution  requesterVertexDistribution;
 
-  if (utils::MasterSlave::_masterMode) {
+  if (utils::MasterSlave::isMaster()) {
     Event e0("m2n.exchangeVertexDistribution");
     // Establish connection between participants' master processes.
     auto c = _communicationFactory->newCommunication();
@@ -303,7 +303,7 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
     m2n::send(vertexDistribution, 0, c);
     m2n::receive(requesterVertexDistribution, 0, c);
   } else {
-    assertion(utils::MasterSlave::_slaveMode);
+    assertion(utils::MasterSlave::isSlave());
   }
 
   Event e1("m2n.broadcastVertexDistributions", precice::syncMode);
@@ -348,7 +348,7 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
   try {
     auto addressDirectory = _communicationFactory->addressDirectory();
 
-    if (utils::MasterSlave::_masterMode) {
+    if (utils::MasterSlave::isMaster()) {
       Event e3("m2n.createDirectories");
 
       for (int rank = 0; rank < utils::MasterSlave::getSize(); ++rank) {
@@ -398,14 +398,14 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
 {
   TRACE(acceptorName, requesterName);
   CHECK(not isConnected(), "Already connected!");
-  CHECK(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode,
+  CHECK(utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave(),
         "You can only use a point-to-point communication between two participants which both use a master. "
         << "Please use distribution-type gather-scatter instead.");
 
   mesh::Mesh::VertexDistribution &vertexDistribution = _mesh->getVertexDistribution();
   mesh::Mesh::VertexDistribution  acceptorVertexDistribution;
 
-  if (utils::MasterSlave::_masterMode) {
+  if (utils::MasterSlave::isMaster()) {
     Event e0("m2n.exchangeVertexDistribution");
     // Establish connection between participants' master processes.
     auto c = _communicationFactory->newCommunication();
@@ -421,7 +421,7 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
     m2n::receive(acceptorVertexDistribution, 0, c);
     m2n::send(vertexDistribution, 0, c);
   } else {
-    assertion(utils::MasterSlave::_slaveMode);
+    assertion(utils::MasterSlave::isSlave());
   }
 
   Event e1("m2n.broadcastVertexDistributions", precice::syncMode);

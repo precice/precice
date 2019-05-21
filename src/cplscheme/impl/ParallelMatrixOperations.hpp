@@ -41,7 +41,7 @@ public:
     assertion(leftMatrix.cols() == rightMatrix.rows(), leftMatrix.cols(), rightMatrix.rows());
 
     // if serial computation on single processor, i.e, no master-slave mode
-    if (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode) {
+    if (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()) {
       result.noalias() = leftMatrix * rightMatrix;
 
       // if parallel computation on p processors, i.e., master-slave mode
@@ -101,7 +101,7 @@ public:
     localResult.noalias() = leftMatrix * rightMatrix;
 
     // if serial computation on single processor, i.e, no master-slave mode
-    if (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode) {
+    if (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()) {
       result = localResult;
     } else {
       utils::MasterSlave::allreduceSum(localResult.data(), result.data(), localResult.size());
@@ -281,13 +281,13 @@ private:
     utils::MasterSlave::reduceSum(block.data(), summarizedBlocks.data(), block.size());
 
     // slaves wait to receive their local result
-    if (utils::MasterSlave::_slaveMode) {
+    if (utils::MasterSlave::isSlave()) {
       if (result.size() > 0)
         utils::MasterSlave::_communication->receive(result.data(), result.size(), 0);
     }
 
     // master distributes the sub blocks of the results
-    if (utils::MasterSlave::_masterMode) {
+    if (utils::MasterSlave::isMaster()) {
       // distribute blocks of summarizedBlocks (result of multiplication) to corresponding slaves
       result = summarizedBlocks.block(0, 0, offsets[1], r);
 

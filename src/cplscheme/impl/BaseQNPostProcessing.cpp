@@ -112,7 +112,7 @@ void BaseQNPostProcessing::initialize(
    *  last entry _dimOffsets[MasterSlave::getSize()] holds the global dimension, global,n
    */
   std::stringstream ss;
-  if (utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode) {
+  if (utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave()) {
     assertion(utils::MasterSlave::_communication.get() != NULL);
     assertion(utils::MasterSlave::_communication->isConnected());
 
@@ -139,7 +139,7 @@ void BaseQNPostProcessing::initialize(
       _dimOffsets[i + 1] = accumulatedNumberOfUnknowns;
     }
     DEBUG("Number of unknowns at the interface (global): " << _dimOffsets.back());
-    if (utils::MasterSlave::_masterMode) {
+    if (utils::MasterSlave::isMaster()) {
       _infostringstream << "\n--------\n DOFs (global): " << _dimOffsets.back() << "\n offsets: " << _dimOffsets << '\n';
     }
 
@@ -532,7 +532,7 @@ void BaseQNPostProcessing::iterationsConverged(
 {
   TRACE();
   
-  if (utils::MasterSlave::_masterMode || (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode))
+  if (utils::MasterSlave::isMaster() || (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()))
     _infostringstream << "# time step " << tSteps << " converged #\n iterations: " << its
                       << "\n used cols: " << getLSSystemCols() << "\n del cols: " << _nbDelCols << '\n';
 
@@ -676,7 +676,7 @@ int BaseQNPostProcessing::getLSSystemCols()
 
 int BaseQNPostProcessing::getLSSystemRows()
 {
-  if (utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode) {
+  if (utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave()) {
     return _dimOffsets.back();
   }
   return _residuals.size();
@@ -685,14 +685,14 @@ int BaseQNPostProcessing::getLSSystemRows()
 void BaseQNPostProcessing::writeInfo(
     std::string s, bool allProcs)
 {
-  if (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode) {
+  if (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()) {
     // serial post processing mode, server mode
     _infostringstream << s;
 
     // parallel post processing, master-slave mode
   } else {
     if (not allProcs) {
-      if (utils::MasterSlave::_masterMode)
+      if (utils::MasterSlave::isMaster())
         _infostringstream << s;
     } else {
       _infostringstream << s;

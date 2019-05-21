@@ -33,7 +33,7 @@ void GatherScatterCommunication::acceptConnection(
     const std::string &requesterName)
 {
   TRACE(acceptorName, requesterName);
-  assertion(utils::MasterSlave::_slaveMode || _com->isConnected());
+  assertion(utils::MasterSlave::isSlave() || _com->isConnected());
   _isConnected = true;
 }
 
@@ -42,14 +42,14 @@ void GatherScatterCommunication::requestConnection(
     const std::string &requesterName)
 {
   TRACE(acceptorName, requesterName);
-  assertion(utils::MasterSlave::_slaveMode || _com->isConnected());
+  assertion(utils::MasterSlave::isSlave() || _com->isConnected());
   _isConnected = true;
 }
 
 void GatherScatterCommunication::closeConnection()
 {
   TRACE();
-  assertion(utils::MasterSlave::_slaveMode || not _com->isConnected());
+  assertion(utils::MasterSlave::isSlave() || not _com->isConnected());
   _isConnected = false;
 }
 
@@ -59,14 +59,14 @@ void GatherScatterCommunication::send(
     int     valueDimension)
 {
   TRACE(size);
-  assertion(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode);
+  assertion(utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster());
   assertion(utils::MasterSlave::_communication.get() != nullptr);
   assertion(utils::MasterSlave::_communication->isConnected());
   assertion(utils::MasterSlave::getSize() > 1);
   assertion(utils::MasterSlave::getRank() != -1);
 
   // Gather data
-  if (utils::MasterSlave::_slaveMode) { // Slave
+  if (utils::MasterSlave::isSlave()) { // Slave
     if (size > 0) {
       utils::MasterSlave::_communication->send(itemsToSend, size, 0);
     }
@@ -110,7 +110,7 @@ void GatherScatterCommunication::receive(
     int     valueDimension)
 {
   TRACE(size);
-  assertion(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode);
+  assertion(utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster());
   assertion(utils::MasterSlave::_communication.get() != nullptr);
   assertion(utils::MasterSlave::_communication->isConnected());
   assertion(utils::MasterSlave::getSize() > 1);
@@ -119,7 +119,7 @@ void GatherScatterCommunication::receive(
   std::vector<double> globalItemsToReceive;
 
   // Receive data at master
-  if (utils::MasterSlave::_masterMode) {
+  if (utils::MasterSlave::isMaster()) {
     int globalSize = _mesh->getGlobalNumberOfVertices() * valueDimension;
     DEBUG("Global Size = " << globalSize);
     globalItemsToReceive.resize(globalSize);
@@ -127,7 +127,7 @@ void GatherScatterCommunication::receive(
   }
 
   // Scatter data
-  if (utils::MasterSlave::_slaveMode) { // Slave
+  if (utils::MasterSlave::isSlave()) { // Slave
     if (size > 0) {
       DEBUG("itemsToRec[0] = " << itemsToReceive[0]);
       utils::MasterSlave::_communication->receive(itemsToReceive, size, 0);

@@ -34,7 +34,7 @@ void ReceivedPartition::communicate()
   TRACE();
   INFO("Receive global mesh " << _mesh->getName());
   Event e("partition.receiveGlobalMesh." + _mesh->getName(), precice::syncMode);
-  if (not utils::MasterSlave::_slaveMode) {
+  if (not utils::MasterSlave::isSlave()) {
     assertion(_mesh->vertices().empty());
     com::CommunicateMesh(_m2n->getMasterCommunication()).receiveMesh(*_mesh, 0);
   }
@@ -45,7 +45,7 @@ void ReceivedPartition::compute()
   TRACE(_geometricFilter);
 
   // handle coupling mode first (i.e. serial participant)
-  if (not utils::MasterSlave::_slaveMode && not utils::MasterSlave::_masterMode) { //coupling mode
+  if (not utils::MasterSlave::isSlave() && not utils::MasterSlave::isMaster()) { //coupling mode
     _mesh->setGlobalNumberOfVertices(_mesh->vertices().size());
     computeVertexOffsets();
     for (mesh::Vertex &v : _mesh->vertices()) {
@@ -55,7 +55,7 @@ void ReceivedPartition::compute()
   }
 
   // check to prevent false configuration
-  if (not utils::MasterSlave::_slaveMode) {
+  if (not utils::MasterSlave::isSlave()) {
     CHECK(_fromMapping || _toMapping,
           "The received mesh " << _mesh->getName()
           << " needs a mapping, either from it, to it, or both. Maybe you don't want to receive this mesh at all?")
@@ -67,7 +67,7 @@ void ReceivedPartition::compute()
 
 
   // (0) set global number of vertices before filtering
-  if (utils::MasterSlave::_masterMode) {
+  if (utils::MasterSlave::isMaster()) {
     _mesh->setGlobalNumberOfVertices(_mesh->vertices().size());
   }
 
@@ -78,7 +78,7 @@ void ReceivedPartition::compute()
     INFO("Pre-filter mesh " << _mesh->getName() << " by bounding-box");
     Event e("partition.preFilterMesh." + _mesh->getName(), precice::syncMode);
 
-    if (utils::MasterSlave::_slaveMode) {
+    if (utils::MasterSlave::isSlave()) {
       prepareBoundingBox();
       com::CommunicateMesh(utils::MasterSlave::_communication).sendBoundingBox(_bb, 0);
       com::CommunicateMesh(utils::MasterSlave::_communication).receiveMesh(*_mesh, 0);
@@ -129,7 +129,7 @@ void ReceivedPartition::compute()
     INFO("Broadcast mesh " << _mesh->getName());
     Event e1("partition.broadcastMesh." + _mesh->getName(), precice::syncMode);
 
-    if (utils::MasterSlave::_slaveMode) {
+    if (utils::MasterSlave::isSlave()) {
       com::CommunicateMesh(utils::MasterSlave::_communication).broadcastReceiveMesh(*_mesh);
     } else { // Master
       assertion(utils::MasterSlave::getRank() == 0);
@@ -200,7 +200,7 @@ void ReceivedPartition::compute()
   // (6) Compute distribution
   INFO("Feedback distribution for mesh " << _mesh->getName());
   Event e6("partition.feedbackMesh." + _mesh->getName(), precice::syncMode);
-  if (utils::MasterSlave::_slaveMode) {
+  if (utils::MasterSlave::isSlave()) {
     int numberOfVertices = _mesh->vertices().size();
     utils::MasterSlave::_communication->send(numberOfVertices, 0);
     if (numberOfVertices != 0) {
@@ -348,7 +348,7 @@ void ReceivedPartition::createOwnerInformation()
 {
   TRACE();
 
-  if (utils::MasterSlave::_slaveMode) {
+  if (utils::MasterSlave::isSlave()) {
     int numberOfVertices = _mesh->vertices().size();
     utils::MasterSlave::_communication->send(numberOfVertices, 0);
 
@@ -378,7 +378,7 @@ void ReceivedPartition::createOwnerInformation()
     }
   }
 
-  else if (utils::MasterSlave::_masterMode) {
+  else if (utils::MasterSlave::isMaster()) {
     // To temporary store which vertices already have an owner
     std::vector<int> globalOwnerVec(_mesh->getGlobalNumberOfVertices(), 0);
     // The same per rank

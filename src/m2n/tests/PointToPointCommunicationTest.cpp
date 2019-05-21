@@ -44,8 +44,6 @@ void P2PComTest1(com::PtrCommunicationFactory cf)
     Parallel::splitCommunicator("A.Master");
 
     utils::MasterSlave::configure(0, 2);
-    MasterSlave::_masterMode = true;
-    MasterSlave::_slaveMode  = false;
 
     MasterSlave::_communication->acceptConnection("A.Master", "A.Slave", 0);
     MasterSlave::_communication->setRankOffset(1);
@@ -72,8 +70,6 @@ void P2PComTest1(com::PtrCommunicationFactory cf)
   case 1: {
     Parallel::splitCommunicator("A.Slave");
     MasterSlave::configure(1, 2);
-    MasterSlave::_masterMode = false;
-    MasterSlave::_slaveMode  = true;
 
     MasterSlave::_communication->requestConnection("A.Master", "A.Slave", 1, 1);
 
@@ -85,8 +81,6 @@ void P2PComTest1(com::PtrCommunicationFactory cf)
   case 2: {
     Parallel::splitCommunicator("B.Master");
     MasterSlave::configure(0, 2);
-    MasterSlave::_masterMode = true;
-    MasterSlave::_slaveMode  = false;
 
     MasterSlave::_communication->acceptConnection("B.Master", "B.Slave", 0);
     MasterSlave::_communication->setRankOffset(1);
@@ -113,8 +107,6 @@ void P2PComTest1(com::PtrCommunicationFactory cf)
   case 3: {
     Parallel::splitCommunicator("B.Slave");
     MasterSlave::configure(1, 2);
-    MasterSlave::_masterMode = false;
-    MasterSlave::_slaveMode  = true;
 
     MasterSlave::_communication->requestConnection("B.Master", "B.Slave", 1, 1);
 
@@ -166,8 +158,6 @@ void P2PComTest2(com::PtrCommunicationFactory cf)
   case 0: {
     Parallel::splitCommunicator("A.Master");
     MasterSlave::configure(0, 2);
-    MasterSlave::_masterMode = true;
-    MasterSlave::_slaveMode  = false;
 
     MasterSlave::_communication->acceptConnection("A.Master", "A.Slave", utils::Parallel::getProcessRank());
     MasterSlave::_communication->setRankOffset(1);
@@ -194,8 +184,6 @@ void P2PComTest2(com::PtrCommunicationFactory cf)
   case 1: {
     Parallel::splitCommunicator("A.Slave");
     utils::MasterSlave::configure(1, 2);
-    MasterSlave::_masterMode = false;
-    MasterSlave::_slaveMode  = true;
 
     MasterSlave::_communication->requestConnection("A.Master", "A.Slave", 0, 1);
 
@@ -207,8 +195,6 @@ void P2PComTest2(com::PtrCommunicationFactory cf)
   case 2: {
     Parallel::splitCommunicator("B.Master");
     utils::MasterSlave::configure(0, 2);
-    MasterSlave::_masterMode = true;
-    MasterSlave::_slaveMode  = false;
 
     MasterSlave::_communication->acceptConnection("B.Master", "B.Slave", utils::Parallel::getProcessRank());
     MasterSlave::_communication->setRankOffset(1);
@@ -235,9 +221,6 @@ void P2PComTest2(com::PtrCommunicationFactory cf)
   case 3: {
     Parallel::splitCommunicator("B.Slave");
     MasterSlave::configure(1, 2);
-    MasterSlave::_masterMode = false;
-    MasterSlave::_slaveMode  = true;
-
     MasterSlave::_communication->requestConnection("B.Master", "B.Slave", 0, 1);
 
     data.assign(6, -1);
