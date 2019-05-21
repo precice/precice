@@ -713,12 +713,12 @@ void SolverInterfaceImpl:: getMeshVertices
     mesh::PtrMesh mesh(context.mesh);
     DEBUG("Get positions");
     auto & vertices = mesh->vertices();
-    assertion(vertices.size() <= size, vertices.size(), size);
+    assertion(size <= vertices.size(), size, vertices.size());
     Eigen::Map<Eigen::MatrixXd> posMatrix{
         positions, _dimensions, static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(size)};
     for (size_t i=0; i < size; i++){
       const size_t id = ids[i];
-      assertion(id < vertices.size(), vertices.size(), id);
+      assertion(id < vertices.size(), id, vertices.size());
       posMatrix.col(i) = vertices[id].getCoords();
     }
   }
