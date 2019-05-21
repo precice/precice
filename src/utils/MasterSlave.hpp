@@ -57,16 +57,15 @@ public:
   
   static void broadcast(double* values, int size);
 
-  /// Current rank
-  static int _rank;
-
-  /// Number of ranks. This includes ranks from both participants, e.g. minimal size is 2.
-  static int _size;
-
 private:
 
   static logging::Logger _log;
 
+  /// Current rank
+  static int _rank;
+  
+  /// Number of ranks. This includes ranks from both participants, e.g. minimal size is 2.
+  static int _size;
   
 };
 
