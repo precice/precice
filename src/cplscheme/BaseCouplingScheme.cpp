@@ -549,10 +549,10 @@ void BaseCouplingScheme::setupDataMatrices(DataMap &data)
   DEBUG("Data size: " << data.size());
   // Reserve storage for convergence measurement of send and receive data values
   for (ConvergenceMeasure &convMeasure : _convergenceMeasures) {
-    assertion(convMeasure.data != nullptr);
-    if (convMeasure.data->oldValues.cols() < 1) {
-      utils::append(convMeasure.data->oldValues,
-                    (Eigen::MatrixXd) Eigen::MatrixXd::Zero(convMeasure.data->values->size(), 1));
+    assertion(convMeasure.couplingData != nullptr);
+    if (convMeasure.couplingData->oldValues.cols() < 1) {
+      utils::append(convMeasure.couplingData->oldValues,
+                    (Eigen::MatrixXd) Eigen::MatrixXd::Zero(convMeasure.couplingData->values->size(), 1));
     }
   }
   // Reserve storage for extrapolation of data values
@@ -593,12 +593,12 @@ void BaseCouplingScheme::setupConvergenceMeasures()
         "At least one convergence measure has to be defined for "
             << "an implicit coupling scheme!");
   for (ConvergenceMeasure &convMeasure : _convergenceMeasures) {
-    int dataID = convMeasure.dataID;
+    int dataID = convMeasure.data->getID();
     if ((getSendData(dataID) != nullptr)) {
-      convMeasure.data = getSendData(dataID);
+      convMeasure.couplingData = getSendData(dataID);
     } else {
-      convMeasure.data = getReceiveData(dataID);
-      assertion(convMeasure.data != nullptr);
+      convMeasure.couplingData = getReceiveData(dataID);
+      assertion(convMeasure.couplingData != nullptr);
     }
   }
 }
@@ -613,17 +613,17 @@ void BaseCouplingScheme::newConvergenceMeasurements()
 }
 
 void BaseCouplingScheme::addConvergenceMeasure(
-    int                         dataID,
+    mesh::PtrData               data,
     bool                        suffices,
     int                         level,
     impl::PtrConvergenceMeasure measure)
 {
   ConvergenceMeasure convMeasure;
-  convMeasure.dataID   = dataID;
-  convMeasure.data     = nullptr;
+  convMeasure.data     = std::move(data);
+  convMeasure.couplingData = nullptr;
   convMeasure.suffices = suffices;
   convMeasure.level    = level;
-  convMeasure.measure  = measure;
+  convMeasure.measure  = std::move(measure);
   _convergenceMeasures.push_back(convMeasure);
   _firstResiduumNorm.push_back(0);
 }
@@ -647,14 +647,14 @@ bool BaseCouplingScheme::measureConvergence(
     if (convMeasure.level > 0)
       continue;
 
-    assertion(convMeasure.data != nullptr);
+    assertion(convMeasure.couplingData != nullptr);
     assertion(convMeasure.measure.get() != nullptr);
-    const auto &    oldValues = convMeasure.data->oldValues.col(0);
-    Eigen::VectorXd q         = Eigen::VectorXd::Zero(convMeasure.data->values->size());
-    if (designSpecifications.find(convMeasure.dataID) != designSpecifications.end())
-      q = designSpecifications.at(convMeasure.dataID);
+    const auto &    oldValues = convMeasure.couplingData->oldValues.col(0);
+    Eigen::VectorXd q         = Eigen::VectorXd::Zero(convMeasure.couplingData->values->size());
+    if (designSpecifications.find(convMeasure.data->getID()) != designSpecifications.end())
+      q = designSpecifications.at(convMeasure.data->getID());
 
-    convMeasure.measure->measure(oldValues, *convMeasure.data->values, q);
+    convMeasure.measure->measure(oldValues, *convMeasure.couplingData->values, q);
 
     if (not utils::MasterSlave::isSlave()) {
       std::stringstream sstm;
@@ -697,22 +697,22 @@ bool BaseCouplingScheme::measureConvergenceCoarseModelOptimization(
     if (convMeasure.level == 0)
       continue;
 
-    std::cout << "  measure convergence coarse measure, id:" << convMeasure.dataID << '\n';
-    assertion(convMeasure.data != nullptr);
+    std::cout << "  measure convergence coarse measure, data:" << convMeasure.data->getName() << '\n';
+    assertion(convMeasure.couplingData != nullptr);
     assertion(convMeasure.measure.get() != nullptr);
-    const auto &    oldValues = convMeasure.data->oldValues.col(0);
-    Eigen::VectorXd q         = Eigen::VectorXd::Zero(convMeasure.data->values->size());
-    if (designSpecifications.find(convMeasure.dataID) != designSpecifications.end())
-      q = designSpecifications.at(convMeasure.dataID);
+    const auto &    oldValues = convMeasure.couplingData->oldValues.col(0);
+    Eigen::VectorXd q         = Eigen::VectorXd::Zero(convMeasure.couplingData->values->size());
+    if (designSpecifications.find(convMeasure.data->getID()) != designSpecifications.end())
+      q = designSpecifications.at(convMeasure.data->getID());
 
-    convMeasure.measure->measure(oldValues, *convMeasure.data->values, q);
+    convMeasure.measure->measure(oldValues, *convMeasure.couplingData->values, q);
 
     if (not convMeasure.measure->isConvergence()) {
       allConverged = false;
     } else if (convMeasure.suffices == true) {
       oneSuffices = true;
     }
-    INFO(convMeasure.measure->printState());
+    INFO('<' << convMeasure.data->getName() << '<' << convMeasure.measure->printState());
   }
 
   if (allConverged) {
