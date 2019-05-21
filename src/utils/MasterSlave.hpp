@@ -13,9 +13,6 @@ class MasterSlave
 {
 public:
 
-  /// The rank of the master. At this time it is hardcoded to 0.
-  static int _masterRank;
-
   /// Communication between the master and all slaves.
   static com::PtrCommunication _communication;
 
@@ -73,7 +70,6 @@ private:
 
   /// True if this process is running a slave.
   static bool _isSlave;
-
   
 };
 

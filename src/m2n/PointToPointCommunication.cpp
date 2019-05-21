@@ -293,12 +293,6 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
 
     c->acceptConnection(acceptorName, requesterName, utils::MasterSlave::getRank());
 
-    int requesterMasterRank;
-
-    // Exchange ranks of participants' master processes.
-    c->send(utils::MasterSlave::_masterRank, 0);
-    c->receive(requesterMasterRank, 0);
-
     // Exchange vertex distributions.
     m2n::send(vertexDistribution, 0, c);
     m2n::receive(requesterVertexDistribution, 0, c);
@@ -410,12 +404,6 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
     // Establish connection between participants' master processes.
     auto c = _communicationFactory->newCommunication();
     c->requestConnection(acceptorName, requesterName, 0, 1);
-
-    int acceptorMasterRank;
-
-    // Exchange ranks of participants' master processes.
-    c->receive(acceptorMasterRank, 0);
-    c->send(utils::MasterSlave::_masterRank, 0);
 
     // Exchange vertex distributions.
     m2n::receive(acceptorVertexDistribution, 0, c);

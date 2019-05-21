@@ -10,10 +10,6 @@ namespace utils {
 
 int MasterSlave::_rank = -1;
 int MasterSlave::_size = -1;
-// One day somebody would want to choose master dynamically (e.g. from
-// configuration). As a result, `_isMaster' would no longer correspond to 0th
-// process. For now we just hardcode `_masterRank' assignment to `0'.
-int MasterSlave::_masterRank = 0;
 bool MasterSlave::_isMaster = false;
 bool MasterSlave::_isSlave = false;
 com::PtrCommunication MasterSlave::_communication;
