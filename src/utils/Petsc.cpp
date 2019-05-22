@@ -1,5 +1,6 @@
 #include "Petsc.hpp"
 #include "utils/Parallel.hpp"
+#include <utility>
 
 #ifndef PRECICE_NO_PETSC
 #include "petsc.h"
@@ -36,6 +37,7 @@ void Petsc::finalize()
   PetscBool petscIsInitialized;
   PetscInitialized(&petscIsInitialized);
   if (petscIsInitialized and weInitialized) {
+    PetscOptionsSetValue(nullptr, "-options_left", "no"); 
     PetscFinalize();
   }
 #endif // not PRECICE_NO_PETSC
@@ -96,7 +98,26 @@ std::string getName(T obj)
 
 /////////////////////////////////////////////////////////////////////////
 
-Vector::Vector(std::string name)
+Vector::Vector(const Vector &v)
+{
+  PetscErrorCode ierr = 0;
+  ierr = VecDuplicate(v.vector, &vector); CHKERRV(ierr);
+  ierr = VecCopy(v.vector, vector); CHKERRV(ierr);
+  setName(vector, getName(v.vector));
+}
+
+Vector& Vector::operator=(Vector other)
+{
+    swap(other);
+    return *this;
+}
+
+Vector::Vector(Vector&& other) {
+  vector = other.vector;
+  other.vector = nullptr;
+}
+
+Vector::Vector(const std::string& name)
 {
   int size;
   MPI_Comm_size(utils::Parallel::getGlobalCommunicator(), &size);
@@ -105,35 +126,10 @@ Vector::Vector(std::string name)
   setName(vector, name);
 }
 
-Vector::Vector(Vec &v, std::string name)
+Vector::Vector(Vec& v, const std::string& name) : vector(v)
 {
-  VecCopy(v, vector);
   setName(vector, name);
 }
-
-Vector::Vector(Vector &v, std::string name)
-{
-  PetscErrorCode ierr = 0;
-  ierr = VecDuplicate(v.vector, &vector); CHKERRV(ierr);
-  setName(vector, name);
-}
-
-Vector::Vector(Mat &m, std::string name, LEFTRIGHT type)
-{
-  // MatGetVecs is deprecated, we keep it due to the old PETSc version at the SuperMUC.
-  PetscErrorCode ierr = 0;
-  if (type == LEFTRIGHT::LEFT) {
-    ierr = MatCreateVecs(m, nullptr, &vector); CHKERRV(ierr); // a vector with the same number of rows
-  }
-  else {
-    ierr = MatCreateVecs(m, &vector, nullptr); CHKERRV(ierr); // a vector with the same number of cols
-  }
-  setName(vector, name);
-}
-
-Vector::Vector(Matrix &m, std::string name, LEFTRIGHT type) :
-  Vector(m.matrix, name, type)
-{}
 
 Vector::~Vector()
 {
@@ -142,6 +138,51 @@ Vector::~Vector()
   PetscInitialized(&petscIsInitialized);
   if (petscIsInitialized) // If PetscFinalize is called before ~Vector
     ierr = VecDestroy(&vector); CHKERRV(ierr);
+}
+
+
+Vector Vector::allocate(const std::string& name)
+{
+    return Vector{name};
+}
+
+Vector Vector::allocate(Vector& other, const std::string& name)
+{
+  return allocate(other.vector, name);
+}
+
+Vector Vector::allocate(Vec& other, const std::string& name) 
+{
+  Vec newvector;
+  PetscErrorCode ierr = 0;
+  ierr = VecDuplicate(other, &newvector); [&]{CHKERRV(ierr);}();
+  return Vector{newvector, name};
+}
+
+Vector Vector::allocate(Matrix& m, const std::string& name, LEFTRIGHT type)
+{
+  return allocate(m.matrix, name, type);
+}
+
+Vector Vector::allocate(Mat& m, const std::string& name, LEFTRIGHT type)
+{
+  Vec newvector;
+  // MatGetVecs is deprecated, we keep it due to the old PETSc version at the SuperMUC.
+  PetscErrorCode ierr = 0;
+  if (type == LEFTRIGHT::LEFT) {
+    ierr = MatCreateVecs(m, nullptr, &newvector);// a vector with the same number of rows
+  }
+  else {
+    ierr = MatCreateVecs(m, &newvector, nullptr); // a vector with the same number of cols
+  }
+  [&]{CHKERRV(ierr);}(); 
+  return Vector{newvector, name};
+}
+
+void Vector::swap(Vector& other) noexcept
+{
+    using std::swap;
+    swap(vector, other.vector);
 }
 
 Vector::operator Vec&()
@@ -156,17 +197,19 @@ void Vector::init(PetscInt rows)
   ierr = VecSetFromOptions(vector); CHKERRV(ierr);
 }
 
-int Vector::getSize()
+PetscInt Vector::getSize() const
 {
+  PetscErrorCode ierr = 0;
   PetscInt size;
-  VecGetSize(vector, &size);
+  ierr = VecGetSize(vector, &size); CHKERRQ(ierr);
   return size;
 }
 
-int Vector::getLocalSize()
+PetscInt Vector::getLocalSize() const
 {
+  PetscErrorCode ierr = 0;
   PetscInt size;
-  VecGetLocalSize(vector, &size);
+  ierr = VecGetLocalSize(vector, &size); CHKERRQ(ierr);
   return size;
 }
 
@@ -226,14 +269,14 @@ void Vector::assemble()
 }
 
 
-std::pair<PetscInt, PetscInt> Vector::ownerRange()
+std::pair<PetscInt, PetscInt> Vector::ownerRange() const
 {
   PetscInt range_start, range_end;
   VecGetOwnershipRange(vector, &range_start, &range_end);
   return std::make_pair(range_start, range_end);
 }
   
-void Vector::write(std::string filename, VIEWERFORMAT format)
+void Vector::write(std::string filename, VIEWERFORMAT format) const
 {
   PetscErrorCode ierr = 0;
   PetscViewer viewer;
@@ -251,10 +294,15 @@ void Vector::read(std::string filename, VIEWERFORMAT format)
    PetscViewerDestroy(&viewer);
 }
 
-void Vector::view()
+void Vector::view() const
 {
   PetscErrorCode ierr;
   ierr = VecView(vector, PETSC_VIEWER_STDOUT_WORLD); CHKERRV(ierr);
+}
+
+void swap(Vector& lhs, Vector& rhs) noexcept
+{
+    lhs.swap(rhs);
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -310,7 +358,7 @@ void Matrix::reset()
   setName(matrix, name);
 }
 
-MatInfo Matrix::getInfo(MatInfoType flag)
+MatInfo Matrix::getInfo(MatInfoType flag) const
 {
   MatInfo info;
   MatGetInfo(matrix, flag, &info);
@@ -339,7 +387,7 @@ void Matrix::fillWithRandoms()
   PetscRandomDestroy(&rctx);
 }
 
-void Matrix::setColumn(Vector &v, int col)
+void Matrix::setColumn(Vector &v, PetscInt col)
 {
   PetscErrorCode ierr = 0;
   const PetscScalar *vec;
@@ -355,28 +403,28 @@ void Matrix::setColumn(Vector &v, int col)
   ierr = MatAssemblyEnd(matrix, MAT_FINAL_ASSEMBLY); CHKERRV(ierr); 
 }
 
-std::pair<PetscInt, PetscInt> Matrix::getSize()
+std::pair<PetscInt, PetscInt> Matrix::getSize() const
 {
   PetscInt m, n;
   MatGetSize(matrix, &m, &n);
   return std::make_pair(m, n);
 }
 
-std::pair<PetscInt, PetscInt> Matrix::getLocalSize()
+std::pair<PetscInt, PetscInt> Matrix::getLocalSize() const
 {
   PetscInt m, n;
   MatGetLocalSize(matrix, &m, &n);
   return std::make_pair(m, n);
 }
 
-std::pair<PetscInt, PetscInt> Matrix::ownerRange()
+std::pair<PetscInt, PetscInt> Matrix::ownerRange() const
 {
   PetscInt range_start, range_end;
   MatGetOwnershipRange(matrix, &range_start, &range_end);
   return std::make_pair(range_start, range_end);
 }
 
-std::pair<PetscInt, PetscInt> Matrix::ownerRangeColumn()
+std::pair<PetscInt, PetscInt> Matrix::ownerRangeColumn() const
 {
   PetscInt range_start, range_end;
   MatGetOwnershipRangeColumn(matrix, &range_start, &range_end);
@@ -391,7 +439,7 @@ PetscInt Matrix::blockSize() const
   return bs;
 }
 
-void Matrix::write(std::string filename, VIEWERFORMAT format)
+void Matrix::write(std::string filename, VIEWERFORMAT format) const
 {
   PetscErrorCode ierr = 0;
   PetscViewer viewer;
@@ -409,7 +457,7 @@ void Matrix::read(std::string filename)
    PetscViewerDestroy(&viewer);
 }
 
-void Matrix::view()
+void Matrix::view() const
 {
   PetscErrorCode ierr = 0;
   PetscViewer viewer;
@@ -421,7 +469,7 @@ void Matrix::view()
   ierr = PetscViewerDestroy(&viewer); CHKERRV(ierr); 
 }
 
-void Matrix::viewDraw()
+void Matrix::viewDraw() const
 {
   PetscErrorCode ierr = 0;
   PetscViewer viewer;
@@ -474,6 +522,23 @@ bool KSPSolver::solve(Vector &b, Vector &x)
   return (convReason > 0);
 }
 
+bool KSPSolver::solveTranspose(Vector &b, Vector &x)
+{
+  PetscErrorCode ierr = 0;
+  KSPConvergedReason convReason;
+  KSPSolveTranspose(ksp, b, x);
+  ierr = KSPGetConvergedReason(ksp, &convReason); CHKERRQ(ierr);
+  return (convReason > 0);
+}
+
+PetscInt KSPSolver::getIterationNumber()
+{
+  PetscErrorCode ierr = 0;
+  PetscInt its;
+  ierr = KSPGetIterationNumber(ksp, &its); CHKERRQ(ierr);
+  return its;
+}
+
 
 /////////////////////////////////////////////////////////////////////////
 
@@ -488,6 +553,16 @@ void destroy(ISLocalToGlobalMapping * IS)
   }
 }
 
+void destroy(AO * ao)
+{
+  PetscErrorCode ierr = 0;
+  PetscBool petscIsInitialized;
+  PetscInitialized(&petscIsInitialized);
+  
+  if (ao and petscIsInitialized) {
+    ierr = AODestroy(ao); CHKERRV(ierr);
+  }
+}
 
 }}} // namespace precice, utils, petsc
 

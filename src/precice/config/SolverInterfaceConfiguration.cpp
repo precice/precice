@@ -7,8 +7,6 @@
 #include "m2n/config/M2NConfiguration.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
 #include "mapping/SharedPointer.hpp"
-#include "xml/ValidatorEquals.hpp"
-#include "xml/ValidatorOr.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
 
 namespace precice {
@@ -19,13 +17,9 @@ SolverInterfaceConfiguration:: SolverInterfaceConfiguration(xml::XMLTag& parent 
   using namespace xml;
   XMLTag tag(*this, "solver-interface", XMLTag::OCCUR_ONCE);
   tag.setDocumentation("Configuration of simulation relevant features.");
-
-  XMLAttribute<int> attrDimensions("dimensions");
-  std::string doc = "Determines the spatial dimensionality of the configuration";
-  attrDimensions.setDocumentation(doc);
-  ValidatorEquals<int> validDim2(2);
-  ValidatorEquals<int> validDim3(3);
-  attrDimensions.setValidator(validDim2 || validDim3);
+  auto attrDimensions = makeXMLAttribute("dimensions", 2)
+                             .setDocumentation("Determines the spatial dimensionality of the configuration")
+                             .setOptions({2, 3});
   tag.addAttribute(attrDimensions);
 
   _dataConfiguration = mesh::PtrDataConfiguration (

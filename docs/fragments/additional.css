@@ -1,0 +1,13 @@
+.headertitle {
+    max-width: 1000px !important;
+    margin: 0 auto !important;
+}
+
+.contents {
+    max-width: 1000px !important;
+    margin: 0 auto !important;
+}
+
+#projectlogo {
+    padding: 5px;
+}

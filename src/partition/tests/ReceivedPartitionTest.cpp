@@ -33,27 +33,16 @@ void setupParallelEnvironment(m2n::PtrM2N m2n)
   if (utils::Parallel::getProcessRank() == 0) { //SOLIDZ
     utils::Parallel::splitCommunicator("Solid");
     m2n->acceptMasterConnection("Solid", "FluidMaster");
-    utils::MasterSlave::_slaveMode  = false;
-    utils::MasterSlave::_masterMode = false;
   } else if (utils::Parallel::getProcessRank() == 1) { //Master
     utils::Parallel::splitCommunicator("FluidMaster");
     m2n->requestMasterConnection("Solid", "FluidMaster");
-    utils::MasterSlave::_rank       = 0;
-    utils::MasterSlave::_size       = 3;
-    utils::MasterSlave::_slaveMode  = false;
-    utils::MasterSlave::_masterMode = true;
+    utils::MasterSlave::configure(0, 3);
   } else if (utils::Parallel::getProcessRank() == 2) { //Slave1
     utils::Parallel::splitCommunicator("FluidSlaves");
-    utils::MasterSlave::_rank       = 1;
-    utils::MasterSlave::_size       = 3;
-    utils::MasterSlave::_slaveMode  = true;
-    utils::MasterSlave::_masterMode = false;
+    utils::MasterSlave::configure(1, 3);
   } else if (utils::Parallel::getProcessRank() == 3) { //Slave2
     utils::Parallel::splitCommunicator("FluidSlaves");
-    utils::MasterSlave::_rank       = 2;
-    utils::MasterSlave::_size       = 3;
-    utils::MasterSlave::_slaveMode  = true;
-    utils::MasterSlave::_masterMode = false;
+    utils::MasterSlave::configure(2, 3);
   }
 
   if(utils::Parallel::getProcessRank() == 1){//Master
@@ -80,7 +69,7 @@ void tearDownParallelEnvironment()
 void createSolidzMesh2D(mesh::PtrMesh pSolidzMesh)
 {
   int dimensions = 2;
-  assertion(pSolidzMesh.use_count() > 0);
+  assertion(pSolidzMesh);
   assertion(pSolidzMesh->getDimensions() == dimensions);
   Eigen::VectorXd position(dimensions);
 
@@ -112,7 +101,7 @@ void createSolidzMesh2D(mesh::PtrMesh pSolidzMesh)
 void createSolidzMesh2DSmall(mesh::PtrMesh pSolidzMesh)
 {
   int dimensions = 2;
-  assertion(pSolidzMesh.use_count() > 0);
+  assertion(pSolidzMesh);
   assertion(pSolidzMesh->getDimensions() == dimensions);
   Eigen::VectorXd position(dimensions);
 
@@ -129,7 +118,7 @@ void createSolidzMesh2DSmall(mesh::PtrMesh pSolidzMesh)
 void createNastinMesh2D(mesh::PtrMesh pNastinMesh)
 {
   int dimensions = 2;
-  assertion(pNastinMesh.use_count() > 0);
+  assertion(pNastinMesh);
   assertion(pNastinMesh->getDimensions() == dimensions);
 
   if (utils::Parallel::getProcessRank() == 1) {
@@ -155,7 +144,7 @@ void createSolidzMesh3D(mesh::PtrMesh pSolidzMesh)
 {
   int             dimensions = 3;
   Eigen::VectorXd position(dimensions);
-  assertion(pSolidzMesh.use_count() > 0);
+  assertion(pSolidzMesh);
   assertion(pSolidzMesh->getDimensions() == dimensions);
 
   position << 0.0, 0.0, -0.1;
@@ -186,7 +175,7 @@ void createSolidzMesh3D(mesh::PtrMesh pSolidzMesh)
 void createNastinMesh3D(mesh::PtrMesh pNastinMesh)
 {
   int dimensions = 3;
-  assertion(pNastinMesh.use_count() > 0);
+  assertion(pNastinMesh);
   assertion(pNastinMesh->getDimensions() == dimensions);
 
   if (utils::Parallel::getProcessRank() == 1) { //Master
@@ -223,8 +212,6 @@ BOOST_AUTO_TEST_CASE(RePartitionNNBroadcastFilter2D, *testing::OnSize(4))
   Eigen::VectorXd offset      = Eigen::VectorXd::Zero(dimensions);
 
   if (utils::Parallel::getProcessRank() == 0) { //SOLIDZ
-    utils::MasterSlave::_slaveMode  = false;
-    utils::MasterSlave::_masterMode = false;
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals));
     createSolidzMesh2D(pSolidzMesh);
     bool              hasToSend = true;
@@ -285,8 +272,6 @@ BOOST_AUTO_TEST_CASE(RePartitionNNDoubleNode2D, *testing::OnSize(4))
   Eigen::VectorXd offset      = Eigen::VectorXd::Zero(dimensions);
 
   if (utils::Parallel::getProcessRank() == 0) { //SOLIDZ
-    utils::MasterSlave::_slaveMode  = false;
-    utils::MasterSlave::_masterMode = false;
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals));
     createSolidzMesh2DSmall(pSolidzMesh);
     bool              hasToSend = true;
@@ -859,14 +844,6 @@ BOOST_FIXTURE_TEST_CASE(ProvideAndReceiveCouplingMode, testing::M2NFixture,
 {
   if (utils::Parallel::getCommunicatorSize() != 2)
     return;
-
-  if (utils::Parallel::getProcessRank() == 0) {
-    utils::MasterSlave::_slaveMode  = false;
-    utils::MasterSlave::_masterMode = false;
-  } else if (utils::Parallel::getProcessRank() == 1) {
-    utils::MasterSlave::_slaveMode  = false;
-    utils::MasterSlave::_masterMode = false;
-  }
 
   int  dimensions  = 2;
   bool flipNormals = false;

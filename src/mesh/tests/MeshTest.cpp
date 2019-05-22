@@ -441,11 +441,10 @@ BOOST_AUTO_TEST_CASE(Demonstration)
 BOOST_AUTO_TEST_CASE(MeshEquality)
 {
     int dim = 3;
-    precice::mesh::Mesh mesh1 ( "Mesh1", dim, false );
-    precice::mesh::Mesh mesh1flipped ( "Mesh1flipped", dim, true );
-    precice::mesh::Mesh mesh2 ( "Mesh2", dim, false );
-    precice::mesh::Mesh mesh3 ( "Mesh3", dim, false );
-    precice::mesh::Mesh *meshes[4] = {&mesh1, &mesh1flipped, &mesh2, &mesh3};
+    Mesh mesh1 ( "Mesh1", dim, false );
+    Mesh mesh1flipped ( "Mesh1flipped", dim, true );
+    Mesh mesh2 ( "Mesh2", dim, false );
+    Mesh *meshes[3] = {&mesh1, &mesh1flipped, &mesh2};
     for (auto ptr : meshes){
         auto& mesh = *ptr;
         Eigen::VectorXd coords0(dim);
@@ -460,22 +459,74 @@ BOOST_AUTO_TEST_CASE(MeshEquality)
         Vertex& v1 = mesh.createVertex(coords1);
         Vertex& v2 = mesh.createVertex(coords2);
         Vertex& v3 = mesh.createVertex(coords3);
-        Edge& e0 = mesh.createEdge ( v0, v1 );
-        Edge& e1 = mesh.createEdge ( v1, v2 );
-        Edge& e2 = mesh.createEdge ( v2, v0 );
-        Edge& e3 = mesh.createEdge ( v1, v3 );
-        Edge& e4 = mesh.createEdge ( v3, v2 );
+        Edge& e0 = mesh.createEdge ( v0, v1 ); // LINESTRING (0 0 0, 1 0 0)
+        Edge& e1 = mesh.createEdge ( v1, v2 ); // LINESTRING (1 0 0, 0 0 1)
+        Edge& e2 = mesh.createEdge ( v2, v0 ); // LINESTRING (0 0 1, 0 0 0)
+        Edge& e3 = mesh.createEdge ( v1, v3 ); // LINESTRING (1 0 0, 1 0 1)
+        Edge& e4 = mesh.createEdge ( v3, v2 ); // LINESTRING (1 0 1, 0 0 1)
         mesh.createTriangle ( e0, e1, e2 );
-        mesh.createTriangle ( e2, e1, e0 );
-        Quad& q0 = mesh.createQuad (e0, e3, e4, e2);
+        mesh.createQuad (e0, e3, e4, e2);
         mesh.computeState();
-        if (ptr == &mesh3){
-            q0.setNormal(q0.getNormal() * -1.); //flip normal
-        }
     }
     BOOST_TEST(mesh1 != mesh1flipped);
     BOOST_TEST(mesh1 == mesh2);
-    BOOST_TEST(mesh1 != mesh3);
+}
+
+BOOST_AUTO_TEST_CASE(MeshWKTPrint)
+{
+    Mesh mesh ("WKTMesh", 3, false);
+    Vertex& v0 = mesh.createVertex(Eigen::Vector3d(0., 0., 0.));
+    Vertex& v1 = mesh.createVertex(Eigen::Vector3d(1., 0., 0.));
+    Vertex& v2 = mesh.createVertex(Eigen::Vector3d(0., 0., 1.));
+    Vertex& v3 = mesh.createVertex(Eigen::Vector3d(1., 0., 1.));
+    Edge& e0 = mesh.createEdge ( v0, v1 ); // LINESTRING (0 0 0, 1 0 0)
+    Edge& e1 = mesh.createEdge ( v1, v2 ); // LINESTRING (1 0 0, 0 0 1)
+    Edge& e2 = mesh.createEdge ( v2, v0 ); // LINESTRING (0 0 1, 0 0 0)
+    Edge& e3 = mesh.createEdge ( v1, v3 ); // LINESTRING (1 0 0, 1 0 1)
+    Edge& e4 = mesh.createEdge ( v3, v2 ); // LINESTRING (1 0 1, 0 0 1)
+    mesh.createTriangle ( e0, e1, e2 );
+    mesh.createQuad (e0, e3, e4, e2);
+    mesh.computeState();
+    std::stringstream sstream;
+    sstream << mesh;
+    std::string reference(
+            "Mesh \"WKTMesh\", dimensionality = 3:\n"
+            "GEOMETRYCOLLECTION(\n"
+            "POINT (0 0 0), POINT (1 0 0), POINT (0 0 1), POINT (1 0 1),\n"
+            "LINESTRING (0 0 0, 1 0 0), LINESTRING (1 0 0, 0 0 1), LINESTRING (0 0 1, 0 0 0), LINESTRING (1 0 0, 1 0 1), LINESTRING (1 0 1, 0 0 1),\n"
+            "POLYGON ((0 0 0, 1 0 0, 0 0 1, 0 0 0)),\n"
+            "POLYGON ((0 0 0, 1 0 0, 1 0 1, 0 0 1, 0 0 0))\n"
+            ")");
+    BOOST_TEST(reference == sstream.str());
+}
+
+BOOST_AUTO_TEST_CASE(CreateUniqueEdge)
+{
+    int dim = 3;
+    Mesh mesh1 ( "Mesh1", dim, false );
+    auto& mesh = mesh1;
+    Eigen::VectorXd coords0(dim);
+    Eigen::VectorXd coords1(dim);
+    Eigen::VectorXd coords2(dim);
+    coords0 << 0.0, 0.0, 0.0;
+    coords1 << 1.0, 0.0, 0.0;
+    coords2 << 0.0, 0.0, 1.0;
+    Vertex& v0 = mesh.createVertex(coords0);
+    Vertex& v1 = mesh.createVertex(coords1);
+    Vertex& v2 = mesh.createVertex(coords2);
+
+    Edge& e01a = mesh.createEdge ( v0, v1 ); // LINESTRING (0 0 0, 1 0 0)
+    mesh.createEdge ( v0, v1 ); // LINESTRING (0 0 0, 1 0 0)
+    BOOST_TEST(mesh.edges().size() == 2);
+
+    Edge& e01c = mesh.createUniqueEdge ( v0, v1 ); // LINESTRING (0 0 0, 1 0 0)
+    BOOST_TEST(mesh.edges().size() == 2);
+    BOOST_TEST(e01a == e01c);
+
+    mesh.createUniqueEdge ( v1, v2 ); // LINESTRING (0 0 0, 1 0 0)
+    BOOST_TEST(mesh.edges().size() == 3);
+    mesh.createUniqueEdge ( v1, v2 ); // LINESTRING (0 0 0, 1 0 0)
+    BOOST_TEST(mesh.edges().size() == 3);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Mesh

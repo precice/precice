@@ -13,12 +13,11 @@
 using namespace precice;
 
 using std::cout;
-using std::endl;
 using std::vector;
 
 vector<double>
 getData() {
-  int rank = utils::MasterSlave::_rank;
+  int rank = utils::MasterSlave::getRank();
 
   static double data_0[] = {10.0, 20.0, 40.0, 80.0};
   static double data_1[] = {30.0, 50.0, 60.0, 90.0};
@@ -34,7 +33,7 @@ getData() {
 
 vector<double>
 getExpectedData() {
-  int rank = utils::MasterSlave::_rank;
+  int rank = utils::MasterSlave::getRank();
 
   static double data_0[] = {10.0 + 2, 20.0 + 1, 40.0 + 2, 80.0 + 5};
   static double data_1[] = {30.0 + 2, 50.0 + 1, 60.0 + 3, 90.0 + 5};
@@ -66,33 +65,33 @@ validate(vector<double> const& data) {
 
 int
 main(int argc, char** argv) {
-  std::cout << "Running communication dummy" << std::endl;
+  std::cout << "Running communication dummy\n";
 
   int provided;
 
   MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
 
-  MPI_Comm_size(MPI_COMM_WORLD, &utils::MasterSlave::_size);
-  MPI_Comm_rank(MPI_COMM_WORLD, &utils::MasterSlave::_rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &utils::MasterSlave::getSize());
+  MPI_Comm_rank(MPI_COMM_WORLD, &utils::MasterSlave::getRank());
 
-  if (utils::MasterSlave::_size != 3) {
-    std::cout << "Please run with 3 mpi processes" << std::endl;
+  if (utils::MasterSlave::getSize() != 3) {
+    std::cout << "Please run with 3 mpi processes\n";
     return 1;
   }
 
-  if (utils::MasterSlave::_rank == 0) {
-    utils::MasterSlave::_masterMode = true;
-    utils::MasterSlave::_slaveMode = false;
+  if (utils::MasterSlave::getRank() == 0) {
+    utils::MasterSlave::isMaster() = true;
+    utils::MasterSlave::isSlave() = false;
   } else {
-    utils::MasterSlave::_masterMode = false;
-    utils::MasterSlave::_slaveMode = true;
+    utils::MasterSlave::isMaster() = false;
+    utils::MasterSlave::isSlave() = true;
   }
 
-  if (utils::MasterSlave::_masterMode) {
+  if (utils::MasterSlave::isMaster()) {
     utils::Parallel::initializeMPI(NULL, NULL);
     utils::Parallel::splitCommunicator("Master");
   } else {
-    assertion(utils::MasterSlave::_slaveMode);
+    assertion(utils::MasterSlave::isSlave());
     utils::Parallel::initializeMPI(NULL, NULL);    
     utils::Parallel::splitCommunicator("Slave");
   }
@@ -102,22 +101,22 @@ main(int argc, char** argv) {
 
   int rankOffset = 1;
 
-  if (utils::MasterSlave::_masterMode) {
+  if (utils::MasterSlave::isMaster()) {
     utils::MasterSlave::_communication->acceptConnection(
-        "Master", "Slave", utils::MasterSlave::_rank, 1);
+        "Master", "Slave", utils::MasterSlave::getRank(), 1);
     utils::MasterSlave::_communication->setRankOffset(rankOffset);
   } else {
-    assertion(utils::MasterSlave::_slaveMode);
+    assertion(utils::MasterSlave::isSlave());
     utils::MasterSlave::_communication->requestConnection(
         "Master",
         "Slave",
-        utils::MasterSlave::_rank - rankOffset,
-        utils::MasterSlave::_size - rankOffset);
+        utils::MasterSlave::getRank() - rankOffset,
+        utils::MasterSlave::getSize() - rankOffset);
   }
 
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 2, true));
 
-  if (utils::MasterSlave::_masterMode) {
+  if (utils::MasterSlave::isMaster()) {
     mesh->setGlobalNumberOfVertices(10);
 
     mesh->getVertexDistribution()[0].push_back(0);
@@ -148,8 +147,7 @@ main(int argc, char** argv) {
 
     c.requestConnection("B", "A");
 
-    cout << utils::MasterSlave::_rank << ": "
-         << "Connected!" << endl;
+    cout << utils::MasterSlave::getRank() << ": " << "Connected!\n";
 
     std::vector<double> data = getData();
 
@@ -158,18 +156,16 @@ main(int argc, char** argv) {
     c.receive(data.data(), data.size());
 
     if (validate(data))
-      cout << utils::MasterSlave::_rank << ": "
-           << "Success!" << endl;
+      cout << utils::MasterSlave::getRank() << ": " << "Success!\n";
     else
-      cout << utils::MasterSlave::_rank << ": "
-           << "Failure!" << endl;
+      cout << utils::MasterSlave::getRank() << ": " << "Failure!\n";
 
-    cout << "----------" << endl;
+    cout << "----------\n";
   }
 
   utils::MasterSlave::_communication.reset();
 
   MPI_Finalize();
 
-  std::cout << "Stop communication dummy" << std::endl;
+  std::cout << "Stop communication dummy\n";
 }

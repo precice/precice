@@ -22,23 +22,23 @@
       <m2n:mpi-single from="SolverA" to="SolverB"/>
                
       <participant name="SolverA">
-         <use-mesh name="MeshForcesA"        provide="yes"/>
          <use-mesh name="MeshDisplacementsA" provide="yes"/>
+         <use-mesh name="MeshForcesA"        provide="yes"/>
          <use-mesh name="MeshForcesB"        from="SolverB"/>
          <use-mesh name="MeshDisplacementsB" from="SolverB"/>
          <mapping:rbf-thin-plate-splines direction="write" 
-                  constraint="conservative" from="MeshForcesA"
-                  to="MeshForcesB" stationary="on"/>
+                  constraint="conservative" from="MeshForcesA" 
+                  to="MeshForcesB" timing="ondemand"/>
          <mapping:rbf-thin-plate-splines direction="read" 
                   constraint="consistent" from="MeshDisplacementsB"
-                  to="MeshDisplacementsA" stationary="on"/>
+                  to="MeshDisplacementsA" timing="ondemand"/>
          <write-data name="Forces"        mesh="MeshForcesA"/>
          <read-data  name="Displacements" mesh="MeshDisplacementsA"/>
       </participant>
       
       <participant name="SolverB">
-         <use-mesh name="MeshForcesB"        provide="yes"/>
          <use-mesh name="MeshDisplacementsB" provide="yes"/>
+         <use-mesh name="MeshForcesB"        provide="yes"/>
          <write-data name="Displacements" mesh="MeshDisplacementsB"/>
          <read-data  name="Forces"        mesh="MeshForcesB"/>
       </participant>

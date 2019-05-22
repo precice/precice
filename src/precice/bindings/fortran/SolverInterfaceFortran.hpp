@@ -1,9 +1,8 @@
 #pragma once
 
-/**
- * @file This file contains a Fortran 77 compatible interface written in C/C++.
+/** @file
+ * This file contains a Fortran 77 compatible interface written in C/C++.
  *
- * It has been tested with: gfortran 4.4.3, ifort 12.1.0
  *
  * Every method has a Fortran syntax equivalent in the method comment, and a
  * listing for input and output variables. A variable can be input and output
@@ -126,6 +125,39 @@ void precicef_write_data_required_(
 void precicef_read_data_available_( int* isAvailable );
 
 /**
+ * @brief See precice::SolverInterface::isTimestepComplete().
+ *
+ * Fortran syntax:
+ * precicef_is_timestep_complete( INTEGER isComplete );
+ *
+ * IN:  -
+ * OUT: isComplete(1:true, 0:false)
+ */
+void precicef_is_timestep_complete_( int* isComplete );
+
+/**
+ * @brief See precice::SolverInterface::hasToEvaluateSurrogateModel().
+ *
+ * Fortran syntax:
+ * precicef_has_to_evaluate_surrogate_model( INTEGER hasToEvaluate );
+ *
+ * IN:  -
+ * OUT: hasToEvaluate(1:true, 0:false)
+ */
+void precicef_has_to_evaluate_surrogate_model_ ( int* hasToEvaluate );
+
+/**
+ * @brief See precice::SolverInterface::hasToEvaluateFineModel().
+ *
+ * Fortran syntax:
+ * precicef_has_to_evaluate_fine_model( INTEGER hasToEvaluate );
+ *
+ * IN:  -
+ * OUT: hasToEvaluate(1:true, 0:false)
+ */
+void precicef_has_to_evaluate_fine_model_ ( int* hasToEvaluate );
+
+/**
  * @brief See precice::SolverInterface::isActionRequired().
  *
  * Fortran syntax:
@@ -153,6 +185,22 @@ void precicef_action_required_(
 void precicef_fulfilled_action_(
   const char* action,
   int         lengthAction );
+
+/**
+ * @brief See precice::SolverInterface::hasMesh().
+ *
+ * Fortran syntax:
+ * precicef_has_mesh(
+ *   CHARACTER meshName(*),
+ *   INTEGER   hasMesh )
+ *
+ * IN:  meshName
+ * OUT: hasMesh(1:true, 0:false)
+ */
+void precicef_has_mesh_(
+    const char* meshName,
+    int*        hasMesh,
+    int         lengthMeshName);
 
 /**
  * @brief See precice::SolverInterface::getMeshID().
@@ -231,6 +279,21 @@ void precicef_set_vertex_(
   int*          vertexID );
 
 /**
+ * @brief See precice::SolverInterface::getMeshVertexSize().
+ *
+ * Fortran syntax:
+ * precicef_get_mesh_vertex_size(
+ *   INTEGER meshID,
+ *   INTEGER meshSize )
+ *
+ * IN:  meshID
+ * OUT: meshSize
+ */
+void precicef_get_mesh_vertex_size_(
+    int* meshID,
+    int* meshSize);
+
+/**
  * @brief See precice::SolverInterface::setMeshVertices().
  *
  * Fortran syntax:
@@ -249,6 +312,43 @@ void precicef_set_vertices_(
   double*       positions,
   int*          positionIDs );
 
+/**
+ * @brief See precice::SolverInterface::getMeshVertices().
+ *
+ * Fortran syntax:
+ * precicef_get_vertices(
+ *   INTEGER          meshID,
+ *   INTEGER          size,
+ *   INTEGER          ids(size)
+ *   DOUBLE PRECISION positions(dim*size))
+ *
+ * IN:  meshID, size, ids
+ * OUT: positions
+ */
+void precicef_get_vertices_(
+    const int* meshID,
+    const int* size,
+    int*       ids,
+    double*    positions );
+
+/**
+ * @brief See precice::SolverInterface::getMeshVertexIDsFromPositions().
+ *
+ * Fortran syntax:
+ * precicef_get_vertices(
+ *   INTEGER          meshID,
+ *   INTEGER          size,
+ *   DOUBLE PRECISION positions(dim*size),
+ *   INTEGER          ids(size))
+ *
+ * IN:  meshID, size, positions
+ * OUT: ids
+ */
+void precicef_get_vertex_ids_from_positions_(
+    const int* meshID,
+    const int* size,
+    double*    positions,
+    int*       ids );
 
 /**
  * @brief See precice::SolverInterface::setMeshEdge().
@@ -306,6 +406,48 @@ void precicef_set_triangle_we_(
   const int* firstVertexID,
   const int* secondVertexID,
   const int* thirdVertexID );
+
+/**
+ * @brief See precice::SolverInterface::setMeshQuad().
+ *
+ * Fortran syntax:
+ * precicef_set_quad(
+ *   INTEGER meshID,
+ *   INTEGER firstEdgeID,
+ *   INTEGER secondEdgeID,
+ *   INTEGER thirdEdgeID,
+ *   INTEGER fourthEdgeID )
+ *
+ * IN:  meshID, firstEdgeID, secondEdgeID, thirdEdgeID, fourthEdgeID
+ * OUT: -
+ */
+void precicef_set_quad_(
+    const int* meshID,
+    const int* firstEdgeID,
+    const int* secondEdgeID,
+    const int* thirdEdgeID,
+    const int* fourthEdgeID);
+
+/**
+ * @brief See precice::SolverInterface::setMeshQuadWithEdges().
+ *
+ * Fortran syntax:
+ * precicef_set_quad_we(
+ *   INTEGER meshID,
+ *   INTEGER firstVertexID,
+ *   INTEGER secondVertexID,
+ *   INTEGER thirdVertexID,
+ *   INTEGER fourthVertexID )
+ *
+ * IN:  meshID, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID
+ * OUT: -
+ */
+void precicef_set_quad_we_(
+    const int* meshID,
+    const int* firstVertexID,
+    const int* secondVertexID,
+    const int* thirdVertexID,
+    const int* fourthVertexID);
 
 /**
  * @brief See precice::SolverInterface::writeBlockVectorData.

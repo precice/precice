@@ -35,13 +35,12 @@ MeshConfiguration:: MeshConfiguration
   doc += "defined by a participant (see tag <use-mesh>).";
   tag.setDocumentation(doc);
 
-  XMLAttribute<std::string> attrName(ATTR_NAME);
-  attrName.setDocumentation("Unique name for the mesh.");
+ auto attrName = XMLAttribute<std::string>(ATTR_NAME)
+      .setDocumentation("Unique name for the mesh.");
   tag.addAttribute(attrName);
 
-  XMLAttribute<bool> attrFlipNormals(ATTR_FLIP_NORMALS);
-  attrFlipNormals.setDocumentation("Flips mesh normal vector directions.");
-  attrFlipNormals.setDefaultValue(false);
+  auto attrFlipNormals = makeXMLAttribute(ATTR_FLIP_NORMALS, false)
+      .setDocumentation("Flips mesh normal vector directions.");
   tag.addAttribute(attrFlipNormals);
 
   XMLTag subtagData(*this, TAG_DATA, XMLTag::OCCUR_ARBITRARY);

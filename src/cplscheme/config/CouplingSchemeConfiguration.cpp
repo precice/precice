@@ -18,8 +18,6 @@
 #include "precice/impl/Participant.hpp"
 #include "precice/impl/SharedPointer.hpp"
 #include "utils/Helpers.hpp"
-#include "xml/ValidatorEquals.hpp"
-#include "xml/ValidatorOr.hpp"
 #include "xml/XMLAttribute.hpp"
 #include "xml/XMLTag.hpp"
 
@@ -404,18 +402,12 @@ void CouplingSchemeConfiguration::addTransientLimitTags(
   tag.addSubtag(tagMaxTimesteps);
 
   XMLTag               tagTimestepLength(*this, TAG_TIMESTEP_LENGTH, XMLTag::OCCUR_ONCE);
-  XMLAttribute<double> attrValueTimestepLength(ATTR_VALUE);
-  attrValueTimestepLength.setDefaultValue(CouplingScheme::UNDEFINED_TIMESTEP_LENGTH);
+  auto attrValueTimestepLength = makeXMLAttribute(ATTR_VALUE, CouplingScheme::UNDEFINED_TIMESTEP_LENGTH);
   tagTimestepLength.addAttribute(attrValueTimestepLength);
-  XMLAttribute<int> attrValidDigits(ATTR_VALID_DIGITS);
-  attrValidDigits.setDefaultValue(10);
+  XMLAttribute<int> attrValidDigits(ATTR_VALID_DIGITS, 10);
   tagTimestepLength.addAttribute(attrValidDigits);
-  XMLAttribute<std::string> attrMethod(ATTR_METHOD);
-  attrMethod.setDefaultValue(VALUE_FIXED);
-  ValidatorEquals<std::string> validFixed(VALUE_FIXED);
-  ValidatorEquals<std::string> validFirst(VALUE_FIRST_PARTICIPANT);
-  //  ValidatorEquals<std::string> validSec ( TagTimestepLength::VALUE_SECOND_PARTICIPANT );
-  attrMethod.setValidator(validFixed || validFirst);
+  auto attrMethod = makeXMLAttribute(ATTR_METHOD, VALUE_FIXED)
+      .setOptions({ VALUE_FIXED, VALUE_FIRST_PARTICIPANT});
   tagTimestepLength.addAttribute(attrMethod);
   tag.addSubtag(tagTimestepLength);
 }
@@ -439,8 +431,7 @@ void CouplingSchemeConfiguration::addTagParticipant(
   XMLTag                    tagParticipant(*this, TAG_PARTICIPANT, XMLTag::OCCUR_ONCE_OR_MORE);
   XMLAttribute<std::string> attrName(ATTR_NAME);
   tagParticipant.addAttribute(attrName);
-  XMLAttribute<bool> attrControl(ATTR_CONTROL);
-  attrControl.setDefaultValue(false);
+  XMLAttribute<bool> attrControl(ATTR_CONTROL, false);
   tagParticipant.addAttribute(attrControl);
   tag.addSubtag(tagParticipant);
 }
@@ -458,8 +449,7 @@ void CouplingSchemeConfiguration::addTagExchange(
   tagExchange.addAttribute(participantFrom);
   XMLAttribute<std::string> participantTo(ATTR_TO);
   tagExchange.addAttribute(participantTo);
-  XMLAttribute<bool> attrInitialize(ATTR_INITIALIZE);
-  attrInitialize.setDefaultValue(false);
+  XMLAttribute<bool> attrInitialize(ATTR_INITIALIZE, false);
   tagExchange.addAttribute(attrInitialize);
   tag.addSubtag(tagExchange);
 }
@@ -512,19 +502,18 @@ void CouplingSchemeConfiguration::addTagMinIterationConvergenceMeasure(
 void CouplingSchemeConfiguration::addBaseAttributesTagConvergenceMeasure(
     xml::XMLTag &tag)
 {
-  xml::XMLAttribute<std::string> attrData(ATTR_DATA);
-  attrData.setDocumentation("Data to be measured.");
+  using namespace xml;
+  auto attrData = XMLAttribute<std::string>(ATTR_DATA)
+      .setDocumentation("Data to be measured.");
   tag.addAttribute(attrData);
-  xml::XMLAttribute<std::string> attrMesh(ATTR_MESH);
-  attrMesh.setDocumentation("Mesh holding the data.");
+  auto attrMesh = XMLAttribute<std::string>(ATTR_MESH)
+      .setDocumentation("Mesh holding the data.");
   tag.addAttribute(attrMesh);
-  xml::XMLAttribute<bool> attrSuffices(ATTR_SUFFICES);
-  attrSuffices.setDocumentation("If true, suffices to lead to convergence.");
-  attrSuffices.setDefaultValue(false);
+  auto attrSuffices = makeXMLAttribute(ATTR_SUFFICES, false)
+      .setDocumentation("If true, suffices to lead to convergence.");
   tag.addAttribute(attrSuffices);
-  xml::XMLAttribute<int> attrLevel(ATTR_LEVEL);
-  attrLevel.setDocumentation("For multi-level based coupling schemes: Indicates the coarseness level of the associated coupling data for this convergence measure.");
-  attrLevel.setDefaultValue(0);
+  auto attrLevel = makeXMLAttribute(ATTR_LEVEL, 0)
+      .setDocumentation("For multi-level based coupling schemes: Indicates the coarseness level of the associated coupling data for this convergence measure.");
   tag.addAttribute(attrLevel);
 }
 
@@ -939,7 +928,7 @@ bool CouplingSchemeConfiguration::checkIfDataIsCoarse(
   for (int i = 0; i < (int) fineIDs.size(); i++) {
     std::cout << fineIDs.at(i) << ", ";
   }
-  std::cout << "], id: " << id << std::endl;
+  std::cout << "], id: " << id << '\n';
 
   // if id is contained within fine data IDs return with isCoarse = false
   if (not isCoarse)
@@ -955,11 +944,11 @@ bool CouplingSchemeConfiguration::checkIfDataIsCoarse(
       for (auto &coarseID : coarseIDs) {
         std::cout << coarseID << ", ";
       }
-      std::cout << "], id: " << id << std::endl;
+      std::cout << "], id: " << id << '\n';
 
       err = not isCoarse;
     } else {
-      std::cout << "There is no coarse model optkmaiimization defined." << std::endl;
+      std::cout << "There is no coarse model optkmaiimization defined.\n";
       err = true;
     }
   }

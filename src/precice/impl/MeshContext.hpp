@@ -19,6 +19,11 @@ struct MeshContext
    :
     localOffset ( Eigen::VectorXd::Zero(dimensions) )
   {}
+
+   /** Upgrades the mesh requirement to a more specific level.
+    * @param[in] requirement The requirement to upgrade to.
+    */
+   void require(mapping::Mapping::MeshRequirement requirement);
   
    /// Mesh holding the geometry data structure.
    mesh::PtrMesh mesh;
@@ -27,7 +32,7 @@ struct MeshContext
    std::vector<int> associatedData;
 
    /// Determines which mesh type has to be provided by the accessor.
-   mapping::Mapping::MeshRequirement meshRequirement = mapping::Mapping::UNDEFINED;
+   mapping::Mapping::MeshRequirement meshRequirement = mapping::Mapping::MeshRequirement::UNDEFINED;
 
    /// Name of participant that creats the mesh.
    std::string receiveMeshFrom;
@@ -54,5 +59,9 @@ struct MeshContext
    MappingContext toMappingContext;
    
 };
+
+inline void MeshContext::require(mapping::Mapping::MeshRequirement requirement) {
+    meshRequirement = std::max(meshRequirement, requirement);
+}
 
 }} // namespace precice, impl

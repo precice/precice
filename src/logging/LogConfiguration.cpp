@@ -107,7 +107,7 @@ public:
   
   void consume(boost::log::record_view const& rec, string_type const& formatted_record)
   {
-    *_ostream << formatted_record << std::endl << std::flush;
+    *_ostream << formatted_record << '\n' << std::flush;
   }
 };
 
@@ -127,8 +127,8 @@ LoggingConfiguration readLogConfFile(std::string const & filename)
     po::store(parsed, vm);
     po::notify(vm);
     for (auto const & opt : parsed.options) {
-      std::string section = opt.string_key.substr(0, opt.string_key.find("."));
-      std::string key = opt.string_key.substr(opt.string_key.find(".")+1);
+      std::string section = opt.string_key.substr(0, opt.string_key.find('.'));
+      std::string key = opt.string_key.substr(opt.string_key.find('.')+1);
       configs[section].setOption(key, opt.value[0]);        
     }
   }
@@ -173,6 +173,8 @@ void BackendConfiguration::setOption(std::string key, std::string value)
 
 void setupLogging(LoggingConfiguration configs, bool enabled)
 {
+  if (_precice_logging_config_lock) return;
+
   namespace bl = boost::log;
   bl::register_formatter_factory("TimeStamp", boost::make_shared<timestamp_formatter_factory>());
   bl::register_formatter_factory("ColorizedSeverity", boost::make_shared<colorized_severity_formatter_factory>());
@@ -218,12 +220,6 @@ void setupLogging(LoggingConfiguration configs, bool enabled)
     sink->set_filter(boost::log::parse_filter(config.filter));
     boost::log::core::get()->add_sink(sink);
   }
-
-  // Printing PRECICE_VERSION as first line of the log
-  auto t = std::time(nullptr);
-  auto tm = *std::localtime(&t);
-  BOOST_LOG_TRIVIAL(info)
-    << "This is preCICE version " << PRECICE_VERSION << ". Starting " << std::put_time(&tm, "%F %T");
 }
 
 
@@ -235,6 +231,17 @@ void setupLogging(std::string const & logConfigFile)
 
 void setMPIRank(int const rank) {
   boost::log::attribute_cast<boost::log::attributes::mutable_constant<int>>(boost::log::core::get()->get_global_attributes()["Rank"]).set(rank);
+}
+
+void setParticipant(std::string const & participant)
+{
+  boost::log::attribute_cast<boost::log::attributes::mutable_constant<std::string>>(boost::log::core::get()->get_global_attributes()["Participant"]).set(participant);
+}
+
+bool _precice_logging_config_lock{false};
+
+void lockConf() {
+    _precice_logging_config_lock = true;
 }
 
 }} // namespace precice, logging

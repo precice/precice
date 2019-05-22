@@ -8,6 +8,8 @@
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 #include "RTree.hpp"
+#include <array>
+#include <algorithm>
 
 namespace precice {
 namespace mesh {
@@ -49,6 +51,7 @@ Mesh:: ~Mesh()
   _content.triangles().deleteElements();
   _content.edges().deleteElements();
   _content.vertices().deleteElements();
+  _propertyContainers.deleteElements();
 
   meshDestroyed(*this); // emit signal
 }
@@ -122,6 +125,26 @@ Edge& Mesh:: createEdge
   newEdge->addParent(*this);
   _content.add(newEdge);
   return *newEdge;
+}
+
+Edge& Mesh::createUniqueEdge
+(
+    Vertex& vertexOne,
+    Vertex& vertexTwo
+)
+{ 
+    const std::array<int, 2> vids{vertexOne.getID(), vertexTwo.getID()};
+    const auto eend = edges().end();
+    auto pos = std::find_if(edges().begin(), eend,
+            [&vids](const Edge& e) -> bool {
+                const std::array<int, 2> eids{e.vertex(0).getID(), e.vertex(1).getID()};
+                return std::is_permutation(vids.begin(), vids.end(), eids.begin());
+            });
+    if (pos != eend) {
+        return *pos;
+    } else {
+        return createEdge(vertexOne, vertexTwo);
+    }
 }
 
 Triangle& Mesh:: createTriangle
@@ -262,6 +285,16 @@ int Mesh:: getID() const
   return iter->second;
 }
 
+bool Mesh::isValidVertexID(int vertexID) const
+{
+    return (0 <= vertexID) && (static_cast<size_t>(vertexID) < vertices().size());
+}
+
+bool Mesh::isValidEdgeID(int edgeID) const
+{
+    return (0 <= edgeID) && (static_cast<size_t>(edgeID) < edges().size());
+}
+
 void Mesh:: allocateDataValues()
 {
   TRACE(_content.vertices().size());
@@ -296,16 +329,14 @@ void Mesh:: computeState()
 
   // Compute (in 2D) edge normals
   for (Edge& edge : _content.edges()) {
-    if (_dimensions == 2 && computeNormals){
+    if (_dimensions == 2 && computeNormals) {
       // Compute normal
-      Eigen::VectorXd vectorA = edge.vertex(1).getCoords();
-      vectorA -= edge.vertex(0).getCoords();
-      Eigen::Vector2d normal(-1.0 *vectorA[1], vectorA[0]);
+      Eigen::VectorXd edgeVector = edge.vertex(1).getCoords() - edge.vertex(0).getCoords();
+      Eigen::VectorXd normal = Eigen::Vector2d(-edgeVector[1], edgeVector[0]);
       if (not _flipNormals){
         normal *= -1.0; // Invert direction if counterclockwise
       }
-      double length = normal.norm();
-      assertion(math::greater(length, 0.0));
+      assertion(math::greater(normal.norm(), 0.0));
       normal.normalize();   // Scale normal vector to length 1
       edge.setNormal(normal);
 
@@ -427,6 +458,7 @@ void Mesh:: computeState()
     
 void Mesh:: clear()
 {
+  _content.quads().deleteElements();
   _content.triangles().deleteElements();
   _content.edges().deleteElements();
   _content.vertices().deleteElements();
@@ -516,7 +548,7 @@ bool Mesh::operator==(const Mesh& other) const
         std::is_permutation(myContent.vertices().begin(), myContent.vertices().end(), otherContent.vertices().begin());
     equal &= myContent.edges().size() == otherContent.edges().size() &&
         std::is_permutation(myContent.edges().begin(), myContent.edges().end(), otherContent.edges().begin());
-    equal &= myContent.triangles().size() == otherContent.triangles().size() && 
+    equal &= myContent.triangles().size() == otherContent.triangles().size() &&
         std::is_permutation(myContent.triangles().begin(), myContent.triangles().end(), otherContent.triangles().begin());
     equal &= myContent.quads().size() == otherContent.quads().size() &&
         std::is_permutation(myContent.quads().begin(), myContent.quads().end(), otherContent.quads().begin());
@@ -530,18 +562,30 @@ bool Mesh::operator!=(const Mesh& other) const
 
 std::ostream& operator<<(std::ostream& os, const Mesh& m)
 {
-  os << "Mesh " << m.getName() << " consisting the Vertices:\n";
-  for (auto& vertex : m.content().edges())
-      os << "\t" << vertex;
-  os << "And the Edges:\n";
-  for (auto& edge : m.content().edges())
-      os << "\t" << edge;
-  os << "And the Triangles:\n";
-  for (auto& triangle : m.content().edges())
-      os << "\t" << triangle;
-  os << "And the Quads:\n";
-  for (auto& quad : m.content().quads())
-      os << "\t" << quad;
+  os << "Mesh \"" << m.getName() << "\", dimensionality = " << m.getDimensions() << ":\n";
+  os << "GEOMETRYCOLLECTION(\n";
+  const auto token = ", ";
+  const auto* sep = "";
+  for (auto& vertex : m.content().vertices()){
+      os << sep << vertex; 
+      sep = token;
+  }
+  sep = ",\n";
+  for (auto& edge : m.content().edges()){
+      os << sep << edge;
+      sep = token;
+  }
+  sep = ",\n";
+  for (auto& triangle : m.content().triangles()){
+      os << sep << triangle;
+      sep = token;
+  }
+  sep = ",\n";
+  for (auto& quad : m.content().quads()){
+      os << sep << quad;
+      sep = token;
+  }
+  os << "\n)";
   return os;
 }
 
