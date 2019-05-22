@@ -111,12 +111,7 @@ BOOST_AUTO_TEST_CASE(GlobalRBFPartitioning, * testing::OnSize(4))
 {
   std::string configFilename = _pathToTests + "globalRBFPartitioning.xml";
   config::Configuration config;
-<<<<<<< HEAD
-  
-=======
-  utils::MasterSlave::_rank = utils::Parallel::getProcessRank();
 
->>>>>>> uekerman/np_integration_test
   if(utils::Parallel::getProcessRank()<=2){
     utils::Parallel::splitCommunicator( "SolverOne" );
     utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator()); //needed since this test uses PETSc
@@ -504,23 +499,22 @@ BOOST_AUTO_TEST_CASE(NearestProjectionRePartitioning, * testing::OnSize(4))
   if(utils::Parallel::getProcessRank()<=2){
     utils::Parallel::splitCommunicator( "FluidSolver" );
     utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator());
-    assertion(utils::Parallel::getCommunicatorSize() == 3);
+    BOOST_TEST(utils::Parallel::getCommunicatorSize() == 3);
     utils::Parallel::clearGroups();
     xml::configure(config.getXMLTag(), configFilename);
     SolverInterface interface ( "FluidSolver", utils::Parallel::getProcessRank(), 3 );
     impl(interface).configure(config.getSolverInterfaceConfiguration());
 
-    if(utils::Parallel::getProcessRank()==1){
+    if(utils::Parallel::getProcessRank()==1) {
 
-      int meshID = interface.getMeshID("CellCenters");
-      int dimensions = 3;
+      const int meshID = interface.getMeshID("CellCenters");
+      const int dimensions = 3;
       BOOST_TEST(interface.getDimensions()==dimensions);
 
-      int numberOfVertices = 65;
-      int vertexIDs[numberOfVertices];
-      double yCoord = 0.0;
-      double zCoord = 0.005;
-      double positions[numberOfVertices*dimensions] = {
+      const int numberOfVertices = 65;
+      const double yCoord = 0.0;
+      const double zCoord = 0.005;
+      const std::vector<double> positions{
                                          0.00124795, yCoord, zCoord,
                                          0.00375646, yCoord, zCoord,
                                          0.00629033, yCoord, zCoord,
@@ -586,18 +580,18 @@ BOOST_AUTO_TEST_CASE(NearestProjectionRePartitioning, * testing::OnSize(4))
                                          0.216062, yCoord, zCoord,
                                          0.220742, yCoord, zCoord,
                                          0.22547, yCoord, zCoord};
-      interface.setMeshVertices(meshID, numberOfVertices, positions, vertexIDs);
-    }
-
-    interface.initialize();
-
-    //after re-partitioning, there should be 15 triangles (look at vtk output)
-    if(utils::Parallel::getProcessRank()==1){
+      BOOST_TEST(numberOfVertices*dimensions == positions.size());
+      std::vector<int> vertexIDs(numberOfVertices);
+      interface.setMeshVertices(meshID, numberOfVertices, positions.data(), vertexIDs.data());
+      interface.initialize();
       BOOST_TEST(impl(interface).getMeshHandle("Nodes").triangles().size()==15);
+      interface.advance(1.0);
+      interface.finalize();
+    } else {
+        interface.initialize();
+        interface.advance(1.0);
+        interface.finalize();
     }
-
-    interface.advance(1.0);
-    interface.finalize();
   }
   else {
     utils::Parallel::splitCommunicator( "SolidSolver" );
@@ -607,15 +601,14 @@ BOOST_AUTO_TEST_CASE(NearestProjectionRePartitioning, * testing::OnSize(4))
     xml::configure(config.getXMLTag(), configFilename);
     SolverInterface interface ( "SolidSolver", 0, 1 );
     impl(interface).configure(config.getSolverInterfaceConfiguration());
-    int meshID = interface.getMeshID("Nodes");
-    int dimensions = 3;
+    const int meshID = interface.getMeshID("Nodes");
+    const int dimensions = 3;
     BOOST_TEST(interface.getDimensions()==dimensions);
-    int numberOfVertices = 34;
-    int vertexIDs[numberOfVertices];
-    double yCoord = 0.0;
-    double zCoord1 = 0.0;
-    double zCoord2 = 0.01;
-    double positions[dimensions*numberOfVertices] = {
+    const int numberOfVertices = 34;
+    const double yCoord = 0.0;
+    const double zCoord1 = 0.0;
+    const double zCoord2 = 0.01;
+    const std::vector<double> positions{
                                       0.0, yCoord, zCoord2,
                                       0.0, yCoord, zCoord1,
                                       0.03125, yCoord, zCoord2,
@@ -650,23 +643,25 @@ BOOST_AUTO_TEST_CASE(NearestProjectionRePartitioning, * testing::OnSize(4))
                                       0.46875, yCoord, zCoord1,
                                       0.5, yCoord, zCoord2,
                                       0.5, yCoord, zCoord1};
-    interface.setMeshVertices(meshID, numberOfVertices, positions, vertexIDs);
+    BOOST_TEST(numberOfVertices*dimensions == positions.size());
+    std::vector<int> vertexIDs(numberOfVertices);
+    interface.setMeshVertices(meshID, numberOfVertices, positions.data(), vertexIDs.data());
 
-    int numberOfCells = numberOfVertices / 2 - 1;
-    int numberOfEdges = numberOfCells * 4 + 1;
-    int edgeIDs[numberOfEdges];
+    const int numberOfCells = numberOfVertices / 2 - 1;
+    const int numberOfEdges = numberOfCells * 4 + 1;
+    std::vector<int> edgeIDs(numberOfEdges);
 
     for( int i = 0; i < numberOfCells; i++){
-      edgeIDs[4*i] = interface.setMeshEdge(meshID, vertexIDs[i*2], vertexIDs[i*2+1]); //left
-      edgeIDs[4*i+1] = interface.setMeshEdge(meshID, vertexIDs[i*2], vertexIDs[i*2+2]); //top
-      edgeIDs[4*i+2] = interface.setMeshEdge(meshID, vertexIDs[i*2+1], vertexIDs[i*2+3]); //bottom
-      edgeIDs[4*i+3] = interface.setMeshEdge(meshID, vertexIDs[i*2], vertexIDs[i*2+3]); //diagonal
+      edgeIDs.at(4*i)   = interface.setMeshEdge(meshID, vertexIDs.at(i*2),   vertexIDs.at(i*2+1)); //left
+      edgeIDs.at(4*i+1) = interface.setMeshEdge(meshID, vertexIDs.at(i*2),   vertexIDs.at(i*2+2)); //top
+      edgeIDs.at(4*i+2) = interface.setMeshEdge(meshID, vertexIDs.at(i*2+1), vertexIDs.at(i*2+3)); //bottom
+      edgeIDs.at(4*i+3) = interface.setMeshEdge(meshID, vertexIDs.at(i*2),   vertexIDs.at(i*2+3)); //diagonal
     }
-    edgeIDs[numberOfEdges-1] = interface.setMeshEdge(meshID, vertexIDs[numberOfVertices-2], vertexIDs[numberOfVertices-1]); //very right
+    edgeIDs.at(numberOfEdges-1) = interface.setMeshEdge(meshID, vertexIDs.at(numberOfVertices-2), vertexIDs.at(numberOfVertices-1)); //very right
 
     for( int i = 0; i < numberOfCells; i++){
-      interface.setMeshTriangle(meshID, edgeIDs[4*i], edgeIDs[4*i+3], edgeIDs[4*i+2]); //left-diag-bottom
-      interface.setMeshTriangle(meshID, edgeIDs[4*i+1], edgeIDs[4*i+3], edgeIDs[4*i+4]); //top-diag-right
+      interface.setMeshTriangle(meshID, edgeIDs.at(4*i),   edgeIDs.at(4*i+3), edgeIDs.at(4*i+2)); //left-diag-bottom
+      interface.setMeshTriangle(meshID, edgeIDs.at(4*i+1), edgeIDs.at(4*i+3), edgeIDs.at(4*i+4)); //top-diag-right
     }
 
     interface.initialize();
