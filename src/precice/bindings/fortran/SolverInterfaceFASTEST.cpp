@@ -7,8 +7,8 @@
 
 using namespace std;
 
-static precice::impl::SolverInterfaceImpl* implAcoustic = nullptr;
-static precice::impl::SolverInterfaceImpl* implFluid = nullptr;
+static precice::SolverInterface* implAcoustic = nullptr;
+static precice::SolverInterface* implFluid = nullptr;
 
 static precice::logging::Logger _log ("SolverInterfaceFASTEST");
 
@@ -44,13 +44,13 @@ void precice_fastest_create_
   //cout << "Accessor: " << stringAccessorName << "!" << '\n';
   //cout << "Config  : " << stringConfigFileName << "!" << '\n';
   if(isAcousticUsed){
-    implAcoustic = new precice::impl::SolverInterfaceImpl (stringAccessorNameAcoustic,
-           *solverProcessIndex, *solverProcessSize, false);
+    implAcoustic = new precice::SolverInterface (stringAccessorNameAcoustic,
+           *solverProcessIndex, *solverProcessSize);
     implAcoustic->configure(stringConfigFileName);
   }
   if(isFluidUsed){
-    implFluid = new precice::impl::SolverInterfaceImpl (stringAccessorNameFluid,
-           *solverProcessIndex, *solverProcessSize, false);
+    implFluid = new precice::SolverInterface (stringAccessorNameFluid,
+           *solverProcessIndex, *solverProcessSize);
     implFluid->configure(stringConfigFileName);
   }
   CHECK(implAcoustic != nullptr || implFluid != nullptr ,"Either the Fluid interface or the Acoustic"
