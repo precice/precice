@@ -4,24 +4,20 @@
    <solver-interface dimensions="2" >
       <data:vector name="DataOne"/>
       <data:vector name="DataTwo"/>
-      <data:vector name="DataThree"/>
 
       <mesh name="MeshOne">
          <use-data name="DataOne"/>
          <use-data name="DataTwo"/>
-         <use-data name="DataThree"/>
       </mesh>
 
       <mesh name="MeshTwo">
          <use-data name="DataOne"/>
          <use-data name="DataTwo"/>
-         <use-data name="DataThree"/>
       </mesh>
 
       <participant name="SolverOne">
          <use-mesh name="MeshOne" provide="on"/>
          <read-data name="DataOne" mesh="MeshOne"/>
-         <read-data name="DataTwo" mesh="MeshOne"/>
       </participant>
 
       <participant name="SolverTwo">
@@ -30,7 +26,6 @@
          <mapping:nearest-neighbor direction="write" from="MeshTwo" to="MeshOne"
                   constraint="consistent" timing="initial"/>
          <write-data  name="DataOne" mesh="MeshTwo"/>
-         <write-data  name="DataTwo" mesh="MeshTwo"/>
       </participant>
 
       <m2n:mpi-single from="SolverOne" to="SolverTwo" />
@@ -40,13 +35,11 @@
          <max-timesteps value="2"/>
          <timestep-length value="1.0"/>
          <exchange data="DataOne" mesh="MeshOne" from="SolverTwo" to="SolverOne"/>
-         <exchange data="DataTwo" mesh="MeshOne" from="SolverTwo" to="SolverOne"/>
-         <exchange data="DataThree" mesh="MeshOne" from="SolverOne" to="SolverTwo"/>
+         <exchange data="DataTwo" mesh="MeshOne" from="SolverOne" to="SolverTwo"/>
          <absolute-convergence-measure limit="1e-5" data="DataOne" mesh="MeshOne"/>
          <max-iterations value="2" />
          <post-processing:IQN-ILS>
             <data name="DataOne" mesh="MeshOne"/>
-            <data name="DataTwo" mesh="MeshOne"/>
             <initial-relaxation value="1.0"/>
             <max-used-iterations value="50"/>
             <timesteps-reused value="0"/>
