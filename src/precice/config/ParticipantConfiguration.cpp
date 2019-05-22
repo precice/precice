@@ -110,7 +110,7 @@ ParticipantConfiguration:: ParticipantConfiguration
               " name. The creator has to use the attribute \"provide\" to signal he is "
               "providing the mesh geometry.");
   tagUseMesh.addAttribute(attrFrom);
-  auto attrSafetyFactor = makeXMLAttribute(ATTR_SAFETY_FACTOR, 0.5)
+  auto attrSafetyFactor = makeXMLAttribute(ATTR_SAFETY_FACTOR, 0.1)
       .setDocumentation(
               "If a mesh is received from another partipant (see tag <from>), it needs to be"
               "decomposed at the receiving participant. To speed up this process, "
@@ -317,7 +317,7 @@ void ParticipantConfiguration:: xmlTagCallback
              << "\" uses mesh \"" << name << "\" which is not defined";
       throw stream.str();
     }
-    if ((geoFilter != partition::ReceivedPartition::GeometricFilter::BROADCAST_FILTER || safetyFactor != 0.5) && from==""){
+    if ((geoFilter != partition::ReceivedPartition::GeometricFilter::BROADCAST_FILTER || safetyFactor != 0.1) && from==""){
       std::ostringstream stream;
       stream << "Participant \"" << _participants.back()->getName()
              << "\" uses mesh \"" << name << "\" which is not received (no \"from\"), but has a geometric-filter and/or"
