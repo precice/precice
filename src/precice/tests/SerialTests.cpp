@@ -1543,6 +1543,56 @@ BOOST_AUTO_TEST_CASE(testSendMeshToMultipleParticipants,
   cplInterface.finalize();
 }
 
+ * @brief Test to reproduce the problem of issue 383, https://github.com/precice/precice/issues/383
+ */
+BOOST_AUTO_TEST_CASE(testPreconditionerBug,
+                     * testing::MinRanks(2)
+                     * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
+{
+  if (utils::Parallel::getCommunicatorSize() != 2)
+    return;
+
+  mesh::Mesh::resetGeometryIDsGlobally();
+  using Eigen::Vector2d;
+  using namespace precice::constants;
+
+  const std::string configFile = _pathToTests + "preconditioner-bug.xml";
+
+  std::string participantName = utils::Parallel::getProcessRank() == 0 ? "SolverOne" : "SolverTwo";
+  std::string meshName = utils::Parallel::getProcessRank() == 0 ? "MeshOne" : "MeshTwo";
+
+  SolverInterface cplInterface(participantName, 0, 1);
+  config::Configuration config;
+  xml::configure(config.getXMLTag(), configFile);
+  impl(cplInterface).configure(config.getSolverInterfaceConfiguration());
+  const int meshID = cplInterface.getMeshID(meshName);
+
+  Vector2d vertex{0.0, 0.0};
+
+  int vertexID = cplInterface.setMeshVertex(meshID, vertex.data());
+
+  cplInterface.initialize();
+  int numberOfAdvanceCalls = 0;
+
+  while (cplInterface.isCouplingOngoing()) {
+    if (cplInterface.isActionRequired(actionWriteIterationCheckpoint()))
+      cplInterface.fulfilledAction(actionWriteIterationCheckpoint());
+    if (cplInterface.isActionRequired(actionReadIterationCheckpoint()))
+      cplInterface.fulfilledAction(actionReadIterationCheckpoint());
+
+    if (utils::Parallel::getProcessRank() == 1){
+      int dataID = cplInterface.getDataID("DataOne", meshID);
+      // to get convergence in first timestep (everything 0), but not in second timestep
+      Vector2d value{0.0, 0.0 + numberOfAdvanceCalls};
+      cplInterface.writeVectorData(dataID, vertexID, value.data());
+    }
+    cplInterface.advance(1.0);
+    ++numberOfAdvanceCalls;
+  }
+  cplInterface.finalize();
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
 #endif // PRECICE_NO_MPI
