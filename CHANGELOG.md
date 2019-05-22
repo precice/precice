@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file. For future 
 - [`#395`](https://github.com/precice/precice/pull/395) removes API functions `nameConfiguration(), dataDisplacements(), dataForces(), dataVelocities(), actionPlotOutput(), exportVTK(), exportAll()` from CPP API and all language bindings.
 - Python bindings offer all preCICE API functions (except `get_mesh_handle`)
 - `bindings/fortran` do not use `precice::impl::SolverInterfaceImpl` anymore, but `precice::SolverInterface`.
+- When exporting meshes with `<export:vtk ...>` the target directories are automatically created.
 
 ## 1.4.1
 
