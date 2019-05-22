@@ -804,13 +804,13 @@ private:
 
 namespace constants {
 
-// @brief TODO
+// @brief Name of action for writing initial data.
 const std::string& actionWriteInitialData();
 
-// @brief TODO
+// @brief Name of action for writing iteration checkpoint
 const std::string& actionWriteIterationCheckpoint();
 
-// @brief TODO
+// @brief Name of action for reading iteration checkpoint.
 const std::string& actionReadIterationCheckpoint();
 
 } // namespace constants
