@@ -314,10 +314,10 @@ int QRFactorization::orthogonalize(
 {
   TRACE();
 
-  if (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode) {
+  if (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()) {
     assertion(_globalRows == _rows, _globalRows, _rows);
   } else {
-    assertion(_globalRows != _rows, _globalRows, _rows, utils::MasterSlave::_rank);
+    assertion(_globalRows != _rows, _globalRows, _rows, utils::MasterSlave::getRank());
   }
 
   bool            null        = false;
@@ -432,11 +432,11 @@ int QRFactorization::orthogonalize_stable(
   TRACE();
 
   // serial case
-  if (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode) {
+  if (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()) {
     assertion(_globalRows == _rows, _globalRows, _rows);
     // master-slave case
   } else {
-    assertion(_globalRows != _rows, _globalRows, _rows, utils::MasterSlave::_rank);
+    assertion(_globalRows != _rows, _globalRows, _rows, utils::MasterSlave::getRank());
   }
 
   bool            restart     = false;
@@ -559,14 +559,14 @@ int QRFactorization::orthogonalize_stable(
         double global_uk = 0.;
         int    rank      = 0;
 
-        if (utils::MasterSlave::_slaveMode) {
+        if (utils::MasterSlave::isSlave()) {
           utils::MasterSlave::_communication->send(k, 0);
           utils::MasterSlave::_communication->send(u(k), 0);
         }
 
-        if (utils::MasterSlave::_masterMode) {
+        if (utils::MasterSlave::isMaster()) {
           global_uk = u(k);
-          for (int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++) {
+          for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
             utils::MasterSlave::_communication->receive(local_k, rankSlave);
             utils::MasterSlave::_communication->receive(local_uk, rankSlave);
             if (local_uk < global_uk) {
@@ -588,10 +588,10 @@ int QRFactorization::orthogonalize_stable(
         v = Eigen::VectorXd::Zero(_rows);
 
         // insert rho1 at position k with smallest u(i) = Q(i,:) * Q(i,:)
-        if (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode) {
+        if (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()) {
           v(k) = rho1;
         } else {
-          if (utils::MasterSlave::_rank == rank)
+          if (utils::MasterSlave::getRank() == rank)
             v(global_k) = rho1;
         }
         k = 0;

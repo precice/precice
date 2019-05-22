@@ -636,7 +636,7 @@ bool BaseCouplingScheme::measureConvergence(
   bool allConverged = true;
   bool oneSuffices  = false;
   assertion(_convergenceMeasures.size() > 0);
-  if (not utils::MasterSlave::_slaveMode) {
+  if (not utils::MasterSlave::isSlave()) {
     _convergenceWriter->writeData("Timestep", _timesteps);
     _convergenceWriter->writeData("Iteration", _iterations);
   }
@@ -656,7 +656,7 @@ bool BaseCouplingScheme::measureConvergence(
 
     convMeasure.measure->measure(oldValues, *convMeasure.data->values, q);
 
-    if (not utils::MasterSlave::_slaveMode) {
+    if (not utils::MasterSlave::isSlave()) {
       std::stringstream sstm;
       sstm << "resNorm(" << i << ")";
       _convergenceWriter->writeData(sstm.str(), convMeasure.measure->getNormResidual());
@@ -726,7 +726,7 @@ bool BaseCouplingScheme::measureConvergenceCoarseModelOptimization(
 
 void BaseCouplingScheme::initializeTXTWriters()
 {
-  if (not utils::MasterSlave::_slaveMode) {
+  if (not utils::MasterSlave::isSlave()) {
 
     _iterationsWriter = std::make_shared<io::TXTTableWriter>("precice-" + _localParticipant + "-iterations.log");
     if (not doesFirstStep()) {
@@ -773,7 +773,7 @@ void BaseCouplingScheme::initializeTXTWriters()
 
 void BaseCouplingScheme::advanceTXTWriters()
 {
-  if (not utils::MasterSlave::_slaveMode) {
+  if (not utils::MasterSlave::isSlave()) {
 
     // check if coarse model optimization exists
     bool hasCoarseModelOptimization = false;

@@ -33,6 +33,7 @@ Logger::LoggerImpl::LoggerImpl(std::string module)
   namespace log = boost::log;
   log::add_common_attributes();
   log::core::get()->add_global_attribute("Scope", attrs::named_scope());
+  log::core::get()->add_global_attribute("Participant", attrs::mutable_constant<std::string>(""));
   log::core::get()->add_global_attribute("Rank", attrs::mutable_constant<int>(0));
   log::core::get()->add_global_attribute("Line", attrs::mutable_constant<int>(0));
   log::core::get()->add_global_attribute("File", attrs::mutable_constant<std::string>(""));

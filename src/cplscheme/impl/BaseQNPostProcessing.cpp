@@ -64,7 +64,7 @@ void BaseQNPostProcessing::initialize(
 
   /*
   std::stringstream sss;
-  sss<<"debugOutput-rank-"<<utils::MasterSlave::_rank;
+  sss<<"debugOutput-rank-"<<utils::MasterSlave::getRank();
   _debugOut.open(sss.str(), std::ios_base::out);
   _debugOut << std::setprecision(16);
 
@@ -109,10 +109,10 @@ void BaseQNPostProcessing::initialize(
   }
   /**
    *  make dimensions public to all procs,
-   *  last entry _dimOffsets[MasterSlave::_size] holds the global dimension, global,n
+   *  last entry _dimOffsets[MasterSlave::getSize()] holds the global dimension, global,n
    */
   std::stringstream ss;
-  if (utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode) {
+  if (utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave()) {
     assertion(utils::MasterSlave::_communication.get() != NULL);
     assertion(utils::MasterSlave::_communication->isConnected());
 
@@ -125,7 +125,7 @@ void BaseQNPostProcessing::initialize(
      *  This information needs to be gathered for all meshes. To get the number of respective unknowns of a specific processor
      *  we need to multiply the number of vertices with the dimensionality of the vector-valued data for each coupling data.
      */
-    _dimOffsets.resize(utils::MasterSlave::_size + 1);
+    _dimOffsets.resize(utils::MasterSlave::getSize() + 1);
     _dimOffsets[0] = 0;
     //for (auto & elem : _dataIDs) {
     //	std::cout<<" Offsets:(vertex) \n"<<cplData[elem]->mesh->getVertexOffsets()<<'\n';
@@ -139,12 +139,12 @@ void BaseQNPostProcessing::initialize(
       _dimOffsets[i + 1] = accumulatedNumberOfUnknowns;
     }
     DEBUG("Number of unknowns at the interface (global): " << _dimOffsets.back());
-    if (utils::MasterSlave::_masterMode) {
+    if (utils::MasterSlave::isMaster()) {
       _infostringstream << "\n--------\n DOFs (global): " << _dimOffsets.back() << "\n offsets: " << _dimOffsets << '\n';
     }
 
     // test that the computed number of unknown per proc equals the number of entries actually present on that proc
-    size_t unknowns = _dimOffsets[utils::MasterSlave::_rank + 1] - _dimOffsets[utils::MasterSlave::_rank];
+    size_t unknowns = _dimOffsets[utils::MasterSlave::getRank() + 1] - _dimOffsets[utils::MasterSlave::getRank()];
     assertion(entries == unknowns, entries, unknowns);
   } else {
     _infostringstream << "\n--------\n DOFs (global): " << entries << '\n';
@@ -532,7 +532,7 @@ void BaseQNPostProcessing::iterationsConverged(
 {
   TRACE();
 
-  if (utils::MasterSlave::_masterMode || (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode))
+  if (utils::MasterSlave::isMaster() || (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()))
     _infostringstream << "# time step " << tSteps << " converged #\n iterations: " << its
                       << "\n used cols: " << getLSSystemCols() << "\n del cols: " << _nbDelCols << '\n';
 
@@ -680,7 +680,7 @@ int BaseQNPostProcessing::getLSSystemCols()
 
 int BaseQNPostProcessing::getLSSystemRows()
 {
-  if (utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode) {
+  if (utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave()) {
     return _dimOffsets.back();
   }
   return _residuals.size();
@@ -689,14 +689,14 @@ int BaseQNPostProcessing::getLSSystemRows()
 void BaseQNPostProcessing::writeInfo(
     std::string s, bool allProcs)
 {
-  if (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode) {
+  if (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()) {
     // serial post processing mode, server mode
     _infostringstream << s;
 
     // parallel post processing, master-slave mode
   } else {
     if (not allProcs) {
-      if (utils::MasterSlave::_masterMode)
+      if (utils::MasterSlave::isMaster())
         _infostringstream << s;
     } else {
       _infostringstream << s;

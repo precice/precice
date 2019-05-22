@@ -77,7 +77,7 @@ def get_real_compiler(compiler):
 vars = Variables(None, ARGUMENTS)
 
 vars.Add(PathVariable("builddir", "Directory holding build files.", "build", PathVariable.PathAccept))
-vars.Add(EnumVariable('build', 'Build type', "Debug", allowed_values=('release', 'debug', 'Release', 'Debug', 'RelWithDebInfo')))
+vars.Add(EnumVariable('build', 'Build type', "Debug", allowed_values=('Release', 'Debug', 'RelWithDebInfo')))
 vars.Add(PathVariable("libprefix", "Path prefix for libraries", "/usr", PathVariable.PathIsDir))
 vars.Add("compiler", "Compiler to use.", "mpicxx")
 vars.Add(BoolVariable("mpi", "Enables MPI-based communication and running coupling tests.", True))
@@ -95,14 +95,6 @@ env.Append(CPPPATH = ['#src'])
 
 print
 print_options(vars)
-
-if env["build"] == 'debug':
-    env["build"] = 'Debug'
-    print("WARNING: Lower-case build type 'debug' is deprecated, use 'Debug' instead!")
-
-if env["build"] == 'release':
-    env["build"] = 'Release'
-    print("WARNING: Lower-case build type 'release' is deprecated, use 'Release' instead!")
 
 
 prefix = env["libprefix"]
@@ -126,9 +118,9 @@ real_compiler = get_real_compiler(env["compiler"])
 if real_compiler.startswith('icc'):
     env.AppendUnique(LIBPATH = ['/usr/lib/'])
     env.Append(LIBS = ['stdc++'])
-    if env["build"] == 'debug':
+    if env["build"] == 'Debug':
         env.Append(CCFLAGS = ['-align'])
-    elif env["build"] == 'release':
+    elif env["build"] == 'Release':
         env.Append(CCFLAGS = ['-w', '-fast', '-align', '-ansi-alias'])
 elif real_compiler.startswith('g++'):
     env.Append(CCFLAGS= ['-Wno-literal-suffix'])
@@ -215,7 +207,7 @@ else:
 env.Append(CPPPATH = join(prefix, 'include/eigen3'))
 
 checkAdd(header = "Eigen/Dense", usage = "Eigen")
-if env["build"] == "debug":
+if env["build"] == "Debug":
     env.Append(CPPDEFINES = ['EIGEN_INITIALIZE_MATRICES_BY_NAN'])
 
 # ====== Boost ======

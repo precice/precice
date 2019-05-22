@@ -516,16 +516,16 @@ BOOST_AUTO_TEST_CASE(CreateUniqueEdge)
     Vertex& v2 = mesh.createVertex(coords2);
 
     Edge& e01a = mesh.createEdge ( v0, v1 ); // LINESTRING (0 0 0, 1 0 0)
-    Edge& e01b = mesh.createEdge ( v0, v1 ); // LINESTRING (0 0 0, 1 0 0)
+    mesh.createEdge ( v0, v1 ); // LINESTRING (0 0 0, 1 0 0)
     BOOST_TEST(mesh.edges().size() == 2);
 
     Edge& e01c = mesh.createUniqueEdge ( v0, v1 ); // LINESTRING (0 0 0, 1 0 0)
     BOOST_TEST(mesh.edges().size() == 2);
     BOOST_TEST(e01a == e01c);
 
-    Edge& e12a = mesh.createUniqueEdge ( v1, v2 ); // LINESTRING (0 0 0, 1 0 0)
+    mesh.createUniqueEdge ( v1, v2 ); // LINESTRING (0 0 0, 1 0 0)
     BOOST_TEST(mesh.edges().size() == 3);
-    Edge& e12b = mesh.createUniqueEdge ( v1, v2 ); // LINESTRING (0 0 0, 1 0 0)
+    mesh.createUniqueEdge ( v1, v2 ); // LINESTRING (0 0 0, 1 0 0)
     BOOST_TEST(mesh.edges().size() == 3);
 }
 
