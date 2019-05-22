@@ -618,4 +618,3 @@ void ParticipantConfiguration:: finishParticipantConfiguration
 
 
 }} // namespace precice, config
-
