@@ -1,12 +1,12 @@
 #include "SolverInterfaceFortran.hpp"
-#include "precice/impl/SolverInterfaceImpl.hpp"
+#include "precice/SolverInterface.hpp"
 #include <iostream>
 #include <string>
 #include "logging/Logger.hpp"
 
 using namespace std;
 
-static precice::impl::SolverInterfaceImpl* impl = nullptr;
+static precice::SolverInterface* impl = nullptr;
 
 static precice::logging::Logger _log ("SolverInterfaceFortran");
 
@@ -40,8 +40,8 @@ void precicef_create_
   string stringConfigFileName(configFileName, strippedLength);
   //cout << "Accessor: " << stringAccessorName << "!" << '\n';
   //cout << "Config  : " << stringConfigFileName << "!" << '\n';
-  impl = new precice::impl::SolverInterfaceImpl (stringAccessorName,
-         *solverProcessIndex, *solverProcessSize, false);
+  impl = new precice::SolverInterface (stringAccessorName,
+         *solverProcessIndex, *solverProcessSize);
   impl->configure(stringConfigFileName);
 }
 
