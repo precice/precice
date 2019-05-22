@@ -5,7 +5,7 @@
 #include "com/Communication.hpp"
 #include "com/CommunicationFactory.hpp"
 #include "com/CommunicateMesh.hpp"
-#include "utils/EventTimings.hpp"
+#include "utils/EventUtils.hpp"
 #include "mesh/Mesh.hpp"
 #include "utils/Event.hpp"
 #include "utils/MasterSlave.hpp"
@@ -394,24 +394,18 @@ void PointToPointCommunication::acceptPreConnection(std::string const &acceptorN
 {
   TRACE(acceptorName, requesterName);
   assertion(not isConnected(), "Already connected!");
-  CHECK(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode,
+  CHECK(utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave(),
         "You can only use a point-to-point communication between two participants which both use a master. "
             << "Please use distribution-type gather-scatter instead.");
 
-  if (utils::MasterSlave::_masterMode) {
+  if (utils::MasterSlave::isMaster()) {
     // Establish connection between participants' master processes.
     auto c = _communicationFactory->newCommunication();
 
-    c->acceptConnection(acceptorName, requesterName, utils::MasterSlave::_rank);
-
-    int requesterMasterRank;
-
-    // Exchange ranks of participants' master processes.
-    c->send(utils::MasterSlave::_masterRank, 0);
-    c->receive(requesterMasterRank, 0);
-
+    c->acceptConnection(acceptorName, requesterName, utils::MasterSlave::getRank());
+    
   } else {
-    assertion(utils::MasterSlave::_slaveMode);
+    assertion(utils::MasterSlave::isSlave());
   }
 
   std::vector<int> localConnectedRanks = _mesh->getConnectedRanks();
@@ -425,7 +419,7 @@ void PointToPointCommunication::acceptPreConnection(std::string const &acceptorN
   try {
     auto addressDirectory = _communicationFactory->addressDirectory();
 
-    if (utils::MasterSlave::_masterMode) {
+    if (utils::MasterSlave::isMaster()) {
       Event e("m2n.createDirectories");
 
       for (int rank = 0; rank < utils::MasterSlave::_size; ++rank) {
@@ -451,24 +445,13 @@ void PointToPointCommunication::acceptPreConnection(std::string const &acceptorN
   c->acceptConnectionAsServer(
       acceptorName,
       requesterName,
-      utils::MasterSlave::_rank,
+      utils::MasterSlave::getRank(),
       localConnectedRanks.size());
 
-  _connectionData.reserve(localConnectedRanks.size());
+  _connectionDataVector.reserve(localConnectedRanks.size());
 
-  for (auto & comMap : localConnectedRanks) {
-    int globalRequesterRank = comMap;
-
-    /*
-      NOTE:
-      Everything is moved (efficiency)!
-      On the acceptor participant side, the communication object `c' behaves as a server, i.e. it 
-      implicitly accepts multiple connections to requester processes (in the requester participant). 
-      As a result, only one communication object `c' is needed to satisfy `communicationMap', and, 
-      therefore, for data structure consistency of `_mappings' with the requester participant side, 
-      we simply duplicate references to the same communication object `c'.
-    */
-    _connectionData.push_back({globalRequesterRank, c, com::PtrRequest(), {}});
+  for (auto & connectedRank : localConnectedRanks) {
+    _connectionDataVector.push_back({connectedRank, c, com::PtrRequest()});
   }
 
   _isConnected = true;
@@ -588,23 +571,17 @@ void PointToPointCommunication::requestPreConnection(std::string const &acceptor
 {
   TRACE(acceptorName, requesterName);
   CHECK(not isConnected(), "Already connected!");
-  CHECK(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode,
+  CHECK(utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave(),
         "You can only use a point-to-point communication between two participants which both use a master. "
         << "Please use distribution-type gather-scatter instead.");
 
-  if (utils::MasterSlave::_masterMode) {
+  if (utils::MasterSlave::isMaster()) {
     // Establish connection between participants' master processes.
     auto c = _communicationFactory->newCommunication();
     c->requestConnection(acceptorName, requesterName, 0, 1);
-
-    int acceptorMasterRank;
-
-    // Exchange ranks of participants' master processes.
-    c->receive(acceptorMasterRank, 0);
-    c->send(utils::MasterSlave::_masterRank, 0);
-
+    
   } else {
-    assertion(utils::MasterSlave::_slaveMode);
+    assertion(utils::MasterSlave::isSlave());
   }
 
   std::vector<int> localConnectedRanks = _mesh->getConnectedRanks();
@@ -625,7 +602,7 @@ void PointToPointCommunication::requestPreConnection(std::string const &acceptor
 
   std::vector<com::PtrRequest> requests;
   requests.reserve(localConnectedRanks.size());
-  _connectionData.reserve(localConnectedRanks.size());
+  _connectionDataVector.reserve(localConnectedRanks.size());
 
   std::set<int> acceptingRanks;
   for (auto &i : localConnectedRanks)
@@ -633,18 +610,17 @@ void PointToPointCommunication::requestPreConnection(std::string const &acceptor
 
   auto c = _communicationFactory->newCommunication();
   c->requestConnectionAsClient(acceptorName, requesterName,
-                               acceptingRanks, utils::MasterSlave::_rank);
+                               acceptingRanks, utils::MasterSlave::getRank());
 
   // Request point-to-point connections (as client) between the current
   // requester process (in the current participant) and (multiple) acceptor
   // processes (in the acceptor participant) with ranks `globalAcceptorRank'
   // according to communication map.
-  for (auto &i : localConnectedRanks) {
-    auto globalAcceptorRank = i;
+  for (auto & connectedRank : localConnectedRanks) {
 
 #ifdef SuperMUC_WORK
     Publisher::ScopedPushDirectory spd("." + acceptorName + "-" + _mesh->getName() + "-" +
-                                       std::to_string(globalAcceptorRank) + ".address");
+                                       std::to_string(connectedRank) + ".address");
 #endif
 
     // NOTE:
@@ -652,7 +628,7 @@ void PointToPointCommunication::requestPreConnection(std::string const &acceptor
     // On the requester participant side, the communication objects behave
     // as clients, i.e. each of them requests only one connection to
     // acceptor process (in the acceptor participant).
-    _connectionData.push_back({globalAcceptorRank, c, com::PtrRequest(), {}});
+    _connectionDataVector.push_back({connectedRank, c, com::PtrRequest()});
   }
   _isConnected = true;
 }
@@ -722,18 +698,18 @@ void PointToPointCommunication::receive(double *itemsToReceive,
   }
 }
 
-void PointToPointCommunication::broadcastSend(double &itemToSend)
+void PointToPointCommunication::broadcastSend(const double &itemToSend)
 {  
-  for (auto &mapping : _connectionData) {
-    mapping.communication->send(itemToSend, mapping.remoteRank);
+  for (auto &connectionData : _connectionDataVector) {
+    connectionData.communication->send(itemToSend, connectionData.remoteRank);
   }  
 }
 
 void PointToPointCommunication::broadcastReceive(double &itemToReceive)
                                 
 {  
-  for (auto &mapping : _connectionData) {
-    mapping.communication->receive(itemToReceive, mapping.remoteRank);
+  for (auto &connectionData : _connectionDataVector) {
+    connectionData.communication->receive(itemToReceive, connectionData.remoteRank);
   }  
 }
 

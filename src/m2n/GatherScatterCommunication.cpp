@@ -172,7 +172,7 @@ void GatherScatterCommunication::requestPreConnection(
   std::string const &requesterName)
 {}
 
-void GatherScatterCommunication::broadcastSend(double &itemToSend)
+void GatherScatterCommunication::broadcastSend(const double &itemToSend)
 {}
 
 void GatherScatterCommunication::broadcastReceive(double &itemToReceive)

@@ -93,9 +93,9 @@ public:
                        int     valueDimension = 1);
 
   /**
-   * @brief Sends a double to connected ranks       
+   * @brief Broadcasts a double to connected ranks       
    */
-  virtual void broadcastSend(double &itemToSend);
+  virtual void broadcastSend(const double &itemToSend);
 
   /**
    * @brief Receives a double from a connected rank
@@ -152,14 +152,13 @@ private:
     int                   remoteRank;
     com::PtrCommunication communication;
     com::PtrRequest       request;
-    std::vector<double>   recvBuffer;
   };
 
   /**
    * @brief Local (for process rank in the current participant) vector of
    *        ConnectionData (one to service each point-to-point connection).
    */
-  std::vector<ConnectionData> _connectionData;
+  std::vector<ConnectionData> _connectionDataVector;
 
   bool _isConnected = false;
 
