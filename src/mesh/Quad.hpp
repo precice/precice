@@ -39,7 +39,7 @@ public:
       int   id);
 
   /// Destructor, empty.
-  virtual ~Quad() {}
+  ~Quad() override {}
 
   /// Returns dimensionalty of space the quad is embedded in.
   int getDimensions() const;
