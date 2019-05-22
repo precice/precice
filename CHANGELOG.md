@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file. For future 
 - The SolverInterface is now hardened against invalid IDs and misconfiguration using a consitent mechanism to express requirements.
 - The SolverInterface now keeps track of the Mesh states, which results more informative error messages for mesh related functions.
 - Sending data between participants is now fully asynchronous. This is relevant in one-way coupling scenarios, where the sending participant doesn't need to wait for the receiving one.
+- When exporting meshes with `<export:vtk ...>` the target directories are automatically created.
 
 ## 1.4.1
 

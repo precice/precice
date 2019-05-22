@@ -34,7 +34,7 @@ void ExportVTKXML:: doExport
 (
   const std::string& name,
   const std::string& location,
-  mesh::Mesh&        mesh)
+  mesh::Mesh & mesh)
 {
   TRACE(name, location, mesh.getName());
   assertion(utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster());
@@ -47,9 +47,7 @@ void ExportVTKXML:: doExport
   }
 }
 
-void ExportVTKXML::processDataNamesAndDimensions
-(
-  mesh::Mesh& mesh)
+void ExportVTKXML::processDataNamesAndDimensions(mesh::Mesh const & mesh)
 {
   _meshDimensions = mesh.getDimensions();
   _vectorDataNames.clear();
@@ -73,10 +71,12 @@ void ExportVTKXML::writeMasterFile
 (
   const std::string& name,
   const std::string& location,
-  mesh::Mesh&        mesh)
+  mesh::Mesh & mesh)
 {
   namespace fs = boost::filesystem;
   fs::path outfile(location);
+  if (not location.empty())
+    fs::create_directories(outfile);
   outfile = outfile / fs::path(name + "_master.pvtu");
   std::ofstream outMasterFile(outfile.string(), std::ios::trunc);
 
@@ -119,7 +119,7 @@ void ExportVTKXML::writeMasterFile
   outMasterFile << "      </PPointData>\n";
 
   for (int i = 0; i < utils::MasterSlave::getSize(); i++) {
-    if(mesh.getVertexDistribution()[i].size()>0){ //only non-empty subfiles
+    if (mesh.getVertexDistribution()[i].size() > 0) { //only non-empty subfiles
       outMasterFile << "      <Piece Source=\"" << name << "_r" << i << ".vtu\"/>\n";
     }
   }
@@ -134,7 +134,7 @@ void ExportVTKXML::writeSubFile
 (
   const std::string& name,
   const std::string& location,
-  mesh::Mesh&        mesh)
+  mesh::Mesh & mesh)
 {
   int numPoints = mesh.vertices().size(); // number of vertices
   int numCells; // number of cells
@@ -181,7 +181,7 @@ void ExportVTKXML::writeSubFile
 void ExportVTKXML::exportMesh
 (
   std::ofstream& outFile,
-  mesh::Mesh&    mesh)
+  mesh::Mesh const & mesh)
 {
   if (_meshDimensions == 2) { // write edges as cells
     outFile << "         <Cells>\n";

@@ -15,9 +15,7 @@ namespace precice {
 namespace io {
 
 
-ExportVTK:: ExportVTK
-(
-  bool writeNormals )
+ExportVTK::ExportVTK(bool writeNormals)
 :
   Export(),
   _writeNormals(writeNormals)
@@ -32,16 +30,18 @@ void ExportVTK:: doExport
 (
   const std::string& name,
   const std::string& location,
-  mesh::Mesh&        mesh)
+  mesh::Mesh & mesh)
 {
   TRACE(name, location, mesh.getName());
   assertion(name != std::string(""));
 
   namespace fs = boost::filesystem;
   fs::path outfile(location);
+  if (not location.empty())
+    fs::create_directories(outfile);
   outfile = outfile / fs::path(name + ".vtk");
   std::ofstream outstream(outfile.string(), std::ios::trunc);
-  CHECK(outstream, "Could not open file \"" << outfile.c_str() << "\" for VTK export!");
+  CHECK(outstream, "Could not open file \"" << outfile << "\" for VTK export!");
 
   initializeWriting(outstream);
   writeHeader(outstream);
@@ -50,10 +50,7 @@ void ExportVTK:: doExport
   outstream.close();
 }
 
-void ExportVTK::exportMesh
-(
-  std::ofstream& outFile,
-  mesh::Mesh&    mesh)
+void ExportVTK::exportMesh(std::ofstream & outFile, mesh::Mesh const & mesh)
 {
   TRACE(mesh.getName());
 
@@ -67,9 +64,8 @@ void ExportVTK::exportMesh
 
   // Plot edges
   if(mesh.getDimensions() == 2) {
-    outFile << "CELLS " << mesh.edges().size() << ' ' << mesh.edges().size() * 3
-            << '\n' << '\n';
-    for (mesh::Edge & edge : mesh.edges()) {
+    outFile << "CELLS " << mesh.edges().size() << ' ' << mesh.edges().size() * 3 << "\n\n";
+    for (auto const & edge : mesh.edges()) {
       int internalIndices[2];
       internalIndices[0] = edge.vertex(0).getID();
       internalIndices[1] = edge.vertex(1).getID();
@@ -87,14 +83,14 @@ void ExportVTK::exportMesh
     size_t sizeQuads = mesh.quads().size();
     outFile << "CELLS " << sizeTriangles + sizeQuads << ' '
             << sizeTriangles * 4 + sizeQuads * 5 << "\n\n";
-    for (mesh::Triangle& triangle : mesh.triangles()) {
+    for (auto const & triangle : mesh.triangles()) {
       int internalIndices[3];
       internalIndices[0] = triangle.vertex(0).getID();
       internalIndices[1] = triangle.vertex(1).getID();
       internalIndices[2] = triangle.vertex(2).getID();
       writeTriangle(internalIndices, outFile);
     }
-    for (mesh::Quad& quad : mesh.quads()) {
+    for (auto const & quad : mesh.quads()) {
       int internalIndices[4];
       internalIndices[0] = quad.vertex(0).getID();
       internalIndices[1] = quad.vertex(1).getID();
@@ -110,40 +106,17 @@ void ExportVTK::exportMesh
     for(size_t i=0; i < sizeQuads; i++){
       outFile << "9\n";
     }
-
-
-    // OLD
-//    outFile << "CELLS " << mesh.triangles().size() << ' '
-//            << mesh.triangles().size() * 4  << "\n\n";
-//    for (mesh::Triangle & triangle : mesh.triangles()){
-//      int internalIndices[3];
-//      internalIndices[0] = triangle.vertex(0).getID();
-//      internalIndices[1] = triangle.vertex(1).getID();
-//      internalIndices[2] = triangle.vertex(2).getID();
-//      writeTriangle(internalIndices, outFile);
-//    }
-//    outFile << "\nCELL_TYPES " << mesh.triangles().size() << "\n\n";
-//    for(size_t i=0; i < mesh.triangles().size(); i++){
-//      outFile << "5\n";
-//    }
-
   }
-
   outFile << '\n';
 }
 
-void ExportVTK:: exportData
-(
-  std::ofstream& outFile,
-  mesh::Mesh&    mesh)
+void ExportVTK:: exportData(std::ofstream & outFile, mesh::Mesh const & mesh)
 {
-  outFile << "POINT_DATA " << mesh.vertices().size() << '\n';
-  outFile << '\n';
+  outFile << "POINT_DATA " << mesh.vertices().size() << "\n\n";
 
   if(_writeNormals) { // Plot vertex normals
-    outFile << "VECTORS VertexNormals float\n";
-    outFile << '\n';
-    for (mesh::Vertex& vertex : mesh.vertices()) {
+    outFile << "VECTORS VertexNormals float\n\n";
+    for (auto const & vertex : mesh.vertices()) {
       int i = 0;
       for(; i < mesh.getDimensions(); i++){
         outFile << vertex.getNormal()[i] << ' ';

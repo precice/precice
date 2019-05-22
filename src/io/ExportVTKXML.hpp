@@ -18,9 +18,7 @@ namespace precice {
 namespace precice {
 namespace io {
 
-/**
- * @brief Writes meshes to xml-vtk files. Only for parallel usage. Serial usage (coupling mode) should still use ExportVTK
- */
+/// Writes meshes to xml-vtk files. Only for parallel usage. Serial usage (coupling mode) should still use ExportVTK
 class ExportVTKXML : public Export
 {
 public:
@@ -36,10 +34,15 @@ public:
   virtual int getType() const;
 
   /// Perform writing to vtk file
+  /**
+   * @param[in] name filename to export to
+   * @param[in] locastion Export path
+   * @param[mesh] mesh Mesh to export
+   */
   virtual void doExport (
     const std::string& name,
     const std::string& location,
-    mesh::Mesh&        mesh );
+    mesh::Mesh & mesh );
 
   static void writeVertex (
     const Eigen::VectorXd& position,
@@ -77,9 +80,7 @@ private:
     * @brief Stores scalar and vector data names in string vectors
     * Needed for writing master file and sub files
     */
-   void processDataNamesAndDimensions
-   (
-     mesh::Mesh& mesh);
+   void processDataNamesAndDimensions(mesh::Mesh const& mesh);
 
    /**
     * @brief Writes the master file (called only by the master rank)
@@ -88,7 +89,7 @@ private:
    (
      const std::string& name,
      const std::string& location,
-     mesh::Mesh&        mesh);
+     mesh::Mesh & mesh);
 
    /**
     * @brief Writes the sub file for each rank
@@ -97,15 +98,15 @@ private:
    (
      const std::string& name,
      const std::string& location,
-     mesh::Mesh&        mesh);
+     mesh::Mesh & mesh);
 
    void exportMesh (
      std::ofstream& outFile,
-     mesh::Mesh&    mesh );
+     mesh::Mesh const & mesh );
 
    void exportData (
      std::ofstream& outFile,
-     mesh::Mesh&    mesh );
+     mesh::Mesh & mesh );
 };
 
 }} // namespace precice, io

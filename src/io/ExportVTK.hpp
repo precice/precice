@@ -19,19 +19,16 @@ class ExportVTK : public Export
 {
 public:
 
-  /**
-   * @brief Standard constructor
-   */
   explicit ExportVTK ( bool exportNormals );
 
   /// Returns the VTK type ID.
   virtual int getType() const;
 
-  /// Perform writing to vtk file
+  /// Perform writing to VTK file
   virtual void doExport (
     const std::string& name,
     const std::string& location,
-    mesh::Mesh&        mesh );
+    mesh::Mesh & mesh );
 
   static void initializeWriting (
     std::ofstream&     filestream );
@@ -57,20 +54,16 @@ public:
 private:
   logging::Logger _log{"io::ExportVTK"};
 
-   // @brief By default set true: plot vertex normals, false: no normals plotting
+   /// By default set true: plot vertex normals, false: no normals plotting
    bool _writeNormals;
 
    void openFile (
     std::ofstream&     outFile,
     const std::string& filename ) const;
 
-   void exportMesh (
-     std::ofstream& outFile,
-     mesh::Mesh&    mesh );
+   void exportMesh(std::ofstream & outFile, mesh::Mesh const & mesh );
 
-   void exportData (
-     std::ofstream& outFile,
-     mesh::Mesh&    mesh );
+   void exportData(std::ofstream& outFile, mesh::Mesh const & mesh );
 };
 
 }} // namespace precice, io
