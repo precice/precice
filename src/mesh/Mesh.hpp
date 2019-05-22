@@ -40,20 +40,6 @@ class Mesh : public PropertyContainer, private boost::noncopyable
 {
 public:
 
-
-<<<<<<< HEAD
-  typedef utils::ptr_vector<Vertex>              VertexContainer;
-  typedef utils::ptr_vector<Edge>                EdgeContainer;
-  typedef utils::ptr_vector<Triangle>            TriangleContainer;
-  typedef utils::ptr_vector<Quad>                QuadContainer;
-  typedef std::vector<PtrData>                   DataContainer;
-  typedef utils::ptr_vector<PropertyContainer>   PropertyContainerContainer;
-  /// a vector of pairs that represents the physical range of vertices owned by a rank. 
-  typedef std::vector<std::pair<double, double>> BoundingBox;
-  /// set of boundingboxes owned by each rank gathered in the master rank.
-  /// A map : each rank -> boundingbox around it's mesh partition.
-  typedef std::map<int,BoundingBox>              BoundingBoxMap;
-=======
   using VertexContainer            = utils::ptr_vector<Vertex>;
   using EdgeContainer              = utils::ptr_vector<Edge>;
   using TriangleContainer          = utils::ptr_vector<Triangle>;
@@ -62,7 +48,6 @@ public:
   using PropertyContainerContainer = utils::ptr_vector<PropertyContainer>;
   using BoundingBox                = std::vector<std::pair<double, double>>;
   using BoundingBoxMap             = std::map<int,BoundingBox>; 
->>>>>>> develop
 
   /// A mapping from rank to used (not necessarily owned) vertex IDs
   using VertexDistribution = std::map<int, std::vector<int>>;

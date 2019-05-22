@@ -5,7 +5,7 @@
 #include "m2n/M2N.hpp"
 #include "mapping/Mapping.hpp"
 #include "mesh/Mesh.hpp"
-#include "utils/EventTimings.hpp"
+#include "utils/EventUtils.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/Parallel.hpp"
 
@@ -34,12 +34,12 @@ void ProvidedBoundingBox::communicateBoundingBox()
     return;
 
   // each rank sends its bb to master
-  if (utils::MasterSlave::_slaveMode) { //slave
+  if (utils::MasterSlave::isSlave()) { //slave
     com::CommunicateBoundingBox(utils::MasterSlave::_communication).sendBoundingBox(_mesh->getBoundingBox(), 0);
   } else { // Master
 
-    assertion(utils::MasterSlave::_rank == 0);
-    assertion(utils::MasterSlave::_size > 1);
+    assertion(utils::MasterSlave::getRank() == 0);
+    assertion(utils::MasterSlave::getSize() > 1);
 
     // to store the collection of bounding boxes
     mesh::Mesh::BoundingBoxMap bbm;
@@ -49,7 +49,7 @@ void ProvidedBoundingBox::communicateBoundingBox()
     for (int i = 0; i < _dimensions; i++) {
       initialBB.push_back(std::make_pair(-1, -1));
     }
-    for (int rank = 0; rank < utils::MasterSlave::_size; rank++) {
+    for (int rank = 0; rank < utils::MasterSlave::getSize(); rank++) {
       bbm[rank] = initialBB;
     }
 
@@ -57,12 +57,12 @@ void ProvidedBoundingBox::communicateBoundingBox()
     bbm[0] = _mesh->getBoundingBox();
 
     // master receives bbs from slaves and stores them in bbm
-    for (int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++) {
+    for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
       com::CommunicateBoundingBox(utils::MasterSlave::_communication).receiveBoundingBox(bbm[rankSlave], rankSlave);
     }
 
     // master sends number of ranks and bbm to the other master
-    _m2n->getMasterCommunication()->send(utils::MasterSlave::_size, 0);
+    _m2n->getMasterCommunication()->send(utils::MasterSlave::getSize(), 0);
     com::CommunicateBoundingBox(_m2n->getMasterCommunication()).sendBoundingBoxMap(bbm, 0);
   }
 }
@@ -77,8 +77,8 @@ void ProvidedBoundingBox::computeBoundingBox()
 
   std::map<int, std::vector<int>> remoteConnectionMap;
 
-  if (not utils::MasterSlave::_slaveMode) { //Master
-    assertion(utils::MasterSlave::_size > 1);
+  if (not utils::MasterSlave::isSlave()) { //Master
+    assertion(utils::MasterSlave::getSize() > 1);
 
     // master receives feedback map (map of other participant ranks -> connected ranks at this participant)
     // from other participants master
@@ -100,7 +100,7 @@ void ProvidedBoundingBox::computeBoundingBox()
     // master checks which ranks are connected to it
     for (auto &remoteRank : remoteConnectionMap) {
       for (auto &includedRank : remoteRank.second) {
-        if (utils::MasterSlave::_rank == includedRank) {
+        if (utils::MasterSlave::getRank() == includedRank) {
           _mesh->getConnectedRanks().push_back(remoteRank.first);
         }
       }
@@ -118,7 +118,7 @@ void ProvidedBoundingBox::computeBoundingBox()
 
     for (auto &remoteRank : remoteConnectionMap) {
       for (auto &includedRanks : remoteRank.second) {
-        if (utils::MasterSlave::_rank == includedRanks) {
+        if (utils::MasterSlave::getRank() == includedRanks) {
           _mesh->getConnectedRanks().push_back(remoteRank.first);
         }
       }
