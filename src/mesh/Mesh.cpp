@@ -434,6 +434,40 @@ void Mesh:: clear()
   }
 }
 
+VertexDistribution &getVertexDistribution()
+{
+  return _vertexDistribution;
+}
+
+const VertexDistribution &getVertexDistribution() const
+{
+  return _vertexDistribution;
+}
+
+std::vector<int> &getVertexOffsets()
+{
+  return _vertexOffsets;
+}
+
+const std::vector<int> &getVertexOffsets() const
+{
+  return _vertexOffsets;
+}
+
+void setVertexOffsets(std::vector<int> &vertexOffsets)
+{
+  _vertexOffsets = vertexOffsets;
+}
+
+int getGlobalNumberOfVertices() const
+{
+  return _globalNumberOfVertices;
+}
+
+void setGlobalNumberOfVertices(int num)
+{
+  _globalNumberOfVertices = num;
+}
 
 void Mesh:: addMesh(
     Mesh& deltaMesh)
