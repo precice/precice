@@ -7,10 +7,10 @@
 
 using precice::utils::Event;
 
-namespace precice
-{
-namespace partition
-{
+namespace precice {
+extern bool syncMode;
+
+namespace partition {
 
 ProvidedPartition::ProvidedPartition(
     mesh::PtrMesh mesh,
@@ -27,7 +27,7 @@ void ProvidedPartition::communicate()
   //@todo communication to more than one participant
 
   if (_hasToSend) {
-    Event e1("partition.gatherMesh." + _mesh->getName());
+    Event e1("partition.gatherMesh." + _mesh->getName(), precice::syncMode);
 
     // Temporary globalMesh such that the master also keeps his local mesh
     mesh::Mesh globalMesh(_mesh->getName(), _mesh->getDimensions(), _mesh->isFlipNormals());
@@ -64,7 +64,7 @@ void ProvidedPartition::communicate()
 
     // Send (global) Mesh
     INFO("Send global mesh " << _mesh->getName());
-    Event e2("partition.sendGlobalMesh." + _mesh->getName());
+    Event e2("partition.sendGlobalMesh." + _mesh->getName(), precice::syncMode);
     if (not utils::MasterSlave::_slaveMode) {
       CHECK(globalMesh.vertices().size() > 0, "The provided mesh " << globalMesh.getName() << " is invalid (possibly empty).");
       com::CommunicateMesh(_m2n->getMasterCommunication()).sendMesh(globalMesh, 0);
@@ -78,7 +78,7 @@ void ProvidedPartition::compute()
 {
   TRACE();
   INFO("Compute partition for mesh " << _mesh->getName());
-  Event e6("partition.feedbackMesh." + _mesh->getName());
+  Event e6("partition.feedbackMesh." + _mesh->getName(), precice::syncMode);
 
   int numberOfVertices = _mesh->vertices().size();
 

@@ -81,7 +81,7 @@ vars.Add(EnumVariable('build', 'Build type', "Debug", allowed_values=('release',
 vars.Add(PathVariable("libprefix", "Path prefix for libraries", "/usr", PathVariable.PathIsDir))
 vars.Add("compiler", "Compiler to use.", "mpicxx")
 vars.Add(BoolVariable("mpi", "Enables MPI-based communication and running coupling tests.", True))
-vars.Add(BoolVariable("petsc", "Enable use of the Petsc linear algebra library.", True))
+vars.Add(BoolVariable("petsc", "Enable use of the PETSc linear algebra library.", True))
 vars.Add(BoolVariable("python", "Used for Python scripted solver actions.", False))
 vars.Add(BoolVariable("gprof", "Used in detailed performance analysis.", False))
 vars.Add(EnumVariable('platform', 'Special configuration for certain platforms', "none", allowed_values=('none', 'supermuc', 'hazelhen')))
@@ -114,7 +114,7 @@ env.Append(LIBPATH = [('#' + buildpath)])
 env.Append(CCFLAGS= ['-Wall', '-Wextra', '-Wno-unused-parameter', '-std=c++11'])
 
 # ====== PRECICE_VERSION number ======
-PRECICE_VERSION = "1.2.0"
+PRECICE_VERSION = "1.3.0"
 
 
 # ====== Compiler Settings ======
@@ -186,7 +186,7 @@ if env["petsc"]:
     else:
         checkAdd("petsc")
     # Set PETSC_VERSION to correct values 
-    with open(PETSC_DIR + "/include/petscversion.h", "r") as versionfile:
+    with open(join(PETSC_DIR, "include/petscversion.h"), "r") as versionfile:
         for line in versionfile:
             tokens = line.split()
             try:

@@ -1,0 +1,38 @@
+---
+Checks:          '-*,clang-diagnostic-all,clang-diagnostic-extra,clang-diagnostic-pedantic,clang-analyzer-*,pugprone-*,cppcoreguidelines-*,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,misc-*,-misc-static-assert,modernize-*,mpi-*,performance-*,portability-*,readability-static-accessed-through-instance,readability-identifier-naming,readability-magic-numbers,readability-redundant-*,readability-else-after-return,readability-simplify-subscript-expr'
+WarningsAsErrors: ''
+HeaderFilterRegex: ''
+AnalyzeTemporaryDtors: false
+FormatStyle:     file
+CheckOptions:    
+  - key:             modernize-use-default-member-init.UseAssignment
+    value:           1
+  - key:             modernize-loop-convert.MaxCopySize
+    value:           '16'
+  - key:             modernize-loop-convert.MinConfidence
+    value:           risky
+  - key:             modernize-loop-convert.NamingStyle
+    value:           CamelCase
+  - key:             modernize-pass-by-value.IncludeStyle
+    value:           llvm
+  - key:             modernize-replace-auto-ptr.IncludeStyle
+    value:           llvm
+  - key:             modernize-use-nullptr.NullMacros
+    value:           'NULL'
+  - key:             portability-simd-intrinsics.Suggest
+    value:           1
+  - key: readability-identifier-naming.NamespaceCase
+    value: lower_case
+  - key: readability-identifier-naming.ClassCase
+    value: CamelCase
+  - key: readability-identifier-naming.PrivateMemberPrefix
+    value: _       
+  - key: readability-identifier-naming.StructCase
+    value: CamelCase
+  - key: readability-identifier-naming.FunctionCase
+    value: camelBack
+  - key: readability-identifier-naming.VariableCase
+    value: camelBack
+  - key: readability-identifier-naming.GlobalConstantCase
+    value: UPPER_CASE
+...

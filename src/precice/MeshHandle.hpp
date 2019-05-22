@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <cstddef>
+#include <iterator>
 
 namespace precice {
   namespace mesh {
@@ -25,42 +26,55 @@ namespace precice {
 class VertexIterator
 {
 public:
+  using value_type        = VertexIterator;
+  using reference         = VertexIterator &;
+  using pointer           = VertexIterator *;
+  using difference_type   = std::size_t;
+  using iterator_category = std::forward_iterator_tag;
+
+  VertexIterator();
+
+  ~VertexIterator();
 
   VertexIterator (
     const mesh::Group& content,
     bool               begin );
 
-  VertexIterator ( const VertexIterator& toCopy );
+  VertexIterator ( const VertexIterator& other );
 
-  VertexIterator& operator= ( const VertexIterator& toAssign );
-
-  ~VertexIterator();
+  VertexIterator& operator= ( const VertexIterator& other );
 
   /// Postfix operator
-  VertexIterator& operator++(int unused);
+  VertexIterator operator++(int unused);
 
   /// Prefix operator
   VertexIterator& operator++();
 
-  VertexIterator& operator*();
+  const VertexIterator operator*() const;
 
-  int vertexID();
+  int vertexID() const;
 
-  const double* vertexCoords();
+  const double* vertexCoords() const;
 
-  bool operator!= ( const VertexIterator& vertexIterator );
+  bool operator== ( const VertexIterator& other ) const;
+
+  bool operator!= ( const VertexIterator& other ) const;
+
+  void swap(VertexIterator& other);
 
 private:
-
-  impl::VertexIteratorImplementation* _impl;
+  using Impl = impl::VertexIteratorImplementation;
+  Impl* _impl;
 };
+
+void swap(VertexIterator& lhs, VertexIterator& rhs);
 
 /// Offers methods begin() and end() to iterate over all vertices.
 class VertexHandle
 {
 public:
 
-  typedef VertexIterator const_iterator;
+  using const_iterator = VertexIterator;
 
   /// Constructor, reference to mesh object holding vertices required.
   VertexHandle ( const mesh::Group& content );
@@ -82,25 +96,47 @@ private:
 class EdgeIterator
 {
 public:
+  using value_type        = EdgeIterator;
+  using reference         = EdgeIterator &;
+  using pointer           = EdgeIterator *;
+  using difference_type   = std::size_t;
+  using iterator_category = std::forward_iterator_tag;
+
+  EdgeIterator ();
+
+  ~EdgeIterator ();
 
   EdgeIterator (
     const mesh::Group& mesh,
     bool              begin );
 
-  ~EdgeIterator();
 
-  EdgeIterator& operator++(int);
+  EdgeIterator (const EdgeIterator& other);
 
-  const double* vertexCoords ( int vertexIndex );
+  EdgeIterator& operator=(const EdgeIterator& other);
 
-  int vertexID ( int vertexIndex );
+  EdgeIterator operator++(int);
 
-  bool operator!= ( const EdgeIterator& edgeIterator );
+  EdgeIterator& operator++();
+
+  const EdgeIterator operator*() const;
+
+  const double* vertexCoords ( int vertexIndex ) const;
+
+  int vertexID ( int vertexIndex ) const;
+
+  bool operator== ( const EdgeIterator& other ) const;
+
+  bool operator!= ( const EdgeIterator& other ) const;
+
+  void swap(EdgeIterator& other);
 
 private:
-
-  impl::EdgeIteratorImplementation* _impl;
+  using Impl = impl::EdgeIteratorImplementation;
+  Impl* _impl;
 };
+
+void swap(EdgeIterator& lhs, EdgeIterator& rhs);
 
 /**
  * @brief Offers methods begin() and end() to iterate over all edges.
@@ -109,8 +145,7 @@ class EdgeHandle
 {
 public:
 
-   // @brief Necessary to be used by boost::foreach.
-   typedef EdgeIterator const_iterator;
+  using const_iterator = EdgeIterator;
 
    /**
     * @brief Constructor, reference to mesh object holding edges required.
@@ -138,25 +173,46 @@ private:
 class TriangleIterator
 {
 public:
+  using value_type        = TriangleIterator;
+  using reference         = TriangleIterator &;
+  using pointer           = TriangleIterator *;
+  using difference_type   = std::size_t;
+  using iterator_category = std::forward_iterator_tag;
+
+  TriangleIterator();
+
+  ~TriangleIterator();
 
   TriangleIterator (
     const mesh::Group& content,
     bool               begin );
 
-  ~TriangleIterator();
+  TriangleIterator (const TriangleIterator& other);
 
-  TriangleIterator& operator++(int);
+  TriangleIterator& operator=(const TriangleIterator& other);
 
-  const double* vertexCoords ( int vertexIndex );
+  TriangleIterator operator++(int);
 
-  int vertexID ( int vertexIndex );
+  TriangleIterator& operator++();
 
-  bool operator!= ( const TriangleIterator& triangleIterator );
+  const TriangleIterator operator*() const;
+
+  const double* vertexCoords ( int vertexIndex ) const;
+
+  int vertexID ( int vertexIndex ) const;
+
+  bool operator== ( const TriangleIterator& other ) const;
+
+  bool operator!= ( const TriangleIterator& other ) const;
+
+  void swap(TriangleIterator& other);
 
 private:
-
-  impl::TriangleIteratorImplementation* _impl;
+  using Impl = impl::TriangleIteratorImplementation;
+  Impl* _impl;
 };
+
+void swap(TriangleIterator& lhs, TriangleIterator& rhs);
 
 /**
  * @brief Offers methods begin() and end() to iterate over all triangles.
@@ -165,7 +221,7 @@ class TriangleHandle
 {
 public:
 
-   typedef TriangleIterator const_iterator;
+  using const_iterator = TriangleIterator;
 
    /**
     * @brief Constructor, reference to mesh object holding triangles required.
@@ -186,7 +242,7 @@ public:
 
 private:
 
-   // @brief Mesh instance holding triangles.
+   /// Mesh instance holding triangles.
    const mesh::Group& _content;
 };
 
@@ -212,7 +268,7 @@ public:
    /**
     * @brief Standard constructor, not meant to be used by a solver.
     *
-    * @param mesh [IN] The mesh representing the geometry.
+    * @param[in] mesh The mesh representing the geometry.
     */
    MeshHandle ( const mesh::Group& content );
 
@@ -233,13 +289,13 @@ public:
 
 private:
 
-   // @brief Handle for vertices.
+   /// Handle for vertices.
    VertexHandle _vertexHandle;
 
-   // @brief Handle for edges.
+   /// Handle for edges.
    EdgeHandle _edgeHandle;
 
-   // @brief Handle for triangles.
+   /// Handle for triangles.
    TriangleHandle _triangleHandle;
 };
 
