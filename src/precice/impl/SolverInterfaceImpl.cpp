@@ -496,13 +496,13 @@ int SolverInterfaceImpl:: getDimensions() const
   return _dimensions;
 }
 
-bool SolverInterfaceImpl:: isCouplingOngoing()
+bool SolverInterfaceImpl:: isCouplingOngoing() const
 {
   TRACE();
   return _couplingScheme->isCouplingOngoing();
 }
 
-bool SolverInterfaceImpl:: isReadDataAvailable()
+bool SolverInterfaceImpl:: isReadDataAvailable() const
 {
   TRACE();
   return _couplingScheme->hasDataBeenExchanged();
@@ -510,13 +510,13 @@ bool SolverInterfaceImpl:: isReadDataAvailable()
 
 bool SolverInterfaceImpl:: isWriteDataRequired
 (
-  double computedTimestepLength )
+  double computedTimestepLength ) const
 {
   TRACE(computedTimestepLength);
   return _couplingScheme->willDataBeExchanged(computedTimestepLength);
 }
 
-bool SolverInterfaceImpl:: isTimestepComplete()
+bool SolverInterfaceImpl:: isTimestepComplete() const
 {
   TRACE();
   return _couplingScheme->isCouplingTimestepComplete();
@@ -524,7 +524,7 @@ bool SolverInterfaceImpl:: isTimestepComplete()
 
 bool SolverInterfaceImpl:: isActionRequired
 (
-  const std::string& action )
+  const std::string& action ) const
 {
   TRACE(action, _couplingScheme->isActionRequired(action));
   return _couplingScheme->isActionRequired(action);
@@ -541,13 +541,13 @@ void SolverInterfaceImpl:: fulfilledAction
   _couplingScheme->performedAction(action);
 }
 
-bool SolverInterfaceImpl::hasToEvaluateSurrogateModel()
+bool SolverInterfaceImpl::hasToEvaluateSurrogateModel() const
 {
  // std::cout<<"_isCoarseModelOptimizationActive() = "<<_couplingScheme->isCoarseModelOptimizationActive();
   return _couplingScheme->isCoarseModelOptimizationActive();
 }
 
-bool SolverInterfaceImpl::hasToEvaluateFineModel()
+bool SolverInterfaceImpl::hasToEvaluateFineModel() const
 {
   return not _couplingScheme->isCoarseModelOptimizationActive();
 }
@@ -562,14 +562,15 @@ bool SolverInterfaceImpl:: hasMesh
 
 int SolverInterfaceImpl:: getMeshID
 (
-  const std::string& meshName )
+  const std::string& meshName ) const
 {
   TRACE(meshName);
-  CHECK( utils::contained(meshName, _meshIDs), "Mesh with name \""<< meshName << "\" is not defined!" );
-  return _meshIDs[meshName];
+  const auto pos = _meshIDs.find(meshName);
+  CHECK(pos != _meshIDs.end(), "Mesh with name \""<< meshName << "\" is not defined!" );
+  return pos->second;
 }
 
-std::set<int> SolverInterfaceImpl:: getMeshIDs()
+std::set<int> SolverInterfaceImpl:: getMeshIDs() const
 {
   TRACE();
   std::set<int> ids;
@@ -581,28 +582,28 @@ std::set<int> SolverInterfaceImpl:: getMeshIDs()
 
 bool SolverInterfaceImpl:: hasData
 (
-  const std::string& dataName, int meshID )
+  const std::string& dataName, int meshID ) const
 {
   TRACE(dataName, meshID );
   PRECICE_VALIDATE_MESH_ID(meshID);
-  std::map<std::string,int>& sub_dataIDs =  _dataIDs[meshID];
+  const auto & sub_dataIDs = _dataIDs.at(meshID);
   return sub_dataIDs.find(dataName)!= sub_dataIDs.end();
 }
 
 int SolverInterfaceImpl:: getDataID
 (
-  const std::string& dataName, int meshID )
+  const std::string& dataName, int meshID ) const
 {
   TRACE(dataName, meshID );
   PRECICE_VALIDATE_MESH_ID(meshID);
   CHECK(hasData(dataName, meshID),
         "Data with name \"" << dataName << "\" is not defined on mesh with ID \"" << meshID << "\".");
-  return _dataIDs[meshID][dataName];
+  return _dataIDs.at(meshID).at(dataName);
 }
 
 int SolverInterfaceImpl:: getMeshVertexSize
 (
-  int meshID )
+  int meshID ) const
 {
   TRACE(meshID);
   int size = 0;
@@ -701,7 +702,7 @@ void SolverInterfaceImpl:: getMeshVertices
   int        meshID,
   size_t     size,
   const int* ids,
-  double*    positions )
+  double*    positions ) const
 {
   TRACE(meshID, size);
   if (_clientMode){
@@ -713,12 +714,12 @@ void SolverInterfaceImpl:: getMeshVertices
     mesh::PtrMesh mesh(context.mesh);
     DEBUG("Get positions");
     auto & vertices = mesh->vertices();
-    assertion(vertices.size() <= size, vertices.size(), size);
+    assertion(size <= vertices.size(), size, vertices.size());
     Eigen::Map<Eigen::MatrixXd> posMatrix{
         positions, _dimensions, static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(size)};
     for (size_t i=0; i < size; i++){
       const size_t id = ids[i];
-      assertion(id < vertices.size(), vertices.size(), id);
+      assertion(id < vertices.size(), id, vertices.size());
       posMatrix.col(i) = vertices[id].getCoords();
     }
   }
@@ -728,7 +729,7 @@ void SolverInterfaceImpl:: getMeshVertexIDsFromPositions (
   int           meshID,
   size_t        size,
   const double* positions,
-  int*          ids )
+  int*          ids ) const
 {
   TRACE(meshID, size);
   if (_clientMode){
@@ -1115,7 +1116,7 @@ void SolverInterfaceImpl:: readBlockVectorData
   int        toDataID,
   int        size,
   const int* valueIndices,
-  double*    values )
+  double*    values ) const
 {
   TRACE(toDataID, size);
   PRECICE_VALIDATE_DATA_ID(toDataID);
@@ -1149,7 +1150,7 @@ void SolverInterfaceImpl:: readVectorData
 (
   int     toDataID,
   int     valueIndex,
-  double* value )
+  double* value ) const
 {
   TRACE(toDataID, valueIndex);
   PRECICE_VALIDATE_DATA_ID(toDataID);
@@ -1179,7 +1180,7 @@ void SolverInterfaceImpl:: readBlockScalarData
   int        toDataID,
   int        size,
   const int* valueIndices,
-  double*    values )
+  double*    values ) const
 {
   TRACE(toDataID, size);
   PRECICE_VALIDATE_DATA_ID(toDataID);
@@ -1210,7 +1211,7 @@ void SolverInterfaceImpl:: readScalarData
 (
   int     toDataID,
   int     valueIndex,
-  double& value )
+  double& value ) const
 {
   TRACE(toDataID, valueIndex, value);
   PRECICE_VALIDATE_DATA_ID(toDataID);
@@ -1234,7 +1235,7 @@ void SolverInterfaceImpl:: readScalarData
 void SolverInterfaceImpl:: exportMesh
 (
   const std::string& filenameSuffix,
-  int                exportType )
+  int                exportType ) const
 {
   TRACE(filenameSuffix, exportType );
   // Export meshes

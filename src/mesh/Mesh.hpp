@@ -298,6 +298,12 @@ public:
 
 private:
 
+  /// Computes the normals for all primitives.
+  void computeNormals();
+
+  /// Computes the boundingBox for the vertices.
+  void computeBoundingBox();
+
   mutable logging::Logger _log{"mesh::Mesh"};
 
   /// Provides unique IDs for all geometry objects
