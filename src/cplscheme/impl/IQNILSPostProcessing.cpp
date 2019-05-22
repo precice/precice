@@ -161,7 +161,7 @@ void IQNILSPostProcessing::computeQNUpdate(PostProcessing::DataMap &cplData, Eig
   utils::append(c, (Eigen::VectorXd) Eigen::VectorXd::Zero(_local_b.size()));
 
   // compute rhs Q^T*res in parallel
-  if (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode) {
+  if (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()) {
     assertion(Q.cols() == getLSSystemCols(), Q.cols(), getLSSystemCols());
     // back substitution
     c = R.triangularView<Eigen::Upper>().solve<Eigen::OnTheLeft>(_local_b);
@@ -173,7 +173,7 @@ void IQNILSPostProcessing::computeQNUpdate(PostProcessing::DataMap &cplData, Eig
     }
     assertion(_local_b.size() == getLSSystemCols(), _local_b.size(), getLSSystemCols());
 
-    if (utils::MasterSlave::_masterMode) {
+    if (utils::MasterSlave::isMaster()) {
       assertion(_global_b.size() == 0, _global_b.size());
     }
     utils::append(_global_b, (Eigen::VectorXd) Eigen::VectorXd::Zero(_local_b.size()));
@@ -182,7 +182,7 @@ void IQNILSPostProcessing::computeQNUpdate(PostProcessing::DataMap &cplData, Eig
     utils::MasterSlave::reduceSum(_local_b.data(), _global_b.data(), _local_b.size()); // size = getLSSystemCols() = _local_b.size()
 
     // back substitution R*c = b only in master node
-    if (utils::MasterSlave::_masterMode)
+    if (utils::MasterSlave::isMaster())
       c = R.triangularView<Eigen::Upper>().solve<Eigen::OnTheLeft>(_global_b);
 
     // broadcast coefficients c to all slaves

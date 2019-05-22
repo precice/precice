@@ -9,6 +9,8 @@ You can use the provided `CMakeLists.txt` to build with CMake.
 1. run `cmake .` in this folder
 2. run `make`
 
+You can now run the test with `ctest -V`.
+
 ## Without CMake (deprecated)
 
 **If you used scons to build preCICE, continue here**

@@ -110,13 +110,13 @@ ParticipantConfiguration:: ParticipantConfiguration
               " name. The creator has to use the attribute \"provide\" to signal he is "
               "providing the mesh geometry.");
   tagUseMesh.addAttribute(attrFrom);
-  auto attrSafetyFactor = makeXMLAttribute(ATTR_SAFETY_FACTOR, 0.1)
+  auto attrSafetyFactor = makeXMLAttribute(ATTR_SAFETY_FACTOR, 0.5)
       .setDocumentation(
               "If a mesh is received from another partipant (see tag <from>), it needs to be"
               "decomposed at the receiving participant. To speed up this process, "
               "a geometric filter (see tag <geometric-filter>), i.e. filtering by bounding boxes around the local mesh, can be used. "
               "This safety factor defines by which factor this local information is "
-              "increased. An example: 0.1 means that the bounding box is 110% of its original size.");
+              "increased. An example: 0.5 means that the bounding box is 150% of its original size.");
   tagUseMesh.addAttribute(attrSafetyFactor);
 
  auto attrGeoFilter = XMLAttribute<std::string>(ATTR_GEOMETRIC_FILTER)
@@ -317,7 +317,7 @@ void ParticipantConfiguration:: xmlTagCallback
              << "\" uses mesh \"" << name << "\" which is not defined";
       throw stream.str();
     }
-    if ((geoFilter != partition::ReceivedPartition::GeometricFilter::BROADCAST_FILTER || safetyFactor != 0.1) && from==""){
+    if ((geoFilter != partition::ReceivedPartition::GeometricFilter::BROADCAST_FILTER || safetyFactor != 0.5) && from==""){
       std::ostringstream stream;
       stream << "Participant \"" << _participants.back()->getName()
              << "\" uses mesh \"" << name << "\" which is not received (no \"from\"), but has a geometric-filter and/or"
@@ -471,15 +471,15 @@ void ParticipantConfiguration:: finishParticipantConfiguration
     impl::MeshContext& toMeshContext = participant->meshContext(toMeshID);
 
     if(confMapping.direction == mapping::MappingConfiguration::READ){
-      CHECK(toMeshContext.provideMesh, "A read mapping needs to map to a provided mesh. "
+      CHECK(toMeshContext.provideMesh, "A read mapping of participant " << participant->getName() << " needs to map TO a provided mesh. "
           "Mesh " << confMapping.toMesh->getName() << " is not provided.");
-      CHECK(not fromMeshContext.receiveMeshFrom.empty(), "A read mapping needs to map from a received mesh. "
+      CHECK(not fromMeshContext.receiveMeshFrom.empty(), "A read mapping of participant " << participant->getName() << " needs to map FROM a received mesh. "
           "Mesh " << confMapping.fromMesh->getName() << " is not received.");
     }
     else{
-      CHECK(fromMeshContext.provideMesh, "A write mapping needs to map from a provided mesh. "
+      CHECK(fromMeshContext.provideMesh, "A write mapping of participant " << participant->getName() << " needs to map FROM a provided mesh. "
           "Mesh " << confMapping.fromMesh->getName() << " is not provided.");
-      CHECK(not toMeshContext.receiveMeshFrom.empty(), "A write mapping needs to map to a received mesh. "
+      CHECK(not toMeshContext.receiveMeshFrom.empty(), "A write mapping of participant " << participant->getName() << " needs to map TO a received mesh. "
           "Mesh " << confMapping.toMesh->getName() << " is not received.");
     }
 
@@ -618,4 +618,3 @@ void ParticipantConfiguration:: finishParticipantConfiguration
 
 
 }} // namespace precice, config
-

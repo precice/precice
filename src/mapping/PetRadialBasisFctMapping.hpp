@@ -248,6 +248,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 {
   TRACE();
   precice::utils::Event e("map.pet.computeMapping.From" + input()->getName() + "To"+ output()->getName(), precice::syncMode);
+  precice::utils::Event ePreCompute("map.pet.preComputeMapping.From" + input()->getName() + "To"+ output()->getName(), precice::syncMode);
 
   clear();
 
@@ -298,6 +299,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   PetscErrorCode ierr = 0;
   DEBUG("inMesh->vertices().size() = " << inMesh->vertices().size());
   DEBUG("outMesh->vertices().size() = " << outMesh->vertices().size());
+  ePreCompute.stop();
+
+  precice::utils::Event eCreateMatrices("map.pet.createMatrices.From" + input()->getName() + "To"+ output()->getName(), precice::syncMode);
 
   // Matrix C: Symmetric, sparse matrix with n x n local size.
   _matrixC.init(n, n, PETSC_DETERMINE, PETSC_DETERMINE, MATSBAIJ);
@@ -317,6 +321,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   _matrixA.init(outputSize, n, PETSC_DETERMINE, PETSC_DETERMINE, MATAIJ);
   DEBUG("Set matrix A to local size " << outputSize << " x " << n);
 
+  eCreateMatrices.stop();
+  precice::utils::Event eAO("map.pet.AO.From" + input()->getName() + "To"+ output()->getName(), precice::syncMode);
+
   auto const ownerRangeABegin = _matrixA.ownerRange().first;
   auto const ownerRangeAEnd = _matrixA.ownerRange().second;
 
@@ -324,6 +331,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   // A mapping from globalIndex -> local col/row
   ierr = AOCreateMapping(utils::Parallel::getGlobalCommunicator(),
                          myIndizes.size(), myIndizes.data(), nullptr, &_AOmapping); CHKERRV(ierr);
+
+  eAO.stop();
 
   Eigen::VectorXd distance(dimensions);
 
