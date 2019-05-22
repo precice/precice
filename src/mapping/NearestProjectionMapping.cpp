@@ -119,8 +119,8 @@ void NearestProjectionMapping:: computeMappingConsistent()
             matches.clear();
             rtree->query(boost::geometry::index::nearest(coords, 10),
                     boost::make_function_output_iterator([&](const IndexType& match) {
-                        using boost::geometry::comparable_distance;
-                        auto dist = comparable_distance(coords, iTriangles[match.second], boost::geometry::strategy::distance::projected_point<>{});
+                        using boost::geometry::distance;
+                        auto dist = distance(coords, iTriangles[match.second]);
                         matches.emplace_back(dist, match.second);
                     }));
             DEBUG("Matches for " << i << " " << oVertices[i] << " :");
@@ -185,8 +185,8 @@ void NearestProjectionMapping:: computeMappingConservative()
             // Search for the output vertex inside the input mesh
             rtree->query(boost::geometry::index::nearest(coords, 10),
                      boost::make_function_output_iterator([&](const IndexType& match) {
-                    using boost::geometry::comparable_distance;
-                    auto dist = comparable_distance(coords, oTriangles[match.second]);
+                    using boost::geometry::distance;
+                    auto dist = distance(coords, oTriangles[match.second]);
                     matches.emplace_back(dist, match.second);
                     }));
             DEBUG("Matches for " << iVertices[i] << " :");
