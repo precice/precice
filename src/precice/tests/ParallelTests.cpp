@@ -111,7 +111,12 @@ BOOST_AUTO_TEST_CASE(GlobalRBFPartitioning, * testing::OnSize(4))
 {
   std::string configFilename = _pathToTests + "globalRBFPartitioning.xml";
   config::Configuration config;
+<<<<<<< HEAD
   
+=======
+  utils::MasterSlave::_rank = utils::Parallel::getProcessRank();
+
+>>>>>>> uekerman/np_integration_test
   if(utils::Parallel::getProcessRank()<=2){
     utils::Parallel::splitCommunicator( "SolverOne" );
     utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator()); //needed since this test uses PETSc
@@ -489,6 +494,187 @@ BOOST_AUTO_TEST_CASE(testDistributedCommunications, * testing::OnSize(4))
     precice.finalize();
   }
 }
+
+/// This testcase is based on a bug documented in issue #371
+BOOST_AUTO_TEST_CASE(NearestProjectionRePartitioning, * testing::OnSize(4))
+{
+  std::string configFilename = _pathToTests + "np-repartitioning.xml";
+  config::Configuration config;
+
+  if(utils::Parallel::getProcessRank()<=2){
+    utils::Parallel::splitCommunicator( "FluidSolver" );
+    utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator());
+    assertion(utils::Parallel::getCommunicatorSize() == 3);
+    utils::Parallel::clearGroups();
+    xml::configure(config.getXMLTag(), configFilename);
+    SolverInterface interface ( "FluidSolver", utils::Parallel::getProcessRank(), 3 );
+    impl(interface).configure(config.getSolverInterfaceConfiguration());
+
+    if(utils::Parallel::getProcessRank()==1){
+
+      int meshID = interface.getMeshID("CellCenters");
+      int dimensions = 3;
+      BOOST_TEST(interface.getDimensions()==dimensions);
+
+      int numberOfVertices = 65;
+      int vertexIDs[numberOfVertices];
+      double yCoord = 0.0;
+      double zCoord = 0.005;
+      double positions[numberOfVertices*dimensions] = {
+                                         0.00124795, yCoord, zCoord,
+                                         0.00375646, yCoord, zCoord,
+                                         0.00629033, yCoord, zCoord,
+                                         0.00884982, yCoord, zCoord,
+                                         0.0114352, yCoord, zCoord,
+                                         0.0140467, yCoord, zCoord,
+                                         0.0166846, yCoord, zCoord,
+                                         0.0193492, yCoord, zCoord,
+                                         0.0220407, yCoord, zCoord,
+                                         0.0247594, yCoord, zCoord,
+                                         0.0275056, yCoord, zCoord,
+                                         0.0302796, yCoord, zCoord,
+                                         0.0330816, yCoord, zCoord,
+                                         0.0359119, yCoord, zCoord,
+                                         0.0387709, yCoord, zCoord,
+                                         0.0416588, yCoord, zCoord,
+                                         0.0445758, yCoord, zCoord,
+                                         0.0475224, yCoord, zCoord,
+                                         0.0504987, yCoord, zCoord,
+                                         0.0535051, yCoord, zCoord,
+                                         0.0565419, yCoord, zCoord,
+                                         0.0596095, yCoord, zCoord,
+                                         0.062708, yCoord, zCoord,
+                                         0.0658378, yCoord, zCoord,
+                                         0.0689993, yCoord, zCoord,
+                                         0.0721928, yCoord, zCoord,
+                                         0.0754186, yCoord, zCoord,
+                                         0.0786769, yCoord, zCoord,
+                                         0.0819682, yCoord, zCoord,
+                                         0.0852928, yCoord, zCoord,
+                                         0.088651, yCoord, zCoord,
+                                         0.0920431, yCoord, zCoord,
+                                         0.0954695, yCoord, zCoord,
+                                         0.0989306, yCoord, zCoord,
+                                         0.102427, yCoord, zCoord,
+                                         0.105958, yCoord, zCoord,
+                                         0.109525, yCoord, zCoord,
+                                         0.113128, yCoord, zCoord,
+                                         0.116768, yCoord, zCoord,
+                                         0.120444, yCoord, zCoord,
+                                         0.124158, yCoord, zCoord,
+                                         0.127909, yCoord, zCoord,
+                                         0.131698, yCoord, zCoord,
+                                         0.135525, yCoord, zCoord,
+                                         0.139391, yCoord, zCoord,
+                                         0.143296, yCoord, zCoord,
+                                         0.147241, yCoord, zCoord,
+                                         0.151226, yCoord, zCoord,
+                                         0.15525, yCoord, zCoord,
+                                         0.159316, yCoord, zCoord,
+                                         0.163422, yCoord, zCoord,
+                                         0.16757, yCoord, zCoord,
+                                         0.17176, yCoord, zCoord,
+                                         0.175993, yCoord, zCoord,
+                                         0.180268, yCoord, zCoord,
+                                         0.184586, yCoord, zCoord,
+                                         0.188948, yCoord, zCoord,
+                                         0.193354, yCoord, zCoord,
+                                         0.197805, yCoord, zCoord,
+                                         0.202301, yCoord, zCoord,
+                                         0.206842, yCoord, zCoord,
+                                         0.211429, yCoord, zCoord,
+                                         0.216062, yCoord, zCoord,
+                                         0.220742, yCoord, zCoord,
+                                         0.22547, yCoord, zCoord};
+      interface.setMeshVertices(meshID, numberOfVertices, positions, vertexIDs);
+    }
+
+    interface.initialize();
+
+    //after re-partitioning, there should be 15 triangles (look at vtk output)
+    if(utils::Parallel::getProcessRank()==1){
+      BOOST_TEST(impl(interface).getMeshHandle("Nodes").triangles().size()==15);
+    }
+
+    interface.advance(1.0);
+    interface.finalize();
+  }
+  else {
+    utils::Parallel::splitCommunicator( "SolidSolver" );
+    utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator());
+    assertion(utils::Parallel::getCommunicatorSize() == 1);
+    utils::Parallel::clearGroups();
+    xml::configure(config.getXMLTag(), configFilename);
+    SolverInterface interface ( "SolidSolver", 0, 1 );
+    impl(interface).configure(config.getSolverInterfaceConfiguration());
+    int meshID = interface.getMeshID("Nodes");
+    int dimensions = 3;
+    BOOST_TEST(interface.getDimensions()==dimensions);
+    int numberOfVertices = 34;
+    int vertexIDs[numberOfVertices];
+    double yCoord = 0.0;
+    double zCoord1 = 0.0;
+    double zCoord2 = 0.01;
+    double positions[dimensions*numberOfVertices] = {
+                                      0.0, yCoord, zCoord2,
+                                      0.0, yCoord, zCoord1,
+                                      0.03125, yCoord, zCoord2,
+                                      0.03125, yCoord, zCoord1,
+                                      0.0625, yCoord, zCoord2,
+                                      0.0625, yCoord, zCoord1,
+                                      0.09375, yCoord, zCoord2,
+                                      0.09375, yCoord, zCoord1,
+                                      0.125, yCoord, zCoord2,
+                                      0.125, yCoord, zCoord1,
+                                      0.15625, yCoord, zCoord2,
+                                      0.15625, yCoord, zCoord1,
+                                      0.1875, yCoord, zCoord2,
+                                      0.1875, yCoord, zCoord1,
+                                      0.21875, yCoord, zCoord2,
+                                      0.21875, yCoord, zCoord1,
+                                      0.25, yCoord, zCoord2,
+                                      0.25, yCoord, zCoord1,
+                                      0.28125, yCoord, zCoord2,
+                                      0.28125, yCoord, zCoord1,
+                                      0.3125, yCoord, zCoord2,
+                                      0.3125, yCoord, zCoord1,
+                                      0.34375, yCoord, zCoord2,
+                                      0.34375, yCoord, zCoord1,
+                                      0.375, yCoord, zCoord2,
+                                      0.375, yCoord, zCoord1,
+                                      0.40625, yCoord, zCoord2,
+                                      0.40625, yCoord, zCoord1,
+                                      0.4375, yCoord, zCoord2,
+                                      0.4375, yCoord, zCoord1,
+                                      0.46875, yCoord, zCoord2,
+                                      0.46875, yCoord, zCoord1,
+                                      0.5, yCoord, zCoord2,
+                                      0.5, yCoord, zCoord1};
+    interface.setMeshVertices(meshID, numberOfVertices, positions, vertexIDs);
+
+    int numberOfCells = numberOfVertices / 2 - 1;
+    int numberOfEdges = numberOfCells * 4 + 1;
+    int edgeIDs[numberOfEdges];
+
+    for( int i = 0; i < numberOfCells; i++){
+      edgeIDs[4*i] = interface.setMeshEdge(meshID, vertexIDs[i*2], vertexIDs[i*2+1]); //left
+      edgeIDs[4*i+1] = interface.setMeshEdge(meshID, vertexIDs[i*2], vertexIDs[i*2+2]); //top
+      edgeIDs[4*i+2] = interface.setMeshEdge(meshID, vertexIDs[i*2+1], vertexIDs[i*2+3]); //bottom
+      edgeIDs[4*i+3] = interface.setMeshEdge(meshID, vertexIDs[i*2], vertexIDs[i*2+3]); //diagonal
+    }
+    edgeIDs[numberOfEdges-1] = interface.setMeshEdge(meshID, vertexIDs[numberOfVertices-2], vertexIDs[numberOfVertices-1]); //very right
+
+    for( int i = 0; i < numberOfCells; i++){
+      interface.setMeshTriangle(meshID, edgeIDs[4*i], edgeIDs[4*i+3], edgeIDs[4*i+2]); //left-diag-bottom
+      interface.setMeshTriangle(meshID, edgeIDs[4*i+1], edgeIDs[4*i+3], edgeIDs[4*i+4]); //top-diag-right
+    }
+
+    interface.initialize();
+    interface.advance(1.0);
+    interface.finalize();
+  }
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
