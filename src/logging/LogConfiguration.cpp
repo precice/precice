@@ -233,6 +233,11 @@ void setMPIRank(int const rank) {
   boost::log::attribute_cast<boost::log::attributes::mutable_constant<int>>(boost::log::core::get()->get_global_attributes()["Rank"]).set(rank);
 }
 
+void setParticipant(std::string const & participant)
+{
+  boost::log::attribute_cast<boost::log::attributes::mutable_constant<std::string>>(boost::log::core::get()->get_global_attributes()["Participant"]).set(participant);
+}
+
 bool _precice_logging_config_lock{false};
 
 void lockConf() {

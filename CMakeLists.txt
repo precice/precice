@@ -321,6 +321,9 @@ export(EXPORT preciceTargets
 file(COPY "cmake/preciceConfig.cmake"
   DESTINATION "${preCICE_BINARY_DIR}")
 
+# Add an alias to allow subprojects to use the namespaced name
+add_library(precice::precice ALIAS precice)
+
 
 # Set the directory used to prepare files for packaging
 set(PRECICE_PACKAGING_DIR "${CMAKE_CURRENT_BINARY_DIR}/packaging")
@@ -382,6 +385,13 @@ install(DIRECTORY "${preCICE_BINARY_DIR}/lib/pkgconfig"
 #
 
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/CTestConfig.cmake)
+
+
+#
+# Add test_install
+#
+
+include(${CMAKE_CURRENT_LIST_DIR}/cmake/TestInstall.cmake)
 
 
 #

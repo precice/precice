@@ -1,5 +1,3 @@
-#ifndef PRECICE_NO_SOCKETS
-
 #pragma once
 
 #include <deque>
@@ -51,4 +49,3 @@ private:
 };
 
 }}
-#endif // not PRECICE_NO_SOCKETS

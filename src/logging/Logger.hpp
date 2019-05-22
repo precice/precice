@@ -16,7 +16,7 @@ struct LogLocation {
 /// This class provides a leightweight logger.
 class Logger {
 public:
-  /** creates a logger for a given module.
+  /** Creates a logger for a given module.
    * @param[in] the name of the module 
    */
   explicit Logger(std::string module);
@@ -36,6 +36,7 @@ public:
   void debug(LogLocation loc, const std::string& mess);
   void trace(LogLocation loc, const std::string& mess);
   ///@}
+  
 private:
   /// Forward declaration of the implementation of the logger
   class LoggerImpl;
