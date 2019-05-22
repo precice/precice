@@ -445,7 +445,7 @@ public:
    */
   void exportMesh (
     const std::string& filenameSuffix,
-    int                exportType = constants::exportAll() ) const;
+    int                exportType = io::constants::exportAll() ) const;
 
   /**
    * @brief Scales data values according to configuration.
