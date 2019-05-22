@@ -57,6 +57,7 @@ public:
 
   /** 
    *  This method has not implemented here yet.    
+   *  @todo: Ideally this should not be here
    */
   virtual void acceptPreConnection(
     std::string const &acceptorName,
@@ -65,6 +66,7 @@ public:
 
   /** 
    *  This method has not implemented here yet.    
+   *  @todo: Ideally this should not be here
    */
   virtual void requestPreConnection(
     std::string const &acceptorName,
@@ -91,11 +93,13 @@ public:
 
    /**
    * @brief Broadcasts a double to connected ranks       
+   * @todo: Ideally this should not be here
    */
   virtual void broadcastSend(const double &itemToSend);
 
   /**
    * @brief Receives a double from a connected rank
+   * @todo: Ideally this should not be here
    */
   virtual void broadcastReceive(double &itemToReceive);
 
