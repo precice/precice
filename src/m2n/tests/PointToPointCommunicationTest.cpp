@@ -255,10 +255,13 @@ void P2PComTest2(com::PtrCommunicationFactory cf)
 void connectionTest1(com::PtrCommunicationFactory cf)
 {
 
-  assertion(utils::Parallel::getCommunicatorSize() == 4);
-  
+  assertion(utils::Parallel::getCommunicatorSize() == 4);  
   utils::MasterSlave::_communication = std::make_shared<com::MPIDirectCommunication>();
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 2, true));
+  
+  int dimensions = 2;
+  bool flipNormals = false;
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, flipNormals));
+
 
   switch (utils::Parallel::getProcessRank()) {
   case 0: {
@@ -347,10 +350,12 @@ void connectionTest1(com::PtrCommunicationFactory cf)
 void connectionTest2(com::PtrCommunicationFactory cf)
 {
 
-  assertion(utils::Parallel::getCommunicatorSize() == 4);
-  
+  assertion(utils::Parallel::getCommunicatorSize() == 4);  
   utils::MasterSlave::_communication = std::make_shared<com::MPIDirectCommunication>();
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 2, true));
+
+  int dimensions = 2;
+  bool flipNormals = false;
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, flipNormals));
 
   switch (utils::Parallel::getProcessRank()) {
   case 0: {
