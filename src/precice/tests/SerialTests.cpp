@@ -1543,7 +1543,9 @@ BOOST_AUTO_TEST_CASE(testSendMeshToMultipleParticipants,
   cplInterface.finalize();
 }
 
+/**
  * @brief Test to reproduce the problem of issue 383, https://github.com/precice/precice/issues/383
+ *
  */
 BOOST_AUTO_TEST_CASE(testPreconditionerBug,
                      * testing::MinRanks(2)
