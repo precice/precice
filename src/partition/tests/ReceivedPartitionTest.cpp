@@ -214,9 +214,8 @@ BOOST_AUTO_TEST_CASE(RePartitionNNBroadcastFilter2D, *testing::OnSize(4))
   if (utils::Parallel::getProcessRank() == 0) { //SOLIDZ
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals));
     createSolidzMesh2D(pSolidzMesh);
-    bool              hasToSend = true;
-    ProvidedPartition part(pSolidzMesh, hasToSend);
-    part.setM2N(m2n);
+    ProvidedPartition part(pSolidzMesh);
+    part.addM2N(m2n);
     part.communicate();
   } else {
     mesh::PtrMesh pNastinMesh(new mesh::Mesh("NastinMesh", dimensions, flipNormals));
@@ -235,7 +234,7 @@ BOOST_AUTO_TEST_CASE(RePartitionNNBroadcastFilter2D, *testing::OnSize(4))
     double safetyFactor = 0.1;
 
     ReceivedPartition part(pSolidzMesh, ReceivedPartition::FILTER_FIRST, safetyFactor);
-    part.setM2N(m2n);
+    part.addM2N(m2n);
     part.setFromMapping(boundingFromMapping);
     part.setToMapping(boundingToMapping);
     part.communicate();
@@ -274,9 +273,8 @@ BOOST_AUTO_TEST_CASE(RePartitionNNDoubleNode2D, *testing::OnSize(4))
   if (utils::Parallel::getProcessRank() == 0) { //SOLIDZ
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals));
     createSolidzMesh2DSmall(pSolidzMesh);
-    bool              hasToSend = true;
-    ProvidedPartition part(pSolidzMesh, hasToSend);
-    part.setM2N(m2n);
+    ProvidedPartition part(pSolidzMesh);
+    part.addM2N(m2n);
     part.communicate();
   } else {
     mesh::PtrMesh pNastinMesh(new mesh::Mesh("NastinMesh", dimensions, flipNormals));
@@ -295,7 +293,7 @@ BOOST_AUTO_TEST_CASE(RePartitionNNDoubleNode2D, *testing::OnSize(4))
     double safetyFactor = 0.5;
 
     ReceivedPartition part(pSolidzMesh, ReceivedPartition::BROADCAST_FILTER, safetyFactor);
-    part.setM2N(m2n);
+    part.addM2N(m2n);
     part.setFromMapping(boundingFromMapping);
     part.setToMapping(boundingToMapping);
     part.communicate();
@@ -332,9 +330,8 @@ BOOST_AUTO_TEST_CASE(RePartitionNPPreFilterPostFilter2D, *testing::OnSize(4))
   if (utils::Parallel::getProcessRank() == 0) { //SOLIDZ
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals));
     createSolidzMesh2D(pSolidzMesh);
-    bool              hasToSend = true;
-    ProvidedPartition part(pSolidzMesh, hasToSend);
-    part.setM2N(m2n);
+    ProvidedPartition part(pSolidzMesh);
+    part.addM2N(m2n);
     part.communicate();
   } else {
     mesh::PtrMesh pNastinMesh(new mesh::Mesh("NastinMesh", dimensions, flipNormals));
@@ -352,7 +349,7 @@ BOOST_AUTO_TEST_CASE(RePartitionNPPreFilterPostFilter2D, *testing::OnSize(4))
     pNastinMesh->computeState();
     double            safetyFactor = 0.1;
     ReceivedPartition part(pSolidzMesh, ReceivedPartition::FILTER_FIRST, safetyFactor);
-    part.setM2N(m2n);
+    part.addM2N(m2n);
     part.setFromMapping(boundingFromMapping);
     part.setToMapping(boundingToMapping);
     part.communicate();
@@ -702,9 +699,8 @@ BOOST_AUTO_TEST_CASE(RePartitionNPBroadcastFilter3D, *testing::OnSize(4))
   if (utils::Parallel::getProcessRank() == 0) { //SOLIDZ
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals));
     createSolidzMesh3D(pSolidzMesh);
-    bool              hasToSend = true;
-    ProvidedPartition part(pSolidzMesh, hasToSend);
-    part.setM2N(m2n);
+    ProvidedPartition part(pSolidzMesh);
+    part.addM2N(m2n);
     part.communicate();
   } else {
     mesh::PtrMesh pNastinMesh(new mesh::Mesh("NastinMesh", dimensions, flipNormals));
@@ -722,7 +718,7 @@ BOOST_AUTO_TEST_CASE(RePartitionNPBroadcastFilter3D, *testing::OnSize(4))
     pNastinMesh->computeState();
     double            safetyFactor = 20.0;
     ReceivedPartition part(pSolidzMesh, ReceivedPartition::FILTER_FIRST, safetyFactor);
-    part.setM2N(m2n);
+    part.addM2N(m2n);
     part.setFromMapping(boundingFromMapping);
     part.setToMapping(boundingToMapping);
     part.communicate();
@@ -851,9 +847,8 @@ BOOST_FIXTURE_TEST_CASE(ProvideAndReceiveCouplingMode, testing::M2NFixture,
   if (utils::Parallel::getProcessRank() == 0) {
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals));
     createSolidzMesh2D(pSolidzMesh);
-    bool              hasToSend = true;
-    ProvidedPartition part(pSolidzMesh, hasToSend);
-    part.setM2N(m2n);
+    ProvidedPartition part(pSolidzMesh);
+    part.addM2N(m2n);
     part.communicate();
     part.compute();
 
@@ -885,7 +880,7 @@ BOOST_FIXTURE_TEST_CASE(ProvideAndReceiveCouplingMode, testing::M2NFixture,
     double            safetyFactor = 0.1;
     ReceivedPartition part(pSolidzMesh, ReceivedPartition::FILTER_FIRST, safetyFactor);
     part.setFromMapping(boundingFromMapping);
-    part.setM2N(m2n);
+    part.addM2N(m2n);
     part.communicate();
     part.compute();
 
