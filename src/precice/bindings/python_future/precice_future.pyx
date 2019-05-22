@@ -180,26 +180,28 @@ cdef class Interface:
     def get_data_id (self, data_name, mesh_id):
         return self.thisptr.getDataID (convert(data_name), mesh_id)
 
-    def set_mesh_vertices (self, mesh_id, size, positions, ids):
-        cdef np.ndarray[np.int_t] ids_ = np.array(ids, dtype=np.int)
+    def set_mesh_vertices (self, mesh_id, positions):
+        size = positions.size/self.get_dimensions()
+        assert(size.is_integer())
+        cdef np.ndarray[np.int_t] ids = np.empty(int(size), dtype=np.int)
         cdef np.ndarray[np.double_t] positions_ = np.array(positions, dtype=np.double)
 
-        self.thisptr.setMeshVertices (mesh_id, size, <double*> positions_.data, <int*> ids_.data)
+        self.thisptr.setMeshVertices (mesh_id, size, <double*> positions_.data, <int*> ids.data)
 
-        ids[:] = ids_[:]
-        positions[:] = positions_[:]
+        return np.array(ids)
 
     def get_mesh_vertex_size (self, mesh_id):
         return self.thisptr.getMeshVertexSize(mesh_id)
 
-    def get_mesh_vertex_ids_from_positions (self, mesh_id, size, positions, ids):
-        cdef np.ndarray[np.int_t] ids_ = np.array(ids, dtype=np.int)
+    def get_mesh_vertex_ids_from_positions (self, mesh_id, positions):
+        size = positions.size/self.get_dimensions()
+        assert(size.is_integer())
+        cdef np.ndarray[np.int_t] ids = np.empty(int(size), dtype=np.int)
         cdef np.ndarray[np.double_t] positions_ = np.array(positions, dtype=np.double)
 
-        self.thisptr.getMeshVertexIDsFromPositions (mesh_id, size, <double*> positions_.data, <int*> ids_.data)
+        self.thisptr.getMeshVertexIDsFromPositions (mesh_id, size, <double*> positions_.data, <int*> ids.data)
 
-        ids[:] = ids_[:]
-        positions[:] = positions_[:]
+        return np.array(ids)
 
     def set_mesh_edge (self, mesh_id, first_vertex_id, second_vertex_id):
         return self.thisptr.setMeshEdge (mesh_id, first_vertex_id, second_vertex_id)
@@ -222,7 +224,8 @@ cdef class Interface:
     def map_write_data_from (self, from_mesh_id):
         self.thisptr.mapWriteDataFrom (from_mesh_id)
 
-    def write_block_vector_data (self, data_id, size, value_indices, values):
+    def write_block_vector_data (self, data_id, value_indices, values):
+        size = value_indices.size
         cdef np.ndarray[np.int_t] value_indices_ = np.array(value_indices, dtype=np.int)
         cdef np.ndarray[np.double_t] values_ = np.array(values, dtype=np.double)
 
@@ -233,7 +236,8 @@ cdef class Interface:
 
         self.thisptr.writeVectorData (data_id, value_index, <double*> value_.data)
 
-    def write_block_scalar_data (self, data_id, size, value_indices, values):
+    def write_block_scalar_data (self, data_id, value_indices, values):
+        size = value_indices.size
         cdef np.ndarray[np.int_t] value_indices_ = np.array(value_indices, dtype=np.int)
         cdef np.ndarray[np.double_t] values_ = np.array(values, dtype=np.double)
 
@@ -242,28 +246,34 @@ cdef class Interface:
     def write_scalar_data (self, data_id, value_index, value):
         self.thisptr.writeScalarData (data_id, value_index, value)
 
-    def read_block_vector_data (self, data_id, size, value_indices, values):
+    def read_block_vector_data (self, data_id, value_indices):
+        size = value_indices.size
         cdef np.ndarray[np.int_t] value_indices_ = np.array(value_indices, dtype=np.int)
-        cdef np.ndarray[np.double_t] values_ = np.empty_like(values, dtype=np.double)
+        cdef np.ndarray[np.double_t] values = np.empty(size * self.get_dimensions(), dtype=np.double)
 
-        self.thisptr.readBlockVectorData (data_id, size, <int*> value_indices_.data, <double*> values_.data)
+        self.thisptr.readBlockVectorData (data_id, size, <int*> value_indices_.data, <double*> values.data)
 
-        values[:] = values_[:]
+        return np.array(values)
 
-    def read_vector_data (self, data_id, value_index, value):
-        cdef np.ndarray[np.double_t] value_ = np.empty_like(value, dtype=np.double)
+    def read_vector_data (self, data_id, value_index):
+        cdef np.ndarray[np.double_t] value = np.empty(self.get_dimensions(), dtype=np.double)
 
-        self.thisptr.readVectorData (data_id, value_index, <double*> value_.data)
+        self.thisptr.readVectorData (data_id, value_index, <double*> value.data)
 
-        value[:] = value_[:]
+        return np.array(value)
 
-    def read_block_scalar_data (self, data_id, size, value_indices, values):
+    def read_block_scalar_data (self, data_id, value_indices):
+        size = value_indices.size
         cdef np.ndarray[np.int_t] value_indices_ = np.array(value_indices, dtype=np.int)
-        cdef np.ndarray[np.double_t] values_ = np.empty_like(values, dtype=np.double)
+        cdef np.ndarray[np.double_t] values = np.empty(size, dtype=np.double)
 
-        self.thisptr.readBlockScalarData (data_id, size, <int*> value_indices_.data, <double*> values_.data)
+        self.thisptr.readBlockScalarData (data_id, size, <int*> value_indices_.data, <double*> values.data)
 
-        values[:] = values_[:]
+        return np.array(values)
 
-    def read_scalar_data (self, int data_id, int value_index, double& value):
+    def read_scalar_data (self, data_id, value_index):
+        cdef np.ndarray[np.double_t] value = np.empty(1, dtype=np.double)
+
         self.thisptr.readScalarData (data_id, value_index, value)
+        
+        return value[0]

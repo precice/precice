@@ -1,9 +1,7 @@
 Python language bindings for preCICE
 ------------------------------------
 
-These are the python bindings for preCICE. 
-
-**RECOMMENDATION: Use the new python bindings with `import precice_future as precice`.** This makes modifications to your adapter necessary, but these bindings are deprecated and will be removed in preCICE Version 2.
+These are the python bindings for preCICE.
 
 # Installing the package
 
@@ -65,7 +63,7 @@ $ python3 setup.py clean --all
 
 Run the following to test the installation:
 ```
-$ python3 -c "import precice"
+$ python3 -c "import precice_future as precice"
 ```
 
 # Using with MPI
