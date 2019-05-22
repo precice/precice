@@ -133,36 +133,36 @@ public:
    * is retreived in the function initializeCoupling and updated in the
    * function exchangeData.
    */
-  bool isCouplingOngoing();
+  bool isCouplingOngoing() const;
 
   /**
    * @brief Returns true, if new data to be read is available.
    */
-  bool isReadDataAvailable();
+  bool isReadDataAvailable() const;
 
   /**
    * @brief Returns true, if new data has to be written.
    */
-  bool isWriteDataRequired ( double computedTimestepLength );
+  bool isWriteDataRequired ( double computedTimestepLength ) const;
 
   /**
    * @brief Returns true, if a global timestep is completed.
    */
-  bool isTimestepComplete();
+  bool isTimestepComplete() const;
 
   /**
    * @brief Returns whether the solver has to evaluate the surrogate model representation
    *        It does not automatically imply, that the solver does not have to evaluate the
    *        fine model representation
    */
-  bool hasToEvaluateSurrogateModel();
+  bool hasToEvaluateSurrogateModel() const;
 
   /**
    * @brief Returns whether the solver has to evaluate the fine model representation
    *        It does not automatically imply, that the solver does not have to evaluate the
    *        surrogate model representation
    */
-  bool hasToEvaluateFineModel();
+  bool hasToEvaluateFineModel() const;
 
   /**
    * @brief Returns true, if provided name of action is required.
@@ -173,7 +173,7 @@ public:
    * performing them on demand, and calling fulfilledAction() to signalize
    * preCICE the correct behavior of the solver.
    */
-  bool isActionRequired (	const std::string& action );
+  bool isActionRequired (	const std::string& action ) const;
 
   /**
    * @brief Tells preCICE that a required action has been fulfilled by a solver.
@@ -190,19 +190,19 @@ public:
    *
    * The existing names are determined from the configuration.
    */
-  int getMeshID (	const std::string& meshName );
+  int getMeshID (	const std::string& meshName ) const;
 
   /// Returns all mesh IDs (besides sub-ids).
-  std::set<int> getMeshIDs();
+  std::set<int> getMeshIDs() const;
 
   /// Returns true, if the data with given name is used in the given mesh.
-  bool hasData ( const std::string& dataName, int meshID );
+  bool hasData ( const std::string& dataName, int meshID ) const;
 
   /// Returns data id corresponding to the given name (from configuration) and mesh.
-  int getDataID ( const std::string& dataName, int meshID );
+  int getDataID ( const std::string& dataName, int meshID ) const;
 
   /// Returns the number of nodes of a mesh.
-  int getMeshVertexSize ( int meshID );
+  int getMeshVertexSize ( int meshID ) const;
 
   /**
    * @brief Resets mesh with given ID.
@@ -243,7 +243,7 @@ public:
     int        meshID,
     size_t     size,
     const int* ids,
-    double*    positions );
+    double*    positions ) const;
 
   /**
    * @brief Gets vertex data ids from positions.
@@ -256,7 +256,7 @@ public:
     int           meshID,
     size_t        size,
     const double* positions,
-    int*          ids );
+    int*          ids ) const;
 
   /**
    * @brief Set an edge of a solver mesh.
@@ -383,7 +383,7 @@ public:
     int        toDataID,
     int        size,
     const int* valueIndices,
-    double*    values );
+    double*    values ) const;
 
   /**
    * @brief Reads vector data from the coupling mesh.
@@ -395,7 +395,7 @@ public:
   void readVectorData (
     int     toDataID,
     int     valueIndex,
-    double* value );
+    double* value ) const;
 
   /**
    * @brief Reads scalar data values given as block.
@@ -408,7 +408,7 @@ public:
     int        toDataID,
     int        size,
     const int* valueIndices,
-    double*    values );
+    double*    values ) const;
 
   /**
    * @brief Read scalar data from the interface mesh.
@@ -422,7 +422,7 @@ public:
   void readScalarData (
     int     toDataID,
     int     valueIndex,
-    double& value );
+    double& value ) const;
 
   /**
    * @brief Sets the location for all output of preCICE.
@@ -444,7 +444,7 @@ public:
    */
   void exportMesh (
     const std::string& filenameSuffix,
-    int                exportType = constants::exportAll() );
+    int                exportType = constants::exportAll() ) const;
 
 
   /**
@@ -554,7 +554,7 @@ private:
   void addMeshesToCouplingScheme();
 
   /// Returns true, if the accessor uses the mesh with given name.
-  bool isUsingMesh ( const std::string& meshName );
+  bool isUsingMesh ( const std::string& meshName ) const;
 
   /// Determines participants providing meshes to other participants.
   void configurePartitions (

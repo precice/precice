@@ -226,7 +226,7 @@ void BaseQNPostProcessing::updateDifferenceMatrices(
     DataMap &cplData)
 {
   TRACE();
-  
+
   // Compute current residual: vertex-data - oldData
   _residuals = _values;
   _residuals -= _oldValues;
@@ -300,7 +300,7 @@ void BaseQNPostProcessing::performPostProcessing(
     DataMap &cplData)
 {
   TRACE(_dataIDs.size(), cplData.size());
-  
+
   utils::Event e("cpl.computeQuasiNewtonUpdate", precice::syncMode);
 
   assertion(_oldResiduals.size() == _oldXTilde.size(), _oldResiduals.size(), _oldXTilde.size());
@@ -464,7 +464,7 @@ void BaseQNPostProcessing::performPostProcessing(
 void BaseQNPostProcessing::applyFilter()
 {
   TRACE(_filter);
-  
+
   if (_filter == PostProcessing::NOFILTER) {
     // do nothing
   } else {
@@ -531,7 +531,7 @@ void BaseQNPostProcessing::iterationsConverged(
     DataMap &cplData)
 {
   TRACE();
-  
+
   if (utils::MasterSlave::isMaster() || (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()))
     _infostringstream << "# time step " << tSteps << " converged #\n iterations: " << its
                       << "\n used cols: " << getLSSystemCols() << "\n del cols: " << _nbDelCols << '\n';
@@ -569,7 +569,11 @@ void BaseQNPostProcessing::iterationsConverged(
   // - save the old Jacobian matrix
   specializedIterationsConverged(cplData);
 
-  _firstTimeStep = false;
+  // if we already have convergence in the first iteration of the first timestep
+  // we need to do underrelax in the first iteration of the second timesteps
+  // so "_firstTimeStep" is slightly misused, but still the best way to understand
+  // the concept
+  if(not _firstIteration) _firstTimeStep = false;
 
   // update preconditioner depending on residuals or values (must be after specialized iterations converged --> IMVJ)
   _preconditioner->update(true, _values, _residuals);

@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file. For future 
 - The SolverInterface now keeps track of the Mesh states, which results more informative error messages for mesh related functions.
 - Sending data between participants is now fully asynchronous. This is relevant in one-way coupling scenarios, where the sending participant doesn't need to wait for the receiving one.
 - Python bindings offer all preCICE API functions (except `get_mesh_handle`)
+- `bindings/fortran` do not use `precice::impl::SolverInterfaceImpl` anymore, but `precice::SolverInterface`.
 
 ## 1.4.1
 
