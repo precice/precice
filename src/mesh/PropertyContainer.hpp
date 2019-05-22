@@ -112,7 +112,7 @@ public:
 
   /// Returns all properties of this and parent PropertyContainer objects.
   template <typename value_t>
-  void getProperties(int propertyID, std::vector<value_t> &properties);
+  void getProperties(int propertyID, std::vector<value_t> &properties) const;
 
 private:
   mutable logging::Logger _log{"mesh::PropertyContainer"};
@@ -149,10 +149,9 @@ const value_t &PropertyContainer::getProperty(int propertyID) const
 }
 
 template <typename value_t>
-void PropertyContainer::getProperties(int propertyID, std::vector<value_t> &properties)
+void PropertyContainer::getProperties(int propertyID, std::vector<value_t> &properties) const
 {
-  std::map<int, PropertyType>::const_iterator iter;
-  iter = _properties.find(propertyID);
+  auto iter = _properties.find(propertyID);
   if (iter != _properties.end()) {
     assertion(not iter->second.empty());
     // When the type of value_t does not match that of the any, NULL is returned.
