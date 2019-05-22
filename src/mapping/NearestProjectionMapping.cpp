@@ -1,8 +1,9 @@
 #include "NearestProjectionMapping.hpp"
 #include "query/FindClosest.hpp"
 #include <Eigen/Core>
-#include "utils/EventTimings.hpp"
+#include "utils/Event.hpp"
 #include "mesh/RTree.hpp"
+#include <stdexcept>
 
 namespace precice {
 extern bool syncMode;
@@ -48,7 +49,7 @@ public:
     case (Primitive::Quad):
       return generateInterpolationElements(pos, _mesh.quads()[idx]);
     default:
-      assertion(false, "Primitive is unknown");
+      throw std::invalid_argument{"Primitve is unknown"};
     }
   }
 
@@ -125,6 +126,11 @@ void NearestProjectionMapping:: clear()
   TRACE();
   _weights.clear();
   _hasComputedMapping = false;
+  if (getConstraint() == CONSISTENT){
+    mesh::rtree::clear(*input()); 
+  } else {
+    mesh::rtree::clear(*output()); 
+  }
 }
 
 void NearestProjectionMapping:: map

@@ -2,6 +2,65 @@
 
 All notable changes to this project will be documented in this file. For future plans, see our [Roadmap](https://github.com/precice/precice/wiki/Roadmap).
 
+## develop
+- The SolverInterface is now hardened against invalid IDs and misconfiguration using a consitent mechanism to express requirements.
+- The SolverInterface now keeps track of the Mesh states, which results more informative error messages for mesh related functions.
+- Sending data between participants is now fully asynchronous. This is relevant in one-way coupling scenarios, where the sending participant doesn't need to wait for the receiving one.
+
+## 1.4.1
+
+- Bug in re-partitioning fixed, occured for OpenFOAM and empty ranks in parallel. 
+
+## 1.4.0
+- The python modules are now proper packages tracking dependencies etc.
+- Fix CMake now importable from binary directory.
+- The Python module for the preCICE bindings `PySolverInterface` is renamed to `precice`. This change does not break old code. Please refer to [`src/precice/bindings/python/README.md`](src/precice/bindings/python/README.md) for more information.
+- Add a pkg-config for preCICE (`libprecice.pc`).
+- Use the Boost stacktrace library for cross-platform stacktrace printing. **This requires Boost 1.65.1**.
+- Added explicit linking to `libdl` for `boost::stacktrace`.
+- Reimplemented the internals of the nearest-projection mapping to significantly reduce its initialization time.
+- The EventTimings now do a time normalization among all ranks, i.e., the first event is considered to happen at t=0, all other events are adapted thereto.
+- The old CSV format of the EventTimings log files, split among two files was replaced by a single file, in structured JSON format.
+- Fixed memory leaks in the `xml::XMLAttributes` and `xml::Validator*`.
+- Removed the `xml::Validator*` classes and replaced them in `xml::XMLAttribute` with a set of "options".
+- Made `xml::XMLAttribute` and `xml::XMLTag` chainable.
+- Added manpages for binprecice and testprecice.
+- Fixed memory leaks in `mesh::Mesh`.
+- Fixed mapping classes not flushing the underlying caches on `clear()`.
+- Fixed format of version logging (first preCICE log message).
+- Added tolerance of iterations in quasi-Newton tests.
+- CMake overhaul:
+  - Converted to target-based system: precice, testprecice, binprecice
+  - New options:
+    - `PRECICE_Packages` (default ON) to configure CPack,
+    - `PRECICE_InstallTest` (default ON) to configure installation of tests.  
+      This includes the binary `testprecice` and necessary files.
+      Use `PREFIX/share/precice` as `PRECICE_ROOT`.
+  - Moved CMake files from `tools/cmake-modules` to `cmake/` (general scripts) and `cmake/modules` (find modules).
+  - Migrated from file-globing to explicit source/interface/test-file lists.  
+    Use `tools/updateSourceFiles.py` from project-root to update all necessary files.
+  - `install` target installs:
+     - the library `PREFIX/lib`.
+     - the binaries `PREFIX/bin` and their manfiles into `PREFIX/share/man/man1`.
+     - the CMake configuration files into `PREFIX/lib/cmake/precice`.
+     - the pkg-config configuration files into `PREFIX/lib/pkgconfig`
+     - the necessary files to run testprecice into `PREFIX/share/precice`. Use this as `PRECICE_ROOT` on installed system.
+  - CTest definition of tests run in isolated working directories:
+    - `precice.Base` for the base test suite
+    - `precice.MPI2` run on 2 MPI ranks
+    - `precice.MPI4` run on 4 MPI ranks
+  - CPack configuration of target `package` to generate binary debian, tar and zip packages.
+  - Added `CMakeLists.txt` to `tools/solverdummy/cpp`. It is an example of how to link to preCICE with CMake.
+  - Extended the displayed information when configuring.
+- Extended `updateSourceFiles.py` to verify the sources using `git ls-files --full-name` if available.
+- Fixed the `io::VTKXMLExporter` not to write VertexNormals.
+- Improved the user-friendliness of the tests.
+  - `make test` will run all tests.
+  - `make test_base` only a unproblematic base-set.
+  - A timeout will kill hanging tests.
+  - All tests sets run in isolated working directories.
+- Added an (experimental) Fortran 2003 solver dummy.
+
 ## 1.3.0
 - Update of build procedure for python bindings (see [`precice/src/bindings/python/README.md`](https://github.com/precice/precice/blob/develop/src/precice/bindings/python/README.md) for instructions). Note: you do not have to add `PySolverInterface.so` to `PYTHONPATH` manually anymore, if you want to use it in your adapter. Python should be able to find it automatically.   
 - Make naming of log files consistent, following the pattern `precice-SOLVERNAME-logtype.log`, example: `precice-FLUID-eventTimings.log`

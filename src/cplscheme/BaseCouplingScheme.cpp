@@ -235,7 +235,7 @@ std::vector<int> BaseCouplingScheme::sendData(m2n::PtrM2N m2n)
   assertion(m2n.get() != nullptr);
   assertion(m2n->isConnected());
   for (const DataMap::value_type &pair : _sendData) {
-    //std::cout<<"\nsend data id="<<pair.first<<": "<<*(pair.second->values)<<std::endl;
+    //std::cout<<"\nsend data id="<<pair.first<<": "<<*(pair.second->values)<<'\n';
     int size = pair.second->values->size();
     m2n->send(pair.second->values->data(), size, pair.second->mesh->getID(), pair.second->dimension);
     sentDataIDs.push_back(pair.first);
@@ -254,7 +254,7 @@ std::vector<int> BaseCouplingScheme::receiveData(
 
   for (DataMap::value_type &pair : _receiveData) {
     int size = pair.second->values->size();
-    //std::cout<<"\nreceive data id="<<pair.first<<": "<<*(pair.second->values)<<std::endl;
+    //std::cout<<"\nreceive data id="<<pair.first<<": "<<*(pair.second->values)<<'\n';
     m2n->receive(pair.second->values->data(), size, pair.second->mesh->getID(), pair.second->dimension);
     receivedDataIDs.push_back(pair.first);
   }
@@ -636,7 +636,7 @@ bool BaseCouplingScheme::measureConvergence(
   bool allConverged = true;
   bool oneSuffices  = false;
   assertion(_convergenceMeasures.size() > 0);
-  if (not utils::MasterSlave::_slaveMode) {
+  if (not utils::MasterSlave::isSlave()) {
     _convergenceWriter->writeData("Timestep", _timesteps);
     _convergenceWriter->writeData("Iteration", _iterations);
   }
@@ -656,7 +656,7 @@ bool BaseCouplingScheme::measureConvergence(
 
     convMeasure.measure->measure(oldValues, *convMeasure.data->values, q);
 
-    if (not utils::MasterSlave::_slaveMode) {
+    if (not utils::MasterSlave::isSlave()) {
       std::stringstream sstm;
       sstm << "resNorm(" << i << ")";
       _convergenceWriter->writeData(sstm.str(), convMeasure.measure->getNormResidual());
@@ -697,7 +697,7 @@ bool BaseCouplingScheme::measureConvergenceCoarseModelOptimization(
     if (convMeasure.level == 0)
       continue;
 
-    std::cout << "  measure convergence coarse measure, id:" << convMeasure.dataID << std::endl;
+    std::cout << "  measure convergence coarse measure, id:" << convMeasure.dataID << '\n';
     assertion(convMeasure.data != nullptr);
     assertion(convMeasure.measure.get() != nullptr);
     const auto &    oldValues = convMeasure.data->oldValues.col(0);
@@ -726,7 +726,7 @@ bool BaseCouplingScheme::measureConvergenceCoarseModelOptimization(
 
 void BaseCouplingScheme::initializeTXTWriters()
 {
-  if (not utils::MasterSlave::_slaveMode) {
+  if (not utils::MasterSlave::isSlave()) {
 
     _iterationsWriter = std::make_shared<io::TXTTableWriter>("precice-" + _localParticipant + "-iterations.log");
     if (not doesFirstStep()) {
@@ -773,7 +773,7 @@ void BaseCouplingScheme::initializeTXTWriters()
 
 void BaseCouplingScheme::advanceTXTWriters()
 {
-  if (not utils::MasterSlave::_slaveMode) {
+  if (not utils::MasterSlave::isSlave()) {
 
     // check if coarse model optimization exists
     bool hasCoarseModelOptimization = false;

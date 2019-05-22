@@ -1,7 +1,5 @@
 #include <string>
 #include "testing/Testing.hpp"
-#include "xml/ValidatorEquals.hpp"
-#include "xml/ValidatorOr.hpp"
 #include "xml/XMLAttribute.hpp"
 #include "xml/XMLTag.hpp"
 
@@ -36,12 +34,7 @@ BOOST_AUTO_TEST_CASE(AttributeConcatenation)
   XMLTag       testcaseTag(cb, "test-attribute-concatenation", XMLTag::OCCUR_ONCE);
   XMLTag       testTag(cb, "test", XMLTag::OCCUR_ONCE_OR_MORE);
 
-  XMLAttribute<std::string>    attr("attribute");
-  ValidatorEquals<std::string> equalsOne("value-one");
-  ValidatorEquals<std::string> equalsTwo("value-two");
-
-  ValidatorEquals<std::string> equalsThree("value-three");
-  attr.setValidator(equalsOne || equalsTwo || equalsThree);
+  auto attr = makeXMLAttribute("attribute", "").setOptions({"value-one", "value-two", "value-three"});
   testTag.addAttribute(attr);
 
   testcaseTag.addSubtag(testTag);

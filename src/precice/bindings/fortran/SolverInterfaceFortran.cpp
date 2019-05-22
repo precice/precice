@@ -30,16 +30,16 @@ void precicef_create_
   int   lengthAccessorName,
   int   lengthConfigFileName )
 {
-  //cout << "lengthAccessorName: " << lengthAccessorName << endl;
-  //cout << "lengthConfigFileName: " << lengthConfigFileName << endl;
-  //cout << "solverProcessIndex: " << *solverProcessIndex << endl;
-  //cout << "solverProcessSize: " << *solverProcessSize << endl;
+  //cout << "lengthAccessorName: " << lengthAccessorName << '\n';
+  //cout << "lengthConfigFileName: " << lengthConfigFileName << '\n';
+  //cout << "solverProcessIndex: " << *solverProcessIndex << '\n';
+  //cout << "solverProcessSize: " << *solverProcessSize << '\n';
   int strippedLength = precice::impl::strippedLength(participantName,lengthAccessorName);
   string stringAccessorName(participantName, strippedLength);
   strippedLength = precice::impl::strippedLength(configFileName,lengthConfigFileName);
   string stringConfigFileName(configFileName, strippedLength);
-  //cout << "Accessor: " << stringAccessorName << "!" << endl;
-  //cout << "Config  : " << stringConfigFileName << "!" << endl;
+  //cout << "Accessor: " << stringAccessorName << "!" << '\n';
+  //cout << "Config  : " << stringConfigFileName << "!" << '\n';
   impl = new precice::impl::SolverInterfaceImpl (stringAccessorName,
          *solverProcessIndex, *solverProcessSize, false);
   impl->configure(stringConfigFileName);
@@ -97,8 +97,8 @@ void precicef_ongoing_
 
 void precicef_write_data_required_
 (
-  double* computedTimestepLength,
-  int*    isRequired )
+  const double* computedTimestepLength,
+  int*          isRequired )
 {
   CHECK(impl != nullptr,errormsg);
   if (impl->isWriteDataRequired(*computedTimestepLength)){
@@ -122,6 +122,42 @@ void precicef_read_data_available_
   }
 }
 
+void precicef_is_timestep_complete_(
+    int* isComplete )
+{
+  CHECK(impl != nullptr,errormsg);
+  if (impl->isTimestepComplete()){
+    *isComplete = 1;
+  }
+  else {
+    *isComplete = 0;
+  }
+}
+
+void precicef_has_to_evaluate_surrogate_model_(
+    int* hasToEvaluate)
+{
+  CHECK(impl != nullptr,errormsg);
+  if (impl->hasToEvaluateSurrogateModel()){
+    *hasToEvaluate = 1;
+  }
+  else {
+    *hasToEvaluate = 0;
+  }
+}
+
+void precicef_has_to_evaluate_fine_model_(
+    int* hasToEvaluate)
+{
+  CHECK(impl != nullptr,errormsg);
+  if (impl->hasToEvaluateFineModel()){
+    *hasToEvaluate = 1;
+  }
+  else {
+    *hasToEvaluate = 0;
+  }
+}
+
 void precicef_action_required_
 (
   const char* action,
@@ -130,14 +166,14 @@ void precicef_action_required_
 {
   CHECK(impl != nullptr,errormsg);
   //assertion(lengthAction > 1);
-  //std::cout << "lengthAction: " << lengthAction << std::endl;
+  //std::cout << "lengthAction: " << lengthAction << '\n';
   //std::cout << "Action:";
   //for (int i=0; i < lengthAction; i++){
   //  std::cout << " a[" << i << "]=\"" << action[i] << "\"";
   //}
-  //std::cout << std::endl;
+  //std::cout << '\n';
   int strippedLength = precice::impl::strippedLength(action, lengthAction);
-  //std::cout << "strippedLength: " << strippedLength << std::endl;
+  //std::cout << "strippedLength: " << strippedLength << '\n';
   //assertion(strippedLength > 1);
   string stringAction(action, strippedLength);
   if (impl->isActionRequired(stringAction)){
@@ -157,6 +193,22 @@ void precicef_fulfilled_action_
   int strippedLength = precice::impl::strippedLength(action, lengthAction);
   string stringAction(action, strippedLength);
   impl->fulfilledAction(stringAction);
+}
+
+void precicef_has_mesh_(
+  const char* meshName,
+  int*        hasMesh,
+  int         lengthMeshName)
+{
+  CHECK(impl != nullptr,errormsg);
+  int strippedLength = precice::impl::strippedLength(meshName, lengthMeshName);
+  string stringMeshName(meshName, strippedLength);
+  if (impl->hasMesh(meshName)){
+    *hasMesh = 1;
+  }
+  else {
+    *hasMesh = 0;
+  }
 }
 
 void precicef_get_mesh_id_
@@ -213,6 +265,14 @@ void precicef_set_vertex_
   *vertexID = impl->setMeshVertex(*meshID, position);
 }
 
+void precicef_get_mesh_vertex_size_(
+    const int* meshID,
+    int* meshSize)
+{
+  CHECK(impl != nullptr,errormsg);
+  *meshSize = impl->getMeshVertexSize(*meshID);
+}
+
 void precicef_set_vertices_
 (
   const int*    meshID,
@@ -222,6 +282,26 @@ void precicef_set_vertices_
 {
   CHECK(impl != nullptr,errormsg);
   impl->setMeshVertices(*meshID, *size, positions, positionIDs);
+}
+
+void precicef_get_vertices_(
+  const int* meshID,
+  const int* size,
+  int*       ids,
+  double*    positions )
+{
+  CHECK(impl != nullptr,errormsg);
+  impl->getMeshVertices(*meshID, *size, ids, positions);
+}
+
+void precicef_get_vertex_ids_from_positions_(
+  const int* meshID,
+  const int* size,
+  double*    positions,
+  int*       ids )
+{
+  CHECK(impl != nullptr,errormsg);
+  impl->getMeshVertexIDsFromPositions(*meshID, *size, positions, ids);
 }
 
 void precicef_set_edge_
@@ -255,6 +335,28 @@ void precicef_set_triangle_we_
 {
   CHECK(impl != nullptr,errormsg);
   impl->setMeshTriangleWithEdges(*meshID, *firstVertexID, *secondVertexID, *thirdVertexID);
+}
+
+void precicef_set_quad_(
+  const int* meshID,
+  const int* firstEdgeID,
+  const int* secondEdgeID,
+  const int* thirdEdgeID,
+  const int* fourthEdgeID)
+{
+  CHECK(impl != nullptr,errormsg);
+  impl->setMeshQuad(*meshID, *firstEdgeID, *secondEdgeID, *thirdEdgeID, *fourthEdgeID);
+}
+
+void precicef_set_quad_we_(
+  const int* meshID,
+  const int* firstVertexID,
+  const int* secondVertexID,
+  const int* thirdVertexID,
+  const int* fourthVertexID)
+{
+  CHECK(impl != nullptr,errormsg);
+  impl->setMeshQuadWithEdges(*meshID, *firstVertexID, *secondVertexID, *thirdVertexID, *fourthVertexID);
 }
 
 void precicef_write_bvdata_

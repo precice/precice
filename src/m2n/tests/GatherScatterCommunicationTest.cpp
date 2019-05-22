@@ -19,6 +19,7 @@ using namespace m2n;
 BOOST_AUTO_TEST_CASE(GatherScatterTest, *testing::OnSize(4))
 {
   assertion(utils::Parallel::getCommunicatorSize() == 4);
+  utils::MasterSlave::reset();
 
   com::PtrCommunication participantCom = com::PtrCommunication(new com::MPIDirectCommunication());
   m2n::DistributedComFactory::SharedPointer distrFactory =
@@ -32,31 +33,18 @@ BOOST_AUTO_TEST_CASE(GatherScatterTest, *testing::OnSize(4))
 
   if (utils::Parallel::getProcessRank() == 0) { // Participant 1
     utils::Parallel::splitCommunicator("Part1");
-    utils::MasterSlave::_rank       = 0;
-    utils::MasterSlave::_size       = 1;
-    utils::MasterSlave::_slaveMode  = false;
-    utils::MasterSlave::_masterMode = false;
   } else if (utils::Parallel::getProcessRank() == 1) { // Participant 2 - Master
     utils::Parallel::splitCommunicator("Part2Master");
-    utils::MasterSlave::_rank       = 0;
-    utils::MasterSlave::_size       = 3;
-    utils::MasterSlave::_slaveMode  = false;
-    utils::MasterSlave::_masterMode = true;
+    utils::MasterSlave::configure(0, 3);
     masterSlaveCom->acceptConnection("Part2Master", "Part2Slaves", utils::Parallel::getProcessRank());
     masterSlaveCom->setRankOffset(1);
   } else if (utils::Parallel::getProcessRank() == 2) { // Participant 2 - Slave1
     utils::Parallel::splitCommunicator("Part2Slaves");
-    utils::MasterSlave::_rank       = 1;
-    utils::MasterSlave::_size       = 3;
-    utils::MasterSlave::_slaveMode  = true;
-    utils::MasterSlave::_masterMode = false;
+    utils::MasterSlave::configure(1, 3);
     masterSlaveCom->requestConnection("Part2Master", "Part2Slaves", 0, 2);
   } else if (utils::Parallel::getProcessRank() == 3) { // Participant 2 - Slave2
     utils::Parallel::splitCommunicator("Part2Slaves");
-    utils::MasterSlave::_rank       = 2;
-    utils::MasterSlave::_size       = 3;
-    utils::MasterSlave::_slaveMode  = true;
-    utils::MasterSlave::_masterMode = false;
+    utils::MasterSlave::configure(2, 3);
     masterSlaveCom->requestConnection("Part2Master", "Part2Slaves", 1, 2);
   }
 
@@ -135,10 +123,8 @@ BOOST_AUTO_TEST_CASE(GatherScatterTest, *testing::OnSize(4))
   }
 
   utils::MasterSlave::_communication.reset();
-  utils::MasterSlave::_rank       = utils::Parallel::getProcessRank();
-  utils::MasterSlave::_size       = utils::Parallel::getCommunicatorSize();
-  utils::MasterSlave::_slaveMode  = false;
-  utils::MasterSlave::_masterMode = false;
+  utils::MasterSlave::configure(utils::Parallel::getProcessRank(), utils::Parallel::getCommunicatorSize());
+  utils::MasterSlave::reset();
 
   utils::Parallel::synchronizeProcesses();
   utils::Parallel::clearGroups();

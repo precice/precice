@@ -20,21 +20,11 @@ public:
    */
   explicit TXTWriter(const std::string& filename);
 
-  /**
-   * @brief Destructor, closes file.
-   */
-  ~TXTWriter();
-
   ///Writes (appends) the matrix to the file.
-  void write(const Eigen::MatrixXd& matrix)
-  {
-    for (long i = 0; i < matrix.rows(); i++) {
-      for (long j = 0; j < matrix.cols(); j++) {
-        _file << matrix(i, j) << " ";
-      }
-    }
-    _file << std::endl;
-  }
+  void write(const Eigen::MatrixXd& matrix);
+
+  ///Flush the buffer to file
+  void flush();
 
   
 private:

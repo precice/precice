@@ -61,7 +61,7 @@ public:
   /// Returns the number of parents.
   int getParentCount() const
   {
-    return (int) _parents.size();
+    return static_cast<int>(_parents.size());
   }
 
   /// Returns the parent corresponding to the given index (0 ... count).
@@ -144,7 +144,7 @@ const value_t &PropertyContainer::getProperty(int propertyID) const
   }
   assertion(not iter->second.empty());
   // When the type of value_t does not match that of the any, NULL is returned.
-  assertion(boost::any_cast<value_t>(&iter->second) != NULL);
+  assertion(boost::any_cast<value_t>(&iter->second) != nullptr);
   return *boost::any_cast<value_t>(&iter->second);
 }
 
@@ -156,7 +156,7 @@ void PropertyContainer::getProperties(int propertyID, std::vector<value_t> &prop
   if (iter != _properties.end()) {
     assertion(not iter->second.empty());
     // When the type of value_t does not match that of the any, NULL is returned.
-    assertion(boost::any_cast<value_t>(&iter->second) != NULL);
+    assertion(boost::any_cast<value_t>(&iter->second) != nullptr);
     properties.push_back(boost::any_cast<value_t>(iter->second));
   } else {
     for (size_t i = 0; i < _parents.size(); i++) {

@@ -2,6 +2,7 @@
 
 #include <Eigen/Core>
 #include <fstream>
+#include <vector>
 #include "logging/Logger.hpp"
 #include "mesh/SharedPointer.hpp"
 

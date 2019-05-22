@@ -10,7 +10,7 @@
 #include "precice/config/Configuration.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/MasterSlave.hpp"
-#include "utils/EventTimings.hpp"
+#include "utils/Event.hpp"
 
 using namespace precice;
 
@@ -23,7 +23,7 @@ void reset ()
   utils::MasterSlave::reset();
 }
 
-struct ParallelTestFixture {
+struct ParallelTestFixture : testing::WhiteboxAccessor {
 
   std::string _pathToTests;
 
@@ -54,21 +54,21 @@ BOOST_AUTO_TEST_CASE(TestMasterSlaveSetup, * testing::OnSize(4))
   std::string configFilename = _pathToTests + "config1.xml";
   config::Configuration config;
   xml::configure(config.getXMLTag(), configFilename);
-  interface._impl->configure(config.getSolverInterfaceConfiguration());
+  impl(interface).configure(config.getSolverInterfaceConfiguration());
 
   BOOST_TEST ( interface.getDimensions() == 3 );
 
   if(utils::Parallel::getProcessRank()==0){
-    BOOST_TEST(utils::MasterSlave::_masterMode == true);
-    BOOST_TEST(utils::MasterSlave::_slaveMode == false);
+    BOOST_TEST(utils::MasterSlave::isMaster() == true);
+    BOOST_TEST(utils::MasterSlave::isSlave() == false);
   }
   else {
-    BOOST_TEST(utils::MasterSlave::_masterMode == false);
-    BOOST_TEST(utils::MasterSlave::_slaveMode == true);
+    BOOST_TEST(utils::MasterSlave::isMaster() == false);
+    BOOST_TEST(utils::MasterSlave::isSlave() == true);
   }
 
-  BOOST_TEST(utils::MasterSlave::_rank == utils::Parallel::getProcessRank());
-  BOOST_TEST(utils::MasterSlave::_size == 4);
+  BOOST_TEST(utils::MasterSlave::getRank() == utils::Parallel::getProcessRank());
+  BOOST_TEST(utils::MasterSlave::getSize() == 4);
   BOOST_TEST(utils::MasterSlave::_communication.use_count()>0);
   BOOST_TEST(utils::MasterSlave::_communication->isConnected());
 
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(TestFinalize, * testing::OnSize(4))
   xml::configure(config.getXMLTag(), configFilename);
   if(utils::Parallel::getProcessRank()<=1){
     SolverInterface interface ( "SolverOne", utils::Parallel::getProcessRank(), 2 );
-    interface._impl->configure(config.getSolverInterfaceConfiguration());
+    impl(interface).configure(config.getSolverInterfaceConfiguration());
     int meshID = interface.getMeshID("MeshOne");
     double xCoord = 0.0 + utils::Parallel::getProcessRank();
     interface.setMeshVertex(meshID, Eigen::Vector3d(xCoord,0.0,0.0).data());
@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(TestFinalize, * testing::OnSize(4))
   }
   else {
     SolverInterface interface ( "SolverTwo", utils::Parallel::getProcessRank()-2, 2 );
-    interface._impl->configure(config.getSolverInterfaceConfiguration());
+    impl(interface).configure(config.getSolverInterfaceConfiguration());
     int meshID = interface.getMeshID("MeshTwo");
     double xCoord = -2.0 + utils::Parallel::getProcessRank();
     interface.setMeshVertex(meshID, Eigen::Vector3d(xCoord,0.0,0.0).data());
@@ -111,7 +111,6 @@ BOOST_AUTO_TEST_CASE(GlobalRBFPartitioning, * testing::OnSize(4))
 {
   std::string configFilename = _pathToTests + "globalRBFPartitioning.xml";
   config::Configuration config;
-  utils::MasterSlave::_rank = utils::Parallel::getProcessRank();
   
   if(utils::Parallel::getProcessRank()<=2){
     utils::Parallel::splitCommunicator( "SolverOne" );
@@ -121,7 +120,7 @@ BOOST_AUTO_TEST_CASE(GlobalRBFPartitioning, * testing::OnSize(4))
     xml::configure(config.getXMLTag(), configFilename);
 
     SolverInterface interface ( "SolverOne", utils::Parallel::getProcessRank(), 3 );
-    interface._impl->configure(config.getSolverInterfaceConfiguration());
+    impl(interface).configure(config.getSolverInterfaceConfiguration());
     int meshID = interface.getMeshID("MeshOne");
     int dataID = interface.getDataID("Data2", meshID);
 
@@ -133,7 +132,7 @@ BOOST_AUTO_TEST_CASE(GlobalRBFPartitioning, * testing::OnSize(4))
     double values[2];
     interface.advance(1.0);
     interface.readBlockScalarData(dataID, 2, vertexIDs, values);
-//    std::cout << utils::Parallel::getProcessRank() <<": " << values << std::endl;
+//    std::cout << utils::Parallel::getProcessRank() <<": " << values << '\n';
     interface.finalize();
   }
   else {
@@ -144,7 +143,7 @@ BOOST_AUTO_TEST_CASE(GlobalRBFPartitioning, * testing::OnSize(4))
     xml::configure(config.getXMLTag(), configFilename);
 
     SolverInterface interface ( "SolverTwo", 0, 1 );
-    interface._impl->configure(config.getSolverInterfaceConfiguration());
+    impl(interface).configure(config.getSolverInterfaceConfiguration());
     int meshID = interface.getMeshID("MeshTwo");
     int vertexIDs[6];
     double positions[12] = {0.0,0.0,0.2,0.0,0.4,0.0,0.6,0.0,0.8,0.0,1.0,0.0};
@@ -171,7 +170,7 @@ BOOST_AUTO_TEST_CASE(LocalRBFPartitioning, * testing::OnSize(4))
     xml::configure(config.getXMLTag(), configFilename);
 
     SolverInterface interface ( "SolverOne", utils::Parallel::getProcessRank(), 3 );
-    interface._impl->configure(config.getSolverInterfaceConfiguration());
+    impl(interface).configure(config.getSolverInterfaceConfiguration());
     int meshID = interface.getMeshID("MeshOne");
     int dataID = interface.getDataID("Data2", meshID);
 
@@ -193,7 +192,7 @@ BOOST_AUTO_TEST_CASE(LocalRBFPartitioning, * testing::OnSize(4))
     xml::configure(config.getXMLTag(), configFilename);
 
     SolverInterface interface ( "SolverTwo", 0, 1 );
-    interface._impl->configure(config.getSolverInterfaceConfiguration());
+    impl(interface).configure(config.getSolverInterfaceConfiguration());
     int meshID = interface.getMeshID("MeshTwo");
     int vertexIDs[6];
     double positions[12] = {0.0,0.0,0.2,0.0,0.4,0.0,0.6,0.0,0.8,0.0,1.0,0.0};
@@ -222,7 +221,7 @@ BOOST_AUTO_TEST_CASE(CouplingOnLine, * testing::OnSize(4))
     utils::Parallel::clearGroups();
     xml::configure(config.getXMLTag(), configFilename);
     SolverInterface interface ( "Ateles", utils::Parallel::getProcessRank(), 3 );
-    interface._impl->configure(config.getSolverInterfaceConfiguration());
+    impl(interface).configure(config.getSolverInterfaceConfiguration());
     int meshID = interface.getMeshID("Ateles_Mesh");
 
     int vertexIDs[4];
@@ -245,7 +244,7 @@ BOOST_AUTO_TEST_CASE(CouplingOnLine, * testing::OnSize(4))
     utils::Parallel::clearGroups();
     xml::configure(config.getXMLTag(), configFilename);
     SolverInterface interface ( "FASTEST", 0, 1 );
-    interface._impl->configure(config.getSolverInterfaceConfiguration());
+    impl(interface).configure(config.getSolverInterfaceConfiguration());
     int meshID = interface.getMeshID("FASTEST_Mesh");
     int vertexIDs[10];
     double xCoord = -0.0001;
@@ -313,7 +312,7 @@ BOOST_AUTO_TEST_CASE(TestQN, * testing::OnSize(4))
     xml::configure(config.getXMLTag(), configFilename);
 
     SolverInterface interface ( solverName, rank, size );
-    interface._impl->configure(config.getSolverInterfaceConfiguration());
+    impl(interface).configure(config.getSolverInterfaceConfiguration());
     int meshID = interface.getMeshID(meshName);
     int writeDataID = interface.getDataID(writeDataName, meshID);
     int readDataID = interface.getDataID(readDataName, meshID);
@@ -369,7 +368,9 @@ BOOST_AUTO_TEST_CASE(TestQN, * testing::OnSize(4))
       }
     }
     interface.finalize();
-    BOOST_TEST(iterations == correctIterations[k]);
+    // Depending on the hardware, QN can be slighly faster or slower leading to an iteration more or less.
+    BOOST_TEST(iterations <= correctIterations[k] + 1);
+    BOOST_TEST(iterations >= correctIterations[k] - 1);
   }
 }
 
@@ -448,7 +449,7 @@ BOOST_AUTO_TEST_CASE(testDistributedCommunications, * testing::OnSize(4))
     SolverInterface precice(solverName, rank, size);
     config::Configuration config;
     xml::configure(config.getXMLTag(), _pathToTests + fileName);
-    precice._impl->configure(config.getSolverInterfaceConfiguration());
+    impl(precice).configure(config.getSolverInterfaceConfiguration());
     int meshID = precice.getMeshID(meshName);
     int forcesID = precice.getDataID("Forces", meshID);
     int velocID = precice.getDataID("Velocities", meshID);

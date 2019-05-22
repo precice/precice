@@ -7,6 +7,7 @@
 #include "mesh/config/MeshConfiguration.hpp"
 #include "mesh/config/DataConfiguration.hpp"
 #include <utility>
+#include <algorithm>
 
 namespace precice {
 namespace impl {
@@ -209,6 +210,24 @@ bool Participant:: isDataUsed
   return _dataContexts[dataID] != nullptr;
 }
 
+bool Participant:: isDataRead
+(
+  int dataID ) const
+{
+    return std::any_of(_readDataContexts.begin(), _readDataContexts.end(), [dataID](const DataContext& context) {
+            return context.toData->getID() == dataID;
+            });
+}
+
+bool Participant:: isDataWrite
+(
+  int dataID ) const
+{
+    return std::any_of(_writeDataContexts.begin(), _writeDataContexts.end(), [dataID](const DataContext& context) {
+            return context.fromData->getID() == dataID;
+            });
+}
+
 const MeshContext& Participant:: meshContext
 (
   int meshID ) const
@@ -293,14 +312,14 @@ void Participant:: checkDuplicatedData
 
 bool Participant:: useServer()
 {
-  return _clientServerCommunication.use_count() > 0;
+  return static_cast<bool>(_clientServerCommunication);
 }
 
 void Participant:: setClientServerCommunication
 (
   com::PtrCommunication communication )
 {
-  assertion ( communication.use_count() > 0 );
+  assertion ( communication );
   _clientServerCommunication = std::move(communication);
 }
 

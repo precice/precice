@@ -20,9 +20,6 @@ public:
   /// Constructor, opens file and sets format.
   explicit TXTReader(const std::string& filename);
 
-  /// Destructor, closes file.
-  ~TXTReader();
-
   /// Reads the Eigen::Matrix from the file.
   template<typename Scalar, int Rows, int Cols>
   void read(Eigen::Matrix<Scalar, Rows, Cols>& matrix)
