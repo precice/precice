@@ -36,6 +36,8 @@ void ExportVTKXML::doExport(
   TRACE(name, location, mesh.getName());
   assertion(utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster());
   processDataNamesAndDimensions(mesh);
+  if (not location.empty())
+    boost::filesystem::create_directories(location);
   if (utils::MasterSlave::isMaster()) {
     writeMasterFile(name, location, mesh);
   }
@@ -71,8 +73,6 @@ void ExportVTKXML::writeMasterFile(
 {
   namespace fs = boost::filesystem;
   fs::path outfile(location);
-  if (not location.empty())
-    fs::create_directories(outfile);
   outfile = outfile / fs::path(name + "_master.pvtu");
   std::ofstream outMasterFile(outfile.string(), std::ios::trunc);
 
