@@ -39,6 +39,9 @@ public:
   /// Returns the merged visitables
   Group& content();
 
+  /// Returns the merged visitables
+  const Group& content() const;
+
 private:
 
   // @brief Merged visitables
