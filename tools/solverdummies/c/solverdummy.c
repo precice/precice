@@ -1,5 +1,5 @@
-#include "SolverInterfaceC.h"
-#include "Constants.h"
+#include "precice/SolverInterfaceC.h"
+#include "precice/Constants.h"
 
 #include <stdio.h>
 #include <stdlib.h>

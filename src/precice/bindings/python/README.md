@@ -68,6 +68,10 @@ Run the following to test the installation:
 $ python3 -c "import precice"
 ```
 
+## additional preliminary tests
+
+You can find an extended solverdummy in `test`. Here some of the API functions are called and the results are checked with assertions. This is currently **not a proper automated unit test**. See also https://github.com/precice/precice/issues/409.
+
 # Using with MPI
 
 If precice was compiled with MPI, you have to initialize MPI prior to configuring a SolverInterface.

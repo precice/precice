@@ -18,6 +18,7 @@
 #include "io/Export.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
 #include "m2n/M2N.hpp"
+#include "m2n/BoundM2N.hpp"
 #include "cplscheme/CouplingScheme.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
 #include "utils/EventUtils.hpp"
@@ -210,46 +211,21 @@ double SolverInterfaceImpl:: initialize()
   else {
     // Setup communication
 
-    INFO("Setting up master communication to coupling partner/s " );
+    INFO("Setting up master communication to coupling partner/s" );
     for (auto& m2nPair : _m2ns) {
-      m2n::PtrM2N& m2n = m2nPair.second.m2n;
-      std::string localName = _accessorName;
-      if (_serverMode) localName += "Server";
-      std::string remoteName(m2nPair.first);
-      CHECK(m2n.get() != nullptr,
-            "M2N communication from " << localName << " to participant "
-            << remoteName << " could not be created! Check compile flags used!");
-      if (m2nPair.second.isRequesting){
-        m2n->requestMasterConnection(remoteName, localName);
-      }
-      else {
-        m2n->acceptMasterConnection(localName, remoteName);
-      }
+        m2nPair.second.prepareEstablishment();
+        m2nPair.second.connectMasters();
     }
-    INFO("Coupling partner/s are connected " );
-
-
-    DEBUG("Perform initializations");
-
+    INFO("Masters are connected");
 
     computePartitions();
 
-    INFO("Setting up slaves communication to coupling partner/s " );
+    INFO("Setting up slaves communication to coupling partner/s" );
     for (auto& m2nPair : _m2ns) {
-      m2n::PtrM2N& m2n = m2nPair.second.m2n;
-      std::string localName = _accessorName;
-      std::string remoteName(m2nPair.first);
-      CHECK(m2n.get() != nullptr,
-                   "Communication from " << localName << " to participant "
-                   << remoteName << " could not be created! Check compile flags used!");
-      if (m2nPair.second.isRequesting){
-        m2n->requestSlavesConnection(remoteName, localName);
-      }
-      else {
-        m2n->acceptSlavesConnection(localName, remoteName);
-      }
+      m2nPair.second.connectSlaves();
+      m2nPair.second.cleanupEstablishment();
     }
-    INFO("Slaves are connected" );
+    INFO("Slaves are connected");
 
     std::set<action::Action::Timing> timings;
     double dt = 0.0;
@@ -496,13 +472,13 @@ int SolverInterfaceImpl:: getDimensions() const
   return _dimensions;
 }
 
-bool SolverInterfaceImpl:: isCouplingOngoing()
+bool SolverInterfaceImpl:: isCouplingOngoing() const
 {
   TRACE();
   return _couplingScheme->isCouplingOngoing();
 }
 
-bool SolverInterfaceImpl:: isReadDataAvailable()
+bool SolverInterfaceImpl:: isReadDataAvailable() const
 {
   TRACE();
   return _couplingScheme->hasDataBeenExchanged();
@@ -510,13 +486,13 @@ bool SolverInterfaceImpl:: isReadDataAvailable()
 
 bool SolverInterfaceImpl:: isWriteDataRequired
 (
-  double computedTimestepLength )
+  double computedTimestepLength ) const
 {
   TRACE(computedTimestepLength);
   return _couplingScheme->willDataBeExchanged(computedTimestepLength);
 }
 
-bool SolverInterfaceImpl:: isTimestepComplete()
+bool SolverInterfaceImpl:: isTimestepComplete() const
 {
   TRACE();
   return _couplingScheme->isCouplingTimestepComplete();
@@ -524,7 +500,7 @@ bool SolverInterfaceImpl:: isTimestepComplete()
 
 bool SolverInterfaceImpl:: isActionRequired
 (
-  const std::string& action )
+  const std::string& action ) const
 {
   TRACE(action, _couplingScheme->isActionRequired(action));
   return _couplingScheme->isActionRequired(action);
@@ -541,13 +517,13 @@ void SolverInterfaceImpl:: fulfilledAction
   _couplingScheme->performedAction(action);
 }
 
-bool SolverInterfaceImpl::hasToEvaluateSurrogateModel()
+bool SolverInterfaceImpl::hasToEvaluateSurrogateModel() const
 {
  // std::cout<<"_isCoarseModelOptimizationActive() = "<<_couplingScheme->isCoarseModelOptimizationActive();
   return _couplingScheme->isCoarseModelOptimizationActive();
 }
 
-bool SolverInterfaceImpl::hasToEvaluateFineModel()
+bool SolverInterfaceImpl::hasToEvaluateFineModel() const
 {
   return not _couplingScheme->isCoarseModelOptimizationActive();
 }
@@ -562,14 +538,15 @@ bool SolverInterfaceImpl:: hasMesh
 
 int SolverInterfaceImpl:: getMeshID
 (
-  const std::string& meshName )
+  const std::string& meshName ) const
 {
   TRACE(meshName);
-  CHECK( utils::contained(meshName, _meshIDs), "Mesh with name \""<< meshName << "\" is not defined!" );
-  return _meshIDs[meshName];
+  const auto pos = _meshIDs.find(meshName);
+  CHECK(pos != _meshIDs.end(), "Mesh with name \""<< meshName << "\" is not defined!" );
+  return pos->second;
 }
 
-std::set<int> SolverInterfaceImpl:: getMeshIDs()
+std::set<int> SolverInterfaceImpl:: getMeshIDs() const
 {
   TRACE();
   std::set<int> ids;
@@ -581,28 +558,28 @@ std::set<int> SolverInterfaceImpl:: getMeshIDs()
 
 bool SolverInterfaceImpl:: hasData
 (
-  const std::string& dataName, int meshID )
+  const std::string& dataName, int meshID ) const
 {
   TRACE(dataName, meshID );
   PRECICE_VALIDATE_MESH_ID(meshID);
-  std::map<std::string,int>& sub_dataIDs =  _dataIDs[meshID];
+  const auto & sub_dataIDs = _dataIDs.at(meshID);
   return sub_dataIDs.find(dataName)!= sub_dataIDs.end();
 }
 
 int SolverInterfaceImpl:: getDataID
 (
-  const std::string& dataName, int meshID )
+  const std::string& dataName, int meshID ) const
 {
   TRACE(dataName, meshID );
   PRECICE_VALIDATE_MESH_ID(meshID);
   CHECK(hasData(dataName, meshID),
         "Data with name \"" << dataName << "\" is not defined on mesh with ID \"" << meshID << "\".");
-  return _dataIDs[meshID][dataName];
+  return _dataIDs.at(meshID).at(dataName);
 }
 
 int SolverInterfaceImpl:: getMeshVertexSize
 (
-  int meshID )
+  int meshID ) const
 {
   TRACE(meshID);
   int size = 0;
@@ -701,7 +678,7 @@ void SolverInterfaceImpl:: getMeshVertices
   int        meshID,
   size_t     size,
   const int* ids,
-  double*    positions )
+  double*    positions ) const
 {
   TRACE(meshID, size);
   if (_clientMode){
@@ -728,7 +705,7 @@ void SolverInterfaceImpl:: getMeshVertexIDsFromPositions (
   int           meshID,
   size_t        size,
   const double* positions,
-  int*          ids )
+  int*          ids ) const
 {
   TRACE(meshID, size);
   if (_clientMode){
@@ -1115,7 +1092,7 @@ void SolverInterfaceImpl:: readBlockVectorData
   int        toDataID,
   int        size,
   const int* valueIndices,
-  double*    values )
+  double*    values ) const
 {
   TRACE(toDataID, size);
   PRECICE_VALIDATE_DATA_ID(toDataID);
@@ -1149,7 +1126,7 @@ void SolverInterfaceImpl:: readVectorData
 (
   int     toDataID,
   int     valueIndex,
-  double* value )
+  double* value ) const
 {
   TRACE(toDataID, valueIndex);
   PRECICE_VALIDATE_DATA_ID(toDataID);
@@ -1179,7 +1156,7 @@ void SolverInterfaceImpl:: readBlockScalarData
   int        toDataID,
   int        size,
   const int* valueIndices,
-  double*    values )
+  double*    values ) const
 {
   TRACE(toDataID, size);
   PRECICE_VALIDATE_DATA_ID(toDataID);
@@ -1210,7 +1187,7 @@ void SolverInterfaceImpl:: readScalarData
 (
   int     toDataID,
   int     valueIndex,
-  double& value )
+  double& value ) const
 {
   TRACE(toDataID, valueIndex, value);
   PRECICE_VALIDATE_DATA_ID(toDataID);
@@ -1234,7 +1211,7 @@ void SolverInterfaceImpl:: readScalarData
 void SolverInterfaceImpl:: exportMesh
 (
   const std::string& filenameSuffix,
-  int                exportType )
+  int                exportType ) const
 {
   TRACE(filenameSuffix, exportType );
   // Export meshes
@@ -1299,10 +1276,16 @@ void SolverInterfaceImpl:: configureM2Ns
           }
           assertion(not utils::contained(comPartner, _m2ns), comPartner);
           assertion(std::get<0>(m2nTuple));
-          M2NWrap m2nWrap;
-          m2nWrap.m2n = std::get<0>(m2nTuple);
-          m2nWrap.isRequesting = isRequesting;
-          _m2ns[comPartner] = m2nWrap;
+
+          _m2ns[comPartner] = [&]{
+              m2n::BoundM2N bound;
+              bound.m2n = std::get<0>(m2nTuple);
+              bound.localName = _accessorName;
+              bound.remoteName = comPartner;
+              bound.isRequesting = isRequesting;
+              bound.localServer = _serverMode;
+              return bound;
+          }();
         }
       }
     }
