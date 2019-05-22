@@ -91,7 +91,7 @@ void ReceivedBoundingBox::computeBoundingBox()
 
     // send connectionMap to other master
     _m2n->getMasterCommunication()->send(connectedRanksList, 0);
-    if (connectionMap.size() != 0) { // @todo we need an error message here instea
+    if (connectionMap.size() != 0) { 
       com::CommunicateBoundingBox(_m2n->getMasterCommunication()).sendConnectionMap(connectionMap, 0);
     } else
     {

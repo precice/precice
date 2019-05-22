@@ -69,9 +69,12 @@ void ProvidedBoundingBox::communicateBoundingBox()
 
 void ProvidedBoundingBox::computeBoundingBox()
 {
+  if (!_hasToSend)
+    return;
+  
   TRACE();
 
-  // size of the feedbackmap that is received here
+  // size of the feedbackmap
   int remoteConnectionMapSize = 0;
   std::vector<int> connectedRanksList;
 
@@ -92,7 +95,7 @@ void ProvidedBoundingBox::computeBoundingBox()
       com::CommunicateBoundingBox(_m2n->getMasterCommunication()).receiveConnectionMap(remoteConnectionMap, 0);
 
     // broadcast the received feedbackMap
-    utils::MasterSlave::_communication->broadcast(remoteConnectionMapSize);
+    utils::MasterSlave::_communication->broadcast(connectedRanksList);
     if (remoteConnectionMapSize != 0) {
       com::CommunicateBoundingBox(utils::MasterSlave::_communication).broadcastSendConnectionMap(remoteConnectionMap);
     }
@@ -108,13 +111,15 @@ void ProvidedBoundingBox::computeBoundingBox()
 
   } else { // Slave
 
-    utils::MasterSlave::_communication->broadcast(remoteConnectionMapSize, 0);
+    utils::MasterSlave::_communication->broadcast(connectedRanksList, 0);
 
-    for (int i = 0; i < remoteConnectionMapSize; i++) {
-      remoteConnectionMap[i] = {-1};
-    }
-    if (remoteConnectionMapSize != 0)
+    if (connectedRanksList.size() != 0)
+    {
+      for (auto &rank : connectedRanksList) {
+        remoteConnectionMap[rank] = {-1};
+      }
       com::CommunicateBoundingBox(utils::MasterSlave::_communication).broadcastReceiveConnectionMap(remoteConnectionMap);
+    }
 
     for (auto &remoteRank : remoteConnectionMap) {
       for (auto &includedRanks : remoteRank.second) {
