@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file. For future 
 - Sending data between participants is now fully asynchronous. This is relevant in one-way coupling scenarios, where the sending participant doesn't need to wait for the receiving one.
 - Python bindings offer all preCICE API functions (except `get_mesh_handle`)
 - `bindings/fortran` do not use `precice::impl::SolverInterfaceImpl` anymore, but `precice::SolverInterface`.
+- When exporting meshes with `<export:vtk ...>` the target directories are automatically created.
 
 ## 1.4.1
 
