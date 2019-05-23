@@ -371,7 +371,7 @@ BOOST_AUTO_TEST_CASE(TestComputeBoundingBox, * testing::OnSize(4))
   tearDownParallelEnvironment();
 }
 
-BOOST_AUTO_TEST_CASE(TestProvidedReceivedPartitionCommunicate, * testing::OnSize(4))
+BOOST_AUTO_TEST_CASE(TestCommunicateLocalMeshPartitions, * testing::OnSize(4))
 {
   //mesh creation
   int dimensions = 2;

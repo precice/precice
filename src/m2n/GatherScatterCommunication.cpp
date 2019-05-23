@@ -187,16 +187,24 @@ void GatherScatterCommunication::broadcastReceive(double &itemToReceive)
 }
 
 void GatherScatterCommunication::broadcastSendMesh(mesh::Mesh &mesh)
-{}
+{
+  assertion(false, "This method can only be used with the point to point communication scheme");
+}
 
 void GatherScatterCommunication::broadcastReceiveMesh(mesh::Mesh &mesh)
-{}
+{
+  assertion(false, "This method can only be used with the point to point communication scheme");
+}
 
 void GatherScatterCommunication::broadcastSendLCM(std::map<int, std::vector<int>> &localCommunicationMap)
-{}
+{
+  assertion(false, "This method can only be used with the point to point communication scheme");
+}
 
 void GatherScatterCommunication::broadcastReceiveLCM(std::map<int, std::vector<int>> &localCommunicationMap)
-{}
+{
+  assertion(false, "This method can only be used with the point to point communication scheme");
+}
 
 } // namespace m2n
 } // namespace precice

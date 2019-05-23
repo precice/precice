@@ -210,6 +210,7 @@ void M2N::broadcastSendLocalMesh(mesh::Mesh &mesh)
     assertion(_distComs[meshID].get() != nullptr);    
     _distComs[meshID]->broadcastSendMesh(mesh);
   } else { //coupling mode
+    assertion(false, "This method can only be used with the point to point communication scheme");
   }
 }
 
@@ -221,6 +222,7 @@ void M2N::broadcastSendLCM(std::map<int, std::vector<int>> &localCommunicationMa
     assertion(_areSlavesConnected);
     _distComs[meshID]->broadcastSendLCM(localCommunicationMap);
   } else { //coupling mode
+    assertion(false, "This method can only be used with the point to point communication scheme");
   }  
 }
 
@@ -284,6 +286,7 @@ void M2N::broadcastReceiveLocalMesh(mesh::Mesh &mesh)
     assertion(_distComs[meshID].get() != nullptr);
     _distComs[meshID]->broadcastReceiveMesh(mesh);
   } else { //coupling mode
+    assertion(false, "This method can only be used with the point to point communication scheme");
   }
 }
 
@@ -294,6 +297,7 @@ void M2N::broadcastReceiveLCM(std::map<int, std::vector<int>> &localCommunicatio
     assertion(_areSlavesConnected);
     _distComs[meshID]->broadcastReceiveLCM(localCommunicationMap);
   } else { //coupling mode
+    assertion(false, "This method can only be used with the point to point communication scheme");
   }  
 }
 

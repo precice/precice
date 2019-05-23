@@ -51,15 +51,15 @@ void P2PComTest1(com::PtrCommunicationFactory cf)
     mesh->setGlobalNumberOfVertices(10);
 
     mesh->getVertexDistribution()[0].push_back(0);
-    mesh->getVertexDistribution()[0].push_back(1); // <-
+    mesh->getVertexDistribution()[0].push_back(1); 
     mesh->getVertexDistribution()[0].push_back(3);
-    mesh->getVertexDistribution()[0].push_back(5); // <-
+    mesh->getVertexDistribution()[0].push_back(5); 
     mesh->getVertexDistribution()[0].push_back(7);
 
-    mesh->getVertexDistribution()[1].push_back(1); // <-
+    mesh->getVertexDistribution()[1].push_back(1); 
     mesh->getVertexDistribution()[1].push_back(2);
     mesh->getVertexDistribution()[1].push_back(4);
-    mesh->getVertexDistribution()[1].push_back(5); // <-
+    mesh->getVertexDistribution()[1].push_back(5); 
     mesh->getVertexDistribution()[1].push_back(6);
 
     data         = {10, 20, 40, 60, 80};
@@ -87,16 +87,16 @@ void P2PComTest1(com::PtrCommunicationFactory cf)
 
     mesh->setGlobalNumberOfVertices(10);
 
-    mesh->getVertexDistribution()[0].push_back(1); // <-
+    mesh->getVertexDistribution()[0].push_back(1); 
     mesh->getVertexDistribution()[0].push_back(2);
-    mesh->getVertexDistribution()[0].push_back(5); // <-
+    mesh->getVertexDistribution()[0].push_back(5); 
     mesh->getVertexDistribution()[0].push_back(6);
 
     mesh->getVertexDistribution()[1].push_back(0);
-    mesh->getVertexDistribution()[1].push_back(1); // <-
+    mesh->getVertexDistribution()[1].push_back(1); 
     mesh->getVertexDistribution()[1].push_back(3);
     mesh->getVertexDistribution()[1].push_back(4);
-    mesh->getVertexDistribution()[1].push_back(5); // <-
+    mesh->getVertexDistribution()[1].push_back(5); 
     mesh->getVertexDistribution()[1].push_back(7);
 
     data.assign(4, -1);
@@ -165,15 +165,15 @@ void P2PComTest2(com::PtrCommunicationFactory cf)
     mesh->setGlobalNumberOfVertices(10);
 
     mesh->getVertexDistribution()[0].push_back(0);
-    mesh->getVertexDistribution()[0].push_back(1); // <-
+    mesh->getVertexDistribution()[0].push_back(1); 
     mesh->getVertexDistribution()[0].push_back(3);
-    mesh->getVertexDistribution()[0].push_back(5); // <-
+    mesh->getVertexDistribution()[0].push_back(5); 
     mesh->getVertexDistribution()[0].push_back(7);
 
-    mesh->getVertexDistribution()[1].push_back(1); // <-
+    mesh->getVertexDistribution()[1].push_back(1); 
     mesh->getVertexDistribution()[1].push_back(2);
     mesh->getVertexDistribution()[1].push_back(4);
-    mesh->getVertexDistribution()[1].push_back(5); // <-
+    mesh->getVertexDistribution()[1].push_back(5); 
     mesh->getVertexDistribution()[1].push_back(6);
 
     data         = {10, 20, 40, 60, 80};
@@ -201,16 +201,16 @@ void P2PComTest2(com::PtrCommunicationFactory cf)
 
     mesh->setGlobalNumberOfVertices(10);
 
-    mesh->getVertexDistribution()[0].push_back(1); // <-
+    mesh->getVertexDistribution()[0].push_back(1); 
     mesh->getVertexDistribution()[0].push_back(3);
-    mesh->getVertexDistribution()[0].push_back(5); // <-
+    mesh->getVertexDistribution()[0].push_back(5); 
     mesh->getVertexDistribution()[0].push_back(6);
 
     mesh->getVertexDistribution()[1].push_back(0);
-    mesh->getVertexDistribution()[1].push_back(1); // <-
+    mesh->getVertexDistribution()[1].push_back(1); 
     mesh->getVertexDistribution()[1].push_back(3);
     mesh->getVertexDistribution()[1].push_back(4);
-    mesh->getVertexDistribution()[1].push_back(5); // <-
+    mesh->getVertexDistribution()[1].push_back(5); 
     mesh->getVertexDistribution()[1].push_back(7);
 
     data.assign(4, -1);
@@ -490,13 +490,6 @@ void P2PMeshBroadcastTest(com::PtrCommunicationFactory cf)
     utils::MasterSlave::_communication->acceptConnection("Solid.Master", "Solid.Slave", utils::Parallel::getProcessRank());
     utils::MasterSlave::_communication->setRankOffset(1);
 
-    Eigen::VectorXd position(dimensions);
-    position << 1.5, 0.0;
-    mesh::Vertex& v1 = mesh->createVertex(position);
-    position << 1.0, 2.0;
-    mesh::Vertex& v2 = mesh->createVertex(position);
-    mesh->createEdge(v1, v2);
-
     mesh->getConnectedRanks().push_back(0);
 
     break;
@@ -506,13 +499,6 @@ void P2PMeshBroadcastTest(com::PtrCommunicationFactory cf)
     utils::MasterSlave::configure(1, 2);
     utils::MasterSlave::_communication->requestConnection("Solid.Master", "Solid.Slave", 0, 1);
     
-    Eigen::VectorXd position(dimensions);
-    position <<1.0, 0.0;
-    mesh::Vertex& v1 = mesh->createVertex(position);
-    position << 1.0, 2.0;
-    mesh::Vertex& v2 = mesh->createVertex(position);
-    mesh->createEdge(v1, v2);
-  
     mesh->getConnectedRanks().push_back(1);
 
     break;
@@ -531,21 +517,23 @@ void P2PMeshBroadcastTest(com::PtrCommunicationFactory cf)
     c.broadcastReceiveMesh(*mesh);
 
       if(utils::Parallel::getProcessRank() ==2 )
-      {     
-        BOOST_TEST(mesh->vertices().size()==4);
-        BOOST_TEST(mesh->vertices()[2].getCoords()[0]==5.50);
-        BOOST_TEST(mesh->vertices()[2].getCoords()[1]==0.0);
-        BOOST_TEST(mesh->vertices()[3].getCoords()[0]==1.0);
-        BOOST_TEST(mesh->vertices()[3].getCoords()[1]==2.0);        
+      {
+        // This rank should receive the mesh from rank 0 (fluid master)
+        BOOST_TEST(mesh->vertices().size()==2);
+        BOOST_TEST(mesh->vertices()[0].getCoords()[0]==5.50);
+        BOOST_TEST(mesh->vertices()[0].getCoords()[1]==0.0);
+        BOOST_TEST(mesh->vertices()[1].getCoords()[0]==1.0);
+        BOOST_TEST(mesh->vertices()[1].getCoords()[1]==2.0);        
       }
 
       if(utils::Parallel::getProcessRank() ==3 )
-      {      
-        BOOST_TEST(mesh->vertices().size()==4);
-        BOOST_TEST(mesh->vertices()[2].getCoords()[0]==1.50);
-        BOOST_TEST(mesh->vertices()[2].getCoords()[1]==0.0);
-        BOOST_TEST(mesh->vertices()[3].getCoords()[0]==1.50);
-        BOOST_TEST(mesh->vertices()[3].getCoords()[1]==2.0);
+      {
+        // This rank should receive the mesh from rank 1 (fluid slave)
+        BOOST_TEST(mesh->vertices().size()==2);
+        BOOST_TEST(mesh->vertices()[0].getCoords()[0]==1.50);
+        BOOST_TEST(mesh->vertices()[0].getCoords()[1]==0.0);
+        BOOST_TEST(mesh->vertices()[1].getCoords()[0]==1.50);
+        BOOST_TEST(mesh->vertices()[1].getCoords()[1]==2.0);
       }
     
   }
