@@ -24,17 +24,19 @@ XMLTag::XMLTag(
   }
 }
 
-void XMLTag::setDocumentation(const std::string &documentation)
+XMLTag& XMLTag::setDocumentation(const std::string &documentation)
 {
   _doc = documentation;
+  return *this;
 }
 
-void XMLTag::addNamespace(const std::string &namespaceName)
+XMLTag& XMLTag::addNamespace(const std::string &namespaceName)
 {
   _namespaces.push_back(namespaceName);
+  return *this;
 }
 
-void XMLTag::addSubtag(const XMLTag &tag)
+XMLTag& XMLTag::addSubtag(const XMLTag &tag)
 {
   TRACE(tag._fullName);
   assertion(tag._name != std::string(""));
@@ -43,47 +45,53 @@ void XMLTag::addSubtag(const XMLTag &tag)
   }
 
   _subtags.push_back(std::make_shared<XMLTag>(tag));
+  return *this;
 }
 
-void XMLTag::addAttribute(const XMLAttribute<double> &attribute)
+XMLTag& XMLTag::addAttribute(const XMLAttribute<double> &attribute)
 {
   TRACE(attribute.getName());
   assertion(not utils::contained(attribute.getName(), _attributes));
   _attributes.insert(attribute.getName());
   _doubleAttributes.insert(std::pair<std::string, XMLAttribute<double>>(attribute.getName(), attribute));
+  return *this;
 }
 
-void XMLTag::addAttribute(const XMLAttribute<int> &attribute)
+XMLTag& XMLTag::addAttribute(const XMLAttribute<int> &attribute)
 {
   TRACE(attribute.getName());
   assertion(not utils::contained(attribute.getName(), _attributes));
   _attributes.insert(attribute.getName());
   _intAttributes.insert(std::pair<std::string, XMLAttribute<int>>(attribute.getName(), attribute));
+  return *this;
 }
 
-void XMLTag::addAttribute(const XMLAttribute<std::string> &attribute)
+XMLTag& XMLTag::addAttribute(const XMLAttribute<std::string> &attribute)
 {
   TRACE(attribute.getName());
   assertion(not utils::contained(attribute.getName(), _attributes));
   _attributes.insert(attribute.getName());
   _stringAttributes.insert(std::pair<std::string, XMLAttribute<std::string>>(attribute.getName(), attribute));
+  return *this;
 }
 
-void XMLTag::addAttribute(const XMLAttribute<bool> &attribute)
+XMLTag& XMLTag::addAttribute(const XMLAttribute<bool> &attribute)
 {
   TRACE(attribute.getName());
   assertion(not utils::contained(attribute.getName(), _attributes));
   _attributes.insert(attribute.getName());
   _booleanAttributes.insert(std::pair<std::string, XMLAttribute<bool>>(attribute.getName(), attribute));
+  return *this;
 }
 
-void XMLTag::addAttribute(const XMLAttribute<Eigen::VectorXd> &attribute)
+XMLTag& XMLTag::addAttribute(const XMLAttribute<Eigen::VectorXd> &attribute)
 {
   TRACE(attribute.getName());
   assertion(not utils::contained(attribute.getName(), _attributes));
   _attributes.insert(attribute.getName());
   _eigenVectorXdAttributes.insert(
       std::pair<std::string, XMLAttribute<Eigen::VectorXd>>(attribute.getName(), attribute));
+  return *this;
 }
 
 bool XMLTag::hasAttribute(const std::string &attributeName)
@@ -153,14 +161,8 @@ void XMLTag::readAttributes(std::map<std::string, std::string> &aAttributes)
     auto name = element.first;
 
     if (not utils::contained(name, _attributes)) {
-      std::string error = "Wrong attribute \"" + name + "\"";
-
-      std::cout << error << std::endl;
-      throw error;
+      ERROR("Wrong attribute \"" << name << '\"');
     }
-
-    auto value = element.second;
-    //std::cout << name << " :: " << value << std::endl;
   }
 
   for (auto &pair : _doubleAttributes) {
@@ -264,8 +266,6 @@ void XMLTag::readAttributes(std::map<std::string, std::string> &aAttributes)
 
 void XMLTag::areAllSubtagsConfigured() const
 {
-  std::ostringstream stream;
-
   for (auto tag : _subtags) {
     std::string ns         = tag->_namespace;
     bool        configured = tag->isConfigured();
@@ -281,11 +281,10 @@ void XMLTag::areAllSubtagsConfigured() const
     if ((not configured) && (occurOnce || occurOnceOrMore)) {
 
       if (tag->getNamespace().empty()) {
-        stream << "Tag <" << tag->getName() << "> is missing";
+        ERROR("Tag <" << tag->getName() << "> is missing");
       } else {
-        stream << "Tag <" << tag->getNamespace() << ":...> is missing";
+        ERROR("Tag <" << tag->getNamespace() << ":...> is missing");
       }
-      throw stream.str();
     }
   }
 }
@@ -338,7 +337,7 @@ std::string XMLTag::printDTD(const bool start) const
   std::ostringstream dtd;
 
   if (start)
-    dtd << "<!DOCTYPE " << _fullName << " [" << std::endl;
+    dtd << "<!DOCTYPE " << _fullName << " [\n";
 
   dtd << "<!ELEMENT " << _fullName << " ";
 
@@ -364,9 +363,9 @@ std::string XMLTag::printDTD(const bool start) const
       first = false;
     }
 
-    dtd << ")>" << std::endl;
+    dtd << ")>\n";
   } else {
-    dtd << "EMPTY>" << std::endl;
+    dtd << "EMPTY>\n";
   }
 
   for (const auto &pair : _doubleAttributes) {
@@ -395,10 +394,10 @@ std::string XMLTag::printDTD(const bool start) const
     }
   }
 
-  dtd << std::endl;
+  dtd << '\n';
 
   if (start)
-    dtd << "]>" << std::endl;
+    dtd << "]>\n";
 
   return dtd.str();
 }
@@ -413,17 +412,17 @@ std::string XMLTag::printDocumentation(int indentation) const
   }
 
   std::ostringstream doc;
-  doc << indent << "<!-- TAG " << _fullName << std::endl;
+  doc << indent << "<!-- TAG " << _fullName << '\n';
   if (not _doc.empty()) {
     std::string indentedDoc = indent + "         " + _doc;
     doc << utils::wrapText(indentedDoc, linewidth, indentation + 9);
-    doc << std::endl;
+    doc << '\n';
   }
   doc << indent << "         (can occur " << getOccurrenceString(_occurrence) << " times)";
 
   for (const auto &pair : _doubleAttributes) {
     std::ostringstream attrDoc;
-    doc << std::endl;
+    doc << '\n';
     attrDoc << indent << "     ATTR " << pair.first << ": "
             << pair.second.getUserDocumentation();
     doc << utils::wrapText(attrDoc.str(), linewidth, indentation + 10);
@@ -431,7 +430,7 @@ std::string XMLTag::printDocumentation(int indentation) const
 
   for (const auto &pair : _intAttributes) {
     std::ostringstream attrDoc;
-    doc << std::endl;
+    doc << '\n';
     attrDoc << indent << "     ATTR " << pair.first << ": "
             << pair.second.getUserDocumentation();
     doc << utils::wrapText(attrDoc.str(), linewidth, indentation + 10);
@@ -439,7 +438,7 @@ std::string XMLTag::printDocumentation(int indentation) const
 
   for (const auto &pair : _stringAttributes) {
     std::ostringstream attrDoc;
-    doc << std::endl;
+    doc << '\n';
     attrDoc << indent << "     ATTR " << pair.first << ": "
             << pair.second.getUserDocumentation();
     doc << utils::wrapText(attrDoc.str(), linewidth, indentation + 10);
@@ -447,7 +446,7 @@ std::string XMLTag::printDocumentation(int indentation) const
 
   for (const auto &pair : _booleanAttributes) {
     std::ostringstream attrDoc;
-    doc << std::endl;
+    doc << '\n';
     attrDoc << indent << "     ATTR " << pair.first << ": "
             << pair.second.getUserDocumentation();
     doc << utils::wrapText(attrDoc.str(), linewidth, indentation + 10);
@@ -455,13 +454,13 @@ std::string XMLTag::printDocumentation(int indentation) const
 
   for (const auto &pair : _eigenVectorXdAttributes) {
     std::ostringstream attrDoc;
-    doc << std::endl;
+    doc << '\n';
     attrDoc << indent << "     ATTR " << pair.first << ": "
             << pair.second.getUserDocumentation();
     doc << utils::wrapText(attrDoc.str(), linewidth, indentation + 10);
   }
 
-  doc << " -->" << std::endl;
+  doc << " -->\n";
   std::ostringstream tagHead;
   tagHead << indent << "<" << _fullName;
 
@@ -493,13 +492,13 @@ std::string XMLTag::printDocumentation(int indentation) const
   doc << utils::wrapText(tagHead.str(), linewidth, indentation + 3);
 
   if (not _subtags.empty()) {
-    doc << ">" << std::endl << std::endl;
+    doc << ">\n\n";
     for (auto const subtag : _subtags) {
       doc << subtag->printDocumentation(indentation + 3);
     }
-    doc << indent << "</" << _fullName << ">" << std::endl << std::endl;
+    doc << indent << "</" << _fullName << ">\n\n";
   } else {
-    doc << "/>" << std::endl << std::endl;
+    doc << "/>\n\n";
   }
 
   return doc.str();

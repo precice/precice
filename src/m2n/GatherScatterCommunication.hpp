@@ -54,21 +54,18 @@ public:
   virtual void requestConnection(
       const std::string &acceptorName,
       const std::string &requesterName);
-  
-  /** same as acceptconnection, but this one does not need vertex distribution
-      and instead gets communication map directly from mesh. 
-   
-   *  This one is used only to create initial communication Map.    
+  /** 
+   *  This method has not implemented here yet.    
+   *  @todo: Ideally this should not be here
    */
   virtual void acceptPreConnection(
     std::string const &acceptorName,
     std::string const &requesterName);
-  
-  /** same as requestConnection, but this one does not need vertex distribution
-      and instead gets communication map directly from mesh. 
-   
-   *  This one is used only to create initial communication Map.    
-   */  
+
+  /** 
+   *  This method has not implemented here yet.    
+   *  @todo: Ideally this should not be here
+   */
   virtual void requestPreConnection(
     std::string const &acceptorName,
     std::string const &requesterName);
@@ -93,12 +90,14 @@ public:
       int     valueDimension);
 
    /**
-   * @brief Sends a double to connected ranks       
+   * @brief Broadcasts a double to connected ranks       
+   * @todo: Ideally this should not be here
    */
-  virtual void broadcastSend(double &itemToSend);
+  virtual void broadcastSend(const double &itemToSend);
 
   /**
    * @brief Receives a double from a connected rank
+   * @todo: Ideally this should not be here
    */
   virtual void broadcastReceive(double &itemToReceive);
 

@@ -59,7 +59,7 @@ void PythonAction::performAction(double time,
     PyObject *pythonDt   = PyFloat_FromDouble(fullDt);
     PyTuple_SetItem(dataArgs, 0, pythonTime);
     PyTuple_SetItem(dataArgs, 1, pythonDt);
-    if (_sourceData.use_count() > 0) {
+    if (_sourceData) {
       npy_intp sourceDim[]  = {_sourceData->values().size()};
       double * sourceValues = _sourceData->values().data();
       //assertion(_sourceValues == NULL);
@@ -67,14 +67,14 @@ void PythonAction::performAction(double time,
       CHECK(_sourceValues != nullptr, "Creating python source values failed!");
       PyTuple_SetItem(dataArgs, 2, _sourceValues);
     }
-    if (_targetData.use_count() > 0) {
+    if (_targetData) {
       npy_intp targetDim[]  = {_targetData->values().size()};
       double * targetValues = _targetData->values().data();
       //assertion(_targetValues == NULL);
       _targetValues =
           PyArray_SimpleNewFromData(1, targetDim, NPY_DOUBLE, targetValues);
       CHECK(_targetValues != nullptr, "Creating python target values failed!");
-      int argumentIndex = _sourceData.use_count() > 0 ? 3 : 2;
+      int argumentIndex = _sourceData ? 3 : 2;
       PyTuple_SetItem(dataArgs, argumentIndex, _targetValues);
     }
     PyObject_CallObject(_performAction, dataArgs);

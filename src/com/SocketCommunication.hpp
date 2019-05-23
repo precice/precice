@@ -1,11 +1,12 @@
-#ifndef PRECICE_NO_SOCKETS
-
 #pragma once
 
 #include "com/Communication.hpp"
 #include <boost/asio.hpp>
 #include "logging/Logger.hpp"
 #include <thread>
+#include <vector>
+#include <map>
+#include "com/SocketSendQueue.hpp"
 
 namespace precice
 {
@@ -69,19 +70,19 @@ public:
   virtual void send(double itemToSend, int rankReceiver) override;
 
   /// Asynchronously sends a double to process with given rank.
-  virtual PtrRequest aSend(double itemToSend, int rankReceiver) override;
+  virtual PtrRequest aSend(const double & itemToSend, int rankReceiver) override;
 
   /// Sends an int to process with given rank.
   virtual void send(int itemToSend, int rankReceiver) override;
 
   /// Asynchronously sends an int to process with given rank.
-  virtual PtrRequest aSend(int itemToSend, int rankReceiver) override;
+  virtual PtrRequest aSend(const int & itemToSend, int rankReceiver) override;
 
   /// Sends a bool to process with given rank.
   virtual void send(bool itemToSend, int rankReceiver) override;
 
   /// Asynchronously sends a bool to process with given rank.
-  virtual PtrRequest aSend(bool itemToSend, int rankReceiver) override;
+  virtual PtrRequest aSend(const bool & itemToSend, int rankReceiver) override;
 
   /// Receives a std::string from process with given rank.
   virtual void receive(std::string &itemToReceive, int rankSender) override;
@@ -150,6 +151,8 @@ private:
   /// Remote rank -> socket map
   std::map<int, std::shared_ptr<Socket>> _sockets;
 
+  SocketSendQueue _queue;
+
   bool isClient();
   bool isServer();
 
@@ -158,4 +161,3 @@ private:
 } // namespace com
 } // namespace precice
 
-#endif // not PRECICE_NO_SOCKETS

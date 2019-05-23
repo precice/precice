@@ -3,12 +3,14 @@
 #include "Mapping.hpp"
 #include "impl/BasisFunctions.hpp"
 #include "utils/MasterSlave.hpp"
-#include "utils/EventTimings.hpp"
+#include "utils/Event.hpp"
 
 #include <Eigen/Core>
 #include <Eigen/QR>
 
 namespace precice {
+extern bool syncMode;
+
 namespace mapping {
 
 /**
@@ -117,8 +119,8 @@ RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: RadialBasisFctMapping
   Mapping ( constraint, dimensions ),
   _basisFunction ( function )
 {
-  setInputRequirement(VERTEX);
-  setOutputRequirement(VERTEX);
+  setInputRequirement(Mapping::MeshRequirement::VERTEX);
+  setOutputRequirement(Mapping::MeshRequirement::VERTEX);
   setDeadAxis(xDead, yDead, zDead);
 }
 
@@ -127,9 +129,9 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
 {
   TRACE();
 
-  precice::utils::Event e("map.rbf.computeMapping.From" + input()->getName() + "To" + output()->getName());
+  precice::utils::Event e("map.rbf.computeMapping.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
 
-  CHECK(not utils::MasterSlave::_slaveMode && not utils::MasterSlave::_masterMode,
+  CHECK(not utils::MasterSlave::isSlave() && not utils::MasterSlave::isMaster(),
         "RBF mapping is not supported for a participant in master mode, use petrbf instead");
 
   assertion(input()->getDimensions() == output()->getDimensions(),
@@ -230,7 +232,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
 {
   TRACE(inputDataID, outputDataID);
 
-  precice::utils::Event e("map.rbf.mapData.From" + input()->getName() + "To" + output()->getName());
+  precice::utils::Event e("map.rbf.mapData.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
 
   assertion(_hasComputedMapping);
   assertion(input()->getDimensions() == output()->getDimensions(),
@@ -326,13 +328,15 @@ Eigen::VectorXd RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::reduceVector
 template<typename RADIAL_BASIS_FUNCTION_T>
 void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
 {
-  assertion(false); //Serial RBF should only be used in coupling mode. This is already handled in the configuration.
+  CHECK(not utils::MasterSlave::isSlave() && not utils::MasterSlave::isMaster(),
+        "RBF mapping is not supported for a participant in master mode, use petrbf instead");
 }
 
 template<typename RADIAL_BASIS_FUNCTION_T>
 void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
 {
-  assertion(false); //Serial RBF should only be used in coupling mode. This is already handled in the configuration.
+  CHECK(not utils::MasterSlave::isSlave() && not utils::MasterSlave::isMaster(),
+        "RBF mapping is not supported for a participant in master mode, use petrbf instead");
 }
 
 

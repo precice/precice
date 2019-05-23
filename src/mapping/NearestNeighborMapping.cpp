@@ -4,11 +4,13 @@
 #include "mesh/RTree.hpp"
 #include <Eigen/Core>
 #include <boost/function_output_iterator.hpp>
-#include "utils/EventTimings.hpp"
+#include "utils/Event.hpp"
 
 
 
 namespace precice {
+extern bool syncMode;
+
 namespace mapping {
 
 NearestNeighborMapping:: NearestNeighborMapping
@@ -18,8 +20,8 @@ NearestNeighborMapping:: NearestNeighborMapping
 :
   Mapping(constraint, dimensions)
 {
-  setInputRequirement(VERTEX);
-  setOutputRequirement(VERTEX);
+  setInputRequirement(Mapping::MeshRequirement::VERTEX);
+  setOutputRequirement(Mapping::MeshRequirement::VERTEX);
 }
 
 void NearestNeighborMapping:: computeMapping()
@@ -29,11 +31,11 @@ void NearestNeighborMapping:: computeMapping()
   assertion(input().get() != nullptr);
   assertion(output().get() != nullptr);
 
-  precice::utils::Event e("map.nn.computeMapping.From" + input()->getName() + "To" + output()->getName());
+  precice::utils::Event e("map.nn.computeMapping.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
   
   if (getConstraint() == CONSISTENT){
     DEBUG("Compute consistent mapping");
-    mesh::rtree::PtrRTree rtree = mesh::rtree::getVertexRTree(input());
+    mesh::rtree::PtrVertexRTree rtree = mesh::rtree::getVertexRTree(input());
     size_t verticesSize = output()->vertices().size();
     _vertexIndices.resize(verticesSize);
     const mesh::Mesh::VertexContainer& outputVertices = output()->vertices();
@@ -49,7 +51,7 @@ void NearestNeighborMapping:: computeMapping()
   else {
     assertion(getConstraint() == CONSERVATIVE, getConstraint());
     DEBUG("Compute conservative mapping");
-    mesh::rtree::PtrRTree rtree = mesh::rtree::getVertexRTree(output());
+    mesh::rtree::PtrVertexRTree rtree = mesh::rtree::getVertexRTree(output());
     size_t verticesSize = input()->vertices().size();
     _vertexIndices.resize(verticesSize);
     const mesh::Mesh::VertexContainer& inputVertices = input()->vertices();
@@ -76,6 +78,11 @@ void NearestNeighborMapping:: clear()
   TRACE();
   _vertexIndices.clear();
   _hasComputedMapping = false;
+  if (getConstraint() == CONSISTENT){
+    mesh::rtree::clear(*input()); 
+  } else {
+    mesh::rtree::clear(*output()); 
+  }
 }
 
 void NearestNeighborMapping:: map
@@ -85,7 +92,7 @@ void NearestNeighborMapping:: map
 {
   TRACE(inputDataID, outputDataID);
 
-  precice::utils::Event e("map.nn.mapData.From" + input()->getName() + "To" + output()->getName());
+  precice::utils::Event e("map.nn.mapData.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
 
   const Eigen::VectorXd& inputValues = input()->data(inputDataID)->values();
   Eigen::VectorXd& outputValues = output()->data(outputDataID)->values();
@@ -99,7 +106,7 @@ void NearestNeighborMapping:: map
                outputValues.size(), valueDimensions, output()->vertices().size() );
   if (getConstraint() == CONSISTENT){
     DEBUG("Map consistent");
-    size_t outSize = output()->vertices().size();
+    size_t const outSize = output()->vertices().size();
     for ( size_t i=0; i < outSize; i++ ){
       int inputIndex = _vertexIndices[i] * valueDimensions;
       for ( int dim=0; dim < valueDimensions; dim++ ){
@@ -110,9 +117,9 @@ void NearestNeighborMapping:: map
   else {
     assertion(getConstraint() == CONSERVATIVE, getConstraint());
     DEBUG("Map conservative");
-    size_t inSize = input()->vertices().size();
+    size_t const inSize = input()->vertices().size();
     for ( size_t i=0; i < inSize; i++ ){
-      int outputIndex = _vertexIndices[i] * valueDimensions;
+      int const outputIndex = _vertexIndices[i] * valueDimensions;
       for ( int dim=0; dim < valueDimensions; dim++ ){
         outputValues(outputIndex+dim) += inputValues((i*valueDimensions)+dim);
       }

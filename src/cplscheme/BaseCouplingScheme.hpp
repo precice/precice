@@ -399,7 +399,7 @@ protected:
   /// @return Communication device to the other coupling participant.
   m2n::PtrM2N getM2N()
   {
-    assertion(_m2n.use_count() > 0);
+    assertion(_m2n);
     return _m2n;
   }
 

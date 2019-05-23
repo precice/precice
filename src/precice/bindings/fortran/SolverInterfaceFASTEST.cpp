@@ -7,12 +7,10 @@
 
 using namespace std;
 
-static precice::impl::SolverInterfaceImpl* implA = nullptr;
-static precice::impl::SolverInterfaceImpl* implF = nullptr;
+static precice::impl::SolverInterfaceImpl* implAcoustic = nullptr;
+static precice::impl::SolverInterfaceImpl* implFluid = nullptr;
 
 static precice::logging::Logger _log ("SolverInterfaceFASTEST");
-
-static std::string errormsg = "preCICE has not been created properly. Be sure to call \"precicef_create\" before any other call to preCICE.";
 
 namespace precice {
   namespace impl {
@@ -20,91 +18,100 @@ namespace precice {
      * @brief Returns length of string without trailing whitespaces.
      */
     int strippedLength( const char* string, int length );
+    void checkCorrectUsage(int useFluid);
   }
 }
 
 void precice_fastest_create_
 (
-  const char* participantNameA,
-  const char* participantNameF,
+  const char* participantNameAcoustic,
+  const int*  isAcousticUsed,
+  const char* participantNameFluid,
+  const int*  isFluidUsed,
   const char* configFileName,
   const int*  solverProcessIndex,
   const int*  solverProcessSize,
-  int   lengthAccessorNameA,
-  int   lengthAccessorNameF,
+  int   lengthAccessorNameAcoustic,
+  int   lengthAccessorNameFluid,
   int   lengthConfigFileName )
 {
-  int strippedLength = precice::impl::strippedLength(participantNameA,lengthAccessorNameA);
-  string stringAccessorNameA(participantNameA, strippedLength);
-  strippedLength = precice::impl::strippedLength(participantNameF,lengthAccessorNameF);
-  string stringAccessorNameF(participantNameF, strippedLength);
+  int strippedLength = precice::impl::strippedLength(participantNameAcoustic,lengthAccessorNameAcoustic);
+  string stringAccessorNameAcoustic(participantNameAcoustic, strippedLength);
+  strippedLength = precice::impl::strippedLength(participantNameFluid,lengthAccessorNameFluid);
+  string stringAccessorNameFluid(participantNameFluid, strippedLength);
   strippedLength = precice::impl::strippedLength(configFileName,lengthConfigFileName);
   string stringConfigFileName(configFileName, strippedLength);
-  //cout << "Accessor: " << stringAccessorName << "!" << endl;
-  //cout << "Config  : " << stringConfigFileName << "!" << endl;
-  implA = new precice::impl::SolverInterfaceImpl (stringAccessorNameA,
-         *solverProcessIndex, *solverProcessSize, false);
-  implA->configure(stringConfigFileName);
-  implF = new precice::impl::SolverInterfaceImpl (stringAccessorNameF,
-         *solverProcessIndex, *solverProcessSize, false);
-  implF->configure(stringConfigFileName);
+  //cout << "Accessor: " << stringAccessorName << "!" << '\n';
+  //cout << "Config  : " << stringConfigFileName << "!" << '\n';
+  if(isAcousticUsed){
+    implAcoustic = new precice::impl::SolverInterfaceImpl (stringAccessorNameAcoustic,
+           *solverProcessIndex, *solverProcessSize, false);
+    implAcoustic->configure(stringConfigFileName);
+  }
+  if(isFluidUsed){
+    implFluid = new precice::impl::SolverInterfaceImpl (stringAccessorNameFluid,
+           *solverProcessIndex, *solverProcessSize, false);
+    implFluid->configure(stringConfigFileName);
+  }
+  CHECK(implAcoustic != nullptr || implFluid != nullptr ,"Either the Fluid interface or the Acoustic"
+      " interface or both need to be used");
 }
 
 void precice_fastest_initialize_
 (
   double* timestepLengthLimit,
-  const int*  useF)
+  const int*  useFluid)
 {
-  CHECK(implA != nullptr && implF != nullptr ,errormsg);
-  assertion(*useF == 0 || *useF == 1);
-  if(*useF==0){
-    *timestepLengthLimit = implA->initialize();
+  precice::impl::checkCorrectUsage(*useFluid);
+
+  if(*useFluid==0){
+    *timestepLengthLimit = implAcoustic->initialize();
   }
   else{
-    *timestepLengthLimit = implF->initialize();
+    *timestepLengthLimit = implFluid->initialize();
   }
 }
 
 void precice_fastest_initialize_data_(
-  const int*  useF)
+  const int*  useFluid)
 {
-  CHECK(implA != nullptr && implF != nullptr ,errormsg);
-  assertion(*useF == 0 || *useF == 1);
-  if(*useF==0){
-    implA->initializeData();
+  precice::impl::checkCorrectUsage(*useFluid);
+
+  if(*useFluid==0){
+    implAcoustic->initializeData();
   }
   else{
-    implF->initializeData();
+    implFluid->initializeData();
   }
 }
 
 void precice_fastest_advance_
 (
   double* timestepLengthLimit,
-  const int*  useF)
+  const int*  useFluid)
 {
-  CHECK(implA != nullptr && implF != nullptr ,errormsg);
-  assertion(*useF == 0 || *useF == 1);
-  if(*useF==0){
-    *timestepLengthLimit = implA->advance(*timestepLengthLimit);
+  precice::impl::checkCorrectUsage(*useFluid);
+
+  if(*useFluid==0){
+    *timestepLengthLimit = implAcoustic->advance(*timestepLengthLimit);
   }
   else{
-    *timestepLengthLimit = implF->advance(*timestepLengthLimit);
+    *timestepLengthLimit = implFluid->advance(*timestepLengthLimit);
   }
 }
 
 void precice_fastest_finalize_(
-  const int*  useF)
+  const int*  useFluid)
 {
-  CHECK(implA != nullptr && implF != nullptr ,errormsg);
-  assertion(*useF == 0 || *useF == 1);
-  if(*useF==0){
-    implA->finalize();
-    delete implA;
+  precice::impl::checkCorrectUsage(*useFluid);
+
+  if(*useFluid==0){
+    implAcoustic->finalize();
+    delete implAcoustic;
   }
   else{
-    implF->finalize();
-    delete implF;
+    implFluid->finalize();
+    delete implFluid;
   }
 }
 
@@ -112,16 +119,16 @@ void precice_fastest_action_required_
 (
   const char* action,
   int*        isRequired,
-  const int*  useF,
+  const int*  useFluid,
   int         lengthAction )
 {
-  CHECK(implA != nullptr && implF != nullptr ,errormsg);
-  assertion(*useF == 0 || *useF == 1);
+  precice::impl::checkCorrectUsage(*useFluid);
+
 
   int strippedLength = precice::impl::strippedLength(action, lengthAction);
   string stringAction(action, strippedLength);
-  if(*useF==0){
-    if (implA->isActionRequired(stringAction)){
+  if(*useFluid==0){
+    if (implAcoustic->isActionRequired(stringAction)){
       *isRequired = 1;
     }
     else {
@@ -129,7 +136,7 @@ void precice_fastest_action_required_
     }
   }
   else{
-    if (implF->isActionRequired(stringAction)){
+    if (implFluid->isActionRequired(stringAction)){
       *isRequired = 1;
     }
     else {
@@ -141,18 +148,18 @@ void precice_fastest_action_required_
 void precice_fastest_fulfilled_action_
 (
   const char* action,
-  const int*  useF,
+  const int*  useFluid,
   int         lengthAction )
 {
-  CHECK(implA != nullptr && implF != nullptr ,errormsg);
-  assertion(*useF == 0 || *useF == 1);
+  precice::impl::checkCorrectUsage(*useFluid);
+
   int strippedLength = precice::impl::strippedLength(action, lengthAction);
   string stringAction(action, strippedLength);
-  if(*useF==0){
-    implA->fulfilledAction(stringAction);
+  if(*useFluid==0){
+    implAcoustic->fulfilledAction(stringAction);
   }
   else{
-    implF->fulfilledAction(stringAction);
+    implFluid->fulfilledAction(stringAction);
   }
 }
 
@@ -160,18 +167,18 @@ void precice_fastest_get_mesh_id_
 (
   const char* meshName,
   int*        meshID,
-  const int*  useF,
+  const int*  useFluid,
   int         lengthMeshName )
 {
-  CHECK(implA != nullptr && implF != nullptr ,errormsg);
-  assertion(*useF == 0 || *useF == 1);
+  precice::impl::checkCorrectUsage(*useFluid);
+
   int strippedLength = precice::impl::strippedLength(meshName, lengthMeshName);
   string stringMeshName(meshName, strippedLength);
-  if(*useF==0){
-    *meshID = implA->getMeshID(stringMeshName);
+  if(*useFluid==0){
+    *meshID = implAcoustic->getMeshID(stringMeshName);
   }
   else{
-    *meshID = implF->getMeshID(stringMeshName);
+    *meshID = implFluid->getMeshID(stringMeshName);
   }
 }
 
@@ -180,19 +187,19 @@ void precice_fastest_get_data_id_
   const char* dataName,
   const int*  meshID,
   int*        dataID,
-  const int*  useF,
+  const int*  useFluid,
   int         lengthDataName
 )
 {
-  CHECK(implA != nullptr && implF != nullptr ,errormsg);
-  assertion(*useF == 0 || *useF == 1);
+  precice::impl::checkCorrectUsage(*useFluid);
+
   int strippedLength = precice::impl::strippedLength(dataName, lengthDataName);
   string stringDataName(dataName, strippedLength);
-  if(*useF==0){
-    *dataID = implA->getDataID(stringDataName, *meshID);
+  if(*useFluid==0){
+    *dataID = implAcoustic->getDataID(stringDataName, *meshID);
   }
   else{
-    *dataID = implF->getDataID(stringDataName, *meshID);
+    *dataID = implFluid->getDataID(stringDataName, *meshID);
   }
 }
 
@@ -201,15 +208,15 @@ void precice_fastest_set_vertex_
   const int*    meshID,
   const double* position,
   int*          vertexID,
-  const int*    useF)
+  const int*    useFluid)
 {
-  CHECK(implA != nullptr && implF != nullptr ,errormsg);
-  assertion(*useF == 0 || *useF == 1);
-  if(*useF==0){
-    *vertexID = implA->setMeshVertex(*meshID, position);
+  precice::impl::checkCorrectUsage(*useFluid);
+
+  if(*useFluid==0){
+    *vertexID = implAcoustic->setMeshVertex(*meshID, position);
   }
   else{
-    *vertexID = implF->setMeshVertex(*meshID, position);
+    *vertexID = implFluid->setMeshVertex(*meshID, position);
   }
 }
 
@@ -219,15 +226,15 @@ void precice_fastest_set_vertices_
   const int*    size,
   double*       positions,
   int*          positionIDs,
-  const int*    useF)
+  const int*    useFluid)
 {
-  CHECK(implA != nullptr && implF != nullptr ,errormsg);
-  assertion(*useF == 0 || *useF == 1);
-  if(*useF==0){
-    implA->setMeshVertices(*meshID, *size, positions, positionIDs);
+  precice::impl::checkCorrectUsage(*useFluid);
+
+  if(*useFluid==0){
+    implAcoustic->setMeshVertices(*meshID, *size, positions, positionIDs);
   }
   else{
-    implF->setMeshVertices(*meshID, *size, positions, positionIDs);
+    implFluid->setMeshVertices(*meshID, *size, positions, positionIDs);
   }
 }
 
@@ -237,15 +244,15 @@ void precice_fastest_write_bvdata_
   const int* size,
   int*       valueIndices,
   double*    values,
-  const int* useF)
+  const int* useFluid)
 {
-  CHECK(implA != nullptr && implF != nullptr ,errormsg);
-  assertion(*useF == 0 || *useF == 1);
-  if(*useF==0){
-    implA->writeBlockVectorData(*dataID, *size, valueIndices, values);
+  precice::impl::checkCorrectUsage(*useFluid);
+
+  if(*useFluid==0){
+    implAcoustic->writeBlockVectorData(*dataID, *size, valueIndices, values);
   }
   else{
-    implF->writeBlockVectorData(*dataID, *size, valueIndices, values);
+    implFluid->writeBlockVectorData(*dataID, *size, valueIndices, values);
   }
 }
 
@@ -254,15 +261,15 @@ void precice_fastest_write_vdata_
   const int*    dataID,
   const int*    valueIndex,
   const double* dataValue,
-  const int*    useF)
+  const int*    useFluid)
 {
-  CHECK(implA != nullptr && implF != nullptr ,errormsg);
-  assertion(*useF == 0 || *useF == 1);
-  if(*useF==0){
-    implA->writeVectorData(*dataID, *valueIndex, dataValue);
+  precice::impl::checkCorrectUsage(*useFluid);
+
+  if(*useFluid==0){
+    implAcoustic->writeVectorData(*dataID, *valueIndex, dataValue);
   }
   else{
-    implF->writeVectorData(*dataID, *valueIndex, dataValue);
+    implFluid->writeVectorData(*dataID, *valueIndex, dataValue);
   }
 }
 
@@ -272,15 +279,15 @@ void precice_fastest_write_bsdata_
   const int* size,
   int*       valueIndices,
   double*    values,
-  const int* useF)
+  const int* useFluid)
 {
-  CHECK(implA != nullptr && implF != nullptr ,errormsg);
-  assertion(*useF == 0 || *useF == 1);
-  if(*useF==0){
-    implA->writeBlockScalarData(*dataID, *size, valueIndices, values);
+  precice::impl::checkCorrectUsage(*useFluid);
+
+  if(*useFluid==0){
+    implAcoustic->writeBlockScalarData(*dataID, *size, valueIndices, values);
   }
   else{
-    implF->writeBlockScalarData(*dataID, *size, valueIndices, values);
+    implFluid->writeBlockScalarData(*dataID, *size, valueIndices, values);
   }
 }
 
@@ -289,15 +296,15 @@ void precice_fastest_write_sdata_
   const int*    dataID,
   const int*    valueIndex,
   const double* dataValue,
-  const int*    useF)
+  const int*    useFluid)
 {
-  CHECK(implA != nullptr && implF != nullptr ,errormsg);
-  assertion(*useF == 0 || *useF == 1);
-  if(*useF==0){
-    implA->writeScalarData(*dataID, *valueIndex, *dataValue);
+  precice::impl::checkCorrectUsage(*useFluid);
+
+  if(*useFluid==0){
+    implAcoustic->writeScalarData(*dataID, *valueIndex, *dataValue);
   }
   else{
-    implF->writeScalarData(*dataID, *valueIndex, *dataValue);
+    implFluid->writeScalarData(*dataID, *valueIndex, *dataValue);
   }
 }
 
@@ -307,15 +314,15 @@ void precice_fastest_read_bvdata_
   const int* size,
   int*       valueIndices,
   double*    values,
-  const int* useF)
+  const int* useFluid)
 {
-  CHECK(implA != nullptr && implF != nullptr ,errormsg);
-  assertion(*useF == 0 || *useF == 1);
-  if(*useF==0){
-    implA->readBlockVectorData(*dataID, *size, valueIndices, values);
+  precice::impl::checkCorrectUsage(*useFluid);
+
+  if(*useFluid==0){
+    implAcoustic->readBlockVectorData(*dataID, *size, valueIndices, values);
   }
   else{
-    implF->readBlockVectorData(*dataID, *size, valueIndices, values);
+    implFluid->readBlockVectorData(*dataID, *size, valueIndices, values);
   }
 }
 
@@ -324,15 +331,15 @@ void precice_fastest_read_vdata_
   const int* dataID,
   const int* valueIndex,
   double*    dataValue,
-  const int* useF)
+  const int* useFluid)
 {
-  CHECK(implA != nullptr && implF != nullptr ,errormsg);
-  assertion(*useF == 0 || *useF == 1);
-  if(*useF==0){
-    implA->readVectorData(*dataID, *valueIndex, dataValue);
+  precice::impl::checkCorrectUsage(*useFluid);
+
+  if(*useFluid==0){
+    implAcoustic->readVectorData(*dataID, *valueIndex, dataValue);
   }
   else{
-    implF->readVectorData(*dataID, *valueIndex, dataValue);
+    implFluid->readVectorData(*dataID, *valueIndex, dataValue);
   }
 }
 
@@ -342,15 +349,15 @@ void precice_fastest_read_bsdata_
   const int* size,
   int*       valueIndices,
   double*    values,
-  const int* useF)
+  const int* useFluid)
 {
-  CHECK(implA != nullptr && implF != nullptr ,errormsg);
-  assertion(*useF == 0 || *useF == 1);
-  if(*useF==0){
-    implA->readBlockScalarData(*dataID, *size, valueIndices, values);
+  precice::impl::checkCorrectUsage(*useFluid);
+
+  if(*useFluid==0){
+    implAcoustic->readBlockScalarData(*dataID, *size, valueIndices, values);
   }
   else{
-    implF->readBlockScalarData(*dataID, *size, valueIndices, values);
+    implFluid->readBlockScalarData(*dataID, *size, valueIndices, values);
   }
 }
 
@@ -359,27 +366,28 @@ void precice_fastest_read_sdata_
   const int* dataID,
   const int* valueIndex,
   double*    dataValue,
-  const int* useF)
+  const int* useFluid)
 {
-  CHECK(implA != nullptr && implF != nullptr ,errormsg);
-  assertion(*useF == 0 || *useF == 1);
-  if(*useF==0){
-    implA->readScalarData(*dataID, *valueIndex, *dataValue);
+  precice::impl::checkCorrectUsage(*useFluid);
+
+  if(*useFluid==0){
+    implAcoustic->readScalarData(*dataID, *valueIndex, *dataValue);
   }
   else{
-    implF->readScalarData(*dataID, *valueIndex, *dataValue);
+    implFluid->readScalarData(*dataID, *valueIndex, *dataValue);
   }
 }
 
-//int precice::impl::strippedLength
-//(
-//  const char* string,
-//  int         length )
-//{
-//  int i=length-1;
-//  while (((string[i] == ' ') || (string[i] == 0)) && (i >= 0)){
-//    i--;
-//  }
-//  return i+1;
-//}
+void precice::impl::checkCorrectUsage(int useFluid)
+{
+  CHECK(useFluid == 0 || useFluid == 1, "useFluid needs to be either 0 or 1.");
 
+  if(useFluid==1){
+    CHECK(implFluid != nullptr, "The fluid interface has not been created properly. Be sure to call "
+        "\"precicef_create\" with \"useFluid=1\" before any other call to preCICE if \"isFluid=1\".");
+  }
+  else if (useFluid==0){
+    CHECK(implAcoustic != nullptr, "The acoustic interface has not been created properly. Be sure to call "
+        "\"precicef_create\" with \"useAcoustic=1\" before any other call to preCICE if \"isFluid=0\".");
+  }
+}

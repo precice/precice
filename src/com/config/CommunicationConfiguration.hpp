@@ -2,6 +2,7 @@
 
 #include "logging/Logger.hpp"
 #include "xml/XMLTag.hpp"
+#include "com/SharedPointer.hpp"
 
 namespace precice
 {

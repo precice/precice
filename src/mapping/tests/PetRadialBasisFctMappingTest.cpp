@@ -323,7 +323,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV4)
       );
 }
 #else
-  #warning "Test case MappingTests/PetRadialBasisFunctionMapping/Parallel/DistributedConsistent2DV4 deactivated, due to PETSc version < 3.8 or compiling with scons."
+  #warning "Test case MappingTests/PetRadialBasisFunctionMapping/Parallel/DistributedConsistent2DV4 deactivated, due to PETSc version < 3.8"
 #endif
 
 // same as 2DV4, but all ranks have vertices
@@ -592,7 +592,7 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV4,
     );
 }
 #else
-  #warning "Test case MappingTests/PetRadialBasisFunctionMapping/Parallel/DistributedConservative2DV4 deactivated, due to PETSc version < 3.8 or compiling with scons."
+  #warning "Test case MappingTests/PetRadialBasisFunctionMapping/Parallel/DistributedConservative2DV4 deactivated, due to PETSc version < 3.8."
 #endif
 
 /// Tests a non-contigous owner distributed at the outMesh
@@ -631,6 +631,100 @@ BOOST_AUTO_TEST_CASE(testDistributedConservative2DV5)
                   },
                   utils::Parallel::getProcessRank()*2
     );
+}
+
+void testTagging(MeshSpecification inMeshSpec,
+    MeshSpecification outMeshSpec,
+    MeshSpecification shouldTagFirstRound,
+    MeshSpecification shouldTagSecondRound,
+    bool consistent)
+{
+  int meshDimension = inMeshSpec[0].position.size();
+  int valueDimension = inMeshSpec[0].value.size();
+
+  mesh::PtrMesh inMesh ( new mesh::Mesh("InMesh", meshDimension, false) );
+  mesh::PtrData inData = inMesh->createData("InData", valueDimension);
+  getDistributedMesh(inMeshSpec, inMesh, inData);
+
+  mesh::PtrMesh outMesh ( new mesh::Mesh("outMesh", meshDimension, false) );
+  mesh::PtrData outData = outMesh->createData( "OutData", valueDimension);
+  getDistributedMesh(outMeshSpec, outMesh, outData);
+
+  Gaussian fct(4.5); //Support radius approx. 1
+  Mapping::Constraint constr = consistent? Mapping::CONSISTENT : Mapping::CONSERVATIVE;
+  PetRadialBasisFctMapping<Gaussian> mapping(constr, 2, fct, false, false, false);
+  inMesh->computeState();
+  outMesh->computeState();
+
+  mapping.setMeshes(inMesh, outMesh);
+  mapping.tagMeshFirstRound();
+
+  for (const auto& v : inMesh->vertices()){
+    auto pos = std::find_if(shouldTagFirstRound.begin(), shouldTagFirstRound.end(),
+        [meshDimension, &v](const VertexSpecification& spec){
+          return std::equal(spec.position.data(), spec.position.data() + meshDimension, v.getCoords().data());
+        });
+    bool found = pos != shouldTagFirstRound.end();
+    BOOST_TEST(found >= v.isTagged(),
+               "FirstRound: Vertex " << v << " is tagged, but should not be.");
+    BOOST_TEST(found <= v.isTagged(),
+               "FirstRound: Vertex " << v << " is not tagged, but should be.");
+  }
+
+  mapping.tagMeshSecondRound();
+
+  for (const auto& v : inMesh->vertices()){
+    auto posFirst = std::find_if(shouldTagFirstRound.begin(), shouldTagFirstRound.end(),
+        [meshDimension, &v](const VertexSpecification& spec){
+          return std::equal(spec.position.data(), spec.position.data() + meshDimension, v.getCoords().data());
+        });
+    bool foundFirst = posFirst != shouldTagFirstRound.end();
+    auto posSecond = std::find_if(shouldTagSecondRound.begin(), shouldTagSecondRound.end(),
+        [meshDimension, &v](const VertexSpecification& spec){
+          return std::equal(spec.position.data(), spec.position.data() + meshDimension, v.getCoords().data());
+        });
+    bool foundSecond = posSecond != shouldTagSecondRound.end();
+    BOOST_TEST(foundFirst <= v.isTagged(), "SecondRound: Vertex " << v
+        << " is not tagged, but should be from the first round.");
+    BOOST_TEST(foundSecond <= v.isTagged(), "SecondRound: Vertex " << v
+        << " is not tagged, but should be.");
+    BOOST_TEST((foundSecond or foundFirst)>= v.isTagged(), "SecondRound: Vertex " << v
+        << " is tagged, but should not be.");
+  }
+}
+
+BOOST_AUTO_TEST_CASE(testTagFirstRound){
+  assertion(utils::Parallel::getCommunicatorSize() == 4);
+  //    *
+  //    + <-- owned
+  //* * x * *
+  //    *
+  //    *
+  MeshSpecification outMeshSpec = {
+    {0, -1, {0, 0}, {0}}
+  };
+  MeshSpecification inMeshSpec = {
+    { 0, -1, {-1, 0}, {1}}, //inside
+    { 0, -1, {-2, 0}, {1}}, //outside
+    { 0, 0, {1, 0}, {1}},  //inside, owner
+    { 0, -1, {2, 0}, {1}},  //outside
+    { 0, -1, {0, -1}, {1}}, //inside
+    { 0, -1, {0, -2}, {1}}, //outside
+    { 0, -1, {0, 1}, {1}}, //inside
+    { 0, -1, {0, 2}, {1}}  //outside
+  };
+  MeshSpecification shouldTagFirstRound = {
+    { 0, -1, {-1, 0}, {1}},
+    { 0, -1, {1, 0}, {1}},
+    { 0, -1, {0, -1}, {1}},
+    { 0, -1, {0, 1}, {1}}
+  };
+  MeshSpecification shouldTagSecondRound = {
+    { 0, -1, {2, 0}, {1}}
+  };
+  testTagging(inMeshSpec, outMeshSpec, shouldTagFirstRound, shouldTagSecondRound, true);
+  // For conservative just swap meshes.
+  testTagging(outMeshSpec, inMeshSpec, shouldTagFirstRound, shouldTagSecondRound, false);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Parallel
@@ -1069,7 +1163,7 @@ BOOST_AUTO_TEST_CASE(MapCompactThinPlateSplinesC2)
   bool yDead = false;
   bool zDead = false;
   CompactThinPlateSplinesC2 fct(supportRadius);
-  typedef PetRadialBasisFctMapping<CompactThinPlateSplinesC2> Mapping;
+  using Mapping = PetRadialBasisFctMapping<CompactThinPlateSplinesC2>;
   Mapping consistentMap2D(Mapping::CONSISTENT, 2, fct, xDead, yDead, zDead);
   perform2DTestConsistentMapping(consistentMap2D);
   Mapping consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead);
@@ -1087,7 +1181,7 @@ BOOST_AUTO_TEST_CASE(MapPetCompactPolynomialC0)
   bool yDead = false;
   bool zDead = false;
   CompactPolynomialC0 fct(supportRadius);
-  typedef PetRadialBasisFctMapping<CompactPolynomialC0> Mapping;
+  using Mapping = PetRadialBasisFctMapping<CompactPolynomialC0>;
   Mapping consistentMap2D(Mapping::CONSISTENT, 2, fct, xDead, yDead, zDead);
   perform2DTestConsistentMapping(consistentMap2D);
   Mapping consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead);
@@ -1105,7 +1199,7 @@ BOOST_AUTO_TEST_CASE(MapPetCompactPolynomialC6)
   bool yDead = false;
   bool zDead = false;
   CompactPolynomialC6 fct(supportRadius);
-  typedef PetRadialBasisFctMapping<CompactPolynomialC6> Mapping;
+  using Mapping = PetRadialBasisFctMapping<CompactPolynomialC6>;
   Mapping consistentMap2D(Mapping::CONSISTENT, 2, fct, xDead, yDead, zDead);
   perform2DTestConsistentMapping(consistentMap2D);
   Mapping consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead);
@@ -1173,7 +1267,7 @@ BOOST_AUTO_TEST_CASE(DeadAxis3D)
   bool xDead = false;
   bool yDead = true;
   bool zDead = false;
-  typedef PetRadialBasisFctMapping<CompactPolynomialC6> Mapping;
+  using Mapping = PetRadialBasisFctMapping<CompactPolynomialC6>;
   Mapping mapping(Mapping::CONSISTENT, dimensions, fct, xDead, yDead, zDead);
 
   // Create mesh to map from
@@ -1250,7 +1344,7 @@ BOOST_AUTO_TEST_CASE(SolutionCaching)
   BOOST_TEST(mapping.hasComputedMapping() == false );
 
   mapping.computeMapping();
-  BOOST_TEST(mapping.previousSolution.size() == 0);
+  BOOST_TEST(mapping.previousSolution.empty());
   mapping.map(inDataID, outDataID);
   BOOST_TEST(mapping.hasComputedMapping() == true );
   BOOST_TEST ( outData->values()[0] == 1.0 );
@@ -1288,7 +1382,7 @@ BOOST_AUTO_TEST_CASE(ConsistentPolynomialSwitch,
   mesh::PtrMesh outMesh( new mesh::Mesh("OutMesh", dimensions, false) );
   mesh::PtrData outData = outMesh->createData( "OutData", 1 );
   int outDataID = outData->getID();
-  outMesh->createVertex(Vector2d(6, 6)); // Point is far outside the inMesh
+  outMesh->createVertex(Vector2d(3, 3)); // Point is outside the inMesh
 
   outMesh->allocateDataValues();
   addGlobalIndex(outMesh);
@@ -1301,7 +1395,7 @@ BOOST_AUTO_TEST_CASE(ConsistentPolynomialSwitch,
   mappingOff.computeMapping();
   mappingOff.map(inDataID, outDataID);
 
-  BOOST_TEST ( outData->values()[0] == 0.0 ); // Mapping to 0 since no basis function at (5,5) and no polynomial
+  BOOST_TEST ( outData->values()[0] <= 0.01 ); // Mapping to almost 0 since almost no basis function at (3,3) and no polynomial
 
   // Test integrated polynomial
   PetRadialBasisFctMapping<Gaussian> mappingOn(Mapping::CONSISTENT, dimensions, fct,
@@ -1437,6 +1531,58 @@ BOOST_AUTO_TEST_CASE(NoMapping)
     mapping2.setMeshes(inMesh, outMesh);
     mapping2.computeMapping();
   }
+}
+
+BOOST_AUTO_TEST_CASE(TestNonHomongenousGlobalIndex)
+{
+  using Eigen::Vector2d;
+  int dimensions = 2;
+
+  bool xDead = false, yDead = false, zDead = false;
+
+  Gaussian fct(1); // supportRadius = 4.55
+
+  // Create mesh to map from
+  mesh::PtrMesh inMesh ( new mesh::Mesh("InMesh", dimensions, false) );
+  mesh::PtrData inData = inMesh->createData ( "InData", 1 );
+  int inDataID = inData->getID ();
+  inMesh->createVertex ( Vector2d(1, 1) ).setGlobalIndex(2);
+  inMesh->createVertex ( Vector2d(1, 0) ).setGlobalIndex(3);
+  inMesh->createVertex ( Vector2d(0, 0) ).setGlobalIndex(6);
+  inMesh->createVertex ( Vector2d(0, 1) ).setGlobalIndex(5);
+  inMesh->allocateDataValues();
+
+  inData->values() << 1, 1, 1, 1;
+
+  // Create mesh to map to
+  mesh::PtrMesh outMesh( new mesh::Mesh("OutMesh", dimensions, false) );
+  mesh::PtrData outData = outMesh->createData( "OutData", 1 );
+  int outDataID = outData->getID();
+  outMesh->createVertex(Vector2d(0.5, 0.5));
+
+  outMesh->allocateDataValues();
+  addGlobalIndex(outMesh);
+
+  PetRadialBasisFctMapping<Gaussian> mapping1(Mapping::CONSISTENT, dimensions, fct,
+                                              xDead, yDead, zDead);
+  mapping1.setMeshes(inMesh, outMesh);
+  mapping1.computeMapping();
+  mapping1.map(inDataID, outDataID);
+
+  BOOST_TEST ( outData->values()[0] == 1 );
+
+  PetRadialBasisFctMapping<Gaussian> mapping2(Mapping::CONSERVATIVE, dimensions, fct,
+                                              xDead, yDead, zDead);
+  inData->values() << 0, 0, 0, 0; // reset
+  outData->values() << 4; // used as inData here
+  mapping2.setMeshes(outMesh, inMesh);
+  mapping2.computeMapping();
+  mapping2.map(outDataID, inDataID);
+
+  BOOST_TEST ( inData->values()[0] == 1.0 );
+  BOOST_TEST ( inData->values()[1] == 1.0 );
+  BOOST_TEST ( inData->values()[2] == 1.0 );
+  BOOST_TEST ( inData->values()[3] == 1.0 );
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Serial

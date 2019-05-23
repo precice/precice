@@ -27,7 +27,7 @@ void ReceivedBoundingBox::communicateBoundingBox()
 {
   TRACE();
 
-  if (not utils::MasterSlave::_slaveMode) {
+  if (not utils::MasterSlave::isSlave()) {
     _m2n->getMasterCommunication()->receive(_remoteParComSize, 0);
 
     // construct and initialize _remoteBBM
@@ -52,9 +52,9 @@ void ReceivedBoundingBox::computeBoundingBox()
 
   prepareBoundingBox();
 
-  if (utils::MasterSlave::_masterMode) { // Master
-    assertion(utils::MasterSlave::_rank == 0);
-    assertion(utils::MasterSlave::_size > 1);
+  if (utils::MasterSlave::isMaster()) { // Master
+    assertion(utils::MasterSlave::getRank() == 0);
+    assertion(utils::MasterSlave::getSize() > 1);
 
     // broadcast _remoteBBM to all slaves
     utils::MasterSlave::_communication->broadcast(_remoteParComSize);
@@ -77,7 +77,7 @@ void ReceivedBoundingBox::computeBoundingBox()
       
     // receive connected ranks from slaves and add them to the connection map
     std::vector<int> slaveConnectedRanks;
-    for (int rank = 1; rank < utils::MasterSlave::_size; rank++) {
+    for (int rank = 1; rank < utils::MasterSlave::getSize(); rank++) {
       int connectedRanksSize = 0;
       utils::MasterSlave::_communication->receive(connectedRanksSize, rank);
       if (connectedRanksSize != 0) {
@@ -91,14 +91,14 @@ void ReceivedBoundingBox::computeBoundingBox()
 
     // send connectionMap to other master
     _m2n->getMasterCommunication()->send(connectedRanksList, 0);
-    if (connectionMap.size() != 0) { // @todo we need an error message here instea
+    if (connectionMap.size() != 0) { 
       com::CommunicateBoundingBox(_m2n->getMasterCommunication()).sendConnectionMap(connectionMap, 0);
     } else
     {
       ERROR("This participant has no rank in the interface! Please check your test case and make sure that the mesh partition given to preCICE is loacted in the interface");
     }
 
-  } else if (utils::MasterSlave::_slaveMode) {
+  } else if (utils::MasterSlave::isSlave()) {
     utils::MasterSlave::_communication->broadcast(_remoteParComSize, 0);
 
     // construct and initialize _remoteBBM

@@ -65,19 +65,26 @@ public:
       const std::string &acceptorName,
       const std::string &requesterName) = 0;
 
-  /** same as acceptconnection, but this one does not need vertex distribution
-      and instead gets communication map directly from mesh. 
-   
-   *  This one is used only to create initial communication Map.    
+  /**
+   * @brief Connects to another participant, which has to call requestConnection().
+   *        Exchanged vertex list is not included, only connection between ranks 
+   *        is established. 
+   *
+   * @param[in] acceptorName Name of calling participant.
+   * @param[in] requesterName Name of remote participant to connect to.
    */
   virtual void acceptPreConnection(
     std::string const &acceptorName,
     std::string const &requesterName) = 0;
   
-  /** same as requestConnection, but this one does not need vertex distribution
-      and instead gets communication map directly from mesh. 
-   
-   *  This one is used only to create initial communication Map.    
+
+  /**
+   * @brief Connects to another participant, which has to call acceptConnection().
+   *        Exchanged vertex list is not included, only connection between ranks 
+   *        is established. 
+   *
+   * @param[in] acceptorName Name of remote participant to connect to.
+   * @param[in] requesterName Name of calling participant.
    */
   virtual void requestPreConnection(
     std::string const &acceptorName,
@@ -103,9 +110,9 @@ public:
       int     valueDimension) = 0;
 
   /**
-   * @brief Sends a double to connected ranks       
+   * @brief Broadcasts a double to connected ranks       
    */
-  virtual void broadcastSend(double &itemToSend) = 0;
+  virtual void broadcastSend(const double &itemToSend) = 0;
 
   /**
    * @brief Receives a double from a connected rank

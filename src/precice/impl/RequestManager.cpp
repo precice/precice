@@ -3,6 +3,8 @@
 #include "cplscheme/CouplingScheme.hpp"
 #include "precice/impl/SolverInterfaceImpl.hpp"
 #include <algorithm>
+#include <utility>
+#include <vector>
 
 namespace precice {
 namespace impl {
@@ -14,8 +16,8 @@ RequestManager:: RequestManager
   cplscheme::PtrCouplingScheme couplingScheme)
 :
   _interface(solverInterfaceImpl),
-  _com(clientServerCommunication),
-  _couplingScheme(couplingScheme)
+  _com(std::move(clientServerCommunication)),
+  _couplingScheme(std::move(couplingScheme))
 {}
 
 void RequestManager:: handleRequests()
@@ -309,10 +311,10 @@ void RequestManager:: requestResetMesh
 
 void RequestManager:: requestSetMeshVertices
 (
-  int     meshID,
-  int     size,
-  double* positions,
-  int*    ids )
+  int           meshID,
+  int           size,
+  const double* positions,
+  int*          ids )
 {
   TRACE();
   _com->send(REQUEST_SET_MESH_VERTICES, 0);
@@ -324,10 +326,10 @@ void RequestManager:: requestSetMeshVertices
 
 void RequestManager:: requestGetMeshVertices
 (
-  int     meshID,
-  int     size,
-  int*    ids,
-  double* positions )
+  int        meshID,
+  int        size,
+  const int* ids,
+  double*    positions )
 {
   TRACE();
   _com->send(REQUEST_GET_MESH_VERTICES, 0);
@@ -339,10 +341,10 @@ void RequestManager:: requestGetMeshVertices
 
 void RequestManager:: requestGetMeshVertexIDsFromPositions
 (
-  int     meshID,
-  int     size,
-  double* positions,
-  int*    ids )
+  int           meshID,
+  int           size,
+  const double* positions,
+  int*          ids )
 {
   TRACE(size);
   _com->send(REQUEST_GET_MESH_VERTEX_IDS_FROM_POSITIONS, 0);
@@ -424,10 +426,10 @@ void RequestManager:: requestSetMeshQuadWithEdges
 }
 
 void RequestManager:: requestWriteBlockScalarData (
-  int     dataID,
-  int     size,
-  int*    valueIndices,
-  double* values )
+  int           dataID,
+  int           size,
+  const int*    valueIndices,
+  const double* values )
 {
   TRACE(dataID, size);
   _com->send(REQUEST_WRITE_BLOCK_SCALAR_DATA, 0);
@@ -451,10 +453,10 @@ void RequestManager:: requestWriteScalarData
 }
 
 void RequestManager:: requestWriteBlockVectorData (
-  int     dataID,
-  int     size,
-  int*    valueIndices,
-  double* values )
+  int           dataID,
+  int           size,
+  const int*    valueIndices,
+  const double* values )
 {
   TRACE(dataID);
   _com->send(REQUEST_WRITE_BLOCK_VECTOR_DATA, 0);
@@ -466,9 +468,9 @@ void RequestManager:: requestWriteBlockVectorData (
 
 void RequestManager:: requestWriteVectorData
 (
-  int     dataID,
-  int     valueIndex,
-  double* value )
+  int           dataID,
+  int           valueIndex,
+  const double* value )
 {
   TRACE();
   _com->send(REQUEST_WRITE_VECTOR_DATA, 0);
@@ -478,10 +480,10 @@ void RequestManager:: requestWriteVectorData
 }
 
 void RequestManager:: requestReadBlockScalarData (
-  int     dataID,
-  int     size,
-  int*    valueIndices,
-  double* values )
+  int        dataID,
+  int        size,
+  const int* valueIndices,
+  double*    values )
 {
   TRACE(dataID, size);
   _com->send(REQUEST_READ_BLOCK_SCALAR_DATA, 0);
@@ -506,10 +508,10 @@ void RequestManager:: requestReadScalarData
 
 void RequestManager:: requestReadBlockVectorData
 (
-  int     dataID,
-  int     size,
-  int*    valueIndices,
-  double* values )
+  int        dataID,
+  int        size,
+  const int* valueIndices,
+  double*    values )
 {
   TRACE(dataID, size);
   _com->send(REQUEST_READ_BLOCK_VECTOR_DATA, 0);
@@ -581,7 +583,7 @@ void RequestManager:: handleRequestAdvance
   const std::list<int>& clientRanks )
 {
   TRACE();
-  std::list<int>::const_iterator iter = clientRanks.begin();
+  auto iter = clientRanks.begin();
   double oldDt;
   _com->receive(oldDt, *iter);
   iter++;
@@ -621,9 +623,9 @@ void RequestManager:: handleRequestSetMeshVertex
   TRACE(rankSender);
   int meshID = -1;
   _com->receive(meshID, rankSender);
-  double position[_interface.getDimensions()];
-  _com->receive(position, _interface.getDimensions(), rankSender);
-  int index = _interface.setMeshVertex(meshID, position);
+  std::vector<double> position(_interface.getDimensions());
+  _com->receive(position.data(), _interface.getDimensions(), rankSender);
+  int index = _interface.setMeshVertex(meshID, position.data());
   _com->send(index, rankSender);
 }
 
@@ -659,13 +661,11 @@ void RequestManager:: handleRequestSetMeshVertices
   int size = -1;
   _com->receive(size, rankSender);
   CHECK(size > 0, "You cannot call setMeshVertices with size=0.");
-  double* positions = new double[size*_interface.getDimensions()];
-  _com->receive(positions, size*_interface.getDimensions(), rankSender);
-  int* ids = new int[size];
-  _interface.setMeshVertices(meshID, size, positions, ids);
-  _com->send(ids, size, rankSender);
-  delete[] positions;
-  delete[] ids;
+  std::vector<double> positions(static_cast<size_t>(size)*_interface.getDimensions());
+  _com->receive(positions, rankSender);
+  std::vector<int> ids(size);
+  _interface.setMeshVertices(meshID, size, positions.data(), ids.data());
+  _com->send(ids, rankSender);
 }
 
 void RequestManager:: handleRequestGetMeshVertices
@@ -678,13 +678,11 @@ void RequestManager:: handleRequestGetMeshVertices
   _com->receive(meshID, rankSender);
   _com->receive(size, rankSender);
   assertion(size > 0, size);
-  int* ids = new int[size];
-  double* positions = new double[size*_interface.getDimensions()];
-  _com->receive(ids, size, rankSender);
-  _interface.getMeshVertices(meshID, size, ids, positions);
-  _com->send(positions, size*_interface.getDimensions(), rankSender);
-  delete[] ids;
-  delete[] positions;
+  std::vector<int> ids(size);
+  std::vector<double> positions(static_cast<size_t>(size)*_interface.getDimensions());
+  _com->receive(ids, rankSender);
+  _interface.getMeshVertices(meshID, size, ids.data(), positions.data());
+  _com->send(positions, rankSender);
 }
 
 void RequestManager:: handleRequestGetMeshVertexIDsFromPositions
@@ -697,13 +695,11 @@ void RequestManager:: handleRequestGetMeshVertexIDsFromPositions
   _com->receive(meshID, rankSender);
   _com->receive(size, rankSender);
   assertion(size > 0, size);
-  int* ids = new int[size];
-  double* positions = new double[size*_interface.getDimensions()];
-  _com->receive(positions, size*_interface.getDimensions(), rankSender);
-  _interface.getMeshVertexIDsFromPositions(meshID, size, positions, ids);
-  _com->send(ids, size, rankSender);
-  delete[] ids;
-  delete[] positions;
+  std::vector<int> ids(size);
+  std::vector<double> positions(static_cast<size_t>(size)*_interface.getDimensions());
+  _com->receive(positions, rankSender);
+  _interface.getMeshVertexIDsFromPositions(meshID, size, positions.data(), ids.data());
+  _com->send(ids, rankSender);
 }
 
 void RequestManager:: handleRequestSetMeshEdge
@@ -780,13 +776,11 @@ void RequestManager:: handleRequestWriteBlockScalarData
   _com->receive(dataID, rankSender);
   int size = -1;
   _com->receive(size, rankSender);
-  int* indices = new int[size];
-  _com->receive(indices, size, rankSender);
-  double* data = new double[size];
-  _com->receive(data, size, rankSender);
-  _interface.writeBlockScalarData(dataID, size, indices, data);
-  delete[] indices;
-  delete[] data;
+  std::vector<int> indices(size);
+  _com->receive(indices, rankSender);
+  std::vector<double> data(size);
+  _com->receive(data, rankSender);
+  _interface.writeBlockScalarData(dataID, size, indices.data(), data.data());
 }
 
 void RequestManager:: handleRequestWriteBlockVectorData
@@ -798,13 +792,11 @@ void RequestManager:: handleRequestWriteBlockVectorData
   _com->receive(dataID, rankSender);
   int size = -1;
   _com->receive(size, rankSender);
-  int* indices = new int[size];
-  _com->receive(indices, size, rankSender);
-  double* data = new double[size*_interface.getDimensions()];
-  _com->receive(data, size*_interface.getDimensions(), rankSender);
-  _interface.writeBlockVectorData(dataID, size, indices, data);
-  delete[] indices;
-  delete[] data;
+  std::vector<int> indices(size);
+  _com->receive(indices, rankSender);
+  std::vector<double> data(static_cast<size_t>(size)*_interface.getDimensions());
+  _com->receive(data, rankSender);
+  _interface.writeBlockVectorData(dataID, size, indices.data(), data.data());
 }
 
 void RequestManager:: handleRequestWriteVectorData
@@ -816,9 +808,9 @@ void RequestManager:: handleRequestWriteVectorData
   _com->receive(dataID, rankSender);
   int index = -1;
   _com->receive( index, rankSender);
-  double data[_interface.getDimensions()];
-  _com->receive(data, _interface.getDimensions(), rankSender);
-  _interface.writeVectorData(dataID, index, data);
+  std::vector<double> data(_interface.getDimensions());
+  _com->receive(data.data(), _interface.getDimensions(), rankSender);
+  _interface.writeVectorData(dataID, index, data.data());
 }
 
 void RequestManager:: handleRequestReadScalarData
@@ -844,13 +836,11 @@ void RequestManager:: handleRequestReadBlockScalarData
   _com->receive(dataID, rankSender);
   int size = -1;
   _com->receive(size, rankSender);
-  int* indices = new int[size];
-  _com->receive(indices, size, rankSender);
-  double* data = new double[size];
-  _interface.readBlockScalarData(dataID, size, indices, data);
-  _com->send(data, size, rankSender);
-  delete[] indices;
-  delete[] data;
+  std::vector<int> indices(size);
+  _com->receive(indices, rankSender);
+  std::vector<double> data(size);
+  _interface.readBlockScalarData(dataID, size, indices.data(), data.data());
+  _com->send(data, rankSender);
 }
 
 void RequestManager:: handleRequestReadBlockVectorData
@@ -862,13 +852,11 @@ void RequestManager:: handleRequestReadBlockVectorData
   _com->receive(dataID, rankSender);
   int size = -1;
   _com->receive(size, rankSender);
-  int* indices = new int[size];
-  _com->receive(indices, size, rankSender);
-  double* data = new double[size*_interface.getDimensions()];
-  _interface.readBlockVectorData(dataID, size, indices, data);
-  _com->send(data, size*_interface.getDimensions(), rankSender);
-  delete[] indices;
-  delete[] data;
+  std::vector<int> indices(size);
+  _com->receive(indices, rankSender);
+  std::vector<double> data(static_cast<size_t>(size)*_interface.getDimensions());
+  _interface.readBlockVectorData(dataID, size, indices.data(), data.data());
+  _com->send(data, rankSender);
 }
 
 void RequestManager:: handleRequestReadVectorData
@@ -880,9 +868,9 @@ void RequestManager:: handleRequestReadVectorData
   _com->receive(dataID, rankSender);
   int index = -1;
   _com->receive(index, rankSender);
-  double data[_interface.getDimensions()];
-  _interface.readVectorData(dataID, index, data);
-  _com->send(data, _interface.getDimensions(), rankSender);
+  std::vector<double> data(_interface.getDimensions());
+  _interface.readVectorData(dataID, index, data.data());
+  _com->send(data.data(), _interface.getDimensions(), rankSender);
 }
 
 void RequestManager:: handleRequestMapWriteDataFrom
@@ -890,7 +878,7 @@ void RequestManager:: handleRequestMapWriteDataFrom
   const std::list<int>& clientRanks )
 {
   TRACE();
-  std::list<int>::const_iterator iter = clientRanks.begin();
+  auto iter = clientRanks.begin();
   int ping = 0;
   _com->send(ping, *iter);
   int oldMeshID;
@@ -912,7 +900,7 @@ void RequestManager:: handleRequestMapReadDataTo
   const std::list<int>& clientRanks )
 {
   TRACE();
-  std::list<int>::const_iterator iter = clientRanks.begin();
+  auto iter = clientRanks.begin();
   int ping = 0;
   _com->send(ping, *iter);
   int oldMeshID;

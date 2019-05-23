@@ -52,7 +52,7 @@ public:
    * @param[in] name Name of the participant. Has to be unique.
    */
   Participant (
-    const std::string&          name,
+    std::string                 name,
     mesh::PtrMeshConfiguration& meshConfig );
 
   virtual ~Participant();
@@ -85,6 +85,10 @@ public:
   bool isMeshUsed ( int meshID ) const;
 
   bool isDataUsed ( int dataID ) const;
+
+  bool isDataRead ( int dataID ) const;
+
+  bool isDataWrite ( int dataID ) const;
 
   const MeshContext& meshContext ( int meshID ) const;
 

@@ -1,0 +1,3 @@
+[build-system]
+# PEP 518 - minimum build system requirements
+requires = ["setuptools", "wheel", "Cython>=0.29"]

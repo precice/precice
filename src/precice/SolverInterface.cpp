@@ -152,30 +152,30 @@ int SolverInterface:: getMeshVertexSize
 
 void SolverInterface:: setMeshVertices
 (
-  int     meshID,
-  int     size,
-  double* positions,
-  int*    ids )
+  int           meshID,
+  int           size,
+  const double* positions,
+  int*          ids )
 {
   _impl->setMeshVertices(meshID, size, positions, ids);
 }
 
 void SolverInterface:: getMeshVertices
 (
-  int     meshID,
-  int     size,
-  int*    ids,
-  double* positions )
+  int        meshID,
+  int        size,
+  const int* ids,
+  double*    positions )
 {
   _impl->getMeshVertices(meshID, size, ids, positions);
 }
 
 void SolverInterface:: getMeshVertexIDsFromPositions
 (
-  int     meshID,
-  int     size,
-  double* positions,
-  int*    ids )
+  int           meshID,
+  int           size,
+  const double* positions,
+  int*          ids )
 {
   _impl->getMeshVertexIDsFromPositions(meshID, size, positions, ids);
 }
@@ -251,8 +251,8 @@ void SolverInterface:: writeBlockVectorData
 (
   int     dataID,
   int     size,
-  int*    valueIndices,
-  double* values )
+  const int*    valueIndices,
+  const double* values )
 {
   _impl->writeBlockVectorData(dataID, size, valueIndices, values);
 }
@@ -268,10 +268,10 @@ void SolverInterface:: writeVectorData
 
 void SolverInterface:: writeBlockScalarData
 (
-  int     dataID,
-  int     size,
-  int*    valueIndices,
-  double* values )
+  int           dataID,
+  int           size,
+  const int*    valueIndices,
+  const double* values )
 {
   _impl->writeBlockScalarData(dataID, size, valueIndices, values);
 }
@@ -287,10 +287,10 @@ void SolverInterface:: writeScalarData
 
 void SolverInterface:: readBlockVectorData
 (
-  int     dataID,
-  int     size,
-  int*    valueIndices,
-  double* values )
+  int        dataID,
+  int        size,
+  const int* valueIndices,
+  double*    values )
 {
   _impl->readBlockVectorData(dataID, size, valueIndices, values);
 }
@@ -306,10 +306,10 @@ void SolverInterface:: readVectorData
 
 void SolverInterface:: readBlockScalarData
 (
-  int     dataID,
-  int     size,
-  int*    valueIndices,
-  double* values )
+  int        dataID,
+  int        size,
+  const int* valueIndices,
+  double*    values )
 {
   _impl->readBlockScalarData(dataID, size, valueIndices, values);
 }
