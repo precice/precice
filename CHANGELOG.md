@@ -2,6 +2,9 @@
 
 All notable changes to this project will be documented in this file. For future plans, see our [Roadmap](https://github.com/precice/precice/wiki/Roadmap).
 
+## Post 1.5
+- Only the total number of filtered vertices are printed, not each one separately, unless debug output is enabled.
+
 ## develop
 - The SolverInterface is now hardened against invalid IDs and misconfiguration using a consitent mechanism to express requirements.
 - The SolverInterface now keeps track of the Mesh states, which results more informative error messages for mesh related functions.
