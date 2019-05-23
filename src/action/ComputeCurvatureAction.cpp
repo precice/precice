@@ -1,5 +1,6 @@
 #include "ComputeCurvatureAction.hpp"
 #include <Eigen/Dense>
+#include <Eigen/Geometry>
 #include "mesh/Edge.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Triangle.hpp"
