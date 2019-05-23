@@ -2,6 +2,8 @@
 #include "mesh/Edge.hpp"
 #include "mesh/Vertex.hpp"
 #include <boost/range/concepts.hpp>
+#include <Eigen/Dense>
+#include <Eigen/Geometry>
 
 namespace precice
 {
