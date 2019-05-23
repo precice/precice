@@ -66,55 +66,27 @@ void setupM2NEnvironment(m2n::PtrM2N m2n){
   utils::Parallel::synchronizeProcesses();
 
   if (utils::Parallel::getProcessRank() == 0){ //Master Fluid
-    utils::Parallel::splitCommunicator( "FluidMaster" );
-    m2n->acceptMasterConnection ( "FluidMaster", "SolidMaster");
-    utils::MasterSlave::_rank = 0;
-    utils::MasterSlave::_size = 2;
-    utils::MasterSlave::_slaveMode = false;
-    utils::MasterSlave::_masterMode = true;
-   
+    utils::Parallel::splitCommunicator("FluidMaster");
+    utils::MasterSlave::configure(0, 2);
+    utils::MasterSlave::_communication->acceptConnection("FluidMaster", "FluidSlave", utils::Parallel::getProcessRank());
+    utils::MasterSlave::_communication->setRankOffset(1);   
   }
   else if(utils::Parallel::getProcessRank() == 1){//Slave1
-    utils::Parallel::splitCommunicator( "Fluid");
-    utils::MasterSlave::_rank = 1;
-    utils::MasterSlave::_size = 2;
-    utils::MasterSlave::_slaveMode = true;
-    utils::MasterSlave::_masterMode = false;
-   
+    utils::Parallel::splitCommunicator("FluidSlave");
+    utils::MasterSlave::configure(1, 2);
+    utils::MasterSlave::_communication->requestConnection("FluidMaster", "FluidSlave", 0, 1);
   }
   else if(utils::Parallel::getProcessRank() == 2){//Master Solid
-    utils::Parallel::splitCommunicator( "SolidMaster" );
-    m2n->requestMasterConnection ( "FluidMaster", "SolidMaster" );
-    utils::MasterSlave::_rank = 0;
-    utils::MasterSlave::_size = 2;
-    utils::MasterSlave::_slaveMode = false;
-    utils::MasterSlave::_masterMode = true;
-   
+    utils::Parallel::splitCommunicator("SolidMaster");
+    utils::MasterSlave::configure(0, 2);
+    utils::MasterSlave::_communication->acceptConnection("SolidMaster", "SolidSlave", utils::Parallel::getProcessRank());
+    utils::MasterSlave::_communication->setRankOffset(1);   
   }
   else if(utils::Parallel::getProcessRank() == 3){//Slave2
-    utils::Parallel::splitCommunicator( "Solid");
-    utils::MasterSlave::_rank = 1;
-    utils::MasterSlave::_size = 2;
-    utils::MasterSlave::_slaveMode = true;
-    utils::MasterSlave::_masterMode = false;
-   
+    utils::Parallel::splitCommunicator("SolidSlave");
+    utils::MasterSlave::configure(1, 2);
+    utils::MasterSlave::_communication->requestConnection("SolidMaster", "SolidSlave", 0, 1);
  }
-
-  if(utils::Parallel::getProcessRank() == 0){//Master
-    masterSlaveCom->acceptConnection ( "FluidMaster", "Fluid", utils::Parallel::getProcessRank());
-    masterSlaveCom->setRankOffset(1);
-  }
-  else if(utils::Parallel::getProcessRank() == 1){//Slave
-    masterSlaveCom->requestConnection( "FluidMaster", "Fluid", 0 , 1 );
-  }
-
-  if(utils::Parallel::getProcessRank() == 2){//Master
-    masterSlaveCom->acceptConnection ( "SolidMaster", "Solid", utils::Parallel::getProcessRank());
-    masterSlaveCom->setRankOffset(1);
-  }
-  else if(utils::Parallel::getProcessRank() == 3){//Slave
-    masterSlaveCom->requestConnection( "SolidMaster", "Solid", 0 , 1 );
-  }
 }
 
 void tearDownParallelEnvironment(){
