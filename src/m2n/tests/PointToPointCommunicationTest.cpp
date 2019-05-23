@@ -441,42 +441,15 @@ void connectionTest2(com::PtrCommunicationFactory cf)
 
 }
 
-BOOST_AUTO_TEST_CASE(SocketCommunication,
-                     * testing::OnSize(4))
+void P2PMeshBroadcastTest(com::PtrCommunicationFactory cf)
 {
-  com::PtrCommunicationFactory cf(new com::SocketCommunicationFactory);
-  if (utils::Parallel::getProcessRank() < 4) {
-    P2PComTest1(cf);
-    P2PComTest2(cf);
-    connectionTest1(cf);
-    connectionTest2(cf);
-  }
-}
-
-BOOST_AUTO_TEST_CASE(MPIPortsCommunication,
-                     * testing::OnSize(4)
-                     * boost::unit_test::label("MPI_Ports"))
-{
-  com::PtrCommunicationFactory cf(new com::MPIPortsCommunicationFactory);
-  if (utils::Parallel::getProcessRank() < 4) {
-    P2PComTest1(cf);
-    P2PComTest2(cf);
-    connectionTest1(cf);
-    connectionTest2(cf);
-  }
-}
-
-BOOST_AUTO_TEST_CASE(P2PMeshBroadcastTest, * testing::OnSize(4))
-{
-
   assertion(utils::Parallel::getCommunicatorSize() == 4);
-
-  // com::PtrCommunicationFactory cf(new com::SocketCommunicationFactory);
-  com::PtrCommunicationFactory cf(new com::MPIPortsCommunicationFactory); 
   utils::MasterSlave::_communication = std::make_shared<com::MPIDirectCommunication>();
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 2, true));
+  
   int dimensions = 2;
-
+  bool flipNormals = false;
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, flipNormals));
+  
   switch (utils::Parallel::getProcessRank()) {
   case 0: {
     utils::Parallel::splitCommunicator("Fluid.Master");
@@ -583,20 +556,17 @@ BOOST_AUTO_TEST_CASE(P2PMeshBroadcastTest, * testing::OnSize(4))
   utils::Parallel::clearGroups();
   mesh::Mesh::resetGeometryIDsGlobally();
   mesh::Data::resetDataCount();
-  utils::Parallel::setGlobalCommunicator(utils::Parallel::getCommunicatorWorld());
+  utils::Parallel::setGlobalCommunicator(utils::Parallel::getCommunicatorWorld());  
 }
 
-BOOST_AUTO_TEST_CASE(P2PComLCMTest, * testing::OnSize(4))
-{
-  
+void P2PComLCMTest(com::PtrCommunicationFactory cf)
+{  
   assertion(utils::Parallel::getCommunicatorSize() == 4);
-
-//  com::PtrCommunicationFactory cf(new com::SocketCommunicationFactory);
-  com::PtrCommunicationFactory cf(new com::MPIPortsCommunicationFactory);
-  
   utils::MasterSlave::_communication = std::make_shared<com::MPIDirectCommunication>();
 
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 2, true));
+  int dimensions = 2;
+  bool flipNormals = false;
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, flipNormals)); 
   std::map<int, std::vector<int>> localCommunicationMap;
 
   switch (utils::Parallel::getProcessRank()) {
@@ -692,6 +662,36 @@ BOOST_AUTO_TEST_CASE(P2PComLCMTest, * testing::OnSize(4))
   mesh::Data::resetDataCount();
   utils::Parallel::setGlobalCommunicator(utils::Parallel::getCommunicatorWorld());  
 }
+
+BOOST_AUTO_TEST_CASE(SocketCommunication,
+                     * testing::OnSize(4))
+{
+  com::PtrCommunicationFactory cf(new com::SocketCommunicationFactory);
+  if (utils::Parallel::getProcessRank() < 4) {
+    P2PComTest1(cf);
+    P2PComTest2(cf);
+    connectionTest1(cf);
+    connectionTest2(cf);
+    P2PMeshBroadcastTest(cf);
+    P2PComLCMTest(cf);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(MPIPortsCommunication,
+                     * testing::OnSize(4)
+                     * boost::unit_test::label("MPI_Ports"))
+{
+  com::PtrCommunicationFactory cf(new com::MPIPortsCommunicationFactory);
+  if (utils::Parallel::getProcessRank() < 4) {
+    P2PComTest1(cf);
+    P2PComTest2(cf);
+    connectionTest1(cf);
+    connectionTest2(cf);
+    P2PMeshBroadcastTest(cf);
+    P2PComLCMTest(cf);
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 #endif // not PRECICE_NO_MPI
