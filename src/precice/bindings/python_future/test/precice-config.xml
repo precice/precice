@@ -8,8 +8,8 @@
 
   <solver-interface dimensions="2" >
    
-    <data:vector name="Forces"  />
-    <data:vector name="Velocities"  />
+    <data:scalar name="Forces"  />
+    <data:scalar name="Velocities"  />
 
     <mesh name="MeshOne">
       <use-data name="Forces" />
@@ -48,15 +48,6 @@
       <exchange data="Velocities" mesh="MeshOne" from="SolverTwo" to="SolverOne"/>
     </coupling-scheme:serial-implicit>                           
              
-    <!--
-    <coupling-scheme:serial-explicit> 
-      <participants first="SolverOne" second="SolverTwo" /> 
-      <max-timesteps value="10" />
-      <timestep-length value="1.0" />
-      <exchange data="Forces"     mesh="MeshOne" from="SolverOne" to="SolverTwo" />
-      <exchange data="Velocities" mesh="MeshOne" from="SolverTwo" to="SolverOne"/>
-    </coupling-scheme:serial-explicit>
-    -->
   </solver-interface>
 
 </precice-configuration>
