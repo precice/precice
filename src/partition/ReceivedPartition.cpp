@@ -467,11 +467,17 @@ void ReceivedPartition::createOwnerInformation()
 #ifndef NDEBUG
     for (size_t i = 0; i < globalOwnerVec.size(); i++) {
       if (globalOwnerVec[i] == 0) {
-        WARN("The Vertex with global index " << i << " of mesh: " << _mesh->getName()
-             << " was completely filtered out, since it has no influence on any mapping.");
+        DEBUG("The Vertex with global index " << i << " of mesh: " << _mesh->getName()
+              << " was completely filtered out, since it has no influence on any mapping.");
       }
-    }
+    }    
 #endif
+    auto filteredVertices = std::count(globalOwnerVec.begin(), globalOwnerVec.end(), 0);
+    if (filteredVertices)
+      WARN(filteredVertices << " of " << _mesh->vertices().size()
+           << " vertices of mesh " << _mesh->getName() << " have been filtered out "
+           << "since they have no influence on the mapping.");
+    
   }
 }
 
