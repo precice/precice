@@ -294,7 +294,7 @@ void SolverInterfaceImpl:: initializeData ()
         suffix << _accessorName << ".init";
         exportMesh(suffix.str());
         if (context.triggerSolverPlot){
-          _couplingScheme->requireAction(constants::actionPlotOutput());
+          _couplingScheme->requireAction(std::string ("plot-output"));
         }
       }
     }
@@ -415,7 +415,7 @@ void SolverInterfaceImpl:: finalize()
         suffix << _accessorName << ".final";
         exportMesh ( suffix.str() );
         if ( context.triggerSolverPlot ) {
-          _couplingScheme->requireAction ( constants::actionPlotOutput() );
+          _couplingScheme->requireAction ( std::string ("plot-output") );
         }
       }
     }
@@ -1218,7 +1218,7 @@ void SolverInterfaceImpl:: exportMesh
   //const ExportContext& context = _accessor->exportContext();
   for (const io::ExportContext& context : _accessor->exportContexts()) {
     DEBUG ( "Export type = " << exportType );
-    bool exportAll = exportType == constants::exportAll();
+    bool exportAll = exportType == io::constants::exportAll();
     bool exportThis = context.exporter->getType() == exportType;
     if ( exportAll || exportThis ){
       for (const MeshContext* meshContext : _accessor->usedMeshContexts()) {
@@ -1514,7 +1514,7 @@ void SolverInterfaceImpl:: handleExports()
           suffix << _accessorName << ".dt" << _couplingScheme->getTimesteps()-1;
           exportMesh(suffix.str());
           if (context.triggerSolverPlot){
-            _couplingScheme->requireAction(constants::actionPlotOutput());
+            _couplingScheme->requireAction( std::string ("plot-output") );
           }
         }
       }

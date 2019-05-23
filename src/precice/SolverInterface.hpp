@@ -1,14 +1,13 @@
 #pragma once
 
 #include "MeshHandle.hpp"
-#include "Constants.hpp"
 #include <string>
 #include <vector>
 #include <set>
 #include <memory>
 
 /**
- * Pre-declarations.
+ * forward declarations.
  */
 namespace precice {
   namespace impl {
@@ -802,5 +801,18 @@ private:
   // @brief To allow white box tests.
   friend struct testing::WhiteboxAccessor;
 };
+
+namespace constants {
+
+// @brief Name of action for writing initial data.
+const std::string& actionWriteInitialData();
+
+// @brief Name of action for writing iteration checkpoint
+const std::string& actionWriteIterationCheckpoint();
+
+// @brief Name of action for reading iteration checkpoint.
+const std::string& actionReadIterationCheckpoint();
+
+} // namespace constants
 
 } // namespace precice

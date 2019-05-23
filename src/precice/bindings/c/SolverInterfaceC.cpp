@@ -292,3 +292,13 @@ void precicec_mapReadDataTo ( int toMeshID )
   assertion ( impl != nullptr );
   impl->mapReadDataTo(toMeshID);
 }
+
+const char* precicec_actionWriteIterationCheckpoint()
+{
+  return precice::constants::actionWriteIterationCheckpoint().c_str();
+}
+
+const char* precicec_actionReadIterationCheckpoint()
+{
+  return precice::constants::actionReadIterationCheckpoint().c_str();
+}
