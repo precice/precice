@@ -6,9 +6,7 @@
 #include "precice/impl/MeshContext.hpp"
 #include "precice/impl/DataContext.hpp"
 #include "precice/SolverInterface.hpp"
-#include "precice/Constants.hpp"
 #include "utils/Parallel.hpp"
-#include "precice/Constants.hpp"
 #include "precice/impl/Participant.hpp"
 #include "precice/config/Configuration.hpp"
 #include "utils/MasterSlave.hpp"
@@ -842,8 +840,8 @@ BOOST_AUTO_TEST_CASE(testStationaryMappingWithSolverMesh,
   std::string meshDisplA = "MeshDisplacementsA";
   std::string meshForcesB = "MeshForcesB";
   std::string meshDisplB = "MeshDisplacementsB";
-  std::string dataForces = constants::dataForces();
-  std::string dataDispl = constants::dataDisplacements();
+  std::string dataForces = "Forces";
+  std::string dataDispl = "Displacements";
   using testing::equals;
 
   for (int dim: {2, 3}){
@@ -1028,8 +1026,8 @@ BOOST_AUTO_TEST_CASE(testBug,
     xml::configure(config.getXMLTag(), configName);
     impl(precice).configure(config.getSolverInterfaceConfiguration());
     int meshID = precice.getMeshID("FliteNodes");
-    int forcesID = precice.getDataID(precice::constants::dataForces(), meshID);
-    int displacementsID = precice.getDataID(precice::constants::dataDisplacements(), meshID);
+    int forcesID = precice.getDataID("Forces", meshID);
+    int displacementsID = precice.getDataID("Displacements", meshID);
     int oldDisplacementsID = precice.getDataID("OldDisplacements", meshID);
     BOOST_TEST(precice.getDimensions() == 3);
     for (Vector3d& coord : coords){
@@ -1484,7 +1482,68 @@ BOOST_AUTO_TEST_CASE(testMappingNearestProjection,
 }
 
 /**
+ * @brief Tests sending one mesh to multiple participants
+ *
+ */
+BOOST_AUTO_TEST_CASE(testSendMeshToMultipleParticipants,
+                     * testing::MinRanks(3)
+                     * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1, 2})))
+{
+  if (utils::Parallel::getCommunicatorSize() != 3)
+    return;
+
+  mesh::Mesh::resetGeometryIDsGlobally();
+
+  const std::string configFile = _pathToTests + "send-mesh-to-multiple-participants.xml";
+  std::string solverName;
+  std::string meshName;
+
+  Eigen::Vector2d vertex{0.0, 0.0};
+
+  double value = 1.0;
+
+  if (utils::Parallel::getProcessRank() == 0){
+    solverName = "SolverOne";
+    meshName = "MeshA";
+  }
+  else if (utils::Parallel::getProcessRank() == 1){
+    solverName = "SolverTwo";
+    meshName = "MeshB";
+  }
+  else if (utils::Parallel::getProcessRank() == 2){
+    solverName = "SolverThree";
+    meshName = "MeshC";
+  }
+
+  SolverInterface cplInterface(solverName, 0, 1);
+  config::Configuration config;
+  xml::configure(config.getXMLTag(), configFile);
+  impl(cplInterface).configure(config.getSolverInterfaceConfiguration());
+
+  const int meshID = cplInterface.getMeshID(meshName);
+
+  int vertexID = cplInterface.setMeshVertex(meshID, vertex.data());
+
+  double maxDt = cplInterface.initialize();
+
+  int dataID = cplInterface.getDataID("Data", meshID);
+
+  if (utils::Parallel::getProcessRank() == 0){
+    cplInterface.writeScalarData(dataID, vertexID, value);
+  }
+  else{
+    double valueReceived = -1.0;
+    cplInterface.readScalarData(dataID, vertexID, valueReceived);
+    BOOST_TEST(valueReceived == value);
+  }
+
+  cplInterface.advance(maxDt);
+  cplInterface.finalize();
+}
+
+/**
  * @brief Test to reproduce the problem of issue 383, https://github.com/precice/precice/issues/383
+ *
  */
 BOOST_AUTO_TEST_CASE(testPreconditionerBug,
                      * testing::MinRanks(2)

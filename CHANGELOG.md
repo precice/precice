@@ -2,11 +2,15 @@
 
 All notable changes to this project will be documented in this file. For future plans, see our [Roadmap](https://github.com/precice/precice/wiki/Roadmap).
 
+## post-release
+
+- More "pythonic" python bindings `precice_future` are introduced. The python bindings `precice` are deprecated and will be removed in preCICE Version 2.0.0. If you still want to use them, please install `precice` and `precice_future`. Our recommendation, if you want to use the new bindings: Use `import precice_future as precice`.
+
 ## develop
 - The SolverInterface is now hardened against invalid IDs and misconfiguration using a consitent mechanism to express requirements.
 - The SolverInterface now keeps track of the Mesh states, which results more informative error messages for mesh related functions.
 - Sending data between participants is now fully asynchronous. This is relevant in one-way coupling scenarios, where the sending participant doesn't need to wait for the receiving one.
-- More "pythonic" python bindings `precice_future` are introduced. The python bindings `precice` are deprecated and will be removed in preCICE Version 2.0.0. If you still want to use them, please install `precice` and `precice_future`. Our recommendation, if you want to use the new bindings: Use `import precice_future as precice`.
+- [`#395`](https://github.com/precice/precice/pull/395) removes API functions `nameConfiguration(), dataDisplacements(), dataForces(), dataVelocities(), actionPlotOutput(), exportVTK(), exportAll()` from CPP API and all language bindings.
 - Python bindings offer all preCICE API functions (except `get_mesh_handle`)
 - `bindings/fortran` do not use `precice::impl::SolverInterfaceImpl` anymore, but `precice::SolverInterface`.
 - When exporting meshes with `<export:vtk ...>` the target directories are automatically created.

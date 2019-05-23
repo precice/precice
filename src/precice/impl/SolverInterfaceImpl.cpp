@@ -294,7 +294,7 @@ void SolverInterfaceImpl:: initializeData ()
         suffix << _accessorName << ".init";
         exportMesh(suffix.str());
         if (context.triggerSolverPlot){
-          _couplingScheme->requireAction(constants::actionPlotOutput());
+          _couplingScheme->requireAction(std::string ("plot-output"));
         }
       }
     }
@@ -415,7 +415,7 @@ void SolverInterfaceImpl:: finalize()
         suffix << _accessorName << ".final";
         exportMesh ( suffix.str() );
         if ( context.triggerSolverPlot ) {
-          _couplingScheme->requireAction ( constants::actionPlotOutput() );
+          _couplingScheme->requireAction ( std::string ("plot-output") );
         }
       }
     }
@@ -1218,7 +1218,7 @@ void SolverInterfaceImpl:: exportMesh
   //const ExportContext& context = _accessor->exportContext();
   for (const io::ExportContext& context : _accessor->exportContexts()) {
     DEBUG ( "Export type = " << exportType );
-    bool exportAll = exportType == constants::exportAll();
+    bool exportAll = exportType == io::constants::exportAll();
     bool exportThis = context.exporter->getType() == exportType;
     if ( exportAll || exportThis ){
       for (const MeshContext* meshContext : _accessor->usedMeshContexts()) {
@@ -1303,31 +1303,25 @@ void SolverInterfaceImpl:: configurePartitions
               "Participant \"" << _accessorName << "\" cannot provide "
               << "and receive mesh " << context->mesh->getName() << "!" );
 
-
-      bool hasToSend = false; /// @todo multiple sends
-      m2n::PtrM2N m2n;
+      context->partition = partition::PtrPartition(new partition::ProvidedPartition(context->mesh));
 
       for (auto& receiver : _participants ) {
         for (auto& receiverContext : receiver->usedMeshContexts()) {
           if(receiverContext->receiveMeshFrom == _accessorName && receiverContext->mesh->getName() == context->mesh->getName()){
-            CHECK( not hasToSend, "Mesh " << context->mesh->getName() << " can currently only be received once.")
-            hasToSend = true;
+            //CHECK( not hasToSend, "Mesh " << context->mesh->getName() << " can currently only be received once.")
+
             // meshRequirement has to be copied from "from" to provide", since
             // mapping are only defined at "provide"
             if(receiverContext->meshRequirement > context->meshRequirement){
               context->meshRequirement = receiverContext->meshRequirement;
             }
-            m2n = m2nConfig->getM2N( receiver->getName(), _accessorName );
+            m2n::PtrM2N m2n = m2nConfig->getM2N( receiver->getName(), _accessorName );
             m2n->createDistributedCommunication(context->mesh);
+            context->partition->addM2N(m2n);
           }
         }
       }
       /// @todo support offset??
-      context->partition = partition::PtrPartition(new partition::ProvidedPartition(context->mesh, hasToSend));
-      if (hasToSend) {
-        assertion(m2n.use_count()>0);
-        context->partition->setM2N(m2n);
-      }
 
     }
     else { // Accessor receives mesh
@@ -1343,7 +1337,7 @@ void SolverInterfaceImpl:: configurePartitions
 
       m2n::PtrM2N m2n = m2nConfig->getM2N ( receiver, provider );
       m2n->createDistributedCommunication(context->mesh);
-      context->partition->setM2N(m2n);
+      context->partition->addM2N(m2n);
       context->partition->setFromMapping(context->fromMappingContext.mapping);
       context->partition->setToMapping(context->toMappingContext.mapping);
     }
@@ -1520,7 +1514,7 @@ void SolverInterfaceImpl:: handleExports()
           suffix << _accessorName << ".dt" << _couplingScheme->getTimesteps()-1;
           exportMesh(suffix.str());
           if (context.triggerSolverPlot){
-            _couplingScheme->requireAction(constants::actionPlotOutput());
+            _couplingScheme->requireAction( std::string ("plot-output") );
           }
         }
       }

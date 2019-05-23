@@ -13,10 +13,8 @@ extern bool syncMode;
 namespace partition {
 
 ProvidedPartition::ProvidedPartition(
-    mesh::PtrMesh mesh,
-    bool          hasToSend)
-    : Partition(mesh),
-      _hasToSend(hasToSend)
+    mesh::PtrMesh mesh)
+    : Partition(mesh)
 {
 }
 
@@ -24,9 +22,7 @@ void ProvidedPartition::communicate()
 {
   TRACE();
 
-  //@todo communication to more than one participant
-
-  if (_hasToSend) {
+  if(_m2ns.size()>0){ // if there is no connected participant we also don't need to gather the mesh
     Event e1("partition.gatherMesh." + _mesh->getName(), precice::syncMode);
 
     // Temporary globalMesh such that the master also keeps his local mesh
@@ -65,13 +61,16 @@ void ProvidedPartition::communicate()
     // Send (global) Mesh
     INFO("Send global mesh " << _mesh->getName());
     Event e2("partition.sendGlobalMesh." + _mesh->getName(), precice::syncMode);
-    if (not utils::MasterSlave::isSlave()) {
-      CHECK(globalMesh.vertices().size() > 0, "The provided mesh " << globalMesh.getName() << " is invalid (possibly empty).");
-      com::CommunicateMesh(_m2n->getMasterCommunication()).sendMesh(globalMesh, 0);
+      
+    for(auto m2n : _m2ns) {
+      if (not utils::MasterSlave::isSlave()) {
+        CHECK(globalMesh.vertices().size() > 0, "The provided mesh " << globalMesh.getName() << " is invalid (possibly empty).");
+        com::CommunicateMesh(m2n->getMasterCommunication()).sendMesh(globalMesh, 0);
+      }
     }
     e2.stop();
 
-  } //_hasToSend
+  } 
 }
 
 void ProvidedPartition::compute()

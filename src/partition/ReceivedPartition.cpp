@@ -36,7 +36,8 @@ void ReceivedPartition::communicate()
   Event e("partition.receiveGlobalMesh." + _mesh->getName(), precice::syncMode);
   if (not utils::MasterSlave::isSlave()) {
     assertion(_mesh->vertices().empty());
-    com::CommunicateMesh(_m2n->getMasterCommunication()).receiveMesh(*_mesh, 0);
+    // a ReceivedPartition can only have one communication, @todo nicer design 
+    com::CommunicateMesh(_m2ns[0]->getMasterCommunication()).receiveMesh(*_mesh, 0);
   }
 }
 

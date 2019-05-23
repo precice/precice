@@ -1,5 +1,6 @@
 #include "precice/SolverInterface.hpp"
 #include "precice/impl/SolverInterfaceImpl.hpp"
+#include "cplscheme/Constants.hpp"
 
 namespace precice {
 
@@ -329,5 +330,24 @@ MeshHandle SolverInterface:: getMeshHandle
 {
   return _impl->getMeshHandle ( meshName );
 }
+
+namespace constants {
+
+const std::string& actionWriteInitialData()
+{
+  return cplscheme::constants::actionWriteInitialData();
+}
+
+const std::string& actionWriteIterationCheckpoint()
+{
+  return cplscheme::constants::actionWriteIterationCheckpoint();
+}
+
+const std::string& actionReadIterationCheckpoint()
+{
+  return cplscheme::constants::actionReadIterationCheckpoint();
+}
+
+} // namespace precice, constants
 
 } // namespace precice
