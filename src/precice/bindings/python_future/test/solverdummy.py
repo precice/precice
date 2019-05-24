@@ -93,7 +93,7 @@ while interface.is_coupling_ongoing():
     read_data = interface.read_scalar_data(read_data_id, idx)
     for i in range(n):
         assert(read_block_data[i] == write_block_data[i])
-    assert(read_data[n+1] == write_data[n+1])
+    assert(read_data == write_data)
     
     if interface.is_action_required(precice.action_read_iteration_checkpoint()):
         print("DUMMY: Reading iteration checkpoint")

@@ -243,9 +243,7 @@ cdef class Interface:
         cdef np.ndarray[int, ndim=1] ids_ = np.array(ids, dtype=np.int32)
         size = ids_.size
         cdef np.ndarray[double] positions = np.empty(size * self.get_dimensions(), dtype=np.double)
-
         self.thisptr.getMeshVertices (mesh_id, size, &ids_[0], &positions[0])
-
         return np.array(positions)
 
     # gets mesh vertex IDs from positions
@@ -328,9 +326,9 @@ cdef class Interface:
         return values
 
     def read_scalar_data (self, data_id, value_index):
-        cdef np.ndarray[np.double_t] value = np.empty(1, dtype=np.double)
-        self.thisptr.readScalarData (data_id, value_index, value)      
-        return value[0]
+        cdef double value;
+        self.thisptr.readScalarData (data_id, value_index, value)
+        return value
 
 def action_write_initial_data ():
     return actionWriteInitialData()
