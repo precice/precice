@@ -48,26 +48,25 @@ else:
 # add n vertices
 data_indices = interface.set_mesh_vertices(mesh_id, vertex[:dimensions*n])
 for i, idx in enumerate(data_indices):
-    print(idx)
-    print(i)
     assert(idx == i)  # data_indices are initialized in ascending order: [0, 1, ..., n-1]
 
+print(data_indices.dtype)
 # add one more vertex
-idx = interface.set_mesh_vertex(mesh_id, vertex[dimensions*n:dimensions*(n+1)])
-assert(idx == n)  # if we add one more vertex, we get id = n
-
+data_indices = np.append(data_indices, interface.set_mesh_vertex(mesh_id, vertex[dimensions*n:dimensions*(n+1)]))
+assert(data_indices[-1] == n)  # if we add one more vertex, we get id = n
+print(data_indices.dtype)
 # make sure that vertex has been appended
 n_vertices = interface.get_mesh_vertex_size(mesh_id)
 assert(n_vertices == n+1)
 
 # get all vertex positions
-position = interface.get_mesh_vertices(mesh_id, np.array(range(n+1)))
-assert(np.array_equal(position, vertex))
+position = interface.get_mesh_vertices(mesh_id, data_indices[:-1])
+assert(np.array_equal(position, vertex[:dimensions*n]))
 
 # get individual positions
-for idx in range(n+1):
-    position = interface.get_mesh_vertices(mesh_id, [idx])  # TODO: Here we have a failing assertion. This is behavior is incorrect!
-    assert(np.array_equal(position, vertex[idx*dimensions:(idx+1)*dimensions]))   
+for i in data_indices:
+    position = interface.get_mesh_vertices(mesh_id, np.array([data_indices[i]]))  # TODO: Here we have a failing assertion. This is behavior is incorrect!
+    assert(np.array_equal(position, vertex[i*dimensions:(i+1)*dimensions]))   
 
 write_data_id = interface.get_data_id(write_data_name, mesh_id)
 read_data_id = interface.get_data_id(read_data_name, mesh_id)
@@ -77,8 +76,6 @@ dt = interface.initialize()
 write_data = n+2
 write_block_data = np.arange(n, dtype=np.double)
 write_block_data[-1] = 10
-print(data_indices)
-print(idx)
     
 while interface.is_coupling_ongoing():
    
@@ -86,11 +83,11 @@ while interface.is_coupling_ongoing():
         print("DUMMY: Writing iteration checkpoint")
         interface.fulfilled_action(precice.action_write_iteration_checkpoint())
 
-    interface.write_block_scalar_data(write_data_id, data_indices, write_block_data)
-    interface.write_scalar_data(write_data_id, idx, write_data)
+    interface.write_block_scalar_data(write_data_id, data_indices[:-1], write_block_data)
+    interface.write_scalar_data(write_data_id, data_indices[-1], write_data)
     dt = interface.advance(dt)
-    read_block_data = interface.read_block_scalar_data(read_data_id, data_indices)
-    read_data = interface.read_scalar_data(read_data_id, idx)
+    read_block_data = interface.read_block_scalar_data(read_data_id, data_indices[:-1])
+    read_data = interface.read_scalar_data(read_data_id, data_indices[-1])
     for i in range(n):
         assert(read_block_data[i] == write_block_data[i])
     assert(read_data == write_data)
