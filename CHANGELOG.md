@@ -3,6 +3,9 @@
 All notable changes to this project will be documented in this file. For future plans, see our [Roadmap](https://github.com/precice/precice/wiki/Roadmap).
 
 ## develop
+
+## 1.5.0
+
 - Added CMake alias `precice::precice` which mimics the namespaced library name after calling `find_package(precice)`. This allows seamless use as a subproject.
 - Added state-awareness to the SolverInterface to keep track of the Mesh states. This results more informative error messages for mesh related functions.
 - Added faster `PetRadialBasisFctMapping` tagging using RTree queries.
