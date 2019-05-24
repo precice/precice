@@ -29,6 +29,7 @@ All notable changes to this project will be documented in this file. For future 
 - Fixed the `const`ness of passed pointer arguments as well as some member functions of the `SolverInterface`.
 - Fixed the default safety factor for nearest projection mapping by increasing it from 0.1 to 0.5.
 - Fixed Python bindings now offer all preCICE API functions (except `get_mesh_handle`)
+- Fixed CMake now properly detects PETSc on systems with a directory-scoped MPI installation (`include/openmpi/mpi.h`) when the compiler was not set to the MPI compiler wrapper.
 - Refactored `Mesh::computeState` into two logical units, improving the trace information.
 - Refactored `computePartitions` using the stl.
 - Refactored logger which dramatically reduces compile times.
