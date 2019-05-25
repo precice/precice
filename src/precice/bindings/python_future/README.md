@@ -66,6 +66,17 @@ Run the following to test the installation:
 $ python3 -c "import precice_future as precice"
 ```
 
+## (experimental) unit tests
+
+run 
+```
+cythonize -i test/test_bindings_module.pyx
+```
+then test with
+```
+python3 setup.py test
+```
+
 # Using with MPI
 
 If precice was compiled with MPI, you have to initialize MPI prior to configuring a SolverInterface.

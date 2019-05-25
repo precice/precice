@@ -63,6 +63,14 @@ def get_extensions(mpi_compiler_wrapper):
                 language="c++",
                 extra_compile_args=compile_args,
                 extra_link_args=link_args
+            ),
+        Extension(
+                "test_bindings_module",
+                sources=[os.path.join(PYTHON_BINDINGS_PATH, "test", "test_bindings_module" + ".pyx")],
+                libraries=[],
+                language="c++",
+                extra_compile_args=compile_args,
+                extra_link_args=link_args
             )
     ]
 
