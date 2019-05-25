@@ -24,8 +24,6 @@ cdef bytes convert(s):
 
 
 cdef class Interface:
-    cdef SolverInterface.SolverInterface *thisptr # hold a C++ instance being wrapped
-
     # construction and configuration
     # constructor
 
