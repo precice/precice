@@ -3,13 +3,14 @@ import subprocess
 from enum import Enum
 
 from setuptools import setup
-from distutils.extension import Extension
-from Cython.Distutils.build_ext import new_build_ext as build_ext
 from distutils.command.install import install
 from distutils.command.build import build
 from setuptools.command.test import test
 import distutils
 from distutils.cmd import Command
+from Cython.Distutils.extension import Extension
+from Cython.Distutils.build_ext import new_build_ext as build_ext
+
 
 # name of Interfacing API
 APPNAME = "precice_future"
@@ -52,7 +53,7 @@ def determine_mpi_args(mpi_compiler_wrapper):
     return mpi_compile_args, mpi_link_args
 
 
-def get_extensions(mpi_compiler_wrapper):
+def get_extensions(mpi_compiler_wrapper, is_test=False):
     mpi_compile_args, mpi_link_args = determine_mpi_args(mpi_compiler_wrapper)
     
     compile_args = ["-Wall", "-std=c++11"] + mpi_compile_args
@@ -65,6 +66,7 @@ def get_extensions(mpi_compiler_wrapper):
                 libraries=[],
                 language="c++",
                 extra_compile_args=compile_args,
+                cython_compile_time_env={'TEST': False},
                 extra_link_args=link_args
             ),
         Extension(
@@ -73,6 +75,7 @@ def get_extensions(mpi_compiler_wrapper):
                 libraries=[],
                 language="c++",
                 extra_compile_args=compile_args,
+                cython_compile_time_env={'TEST': False},
                 extra_link_args=link_args
             )
     ]
@@ -135,10 +138,9 @@ class my_build(build, object):
 
         super(my_build, self).finalize_options()
 
-
 class my_test(test, object):
     def run(self):
-        build_test_package = ['cythonize', '-i', 'test/test_bindings_module.pyx']  # before running the tests, we have to build the tests module
+        build_test_package = ['cythonize', '-i', '-E TEST=False', 'test/test_bindings_module.pyx']  # before running the tests, we have to build the tests module
         self.announce(
             'Running command: %s' % str(build_test_package),
             level=distutils.log.INFO)
@@ -157,11 +159,10 @@ setup(
     author_email='info@precice.org',
     license='LGPL-3.0',
     python_requires='>=3',
+    setup_requires=['cython>=0.x'],
     install_requires=dependencies,
-    cmdclass={'build_ext': my_build_ext,
-              'build': my_build,
-              'install': my_install,
-              'test': my_test},
+    build_ext=get_extensions(mpicompiler_default),
+    cmdclass={'test': my_test},
     #ensure pxd-files:
     package_data={ 'my_module': ['*.pxd']},
     include_package_data=True,
