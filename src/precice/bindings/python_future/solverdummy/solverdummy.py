@@ -31,6 +31,7 @@ interface.configure(configuration_file_name)
 mesh_id = interface.get_mesh_id(mesh_name)
 
 dimensions = interface.get_dimensions()
+print(dimensions)
 vertex_x = np.linspace(0, 1, n + 1)
 vertex_y = np.zeros(n+1)
 vertex = np.vstack((vertex_x,vertex_y)).ravel(order='F')

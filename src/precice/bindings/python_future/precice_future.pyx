@@ -1,3 +1,5 @@
+# distutils: language = c++
+
 """precice
 
 The python module precice offers python language bindings to the C++ coupling library precice. Please refer to precice.org for further information.
