@@ -7,6 +7,9 @@ from distutils.extension import Extension
 from Cython.Distutils.build_ext import new_build_ext as build_ext
 from distutils.command.install import install
 from distutils.command.build import build
+from setuptools.command.test import test
+import distutils
+from distutils.cmd import Command
 
 # name of Interfacing API
 APPNAME = "precice_future"
@@ -132,6 +135,16 @@ class my_build(build, object):
 
         super(my_build, self).finalize_options()
 
+
+class my_test(test, object):
+    def run(self):
+        build_test_package = ['cythonize', '-i', 'test/test_bindings_module.pyx']  # before running the tests, we have to build the tests module
+        self.announce(
+            'Running command: %s' % str(build_test_package),
+            level=distutils.log.INFO)
+        subprocess.check_call(build_test_package)
+        super().run()
+
 dependencies = ['cython']
 dependencies.append('mpi4py')  # only needed, if preCICE was compiled with MPI, see https://github.com/precice/precice/issues/311
 
@@ -147,7 +160,8 @@ setup(
     install_requires=dependencies,
     cmdclass={'build_ext': my_build_ext,
               'build': my_build,
-              'install': my_install},
+              'install': my_install,
+              'test': my_test},
     #ensure pxd-files:
     package_data={ 'my_module': ['*.pxd']},
     include_package_data=True,

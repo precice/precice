@@ -68,11 +68,7 @@ $ python3 -c "import precice_future as precice"
 
 ## (experimental) unit tests
 
-run 
-```
-cythonize -i test/test_bindings_module.pyx
-```
-then test with
+run tests with
 ```
 python3 setup.py test
 ```
