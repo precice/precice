@@ -92,13 +92,10 @@ jobs:
   include:
     - stage: bindings
       name: "Mock Test Python Bindings"
-      language: python
-      python: 
-        - "3.6"
       before_install:
-        - sudo apt-get update
-        - sudo apt-get install python3        
-      install: pip3 install -e .
+      - pyenv global $(pyenv whence 2to3)  # activate all python versions
+      - PY_CMD=python3
+      - $PY_CMD -m pip install --user --upgrade pip wheel setuptools cython
       script:
         - $TRAVIS_BUILD_DIR/tools/travis-bindings-test.sh
     - stage: codecov
