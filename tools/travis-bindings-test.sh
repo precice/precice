@@ -8,5 +8,6 @@ cd $PYTHON_BINDINGS_DIR
 
 export PYTHONPATH=/usr/local/lib/python3/
 
+pip3 install --user setuptools cython
 python3 setup.py test
 
