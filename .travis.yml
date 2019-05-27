@@ -71,6 +71,8 @@ matrix:
         - PYTHONPATH=""
         - PY_CMD=python3
         - $PY_CMD -m pip install --user --upgrade pip wheel setuptools cython
+      install:
+        - echo "nothing to install"
       script:
         - $TRAVIS_BUILD_DIR/tools/travis-bindings-test.sh
         
