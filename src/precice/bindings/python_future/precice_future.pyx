@@ -183,6 +183,7 @@ cdef class Interface:
         self.thisptr.mapWriteDataFrom (from_mesh_id)
 
     def write_block_vector_data (self, int data_id, value_indices, np.ndarray[np.double_t, ndim=1] values):
+        assert(values.size / self.get_dimensions() == value_indices.size)
         size = value_indices.size
         cdef np.ndarray[int, ndim=1] value_indices_int = np.array(value_indices, dtype=np.int32)
         self.thisptr.writeBlockVectorData (data_id, size, &value_indices_int[0], &values[0])
@@ -191,6 +192,7 @@ cdef class Interface:
         self.thisptr.writeVectorData (data_id, value_index, &value[0])
 
     def write_block_scalar_data (self, int data_id, value_indices, np.ndarray[np.double_t, ndim=1] values):
+        assert(values.size == value_indices.size)
         size = value_indices.size
         cdef np.ndarray[int, ndim=1] value_indices_int = np.array(value_indices, dtype=np.int32)
         self.thisptr.writeBlockScalarData (data_id, size, &value_indices_int[0], &values[0])
