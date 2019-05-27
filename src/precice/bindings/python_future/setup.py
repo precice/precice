@@ -104,9 +104,6 @@ class my_build_ext(build_ext, object):
             self.distribution.is_test
         except AttributeError:
             self.distribution.is_test = False
-
-        if not self.distribution.ext_modules:            
-            self.distribution.ext_modules=cythonize(get_extensions(mpicompiler_default), compile_time_env={"TEST":self.distribution.is_test})
         
         super().initialize_options()
         
@@ -117,7 +114,7 @@ class my_build_ext(build_ext, object):
 
         if not self.distribution.ext_modules:
             print("adding extension")
-            self.distribution.ext_modules = cythonize(get_extensions(self.mpicompiler), compile_time_env={"TEST":self.distribution.is_test})
+            self.distribution.ext_modules = cythonize(get_extensions(self.mpicompiler, self.distribution.is_test), compile_time_env={"TEST":self.distribution.is_test})
 
         print("#####")
 
@@ -158,7 +155,7 @@ class my_build(build, object):
 
         if not self.distribution.ext_modules:
             print("adding extension")
-            self.distribution.ext_modules = cythonize(get_extensions(self.mpicompiler), compile_time_env={"TEST":self.distribution.is_test})
+            self.distribution.ext_modules = cythonize(get_extensions(self.mpicompiler, self.distribution.is_test), compile_time_env={"TEST":self.distribution.is_test})
 
         print("#####")
 
