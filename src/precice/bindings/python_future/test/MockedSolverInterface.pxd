@@ -3,7 +3,7 @@ from libcpp.set    cimport set
 from libcpp.string cimport string
 
 
-cdef extern from "SolverInterface.hpp" namespace "precice":
+cdef extern from "test/SolverInterface.hpp" namespace "precice":
     cdef cppclass SolverInterface:
         # construction and configuration
 
@@ -100,7 +100,7 @@ cdef extern from "SolverInterface.hpp" namespace "precice":
         void readScalarData (int dataID, int valueIndex, double& value)
 
 
-cdef extern from "SolverInterface.hpp"  namespace "precice::constants":
+cdef extern from "test/SolverInterface.hpp"  namespace "precice::constants":
     const string& actionWriteInitialData()
     const string& actionWriteIterationCheckpoint()
     const string& actionReadIterationCheckpoint()
