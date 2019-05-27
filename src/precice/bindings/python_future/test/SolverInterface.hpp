@@ -809,13 +809,13 @@ public:
 namespace constants {
 
 // @brief Name of action for writing initial data.
-const std::string& actionWriteInitialData();
+const std::string& actionWriteInitialData(){return std::string("");}
 
 // @brief Name of action for writing iteration checkpoint
-const std::string& actionWriteIterationCheckpoint();
+const std::string& actionWriteIterationCheckpoint(){return std::string("");}
 
 // @brief Name of action for reading iteration checkpoint.
-const std::string& actionReadIterationCheckpoint();
+const std::string& actionReadIterationCheckpoint(){return std::string("");}
 
 } // namespace constants
 
