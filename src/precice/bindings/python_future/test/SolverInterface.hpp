@@ -779,7 +779,7 @@ public:
   for(int i = 0; i<size; i++){
       values[i] = this->fake_read_write_buffer[i];
     }
-  };
+  }
 
   /**
    * @brief Reads scalar data of a vertex.
@@ -800,10 +800,8 @@ public:
     int     dataID,
     int     valueIndex,
     double& value ) const{
-    value = this->fake_read_write_buffer[0];    
-};
-
-  ///@}
+    value = this->fake_read_write_buffer[0]; 
+  }   
 };
 
 namespace constants {
