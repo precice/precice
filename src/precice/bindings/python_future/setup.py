@@ -76,8 +76,28 @@ def get_extensions(mpi_compiler_wrapper):
             )
     ]
 
+# some global definitions for an additional user input command
+doc_string = 'specify the mpi compiler wrapper'
+mpicompiler_default = "mpic++"
+dependencies = ['cython']
+dependencies.append('mpi4py')  # only needed, if preCICE was compiled with MPI, see https://github.com/precice/precice/issues/311
+
+class my_build_ext(build_ext):
+    def initialize_options(self):
+        try:
+            self.distribution.is_test
+        except AttributeError:
+            self.distribution.is_test = False
+            
+        print("TEST:{}".format(self.distribution.is_test))
+        self.distribution.ext_modules=cythonize(get_extensions(mpicompiler_default), compile_time_env={"TEST":self.distribution.is_test})
+        super().initialize_options()
 
 class my_test(test, object):
+    def initialize_options(self):
+        self.distribution.is_test = True       
+        super().initialize_options()
+
     def run(self):
         build_test_package = ['cythonize', '-i', '-E TEST=True', 'precice_future.pyx', 'test/test_bindings_module.pyx']  # before running the tests, we have to build the tests module
         self.announce(
@@ -85,14 +105,6 @@ class my_test(test, object):
             level=distutils.log.INFO)
         subprocess.check_call(build_test_package)
         super().run()
-
-
-# some global definitions for an additional user input command
-doc_string = 'specify the mpi compiler wrapper'
-mpicompiler_default = "mpic++"
-
-dependencies = ['cython']
-dependencies.append('mpi4py')  # only needed, if preCICE was compiled with MPI, see https://github.com/precice/precice/issues/311
 
 setup(
     name=APPNAME,
@@ -104,10 +116,11 @@ setup(
     license='LGPL-3.0',
     python_requires='>=3',
     install_requires=dependencies,
-    ext_modules=cythonize(get_extensions(mpicompiler_default), compile_time_env={"TEST":False}),
-    cmdclass={'test': my_test},
+    cmdclass={'test': my_test,
+              'build_ext': my_build_ext},
+    ext_modules=cythonize(get_extensions(mpicompiler_default), compile_time_env={"TEST":True}),
     #ensure pxd-files:
-    package_data={ 'my_module': ['*.pxd']},
+    package_data={ 'precice_future': ['*.pxd']},
     include_package_data=True,
     zip_safe=False  #needed because setuptools are used
 )
