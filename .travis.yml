@@ -62,18 +62,7 @@ matrix:
     - if: type = cron or branch = master
       compiler: clang
       env: BUILD_TYPE=SCONS MPI=off PETSC=off
-
-    # Test coverage
-    - name: "Test Coverage"
-      compiler: gcc
-      script:
-        - $TRAVIS_BUILD_DIR/tools/travis-coverage.sh
-      after_success:
-        - lcov --capture --directory "$TRAVIS_BUILD_DIR/build" --output-file coverage.info
-        - lcov --remove coverage.info '/usr/*' "$LOCAL_INSTALL/*" --output-file coverage.info # filter system-files and local-dependencies
-        - lcov --list coverage.info # debug info
-        - bash <(curl -s https://codecov.io/bash) -f coverage.info || echo "Codecov did not collect coverage reports"
-
+  
 cache:
   ccache: true
   directories:
@@ -109,4 +98,13 @@ jobs:
       install: pip install -e .
       script:
         - $TRAVIS_BUILD_DIR/tools/travis-bindings-test.sh
-
+    - stage: codecov
+      name: "Test Coverage"
+      compiler: gcc
+      script:
+        - $TRAVIS_BUILD_DIR/tools/travis-coverage.sh
+      after_success:
+        - lcov --capture --directory "$TRAVIS_BUILD_DIR/build" --output-file coverage.info
+        - lcov --remove coverage.info '/usr/*' "$LOCAL_INSTALL/*" --output-file coverage.info # filter system-files and local-dependencies
+        - lcov --list coverage.info # debug info
+        - bash <(curl -s https://codecov.io/bash) -f coverage.info || echo "Codecov did not collect coverage reports"
