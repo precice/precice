@@ -25,6 +25,11 @@ namespace precice {
  */
 class SolverInterface
 {
+private:
+    std::vector<double> fake_read_write_buffer;
+    int fake_dimensions;
+    int fake_mesh_id;
+
 public:
 
   ///@name Construction and Configuration
@@ -41,7 +46,11 @@ public:
   SolverInterface (
     const std::string& participantName,
     int                solverProcessIndex,
-    int                solverProcessSize ){};
+    int                solverProcessSize ){
+  this->fake_read_write_buffer = std::vector<double>();
+  this->fake_dimensions = 3;
+  this->fake_mesh_id = 0;
+  };
 
   ~SolverInterface(){};
 
@@ -160,7 +169,7 @@ public:
    *
    * @pre configure() has been called successfully.
    */
-  int getDimensions() const{return 2;};
+  int getDimensions() const{return this->fake_dimensions;};
 
   /**
    * @brief Checks if the coupled simulation is still ongoing.
@@ -318,7 +327,7 @@ public:
    * @param[in] meshName the name of the mesh
    * @returns the id of the corresponding mesh
    */
-  int getMeshID ( const std::string& meshName ) const{return -1;};
+  int getMeshID ( const std::string& meshName ) const{return this->fake_mesh_id;};
 
   /**
    * @brief Returns a id-set of all used meshes by this participant.
@@ -594,7 +603,12 @@ public:
     int           dataID,
     int           size,
     const int*    valueIndices,
-    const double* values ){};
+    const double* values ){
+  this->fake_read_write_buffer.clear();
+  for(int i = 0; i < size * this->getDimensions(); i++){
+      this->fake_read_write_buffer.push_back(values[i]); 
+    }
+};
 
   /**
    * @brief Writes vector data to a vertex
@@ -617,7 +631,12 @@ public:
   void writeVectorData (
     int           dataID,
     int           valueIndex,
-    const double* value ){};
+    const double* value ){
+  this->fake_read_write_buffer.clear();
+  for(int i = 0; i < this->getDimensions(); i++){
+      this->fake_read_write_buffer.push_back(value[i]); 
+    }
+};
 
 
   /**
@@ -642,7 +661,12 @@ public:
     int           dataID,
     int           size,
     const int*    valueIndices,
-    const double* values ){};
+    const double* values ){
+  this->fake_read_write_buffer.clear();
+  for(int i = 0; i < size; i++){
+      this->fake_read_write_buffer.push_back(values[i]); 
+    }
+  };
 
   /**
    * @brief Writes scalar data to a vertex
@@ -660,7 +684,10 @@ public:
   void writeScalarData (
     int    dataID,
     int    valueIndex,
-    double value ){};
+    double value ){
+    this->fake_read_write_buffer.clear();
+    this->fake_read_write_buffer.push_back(value); 
+};
 
   /**
    * @brief Reads vector data into a provided block.
@@ -689,7 +716,11 @@ public:
     int        dataID,
     int        size,
     const int* valueIndices,
-    double*    values ) const{};
+    double*    values ) const{
+  for(int i = 0; i < size * this->getDimensions(); i++){
+      values[i] = this->fake_read_write_buffer[i];
+    }
+};
 
   /**
    * @brief Reads vector data form a vertex
@@ -714,7 +745,11 @@ public:
   void readVectorData (
     int     dataID,
     int     valueIndex,
-    double* value ) const{};
+    double* value ) const{
+  for(int i = 0; i < this->getDimensions(); i++){
+      value[i] = this->fake_read_write_buffer[i];
+    }
+};
 
   /**
    * @brief Reads scalar data as a block.
@@ -740,7 +775,11 @@ public:
     int        dataID,
     int        size,
     const int* valueIndices,
-    double*    values ) const{};
+    double*    values ) const{
+  for(int i = 0; i<size; i++){
+      values[i] = this->fake_read_write_buffer[i];
+    }
+  };
 
   /**
    * @brief Reads scalar data of a vertex.
@@ -760,7 +799,9 @@ public:
   void readScalarData (
     int     dataID,
     int     valueIndex,
-    double& value ) const{};
+    double& value ) const{
+    value = this->fake_read_write_buffer[0];    
+};
 
   ///@}
 };
