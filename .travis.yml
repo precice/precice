@@ -73,7 +73,11 @@ matrix:
         - lcov --remove coverage.info '/usr/*' "$LOCAL_INSTALL/*" --output-file coverage.info # filter system-files and local-dependencies
         - lcov --list coverage.info # debug info
         - bash <(curl -s https://codecov.io/bash) -f coverage.info || echo "Codecov did not collect coverage reports"
-
+    # Bindings test
+    - name: "Mock Test Python Bindings"
+      compiler: cython
+      script:
+        - $TRAVIV_BUILD_DIR/tools/travis-bindings-test.sh
 
 cache:
   ccache: true
@@ -94,7 +98,6 @@ before_script:
 
 script:
   - $TRAVIS_BUILD_DIR/tools/travis-build-test.sh
-  - $TRAVIS_BUILD_DIR/tools/travis-bindings-test.sh
 
 after_failure:
   - cd $TRAVIS_BUILD_DIR
