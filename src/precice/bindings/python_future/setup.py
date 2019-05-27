@@ -62,7 +62,7 @@ def get_extensions(mpi_compiler_wrapper, is_test):
     compile_args.append("-std=c++11")
 
     link_args += mpi_link_args
-    if is_test:
+    if not is_test:
         link_args.append("-lprecice")
 
     return [
