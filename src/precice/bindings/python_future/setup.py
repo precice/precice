@@ -77,14 +77,29 @@ def get_extensions(mpi_compiler_wrapper):
     ]
 
 
-class my_test(test, object):
+class my_test(Command):
+    description = 'run tests for python bindings, mocked preCICE library is used'
+    user_options = []
+
+    def initialize_options(self):
+        """Set default values for options."""
+        pass
+    
+    def finalize_options(self):
+        """Post-process options."""
+        pass
+
     def run(self):
         build_test_package = ['cythonize', '-i', '-E TEST=True', 'precice_future.pyx', 'test/test_bindings_module.pyx']  # before running the tests, we have to build the tests module
         self.announce(
             'Running command: %s' % str(build_test_package),
             level=distutils.log.INFO)
-        subprocess.check_call(build_test_package)
-        super().run()
+        subprocess.check_output(build_test_package)
+        run_test = ['python3', '-m', 'unittest', '--verbose']
+        self.announce(
+            'Running command: %s' % str(run_test),
+            level=distutils.log.INFO)
+        subprocess.check_output(run_test)
 
 
 # some global definitions for an additional user input command
@@ -107,7 +122,7 @@ setup(
     ext_modules=cythonize(get_extensions(mpicompiler_default), compile_time_env={"TEST":False}),
     cmdclass={'test': my_test},
     #ensure pxd-files:
-    package_data={ 'my_module': ['*.pxd']},
+    package_data={ 'precice_future': ['*.pxd']},
     include_package_data=True,
     zip_safe=False  #needed because setuptools are used
 )
