@@ -4,11 +4,11 @@ from enum import Enum
 
 from setuptools import setup
 from setuptools.command.test import test
-import distutils
-from distutils.cmd import Command
 from Cython.Distutils.extension import Extension
 from Cython.Distutils.build_ext import new_build_ext as build_ext
 from Cython.Build import cythonize
+from distutils.command.install import install
+from distutils.command.build import build
 
 # name of Interfacing API
 APPNAME = "precice_future"
@@ -86,20 +86,83 @@ def get_extensions(mpi_compiler_wrapper, is_test):
 
 # some global definitions for an additional user input command
 doc_string = 'specify the mpi compiler wrapper'
+opt_name = 'mpicompiler='
 mpicompiler_default = "mpic++"
+add_option = [(opt_name, None, doc_string)]
+
 dependencies = ['cython']
 dependencies.append('mpi4py')  # only needed, if preCICE was compiled with MPI, see https://github.com/precice/precice/issues/311
 
-class my_build_ext(build_ext):
+class my_build_ext(build_ext, object):
+    description = "building with optional specification of an alternative mpi compiler wrapper"
+    user_options = build_ext.user_options + add_option
+
     def initialize_options(self):
+        self.mpicompiler = mpicompiler_default
+
         try:
             self.distribution.is_test
         except AttributeError:
             self.distribution.is_test = False
-            
-        print("TEST:{}".format(self.distribution.is_test))
-        self.distribution.ext_modules=cythonize(get_extensions(mpicompiler_default, self.distribution.is_test), compile_time_env={"TEST":self.distribution.is_test})
+
+        if not self.distribution.ext_modules:            
+            self.distribution.ext_modules=cythonize(get_extensions(mpicompiler_default), compile_time_env={"TEST":self.distribution.is_test})
+        
         super().initialize_options()
+        
+    def finalize_options(self):
+        print("#####")
+        print("calling my_build_ext")
+        print("using --%s%s" % (opt_name, self.mpicompiler))
+
+        if not self.distribution.ext_modules:
+            print("adding extension")
+            self.distribution.ext_modules = cythonize(get_extensions(self.mpicompiler), compile_time_env={"TEST":self.distribution.is_test})
+
+        print("#####")
+
+        super().finalize_options()
+
+
+class my_install(install, object):
+    user_options = install.user_options + add_option
+
+    def initialize_options(self):
+        self.mpicompiler = mpicompiler_default
+
+        try:
+            self.distribution.is_test
+        except AttributeError:
+            self.distribution.is_test = False
+
+        super().initialize_options()
+
+
+class my_build(build, object):
+    user_options = install.user_options + add_option
+
+    def initialize_options(self):
+        self.mpicompiler = mpicompiler_default
+
+        try:
+            self.distribution.is_test
+        except AttributeError:
+            self.distribution.is_test = False
+
+        super().initialize_options()
+
+    def finalize_options(self):
+        print("#####")
+        print("calling my_build")
+        print("using --%s%s" % (opt_name, self.mpicompiler))
+
+        if not self.distribution.ext_modules:
+            print("adding extension")
+            self.distribution.ext_modules = cythonize(get_extensions(self.mpicompiler), compile_time_env={"TEST":self.distribution.is_test})
+
+        print("#####")
+
+        super().finalize_options()
 
 class my_test(test, object):
     def initialize_options(self):
@@ -117,7 +180,9 @@ setup(
     python_requires='>=3',
     install_requires=dependencies,
     cmdclass={'test': my_test,
-              'build_ext': my_build_ext},
+              'build_ext': my_build_ext,
+              'build': my_build,
+              'install': my_install},
     #ensure pxd-files:
     package_data={ 'precice_future': ['*.pxd']},
     include_package_data=True,
