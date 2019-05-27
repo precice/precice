@@ -51,11 +51,19 @@ def determine_mpi_args(mpi_compiler_wrapper):
     return mpi_compile_args, mpi_link_args
 
 
-def get_extensions(mpi_compiler_wrapper):
+def get_extensions(mpi_compiler_wrapper, is_test):
+    compile_args = []
+    link_args = []
+
     mpi_compile_args, mpi_link_args = determine_mpi_args(mpi_compiler_wrapper)
     
-    compile_args = ["-Wall", "-std=c++11"] + mpi_compile_args
-    link_args = ["-lprecice"] + mpi_link_args
+    compile_args += mpi_compile_args
+    compile_args.append("-Wall")
+    compile_args.append("-std=c++11")
+
+    link_args += mpi_link_args
+    if is_test:
+        link_args.append("-lprecice")
 
     return [
         Extension(
@@ -90,21 +98,13 @@ class my_build_ext(build_ext):
             self.distribution.is_test = False
             
         print("TEST:{}".format(self.distribution.is_test))
-        self.distribution.ext_modules=cythonize(get_extensions(mpicompiler_default), compile_time_env={"TEST":self.distribution.is_test})
+        self.distribution.ext_modules=cythonize(get_extensions(mpicompiler_default, self.distribution.is_test), compile_time_env={"TEST":self.distribution.is_test})
         super().initialize_options()
 
 class my_test(test, object):
     def initialize_options(self):
         self.distribution.is_test = True       
         super().initialize_options()
-
-    def run(self):
-        build_test_package = ['cythonize', '-i', '-E TEST=True', 'precice_future.pyx', 'test/test_bindings_module.pyx']  # before running the tests, we have to build the tests module
-        self.announce(
-            'Running command: %s' % str(build_test_package),
-            level=distutils.log.INFO)
-        subprocess.check_call(build_test_package)
-        super().run()
 
 setup(
     name=APPNAME,
@@ -118,7 +118,6 @@ setup(
     install_requires=dependencies,
     cmdclass={'test': my_test,
               'build_ext': my_build_ext},
-    ext_modules=cythonize(get_extensions(mpicompiler_default), compile_time_env={"TEST":True}),
     #ensure pxd-files:
     package_data={ 'precice_future': ['*.pxd']},
     include_package_data=True,
