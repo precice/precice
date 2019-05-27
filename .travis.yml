@@ -95,7 +95,10 @@ jobs:
       language: python
       python: 
         - "3.6"
-      install: pip install -e .
+      before_install:
+        - sudo apt-get update
+        - sudo apt-get install python3        
+      install: pip3 install -e .
       script:
         - $TRAVIS_BUILD_DIR/tools/travis-bindings-test.sh
     - stage: codecov
