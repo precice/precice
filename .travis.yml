@@ -62,6 +62,8 @@ matrix:
     - if: type = cron or branch = master
       compiler: clang
       env: BUILD_TYPE=SCONS MPI=off PETSC=off
+      
+      # Test Bindings
     - name: "Mock Test Python Bindings"
       cache: false
       before_install:
@@ -70,6 +72,8 @@ matrix:
         - $PY_CMD -m pip install --user --upgrade pip wheel setuptools cython
       script:
         - $TRAVIS_BUILD_DIR/tools/travis-bindings-test.sh
+        
+      # Test coverage
     - name: "Test Coverage"
       compiler: gcc
       script:
@@ -104,24 +108,4 @@ after_failure:
   - cd $TRAVIS_BUILD_DIR
   - cat config.log
   - cat -n ./tests/boost-test-output*
-
-jobs:
-  include:
-    - stage: bindings
-      name: "Mock Test Python Bindings"
-      before_install:
-      - pyenv global $(pyenv whence 2to3)  # activate all python versions
-      - PY_CMD=python3
-      - $PY_CMD -m pip install --user --upgrade pip wheel setuptools cython
-      script:
-        - $TRAVIS_BUILD_DIR/tools/travis-bindings-test.sh
-    - stage: codecov
-      name: "Test Coverage"
-      compiler: gcc
-      script:
-        - $TRAVIS_BUILD_DIR/tools/travis-coverage.sh
-      after_success:
-        - lcov --capture --directory "$TRAVIS_BUILD_DIR/build" --output-file coverage.info
-        - lcov --remove coverage.info '/usr/*' "$LOCAL_INSTALL/*" --output-file coverage.info # filter system-files and local-dependencies
-        - lcov --list coverage.info # debug info
-        - bash <(curl -s https://codecov.io/bash) -f coverage.info || echo "Codecov did not collect coverage reports"
+ 
