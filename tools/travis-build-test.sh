@@ -21,3 +21,19 @@ else
     cmake --build . -- -j $(nproc)
     ctest --output-on-failure -O $TRAVIS_BUILD_DIR/tests/boost-test-output
 fi
+
+export FUTURE_PYTHON_BINDINGS_DIR=$TRAVIS_BUILD_DIR/src/precice/bindings/python_future
+cd $FUTURE_PYTHON_BINDINGS_DIR
+
+# test bindings
+pip3 install --user setuptools cython numpy
+python3 setup.py test
+
+# install bindings
+pip3 install --user .
+
+export PYTHON_BINDINGS_DIR=$TRAVIS_BUILD_DIR/src/precice/bindings/python
+cd $PYTHON_BINDINGS_DIR
+
+# install bindings
+pip3 install --user .
