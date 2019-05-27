@@ -3,8 +3,9 @@ import subprocess
 from enum import Enum
 
 from setuptools import setup
-from distutils.extension import Extension
+from Cython.Distutils.extension import Extension
 from Cython.Distutils.build_ext import new_build_ext as build_ext
+from Cython.Build import cythonize
 from distutils.command.install import install
 from distutils.command.build import build
 
@@ -89,7 +90,7 @@ class my_build_ext(build_ext, object):
 
         if not self.distribution.ext_modules:
             print("adding extension")
-            self.distribution.ext_modules = get_extensions(self.mpicompiler)
+            self.distribution.ext_modules = cythonize(get_extensions(self.mpicompiler))
 
         print("#####")
 
@@ -118,7 +119,7 @@ class my_build(build, object):
 
         if not self.distribution.ext_modules:
             print("adding extension")
-            self.distribution.ext_modules = get_extensions(self.mpicompiler)
+            self.distribution.ext_modules = cythonize(get_extensions(self.mpicompiler))
 
         print("#####")
 
