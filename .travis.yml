@@ -74,18 +74,6 @@ matrix:
         - lcov --list coverage.info # debug info
         - bash <(curl -s https://codecov.io/bash) -f coverage.info || echo "Codecov did not collect coverage reports"
 
-jobs:
-  include:
-    - stage: bindings
-    # Python Bindings test    
-      name: "Mock Test Python Bindings"
-      language: python
-      python: 
-        - "3.6"
-      install: pip install -e .
-      script:
-        - $TRAVIS_BUILD_DIR/tools/travis-bindings-test.sh
-
 cache:
   ccache: true
   directories:
@@ -111,4 +99,14 @@ after_failure:
   - cat config.log
   - cat -n ./tests/boost-test-output*
 
+jobs:
+  include:
+    - stage: bindings
+      name: "Mock Test Python Bindings"
+      language: python
+      python: 
+        - "3.6"
+      install: pip install -e .
+      script:
+        - $TRAVIS_BUILD_DIR/tools/travis-bindings-test.sh
 
