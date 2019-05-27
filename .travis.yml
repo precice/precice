@@ -76,7 +76,7 @@ matrix:
     # Bindings test
     - name: "Mock Test Python Bindings"
       script:
-        - $TRAVIV_BUILD_DIR/tools/travis-bindings-test.sh
+        - $TRAVIS_BUILD_DIR/tools/travis-bindings-test.sh
 
 cache:
   ccache: true
