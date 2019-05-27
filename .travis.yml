@@ -70,7 +70,7 @@ matrix:
         - pyenv global $(pyenv whence 2to3)  # activate all python versions
         - PYTHONPATH=""
         - PY_CMD=python3
-        - $PY_CMD -m pip install --user --upgrade pip wheel setuptools cython
+        - $PY_CMD -m pip install --user --upgrade pip wheel setuptools cython numpy
       install:
         - echo "nothing to install"
       script:
