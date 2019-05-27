@@ -75,7 +75,6 @@ matrix:
         - bash <(curl -s https://codecov.io/bash) -f coverage.info || echo "Codecov did not collect coverage reports"
     # Bindings test
     - name: "Mock Test Python Bindings"
-      compiler: cython
       script:
         - $TRAVIV_BUILD_DIR/tools/travis-bindings-test.sh
 
