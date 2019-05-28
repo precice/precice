@@ -96,3 +96,5 @@ if [ ! -f $CACHE_CCACHE_TOKEN ]; then
     # Create token
     touch $CACHE_CCACHE_TOKEN
 fi
+
+pip3 install --user cython numpy mpi4py
