@@ -70,9 +70,9 @@ matrix:
         - pyenv global $(pyenv whence 2to3)  # activate all python versions
         - PYTHONPATH=""
         - PY_CMD=python3
-        - $PY_CMD -m pip install --user --upgrade pip wheel setuptools cython numpy
+        - $PY_CMD -m pip install --user --upgrade pip wheel setuptools
       install:
-        - echo "nothing to install"
+        - pip3 install --user cython numpy
       script:
         - $TRAVIS_BUILD_DIR/tools/travis-bindings-test.sh
         
@@ -103,6 +103,7 @@ before_install:
 
 install:
   - $TRAVIS_BUILD_DIR/tools/travis-install-dependencies.sh $LOCAL_INSTALL
+  - pip3 install --user cython numpy mpi4py
   - export PATH=${LOCAL_INSTALL}/cmake/bin:${LOCAL_INSTALL}/bin:${PATH}
 
 before_script:
