@@ -95,6 +95,10 @@ void SolverInterfaceImpl:: configure
 (
   const std::string& configurationFileName )
 {
+  mesh::Mesh::resetGeometryIDsGlobally();
+  mesh::Data::resetDataCount();
+  Participant::resetParticipantCount();
+  
   config::Configuration config;
   xml::configure(config.getXMLTag(), configurationFileName);
   if(_accessorProcessRank==0){
@@ -113,9 +117,6 @@ void SolverInterfaceImpl:: configure
   Event e("configure"); // no precice::syncMode as this is not yet configured here
   utils::ScopedEventPrefix sep("configure/");
 
-  mesh::Mesh::resetGeometryIDsGlobally();
-  mesh::Data::resetDataCount();
-  Participant::resetParticipantCount();
   _meshLock.clear();
 
   _dimensions = config.getDimensions();
