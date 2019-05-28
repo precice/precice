@@ -1,7 +1,7 @@
 #pragma once
 
 #include "precice/MeshHandle.hpp"
-#include "precice/Constants.hpp"
+#include "precice/SolverInterface.hpp"
 #include "precice/impl/SharedPointer.hpp"
 #include "precice/impl/DataContext.hpp"
 #include "action/Action.hpp"
@@ -433,7 +433,7 @@ public:
    */
 //  void setExportLocation (
 //    const std::string& location,
-//    int                exportType = constants::exportAll() );
+//    int                exportType = io::constants::exportAll() );
 
   /**
    * @brief Writes a mesh to vtk file.
@@ -445,8 +445,7 @@ public:
    */
   void exportMesh (
     const std::string& filenameSuffix,
-    int                exportType = constants::exportAll() ) const;
-
+    int                exportType = io::constants::exportAll() ) const;
 
   /**
    * @brief Scales data values according to configuration.

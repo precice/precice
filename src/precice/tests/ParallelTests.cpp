@@ -5,7 +5,6 @@
 #include "utils/Parallel.hpp"
 #include "precice/impl/SolverInterfaceImpl.hpp"
 #include "precice/SolverInterface.hpp"
-#include "precice/Constants.hpp"
 #include "precice/impl/Participant.hpp"
 #include "precice/config/Configuration.hpp"
 #include "utils/Parallel.hpp"

@@ -3,7 +3,6 @@
 
 #include "precice/impl/SolverInterfaceImpl.hpp"
 #include "precice/SolverInterface.hpp"
-#include "precice/Constants.hpp"
 #include "precice/config/Configuration.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/Event.hpp"

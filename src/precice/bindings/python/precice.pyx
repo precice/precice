@@ -27,8 +27,6 @@ cdef bytes convert(s):
     else:
         raise TypeError("Could not convert.")
 
-include "constants.pyx"
-
 cdef extern from "precice/SolverInterface.hpp"  namespace "precice":
    cdef cppclass SolverInterface:
       # construction and configuration
@@ -124,6 +122,12 @@ cdef extern from "precice/SolverInterface.hpp"  namespace "precice":
       void readBlockScalarData (int dataID, int size, int* valueIndices, double* values)
 
       void readScalarData (int dataID, int valueIndex, double& value)
+
+
+cdef extern from "precice/SolverInterface.hpp"  namespace "precice::constants":
+   const string& actionWriteInitialData()
+   const string& actionWriteIterationCheckpoint()
+   const string& actionReadIterationCheckpoint()
 
 
 cdef class Interface:
@@ -476,3 +480,13 @@ cdef class Interface:
 
    def read_scalar_data (self, int data_id, int value_index, double& value):
       self.thisptr.readScalarData (data_id, value_index, value)
+
+def action_write_initial_data ():
+   return actionWriteInitialData()
+   
+def action_write_iteration_checkpoint ():
+   return actionWriteIterationCheckpoint()
+
+def action_read_iteration_checkpoint ():
+   return actionReadIterationCheckpoint()
+

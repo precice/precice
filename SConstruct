@@ -106,7 +106,7 @@ env.Append(LIBPATH = [('#' + buildpath)])
 env.Append(CCFLAGS= ['-Wall', '-Wextra', '-Wno-unused-parameter', '-std=c++11'])
 
 # ====== PRECICE_VERSION number ======
-PRECICE_VERSION = "1.4.1"
+PRECICE_VERSION = "1.5.0"
 
 
 # ====== Compiler Settings ======
@@ -144,8 +144,6 @@ if not conf.CheckCXX():
 
 # ====== Build Directories ======
 if env["build"] == 'Debug':
-    # The Assert define does not actually switches asserts on/off, these are controlled by NDEBUG.
-    # It's kept in place for some legacy code.
     env.Append(CCFLAGS = ['-g3', '-O0'])
     env.Append(LINKFLAGS = ["-rdynamic"]) # Gives more informative backtraces
     buildpath += "debug"

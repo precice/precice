@@ -1,5 +1,3 @@
-F90 ?= $(FORTRAN)
-F90 ?= $(FC)
 F90 ?= gfortran
 
 all: solverdummy

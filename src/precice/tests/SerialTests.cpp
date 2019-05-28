@@ -6,9 +6,7 @@
 #include "precice/impl/MeshContext.hpp"
 #include "precice/impl/DataContext.hpp"
 #include "precice/SolverInterface.hpp"
-#include "precice/Constants.hpp"
 #include "utils/Parallel.hpp"
-#include "precice/Constants.hpp"
 #include "precice/impl/Participant.hpp"
 #include "precice/config/Configuration.hpp"
 #include "utils/MasterSlave.hpp"
@@ -842,8 +840,8 @@ BOOST_AUTO_TEST_CASE(testStationaryMappingWithSolverMesh,
   std::string meshDisplA = "MeshDisplacementsA";
   std::string meshForcesB = "MeshForcesB";
   std::string meshDisplB = "MeshDisplacementsB";
-  std::string dataForces = constants::dataForces();
-  std::string dataDispl = constants::dataDisplacements();
+  std::string dataForces = "Forces";
+  std::string dataDispl = "Displacements";
   using testing::equals;
 
   for (int dim: {2, 3}){
@@ -1028,8 +1026,8 @@ BOOST_AUTO_TEST_CASE(testBug,
     xml::configure(config.getXMLTag(), configName);
     impl(precice).configure(config.getSolverInterfaceConfiguration());
     int meshID = precice.getMeshID("FliteNodes");
-    int forcesID = precice.getDataID(precice::constants::dataForces(), meshID);
-    int displacementsID = precice.getDataID(precice::constants::dataDisplacements(), meshID);
+    int forcesID = precice.getDataID("Forces", meshID);
+    int displacementsID = precice.getDataID("Displacements", meshID);
     int oldDisplacementsID = precice.getDataID("OldDisplacements", meshID);
     BOOST_TEST(precice.getDimensions() == 3);
     for (Vector3d& coord : coords){
