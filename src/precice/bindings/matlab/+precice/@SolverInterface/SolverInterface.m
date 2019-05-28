@@ -45,6 +45,11 @@ classdef SolverInterface < handle
             dt = preciceGateway(uint8(10));
         end
         
+        function initializeData(obj)
+            obj.interfaceID = 0;
+            preciceGateway(uint8(11));
+        end
+        
         function dt = advance(obj,dt)
             obj.interfaceID = 0;
             dt = preciceGateway(uint8(12),dt);
@@ -63,6 +68,11 @@ classdef SolverInterface < handle
         function bool = isCouplingOngoing(obj)
             obj.interfaceID = 0;
             bool = preciceGateway(uint8(21));
+        end
+        
+        function bool = isReadDataAvailable(obj)
+            obj.interfaceID = 0;
+            bool = preciceGateway(uint8(22));
         end
         
         function bool = isActionRequired(obj,action)
