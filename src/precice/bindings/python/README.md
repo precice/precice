@@ -5,7 +5,7 @@ These are the python bindings for preCICE.
 
 # Installing the package
 
-We recommend using `pip3 install --user` for the sake of simplicity.
+We recommend [using pip3](https://github.com/precice/precice/blob/develop/src/precice/bindings/python/README.md#using-pip3) for the sake of simplicity.
 
 For system installs of preCICE, this works out of the box.
 
@@ -65,6 +65,10 @@ Run the following to test the installation:
 ```
 $ python3 -c "import precice"
 ```
+
+## additional preliminary tests
+
+You can find an extended solverdummy in `test`. Here some of the API functions are called and the results are checked with assertions. This is currently **not a proper automated unit test**. See also https://github.com/precice/precice/issues/409.
 
 # Using with MPI
 

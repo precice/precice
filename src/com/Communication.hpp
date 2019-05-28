@@ -145,6 +145,16 @@ public:
    */
   virtual void closeConnection() = 0;
 
+  /**
+   * @brief Prepare environment used to establish the communication.
+   */
+  virtual void prepareEstablishment() {}
+
+  /**
+   * @brief Clean-up environment used to establish the communication.
+   */
+  virtual void cleanupEstablishment() {}
+
   /// Performs a reduce summation on the rank given by rankMaster
   virtual void reduceSum(double *itemsToSend, double *itemsToReceive, int size, int rankMaster);
 

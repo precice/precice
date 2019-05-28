@@ -77,11 +77,11 @@ void broadcastReceive(mesh::Mesh::VertexDistribution &m,
 
 void broadcast(mesh::Mesh::VertexDistribution &m)
 {
-  if (utils::MasterSlave::_masterMode) {
+  if (utils::MasterSlave::isMaster()) {
     // Broadcast (send) vertex distributions.
     m2n::broadcastSend(m);
   } else {
-    assertion(utils::MasterSlave::_slaveMode);
+    assertion(utils::MasterSlave::isSlave());
     // Broadcast (receive) vertex distributions.
     m2n::broadcastReceive(m, 0);
   }
@@ -91,18 +91,18 @@ void print(std::map<int, std::vector<int>> const &m)
 {
   std::ostringstream oss;
 
-  oss << "rank: " << utils::MasterSlave::_rank << "\n";
+  oss << "rank: " << utils::MasterSlave::getRank() << "\n";
 
   for (auto &i : m) {
     for (auto &j : i.second) {
-      oss << i.first << ":" << j << std::endl; // prints rank:index
+      oss << i.first << ":" << j << '\n'; // prints rank:index
     }
   }
 
-  if (utils::MasterSlave::_masterMode) {
+  if (utils::MasterSlave::isMaster()) {
     std::string s;
 
-    for (int rank = 1; rank < utils::MasterSlave::_size; ++rank) {
+    for (int rank = 1; rank < utils::MasterSlave::getSize(); ++rank) {
       utils::MasterSlave::_communication->receive(s, rank);
 
       oss << s;
@@ -110,7 +110,7 @@ void print(std::map<int, std::vector<int>> const &m)
 
     std::cout << oss.str();
   } else {
-    assertion(utils::MasterSlave::_slaveMode);
+    assertion(utils::MasterSlave::isSlave());
 
     utils::MasterSlave::_communication->send(oss.str(), 0);
   }
@@ -120,7 +120,7 @@ void printCommunicationPartnerCountStats(std::map<int, std::vector<int>> const &
 {
   int size = m.size();
 
-  if (utils::MasterSlave::_masterMode) {
+  if (utils::MasterSlave::isMaster()) {
     size_t count   = 0;
     size_t maximum = std::numeric_limits<size_t>::min();
     size_t minimum = std::numeric_limits<size_t>::max();
@@ -132,7 +132,7 @@ void printCommunicationPartnerCountStats(std::map<int, std::vector<int>> const &
       count++;
     }
 
-    for (int rank = 1; rank < utils::MasterSlave::_size; ++rank) {
+    for (int rank = 1; rank < utils::MasterSlave::getSize(); ++rank) {
       utils::MasterSlave::_communication->receive(size, rank);
 
       total += size;
@@ -157,9 +157,9 @@ void printCommunicationPartnerCountStats(std::map<int, std::vector<int>> const &
               << "  Minimum: " << minimum << "\n"
               << "  Average: " << average << "\n"
               << "Number of Interface Processes: " << count << "\n"
-              << std::endl;
+              << '\n';
   } else {
-    assertion(utils::MasterSlave::_slaveMode);
+    assertion(utils::MasterSlave::isSlave());
     utils::MasterSlave::_communication->send(size, 0);
   }
 }
@@ -172,7 +172,7 @@ void printLocalIndexCountStats(std::map<int, std::vector<int>> const &m)
     size += i.second.size();
   }
 
-  if (utils::MasterSlave::_masterMode) {
+  if (utils::MasterSlave::isMaster()) {
     size_t count   = 0;
     size_t maximum = std::numeric_limits<size_t>::min();
     size_t minimum = std::numeric_limits<size_t>::max();
@@ -185,7 +185,7 @@ void printLocalIndexCountStats(std::map<int, std::vector<int>> const &m)
       count++;
     }
 
-    for (int rank = 1; rank < utils::MasterSlave::_size; ++rank) {
+    for (int rank = 1; rank < utils::MasterSlave::getSize(); ++rank) {
       utils::MasterSlave::_communication->receive(size, rank);
 
       total += size;
@@ -211,9 +211,9 @@ void printLocalIndexCountStats(std::map<int, std::vector<int>> const &m)
               << "  Minimum: " << minimum << "\n"
               << "  Average: " << average << "\n"
               << "Number of Interface Processes: " << count << "\n"
-              << std::endl;
+              << '\n';
   } else {
-    assertion(utils::MasterSlave::_slaveMode);
+    assertion(utils::MasterSlave::isSlave());
 
     utils::MasterSlave::_communication->send(size, 0);
   }
@@ -227,7 +227,7 @@ std::map<int, std::vector<int>> buildCommunicationMap(
     mesh::Mesh::VertexDistribution const &thisVertexDistribution,
     // `otherVertexDistribution' is input vertex distribution from other participant.
     mesh::Mesh::VertexDistribution const &otherVertexDistribution,
-    int                                    thisRank = utils::MasterSlave::_rank)
+    int                                    thisRank = utils::MasterSlave::getRank())
 {
   std::map<int, std::vector<int>> communicationMap;
 
@@ -279,31 +279,25 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
 {
   TRACE(acceptorName, requesterName);
   CHECK(not isConnected(), "Already connected!");
-  CHECK(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode,
+  CHECK(utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave(),
         "You can only use a point-to-point communication between two participants which both use a master. "
             << "Please use distribution-type gather-scatter instead.");
 
   mesh::Mesh::VertexDistribution &vertexDistribution = _mesh->getVertexDistribution();
   mesh::Mesh::VertexDistribution  requesterVertexDistribution;
 
-  if (utils::MasterSlave::_masterMode) {
+  if (utils::MasterSlave::isMaster()) {
     Event e0("m2n.exchangeVertexDistribution");
     // Establish connection between participants' master processes.
     auto c = _communicationFactory->newCommunication();
 
-    c->acceptConnection(acceptorName, requesterName, utils::MasterSlave::_rank);
-
-    int requesterMasterRank;
-
-    // Exchange ranks of participants' master processes.
-    c->send(utils::MasterSlave::_masterRank, 0);
-    c->receive(requesterMasterRank, 0);
+    c->acceptConnection(acceptorName, requesterName, utils::MasterSlave::getRank());
 
     // Exchange vertex distributions.
     m2n::send(vertexDistribution, 0, c);
     m2n::receive(requesterVertexDistribution, 0, c);
   } else {
-    assertion(utils::MasterSlave::_slaveMode);
+    assertion(utils::MasterSlave::isSlave());
   }
 
   Event e1("m2n.broadcastVertexDistributions", precice::syncMode);
@@ -348,10 +342,10 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
   try {
     auto addressDirectory = _communicationFactory->addressDirectory();
 
-    if (utils::MasterSlave::_masterMode) {
+    if (utils::MasterSlave::isMaster()) {
       Event e3("m2n.createDirectories");
 
-      for (int rank = 0; rank < utils::MasterSlave::_size; ++rank) {
+      for (int rank = 0; rank < utils::MasterSlave::getSize(); ++rank) {
         Publisher::createDirectory(addressDirectory + "/" + "." + acceptorName + "-" + _mesh->getName() +
                                    "-" + std::to_string(rank) + ".address");
       }
@@ -362,6 +356,7 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
 #endif
 
   Event e4("m2n.createCommunications");
+  e4.addData("Connections", communicationMap.size());
   if (communicationMap.empty()) {
     _isConnected = true;
     return;
@@ -371,31 +366,21 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
 
 #ifdef SuperMUC_WORK
   Publisher::ScopedPushDirectory spd("." + acceptorName + "-" + _mesh->getName() + "-" +
-                                     std::to_string(utils::MasterSlave::_rank) + ".address");
+                                     std::to_string(utils::MasterSlave::getRank()) + ".address");
 #endif
 
   // Accept point-to-point connections (as server) between the current acceptor
-  // process (in the current participant) with rank `utils::MasterSlave::_rank'
+  // process (in the current participant) with rank `utils::MasterSlave::getRank()'
   // and (multiple) requester processes (in the requester participant).
   _communication->acceptConnectionAsServer(acceptorName,
                                            requesterName,
-                                           utils::MasterSlave::_rank,
+                                           utils::MasterSlave::getRank(),
                                            communicationMap.size());
 
-  for (auto & comMap : communicationMap) {
+  for (auto const & comMap : communicationMap) {
     int globalRequesterRank = comMap.first;
-
     auto indices = std::move(communicationMap[globalRequesterRank]);
 
-    /*
-      NOTE:
-      Everything is moved (efficiency)!
-      On the acceptor participant side, the communication object `c' behaves as a server, i.e. it 
-      implicitly accepts multiple connections to requester processes (in the requester participant). 
-      As a result, only one communication object `c' is needed to satisfy `communicationMap', and, 
-      therefore, for data structure consistency of `_mappings' with the requester participant side, 
-      we simply duplicate references to the same communication object `c'.
-    */
     _mappings.push_back({globalRequesterRank, std::move(indices), com::PtrRequest(), {}});
   }
   e4.stop();
@@ -407,30 +392,24 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
 {
   TRACE(acceptorName, requesterName);
   CHECK(not isConnected(), "Already connected!");
-  CHECK(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode,
+  CHECK(utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave(),
         "You can only use a point-to-point communication between two participants which both use a master. "
         << "Please use distribution-type gather-scatter instead.");
 
   mesh::Mesh::VertexDistribution &vertexDistribution = _mesh->getVertexDistribution();
   mesh::Mesh::VertexDistribution  acceptorVertexDistribution;
 
-  if (utils::MasterSlave::_masterMode) {
+  if (utils::MasterSlave::isMaster()) {
     Event e0("m2n.exchangeVertexDistribution");
     // Establish connection between participants' master processes.
     auto c = _communicationFactory->newCommunication();
     c->requestConnection(acceptorName, requesterName, 0, 1);
 
-    int acceptorMasterRank;
-
-    // Exchange ranks of participants' master processes.
-    c->receive(acceptorMasterRank, 0);
-    c->send(utils::MasterSlave::_masterRank, 0);
-
     // Exchange vertex distributions.
     m2n::receive(acceptorVertexDistribution, 0, c);
     m2n::send(vertexDistribution, 0, c);
   } else {
-    assertion(utils::MasterSlave::_slaveMode);
+    assertion(utils::MasterSlave::isSlave());
   }
 
   Event e1("m2n.broadcastVertexDistributions", precice::syncMode);
@@ -481,6 +460,7 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
 #endif
 
   Event e4("m2n.createCommunications");
+  e4.addData("Connections", communicationMap.size());
   if (communicationMap.empty()) {
     _isConnected = true;
     return;
@@ -499,7 +479,7 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
   // processes (in the acceptor participant) to ranks `accceptingRanks'
   // according to `communicationMap`.
   _communication->requestConnectionAsClient(acceptorName, requesterName,
-                                            acceptingRanks, utils::MasterSlave::_rank);
+                                            acceptingRanks, utils::MasterSlave::getRank());
 
   for (auto &i : communicationMap) {
     auto globalAcceptorRank = i.first;
@@ -550,20 +530,7 @@ void PointToPointCommunication::send(double *itemsToSend,
     auto request = _communication->aSend(*buffer, mapping.remoteRank);
     bufferedRequests.emplace_back(request, buffer);
   }
-
-  /* Disable asynchronous sending
-   * For SocketCommunuication, an async send request is given to asio::async_write and from that
-   * written to the operating system TCP queues using multiple function calls. 
-   * Problem 1) Simultaneous invocations of async_write on the same socket could be problematic.
-   * Problem 2) Writes from async_write to the OS queues could interfere with other writes
-   * (asio::write or asio::async_write) on the same sockets and thus changing order or requests.
-   * Since preCICE does not implement its own method to ensure correct ordering, this can lead to
-   * garbled data.
-   * See:
-   * https://lists.boost.org/Archives/boost/2018/10/243612.php
-   * https://www.boost.org/doc/libs/1_68_0/doc/html/boost_asio/reference/async_write/overload1.html
-   */
-  checkBufferedRequests(true);
+  checkBufferedRequests(false);
 }
 
 void PointToPointCommunication::receive(double *itemsToReceive,

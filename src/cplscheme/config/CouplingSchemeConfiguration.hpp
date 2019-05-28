@@ -140,7 +140,7 @@ private:
     typedef std::tuple<mesh::PtrData, mesh::PtrMesh, std::string, std::string, bool> Exchange;
     std::vector<Exchange>                                                            exchanges;
     /// Tuples of data ID, mesh ID, and convergence measure.
-    std::vector<std::tuple<int, bool, std::string, int, impl::PtrConvergenceMeasure>> convMeasures;
+    std::vector<std::tuple<mesh::PtrData, bool, std::string, int, impl::PtrConvergenceMeasure>> convMeasures;
     int                                                                               maxIterations = -1;
     int                                                                               extrapolationOrder = 0;
 

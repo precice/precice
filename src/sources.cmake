@@ -48,6 +48,8 @@ target_sources(precice
     src/com/SocketCommunicationFactory.hpp
     src/com/SocketRequest.cpp
     src/com/SocketRequest.hpp
+    src/com/SocketSendQueue.cpp
+    src/com/SocketSendQueue.hpp
     src/com/config/CommunicationConfiguration.cpp
     src/com/config/CommunicationConfiguration.hpp
     src/cplscheme/BaseCouplingScheme.cpp
@@ -140,6 +142,8 @@ target_sources(precice
     src/logging/Tracer.hpp
     src/logging/config/LogConfiguration.cpp
     src/logging/config/LogConfiguration.hpp
+    src/m2n/BoundM2N.cpp
+    src/m2n/BoundM2N.hpp
     src/m2n/DistributedComFactory.hpp
     src/m2n/DistributedCommunication.hpp
     src/m2n/GatherScatterComFactory.cpp
@@ -210,15 +214,11 @@ target_sources(precice
     src/partition/ReceivedPartition.cpp
     src/partition/ReceivedPartition.hpp
     src/partition/SharedPointer.hpp
-    src/precice/Constants.cpp
-    src/precice/Constants.hpp
     src/precice/MeshHandle.cpp
     src/precice/MeshHandle.hpp
     src/precice/SolverInterface.cpp
     src/precice/SolverInterface.hpp
-    src/precice/bindings/c/Constants.cpp
     src/precice/bindings/c/SolverInterfaceC.cpp
-    src/precice/bindings/fortran/ConstantsFortran.cpp
     src/precice/bindings/fortran/ConstantsFortran.hpp
     src/precice/bindings/fortran/SolverInterfaceFASTEST.cpp
     src/precice/bindings/fortran/SolverInterfaceFASTEST.hpp
@@ -241,6 +241,7 @@ target_sources(precice
     src/precice/impl/SharedPointer.hpp
     src/precice/impl/SolverInterfaceImpl.cpp
     src/precice/impl/SolverInterfaceImpl.hpp
+    src/precice/impl/ValidationMacros.hpp
     src/precice/impl/WatchPoint.cpp
     src/precice/impl/WatchPoint.hpp
     src/query/ExportVTKNeighbors.cpp
@@ -274,6 +275,7 @@ target_sources(precice
     src/utils/ManageUniqueIDs.hpp
     src/utils/MasterSlave.cpp
     src/utils/MasterSlave.hpp
+    src/utils/MultiLock.hpp
     src/utils/Parallel.cpp
     src/utils/Parallel.hpp
     src/utils/Petsc.cpp
@@ -307,9 +309,7 @@ target_sources(precice
 #
 
 set_property(TARGET precice PROPERTY PUBLIC_HEADER
-    src/precice/Constants.hpp
     src/precice/MeshHandle.hpp
     src/precice/SolverInterface.hpp
-    src/precice/bindings/c/Constants.h
     src/precice/bindings/c/SolverInterfaceC.h
     )

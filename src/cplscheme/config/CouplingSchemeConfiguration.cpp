@@ -559,8 +559,7 @@ void CouplingSchemeConfiguration::addAbsoluteConvergenceMeasure(
 {
   TRACE();
   impl::PtrConvergenceMeasure measure(new impl::AbsoluteConvergenceMeasure(limit));
-  int                         dataID = getData(dataName, meshName)->getID();
-  _config.convMeasures.push_back(std::make_tuple(dataID, suffices, meshName, level, measure));
+  _config.convMeasures.push_back(std::make_tuple(getData(dataName, meshName), suffices, meshName, level, measure));
 }
 
 void CouplingSchemeConfiguration::addRelativeConvergenceMeasure(
@@ -573,8 +572,7 @@ void CouplingSchemeConfiguration::addRelativeConvergenceMeasure(
   TRACE();
   impl::PtrConvergenceMeasure measure(
       new impl::RelativeConvergenceMeasure(limit));
-  int dataID = getData(dataName, meshName)->getID();
-  _config.convMeasures.push_back(std::make_tuple(dataID, suffices, meshName, level, measure));
+  _config.convMeasures.push_back(std::make_tuple(getData(dataName, meshName), suffices, meshName, level, measure));
 }
 
 void CouplingSchemeConfiguration::addResidualRelativeConvergenceMeasure(
@@ -587,8 +585,7 @@ void CouplingSchemeConfiguration::addResidualRelativeConvergenceMeasure(
   TRACE();
   impl::PtrConvergenceMeasure measure(
       new impl::ResidualRelativeConvergenceMeasure(limit));
-  int dataID = getData(dataName, meshName)->getID();
-  _config.convMeasures.push_back(std::make_tuple(dataID, suffices, meshName, level, measure));
+  _config.convMeasures.push_back(std::make_tuple(getData(dataName, meshName), suffices, meshName, level, measure));
 }
 
 void CouplingSchemeConfiguration::addMinIterationConvergenceMeasure(
@@ -601,8 +598,7 @@ void CouplingSchemeConfiguration::addMinIterationConvergenceMeasure(
   TRACE();
   impl::PtrConvergenceMeasure measure(
       new impl::MinIterationConvergenceMeasure(minIterations));
-  int dataID = getData(dataName, meshName)->getID();
-  _config.convMeasures.push_back(std::make_tuple(dataID, suffices, meshName, level, measure));
+  _config.convMeasures.push_back(std::make_tuple(getData(dataName, meshName), suffices, meshName, level, measure));
 }
 
 mesh::PtrData CouplingSchemeConfiguration::getData(
@@ -672,15 +668,15 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialImplicitCouplingSchem
   // Add convergence measures
   using std::get;
   for (auto &elem : _config.convMeasures) {
-    int                         dataID     = get<0>(elem);
+    mesh::PtrData               data       = get<0>(elem);
     bool                        suffices   = get<1>(elem);
     std::string                 neededMesh = get<2>(elem);
     int                         level      = get<3>(elem);
     impl::PtrConvergenceMeasure measure    = get<4>(elem);
     _meshConfig->addNeededMesh(_config.participants[1], neededMesh);
-    checkIfDataIsExchanged(dataID);
+    checkIfDataIsExchanged(data->getID());
     //bool isCoarse = checkIfDataIsCoarse(dataID);
-    scheme->addConvergenceMeasure(dataID, suffices, level, measure);
+    scheme->addConvergenceMeasure(data, suffices, level, measure);
   }
 
   // Set relaxation parameters
@@ -713,15 +709,15 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelImplicitCouplingSch
   // Add convergence measures
   using std::get;
   for (auto &elem : _config.convMeasures) {
-    int                         dataID     = get<0>(elem);
+    mesh::PtrData               data       = get<0>(elem);
     bool                        suffices   = get<1>(elem);
     std::string                 neededMesh = get<2>(elem);
     int                         level      = get<3>(elem);
     impl::PtrConvergenceMeasure measure    = get<4>(elem);
     _meshConfig->addNeededMesh(_config.participants[1], neededMesh);
-    checkIfDataIsExchanged(dataID);
+    checkIfDataIsExchanged(data->getID());
     //bool isCoarse = checkIfDataIsCoarse(dataID);
-    scheme->addConvergenceMeasure(dataID, suffices, level, measure);
+    scheme->addConvergenceMeasure(data, suffices, level, measure);
   }
 
   // Set relaxation parameters
@@ -774,15 +770,15 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
   // Add convergence measures
   using std::get;
   for (auto &elem : _config.convMeasures) {
-    int                         dataID     = get<0>(elem);
+    mesh::PtrData               data       = get<0>(elem);
     bool                        suffices   = get<1>(elem);
     std::string                 neededMesh = get<2>(elem);
     int                         level      = get<3>(elem);
     impl::PtrConvergenceMeasure measure    = get<4>(elem);
     _meshConfig->addNeededMesh(_config.controller, neededMesh);
-    checkIfDataIsExchanged(dataID);
+    checkIfDataIsExchanged(data->getID());
     // bool isCoarse = checkIfDataIsCoarse(dataID);
-    scheme->addConvergenceMeasure(dataID, suffices, level, measure);
+    scheme->addConvergenceMeasure(data, suffices, level, measure);
   }
 
   // Set relaxation parameters
@@ -928,7 +924,7 @@ bool CouplingSchemeConfiguration::checkIfDataIsCoarse(
   for (int i = 0; i < (int) fineIDs.size(); i++) {
     std::cout << fineIDs.at(i) << ", ";
   }
-  std::cout << "], id: " << id << std::endl;
+  std::cout << "], id: " << id << '\n';
 
   // if id is contained within fine data IDs return with isCoarse = false
   if (not isCoarse)
@@ -944,11 +940,11 @@ bool CouplingSchemeConfiguration::checkIfDataIsCoarse(
       for (auto &coarseID : coarseIDs) {
         std::cout << coarseID << ", ";
       }
-      std::cout << "], id: " << id << std::endl;
+      std::cout << "], id: " << id << '\n';
 
       err = not isCoarse;
     } else {
-      std::cout << "There is no coarse model optkmaiimization defined." << std::endl;
+      std::cout << "There is no coarse model optkmaiimization defined.\n";
       err = true;
     }
   }

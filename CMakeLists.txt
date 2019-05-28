@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 3.9.6)
 
-project(preCICE VERSION 1.4.1 LANGUAGES CXX)
+project(preCICE VERSION 1.5.0 LANGUAGES CXX)
 
 #
 # Overview of this configuration
@@ -310,7 +310,7 @@ write_basic_package_version_file("preciceConfigVersion.cmake"
   )
 
 # Install the Config and the ConfigVersion files
-install(FILES "preciceConfig.cmake" "${preCICE_BINARY_DIR}/preciceConfigVersion.cmake"
+install(FILES "cmake/preciceConfig.cmake" "${preCICE_BINARY_DIR}/preciceConfigVersion.cmake"
   DESTINATION lib/cmake/precice
   )
 
@@ -318,8 +318,11 @@ install(FILES "preciceConfig.cmake" "${preCICE_BINARY_DIR}/preciceConfigVersion.
 export(EXPORT preciceTargets
   NAMESPACE precice::
   FILE "preciceTargets.cmake")
-file(COPY "preciceConfig.cmake"
+file(COPY "cmake/preciceConfig.cmake"
   DESTINATION "${preCICE_BINARY_DIR}")
+
+# Add an alias to allow subprojects to use the namespaced name
+add_library(precice::precice ALIAS precice)
 
 
 # Set the directory used to prepare files for packaging
@@ -382,6 +385,13 @@ install(DIRECTORY "${preCICE_BINARY_DIR}/lib/pkgconfig"
 #
 
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/CTestConfig.cmake)
+
+
+#
+# Add test_install
+#
+
+include(${CMAKE_CURRENT_LIST_DIR}/cmake/TestInstall.cmake)
 
 
 #

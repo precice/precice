@@ -75,7 +75,7 @@ public:
   virtual ~BaseQNPostProcessing()
   {
     // not necessary for user, only for developer, if needed, this should be configurable
-    //     if (utils::MasterSlave::_masterMode || (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode)){
+    //     if (utils::MasterSlave::isMaster() || (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave())){
     //       _infostream.open("precice-postProcessingInfo.log", std::ios_base::out);
     //       _infostream << std::setprecision(16);
     //       _infostream << _infostringstream.str();

@@ -70,15 +70,15 @@ EventData::EventData(std::string _name) :
   name(_name)
 {}
 
-EventData::EventData(std::string _name, long _count, long _total,
-                     long _max, long _min, std::vector<int> _data, Event::StateChanges _stateChanges)
+EventData::EventData(std::string _name, long _count, long _total, long _max, long _min,
+                     Event::Data data, Event::StateChanges _stateChanges)
   :  max(std::chrono::milliseconds(_max)),
      min(std::chrono::milliseconds(_min)),
      total(std::chrono::milliseconds(_total)),
      stateChanges(_stateChanges),
      name(_name),
      count(_count),
-     data(_data)
+     data(data)
 {}
 
 
@@ -89,7 +89,11 @@ void EventData::put(Event const & event)
   total += duration;
   min = std::min(duration, min);
   max = std::max(duration, max);
-  data.insert(std::end(data), std::begin(event.data), std::end(event.data));
+  for (auto const & d : event.data) {
+    auto & source = std::get<1>(d);
+    auto & target = data[std::get<0>(d)];
+    target.insert(target.begin(), source.begin(), source.end());
+  }
   stateChanges.insert(std::end(stateChanges), std::begin(event.stateChanges), std::end(event.stateChanges));
 }
 
@@ -123,10 +127,11 @@ long EventData::getCount() const
   return count;
 }
 
-std::vector<int> const & EventData::getData() const
+Event::Data const & EventData::getData() const
 {
   return data;
 }
+
 
 
 // -----------------------------------------------------------------------
@@ -458,9 +463,15 @@ void EventRegistry::collect()
     MPI_Isend(stateChangesBuf[i].data(), ev.stateChanges.size() * 2, MPI_LONG, 0, 0, comm, &req);
     requests.push_back(req);
 
-    // Send the integer data associated with an event
-    MPI_Isend(const_cast<int*>(ev.getData().data()), ev.getData().size(), MPI_INT, 0, 0, comm, &req);
-    requests.push_back(req);
+    // Send the map that stores the data associated with an event
+    for (auto const & md : ev.getData()) {
+      auto & key = std::get<0>(md);
+      auto & val = std::get<1>(md);
+      MPI_Isend(const_cast<char*>(key.c_str()), key.size(), MPI_CHAR, 0, 0, comm, &req);
+      requests.push_back(req);
+      MPI_Isend(const_cast<int*>(val.data()), val.size(), MPI_INT, 0, 0, comm, &req);
+      requests.push_back(req);
+    }
     
     ++i;
   }
@@ -491,12 +502,24 @@ void EventRegistry::collect()
                                     stdy_clk::time_point(std::chrono::milliseconds(recvStateChanges[i+1])));
         }
 
-        // Receive integer data associated with an event
-        std::vector<int> recvData(ev.dataSize);
-        MPI_Recv(recvData.data(), recvData.size(), MPI_INT, i, MPI_ANY_TAG, comm, MPI_STATUS_IGNORE);
+        // Receive the map that stores the data associated with an event
+        Event::Data dataMap;
+        for (int j = 0; j < ev.dataSize; j++) {
+          MPI_Status status;
+          int count = 0;
+          MPI_Probe(i, MPI_ANY_TAG, comm, &status);
+          MPI_Get_count(&status, MPI_CHAR, &count);
+          std::string key(count, '\0');
+          MPI_Recv(&key[0], count, MPI_CHAR, i, MPI_ANY_TAG, comm, MPI_STATUS_IGNORE);
+          MPI_Probe(i, MPI_ANY_TAG, comm, &status);
+          MPI_Get_count(&status, MPI_INT, &count);
+          std::vector<int> val(count);
+          MPI_Recv(val.data(), count, MPI_INT, i, MPI_ANY_TAG, comm, MPI_STATUS_IGNORE);
+          dataMap[key] = val;
+        }
 
         // Create the EventData
-        EventData ed(ev.name, ev.count, ev.total, ev.max, ev.min, recvData, stateChanges);
+        EventData ed(ev.name, ev.count, ev.total, ev.max, ev.min, dataMap, stateChanges);
         data.addEventData(std::move(ed));
       }
       globalRankData.push_back(data);      

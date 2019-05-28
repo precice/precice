@@ -34,9 +34,10 @@ void ReceivedPartition::communicate()
   TRACE();
   INFO("Receive global mesh " << _mesh->getName());
   Event e("partition.receiveGlobalMesh." + _mesh->getName(), precice::syncMode);
-  if (not utils::MasterSlave::_slaveMode) {
+  if (not utils::MasterSlave::isSlave()) {
     assertion(_mesh->vertices().empty());
-    com::CommunicateMesh(_m2n->getMasterCommunication()).receiveMesh(*_mesh, 0);
+    // a ReceivedPartition can only have one communication, @todo nicer design 
+    com::CommunicateMesh(_m2ns[0]->getMasterCommunication()).receiveMesh(*_mesh, 0);
   }
 }
 
@@ -45,7 +46,7 @@ void ReceivedPartition::compute()
   TRACE(_geometricFilter);
 
   // handle coupling mode first (i.e. serial participant)
-  if (not utils::MasterSlave::_slaveMode && not utils::MasterSlave::_masterMode) { //coupling mode
+  if (not utils::MasterSlave::isSlave() && not utils::MasterSlave::isMaster()) { //coupling mode
     _mesh->setGlobalNumberOfVertices(_mesh->vertices().size());
     computeVertexOffsets();
     for (mesh::Vertex &v : _mesh->vertices()) {
@@ -55,7 +56,7 @@ void ReceivedPartition::compute()
   }
 
   // check to prevent false configuration
-  if (not utils::MasterSlave::_slaveMode) {
+  if (not utils::MasterSlave::isSlave()) {
     CHECK(_fromMapping || _toMapping,
           "The received mesh " << _mesh->getName()
           << " needs a mapping, either from it, to it, or both. Maybe you don't want to receive this mesh at all?")
@@ -67,7 +68,7 @@ void ReceivedPartition::compute()
 
 
   // (0) set global number of vertices before filtering
-  if (utils::MasterSlave::_masterMode) {
+  if (utils::MasterSlave::isMaster()) {
     _mesh->setGlobalNumberOfVertices(_mesh->vertices().size());
   }
 
@@ -78,15 +79,12 @@ void ReceivedPartition::compute()
     INFO("Pre-filter mesh " << _mesh->getName() << " by bounding-box");
     Event e("partition.preFilterMesh." + _mesh->getName(), precice::syncMode);
 
-    if (utils::MasterSlave::_slaveMode) {
+    if (utils::MasterSlave::isSlave()) {
       prepareBoundingBox();
       com::CommunicateMesh(utils::MasterSlave::_communication).sendBoundingBox(_bb, 0);
       com::CommunicateMesh(utils::MasterSlave::_communication).receiveMesh(*_mesh, 0);
 
-      if ((_fromMapping && not _fromMapping->getOutputMesh()->vertices().empty() ||
-           (_toMapping && not _toMapping->getInputMesh()->vertices().empty()))) {
-        // this rank has vertices at the coupling interface
-        // then, also the filtered mesh should still have vertices
+      if(areProvidedMeshesEmpty()) {
         std::string msg = "The re-partitioning completely filtered out the mesh " + _mesh->getName() +
           " received on this rank at the coupling interface. "
           "Most probably, the coupling interfaces of your coupled participants do not match geometry-wise. "
@@ -97,10 +95,10 @@ void ReceivedPartition::compute()
       }
 
     } else { // Master
-      assertion(utils::MasterSlave::_rank == 0);
-      assertion(utils::MasterSlave::_size > 1);
+      assertion(utils::MasterSlave::getRank() == 0);
+      assertion(utils::MasterSlave::getSize() > 1);
 
-      for (int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++) {
+      for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
         com::CommunicateMesh(utils::MasterSlave::_communication).receiveBoundingBox(_bb, rankSlave);
 
         DEBUG("From slave " << rankSlave << ", bounding mesh: " << _bb[0].first
@@ -119,10 +117,7 @@ void ReceivedPartition::compute()
       _mesh->computeState();
       DEBUG("Master mesh after filtering, #vertices " << _mesh->vertices().size());
 
-      if ((_fromMapping && not _fromMapping->getOutputMesh()->vertices().empty()) ||
-          (_toMapping && not _toMapping->getInputMesh()->vertices().empty())) {
-        // this rank has vertices at the coupling interface
-        // then, also the filtered mesh should still have vertices
+      if(areProvidedMeshesEmpty()) {
         std::string msg = "The re-partitioning completely filtered out the mesh " + _mesh->getName() + " received on this rank at the coupling interface. "
           "Most probably, the coupling interfaces of your coupled participants do not match geometry-wise. "
           "Please check your geometry setup again. Small overlaps or gaps are no problem. "
@@ -135,11 +130,11 @@ void ReceivedPartition::compute()
     INFO("Broadcast mesh " << _mesh->getName());
     Event e1("partition.broadcastMesh." + _mesh->getName(), precice::syncMode);
 
-    if (utils::MasterSlave::_slaveMode) {
+    if (utils::MasterSlave::isSlave()) {
       com::CommunicateMesh(utils::MasterSlave::_communication).broadcastReceiveMesh(*_mesh);
     } else { // Master
-      assertion(utils::MasterSlave::_rank == 0);
-      assertion(utils::MasterSlave::_size > 1);
+      assertion(utils::MasterSlave::getRank() == 0);
+      assertion(utils::MasterSlave::getSize() > 1);
       com::CommunicateMesh(utils::MasterSlave::_communication).broadcastSendMesh(*_mesh);
     }
 
@@ -154,10 +149,7 @@ void ReceivedPartition::compute()
       mesh::Mesh filteredMesh("FilteredMesh", _dimensions, _mesh->isFlipNormals());
       filterMesh(filteredMesh, true);
 
-      if ((_fromMapping && not _fromMapping->getOutputMesh()->vertices().empty()) ||
-          (_toMapping && not _toMapping->getInputMesh()->vertices().empty())) {
-        // this rank has vertices at the coupling interface
-        // then, also the filtered mesh should still have vertices
+      if(areProvidedMeshesEmpty()) {
         std::string msg = "The re-partitioning completely filtered out the mesh " + _mesh->getName() + " received on this rank at the coupling interface. "
           "Most probably, the coupling interfaces of your coupled participants do not match geometry-wise. "
           "Please check your geometry setup again. Small overlaps or gaps are no problem. "
@@ -209,7 +201,7 @@ void ReceivedPartition::compute()
   // (6) Compute distribution
   INFO("Feedback distribution for mesh " << _mesh->getName());
   Event e6("partition.feedbackMesh." + _mesh->getName(), precice::syncMode);
-  if (utils::MasterSlave::_slaveMode) {
+  if (utils::MasterSlave::isSlave()) {
     int numberOfVertices = _mesh->vertices().size();
     utils::MasterSlave::_communication->send(numberOfVertices, 0);
     if (numberOfVertices != 0) {
@@ -231,7 +223,7 @@ void ReceivedPartition::compute()
     }
     _mesh->getVertexDistribution()[0] = vertexIDs;
 
-    for (int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++) {
+    for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
       int numberOfSlaveVertices = -1;
       utils::MasterSlave::_communication->receive(numberOfSlaveVertices, rankSlave);
       std::vector<int> slaveVertexIDs;
@@ -254,7 +246,7 @@ void ReceivedPartition::filterMesh(mesh::Mesh &filteredMesh, const bool filterBy
   DEBUG("Bounding mesh. #vertices: " << _mesh->vertices().size()
         << ", #edges: " << _mesh->edges().size()
         << ", #triangles: " << _mesh->triangles().size()
-        << ", rank: " << utils::MasterSlave::_rank);
+        << ", rank: " << utils::MasterSlave::getRank());
 
   std::map<int, mesh::Vertex *> vertexMap;
   std::map<int, mesh::Edge *>   edgeMap;
@@ -301,7 +293,7 @@ void ReceivedPartition::filterMesh(mesh::Mesh &filteredMesh, const bool filterBy
   DEBUG("Filtered mesh. #vertices: " << filteredMesh.vertices().size()
         << ", #edges: " << filteredMesh.edges().size()
         << ", #triangles: " << filteredMesh.triangles().size()
-        << ", rank: " << utils::MasterSlave::_rank);
+        << ", rank: " << utils::MasterSlave::getRank());
 }
 
 void ReceivedPartition::prepareBoundingBox()
@@ -357,7 +349,7 @@ void ReceivedPartition::createOwnerInformation()
 {
   TRACE();
 
-  if (utils::MasterSlave::_slaveMode) {
+  if (utils::MasterSlave::isSlave()) {
     int numberOfVertices = _mesh->vertices().size();
     utils::MasterSlave::_communication->send(numberOfVertices, 0);
 
@@ -387,15 +379,15 @@ void ReceivedPartition::createOwnerInformation()
     }
   }
 
-  else if (utils::MasterSlave::_masterMode) {
+  else if (utils::MasterSlave::isMaster()) {
     // To temporary store which vertices already have an owner
     std::vector<int> globalOwnerVec(_mesh->getGlobalNumberOfVertices(), 0);
     // The same per rank
-    std::vector<std::vector<int>> slaveOwnerVecs(utils::MasterSlave::_size);
+    std::vector<std::vector<int>> slaveOwnerVecs(utils::MasterSlave::getSize());
     // Global IDs per rank
-    std::vector<std::vector<int>> slaveGlobalIDs(utils::MasterSlave::_size);
+    std::vector<std::vector<int>> slaveGlobalIDs(utils::MasterSlave::getSize());
     // Tag information per rank
-    std::vector<std::vector<int>> slaveTags(utils::MasterSlave::_size);
+    std::vector<std::vector<int>> slaveTags(utils::MasterSlave::getSize());
 
     // Fill master data
     bool masterAtInterface = false;
@@ -418,7 +410,7 @@ void ReceivedPartition::createOwnerInformation()
     if (masterAtInterface)
       ranksAtInterface++;
 
-    for (int rank = 1; rank < utils::MasterSlave::_size; rank++) {
+    for (int rank = 1; rank < utils::MasterSlave::getSize(); rank++) {
       int localNumberOfVertices = -1;
       utils::MasterSlave::_communication->receive(localNumberOfVertices, rank);
       DEBUG("Rank " << rank << " has " << localNumberOfVertices << " vertices.");
@@ -439,7 +431,7 @@ void ReceivedPartition::createOwnerInformation()
     // Decide upon owners,
     int localGuess = _mesh->getGlobalNumberOfVertices() / ranksAtInterface; // Guess for a decent load balancing
     // First round: every slave gets localGuess vertices
-    for (int rank = 0; rank < utils::MasterSlave::_size; rank++) {
+    for (int rank = 0; rank < utils::MasterSlave::getSize(); rank++) {
       int counter = 0;
       for (size_t i = 0; i < slaveOwnerVecs[rank].size(); i++) {
          // Vertex has no owner yet and rank could be owner
@@ -454,7 +446,7 @@ void ReceivedPartition::createOwnerInformation()
     }
 
     // Second round: distribute all other vertices in a greedy way
-    for (int rank = 0; rank < utils::MasterSlave::_size; rank++) {
+    for (int rank = 0; rank < utils::MasterSlave::getSize(); rank++) {
       for (size_t i = 0; i < slaveOwnerVecs[rank].size(); i++) {
         if (globalOwnerVec[slaveGlobalIDs[rank][i]] == 0 && slaveTags[rank][i] == 1) {
           slaveOwnerVecs[rank][i]                 = 1;
@@ -464,7 +456,7 @@ void ReceivedPartition::createOwnerInformation()
     }
 
     // Send information back to slaves
-    for (int rank = 1; rank < utils::MasterSlave::_size; rank++) {
+    for (int rank = 1; rank < utils::MasterSlave::getSize(); rank++) {
       if (not slaveTags[rank].empty())
         utils::MasterSlave::_communication->send(slaveOwnerVecs[rank], rank);
     }
@@ -481,6 +473,11 @@ void ReceivedPartition::createOwnerInformation()
     }
 #endif
   }
+}
+
+bool ReceivedPartition::areProvidedMeshesEmpty() const {
+    return (_fromMapping && not _fromMapping->getOutputMesh()->vertices().empty()) ||
+           (_toMapping   && not _toMapping->getInputMesh()->vertices().empty());
 }
 
 void ReceivedPartition::setOwnerInformation(const std::vector<int> &ownerVec)

@@ -41,7 +41,7 @@ public:
     assertion(leftMatrix.cols() == rightMatrix.rows(), leftMatrix.cols(), rightMatrix.rows());
 
     // if serial computation on single processor, i.e, no master-slave mode
-    if (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode) {
+    if (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()) {
       result.noalias() = leftMatrix * rightMatrix;
 
       // if parallel computation on p processors, i.e., master-slave mode
@@ -101,7 +101,7 @@ public:
     localResult.noalias() = leftMatrix * rightMatrix;
 
     // if serial computation on single processor, i.e, no master-slave mode
-    if (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode) {
+    if (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()) {
       result = localResult;
     } else {
       utils::MasterSlave::allreduceSum(localResult.data(), result.data(), localResult.size());
@@ -137,8 +137,8 @@ private:
     assertion(leftMatrix.rows() == rightMatrix.cols(), leftMatrix.rows(), rightMatrix.cols());
     assertion(result.rows() == p, result.rows(), p);
 
-    //int nextProc = (utils::MasterSlave::_rank + 1) % utils::MasterSlave::_size;
-    int prevProc = (utils::MasterSlave::_rank - 1 < 0) ? utils::MasterSlave::_size - 1 : utils::MasterSlave::_rank - 1;
+    //int nextProc = (utils::MasterSlave::getRank() + 1) % utils::MasterSlave::getSize();
+    int prevProc = (utils::MasterSlave::getRank() - 1 < 0) ? utils::MasterSlave::getSize() - 1 : utils::MasterSlave::getRank() - 1;
     int rows_rcv = (prevProc > 0) ? offsets[prevProc + 1] - offsets[prevProc] : offsets[1];
     //Eigen::MatrixXd leftMatrix_rcv = Eigen::MatrixXd::Zero(rows_rcv, q);
     Eigen::MatrixXd leftMatrix_rcv(rows_rcv, q);
@@ -160,14 +160,14 @@ private:
     diagBlock.noalias() = leftMatrix * rightMatrix;
 
     // set block at corresponding row-index on proc
-    int off = offsets[utils::MasterSlave::_rank];
+    int off = offsets[utils::MasterSlave::getRank()];
     assertion(result.cols() == diagBlock.cols(), result.cols(), diagBlock.cols());
     result.block(off, 0, diagBlock.rows(), diagBlock.cols()) = diagBlock;
 
     /**
 		 * cyclic send-receive operation
 		 */
-    for (int cycle = 1; cycle < utils::MasterSlave::_size; cycle++) {
+    for (int cycle = 1; cycle < utils::MasterSlave::getSize(); cycle++) {
 
       // wait until W_til from previous processor is fully received
       if (requestSend != NULL)
@@ -179,22 +179,22 @@ private:
       Eigen::MatrixXd leftMatrix_copy(leftMatrix_rcv);
 
       // initiate async send to hand over leftMatrix (W_til) to the next proc (this data will be needed in the next cycle)    dim: n_local x cols
-      if (cycle < utils::MasterSlave::_size - 1) {
+      if (cycle < utils::MasterSlave::getSize() - 1) {
         if (leftMatrix_copy.size() > 0)
           requestSend = _cyclicCommRight->aSend(leftMatrix_copy.data(), leftMatrix_copy.size(), 0);
       }
 
       // compute proc that owned leftMatrix_rcv (Wtil_rcv) at the very beginning for each cylce
-      int sourceProc_nextCycle = (utils::MasterSlave::_rank - (cycle + 1) < 0) ? utils::MasterSlave::_size + (utils::MasterSlave::_rank - (cycle + 1)) : utils::MasterSlave::_rank - (cycle + 1);
+      int sourceProc_nextCycle = (utils::MasterSlave::getRank() - (cycle + 1) < 0) ? utils::MasterSlave::getSize() + (utils::MasterSlave::getRank() - (cycle + 1)) : utils::MasterSlave::getRank() - (cycle + 1);
 
-      int sourceProc = (utils::MasterSlave::_rank - cycle < 0) ? utils::MasterSlave::_size + (utils::MasterSlave::_rank - cycle) : utils::MasterSlave::_rank - cycle;
+      int sourceProc = (utils::MasterSlave::getRank() - cycle < 0) ? utils::MasterSlave::getSize() + (utils::MasterSlave::getRank() - cycle) : utils::MasterSlave::getRank() - cycle;
 
       int rows_rcv_nextCycle = (sourceProc_nextCycle > 0) ? offsets[sourceProc_nextCycle + 1] - offsets[sourceProc_nextCycle] : offsets[1];
       rows_rcv               = (sourceProc > 0) ? offsets[sourceProc + 1] - offsets[sourceProc] : offsets[1];
       leftMatrix_rcv         = Eigen::MatrixXd::Zero(rows_rcv_nextCycle, q);
 
       // initiate asynchronous receive operation for leftMatrix (W_til) from previous processor --> W_til (this data is needed in the next cycle)
-      if (cycle < utils::MasterSlave::_size - 1) {
+      if (cycle < utils::MasterSlave::getSize() - 1) {
         if (leftMatrix_rcv.size() > 0) // only receive data, if data has been sent
           requestRcv = _cyclicCommLeft->aReceive(leftMatrix_rcv.data(), leftMatrix_rcv.size(), 0);
       }
@@ -244,7 +244,7 @@ private:
 
         // find proc that needs to store the result.
         int local_row;
-        if (utils::MasterSlave::_rank == rank) {
+        if (utils::MasterSlave::getRank() == rank) {
           local_row            = i - offsets[rank];
           result(local_row, j) = res_ij;
         }
@@ -281,17 +281,17 @@ private:
     utils::MasterSlave::reduceSum(block.data(), summarizedBlocks.data(), block.size());
 
     // slaves wait to receive their local result
-    if (utils::MasterSlave::_slaveMode) {
+    if (utils::MasterSlave::isSlave()) {
       if (result.size() > 0)
         utils::MasterSlave::_communication->receive(result.data(), result.size(), 0);
     }
 
     // master distributes the sub blocks of the results
-    if (utils::MasterSlave::_masterMode) {
+    if (utils::MasterSlave::isMaster()) {
       // distribute blocks of summarizedBlocks (result of multiplication) to corresponding slaves
       result = summarizedBlocks.block(0, 0, offsets[1], r);
 
-      for (int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++) {
+      for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
         int off       = offsets[rankSlave];
         int send_rows = offsets[rankSlave + 1] - offsets[rankSlave];
 

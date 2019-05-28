@@ -1,11 +1,12 @@
-#ifndef PRECICE_NO_SOCKETS
-
 #pragma once
 
 #include "com/Communication.hpp"
 #include <boost/asio.hpp>
 #include "logging/Logger.hpp"
 #include <thread>
+#include <vector>
+#include <map>
+#include "com/SocketSendQueue.hpp"
 
 namespace precice
 {
@@ -150,6 +151,8 @@ private:
   /// Remote rank -> socket map
   std::map<int, std::shared_ptr<Socket>> _sockets;
 
+  SocketSendQueue _queue;
+
   bool isClient();
   bool isServer();
 
@@ -158,4 +161,3 @@ private:
 } // namespace com
 } // namespace precice
 
-#endif // not PRECICE_NO_SOCKETS

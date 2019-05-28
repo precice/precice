@@ -1,12 +1,14 @@
 #include "SolverInterfaceFortran.hpp"
-#include "precice/impl/SolverInterfaceImpl.hpp"
+#include "precice/SolverInterface.hpp"
 #include <iostream>
 #include <string>
 #include "logging/Logger.hpp"
+#include "precice/SolverInterface.hpp"
+#include "utils/assertion.hpp"
 
 using namespace std;
 
-static precice::impl::SolverInterfaceImpl* impl = nullptr;
+static precice::SolverInterface* impl = nullptr;
 
 static precice::logging::Logger _log ("SolverInterfaceFortran");
 
@@ -30,18 +32,18 @@ void precicef_create_
   int   lengthAccessorName,
   int   lengthConfigFileName )
 {
-  //cout << "lengthAccessorName: " << lengthAccessorName << endl;
-  //cout << "lengthConfigFileName: " << lengthConfigFileName << endl;
-  //cout << "solverProcessIndex: " << *solverProcessIndex << endl;
-  //cout << "solverProcessSize: " << *solverProcessSize << endl;
+  //cout << "lengthAccessorName: " << lengthAccessorName << '\n';
+  //cout << "lengthConfigFileName: " << lengthConfigFileName << '\n';
+  //cout << "solverProcessIndex: " << *solverProcessIndex << '\n';
+  //cout << "solverProcessSize: " << *solverProcessSize << '\n';
   int strippedLength = precice::impl::strippedLength(participantName,lengthAccessorName);
   string stringAccessorName(participantName, strippedLength);
   strippedLength = precice::impl::strippedLength(configFileName,lengthConfigFileName);
   string stringConfigFileName(configFileName, strippedLength);
-  //cout << "Accessor: " << stringAccessorName << "!" << endl;
-  //cout << "Config  : " << stringConfigFileName << "!" << endl;
-  impl = new precice::impl::SolverInterfaceImpl (stringAccessorName,
-         *solverProcessIndex, *solverProcessSize, false);
+  //cout << "Accessor: " << stringAccessorName << "!" << '\n';
+  //cout << "Config  : " << stringConfigFileName << "!" << '\n';
+  impl = new precice::SolverInterface (stringAccessorName,
+         *solverProcessIndex, *solverProcessSize);
   impl->configure(stringConfigFileName);
 }
 
@@ -166,14 +168,14 @@ void precicef_action_required_
 {
   CHECK(impl != nullptr,errormsg);
   //assertion(lengthAction > 1);
-  //std::cout << "lengthAction: " << lengthAction << std::endl;
+  //std::cout << "lengthAction: " << lengthAction << '\n';
   //std::cout << "Action:";
   //for (int i=0; i < lengthAction; i++){
   //  std::cout << " a[" << i << "]=\"" << action[i] << "\"";
   //}
-  //std::cout << std::endl;
+  //std::cout << '\n';
   int strippedLength = precice::impl::strippedLength(action, lengthAction);
-  //std::cout << "strippedLength: " << strippedLength << std::endl;
+  //std::cout << "strippedLength: " << strippedLength << '\n';
   //assertion(strippedLength > 1);
   string stringAction(action, strippedLength);
   if (impl->isActionRequired(stringAction)){
@@ -469,5 +471,40 @@ int precice::impl::strippedLength
     i--;
   }
   return i+1;
+}
+
+void precicef_action_write_iter_checkp_
+(
+  char*  nameAction,
+  int lengthNameAction )
+{
+  const std::string& name = precice::constants::actionWriteIterationCheckpoint();
+  assertion(name.size() < (size_t) lengthNameAction, name.size(), lengthNameAction);
+  for (size_t i=0; i < name.size(); i++){
+    nameAction[i] = name[i];
+  }
+}
+
+void precicef_action_write_initial_data_(
+  char*  nameAction,
+  int lengthNameAction )
+{
+  const std::string& name = precice::constants::actionWriteInitialData();
+  assertion(name.size() < (size_t) lengthNameAction, name.size(), lengthNameAction);
+  for (size_t i=0; i < name.size(); i++){
+    nameAction[i] = name[i];
+  }
+}
+
+void precicef_action_read_iter_checkp_
+(
+  char*  nameAction,
+  int lengthNameAction )
+{
+  const std::string& name = precice::constants::actionReadIterationCheckpoint();
+  assertion(name.size() < (size_t) lengthNameAction, name.size(), lengthNameAction);
+  for (size_t i=0; i < name.size(); i++){
+    nameAction[i] = name[i];
+  }
 }
 

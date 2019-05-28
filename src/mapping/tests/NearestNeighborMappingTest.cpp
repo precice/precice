@@ -15,6 +15,7 @@ BOOST_AUTO_TEST_SUITE(NearestNeighborMapping)
 BOOST_AUTO_TEST_CASE(ConsistentNonIncremental)
 {
   int dimensions = 2;
+  using testing::equals;
 
   // Create mesh to map from
   PtrMesh inMesh(new Mesh("InMesh", dimensions, false));
@@ -54,7 +55,7 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncremental)
   BOOST_TEST(outValuesScalar(1) == inValuesScalar(1));
   mapping.map(inDataVectorID, outDataVectorID);
   const Eigen::VectorXd& outValuesVector = outDataVector->values();
-  BOOST_CHECK(math::equals(inValuesVector, outValuesVector));
+  BOOST_CHECK(equals(inValuesVector, outValuesVector));
               
   // Map data with almost coinciding vertices, has to result in equal values.
   inVertex0.setCoords(outVertex0.getCoords() + Eigen::Vector2d::Constant(0.1));
@@ -65,7 +66,7 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncremental)
   BOOST_TEST(outValuesScalar(0) == inValuesScalar(0));
   BOOST_TEST(outValuesScalar(1) == inValuesScalar(1));
   mapping.map(inDataVectorID, outDataVectorID);
-  BOOST_CHECK(math::equals(inValuesVector, outValuesVector));
+  BOOST_CHECK(equals(inValuesVector, outValuesVector));
 
   // Map data with exchanged vertices, has to result in exchanged values.
   inVertex0.setCoords(outVertex1.getCoords());
@@ -77,7 +78,7 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncremental)
   BOOST_TEST(outValuesScalar(0) == inValuesScalar(1));
   mapping.map(inDataVectorID, outDataVectorID);
   Eigen::Vector4d expected(3.0, 4.0, 1.0, 2.0);
-  BOOST_CHECK(math::equals(expected, outValuesVector));
+  BOOST_CHECK(equals(expected, outValuesVector));
 
   // Map data with coinciding output vertices, has to result in same values.
   outVertex1.setCoords(outVertex0.getCoords());
@@ -88,7 +89,7 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncremental)
   BOOST_TEST(outValuesScalar(0) == inValuesScalar(1));
   mapping.map(inDataVectorID, outDataVectorID);
   expected << 3.0, 4.0, 3.0, 4.0;
-  BOOST_CHECK(math::equals(expected, outValuesVector));
+  BOOST_CHECK(equals(expected, outValuesVector));
 }
 
 BOOST_AUTO_TEST_CASE(ConservativeNonIncremental)

@@ -7,6 +7,7 @@
 #include "mesh/config/MeshConfiguration.hpp"
 #include "mesh/config/DataConfiguration.hpp"
 #include <utility>
+#include <algorithm>
 
 namespace precice {
 namespace impl {
@@ -207,6 +208,24 @@ bool Participant:: isDataUsed
 {
   assertion ( (dataID >= 0) && (dataID < (int)_dataContexts.size()), dataID, (int)_dataContexts.size() );
   return _dataContexts[dataID] != nullptr;
+}
+
+bool Participant:: isDataRead
+(
+  int dataID ) const
+{
+    return std::any_of(_readDataContexts.begin(), _readDataContexts.end(), [dataID](const DataContext& context) {
+            return context.toData->getID() == dataID;
+            });
+}
+
+bool Participant:: isDataWrite
+(
+  int dataID ) const
+{
+    return std::any_of(_writeDataContexts.begin(), _writeDataContexts.end(), [dataID](const DataContext& context) {
+            return context.fromData->getID() == dataID;
+            });
 }
 
 const MeshContext& Participant:: meshContext

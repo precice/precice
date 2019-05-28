@@ -1,52 +1,20 @@
 #pragma once
 
 #include "MeshHandle.hpp"
-#include "Constants.hpp"
 #include <string>
 #include <vector>
 #include <set>
 #include <memory>
 
 /**
- * Pre-declarations.
+ * forward declarations.
  */
 namespace precice {
   namespace impl {
     class SolverInterfaceImpl;
   }
-}
-
-// Forward declaration to friend the boost test struct
-namespace PreciceTests {
-  namespace Parallel {
-    struct TestFinalize;
-    struct TestMasterSlaveSetup;
-    struct GlobalRBFPartitioning;
-    struct LocalRBFPartitioning;
-    struct TestQN;
-    struct testDistributedCommunications;
-    struct CouplingOnLine;
-  }
-  namespace Serial {
-    struct TestExplicit;
-    struct TestConfiguration;
-    struct testExplicitWithSubcycling;
-    struct testExplicitWithDataExchange;
-    struct testExplicitWithDataInitialization;
-    struct testExplicitWithBlockDataExchange;
-    struct testExplicitWithSolverGeometry;
-    struct testExplicitWithDisplacingGeometry;
-    struct testExplicitWithDataScaling;
-    struct testImplicit;
-    struct testStationaryMappingWithSolverMesh;
-    struct testBug;
-    struct testThreeSolvers;
-    struct testMultiCoupling;
-    struct testMappingNearestProjection;
-  }
-  namespace Server {
-    struct testCouplingModeWithOneServer;
-    struct testCouplingModeParallelWithOneServer;
+  namespace testing {
+      struct WhiteboxAccessor;
   }
 }
 
@@ -224,7 +192,7 @@ public:
    * @note
    * The user should call finalize() after this function returns false.
    */
-  bool isCouplingOngoing();
+  bool isCouplingOngoing() const;
 
   /**
    * @brief Checks if new data to be read is available.
@@ -244,7 +212,7 @@ public:
    * This is not recommended due to performance reasons.
    * Use this function to prevent unnecessary reads.
    */
-  bool isReadDataAvailable();
+  bool isReadDataAvailable() const;
 
   /**
    * @brief Checks if new data has to be written before calling advance().
@@ -264,7 +232,7 @@ public:
    * This is not recommended due to performance reasons.
    * Use this function to prevent unnecessary writes.
    */
-  bool isWriteDataRequired ( double computedTimestepLength );
+  bool isWriteDataRequired ( double computedTimestepLength ) const;
 
   /**
    * @brief Checks if the current coupling timestep is completed.
@@ -278,7 +246,7 @@ public:
    *
    * @pre initialize() has been called successfully.
    */
-  bool isTimestepComplete();
+  bool isTimestepComplete() const;
 
   /**
    * @brief Returns whether the solver has to evaluate the surrogate model representation.
@@ -293,7 +261,7 @@ public:
    *
    * @see hasToEvaluateFineModel()
    */
-  bool hasToEvaluateSurrogateModel();
+  bool hasToEvaluateSurrogateModel() const;
 
   /**
    * @brief Checks if the solver has to evaluate the fine model representation.
@@ -308,7 +276,7 @@ public:
    *
    * @see hasToEvaluateSurrogateModel()
    */
-  bool hasToEvaluateFineModel();
+  bool hasToEvaluateFineModel() const;
 
   ///@}
 
@@ -330,7 +298,7 @@ public:
    * @see fulfilledAction()
    * @see cplscheme::constants
    */
-  bool isActionRequired ( const std::string& action );
+  bool isActionRequired ( const std::string& action ) const;
 
   /**
    * @brief Indicates preCICE that a required action has been fulfilled by a solver.
@@ -347,6 +315,7 @@ public:
   ///@}
 
   ///@name Mesh Access
+  ///@anchor precice-mesh-access
   ///@{
 
   /*
@@ -372,14 +341,14 @@ public:
    * @param[in] meshName the name of the mesh
    * @returns the id of the corresponding mesh
    */
-  int getMeshID ( const std::string& meshName );
+  int getMeshID ( const std::string& meshName ) const;
 
   /**
    * @brief Returns a id-set of all used meshes by this participant.
    *
    * @returns the set of ids.
    */
-  std::set<int> getMeshIDs();
+  std::set<int> getMeshIDs() const;
 
   /**
    * @brief Returns a handle to a created mesh.
@@ -413,7 +382,7 @@ public:
    * @param[in] meshID the id of the mesh
    * @returns the amount of the vertices of the mesh
    */
-  int getMeshVertexSize(int meshID);
+  int getMeshVertexSize(int meshID) const;
 
   /**
    * @brief Creates multiple mesh vertices
@@ -433,10 +402,10 @@ public:
    * @see getDimensions()
    */
   void setMeshVertices (
-    int     meshID,
-    int     size,
-    double* positions,
-    int*    ids );
+    int           meshID,
+    int           size,
+    const double* positions,
+    int*          ids );
 
   /**
    * @brief Get vertex positions for multiple vertex ids from a given mesh
@@ -454,10 +423,10 @@ public:
    * @see getDimensions()
    */
   void getMeshVertices (
-    int     meshID,
-    int     size,
-    int*    ids,
-    double* positions );
+    int        meshID,
+    int        size,
+    const int* ids,
+    double*    positions ) const;
 
   /**
    * @brief Gets mesh vertex IDs from positions.
@@ -475,10 +444,10 @@ public:
    * @note prefer to reuse the IDs returned from calls to setMeshVertex() and setMeshVertices().
    */
   void getMeshVertexIDsFromPositions (
-    int     meshID,
-    int     size,
-    double* positions,
-    int*    ids );
+    int           meshID,
+    int           size,
+    const double* positions,
+    int*          ids ) const;
 
   /**
    * @brief Sets mesh edge from vertex IDs, returns edge ID.
@@ -601,7 +570,7 @@ public:
    *
    * @returns the id of the corresponding data
    */
-  int getDataID ( const std::string& dataName, int meshID );
+  int getDataID ( const std::string& dataName, int meshID ) const;
 
   /**
    * @brief Computes and maps all read data mapped to the mesh with given ID.
@@ -645,10 +614,10 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void writeBlockVectorData (
-    int     dataID,
-    int     size,
-    int*    valueIndices,
-    double* values );
+    int           dataID,
+    int           size,
+    const int*    valueIndices,
+    const double* values );
 
   /**
    * @brief Writes vector data to a vertex
@@ -693,10 +662,10 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void writeBlockScalarData (
-    int     dataID,
-    int     size,
-    int*    valueIndices,
-    double* values );
+    int           dataID,
+    int           size,
+    const int*    valueIndices,
+    const double* values );
 
   /**
    * @brief Writes scalar data to a vertex
@@ -740,10 +709,10 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void readBlockVectorData (
-    int     dataID,
-    int     size,
-    int*    valueIndices,
-    double* values );
+    int        dataID,
+    int        size,
+    const int* valueIndices,
+    double*    values ) const;
 
   /**
    * @brief Reads vector data form a vertex
@@ -768,7 +737,7 @@ public:
   void readVectorData (
     int     dataID,
     int     valueIndex,
-    double* value );
+    double* value ) const;
 
   /**
    * @brief Reads scalar data as a block.
@@ -791,10 +760,10 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void readBlockScalarData (
-    int     dataID,
-    int     size,
-    int*    valueIndices,
-    double* values );
+    int        dataID,
+    int        size,
+    const int* valueIndices,
+    double*    values ) const;
 
   /**
    * @brief Reads scalar data of a vertex.
@@ -814,7 +783,7 @@ public:
   void readScalarData (
     int     dataID,
     int     valueIndex,
-    double& value );
+    double& value ) const;
 
   ///@}
 
@@ -830,31 +799,20 @@ private:
   SolverInterface& operator= ( const SolverInterface& assign );
 
   // @brief To allow white box tests.
-  friend struct PreciceTests::Parallel::TestFinalize;
-  friend struct PreciceTests::Parallel::TestMasterSlaveSetup;
-  friend struct PreciceTests::Parallel::GlobalRBFPartitioning;
-  friend struct PreciceTests::Parallel::LocalRBFPartitioning;
-  friend struct PreciceTests::Parallel::TestQN;
-  friend struct PreciceTests::Parallel::testDistributedCommunications;
-  friend struct PreciceTests::Parallel::CouplingOnLine;
-  friend struct PreciceTests::Serial::TestExplicit;
-  friend struct PreciceTests::Serial::TestConfiguration;
-  friend struct PreciceTests::Serial::testExplicitWithSubcycling;
-  friend struct PreciceTests::Serial::testExplicitWithDataExchange;
-  friend struct PreciceTests::Serial::testExplicitWithDataInitialization;
-  friend struct PreciceTests::Serial::testExplicitWithBlockDataExchange;
-  friend struct PreciceTests::Serial::testExplicitWithSolverGeometry;
-  friend struct PreciceTests::Serial::testExplicitWithDisplacingGeometry;
-  friend struct PreciceTests::Serial::testExplicitWithDataScaling;
-  friend struct PreciceTests::Serial::testImplicit;
-  friend struct PreciceTests::Serial::testStationaryMappingWithSolverMesh;
-  friend struct PreciceTests::Serial::testBug;
-  friend struct PreciceTests::Serial::testThreeSolvers;
-  friend struct PreciceTests::Serial::testMultiCoupling;
-  friend struct PreciceTests::Serial::testMappingNearestProjection;
-  friend struct PreciceTests::Server::testCouplingModeWithOneServer;
-  friend struct PreciceTests::Server::testCouplingModeParallelWithOneServer;
-
+  friend struct testing::WhiteboxAccessor;
 };
+
+namespace constants {
+
+// @brief Name of action for writing initial data.
+const std::string& actionWriteInitialData();
+
+// @brief Name of action for writing iteration checkpoint
+const std::string& actionWriteIterationCheckpoint();
+
+// @brief Name of action for reading iteration checkpoint.
+const std::string& actionReadIterationCheckpoint();
+
+} // namespace constants
 
 } // namespace precice

@@ -1,7 +1,10 @@
 #pragma once
 
-#include "DistributedCommunication.hpp"
 #include <list>
+#include <vector>
+#include <string>
+
+#include "DistributedCommunication.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include "mesh/SharedPointer.hpp"

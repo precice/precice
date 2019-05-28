@@ -135,6 +135,16 @@ public:
     Vertex& vertexTwo );
 
   /**
+   * @brief Creates and initializes an Edge object or returns an already existing one.
+   *
+   * @param[in] vertexOne Reference to first Vertex defining the Edge.
+   * @param[in] vertexTwo Reference to second Vertex defining the Edge.
+   */
+  Edge& createUniqueEdge (
+    Vertex& vertexOne,
+    Vertex& vertexTwo );
+
+  /**
    * @brief Creates and initializes a Triangle object.
    *
    * @param[in] edgeOne Reference to first edge defining the Triangle.
@@ -205,6 +215,12 @@ public:
 
   /// Returns the base ID of the mesh.
   int getID() const;
+
+  /// Returns true if the given vertexID is valid
+  bool isValidVertexID(int vertexID) const;
+
+  /// Returns true if the given edgeID is valid
+  bool isValidEdgeID(int edgeID) const;
 
   /// Allocates memory for the vertex data values.
   void allocateDataValues();
@@ -281,6 +297,12 @@ public:
   bool operator!=(const Mesh& other) const;
 
 private:
+
+  /// Computes the normals for all primitives.
+  void computeNormals();
+
+  /// Computes the boundingBox for the vertices.
+  void computeBoundingBox();
 
   mutable logging::Logger _log{"mesh::Mesh"};
 

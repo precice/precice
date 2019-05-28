@@ -252,7 +252,7 @@ public:
 
   /// Adds a measure to determine the convergence of coupling iterations.
   void addConvergenceMeasure(
-      int                         dataID,
+      mesh::PtrData               data,
       bool                        suffices,
       int                         level,
       impl::PtrConvergenceMeasure measure);
@@ -435,8 +435,8 @@ protected:
 
   /// Holds relevant variables to perform a convergence measurement.
   struct ConvergenceMeasure {
-    int                         dataID;
-    CouplingData *              data;
+    mesh::PtrData               data;
+    CouplingData *              couplingData;
     bool                        suffices;
     int                         level;
     impl::PtrConvergenceMeasure measure;

@@ -3,6 +3,7 @@
 #include "MPISinglePortsCommunication.hpp"
 #include "utils/assertion.hpp"
 #include "utils/Parallel.hpp"
+#include "utils/MasterSlave.hpp"
 #include "utils/Publisher.hpp"
 
 using precice::utils::Publisher;
@@ -101,7 +102,7 @@ void MPISinglePortsCommunication::acceptConnectionAsServer(
   const std::string addressFileName("." + requesterName + "-" + acceptorName + ".address");
   Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
   ScopedPublisher                        p(addressFileName);
-  if (utils::MasterSlave::_rank == 0) { // only master opens a port
+  if (utils::MasterSlave::getRank() == 0) { // only master opens a port
     MPI_Open_port(MPI_INFO_NULL, const_cast<char *>(_portName.data()));
     p.write(_portName);
     DEBUG("Accept connection at " << _portName);
@@ -181,7 +182,7 @@ void MPISinglePortsCommunication::closeConnection()
 
   DEBUG("Disconnected");
 
-  if (_isAcceptor and utils::MasterSlave::_rank == 0) {
+  if (_isAcceptor and utils::MasterSlave::getRank() == 0) {
     MPI_Close_port(const_cast<char *>(_portName.c_str()));
     DEBUG("Port closed");
   }
