@@ -96,4 +96,3 @@ if [ ! -f $CACHE_CCACHE_TOKEN ]; then
     # Create token
     touch $CACHE_CCACHE_TOKEN
 fi
-
