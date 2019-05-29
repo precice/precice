@@ -30,7 +30,8 @@ pip3 install --user setuptools cython numpy
 python3 setup.py test
 
 # install bindings
-pip3 install --user --global-option="-I${TRAVIS_BUILD_DIR}/src" --global-option="-L${TRAVIS_BUILD_DIR}/build -lprecice" .
+python3 setup.py config -I{TRAVIS_BUILD_DIR}/src -L${TRAVIS_BUILD_DIR}/build -lprecice
+python3 setup.py install --user
 
 export PYTHON_BINDINGS_DIR=$TRAVIS_BUILD_DIR/src/precice/bindings/python
 cd $PYTHON_BINDINGS_DIR
