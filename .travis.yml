@@ -62,7 +62,7 @@ matrix:
     - if: type = cron or branch = master
       compiler: clang
       env: BUILD_TYPE=SCONS MPI=off PETSC=off
-           
+
     # Test coverage
     - name: "Test Coverage"
       compiler: gcc
@@ -73,7 +73,7 @@ matrix:
         - lcov --remove coverage.info '/usr/*' "$LOCAL_INSTALL/*" --output-file coverage.info # filter system-files and local-dependencies
         - lcov --list coverage.info # debug info
         - bash <(curl -s https://codecov.io/bash) -f coverage.info || echo "Codecov did not collect coverage reports"
-    
+
     # Test Bindings
     - name: "Mock Test Python Bindings"
       cache: false
