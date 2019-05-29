@@ -50,9 +50,9 @@ public:
   this->fake_read_write_buffer = std::vector<double>();
   this->fake_dimensions = 3;
   this->fake_mesh_id = 0;
-  };
+  }
 
-  ~SolverInterface(){};
+  ~SolverInterface(){}
 
   /**
    * @brief Configures preCICE from the given xml file.
@@ -71,7 +71,7 @@ public:
    *
    * @param[in] configurationFileName Name (with path) of the xml configuration file to be read.
    */
-  void configure ( const std::string& configurationFileName ){};
+  void configure ( const std::string& configurationFileName ){}
 
   ///@}
 
@@ -91,7 +91,7 @@ public:
    *
    * @return Maximum length of first timestep to be computed by the solver.
    */
-  double initialize(){return -1;};
+  double initialize(){return -1;}
 
   /**
    * @brief Initializes coupling data.
@@ -119,7 +119,7 @@ public:
    * @see isActionRequired  
    * @see precice::constants::actionWriteInitialData
    */
-  void initializeData(){};
+  void initializeData(){}
 
   /**
    * @brief Advances preCICE after the solver has computed one timestep.
@@ -140,7 +140,7 @@ public:
    *
    * @return Maximum length of next timestep to be computed by solver.
    */
-  double advance ( double computedTimestepLength ){return -1;};
+  double advance ( double computedTimestepLength ){return -1;}
 
   /**
    * @brief Finalizes preCICE.
@@ -152,7 +152,7 @@ public:
    *
    * @see isCouplingOngoing()
    */
-  void finalize(){};
+  void finalize(){}
 
   ///@}
   
@@ -169,7 +169,7 @@ public:
    *
    * @pre configure() has been called successfully.
    */
-  int getDimensions() const{return this->fake_dimensions;};
+  int getDimensions() const{return this->fake_dimensions;}
 
   /**
    * @brief Checks if the coupled simulation is still ongoing.
@@ -187,7 +187,7 @@ public:
    * @note
    * The user should call finalize() after this function returns false.
    */
-  bool isCouplingOngoing() const{return 0;};
+  bool isCouplingOngoing() const{return 0;}
 
   /**
    * @brief Checks if new data to be read is available.
@@ -207,7 +207,7 @@ public:
    * This is not recommended due to performance reasons.
    * Use this function to prevent unnecessary reads.
    */
-  bool isReadDataAvailable() const{return 0;};
+  bool isReadDataAvailable() const{return 0;}
 
   /**
    * @brief Checks if new data has to be written before calling advance().
@@ -227,7 +227,7 @@ public:
    * This is not recommended due to performance reasons.
    * Use this function to prevent unnecessary writes.
    */
-  bool isWriteDataRequired ( double computedTimestepLength ) const{return 0;};
+  bool isWriteDataRequired ( double computedTimestepLength ) const{return 0;}
 
   /**
    * @brief Checks if the current coupling timestep is completed.
@@ -241,7 +241,7 @@ public:
    *
    * @pre initialize() has been called successfully.
    */
-  bool isTimestepComplete() const{return 0;};
+  bool isTimestepComplete() const{return 0;}
 
   /**
    * @brief Returns whether the solver has to evaluate the surrogate model representation.
@@ -256,7 +256,7 @@ public:
    *
    * @see hasToEvaluateFineModel()
    */
-  bool hasToEvaluateSurrogateModel() const{return 0;};
+  bool hasToEvaluateSurrogateModel() const{return 0;}
 
   /**
    * @brief Checks if the solver has to evaluate the fine model representation.
@@ -271,7 +271,7 @@ public:
    *
    * @see hasToEvaluateSurrogateModel()
    */
-  bool hasToEvaluateFineModel() const{return 0;};
+  bool hasToEvaluateFineModel() const{return 0;}
 
   ///@}
 
@@ -293,7 +293,7 @@ public:
    * @see fulfilledAction()
    * @see cplscheme::constants
    */
-  bool isActionRequired ( const std::string& action ) const{return 0;};
+  bool isActionRequired ( const std::string& action ) const{return 0;}
 
   /**
    * @brief Indicates preCICE that a required action has been fulfilled by a solver.
@@ -305,7 +305,7 @@ public:
    * @see requireAction()
    * @see cplscheme::constants
    */
-  void fulfilledAction ( const std::string& action ){};
+  void fulfilledAction ( const std::string& action ){}
 
   ///@}
 
@@ -319,7 +319,7 @@ public:
    * @param[in] meshName the name of the mesh
    * @returns whether the mesh is used.
    */
-  bool hasMesh ( const std::string& meshName ) const{return 0;};
+  bool hasMesh ( const std::string& meshName ) const{return 0;}
 
   /**
    * @brief Returns the ID belonging to the mesh with given name.
@@ -327,14 +327,14 @@ public:
    * @param[in] meshName the name of the mesh
    * @returns the id of the corresponding mesh
    */
-  int getMeshID ( const std::string& meshName ) const{return this->fake_mesh_id;};
+  int getMeshID ( const std::string& meshName ) const{return this->fake_mesh_id;}
 
   /**
    * @brief Returns a id-set of all used meshes by this participant.
    *
    * @returns the set of ids.
    */
-  std::set<int> getMeshIDs() const{return std::set<int>();};
+  std::set<int> getMeshIDs() const{return std::set<int>();}
 
   /**
    * @brief Returns a handle to a created mesh.
@@ -360,7 +360,7 @@ public:
    */
   int setMeshVertex (
     int           meshID,
-    const double* position ){return -1;};
+    const double* position ){return -1;}
 
   /**
    * @brief Returns the number of vertices of a mesh.
@@ -368,7 +368,7 @@ public:
    * @param[in] meshID the id of the mesh
    * @returns the amount of the vertices of the mesh
    */
-  int getMeshVertexSize(int meshID) const{return -1;};
+  int getMeshVertexSize(int meshID) const{return -1;}
 
   /**
    * @brief Creates multiple mesh vertices
@@ -391,7 +391,7 @@ public:
     int           meshID,
     int           size,
     const double* positions,
-    int*          ids ){};
+    int*          ids ){}
 
   /**
    * @brief Get vertex positions for multiple vertex ids from a given mesh
@@ -412,7 +412,7 @@ public:
     int        meshID,
     int        size,
     const int* ids,
-    double*    positions ) const{};
+    double*    positions ) const{}
 
   /**
    * @brief Gets mesh vertex IDs from positions.
@@ -433,7 +433,7 @@ public:
     int           meshID,
     int           size,
     const double* positions,
-    int*          ids ) const{};
+    int*          ids ) const{}
 
   /**
    * @brief Sets mesh edge from vertex IDs, returns edge ID.
@@ -449,7 +449,7 @@ public:
   int setMeshEdge (
     int meshID,
     int firstVertexID,
-    int secondVertexID ){return -1;};
+    int secondVertexID ){return -1;}
 
   /**
    * @brief Sets mesh triangle from edge IDs
@@ -465,7 +465,7 @@ public:
     int meshID,
     int firstEdgeID,
     int secondEdgeID,
-    int thirdEdgeID ){};
+    int thirdEdgeID ){}
 
   /**
    * @brief Sets mesh triangle from vertex IDs.
@@ -487,7 +487,7 @@ public:
     int meshID,
     int firstVertexID,
     int secondVertexID,
-    int thirdVertexID ){};
+    int thirdVertexID ){}
 
   /**
    * @brief Sets mesh Quad from edge IDs.
@@ -507,7 +507,7 @@ public:
     int firstEdgeID,
     int secondEdgeID,
     int thirdEdgeID,
-    int fourthEdgeID ){};
+    int fourthEdgeID ){}
 
   /**
    * @brief Sets surface mesh quadrangle from vertex IDs.
@@ -532,7 +532,7 @@ public:
     int firstVertexID,
     int secondVertexID,
     int thirdVertexID,
-    int fourthVertexID ){};
+    int fourthVertexID ){}
 
   ///@}
 
@@ -546,7 +546,7 @@ public:
    * @param[in] meshID the id of the associated mesh
    * @returns whether the mesh is used.
    */
-  bool hasData ( const std::string& dataName, int meshID ) const{return 0;};
+  bool hasData ( const std::string& dataName, int meshID ) const{return 0;}
 
   /**
    * @brief Returns the ID of the data associated with the given name and mesh.
@@ -556,7 +556,7 @@ public:
    *
    * @returns the id of the corresponding data
    */
-  int getDataID ( const std::string& dataName, int meshID ) const{return -1;};
+  int getDataID ( const std::string& dataName, int meshID ) const{return -1;}
 
   /**
    * @brief Computes and maps all read data mapped to the mesh with given ID.
@@ -566,7 +566,7 @@ public:
    *
    * @pre A mapping to toMeshID was configured.
    */
-  void mapReadDataTo ( int toMeshID ){};
+  void mapReadDataTo ( int toMeshID ){}
 
   /**
    * @brief Computes and maps all write data mapped from the mesh with given ID.
@@ -576,7 +576,7 @@ public:
    *
    * @pre A mapping from fromMeshID was configured.
    */
-  void mapWriteDataFrom ( int fromMeshID ){};
+  void mapWriteDataFrom ( int fromMeshID ){}
 
   /**
    * @brief Writes vector data given as block.
@@ -608,7 +608,7 @@ public:
   for(int i = 0; i < size * this->getDimensions(); i++){
       this->fake_read_write_buffer.push_back(values[i]); 
     }
-};
+  }
 
   /**
    * @brief Writes vector data to a vertex
@@ -636,8 +636,7 @@ public:
   for(int i = 0; i < this->getDimensions(); i++){
       this->fake_read_write_buffer.push_back(value[i]); 
     }
-};
-
+  }
 
   /**
    * @brief Writes scalar data given as block.
@@ -666,7 +665,7 @@ public:
   for(int i = 0; i < size; i++){
       this->fake_read_write_buffer.push_back(values[i]); 
     }
-  };
+  }
 
   /**
    * @brief Writes scalar data to a vertex
@@ -687,7 +686,7 @@ public:
     double value ){
     this->fake_read_write_buffer.clear();
     this->fake_read_write_buffer.push_back(value); 
-};
+  }
 
   /**
    * @brief Reads vector data into a provided block.
@@ -720,7 +719,7 @@ public:
   for(int i = 0; i < size * this->getDimensions(); i++){
       values[i] = this->fake_read_write_buffer[i];
     }
-};
+  }
 
   /**
    * @brief Reads vector data form a vertex
@@ -749,7 +748,7 @@ public:
   for(int i = 0; i < this->getDimensions(); i++){
       value[i] = this->fake_read_write_buffer[i];
     }
-};
+  }
 
   /**
    * @brief Reads scalar data as a block.
@@ -779,7 +778,7 @@ public:
   for(int i = 0; i<size; i++){
       values[i] = this->fake_read_write_buffer[i];
     }
-  };
+  }
 
   /**
    * @brief Reads scalar data of a vertex.
@@ -800,22 +799,29 @@ public:
     int     dataID,
     int     valueIndex,
     double& value ) const{
-    value = this->fake_read_write_buffer[0];    
-};
-
-  ///@}
+    value = this->fake_read_write_buffer[0]; 
+  }
 };
 
 namespace constants {
 
 // @brief Name of action for writing initial data.
-const std::string& actionWriteInitialData(){return std::string("");}
+const std::string& actionWriteInitialData(){
+    static std::string dummy ("dummy");
+    return dummy;
+}
 
 // @brief Name of action for writing iteration checkpoint
-const std::string& actionWriteIterationCheckpoint(){return std::string("");}
+const std::string& actionWriteIterationCheckpoint(){
+    static std::string dummy ("dummy");
+    return dummy;
+}
 
 // @brief Name of action for reading iteration checkpoint.
-const std::string& actionReadIterationCheckpoint(){return std::string("");}
+const std::string& actionReadIterationCheckpoint(){
+    static std::string dummy ("dummy");
+    return dummy;
+}
 
 } // namespace constants
 

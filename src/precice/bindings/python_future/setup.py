@@ -51,11 +51,19 @@ def determine_mpi_args(mpi_compiler_wrapper):
     return mpi_compile_args, mpi_link_args
 
 
-def get_extensions(mpi_compiler_wrapper):
+def get_extensions(mpi_compiler_wrapper, is_test):
+    compile_args = []
+    link_args = []
+
     mpi_compile_args, mpi_link_args = determine_mpi_args(mpi_compiler_wrapper)
     
-    compile_args = ["-Wall", "-std=c++11"] + mpi_compile_args
-    link_args = ["-lprecice"] + mpi_link_args
+    compile_args += mpi_compile_args
+    compile_args.append("-Wall")
+    compile_args.append("-std=c++11")
+
+    link_args += mpi_link_args
+    if not is_test:
+        link_args.append("-lprecice")
 
     return [
         Extension(
@@ -96,9 +104,6 @@ class my_build_ext(build_ext, object):
             self.distribution.is_test
         except AttributeError:
             self.distribution.is_test = False
-
-        if not self.distribution.ext_modules:            
-            self.distribution.ext_modules=cythonize(get_extensions(mpicompiler_default), compile_time_env={"TEST":self.distribution.is_test})
         
         super().initialize_options()
         
@@ -109,7 +114,7 @@ class my_build_ext(build_ext, object):
 
         if not self.distribution.ext_modules:
             print("adding extension")
-            self.distribution.ext_modules = cythonize(get_extensions(self.mpicompiler), compile_time_env={"TEST":self.distribution.is_test})
+            self.distribution.ext_modules = cythonize(get_extensions(self.mpicompiler, self.distribution.is_test), compile_time_env={"TEST":self.distribution.is_test})
 
         print("#####")
 
@@ -150,7 +155,7 @@ class my_build(build, object):
 
         if not self.distribution.ext_modules:
             print("adding extension")
-            self.distribution.ext_modules = cythonize(get_extensions(self.mpicompiler), compile_time_env={"TEST":self.distribution.is_test})
+            self.distribution.ext_modules = cythonize(get_extensions(self.mpicompiler, self.distribution.is_test), compile_time_env={"TEST":self.distribution.is_test})
 
         print("#####")
 
@@ -161,7 +166,6 @@ class my_test(test, object):
         self.distribution.is_test = True       
         super().initialize_options()
 
-# build precice.so python extension to be added to "PYTHONPATH" later
 setup(
     name=APPNAME,
     version=APPVERSION,
