@@ -10,6 +10,8 @@ from Cython.Build import cythonize
 from distutils.command.install import install
 from distutils.command.build import build
 
+# REMOVE THIS COMMENT!
+
 # name of Interfacing API
 APPNAME = "precice_future"
 APPVERSION = "1.5.0"  # todo: should be replaced with precice.get_version() as soon as it exists , see https://github.com/precice/precice/issues/261
