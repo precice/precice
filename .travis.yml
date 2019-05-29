@@ -85,8 +85,9 @@ matrix:
         - lcov --capture --directory "$TRAVIS_BUILD_DIR/build" --output-file coverage.info
         - lcov --remove coverage.info '/usr/*' "$LOCAL_INSTALL/*" --output-file coverage.info # filter system-files and local-dependencies
         - lcov --list coverage.info # debug info
-        - bash <(curl -s https://codecov.io/bash) -f coverage.info || echo "Codecov did not collect coverage reports"      
-  
+        - bash <(curl -s https://codecov.io/bash) -f coverage.info || echo "Codecov did not collect coverage reports"
+
+
 cache:
   ccache: true
   directories:
@@ -115,4 +116,3 @@ after_failure:
   - cd $TRAVIS_BUILD_DIR
   - cat config.log
   - cat -n ./tests/boost-test-output*
- 
