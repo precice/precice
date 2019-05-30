@@ -17,6 +17,8 @@ classdef SolverInterface < handle
     end
     
     methods
+        %% Construction and configuration
+        % Constructor
         function obj = SolverInterface(SolverName)
             %SOLVERINTERFACE Construct an instance of this class
             %   Detailed explanation goes here
@@ -27,11 +29,13 @@ classdef SolverInterface < handle
             preciceGateway(uint8(0),SolverName);
         end
         
+        % Destructor
         function delete(obj)
             obj.interfaceID = 0;
             preciceGateway(uint8(1));
         end
         
+        % configure
         function configure(obj,configFileName)
             obj.interfaceID = 0;
             if ischar(configFileName)
@@ -40,41 +44,76 @@ classdef SolverInterface < handle
             preciceGateway(uint8(2),configFileName);
         end
         
+        %% Steering methods
+        % initialize
         function dt = initialize(obj)
             obj.interfaceID = 0;
             dt = preciceGateway(uint8(10));
         end
         
+        % initialize Data
         function initializeData(obj)
             obj.interfaceID = 0;
             preciceGateway(uint8(11));
         end
         
+        % advance
         function dt = advance(obj,dt)
             obj.interfaceID = 0;
             dt = preciceGateway(uint8(12),dt);
         end
         
+        % finalize
         function finalize(obj)
             obj.interfaceID = 0;
             preciceGateway(uint8(13));
         end
         
+        %% Status queries
+        % getDimensions
         function dims = getDimensions(obj)
             obj.interfaceID = 0;
             dims = preciceGateway(uint8(20));
         end
         
+        % isCouplingOngoing
         function bool = isCouplingOngoing(obj)
             obj.interfaceID = 0;
             bool = preciceGateway(uint8(21));
         end
         
+        % isReadDataAvailable
         function bool = isReadDataAvailable(obj)
             obj.interfaceID = 0;
             bool = preciceGateway(uint8(22));
         end
         
+        % isWriteDataRequired
+        function bool = isWriteDataRequired(obj,dt)
+            obj.interfaceID = 0;
+            bool = preciceGateway(uint8(23),dt);
+        end
+        
+        % isCouplingOngoing
+        function bool = isTimestepComplete(obj)
+            obj.interfaceID = 0;
+            bool = preciceGateway(uint8(24));
+        end
+        
+        % isCouplingOngoing
+        function bool = hasToEvaluateSurrogateModel(obj)
+            obj.interfaceID = 0;
+            bool = preciceGateway(uint8(25));
+        end
+        
+        % isCouplingOngoing
+        function bool = hasToEvaluateFineModel(obj)
+            obj.interfaceID = 0;
+            bool = preciceGateway(uint8(26));
+        end
+        
+        %% Action Methods
+        % isActionRequired
         function bool = isActionRequired(obj,action)
             if ischar(action)
                 action = string(action);
@@ -83,6 +122,7 @@ classdef SolverInterface < handle
             bool = preciceGateway(uint8(30),action);
         end
         
+        % fulfilledAction
         function fulfilledAction(obj,action)
             if ischar(action)
                 action = string(action);
@@ -91,6 +131,17 @@ classdef SolverInterface < handle
             preciceGateway(uint8(31),action);
         end
         
+        %% Mesh Access
+        % hasMesh
+        function bool = hasMesh(obj,meshName)
+            if ischar(meshName)
+                meshName = string(meshName);
+            end
+            obj.interfaceID = 0;
+            bool = preciceGateway(uint8(40),meshName);
+        end
+        
+        % getMeshID
         function id = getMeshID(obj,meshName)
             if ischar(meshName)
                 meshName = string(meshName);
@@ -99,11 +150,27 @@ classdef SolverInterface < handle
             id = preciceGateway(uint8(41),meshName);
         end
         
+        % getMeshIDs
+        function ids = getMeshIDs(obj)
+            obj.interfaceID = 0;
+            ids = preciceGateway(uint8(42));
+        end
+        
+        % getMeshHandle not yet implemented
+        
+        % setMeshVertex
         function vertexId = setMeshVertex(obj,meshID,position)
             obj.interfaceID = 0;
             vertexId = preciceGateway(uint8(44),int32(meshID),position);
         end
         
+        % getMeshVertexSize
+        function vertexId = getMeshVertexSize(obj,meshID)
+            obj.interfaceID = 0;
+            vertexId = preciceGateway(uint8(45),int32(meshID));
+        end
+        
+        % setMeshVertices
         function vertexIds = setMeshVertices(obj,meshID,inSize,positions)
             if size(positions,2) ~= inSize
                 error('Number of columns in position vector must match size!');
@@ -112,6 +179,26 @@ classdef SolverInterface < handle
             vertexIds = preciceGateway(uint8(46),int32(meshID),uint64(inSize),positions);
         end
         
+        % getMeshVertices
+        function positions = getMeshVertices(obj,meshID,inSize,vertexIds)
+            if size(ids,2) ~= inSize
+                error('Number of columns in position vector must match size!');
+            end
+            obj.interfaceID = 0;
+            positions = preciceGateway(uint8(47),int32(meshID),uint64(inSize),vertexIds);
+        end
+        
+        % getMeshVertexIDsFromPositions
+        function vertexIds = getMeshVertexIDsFromPositions(obj,meshID,inSize,positions)
+            if size(positions,2) ~= inSize
+                error('Number of columns in position vector must match size!');
+            end
+            obj.interfaceID = 0;
+            vertexIds = preciceGateway(uint8(48),int32(meshID),uint64(inSize),positions);
+        end
+        
+        %% Data Access
+        % getMeshVertices
         function id = getDataID(obj,dataName,meshID)
             obj.interfaceID = 0;
             if ischar(dataName)
