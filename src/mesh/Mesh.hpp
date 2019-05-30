@@ -248,31 +248,20 @@ public:
   void clear();
 
   /// Returns a mapping from rank to used (not necessarily owned) vertex IDs
-  VertexDistribution & getVertexDistribution()
-  {
-    return _vertexDistribution;
-  }
+  VertexDistribution & getVertexDistribution();
 
-  std::vector<int>& getVertexOffsets()
-  {
-    return _vertexOffsets;
-  }
+  VertexDistribution const & getVertexDistribution() const;
+
+  std::vector<int>& getVertexOffsets();
+
+  const std::vector<int>& getVertexOffsets() const;
 
   /// Only used for tests
-  void setVertexOffsets(std::vector<int> & vertexOffsets)
-  {
-    _vertexOffsets = vertexOffsets;
-  }
+  void setVertexOffsets(std::vector<int> & vertexOffsets);
 
-  int getGlobalNumberOfVertices()
-  {
-    return _globalNumberOfVertices;
-  }
+  int getGlobalNumberOfVertices() const;
 
-  void setGlobalNumberOfVertices(int num)
-  {
-    _globalNumberOfVertices = num;
-  }
+  void setGlobalNumberOfVertices(int num);
 
   void addMesh(Mesh& deltaMesh);
 
