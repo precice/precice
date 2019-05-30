@@ -5,15 +5,30 @@ classdef SolverInterface < handle
     %   MATLAB C++ API. Such a function is actually an instance of a C++ 
     %   class that is stored internally by MATLAB. Whenever they are 
     %   "called", a subroutine of the object (operator ()) is invoked which
-    %   then has access to the of the class.
+    %   then has access to the members of the class.
     %   Hence, we can store the actual solver interface in this class and
     %   access it by invoking the mex function.
     
     properties(Access=private)
-        % This is currently just a dummy variable. It will be given meaning
-        % later.
-        interfaceID;
-        
+        % TODO: This class is intended to be a wrapper class for a C++
+        % SolverInterface object. This object, however, is stored in the
+        % preciceGateway mex Function class which is created and handled 
+        % internally by MATLAB, we do not need any properties.
+        %
+        % Therefore, as long as we do not support the existence of multiple
+        % SolverInterfaces at the same time, all methods could also be 
+        % static. Nevertheless, I think it is more intuitive to make them 
+        % non-static. Also, possible future changes (see below) will
+        % probably require properties.
+        %
+        % Possible changes:
+        % - Allow the creation of multiple SolverInterfaces. For this, we
+        % should replace the interface pointer in the Gateway by a list of 
+        % interface pointers and add an InterfaceID as property of this
+        % class.
+        % - Use out of process execution. I must check whether this works,
+        % but a vast advantage would be that MATLAB won't always crash when
+        % preCICE calls std::exit().
     end
     
     methods
@@ -22,7 +37,6 @@ classdef SolverInterface < handle
         function obj = SolverInterface(SolverName)
             %SOLVERINTERFACE Construct an instance of this class
             %   Detailed explanation goes here
-            obj.interfaceID = 0;
             if ischar(SolverName)
                 SolverName = string(SolverName);
             end
@@ -31,13 +45,11 @@ classdef SolverInterface < handle
         
         % Destructor
         function delete(obj)
-            obj.interfaceID = 0;
             preciceGateway(uint8(1));
         end
         
         % configure
         function configure(obj,configFileName)
-            obj.interfaceID = 0;
             if ischar(configFileName)
                 configFileName = string(configFileName);
             end
@@ -47,68 +59,57 @@ classdef SolverInterface < handle
         %% Steering methods
         % initialize
         function dt = initialize(obj)
-            obj.interfaceID = 0;
             dt = preciceGateway(uint8(10));
         end
         
         % initialize Data
         function initializeData(obj)
-            obj.interfaceID = 0;
             preciceGateway(uint8(11));
         end
         
         % advance
         function dt = advance(obj,dt)
-            obj.interfaceID = 0;
             dt = preciceGateway(uint8(12),dt);
         end
         
         % finalize
         function finalize(obj)
-            obj.interfaceID = 0;
             preciceGateway(uint8(13));
         end
         
         %% Status queries
         % getDimensions
         function dims = getDimensions(obj)
-            obj.interfaceID = 0;
             dims = preciceGateway(uint8(20));
         end
         
         % isCouplingOngoing
         function bool = isCouplingOngoing(obj)
-            obj.interfaceID = 0;
             bool = preciceGateway(uint8(21));
         end
         
         % isReadDataAvailable
         function bool = isReadDataAvailable(obj)
-            obj.interfaceID = 0;
             bool = preciceGateway(uint8(22));
         end
         
         % isWriteDataRequired
         function bool = isWriteDataRequired(obj,dt)
-            obj.interfaceID = 0;
             bool = preciceGateway(uint8(23),dt);
         end
         
-        % isCouplingOngoing
+        % isTimestepComplete
         function bool = isTimestepComplete(obj)
-            obj.interfaceID = 0;
             bool = preciceGateway(uint8(24));
         end
         
-        % isCouplingOngoing
+        % hasToEvaluateSurrogateModel
         function bool = hasToEvaluateSurrogateModel(obj)
-            obj.interfaceID = 0;
             bool = preciceGateway(uint8(25));
         end
         
-        % isCouplingOngoing
+        % hasToEvaluateFineModel
         function bool = hasToEvaluateFineModel(obj)
-            obj.interfaceID = 0;
             bool = preciceGateway(uint8(26));
         end
         
@@ -118,7 +119,6 @@ classdef SolverInterface < handle
             if ischar(action)
                 action = string(action);
             end
-            obj.interfaceID = 0;
             bool = preciceGateway(uint8(30),action);
         end
         
@@ -127,7 +127,6 @@ classdef SolverInterface < handle
             if ischar(action)
                 action = string(action);
             end
-            obj.interfaceID = 0;
             preciceGateway(uint8(31),action);
         end
         
@@ -137,7 +136,6 @@ classdef SolverInterface < handle
             if ischar(meshName)
                 meshName = string(meshName);
             end
-            obj.interfaceID = 0;
             bool = preciceGateway(uint8(40),meshName);
         end
         
@@ -146,13 +144,11 @@ classdef SolverInterface < handle
             if ischar(meshName)
                 meshName = string(meshName);
             end
-            obj.interfaceID = 0;
             id = preciceGateway(uint8(41),meshName);
         end
         
         % getMeshIDs
         function ids = getMeshIDs(obj)
-            obj.interfaceID = 0;
             ids = preciceGateway(uint8(42));
         end
         
@@ -160,13 +156,11 @@ classdef SolverInterface < handle
         
         % setMeshVertex
         function vertexId = setMeshVertex(obj,meshID,position)
-            obj.interfaceID = 0;
             vertexId = preciceGateway(uint8(44),int32(meshID),position);
         end
         
         % getMeshVertexSize
         function vertexId = getMeshVertexSize(obj,meshID)
-            obj.interfaceID = 0;
             vertexId = preciceGateway(uint8(45),int32(meshID));
         end
         
@@ -175,8 +169,7 @@ classdef SolverInterface < handle
             if size(positions,2) ~= inSize
                 error('Number of columns in position vector must match size!');
             end
-            obj.interfaceID = 0;
-            vertexIds = preciceGateway(uint8(46),int32(meshID),uint64(inSize),positions);
+            vertexIds = preciceGateway(uint8(46),int32(meshID),int32(inSize),positions);
         end
         
         % getMeshVertices
@@ -184,8 +177,7 @@ classdef SolverInterface < handle
             if size(ids,2) ~= inSize
                 error('Number of columns in position vector must match size!');
             end
-            obj.interfaceID = 0;
-            positions = preciceGateway(uint8(47),int32(meshID),uint64(inSize),vertexIds);
+            positions = preciceGateway(uint8(47),int32(meshID),int32(inSize),vertexIds);
         end
         
         % getMeshVertexIDsFromPositions
@@ -193,36 +185,115 @@ classdef SolverInterface < handle
             if size(positions,2) ~= inSize
                 error('Number of columns in position vector must match size!');
             end
-            obj.interfaceID = 0;
-            vertexIds = preciceGateway(uint8(48),int32(meshID),uint64(inSize),positions);
+            vertexIds = preciceGateway(uint8(48),int32(meshID),int32(inSize),positions);
+        end
+        
+        % setMeshEdge
+        function edgeID = setMeshEdge(obj, meshID, firstVertexID, secondVertexID)
+            edgeID = preciceGateway(uint8(49),int32(meshID),int32(firstVertexID),int32(secondVertexID));
+        end
+        
+        % setMeshTriangle
+        function setMeshTriangle(obj, meshID, firstEdgeID, secondEdgeID, thirdEdgeID)
+            preciceGateway(uint8(50),int32(meshID),int32(firstEdgeID),int32(secondEdgeID),int32(thirdEdgeID));
+        end
+        
+        % setMeshTriangleWithEdges
+        function setMeshTriangleWithEdges(obj, meshID, firstVertexID, secondVertexID, thirdVertexID)
+            preciceGateway(uint8(51),int32(meshID),int32(firstVertexID),int32(secondVertexID),int32(thirdVertexID));
+        end
+        
+        % setMeshQuad
+        function setMeshQuad(obj, meshID, firstEdgeID, secondEdgeID, thirdEdgeID, fourthEdgeID)
+            preciceGateway(uint8(52),int32(meshID),int32(firstEdgeID),int32(secondEdgeID),int32(thirdEdgeID),int32(fourthEdgeID));
+        end
+        
+        % setMeshQuadWithEdges
+        function setMeshQuadWithEdges(obj, meshID, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID)
+            preciceGateway(uint8(53),int32(meshID),int32(firstVertexID),int32(secondVertexID),int32(thirdVertexID),int32(fourthVertexID));
         end
         
         %% Data Access
-        % getMeshVertices
+        % hasDataID
+        function bool = hasData(obj,dataName,meshID)
+            if ischar(dataName)
+                dataName = string(dataName);
+            end
+            bool = preciceGateway(uint8(60),dataName,int32(meshID));
+        end
+        
+        % getDataID
         function id = getDataID(obj,dataName,meshID)
-            obj.interfaceID = 0;
             if ischar(dataName)
                 dataName = string(dataName);
             end
             id = preciceGateway(uint8(61),dataName,int32(meshID));
         end
         
-        function writeBlockScalarData(obj,dataID,inSize,valueIndices,values)
-            obj.interfaceID = 0;
-            if ~isa(valueIndices,'int32')
-                warning('valueIndices should be allocated as int32 to prevent copying.');
-                valueIndices = int32(valueIndices);
-            end
-            preciceGateway(uint8(66),int32(dataID),uint64(inSize),valueIndices,values);
+        % mapReadDataTo
+        function mapReadDataTo(obj,meshID)
+            preciceGateway(uint8(62),int32(meshID));
         end
         
-        function values = readBlockScalarData(obj,dataID,inSize,valueIndices)
-            obj.interfaceID = 0;
+        % mapWriteDataFrom
+        function mapWriteDataFrom(obj,meshID)
+            preciceGateway(uint8(63),int32(meshID));
+        end
+        
+        % writeBlockVectorData
+        function writeBlockVectorData(obj,dataID,inSize,valueIndices,values)
             if ~isa(valueIndices,'int32')
                 warning('valueIndices should be allocated as int32 to prevent copying.');
                 valueIndices = int32(valueIndices);
             end
-            values = preciceGateway(uint8(70),int32(dataID),uint64(inSize),valueIndices);
+            preciceGateway(uint8(64),int32(dataID),int32(inSize),valueIndices,values);
+        end
+        
+        % writeVectorData
+        function writeVectorData(obj,dataID,valueIndex,value)
+            preciceGateway(uint8(65),int32(dataID),int32(valueIndex),value);
+        end
+        
+        % writeBlockScalarData
+        function writeBlockScalarData(obj,dataID,inSize,valueIndices,values)
+            if ~isa(valueIndices,'int32')
+                warning('valueIndices should be allocated as int32 to prevent copying.');
+                valueIndices = int32(valueIndices);
+            end
+            preciceGateway(uint8(66),int32(dataID),int32(inSize),valueIndices,values);
+        end
+        
+        % writeScalarData
+        function writeScalarData(obj,dataID,valueIndex,value)
+            preciceGateway(uint8(67),int32(dataID),int32(valueIndex),value);
+        end
+        
+        % readBlockVectorData
+        function values = readBlockVectorData(obj,dataID,inSize,valueIndices)
+            if ~isa(valueIndices,'int32')
+                warning('valueIndices should be allocated as int32 to prevent copying.');
+                valueIndices = int32(valueIndices);
+            end
+            values = preciceGateway(uint8(68),int32(dataID),int32(inSize),valueIndices);
+        end
+        
+        % readVectorData
+        function value = readVectorData(obj,dataID,valueIndex)
+            value = preciceGateway(uint8(69),int32(dataID),int32(valueIndex));
+        end
+        
+        % readBlockScalarData
+        function values = readBlockScalarData(obj,dataID,inSize,valueIndices)
+            if ~isa(valueIndices,'int32')
+                warning('valueIndices should be allocated as int32 to prevent copying.');
+                valueIndices = int32(valueIndices);
+            end
+            values = preciceGateway(uint8(70),int32(dataID),int32(inSize),valueIndices);
+        end
+        
+        % readScalarData
+        function value = readScalarData(obj,dataID,valueIndex)
+            value = preciceGateway(uint8(71),int32(dataID),int32(valueIndex));
         end
     end
 end

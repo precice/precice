@@ -222,12 +222,95 @@ public:
                 outputs[0] = factory.createArrayFromBuffer<int32_t>({1,size[0]}, std::move(ids_ptr));
                 break;
             }
+            case 49: //setMeshEdge
+            {
+                const TypedArray<int32_t> meshID = inputs[1];
+                const TypedArray<int32_t> firstVertexID = inputs[2];
+                const TypedArray<int32_t> secondVertexID = inputs[3];
+                int id = interface->setMeshEdge(meshID[0],firstVertexID[0],secondVertexID[0]);
+                outputs[0] = factory.createScalar<int32_t>(id);
+                break;
+            }
+            case 50: //setMeshTriangle
+            {
+                const TypedArray<int32_t> meshID = inputs[1];
+                const TypedArray<int32_t> firstEdgeID = inputs[2];
+                const TypedArray<int32_t> secondEdgeID = inputs[3];
+                const TypedArray<int32_t> thirdEdgeID = inputs[3];
+                interface->setMeshTriangle(meshID[0],firstEdgeID[0],secondEdgeID[0],thirdEdgeID[0]);
+                break;
+            }
+            case 51: //setMeshTriangleWithEdges
+            {
+                const TypedArray<int32_t> meshID = inputs[1];
+                const TypedArray<int32_t> firstVertexID = inputs[2];
+                const TypedArray<int32_t> secondVertexID = inputs[3];
+                const TypedArray<int32_t> thirdVertexID = inputs[3];
+                interface->setMeshTriangleWithEdges(meshID[0],firstVertexID[0],secondVertexID[0],thirdVertexID[0]);
+                break;
+            }
+            case 52: //setMeshQuad
+            {
+                const TypedArray<int32_t> meshID = inputs[1];
+                const TypedArray<int32_t> firstEdgeID = inputs[2];
+                const TypedArray<int32_t> secondEdgeID = inputs[3];
+                const TypedArray<int32_t> thirdEdgeID = inputs[3];
+                interface->setMeshQuad(meshID[0],firstEdgeID[0],secondEdgeID[0],thirdEdgeID[0]);
+                break;
+            }
+            case 53: //setMeshQuadWithEdges
+            {
+                const TypedArray<int32_t> meshID = inputs[1];
+                const TypedArray<int32_t> firstVertexID = inputs[2];
+                const TypedArray<int32_t> secondVertexID = inputs[3];
+                const TypedArray<int32_t> thirdVertexID = inputs[3];
+                interface->setMeshQuadWithEdges(meshID[0],firstVertexID[0],secondVertexID[0],thirdVertexID[0]);
+                break;
+            }
+            
+            case 60: //hasData
+            {
+                const StringArray dataName = inputs[1];
+                const TypedArray<int32_t> meshID = inputs[2];
+                bool output = interface->hasData(meshName[0]);
+                outputs[0] = factory.createScalar<bool>(output);
+                break;
+            }
             case 61: //getDataID
             {
                 const StringArray dataName = inputs[1];
                 const TypedArray<int32_t> meshID = inputs[2];
                 int id = interface->getDataID(dataName[0],meshID[0]);
                 outputs[0] = factory.createScalar<int32_t>(id);
+                break;
+            }
+            case 62: //mapReadDataTo
+            {
+                const TypedArray<int32_t> toMeshID = inputs[1];
+                interface->mapReadDataTo(toMeshID);
+                break;
+            }
+            case 63: //mapWriteDataFrom
+            {
+                const TypedArray<int32_t> fromMeshID = inputs[1];
+                interface->mapReadDataFrom(fromMeshID);
+                break;
+            }
+            case 64: //writeBlockVectorData
+            {
+                const TypedArray<int32_t> dataID = inputs[1];
+                const TypedArray<uint64_t> size = inputs[2];
+                const TypedArray<int32_t> vertexIDs = inputs[3];
+                const TypedArray<double> values = inputs[4];
+                interface->writeBlockVectorData(dataID[0],size[0],&*vertexIDs.begin(),&*values.begin());
+                break;
+            }
+            case 65: //writeVectorData
+            {
+                const TypedArray<int32_t> dataID = inputs[1];
+                const TypedArray<int32_t> valueIndex = inputs[2];
+                const TypedArray<double> value = inputs[3];
+                interface->writeVectorData(dataID[0],size[0],&*value.begin());
                 break;
             }
             case 66: //writeBlockScalarData
@@ -239,6 +322,37 @@ public:
                 interface->writeBlockScalarData(dataID[0],size[0],&*vertexIDs.begin(),&*values.begin());
                 break;
             }
+            case 67: //writeScalarData
+            {
+                const TypedArray<int32_t> dataID = inputs[1];
+                const TypedArray<int32_t> valueIndex = inputs[2];
+                const TypedArray<double> value = inputs[3];
+                interface->writeScalarData(dataID[0],size[0],value[0]);
+                break;
+            }
+            case 68: //readBlockVectorData
+            {
+                const TypedArray<int32_t> dataID = inputs[1];
+                const TypedArray<uint64_t> size = inputs[2];
+                const TypedArray<int32_t> vertexIDs = inputs[3];
+                uint64_t dim = interface->getDimensions();
+                buffer_ptr_t<double> values_ptr = factory.createBuffer<double>(size[0]*dim);
+                double* values = values_ptr.get();
+                interface->readBlockVectorData(dataID[0],size[0],&*vertexIDs.begin(),values);
+                outputs[0] = factory.createArrayFromBuffer<double>({dim,size[0]}, std::move(values_ptr));
+                break;
+            }
+            case 69: //readVectorData
+            {
+                const TypedArray<int32_t> dataID = inputs[1];
+                const TypedArray<int32_t> valueIndex = inputs[2];
+                uint64_t dim = interface->getDimensions();
+                buffer_ptr_t<double> value_ptr = factory.createBuffer<double>(dim);
+                double* value = value_ptr.get();
+                interface->readVectorData(dataID[0],valueIndex[0],value);
+                outputs[0] = factory.createArrayFromBuffer<double>({dim,1}, std::move(value_ptr));
+                break;
+            }
             case 70: //readBlockScalarData
             {
                 const TypedArray<int32_t> dataID = std::move(inputs[1]);
@@ -248,6 +362,15 @@ public:
                 double* values = values_ptr.get();
                 interface->readBlockScalarData(dataID[0],size[0],&*valueIndices.begin(),values);
                 outputs[0] = factory.createArrayFromBuffer<double>({1,size[0]}, std::move(values_ptr));
+                break;
+            }
+            case 71: //readScalarData
+            {
+                const TypedArray<int32_t> dataID = inputs[1];
+                const TypedArray<int32_t> valueIndex = inputs[2];
+                double value;
+                interface->readScalarData(dataID[0],valueIndex[0],&value);
+                outputs[0] = factory.createScalar<double>(value);
                 break;
             }
             default:
