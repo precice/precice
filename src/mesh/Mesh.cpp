@@ -434,37 +434,37 @@ void Mesh:: clear()
   }
 }
 
-VertexDistribution &getVertexDistribution()
+Mesh::VertexDistribution &Mesh::getVertexDistribution()
 {
   return _vertexDistribution;
 }
 
-const VertexDistribution &getVertexDistribution() const
+const Mesh::VertexDistribution &Mesh::getVertexDistribution() const
 {
   return _vertexDistribution;
 }
 
-std::vector<int> &getVertexOffsets()
+std::vector<int> &Mesh::getVertexOffsets()
 {
   return _vertexOffsets;
 }
 
-const std::vector<int> &getVertexOffsets() const
+const std::vector<int> &Mesh::getVertexOffsets() const
 {
   return _vertexOffsets;
 }
 
-void setVertexOffsets(std::vector<int> &vertexOffsets)
+void Mesh::setVertexOffsets(std::vector<int> &vertexOffsets)
 {
   _vertexOffsets = vertexOffsets;
 }
 
-int getGlobalNumberOfVertices() const
+int Mesh::getGlobalNumberOfVertices() const
 {
   return _globalNumberOfVertices;
 }
 
-void setGlobalNumberOfVertices(int num)
+void Mesh::setGlobalNumberOfVertices(int num)
 {
   _globalNumberOfVertices = num;
 }
