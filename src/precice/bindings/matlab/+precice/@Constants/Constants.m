@@ -11,7 +11,7 @@ classdef Constants
         function result = nameConfiguration()
             persistent constantName;
             if isempty(constantName)
-                constantName = preciceConstants(uint8(0));
+                constantName = preciceGateway(uint8(0));
             end
             result = constantName;
         end
@@ -19,7 +19,7 @@ classdef Constants
         function result = dataDisplacements()
             persistent constantName;
             if isempty(constantName)
-                constantName = preciceConstants(uint8(1));
+                constantName = preciceGateway(uint8(1));
             end
             result = constantName;
         end
@@ -27,7 +27,7 @@ classdef Constants
         function result = dataForces()
             persistent constantName;
             if isempty(constantName)
-                constantName = preciceConstants(uint8(2));
+                constantName = preciceGateway(uint8(2));
             end
             result = constantName;
         end
@@ -35,7 +35,7 @@ classdef Constants
         function result = dataVelocities()
             persistent constantName;
             if isempty(constantName)
-                constantName = preciceConstants(uint8(3));
+                constantName = preciceGateway(uint8(3));
             end
             result = constantName;
         end
@@ -43,7 +43,7 @@ classdef Constants
         function result = actionWriteInitialData()
             persistent constantName;
             if isempty(constantName)
-                constantName = preciceConstants(uint8(4));
+                constantName = preciceGateway(uint8(4));
             end
             result = constantName;
         end
@@ -51,7 +51,7 @@ classdef Constants
         function result = actionWriteIterationCheckpoint()
             persistent constantName;
             if isempty(constantName)
-                constantName = preciceConstants(uint8(5));
+                constantName = preciceGateway(uint8(5));
             end
             result = constantName;
         end
@@ -59,7 +59,7 @@ classdef Constants
         function result = actionReadIterationCheckpoint()
             persistent constantName;
             if isempty(constantName)
-                constantName = preciceConstants(uint8(6));
+                constantName = preciceGateway(uint8(6));
             end
             result = constantName;
         end
@@ -67,7 +67,7 @@ classdef Constants
         function result = actionPlotOutput()
             persistent constantName;
             if isempty(constantName)
-                constantName = preciceConstants(uint8(7));
+                constantName = preciceGateway(uint8(7));
             end
             result = constantName;
         end
@@ -75,7 +75,7 @@ classdef Constants
         function result = exportVTK()
             persistent constantName;
             if isempty(constantName)
-                constantName = preciceConstants(uint8(8));
+                constantName = preciceGateway(uint8(8));
             end
             result = constantName;
         end
@@ -83,7 +83,7 @@ classdef Constants
         function result = exportAll()
             persistent constantName;
             if isempty(constantName)
-                constantName = preciceConstants(uint8(9));
+                constantName = preciceGateway(uint8(9));
             end
             result = constantName;
         end

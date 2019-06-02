@@ -283,12 +283,15 @@ classdef SolverInterface < handle
         end
         
         % readBlockScalarData
-        function values = readBlockScalarData(obj,dataID,inSize,valueIndices)
+        function values = readBlockScalarData(obj,dataID,inSize,valueIndices,transpose)
+            if nargin<5
+                transpose=false;
+            end
             if ~isa(valueIndices,'int32')
                 warning('valueIndices should be allocated as int32 to prevent copying.');
                 valueIndices = int32(valueIndices);
             end
-            values = preciceGateway(uint8(70),int32(dataID),int32(inSize),valueIndices);
+            values = preciceGateway(uint8(70),int32(dataID),int32(inSize),valueIndices,transpose);
         end
         
         % readScalarData
