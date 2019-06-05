@@ -144,6 +144,8 @@ target_sources(precice
     src/logging/Tracer.hpp
     src/logging/config/LogConfiguration.cpp
     src/logging/config/LogConfiguration.hpp
+    src/m2n/BoundM2N.cpp
+    src/m2n/BoundM2N.hpp
     src/m2n/DistributedComFactory.hpp
     src/m2n/DistributedCommunication.hpp
     src/m2n/GatherScatterComFactory.cpp
@@ -214,15 +216,11 @@ target_sources(precice
     src/partition/ReceivedPartition.cpp
     src/partition/ReceivedPartition.hpp
     src/partition/SharedPointer.hpp
-    src/precice/Constants.cpp
-    src/precice/Constants.hpp
     src/precice/MeshHandle.cpp
     src/precice/MeshHandle.hpp
     src/precice/SolverInterface.cpp
     src/precice/SolverInterface.hpp
-    src/precice/bindings/c/Constants.cpp
     src/precice/bindings/c/SolverInterfaceC.cpp
-    src/precice/bindings/fortran/ConstantsFortran.cpp
     src/precice/bindings/fortran/ConstantsFortran.hpp
     src/precice/bindings/fortran/SolverInterfaceFASTEST.cpp
     src/precice/bindings/fortran/SolverInterfaceFASTEST.hpp
@@ -298,6 +296,7 @@ target_sources(precice
     src/utils/stacktrace.cpp
     src/utils/stacktrace.hpp
     src/versions.hpp
+    src/versions.hpp
     src/xml/ConfigParser.cpp
     src/xml/ConfigParser.hpp
     src/xml/XMLAttribute.hpp
@@ -310,9 +309,7 @@ target_sources(precice
 #
 
 set_property(TARGET precice PROPERTY PUBLIC_HEADER
-    src/precice/Constants.hpp
     src/precice/MeshHandle.hpp
     src/precice/SolverInterface.hpp
-    src/precice/bindings/c/Constants.h
     src/precice/bindings/c/SolverInterfaceC.h
     )

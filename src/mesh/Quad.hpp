@@ -39,7 +39,7 @@ public:
       int   id);
 
   /// Destructor, empty.
-  virtual ~Quad() {}
+  ~Quad() override {}
 
   /// Returns dimensionalty of space the quad is embedded in.
   int getDimensions() const;
@@ -94,6 +94,9 @@ public:
   /// Sets the outer normal of the quad.
   template <typename VECTOR_T>
   void setNormal(const VECTOR_T &normal);
+
+  /// Computes and sets the normal of the triangle, returns the area-weighted normal.
+  const Eigen::VectorXd computeNormal(bool flip = false);
 
   /// Returns a among quads globally unique ID.
   int getID() const;

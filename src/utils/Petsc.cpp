@@ -37,6 +37,7 @@ void Petsc::finalize()
   PetscBool petscIsInitialized;
   PetscInitialized(&petscIsInitialized);
   if (petscIsInitialized and weInitialized) {
+    PetscOptionsSetValue(nullptr, "-options_left", "no"); 
     PetscFinalize();
   }
 #endif // not PRECICE_NO_PETSC

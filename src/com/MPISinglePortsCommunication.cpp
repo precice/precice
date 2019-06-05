@@ -96,7 +96,7 @@ void MPISinglePortsCommunication::acceptConnectionAsServer(
   
   _isAcceptor = true;
 
-  if (utils::MasterSlave::_rank == 0) { // only master opens a port
+  if (utils::MasterSlave::getRank() == 0) { // only master opens a port
     MPI_Open_port(MPI_INFO_NULL, const_cast<char *>(_portName.data()));
     conInfo.write(_portName);
     DEBUG("Accept connection at " << _portName);
@@ -173,7 +173,7 @@ void MPISinglePortsCommunication::closeConnection()
 
   DEBUG("Disconnected");
 
-  if (_isAcceptor and utils::MasterSlave::_rank == 0) {
+  if (_isAcceptor and utils::MasterSlave::getRank() == 0) {
     MPI_Close_port(const_cast<char *>(_portName.c_str()));
     DEBUG("Port closed");
   }

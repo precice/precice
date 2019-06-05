@@ -308,151 +308,107 @@ void Mesh:: allocateDataValues()
   }
 }
 
+void Mesh:: computeNormals()
+{
+  TRACE(_name);
+  // Compute normals only if faces to derive normal information are available
+  size_t size2DFaces = _content.edges().size();
+  size_t size3DFaces = _content.triangles().size() + _content.quads().size();
+  if (_dimensions == 2 && size2DFaces == 0){
+      return;
+  }
+  if (_dimensions == 3 && size3DFaces == 0){
+    return;
+  }
+
+  // Compute (in 2D) edge normals
+  if (_dimensions == 2) {
+      for (Edge& edge : _content.edges()) {
+          Eigen::VectorXd weightednormal = edge.computeNormal(_flipNormals);
+
+          // Accumulate normal in associated vertices
+          for (int i=0; i < 2; i++){
+              Eigen::VectorXd vertexNormal = edge.vertex(i).getNormal();
+              vertexNormal += weightednormal;
+              edge.vertex(i).setNormal(vertexNormal);
+          }
+      }
+  }
+
+  if (_dimensions == 3){
+      // Compute normals
+      for (Triangle& triangle : _content.triangles()) {
+          assertion(triangle.vertex(0) != triangle.vertex(1),
+                  triangle.vertex(0), triangle.getID());
+          assertion(triangle.vertex(1) != triangle.vertex(2),
+                  triangle.vertex(1), triangle.getID());
+          assertion(triangle.vertex(2) != triangle.vertex(0),
+                  triangle.vertex(2), triangle.getID());
+
+          // Compute normals
+          Eigen::VectorXd weightednormal = triangle.computeNormal(_flipNormals);
+
+          // Accumulate area-weighted normal in associated vertices and edges
+          for (int i=0; i < 3; i++){
+              triangle.edge(i).setNormal(triangle.edge(i).getNormal() + weightednormal);
+              triangle.vertex(i).setNormal(triangle.vertex(i).getNormal() + weightednormal);
+          }
+      }
+
+      // Compute quad normals
+      for (Quad& quad : _content.quads()) {
+          assertion(quad.vertex(0) != quad.vertex(1), quad.vertex(0).getCoords(), quad.getID());
+          assertion(quad.vertex(1) != quad.vertex(2), quad.vertex(1).getCoords(), quad.getID());
+          assertion(quad.vertex(2) != quad.vertex(3), quad.vertex(2).getCoords(), quad.getID());
+          assertion(quad.vertex(3) != quad.vertex(0), quad.vertex(3).getCoords(), quad.getID());
+
+          // Compute normals (assuming all vertices are on same plane)
+          Eigen::VectorXd weightednormal = quad.computeNormal(_flipNormals);
+          // Accumulate area-weighted normal in associated vertices and edges
+          for (int i=0; i < 4; i++){
+              quad.edge(i).setNormal(quad.edge(i).getNormal() + weightednormal);
+              quad.vertex(i).setNormal(quad.vertex(i).getNormal() + weightednormal);
+          }
+      }
+
+      // Normalize edge normals (only done in 3D)
+      for (Edge& edge : _content.edges()) {
+          // there can be cases when an edge has no adjacent triangle though triangles exist in general (e.g. after filtering)
+          edge.setNormal(edge.getNormal().normalized());
+      }
+  }
+
+  for (Vertex& vertex : _content.vertices()) {
+      // there can be cases when a vertex has no edge though edges exist in general (e.g. after filtering)
+      vertex.setNormal(vertex.getNormal().normalized());
+  }
+}
+
+void Mesh:: computeBoundingBox()
+{
+  TRACE(_name);
+  BoundingBox boundingBox(_dimensions,
+                              std::make_pair(std::numeric_limits<double>::max(),
+                                             std::numeric_limits<double>::lowest()));
+  for (const Vertex& vertex : _content.vertices()) {
+    for (int d = 0; d < _dimensions; d++) {
+      boundingBox[d].first  = std::min(vertex.getCoords()[d], boundingBox[d].first);
+      boundingBox[d].second = std::max(vertex.getCoords()[d], boundingBox[d].second);
+    }
+  }
+  for (int d = 0; d < _dimensions; d++) {
+    DEBUG("BoundingBox, dim: " << d << ", first: " << boundingBox[d].first << ", second: " << boundingBox[d].second);
+  }
+  _boundingBox = std::move(boundingBox);
+}
+
 void Mesh:: computeState()
 {
   TRACE(_name);
   assertion(_dimensions==2 || _dimensions==3, _dimensions);
 
-  // Compute normals only if faces to derive normal information are available
-  bool computeNormals = true;
-  size_t size2DFaces = _content.edges().size();
-  size_t size3DFaces = _content.triangles().size() + _content.quads().size();
-  if (_dimensions == 2){
-    if (size2DFaces == 0){
-      computeNormals = false;
-    }
-  }
-  else if (size3DFaces == 0){
-    assertion(_dimensions == 3, _dimensions);
-    computeNormals = false;
-  }
-
-  // Compute (in 2D) edge normals
-  for (Edge& edge : _content.edges()) {
-    if (_dimensions == 2 && computeNormals) {
-      // Compute normal
-      Eigen::VectorXd edgeVector = edge.vertex(1).getCoords() - edge.vertex(0).getCoords();
-      Eigen::VectorXd normal = Eigen::Vector2d(-edgeVector[1], edgeVector[0]);
-      if (not _flipNormals){
-        normal *= -1.0; // Invert direction if counterclockwise
-      }
-      assertion(math::greater(normal.norm(), 0.0));
-      normal.normalize();   // Scale normal vector to length 1
-      edge.setNormal(normal);
-
-      // Accumulate normal in associated vertices
-      normal *= edge.getEnclosingRadius() * 2.0; // Weight by length
-      for (int i=0; i < 2; i++){
-        Eigen::VectorXd vertexNormal = edge.vertex(i).getNormal();
-        vertexNormal += normal;
-        edge.vertex(i).setNormal(vertexNormal);
-      }
-    }
-  }
-
-  if (_dimensions == 3){
-    // Compute normals
-    for (Triangle& triangle : _content.triangles()) {
-      assertion(triangle.vertex(0) != triangle.vertex(1),
-                triangle.vertex(0), triangle.getID());
-      assertion(triangle.vertex(1) != triangle.vertex(2),
-                triangle.vertex(1), triangle.getID());
-      assertion(triangle.vertex(2) != triangle.vertex(0),
-                triangle.vertex(2), triangle.getID());
-
-      // Compute normals
-      if (computeNormals){
-        Eigen::Vector3d vectorA = triangle.edge(1).getCenter() - triangle.edge(0).getCenter(); // edge() is faster than vertex()
-        Eigen::Vector3d vectorB = triangle.edge(2).getCenter() - triangle.edge(0).getCenter();
-        // Compute cross-product of vector A and vector B
-        auto normal = vectorA.cross(vectorB);
-        if ( _flipNormals ){
-          normal *= -1.0; // Invert direction if counterclockwise
-        }
-
-        // Accumulate area-weighted normal in associated vertices and edges
-        for (int i=0; i < 3; i++){
-          triangle.edge(i).setNormal(triangle.edge(i).getNormal() + normal);
-          triangle.vertex(i).setNormal(triangle.vertex(i).getNormal() + normal);
-        }
-
-        // Normalize triangle normal
-        triangle.setNormal(normal.normalized());
-      }
-    }
-
-    // Compute quad normals
-    for (Quad& quad : _content.quads()) {
-      assertion(quad.vertex(0) != quad.vertex(1), quad.vertex(0).getCoords(), quad.getID());
-      assertion(quad.vertex(1) != quad.vertex(2), quad.vertex(1).getCoords(), quad.getID());
-      assertion(quad.vertex(2) != quad.vertex(3), quad.vertex(2).getCoords(), quad.getID());
-      assertion(quad.vertex(3) != quad.vertex(0), quad.vertex(3).getCoords(), quad.getID());
-
-      // Compute normals (assuming all vertices are on same plane)
-      if (computeNormals) {
-        // Two triangles are thought by splitting the quad from vertex 0 to 2.
-        // The cross prodcut of the outer edges of the triangles is used to compute
-        // the normal direction and area of the triangles. The direction must be
-        // the same, while the areas differ in general. The normals are added up
-        // and divided by 2 to get the area of the overall quad, since the length
-        // does correspond to the parallelogram spanned by the vectors of the
-        // cross product, which is twice the area of the corresponding triangles.
-        Eigen::Vector3d vectorA = quad.vertex(2).getCoords() - quad.vertex(1).getCoords();
-        Eigen::Vector3d vectorB = quad.vertex(0).getCoords() - quad.vertex(1).getCoords();
-        // Compute cross-product of vector A and vector B
-        auto normal = vectorA.cross(vectorB);
-        
-        vectorA = quad.vertex(0).getCoords() - quad.vertex(3).getCoords();
-        vectorB = quad.vertex(2).getCoords() - quad.vertex(3).getCoords();
-        auto normalSecondPart = vectorA.cross(vectorB);
-        
-        assertion(math::equals(normal.normalized(), normalSecondPart.normalized()),
-                  normal, normalSecondPart);
-        normal += normalSecondPart;
-        normal *= 0.5;
-
-        if ( _flipNormals ){
-          normal *= -1.0; // Invert direction if counterclockwise
-        }
-
-        // Accumulate area-weighted normal in associated vertices and edges
-        for (int i=0; i < 4; i++){
-          quad.edge(i).setNormal(quad.edge(i).getNormal() + normal);
-          quad.vertex(i).setNormal(quad.vertex(i).getNormal() + normal);
-        }
-
-        quad.setNormal(normal.normalized());
-      }
-    }
-
-    // Normalize edge normals (only done in 3D)
-    if (computeNormals){
-      for (Edge& edge : _content.edges()) {
-        // there can be cases when an edge has no adjacent triangle though triangles exist in general (e.g. after filtering)
-        edge.setNormal(edge.getNormal().normalized());
-      }
-    }
-  }
-
-  // Normalize vertex normals & compute bounding box
-  _boundingBox = BoundingBox (_dimensions,
-                              std::make_pair(std::numeric_limits<double>::max(),
-                                             std::numeric_limits<double>::lowest()));
-
-  for (Vertex& vertex : _content.vertices()) {
-    if (computeNormals) {
-      // there can be cases when a vertex has no edge though edges exist in general (e.g. after filtering)
-      vertex.setNormal(vertex.getNormal().normalized());
-    }
-    
-    for (int d = 0; d < _dimensions; d++) {
-      _boundingBox[d].first  = std::min(vertex.getCoords()[d], _boundingBox[d].first);
-      _boundingBox[d].second = std::max(vertex.getCoords()[d], _boundingBox[d].second);
-    }
-  }
-  for (int d = 0; d < _dimensions; d++) {
-    DEBUG("BoundingBox, dim: " << d << ", first: " << _boundingBox[d].first << ", second: " << _boundingBox[d].second);
-  }
+  computeNormals();
+  computeBoundingBox();
 }
 
     
@@ -478,6 +434,40 @@ void Mesh:: clear()
   }
 }
 
+Mesh::VertexDistribution &Mesh::getVertexDistribution()
+{
+  return _vertexDistribution;
+}
+
+const Mesh::VertexDistribution &Mesh::getVertexDistribution() const
+{
+  return _vertexDistribution;
+}
+
+std::vector<int> &Mesh::getVertexOffsets()
+{
+  return _vertexOffsets;
+}
+
+const std::vector<int> &Mesh::getVertexOffsets() const
+{
+  return _vertexOffsets;
+}
+
+void Mesh::setVertexOffsets(std::vector<int> &vertexOffsets)
+{
+  _vertexOffsets = vertexOffsets;
+}
+
+int Mesh::getGlobalNumberOfVertices() const
+{
+  return _globalNumberOfVertices;
+}
+
+void Mesh::setGlobalNumberOfVertices(int num)
+{
+  _globalNumberOfVertices = num;
+}
 
 void Mesh:: addMesh(
     Mesh& deltaMesh)

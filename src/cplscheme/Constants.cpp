@@ -22,10 +22,4 @@ const std::string& actionWriteInitialData ()
   return actionWriteInitialData;
 }
 
-//const std::string WRITE_ITERATION_CHECKPOINT ( "write-iteration-checkpoint" );
-//
-//const std::string READ_ITERATION_CHECKPOINT ( "read-iteration-checkpoint" );
-//
-//const std::string WRITE_INITIAL_DATA ( "write-initial-data" );
-
 }}} // namespace precice, cplscheme, constants

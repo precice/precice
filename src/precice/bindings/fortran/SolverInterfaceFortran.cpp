@@ -1,12 +1,14 @@
 #include "SolverInterfaceFortran.hpp"
-#include "precice/impl/SolverInterfaceImpl.hpp"
+#include "precice/SolverInterface.hpp"
 #include <iostream>
 #include <string>
 #include "logging/Logger.hpp"
+#include "precice/SolverInterface.hpp"
+#include "utils/assertion.hpp"
 
 using namespace std;
 
-static precice::impl::SolverInterfaceImpl* impl = nullptr;
+static precice::SolverInterface* impl = nullptr;
 
 static precice::logging::Logger _log ("SolverInterfaceFortran");
 
@@ -40,8 +42,8 @@ void precicef_create_
   string stringConfigFileName(configFileName, strippedLength);
   //cout << "Accessor: " << stringAccessorName << "!" << '\n';
   //cout << "Config  : " << stringConfigFileName << "!" << '\n';
-  impl = new precice::impl::SolverInterfaceImpl (stringAccessorName,
-         *solverProcessIndex, *solverProcessSize, false);
+  impl = new precice::SolverInterface (stringAccessorName,
+         *solverProcessIndex, *solverProcessSize);
   impl->configure(stringConfigFileName);
 }
 
@@ -469,5 +471,40 @@ int precice::impl::strippedLength
     i--;
   }
   return i+1;
+}
+
+void precicef_action_write_iter_checkp_
+(
+  char*  nameAction,
+  int lengthNameAction )
+{
+  const std::string& name = precice::constants::actionWriteIterationCheckpoint();
+  assertion(name.size() < (size_t) lengthNameAction, name.size(), lengthNameAction);
+  for (size_t i=0; i < name.size(); i++){
+    nameAction[i] = name[i];
+  }
+}
+
+void precicef_action_write_initial_data_(
+  char*  nameAction,
+  int lengthNameAction )
+{
+  const std::string& name = precice::constants::actionWriteInitialData();
+  assertion(name.size() < (size_t) lengthNameAction, name.size(), lengthNameAction);
+  for (size_t i=0; i < name.size(); i++){
+    nameAction[i] = name[i];
+  }
+}
+
+void precicef_action_read_iter_checkp_
+(
+  char*  nameAction,
+  int lengthNameAction )
+{
+  const std::string& name = precice::constants::actionReadIterationCheckpoint();
+  assertion(name.size() < (size_t) lengthNameAction, name.size(), lengthNameAction);
+  for (size_t i=0; i < name.size(); i++){
+    nameAction[i] = name[i];
+  }
 }
 

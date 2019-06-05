@@ -298,9 +298,9 @@ void MultiCouplingScheme::setupConvergenceMeasures()
   CHECK(not _convergenceMeasures.empty(),
         "At least one convergence measure has to be defined for an implicit coupling scheme!");
   for (ConvergenceMeasure& convMeasure : _convergenceMeasures) {
-    int dataID = convMeasure.dataID;
-    convMeasure.data = getData(dataID);
-    assertion(convMeasure.data != nullptr);
+    int dataID = convMeasure.data->getID();
+    convMeasure.couplingData = getData(dataID);
+    assertion(convMeasure.couplingData != nullptr);
   }
 }
 

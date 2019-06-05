@@ -75,11 +75,11 @@ void broadcastReceive(mesh::Mesh::VertexDistribution &m,
 
 void broadcast(mesh::Mesh::VertexDistribution &m)
 {
-  if (utils::MasterSlave::_masterMode) {
+  if (utils::MasterSlave::isMaster()) {
     // Broadcast (send) vertex distributions.
     m2n::broadcastSend(m);
   } else {
-    assertion(utils::MasterSlave::_slaveMode);
+    assertion(utils::MasterSlave::isSlave());
     // Broadcast (receive) vertex distributions.
     m2n::broadcastReceive(m, 0);
   }
@@ -89,7 +89,7 @@ void print(std::map<int, std::vector<int>> const &m)
 {
   std::ostringstream oss;
 
-  oss << "rank: " << utils::MasterSlave::_rank << "\n";
+  oss << "rank: " << utils::MasterSlave::getRank() << "\n";
 
   for (auto &i : m) {
     for (auto &j : i.second) {
@@ -97,10 +97,10 @@ void print(std::map<int, std::vector<int>> const &m)
     }
   }
 
-  if (utils::MasterSlave::_masterMode) {
+  if (utils::MasterSlave::isMaster()) {
     std::string s;
 
-    for (int rank = 1; rank < utils::MasterSlave::_size; ++rank) {
+    for (int rank = 1; rank < utils::MasterSlave::getSize(); ++rank) {
       utils::MasterSlave::_communication->receive(s, rank);
 
       oss << s;
@@ -108,7 +108,7 @@ void print(std::map<int, std::vector<int>> const &m)
 
     std::cout << oss.str();
   } else {
-    assertion(utils::MasterSlave::_slaveMode);
+    assertion(utils::MasterSlave::isSlave());
 
     utils::MasterSlave::_communication->send(oss.str(), 0);
   }
@@ -118,7 +118,7 @@ void printCommunicationPartnerCountStats(std::map<int, std::vector<int>> const &
 {
   int size = m.size();
 
-  if (utils::MasterSlave::_masterMode) {
+  if (utils::MasterSlave::isMaster()) {
     size_t count   = 0;
     size_t maximum = std::numeric_limits<size_t>::min();
     size_t minimum = std::numeric_limits<size_t>::max();
@@ -130,7 +130,7 @@ void printCommunicationPartnerCountStats(std::map<int, std::vector<int>> const &
       count++;
     }
 
-    for (int rank = 1; rank < utils::MasterSlave::_size; ++rank) {
+    for (int rank = 1; rank < utils::MasterSlave::getSize(); ++rank) {
       utils::MasterSlave::_communication->receive(size, rank);
 
       total += size;
@@ -157,7 +157,7 @@ void printCommunicationPartnerCountStats(std::map<int, std::vector<int>> const &
               << "Number of Interface Processes: " << count << "\n"
               << '\n';
   } else {
-    assertion(utils::MasterSlave::_slaveMode);
+    assertion(utils::MasterSlave::isSlave());
     utils::MasterSlave::_communication->send(size, 0);
   }
 }
@@ -170,7 +170,7 @@ void printLocalIndexCountStats(std::map<int, std::vector<int>> const &m)
     size += i.second.size();
   }
 
-  if (utils::MasterSlave::_masterMode) {
+  if (utils::MasterSlave::isMaster()) {
     size_t count   = 0;
     size_t maximum = std::numeric_limits<size_t>::min();
     size_t minimum = std::numeric_limits<size_t>::max();
@@ -183,7 +183,7 @@ void printLocalIndexCountStats(std::map<int, std::vector<int>> const &m)
       count++;
     }
 
-    for (int rank = 1; rank < utils::MasterSlave::_size; ++rank) {
+    for (int rank = 1; rank < utils::MasterSlave::getSize(); ++rank) {
       utils::MasterSlave::_communication->receive(size, rank);
 
       total += size;
@@ -211,7 +211,7 @@ void printLocalIndexCountStats(std::map<int, std::vector<int>> const &m)
               << "Number of Interface Processes: " << count << "\n"
               << '\n';
   } else {
-    assertion(utils::MasterSlave::_slaveMode);
+    assertion(utils::MasterSlave::isSlave());
 
     utils::MasterSlave::_communication->send(size, 0);
   }
@@ -225,7 +225,7 @@ std::map<int, std::vector<int>> buildCommunicationMap(
     mesh::Mesh::VertexDistribution const &thisVertexDistribution,
     // `otherVertexDistribution' is input vertex distribution from other participant.
     mesh::Mesh::VertexDistribution const &otherVertexDistribution,
-    int                                    thisRank = utils::MasterSlave::_rank)
+    int                                    thisRank = utils::MasterSlave::getRank())
 {
   std::map<int, std::vector<int>> communicationMap;
 
@@ -277,31 +277,25 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
 {
   TRACE(acceptorName, requesterName);
   CHECK(not isConnected(), "Already connected!");
-  CHECK(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode,
+  CHECK(utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave(),
         "You can only use a point-to-point communication between two participants which both use a master. "
             << "Please use distribution-type gather-scatter instead.");
 
   mesh::Mesh::VertexDistribution &vertexDistribution = _mesh->getVertexDistribution();
   mesh::Mesh::VertexDistribution  requesterVertexDistribution;
 
-  if (utils::MasterSlave::_masterMode) {
+  if (utils::MasterSlave::isMaster()) {
     Event e0("m2n.exchangeVertexDistribution");
     // Establish connection between participants' master processes.
     auto c = _communicationFactory->newCommunication();
 
-    c->acceptConnection(acceptorName, requesterName, utils::MasterSlave::_rank);
-
-    int requesterMasterRank;
-
-    // Exchange ranks of participants' master processes.
-    c->send(utils::MasterSlave::_masterRank, 0);
-    c->receive(requesterMasterRank, 0);
+    c->acceptConnection(acceptorName, requesterName, utils::MasterSlave::getRank());
 
     // Exchange vertex distributions.
     m2n::send(vertexDistribution, 0, c);
     m2n::receive(requesterVertexDistribution, 0, c);
   } else {
-    assertion(utils::MasterSlave::_slaveMode);
+    assertion(utils::MasterSlave::isSlave());
   }
 
   Event e1("m2n.broadcastVertexDistributions", precice::syncMode);
@@ -352,11 +346,11 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
   _communication = _communicationFactory->newCommunication();
 
   // Accept point-to-point connections (as server) between the current acceptor
-  // process (in the current participant) with rank `utils::MasterSlave::_rank'
+  // process (in the current participant) with rank `utils::MasterSlave::getRank()'
   // and (multiple) requester processes (in the requester participant).
   _communication->acceptConnectionAsServer(acceptorName,
                                            requesterName,
-                                           utils::MasterSlave::_rank,
+                                           utils::MasterSlave::getRank(),
                                            communicationMap.size());
 
   for (auto const & comMap : communicationMap) {
@@ -374,30 +368,24 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
 {
   TRACE(acceptorName, requesterName);
   CHECK(not isConnected(), "Already connected!");
-  CHECK(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode,
+  CHECK(utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave(),
         "You can only use a point-to-point communication between two participants which both use a master. "
         << "Please use distribution-type gather-scatter instead.");
 
   mesh::Mesh::VertexDistribution &vertexDistribution = _mesh->getVertexDistribution();
   mesh::Mesh::VertexDistribution  acceptorVertexDistribution;
 
-  if (utils::MasterSlave::_masterMode) {
+  if (utils::MasterSlave::isMaster()) {
     Event e0("m2n.exchangeVertexDistribution");
     // Establish connection between participants' master processes.
     auto c = _communicationFactory->newCommunication();
     c->requestConnection(acceptorName, requesterName, 0, 1);
 
-    int acceptorMasterRank;
-
-    // Exchange ranks of participants' master processes.
-    c->receive(acceptorMasterRank, 0);
-    c->send(utils::MasterSlave::_masterRank, 0);
-
     // Exchange vertex distributions.
     m2n::receive(acceptorVertexDistribution, 0, c);
     m2n::send(vertexDistribution, 0, c);
   } else {
-    assertion(utils::MasterSlave::_slaveMode);
+    assertion(utils::MasterSlave::isSlave());
   }
 
   Event e1("m2n.broadcastVertexDistributions", precice::syncMode);
@@ -458,7 +446,7 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
   // processes (in the acceptor participant) to ranks `accceptingRanks'
   // according to `communicationMap`.
   _communication->requestConnectionAsClient(acceptorName, requesterName,
-                                            acceptingRanks, utils::MasterSlave::_rank);
+                                            acceptingRanks, utils::MasterSlave::getRank());
 
   for (auto &i : communicationMap) {
     auto globalAcceptorRank = i.first;

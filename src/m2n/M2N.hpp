@@ -65,6 +65,28 @@ public:
                                const std::string &requesterName);
 
   /**
+   * @brief prepares to establish the connections
+   *
+   * This should be called before calling the accept and request methods.
+   * Calling this function forwards the call to the configured master communication.
+   *
+   * @see com::Communication::prepareEstablishment()
+   * @see cleanupEstablishment()
+   */
+  void prepareEstablishment();
+
+  /**
+   * @brief cleans-up to establish the connections
+   *
+   * This should be called after calling the accept and request methods.
+   * Calling this function forwards the call to the configured master communication.
+   *
+   * @see com::Communication::cleanupEstablishment()
+   * @see prepareEstablishment()
+   */
+  void cleanupEstablishment();
+
+  /**
    * @brief Disconnects from communication space, i.e. participant.
    *
    * This method is called on destruction.

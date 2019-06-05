@@ -33,7 +33,7 @@ public:
     int     id );
 
   /// Destructor, empty.
-  virtual ~Edge () {}
+  ~Edge () override {}
 
   /// Returns number of spatial dimensions (2 or 3) the edge is embedded to.
   int getDimensions() const;
@@ -47,6 +47,9 @@ public:
   /// Sets the normal of the edge.
   template<typename VECTOR_T>
   void setNormal ( const VECTOR_T& normal );
+
+  /// Computes and sets the normal of the edge, returns the area-weighted normal.
+  const Eigen::VectorXd computeNormal(bool flip = false);
 
   /// Returns the (among edges) unique ID of the edge.
   int getID () const;

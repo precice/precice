@@ -28,20 +28,14 @@ struct MasterComFixture {
 
     if (utils::Parallel::getProcessRank() == 0){ //Master
       utils::Parallel::splitCommunicator( "Master" );
-      utils::MasterSlave::_rank = 0;
-      utils::MasterSlave::_size = size;
-      utils::MasterSlave::_slaveMode = false;
-      utils::MasterSlave::_masterMode = true;
+      utils::MasterSlave::configure(0, size);
       utils::MasterSlave::_communication->acceptConnection ( "Master", "Slaves", utils::Parallel::getProcessRank() );
       utils::MasterSlave::_communication->setRankOffset(1);
     }
     else {//Slaves
       assertion(utils::Parallel::getProcessRank() > 0 && utils::Parallel::getProcessRank() < size);
       utils::Parallel::splitCommunicator( "Slaves" );
-      utils::MasterSlave::_rank = utils::Parallel::getProcessRank();
-      utils::MasterSlave::_size = size;
-      utils::MasterSlave::_slaveMode = true;
-      utils::MasterSlave::_masterMode = false;
+      utils::MasterSlave::configure(utils::Parallel::getProcessRank(), size);
       utils::MasterSlave::_communication->requestConnection( "Master", "Slaves", utils::Parallel::getProcessRank()-1 , size-1 );
     }
   }
@@ -60,6 +54,7 @@ struct M2NFixture {
 
   M2NFixture()
   {
+    utils::MasterSlave::reset();
     auto participantCom = com::PtrCommunication(new com::MPIDirectCommunication());
     auto distrFactory = m2n::DistributedComFactory::SharedPointer(new m2n::GatherScatterComFactory(participantCom));
     m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory));

@@ -13,24 +13,23 @@ class MasterSlave
 {
 public:
 
-  static int _rank;
-
-  /// Number of ranks. This includes ranks from both participants, e.g. minimal size is 2.
-  static int _size;
-
-  /// The rank of the master. At this time it is hardcoded to 0.
-  static int _masterRank;
-
-  /// True if this process is running the master.
-  static bool _masterMode;
-  // True if this process is running a slave.
-  static bool _slaveMode;
-
   /// Communication between the master and all slaves.
   static com::PtrCommunication _communication;
 
   /// Configures the master-slave communication.
   static void configure(int rank, int size);
+
+  /// Current rank
+  static int getRank();
+
+  /// Number of ranks. This includes ranks from both participants, e.g. minimal size is 2.
+  static int getSize();
+  
+  /// True if this process is running the master.
+  static bool isMaster();
+
+  /// True if this process is running a slave.
+  static bool isSlave();
 
   /// The l2 norm of a vector is calculated on distributed data.
   static double l2norm(const Eigen::VectorXd& vec);
@@ -60,6 +59,18 @@ private:
 
   static logging::Logger _log;
 
+  /// Current rank
+  static int _rank;
+  
+  /// Number of ranks. This includes ranks from both participants, e.g. minimal size is 2.
+  static int _size;
+
+  /// True if this process is running the master.
+  static bool _isMaster;
+
+  /// True if this process is running a slave.
+  static bool _isSlave;
+  
 };
 
 

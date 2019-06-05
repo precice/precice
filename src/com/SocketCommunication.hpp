@@ -1,5 +1,3 @@
-#ifndef PRECICE_NO_SOCKETS
-
 #pragma once
 
 #include "com/Communication.hpp"
@@ -163,4 +161,3 @@ private:
 } // namespace com
 } // namespace precice
 
-#endif // not PRECICE_NO_SOCKETS

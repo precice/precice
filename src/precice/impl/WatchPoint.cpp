@@ -46,16 +46,16 @@ void WatchPoint:: initialize()
     _weights.push_back ( 1.0 );
   }
 
-  if(utils::MasterSlave::_slaveMode){
+  if(utils::MasterSlave::isSlave()){
     utils::MasterSlave::_communication->send(_shortestDistance, 0);
     utils::MasterSlave::_communication->receive(_isClosest, 0);
   }
 
-  if(utils::MasterSlave::_masterMode){
+  if(utils::MasterSlave::isMaster()){
     int closestRank = 0;
     double closestDistanceGlobal = _shortestDistance;
     double closestDistanceLocal = std::numeric_limits<double>::max();
-    for(int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
+    for(int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++){
       utils::MasterSlave::_communication->receive(closestDistanceLocal, rankSlave);
       if(closestDistanceLocal < closestDistanceGlobal){
         closestDistanceGlobal = closestDistanceLocal;
@@ -63,12 +63,12 @@ void WatchPoint:: initialize()
       }
     }
     _isClosest = closestRank == 0;
-    for(int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
+    for(int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++){
       utils::MasterSlave::_communication->send(closestRank==rankSlave, rankSlave);
     }
   }
 
-  DEBUG("Rank: " << utils::MasterSlave::_rank << ", isClosest: " << _isClosest);
+  DEBUG("Rank: " << utils::MasterSlave::getRank() << ", isClosest: " << _isClosest);
 
   if(_isClosest){
 

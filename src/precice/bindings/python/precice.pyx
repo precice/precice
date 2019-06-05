@@ -27,13 +27,15 @@ cdef bytes convert(s):
     else:
         raise TypeError("Could not convert.")
 
-include "constants.pyx"
-
 cdef extern from "precice/SolverInterface.hpp"  namespace "precice":
    cdef cppclass SolverInterface:
+      # construction and configuration
+
       SolverInterface (const string&, int, int) except +
 
       void configure (const string&)
+
+      # steering methods
 
       double initialize ()
 
@@ -42,6 +44,8 @@ cdef extern from "precice/SolverInterface.hpp"  namespace "precice":
       double advance (double computedTimestepLength)
 
       void finalize()
+
+      # status queries
 
       int getDimensions() const
 
@@ -53,9 +57,17 @@ cdef extern from "precice/SolverInterface.hpp"  namespace "precice":
 
       bool isTimestepComplete()
 
+      bool hasToEvaluateSurrogateModel ()
+
+      bool hasToEvaluateFineModel ()
+
+      # action methods
+
       bool isActionRequired (const string& action)
 
       void fulfilledAction (const string& action)
+
+      # mesh access
 
       bool hasMesh (const string& meshName ) const
 
@@ -63,13 +75,15 @@ cdef extern from "precice/SolverInterface.hpp"  namespace "precice":
 
       set[int] getMeshIDs ()
 
-      bool hasData (const string& dataName, int meshID) const
+      # MeshHandle getMeshHandle (const string& meshName)
 
-      int getDataID (const string& dataName, int meshID)
+      int setMeshVertex (int meshID, const double* position)
 
-      void setMeshVertices (int meshID, int size, double* positions, int* ids)
+      int getMeshVertexSize (int meshID)
 
-      int getMeshVertexSize(int meshID)
+      void setMeshVertices (int meshID, int size, const double* positions, int* ids)
+
+      void getMeshVertices (int meshID, int size, const int* ids, double* positions)
 
       void getMeshVertexIDsFromPositions (int meshID, int size, double* positions, int* ids)
 
@@ -82,6 +96,12 @@ cdef extern from "precice/SolverInterface.hpp"  namespace "precice":
       void setMeshQuad (int meshID, int firstEdgeID, int secondEdgeID, int thirdEdgeID, int fourthEdgeID)
 
       void setMeshQuadWithEdges (int meshID, int firstVertexID, int secondVertexID, int thirdVertexID, int fourthVertexID)
+
+      # data access
+
+      bool hasData (const string& dataName, int meshID) const
+
+      int getDataID (const string& dataName, int meshID)
 
       void mapReadDataTo (int toMeshID)
 
@@ -104,9 +124,16 @@ cdef extern from "precice/SolverInterface.hpp"  namespace "precice":
       void readScalarData (int dataID, int valueIndex, double& value)
 
 
+cdef extern from "precice/SolverInterface.hpp"  namespace "precice::constants":
+   const string& actionWriteInitialData()
+   const string& actionWriteIterationCheckpoint()
+   const string& actionReadIterationCheckpoint()
+
+
 cdef class Interface:
    cdef SolverInterface *thisptr # hold a C++ instance being wrapped
    
+   # construction and configuration
    # constructor
 
    def __cinit__ (self, solver_name, int solver_process_index, int solver_process_size):
@@ -121,6 +148,7 @@ cdef class Interface:
    def configure (self, configuration_file_name):
       self.thisptr.configure (convert(configuration_file_name))
 
+   # steering methods
    # initialize
    def initialize (self):
       return self.thisptr.initialize ()
@@ -137,6 +165,7 @@ cdef class Interface:
    def finalize (self):
       self.thisptr.finalize ()
 
+   # status queries
    # get dimensions
    def get_dimensions (self):
       return self.thisptr.getDimensions ()
@@ -157,6 +186,15 @@ cdef class Interface:
    def is_timestep_complete (self):
       return self.thisptr.isTimestepComplete ()
 
+   # returns whether the solver has to evaluate the surrogate model representation
+   def has_to_evaluate_surrogate_model (self):
+      return self.thisptr.hasToEvaluateSurrogateModel ()
+
+   # checks if the solver has to evaluate the fine model representation
+   def has_to_evaluate_fine_model (self):
+      return self.thisptr.hasToEvaluateFineModel ()
+
+   # action methods
    # check if action is needed
    def is_action_required (self, action):
       return self.thisptr.isActionRequired (action)
@@ -165,6 +203,7 @@ cdef class Interface:
    def fulfilled_action (self, action):
       self.thisptr.fulfilledAction (action)
 
+   # mesh access
    # hasMesh
    def has_mesh(self, mesh_name):
       return self.thisptr.hasMesh (convert(mesh_name))
@@ -177,14 +216,58 @@ cdef class Interface:
    def get_mesh_ids (self):
       return self.thisptr.getMeshIDs ()
 
-   # hasData
-   def has_data (self, data_name, mesh_id):
-      return self.thisptr.hasData(convert(data_name), mesh_id)
+   # returns a handle to a created mesh
+   def get_mesh_handle(self, mesh_name):
+      raise Exception("The API method get_mesh_handle is not yet available for the Python bindings.")
 
-   def get_data_id (self, data_name, mesh_id):
-      return self.thisptr.getDataID (convert(data_name), mesh_id)
+   # creates a mesh vertex
+   def set_mesh_vertex(self, mesh_id, position):
+      cdef double* position_
+      position_ = <double*> malloc(len(position) * sizeof(double))
 
+      if position_ is NULL:
+         raise MemoryError()
+
+      for i in xrange(len(position)):
+         position_[i] = position[i]
+
+      vertex_id = self.thisptr.setMeshVertex(mesh_id, position_)
+
+      free(position_)
+
+      return vertex_id
+
+   # returns the number of vertices of a mesh
+   def get_mesh_vertex_size (self, mesh_id):
+      return self.thisptr.getMeshVertexSize(mesh_id)
+  
+   # creates multiple mesh vertices
    def set_mesh_vertices (self, mesh_id, size, positions, ids):
+      cdef int* ids_
+      cdef double* positions_
+      ids_ = <int*> malloc(len(ids) * sizeof(int))
+      positions_ = <double*> malloc(len(positions) * sizeof(double))
+
+      if ids_ is NULL or positions_ is NULL:
+         raise MemoryError()
+      
+      for i in xrange(len(ids)):
+         ids_[i] = ids[i]  # TODO: remove this and initialize ids_ empty. ids_ is used as return buffer.
+      for i in xrange(len(positions)):
+         positions_[i] = positions[i]
+
+      self.thisptr.setMeshVertices (mesh_id, size, positions_, ids_)
+
+      for i in xrange(len(ids)):
+         ids[i] = ids_[i]
+      for i in xrange(len(positions)):
+         positions[i] = positions_[i]  # TODO: remove this. Writing positions_ back to positions is unnecessary. positions_ are const!
+
+      free(ids_)
+      free(positions_)
+
+   # get vertex positions for multiple vertex ids from a given mesh
+   def get_mesh_vertices(self, mesh_id, size, ids, positions):
       cdef int* ids_
       cdef double* positions_
       ids_ = <int*> malloc(len(ids) * sizeof(int))
@@ -196,21 +279,17 @@ cdef class Interface:
       for i in xrange(len(ids)):
          ids_[i] = ids[i]
       for i in xrange(len(positions)):
-         positions_[i] = positions[i]
+         positions_[i] = 0  # TODO: initialize empty: positions_ are used as return buffer.
 
-      self.thisptr.setMeshVertices (mesh_id, size, positions_, ids_)
+      self.thisptr.getMeshVertices (mesh_id, size, ids_, positions_)
 
-      for i in xrange(len(ids)):
-         ids[i] = ids_[i]
       for i in xrange(len(positions)):
          positions[i] = positions_[i]
 
       free(ids_)
       free(positions_)
 
-   def get_mesh_vertex_size (self, mesh_id):
-      return self.thisptr.getMeshVertexSize(mesh_id)
-
+   # gets mesh vertex IDs from positions
    def get_mesh_vertex_ids_from_positions (self, mesh_id, size, positions, ids):
       cdef int* ids_
       cdef double* positions_
@@ -236,6 +315,7 @@ cdef class Interface:
       free(ids_)
       free(positions_)
 
+   # sets mesh edge from vertex IDs, returns edge ID
    def set_mesh_edge (self, mesh_id, first_vertex_id, second_vertex_id):
       return self.thisptr.setMeshEdge (mesh_id, first_vertex_id, second_vertex_id)
 
@@ -251,6 +331,14 @@ cdef class Interface:
    def set_mesh_quad_with_edges (self, mesh_id, first_vertex_id, second_vertex_id, third_vertex_id, fourth_vertex_id):
       self.thisptr.setMeshQuadWithEdges (mesh_id, first_vertex_id, second_vertex_id, third_vertex_id, fourth_vertex_id)
 
+   # data access
+   # hasData
+   def has_data (self, data_name, mesh_id):
+      return self.thisptr.hasData(convert(data_name), mesh_id)
+
+   def get_data_id (self, data_name, mesh_id):
+      return self.thisptr.getDataID (convert(data_name), mesh_id)
+   
    def map_read_data_to (self, to_mesh_id):
       self.thisptr.mapReadDataTo (to_mesh_id)
 
@@ -392,3 +480,13 @@ cdef class Interface:
 
    def read_scalar_data (self, int data_id, int value_index, double& value):
       self.thisptr.readScalarData (data_id, value_index, value)
+
+def action_write_initial_data ():
+   return actionWriteInitialData()
+   
+def action_write_iteration_checkpoint ():
+   return actionWriteIterationCheckpoint()
+
+def action_read_iteration_checkpoint ():
+   return actionReadIterationCheckpoint()
+

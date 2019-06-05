@@ -24,7 +24,7 @@ void validate_result_equals_reference(
     std::vector<int> &offsets,
     bool              partitionedRowWise)
 {
-  int off = offsets[utils::MasterSlave::_rank];
+  int off = offsets[utils::MasterSlave::getRank()];
   for (int i = 0; i < result_local.rows(); i++) {
     for (int j = 0; j < result_local.cols(); j++) {
       if (partitionedRowWise) {
@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(ParVectorOperations, * boost::unit_test::fixture<testing::M
   BOOST_TEST(testing::equals(res2[0], 10.));
   BOOST_TEST(testing::equals(res2[1], 10.));
 
-  if (utils::MasterSlave::_masterMode) {
+  if (utils::MasterSlave::isMaster()) {
     BOOST_TEST(testing::equals(res3[0], 10.));
     BOOST_TEST(testing::equals(res3[1], 10.));
     BOOST_TEST(testing::equals(ires1, 10));
@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(ParVectorOperations, * boost::unit_test::fixture<testing::M
   Eigen::VectorXd vec2_local(n_local);
 
   // partition and distribute
-  int off = vertexOffsets[utils::MasterSlave::_rank];
+  int off = vertexOffsets[utils::MasterSlave::getRank()];
   for (int i = 0; i < n_local; i++) {
     vec1_local(i) = vec1(i + off);
     vec2_local(i) = vec2(i + off);
@@ -271,7 +271,7 @@ BOOST_AUTO_TEST_CASE(ParallelMatrixMatrixOp,  * boost::unit_test::fixture<testin
 
   // partition and distribute matrices
 
-  int off = vertexOffsets[utils::MasterSlave::_rank];
+  int off = vertexOffsets[utils::MasterSlave::getRank()];
   for (int i = 0; i < n_global; i++)
     for (int j = 0; j < n_local; j++) {
       J_local(i, j)  = J_global(i, j + off);
