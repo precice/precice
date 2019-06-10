@@ -27,9 +27,7 @@ cd $FUTURE_PYTHON_BINDINGS_DIR
 
 # test bindings
 export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:$TRAVIS_BUILD_DIR/src
-pip3 install --user setuptools cython numpy
 python3 setup.py test
-
 
 # install bindings
 python3 setup.py build_ext --include-dirs=$TRAVIS_BUILD_DIR/src --library-dirs=$TRAVIS_BUILD_DIR/build/last
