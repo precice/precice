@@ -26,11 +26,13 @@ export FUTURE_PYTHON_BINDINGS_DIR=$TRAVIS_BUILD_DIR/src/precice/bindings/python_
 cd $FUTURE_PYTHON_BINDINGS_DIR
 
 # test bindings
+export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:$TRAVIS_BUILD_DIR/src
 pip3 install --user setuptools cython numpy
 python3 setup.py test
 
+
 # install bindings
-python3 setup.py config -I${TRAVIS_BUILD_DIR}/src -L${TRAVIS_BUILD_DIR}/build -lprecice
+python3 setup.py build_ext --include-dirs=$TRAVIS_BUILD_DIR/src --library-dirs=$TRAVIS_BUILD_DIR/build/last
 python3 setup.py install --user
 
 export PYTHON_BINDINGS_DIR=$TRAVIS_BUILD_DIR/src/precice/bindings/python
@@ -38,3 +40,5 @@ cd $PYTHON_BINDINGS_DIR
 
 # install bindings
 pip3 install --user .
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$TRAVIS_BUILD_DIR/build
+python3 -c "import precice_future"
