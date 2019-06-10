@@ -7,13 +7,11 @@ These are the python bindings for preCICE.
 
 We recommend [using pip3](https://github.com/precice/precice/blob/develop/src/precice/bindings/python/README.md#using-pip3) for the sake of simplicity.
 
-For system installs of preCICE, this works out of the box.
-
-If preCICE was installed in a custom prefix, or not installed at all, you have to extend the following environment variables:
-- `LIBRARY_PATH`, `LD_LIBRARY_PATH` to the library location, or `$prefix/lib`
-- `CPATH` either to the `src` directory or the `$prefix/include`
-
 ## Using pip3
+
+### preCICE system installs
+
+For system installs of preCICE, this works out of the box.
 
 In this directory, execute:
 ```
@@ -22,7 +20,29 @@ $ pip3 install --user .
 
 This will fetch cython, compile the bindings and finally install the precice package.
 
-## With explicit include path, library path, or mpicompiler
+### preCICE at custom location (setting PATHS)
+
+If preCICE was installed in a custom prefix, or not installed at all, you have to extend the following environment variables:
+- `LIBRARY_PATH`, `LD_LIBRARY_PATH` to the library location, or `$prefix/lib`
+- `CPATH` either to the `src` directory or the `$prefix/include`
+
+## Using setup.py
+
+### preCICE system installs
+
+In this directory, execute:
+```
+$ python3 setup.py install --user
+```
+
+### preCICE at custom location (setting PATHS)
+
+see above. Then run
+```
+$ python3 setup.py install --user
+```
+
+### preCICE at custom location (explicit include path, library path, or mpicompiler)
 
 1. Install cython via pip3
 ```
@@ -32,15 +52,15 @@ $ pip3 install --user cython
 3. Build the bindings
 
 ```
-$ python3 setup.py build_ext --mpicompiler=mpicc --include-dirs=$PRECICE_ROOT/src --library-dirs=$PRECICE_ROOT/build/last 
+$ python3 setup.py build_ext --mpicompiler=mpicc --include-dirs=$PRECICE_ROOT/src --library-dirs=$PRECICE_ROOT/build/last
 ```
 
 **Options:**
-- `--include-dirs=`, default: `''`   
+- `--include-dirs=`, default: `''` 
   Path to the headers of preCICE, point to the sources `$PRECICE_ROOT/src`, or the your custom install prefix `$prefix/include`.
-- `--library-dirs=`, default: `''`  
+- `--library-dirs=`, default: `''` 
   Path to the libary of preCICE, point to the build directory (scons: `$PRECICE_ROOT/build/last`, cmake: wherever you configured the build), or to the custom install prefix `$prefix/lib`.
-- `--mpicompiler=`, default: `mpic++`  
+- `--mpicompiler=`, default: `mpic++` 
   MPI compiler wrapper of choice.
 
 **NOTES:**
@@ -54,21 +74,36 @@ $ python3 setup.py build_ext --mpicompiler=mpicc --include-dirs=$PRECICE_ROOT/sr
 $ python3 setup.py install --user
 ```
 
-4. Clean-up _optional_
+5. Clean-up _optional_
 ```
 $ python3 setup.py clean --all
 ```
 
 # Test the installation
 
+Update `LD_LIBRARY_PATH` such that python can find `precice.so`
+```
+$ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PRECICE_ROOT/build/last
+```
+
 Run the following to test the installation:
 ```
 $ python3 -c "import precice_future as precice"
 ```
 
-## (experimental) unit tests
+## Unit tests
 
-run tests with
+1. Clean-up __mandatory__ (because we must not link against the real `precice.so`, but we use a mocked version)
+```
+$ python3 setup.py clean --all
+```
+
+2. Set `CPLUS_INCLUDE_PATH` (we cannot use `build_ext` and the `--include-dirs` option here)
+```
+$ export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:$PRECICE_ROOT/src
+```
+
+3. Run tests with
 ```
 python3 setup.py test
 ```
