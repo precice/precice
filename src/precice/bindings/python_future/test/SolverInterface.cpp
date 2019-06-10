@@ -10,7 +10,6 @@ namespace impl{
 class SolverInterfaceImpl{};
 }
 
-
 SolverInterface:: SolverInterface
 (
   const std::string& participantName,
@@ -45,31 +44,31 @@ void SolverInterface:: finalize()
 int SolverInterface:: getDimensions() const
 {return fake_dimensions;}
 
-bool SolverInterface:: isCouplingOngoing()
+bool SolverInterface:: isCouplingOngoing() const
 {
   return 0;
 }
 
-bool SolverInterface:: isReadDataAvailable()
+bool SolverInterface:: isReadDataAvailable() const
 {
   return 0;
 }
 
 bool SolverInterface:: isWriteDataRequired
 (
-  double computedTimestepLength )
+  double computedTimestepLength ) const
 {
   return 0;
 }
 
-bool SolverInterface:: isTimestepComplete()
+bool SolverInterface:: isTimestepComplete() const
 {
   return 0;
 }
 
 bool SolverInterface:: isActionRequired
 (
-  const std::string& action )
+  const std::string& action ) const
 {
   return 0;
 }
@@ -88,12 +87,12 @@ bool SolverInterface:: hasMesh
 
 int SolverInterface:: getMeshID
 (
-  const std::string& meshName )
+  const std::string& meshName ) const
 {
   return fake_mesh_id;
 }
 
-std::set<int> SolverInterface:: getMeshIDs()
+std::set<int> SolverInterface:: getMeshIDs() const
 {
   return std::set<int>();
 }
@@ -107,17 +106,17 @@ bool SolverInterface:: hasData
 
 int SolverInterface:: getDataID
 (
-  const std::string& dataName, int meshID )
+  const std::string& dataName, int meshID ) const
 {
   return -1;
 }
 
-bool SolverInterface::hasToEvaluateSurrogateModel()
+bool SolverInterface::hasToEvaluateSurrogateModel() const
 {
   return 0;
 }
 
-bool SolverInterface::hasToEvaluateFineModel()
+bool SolverInterface::hasToEvaluateFineModel() const
 {
   return 0;
 }
@@ -132,7 +131,7 @@ int SolverInterface:: setMeshVertex
 
 int SolverInterface:: getMeshVertexSize
 (
-  int meshID)
+  int meshID) const
 {
   return -1;
 }
@@ -150,7 +149,7 @@ void SolverInterface:: getMeshVertices
   int        meshID,
   int        size,
   const int* ids,
-  double*    positions )
+  double*    positions ) const
 {}
 
 void SolverInterface:: getMeshVertexIDsFromPositions
@@ -158,7 +157,7 @@ void SolverInterface:: getMeshVertexIDsFromPositions
   int           meshID,
   int           size,
   const double* positions,
-  int*          ids )
+  int*          ids ) const
 {}
 
 int SolverInterface:: setMeshEdge
@@ -268,7 +267,7 @@ void SolverInterface:: readBlockVectorData
   int        dataID,
   int        size,
   const int* valueIndices,
-  double*    values )
+  double*    values ) const
 {
   for(int i = 0; i < size * this->getDimensions(); i++){
       values[i] = fake_read_write_buffer[i];
@@ -279,7 +278,7 @@ void SolverInterface:: readVectorData
 (
   int     dataID,
   int     valueIndex,
-  double* value )
+  double* value ) const
 {
   for(int i = 0; i < this->getDimensions(); i++){
       value[i] = fake_read_write_buffer[i];
@@ -291,7 +290,7 @@ void SolverInterface:: readBlockScalarData
   int        dataID,
   int        size,
   const int* valueIndices,
-  double*    values )
+  double*    values ) const
 {
   for(int i = 0; i<size; i++){
       values[i] = fake_read_write_buffer[i];
@@ -302,7 +301,7 @@ void SolverInterface:: readScalarData
 (
   int     dataID,
   int     valueIndex,
-  double& value )
+  double& value ) const
 {
     value = fake_read_write_buffer[0]; 
 }
