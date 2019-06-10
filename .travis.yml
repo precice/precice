@@ -83,7 +83,7 @@ matrix:
         - PY_CMD=python3
         - $PY_CMD -m pip install --user --upgrade pip wheel setuptools
       install:
-        - pip3 install --user cython numpy
+        - pip3 install --user cython numpy mpi4py
       script:
         - $TRAVIS_BUILD_DIR/tools/travis-bindings-test.sh
 
