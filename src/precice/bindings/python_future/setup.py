@@ -90,10 +90,8 @@ def get_extensions(mpi_compiler_wrapper, is_test):
     ]
 
 # some global definitions for an additional user input command
-doc_string = 'specify the mpi compiler wrapper'
-opt_name = 'mpicompiler='
 mpicompiler_default = "mpic++"
-add_option = [(opt_name, None, doc_string)]
+add_option = [('mpicompiler=', None, 'specify the mpi compiler wrapper')]
 
 dependencies = ['cython']
 dependencies.append('mpi4py')  # only needed, if preCICE was compiled with MPI, see https://github.com/precice/precice/issues/311
@@ -115,7 +113,7 @@ class my_build_ext(build_ext, object):
     def finalize_options(self):
         print("#####")
         print("calling my_build_ext")
-        print("using --%s%s" % (opt_name, self.mpicompiler))
+        print("using --%s%s" % ("mpicompiler=", self.mpicompiler))
 
         if not self.distribution.ext_modules:
             print("adding extension")
@@ -141,7 +139,7 @@ class my_install(install, object):
 
 
 class my_build(build, object):
-    user_options = install.user_options + add_option
+    user_options = build.user_options + add_option
 
     def initialize_options(self):
         self.mpicompiler = mpicompiler_default
@@ -156,7 +154,7 @@ class my_build(build, object):
     def finalize_options(self):
         print("#####")
         print("calling my_build")
-        print("using --%s%s" % (opt_name, self.mpicompiler))
+        print("using --%s%s" % ("mpicompiler=", self.mpicompiler))
 
         if not self.distribution.ext_modules:
             print("adding extension")
