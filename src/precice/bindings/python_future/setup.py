@@ -64,13 +64,11 @@ def get_extensions(mpi_compiler_wrapper, is_test):
     link_args += mpi_link_args
     bindings_sources = [os.path.join(PYTHON_BINDINGS_PATH, APPNAME) + ".pyx"]
     test_sources = [os.path.join(PYTHON_BINDINGS_PATH, "test", "test_bindings_module" + ".pyx")]
-    include_path = []
     if not is_test:
         link_args.append("-lprecice")
     if is_test:
         bindings_sources.append(os.path.join(PYTHON_BINDINGS_PATH, "test", "SolverInterface.cpp"))
         test_sources.append(os.path.join(PYTHON_BINDINGS_PATH, "test", "SolverInterface.cpp"))
-        include_path.append(os.path.join(PYTHON_BINDINGS_PATH, "..", "..", ".."))
 
     return [
         Extension(
@@ -79,8 +77,7 @@ def get_extensions(mpi_compiler_wrapper, is_test):
                 libraries=[],
                 language="c++",
                 extra_compile_args=compile_args,
-                extra_link_args=link_args,
-                include_dirs=include_path
+                extra_link_args=link_args
             ),
         Extension(
                 "test_bindings_module",
@@ -88,8 +85,7 @@ def get_extensions(mpi_compiler_wrapper, is_test):
                 libraries=[],
                 language="c++",
                 extra_compile_args=compile_args,
-                extra_link_args=link_args,
-                include_dirs=include_path
+                extra_link_args=link_args
             )
     ]
 
