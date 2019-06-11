@@ -1,12 +1,9 @@
 #ifndef PRECICE_NO_MPI
 
 #include "MPIPortsCommunication.hpp"
+#include "ConnectionInfoPublisher.hpp"
 #include "utils/assertion.hpp"
 #include "utils/Parallel.hpp"
-#include "utils/Publisher.hpp"
-
-using precice::utils::Publisher;
-using precice::utils::ScopedPublisher;
 
 namespace precice
 {
@@ -44,10 +41,8 @@ void MPIPortsCommunication::acceptConnection(std::string const &acceptorName,
 
   MPI_Open_port(MPI_INFO_NULL, const_cast<char *>(_portName.data()));
 
-  const std::string addressFileName("." + requesterName + "-" + acceptorName + ".address");
-  Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
-  ScopedPublisher                        p(addressFileName);
-  p.write(_portName);
+  ConnectionInfoWriter conInfo(acceptorName, requesterName, _addressDirectory);
+  conInfo.write(_portName);
   DEBUG("Accept connection at " << _portName);
 
   size_t peerCurrent = 0; // Current peer to connect to
@@ -81,15 +76,14 @@ void MPIPortsCommunication::acceptConnection(std::string const &acceptorName,
     _communicators[requesterRank] = communicator;
 
   } while (++peerCurrent < requesterCommunicatorSize);
-  
+
   _isConnected = true;
 }
 
-void MPIPortsCommunication::acceptConnectionAsServer(
-    std::string const &acceptorName,
-    std::string const &requesterName,
-    int                acceptorRank,
-    int                requesterCommunicatorSize)
+void MPIPortsCommunication::acceptConnectionAsServer(std::string const &acceptorName,
+                                                     std::string const &requesterName,
+                                                     int                acceptorRank,
+                                                     int                requesterCommunicatorSize)
 {
   TRACE(acceptorName, requesterName, acceptorRank, requesterCommunicatorSize);
   CHECK(requesterCommunicatorSize > 0, "Requester communicator size has to be > 0!");
@@ -99,11 +93,8 @@ void MPIPortsCommunication::acceptConnectionAsServer(
 
   MPI_Open_port(MPI_INFO_NULL, const_cast<char *>(_portName.data()));
 
-  const std::string addressFileName("." + requesterName + "-" +
-                                    acceptorName + "-" + std::to_string(acceptorRank) + ".address");
-  Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
-  ScopedPublisher                        p(addressFileName);
-  p.write(_portName);
+  ConnectionInfoWriter conInfo(acceptorName, requesterName, acceptorRank, _addressDirectory);
+  conInfo.write(_portName);
   DEBUG("Accept connection at " << _portName);
 
   for (int connection = 0; connection < requesterCommunicatorSize; ++connection) {
@@ -128,10 +119,9 @@ void MPIPortsCommunication::requestConnection(std::string const &acceptorName,
   assertion(not isConnected());
   _isAcceptor = false;
 
-  const std::string addressFileName("." + requesterName + "-" + acceptorName + ".address");
-  Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
-  Publisher p(addressFileName);
-  _portName = p.read();
+  ConnectionInfoReader conInfo(acceptorName, requesterName, _addressDirectory);
+  _portName = conInfo.read();
+      
   DEBUG("Request connection to " << _portName);
 
   MPI_Comm communicator;
@@ -159,12 +149,8 @@ void MPIPortsCommunication::requestConnectionAsClient(std::string      const &ac
   _isAcceptor = false;
 
   for (auto const & acceptorRank : acceptorRanks) {
-    const std::string addressFileName("." + requesterName + "-" +
-                                      acceptorName + "-" + std::to_string(acceptorRank) + ".address");
-
-    Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
-    Publisher p(addressFileName);
-    _portName = p.read();
+    ConnectionInfoReader conInfo(acceptorName, requesterName, acceptorRank, _addressDirectory);
+    _portName = conInfo.read();
     DEBUG("Request connection to " << _portName);
 
     MPI_Comm communicator;

@@ -92,7 +92,6 @@ def get_extensions(mpi_compiler_wrapper, is_test):
 # some global definitions for an additional user input command
 mpicompiler_default = "mpic++"
 add_option = [('mpicompiler=', None, 'specify the mpi compiler wrapper')]
-
 dependencies = ['cython']
 dependencies.append('mpi4py')  # only needed, if preCICE was compiled with MPI, see https://github.com/precice/precice/issues/311
 
