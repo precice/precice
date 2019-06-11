@@ -33,7 +33,7 @@ public:
     int     id );
 
   /// Destructor, empty.
-  virtual ~Edge () {}
+  ~Edge () override {}
 
   /// Returns number of spatial dimensions (2 or 3) the edge is embedded to.
   int getDimensions() const;

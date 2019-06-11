@@ -169,6 +169,7 @@ class my_test(test, object):
         self.distribution.is_test = True       
         super().initialize_options()
 
+# build precice.so python extension to be added to "PYTHONPATH" later
 setup(
     name=APPNAME,
     version=APPVERSION,
