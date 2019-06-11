@@ -143,8 +143,16 @@ set_target_properties(precice PROPERTIES
 
 # Setup Boost
 target_compile_definitions(precice PRIVATE BOOST_ALL_DYN_LINK BOOST_ASIO_ENABLE_OLD_SERVICES)
-target_link_libraries(precice PRIVATE ${Boost_LIBRARIES})
-target_include_directories(precice PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries(precice PRIVATE
+  Boost::boost
+  Boost::filesystem
+  Boost::log
+  Boost::log_setup
+  Boost::program_options
+  Boost::system
+  Boost::thread
+  Boost::unit_test_framework
+  )
 if(UNIX OR APPLE OR MINGW)
   target_link_libraries(precice PRIVATE ${CMAKE_DL_LIBS})
 endif()
@@ -210,7 +218,14 @@ target_link_libraries(binprecice
   Threads::Threads
   precice
   Eigen3::Eigen
-  ${Boost_LIBRARIES}
+  Boost::boost
+  Boost::filesystem
+  Boost::log
+  Boost::log_setup
+  Boost::program_options
+  Boost::system
+  Boost::thread
+  Boost::unit_test_framework
   )
 set_target_properties(binprecice PROPERTIES
   # precice is a C++11 project
@@ -239,7 +254,14 @@ target_link_libraries(testprecice
   Threads::Threads
   precice
   Eigen3::Eigen
-  ${Boost_LIBRARIES}
+  Boost::boost
+  Boost::filesystem
+  Boost::log
+  Boost::log_setup
+  Boost::program_options
+  Boost::system
+  Boost::thread
+  Boost::unit_test_framework
   )
 set_target_properties(testprecice PROPERTIES
   # precice is a C++11 project
