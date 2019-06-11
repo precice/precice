@@ -157,44 +157,34 @@ public:
 
   /// Performs a reduce summation on the rank given by rankMaster
   virtual void reduceSum(double *itemsToSend, double *itemsToReceive, int size, int rankMaster);
-
   /// Performs a reduce summation on the master, every other rank has to call reduceSum
   virtual void reduceSum(double *itemsToSend, double *itemsToReceive, int size);
 
   virtual void reduceSum(int itemToSend, int &itemToReceive, int rankMaster);
-
   virtual void reduceSum(int itemsToSend, int &itemsToReceive);
 
   virtual void allreduceSum(double *itemsToSend, double *itemsToReceive, int size, int rankMaster);
-
   virtual void allreduceSum(double *itemsToSend, double *itemsToReceive, int size);
 
   virtual void allreduceSum(double itemToSend, double &itemToReceive, int rankMaster);
-
   virtual void allreduceSum(double itemToSend, double &itemToReceive);
 
   virtual void allreduceSum(int itemToSend, int &itemToReceive, int rankMaster);
-
   virtual void allreduceSum(int itemToSend, int &itemToReceive);
 
   virtual void broadcast(const int *itemsToSend, int size);
-
   virtual void broadcast(int *itemsToReceive, int size, int rankBroadcaster);
 
   virtual void broadcast(int itemToSend);
-
   virtual void broadcast(int &itemToReceive, int rankBroadcaster);
 
   virtual void broadcast(const double *itemsToSend, int size);
-
   virtual void broadcast(double *itemsToReceive, int size, int rankBroadcaster);
 
   virtual void broadcast(double itemToSend);
-
   virtual void broadcast(double &itemToReceive, int rankBroadcaster);
 
   virtual void broadcast(bool itemToSend);
-
   virtual void broadcast(bool &itemToReceive, int rankBroadcaster);
 
   virtual void broadcast(std::vector<int> const &v);
@@ -299,7 +289,7 @@ public:
   }
 
 protected:
-  /// Rank offset for masters-slave communication, since ranks are from 0 to size - 2
+  /// Rank offset for masters-slave communication, since ranks are from 0 to size-2
   int _rankOffset = 0;
 
   bool _isConnected = false;

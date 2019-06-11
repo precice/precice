@@ -52,10 +52,6 @@ message(STATUS "Build configuration: " ${CMAKE_BUILD_TYPE})
 # Setup Options
 #
 
-set(Platform "none" CACHE STRING "Special configurations for certain platforms")
-set_property(CACHE Platform PROPERTY STRINGS none "SuperMUC")
-message(STATUS "Special platform settings: " ${Platform})
-
 option(MPI "Enables MPI-based communication and running coupling tests." ON)
 option(PETSC "Enable use of the PETSc linear algebra library." ON)
 option(PYTHON "Python support" ON)
@@ -69,7 +65,6 @@ print_configuration(
   "MPI;Build with MPI"
   "PETSC;Build with PETSC"
   "PYTHON;Build with PYTHON"
-  "Platform;Special platform settings"
   "PRECICE_Packages;Configure package generation"
   "PRECICE_InstallTest;Install tests/testfiles"
   )
@@ -156,10 +151,6 @@ target_compile_definitions(precice PRIVATE "$<$<CONFIG:DEBUG>:EIGEN_INITIALIZE_M
 # Setup LIBXML2
 target_include_directories(precice PRIVATE ${LIBXML2_INCLUDE_DIR})
 target_link_libraries(precice PRIVATE ${LIBXML2_LIBRARIES})
-
-if (Platform STREQUAL "SuperMUC")
-  target_compile_definitions(precice PRIVATE SuperMUC_WORK)
-endif()
 
 # Setup MPI
 if (MPI)

@@ -84,7 +84,7 @@ vars.Add(BoolVariable("mpi", "Enables MPI-based communication and running coupli
 vars.Add(BoolVariable("petsc", "Enable use of the PETSc linear algebra library.", True))
 vars.Add(BoolVariable("python", "Used for Python scripted solver actions.", False))
 vars.Add(BoolVariable("gprof", "Used in detailed performance analysis.", False))
-vars.Add(EnumVariable('platform', 'Special configuration for certain platforms', "none", allowed_values=('none', 'supermuc', 'hazelhen')))
+vars.Add(EnumVariable('platform', 'Special configuration for certain platforms', "none", allowed_values=('none', 'hazelhen')))
 
 env = Environment(variables = vars, ENV = os.environ, tools = ["default", "textfile"])
 
@@ -225,6 +225,7 @@ checkAdd("boost_system")
 checkAdd("boost_filesystem")
 checkAdd("boost_program_options")
 checkAdd("boost_unit_test_framework")
+checkAdd("boost_iostreams")
 
 checkAdd(header = 'boost/vmd/is_empty.hpp', usage = 'Boost Variadic Macro Data Library')
 checkAdd(header = 'boost/geometry.hpp', usage = 'Boost Geometry Library')
@@ -292,9 +293,7 @@ if env["gprof"]:
     buildpath += "-gprof"
 
 # ====== Special Platforms ======
-if env["platform"] == "supermuc":
-    env.Append(CPPDEFINES = ['SuperMUC_WORK'])
-elif env["platform"] == "hazelhen":
+if env["platform"] == "hazelhen":
     env.Append(LINKFLAGS = ['-dynamic']) # Needed for correct linking against boost.log
 
 # ====== LibXML2 ======
