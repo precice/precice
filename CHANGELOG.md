@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file. For future 
 
 ## develop
 
+- More "pythonic" python bindings `precice_future` are introduced. The python bindings `precice` are deprecated and will be removed in preCICE Version 2.0.0. If you still want to use them, please install `precice` and `precice_future`. Our recommendation, if you want to use the new bindings: Use `import precice_future as precice`.
+
 ## 1.5.0
 
 - Added CMake alias `precice::precice` which mimics the namespaced library name after calling `find_package(precice)`. This allows seamless use as a subproject.

@@ -1,9 +1,7 @@
 Python language bindings for preCICE
 ------------------------------------
 
-These are the python bindings for preCICE. 
-
-**RECOMMENDATION: Use the new python bindings with `import precice_future as precice`.** This makes modifications to your adapter necessary, but these bindings are deprecated and will be removed in preCICE Version 2.
+These are the python bindings for preCICE.
 
 # Installing the package
 
@@ -65,12 +63,15 @@ $ python3 setup.py clean --all
 
 Run the following to test the installation:
 ```
-$ python3 -c "import precice"
+$ python3 -c "import precice_future as precice"
 ```
 
-## additional preliminary tests
+## (experimental) unit tests
 
-You can find an extended solverdummy in `test`. Here some of the API functions are called and the results are checked with assertions. This is currently **not a proper automated unit test**. See also https://github.com/precice/precice/issues/409.
+run tests with
+```
+python3 setup.py test
+```
 
 # Using with MPI
 
