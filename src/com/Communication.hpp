@@ -51,6 +51,9 @@ public:
   {
   }
 
+  /// @name Connection Setup
+  /// @{
+
   /// Returns true, if a connection to a remote participant has been setup.
   virtual bool isConnected()
   {
@@ -155,6 +158,11 @@ public:
    */
   virtual void cleanupEstablishment() {}
 
+  /// @}
+  
+  /// @name Reduction
+  /// @{
+
   /// Performs a reduce summation on the rank given by rankMaster
   virtual void reduceSum(double *itemsToSend, double *itemsToReceive, int size, int rankMaster);
   /// Performs a reduce summation on the master, every other rank has to call reduceSum
@@ -171,6 +179,11 @@ public:
 
   virtual void allreduceSum(int itemToSend, int &itemToReceive, int rankMaster);
   virtual void allreduceSum(int itemToSend, int &itemToReceive);
+
+  /// @}
+  
+  /// @name Broadcast
+  /// @{
 
   virtual void broadcast(const int *itemsToSend, int size);
   virtual void broadcast(int *itemsToReceive, int size, int rankBroadcaster);
@@ -192,6 +205,11 @@ public:
 
   virtual void broadcast(std::vector<double> const &v);
   virtual void broadcast(std::vector<double>& v, int rankBroadcaster);
+
+  /// @}
+  
+  /// @name Send
+  /// @{
   
   /// Sends a std::string to process with given rank.
   virtual void send(std::string const &itemToSend, int rankReceiver) = 0;
@@ -233,6 +251,11 @@ public:
   /// Asynchronously sends a bool to process with given rank.
   /// @attention The caller must guarantee that the lifetime of the item extends to the completion of the request!
   virtual PtrRequest aSend( const bool & itemToSend, int rankReceiver) = 0;
+
+  /// @}
+  
+  /// @name Receive
+  /// @{
 
   /// Receives a std::string from process with given rank.
   virtual void receive(std::string &itemToReceive, int rankSender) = 0;
@@ -281,6 +304,7 @@ public:
   /// Receives an std::vector of doubles. The vector will be resized accordingly.
   virtual void receive(std::vector<double> &v, int rankSender) = 0;
 
+  /// @}
 
   /// Set rank offset.
   void setRankOffset(int rankOffset)
