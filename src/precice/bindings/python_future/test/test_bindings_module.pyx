@@ -7,7 +7,6 @@ cimport precice_future
 from unittest import TestCase
 import numpy as np
 
-
 class TestBindings(TestCase):
     """
     Test suite to check correct behaviour of python bindings.
