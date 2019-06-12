@@ -3,6 +3,7 @@ import subprocess
 from enum import Enum
 
 from setuptools import setup
+from setuptools.command.test import test
 from Cython.Distutils.extension import Extension
 from Cython.Distutils.build_ext import new_build_ext as build_ext
 from Cython.Build import cythonize
@@ -50,16 +51,29 @@ def determine_mpi_args(mpi_compiler_wrapper):
     return mpi_compile_args, mpi_link_args
 
 
-def get_extensions(mpi_compiler_wrapper):
+def get_extensions(mpi_compiler_wrapper, is_test):
+    compile_args = []
+    link_args = []
+
     mpi_compile_args, mpi_link_args = determine_mpi_args(mpi_compiler_wrapper)
     
-    compile_args = ["-Wall", "-std=c++11"] + mpi_compile_args
-    link_args = ["-lprecice"] + mpi_link_args
+    compile_args += mpi_compile_args
+    compile_args.append("-Wall")
+    compile_args.append("-std=c++11")
+
+    link_args += mpi_link_args
+    bindings_sources = [os.path.join(PYTHON_BINDINGS_PATH, APPNAME) + ".pyx"]
+    test_sources = [os.path.join(PYTHON_BINDINGS_PATH, "test", "test_bindings_module" + ".pyx")]
+    if not is_test:
+        link_args.append("-lprecice")
+    if is_test:
+        bindings_sources.append(os.path.join(PYTHON_BINDINGS_PATH, "test", "SolverInterface.cpp"))
+        test_sources.append(os.path.join(PYTHON_BINDINGS_PATH, "test", "SolverInterface.cpp"))
 
     return [
         Extension(
                 APPNAME,
-                sources=[os.path.join(PYTHON_BINDINGS_PATH, APPNAME) + ".pyx"],
+                sources=bindings_sources,
                 libraries=[],
                 language="c++",
                 extra_compile_args=compile_args,
@@ -67,7 +81,7 @@ def get_extensions(mpi_compiler_wrapper):
             ),
         Extension(
                 "test_bindings_module",
-                sources=[os.path.join(PYTHON_BINDINGS_PATH, "test", "test_bindings_module" + ".pyx")],
+                sources=test_sources,
                 libraries=[],
                 language="c++",
                 extra_compile_args=compile_args,
@@ -75,13 +89,11 @@ def get_extensions(mpi_compiler_wrapper):
             )
     ]
 
-
 # some global definitions for an additional user input command
-doc_string = 'specify the mpi compiler wrapper'
-opt_name = 'mpicompiler='
 mpicompiler_default = "mpic++"
-add_option = [(opt_name, None, doc_string)]
-
+add_option = [('mpicompiler=', None, 'specify the mpi compiler wrapper')]
+dependencies = ['cython']
+dependencies.append('mpi4py')  # only needed, if preCICE was compiled with MPI, see https://github.com/precice/precice/issues/311
 
 class my_build_ext(build_ext, object):
     description = "building with optional specification of an alternative mpi compiler wrapper"
@@ -89,20 +101,26 @@ class my_build_ext(build_ext, object):
 
     def initialize_options(self):
         self.mpicompiler = mpicompiler_default
-        super(my_build_ext, self).initialize_options()
+
+        try:
+            self.distribution.is_test
+        except AttributeError:
+            self.distribution.is_test = False
+        
+        super().initialize_options()
         
     def finalize_options(self):
         print("#####")
         print("calling my_build_ext")
-        print("using --%s%s" % (opt_name, self.mpicompiler))
+        print("using --%s%s" % ("mpicompiler=", self.mpicompiler))
 
         if not self.distribution.ext_modules:
             print("adding extension")
-            self.distribution.ext_modules = cythonize(get_extensions(self.mpicompiler))
+            self.distribution.ext_modules = cythonize(get_extensions(self.mpicompiler, self.distribution.is_test))
 
         print("#####")
 
-        super(my_build_ext, self).finalize_options()
+        super().finalize_options()
 
 
 class my_install(install, object):
@@ -110,31 +128,45 @@ class my_install(install, object):
 
     def initialize_options(self):
         self.mpicompiler = mpicompiler_default
-        super(my_install, self).initialize_options()
+
+        try:
+            self.distribution.is_test
+        except AttributeError:
+            self.distribution.is_test = False
+
+        super().initialize_options()
 
 
 class my_build(build, object):
-    user_options = install.user_options + add_option
+    user_options = build.user_options + add_option
 
     def initialize_options(self):
         self.mpicompiler = mpicompiler_default
-        super(my_build, self).initialize_options()
+
+        try:
+            self.distribution.is_test
+        except AttributeError:
+            self.distribution.is_test = False
+
+        super().initialize_options()
 
     def finalize_options(self):
         print("#####")
         print("calling my_build")
-        print("using --%s%s" % (opt_name, self.mpicompiler))
+        print("using --%s%s" % ("mpicompiler=", self.mpicompiler))
 
         if not self.distribution.ext_modules:
             print("adding extension")
-            self.distribution.ext_modules = cythonize(get_extensions(self.mpicompiler))
+            self.distribution.ext_modules = cythonize(get_extensions(self.mpicompiler, self.distribution.is_test))
 
         print("#####")
 
-        super(my_build, self).finalize_options()
+        super().finalize_options()
 
-dependencies = ['cython']
-dependencies.append('mpi4py')  # only needed, if preCICE was compiled with MPI, see https://github.com/precice/precice/issues/311
+class my_test(test, object):
+    def initialize_options(self):
+        self.distribution.is_test = True       
+        super().initialize_options()
 
 # build precice.so python extension to be added to "PYTHONPATH" later
 setup(
@@ -147,7 +179,12 @@ setup(
     license='LGPL-3.0',
     python_requires='>=3',
     install_requires=dependencies,
-    cmdclass={'build_ext': my_build_ext,
+    cmdclass={'test': my_test,
+              'build_ext': my_build_ext,
               'build': my_build,
               'install': my_install},
+    #ensure pxd-files:
+    package_data={ 'precice_future': ['*.pxd']},
+    include_package_data=True,
+    zip_safe=False  #needed because setuptools are used
 )
