@@ -57,6 +57,7 @@ option(PETSC "Enable use of the PETSc linear algebra library." ON)
 option(PYTHON "Python support" ON)
 option(PRECICE_Packages "Configure package generation." ON)
 option(PRECICE_InstallTest "Add test binary and necessary files to install target." ON)
+option(BUILD_SHARED_LIBS "Build shared libraries by default" OFF)
 
 # Print information about this configuration
 include(PrintHelper)
