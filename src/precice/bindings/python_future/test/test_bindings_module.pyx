@@ -4,6 +4,7 @@
 # run with python -m unittest tests.test_fenicsadapter
 
 cimport precice_future
+from unittest.mock import MagicMock, patch
 from unittest import TestCase
 import numpy as np
 

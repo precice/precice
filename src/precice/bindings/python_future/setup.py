@@ -3,7 +3,6 @@ import subprocess
 from enum import Enum
 
 from setuptools import setup
-from setuptools.command.test import test
 from Cython.Distutils.extension import Extension
 from Cython.Distutils.build_ext import new_build_ext as build_ext
 from Cython.Build import cythonize
@@ -88,6 +87,7 @@ def get_extensions(mpi_compiler_wrapper, is_test):
                 extra_link_args=link_args
             )
     ]
+
 
 # some global definitions for an additional user input command
 mpicompiler_default = "mpic++"
