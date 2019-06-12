@@ -3,6 +3,7 @@ import subprocess
 from enum import Enum
 
 from setuptools import setup
+from setuptools.command.test import test
 from Cython.Distutils.extension import Extension
 from Cython.Distutils.build_ext import new_build_ext as build_ext
 from Cython.Build import cythonize
@@ -88,11 +89,9 @@ def get_extensions(mpi_compiler_wrapper, is_test):
             )
     ]
 
-
 # some global definitions for an additional user input command
 mpicompiler_default = "mpic++"
 add_option = [('mpicompiler=', None, 'specify the mpi compiler wrapper')]
-
 dependencies = ['cython']
 dependencies.append('mpi4py')  # only needed, if preCICE was compiled with MPI, see https://github.com/precice/precice/issues/311
 
@@ -169,6 +168,7 @@ class my_test(test, object):
         self.distribution.is_test = True       
         super().initialize_options()
 
+# build precice.so python extension to be added to "PYTHONPATH" later
 setup(
     name=APPNAME,
     version=APPVERSION,
