@@ -155,6 +155,39 @@ BOOST_AUTO_TEST_CASE(DistanceTestFlatDoubleTriangle)
   BOOST_TEST(rt_v3 > 0);
 }
 
+BOOST_AUTO_TEST_CASE(DistanceTestFlatDoubleTriangleInsideOutside)
+{
+  precice::mesh::Mesh mesh("MyMesh", 3, false);
+  auto & a = mesh.createVertex(Eigen::Vector3d(0, 0, 0));
+  auto & b = mesh.createVertex(Eigen::Vector3d(1, 0, 0));
+  auto & c = mesh.createVertex(Eigen::Vector3d(1, 1, 0));
+  auto & d = mesh.createVertex(Eigen::Vector3d(0, 1, 0));
+
+  auto & ab = mesh.createEdge(a, b);
+  auto & bd = mesh.createEdge(b, d);
+  auto & da = mesh.createEdge(d, a);
+  auto & dc = mesh.createEdge(d, c);
+  auto & cb = mesh.createEdge(c, b);
+
+  auto & lt = mesh.createTriangle(ab, bd, da);
+  auto & rt = mesh.createTriangle(bd, dc, cb);
+  BOOST_TEST_MESSAGE("Left  Triangle:" << lt);
+  BOOST_TEST_MESSAGE("Right Triangle:" << rt);
+
+  auto & lv = mesh.createVertex(Eigen::Vector3d(.25,.25,0));
+  auto & rv = mesh.createVertex(Eigen::Vector3d(.75,.75,0));
+
+  auto lv_lt = bg::comparable_distance(lv, lt);
+  auto lv_rt = bg::comparable_distance(lv, rt);
+  BOOST_TEST( precice::testing::equals(lv_lt, 0.0), lv_lt << " == 0.0");
+  BOOST_TEST(!precice::testing::equals(lv_rt, 0.0), lv_rt << " != 0.0");
+
+  auto rv_lt = bg::comparable_distance(rv, lt);
+  auto rv_rt = bg::comparable_distance(rv, rt);
+  BOOST_TEST(!precice::testing::equals(rv_lt, 0.0), rv_lt << " != 0.0");
+  BOOST_TEST( precice::testing::equals(rv_rt, 0.0), rv_rt << " == 0.0");
+}
+
 BOOST_AUTO_TEST_CASE(DistanceTestSlopedTriangle)
 {
   precice::mesh::Mesh mesh("MyMesh", 3, false);
