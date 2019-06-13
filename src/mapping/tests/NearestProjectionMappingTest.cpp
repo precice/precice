@@ -26,6 +26,8 @@ BOOST_AUTO_TEST_CASE(testConservativeNonIncremental)
   outMesh->computeState();
   outMesh->allocateDataValues();
 
+  BOOST_TEST_MESSAGE(*outMesh);
+
   // Base-value for tests
   double value = 1.0;
 
@@ -58,8 +60,10 @@ BOOST_AUTO_TEST_CASE(testConservativeNonIncremental)
       mapping.setMeshes(inMesh, outMesh);
       mapping.computeMapping();
       mapping.map(inDataID, outDataID);
-      BOOST_TEST(values(0) == value * 1.5);
-      BOOST_TEST(values(1) == value * 1.5);
+      BOOST_TEST_CONTEXT(*inMesh) {
+          BOOST_TEST(values(0) == value * 1.5);
+          BOOST_TEST(values(1) == value * 1.5);
+      }
   }
   mapping.clear();
   {
@@ -83,16 +87,20 @@ BOOST_AUTO_TEST_CASE(testConservativeNonIncremental)
       mapping.setMeshes(inMesh, outMesh);
       mapping.computeMapping();
       mapping.map(inDataID, outDataID);
-      BOOST_TEST(values(0) == value * 2.0);
-      BOOST_TEST(values(1) == value * 1.0);
+      BOOST_TEST_CONTEXT(*inMesh) {
+          BOOST_TEST(values(0) == value * 4.0);
+          BOOST_TEST(values(1) == value * -1.0);
+      }
 
       // reset output value and remap
       //assign(values) = 0.0;
       values = Eigen::VectorXd::Constant(values.size(), 0.0);
 
       mapping.map(inDataID, outDataID);
-      BOOST_TEST(values(0) == value * 2.0);
-      BOOST_TEST(values(1) == value * 1.0);
+      BOOST_TEST_CONTEXT(*inMesh) {
+          BOOST_TEST(values(0) == value * 4.0);
+          BOOST_TEST(values(1) == value * -1.0);
+      }
   }
 }
 
