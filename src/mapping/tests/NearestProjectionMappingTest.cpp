@@ -31,9 +31,9 @@ BOOST_AUTO_TEST_CASE(testConservativeNonIncremental)
   // Base-value for tests
   double value = 1.0;
 
-  // Setup mapping with mapping coordinates and geometry used
-  mapping::NearestProjectionMapping mapping(mapping::Mapping::CONSERVATIVE, dimensions);
   {
+      // Setup mapping with mapping coordinates and geometry used
+      mapping::NearestProjectionMapping mapping(mapping::Mapping::CONSERVATIVE, dimensions);
       PtrMesh inMesh ( new Mesh("InMesh0", dimensions, false) );
       PtrData inData = inMesh->createData ( "Data0", 1 );
       int inDataID = inData->getID();
@@ -65,8 +65,9 @@ BOOST_AUTO_TEST_CASE(testConservativeNonIncremental)
           BOOST_TEST(values(1) == value * 1.5);
       }
   }
-  mapping.clear();
   {
+      // Setup mapping with mapping coordinates and geometry used
+      mapping::NearestProjectionMapping mapping(mapping::Mapping::CONSERVATIVE, dimensions);
       PtrMesh inMesh ( new Mesh("InMesh1", dimensions, false) );
       PtrData inData = inMesh->createData ( "Data1", 1 );
       int inDataID = inData->getID();
