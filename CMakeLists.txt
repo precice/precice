@@ -371,6 +371,12 @@ install(DIRECTORY "${preCICE_BINARY_DIR}/lib/pkgconfig"
   DESTINATION lib
 )
 
+#
+# Add uninstall
+#
+
+include(${CMAKE_CURRENT_LIST_DIR}/cmake/Uninstall.cmake)
+
 
 #
 # CTest
