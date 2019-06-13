@@ -363,13 +363,15 @@ BOOST_AUTO_TEST_CASE(Query_3D_FullMesh)
   auto& trb = inMesh->createTriangle(erd, erb, err);
 
   inMesh->allocateDataValues();
+  inMesh->computeState();
   inData->values() = Eigen::VectorXd::Constant(6, 1.0);
 
   PtrMesh outMesh(new Mesh("OutMesh", dimensions, false));
   PtrData outData = outMesh->createData("OutData", 1);
   outMesh->createVertex(Eigen::Vector3d{0.7, 0.5, 0.0});
   outMesh->allocateDataValues();
-  outData->values() = Eigen::VectorXd::Constant(1, 2.0);
+  outMesh->computeState();
+  outData->values() = Eigen::VectorXd::Constant(1, 0.0);
 
   // Setup mapping with mapping coordinates and geometry used
   precice::mapping::NearestProjectionMapping mapping(mapping::Mapping::CONSISTENT, dimensions);
@@ -378,7 +380,11 @@ BOOST_AUTO_TEST_CASE(Query_3D_FullMesh)
 
   mapping.computeMapping();
   BOOST_TEST(mapping.hasComputedMapping() == true);
+
+  BOOST_TEST_INFO("In Data:" << inData->values());
+  BOOST_TEST_INFO("Out Data before Mapping:" << outData->values());
   mapping.map(inData->getID(), outData->getID());
+  BOOST_TEST_INFO("Out Data after Mapping:" << outData->values());
   BOOST_TEST(outData->values()[0] == 1.0);
 }
 
