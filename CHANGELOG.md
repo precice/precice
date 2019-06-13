@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file. For future 
 ## develop
 
 - More "pythonic" python bindings `precice_future` are introduced. The python bindings `precice` are deprecated and will be removed in preCICE Version 2.0.0. If you still want to use them, please install `precice` and `precice_future`. Our recommendation, if you want to use the new bindings: Use `import precice_future as precice`.
+- Added CMake target to uninstall the project.
 
 ## 1.5.0
 
