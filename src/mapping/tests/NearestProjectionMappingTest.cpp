@@ -306,6 +306,7 @@ BOOST_AUTO_TEST_CASE(AxisAlignedTriangles)
   inMesh->createTriangle(inEAB, inEBD, inEDA);
   inMesh->createTriangle(inEBD, inEDC, inECB);
   inMesh->allocateDataValues();
+  inMesh->computeState();
   inData->values() << 1.0, 1.0, 1.0, 1.0;
 
   // Create mesh to map to with one vertex per defined traingle
@@ -314,6 +315,7 @@ BOOST_AUTO_TEST_CASE(AxisAlignedTriangles)
   outMesh->createVertex(Eigen::Vector3d{0.33, 0.33, 0});
   outMesh->createVertex(Eigen::Vector3d{0.66, 0.66, 0});
   outMesh->allocateDataValues();
+  outMesh->computeState();
   outData->values() << 0.0, 0.0;
 
   // Setup mapping with mapping coordinates and geometry used
@@ -323,7 +325,10 @@ BOOST_AUTO_TEST_CASE(AxisAlignedTriangles)
 
   mapping.computeMapping();
   BOOST_TEST(mapping.hasComputedMapping() == true);
+  BOOST_TEST_INFO("In Data:" << inData->values());
+  BOOST_TEST_INFO("Out Data before Mapping:" << outData->values());
   mapping.map(inData->getID(), outData->getID());
+  BOOST_TEST_INFO("Out Data after Mapping:" << outData->values());
   BOOST_TEST(outData->values() == outData->values().cwiseAbs());
 }
 
