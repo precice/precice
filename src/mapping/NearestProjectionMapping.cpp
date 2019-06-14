@@ -28,36 +28,6 @@ NearestProjectionMapping:: NearestProjectionMapping
   }
 }
 
-namespace {
-class InterpolationElementsGenerator {
-public:
-  InterpolationElementsGenerator(const mesh::Mesh &mesh)
-      : _mesh(mesh){};
-
-  query::InterpolationElements operator()(const mesh::Vertex& pos, mesh::PrimitiveIndex pi) const
-  {
-    using query::generateInterpolationElements;
-    using mesh::Primitive;
-    const auto idx = pi.index;
-    switch (pi.type) {
-    case (Primitive::Vertex):
-      return generateInterpolationElements(pos, _mesh.vertices()[idx]);
-    case (Primitive::Edge):
-      return generateInterpolationElements(pos, _mesh.edges()[idx]);
-    case (Primitive::Triangle):
-      return generateInterpolationElements(pos, _mesh.triangles()[idx]);
-    case (Primitive::Quad):
-      return generateInterpolationElements(pos, _mesh.quads()[idx]);
-    default:
-      throw std::invalid_argument{"Primitve is unknown"};
-    }
-  }
-
-private:
-  const mesh::Mesh &_mesh;
-};
-} // namespace
-
 void NearestProjectionMapping:: computeMapping()
 {
   TRACE()
