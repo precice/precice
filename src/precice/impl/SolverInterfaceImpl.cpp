@@ -1206,7 +1206,7 @@ void SolverInterfaceImpl:: readScalarData
         "You cannot call readScalarData on the vector data type " << context.toData->getName());
     assertion(context.fromData);
     auto& values = context.toData->values();
-    CHECK(0 <= valueIndex && valueIndex < valuesInternal.size(), "Value index out of range");
+    CHECK(0 <= valueIndex && valueIndex < values.size(), "Value index out of range");
     value = values[valueIndex];
 
   }
