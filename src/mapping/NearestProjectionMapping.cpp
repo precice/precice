@@ -31,23 +31,6 @@ NearestProjectionMapping:: NearestProjectionMapping
   }
 }
 
-void NearestProjectionMapping:: computeMapping()
-{
-  TRACE()
-  precice::utils::Event e("map.np.computeMapping.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
-  if (getConstraint() == CONSISTENT){
-      computeMappingConsistent();
-  } else {
-      computeMappingConservative();
-  }
-  auto negativeWeights = std::count_if(_weights.begin(), _weights.end(), [](const InterpolationElements& elems) -> bool {
-          return std::any_of(elems.begin(), elems.end(), [](const query::InterpolationElement& elem) -> bool {
-                  return elem.weight < 0.0;
-                  });
-          });
-  INFO("Extrapolating on " << negativeWeights << " / " << _weights.size() << " associaltions");
-}
-
 namespace{
     struct MatchType {
         double distance;
@@ -59,147 +42,51 @@ namespace{
     };
 }
 
-void NearestProjectionMapping:: computeMappingConsistent()
+void NearestProjectionMapping:: computeMapping()
 {
     TRACE(input()->vertices().size(), output()->vertices().size());
-    DEBUG("Compute consistent mapping");
-    assertion(getConstraint() == CONSISTENT, getConstraint());
-    const auto &oVertices = output()->vertices();
-    const auto &iVertices = output()->vertices();
-    _weights.resize(oVertices.size());
+    precice::utils::Event e("map.np.computeMapping.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
 
-    constexpr int nnearest = 4;
-
-    if (getDimensions() == 2) {
-        const auto &iEdges    = input()->edges();
-        //CHECK(oVertices.empty() || !iEdges.empty(), "Mesh \"" << input()->getName() << "\" does not contain Edges to project onto.");
-
-        std::vector<MatchType> matches;
-        matches.reserve(nnearest);
-
-        auto indexEdges = mesh::rtree::getEdgeRTree(input());
-        auto indexVertices = mesh::rtree::getVertexRTree(input());
-        for (size_t i = 0; i < oVertices.size(); i++) {
-            const Eigen::VectorXd &coords = oVertices[i].getCoords();
-            // Search for the output vertex inside the input meshes edges
-            matches.clear();
-            indexEdges->query(bg::index::nearest(coords, nnearest),
-                    boost::make_function_output_iterator([&](int match) {
-                        matches.emplace_back(bg::distance(coords, iEdges[match]), match);
-                    }));
-            std::sort(matches.begin(), matches.end());
-            bool found = false;
-            for (const auto& match: matches) {
-                auto weights = query::generateInterpolationElements(oVertices[i], iEdges[match.index]);
-                if (std::all_of(weights.begin(), weights.end(), [](query::InterpolationElement const & elem){ return elem.weight >= 0.0; })) {
-                    _weights[i] = std::move(weights);
-                    found = true;
-                    break;
-                }
-            }
-
-            if (not found) {
-                // Search for the output vertex inside the input meshes vertices
-                indexVertices->query(bg::index::nearest(coords, 1), 
-                        boost::make_function_output_iterator([&](int match) {
-                            _weights[i] = query::generateInterpolationElements(oVertices[i], iVertices[match]);
-                            }));
-            }
-        }
+    // Setup Direction of Mapping
+    mesh::PtrMesh from, to;
+    if (getConstraint() == CONSISTENT){
+        DEBUG("Compute consistent mapping");
+        from = output();
+        to   = input();
     } else {
-        const auto &iEdges    = input()->edges();
-        const auto &iTriangles = input()->triangles();
-        //CHECK(oVertices.empty() || !iTriangles.empty(), "Mesh \"" << input()->getName() << "\" does not contain Triangles to project onto.");
-
-        mesh::rtree::clear(*input()); // TODO Remove me
-        auto indexTriangles = mesh::rtree::getTriangleRTree(input());
-        auto indexEdges     = mesh::rtree::getEdgeRTree(input());
-        auto indexVertices  = mesh::rtree::getVertexRTree(input());
-
-        std::vector<MatchType> matches;
-        matches.reserve(nnearest);
-        for (size_t i = 0; i < oVertices.size(); i++) {
-            const Eigen::VectorXd &coords = oVertices[i].getCoords();
-
-            // Search for the output vertex inside the input meshes triangles
-            matches.clear();
-            indexTriangles->query(bg::index::nearest(coords, nnearest),
-                    boost::make_function_output_iterator([&](mesh::rtree::triangle_traits::IndexType const & match) {
-                        matches.emplace_back(bg::distance(coords, iTriangles[match.second]), match.second);
-                    }));
-            std::sort(matches.begin(), matches.end());
-            bool found = false;
-            for (const auto& match: matches) {
-                auto weights = query::generateInterpolationElements(oVertices[i], iTriangles[match.index]);
-                if (std::all_of(weights.begin(), weights.end(), [](query::InterpolationElement const & elem){ return elem.weight >= 0.0; })) {
-                    _weights[i] = std::move(weights);
-                    found = true;
-                    break;
-                }
-            }
-
-            if (not found) {
-                // Search for the output vertex inside the input meshes edges
-                matches.clear();
-                indexEdges->query(bg::index::nearest(coords, nnearest),
-                        boost::make_function_output_iterator([&](int match) {
-                            matches.emplace_back(bg::distance(coords, iEdges[match]), match);
-                            }));
-                std::sort(matches.begin(), matches.end());
-                for (const auto& match: matches) {
-                    auto weights = query::generateInterpolationElements(oVertices[i], iEdges[match.index]);
-                    if (std::all_of(weights.begin(), weights.end(), [](query::InterpolationElement const & elem){ return elem.weight >= 0.0; })) {
-                        _weights[i] = std::move(weights);
-                        found = true;
-                        break;
-                    }
-                }
-            }
-
-            if (not found) {
-                // Search for the output vertex inside the input meshes vertices
-                indexVertices->query(bg::index::nearest(coords, 1), 
-                        boost::make_function_output_iterator([&](int match) {
-                            _weights[i] = query::generateInterpolationElements(oVertices[i], iVertices[match]);
-                            }));
-            }
-        }
+        DEBUG("Compute conservative mapping");
+        from = input();
+        to   = output();
     }
-    _hasComputedMapping = true;
-}
 
-void NearestProjectionMapping:: computeMappingConservative()
-{
-    TRACE(output()->vertices().size(), input()->vertices().size());
-    DEBUG("Compute conservative mapping");
-    assertion(getConstraint() == CONSERVATIVE, getConstraint());
-    const auto &iVertices = input()->vertices();
-    const auto &oVertices = input()->vertices();
-    _weights.resize(iVertices.size());
+    const auto &fVertices = from->vertices();
+    const auto &tVertices = to->vertices();
+    const auto &tEdges    = to->edges();
+
+    _weights.resize(fVertices.size());
 
     constexpr int nnearest = 4;
 
     if (getDimensions() == 2) {
-        const auto &oEdges    = output()->edges();
-        // CHECK(iVertices.empty() || !oEdges.empty(), "Mesh \"" << output()->getName() << "\" does not contain Edges to project onto.");
+        //CHECK(fVertices.empty() || !tEdges.empty(), "Mesh \"" << to->getName() << "\" does not contain Edges to project onto.");
+
+        auto indexEdges = mesh::rtree::getEdgeRTree(to);
+        auto indexVertices = mesh::rtree::getVertexRTree(to);
 
         std::vector<MatchType> matches;
         matches.reserve(nnearest);
-
-        auto indexEdges = mesh::rtree::getEdgeRTree(output());
-        auto indexVertices = mesh::rtree::getVertexRTree(output());
-        for (size_t i = 0; i < iVertices.size(); i++) {
-            const Eigen::VectorXd &coords = iVertices[i].getCoords();
-            // Search for the output vertex inside the input meshes edges
+        for (size_t i = 0; i < fVertices.size(); i++) {
+            const Eigen::VectorXd &coords = fVertices[i].getCoords();
+            // Search for the from vertex inside the destination meshes edges
             matches.clear();
             indexEdges->query(bg::index::nearest(coords, nnearest),
                     boost::make_function_output_iterator([&](int match) {
-                        matches.emplace_back(bg::distance(coords, oEdges[match]), match);
-                    }));
+                        matches.emplace_back(bg::distance(coords, tEdges[match]), match);
+                        }));
             std::sort(matches.begin(), matches.end());
             bool found = false;
             for (const auto& match: matches) {
-                auto weights = query::generateInterpolationElements(iVertices[i], oEdges[match.index]);
+                auto weights = query::generateInterpolationElements(fVertices[i], tEdges[match.index]);
                 if (std::all_of(weights.begin(), weights.end(), [](query::InterpolationElement const & elem){ return elem.weight >= 0.0; })) {
                     _weights[i] = std::move(weights);
                     found = true;
@@ -208,38 +95,36 @@ void NearestProjectionMapping:: computeMappingConservative()
             }
 
             if (not found) {
-                // Search for the output vertex inside the input meshes vertices
+                // Search for the from vertex inside the destination meshes vertices
                 indexVertices->query(bg::index::nearest(coords, 1), 
                         boost::make_function_output_iterator([&](int match) {
-                            _weights[i] = query::generateInterpolationElements(iVertices[i], oVertices[match]);
+                            _weights[i] = query::generateInterpolationElements(fVertices[i], tVertices[match]);
                             }));
             }
         }
     } else {
-        const auto &oEdges    = output()->edges();
-        const auto &oTriangles = output()->triangles();
-        // CHECK(iVertices.empty() || !oTriangles.empty(), "Mesh \"" << output()->getName() << "\" does not contain Triangles to project onto.");
+        const auto &tTriangles = to->triangles();
+        //CHECK(fVertices.empty() || !tTriangles.empty(), "Mesh \"" << to->getName() << "\" does not contain Triangles to project onto.");
 
-        mesh::rtree::clear(*output()); // TODO Remove me
-        auto indexTriangles = mesh::rtree::getTriangleRTree(output());
-        auto indexEdges     = mesh::rtree::getEdgeRTree(output());
-        auto indexVertices  = mesh::rtree::getVertexRTree(output());
+        auto indexTriangles = mesh::rtree::getTriangleRTree(to);
+        auto indexEdges     = mesh::rtree::getEdgeRTree(to);
+        auto indexVertices  = mesh::rtree::getVertexRTree(to);
 
         std::vector<MatchType> matches;
         matches.reserve(nnearest);
-        for (size_t i = 0; i < iVertices.size(); i++) {
-            const Eigen::VectorXd &coords = iVertices[i].getCoords();
+        for (size_t i = 0; i < fVertices.size(); i++) {
+            const Eigen::VectorXd &coords = fVertices[i].getCoords();
 
-            // Search for the output vertex inside the input meshes triangles
+            // Search for the vertex inside the destination meshes triangles
             matches.clear();
             indexTriangles->query(bg::index::nearest(coords, nnearest),
                     boost::make_function_output_iterator([&](mesh::rtree::triangle_traits::IndexType const & match) {
-                        matches.emplace_back(bg::distance(coords, oTriangles[match.second]), match.second);
-                    }));
+                        matches.emplace_back(bg::distance(coords, tTriangles[match.second]), match.second);
+                        }));
             std::sort(matches.begin(), matches.end());
             bool found = false;
             for (const auto& match: matches) {
-                auto weights = query::generateInterpolationElements(iVertices[i], oTriangles[match.index]);
+                auto weights = query::generateInterpolationElements(fVertices[i], tTriangles[match.index]);
                 if (std::all_of(weights.begin(), weights.end(), [](query::InterpolationElement const & elem){ return elem.weight >= 0.0; })) {
                     _weights[i] = std::move(weights);
                     found = true;
@@ -248,15 +133,15 @@ void NearestProjectionMapping:: computeMappingConservative()
             }
 
             if (not found) {
-                // Search for the output vertex inside the input meshes edges
+                // Search for the vertex inside the destination meshes edges
                 matches.clear();
                 indexEdges->query(bg::index::nearest(coords, nnearest),
                         boost::make_function_output_iterator([&](int match) {
-                            matches.emplace_back(bg::distance(coords, oEdges[match]), match);
+                            matches.emplace_back(bg::distance(coords, tEdges[match]), match);
                             }));
                 std::sort(matches.begin(), matches.end());
                 for (const auto& match: matches) {
-                    auto weights = query::generateInterpolationElements(iVertices[i], oEdges[match.index]);
+                    auto weights = query::generateInterpolationElements(fVertices[i], tEdges[match.index]);
                     if (std::all_of(weights.begin(), weights.end(), [](query::InterpolationElement const & elem){ return elem.weight >= 0.0; })) {
                         _weights[i] = std::move(weights);
                         found = true;
@@ -266,10 +151,10 @@ void NearestProjectionMapping:: computeMappingConservative()
             }
 
             if (not found) {
-                // Search for the output vertex inside the input meshes vertices
+                // Search for the vertex inside the destination meshes vertices
                 indexVertices->query(bg::index::nearest(coords, 1), 
                         boost::make_function_output_iterator([&](int match) {
-                            _weights[i] = query::generateInterpolationElements(iVertices[i], oVertices[match]);
+                            _weights[i] = query::generateInterpolationElements(fVertices[i], tVertices[match]);
                             }));
             }
         }
