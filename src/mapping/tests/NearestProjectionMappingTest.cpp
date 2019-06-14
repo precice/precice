@@ -89,8 +89,8 @@ BOOST_AUTO_TEST_CASE(testConservativeNonIncremental)
       mapping.computeMapping();
       mapping.map(inDataID, outDataID);
       BOOST_TEST_CONTEXT(*inMesh) {
-          BOOST_TEST(values(0) == value * 4.0);
-          BOOST_TEST(values(1) == value * -1.0);
+          BOOST_TEST(values(0) == value * 2.0);
+          BOOST_TEST(values(1) == value * 1.0);
       }
 
       // reset output value and remap
@@ -99,8 +99,8 @@ BOOST_AUTO_TEST_CASE(testConservativeNonIncremental)
 
       mapping.map(inDataID, outDataID);
       BOOST_TEST_CONTEXT(*inMesh) {
-          BOOST_TEST(values(0) == value * 4.0);
-          BOOST_TEST(values(1) == value * -1.0);
+          BOOST_TEST(values(0) == value * 2.0);
+          BOOST_TEST(values(1) == value * 1.0);
       }
   }
 }
@@ -148,8 +148,8 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncremental2D)
       // Validate results
       BOOST_TEST ( mapping.hasComputedMapping() == true );
       BOOST_TEST ( outData->values()[0] == (valueVertex1 + valueVertex2) * 0.5 );
-      BOOST_TEST ( outData->values()[1] == (valueVertex1*1.5 + valueVertex2*-.5));
-      BOOST_TEST ( outData->values()[2] == (valueVertex1*-.5 + valueVertex2*1.5));
+      BOOST_TEST ( outData->values()[1] == valueVertex1);
+      BOOST_TEST ( outData->values()[2] == valueVertex2);
 
       // Redo mapping, results should be
       //assign(outData->values()) = 0.0;
@@ -157,8 +157,8 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncremental2D)
 
       mapping.map ( inDataID, outDataID );
       BOOST_TEST ( outData->values()[0] == (valueVertex1 + valueVertex2) * 0.5 );
-      BOOST_TEST ( outData->values()[1] == (valueVertex1*1.5 + valueVertex2*-.5));
-      BOOST_TEST ( outData->values()[2] == (valueVertex1*-.5 + valueVertex2*1.5));
+      BOOST_TEST ( outData->values()[1] == valueVertex1);
+      BOOST_TEST ( outData->values()[2] == valueVertex2);
   }
 
   {
@@ -182,8 +182,8 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncremental2D)
 
       mapping.computeMapping();
       mapping.map ( inDataID, outDataID );
-      BOOST_TEST ( outData->values()[0] == (valueVertex1*1.5 + valueVertex2*-.5));
-      BOOST_TEST ( outData->values()[1] == (valueVertex1*-.5 + valueVertex2*1.5));
+      BOOST_TEST ( outData->values()[0] == valueVertex1);
+      BOOST_TEST ( outData->values()[1] == valueVertex2);
       BOOST_TEST ( outData->values()[2] == (valueVertex1 + valueVertex2) * 0.5 );
 
       // Reset output data to zero and redo the mapping
@@ -191,8 +191,8 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncremental2D)
       outData->values() = Eigen::VectorXd::Constant(outData->values().size(), 0.0);
 
       mapping.map ( inDataID, outDataID );
-      BOOST_TEST ( outData->values()[0] == (valueVertex1*1.5 + valueVertex2*-.5));
-      BOOST_TEST ( outData->values()[1] == (valueVertex1*-.5 + valueVertex2*1.5));
+      BOOST_TEST ( outData->values()[0] == valueVertex1);
+      BOOST_TEST ( outData->values()[1] == valueVertex2);
       BOOST_TEST ( outData->values()[2] == (valueVertex1 + valueVertex2) * 0.5 );
   }
 }
