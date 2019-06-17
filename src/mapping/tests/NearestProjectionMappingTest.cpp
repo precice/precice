@@ -282,6 +282,110 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncrementalPseudo3D)
   BOOST_TEST ( outData->values()[2] == (valueVertex1 + valueVertex2) * 0.5 );
 }
 
+BOOST_AUTO_TEST_CASE(AxisAlignedTriangles)
+{
+  using namespace precice::mesh;
+  constexpr int dimensions = 3;
+
+  // Create mesh to map from with Triangles ABD and BDC
+  PtrMesh inMesh(new Mesh("InMesh", dimensions, false));
+  PtrData inData = inMesh->createData("InData", 1);
+  Vertex& inVA = inMesh->createVertex(Eigen::Vector3d{0,0,0});
+  Vertex& inVB = inMesh->createVertex(Eigen::Vector3d{0,1,0});
+  Vertex& inVC = inMesh->createVertex(Eigen::Vector3d{1,1,0});
+  Vertex& inVD = inMesh->createVertex(Eigen::Vector3d{1,0,0});
+
+  Edge& inEDA = inMesh->createEdge(inVD, inVA);
+  Edge& inEAB = inMesh->createEdge(inVA, inVB);
+  Edge& inEBD = inMesh->createEdge(inVB, inVD);
+  Edge& inEDC = inMesh->createEdge(inVD, inVC);
+  Edge& inECB = inMesh->createEdge(inVC, inVB);
+
+  inMesh->createTriangle(inEAB, inEBD, inEDA);
+  inMesh->createTriangle(inEBD, inEDC, inECB);
+  inMesh->allocateDataValues();
+  inMesh->computeState();
+  inData->values() << 1.0, 1.0, 1.0, 1.0;
+
+  // Create mesh to map to with one vertex per defined traingle
+  PtrMesh outMesh(new Mesh("OutMesh", dimensions, false));
+  PtrData outData = outMesh->createData("OutData", 1);
+  outMesh->createVertex(Eigen::Vector3d{0.33, 0.33, 0});
+  outMesh->createVertex(Eigen::Vector3d{0.66, 0.66, 0});
+  outMesh->allocateDataValues();
+  outMesh->computeState();
+  outData->values() << 0.0, 0.0;
+
+  // Setup mapping with mapping coordinates and geometry used
+  precice::mapping::NearestProjectionMapping mapping(mapping::Mapping::CONSISTENT, dimensions);
+  mapping.setMeshes(inMesh, outMesh);
+  BOOST_TEST(mapping.hasComputedMapping() == false);
+
+  mapping.computeMapping();
+  BOOST_TEST(mapping.hasComputedMapping() == true);
+  BOOST_TEST_INFO("In Data:" << inData->values());
+  BOOST_TEST_INFO("Out Data before Mapping:" << outData->values());
+  mapping.map(inData->getID(), outData->getID());
+  BOOST_TEST_INFO("Out Data after Mapping:" << outData->values());
+  BOOST_TEST(outData->values() == outData->values().cwiseAbs());
+}
+
+BOOST_AUTO_TEST_CASE(Query_3D_FullMesh)
+{
+  using namespace precice::mesh;
+  constexpr int dimensions = 3;
+
+  PtrMesh inMesh(new precice::mesh::Mesh("InMesh", 3, false));
+  PtrData inData = inMesh->createData("InData", 1);
+  const double z1 = 0.1;
+  const double z2 = -0.1;
+  auto& v00 = inMesh->createVertex(Eigen::Vector3d(0, 0, 0));
+  auto& v01 = inMesh->createVertex(Eigen::Vector3d(0, 1, 0));
+  auto& v10 = inMesh->createVertex(Eigen::Vector3d(1, 0, z1));
+  auto& v11 = inMesh->createVertex(Eigen::Vector3d(1, 1, z1));
+  auto& v20 = inMesh->createVertex(Eigen::Vector3d(2, 0, z2));
+  auto& v21 = inMesh->createVertex(Eigen::Vector3d(2, 1, z2));
+  auto& ell = inMesh->createEdge(v00, v01);
+  auto& elt = inMesh->createEdge(v01, v11);
+  auto& elr = inMesh->createEdge(v11, v10);
+  auto& elb = inMesh->createEdge(v10, v00);
+  auto& eld = inMesh->createEdge(v00, v11);
+  auto& erl = elr;
+  auto& ert = inMesh->createEdge(v11, v21);
+  auto& err = inMesh->createEdge(v21, v20);
+  auto& erb = inMesh->createEdge(v20, v10);
+  auto& erd = inMesh->createEdge(v10, v21);
+  auto& tlt = inMesh->createTriangle(ell, elt, eld);
+  auto& tlb = inMesh->createTriangle(eld, elb, elr);
+  auto& trt = inMesh->createTriangle(erl, ert, erd);
+  auto& trb = inMesh->createTriangle(erd, erb, err);
+
+  inMesh->allocateDataValues();
+  inMesh->computeState();
+  inData->values() = Eigen::VectorXd::Constant(6, 1.0);
+
+  PtrMesh outMesh(new Mesh("OutMesh", dimensions, false));
+  PtrData outData = outMesh->createData("OutData", 1);
+  outMesh->createVertex(Eigen::Vector3d{0.7, 0.5, 0.0});
+  outMesh->allocateDataValues();
+  outMesh->computeState();
+  outData->values() = Eigen::VectorXd::Constant(1, 0.0);
+
+  // Setup mapping with mapping coordinates and geometry used
+  precice::mapping::NearestProjectionMapping mapping(mapping::Mapping::CONSISTENT, dimensions);
+  mapping.setMeshes(inMesh, outMesh);
+  BOOST_TEST(mapping.hasComputedMapping() == false);
+
+  mapping.computeMapping();
+  BOOST_TEST(mapping.hasComputedMapping() == true);
+
+  BOOST_TEST_INFO("In Data:" << inData->values());
+  BOOST_TEST_INFO("Out Data before Mapping:" << outData->values());
+  mapping.map(inData->getID(), outData->getID());
+  BOOST_TEST_INFO("Out Data after Mapping:" << outData->values());
+  BOOST_TEST(outData->values()[0] == 1.0);
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
