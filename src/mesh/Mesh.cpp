@@ -304,7 +304,7 @@ void Mesh:: allocateDataValues()
     if (leftToAllocate > 0){
       utils::append(data->values(), (Eigen::VectorXd) Eigen::VectorXd::Zero(leftToAllocate));
     }
-    DEBUG("Data " << data->getName() << " no has " << data->values().size() << " values");
+    DEBUG("Data " << data->getName() << " now has " << data->values().size() << " values");
   }
 }
 
