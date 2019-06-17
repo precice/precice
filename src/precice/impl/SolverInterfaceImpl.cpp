@@ -992,7 +992,9 @@ void SolverInterfaceImpl:: writeBlockVectorData
     assertion(context.toData.get() != nullptr);
     auto& valuesInternal = context.fromData->values();
     for (int i=0; i < size; i++){
-      int offsetInternal = valueIndices[i]*_dimensions;
+      const auto valueIndex = valueIndices[i];
+      CHECK(0 <= valueIndex && valueIndex < valuesInternal.size()/context.fromData->getDimensions(), "Value index out of range");
+      int offsetInternal = valueIndex*_dimensions;
       int offset = i*_dimensions;
       for (int dim=0; dim < _dimensions; dim++){
         assertion(offset+dim < valuesInternal.size(),
@@ -1012,7 +1014,6 @@ void SolverInterfaceImpl:: writeVectorData
   TRACE(fromDataID, valueIndex );
   PRECICE_VALIDATE_DATA_ID(fromDataID);
   DEBUG("value = " << Eigen::Map<const Eigen::VectorXd>(value, _dimensions));
-  CHECK(valueIndex >= -1, "Invalid value index (" << valueIndex << ") when writing vector data!" );
   if (_clientMode){
     _requestManager->requestWriteVectorData(fromDataID, valueIndex, value);
   }
@@ -1023,7 +1024,7 @@ void SolverInterfaceImpl:: writeVectorData
         "You cannot call writeVectorData on the scalar data type " << context.fromData->getName());
     assertion(context.toData.get() != nullptr);
     auto& values = context.fromData->values();
-    assertion(valueIndex >= 0, valueIndex);
+    CHECK(0 <= valueIndex && valueIndex < values.size()/context.fromData->getDimensions(), "Value index out of range");
     int offset = valueIndex * _dimensions;
     for (int dim=0; dim < _dimensions; dim++){
       values[offset+dim] = value[dim];
@@ -1056,8 +1057,10 @@ void SolverInterfaceImpl:: writeBlockScalarData
     assertion(context.toData.get() != nullptr);
     auto& valuesInternal = context.fromData->values();
     for (int i=0; i < size; i++){
+      const auto valueIndex = valueIndices[i];
+      CHECK(0 <= valueIndex && valueIndex < valuesInternal.size()/context.fromData->getDimensions(), "Value index out of range");
       assertion(i < valuesInternal.size(), i, valuesInternal.size());
-      valuesInternal[valueIndices[i]] = values[i];
+      valuesInternal[valueIndex] = values[i];
     }
   }
 }
@@ -1081,9 +1084,8 @@ void SolverInterfaceImpl:: writeScalarData
         "You cannot call writeScalarData on the vector data type " << context.fromData->getName());
     assertion(context.toData);
     auto& values = context.fromData->values();
-    assertion(valueIndex >= 0, valueIndex);
+    CHECK(0 <= valueIndex && valueIndex < values.size()/context.fromData->getDimensions(), "Value index out of range");
     values[valueIndex] = value;
-
   }
 }
 
@@ -1111,7 +1113,9 @@ void SolverInterfaceImpl:: readBlockVectorData
     assertion(context.fromData.get() != nullptr);
     auto& valuesInternal = context.toData->values();
     for (int i=0; i < size; i++){
-      int offsetInternal = valueIndices[i] * _dimensions;
+      const auto valueIndex = valueIndices[i];
+      CHECK(0 <= valueIndex && valueIndex < valuesInternal.size()/context.fromData->getDimensions(), "Value index out of range");
+      int offsetInternal = valueIndex * _dimensions;
       int offset = i * _dimensions;
       for (int dim=0; dim < _dimensions; dim++){
         assertion(offsetInternal+dim < valuesInternal.size(),
@@ -1141,7 +1145,7 @@ void SolverInterfaceImpl:: readVectorData
         "You cannot call readVectorData on the scalar data type " << context.toData->getName());
     assertion(context.fromData);
     auto& values = context.toData->values();
-    assertion (valueIndex >= 0, valueIndex);
+    CHECK(0 <= valueIndex && valueIndex < values.size()/context.fromData->getDimensions(), "Value index out of range");
     int offset = valueIndex * _dimensions;
     for (int dim=0; dim < _dimensions; dim++){
       value[dim] = values[offset + dim];
@@ -1176,9 +1180,9 @@ void SolverInterfaceImpl:: readBlockScalarData
     assertion(context.fromData.get() != nullptr);
     auto& valuesInternal = context.toData->values();
     for (int i=0; i < size; i++){
-      assertion(valueIndices[i] < valuesInternal.size(),
-               valueIndices[i], valuesInternal.size());
-      values[i] = valuesInternal[valueIndices[i]];
+        const auto valueIndex = valueIndices[i];
+        CHECK(0 <= valueIndex && valueIndex < valuesInternal.size(), "Value index out of range");
+        values[i] = valuesInternal[valueIndex];
     }
   }
 }
@@ -1202,6 +1206,7 @@ void SolverInterfaceImpl:: readScalarData
         "You cannot call readScalarData on the vector data type " << context.toData->getName());
     assertion(context.fromData);
     auto& values = context.toData->values();
+    CHECK(0 <= valueIndex && valueIndex < values.size(), "Value index out of range");
     value = values[valueIndex];
 
   }
