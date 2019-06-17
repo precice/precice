@@ -208,14 +208,21 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncrementalPseudo3D)
   int inDataID = inData->getID ();
   Vertex& v1 = inMesh->createVertex ( Eigen::Vector3d(0.0, 0.0, 0.0) );
   Vertex& v2 = inMesh->createVertex ( Eigen::Vector3d(1.0, 1.0, 0.0) );
-  inMesh->createEdge ( v1, v2 );
+  Vertex& v3 = inMesh->createVertex ( Eigen::Vector3d(2.0, 2.0, 0.0) );
+  Edge & e12 = inMesh->createEdge ( v1, v2 );
+  Edge & e23 = inMesh->createEdge ( v2, v3 );
+  Edge & e31 = inMesh->createEdge ( v3, v1 );
+  inMesh->createTriangle(e12, e23, e31);
+
   inMesh->computeState();
   inMesh->allocateDataValues();
   double valueVertex1 = 1.0;
   double valueVertex2 = 2.0;
+  double valueVertex3 = 3.0;
   Eigen::VectorXd& values = inData->values();
   values(0) = valueVertex1;
   values(1) = valueVertex2;
+  values(2) = valueVertex3;
 
   // Create mesh to map to
   PtrMesh outMesh ( new Mesh("OutMesh", dimensions, false) );
@@ -258,6 +265,7 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncrementalPseudo3D)
   //assign(outData->values()) = 0.0;
   outData->values() = Eigen::VectorXd::Constant(outData->values().size(), 0.0);
 
+  mapping.clear();
   mapping.computeMapping();
   mapping.map ( inDataID, outDataID );
   BOOST_TEST ( outData->values()[0] == valueVertex1 );
