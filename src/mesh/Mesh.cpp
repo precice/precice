@@ -41,8 +41,8 @@ Mesh:: Mesh
   _nameIDPairs[_name] = _managePropertyIDs->getFreeID ();
   setProperty(INDEX_GEOMETRY_ID, _nameIDPairs[_name]);
 
-  meshChanged.connect(&rtree::clear);
-  meshDestroyed.connect(&rtree::clear);
+  meshChanged.connect([](Mesh & m){rtree::clear(m);});
+  meshDestroyed.connect([](Mesh & m){rtree::clear(m);});
 }
 
 Mesh:: ~Mesh()
