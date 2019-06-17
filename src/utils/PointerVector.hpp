@@ -18,6 +18,9 @@ public:
    typedef std::vector<CONTENT_T*> container;
    typedef CONTENT_T value_type; // necessary to be standard conform
 
+   // The size_type of the wrapped vector
+   using size_type = typename container::size_type;
+
    /// Type of iterator hiding pointers.
    typedef boost::indirect_iterator<
               typename container::iterator,
