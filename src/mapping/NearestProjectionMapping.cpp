@@ -2,6 +2,7 @@
 #include "query/FindClosest.hpp"
 #include <Eigen/Core>
 #include "utils/Event.hpp"
+#include "mesh/RTree.hpp"
 
 namespace bg = boost::geometry;
 namespace bgi = boost::geometry::index;

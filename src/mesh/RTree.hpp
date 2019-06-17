@@ -90,7 +90,7 @@ using PtrPrimitiveRTree = std::shared_ptr<PrimitiveRTree>;
 PrimitiveRTree indexMesh(const Mesh &mesh);
 
 /// The RTree box type
-using RTreeBox = bg::model::box<Eigen::VectorXd>;
+using RTreeBox = boost::geometry::model::box<Eigen::VectorXd>;
 
 /// Type trait to extract information based on the type of a Primitive
 template<class T>
