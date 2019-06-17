@@ -21,6 +21,38 @@ namespace boost {
 namespace geometry {
 namespace traits {
 
+/// Adapts Eigen::VectorXd to boost.geometry
+/*
+ * This adapts every VectorXd to a 3d point. For non-existing dimensions, zero is returned.
+ */
+template<> struct tag<Eigen::VectorXd>               { using type = point_tag; };
+template<> struct coordinate_type<Eigen::VectorXd>   { using type = double; };
+template<> struct coordinate_system<Eigen::VectorXd> { using type = cs::cartesian; };
+template<> struct dimension<Eigen::VectorXd> : boost::mpl::int_<3> {};
+
+template<size_t Dimension>
+struct access<Eigen::VectorXd, Dimension>
+{
+  static double get(Eigen::VectorXd const& p)
+  {
+    if (Dimension > static_cast<size_t>(p.rows())-1)
+      return 0;
+   
+    return p[Dimension];
+  }
+  
+  static void set(Eigen::VectorXd& p, double const& value)
+  {
+    // This handles default initialized VectorXd
+    if (p.size() == 0) {
+        p = Eigen::VectorXd::Zero(3);
+    }
+    p[Dimension] = value;
+  }
+};
+
+BOOST_CONCEPT_ASSERT( (bg::concepts::Point<Eigen::VectorXd>));
+
 /// Provides the necessary template specialisations to adapt precice's Vertex to boost.geometry
 /*
 * This adapts every Vertex to a 3d point. For non-existing dimensions, zero is returned.
@@ -93,9 +125,15 @@ struct tag<Triangle> {
   using type = ring_tag;
 };
 template <>
-struct closure<Triangle> {
-  static const closure_selector value = closed;
+struct point_order<pm::Triangle> {
+  static const order_selector value = clockwise;
 };
+template <>
+struct closure<pm::Triangle> {
+  static const closure_selector value = open;
+};
+
+// BOOST_CONCEPT_ASSERT( (bg::concepts::Ring<pm::Triangle>));
 
 /** @brief Provides the necessary template specialisations to adapt precice's Quad to boost.geometry
 *
@@ -106,41 +144,15 @@ struct tag<Quad> {
   using type = ring_tag;
 };
 template <>
-struct closure<Quad> {
-  static const closure_selector value = closed;
+struct point_order<pm::Quad> {
+  static const order_selector value = clockwise;
+};
+template <>
+struct closure<pm::Quad> {
+  static const closure_selector value = open;
 };
 
-/// Adapts Eigen::VectorXd to boost.geometry
-/*
- * This adapts every VectorXd to a 3d point. For non-existing dimensions, zero is returned.
- */
-template<> struct tag<Eigen::VectorXd>               { using type = point_tag; };
-template<> struct coordinate_type<Eigen::VectorXd>   { using type = double; };
-template<> struct coordinate_system<Eigen::VectorXd> { using type = cs::cartesian; };
-template<> struct dimension<Eigen::VectorXd> : boost::mpl::int_<3> {};
-
-template<size_t Dimension>
-struct access<Eigen::VectorXd, Dimension>
-{
-  static double get(Eigen::VectorXd const& p)
-  {
-    if (Dimension > static_cast<size_t>(p.rows())-1)
-      return 0;
-   
-    return p[Dimension];
-  }
-  
-  static void set(Eigen::VectorXd& p, double const& value)
-  {
-    // This handles default initialized VectorXd
-    if (p.size() == 0) {
-        p.resize(3);
-    }
-    p[Dimension] = value;
-  }
-};
-
-BOOST_CONCEPT_ASSERT( (concepts::Point<Eigen::VectorXd>));
+// BOOST_CONCEPT_ASSERT( (bg::concepts::Ring<pm::Quad>));
 
 /// Adapts precice's Mesh::BoundingBox to boost.geometry
 /*
