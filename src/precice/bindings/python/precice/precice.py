@@ -57,10 +57,15 @@ class Interface:
         return self.interface.get_data_id(data_name, mesh_id)
 
     def set_mesh_vertices(self, mesh_id, size, positions, ids):
+        assert(positions.size == size * self.get_dimensions())
         out_ids = self.interface.set_mesh_vertices(mesh_id, positions)
         ids[:] = out_ids[:]
 
+    def set_mesh_vertex(self, mesh_id, position):
+        return self.interface.set_mesh_vertex(mesh_id, position)
+
     def get_mesh_vertices(self, mesh_id, size, ids, positions):
+        assert (positions.size == size * self.get_dimensions())
         out_positions = self.interface.get_mesh_vertices(mesh_id, ids)
         positions[:] = out_positions[:]
 
@@ -68,6 +73,7 @@ class Interface:
         return self.interface.get_mesh_vertex_size(mesh_id)
 
     def get_mesh_vertex_ids_from_positions(self, mesh_id, size, positions, ids):
+        assert (positions.size == size * self.get_dimensions())
         out_ids = self.interface.get_mesh_vertex_ids_from_positions(mesh_id, positions)
         ids[:] = out_ids[:]
 
@@ -93,18 +99,21 @@ class Interface:
         self.interface.map_write_data_from(from_mesh_id)
 
     def write_block_vector_data(self, data_id, size, value_indices, values):
+        assert (values.size == size * self.get_dimensions())
         self.interface.write_block_vector_data(data_id, value_indices, values)
 
     def write_vector_data(self, data_id, value_index, value):
         self.interface.write_vector_data(data_id, value_index, value)
 
     def write_block_scalar_data(self, data_id, size, value_indices, values):
+        assert (values.size == size)
         self.interface.write_block_scalar_data(data_id, value_indices, values)
 
     def write_scalar_data(self, data_id, value_index, value):
         self.interface.write_scalar_data(data_id, value_index, value)
 
     def read_block_vector_data(self, data_id, size, value_indices, values):
+        assert (values.size == size * self.get_dimensions())
         out_values = self.interface.read_block_vector_data(data_id, value_indices)
         values[:] = out_values[:]
 
@@ -113,6 +122,7 @@ class Interface:
         value[:] = out_value[:]
 
     def read_block_scalar_data(self, dataID, size, valueIndices, values):
+        assert (values.size == size)
         out_values = self.interface.read_block_scalar_data(dataID, valueIndices)
         values[:] = out_values[:]
 
