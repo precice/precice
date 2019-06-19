@@ -10,6 +10,7 @@ cimport numpy as np
 cimport cython
 from mpi4py import MPI
 
+
 from cpython.version cimport PY_MAJOR_VERSION  # important for determining python version in order to properly normalize string input. See http://docs.cython.org/en/latest/src/tutorial/strings.html#general-notes-about-c-strings and https://github.com/precice/precice/issues/68 .
 
 cdef bytes convert(s):
@@ -182,47 +183,51 @@ cdef class Interface:
     def map_write_data_from (self, int from_mesh_id):
         self.thisptr.mapWriteDataFrom (from_mesh_id)
 
-    def write_block_vector_data (self, int data_id, value_indices, np.ndarray[np.double_t, ndim=1] values):
+    def write_block_vector_data (self, int data_id, value_indices, values):
         assert(values.size / self.get_dimensions() == value_indices.size)
         size = value_indices.size
         cdef np.ndarray[int, ndim=1] value_indices_int = np.array(value_indices, dtype=np.int32)
-        self.thisptr.writeBlockVectorData (data_id, size, &value_indices_int[0], &values[0])
+        cdef np.ndarray[double, ndim=1] values_double = np.array(values)
+        self.thisptr.writeBlockVectorData (data_id, size, &value_indices_int[0], &values_double[0])
 
-    def write_vector_data (self, int data_id, value_index, np.ndarray[np.double_t, ndim=1] value):
-        self.thisptr.writeVectorData (data_id, value_index, &value[0])
+    def write_vector_data (self, int data_id, value_index, value):
+        cdef np.ndarray[double, ndim=1] values_double = np.array(value)
+        self.thisptr.writeVectorData (data_id, value_index, &values_double[0])
 
-    def write_block_scalar_data (self, int data_id, value_indices, np.ndarray[np.double_t, ndim=1] values):
+    def write_block_scalar_data (self, int data_id, value_indices, values):
         assert(values.size == value_indices.size)
         size = value_indices.size
         cdef np.ndarray[int, ndim=1] value_indices_int = np.array(value_indices, dtype=np.int32)
-        self.thisptr.writeBlockScalarData (data_id, size, &value_indices_int[0], &values[0])
+        cdef np.ndarray[double, ndim=1] values_double = np.array(values)
+        self.thisptr.writeBlockScalarData (data_id, size, &value_indices_int[0], &values_double[0])
 
-    def write_scalar_data (self, int data_id, int value_index, double value):
-        self.thisptr.writeScalarData (data_id, value_index, value)
+    def write_scalar_data (self, int data_id, int value_index, value):
+        cdef double value_double = value
+        self.thisptr.writeScalarData (data_id, value_index, value_double)
 
     def read_block_vector_data (self, int data_id, value_indices):
         size = value_indices.size
         cdef np.ndarray[int, ndim=1] value_indices_int = np.array(value_indices, dtype=np.int32)
-        cdef np.ndarray[np.double_t] values = np.empty(size * self.get_dimensions(), dtype=np.double)
-        self.thisptr.readBlockVectorData (data_id, size, &value_indices_int[0], &values[0])
-        return values
+        cdef np.ndarray[np.double_t] values_double = np.empty(size * self.get_dimensions(), dtype=np.double)
+        self.thisptr.readBlockVectorData (data_id, size, &value_indices_int[0], &values_double[0])
+        return values_double
 
     def read_vector_data (self, int data_id, int value_index):
-        cdef np.ndarray[np.double_t] value = np.empty(self.get_dimensions(), dtype=np.double)
-        self.thisptr.readVectorData (data_id, value_index, &value[0])
-        return value
+        cdef np.ndarray[np.double_t] value_double = np.empty(self.get_dimensions(), dtype=np.double)
+        self.thisptr.readVectorData (data_id, value_index, &value_double[0])
+        return value_double
 
     def read_block_scalar_data (self, int data_id, value_indices):
         size = value_indices.size
         cdef np.ndarray[int, ndim=1] value_indices_int = np.array(value_indices, dtype=np.int32)
-        cdef np.ndarray[np.double_t] values = np.empty(size, dtype=np.double)
-        self.thisptr.readBlockScalarData (data_id, size, &value_indices_int[0], &values[0])
-        return values
+        cdef np.ndarray[double, ndim=1] values_double = np.empty(size)
+        self.thisptr.readBlockScalarData (data_id, size, &value_indices_int[0], &values_double[0])
+        return values_double
 
     def read_scalar_data (self, int data_id, int value_index):
-        cdef double value;
-        self.thisptr.readScalarData (data_id, value_index, value)
-        return value
+        cdef double value_double;
+        self.thisptr.readScalarData (data_id, value_index, value_double)
+        return value_double
 
 def action_write_initial_data ():
     return SolverInterface.actionWriteInitialData()
