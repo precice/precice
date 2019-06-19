@@ -1,5 +1,43 @@
 import precice_future
+import functools
+import logging
+import psutil
 
+logging.basicConfig(level=logging.WARNING)
+write_trace_file = False  # allows to write a trace file with funciton calls of pracice.py
+
+if write_trace_file:
+    me = psutil.Process()
+    uid = me.ppid()
+
+
+def calltracker(func):
+    """
+    decorator to track if function is called
+    """
+    @functools.wraps(func)
+    def wrapper(*args):
+        if write_trace_file:
+            with open(str(uid)+"trace.log", "a") as f:
+                f.write(str(func)+"\n")
+        logging.debug("precice.py calls " + str(func) + " with arguments " + str(args))
+        return func(*args)
+    return wrapper
+
+
+def for_all_methods(decorator):
+    """
+    decorator to add another decorator to all functions of a class
+    """
+    def decorate(cls):
+        for attr in cls.__dict__: # there's propably a better way to do this
+            if callable(getattr(cls, attr)):
+                setattr(cls, attr, decorator(getattr(cls, attr)))
+        return cls
+    return decorate
+
+
+@for_all_methods(calltracker)
 class Interface:
     def __init__(self, solver_name, solver_process_index, solver_process_size):
 
@@ -129,4 +167,3 @@ class Interface:
     def read_scalar_data(self, dataID, valueIndex, value):
         out_value = self.interface.read_scalar_data(dataID, valueIndex)
         value[:] = out_value[:]
-
