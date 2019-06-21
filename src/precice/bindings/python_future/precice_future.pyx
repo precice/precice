@@ -128,6 +128,7 @@ cdef class Interface:
         cdef np.ndarray[double, ndim=1] _positions = np.ascontiguousarray(positions, dtype=np.double)
         size = _positions.size/self.get_dimensions()
         assert(size.is_integer())
+        size = int(size)
         cdef np.ndarray[int, ndim=1] _ids = np.empty(size, dtype=np.int32)
         self.thisptr.setMeshVertices (mesh_id, size, &_positions[0], &_ids[0])
         return _ids
@@ -145,6 +146,7 @@ cdef class Interface:
         cdef np.ndarray[double, ndim=1] _positions = np.ascontiguousarray(positions, dtype=np.double)
         size = _positions.size/self.get_dimensions()
         assert(size.is_integer())
+        size = int(size)
         cdef np.ndarray[int, ndim=1] _ids = np.empty(int(size), dtype=np.int32)
         self.thisptr.getMeshVertexIDsFromPositions (mesh_id, size, &_positions[0], &_ids[0])
         return _ids
