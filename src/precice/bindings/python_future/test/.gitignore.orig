@@ -1,0 +1,8 @@
+*.json
+<<<<<<< HEAD
+*.cpython*
+test_bindings_module.cpp
+=======
+*.cpp
+*.cpython*
+>>>>>>> develop
