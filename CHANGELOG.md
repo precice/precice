@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file. For future 
 - More "pythonic" python bindings `precice_future` are introduced. The python bindings `precice` are deprecated and will be removed in preCICE Version 2.0.0. If you still want to use them, please install `precice` and `precice_future`. Our recommendation, if you want to use the new bindings: Use `import precice_future as precice`.
 - Added CMake target to uninstall the project.
 - Only the total number of filtered vertices are printed, not each one separately, unless debug output is enabled.
+- Added `-oversubscribe` to the tests allowing them to run on dual-core processors.
 
 ## 1.5.1
 
