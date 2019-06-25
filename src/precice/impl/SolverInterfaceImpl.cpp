@@ -99,6 +99,7 @@ void SolverInterfaceImpl:: configure
   xml::configure(config.getXMLTag(), configurationFileName);
   if(_accessorProcessRank==0){
     INFO("This is preCICE version " << PRECICE_VERSION);
+    INFO("Revision info: " << precice::preciceCommit);
     INFO("Configuring preCICE with configuration: \"" << configurationFileName << "\"" );
   }
   configure(config.getSolverInterfaceConfiguration());
