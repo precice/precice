@@ -4,6 +4,7 @@
 
 target_sources(precice
     PRIVATE
+    ${CMAKE_BINARY_DIR}/src/versions.cpp
     src/action/Action.hpp
     src/action/ComputeCurvatureAction.cpp
     src/action/ComputeCurvatureAction.hpp
@@ -295,7 +296,6 @@ target_sources(precice
     src/utils/prettyprint.hpp
     src/utils/stacktrace.cpp
     src/utils/stacktrace.hpp
-    src/versions.hpp
     src/versions.hpp
     src/xml/ConfigParser.cpp
     src/xml/ConfigParser.hpp
