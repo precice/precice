@@ -193,7 +193,6 @@ endif()
 # File Configuration
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/DetectGitCommit.cmake)
 configure_file("${PROJECT_SOURCE_DIR}/src/versions.hpp.in" "${PROJECT_BINARY_DIR}/src/versions.hpp" @ONLY)
-configure_file("${PROJECT_SOURCE_DIR}/src/versions.cpp.in" "${PROJECT_BINARY_DIR}/src/versions.cpp" @ONLY)
 
 # Includes Configuration
 target_include_directories(precice PUBLIC 
