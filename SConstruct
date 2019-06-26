@@ -225,7 +225,6 @@ checkAdd("boost_system")
 checkAdd("boost_filesystem")
 checkAdd("boost_program_options")
 checkAdd("boost_unit_test_framework")
-checkAdd("boost_iostreams")
 
 checkAdd(header = 'boost/vmd/is_empty.hpp', usage = 'Boost Variadic Macro Data Library')
 checkAdd(header = 'boost/geometry.hpp', usage = 'Boost Geometry Library')
