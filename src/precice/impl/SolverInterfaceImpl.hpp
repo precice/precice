@@ -37,7 +37,7 @@ namespace precice {
 namespace impl {
 
 /// Implementation of solver interface.
-class SolverInterfaceImpl : private boost::noncopyable
+class SolverInterfaceImpl
 {
 public:
 
@@ -57,6 +57,18 @@ public:
     int         accessorProcessRank,
     int         accessorCommunicatorSize,
     bool        serverMode );
+
+  /// Deleted copy constructor
+  SolverInterfaceImpl(SolverInterfaceImpl const &) = delete;
+
+  /// Deleted copy assignment
+  SolverInterfaceImpl& operator=(SolverInterfaceImpl const &) = delete;
+  
+  /// Deleted move constructor
+  SolverInterfaceImpl(SolverInterfaceImpl &&) = delete;
+
+  /// Deleted move assignment
+  SolverInterfaceImpl& operator=(SolverInterfaceImpl &&) = delete;
 
   /**
    * @brief Configures the coupling interface from the given xml file.

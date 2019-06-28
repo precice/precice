@@ -2,7 +2,6 @@
 
 #include <iostream>
 #include <algorithm>
-#include "boost/noncopyable.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/PropertyContainer.hpp"
 #include "mesh/RangeAccessor.hpp"
@@ -13,7 +12,7 @@ namespace mesh
 {
 
 /// Quadrilateral (or Quadrangle) geometric primitive.
-class Quad : public PropertyContainer, private boost::noncopyable
+class Quad : public PropertyContainer
 {
 public:
   /// Type of the read-only const random-access iterator over Vertex coords
