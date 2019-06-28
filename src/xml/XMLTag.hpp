@@ -29,6 +29,9 @@ class XMLTag
 public:
   /// Callback interface for configuration classes using XMLTag.
   struct Listener {
+
+    Listener& operator=(Listener &&) = delete;
+
     virtual ~Listener(){};
     /**
      * @brief Callback at begin of XML tag.

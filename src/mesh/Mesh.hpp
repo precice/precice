@@ -6,7 +6,6 @@
 #include "mesh/Vertex.hpp"
 #include "utils/PointerVector.hpp"
 #include "utils/ManageUniqueIDs.hpp"
-#include <boost/noncopyable.hpp>
 #include <map>
 #include <list>
 #include <vector>
@@ -36,7 +35,7 @@ namespace mesh {
  *
  * Usage example: precice::mesh::tests::MeshTest::testDemonstration()
  */
-class Mesh : public PropertyContainer, private boost::noncopyable
+class Mesh : public PropertyContainer
 {
 public:
 

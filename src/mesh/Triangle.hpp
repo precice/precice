@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Eigen/Core>
-#include <boost/noncopyable.hpp>
 #include <iostream>
 #include <algorithm>
 
@@ -27,7 +26,7 @@ namespace mesh
 {
 
 /// Triangle of a mesh, defined by three edges (and vertices).
-class Triangle : public PropertyContainer, private boost::noncopyable
+class Triangle : public PropertyContainer
 {
 public:
   /// Type of the read-only const random-access iterator over Vertex coords

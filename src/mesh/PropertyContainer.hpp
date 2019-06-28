@@ -32,6 +32,7 @@ namespace mesh
 class PropertyContainer
 {
 public:
+  PropertyContainer& operator=(PropertyContainer &&) = delete;
 
   virtual ~PropertyContainer(){};
 
