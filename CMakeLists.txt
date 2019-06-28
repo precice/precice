@@ -59,6 +59,8 @@ option(PRECICE_Packages "Configure package generation." ON)
 option(PRECICE_InstallTest "Add test binary and necessary files to install target." ON)
 option(BUILD_SHARED_LIBS "Build shared libraries by default" OFF)
 
+set(PRECICE_CTEST_MPI_FLAGS "" CACHE STRING "Add additional flags to mpiexec for running tests via CTest.")
+
 # Print information about this configuration
 include(PrintHelper)
 print_configuration(
@@ -68,6 +70,7 @@ print_configuration(
   "PYTHON;Build with PYTHON"
   "PRECICE_Packages;Configure package generation"
   "PRECICE_InstallTest;Install tests/testfiles"
+  "PRECICE_CTEST_MPI_FLAGS;Additional CTest MPI Flags"
   )
 
 
