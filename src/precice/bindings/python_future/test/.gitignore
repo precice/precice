@@ -1,0 +1,3 @@
+*.json
+*.cpython*
+test_bindings_module.cpp

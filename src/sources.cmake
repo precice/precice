@@ -25,6 +25,8 @@ target_sources(precice
     src/com/Communication.cpp
     src/com/Communication.hpp
     src/com/CommunicationFactory.hpp
+    src/com/ConnectionInfoPublisher.cpp
+    src/com/ConnectionInfoPublisher.hpp
     src/com/MPICommunication.cpp
     src/com/MPICommunication.hpp
     src/com/MPIDirectCommunication.cpp
@@ -281,8 +283,6 @@ target_sources(precice
     src/utils/Petsc.cpp
     src/utils/Petsc.hpp
     src/utils/PointerVector.hpp
-    src/utils/Publisher.cpp
-    src/utils/Publisher.hpp
     src/utils/SignalHandler.cpp
     src/utils/SignalHandler.hpp
     src/utils/String.cpp

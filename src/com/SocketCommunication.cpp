@@ -1,16 +1,10 @@
 #include "SocketCommunication.hpp"
-
 #include "SocketRequest.hpp"
-
+#include "ConnectionInfoPublisher.hpp"
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
-#include "utils/Publisher.hpp"
 #include "utils/assertion.hpp"
-
 #include <sstream>
-
-using precice::utils::Publisher;
-using precice::utils::ScopedPublisher;
 
 namespace precice
 {
@@ -60,7 +54,6 @@ void SocketCommunication::acceptConnection(std::string const &acceptorName,
   assertion(not isConnected());
 
   std::string address;
-  const std::string addressFileName("." + requesterName + "-" + acceptorName + ".address");
 
   try {
     std::string ipAddress = getIpAddress();
@@ -77,12 +70,9 @@ void SocketCommunication::acceptConnection(std::string const &acceptorName,
     acceptor.listen();
 
     _portNumber = acceptor.local_endpoint().port();
-
     address = ipAddress + ":" + std::to_string(_portNumber);
-
-    Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
-    ScopedPublisher p(addressFileName);
-    p.write(address);
+    ConnectionInfoWriter conInfo(acceptorName, requesterName, _addressDirectory);
+    conInfo.write(address);
     DEBUG("Accept connection at " << address);
 
     int peerCurrent = 0; // Current peer to connect to
@@ -139,12 +129,9 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorNa
   assertion(not isConnected());
 
   std::string address;
-  const std::string addressFileName("." + requesterName + "-" +
-                                    acceptorName + "-" + std::to_string(acceptorRank) + ".address");
 
   try {
     std::string ipAddress = getIpAddress();
-
     CHECK(not ipAddress.empty(), "Network \"" << _networkName << "\" not found for socket connection!");
 
     using asio::ip::tcp;
@@ -162,10 +149,8 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorNa
     }
 
     address = ipAddress + ":" + std::to_string(_portNumber);
-
-    Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
-    ScopedPublisher p(addressFileName);
-    p.write(address);
+    ConnectionInfoWriter conInfo(acceptorName, requesterName, acceptorRank, _addressDirectory);
+    conInfo.write(address);
 
     DEBUG("Accepting connection at " << address);
 
@@ -185,8 +170,7 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorNa
     ERROR("Accepting connection at " << address << " failed: " << e.what());
   }
 
-  // NOTE:
-  // Keep IO service running so that it fires asynchronous handlers from another thread.
+  // NOTE: Keep IO service running so that it fires asynchronous handlers from another thread.
   _work   = std::make_shared<asio::io_service::work>(*_ioService);
   _thread = std::thread([this] { _ioService->run(); });  
 }
@@ -199,21 +183,15 @@ void SocketCommunication::requestConnection(std::string const &acceptorName,
   TRACE(acceptorName, requesterName);
   assertion(not isConnected());
 
-  std::string address;
-  const std::string addressFileName("." + requesterName + "-" + acceptorName + ".address");
+  ConnectionInfoReader conInfo(acceptorName, requesterName, _addressDirectory);
+  std::string const address = conInfo.read();
+  DEBUG("Request connection to " << address);
+  auto const sepidx = address.find(':');
+  std::string const ipAddress  = address.substr(0, sepidx);
+  std::string const portNumber = address.substr(sepidx + 1);
+  _portNumber = static_cast<unsigned short>(std::stoul(portNumber));
 
   try {
-    Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
-    Publisher p(addressFileName);
-    address = p.read();
-
-    DEBUG("Request connection to " << address);
-
-    std::string ipAddress  = address.substr(0, address.find(':'));
-    std::string portNumber = address.substr(ipAddress.length() + 1, address.length() - ipAddress.length() - 1);
-
-    _portNumber = static_cast<unsigned short>(std::stoi(portNumber));
-
     auto socket = std::make_shared<Socket>(*_ioService);
 
     using asio::ip::tcp;
@@ -250,8 +228,7 @@ void SocketCommunication::requestConnection(std::string const &acceptorName,
     ERROR("Requesting connection to " << address << " failed: " << e.what());
   }
 
-  // NOTE:
-  // Keep IO service running so that it fires asynchronous handlers from another thread.
+  // NOTE: Keep IO service running so that it fires asynchronous handlers from another thread.
   _work   = std::make_shared<asio::io_service::work>(*_ioService);
   _thread = std::thread([this] { _ioService->run(); });
 }
@@ -267,20 +244,14 @@ void SocketCommunication::requestConnectionAsClient(std::string      const &acce
   
   for (auto const & acceptorRank : acceptorRanks) {
     _isConnected = false;
-    std::string address;
-    const std::string addressFileName("." + requesterName + "-" +
-                                      acceptorName + "-" + std::to_string(acceptorRank) + ".address");
+    ConnectionInfoReader conInfo(acceptorName, requesterName, acceptorRank, _addressDirectory);
+    std::string const address = conInfo.read();
+    auto const sepidx = address.find(':');
+    std::string const ipAddress  = address.substr(0, sepidx);
+    std::string const portNumber = address.substr(sepidx + 1);
+    _portNumber = static_cast<unsigned short>(std::stoul(portNumber));
 
     try {
-      Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
-      Publisher p(addressFileName);
-      address = p.read();
-      
-      std::string ipAddress  = address.substr(0, address.find(':'));
-      std::string portNumber = address.substr(ipAddress.length()+1, address.length() - ipAddress.length()-1);
-
-      _portNumber = static_cast<unsigned short>(std::stoi(portNumber));
-
       auto socket = std::make_shared<Socket>(*_ioService);
 
       using asio::ip::tcp;
@@ -313,8 +284,7 @@ void SocketCommunication::requestConnectionAsClient(std::string      const &acce
       ERROR("Requesting connection to " << address << " failed: " << e.what());
     }
   }
-  // NOTE:
-  // Keep IO service running so that it fires asynchronous handlers from another thread.
+  // NOTE: Keep IO service running so that it fires asynchronous handlers from another thread.
   _work   = std::make_shared<asio::io_service::work>(*_ioService);
   _thread = std::thread([this] { _ioService->run(); });
 }

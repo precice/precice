@@ -99,18 +99,21 @@ public:
   bool deleteProperty(int propertyID);
 
   /**
-     * @brief Returns the value of the property with given ID.
-     *
-     * Prerequesits:
-     * - the property has to exist for the object, or for its parent
-     *   PropertyContainer object
-     * - the type of the property has to coincide with the one specified as
-     *   explicit template parameter when calling getProperty<type>().
-     */
+   * @brief Returns the value of the property with given ID.
+   *
+   * @pre The property has to exist for the object, or for its PropertyContainer object
+   * @pre The type of the property has to coincide with the one specified as
+   *   explicit template parameter when calling getProperty<type>().
+   */
   template <typename value_t>
   const value_t &getProperty(int propertyID) const;
-
-  /// Returns all properties of this and parent PropertyContainer objects.
+  
+  /**
+   * @brief Recursively looks up a property ID.
+   *
+   * @param[in] propertyID ID to lookup
+   * @param[out] properties found
+   */
   template <typename value_t>
   void getProperties(int propertyID, std::vector<value_t> &properties) const;
 

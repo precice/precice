@@ -51,8 +51,6 @@ void ParallelCouplingScheme::initialize
       mergeData(); // merge send and receive data for all pp calls
       setupDataMatrices(getAllData()); // Reserve memory and initialize data with zero
       if (getPostProcessing().get() != nullptr) {
-        CHECK(getPostProcessing()->getDataIDs().size()==2 || getPostProcessing()->getDataIDs().size()==0,                     "For parallel coupling, the number of post-processing data vectors has to be 2 (or 0 for constant underrelaxation), not: "
-                     << getPostProcessing()->getDataIDs().size());
         getPostProcessing()->initialize(getAllData()); // Reserve memory, initialize
       }
     }

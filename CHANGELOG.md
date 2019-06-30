@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file. For future 
 
 ## develop
 
+- Introduced unit tests using mocked preCICE C++ Interface for python bindings.
+- More "pythonic" python bindings `precice_future` are introduced. The python bindings `precice` are deprecated and will be removed in preCICE Version 2.0.0. If you still want to use them, please install `precice` and `precice_future`. Our recommendation, if you want to use the new bindings: Use `import precice_future as precice`.
+- Added CMake target to uninstall the project.
+- Only the total number of filtered vertices are printed, not each one separately, unless debug output is enabled.
+
+## 1.5.1
+
+- Fixed the exposure of `boost::asio` implementation details leading to version incompatibilities
+- Fixed the CMake linkage of Boost to become compatible with the generated CMake config of Boost 1.70.0
+
 ## 1.5.0
 
 - Added CMake alias `precice::precice` which mimics the namespaced library name after calling `find_package(precice)`. This allows seamless use as a subproject.
