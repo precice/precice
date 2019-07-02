@@ -28,34 +28,13 @@ public:
         // assign
         switch (constantID) {
             case 0:
-                result = nameConfiguration();
-                break;
-            case 1:
-                result = dataDisplacements();
-                break;
-            case 2:
-                result = dataForces();
-                break;
-            case 3:
-                result = dataVelocities();
-                break;
-            case 4:
                 result = actionWriteInitialData();
                 break;
-            case 5:
+            case 1:
                 result = actionWriteIterationCheckpoint();
                 break;
-            case 6:
+            case 2:
                 result = actionReadIterationCheckpoint();
-                break;
-            case 7:
-                result = actionPlotOutput();
-                break;
-            case 8:
-                result = exportVTK();
-                break;
-            case 9:
-                result = exportAll();
                 break;
             default:
                 myMexPrint("An unknown ID was passed.");

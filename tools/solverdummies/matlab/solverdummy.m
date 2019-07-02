@@ -39,5 +39,5 @@ function solverdummy(configFileName,solverName,meshName)
     end
     
     interface.finalize();
-    disp('DUMMY: Colsing MATLAB solverdummy.')
+    disp('DUMMY: Closing MATLAB solverdummy.')
 end
