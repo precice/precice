@@ -1,6 +1,5 @@
 #pragma once
 
-#include "precice/Constants.hpp"
 #include "SharedPointer.hpp"
 #include "action/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
@@ -85,6 +84,10 @@ public:
   bool isMeshUsed ( int meshID ) const;
 
   bool isDataUsed ( int dataID ) const;
+
+  bool isDataRead ( int dataID ) const;
+
+  bool isDataWrite ( int dataID ) const;
 
   const MeshContext& meshContext ( int meshID ) const;
 

@@ -1,9 +1,9 @@
 #pragma once
 
-#include "logging/Logger.hpp"
 #include <Eigen/Core>
-#include <string>
 #include <fstream>
+#include <string>
+#include "logging/Logger.hpp"
 
 namespace precice {
 namespace io {
@@ -11,32 +11,19 @@ namespace io {
 /**
  * @brief File writer for matrix in Matlab V7 ASCII format.
  */
-class TXTWriter
-{
+class TXTWriter {
 public:
-
   /**
    * @brief Constructor, opens file and sets format.
    */
-  explicit TXTWriter(const std::string& filename);
-
-  /**
-   * @brief Destructor, closes file.
-   */
-  ~TXTWriter();
+  explicit TXTWriter(const std::string &filename);
 
   ///Writes (appends) the matrix to the file.
-  void write(const Eigen::MatrixXd& matrix)
-  {
-    for (long i = 0; i < matrix.rows(); i++) {
-      for (long j = 0; j < matrix.cols(); j++) {
-        _file << matrix(i, j) << " ";
-      }
-    }
-    _file << std::endl;
-  }
+  void write(const Eigen::MatrixXd &matrix);
 
-  
+  ///Flush the buffer to file
+  void flush();
+
 private:
   logging::Logger _log{"io::TXTWriter"};
 
@@ -44,5 +31,5 @@ private:
   std::ofstream _file;
 };
 
-}} // namespace precice, io
-
+} // namespace io
+} // namespace precice

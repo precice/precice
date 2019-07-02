@@ -29,7 +29,7 @@ bool IGES2Vrml:: readFile (  const std::string & inputFileName )
 void IGES2Vrml:: loadReport ( void )
 {
    if ( !myIGESFileName || ( myIGESFileName [0] == '\0' ) ) {
-      std::cout << "no input file" << endl;
+      std::cout << "no input file" << '\n';
       return;
    }
 

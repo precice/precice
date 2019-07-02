@@ -88,14 +88,6 @@ public:
   /// Returns all configured mappings.
   const std::vector<ConfiguredMapping>& mappings();
 
-  /// Adds a mapping to the configuration.
-  void addMapping (
-    const PtrMapping&    mapping,
-    const mesh::PtrMesh& fromMesh,
-    const mesh::PtrMesh& toMesh,
-    Direction            direction,
-    Timing               timing );
-
   void resetMappings() { _mappings.clear(); }
 
 private:

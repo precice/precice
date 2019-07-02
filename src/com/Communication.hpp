@@ -1,5 +1,6 @@
 #pragma once
 
+#include <boost/core/noncopyable.hpp>
 #include "Request.hpp"
 #include "logging/Logger.hpp"
 
@@ -41,7 +42,7 @@ namespace com
  * sized appropriatly. Asynchronous receive methods also expect the vector
  * be sized correctly.
  */
-class Communication
+class Communication: private boost::noncopyable
 {
 
 public:
@@ -49,6 +50,9 @@ public:
   virtual ~Communication()
   {
   }
+
+  /// @name Connection Setup
+  /// @{
 
   /// Returns true, if a connection to a remote participant has been setup.
   virtual bool isConnected()
@@ -144,46 +148,56 @@ public:
    */
   virtual void closeConnection() = 0;
 
+  /**
+   * @brief Prepare environment used to establish the communication.
+   */
+  virtual void prepareEstablishment() {}
+
+  /**
+   * @brief Clean-up environment used to establish the communication.
+   */
+  virtual void cleanupEstablishment() {}
+
+  /// @}
+  
+  /// @name Reduction
+  /// @{
+
   /// Performs a reduce summation on the rank given by rankMaster
   virtual void reduceSum(double *itemsToSend, double *itemsToReceive, int size, int rankMaster);
-
   /// Performs a reduce summation on the master, every other rank has to call reduceSum
   virtual void reduceSum(double *itemsToSend, double *itemsToReceive, int size);
 
   virtual void reduceSum(int itemToSend, int &itemToReceive, int rankMaster);
-
   virtual void reduceSum(int itemsToSend, int &itemsToReceive);
 
   virtual void allreduceSum(double *itemsToSend, double *itemsToReceive, int size, int rankMaster);
-
   virtual void allreduceSum(double *itemsToSend, double *itemsToReceive, int size);
 
   virtual void allreduceSum(double itemToSend, double &itemToReceive, int rankMaster);
-
   virtual void allreduceSum(double itemToSend, double &itemToReceive);
 
   virtual void allreduceSum(int itemToSend, int &itemToReceive, int rankMaster);
-
   virtual void allreduceSum(int itemToSend, int &itemToReceive);
 
-  virtual void broadcast(const int *itemsToSend, int size);
+  /// @}
+  
+  /// @name Broadcast
+  /// @{
 
+  virtual void broadcast(const int *itemsToSend, int size);
   virtual void broadcast(int *itemsToReceive, int size, int rankBroadcaster);
 
   virtual void broadcast(int itemToSend);
-
   virtual void broadcast(int &itemToReceive, int rankBroadcaster);
 
   virtual void broadcast(const double *itemsToSend, int size);
-
   virtual void broadcast(double *itemsToReceive, int size, int rankBroadcaster);
 
   virtual void broadcast(double itemToSend);
-
   virtual void broadcast(double &itemToReceive, int rankBroadcaster);
 
   virtual void broadcast(bool itemToSend);
-
   virtual void broadcast(bool &itemToReceive, int rankBroadcaster);
 
   virtual void broadcast(std::vector<int> const &v);
@@ -191,6 +205,11 @@ public:
 
   virtual void broadcast(std::vector<double> const &v);
   virtual void broadcast(std::vector<double>& v, int rankBroadcaster);
+
+  /// @}
+  
+  /// @name Send
+  /// @{
   
   /// Sends a std::string to process with given rank.
   virtual void send(std::string const &itemToSend, int rankReceiver) = 0;
@@ -232,6 +251,11 @@ public:
   /// Asynchronously sends a bool to process with given rank.
   /// @attention The caller must guarantee that the lifetime of the item extends to the completion of the request!
   virtual PtrRequest aSend( const bool & itemToSend, int rankReceiver) = 0;
+
+  /// @}
+  
+  /// @name Receive
+  /// @{
 
   /// Receives a std::string from process with given rank.
   virtual void receive(std::string &itemToReceive, int rankSender) = 0;
@@ -280,6 +304,7 @@ public:
   /// Receives an std::vector of doubles. The vector will be resized accordingly.
   virtual void receive(std::vector<double> &v, int rankSender) = 0;
 
+  /// @}
 
   /// Set rank offset.
   void setRankOffset(int rankOffset)
@@ -288,7 +313,7 @@ public:
   }
 
 protected:
-  /// Rank offset for masters-slave communication, since ranks are from 0 to size - 2
+  /// Rank offset for masters-slave communication, since ranks are from 0 to size-2
   int _rankOffset = 0;
 
   bool _isConnected = false;

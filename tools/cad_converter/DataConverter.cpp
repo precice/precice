@@ -12,7 +12,7 @@
 int main ( int argc, char** argv )
 {
   if ( argc != 3 ) {
-    std::cout << " Usage: ./DataConverter inputFileName outputFilename" << std::endl;
+    std::cout << " Usage: ./DataConverter inputFileName outputFilename\n";
     abort ();
   }
 
@@ -23,14 +23,14 @@ int main ( int argc, char** argv )
 
   if ( myTransformer.parseFileType () ) {
     if ( myTransformer.doTransform() ) {
-      std::cout << " Transform to VRML succeed!" << std::endl;
+      std::cout << " Transform to VRML succeed!\n";
     }
     else {
-      std::cout << " Transform to VRML failed!" << std::endl;
+      std::cout << " Transform to VRML failed!\n";
     }
   }
   else {
-    std::cout << "Input file type must be one of: .stp .step .igs .iges" << std::endl;
+    std::cout << "Input file type must be one of: .stp .step .igs .iges\n";
     return 0;
   }
   return 1;

@@ -200,7 +200,7 @@ struct CompositionalCouplingSchemeFixture
                const std::string&     localParticipant,
                m2n::PtrM2N communication ) const
   {
-    assertion ( communication.use_count() > 0 );
+    assertion ( communication );
     assertion ( not communication->isConnected() );
     utils::Parallel::splitCommunicator( localParticipant );
     if ( participant0 == localParticipant ) {

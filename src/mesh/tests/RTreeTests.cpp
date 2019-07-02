@@ -267,7 +267,7 @@ BOOST_AUTO_TEST_CASE(QueryWithBox)
           return bg::distance(searchVector, mesh->vertices()[i]) <= radius;}),
       std::back_inserter(results));
   
-    BOOST_TEST(results.size() == 0);
+    BOOST_TEST(results.empty());
   }
 
   {
@@ -313,8 +313,8 @@ BOOST_AUTO_TEST_CASE(CacheClearing)
   BOOST_TEST(rtree::_vertex_trees.size() == 1);
   BOOST_TEST(rtree::_primitive_trees.size() == 1);
   mesh->meshChanged(*mesh); // Emit signal, that mesh has changed
-  BOOST_TEST(rtree::_vertex_trees.size() == 0);
-  BOOST_TEST(rtree::_primitive_trees.size() == 0);
+  BOOST_TEST(rtree::_vertex_trees.empty());
+  BOOST_TEST(rtree::_primitive_trees.empty());
 
   // The Cache should clear whenever we destroy the Mesh
   auto vTree2 = rtree::getVertexRTree(mesh);
@@ -322,8 +322,8 @@ BOOST_AUTO_TEST_CASE(CacheClearing)
   BOOST_TEST(rtree::_vertex_trees.size() == 1);
   BOOST_TEST(rtree::_primitive_trees.size() == 1);
   mesh.reset(); // Destroy mesh object, signal is emitted to clear cache
-  BOOST_TEST(rtree::_vertex_trees.size() == 0);
-  BOOST_TEST(rtree::_primitive_trees.size() == 0);
+  BOOST_TEST(rtree::_vertex_trees.empty());
+  BOOST_TEST(rtree::_primitive_trees.empty());
 }
 
 BOOST_AUTO_TEST_CASE(PrimitveIndexComparison) {

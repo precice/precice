@@ -8,8 +8,6 @@
 #include "mesh/config/MeshConfiguration.hpp"
 #include "xml/XMLTag.hpp"
 #include "xml/XMLAttribute.hpp"
-#include "xml/ValidatorEquals.hpp"
-#include "xml/ValidatorOr.hpp"
 
 namespace precice {
 namespace mapping {
@@ -41,50 +39,32 @@ MappingConfiguration:: MappingConfiguration
 
   _meshConfig(meshConfiguration)
 {
-  assertion (_meshConfig.use_count() > 0);
+  assertion (_meshConfig);
   using namespace xml;
 
-  XMLAttribute<double> attrShapeParam ( ATTR_SHAPE_PARAM );
-  attrShapeParam.setDocumentation("Specific shape parameter for RBF basis function.");
-  XMLAttribute<double> attrSupportRadius ( ATTR_SUPPORT_RADIUS );
-  attrSupportRadius.setDocumentation("Support radius of each RBF basis function (global choice).");
-  XMLAttribute<double> attrSolverRtol ( ATTR_SOLVER_RTOL );
-  attrSolverRtol.setDocumentation("Solver relative tolerance for convergence");
-  attrSolverRtol.setDefaultValue(1e-9);
-  XMLAttribute<bool> attrXDead(ATTR_X_DEAD);
-  attrXDead.setDocumentation("If set to true, the x axis will be ignored for the mapping");
-  attrXDead.setDefaultValue(false);
-  XMLAttribute<bool> attrYDead(ATTR_Y_DEAD);
-  attrYDead.setDocumentation("If set to true, the y axis will be ignored for the mapping");
-  attrYDead.setDefaultValue(false);
-  XMLAttribute<bool> attrZDead(ATTR_Z_DEAD);
-  attrZDead.setDocumentation("If set to true, the z axis will be ignored for the mapping");
-  attrZDead.setDefaultValue(false);
-  XMLAttribute<std::string> attrPolynomial("polynomial");
-  attrPolynomial.setDocumentation("Toggles use of the global polynomial");
-  attrPolynomial.setDefaultValue("separate");
-  attrPolynomial.setValidator(makeValidatorEquals("on")
-                              || makeValidatorEquals("off")
-                              || makeValidatorEquals("separate"));
-
-
-  XMLAttribute<std::string> attrPreallocation("preallocation");
-  attrPreallocation.setDocumentation("Sets kind of preallocation for PETSc RBF implementation");
-  attrPreallocation.setDefaultValue("tree");
-  attrPreallocation.setValidator(makeValidatorEquals("estimate")
-                              || makeValidatorEquals("compute")
-                              || makeValidatorEquals("off")
-                              || makeValidatorEquals("save")
-                              || makeValidatorEquals("tree"));
-
-  XMLAttribute<double> attrRadius ( "radius" );
-  attrRadius.setDocumentation("Radius for 1D participants in a geometric multiscale mapping.");
-
-  XMLAttribute<std::string> attrMultiScaleType("type");
-  attrMultiScaleType.setDocumentation("Type of a geometric multiscale mapping (spread or collect).");
-  attrMultiScaleType.setValidator(makeValidatorEquals("spread")
-                               || makeValidatorEquals("collect"));
-
+ auto attrShapeParam  = XMLAttribute<double>( ATTR_SHAPE_PARAM )
+      .setDocumentation("Specific shape parameter for RBF basis function.");
+ auto attrSupportRadius  = XMLAttribute<double>( ATTR_SUPPORT_RADIUS )
+      .setDocumentation("Support radius of each RBF basis function (global choice).");
+  auto attrSolverRtol  = makeXMLAttribute( ATTR_SOLVER_RTOL, 1e-9)
+      .setDocumentation("Solver relative tolerance for convergence");
+  auto attrXDead = makeXMLAttribute(ATTR_X_DEAD, false)
+      .setDocumentation("If set to true, the x axis will be ignored for the mapping");
+  auto attrYDead = makeXMLAttribute(ATTR_Y_DEAD, false)
+      .setDocumentation("If set to true, the y axis will be ignored for the mapping");
+  auto attrZDead = makeXMLAttribute(ATTR_Z_DEAD, false)
+      .setDocumentation("If set to true, the z axis will be ignored for the mapping");
+  auto attrPolynomial = makeXMLAttribute("polynomial", "separate")
+      .setDocumentation("Toggles use of the global polynomial")
+      .setOptions({"on", "off", "separate"});
+  auto attrPreallocation = makeXMLAttribute("preallocation", "tree")
+      .setDocumentation("Sets kind of preallocation for PETSc RBF implementation")
+      .setOptions({"estimate", "compute", "off", "save", "tree"});
+  auto attrMultiScaleType = makeXMLAttribute("type", "spread")
+      .setDocumentation("Type of a geometric multiscale mapping (spread or collect)")
+      .setOptions({"spread", "collect"});
+  auto attrRadius  = XMLAttribute<double>("radius")
+      .setDocumentation("Radius for 1D participants in a geometric multiscale mapping");
 
   XMLTag::Occurrence occ = XMLTag::OCCUR_ARBITRARY;
   std::list<XMLTag> tags;
@@ -209,26 +189,18 @@ MappingConfiguration:: MappingConfiguration
     tag.addAttribute(attrMultiScaleType);
     tags.push_back(tag);
   }
-  
-  XMLAttribute<std::string> attrDirection ( ATTR_DIRECTION );
-  auto validDirectionWrite  = makeValidatorEquals( VALUE_WRITE );
-  auto validDirectionRead  = makeValidatorEquals( VALUE_READ );
-  attrDirection.setValidator ( validDirectionWrite || validDirectionRead );
+
+  auto attrDirection = XMLAttribute<std::string>( ATTR_DIRECTION)
+      .setOptions({ VALUE_WRITE, VALUE_READ });
 
   XMLAttribute<std::string> attrFromMesh(ATTR_FROM);
   XMLAttribute<std::string> attrToMesh(ATTR_TO);
 
-  XMLAttribute<std::string> attrConstraint(ATTR_CONSTRAINT);
-  auto validConservative = makeValidatorEquals(VALUE_CONSERVATIVE);
-  auto validConsistent = makeValidatorEquals(VALUE_CONSISTENT);
-  attrConstraint.setValidator(validConservative || validConsistent);
+  auto attrConstraint = XMLAttribute<std::string>(ATTR_CONSTRAINT)
+      .setOptions({VALUE_CONSERVATIVE, VALUE_CONSISTENT});
 
-  XMLAttribute<std::string> attrTiming(ATTR_TIMING);
-  attrTiming.setDefaultValue(VALUE_TIMING_INITIAL);
-  auto validInitial = makeValidatorEquals(VALUE_TIMING_INITIAL);
-  auto validOnAdvance = makeValidatorEquals(VALUE_TIMING_ON_ADVANCE);
-  auto validOnDemand = makeValidatorEquals(VALUE_TIMING_ON_DEMAND);
-  attrTiming.setValidator(validInitial || validOnAdvance || validOnDemand);
+  auto attrTiming = makeXMLAttribute(ATTR_TIMING, VALUE_TIMING_INITIAL)
+      .setOptions({VALUE_TIMING_INITIAL, VALUE_TIMING_ON_ADVANCE, VALUE_TIMING_ON_DEMAND});
 
   // Add tags that all mappings use and add to parent tag
   for (XMLTag & tag : tags) {
@@ -261,7 +233,7 @@ void MappingConfiguration:: xmlTagCallback
     Preallocation preallocation = Preallocation::TREE;
     double radius = 0.0;
     std::string multiscaleType = "undefined";
-    
+
     if (tag.hasAttribute(ATTR_SHAPE_PARAM)){
       shapeParameter = tag.getDoubleAttributeValue(ATTR_SHAPE_PARAM);
     }
@@ -308,7 +280,7 @@ void MappingConfiguration:: xmlTagCallback
     if (tag.hasAttribute("type")){
       multiscaleType = tag.getStringAttributeValue("type");
     }
-          
+
     ConfiguredMapping configuredMapping = createMapping(dir, type, constraint,
                                                         fromMesh, toMesh, timing,
                                                         shapeParameter, supportRadius, solverRtol,
@@ -327,25 +299,6 @@ const std::vector<MappingConfiguration::ConfiguredMapping>&
 MappingConfiguration:: mappings()
 {
   return _mappings;
-}
-
-void MappingConfiguration::addMapping
-(
-  const PtrMapping&    mapping,
-  const mesh::PtrMesh& fromMesh,
-  const mesh::PtrMesh& toMesh,
-  Direction            direction,
-  Timing               timing )
-{
-  TRACE(fromMesh, direction, timing);
-  ConfiguredMapping configuredMapping;
-  configuredMapping.mapping = mapping;
-  configuredMapping.fromMesh = fromMesh;
-  configuredMapping.toMesh = toMesh;
-  configuredMapping.direction = direction;
-  configuredMapping.timing = timing;
-  checkDuplicates ( configuredMapping );
-  _mappings.push_back ( configuredMapping );
 }
 
 MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping
@@ -539,7 +492,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping
   else {
     ERROR("Unknown mapping type!");
   }
-  assertion ( configuredMapping.mapping.use_count() > 0 );
+  assertion (configuredMapping.mapping);
   #ifndef PRECICE_NO_PETSC
     delete[] arg;
   #endif
@@ -574,4 +527,3 @@ MappingConfiguration::Timing MappingConfiguration:: getTiming(const std::string&
 
 
 }} // namespace precice, mapping
-

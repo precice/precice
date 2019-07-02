@@ -1,5 +1,6 @@
 #include "geometry.hpp"
 #include <Eigen/Dense>
+#include <Eigen/Geometry>
 #include "math/math.hpp"
 #include "utils/Helpers.hpp"
 

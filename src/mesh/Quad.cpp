@@ -2,6 +2,8 @@
 #include "mesh/Edge.hpp"
 #include "mesh/Vertex.hpp"
 #include <boost/range/concepts.hpp>
+#include <Eigen/Dense>
+#include <Eigen/Geometry>
 
 namespace precice
 {
@@ -96,6 +98,36 @@ Quad::Quad(
   assertion((_vertexMap[1] == 0) || (_vertexMap[1] == 1), _vertexMap[1]);
   assertion((_vertexMap[2] == 0) || (_vertexMap[2] == 1), _vertexMap[2]);
   assertion((_vertexMap[2] == 0) || (_vertexMap[2] == 1), _vertexMap[3]);
+}
+
+const Eigen::VectorXd Quad::computeNormal(bool flip)
+{
+    // Two triangles are thought by splitting the quad from vertex 0 to 2.
+    // The cross prodcut of the outer edges of the triangles is used to compute
+    // the normal direction and area of the triangles. The direction must be
+    // the same, while the areas differ in general. The normals are added up
+    // and divided by 2 to get the area of the overall quad, since the length
+    // does correspond to the parallelogram spanned by the vectors of the
+    // cross product, which is twice the area of the corresponding triangles.
+    Eigen::Vector3d vectorA = vertex(2).getCoords() - vertex(1).getCoords();
+    Eigen::Vector3d vectorB = vertex(0).getCoords() - vertex(1).getCoords();
+    // Compute cross-product of vector A and vector B
+    auto normal = vectorA.cross(vectorB);
+
+    vectorA = vertex(0).getCoords() - vertex(3).getCoords();
+    vectorB = vertex(2).getCoords() - vertex(3).getCoords();
+    auto normalSecondPart = vectorA.cross(vectorB);
+
+    assertion(math::equals(normal.normalized(), normalSecondPart.normalized()),
+            normal, normalSecondPart);
+    normal += normalSecondPart;
+    normal *= 0.5;
+
+    if (flip){
+        normal *= -1.0; // Invert direction if counterclockwise
+    }
+    _normal = normal.normalized();
+    return normal;
 }
 
 int Quad::getDimensions() const

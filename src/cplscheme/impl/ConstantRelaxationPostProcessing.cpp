@@ -26,7 +26,7 @@ ConstantRelaxationPostProcessing::ConstantRelaxationPostProcessing(
 
 void ConstantRelaxationPostProcessing::initialize(DataMap &cplData)
 {
-  CHECK(_dataIDs.size() == 0 || utils::contained(*_dataIDs.begin(), cplData),
+  CHECK(_dataIDs.empty() || utils::contained(*_dataIDs.begin(), cplData),
         "Data with ID " << *_dataIDs.begin()
                         << " is not contained in data given at initialization!");
 

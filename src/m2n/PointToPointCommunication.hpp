@@ -1,7 +1,10 @@
 #pragma once
 
-#include "DistributedCommunication.hpp"
 #include <list>
+#include <vector>
+#include <string>
+
+#include "DistributedCommunication.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include "mesh/SharedPointer.hpp"
@@ -83,21 +86,26 @@ private:
   
   com::PtrCommunicationFactory _communicationFactory;
 
+  /// Communication class used for this PointToPointCommunication
+  /**
+   * A Communication object represents all connections to all ranks made by this P2P instance.
+   **/
+  com::PtrCommunication _communication;
+  
   /**
    * @brief Defines mapping between:
    *        1. global remote process rank;
    *        2. local data indices, which define a subset of local (for process
    *           rank in the current participant) data to be communicated between
    *           the current process rank and the remote process rank;
-   *        3. communication object (provides point-to-point communication routines).
-   *        5. Appropriatly sized buffer to receive elements
+   *        3. Request holding information about pending communication
+   *        4. Appropriately sized buffer to receive elements
    */
   struct Mapping {
-    int                   remoteRank;
-    std::vector<int>      indices;
-    com::PtrCommunication communication;
-    com::PtrRequest       request;
-    std::vector<double>   recvBuffer;
+    int                 remoteRank;
+    std::vector<int>    indices;
+    com::PtrRequest     request;
+    std::vector<double> recvBuffer;
   };
 
   /**

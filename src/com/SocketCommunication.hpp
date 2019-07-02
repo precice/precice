@@ -1,11 +1,12 @@
-#ifndef PRECICE_NO_SOCKETS
-
 #pragma once
 
 #include "com/Communication.hpp"
 #include <boost/asio.hpp>
 #include "logging/Logger.hpp"
 #include <thread>
+#include <vector>
+#include <map>
+#include "com/SocketSendQueue.hpp"
 
 namespace precice
 {
@@ -138,9 +139,7 @@ private:
   std::string _addressDirectory;
 
   using IOService     = boost::asio::io_service;
-  using TCP           = boost::asio::ip::tcp;
-  using SocketService = boost::asio::stream_socket_service<TCP>;
-  using Socket        = boost::asio::basic_stream_socket<TCP, SocketService>;
+  using Socket        = boost::asio::ip::tcp::socket;
   using Work          = boost::asio::io_service::work;
   
   std::shared_ptr<IOService> _ioService;
@@ -150,6 +149,8 @@ private:
   /// Remote rank -> socket map
   std::map<int, std::shared_ptr<Socket>> _sockets;
 
+  SocketSendQueue _queue;
+
   bool isClient();
   bool isServer();
 
@@ -158,4 +159,3 @@ private:
 } // namespace com
 } // namespace precice
 
-#endif // not PRECICE_NO_SOCKETS

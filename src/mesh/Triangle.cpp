@@ -2,6 +2,8 @@
 #include "mesh/Edge.hpp"
 #include "mesh/Vertex.hpp"
 #include <boost/range/concepts.hpp>
+#include <Eigen/Dense>
+#include <Eigen/Geometry>
 
 namespace precice
 {
@@ -69,6 +71,19 @@ Triangle::Triangle(
   assertion((_vertexMap[0] == 0) || (_vertexMap[0] == 1), _vertexMap[0]);
   assertion((_vertexMap[1] == 0) || (_vertexMap[1] == 1), _vertexMap[0]);
   assertion((_vertexMap[2] == 0) || (_vertexMap[2] == 1), _vertexMap[0]);
+}
+
+const Eigen::VectorXd Triangle::computeNormal(bool flip)
+{
+    Eigen::Vector3d vectorA = edge(1).getCenter() - edge(0).getCenter();
+    Eigen::Vector3d vectorB = edge(2).getCenter() - edge(0).getCenter();
+    // Compute cross-product of vector A and vector B
+    auto normal = vectorA.cross(vectorB);
+    if (flip){
+      normal *= -1.0; // Invert direction if counterclockwise
+    }
+    _normal = normal.normalized();
+    return normal;
 }
 
 int Triangle::getDimensions() const

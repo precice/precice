@@ -29,14 +29,14 @@
       <participant name="SolverTwo">
          <use-mesh name="MeshA" from="SolverOne"/>
          <use-mesh name="MeshC" provide="yes"/>
-         <read-data name="Data" mesh="MeshA" />
-         <mapping:nearest-neighbor direction="read" from="MeshC" to="MeshA" constraint="conservative" />
+         <read-data name="Data" mesh="MeshC" />
+         <mapping:nearest-neighbor direction="read" from="MeshA" to="MeshC" constraint="conservative" />
       </participant>
       
       <participant name="SolverThree">
          <use-mesh name="MeshB" from="SolverOne"/>
          <use-mesh name="MeshD" provide="yes"/>
-         <read-data name="Data" mesh="MeshB" />
+         <read-data name="Data" mesh="MeshD" />
          <mapping:nearest-neighbor direction="read" from="MeshB" to="MeshD" constraint="conservative" />
       </participant>
       

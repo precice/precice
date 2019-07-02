@@ -1,2 +1,3 @@
 /build
-PySolverInterface.cpp
+precice.cpp
+*egg-info*

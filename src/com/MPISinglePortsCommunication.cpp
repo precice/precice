@@ -1,12 +1,10 @@
 #ifndef PRECICE_NO_MPI
 
 #include "MPISinglePortsCommunication.hpp"
+#include "ConnectionInfoPublisher.hpp"
 #include "utils/assertion.hpp"
 #include "utils/Parallel.hpp"
-#include "utils/Publisher.hpp"
-
-using precice::utils::Publisher;
-using precice::utils::ScopedPublisher;
+#include "utils/MasterSlave.hpp"
 
 namespace precice
 {
@@ -46,11 +44,9 @@ void MPISinglePortsCommunication::acceptConnection(std::string const &acceptorNa
 
   MPI_Open_port(MPI_INFO_NULL, const_cast<char *>(_portName.data()));
 
-  const std::string addressFileName("." + requesterName + "-" + acceptorName + ".address");
-  Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
-  ScopedPublisher                        p(addressFileName);
-  p.write(_portName);
-
+  ConnectionInfoWriter conPub(acceptorName, requesterName, _addressDirectory);
+  conPub.write(_portName);
+    
   size_t peerCurrent = 0; // current peer to connect to
   size_t peerCount   = 0; // The total count of peers (initialized in the first iteration)
   size_t requesterCommunicatorSize = 0;
@@ -82,7 +78,7 @@ void MPISinglePortsCommunication::acceptConnection(std::string const &acceptorNa
     _communicators[requesterRank] = communicator;
 
   } while (++peerCurrent < requesterCommunicatorSize);
-  
+
   _isConnected = true;
 }
 
@@ -96,14 +92,13 @@ void MPISinglePortsCommunication::acceptConnectionAsServer(
   TRACE(acceptorName, requesterName, acceptorRank, requesterCommunicatorSize);
   assertion(not isConnected());
 
+  ConnectionInfoWriter conInfo(acceptorName, requesterName, _addressDirectory);
+  
   _isAcceptor = true;
 
-  const std::string addressFileName("." + requesterName + "-" + acceptorName + ".address");
-  Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
-  ScopedPublisher                        p(addressFileName);
-  if (utils::MasterSlave::_rank == 0) { // only master opens a port
+  if (utils::MasterSlave::getRank() == 0) { // only master opens a port
     MPI_Open_port(MPI_INFO_NULL, const_cast<char *>(_portName.data()));
-    p.write(_portName);
+    conInfo.write(_portName);
     DEBUG("Accept connection at " << _portName);
   }
   
@@ -112,6 +107,7 @@ void MPISinglePortsCommunication::acceptConnectionAsServer(
                   utils::Parallel::getGlobalCommunicator(), &communicator);
   DEBUG("Accepted connection at " << _portName);
   _communicators[0] = communicator; // all comms are the same
+  
   _isConnected = true;
 }
 
@@ -124,10 +120,8 @@ void MPISinglePortsCommunication::requestConnection(std::string const &acceptorN
   assertion(not isConnected());
   _isAcceptor = false;
 
-  const std::string addressFileName("." + requesterName + "-" + acceptorName + ".address");
-  Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
-  Publisher p(addressFileName);
-  _portName = p.read();
+  ConnectionInfoReader conInfo(acceptorName, requesterName, _addressDirectory);
+  _portName = conInfo.read();
   DEBUG("Request connection to " << _portName);
 
   MPI_Comm communicator;
@@ -154,10 +148,8 @@ void MPISinglePortsCommunication::requestConnectionAsClient(std::string      con
   
   _isAcceptor = false;
 
-  const std::string addressFileName("." + requesterName + "-" + acceptorName + ".address");
-  Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
-  Publisher p(addressFileName);
-  _portName = p.read();
+  ConnectionInfoReader conInfo(acceptorName, requesterName, _addressDirectory);
+  _portName = conInfo.read();
   DEBUG("Request connection to " << _portName);
 
   MPI_Comm communicator;
@@ -181,7 +173,7 @@ void MPISinglePortsCommunication::closeConnection()
 
   DEBUG("Disconnected");
 
-  if (_isAcceptor and utils::MasterSlave::_rank == 0) {
+  if (_isAcceptor and utils::MasterSlave::getRank() == 0) {
     MPI_Close_port(const_cast<char *>(_portName.c_str()));
     DEBUG("Port closed");
   }
