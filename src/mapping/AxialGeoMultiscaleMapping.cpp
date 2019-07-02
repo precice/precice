@@ -36,9 +36,16 @@ void AxialGeoMultiscaleMapping:: computeMapping()
 
   if (getConstraint() == CONSISTENT){
     DEBUG("Compute consistent mapping");
-    assertion(_type == SPREAD, "Not yet implemented");
-    CHECK(input()->vertices().size()==1, "You can only define an axial geometric multiscale mapping of type spread "
-        "from a mesh with exactly one vertex. Mesh " << input()->getName() << " has " << input()->vertices().size() << " vertices.");
+    if (_type == SPREAD){
+      CHECK(input()->vertices().size()==1, "You can only define an axial geometric multiscale mapping of type spread "
+          "from a mesh with exactly one vertex. Mesh " << input()->getName() << " has " << input()->vertices().size() << " vertices.");
+    }
+    else{
+      assertion(_type == COLLECT);
+      CHECK(output()->vertices().size()==1, "You can only define an axial geometric multiscale mapping of type collect "
+          "to a mesh with exactly one vertex. Mesh " << output()->getName() << " has " << output()->vertices().size() << " vertices.");
+    }
+
 
     // Nothing to do here
   }
@@ -111,6 +118,10 @@ void AxialGeoMultiscaleMapping:: map
       assertion(_type == COLLECT);
       assertion(output()->vertices().size() == 1);
       assertion(outputValues.size() == valueDimensions);
+
+      for ( int dim=0; dim < valueDimensions; dim++ ){
+        outputValues(dim) = 0.0;
+      }
 
       size_t const inSize = input()->vertices().size();
       for ( size_t i=0; i < inSize; i++ ){
