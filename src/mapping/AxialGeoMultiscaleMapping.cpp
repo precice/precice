@@ -71,13 +71,7 @@ void AxialGeoMultiscaleMapping:: map
 
   const Eigen::VectorXd& inputValues = input()->data(inputDataID)->values();
   int valueDimensions = input()->data(inputDataID)->getDimensions();
-
-  assertion(inputValues.size() == valueDimensions);
-
   Eigen::VectorXd& outputValues = output()->data(outputDataID)->values();
-
-  assertion(input()->vertices().size() == 1);
-  mesh::Vertex& v0 = input()->vertices()[0];
 
   assertion ( valueDimensions == output()->data(outputDataID)->getDimensions(),
               valueDimensions, output()->data(outputDataID)->getDimensions() );
@@ -88,21 +82,41 @@ void AxialGeoMultiscaleMapping:: map
 
   if (getConstraint() == CONSISTENT){
     DEBUG("Map consistent");
-    assertion(_type == SPREAD, "Not yet implemented");
-    size_t const outSize = output()->vertices().size();
-    for ( size_t i=0; i < outSize; i++ ){
+    if (_type == SPREAD){
+      assertion(inputValues.size() == valueDimensions);
+      assertion(input()->vertices().size() == 1);
+      mesh::Vertex& v0 = input()->vertices()[0];
 
-      Eigen::VectorXd difference(getDimensions());
-      difference = v0.getCoords();
-      difference -= output()->vertices()[i].getCoords();
-      double distance = difference.norm() / _radius;
-      CHECK(distance <= 1.05, "Mesh " << output()->getName() << " has vertices that do not coincide with the geometric"
-          " multiscale interface define by mesh " << input()->getName() << ". Radius is " << _radius << " and distance between"
-          " 2D/3D point and 1D point is " << difference.norm());
+      size_t const outSize = output()->vertices().size();
+      for ( size_t i=0; i < outSize; i++ ){
 
-      for ( int dim=0; dim < valueDimensions; dim++ ){
-        // only parabolic shape supported
-        outputValues((i*valueDimensions)+dim) = inputValues(dim) * (1.0 - distance*distance) * _scaling;
+        Eigen::VectorXd difference(getDimensions());
+        difference = v0.getCoords();
+        difference -= output()->vertices()[i].getCoords();
+        double distance = difference.norm() / _radius;
+        CHECK(distance <= 1.05, "Mesh " << output()->getName() << " has vertices that do not coincide with the geometric"
+            " multiscale interface define by mesh " << input()->getName() << ". Radius is " << _radius << " and distance between"
+            " 2D/3D point and 1D point is " << difference.norm());
+
+        for ( int dim=0; dim < valueDimensions; dim++ ){
+          // only parabolic shape supported
+          //outputValues((i*valueDimensions)+dim) = inputValues(dim) * (1.0 - distance*distance) * _scaling;
+
+          // constant shape
+          outputValues((i*valueDimensions)+dim) = inputValues(dim);
+        }
+      }
+    }
+    else{
+      assertion(_type == COLLECT);
+      assertion(output()->vertices().size() == 1);
+      assertion(outputValues.size() == valueDimensions);
+
+      size_t const inSize = input()->vertices().size();
+      for ( size_t i=0; i < inSize; i++ ){
+        for ( int dim=0; dim < valueDimensions; dim++ ){
+          outputValues(dim) += inputValues((i*valueDimensions)+dim) / inSize;
+        }
       }
     }
   }
