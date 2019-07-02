@@ -161,6 +161,8 @@ target_sources(precice
     src/m2n/SharedPointer.hpp
     src/m2n/config/M2NConfiguration.cpp
     src/m2n/config/M2NConfiguration.hpp
+    src/mapping/AxialGeoMultiscaleMapping.cpp
+    src/mapping/AxialGeoMultiscaleMapping.hpp
     src/mapping/Mapping.cpp
     src/mapping/Mapping.hpp
     src/mapping/NearestNeighborMapping.cpp
@@ -295,7 +297,6 @@ target_sources(precice
     src/utils/prettyprint.hpp
     src/utils/stacktrace.cpp
     src/utils/stacktrace.hpp
-    src/versions.hpp
     src/versions.hpp
     src/xml/ConfigParser.cpp
     src/xml/ConfigParser.hpp
