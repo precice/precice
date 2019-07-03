@@ -23,7 +23,7 @@ GatherScatterCommunication::~GatherScatterCommunication()
   }
 }
 
-bool GatherScatterCommunication::isConnected()
+bool GatherScatterCommunication::isConnected() const
 {
   return _isConnected;
 }
@@ -54,7 +54,7 @@ void GatherScatterCommunication::closeConnection()
 }
 
 void GatherScatterCommunication::send(
-    double *itemsToSend,
+    double const *itemsToSend,
     size_t  size,
     int     valueDimension)
 {

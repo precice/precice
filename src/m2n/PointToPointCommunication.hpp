@@ -30,10 +30,10 @@ public:
   PointToPointCommunication(com::PtrCommunicationFactory communicationFactory,
                             mesh::PtrMesh                mesh);
 
-  virtual ~PointToPointCommunication();
+  ~PointToPointCommunication() override;
 
   /// Returns true, if a connection to a remote participant has been established.
-  virtual bool isConnected();
+  bool isConnected() const override;
 
   /**
    * @brief Accepts connection from participant, which has to call
@@ -42,8 +42,8 @@ public:
    * @param[in] acceptorName  Name of calling participant.
    * @param[in] requesterName Name of remote participant to connect to.
    */
-  virtual void acceptConnection(std::string const &acceptorName,
-                                std::string const &requesterName);
+  void acceptConnection(std::string const &acceptorName,
+                        std::string const &requesterName) override;
 
   /**
    * @brief Requests connection from participant, which has to call acceptConnection().
@@ -51,29 +51,29 @@ public:
    * @param[in] acceptorName Name of remote participant to connect to.
    * @param[in] requesterName Name of calling participant.
    */
-  virtual void requestConnection(std::string const &acceptorName,
-                                 std::string const &requesterName);
+  void requestConnection(std::string const &acceptorName,
+                         std::string const &requesterName) override;
 
   /**
    * @brief Disconnects from communication space, i.e. participant.
    *
    * This method is called on destruction.
    */
-  virtual void closeConnection();
+  void closeConnection() override;
 
   /**
    * @brief Sends a subset of local double values corresponding to local indices
    *        deduced from the current and remote vertex distributions.
    */
-  virtual void send(double *itemsToSend, size_t size, int valueDimension = 1);
+  void send(double const *itemsToSend, size_t size, int valueDimension = 1) override;
 
   /**
    * @brief Receives a subset of local double values corresponding to local
    *        indices deduced from the current and remote vertex distributions.
    */
-  virtual void receive(double *itemsToReceive,
-                       size_t  size,
-                       int     valueDimension = 1);
+  void receive(double *itemsToReceive,
+               size_t  size,
+               int     valueDimension = 1) override;
 
 private:
   logging::Logger _log{"m2n::PointToPointCommunication"};
