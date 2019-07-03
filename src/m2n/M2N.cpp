@@ -143,7 +143,7 @@ void M2N::createDistributedCommunication(mesh::PtrMesh mesh)
 }
 
 void M2N::send(
-    double *itemsToSend,
+    double const *itemsToSend,
     int     size,
     int     meshID,
     int     valueDimension)

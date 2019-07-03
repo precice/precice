@@ -100,7 +100,7 @@ public:
   void createDistributedCommunication(mesh::PtrMesh mesh);
 
   /// Sends an array of double values from all slaves (different for each slave).
-  void send(double *itemsToSend,
+  void send(double const *itemsToSend,
             int     size,
             int     meshID,
             int     valueDimension);
