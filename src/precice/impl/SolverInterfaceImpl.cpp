@@ -213,8 +213,10 @@ double SolverInterfaceImpl:: initialize()
 
     INFO("Setting up master communication to coupling partner/s" );
     for (auto& m2nPair : _m2ns) {
-        m2nPair.second.prepareEstablishment();
-        m2nPair.second.connectMasters();
+        auto& bm2n = m2nPair.second;
+        INFO("Establishing " << (bm2n.isRequesting?"incoming connection from ":"outgoing connection to") <<  " master of " << bm2n.remoteName);
+        bm2n.prepareEstablishment();
+        bm2n.connectMasters();
     }
     INFO("Masters are connected");
 
@@ -222,8 +224,10 @@ double SolverInterfaceImpl:: initialize()
 
     INFO("Setting up slaves communication to coupling partner/s" );
     for (auto& m2nPair : _m2ns) {
-      m2nPair.second.connectSlaves();
-      m2nPair.second.cleanupEstablishment();
+      auto& bm2n = m2nPair.second;
+      INFO("Establishing " << (bm2n.isRequesting?"incoming connection from ":"outgoing connection to") <<  " slaves of " << bm2n.remoteName);
+      bm2n.connectSlaves();
+      bm2n.cleanupEstablishment();
     }
     INFO("Slaves are connected");
 
