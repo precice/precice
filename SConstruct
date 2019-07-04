@@ -106,7 +106,7 @@ env.Append(LIBPATH = [('#' + buildpath)])
 env.Append(CCFLAGS= ['-Wall', '-Wextra', '-Wno-unused-parameter', '-std=c++11'])
 
 # ====== PRECICE_VERSION number ======
-PRECICE_VERSION = "1.5.1"
+PRECICE_VERSION = "1.5.2"
 
 
 # ====== Compiler Settings ======
