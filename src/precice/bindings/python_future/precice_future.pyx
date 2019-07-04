@@ -66,6 +66,7 @@ cdef class Interface:
     #  @pre configure() has not yet been called
     # 
     #  @param[in] configurationFileName Name (with path) of the xml configuration file to be read.
+    #
     def configure (self, configuration_file_name):
         self.thisptr.configure (convert(configuration_file_name))
 
@@ -80,6 +81,7 @@ cdef class Interface:
     #  from the coupling partner's first computation.
     #
     #  @return Maximum length of first timestep to be computed by the solver.
+    #
     def initialize (self):
         return self.thisptr.initialize ()
 
@@ -105,8 +107,9 @@ cdef class Interface:
     #
     #  @post Initial coupling data was exchanged.
     #
-    #  @see isActionRequired  
-    #  @see precice::constants::actionWriteInitialData
+    #  @see SolverInterface()::isActionRequired()  
+    #  @see precice()::constants()::actionWriteInitialData()
+    # 
     def initialize_data (self):
         self.thisptr.initializeData ()
 
@@ -127,6 +130,7 @@ cdef class Interface:
     #  @post Meshes with data are exported to files if configured.
     #
     #  @return Maximum length of next timestep to be computed by solver. 
+    #
     def advance (self, double computed_timestep_length):
         return self.thisptr.advance (computed_timestep_length)
 
@@ -138,6 +142,7 @@ cdef class Interface:
     #  @post Meshes and data are deallocated
     #
     #  @see isCouplingOngoing()
+    #
     def finalize (self):
         self.thisptr.finalize ()
 
@@ -149,6 +154,7 @@ cdef class Interface:
     #  The dimension is specified in the XML configuration.
     #
     #  @pre configure() has been called successfully.
+    #
     def get_dimensions (self):
         return self.thisptr.getDimensions ()
 
@@ -166,6 +172,7 @@ cdef class Interface:
     # 
     #  @note
     #  The user should call finalize() after this function returns false.
+    #
     def is_coupling_ongoing (self):
         return self.thisptr.isCouplingOngoing ()
 
@@ -185,6 +192,7 @@ cdef class Interface:
     #  It is allowed to read data even if this function returns false.
     #  This is not recommended due to performance reasons.
     #  Use this function to prevent unnecessary reads.
+    #
     def is_read_data_available (self):
         return self.thisptr.isReadDataAvailable ()
 
@@ -204,6 +212,7 @@ cdef class Interface:
     #  It is allowed to write data even if this function returns false.
     #  This is not recommended due to performance reasons.
     #  Use this function to prevent unnecessary writes.
+    #
     def is_write_data_required (self, double computed_timestep_length):
         return self.thisptr.isWriteDataRequired (computed_timestep_length)
 
@@ -217,6 +226,7 @@ cdef class Interface:
     #  - An implicit coupling timestep iteration is not yet converged.
     #
     #  @pre initialize() has been called successfully.
+    #
     def is_timestep_complete (self):
         return self.thisptr.isTimestepComplete ()
 
@@ -231,6 +241,7 @@ cdef class Interface:
     #  The solver may still have to evaluate the fine model representation.
     #
     #  @see hasToEvaluateFineModel()
+    #
     def has_to_evaluate_surrogate_model (self):
         return self.thisptr.hasToEvaluateSurrogateModel ()
 
@@ -245,6 +256,7 @@ cdef class Interface:
     #  The solver may still have to evaluate the surrogate model representation.
     #
     #  @see hasToEvaluateSurrogateModel()
+    #
     def has_to_evaluate_fine_model (self):
         return self.thisptr.hasToEvaluateFineModel ()
 
@@ -261,6 +273,7 @@ cdef class Interface:
     #
     #  @see fulfilledAction()
     #  @see cplscheme::constants
+    #
     def is_action_required (self, action):
         return self.thisptr.isActionRequired (action)
 
@@ -272,6 +285,7 @@ cdef class Interface:
     # 
     #  @see requireAction()
     #  @see cplscheme::constants
+    #
     def fulfilled_action (self, action):
         self.thisptr.fulfilledAction (action)
 
@@ -279,6 +293,7 @@ cdef class Interface:
     #
     #  @param[in] meshName the name of the mesh
     #  @returns whether the mesh is used.
+    #
     def has_mesh(self, str mesh_name):
         return self.thisptr.hasMesh (convert(mesh_name))
 
@@ -286,12 +301,14 @@ cdef class Interface:
     # 
     #  @param[in] meshName the name of the mesh
     #  @returns the id of the corresponding mesh
+    #
     def get_mesh_id (self, str mesh_name):
         return self.thisptr.getMeshID (convert(mesh_name))
 
     ## @brief Returns a id-set of all used meshes by this participant.
     #
     #  @returns the set of ids.
+    #
     def get_mesh_ids (self):
         return self.thisptr.getMeshIDs ()
 
@@ -301,6 +318,7 @@ cdef class Interface:
     #  @returns the handle to the mesh
     #
     #  @see precice::MeshHandle
+    #
     def get_mesh_handle(self, str mesh_name):
         raise Exception("The API method get_mesh_handle is not yet available for the Python bindings.")
 
@@ -314,6 +332,7 @@ cdef class Interface:
     #  @pre count of available elements at position matches the configured dimension
     #
     #  @see getDimensions()
+    #
     def set_mesh_vertex(self, int mesh_id, np.ndarray[np.double_t, ndim=1] position):
         vertex_id = self.thisptr.setMeshVertex(mesh_id, &position[0])
         return vertex_id
@@ -322,6 +341,7 @@ cdef class Interface:
     #
     #  @param[in] meshID the id of the mesh
     #  @returns the amount of the vertices of the mesh
+    #
     def get_mesh_vertex_size (self, int mesh_id):
         return self.thisptr.getMeshVertexSize(mesh_id)
 
@@ -340,6 +360,7 @@ cdef class Interface:
     #  @pre count of available elements at ids matches size
     # 
     #  @see getDimensions()
+    #
     def set_mesh_vertices (self, int mesh_id, np.ndarray[np.double_t, ndim=1] positions):
         size = positions.size/self.get_dimensions()
         assert(size.is_integer())
@@ -361,6 +382,7 @@ cdef class Interface:
     #  @pre count of available elements at ids matches size
     # 
     #  @see getDimensions()
+    #
     def get_mesh_vertices(self, int mesh_id, ids):
         cdef np.ndarray[int, ndim=1] ids_int = np.array(ids, dtype=np.int32)
         size = ids.size
@@ -381,6 +403,7 @@ cdef class Interface:
     #  @pre count of available elements at ids matches size
     #
     #  @note prefer to reuse the IDs returned from calls to setMeshVertex() and setMeshVertices().
+    #
     def get_mesh_vertex_ids_from_positions (self, int mesh_id, np.ndarray[np.double_t, ndim=1] positions):
         size = positions.size/self.get_dimensions()
         assert(size.is_integer())
@@ -399,6 +422,7 @@ cdef class Interface:
     #  @return the ID of the edge
     #
     #  @pre vertices with firstVertexID and secondVertexID were added to the mesh with the ID meshID
+    #
     def set_mesh_edge (self, int mesh_id, int first_vertex_id, int second_vertex_id):
         return self.thisptr.setMeshEdge (mesh_id, first_vertex_id, second_vertex_id)
 
@@ -410,6 +434,7 @@ cdef class Interface:
     #  @param[in] thirdEdgeID ID of the third edge of the triangle
     # 
     #  @pre edges with firstEdgeID, secondEdgeID, and thirdEdgeID were added to the mesh with the ID meshID
+    #
     def set_mesh_triangle (self, int mesh_id, int first_edge_id, int second_edge_id, int third_edge_id):
         self.thisptr.setMeshTriangle (mesh_id, first_edge_id, second_edge_id, third_edge_id)
 
@@ -427,6 +452,7 @@ cdef class Interface:
     #  @param[in] thirdVertexID ID of the third vertex of the triangle
     # 
     #  @pre edges with firstVertexID, secondVertexID, and thirdVertexID were added to the mesh with the ID meshID
+    #
     def set_mesh_triangle_with_edges (self, int mesh_id, int first_vertex_id, int second_vertex_id, int third_vertex_id):
         self.thisptr.setMeshTriangleWithEdges (mesh_id, first_vertex_id, second_vertex_id, third_vertex_id)
 
@@ -441,6 +467,7 @@ cdef class Interface:
     #  @pre edges with firstEdgeID, secondEdgeID, thirdEdgeID, and fourthEdgeID were added to the mesh with the ID meshID
     # 
     #  @warning Quads are not fully implemented yet.
+    #
     def set_mesh_quad (self, int mesh_id, int first_edge_id, int second_edge_id, int third_edge_id, int fourth_edge_id):
         self.thisptr.setMeshQuad (mesh_id, first_edge_id, second_edge_id, third_edge_id, fourth_edge_id)
 
@@ -459,6 +486,7 @@ cdef class Interface:
     #  @param[in] fourthVertexID ID of the fourth vertex of the Quad
     #
     #  @pre edges with firstVertexID, secondVertexID, thirdVertexID, and fourthVertexID were added to the mesh with the ID meshID
+    #
     def set_mesh_quad_with_edges (self, int mesh_id, int first_vertex_id, int second_vertex_id, int third_vertex_id, int fourth_vertex_id):
         self.thisptr.setMeshQuadWithEdges (mesh_id, first_vertex_id, second_vertex_id, third_vertex_id, fourth_vertex_id)
 
@@ -467,6 +495,7 @@ cdef class Interface:
     #  @param[in] dataName the name of the data
     #  @param[in] meshID the id of the associated mesh
     #  @returns whether the mesh is used.
+    #
     def has_data (self, str data_name, int mesh_id):
         return self.thisptr.hasData(convert(data_name), mesh_id)
 
@@ -476,6 +505,7 @@ cdef class Interface:
     #  @param[in] meshID the id of the associated mesh
     #
     #  @returns the id of the corresponding data
+    #
     def get_data_id (self, str data_name, int mesh_id):
         return self.thisptr.getDataID (convert(data_name), mesh_id)
 
@@ -485,6 +515,7 @@ cdef class Interface:
     #  It also computes the mapping if necessary.
     #
     #  @pre A mapping to toMeshID was configured.
+    #
     def map_read_data_to (self, int to_mesh_id):
         self.thisptr.mapReadDataTo (to_mesh_id)
 
@@ -494,6 +525,7 @@ cdef class Interface:
     #  It also computes the mapping if necessary.
     #
     #  @pre A mapping from fromMeshID was configured.
+    #
     def map_write_data_from (self, int from_mesh_id):
         self.thisptr.mapWriteDataFrom (from_mesh_id)
 
@@ -516,6 +548,7 @@ cdef class Interface:
     #  @pre initialize() has been called
     #
     #  @see SolverInterface::setMeshVertex()
+    #
     def write_block_vector_data (self, int data_id, value_indices, np.ndarray[np.double_t, ndim=1] values):
         assert(values.size / self.get_dimensions() == value_indices.size)
         size = value_indices.size
@@ -538,6 +571,7 @@ cdef class Interface:
     #  @pre initialize() has been called
     #
     #  @see SolverInterface::setMeshVertex()
+    #
     def write_vector_data (self, int data_id, value_index, np.ndarray[np.double_t, ndim=1] value):
         self.thisptr.writeVectorData (data_id, value_index, &value[0])
 
@@ -557,6 +591,7 @@ cdef class Interface:
     #  @pre initialize() has been called
     #
     #  @see SolverInterface::setMeshVertex()
+    #
     def write_block_scalar_data (self, int data_id, value_indices, np.ndarray[np.double_t, ndim=1] values):
         assert(values.size == value_indices.size)
         size = value_indices.size
@@ -574,6 +609,7 @@ cdef class Interface:
     #  @pre initialize() has been called
     # 
     #  @see SolverInterface::setMeshVertex()
+    #
     def write_scalar_data (self, int data_id, int value_index, double value):
         self.thisptr.writeScalarData (data_id, value_index, value)
 
@@ -598,6 +634,7 @@ cdef class Interface:
     #  @post values contain the read data as specified in the above format.
     #
     #  @see SolverInterface::setMeshVertex()
+    #
     def read_block_vector_data (self, int data_id, value_indices):
         size = value_indices.size
         cdef np.ndarray[int, ndim=1] value_indices_int = np.array(value_indices, dtype=np.int32)
@@ -623,6 +660,7 @@ cdef class Interface:
     #  @post value contains the read data as specified in the above format.
     # 
     #  @see SolverInterface::setMeshVertex()
+    #
     def read_vector_data (self, int data_id, int value_index):
         cdef np.ndarray[np.double_t] value = np.empty(self.get_dimensions(), dtype=np.double)
         self.thisptr.readVectorData (data_id, value_index, &value[0])
@@ -646,6 +684,7 @@ cdef class Interface:
     #  @post values contains the read data.
     #
     #  @see SolverInterface::setMeshVertex()
+    #
     def read_block_scalar_data (self, int data_id, value_indices):
         size = value_indices.size
         cdef np.ndarray[int, ndim=1] value_indices_int = np.array(value_indices, dtype=np.int32)
@@ -666,6 +705,7 @@ cdef class Interface:
     #  @post value contains the read data.
     #
     #  @see SolverInterface::setMeshVertex()
+    #
     def read_scalar_data (self, int data_id, int value_index):
         cdef double value;
         self.thisptr.readScalarData (data_id, value_index, value)
