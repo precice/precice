@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file. For future 
 
 ## develop
 
+## 1.5.2
+
+- Fixed faulty communication in `master:sockets` leading to crashes.
+
 ## 1.5.1
 
 - Fixed the exposure of `boost::asio` implementation details leading to version incompatibilities
