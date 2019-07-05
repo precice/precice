@@ -16,9 +16,10 @@ private:
     SolverInterface* interface;
     ArrayFactory factory;
     bool constructed;
+    std::shared_ptr<matlab::engine::MATLABEngine> matlabPtr = getEngine();
     
     void myMexPrint(const std::string text) {
-        std::cout << "MEX gateway: " << text << std::endl;
+        matlabPtr->feval(u"fprintf",0,std::vector<Array>({factory.createScalar(text)}));
     }
     
 public:
@@ -29,7 +30,9 @@ public:
         // define the functionID
         const TypedArray<uint8_t> functionIDArray = inputs[0];
         int functionID = functionIDArray[0];
-        std::cout << "Gateway function " << (int)functionID << " was called." << std::endl;
+        
+        // Debug output
+        // std::cout << "Gateway function " << (int)functionID << " was called." << std::endl;
         
         // Abort if constructor was not called before, or if constructor 
         // was called on an existing solverInterface
