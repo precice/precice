@@ -1,3 +1,5 @@
+from setuptools import setup
+
 setup(
     name='precice',
     version='1.5.2',
