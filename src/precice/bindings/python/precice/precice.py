@@ -100,6 +100,7 @@ class Interface:
 
     def write_block_vector_data(self, data_id, size, value_indices, values):
         assert (values.size == size * self.get_dimensions())
+        assert (value_indices.size == size)
         self.interface.write_block_vector_data(data_id, value_indices, values)
 
     def write_vector_data(self, data_id, value_index, value):
@@ -107,6 +108,7 @@ class Interface:
 
     def write_block_scalar_data(self, data_id, size, value_indices, values):
         assert (values.size == size)
+        assert (value_indices.size == size)
         self.interface.write_block_scalar_data(data_id, value_indices, values)
 
     def write_scalar_data(self, data_id, value_index, value):
@@ -114,18 +116,20 @@ class Interface:
 
     def read_block_vector_data(self, data_id, size, value_indices, values):
         assert (values.size == size * self.get_dimensions())
+        assert (value_indices.size == size)
         out_values = self.interface.read_block_vector_data(data_id, value_indices)
         values[:] = out_values[:]
 
-    def read_vector_data(self, dataID, valueIndex, value):
-        out_value = self.interface.read_vector_data(dataID, valueIndex)
+    def read_vector_data(self, data_id, value_index, value):
+        out_value = self.interface.read_vector_data(data_id, value_index)
         value[:] = out_value[:]
 
-    def read_block_scalar_data(self, dataID, size, valueIndices, values):
+    def read_block_scalar_data(self, data_id, size, value_indices, values):
         assert (values.size == size)
-        out_values = self.interface.read_block_scalar_data(dataID, valueIndices)
+        assert (value_indices.size == size)
+        out_values = self.interface.read_block_scalar_data(data_id, value_indices)
         values[:] = out_values[:]
 
-    def read_scalar_data(self, dataID, valueIndex, value):
-        out_value = self.interface.read_scalar_data(dataID, valueIndex)
+    def read_scalar_data(self, data_id, value_index, value):
+        out_value = self.interface.read_scalar_data(data_id, value_index)
         value[:] = out_value[:]

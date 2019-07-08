@@ -188,7 +188,7 @@ cdef class Interface:
     def write_block_vector_data (self, int data_id, value_indices, values):
         cdef np.ndarray[int, ndim=1] _value_indices = np.ascontiguousarray(value_indices, dtype=np.int32)
         cdef np.ndarray[double, ndim=1] _values = np.ascontiguousarray(values, dtype=np.double)
-        assert(_values.size / self.get_dimensions() == value_indices.size)
+        assert(_values.size / self.get_dimensions() == _value_indices.size)
         size = value_indices.size
         self.thisptr.writeBlockVectorData (data_id, size, &_value_indices[0], &_values[0])
 
@@ -199,7 +199,7 @@ cdef class Interface:
     def write_block_scalar_data (self, int data_id, value_indices, values):
         cdef np.ndarray[int, ndim=1] _value_indices = np.ascontiguousarray(value_indices, dtype=np.int32)
         cdef np.ndarray[double, ndim=1] _values = np.ascontiguousarray(values, dtype=np.double)
-        assert(values.size == value_indices.size)
+        assert(_values.size == _value_indices.size)
         size = value_indices.size
         self.thisptr.writeBlockScalarData (data_id, size, &_value_indices[0], &_values[0])
 
@@ -220,7 +220,7 @@ cdef class Interface:
 
     def read_block_scalar_data (self, int data_id, value_indices):
         cdef np.ndarray[int, ndim=1] _value_indices = np.ascontiguousarray(value_indices, dtype=np.int32)
-        size = value_indices.size
+        size = _value_indices.size
         cdef np.ndarray[double, ndim=1] _values = np.empty(size, dtype=np.double)
         self.thisptr.readBlockScalarData (data_id, size, &_value_indices[0], &_values[0])
         return _values
