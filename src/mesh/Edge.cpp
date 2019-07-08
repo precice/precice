@@ -1,4 +1,5 @@
 #include "Edge.hpp"
+#include "utils/EigenIO.hpp"
 
 namespace precice {
 namespace mesh {
@@ -57,13 +58,12 @@ bool Edge::operator!=(const Edge& other) const
 }
 
 std::ostream& operator<<(std::ostream& stream, const Edge& edge){
-    stream << "LINESTRING (";
-    for (int i = 0; i < 2; i++){
-        stream << edge.vertex(i).getCoords().transpose();
-        if (i < 1)
-            stream << ", ";
-    }
-    return stream << ")";
+    using utils::eigenio::wkt;
+    return stream << "LINESTRING ("
+                  << edge.vertex(0).getCoords().transpose().format(wkt())
+                  << ", "
+                  << edge.vertex(1).getCoords().transpose().format(wkt())
+                  << ')';
 }
 
 }} // namespace precice, mesh

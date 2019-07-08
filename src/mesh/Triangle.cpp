@@ -1,6 +1,7 @@
 #include "Triangle.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Vertex.hpp"
+#include "utils/EigenIO.hpp"
 #include <boost/range/concepts.hpp>
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
@@ -123,13 +124,12 @@ bool Triangle::operator!=(const Triangle& other) const
 
 std::ostream& operator<<(std::ostream& os, const Triangle& t)
 {
-    os << "POLYGON ((";
-    for (int i = 0; i < 3; i++){
-        os << t.vertex(i).getCoords().transpose();
-        if (i < 2)
-            os << ", ";
-    }
-    return os <<", " << t.vertex(0).getCoords().transpose() << "))";
+    using utils::eigenio::wkt;
+    return os << "POLYGON (("
+              << t.vertex(0).getCoords().transpose().format(wkt()) << ", "
+              << t.vertex(1).getCoords().transpose().format(wkt()) << ", "
+              << t.vertex(2).getCoords().transpose().format(wkt()) << ", "
+              << t.vertex(0).getCoords().transpose().format(wkt()) << "))";
 }
 
 } // namespace mesh

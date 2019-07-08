@@ -266,6 +266,7 @@ target_sources(precice
     src/utils/Dimensions.hpp
     src/utils/EigenHelperFunctions.cpp
     src/utils/EigenHelperFunctions.hpp
+    src/utils/EigenIO.hpp
     src/utils/Event.cpp
     src/utils/Event.hpp
     src/utils/EventUtils.cpp
@@ -295,7 +296,6 @@ target_sources(precice
     src/utils/prettyprint.hpp
     src/utils/stacktrace.cpp
     src/utils/stacktrace.hpp
-    src/versions.hpp
     src/versions.hpp
     src/xml/ConfigParser.cpp
     src/xml/ConfigParser.hpp

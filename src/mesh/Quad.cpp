@@ -1,6 +1,7 @@
 #include "Quad.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Vertex.hpp"
+#include "utils/EigenIO.hpp"
 #include <boost/range/concepts.hpp>
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
@@ -168,13 +169,13 @@ bool Quad::operator!=(const Quad& other) const
 
 std::ostream& operator<<(std::ostream& os, const Quad& q)
 {
-    os << "POLYGON ((";
-    for (int i = 0; i < 4; i++){
-        os << q.vertex(i).getCoords().transpose();
-        if (i < 3)
-            os << ", ";
-    }
-    return os <<", " << q.vertex(0).getCoords().transpose() << "))";
+    using utils::eigenio::wkt;
+    return os << "POLYGON (("
+              << q.vertex(0).getCoords().transpose().format(wkt()) << ", "
+              << q.vertex(1).getCoords().transpose().format(wkt()) << ", "
+              << q.vertex(2).getCoords().transpose().format(wkt()) << ", "
+              << q.vertex(3).getCoords().transpose().format(wkt()) << ", "
+              << q.vertex(0).getCoords().transpose().format(wkt()) << "))";
 }
 
 } // namespace mesh
