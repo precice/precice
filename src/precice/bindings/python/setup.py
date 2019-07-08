@@ -1,8 +1,6 @@
-from setuptools import setup
-
 setup(
     name='precice',
-    version='1.5.1',
+    version='1.5.2',
     description='Python language bindings for preCICE coupling library',
     url='https://github.com/precice/precice',
     author='the preCICE developers',

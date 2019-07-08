@@ -90,7 +90,7 @@ void GatherScatterCommunication::send(
       DEBUG("Slave Size = " << slaveSize);
       if (slaveSize > 0) {
         std::vector<double> valuesSlave(slaveSize);
-        utils::MasterSlave::_communication->receive(valuesSlave, rankSlave);
+        utils::MasterSlave::_communication->receive(valuesSlave.data(), slaveSize, rankSlave);
         for (size_t i = 0; i < vertexDistribution[rankSlave].size(); i++) {
           for (int j = 0; j < valueDimension; j++) {
             globalItemsToSend[vertexDistribution[rankSlave][i] * valueDimension + j] += valuesSlave[i * valueDimension + j];
@@ -155,7 +155,7 @@ void GatherScatterCommunication::receive(
             valuesSlave[i * valueDimension + j] = globalItemsToReceive[vertexDistribution[rankSlave][i] * valueDimension + j];
           }
         }
-        utils::MasterSlave::_communication->send(valuesSlave, rankSlave);
+        utils::MasterSlave::_communication->send(valuesSlave.data(), slaveSize, rankSlave);
         DEBUG("valuesSlave[0] = " << valuesSlave[0]);
       }
     }

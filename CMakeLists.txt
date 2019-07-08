@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 3.10.2)
 
-project(preCICE VERSION 1.5.1 LANGUAGES CXX)
+project(preCICE VERSION 1.5.2 LANGUAGES CXX)
 
 #
 # Overview of this configuration
