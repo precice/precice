@@ -25,8 +25,6 @@ BOOST_AUTO_TEST_CASE(testConservativeNonIncremental)
   outMesh->computeState();
   outMesh->allocateDataValues();
 
-  BOOST_TEST_MESSAGE(*outMesh);
-
   // Base-value for tests
   double value = 1.0;
 
