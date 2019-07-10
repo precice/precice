@@ -72,7 +72,9 @@ void NearestProjectionMapping::computeMapping()
   constexpr int nnearest = 4;
 
   if (getDimensions() == 2) {
-    //CHECK(fVertices.empty() || !tEdges.empty(), "Mesh \"" << to->getName() << "\" does not contain Edges to project onto.");
+    if(!fVertices.empty() && tEdges.empty()) {
+        WARN("2D Mesh \"" << to->getName() << "\" does not contain edges. Nearest projection mapping falls back to nearest neighbor mapping.");
+    }
 
     auto indexEdges    = mesh::rtree::getEdgeRTree(to);
     auto indexVertices = mesh::rtree::getVertexRTree(to);
@@ -108,7 +110,9 @@ void NearestProjectionMapping::computeMapping()
     }
   } else {
     const auto &tTriangles = to->triangles();
-    //CHECK(fVertices.empty() || !tTriangles.empty(), "Mesh \"" << to->getName() << "\" does not contain Triangles to project onto.");
+    if(!fVertices.empty() && tTriangles.empty()) {
+         WARN("3D Mesh \"" << to->getName() << "\" does not contain triangles. Nearest projection mapping will map to primitives of lower dimension.");
+    }
 
     auto indexTriangles = mesh::rtree::getTriangleRTree(to);
     auto indexEdges     = mesh::rtree::getEdgeRTree(to);
