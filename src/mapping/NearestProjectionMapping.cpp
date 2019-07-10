@@ -65,6 +65,10 @@ void NearestProjectionMapping::computeMapping()
 
   _weights.resize(fVertices.size());
 
+  // Amount of nearest elements to fetch for detailed comparison.
+  // This safety margin results in a candidate set which forms the base for the
+  // local nearest projection and counters the loss of detail due to bounding box generation.
+  // @TODO Add a configuration option for this factor
   constexpr int nnearest = 4;
 
   if (getDimensions() == 2) {
