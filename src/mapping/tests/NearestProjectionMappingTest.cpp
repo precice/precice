@@ -195,8 +195,6 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncremental2D)
 }
 
 
-/// @TODO FIX broken test
-#if 0
 BOOST_AUTO_TEST_CASE(ConsistentNonIncrementalPseudo3D)
 {
   using namespace mesh;
@@ -224,64 +222,85 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncrementalPseudo3D)
   values(1) = valueVertex2;
   values(2) = valueVertex3;
 
-  // Create mesh to map to
-  PtrMesh outMesh ( new Mesh("OutMesh", dimensions, false) );
-  PtrData outData = outMesh->createData ( "OutData", 1 );
-  int outDataID = outData->getID();
+  {
+      // Create mesh to map to
+      PtrMesh outMesh ( new Mesh("OutMesh1", dimensions, false) );
+      PtrData outData = outMesh->createData ( "OutData1", 1 );
+      int outDataID = outData->getID();
 
-  // Setup mapping with mapping coordinates and geometry used
-  mapping::NearestProjectionMapping mapping(mapping::Mapping::CONSISTENT, dimensions);
-  mapping.setMeshes ( inMesh, outMesh );
-  BOOST_TEST ( mapping.hasComputedMapping() == false );
+      // Setup mapping with mapping coordinates and geometry used
+      mapping::NearestProjectionMapping mapping(mapping::Mapping::CONSISTENT, dimensions);
+      mapping.setMeshes ( inMesh, outMesh );
+      BOOST_TEST ( mapping.hasComputedMapping() == false );
 
-  Vertex& outv0 = outMesh->createVertex ( Eigen::Vector3d(0.5, 0.5, 0.0) );
-  Vertex& outv1 = outMesh->createVertex ( Eigen::Vector3d(-0.5, -0.5, 0.0) );
-  Vertex& outv2 = outMesh->createVertex ( Eigen::Vector3d(1.5, 1.5, 0.0) );
-  outMesh->allocateDataValues();
+      Vertex& outv0 = outMesh->createVertex ( Eigen::Vector3d(0.5, 0.5, 0.0) );
+      Vertex& outv1 = outMesh->createVertex ( Eigen::Vector3d(-0.5, -0.5, 0.0) );
+      Vertex& outv2 = outMesh->createVertex ( Eigen::Vector3d(1.5, 1.5, 0.0) );
+      outMesh->allocateDataValues();
 
-  // Compute and perform mapping
-  mapping.computeMapping();
-  mapping.map ( inDataID, outDataID );
+      // Compute and perform mapping
+      mapping.computeMapping();
+      mapping.map ( inDataID, outDataID );
 
-  // Validate results
-  BOOST_TEST ( mapping.hasComputedMapping() == true );
-  BOOST_TEST ( outData->values()[0] == (valueVertex1 + valueVertex2) * 0.5 );
-  BOOST_TEST ( outData->values()[1] == valueVertex1 );
-  BOOST_TEST ( outData->values()[2] == valueVertex2 );
+      // Validate results
+      BOOST_TEST ( mapping.hasComputedMapping() == true );
+      BOOST_TEST_CONTEXT(*inMesh) {
+          BOOST_TEST ( outData->values()[0] == (valueVertex1 + valueVertex2) * 0.5 );
+          BOOST_TEST ( outData->values()[1] ==  valueVertex1 );
+          BOOST_TEST ( outData->values()[2] == (valueVertex2 + valueVertex3) * 0.5 );
+      }
 
-  // Redo mapping, results should be
-  //assign(outData->values()) = 0.0;
-  outData->values() = Eigen::VectorXd::Constant(outData->values().size(), 0.0);
+      // Redo mapping, results should be
+      //assign(outData->values()) = 0.0;
+      outData->values() = Eigen::VectorXd::Constant(outData->values().size(), 0.0);
 
-  mapping.map ( inDataID, outDataID );
-  BOOST_TEST ( outData->values()[0] == (valueVertex1 + valueVertex2) * 0.5 );
-  BOOST_TEST ( outData->values()[1] == valueVertex1 );
-  BOOST_TEST ( outData->values()[2] == valueVertex2 );
+      mapping.map ( inDataID, outDataID );
+      BOOST_TEST_CONTEXT(*inMesh) {
+          BOOST_TEST ( outData->values()[0] == (valueVertex1 + valueVertex2) * 0.5 );
+          BOOST_TEST ( outData->values()[1] ==  valueVertex1 );
+          BOOST_TEST ( outData->values()[2] == (valueVertex2 + valueVertex3) * 0.5 );
+      }
+  }
+  {
+      // Create mesh to map to
+      PtrMesh outMesh ( new Mesh("OutMesh2", dimensions, false) );
+      PtrData outData = outMesh->createData ( "OutData2", 1 );
+      int outDataID = outData->getID();
 
-  // Change vertex coordinates and redo mapping
-  outv0.setCoords ( Eigen::Vector3d(-0.5, -0.5, 0.0) );
-  outv1.setCoords ( Eigen::Vector3d(1.5, 1.5, 0.0) );
-  outv2.setCoords ( Eigen::Vector3d(0.5, 0.5, 0.0) );
-  //assign(outData->values()) = 0.0;
-  outData->values() = Eigen::VectorXd::Constant(outData->values().size(), 0.0);
+      // Setup mapping with mapping coordinates and geometry used
+      mapping::NearestProjectionMapping mapping(mapping::Mapping::CONSISTENT, dimensions);
+      mapping.setMeshes ( inMesh, outMesh );
+      BOOST_TEST ( mapping.hasComputedMapping() == false );
 
-  mapping.clear();
-  mapping.computeMapping();
-  mapping.map ( inDataID, outDataID );
-  BOOST_TEST ( outData->values()[0] == valueVertex1 );
-  BOOST_TEST ( outData->values()[1] == valueVertex2 );
-  BOOST_TEST ( outData->values()[2] == (valueVertex1 + valueVertex2) * 0.5 );
+      Vertex& outv0 = outMesh->createVertex ( Eigen::Vector3d(-0.5, -0.5, 0.0) );
+      Vertex& outv1 = outMesh->createVertex ( Eigen::Vector3d(1.5, 1.5, 0.0) );
+      Vertex& outv2 = outMesh->createVertex ( Eigen::Vector3d(0.5, 0.5, 0.0) );
+      outMesh->allocateDataValues();
 
-  // Reset output data to zero and redo the mapping
-  //assign(outData->values()) = 0.0;
-  outData->values() = Eigen::VectorXd::Constant(outData->values().size(), 0.0);
+      //assign(outData->values()) = 0.0;
+      outData->values() = Eigen::VectorXd::Constant(outData->values().size(), 0.0);
 
-  mapping.map ( inDataID, outDataID );
-  BOOST_TEST ( outData->values()[0] == valueVertex1 );
-  BOOST_TEST ( outData->values()[1] == valueVertex2 );
-  BOOST_TEST ( outData->values()[2] == (valueVertex1 + valueVertex2) * 0.5 );
+      mapping.clear();
+      mapping.computeMapping();
+      mapping.map ( inDataID, outDataID );
+      BOOST_TEST_CONTEXT(*inMesh) {
+          BOOST_TEST ( outData->values()[0] == valueVertex1 );
+          BOOST_TEST ( outData->values()[1] == (valueVertex2 + valueVertex3) * 0.5 );
+          BOOST_TEST ( outData->values()[2] == (valueVertex1 + valueVertex2) * 0.5 );
+      }
+
+      // Reset output data to zero and redo the mapping
+      //assign(outData->values()) = 0.0;
+      outData->values() = Eigen::VectorXd::Constant(outData->values().size(), 0.0);
+
+      mapping.map ( inDataID, outDataID );
+      BOOST_TEST_CONTEXT(*inMesh) {
+          BOOST_TEST ( outData->values()[0] == valueVertex1 );
+          BOOST_TEST ( outData->values()[1] == (valueVertex2 + valueVertex3) * 0.5 );
+          BOOST_TEST ( outData->values()[2] == (valueVertex1 + valueVertex2) * 0.5 );
+      }
+  }
 }
-#endif
 
 BOOST_AUTO_TEST_CASE(AxisAlignedTriangles)
 {
