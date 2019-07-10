@@ -96,6 +96,9 @@ BOOST_AUTO_TEST_CASE(TestExplicit,
   for(std::string configurationFileName : configs){
 
     reset();
+
+    BOOST_TEST_MESSAGE("Config: " << configurationFileName);
+
     std::string solverName;
     int timesteps = 0;
     double time = 0.0;
