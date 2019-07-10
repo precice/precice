@@ -83,21 +83,21 @@ cdef extern from "precice/SolverInterface.hpp" namespace "precice":
 
         void mapWriteDataFrom (int fromMeshID)
 
-        void writeBlockVectorData (int dataID, int size, int* valueIndices, double* values)
+        void writeBlockVectorData (const int dataID, const int size, const int* valueIndices, const double* values)
 
-        void writeVectorData (int dataID, int valueIndex, const double* value)
+        void writeVectorData (const int dataID, const int valueIndex, const double* value)
 
-        void writeBlockScalarData (int dataID, int size, int* valueIndices, double* values)
+        void writeBlockScalarData (const int dataID, const int size, const int* valueIndices, const double* values)
 
-        void writeScalarData (int dataID, int valueIndex, double value)
+        void writeScalarData (const int dataID, const int valueIndex, const double value)
 
-        void readBlockVectorData (int dataID, int size, int* valueIndices, double* values)
+        void readBlockVectorData (const int dataID, const int size, const int* valueIndices, double* values)
 
-        void readVectorData (int dataID, int valueIndex, double* value)
+        void readVectorData (const int dataID, const int valueIndex, double* value)
 
-        void readBlockScalarData (int dataID, int size, int* valueIndices, double* values)
+        void readBlockScalarData (const int dataID, const int size, const int* valueIndices, double* values)
 
-        void readScalarData (int dataID, int valueIndex, double& value)
+        void readScalarData (const int dataID, const int valueIndex, double& value)
 
 
 cdef extern from "precice/SolverInterface.hpp"  namespace "precice::constants":
