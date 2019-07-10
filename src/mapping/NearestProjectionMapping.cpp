@@ -48,20 +48,20 @@ void NearestProjectionMapping::computeMapping()
   precice::utils::Event e("map.np.computeMapping.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
 
   // Setup Direction of Mapping
-  mesh::PtrMesh from, to;
+  mesh::PtrMesh origins, search_space;
   if (getConstraint() == CONSISTENT) {
     DEBUG("Compute consistent mapping");
-    from = output();
-    to   = input();
+    origins = output();
+    search_space = input();
   } else {
     DEBUG("Compute conservative mapping");
-    from = input();
-    to   = output();
+    origins = input();
+    search_space = output();
   }
 
-  const auto &fVertices = from->vertices();
-  const auto &tVertices = to->vertices();
-  const auto &tEdges    = to->edges();
+  const auto &fVertices = origins->vertices();
+  const auto &tVertices = search_space->vertices();
+  const auto &tEdges    = search_space->edges();
 
   _weights.resize(fVertices.size());
 
@@ -73,17 +73,17 @@ void NearestProjectionMapping::computeMapping()
 
   if (getDimensions() == 2) {
     if(!fVertices.empty() && tEdges.empty()) {
-        WARN("2D Mesh \"" << to->getName() << "\" does not contain edges. Nearest projection mapping falls back to nearest neighbor mapping.");
+        WARN("2D Mesh \"" << search_space->getName() << "\" does not contain edges. Nearest projection mapping falls back to nearest neighbor mapping.");
     }
 
-    auto indexEdges    = mesh::rtree::getEdgeRTree(to);
-    auto indexVertices = mesh::rtree::getVertexRTree(to);
+    auto indexEdges    = mesh::rtree::getEdgeRTree(search_space);
+    auto indexVertices = mesh::rtree::getVertexRTree(search_space);
 
     std::vector<MatchType> matches;
     matches.reserve(nnearest);
     for (size_t i = 0; i < fVertices.size(); i++) {
       const Eigen::VectorXd &coords = fVertices[i].getCoords();
-      // Search for the from vertex inside the destination meshes edges
+      // Search for the origin inside the destination meshes edges
       matches.clear();
       indexEdges->query(bg::index::nearest(coords, nnearest),
                         boost::make_function_output_iterator([&](int match) {
@@ -101,7 +101,7 @@ void NearestProjectionMapping::computeMapping()
       }
 
       if (not found) {
-        // Search for the from vertex inside the destination meshes vertices
+        // Search for the origin inside the destination meshes vertices
         indexVertices->query(bg::index::nearest(coords, 1),
                              boost::make_function_output_iterator([&](int match) {
                                _weights[i] = query::generateInterpolationElements(fVertices[i], tVertices[match]);
@@ -109,14 +109,14 @@ void NearestProjectionMapping::computeMapping()
       }
     }
   } else {
-    const auto &tTriangles = to->triangles();
+    const auto &tTriangles = search_space->triangles();
     if(!fVertices.empty() && tTriangles.empty()) {
-         WARN("3D Mesh \"" << to->getName() << "\" does not contain triangles. Nearest projection mapping will map to primitives of lower dimension.");
+         WARN("3D Mesh \"" << search_space->getName() << "\" does not contain triangles. Nearest projection mapping will map to primitives of lower dimension.");
     }
 
-    auto indexTriangles = mesh::rtree::getTriangleRTree(to);
-    auto indexEdges     = mesh::rtree::getEdgeRTree(to);
-    auto indexVertices  = mesh::rtree::getVertexRTree(to);
+    auto indexTriangles = mesh::rtree::getTriangleRTree(search_space);
+    auto indexEdges     = mesh::rtree::getEdgeRTree(search_space);
+    auto indexVertices  = mesh::rtree::getVertexRTree(search_space);
 
     std::vector<MatchType> matches;
     matches.reserve(nnearest);
@@ -243,18 +243,18 @@ void NearestProjectionMapping::tagMeshFirstRound()
   DEBUG("Tagging First Round");
 
   // Determine the Mesh to Tag
-  mesh::PtrMesh from{nullptr};
+  mesh::PtrMesh origins;
   if (getConstraint() == CONSISTENT) {
-    from = input();
+    origins = input();
   } else {
     assertion(getConstraint() == CONSERVATIVE, getConstraint());
-    from = output();
+    origins = output();
   }
 
   // Gather all vertices to be tagged in a first phase.
   // max_count is used to shortcut if all vertices have been tagged.
   std::unordered_set<mesh::Vertex const *> tagged;
-  const std::size_t max_count = from->vertices().size();
+  const std::size_t max_count = origins->vertices().size();
 
   for (const InterpolationElements &elems : _weights) {
     for (const query::InterpolationElement &elem : elems) {
@@ -269,7 +269,7 @@ void NearestProjectionMapping::tagMeshFirstRound()
   }
 
   // Now tag all vertices to be tagged in the second phase.
-  for (auto& v : from->vertices()) {
+  for (auto& v : origins->vertices()) {
       if(tagged.count(&v) == 1) {
           v.tag();
       }
