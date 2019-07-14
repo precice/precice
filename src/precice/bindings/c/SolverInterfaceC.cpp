@@ -14,9 +14,11 @@ void precicec_createSolverInterface
   int         solverProcessIndex,
   int         solverProcessSize )
 {
+  assertion (participantName == '\0');
   std::string stringAccessorName ( participantName );
   impl = new precice::impl::SolverInterfaceImpl ( stringAccessorName,
       solverProcessIndex, solverProcessSize, false );
+  assertion (configFileName == '\0');
   std::string stringConfigFileName ( configFileName );
   impl->configure ( stringConfigFileName );
 }
