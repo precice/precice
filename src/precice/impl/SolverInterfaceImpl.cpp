@@ -71,6 +71,7 @@ SolverInterfaceImpl:: SolverInterfaceImpl
   _accessorCommunicatorSize(accessorCommunicatorSize),
   _serverMode(serverMode)
 {
+  CHECK(!_accessorName.empty(), "Accessor has to be named!");
   CHECK(_accessorProcessRank >= 0, "Accessor process index has to be >= 0!");
   CHECK(_accessorCommunicatorSize >= 0, "Accessor process size has to be >= 0!");
   CHECK(_accessorProcessRank < _accessorCommunicatorSize,
