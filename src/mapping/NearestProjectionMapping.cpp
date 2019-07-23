@@ -45,7 +45,8 @@ struct MatchType {
 void NearestProjectionMapping::computeMapping()
 {
   TRACE(input()->vertices().size(), output()->vertices().size());
-  precice::utils::Event e("map.np.computeMapping.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
+  const std::string baseEvent = "map.np.computeMapping.From" + input()->getName() + "To" + output()->getName();
+  precice::utils::Event e(baseEvent, precice::syncMode);
 
   // Setup Direction of Mapping
   mesh::PtrMesh origins, search_space;
@@ -76,8 +77,10 @@ void NearestProjectionMapping::computeMapping()
         WARN("2D Mesh \"" << search_space->getName() << "\" does not contain edges. Nearest projection mapping falls back to nearest neighbor mapping.");
     }
 
+    precice::utils::Event e2(baseEvent+".getIndex2D", precice::syncMode);
     auto indexEdges    = mesh::rtree::getEdgeRTree(search_space);
     auto indexVertices = mesh::rtree::getVertexRTree(search_space);
+    e2.stop();
 
     std::vector<MatchType> matches;
     matches.reserve(nnearest);
@@ -114,9 +117,11 @@ void NearestProjectionMapping::computeMapping()
          WARN("3D Mesh \"" << search_space->getName() << "\" does not contain triangles. Nearest projection mapping will map to primitives of lower dimension.");
     }
 
+    precice::utils::Event e2(baseEvent+".getIndex3D", precice::syncMode);
     auto indexTriangles = mesh::rtree::getTriangleRTree(search_space);
     auto indexEdges     = mesh::rtree::getEdgeRTree(search_space);
     auto indexVertices  = mesh::rtree::getVertexRTree(search_space);
+    e2.stop();
 
     std::vector<MatchType> matches;
     matches.reserve(nnearest);
@@ -237,6 +242,7 @@ void NearestProjectionMapping::map(
 void NearestProjectionMapping::tagMeshFirstRound()
 {
   TRACE();
+  precice::utils::Event e("map.np.tagMeshFirstRound.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
   DEBUG("Compute Mapping for Tagging");
 
   computeMapping();
