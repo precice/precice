@@ -213,7 +213,7 @@ void ReceivedPartition::compute()
     }
     int globalNumberOfVertices = -1;
     utils::MasterSlave::_communication->broadcast(globalNumberOfVertices, 0);
-    assertion(globalNumberOfVertices != -1);
+    assertion(globalNumberOfVertices >= 0);
     _mesh->setGlobalNumberOfVertices(globalNumberOfVertices);
   } else { // Master
     int              numberOfVertices = _mesh->vertices().size();
@@ -226,6 +226,7 @@ void ReceivedPartition::compute()
     for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
       int numberOfSlaveVertices = -1;
       utils::MasterSlave::_communication->receive(numberOfSlaveVertices, rankSlave);
+      assertion(numberOfSlaveVertices >= 0);
       std::vector<int> slaveVertexIDs;
       if (numberOfSlaveVertices != 0) {
         utils::MasterSlave::_communication->receive(slaveVertexIDs, rankSlave);
