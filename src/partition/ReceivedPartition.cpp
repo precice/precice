@@ -349,6 +349,7 @@ bool ReceivedPartition::isVertexInBB(const mesh::Vertex &vertex)
 void ReceivedPartition::createOwnerInformation()
 {
   TRACE();
+  Event e("partition.createOwnerInformation." + _mesh->getName(), precice::syncMode);
 
   if (utils::MasterSlave::isSlave()) {
     int numberOfVertices = _mesh->vertices().size();
