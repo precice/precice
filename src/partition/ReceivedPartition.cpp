@@ -221,17 +221,17 @@ void ReceivedPartition::compute()
     for (int i = 0; i < numberOfVertices; i++) {
       vertexIDs[i] = _mesh->vertices()[i].getGlobalIndex();
     }
-    _mesh->getVertexDistribution()[0] = vertexIDs;
+    _mesh->getVertexDistribution()[0] = std::move(vertexIDs);
 
     for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
       int numberOfSlaveVertices = -1;
       utils::MasterSlave::_communication->receive(numberOfSlaveVertices, rankSlave);
       assertion(numberOfSlaveVertices >= 0);
-      std::vector<int> slaveVertexIDs;
+      std::vector<int> slaveVertexIDs(numberOfSlaveVertices, -1);
       if (numberOfSlaveVertices != 0) {
         utils::MasterSlave::_communication->receive(slaveVertexIDs, rankSlave);
       }
-      _mesh->getVertexDistribution()[rankSlave] = slaveVertexIDs;
+      _mesh->getVertexDistribution()[rankSlave] = std::move(slaveVertexIDs);
     }
     utils::MasterSlave::_communication->broadcast(_mesh->getGlobalNumberOfVertices());
   }
