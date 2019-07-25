@@ -281,12 +281,25 @@ public:
     int firstVertexID,
     int secondVertexID );
 
+  /// Set multiple edges of a solver mesh.
+  void setMeshEdges (
+    int meshID,
+    int size,
+    const int* vertexIDs,
+    int* edgeIDs );
+
   /// Set a triangle of a solver mesh.
   void setMeshTriangle (
     int meshID,
     int firstEdgeID,
     int secondEdgeID,
     int thirdEdgeID );
+
+  /// Set multiple triangles of a solver mesh.
+  void setMeshTriangles (
+    int meshID,
+    int size,
+    const int* edgeIDs );
 
   /// Sets a triangle and creates/sets edges automatically of a solver mesh.
   void setMeshTriangleWithEdges (

@@ -466,6 +466,26 @@ public:
     int secondVertexID );
 
   /**
+   * @brief Sets multiple mesh edges from vertexIDs and writes the resulting ids to edgeIDs
+   *
+   * @param[in] meshID ID of the mesh to add the edges to
+   * @param[in] size amount of edges to add
+   * @param[in] vertexIDs IDs of the vertices of the edges
+   * @param[out] edgeIDs IDs of the resulting edges
+   *
+   * The format of vertexIDs is (e0A, e0B, e1A, e1B, ... )
+   *
+   * @pre vertices in vertexIDs were added to the mesh with the ID meshID
+   * @pre count of available elements at vertexIDs is at least size*2
+   * @pre count of available elements at edgeIDs is at least size
+   */
+  void setMeshEdges (
+    int meshID,
+    int size,
+    const int* vertexIDs,
+    int* edgeIDs );
+
+  /**
    * @brief Sets mesh triangle from edge IDs
    *
    * @param[in] meshID ID of the mesh to add the triangle to
@@ -480,6 +500,23 @@ public:
     int firstEdgeID,
     int secondEdgeID,
     int thirdEdgeID );
+
+  /**
+   * @brief Sets multiple mesh triangles from edgeIDs
+   *
+   * @param[in] meshID ID of the mesh to add the triangles to
+   * @param[in] size amount of triangles to add
+   * @param[in] edgeIDs IDs of the edges of the triangles
+   *
+   * The format of edgeIDs is (t0A, e0B, t0C, e1A, e1B, e1C, ... )
+   *
+   * @pre edges in edgeIDs were added to the mesh with the ID meshID
+   * @pre count of available elements at edgeIDs is at least size*3
+   */
+  void setMeshTriangles (
+    int meshID,
+    int size,
+    const int* edgeIDs );
 
   /**
    * @brief Sets mesh triangle from vertex IDs.

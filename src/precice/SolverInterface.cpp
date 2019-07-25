@@ -190,6 +190,16 @@ int SolverInterface:: setMeshEdge
   return _impl->setMeshEdge ( meshID, firstVertexID, secondVertexID );
 }
 
+void SolverInterface:: setMeshEdges
+(
+  int meshID,
+  int size,
+  const int* vertexIDs,
+  int* edgeIDs )
+{
+    _impl->setMeshEdges(meshID, size, vertexIDs, edgeIDs);
+}
+
 void SolverInterface:: setMeshTriangle
 (
   int meshID,
@@ -198,6 +208,15 @@ void SolverInterface:: setMeshTriangle
   int thirdEdgeID )
 {
   _impl->setMeshTriangle ( meshID, firstEdgeID, secondEdgeID, thirdEdgeID );
+}
+
+void SolverInterface:: setMeshTriangles
+(
+  int meshID,
+  int size,
+  const int* edgeIDs )
+{
+    _impl->setMeshTriangles(meshID, size, edgeIDs);
 }
 
 void SolverInterface:: setMeshTriangleWithEdges

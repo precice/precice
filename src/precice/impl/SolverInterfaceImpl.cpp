@@ -769,6 +769,41 @@ int SolverInterfaceImpl:: setMeshEdge
   return -1;
 }
 
+
+void SolverInterfaceImpl:: setMeshEdges
+(
+  int meshID,
+  int size,
+  const int* vertexIDs,
+  int* edgeIDs )
+{
+  TRACE(meshID, size);
+  if ( _clientMode ){
+    _requestManager->requestSetMeshEdges( meshID, size, vertexIDs, edgeIDs);
+    return;
+  }
+  else {
+    PRECICE_REQUIRE_MESH_MODIFY(meshID);
+    MeshContext& context = _accessor->meshContext(meshID);
+    if ( context.meshRequirement == mapping::Mapping::MeshRequirement::FULL ){
+      mesh::PtrMesh& mesh = context.mesh;
+      CHECK(std::all_of(vertexIDs, vertexIDs + size * 2, [&mesh](int vid) {
+                  return mesh->isValidVertexID(vid);
+                  }),
+              "Received invalid vertexIDs!");
+
+      auto& vertices = mesh->vertices();
+      for(int eidx = 0; eidx < size; ++eidx) {
+          auto ida = vertexIDs[eidx*2];
+          auto idb = vertexIDs[eidx*2+1];
+          edgeIDs[eidx] = mesh->createEdge(vertices[ida], vertices[idb]).getID();
+      }
+    } else {
+        std::fill(edgeIDs, edgeIDs+size, -1);
+    }
+  }
+}
+
 void SolverInterfaceImpl:: setMeshTriangle
 (
   int meshID,
@@ -793,6 +828,36 @@ void SolverInterfaceImpl:: setMeshTriangle
       mesh::Edge& e1 = mesh->edges()[secondEdgeID];
       mesh::Edge& e2 = mesh->edges()[thirdEdgeID];
       mesh->createTriangle ( e0, e1, e2 );
+    }
+  }
+}
+
+void SolverInterfaceImpl:: setMeshTriangles
+(
+ int meshID,
+ int size,
+ const int* edgeIDs )
+{
+  TRACE(meshID, size);
+  if ( _clientMode ){
+    _requestManager->requestSetMeshTriangles ( meshID, size, edgeIDs );
+  }
+  else {
+    PRECICE_REQUIRE_MESH_MODIFY(meshID);
+    MeshContext& context = _accessor->meshContext(meshID);
+    if ( context.meshRequirement == mapping::Mapping::MeshRequirement::FULL ){
+      mesh::PtrMesh& mesh = context.mesh;
+      CHECK(std::all_of( edgeIDs, edgeIDs+size*2, [&mesh](int vid) {
+                  return mesh->isValidEdgeID(vid);
+                  }), "Received invalid edgeIDs!");
+
+      auto& edges = mesh->edges();
+      for(int tidx = 0; tidx < size; ++tidx) {
+          auto ida = edgeIDs[tidx*3];
+          auto idb = edgeIDs[tidx*3+1];
+          auto idc = edgeIDs[tidx*3+2];
+          mesh->createTriangle(edges[ida], edges[idb], edges[idc]);
+      }
     }
   }
 }
