@@ -36,7 +36,7 @@ void NearestNeighborMapping:: computeMapping()
   
   if (getConstraint() == CONSISTENT){
     DEBUG("Compute consistent mapping");
-    precice::utils::Event e2(baseEvent+".getIndex", precice::syncMode);
+    precice::utils::Event e2(baseEvent+".getIndexOnVertices", precice::syncMode);
     auto rtree = mesh::rtree::getVertexRTree(input());
     e2.stop();
     size_t verticesSize = output()->vertices().size();
@@ -54,7 +54,7 @@ void NearestNeighborMapping:: computeMapping()
   else {
     assertion(getConstraint() == CONSERVATIVE, getConstraint());
     DEBUG("Compute conservative mapping");
-    precice::utils::Event e2(baseEvent+".getIndex", precice::syncMode);
+    precice::utils::Event e2(baseEvent+".getIndexOnVertices", precice::syncMode);
     auto rtree = mesh::rtree::getVertexRTree(output());
     e2.stop();
     size_t verticesSize = input()->vertices().size();

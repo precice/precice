@@ -77,10 +77,12 @@ void NearestProjectionMapping::computeMapping()
         WARN("2D Mesh \"" << search_space->getName() << "\" does not contain edges. Nearest projection mapping falls back to nearest neighbor mapping.");
     }
 
-    precice::utils::Event e2(baseEvent+".getIndex2D", precice::syncMode);
+    precice::utils::Event e2(baseEvent+".getIndexOnEdges", precice::syncMode);
     auto indexEdges    = mesh::rtree::getEdgeRTree(search_space);
-    auto indexVertices = mesh::rtree::getVertexRTree(search_space);
     e2.stop();
+    precice::utils::Event e3(baseEvent+".getIndexOnVertices", precice::syncMode);
+    auto indexVertices = mesh::rtree::getVertexRTree(search_space);
+    e3.stop();
 
     std::vector<MatchType> matches;
     matches.reserve(nnearest);
@@ -117,11 +119,15 @@ void NearestProjectionMapping::computeMapping()
          WARN("3D Mesh \"" << search_space->getName() << "\" does not contain triangles. Nearest projection mapping will map to primitives of lower dimension.");
     }
 
-    precice::utils::Event e2(baseEvent+".getIndex3D", precice::syncMode);
+    precice::utils::Event e2(baseEvent+".getIndexOnTriangles", precice::syncMode);
     auto indexTriangles = mesh::rtree::getTriangleRTree(search_space);
-    auto indexEdges     = mesh::rtree::getEdgeRTree(search_space);
-    auto indexVertices  = mesh::rtree::getVertexRTree(search_space);
     e2.stop();
+    precice::utils::Event e3(baseEvent+".getIndexOnEdges", precice::syncMode);
+    auto indexEdges     = mesh::rtree::getEdgeRTree(search_space);
+    e3.stop();
+    precice::utils::Event e4(baseEvent+".getIndexOnVertices", precice::syncMode);
+    auto indexVertices  = mesh::rtree::getVertexRTree(search_space);
+    e4.stop();
 
     std::vector<MatchType> matches;
     matches.reserve(nnearest);
