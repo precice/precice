@@ -308,6 +308,10 @@ if(PRECICE_InstallTest)
     DESTINATION share/precice
     FILES_MATCHING
     PATTERN "*.xml"
+    )
+  install(DIRECTORY src/action/tests/
+    DESTINATION share/precice/src/action/tests
+    FILES_MATCHING
     PATTERN "*.py"
     )
 endif()
