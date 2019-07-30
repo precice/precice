@@ -146,8 +146,8 @@ void runExplicitCouplingWithSubcycling(
   int computedTimesteps = 0;
   std::string nameParticipant0 ( "Participant0" );
   std::string nameParticipant1 ( "Participant1" );
-  P_ASSERT( (participantName == nameParticipant0) ||
-              (participantName == nameParticipant1) );
+  BOOST_TEST ( (participantName == nameParticipant0) ||
+               (participantName == nameParticipant1) );
   if ( participantName == nameParticipant0 ) {
     cplScheme.initialize ( 0.0, 1 );
     double dtDesired = cplScheme.getNextTimestepMaxLength() / 2.0;
@@ -257,14 +257,14 @@ struct ExplicitCouplingSchemeFixture
       const std::string&      localParticipant,
       m2n::PtrM2N& communication )
   {
-    P_ASSERT(communication);
-    P_ASSERT(not communication->isConnected());
+    BOOST_TEST(communication);
+    BOOST_TEST(not communication->isConnected());
     utils::Parallel::splitCommunicator( localParticipant );
     if ( participant0 == localParticipant ) {
       communication->requestMasterConnection ( participant1, participant0);
     }
     else {
-      P_ASSERT( participant1 == localParticipant );
+      BOOST_TEST ( participant1 == localParticipant );
       communication->acceptMasterConnection ( participant1, participant0);
     }
   }
@@ -330,7 +330,7 @@ BOOST_AUTO_TEST_CASE(testConfiguredSimpleExplicitCoupling,
     return;
 
   using namespace mesh;
-  P_ASSERT( utils::Parallel::getCommunicatorSize() > 1 );
+  BOOST_TEST ( utils::Parallel::getCommunicatorSize() > 1 );
   mesh::PropertyContainer::resetPropertyIDCounter ();
 
   std::string configurationPath ( _pathToTests + "explicit-coupling-scheme-1.xml" );
@@ -437,7 +437,7 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingFirstParticipantSetsDt,
     BOOST_TEST(not cplScheme.isCouplingOngoing());
   }
   else {
-    P_ASSERT( nameLocalParticipant == std::string(nameParticipant1), nameLocalParticipant );
+    BOOST_TEST ( nameLocalParticipant == std::string(nameParticipant1), nameLocalParticipant );
     cplScheme.initialize ( 0.0, 1 );
     BOOST_TEST(not cplScheme.isCouplingTimestepComplete());
     BOOST_TEST(cplScheme.isCouplingOngoing());

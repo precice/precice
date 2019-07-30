@@ -36,7 +36,7 @@ struct CompositionalCouplingSchemeFixture
   {
     using namespace mesh;
     utils::Parallel::synchronizeProcesses();
-    P_ASSERT(utils::Parallel::getCommunicatorSize() > 1);
+    BOOST_TEST(utils::Parallel::getCommunicatorSize() > 1);
     mesh::PropertyContainer::resetPropertyIDCounter();
 
     std::string configurationPath(configFilename);
@@ -74,7 +74,7 @@ struct CompositionalCouplingSchemeFixture
       connect(nameParticipant1, nameParticipant2, localParticipant, m2n1);
     }
     else {
-      P_ASSERT(utils::Parallel::getProcessRank() == 2,
+      BOOST_TEST(utils::Parallel::getProcessRank() == 2,
           utils::Parallel::getProcessRank());
       localParticipant = nameParticipant2;
       connect(nameParticipant1, nameParticipant2, localParticipant, m2n1);
@@ -162,7 +162,7 @@ struct CompositionalCouplingSchemeFixture
       BOOST_TEST(cplScheme->getNextTimestepMaxLength() > 0.0); // ??
     }
     else {
-      P_ASSERT(participantName == std::string("Participant2"), participantName);
+      BOOST_TEST(participantName == std::string("Participant2"), participantName);
       cplScheme->initialize(0.0, 1);
       BOOST_TEST(cplScheme->hasDataBeenExchanged());
       BOOST_TEST(not cplScheme->isCouplingTimestepComplete());
@@ -200,14 +200,14 @@ struct CompositionalCouplingSchemeFixture
                const std::string&     localParticipant,
                m2n::PtrM2N communication ) const
   {
-    P_ASSERT( communication );
-    P_ASSERT( not communication->isConnected() );
+    BOOST_TEST ( communication );
+    BOOST_TEST ( not communication->isConnected() );
     utils::Parallel::splitCommunicator( localParticipant );
     if ( participant0 == localParticipant ) {
       communication->requestMasterConnection ( participant1, participant0 );
     }
     else {
-      P_ASSERT( participant1 == localParticipant );
+      BOOST_TEST ( participant1 == localParticipant );
       communication->acceptMasterConnection ( participant1, participant0 );
     }
   }
