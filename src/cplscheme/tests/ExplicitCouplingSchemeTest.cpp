@@ -146,8 +146,7 @@ void runExplicitCouplingWithSubcycling(
   int computedTimesteps = 0;
   std::string nameParticipant0 ( "Participant0" );
   std::string nameParticipant1 ( "Participant1" );
-  BOOST_TEST ( (participantName == nameParticipant0) ||
-               (participantName == nameParticipant1) );
+  BOOST_TEST ( ((participantName == nameParticipant0) || (participantName == nameParticipant1)) );
   if ( participantName == nameParticipant0 ) {
     cplScheme.initialize ( 0.0, 1 );
     double dtDesired = cplScheme.getNextTimestepMaxLength() / 2.0;
