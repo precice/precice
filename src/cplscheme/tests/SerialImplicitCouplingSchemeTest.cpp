@@ -48,7 +48,7 @@ void runCoupling(
   int computedTimesteps = 0;
   std::string nameParticipant0("Participant0");
   std::string nameParticipant1("Participant1");
-  BOOST_TEST ((nameParticipant == nameParticipant0) || (nameParticipant == nameParticipant1));
+  BOOST_TEST (((nameParticipant == nameParticipant0) || (nameParticipant == nameParticipant1)));
   int iterationCount = 0;
   std::vector<int>::const_iterator iterValidIterations = validIterations.begin();
 
@@ -213,11 +213,7 @@ void runCouplingWithSubcycling
   int computedTimesteps = 0;
   std::string nameParticipant0 ( "Participant0");
   std::string nameParticipant1 ( "Participant1");
-<<<<<<< HEAD
-  P_ASSERT((nameParticipant == nameParticipant0) || (nameParticipant == nameParticipant1));
-=======
-  BOOST_TEST((nameParticipant == nameParticipant0) || (nameParticipant == nameParticipant1));
->>>>>>> Replace assertion with BOOST_TEST
+  BOOST_TEST(((nameParticipant == nameParticipant0) || (nameParticipant == nameParticipant1)));
   int iterationCount = 0;
   std::vector<int>::const_iterator iterValidIterations =
       validIterations.begin();
@@ -836,11 +832,7 @@ BOOST_FIXTURE_TEST_CASE(testInitializeData, testing::M2NFixture,
     }
   }
   else {
-<<<<<<< HEAD
-    P_ASSERT(nameLocalParticipant == nameParticipant1);
-=======
     BOOST_TEST(nameLocalParticipant == nameParticipant1);
->>>>>>> Replace assertion with BOOST_TEST
     BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteInitialData()));
     cplScheme.performedAction(constants::actionWriteInitialData());
     auto& values = mesh->data(dataID0)->values();
