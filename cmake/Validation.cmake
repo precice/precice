@@ -30,7 +30,7 @@ endmacro()
 # Validation for NumPy
 macro(precice_validate_numpy)
   message(STATUS "Validating NumPy")
-  file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/validateNumPy.cpp "#include <numpy/arrayobject.h>\nint main() { return 0; } ")
+  file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/validateNumPy.cpp "#include <Python.h>\n#include <numpy/arrayobject.h>\nint main() { return 0; } ")
   unset(VAL_SUCCESS)
   unset(VAL_OUT)
   try_compile(VAL_SUCCESS
