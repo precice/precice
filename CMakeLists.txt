@@ -188,7 +188,7 @@ endif()
 
 
 # File Configuration
-include(${CMAKE_CURRENT_LIST_DIR}/cmake/DetectGitCommit.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/cmake/DetectGitRevision.cmake)
 configure_file("${PROJECT_SOURCE_DIR}/src/versions.hpp.in" "${PROJECT_BINARY_DIR}/src/versions.hpp" @ONLY)
 
 # Includes Configuration

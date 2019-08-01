@@ -355,7 +355,7 @@ versions_hpp = env.Substfile(
 # Substitute strings in versions.cpp.in, save it as versions.cpp
 versions_cpp = env.Substfile(
     "src/versions.cpp.in",
-    SUBST_DICT = {"@preCICE_COMMIT@" : "no-info"}
+    SUBST_DICT = {"@preCICE_REVISION@" : "no-info"}
 )
 
 Default(versions_cpp, versions_hpp, solib, tests, symlink)
