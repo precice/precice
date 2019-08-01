@@ -19,6 +19,7 @@ macro(precice_validate_libpython)
     COMPILE_DEFINITIONS "-I ${PYTHON_INCLUDE_DIRS}"
     LINK_LIBRARIES ${PYTHON_LIBRARIES}
     OUTPUT_VARIABLE VAL_OUT
+    CXX_STANDARD 11
     )
   if(NOT VAL_SUCCESS)
     message(FATAL_ERROR "Validating LibPython - failure\n\n${VAL_OUT}")
@@ -39,6 +40,7 @@ macro(precice_validate_numpy)
     COMPILE_DEFINITIONS "-I ${PYTHON_INCLUDE_DIRS}"
     LINK_LIBRARIES NumPy::NumPy ${PYTHON_LIBRARIES}
     OUTPUT_VARIABLE VAL_OUT
+    CXX_STANDARD 11
     )
   if(NOT VAL_SUCCESS)
     message(FATAL_ERROR "Validating NumPy - failure\n\n${VAL_OUT}")
@@ -61,6 +63,7 @@ macro(precice_validate_libxml2)
     COMPILE_DEFINITIONS "-I ${LIBXML2_INCLUDE_DIR}"
     LINK_LIBRARIES ${LIBXML2_LIBRARIES}
     OUTPUT_VARIABLE VAL_OUT
+    CXX_STANDARD 11
     )
   if(NOT VAL_SUCCESS)
     message(FATAL_ERROR "Validating LibXML2 - failure\n\n${VAL_OUT}")
@@ -80,6 +83,7 @@ macro(precice_validate_eigen)
     ${CMAKE_CURRENT_BINARY_DIR}/validateEigen.cpp
     LINK_LIBRARIES Eigen3::Eigen
     OUTPUT_VARIABLE VAL_OUT
+    CXX_STANDARD 11
     )
   if(NOT VAL_SUCCESS)
     message(FATAL_ERROR "Validating Eigen - failure\n\n${VAL_OUT}")
@@ -100,6 +104,7 @@ macro(precice_validate_json)
     ${CMAKE_CURRENT_BINARY_DIR}/validateJSON.cpp
     LINK_LIBRARIES JSON
     OUTPUT_VARIABLE VAL_OUT
+    CXX_STANDARD 11
     )
   if(NOT VAL_SUCCESS)
     message(FATAL_ERROR "Validating JSON - failure\n\n${VAL_OUT}")
@@ -119,6 +124,7 @@ macro(precice_validate_prettyprint)
     ${CMAKE_CURRENT_BINARY_DIR}/validatePrettyprint.cpp
     LINK_LIBRARIES prettyprint
     OUTPUT_VARIABLE VAL_OUT
+    CXX_STANDARD 11
     )
   if(NOT VAL_SUCCESS)
     message(FATAL_ERROR "Validating Prettyprint - failure\n\n${VAL_OUT}")
