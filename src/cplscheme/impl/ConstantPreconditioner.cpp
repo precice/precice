@@ -15,14 +15,14 @@ ConstantPreconditioner::ConstantPreconditioner(std::vector<double> factors)
 
 void ConstantPreconditioner::initialize(std::vector<size_t> & svs)
 {
-  TRACE();
+  P_TRACE();
   Preconditioner::initialize(svs);
 
   // is always constant by definition
   _freezed = true;
-  assertion(_maxNonConstTimesteps == -1, _maxNonConstTimesteps);
+  P_assertion(_maxNonConstTimesteps == -1, _maxNonConstTimesteps);
 
-  assertion(_factors.size() == _subVectorSizes.size());
+  P_assertion(_factors.size() == _subVectorSizes.size());
 
   int offset = 0;
   for (size_t k = 0; k < _subVectorSizes.size(); k++) {

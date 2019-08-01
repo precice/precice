@@ -31,7 +31,7 @@ void SVDFactorization::initialize(
 /*
 void SVDFactorization::applyPreconditioner()
 {
-  TRACE();
+  P_TRACE();
 
   if(_psi.size() > 0 && _phi.size() > 0){
     // apply preconditioner: \psi_i * P_i, corresponds to Wtil_i * P_i, local!
@@ -47,7 +47,7 @@ void SVDFactorization::applyPreconditioner()
 
 void SVDFactorization::revertPreconditioner()
 {
-  TRACE();
+  P_TRACE();
 
   if(_psi.size() > 0 && _phi.size() > 0){
     // revert preconditioner: \psi_i * P_i^{-1}, corresponds to Wtil_i * P_i^{-1}, local!
@@ -78,7 +78,7 @@ void SVDFactorization::computeQRdecomposition(
     Matrix &      Q,
     Matrix &      R)
 {
-  TRACE();
+  P_TRACE();
 
   // if nothing is linear dependent, the dimensions stay like this
   Q         = Matrix::Zero(A.rows(), A.cols());
@@ -96,14 +96,14 @@ void SVDFactorization::computeQRdecomposition(
   for (int colIndex = 0; colIndex < A.cols(); colIndex++) {
 
     // invariants:
-    assertion(colsQ == rowsR, colsQ, rowsR);
-    assertion(colsQ <= colIndex, colsQ, colIndex);
+    P_assertion(colsQ == rowsR, colsQ, rowsR);
+    P_assertion(colsQ <= colIndex, colsQ, colIndex);
 
     Vector col = A.col(colIndex);
 
     // if system is quadratic; discard
     if (_globalRows == colIndex) {
-      WARN("The matrix that is about to be factorized is quadratic, i.e., the new column cannot be orthogonalized; discard.");
+      P_WARN("The matrix that is about to be factorized is quadratic, i.e., the new column cannot be orthogonalized; discard.");
       return;
     }
 
@@ -150,7 +150,7 @@ void SVDFactorization::computeQRdecomposition(
 
       // if ||v_orth|| is nearly zero, col is not well orthogonalized; discard
       if (rho_orth <= std::numeric_limits<double>::min()) {
-        DEBUG("The norm of v_orthogonal is almost zero, i.e., failed to orthogonalize column v; discard.");
+        P_DEBUG("The norm of v_orthogonal is almost zero, i.e., failed to orthogonalize column v; discard.");
         orthogonalized = false;
         termination    = true;
       }
@@ -170,7 +170,7 @@ void SVDFactorization::computeQRdecomposition(
       if (rho_orth * theta <= rho0 + omega * norm_coefficients) {
         // exit to fail if too many iterations
         if (its >= 4) {
-          WARN("Matrix Q is not sufficiently orthogonal. Failed to rorthogonalize new column after 4 iterations. New column will be discarded.");
+          P_WARN("Matrix Q is not sufficiently orthogonal. Failed to rorthogonalize new column after 4 iterations. New column will be discarded.");
           orthogonalized = false;
           termination    = true;
         }
@@ -200,9 +200,9 @@ void SVDFactorization::computeQRdecomposition(
     R.col(colsR) = r;   // insert gram-schmidt coefficients to the right in R
 
     colsR++;
-    assertion(colsR <= R.cols(), colsR, R.cols());
+    P_assertion(colsR <= R.cols(), colsR, R.cols());
     rowsR++;
-    assertion(rowsR <= R.rows(), rowsR, R.rows());
+    P_assertion(rowsR <= R.rows(), rowsR, R.rows());
     colsQ++;
 
     // failed to orthogonalize the column, i.e., it is linear dependent;
@@ -212,16 +212,16 @@ void SVDFactorization::computeQRdecomposition(
     if (not orthogonalized) {
 
       colsQ--;
-      assertion(colsQ >= 0, colsQ);
+      P_assertion(colsQ >= 0, colsQ);
       rowsR--;
-      assertion(rowsR >= 0, rowsR);
+      P_assertion(rowsR >= 0, rowsR);
       // delete column that was just inserted (as it is not orthogonal to Q)
       Q.col(colsQ) = Vector::Zero(A.rows());
       // delete line in R that corresponds to the just inserted but not orthogonal column
       // as we always insert to the right, no shifting/ application of givens roatations is
       // necessary.
       // Note: The corresponding column from R with index colIndex is not deleted: dimensions must align with A.
-      assertion(R(rowsR, colsR - 1) == 1.0, R(rowsR, colsR - 1));
+      P_assertion(R(rowsR, colsR - 1) == 1.0, R(rowsR, colsR - 1));
       R.row(rowsR) = Vector::Zero(A.cols());
     }
   }

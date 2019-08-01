@@ -27,9 +27,9 @@ SerialCouplingScheme::SerialCouplingScheme
 {
   _couplingMode = cplMode;
   // Coupling mode must be either Explicit or Implicit when using SerialCouplingScheme.
-  assertion(_couplingMode != Undefined);
+  P_assertion(_couplingMode != Undefined);
   if (_couplingMode == Explicit) {
-    assertion(maxIterations == 1);
+    P_assertion(maxIterations == 1);
   }
 }
 
@@ -38,15 +38,15 @@ void SerialCouplingScheme::initialize
   double startTime,
   int    startTimestep)
 {
-  TRACE(startTime, startTimestep);
-  assertion(not isInitialized());
-  assertion(math::greaterEquals(startTime, 0.0), startTime);
-  assertion(startTimestep >= 0, startTimestep);
+  P_TRACE(startTime, startTimestep);
+  P_assertion(not isInitialized());
+  P_assertion(math::greaterEquals(startTime, 0.0), startTime);
+  P_assertion(startTimestep >= 0, startTimestep);
   setTime(startTime);
   setTimesteps(startTimestep);
 
   if (_couplingMode == Implicit) {
-    CHECK(not getSendData().empty(), "No send data configured! Use explicit scheme for one-way coupling.");
+    P_CHECK(not getSendData().empty(), "No send data configured! Use explicit scheme for one-way coupling.");
     if (not doesFirstStep()) {
       if (not _convergenceMeasures.empty()) {
         setupConvergenceMeasures(); // needs _couplingData configured
@@ -58,7 +58,7 @@ void SerialCouplingScheme::initialize
     }
     else if (getPostProcessing().get() != nullptr && getPostProcessing()->getDataIDs().size()>0) {
       int dataID = *(getPostProcessing()->getDataIDs().begin());
-      CHECK(getSendData(dataID) == nullptr,
+      P_CHECK(getSendData(dataID) == nullptr,
             "In case of serial coupling, post-processing can be defined for "
             << "data of second participant only!");
     }
@@ -67,8 +67,8 @@ void SerialCouplingScheme::initialize
 
   for (DataMap::value_type & pair : getSendData()) {
     if (pair.second->initialize) {
-      CHECK(not doesFirstStep(), "Only second participant can initialize data!");
-      DEBUG("Initialized data to be written");
+      P_CHECK(not doesFirstStep(), "Only second participant can initialize data!");
+      P_DEBUG("Initialized data to be written");
       setHasToSendInitData(true);
       break;
     }
@@ -76,8 +76,8 @@ void SerialCouplingScheme::initialize
 
   for (DataMap::value_type & pair : getReceiveData()) {
     if (pair.second->initialize) {
-      CHECK(doesFirstStep(), "Only first participant can receive initial data!");
-      DEBUG("Initialized data to be received");
+      P_CHECK(doesFirstStep(), "Only first participant can receive initial data!");
+      P_DEBUG("Initialized data to be received");
       setHasToReceiveInitData(true);
     }
   }
@@ -85,7 +85,7 @@ void SerialCouplingScheme::initialize
   // If the second participant initializes data, the first receive for the
   // second participant is done in initializeData() instead of initialize().
   if (not doesFirstStep() && not hasToSendInitData() && isCouplingOngoing()) {
-    DEBUG("Receiving data");
+    P_DEBUG("Receiving data");
     receiveAndSetDt();
     receiveData(getM2N());
     setHasDataBeenExchanged(true);
@@ -102,30 +102,30 @@ void SerialCouplingScheme::initialize
 
 void SerialCouplingScheme::initializeData()
 {
-  TRACE();
-  CHECK(isInitialized(), "initializeData() can be called after initialize() only!");
+  P_TRACE();
+  P_CHECK(isInitialized(), "initializeData() can be called after initialize() only!");
 
   if (not hasToSendInitData() && not hasToReceiveInitData()) {
-    INFO("initializeData is skipped since no data has to be initialized");
+    P_INFO("initializeData is skipped since no data has to be initialized");
     return;
   }
 
-  DEBUG("Initializing Data ...");
+  P_DEBUG("Initializing Data ...");
 
-  CHECK(not (hasToSendInitData() && isActionRequired(constants::actionWriteInitialData())),
+  P_CHECK(not (hasToSendInitData() && isActionRequired(constants::actionWriteInitialData())),
         "InitialData has to be written to preCICE before calling initializeData()");
 
   setHasDataBeenExchanged(false);
 
   if (hasToReceiveInitData() && isCouplingOngoing() )  {
-    assertion(doesFirstStep());
-    DEBUG("Receiving data");
+    P_assertion(doesFirstStep());
+    P_DEBUG("Receiving data");
     receiveData(getM2N());
     setHasDataBeenExchanged(true);
   }
 
   if (hasToSendInitData() && isCouplingOngoing()) {
-    assertion(not doesFirstStep());
+    P_assertion(not doesFirstStep());
     for (DataMap::value_type & pair : getSendData()) {
       if (pair.second->oldValues.cols() == 0)
         break;
@@ -150,7 +150,7 @@ void SerialCouplingScheme::initializeData()
 
 void SerialCouplingScheme::advance()
 {
-  TRACE(getTimesteps(), getTime());
+  P_TRACE(getTimesteps(), getTime());
   #ifndef NDEBUG
   for (const DataMap::value_type & pair : getReceiveData()) {
     Eigen::VectorXd& values = *pair.second->values;
@@ -159,12 +159,12 @@ void SerialCouplingScheme::advance()
     for (int i=0; (i < max) && (i < 10); i++){
       stream << values[i] << " ";
     }
-    DEBUG("Begin advance, first New Values: " << stream.str() );
+    P_DEBUG("Begin advance, first New Values: " << stream.str() );
   }
   #endif
   checkCompletenessRequiredActions();
 
-  CHECK(not hasToReceiveInitData() && not hasToSendInitData(),
+  P_CHECK(not hasToReceiveInitData() && not hasToSendInitData(),
         "initializeData() needs to be called before advance if data has to be initialized!");
 
   setHasDataBeenExchanged(false);
@@ -174,12 +174,12 @@ void SerialCouplingScheme::advance()
     if (math::equals(getThisTimestepRemainder(), 0.0, _eps)) {
       setIsCouplingTimestepComplete(true);
       setTimesteps(getTimesteps() + 1);
-      DEBUG("Sending data...");
+      P_DEBUG("Sending data...");
       sendDt();
       sendData(getM2N());
 
       if (isCouplingOngoing() || doesFirstStep()) {
-        DEBUG("Receiving data...");
+        P_DEBUG("Receiving data...");
         receiveAndSetDt();
         receiveData(getM2N());
         setHasDataBeenExchanged(true);
@@ -193,7 +193,7 @@ void SerialCouplingScheme::advance()
     bool doOnlySolverEvaluation = false;
 
     if (math::equals(getThisTimestepRemainder(), 0.0, _eps)) {
-      DEBUG("Computed full length of iteration");
+      P_DEBUG("Computed full length of iteration");
       if (doesFirstStep()) {
         sendDt();
         sendData(getM2N());
@@ -217,7 +217,7 @@ void SerialCouplingScheme::advance()
         // measure convergence of coupling iteration
         // measure convergence for coarse model optimization
         if(_isCoarseModelOptimizationActive){
-          DEBUG("measure convergence of coarse model optimization.");
+          P_DEBUG("measure convergence of coarse model optimization.");
           // in case of multilevel post processing only: measure the convergence of the coarse model optimization
           convergenceCoarseOptimization = measureConvergenceCoarseModelOptimization(designSpecifications);
           // Stop, when maximal iteration count (given in config) is reached
@@ -236,7 +236,7 @@ void SerialCouplingScheme::advance()
         }
         // measure convergence of coupling iteration
         else{
-          DEBUG("measure convergence.");
+          P_DEBUG("measure convergence.");
           doOnlySolverEvaluation = false;
 
           // measure convergence of the coupling iteration,
@@ -327,11 +327,11 @@ void SerialCouplingScheme::advance()
       }
 
       if (not convergence) {
-        DEBUG("No convergence achieved");
+        P_DEBUG("No convergence achieved");
         requireAction(constants::actionReadIterationCheckpoint());
       }
       else {
-        DEBUG("Convergence achieved");
+        P_DEBUG("Convergence achieved");
         advanceTXTWriters();
       }
       updateTimeAndIterations(convergence, convergenceCoarseOptimization);

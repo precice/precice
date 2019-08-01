@@ -46,7 +46,7 @@ public:
                                         int                acceptorRank,
                                         int                requesterCommunicatorSize) override
   {
-    assertion(false, "Not implemented!");
+    P_assertion(false, "Not implemented!");
   }
 
   /// See precice::com::Communication::requestConnection().
@@ -60,7 +60,7 @@ public:
                                          std::set<int> const &acceptorRanks,
                                          int                  requesterRank) override
   {
-    assertion(false, "Not implemented!");
+    P_assertion(false, "Not implemented!");
   }
 
   /// See precice::com::Communication::closeConnection().

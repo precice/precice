@@ -213,8 +213,8 @@ bool collinear (
   const Eigen::MatrixBase<Derived>& b,
   const Eigen::MatrixBase<Derived>& c )
 {
-  assertion ( a.size() == b.size(), a.size(), b.size() );
-  assertion ( a.size() == c.size(), a.size(), c.size() );
+  P_assertion( a.size() == b.size(), a.size(), b.size() );
+  P_assertion( a.size() == c.size(), a.size(), c.size() );
   double triangleOutline = (b-a).norm() + (c-b).norm() + (a-c).norm();
   if ( math::equals(triangleArea(a, b, c) / triangleOutline, 0.0) ) {
     return true;

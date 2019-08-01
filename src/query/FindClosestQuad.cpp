@@ -34,7 +34,7 @@ double FindClosestQuad:: getEuclidianDistance()
 
 mesh::Quad & FindClosestQuad:: getClosestQuad()
 {
-  assertion(_closestQuad != nullptr);
+  P_assertion(_closestQuad != nullptr);
   return *_closestQuad;
 }
 
@@ -54,7 +54,7 @@ void FindClosestQuad:: find
 (
   mesh::Quad& quad )
 {
-  TRACE(quad.vertex(0).getCoords(), quad.vertex(1).getCoords(), quad.vertex(2).getCoords() , quad.vertex(3).getCoords());
+  P_TRACE(quad.vertex(0).getCoords(), quad.vertex(1).getCoords(), quad.vertex(2).getCoords() , quad.vertex(3).getCoords());
 
   // Methodology of book "Computational Geometry", Joseph O' Rourke, Chapter 7.2
   auto& a = quad.vertex(0).getCoords();
@@ -64,7 +64,7 @@ void FindClosestQuad:: find
   auto& norm = quad.getNormal();
 
   auto ret = math::barycenter::calcBarycentricCoordsForQuad(a, b, c, d, norm, _searchPoint);
-  assertion(ret.barycentricCoords.size() == 4);
+  P_assertion(ret.barycentricCoords.size() == 4);
 
   const bool inside = not (ret.barycentricCoords.array() < - math::NUMERICAL_ZERO_DIFFERENCE).any();
 

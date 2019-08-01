@@ -16,10 +16,10 @@ bool segmentsIntersect
   const Eigen::Ref<const Eigen::Vector2d>& d,
   bool countTouchingAsIntersection)
 {
-  assertion ( a.size() == 2, a.size() );
-  assertion ( b.size() == 2, b.size() );
-  assertion ( c.size() == 2, c.size() );
-  assertion ( d.size() == 2, d.size() );
+  P_assertion( a.size() == 2, a.size() );
+  P_assertion( b.size() == 2, b.size() );
+  P_assertion( c.size() == 2, c.size() );
+  P_assertion( d.size() == 2, d.size() );
 
   if ( countTouchingAsIntersection ) {
     if ( between(a, b, c) ) {
@@ -163,8 +163,8 @@ double triangleArea
   const Eigen::VectorXd& b,
   const Eigen::VectorXd& c )
 {
-  assertion ( a.size() == b.size(), a.size(), b.size() );
-  assertion ( b.size() == c.size(), b.size(), c.size() );
+  P_assertion( a.size() == b.size(), a.size(), b.size() );
+  P_assertion( b.size() == c.size(), b.size(), c.size() );
   if ( a.size() == 2 ){
     Eigen::Vector2d A = b;
     A -= a;
@@ -173,7 +173,7 @@ double triangleArea
     return 0.5 * (A(0)*B(1) - A(1)*B(0));
   }
   else {
-    assertion ( a.size() == 3, a.size() );
+    P_assertion( a.size() == 3, a.size() );
     Eigen::Vector3d A = b; A -= a;
     Eigen::Vector3d B = c; B -= a;
     return 0.5 * A.cross(B).norm();
@@ -195,8 +195,8 @@ Eigen::Vector2d projectVector
   const Eigen::Vector3d & vector,
   int indexDimensionToRemove )
 {
-   assertion ( indexDimensionToRemove >= 0 );
-   assertion ( indexDimensionToRemove < 3 );
+   P_assertion( indexDimensionToRemove >= 0 );
+   P_assertion( indexDimensionToRemove < 3 );
    Eigen::Vector2d projectedVector;
    int reducedDim = 0;
    for (int dim=0; dim < 3; dim++) {

@@ -14,7 +14,7 @@ std::string wrapText (
 {
   std::vector<std::string> tokens;
   boost::algorithm::split(tokens, text, boost::algorithm::is_space());
-  assertion((int)tokens.size() > 0);
+  P_assertion((int)tokens.size() > 0);
   std::string wrapped;
   int length = 0;
   while (text[length] == ' '){

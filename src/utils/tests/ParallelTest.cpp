@@ -19,7 +19,7 @@ BOOST_AUTO_TEST_CASE(Parallel, *testing::MinRanks{3})
     if ((rank == 0) || (rank == 1)) {
       group = "GroupOne";
     } else {
-      assertion(rank == 2, rank);
+      P_assertion(rank == 2, rank);
       group = "GroupTwo";
     }
     Par::splitCommunicator(group);

@@ -18,7 +18,7 @@ void Petsc::initialize
   int*               argc,
   char***            argv )
 {
-  TRACE();
+  P_TRACE();
 #ifndef PRECICE_NO_PETSC
   PetscBool petscIsInitialized;
   PetscInitialized(&petscIsInitialized);

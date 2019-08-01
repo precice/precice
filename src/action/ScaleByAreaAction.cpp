@@ -25,8 +25,8 @@ void ScaleByAreaAction::performAction(
     double computedPartFullDt,
     double fullDt)
 {
-  TRACE();
-  CHECK(getMesh()->getDimensions() == 2, "Not implemented for dimension != 2!");
+  P_TRACE();
+  P_CHECK(getMesh()->getDimensions() == 2, "Not implemented for dimension != 2!");
   auto &          targetValues = _targetData->values();
   Eigen::VectorXd areas        = Eigen::VectorXd::Zero(getMesh()->vertices().size());
   for (mesh::Edge &edge : getMesh()->edges()) {
@@ -34,7 +34,7 @@ void ScaleByAreaAction::performAction(
     areas[edge.vertex(1).getID()] += edge.getEnclosingRadius();
   }
   int dimensions = _targetData->getDimensions();
-  assertion(targetValues.size() / dimensions == areas.size());
+  P_assertion(targetValues.size() / dimensions == areas.size());
   if (_scaling == SCALING_DIVIDE_BY_AREA) {
     for (int i = 0; i < areas.size(); i++) {
       for (int dim = 0; dim < dimensions; dim++) {

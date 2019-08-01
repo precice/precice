@@ -71,10 +71,10 @@ SolverInterfaceImpl:: SolverInterfaceImpl
   _accessorCommunicatorSize(accessorCommunicatorSize),
   _serverMode(serverMode)
 {
-  CHECK(!_accessorName.empty(), "Accessor has to be named!");
-  CHECK(_accessorProcessRank >= 0, "Accessor process index has to be >= 0!");
-  CHECK(_accessorCommunicatorSize >= 0, "Accessor process size has to be >= 0!");
-  CHECK(_accessorProcessRank < _accessorCommunicatorSize,
+  P_CHECK(!_accessorName.empty(), "Accessor has to be named!");
+  P_CHECK(_accessorProcessRank >= 0, "Accessor process index has to be >= 0!");
+  P_CHECK(_accessorCommunicatorSize >= 0, "Accessor process size has to be >= 0!");
+  P_CHECK(_accessorProcessRank < _accessorCommunicatorSize,
         "Accessor process index has to be smaller than accessor process "
         << "size (given as " << _accessorProcessRank << ")!");
 
@@ -99,8 +99,8 @@ void SolverInterfaceImpl:: configure
   config::Configuration config;
   xml::configure(config.getXMLTag(), configurationFileName);
   if(_accessorProcessRank==0){
-    INFO("This is preCICE version " << PRECICE_VERSION);
-    INFO("Configuring preCICE with configuration: \"" << configurationFileName << "\"" );
+    P_INFO("This is preCICE version " << PRECICE_VERSION);
+    P_INFO("Configuring preCICE with configuration: \"" << configurationFileName << "\"" );
   }
   configure(config.getSolverInterfaceConfiguration());
 }
@@ -109,7 +109,7 @@ void SolverInterfaceImpl:: configure
 (
   const config::SolverInterfaceConfiguration& config )
 {
-  TRACE();
+  P_TRACE();
 
   Event e("configure"); // no precice::syncMode as this is not yet configured here
   utils::ScopedEventPrefix sep("configure/");
@@ -122,8 +122,8 @@ void SolverInterfaceImpl:: configure
   _dimensions = config.getDimensions();
   _accessor = determineAccessingParticipant(config);
 
-  CHECK(not (_accessor->useServer() && _accessor->useMaster()), "You cannot use a server and a master.");
-  CHECK(_accessorCommunicatorSize==1 || _accessor->useMaster() || _accessor->useServer(),
+  P_CHECK(not (_accessor->useServer() && _accessor->useMaster()), "You cannot use a server and a master.");
+  P_CHECK(_accessorCommunicatorSize==1 || _accessor->useMaster() || _accessor->useServer(),
         "A parallel participant needs either a master or a server communication configured");
 
   _clientMode = (not _serverMode) && _accessor->useServer();
@@ -136,15 +136,15 @@ void SolverInterfaceImpl:: configure
   configureM2Ns(config.getM2NConfiguration());
 
   if (_serverMode){
-    INFO("Run in server mode");
+    P_INFO("Run in server mode");
   }
   if (_clientMode){
-    INFO("Run in client mode");
+    P_INFO("Run in client mode");
   }
 
   if (not _clientMode){
-    INFO("Run in coupling mode");
-    CHECK(_participants.size() > 1, "At least two participants need to be defined!");
+    P_INFO("Run in coupling mode");
+    P_CHECK(_participants.size() > 1, "At least two participants need to be defined!");
     configurePartitions(config.getM2NConfiguration());
   }
 
@@ -154,7 +154,7 @@ void SolverInterfaceImpl:: configure
 
   if (_serverMode || _clientMode){
     com::PtrCommunication com = _accessor->getClientServerCommunication();
-    assertion(com.get() != nullptr);
+    P_assertion(com.get() != nullptr);
     _requestManager = std::make_shared<RequestManager>(*this, com, _couplingScheme);
   }
 
@@ -162,14 +162,14 @@ void SolverInterfaceImpl:: configure
   for (const MeshContext* meshContext : _accessor->usedMeshContexts()) {
     const mesh::PtrMesh& mesh = meshContext->mesh;
     for (std::pair<std::string,int> nameID : mesh->getNameIDPairs()) {
-      assertion(not utils::contained(nameID.first, _meshIDs));
+      P_assertion(not utils::contained(nameID.first, _meshIDs));
       _meshIDs[nameID.first] = nameID.second;
     }
-    assertion(_dataIDs.find(mesh->getID())==_dataIDs.end());
+    P_assertion(_dataIDs.find(mesh->getID())==_dataIDs.end());
     _dataIDs[mesh->getID()] = std::map<std::string,int>();
-    assertion(_dataIDs.find(mesh->getID())!=_dataIDs.end());
+    P_assertion(_dataIDs.find(mesh->getID())!=_dataIDs.end());
     for (const mesh::PtrData& data : mesh->data()) {
-      assertion(_dataIDs[mesh->getID()].find(data->getName())==_dataIDs[mesh->getID()].end());
+      P_assertion(_dataIDs[mesh->getID()].find(data->getName())==_dataIDs[mesh->getID()].end());
       _dataIDs[mesh->getID()][data->getName()] = data->getID();
     }
     std::string meshName = mesh->getName();
@@ -199,40 +199,40 @@ void SolverInterfaceImpl:: configure
 
 double SolverInterfaceImpl:: initialize()
 {
-  TRACE();
+  P_TRACE();
   auto & solverInitEvent = EventRegistry::instance().getStoredEvent("solver.initialize");
   solverInitEvent.pause(precice::syncMode);
   Event e("initialize", precice::syncMode);
   utils::ScopedEventPrefix sep("initialize/");
   
   if (_clientMode){
-    DEBUG("Request perform initializations");
+    P_DEBUG("Request perform initializations");
     _requestManager->requestInitialize();
   }
   else {
     // Setup communication
 
-    INFO("Setting up master communication to coupling partner/s" );
+    P_INFO("Setting up master communication to coupling partner/s" );
     for (auto& m2nPair : _m2ns) {
         auto& bm2n = m2nPair.second;
-        DEBUG((bm2n.isRequesting?"Awaiting master connection from ":"Establishing master connection to ") << bm2n.remoteName);
+        P_DEBUG((bm2n.isRequesting?"Awaiting master connection from ":"Establishing master connection to ") << bm2n.remoteName);
         bm2n.prepareEstablishment();
         bm2n.connectMasters();
-        DEBUG("Established master connection " << (bm2n.isRequesting?"from ":"to ") << bm2n.remoteName);
+        P_DEBUG("Established master connection " << (bm2n.isRequesting?"from ":"to ") << bm2n.remoteName);
     }
-    INFO("Masters are connected");
+    P_INFO("Masters are connected");
 
     computePartitions();
 
-    INFO("Setting up slaves communication to coupling partner/s" );
+    P_INFO("Setting up slaves communication to coupling partner/s" );
     for (auto& m2nPair : _m2ns) {
       auto& bm2n = m2nPair.second;
-      DEBUG((bm2n.isRequesting?"Awaiting slaves connection from ":"Establishing slaves connection to ") << bm2n.remoteName);
+      P_DEBUG((bm2n.isRequesting?"Awaiting slaves connection from ":"Establishing slaves connection to ") << bm2n.remoteName);
       bm2n.connectSlaves();
       bm2n.cleanupEstablishment();
-      DEBUG("Established slaves connection " << (bm2n.isRequesting?"from ":"to ") << bm2n.remoteName);
+      P_DEBUG("Established slaves connection " << (bm2n.isRequesting?"from ":"to ") << bm2n.remoteName);
     }
-    INFO("Slaves are connected");
+    P_INFO("Slaves are connected");
 
     std::set<action::Action::Timing> timings;
     double dt = 0.0;
@@ -258,7 +258,7 @@ double SolverInterfaceImpl:: initialize()
 
     performDataActions(timings, 0.0, 0.0, 0.0, dt);
 
-    INFO(_couplingScheme->printCouplingState());
+    P_INFO(_couplingScheme->printCouplingState());
   }
 
   solverInitEvent.start(precice::syncMode);
@@ -270,7 +270,7 @@ double SolverInterfaceImpl:: initialize()
 
 void SolverInterfaceImpl:: initializeData ()
 {
-  TRACE();
+  P_TRACE();
 
   auto & solverInitEvent = EventRegistry::instance().getStoredEvent("solver.initialize");
   solverInitEvent.pause(precice::syncMode);
@@ -278,7 +278,7 @@ void SolverInterfaceImpl:: initializeData ()
   Event e("initializeData", precice::syncMode);
   utils::ScopedEventPrefix sep("initializeData/");
 
-  CHECK(_couplingScheme->isInitialized(),
+  P_CHECK(_couplingScheme->isInitialized(),
         "initialize() has to be called before initializeData()");
   if (_clientMode){
     _requestManager->requestInitialzeData();
@@ -294,7 +294,7 @@ void SolverInterfaceImpl:: initializeData ()
     }
     performDataActions(timings, 0.0, 0.0, 0.0, dt);
     resetWrittenData();
-    DEBUG("Plot output...");
+    P_DEBUG("Plot output...");
     for (const io::ExportContext& context : _accessor->exportContexts()){
       if (context.timestepInterval != -1){
         std::ostringstream suffix;
@@ -313,7 +313,7 @@ double SolverInterfaceImpl:: advance
 (
   double computedTimestepLength )
 {
-  TRACE(computedTimestepLength);
+  P_TRACE(computedTimestepLength);
 
   // Events for the solver time, stopped when we enter, restarted when we leave advance
   auto & solverEvent = EventRegistry::instance().getStoredEvent("solver.advance");
@@ -324,7 +324,7 @@ double SolverInterfaceImpl:: advance
   Event e("advance", precice::syncMode);
   utils::ScopedEventPrefix sep("advance/");
 
-  CHECK(_couplingScheme->isInitialized(), "initialize() has to be called before advance()");
+  P_CHECK(_couplingScheme->isInitialized(), "initialize() has to be called before advance()");
   _numberAdvanceCalls++;
   if (_clientMode){
     _requestManager->requestAdvance(computedTimestepLength);
@@ -365,7 +365,7 @@ double SolverInterfaceImpl:: advance
     }
     performDataActions(timings, time, computedTimestepLength, timestepPart, timestepLength);
 
-    DEBUG("Advancing coupling scheme");
+    P_DEBUG("Advancing coupling scheme");
     _couplingScheme->advance();
 
     timings.clear();
@@ -382,7 +382,7 @@ double SolverInterfaceImpl:: advance
       mapReadData();
     }
 
-    INFO(_couplingScheme->printCouplingState());
+    P_INFO(_couplingScheme->printCouplingState());
 
     handleExports();
 
@@ -398,7 +398,7 @@ double SolverInterfaceImpl:: advance
 
 void SolverInterfaceImpl:: finalize()
 {
-  TRACE();
+  P_TRACE();
 
   // Events for the solver time, finally stopped here
   auto & solverEvent = EventRegistry::instance().getStoredEvent("solver.advance");
@@ -407,7 +407,7 @@ void SolverInterfaceImpl:: finalize()
   Event e("finalize"); // no precice::syncMode here as MPI is already finalized at destruction of this event
   utils::ScopedEventPrefix sep("finalize/");
 
-  CHECK(_couplingScheme->isInitialized(), "initialize() has to be called before finalize()");
+  P_CHECK(_couplingScheme->isInitialized(), "initialize() has to be called before finalize()");
   _couplingScheme->finalize();
   _couplingScheme.reset();
 
@@ -436,12 +436,12 @@ void SolverInterfaceImpl:: finalize()
           iter.second.m2n->getMasterCommunication()->send(ping,0);
           std::string receive = "init";
           iter.second.m2n->getMasterCommunication()->receive(receive,0);
-          assertion(receive==pong);
+          P_assertion(receive==pong);
         }
         else{
           std::string receive = "init";
           iter.second.m2n->getMasterCommunication()->receive(receive,0);
-          assertion(receive==ping);
+          P_assertion(receive==ping);
           iter.second.m2n->getMasterCommunication()->send(pong,0);
         }
       }
@@ -475,19 +475,19 @@ void SolverInterfaceImpl:: finalize()
 
 int SolverInterfaceImpl:: getDimensions() const
 {
-  TRACE(_dimensions );
+  P_TRACE(_dimensions );
   return _dimensions;
 }
 
 bool SolverInterfaceImpl:: isCouplingOngoing() const
 {
-  TRACE();
+  P_TRACE();
   return _couplingScheme->isCouplingOngoing();
 }
 
 bool SolverInterfaceImpl:: isReadDataAvailable() const
 {
-  TRACE();
+  P_TRACE();
   return _couplingScheme->hasDataBeenExchanged();
 }
 
@@ -495,13 +495,13 @@ bool SolverInterfaceImpl:: isWriteDataRequired
 (
   double computedTimestepLength ) const
 {
-  TRACE(computedTimestepLength);
+  P_TRACE(computedTimestepLength);
   return _couplingScheme->willDataBeExchanged(computedTimestepLength);
 }
 
 bool SolverInterfaceImpl:: isTimestepComplete() const
 {
-  TRACE();
+  P_TRACE();
   return _couplingScheme->isCouplingTimestepComplete();
 }
 
@@ -509,7 +509,7 @@ bool SolverInterfaceImpl:: isActionRequired
 (
   const std::string& action ) const
 {
-  TRACE(action, _couplingScheme->isActionRequired(action));
+  P_TRACE(action, _couplingScheme->isActionRequired(action));
   return _couplingScheme->isActionRequired(action);
 }
 
@@ -517,7 +517,7 @@ void SolverInterfaceImpl:: fulfilledAction
 (
   const std::string& action )
 {
-  TRACE(action);
+  P_TRACE(action);
   if ( _clientMode ) {
     _requestManager->requestFulfilledAction(action);
   }
@@ -539,7 +539,7 @@ bool SolverInterfaceImpl:: hasMesh
 (
   const std::string& meshName ) const
 {
-  TRACE(meshName);
+  P_TRACE(meshName);
   return utils::contained ( meshName, _meshIDs );
 }
 
@@ -547,15 +547,15 @@ int SolverInterfaceImpl:: getMeshID
 (
   const std::string& meshName ) const
 {
-  TRACE(meshName);
+  P_TRACE(meshName);
   const auto pos = _meshIDs.find(meshName);
-  CHECK(pos != _meshIDs.end(), "Mesh with name \""<< meshName << "\" is not defined!" );
+  P_CHECK(pos != _meshIDs.end(), "Mesh with name \""<< meshName << "\" is not defined!" );
   return pos->second;
 }
 
 std::set<int> SolverInterfaceImpl:: getMeshIDs() const
 {
-  TRACE();
+  P_TRACE();
   std::set<int> ids;
   for (const impl::MeshContext* context : _accessor->usedMeshContexts()) {
     ids.insert ( context->mesh->getID() );
@@ -567,7 +567,7 @@ bool SolverInterfaceImpl:: hasData
 (
   const std::string& dataName, int meshID ) const
 {
-  TRACE(dataName, meshID );
+  P_TRACE(dataName, meshID );
   PRECICE_VALIDATE_MESH_ID(meshID);
   const auto & sub_dataIDs = _dataIDs.at(meshID);
   return sub_dataIDs.find(dataName)!= sub_dataIDs.end();
@@ -577,9 +577,9 @@ int SolverInterfaceImpl:: getDataID
 (
   const std::string& dataName, int meshID ) const
 {
-  TRACE(dataName, meshID );
+  P_TRACE(dataName, meshID );
   PRECICE_VALIDATE_MESH_ID(meshID);
-  CHECK(hasData(dataName, meshID),
+  P_CHECK(hasData(dataName, meshID),
         "Data with name \"" << dataName << "\" is not defined on mesh with ID \"" << meshID << "\".");
   return _dataIDs.at(meshID).at(dataName);
 }
@@ -588,7 +588,7 @@ int SolverInterfaceImpl:: getMeshVertexSize
 (
   int meshID ) const
 {
-  TRACE(meshID);
+  P_TRACE(meshID);
   int size = 0;
   if (_clientMode){
     size = _requestManager->requestGetMeshVertexSize(meshID);
@@ -596,10 +596,10 @@ int SolverInterfaceImpl:: getMeshVertexSize
   else {
     PRECICE_REQUIRE_MESH_USE(meshID);
     MeshContext& context = _accessor->meshContext(meshID);
-    assertion(context.mesh.get() != nullptr);
+    P_assertion(context.mesh.get() != nullptr);
     size = context.mesh->vertices().size();
   }
-  DEBUG("return " << size);
+  P_DEBUG("return " << size);
   return size;
 }
 
@@ -608,7 +608,7 @@ void SolverInterfaceImpl:: resetMesh
 (
   int meshID )
 {
-  TRACE(meshID);
+  P_TRACE(meshID);
   if (_clientMode){
     _requestManager->requestResetMesh(meshID);
   }
@@ -621,10 +621,10 @@ void SolverInterfaceImpl:: resetMesh
           context.fromMappingContext.timing == mapping::MappingConfiguration::INITIAL &&
               context.toMappingContext.timing == mapping::MappingConfiguration::INITIAL;
 
-    CHECK(!isStationary, "A mesh with only initial mappings  must not be reseted");
-    CHECK(hasMapping, "A mesh with no mappings must not be reseted");
+    P_CHECK(!isStationary, "A mesh with only initial mappings  must not be reseted");
+    P_CHECK(hasMapping, "A mesh with no mappings must not be reseted");
 
-    DEBUG ( "Clear mesh positions for mesh \"" << context.mesh->getName() << "\"" );
+    P_DEBUG( "Clear mesh positions for mesh \"" << context.mesh->getName() << "\"" );
     _meshLock.unlock(meshID);
     context.mesh->clear ();
   }
@@ -635,10 +635,10 @@ int SolverInterfaceImpl:: setMeshVertex
   int           meshID,
   const double* position )
 {
-  TRACE(meshID);
+  P_TRACE(meshID);
   Eigen::VectorXd internalPosition{
       Eigen::Map<const Eigen::VectorXd>{position, _dimensions}};
-  DEBUG("Position = " << internalPosition);
+  P_DEBUG("Position = " << internalPosition);
   int index = -1;
   if ( _clientMode ){
     index = _requestManager->requestSetMeshVertex ( meshID, internalPosition);
@@ -647,7 +647,7 @@ int SolverInterfaceImpl:: setMeshVertex
     PRECICE_REQUIRE_MESH_MODIFY(meshID);
     MeshContext& context = _accessor->meshContext(meshID);
     mesh::PtrMesh mesh(context.mesh);
-    DEBUG("MeshRequirement: " << context.meshRequirement);
+    P_DEBUG("MeshRequirement: " << context.meshRequirement);
     index = mesh->createVertex(internalPosition).getID();
     mesh->allocateDataValues();
   }
@@ -661,7 +661,7 @@ void SolverInterfaceImpl:: setMeshVertices
   const double* positions,
   int*          ids )
 {
-  TRACE(meshID, size);
+  P_TRACE(meshID, size);
   if (_clientMode){
     _requestManager->requestSetMeshVertices(meshID, size, positions, ids);
   }
@@ -669,7 +669,7 @@ void SolverInterfaceImpl:: setMeshVertices
     PRECICE_REQUIRE_MESH_MODIFY(meshID);
     MeshContext& context = _accessor->meshContext(meshID);
     mesh::PtrMesh mesh(context.mesh);
-    DEBUG("Set positions");
+    P_DEBUG("Set positions");
     const Eigen::Map<const Eigen::MatrixXd> posMatrix{
         positions, _dimensions, static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(size)};
     for (int i=0; i < size; ++i){
@@ -687,7 +687,7 @@ void SolverInterfaceImpl:: getMeshVertices
   const int* ids,
   double*    positions ) const
 {
-  TRACE(meshID, size);
+  P_TRACE(meshID, size);
   if (_clientMode){
     _requestManager->requestGetMeshVertices(meshID, size, ids, positions);
   }
@@ -695,14 +695,14 @@ void SolverInterfaceImpl:: getMeshVertices
     PRECICE_REQUIRE_MESH_USE(meshID);
     MeshContext& context = _accessor->meshContext(meshID);
     mesh::PtrMesh mesh(context.mesh);
-    DEBUG("Get positions");
+    P_DEBUG("Get positions");
     auto & vertices = mesh->vertices();
-    assertion(size <= vertices.size(), size, vertices.size());
+    P_assertion(size <= vertices.size(), size, vertices.size());
     Eigen::Map<Eigen::MatrixXd> posMatrix{
         positions, _dimensions, static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(size)};
     for (size_t i=0; i < size; i++){
       const size_t id = ids[i];
-      assertion(id < vertices.size(), id, vertices.size());
+      P_assertion(id < vertices.size(), id, vertices.size());
       posMatrix.col(i) = vertices[id].getCoords();
     }
   }
@@ -714,7 +714,7 @@ void SolverInterfaceImpl:: getMeshVertexIDsFromPositions (
   const double* positions,
   int*          ids ) const
 {
-  TRACE(meshID, size);
+  P_TRACE(meshID, size);
   if (_clientMode){
     _requestManager->requestGetMeshVertexIDsFromPositions(meshID, size, positions, ids);
   }
@@ -722,9 +722,9 @@ void SolverInterfaceImpl:: getMeshVertexIDsFromPositions (
     PRECICE_REQUIRE_MESH_USE(meshID);
     MeshContext& context = _accessor->meshContext(meshID);
     mesh::PtrMesh mesh(context.mesh);
-    DEBUG("Get IDs");
+    P_DEBUG("Get IDs");
     const auto &vertices = mesh->vertices();
-    assertion(vertices.size() <= size, vertices.size(), size);
+    P_assertion(vertices.size() <= size, vertices.size(), size);
     Eigen::Map<const Eigen::MatrixXd> posMatrix{
         positions, _dimensions, static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(size)};
     const auto vsize = vertices.size();
@@ -735,7 +735,7 @@ void SolverInterfaceImpl:: getMeshVertexIDsFromPositions (
               break;
           }
       }
-      CHECK(j != vsize, "Position " << i << "=" << ids[i] << " unknown!");
+      P_CHECK(j != vsize, "Position " << i << "=" << ids[i] << " unknown!");
       ids[i] = j;
     }
   }
@@ -749,7 +749,7 @@ int SolverInterfaceImpl:: setMeshEdge
   int firstVertexID,
   int secondVertexID )
 {
-  TRACE(meshID, firstVertexID, secondVertexID );
+  P_TRACE(meshID, firstVertexID, secondVertexID );
   if ( _clientMode ){
     return _requestManager->requestSetMeshEdge ( meshID, firstVertexID, secondVertexID );
   }
@@ -757,10 +757,10 @@ int SolverInterfaceImpl:: setMeshEdge
     PRECICE_REQUIRE_MESH_MODIFY(meshID);
     MeshContext& context = _accessor->meshContext(meshID);
     if ( context.meshRequirement == mapping::Mapping::MeshRequirement::FULL ){
-      DEBUG("Full mesh required.");
+      P_DEBUG("Full mesh required.");
       mesh::PtrMesh& mesh = context.mesh;
-      CHECK(mesh->isValidVertexID(firstVertexID),  " Given VertexID is invalid!");
-      CHECK(mesh->isValidVertexID(secondVertexID), " Given VertexID is invalid!");
+      P_CHECK(mesh->isValidVertexID(firstVertexID),  " Given VertexID is invalid!");
+      P_CHECK(mesh->isValidVertexID(secondVertexID), " Given VertexID is invalid!");
       mesh::Vertex& v0 = mesh->vertices()[firstVertexID];
       mesh::Vertex& v1 = mesh->vertices()[secondVertexID];
       return mesh->createEdge(v0, v1).getID ();
@@ -776,7 +776,7 @@ void SolverInterfaceImpl:: setMeshTriangle
   int secondEdgeID,
   int thirdEdgeID )
 {
-  TRACE(meshID, firstEdgeID,
+  P_TRACE(meshID, firstEdgeID,
                   secondEdgeID, thirdEdgeID );
   if ( _clientMode ){
     _requestManager->requestSetMeshTriangle ( meshID, firstEdgeID, secondEdgeID, thirdEdgeID );
@@ -786,9 +786,9 @@ void SolverInterfaceImpl:: setMeshTriangle
     MeshContext& context = _accessor->meshContext(meshID);
     if ( context.meshRequirement == mapping::Mapping::MeshRequirement::FULL ){
       mesh::PtrMesh& mesh = context.mesh;
-      CHECK(mesh->isValidEdgeID(firstEdgeID),  " Given EdgeID is invalid!");
-      CHECK(mesh->isValidEdgeID(secondEdgeID), " Given EdgeID is invalid!");
-      CHECK(mesh->isValidEdgeID(thirdEdgeID),  " Given EdgeID is invalid!");
+      P_CHECK(mesh->isValidEdgeID(firstEdgeID),  " Given EdgeID is invalid!");
+      P_CHECK(mesh->isValidEdgeID(secondEdgeID), " Given EdgeID is invalid!");
+      P_CHECK(mesh->isValidEdgeID(thirdEdgeID),  " Given EdgeID is invalid!");
       mesh::Edge& e0 = mesh->edges()[firstEdgeID];
       mesh::Edge& e1 = mesh->edges()[secondEdgeID];
       mesh::Edge& e2 = mesh->edges()[thirdEdgeID];
@@ -804,7 +804,7 @@ void SolverInterfaceImpl:: setMeshTriangleWithEdges
   int secondVertexID,
   int thirdVertexID )
 {
-  TRACE(meshID, firstVertexID,
+  P_TRACE(meshID, firstVertexID,
                 secondVertexID, thirdVertexID);
   if (_clientMode){
     _requestManager->requestSetMeshTriangleWithEdges(meshID,
@@ -817,9 +817,9 @@ void SolverInterfaceImpl:: setMeshTriangleWithEdges
   MeshContext& context = _accessor->meshContext(meshID);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL){
     mesh::PtrMesh& mesh = context.mesh;
-    CHECK(mesh->isValidVertexID(firstVertexID),  " Given VertexID is invalid!");
-    CHECK(mesh->isValidVertexID(secondVertexID), " Given VertexID is invalid!");
-    CHECK(mesh->isValidVertexID(thirdVertexID),  " Given VertexID is invalid!");
+    P_CHECK(mesh->isValidVertexID(firstVertexID),  " Given VertexID is invalid!");
+    P_CHECK(mesh->isValidVertexID(secondVertexID), " Given VertexID is invalid!");
+    P_CHECK(mesh->isValidVertexID(thirdVertexID),  " Given VertexID is invalid!");
     mesh::Vertex* vertices[3];
     vertices[0] = &mesh->vertices()[firstVertexID];
     vertices[1] = &mesh->vertices()[secondVertexID];
@@ -841,7 +841,7 @@ void SolverInterfaceImpl:: setMeshQuad
   int thirdEdgeID,
   int fourthEdgeID )
 {
-  TRACE(meshID, firstEdgeID, secondEdgeID, thirdEdgeID,
+  P_TRACE(meshID, firstEdgeID, secondEdgeID, thirdEdgeID,
                 fourthEdgeID);
   if (_clientMode){
     _requestManager->requestSetMeshQuad(meshID, firstEdgeID, secondEdgeID,
@@ -852,10 +852,10 @@ void SolverInterfaceImpl:: setMeshQuad
     MeshContext& context = _accessor->meshContext(meshID);
     if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL){
       mesh::PtrMesh& mesh = context.mesh;
-      CHECK(mesh->isValidEdgeID(firstEdgeID),  " Given EdgeID is invalid!");
-      CHECK(mesh->isValidEdgeID(secondEdgeID), " Given EdgeID is invalid!");
-      CHECK(mesh->isValidEdgeID(thirdEdgeID),  " Given EdgeID is invalid!");
-      CHECK(mesh->isValidEdgeID(fourthEdgeID), " Given EdgeID is invalid!");
+      P_CHECK(mesh->isValidEdgeID(firstEdgeID),  " Given EdgeID is invalid!");
+      P_CHECK(mesh->isValidEdgeID(secondEdgeID), " Given EdgeID is invalid!");
+      P_CHECK(mesh->isValidEdgeID(thirdEdgeID),  " Given EdgeID is invalid!");
+      P_CHECK(mesh->isValidEdgeID(fourthEdgeID), " Given EdgeID is invalid!");
       mesh::Edge& e0 = mesh->edges()[firstEdgeID];
       mesh::Edge& e1 = mesh->edges()[secondEdgeID];
       mesh::Edge& e2 = mesh->edges()[thirdEdgeID];
@@ -873,7 +873,7 @@ void SolverInterfaceImpl:: setMeshQuadWithEdges
   int thirdVertexID,
   int fourthVertexID )
 {
-  TRACE(meshID, firstVertexID,
+  P_TRACE(meshID, firstVertexID,
                 secondVertexID, thirdVertexID, fourthVertexID);
   if (_clientMode){
     _requestManager->requestSetMeshQuadWithEdges(
@@ -884,10 +884,10 @@ void SolverInterfaceImpl:: setMeshQuadWithEdges
   MeshContext& context = _accessor->meshContext(meshID);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL){
     mesh::PtrMesh& mesh = context.mesh;
-    CHECK(mesh->isValidVertexID(firstVertexID),  " Given VertexID is invalid!");
-    CHECK(mesh->isValidVertexID(secondVertexID), " Given VertexID is invalid!");
-    CHECK(mesh->isValidVertexID(thirdVertexID),  " Given VertexID is invalid!");
-    CHECK(mesh->isValidVertexID(fourthVertexID), " Given VertexID is invalid!");
+    P_CHECK(mesh->isValidVertexID(firstVertexID),  " Given VertexID is invalid!");
+    P_CHECK(mesh->isValidVertexID(secondVertexID), " Given VertexID is invalid!");
+    P_CHECK(mesh->isValidVertexID(thirdVertexID),  " Given VertexID is invalid!");
+    P_CHECK(mesh->isValidVertexID(fourthVertexID), " Given VertexID is invalid!");
     mesh::Vertex* vertices[4];
     vertices[0] = &mesh->vertices()[firstVertexID];
     vertices[1] = &mesh->vertices()[secondVertexID];
@@ -907,7 +907,7 @@ void SolverInterfaceImpl:: mapWriteDataFrom
 (
   int fromMeshID )
 {
-  TRACE(fromMeshID);
+  P_TRACE(fromMeshID);
   if (_clientMode){
     _requestManager->requestMapWriteDataFrom(fromMeshID);
     return;
@@ -916,12 +916,12 @@ void SolverInterfaceImpl:: mapWriteDataFrom
   impl::MeshContext& context = _accessor->meshContext(fromMeshID);
   impl::MappingContext& mappingContext = context.fromMappingContext;
   if (mappingContext.mapping.use_count() == 0){
-    ERROR("From mesh \"" << context.mesh->getName()
+    P_ERROR("From mesh \"" << context.mesh->getName()
                    << "\", there is no mapping defined");
     return;
   }
   if (not mappingContext.mapping->hasComputedMapping()){
-    DEBUG("Compute mapping from mesh \"" << context.mesh->getName() << "\"");
+    P_DEBUG("Compute mapping from mesh \"" << context.mesh->getName() << "\"");
     mappingContext.mapping->computeMapping();
   }
   for (impl::DataContext& context : _accessor->writeDataContexts()) {
@@ -929,9 +929,9 @@ void SolverInterfaceImpl:: mapWriteDataFrom
       int inDataID = context.fromData->getID();
       int outDataID = context.toData->getID();
       context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
-      DEBUG("Map data \"" << context.fromData->getName()
+      P_DEBUG("Map data \"" << context.fromData->getName()
                    << "\" from mesh \"" << context.mesh->getName() << "\"");
-      assertion(mappingContext.mapping==context.mappingContext.mapping);
+      P_assertion(mappingContext.mapping==context.mappingContext.mapping);
       mappingContext.mapping->map(inDataID, outDataID);
     }
   }
@@ -943,7 +943,7 @@ void SolverInterfaceImpl:: mapReadDataTo
 (
   int toMeshID )
 {
-  TRACE(toMeshID);
+  P_TRACE(toMeshID);
   if (_clientMode){
     _requestManager->requestMapReadDataTo(toMeshID);
     return;
@@ -952,12 +952,12 @@ void SolverInterfaceImpl:: mapReadDataTo
   impl::MeshContext& context = _accessor->meshContext(toMeshID);
   impl::MappingContext& mappingContext = context.toMappingContext;
   if (mappingContext.mapping.use_count() == 0){
-    ERROR("From mesh \"" << context.mesh->getName()
+    P_ERROR("From mesh \"" << context.mesh->getName()
                    << "\", there is no mapping defined!");
     return;
   }
   if (not mappingContext.mapping->hasComputedMapping()){
-    DEBUG("Compute mapping from mesh \"" << context.mesh->getName() << "\"");
+    P_DEBUG("Compute mapping from mesh \"" << context.mesh->getName() << "\"");
     mappingContext.mapping->computeMapping();
   }
   for (impl::DataContext& context : _accessor->readDataContexts()) {
@@ -965,11 +965,11 @@ void SolverInterfaceImpl:: mapReadDataTo
       int inDataID = context.fromData->getID();
       int outDataID = context.toData->getID();
       context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
-      DEBUG("Map data \"" << context.fromData->getName()
+      P_DEBUG("Map data \"" << context.fromData->getName()
                    << "\" to mesh \"" << context.mesh->getName() << "\"");
-      assertion(mappingContext.mapping==context.mappingContext.mapping);
+      P_assertion(mappingContext.mapping==context.mappingContext.mapping);
       mappingContext.mapping->map(inDataID, outDataID);
-      DEBUG("First mapped values = " << utils::firstN(context.toData->values(), 10));
+      P_DEBUG("First mapped values = " << utils::firstN(context.toData->values(), 10));
     }
   }
   mappingContext.hasMappedData = true;
@@ -982,29 +982,29 @@ void SolverInterfaceImpl:: writeBlockVectorData
   const int*    valueIndices,
   const double* values )
 {
-  TRACE(fromDataID, size);
+  P_TRACE(fromDataID, size);
   PRECICE_VALIDATE_DATA_ID(fromDataID);
   if (size == 0)
     return;
-  assertion(valueIndices != nullptr);
-  assertion(values != nullptr);
+  P_assertion(valueIndices != nullptr);
+  P_assertion(values != nullptr);
   if (_clientMode){
     _requestManager->requestWriteBlockVectorData(fromDataID, size, valueIndices, values);
   }
   else { //couplingMode
     PRECICE_REQUIRE_DATA_WRITE(fromDataID);
     DataContext& context = _accessor->dataContext(fromDataID);
-    CHECK(context.fromData->getDimensions()==_dimensions,
+    P_CHECK(context.fromData->getDimensions()==_dimensions,
         "You cannot call writeBlockVectorData on the scalar data type " << context.fromData->getName());
-    assertion(context.toData.get() != nullptr);
+    P_assertion(context.toData.get() != nullptr);
     auto& valuesInternal = context.fromData->values();
     for (int i=0; i < size; i++){
       const auto valueIndex = valueIndices[i];
-      CHECK(0 <= valueIndex && valueIndex < valuesInternal.size()/context.fromData->getDimensions(), "Value index out of range");
+      P_CHECK(0 <= valueIndex && valueIndex < valuesInternal.size()/context.fromData->getDimensions(), "Value index out of range");
       int offsetInternal = valueIndex*_dimensions;
       int offset = i*_dimensions;
       for (int dim=0; dim < _dimensions; dim++){
-        assertion(offset+dim < valuesInternal.size(),
+        P_assertion(offset+dim < valuesInternal.size(),
                    offset+dim, valuesInternal.size());
         valuesInternal[offsetInternal + dim] = values[offset + dim];
       }
@@ -1018,20 +1018,20 @@ void SolverInterfaceImpl:: writeVectorData
   int           valueIndex,
   const double* value )
 {
-  TRACE(fromDataID, valueIndex );
+  P_TRACE(fromDataID, valueIndex );
   PRECICE_VALIDATE_DATA_ID(fromDataID);
-  DEBUG("value = " << Eigen::Map<const Eigen::VectorXd>(value, _dimensions));
+  P_DEBUG("value = " << Eigen::Map<const Eigen::VectorXd>(value, _dimensions));
   if (_clientMode){
     _requestManager->requestWriteVectorData(fromDataID, valueIndex, value);
   }
   else {
     PRECICE_REQUIRE_DATA_WRITE(fromDataID);
     DataContext& context = _accessor->dataContext(fromDataID);
-    CHECK(context.fromData->getDimensions()==_dimensions,
+    P_CHECK(context.fromData->getDimensions()==_dimensions,
         "You cannot call writeVectorData on the scalar data type " << context.fromData->getName());
-    assertion(context.toData.get() != nullptr);
+    P_assertion(context.toData.get() != nullptr);
     auto& values = context.fromData->values();
-    CHECK(0 <= valueIndex && valueIndex < values.size()/context.fromData->getDimensions(), "Value index out of range");
+    P_CHECK(0 <= valueIndex && valueIndex < values.size()/context.fromData->getDimensions(), "Value index out of range");
     int offset = valueIndex * _dimensions;
     for (int dim=0; dim < _dimensions; dim++){
       values[offset+dim] = value[dim];
@@ -1047,26 +1047,26 @@ void SolverInterfaceImpl:: writeBlockScalarData
   const int*    valueIndices,
   const double* values )
 {
-  TRACE(fromDataID, size);
+  P_TRACE(fromDataID, size);
   PRECICE_VALIDATE_DATA_ID(fromDataID);
   if (size == 0)
     return;
-  assertion(valueIndices != nullptr);
-  assertion(values != nullptr);
+  P_assertion(valueIndices != nullptr);
+  P_assertion(values != nullptr);
   if (_clientMode){
     _requestManager->requestWriteBlockScalarData(fromDataID, size, valueIndices, values);
   }
   else {
     PRECICE_REQUIRE_DATA_WRITE(fromDataID);
     DataContext& context = _accessor->dataContext(fromDataID);
-    CHECK(context.fromData->getDimensions()==1,
+    P_CHECK(context.fromData->getDimensions()==1,
         "You cannot call writeBlockScalarData on the vector data type " << context.fromData->getName());
-    assertion(context.toData.get() != nullptr);
+    P_assertion(context.toData.get() != nullptr);
     auto& valuesInternal = context.fromData->values();
     for (int i=0; i < size; i++){
       const auto valueIndex = valueIndices[i];
-      CHECK(0 <= valueIndex && valueIndex < valuesInternal.size()/context.fromData->getDimensions(), "Value index out of range");
-      assertion(i < valuesInternal.size(), i, valuesInternal.size());
+      P_CHECK(0 <= valueIndex && valueIndex < valuesInternal.size()/context.fromData->getDimensions(), "Value index out of range");
+      P_assertion(i < valuesInternal.size(), i, valuesInternal.size());
       valuesInternal[valueIndex] = values[i];
     }
   }
@@ -1078,20 +1078,20 @@ void SolverInterfaceImpl:: writeScalarData
   int    valueIndex,
   double value)
 {
-  TRACE(fromDataID, valueIndex, value );
+  P_TRACE(fromDataID, valueIndex, value );
   PRECICE_VALIDATE_DATA_ID(fromDataID);
-  CHECK(valueIndex >= -1, "Invalid value index (" << valueIndex << ") when writing scalar data!");
+  P_CHECK(valueIndex >= -1, "Invalid value index (" << valueIndex << ") when writing scalar data!");
   if (_clientMode){
     _requestManager->requestWriteScalarData(fromDataID, valueIndex, value);
   }
   else {
     PRECICE_REQUIRE_DATA_WRITE(fromDataID);
     DataContext& context = _accessor->dataContext(fromDataID);
-    CHECK(context.fromData->getDimensions()==1,
+    P_CHECK(context.fromData->getDimensions()==1,
         "You cannot call writeScalarData on the vector data type " << context.fromData->getName());
-    assertion(context.toData);
+    P_assertion(context.toData);
     auto& values = context.fromData->values();
-    CHECK(0 <= valueIndex && valueIndex < values.size()/context.fromData->getDimensions(), "Value index out of range");
+    P_CHECK(0 <= valueIndex && valueIndex < values.size()/context.fromData->getDimensions(), "Value index out of range");
     values[valueIndex] = value;
   }
 }
@@ -1103,29 +1103,29 @@ void SolverInterfaceImpl:: readBlockVectorData
   const int* valueIndices,
   double*    values ) const
 {
-  TRACE(toDataID, size);
+  P_TRACE(toDataID, size);
   PRECICE_VALIDATE_DATA_ID(toDataID);
   if (size == 0)
     return;
-  assertion(valueIndices != nullptr);
-  assertion(values != nullptr);
+  P_assertion(valueIndices != nullptr);
+  P_assertion(values != nullptr);
   if (_clientMode){
     _requestManager->requestReadBlockVectorData(toDataID, size, valueIndices, values);
   }
   else { //couplingMode
     PRECICE_REQUIRE_DATA_READ(toDataID);
     DataContext& context = _accessor->dataContext(toDataID);
-    CHECK(context.toData->getDimensions()==_dimensions,
+    P_CHECK(context.toData->getDimensions()==_dimensions,
         "You cannot call readBlockVectorData on the scalar data type " << context.toData->getName());
-    assertion(context.fromData.get() != nullptr);
+    P_assertion(context.fromData.get() != nullptr);
     auto& valuesInternal = context.toData->values();
     for (int i=0; i < size; i++){
       const auto valueIndex = valueIndices[i];
-      CHECK(0 <= valueIndex && valueIndex < valuesInternal.size()/context.fromData->getDimensions(), "Value index out of range");
+      P_CHECK(0 <= valueIndex && valueIndex < valuesInternal.size()/context.fromData->getDimensions(), "Value index out of range");
       int offsetInternal = valueIndex * _dimensions;
       int offset = i * _dimensions;
       for (int dim=0; dim < _dimensions; dim++){
-        assertion(offsetInternal+dim < valuesInternal.size(),
+        P_assertion(offsetInternal+dim < valuesInternal.size(),
                    offsetInternal+dim, valuesInternal.size());
         values[offset + dim] = valuesInternal[offsetInternal + dim];
       }
@@ -1139,27 +1139,27 @@ void SolverInterfaceImpl:: readVectorData
   int     valueIndex,
   double* value ) const
 {
-  TRACE(toDataID, valueIndex);
+  P_TRACE(toDataID, valueIndex);
   PRECICE_VALIDATE_DATA_ID(toDataID);
-  CHECK(valueIndex >= -1, "Invalid value index ( " << valueIndex << " )when reading vector data!");
+  P_CHECK(valueIndex >= -1, "Invalid value index ( " << valueIndex << " )when reading vector data!");
   if (_clientMode){
     _requestManager->requestReadVectorData(toDataID, valueIndex, value);
   }
   else {
     PRECICE_REQUIRE_DATA_READ(toDataID);
     DataContext& context = _accessor->dataContext(toDataID);
-    CHECK(context.toData->getDimensions()==_dimensions,
+    P_CHECK(context.toData->getDimensions()==_dimensions,
         "You cannot call readVectorData on the scalar data type " << context.toData->getName());
-    assertion(context.fromData);
+    P_assertion(context.fromData);
     auto& values = context.toData->values();
-    CHECK(0 <= valueIndex && valueIndex < values.size()/context.fromData->getDimensions(), "Value index out of range");
+    P_CHECK(0 <= valueIndex && valueIndex < values.size()/context.fromData->getDimensions(), "Value index out of range");
     int offset = valueIndex * _dimensions;
     for (int dim=0; dim < _dimensions; dim++){
       value[dim] = values[offset + dim];
     }
 
   }
-  DEBUG("read value = " << Eigen::Map<const Eigen::VectorXd>(value, _dimensions));
+  P_DEBUG("read value = " << Eigen::Map<const Eigen::VectorXd>(value, _dimensions));
 }
 
 void SolverInterfaceImpl:: readBlockScalarData
@@ -1169,26 +1169,26 @@ void SolverInterfaceImpl:: readBlockScalarData
   const int* valueIndices,
   double*    values ) const
 {
-  TRACE(toDataID, size);
+  P_TRACE(toDataID, size);
   PRECICE_VALIDATE_DATA_ID(toDataID);
   if (size == 0)
     return;
-  DEBUG("size = " << size);
-  assertion(valueIndices != nullptr);
-  assertion(values != nullptr);
+  P_DEBUG("size = " << size);
+  P_assertion(valueIndices != nullptr);
+  P_assertion(values != nullptr);
   if (_clientMode){
     _requestManager->requestReadBlockScalarData(toDataID, size, valueIndices, values);
   }
   else {
     PRECICE_REQUIRE_DATA_READ(toDataID);
     DataContext& context = _accessor->dataContext(toDataID);
-    CHECK(context.toData->getDimensions()==1,
+    P_CHECK(context.toData->getDimensions()==1,
         "You cannot call readBlockScalarData on the vector data type " << context.toData->getName());
-    assertion(context.fromData.get() != nullptr);
+    P_assertion(context.fromData.get() != nullptr);
     auto& valuesInternal = context.toData->values();
     for (int i=0; i < size; i++){
         const auto valueIndex = valueIndices[i];
-        CHECK(0 <= valueIndex && valueIndex < valuesInternal.size(), "Value index out of range");
+        P_CHECK(0 <= valueIndex && valueIndex < valuesInternal.size(), "Value index out of range");
         values[i] = valuesInternal[valueIndex];
     }
   }
@@ -1200,24 +1200,24 @@ void SolverInterfaceImpl:: readScalarData
   int     valueIndex,
   double& value ) const
 {
-  TRACE(toDataID, valueIndex, value);
+  P_TRACE(toDataID, valueIndex, value);
   PRECICE_VALIDATE_DATA_ID(toDataID);
-  CHECK(valueIndex >= -1, "Invalid value index ( " << valueIndex << " )when reading vector data!");
+  P_CHECK(valueIndex >= -1, "Invalid value index ( " << valueIndex << " )when reading vector data!");
   if (_clientMode){
     _requestManager->requestReadScalarData(toDataID, valueIndex, value);
   }
   else {
     PRECICE_REQUIRE_DATA_READ(toDataID);
     DataContext& context = _accessor->dataContext(toDataID);
-    CHECK(context.toData->getDimensions()==1,
+    P_CHECK(context.toData->getDimensions()==1,
         "You cannot call readScalarData on the vector data type " << context.toData->getName());
-    assertion(context.fromData);
+    P_assertion(context.fromData);
     auto& values = context.toData->values();
-    CHECK(0 <= valueIndex && valueIndex < values.size(), "Value index out of range");
+    P_CHECK(0 <= valueIndex && valueIndex < values.size(), "Value index out of range");
     value = values[valueIndex];
 
   }
-  DEBUG("Read value = " << value);
+  P_DEBUG("Read value = " << value);
 }
 
 void SolverInterfaceImpl:: exportMesh
@@ -1225,17 +1225,17 @@ void SolverInterfaceImpl:: exportMesh
   const std::string& filenameSuffix,
   int                exportType ) const
 {
-  TRACE(filenameSuffix, exportType );
+  P_TRACE(filenameSuffix, exportType );
   // Export meshes
   //const ExportContext& context = _accessor->exportContext();
   for (const io::ExportContext& context : _accessor->exportContexts()) {
-    DEBUG ( "Export type = " << exportType );
+    P_DEBUG( "Export type = " << exportType );
     bool exportAll = exportType == io::constants::exportAll();
     bool exportThis = context.exporter->getType() == exportType;
     if ( exportAll || exportThis ){
       for (const MeshContext* meshContext : _accessor->usedMeshContexts()) {
         std::string name = meshContext->mesh->getName() + "-" + filenameSuffix;
-        DEBUG ( "Exporting mesh to file \"" << name << "\" at location \"" << context.location << "\"" );
+        P_DEBUG( "Exporting mesh to file \"" << name << "\" at location \"" << context.location << "\"" );
         context.exporter->doExport ( name, context.location, *(meshContext->mesh) );
       }
     }
@@ -1247,20 +1247,20 @@ MeshHandle SolverInterfaceImpl:: getMeshHandle
 (
   const std::string& meshName )
 {
-  TRACE(meshName);
-  assertion(not _clientMode);
+  P_TRACE(meshName);
+  P_assertion(not _clientMode);
   for (MeshContext* context : _accessor->usedMeshContexts()){
     if (context->mesh->getName() == meshName){
       return {context->mesh->content()};
     }
   }
-  ERROR("Participant \"" << _accessorName
+  P_ERROR("Participant \"" << _accessorName
                << "\" does not use mesh \"" << meshName << "\"!");
 }
 
 void SolverInterfaceImpl:: runServer()
 {
-  assertion(_serverMode);
+  P_assertion(_serverMode);
   initializeClientServerCommunication();
   _requestManager->handleRequests();
 }
@@ -1269,7 +1269,7 @@ void SolverInterfaceImpl:: configureM2Ns
 (
   const m2n::M2NConfiguration::SharedPointer& config )
 {
-  TRACE();
+  P_TRACE();
   for (const auto& m2nTuple : config->m2ns()) {
     std::string comPartner("");
     bool isRequesting = false;
@@ -1286,8 +1286,8 @@ void SolverInterfaceImpl:: configureM2Ns
           if (participant->useServer()){
             comPartner += "Server";
           }
-          assertion(not utils::contained(comPartner, _m2ns), comPartner);
-          assertion(std::get<0>(m2nTuple));
+          P_assertion(not utils::contained(comPartner, _m2ns), comPartner);
+          P_assertion(std::get<0>(m2nTuple));
 
           _m2ns[comPartner] = [&]{
               m2n::BoundM2N bound;
@@ -1308,10 +1308,10 @@ void SolverInterfaceImpl:: configurePartitions
 (
   const m2n::M2NConfiguration::SharedPointer& m2nConfig )
 {
-  TRACE();
+  P_TRACE();
   for (MeshContext* context : _accessor->usedMeshContexts()) {
     if ( context->provideMesh ) { // Accessor provides mesh
-      CHECK ( context->receiveMeshFrom.empty(),
+      P_CHECK( context->receiveMeshFrom.empty(),
               "Participant \"" << _accessorName << "\" cannot provide "
               << "and receive mesh " << context->mesh->getName() << "!" );
 
@@ -1320,7 +1320,7 @@ void SolverInterfaceImpl:: configurePartitions
       for (auto& receiver : _participants ) {
         for (auto& receiverContext : receiver->usedMeshContexts()) {
           if(receiverContext->receiveMeshFrom == _accessorName && receiverContext->mesh->getName() == context->mesh->getName()){
-            //CHECK( not hasToSend, "Mesh " << context->mesh->getName() << " can currently only be received once.")
+            //P_CHECK( not hasToSend, "Mesh " << context->mesh->getName() << " can currently only be received once.")
 
             // meshRequirement has to be copied from "from" to provide", since
             // mapping are only defined at "provide"
@@ -1337,13 +1337,13 @@ void SolverInterfaceImpl:: configurePartitions
 
     }
     else { // Accessor receives mesh
-      CHECK(not context->receiveMeshFrom.empty(),
+      P_CHECK(not context->receiveMeshFrom.empty(),
             "Participant \"" << _accessorName << "\" must either provide or receive the mesh " << context->mesh->getName() << "!")
-      CHECK(not context->provideMesh,
+      P_CHECK(not context->provideMesh,
             "Participant \"" << _accessorName << "\" cannot provide and receive mesh " << context->mesh->getName() << "!" );
       std::string receiver ( _accessorName );
       std::string provider ( context->receiveMeshFrom );
-      DEBUG ( "Receiving mesh from " << provider );
+      P_DEBUG( "Receiving mesh from " << provider );
       
       context->partition = partition::PtrPartition(new partition::ReceivedPartition(context->mesh, context->geoFilter, context->safetyFactor));
 
@@ -1389,7 +1389,7 @@ void SolverInterfaceImpl:: computePartitions()
 
 void SolverInterfaceImpl:: mapWrittenData()
 {
-  TRACE();
+  P_TRACE();
   using namespace mapping;
   MappingConfiguration::Timing timing;
   // Compute mappings
@@ -1399,7 +1399,7 @@ void SolverInterfaceImpl:: mapWrittenData()
     rightTime |= timing == MappingConfiguration::INITIAL;
     bool hasComputed = context.mapping->hasComputedMapping();
     if (rightTime && not hasComputed){
-      INFO("Compute write mapping from mesh \""
+      P_INFO("Compute write mapping from mesh \""
           << _accessor->meshContext(context.fromMeshID).mesh->getName()
           << "\" to mesh \""
           << _accessor->meshContext(context.toMeshID).mesh->getName()
@@ -1419,12 +1419,12 @@ void SolverInterfaceImpl:: mapWrittenData()
     if (hasMapping && rightTime && (not hasMapped)){
       int inDataID = context.fromData->getID();
       int outDataID = context.toData->getID();
-      DEBUG("Map data \"" << context.fromData->getName()
+      P_DEBUG("Map data \"" << context.fromData->getName()
                    << "\" from mesh \"" << context.mesh->getName() << "\"");
       context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
-      DEBUG("Map from dataID " << inDataID << " to dataID: " << outDataID);
+      P_DEBUG("Map from dataID " << inDataID << " to dataID: " << outDataID);
       context.mappingContext.mapping->map(inDataID, outDataID);
-      DEBUG("First mapped values = " << utils::firstN(context.toData->values(), 10));
+      P_DEBUG("First mapped values = " << utils::firstN(context.toData->values(), 10));
     }
   }
 
@@ -1441,7 +1441,7 @@ void SolverInterfaceImpl:: mapWrittenData()
 
 void SolverInterfaceImpl:: mapReadData()
 {
-  TRACE();
+  P_TRACE();
   mapping::MappingConfiguration::Timing timing;
   // Compute mappings
   for (impl::MappingContext& context : _accessor->readMappingContexts()) {
@@ -1450,7 +1450,7 @@ void SolverInterfaceImpl:: mapReadData()
     mapNow |= timing == mapping::MappingConfiguration::INITIAL;
     bool hasComputed = context.mapping->hasComputedMapping();
     if (mapNow && not hasComputed){
-      INFO("Compute read mapping from mesh \""
+      P_INFO("Compute read mapping from mesh \""
               << _accessor->meshContext(context.fromMeshID).mesh->getName()
               << "\" to mesh \""
               << _accessor->meshContext(context.toMeshID).mesh->getName()
@@ -1471,10 +1471,10 @@ void SolverInterfaceImpl:: mapReadData()
       int inDataID = context.fromData->getID();
       int outDataID = context.toData->getID();
       context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
-      DEBUG("Map read data \"" << context.fromData->getName()
+      P_DEBUG("Map read data \"" << context.fromData->getName()
                    << "\" to mesh \"" << context.mesh->getName() << "\"");
       context.mappingContext.mapping->map(inDataID, outDataID);
-      DEBUG("First mapped values = " << utils::firstN(context.toData->values(), 10));
+      P_DEBUG("First mapped values = " << utils::firstN(context.toData->values(), 10));
     }
   }
 
@@ -1497,8 +1497,8 @@ void SolverInterfaceImpl:: performDataActions
   double                 partFullDt,
   double                 fullDt )
 {
-  TRACE();
-  assertion(not _clientMode);
+  P_TRACE();
+  P_assertion(not _clientMode);
   for (action::PtrAction& action : _accessor->actions()) {
     if (timings.find(action->getTiming()) != timings.end()){
       action->performAction(time, dt, partFullDt, fullDt);
@@ -1508,8 +1508,8 @@ void SolverInterfaceImpl:: performDataActions
 
 void SolverInterfaceImpl:: handleExports()
 {
-  TRACE();
-  assertion(not _clientMode);
+  P_TRACE();
+  P_assertion(not _clientMode);
   //timesteps was already incremented before
   int timesteps = _couplingScheme->getTimesteps()-1;
 
@@ -1543,7 +1543,7 @@ void SolverInterfaceImpl:: handleExports()
 
 void SolverInterfaceImpl:: resetWrittenData()
 {
-  TRACE();
+  P_TRACE();
   for (DataContext& context : _accessor->writeDataContexts()) {
     context.fromData->values() = Eigen::VectorXd::Zero(context.fromData->values().size());
     if (context.toData != context.fromData){
@@ -1562,21 +1562,21 @@ PtrParticipant SolverInterfaceImpl:: determineAccessingParticipant
       return participant;
     }
   }
-  ERROR("Accessing participant \"" << _accessorName << "\" is not defined in configuration!");
+  P_ERROR("Accessing participant \"" << _accessorName << "\" is not defined in configuration!");
 }
 
 
 void SolverInterfaceImpl:: initializeClientServerCommunication()
 {
-  TRACE();
+  P_TRACE();
   com::PtrCommunication com = _accessor->getClientServerCommunication();
-  assertion(com.get() != nullptr);
+  P_assertion(com.get() != nullptr);
   if ( _serverMode ){
-    INFO("Setting up communication to client" );
+    P_INFO("Setting up communication to client" );
     com->acceptConnection ( _accessorName + "Server", _accessorName, 0);
   }
   else {
-    INFO("Setting up communication to server" );
+    P_INFO("Setting up communication to server" );
     com->requestConnection( _accessorName + "Server", _accessorName,
                             _accessorProcessRank, _accessorCommunicatorSize );
   }
@@ -1584,7 +1584,7 @@ void SolverInterfaceImpl:: initializeClientServerCommunication()
 
 void SolverInterfaceImpl:: initializeMasterSlaveCommunication()
 {
-  TRACE();
+  P_TRACE();
 
   Event e("com.initializeMasterSlaveCom", precice::syncMode);
   //slaves create new communicator with ranks 0 to size-2
@@ -1592,12 +1592,12 @@ void SolverInterfaceImpl:: initializeMasterSlaveCommunication()
   // with that offset
   int rankOffset = 1;
   if ( utils::MasterSlave::isMaster() ){
-    INFO("Setting up communication to slaves" );
+    P_INFO("Setting up communication to slaves" );
     utils::MasterSlave::_communication->acceptConnection ( _accessorName + "Master", _accessorName, utils::MasterSlave::getRank());
     utils::MasterSlave::_communication->setRankOffset(rankOffset);
   }
   else {
-    assertion(utils::MasterSlave::isSlave());
+    P_assertion(utils::MasterSlave::isSlave());
     utils::MasterSlave::_communication->requestConnection( _accessorName + "Master", _accessorName,
                             _accessorProcessRank-rankOffset, _accessorCommunicatorSize-rankOffset );
   }
@@ -1605,7 +1605,7 @@ void SolverInterfaceImpl:: initializeMasterSlaveCommunication()
 
 void SolverInterfaceImpl:: syncTimestep(double computedTimestepLength)
 {
-  assertion(utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave());
+  P_assertion(utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave());
   if(utils::MasterSlave::isSlave()){
     utils::MasterSlave::_communication->send(computedTimestepLength, 0);
   }
@@ -1613,7 +1613,7 @@ void SolverInterfaceImpl:: syncTimestep(double computedTimestepLength)
     for(int rankSlave = 1; rankSlave < _accessorCommunicatorSize; rankSlave++){
       double dt;
       utils::MasterSlave::_communication->receive(dt, rankSlave);
-      CHECK(math::equals(dt, computedTimestepLength),
+      P_CHECK(math::equals(dt, computedTimestepLength),
             "Ambiguous timestep length when calling request advance from several processes!");
     }
   }

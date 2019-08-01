@@ -142,13 +142,13 @@ private:
 
 inline Vertex &Quad::vertex(int i)
 {
-  assertion((i >= 0) && (i < 4), i);
+  P_assertion((i >= 0) && (i < 4), i);
   return edge(i).vertex(_vertexMap[i]);
 }
 
 inline const Vertex &Quad::vertex(int i) const
 {
-  assertion((i >= 0) && (i < 4), i);
+  P_assertion((i >= 0) && (i < 4), i);
   return edge(i).vertex(_vertexMap[i]);
 }
 
@@ -195,7 +195,7 @@ inline const Edge &Quad::edge(int i) const
 template <typename VECTOR_T>
 void Quad::setNormal(const VECTOR_T &normal)
 {
-  assertion(normal.size() == getDimensions(), normal.size(), getDimensions());
+  P_assertion(normal.size() == getDimensions(), normal.size(), getDimensions());
   _normal = normal;
 }
 

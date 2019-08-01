@@ -21,7 +21,7 @@ BOOST_AUTO_TEST_CASE(VertexEdgeMesh,
                      * testing::MinRanks(2))
 {
   utils::Parallel::synchronizeProcesses();
-  assertion(utils::Parallel::getCommunicatorSize() > 1);
+  P_assertion(utils::Parallel::getCommunicatorSize() > 1);
   mesh::PropertyContainer::resetPropertyIDCounter();
 
   std::string participant0("rank0");
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(VertexEdgeTriangleMesh,
                      * testing::MinRanks(2))
 {
   utils::Parallel::synchronizeProcesses();
-  assertion(utils::Parallel::getCommunicatorSize() > 1);
+  P_assertion(utils::Parallel::getCommunicatorSize() > 1);
   mesh::PropertyContainer::resetPropertyIDCounter();
 
   std::string participant0("rank0");
@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(BroadcastVertexEdgeTriangleMesh,
                      * testing::MinRanks(2))
 {
   utils::Parallel::synchronizeProcesses();
-  assertion(utils::Parallel::getCommunicatorSize() > 1);
+  P_assertion(utils::Parallel::getCommunicatorSize() > 1);
   mesh::PropertyContainer::resetPropertyIDCounter();
 
   std::string participant0("rank0");

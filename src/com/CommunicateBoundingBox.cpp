@@ -15,7 +15,7 @@ void CommunicateBoundingBox::sendBoundingBox(
     const mesh::Mesh::BoundingBox &bb,
     int                            rankReceiver)
 {
-  TRACE(rankReceiver);
+  P_TRACE(rankReceiver);
 
   for (const auto &d : bb) {
     _communication->send(d.first, rankReceiver);
@@ -27,7 +27,7 @@ void CommunicateBoundingBox::receiveBoundingBox(
     mesh::Mesh::BoundingBox &bb,
     int                      rankSender)
 {
-  TRACE(rankSender);
+  P_TRACE(rankSender);
 
   for (auto &d : bb) {
     _communication->receive(d.first, rankSender);
@@ -39,7 +39,7 @@ void CommunicateBoundingBox::sendBoundingBoxMap(
     mesh::Mesh::BoundingBoxMap &bbm,
     int                         rankReceiver)
 {
-  TRACE(rankReceiver);
+  P_TRACE(rankReceiver);
 
   for (const auto &bb : bbm) {
     sendBoundingBox(bb.second, rankReceiver);
@@ -50,7 +50,7 @@ void CommunicateBoundingBox::receiveBoundingBoxMap(
     mesh::Mesh::BoundingBoxMap &bbm,
     int                         rankSender)
 {
-  TRACE(rankSender);
+  P_TRACE(rankSender);
 
   for (auto &bb : bbm) {
     receiveBoundingBox(bb.second, rankSender);

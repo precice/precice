@@ -33,7 +33,7 @@ struct MasterComFixture {
       utils::MasterSlave::_communication->setRankOffset(1);
     }
     else {//Slaves
-      assertion(utils::Parallel::getProcessRank() > 0 && utils::Parallel::getProcessRank() < size);
+      P_assertion(utils::Parallel::getProcessRank() > 0 && utils::Parallel::getProcessRank() < size);
       utils::Parallel::splitCommunicator( "Slaves" );
       utils::MasterSlave::configure(utils::Parallel::getProcessRank(), size);
       utils::MasterSlave::_communication->requestConnection( "Master", "Slaves", utils::Parallel::getProcessRank()-1 , size-1 );
@@ -90,7 +90,7 @@ struct SplitParticipantsFixture {
       participantID = 1;
     }
     else {
-      assertion(utils::Parallel::getProcessRank() > 1 && utils::Parallel::getProcessRank() < 4);
+      P_assertion(utils::Parallel::getProcessRank() > 1 && utils::Parallel::getProcessRank() < 4);
       utils::Parallel::splitCommunicator( "ParticipantTwo" );
       utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator());
       utils::Parallel::clearGroups();

@@ -37,9 +37,9 @@ public:
    */
   virtual void initialize(std::vector<size_t> & svs)
   {
-    TRACE();
+    P_TRACE();
 
-    assertion(_weights.empty());
+    P_assertion(_weights.empty());
     _subVectorSizes = svs;
 
     size_t N = 0;
@@ -57,16 +57,16 @@ public:
    */
   void apply(Eigen::MatrixXd &M, bool transpose)
   {
-    TRACE();
+    P_TRACE();
     if (transpose) {
-      assertion(M.cols() == (int) _weights.size(), M.cols(), _weights.size());
+      P_assertion(M.cols() == (int) _weights.size(), M.cols(), _weights.size());
       for (int i = 0; i < M.cols(); i++) {
         for (int j = 0; j < M.rows(); j++) {
           M(j, i) *= _weights[i];
         }
       }
     } else {
-      assertion(M.rows() == (int) _weights.size(), M.rows(), (int) _weights.size());
+      P_assertion(M.rows() == (int) _weights.size(), M.rows(), (int) _weights.size());
       for (int i = 0; i < M.cols(); i++) {
         for (int j = 0; j < M.rows(); j++) {
           M(j, i) *= _weights[j];
@@ -81,17 +81,17 @@ public:
    */
   void revert(Eigen::MatrixXd &M, bool transpose)
   {
-    TRACE();
-    //assertion(_needsGlobalWeights);
+    P_TRACE();
+    //P_assertion(_needsGlobalWeights);
     if (transpose) {
-      assertion(M.cols() == (int) _invWeights.size());
+      P_assertion(M.cols() == (int) _invWeights.size());
       for (int i = 0; i < M.cols(); i++) {
         for (int j = 0; j < M.rows(); j++) {
           M(j, i) *= _invWeights[i];
         }
       }
     } else {
-      assertion(M.rows() == (int) _invWeights.size(), M.rows(), (int) _invWeights.size());
+      P_assertion(M.rows() == (int) _invWeights.size(), M.rows(), (int) _invWeights.size());
       for (int i = 0; i < M.cols(); i++) {
         for (int j = 0; j < M.rows(); j++) {
           M(j, i) *= _invWeights[j];
@@ -103,8 +103,8 @@ public:
   /// To transform physical values to balanced values. Matrix version
   void apply(Eigen::MatrixXd &M)
   {
-    TRACE();
-    assertion(M.rows() == (int) _weights.size(), M.rows(), (int) _weights.size());
+    P_TRACE();
+    P_assertion(M.rows() == (int) _weights.size(), M.rows(), (int) _weights.size());
 
     // scale matrix M
     for (int i = 0; i < M.cols(); i++) {
@@ -117,9 +117,9 @@ public:
   /// To transform physical values to balanced values. Vector version
   void apply(Eigen::VectorXd &v)
   {
-    TRACE();
+    P_TRACE();
 
-    assertion(v.size() == (int) _weights.size());
+    P_assertion(v.size() == (int) _weights.size());
 
     // scale residual
     for (int j = 0; j < v.size(); j++) {
@@ -130,9 +130,9 @@ public:
   /// To transform balanced values back to physical values. Matrix version
   void revert(Eigen::MatrixXd &M)
   {
-    TRACE();
+    P_TRACE();
 
-    assertion(M.rows() == (int) _weights.size());
+    P_assertion(M.rows() == (int) _weights.size());
 
     // scale matrix M
     for (int i = 0; i < M.cols(); i++) {
@@ -145,9 +145,9 @@ public:
   /// To transform balanced values back to physical values. Vector version
   void revert(Eigen::VectorXd &v)
   {
-    TRACE();
+    P_TRACE();
 
-    assertion(v.size() == (int) _weights.size());
+    P_assertion(v.size() == (int) _weights.size());
 
     // scale residual
     for (int j = 0; j < v.size(); j++) {
@@ -162,7 +162,7 @@ public:
    */
   void update(bool timestepComplete, const Eigen::VectorXd &oldValues, const Eigen::VectorXd &res)
   {
-    TRACE(_nbNonConstTimesteps, _freezed);
+    P_TRACE(_nbNonConstTimesteps, _freezed);
 
     // if number of allowed non-const time steps is exceeded, do not update weights
     if (_freezed)
@@ -182,7 +182,7 @@ public:
   /// returns true if a QR decomposition from scratch is necessary
   bool requireNewQR()
   {
-    TRACE(_requireNewQR);
+    P_TRACE(_requireNewQR);
     return _requireNewQR;
   }
 

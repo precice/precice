@@ -16,7 +16,7 @@ void ParallelMatrixOperations::initialize(
     com::PtrCommunication rightComm,
     bool                  needCyclicComm)
 {
-  TRACE();
+  P_TRACE();
 
   _needCycliclComm = needCyclicComm;
   if (utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave()) {
@@ -25,10 +25,10 @@ void ParallelMatrixOperations::initialize(
     _cyclicCommRight = rightComm;
 
     if (_needCycliclComm) {
-      assertion(_cyclicCommLeft.get() != NULL);
-      assertion(_cyclicCommLeft->isConnected());
-      assertion(_cyclicCommRight.get() != NULL);
-      assertion(_cyclicCommRight->isConnected());
+      P_assertion(_cyclicCommLeft.get() != NULL);
+      P_assertion(_cyclicCommLeft->isConnected());
+      P_assertion(_cyclicCommRight.get() != NULL);
+      P_assertion(_cyclicCommRight->isConnected());
     }
   }
 }

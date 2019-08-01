@@ -35,7 +35,7 @@ double FindClosestTriangle:: getEuclidianDistance() const
 
 mesh::Triangle & FindClosestTriangle:: getClosestTriangle()
 {
-  assertion(_closestTriangle != nullptr);
+  P_assertion(_closestTriangle != nullptr);
   return *_closestTriangle;
 }
 
@@ -62,7 +62,7 @@ void FindClosestTriangle:: find
           triangle.getNormal(),
           _searchPoint
           );
-  assertion(ret.barycentricCoords.size() == 3);
+  P_assertion(ret.barycentricCoords.size() == 3);
 
   // Determine from barycentric coordinates, if point is inside triangle
   const bool inside = not (ret.barycentricCoords.array() < - math::NUMERICAL_ZERO_DIFFERENCE).any();

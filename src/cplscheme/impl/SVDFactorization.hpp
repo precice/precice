@@ -58,19 +58,19 @@ public:
       const Eigen::MatrixBase<Derived1> &A,
       const Eigen::MatrixBase<Derived2> &B)
   {
-    TRACE();
-    assertion(_initialized);
+    P_TRACE();
+    P_assertion(_initialized);
     /** updates the truncated svd factorization of the Jacobian with a rank-1 modification
       *
       * \psi * \sigma * \phi <-- \psi * \sigma * \phi + A * B^T
       *
       */
     if (_initialSVD) {
-      assertion(A.rows() == _rows, A.rows(), _rows);
-      assertion(B.rows() == _rows, B.rows(), _rows);
+      P_assertion(A.rows() == _rows, A.rows(), _rows);
+      P_assertion(B.rows() == _rows, B.rows(), _rows);
     } else {
-      assertion(A.rows() == B.rows(), A.rows(), B.rows());
-      assertion(A.cols() == B.cols(), A.cols(), B.cols());
+      P_assertion(A.rows() == B.rows(), A.rows(), B.rows());
+      P_assertion(A.cols() == B.cols(), A.cols(), B.cols());
       _rows  = A.rows();
       _cols  = 0;
       _psi   = Matrix::Zero(_rows, 0);
@@ -169,7 +169,7 @@ public:
     _psi.conservativeResize(_rows, _cols);
     _phi.conservativeResize(_rows, _cols);
     _sigma.conservativeResize(_cols);
-    DEBUG("SVD factorization of Jacobian is truncated to " << _cols << " DOFs. Cut off " << waste << " DOFs");
+    P_DEBUG("SVD factorization of Jacobian is truncated to " << _cols << " DOFs. Cut off " << waste << " DOFs");
 
     _initialSVD = true;
   }

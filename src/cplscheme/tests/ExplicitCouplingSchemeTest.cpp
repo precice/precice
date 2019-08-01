@@ -146,7 +146,7 @@ void runExplicitCouplingWithSubcycling(
   int computedTimesteps = 0;
   std::string nameParticipant0 ( "Participant0" );
   std::string nameParticipant1 ( "Participant1" );
-  assertion ( (participantName == nameParticipant0) ||
+  P_assertion( (participantName == nameParticipant0) ||
               (participantName == nameParticipant1) );
   if ( participantName == nameParticipant0 ) {
     cplScheme.initialize ( 0.0, 1 );
@@ -257,14 +257,14 @@ struct ExplicitCouplingSchemeFixture
       const std::string&      localParticipant,
       m2n::PtrM2N& communication )
   {
-    assertion(communication);
-    assertion(not communication->isConnected());
+    P_assertion(communication);
+    P_assertion(not communication->isConnected());
     utils::Parallel::splitCommunicator( localParticipant );
     if ( participant0 == localParticipant ) {
       communication->requestMasterConnection ( participant1, participant0);
     }
     else {
-      assertion ( participant1 == localParticipant );
+      P_assertion( participant1 == localParticipant );
       communication->acceptMasterConnection ( participant1, participant0);
     }
   }
@@ -330,7 +330,7 @@ BOOST_AUTO_TEST_CASE(testConfiguredSimpleExplicitCoupling,
     return;
 
   using namespace mesh;
-  assertion ( utils::Parallel::getCommunicatorSize() > 1 );
+  P_assertion( utils::Parallel::getCommunicatorSize() > 1 );
   mesh::PropertyContainer::resetPropertyIDCounter ();
 
   std::string configurationPath ( _pathToTests + "explicit-coupling-scheme-1.xml" );
@@ -437,7 +437,7 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingFirstParticipantSetsDt,
     BOOST_TEST(not cplScheme.isCouplingOngoing());
   }
   else {
-    assertion ( nameLocalParticipant == std::string(nameParticipant1), nameLocalParticipant );
+    P_assertion( nameLocalParticipant == std::string(nameParticipant1), nameLocalParticipant );
     cplScheme.initialize ( 0.0, 1 );
     BOOST_TEST(not cplScheme.isCouplingTimestepComplete());
     BOOST_TEST(cplScheme.isCouplingOngoing());

@@ -21,7 +21,7 @@ rtree::MeshIndices& rtree::cacheEntry(int meshID)
 
 rtree::vertex_traits::Ptr rtree::getVertexRTree(const PtrMesh& mesh)
 {
-  assertion(mesh);
+  P_assertion(mesh);
   auto& cache = cacheEntry(mesh->getID());
   if (cache.vertices) {
       return cache.vertices;
@@ -41,7 +41,7 @@ rtree::vertex_traits::Ptr rtree::getVertexRTree(const PtrMesh& mesh)
 
 rtree::edge_traits::Ptr rtree::getEdgeRTree(const PtrMesh& mesh)
 {
-  assertion(mesh);
+  P_assertion(mesh);
   auto& cache = cacheEntry(mesh->getID());
   if (cache.edges) {
       return cache.edges;
@@ -61,7 +61,7 @@ rtree::edge_traits::Ptr rtree::getEdgeRTree(const PtrMesh& mesh)
 
 rtree::triangle_traits::Ptr rtree::getTriangleRTree(const PtrMesh& mesh)
 {
-  assertion(mesh);
+  P_assertion(mesh);
   auto& cache = cacheEntry(mesh->getID());
   if (cache.triangles) {
       return cache.triangles;
@@ -82,7 +82,7 @@ rtree::triangle_traits::Ptr rtree::getTriangleRTree(const PtrMesh& mesh)
 
 PtrPrimitiveRTree rtree::getPrimitiveRTree(const PtrMesh& mesh)
 {
-  assertion(mesh, "Empty meshes are not allowed.");
+  P_assertion(mesh, "Empty meshes are not allowed.");
   auto iter = _primitive_trees.find(mesh->getID());
   if (iter != _primitive_trees.end()) {
     return iter->second;

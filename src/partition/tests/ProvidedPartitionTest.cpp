@@ -19,7 +19,7 @@ BOOST_AUTO_TEST_SUITE(ProvidedPartitionTests)
 
 void setupParallelEnvironment(m2n::PtrM2N m2n)
 {
-  assertion(utils::Parallel::getCommunicatorSize() == 4);
+  P_assertion(utils::Parallel::getCommunicatorSize() == 4);
 
   com::PtrCommunication masterSlaveCom = com::PtrCommunication(new com::MPIDirectCommunication());
   utils::MasterSlave::_communication   = masterSlaveCom;

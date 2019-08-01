@@ -28,8 +28,8 @@ void ExportVTK::doExport(
     const std::string &location,
     mesh::Mesh &       mesh)
 {
-  TRACE(name, location, mesh.getName());
-  assertion(name != std::string(""));
+  P_TRACE(name, location, mesh.getName());
+  P_assertion(name != std::string(""));
 
   namespace fs = boost::filesystem;
   fs::path outfile(location);
@@ -37,7 +37,7 @@ void ExportVTK::doExport(
     fs::create_directories(outfile);
   outfile = outfile / fs::path(name + ".vtk");
   std::ofstream outstream(outfile.string(), std::ios::trunc);
-  CHECK(outstream, "Could not open file \"" << outfile << "\" for VTK export!");
+  P_CHECK(outstream, "Could not open file \"" << outfile << "\" for VTK export!");
 
   initializeWriting(outstream);
   writeHeader(outstream);
@@ -48,7 +48,7 @@ void ExportVTK::doExport(
 
 void ExportVTK::exportMesh(std::ofstream &outFile, mesh::Mesh const &mesh)
 {
-  TRACE(mesh.getName());
+  P_TRACE(mesh.getName());
 
   // Plot vertices
   outFile << "POINTS " << mesh.vertices().size() << " float \n\n";
@@ -198,7 +198,7 @@ void ExportVTK::writeVertex(
   if (position.size() == 2) {
     outFile << position(0) << "  " << position(1) << "  " << 0.0 << '\n';
   } else {
-    assertion(position.size() == 3);
+    P_assertion(position.size() == 3);
     outFile << position(0) << "  " << position(1) << "  " << position(2) << '\n';
   }
 }

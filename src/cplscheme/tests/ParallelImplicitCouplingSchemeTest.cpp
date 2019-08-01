@@ -352,7 +352,7 @@ BOOST_FIXTURE_TEST_CASE(testInitializeData, testing::M2NFixture,
     }
   }
   else {
-    assertion(nameLocalParticipant == nameParticipant1);
+    P_assertion(nameLocalParticipant == nameParticipant1);
     auto& values = mesh->data(dataID0)->values();
     BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteInitialData()));
     Eigen::VectorXd v(3); v << 1.0, 2.0, 3.0;
