@@ -100,11 +100,32 @@ endif()
 find_package(Eigen3 3.2 REQUIRED)
 precice_validate_eigen()
 
+# LibXML2
 if(TPL_ENABLE_LIBXML2)
   xsdk_tpl_require(LIBXML2 LIBXML2_LIBRARIES LIBXML2_INCLUDE_DIRS)
 endif()
 find_package(LibXml2 REQUIRED)
 precice_validate_libxml2()
+
+# nlohmann/JSON
+if(TPL_ENABLE_JSON)
+  xsdk_tpl_require(JSON JSON_INCLUDE_DIR)
+  add_library(JSON INTERFACE IMPORTED)
+  set_property(TARGET JSON PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${JSON_INCLUDE_DIR}")
+else()
+  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/json)
+endif()
+precice_validate_json()
+
+# prettyprint
+if(TPL_ENABLE_PRETTYPRINT)
+  xsdk_tpl_require(PRETTYPRINT PRETTYPRINT_INCLUDE_DIR)
+  add_library(prettyprint INTERFACE IMPORTED)
+  set_property(TARGET prettyprint PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${PRETTYPRINT_INCLUDE_DIR}")
+else()
+  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/prettyprint)
+endif()
+precice_validate_prettyprint()
 
 
 #
@@ -206,6 +227,12 @@ target_compile_definitions(precice PRIVATE "$<$<CONFIG:DEBUG>:EIGEN_INITIALIZE_M
 target_include_directories(precice PRIVATE ${LIBXML2_INCLUDE_DIR})
 target_link_libraries(precice PRIVATE ${LIBXML2_LIBRARIES})
 
+# Setup Prettyprint
+target_link_libraries(precice PRIVATE prettyprint)
+
+# Setup JSON
+target_link_libraries(precice PRIVATE JSON)
+
 # Setup MPI
 if (MPI)
   target_link_libraries(precice PRIVATE MPI::MPI_CXX)
@@ -257,6 +284,7 @@ target_link_libraries(binprecice
   PRIVATE
   Threads::Threads
   precice
+  prettyprint
   Eigen3::Eigen
   Boost::boost
   Boost::filesystem
@@ -294,6 +322,7 @@ target_link_libraries(testprecice
   Threads::Threads
   precice
   Eigen3::Eigen
+  prettyprint
   Boost::boost
   Boost::filesystem
   Boost::log

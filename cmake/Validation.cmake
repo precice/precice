@@ -87,3 +87,42 @@ macro(precice_validate_eigen)
     message(STATUS "Validating Eigen - success")
   endif()
 endmacro()
+
+
+# Validation for JSON
+macro(precice_validate_json)
+  message(STATUS "Validating JSON")
+  file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/validateJSON.cpp "#include <nlohmann/json.hpp>\nint main() { return 0; } ")
+  unset(VAL_SUCCESS)
+  unset(VAL_OUT)
+  try_compile(VAL_SUCCESS
+    ${CMAKE_CURRENT_BINARY_DIR}
+    ${CMAKE_CURRENT_BINARY_DIR}/validateJSON.cpp
+    LINK_LIBRARIES JSON
+    OUTPUT_VARIABLE VAL_OUT
+    )
+  if(NOT VAL_SUCCESS)
+    message(FATAL_ERROR "Validating JSON - failure\n\n${VAL_OUT}")
+  else()
+    message(STATUS "Validating JSON - success")
+  endif()
+endmacro()
+
+# Validation for prettyprint
+macro(precice_validate_prettyprint)
+  message(STATUS "Validating Prettyprint")
+  file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/validatePrettyprint.cpp "#include <prettyprint/prettyprint.hpp>\nint main() { return 0; } ")
+  unset(VAL_SUCCESS)
+  unset(VAL_OUT)
+  try_compile(VAL_SUCCESS
+    ${CMAKE_CURRENT_BINARY_DIR}
+    ${CMAKE_CURRENT_BINARY_DIR}/validatePrettyprint.cpp
+    LINK_LIBRARIES prettyprint
+    OUTPUT_VARIABLE VAL_OUT
+    )
+  if(NOT VAL_SUCCESS)
+    message(FATAL_ERROR "Validating Prettyprint - failure\n\n${VAL_OUT}")
+  else()
+    message(STATUS "Validating Prettyprint - success")
+  endif()
+endmacro()

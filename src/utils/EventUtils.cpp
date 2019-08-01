@@ -1,5 +1,7 @@
 #include "EventUtils.hpp"
-#include "json.hpp"
+
+#include <nlohmann/json.hpp>
+#include <prettyprint/prettyprint.hpp>
 
 #include <cassert>
 #include <algorithm>
@@ -10,7 +12,6 @@
 #include <sstream>
 #include <ctime>
 #include <utility>
-#include "prettyprint.hpp"
 #include "TableWriter.hpp"
 #include "utils/assertion.hpp"
 

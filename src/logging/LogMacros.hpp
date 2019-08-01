@@ -9,7 +9,7 @@
 
 #include <string>
 #include "utils/String.hpp"
-#include "utils/prettyprint.hpp" // so that we can put std::vector et. al. on ostream
+#include "prettyprint/prettyprint.hpp" // so that we can put std::vector et. al. on ostream
 
 #include "Tracer.hpp"
 

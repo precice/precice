@@ -291,8 +291,6 @@ target_sources(precice
     src/utils/TableWriter.hpp
     src/utils/TypeNames.hpp
     src/utils/assertion.hpp
-    src/utils/json.hpp
-    src/utils/prettyprint.hpp
     src/utils/stacktrace.cpp
     src/utils/stacktrace.hpp
     src/versions.hpp
