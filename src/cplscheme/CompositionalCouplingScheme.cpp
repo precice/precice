@@ -465,7 +465,7 @@ void CompositionalCouplingScheme:: advanceActiveCouplingSchemes()
     _activeSchemesEnd++;
     P_DEBUG("Advanced active schemes by one new scheme");
   }
-  P_assertion(_activeSchemesBegin != _activeSchemesEnd);
+  P_ASSERT(_activeSchemesBegin != _activeSchemesEnd);
 }
 
 }} // namespace precice, cplscheme
@@ -834,7 +834,7 @@ void CompositionalCouplingScheme:: advanceActiveCouplingSchemes()
 //      state += "\n";
 //    }
 //    partners = couplingScheme->getCouplingPartners();
-//    P_assertion(partners.size() == 1, partners.size());
+//    P_ASSERT(partners.size() == 1, partners.size());
 //    state += "Coupling to ";
 //    state += partners[0];
 //    state += ":\n";
@@ -997,8 +997,8 @@ void CompositionalCouplingScheme:: advanceActiveCouplingSchemes()
 //    _activeSchemesEnd++;
 //    P_DEBUG("Advanced active schemes by one new scheme");
 //  }
-//  P_assertion(not _activeCouplingSchemes.empty());
-//  //P_assertion(_activeSchemesBegin != _activeSchemesEnd);
+//  P_ASSERT(not _activeCouplingSchemes.empty());
+//  //P_ASSERT(_activeSchemesBegin != _activeSchemesEnd);
 //}
 //
 //}} // namespace precice, cplscheme

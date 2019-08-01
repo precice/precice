@@ -222,7 +222,7 @@ void ActionConfiguration:: createAction()
 {
   P_TRACE();
 
-  P_assertion(_configuredAction.type != std::string(""));
+  P_ASSERT(_configuredAction.type != std::string(""));
   action::Action::Timing timing = getTiming();
 
   // Determine data and mesh
@@ -310,7 +310,7 @@ void ActionConfiguration:: createAction()
         mesh, targetDataID, sourceDataID) );
   }
   #endif
-  P_assertion(action.get() != nullptr);
+  P_ASSERT(action.get() != nullptr);
   _actions.push_back(action);
 }
 

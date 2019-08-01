@@ -317,7 +317,7 @@ std::string XMLAttribute<ATTRIBUTE_T>::printDocumentation() const
   std::ostringstream doc;
   doc << _name << "=\"{" << utils::getTypeName(_value);
   if (_hasValidation) {
-    P_assertion(!_options.empty());
+    P_ASSERT(!_options.empty());
     doc << ":";
     // print the first item
     auto first = _options.begin();

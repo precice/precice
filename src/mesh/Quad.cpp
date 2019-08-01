@@ -26,13 +26,13 @@ Quad::Quad(
     _id(id),
     _normal(Eigen::VectorXd::Zero(edgeOne.getDimensions()))
 {
-  P_assertion(edgeOne.getDimensions() == edgeTwo.getDimensions(),
+  P_ASSERT(edgeOne.getDimensions() == edgeTwo.getDimensions(),
             edgeOne.getDimensions(), edgeTwo.getDimensions());
-  P_assertion(edgeTwo.getDimensions() == edgeThree.getDimensions(),
+  P_ASSERT(edgeTwo.getDimensions() == edgeThree.getDimensions(),
             edgeTwo.getDimensions(), edgeThree.getDimensions());
-  P_assertion(edgeThree.getDimensions() == edgeFour.getDimensions(),
+  P_ASSERT(edgeThree.getDimensions() == edgeFour.getDimensions(),
             edgeThree.getDimensions(), edgeFour.getDimensions());
-  P_assertion(getDimensions() == 3, getDimensions());
+  P_ASSERT(getDimensions() == 3, getDimensions());
 
   // Determine vertex map
   Vertex &v0 = edge(0).vertex(0);
@@ -49,7 +49,7 @@ Quad::Quad(
     _vertexMap[0] = 0;
     _vertexMap[1] = 0;
   } else {
-    P_assertion(&edge(1).vertex(1) == &v1);
+    P_ASSERT(&edge(1).vertex(1) == &v1);
     _vertexMap[0] = 0;
     _vertexMap[1] = 1;
   }
@@ -59,14 +59,14 @@ Quad::Quad(
     if (&edge(2).vertex(0) == &edge(1).vertex(1)) {
       _vertexMap[2] = 0;
     } else {
-      P_assertion(&edge(2).vertex(1) == &edge(1).vertex(1));
+      P_ASSERT(&edge(2).vertex(1) == &edge(1).vertex(1));
       _vertexMap[2] = 1;
     }
   } else if (_vertexMap[1] == 1) {
     if (&edge(2).vertex(0) == &edge(1).vertex(0)) {
       _vertexMap[2] = 0;
     } else {
-      P_assertion(&edge(2).vertex(1) == &edge(1).vertex(0));
+      P_ASSERT(&edge(2).vertex(1) == &edge(1).vertex(0));
       _vertexMap[2] = 1;
     }
   }
@@ -76,29 +76,29 @@ Quad::Quad(
     if (&edge(3).vertex(0) == &edge(2).vertex(1)) {
       _vertexMap[3] = 0;
     } else {
-      P_assertion(&edge(3).vertex(1) == &edge(2).vertex(1));
+      P_ASSERT(&edge(3).vertex(1) == &edge(2).vertex(1));
       _vertexMap[3] = 1;
     }
   } else if (_vertexMap[2] == 1) {
     if (&edge(3).vertex(0) == &edge(2).vertex(0)) {
       _vertexMap[3] = 0;
     } else {
-      P_assertion(&edge(3).vertex(1) == &edge(2).vertex(0));
+      P_ASSERT(&edge(3).vertex(1) == &edge(2).vertex(0));
       _vertexMap[3] = 1;
     }
   }
 
-  P_assertion(&vertex(0) != &vertex(1));
-  P_assertion(&vertex(0) != &vertex(2));
-  P_assertion(&vertex(0) != &vertex(3));
-  P_assertion(&vertex(1) != &vertex(2));
-  P_assertion(&vertex(1) != &vertex(3));
-  P_assertion(&vertex(2) != &vertex(3));
+  P_ASSERT(&vertex(0) != &vertex(1));
+  P_ASSERT(&vertex(0) != &vertex(2));
+  P_ASSERT(&vertex(0) != &vertex(3));
+  P_ASSERT(&vertex(1) != &vertex(2));
+  P_ASSERT(&vertex(1) != &vertex(3));
+  P_ASSERT(&vertex(2) != &vertex(3));
 
-  P_assertion((_vertexMap[0] == 0) || (_vertexMap[0] == 1), _vertexMap[0]);
-  P_assertion((_vertexMap[1] == 0) || (_vertexMap[1] == 1), _vertexMap[1]);
-  P_assertion((_vertexMap[2] == 0) || (_vertexMap[2] == 1), _vertexMap[2]);
-  P_assertion((_vertexMap[2] == 0) || (_vertexMap[2] == 1), _vertexMap[3]);
+  P_ASSERT((_vertexMap[0] == 0) || (_vertexMap[0] == 1), _vertexMap[0]);
+  P_ASSERT((_vertexMap[1] == 0) || (_vertexMap[1] == 1), _vertexMap[1]);
+  P_ASSERT((_vertexMap[2] == 0) || (_vertexMap[2] == 1), _vertexMap[2]);
+  P_ASSERT((_vertexMap[2] == 0) || (_vertexMap[2] == 1), _vertexMap[3]);
 }
 
 const Eigen::VectorXd Quad::computeNormal(bool flip)
@@ -119,7 +119,7 @@ const Eigen::VectorXd Quad::computeNormal(bool flip)
     vectorB = vertex(2).getCoords() - vertex(3).getCoords();
     auto normalSecondPart = vectorA.cross(vectorB);
 
-    P_assertion(math::equals(normal.normalized(), normalSecondPart.normalized()),
+    P_ASSERT(math::equals(normal.normalized(), normalSecondPart.normalized()),
             normal, normalSecondPart);
     normal += normalSecondPart;
     normal *= 0.5;

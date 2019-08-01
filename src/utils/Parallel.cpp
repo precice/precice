@@ -124,7 +124,7 @@ void Parallel::splitCommunicator(const std::string &groupName)
             groupID = group.id;
           }
         }
-        P_assertion(groupID != -1);
+        P_ASSERT(groupID != -1);
         // Create a new communicator that contains only ranks of my group
         MPI_Comm_split(_globalCommunicator, groupID, getProcessRank(), &_localCommunicator);
       } else {
@@ -203,7 +203,7 @@ void Parallel::synchronizeProcesses()
 {
 #ifndef PRECICE_NO_MPI
   P_TRACE();
-  P_assertion(_isInitialized);
+  P_ASSERT(_isInitialized);
   MPI_Barrier(_globalCommunicator);
 #endif // not PRECICE_NO_MPI
 }
@@ -212,7 +212,7 @@ void Parallel::synchronizeLocalProcesses()
 {
 #ifndef PRECICE_NO_MPI
   P_TRACE();
-  P_assertion(_isInitialized && _isSplit);
+  P_ASSERT(_isInitialized && _isSplit);
   MPI_Barrier(_localCommunicator);
 #endif // not PRECICE_NO_MPI
 }
@@ -240,7 +240,7 @@ const Parallel::Communicator &Parallel::getGlobalCommunicator()
 const Parallel::Communicator &Parallel::getLocalCommunicator()
 {
   P_TRACE();
-  P_assertion(_isSplit);
+  P_ASSERT(_isSplit);
   return _localCommunicator;
 }
 
@@ -249,9 +249,9 @@ Parallel::Communicator Parallel::getRestrictedCommunicator(const std::vector<int
   P_TRACE();
   Communicator restrictedCommunicator = getCommunicatorWorld();
 #ifndef PRECICE_NO_MPI
-  P_assertion(_isInitialized);
-  P_assertion(not ranks.empty());
-  P_assertion(ranks.size() <= static_cast<size_t>(getCommunicatorSize()));
+  P_ASSERT(_isInitialized);
+  P_ASSERT(not ranks.empty());
+  P_ASSERT(ranks.size() <= static_cast<size_t>(getCommunicatorSize()));
   // Create group, containing all processes of communicator
   MPI_Group currentGroup;
   MPI_Comm_group(_globalCommunicator, &currentGroup);
@@ -261,11 +261,11 @@ Parallel::Communicator Parallel::getRestrictedCommunicator(const std::vector<int
   MPI_Comm_size(_globalCommunicator, &communicatorSize);
   P_DEBUG("Comm size:" << communicatorSize);
   P_DEBUG("ranks size:" << (int) ranks.size());
-//   P_assertion( (int)ranks.size() < communicatorSize );
+//   P_ASSERT( (int)ranks.size() < communicatorSize );
 #endif // Debug
   for (size_t i = 0; i < ranks.size(); i++) {
     P_DEBUG("Adding rank " << ranks[i]);
-    P_assertion(ranks[i] >= 0);
+    P_ASSERT(ranks[i] >= 0);
     ranksArray[i] = ranks[i];
   }
   // Create subgroup, containing processes contained in ranks
@@ -275,7 +275,7 @@ Parallel::Communicator Parallel::getRestrictedCommunicator(const std::vector<int
 #ifndef NDEBUG
   int restrictedGroupSize = 0;
   MPI_Group_size(restrictedGroup, &restrictedGroupSize);
-  P_assertion(restrictedGroupSize > 0);
+  P_ASSERT(restrictedGroupSize > 0);
 #endif
   // Create communicator, containing process of restrictedGroup
   P_DEBUG("Create Comm");
@@ -301,7 +301,7 @@ void Parallel::restrictGlobalCommunicator(const std::vector<int> &ranks)
 const std::vector<Parallel::AccessorGroup> &Parallel::getAccessorGroups()
 {
   P_TRACE();
-  P_assertion(_isInitialized);
+  P_ASSERT(_isInitialized);
   return _accessorGroups;
 }
 }

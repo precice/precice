@@ -27,9 +27,9 @@ SerialCouplingScheme::SerialCouplingScheme
 {
   _couplingMode = cplMode;
   // Coupling mode must be either Explicit or Implicit when using SerialCouplingScheme.
-  P_assertion(_couplingMode != Undefined);
+  P_ASSERT(_couplingMode != Undefined);
   if (_couplingMode == Explicit) {
-    P_assertion(maxIterations == 1);
+    P_ASSERT(maxIterations == 1);
   }
 }
 
@@ -39,9 +39,9 @@ void SerialCouplingScheme::initialize
   int    startTimestep)
 {
   P_TRACE(startTime, startTimestep);
-  P_assertion(not isInitialized());
-  P_assertion(math::greaterEquals(startTime, 0.0), startTime);
-  P_assertion(startTimestep >= 0, startTimestep);
+  P_ASSERT(not isInitialized());
+  P_ASSERT(math::greaterEquals(startTime, 0.0), startTime);
+  P_ASSERT(startTimestep >= 0, startTimestep);
   setTime(startTime);
   setTimesteps(startTimestep);
 
@@ -118,14 +118,14 @@ void SerialCouplingScheme::initializeData()
   setHasDataBeenExchanged(false);
 
   if (hasToReceiveInitData() && isCouplingOngoing() )  {
-    P_assertion(doesFirstStep());
+    P_ASSERT(doesFirstStep());
     P_DEBUG("Receiving data");
     receiveData(getM2N());
     setHasDataBeenExchanged(true);
   }
 
   if (hasToSendInitData() && isCouplingOngoing()) {
-    P_assertion(not doesFirstStep());
+    P_ASSERT(not doesFirstStep());
     for (DataMap::value_type & pair : getSendData()) {
       if (pair.second->oldValues.cols() == 0)
         break;

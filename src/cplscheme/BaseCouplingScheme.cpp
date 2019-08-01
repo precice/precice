@@ -120,7 +120,7 @@ void BaseCouplingScheme::receiveAndSetDt()
     double dt = UNDEFINED_TIMESTEP_LENGTH;
     getM2N()->receive(dt);
     P_DEBUG("Received timestep length of " << dt);
-    P_assertion(not math::equals(dt, UNDEFINED_TIMESTEP_LENGTH));
+    P_ASSERT(not math::equals(dt, UNDEFINED_TIMESTEP_LENGTH));
     setTimestepLength(dt);
   }
 }
@@ -171,8 +171,8 @@ void BaseCouplingScheme::sendState(
     int                   rankReceiver)
 {
   P_TRACE(rankReceiver);
-  P_assertion(communication.get() != nullptr);
-  P_assertion(communication->isConnected());
+  P_ASSERT(communication.get() != nullptr);
+  P_ASSERT(communication->isConnected());
   communication->send(_maxTime, rankReceiver);
   communication->send(_maxTimesteps, rankReceiver);
   communication->send(_timestepLength, rankReceiver);
@@ -198,8 +198,8 @@ void BaseCouplingScheme::receiveState(
     int                   rankSender)
 {
   P_TRACE(rankSender);
-  P_assertion(communication.get() != nullptr);
-  P_assertion(communication->isConnected());
+  P_ASSERT(communication.get() != nullptr);
+  P_ASSERT(communication->isConnected());
   communication->receive(_maxTime, rankSender);
   communication->receive(_maxTimesteps, rankSender);
   communication->receive(_timestepLength, rankSender);
@@ -232,8 +232,8 @@ std::vector<int> BaseCouplingScheme::sendData(m2n::PtrM2N m2n)
   P_TRACE();
 
   std::vector<int> sentDataIDs;
-  P_assertion(m2n.get() != nullptr);
-  P_assertion(m2n->isConnected());
+  P_ASSERT(m2n.get() != nullptr);
+  P_ASSERT(m2n->isConnected());
   for (const DataMap::value_type &pair : _sendData) {
     //std::cout<<"\nsend data id="<<pair.first<<": "<<*(pair.second->values)<<'\n';
     int size = pair.second->values->size();
@@ -249,8 +249,8 @@ std::vector<int> BaseCouplingScheme::receiveData(
 {
   P_TRACE();
   std::vector<int> receivedDataIDs;
-  P_assertion(m2n.get() != nullptr);
-  P_assertion(m2n->isConnected());
+  P_ASSERT(m2n.get() != nullptr);
+  P_ASSERT(m2n->isConnected());
 
   for (DataMap::value_type &pair : _receiveData) {
     int size = pair.second->values->size();
@@ -320,7 +320,7 @@ void BaseCouplingScheme::extrapolateData(DataMap &data)
     P_INFO("Performing first order extrapolation");
     for (DataMap::value_type &pair : data) {
       P_DEBUG("Extrapolate data: " << pair.first);
-      P_assertion(pair.second->oldValues.cols() > 1);
+      P_ASSERT(pair.second->oldValues.cols() > 1);
       Eigen::VectorXd &values       = *pair.second->values;
       pair.second->oldValues.col(0) = values;  // = x^t
       values *= 2.0;                           // = 2*x^t
@@ -330,7 +330,7 @@ void BaseCouplingScheme::extrapolateData(DataMap &data)
   } else if (_extrapolationOrder == 2) {
     P_INFO("Performing second order extrapolation");
     for (DataMap::value_type &pair : data) {
-      P_assertion(pair.second->oldValues.cols() > 2);
+      P_ASSERT(pair.second->oldValues.cols() > 2);
       Eigen::VectorXd &values     = *pair.second->values;
       auto             valuesOld1 = pair.second->oldValues.col(1);
       auto             valuesOld2 = pair.second->oldValues.col(2);
@@ -353,7 +353,7 @@ bool BaseCouplingScheme::hasTimestepLength() const
 
 double BaseCouplingScheme::getTimestepLength() const
 {
-  P_assertion(not math::equals(_timestepLength, UNDEFINED_TIMESTEP_LENGTH));
+  P_ASSERT(not math::equals(_timestepLength, UNDEFINED_TIMESTEP_LENGTH));
   return _timestepLength;
 }
 
@@ -549,7 +549,7 @@ void BaseCouplingScheme::setupDataMatrices(DataMap &data)
   P_DEBUG("Data size: " << data.size());
   // Reserve storage for convergence measurement of send and receive data values
   for (ConvergenceMeasure &convMeasure : _convergenceMeasures) {
-    P_assertion(convMeasure.couplingData != nullptr);
+    P_ASSERT(convMeasure.couplingData != nullptr);
     if (convMeasure.couplingData->oldValues.cols() < 1) {
       utils::append(convMeasure.couplingData->oldValues,
                     (Eigen::MatrixXd) Eigen::MatrixXd::Zero(convMeasure.couplingData->values->size(), 1));
@@ -560,7 +560,7 @@ void BaseCouplingScheme::setupDataMatrices(DataMap &data)
     for (DataMap::value_type &pair : data) {
       int cols = pair.second->oldValues.cols();
       P_DEBUG("Add cols: " << pair.first << ", cols: " << cols);
-      P_assertion(cols <= 1, cols);
+      P_ASSERT(cols <= 1, cols);
       utils::append(pair.second->oldValues,
                     (Eigen::MatrixXd) Eigen::MatrixXd::Zero(pair.second->values->size(), _extrapolationOrder + 1 - cols));
     }
@@ -570,7 +570,7 @@ void BaseCouplingScheme::setupDataMatrices(DataMap &data)
 void BaseCouplingScheme::setIterationPostProcessing(
     impl::PtrPostProcessing postProcessing)
 {
-  P_assertion(postProcessing.get() != nullptr);
+  P_ASSERT(postProcessing.get() != nullptr);
   _postProcessing = postProcessing;
 
   // if multilevel based approach, i.e., manifold mapping, we have to start
@@ -588,7 +588,7 @@ void BaseCouplingScheme::setIterationPostProcessing(
 void BaseCouplingScheme::setupConvergenceMeasures()
 {
   P_TRACE();
-  P_assertion(not doesFirstStep());
+  P_ASSERT(not doesFirstStep());
   P_CHECK(not _convergenceMeasures.empty(),
         "At least one convergence measure has to be defined for "
             << "an implicit coupling scheme!");
@@ -598,7 +598,7 @@ void BaseCouplingScheme::setupConvergenceMeasures()
       convMeasure.couplingData = getSendData(dataID);
     } else {
       convMeasure.couplingData = getReceiveData(dataID);
-      P_assertion(convMeasure.couplingData != nullptr);
+      P_ASSERT(convMeasure.couplingData != nullptr);
     }
   }
 }
@@ -607,7 +607,7 @@ void BaseCouplingScheme::newConvergenceMeasurements()
 {
   P_TRACE();
   for (ConvergenceMeasure &convMeasure : _convergenceMeasures) {
-    P_assertion(convMeasure.measure.get() != nullptr);
+    P_ASSERT(convMeasure.measure.get() != nullptr);
     convMeasure.measure->newMeasurementSeries();
   }
 }
@@ -632,10 +632,10 @@ bool BaseCouplingScheme::measureConvergence(
     std::map<int, Eigen::VectorXd> &designSpecifications)
 {
   P_TRACE();
-  P_assertion(not doesFirstStep());
+  P_ASSERT(not doesFirstStep());
   bool allConverged = true;
   bool oneSuffices  = false;
-  P_assertion(_convergenceMeasures.size() > 0);
+  P_ASSERT(_convergenceMeasures.size() > 0);
   if (not utils::MasterSlave::isSlave()) {
     _convergenceWriter->writeData("Timestep", _timesteps);
     _convergenceWriter->writeData("Iteration", _iterations);
@@ -647,8 +647,8 @@ bool BaseCouplingScheme::measureConvergence(
     if (convMeasure.level > 0)
       continue;
 
-    P_assertion(convMeasure.couplingData != nullptr);
-    P_assertion(convMeasure.measure.get() != nullptr);
+    P_ASSERT(convMeasure.couplingData != nullptr);
+    P_ASSERT(convMeasure.measure.get() != nullptr);
     const auto &    oldValues = convMeasure.couplingData->oldValues.col(0);
     Eigen::VectorXd q         = Eigen::VectorXd::Zero(convMeasure.couplingData->values->size());
     if (designSpecifications.find(convMeasure.data->getID()) != designSpecifications.end())
@@ -690,7 +690,7 @@ bool BaseCouplingScheme::measureConvergenceCoarseModelOptimization(
   P_TRACE();
   bool allConverged = true;
   bool oneSuffices  = false;
-  P_assertion(_convergenceMeasures.size() > 0);
+  P_ASSERT(_convergenceMeasures.size() > 0);
   for (ConvergenceMeasure &convMeasure : _convergenceMeasures) {
 
     // only apply convergence measures for coarse model optimization
@@ -698,8 +698,8 @@ bool BaseCouplingScheme::measureConvergenceCoarseModelOptimization(
       continue;
 
     std::cout << "  measure convergence coarse measure, data:" << convMeasure.data->getName() << '\n';
-    P_assertion(convMeasure.couplingData != nullptr);
-    P_assertion(convMeasure.measure.get() != nullptr);
+    P_ASSERT(convMeasure.couplingData != nullptr);
+    P_ASSERT(convMeasure.measure.get() != nullptr);
     const auto &    oldValues = convMeasure.couplingData->oldValues.col(0);
     Eigen::VectorXd q         = Eigen::VectorXd::Zero(convMeasure.couplingData->values->size());
     if (designSpecifications.find(convMeasure.data->getID()) != designSpecifications.end())
@@ -826,7 +826,7 @@ void BaseCouplingScheme::updateTimeAndIterations(
     // The computed timestep part equals the timestep length, since the
     // timestep remainder is zero. Subtract the timestep length do another
     // coupling iteration.
-    P_assertion(math::greater(getComputedTimestepPart(), 0.0));
+    P_ASSERT(math::greater(getComputedTimestepPart(), 0.0));
     _time = _time - _computedTimestepPart;
 
     // in case of multilevel PP: only increment outer iteration count if surrogate model has converged.

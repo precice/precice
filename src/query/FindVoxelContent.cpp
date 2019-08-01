@@ -21,9 +21,9 @@ FindVoxelContent:: FindVoxelContent
   _dimensions ( voxelCenter.size() )
 {
   P_TRACE(voxelCenter, halflengths, boundaryInclusion);
-  P_assertion( voxelCenter.size() == halflengths.size(),
+  P_ASSERT( voxelCenter.size() == halflengths.size(),
               voxelCenter.size(), halflengths.size() );
-  P_assertion( (_dimensions == 2) || (_dimensions == 3), _dimensions );
+  P_ASSERT( (_dimensions == 2) || (_dimensions == 3), _dimensions );
 }
 
 const Eigen::VectorXd& FindVoxelContent:: getVoxelCenter() const
@@ -54,7 +54,7 @@ void FindVoxelContent:: clear()
 void FindVoxelContent::checkVertex( mesh::Vertex& vertex )
 {
   P_TRACE();
-  P_assertion(vertex.getDimensions() == _dimensions, vertex.getDimensions(),
+  P_ASSERT(vertex.getDimensions() == _dimensions, vertex.getDimensions(),
             _dimensions);
   Eigen::VectorXd toVertex = vertex.getCoords();
   toVertex -= _voxelCenter;
@@ -77,7 +77,7 @@ void FindVoxelContent::checkEdge( mesh::Edge& edge )
   P_TRACE(edge.vertex(0).getCoords(), edge.vertex(1).getCoords());
   using Eigen::Vector3d; using Eigen::Vector2d; using Eigen::VectorXd;
   using math::greater; using math::smaller;
-  P_assertion(edge.getDimensions() == _dimensions, edge.getDimensions(),
+  P_ASSERT(edge.getDimensions() == _dimensions, edge.getDimensions(),
             _dimensions);
 
   // For excluding boundary case, add eps to achieve greater/smaller-equals
@@ -128,7 +128,7 @@ void FindVoxelContent::checkEdge( mesh::Edge& edge )
 
   }
   else { // 3D
-    P_assertion(_dimensions == 3, _dimensions);
+    P_ASSERT(_dimensions == 3, _dimensions);
     // Test if edge intersects with rectangle, using seperating axis theorem
     Vector3d a = edge.vertex(0).getCoords();
     a -= _voxelCenter; // Move to origin
@@ -178,7 +178,7 @@ void FindVoxelContent:: checkTriangle
   mesh::Triangle& triangle )
 {
   P_TRACE(triangle.getID(), triangle.getCenter());
-  P_assertion( _dimensions == 3, _dimensions );
+  P_ASSERT( _dimensions == 3, _dimensions );
   using math::greater; using math::smaller;
   using Eigen::Vector3d;
   using Eigen::Vector2d;
@@ -346,7 +346,7 @@ bool FindVoxelContent:: computeIntersection
   P_TRACE(squareCenter, halflengths, squareNormalDirection,
         firstPointSegment, secondPointSegment, countTouchingAsIntersection);
   
-  P_assertion( (squareNormalDirection >= 0) && (squareNormalDirection < 3) );
+  P_ASSERT( (squareNormalDirection >= 0) && (squareNormalDirection < 3) );
   namespace geo = math::geometry;
   using Eigen::Vector2d;
   using Eigen::Vector3d;
@@ -377,7 +377,7 @@ bool FindVoxelContent:: computeIntersection
       indices[1] = 2;
     }
     else {
-      P_assertion( squareNormalDirection == 2, squareNormalDirection );
+      P_ASSERT( squareNormalDirection == 2, squareNormalDirection );
       indices[0] = 0;
       indices[1] = 1;
     }
@@ -419,7 +419,7 @@ bool FindVoxelContent:: computeIntersection
   else if ( (result == geo::TOUCHING) && (! countTouchingAsIntersection) ) {
     return false;
   }
-  P_assertion( (result == geo::INTERSECTION) || (result == geo::TOUCHING));
+  P_ASSERT( (result == geo::INTERSECTION) || (result == geo::TOUCHING));
   // Segment intersects or touches plane of square, see if intersection point is
   // contained or touches square
   int indices[2];
@@ -432,7 +432,7 @@ bool FindVoxelContent:: computeIntersection
     indices[1] = 2;
   }
   else {
-    P_assertion( squareNormalDirection == 3, squareNormalDirection );
+    P_ASSERT( squareNormalDirection == 3, squareNormalDirection );
     indices[0] = 0;
     indices[1] = 1;
   }
@@ -509,7 +509,7 @@ bool FindVoxelContent:: computeIntersection
     return false;
   }
 
-  P_assertion((result == geo::INTERSECTION) || (result == geo::TOUCHING));
+  P_ASSERT((result == geo::INTERSECTION) || (result == geo::TOUCHING));
   // Compute signed areas of triangle and intersection point
   Vector3d normal ( triangle.getNormal() );
   int indexMin;

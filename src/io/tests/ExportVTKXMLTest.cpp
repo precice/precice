@@ -34,7 +34,7 @@ using namespace precice;
 struct SetupMasterSlaveFixture {
   SetupMasterSlaveFixture()
   {
-    P_assertion(utils::Parallel::getCommunicatorSize() == 4);
+    P_ASSERT(utils::Parallel::getCommunicatorSize() == 4);
 
     auto masterSlaveCom                = std::make_shared<com::MPIDirectCommunication>();
     utils::MasterSlave::_communication = masterSlaveCom;

@@ -29,7 +29,7 @@ double FindClosestVertex:: getEuclidianDistance()
 
 mesh::Vertex& FindClosestVertex:: getClosestVertex()
 {
-  P_assertion( _closestVertex != nullptr );
+  P_ASSERT( _closestVertex != nullptr );
   return *_closestVertex;
 }
 

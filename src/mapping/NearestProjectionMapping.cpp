@@ -21,7 +21,7 @@ NearestProjectionMapping::NearestProjectionMapping(
     setInputRequirement(Mapping::MeshRequirement::FULL);
     setOutputRequirement(Mapping::MeshRequirement::VERTEX);
   } else {
-    P_assertion(constraint == CONSERVATIVE, constraint);
+    P_ASSERT(constraint == CONSERVATIVE, constraint);
     setInputRequirement(Mapping::MeshRequirement::VERTEX);
     setOutputRequirement(Mapping::MeshRequirement::FULL);
   }
@@ -207,11 +207,11 @@ void NearestProjectionMapping::map(
   Eigen::VectorXd &      outValues = outData->values();
   //assign(outValues) = 0.0;
   int dimensions = inData->getDimensions();
-  P_assertion(dimensions == outData->getDimensions());
+  P_ASSERT(dimensions == outData->getDimensions());
 
   if (getConstraint() == CONSISTENT) {
     P_DEBUG("Map consistent");
-    P_assertion(_weights.size() == output()->vertices().size(),
+    P_ASSERT(_weights.size() == output()->vertices().size(),
               _weights.size(), output()->vertices().size());
     for (size_t i = 0; i < output()->vertices().size(); i++) {
       InterpolationElements &elems     = _weights[i];
@@ -219,16 +219,16 @@ void NearestProjectionMapping::map(
       for (query::InterpolationElement &elem : elems) {
         size_t inOffset = (size_t) elem.element->getID() * dimensions;
         for (int dim = 0; dim < dimensions; dim++) {
-          P_assertion(outOffset + dim < (size_t) outValues.size());
-          P_assertion(inOffset + dim < (size_t) inValues.size());
+          P_ASSERT(outOffset + dim < (size_t) outValues.size());
+          P_ASSERT(inOffset + dim < (size_t) inValues.size());
           outValues(outOffset + dim) += elem.weight * inValues(inOffset + dim);
         }
       }
     }
   } else {
-    P_assertion(getConstraint() == CONSERVATIVE, getConstraint());
+    P_ASSERT(getConstraint() == CONSERVATIVE, getConstraint());
     P_DEBUG("Map conservative");
-    P_assertion(_weights.size() == input()->vertices().size(),
+    P_ASSERT(_weights.size() == input()->vertices().size(),
               _weights.size(), input()->vertices().size());
     for (size_t i = 0; i < input()->vertices().size(); i++) {
       size_t                 inOffset = i * dimensions;
@@ -236,8 +236,8 @@ void NearestProjectionMapping::map(
       for (query::InterpolationElement &elem : elems) {
         size_t outOffset = (size_t) elem.element->getID() * dimensions;
         for (int dim = 0; dim < dimensions; dim++) {
-          P_assertion(outOffset + dim < (size_t) outValues.size());
-          P_assertion(inOffset + dim < (size_t) inValues.size());
+          P_ASSERT(outOffset + dim < (size_t) outValues.size());
+          P_ASSERT(inOffset + dim < (size_t) inValues.size());
           outValues(outOffset + dim) += elem.weight * inValues(inOffset + dim);
         }
       }
@@ -259,7 +259,7 @@ void NearestProjectionMapping::tagMeshFirstRound()
   if (getConstraint() == CONSISTENT) {
     origins = input();
   } else {
-    P_assertion(getConstraint() == CONSERVATIVE, getConstraint());
+    P_ASSERT(getConstraint() == CONSERVATIVE, getConstraint());
     origins = output();
   }
 

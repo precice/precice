@@ -43,11 +43,11 @@ void ResidualSumPreconditioner::_update_(bool timestepComplete,
       norms[k] = std::sqrt(norms[k]);
     }
     sum = std::sqrt(sum);
-    P_assertion(sum > 0);
+    P_ASSERT(sum > 0);
 
     for (size_t k = 0; k < _subVectorSizes.size(); k++) {
       _residualSum[k] += norms[k] / sum;
-      P_assertion(_residualSum[k] > 0);
+      P_ASSERT(_residualSum[k] > 0);
     }
 
     offset = 0;

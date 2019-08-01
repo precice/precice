@@ -19,8 +19,8 @@ void performTestVertices(
     const Eigen::VectorXd &offset)
 {
   int dim = offset.size();
-  P_assertion(not math::oneGreater(offset, Eigen::VectorXd::Constant(dim, 1.0)));
-  P_assertion(math::allGreater(offset, Eigen::VectorXd::Constant(dim, -1.0)));
+  P_ASSERT(not math::oneGreater(offset, Eigen::VectorXd::Constant(dim, 1.0)));
+  P_ASSERT(math::allGreater(offset, Eigen::VectorXd::Constant(dim, -1.0)));
   bool            flipNormals = false;
   mesh::Mesh      mesh("TestMesh", dim, flipNormals);
   Eigen::VectorXd coords(offset);
@@ -33,8 +33,8 @@ void performTestVertices(
   query::FindVoxelContent             findIncluded(center, halflengths, includeBounds);
   query::FindVoxelContent             findExcluded(center, halflengths, excludeBounds);
 
-  P_assertion(testDim >= 0);
-  P_assertion(testDim < dim);
+  P_ASSERT(testDim >= 0);
+  P_ASSERT(testDim < dim);
 
   double sign = positive ? 1.0 : -1.0;
   int    size = 0;
@@ -126,8 +126,8 @@ void performTestEdges(
     const Eigen::VectorXd &offset)
 {
   int dim = offset.size();
-  P_assertion(not math::oneGreater(offset, Eigen::VectorXd::Constant(dim, 1.0)));
-  P_assertion(math::allGreater(offset, Eigen::VectorXd::Constant(dim, -1.0)));
+  P_ASSERT(not math::oneGreater(offset, Eigen::VectorXd::Constant(dim, 1.0)));
+  P_ASSERT(math::allGreater(offset, Eigen::VectorXd::Constant(dim, -1.0)));
   bool            flipNormals = false;
   mesh::Mesh      mesh("TestMesh", dim, flipNormals);
   Eigen::VectorXd coords0(offset);
@@ -143,8 +143,8 @@ void performTestEdges(
   query::FindVoxelContent             findIncluded(center, halflengths, includeBounds);
   query::FindVoxelContent             findExcluded(center, halflengths, excludeBounds);
 
-  P_assertion(testDim >= 0);
-  P_assertion(testDim < dim);
+  P_ASSERT(testDim >= 0);
+  P_ASSERT(testDim < dim);
 
   double sign = positive ? 1.0 : -1.0;
 
@@ -246,7 +246,7 @@ void performTestTriangles(
     bool positive)
 {
   int dim = 3;
-  P_assertion(testDim != secondDimension);
+  P_ASSERT(testDim != secondDimension);
   bool            flipNormals = false;
   mesh::Mesh      mesh("TestMesh", dim, flipNormals);
   Eigen::Vector3d coords0 = Eigen::Vector3d::Zero();
@@ -267,8 +267,8 @@ void performTestTriangles(
   query::FindVoxelContent             findIncluded(center, halflengths, includeBounds);
   query::FindVoxelContent             findExcluded(center, halflengths, excludeBounds);
 
-  P_assertion(testDim >= 0);
-  P_assertion(testDim < dim);
+  P_ASSERT(testDim >= 0);
+  P_ASSERT(testDim < dim);
 
   double sign = positive ? 1.0 : -1.0;
 

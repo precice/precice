@@ -106,7 +106,7 @@ void CommunicateMesh::receiveMesh(
         coords[d] = vertexCoords[i * dim + d];
       }
       mesh::Vertex &v = mesh.createVertex(coords);
-      P_assertion(v.getID() >= 0, v.getID());
+      P_ASSERT(v.getID() >= 0, v.getID());
       v.setGlobalIndex(globalIDs[i]);
       vertices.push_back(&v);
     }
@@ -126,9 +126,9 @@ void CommunicateMesh::receiveMesh(
     std::vector<int> edgeIDs;
     _communication->receive(edgeIDs, rankSender);
     for (int i = 0; i < numberOfEdges; i++) {
-      P_assertion(vertexMap.find(edgeIDs[i * 2]) != vertexMap.end());
-      P_assertion(vertexMap.find(edgeIDs[i * 2 + 1]) != vertexMap.end());
-      P_assertion(edgeIDs[i * 2] != edgeIDs[i * 2 + 1]);
+      P_ASSERT(vertexMap.find(edgeIDs[i * 2]) != vertexMap.end());
+      P_ASSERT(vertexMap.find(edgeIDs[i * 2 + 1]) != vertexMap.end());
+      P_ASSERT(edgeIDs[i * 2] != edgeIDs[i * 2 + 1]);
       mesh::Edge &e = mesh.createEdge(*vertexMap[edgeIDs[i * 2]], *vertexMap[edgeIDs[i * 2 + 1]]);
       edges.push_back(&e);
     }
@@ -140,7 +140,7 @@ void CommunicateMesh::receiveMesh(
     P_DEBUG("Number of Triangles to receive: " << numberOfTriangles);
     P_DEBUG("Number of Edges: " << edges.size());
     if (numberOfTriangles > 0) {
-      P_assertion((edges.size() > 0) || (numberOfTriangles == 0));
+      P_ASSERT((edges.size() > 0) || (numberOfTriangles == 0));
       std::vector<int> edgeIDs;
       _communication->receive(edgeIDs, rankSender);
       std::map<int, mesh::Edge *> edgeMap;
@@ -152,12 +152,12 @@ void CommunicateMesh::receiveMesh(
       _communication->receive(triangleIDs, rankSender);
 
       for (int i = 0; i < numberOfTriangles; i++) {
-        P_assertion(edgeMap.find(triangleIDs[i * 3]) != edgeMap.end());
-        P_assertion(edgeMap.find(triangleIDs[i * 3 + 1]) != edgeMap.end());
-        P_assertion(edgeMap.find(triangleIDs[i * 3 + 2]) != edgeMap.end());
-        P_assertion(triangleIDs[i * 3] != triangleIDs[i * 3 + 1]);
-        P_assertion(triangleIDs[i * 3 + 1] != triangleIDs[i * 3 + 2]);
-        P_assertion(triangleIDs[i * 3 + 2] != triangleIDs[i * 3]);
+        P_ASSERT(edgeMap.find(triangleIDs[i * 3]) != edgeMap.end());
+        P_ASSERT(edgeMap.find(triangleIDs[i * 3 + 1]) != edgeMap.end());
+        P_ASSERT(edgeMap.find(triangleIDs[i * 3 + 2]) != edgeMap.end());
+        P_ASSERT(triangleIDs[i * 3] != triangleIDs[i * 3 + 1]);
+        P_ASSERT(triangleIDs[i * 3 + 1] != triangleIDs[i * 3 + 2]);
+        P_ASSERT(triangleIDs[i * 3 + 2] != triangleIDs[i * 3]);
         mesh.createTriangle(*edgeMap[triangleIDs[i * 3]], *edgeMap[triangleIDs[i * 3 + 1]], *edgeMap[triangleIDs[i * 3 + 2]]);
       }
     }
@@ -249,7 +249,7 @@ void CommunicateMesh::broadcastReceiveMesh(
         coords[d] = vertexCoords[i * dim + d];
       }
       mesh::Vertex &v = mesh.createVertex(coords);
-      P_assertion(v.getID() >= 0, v.getID());
+      P_ASSERT(v.getID() >= 0, v.getID());
       v.setGlobalIndex(globalIDs[i]);
       vertices.push_back(&v);
     }
@@ -268,9 +268,9 @@ void CommunicateMesh::broadcastReceiveMesh(
     std::vector<int> edgeIDs;
     _communication->broadcast(edgeIDs, rankBroadcaster);
     for (int i = 0; i < numberOfEdges; i++) {
-      P_assertion(vertexMap.find(edgeIDs[i * 2]) != vertexMap.end());
-      P_assertion(vertexMap.find(edgeIDs[i * 2 + 1]) != vertexMap.end());
-      P_assertion(edgeIDs[i * 2] != edgeIDs[i * 2 + 1]);
+      P_ASSERT(vertexMap.find(edgeIDs[i * 2]) != vertexMap.end());
+      P_ASSERT(vertexMap.find(edgeIDs[i * 2 + 1]) != vertexMap.end());
+      P_ASSERT(edgeIDs[i * 2] != edgeIDs[i * 2 + 1]);
       mesh::Edge &e = mesh.createEdge(*vertexMap[edgeIDs[i * 2]], *vertexMap[edgeIDs[i * 2 + 1]]);
       edges.push_back(&e);
     }
@@ -280,7 +280,7 @@ void CommunicateMesh::broadcastReceiveMesh(
     int numberOfTriangles = 0;
     _communication->broadcast(numberOfTriangles, rankBroadcaster);
     if (numberOfTriangles > 0) {
-      P_assertion((edges.size() > 0) || (numberOfTriangles == 0));
+      P_ASSERT((edges.size() > 0) || (numberOfTriangles == 0));
       std::vector<int> edgeIDs;
       _communication->broadcast(edgeIDs, rankBroadcaster);
       std::map<int, mesh::Edge *> edgeMap;
@@ -292,12 +292,12 @@ void CommunicateMesh::broadcastReceiveMesh(
       _communication->broadcast(triangleIDs, rankBroadcaster);
 
       for (int i = 0; i < numberOfTriangles; i++) {
-        P_assertion(edgeMap.find(triangleIDs[i * 3]) != edgeMap.end());
-        P_assertion(edgeMap.find(triangleIDs[i * 3 + 1]) != edgeMap.end());
-        P_assertion(edgeMap.find(triangleIDs[i * 3 + 2]) != edgeMap.end());
-        P_assertion(triangleIDs[i * 3] != triangleIDs[i * 3 + 1]);
-        P_assertion(triangleIDs[i * 3 + 1] != triangleIDs[i * 3 + 2]);
-        P_assertion(triangleIDs[i * 3 + 2] != triangleIDs[i * 3]);
+        P_ASSERT(edgeMap.find(triangleIDs[i * 3]) != edgeMap.end());
+        P_ASSERT(edgeMap.find(triangleIDs[i * 3 + 1]) != edgeMap.end());
+        P_ASSERT(edgeMap.find(triangleIDs[i * 3 + 2]) != edgeMap.end());
+        P_ASSERT(triangleIDs[i * 3] != triangleIDs[i * 3 + 1]);
+        P_ASSERT(triangleIDs[i * 3 + 1] != triangleIDs[i * 3 + 2]);
+        P_ASSERT(triangleIDs[i * 3 + 2] != triangleIDs[i * 3]);
         mesh.createTriangle(*edgeMap[triangleIDs[i * 3]], *edgeMap[triangleIDs[i * 3 + 1]], *edgeMap[triangleIDs[i * 3 + 2]]);
       }
     }

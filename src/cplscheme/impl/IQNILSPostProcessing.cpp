@@ -59,7 +59,7 @@ void IQNILSPostProcessing::updateDifferenceMatrices(
   for (int id : _secondaryDataIDs) {
     Eigen::VectorXd &secResiduals = _secondaryResiduals[id];
     PtrCouplingData  data         = cplData[id];
-    P_assertion(secResiduals.size() == data->values->size(),
+    P_ASSERT(secResiduals.size() == data->values->size(),
               secResiduals.size(), data->values->size());
     secResiduals = *(data->values);
     secResiduals -= data->oldValues.col(0);
@@ -87,7 +87,7 @@ void IQNILSPostProcessing::updateDifferenceMatrices(
       // Compute delta_x_tilde for secondary data
       for (int id : _secondaryDataIDs) {
         Eigen::MatrixXd &secW = _secondaryMatricesW[id];
-        P_assertion(secW.rows() == cplData[id]->values->size(), secW.rows(), cplData[id]->values->size());
+        P_ASSERT(secW.rows() == cplData[id]->values->size(), secW.rows(), cplData[id]->values->size());
         secW.col(0) = *(cplData[id]->values);
         secW.col(0) -= _secondaryOldXTildes[id];
       }
@@ -95,7 +95,7 @@ void IQNILSPostProcessing::updateDifferenceMatrices(
 
     // Store x_tildes for secondary data
     for (int id : _secondaryDataIDs) {
-      P_assertion(_secondaryOldXTildes[id].size() == cplData[id]->values->size(),
+      P_ASSERT(_secondaryOldXTildes[id].size() == cplData[id]->values->size(),
                 _secondaryOldXTildes[id].size(), cplData[id]->values->size());
       _secondaryOldXTildes[id] = *(cplData[id]->values);
     }
@@ -110,7 +110,7 @@ void IQNILSPostProcessing::computeUnderrelaxationSecondaryData(
 {
   //Store x_tildes for secondary data
   for (int id : _secondaryDataIDs) {
-    P_assertion(_secondaryOldXTildes[id].size() == cplData[id]->values->size(),
+    P_ASSERT(_secondaryOldXTildes[id].size() == cplData[id]->values->size(),
               _secondaryOldXTildes[id].size(), cplData[id]->values->size());
     _secondaryOldXTildes[id] = *(cplData[id]->values);
   }
@@ -141,9 +141,9 @@ void IQNILSPostProcessing::computeQNUpdate(PostProcessing::DataMap &cplData, Eig
   auto R = _qrV.matrixR();
 
   if (!_hasNodesOnInterface) {
-    P_assertion(_qrV.cols() == getLSSystemCols(), _qrV.cols(), getLSSystemCols());
-    P_assertion(_qrV.rows() == 0, _qrV.rows());
-    P_assertion(Q.size() == 0, Q.size());
+    P_ASSERT(_qrV.cols() == getLSSystemCols(), _qrV.cols(), getLSSystemCols());
+    P_ASSERT(_qrV.rows() == 0, _qrV.rows());
+    P_ASSERT(Q.size() == 0, Q.size());
   }
 
   Eigen::VectorXd _local_b = Eigen::VectorXd::Zero(_qrV.cols());
@@ -156,25 +156,25 @@ void IQNILSPostProcessing::computeQNUpdate(PostProcessing::DataMap &cplData, Eig
   _preconditioner->revert(_residuals);
   _local_b *= -1.0; // = -Qr
 
-  P_assertion(c.size() == 0, c.size());
+  P_ASSERT(c.size() == 0, c.size());
   // reserve memory for c
   utils::append(c, (Eigen::VectorXd) Eigen::VectorXd::Zero(_local_b.size()));
 
   // compute rhs Q^T*res in parallel
   if (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()) {
-    P_assertion(Q.cols() == getLSSystemCols(), Q.cols(), getLSSystemCols());
+    P_ASSERT(Q.cols() == getLSSystemCols(), Q.cols(), getLSSystemCols());
     // back substitution
     c = R.triangularView<Eigen::Upper>().solve<Eigen::OnTheLeft>(_local_b);
   } else {
-    P_assertion(utils::MasterSlave::_communication.get() != nullptr);
-    P_assertion(utils::MasterSlave::_communication->isConnected());
+    P_ASSERT(utils::MasterSlave::_communication.get() != nullptr);
+    P_ASSERT(utils::MasterSlave::_communication->isConnected());
     if (_hasNodesOnInterface) {
-      P_assertion(Q.cols() == getLSSystemCols(), Q.cols(), getLSSystemCols());
+      P_ASSERT(Q.cols() == getLSSystemCols(), Q.cols(), getLSSystemCols());
     }
-    P_assertion(_local_b.size() == getLSSystemCols(), _local_b.size(), getLSSystemCols());
+    P_ASSERT(_local_b.size() == getLSSystemCols(), _local_b.size(), getLSSystemCols());
 
     if (utils::MasterSlave::isMaster()) {
-      P_assertion(_global_b.size() == 0, _global_b.size());
+      P_ASSERT(_global_b.size() == 0, _global_b.size());
     }
     utils::append(_global_b, (Eigen::VectorXd) Eigen::VectorXd::Zero(_local_b.size()));
 
@@ -210,11 +210,11 @@ void IQNILSPostProcessing::computeQNUpdate(PostProcessing::DataMap &cplData, Eig
   for (int id : _secondaryDataIDs) {
     PtrCouplingData data   = cplData[id];
     auto &          values = *(data->values);
-    P_assertion(_secondaryMatricesW[id].cols() == c.size(), _secondaryMatricesW[id].cols(), c.size());
+    P_ASSERT(_secondaryMatricesW[id].cols() == c.size(), _secondaryMatricesW[id].cols(), c.size());
     values = _secondaryMatricesW[id] * c;
-    P_assertion(values.size() == data->oldValues.col(0).size(), values.size(), data->oldValues.col(0).size());
+    P_ASSERT(values.size() == data->oldValues.col(0).size(), values.size(), data->oldValues.col(0).size());
     values += data->oldValues.col(0);
-    P_assertion(values.size() == _secondaryResiduals[id].size(), values.size(), _secondaryResiduals[id].size());
+    P_ASSERT(values.size() == _secondaryResiduals[id].size(), values.size(), _secondaryResiduals[id].size());
     values += _secondaryResiduals[id];
   }
 
@@ -254,7 +254,7 @@ void IQNILSPostProcessing::specializedIterationsConverged(
     int toRemove = _matrixCols.back();
     for (int id : _secondaryDataIDs) {
       Eigen::MatrixXd &secW = _secondaryMatricesW[id];
-      P_assertion(secW.cols() > toRemove, secW, toRemove, id);
+      P_ASSERT(secW.cols() > toRemove, secW, toRemove, id);
       for (int i = 0; i < toRemove; i++) {
         utils::removeColumnFromMatrix(secW, secW.cols() - 1);
       }
@@ -265,7 +265,7 @@ void IQNILSPostProcessing::specializedIterationsConverged(
 void IQNILSPostProcessing::removeMatrixColumn(
     int columnIndex)
 {
-  P_assertion(_matrixV.cols() > 1);
+  P_ASSERT(_matrixV.cols() > 1);
   // remove column from secondary Data Matrix W
   for (int id : _secondaryDataIDs) {
     utils::removeColumnFromMatrix(_secondaryMatricesW[id], columnIndex);

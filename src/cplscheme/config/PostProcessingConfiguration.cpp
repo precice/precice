@@ -74,7 +74,7 @@ PostProcessingConfiguration::PostProcessingConfiguration(
       _config(),
       _isAddManifoldMappingTagAllowed(true)
 {
-  P_assertion(meshConfig.get() != nullptr);
+  P_ASSERT(meshConfig.get() != nullptr);
 }
 
 void PostProcessingConfiguration::connectTags(xml::XMLTag &parent)
@@ -205,7 +205,7 @@ void PostProcessingConfiguration::xmlTagCallback(
     } else if (f == VALUE_QR2FILTER) {
       _config.filter = impl::PostProcessing::QR2FILTER;
     } else {
-      P_assertion(false);
+      P_ASSERT(false);
     }
     _config.singularityLimit = callingTag.getDoubleAttributeValue(ATTR_SINGULARITYLIMIT);
   } else if (callingTag.getName() == TAG_ESTIMATEJACOBIAN) {
@@ -236,7 +236,7 @@ void PostProcessingConfiguration::xmlTagCallback(
       _config.imvjRestartType = impl::MVQNPostProcessing::RS_SLIDE;
     } else {
       _config.imvjChunkSize = 0;
-      P_assertion(false);
+      P_ASSERT(false);
     }
 #else
     P_ERROR("Post processing IQN-IMVJ only works if preCICE is compiled with MPI");
@@ -324,8 +324,8 @@ void PostProcessingConfiguration::xmlEndTagCallback(
     } else if (callingTag.getName() == VALUE_ManifoldMapping) {
 
       // create coarse model optimization method recursive
-      P_assertion((_coarseModelOptimizationConfig.get() != nullptr));
-      P_assertion((_coarseModelOptimizationConfig->getPostProcessing().get() != nullptr));
+      P_ASSERT((_coarseModelOptimizationConfig.get() != nullptr));
+      P_ASSERT((_coarseModelOptimizationConfig->getPostProcessing().get() != nullptr));
 
       // create manifold mapping PP
       _postProcessing = impl::PtrPostProcessing(
@@ -349,7 +349,7 @@ void PostProcessingConfiguration::xmlEndTagCallback(
               _config.dataIDs,
               _preconditioner));
     } else {
-      P_assertion(false);
+      P_ASSERT(false);
     }
   }
 }

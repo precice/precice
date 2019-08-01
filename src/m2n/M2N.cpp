@@ -42,7 +42,7 @@ void M2N::acceptMasterConnection(
   Event e("m2n.acceptMasterConnection", precice::syncMode);
 
   if (not utils::MasterSlave::isSlave()) {
-    P_assertion(_masterCom);
+    P_ASSERT(_masterCom);
     _masterCom->acceptConnection(acceptorName, requesterName, utils::MasterSlave::getRank());
     _isMasterConnected = _masterCom->isConnected();
   }
@@ -59,7 +59,7 @@ void M2N::requestMasterConnection(
   Event e("m2n.requestMasterConnection", precice::syncMode);
 
   if (not utils::MasterSlave::isSlave()) {
-    P_assertion(_masterCom);
+    P_ASSERT(_masterCom);
 
     _masterCom->requestConnection(acceptorName, requesterName, 0, 1);
     _isMasterConnected = _masterCom->isConnected();
@@ -80,7 +80,7 @@ void M2N::acceptSlavesConnection(
     pair.second->acceptConnection(acceptorName, requesterName);
     _areSlavesConnected = _areSlavesConnected && pair.second->isConnected();
   }
-  P_assertion(_areSlavesConnected);
+  P_ASSERT(_areSlavesConnected);
 }
 
 void M2N::requestSlavesConnection(
@@ -95,7 +95,7 @@ void M2N::requestSlavesConnection(
     pair.second->requestConnection(acceptorName, requesterName);
     _areSlavesConnected = _areSlavesConnected && pair.second->isConnected();
   }
-  P_assertion(_areSlavesConnected);
+  P_ASSERT(_areSlavesConnected);
 }
 
 void M2N::prepareEstablishment()
@@ -126,13 +126,13 @@ void M2N::closeConnection()
       pair.second->closeConnection();
       _areSlavesConnected = _areSlavesConnected || pair.second->isConnected();
     }
-    P_assertion(not _areSlavesConnected);
+    P_ASSERT(not _areSlavesConnected);
   }
 }
 
 com::PtrCommunication M2N::getMasterCommunication()
 {
-  P_assertion(not utils::MasterSlave::isSlave());
+  P_ASSERT(not utils::MasterSlave::isSlave());
   return _masterCom; /// @todo maybe it would be a nicer design to not offer this
 }
 
@@ -149,9 +149,9 @@ void M2N::send(
     int     valueDimension)
 {
   if (utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster()) {
-    P_assertion(_areSlavesConnected);
-    P_assertion(_distComs.find(meshID) != _distComs.end());
-    P_assertion(_distComs[meshID].get() != nullptr);
+    P_ASSERT(_areSlavesConnected);
+    P_ASSERT(_distComs.find(meshID) != _distComs.end());
+    P_ASSERT(_distComs[meshID].get() != nullptr);
 
     if (precice::syncMode) {
       if (not utils::MasterSlave::isSlave()) {
@@ -164,7 +164,7 @@ void M2N::send(
     Event e("m2n.sendData", precice::syncMode);
     _distComs[meshID]->send(itemsToSend, size, valueDimension);
   } else { //coupling mode
-    P_assertion(_isMasterConnected);
+    P_ASSERT(_isMasterConnected);
     _masterCom->send(itemsToSend, size, 0);
   }
 }
@@ -191,9 +191,9 @@ void M2N::receive(double *itemsToReceive,
                   int     valueDimension)
 {
   if (utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster()) {
-    P_assertion(_areSlavesConnected);
-    P_assertion(_distComs.find(meshID) != _distComs.end());
-    P_assertion(_distComs[meshID].get() != nullptr);
+    P_ASSERT(_areSlavesConnected);
+    P_ASSERT(_distComs.find(meshID) != _distComs.end());
+    P_ASSERT(_distComs[meshID].get() != nullptr);
 
     if (precice::syncMode) {
       if (not utils::MasterSlave::isSlave()) {
@@ -207,7 +207,7 @@ void M2N::receive(double *itemsToReceive,
     Event e("m2n.receiveData", precice::syncMode);
     _distComs[meshID]->receive(itemsToReceive, size, valueDimension);
   } else { //coupling mode
-    P_assertion(_isMasterConnected);
+    P_ASSERT(_isMasterConnected);
     _masterCom->receive(itemsToReceive, size, 0);
   }
 }

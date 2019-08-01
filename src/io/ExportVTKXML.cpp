@@ -34,7 +34,7 @@ void ExportVTKXML::doExport(
     mesh::Mesh &       mesh)
 {
   P_TRACE(name, location, mesh.getName());
-  P_assertion(utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster());
+  P_ASSERT(utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster());
   processDataNamesAndDimensions(mesh);
   if (not location.empty())
     boost::filesystem::create_directories(location);
@@ -56,7 +56,7 @@ void ExportVTKXML::processDataNamesAndDimensions(mesh::Mesh const &mesh)
   }
   for (mesh::PtrData data : mesh.data()) {
     int dataDimensions = data->getDimensions();
-    P_assertion(dataDimensions >= 1);
+    P_ASSERT(dataDimensions >= 1);
     std::string dataName = data->getName();
     if (dataDimensions == 1) {
       _scalarDataNames.push_back(dataName);

@@ -91,7 +91,7 @@ inline Vertex& Edge:: vertex
 (
   int i )
 {
-  P_assertion( (i == 0) || (i == 1), i );
+  P_ASSERT( (i == 0) || (i == 1), i );
   return *_vertices[i];
 }
 
@@ -99,7 +99,7 @@ inline const Vertex& Edge:: vertex
 (
   int i ) const
 {
-  P_assertion( (i==0) || (i==1), i );
+  P_ASSERT( (i==0) || (i==1), i );
   return *_vertices[i];
 }
 
@@ -113,7 +113,7 @@ void Edge:: setNormal
 (
   const VECTOR_T& normal )
 {
-  P_assertion( normal.size() == _vertices[0]->getDimensions(), normal,
+  P_ASSERT( normal.size() == _vertices[0]->getDimensions(), normal,
                _vertices[0]->getDimensions() );
   _normal = normal;
 }

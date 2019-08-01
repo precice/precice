@@ -167,7 +167,7 @@ void precicef_action_required_
   int         lengthAction )
 {
   P_CHECK(impl != nullptr,errormsg);
-  //P_assertion(lengthAction > 1);
+  //P_ASSERT(lengthAction > 1);
   //std::cout << "lengthAction: " << lengthAction << '\n';
   //std::cout << "Action:";
   //for (int i=0; i < lengthAction; i++){
@@ -176,7 +176,7 @@ void precicef_action_required_
   //std::cout << '\n';
   int strippedLength = precice::impl::strippedLength(action, lengthAction);
   //std::cout << "strippedLength: " << strippedLength << '\n';
-  //P_assertion(strippedLength > 1);
+  //P_ASSERT(strippedLength > 1);
   string stringAction(action, strippedLength);
   if (impl->isActionRequired(stringAction)){
     *isRequired = 1;
@@ -479,7 +479,7 @@ void precicef_action_write_iter_checkp_
   int lengthNameAction )
 {
   const std::string& name = precice::constants::actionWriteIterationCheckpoint();
-  P_assertion(name.size() < (size_t) lengthNameAction, name.size(), lengthNameAction);
+  P_ASSERT(name.size() < (size_t) lengthNameAction, name.size(), lengthNameAction);
   for (size_t i=0; i < name.size(); i++){
     nameAction[i] = name[i];
   }
@@ -490,7 +490,7 @@ void precicef_action_write_initial_data_(
   int lengthNameAction )
 {
   const std::string& name = precice::constants::actionWriteInitialData();
-  P_assertion(name.size() < (size_t) lengthNameAction, name.size(), lengthNameAction);
+  P_ASSERT(name.size() < (size_t) lengthNameAction, name.size(), lengthNameAction);
   for (size_t i=0; i < name.size(); i++){
     nameAction[i] = name[i];
   }
@@ -502,7 +502,7 @@ void precicef_action_read_iter_checkp_
   int lengthNameAction )
 {
   const std::string& name = precice::constants::actionReadIterationCheckpoint();
-  P_assertion(name.size() < (size_t) lengthNameAction, name.size(), lengthNameAction);
+  P_ASSERT(name.size() < (size_t) lengthNameAction, name.size(), lengthNameAction);
   for (size_t i=0; i < name.size(); i++){
     nameAction[i] = name[i];
   }

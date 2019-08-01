@@ -24,8 +24,8 @@ WatchPoint:: WatchPoint
   _mesh(std::move(meshToWatch)),
   _txtWriter ( exportFilename )
 {
-  P_assertion( _mesh );
-  P_assertion( _point.size() == _mesh->getDimensions(), _point.size(),
+  P_ASSERT( _mesh );
+  P_ASSERT( _point.size() == _mesh->getDimensions(), _point.size(),
                _mesh->getDimensions() );
 }
 
@@ -127,7 +127,7 @@ void WatchPoint:: exportPointData
   double time )
 {
   if(_isClosest){
-    P_assertion(_vertices.size() == _weights.size());
+    P_ASSERT(_vertices.size() == _weights.size());
     _txtWriter.writeData("Time", time);
     // Export watch point coordinates
     Eigen::VectorXd coords = Eigen::VectorXd::Constant(_mesh->getDimensions(), 0.0);

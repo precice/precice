@@ -98,7 +98,7 @@ private:
       P_CHECK(not (xDead && yDead && zDead), "You cannot choose all axis to be dead for a RBF mapping");
     }
     else {
-      P_assertion(false);
+      P_ASSERT(false);
     }
   }
 
@@ -134,9 +134,9 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
   P_CHECK(not utils::MasterSlave::isSlave() && not utils::MasterSlave::isMaster(),
         "RBF mapping is not supported for a participant in master mode, use petrbf instead");
 
-  P_assertion(input()->getDimensions() == output()->getDimensions(),
+  P_ASSERT(input()->getDimensions() == output()->getDimensions(),
              input()->getDimensions(), output()->getDimensions());
-  P_assertion(getDimensions() == output()->getDimensions(),
+  P_ASSERT(getDimensions() == output()->getDimensions(),
              getDimensions(), output()->getDimensions());
   int dimensions = getDimensions();
   mesh::PtrMesh inMesh;
@@ -156,7 +156,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
     if (_deadAxis[d]) deadDimensions +=1;
   }
   int polyparams = 1 + dimensions - deadDimensions;
-  P_assertion(inputSize >= 1 + polyparams, inputSize);
+  P_ASSERT(inputSize >= 1 + polyparams, inputSize);
   int n = inputSize + polyparams; // Add linear polynom degrees
   Eigen::MatrixXd matrixCLU(n, n);
   matrixCLU.setZero();
@@ -234,16 +234,16 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
 
   precice::utils::Event e("map.rbf.mapData.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
 
-  P_assertion(_hasComputedMapping);
-  P_assertion(input()->getDimensions() == output()->getDimensions(),
+  P_ASSERT(_hasComputedMapping);
+  P_ASSERT(input()->getDimensions() == output()->getDimensions(),
              input()->getDimensions(), output()->getDimensions());
-  P_assertion(getDimensions() == output()->getDimensions(),
+  P_ASSERT(getDimensions() == output()->getDimensions(),
              getDimensions(), output()->getDimensions());
 
   Eigen::VectorXd& inValues = input()->data(inputDataID)->values();
   Eigen::VectorXd& outValues = output()->data(outputDataID)->values();
   int valueDim = input()->data(inputDataID)->getDimensions();
-  P_assertion(valueDim == output()->data(outputDataID)->getDimensions(),
+  P_ASSERT(valueDim == output()->data(outputDataID)->getDimensions(),
              valueDim, output()->data(outputDataID)->getDimensions());
   int deadDimensions = 0;
   for (int d = 0; d < getDimensions(); d++) {
@@ -313,7 +313,7 @@ Eigen::VectorXd RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::reduceVector
     if (_deadAxis[d])
       deadDimensions +=1;
   }
-  P_assertion(getDimensions()>deadDimensions, getDimensions(), deadDimensions);
+  P_ASSERT(getDimensions()>deadDimensions, getDimensions(), deadDimensions);
   Eigen::VectorXd reducedVector(getDimensions()-deadDimensions);
   int k = 0;
   for (int d = 0; d < getDimensions(); d++) {

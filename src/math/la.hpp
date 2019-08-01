@@ -16,9 +16,9 @@ void sumSubvectors (const Eigen::MatrixBase<DerivedA>& vector,
 {
   int vectorSize = vector.size();
   int subvectorSize = result.size();
-  P_assertion(vectorSize > 0);
-  P_assertion(subvectorSize > 0);
-  P_assertion(vectorSize % subvectorSize == 0, vectorSize, subvectorSize);
+  P_ASSERT(vectorSize > 0);
+  P_ASSERT(subvectorSize > 0);
+  P_ASSERT(vectorSize % subvectorSize == 0, vectorSize, subvectorSize);
 
   result.setZero();
   

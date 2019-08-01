@@ -40,7 +40,7 @@ void ConstantRelaxationPostProcessing::initialize(DataMap &cplData)
   for (DataMap::value_type &pair : cplData) {
     int cols = pair.second->oldValues.cols();
     if (cols < 1) {
-      P_assertion(pair.second->values->size() > 0, pair.first);
+      P_ASSERT(pair.second->values->size() > 0, pair.first);
       utils::append(pair.second->oldValues, (Eigen::VectorXd) Eigen::VectorXd::Zero(pair.second->values->size()));
     }
   }

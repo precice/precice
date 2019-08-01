@@ -23,7 +23,7 @@ void MasterSlave:: configure(int rank, int size)
   P_CHECK(size>=2, "You cannot use a master with a serial participant.");
   _rank = rank;
   _size = size;
-  P_assertion(_rank != -1 && _size != -1);
+  P_ASSERT(_rank != -1 && _size != -1);
   _isMaster = (rank==0);
   _isSlave = (rank!=0);
   P_DEBUG("isSlave: " << _isSlave <<", isMaster: " << _isMaster);
@@ -58,8 +58,8 @@ double MasterSlave:: l2norm(const Eigen::VectorXd& vec)
     return vec.norm();
   }
 
-  P_assertion(_communication.get() != nullptr);
-  P_assertion(_communication->isConnected());
+  P_ASSERT(_communication.get() != nullptr);
+  P_ASSERT(_communication->isConnected());
   double localSum2 = 0.0;
   double globalSum2 = 0.0;
 
@@ -97,9 +97,9 @@ double MasterSlave:: dot(const Eigen::VectorXd& vec1, const Eigen::VectorXd& vec
     return vec1.dot(vec2);
   }
 
-  P_assertion(_communication.get() != nullptr);
-  P_assertion(_communication->isConnected());
-  P_assertion(vec1.size()==vec2.size(), vec1.size(), vec2.size());
+  P_ASSERT(_communication.get() != nullptr);
+  P_ASSERT(_communication->isConnected());
+  P_ASSERT(vec1.size()==vec2.size(), vec1.size(), vec2.size());
   double localSum = 0.0;
   double globalSum = 0.0;
 
@@ -148,8 +148,8 @@ MasterSlave::reduceSum(double* sendData, double* rcvData, int size) {
     return;
   }
 
-  P_assertion(_communication.get() != nullptr);
-  P_assertion(_communication->isConnected());
+  P_ASSERT(_communication.get() != nullptr);
+  P_ASSERT(_communication->isConnected());
 
   if (_isSlave) {
     // send local result to master
@@ -170,8 +170,8 @@ MasterSlave::reduceSum(int& sendData, int& rcvData, int size) {
     return;
   }
 
-  P_assertion(_communication.get() != nullptr);
-  P_assertion(_communication->isConnected());
+  P_ASSERT(_communication.get() != nullptr);
+  P_ASSERT(_communication->isConnected());
 
   if (_isSlave) {
     // send local result to master
@@ -192,8 +192,8 @@ MasterSlave::allreduceSum(double* sendData, double* rcvData, int size) {
     return;
   }
 
-  P_assertion(_communication.get() != nullptr);
-  P_assertion(_communication->isConnected());
+  P_ASSERT(_communication.get() != nullptr);
+  P_ASSERT(_communication->isConnected());
 
   if (_isSlave) {
     // send local result to master, receive reduced result from master
@@ -214,8 +214,8 @@ MasterSlave::allreduceSum(double& sendData, double& rcvData, int size) {
     return;
   }
 
-  P_assertion(_communication.get() != nullptr);
-  P_assertion(_communication->isConnected());
+  P_ASSERT(_communication.get() != nullptr);
+  P_ASSERT(_communication->isConnected());
 
   if (_isSlave) {
     // send local result to master, receive reduced result from master
@@ -236,8 +236,8 @@ MasterSlave::allreduceSum(int& sendData, int& rcvData, int size) {
     return;
   }
 
-  P_assertion(_communication.get() != nullptr);
-  P_assertion(_communication->isConnected());
+  P_ASSERT(_communication.get() != nullptr);
+  P_ASSERT(_communication->isConnected());
 
   if (_isSlave) {
     // send local result to master, receive reduced result from master
@@ -258,8 +258,8 @@ MasterSlave::broadcast(bool& value) {
     return;
   }
 
-  P_assertion(_communication.get() != nullptr);
-  P_assertion(_communication->isConnected());
+  P_ASSERT(_communication.get() != nullptr);
+  P_ASSERT(_communication->isConnected());
 
   if (_isMaster) {
     // Broadcast (send) value.
@@ -281,8 +281,8 @@ MasterSlave::broadcast(double& value) {
     return;
   }
 
-  P_assertion(_communication.get() != nullptr);
-  P_assertion(_communication->isConnected());
+  P_ASSERT(_communication.get() != nullptr);
+  P_ASSERT(_communication->isConnected());
 
   if (_isMaster) {
     // Broadcast (send) value.
@@ -303,8 +303,8 @@ MasterSlave::broadcast(double* values, int size) {
     return;
   }
 
-  P_assertion(_communication.get() != nullptr);
-  P_assertion(_communication->isConnected());
+  P_ASSERT(_communication.get() != nullptr);
+  P_ASSERT(_communication->isConnected());
 
   if (_isMaster) {
     // Broadcast (send) value.

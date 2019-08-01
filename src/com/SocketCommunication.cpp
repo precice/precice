@@ -41,7 +41,7 @@ SocketCommunication::~SocketCommunication()
 size_t SocketCommunication::getRemoteCommunicatorSize()
 {
   P_TRACE();
-  P_assertion(isConnected());
+  P_ASSERT(isConnected());
   return _sockets.size();
 }
 
@@ -51,7 +51,7 @@ void SocketCommunication::acceptConnection(std::string const &acceptorName,
 {
   P_TRACE(acceptorName, requesterName);
 
-  P_assertion(not isConnected());
+  P_ASSERT(not isConnected());
 
   std::string address;
 
@@ -126,7 +126,7 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorNa
 {
   P_TRACE(acceptorName, requesterName, acceptorRank, requesterCommunicatorSize);
   P_CHECK(requesterCommunicatorSize > 0, "Requester communicator size has to be > 0!");
-  P_assertion(not isConnected());
+  P_ASSERT(not isConnected());
 
   std::string address;
 
@@ -181,7 +181,7 @@ void SocketCommunication::requestConnection(std::string const &acceptorName,
                                             int                requesterCommunicatorSize)
 {
   P_TRACE(acceptorName, requesterName);
-  P_assertion(not isConnected());
+  P_ASSERT(not isConnected());
 
   ConnectionInfoReader conInfo(acceptorName, requesterName, _addressDirectory);
   std::string const address = conInfo.read();
@@ -240,7 +240,7 @@ void SocketCommunication::requestConnectionAsClient(std::string      const &acce
                                                     
 {
   P_TRACE(acceptorName, requesterName, acceptorRanks, requesterRank);
-  P_assertion(not isConnected());
+  P_ASSERT(not isConnected());
   
   for (auto const & acceptorRank : acceptorRanks) {
     _isConnected = false;
@@ -303,7 +303,7 @@ void SocketCommunication::closeConnection()
   }
 
   for (auto &socket : _sockets) {
-    P_assertion(socket.second->is_open());
+    P_ASSERT(socket.second->is_open());
     socket.second->shutdown(Socket::shutdown_both);
     socket.second->close();
   }
@@ -317,8 +317,8 @@ void SocketCommunication::send(std::string const &itemToSend, int rankReceiver)
 
   rankReceiver = rankReceiver - _rankOffset;
 
-  P_assertion(rankReceiver >= 0, rankReceiver);
-  P_assertion(isConnected());
+  P_ASSERT(rankReceiver >= 0, rankReceiver);
+  P_ASSERT(isConnected());
 
   size_t size = itemToSend.size() + 1;
   try {
@@ -335,8 +335,8 @@ void SocketCommunication::send(const int *itemsToSend, int size, int rankReceive
 
   rankReceiver = rankReceiver - _rankOffset;
 
-  P_assertion(rankReceiver >= 0, rankReceiver);
-  P_assertion(isConnected());
+  P_ASSERT(rankReceiver >= 0, rankReceiver);
+  P_ASSERT(isConnected());
 
   try {
     asio::write(*_sockets[rankReceiver], asio::buffer(itemsToSend, size * sizeof(int)));
@@ -351,8 +351,8 @@ PtrRequest SocketCommunication::aSend(const int *itemsToSend, int size, int rank
 
   rankReceiver = rankReceiver - _rankOffset;
 
-  P_assertion(rankReceiver >= 0, rankReceiver);
-  P_assertion(isConnected());
+  P_ASSERT(rankReceiver >= 0, rankReceiver);
+  P_ASSERT(isConnected());
 
   PtrRequest request(new SocketRequest);
 
@@ -370,8 +370,8 @@ void SocketCommunication::send(const double *itemsToSend, int size, int rankRece
 
   rankReceiver = rankReceiver - _rankOffset;
 
-  P_assertion(rankReceiver >= 0, rankReceiver);
-  P_assertion(isConnected());
+  P_ASSERT(rankReceiver >= 0, rankReceiver);
+  P_ASSERT(isConnected());
 
   try {
     asio::write(*_sockets[rankReceiver], asio::buffer(itemsToSend, size * sizeof(double)));
@@ -386,8 +386,8 @@ PtrRequest SocketCommunication::aSend(const double *itemsToSend, int size, int r
 
   rankReceiver = rankReceiver - _rankOffset;
 
-  P_assertion(rankReceiver >= 0, rankReceiver);
-  P_assertion(isConnected());
+  P_ASSERT(rankReceiver >= 0, rankReceiver);
+  P_ASSERT(isConnected());
 
   PtrRequest request(new SocketRequest);
 
@@ -405,8 +405,8 @@ PtrRequest SocketCommunication::aSend(std::vector<double> const & itemsToSend, i
 
   rankReceiver = rankReceiver - _rankOffset;
 
-  P_assertion(rankReceiver >= 0, rankReceiver);
-  P_assertion(isConnected());
+  P_ASSERT(rankReceiver >= 0, rankReceiver);
+  P_ASSERT(isConnected());
 
   PtrRequest request(new SocketRequest);
 
@@ -425,8 +425,8 @@ void SocketCommunication::send(double itemToSend, int rankReceiver)
 
   rankReceiver = rankReceiver - _rankOffset;
 
-  P_assertion(rankReceiver >= 0, rankReceiver);
-  P_assertion(isConnected());
+  P_ASSERT(rankReceiver >= 0, rankReceiver);
+  P_ASSERT(isConnected());
 
   try {
     asio::write(*_sockets[rankReceiver], asio::buffer(&itemToSend, sizeof(double)));
@@ -446,8 +446,8 @@ void SocketCommunication::send(int itemToSend, int rankReceiver)
 
   rankReceiver = rankReceiver - _rankOffset;
 
-  P_assertion(rankReceiver >= 0, rankReceiver)
-  P_assertion(isConnected());
+  P_ASSERT(rankReceiver >= 0, rankReceiver)
+  P_ASSERT(isConnected());
 
   try {
     asio::write(*_sockets[rankReceiver], asio::buffer(&itemToSend, sizeof(int)));
@@ -467,8 +467,8 @@ void SocketCommunication::send(bool itemToSend, int rankReceiver)
 
   rankReceiver = rankReceiver - _rankOffset;
 
-  P_assertion(rankReceiver >= 0, rankReceiver);
-  P_assertion(isConnected());
+  P_ASSERT(rankReceiver >= 0, rankReceiver);
+  P_ASSERT(isConnected());
 
   try {
     asio::write(*_sockets[rankReceiver], asio::buffer(&itemToSend, sizeof(bool)));
@@ -483,8 +483,8 @@ PtrRequest SocketCommunication::aSend(const bool & itemToSend, int rankReceiver)
 
   rankReceiver = rankReceiver - _rankOffset;
 
-  P_assertion(rankReceiver >= 0, rankReceiver);
-  P_assertion(isConnected());
+  P_ASSERT(rankReceiver >= 0, rankReceiver);
+  P_ASSERT(isConnected());
 
   PtrRequest request(new SocketRequest);
 
@@ -502,8 +502,8 @@ void SocketCommunication::receive(std::string &itemToReceive, int rankSender)
 
   rankSender = rankSender - _rankOffset;
 
-  P_assertion(rankSender >= 0, rankSender);
-  P_assertion(isConnected());
+  P_ASSERT(rankSender >= 0, rankSender);
+  P_ASSERT(isConnected());
 
   size_t size = 0;
 
@@ -523,8 +523,8 @@ void SocketCommunication::receive(int *itemsToReceive, int size, int rankSender)
 
   rankSender = rankSender - _rankOffset;
 
-  P_assertion(rankSender >= 0, rankSender);
-  P_assertion(isConnected());
+  P_ASSERT(rankSender >= 0, rankSender);
+  P_ASSERT(isConnected());
 
   try {
     asio::read(*_sockets[rankSender], asio::buffer(itemsToReceive, size * sizeof(int)));
@@ -539,8 +539,8 @@ void SocketCommunication::receive(double *itemsToReceive, int size, int rankSend
 
   rankSender = rankSender - _rankOffset;
 
-  P_assertion(rankSender >= 0, rankSender);
-  P_assertion(isConnected());
+  P_ASSERT(rankSender >= 0, rankSender);
+  P_ASSERT(isConnected());
 
   try {
     asio::read(*_sockets[rankSender], asio::buffer(itemsToReceive, size * sizeof(double)));
@@ -557,8 +557,8 @@ PtrRequest SocketCommunication::aReceive(double *itemsToReceive,
 
   rankSender = rankSender - _rankOffset;
 
-  P_assertion(rankSender >= 0, rankSender);
-  P_assertion(isConnected());
+  P_ASSERT(rankSender >= 0, rankSender);
+  P_ASSERT(isConnected());
 
   PtrRequest request(new SocketRequest);
 
@@ -581,8 +581,8 @@ PtrRequest SocketCommunication::aReceive(std::vector<double> & itemsToReceive, i
 
   rankSender = rankSender - _rankOffset;
 
-  P_assertion(rankSender >= 0, rankSender);
-  P_assertion(isConnected());
+  P_ASSERT(rankSender >= 0, rankSender);
+  P_ASSERT(isConnected());
 
   PtrRequest request(new SocketRequest);
 
@@ -605,8 +605,8 @@ void SocketCommunication::receive(double &itemToReceive, int rankSender)
 
   rankSender = rankSender - _rankOffset;
 
-  P_assertion(rankSender >= 0, rankSender);
-  P_assertion(isConnected());
+  P_ASSERT(rankSender >= 0, rankSender);
+  P_ASSERT(isConnected());
 
   try {
     asio::read(*_sockets[rankSender], asio::buffer(&itemToReceive, sizeof(double)));
@@ -626,8 +626,8 @@ void SocketCommunication::receive(int &itemToReceive, int rankSender)
 
   rankSender = rankSender - _rankOffset;
 
-  P_assertion(rankSender >= 0, rankSender);
-  P_assertion(isConnected());
+  P_ASSERT(rankSender >= 0, rankSender);
+  P_ASSERT(isConnected());
 
   try {
     asio::read(*_sockets[rankSender], asio::buffer(&itemToReceive, sizeof(int)));
@@ -642,9 +642,9 @@ PtrRequest SocketCommunication::aReceive(int &itemToReceive, int rankSender)
 
   rankSender = rankSender - _rankOffset;
 
-  P_assertion((rankSender >= 0) && (rankSender < (int) _sockets.size()),
+  P_ASSERT((rankSender >= 0) && (rankSender < (int) _sockets.size()),
             rankSender, _sockets.size());
-  P_assertion(isConnected());
+  P_ASSERT(isConnected());
 
   PtrRequest request(new SocketRequest);
 
@@ -667,8 +667,8 @@ void SocketCommunication::receive(bool &itemToReceive, int rankSender)
 
   rankSender = rankSender - _rankOffset;
 
-  P_assertion(rankSender >= 0, rankSender);
-  P_assertion(isConnected());
+  P_ASSERT(rankSender >= 0, rankSender);
+  P_ASSERT(isConnected());
 
   try {
     asio::read(*_sockets[rankSender], asio::buffer(&itemToReceive, sizeof(bool)));
@@ -683,8 +683,8 @@ PtrRequest SocketCommunication::aReceive(bool &itemToReceive, int rankSender)
 
   rankSender = rankSender - _rankOffset;
 
-  P_assertion(rankSender >= 0, rankSender);
-  P_assertion(isConnected());
+  P_ASSERT(rankSender >= 0, rankSender);
+  P_ASSERT(isConnected());
 
   PtrRequest request(new SocketRequest);
 
@@ -707,8 +707,8 @@ void SocketCommunication::send(std::vector<int> const &v, int rankReceiver)
 
   rankReceiver = rankReceiver - _rankOffset;
 
-  P_assertion(rankReceiver >= 0, rankReceiver);
-  P_assertion(isConnected());
+  P_ASSERT(rankReceiver >= 0, rankReceiver);
+  P_ASSERT(isConnected());
 
   size_t size = v.size();
   try {
@@ -725,8 +725,8 @@ void SocketCommunication::receive(std::vector<int> &v, int rankSender)
 
   rankSender = rankSender - _rankOffset;
 
-  P_assertion(rankSender >= 0, rankSender);
-  P_assertion(isConnected());
+  P_ASSERT(rankSender >= 0, rankSender);
+  P_ASSERT(isConnected());
 
   size_t size = 0;
 
@@ -745,8 +745,8 @@ void SocketCommunication::send(std::vector<double> const &v, int rankReceiver)
 
   rankReceiver = rankReceiver - _rankOffset;
 
-  P_assertion(rankReceiver >= 0, rankReceiver);
-  P_assertion(isConnected());
+  P_ASSERT(rankReceiver >= 0, rankReceiver);
+  P_ASSERT(isConnected());
 
   size_t size = v.size();
   try {
@@ -763,8 +763,8 @@ void SocketCommunication::receive(std::vector<double> &v, int rankSender)
 
   rankSender = rankSender - _rankOffset;
 
-  P_assertion(rankSender >= 0, rankSender);
-  P_assertion(isConnected());
+  P_ASSERT(rankSender >= 0, rankSender);
+  P_ASSERT(isConnected());
 
   size_t size = 0;
 
@@ -787,14 +787,14 @@ std::string SocketCommunication::getIpAddress()
 #else
   int querySocket = socket(AF_INET, SOCK_STREAM, 0);
 
-  P_assertion(querySocket >= 0);
+  P_ASSERT(querySocket >= 0);
 
   P_DEBUG("Looking for IP address of network \"" << _networkName << "\"");
 
   struct ifreq         request;
   struct if_nameindex *nameInterface = if_nameindex();
 
-  P_assertion(nameInterface);
+  P_ASSERT(nameInterface);
 
   struct if_nameindex *itNameInterface = nameInterface;
 

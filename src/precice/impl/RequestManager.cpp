@@ -56,7 +56,7 @@ void RequestManager:: handleRequests()
     case REQUEST_INITIALIZE:
       P_DEBUG("Request initialize by rank " << rankSender);
       clientCounter++;
-      P_assertion(clientCounter <= clientCommSize, clientCounter, clientCommSize);
+      P_ASSERT(clientCounter <= clientCommSize, clientCounter, clientCommSize);
       clientRanks.push_front(rankSender);
       if (clientCounter == clientCommSize){
         handleRequestInitialze(clientRanks);
@@ -66,7 +66,7 @@ void RequestManager:: handleRequests()
     case REQUEST_INITIALIZE_DATA:
       P_DEBUG("Request initialize data by rank " << rankSender);
       clientCounter++;
-      P_assertion(clientCounter <= clientCommSize, clientCounter, clientCommSize);
+      P_ASSERT(clientCounter <= clientCommSize, clientCounter, clientCommSize);
       clientRanks.push_front(rankSender);
       if (clientCounter == clientCommSize){
         handleRequestInitialzeData(clientRanks);
@@ -76,7 +76,7 @@ void RequestManager:: handleRequests()
     case REQUEST_ADVANCE:
       P_DEBUG("Request advance by rank " << rankSender);
       clientCounter++;
-      P_assertion(clientCounter <= clientCommSize, clientCounter, clientCommSize);
+      P_ASSERT(clientCounter <= clientCommSize, clientCounter, clientCommSize);
       clientRanks.push_front(rankSender);
       if (clientCounter == clientCommSize){
         handleRequestAdvance(clientRanks);
@@ -86,7 +86,7 @@ void RequestManager:: handleRequests()
     case REQUEST_FINALIZE:
       P_DEBUG("Request finalize by rank " << rankSender);
       clientCounter++;
-      P_assertion(clientCounter <= clientCommSize, clientCounter, clientCommSize);
+      P_ASSERT(clientCounter <= clientCommSize, clientCounter, clientCommSize);
       clientRanks.push_front(rankSender);
       if (clientCounter == clientCommSize){
         handleRequestFinalize();
@@ -177,7 +177,7 @@ void RequestManager:: handleRequests()
     case REQUEST_MAP_WRITE_DATA_FROM:
       P_DEBUG("Request map written data by rank " << rankSender);
       clientCounter++;
-      P_assertion(clientCounter <= clientCommSize, clientCounter, clientCommSize);
+      P_ASSERT(clientCounter <= clientCommSize, clientCounter, clientCommSize);
       clientRanks.push_front(rankSender);
       if (clientCounter == clientCommSize){
         handleRequestMapWriteDataFrom(clientRanks);
@@ -187,7 +187,7 @@ void RequestManager:: handleRequests()
     case REQUEST_MAP_READ_DATA_TO:
       P_DEBUG("Request map read data by rank " << rankSender);
       clientCounter++;
-      P_assertion(clientCounter <= clientCommSize, clientCounter, clientCommSize);
+      P_ASSERT(clientCounter <= clientCommSize, clientCounter, clientCommSize);
       clientRanks.push_front(rankSender);
       if (clientCounter == clientCommSize){
         handleRequestMapReadDataTo(clientRanks);
@@ -211,7 +211,7 @@ void RequestManager:: handleRequests()
       singleRequest = false;
     }
     else if(collectiveRequest){
-      P_assertion(clientRanks.size()== static_cast<size_t>(clientCommSize));
+      P_ASSERT(clientRanks.size()== static_cast<size_t>(clientCommSize));
       for(int rank : clientRanks){
         requests[rank] = _com->aReceive(requestIDs[rank], rank);
       }
@@ -677,7 +677,7 @@ void RequestManager:: handleRequestGetMeshVertices
   int size = -1;
   _com->receive(meshID, rankSender);
   _com->receive(size, rankSender);
-  P_assertion(size > 0, size);
+  P_ASSERT(size > 0, size);
   std::vector<int> ids(size);
   std::vector<double> positions(static_cast<size_t>(size)*_interface.getDimensions());
   _com->receive(ids, rankSender);
@@ -694,7 +694,7 @@ void RequestManager:: handleRequestGetMeshVertexIDsFromPositions
   int size = -1;
   _com->receive(meshID, rankSender);
   _com->receive(size, rankSender);
-  P_assertion(size > 0, size);
+  P_ASSERT(size > 0, size);
   std::vector<int> ids(size);
   std::vector<double> positions(static_cast<size_t>(size)*_interface.getDimensions());
   _com->receive(positions, rankSender);

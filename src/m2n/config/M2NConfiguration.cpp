@@ -190,17 +190,17 @@ void M2NConfiguration::xmlTagCallback(xml::XMLTag &tag)
 #endif
     }
 
-    P_assertion(com.get() != nullptr);
+    P_ASSERT(com.get() != nullptr);
 
     DistributedComFactory::SharedPointer distrFactory;
     if (tag.getName() == "mpi-single" || distrType == VALUE_GATHER_SCATTER) {
-      P_assertion(distrType == VALUE_GATHER_SCATTER);
+      P_ASSERT(distrType == VALUE_GATHER_SCATTER);
       distrFactory = std::make_shared<GatherScatterComFactory>(com);
     } else if (distrType == VALUE_POINT_TO_POINT) {
-      P_assertion(tag.getName() == "mpi" or tag.getName() == "mpi-singleports" or tag.getName() == "sockets");
+      P_ASSERT(tag.getName() == "mpi" or tag.getName() == "mpi-singleports" or tag.getName() == "sockets");
       distrFactory = std::make_shared<PointToPointComFactory>(comFactory);
     }
-    P_assertion(distrFactory.get() != nullptr);
+    P_ASSERT(distrFactory.get() != nullptr);
 
     auto m2n = std::make_shared<m2n::M2N>(com, distrFactory);
     _m2ns.push_back(std::make_tuple(m2n, from, to));

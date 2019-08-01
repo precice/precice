@@ -79,11 +79,11 @@ void Participant:: useMesh
 {
   P_TRACE(_name,  mesh->getName(), mesh->getID() );
   checkDuplicatedUse(mesh);
-  P_assertion( mesh->getID() < (int)_meshContexts.size() );
+  P_ASSERT( mesh->getID() < (int)_meshContexts.size() );
   auto context = new MeshContext(mesh->getDimensions());
   context->mesh = mesh;
   context->localOffset = localOffset;
-  P_assertion( mesh->getDimensions() == context->localOffset.size(),
+  P_ASSERT( mesh->getDimensions() == context->localOffset.size(),
                mesh->getDimensions(), context->localOffset.size() );
   context->receiveMeshFrom = fromParticipant;
   context->safetyFactor = safetyFactor;
@@ -105,7 +105,7 @@ void Participant:: addWriteData
   const mesh::PtrMesh& mesh )
 {
   checkDuplicatedData ( data );
-  P_assertion( data->getID() < (int)_dataContexts.size() );
+  P_ASSERT( data->getID() < (int)_dataContexts.size() );
   auto context = new DataContext ();
   context->fromData = data;
   context->mesh = mesh;
@@ -121,7 +121,7 @@ void Participant:: addReadData
   const mesh::PtrMesh& mesh )
 {
   checkDuplicatedData ( data );
-  P_assertion( data->getID() < (int)_dataContexts.size() );
+  P_ASSERT( data->getID() < (int)_dataContexts.size() );
   auto context = new DataContext ();
   context->toData = data;
   context->mesh = mesh;
@@ -159,8 +159,8 @@ const DataContext& Participant:: dataContext
 (
   int dataID ) const
 {
-  P_assertion( (dataID >= 0) && (dataID < (int)_dataContexts.size()) );
-  P_assertion( _dataContexts[dataID] != nullptr );
+  P_ASSERT( (dataID >= 0) && (dataID < (int)_dataContexts.size()) );
+  P_ASSERT( _dataContexts[dataID] != nullptr );
   return *_dataContexts[dataID];
 }
 
@@ -169,8 +169,8 @@ DataContext& Participant:: dataContext
   int dataID )
 {
   P_TRACE(dataID, _dataContexts.size() );
-  P_assertion( (dataID >= 0) && (dataID < (int)_dataContexts.size()) );
-  P_assertion( _dataContexts[dataID] != nullptr );
+  P_ASSERT( (dataID >= 0) && (dataID < (int)_dataContexts.size()) );
+  P_ASSERT( _dataContexts[dataID] != nullptr );
   return *_dataContexts[dataID];
 }
 
@@ -198,7 +198,7 @@ bool Participant:: isMeshUsed
 (
   int meshID ) const
 {
-  P_assertion( (meshID >= 0) && (meshID < (int)_meshContexts.size()) );
+  P_ASSERT( (meshID >= 0) && (meshID < (int)_meshContexts.size()) );
   return _meshContexts[meshID] != nullptr;
 }
 
@@ -206,7 +206,7 @@ bool Participant:: isDataUsed
 (
   int dataID ) const
 {
-  P_assertion( (dataID >= 0) && (dataID < (int)_dataContexts.size()), dataID, (int)_dataContexts.size() );
+  P_ASSERT( (dataID >= 0) && (dataID < (int)_dataContexts.size()), dataID, (int)_dataContexts.size() );
   return _dataContexts[dataID] != nullptr;
 }
 
@@ -232,8 +232,8 @@ const MeshContext& Participant:: meshContext
 (
   int meshID ) const
 {
-  P_assertion((meshID >= 0) && (meshID < (int)_meshContexts.size()));
-  P_assertion(_meshContexts[meshID] != nullptr);
+  P_ASSERT((meshID >= 0) && (meshID < (int)_meshContexts.size()));
+  P_ASSERT(_meshContexts[meshID] != nullptr);
   return *_meshContexts[meshID];
 }
 
@@ -242,9 +242,9 @@ MeshContext& Participant:: meshContext
   int meshID )
 {
   P_TRACE(meshID, _meshContexts.size());
-  P_assertion((meshID >= 0) && (meshID < (int)_meshContexts.size()),
+  P_ASSERT((meshID >= 0) && (meshID < (int)_meshContexts.size()),
              meshID, _meshContexts.size());
-  P_assertion(_meshContexts[meshID] != nullptr);
+  P_ASSERT(_meshContexts[meshID] != nullptr);
   return *_meshContexts[meshID];
 }
 
@@ -293,7 +293,7 @@ void Participant:: checkDuplicatedUse
 (
   const mesh::PtrMesh& mesh )
 {
-  P_assertion( (int)_meshContexts.size() > mesh->getID() );
+  P_ASSERT( (int)_meshContexts.size() > mesh->getID() );
   P_CHECK( _meshContexts[mesh->getID()] == nullptr,
          "Mesh \"" << mesh->getName() << " cannot be used twice by "
          << "participant " << _name << "!" );
@@ -304,7 +304,7 @@ void Participant:: checkDuplicatedData
   const mesh::PtrData& data )
 {
   P_TRACE(data->getID(), _dataContexts.size() );
-  P_assertion( data->getID() < (int)_dataContexts.size(), data->getID(), _dataContexts.size() );
+  P_ASSERT( data->getID() < (int)_dataContexts.size(), data->getID(), _dataContexts.size() );
   P_CHECK( _dataContexts[data->getID()] == nullptr,
           "Participant \"" << _name << "\" can read/write data \""
           << data->getName() << "\" only once!" );
@@ -319,7 +319,7 @@ void Participant:: setClientServerCommunication
 (
   com::PtrCommunication communication )
 {
-  P_assertion( communication );
+  P_ASSERT( communication );
   _clientServerCommunication = std::move(communication);
 }
 

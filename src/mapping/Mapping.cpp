@@ -103,7 +103,7 @@ std::ostream &operator<<(std::ostream &out, Mapping::MeshRequirement val) {
             out << "FULL";
             break;
         default:
-            P_assertion(false, "Implementation does not cover all cases");
+            P_ASSERT(false, "Implementation does not cover all cases");
     };
     return out;
 }

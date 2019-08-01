@@ -58,7 +58,7 @@ int main ( int argc, char** argv )
   precice::utils::Petsc::initialize(&argc, &argv);
 
   if ( runServer ){
-    P_assertion(not runHelp);
+    P_ASSERT(not runHelp);
     std::cout << "PreCICE running server...\n";
     std::string participantName ( argv[2] );
     std::string configFile ( argv[3] );
@@ -74,17 +74,17 @@ int main ( int argc, char** argv )
     std::cout << "\n\n...finished running server\n";
   }
   else if (runHelp){
-    P_assertion(not runServer);
+    P_ASSERT(not runServer);
     precice::config::Configuration config;
     std::cout << config.getXMLTag().printDocumentation(0) << "\n\n";
   }
   else if (runDtd) {
-	P_assertion(not runServer);
+	P_ASSERT(not runServer);
     precice::config::Configuration config;
     std::cout << config.getXMLTag().printDTD(true) << "\n\n";
   }
   else {
-    P_assertion( false );
+    P_ASSERT( false );
   }
   precice::utils::Petsc::finalize();
   //precice::utils::Parallel::synchronizeProcesses();

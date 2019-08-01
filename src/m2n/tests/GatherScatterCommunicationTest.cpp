@@ -18,7 +18,7 @@ using namespace m2n;
 
 BOOST_AUTO_TEST_CASE(GatherScatterTest, *testing::OnSize(4))
 {
-  P_assertion(utils::Parallel::getCommunicatorSize() == 4);
+  P_ASSERT(utils::Parallel::getCommunicatorSize() == 4);
   utils::MasterSlave::reset();
 
   com::PtrCommunication participantCom = com::PtrCommunication(new com::MPIDirectCommunication());

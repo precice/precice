@@ -18,9 +18,9 @@ BarycentricCoordsAndProjected calcBarycentricCoordsForEdge(
   using Eigen::VectorXd;
 
   const int dimensions = edgeA.size();
-  P_assertion(dimensions == edgeB.size() && dimensions == edgeNormal.size() && dimensions == location.size(),
+  P_ASSERT(dimensions == edgeB.size() && dimensions == edgeNormal.size() && dimensions == location.size(),
             "The inputs need to have the same dimensions.");
-  P_assertion((dimensions == 2) || (dimensions == 3), dimensions);
+  P_ASSERT((dimensions == 2) || (dimensions == 3), dimensions);
 
   Vector2d barycentricCoords;
   VectorXd projected = VectorXd::Zero(dimensions);
@@ -42,7 +42,7 @@ BarycentricCoordsAndProjected calcBarycentricCoordsForEdge(
       // From p(s) = a + s(b-a) we get: s = (p(s) - a) / (b-a)
       int iMax;
       ab.cwiseAbs().maxCoeff(&iMax);
-      P_assertion(!math::equals(ab(iMax), 0.0));
+      P_ASSERT(!math::equals(ab(iMax), 0.0));
       barycentricCoords[0] = (location(iMax) - a(iMax)) / ab(iMax);
       barycentricCoords[1] = 1.0 - barycentricCoords[0];
       projected            = location.head<2>();
@@ -50,7 +50,7 @@ BarycentricCoordsAndProjected calcBarycentricCoordsForEdge(
       return {barycentricCoords, projected};
     }
   } else { // 3D
-    P_assertion(dimensions == 3, dimensions);
+    P_ASSERT(dimensions == 3, dimensions);
     // Get parameters for parametric triangle representation: p(s) = a + s(b-a)
     Vector3d a3D  = edgeA;
     Vector3d b3D  = edgeB;
@@ -62,7 +62,7 @@ BarycentricCoordsAndProjected calcBarycentricCoordsForEdge(
       // From p(s) = a + s(b-a) we get: s = (p(s) - a) / (b-a)
       int iMax;
       ab3D.cwiseAbs().maxCoeff(&iMax);
-      P_assertion(!math::equals(ab3D[iMax], 0.0));
+      P_ASSERT(!math::equals(ab3D[iMax], 0.0));
       barycentricCoords[0] =
           (location(iMax) - edgeA(iMax)) / ab3D(iMax);
       barycentricCoords[1] = 1.0 - barycentricCoords[0];
@@ -84,7 +84,7 @@ BarycentricCoordsAndProjected calcBarycentricCoordsForEdge(
       indices[0] = 0;
       indices[1] = 2;
     } else {
-      P_assertion(indexToRemove == 2, indexToRemove);
+      P_ASSERT(indexToRemove == 2, indexToRemove);
       indices[0] = 0;
       indices[1] = 1;
     }
@@ -99,7 +99,7 @@ BarycentricCoordsAndProjected calcBarycentricCoordsForEdge(
 
   // Compute denominator for solving 2x2 equation system
   double D = a(0) * (d(1) - c(1)) + b(0) * (c(1) - d(1)) + d(0) * ab(1) - c(0) * ab(1);
-  P_assertion(not math::equals(D, 0.0), a, b, c, d, ab); // D == 0 would imply "normal // edge"
+  P_ASSERT(not math::equals(D, 0.0), a, b, c, d, ab); // D == 0 would imply "normal // edge"
 
   // Compute triangle segment parameter s, which is in [0, 1], if the
   // intersection point is within the triangle.
@@ -161,7 +161,7 @@ BarycentricCoordsAndProjected calcBarycentricCoordsForTriangle(
     indices[0] = 0;
     indices[1] = 2;
   } else {
-    P_assertion(iMax == 2, iMax);
+    P_ASSERT(iMax == 2, iMax);
     indices[0] = 0;
     indices[1] = 1;
   }
@@ -191,7 +191,7 @@ BarycentricCoordsAndProjected calcBarycentricCoordsForQuad(
     const Eigen::VectorXd &normal,
     const Eigen::VectorXd &location)
 {
-  P_assertion("Interpolation on Quads is not implemented!");
+  P_ASSERT("Interpolation on Quads is not implemented!");
   return {};
 }
 } // namespace barycenter

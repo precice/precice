@@ -33,7 +33,7 @@ void GatherScatterCommunication::acceptConnection(
     const std::string &requesterName)
 {
   P_TRACE(acceptorName, requesterName);
-  P_assertion(utils::MasterSlave::isSlave() || _com->isConnected());
+  P_ASSERT(utils::MasterSlave::isSlave() || _com->isConnected());
   _isConnected = true;
 }
 
@@ -42,14 +42,14 @@ void GatherScatterCommunication::requestConnection(
     const std::string &requesterName)
 {
   P_TRACE(acceptorName, requesterName);
-  P_assertion(utils::MasterSlave::isSlave() || _com->isConnected());
+  P_ASSERT(utils::MasterSlave::isSlave() || _com->isConnected());
   _isConnected = true;
 }
 
 void GatherScatterCommunication::closeConnection()
 {
   P_TRACE();
-  P_assertion(utils::MasterSlave::isSlave() || not _com->isConnected());
+  P_ASSERT(utils::MasterSlave::isSlave() || not _com->isConnected());
   _isConnected = false;
 }
 
@@ -59,11 +59,11 @@ void GatherScatterCommunication::send(
     int     valueDimension)
 {
   P_TRACE(size);
-  P_assertion(utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster());
-  P_assertion(utils::MasterSlave::_communication.get() != nullptr);
-  P_assertion(utils::MasterSlave::_communication->isConnected());
-  P_assertion(utils::MasterSlave::getSize() > 1);
-  P_assertion(utils::MasterSlave::getRank() != -1);
+  P_ASSERT(utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster());
+  P_ASSERT(utils::MasterSlave::_communication.get() != nullptr);
+  P_ASSERT(utils::MasterSlave::_communication->isConnected());
+  P_ASSERT(utils::MasterSlave::getSize() > 1);
+  P_ASSERT(utils::MasterSlave::getRank() != -1);
 
   // Gather data
   if (utils::MasterSlave::isSlave()) { // Slave
@@ -71,7 +71,7 @@ void GatherScatterCommunication::send(
       utils::MasterSlave::_communication->send(itemsToSend, size, 0);
     }
   } else { // Master
-    P_assertion(utils::MasterSlave::getRank() == 0);
+    P_ASSERT(utils::MasterSlave::getRank() == 0);
     mesh::Mesh::VertexDistribution  &vertexDistribution = _mesh->getVertexDistribution();
     int                              globalSize         = _mesh->getGlobalNumberOfVertices() * valueDimension;
     P_DEBUG("Global Size = " << globalSize);
@@ -110,11 +110,11 @@ void GatherScatterCommunication::receive(
     int     valueDimension)
 {
   P_TRACE(size);
-  P_assertion(utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster());
-  P_assertion(utils::MasterSlave::_communication.get() != nullptr);
-  P_assertion(utils::MasterSlave::_communication->isConnected());
-  P_assertion(utils::MasterSlave::getSize() > 1);
-  P_assertion(utils::MasterSlave::getRank() != -1);
+  P_ASSERT(utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster());
+  P_ASSERT(utils::MasterSlave::_communication.get() != nullptr);
+  P_ASSERT(utils::MasterSlave::_communication->isConnected());
+  P_ASSERT(utils::MasterSlave::getSize() > 1);
+  P_ASSERT(utils::MasterSlave::getRank() != -1);
 
   std::vector<double> globalItemsToReceive;
 
@@ -134,7 +134,7 @@ void GatherScatterCommunication::receive(
       P_DEBUG("itemsToRec[0] = " << itemsToReceive[0]);
     }
   } else { // Master
-    P_assertion(utils::MasterSlave::getRank() == 0);
+    P_ASSERT(utils::MasterSlave::getRank() == 0);
     mesh::Mesh::VertexDistribution &vertexDistribution = _mesh->getVertexDistribution();
 
     // Master data

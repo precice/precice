@@ -84,7 +84,7 @@ void SolverInterfaceConfiguration:: xmlEndTagCallback
           break;
         }
       }
-      P_assertion(participantFound);
+      P_ASSERT(participantFound);
     }
 
   }

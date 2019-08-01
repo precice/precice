@@ -116,7 +116,7 @@ public:
   template<typename VECTOR_T>
   Vertex& createVertex ( const VECTOR_T& coords )
   {
-    P_assertion(coords.size() == _dimensions, coords.size(), _dimensions);
+    P_ASSERT(coords.size() == _dimensions, coords.size(), _dimensions);
     Vertex* newVertex = new Vertex(coords, _manageVertexIDs.getFreeID());
     newVertex->addParent(*this);
     _content.add(newVertex);

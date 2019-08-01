@@ -24,7 +24,7 @@ MPIDirectCommunication::~MPIDirectCommunication()
 size_t MPIDirectCommunication::getRemoteCommunicatorSize()
 {
   P_TRACE();
-  P_assertion(isConnected());
+  P_ASSERT(isConnected());
   int remoteSize = 0;
   MPI_Comm_remote_size(communicator(), &remoteSize);
   return remoteSize;
@@ -35,7 +35,7 @@ void MPIDirectCommunication::acceptConnection(std::string const &acceptorName,
                                               int                acceptorRank)
 {
   P_TRACE(acceptorName, requesterName);
-  P_assertion(not isConnected());
+  P_ASSERT(not isConnected());
 
   utils::Parallel::splitCommunicator(acceptorName);
 
@@ -71,7 +71,7 @@ void MPIDirectCommunication::requestConnection(std::string const &acceptorName,
                                                int                requesterCommunicatorSize)
 {
   P_TRACE(acceptorName, requesterName);
-  P_assertion(not isConnected());
+  P_ASSERT(not isConnected());
 
   utils::Parallel::splitCommunicator(requesterName);
 

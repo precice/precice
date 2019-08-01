@@ -224,7 +224,7 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
     P_CHECK(not (xDead and yDead and zDead), "You cannot choose all axes to be dead for a RBF mapping");
   }
   else {
-    P_assertion(false);
+    P_ASSERT(false);
   }
 
   // Count number of dead dimensions
@@ -262,7 +262,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     P_DEBUG("Using seperated polynomial.");
   }
 
-  P_assertion(input()->getDimensions() == output()->getDimensions(),
+  P_ASSERT(input()->getDimensions() == output()->getDimensions(),
             input()->getDimensions(), output()->getDimensions());
   int const dimensions = input()->getDimensions();
   mesh::PtrMesh inMesh;
@@ -608,8 +608,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
   P_TRACE(inputDataID, outputDataID);
   precice::utils::Event e("map.pet.mapData.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
 
-  P_assertion(_hasComputedMapping);
-  P_assertion(input()->getDimensions() == output()->getDimensions(),
+  P_ASSERT(_hasComputedMapping);
+  P_ASSERT(input()->getDimensions() == output()->getDimensions(),
             input()->getDimensions(), output()->getDimensions());
 
   PetscErrorCode ierr = 0;
@@ -617,7 +617,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
   auto & outValues = output()->data(outputDataID)->values();
 
   int const valueDim = input()->data(inputDataID)->getDimensions();
-  P_assertion(valueDim == output()->data(outputDataID)->getDimensions(),
+  P_ASSERT(valueDim == output()->data(outputDataID)->getDimensions(),
             valueDim, output()->data(outputDataID)->getDimensions());
 
   if (getConstraint() == CONSERVATIVE) {
@@ -685,7 +685,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
           ownerCount++;
         }
         else {
-          P_assertion(outValues[count*valueDim + dim] == 0.0);
+          P_ASSERT(outValues[count*valueDim + dim] == 0.0);
         }
         count++;
       }
@@ -839,7 +839,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
   // Construct bounding box around all owned vertices
   for (mesh::Vertex& v : mesh->vertices()) {
     if (v.isOwner()) {
-      P_assertion(v.isTagged()); // Should be tagged from the first round
+      P_ASSERT(v.isTagged()); // Should be tagged from the first round
       for (int d = 0; d < v.getDimensions(); d++) {
         bb[d].first  = std::min(v.getCoords()[d], bb[d].first);
         bb[d].second = std::max(v.getCoords()[d], bb[d].second);

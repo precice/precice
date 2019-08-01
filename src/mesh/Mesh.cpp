@@ -36,8 +36,8 @@ Mesh:: Mesh
   if (not _managePropertyIDs) {
     _managePropertyIDs.reset(new utils::ManageUniqueIDs);
   }
-  P_assertion((_dimensions == 2) || (_dimensions == 3), _dimensions);
-  P_assertion(_name != std::string(""));
+  P_ASSERT((_dimensions == 2) || (_dimensions == 3), _dimensions);
+  P_ASSERT(_name != std::string(""));
   _nameIDPairs[_name] = _managePropertyIDs->getFreeID ();
   setProperty(INDEX_GEOMETRY_ID, _nameIDPairs[_name]);
 
@@ -220,7 +220,7 @@ PropertyContainer& Mesh:: getPropertyContainer
   const std::string & subIDName )
 {
   P_TRACE(subIDName);
-  P_assertion(_nameIDPairs.count(subIDName) == 1);
+  P_ASSERT(_nameIDPairs.count(subIDName) == 1);
   int id = _nameIDPairs[subIDName];
   for (PropertyContainer& cont : _propertyContainers) {
     if (cont.getProperty<int>(cont.INDEX_GEOMETRY_ID) == id){
@@ -274,14 +274,14 @@ int Mesh:: getID
 (
   const std::string& name ) const
 {
-  P_assertion(_nameIDPairs.count(name) > 0);
+  P_ASSERT(_nameIDPairs.count(name) > 0);
   return _nameIDPairs.find(name)->second;
 }
 
 int Mesh:: getID() const
 {
   std::map<std::string,int>::const_iterator iter = _nameIDPairs.find(_name);
-  P_assertion(iter != _nameIDPairs.end());
+  P_ASSERT(iter != _nameIDPairs.end());
   return iter->second;
 }
 
@@ -338,11 +338,11 @@ void Mesh:: computeNormals()
   if (_dimensions == 3){
       // Compute normals
       for (Triangle& triangle : _content.triangles()) {
-          P_assertion(triangle.vertex(0) != triangle.vertex(1),
+          P_ASSERT(triangle.vertex(0) != triangle.vertex(1),
                   triangle.vertex(0), triangle.getID());
-          P_assertion(triangle.vertex(1) != triangle.vertex(2),
+          P_ASSERT(triangle.vertex(1) != triangle.vertex(2),
                   triangle.vertex(1), triangle.getID());
-          P_assertion(triangle.vertex(2) != triangle.vertex(0),
+          P_ASSERT(triangle.vertex(2) != triangle.vertex(0),
                   triangle.vertex(2), triangle.getID());
 
           // Compute normals
@@ -357,10 +357,10 @@ void Mesh:: computeNormals()
 
       // Compute quad normals
       for (Quad& quad : _content.quads()) {
-          P_assertion(quad.vertex(0) != quad.vertex(1), quad.vertex(0).getCoords(), quad.getID());
-          P_assertion(quad.vertex(1) != quad.vertex(2), quad.vertex(1).getCoords(), quad.getID());
-          P_assertion(quad.vertex(2) != quad.vertex(3), quad.vertex(2).getCoords(), quad.getID());
-          P_assertion(quad.vertex(3) != quad.vertex(0), quad.vertex(3).getCoords(), quad.getID());
+          P_ASSERT(quad.vertex(0) != quad.vertex(1), quad.vertex(0).getCoords(), quad.getID());
+          P_ASSERT(quad.vertex(1) != quad.vertex(2), quad.vertex(1).getCoords(), quad.getID());
+          P_ASSERT(quad.vertex(2) != quad.vertex(3), quad.vertex(2).getCoords(), quad.getID());
+          P_ASSERT(quad.vertex(3) != quad.vertex(0), quad.vertex(3).getCoords(), quad.getID());
 
           // Compute normals (assuming all vertices are on same plane)
           Eigen::VectorXd weightednormal = quad.computeNormal(_flipNormals);
@@ -405,7 +405,7 @@ void Mesh:: computeBoundingBox()
 void Mesh:: computeState()
 {
   P_TRACE(_name);
-  P_assertion(_dimensions==2 || _dimensions==3, _dimensions);
+  P_ASSERT(_dimensions==2 || _dimensions==3, _dimensions);
 
   computeNormals();
   computeBoundingBox();
@@ -473,7 +473,7 @@ void Mesh:: addMesh(
     Mesh& deltaMesh)
 {
   P_TRACE();
-  P_assertion(_dimensions==deltaMesh.getDimensions());
+  P_ASSERT(_dimensions==deltaMesh.getDimensions());
 
   std::map<int, Vertex*> vertexMap;
   std::map<int, Edge*> edgeMap;
@@ -485,7 +485,7 @@ void Mesh:: addMesh(
     v.setGlobalIndex(vertex.getGlobalIndex());
     if(vertex.isTagged()) v.tag();
     v.setOwner(vertex.isOwner());
-    P_assertion( vertex.getID() >= 0, vertex.getID() );
+    P_ASSERT( vertex.getID() >= 0, vertex.getID() );
     vertexMap[vertex.getID()] = &v;
   }
 
@@ -495,8 +495,8 @@ void Mesh:: addMesh(
   for (const Edge& edge : deltaMesh.edges()) {
     int vertexIndex1 = edge.vertex(0).getID();
     int vertexIndex2 = edge.vertex(1).getID();
-    P_assertion( vertexMap.find(vertexIndex1) != vertexMap.end() );
-    P_assertion( vertexMap.find(vertexIndex2) != vertexMap.end() );
+    P_ASSERT( vertexMap.find(vertexIndex1) != vertexMap.end() );
+    P_ASSERT( vertexMap.find(vertexIndex2) != vertexMap.end() );
     Edge& e = createEdge(*vertexMap[vertexIndex1], *vertexMap[vertexIndex2]);
     edgeMap[edge.getID()] = &e;
   }
@@ -506,9 +506,9 @@ void Mesh:: addMesh(
       int edgeIndex1 = triangle.edge(0).getID();
       int edgeIndex2 = triangle.edge(1).getID();
       int edgeIndex3 = triangle.edge(2).getID();
-      P_assertion( edgeMap.find(edgeIndex1) != edgeMap.end() );
-      P_assertion( edgeMap.find(edgeIndex2) != edgeMap.end() );
-      P_assertion( edgeMap.find(edgeIndex3) != edgeMap.end() );
+      P_ASSERT( edgeMap.find(edgeIndex1) != edgeMap.end() );
+      P_ASSERT( edgeMap.find(edgeIndex2) != edgeMap.end() );
+      P_ASSERT( edgeMap.find(edgeIndex3) != edgeMap.end() );
       createTriangle(*edgeMap[edgeIndex1],*edgeMap[edgeIndex2],*edgeMap[edgeIndex3]);
     }
   }

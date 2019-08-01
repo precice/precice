@@ -95,8 +95,8 @@ void BaseQNPostProcessing::initialize(
   _firstIteration = true;
   _firstTimeStep  = true;
 
-  P_assertion(_oldXTilde.size() == 0);
-  P_assertion(_oldResiduals.size() == 0);
+  P_ASSERT(_oldXTilde.size() == 0);
+  P_ASSERT(_oldResiduals.size() == 0);
   _oldXTilde    = Eigen::VectorXd::Zero(entries);
   _oldResiduals = Eigen::VectorXd::Zero(entries);
   _residuals    = Eigen::VectorXd::Zero(entries);
@@ -113,8 +113,8 @@ void BaseQNPostProcessing::initialize(
    */
   std::stringstream ss;
   if (utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave()) {
-    P_assertion(utils::MasterSlave::_communication.get() != NULL);
-    P_assertion(utils::MasterSlave::_communication->isConnected());
+    P_ASSERT(utils::MasterSlave::_communication.get() != NULL);
+    P_ASSERT(utils::MasterSlave::_communication->isConnected());
 
     if (entries <= 0) {
       _hasNodesOnInterface = false;
@@ -145,7 +145,7 @@ void BaseQNPostProcessing::initialize(
 
     // test that the computed number of unknown per proc equals the number of entries actually present on that proc
     size_t unknowns = _dimOffsets[utils::MasterSlave::getRank() + 1] - _dimOffsets[utils::MasterSlave::getRank()];
-    P_assertion(entries == unknowns, entries, unknowns);
+    P_ASSERT(entries == unknowns, entries, unknowns);
   } else {
     _infostringstream << "\n--------\n DOFs (global): " << entries << '\n';
   }
@@ -166,7 +166,7 @@ void BaseQNPostProcessing::initialize(
   for (DataMap::value_type &pair : cplData) {
     int cols = pair.second->oldValues.cols();
     if (cols < 1) { // Add only, if not already done
-      //P_assertion(pair.second->values->size() > 0, pair.first);
+      //P_ASSERT(pair.second->values->size() > 0, pair.first);
       utils::append(pair.second->oldValues, (Eigen::VectorXd) Eigen::VectorXd::Zero(pair.second->values->size()));
     }
   }
@@ -185,7 +185,7 @@ void BaseQNPostProcessing::setDesignSpecification(
     Eigen::VectorXd &q)
 {
   P_TRACE();
-  P_assertion(q.size() == _residuals.size(), q.size(), _residuals.size());
+  P_ASSERT(q.size() == _residuals.size(), q.size(), _residuals.size());
   _designSpecification = q;
 }
 
@@ -239,8 +239,8 @@ void BaseQNPostProcessing::updateDifferenceMatrices(
     if (not _firstIteration) {
       // Update matrices V, W with newest information
 
-      P_assertion(_matrixV.cols() == _matrixW.cols(), _matrixV.cols(), _matrixW.cols());
-      P_assertion(getLSSystemCols() <= _maxIterationsUsed, getLSSystemCols(), _maxIterationsUsed);
+      P_ASSERT(_matrixV.cols() == _matrixW.cols(), _matrixV.cols(), _matrixW.cols());
+      P_ASSERT(getLSSystemCols() <= _maxIterationsUsed, getLSSystemCols(), _maxIterationsUsed);
 
       if (2 * getLSSystemCols() >= getLSSystemRows())
         P_WARN(
@@ -303,10 +303,10 @@ void BaseQNPostProcessing::performPostProcessing(
 
   utils::Event e("cpl.computeQuasiNewtonUpdate", precice::syncMode);
 
-  P_assertion(_oldResiduals.size() == _oldXTilde.size(), _oldResiduals.size(), _oldXTilde.size());
-  P_assertion(_values.size() == _oldXTilde.size(), _values.size(), _oldXTilde.size());
-  P_assertion(_oldValues.size() == _oldXTilde.size(), _oldValues.size(), _oldXTilde.size());
-  P_assertion(_residuals.size() == _oldXTilde.size(), _residuals.size(), _oldXTilde.size());
+  P_ASSERT(_oldResiduals.size() == _oldXTilde.size(), _oldResiduals.size(), _oldXTilde.size());
+  P_ASSERT(_values.size() == _oldXTilde.size(), _values.size(), _oldXTilde.size());
+  P_ASSERT(_oldValues.size() == _oldXTilde.size(), _oldValues.size(), _oldXTilde.size());
+  P_ASSERT(_residuals.size() == _oldXTilde.size(), _residuals.size(), _oldXTilde.size());
 
   /*
   Eigen::IOFormat CommaInitFmt(Eigen::StreamPrecision, Eigen::DontAlignCols, ", ", ", ", "", "", " << ", ";");
@@ -368,7 +368,7 @@ void BaseQNPostProcessing::performPostProcessing(
     }
 
     // subtract design specification from residuals, i.e., we want to minimize argmin_x|| r(x) - q ||
-    P_assertion(_residuals.size() == _designSpecification.size(), _residuals.size(), _designSpecification.size());
+    P_ASSERT(_residuals.size() == _designSpecification.size(), _residuals.size(), _designSpecification.size());
     _residuals -= _designSpecification;
 
     /**
@@ -478,7 +478,7 @@ void BaseQNPostProcessing::applyFilter()
 
       P_DEBUG(" Filter: removing column with index " << delIndices[i] << " in iteration " << its << " of time step: " << tSteps);
     }
-    P_assertion(_matrixV.cols() == _qrV.cols(), _matrixV.cols(), _qrV.cols());
+    P_ASSERT(_matrixV.cols() == _qrV.cols(), _matrixV.cols(), _qrV.cols());
   }
 }
 
@@ -547,7 +547,7 @@ void BaseQNPostProcessing::iterationsConverged(
   updateDifferenceMatrices(cplData);
 
   // subtract design specification from residuals, i.e., we want to minimize argmin_x|| r(x) - q ||
-  P_assertion(_residuals.size() == _designSpecification.size(), _residuals.size(), _designSpecification.size());
+  P_ASSERT(_residuals.size() == _designSpecification.size(), _residuals.size(), _designSpecification.size());
   _residuals -= _designSpecification;
 
   if (_matrixCols.front() == 0) { // Did only one iteration
@@ -595,10 +595,10 @@ void BaseQNPostProcessing::iterationsConverged(
     }
   } else if ((int) _matrixCols.size() > _timestepsReused) {
     int toRemove = _matrixCols.back();
-    P_assertion(toRemove > 0, toRemove);
+    P_ASSERT(toRemove > 0, toRemove);
     P_DEBUG("Removing " << toRemove << " cols from least-squares system with " << getLSSystemCols() << " cols");
-    P_assertion(_matrixV.cols() == _matrixW.cols(), _matrixV.cols(), _matrixW.cols());
-    P_assertion(getLSSystemCols() > toRemove, getLSSystemCols(), toRemove);
+    P_ASSERT(_matrixV.cols() == _matrixW.cols(), _matrixV.cols(), _matrixW.cols());
+    P_ASSERT(getLSSystemCols() > toRemove, getLSSystemCols(), toRemove);
 
     // remove columns
     for (int i = 0; i < toRemove; i++) {
@@ -628,7 +628,7 @@ void BaseQNPostProcessing::removeMatrixColumn(
   // debugging information, can be removed
   _nbDelCols++;
 
-  P_assertion(_matrixV.cols() > 1);
+  P_ASSERT(_matrixV.cols() > 1);
   utils::removeColumnFromMatrix(_matrixV, columnIndex);
   utils::removeColumnFromMatrix(_matrixW, columnIndex);
 
@@ -638,7 +638,7 @@ void BaseQNPostProcessing::removeMatrixColumn(
   while (iter != _matrixCols.end()) {
     cols += *iter;
     if (cols > columnIndex) {
-      P_assertion(*iter > 0);
+      P_ASSERT(*iter > 0);
       *iter -= 1;
       if (*iter == 0) {
         _matrixCols.erase(iter);
@@ -671,8 +671,8 @@ int BaseQNPostProcessing::getLSSystemCols()
     cols += col;
   }
   if (_hasNodesOnInterface) {
-    P_assertion(cols == _matrixV.cols(), cols, _matrixV.cols(), _matrixCols, _qrV.cols());
-    P_assertion(cols == _matrixW.cols(), cols, _matrixW.cols());
+    P_ASSERT(cols == _matrixV.cols(), cols, _matrixV.cols(), _matrixCols, _qrV.cols());
+    P_ASSERT(cols == _matrixW.cols(), cols, _matrixW.cols());
   }
 
   return cols;

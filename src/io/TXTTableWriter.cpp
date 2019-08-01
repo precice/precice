@@ -36,9 +36,9 @@ void TXTTableWriter::addData(
   Data data;
   data.name = name;
   data.type = type;
-  P_assertion(not utils::contained(data, _data), data.name, data.type);
+  P_ASSERT(not utils::contained(data, _data), data.name, data.type);
   _data.push_back(data);
-  P_assertion(_outputStream.is_open());
+  P_ASSERT(_outputStream.is_open());
   if ((type == INT) || (type == DOUBLE)) {
     _outputStream << name << "  ";
   } else if (type == VECTOR2D) {
@@ -46,7 +46,7 @@ void TXTTableWriter::addData(
       _outputStream << name << i << "  ";
     }
   } else {
-    P_assertion(type == VECTOR3D);
+    P_ASSERT(type == VECTOR3D);
     for (int i = 0; i < 3; i++) {
       _outputStream << name << i << "  ";
     }
@@ -58,13 +58,13 @@ void TXTTableWriter::writeData(
     const std::string &name,
     int                value)
 {
-  P_assertion(not _data.empty());
+  P_ASSERT(not _data.empty());
   if (_writeIterator == _data.end()) {
     _writeIterator = _data.begin();
     _outputStream << "\n";
   }
-  P_assertion(_writeIterator->name == name, _writeIterator->name, name);
-  P_assertion(_writeIterator->type == INT, _writeIterator->type);
+  P_ASSERT(_writeIterator->name == name, _writeIterator->name, name);
+  P_ASSERT(_writeIterator->type == INT, _writeIterator->type);
   _outputStream << value << "  ";
   _writeIterator++;
   if (_writeIterator == _data.end()) {
@@ -76,13 +76,13 @@ void TXTTableWriter::writeData(
     const std::string &name,
     double             value)
 {
-  P_assertion(not _data.empty());
+  P_ASSERT(not _data.empty());
   if (_writeIterator == _data.end()) {
     _writeIterator = _data.begin();
     _outputStream << "\n";
   }
-  P_assertion(_writeIterator->name == name, _writeIterator->name, name);
-  P_assertion(_writeIterator->type == DOUBLE, _writeIterator->type);
+  P_ASSERT(_writeIterator->name == name, _writeIterator->name, name);
+  P_ASSERT(_writeIterator->type == DOUBLE, _writeIterator->type);
   _outputStream << value << "  ";
   _writeIterator++;
   if (_writeIterator == _data.end()) {
@@ -94,13 +94,13 @@ void TXTTableWriter::writeData(
     const std::string &    name,
     const Eigen::Vector2d &value)
 {
-  P_assertion(not _data.empty());
+  P_ASSERT(not _data.empty());
   if (_writeIterator == _data.end()) {
     _writeIterator = _data.begin();
     _outputStream << "\n";
   }
-  P_assertion(_writeIterator->name == name, _writeIterator->name, name);
-  P_assertion(_writeIterator->type == VECTOR2D, _writeIterator->type);
+  P_ASSERT(_writeIterator->name == name, _writeIterator->name, name);
+  P_ASSERT(_writeIterator->type == VECTOR2D, _writeIterator->type);
   for (int i = 0; i < value.size(); i++) {
     _outputStream << value[i] << "  ";
   }
@@ -114,13 +114,13 @@ void TXTTableWriter::writeData(
     const std::string &    name,
     const Eigen::Vector3d &value)
 {
-  P_assertion(not _data.empty());
+  P_ASSERT(not _data.empty());
   if (_writeIterator == _data.end()) {
     _writeIterator = _data.begin();
     _outputStream << "\n";
   }
-  P_assertion(_writeIterator->name == name, _writeIterator->name, name);
-  P_assertion(_writeIterator->type == VECTOR3D, _writeIterator->type);
+  P_ASSERT(_writeIterator->name == name, _writeIterator->name, name);
+  P_ASSERT(_writeIterator->type == VECTOR3D, _writeIterator->type);
   for (int i = 0; i < value.size(); i++) {
     _outputStream << value[i] << "  ";
   }
@@ -132,7 +132,7 @@ void TXTTableWriter::writeData(
 
 void TXTTableWriter::close()
 {
-  P_assertion(_outputStream.is_open());
+  P_ASSERT(_outputStream.is_open());
   _outputStream.close();
 }
 

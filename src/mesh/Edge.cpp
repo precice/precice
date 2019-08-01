@@ -14,7 +14,7 @@ Edge:: Edge
   _id ( id ),
   _normal ( Eigen::VectorXd::Constant(vertexOne.getDimensions(), 0.0) )
 {
-  P_assertion( vertexOne.getDimensions() == vertexTwo.getDimensions(),
+  P_ASSERT( vertexOne.getDimensions() == vertexTwo.getDimensions(),
               vertexOne.getDimensions(), vertexTwo.getDimensions() );
 }
 

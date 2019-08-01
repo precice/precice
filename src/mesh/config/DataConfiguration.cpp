@@ -33,7 +33,7 @@ void DataConfiguration:: setDimensions
   int dimensions )
 {
   P_TRACE(dimensions);
-  P_assertion((dimensions == 2) || (dimensions == 3), dimensions);
+  P_ASSERT((dimensions == 2) || (dimensions == 3), dimensions);
   _dimensions = dimensions;
 }
 
@@ -45,9 +45,9 @@ DataConfiguration:: data() const
 
 DataConfiguration::ConfiguredData DataConfiguration:: getRecentlyConfiguredData() const
 {
-  P_assertion(_data.size() > 0);
-  P_assertion(_indexLastConfigured >= 0);
-  P_assertion(_indexLastConfigured < (int)_data.size());
+  P_ASSERT(_data.size() > 0);
+  P_ASSERT(_indexLastConfigured >= 0);
+  P_ASSERT(_indexLastConfigured < (int)_data.size());
   return _data[_indexLastConfigured];
 }
 
@@ -56,7 +56,7 @@ void DataConfiguration:: xmlTagCallback
   xml::XMLTag& tag )
 {
   if (tag.getNamespace() == TAG){
-    P_assertion(_dimensions != 0);
+    P_ASSERT(_dimensions != 0);
     std::string name = tag.getStringAttributeValue(ATTR_NAME);
     std::string typeName = tag.getName();
     int dataDimensions = getDataDimensions(typeName);

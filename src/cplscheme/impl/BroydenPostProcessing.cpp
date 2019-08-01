@@ -93,11 +93,11 @@ void BroydenPostProcessing::computeQNUpdate(PostProcessing::DataMap &cplData, Ei
     tmp                         = tmp / dotproductV;   // (w-J_inv*v)/|v|_l2
     P_DEBUG("did step (W-J_inv*v)/|v|");
 
-    P_assertion(tmp.size() == v.size(), tmp.size(), v.size());
+    P_ASSERT(tmp.size() == v.size(), tmp.size(), v.size());
     JUpdate = tmp * v.transpose();
     P_DEBUG("multiplied (w-J_inv*v)/|v| * v^T");
 
-    P_assertion(_invJacobian.rows() == JUpdate.rows(), _invJacobian.rows(), JUpdate.rows());
+    P_ASSERT(_invJacobian.rows() == JUpdate.rows(), _invJacobian.rows(), JUpdate.rows());
     _invJacobian = _oldInvJacobian + JUpdate;
 
     // solve delta_x = - J_inv*residuals

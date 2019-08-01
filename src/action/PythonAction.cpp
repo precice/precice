@@ -35,8 +35,8 @@ PythonAction::PythonAction(
 PythonAction::~PythonAction()
 {
   if (_module != nullptr) {
-    P_assertion(_moduleNameObject != nullptr);
-    P_assertion(_module != nullptr);
+    P_ASSERT(_moduleNameObject != nullptr);
+    P_ASSERT(_module != nullptr);
     Py_DECREF(_moduleNameObject);
     Py_DECREF(_module);
     Py_Finalize();
@@ -62,7 +62,7 @@ void PythonAction::performAction(double time,
     if (_sourceData) {
       npy_intp sourceDim[]  = {_sourceData->values().size()};
       double * sourceValues = _sourceData->values().data();
-      //P_assertion(_sourceValues == NULL);
+      //P_ASSERT(_sourceValues == NULL);
       _sourceValues = PyArray_SimpleNewFromData(1, sourceDim, NPY_DOUBLE, sourceValues);
       P_CHECK(_sourceValues != nullptr, "Creating python source values failed!");
       PyTuple_SetItem(dataArgs, 2, _sourceValues);
@@ -70,7 +70,7 @@ void PythonAction::performAction(double time,
     if (_targetData) {
       npy_intp targetDim[]  = {_targetData->values().size()};
       double * targetValues = _targetData->values().data();
-      //P_assertion(_targetValues == NULL);
+      //P_ASSERT(_targetValues == NULL);
       _targetValues =
           PyArray_SimpleNewFromData(1, targetDim, NPY_DOUBLE, targetValues);
       P_CHECK(_targetValues != nullptr, "Creating python target values failed!");
@@ -130,7 +130,7 @@ void PythonAction::performAction(double time,
 
 void PythonAction::initialize()
 {
-  P_assertion(not _isInitialized);
+  P_ASSERT(not _isInitialized);
   // Initialize Python
   Py_Initialize();
   makeNumPyArraysAvailable();

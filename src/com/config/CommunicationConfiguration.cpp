@@ -44,7 +44,7 @@ PtrCommunication CommunicationConfiguration::createCommunication(
 
 #endif
   }
-  P_assertion(com.get() != nullptr);
+  P_ASSERT(com.get() != nullptr);
   return com;
 }
 

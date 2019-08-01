@@ -27,7 +27,7 @@ MPISinglePortsCommunication::~MPISinglePortsCommunication()
 size_t MPISinglePortsCommunication::getRemoteCommunicatorSize()
 {
   P_TRACE();
-  P_assertion(isConnected());
+  P_ASSERT(isConnected());
   int size = -1;
   MPI_Comm_remote_size(_communicators[0], &size);
   return size;
@@ -38,7 +38,7 @@ void MPISinglePortsCommunication::acceptConnection(std::string const &acceptorNa
                                                    int                acceptorRank)
 {
   P_TRACE(acceptorName, requesterName);
-  P_assertion(not isConnected());
+  P_ASSERT(not isConnected());
 
   _isAcceptor = true;
 
@@ -90,7 +90,7 @@ void MPISinglePortsCommunication::acceptConnectionAsServer(
     int                requesterCommunicatorSize)
 {
   P_TRACE(acceptorName, requesterName, acceptorRank, requesterCommunicatorSize);
-  P_assertion(not isConnected());
+  P_ASSERT(not isConnected());
 
   ConnectionInfoWriter conInfo(acceptorName, requesterName, _addressDirectory);
   
@@ -117,7 +117,7 @@ void MPISinglePortsCommunication::requestConnection(std::string const &acceptorN
                                                     int                requesterCommunicatorSize)
 {
   P_TRACE(acceptorName, requesterName);
-  P_assertion(not isConnected());
+  P_ASSERT(not isConnected());
   _isAcceptor = false;
 
   ConnectionInfoReader conInfo(acceptorName, requesterName, _addressDirectory);
@@ -144,7 +144,7 @@ void MPISinglePortsCommunication::requestConnectionAsClient(std::string      con
                                                       
 {
   P_TRACE(acceptorName, requesterName);
-  P_assertion(not isConnected());
+  P_ASSERT(not isConnected());
   
   _isAcceptor = false;
 

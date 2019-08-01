@@ -35,7 +35,7 @@ void ReceivedPartition::communicate()
   P_INFO("Receive global mesh " << _mesh->getName());
   Event e("partition.receiveGlobalMesh." + _mesh->getName(), precice::syncMode);
   if (not utils::MasterSlave::isSlave()) {
-    P_assertion(_mesh->vertices().empty());
+    P_ASSERT(_mesh->vertices().empty());
     // a ReceivedPartition can only have one communication, @todo nicer design 
     com::CommunicateMesh(_m2ns[0]->getMasterCommunication()).receiveMesh(*_mesh, 0);
   }
@@ -95,8 +95,8 @@ void ReceivedPartition::compute()
       }
 
     } else { // Master
-      P_assertion(utils::MasterSlave::getRank() == 0);
-      P_assertion(utils::MasterSlave::getSize() > 1);
+      P_ASSERT(utils::MasterSlave::getRank() == 0);
+      P_ASSERT(utils::MasterSlave::getSize() > 1);
 
       for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
         com::CommunicateMesh(utils::MasterSlave::_communication).receiveBoundingBox(_bb, rankSlave);
@@ -133,8 +133,8 @@ void ReceivedPartition::compute()
     if (utils::MasterSlave::isSlave()) {
       com::CommunicateMesh(utils::MasterSlave::_communication).broadcastReceiveMesh(*_mesh);
     } else { // Master
-      P_assertion(utils::MasterSlave::getRank() == 0);
-      P_assertion(utils::MasterSlave::getSize() > 1);
+      P_ASSERT(utils::MasterSlave::getRank() == 0);
+      P_ASSERT(utils::MasterSlave::getSize() > 1);
       com::CommunicateMesh(utils::MasterSlave::_communication).broadcastSendMesh(*_mesh);
     }
 
@@ -164,7 +164,7 @@ void ReceivedPartition::compute()
       _mesh->computeState();
       e2.stop();
     } else {
-      P_assertion(_geometricFilter == NO_FILTER);
+      P_ASSERT(_geometricFilter == NO_FILTER);
     }
   }
 
@@ -213,7 +213,7 @@ void ReceivedPartition::compute()
     }
     int globalNumberOfVertices = -1;
     utils::MasterSlave::_communication->broadcast(globalNumberOfVertices, 0);
-    P_assertion(globalNumberOfVertices >= 0);
+    P_ASSERT(globalNumberOfVertices >= 0);
     _mesh->setGlobalNumberOfVertices(globalNumberOfVertices);
   } else { // Master
     int              numberOfVertices = _mesh->vertices().size();
@@ -226,7 +226,7 @@ void ReceivedPartition::compute()
     for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
       int numberOfSlaveVertices = -1;
       utils::MasterSlave::_communication->receive(numberOfSlaveVertices, rankSlave);
-      P_assertion(numberOfSlaveVertices >= 0);
+      P_ASSERT(numberOfSlaveVertices >= 0);
       std::vector<int> slaveVertexIDs(numberOfSlaveVertices, -1);
       if (numberOfSlaveVertices != 0) {
         utils::MasterSlave::_communication->receive(slaveVertexIDs, rankSlave);
@@ -321,7 +321,7 @@ void ReceivedPartition::prepareBoundingBox()
   }
 
   // Enlarge BB
-  P_assertion(_safetyFactor >= 0.0);
+  P_ASSERT(_safetyFactor >= 0.0);
 
   double maxSideLength = 1e-6; // we need some minimum > 0 here
 
@@ -492,8 +492,8 @@ void ReceivedPartition::setOwnerInformation(const std::vector<int> &ownerVec)
 {
   size_t i = 0;
   for (mesh::Vertex &vertex : _mesh->vertices()) {
-    P_assertion(i < ownerVec.size());
-    P_assertion(ownerVec[i] != -1);
+    P_ASSERT(i < ownerVec.size());
+    P_ASSERT(ownerVec[i] != -1);
     vertex.setOwner(ownerVec[i] == 1);
     i++;
   }

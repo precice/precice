@@ -31,7 +31,7 @@ struct ParallelTestFixture : testing::WhiteboxAccessor {
     reset();
     _pathToTests = testing::getPathToSources() + "/precice/tests/";
     utils::Parallel::restrictGlobalCommunicator({0,1,2,3});
-    P_assertion(utils::Parallel::getCommunicatorSize() == 4);
+    P_ASSERT(utils::Parallel::getCommunicatorSize() == 4);
   }
 
   ~ParallelTestFixture()
@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(GlobalRBFPartitioning, * testing::OnSize(4))
   if(utils::Parallel::getProcessRank()<=2){
     utils::Parallel::splitCommunicator( "SolverOne" );
     utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator()); //needed since this test uses PETSc
-    P_assertion(utils::Parallel::getCommunicatorSize() == 3);
+    P_ASSERT(utils::Parallel::getCommunicatorSize() == 3);
     utils::Parallel::clearGroups();
     xml::configure(config.getXMLTag(), configFilename);
 
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(GlobalRBFPartitioning, * testing::OnSize(4))
   else {
     utils::Parallel::splitCommunicator( "SolverTwo" );
     utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator());
-    P_assertion(utils::Parallel::getCommunicatorSize() == 1);
+    P_ASSERT(utils::Parallel::getCommunicatorSize() == 1);
     utils::Parallel::clearGroups();
     xml::configure(config.getXMLTag(), configFilename);
 
@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE(LocalRBFPartitioning, * testing::OnSize(4))
   if(utils::Parallel::getProcessRank()<=2){
     utils::Parallel::splitCommunicator( "SolverOne" );
     utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator());
-    P_assertion(utils::Parallel::getCommunicatorSize() == 3);
+    P_ASSERT(utils::Parallel::getCommunicatorSize() == 3);
     utils::Parallel::clearGroups();
     xml::configure(config.getXMLTag(), configFilename);
 
@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE(LocalRBFPartitioning, * testing::OnSize(4))
   else {
     utils::Parallel::splitCommunicator( "SolverTwo" );
     utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator());
-    P_assertion(utils::Parallel::getCommunicatorSize() == 1);
+    P_ASSERT(utils::Parallel::getCommunicatorSize() == 1);
     utils::Parallel::clearGroups();
     xml::configure(config.getXMLTag(), configFilename);
 
@@ -216,7 +216,7 @@ BOOST_AUTO_TEST_CASE(CouplingOnLine, * testing::OnSize(4))
   if(utils::Parallel::getProcessRank()<=2){
     utils::Parallel::splitCommunicator( "Ateles" );
     utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator());
-    P_assertion(utils::Parallel::getCommunicatorSize() == 3);
+    P_ASSERT(utils::Parallel::getCommunicatorSize() == 3);
     utils::Parallel::clearGroups();
     xml::configure(config.getXMLTag(), configFilename);
     SolverInterface interface ( "Ateles", utils::Parallel::getProcessRank(), 3 );
@@ -239,7 +239,7 @@ BOOST_AUTO_TEST_CASE(CouplingOnLine, * testing::OnSize(4))
   else {
     utils::Parallel::splitCommunicator( "FASTEST" );
     utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator());
-    P_assertion(utils::Parallel::getCommunicatorSize() == 1);
+    P_ASSERT(utils::Parallel::getCommunicatorSize() == 1);
     utils::Parallel::clearGroups();
     xml::configure(config.getXMLTag(), configFilename);
     SolverInterface interface ( "FASTEST", 0, 1 );
@@ -300,7 +300,7 @@ BOOST_AUTO_TEST_CASE(TestQN, * testing::OnSize(4))
 
   utils::Parallel::splitCommunicator( solverName );
   utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator());
-  P_assertion(utils::Parallel::getCommunicatorSize() == size);
+  P_ASSERT(utils::Parallel::getCommunicatorSize() == size);
   utils::Parallel::clearGroups();
 
   for(int k=0; k<numberOfTests; k++){
@@ -595,7 +595,7 @@ BOOST_AUTO_TEST_CASE(NearestProjectionRePartitioning, * testing::OnSize(4))
   else {
     utils::Parallel::splitCommunicator( "SolidSolver" );
     utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator());
-    P_assertion(utils::Parallel::getCommunicatorSize() == 1);
+    P_ASSERT(utils::Parallel::getCommunicatorSize() == 1);
     utils::Parallel::clearGroups();
     xml::configure(config.getXMLTag(), configFilename);
     SolverInterface interface ( "SolidSolver", 0, 1 );

@@ -25,10 +25,10 @@ void ParallelMatrixOperations::initialize(
     _cyclicCommRight = rightComm;
 
     if (_needCycliclComm) {
-      P_assertion(_cyclicCommLeft.get() != NULL);
-      P_assertion(_cyclicCommLeft->isConnected());
-      P_assertion(_cyclicCommRight.get() != NULL);
-      P_assertion(_cyclicCommRight->isConnected());
+      P_ASSERT(_cyclicCommLeft.get() != NULL);
+      P_ASSERT(_cyclicCommLeft->isConnected());
+      P_ASSERT(_cyclicCommRight.get() != NULL);
+      P_ASSERT(_cyclicCommRight->isConnected());
     }
   }
 }

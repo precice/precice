@@ -20,7 +20,7 @@ void DummyCouplingScheme:: initialize
   double startTime,
   int    startTimesteps )
 {
-  P_assertion(not _isInitialized);
+  P_ASSERT(not _isInitialized);
   _isInitialized = true;
   _isOngoing = true;
   _timesteps = startTimesteps;
@@ -29,8 +29,8 @@ void DummyCouplingScheme:: initialize
 
 void DummyCouplingScheme:: advance()
 {
-  P_assertion(_isInitialized);
-  P_assertion(_isOngoing);
+  P_ASSERT(_isInitialized);
+  P_ASSERT(_isOngoing);
   if (_iterations == _numberIterations){
     if (_timesteps == _maxTimesteps){
       _isOngoing = false;
@@ -43,8 +43,8 @@ void DummyCouplingScheme:: advance()
 
 void DummyCouplingScheme:: finalize()
 {
-  P_assertion(_isInitialized);
-  P_assertion(not _isOngoing);
+  P_ASSERT(_isInitialized);
+  P_ASSERT(not _isOngoing);
 }
 
 bool DummyCouplingScheme:: isCouplingOngoing() const

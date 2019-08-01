@@ -36,7 +36,7 @@ void AitkenPostProcessing::initialize(DataMap &cplData)
   if (_dataIDs.size() == 1) {
     entries = cplData[_dataIDs.at(0)]->values->size();
   } else {
-    P_assertion(_dataIDs.size() == 2);
+    P_ASSERT(_dataIDs.size() == 2);
     entries = cplData[_dataIDs.at(0)]->values->size() +
               cplData[_dataIDs.at(1)]->values->size();
   }
@@ -49,7 +49,7 @@ void AitkenPostProcessing::initialize(DataMap &cplData)
   for (DataMap::value_type &pair : cplData) {
     int cols = pair.second->oldValues.cols();
     if (cols < 1) {
-      P_assertion(pair.second->values->size() > 0, pair.first);
+      P_ASSERT(pair.second->values->size() > 0, pair.first);
       utils::append(pair.second->oldValues,
                     (Eigen::VectorXd) Eigen::VectorXd::Zero(pair.second->values->size()));
     }
@@ -62,7 +62,7 @@ void AitkenPostProcessing::performPostProcessing(
   P_TRACE();
 
   // Compute aitken relaxation factor
-  P_assertion(utils::contained(*_dataIDs.begin(), cplData));
+  P_ASSERT(utils::contained(*_dataIDs.begin(), cplData));
 
   Eigen::VectorXd values;
   Eigen::VectorXd oldValues;

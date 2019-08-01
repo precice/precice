@@ -28,7 +28,7 @@ ParticipantConfiguration:: ParticipantConfiguration
 :
   _meshConfig(meshConfiguration)
 {
-  P_assertion(_meshConfig);
+  P_ASSERT(_meshConfig);
   using namespace xml;
   std::string doc;
   XMLTag tag(*this, TAG, XMLTag::OCCUR_ONCE_OR_MORE);
@@ -280,7 +280,7 @@ void ParticipantConfiguration:: setDimensions
   int dimensions )
 {
   P_TRACE(dimensions);
-  P_assertion((dimensions == 2) || (dimensions == 3), dimensions);
+  P_ASSERT((dimensions == 2) || (dimensions == 3), dimensions);
   _dimensions = dimensions;
 }
 
@@ -296,7 +296,7 @@ void ParticipantConfiguration:: xmlTagCallback
     _participants.push_back(p);
   }
   else if (tag.getName() == TAG_USE_MESH){
-    P_assertion(_dimensions != 0); // setDimensions() has been called
+    P_ASSERT(_dimensions != 0); // setDimensions() has been called
     std::string name = tag.getStringAttributeValue(ATTR_NAME);
     Eigen::VectorXd offset(_dimensions);
     /// @todo offset currently not supported
@@ -347,7 +347,7 @@ void ParticipantConfiguration:: xmlTagCallback
     _participants.back()->addReadData ( data, mesh );
   }
   else if ( tag.getName() == TAG_WATCH_POINT ){
-    P_assertion(_dimensions != 0); // setDimensions() has been called
+    P_ASSERT(_dimensions != 0); // setDimensions() has been called
     WatchPointConfig config;
     config.name = tag.getStringAttributeValue(ATTR_NAME);
     config.nameMesh = tag.getStringAttributeValue(ATTR_MESH);
@@ -402,7 +402,7 @@ partition::ReceivedPartition::GeometricFilter ParticipantConfiguration:: getGeoF
     return partition::ReceivedPartition::GeometricFilter::BROADCAST_FILTER;
   }
   else {
-    P_assertion(geoFilter == VALUE_NO_FILTER);
+    P_ASSERT(geoFilter == VALUE_NO_FILTER);
     return partition::ReceivedPartition::GeometricFilter::NO_FILTER;
   }
 }
@@ -494,7 +494,7 @@ void ParticipantConfiguration:: finishParticipantConfiguration
     mappingContext->timing = confMapping.timing;
 
     mapping::PtrMapping& map = mappingContext->mapping;
-    P_assertion(map.get() == nullptr);
+    P_ASSERT(map.get() == nullptr);
     map = confMapping.mapping;
 
     const mesh::PtrMesh& input = fromMeshContext.mesh;
@@ -507,7 +507,7 @@ void ParticipantConfiguration:: finishParticipantConfiguration
       participant->addWriteMappingContext(mappingContext);
     }
     else {
-      P_assertion(confMapping.direction == mapping::MappingConfiguration::READ);
+      P_ASSERT(confMapping.direction == mapping::MappingConfiguration::READ);
       participant->addReadMappingContext(mappingContext);
     }
 

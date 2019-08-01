@@ -37,10 +37,10 @@ QRFactorization::QRFactorization(
       _fstream_set(false),
       _globalRows(rows)
 {
-  P_assertion(_R.rows() == _cols, _R.rows(), _cols);
-  P_assertion(_R.cols() == _cols, _R.cols(), _cols);
-  P_assertion(_Q.cols() == _cols, _Q.cols(), _cols);
-  P_assertion(_Q.rows() == _rows, _Q.rows(), _rows);
+  P_ASSERT(_R.rows() == _cols, _R.rows(), _cols);
+  P_ASSERT(_R.cols() == _cols, _R.cols(), _cols);
+  P_ASSERT(_Q.cols() == _cols, _Q.cols(), _cols);
+  P_ASSERT(_Q.rows() == _rows, _Q.rows(), _rows);
 }
 
 /**
@@ -69,11 +69,11 @@ QRFactorization::QRFactorization(
     Eigen::VectorXd v = A.col(k);
     insertColumn(k, v);
   }
-  //P_assertion(_R.rows() == _cols, _R.rows(), _cols);
-  P_assertion(_R.cols() == _cols, _R.cols(), _cols);
-  P_assertion(_Q.cols() == _cols, _Q.cols(), _cols);
-  P_assertion(_Q.rows() == _rows, _Q.rows(), _rows);
-  P_assertion(_cols == m, _cols, m);
+  //P_ASSERT(_R.rows() == _cols, _R.rows(), _cols);
+  P_ASSERT(_R.cols() == _cols, _R.cols(), _cols);
+  P_ASSERT(_Q.cols() == _cols, _Q.cols(), _cols);
+  P_ASSERT(_Q.rows() == _rows, _Q.rows(), _rows);
+  P_ASSERT(_cols == m, _cols, m);
 }
 
 /**
@@ -118,7 +118,7 @@ void QRFactorization::applyFilter(double singularityLimit, std::vector<int> &del
           // QR1-filter
           if (index >= cols())
             break;
-          P_assertion(index < _cols, index, _cols);
+          P_ASSERT(index < _cols, index, _cols);
           double factor = (_filter == PostProcessing::QR1FILTER_ABS) ? 1.0 : _R.norm();
           if (std::fabs(_R(index, index)) < singularityLimit * factor) {
 
@@ -130,7 +130,7 @@ void QRFactorization::applyFilter(double singularityLimit, std::vector<int> &del
             //break;
             index--; // check same column index, as cols are shifted left
           }
-          P_assertion(delCols + _cols == (int) delFlag.size(), (delCols + _cols), delFlag.size());
+          P_ASSERT(delCols + _cols == (int) delFlag.size(), (delCols + _cols), delFlag.size());
           index++;
         }
       }
@@ -163,8 +163,8 @@ void QRFactorization::deleteColumn(int k)
 
   P_TRACE();
 
-  P_assertion(k >= 0, k);
-  P_assertion(k < _cols, k, _cols);
+  P_ASSERT(k >= 0, k);
+  P_ASSERT(k < _cols, k, _cols);
 
   // maintain decomposition and orthogonalization by application of givens rotations
 
@@ -193,10 +193,10 @@ void QRFactorization::deleteColumn(int k)
   _Q.conservativeResize(_rows, _cols - 1);
   _cols--;
 
-  P_assertion(_Q.cols() == _cols, _Q.cols(), _cols);
-  P_assertion(_Q.rows() == _rows, _Q.rows(), _rows);
-  P_assertion(_R.cols() == _cols, _R.cols(), _cols);
-  //P_assertion(_R.rows() == _cols, _Q.rows(), _cols);
+  P_ASSERT(_Q.cols() == _cols, _Q.cols(), _cols);
+  P_ASSERT(_Q.rows() == _rows, _Q.rows(), _rows);
+  P_ASSERT(_R.cols() == _cols, _R.cols(), _cols);
+  //P_ASSERT(_R.rows() == _cols, _Q.rows(), _cols);
 }
 
 // ATTENTION: This method works on the memory of vector v, thus changes the vector v.
@@ -211,9 +211,9 @@ bool QRFactorization::insertColumn(int k, const Eigen::VectorXd &vec, double sin
 
   bool applyFilter = (singularityLimit > 0.0);
 
-  P_assertion(k >= 0, k);
-  P_assertion(k <= _cols, k, _cols);
-  P_assertion(v.size() == _rows, v.size(), _rows);
+  P_ASSERT(k >= 0, k);
+  P_ASSERT(k <= _cols, k, _cols);
+  P_ASSERT(v.size() == _rows, v.size(), _rows);
 
   _cols++;
 
@@ -263,15 +263,15 @@ bool QRFactorization::insertColumn(int k, const Eigen::VectorXd &vec, double sin
     _R(j, j) = 0.;
   }
 
-  P_assertion(_R.cols() == _cols, _R.cols(), _cols);
-  //P_assertion(_R.rows() == _cols, _R.rows(), _cols);
+  P_ASSERT(_R.cols() == _cols, _R.cols(), _cols);
+  //P_ASSERT(_R.rows() == _cols, _R.rows(), _cols);
 
   // resize Q(1:n, 1:m) -> Q(1:n, 1:m+1)
   _Q.conservativeResize(_rows, _cols);
   _Q.col(_cols - 1) = v;
 
-  P_assertion(_Q.cols() == _cols, _Q.cols(), _cols);
-  P_assertion(_Q.rows() == _rows, _Q.rows(), _rows);
+  P_ASSERT(_Q.cols() == _cols, _Q.cols(), _cols);
+  P_ASSERT(_Q.rows() == _rows, _Q.rows(), _rows);
 
   // maintain decomposition and orthogonalization by application of givens rotations
   for (int l = _cols - 2; l >= k; l--) {
@@ -315,9 +315,9 @@ int QRFactorization::orthogonalize(
   P_TRACE();
 
   if (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()) {
-    P_assertion(_globalRows == _rows, _globalRows, _rows);
+    P_ASSERT(_globalRows == _rows, _globalRows, _rows);
   } else {
-    P_assertion(_globalRows != _rows, _globalRows, _rows, utils::MasterSlave::getRank());
+    P_ASSERT(_globalRows != _rows, _globalRows, _rows, utils::MasterSlave::getRank());
   }
 
   bool            null        = false;
@@ -433,10 +433,10 @@ int QRFactorization::orthogonalize_stable(
 
   // serial case
   if (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()) {
-    P_assertion(_globalRows == _rows, _globalRows, _rows);
+    P_ASSERT(_globalRows == _rows, _globalRows, _rows);
     // master-slave case
   } else {
-    P_assertion(_globalRows != _rows, _globalRows, _rows, utils::MasterSlave::getRank());
+    P_ASSERT(_globalRows != _rows, _globalRows, _rows, utils::MasterSlave::getRank());
   }
 
   bool            restart     = false;
@@ -707,10 +707,10 @@ void QRFactorization::reset(
   _theta      = theta;
   _sigma      = sigma;
   _globalRows = _rows;
-  P_assertion(_R.rows() == _cols, _R.rows(), _cols);
-  P_assertion(_R.cols() == _cols, _R.cols(), _cols);
-  P_assertion(_Q.cols() == _cols, _Q.cols(), _cols);
-  P_assertion(_Q.rows() == _rows, _Q.rows(), _rows);
+  P_ASSERT(_R.rows() == _cols, _R.rows(), _cols);
+  P_ASSERT(_R.cols() == _cols, _R.cols(), _cols);
+  P_ASSERT(_Q.cols() == _cols, _Q.cols(), _cols);
+  P_ASSERT(_Q.rows() == _rows, _Q.rows(), _rows);
 }
 
 void QRFactorization::reset(
@@ -740,11 +740,11 @@ void QRFactorization::reset(
       P_DEBUG("column " << col << " has not been inserted in the QR-factorization, failed to orthogonalize.");
     }
   }
-  P_assertion(_R.rows() == _cols, _R.rows(), _cols);
-  P_assertion(_R.cols() == _cols, _R.cols(), _cols);
-  P_assertion(_Q.cols() == _cols, _Q.cols(), _cols);
-  P_assertion(_Q.rows() == _rows, _Q.rows(), _rows);
-  P_assertion(_cols == m, _cols, m);
+  P_ASSERT(_R.rows() == _cols, _R.rows(), _cols);
+  P_ASSERT(_R.cols() == _cols, _R.cols(), _cols);
+  P_ASSERT(_Q.cols() == _cols, _Q.cols(), _cols);
+  P_ASSERT(_Q.rows() == _rows, _Q.rows(), _rows);
+  P_ASSERT(_cols == m, _cols, m);
 }
 
 void QRFactorization::pushFront(const Eigen::VectorXd &v)

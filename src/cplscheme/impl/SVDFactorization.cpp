@@ -96,8 +96,8 @@ void SVDFactorization::computeQRdecomposition(
   for (int colIndex = 0; colIndex < A.cols(); colIndex++) {
 
     // invariants:
-    P_assertion(colsQ == rowsR, colsQ, rowsR);
-    P_assertion(colsQ <= colIndex, colsQ, colIndex);
+    P_ASSERT(colsQ == rowsR, colsQ, rowsR);
+    P_ASSERT(colsQ <= colIndex, colsQ, colIndex);
 
     Vector col = A.col(colIndex);
 
@@ -200,9 +200,9 @@ void SVDFactorization::computeQRdecomposition(
     R.col(colsR) = r;   // insert gram-schmidt coefficients to the right in R
 
     colsR++;
-    P_assertion(colsR <= R.cols(), colsR, R.cols());
+    P_ASSERT(colsR <= R.cols(), colsR, R.cols());
     rowsR++;
-    P_assertion(rowsR <= R.rows(), rowsR, R.rows());
+    P_ASSERT(rowsR <= R.rows(), rowsR, R.rows());
     colsQ++;
 
     // failed to orthogonalize the column, i.e., it is linear dependent;
@@ -212,16 +212,16 @@ void SVDFactorization::computeQRdecomposition(
     if (not orthogonalized) {
 
       colsQ--;
-      P_assertion(colsQ >= 0, colsQ);
+      P_ASSERT(colsQ >= 0, colsQ);
       rowsR--;
-      P_assertion(rowsR >= 0, rowsR);
+      P_ASSERT(rowsR >= 0, rowsR);
       // delete column that was just inserted (as it is not orthogonal to Q)
       Q.col(colsQ) = Vector::Zero(A.rows());
       // delete line in R that corresponds to the just inserted but not orthogonal column
       // as we always insert to the right, no shifting/ application of givens roatations is
       // necessary.
       // Note: The corresponding column from R with index colIndex is not deleted: dimensions must align with A.
-      P_assertion(R(rowsR, colsR - 1) == 1.0, R(rowsR, colsR - 1));
+      P_ASSERT(R(rowsR, colsR - 1) == 1.0, R(rowsR, colsR - 1));
       R.row(rowsR) = Vector::Zero(A.cols());
     }
   }

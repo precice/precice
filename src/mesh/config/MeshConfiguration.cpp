@@ -67,7 +67,7 @@ void MeshConfiguration:: setDimensions
   int dimensions )
 {
   P_TRACE(dimensions);
-  P_assertion((dimensions == 2) || (dimensions == 3), dimensions);
+  P_ASSERT((dimensions == 2) || (dimensions == 3), dimensions);
   _dimensions = dimensions;
 }
 
@@ -77,7 +77,7 @@ void MeshConfiguration:: xmlTagCallback
 {
   P_TRACE(tag.getName());
   if (tag.getName() == TAG){
-    P_assertion(_dimensions != 0);
+    P_ASSERT(_dimensions != 0);
     std::string name = tag.getStringAttributeValue(ATTR_NAME);
     bool flipNormals = tag.getBooleanAttributeValue(ATTR_FLIP_NORMALS);
     _meshes.push_back(PtrMesh(new Mesh(name, _dimensions, flipNormals)));
@@ -140,8 +140,8 @@ void MeshConfiguration:: addMesh
 
 void MeshConfiguration:: setMeshSubIDs()
 {
-  P_assertion( _meshes.size() == _meshSubIDs.size() );
-  P_assertion( not _setMeshSubIDs );
+  P_ASSERT( _meshes.size() == _meshSubIDs.size() );
+  P_ASSERT( not _setMeshSubIDs );
   for ( size_t i=0; i < _meshes.size(); i++ ) {
     for ( const std::string & subIDName : _meshSubIDs[i] ) {
       _meshes[i]->setSubID ( subIDName );

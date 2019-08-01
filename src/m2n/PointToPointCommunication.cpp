@@ -79,7 +79,7 @@ void broadcast(mesh::Mesh::VertexDistribution &m)
     // Broadcast (send) vertex distributions.
     m2n::broadcastSend(m);
   } else {
-    P_assertion(utils::MasterSlave::isSlave());
+    P_ASSERT(utils::MasterSlave::isSlave());
     // Broadcast (receive) vertex distributions.
     m2n::broadcastReceive(m, 0);
   }
@@ -108,7 +108,7 @@ void print(std::map<int, std::vector<int>> const &m)
 
     std::cout << oss.str();
   } else {
-    P_assertion(utils::MasterSlave::isSlave());
+    P_ASSERT(utils::MasterSlave::isSlave());
 
     utils::MasterSlave::_communication->send(oss.str(), 0);
   }
@@ -157,7 +157,7 @@ void printCommunicationPartnerCountStats(std::map<int, std::vector<int>> const &
               << "Number of Interface Processes: " << count << "\n"
               << '\n';
   } else {
-    P_assertion(utils::MasterSlave::isSlave());
+    P_ASSERT(utils::MasterSlave::isSlave());
     utils::MasterSlave::_communication->send(size, 0);
   }
 }
@@ -211,7 +211,7 @@ void printLocalIndexCountStats(std::map<int, std::vector<int>> const &m)
               << "Number of Interface Processes: " << count << "\n"
               << '\n';
   } else {
-    P_assertion(utils::MasterSlave::isSlave());
+    P_ASSERT(utils::MasterSlave::isSlave());
 
     utils::MasterSlave::_communication->send(size, 0);
   }
@@ -295,7 +295,7 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
     m2n::send(vertexDistribution, 0, c);
     m2n::receive(requesterVertexDistribution, 0, c);
   } else {
-    P_assertion(utils::MasterSlave::isSlave());
+    P_ASSERT(utils::MasterSlave::isSlave());
   }
 
   Event e1("m2n.broadcastVertexDistributions", precice::syncMode);
@@ -385,7 +385,7 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
     m2n::receive(acceptorVertexDistribution, 0, c);
     m2n::send(vertexDistribution, 0, c);
   } else {
-    P_assertion(utils::MasterSlave::isSlave());
+    P_ASSERT(utils::MasterSlave::isSlave());
   }
 
   Event e1("m2n.broadcastVertexDistributions", precice::syncMode);

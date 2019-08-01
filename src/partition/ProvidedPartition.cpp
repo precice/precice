@@ -38,8 +38,8 @@ void ProvidedPartition::communicate()
         com::CommunicateMesh(utils::MasterSlave::_communication).sendMesh(*_mesh, 0);
     }
     if (utils::MasterSlave::isMaster())  {
-      P_assertion(utils::MasterSlave::getRank() == 0);
-      P_assertion(utils::MasterSlave::getSize() > 1);
+      P_ASSERT(utils::MasterSlave::getRank() == 0);
+      P_ASSERT(utils::MasterSlave::getSize() > 1);
 
       for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
         com::CommunicateMesh(utils::MasterSlave::_communication).receiveMesh(globalMesh, rankSlave);
@@ -91,10 +91,10 @@ void ProvidedPartition::compute()
     }
     int globalNumberOfVertices = -1;
     utils::MasterSlave::_communication->broadcast(globalNumberOfVertices, 0);
-    P_assertion(globalNumberOfVertices != -1);
+    P_ASSERT(globalNumberOfVertices != -1);
     _mesh->setGlobalNumberOfVertices(globalNumberOfVertices);
   } else if (utils::MasterSlave::isMaster()) {
-    P_assertion(utils::MasterSlave::getSize() > 1);
+    P_ASSERT(utils::MasterSlave::getSize() > 1);
     int vertexCounter = 0;
 
     // Add master vertices

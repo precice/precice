@@ -29,7 +29,7 @@ void HierarchicalAitkenPostProcessing::initialize(DataMap &cplData)
   P_CHECK(utils::contained(*_dataIDs.begin(), cplData),
         "Data with ID " << *_dataIDs.begin() << " is not contained in data given at initialization!");
   size_t entries = cplData[*_dataIDs.begin()]->values->size(); // Add zero boundaries
-  P_assertion((entries - 1) % 2 == 0);                           // entries has to be an odd number
+  P_ASSERT((entries - 1) % 2 == 0);                           // entries has to be an odd number
   double          initializer = std::numeric_limits<double>::max();
   Eigen::VectorXd toAppend    = Eigen::VectorXd::Constant(entries, initializer);
   utils::append(_residual, toAppend);
@@ -42,7 +42,7 @@ void HierarchicalAitkenPostProcessing::initialize(DataMap &cplData)
     totalEntries += entriesCurrentLevel;
     entriesCurrentLevel *= 2;
   }
-  P_assertion(totalEntries == entries);
+  P_ASSERT(totalEntries == entries);
   //  P_INFO( "HierarchicalAitkenPostProcessing: level count = " << _aitkenFactors.size() );
 
   // Append column for old values if not done by coupling scheme yet
@@ -61,7 +61,7 @@ void HierarchicalAitkenPostProcessing::performPostProcessing(
   typedef Eigen::VectorXd DataValues;
 
   // Compute aitken relaxation factor
-  P_assertion(utils::contained(*_dataIDs.begin(), cplData));
+  P_ASSERT(utils::contained(*_dataIDs.begin(), cplData));
   auto &values = *cplData[*_dataIDs.begin()]->values;
 
   // Attention: no passing by ref any more --> needs to be written back at the end of the function!
@@ -92,7 +92,7 @@ void HierarchicalAitkenPostProcessing::performPostProcessing(
   size_t entriesCurrentLevel = std::pow(2.0, (int) (_aitkenFactors.size() - 2));
   for (size_t level = _aitkenFactors.size() - 1; level > 0; level--) {
     size_t stepsize = (entries - 1) / std::pow(2.0, (int) (level - 1));
-    P_assertion(stepsize % 2 == 0);
+    P_ASSERT(stepsize % 2 == 0);
     size_t index = stepsize / 2;
 
     for (size_t i = 0; i < entriesCurrentLevel; i++) {
@@ -113,7 +113,7 @@ void HierarchicalAitkenPostProcessing::performPostProcessing(
     treatedEntries += entriesCurrentLevel;
     entriesCurrentLevel /= 2;
   }
-  P_assertion(treatedEntries == entries);
+  P_ASSERT(treatedEntries == entries);
   //  P_INFO( "hierarchized values = " << values );
   //  P_INFO( "hierarchized oldValues = " << oldValues );
   //  P_INFO( "hierarchized _residual = " << _residual );
@@ -158,7 +158,7 @@ void HierarchicalAitkenPostProcessing::performPostProcessing(
     treatedEntries += entriesCurrentLevel;
     entriesCurrentLevel *= 2;
   }
-  P_assertion(treatedEntries == entries);
+  P_ASSERT(treatedEntries == entries);
 
   _residual = residual; // Overwrite old residual by current one
 
@@ -198,7 +198,7 @@ void HierarchicalAitkenPostProcessing::performPostProcessing(
     treatedEntries += entriesCurrentLevel;
     entriesCurrentLevel *= 2;
   }
-  P_assertion(treatedEntries == entries);
+  P_ASSERT(treatedEntries == entries);
   //  P_INFO( "relaxed values = " << values );
   //  P_INFO( "oldValues = " << oldValues );
 

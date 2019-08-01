@@ -154,7 +154,7 @@ void SolverInterfaceImpl:: configure
 
   if (_serverMode || _clientMode){
     com::PtrCommunication com = _accessor->getClientServerCommunication();
-    P_assertion(com.get() != nullptr);
+    P_ASSERT(com.get() != nullptr);
     _requestManager = std::make_shared<RequestManager>(*this, com, _couplingScheme);
   }
 
@@ -162,14 +162,14 @@ void SolverInterfaceImpl:: configure
   for (const MeshContext* meshContext : _accessor->usedMeshContexts()) {
     const mesh::PtrMesh& mesh = meshContext->mesh;
     for (std::pair<std::string,int> nameID : mesh->getNameIDPairs()) {
-      P_assertion(not utils::contained(nameID.first, _meshIDs));
+      P_ASSERT(not utils::contained(nameID.first, _meshIDs));
       _meshIDs[nameID.first] = nameID.second;
     }
-    P_assertion(_dataIDs.find(mesh->getID())==_dataIDs.end());
+    P_ASSERT(_dataIDs.find(mesh->getID())==_dataIDs.end());
     _dataIDs[mesh->getID()] = std::map<std::string,int>();
-    P_assertion(_dataIDs.find(mesh->getID())!=_dataIDs.end());
+    P_ASSERT(_dataIDs.find(mesh->getID())!=_dataIDs.end());
     for (const mesh::PtrData& data : mesh->data()) {
-      P_assertion(_dataIDs[mesh->getID()].find(data->getName())==_dataIDs[mesh->getID()].end());
+      P_ASSERT(_dataIDs[mesh->getID()].find(data->getName())==_dataIDs[mesh->getID()].end());
       _dataIDs[mesh->getID()][data->getName()] = data->getID();
     }
     std::string meshName = mesh->getName();
@@ -436,12 +436,12 @@ void SolverInterfaceImpl:: finalize()
           iter.second.m2n->getMasterCommunication()->send(ping,0);
           std::string receive = "init";
           iter.second.m2n->getMasterCommunication()->receive(receive,0);
-          P_assertion(receive==pong);
+          P_ASSERT(receive==pong);
         }
         else{
           std::string receive = "init";
           iter.second.m2n->getMasterCommunication()->receive(receive,0);
-          P_assertion(receive==ping);
+          P_ASSERT(receive==ping);
           iter.second.m2n->getMasterCommunication()->send(pong,0);
         }
       }
@@ -596,7 +596,7 @@ int SolverInterfaceImpl:: getMeshVertexSize
   else {
     PRECICE_REQUIRE_MESH_USE(meshID);
     MeshContext& context = _accessor->meshContext(meshID);
-    P_assertion(context.mesh.get() != nullptr);
+    P_ASSERT(context.mesh.get() != nullptr);
     size = context.mesh->vertices().size();
   }
   P_DEBUG("return " << size);
@@ -697,12 +697,12 @@ void SolverInterfaceImpl:: getMeshVertices
     mesh::PtrMesh mesh(context.mesh);
     P_DEBUG("Get positions");
     auto & vertices = mesh->vertices();
-    P_assertion(size <= vertices.size(), size, vertices.size());
+    P_ASSERT(size <= vertices.size(), size, vertices.size());
     Eigen::Map<Eigen::MatrixXd> posMatrix{
         positions, _dimensions, static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(size)};
     for (size_t i=0; i < size; i++){
       const size_t id = ids[i];
-      P_assertion(id < vertices.size(), id, vertices.size());
+      P_ASSERT(id < vertices.size(), id, vertices.size());
       posMatrix.col(i) = vertices[id].getCoords();
     }
   }
@@ -724,7 +724,7 @@ void SolverInterfaceImpl:: getMeshVertexIDsFromPositions (
     mesh::PtrMesh mesh(context.mesh);
     P_DEBUG("Get IDs");
     const auto &vertices = mesh->vertices();
-    P_assertion(vertices.size() <= size, vertices.size(), size);
+    P_ASSERT(vertices.size() <= size, vertices.size(), size);
     Eigen::Map<const Eigen::MatrixXd> posMatrix{
         positions, _dimensions, static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(size)};
     const auto vsize = vertices.size();
@@ -931,7 +931,7 @@ void SolverInterfaceImpl:: mapWriteDataFrom
       context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
       P_DEBUG("Map data \"" << context.fromData->getName()
                    << "\" from mesh \"" << context.mesh->getName() << "\"");
-      P_assertion(mappingContext.mapping==context.mappingContext.mapping);
+      P_ASSERT(mappingContext.mapping==context.mappingContext.mapping);
       mappingContext.mapping->map(inDataID, outDataID);
     }
   }
@@ -967,7 +967,7 @@ void SolverInterfaceImpl:: mapReadDataTo
       context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
       P_DEBUG("Map data \"" << context.fromData->getName()
                    << "\" to mesh \"" << context.mesh->getName() << "\"");
-      P_assertion(mappingContext.mapping==context.mappingContext.mapping);
+      P_ASSERT(mappingContext.mapping==context.mappingContext.mapping);
       mappingContext.mapping->map(inDataID, outDataID);
       P_DEBUG("First mapped values = " << utils::firstN(context.toData->values(), 10));
     }
@@ -986,8 +986,8 @@ void SolverInterfaceImpl:: writeBlockVectorData
   PRECICE_VALIDATE_DATA_ID(fromDataID);
   if (size == 0)
     return;
-  P_assertion(valueIndices != nullptr);
-  P_assertion(values != nullptr);
+  P_ASSERT(valueIndices != nullptr);
+  P_ASSERT(values != nullptr);
   if (_clientMode){
     _requestManager->requestWriteBlockVectorData(fromDataID, size, valueIndices, values);
   }
@@ -996,7 +996,7 @@ void SolverInterfaceImpl:: writeBlockVectorData
     DataContext& context = _accessor->dataContext(fromDataID);
     P_CHECK(context.fromData->getDimensions()==_dimensions,
         "You cannot call writeBlockVectorData on the scalar data type " << context.fromData->getName());
-    P_assertion(context.toData.get() != nullptr);
+    P_ASSERT(context.toData.get() != nullptr);
     auto& valuesInternal = context.fromData->values();
     for (int i=0; i < size; i++){
       const auto valueIndex = valueIndices[i];
@@ -1004,7 +1004,7 @@ void SolverInterfaceImpl:: writeBlockVectorData
       int offsetInternal = valueIndex*_dimensions;
       int offset = i*_dimensions;
       for (int dim=0; dim < _dimensions; dim++){
-        P_assertion(offset+dim < valuesInternal.size(),
+        P_ASSERT(offset+dim < valuesInternal.size(),
                    offset+dim, valuesInternal.size());
         valuesInternal[offsetInternal + dim] = values[offset + dim];
       }
@@ -1029,7 +1029,7 @@ void SolverInterfaceImpl:: writeVectorData
     DataContext& context = _accessor->dataContext(fromDataID);
     P_CHECK(context.fromData->getDimensions()==_dimensions,
         "You cannot call writeVectorData on the scalar data type " << context.fromData->getName());
-    P_assertion(context.toData.get() != nullptr);
+    P_ASSERT(context.toData.get() != nullptr);
     auto& values = context.fromData->values();
     P_CHECK(0 <= valueIndex && valueIndex < values.size()/context.fromData->getDimensions(), "Value index out of range");
     int offset = valueIndex * _dimensions;
@@ -1051,8 +1051,8 @@ void SolverInterfaceImpl:: writeBlockScalarData
   PRECICE_VALIDATE_DATA_ID(fromDataID);
   if (size == 0)
     return;
-  P_assertion(valueIndices != nullptr);
-  P_assertion(values != nullptr);
+  P_ASSERT(valueIndices != nullptr);
+  P_ASSERT(values != nullptr);
   if (_clientMode){
     _requestManager->requestWriteBlockScalarData(fromDataID, size, valueIndices, values);
   }
@@ -1061,12 +1061,12 @@ void SolverInterfaceImpl:: writeBlockScalarData
     DataContext& context = _accessor->dataContext(fromDataID);
     P_CHECK(context.fromData->getDimensions()==1,
         "You cannot call writeBlockScalarData on the vector data type " << context.fromData->getName());
-    P_assertion(context.toData.get() != nullptr);
+    P_ASSERT(context.toData.get() != nullptr);
     auto& valuesInternal = context.fromData->values();
     for (int i=0; i < size; i++){
       const auto valueIndex = valueIndices[i];
       P_CHECK(0 <= valueIndex && valueIndex < valuesInternal.size()/context.fromData->getDimensions(), "Value index out of range");
-      P_assertion(i < valuesInternal.size(), i, valuesInternal.size());
+      P_ASSERT(i < valuesInternal.size(), i, valuesInternal.size());
       valuesInternal[valueIndex] = values[i];
     }
   }
@@ -1089,7 +1089,7 @@ void SolverInterfaceImpl:: writeScalarData
     DataContext& context = _accessor->dataContext(fromDataID);
     P_CHECK(context.fromData->getDimensions()==1,
         "You cannot call writeScalarData on the vector data type " << context.fromData->getName());
-    P_assertion(context.toData);
+    P_ASSERT(context.toData);
     auto& values = context.fromData->values();
     P_CHECK(0 <= valueIndex && valueIndex < values.size()/context.fromData->getDimensions(), "Value index out of range");
     values[valueIndex] = value;
@@ -1107,8 +1107,8 @@ void SolverInterfaceImpl:: readBlockVectorData
   PRECICE_VALIDATE_DATA_ID(toDataID);
   if (size == 0)
     return;
-  P_assertion(valueIndices != nullptr);
-  P_assertion(values != nullptr);
+  P_ASSERT(valueIndices != nullptr);
+  P_ASSERT(values != nullptr);
   if (_clientMode){
     _requestManager->requestReadBlockVectorData(toDataID, size, valueIndices, values);
   }
@@ -1117,7 +1117,7 @@ void SolverInterfaceImpl:: readBlockVectorData
     DataContext& context = _accessor->dataContext(toDataID);
     P_CHECK(context.toData->getDimensions()==_dimensions,
         "You cannot call readBlockVectorData on the scalar data type " << context.toData->getName());
-    P_assertion(context.fromData.get() != nullptr);
+    P_ASSERT(context.fromData.get() != nullptr);
     auto& valuesInternal = context.toData->values();
     for (int i=0; i < size; i++){
       const auto valueIndex = valueIndices[i];
@@ -1125,7 +1125,7 @@ void SolverInterfaceImpl:: readBlockVectorData
       int offsetInternal = valueIndex * _dimensions;
       int offset = i * _dimensions;
       for (int dim=0; dim < _dimensions; dim++){
-        P_assertion(offsetInternal+dim < valuesInternal.size(),
+        P_ASSERT(offsetInternal+dim < valuesInternal.size(),
                    offsetInternal+dim, valuesInternal.size());
         values[offset + dim] = valuesInternal[offsetInternal + dim];
       }
@@ -1150,7 +1150,7 @@ void SolverInterfaceImpl:: readVectorData
     DataContext& context = _accessor->dataContext(toDataID);
     P_CHECK(context.toData->getDimensions()==_dimensions,
         "You cannot call readVectorData on the scalar data type " << context.toData->getName());
-    P_assertion(context.fromData);
+    P_ASSERT(context.fromData);
     auto& values = context.toData->values();
     P_CHECK(0 <= valueIndex && valueIndex < values.size()/context.fromData->getDimensions(), "Value index out of range");
     int offset = valueIndex * _dimensions;
@@ -1174,8 +1174,8 @@ void SolverInterfaceImpl:: readBlockScalarData
   if (size == 0)
     return;
   P_DEBUG("size = " << size);
-  P_assertion(valueIndices != nullptr);
-  P_assertion(values != nullptr);
+  P_ASSERT(valueIndices != nullptr);
+  P_ASSERT(values != nullptr);
   if (_clientMode){
     _requestManager->requestReadBlockScalarData(toDataID, size, valueIndices, values);
   }
@@ -1184,7 +1184,7 @@ void SolverInterfaceImpl:: readBlockScalarData
     DataContext& context = _accessor->dataContext(toDataID);
     P_CHECK(context.toData->getDimensions()==1,
         "You cannot call readBlockScalarData on the vector data type " << context.toData->getName());
-    P_assertion(context.fromData.get() != nullptr);
+    P_ASSERT(context.fromData.get() != nullptr);
     auto& valuesInternal = context.toData->values();
     for (int i=0; i < size; i++){
         const auto valueIndex = valueIndices[i];
@@ -1211,7 +1211,7 @@ void SolverInterfaceImpl:: readScalarData
     DataContext& context = _accessor->dataContext(toDataID);
     P_CHECK(context.toData->getDimensions()==1,
         "You cannot call readScalarData on the vector data type " << context.toData->getName());
-    P_assertion(context.fromData);
+    P_ASSERT(context.fromData);
     auto& values = context.toData->values();
     P_CHECK(0 <= valueIndex && valueIndex < values.size(), "Value index out of range");
     value = values[valueIndex];
@@ -1248,7 +1248,7 @@ MeshHandle SolverInterfaceImpl:: getMeshHandle
   const std::string& meshName )
 {
   P_TRACE(meshName);
-  P_assertion(not _clientMode);
+  P_ASSERT(not _clientMode);
   for (MeshContext* context : _accessor->usedMeshContexts()){
     if (context->mesh->getName() == meshName){
       return {context->mesh->content()};
@@ -1260,7 +1260,7 @@ MeshHandle SolverInterfaceImpl:: getMeshHandle
 
 void SolverInterfaceImpl:: runServer()
 {
-  P_assertion(_serverMode);
+  P_ASSERT(_serverMode);
   initializeClientServerCommunication();
   _requestManager->handleRequests();
 }
@@ -1286,8 +1286,8 @@ void SolverInterfaceImpl:: configureM2Ns
           if (participant->useServer()){
             comPartner += "Server";
           }
-          P_assertion(not utils::contained(comPartner, _m2ns), comPartner);
-          P_assertion(std::get<0>(m2nTuple));
+          P_ASSERT(not utils::contained(comPartner, _m2ns), comPartner);
+          P_ASSERT(std::get<0>(m2nTuple));
 
           _m2ns[comPartner] = [&]{
               m2n::BoundM2N bound;
@@ -1498,7 +1498,7 @@ void SolverInterfaceImpl:: performDataActions
   double                 fullDt )
 {
   P_TRACE();
-  P_assertion(not _clientMode);
+  P_ASSERT(not _clientMode);
   for (action::PtrAction& action : _accessor->actions()) {
     if (timings.find(action->getTiming()) != timings.end()){
       action->performAction(time, dt, partFullDt, fullDt);
@@ -1509,7 +1509,7 @@ void SolverInterfaceImpl:: performDataActions
 void SolverInterfaceImpl:: handleExports()
 {
   P_TRACE();
-  P_assertion(not _clientMode);
+  P_ASSERT(not _clientMode);
   //timesteps was already incremented before
   int timesteps = _couplingScheme->getTimesteps()-1;
 
@@ -1570,7 +1570,7 @@ void SolverInterfaceImpl:: initializeClientServerCommunication()
 {
   P_TRACE();
   com::PtrCommunication com = _accessor->getClientServerCommunication();
-  P_assertion(com.get() != nullptr);
+  P_ASSERT(com.get() != nullptr);
   if ( _serverMode ){
     P_INFO("Setting up communication to client" );
     com->acceptConnection ( _accessorName + "Server", _accessorName, 0);
@@ -1597,7 +1597,7 @@ void SolverInterfaceImpl:: initializeMasterSlaveCommunication()
     utils::MasterSlave::_communication->setRankOffset(rankOffset);
   }
   else {
-    P_assertion(utils::MasterSlave::isSlave());
+    P_ASSERT(utils::MasterSlave::isSlave());
     utils::MasterSlave::_communication->requestConnection( _accessorName + "Master", _accessorName,
                             _accessorProcessRank-rankOffset, _accessorCommunicatorSize-rankOffset );
   }
@@ -1605,7 +1605,7 @@ void SolverInterfaceImpl:: initializeMasterSlaveCommunication()
 
 void SolverInterfaceImpl:: syncTimestep(double computedTimestepLength)
 {
-  P_assertion(utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave());
+  P_ASSERT(utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave());
   if(utils::MasterSlave::isSlave()){
     utils::MasterSlave::_communication->send(computedTimestepLength, 0);
   }

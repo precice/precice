@@ -19,7 +19,7 @@ FindClosestEdge:: FindClosestEdge
   _vectorToProjectionPoint ( Eigen::VectorXd::Constant(searchPoint.size(), std::numeric_limits<double>::max()) ),
   _parametersProjectionPoint( {_shortestDistance , _shortestDistance} )
 {
-  P_assertion( (_searchPoint.size() == 2) || (_searchPoint.size() == 3),
+  P_ASSERT( (_searchPoint.size() == 2) || (_searchPoint.size() == 3),
                _searchPoint.size() );
 }
 
@@ -40,7 +40,7 @@ double FindClosestEdge:: getEuclidianDistance()
 
 mesh::Edge& FindClosestEdge:: getClosestEdge()
 {
-  P_assertion( _closestEdge != nullptr );
+  P_ASSERT( _closestEdge != nullptr );
   return *_closestEdge;
 }
 
@@ -76,7 +76,7 @@ void FindClosestEdge:: find ( mesh::Edge& edge )
   auto& norm = edge.getNormal();
 
   auto ret = math::barycenter::calcBarycentricCoordsForEdge(a, b, norm, _searchPoint);
-  P_assertion(ret.barycentricCoords.size() == 2);
+  P_ASSERT(ret.barycentricCoords.size() == 2);
 
   bool inside = not (ret.barycentricCoords.array() < - math::NUMERICAL_ZERO_DIFFERENCE).any();
 

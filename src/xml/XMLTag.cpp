@@ -39,7 +39,7 @@ XMLTag& XMLTag::addNamespace(const std::string &namespaceName)
 XMLTag& XMLTag::addSubtag(const XMLTag &tag)
 {
   P_TRACE(tag._fullName);
-  P_assertion(tag._name != std::string(""));
+  P_ASSERT(tag._name != std::string(""));
   if (not tag._namespace.empty()) {
     _configuredNamespaces[tag._namespace] = false;
   }
@@ -51,7 +51,7 @@ XMLTag& XMLTag::addSubtag(const XMLTag &tag)
 XMLTag& XMLTag::addAttribute(const XMLAttribute<double> &attribute)
 {
   P_TRACE(attribute.getName());
-  P_assertion(not utils::contained(attribute.getName(), _attributes));
+  P_ASSERT(not utils::contained(attribute.getName(), _attributes));
   _attributes.insert(attribute.getName());
   _doubleAttributes.insert(std::pair<std::string, XMLAttribute<double>>(attribute.getName(), attribute));
   return *this;
@@ -60,7 +60,7 @@ XMLTag& XMLTag::addAttribute(const XMLAttribute<double> &attribute)
 XMLTag& XMLTag::addAttribute(const XMLAttribute<int> &attribute)
 {
   P_TRACE(attribute.getName());
-  P_assertion(not utils::contained(attribute.getName(), _attributes));
+  P_ASSERT(not utils::contained(attribute.getName(), _attributes));
   _attributes.insert(attribute.getName());
   _intAttributes.insert(std::pair<std::string, XMLAttribute<int>>(attribute.getName(), attribute));
   return *this;
@@ -69,7 +69,7 @@ XMLTag& XMLTag::addAttribute(const XMLAttribute<int> &attribute)
 XMLTag& XMLTag::addAttribute(const XMLAttribute<std::string> &attribute)
 {
   P_TRACE(attribute.getName());
-  P_assertion(not utils::contained(attribute.getName(), _attributes));
+  P_ASSERT(not utils::contained(attribute.getName(), _attributes));
   _attributes.insert(attribute.getName());
   _stringAttributes.insert(std::pair<std::string, XMLAttribute<std::string>>(attribute.getName(), attribute));
   return *this;
@@ -78,7 +78,7 @@ XMLTag& XMLTag::addAttribute(const XMLAttribute<std::string> &attribute)
 XMLTag& XMLTag::addAttribute(const XMLAttribute<bool> &attribute)
 {
   P_TRACE(attribute.getName());
-  P_assertion(not utils::contained(attribute.getName(), _attributes));
+  P_ASSERT(not utils::contained(attribute.getName(), _attributes));
   _attributes.insert(attribute.getName());
   _booleanAttributes.insert(std::pair<std::string, XMLAttribute<bool>>(attribute.getName(), attribute));
   return *this;
@@ -87,7 +87,7 @@ XMLTag& XMLTag::addAttribute(const XMLAttribute<bool> &attribute)
 XMLTag& XMLTag::addAttribute(const XMLAttribute<Eigen::VectorXd> &attribute)
 {
   P_TRACE(attribute.getName());
-  P_assertion(not utils::contained(attribute.getName(), _attributes));
+  P_ASSERT(not utils::contained(attribute.getName(), _attributes));
   _attributes.insert(attribute.getName());
   _eigenVectorXdAttributes.insert(
       std::pair<std::string, XMLAttribute<Eigen::VectorXd>>(attribute.getName(), attribute));
@@ -103,7 +103,7 @@ double XMLTag::getDoubleAttributeValue(const std::string &name) const
 {
   std::map<std::string, XMLAttribute<double>>::const_iterator iter;
   iter = _doubleAttributes.find(name);
-  P_assertion(iter != _doubleAttributes.end());
+  P_ASSERT(iter != _doubleAttributes.end());
   return iter->second.getValue();
 }
 
@@ -111,7 +111,7 @@ int XMLTag::getIntAttributeValue(const std::string &name) const
 {
   std::map<std::string, XMLAttribute<int>>::const_iterator iter;
   iter = _intAttributes.find(name);
-  P_assertion(iter != _intAttributes.end());
+  P_ASSERT(iter != _intAttributes.end());
   return iter->second.getValue();
 }
 
@@ -119,7 +119,7 @@ const std::string &XMLTag::getStringAttributeValue(const std::string &name) cons
 {
   std::map<std::string, XMLAttribute<std::string>>::const_iterator iter;
   iter = _stringAttributes.find(name);
-  P_assertion(iter != _stringAttributes.end(), name);
+  P_ASSERT(iter != _stringAttributes.end(), name);
   return iter->second.getValue();
 }
 
@@ -127,7 +127,7 @@ bool XMLTag::getBooleanAttributeValue(const std::string &name) const
 {
   std::map<std::string, XMLAttribute<bool>>::const_iterator iter;
   iter = _booleanAttributes.find(name);
-  P_assertion(iter != _booleanAttributes.end());
+  P_ASSERT(iter != _booleanAttributes.end());
   return iter->second.getValue();
 }
 
@@ -136,7 +136,7 @@ Eigen::VectorXd XMLTag::getEigenVectorXdAttributeValue(const std::string &name, 
   P_TRACE(name, dimensions);
   // std::map<std::string, XMLAttribute<utils::DynVector> >::const_iterator iter;
   auto iter = _eigenVectorXdAttributes.find(name);
-  P_assertion(iter != _eigenVectorXdAttributes.end());
+  P_ASSERT(iter != _eigenVectorXdAttributes.end());
   P_CHECK(iter->second.getValue().size() >= dimensions,
         "Vector attribute \"" << name << "\" of tag <" << getFullName()
                               << "> has less dimensions than required (" << iter->second.getValue().size()
@@ -274,7 +274,7 @@ void XMLTag::areAllSubtagsConfigured() const
     bool occurOnceOrMore = tag->getOccurrence() == OCCUR_ONCE_OR_MORE;
 
     if (not ns.empty()) {
-      P_assertion(utils::contained(ns, _configuredNamespaces));
+      P_ASSERT(utils::contained(ns, _configuredNamespaces));
       configured |= _configuredNamespaces.find(ns)->second;
     }
 

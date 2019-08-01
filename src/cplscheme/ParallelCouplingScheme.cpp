@@ -27,9 +27,9 @@ ParallelCouplingScheme::ParallelCouplingScheme
 {
   _couplingMode = cplMode;
   // Coupling mode must be either Explicit or Implicit when using SerialCouplingScheme.
-  P_assertion(_couplingMode != Undefined);
+  P_ASSERT(_couplingMode != Undefined);
   if (_couplingMode == Explicit) {
-    P_assertion(maxIterations == 1);
+    P_ASSERT(maxIterations == 1);
   }
 }
 
@@ -39,9 +39,9 @@ void ParallelCouplingScheme::initialize
   int    startTimestep )
 {
   P_TRACE(startTime, startTimestep);
-  P_assertion(not isInitialized());
-  P_assertion(math::greaterEquals(startTime, 0.0), startTime);
-  P_assertion(startTimestep >= 0, startTimestep);
+  P_ASSERT(not isInitialized());
+  P_ASSERT(math::greaterEquals(startTime, 0.0), startTime);
+  P_ASSERT(startTimestep >= 0, startTimestep);
   setTime(startTime);
   setTimesteps(startTimestep);
   if (_couplingMode == Implicit) {
@@ -332,8 +332,8 @@ void ParallelCouplingScheme::implicitAdvance()
 void ParallelCouplingScheme::mergeData()
 {
   P_TRACE();
-  P_assertion(!doesFirstStep(), "Only the second participant should do the post processing." );
-  P_assertion(_allData.empty(), "This function should only be called once.");
+  P_ASSERT(!doesFirstStep(), "Only the second participant should do the post processing." );
+  P_ASSERT(_allData.empty(), "This function should only be called once.");
   _allData.insert(getSendData().begin(), getSendData().end());
   _allData.insert(getReceiveData().begin(), getReceiveData().end());
 }

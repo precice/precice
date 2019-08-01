@@ -27,7 +27,7 @@ void ResidualPreconditioner::_update_(bool timestepComplete,
       }
       norms[k] = utils::MasterSlave::l2norm(part);
       offset += _subVectorSizes[k];
-      P_assertion(norms[k] > 0.0);
+      P_ASSERT(norms[k] > 0.0);
     }
 
     offset = 0;

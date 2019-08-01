@@ -80,7 +80,7 @@ public:
     */
    CONTENT_T & operator[] ( size_t index )
    {
-      P_assertion( index < _content.size() );
+      P_ASSERT( index < _content.size() );
       return *_content[index];
    }
 
@@ -89,7 +89,7 @@ public:
     */
    const CONTENT_T & operator[] ( size_t index ) const
    {
-      P_assertion( index < _content.size() );
+      P_ASSERT( index < _content.size() );
       return *_content[index];
    }
 
@@ -143,7 +143,7 @@ public:
    void deleteElements ()
    {
       for ( CONTENT_T * elem : _content ) {
-         P_assertion( elem != NULL );
+         P_ASSERT( elem != NULL );
          delete ( elem );
       }
    }

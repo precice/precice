@@ -19,7 +19,7 @@ ScaleByDtAction::ScaleByDtAction(
       _targetData(mesh->data(targetDataID)),
       _scaling(scaling)
 {
-  P_assertion(_sourceData->getDimensions() == _targetData->getDimensions(),
+  P_ASSERT(_sourceData->getDimensions() == _targetData->getDimensions(),
             _sourceData->getDimensions(), _targetData->getDimensions());
 }
 
@@ -32,7 +32,7 @@ void ScaleByDtAction::performAction(
   P_TRACE(dt, computedPartFullDt, fullDt);
   auto &sourceValues = _sourceData->values();
   auto &targetValues = _targetData->values();
-  P_assertion(sourceValues.size() == targetValues.size(),
+  P_ASSERT(sourceValues.size() == targetValues.size(),
             sourceValues.size(), targetValues.size());
   if (_scaling == SCALING_BY_COMPUTED_DT_RATIO) {
     double scaling = dt / fullDt;
@@ -46,7 +46,7 @@ void ScaleByDtAction::performAction(
       targetValues[i] = sourceValues[i] * fullDt;
     }
   } else {
-    P_assertion(_scaling == SCALING_BY_COMPUTED_DT_PART_RATIO, _scaling);
+    P_ASSERT(_scaling == SCALING_BY_COMPUTED_DT_PART_RATIO, _scaling);
     double scaling = computedPartFullDt / fullDt;
     P_DEBUG("Scale by computed dt part ratio " << scaling);
     for (int i = 0; i < targetValues.size(); i++) {

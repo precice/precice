@@ -28,8 +28,8 @@ void NearestNeighborMapping:: computeMapping()
 {
   P_TRACE(input()->vertices().size());
 
-  P_assertion(input().get() != nullptr);
-  P_assertion(output().get() != nullptr);
+  P_ASSERT(input().get() != nullptr);
+  P_ASSERT(output().get() != nullptr);
 
   const std::string baseEvent = "map.nn.computeMapping.From" + input()->getName() + "To" + output()->getName();
   precice::utils::Event e(baseEvent, precice::syncMode);
@@ -52,7 +52,7 @@ void NearestNeighborMapping:: computeMapping()
     }
   }
   else {
-    P_assertion(getConstraint() == CONSERVATIVE, getConstraint());
+    P_ASSERT(getConstraint() == CONSERVATIVE, getConstraint());
     P_DEBUG("Compute conservative mapping");
     precice::utils::Event e2(baseEvent+".getIndexOnVertices", precice::syncMode);
     auto rtree = mesh::rtree::getVertexRTree(output());
@@ -103,11 +103,11 @@ void NearestNeighborMapping:: map
   Eigen::VectorXd& outputValues = output()->data(outputDataID)->values();
   //assign(outputValues) = 0.0;
   int valueDimensions = input()->data(inputDataID)->getDimensions();
-  P_assertion( valueDimensions == output()->data(outputDataID)->getDimensions(),
+  P_ASSERT( valueDimensions == output()->data(outputDataID)->getDimensions(),
               valueDimensions, output()->data(outputDataID)->getDimensions() );
-  P_assertion( inputValues.size() / valueDimensions == (int)input()->vertices().size(),
+  P_ASSERT( inputValues.size() / valueDimensions == (int)input()->vertices().size(),
                inputValues.size(), valueDimensions, input()->vertices().size() );
-  P_assertion( outputValues.size() / valueDimensions == (int)output()->vertices().size(),
+  P_ASSERT( outputValues.size() / valueDimensions == (int)output()->vertices().size(),
                outputValues.size(), valueDimensions, output()->vertices().size() );
   if (getConstraint() == CONSISTENT){
     P_DEBUG("Map consistent");
@@ -120,7 +120,7 @@ void NearestNeighborMapping:: map
     }
   }
   else {
-    P_assertion(getConstraint() == CONSERVATIVE, getConstraint());
+    P_ASSERT(getConstraint() == CONSERVATIVE, getConstraint());
     P_DEBUG("Map conservative");
     size_t const inSize = input()->vertices().size();
     for ( size_t i=0; i < inSize; i++ ){
@@ -145,7 +145,7 @@ void NearestNeighborMapping::tagMeshFirstRound()
     }
   }
   else {
-    P_assertion(getConstraint() == CONSERVATIVE, getConstraint());
+    P_ASSERT(getConstraint() == CONSERVATIVE, getConstraint());
     for(mesh::Vertex& v : output()->vertices()){
       if(utils::contained(v.getID(),_vertexIndices)) v.tag();
     }

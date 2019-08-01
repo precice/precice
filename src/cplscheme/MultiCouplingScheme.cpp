@@ -40,9 +40,9 @@ void MultiCouplingScheme::initialize
   int    startTimestep )
 {
   P_TRACE(startTime, startTimestep);
-  P_assertion(not isInitialized());
-  P_assertion(math::greaterEquals(startTime, 0.0), startTime);
-  P_assertion(startTimestep >= 0, startTimestep);
+  P_ASSERT(not isInitialized());
+  P_ASSERT(math::greaterEquals(startTime, 0.0), startTime);
+  P_ASSERT(startTimestep >= 0, startTimestep);
   setTime(startTime);
   setTimesteps(startTimestep);
 
@@ -172,7 +172,7 @@ void MultiCouplingScheme::advance()
 
     for (m2n::PtrM2N m2n : _communications) {
       m2n->send(convergence);
-      P_assertion(not _isCoarseModelOptimizationActive);
+      P_ASSERT(not _isCoarseModelOptimizationActive);
       m2n->send(_isCoarseModelOptimizationActive); //need to do this to match with ParallelCplScheme
     }
 
@@ -208,8 +208,8 @@ void MultiCouplingScheme::advance()
 void MultiCouplingScheme::mergeData()
 {
   P_TRACE();
-  P_assertion(_allData.empty(), "This function should only be called once.");
-  P_assertion(_sendDataVector.size()==_receiveDataVector.size());
+  P_ASSERT(_allData.empty(), "This function should only be called once.");
+  P_ASSERT(_sendDataVector.size()==_receiveDataVector.size());
   for(size_t i=0;i<_sendDataVector.size();i++){
     _allData.insert(_sendDataVector[i].begin(), _sendDataVector[i].end());
     _allData.insert(_receiveDataVector[i].begin(), _receiveDataVector[i].end());
@@ -261,8 +261,8 @@ void MultiCouplingScheme:: sendData()
   P_TRACE();
 
   for(size_t i=0;i<_communications.size();i++){
-    P_assertion(_communications[i].get() != nullptr);
-    P_assertion(_communications[i]->isConnected());
+    P_ASSERT(_communications[i].get() != nullptr);
+    P_ASSERT(_communications[i]->isConnected());
 
     for (DataMap::value_type& pair : _sendDataVector[i]) {
       int size = pair.second->values->size();
@@ -278,8 +278,8 @@ void MultiCouplingScheme:: receiveData()
   P_TRACE();
 
   for(size_t i=0;i<_communications.size();i++){
-    P_assertion(_communications[i].get() != nullptr);
-    P_assertion(_communications[i]->isConnected());
+    P_ASSERT(_communications[i].get() != nullptr);
+    P_ASSERT(_communications[i]->isConnected());
 
     for (DataMap::value_type& pair : _receiveDataVector[i]) {
       int size = pair.second->values->size();
@@ -294,13 +294,13 @@ void MultiCouplingScheme:: receiveData()
 void MultiCouplingScheme::setupConvergenceMeasures()
 {
   P_TRACE();
-  P_assertion(not doesFirstStep());
+  P_ASSERT(not doesFirstStep());
   P_CHECK(not _convergenceMeasures.empty(),
         "At least one convergence measure has to be defined for an implicit coupling scheme!");
   for (ConvergenceMeasure& convMeasure : _convergenceMeasures) {
     int dataID = convMeasure.data->getID();
     convMeasure.couplingData = getData(dataID);
-    P_assertion(convMeasure.couplingData != nullptr);
+    P_ASSERT(convMeasure.couplingData != nullptr);
   }
 }
 

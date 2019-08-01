@@ -32,8 +32,8 @@ void ExportVTKVoxelQueries:: exportQueries
 //  PtrCellDataWriter countContainedWriter (
 //      vtkWriter.createCellDataWriter("ContainedVisitables", 1) );
 
-  P_assertion(_voxelCenters.size() == _voxelHalflengths.size());
-  P_assertion(_voxelCenters.size() == _containedElementCount.size());
+  P_ASSERT(_voxelCenters.size() == _voxelHalflengths.size());
+  P_ASSERT(_voxelCenters.size() == _containedElementCount.size());
 
   // for (auto & elem : _voxelCenters) {
 //    int vertexIndices[utils::Def::TWO_POWER_DIM];
@@ -50,11 +50,11 @@ void ExportVTKVoxelQueries:: exportQueries
 //      cellIndex = cellWriter->plotQuadrangle ( vertexIndices );
 //    }
 //    else {
-//      P_assertion( utils::Def::DIM == 3 );
+//      P_ASSERT( utils::Def::DIM == 3 );
 //      cellIndex = cellWriter->plotHexahedron ( vertexIndices );
 //    }
 //    int containedVisitables = _containedElementCount[i];
-//    P_assertion( cellIndex != -1 );
+//    P_ASSERT( cellIndex != -1 );
 //    countContainedWriter->plotCell ( cellIndex, containedVisitables );
   // }
 //  vtkWriter.writeToFile ( filename + ".vtk" );
@@ -67,7 +67,7 @@ void ExportVTKVoxelQueries:: exportQueries
 //   tarch::plotter::VTKWriter::ElementWriter cellWriter (vtkWriter);
 //   tarch::plotter::VTKWriter::ScalarCellDataWriter countContainedWriter (vtkWriter, "ContainedVisitables");
 //
-//   P_assertion(_voxelCenters.size() == _voxelHalflengths.size());
+//   P_ASSERT(_voxelCenters.size() == _voxelHalflengths.size());
 //
 //   for (size_t i=0; i < _voxelCenters.size(); i++) {
 //      int vertexIndices[TWO_POWER_D];

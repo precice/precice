@@ -155,7 +155,7 @@ void CouplingSchemeConfiguration::xmlTagCallback(
     _config.participants.push_back(tag.getStringAttributeValue(ATTR_FIRST));
     _config.participants.push_back(tag.getStringAttributeValue(ATTR_SECOND));
   } else if (tag.getName() == TAG_PARTICIPANT) {
-    P_assertion(_config.type == VALUE_MULTI);
+    P_ASSERT(_config.type == VALUE_MULTI);
     bool control = tag.getBooleanAttributeValue(ATTR_CONTROL);
     if (control) {
       P_CHECK(not _config.setController,
@@ -184,7 +184,7 @@ void CouplingSchemeConfiguration::xmlTagCallback(
     double      limit    = tag.getDoubleAttributeValue(ATTR_LIMIT);
     bool        suffices = tag.getBooleanAttributeValue(ATTR_SUFFICES);
     int         level    = tag.getIntAttributeValue(ATTR_LEVEL);
-    P_assertion(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
+    P_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
     addAbsoluteConvergenceMeasure(dataName, meshName, limit, suffices, level);
   } else if (tag.getName() == TAG_REL_CONV_MEASURE) {
     std::string dataName = tag.getStringAttributeValue(ATTR_DATA);
@@ -192,7 +192,7 @@ void CouplingSchemeConfiguration::xmlTagCallback(
     double      limit    = tag.getDoubleAttributeValue(ATTR_LIMIT);
     bool        suffices = tag.getBooleanAttributeValue(ATTR_SUFFICES);
     int         level    = tag.getIntAttributeValue(ATTR_LEVEL);
-    P_assertion(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
+    P_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
     addRelativeConvergenceMeasure(dataName, meshName, limit, suffices, level);
   } else if (tag.getName() == TAG_RES_REL_CONV_MEASURE) {
     std::string dataName = tag.getStringAttributeValue(ATTR_DATA);
@@ -200,7 +200,7 @@ void CouplingSchemeConfiguration::xmlTagCallback(
     double      limit    = tag.getDoubleAttributeValue(ATTR_LIMIT);
     bool        suffices = tag.getBooleanAttributeValue(ATTR_SUFFICES);
     int         level    = tag.getIntAttributeValue(ATTR_LEVEL);
-    P_assertion(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
+    P_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
     addResidualRelativeConvergenceMeasure(dataName, meshName, limit, suffices, level);
   } else if (tag.getName() == TAG_MIN_ITER_CONV_MEASURE) {
     std::string dataName      = tag.getStringAttributeValue(ATTR_DATA);
@@ -208,7 +208,7 @@ void CouplingSchemeConfiguration::xmlTagCallback(
     int         minIterations = tag.getIntAttributeValue(ATTR_MIN_ITERATIONS);
     bool        suffices      = tag.getBooleanAttributeValue(ATTR_SUFFICES);
     int         level         = tag.getIntAttributeValue(ATTR_LEVEL);
-    P_assertion(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
+    P_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
     addMinIterationConvergenceMeasure(dataName, meshName, minIterations, suffices, level);
   } else if (tag.getName() == TAG_EXCHANGE) {
     std::string   nameData            = tag.getStringAttributeValue(ATTR_DATA);
@@ -240,10 +240,10 @@ void CouplingSchemeConfiguration::xmlTagCallback(
     _config.exchanges.push_back(std::make_tuple(exchangeData, exchangeMesh,
                                                 nameParticipantFrom, nameParticipantTo, initialize));
   } else if (tag.getName() == TAG_MAX_ITERATIONS) {
-    P_assertion(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
+    P_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
     _config.maxIterations = tag.getIntAttributeValue(ATTR_VALUE);
   } else if (tag.getName() == TAG_EXTRAPOLATION) {
-    P_assertion(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
+    P_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
     _config.extrapolationOrder = tag.getIntAttributeValue(ATTR_VALUE);
   }
 }
@@ -302,7 +302,7 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
       addCouplingScheme(scheme, _config.controller);
       _config = Config();
     } else {
-      P_assertion(false, _config.type);
+      P_ASSERT(false, _config.type);
     }
   }
 }
@@ -317,7 +317,7 @@ void CouplingSchemeConfiguration::addCouplingScheme(
     if (utils::contained(participantName, _couplingSchemeCompositions)) {
       P_DEBUG("Coupling scheme composition exists already for participant");
       // Fetch the composition and add the new scheme.
-      P_assertion(_couplingSchemeCompositions[participantName] != nullptr);
+      P_ASSERT(_couplingSchemeCompositions[participantName] != nullptr);
       _couplingSchemeCompositions[participantName]->addCouplingScheme(cplScheme);
     } else {
       P_DEBUG("No composition exists for the participant");
@@ -840,7 +840,7 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(
     } else if (to == accessor) {
       scheme.addDataToReceive(data, mesh, initialize);
     } else {
-      P_assertion(_config.type == VALUE_MULTI);
+      P_ASSERT(_config.type == VALUE_MULTI);
     }
   }
 }
@@ -875,7 +875,7 @@ void CouplingSchemeConfiguration::addMultiDataToBeExchanged(
         }
         index++;
       }
-      P_assertion(index < _config.participants.size(), index, _config.participants.size());
+      P_ASSERT(index < _config.participants.size(), index, _config.participants.size());
       scheme.addDataToSend(data, mesh, initialize, index);
     } else {
       size_t index = 0;
@@ -886,7 +886,7 @@ void CouplingSchemeConfiguration::addMultiDataToBeExchanged(
         }
         index++;
       }
-      P_assertion(index < _config.participants.size(), index, _config.participants.size());
+      P_ASSERT(index < _config.participants.size(), index, _config.participants.size());
       scheme.addDataToReceive(data, mesh, initialize, index);
     }
   }

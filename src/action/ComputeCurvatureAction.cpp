@@ -45,7 +45,7 @@ void ComputeCurvatureAction::performAction(
       }
     }
   } else {
-    P_assertion(getMesh()->getDimensions() == 3, getMesh()->getDimensions());
+    P_ASSERT(getMesh()->getDimensions() == 3, getMesh()->getDimensions());
     for (int i = 0; i < dataValues.size(); i++) {
       dataValues[i] = 0.0;
     }

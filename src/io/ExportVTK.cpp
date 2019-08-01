@@ -29,7 +29,7 @@ void ExportVTK::doExport(
     mesh::Mesh &       mesh)
 {
   P_TRACE(name, location, mesh.getName());
-  P_assertion(name != std::string(""));
+  P_ASSERT(name != std::string(""));
 
   namespace fs = boost::filesystem;
   fs::path outfile(location);
@@ -198,7 +198,7 @@ void ExportVTK::writeVertex(
   if (position.size() == 2) {
     outFile << position(0) << "  " << position(1) << "  " << 0.0 << '\n';
   } else {
-    P_assertion(position.size() == 3);
+    P_ASSERT(position.size() == 3);
     outFile << position(0) << "  " << position(1) << "  " << position(2) << '\n';
   }
 }

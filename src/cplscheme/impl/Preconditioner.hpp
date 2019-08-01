@@ -39,7 +39,7 @@ public:
   {
     P_TRACE();
 
-    P_assertion(_weights.empty());
+    P_ASSERT(_weights.empty());
     _subVectorSizes = svs;
 
     size_t N = 0;
@@ -59,14 +59,14 @@ public:
   {
     P_TRACE();
     if (transpose) {
-      P_assertion(M.cols() == (int) _weights.size(), M.cols(), _weights.size());
+      P_ASSERT(M.cols() == (int) _weights.size(), M.cols(), _weights.size());
       for (int i = 0; i < M.cols(); i++) {
         for (int j = 0; j < M.rows(); j++) {
           M(j, i) *= _weights[i];
         }
       }
     } else {
-      P_assertion(M.rows() == (int) _weights.size(), M.rows(), (int) _weights.size());
+      P_ASSERT(M.rows() == (int) _weights.size(), M.rows(), (int) _weights.size());
       for (int i = 0; i < M.cols(); i++) {
         for (int j = 0; j < M.rows(); j++) {
           M(j, i) *= _weights[j];
@@ -82,16 +82,16 @@ public:
   void revert(Eigen::MatrixXd &M, bool transpose)
   {
     P_TRACE();
-    //P_assertion(_needsGlobalWeights);
+    //P_ASSERT(_needsGlobalWeights);
     if (transpose) {
-      P_assertion(M.cols() == (int) _invWeights.size());
+      P_ASSERT(M.cols() == (int) _invWeights.size());
       for (int i = 0; i < M.cols(); i++) {
         for (int j = 0; j < M.rows(); j++) {
           M(j, i) *= _invWeights[i];
         }
       }
     } else {
-      P_assertion(M.rows() == (int) _invWeights.size(), M.rows(), (int) _invWeights.size());
+      P_ASSERT(M.rows() == (int) _invWeights.size(), M.rows(), (int) _invWeights.size());
       for (int i = 0; i < M.cols(); i++) {
         for (int j = 0; j < M.rows(); j++) {
           M(j, i) *= _invWeights[j];
@@ -104,7 +104,7 @@ public:
   void apply(Eigen::MatrixXd &M)
   {
     P_TRACE();
-    P_assertion(M.rows() == (int) _weights.size(), M.rows(), (int) _weights.size());
+    P_ASSERT(M.rows() == (int) _weights.size(), M.rows(), (int) _weights.size());
 
     // scale matrix M
     for (int i = 0; i < M.cols(); i++) {
@@ -119,7 +119,7 @@ public:
   {
     P_TRACE();
 
-    P_assertion(v.size() == (int) _weights.size());
+    P_ASSERT(v.size() == (int) _weights.size());
 
     // scale residual
     for (int j = 0; j < v.size(); j++) {
@@ -132,7 +132,7 @@ public:
   {
     P_TRACE();
 
-    P_assertion(M.rows() == (int) _weights.size());
+    P_ASSERT(M.rows() == (int) _weights.size());
 
     // scale matrix M
     for (int i = 0; i < M.cols(); i++) {
@@ -147,7 +147,7 @@ public:
   {
     P_TRACE();
 
-    P_assertion(v.size() == (int) _weights.size());
+    P_ASSERT(v.size() == (int) _weights.size());
 
     // scale residual
     for (int j = 0; j < v.size(); j++) {

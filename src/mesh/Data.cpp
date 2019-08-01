@@ -12,7 +12,7 @@ Data:: Data()
   _id ( -1 ),
   _dimensions ( 0 )
 {
-  P_assertion( false );
+  P_ASSERT( false );
 }
 
 Data:: Data
@@ -26,7 +26,7 @@ Data:: Data
   _id ( id ),
   _dimensions ( dimensions )
 {
-  P_assertion( dimensions > 0, dimensions );
+  P_ASSERT( dimensions > 0, dimensions );
   _dataCount ++;
 }
 
