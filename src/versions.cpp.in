@@ -1,3 +1,3 @@
 #include "versions.hpp"
 
-const char * precice::preciceCommit = "@preCICE_COMMIT@";
+const char * precice::preciceRevision = "@preCICE_REVISION@";

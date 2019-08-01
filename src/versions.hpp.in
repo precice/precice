@@ -8,5 +8,5 @@
 #endif
 
 namespace precice {
-    extern const char * preciceCommit;
+    extern const char * preciceRevision;
 }
