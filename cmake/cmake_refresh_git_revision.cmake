@@ -11,7 +11,7 @@
 #
 
 find_package(Git REQUIRED)
-set(preCICE_REVISION "no-info")
+set(preCICE_REVISION "no-info [Git failed/Not a repository]")
 execute_process(
   COMMAND ${GIT_EXECUTABLE} describe --tags --broken
   RESULT_VARIABLE PRECICE_REVISION_RET
