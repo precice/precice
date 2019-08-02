@@ -14,10 +14,11 @@
 find_package(Git QUIET)
 if(GIT_FOUND)
   add_custom_target(GitRevision
-    COMMAND ${CMAKE_COMMAND} -DSRC="${PROJECT_SOURCE_DIR}/src/versions.cpp.in" -DDST="${PROJECT_BINARY_DIR}/src/versions.cpp" -P ${CMAKE_CURRENT_LIST_DIR}/cmake_refresh_git_revision.cmake
-    WORKING_DIRECTORY ${preCICE_SOURCE_DIR}
+    COMMAND ${CMAKE_COMMAND} -DSRC=${PROJECT_SOURCE_DIR}/src/versions.cpp.in -DDST=${PROJECT_BINARY_DIR}/src/versions.cpp -DpreCICE_VERSION=${preCICE_VERSION} -DpreCICE_VERSION_INFORMATION=${preCICE_VERSION_INFORMATION} -P ${CMAKE_CURRENT_LIST_DIR}/cmake_refresh_git_revision.cmake
+    WORKING_DIRECTORY "${preCICE_SOURCE_DIR}"
     BYPRODUCTS src/versions.cpp
     DEPENDS src/versions.cpp.in
+    VERBATIM
     )
   add_dependencies(precice GitRevision)
 else(GIT_FOUND)

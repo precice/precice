@@ -11,17 +11,19 @@
 #
 
 find_package(Git REQUIRED)
-set(preCICE_REVISION "no-info [Git failed/Not a repository]")
 execute_process(
   COMMAND ${GIT_EXECUTABLE} describe --tags --broken
   RESULT_VARIABLE PRECICE_REVISION_RET
-  OUTPUT_VARIABLE preCICE_REVISION
+  OUTPUT_VARIABLE PRECICE_REVISION_OUT
   OUTPUT_STRIP_TRAILING_WHITESPACE
+  ERROR_QUIET
   )
-configure_file(${SRC} ${DST} @ONLY)
 
+set(preCICE_REVISION "no-info [Git failed/Not a repository]")
 if("${PRECICE_REVISION_RET}" EQUAL "0")
   message(STATUS "Revision status: ${preCICE_REVISION}")
+  set(preCICE_REVISION "${PRECICE_REVISION_OUT}")
 else()
   message(STATUS "Revision status: Detection failed")
 endif()
+configure_file( ${SRC} ${DST} @ONLY)

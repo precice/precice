@@ -355,7 +355,13 @@ versions_hpp = env.Substfile(
 # Substitute strings in versions.cpp.in, save it as versions.cpp
 versions_cpp = env.Substfile(
     "src/versions.cpp.in",
-    SUBST_DICT = {"@preCICE_REVISION@" : "no-info [SCons]"}
+    SUBST_DICT = {
+        "@preCICE_REVISION@" : "no-info [SCons]"
+        "@preCICE_VERSION@" : PRECICE_VERSION,
+        "@preCICE_VERSION_INFORMATION@" : "MPI=" + ("Y" if env["mpi"] else "N") +
+                                          ";PETSC=" + ("Y" if env["petsc"] else "N") +
+                                          ";PYTHON=" + ("Y" if env["python"] else "N")
+    }
 )
 
 Default(versions_cpp, versions_hpp, solib, tests, symlink)

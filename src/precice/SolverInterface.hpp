@@ -802,6 +802,8 @@ private:
   friend struct testing::WhiteboxAccessor;
 };
 
+const char * getVersionInformation();
+
 namespace constants {
 
 // @brief Name of action for writing initial data.
