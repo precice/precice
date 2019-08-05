@@ -8,6 +8,7 @@
 #include "precice/impl/Participant.hpp"
 #include "precice/config/Configuration.hpp"
 #include "utils/Parallel.hpp"
+#include "utils/Petsc.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/Event.hpp"
 
@@ -758,8 +759,8 @@ BOOST_AUTO_TEST_CASE(UserDefinedMPICommunicatorPetRBF, * testing::OnSize(4))
     BOOST_TEST(myCommSize == 3);
     utils::Parallel::clearGroups();
 
-    xml::configure(config.getXMLTag(), configFilename);
     SolverInterface interface ( "SolverOne", utils::Parallel::getProcessRank(), 3, &myComm );
+    xml::configure(config.getXMLTag(), configFilename);
     impl(interface).configure(config.getSolverInterfaceConfiguration());
     int meshID = interface.getMeshID("MeshOne");
 
