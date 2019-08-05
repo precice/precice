@@ -811,7 +811,7 @@ private:
  * 2) the revision information of preCICE
  * 3) the configuration of preCICE including MPI, PETSC, PYTHON
  */
-const char * getVersionInformation();
+std::string getVersionInformation();
 
 namespace constants {
 

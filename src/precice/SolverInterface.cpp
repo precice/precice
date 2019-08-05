@@ -332,9 +332,9 @@ MeshHandle SolverInterface:: getMeshHandle
   return _impl->getMeshHandle ( meshName );
 }
 
-const char * getVersionInformation()
+std::string getVersionInformation()
 {
-    return precice::versionInformation;
+    return {precice::versionInformation};
 }
 
 namespace constants {
