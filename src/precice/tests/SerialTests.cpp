@@ -837,7 +837,7 @@ BOOST_AUTO_TEST_CASE(testStationaryMappingWithSolverMesh,
   std::string config2D = _pathToTests + "mapping-without-geo-2D.xml";
   std::string config3D = _pathToTests + "mapping-without-geo-3D.xml";
   int rank = utils::Parallel::getProcessRank();
-  BOOST_TEST((rank == 0) || (rank == 1), rank);
+  BOOST_TEST(((rank == 0) || (rank == 1)), rank);
   std::string solverName = rank == 0 ? "SolverA" : "SolverB";
   std::string meshForcesA = "MeshForcesA";
   std::string meshDisplA = "MeshDisplacementsA";
@@ -1021,7 +1021,7 @@ BOOST_AUTO_TEST_CASE(testBug,
   }
 
   int rank = utils::Parallel::getProcessRank();
-  BOOST_TEST((rank == 0) || (rank == 1), rank);
+  BOOST_TEST(((rank == 0) || (rank == 1)), rank);
   std::string solverName = rank == 0 ? "Flite" : "Calculix";
   if (solverName == std::string("Flite")){
     SolverInterface precice("Flite", 0, 1);
@@ -1118,7 +1118,7 @@ BOOST_AUTO_TEST_CASE(testThreeSolvers,
     reset();
 
     int rank = utils::Parallel::getProcessRank();
-    BOOST_TEST((rank == 0) || (rank == 1) || (rank == 2), rank);
+    BOOST_TEST(((rank == 0) || (rank == 1) || (rank == 2)), rank);
 
     std::string writeIterCheckpoint(constants::actionWriteIterationCheckpoint());
     std::string readIterCheckpoint(constants::actionReadIterationCheckpoint());
