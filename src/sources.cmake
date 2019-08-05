@@ -4,6 +4,7 @@
 
 target_sources(precice
     PRIVATE
+    ${CMAKE_BINARY_DIR}/src/versions.cpp
     src/action/Action.hpp
     src/action/ComputeCurvatureAction.cpp
     src/action/ComputeCurvatureAction.hpp
