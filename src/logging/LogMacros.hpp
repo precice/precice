@@ -10,7 +10,6 @@
 #include <string>
 #include "utils/String.hpp"
 #include "utils/prettyprint.hpp" // so that we can put std::vector et. al. on ostream
-#include "utils/SignalHandler.hpp"
 
 #include "Tracer.hpp"
 
@@ -20,7 +19,6 @@
 
 #define ERROR(message) do {                                             \
     _log.error(LOG_LOCATION, PRECICE_AS_STRING(message));               \
-    precice::utils::terminationSignalHandler(6);                        \
     std::exit(-1);                                                      \
 } while (false)
 
