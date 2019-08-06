@@ -20,7 +20,7 @@ void DummyCouplingScheme:: initialize
   double startTime,
   int    startTimesteps )
 {
-  assertion(not _isInitialized);
+  P_ASSERT(not _isInitialized);
   _isInitialized = true;
   _isOngoing = true;
   _timesteps = startTimesteps;
@@ -29,8 +29,8 @@ void DummyCouplingScheme:: initialize
 
 void DummyCouplingScheme:: advance()
 {
-  assertion(_isInitialized);
-  assertion(_isOngoing);
+  P_ASSERT(_isInitialized);
+  P_ASSERT(_isOngoing);
   if (_iterations == _numberIterations){
     if (_timesteps == _maxTimesteps){
       _isOngoing = false;
@@ -43,8 +43,8 @@ void DummyCouplingScheme:: advance()
 
 void DummyCouplingScheme:: finalize()
 {
-  assertion(_isInitialized);
-  assertion(not _isOngoing);
+  P_ASSERT(_isInitialized);
+  P_ASSERT(not _isOngoing);
 }
 
 bool DummyCouplingScheme:: isCouplingOngoing() const
@@ -60,18 +60,18 @@ bool DummyCouplingScheme:: isActionRequired
   if (_numberIterations > 1){
     if (actionName == constants::actionWriteIterationCheckpoint()){
       if (_iterations == 1) {
-        DEBUG("return true");
+        P_DEBUG("return true");
         return true;
       }
     }
     else if (actionName == constants::actionReadIterationCheckpoint()){
       if (_iterations != 1) {
-        DEBUG("return true");
+        P_DEBUG("return true");
         return true;
       }
     }
   }
-  DEBUG("return false");
+  P_DEBUG("return false");
   return false;
 }
 

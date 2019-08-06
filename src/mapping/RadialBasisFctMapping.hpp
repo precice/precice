@@ -87,18 +87,18 @@ private:
     if (getDimensions() == 2) {
       _deadAxis[0] = xDead;
       _deadAxis[1] = yDead;
-      CHECK(not (xDead && yDead), "You cannot choose all axis to be dead for a RBF mapping");
+      P_CHECK(not (xDead && yDead), "You cannot choose all axis to be dead for a RBF mapping");
       if (zDead)
-        WARN("Setting the z-axis to dead on a 2 dimensional problem has not effect and will be ignored.");
+        P_WARN("Setting the z-axis to dead on a 2 dimensional problem has not effect and will be ignored.");
     }
     else if (getDimensions() == 3) {
       _deadAxis[0] = xDead;
       _deadAxis[1] = yDead;
       _deadAxis[2] = zDead;
-      CHECK(not (xDead && yDead && zDead), "You cannot choose all axis to be dead for a RBF mapping");
+      P_CHECK(not (xDead && yDead && zDead), "You cannot choose all axis to be dead for a RBF mapping");
     }
     else {
-      assertion(false);
+      P_ASSERT(false);
     }
   }
 
@@ -127,16 +127,16 @@ RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: RadialBasisFctMapping
 template<typename RADIAL_BASIS_FUNCTION_T>
 void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
 {
-  TRACE();
+  P_TRACE();
 
   precice::utils::Event e("map.rbf.computeMapping.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
 
-  CHECK(not utils::MasterSlave::isSlave() && not utils::MasterSlave::isMaster(),
+  P_CHECK(not utils::MasterSlave::isSlave() && not utils::MasterSlave::isMaster(),
         "RBF mapping is not supported for a participant in master mode, use petrbf instead");
 
-  assertion(input()->getDimensions() == output()->getDimensions(),
+  P_ASSERT(input()->getDimensions() == output()->getDimensions(),
              input()->getDimensions(), output()->getDimensions());
-  assertion(getDimensions() == output()->getDimensions(),
+  P_ASSERT(getDimensions() == output()->getDimensions(),
              getDimensions(), output()->getDimensions());
   int dimensions = getDimensions();
   mesh::PtrMesh inMesh;
@@ -156,7 +156,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
     if (_deadAxis[d]) deadDimensions +=1;
   }
   int polyparams = 1 + dimensions - deadDimensions;
-  assertion(inputSize >= 1 + polyparams, inputSize);
+  P_ASSERT(inputSize >= 1 + polyparams, inputSize);
   int n = inputSize + polyparams; // Add linear polynom degrees
   Eigen::MatrixXd matrixCLU(n, n);
   matrixCLU.setZero();
@@ -204,7 +204,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
 
   _qr = matrixCLU.colPivHouseholderQr();
   if (not _qr.isInvertible())
-    ERROR("Interpolation matrix C is not invertible.");
+    P_ERROR("Interpolation matrix C is not invertible.");
   
   _hasComputedMapping = true;
 }
@@ -218,7 +218,7 @@ bool RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: hasComputedMapping() const
 template<typename RADIAL_BASIS_FUNCTION_T>
 void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: clear()
 {
-  TRACE();
+  P_TRACE();
   _matrixA = Eigen::MatrixXd();
   _qr = Eigen::ColPivHouseholderQR<Eigen::MatrixXd>();
   _hasComputedMapping = false;
@@ -230,20 +230,20 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
   int inputDataID,
   int outputDataID )
 {
-  TRACE(inputDataID, outputDataID);
+  P_TRACE(inputDataID, outputDataID);
 
   precice::utils::Event e("map.rbf.mapData.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
 
-  assertion(_hasComputedMapping);
-  assertion(input()->getDimensions() == output()->getDimensions(),
+  P_ASSERT(_hasComputedMapping);
+  P_ASSERT(input()->getDimensions() == output()->getDimensions(),
              input()->getDimensions(), output()->getDimensions());
-  assertion(getDimensions() == output()->getDimensions(),
+  P_ASSERT(getDimensions() == output()->getDimensions(),
              getDimensions(), output()->getDimensions());
 
   Eigen::VectorXd& inValues = input()->data(inputDataID)->values();
   Eigen::VectorXd& outValues = output()->data(outputDataID)->values();
   int valueDim = input()->data(inputDataID)->getDimensions();
-  assertion(valueDim == output()->data(outputDataID)->getDimensions(),
+  P_ASSERT(valueDim == output()->data(outputDataID)->getDimensions(),
              valueDim, output()->data(outputDataID)->getDimensions());
   int deadDimensions = 0;
   for (int d = 0; d < getDimensions(); d++) {
@@ -252,15 +252,15 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
   int polyparams = 1 + getDimensions() - deadDimensions;
 
   if (getConstraint() == CONSERVATIVE){
-    DEBUG("Map conservative");
+    P_DEBUG("Map conservative");
     static int mappingIndex = 0;
     Eigen::VectorXd Au(_matrixA.cols());  // rows == n
     Eigen::VectorXd in(_matrixA.rows());  // rows == outputSize
     Eigen::VectorXd out(_matrixA.cols()); // rows == n
 
-    // DEBUG("C rows=" << _matrixCLU.rows() << " cols=" << _matrixCLU.cols());
-    DEBUG("A rows=" << _matrixA.rows() << " cols=" << _matrixA.cols());
-    DEBUG("in size=" << in.size() << ", out size=" << out.size());
+    // P_DEBUG("C rows=" << _matrixCLU.rows() << " cols=" << _matrixCLU.cols());
+    P_DEBUG("A rows=" << _matrixA.rows() << " cols=" << _matrixA.cols());
+    P_DEBUG("in size=" << in.size() << ", out size=" << out.size());
 
     for (int dim = 0; dim < valueDim; dim++) {
       for (int i = 0; i < in.size(); i++) { // Fill input data values
@@ -278,7 +278,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
     mappingIndex++;
   }
   else { // Map consistent
-    DEBUG("Map consistent");
+    P_DEBUG("Map consistent");
     Eigen::VectorXd p(_matrixA.cols());    // rows == n
     Eigen::VectorXd in(_matrixA.cols());   // rows == n
     Eigen::VectorXd out(_matrixA.rows());  // rows == outputSize
@@ -313,7 +313,7 @@ Eigen::VectorXd RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::reduceVector
     if (_deadAxis[d])
       deadDimensions +=1;
   }
-  assertion(getDimensions()>deadDimensions, getDimensions(), deadDimensions);
+  P_ASSERT(getDimensions()>deadDimensions, getDimensions(), deadDimensions);
   Eigen::VectorXd reducedVector(getDimensions()-deadDimensions);
   int k = 0;
   for (int d = 0; d < getDimensions(); d++) {
@@ -328,14 +328,14 @@ Eigen::VectorXd RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::reduceVector
 template<typename RADIAL_BASIS_FUNCTION_T>
 void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
 {
-  CHECK(not utils::MasterSlave::isSlave() && not utils::MasterSlave::isMaster(),
+  P_CHECK(not utils::MasterSlave::isSlave() && not utils::MasterSlave::isMaster(),
         "RBF mapping is not supported for a participant in master mode, use petrbf instead");
 }
 
 template<typename RADIAL_BASIS_FUNCTION_T>
 void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
 {
-  CHECK(not utils::MasterSlave::isSlave() && not utils::MasterSlave::isMaster(),
+  P_CHECK(not utils::MasterSlave::isSlave() && not utils::MasterSlave::isMaster(),
         "RBF mapping is not supported for a participant in master mode, use petrbf instead");
 }
 

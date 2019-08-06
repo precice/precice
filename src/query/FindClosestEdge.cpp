@@ -19,7 +19,7 @@ FindClosestEdge:: FindClosestEdge
   _vectorToProjectionPoint ( Eigen::VectorXd::Constant(searchPoint.size(), std::numeric_limits<double>::max()) ),
   _parametersProjectionPoint( {_shortestDistance , _shortestDistance} )
 {
-  assertion ( (_searchPoint.size() == 2) || (_searchPoint.size() == 3),
+  P_ASSERT( (_searchPoint.size() == 2) || (_searchPoint.size() == 3),
                _searchPoint.size() );
 }
 
@@ -40,7 +40,7 @@ double FindClosestEdge:: getEuclidianDistance()
 
 mesh::Edge& FindClosestEdge:: getClosestEdge()
 {
-  assertion ( _closestEdge != nullptr );
+  P_ASSERT( _closestEdge != nullptr );
   return *_closestEdge;
 }
 
@@ -68,7 +68,7 @@ double FindClosestEdge:: getProjectionPointParameter
 
 void FindClosestEdge:: find ( mesh::Edge& edge )
 {
-  TRACE(edge.vertex(0).getCoords(), edge.vertex(1).getCoords() );
+  P_TRACE(edge.vertex(0).getCoords(), edge.vertex(1).getCoords() );
 
   // Methodology of book "Computational Geometry", Joseph O' Rourke, Chapter 7.2
   auto& a = edge.vertex(0).getCoords();
@@ -76,7 +76,7 @@ void FindClosestEdge:: find ( mesh::Edge& edge )
   auto& norm = edge.getNormal();
 
   auto ret = math::barycenter::calcBarycentricCoordsForEdge(a, b, norm, _searchPoint);
-  assertion(ret.barycentricCoords.size() == 2);
+  P_ASSERT(ret.barycentricCoords.size() == 2);
 
   bool inside = not (ret.barycentricCoords.array() < - math::NUMERICAL_ZERO_DIFFERENCE).any();
 

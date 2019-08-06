@@ -20,7 +20,7 @@ ProvidedPartition::ProvidedPartition(
 
 void ProvidedPartition::communicate()
 {
-  TRACE();
+  P_TRACE();
 
   if(_m2ns.size()>0){ // if there is no connected participant we also don't need to gather the mesh
     Event e1("partition.gatherMesh." + _mesh->getName(), precice::syncMode);
@@ -33,17 +33,17 @@ void ProvidedPartition::communicate()
     }
 
     // Gather Mesh
-    INFO("Gather mesh " + _mesh->getName());
+    P_INFO("Gather mesh " + _mesh->getName());
     if (utils::MasterSlave::isSlave() ) {
         com::CommunicateMesh(utils::MasterSlave::_communication).sendMesh(*_mesh, 0);
     }
     if (utils::MasterSlave::isMaster())  {
-      assertion(utils::MasterSlave::getRank() == 0);
-      assertion(utils::MasterSlave::getSize() > 1);
+      P_ASSERT(utils::MasterSlave::getRank() == 0);
+      P_ASSERT(utils::MasterSlave::getSize() > 1);
 
       for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
         com::CommunicateMesh(utils::MasterSlave::_communication).receiveMesh(globalMesh, rankSlave);
-        DEBUG("Received sub-mesh, from slave: " << rankSlave << ", global vertexCount: " << globalMesh.vertices().size());
+        P_DEBUG("Received sub-mesh, from slave: " << rankSlave << ", global vertexCount: " << globalMesh.vertices().size());
       }
     }
     
@@ -59,12 +59,12 @@ void ProvidedPartition::communicate()
     e1.stop();
 
     // Send (global) Mesh
-    INFO("Send global mesh " << _mesh->getName());
+    P_INFO("Send global mesh " << _mesh->getName());
     Event e2("partition.sendGlobalMesh." + _mesh->getName(), precice::syncMode);
       
     for(auto m2n : _m2ns) {
       if (not utils::MasterSlave::isSlave()) {
-        CHECK(globalMesh.vertices().size() > 0, "The provided mesh " << globalMesh.getName() << " is invalid (possibly empty).");
+        P_CHECK(globalMesh.vertices().size() > 0, "The provided mesh " << globalMesh.getName() << " is invalid (possibly empty).");
         com::CommunicateMesh(m2n->getMasterCommunication()).sendMesh(globalMesh, 0);
       }
     }
@@ -75,8 +75,8 @@ void ProvidedPartition::communicate()
 
 void ProvidedPartition::compute()
 {
-  TRACE();
-  INFO("Compute partition for mesh " << _mesh->getName());
+  P_TRACE();
+  P_INFO("Compute partition for mesh " << _mesh->getName());
   Event e6("partition.feedbackMesh." + _mesh->getName(), precice::syncMode);
 
   int numberOfVertices = _mesh->vertices().size();
@@ -91,10 +91,10 @@ void ProvidedPartition::compute()
     }
     int globalNumberOfVertices = -1;
     utils::MasterSlave::_communication->broadcast(globalNumberOfVertices, 0);
-    assertion(globalNumberOfVertices != -1);
+    P_ASSERT(globalNumberOfVertices != -1);
     _mesh->setGlobalNumberOfVertices(globalNumberOfVertices);
   } else if (utils::MasterSlave::isMaster()) {
-    assertion(utils::MasterSlave::getSize() > 1);
+    P_ASSERT(utils::MasterSlave::getSize() > 1);
     int vertexCounter = 0;
 
     // Add master vertices
@@ -129,7 +129,7 @@ void ProvidedPartition::compute()
 
 void ProvidedPartition::createOwnerInformation()
 {
-  TRACE();
+  P_TRACE();
   for (mesh::Vertex &v : _mesh->vertices()) {
     v.setOwner(true);
   }

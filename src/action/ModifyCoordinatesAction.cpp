@@ -25,12 +25,12 @@ void ModifyCoordinatesAction::performAction(
     double computedPartFullDt,
     double fullDt)
 {
-  TRACE();
+  P_TRACE();
   auto &          values = _data->values();
   int             dim    = getMesh()->getDimensions();
   Eigen::VectorXd data(dim);
   if (_mode == ADD_TO_COORDINATES_MODE) {
-    DEBUG("Adding data to coordinates");
+    P_DEBUG("Adding data to coordinates");
     for (mesh::Vertex &vertex : getMesh()->vertices()) {
       for (int i = 0; i < dim; i++) {
         data[i] = values[vertex.getID() * dim + i];
@@ -39,7 +39,7 @@ void ModifyCoordinatesAction::performAction(
       vertex.setCoords(data);
     }
   } else if (_mode == SUBTRACT_FROM_COORDINATES_MODE) {
-    DEBUG("Subtracting data from coordinates");
+    P_DEBUG("Subtracting data from coordinates");
     for (mesh::Vertex &vertex : getMesh()->vertices()) {
       data = vertex.getCoords();
       for (int i = 0; i < dim; i++) {
@@ -48,7 +48,7 @@ void ModifyCoordinatesAction::performAction(
       vertex.setCoords(data);
     }
   } else {
-    ERROR("Unknown mode type!");
+    P_ERROR("Unknown mode type!");
   }
   getMesh()->computeState();
   getMesh()->meshChanged(*getMesh());

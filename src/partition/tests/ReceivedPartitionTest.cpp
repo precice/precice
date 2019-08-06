@@ -25,7 +25,7 @@ BOOST_AUTO_TEST_SUITE(ReceivedPartitionTests)
 
 void setupParallelEnvironment(m2n::PtrM2N m2n)
 {
-  assertion(utils::Parallel::getCommunicatorSize() == 4);
+  P_ASSERT(utils::Parallel::getCommunicatorSize() == 4);
 
   com::PtrCommunication masterSlaveCom = com::PtrCommunication(new com::MPIDirectCommunication());
   utils::MasterSlave::_communication   = masterSlaveCom;
@@ -69,8 +69,8 @@ void tearDownParallelEnvironment()
 void createSolidzMesh2D(mesh::PtrMesh pSolidzMesh)
 {
   int dimensions = 2;
-  assertion(pSolidzMesh);
-  assertion(pSolidzMesh->getDimensions() == dimensions);
+  P_ASSERT(pSolidzMesh);
+  P_ASSERT(pSolidzMesh->getDimensions() == dimensions);
   Eigen::VectorXd position(dimensions);
 
   position << 0.0, 0.0;
@@ -101,8 +101,8 @@ void createSolidzMesh2D(mesh::PtrMesh pSolidzMesh)
 void createSolidzMesh2DSmall(mesh::PtrMesh pSolidzMesh)
 {
   int dimensions = 2;
-  assertion(pSolidzMesh);
-  assertion(pSolidzMesh->getDimensions() == dimensions);
+  P_ASSERT(pSolidzMesh);
+  P_ASSERT(pSolidzMesh->getDimensions() == dimensions);
   Eigen::VectorXd position(dimensions);
 
   position << 0.0, 0.0;
@@ -118,8 +118,8 @@ void createSolidzMesh2DSmall(mesh::PtrMesh pSolidzMesh)
 void createNastinMesh2D(mesh::PtrMesh pNastinMesh)
 {
   int dimensions = 2;
-  assertion(pNastinMesh);
-  assertion(pNastinMesh->getDimensions() == dimensions);
+  P_ASSERT(pNastinMesh);
+  P_ASSERT(pNastinMesh->getDimensions() == dimensions);
 
   if (utils::Parallel::getProcessRank() == 1) {
 
@@ -144,8 +144,8 @@ void createSolidzMesh3D(mesh::PtrMesh pSolidzMesh)
 {
   int             dimensions = 3;
   Eigen::VectorXd position(dimensions);
-  assertion(pSolidzMesh);
-  assertion(pSolidzMesh->getDimensions() == dimensions);
+  P_ASSERT(pSolidzMesh);
+  P_ASSERT(pSolidzMesh->getDimensions() == dimensions);
 
   position << 0.0, 0.0, -0.1;
   mesh::Vertex &v1 = pSolidzMesh->createVertex(position);
@@ -175,8 +175,8 @@ void createSolidzMesh3D(mesh::PtrMesh pSolidzMesh)
 void createNastinMesh3D(mesh::PtrMesh pNastinMesh)
 {
   int dimensions = 3;
-  assertion(pNastinMesh);
-  assertion(pNastinMesh->getDimensions() == dimensions);
+  P_ASSERT(pNastinMesh);
+  P_ASSERT(pNastinMesh->getDimensions() == dimensions);
 
   if (utils::Parallel::getProcessRank() == 1) { //Master
 

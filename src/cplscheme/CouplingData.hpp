@@ -33,7 +33,7 @@ struct CouplingData
    */
   CouplingData ()
     {
-      assertion ( false );
+      P_ASSERT( false );
     }
 
   CouplingData (
@@ -47,8 +47,8 @@ struct CouplingData
     initialize ( initialize ),
     dimension(dimension)
     {
-      assertion ( values != NULL );
-      assertion ( mesh.use_count()>0);
+      P_ASSERT( values != NULL );
+      P_ASSERT( mesh.use_count()>0);
     }
 };
 

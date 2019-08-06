@@ -53,7 +53,7 @@ void precice_fastest_create_
            *solverProcessIndex, *solverProcessSize);
     implFluid->configure(stringConfigFileName);
   }
-  CHECK(implAcoustic != nullptr || implFluid != nullptr ,"Either the Fluid interface or the Acoustic"
+  P_CHECK(implAcoustic != nullptr || implFluid != nullptr ,"Either the Fluid interface or the Acoustic"
       " interface or both need to be used");
 }
 
@@ -380,14 +380,14 @@ void precice_fastest_read_sdata_
 
 void precice::impl::checkCorrectUsage(int useFluid)
 {
-  CHECK(useFluid == 0 || useFluid == 1, "useFluid needs to be either 0 or 1.");
+  P_CHECK(useFluid == 0 || useFluid == 1, "useFluid needs to be either 0 or 1.");
 
   if(useFluid==1){
-    CHECK(implFluid != nullptr, "The fluid interface has not been created properly. Be sure to call "
+    P_CHECK(implFluid != nullptr, "The fluid interface has not been created properly. Be sure to call "
         "\"precicef_create\" with \"useFluid=1\" before any other call to preCICE if \"isFluid=1\".");
   }
   else if (useFluid==0){
-    CHECK(implAcoustic != nullptr, "The acoustic interface has not been created properly. Be sure to call "
+    P_CHECK(implAcoustic != nullptr, "The acoustic interface has not been created properly. Be sure to call "
         "\"precicef_create\" with \"useAcoustic=1\" before any other call to preCICE if \"isFluid=0\".");
   }
 }

@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE(TestExplicit,
       solverName = "SolverOne";
     }
     else {
-      assertion(utils::Parallel::getProcessRank() == 1);
+      P_ASSERT(utils::Parallel::getProcessRank() == 1);
       solverName = "SolverTwo";
     }
 
@@ -837,7 +837,7 @@ BOOST_AUTO_TEST_CASE(testStationaryMappingWithSolverMesh,
   std::string config2D = _pathToTests + "mapping-without-geo-2D.xml";
   std::string config3D = _pathToTests + "mapping-without-geo-3D.xml";
   int rank = utils::Parallel::getProcessRank();
-  assertion((rank == 0) || (rank == 1), rank);
+  P_ASSERT((rank == 0) || (rank == 1), rank);
   std::string solverName = rank == 0 ? "SolverA" : "SolverB";
   std::string meshForcesA = "MeshForcesA";
   std::string meshDisplA = "MeshDisplacementsA";
@@ -938,7 +938,7 @@ BOOST_AUTO_TEST_CASE(testStationaryMappingWithSolverMesh,
       interface.finalize();
     }
     else {
-      assertion(rank == 1, rank);
+      P_ASSERT(rank == 1, rank);
       int meshForcesID = interface.getMeshID(meshForcesB);
       int meshDisplID = interface.getMeshID(meshDisplB);
       int dataForcesID = interface.getDataID(dataForces, meshForcesID);
@@ -1021,7 +1021,7 @@ BOOST_AUTO_TEST_CASE(testBug,
   }
 
   int rank = utils::Parallel::getProcessRank();
-  assertion((rank == 0) || (rank == 1), rank);
+  P_ASSERT((rank == 0) || (rank == 1), rank);
   std::string solverName = rank == 0 ? "Flite" : "Calculix";
   if (solverName == std::string("Flite")){
     SolverInterface precice("Flite", 0, 1);
@@ -1056,7 +1056,7 @@ BOOST_AUTO_TEST_CASE(testBug,
     precice.finalize();
   }
   else {
-    assertion(solverName == std::string("Calculix"), solverName);
+    P_ASSERT(solverName == std::string("Calculix"), solverName);
     SolverInterface precice("Calculix", 0, 1);
     config::Configuration config;
     xml::configure(config.getXMLTag(), configName);
@@ -1118,7 +1118,7 @@ BOOST_AUTO_TEST_CASE(testThreeSolvers,
     reset();
 
     int rank = utils::Parallel::getProcessRank();
-    assertion((rank == 0) || (rank == 1) || (rank == 2), rank);
+    P_ASSERT((rank == 0) || (rank == 1) || (rank == 2), rank);
 
     std::string writeIterCheckpoint(constants::actionWriteIterationCheckpoint());
     std::string readIterCheckpoint(constants::actionReadIterationCheckpoint());
@@ -1187,7 +1187,7 @@ BOOST_AUTO_TEST_CASE(testThreeSolvers,
       BOOST_TEST(callsOfAdvance == expectedCallsOfAdvance[k][1]);
     }
     else {
-      assertion(solverName == std::string("SolverThree"), solverName);
+      P_ASSERT(solverName == std::string("SolverThree"), solverName);
       SolverInterface precice(solverName, 0, 1);
       config::Configuration config;
       xml::configure(config.getXMLTag(), configs[k]);
@@ -1322,7 +1322,7 @@ BOOST_AUTO_TEST_CASE(testMultiCoupling, * testing::OnSize(4))
 
   }
   else {
-    assertion(utils::Parallel::getProcessRank() == 3);
+    P_ASSERT(utils::Parallel::getProcessRank() == 3);
     SolverInterface precice("NASTIN", 0, 1);
     config::Configuration config;
     xml::configure(config.getXMLTag(), _pathToTests + "/multi.xml");

@@ -35,8 +35,8 @@ PythonAction::PythonAction(
 PythonAction::~PythonAction()
 {
   if (_module != nullptr) {
-    assertion(_moduleNameObject != nullptr);
-    assertion(_module != nullptr);
+    P_ASSERT(_moduleNameObject != nullptr);
+    P_ASSERT(_module != nullptr);
     Py_DECREF(_moduleNameObject);
     Py_DECREF(_module);
     Py_Finalize();
@@ -48,7 +48,7 @@ void PythonAction::performAction(double time,
                                  double computedPartFullDt,
                                  double fullDt)
 {
-  TRACE(time, dt, computedPartFullDt, fullDt);
+  P_TRACE(time, dt, computedPartFullDt, fullDt);
 
   if (not _isInitialized)
     initialize();
@@ -62,25 +62,25 @@ void PythonAction::performAction(double time,
     if (_sourceData) {
       npy_intp sourceDim[]  = {_sourceData->values().size()};
       double * sourceValues = _sourceData->values().data();
-      //assertion(_sourceValues == NULL);
+      //P_ASSERT(_sourceValues == NULL);
       _sourceValues = PyArray_SimpleNewFromData(1, sourceDim, NPY_DOUBLE, sourceValues);
-      CHECK(_sourceValues != nullptr, "Creating python source values failed!");
+      P_CHECK(_sourceValues != nullptr, "Creating python source values failed!");
       PyTuple_SetItem(dataArgs, 2, _sourceValues);
     }
     if (_targetData) {
       npy_intp targetDim[]  = {_targetData->values().size()};
       double * targetValues = _targetData->values().data();
-      //assertion(_targetValues == NULL);
+      //P_ASSERT(_targetValues == NULL);
       _targetValues =
           PyArray_SimpleNewFromData(1, targetDim, NPY_DOUBLE, targetValues);
-      CHECK(_targetValues != nullptr, "Creating python target values failed!");
+      P_CHECK(_targetValues != nullptr, "Creating python target values failed!");
       int argumentIndex = _sourceData ? 3 : 2;
       PyTuple_SetItem(dataArgs, argumentIndex, _targetValues);
     }
     PyObject_CallObject(_performAction, dataArgs);
     if (PyErr_Occurred()) {
       PyErr_Print();
-      ERROR("Error occurred during call of function "
+      P_ERROR("Error occurred during call of function "
             << "performAction() python module \"" << _moduleName << "\"!");
     }
   }
@@ -98,16 +98,16 @@ void PythonAction::performAction(double time,
       PyObject *pythonID     = PyInt_FromLong(id);
       PyObject *pythonCoords = PyArray_SimpleNewFromData(1, vdim, NPY_DOUBLE, coords.data());
       PyObject *pythonNormal = PyArray_SimpleNewFromData(1, vdim, NPY_DOUBLE, coords.data());
-      CHECK(pythonID != nullptr, "Creating python ID failed!");
-      CHECK(pythonCoords != nullptr, "Creating python coords failed!");
-      CHECK(pythonNormal != nullptr, "Creating python normal failed!");
+      P_CHECK(pythonID != nullptr, "Creating python ID failed!");
+      P_CHECK(pythonCoords != nullptr, "Creating python coords failed!");
+      P_CHECK(pythonNormal != nullptr, "Creating python normal failed!");
       PyTuple_SetItem(vertexArgs, 0, pythonID);
       PyTuple_SetItem(vertexArgs, 1, pythonCoords);
       PyTuple_SetItem(vertexArgs, 2, pythonNormal);
       PyObject_CallObject(_vertexCallback, vertexArgs);
       if (PyErr_Occurred()) {
         PyErr_Print();
-        ERROR("Error occurred during call of function "
+        P_ERROR("Error occurred during call of function "
               << "vertexCallback() python module \"" << _moduleName << "\"!");
       }
     }
@@ -119,7 +119,7 @@ void PythonAction::performAction(double time,
     PyObject_CallObject(_postAction, postActionArgs);
     if (PyErr_Occurred()) {
       PyErr_Print();
-      ERROR("Error occurred during call of function "
+      P_ERROR("Error occurred during call of function "
             << "postAction() in python module \"" << _moduleName << "\"!");
     }
     Py_DECREF(postActionArgs);
@@ -130,7 +130,7 @@ void PythonAction::performAction(double time,
 
 void PythonAction::initialize()
 {
-  assertion(not _isInitialized);
+  P_ASSERT(not _isInitialized);
   // Initialize Python
   Py_Initialize();
   makeNumPyArraysAvailable();
@@ -142,14 +142,14 @@ void PythonAction::initialize()
   _module           = PyImport_Import(_moduleNameObject);
   if (_module == nullptr) {
     PyErr_Print();
-    ERROR("Could not load python module \"" << _moduleName << "\" at path \"" << _modulePath << "\"!");
+    P_ERROR("Could not load python module \"" << _moduleName << "\" at path \"" << _modulePath << "\"!");
   }
 
   // Construct method performAction
   _performAction = PyObject_GetAttrString(_module, "performAction");
   if (PyErr_Occurred()) {
     PyErr_Clear();
-    WARN("No function void performAction() in python module \"" << _moduleName << "\" found.");
+    P_WARN("No function void performAction() in python module \"" << _moduleName << "\" found.");
     _performAction = nullptr;
   }
   //  bool valid = _performAction != NULL;
@@ -161,7 +161,7 @@ void PythonAction::initialize()
   _vertexCallback = PyObject_GetAttrString(_module, "vertexCallback");
   if (PyErr_Occurred()) {
     PyErr_Clear();
-    WARN("No function void vertexCallback() in python module \"" << _moduleName << "\" found.");
+    P_WARN("No function void vertexCallback() in python module \"" << _moduleName << "\" found.");
     _vertexCallback = nullptr;
   }
 
@@ -169,7 +169,7 @@ void PythonAction::initialize()
   _postAction = PyObject_GetAttrString(_module, "postAction");
   if (PyErr_Occurred()) {
     PyErr_Clear();
-    WARN("No function void postAction() in python module \"" << _moduleName << "\" found.");
+    P_WARN("No function void postAction() in python module \"" << _moduleName << "\" found.");
     _postAction = nullptr;
   }
 }

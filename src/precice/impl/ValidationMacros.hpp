@@ -15,7 +15,7 @@
  * @attention Do not use this macro directly!
  */
 #define PRECICE_VALIDATE_MESH_ID_IMPL(id) \
-    CHECK(_dataIDs.find(id) != _dataIDs.end(), "There is no Mesh with ID:" << id);
+    P_CHECK(_dataIDs.find(id) != _dataIDs.end(), "There is no Mesh with ID:" << id);
 
 /** Implementation of PRECICE_REQUIRE_MESH_USE()
  *
@@ -24,7 +24,7 @@
 #define PRECICE_REQUIRE_MESH_USE_IMPL(id) \
     PRECICE_VALIDATE_MESH_ID_IMPL(id) \
     MeshContext& context = _accessor->meshContext(id); \
-    CHECK(_accessor->isMeshUsed(id), "This participant is required to use Mesh \"" << context.mesh->getName() << "\"!");
+    P_CHECK(_accessor->isMeshUsed(id), "This participant is required to use Mesh \"" << context.mesh->getName() << "\"!");
 
 /** Implementation of PRECICE_REQUIRE_MESH_PROVIDE()
  *
@@ -32,7 +32,7 @@
  */
 #define PRECICE_REQUIRE_MESH_PROVIDE_IMPL(id) \
     PRECICE_REQUIRE_MESH_USE_IMPL(id) \
-    CHECK(context.provideMesh, "This participant is required to provide Mesh \"" << context.mesh->getName() << "\"!");
+    P_CHECK(context.provideMesh, "This participant is required to provide Mesh \"" << context.mesh->getName() << "\"!");
 
 /** Implementation of PRECICE_REQUIRE_MESH_MODIFY()
  *
@@ -40,7 +40,7 @@
  */
 #define PRECICE_REQUIRE_MESH_MODIFY_IMPL(id) \
     PRECICE_REQUIRE_MESH_PROVIDE_IMPL(id) \
-    CHECK(!_meshLock.check(meshID), "This participant attempted to modify the locked Mesh \"" << context.mesh->getName() << "\"!");
+    P_CHECK(!_meshLock.check(meshID), "This participant attempted to modify the locked Mesh \"" << context.mesh->getName() << "\"!");
 
 /// Validates a given meshID
 #define PRECICE_VALIDATE_MESH_ID(meshID) \
@@ -79,7 +79,7 @@
  * @attention Do not use this macro directly!
  */
 #define PRECICE_VALIDATE_DATA_ID_IMPL(id) \
-    CHECK(std::any_of(_dataIDs.begin(), _dataIDs.end(), [id](const typename decltype(_dataIDs)::value_type & meshkv){ \
+    P_CHECK(std::any_of(_dataIDs.begin(), _dataIDs.end(), [id](const typename decltype(_dataIDs)::value_type & meshkv){ \
                 return std::any_of(meshkv.second.begin(), meshkv.second.end(), [id](const typename decltype(meshkv.second)::value_type& datakv){ \
                         return datakv.second == id; \
                         }); \
@@ -92,8 +92,8 @@
  */
 #define PRECICE_REQUIRE_DATA_READ_IMPL(id) \
     PRECICE_VALIDATE_DATA_ID_IMPL(id) \
-    CHECK(_accessor->isDataUsed(id), "Data is not used by this participant! " << id); \
-    CHECK(_accessor->isDataRead(id), "Data is not marked as read! " << id); \
+    P_CHECK(_accessor->isDataUsed(id), "Data is not used by this participant! " << id); \
+    P_CHECK(_accessor->isDataRead(id), "Data is not marked as read! " << id); \
 
 /** Implementation of PRECICE_REQUIRE_DATA_WRITE()
  *
@@ -101,8 +101,8 @@
  */
 #define PRECICE_REQUIRE_DATA_WRITE_IMPL(id) \
     PRECICE_VALIDATE_DATA_ID_IMPL(id) \
-    CHECK(_accessor->isDataUsed(id), "Data is not used by this participant! " << id); \
-    CHECK(_accessor->isDataWrite(id), "Data is not marked as write! " << id); \
+    P_CHECK(_accessor->isDataUsed(id), "Data is not used by this participant! " << id); \
+    P_CHECK(_accessor->isDataWrite(id), "Data is not marked as write! " << id); \
 
 /// Validates a given dataID
 #define PRECICE_VALIDATE_DATA_ID(dataID) \

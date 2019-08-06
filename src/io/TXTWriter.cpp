@@ -11,7 +11,7 @@ TXTWriter::TXTWriter(
 {
   _file.open(filename.c_str());
   if (not _file) {
-    ERROR("Could not open file \"" << filename << "\" for txt writing!");
+    P_ERROR("Could not open file \"" << filename << "\" for txt writing!");
   }
   _file.setf(std::ios::showpoint);
   _file.setf(std::ios::fixed);

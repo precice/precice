@@ -112,7 +112,7 @@ const Eigen::VectorXd& FindClosest:: getSearchPoint() const
 
 bool FindClosest:: determineClosest()
 {
-  TRACE(_searchpoint);
+  P_TRACE(_searchpoint);
   using math::greater;
   _closest = ClosestElement(_searchpoint.size());
   _closest.distance = std::numeric_limits<double>::max();

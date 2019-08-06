@@ -39,10 +39,10 @@ void MultiCouplingScheme::initialize
   double startTime,
   int    startTimestep )
 {
-  TRACE(startTime, startTimestep);
-  assertion(not isInitialized());
-  assertion(math::greaterEquals(startTime, 0.0), startTime);
-  assertion(startTimestep >= 0, startTimestep);
+  P_TRACE(startTime, startTimestep);
+  P_ASSERT(not isInitialized());
+  P_ASSERT(math::greaterEquals(startTime, 0.0), startTime);
+  P_ASSERT(startTimestep >= 0, startTimestep);
   setTime(startTime);
   setTimesteps(startTimestep);
 
@@ -51,7 +51,7 @@ void MultiCouplingScheme::initialize
   setupConvergenceMeasures(); // needs _couplingData configured
   setupDataMatrices(_allData); // Reserve memory and initialize data with zero
   if (getPostProcessing().get() != nullptr) {
-    CHECK(getPostProcessing()->getDataIDs().size()>=3,
+    P_CHECK(getPostProcessing()->getDataIDs().size()>=3,
           "For parallel coupling, the number of coupling data vectors has to be at least 3, not: "
           << getPostProcessing()->getDataIDs().size());
     getPostProcessing()->initialize(_allData); // Reserve memory, initialize
@@ -88,15 +88,15 @@ void MultiCouplingScheme::initialize
 
 void MultiCouplingScheme::initializeData()
 {
-  TRACE();
-  CHECK(isInitialized(), "initializeData() can be called after initialize() only!");
+  P_TRACE();
+  P_CHECK(isInitialized(), "initializeData() can be called after initialize() only!");
 
   if (not hasToSendInitData() && not hasToReceiveInitData()) {
-    INFO("initializeData is skipped since no data has to be initialized");
+    P_INFO("initializeData is skipped since no data has to be initialized");
     return;
   }
 
-  CHECK(not (hasToSendInitData() && isActionRequired(constants::actionWriteInitialData())),
+  P_CHECK(not (hasToSendInitData() && isActionRequired(constants::actionWriteInitialData())),
         "InitialData has to be written to preCICE before calling initializeData()");
 
   setHasDataBeenExchanged(false);
@@ -138,17 +138,17 @@ void MultiCouplingScheme::initializeData()
 
 void MultiCouplingScheme::advance()
 {
-  TRACE(getTimesteps(), getTime());
+  P_TRACE(getTimesteps(), getTime());
   checkCompletenessRequiredActions();
 
-  CHECK(!hasToReceiveInitData() && !hasToSendInitData(),
+  P_CHECK(!hasToReceiveInitData() && !hasToSendInitData(),
         "initializeData() needs to be called before advance if data has to be initialized!");
 
   setHasDataBeenExchanged(false);
   setIsCouplingTimestepComplete(false);
   bool convergence = false;
   if (math::equals(getThisTimestepRemainder(), 0.0, _eps)) {
-    DEBUG("Computed full length of iteration");
+    P_DEBUG("Computed full length of iteration");
 
     receiveData();
 
@@ -172,7 +172,7 @@ void MultiCouplingScheme::advance()
 
     for (m2n::PtrM2N m2n : _communications) {
       m2n->send(convergence);
-      assertion(not _isCoarseModelOptimizationActive);
+      P_ASSERT(not _isCoarseModelOptimizationActive);
       m2n->send(_isCoarseModelOptimizationActive); //need to do this to match with ParallelCplScheme
     }
 
@@ -189,11 +189,11 @@ void MultiCouplingScheme::advance()
     sendData();
 
     if (not convergence) {
-      DEBUG("No convergence achieved");
+      P_DEBUG("No convergence achieved");
       requireAction(constants::actionReadIterationCheckpoint());
     }
     else {
-      DEBUG("Convergence achieved");
+      P_DEBUG("Convergence achieved");
       advanceTXTWriters();
     }
     updateTimeAndIterations(convergence);
@@ -207,9 +207,9 @@ void MultiCouplingScheme::advance()
 
 void MultiCouplingScheme::mergeData()
 {
-  TRACE();
-  assertion(_allData.empty(), "This function should only be called once.");
-  assertion(_sendDataVector.size()==_receiveDataVector.size());
+  P_TRACE();
+  P_ASSERT(_allData.empty(), "This function should only be called once.");
+  P_ASSERT(_sendDataVector.size()==_receiveDataVector.size());
   for(size_t i=0;i<_sendDataVector.size();i++){
     _allData.insert(_sendDataVector[i].begin(), _sendDataVector[i].end());
     _allData.insert(_receiveDataVector[i].begin(), _receiveDataVector[i].end());
@@ -230,7 +230,7 @@ void MultiCouplingScheme:: addDataToSend
     _sendDataVector[index].insert(pair);
   }
   else {
-    ERROR("Data \"" << data->getName()
+    P_ERROR("Data \"" << data->getName()
           << "\" of mesh \"" << mesh->getName() << "\" cannot be "
           << "added twice for sending!");
   }
@@ -250,7 +250,7 @@ void MultiCouplingScheme:: addDataToReceive
     _receiveDataVector[index].insert(pair);
   }
   else {
-    ERROR("Data \"" << data->getName()
+    P_ERROR("Data \"" << data->getName()
           << "\" of mesh \"" << mesh->getName() << "\" cannot be "
           << "added twice for receiving!");
   }
@@ -258,11 +258,11 @@ void MultiCouplingScheme:: addDataToReceive
 
 void MultiCouplingScheme:: sendData()
 {
-  TRACE();
+  P_TRACE();
 
   for(size_t i=0;i<_communications.size();i++){
-    assertion(_communications[i].get() != nullptr);
-    assertion(_communications[i]->isConnected());
+    P_ASSERT(_communications[i].get() != nullptr);
+    P_ASSERT(_communications[i]->isConnected());
 
     for (DataMap::value_type& pair : _sendDataVector[i]) {
       int size = pair.second->values->size();
@@ -275,11 +275,11 @@ void MultiCouplingScheme:: sendData()
 
 void MultiCouplingScheme:: receiveData()
 {
-  TRACE();
+  P_TRACE();
 
   for(size_t i=0;i<_communications.size();i++){
-    assertion(_communications[i].get() != nullptr);
-    assertion(_communications[i]->isConnected());
+    P_ASSERT(_communications[i].get() != nullptr);
+    P_ASSERT(_communications[i]->isConnected());
 
     for (DataMap::value_type& pair : _receiveDataVector[i]) {
       int size = pair.second->values->size();
@@ -293,14 +293,14 @@ void MultiCouplingScheme:: receiveData()
 
 void MultiCouplingScheme::setupConvergenceMeasures()
 {
-  TRACE();
-  assertion(not doesFirstStep());
-  CHECK(not _convergenceMeasures.empty(),
+  P_TRACE();
+  P_ASSERT(not doesFirstStep());
+  P_CHECK(not _convergenceMeasures.empty(),
         "At least one convergence measure has to be defined for an implicit coupling scheme!");
   for (ConvergenceMeasure& convMeasure : _convergenceMeasures) {
     int dataID = convMeasure.data->getID();
     convMeasure.couplingData = getData(dataID);
-    assertion(convMeasure.couplingData != nullptr);
+    P_ASSERT(convMeasure.couplingData != nullptr);
   }
 }
 
@@ -308,7 +308,7 @@ CouplingData* MultiCouplingScheme:: getData
 (
   int dataID)
 {
-  TRACE(dataID);
+  P_TRACE(dataID);
   DataMap::iterator iter = _allData.find(dataID);
   if (iter != _allData.end()) {
     return  &(*(iter->second));

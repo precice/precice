@@ -40,12 +40,12 @@ public:
   /**
    * @brief Not implemented.
    */
-  virtual bool isInitialized() const { assertion(false); return false; }
+  virtual bool isInitialized() const { P_ASSERT(false); return false; }
 
   /**
    * @brief Not implemented.
    */
-  virtual void initializeData() { assertion(false); }
+  virtual void initializeData() { P_ASSERT(false); }
 
   /**
    * @brief Not implemented.
@@ -65,22 +65,22 @@ public:
   /*
    * @brief Not implemented.
    */
-  virtual std::vector<std::string> getCouplingPartners() const { assertion(false); return std::vector<std::string>(); }
+  virtual std::vector<std::string> getCouplingPartners() const { P_ASSERT(false); return std::vector<std::string>(); }
 
   /**
    * @brief Not implemented.
    */
-  virtual bool willDataBeExchanged(double lastSolverTimestepLength) const { assertion(false); return false; }
+  virtual bool willDataBeExchanged(double lastSolverTimestepLength) const { P_ASSERT(false); return false; }
 
   /**
    * @brief Not implemented.
    */
-  virtual bool hasDataBeenExchanged() const { assertion(false); return false; }
+  virtual bool hasDataBeenExchanged() const { P_ASSERT(false); return false; }
 
   /**
    * @brief Not implemented.
    */
-  virtual double getTime() const { assertion(false); return 0; }
+  virtual double getTime() const { P_ASSERT(false); return 0; }
 
   /**
    * @brief Not implemented.
@@ -90,37 +90,37 @@ public:
   /**
    * @brief Not implemented.
    */
-  virtual double getMaxTime() const { assertion(false); return 0; }
+  virtual double getMaxTime() const { P_ASSERT(false); return 0; }
 
   /**
    * @brief Not implemented.
    */
-  virtual int getMaxTimesteps() const { assertion(false); return 0; }
+  virtual int getMaxTimesteps() const { P_ASSERT(false); return 0; }
 
   /**
    * @brief Not implemented.
    */
-  virtual bool hasTimestepLength() const { assertion(false); return false; }
+  virtual bool hasTimestepLength() const { P_ASSERT(false); return false; }
 
   /**
    * @brief Not implemented.
    */
-  virtual double getTimestepLength() const { assertion(false); return 0; }
+  virtual double getTimestepLength() const { P_ASSERT(false); return 0; }
 
   /**
    * @brief Not implemented.
    */
-  virtual double getThisTimestepRemainder() const { assertion(false); return 0; }
+  virtual double getThisTimestepRemainder() const { P_ASSERT(false); return 0; }
 
   /**
    * @brief Not implemented.
    */
-  virtual double getComputedTimestepPart() const { assertion(false); return 0; }
+  virtual double getComputedTimestepPart() const { P_ASSERT(false); return 0; }
 
   /**
    * @brief Not implemented.
    */
-  virtual double getNextTimestepMaxLength() const { assertion(false); return 0; }
+  virtual double getNextTimestepMaxLength() const { P_ASSERT(false); return 0; }
 
   /**
    * @brief Not implemented.
@@ -130,7 +130,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  virtual bool isCouplingTimestepComplete() const { assertion(false); return false; }
+  virtual bool isCouplingTimestepComplete() const { P_ASSERT(false); return false; }
 
   /**
    * @brief
@@ -140,17 +140,17 @@ public:
   /**
    * @brief Not implemented.
    */
-  virtual void performedAction(const std::string& actionName) { assertion(false); }
+  virtual void performedAction(const std::string& actionName) { P_ASSERT(false); }
 
   /**
    * @brief Not implemented.
    */
-  virtual int getCheckpointTimestepInterval() const { assertion(false); return 0; }
+  virtual int getCheckpointTimestepInterval() const { P_ASSERT(false); return 0; }
 
   /**
    * @brief Not implemented.
    */
-  virtual void requireAction(const std::string& actionName) { assertion(false); }
+  virtual void requireAction(const std::string& actionName) { P_ASSERT(false); }
 
   /**
    * @brief Empty.

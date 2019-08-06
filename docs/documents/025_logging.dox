@@ -7,15 +7,15 @@ Logging
 Debug Output and Checks
 -----------------------
 
-Before using any of debugging/logging methods below you should set TRACE() at the beginning of the function.
+Before using any of debugging/logging methods below you should set P_TRACE() at the beginning of the function.
 
-- TRACE(parameters) entering and leaving that function, print the parameters. This call should go to the very top of a function.
-- ERROR(message) unconditionally aborts the program. Should be used to catch user errors such as invalid configuration parameter combinations.
-- CHECK(check, errorMessage) checks if check == true and otherwise emits errorMessage and aborts program.
-- assertion(check) behaves like \c CHECK but should be used for programming errors and should therefore never happen to the user.
-- DEBUG(stream) prints a debug message, depending on global log level configuration.
-- INFO(stream) prints an info message, depending on global log level configuration.
-- WARN(stream) prints a warning message, depending on global log level configuration.
+- P_TRACE(parameters) entering and leaving that function, print the parameters. This call should go to the very top of a function.
+- P_ERROR(message) unconditionally aborts the program. Should be used to catch user errors such as invalid configuration parameter combinations.
+- P_CHECK(check, errorMessage) checks if check == true and otherwise emits errorMessage and aborts program.
+- P_ASSERT(check) behaves like \c P_CHECK but should be used for programming errors and should therefore never happen to the user.
+- P_DEBUG(stream) prints a debug message, depending on global log level configuration.
+- P_INFO(stream) prints an info message, depending on global log level configuration.
+- P_WARN(stream) prints a warning message, depending on global log level configuration.
 
 
 Usage

@@ -15,11 +15,11 @@ Partition::Partition(mesh::PtrMesh mesh)
 
 void Partition::computeVertexOffsets()
 {
-  TRACE();
-  DEBUG("Generate vertex offsets");
+  P_TRACE();
+  P_DEBUG("Generate vertex offsets");
   if (utils::MasterSlave::isSlave()) {
     utils::MasterSlave::_communication->broadcast(_mesh->getVertexOffsets(), 0);
-    DEBUG("My vertex offsets: " << _mesh->getVertexOffsets());
+    P_DEBUG("My vertex offsets: " << _mesh->getVertexOffsets());
     
   } else if (utils::MasterSlave::isMaster()) {
     _mesh->getVertexOffsets().resize(utils::MasterSlave::getSize());
@@ -27,7 +27,7 @@ void Partition::computeVertexOffsets()
     for (int rank = 1; rank < utils::MasterSlave::getSize(); rank++) {
       _mesh->getVertexOffsets()[rank] = _mesh->getVertexDistribution()[rank].size() + _mesh->getVertexOffsets()[rank - 1];
     }
-    DEBUG("My vertex offsets: " << _mesh->getVertexOffsets());
+    P_DEBUG("My vertex offsets: " << _mesh->getVertexOffsets());
     utils::MasterSlave::_communication->broadcast(_mesh->getVertexOffsets());
     
   } else { //coupling mode

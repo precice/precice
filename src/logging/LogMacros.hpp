@@ -13,47 +13,46 @@
 
 #include "Tracer.hpp"
 
-#define WARN(message) _log.warning(LOG_LOCATION, PRECICE_AS_STRING(message))
+#define P_WARN(message) _log.warning(PRECICE_LOG_LOCATION, PRECICE_AS_STRING(message))
 
-#define INFO(message) _log.info(LOG_LOCATION, PRECICE_AS_STRING(message))
+#define P_INFO(message) _log.info(PRECICE_LOG_LOCATION, PRECICE_AS_STRING(message))
 
-#define ERROR(message) do {                                             \
-    _log.error(LOG_LOCATION, PRECICE_AS_STRING(message));               \
-    std::exit(-1);                                                      \
+#define P_ERROR(message) do {                                             \
+    _log.error(PRECICE_LOG_LOCATION, PRECICE_AS_STRING(message));               \
+    std::exit(-1);                                                              \
 } while (false)
 
-#define CHECK(check, message)                      \
-  if ( !(check) ) {                                \
-    ERROR(message);                                \
+#define P_CHECK(check, message)                                           \
+  if ( !(check) ) {                                                             \
+    P_ERROR(message);                                                     \
   }
 
 #ifdef NDEBUG 
 
-#define DEBUG(...) {}
-#define TRACE(...) {}
+#define P_DEBUG(...) {}
+#define P_TRACE(...) {}
 
 #else // NDEBUG
 
-#define DEBUG(message) _log.debug(LOG_LOCATION, PRECICE_AS_STRING(message))
+#define P_DEBUG(message) _log.debug(PRECICE_LOG_LOCATION, PRECICE_AS_STRING(message))
 
 /// Helper macro, used by TRACE
-#define LOG_ARGUMENT(r, data, i, elem)                                  \
+#define PRECICE_LOG_ARGUMENT(r, data, i, elem)                                  \
   << '\n' << "  Argument " << i << ": " << BOOST_PP_STRINGIZE(elem) << " == " << elem
 
 // Do not put do {...} while (false) here, it will destroy the _tracer_ right after creation
-#define TRACE(...)                                                      \
-  /*BOOST_LOG_FUNCTION();*/                                             \
-  precice::logging::Tracer _tracer_(_log, LOG_LOCATION);                \
-  _log.trace(LOG_LOCATION, PRECICE_AS_STRING("Entering " << __func__    \
-  BOOST_PP_IF(BOOST_VMD_IS_EMPTY(__VA_ARGS__),                          \
-              BOOST_PP_EMPTY(),                                         \
-              BOOST_PP_SEQ_FOR_EACH_I(LOG_ARGUMENT,, BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__)))));
+#define P_TRACE(...)                                                      \
+  precice::logging::Tracer _tracer_(_log, PRECICE_LOG_LOCATION);                \
+  _log.trace(PRECICE_LOG_LOCATION, PRECICE_AS_STRING("Entering " << __func__    \
+  BOOST_PP_IF(BOOST_VMD_IS_EMPTY(__VA_ARGS__),                                  \
+              BOOST_PP_EMPTY(),                                                 \
+              BOOST_PP_SEQ_FOR_EACH_I(PRECICE_LOG_ARGUMENT,, BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__)))));
 
 
 #endif // ! NDEBUG
 
 
-#define LOG_LOCATION precice::logging::LogLocation{__FILE__,  __LINE__, __func__}
+#define PRECICE_LOG_LOCATION precice::logging::LogLocation{__FILE__,  __LINE__, __func__}
 
   
 

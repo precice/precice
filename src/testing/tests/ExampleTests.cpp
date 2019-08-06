@@ -137,7 +137,7 @@ BOOST_FIXTURE_TEST_CASE(IntegrationTestsWithTwoParticipants, testing::SplitParti
     BOOST_TEST(utils::Parallel::getCommunicatorSize() == 2);
   }
   else {
-    assertion(participantID==2);
+    P_ASSERT(participantID==2);
 
     // Put here your preCICE API code for the second participant
 

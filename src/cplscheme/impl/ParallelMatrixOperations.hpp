@@ -36,9 +36,9 @@ public:
       int p, int q, int r,
       bool dotProductComputation = true)
   {
-    TRACE();
-    assertion(result.cols() == rightMatrix.cols(), result.cols(), rightMatrix.cols());
-    assertion(leftMatrix.cols() == rightMatrix.rows(), leftMatrix.cols(), rightMatrix.rows());
+    P_TRACE();
+    P_ASSERT(result.cols() == rightMatrix.cols(), result.cols(), rightMatrix.cols());
+    P_ASSERT(leftMatrix.cols() == rightMatrix.rows(), leftMatrix.cols(), rightMatrix.rows());
 
     // if serial computation on single processor, i.e, no master-slave mode
     if (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()) {
@@ -46,18 +46,18 @@ public:
 
       // if parallel computation on p processors, i.e., master-slave mode
     } else {
-      assertion(utils::MasterSlave::_communication.get() != NULL);
-      assertion(utils::MasterSlave::_communication->isConnected());
+      P_ASSERT(utils::MasterSlave::_communication.get() != NULL);
+      P_ASSERT(utils::MasterSlave::_communication->isConnected());
 
       // The result matrix is of size (p x r)
       // if p equals r (and p = global_n), we have to perform the
       // cyclic communication with block-wise matrix-matrix multiplication
       if (p == r) {
-        assertion(_needCycliclComm);
-        assertion(_cyclicCommLeft.get() != NULL);
-        assertion(_cyclicCommLeft->isConnected());
-        assertion(_cyclicCommRight.get() != NULL);
-        assertion(_cyclicCommRight->isConnected());
+        P_ASSERT(_needCycliclComm);
+        P_ASSERT(_cyclicCommLeft.get() != NULL);
+        P_ASSERT(_cyclicCommLeft->isConnected());
+        P_ASSERT(_cyclicCommRight.get() != NULL);
+        P_ASSERT(_cyclicCommRight->isConnected());
 
         _multiplyNN(leftMatrix, rightMatrix, result, offsets, p, q, r);
 
@@ -91,11 +91,11 @@ public:
       Eigen::PlainObjectBase<Derived3> & result,
       int p, int q, int r)
   {
-    TRACE();
-    assertion(leftMatrix.rows() == p, leftMatrix.rows(), p);
-    assertion(leftMatrix.cols() == rightMatrix.rows(), leftMatrix.cols(), rightMatrix.rows());
-    assertion(result.rows() == p, result.rows(), p);
-    assertion(result.cols() == r, result.cols(), r);
+    P_TRACE();
+    P_ASSERT(leftMatrix.rows() == p, leftMatrix.rows(), p);
+    P_ASSERT(leftMatrix.cols() == rightMatrix.rows(), leftMatrix.cols(), rightMatrix.rows());
+    P_ASSERT(result.rows() == p, result.rows(), p);
+    P_ASSERT(result.cols() == r, result.cols(), r);
 
     Eigen::MatrixXd localResult(result.rows(), result.cols());
     localResult.noalias() = leftMatrix * rightMatrix;
@@ -120,7 +120,7 @@ private:
       const std::vector<int> &          offsets,
       int p, int q, int r)
   {
-    TRACE();
+    P_TRACE();
     /*
      * For multiplication W_til * Z = J
      * -----------------------------------------------------------------------
@@ -132,10 +132,10 @@ private:
      * -----------------------------------------------------------------------
      */
 
-    assertion(_needCycliclComm);
-    assertion(leftMatrix.cols() == q, leftMatrix.cols(), q);
-    assertion(leftMatrix.rows() == rightMatrix.cols(), leftMatrix.rows(), rightMatrix.cols());
-    assertion(result.rows() == p, result.rows(), p);
+    P_ASSERT(_needCycliclComm);
+    P_ASSERT(leftMatrix.cols() == q, leftMatrix.cols(), q);
+    P_ASSERT(leftMatrix.rows() == rightMatrix.cols(), leftMatrix.rows(), rightMatrix.cols());
+    P_ASSERT(result.rows() == p, result.rows(), p);
 
     //int nextProc = (utils::MasterSlave::getRank() + 1) % utils::MasterSlave::getSize();
     int prevProc = (utils::MasterSlave::getRank() - 1 < 0) ? utils::MasterSlave::getSize() - 1 : utils::MasterSlave::getRank() - 1;
@@ -161,7 +161,7 @@ private:
 
     // set block at corresponding row-index on proc
     int off = offsets[utils::MasterSlave::getRank()];
-    assertion(result.cols() == diagBlock.cols(), result.cols(), diagBlock.cols());
+    P_ASSERT(result.cols() == diagBlock.cols(), result.cols(), diagBlock.cols());
     result.block(off, 0, diagBlock.rows(), diagBlock.cols()) = diagBlock;
 
     /**
@@ -210,7 +210,7 @@ private:
       // note: the direction and ordering of the cyclic sending operation is chosen s.t. the computed block is
       //       local on the current processor (in J_inv).
       off = offsets[sourceProc];
-      assertion(result.cols() == block.cols(), result.cols(), block.cols());
+      P_ASSERT(result.cols() == block.cols(), result.cols(), block.cols());
       result.block(off, 0, block.rows(), block.cols()) = block;
     }
   }
@@ -224,7 +224,7 @@ private:
       const std::vector<int> &          offsets,
       int p, int q, int r)
   {
-    TRACE();
+    P_TRACE();
     for (int i = 0; i < leftMatrix.rows(); i++) {
       int rank = 0;
       // find rank of processor that stores the result
@@ -261,10 +261,10 @@ private:
       const std::vector<int> &          offsets,
       int p, int q, int r)
   {
-    TRACE();
+    P_TRACE();
 
     // ensure that both matrices are stored in the same order. Important for reduce function, that adds serialized data.
-    assertion(static_cast<int>(leftMatrix.IsRowMajor) == static_cast<int>(rightMatrix.IsRowMajor),
+    P_ASSERT(static_cast<int>(leftMatrix.IsRowMajor) == static_cast<int>(rightMatrix.IsRowMajor),
               leftMatrix.IsRowMajor, rightMatrix.IsRowMajor);
 
     // multiply local block (saxpy-based approach)
