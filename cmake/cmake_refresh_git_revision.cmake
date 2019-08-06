@@ -21,8 +21,8 @@ execute_process(
 
 set(preCICE_REVISION "no-info [Git failed/Not a repository]")
 if("${PRECICE_REVISION_RET}" EQUAL "0")
-  message(STATUS "Revision status: ${preCICE_REVISION}")
   set(preCICE_REVISION "${PRECICE_REVISION_OUT}")
+  message(STATUS "Revision status: ${preCICE_REVISION}")
 else()
   message(STATUS "Revision status: Detection failed")
 endif()
