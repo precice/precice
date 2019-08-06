@@ -8,6 +8,7 @@
 #include "precice/impl/Participant.hpp"
 #include "precice/config/Configuration.hpp"
 #include "utils/Parallel.hpp"
+#include "utils/Petsc.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/Event.hpp"
 
@@ -698,6 +699,96 @@ BOOST_AUTO_TEST_CASE(MasterSockets, * testing::OnSize(4))
   interface.finalize();
 }
 
+// Tests SolverInterface() with a user-defined MPI communicator.
+BOOST_AUTO_TEST_CASE(UserDefinedMPICommunicator, * testing::OnSize(4))
+{
+  std::string configFilename = _pathToTests + "userDefinedMPICommunicator.xml";
+  config::Configuration config;
+  
+  if(utils::Parallel::getProcessRank()<=2){
+    utils::Parallel::splitCommunicator( "SolverOne" );
+    MPI_Comm myComm = utils::Parallel::getLocalCommunicator();
+    int myCommSize;
+    MPI_Comm_size(myComm, &myCommSize);
+    BOOST_TEST(myCommSize == 3);
+    utils::Parallel::clearGroups();
+
+    xml::configure(config.getXMLTag(), configFilename);
+    SolverInterface interface ( "SolverOne", utils::Parallel::getProcessRank(), 3, &myComm );
+    impl(interface).configure(config.getSolverInterfaceConfiguration());
+    int meshID = interface.getMeshID("MeshOne");
+
+    int vertexIDs[2];
+    double xCoord = utils::Parallel::getProcessRank() * 0.4;
+    double positions[4] = {xCoord,0.0,xCoord+0.2,0.0};
+    interface.setMeshVertices(meshID, 2, positions, vertexIDs);
+    interface.initialize();
+    interface.finalize();
+  }
+  else {
+    utils::Parallel::splitCommunicator( "SolverTwo" );
+    utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator());
+    BOOST_TEST(utils::Parallel::getCommunicatorSize() == 1);
+    utils::Parallel::clearGroups();
+    xml::configure(config.getXMLTag(), configFilename);
+
+    SolverInterface interface ( "SolverTwo", 0, 1 );
+    impl(interface).configure(config.getSolverInterfaceConfiguration());
+    int meshID = interface.getMeshID("MeshTwo");
+    int vertexIDs[6];
+    double positions[12] = {0.0,0.0,0.2,0.0,0.4,0.0,0.6,0.0,0.8,0.0,1.0,0.0};
+    interface.setMeshVertices(meshID, 6, positions, vertexIDs);
+    interface.initialize();
+    interface.finalize();
+  }
+}
+
+#ifndef PRECICE_NO_PETSC
+// Tests SolverInterface() with a user-defined MPI communicator.
+// Since PETSc also uses MPI, we use petrbf mapping here.
+BOOST_AUTO_TEST_CASE(UserDefinedMPICommunicatorPetRBF, * testing::OnSize(4))
+{
+  std::string configFilename = _pathToTests + "userDefinedMPICommunicatorPetRBF.xml";
+  config::Configuration config;
+  
+  if(utils::Parallel::getProcessRank()<=2){
+    utils::Parallel::splitCommunicator( "SolverOne" );
+    MPI_Comm myComm = utils::Parallel::getLocalCommunicator();
+    int myCommSize;
+    MPI_Comm_size(myComm, &myCommSize);
+    BOOST_TEST(myCommSize == 3);
+    utils::Parallel::clearGroups();
+
+    SolverInterface interface ( "SolverOne", utils::Parallel::getProcessRank(), 3, &myComm );
+    xml::configure(config.getXMLTag(), configFilename);
+    impl(interface).configure(config.getSolverInterfaceConfiguration());
+    int meshID = interface.getMeshID("MeshOne");
+
+    int vertexIDs[2];
+    double xCoord = utils::Parallel::getProcessRank() * 0.4;
+    double positions[4] = {xCoord,0.0,xCoord+0.2,0.0};
+    interface.setMeshVertices(meshID, 2, positions, vertexIDs);
+    interface.initialize();
+    interface.finalize();
+  }
+  else {
+    utils::Parallel::splitCommunicator( "SolverTwo" );
+    utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator());
+    BOOST_TEST(utils::Parallel::getCommunicatorSize() == 1);
+    utils::Parallel::clearGroups();
+    xml::configure(config.getXMLTag(), configFilename);
+
+    SolverInterface interface ( "SolverTwo", 0, 1 );
+    impl(interface).configure(config.getSolverInterfaceConfiguration());
+    int meshID = interface.getMeshID("MeshTwo");
+    int vertexIDs[6];
+    double positions[12] = {0.0,0.0,0.2,0.0,0.4,0.0,0.6,0.0,0.8,0.0,1.0,0.0};
+    interface.setMeshVertices(meshID, 6, positions, vertexIDs);
+    interface.initialize();
+    interface.finalize();
+  }
+}
+#endif // PRECICE_NO_PETSC
 
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()

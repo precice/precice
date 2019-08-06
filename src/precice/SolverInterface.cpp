@@ -14,6 +14,16 @@ SolverInterface:: SolverInterface
   _impl ( new impl::SolverInterfaceImpl(participantName, solverProcessIndex, solverProcessSize, false) )
 {}
 
+SolverInterface:: SolverInterface
+(
+  const std::string& participantName,
+  int                solverProcessIndex,
+  int                solverProcessSize,
+  void*              communicator)
+:
+  _impl ( new impl::SolverInterfaceImpl(participantName, solverProcessIndex, solverProcessSize, false, communicator) )
+{}
+
 SolverInterface::~SolverInterface() = default;
 
 void SolverInterface:: configure

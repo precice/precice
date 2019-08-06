@@ -216,10 +216,13 @@ void EventRegistry::initialize(std::string applicationName, std::string runName,
 
   globalEvent.start(false);
   initialized = true;
+  finalized = false;
 }
 
 void EventRegistry::finalize()
 {
+  if (finalized) return;
+
   globalEvent.stop();
   localRankData.finalize();
 
@@ -232,6 +235,7 @@ void EventRegistry::finalize()
   collect();
 
   initialized = false;
+  finalized = true;
 }
 
 void EventRegistry::clear()
