@@ -23,6 +23,7 @@ void Petsc::initialize
   PetscBool petscIsInitialized;
   PetscInitialized(&petscIsInitialized);
   if (not petscIsInitialized) {
+    PETSC_COMM_WORLD = Parallel::getGlobalCommunicator();
     PetscErrorCode ierr;
     ierr = PetscInitialize(argc, argv, "", nullptr); CHKERRV(ierr);
     weInitialized = true;
