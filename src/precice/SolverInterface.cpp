@@ -1,6 +1,7 @@
 #include "precice/SolverInterface.hpp"
 #include "precice/impl/SolverInterfaceImpl.hpp"
 #include "cplscheme/Constants.hpp"
+#include "versions.hpp"
 
 namespace precice {
 
@@ -329,6 +330,11 @@ MeshHandle SolverInterface:: getMeshHandle
   const std::string & meshName )
 {
   return _impl->getMeshHandle ( meshName );
+}
+
+std::string getVersionInformation()
+{
+    return {precice::versionInformation};
 }
 
 namespace constants {

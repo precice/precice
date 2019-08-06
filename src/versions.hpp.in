@@ -9,4 +9,5 @@
 
 namespace precice {
     extern const char * preciceRevision;
+    extern const char * versionInformation;
 }
