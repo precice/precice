@@ -267,7 +267,7 @@ PointToPointCommunication::~PointToPointCommunication()
   closeConnection();
 }
 
-bool PointToPointCommunication::isConnected()
+bool PointToPointCommunication::isConnected() const
 {
   return _isConnected;
 }
@@ -472,9 +472,9 @@ void PointToPointCommunication::closeConnection()
   _isConnected = false;
 }
 
-void PointToPointCommunication::send(double *itemsToSend,
-                                     size_t  size,
-                                     int     valueDimension)
+void PointToPointCommunication::send(double const  *itemsToSend,
+                                     size_t         size,
+                                     int            valueDimension)
 {
 
   if (_mappings.empty()) {

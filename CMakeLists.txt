@@ -1,6 +1,6 @@
-cmake_minimum_required (VERSION 3.9.6)
+cmake_minimum_required (VERSION 3.10.2)
 
-project(preCICE VERSION 1.5.1 LANGUAGES CXX)
+project(preCICE VERSION 1.5.2 LANGUAGES CXX)
 
 #
 # Overview of this configuration
@@ -59,6 +59,8 @@ option(PRECICE_Packages "Configure package generation." ON)
 option(PRECICE_InstallTest "Add test binary and necessary files to install target." ON)
 option(BUILD_SHARED_LIBS "Build shared libraries by default" OFF)
 
+set(PRECICE_CTEST_MPI_FLAGS "" CACHE STRING "Add additional flags to mpiexec for running tests via CTest.")
+
 # Print information about this configuration
 include(PrintHelper)
 print_configuration(
@@ -68,6 +70,7 @@ print_configuration(
   "PYTHON;Build with PYTHON"
   "PRECICE_Packages;Configure package generation"
   "PRECICE_InstallTest;Install tests/testfiles"
+  "PRECICE_CTEST_MPI_FLAGS;Additional CTest MPI Flags"
   )
 
 
@@ -308,6 +311,10 @@ if(PRECICE_InstallTest)
     DESTINATION share/precice
     FILES_MATCHING
     PATTERN "*.xml"
+    )
+  install(DIRECTORY src/action/tests/
+    DESTINATION share/precice/src/action/tests
+    FILES_MATCHING
     PATTERN "*.py"
     )
 endif()

@@ -213,7 +213,7 @@ void ReceivedPartition::compute()
     }
     int globalNumberOfVertices = -1;
     utils::MasterSlave::_communication->broadcast(globalNumberOfVertices, 0);
-    assertion(globalNumberOfVertices != -1);
+    assertion(globalNumberOfVertices >= 0);
     _mesh->setGlobalNumberOfVertices(globalNumberOfVertices);
   } else { // Master
     int              numberOfVertices = _mesh->vertices().size();
@@ -221,16 +221,17 @@ void ReceivedPartition::compute()
     for (int i = 0; i < numberOfVertices; i++) {
       vertexIDs[i] = _mesh->vertices()[i].getGlobalIndex();
     }
-    _mesh->getVertexDistribution()[0] = vertexIDs;
+    _mesh->getVertexDistribution()[0] = std::move(vertexIDs);
 
     for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
       int numberOfSlaveVertices = -1;
       utils::MasterSlave::_communication->receive(numberOfSlaveVertices, rankSlave);
-      std::vector<int> slaveVertexIDs;
+      assertion(numberOfSlaveVertices >= 0);
+      std::vector<int> slaveVertexIDs(numberOfSlaveVertices, -1);
       if (numberOfSlaveVertices != 0) {
         utils::MasterSlave::_communication->receive(slaveVertexIDs, rankSlave);
       }
-      _mesh->getVertexDistribution()[rankSlave] = slaveVertexIDs;
+      _mesh->getVertexDistribution()[rankSlave] = std::move(slaveVertexIDs);
     }
     utils::MasterSlave::_communication->broadcast(_mesh->getGlobalNumberOfVertices());
   }
@@ -348,6 +349,7 @@ bool ReceivedPartition::isVertexInBB(const mesh::Vertex &vertex)
 void ReceivedPartition::createOwnerInformation()
 {
   TRACE();
+  Event e("partition.createOwnerInformation." + _mesh->getName(), precice::syncMode);
 
   if (utils::MasterSlave::isSlave()) {
     int numberOfVertices = _mesh->vertices().size();

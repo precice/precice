@@ -41,8 +41,8 @@ Mesh:: Mesh
   _nameIDPairs[_name] = _managePropertyIDs->getFreeID ();
   setProperty(INDEX_GEOMETRY_ID, _nameIDPairs[_name]);
 
-  meshChanged.connect(&rtree::clear);
-  meshDestroyed.connect(&rtree::clear);
+  meshChanged.connect([](Mesh & m){rtree::clear(m);});
+  meshDestroyed.connect([](Mesh & m){rtree::clear(m);});
 }
 
 Mesh:: ~Mesh()
@@ -304,7 +304,7 @@ void Mesh:: allocateDataValues()
     if (leftToAllocate > 0){
       utils::append(data->values(), (Eigen::VectorXd) Eigen::VectorXd::Zero(leftToAllocate));
     }
-    DEBUG("Data " << data->getName() << " no has " << data->values().size() << " values");
+    DEBUG("Data " << data->getName() << " now has " << data->values().size() << " values");
   }
 }
 

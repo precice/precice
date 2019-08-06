@@ -9,6 +9,10 @@ All notable changes to this project will be documented in this file. For future 
 - Added CMake target to uninstall the project.
 - Only the total number of filtered vertices are printed, not each one separately, unless debug output is enabled.
 
+## 1.5.2
+
+- Fixed faulty communication in `master:sockets` leading to crashes.
+
 ## 1.5.1
 
 - Fixed the exposure of `boost::asio` implementation details leading to version incompatibilities

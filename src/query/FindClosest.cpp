@@ -11,6 +11,12 @@
 namespace precice {
 namespace query {
 
+std::ostream& operator<<(std::ostream& out, const InterpolationElement& val)
+{
+    out << '(' << *val.element << ", w:" << val.weight << ')';
+    return out;
+}
+
 InterpolationElements generateInterpolationElements(
     const mesh::Vertex& /*location*/,
     const mesh::Vertex& element)

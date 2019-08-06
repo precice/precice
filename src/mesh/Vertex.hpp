@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Eigen/Core>
-#include <boost/noncopyable.hpp>
 #include <iostream>
 
 #include "math/differences.hpp"
@@ -13,7 +12,7 @@ namespace mesh
 {
 
 /// Vertex of a mesh.
-class Vertex : public PropertyContainer, private boost::noncopyable
+class Vertex : public PropertyContainer
 {
 public:
   /// Constructor for vertex

@@ -5,7 +5,6 @@
 
 #include "mesh/PropertyContainer.hpp"
 #include "mesh/Vertex.hpp"
-#include "boost/noncopyable.hpp"
 #include "math/differences.hpp"
 
 namespace precice {
@@ -16,7 +15,7 @@ struct EdgeIteratorTypes;
 template<typename Types> class EdgeIterator;
 
 /// Linear edge of a mesh, defined by two Vertex objects.
-class Edge : public PropertyContainer, private boost::noncopyable
+class Edge : public PropertyContainer
 {
 public:
 

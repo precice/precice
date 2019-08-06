@@ -1,6 +1,5 @@
 #pragma once
 
-#include <boost/core/noncopyable.hpp>
 #include "Request.hpp"
 #include "logging/Logger.hpp"
 
@@ -42,10 +41,13 @@ namespace com
  * sized appropriatly. Asynchronous receive methods also expect the vector
  * be sized correctly.
  */
-class Communication: private boost::noncopyable
+class Communication
 {
 
 public:
+
+  Communication& operator=(Communication &&) = delete;
+
   /// Destructor, empty.
   virtual ~Communication()
   {

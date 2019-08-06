@@ -31,11 +31,14 @@ void NearestNeighborMapping:: computeMapping()
   assertion(input().get() != nullptr);
   assertion(output().get() != nullptr);
 
-  precice::utils::Event e("map.nn.computeMapping.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
+  const std::string baseEvent = "map.nn.computeMapping.From" + input()->getName() + "To" + output()->getName();
+  precice::utils::Event e(baseEvent, precice::syncMode);
   
   if (getConstraint() == CONSISTENT){
     DEBUG("Compute consistent mapping");
-    mesh::rtree::PtrVertexRTree rtree = mesh::rtree::getVertexRTree(input());
+    precice::utils::Event e2(baseEvent+".getIndexOnVertices", precice::syncMode);
+    auto rtree = mesh::rtree::getVertexRTree(input());
+    e2.stop();
     size_t verticesSize = output()->vertices().size();
     _vertexIndices.resize(verticesSize);
     const mesh::Mesh::VertexContainer& outputVertices = output()->vertices();
@@ -51,7 +54,9 @@ void NearestNeighborMapping:: computeMapping()
   else {
     assertion(getConstraint() == CONSERVATIVE, getConstraint());
     DEBUG("Compute conservative mapping");
-    mesh::rtree::PtrVertexRTree rtree = mesh::rtree::getVertexRTree(output());
+    precice::utils::Event e2(baseEvent+".getIndexOnVertices", precice::syncMode);
+    auto rtree = mesh::rtree::getVertexRTree(output());
+    e2.stop();
     size_t verticesSize = input()->vertices().size();
     _vertexIndices.resize(verticesSize);
     const mesh::Mesh::VertexContainer& inputVertices = input()->vertices();
@@ -130,6 +135,7 @@ void NearestNeighborMapping:: map
 void NearestNeighborMapping::tagMeshFirstRound()
 {
   TRACE();
+  precice::utils::Event e("map.nn.tagMeshFirstRound.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
 
   computeMapping();
 

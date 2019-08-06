@@ -669,6 +669,35 @@ BOOST_AUTO_TEST_CASE(NearestProjectionRePartitioning, * testing::OnSize(4))
   }
 }
 
+BOOST_AUTO_TEST_CASE(MasterSockets, * testing::OnSize(4))
+{
+  std::string configFilename = _pathToTests + "master-sockets.xml";
+  std::string myName, myMeshName;
+  int myRank, mySize;
+  config::Configuration config;
+  xml::configure(config.getXMLTag(), configFilename);
+  if(utils::Parallel::getProcessRank()<=2){
+    myName = "ParallelSolver";
+    myRank = utils::Parallel::getProcessRank();
+    mySize = 3;
+    myMeshName = "ParallelMesh";
+  }
+  else{
+    myName = "SerialSolver";
+    myRank = 0;
+    mySize = 1;
+    myMeshName = "SerialMesh";
+  }
+  SolverInterface interface(myName, myRank, mySize);
+  impl(interface).configure(config.getSolverInterfaceConfiguration());
+  int meshID = interface.getMeshID(myMeshName);
+  double position[2] = {0, 0};
+  int vertexID = interface.setMeshVertex(meshID, position);
+  interface.initialize();
+  interface.advance(1.0);
+  interface.finalize();
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()

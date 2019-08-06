@@ -23,7 +23,6 @@
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
 #include "utils/EventUtils.hpp"
 #include "utils/Helpers.hpp"
-#include "utils/SignalHandler.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Petsc.hpp"
 #include "utils/MasterSlave.hpp"
@@ -33,11 +32,6 @@
 #include "partition/ReceivedPartition.hpp"
 #include "partition/ProvidedPartition.hpp"
 #include "versions.hpp"
-
-#include <csignal> // used for installing crash handler
-#ifndef SIGXCPU
-#define SIGXCPU 24 /* exceeded CPU time limit */
-#endif
 
 #include <utility>
 #include <algorithm>
@@ -71,22 +65,12 @@ SolverInterfaceImpl:: SolverInterfaceImpl
   _accessorCommunicatorSize(accessorCommunicatorSize),
   _serverMode(serverMode)
 {
+  CHECK(!_accessorName.empty(), "Accessor has to be named!");
   CHECK(_accessorProcessRank >= 0, "Accessor process index has to be >= 0!");
   CHECK(_accessorCommunicatorSize >= 0, "Accessor process size has to be >= 0!");
   CHECK(_accessorProcessRank < _accessorCommunicatorSize,
         "Accessor process index has to be smaller than accessor process "
         << "size (given as " << _accessorProcessRank << ")!");
-
-  /* When precice stops abruptly, e.g. an external solver crashes, the
-     SolverInterfaceImpl destructor is never called. Since we still want
-     to print the timings, we install the signal handler here. */
-  // Disable SIGSEGV handler, because we don't want to interfere with crash backtrace.
-  // signal(SIGSEGV, precice::utils::terminationSignalHandler);
-  signal(SIGABRT, precice::utils::terminationSignalHandler);
-  signal(SIGTERM, precice::utils::terminationSignalHandler);
-  // SIGXCPU is emitted when the job is killed due to walltime limit on SuperMUC
-  signal(SIGXCPU, precice::utils::terminationSignalHandler);
-  // signal(SIGINT,  precice::utils::terminationSignalHandler);
 
   logging::setParticipant(_accessorName);
 }
@@ -214,8 +198,11 @@ double SolverInterfaceImpl:: initialize()
 
     INFO("Setting up master communication to coupling partner/s" );
     for (auto& m2nPair : _m2ns) {
-        m2nPair.second.prepareEstablishment();
-        m2nPair.second.connectMasters();
+        auto& bm2n = m2nPair.second;
+        DEBUG((bm2n.isRequesting?"Awaiting master connection from ":"Establishing master connection to ") << bm2n.remoteName);
+        bm2n.prepareEstablishment();
+        bm2n.connectMasters();
+        DEBUG("Established master connection " << (bm2n.isRequesting?"from ":"to ") << bm2n.remoteName);
     }
     INFO("Masters are connected");
 
@@ -223,8 +210,11 @@ double SolverInterfaceImpl:: initialize()
 
     INFO("Setting up slaves communication to coupling partner/s" );
     for (auto& m2nPair : _m2ns) {
-      m2nPair.second.connectSlaves();
-      m2nPair.second.cleanupEstablishment();
+      auto& bm2n = m2nPair.second;
+      DEBUG((bm2n.isRequesting?"Awaiting slaves connection from ":"Establishing slaves connection to ") << bm2n.remoteName);
+      bm2n.connectSlaves();
+      bm2n.cleanupEstablishment();
+      DEBUG("Established slaves connection " << (bm2n.isRequesting?"from ":"to ") << bm2n.remoteName);
     }
     INFO("Slaves are connected");
 

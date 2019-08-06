@@ -55,7 +55,7 @@ assert(np.array_equal(position, vertex))
 # get individual positions
 for idx in range(n+1):
     position = np.zeros(dimensions)
-    interface.get_mesh_vertices(mesh_id, 1, [idx], position)  # TODO: Here we have a failing assertion. This is behavior is incorrect!
+    interface.get_mesh_vertices(mesh_id, 1, np.array([idx]), position)  # TODO: Here we have a failing assertion. This is behavior is incorrect!
     assert(np.array_equal(position, vertex[idx*dimensions:(idx+1)*dimensions]))   
 
 dt = interface.initialize()

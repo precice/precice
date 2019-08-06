@@ -28,9 +28,31 @@ class TestBindings(TestCase):
         fake_mesh_id = 0  # compare to test/SolverInterface.hpp, fake_mesh_id
         self.assertEqual(fake_mesh_id, solver_interface.get_mesh_id("testMesh"))
 
+    def test_set_mesh_vertices (self):
+        solver_interface = precice_future.Interface("test", 0, 1)
+        fake_mesh_id = 0  # compare to test/SolverInterface.cpp, fake_mesh_id
+        fake_dimension = 3  # compare to test/SolverInterface.cpp, fake_dimensions
+        n_fake_vertices = 3  # compare to test/SolverInterface.cpp, n_fake_vertices
+        positions = np.random.rand(fake_dimension * n_fake_vertices)
+        self.assertTrue(np.array_equal(np.array(range(n_fake_vertices)), solver_interface.set_mesh_vertices(fake_mesh_id, positions)))
+
     def test_read_write_block_scalar_data(self):
         solver_interface = precice_future.Interface("test", 0, 1)
         write_data = np.array([3, 7, 8], dtype=np.double)
+        solver_interface.write_block_scalar_data(1, np.array([1, 2, 3]), write_data)
+        read_data = solver_interface.read_block_scalar_data(1, np.array([1, 2, 3]))
+        self.assertTrue(np.array_equal(write_data, read_data))
+
+    def test_read_write_block_scalar_data_non_contiguous(self):
+        """
+        Tests behaviour of solver interface, if a non contiguous array is passed to the interface.
+
+        Note: Check whether np.ndarray is contiguous via np.ndarray.flags.
+        """
+        solver_interface = precice_future.Interface("test", 0, 1)
+        dummy_array = np.random.rand(3, 3)
+        write_data = dummy_array[:, 1]
+        assert(write_data.flags["C_CONTIGUOUS"] == False)
         solver_interface.write_block_scalar_data(1, np.array([1, 2, 3]), write_data)
         read_data = solver_interface.read_block_scalar_data(1, np.array([1, 2, 3]))
         self.assertTrue(np.array_equal(write_data, read_data))
@@ -49,6 +71,20 @@ class TestBindings(TestCase):
         read_data = solver_interface.read_block_vector_data(1, np.array([1, 2]))
         self.assertTrue(np.array_equal(write_data, read_data))
 
+    def test_read_write_block_vector_data_non_contiguous(self):
+        """
+        Tests behaviour of solver interface, if a non contiguous array is passed to the interface.
+
+        Note: Check whether np.ndarray is contiguous via np.ndarray.flags.
+        """
+        solver_interface = precice_future.Interface("test", 0, 1)
+        dummy_array = np.random.rand(6, 3)
+        write_data = dummy_array[:, 1]
+        assert(write_data.flags["C_CONTIGUOUS"] == False)
+        solver_interface.write_block_vector_data(1, np.array([1, 2]), write_data)
+        read_data = solver_interface.read_block_vector_data(1, np.array([1, 2]))
+        self.assertTrue(np.array_equal(write_data, read_data))
+
     def test_read_write_vector_data(self):
         solver_interface = precice_future.Interface("test", 0, 1)
         write_data = np.array([1, 2, 3], dtype=np.double)
@@ -56,3 +92,16 @@ class TestBindings(TestCase):
         read_data = solver_interface.read_vector_data(1, 1)
         self.assertTrue(np.array_equal(write_data, read_data))
 
+    def test_read_write_vector_data_non_contiguous(self):
+        """
+        Tests behaviour of solver interface, if a non contiguous array is passed to the interface.
+
+        Note: Check whether np.ndarray is contiguous via np.ndarray.flags.
+        """
+        solver_interface = precice_future.Interface("test", 0, 1)
+        dummy_array = np.random.rand(3, 3)
+        write_data = dummy_array[:, 1]
+        assert(write_data.flags["C_CONTIGUOUS"] == False)
+        solver_interface.write_vector_data(1, 1, write_data)
+        read_data = solver_interface.read_vector_data(1, 1)
+        self.assertTrue(np.array_equal(write_data, read_data))

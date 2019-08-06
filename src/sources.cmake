@@ -267,6 +267,7 @@ target_sources(precice
     src/utils/Dimensions.hpp
     src/utils/EigenHelperFunctions.cpp
     src/utils/EigenHelperFunctions.hpp
+    src/utils/EigenIO.hpp
     src/utils/Event.cpp
     src/utils/Event.hpp
     src/utils/EventUtils.cpp
@@ -284,8 +285,6 @@ target_sources(precice
     src/utils/Petsc.cpp
     src/utils/Petsc.hpp
     src/utils/PointerVector.hpp
-    src/utils/SignalHandler.cpp
-    src/utils/SignalHandler.hpp
     src/utils/String.cpp
     src/utils/String.hpp
     src/utils/TableWriter.cpp
