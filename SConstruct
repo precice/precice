@@ -344,7 +344,7 @@ symlink = env.Command(
 )
 
 # Substitute strings in version.hpp.in, save it as version.hpp
-versions = env.Substfile(
+versions_hpp = env.Substfile(
     "src/versions.hpp.in",
     SUBST_DICT =  {
         "@preCICE_VERSION@" : PRECICE_VERSION,
@@ -352,10 +352,15 @@ versions = env.Substfile(
         "@PETSC_VERSION_MINOR@" : PETSC_VERSION_MINOR}
 )
 
+# Substitute strings in versions.cpp.in, save it as versions.cpp
+versions_cpp = env.Substfile(
+    "src/versions.cpp.in",
+    SUBST_DICT = {"@preCICE_REVISION@" : "no-info [SCons]"}
+)
 
-Default(versions, solib, tests, symlink)
+Default(versions_cpp, versions_hpp, solib, tests, symlink)
 
-AlwaysBuild(versions, symlink)
+AlwaysBuild(versions_cpp, versions_hpp, symlink)
 
 print("Targets:   " + ", ".join([str(i) for i in BUILD_TARGETS]))
 print("Buildpath: " + buildpath)

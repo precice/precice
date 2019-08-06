@@ -80,6 +80,10 @@ sourcesXml = [
     Glob('xml/*.cpp'),
 ]
 
+sourcesVersion = [
+    File('versions.cpp')
+]
+
 sourcesAllNoMain = [
     sourcesAction,
     sourcesCom,
@@ -95,6 +99,7 @@ sourcesAllNoMain = [
     sourcesQuery,
     sourcesUtils,
     sourcesXml,
+    sourcesVersion
 ]
 
 Return ('sourcesAllNoMain', 'sourcesMain', 'sourcesTests')
