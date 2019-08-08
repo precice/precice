@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(testCouplingModeWithOneServer,
     BOOST_TEST(timesteps == 5);
   }
   else {
-    P_ASSERT(rank == 2, rank);
+    BOOST_TEST (rank == 2, rank);
     bool isServer = true;
     impl::SolverInterfaceImpl server("ParticipantB", 0, 1, isServer);
 
@@ -174,7 +174,7 @@ BOOST_AUTO_TEST_CASE(testCouplingModeParallelWithOneServer, * testing::OnSize(4)
     BOOST_TEST(timesteps == 5);
   }
   else {
-    P_ASSERT(rank == 3, rank);
+    BOOST_TEST(rank == 3, rank);
     bool isServer = true;
     impl::SolverInterfaceImpl server("ParticipantB", 0, 1, isServer);
 

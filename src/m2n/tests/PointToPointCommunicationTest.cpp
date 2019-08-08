@@ -28,7 +28,7 @@ void process(vector<double> &data)
 
 void P2PComTest1(com::PtrCommunicationFactory cf)
 {
-  P_ASSERT(Parallel::getCommunicatorSize() == 4);
+  BOOST_TEST(Parallel::getCommunicatorSize() == 4);
 
   MasterSlave::_communication = std::make_shared<com::MPIDirectCommunication>();
 
@@ -143,7 +143,7 @@ void P2PComTest1(com::PtrCommunicationFactory cf)
 /// a very similar test, but with a vertex that has been completely filtered out
 void P2PComTest2(com::PtrCommunicationFactory cf)
 {
-  P_ASSERT(Parallel::getCommunicatorSize() == 4);
+  BOOST_TEST(Parallel::getCommunicatorSize() == 4);
 
   MasterSlave::_communication = std::make_shared<com::MPIDirectCommunication>();
 
