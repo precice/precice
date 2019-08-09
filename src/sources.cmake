@@ -290,6 +290,7 @@ target_sources(precice
     src/utils/TableWriter.cpp
     src/utils/TableWriter.hpp
     src/utils/TypeNames.hpp
+    src/utils/algorithm.hpp
     src/utils/assertion.hpp
     src/utils/stacktrace.cpp
     src/utils/stacktrace.hpp
