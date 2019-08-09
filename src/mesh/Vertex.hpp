@@ -106,7 +106,7 @@ template <typename VECTOR_T>
 void Vertex::setCoords(
     const VECTOR_T &coordinates)
 {
-  P_ASSERT(coordinates.size() == _coords.size(), coordinates.size(), _coords.size());
+  PRECICE_ASSERT(coordinates.size() == _coords.size(), coordinates.size(), _coords.size());
   _coords = coordinates;
 }
 
@@ -114,7 +114,7 @@ template <typename VECTOR_T>
 void Vertex::setCoords(
     VECTOR_T &&coordinates)
 {
-  P_ASSERT(coordinates.size() == _coords.size(), coordinates.size(), _coords.size());
+  PRECICE_ASSERT(coordinates.size() == _coords.size(), coordinates.size(), _coords.size());
   _coords = std::forward<VECTOR_T>(coordinates);
 }
 
@@ -122,7 +122,7 @@ template <typename VECTOR_T>
 void Vertex::setNormal(
     const VECTOR_T &normal)
 {
-  P_ASSERT(normal.size() == _normal.size(), normal.size(), _normal.size());
+  PRECICE_ASSERT(normal.size() == _normal.size(), normal.size(), _normal.size());
   _normal = normal;
 }
 
@@ -130,7 +130,7 @@ template <typename VECTOR_T>
 void Vertex::setNormal(
     VECTOR_T &&normal)
 {
-  P_ASSERT(normal.size() == _normal.size(), normal.size(), _normal.size());
+  PRECICE_ASSERT(normal.size() == _normal.size(), normal.size(), _normal.size());
   _normal = std::forward<VECTOR_T>(normal);
 }
 

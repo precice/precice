@@ -74,7 +74,7 @@ PostProcessingConfiguration::PostProcessingConfiguration(
       _config(),
       _isAddManifoldMappingTagAllowed(true)
 {
-  P_ASSERT(meshConfig.get() != nullptr);
+  PRECICE_ASSERT(meshConfig.get() != nullptr);
 }
 
 void PostProcessingConfiguration::connectTags(xml::XMLTag &parent)
@@ -151,7 +151,7 @@ PtrPostProcessingConfiguration PostProcessingConfiguration::getCoarseModelOptimi
 void PostProcessingConfiguration::xmlTagCallback(
     xml::XMLTag &callingTag)
 {
-  P_TRACE(callingTag.getFullName());
+  PRECICE_TRACE(callingTag.getFullName());
 
   if (callingTag.getNamespace() == TAG) {
     _config.type = callingTag.getName();
@@ -205,7 +205,7 @@ void PostProcessingConfiguration::xmlTagCallback(
     } else if (f == VALUE_QR2FILTER) {
       _config.filter = impl::PostProcessing::QR2FILTER;
     } else {
-      P_ASSERT(false);
+      PRECICE_ASSERT(false);
     }
     _config.singularityLimit = callingTag.getDoubleAttributeValue(ATTR_SINGULARITYLIMIT);
   } else if (callingTag.getName() == TAG_ESTIMATEJACOBIAN) {
@@ -217,7 +217,7 @@ void PostProcessingConfiguration::xmlTagCallback(
   } else if (callingTag.getName() == TAG_IMVJRESTART) {
 
     if (_config.alwaysBuildJacobian)
-      P_ERROR("IMVJ can not be in restart mode while parameter always-build-jacobian is set true.");
+      PRECICE_ERROR("IMVJ can not be in restart mode while parameter always-build-jacobian is set true.");
 
 #ifndef PRECICE_NO_MPI
     _config.imvjChunkSize = callingTag.getIntAttributeValue(ATTR_IMVJCHUNKSIZE);
@@ -236,10 +236,10 @@ void PostProcessingConfiguration::xmlTagCallback(
       _config.imvjRestartType = impl::MVQNPostProcessing::RS_SLIDE;
     } else {
       _config.imvjChunkSize = 0;
-      P_ASSERT(false);
+      PRECICE_ASSERT(false);
     }
 #else
-    P_ERROR("Post processing IQN-IMVJ only works if preCICE is compiled with MPI");
+    PRECICE_ERROR("Post processing IQN-IMVJ only works if preCICE is compiled with MPI");
 #endif
   }
 }
@@ -247,7 +247,7 @@ void PostProcessingConfiguration::xmlTagCallback(
 void PostProcessingConfiguration::xmlEndTagCallback(
     xml::XMLTag &callingTag)
 {
-  P_TRACE(callingTag.getName());
+  PRECICE_TRACE(callingTag.getName());
   if (callingTag.getNamespace() == TAG) {
 
     //create preconditioner
@@ -319,13 +319,13 @@ void PostProcessingConfiguration::xmlEndTagCallback(
               _config.imvjRSLS_reustedTimesteps,
               _config.imvjRSSVD_truncationEps));
 #else
-      P_ERROR("Post processing IQN-IMVJ only works if preCICE is compiled with MPI");
+      PRECICE_ERROR("Post processing IQN-IMVJ only works if preCICE is compiled with MPI");
 #endif
     } else if (callingTag.getName() == VALUE_ManifoldMapping) {
 
       // create coarse model optimization method recursive
-      P_ASSERT((_coarseModelOptimizationConfig.get() != nullptr));
-      P_ASSERT((_coarseModelOptimizationConfig->getPostProcessing().get() != nullptr));
+      PRECICE_ASSERT((_coarseModelOptimizationConfig.get() != nullptr));
+      PRECICE_ASSERT((_coarseModelOptimizationConfig->getPostProcessing().get() != nullptr));
 
       // create manifold mapping PP
       _postProcessing = impl::PtrPostProcessing(
@@ -349,7 +349,7 @@ void PostProcessingConfiguration::xmlEndTagCallback(
               _config.dataIDs,
               _preconditioner));
     } else {
-      P_ASSERT(false);
+      PRECICE_ASSERT(false);
     }
   }
 }
@@ -674,7 +674,7 @@ void PostProcessingConfiguration::addTypeSpecificSubtags(
     tagData.addAttribute(attrMesh);
     tag.addSubtag(tagData);
   } else {
-    P_ERROR("Post-processing of type \""
+    PRECICE_ERROR("Post-processing of type \""
           << tag.getName() << "\" is unknown!");
   }
 }

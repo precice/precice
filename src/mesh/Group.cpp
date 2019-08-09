@@ -14,7 +14,7 @@ void Group:: add
 (
   Vertex* vertex )
 {
-  P_ASSERT( vertex != nullptr );
+  PRECICE_ASSERT( vertex != nullptr );
   _vertices.push_back ( vertex );
 }
 
@@ -29,7 +29,7 @@ void Group:: add
 (
   Edge* edge )
 {
-  P_ASSERT(edge != nullptr);
+  PRECICE_ASSERT(edge != nullptr);
   _edges.push_back(edge);
 }
 
@@ -43,7 +43,7 @@ void Group:: add
 (
   Triangle* triangle )
 {
-  P_ASSERT( triangle != nullptr );
+  PRECICE_ASSERT( triangle != nullptr );
   _triangles.push_back ( triangle );
 }
 
@@ -57,7 +57,7 @@ void Group:: add
 (
   Quad* quad )
 {
-  P_ASSERT( quad != nullptr );
+  PRECICE_ASSERT( quad != nullptr );
   _quads.push_back ( quad );
 }
 

@@ -144,11 +144,11 @@ const value_t &PropertyContainer::getProperty(int propertyID) const
         return prop->getProperty<value_t>(propertyID);
       }
     }
-    P_ERROR("No property with id = " << propertyID);
+    PRECICE_ERROR("No property with id = " << propertyID);
   }
-  P_ASSERT(not iter->second.empty());
+  PRECICE_ASSERT(not iter->second.empty());
   // When the type of value_t does not match that of the any, NULL is returned.
-  P_ASSERT(boost::any_cast<value_t>(&iter->second) != nullptr);
+  PRECICE_ASSERT(boost::any_cast<value_t>(&iter->second) != nullptr);
   return *boost::any_cast<value_t>(&iter->second);
 }
 
@@ -157,9 +157,9 @@ void PropertyContainer::getProperties(int propertyID, std::vector<value_t> &prop
 {
   auto iter = _properties.find(propertyID);
   if (iter != _properties.end()) {
-    P_ASSERT(not iter->second.empty());
+    PRECICE_ASSERT(not iter->second.empty());
     // When the type of value_t does not match that of the any, NULL is returned.
-    P_ASSERT(boost::any_cast<value_t>(&iter->second) != nullptr);
+    PRECICE_ASSERT(boost::any_cast<value_t>(&iter->second) != nullptr);
     properties.push_back(boost::any_cast<value_t>(iter->second));
   } else {
     for (size_t i = 0; i < _parents.size(); i++) {

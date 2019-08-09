@@ -84,7 +84,7 @@ public:
   explicit InverseMultiquadrics(double c)
       : _cPow2(std::pow(c, 2))
   {
-    P_CHECK(math::greater(c, 0.0),
+    PRECICE_CHECK(math::greater(c, 0.0),
           "Shape parameter for radial-basis-function inverse multiquadric has to be larger than zero!");
   }
 
@@ -150,9 +150,9 @@ public:
       : _shape(shape),
         _supportRadius(supportRadius)
   {
-    P_CHECK(math::greater(_shape, 0.0),
+    PRECICE_CHECK(math::greater(_shape, 0.0),
           "Shape parameter for radial-basis-function gaussian has to be larger than zero!");
-    P_CHECK(math::greater(_supportRadius, 0.0),
+    PRECICE_CHECK(math::greater(_supportRadius, 0.0),
           "Support radius for radial-basis-function gaussian has to be larger than zero!");
     
     _deltaY          = hasCompactSupport() ? evaluate(supportRadius) : 0;
@@ -210,7 +210,7 @@ public:
   explicit CompactThinPlateSplinesC2(double supportRadius)
       : _r(supportRadius)
   {
-    P_CHECK(math::greater(_r, 0.0),
+    PRECICE_CHECK(math::greater(_r, 0.0),
           "Support radius for radial-basis-function compact thin-plate-splines c2 has to be larger than zero!");
   }
 
@@ -256,7 +256,7 @@ public:
   explicit CompactPolynomialC0(double supportRadius)
       : _r(supportRadius)
   {
-    P_CHECK(math::greater(_r, 0.0),
+    PRECICE_CHECK(math::greater(_r, 0.0),
           "Support radius for radial-basis-function compact polynomial c0 has to be larger than zero!");
   }
 
@@ -299,7 +299,7 @@ public:
   explicit CompactPolynomialC6(double supportRadius)
       : _r(supportRadius)
   {
-    P_CHECK(math::greater(_r, 0.0),
+    PRECICE_CHECK(math::greater(_r, 0.0),
           "Support radius for radial-basis-function compact polynomial c6 has to be larger than zero!");
   }
 

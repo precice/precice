@@ -37,12 +37,12 @@ void M2N::acceptMasterConnection(
     const std::string &acceptorName,
     const std::string &requesterName)
 {
-  P_TRACE(acceptorName, requesterName);
+  PRECICE_TRACE(acceptorName, requesterName);
 
   Event e("m2n.acceptMasterConnection", precice::syncMode);
 
   if (not utils::MasterSlave::isSlave()) {
-    P_ASSERT(_masterCom);
+    PRECICE_ASSERT(_masterCom);
     _masterCom->acceptConnection(acceptorName, requesterName, utils::MasterSlave::getRank());
     _isMasterConnected = _masterCom->isConnected();
   }
@@ -54,12 +54,12 @@ void M2N::requestMasterConnection(
     const std::string &acceptorName,
     const std::string &requesterName)
 {
-  P_TRACE(acceptorName, requesterName);
+  PRECICE_TRACE(acceptorName, requesterName);
 
   Event e("m2n.requestMasterConnection", precice::syncMode);
 
   if (not utils::MasterSlave::isSlave()) {
-    P_ASSERT(_masterCom);
+    PRECICE_ASSERT(_masterCom);
 
     _masterCom->requestConnection(acceptorName, requesterName, 0, 1);
     _isMasterConnected = _masterCom->isConnected();
@@ -72,7 +72,7 @@ void M2N::acceptSlavesConnection(
     const std::string &acceptorName,
     const std::string &requesterName)
 {
-  P_TRACE(acceptorName, requesterName);
+  PRECICE_TRACE(acceptorName, requesterName);
   Event e("m2n.acceptSlavesConnection", precice::syncMode);
 
   _areSlavesConnected = true;
@@ -80,14 +80,14 @@ void M2N::acceptSlavesConnection(
     pair.second->acceptConnection(acceptorName, requesterName);
     _areSlavesConnected = _areSlavesConnected && pair.second->isConnected();
   }
-  P_ASSERT(_areSlavesConnected);
+  PRECICE_ASSERT(_areSlavesConnected);
 }
 
 void M2N::requestSlavesConnection(
     const std::string &acceptorName,
     const std::string &requesterName)
 {
-  P_TRACE(acceptorName, requesterName);
+  PRECICE_TRACE(acceptorName, requesterName);
   Event e("m2n.requestSlavesConnection", precice::syncMode);
 
   _areSlavesConnected = true;
@@ -95,24 +95,24 @@ void M2N::requestSlavesConnection(
     pair.second->requestConnection(acceptorName, requesterName);
     _areSlavesConnected = _areSlavesConnected && pair.second->isConnected();
   }
-  P_ASSERT(_areSlavesConnected);
+  PRECICE_ASSERT(_areSlavesConnected);
 }
 
 void M2N::prepareEstablishment()
 {
-  P_TRACE();
+  PRECICE_TRACE();
   _masterCom->prepareEstablishment();
 }
 
 void M2N::cleanupEstablishment()
 {
-  P_TRACE();
+  PRECICE_TRACE();
   _masterCom->cleanupEstablishment();
 }
 
 void M2N::closeConnection()
 {
-  P_TRACE();
+  PRECICE_TRACE();
   if (not utils::MasterSlave::isSlave() && _masterCom->isConnected()) {
     _masterCom->closeConnection();
     _isMasterConnected = false;
@@ -126,13 +126,13 @@ void M2N::closeConnection()
       pair.second->closeConnection();
       _areSlavesConnected = _areSlavesConnected || pair.second->isConnected();
     }
-    P_ASSERT(not _areSlavesConnected);
+    PRECICE_ASSERT(not _areSlavesConnected);
   }
 }
 
 com::PtrCommunication M2N::getMasterCommunication()
 {
-  P_ASSERT(not utils::MasterSlave::isSlave());
+  PRECICE_ASSERT(not utils::MasterSlave::isSlave());
   return _masterCom; /// @todo maybe it would be a nicer design to not offer this
 }
 
@@ -149,9 +149,9 @@ void M2N::send(
     int     valueDimension)
 {
   if (utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster()) {
-    P_ASSERT(_areSlavesConnected);
-    P_ASSERT(_distComs.find(meshID) != _distComs.end());
-    P_ASSERT(_distComs[meshID].get() != nullptr);
+    PRECICE_ASSERT(_areSlavesConnected);
+    PRECICE_ASSERT(_distComs.find(meshID) != _distComs.end());
+    PRECICE_ASSERT(_distComs[meshID].get() != nullptr);
 
     if (precice::syncMode) {
       if (not utils::MasterSlave::isSlave()) {
@@ -164,14 +164,14 @@ void M2N::send(
     Event e("m2n.sendData", precice::syncMode);
     _distComs[meshID]->send(itemsToSend, size, valueDimension);
   } else { //coupling mode
-    P_ASSERT(_isMasterConnected);
+    PRECICE_ASSERT(_isMasterConnected);
     _masterCom->send(itemsToSend, size, 0);
   }
 }
 
 void M2N::send(bool itemToSend)
 {
-  P_TRACE(utils::MasterSlave::getRank());
+  PRECICE_TRACE(utils::MasterSlave::getRank());
   if (not utils::MasterSlave::isSlave()) {
     _masterCom->send(itemToSend, 0);
   }
@@ -179,7 +179,7 @@ void M2N::send(bool itemToSend)
 
 void M2N::send(double itemToSend)
 {
-  P_TRACE(utils::MasterSlave::getRank());
+  PRECICE_TRACE(utils::MasterSlave::getRank());
   if (not utils::MasterSlave::isSlave()) {
     _masterCom->send(itemToSend, 0);
   }
@@ -191,9 +191,9 @@ void M2N::receive(double *itemsToReceive,
                   int     valueDimension)
 {
   if (utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster()) {
-    P_ASSERT(_areSlavesConnected);
-    P_ASSERT(_distComs.find(meshID) != _distComs.end());
-    P_ASSERT(_distComs[meshID].get() != nullptr);
+    PRECICE_ASSERT(_areSlavesConnected);
+    PRECICE_ASSERT(_distComs.find(meshID) != _distComs.end());
+    PRECICE_ASSERT(_distComs[meshID].get() != nullptr);
 
     if (precice::syncMode) {
       if (not utils::MasterSlave::isSlave()) {
@@ -207,33 +207,33 @@ void M2N::receive(double *itemsToReceive,
     Event e("m2n.receiveData", precice::syncMode);
     _distComs[meshID]->receive(itemsToReceive, size, valueDimension);
   } else { //coupling mode
-    P_ASSERT(_isMasterConnected);
+    PRECICE_ASSERT(_isMasterConnected);
     _masterCom->receive(itemsToReceive, size, 0);
   }
 }
 
 void M2N::receive(bool &itemToReceive)
 {
-  P_TRACE(utils::MasterSlave::getRank());
+  PRECICE_TRACE(utils::MasterSlave::getRank());
   if (not utils::MasterSlave::isSlave()) {
     _masterCom->receive(itemToReceive, 0);
   }
 
   utils::MasterSlave::broadcast(itemToReceive);
 
-  P_DEBUG("receive(bool): " << itemToReceive);
+  PRECICE_DEBUG("receive(bool): " << itemToReceive);
 }
 
 void M2N::receive(double &itemToReceive)
 {
-  P_TRACE(utils::MasterSlave::getRank());
+  PRECICE_TRACE(utils::MasterSlave::getRank());
   if (not utils::MasterSlave::isSlave()) { //coupling mode
     _masterCom->receive(itemToReceive, 0);
   }
 
   utils::MasterSlave::broadcast(itemToReceive);
 
-  P_DEBUG("receive(double): " << itemToReceive);
+  PRECICE_DEBUG("receive(double): " << itemToReceive);
 }
 
 } // namespace m2n

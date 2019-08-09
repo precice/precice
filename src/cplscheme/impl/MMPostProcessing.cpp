@@ -46,12 +46,12 @@ MMPostProcessing::MMPostProcessing(
       _maxIterCoarseModelOpt(maxIterationsUsed),
       _filter(filter)
 {
-  P_CHECK(_maxIterationsUsed > 0,
+  PRECICE_CHECK(_maxIterationsUsed > 0,
         "Maximal iterations used for MM post-processing has to be larger than zero!");
-  P_CHECK(_maxIterCoarseModelOpt > 0,
+  PRECICE_CHECK(_maxIterCoarseModelOpt > 0,
         "Maximal iterations used for coarse model optimization for MM post-processing has to "
             << "be larger than zero!");
-  P_CHECK(_timestepsReused >= 0,
+  PRECICE_CHECK(_timestepsReused >= 0,
         "Number of old timesteps to be reused for MM post-processing has to be >= 0!");
 }
 
@@ -63,26 +63,26 @@ MMPostProcessing::MMPostProcessing(
  */
 void MMPostProcessing::initialize(DataMap &cplData)
 {
-  P_TRACE(cplData.size());
+  PRECICE_TRACE(cplData.size());
   size_t              entries       = 0;
   size_t              coarseEntries = 0;
   std::vector<size_t> subVectorSizes; //needed for preconditioner
 
-  P_ASSERT(_fineDataIDs.size() == _coarseDataIDs.size(), _fineDataIDs.size(), _coarseDataIDs.size());
-  P_ASSERT(_dataIDs.empty(), _dataIDs.size());
+  PRECICE_ASSERT(_fineDataIDs.size() == _coarseDataIDs.size(), _fineDataIDs.size(), _coarseDataIDs.size());
+  PRECICE_ASSERT(_dataIDs.empty(), _dataIDs.size());
 
   _dataIDs.insert(_dataIDs.end(), _fineDataIDs.begin(), _fineDataIDs.end());
   _dataIDs.insert(_dataIDs.end(), _coarseDataIDs.begin(), _coarseDataIDs.end());
 
   for (auto &elem : _fineDataIDs) {
-    P_CHECK(utils::contained(elem, cplData),
+    PRECICE_CHECK(utils::contained(elem, cplData),
           "Data with ID " << elem << " is not contained in data given at initialization!");
     entries += cplData[elem]->values->size();
     subVectorSizes.push_back(cplData[elem]->values->size());
   }
 
   for (auto &elem : _coarseDataIDs) {
-    P_CHECK(utils::contained(elem, cplData),
+    PRECICE_CHECK(utils::contained(elem, cplData),
           "Data with ID " << elem << " is not contained in data given at initialization!");
     coarseEntries += cplData[elem]->values->size();
   }
@@ -99,14 +99,14 @@ void MMPostProcessing::initialize(DataMap &cplData)
   _coarseModelOptimization->initialize(coarseCplData);
 
   // the coarse model also uses the fine mesh (only evaluation in solver is on coarse model)
-  P_ASSERT(entries == coarseEntries, entries, coarseEntries);
+  PRECICE_ASSERT(entries == coarseEntries, entries, coarseEntries);
 
   _matrixCols.push_front(0);
   _firstIteration = true;
   _firstTimeStep  = true;
 
-  P_ASSERT(_coarseOldResiduals.size() == 0);
-  P_ASSERT(_fineOldResiduals.size() == 0);
+  PRECICE_ASSERT(_coarseOldResiduals.size() == 0);
+  PRECICE_ASSERT(_fineOldResiduals.size() == 0);
   _coarseOldResiduals = Eigen::VectorXd::Zero(entries);
   _fineOldResiduals   = Eigen::VectorXd::Zero(entries);
   _fineResiduals      = Eigen::VectorXd::Zero(entries);
@@ -126,8 +126,8 @@ void MMPostProcessing::initialize(DataMap &cplData)
    *  last entry _dimOffsets[MasterSlave::getSize()] holds the global dimension, global,n
    */
   if (utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave()) {
-    P_ASSERT(utils::MasterSlave::_communication.get() != NULL);
-    P_ASSERT(utils::MasterSlave::_communication->isConnected());
+    PRECICE_ASSERT(utils::MasterSlave::_communication.get() != NULL);
+    PRECICE_ASSERT(utils::MasterSlave::_communication->isConnected());
 
     /** provide vertex offset information for all processors
      *  mesh->getVertexOffsets() provides an array that stores the number of mesh vertices on each processor
@@ -147,7 +147,7 @@ void MMPostProcessing::initialize(DataMap &cplData)
 
     // test that the computed number of unknown per proc equals the number of entries actually present on that proc
     size_t unknowns = _dimOffsets[utils::MasterSlave::getRank() + 1] - _dimOffsets[utils::MasterSlave::getRank()];
-    P_ASSERT(entries == unknowns, entries, unknowns);
+    PRECICE_ASSERT(entries == unknowns, entries, unknowns);
   }
 
   if (_estimateJacobian) {
@@ -174,7 +174,7 @@ void MMPostProcessing::initialize(DataMap &cplData)
   for (DataMap::value_type &pair : cplData) {
     int cols = pair.second->oldValues.cols();
     if (cols < 1) { // Add only, if not already done
-      //P_ASSERT(pair.second->values->size() > 0, pair.first);
+      //PRECICE_ASSERT(pair.second->values->size() > 0, pair.first);
       utils::append(pair.second->oldValues, (Eigen::VectorXd) Eigen::VectorXd::Zero(pair.second->values->size()));
     }
   }
@@ -192,7 +192,7 @@ void MMPostProcessing::initialize(DataMap &cplData)
 void MMPostProcessing::registerSolutionCoarseModelOptimization(
     DataMap &cplData)
 {
-  P_TRACE();
+  PRECICE_TRACE();
   // extract new solution x_star from coarse model optimization problem from coarse cplData
   int off = 0;
   for (int id : _coarseDataIDs) {
@@ -233,8 +233,8 @@ void MMPostProcessing::registerSolutionCoarseModelOptimization(
 void MMPostProcessing::setDesignSpecification(
     Eigen::VectorXd &q)
 {
-  P_TRACE();
-  P_ASSERT(q.size() == _fineResiduals.size(), q.size(), _fineResiduals.size());
+  PRECICE_TRACE();
+  PRECICE_ASSERT(q.size() == _fineResiduals.size(), q.size(), _fineResiduals.size());
   _designSpecification = (q.norm() <= 1.0e-15) ? Eigen::VectorXd::Zero(_fineResiduals.size()) : q;
 
   // only in the first step, the coarse model design specification equals the design specification
@@ -290,7 +290,7 @@ std::map<int, Eigen::VectorXd> MMPostProcessing::getDesignSpecification(
 void MMPostProcessing::updateDifferenceMatrices(
     DataMap &cplData)
 {
-  P_TRACE();
+  PRECICE_TRACE();
 
   /**
    * Compute current residual: vertex-data - oldData
@@ -302,12 +302,12 @@ void MMPostProcessing::updateDifferenceMatrices(
    * Update matrices C, F with newest information
    */
   if (not _firstIteration) {
-    P_DEBUG("   Update Difference Matrices C and F with coarse and fine model responses");
-    P_ASSERT(_matrixF.cols() == _matrixC.cols(), _matrixF.cols(), _matrixC.cols());
-    P_ASSERT(getLSSystemCols() <= _maxIterationsUsed, getLSSystemCols(), _maxIterationsUsed);
+    PRECICE_DEBUG("   Update Difference Matrices C and F with coarse and fine model responses");
+    PRECICE_ASSERT(_matrixF.cols() == _matrixC.cols(), _matrixF.cols(), _matrixC.cols());
+    PRECICE_ASSERT(getLSSystemCols() <= _maxIterationsUsed, getLSSystemCols(), _maxIterationsUsed);
 
     if (2 * getLSSystemCols() >= getLSSystemRows())
-      P_WARN(
+      PRECICE_WARN(
           "The number of columns in the least squares system exceeded half the number of unknowns at the interface. The system will probably become bad or ill-conditioned and the quasi-Newton post processing may not converge. Maybe the number of allowed columns (maxIterationsUsed) should be limited.");
 
     Eigen::VectorXd colF = _fineResiduals - _fineOldResiduals;
@@ -350,14 +350,14 @@ void MMPostProcessing::updateDifferenceMatrices(
 void MMPostProcessing::performPostProcessing(
     DataMap &cplData)
 {
-  P_TRACE(_dataIDs.size(), cplData.size());
+  PRECICE_TRACE(_dataIDs.size(), cplData.size());
 
-  //P_ASSERT(_fineDataIDs.size() == _scalings.size(), _fineDataIDs.size(), _scalings.size());
-  P_ASSERT(_fineOldResiduals.size() == _fineResiduals.size(), _fineOldResiduals.size(), _fineResiduals.size());
-  P_ASSERT(_coarseResiduals.size() == _fineResiduals.size(), _coarseResiduals.size(), _fineResiduals.size());
-  P_ASSERT(_coarseOldResiduals.size() == _fineResiduals.size(), _coarseOldResiduals.size(), _fineResiduals.size());
-  P_ASSERT(_outputFineModel.size() == _fineResiduals.size(), _outputFineModel.size(), _fineResiduals.size());
-  P_ASSERT(_input_Xstar.size() == _fineResiduals.size(), _input_Xstar.size(), _fineResiduals.size());
+  //PRECICE_ASSERT(_fineDataIDs.size() == _scalings.size(), _fineDataIDs.size(), _scalings.size());
+  PRECICE_ASSERT(_fineOldResiduals.size() == _fineResiduals.size(), _fineOldResiduals.size(), _fineResiduals.size());
+  PRECICE_ASSERT(_coarseResiduals.size() == _fineResiduals.size(), _coarseResiduals.size(), _fineResiduals.size());
+  PRECICE_ASSERT(_coarseOldResiduals.size() == _fineResiduals.size(), _coarseOldResiduals.size(), _fineResiduals.size());
+  PRECICE_ASSERT(_outputFineModel.size() == _fineResiduals.size(), _outputFineModel.size(), _fineResiduals.size());
+  PRECICE_ASSERT(_input_Xstar.size() == _fineResiduals.size(), _input_Xstar.size(), _fineResiduals.size());
 
   /**
    * Manifold Mapping cycle, computing the new design specification for the coarse model
@@ -419,7 +419,7 @@ void MMPostProcessing::performPostProcessing(
      */
     computeCoarseModelDesignSpecifiaction();
 
-    P_ASSERT(isSet(_coarseModel_designSpecification)); // the coarse model design specification is computed within the MM cycle and should therefore be set and valid
+    PRECICE_ASSERT(isSet(_coarseModel_designSpecification)); // the coarse model design specification is computed within the MM cycle and should therefore be set and valid
 
     // undo preconditioning
     if (_estimateJacobian && _MMMappingMatrix_prev.rows() > 0) {
@@ -490,21 +490,21 @@ void MMPostProcessing::performPostProcessing(
     if (_iterCoarseModelOpt >= _maxIterCoarseModelOpt) {
       //(*_isCoarseModelOptimizationActive)  = false;
       _notConvergedWithinMaxIter = true;
-      P_WARN("The coarse model optimization in coupling iteration " << its
+      PRECICE_WARN("The coarse model optimization in coupling iteration " << its
                                                                   << " exceeds maximal number of optimization cycles (" << _maxIterCoarseModelOpt << " without convergence!");
     }
   }
 
   if (_notConvergedWithinMaxIter) {
     if (std::isnan(utils::MasterSlave::l2norm(_input_Xstar))) {
-      P_ERROR("The coupling iteration in time step " << tSteps << " failed to converge and NaN values occured throughout the coupling process. "
+      PRECICE_ERROR("The coupling iteration in time step " << tSteps << " failed to converge and NaN values occured throughout the coupling process. "
                                                    << "This is most likely due to the fact that the coarse model failed to converge within "
                                                    << "the given maximum number of allowed iterations: " << _maxIterCoarseModelOpt);
     }
   }
 
-  P_DEBUG("  * Manifold Mapping Iterations: " << its);
-  P_DEBUG("  * Coarse Model Optimization Iterations: " << _iterCoarseModelOpt);
+  PRECICE_DEBUG("  * Manifold Mapping Iterations: " << its);
+  PRECICE_DEBUG("  * Coarse Model Optimization Iterations: " << _iterCoarseModelOpt);
 }
 
 /** ---------------------------------------------------------------------------------------------
@@ -516,7 +516,7 @@ void MMPostProcessing::performPostProcessing(
  */
 void MMPostProcessing::computeCoarseModelDesignSpecifiaction()
 {
-  P_TRACE();
+  PRECICE_TRACE();
 
   /** update design specification
    *  alpha = (f(x) - q),
@@ -553,7 +553,7 @@ void MMPostProcessing::computeCoarseModelDesignSpecifiaction()
         }
       }
       if (nbRemoveCols)
-        P_DEBUG("Manifold mapping: remove " << nbRemoveCols << " columns from the Jacobian matrices");
+        PRECICE_DEBUG("Manifold mapping: remove " << nbRemoveCols << " columns from the Jacobian matrices");
     }
 
     assert(_matrixF.cols() == _matrixC.cols());
@@ -607,7 +607,7 @@ void MMPostProcessing::computeCoarseModelDesignSpecifiaction()
 
   // if no residual differences for the fine and coarse model are given so far
   if ((_firstIteration && _firstTimeStep) || getLSSystemCols() <= 0) {
-    P_ASSERT(getLSSystemCols() <= 0, getLSSystemCols());
+    PRECICE_ASSERT(getLSSystemCols() <= 0, getLSSystemCols());
     if (_estimateJacobian && (_MMMappingMatrix_prev.rows() == getLSSystemRows())) {
       _coarseModel_designSpecification -= _MMMappingMatrix_prev * alpha;
     } else {
@@ -619,18 +619,18 @@ void MMPostProcessing::computeCoarseModelDesignSpecifiaction()
 void MMPostProcessing::concatenateCouplingData(
     DataMap &cplData)
 {
-  P_TRACE();
+  PRECICE_TRACE();
 
   int offset = 0;
   int k      = 0;
-  P_ASSERT(_fineDataIDs.size() == _coarseDataIDs.size(), _fineDataIDs.size(), _coarseDataIDs.size());
+  PRECICE_ASSERT(_fineDataIDs.size() == _coarseDataIDs.size(), _fineDataIDs.size(), _coarseDataIDs.size());
   for (int id : _fineDataIDs) {
     int         size            = cplData[id]->values->size();
     auto &      values          = *cplData[id]->values;
     auto &      coarseValues    = *cplData[_coarseDataIDs.at(k)]->values;
     const auto &coarseOldValues = cplData[_coarseDataIDs.at(k)]->oldValues.col(0);
-    P_ASSERT(values.size() == coarseValues.size(), values.size(), coarseValues.size());
-    P_ASSERT(values.size() == coarseOldValues.size(), values.size(), coarseOldValues.size());
+    PRECICE_ASSERT(values.size() == coarseValues.size(), values.size(), coarseValues.size());
+    PRECICE_ASSERT(values.size() == coarseOldValues.size(), values.size(), coarseOldValues.size());
     for (int i = 0; i < size; i++) {
       _outputFineModel[i + offset] = values[i];
       // ignore input from fine model as it must be exactly the
@@ -655,7 +655,7 @@ bool MMPostProcessing::isSet(Eigen::VectorXd &designSpec)
   // 2. its l2-norm is larger then 1.0e-15
   bool set((designSpec.size() > 0)); // && (designSpec.norm() > 1.0e-15));
   if (set)
-    P_ASSERT(designSpec.size() == _fineResiduals.size(), designSpec.size(), _fineResiduals.size());
+    PRECICE_ASSERT(designSpec.size() == _fineResiduals.size(), designSpec.size(), _fineResiduals.size());
   return set;
 }
 
@@ -670,7 +670,7 @@ bool MMPostProcessing::isSet(Eigen::VectorXd &designSpec)
 void MMPostProcessing::iterationsConverged(
     DataMap &cplData)
 {
-  P_TRACE();
+  PRECICE_TRACE();
 
   its = 0;
   tSteps++;
@@ -722,7 +722,7 @@ void MMPostProcessing::iterationsConverged(
   for (int cols : _matrixCols) {
     stream << cols << ", ";
   }
-  P_DEBUG(stream.str());
+  PRECICE_DEBUG(stream.str());
 #endif // Debug
 
   if (_timestepsReused == 0) {
@@ -731,10 +731,10 @@ void MMPostProcessing::iterationsConverged(
     _matrixCols.clear();
   } else if ((int) _matrixCols.size() > _timestepsReused) {
     int toRemove = _matrixCols.back();
-    P_ASSERT(toRemove > 0, toRemove);
-    P_DEBUG("Removing " << toRemove << " cols from mannifold mapping least-squares system with " << getLSSystemCols() << " cols");
-    P_ASSERT(_matrixF.cols() == _matrixC.cols(), _matrixF.cols(), _matrixC.cols());
-    P_ASSERT(getLSSystemCols() > toRemove, getLSSystemCols(), toRemove);
+    PRECICE_ASSERT(toRemove > 0, toRemove);
+    PRECICE_DEBUG("Removing " << toRemove << " cols from mannifold mapping least-squares system with " << getLSSystemCols() << " cols");
+    PRECICE_ASSERT(_matrixF.cols() == _matrixC.cols(), _matrixF.cols(), _matrixC.cols());
+    PRECICE_ASSERT(getLSSystemCols() > toRemove, getLSSystemCols(), toRemove);
 
     // remove columns
     for (int i = 0; i < toRemove; i++) {
@@ -757,12 +757,12 @@ void MMPostProcessing::iterationsConverged(
 void MMPostProcessing::removeMatrixColumn(
     int columnIndex)
 {
-  P_TRACE(columnIndex, _matrixF.cols());
+  PRECICE_TRACE(columnIndex, _matrixF.cols());
 
   // debugging information, can be removed
   deletedColumns++;
 
-  P_ASSERT(_matrixF.cols() > 1);
+  PRECICE_ASSERT(_matrixF.cols() > 1);
   utils::removeColumnFromMatrix(_matrixF, columnIndex);
   utils::removeColumnFromMatrix(_matrixC, columnIndex);
 
@@ -772,7 +772,7 @@ void MMPostProcessing::removeMatrixColumn(
   while (iter != _matrixCols.end()) {
     cols += *iter;
     if (cols > columnIndex) {
-      P_ASSERT(*iter > 0);
+      PRECICE_ASSERT(*iter > 0);
       *iter -= 1;
       if (*iter == 0) {
         _matrixCols.erase(iter);
@@ -805,8 +805,8 @@ int MMPostProcessing::getLSSystemCols()
     cols += col;
   }
   //if(_hasNodesOnInterface){
-  //	P_ASSERT(cols == _matrixF.cols(), cols, _matrixF.cols(), _matrixCols);
-  //	P_ASSERT(cols == _matrixC.cols(), cols, _matrixC.cols());
+  //	PRECICE_ASSERT(cols == _matrixF.cols(), cols, _matrixF.cols(), _matrixCols);
+  //	PRECICE_ASSERT(cols == _matrixC.cols(), cols, _matrixC.cols());
   //}
 
   return cols;

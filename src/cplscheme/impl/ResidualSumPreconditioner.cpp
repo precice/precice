@@ -16,7 +16,7 @@ ResidualSumPreconditioner::ResidualSumPreconditioner(
 
 void ResidualSumPreconditioner::initialize(std::vector<size_t> &svs)
 {
-  P_TRACE();
+  PRECICE_TRACE();
   Preconditioner::initialize(svs);
 
   _residualSum.resize(_subVectorSizes.size(), 0.0);
@@ -43,11 +43,11 @@ void ResidualSumPreconditioner::_update_(bool timestepComplete,
       norms[k] = std::sqrt(norms[k]);
     }
     sum = std::sqrt(sum);
-    P_ASSERT(sum > 0);
+    PRECICE_ASSERT(sum > 0);
 
     for (size_t k = 0; k < _subVectorSizes.size(); k++) {
       _residualSum[k] += norms[k] / sum;
-      P_ASSERT(_residualSum[k] > 0);
+      PRECICE_ASSERT(_residualSum[k] > 0);
     }
 
     offset = 0;

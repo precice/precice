@@ -13,35 +13,35 @@
 
 #include "Tracer.hpp"
 
-#define P_WARN(message) _log.warning(PRECICE_LOG_LOCATION, PRECICE_AS_STRING(message))
+#define PRECICE_WARN(message) _log.warning(PRECICE_LOG_LOCATION, PRECICE_AS_STRING(message))
 
-#define P_INFO(message) _log.info(PRECICE_LOG_LOCATION, PRECICE_AS_STRING(message))
+#define PRECICE_INFO(message) _log.info(PRECICE_LOG_LOCATION, PRECICE_AS_STRING(message))
 
-#define P_ERROR(message) do {                                             \
+#define PRECICE_ERROR(message) do {                                             \
     _log.error(PRECICE_LOG_LOCATION, PRECICE_AS_STRING(message));               \
     std::exit(-1);                                                              \
 } while (false)
 
-#define P_CHECK(check, message)                                           \
+#define PRECICE_CHECK(check, message)                                           \
   if ( !(check) ) {                                                             \
-    P_ERROR(message);                                                     \
+    PRECICE_ERROR(message);                                                     \
   }
 
 #ifdef NDEBUG 
 
-#define P_DEBUG(...) {}
-#define P_TRACE(...) {}
+#define PRECICE_DEBUG(...) {}
+#define PRECICE_TRACE(...) {}
 
 #else // NDEBUG
 
-#define P_DEBUG(message) _log.debug(PRECICE_LOG_LOCATION, PRECICE_AS_STRING(message))
+#define PRECICE_DEBUG(message) _log.debug(PRECICE_LOG_LOCATION, PRECICE_AS_STRING(message))
 
 /// Helper macro, used by TRACE
 #define PRECICE_LOG_ARGUMENT(r, data, i, elem)                                  \
   << '\n' << "  Argument " << i << ": " << BOOST_PP_STRINGIZE(elem) << " == " << elem
 
 // Do not put do {...} while (false) here, it will destroy the _tracer_ right after creation
-#define P_TRACE(...)                                                      \
+#define PRECICE_TRACE(...)                                                      \
   precice::logging::Tracer _tracer_(_log, PRECICE_LOG_LOCATION);                \
   _log.trace(PRECICE_LOG_LOCATION, PRECICE_AS_STRING("Entering " << __func__    \
   BOOST_PP_IF(BOOST_VMD_IS_EMPTY(__VA_ARGS__),                                  \

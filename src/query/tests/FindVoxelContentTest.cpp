@@ -569,7 +569,7 @@ void performTestTriangles(
   mesh.computeState();
   findIncluded(mesh);
   //  if((sign = -1) && (testDim == 1) && (secondDimension == 2) && (thirdDimension == 0)){
-  //    P_INFO("------------------------------ sign = " << sign << ", testDim = " << testDim
+  //    PRECICE_INFO("------------------------------ sign = " << sign << ", testDim = " << testDim
   //                   << ", secondDimension = " << secondDimension << ", thirdDimension = " << thirdDimension);
   //  }
   findExcluded(mesh);
@@ -577,10 +577,10 @@ void performTestTriangles(
   BOOST_TEST(size == 15);
   size = findExcluded.content().triangles().size();
   //if((sign = -1) && (testDim == 1) && (secondDimension == 2) && (thirdDimension == 0)){
-  //    P_INFO("############################## triangles = " << size);
+  //    PRECICE_INFO("############################## triangles = " << size);
   //}
   //  if(size != 9){
-  //    P_ERROR("Aus die Mausss");
+  //    PRECICE_ERROR("Aus die Mausss");
   //  }
   BOOST_TEST(size == 9);
 

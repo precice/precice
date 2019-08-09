@@ -13966,7 +13966,7 @@ class basic_json
     @param[in] last end of the range to copy from (excluded)
 
     @pre Iterators @a first and @a last must be initialized. **This
-         precondition is enforced with an P_ASSERT(see warning).** If
+         precondition is enforced with an PRECICE_ASSERT(see warning).** If
          assertions are switched off, a violation of this precondition yields
          undefined behavior.
 

@@ -12,7 +12,7 @@
 
 // void ExportVTKXMLTest:: run()
 // {
-//   P_TRACE();
+//   PRECICE_TRACE();
 //   typedef utils::Parallel Par;
 //   if (Par::getCommunicatorSize() > 3){
 //     const std::vector<int> ranksWanted = {0, 1, 2, 3};

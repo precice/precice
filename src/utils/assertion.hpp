@@ -13,7 +13,7 @@
 
 #ifdef NDEBUG
 
-#define P_ASSERT(...) {}
+#define PRECICE_ASSERT(...) {}
 
 #else
 
@@ -22,7 +22,7 @@
   std::cerr << "  Argument " << i << ": " << elem << '\n';
 
 /// Asserts that expr evaluates to true, prints all other arguments and calls assert(false).
-#define P_ASSERT(...) if (not (BOOST_PP_VARIADIC_ELEM(0, __VA_ARGS__))) { \
+#define PRECICE_ASSERT(...) if (not (BOOST_PP_VARIADIC_ELEM(0, __VA_ARGS__))) { \
     std::cerr << "ASSERTION FAILED\n"                                           \
               << "  Location:          " << BOOST_CURRENT_FUNCTION << '\n'      \
               << "  File:              " << __FILE__ << ":" << __LINE__ << '\n' \

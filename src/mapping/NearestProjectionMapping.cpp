@@ -21,7 +21,7 @@ NearestProjectionMapping::NearestProjectionMapping(
     setInputRequirement(Mapping::MeshRequirement::FULL);
     setOutputRequirement(Mapping::MeshRequirement::VERTEX);
   } else {
-    P_ASSERT(constraint == CONSERVATIVE, constraint);
+    PRECICE_ASSERT(constraint == CONSERVATIVE, constraint);
     setInputRequirement(Mapping::MeshRequirement::VERTEX);
     setOutputRequirement(Mapping::MeshRequirement::FULL);
   }
@@ -44,18 +44,18 @@ struct MatchType {
 
 void NearestProjectionMapping::computeMapping()
 {
-  P_TRACE(input()->vertices().size(), output()->vertices().size());
+  PRECICE_TRACE(input()->vertices().size(), output()->vertices().size());
   const std::string baseEvent = "map.np.computeMapping.From" + input()->getName() + "To" + output()->getName();
   precice::utils::Event e(baseEvent, precice::syncMode);
 
   // Setup Direction of Mapping
   mesh::PtrMesh origins, search_space;
   if (getConstraint() == CONSISTENT) {
-    P_DEBUG("Compute consistent mapping");
+    PRECICE_DEBUG("Compute consistent mapping");
     origins = output();
     search_space = input();
   } else {
-    P_DEBUG("Compute conservative mapping");
+    PRECICE_DEBUG("Compute conservative mapping");
     origins = input();
     search_space = output();
   }
@@ -74,7 +74,7 @@ void NearestProjectionMapping::computeMapping()
 
   if (getDimensions() == 2) {
     if(!fVertices.empty() && tEdges.empty()) {
-        P_WARN("2D Mesh \"" << search_space->getName() << "\" does not contain edges. Nearest projection mapping falls back to nearest neighbor mapping.");
+        PRECICE_WARN("2D Mesh \"" << search_space->getName() << "\" does not contain edges. Nearest projection mapping falls back to nearest neighbor mapping.");
     }
 
     precice::utils::Event e2(baseEvent+".getIndexOnEdges", precice::syncMode);
@@ -116,7 +116,7 @@ void NearestProjectionMapping::computeMapping()
   } else {
     const auto &tTriangles = search_space->triangles();
     if(!fVertices.empty() && tTriangles.empty()) {
-         P_WARN("3D Mesh \"" << search_space->getName() << "\" does not contain triangles. Nearest projection mapping will map to primitives of lower dimension.");
+         PRECICE_WARN("3D Mesh \"" << search_space->getName() << "\" does not contain triangles. Nearest projection mapping will map to primitives of lower dimension.");
     }
 
     precice::utils::Event e2(baseEvent+".getIndexOnTriangles", precice::syncMode);
@@ -188,7 +188,7 @@ bool NearestProjectionMapping::hasComputedMapping() const
 
 void NearestProjectionMapping::clear()
 {
-  P_TRACE();
+  PRECICE_TRACE();
   _weights.clear();
   _hasComputedMapping = false;
 }
@@ -197,7 +197,7 @@ void NearestProjectionMapping::map(
     int inputDataID,
     int outputDataID)
 {
-  P_TRACE(inputDataID, outputDataID);
+  PRECICE_TRACE(inputDataID, outputDataID);
 
   precice::utils::Event e("map.np.mapData.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
 
@@ -207,11 +207,11 @@ void NearestProjectionMapping::map(
   Eigen::VectorXd &      outValues = outData->values();
   //assign(outValues) = 0.0;
   int dimensions = inData->getDimensions();
-  P_ASSERT(dimensions == outData->getDimensions());
+  PRECICE_ASSERT(dimensions == outData->getDimensions());
 
   if (getConstraint() == CONSISTENT) {
-    P_DEBUG("Map consistent");
-    P_ASSERT(_weights.size() == output()->vertices().size(),
+    PRECICE_DEBUG("Map consistent");
+    PRECICE_ASSERT(_weights.size() == output()->vertices().size(),
               _weights.size(), output()->vertices().size());
     for (size_t i = 0; i < output()->vertices().size(); i++) {
       InterpolationElements &elems     = _weights[i];
@@ -219,16 +219,16 @@ void NearestProjectionMapping::map(
       for (query::InterpolationElement &elem : elems) {
         size_t inOffset = (size_t) elem.element->getID() * dimensions;
         for (int dim = 0; dim < dimensions; dim++) {
-          P_ASSERT(outOffset + dim < (size_t) outValues.size());
-          P_ASSERT(inOffset + dim < (size_t) inValues.size());
+          PRECICE_ASSERT(outOffset + dim < (size_t) outValues.size());
+          PRECICE_ASSERT(inOffset + dim < (size_t) inValues.size());
           outValues(outOffset + dim) += elem.weight * inValues(inOffset + dim);
         }
       }
     }
   } else {
-    P_ASSERT(getConstraint() == CONSERVATIVE, getConstraint());
-    P_DEBUG("Map conservative");
-    P_ASSERT(_weights.size() == input()->vertices().size(),
+    PRECICE_ASSERT(getConstraint() == CONSERVATIVE, getConstraint());
+    PRECICE_DEBUG("Map conservative");
+    PRECICE_ASSERT(_weights.size() == input()->vertices().size(),
               _weights.size(), input()->vertices().size());
     for (size_t i = 0; i < input()->vertices().size(); i++) {
       size_t                 inOffset = i * dimensions;
@@ -236,8 +236,8 @@ void NearestProjectionMapping::map(
       for (query::InterpolationElement &elem : elems) {
         size_t outOffset = (size_t) elem.element->getID() * dimensions;
         for (int dim = 0; dim < dimensions; dim++) {
-          P_ASSERT(outOffset + dim < (size_t) outValues.size());
-          P_ASSERT(inOffset + dim < (size_t) inValues.size());
+          PRECICE_ASSERT(outOffset + dim < (size_t) outValues.size());
+          PRECICE_ASSERT(inOffset + dim < (size_t) inValues.size());
           outValues(outOffset + dim) += elem.weight * inValues(inOffset + dim);
         }
       }
@@ -247,19 +247,19 @@ void NearestProjectionMapping::map(
 
 void NearestProjectionMapping::tagMeshFirstRound()
 {
-  P_TRACE();
+  PRECICE_TRACE();
   precice::utils::Event e("map.np.tagMeshFirstRound.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
-  P_DEBUG("Compute Mapping for Tagging");
+  PRECICE_DEBUG("Compute Mapping for Tagging");
 
   computeMapping();
-  P_DEBUG("Tagging First Round");
+  PRECICE_DEBUG("Tagging First Round");
 
   // Determine the Mesh to Tag
   mesh::PtrMesh origins;
   if (getConstraint() == CONSISTENT) {
     origins = input();
   } else {
-    P_ASSERT(getConstraint() == CONSERVATIVE, getConstraint());
+    PRECICE_ASSERT(getConstraint() == CONSERVATIVE, getConstraint());
     origins = output();
   }
 
@@ -286,14 +286,14 @@ void NearestProjectionMapping::tagMeshFirstRound()
           v.tag();
       }
   }
-  P_DEBUG("First Round Tagged " << tagged.size() << "/" << max_count << " Vertices");
+  PRECICE_DEBUG("First Round Tagged " << tagged.size() << "/" << max_count << " Vertices");
 
   clear();
 }
 
 void NearestProjectionMapping::tagMeshSecondRound()
 {
-  P_TRACE();
+  PRECICE_TRACE();
   // for NP mapping no operation needed here
 }
 

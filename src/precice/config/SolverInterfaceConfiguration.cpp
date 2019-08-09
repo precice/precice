@@ -41,7 +41,7 @@ void SolverInterfaceConfiguration:: xmlTagCallback
 (
   xml::XMLTag& tag )
 {
-  P_TRACE();
+  PRECICE_TRACE();
   if (tag.getName() == "solver-interface"){
     _dimensions = tag.getIntAttributeValue("dimensions");
     _dataConfiguration->setDimensions(_dimensions);
@@ -49,7 +49,7 @@ void SolverInterfaceConfiguration:: xmlTagCallback
     _participantConfiguration->setDimensions(_dimensions);
   }
   else {
-    P_ERROR("Received callback from tag " << tag.getName());
+    PRECICE_ERROR("Received callback from tag " << tag.getName());
   }
 }
 
@@ -57,7 +57,7 @@ void SolverInterfaceConfiguration:: xmlEndTagCallback
 (
   xml::XMLTag& tag )
 {
-  P_TRACE();
+  PRECICE_TRACE();
   if (tag.getName() == "solver-interface"){
     _meshConfiguration->setMeshSubIDs();
 
@@ -75,7 +75,7 @@ void SolverInterfaceConfiguration:: xmlEndTagCallback
                 break;
               }
             }
-            P_CHECK(meshFound,
+            PRECICE_CHECK(meshFound,
                   "The participant "<< neededMeshes.first <<
                   " needs to use the mesh " << neededMesh <<
                   " if he wants to use it in the coupling scheme.");
@@ -84,7 +84,7 @@ void SolverInterfaceConfiguration:: xmlEndTagCallback
           break;
         }
       }
-      P_ASSERT(participantFound);
+      PRECICE_ASSERT(participantFound);
     }
 
   }

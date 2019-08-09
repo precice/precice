@@ -75,7 +75,7 @@ ConfigParser::ConfigParser(const std::string &filePath, std::shared_ptr<precice:
   try {
     connectTags(DefTags, SubTags);
   } catch (const std::string& error) {
-    P_ERROR(error);
+    PRECICE_ERROR(error);
   }
 }
 
@@ -94,7 +94,7 @@ void ConfigParser::GenericErrorFunc(void *ctx, const char *msg, ...)
   vsnprintf(err, TMP_BUF_SIZE, msg, arg_ptr);
   va_end(arg_ptr);
 
-  P_ERROR(err);
+  PRECICE_ERROR(err);
 }
 
 int ConfigParser::readXmlFile(std::string const &filePath)
@@ -113,7 +113,7 @@ int ConfigParser::readXmlFile(std::string const &filePath)
 
   std::ifstream ifs(filePath);
   if (not ifs) {
-    P_ERROR("File open error: " << filePath);
+    PRECICE_ERROR("File open error: " << filePath);
   }
 
   std::string content{std::istreambuf_iterator<char>(ifs), std::istreambuf_iterator<char>()};
@@ -144,7 +144,7 @@ void ConfigParser::connectTags(std::vector<std::shared_ptr<XMLTag>> &DefTags, CT
 
         if (pDefSubTag->_occurrence == XMLTag::OCCUR_ONCE) {
           if (std::find(usedTags.begin(), usedTags.end(), pDefSubTag->_fullName) != usedTags.end()) {
-            P_ERROR("Tag <" + pDefSubTag->_fullName + "> is already used");
+            PRECICE_ERROR("Tag <" + pDefSubTag->_fullName + "> is already used");
           }
           usedTags.push_back(pDefSubTag->_fullName);
         }
@@ -166,7 +166,7 @@ void ConfigParser::connectTags(std::vector<std::shared_ptr<XMLTag>> &DefTags, CT
     }
 
     if (!found)
-      P_ERROR("Tag <" + ((subtag->m_Prefix.length() ? subtag->m_Prefix + ":" : "") + subtag->m_Name) + "> is unknown");
+      PRECICE_ERROR("Tag <" + ((subtag->m_Prefix.length() ? subtag->m_Prefix + ":" : "") + subtag->m_Name) + "> is unknown");
   }
 }
 

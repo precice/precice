@@ -66,8 +66,8 @@ void MeshConfiguration:: setDimensions
 (
   int dimensions )
 {
-  P_TRACE(dimensions);
-  P_ASSERT((dimensions == 2) || (dimensions == 3), dimensions);
+  PRECICE_TRACE(dimensions);
+  PRECICE_ASSERT((dimensions == 2) || (dimensions == 3), dimensions);
   _dimensions = dimensions;
 }
 
@@ -75,9 +75,9 @@ void MeshConfiguration:: xmlTagCallback
 (
   xml::XMLTag& tag )
 {
-  P_TRACE(tag.getName());
+  PRECICE_TRACE(tag.getName());
   if (tag.getName() == TAG){
-    P_ASSERT(_dimensions != 0);
+    PRECICE_ASSERT(_dimensions != 0);
     std::string name = tag.getStringAttributeValue(ATTR_NAME);
     bool flipNormals = tag.getBooleanAttributeValue(ATTR_FLIP_NORMALS);
     _meshes.push_back(PtrMesh(new Mesh(name, _dimensions, flipNormals)));
@@ -133,15 +133,15 @@ void MeshConfiguration:: addMesh
         break;
       }
     }
-    P_CHECK(found, "Data " << dataNewMesh->getName() << " is not available in data configuration!");
+    PRECICE_CHECK(found, "Data " << dataNewMesh->getName() << " is not available in data configuration!");
   }
   _meshes.push_back(mesh);
 }
 
 void MeshConfiguration:: setMeshSubIDs()
 {
-  P_ASSERT( _meshes.size() == _meshSubIDs.size() );
-  P_ASSERT( not _setMeshSubIDs );
+  PRECICE_ASSERT( _meshes.size() == _meshSubIDs.size() );
+  PRECICE_ASSERT( not _setMeshSubIDs );
   for ( size_t i=0; i < _meshes.size(); i++ ) {
     for ( const std::string & subIDName : _meshSubIDs[i] ) {
       _meshes[i]->setSubID ( subIDName );
@@ -176,7 +176,7 @@ void MeshConfiguration:: addNeededMesh(
   const std::string& participant,
   const std::string& mesh)
 {
-  P_TRACE(participant, mesh );
+  PRECICE_TRACE(participant, mesh );
   if(_neededMeshes.count(participant)==0){
     std::vector<std::string> meshes;
     meshes.push_back(mesh);
