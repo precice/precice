@@ -95,7 +95,7 @@ void PythonAction::performAction(double time,
       int      id            = vertex.getID();
       coords                 = vertex.getCoords();
       normal                 = vertex.getNormal();
-      PyObject *pythonID     = PyInt_FromLong(id);
+      PyObject *pythonID     = PyLong_FromLong(id);
       PyObject *pythonCoords = PyArray_SimpleNewFromData(1, vdim, NPY_DOUBLE, coords.data());
       PyObject *pythonNormal = PyArray_SimpleNewFromData(1, vdim, NPY_DOUBLE, coords.data());
       PRECICE_CHECK(pythonID != nullptr, "Creating python ID failed!");
@@ -138,7 +138,7 @@ void PythonAction::initialize()
   PyRun_SimpleString("import sys");
   std::string appendPathCommand("sys.path.append('" + _modulePath + "')");
   PyRun_SimpleString(appendPathCommand.c_str());
-  _moduleNameObject = PyString_FromString(_moduleName.c_str());
+  _moduleNameObject = PyUnicode_FromString(_moduleName.c_str());
   _module           = PyImport_Import(_moduleNameObject);
   if (_module == nullptr) {
     PyErr_Print();
