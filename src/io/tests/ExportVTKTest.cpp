@@ -7,7 +7,7 @@
 
 BOOST_AUTO_TEST_SUITE(IOTests)
 
-BOOST_AUTO_TEST_SUITE(VTKExport, * precice::testing::OnMaster())
+BOOST_AUTO_TEST_SUITE(VTKExport, *precice::testing::OnMaster())
 
 using namespace precice;
 

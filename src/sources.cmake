@@ -4,6 +4,7 @@
 
 target_sources(precice
     PRIVATE
+    ${CMAKE_BINARY_DIR}/src/versions.cpp
     src/action/Action.hpp
     src/action/ComputeCurvatureAction.cpp
     src/action/ComputeCurvatureAction.hpp
@@ -25,6 +26,8 @@ target_sources(precice
     src/com/Communication.cpp
     src/com/Communication.hpp
     src/com/CommunicationFactory.hpp
+    src/com/ConnectionInfoPublisher.cpp
+    src/com/ConnectionInfoPublisher.hpp
     src/com/MPICommunication.cpp
     src/com/MPICommunication.hpp
     src/com/MPIDirectCommunication.cpp
@@ -142,6 +145,8 @@ target_sources(precice
     src/logging/Tracer.hpp
     src/logging/config/LogConfiguration.cpp
     src/logging/config/LogConfiguration.hpp
+    src/m2n/BoundM2N.cpp
+    src/m2n/BoundM2N.hpp
     src/m2n/DistributedComFactory.hpp
     src/m2n/DistributedCommunication.hpp
     src/m2n/GatherScatterComFactory.cpp
@@ -212,15 +217,11 @@ target_sources(precice
     src/partition/ReceivedPartition.cpp
     src/partition/ReceivedPartition.hpp
     src/partition/SharedPointer.hpp
-    src/precice/Constants.cpp
-    src/precice/Constants.hpp
     src/precice/MeshHandle.cpp
     src/precice/MeshHandle.hpp
     src/precice/SolverInterface.cpp
     src/precice/SolverInterface.hpp
-    src/precice/bindings/c/Constants.cpp
     src/precice/bindings/c/SolverInterfaceC.cpp
-    src/precice/bindings/fortran/ConstantsFortran.cpp
     src/precice/bindings/fortran/ConstantsFortran.hpp
     src/precice/bindings/fortran/SolverInterfaceFASTEST.cpp
     src/precice/bindings/fortran/SolverInterfaceFASTEST.hpp
@@ -266,6 +267,7 @@ target_sources(precice
     src/utils/Dimensions.hpp
     src/utils/EigenHelperFunctions.cpp
     src/utils/EigenHelperFunctions.hpp
+    src/utils/EigenIO.hpp
     src/utils/Event.cpp
     src/utils/Event.hpp
     src/utils/EventUtils.cpp
@@ -283,18 +285,12 @@ target_sources(precice
     src/utils/Petsc.cpp
     src/utils/Petsc.hpp
     src/utils/PointerVector.hpp
-    src/utils/Publisher.cpp
-    src/utils/Publisher.hpp
-    src/utils/SignalHandler.cpp
-    src/utils/SignalHandler.hpp
     src/utils/String.cpp
     src/utils/String.hpp
     src/utils/TableWriter.cpp
     src/utils/TableWriter.hpp
     src/utils/TypeNames.hpp
     src/utils/assertion.hpp
-    src/utils/json.hpp
-    src/utils/prettyprint.hpp
     src/utils/stacktrace.cpp
     src/utils/stacktrace.hpp
     src/versions.hpp
@@ -310,9 +306,7 @@ target_sources(precice
 #
 
 set_property(TARGET precice PROPERTY PUBLIC_HEADER
-    src/precice/Constants.hpp
     src/precice/MeshHandle.hpp
     src/precice/SolverInterface.hpp
-    src/precice/bindings/c/Constants.h
     src/precice/bindings/c/SolverInterfaceC.h
     )

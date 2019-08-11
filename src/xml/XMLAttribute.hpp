@@ -141,7 +141,7 @@ XMLAttribute<ATTRIBUTE_T>& XMLAttribute<ATTRIBUTE_T>::setOptions(std::vector<ATT
 template <typename ATTRIBUTE_T>
 XMLAttribute<ATTRIBUTE_T>& XMLAttribute<ATTRIBUTE_T>::setDefaultValue(const ATTRIBUTE_T &defaultValue)
 {
-  TRACE(defaultValue);
+  PRECICE_TRACE(defaultValue);
   _hasDefaultValue = true;
   set(_defaultValue, defaultValue);
   return *this;
@@ -150,16 +150,16 @@ XMLAttribute<ATTRIBUTE_T>& XMLAttribute<ATTRIBUTE_T>::setDefaultValue(const ATTR
 template <typename ATTRIBUTE_T>
 void XMLAttribute<ATTRIBUTE_T>::readValue(std::map<std::string, std::string> &aAttributes)
 {
-  TRACE(_name);
+  PRECICE_TRACE(_name);
   if (_read) {
     std::cout << "Attribute \"" + _name + "\" is defined multiple times\n";
-    ERROR("Attribute \"" + _name + "\" is defined multiple times");
+    PRECICE_ERROR("Attribute \"" + _name + "\" is defined multiple times");
   }
 
   if (aAttributes.find(getName()) == aAttributes.end()) {
     if (not _hasDefaultValue) {
       std::cout << "Attribute \"" + _name + "\" missing\n";
-      ERROR("Attribute \"" + _name + "\" missing");
+      PRECICE_ERROR("Attribute \"" + _name + "\" missing");
     }
     set(_value, _defaultValue);
   } else {
@@ -179,11 +179,11 @@ void XMLAttribute<ATTRIBUTE_T>::readValue(std::map<std::string, std::string> &aA
         }
 
         std::cout << stream.str() << '\n';
-        ERROR(stream.str());
+        PRECICE_ERROR(stream.str());
       }
     }
   }
-  DEBUG("Read valid attribute \"" << getName() << "\" value = " << _value);
+  PRECICE_DEBUG("Read valid attribute \"" << getName() << "\" value = " << _value);
 }
 
 template <typename ATTRIBUTE_T>
@@ -199,7 +199,7 @@ void XMLAttribute<ATTRIBUTE_T>::readValueSpecific(std::string &rawValue, double 
       value = std::stod(rawValue);
     }
   } catch (...) {
-    ERROR("String to Double error");
+    PRECICE_ERROR("String to Double error");
   }
 }
 
@@ -209,7 +209,7 @@ void XMLAttribute<ATTRIBUTE_T>::readValueSpecific(std::string &rawValue, int &va
   try {
     value = std::stoi(rawValue);
   } catch (...) {
-    ERROR("String to Int error");
+    PRECICE_ERROR("String to Int error");
   }
 }
 
@@ -317,7 +317,7 @@ std::string XMLAttribute<ATTRIBUTE_T>::printDocumentation() const
   std::ostringstream doc;
   doc << _name << "=\"{" << utils::getTypeName(_value);
   if (_hasValidation) {
-    assertion(!_options.empty());
+    PRECICE_ASSERT(!_options.empty());
     doc << ":";
     // print the first item
     auto first = _options.begin();

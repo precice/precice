@@ -1,14 +1,14 @@
 #ifndef PRECICE_IO_IMPORT_HPP_
 #define PRECICE_IO_IMPORT_HPP_
 
-#include <string>
 #include <map>
+#include <string>
 
 namespace precice {
-  namespace mesh {
-    class Mesh;
-  }
+namespace mesh {
+class Mesh;
 }
+} // namespace precice
 
 // ------------------------------------------------------------ CLASS DEFINTION
 
@@ -20,11 +20,11 @@ namespace io {
  *
  * Defines a unique interface to import geometries.
  */
-class Import
-{
+class Import {
 public:
+  Import(const std::string &location);
 
-  Import ( const std::string& location );
+  Import& operator=(Import &&) = delete;
 
   virtual ~Import() {}
 
@@ -33,22 +33,21 @@ public:
    *
    * @param mesh [IN/OUT] The importet elements are added to the mesh.
    */
-  virtual void doImport (
-    const std::string& name,
-    mesh::Mesh&        mesh ) =0;
+  virtual void doImport(
+      const std::string &name,
+      mesh::Mesh &       mesh) = 0;
 
 protected:
-
-  const std::string& getLocation () const
+  const std::string &getLocation() const
   {
     return _location;
   }
 
 private:
-
   std::string _location;
 };
 
-}} // namespace precice, io
+} // namespace io
+} // namespace precice
 
 #endif /* PRECICE_IO_IMPORT_HPP_ */

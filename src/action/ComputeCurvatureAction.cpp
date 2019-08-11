@@ -1,5 +1,6 @@
 #include "ComputeCurvatureAction.hpp"
 #include <Eigen/Dense>
+#include <Eigen/Geometry>
 #include "mesh/Edge.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Triangle.hpp"
@@ -25,7 +26,7 @@ void ComputeCurvatureAction::performAction(
     double computedPartFullDt,
     double fullDt)
 {
-  TRACE();
+  PRECICE_TRACE();
   auto &dataValues = _data->values();
 
   if (getMesh()->getDimensions() == 2) {
@@ -44,7 +45,7 @@ void ComputeCurvatureAction::performAction(
       }
     }
   } else {
-    assertion(getMesh()->getDimensions() == 3, getMesh()->getDimensions());
+    PRECICE_ASSERT(getMesh()->getDimensions() == 3, getMesh()->getDimensions());
     for (int i = 0; i < dataValues.size(); i++) {
       dataValues[i] = 0.0;
     }

@@ -1,36 +1,88 @@
-#include "impl/RTree.hpp"
+#include "mesh/impl/RTree.hpp"
+#include "mesh/impl/RTreeAdapter.hpp"
 
-#include "RTree.hpp"
+#include "mesh/RTree.hpp"
 
 namespace precice {
 namespace mesh {
 
+namespace bg = boost::geometry;
+
 // Initialize static member
-std::map<int, rtree::PtrVertexRTree> precice::mesh::rtree::_vertex_trees;
-// Initialize static member
+std::map<int, rtree::MeshIndices> precice::mesh::rtree::_cached_trees;
 std::map<int, PtrPrimitiveRTree> precice::mesh::rtree::_primitive_trees;
 
-rtree::PtrVertexRTree rtree::getVertexRTree(const PtrMesh& mesh)
+rtree::MeshIndices& rtree::cacheEntry(int meshID)
 {
+    auto result = _cached_trees.emplace(std::make_pair(meshID, rtree::MeshIndices{}));
+    return result.first->second;
+}
+
+
+rtree::vertex_traits::Ptr rtree::getVertexRTree(const PtrMesh& mesh)
+{
+  PRECICE_ASSERT(mesh);
+  auto& cache = cacheEntry(mesh->getID());
+  if (cache.vertices) {
+      return cache.vertices;
+  }
+
   RTreeParameters params;
-  VertexIndexGetter ind(mesh->vertices());
-    
-  auto result = _vertex_trees.emplace(std::piecewise_construct,
-                              std::forward_as_tuple(mesh->getID()),
-                              std::forward_as_tuple(std::make_shared<VertexRTree>(params, ind)));
-    
-  PtrVertexRTree tree = std::get<0>(result)->second;
-    
-  if (std::get<1>(result)) // insertion took place, fill tree
-    for (size_t i = 0; i < mesh->vertices().size(); ++i)
+  vertex_traits::IndexGetter ind(mesh->vertices());
+  auto tree = std::make_shared<vertex_traits::RTree>(params, ind);
+  for (size_t i = 0; i < mesh->vertices().size(); ++i) {
       tree->insert(i);
-    
+  }
+
+  cache.vertices = tree;
   return tree;
 }
 
+
+rtree::edge_traits::Ptr rtree::getEdgeRTree(const PtrMesh& mesh)
+{
+  PRECICE_ASSERT(mesh);
+  auto& cache = cacheEntry(mesh->getID());
+  if (cache.edges) {
+      return cache.edges;
+  }
+
+  RTreeParameters params;
+  edge_traits::IndexGetter ind(mesh->edges());
+  auto tree = std::make_shared<edge_traits::RTree>(params, ind);
+  for (size_t i = 0; i < mesh->edges().size(); ++i) {
+      tree->insert(i);
+  }
+
+  cache.edges = tree;
+  return tree;
+}
+
+
+rtree::triangle_traits::Ptr rtree::getTriangleRTree(const PtrMesh& mesh)
+{
+  PRECICE_ASSERT(mesh);
+  auto& cache = cacheEntry(mesh->getID());
+  if (cache.triangles) {
+      return cache.triangles;
+  }
+
+  RTreeParameters params;
+  triangle_traits::IndexGetter ind;
+  auto tree = std::make_shared<triangle_traits::RTree>(params, ind);
+  for (size_t i = 0; i < mesh->triangles().size(); ++i) {
+      auto box = bg::return_envelope<RTreeBox>(mesh->triangles()[i]);
+      tree->insert(std::make_pair(std::move(box) , i));
+  }
+
+  cache.triangles = tree;
+  return tree;
+}
+
+
 PtrPrimitiveRTree rtree::getPrimitiveRTree(const PtrMesh& mesh)
 {
-  assertion(mesh, "Empty meshes are not allowed.");
+  PRECICE_ASSERT(mesh, "Empty meshes are not allowed.");
   auto iter = _primitive_trees.find(mesh->getID());
   if (iter != _primitive_trees.end()) {
     return iter->second;
@@ -42,12 +94,18 @@ PtrPrimitiveRTree rtree::getPrimitiveRTree(const PtrMesh& mesh)
   return treeptr;
 }
 
+
 void rtree::clear(Mesh &mesh)
 {
-  _vertex_trees.erase(mesh.getID());
+  _cached_trees.erase(mesh.getID());
   _primitive_trees.erase(mesh.getID());
 }
 
+void rtree::clear()
+{
+  _cached_trees.clear();
+  _primitive_trees.clear();
+}
 
 Box3d getEnclosingBox(Vertex const & middlePoint, double sphereRadius)
 {
@@ -65,6 +123,7 @@ Box3d getEnclosingBox(Vertex const & middlePoint, double sphereRadius)
   
   return box;
 }
+
 
 PrimitiveRTree indexMesh(const Mesh &mesh)
 {

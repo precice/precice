@@ -242,6 +242,8 @@ void precicec_mapWriteDataFrom ( int fromMeshID );
  */
 void precicec_mapReadDataTo ( int toMeshID );
 
+const char* precicec_actionWriteIterationCheckpoint();
+const char* precicec_actionReadIterationCheckpoint();
 
 #ifdef __cplusplus
 }

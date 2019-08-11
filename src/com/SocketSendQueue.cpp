@@ -10,7 +10,7 @@ namespace asio = boost::asio;
 SocketSendQueue::~SocketSendQueue()
 {
   if (not _itemQueue.empty())
-    ERROR("The SocketSendQueue is not empty upon destruction.\n"
+    PRECICE_ERROR("The SocketSendQueue is not empty upon destruction.\n"
           "Make sure it always outlives all the requests pushed onto it");
 }
 

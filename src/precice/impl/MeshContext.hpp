@@ -34,7 +34,7 @@ struct MeshContext
    /// Determines which mesh type has to be provided by the accessor.
    mapping::Mapping::MeshRequirement meshRequirement = mapping::Mapping::MeshRequirement::UNDEFINED;
 
-   /// Name of participant that creats the mesh.
+   /// Name of participant that creates the mesh.
    std::string receiveMeshFrom;
 
    /// bounding box to speed up decomposition of received mesh is increased by this safety factor

@@ -6,9 +6,7 @@
 #include "precice/impl/MeshContext.hpp"
 #include "precice/impl/DataContext.hpp"
 #include "precice/SolverInterface.hpp"
-#include "precice/Constants.hpp"
 #include "utils/Parallel.hpp"
-#include "precice/Constants.hpp"
 #include "precice/impl/Participant.hpp"
 #include "precice/config/Configuration.hpp"
 #include "utils/MasterSlave.hpp"
@@ -98,6 +96,9 @@ BOOST_AUTO_TEST_CASE(TestExplicit,
   for(std::string configurationFileName : configs){
 
     reset();
+
+    BOOST_TEST_MESSAGE("Config: " << configurationFileName);
+
     std::string solverName;
     int timesteps = 0;
     double time = 0.0;
@@ -105,7 +106,7 @@ BOOST_AUTO_TEST_CASE(TestExplicit,
       solverName = "SolverOne";
     }
     else {
-      assertion(utils::Parallel::getProcessRank() == 1);
+      BOOST_TEST(utils::Parallel::getProcessRank() == 1);
       solverName = "SolverTwo";
     }
 
@@ -836,14 +837,14 @@ BOOST_AUTO_TEST_CASE(testStationaryMappingWithSolverMesh,
   std::string config2D = _pathToTests + "mapping-without-geo-2D.xml";
   std::string config3D = _pathToTests + "mapping-without-geo-3D.xml";
   int rank = utils::Parallel::getProcessRank();
-  assertion((rank == 0) || (rank == 1), rank);
+  BOOST_TEST(((rank == 0) || (rank == 1)), rank);
   std::string solverName = rank == 0 ? "SolverA" : "SolverB";
   std::string meshForcesA = "MeshForcesA";
   std::string meshDisplA = "MeshDisplacementsA";
   std::string meshForcesB = "MeshForcesB";
   std::string meshDisplB = "MeshDisplacementsB";
-  std::string dataForces = constants::dataForces();
-  std::string dataDispl = constants::dataDisplacements();
+  std::string dataForces = "Forces";
+  std::string dataDispl = "Displacements";
   using testing::equals;
 
   for (int dim: {2, 3}){
@@ -937,7 +938,7 @@ BOOST_AUTO_TEST_CASE(testStationaryMappingWithSolverMesh,
       interface.finalize();
     }
     else {
-      assertion(rank == 1, rank);
+      BOOST_TEST(rank == 1, rank);
       int meshForcesID = interface.getMeshID(meshForcesB);
       int meshDisplID = interface.getMeshID(meshDisplB);
       int dataForcesID = interface.getDataID(dataForces, meshForcesID);
@@ -1020,7 +1021,7 @@ BOOST_AUTO_TEST_CASE(testBug,
   }
 
   int rank = utils::Parallel::getProcessRank();
-  assertion((rank == 0) || (rank == 1), rank);
+  BOOST_TEST(((rank == 0) || (rank == 1)), rank);
   std::string solverName = rank == 0 ? "Flite" : "Calculix";
   if (solverName == std::string("Flite")){
     SolverInterface precice("Flite", 0, 1);
@@ -1028,8 +1029,8 @@ BOOST_AUTO_TEST_CASE(testBug,
     xml::configure(config.getXMLTag(), configName);
     impl(precice).configure(config.getSolverInterfaceConfiguration());
     int meshID = precice.getMeshID("FliteNodes");
-    int forcesID = precice.getDataID(precice::constants::dataForces(), meshID);
-    int displacementsID = precice.getDataID(precice::constants::dataDisplacements(), meshID);
+    int forcesID = precice.getDataID("Forces", meshID);
+    int displacementsID = precice.getDataID("Displacements", meshID);
     int oldDisplacementsID = precice.getDataID("OldDisplacements", meshID);
     BOOST_TEST(precice.getDimensions() == 3);
     for (Vector3d& coord : coords){
@@ -1055,7 +1056,7 @@ BOOST_AUTO_TEST_CASE(testBug,
     precice.finalize();
   }
   else {
-    assertion(solverName == std::string("Calculix"), solverName);
+    BOOST_TEST(solverName == std::string("Calculix"), solverName);
     SolverInterface precice("Calculix", 0, 1);
     config::Configuration config;
     xml::configure(config.getXMLTag(), configName);
@@ -1117,7 +1118,7 @@ BOOST_AUTO_TEST_CASE(testThreeSolvers,
     reset();
 
     int rank = utils::Parallel::getProcessRank();
-    assertion((rank == 0) || (rank == 1) || (rank == 2), rank);
+    BOOST_TEST(((rank == 0) || (rank == 1) || (rank == 2)), rank);
 
     std::string writeIterCheckpoint(constants::actionWriteIterationCheckpoint());
     std::string readIterCheckpoint(constants::actionReadIterationCheckpoint());
@@ -1186,7 +1187,7 @@ BOOST_AUTO_TEST_CASE(testThreeSolvers,
       BOOST_TEST(callsOfAdvance == expectedCallsOfAdvance[k][1]);
     }
     else {
-      assertion(solverName == std::string("SolverThree"), solverName);
+      BOOST_TEST(solverName == std::string("SolverThree"), solverName);
       SolverInterface precice(solverName, 0, 1);
       config::Configuration config;
       xml::configure(config.getXMLTag(), configs[k]);
@@ -1321,7 +1322,7 @@ BOOST_AUTO_TEST_CASE(testMultiCoupling, * testing::OnSize(4))
 
   }
   else {
-    assertion(utils::Parallel::getProcessRank() == 3);
+    BOOST_TEST(utils::Parallel::getProcessRank() == 3);
     SolverInterface precice("NASTIN", 0, 1);
     config::Configuration config;
     xml::configure(config.getXMLTag(), _pathToTests + "/multi.xml");
@@ -1482,6 +1483,118 @@ BOOST_AUTO_TEST_CASE(testMappingNearestProjection,
     cplInterface.finalize();
   }
 }
+
+/**
+ * @brief Tests sending one mesh to multiple participants
+ *
+ */
+BOOST_AUTO_TEST_CASE(testSendMeshToMultipleParticipants,
+                     * testing::MinRanks(3)
+                     * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1, 2})))
+{
+  if (utils::Parallel::getCommunicatorSize() != 3)
+    return;
+
+  mesh::Mesh::resetGeometryIDsGlobally();
+
+  const std::string configFile = _pathToTests + "send-mesh-to-multiple-participants.xml";
+  std::string solverName;
+  std::string meshName;
+
+  Eigen::Vector2d vertex{0.0, 0.0};
+
+  double value = 1.0;
+
+  if (utils::Parallel::getProcessRank() == 0){
+    solverName = "SolverOne";
+    meshName = "MeshA";
+  }
+  else if (utils::Parallel::getProcessRank() == 1){
+    solverName = "SolverTwo";
+    meshName = "MeshB";
+  }
+  else if (utils::Parallel::getProcessRank() == 2){
+    solverName = "SolverThree";
+    meshName = "MeshC";
+  }
+
+  SolverInterface cplInterface(solverName, 0, 1);
+  config::Configuration config;
+  xml::configure(config.getXMLTag(), configFile);
+  impl(cplInterface).configure(config.getSolverInterfaceConfiguration());
+
+  const int meshID = cplInterface.getMeshID(meshName);
+
+  int vertexID = cplInterface.setMeshVertex(meshID, vertex.data());
+
+  double maxDt = cplInterface.initialize();
+
+  int dataID = cplInterface.getDataID("Data", meshID);
+
+  if (utils::Parallel::getProcessRank() == 0){
+    cplInterface.writeScalarData(dataID, vertexID, value);
+  }
+  else{
+    double valueReceived = -1.0;
+    cplInterface.readScalarData(dataID, vertexID, valueReceived);
+    BOOST_TEST(valueReceived == value);
+  }
+
+  cplInterface.advance(maxDt);
+  cplInterface.finalize();
+}
+
+/**
+ * @brief Test to reproduce the problem of issue 383, https://github.com/precice/precice/issues/383
+ *
+ */
+BOOST_AUTO_TEST_CASE(testPreconditionerBug,
+                     * testing::MinRanks(2)
+                     * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
+{
+  if (utils::Parallel::getCommunicatorSize() != 2)
+    return;
+
+  mesh::Mesh::resetGeometryIDsGlobally();
+  using Eigen::Vector2d;
+  using namespace precice::constants;
+
+  const std::string configFile = _pathToTests + "preconditioner-bug.xml";
+
+  std::string participantName = utils::Parallel::getProcessRank() == 0 ? "SolverOne" : "SolverTwo";
+  std::string meshName = utils::Parallel::getProcessRank() == 0 ? "MeshOne" : "MeshTwo";
+
+  SolverInterface cplInterface(participantName, 0, 1);
+  config::Configuration config;
+  xml::configure(config.getXMLTag(), configFile);
+  impl(cplInterface).configure(config.getSolverInterfaceConfiguration());
+  const int meshID = cplInterface.getMeshID(meshName);
+
+  Vector2d vertex{0.0, 0.0};
+
+  int vertexID = cplInterface.setMeshVertex(meshID, vertex.data());
+
+  cplInterface.initialize();
+  int numberOfAdvanceCalls = 0;
+
+  while (cplInterface.isCouplingOngoing()) {
+    if (cplInterface.isActionRequired(actionWriteIterationCheckpoint()))
+      cplInterface.fulfilledAction(actionWriteIterationCheckpoint());
+    if (cplInterface.isActionRequired(actionReadIterationCheckpoint()))
+      cplInterface.fulfilledAction(actionReadIterationCheckpoint());
+
+    if (utils::Parallel::getProcessRank() == 1){
+      int dataID = cplInterface.getDataID("DataOne", meshID);
+      // to get convergence in first timestep (everything 0), but not in second timestep
+      Vector2d value{0.0, 0.0 + numberOfAdvanceCalls};
+      cplInterface.writeVectorData(dataID, vertexID, value.data());
+    }
+    cplInterface.advance(1.0);
+    ++numberOfAdvanceCalls;
+  }
+  cplInterface.finalize();
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()

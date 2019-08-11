@@ -47,6 +47,10 @@ sourcesCom = [
    Glob('com/config/*.cpp'),
    Glob('com/tests/*.cpp')
    ]
+
+sourcesVersion = [
+    File('versions.cpp')
+]
    
 sourcesAll = [ 
    sourcesUtils,
@@ -55,7 +59,8 @@ sourcesAll = [
    sourcesPartition,
    sourcesQuery,
    sourcesMapping,
-   sourcesCom
+   sourcesCom,
+   sourcesVersion
    ]
    
 Return ('sourcesAll')

@@ -6,7 +6,6 @@
 #include "mesh/Vertex.hpp"
 #include "utils/PointerVector.hpp"
 #include "utils/ManageUniqueIDs.hpp"
-#include <boost/noncopyable.hpp>
 #include <map>
 #include <list>
 #include <vector>
@@ -36,7 +35,7 @@ namespace mesh {
  *
  * Usage example: precice::mesh::tests::MeshTest::testDemonstration()
  */
-class Mesh : public PropertyContainer, private boost::noncopyable
+class Mesh : public PropertyContainer
 {
 public:
 
@@ -119,7 +118,7 @@ public:
   template<typename VECTOR_T>
   Vertex& createVertex ( const VECTOR_T& coords )
   {
-    assertion(coords.size() == _dimensions, coords.size(), _dimensions);
+    PRECICE_ASSERT(coords.size() == _dimensions, coords.size(), _dimensions);
     Vertex* newVertex = new Vertex(coords, _manageVertexIDs.getFreeID());
     newVertex->addParent(*this);
     _content.add(newVertex);
@@ -250,31 +249,20 @@ public:
   void clear();
 
   /// Returns a mapping from rank to used (not necessarily owned) vertex IDs
-  VertexDistribution & getVertexDistribution()
-  {
-    return _vertexDistribution;
-  }
+  VertexDistribution & getVertexDistribution();
 
-  std::vector<int>& getVertexOffsets()
-  {
-    return _vertexOffsets;
-  }
+  VertexDistribution const & getVertexDistribution() const;
+
+  std::vector<int>& getVertexOffsets();
+
+  const std::vector<int>& getVertexOffsets() const;
 
   /// Only used for tests
-  void setVertexOffsets(std::vector<int> & vertexOffsets)
-  {
-    _vertexOffsets = vertexOffsets;
-  }
+  void setVertexOffsets(std::vector<int> & vertexOffsets);
 
-  int getGlobalNumberOfVertices()
-  {
-    return _globalNumberOfVertices;
-  }
+  int getGlobalNumberOfVertices() const;
 
-  void setGlobalNumberOfVertices(int num)
-  {
-    _globalNumberOfVertices = num;
-  }
+  void setGlobalNumberOfVertices(int num);
 
   /// Returns a vector of connected ranks
   std::vector<int> & getConnectedRanks()
@@ -311,6 +299,12 @@ public:
   bool operator!=(const Mesh& other) const;
 
 private:
+
+  /// Computes the normals for all primitives.
+  void computeNormals();
+
+  /// Computes the boundingBox for the vertices.
+  void computeBoundingBox();
 
   mutable logging::Logger _log{"mesh::Mesh"};
 

@@ -9,7 +9,7 @@ import subprocess
 IGNORE_PATTERNS = ["drivers", "bindings/python"]
 
 """ Configured files, which should be ignored by git """
-CONFIGURED_SOURCES = ["src/versions.hpp"]
+CONFIGURED_SOURCES = ["src/versions.hpp", "${CMAKE_BINARY_DIR}/src/versions.cpp"]
 
 
 def get_gitfiles():

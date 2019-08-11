@@ -68,7 +68,7 @@ bool FindClosestVertex:: operator()
 {
   Eigen::VectorXd vectorDistance = Eigen::VectorXd::Zero(_searchPoint.size());
   for ( mesh::Vertex& vertex : container.vertices() ) {
-    assertion ( vertex.getDimensions() == _searchPoint.size(),
+    PRECICE_ASSERT( vertex.getDimensions() == _searchPoint.size(),
                 vertex.getDimensions(), _searchPoint.size() );
     vectorDistance = vertex.getCoords();
     vectorDistance -= _searchPoint;

@@ -212,7 +212,7 @@ void setupLogging(LoggingConfiguration configs, bool enabled)
       if (config.output == "stderr")
         backend = boost::make_shared<StreamBackend>(boost::shared_ptr<std::ostream>(&std::cerr, boost::null_deleter()));
     }
-    assertion(backend != nullptr, "The logging backend was not initialized properly. Check your log config.");
+    PRECICE_ASSERT(backend != nullptr, "The logging backend was not initialized properly. Check your log config.");
     backend->auto_flush(true);
     using sink_t =  boost::log::sinks::synchronous_sink<StreamBackend>;          
     boost::shared_ptr<sink_t> sink(new sink_t(backend));
