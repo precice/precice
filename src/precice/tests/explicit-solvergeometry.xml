@@ -24,9 +24,9 @@
       <participant name="SolverOne">
          <use-mesh name="MeshOne" provide="yes"/>
          <use-mesh name="SolverGeometry" from="SolverTwo" />
-         <mapping:nearest-projection direction="write" from="MeshOne" to="SolverGeometry"
+         <mapping:nearest-neighbor direction="write" from="MeshOne" to="SolverGeometry"
                   constraint="conservative" timing="initial" />
-         <mapping:nearest-projection direction="read" from="SolverGeometry" to="MeshOne"
+         <mapping:nearest-neighbor direction="read" from="SolverGeometry" to="MeshOne"
                   constraint="consistent" timing="initial" />
          <write-data name="Forces"        mesh="MeshOne" />
          <read-data  name="Velocities"    mesh="MeshOne" />

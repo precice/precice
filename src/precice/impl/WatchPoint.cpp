@@ -24,8 +24,8 @@ WatchPoint:: WatchPoint
   _mesh(std::move(meshToWatch)),
   _txtWriter ( exportFilename )
 {
-  assertion ( _mesh );
-  assertion ( _point.size() == _mesh->getDimensions(), _point.size(),
+  PRECICE_ASSERT( _mesh );
+  PRECICE_ASSERT( _point.size() == _mesh->getDimensions(), _point.size(),
                _mesh->getDimensions() );
 }
 
@@ -36,7 +36,7 @@ const mesh::PtrMesh& WatchPoint:: mesh() const
 
 void WatchPoint:: initialize()
 {
-  TRACE();
+  PRECICE_TRACE();
   // Find closest vertex
   if(_mesh->vertices().size()>0){
     query::FindClosestVertex findVertex ( _point );
@@ -68,7 +68,7 @@ void WatchPoint:: initialize()
     }
   }
 
-  DEBUG("Rank: " << utils::MasterSlave::getRank() << ", isClosest: " << _isClosest);
+  PRECICE_DEBUG("Rank: " << utils::MasterSlave::getRank() << ", isClosest: " << _isClosest);
 
   if(_isClosest){
 
@@ -127,7 +127,7 @@ void WatchPoint:: exportPointData
   double time )
 {
   if(_isClosest){
-    assertion(_vertices.size() == _weights.size());
+    PRECICE_ASSERT(_vertices.size() == _weights.size());
     _txtWriter.writeData("Time", time);
     // Export watch point coordinates
     Eigen::VectorXd coords = Eigen::VectorXd::Constant(_mesh->getDimensions(), 0.0);

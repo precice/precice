@@ -22,12 +22,12 @@ public:
       com::PtrCommunication com,
       mesh::PtrMesh         mesh);
 
-  virtual ~GatherScatterCommunication();
+  ~GatherScatterCommunication() override;
 
   /**
    * @brief Returns true, if a connection to a remote participant has been setup.
    */
-  virtual bool isConnected();
+  bool isConnected() const override;
 
   /**
    * @brief Accepts connection from participant, which has to call requestConnection().
@@ -38,9 +38,9 @@ public:
    * @param[in] acceptorName Name of calling participant.
    * @param[in] requesterName Name of remote participant to connect to.
    */
-  virtual void acceptConnection(
+  void acceptConnection(
       const std::string &acceptorName,
-      const std::string &requesterName);
+      const std::string &requesterName) override;
 
   /**
    * @brief Requests connection from participant, which has to call acceptConnection().
@@ -51,9 +51,9 @@ public:
    * @param[in] acceptorName Name of remote participant to connect to.
    * @param[in] nameReuester Name of calling participant.
    */
-  virtual void requestConnection(
+  void requestConnection(
       const std::string &acceptorName,
-      const std::string &requesterName);
+      const std::string &requesterName) override;
 
   /** 
    *  This method has not implemented here yet.    
@@ -77,19 +77,19 @@ public:
    *
    * This method is called on destruction.
    */
-  virtual void closeConnection();
+  void closeConnection() override;
 
   /// Sends an array of double values from all slaves (different for each slave).
-  virtual void send(
-      double *itemsToSend,
+  void send(
+      double const *itemsToSend,
       size_t  size,
-      int     valueDimension);
+      int     valueDimension) override;
 
   /// All slaves receive an array of doubles (different for each slave).
-  virtual void receive(
+  void receive(
       double *itemsToReceive,
       size_t  size,
-      int     valueDimension);
+      int     valueDimension) override;
 
    /**
    * @brief Broadcasts a double to connected ranks       

@@ -19,7 +19,7 @@ BOOST_AUTO_TEST_SUITE(ProvidedPartitionTests)
 
 void setupParallelEnvironment(m2n::PtrM2N m2n)
 {
-  assertion(utils::Parallel::getCommunicatorSize() == 4);
+  BOOST_TEST(utils::Parallel::getCommunicatorSize() == 4);
 
   com::PtrCommunication masterSlaveCom = com::PtrCommunication(new com::MPIDirectCommunication());
   utils::MasterSlave::_communication   = masterSlaveCom;
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate2D, *testing::OnSize(4))
     double safetyFactor = 0.1;
 
     ReceivedPartition part(pSolidzMesh, ReceivedPartition::BROADCAST_FILTER, safetyFactor);
-    part.setM2N(m2n);
+    part.addM2N(m2n);
     part.communicate();
 
     BOOST_TEST(pSolidzMesh->vertices().size() == 6);
@@ -116,9 +116,8 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate2D, *testing::OnSize(4))
       pSolidzMesh->createEdge(v5, v6);
     }
 
-    bool              hasToSend = true;
-    ProvidedPartition part(pSolidzMesh, hasToSend);
-    part.setM2N(m2n);
+    ProvidedPartition part(pSolidzMesh);
+    part.addM2N(m2n);
     part.communicate();
     part.compute();
 
@@ -158,7 +157,7 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate3D, *testing::OnSize(4))
     double safetyFactor = 0.1;
 
     ReceivedPartition part(pSolidzMesh, ReceivedPartition::BROADCAST_FILTER, safetyFactor);
-    part.setM2N(m2n);
+    part.addM2N(m2n);
     part.communicate();
 
     BOOST_TEST(pSolidzMesh->vertices().size() == 6);
@@ -199,9 +198,8 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate3D, *testing::OnSize(4))
       pSolidzMesh->createTriangle(e4, e5, e3);
     }
 
-    bool              hasToSend = true;
-    ProvidedPartition part(pSolidzMesh, hasToSend);
-    part.setM2N(m2n);
+    ProvidedPartition part(pSolidzMesh);
+    part.addM2N(m2n);
     part.communicate();
     part.compute();
 
@@ -278,8 +276,7 @@ BOOST_AUTO_TEST_CASE(TestOnlyDistribution2D,
     pMesh->createVertex(position);
   }
 
-  bool              hasToSend = false;
-  ProvidedPartition part(pMesh, hasToSend);
+  ProvidedPartition part(pMesh);
   part.communicate();
   part.compute();
 

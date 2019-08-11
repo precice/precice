@@ -38,7 +38,8 @@ namespace pretty_print
         struct has_const_iterator : private sfinae_base
         {
         private:
-            template <typename C> static yes & test(typename C::const_iterator*);
+            template <typename C>
+            static typename std::enable_if<!std::is_void<typename std::iterator_traits<typename C::const_iterator>::value_type>::value, yes &>::type test(typename C::const_iterator*);
             template <typename C> static no  & test(...);
         public:
             static const bool value = sizeof(test<T>(nullptr)) == sizeof(yes);

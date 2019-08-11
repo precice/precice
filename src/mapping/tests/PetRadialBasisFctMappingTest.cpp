@@ -98,7 +98,7 @@ void testDistributed(Mapping& mapping,
                      int inGlobalIndexOffset = 0)
 {
   using Par = utils::Parallel;
-  assertion(Par::getCommunicatorSize() == 4);
+  BOOST_TEST(Par::getCommunicatorSize() == 4);
   int meshDimension = inMeshSpec[0].position.size();
   int valueDimension = inMeshSpec[0].value.size();
 
@@ -140,7 +140,7 @@ void testDistributed(Mapping& mapping,
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1)
 {
   utils::Parallel::setGlobalCommunicator(utils::Parallel::getRestrictedCommunicator({0,1,2,3}));
-  assertion(utils::Parallel::getCommunicatorSize() == 4);
+  BOOST_TEST(utils::Parallel::getCommunicatorSize() == 4);
   Gaussian fct(5.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
 
@@ -184,7 +184,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1)
 /// Using a more heterogenous distributon of vertices and owner
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV2)
 {
-  assertion(utils::Parallel::getCommunicatorSize() == 4);
+  BOOST_TEST(utils::Parallel::getCommunicatorSize() == 4);
   Gaussian fct(5.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
 
@@ -226,7 +226,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV2)
 /// Test with a very heterogenous distributed and non-continues ownership
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3)
 {
-  assertion(utils::Parallel::getCommunicatorSize() == 4);
+  BOOST_TEST(utils::Parallel::getCommunicatorSize() == 4);
   Gaussian fct(5.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
 
@@ -329,7 +329,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV4)
 // same as 2DV4, but all ranks have vertices
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV5)
 {
-  assertion(utils::Parallel::getCommunicatorSize() == 4);
+  BOOST_TEST(utils::Parallel::getCommunicatorSize() == 4);
   ThinPlateSplines fct;
   PetRadialBasisFctMapping<ThinPlateSplines> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
 
@@ -385,7 +385,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV5)
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV6,
                      * boost::unit_test::tolerance(1e-7))
 {
-  assertion(utils::Parallel::getCommunicatorSize() == 4);
+  BOOST_TEST(utils::Parallel::getCommunicatorSize() == 4);
   ThinPlateSplines fct;
   PetRadialBasisFctMapping<ThinPlateSplines> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
 
@@ -435,7 +435,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV6,
 /// Test with a homogenous distribution of mesh amoung ranks
 BOOST_AUTO_TEST_CASE(DistributedConservative2DV1)
 {
-  assertion(utils::Parallel::getCommunicatorSize() == 4);
+  BOOST_TEST(utils::Parallel::getCommunicatorSize() == 4);
   Gaussian fct(5.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
 
@@ -474,7 +474,7 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV1)
 /// Using a more heterogenous distribution of vertices and owner
 BOOST_AUTO_TEST_CASE(DistributedConservative2DV2)
 {
-  assertion(utils::Parallel::getCommunicatorSize() == 4);
+  BOOST_TEST(utils::Parallel::getCommunicatorSize() == 4);
   Gaussian fct(5.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
 
@@ -694,7 +694,7 @@ void testTagging(MeshSpecification inMeshSpec,
 }
 
 BOOST_AUTO_TEST_CASE(testTagFirstRound){
-  assertion(utils::Parallel::getCommunicatorSize() == 4);
+  BOOST_TEST(utils::Parallel::getCommunicatorSize() == 4);
   //    *
   //    + <-- owned
   //* * x * *

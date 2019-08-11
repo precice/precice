@@ -27,9 +27,9 @@ ParallelCouplingScheme::ParallelCouplingScheme
 {
   _couplingMode = cplMode;
   // Coupling mode must be either Explicit or Implicit when using SerialCouplingScheme.
-  assertion(_couplingMode != Undefined);
+  PRECICE_ASSERT(_couplingMode != Undefined);
   if (_couplingMode == Explicit) {
-    assertion(maxIterations == 1);
+    PRECICE_ASSERT(maxIterations == 1);
   }
 }
 
@@ -38,21 +38,19 @@ void ParallelCouplingScheme::initialize
   double startTime,
   int    startTimestep )
 {
-  TRACE(startTime, startTimestep);
-  assertion(not isInitialized());
-  assertion(math::greaterEquals(startTime, 0.0), startTime);
-  assertion(startTimestep >= 0, startTimestep);
+  PRECICE_TRACE(startTime, startTimestep);
+  PRECICE_ASSERT(not isInitialized());
+  PRECICE_ASSERT(math::greaterEquals(startTime, 0.0), startTime);
+  PRECICE_ASSERT(startTimestep >= 0, startTimestep);
   setTime(startTime);
   setTimesteps(startTimestep);
   if (_couplingMode == Implicit) {
-    CHECK(not getSendData().empty(), "No send data configured! Use explicit scheme for one-way coupling.");
+    PRECICE_CHECK(not getSendData().empty(), "No send data configured! Use explicit scheme for one-way coupling.");
     if (not doesFirstStep()) { // second participant
       setupConvergenceMeasures(); // needs _couplingData configured
       mergeData(); // merge send and receive data for all pp calls
       setupDataMatrices(getAllData()); // Reserve memory and initialize data with zero
       if (getPostProcessing().get() != nullptr) {
-        CHECK(getPostProcessing()->getDataIDs().size()==2 || getPostProcessing()->getDataIDs().size()==0,                     "For parallel coupling, the number of post-processing data vectors has to be 2 (or 0 for constant underrelaxation), not: "
-                     << getPostProcessing()->getDataIDs().size());
         getPostProcessing()->initialize(getAllData()); // Reserve memory, initialize
       }
     }
@@ -83,15 +81,15 @@ void ParallelCouplingScheme::initialize
 
 void ParallelCouplingScheme::initializeData()
 {
-  TRACE("initializeData()");
-  CHECK(isInitialized(), "initializeData() can be called after initialize() only!");
+  PRECICE_TRACE("initializeData()");
+  PRECICE_CHECK(isInitialized(), "initializeData() can be called after initialize() only!");
 
   if (not hasToSendInitData() && not hasToReceiveInitData()) {
-    INFO("initializeData is skipped since no data has to be initialized");
+    PRECICE_INFO("initializeData is skipped since no data has to be initialized");
     return;
   }
 
-  CHECK(not (hasToSendInitData() && isActionRequired(constants::actionWriteInitialData())),
+  PRECICE_CHECK(not (hasToSendInitData() && isActionRequired(constants::actionWriteInitialData())),
         "InitialData has to be written to preCICE before calling initializeData()");
 
   setHasDataBeenExchanged(false);
@@ -154,9 +152,9 @@ void ParallelCouplingScheme::advance()
 
 void ParallelCouplingScheme::explicitAdvance()
 {
-  TRACE();
+  PRECICE_TRACE();
   checkCompletenessRequiredActions();
-  CHECK(!hasToReceiveInitData() && !hasToSendInitData(),
+  PRECICE_CHECK(!hasToReceiveInitData() && !hasToSendInitData(),
         "initializeData() needs to be called before advance if data has to be initialized!");
   setHasDataBeenExchanged(false);
   setIsCouplingTimestepComplete(false);
@@ -166,22 +164,22 @@ void ParallelCouplingScheme::explicitAdvance()
     setTimesteps(getTimesteps() + 1);
 
     if (doesFirstStep()) {
-      DEBUG("Sending data...");
+      PRECICE_DEBUG("Sending data...");
       sendDt();
       sendData(getM2N());
 
-      DEBUG("Receiving data...");
+      PRECICE_DEBUG("Receiving data...");
       receiveAndSetDt();
       receiveData(getM2N());
       setHasDataBeenExchanged(true);
     }
     else { //second participant
-      DEBUG("Receiving data...");
+      PRECICE_DEBUG("Receiving data...");
       receiveAndSetDt();
       receiveData(getM2N());
       setHasDataBeenExchanged(true);
 
-      DEBUG("Sending data...");
+      PRECICE_DEBUG("Sending data...");
       sendDt();
       sendData(getM2N());
     }
@@ -193,10 +191,10 @@ void ParallelCouplingScheme::explicitAdvance()
 
 void ParallelCouplingScheme::implicitAdvance()
 {
-  TRACE(getTimesteps(), getTime());
+  PRECICE_TRACE(getTimesteps(), getTime());
   checkCompletenessRequiredActions();
 
-  CHECK(!hasToReceiveInitData() && !hasToSendInitData(),
+  PRECICE_CHECK(!hasToReceiveInitData() && !hasToSendInitData(),
         "initializeData() needs to be called before advance if data has to be initialized!");
 
   setHasDataBeenExchanged(false);
@@ -205,7 +203,7 @@ void ParallelCouplingScheme::implicitAdvance()
   bool convergenceCoarseOptimization = true;
   bool doOnlySolverEvaluation = false;
   if (math::equals(getThisTimestepRemainder(), 0.0, _eps)) {
-    DEBUG("Computed full length of iteration");
+    PRECICE_DEBUG("Computed full length of iteration");
     if (doesFirstStep()) { //First participant
       sendData(getM2N());
       getM2N()->receive(convergence);
@@ -226,7 +224,7 @@ void ParallelCouplingScheme::implicitAdvance()
 
       // measure convergence for coarse model optimization
       if(_isCoarseModelOptimizationActive){
-        DEBUG("measure convergence of coarse model optimization.");
+        PRECICE_DEBUG("measure convergence of coarse model optimization.");
         // in case of multilevel post processing only: measure the convergence of the coarse model optimization
         convergenceCoarseOptimization = measureConvergenceCoarseModelOptimization(designSpecifications);
         // Stop, when maximal iteration count (given in config) is reached
@@ -245,7 +243,7 @@ void ParallelCouplingScheme::implicitAdvance()
       }
       // measure convergence of coupling iteration
       else{
-        DEBUG("measure convergence.");
+        PRECICE_DEBUG("measure convergence.");
         doOnlySolverEvaluation = false;
 
         // measure convergence of the coupling iteration,
@@ -316,11 +314,11 @@ void ParallelCouplingScheme::implicitAdvance()
 
     // both participants
     if (not convergence) {
-      DEBUG("No convergence achieved");
+      PRECICE_DEBUG("No convergence achieved");
       requireAction(constants::actionReadIterationCheckpoint());
     }
     else {
-      DEBUG("Convergence achieved");
+      PRECICE_DEBUG("Convergence achieved");
       advanceTXTWriters();
     }
     updateTimeAndIterations(convergence, convergenceCoarseOptimization);
@@ -333,9 +331,9 @@ void ParallelCouplingScheme::implicitAdvance()
 
 void ParallelCouplingScheme::mergeData()
 {
-  TRACE();
-  assertion(!doesFirstStep(), "Only the second participant should do the post processing." );
-  assertion(_allData.empty(), "This function should only be called once.");
+  PRECICE_TRACE();
+  PRECICE_ASSERT(!doesFirstStep(), "Only the second participant should do the post processing." );
+  PRECICE_ASSERT(_allData.empty(), "This function should only be called once.");
   _allData.insert(getSendData().begin(), getSendData().end());
   _allData.insert(getReceiveData().begin(), getReceiveData().end());
 }

@@ -33,7 +33,7 @@ struct MasterComFixture {
       utils::MasterSlave::_communication->setRankOffset(1);
     }
     else {//Slaves
-      assertion(utils::Parallel::getProcessRank() > 0 && utils::Parallel::getProcessRank() < size);
+      PRECICE_ASSERT(utils::Parallel::getProcessRank() > 0 && utils::Parallel::getProcessRank() < size);
       utils::Parallel::splitCommunicator( "Slaves" );
       utils::MasterSlave::configure(utils::Parallel::getProcessRank(), size);
       utils::MasterSlave::_communication->requestConnection( "Master", "Slaves", utils::Parallel::getProcessRank()-1 , size-1 );
@@ -54,6 +54,7 @@ struct M2NFixture {
 
   M2NFixture()
   {
+    utils::MasterSlave::reset();
     auto participantCom = com::PtrCommunication(new com::MPIDirectCommunication());
     auto distrFactory = m2n::DistributedComFactory::SharedPointer(new m2n::GatherScatterComFactory(participantCom));
     m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory));
@@ -89,7 +90,7 @@ struct SplitParticipantsFixture {
       participantID = 1;
     }
     else {
-      assertion(utils::Parallel::getProcessRank() > 1 && utils::Parallel::getProcessRank() < 4);
+      PRECICE_ASSERT(utils::Parallel::getProcessRank() > 1 && utils::Parallel::getProcessRank() < 4);
       utils::Parallel::splitCommunicator( "ParticipantTwo" );
       utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator());
       utils::Parallel::clearGroups();

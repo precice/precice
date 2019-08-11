@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Eigen/Core>
-#include <boost/noncopyable.hpp>
 #include <iostream>
 
 #include "math/differences.hpp"
@@ -13,7 +12,7 @@ namespace mesh
 {
 
 /// Vertex of a mesh.
-class Vertex : public PropertyContainer, private boost::noncopyable
+class Vertex : public PropertyContainer
 {
 public:
   /// Constructor for vertex
@@ -107,7 +106,7 @@ template <typename VECTOR_T>
 void Vertex::setCoords(
     const VECTOR_T &coordinates)
 {
-  assertion(coordinates.size() == _coords.size(), coordinates.size(), _coords.size());
+  PRECICE_ASSERT(coordinates.size() == _coords.size(), coordinates.size(), _coords.size());
   _coords = coordinates;
 }
 
@@ -115,7 +114,7 @@ template <typename VECTOR_T>
 void Vertex::setCoords(
     VECTOR_T &&coordinates)
 {
-  assertion(coordinates.size() == _coords.size(), coordinates.size(), _coords.size());
+  PRECICE_ASSERT(coordinates.size() == _coords.size(), coordinates.size(), _coords.size());
   _coords = std::forward<VECTOR_T>(coordinates);
 }
 
@@ -123,7 +122,7 @@ template <typename VECTOR_T>
 void Vertex::setNormal(
     const VECTOR_T &normal)
 {
-  assertion(normal.size() == _normal.size(), normal.size(), _normal.size());
+  PRECICE_ASSERT(normal.size() == _normal.size(), normal.size(), _normal.size());
   _normal = normal;
 }
 
@@ -131,7 +130,7 @@ template <typename VECTOR_T>
 void Vertex::setNormal(
     VECTOR_T &&normal)
 {
-  assertion(normal.size() == _normal.size(), normal.size(), _normal.size());
+  PRECICE_ASSERT(normal.size() == _normal.size(), normal.size(), _normal.size());
   _normal = std::forward<VECTOR_T>(normal);
 }
 

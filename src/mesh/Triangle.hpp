@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Eigen/Core>
-#include <boost/noncopyable.hpp>
 #include <iostream>
 #include <algorithm>
 
@@ -27,7 +26,7 @@ namespace mesh
 {
 
 /// Triangle of a mesh, defined by three edges (and vertices).
-class Triangle : public PropertyContainer, private boost::noncopyable
+class Triangle : public PropertyContainer
 {
 public:
   /// Type of the read-only const random-access iterator over Vertex coords
@@ -108,6 +107,9 @@ public:
   template <typename VECTOR_T>
   void setNormal(const VECTOR_T &normal);
 
+  /// Computes and sets the normal of the triangle, returns the area-weighted normal.
+  const Eigen::VectorXd computeNormal(bool flip = false);
+
   /// Returns a among triangles globally unique ID.
   int getID() const;
 
@@ -154,13 +156,13 @@ private:
 
 inline Vertex &Triangle::vertex(int i)
 {
-  assertion((i >= 0) && (i < 3), i);
+  PRECICE_ASSERT((i >= 0) && (i < 3), i);
   return edge(i).vertex(_vertexMap[i]);
 }
 
 inline const Vertex &Triangle::vertex(int i) const
 {
-  assertion((i >= 0) && (i < 3), i);
+  PRECICE_ASSERT((i >= 0) && (i < 3), i);
   return edge(i).vertex(_vertexMap[i]);
 }
 
@@ -208,7 +210,7 @@ template <typename VECTOR_T>
 void Triangle::setNormal(
     const VECTOR_T &normal)
 {
-  assertion(normal.size() == getDimensions(), normal.size(), getDimensions());
+  PRECICE_ASSERT(normal.size() == getDimensions(), normal.size(), getDimensions());
   _normal = normal;
 }
 

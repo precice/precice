@@ -167,7 +167,7 @@ void ActionConfiguration:: xmlTagCallback
 (
   xml::XMLTag& callingTag )
 {
-  TRACE(callingTag.getName());
+  PRECICE_TRACE(callingTag.getName());
   if (callingTag.getNamespace() == TAG){
     _configuredAction = ConfiguredAction();
     _configuredAction.type = callingTag.getName();
@@ -213,16 +213,16 @@ int ActionConfiguration:: getUsedMeshID() const
       return mesh->getID();
     }
   }
-  ERROR("No mesh ID found!");
+  PRECICE_ERROR("No mesh ID found!");
   return -1; // To please compiler
 }
 
 
 void ActionConfiguration:: createAction()
 {
-  TRACE();
+  PRECICE_TRACE();
 
-  assertion(_configuredAction.type != std::string(""));
+  PRECICE_ASSERT(_configuredAction.type != std::string(""));
   action::Action::Timing timing = getTiming();
 
   // Determine data and mesh
@@ -310,13 +310,13 @@ void ActionConfiguration:: createAction()
         mesh, targetDataID, sourceDataID) );
   }
   #endif
-  assertion(action.get() != nullptr);
+  PRECICE_ASSERT(action.get() != nullptr);
   _actions.push_back(action);
 }
 
 action::Action::Timing ActionConfiguration:: getTiming () const
 {
-  TRACE(_configuredAction.timing );
+  PRECICE_TRACE(_configuredAction.timing );
   action::Action::Timing timing;
   if ( _configuredAction.timing == VALUE_REGULAR_PRIOR ){
     timing = action::Action::ALWAYS_PRIOR;
@@ -334,7 +334,7 @@ action::Action::Timing ActionConfiguration:: getTiming () const
     timing = action::Action::ON_TIMESTEP_COMPLETE_POST;
   }
   else {
-    ERROR("Unknown action timing \"" <<  _configuredAction.timing << "\"!" );
+    PRECICE_ERROR("Unknown action timing \"" <<  _configuredAction.timing << "\"!" );
   }
   return timing;
 }

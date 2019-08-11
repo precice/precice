@@ -151,7 +151,7 @@ void M2NConfiguration::xmlTagCallback(xml::XMLTag &tag)
       std::string network = tag.getStringAttributeValue("network");
       int         port    = tag.getIntAttributeValue("port");
 
-      CHECK(not utils::isTruncated<unsigned short>(port),
+      PRECICE_CHECK(not utils::isTruncated<unsigned short>(port),
             "The value given for the \"port\" attribute is not a 16-bit unsigned integer: " << port);
 
       std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
@@ -190,17 +190,17 @@ void M2NConfiguration::xmlTagCallback(xml::XMLTag &tag)
 #endif
     }
 
-    assertion(com.get() != nullptr);
+    PRECICE_ASSERT(com.get() != nullptr);
 
     DistributedComFactory::SharedPointer distrFactory;
     if (tag.getName() == "mpi-single" || distrType == VALUE_GATHER_SCATTER) {
-      assertion(distrType == VALUE_GATHER_SCATTER);
+      PRECICE_ASSERT(distrType == VALUE_GATHER_SCATTER);
       distrFactory = std::make_shared<GatherScatterComFactory>(com);
     } else if (distrType == VALUE_POINT_TO_POINT) {
-      assertion(tag.getName() == "mpi" or tag.getName() == "mpi-singleports" or tag.getName() == "sockets");
+      PRECICE_ASSERT(tag.getName() == "mpi" or tag.getName() == "mpi-singleports" or tag.getName() == "sockets");
       distrFactory = std::make_shared<PointToPointComFactory>(comFactory);
     }
-    assertion(distrFactory.get() != nullptr);
+    PRECICE_ASSERT(distrFactory.get() != nullptr);
 
     auto m2n = std::make_shared<m2n::M2N>(com, distrFactory);
     _m2ns.push_back(std::make_tuple(m2n, from, to));
