@@ -26,7 +26,7 @@ using namespace precice::acceleration::impl;
 
 AccelerationConfiguration::AccelerationConfiguration(
     const mesh::PtrMeshConfiguration &meshConfig)
-    : TAG("post-processing"),
+    : TAG("acceleration"),
       TAG_RELAX("relaxation"),
       TAG_INIT_RELAX("initial-relaxation"),
       TAG_MAX_USED_ITERATIONS("max-used-iterations"),

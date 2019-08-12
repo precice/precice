@@ -38,13 +38,13 @@
          <exchange data="DataTwo" mesh="MeshOne" from="SolverOne" to="SolverTwo"/>
          <absolute-convergence-measure limit="1e-5" data="DataOne" mesh="MeshOne"/>
          <max-iterations value="2" />
-         <post-processing:IQN-ILS>
+         <acceleration:IQN-ILS>
             <data name="DataOne" mesh="MeshOne"/>
             <initial-relaxation value="1.0"/>
             <max-used-iterations value="50"/>
             <timesteps-reused value="0"/>
             <filter type="QR2" limit="1e-3"/>
-         </post-processing:IQN-ILS>
+         </acceleration:IQN-ILS>
       </coupling-scheme:serial-implicit>
 
    </solver-interface>
