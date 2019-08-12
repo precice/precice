@@ -151,7 +151,7 @@ private:
 
   m2n::M2NConfiguration::SharedPointer _m2nConfig;
 
-  acceleration::PtrAccelerationConfiguration _postProcConfig;
+  acceleration::PtrAccelerationConfiguration _accelerationConfig;
 
   /// Map from participant name to coupling scheme (composition).
   std::map<std::string, PtrCouplingScheme> _couplingSchemes;

@@ -415,7 +415,7 @@ BOOST_AUTO_TEST_CASE(testParseConfigurationWithRelaxation)
   CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
 
   xml::configure(root, path);
-  BOOST_CHECK(cplSchemeConfig._postProcConfig->getAcceleration().get()); // no nullptr
+  BOOST_CHECK(cplSchemeConfig._accelerationConfig->getAcceleration().get()); // no nullptr
   meshConfig->setMeshSubIDs();
 }
 

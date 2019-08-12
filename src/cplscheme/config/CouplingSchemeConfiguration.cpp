@@ -150,7 +150,7 @@ void CouplingSchemeConfiguration::xmlTagCallback(
   PRECICE_TRACE(tag.getFullName());
   if (tag.getNamespace() == TAG) {
     _config.type = tag.getName();
-    _postProcConfig->clear();
+    _accelerationConfig->clear();
   } else if (tag.getName() == TAG_PARTICIPANTS) {
     _config.participants.push_back(tag.getStringAttributeValue(ATTR_FIRST));
     _config.participants.push_back(tag.getStringAttributeValue(ATTR_SECOND));
@@ -542,12 +542,12 @@ void CouplingSchemeConfiguration::addTagAcceleration(
     xml::XMLTag &tag)
 {
   PRECICE_TRACE(tag.getFullName());
-  if (_postProcConfig.get() == nullptr) {
-    _postProcConfig = acceleration::PtrAccelerationConfiguration(
+  if (_accelerationConfig.get() == nullptr) {
+    _accelerationConfig = acceleration::PtrAccelerationConfiguration(
         new acceleration::AccelerationConfiguration(_meshConfig));
   }
-  _postProcConfig->setIsAddManifoldMappingTagAllowed(true);
-  _postProcConfig->connectTags(tag);
+  _accelerationConfig->setIsAddManifoldMappingTagAllowed(true);
+  _accelerationConfig->connectTags(tag);
 }
 
 void CouplingSchemeConfiguration::addAbsoluteConvergenceMeasure(
@@ -680,14 +680,14 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialImplicitCouplingSchem
   }
 
   // Set relaxation parameters
-  if (_postProcConfig->getAcceleration().get() != nullptr) {
-    for (std::string &neededMesh : _postProcConfig->getNeededMeshes()) {
+  if (_accelerationConfig->getAcceleration().get() != nullptr) {
+    for (std::string &neededMesh : _accelerationConfig->getNeededMeshes()) {
       _meshConfig->addNeededMesh(_config.participants[1], neededMesh);
     }
-    for (const int dataID : _postProcConfig->getAcceleration()->getDataIDs()) {
+    for (const int dataID : _accelerationConfig->getAcceleration()->getDataIDs()) {
       checkIfDataIsExchanged(dataID);
     }
-    scheme->setIterationAcceleration(_postProcConfig->getAcceleration());
+    scheme->setIterationAcceleration(_accelerationConfig->getAcceleration());
   }
   return PtrCouplingScheme(scheme);
 }
@@ -721,14 +721,14 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelImplicitCouplingSch
   }
 
   // Set relaxation parameters
-  if (_postProcConfig->getAcceleration().get() != nullptr) {
-    for (std::string &neededMesh : _postProcConfig->getNeededMeshes()) {
+  if (_accelerationConfig->getAcceleration().get() != nullptr) {
+    for (std::string &neededMesh : _accelerationConfig->getNeededMeshes()) {
       _meshConfig->addNeededMesh(_config.participants[1], neededMesh);
     }
-    for (const int dataID : _postProcConfig->getAcceleration()->getDataIDs()) {
+    for (const int dataID : _accelerationConfig->getAcceleration()->getDataIDs()) {
       checkIfDataIsExchanged(dataID);
     }
-    scheme->setIterationAcceleration(_postProcConfig->getAcceleration());
+    scheme->setIterationAcceleration(_accelerationConfig->getAcceleration());
   }
   return PtrCouplingScheme(scheme);
 }
@@ -782,15 +782,15 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
   }
 
   // Set relaxation parameters
-  if (_postProcConfig->getAcceleration().get() != nullptr) {
-    for (std::string &neededMesh : _postProcConfig->getNeededMeshes()) {
+  if (_accelerationConfig->getAcceleration().get() != nullptr) {
+    for (std::string &neededMesh : _accelerationConfig->getNeededMeshes()) {
       _meshConfig->addNeededMesh(_config.controller, neededMesh);
     }
-    for (const int dataID : _postProcConfig->getAcceleration()->getDataIDs()) {
+    for (const int dataID : _accelerationConfig->getAcceleration()->getDataIDs()) {
       checkIfDataIsExchanged(dataID);
     }
 
-    scheme->setIterationAcceleration(_postProcConfig->getAcceleration());
+    scheme->setIterationAcceleration(_accelerationConfig->getAcceleration());
   }
   return PtrCouplingScheme(scheme);
 }
@@ -913,11 +913,11 @@ bool CouplingSchemeConfiguration::checkIfDataIsCoarse(
   bool isCoarse = false;
   bool err      = false;
   // check if acceleration is defined.
-  if (_postProcConfig->getAcceleration().get() == nullptr)
+  if (_accelerationConfig->getAcceleration().get() == nullptr)
     return false;
 
   // check if id is contained within fine Data IDs
-  const std::vector<int> &fineIDs = _postProcConfig->getAcceleration()->getDataIDs();
+  const std::vector<int> &fineIDs = _accelerationConfig->getAcceleration()->getDataIDs();
   isCoarse                        = not utils::contained(id, fineIDs);
 
   std::cout << " fineIDs = [";
@@ -931,9 +931,9 @@ bool CouplingSchemeConfiguration::checkIfDataIsCoarse(
     return false;
 
   if (isCoarse) {
-    if (_postProcConfig->getCoarseModelOptimizationConfig().get() != nullptr &&
-        _postProcConfig->getCoarseModelOptimizationConfig()->getAcceleration().get() != nullptr) {
-      const std::vector<int> &coarseIDs = _postProcConfig->getCoarseModelOptimizationConfig()->getAcceleration()->getDataIDs();
+    if (_accelerationConfig->getCoarseModelOptimizationConfig().get() != nullptr &&
+        _accelerationConfig->getCoarseModelOptimizationConfig()->getAcceleration().get() != nullptr) {
+      const std::vector<int> &coarseIDs = _accelerationConfig->getCoarseModelOptimizationConfig()->getAcceleration()->getDataIDs();
       isCoarse                          = utils::contained(id, coarseIDs);
 
       std::cout << " coarseIDs = [";
