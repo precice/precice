@@ -119,7 +119,7 @@ public:
   void getProperties(int propertyID, std::vector<value_t> &properties) const;
 
 private:
-  mutable logging::Logger _log{"mesh::PropertyContainer"};
+  static logging::Logger _log;
 
   /// Manager to ensure unique identification of all properties.
   static std::unique_ptr<utils::ManageUniqueIDs> _manageUniqueIDs;
