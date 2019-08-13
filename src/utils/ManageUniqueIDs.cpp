@@ -9,7 +9,7 @@ int ManageUniqueIDs::getFreeID()
 {
   bool notFound = true;
   while (notFound) {
-    if (!_ids.contains(_lowerLimit)) {
+    if (_ids.find(_lowerLimit) == _ids.end()) {
       notFound = false;
     }
     _lowerLimit++;
@@ -20,7 +20,7 @@ int ManageUniqueIDs::getFreeID()
 
 bool ManageUniqueIDs::insertID(int id)
 {
-  if (_ids.contains(id)) {
+  if (_ids.find(id) != _ids.end()) {
     return false;
   }
 
