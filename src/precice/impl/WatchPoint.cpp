@@ -35,6 +35,12 @@ const mesh::PtrMesh &WatchPoint::mesh() const
 void WatchPoint::initialize()
 {
   PRECICE_TRACE();
+  // Clear to allow reinitialization
+  _txtWriter.reset();
+  _weights.clear();
+  _vertices.clear();
+  _dataToExport.clear();
+
   // Find closest vertex
   if (_mesh->vertices().size() > 0) {
     query::FindClosestVertex findVertex(_point);
