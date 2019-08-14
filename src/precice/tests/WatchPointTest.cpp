@@ -57,6 +57,20 @@ BOOST_AUTO_TEST_CASE(WatchPoint)
   }
   watchpoint0.exportPointData(1.0);
   watchpoint1.exportPointData(1.0);
+
+  // Change Mesh
+  mesh::Vertex& v5 = mesh->createVertex(Eigen::Vector2d(3.0, 2.0));
+  mesh->createEdge(v4,v5);
+  mesh->allocateDataValues();
+  mesh->computeState();
+
+  // Re-Initialize
+  watchpoint0.initialize();
+  watchpoint1.initialize();
+
+  // Write output
+  watchpoint0.exportPointData(2.0);
+  watchpoint1.exportPointData(2.0);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Precice
