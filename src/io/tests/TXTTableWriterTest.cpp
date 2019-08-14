@@ -23,6 +23,15 @@ BOOST_AUTO_TEST_CASE(TXTTableWriterTest)
                                                 0.0 + 2.0 * (double) t,
                                                 0.0 + 2.0 * (double) t));
   }
+  writer.reset();
+
+  writer.addData("Timestep", TXTTableWriter::INT);
+  writer.addData("Importance", TXTTableWriter::INT);
+
+  for (int t = 0; t < 10; t++) {
+    writer.writeData("Timestep", t);
+    writer.writeData("Importance", t*2);
+  }
   writer.close();
 }
 

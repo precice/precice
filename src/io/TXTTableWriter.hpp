@@ -74,6 +74,9 @@ public:
   /// Closes the file, is automatically called on destruction.
   void close();
 
+  /// Resets the table information.
+  void reset();
+
 private:
   /// Represents one data entry to be written.
   struct Data {
