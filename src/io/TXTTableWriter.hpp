@@ -29,9 +29,6 @@ public:
   /// Constructor, opens file.
   explicit TXTTableWriter(const std::string &filename);
 
-  /// Destructor, closes file, if not done yet.
-  ~TXTTableWriter();
-
   /**
    * @brief Adds a data entry to the table.
    *

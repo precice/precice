@@ -22,13 +22,6 @@ TXTTableWriter::TXTTableWriter(
   _outputStream << std::setprecision(16);
 }
 
-TXTTableWriter::~TXTTableWriter()
-{
-  if (_outputStream.is_open()) {
-    _outputStream.close();
-  }
-}
-
 void TXTTableWriter::addData(
     const std::string &name,
     DataType           type)
