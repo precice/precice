@@ -62,7 +62,7 @@ public:
   /// Returns the radius of the enclosing circle of the edge.
   double getEnclosingRadius () const;
 
-  /// Checks weather both eadges share a vertex.
+  /// Checks whether both edges share a vertex.
   bool connectedTo(const Edge& other) const;
 
   /**
