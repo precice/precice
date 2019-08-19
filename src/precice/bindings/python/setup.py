@@ -55,7 +55,7 @@ def get_extensions(mpi_compiler_wrapper):
 
     # need to include libs here, because distutils messes up the order
     compile_args = ["-I" + PRECICE_ROOT, "-Wall", "-std=c++11"] + mpi_compile_args
-    link_args = ["-L" + PRECICE_ROOT + "/build/last/", "-lprecice"] + mpi_link_args
+    link_args = ["-L" + os.path.join(PRECICE_ROOT, "build/last/"), "-lprecice"] + mpi_link_args
 
     return [
         Extension(
@@ -127,26 +127,6 @@ class my_build(build, object):
 
         super(my_build, self).finalize_options()
         
-
-mpi_compiler_wrapper = "mpic++"
-mpi_compile_args, mpi_link_args = determine_mpi_args(mpi_compiler_wrapper)
-
-# need to include libs here, because distutils messes up the order
-compile_args = ["-I" + PRECICE_ROOT, "-Wall", "-std=c++11"] + mpi_compile_args
-link_args = ["-L" + PRECICE_ROOT + "/build/last/", "-lprecice"] + mpi_link_args
-
-extensions = [
-    Extension(
-        APPNAME,
-        sources=[os.path.join(PYTHON_BINDINGS_PATH, APPNAME) + ".pyx"],
-        libraries=[],
-        include_dirs=[PRECICE_ROOT],
-        language="c++",
-        extra_compile_args=compile_args,
-        extra_link_args=link_args
-    )
-]
-
 
 # build precice.so python extension to be added to "PYTHONPATH" later
 setup(

@@ -9,6 +9,8 @@
 
 
 namespace precice {
+extern bool syncMode;
+
 namespace mapping {
 
 NearestNeighborMapping:: NearestNeighborMapping
@@ -18,8 +20,8 @@ NearestNeighborMapping:: NearestNeighborMapping
 :
   Mapping(constraint, dimensions)
 {
-  setInputRequirement(VERTEX);
-  setOutputRequirement(VERTEX);
+  setInputRequirement(Mapping::MeshRequirement::VERTEX);
+  setOutputRequirement(Mapping::MeshRequirement::VERTEX);
 }
 
 void NearestNeighborMapping:: computeMapping()
@@ -29,11 +31,11 @@ void NearestNeighborMapping:: computeMapping()
   assertion(input().get() != nullptr);
   assertion(output().get() != nullptr);
 
-  precice::utils::Event e("map.nn.computeMapping.From" + input()->getName() + "To" + output()->getName());
+  precice::utils::Event e("map.nn.computeMapping.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
   
   if (getConstraint() == CONSISTENT){
     DEBUG("Compute consistent mapping");
-    mesh::rtree::PtrRTree rtree = mesh::rtree::getVertexRTree(input());
+    mesh::rtree::PtrVertexRTree rtree = mesh::rtree::getVertexRTree(input());
     size_t verticesSize = output()->vertices().size();
     _vertexIndices.resize(verticesSize);
     const mesh::Mesh::VertexContainer& outputVertices = output()->vertices();
@@ -49,7 +51,7 @@ void NearestNeighborMapping:: computeMapping()
   else {
     assertion(getConstraint() == CONSERVATIVE, getConstraint());
     DEBUG("Compute conservative mapping");
-    mesh::rtree::PtrRTree rtree = mesh::rtree::getVertexRTree(output());
+    mesh::rtree::PtrVertexRTree rtree = mesh::rtree::getVertexRTree(output());
     size_t verticesSize = input()->vertices().size();
     _vertexIndices.resize(verticesSize);
     const mesh::Mesh::VertexContainer& inputVertices = input()->vertices();
@@ -85,7 +87,7 @@ void NearestNeighborMapping:: map
 {
   TRACE(inputDataID, outputDataID);
 
-  precice::utils::Event e("map.nn.mapData.From" + input()->getName() + "To" + output()->getName());
+  precice::utils::Event e("map.nn.mapData.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
 
   const Eigen::VectorXd& inputValues = input()->data(inputDataID)->values();
   Eigen::VectorXd& outputValues = output()->data(outputDataID)->values();

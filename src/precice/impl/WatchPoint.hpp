@@ -27,9 +27,9 @@ public:
    * @param[in] meshToWatch Mesh to be watched, can be empty on construction.
    */
   WatchPoint (
-    const Eigen::VectorXd& pointCoords,
-    const mesh::PtrMesh&   meshToWatch,
-    const std::string&     exportFilename );
+    Eigen::VectorXd    pointCoords,
+    mesh::PtrMesh      meshToWatch,
+    const std::string& exportFilename );
 
   const mesh::PtrMesh& mesh() const;
   

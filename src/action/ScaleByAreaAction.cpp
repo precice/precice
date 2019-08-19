@@ -13,7 +13,7 @@ ScaleByAreaAction::ScaleByAreaAction(
     int                  targetDataID,
     const mesh::PtrMesh &mesh,
     Scaling              scaling)
-    : Action(timing, mesh),
+    : Action(timing, mesh, mapping::Mapping::MeshRequirement::FULL),
       _targetData(mesh->data(targetDataID)),
       _scaling(scaling)
 {

@@ -1,6 +1,18 @@
 cmake_minimum_required (VERSION 3.5)
 
-project(preCICE VERSION 1.2.0 LANGUAGES CXX)
+project(preCICE VERSION 1.3.0 LANGUAGES CXX)
+
+# CMake Policies
+
+# CMP0074: find_package() uses <PackageName>_ROOT variables.
+if(POLICY CMP0074)
+    cmake_policy(SET CMP0074 NEW)
+endif()
+# CMP0075 Include file check macros honor CMAKE_REQUIRED_LIBRARIES
+if(POLICY CMP0075)
+    cmake_policy(SET CMP0075 NEW)
+endif()
+
 
 list (APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/tools/cmake-modules")
 
@@ -88,8 +100,8 @@ endif()
 
 
 # Create versions.hpp and add binary dir to include dirs
-configure_file("${PROJECT_SOURCE_DIR}/src/versions.hpp.in" "${PROJECT_BINARY_DIR}/versions.hpp" @ONLY)
-include_directories(${PROJECT_BINARY_DIR})
+configure_file("${PROJECT_SOURCE_DIR}/src/versions.hpp.in" "${PROJECT_BINARY_DIR}/src/versions.hpp" @ONLY)
+include_directories("${PROJECT_BINARY_DIR}/src")
 
 add_subdirectory("src")
 include_directories("src")
@@ -117,10 +129,6 @@ add_executable(testprecice
   "src/testing/main.cpp" ${sourcesTests})
 target_link_libraries(testprecice Threads::Threads)
 target_link_libraries(testprecice precice)
-
-# Create a symlink to the last build from build/last directory.
-add_custom_target(symlink ALL
-  COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_BINARY_DIR} ${PROJECT_SOURCE_DIR}/build/last)
 
 install(TARGETS precice binprecice
   LIBRARY DESTINATION lib

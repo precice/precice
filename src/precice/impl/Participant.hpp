@@ -52,7 +52,7 @@ public:
    * @param[in] name Name of the participant. Has to be unique.
    */
   Participant (
-    const std::string&          name,
+    std::string                 name,
     mesh::PtrMeshConfiguration& meshConfig );
 
   virtual ~Participant();

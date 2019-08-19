@@ -54,7 +54,7 @@ public:
   virtual void send(double itemToSend, int rankReceiver) override;
 
   /// Asynchronously sends a double to process with given rank.
-  virtual PtrRequest aSend(double itemToSend, int rankReceiver) override;
+  virtual PtrRequest aSend(const double& itemToSend, int rankReceiver) override;
 
   /**
    * @brief Sends an int to process with given rank.
@@ -64,7 +64,7 @@ public:
   virtual void send(int itemToSend, int rankReceiver) override;
 
   /// Asynchronously sends an int to process with given rank.
-  virtual PtrRequest aSend(int itemToSend, int rankReceiver) override;
+  virtual PtrRequest aSend(const int& itemToSend, int rankReceiver) override;
 
   /**
    * @brief Sends a bool to process with given rank.
@@ -74,7 +74,7 @@ public:
   virtual void send(bool itemToSend, int rankReceiver) override;
 
   /// Asynchronously sends a bool to process with given rank.
-  virtual PtrRequest aSend(bool itemToSend, int rankReceiver) override;
+  virtual PtrRequest aSend(const bool& itemToSend, int rankReceiver) override;
 
   /**
    * @brief Receives a std::string from process with given rank.

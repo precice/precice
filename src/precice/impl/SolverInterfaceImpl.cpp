@@ -30,7 +30,8 @@
 #include "partition/ReceivedPartition.hpp"
 #include "partition/ProvidedPartition.hpp"
 
-#include <signal.h> // used for installing crash handler
+#include <csignal> // used for installing crash handler
+#include <utility>
 
 #include "logging/Logger.hpp"
 #include "logging/LogConfiguration.hpp"
@@ -51,12 +52,12 @@ namespace impl {
 
 SolverInterfaceImpl:: SolverInterfaceImpl
 (
-  const std::string& participantName,
-  int                accessorProcessRank,
-  int                accessorCommunicatorSize,
-  bool               serverMode )
+  std::string participantName,
+  int         accessorProcessRank,
+  int         accessorCommunicatorSize,
+  bool        serverMode )
 :
-  _accessorName(participantName),
+  _accessorName(std::move(participantName)),
   _accessorProcessRank(accessorProcessRank),
   _accessorCommunicatorSize(accessorCommunicatorSize),
   _serverMode(serverMode)
@@ -95,7 +96,7 @@ void SolverInterfaceImpl:: configure
 {
   TRACE();
 
-  Event e("configure");
+  Event e("configure"); // no precice::syncMode as this is not yet configured here
   utils::ScopedEventPrefix sep("configure/");
 
   mesh::Mesh::resetGeometryIDsGlobally();
@@ -142,7 +143,7 @@ void SolverInterfaceImpl:: configure
   }
 
   // Add meshIDs and data IDs
-  for (MeshContext* meshContext : _accessor->usedMeshContexts()) {
+  for (const MeshContext* meshContext : _accessor->usedMeshContexts()) {
     const mesh::PtrMesh& mesh = meshContext->mesh;
     for (std::pair<std::string,int> nameID : mesh->getNameIDPairs()) {
       assertion(not utils::contained(nameID.first, _meshIDs));
@@ -172,15 +173,15 @@ void SolverInterfaceImpl:: configure
   }
 
   auto & solverInitEvent = EventRegistry::instance().getStoredEvent("solver.initialize");
-  solverInitEvent.start();
+  solverInitEvent.start(precice::syncMode);
 }
 
 double SolverInterfaceImpl:: initialize()
 {
   TRACE();
   auto & solverInitEvent = EventRegistry::instance().getStoredEvent("solver.initialize");
-  solverInitEvent.pause();
-  Event e("initialize");
+  solverInitEvent.pause(precice::syncMode);
+  Event e("initialize", precice::syncMode);
   utils::ScopedEventPrefix sep("initialize/");
   
   if (_clientMode){
@@ -190,9 +191,8 @@ double SolverInterfaceImpl:: initialize()
   else {
     // Setup communication
 
-    typedef std::map<std::string,M2NWrap>::value_type M2NPair;
     INFO("Setting up master communication to coupling partner/s " );
-    for (M2NPair& m2nPair : _m2ns) {
+    for (auto& m2nPair : _m2ns) {
       m2n::PtrM2N& m2n = m2nPair.second.m2n;
       std::string localName = _accessorName;
       if (_serverMode) localName += "Server";
@@ -215,9 +215,8 @@ double SolverInterfaceImpl:: initialize()
 
     computePartitions();
 
-    typedef std::map<std::string,M2NWrap>::value_type M2NPair;
     INFO("Setting up slaves communication to coupling partner/s " );
-    for (M2NPair& m2nPair : _m2ns) {
+    for (auto& m2nPair : _m2ns) {
       m2n::PtrM2N& m2n = m2nPair.second.m2n;
       std::string localName = _accessorName;
       std::string remoteName(m2nPair.first);
@@ -260,7 +259,7 @@ double SolverInterfaceImpl:: initialize()
     INFO(_couplingScheme->printCouplingState());
   }
 
-  solverInitEvent.start();
+  solverInitEvent.start(precice::syncMode);
 
   return _couplingScheme->getNextTimestepMaxLength();
 }
@@ -270,9 +269,9 @@ void SolverInterfaceImpl:: initializeData ()
   TRACE();
 
   auto & solverInitEvent = EventRegistry::instance().getStoredEvent("solver.initialize");
-  solverInitEvent.pause();
+  solverInitEvent.pause(precice::syncMode);
 
-  Event e("initializeData");
+  Event e("initializeData", precice::syncMode);
   utils::ScopedEventPrefix sep("initializeData/");
 
   CHECK(_couplingScheme->isInitialized(),
@@ -303,7 +302,7 @@ void SolverInterfaceImpl:: initializeData ()
       }
     }
   }
-  solverInitEvent.start();
+  solverInitEvent.start(precice::syncMode);
 }
 
 double SolverInterfaceImpl:: advance
@@ -314,11 +313,11 @@ double SolverInterfaceImpl:: advance
 
   // Events for the solver time, stopped when we enter, restarted when we leave advance
   auto & solverEvent = EventRegistry::instance().getStoredEvent("solver.advance");
-  solverEvent.stop();
+  solverEvent.stop(precice::syncMode);
   auto & solverInitEvent = EventRegistry::instance().getStoredEvent("solver.initialize");
-  solverInitEvent.stop();
+  solverInitEvent.stop(precice::syncMode);
 
-  Event e("advance");
+  Event e("advance", precice::syncMode);
   utils::ScopedEventPrefix sep("advance/");
 
   CHECK(_couplingScheme->isInitialized(), "initialize() has to be called before advance()");
@@ -388,7 +387,7 @@ double SolverInterfaceImpl:: advance
     //resetWrittenData();
 
   }
-  solverEvent.start();
+  solverEvent.start(precice::syncMode);
   return _couplingScheme->getNextTimestepMaxLength();
 }
 
@@ -398,9 +397,9 @@ void SolverInterfaceImpl:: finalize()
 
   // Events for the solver time, finally stopped here
   auto & solverEvent = EventRegistry::instance().getStoredEvent("solver.advance");
-  solverEvent.stop();
+  solverEvent.stop(precice::syncMode);
 
-  Event e("finalize");
+  Event e("finalize"); // no precice::syncMode here as MPI is already finalized at destruction of this event
   utils::ScopedEventPrefix sep("finalize/");
 
   CHECK(_couplingScheme->isInitialized(), "initialize() has to be called before finalize()");
@@ -754,7 +753,7 @@ int SolverInterfaceImpl:: setMeshEdge
   else {
     CHECK(not _couplingScheme->isInitialized(), "Edges can only be defined before initialize() is called");
     MeshContext& context = _accessor->meshContext(meshID);
-    if ( context.meshRequirement == mapping::Mapping::FULL ){
+    if ( context.meshRequirement == mapping::Mapping::MeshRequirement::FULL ){
       DEBUG("Full mesh required.");
       mesh::PtrMesh& mesh = context.mesh;
       assertion(firstVertexID >= 0, firstVertexID);
@@ -786,7 +785,7 @@ void SolverInterfaceImpl:: setMeshTriangle
   else {
     CHECK(not _couplingScheme->isInitialized(), "Triangles can only be defined before initialize() is called");
     MeshContext& context = _accessor->meshContext(meshID);
-    if ( context.meshRequirement == mapping::Mapping::FULL ){
+    if ( context.meshRequirement == mapping::Mapping::MeshRequirement::FULL ){
       mesh::PtrMesh& mesh = context.mesh;
       assertion ( firstEdgeID >= 0 );
       assertion ( secondEdgeID >= 0 );
@@ -820,7 +819,7 @@ void SolverInterfaceImpl:: setMeshTriangleWithEdges
   }
   CHECK(not _couplingScheme->isInitialized(), "Triangles can only be defined before initialize() is called");
   MeshContext& context = _accessor->meshContext(meshID);
-  if (context.meshRequirement == mapping::Mapping::FULL){
+  if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL){
     mesh::PtrMesh& mesh = context.mesh;
     assertion(firstVertexID >= 0, firstVertexID);
     assertion(secondVertexID >= 0, secondVertexID);
@@ -914,7 +913,7 @@ void SolverInterfaceImpl:: setMeshQuad
   else {
     CHECK(not _couplingScheme->isInitialized(), "Quads can only be defined before initialize() is called");
     MeshContext& context = _accessor->meshContext(meshID);
-    if (context.meshRequirement == mapping::Mapping::FULL){
+    if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL){
       mesh::PtrMesh& mesh = context.mesh;
       assertion(firstEdgeID >= 0);
       assertion(secondEdgeID >= 0);
@@ -950,7 +949,7 @@ void SolverInterfaceImpl:: setMeshQuadWithEdges
   }
   CHECK(not _couplingScheme->isInitialized(), "Quads can only be defined before initialize() is called");
   MeshContext& context = _accessor->meshContext(meshID);
-  if (context.meshRequirement == mapping::Mapping::FULL){
+  if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL){
     mesh::PtrMesh& mesh = context.mesh;
     assertion(firstVertexID >= 0, firstVertexID);
     assertion(secondVertexID >= 0, secondVertexID);
@@ -1145,7 +1144,7 @@ void SolverInterfaceImpl:: writeBlockVectorData
   }
   else { //couplingMode
     CHECK(_accessor->isDataUsed(fromDataID),
-          "You try to write to data /// @todo: hat is not defined for " << _accessor->getName());
+          "You try to write to data that is not defined for " << _accessor->getName());
     DataContext& context = _accessor->dataContext(fromDataID);
     CHECK(context.fromData->getDimensions()==_dimensions,
         "You cannot call writeBlockVectorData on the scalar data type " << context.fromData->getName());
@@ -1391,7 +1390,7 @@ void SolverInterfaceImpl:: exportMesh
     bool exportAll = exportType == constants::exportAll();
     bool exportThis = context.exporter->getType() == exportType;
     if ( exportAll || exportThis ){
-      for (MeshContext* meshContext : _accessor->usedMeshContexts()) {
+      for (const MeshContext* meshContext : _accessor->usedMeshContexts()) {
         std::string name = meshContext->mesh->getName() + "-" + filenameSuffix;
         DEBUG ( "Exporting mesh to file \"" << name << "\" at location \"" << context.location << "\"" );
         context.exporter->doExport ( name, context.location, *(meshContext->mesh) );
@@ -1409,7 +1408,7 @@ MeshHandle SolverInterfaceImpl:: getMeshHandle
   assertion(not _clientMode);
   for (MeshContext* context : _accessor->usedMeshContexts()){
     if (context->mesh->getName() == meshName){
-      return MeshHandle(context->mesh->content());
+      return {context->mesh->content()};
     }
   }
   ERROR("Participant \"" << _accessorName
@@ -1428,8 +1427,7 @@ void SolverInterfaceImpl:: configureM2Ns
   const m2n::M2NConfiguration::SharedPointer& config )
 {
   TRACE();
-  typedef m2n::M2NConfiguration::M2NTuple M2NTuple;
-  for (M2NTuple m2nTuple : config->m2ns()) {
+  for (const auto& m2nTuple : config->m2ns()) {
     std::string comPartner("");
     bool isRequesting = false;
     if (std::get<1>(m2nTuple) == _accessorName){
@@ -1472,8 +1470,8 @@ void SolverInterfaceImpl:: configurePartitions
       bool hasToSend = false; /// @todo multiple sends
       m2n::PtrM2N m2n;
 
-      for (PtrParticipant receiver : _participants ) {
-        for (MeshContext* receiverContext : receiver->usedMeshContexts()) {
+      for (auto& receiver : _participants ) {
+        for (auto& receiverContext : receiver->usedMeshContexts()) {
           if(receiverContext->receiveMeshFrom == _accessorName && receiverContext->mesh->getName() == context->mesh->getName()){
             CHECK( not hasToSend, "Mesh " << context->mesh->getName() << " can currently only be received once.")
             hasToSend = true;
@@ -1717,7 +1715,7 @@ void SolverInterfaceImpl:: handleExports()
 
   if (_couplingScheme->isCouplingTimestepComplete()){
     // Export watch point data
-    for (PtrWatchPoint watchPoint : _accessor->watchPoints()) {
+    for (const PtrWatchPoint& watchPoint : _accessor->watchPoints()) {
       watchPoint->exportPointData(_couplingScheme->getTime());
     }
   }
@@ -1740,8 +1738,7 @@ PtrParticipant SolverInterfaceImpl:: determineAccessingParticipant
 (
    const config::SolverInterfaceConfiguration& config )
 {
-  config::PtrParticipantConfiguration partConfig =
-      config.getParticipantConfiguration ();
+  const auto& partConfig = config.getParticipantConfiguration();
   for (const PtrParticipant& participant : partConfig->getParticipants()) {
     if ( participant->getName() == _accessorName ) {
       return participant;
@@ -1771,7 +1768,7 @@ void SolverInterfaceImpl:: initializeMasterSlaveCommunication()
 {
   TRACE();
 
-  Event e("com.initializeMasterSlaveCom");
+  Event e("com.initializeMasterSlaveCom", precice::syncMode);
   //slaves create new communicator with ranks 0 to size-2
   //therefore, the master uses a rankOffset and the slaves have to call request
   // with that offset

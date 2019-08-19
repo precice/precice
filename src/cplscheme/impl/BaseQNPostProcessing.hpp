@@ -123,7 +123,7 @@ public:
     *        Information needed to measure the convergence.
     *        In case of manifold mapping it also returns the design specification
     *        for the surrogate model which is updated in every iteration.
-    */ /// @todo: change to call by ref when Eigen is used.
+    */
   virtual std::map<int, Eigen::VectorXd> getDesignSpecification(DataMap &cplData);
 
   /**
