@@ -119,6 +119,12 @@ public:
   void getProperties(int propertyID, std::vector<value_t> &properties) const;
 
 private:
+  /** The logger for the PropertyContainer.
+   *
+   * @attention There will be many instances of this class.
+   * Thus using a static logger is crucial, as creating a logger is a costly
+   * and an allocation-heavy operation,
+   */
   static logging::Logger _log;
 
   /// Manager to ensure unique identification of all properties.
