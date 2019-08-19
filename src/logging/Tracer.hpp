@@ -8,19 +8,14 @@ class Tracer
 {
 public:  
   
-  Tracer (Logger &log, std::string function, std::string file, long line);
+  Tracer (Logger &log, LogLocation loc);
   ~Tracer();
 
 private:
 
   Logger _log;
 
-  std::string _function;
-
-  std::string _file;
-
-  long _line;
-
+  LogLocation _loc;
 };
 
 }} // namespace precice, logging

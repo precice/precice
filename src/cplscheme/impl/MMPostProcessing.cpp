@@ -69,7 +69,7 @@ void MMPostProcessing::initialize(DataMap &cplData)
   std::vector<size_t> subVectorSizes; //needed for preconditioner
 
   assertion(_fineDataIDs.size() == _coarseDataIDs.size(), _fineDataIDs.size(), _coarseDataIDs.size());
-  assertion(_dataIDs.size() == 0, _dataIDs.size());
+  assertion(_dataIDs.empty(), _dataIDs.size());
 
   _dataIDs.insert(_dataIDs.end(), _fineDataIDs.begin(), _fineDataIDs.end());
   _dataIDs.insert(_dataIDs.end(), _coarseDataIDs.begin(), _coarseDataIDs.end());
@@ -123,9 +123,9 @@ void MMPostProcessing::initialize(DataMap &cplData)
 
   /**
    *  make dimensions public to all procs,
-   *  last entry _dimOffsets[MasterSlave::_size] holds the global dimension, global,n
+   *  last entry _dimOffsets[MasterSlave::getSize()] holds the global dimension, global,n
    */
-  if (utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode) {
+  if (utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave()) {
     assertion(utils::MasterSlave::_communication.get() != NULL);
     assertion(utils::MasterSlave::_communication->isConnected());
 
@@ -134,7 +134,7 @@ void MMPostProcessing::initialize(DataMap &cplData)
      *  This information needs to be gathered for all meshes. To get the number of respective unknowns of a specific processor
      *  we need to multiply the number of vertices with the dimensionality of the vector-valued data for each coupling data.
      */
-    _dimOffsets.resize(utils::MasterSlave::_size + 1);
+    _dimOffsets.resize(utils::MasterSlave::getSize() + 1);
     _dimOffsets[0] = 0;
     for (size_t i = 0; i < _dimOffsets.size() - 1; i++) {
       int accumulatedNumberOfUnknowns = 0;
@@ -146,7 +146,7 @@ void MMPostProcessing::initialize(DataMap &cplData)
     }
 
     // test that the computed number of unknown per proc equals the number of entries actually present on that proc
-    size_t unknowns = _dimOffsets[utils::MasterSlave::_rank + 1] - _dimOffsets[utils::MasterSlave::_rank];
+    size_t unknowns = _dimOffsets[utils::MasterSlave::getRank() + 1] - _dimOffsets[utils::MasterSlave::getRank()];
     assertion(entries == unknowns, entries, unknowns);
   }
 
@@ -545,7 +545,7 @@ void MMPostProcessing::computeCoarseModelDesignSpecifiaction()
 
       for (int i = 0; i < singularValues.rows(); i++) {
         if (std::abs(singularValues(i)) <= _singularityLimit) {
-          std::cout << "singular value: " << singularValues(i) << std::endl;
+          std::cout << "singular value: " << singularValues(i) << '\n';
 
           // Remove the column from _matrixC and _matrixF
           removeMatrixColumn(i - nbRemoveCols);
@@ -814,7 +814,7 @@ int MMPostProcessing::getLSSystemCols()
 
 int MMPostProcessing::getLSSystemRows()
 {
-  if (utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode) {
+  if (utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave()) {
     return _dimOffsets.back();
   }
   return _fineResiduals.size();

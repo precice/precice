@@ -45,6 +45,7 @@ private:
 
 namespace precice {
 namespace utils {
+/// PETSc related utilities
 namespace petsc {
 
 enum VIEWERFORMAT { ASCII, BINARY };
@@ -59,28 +60,55 @@ public:
   enum LEFTRIGHT { LEFT, RIGHT };
   
   /// Creates a new vector on the given MPI communicator.
-  explicit Vector(std::string name = "");
+  explicit Vector(const std::string& name = "");
 
-  /// Use Vec v as vector.
-  Vector(Vec &v, std::string name = "");
-
-  /// Duplicates type, row layout etc. (not values) of v.
-  Vector(Vector &v, std::string name = "");  
-
-  /// Constructs a vector with the same number of rows (default) or columns.
-  Vector(Mat &m, std::string name = "", LEFTRIGHT type = LEFT);
-
-  /// Constructs a vector with the same number of rows (default) or columns.
-  Vector(Matrix &m, std::string name = "", LEFTRIGHT type = LEFT);
-
-  /// Delete copy and assignment constructor
-  /** Copying and assignement of this class would involve copying the pointer to
-      the PETSc object and finallly cause double destruction of it.
+  /** Copy construction from another vector
+   * Duplicates the vector and copies the name
    */
-  Vector(const Vector&) = delete;
-  Vector& operator=(const Vector&) = delete;
+  Vector(const Vector& other);
+
+  /** Copy assignement
+   * Destroys the current vector and takes ownership of the other.
+   */
+  Vector& operator=(Vector other);
+
+  /** Move construction
+   * Takes ownership of the other vector.
+   */
+  Vector(Vector&& other);
+
+  /** Constructs the object from another Vec
+   * Takes ownership of the other Vec
+   */
+  Vector(Vec& other, const std::string& name = "");
+
 
   ~Vector();
+
+  ///@name Allocation
+  ///@{
+
+  /// Allocates a new vector on the given MPI communicator.
+  static Vector allocate(const std::string& name = "");
+
+  /** Allocated an uninitialized vector of identical shape.
+   * Duplicates type, row layout etc. (not values) of v.
+   */
+  static Vector allocate(Vector& other, const std::string& name = "");
+
+  /// Allocated an uninitialized vector of identical shape.
+  static Vector allocate(Vec& other, const std::string& name = "");
+
+  /// Allocates a vector with the same number of rows (default) or columns.
+  static Vector allocate(Matrix& m, const std::string& name = "", LEFTRIGHT type = LEFT);
+
+  /// Allocates a vector with the same number of rows (default) or columns.
+  static Vector allocate(Mat& m, const std::string& name = "", LEFTRIGHT type = LEFT);
+
+  ///@}
+
+  /// Swaps the ownership of two vectors
+  void swap(Vector& other) noexcept;
 
   /// Enables implicit conversion into a reference to a PETSc Vec type
   operator Vec&();
@@ -116,6 +144,7 @@ public:
   void view() const;
 };
 
+void swap(Vector& lhs, Vector& rhs) noexcept;
   
 class Matrix
 {
@@ -219,6 +248,12 @@ public:
 
   /// Solves the linear system, returns false it not converged
   bool solve(Vector &b, Vector &x);
+
+  /// Solves the transposed linear system, returns false it not converged
+  bool solveTranspose(Vector &b, Vector &x);
+
+  /// Returns the iteration number of solver, either during or after the solve call.
+  PetscInt getIterationNumber();
 };
 
 

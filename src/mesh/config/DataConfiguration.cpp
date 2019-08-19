@@ -2,8 +2,6 @@
 #include "mesh/Data.hpp"
 #include "mesh/PropertyContainer.hpp"
 #include "xml/XMLAttribute.hpp"
-#include "xml/ValidatorEquals.hpp"
-#include "xml/ValidatorOr.hpp"
 
 namespace precice {
 namespace mesh {
@@ -21,9 +19,8 @@ DataConfiguration:: DataConfiguration(xml::XMLTag& parent)
   doc += "in tag <solver-interface>.";
   tagVector.setDocumentation(doc);
 
-  XMLAttribute<std::string> attrName(ATTR_NAME);
-  doc = "Unique name for the data set.";
-  attrName.setDocumentation(doc);
+ auto attrName = XMLAttribute<std::string>(ATTR_NAME)
+      .setDocumentation("Unique name for the data set.");
   tagScalar.addAttribute(attrName);
   tagVector.addAttribute(attrName);
 

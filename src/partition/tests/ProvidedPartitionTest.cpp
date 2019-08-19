@@ -29,27 +29,16 @@ void setupParallelEnvironment(m2n::PtrM2N m2n)
   if (utils::Parallel::getProcessRank() == 0) { //NASTIN
     utils::Parallel::splitCommunicator("Fluid");
     m2n->acceptMasterConnection("Fluid", "SolidMaster");
-    utils::MasterSlave::_slaveMode  = false;
-    utils::MasterSlave::_masterMode = false;
   } else if (utils::Parallel::getProcessRank() == 1) { //Master
     utils::Parallel::splitCommunicator("SolidMaster");
     m2n->requestMasterConnection("Fluid", "SolidMaster");
-    utils::MasterSlave::_rank       = 0;
-    utils::MasterSlave::_size       = 3;
-    utils::MasterSlave::_slaveMode  = false;
-    utils::MasterSlave::_masterMode = true;
+    utils::MasterSlave::configure(0, 3);
   } else if (utils::Parallel::getProcessRank() == 2) { //Slave1
     utils::Parallel::splitCommunicator("SolidSlaves");
-    utils::MasterSlave::_rank       = 1;
-    utils::MasterSlave::_size       = 3;
-    utils::MasterSlave::_slaveMode  = true;
-    utils::MasterSlave::_masterMode = false;
+    utils::MasterSlave::configure(1, 3);
   } else if (utils::Parallel::getProcessRank() == 3) { //Slave2
     utils::Parallel::splitCommunicator("SolidSlaves");
-    utils::MasterSlave::_rank       = 2;
-    utils::MasterSlave::_size       = 3;
-    utils::MasterSlave::_slaveMode  = true;
-    utils::MasterSlave::_masterMode = false;
+    utils::MasterSlave::configure(3, 2);
   }
 
   if(utils::Parallel::getProcessRank() == 1){//Master

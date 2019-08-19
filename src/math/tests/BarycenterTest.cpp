@@ -12,7 +12,7 @@ BOOST_AUTO_TEST_CASE(BarycenterEdge)
 {
   using Eigen::Vector2d;
   using Eigen::Vector3d;
-  using precice::math::equals;
+  using precice::testing::equals;
   Vector3d a(0.0, 0.0, 0.0);
   Vector3d b(1.0, 0.0, 0.0);
   Vector3d n(0.0, 0.0, 1.0);
@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(BarycenterEdge)
 BOOST_AUTO_TEST_CASE(BarycenterTriangle)
 {
   using Eigen::Vector3d;
-  using precice::math::equals;
+  using precice::testing::equals;
   Vector3d a(0.0, 0.0, 0.0);
   Vector3d b(0.0, 1.0, 0.0);
   Vector3d c(1.0, 0.0, 0.0);

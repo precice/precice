@@ -3,7 +3,7 @@
 #include <boost/filesystem.hpp>
 #include "utils/Parallel.hpp"
 #include "utils/Petsc.hpp"
-#include "utils/EventTimings.hpp"
+#include "utils/EventUtils.hpp"
 #include "logging/LogConfiguration.hpp"
 #include <iostream>
 
@@ -44,11 +44,13 @@ bool init_unit_test()
   auto logConfigs = logging::readLogConfFile("log.conf");
   
   if (logConfigs.empty()) { // nothing has been read from log.conf
-    #if BOOST_VERSION >= 106400
-    auto logLevel = runtime_config::get<log_level>(runtime_config::btrt_log_level);
+    #if BOOST_VERSION == 106900
+    std::cerr << "Boost 1.69 get log_level is broken, preCICE log level set to debug.\n";
+    auto logLevel = log_successful_tests;
     #else
-    auto logLevel = runtime_config::get<log_level>(runtime_config::LOG_LEVEL);
+    auto logLevel = runtime_config::get<log_level>(runtime_config::btrt_log_level);
     #endif
+    
     logging::BackendConfiguration config;
     if (logLevel == log_successful_tests or logLevel == log_test_units)
       config.filter = "%Severity% >= debug";
@@ -65,13 +67,18 @@ bool init_unit_test()
   // Initialize either with empty logConfig -> default, configs that are read from file
   // or from the Boost Test log level.
   logging::setupLogging(logConfigs);
+  logging::lockConf();
   
 
   // Sets the default tolerance for floating point comparisions
   // Can be overwritten on a per-test or per-suite basis using decators
   // boost::unit_test::decorator::collector::instance() * boost::unit_test::tolerance(0.001);
   * tolerance(1e-9); // Stores the decorator in the collector singleton
+  #if BOOST_VERSION < 106900
   decorator::collector::instance().store_in(master_suite);
+  #else
+  decorator::collector_t::instance().store_in(master_suite);
+  #endif
   
   return true;
 }
@@ -87,14 +94,15 @@ int main(int argc, char* argv[])
   utils::Parallel::initializeMPI(&argc, &argv);
   logging::setMPIRank(utils::Parallel::getProcessRank());
   utils::Petsc::initialize(&argc, &argv);
-  
+  utils::EventRegistry::instance().initialize("precice-Tests", "", utils::Parallel::getGlobalCommunicator());
+    
   if (utils::Parallel::getCommunicatorSize() < 4) {
     if (utils::Parallel::getProcessRank() == 0)
-      std::cerr << "Running tests on less than four processors. Not all tests are executed." << std::endl;
+      std::cerr << "Running tests on less than four processors. Not all tests are executed.\n";
   }
   if (utils::Parallel::getCommunicatorSize() > 4) {
     if (utils::Parallel::getProcessRank() == 0)
-      std::cerr << "Running tests on more than 4 processors is not supported. Aborting." << std::endl;
+      std::cerr << "Running tests on more than 4 processors is not supported. Aborting.\n";
     std::exit(-1);
   }
 

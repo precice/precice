@@ -60,24 +60,24 @@ public:
 
   /// Requests set vertex positions from server.
   void requestSetMeshVertices (
-    int     meshID,
-    int     size,
-    double* positions,
-    int*    ids );
+    int           meshID,
+    int           size,
+    const double* positions,
+    int*          ids );
 
   /// Requests get vertex positions from server.
   void requestGetMeshVertices (
-    int     meshID,
-    int     size,
-    int*    ids,
-    double* positions );
+    int        meshID,
+    int        size,
+    const int* ids,
+    double*    positions );
 
   /// Requests get vertex ids from server.
   void requestGetMeshVertexIDsFromPositions (
-    int     meshID,
-    int     size,
-    double* positions,
-    int*    ids );
+    int           meshID,
+    int           size,
+    const double* positions,
+    int*          ids );
 
   /// Requests set mesh edge from server.
   int requestSetMeshEdge (
@@ -117,10 +117,10 @@ public:
 
   /// Requests write block scalar data from server.
   void requestWriteBlockScalarData (
-    int     dataID,
-    int     size,
-    int*    valueIndices,
-    double* values );
+    int           dataID,
+    int           size,
+    const int*    valueIndices,
+    const double* values );
 
   /// Requests write scalar data from server.
   void requestWriteScalarData (
@@ -130,23 +130,23 @@ public:
 
   /// Requests write block vector data from server.
   void requestWriteBlockVectorData (
-    int     dataID,
-    int     size,
-    int*    valueIndices,
-    double* values );
+    int           dataID,
+    int           size,
+    const int*    valueIndices,
+    const double* values );
 
   /// Requests write vector data from server.
   void requestWriteVectorData (
-    int     dataID,
-    int     valueIndex,
-    double* value );
+    int           dataID,
+    int           valueIndex,
+    const double* value );
 
   /// Requests read block scalar data from server.
   void requestReadBlockScalarData (
-    int     dataID,
-    int     size,
-    int*    valueIndices,
-    double* values );
+    int        dataID,
+    int        size,
+    const int* valueIndices,
+    double*    values );
 
   /// Requests read scalar data from server.
   void requestReadScalarData (
@@ -156,10 +156,10 @@ public:
 
   /// Requests read block vector data from server.
   void requestReadBlockVectorData (
-    int     dataID,
-    int     size,
-    int*    valueIndices,
-    double* values );
+    int        dataID,
+    int        size,
+    const int* valueIndices,
+    double*    values );
 
   /// Requests read vector data from server.
   void requestReadVectorData (

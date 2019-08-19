@@ -11,6 +11,7 @@
 #include "cplscheme/SharedPointer.hpp"
 #include "com/Communication.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
+#include "utils/MultiLock.hpp"
 #include <string>
 #include <vector>
 #include <set>
@@ -200,6 +201,9 @@ public:
   /// Returns data id corresponding to the given name (from configuration) and mesh.
   int getDataID ( const std::string& dataName, int meshID );
 
+  /// Returns the number of nodes of a mesh.
+  int getMeshVertexSize ( int meshID );
+
   /**
    * @brief Resets mesh with given ID.
    *
@@ -210,27 +214,36 @@ public:
   void resetMesh ( int meshID );
 
   /**
+   * @brief Set the position of a solver mesh vertex.
+   *
+   * @return Vertex ID to be used when setting an edge.
+   */
+  int setMeshVertex (
+    int           meshID,
+    const double* position );
+
+  /**
    * @brief Sets several spatial positions for a mesh.
    *
    * @param[out] ids IDs for data from given positions.
    */
   void setMeshVertices (
-    int     meshID,
-    int     size,
-    double* positions,
-    int*    ids );
+    int           meshID,
+    int           size,
+    const double* positions,
+    int*          ids );
 
   /**
    * @brief Gets spatial positions of vertices for given IDs.
    *
    * @param[in] ids IDs obtained when setting write positions.
-   * @param[in] positions Positions corresponding to IDs.
+   * @param[out] positions Positions corresponding to IDs.
    */
   void getMeshVertices (
-    int     meshID,
-    size_t  size,
-    int*    ids,
-    double* positions );
+    int        meshID,
+    size_t     size,
+    const int* ids,
+    double*    positions );
 
   /**
    * @brief Gets vertex data ids from positions.
@@ -240,22 +253,10 @@ public:
    * @param[out] ids IDs corresponding to positions.
    */
   void getMeshVertexIDsFromPositions (
-    int     meshID,
-    size_t  size,
-    double* positions,
-    int*    ids );
-
-  /// Returns the number of nodes of a mesh.
-  int getMeshVertexSize ( int meshID );
-
-  /**
-   * @brief Set the position of a solver mesh vertex.
-   *
-   * @return Vertex ID to be used when setting an edge.
-   */
-  int setMeshVertex (
     int           meshID,
-    const double* position );
+    size_t        size,
+    const double* positions,
+    int*          ids );
 
   /**
    * @brief Set an edge of a solver mesh.
@@ -319,10 +320,10 @@ public:
    * @param[in] values Values of the data to be written.
    */
   void writeBlockVectorData (
-    int     fromDataID,
-    int     size,
-    int*    valueIndices,
-    double* values );
+    int           fromDataID,
+    int           size,
+    const int*    valueIndices,
+    const double* values );
 
 
   /**
@@ -347,10 +348,10 @@ public:
    * @param values [IN] Values of the data to be written.
    */
   void writeBlockScalarData (
-    int     fromDataID,
-    int     size,
-    int*    valueIndices,
-    double* values );
+    int           fromDataID,
+    int           size,
+    const int*    valueIndices,
+    const double* values );
 
   /**
    * @brief Write scalar data to the interface mesh
@@ -364,7 +365,7 @@ public:
   void writeScalarData(
     int    fromDataID,
     int    valueIndex,
-    double value );
+    double value);
 
   /**
    * @brief Reads vector data values given as block.
@@ -379,10 +380,10 @@ public:
    * @param values [IN] Values of the data to be read.
    */
   void readBlockVectorData (
-    int     toDataID,
-    int     size,
-    int*    valueIndices,
-    double* values );
+    int        toDataID,
+    int        size,
+    const int* valueIndices,
+    double*    values );
 
   /**
    * @brief Reads vector data from the coupling mesh.
@@ -404,10 +405,10 @@ public:
    * @param[in] values Values of the data to be written.
    */
   void readBlockScalarData (
-    int     toDataID,
-    int     size,
-    int*    valueIndices,
-    double* values );
+    int        toDataID,
+    int        size,
+    const int* valueIndices,
+    double*    values );
 
   /**
    * @brief Read scalar data from the interface mesh.
@@ -486,6 +487,8 @@ private:
 
   /// If true, the interface uses a server to operate on coupling data.
   bool _clientMode = false;
+
+  utils::MultiLock<int> _meshLock;
 
   /// Communication when for client-server mode.
   //com::Communication::SharedPointer _clientServerCommunication;
@@ -601,6 +604,7 @@ private:
 
   /// To allow white box tests.
   friend struct PreciceTests::Serial::TestConfiguration;
+
 };
 
 }} // namespace precice, impl
