@@ -41,7 +41,7 @@ public:
   virtual ~DistributedCommunication() {}
 
   /// Returns true, if a connection to a remote participant has been setup.
-  virtual bool isConnected() = 0;
+  virtual bool isConnected() const = 0;
 
   /**
    * @brief Connects to another participant, which has to call requestConnection().
@@ -72,7 +72,7 @@ public:
 
   /// Sends an array of double values from all slaves (different for each slave).
   virtual void send(
-      double *itemsToSend,
+      double const *itemsToSend,
       size_t  size,
       int     valueDimension) = 0;
 

@@ -5,7 +5,6 @@
 
 #include "mesh/PropertyContainer.hpp"
 #include "mesh/Vertex.hpp"
-#include "boost/noncopyable.hpp"
 #include "math/differences.hpp"
 
 namespace precice {
@@ -16,7 +15,7 @@ struct EdgeIteratorTypes;
 template<typename Types> class EdgeIterator;
 
 /// Linear edge of a mesh, defined by two Vertex objects.
-class Edge : public PropertyContainer, private boost::noncopyable
+class Edge : public PropertyContainer
 {
 public:
 
@@ -33,7 +32,7 @@ public:
     int     id );
 
   /// Destructor, empty.
-  virtual ~Edge () {}
+  ~Edge () override {}
 
   /// Returns number of spatial dimensions (2 or 3) the edge is embedded to.
   int getDimensions() const;
@@ -47,6 +46,9 @@ public:
   /// Sets the normal of the edge.
   template<typename VECTOR_T>
   void setNormal ( const VECTOR_T& normal );
+
+  /// Computes and sets the normal of the edge, returns the area-weighted normal.
+  const Eigen::VectorXd computeNormal(bool flip = false);
 
   /// Returns the (among edges) unique ID of the edge.
   int getID () const;
@@ -89,7 +91,7 @@ inline Vertex& Edge:: vertex
 (
   int i )
 {
-  assertion ( (i == 0) || (i == 1), i );
+  PRECICE_ASSERT( (i == 0) || (i == 1), i );
   return *_vertices[i];
 }
 
@@ -97,7 +99,7 @@ inline const Vertex& Edge:: vertex
 (
   int i ) const
 {
-  assertion ( (i==0) || (i==1), i );
+  PRECICE_ASSERT( (i==0) || (i==1), i );
   return *_vertices[i];
 }
 
@@ -111,7 +113,7 @@ void Edge:: setNormal
 (
   const VECTOR_T& normal )
 {
-  assertion ( normal.size() == _vertices[0]->getDimensions(), normal,
+  PRECICE_ASSERT( normal.size() == _vertices[0]->getDimensions(), normal,
                _vertices[0]->getDimensions() );
   _normal = normal;
 }

@@ -17,9 +17,7 @@ class SocketSendQueue
 {
 public:
 
-  using TCP           = boost::asio::ip::tcp;
-  using SocketService = boost::asio::stream_socket_service<TCP>;
-  using Socket        = boost::asio::basic_stream_socket<TCP, SocketService>;
+  using Socket = boost::asio::ip::tcp::socket;
 
   SocketSendQueue() = default;
   ~SocketSendQueue();

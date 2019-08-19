@@ -19,7 +19,7 @@ function(add_precice_test)
   # Assemble the command
   if(PAT_MPI)
     add_test(NAME ${PAT_FULL_NAME}
-      COMMAND ${MPIEXEC_EXECUTABLE} -np 4 $<TARGET_FILE:testprecice> ${PAT_ARGUMENTS}
+      COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 4 ${PRECICE_CTEST_MPI_FLAGS} ${MPIEXEC_PREFLAGS} $<TARGET_FILE:testprecice> ${PAT_ARGUMENTS} ${MPIEXEC_POSTFLAGS}
       )
   else()
     add_test(NAME ${PAT_FULL_NAME}

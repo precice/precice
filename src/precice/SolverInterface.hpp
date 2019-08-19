@@ -1,14 +1,13 @@
 #pragma once
 
 #include "MeshHandle.hpp"
-#include "Constants.hpp"
 #include <string>
 #include <vector>
 #include <set>
 #include <memory>
 
 /**
- * Pre-declarations.
+ * forward declarations.
  */
 namespace precice {
   namespace impl {
@@ -56,7 +55,23 @@ public:
   SolverInterface (
     const std::string& participantName,
     int                solverProcessIndex,
-    int                solverProcessSize );
+    int                solverProcessSize);
+
+
+  /**
+   * @param[in] participantName Name of the participant using the interface. Has to
+   *        match the name given for a participant in the xml configuration file.
+   * @param[in] solverProcessIndex If the solver code runs with several processes,
+   *        each process using preCICE has to specify its index, which has to start
+   *        from 0 and end with solverProcessSize - 1.
+   * @param[in] solverProcessSize The number of solver processes using preCICE.
+   * @param[in] communicator A pointer to an MPI_Comm to use as MPI_COMM_WORLD.
+   */
+  SolverInterface (
+    const std::string& participantName,
+    int                solverProcessIndex,
+    int                solverProcessSize,
+    void*              communicator);
 
   ~SolverInterface();
 
@@ -193,7 +208,7 @@ public:
    * @note
    * The user should call finalize() after this function returns false.
    */
-  bool isCouplingOngoing();
+  bool isCouplingOngoing() const;
 
   /**
    * @brief Checks if new data to be read is available.
@@ -213,7 +228,7 @@ public:
    * This is not recommended due to performance reasons.
    * Use this function to prevent unnecessary reads.
    */
-  bool isReadDataAvailable();
+  bool isReadDataAvailable() const;
 
   /**
    * @brief Checks if new data has to be written before calling advance().
@@ -233,7 +248,7 @@ public:
    * This is not recommended due to performance reasons.
    * Use this function to prevent unnecessary writes.
    */
-  bool isWriteDataRequired ( double computedTimestepLength );
+  bool isWriteDataRequired ( double computedTimestepLength ) const;
 
   /**
    * @brief Checks if the current coupling timestep is completed.
@@ -247,7 +262,7 @@ public:
    *
    * @pre initialize() has been called successfully.
    */
-  bool isTimestepComplete();
+  bool isTimestepComplete() const;
 
   /**
    * @brief Returns whether the solver has to evaluate the surrogate model representation.
@@ -262,7 +277,7 @@ public:
    *
    * @see hasToEvaluateFineModel()
    */
-  bool hasToEvaluateSurrogateModel();
+  bool hasToEvaluateSurrogateModel() const;
 
   /**
    * @brief Checks if the solver has to evaluate the fine model representation.
@@ -277,7 +292,7 @@ public:
    *
    * @see hasToEvaluateSurrogateModel()
    */
-  bool hasToEvaluateFineModel();
+  bool hasToEvaluateFineModel() const;
 
   ///@}
 
@@ -299,7 +314,7 @@ public:
    * @see fulfilledAction()
    * @see cplscheme::constants
    */
-  bool isActionRequired ( const std::string& action );
+  bool isActionRequired ( const std::string& action ) const;
 
   /**
    * @brief Indicates preCICE that a required action has been fulfilled by a solver.
@@ -342,14 +357,14 @@ public:
    * @param[in] meshName the name of the mesh
    * @returns the id of the corresponding mesh
    */
-  int getMeshID ( const std::string& meshName );
+  int getMeshID ( const std::string& meshName ) const;
 
   /**
    * @brief Returns a id-set of all used meshes by this participant.
    *
    * @returns the set of ids.
    */
-  std::set<int> getMeshIDs();
+  std::set<int> getMeshIDs() const;
 
   /**
    * @brief Returns a handle to a created mesh.
@@ -383,7 +398,7 @@ public:
    * @param[in] meshID the id of the mesh
    * @returns the amount of the vertices of the mesh
    */
-  int getMeshVertexSize(int meshID);
+  int getMeshVertexSize(int meshID) const;
 
   /**
    * @brief Creates multiple mesh vertices
@@ -427,7 +442,7 @@ public:
     int        meshID,
     int        size,
     const int* ids,
-    double*    positions );
+    double*    positions ) const;
 
   /**
    * @brief Gets mesh vertex IDs from positions.
@@ -448,7 +463,7 @@ public:
     int           meshID,
     int           size,
     const double* positions,
-    int*          ids );
+    int*          ids ) const;
 
   /**
    * @brief Sets mesh edge from vertex IDs, returns edge ID.
@@ -571,7 +586,7 @@ public:
    *
    * @returns the id of the corresponding data
    */
-  int getDataID ( const std::string& dataName, int meshID );
+  int getDataID ( const std::string& dataName, int meshID ) const;
 
   /**
    * @brief Computes and maps all read data mapped to the mesh with given ID.
@@ -713,7 +728,7 @@ public:
     int        dataID,
     int        size,
     const int* valueIndices,
-    double*    values );
+    double*    values ) const;
 
   /**
    * @brief Reads vector data form a vertex
@@ -738,7 +753,7 @@ public:
   void readVectorData (
     int     dataID,
     int     valueIndex,
-    double* value );
+    double* value ) const;
 
   /**
    * @brief Reads scalar data as a block.
@@ -764,7 +779,7 @@ public:
     int        dataID,
     int        size,
     const int* valueIndices,
-    double*    values );
+    double*    values ) const;
 
   /**
    * @brief Reads scalar data of a vertex.
@@ -784,7 +799,7 @@ public:
   void readScalarData (
     int     dataID,
     int     valueIndex,
-    double& value );
+    double& value ) const;
 
   ///@}
 
@@ -802,5 +817,29 @@ private:
   // @brief To allow white box tests.
   friend struct testing::WhiteboxAccessor;
 };
+
+/** 
+ * @brief Returns information on the version of preCICE.
+ *
+ * Returns a semicolon-separated C-string containing:
+ * 
+ * 1) the version of preCICE
+ * 2) the revision information of preCICE
+ * 3) the configuration of preCICE including MPI, PETSC, PYTHON
+ */
+std::string getVersionInformation();
+
+namespace constants {
+
+// @brief Name of action for writing initial data.
+const std::string& actionWriteInitialData();
+
+// @brief Name of action for writing iteration checkpoint
+const std::string& actionWriteIterationCheckpoint();
+
+// @brief Name of action for reading iteration checkpoint.
+const std::string& actionReadIterationCheckpoint();
+
+} // namespace constants
 
 } // namespace precice

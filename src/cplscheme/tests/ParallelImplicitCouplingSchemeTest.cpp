@@ -323,10 +323,8 @@ BOOST_FIXTURE_TEST_CASE(testInitializeData, testing::M2NFixture,
       new cplscheme::impl::MinIterationConvergenceMeasure(minIterations) );
   cplscheme::impl::PtrConvergenceMeasure minIterationConvMeasure2 (
       new cplscheme::impl::MinIterationConvergenceMeasure(minIterations) );
-  cplScheme.addConvergenceMeasure (
-      mesh->data()[1]->getID(), false, false, minIterationConvMeasure1 );
-  cplScheme.addConvergenceMeasure (
-      mesh->data()[0]->getID(), false, false, minIterationConvMeasure2 );
+  cplScheme.addConvergenceMeasure(mesh->data()[1], false, false, minIterationConvMeasure1 );
+  cplScheme.addConvergenceMeasure(mesh->data()[0], false, false, minIterationConvMeasure2 );
 
   std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
@@ -354,7 +352,7 @@ BOOST_FIXTURE_TEST_CASE(testInitializeData, testing::M2NFixture,
     }
   }
   else {
-    assertion(nameLocalParticipant == nameParticipant1);
+    BOOST_TEST(nameLocalParticipant == nameParticipant1);
     auto& values = mesh->data(dataID0)->values();
     BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteInitialData()));
     Eigen::VectorXd v(3); v << 1.0, 2.0, 3.0;

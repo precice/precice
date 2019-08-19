@@ -54,7 +54,7 @@ void LogConfiguration::xmlTagCallback
 (
   xml::XMLTag& tag )
 {
-  TRACE(tag.getFullName());
+  PRECICE_TRACE(tag.getFullName());
   
   if (tag.getName() == "sink" and tag.getBooleanAttributeValue("enabled")) {
     precice::logging::BackendConfiguration config;
@@ -71,7 +71,7 @@ void LogConfiguration::xmlEndTagCallback
 (
   xml::XMLTag& tag )
 {
-  TRACE(tag.getFullName());
+  PRECICE_TRACE(tag.getFullName());
   if (tag.getName() == "log")
     precice::logging::setupLogging(_logconfig, tag.getBooleanAttributeValue("enabled"));
 }

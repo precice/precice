@@ -51,7 +51,7 @@ public:
   {
     _normDiff      = utils::MasterSlave::l2norm((newValues - oldValues) - designSpecification);
     _isConvergence = _normDiff <= _convergenceLimit;
-    //      INFO("Absolute convergence measure: "
+    //      PRECICE_INFO("Absolute convergence measure: "
     //                     << "two-norm differences = " << normDiff
     //                     << ", convergence limit = " << _convergenceLimit
     //                     << ", convergence = " << _isConvergence );

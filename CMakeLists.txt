@@ -1,6 +1,7 @@
-cmake_minimum_required (VERSION 3.9.6)
+cmake_minimum_required (VERSION 3.10.2)
+include(${CMAKE_CURRENT_LIST_DIR}/cmake/XSDKCompilerDetect.cmake)
 
-project(preCICE VERSION 1.4.1 LANGUAGES CXX)
+project(preCICE VERSION 1.5.2 LANGUAGES CXX)
 
 #
 # Overview of this configuration
@@ -26,6 +27,8 @@ list (APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 list (APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/modules")
 
 include(CopyTargetProperty)
+include(XSDKMacros)
+include(Validation)
 
 # CMake Policies
 
@@ -38,29 +41,27 @@ if(POLICY CMP0075)
   cmake_policy(SET CMP0075 NEW)
 endif()
 
-# Enforce a build type
-if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
-  set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Choose the type of build." FORCE)
-  # Set the possible values of build type for cmake-gui
-  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
-    "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
-endif()
-message(STATUS "Build configuration: " ${CMAKE_BUILD_TYPE})
-
-
 #
 # Setup Options
 #
-
-set(Platform "none" CACHE STRING "Special configurations for certain platforms")
-set_property(CACHE Platform PROPERTY STRINGS none "SuperMUC")
-message(STATUS "Special platform settings: " ${Platform})
 
 option(MPI "Enables MPI-based communication and running coupling tests." ON)
 option(PETSC "Enable use of the PETSc linear algebra library." ON)
 option(PYTHON "Python support" ON)
 option(PRECICE_Packages "Configure package generation." ON)
 option(PRECICE_InstallTest "Add test binary and necessary files to install target." ON)
+option(BUILD_SHARED_LIBS "Build shared libraries by default" OFF)
+xsdk_tpl_option_override(MPI TPL_ENABLE_MPI)
+xsdk_tpl_option_override(PETSC TPL_ENABLE_PETSC)
+xsdk_tpl_option_override(PYTHON TPL_ENABLE_PYTHON)
+
+if(PETSC AND NOT MPI)
+  message(FATAL_ERROR "Please enable MPI to use PETSC.")
+endif()
+
+set(PRECICE_CTEST_MPI_FLAGS "" CACHE STRING "Add additional flags to mpiexec for running tests via CTest.")
+
+include(XSDKOptions)
 
 # Print information about this configuration
 include(PrintHelper)
@@ -69,9 +70,9 @@ print_configuration(
   "MPI;Build with MPI"
   "PETSC;Build with PETSC"
   "PYTHON;Build with PYTHON"
-  "Platform;Special platform settings"
   "PRECICE_Packages;Configure package generation"
   "PRECICE_InstallTest;Install tests/testfiles"
+  "PRECICE_CTEST_MPI_FLAGS;Additional CTest MPI Flags"
   )
 
 
@@ -81,12 +82,50 @@ print_configuration(
 
 find_package (Threads REQUIRED)
 
+if(TPL_ENABLE_BOOST)
+  xsdk_tpl_require(BOOST BOOST_ROOT)
+  # Use BOOST_ROOT to set the directory
+  set(Boost_NO_SYSTEM_PATHS ON CACHE BOOL "" FORCE)
+  unset(ENV{BOOST_ROOT})
+endif()
 find_package(Boost 1.65.1 REQUIRED
-  COMPONENTS filesystem log log_setup program_options system thread unit_test_framework)
+  COMPONENTS filesystem log log_setup program_options system thread unit_test_framework
+  )
 
+# Eigen
+if(TPL_ENABLE_EIGEN3)
+  # Use EIGEN3_ROOT to set the directory
+  xsdk_tpl_require(EIGEN3 EIGEN3_INCLUDE_DIR)
+endif()
 find_package(Eigen3 3.2 REQUIRED)
+precice_validate_eigen()
 
+# LibXML2
+if(TPL_ENABLE_LIBXML2)
+  xsdk_tpl_require(LIBXML2 LIBXML2_LIBRARIES LIBXML2_INCLUDE_DIRS)
+endif()
 find_package(LibXml2 REQUIRED)
+precice_validate_libxml2()
+
+# nlohmann/JSON
+if(TPL_ENABLE_JSON)
+  xsdk_tpl_require(JSON JSON_INCLUDE_DIR)
+  add_library(JSON INTERFACE IMPORTED)
+  set_property(TARGET JSON PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${JSON_INCLUDE_DIR}")
+else()
+  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/json)
+endif()
+precice_validate_json()
+
+# prettyprint
+if(TPL_ENABLE_PRETTYPRINT)
+  xsdk_tpl_require(PRETTYPRINT PRETTYPRINT_INCLUDE_DIR)
+  add_library(prettyprint INTERFACE IMPORTED)
+  set_property(TARGET prettyprint PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${PRETTYPRINT_INCLUDE_DIR}")
+else()
+  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/prettyprint)
+endif()
+precice_validate_prettyprint()
 
 
 #
@@ -99,8 +138,16 @@ if (MPI)
 endif()
 
 # Option: PETSC
-if (PETSC AND MPI)
+if (PETSC)
+  if (TPL_ENABLE_PETSC)
+    xsdk_tpl_require(PETSC PETSC_DIR PETSC_ARCH)
+    # PETSc detection uses primarily these ENVs
+    unset(ENV{PETSC_DIR})
+    unset(ENV{PETSC_ARCH})
+  endif()
   find_package(PETSc 3.6 REQUIRED)
+  # No validation required as PETSc does this internally
+
   set(PETSC_VERSIONS "")
   set(PETSC_VERSION_MAJOR "")
   set(PETSC_VERSION_MINOR "")
@@ -114,8 +161,23 @@ endif()
 # Option Python
 if (PYTHON)
   set(Python_ADDITIONAL_VERSIONS "2.7")
-  find_package(PythonLibs 2.7 REQUIRED)
-  find_package(NumPy REQUIRED)
+  if (TPL_ENABLE_PYTHON)
+    xsdk_tpl_require(PYTHON PYTHON_LIBRARY PYTHON_INCLUDE_DIR NumPy_INCLUDE_DIR)
+    find_package(PythonLibs 2.7 REQUIRED)
+
+    # Override NumPy
+    # TODO: Incorporate into the FindNumPy module
+    set(NumPy_FOUND True CACHE BOOL "NumPy found?" FORCE)
+    if(NOT TARGET NumPy::NumPy)
+      add_library(NumPy::NumPy INTERFACE IMPORTED)
+      set_property(TARGET NumPy::NumPy PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${NumPy_INCLUDE_DIR}")
+    endif()
+  else()
+    find_package(PythonLibs 2.7 REQUIRED)
+    find_package(NumPy REQUIRED)
+  endif()
+  precice_validate_libpython()
+  precice_validate_numpy()
 else()
   message(STATUS "Python support disabled")
 endif()
@@ -143,8 +205,16 @@ set_target_properties(precice PROPERTIES
 
 # Setup Boost
 target_compile_definitions(precice PRIVATE BOOST_ALL_DYN_LINK BOOST_ASIO_ENABLE_OLD_SERVICES)
-target_link_libraries(precice PRIVATE ${Boost_LIBRARIES})
-target_include_directories(precice PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries(precice PRIVATE
+  Boost::boost
+  Boost::filesystem
+  Boost::log
+  Boost::log_setup
+  Boost::program_options
+  Boost::system
+  Boost::thread
+  Boost::unit_test_framework
+  )
 if(UNIX OR APPLE OR MINGW)
   target_link_libraries(precice PRIVATE ${CMAKE_DL_LIBS})
 endif()
@@ -157,9 +227,11 @@ target_compile_definitions(precice PRIVATE "$<$<CONFIG:DEBUG>:EIGEN_INITIALIZE_M
 target_include_directories(precice PRIVATE ${LIBXML2_INCLUDE_DIR})
 target_link_libraries(precice PRIVATE ${LIBXML2_LIBRARIES})
 
-if (Platform STREQUAL "SuperMUC")
-  target_compile_definitions(precice PRIVATE SuperMUC_WORK)
-endif()
+# Setup Prettyprint
+target_link_libraries(precice PRIVATE prettyprint)
+
+# Setup JSON
+target_link_libraries(precice PRIVATE JSON)
 
 # Setup MPI
 if (MPI)
@@ -186,7 +258,10 @@ else()
   target_compile_definitions(precice PRIVATE PRECICE_NO_PYTHON)
 endif()
 
+
 # File Configuration
+include(GenerateVersionInformation)
+include(${CMAKE_CURRENT_LIST_DIR}/cmake/DetectGitRevision.cmake)
 configure_file("${PROJECT_SOURCE_DIR}/src/versions.hpp.in" "${PROJECT_BINARY_DIR}/src/versions.hpp" @ONLY)
 
 # Includes Configuration
@@ -209,8 +284,16 @@ target_link_libraries(binprecice
   PRIVATE
   Threads::Threads
   precice
+  prettyprint
   Eigen3::Eigen
-  ${Boost_LIBRARIES}
+  Boost::boost
+  Boost::filesystem
+  Boost::log
+  Boost::log_setup
+  Boost::program_options
+  Boost::system
+  Boost::thread
+  Boost::unit_test_framework
   )
 set_target_properties(binprecice PROPERTIES
   # precice is a C++11 project
@@ -239,7 +322,15 @@ target_link_libraries(testprecice
   Threads::Threads
   precice
   Eigen3::Eigen
-  ${Boost_LIBRARIES}
+  prettyprint
+  Boost::boost
+  Boost::filesystem
+  Boost::log
+  Boost::log_setup
+  Boost::program_options
+  Boost::system
+  Boost::thread
+  Boost::unit_test_framework
   )
 set_target_properties(testprecice PROPERTIES
   # precice is a C++11 project
@@ -291,6 +382,10 @@ if(PRECICE_InstallTest)
     DESTINATION share/precice
     FILES_MATCHING
     PATTERN "*.xml"
+    )
+  install(DIRECTORY src/action/tests/
+    DESTINATION share/precice/src/action/tests
+    FILES_MATCHING
     PATTERN "*.py"
     )
 endif()
@@ -378,6 +473,12 @@ configure_file(
 install(DIRECTORY "${preCICE_BINARY_DIR}/lib/pkgconfig" 
   DESTINATION lib
 )
+
+#
+# Add uninstall
+#
+
+include(${CMAKE_CURRENT_LIST_DIR}/cmake/Uninstall.cmake)
 
 
 #

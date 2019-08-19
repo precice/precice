@@ -1,4 +1,5 @@
 #include "Vertex.hpp"
+#include "utils/EigenIO.hpp"
 
 namespace precice
 {
@@ -47,7 +48,7 @@ void Vertex::tag()
 
 std::ostream &operator<<(std::ostream &os, Vertex const &v)
 {
-  return os << "POINT (" << v.getCoords().transpose() << ")";
+  return os << "POINT (" << v.getCoords().transpose().format(utils::eigenio::wkt()) << ')';
 }
 
 } // namespace mesh

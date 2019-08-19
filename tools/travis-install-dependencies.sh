@@ -59,13 +59,13 @@ if [ ! -f $CACHE_PETSC_TOKEN ]; then
     touch $CACHE_PETSC_TOKEN
 fi
 
-# Download CMake 3.10.1
+# Download CMake 3.10.2
 if [ ! -f $CACHE_CMAKE_TOKEN ]; then
     # Cleanup
     rm -rf $LOCAL_INSTALL/cmake
     mkdir ${LOCAL_INSTALL}/cmake
     # Download
-    CMAKE_URL="http://www.cmake.org/files/v3.10/cmake-3.10.1-Linux-x86_64.tar.gz"
+    CMAKE_URL="http://www.cmake.org/files/v3.10/cmake-3.10.2-Linux-x86_64.tar.gz"
     wget --no-check-certificate --quiet -O - ${CMAKE_URL} | tar --strip-components=1 -xz -C ${LOCAL_INSTALL}/cmake
     # Check version
     $LOCAL_INSTALL/cmake/bin/cmake --version
