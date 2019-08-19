@@ -66,7 +66,7 @@ void CommunicateBoundingBox::sendConnectionMap(
     std::map<int, std::vector<int>> &fbm,
     int                              rankReceiver)
 {
-  TRACE(rankReceiver);
+  PRECICE_TRACE(rankReceiver);
   _communication->send((int) fbm.size(), rankReceiver);
 
   for (const auto &vect : fbm) {
@@ -80,10 +80,10 @@ void CommunicateBoundingBox::receiveConnectionMap(
     std::map<int, std::vector<int>> &fbm,
     int                              rankSender)
 {
-  TRACE(rankSender);
+  PRECICE_TRACE(rankSender);
   int sizeOfReceivingMap;
   _communication->receive(sizeOfReceivingMap, rankSender);
-  assertion(sizeOfReceivingMap == (int) fbm.size());
+  PRECICE_ASSERT(sizeOfReceivingMap == (int) fbm.size());
 
   for (size_t i = 0; i < fbm.size(); ++i) {
     int              rank;
@@ -98,7 +98,7 @@ void CommunicateBoundingBox::receiveConnectionMap(
 void CommunicateBoundingBox::broadcastSendBoundingBoxMap(
     mesh::Mesh::BoundingBoxMap &bbm)
 {
-  TRACE();
+  PRECICE_TRACE();
   _communication->broadcast((int) bbm.size());
 
   for (const auto &rank : bbm) {
@@ -112,10 +112,10 @@ void CommunicateBoundingBox::broadcastSendBoundingBoxMap(
 void CommunicateBoundingBox::broadcastReceiveBoundingBoxMap(
     mesh::Mesh::BoundingBoxMap &bbm)
 {
-  TRACE();
+  PRECICE_TRACE();
   int sizeOfReceivingMap;
   _communication->broadcast(sizeOfReceivingMap, 0);
-  assertion(sizeOfReceivingMap == (int) bbm.size());
+  PRECICE_ASSERT(sizeOfReceivingMap == (int) bbm.size());
 
   for (auto &rank : bbm) {
     for (auto &dimension : rank.second) {
@@ -128,7 +128,7 @@ void CommunicateBoundingBox::broadcastReceiveBoundingBoxMap(
 void CommunicateBoundingBox::broadcastSendConnectionMap(
     std::map<int, std::vector<int>> &fbm)
 {
-  TRACE();
+  PRECICE_TRACE();
   _communication->broadcast((int) fbm.size());
 
   for (auto &rank : fbm) {
@@ -139,10 +139,10 @@ void CommunicateBoundingBox::broadcastSendConnectionMap(
 void CommunicateBoundingBox::broadcastReceiveConnectionMap(
     std::map<int, std::vector<int>> &fbm)
 {
-  TRACE();
+  PRECICE_TRACE();
   int sizeOfReceivingMap;
   _communication->broadcast(sizeOfReceivingMap, 0);
-  assertion(sizeOfReceivingMap == (int) fbm.size());
+  PRECICE_ASSERT(sizeOfReceivingMap == (int) fbm.size());
 
   for (auto &rank : fbm) {
     _communication->broadcast(rank.second, 0);
