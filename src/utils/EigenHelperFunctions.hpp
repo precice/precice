@@ -2,6 +2,7 @@
 
 #include <Eigen/Core>
 #include "utils/assertion.hpp"
+#include "utils/algorithm.hpp"
 
 namespace precice {
 namespace utils {
@@ -57,5 +58,33 @@ auto firstN(const Eigen::PlainObjectBase<Derived>& val, unsigned n) -> const Eig
 {
     return {val.data(), std::min<Eigen::Index>(n,val.size())};
 }
+
+
+template<typename DerivedLHS, typename DerivedRHS>
+bool componentWiseLess(const Eigen::PlainObjectBase<DerivedLHS>& lhs, const Eigen::PlainObjectBase<DerivedRHS>& rhs)
+{
+    const auto lhs_begin = lhs.data();
+    const auto lhs_end   = lhs.data()+lhs.size();
+    const auto rhs_begin = rhs.data();
+    const auto rhs_end   = rhs.data()+rhs.size();
+    
+    auto mismatch = utils::mismatch(lhs_begin, lhs_end, rhs_begin, rhs_end);
+
+    if (mismatch.first == lhs_end) {
+        return true;
+    }
+    if (mismatch.second == rhs_end) {
+        return false;
+    }
+    return *mismatch.first < *mismatch.second;
+}
+
+struct ComponentWiseLess {
+    template<typename DerivedLHS, typename DerivedRHS>
+    bool operator()(const Eigen::PlainObjectBase<DerivedLHS>& lhs, const Eigen::PlainObjectBase<DerivedRHS>& rhs) const
+    {
+        return componentWiseLess(lhs, rhs);
+    }
+};
 
 }}

@@ -153,6 +153,11 @@ Triangle& Mesh:: createTriangle
   Edge& edgeTwo,
   Edge& edgeThree )
 {
+  PRECICE_CHECK(
+          edgeOne.connectedTo(edgeTwo) &&
+          edgeTwo.connectedTo(edgeThree) &&
+          edgeThree.connectedTo(edgeOne),
+          "Edges are not connected!");
   Triangle* newTriangle = new Triangle (
       edgeOne, edgeTwo, edgeThree, _manageTriangleIDs.getFreeID());
   newTriangle->addParent(*this);

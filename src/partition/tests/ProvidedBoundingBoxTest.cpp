@@ -26,7 +26,7 @@ BOOST_AUTO_TEST_SUITE(ProvidedBoundingBoxTests)
 
 void setupParallelEnvironment(m2n::PtrM2N m2n)
 {
-  assertion(utils::Parallel::getCommunicatorSize() == 4);
+  PRECICE_ASSERT(utils::Parallel::getCommunicatorSize() == 4);
 
   com::PtrCommunication masterSlaveCom = com::PtrCommunication(new com::MPIDirectCommunication());
   utils::MasterSlave::_communication   = masterSlaveCom;
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(TestCommunicateBoundingBox2D, * testing::OnSize(4))
     pSolidzMesh->computeState();
     
     ProvidedBoundingBox part(pSolidzMesh, hasToSend, safetyFactor);
-    part.setM2N(m2n);
+    part.addM2N(m2n);
     part.communicateBoundingBox();
     
   }
@@ -221,7 +221,7 @@ BOOST_AUTO_TEST_CASE(TestCommunicateBoundingBox3D, * testing::OnSize(4))
     pSolidzMesh->computeState();
     
     ProvidedBoundingBox part(pSolidzMesh, hasToSend, safetyFactor);
-    part.setM2N(m2n);
+    part.addM2N(m2n);
     part.communicateBoundingBox();
     
   }
@@ -313,7 +313,7 @@ BOOST_AUTO_TEST_CASE(TestComputeBoundingBox, * testing::OnSize(4))
     pSolidzMesh->computeState();
     
     ProvidedBoundingBox part(pSolidzMesh, hasToSend, safetyFactor);
-    part.setM2N(m2n);
+    part.addM2N(m2n);
     part.computeBoundingBox();
 
     if(utils::Parallel::getProcessRank() == 1)

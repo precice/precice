@@ -51,7 +51,9 @@ target_sources(testprecice
     src/mesh/tests/RTreeTests.cpp
     src/mesh/tests/TriangleTest.cpp
     src/mesh/tests/VertexTest.cpp
+    src/partition/tests/ProvidedBoundingBoxTest.cpp
     src/partition/tests/ProvidedPartitionTest.cpp
+    src/partition/tests/ReceivedBoundingBoxTest.cpp
     src/partition/tests/ReceivedPartitionTest.cpp
     src/precice/tests/MeshHandleTest.cpp
     src/precice/tests/ParallelTests.cpp
@@ -67,6 +69,7 @@ target_sources(testprecice
     src/testing/Testing.hpp
     src/testing/main.cpp
     src/testing/tests/ExampleTests.cpp
+    src/utils/tests/AlgorithmTest.cpp
     src/utils/tests/DimensionsTest.cpp
     src/utils/tests/EigenHelperFunctionsTest.cpp
     src/utils/tests/ManageUniqueIDsTest.cpp
