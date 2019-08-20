@@ -55,18 +55,23 @@ public:
   void requestConnection(std::string const &acceptorName,
                          std::string const &requesterName) override;
 
-  /** same as acceptconnection, but this one does not need vertex distribution
-      and instead gets connected ranks directly from mesh. 
-   
-   *  This one is used only to create initial communication Map.    
+  /**
+   * @brief Accepts connection from participant, which has to call
+   *        requestPreConnection().
+   *        Only initial connection is created.
+   *
+   * @param[in] acceptorName  Name of calling participant.
+   * @param[in] requesterName Name of remote participant to connect to.
    */
   virtual void acceptPreConnection(std::string const &acceptorName,
                                    std::string const &requesterName);
   
-  /** same as requestConnection, but this one does not need vertex distribution
-      and instead gets connected ranks directly from mesh. 
-   
-   *  This one is used only to create initial communication Map.    
+  /**
+   * @brief Requests connection from participant, which has to call acceptConnection().
+   *        Only initial connection is created. 
+   *
+   * @param[in] acceptorName Name of remote participant to connect to.
+   * @param[in] requesterName Name of calling participant.
    */
   virtual void requestPreConnection(std::string const &acceptorName,
                                     std::string const &requesterName);
@@ -98,7 +103,7 @@ public:
   virtual void broadcastSend(const double &itemToSend);
 
   /**
-   * @brief Receives a double from a connected rank
+   * @brief Receives a double from a connected rank on remote participant
    */
   virtual void broadcastReceive(double &itemToReceive);
 
@@ -146,7 +151,7 @@ private:
    *        bounding box initialization. It stores:
    *        1. global remote process rank;
    *        2. communication object (provides point-to-point communication routines).
-   *        3. Appropriatly sized buffer to receive elements
+   *        3. Request holding information about pending communication
    */
   struct ConnectionData {
     int                   remoteRank;
