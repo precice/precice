@@ -255,7 +255,7 @@ void P2PComTest2(com::PtrCommunicationFactory cf)
 void connectionTest1(com::PtrCommunicationFactory cf)
 {
 
-  assertion(utils::Parallel::getCommunicatorSize() == 4);  
+  PRECICE_ASSERT(utils::Parallel::getCommunicatorSize() == 4);  
   utils::MasterSlave::_communication = std::make_shared<com::MPIDirectCommunication>();
   
   int dimensions = 2;
@@ -350,7 +350,7 @@ void connectionTest1(com::PtrCommunicationFactory cf)
 void connectionTest2(com::PtrCommunicationFactory cf)
 {
 
-  assertion(utils::Parallel::getCommunicatorSize() == 4);  
+  PRECICE_ASSERT(utils::Parallel::getCommunicatorSize() == 4);  
   utils::MasterSlave::_communication = std::make_shared<com::MPIDirectCommunication>();
 
   int dimensions = 2;
