@@ -32,7 +32,7 @@
 #include <Eigen/Core>
 #include "partition/ReceivedPartition.hpp"
 #include "partition/ProvidedPartition.hpp"
-#include "versions.hpp"
+#include "precice/impl/versions.hpp"
 
 #include <utility>
 #include <algorithm>

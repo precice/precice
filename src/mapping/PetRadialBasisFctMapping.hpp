@@ -7,7 +7,7 @@
 #include <numeric>
 #include <vector>
 
-#include "versions.hpp"
+#include "precice/impl/versions.hpp"
 #include "mesh/RTree.hpp"
 #include "math/math.hpp"
 #include "impl/BasisFunctions.hpp"
