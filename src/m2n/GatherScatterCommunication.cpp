@@ -166,24 +166,24 @@ void GatherScatterCommunication::acceptPreConnection(
   std::string const &acceptorName,
   std::string const &requesterName)
 {  
-  assertion(false, "This method can only be used with the point to point communication scheme");
+  PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
 }
  
 void GatherScatterCommunication::requestPreConnection(
   std::string const &acceptorName,
   std::string const &requesterName)
 {
-  assertion(false, "This method can only be used with the point to point communication scheme");
+  PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
 }
 
 void GatherScatterCommunication::broadcastSend(const double &itemToSend)
 {
-  assertion(false, "This method can only be used with the point to point communication scheme");
+  PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
 }
 
 void GatherScatterCommunication::broadcastReceive(double &itemToReceive)
 {
-  assertion(false, "This method can only be used with the point to point communication scheme");
+  PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
 }
 
 void GatherScatterCommunication::broadcastSendMesh(mesh::Mesh &mesh)

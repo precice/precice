@@ -3,7 +3,7 @@
 #include <string>
 #include <algorithm>
 #include "precice/SolverInterface.hpp"
-#include "versions.hpp"
+#include "precice/impl/versions.hpp"
 
 BOOST_AUTO_TEST_SUITE(PreciceTests)
 BOOST_AUTO_TEST_SUITE(Versioning)

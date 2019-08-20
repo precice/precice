@@ -28,7 +28,7 @@ ProvidedBoundingBox::ProvidedBoundingBox(mesh::PtrMesh mesh,
 
 void ProvidedBoundingBox::communicateBoundingBox()
 {
-  TRACE();
+  PRECICE_TRACE();
 
   if (!_hasToSend)
     return;
@@ -38,8 +38,8 @@ void ProvidedBoundingBox::communicateBoundingBox()
     com::CommunicateBoundingBox(utils::MasterSlave::_communication).sendBoundingBox(_mesh->getBoundingBox(), 0);
   } else { // Master
 
-    assertion(utils::MasterSlave::getRank() == 0);
-    assertion(utils::MasterSlave::getSize() > 1);
+    PRECICE_ASSERT(utils::MasterSlave::getRank() == 0);
+    PRECICE_ASSERT(utils::MasterSlave::getSize() > 1);
 
     // to store the collection of bounding boxes
     mesh::Mesh::BoundingBoxMap bbm;
@@ -62,8 +62,8 @@ void ProvidedBoundingBox::communicateBoundingBox()
     }
 
     // master sends number of ranks and bbm to the other master
-    _m2n->getMasterCommunication()->send(utils::MasterSlave::getSize(), 0);
-    com::CommunicateBoundingBox(_m2n->getMasterCommunication()).sendBoundingBoxMap(bbm, 0);
+    _m2ns[0]->getMasterCommunication()->send(utils::MasterSlave::getSize(), 0);
+    com::CommunicateBoundingBox(_m2ns[0]->getMasterCommunication()).sendBoundingBoxMap(bbm, 0);
   }
 }
 
@@ -72,7 +72,7 @@ void ProvidedBoundingBox::computeBoundingBox()
   if (!_hasToSend)
     return;
   
-  TRACE();
+  PRECICE_TRACE();
 
   // size of the feedbackmap
   int remoteConnectionMapSize = 0;
@@ -81,18 +81,18 @@ void ProvidedBoundingBox::computeBoundingBox()
   std::map<int, std::vector<int>> remoteConnectionMap;
 
   if (not utils::MasterSlave::isSlave()) { //Master
-    assertion(utils::MasterSlave::getSize() > 1);
+    PRECICE_ASSERT(utils::MasterSlave::getSize() > 1);
 
     // master receives feedback map (map of other participant ranks -> connected ranks at this participant)
     // from other participants master
-    _m2n->getMasterCommunication()->receive(connectedRanksList, 0);
+    _m2ns[0]->getMasterCommunication()->receive(connectedRanksList, 0);
     remoteConnectionMapSize = connectedRanksList.size();
     
     for (auto &rank : connectedRanksList) {
       remoteConnectionMap[rank] = {-1};
     }
     if (remoteConnectionMapSize != 0)
-      com::CommunicateBoundingBox(_m2n->getMasterCommunication()).receiveConnectionMap(remoteConnectionMap, 0);
+      com::CommunicateBoundingBox(_m2ns[0]->getMasterCommunication()).receiveConnectionMap(remoteConnectionMap, 0);
 
     // broadcast the received feedbackMap
     utils::MasterSlave::_communication->broadcast(connectedRanksList);

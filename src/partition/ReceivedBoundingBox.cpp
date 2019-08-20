@@ -25,10 +25,10 @@ ReceivedBoundingBox::ReceivedBoundingBox(
 
 void ReceivedBoundingBox::communicateBoundingBox()
 {
-  TRACE();
+  PRECICE_TRACE();
 
   if (not utils::MasterSlave::isSlave()) {
-    _m2n->getMasterCommunication()->receive(_remoteParComSize, 0);
+    _m2ns[0]->getMasterCommunication()->receive(_remoteParComSize, 0);
 
     // construct and initialize _remoteBBM
     mesh::Mesh::BoundingBox initialBB;
@@ -40,21 +40,21 @@ void ReceivedBoundingBox::communicateBoundingBox()
     }
 
     // master receives global_bb from other master
-    com::CommunicateBoundingBox(_m2n->getMasterCommunication()).receiveBoundingBoxMap(_remoteBBM, 0);
+    com::CommunicateBoundingBox(_m2ns[0]->getMasterCommunication()).receiveBoundingBoxMap(_remoteBBM, 0);
   }
 }
 
 void ReceivedBoundingBox::computeBoundingBox()
 {
-  TRACE();
+  PRECICE_TRACE();
 
   /// @todo handle coupling mode (i.e. serial participant)
 
   prepareBoundingBox();
 
   if (utils::MasterSlave::isMaster()) { // Master
-    assertion(utils::MasterSlave::getRank() == 0);
-    assertion(utils::MasterSlave::getSize() > 1);
+    PRECICE_ASSERT(utils::MasterSlave::getRank() == 0);
+    PRECICE_ASSERT(utils::MasterSlave::getSize() > 1);
 
     // broadcast _remoteBBM to all slaves
     utils::MasterSlave::_communication->broadcast(_remoteParComSize);
@@ -90,12 +90,12 @@ void ReceivedBoundingBox::computeBoundingBox()
     }
 
     // send connectionMap to other master
-    _m2n->getMasterCommunication()->send(connectedRanksList, 0);
+    _m2ns[0]->getMasterCommunication()->send(connectedRanksList, 0);
     if (connectionMap.size() != 0) { 
-      com::CommunicateBoundingBox(_m2n->getMasterCommunication()).sendConnectionMap(connectionMap, 0);
+      com::CommunicateBoundingBox(_m2ns[0]->getMasterCommunication()).sendConnectionMap(connectionMap, 0);
     } else
     {
-      ERROR("This participant has no rank in the interface! Please check your test case and make sure that the mesh partition given to preCICE is loacted in the interface");
+      PRECICE_ERROR("This participant has no rank in the interface! Please check your test case and make sure that the mesh partition given to preCICE is loacted in the interface");
     }
 
   } else if (utils::MasterSlave::isSlave()) {
@@ -148,7 +148,7 @@ bool ReceivedBoundingBox::overlapping(mesh::Mesh::BoundingBox currentBB, mesh::M
 
 void ReceivedBoundingBox::prepareBoundingBox()
 {
-  TRACE(_safetyFactor);
+  PRECICE_TRACE(_safetyFactor);
 
   _bb.resize(_dimensions, std::make_pair(std::numeric_limits<double>::max(), std::numeric_limits<double>::lowest()));
 
@@ -173,7 +173,7 @@ void ReceivedBoundingBox::prepareBoundingBox()
   }
 
   //enlarge BB
-  assertion(_safetyFactor >= 0.0);
+  PRECICE_ASSERT(_safetyFactor >= 0.0);
 
   double maxSideLength = 1e-6; // we need some minimum > 0 here
 
@@ -183,7 +183,7 @@ void ReceivedBoundingBox::prepareBoundingBox()
   for (int d = 0; d < _dimensions; d++) {
     _bb[d].second += _safetyFactor * maxSideLength;
     _bb[d].first -= _safetyFactor * maxSideLength;
-    DEBUG("Merged BoundingBox, dim: " << d << ", first: " << _bb[d].first << ", second: " << _bb[d].second);
+    PRECICE_DEBUG("Merged BoundingBox, dim: " << d << ", first: " << _bb[d].first << ", second: " << _bb[d].second);
   }
 }
 

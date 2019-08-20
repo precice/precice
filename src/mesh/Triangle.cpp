@@ -66,12 +66,12 @@ Triangle::Triangle(
       _vertexMap[2] = 1;
     }
   }
-  PRECICE_ASSERT(&edge(0).vertex(_vertexMap[0]) != &edge(1).vertex(_vertexMap[1]));
-  PRECICE_ASSERT(&edge(0).vertex(_vertexMap[0]) != &edge(2).vertex(_vertexMap[2]));
-  PRECICE_ASSERT(&edge(1).vertex(_vertexMap[1]) != &edge(2).vertex(_vertexMap[2]));
-  PRECICE_ASSERT((_vertexMap[0] == 0) || (_vertexMap[0] == 1), _vertexMap[0]);
-  PRECICE_ASSERT((_vertexMap[1] == 0) || (_vertexMap[1] == 1), _vertexMap[0]);
-  PRECICE_ASSERT((_vertexMap[2] == 0) || (_vertexMap[2] == 1), _vertexMap[0]);
+
+  PRECICE_ASSERT(
+          (&edge(0).vertex(_vertexMap[0]) != &edge(1).vertex(_vertexMap[1])) &&
+          (&edge(0).vertex(_vertexMap[0]) != &edge(2).vertex(_vertexMap[2])) &&
+          (&edge(1).vertex(_vertexMap[1]) != &edge(2).vertex(_vertexMap[2])),
+          "Triangle vertices are not unique!");
 }
 
 const Eigen::VectorXd Triangle::computeNormal(bool flip)

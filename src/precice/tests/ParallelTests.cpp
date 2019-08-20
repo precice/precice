@@ -693,7 +693,7 @@ BOOST_AUTO_TEST_CASE(MasterSockets, * testing::OnSize(4))
   impl(interface).configure(config.getSolverInterfaceConfiguration());
   int meshID = interface.getMeshID(myMeshName);
   double position[2] = {0, 0};
-  int vertexID = interface.setMeshVertex(meshID, position);
+  interface.setMeshVertex(meshID, position);
   interface.initialize();
   interface.advance(1.0);
   interface.finalize();

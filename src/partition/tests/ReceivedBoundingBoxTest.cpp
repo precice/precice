@@ -26,7 +26,7 @@ BOOST_AUTO_TEST_SUITE(ReceivedBoundingBoxTests)
 
 void setupParallelEnvironment(m2n::PtrM2N m2n)
 {
-  assertion(utils::Parallel::getCommunicatorSize() == 4);
+  PRECICE_ASSERT(utils::Parallel::getCommunicatorSize() == 4);
 
   com::PtrCommunication masterSlaveCom = com::PtrCommunication(new com::MPIDirectCommunication());
   utils::MasterSlave::_communication   = masterSlaveCom;
@@ -71,8 +71,8 @@ void tearDownParallelEnvironment(){
 void createNastinMesh2D(mesh::PtrMesh pNastinMesh)
 {
   int dimensions = 2;
-  assertion(pNastinMesh.use_count() > 0);
-  assertion(pNastinMesh->getDimensions() == dimensions);
+  PRECICE_ASSERT(pNastinMesh.use_count() > 0);
+  PRECICE_ASSERT(pNastinMesh->getDimensions() == dimensions);
 
   if (utils::Parallel::getProcessRank() == 1) {
 
@@ -96,8 +96,8 @@ void createNastinMesh2D(mesh::PtrMesh pNastinMesh)
 void createNastinMesh3D(mesh::PtrMesh pNastinMesh)
 {
   int dimensions = 3;
-  assertion(pNastinMesh.use_count() > 0);
-  assertion(pNastinMesh->getDimensions() == dimensions);
+  PRECICE_ASSERT(pNastinMesh.use_count() > 0);
+  PRECICE_ASSERT(pNastinMesh->getDimensions() == dimensions);
 
   if (utils::Parallel::getProcessRank() == 1) {
 
@@ -191,7 +191,7 @@ BOOST_AUTO_TEST_CASE(TestConnectionMap2D, * testing::OnSize(4))
     double safetyFactor = 0.0;
     
     ReceivedBoundingBox part(pSolidzMesh, safetyFactor);
-    part.setM2N(m2n);
+    part.addM2N(m2n);
     part.setFromMapping(boundingFromMapping);
     part.setToMapping(boundingToMapping);
     part.communicateBoundingBox();
@@ -272,7 +272,7 @@ BOOST_AUTO_TEST_CASE(TestConnectionMap3D, * testing::OnSize(4))
     double safetyFactor = 0.0;
     
     ReceivedBoundingBox part(pSolidzMesh, safetyFactor);
-    part.setM2N(m2n);
+    part.addM2N(m2n);
     part.setFromMapping(boundingFromMapping);
     part.setToMapping(boundingToMapping);
     part.communicateBoundingBox();

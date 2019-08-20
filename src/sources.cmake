@@ -4,7 +4,7 @@
 
 target_sources(precice
     PRIVATE
-    ${CMAKE_BINARY_DIR}/src/versions.cpp
+    ${CMAKE_BINARY_DIR}/src/precice/impl/versions.cpp
     src/action/Action.hpp
     src/action/ComputeCurvatureAction.cpp
     src/action/ComputeCurvatureAction.hpp
@@ -212,8 +212,12 @@ target_sources(precice
     src/mesh/impl/RTreeAdapter.hpp
     src/partition/Partition.cpp
     src/partition/Partition.hpp
+    src/partition/ProvidedBoundingBox.cpp
+    src/partition/ProvidedBoundingBox.hpp
     src/partition/ProvidedPartition.cpp
     src/partition/ProvidedPartition.hpp
+    src/partition/ReceivedBoundingBox.cpp
+    src/partition/ReceivedBoundingBox.hpp
     src/partition/ReceivedPartition.cpp
     src/partition/ReceivedPartition.hpp
     src/partition/SharedPointer.hpp
@@ -247,6 +251,7 @@ target_sources(precice
     src/precice/impl/ValidationMacros.hpp
     src/precice/impl/WatchPoint.cpp
     src/precice/impl/WatchPoint.hpp
+    src/precice/impl/versions.hpp
     src/query/ExportVTKNeighbors.cpp
     src/query/ExportVTKNeighbors.hpp
     src/query/ExportVTKVoxelQueries.cpp
@@ -290,6 +295,7 @@ target_sources(precice
     src/utils/TableWriter.cpp
     src/utils/TableWriter.hpp
     src/utils/TypeNames.hpp
+    src/utils/algorithm.hpp
     src/utils/assertion.hpp
     src/utils/stacktrace.cpp
     src/utils/stacktrace.hpp

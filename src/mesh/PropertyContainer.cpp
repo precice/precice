@@ -9,6 +9,7 @@ namespace mesh
 const int PropertyContainer::INDEX_GEOMETRY_ID = getFreePropertyID();
 
 std::unique_ptr<utils::ManageUniqueIDs> PropertyContainer::_manageUniqueIDs;
+logging::Logger PropertyContainer::_log{"mesh::PropertyContainer"};
 
 const PropertyContainer &PropertyContainer::getParent(size_t index) const
 {
