@@ -98,7 +98,7 @@ public:
                int     valueDimension = 1) override;
 
   /**
-   * @brief Broadcasts a double to connected ranks       
+   * @brief Broadcasts a double to connected ranks on remote participant       
    */
   virtual void broadcastSend(const double &itemToSend);
 

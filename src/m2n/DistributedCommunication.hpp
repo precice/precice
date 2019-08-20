@@ -64,7 +64,7 @@ public:
       const std::string &requesterName) = 0;
 
   /**
-   * @brief Connects to another participant, which has to call requestConnection().
+   * @brief Connects to another participant, which has to call requestPreConnection().
    *        Exchanged vertex list is not included, only connection between ranks 
    *        is established. 
    *
@@ -77,7 +77,7 @@ public:
   
 
   /**
-   * @brief Connects to another participant, which has to call acceptConnection().
+   * @brief Connects to another participant, which has to call acceptPreConnection().
    *        Exchanged vertex list is not included, only connection between ranks 
    *        is established. 
    *
@@ -108,12 +108,12 @@ public:
       int     valueDimension) = 0;
 
   /**
-   * @brief Broadcasts a double to connected ranks       
+   * @brief Broadcasts a double to connected ranks on remote participant      
    */
   virtual void broadcastSend(const double &itemToSend) = 0;
 
   /**
-   * @brief Receives a double from a connected rank
+   * @brief Receives a double from a connected rank on remote participant
    */
   virtual void broadcastReceive(double &itemToReceive) = 0;
 
