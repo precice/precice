@@ -377,7 +377,6 @@ void PointToPointCommunication::acceptPreConnection(std::string const &acceptorN
   if (utils::MasterSlave::isMaster()) {
     // Establish connection between participants' master processes.
     auto c = _communicationFactory->newCommunication();
-
     c->acceptConnection(acceptorName, requesterName, utils::MasterSlave::getRank());
     
   } else {
@@ -426,7 +425,7 @@ void PointToPointCommunication::acceptPreConnection(std::string const &acceptorN
 
   _connectionDataVector.reserve(localConnectedRanks.size());
 
-  for (auto & connectedRank : localConnectedRanks) {
+  for (int & connectedRank : localConnectedRanks) {
     _connectionDataVector.push_back({connectedRank, c, com::PtrRequest()});
   }
 
@@ -567,7 +566,7 @@ void PointToPointCommunication::requestPreConnection(std::string const &acceptor
   _connectionDataVector.reserve(localConnectedRanks.size());
 
   std::set<int> acceptingRanks;
-  for (auto &i : localConnectedRanks)
+  for (int &i : localConnectedRanks)
     acceptingRanks.emplace(i);
 
   auto c = _communicationFactory->newCommunication();
