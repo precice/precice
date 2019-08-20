@@ -27,6 +27,7 @@
 #include "utils/Petsc.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/EigenHelperFunctions.hpp"
+#include "utils/algorithm.hpp"
 #include "mapping/Mapping.hpp"
 #include <Eigen/Core>
 #include "partition/ReceivedPartition.hpp"
@@ -763,8 +764,8 @@ int SolverInterfaceImpl:: setMeshEdge
     if ( context.meshRequirement == mapping::Mapping::MeshRequirement::FULL ){
       PRECICE_DEBUG("Full mesh required.");
       mesh::PtrMesh& mesh = context.mesh;
-      PRECICE_CHECK(mesh->isValidVertexID(firstVertexID),  " Given VertexID is invalid!");
-      PRECICE_CHECK(mesh->isValidVertexID(secondVertexID), " Given VertexID is invalid!");
+      PRECICE_CHECK(mesh->isValidVertexID(firstVertexID),  "Given VertexID is invalid!");
+      PRECICE_CHECK(mesh->isValidVertexID(secondVertexID), "Given VertexID is invalid!");
       mesh::Vertex& v0 = mesh->vertices()[firstVertexID];
       mesh::Vertex& v1 = mesh->vertices()[secondVertexID];
       return mesh->createEdge(v0, v1).getID ();
@@ -790,9 +791,11 @@ void SolverInterfaceImpl:: setMeshTriangle
     MeshContext& context = _accessor->meshContext(meshID);
     if ( context.meshRequirement == mapping::Mapping::MeshRequirement::FULL ){
       mesh::PtrMesh& mesh = context.mesh;
-      PRECICE_CHECK(mesh->isValidEdgeID(firstEdgeID),  " Given EdgeID is invalid!");
-      PRECICE_CHECK(mesh->isValidEdgeID(secondEdgeID), " Given EdgeID is invalid!");
-      PRECICE_CHECK(mesh->isValidEdgeID(thirdEdgeID),  " Given EdgeID is invalid!");
+      PRECICE_CHECK(mesh->isValidEdgeID(firstEdgeID),  "Given EdgeID is invalid!");
+      PRECICE_CHECK(mesh->isValidEdgeID(secondEdgeID), "Given EdgeID is invalid!");
+      PRECICE_CHECK(mesh->isValidEdgeID(thirdEdgeID),  "Given EdgeID is invalid!");
+      PRECICE_CHECK(utils::unique_elements(utils::make_array(firstEdgeID, secondEdgeID, thirdEdgeID)),
+              "Given EdgeIDs must be unique!");
       mesh::Edge& e0 = mesh->edges()[firstEdgeID];
       mesh::Edge& e1 = mesh->edges()[secondEdgeID];
       mesh::Edge& e2 = mesh->edges()[thirdEdgeID];
@@ -821,13 +824,18 @@ void SolverInterfaceImpl:: setMeshTriangleWithEdges
   MeshContext& context = _accessor->meshContext(meshID);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL){
     mesh::PtrMesh& mesh = context.mesh;
-    PRECICE_CHECK(mesh->isValidVertexID(firstVertexID),  " Given VertexID is invalid!");
-    PRECICE_CHECK(mesh->isValidVertexID(secondVertexID), " Given VertexID is invalid!");
-    PRECICE_CHECK(mesh->isValidVertexID(thirdVertexID),  " Given VertexID is invalid!");
+    PRECICE_CHECK(mesh->isValidVertexID(firstVertexID),  "Given VertexID is invalid!");
+    PRECICE_CHECK(mesh->isValidVertexID(secondVertexID), "Given VertexID is invalid!");
+    PRECICE_CHECK(mesh->isValidVertexID(thirdVertexID),  "Given VertexID is invalid!");
+    PRECICE_CHECK(!utils::unique_elements(utils::make_array(firstVertexID, secondVertexID, thirdVertexID)),
+            "Given VertexIDs must be unique!");
     mesh::Vertex* vertices[3];
     vertices[0] = &mesh->vertices()[firstVertexID];
     vertices[1] = &mesh->vertices()[secondVertexID];
     vertices[2] = &mesh->vertices()[thirdVertexID];
+    PRECICE_CHECK(!utils::unique_elements(utils::make_array(vertices[0]->getCoords(),
+                vertices[1]->getCoords(), vertices[2]->getCoords()), utils::ComponentWiseLess{}),
+            "The coordinates of the vertices must be unique!");
     mesh::Edge* edges[3];
     edges[0] = & mesh->createUniqueEdge(*vertices[0], *vertices[1]);
     edges[1] = & mesh->createUniqueEdge(*vertices[1], *vertices[2]);
@@ -856,10 +864,10 @@ void SolverInterfaceImpl:: setMeshQuad
     MeshContext& context = _accessor->meshContext(meshID);
     if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL){
       mesh::PtrMesh& mesh = context.mesh;
-      PRECICE_CHECK(mesh->isValidEdgeID(firstEdgeID),  " Given EdgeID is invalid!");
-      PRECICE_CHECK(mesh->isValidEdgeID(secondEdgeID), " Given EdgeID is invalid!");
-      PRECICE_CHECK(mesh->isValidEdgeID(thirdEdgeID),  " Given EdgeID is invalid!");
-      PRECICE_CHECK(mesh->isValidEdgeID(fourthEdgeID), " Given EdgeID is invalid!");
+      PRECICE_CHECK(mesh->isValidEdgeID(firstEdgeID),  "Given EdgeID is invalid!");
+      PRECICE_CHECK(mesh->isValidEdgeID(secondEdgeID), "Given EdgeID is invalid!");
+      PRECICE_CHECK(mesh->isValidEdgeID(thirdEdgeID),  "Given EdgeID is invalid!");
+      PRECICE_CHECK(mesh->isValidEdgeID(fourthEdgeID), "Given EdgeID is invalid!");
       mesh::Edge& e0 = mesh->edges()[firstEdgeID];
       mesh::Edge& e1 = mesh->edges()[secondEdgeID];
       mesh::Edge& e2 = mesh->edges()[thirdEdgeID];
@@ -888,10 +896,10 @@ void SolverInterfaceImpl:: setMeshQuadWithEdges
   MeshContext& context = _accessor->meshContext(meshID);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL){
     mesh::PtrMesh& mesh = context.mesh;
-    PRECICE_CHECK(mesh->isValidVertexID(firstVertexID),  " Given VertexID is invalid!");
-    PRECICE_CHECK(mesh->isValidVertexID(secondVertexID), " Given VertexID is invalid!");
-    PRECICE_CHECK(mesh->isValidVertexID(thirdVertexID),  " Given VertexID is invalid!");
-    PRECICE_CHECK(mesh->isValidVertexID(fourthVertexID), " Given VertexID is invalid!");
+    PRECICE_CHECK(mesh->isValidVertexID(firstVertexID),  "Given VertexID is invalid!");
+    PRECICE_CHECK(mesh->isValidVertexID(secondVertexID), "Given VertexID is invalid!");
+    PRECICE_CHECK(mesh->isValidVertexID(thirdVertexID),  "Given VertexID is invalid!");
+    PRECICE_CHECK(mesh->isValidVertexID(fourthVertexID), "Given VertexID is invalid!");
     mesh::Vertex* vertices[4];
     vertices[0] = &mesh->vertices()[firstVertexID];
     vertices[1] = &mesh->vertices()[secondVertexID];
