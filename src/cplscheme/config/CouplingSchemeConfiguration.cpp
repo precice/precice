@@ -233,7 +233,7 @@ void CouplingSchemeConfiguration::xmlTagCallback(
       std::ostringstream stream;
       stream << "Mesh \"" << nameMesh << "\" with data \"" << nameData
              << "\" not defined at definition of coupling scheme";
-      throw stream.str();
+      throw std::runtime_error{stream.str()};
     }
     _meshConfig->addNeededMesh(nameParticipantFrom, nameMesh);
     _meshConfig->addNeededMesh(nameParticipantTo, nameMesh);
