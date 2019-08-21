@@ -39,11 +39,22 @@ private:
 
   logging::Logger _log{"partition::ReceivedBoundingBox"};
 
+  /// Create filteredMesh from the filtered _mesh.
+  /*
+   * Copies all vertices/edges/triangles that are either contained in the bounding box
+   * or tagged to the filteredMesh. Edges and triangles are copied, when ALL vertices
+   * are part of the filteredMesh i.e. their IDs are contained in vertexMap.
+   */
+  void filterMesh(mesh::Mesh &filteredMesh, const bool filterByBB);
+
   /// compares to bounding box and if they have intersection, returns true, otherwise flase!
   bool overlapping(mesh::Mesh::BoundingBox currentBB, mesh::Mesh::BoundingBox receivedBB);
 
   /// Sets _bb to the union with the mesh from fromMapping resp. toMapping, also enlage by _safetyFactor
   void prepareBoundingBox();
+
+  /// Checks if vertex in contained in _bb
+  bool isVertexInBB(const mesh::Vertex &vertex, const mesh::Mesh::BoundingBox BB);
 
   /// will be implemented in 3rd work package
   virtual void createOwnerInformation();
@@ -59,6 +70,8 @@ private:
   int _dimensions;
 
   double _safetyFactor;
+
+  std::vector<int> _connectedRanks;
 };
 
 }} // namespace precice, partition

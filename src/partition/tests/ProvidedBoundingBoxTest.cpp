@@ -417,7 +417,8 @@ BOOST_AUTO_TEST_CASE(TestComputeBoundingBox, * testing::OnSize(4))
   tearDownParallelEnvironment();
 }
 
-BOOST_AUTO_TEST_CASE(TestProvidedReceivedPartitionCommunicate, * testing::OnSize(4))
+// for both participants: receivd and provided!
+BOOST_AUTO_TEST_CASE(TestCommunicate, * testing::OnSize(4))
 {
   //mesh creation
   int dimensions = 2;
@@ -541,6 +542,190 @@ BOOST_AUTO_TEST_CASE(TestProvidedReceivedPartitionCommunicate, * testing::OnSize
   tearDownParallelEnvironment();
 }
 
+//for both participants: receivd and provided!
+BOOST_AUTO_TEST_CASE(TestCompute, * testing::OnSize(4))
+{
+
+  //mesh creation
+  int dimensions = 2;
+  bool flipNormals = true;
+  double safetyFactor = 0.1;
+  bool hasToSend=true;
+  mesh::PtrMesh mesh(new mesh::Mesh("mesh", dimensions, flipNormals));
+  mesh::PtrMesh receivedMesh(new mesh::Mesh("mesh", dimensions, flipNormals));  
+  
+  switch (utils::Parallel::getProcessRank()) {
+  case 0: {
+    Eigen::VectorXd position(dimensions);
+    position <<0.5, 0.0;
+    mesh::Vertex& v1 = mesh->createVertex(position);
+    position << 1.5, 0.0;
+    mesh::Vertex& v2 = mesh->createVertex(position);
+    position <<2.0, 1.0;
+    mesh::Vertex& v3 = mesh->createVertex(position);
+    position << 0.5, 1.0;
+    mesh::Vertex& v4 = mesh->createVertex(position);
+    mesh->createEdge(v1, v2);
+    mesh->createEdge(v2, v3);
+    mesh->createEdge(v3, v4);
+    mesh->createEdge(v4, v1);
+    
+    
+    break;
+  }
+  case 1: {
+    Eigen::VectorXd position(dimensions);
+    position <<2.5, 0.0;
+    mesh::Vertex& v1 = mesh->createVertex(position);
+    position << 3.5, 0.0;
+    mesh::Vertex& v2 = mesh->createVertex(position);
+    position <<3.5, 1.0;
+    mesh::Vertex& v3 = mesh->createVertex(position);
+    position << 2.0, 1.0;
+    mesh::Vertex& v4 = mesh->createVertex(position);
+    mesh->createEdge(v1, v2);
+    mesh->createEdge(v2, v3);
+    mesh->createEdge(v3, v4);
+    mesh->createEdge(v4, v1);
+
+    break;
+  }
+  case 2: {
+    Eigen::VectorXd position(dimensions);
+    position <<0.5, 0.0;
+    mesh::Vertex& v1 = mesh->createVertex(position);
+    position << 2.0, 0.0;
+    mesh::Vertex& v2 = mesh->createVertex(position);
+    position <<2.0, -1.0;
+    mesh::Vertex& v3 = mesh->createVertex(position);
+    position << 0.5, -1.0;
+    mesh::Vertex& v4 = mesh->createVertex(position);
+    mesh->createEdge(v1, v2);
+    mesh->createEdge(v2, v3);
+    mesh->createEdge(v3, v4);
+    mesh->createEdge(v4, v1);
+
+    break;
+  }
+  case 3: {
+    Eigen::VectorXd position(dimensions);
+    position <<2.0, 0.0;
+    mesh::Vertex& v1 = mesh->createVertex(position);
+    position << 3.5, 0.0;
+    mesh::Vertex& v2 = mesh->createVertex(position);
+    position <<3.5, -1.0;
+    mesh::Vertex& v3 = mesh->createVertex(position);
+    position << 2.0, -1.0;
+    mesh::Vertex& v4 = mesh->createVertex(position);
+    mesh->createEdge(v1, v2);
+    mesh->createEdge(v2, v3);
+    mesh->createEdge(v3, v4);
+    mesh->createEdge(v4, v1);
+
+    break;
+  }
+  }
+
+  mesh->computeState();
+  
+  // create communicatror for master com and bb exchange/com/initial com_map
+  com::PtrCommunication participantCom1 = com::PtrCommunication(new com::SocketCommunication());
+  m2n::DistributedComFactory::SharedPointer distrFactory = m2n::DistributedComFactory::SharedPointer(new m2n::GatherScatterComFactory(participantCom1));
+  m2n::PtrM2N m2n = m2n::PtrM2N(new m2n::M2N(participantCom1, distrFactory));
+  setupM2NEnvironment(m2n);
+
+  // create second communicator for m2n mesh and communciation map exchange 
+  com::PtrCommunication participantsCom =  com::PtrCommunication(new com::SocketCommunication());
+  com::PtrCommunicationFactory participantComFactory =  com::PtrCommunicationFactory(new com::SocketCommunicationFactory);
+  m2n::DistributedComFactory::SharedPointer distributionFactory = m2n::DistributedComFactory::SharedPointer(new m2n::PointToPointComFactory(participantComFactory));
+  m2n::PtrM2N p2p = m2n::PtrM2N(new m2n::M2N(participantsCom, distributionFactory));
+  
+  if(utils::Parallel::getProcessRank() < 2)
+  {
+    p2p->createDistributedCommunication(mesh);
+    ProvidedBoundingBox part(mesh, hasToSend, safetyFactor);
+    part.setM2N(m2n);
+    
+    part.communicateBoundingBox();
+    part.computeBoundingBox();
+
+    // if(utils::Parallel::getProcessRank() == 0 )
+    // {      
+    //   BOOST_TEST(mesh->getConnectedRanks().size() == 2);
+    // }
+    // else
+    // {
+    //   BOOST_TEST(mesh->getConnectedRanks().size() == 2);
+    // }
+
+    
+    // part.setM2N(p2p);
+    // p2p->requestSlavesPreConnection("Solid", "Fluid");
+
+    // mesh->getConnectedRanks().push_back(0);
+    // mesh->getConnectedRanks().push_back(1);
+
+    //part.communicate();
+    //part.compute();
+
+  }
+  else
+  {
+    p2p->createDistributedCommunication(receivedMesh);
+    mapping::PtrMapping boundingFromMapping = mapping::PtrMapping(new mapping::NearestNeighborMapping(mapping::Mapping::CONSISTENT, dimensions));
+    mapping::PtrMapping boundingToMapping = mapping::PtrMapping(new mapping::NearestNeighborMapping(mapping::Mapping::CONSERVATIVE, dimensions));
+    boundingFromMapping->setMeshes(receivedMesh, mesh);
+    boundingToMapping->setMeshes(mesh, receivedMesh);
+
+    ReceivedBoundingBox part(receivedMesh, safetyFactor);  // up to here
+    
+    part.setM2N(m2n);
+    part.setFromMapping(boundingFromMapping);
+    part.setToMapping(boundingToMapping);
+    part.communicateBoundingBox();    
+    part.computeBoundingBox();
+    receivedMesh->getConnectedRanks().push_back(0);
+    receivedMesh->getConnectedRanks().push_back(1);
+    part.setM2N(p2p);
+    p2p->acceptSlavesPreConnection("Solid", "Fluid");
+
+    //part.communicate();
+
+    BOOST_TEST(receivedMesh->vertices().size()==8);      
+    // part.compute();     
+
+    BOOST_TEST(receivedMesh->vertices().size()==2);
+
+    if(utils::Parallel::getProcessRank() == 2)
+    {
+      // BOOST_TEST(part._localCommunicationMap[1].size() == 0);
+      // BOOST_TEST(part._localCommunicationMap[0][0] == 0);
+      // BOOST_TEST(part._localCommunicationMap[0][1] == 1);
+    } else
+    {
+      // BOOST_TEST(part._localCommunicationMap[0].size() == 0);
+      // BOOST_TEST(part._localCommunicationMap[1][0] == 4);
+      // BOOST_TEST(part._localCommunicationMap[1][1] == 5);
+    }
+
+      
+
+      //If some one need the list of vertices in CommunicationMap:
+      
+      // if(utils::Parallel::getProcessRank() == 2)
+      // {
+      //   std::cout << "for global rank  " <<  utils::Parallel::getProcessRank() << std::endl;     
+      //   for (auto & ranks : part.localCommunicationMap ) {
+      //     std::cout << "vertices for rank = " <<  ranks.first << "are " ;
+      //     for (auto & vertices : ranks.second ) {
+      //       std::cout << vertices << ", ";
+      //     }
+      //     std::cout <<  std::endl;
+      //   }
+      // }      
+  } 
+  tearDownParallelEnvironment();
+}
 
 
 BOOST_AUTO_TEST_SUITE_END()

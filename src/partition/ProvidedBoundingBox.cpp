@@ -134,7 +134,10 @@ void ProvidedBoundingBox::communicate()
 }
 
 void ProvidedBoundingBox::compute()
-{}
+{
+  // each rank receives its final communication map
+  _m2n->broadcastReceiveLCM(_mesh->getCommunicationMap(), *_mesh);
+}
 
 void ProvidedBoundingBox::createOwnerInformation()
 {}
