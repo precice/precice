@@ -120,7 +120,7 @@ void ReceivedBoundingBox::computeBoundingBox()
       if (overlapping(_bb, remoteBB.second)) {
         _mesh->getConnectedRanks().push_back(remoteBB.first);
       }
-    }
+    }    
 
     //save a local copy of connected ranks
     _connectedRanks = _mesh->getConnectedRanks();
@@ -136,6 +136,10 @@ void ReceivedBoundingBox::computeBoundingBox()
 
 void ReceivedBoundingBox::communicate()
 {
+
+  // each rank receives max/min global vertex indexes from connected remote ranks
+  _m2n->broadcastReceiveLCM(_maxVertexGlobalIndexDomain, *_mesh);  
+
   // each rank receives mesh partition from connected ranks
   _m2n->broadcastReceiveLocalMesh(*_mesh);
 }
@@ -192,41 +196,41 @@ void ReceivedBoundingBox::compute()
     _toMapping->tagMeshSecondRound();
 
   // (5) Filter mesh according to tag
+  filteredMesh.clear();
   INFO("Filter mesh " << _mesh->getName() << " by mappings");
   filterMesh(filteredMesh, false);
   DEBUG("Mapping filter, filtered from " << _mesh->vertices().size() << " vertices to " << filteredMesh.vertices().size() << " vertices.");
   _mesh->clear();
   _mesh->addMesh(filteredMesh);
   _mesh->computeState();
-  
-  // (6) Compute distribution and communication map
-  INFO("Feedback distribution for mesh " << _mesh->getName()); 
-  int numberOfVertices = _mesh->vertices().size();
-  std::vector<int> vertexIDs(numberOfVertices, -1);
-  for (int i = 0; i < numberOfVertices; i++)
-  {
-    vertexIDs[i] = _mesh->vertices()[i].getGlobalIndex();
-  }
 
-  // This nested loops  fill in the localCommunicationbMap which shows this local
-  // rank needs which vertices from which rank of the other particpant
-  // for example:
-  // 4->{6, 8, 9}
-  // 8->{45, 49, 55}
-  // this rank needs vertices 6 ,8 and 9 from rank 4 and vertices 45, 49 and 55
-  // from rank 8
 
+  // (6) Compute and feedback local communication map
+  INFO("Feedback Communicatin Map "); 
   std::map<int, std::vector<int>> localCommunicationMap;
-    
+
+  /*
+   * The following nested loops fill in the localCommunicationbMap which shows this local
+   * rank needs which vertices from which rank of the other particpant
+   * for example:
+   * 4->{6, 8, 9}
+   * 8->{45, 49, 55}
+   * this rank needs vertices 6 ,8 and 9 from rank 4 and vertices 45, 49 and 55
+   * from rank 8
+   * If global index of a vertex is between min/max global index of a specific 
+   * remore rank, this vertex belongs to that rank
+   */
   for (auto &remoteVertex : _mesh->vertices()) {
-    for (auto &remoteRank : _connectedRanks) {
-      if (isVertexInBB(remoteVertex, _remoteBBM[remoteRank])) {
-        localCommunicationMap[remoteRank].push_back(remoteVertex.getID());
+    for (auto &remoteRank : _maxVertexGlobalIndexDomain) {
+      if (remoteVertex.getGlobalIndex() <= remoteRank.second[1] && remoteVertex.getGlobalIndex() >= remoteRank.second[0]) {
+        localCommunicationMap[remoteRank.first].push_back(remoteVertex.getGlobalIndex());
+
         break;
       }
     }
   }
-  _m2n->broadcastSendLCM(localCommunicationMap, *_mesh);
+  
+  _m2n->broadcastSendLCM(localCommunicationMap, *_mesh);   
 }
 
 
@@ -302,7 +306,11 @@ void ReceivedBoundingBox:: filterMesh(mesh::Mesh& filteredMesh, const bool filte
 
   for (const mesh::Vertex& vertex : _mesh->vertices())
   {
+<<<<<<< HEAD
     if ((filterByBB && isVertexInBB(vertex, _bb)) || (not filterByBB && vertex.isTagged()))
+=======
+    if ((filterByBB && isVertexInBB(vertex)) || (not filterByBB && vertex.isTagged()))
+>>>>>>> 7175c940f3c5bac5b769e4c0d0f144432cd2728c
     {
       mesh::Vertex& v = filteredMesh.createVertex(vertex.getCoords());
       v.setGlobalIndex(vertex.getGlobalIndex());
@@ -347,9 +355,15 @@ void ReceivedBoundingBox:: filterMesh(mesh::Mesh& filteredMesh, const bool filte
                <<", #triangles: " << filteredMesh.triangles().size() << ", rank: " << utils::MasterSlave::_rank);
 }
 
+<<<<<<< HEAD
 bool ReceivedBoundingBox::isVertexInBB(const mesh::Vertex& vertex, const mesh::Mesh::BoundingBox BB) {
   for (int d=0; d<_dimensions; d++) {
     if (vertex.getCoords()[d] < BB[d].first || vertex.getCoords()[d] > BB[d].second ) {
+=======
+bool ReceivedBoundingBox::isVertexInBB(const mesh::Vertex& vertex) {
+  for (int d=0; d<_dimensions; d++) {
+    if (vertex.getCoords()[d] < _bb[d].first || vertex.getCoords()[d] > _bb[d].second ) {
+>>>>>>> 7175c940f3c5bac5b769e4c0d0f144432cd2728c
       return false;
     }
   }
