@@ -16,16 +16,16 @@ namespace impl {
 
 WatchPoint:: WatchPoint
 (
-  const Eigen::VectorXd&  pointCoords,
-  const mesh::PtrMesh&    meshToWatch,
-  const std::string&      exportFilename )
+  Eigen::VectorXd    pointCoords,
+  mesh::PtrMesh      meshToWatch,
+  const std::string& exportFilename )
 :
-  _point ( pointCoords ),
-  _mesh ( meshToWatch ),
+  _point(std::move(pointCoords)),
+  _mesh(std::move(meshToWatch)),
   _txtWriter ( exportFilename )
 {
-  assertion ( _mesh.use_count() > 0 );
-  assertion ( _point.size() == _mesh->getDimensions(), _point.size(),
+  PRECICE_ASSERT( _mesh );
+  PRECICE_ASSERT( _point.size() == _mesh->getDimensions(), _point.size(),
                _mesh->getDimensions() );
 }
 
@@ -36,7 +36,7 @@ const mesh::PtrMesh& WatchPoint:: mesh() const
 
 void WatchPoint:: initialize()
 {
-  TRACE();
+  PRECICE_TRACE();
   // Find closest vertex
   if(_mesh->vertices().size()>0){
     query::FindClosestVertex findVertex ( _point );
@@ -46,16 +46,16 @@ void WatchPoint:: initialize()
     _weights.push_back ( 1.0 );
   }
 
-  if(utils::MasterSlave::_slaveMode){
+  if(utils::MasterSlave::isSlave()){
     utils::MasterSlave::_communication->send(_shortestDistance, 0);
     utils::MasterSlave::_communication->receive(_isClosest, 0);
   }
 
-  if(utils::MasterSlave::_masterMode){
+  if(utils::MasterSlave::isMaster()){
     int closestRank = 0;
     double closestDistanceGlobal = _shortestDistance;
     double closestDistanceLocal = std::numeric_limits<double>::max();
-    for(int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
+    for(int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++){
       utils::MasterSlave::_communication->receive(closestDistanceLocal, rankSlave);
       if(closestDistanceLocal < closestDistanceGlobal){
         closestDistanceGlobal = closestDistanceLocal;
@@ -63,12 +63,12 @@ void WatchPoint:: initialize()
       }
     }
     _isClosest = closestRank == 0;
-    for(int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
+    for(int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++){
       utils::MasterSlave::_communication->send(closestRank==rankSlave, rankSlave);
     }
   }
 
-  DEBUG("Rank: " << utils::MasterSlave::_rank << ", isClosest: " << _isClosest);
+  PRECICE_DEBUG("Rank: " << utils::MasterSlave::getRank() << ", isClosest: " << _isClosest);
 
   if(_isClosest){
 
@@ -127,7 +127,7 @@ void WatchPoint:: exportPointData
   double time )
 {
   if(_isClosest){
-    assertion(_vertices.size() == _weights.size());
+    PRECICE_ASSERT(_vertices.size() == _weights.size());
     _txtWriter.writeData("Time", time);
     // Export watch point coordinates
     Eigen::VectorXd coords = Eigen::VectorXd::Constant(_mesh->getDimensions(), 0.0);

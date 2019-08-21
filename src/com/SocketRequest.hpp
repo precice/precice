@@ -1,8 +1,6 @@
 #pragma once
-#ifndef PRECICE_NO_SOCKETS
 
 #include "Request.hpp"
-
 #include <condition_variable>
 #include <mutex>
 
@@ -29,5 +27,3 @@ private:
 };
 } // namespace com
 } // namespace precice
-
-#endif // not PRECICE_NO_SOCKETS

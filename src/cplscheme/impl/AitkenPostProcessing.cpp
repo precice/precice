@@ -23,20 +23,20 @@ AitkenPostProcessing::AitkenPostProcessing(double initialRelaxation,
    _dataIDs(dataIDs),
    _aitkenFactor(initialRelaxation)
 {
-  CHECK((_initialRelaxation > 0.0) && (_initialRelaxation <= 1.0),
+  PRECICE_CHECK((_initialRelaxation > 0.0) && (_initialRelaxation <= 1.0),
         "Initial relaxation factor for aitken post processing has to "
         << "be larger than zero and smaller or equal than one!");
 }
 
 void AitkenPostProcessing::initialize(DataMap &cplData)
 {
-  CHECK(utils::contained(*_dataIDs.begin(), cplData),
+  PRECICE_CHECK(utils::contained(*_dataIDs.begin(), cplData),
         "Data with ID " << *_dataIDs.begin() << " is not contained in data given at initialization!");
   size_t entries = 0;
   if (_dataIDs.size() == 1) {
     entries = cplData[_dataIDs.at(0)]->values->size();
   } else {
-    assertion(_dataIDs.size() == 2);
+    PRECICE_ASSERT(_dataIDs.size() == 2);
     entries = cplData[_dataIDs.at(0)]->values->size() +
               cplData[_dataIDs.at(1)]->values->size();
   }
@@ -49,7 +49,7 @@ void AitkenPostProcessing::initialize(DataMap &cplData)
   for (DataMap::value_type &pair : cplData) {
     int cols = pair.second->oldValues.cols();
     if (cols < 1) {
-      assertion(pair.second->values->size() > 0, pair.first);
+      PRECICE_ASSERT(pair.second->values->size() > 0, pair.first);
       utils::append(pair.second->oldValues,
                     (Eigen::VectorXd) Eigen::VectorXd::Zero(pair.second->values->size()));
     }
@@ -59,10 +59,10 @@ void AitkenPostProcessing::initialize(DataMap &cplData)
 void AitkenPostProcessing::performPostProcessing(
     DataMap &cplData)
 {
-  TRACE();
+  PRECICE_TRACE();
 
   // Compute aitken relaxation factor
-  assertion(utils::contained(*_dataIDs.begin(), cplData));
+  PRECICE_ASSERT(utils::contained(*_dataIDs.begin(), cplData));
 
   Eigen::VectorXd values;
   Eigen::VectorXd oldValues;
@@ -90,7 +90,7 @@ void AitkenPostProcessing::performPostProcessing(
     _aitkenFactor      = -_aitkenFactor * (nominator / denominator);
   }
 
-  DEBUG("AitkenFactor: " << _aitkenFactor);
+  PRECICE_DEBUG("AitkenFactor: " << _aitkenFactor);
 
   // Perform relaxation with aitken factor
   double omega         = _aitkenFactor;
@@ -123,7 +123,7 @@ void AitkenPostProcessing::iterationsConverged(
  * @brief: Returns the design specification corresponding to the given coupling data.
  *         This information is needed for convergence measurements in the coupling scheme.
  *  ---------------------------------------------------------------------------------------------
- */ /// @todo: change to call by ref when Eigen is used.
+ */
 std::map<int, Eigen::VectorXd> AitkenPostProcessing::getDesignSpecification(
     DataMap &cplData)
 {
@@ -146,7 +146,7 @@ void AitkenPostProcessing::setDesignSpecification(
     Eigen::VectorXd &q)
 {
   _designSpecification = q;
-  ERROR("design specification for Aitken relaxation is not supported yet.");
+  PRECICE_ERROR("design specification for Aitken relaxation is not supported yet.");
 }
 }
 }

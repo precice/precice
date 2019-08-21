@@ -17,6 +17,7 @@ addons:
       - python-numpy
       - libblas-dev
       - liblapack-dev
+      - lcov
 
 env:
   global:
@@ -25,37 +26,91 @@ env:
     - LOCAL_INSTALL="$HOME/local"
     - PETSC_ARCH=arch-linux2-c-debug
     - PETSC_DIR=$LOCAL_INSTALL/petsc
-    - CPLUS_INCLUDE_PATH="$PETSC_DIR/include:$PETSC_DIR/$PETSC_ARCH/include:$LOCAL_INSTALL/include:$CPLUS_INCLUDE_PATH"
+    - EIGEN3_ROOT_DIR=${LOCAL_INSTALL}/eigen3
+    - CPLUS_INCLUDE_PATH="$PETSC_DIR/include:$PETSC_DIR/$PETSC_ARCH/include:$LOCAL_INSTALL/include:$EIGEN3_ROOT_DIR:$CPLUS_INCLUDE_PATH"
     - LD_LIBRARY_PATH="$PETSC_DIR/$PETSC_ARCH/lib:$LOCAL_INSTALL/lib:$LD_LIBRARY_PATH"
     - LIBRARY_PATH="$PETSC_DIR/$PETSC_ARCH/lib:$LOCAL_INSTALL/lib:$LIBRARY_PATH"
     - PYTHONPATH="$PETSC_DIR/$PETSC_ARCH/lib:/usr/lib/python2.7:/usr/lib/python2.7/dist-packages:/usr/lib/python2.7/plat-x86_64-linux-gnu"
+    - BOOST_ROOT=${LOCAL_INSTALL}
+    - BUILD_TYPE=CMAKE
+    - CXXFLAGS="-Wall -Wextra -Wno-unused-parameter"
 
   matrix:
     - MPI=on PETSC=on
     - MPI=on PETSC=off
     - MPI=off PETSC=off
 
+matrix:
+  include:
+
+      # testing builds on scons
+    - if: type = cron or branch = master
+      compiler: gcc
+      env: BUILD_TYPE=SCONS MPI=on PETSC=on
+    - if: type = cron or branch = master
+      compiler: gcc
+      env: BUILD_TYPE=SCONS MPI=on PETSC=off
+    - if: type = cron or branch = master
+      compiler: gcc
+      env: BUILD_TYPE=SCONS MPI=off PETSC=off
+    - if: type = cron or branch = master
+      compiler: clang
+      env: BUILD_TYPE=SCONS MPI=on PETSC=on
+    - if: type = cron or branch = master
+      compiler: clang
+      env: BUILD_TYPE=SCONS MPI=on PETSC=off
+    - if: type = cron or branch = master
+      compiler: clang
+      env: BUILD_TYPE=SCONS MPI=off PETSC=off
+
+    # Test coverage
+    - name: "Test Coverage"
+      compiler: gcc
+      script:
+        - $TRAVIS_BUILD_DIR/tools/travis-coverage.sh
+      after_success:
+        - lcov --capture --directory "$TRAVIS_BUILD_DIR/build" --output-file coverage.info
+        - lcov --remove coverage.info '/usr/*' "$LOCAL_INSTALL/*" --output-file coverage.info # filter system-files and local-dependencies
+        - lcov --list coverage.info # debug info
+        - bash <(curl -s https://codecov.io/bash) -f coverage.info || echo "Codecov did not collect coverage reports"
+
+    # Test Bindings
+    - name: "Mock Test Python Bindings"
+      cache: false
+      before_install:
+        - pyenv global $(pyenv whence 2to3)  # activate all python versions
+        - PYTHONPATH=""
+        - PY_CMD=python3
+        - $PY_CMD -m pip install --user --upgrade pip wheel setuptools
+      install:
+        - pip3 install --user cython numpy mpi4py
+      script:
+        - $TRAVIS_BUILD_DIR/tools/travis-bindings-test.sh
+
 cache:
+  ccache: true
   directories:
     - $LOCAL_INSTALL
 
 before_install:
-  - if [ "$CXX" = "g++" ]; then export CXX="g++-6" && export CC="gcc-6"; fi
+  - if [ "$CXX" = "g++" ]; then export CXX="g++-6" && export CC="gcc-6" && export CXXFLAGS="$CXXFLAGS -Wno-literal-suffix"; fi
   - export OMPI_CXX=$CXX
   - if [ "$MPI" = "on" ]; then export CXX="mpicxx"; fi
+  - pyenv global $(pyenv whence 2to3)  # activate all python versions
+  - PYTHONPATH=""  # if PYTHONPATH is set, Travis errors
+  - PY_CMD=python3  # set PY_CMD
+  - $PY_CMD -m pip install --user --upgrade pip wheel setuptools # install python dependencies
 
 install:
   - $TRAVIS_BUILD_DIR/tools/travis-install-dependencies.sh $LOCAL_INSTALL
+  - pip3 install --user cython numpy mpi4py
+  - export PATH=${LOCAL_INSTALL}/cmake/bin:${LOCAL_INSTALL}/bin:${PATH}
 
 before_script:
   - mkdir $TRAVIS_BUILD_DIR/tests
 
 script:
-  - cd $TRAVIS_BUILD_DIR
-  - scons -j 2 petsc=$PETSC mpi=$MPI python=on compiler=$CXX staticlib bin solib tests symlink
-  - cd tests
-  - if [ "$MPI" = "off" ]; then ../build/last/testprecice -x -r detailed > boost-test-output; fi
-  - if [ "$MPI" = "on"  ]; then mpirun.openmpi --mca btl_base_warn_component_unused 0 -n 4 --output-filename boost-test-output  ../build/last/testprecice -r detailed; fi
+  - $TRAVIS_BUILD_DIR/tools/travis-build-test.sh
 
 after_failure:
   - cd $TRAVIS_BUILD_DIR

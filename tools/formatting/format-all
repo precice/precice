@@ -1,0 +1,14 @@
+#! /bin/bash
+# Call this script to format every c[pp] & h[pp] file
+# in the parent directory using clang-format
+
+FILES="$(find . -type f -name \*.hpp -or -name \*.h -or -name \*.cpp -or -name \*.c)"
+SPIN=0
+echo "Formatting files"
+for cfile in $FILES
+do
+    clang-format -style=file -i $cfile
+    echo -n "."
+done
+echo -e "\nDone"
+exit 0

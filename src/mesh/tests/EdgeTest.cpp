@@ -51,4 +51,25 @@ BOOST_AUTO_TEST_CASE(EdgeWKTPrint)
     std::string e2str("LINESTRING (1 2 3, 3 2 1)");
     BOOST_TEST(e2str == e2stream.str());
 }
+
+BOOST_AUTO_TEST_CASE(EdgeConnectedTo)
+{
+   Vertex v1 (Eigen::Vector3d(0,0,1), 0);
+   Vertex v2 (Eigen::Vector3d(0,0,2), 0);
+   Vertex v3 (Eigen::Vector3d(0,0,3), 0);
+   Vertex v4 (Eigen::Vector3d(0,0,4), 0);
+
+   Edge edge1(v1, v2, 0);
+   Edge edge2(v2, v3, 0);
+   BOOST_TEST(edge1.connectedTo(edge2));
+   BOOST_TEST(edge2.connectedTo(edge1));
+
+   Edge edge3(v3, v4, 0);
+   BOOST_TEST(!edge1.connectedTo(edge3));
+   BOOST_TEST(!edge3.connectedTo(edge1));
+   BOOST_TEST(edge2.connectedTo(edge3));
+   BOOST_TEST(edge3.connectedTo(edge2));
+}
+
+
 BOOST_AUTO_TEST_SUITE_END() // Mesh

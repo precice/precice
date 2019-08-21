@@ -1,7 +1,5 @@
 #include "ActionConfiguration.hpp"
 #include "xml/XMLAttribute.hpp"
-#include "xml/ValidatorEquals.hpp"
-#include "xml/ValidatorOr.hpp"
 #include "action/ModifyCoordinatesAction.hpp"
 #include "action/ScaleByAreaAction.hpp"
 #include "action/ScaleByDtAction.hpp"
@@ -48,8 +46,7 @@ ActionConfiguration:: ActionConfiguration
   XMLTag tagTargetData(*this, TAG_TARGET_DATA, XMLTag::OCCUR_ONCE);
   tagSourceData.setDocumentation("Data to read from and write to.");
 
-  XMLAttribute<std::string> attrName(ATTR_NAME);
-  attrName.setDocumentation("Name of data.");
+  auto attrName = XMLAttribute<std::string>(ATTR_NAME).setDocumentation("Name of data.");
   tagSourceData.addAttribute(attrName);
   tagTargetData.addAttribute(attrName);
 
@@ -130,8 +127,7 @@ ActionConfiguration:: ActionConfiguration
     doc += "The module name has to differ from existing (library) modules, ";
     doc += "otherwise, the existing module will be loaded instead of the user script.";
     tagModule.setDocumentation(doc);
-    XMLAttribute<std::string> attrName(ATTR_NAME);
-    tagModulePath.addAttribute(attrName);
+    tagModulePath.addAttribute(makeXMLAttribute(ATTR_NAME, ""));
     tagModule.addAttribute(attrName);
     tag.addSubtag(tagModulePath);
     tag.addSubtag(tagModule);
@@ -150,20 +146,16 @@ ActionConfiguration:: ActionConfiguration
     tags.push_back(tag);
   }
 
-  XMLAttribute<std::string> attrTiming ( ATTR_TIMING );
-  doc = "Determines when (relative to advancing the coupling scheme) the action is executed.";
-  attrTiming.setDocumentation(doc);
-  ValidatorEquals<std::string> validRegularPrior ( VALUE_REGULAR_PRIOR );
-  ValidatorEquals<std::string> validRegularPost ( VALUE_REGULAR_POST );
-  ValidatorEquals<std::string> validOnExchangePrior ( VALUE_ON_EXCHANGE_PRIOR );
-  ValidatorEquals<std::string> validOnExchangePost ( VALUE_ON_EXCHANGE_POST );
-  ValidatorEquals<std::string> validOnTimestepCompletePost(VALUE_ON_TIMESTEP_COMPLETE_POST);
-  attrTiming.setValidator(validRegularPrior || validRegularPost ||
-                          validOnExchangePrior || validOnExchangePost ||
-                          validOnTimestepCompletePost);
+ auto attrTiming  = XMLAttribute<std::string>( ATTR_TIMING )
+      .setDocumentation(
+              "Determines when (relative to advancing the coupling scheme) the action is executed.")
+      .setOptions({
+              VALUE_REGULAR_PRIOR, VALUE_REGULAR_POST,
+              VALUE_ON_EXCHANGE_PRIOR, VALUE_ON_EXCHANGE_POST,
+              VALUE_ON_TIMESTEP_COMPLETE_POST});
 
-  XMLAttribute<std::string> attrMesh(ATTR_MESH);
-  attrMesh.setDocumentation("Determines mesh used in action.");
+ auto attrMesh = XMLAttribute<std::string>(ATTR_MESH)
+      .setDocumentation("Determines mesh used in action.");
   for (XMLTag& tag : tags) {
     tag.addAttribute(attrTiming);
     tag.addAttribute(attrMesh);
@@ -175,7 +167,7 @@ void ActionConfiguration:: xmlTagCallback
 (
   xml::XMLTag& callingTag )
 {
-  TRACE(callingTag.getName());
+  PRECICE_TRACE(callingTag.getName());
   if (callingTag.getNamespace() == TAG){
     _configuredAction = ConfiguredAction();
     _configuredAction.type = callingTag.getName();
@@ -221,16 +213,16 @@ int ActionConfiguration:: getUsedMeshID() const
       return mesh->getID();
     }
   }
-  ERROR("No mesh ID found!");
+  PRECICE_ERROR("No mesh ID found!");
   return -1; // To please compiler
 }
 
 
 void ActionConfiguration:: createAction()
 {
-  TRACE();
+  PRECICE_TRACE();
 
-  assertion(_configuredAction.type != std::string(""));
+  PRECICE_ASSERT(_configuredAction.type != std::string(""));
   action::Action::Timing timing = getTiming();
 
   // Determine data and mesh
@@ -318,13 +310,13 @@ void ActionConfiguration:: createAction()
         mesh, targetDataID, sourceDataID) );
   }
   #endif
-  assertion(action.get() != nullptr);
+  PRECICE_ASSERT(action.get() != nullptr);
   _actions.push_back(action);
 }
 
 action::Action::Timing ActionConfiguration:: getTiming () const
 {
-  TRACE(_configuredAction.timing );
+  PRECICE_TRACE(_configuredAction.timing );
   action::Action::Timing timing;
   if ( _configuredAction.timing == VALUE_REGULAR_PRIOR ){
     timing = action::Action::ALWAYS_PRIOR;
@@ -342,7 +334,7 @@ action::Action::Timing ActionConfiguration:: getTiming () const
     timing = action::Action::ON_TIMESTEP_COMPLETE_POST;
   }
   else {
-    ERROR("Unknown action timing \"" <<  _configuredAction.timing << "\"!" );
+    PRECICE_ERROR("Unknown action timing \"" <<  _configuredAction.timing << "\"!" );
   }
   return timing;
 }

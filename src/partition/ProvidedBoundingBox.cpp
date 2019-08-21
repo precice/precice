@@ -5,7 +5,7 @@
 #include "m2n/M2N.hpp"
 #include "mapping/Mapping.hpp"
 #include "mesh/Mesh.hpp"
-#include "utils/EventTimings.hpp"
+#include "utils/EventUtils.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/Parallel.hpp"
 
@@ -28,18 +28,18 @@ ProvidedBoundingBox::ProvidedBoundingBox(mesh::PtrMesh mesh,
 
 void ProvidedBoundingBox::communicateBoundingBox()
 {
-  TRACE();
+  PRECICE_TRACE();
 
   if (!_hasToSend)
     return;
 
   // each rank sends its bb to master
-  if (utils::MasterSlave::_slaveMode) { //slave
+  if (utils::MasterSlave::isSlave()) { //slave
     com::CommunicateBoundingBox(utils::MasterSlave::_communication).sendBoundingBox(_mesh->getBoundingBox(), 0);
   } else { // Master
 
-    assertion(utils::MasterSlave::_rank == 0);
-    assertion(utils::MasterSlave::_size > 1);
+    PRECICE_ASSERT(utils::MasterSlave::getRank() == 0);
+    PRECICE_ASSERT(utils::MasterSlave::getSize() > 1);
 
     // to store the collection of bounding boxes
     mesh::Mesh::BoundingBoxMap bbm;
@@ -49,7 +49,7 @@ void ProvidedBoundingBox::communicateBoundingBox()
     for (int i = 0; i < _dimensions; i++) {
       initialBB.push_back(std::make_pair(-1, -1));
     }
-    for (int rank = 0; rank < utils::MasterSlave::_size; rank++) {
+    for (int rank = 0; rank < utils::MasterSlave::getSize(); rank++) {
       bbm[rank] = initialBB;
     }
 
@@ -57,42 +57,45 @@ void ProvidedBoundingBox::communicateBoundingBox()
     bbm[0] = _mesh->getBoundingBox();
 
     // master receives bbs from slaves and stores them in bbm
-    for (int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++) {
+    for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
       com::CommunicateBoundingBox(utils::MasterSlave::_communication).receiveBoundingBox(bbm[rankSlave], rankSlave);
     }
 
     // master sends number of ranks and bbm to the other master
-    _m2n->getMasterCommunication()->send(utils::MasterSlave::_size, 0);
-    com::CommunicateBoundingBox(_m2n->getMasterCommunication()).sendBoundingBoxMap(bbm, 0);
+    _m2ns[0]->getMasterCommunication()->send(utils::MasterSlave::getSize(), 0);
+    com::CommunicateBoundingBox(_m2ns[0]->getMasterCommunication()).sendBoundingBoxMap(bbm, 0);
   }
 }
 
 void ProvidedBoundingBox::computeBoundingBox()
 {
-  TRACE();
+  if (!_hasToSend)
+    return;
+  
+  PRECICE_TRACE();
 
-  // size of the feedbackmap that is received here
+  // size of the feedbackmap
   int remoteConnectionMapSize = 0;
   std::vector<int> connectedRanksList;
 
   std::map<int, std::vector<int>> remoteConnectionMap;
 
-  if (not utils::MasterSlave::_slaveMode) { //Master
-    assertion(utils::MasterSlave::_size > 1);
+  if (not utils::MasterSlave::isSlave()) { //Master
+    PRECICE_ASSERT(utils::MasterSlave::getSize() > 1);
 
     // master receives feedback map (map of other participant ranks -> connected ranks at this participant)
     // from other participants master
-    _m2n->getMasterCommunication()->receive(connectedRanksList, 0);
+    _m2ns[0]->getMasterCommunication()->receive(connectedRanksList, 0);
     remoteConnectionMapSize = connectedRanksList.size();
     
     for (auto &rank : connectedRanksList) {
       remoteConnectionMap[rank] = {-1};
     }
     if (remoteConnectionMapSize != 0)
-      com::CommunicateBoundingBox(_m2n->getMasterCommunication()).receiveConnectionMap(remoteConnectionMap, 0);
+      com::CommunicateBoundingBox(_m2ns[0]->getMasterCommunication()).receiveConnectionMap(remoteConnectionMap, 0);
 
     // broadcast the received feedbackMap
-    utils::MasterSlave::_communication->broadcast(remoteConnectionMapSize);
+    utils::MasterSlave::_communication->broadcast(connectedRanksList);
     if (remoteConnectionMapSize != 0) {
       com::CommunicateBoundingBox(utils::MasterSlave::_communication).broadcastSendConnectionMap(remoteConnectionMap);
     }
@@ -100,7 +103,7 @@ void ProvidedBoundingBox::computeBoundingBox()
     // master checks which ranks are connected to it
     for (auto &remoteRank : remoteConnectionMap) {
       for (auto &includedRank : remoteRank.second) {
-        if (utils::MasterSlave::_rank == includedRank) {
+        if (utils::MasterSlave::getRank() == includedRank) {
           _mesh->getConnectedRanks().push_back(remoteRank.first);
         }
       }
@@ -108,17 +111,19 @@ void ProvidedBoundingBox::computeBoundingBox()
 
   } else { // Slave
 
-    utils::MasterSlave::_communication->broadcast(remoteConnectionMapSize, 0);
+    utils::MasterSlave::_communication->broadcast(connectedRanksList, 0);
 
-    for (int i = 0; i < remoteConnectionMapSize; i++) {
-      remoteConnectionMap[i] = {-1};
-    }
-    if (remoteConnectionMapSize != 0)
+    if (connectedRanksList.size() != 0)
+    {
+      for (auto &rank : connectedRanksList) {
+        remoteConnectionMap[rank] = {-1};
+      }
       com::CommunicateBoundingBox(utils::MasterSlave::_communication).broadcastReceiveConnectionMap(remoteConnectionMap);
+    }
 
     for (auto &remoteRank : remoteConnectionMap) {
       for (auto &includedRanks : remoteRank.second) {
-        if (utils::MasterSlave::_rank == includedRanks) {
+        if (utils::MasterSlave::getRank() == includedRanks) {
           _mesh->getConnectedRanks().push_back(remoteRank.first);
         }
       }
@@ -191,9 +196,11 @@ void ProvidedBoundingBox::communicate()
   
   // each rank sends its min/max global vertex index to connected remote ranks 
   _m2n->broadcastSendLCM(vertexGlobalIndexDomain, *_mesh);
-  
-  // each rank sends its mesh partition to connected remote ranks
-  _m2n->broadcastSendLocalMesh(*_mesh);  
+
+
+  // each rank send its mesh partition to connected ranks at other participant
+  _m2ns[0]->broadcastSendLocalMesh(*_mesh);  
+
 }
 
 void ProvidedBoundingBox::compute()

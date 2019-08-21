@@ -8,42 +8,52 @@
 #include <vector>
 
 
-Column::Column(std::string const & colName)
-  : name(colName),
-    width(colName.size())
+Column::Column(std::string const & name)
+  : name(name),
+    width(name.size())
 {}
 
-Column::Column(std::string const & colName, int colWidth) :
-  name(colName),
-  width(colWidth)
+
+Column::Column(std::string const & name, int width) :
+  name(name),
+  width(std::max(width, static_cast<int>(name.size())))
+{
+  precision = std::min(this->precision, this->width - 1);
+}
+
+
+Column::Column(std::string const & name, int width, int precision) :
+  name(name),
+  width(std::max(width, static_cast<int>(name.size())))
+{
+  this->precision = std::min(precision, this->width - 1);
+}
+
+
+Table::Table()
+  :
+  out(std::cout)
 {}
 
-Table::Table(std::initializer_list<std::string> headers)
-{
-  for (auto & h : headers) {
-    cols.emplace_back(h);
-  }    
-}
 
-Table::Table(std::initializer_list<std::pair<int, std::string>> headers)
-{
-  for (auto & h : headers) {
-    cols.emplace_back(std::get<1>(h), std::get<0>(h));
-  }    
-}
+Table::Table(std::ostream & out)
+  :
+  out(out)
+{}
+
 
 void Table::printHeader()
 {
   using namespace std;
 
   for (auto & h : cols) {
-    *out << padding << setw(h.width) << h.name << padding << sepChar;
+    out << padding << setw(h.width) << h.name << padding << sepChar;
   }
-    
-  *out << endl;
-  int headerLength = std::accumulate(cols.begin(), cols.end(), 0, [](int count, Column col){
-      return count + col.width + 3;
+
+  out << '\n';
+  int headerLength = std::accumulate(cols.begin(), cols.end(), 0, [this](int count, Column col){
+    return count + col.width + sepChar.size() + 2;
     });
   std::string sepLine(headerLength, '-');
-  *out << sepLine << endl;
+  out << sepLine << '\n';
 }

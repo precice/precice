@@ -97,16 +97,16 @@ int precicec_setMeshVertex (
   const double* position );
 
 void precicec_getMeshVertices (
-  int     meshID,
-  int     size,
-  int*    ids,
-  double* positions );
+  int        meshID,
+  int        size,
+  const int* ids,
+  double*    positions );
 
 void precicec_setMeshVertices (
-  int     meshID,
-  int     size,
-  double* positions,
-  int*    ids );
+  int           meshID,
+  int           size,
+  const double* positions,
+  int*          ids );
 
 int precicec_getMeshVertexSize ( int meshID );
 
@@ -143,10 +143,10 @@ void precicec_setMeshTriangleWithEdges (
  * @param[in] values Values of the data to be written.
  */
 void precicec_writeBlockVectorData (
-  int     dataID,
-  int     size,
-  int*    valueIndices,
-  double* values );
+  int           dataID,
+  int           size,
+  const int*    valueIndices,
+  const double* values );
 
 /**
  * @brief Writes vectorial foating point data to the coupling mesh.
@@ -164,10 +164,10 @@ void precicec_writeVectorData (
  * @brief See precice::SolverInterface::writeBlockScalarData().
  */
 void precicec_writeBlockScalarData (
-  int     dataID,
-  int     size,
-  int*    valueIndices,
-  double* values );
+  int           dataID,
+  int           size,
+  const int*    valueIndices,
+  const double* values );
 
 /**
  * @brief Writes scalar floating point data to the coupling mesh.
@@ -194,10 +194,10 @@ void precicec_writeScalarData (
  * @param[in] values Values of the data to be read.
  */
 void precicec_readBlockVectorData (
-  int     dataID,
-  int     size,
-  int*    valueIndices,
-  double* values );
+  int        dataID,
+  int        size,
+  const int* valueIndices,
+  double*    values );
 
 /**
  * @brief Reads vectorial foating point data from the coupling mesh.
@@ -215,10 +215,10 @@ void precicec_readVectorData (
  * @brief See precice::SolverInterface::readBlockScalarData().
  */
 void precicec_readBlockScalarData (
-  int     dataID,
-  int     size,
-  int*    valueIndices,
-  double* values );
+  int        dataID,
+  int        size,
+  const int* valueIndices,
+  double*    values );
 
 /**
  * @brief Reads scalar foating point data from the coupling mesh.
@@ -242,6 +242,8 @@ void precicec_mapWriteDataFrom ( int fromMeshID );
  */
 void precicec_mapReadDataTo ( int toMeshID );
 
+const char* precicec_actionWriteIterationCheckpoint();
+const char* precicec_actionReadIterationCheckpoint();
 
 #ifdef __cplusplus
 }

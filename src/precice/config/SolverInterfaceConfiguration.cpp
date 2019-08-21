@@ -7,8 +7,6 @@
 #include "m2n/config/M2NConfiguration.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
 #include "mapping/SharedPointer.hpp"
-#include "xml/ValidatorEquals.hpp"
-#include "xml/ValidatorOr.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
 
 namespace precice {
@@ -19,13 +17,9 @@ SolverInterfaceConfiguration:: SolverInterfaceConfiguration(xml::XMLTag& parent 
   using namespace xml;
   XMLTag tag(*this, "solver-interface", XMLTag::OCCUR_ONCE);
   tag.setDocumentation("Configuration of simulation relevant features.");
-
-  XMLAttribute<int> attrDimensions("dimensions");
-  std::string doc = "Determines the spatial dimensionality of the configuration";
-  attrDimensions.setDocumentation(doc);
-  ValidatorEquals<int> validDim2(2);
-  ValidatorEquals<int> validDim3(3);
-  attrDimensions.setValidator(validDim2 || validDim3);
+  auto attrDimensions = makeXMLAttribute("dimensions", 2)
+                             .setDocumentation("Determines the spatial dimensionality of the configuration")
+                             .setOptions({2, 3});
   tag.addAttribute(attrDimensions);
 
   _dataConfiguration = mesh::PtrDataConfiguration (
@@ -47,7 +41,7 @@ void SolverInterfaceConfiguration:: xmlTagCallback
 (
   xml::XMLTag& tag )
 {
-  TRACE();
+  PRECICE_TRACE();
   if (tag.getName() == "solver-interface"){
     _dimensions = tag.getIntAttributeValue("dimensions");
     _dataConfiguration->setDimensions(_dimensions);
@@ -55,7 +49,7 @@ void SolverInterfaceConfiguration:: xmlTagCallback
     _participantConfiguration->setDimensions(_dimensions);
   }
   else {
-    ERROR("Received callback from tag " << tag.getName());
+    PRECICE_ERROR("Received callback from tag " << tag.getName());
   }
 }
 
@@ -63,7 +57,7 @@ void SolverInterfaceConfiguration:: xmlEndTagCallback
 (
   xml::XMLTag& tag )
 {
-  TRACE();
+  PRECICE_TRACE();
   if (tag.getName() == "solver-interface"){
     _meshConfiguration->setMeshSubIDs();
 
@@ -81,7 +75,7 @@ void SolverInterfaceConfiguration:: xmlEndTagCallback
                 break;
               }
             }
-            CHECK(meshFound,
+            PRECICE_CHECK(meshFound,
                   "The participant "<< neededMeshes.first <<
                   " needs to use the mesh " << neededMesh <<
                   " if he wants to use it in the coupling scheme.");
@@ -90,7 +84,7 @@ void SolverInterfaceConfiguration:: xmlEndTagCallback
           break;
         }
       }
-      assertion(participantFound);
+      PRECICE_ASSERT(participantFound);
     }
 
   }

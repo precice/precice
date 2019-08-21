@@ -1,0 +1,5 @@
+solverdummy
+CMakeCache.txt
+*events.json
+cmake_install.cmake
+CTestTestfile.cmake

@@ -43,7 +43,7 @@ public:
   virtual ~DistributedCommunication() {}
 
   /// Returns true, if a connection to a remote participant has been setup.
-  virtual bool isConnected() = 0;
+  virtual bool isConnected() const = 0;
 
   /**
    * @brief Connects to another participant, which has to call requestConnection().
@@ -65,19 +65,26 @@ public:
       const std::string &acceptorName,
       const std::string &requesterName) = 0;
 
-  /** same as acceptconnection, but this one does not need vertex distribution
-      and instead gets communication map directly from mesh. 
-   
-   *  This one is used only to create initial communication Map.    
+  /**
+   * @brief Connects to another participant, which has to call requestPreConnection().
+   *        Exchanged vertex list is not included, only connection between ranks 
+   *        is established. 
+   *
+   * @param[in] acceptorName Name of calling participant.
+   * @param[in] requesterName Name of remote participant to connect to.
    */
   virtual void acceptPreConnection(
     std::string const &acceptorName,
     std::string const &requesterName) = 0;
   
-  /** same as requestConnection, but this one does not need vertex distribution
-      and instead gets communication map directly from mesh. 
-   
-   *  This one is used only to create initial communication Map.    
+
+  /**
+   * @brief Connects to another participant, which has to call acceptPreConnection().
+   *        Exchanged vertex list is not included, only connection between ranks 
+   *        is established. 
+   *
+   * @param[in] acceptorName Name of remote participant to connect to.
+   * @param[in] requesterName Name of calling participant.
    */
   virtual void requestPreConnection(
     std::string const &acceptorName,
@@ -92,7 +99,7 @@ public:
 
   /// Sends an array of double values from all slaves (different for each slave).
   virtual void send(
-      double *itemsToSend,
+      double const *itemsToSend,
       size_t  size,
       int     valueDimension) = 0;
 
@@ -103,26 +110,24 @@ public:
       int     valueDimension) = 0;
 
   /**
-   * @brief Sends a double to connected ranks       
+   * @brief Broadcasts a double to connected ranks on remote participant      
    */
-  virtual void broadcastSend(double &itemToSend) = 0;
+  virtual void broadcastSend(const double &itemToSend) = 0;
 
   /**
-   * @brief Receives a double from a connected rank
+   * @brief Receives a double from a connected rank on remote participant
    */
   virtual void broadcastReceive(double &itemToReceive) = 0;
 
   /**
-   * All ranks send their mesh partition to remote local  connected ranks.
+   * @brief All ranks send their mesh partition to remote local  connected ranks.
    */
-  virtual void broadcastSendMesh(
-    mesh::Mesh &mesh) = 0;
+  virtual void broadcastSendMesh() = 0;
   
   /**
-   * All ranks receive mesh partition from remote local ranks.
+   * @brief All ranks receive mesh partition from remote local ranks.
    */
-  virtual void broadcastReceiveMesh(
-    mesh::Mesh &mesh) = 0;
+  virtual void broadcastReceiveMesh() = 0;
 
   /**
    *  All ranks Send their local communication maps to connected ranks

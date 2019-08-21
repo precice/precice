@@ -13,7 +13,7 @@ ScaleByAreaAction::ScaleByAreaAction(
     int                  targetDataID,
     const mesh::PtrMesh &mesh,
     Scaling              scaling)
-    : Action(timing, mesh),
+    : Action(timing, mesh, mapping::Mapping::MeshRequirement::FULL),
       _targetData(mesh->data(targetDataID)),
       _scaling(scaling)
 {
@@ -25,8 +25,8 @@ void ScaleByAreaAction::performAction(
     double computedPartFullDt,
     double fullDt)
 {
-  TRACE();
-  CHECK(getMesh()->getDimensions() == 2, "Not implemented for dimension != 2!");
+  PRECICE_TRACE();
+  PRECICE_CHECK(getMesh()->getDimensions() == 2, "Not implemented for dimension != 2!");
   auto &          targetValues = _targetData->values();
   Eigen::VectorXd areas        = Eigen::VectorXd::Zero(getMesh()->vertices().size());
   for (mesh::Edge &edge : getMesh()->edges()) {
@@ -34,7 +34,7 @@ void ScaleByAreaAction::performAction(
     areas[edge.vertex(1).getID()] += edge.getEnclosingRadius();
   }
   int dimensions = _targetData->getDimensions();
-  assertion(targetValues.size() / dimensions == areas.size());
+  PRECICE_ASSERT(targetValues.size() / dimensions == areas.size());
   if (_scaling == SCALING_DIVIDE_BY_AREA) {
     for (int i = 0; i < areas.size(); i++) {
       for (int dim = 0; dim < dimensions; dim++) {

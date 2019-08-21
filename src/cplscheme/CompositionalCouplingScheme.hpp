@@ -284,7 +284,7 @@ private:
   SchemesIt _activeSchemesBegin = _couplingSchemes.end();
 
   /// Iterator to behind the end of coupling schemes currently active.
-  SchemesIt _activeSchemesEnd  = _couplingSchemes.end();;
+  SchemesIt _activeSchemesEnd  = _couplingSchemes.end();
 
   /// Stores time added since last call of advance.
   double _lastAddedTime = 0;

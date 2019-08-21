@@ -2,7 +2,6 @@
 #include "com/MPIDirectCommunication.hpp"
 #include "com/MPIPortsCommunication.hpp"
 #include "com/SocketCommunication.hpp"
-#include "xml/XMLAttribute.hpp"
 #include "utils/Helpers.hpp"
 
 namespace precice
@@ -17,7 +16,7 @@ PtrCommunication CommunicationConfiguration::createCommunication(
     std::string network = tag.getStringAttributeValue("network");
     int         port    = tag.getIntAttributeValue("port");
 
-    CHECK(not utils::isTruncated<unsigned short>(port),
+    PRECICE_CHECK(not utils::isTruncated<unsigned short>(port),
           "The value given for the \"port\" attribute is not a 16-bit unsigned integer: " << port);
 
     std::string dir = tag.getStringAttributeValue("exchange-directory");
@@ -45,7 +44,7 @@ PtrCommunication CommunicationConfiguration::createCommunication(
 
 #endif
   }
-  assertion(com.get() != nullptr);
+  PRECICE_ASSERT(com.get() != nullptr);
   return com;
 }
 
