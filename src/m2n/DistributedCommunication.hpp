@@ -120,16 +120,14 @@ public:
   virtual void broadcastReceive(double &itemToReceive) = 0;
 
   /**
-   * All ranks send their mesh partition to remote local  connected ranks.
+   * @brief All ranks send their mesh partition to remote local  connected ranks.
    */
-  virtual void broadcastSendMesh(
-    mesh::Mesh &mesh) = 0;
+  virtual void broadcastSendMesh() = 0;
   
   /**
-   * All ranks receive mesh partition from remote local ranks.
+   * @brief All ranks receive mesh partition from remote local ranks.
    */
-  virtual void broadcastReceiveMesh(
-    mesh::Mesh &mesh) = 0;
+  virtual void broadcastReceiveMesh() = 0;
 
   /**
    *  All ranks Send their local communication maps to connected ranks

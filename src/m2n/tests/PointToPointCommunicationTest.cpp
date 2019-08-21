@@ -389,7 +389,7 @@ void connectionTest(com::PtrCommunicationFactory cf)
 
 void P2PMeshBroadcastTest(com::PtrCommunicationFactory cf)
 {
-  assertion(utils::Parallel::getCommunicatorSize() == 4);
+  PRECICE_ASSERT(utils::Parallel::getCommunicatorSize() == 4);
   utils::MasterSlave::_communication = std::make_shared<com::MPIDirectCommunication>();
   
   int dimensions = 2;
@@ -456,11 +456,11 @@ void P2PMeshBroadcastTest(com::PtrCommunicationFactory cf)
   if (utils::Parallel::getProcessRank() < 2) {
   
     c.requestPreConnection("Solid", "Fluid");
-    c.broadcastSendMesh(*mesh);
+    c.broadcastSendMesh();
   } else {
 
     c.acceptPreConnection("Solid", "Fluid");    
-    c.broadcastReceiveMesh(*mesh);
+    c.broadcastReceiveMesh();
 
       if(utils::Parallel::getProcessRank() ==2 )
       {
@@ -495,7 +495,7 @@ void P2PMeshBroadcastTest(com::PtrCommunicationFactory cf)
 
 void P2PComLCMTest(com::PtrCommunicationFactory cf)
 {  
-  assertion(utils::Parallel::getCommunicatorSize() == 4);
+  PRECICE_ASSERT(utils::Parallel::getCommunicatorSize() == 4);
   utils::MasterSlave::_communication = std::make_shared<com::MPIDirectCommunication>();
 
   int dimensions = 2;
@@ -619,9 +619,7 @@ BOOST_AUTO_TEST_CASE(MPIPortsCommunication,
   if (utils::Parallel::getProcessRank() < 4) {
     P2PComTest1(cf);
     P2PComTest2(cf);
-    connectionTest(cf);
-    P2PMeshBroadcastTest(cf);
-    P2PComLCMTest(cf);    
+    connectionTest(cf);    
   }
 }
 

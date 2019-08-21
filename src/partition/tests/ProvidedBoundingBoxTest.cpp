@@ -57,7 +57,7 @@ void setupParallelEnvironment(m2n::PtrM2N m2n)
 }
 
 void setupM2NEnvironment(m2n::PtrM2N m2n){
-  assertion(utils::Parallel::getCommunicatorSize() == 4);
+  PRECICE_ASSERT(utils::Parallel::getCommunicatorSize() == 4);
 
   com::PtrCommunication masterSlaveCom =
         com::PtrCommunication(new com::MPIDirectCommunication());
@@ -451,7 +451,7 @@ BOOST_AUTO_TEST_CASE(TestCommunicateLocalMeshPartitions, * testing::OnSize(4))
   {
     p2p->createDistributedCommunication(mesh);
     ProvidedBoundingBox part(mesh, hasToSend, safetyFactor);
-    part.setM2N(p2p);
+    part.addM2N(p2p);
     p2p->requestSlavesPreConnection("Solid", "Fluid");
 
     part.communicate();
@@ -460,7 +460,7 @@ BOOST_AUTO_TEST_CASE(TestCommunicateLocalMeshPartitions, * testing::OnSize(4))
   {
     p2p->createDistributedCommunication(mesh);
     ReceivedBoundingBox part(mesh, safetyFactor);
-    part.setM2N(p2p);
+    part.addM2N(p2p);
     p2p->acceptSlavesPreConnection("Solid", "Fluid");
 
     part.communicate();

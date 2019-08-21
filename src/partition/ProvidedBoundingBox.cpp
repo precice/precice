@@ -135,7 +135,7 @@ void ProvidedBoundingBox::computeBoundingBox()
 void ProvidedBoundingBox::communicate()
 {
   // each rank send its mesh partition to connected ranks at other participant
-  _m2n->broadcastSendLocalMesh(*_mesh);  
+  _m2ns[0]->broadcastSendLocalMesh(*_mesh);  
 }
 
 void ProvidedBoundingBox::compute()

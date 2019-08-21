@@ -114,26 +114,26 @@ void M2N::acceptSlavesPreConnection(
     const std::string &acceptorName,
     const std::string &requesterName)
 {
-  TRACE(acceptorName, requesterName);
+  PRECICE_TRACE(acceptorName, requesterName);
   _areSlavesConnected = true;
   for (const auto &pair : _distComs) {
     pair.second->acceptPreConnection(acceptorName, requesterName);
     _areSlavesConnected = _areSlavesConnected && pair.second->isConnected();
     }
-  assertion(_areSlavesConnected);
+  PRECICE_ASSERT(_areSlavesConnected);
 }
 
 void M2N::requestSlavesPreConnection(
   const std::string &acceptorName,
   const std::string &requesterName)
 {
-  TRACE(acceptorName, requesterName);
+  PRECICE_TRACE(acceptorName, requesterName);
   _areSlavesConnected = true;
   for (const auto &pair : _distComs) {
     pair.second->requestPreConnection(acceptorName, requesterName);
     _areSlavesConnected = _areSlavesConnected && pair.second->isConnected();
     }
-  assertion(_areSlavesConnected);
+  PRECICE_ASSERT(_areSlavesConnected);
 }
 
 void M2N::closeConnection()
@@ -215,12 +215,12 @@ void M2N::broadcastSendLocalMesh(mesh::Mesh &mesh)
 {
   int meshID = mesh.getID();
   if (utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster()) {
-    assertion(_areSlavesConnected);
-    assertion(_distComs.find(meshID) != _distComs.end());
-    assertion(_distComs[meshID].get() != nullptr);    
-    _distComs[meshID]->broadcastSendMesh(mesh);
+    PRECICE_ASSERT(_areSlavesConnected);
+    PRECICE_ASSERT(_distComs.find(meshID) != _distComs.end());
+    PRECICE_ASSERT(_distComs[meshID].get() != nullptr);    
+    _distComs[meshID]->broadcastSendMesh();
   } else { //coupling mode
-    assertion(false, "This method can only be used with the point to point communication scheme");
+    PRECICE_ASSERT(false, "This method can only be used in parallel communication mode");
   }
 }
 
@@ -229,10 +229,10 @@ void M2N::broadcastSendLCM(std::map<int, std::vector<int>> &localCommunicationMa
 {
   if (utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster()) {
     int meshID = mesh.getID();
-    assertion(_areSlavesConnected);
+    PRECICE_ASSERT(_areSlavesConnected);
     _distComs[meshID]->broadcastSendLCM(localCommunicationMap);
   } else { //coupling mode
-    assertion(false, "This method can only be used with the point to point communication scheme");
+    PRECICE_ASSERT(false, "This method can only be used in parallel communication mode");
   }  
 }
 
@@ -291,12 +291,12 @@ void M2N::broadcastReceiveLocalMesh(mesh::Mesh &mesh)
 {
   int meshID = mesh.getID();
   if (utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster()) {
-    assertion(_areSlavesConnected);
-    assertion(_distComs.find(meshID) != _distComs.end());
-    assertion(_distComs[meshID].get() != nullptr);
-    _distComs[meshID]->broadcastReceiveMesh(mesh);
+    PRECICE_ASSERT(_areSlavesConnected);
+    PRECICE_ASSERT(_distComs.find(meshID) != _distComs.end());
+    PRECICE_ASSERT(_distComs[meshID].get() != nullptr);
+    _distComs[meshID]->broadcastReceiveMesh();
   } else { //coupling mode
-    assertion(false, "This method can only be used with the point to point communication scheme");
+    PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
   }
 }
 
@@ -304,10 +304,10 @@ void M2N::broadcastReceiveLCM(std::map<int, std::vector<int>> &localCommunicatio
 {
   if (utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster()) {
     int meshID = mesh.getID();
-    assertion(_areSlavesConnected);
+    PRECICE_ASSERT(_areSlavesConnected);
     _distComs[meshID]->broadcastReceiveLCM(localCommunicationMap);
   } else { //coupling mode
-    assertion(false, "This method can only be used with the point to point communication scheme");
+    PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
   }  
 }
 

@@ -674,17 +674,17 @@ void PointToPointCommunication::broadcastReceive(double &itemToReceive)
   }  
 }
 
-void PointToPointCommunication::broadcastSendMesh(mesh::Mesh &mesh)
+void PointToPointCommunication::broadcastSendMesh()
 {  
   for (auto &connectionData : _connectionDataVector) {
-    com::CommunicateMesh(connectionData.communication).sendMesh(mesh, connectionData.remoteRank);
+    com::CommunicateMesh(connectionData.communication).sendMesh(*_mesh, connectionData.remoteRank);
   }  
 }
 
-void PointToPointCommunication::broadcastReceiveMesh(mesh::Mesh &mesh)
+void PointToPointCommunication::broadcastReceiveMesh()
 {  
   for (auto &connectionData : _connectionDataVector) {
-    com::CommunicateMesh(connectionData.communication).receiveMesh(mesh, connectionData.remoteRank);
+    com::CommunicateMesh(connectionData.communication).receiveMesh(*_mesh, connectionData.remoteRank);
   }  
 }
 

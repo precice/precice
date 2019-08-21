@@ -108,23 +108,23 @@ public:
   virtual void broadcastReceive(double &itemToReceive);
 
   /**
-   * All ranks send their mesh partition to remote local  connected ranks.
+   * @brief All ranks send their mesh partition to remote local  connected ranks.
    */
-  virtual void broadcastSendMesh(mesh::Mesh &mesh);
+  virtual void broadcastSendMesh();
   
   /**
-   * All ranks receive mesh partition from remote local ranks.
+   * @brief All ranks receive mesh partition from remote local ranks.
    */
-  virtual void broadcastReceiveMesh(mesh::Mesh &mesh);
+  virtual void broadcastReceiveMesh();
 
   /**
-   *  All ranks Send their local communication maps to connected ranks
+   *  @brief All ranks Send their local communication maps to connected ranks
    */
   virtual void broadcastSendLCM(
     std::map<int, std::vector<int>> &localCommunicationMap);
 
   /**
-   *  Each rank revives local communication maps from connected ranks
+   *  @brief Each rank revives local communication maps from connected ranks
    */
   virtual void broadcastReceiveLCM(
     std::map<int, std::vector<int>> &localCommunicationMap);

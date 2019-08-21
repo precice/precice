@@ -53,7 +53,6 @@ public:
    */
   void requestConnection(
       const std::string &acceptorName,
-<<<<<<< HEAD
       const std::string &requesterName);
   /** 
    *  This method has not been implemented yet.    
@@ -64,15 +63,12 @@ public:
     std::string const &requesterName);
 
   /** 
-   *  This method has not beein implemented yet.    
+   *  This method has not been implemented yet.    
    *  @todo: Ideally this should not be here
    */
   virtual void requestPreConnection(
     std::string const &acceptorName,
     std::string const &requesterName);
-=======
-      const std::string &requesterName) override;
->>>>>>> a4e31ca195c0d129ca764cc6472ec7101d81cc68
 
   /**
    * @brief Disconnects from communication space, i.e. participant.
@@ -110,14 +106,18 @@ public:
   virtual void broadcastReceive(double &itemToReceive);
 
   /**
-   * All ranks send their mesh partition to remote local  connected ranks.
+   * @brief All ranks send their mesh partition to remote local  connected ranks.
+   *
+   * @todo: Ideally this should not be here
    */
-  virtual void broadcastSendMesh(mesh::Mesh &mesh);
+  virtual void broadcastSendMesh();
   
   /**
-   * All ranks receive mesh partition from remote local ranks.
+   * @brief All ranks receive mesh partition from remote local ranks.
+   *
+   * @todo: Ideally this should not be here
    */
-  virtual void broadcastReceiveMesh(mesh::Mesh &mesh);
+  virtual void broadcastReceiveMesh();
 
   /**
    *  All ranks Send their local communication maps to connected ranks
