@@ -9,6 +9,28 @@
 namespace precice {
 namespace utils {
 
+#ifndef PRECICE_NO_PETSC
+namespace {
+
+template< typename Func = decltype(PetscOptionsSetValue)>
+PetscErrorCode PetscOptionsSetValueWrapper(const char name [], const char value[],
+    typename std::enable_if<std::is_same<Func, PetscErrorCode(PetscOptions,const char [],const char[])>::value, Func>::type PetscOptionsSetValueImpl =
+                           PetscOptionsSetValue)
+{
+  PetscOptionsSetValueImpl(nullptr, name, value);
+};
+
+template <typename Func = decltype(PetscOptionsSetValue)>
+PetscErrorCode PetscOptionsSetValueWrapper(const char name[], const char value[],
+    typename std::enable_if<std::is_same<Func, PetscErrorCode(const char[], const char[])>::value, Func>::type PetscOptionsSetValueImpl =
+                            PetscOptionsSetValue)
+{
+  PetscOptionsSetValueImpl(name, value);
+};
+
+}
+#endif
+
 logging::Logger Petsc::_log("utils::Petsc");
 
 bool Petsc::weInitialized = false;
@@ -38,7 +60,7 @@ void Petsc::finalize()
   PetscBool petscIsInitialized;
   PetscInitialized(&petscIsInitialized);
   if (petscIsInitialized and weInitialized) {
-    PetscOptionsSetValue(nullptr, "-options_left", "no"); 
+    PetscOptionsSetValueWrapper("-options_left", "no"); 
     PetscFinalize();
   }
 #endif // not PRECICE_NO_PETSC
