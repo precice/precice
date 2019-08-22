@@ -14,7 +14,7 @@
 #include <boost/log/utility/setup/console.hpp>
 #include <boost/log/support/date_time.hpp>
 
-#include "versions.hpp"
+#include "precice/impl/versions.hpp"
 #include "utils/assertion.hpp"
 #include "utils/String.hpp"
 

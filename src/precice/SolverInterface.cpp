@@ -1,7 +1,7 @@
 #include "precice/SolverInterface.hpp"
 #include "precice/impl/SolverInterfaceImpl.hpp"
 #include "cplscheme/Constants.hpp"
-#include "versions.hpp"
+#include "precice/impl/versions.hpp"
 
 namespace precice {
 
