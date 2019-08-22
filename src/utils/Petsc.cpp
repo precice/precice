@@ -17,7 +17,7 @@ PetscErrorCode PetscOptionsSetValueWrapper(const char name [], const char value[
     typename std::enable_if<std::is_same<Func, PetscErrorCode(PetscOptions,const char [],const char[])>::value, Func>::type PetscOptionsSetValueImpl =
                            PetscOptionsSetValue)
 {
-  PetscOptionsSetValueImpl(nullptr, name, value);
+  return PetscOptionsSetValueImpl(nullptr, name, value);
 };
 
 template <typename Func = decltype(PetscOptionsSetValue)>
@@ -25,7 +25,7 @@ PetscErrorCode PetscOptionsSetValueWrapper(const char name[], const char value[]
     typename std::enable_if<std::is_same<Func, PetscErrorCode(const char[], const char[])>::value, Func>::type PetscOptionsSetValueImpl =
                             PetscOptionsSetValue)
 {
-  PetscOptionsSetValueImpl(name, value);
+  return PetscOptionsSetValueImpl(name, value);
 };
 
 }
