@@ -4,10 +4,11 @@ All notable changes to this project will be documented in this file. For future 
 
 ## develop
 
-- Introduced unit tests using mocked preCICE C++ Interface for python bindings.
-- More "pythonic" python bindings `precice_future` are introduced. The python bindings `precice` are deprecated and will be removed in preCICE Version 2.0.0. If you still want to use them, please install `precice` and `precice_future`. Our recommendation, if you want to use the new bindings: Use `import precice_future as precice`.
+- Added unit tests using mocked preCICE C++ Interface for python bindings.
+- Added more "pythonic" python bindings `precice_future`.
+- Deprecated the python bindings `precice`, which will be removed in preCICE Version 2.0.0. If you still want to use them, please install `precice` and `precice_future`. Our recommendation, if you want to use the new bindings: Use `import precice_future as precice`.
 - Added CMake target to uninstall the project.
-- Only the total number of filtered vertices are printed, not each one separately, unless debug output is enabled.
+- Changed the log output for filtered vertices. Log level `INFO` prints the total number of filtered vertices. The detailed information was moved to `DEBUG`.
 
 ## 1.5.2
 
