@@ -10,6 +10,8 @@ namespace precice {
 namespace utils {
 
 #ifndef PRECICE_NO_PETSC
+
+// Fix for compatibility with PETSc < 3.7 to call PetscOptionsSetValue with proper number of args
 namespace {
 
 template< typename Func = decltype(PetscOptionsSetValue)>
