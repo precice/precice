@@ -12,7 +12,7 @@
 
 // void ExportVTKXMLTest:: run()
 // {
-//   TRACE();
+//   PRECICE_TRACE();
 //   typedef utils::Parallel Par;
 //   if (Par::getCommunicatorSize() > 3){
 //     const std::vector<int> ranksWanted = {0, 1, 2, 3};
@@ -34,7 +34,7 @@ using namespace precice;
 struct SetupMasterSlaveFixture {
   SetupMasterSlaveFixture()
   {
-    assertion(utils::Parallel::getCommunicatorSize() == 4);
+    BOOST_TEST(utils::Parallel::getCommunicatorSize() == 4);
 
     auto masterSlaveCom                = std::make_shared<com::MPIDirectCommunication>();
     utils::MasterSlave::_communication = masterSlaveCom;

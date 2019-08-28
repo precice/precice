@@ -3,6 +3,8 @@
 std::vector<double> fake_read_write_buffer;
 int fake_dimensions;
 int fake_mesh_id;
+std::vector<int> fake_ids;
+int n_fake_vertices;
 
 namespace precice {
 
@@ -19,6 +21,10 @@ SolverInterface:: SolverInterface
   fake_read_write_buffer = std::vector<double>();
   fake_dimensions = 3;
   fake_mesh_id = 0;
+  n_fake_vertices = 3;
+  for(int i=0; i<n_fake_vertices; i++){
+    fake_ids.push_back(i);
+  }
 }
 
 SolverInterface::~SolverInterface() = default;
@@ -142,7 +148,11 @@ void SolverInterface:: setMeshVertices
   int           size,
   const double* positions,
   int*          ids )
-{}
+{
+  for(int i = 0; i < size; i++){
+    ids[i] = fake_ids[i];
+  }
+}
 
 void SolverInterface:: getMeshVertices
 (

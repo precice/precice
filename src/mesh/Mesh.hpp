@@ -6,7 +6,6 @@
 #include "mesh/Vertex.hpp"
 #include "utils/PointerVector.hpp"
 #include "utils/ManageUniqueIDs.hpp"
-#include <boost/noncopyable.hpp>
 #include <map>
 #include <list>
 #include <vector>
@@ -36,7 +35,7 @@ namespace mesh {
  *
  * Usage example: precice::mesh::tests::MeshTest::testDemonstration()
  */
-class Mesh : public PropertyContainer, private boost::noncopyable
+class Mesh : public PropertyContainer
 {
 public:
 
@@ -117,7 +116,7 @@ public:
   template<typename VECTOR_T>
   Vertex& createVertex ( const VECTOR_T& coords )
   {
-    assertion(coords.size() == _dimensions, coords.size(), _dimensions);
+    PRECICE_ASSERT(coords.size() == _dimensions, coords.size(), _dimensions);
     Vertex* newVertex = new Vertex(coords, _manageVertexIDs.getFreeID());
     newVertex->addParent(*this);
     _content.add(newVertex);

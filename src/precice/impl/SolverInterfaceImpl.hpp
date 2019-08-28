@@ -37,7 +37,7 @@ namespace precice {
 namespace impl {
 
 /// Implementation of solver interface.
-class SolverInterfaceImpl : private boost::noncopyable
+class SolverInterfaceImpl
 {
 public:
 
@@ -57,6 +57,40 @@ public:
     int         accessorProcessRank,
     int         accessorCommunicatorSize,
     bool        serverMode );
+
+  /// Deleted copy constructor
+  SolverInterfaceImpl(SolverInterfaceImpl const &) = delete;
+
+  /// Deleted copy assignment
+  SolverInterfaceImpl& operator=(SolverInterfaceImpl const &) = delete;
+  
+  /// Deleted move constructor
+  SolverInterfaceImpl(SolverInterfaceImpl &&) = delete;
+
+  /// Deleted move assignment
+  SolverInterfaceImpl& operator=(SolverInterfaceImpl &&) = delete;
+
+  /**
+   * @brief Constructor with support for custom MPI_COMM_WORLD.
+   *
+   * A solver that wants to use the SolverInterfaceImpl must instatiate an object
+   * of this class. The object has to be configured by one of the configure
+   * methods before it has a reasonable state and can be used.
+   *
+   * Use the parameter communicator to specify a custom global MPI communicator.
+   * Pass a null pointer to signal preCICE to use MPI_COMM_WORLD.
+   *
+   * @param[in] participantName Name of the participant using the interface. Has to
+   *                            match the name given for a participant in the
+   *                            xml configuration file.
+   * @param[in] communicator    A pointer to the MPI_Comm to use.
+   */
+  SolverInterfaceImpl (
+    std::string participantName,
+    int         accessorProcessRank,
+    int         accessorCommunicatorSize,
+    bool        serverMode,
+    void*       communicator);
 
   /**
    * @brief Configures the coupling interface from the given xml file.

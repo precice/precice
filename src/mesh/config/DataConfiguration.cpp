@@ -32,8 +32,8 @@ void DataConfiguration:: setDimensions
 (
   int dimensions )
 {
-  TRACE(dimensions);
-  assertion((dimensions == 2) || (dimensions == 3), dimensions);
+  PRECICE_TRACE(dimensions);
+  PRECICE_ASSERT((dimensions == 2) || (dimensions == 3), dimensions);
   _dimensions = dimensions;
 }
 
@@ -45,9 +45,9 @@ DataConfiguration:: data() const
 
 DataConfiguration::ConfiguredData DataConfiguration:: getRecentlyConfiguredData() const
 {
-  assertion(_data.size() > 0);
-  assertion(_indexLastConfigured >= 0);
-  assertion(_indexLastConfigured < (int)_data.size());
+  PRECICE_ASSERT(_data.size() > 0);
+  PRECICE_ASSERT(_indexLastConfigured >= 0);
+  PRECICE_ASSERT(_indexLastConfigured < (int)_data.size());
   return _data[_indexLastConfigured];
 }
 
@@ -56,14 +56,14 @@ void DataConfiguration:: xmlTagCallback
   xml::XMLTag& tag )
 {
   if (tag.getNamespace() == TAG){
-    assertion(_dimensions != 0);
+    PRECICE_ASSERT(_dimensions != 0);
     std::string name = tag.getStringAttributeValue(ATTR_NAME);
     std::string typeName = tag.getName();
     int dataDimensions = getDataDimensions(typeName);
     addData(name, dataDimensions);
   }
   else {
-    ERROR("Received callback from tag " << tag.getName());
+    PRECICE_ERROR("Received callback from tag " << tag.getName());
   }
 }
 
@@ -82,7 +82,7 @@ void DataConfiguration:: addData
 
   // Check, if data with same name has been added already
   for (auto & elem : _data) {
-    CHECK ( elem.name != data.name, "Data \"" << data.name << "\" uses non-unique name!" );
+    PRECICE_CHECK( elem.name != data.name, "Data \"" << data.name << "\" uses non-unique name!" );
   }
   _data.push_back ( data );
 }
@@ -97,7 +97,7 @@ int DataConfiguration:: getDataDimensions
   else if (typeName == VALUE_SCALAR) {
     return 1;
   }
-  ERROR("Unknown data type!" );
+  PRECICE_ERROR("Unknown data type!" );
 }
 
 

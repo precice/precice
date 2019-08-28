@@ -35,6 +35,8 @@ public:
   /// Constructor.
   Partition(mesh::PtrMesh mesh);
 
+  Partition& operator=(Partition &&) = delete;
+
   virtual ~Partition() {}
 
   /// The mesh is communicated between both master ranks (if required)

@@ -19,14 +19,14 @@ logging::Logger MasterSlave:: _log("utils::MasterSlave" );
 
 void MasterSlave:: configure(int rank, int size)
 {
-  TRACE(rank, size);
-  CHECK(size>=2, "You cannot use a master with a serial participant.");
+  PRECICE_TRACE(rank, size);
+  PRECICE_CHECK(size>=2, "You cannot use a master with a serial participant.");
   _rank = rank;
   _size = size;
-  assertion(_rank != -1 && _size != -1);
+  PRECICE_ASSERT(_rank != -1 && _size != -1);
   _isMaster = (rank==0);
   _isSlave = (rank!=0);
-  DEBUG("isSlave: " << _isSlave <<", isMaster: " << _isMaster);
+  PRECICE_DEBUG("isSlave: " << _isSlave <<", isMaster: " << _isMaster);
 }
 
 int MasterSlave::getRank()
@@ -52,14 +52,14 @@ bool MasterSlave::isSlave()
 
 double MasterSlave:: l2norm(const Eigen::VectorXd& vec)
 {
-  TRACE();
+  PRECICE_TRACE();
 
   if(not _isMaster && not _isSlave){ //old case
     return vec.norm();
   }
 
-  assertion(_communication.get() != nullptr);
-  assertion(_communication->isConnected());
+  PRECICE_ASSERT(_communication.get() != nullptr);
+  PRECICE_ASSERT(_communication->isConnected());
   double localSum2 = 0.0;
   double globalSum2 = 0.0;
 
@@ -91,15 +91,15 @@ double MasterSlave:: l2norm(const Eigen::VectorXd& vec)
 
 double MasterSlave:: dot(const Eigen::VectorXd& vec1, const Eigen::VectorXd& vec2)
 {
-  TRACE();
+  PRECICE_TRACE();
 
   if(not _isMaster && not _isSlave){ //old case
     return vec1.dot(vec2);
   }
 
-  assertion(_communication.get() != nullptr);
-  assertion(_communication->isConnected());
-  assertion(vec1.size()==vec2.size(), vec1.size(), vec2.size());
+  PRECICE_ASSERT(_communication.get() != nullptr);
+  PRECICE_ASSERT(_communication->isConnected());
+  PRECICE_ASSERT(vec1.size()==vec2.size(), vec1.size(), vec2.size());
   double localSum = 0.0;
   double globalSum = 0.0;
 
@@ -132,7 +132,7 @@ double MasterSlave:: dot(const Eigen::VectorXd& vec1, const Eigen::VectorXd& vec
 
 void MasterSlave:: reset()
 {
-  TRACE();
+  PRECICE_TRACE();
   _isMaster = false;
   _isSlave = false;
   _rank = -1;
@@ -142,14 +142,14 @@ void MasterSlave:: reset()
 
 void
 MasterSlave::reduceSum(double* sendData, double* rcvData, int size) {
-  TRACE();
+  PRECICE_TRACE();
 
   if (not _isMaster && not _isSlave) {
     return;
   }
 
-  assertion(_communication.get() != nullptr);
-  assertion(_communication->isConnected());
+  PRECICE_ASSERT(_communication.get() != nullptr);
+  PRECICE_ASSERT(_communication->isConnected());
 
   if (_isSlave) {
     // send local result to master
@@ -164,14 +164,14 @@ MasterSlave::reduceSum(double* sendData, double* rcvData, int size) {
 
 void
 MasterSlave::reduceSum(int& sendData, int& rcvData, int size) {
-  TRACE();
+  PRECICE_TRACE();
 
   if (not _isMaster && not _isSlave) {
     return;
   }
 
-  assertion(_communication.get() != nullptr);
-  assertion(_communication->isConnected());
+  PRECICE_ASSERT(_communication.get() != nullptr);
+  PRECICE_ASSERT(_communication->isConnected());
 
   if (_isSlave) {
     // send local result to master
@@ -186,14 +186,14 @@ MasterSlave::reduceSum(int& sendData, int& rcvData, int size) {
 
 void
 MasterSlave::allreduceSum(double* sendData, double* rcvData, int size) {
-  TRACE();
+  PRECICE_TRACE();
 
   if (not _isMaster && not _isSlave) {
     return;
   }
 
-  assertion(_communication.get() != nullptr);
-  assertion(_communication->isConnected());
+  PRECICE_ASSERT(_communication.get() != nullptr);
+  PRECICE_ASSERT(_communication->isConnected());
 
   if (_isSlave) {
     // send local result to master, receive reduced result from master
@@ -208,14 +208,14 @@ MasterSlave::allreduceSum(double* sendData, double* rcvData, int size) {
 
 void
 MasterSlave::allreduceSum(double& sendData, double& rcvData, int size) {
-  TRACE();
+  PRECICE_TRACE();
 
   if (not _isMaster && not _isSlave) {
     return;
   }
 
-  assertion(_communication.get() != nullptr);
-  assertion(_communication->isConnected());
+  PRECICE_ASSERT(_communication.get() != nullptr);
+  PRECICE_ASSERT(_communication->isConnected());
 
   if (_isSlave) {
     // send local result to master, receive reduced result from master
@@ -230,14 +230,14 @@ MasterSlave::allreduceSum(double& sendData, double& rcvData, int size) {
 
 void
 MasterSlave::allreduceSum(int& sendData, int& rcvData, int size) {
-  TRACE();
+  PRECICE_TRACE();
 
   if (not _isMaster && not _isSlave) {
     return;
   }
 
-  assertion(_communication.get() != nullptr);
-  assertion(_communication->isConnected());
+  PRECICE_ASSERT(_communication.get() != nullptr);
+  PRECICE_ASSERT(_communication->isConnected());
 
   if (_isSlave) {
     // send local result to master, receive reduced result from master
@@ -252,14 +252,14 @@ MasterSlave::allreduceSum(int& sendData, int& rcvData, int size) {
 
 void
 MasterSlave::broadcast(bool& value) {
-  TRACE();
+  PRECICE_TRACE();
 
   if (not _isMaster && not _isSlave) {
     return;
   }
 
-  assertion(_communication.get() != nullptr);
-  assertion(_communication->isConnected());
+  PRECICE_ASSERT(_communication.get() != nullptr);
+  PRECICE_ASSERT(_communication->isConnected());
 
   if (_isMaster) {
     // Broadcast (send) value.
@@ -275,14 +275,14 @@ MasterSlave::broadcast(bool& value) {
 
 void
 MasterSlave::broadcast(double& value) {
-  TRACE();
+  PRECICE_TRACE();
 
   if (not _isMaster && not _isSlave) {
     return;
   }
 
-  assertion(_communication.get() != nullptr);
-  assertion(_communication->isConnected());
+  PRECICE_ASSERT(_communication.get() != nullptr);
+  PRECICE_ASSERT(_communication->isConnected());
 
   if (_isMaster) {
     // Broadcast (send) value.
@@ -297,14 +297,14 @@ MasterSlave::broadcast(double& value) {
 
 void
 MasterSlave::broadcast(double* values, int size) {
-  TRACE();
+  PRECICE_TRACE();
 
   if (not _isMaster && not _isSlave) {
     return;
   }
 
-  assertion(_communication.get() != nullptr);
-  assertion(_communication->isConnected());
+  PRECICE_ASSERT(_communication.get() != nullptr);
+  PRECICE_ASSERT(_communication->isConnected());
 
   if (_isMaster) {
     // Broadcast (send) value.

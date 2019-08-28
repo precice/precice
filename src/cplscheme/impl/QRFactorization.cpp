@@ -37,10 +37,10 @@ QRFactorization::QRFactorization(
       _fstream_set(false),
       _globalRows(rows)
 {
-  assertion(_R.rows() == _cols, _R.rows(), _cols);
-  assertion(_R.cols() == _cols, _R.cols(), _cols);
-  assertion(_Q.cols() == _cols, _Q.cols(), _cols);
-  assertion(_Q.rows() == _rows, _Q.rows(), _rows);
+  PRECICE_ASSERT(_R.rows() == _cols, _R.rows(), _cols);
+  PRECICE_ASSERT(_R.cols() == _cols, _R.cols(), _cols);
+  PRECICE_ASSERT(_Q.cols() == _cols, _Q.cols(), _cols);
+  PRECICE_ASSERT(_Q.rows() == _rows, _Q.rows(), _rows);
 }
 
 /**
@@ -69,11 +69,11 @@ QRFactorization::QRFactorization(
     Eigen::VectorXd v = A.col(k);
     insertColumn(k, v);
   }
-  //assertion(_R.rows() == _cols, _R.rows(), _cols);
-  assertion(_R.cols() == _cols, _R.cols(), _cols);
-  assertion(_Q.cols() == _cols, _Q.cols(), _cols);
-  assertion(_Q.rows() == _rows, _Q.rows(), _rows);
-  assertion(_cols == m, _cols, m);
+  //PRECICE_ASSERT(_R.rows() == _cols, _R.rows(), _cols);
+  PRECICE_ASSERT(_R.cols() == _cols, _R.cols(), _cols);
+  PRECICE_ASSERT(_Q.cols() == _cols, _Q.cols(), _cols);
+  PRECICE_ASSERT(_Q.rows() == _rows, _Q.rows(), _rows);
+  PRECICE_ASSERT(_cols == m, _cols, m);
 }
 
 /**
@@ -100,7 +100,7 @@ QRFactorization::QRFactorization(
 
 void QRFactorization::applyFilter(double singularityLimit, std::vector<int> &delIndices, Eigen::MatrixXd &V)
 {
-  TRACE();
+  PRECICE_TRACE();
   delIndices.resize(0);
   if (_filter == PostProcessing::QR1FILTER || _filter == PostProcessing::QR1FILTER_ABS) {
     bool             linearDependence = true;
@@ -118,7 +118,7 @@ void QRFactorization::applyFilter(double singularityLimit, std::vector<int> &del
           // QR1-filter
           if (index >= cols())
             break;
-          assertion(index < _cols, index, _cols);
+          PRECICE_ASSERT(index < _cols, index, _cols);
           double factor = (_filter == PostProcessing::QR1FILTER_ABS) ? 1.0 : _R.norm();
           if (std::fabs(_R(index, index)) < singularityLimit * factor) {
 
@@ -130,7 +130,7 @@ void QRFactorization::applyFilter(double singularityLimit, std::vector<int> &del
             //break;
             index--; // check same column index, as cols are shifted left
           }
-          assertion(delCols + _cols == (int) delFlag.size(), (delCols + _cols), delFlag.size());
+          PRECICE_ASSERT(delCols + _cols == (int) delFlag.size(), (delCols + _cols), delFlag.size());
           index++;
         }
       }
@@ -161,10 +161,10 @@ void QRFactorization::applyFilter(double singularityLimit, std::vector<int> &del
 void QRFactorization::deleteColumn(int k)
 {
 
-  TRACE();
+  PRECICE_TRACE();
 
-  assertion(k >= 0, k);
-  assertion(k < _cols, k, _cols);
+  PRECICE_ASSERT(k >= 0, k);
+  PRECICE_ASSERT(k < _cols, k, _cols);
 
   // maintain decomposition and orthogonalization by application of givens rotations
 
@@ -193,16 +193,16 @@ void QRFactorization::deleteColumn(int k)
   _Q.conservativeResize(_rows, _cols - 1);
   _cols--;
 
-  assertion(_Q.cols() == _cols, _Q.cols(), _cols);
-  assertion(_Q.rows() == _rows, _Q.rows(), _rows);
-  assertion(_R.cols() == _cols, _R.cols(), _cols);
-  //assertion(_R.rows() == _cols, _Q.rows(), _cols);
+  PRECICE_ASSERT(_Q.cols() == _cols, _Q.cols(), _cols);
+  PRECICE_ASSERT(_Q.rows() == _rows, _Q.rows(), _rows);
+  PRECICE_ASSERT(_R.cols() == _cols, _R.cols(), _cols);
+  //PRECICE_ASSERT(_R.rows() == _cols, _Q.rows(), _cols);
 }
 
 // ATTENTION: This method works on the memory of vector v, thus changes the vector v.
 bool QRFactorization::insertColumn(int k, const Eigen::VectorXd &vec, double singularityLimit)
 {
-  TRACE(k);
+  PRECICE_TRACE(k);
 
   Eigen::VectorXd v(vec);
 
@@ -211,9 +211,9 @@ bool QRFactorization::insertColumn(int k, const Eigen::VectorXd &vec, double sin
 
   bool applyFilter = (singularityLimit > 0.0);
 
-  assertion(k >= 0, k);
-  assertion(k <= _cols, k, _cols);
-  assertion(v.size() == _rows, v.size(), _rows);
+  PRECICE_ASSERT(k >= 0, k);
+  PRECICE_ASSERT(k <= _cols, k, _cols);
+  PRECICE_ASSERT(v.size() == _rows, v.size(), _rows);
 
   _cols++;
 
@@ -230,7 +230,7 @@ bool QRFactorization::insertColumn(int k, const Eigen::VectorXd &vec, double sin
   // - or the system is quadratic, thus no further column can be orthogonalized (||v_orth|| = rho_orth = 0)
   // - or ||v_orth|| = rho_orth extremely small (almost zero), thus the column v is not very orthogonal to Q, discard
   if (rho_orth <= std::numeric_limits<double>::min() || err < 0) {
-    DEBUG("The ratio ||v_orth|| / ||v|| is extremely small and either the orthogonalization process of column v failed or the system is quadratic.");
+    PRECICE_DEBUG("The ratio ||v_orth|| / ||v|| is extremely small and either the orthogonalization process of column v failed or the system is quadratic.");
 
     // necessary for applyFilter with the QR-2 filer. In this case, the new column is not inserted, but discarded.
     _cols--;
@@ -243,7 +243,7 @@ bool QRFactorization::insertColumn(int k, const Eigen::VectorXd &vec, double sin
   // rho_orth: the norm of the orthogonalized (but not normalized) column
   // rho0:     the norm of the initial column that is to be inserted
   if (applyFilter && (rho0 * singularityLimit > rho_orth)) {
-    DEBUG("discarding column as it is filtered out by the QR2-filter: rho0*eps > rho_orth: " << rho0 * singularityLimit << " > " << rho_orth);
+    PRECICE_DEBUG("discarding column as it is filtered out by the QR2-filter: rho0*eps > rho_orth: " << rho0 * singularityLimit << " > " << rho_orth);
     _cols--;
     return false;
   }
@@ -263,15 +263,15 @@ bool QRFactorization::insertColumn(int k, const Eigen::VectorXd &vec, double sin
     _R(j, j) = 0.;
   }
 
-  assertion(_R.cols() == _cols, _R.cols(), _cols);
-  //assertion(_R.rows() == _cols, _R.rows(), _cols);
+  PRECICE_ASSERT(_R.cols() == _cols, _R.cols(), _cols);
+  //PRECICE_ASSERT(_R.rows() == _cols, _R.rows(), _cols);
 
   // resize Q(1:n, 1:m) -> Q(1:n, 1:m+1)
   _Q.conservativeResize(_rows, _cols);
   _Q.col(_cols - 1) = v;
 
-  assertion(_Q.cols() == _cols, _Q.cols(), _cols);
-  assertion(_Q.rows() == _rows, _Q.rows(), _rows);
+  PRECICE_ASSERT(_Q.cols() == _cols, _Q.cols(), _cols);
+  PRECICE_ASSERT(_Q.rows() == _rows, _Q.rows(), _rows);
 
   // maintain decomposition and orthogonalization by application of givens rotations
   for (int l = _cols - 2; l >= k; l--) {
@@ -312,12 +312,12 @@ int QRFactorization::orthogonalize(
     double &         rho,
     int              colNum)
 {
-  TRACE();
+  PRECICE_TRACE();
 
   if (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()) {
-    assertion(_globalRows == _rows, _globalRows, _rows);
+    PRECICE_ASSERT(_globalRows == _rows, _globalRows, _rows);
   } else {
-    assertion(_globalRows != _rows, _globalRows, _rows, utils::MasterSlave::getRank());
+    PRECICE_ASSERT(_globalRows != _rows, _globalRows, _rows, utils::MasterSlave::getRank());
   }
 
   bool            null        = false;
@@ -365,7 +365,7 @@ int QRFactorization::orthogonalize(
     // Attention (Master-Slave): Here, we need to compare the global _rows with colNum and NOT the local
     // rows on the processor.
     if (_globalRows == colNum) {
-      WARN("The least-squares system matrix is quadratic, i.e., the new column cannot be orthogonalized (and thus inserted) to the LS-system.\nOld columns need to be removed.");
+      PRECICE_WARN("The least-squares system matrix is quadratic, i.e., the new column cannot be orthogonalized (and thus inserted) to the LS-system.\nOld columns need to be removed.");
       v   = Eigen::VectorXd::Zero(_rows);
       rho = 0.;
       return k;
@@ -373,7 +373,7 @@ int QRFactorization::orthogonalize(
 
     // take correct action if v_orth is null
     if (rho1 <= std::numeric_limits<double>::min()) {
-      DEBUG("The norm of v_orthogonal is almost zero, i.e., failed to orthogonalize column v; discard.");
+      PRECICE_DEBUG("The norm of v_orthogonal is almost zero, i.e., failed to orthogonalize column v; discard.");
       null        = true;
       rho1        = 1;
       termination = true;
@@ -394,7 +394,7 @@ int QRFactorization::orthogonalize(
     if (rho1 * _theta <= rho0 + _omega * norm_coefficients) {
       // exit to fail if too many iterations
       if (k >= 4) {
-        WARN("Matrix Q is not sufficiently orthogonal. Failed to rorthogonalize new column after 4 iterations. New column will be discarded. The least-squares system is very bad conditioned and the quasi-Newton will most probably fail to converge.");
+        PRECICE_WARN("Matrix Q is not sufficiently orthogonal. Failed to rorthogonalize new column after 4 iterations. New column will be discarded. The least-squares system is very bad conditioned and the quasi-Newton will most probably fail to converge.");
         return -1;
       }
       rho0 = rho1;
@@ -429,14 +429,14 @@ int QRFactorization::orthogonalize_stable(
     double &         rho,
     int              colNum)
 {
-  TRACE();
+  PRECICE_TRACE();
 
   // serial case
   if (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()) {
-    assertion(_globalRows == _rows, _globalRows, _rows);
+    PRECICE_ASSERT(_globalRows == _rows, _globalRows, _rows);
     // master-slave case
   } else {
-    assertion(_globalRows != _rows, _globalRows, _rows, utils::MasterSlave::getRank());
+    PRECICE_ASSERT(_globalRows != _rows, _globalRows, _rows, utils::MasterSlave::getRank());
   }
 
   bool            restart     = false;
@@ -492,7 +492,7 @@ int QRFactorization::orthogonalize_stable(
     // Attention (Master-Slave): Here, we need to compare the global _rows with colNum and NOT the local
     // rows on the processor.
     if (_globalRows == colNum) {
-      WARN("The least-squares system matrix is quadratic, i.e., the new column cannot be orthogonalized (and thus inserted) to the LS-system.\nOld columns need to be removed.");
+      PRECICE_WARN("The least-squares system matrix is quadratic, i.e., the new column cannot be orthogonalized (and thus inserted) to the LS-system.\nOld columns need to be removed.");
       v   = Eigen::VectorXd::Zero(_rows);
       rho = 0.;
       return k;
@@ -515,15 +515,15 @@ int QRFactorization::orthogonalize_stable(
       if (k >= 4) {
         std::cout
             << "\ntoo many iterations in orthogonalize, termination failed\n";
-        WARN("Matrix Q is not sufficiently orthogonal. Failed to rorthogonalize new column after 4 iterations. New column will be discarded. The least-squares system is very bad conditioned and the quasi-Newton will most probably fail to converge.");
+        PRECICE_WARN("Matrix Q is not sufficiently orthogonal. Failed to rorthogonalize new column after 4 iterations. New column will be discarded. The least-squares system is very bad conditioned and the quasi-Newton will most probably fail to converge.");
         return -1;
       }
 
       // if ||v_orth|| / ||v|| is extremely small (numeric limit)
       // discard information from column, use any unit vector orthogonal to Q
       if (!restart && rho1 <= rho * _sigma) {
-        WARN("The new column is in the range of Q, thus not possible to orthogonalize. Try to insert a unit vector that is orthogonal to the columns space of Q.");
-        //DEBUG("[QR-dec] - reorthogonalization");
+        PRECICE_WARN("The new column is in the range of Q, thus not possible to orthogonalize. Try to insert a unit vector that is orthogonal to the columns space of Q.");
+        //PRECICE_DEBUG("[QR-dec] - reorthogonalization");
         if (_fstream_set)
           (*_infostream) << "[QR-dec] - reorthogonalization\n";
 
@@ -707,10 +707,10 @@ void QRFactorization::reset(
   _theta      = theta;
   _sigma      = sigma;
   _globalRows = _rows;
-  assertion(_R.rows() == _cols, _R.rows(), _cols);
-  assertion(_R.cols() == _cols, _R.cols(), _cols);
-  assertion(_Q.cols() == _cols, _Q.cols(), _cols);
-  assertion(_Q.rows() == _rows, _Q.rows(), _rows);
+  PRECICE_ASSERT(_R.rows() == _cols, _R.rows(), _cols);
+  PRECICE_ASSERT(_R.cols() == _cols, _R.cols(), _cols);
+  PRECICE_ASSERT(_Q.cols() == _cols, _Q.cols(), _cols);
+  PRECICE_ASSERT(_Q.rows() == _rows, _Q.rows(), _rows);
 }
 
 void QRFactorization::reset(
@@ -720,7 +720,7 @@ void QRFactorization::reset(
     double                 theta,
     double                 sigma)
 {
-  TRACE();
+  PRECICE_TRACE();
   _Q.resize(0, 0);
   _R.resize(0, 0);
   _cols       = 0;
@@ -737,14 +737,14 @@ void QRFactorization::reset(
     bool            inserted = insertColumn(k, v);
     if (not inserted) {
       k--;
-      DEBUG("column " << col << " has not been inserted in the QR-factorization, failed to orthogonalize.");
+      PRECICE_DEBUG("column " << col << " has not been inserted in the QR-factorization, failed to orthogonalize.");
     }
   }
-  assertion(_R.rows() == _cols, _R.rows(), _cols);
-  assertion(_R.cols() == _cols, _R.cols(), _cols);
-  assertion(_Q.cols() == _cols, _Q.cols(), _cols);
-  assertion(_Q.rows() == _rows, _Q.rows(), _rows);
-  assertion(_cols == m, _cols, m);
+  PRECICE_ASSERT(_R.rows() == _cols, _R.rows(), _cols);
+  PRECICE_ASSERT(_R.cols() == _cols, _R.cols(), _cols);
+  PRECICE_ASSERT(_Q.cols() == _cols, _Q.cols(), _cols);
+  PRECICE_ASSERT(_Q.rows() == _rows, _Q.rows(), _rows);
+  PRECICE_ASSERT(_cols == m, _cols, m);
 }
 
 void QRFactorization::pushFront(const Eigen::VectorXd &v)

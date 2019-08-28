@@ -57,6 +57,7 @@ target_sources(testprecice
     src/precice/tests/ParallelTests.cpp
     src/precice/tests/SerialTests.cpp
     src/precice/tests/ServerTests.cpp
+    src/precice/tests/VersioningTests.cpp
     src/precice/tests/WatchPointTest.cpp
     src/query/tests/FindClosestTest.cpp
     src/query/tests/FindClosestVertexVisitorTest.cpp
@@ -66,6 +67,7 @@ target_sources(testprecice
     src/testing/Testing.hpp
     src/testing/main.cpp
     src/testing/tests/ExampleTests.cpp
+    src/utils/tests/AlgorithmTest.cpp
     src/utils/tests/DimensionsTest.cpp
     src/utils/tests/EigenHelperFunctionsTest.cpp
     src/utils/tests/ManageUniqueIDsTest.cpp

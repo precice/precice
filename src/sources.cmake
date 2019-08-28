@@ -4,6 +4,7 @@
 
 target_sources(precice
     PRIVATE
+    ${CMAKE_BINARY_DIR}/src/precice/impl/versions.cpp
     src/action/Action.hpp
     src/action/ComputeCurvatureAction.cpp
     src/action/ComputeCurvatureAction.hpp
@@ -246,6 +247,7 @@ target_sources(precice
     src/precice/impl/ValidationMacros.hpp
     src/precice/impl/WatchPoint.cpp
     src/precice/impl/WatchPoint.hpp
+    src/precice/impl/versions.hpp
     src/query/ExportVTKNeighbors.cpp
     src/query/ExportVTKNeighbors.hpp
     src/query/ExportVTKVoxelQueries.cpp
@@ -266,6 +268,7 @@ target_sources(precice
     src/utils/Dimensions.hpp
     src/utils/EigenHelperFunctions.cpp
     src/utils/EigenHelperFunctions.hpp
+    src/utils/EigenIO.hpp
     src/utils/Event.cpp
     src/utils/Event.hpp
     src/utils/EventUtils.cpp
@@ -283,20 +286,15 @@ target_sources(precice
     src/utils/Petsc.cpp
     src/utils/Petsc.hpp
     src/utils/PointerVector.hpp
-    src/utils/SignalHandler.cpp
-    src/utils/SignalHandler.hpp
     src/utils/String.cpp
     src/utils/String.hpp
     src/utils/TableWriter.cpp
     src/utils/TableWriter.hpp
     src/utils/TypeNames.hpp
+    src/utils/algorithm.hpp
     src/utils/assertion.hpp
-    src/utils/json.hpp
-    src/utils/prettyprint.hpp
     src/utils/stacktrace.cpp
     src/utils/stacktrace.hpp
-    src/versions.hpp
-    src/versions.hpp
     src/xml/ConfigParser.cpp
     src/xml/ConfigParser.hpp
     src/xml/XMLAttribute.hpp

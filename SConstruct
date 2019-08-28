@@ -106,7 +106,7 @@ env.Append(LIBPATH = [('#' + buildpath)])
 env.Append(CCFLAGS= ['-Wall', '-Wextra', '-Wno-unused-parameter', '-std=c++11'])
 
 # ====== PRECICE_VERSION number ======
-PRECICE_VERSION = "1.5.1"
+PRECICE_VERSION = "1.5.2"
 
 
 # ====== Compiler Settings ======
@@ -344,18 +344,29 @@ symlink = env.Command(
 )
 
 # Substitute strings in version.hpp.in, save it as version.hpp
-versions = env.Substfile(
-    "src/versions.hpp.in",
+versions_hpp = env.Substfile(
+    "src/precice/impl/versions.hpp.in",
     SUBST_DICT =  {
-        "@preCICE_VERSION@" : PRECICE_VERSION,
-        "@PETSC_VERSION_MAJOR@" : PETSC_VERSION_MAJOR,
-        "@PETSC_VERSION_MINOR@" : PETSC_VERSION_MINOR}
+        "@preCICE_VERSION@": PRECICE_VERSION,
+        "@PETSC_VERSION_MAJOR@": PETSC_VERSION_MAJOR,
+        "@PETSC_VERSION_MINOR@": PETSC_VERSION_MINOR}
 )
 
+# Substitute strings in versions.cpp.in, save it as versions.cpp
+versions_cpp = env.Substfile(
+    "src/precice/impl/versions.cpp.in",
+    SUBST_DICT = {
+        "@preCICE_REVISION@": "no-info [SCons]",
+        "@preCICE_VERSION@": PRECICE_VERSION,
+        "@preCICE_VERSION_INFORMATION@": "MPI=" + ("Y" if env["mpi"] else "N") +
+                                          ";PETSC=" + ("Y" if env["petsc"] else "N") +
+                                          ";PYTHON=" + ("Y" if env["python"] else "N")
+    }
+)
 
-Default(versions, solib, tests, symlink)
+Default(versions_cpp, versions_hpp, solib, tests, symlink)
 
-AlwaysBuild(versions, symlink)
+AlwaysBuild(versions_cpp, versions_hpp, symlink)
 
 print("Targets:   " + ", ".join([str(i) for i in BUILD_TARGETS]))
 print("Buildpath: " + buildpath)

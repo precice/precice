@@ -22,11 +22,16 @@ sourcesPrecice = [
    Glob('precice/tests/servermode/*.cpp'),
    Glob('precice/bindings/c/*.cpp')
    ]
+
+sourcesVersion = [
+    File('versions.cpp')
+]
    
 sourcesAll = [ 
    sourcesCplscheme,
    sourcesAction,
-   sourcesPrecice
+   sourcesPrecice,
+   sourcesVersion
    ]
    
 Return ('sourcesAll')

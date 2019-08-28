@@ -53,7 +53,7 @@ ConnectionInfoWriter::~ConnectionInfoWriter()
 {
   namespace fs = boost::filesystem;
   fs::path p(getFilename());
-  DEBUG("Deleting connection file " << p.string());
+  PRECICE_DEBUG("Deleting connection file " << p.string());
   fs::remove(p);
 }
 
@@ -62,7 +62,7 @@ void ConnectionInfoWriter::write(std::string const & info) const
   namespace fs = boost::filesystem;
   auto path = getFilename();
   auto tmp = fs::path(path + "~");
-  DEBUG("Writing connection file " << path);
+  PRECICE_DEBUG("Writing connection file " << path);
   fs::create_directories(tmp.parent_path());
   {
     std::ofstream ofs(tmp.string(), std::ofstream::out);
