@@ -598,9 +598,9 @@ void PointToPointCommunication::updateVertexList()
 {
   mesh::Mesh::CommunicationMap localCommunicationMap = _mesh->getCommunicationMap();
 
-  for(auto &i : _connectionData)
+  for(auto &i : _connectionDataVector)
   {
-    _mappings.push_back({i.remoteRank, std::move(localCommunicationMap[i.remoteRank]), i.communication, i.request, {}});
+    _mappings.push_back({i.remoteRank, std::move(localCommunicationMap[i.remoteRank]), i.request, {}});
   }
 }
 
