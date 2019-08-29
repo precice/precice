@@ -60,6 +60,12 @@ public:
     _m2ns.push_back(m2n);
   }
 
+  void setM2N(m2n::PtrM2N m2n)
+  {
+    _m2ns.clear();
+    _m2ns.push_back(m2n);
+  }
+
 protected:
   mesh::PtrMesh _mesh;
 

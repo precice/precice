@@ -56,11 +56,54 @@ void setupParallelEnvironment(m2n::PtrM2N m2n)
   }
 }
 
+
 void setupM2NEnvironment(m2n::PtrM2N m2n){
   PRECICE_ASSERT(utils::Parallel::getCommunicatorSize() == 4);
 
-  com::PtrCommunication masterSlaveCom =
-        com::PtrCommunication(new com::MPIDirectCommunication());
+  com::PtrCommunication masterSlaveCom = com::PtrCommunication(new com::MPIDirectCommunication());
+  utils::MasterSlave::_communication = masterSlaveCom;
+
+  utils::Parallel::synchronizeProcesses();
+
+  if (utils::Parallel::getProcessRank() == 0){ //Master Fluid
+    utils::Parallel::splitCommunicator("FluidMaster");
+    m2n->acceptMasterConnection("FluidMaster", "SolidMaster");
+    utils::MasterSlave::configure(0, 2);    
+  }
+  else if(utils::Parallel::getProcessRank() == 1){//Slave1
+    utils::Parallel::splitCommunicator("FluidSlave");
+    utils::MasterSlave::configure(1, 2);    
+  }
+  else if(utils::Parallel::getProcessRank() == 2){//Master Solid
+    utils::Parallel::splitCommunicator("SolidMaster");
+    m2n->requestMasterConnection("FluidMaster", "SolidMaster");
+    utils::MasterSlave::configure(0, 2);    
+  }
+  else if(utils::Parallel::getProcessRank() == 3){//Slave2
+    utils::Parallel::splitCommunicator("SolidSlave");
+    utils::MasterSlave::configure(1, 2);    
+ }
+
+  if (utils::Parallel::getProcessRank() == 0){ //Master Fluid
+    masterSlaveCom->acceptConnection("FluidMaster", "FluidSlave", utils::Parallel::getProcessRank());
+    masterSlaveCom->setRankOffset(1);   
+  }
+  else if (utils::Parallel::getProcessRank() == 1){ //Slave Fluid
+    masterSlaveCom->requestConnection("FluidMaster", "FluidSlave", 0, 1);
+  }
+  else if(utils::Parallel::getProcessRank() == 2){//Master Solid
+    masterSlaveCom->acceptConnection("SolidMaster", "SolidSlave", utils::Parallel::getProcessRank());
+    utils::MasterSlave::_communication->setRankOffset(1);   
+  }
+  else if (utils::Parallel::getProcessRank() == 3){ //Slave Solid
+    masterSlaveCom->requestConnection("SolidMaster", "SolidSlave", 0, 1);
+  }
+}
+
+void setupM2NOnlyEnvironment(m2n::PtrM2N m2n){
+  PRECICE_ASSERT(utils::Parallel::getCommunicatorSize() == 4);
+
+  com::PtrCommunication masterSlaveCom = com::PtrCommunication(new com::MPIDirectCommunication());
   utils::MasterSlave::_communication = masterSlaveCom;
 
   utils::Parallel::synchronizeProcesses();
@@ -68,31 +111,32 @@ void setupM2NEnvironment(m2n::PtrM2N m2n){
   if (utils::Parallel::getProcessRank() == 0){ //Master Fluid
     utils::Parallel::splitCommunicator("FluidMaster");
     utils::MasterSlave::configure(0, 2);
-    utils::MasterSlave::_communication->acceptConnection("FluidMaster", "FluidSlave", utils::Parallel::getProcessRank());
-    utils::MasterSlave::_communication->setRankOffset(1);   
+    masterSlaveCom->acceptConnection("FluidMaster", "FluidSlave", utils::Parallel::getProcessRank());
+    masterSlaveCom->setRankOffset(1);   
   }
   else if(utils::Parallel::getProcessRank() == 1){//Slave1
     utils::Parallel::splitCommunicator("FluidSlave");
     utils::MasterSlave::configure(1, 2);
-    utils::MasterSlave::_communication->requestConnection("FluidMaster", "FluidSlave", 0, 1);
+    masterSlaveCom->requestConnection("FluidMaster", "FluidSlave", 0, 1);
   }
   else if(utils::Parallel::getProcessRank() == 2){//Master Solid
     utils::Parallel::splitCommunicator("SolidMaster");
     utils::MasterSlave::configure(0, 2);
-    utils::MasterSlave::_communication->acceptConnection("SolidMaster", "SolidSlave", utils::Parallel::getProcessRank());
+    masterSlaveCom->acceptConnection("SolidMaster", "SolidSlave", utils::Parallel::getProcessRank());
     utils::MasterSlave::_communication->setRankOffset(1);   
   }
   else if(utils::Parallel::getProcessRank() == 3){//Slave2
     utils::Parallel::splitCommunicator("SolidSlave");
     utils::MasterSlave::configure(1, 2);
-    utils::MasterSlave::_communication->requestConnection("SolidMaster", "SolidSlave", 0, 1);
+    masterSlaveCom->requestConnection("SolidMaster", "SolidSlave", 0, 1);
  }
+  
 }
 
 void tearDownParallelEnvironment(){
   utils::MasterSlave::_communication = nullptr;
   utils::MasterSlave::reset();
-  //utils::Parallel::synchronizeProcesses();
+  // utils::Parallel::synchronizeProcesses();
   utils::Parallel::clearGroups();
   mesh::Mesh::resetGeometryIDsGlobally();
   mesh::Data::resetDataCount();
@@ -303,6 +347,7 @@ BOOST_AUTO_TEST_CASE(TestCommunicateBoundingBox3D, * testing::OnSize(4))
   tearDownParallelEnvironment();
 }
 
+
 BOOST_AUTO_TEST_CASE(TestComputeBoundingBox, * testing::OnSize(4))
 {
   com::PtrCommunication participantCom =
@@ -379,7 +424,15 @@ BOOST_AUTO_TEST_CASE(TestCommunicateLocalMeshPartitions, * testing::OnSize(4))
   bool flipNormals = true;
   double safetyFactor = 0.1;
   bool hasToSend=true;
-  mesh::PtrMesh mesh(new mesh::Mesh("mesh", dimensions, flipNormals));  
+  mesh::PtrMesh mesh(new mesh::Mesh("mesh", dimensions, flipNormals));
+
+  // create second communicator for m2n mesh and communciation map exchange 
+  com::PtrCommunication participantsCom =  com::PtrCommunication(new com::SocketCommunication());
+  com::PtrCommunicationFactory participantComFactory =  com::PtrCommunicationFactory(new com::SocketCommunicationFactory);
+  m2n::DistributedComFactory::SharedPointer distributionFactory = m2n::DistributedComFactory::SharedPointer(new m2n::PointToPointComFactory(participantComFactory));
+  m2n::PtrM2N p2p = m2n::PtrM2N(new m2n::M2N(participantsCom, distributionFactory));
+
+  setupM2NOnlyEnvironment(p2p);
   
   switch (utils::Parallel::getProcessRank()) {
   case 0: {
@@ -398,6 +451,7 @@ BOOST_AUTO_TEST_CASE(TestCommunicateLocalMeshPartitions, * testing::OnSize(4))
     mesh->createEdge(v4, v1);
 
     mesh->getConnectedRanks().push_back(0);
+    p2p->acceptMasterConnection("SolidMaster", "FluidMaster");
     
     break;
   }
@@ -423,6 +477,7 @@ BOOST_AUTO_TEST_CASE(TestCommunicateLocalMeshPartitions, * testing::OnSize(4))
   case 2: {    
 
     mesh->getConnectedRanks().push_back(0);
+    p2p->requestMasterConnection("SolidMaster", "FluidMaster");
     
     break;
   }
@@ -435,34 +490,22 @@ BOOST_AUTO_TEST_CASE(TestCommunicateLocalMeshPartitions, * testing::OnSize(4))
   }
 
   mesh->computeState();
-
-  // create communicatror for master com and bb exchange/com/initial com_map
-  com::PtrCommunication participantCom1 = com::PtrCommunication(new com::SocketCommunication());
-  m2n::DistributedComFactory::SharedPointer distrFactory = m2n::DistributedComFactory::SharedPointer(new m2n::GatherScatterComFactory(participantCom1));
-  m2n::PtrM2N m2n = m2n::PtrM2N(new m2n::M2N(participantCom1, distrFactory));
-  setupM2NEnvironment(m2n);
-  
-  // create second communicator for m2n mesh and communciation map exchange 
-  com::PtrCommunication participantsCom =  com::PtrCommunication(new com::SocketCommunication());
-  com::PtrCommunicationFactory participantComFactory =  com::PtrCommunicationFactory(new com::SocketCommunicationFactory);
-  m2n::DistributedComFactory::SharedPointer distributionFactory = m2n::DistributedComFactory::SharedPointer(new m2n::PointToPointComFactory(participantComFactory));
-  m2n::PtrM2N p2p = m2n::PtrM2N(new m2n::M2N(participantsCom, distributionFactory));
-  
+    
   if(utils::Parallel::getProcessRank() < 2)
   {
     p2p->createDistributedCommunication(mesh);
     ProvidedBoundingBox part(mesh, hasToSend, safetyFactor);
+    p2p->acceptSlavesPreConnection("SolidSlaves", "FluidSlaves");
     part.addM2N(p2p);
-    p2p->requestSlavesPreConnection("Solid", "Fluid");
-
+    
     part.communicate();
   }
   else
   {
     p2p->createDistributedCommunication(mesh);
     ReceivedBoundingBox part(mesh, safetyFactor);
-    part.addM2N(p2p);
-    p2p->acceptSlavesPreConnection("Solid", "Fluid");
+    p2p->requestSlavesPreConnection("SolidSlaves", "FluidSlaves");    
+    part.addM2N(p2p);    
 
     part.communicate();
 
@@ -496,202 +539,17 @@ BOOST_AUTO_TEST_CASE(TestCommunicateLocalMeshPartitions, * testing::OnSize(4))
   tearDownParallelEnvironment();
 }
 
-//for both participants: receivd and provided!
-/* must be checked 
-BOOST_AUTO_TEST_CASE(TestCompute, * testing::OnSize(4))
-{
 
-  //mesh creation
-  int dimensions = 2;
-  bool flipNormals = true;
-  double safetyFactor = 0.1;
-  bool hasToSend=true;
-  mesh::PtrMesh mesh(new mesh::Mesh("mesh", dimensions, flipNormals));
-  mesh::PtrMesh receivedMesh(new mesh::Mesh("mesh", dimensions, flipNormals));  
-  
-  switch (utils::Parallel::getProcessRank()) {
-  case 0: {
-    Eigen::VectorXd position(dimensions);
-    position <<0.5, 0.0;
-    mesh::Vertex& v1 = mesh->createVertex(position);
-    position << 1.5, 0.0;
-    mesh::Vertex& v2 = mesh->createVertex(position);
-    position <<2.0, 1.0;
-    mesh::Vertex& v3 = mesh->createVertex(position);
-    position << 0.5, 1.0;
-    mesh::Vertex& v4 = mesh->createVertex(position);
-    mesh->createEdge(v1, v2);
-    mesh->createEdge(v2, v3);
-    mesh->createEdge(v3, v4);
-    mesh->createEdge(v4, v1);
-    
-    
-    break;
-  }
-  case 1: {
-    Eigen::VectorXd position(dimensions);
-    position <<2.5, 0.0;
-    mesh::Vertex& v1 = mesh->createVertex(position);
-    position << 3.5, 0.0;
-    mesh::Vertex& v2 = mesh->createVertex(position);
-    position <<3.5, 1.0;
-    mesh::Vertex& v3 = mesh->createVertex(position);
-    position << 2.0, 1.0;
-    mesh::Vertex& v4 = mesh->createVertex(position);
-    mesh->createEdge(v1, v2);
-    mesh->createEdge(v2, v3);
-    mesh->createEdge(v3, v4);
-    mesh->createEdge(v4, v1);
-
-    break;
-  }
-  case 2: {
-    Eigen::VectorXd position(dimensions);
-    position <<0.5, 0.0;
-    mesh::Vertex& v1 = mesh->createVertex(position);
-    position << 2.0, 0.0;
-    mesh::Vertex& v2 = mesh->createVertex(position);
-    position <<2.0, -1.0;
-    mesh::Vertex& v3 = mesh->createVertex(position);
-    position << 0.5, -1.0;
-    mesh::Vertex& v4 = mesh->createVertex(position);
-    mesh->createEdge(v1, v2);
-    mesh->createEdge(v2, v3);
-    mesh->createEdge(v3, v4);
-    mesh->createEdge(v4, v1);
-
-    break;
-  }
-  case 3: {
-    Eigen::VectorXd position(dimensions);
-    position <<2.0, 0.0;
-    mesh::Vertex& v1 = mesh->createVertex(position);
-    position << 3.5, 0.0;
-    mesh::Vertex& v2 = mesh->createVertex(position);
-    position <<3.5, -1.0;
-    mesh::Vertex& v3 = mesh->createVertex(position);
-    position << 2.0, -1.0;
-    mesh::Vertex& v4 = mesh->createVertex(position);
-    mesh->createEdge(v1, v2);
-    mesh->createEdge(v2, v3);
-    mesh->createEdge(v3, v4);
-    mesh->createEdge(v4, v1);
-
-    break;
-  }
-  }
-
-  mesh->computeState();
-  
-  // create communicatror for master com and bb exchange/com/initial com_map
-  com::PtrCommunication participantCom1 = com::PtrCommunication(new com::SocketCommunication());
-  m2n::DistributedComFactory::SharedPointer distrFactory = m2n::DistributedComFactory::SharedPointer(new m2n::GatherScatterComFactory(participantCom1));
-  m2n::PtrM2N m2n = m2n::PtrM2N(new m2n::M2N(participantCom1, distrFactory));
-  setupM2NEnvironment(m2n);
-
-  // create second communicator for m2n mesh and communciation map exchange 
-  com::PtrCommunication participantsCom =  com::PtrCommunication(new com::SocketCommunication());
-  com::PtrCommunicationFactory participantComFactory =  com::PtrCommunicationFactory(new com::SocketCommunicationFactory);
-  m2n::DistributedComFactory::SharedPointer distributionFactory = m2n::DistributedComFactory::SharedPointer(new m2n::PointToPointComFactory(participantComFactory));
-  m2n::PtrM2N p2p = m2n::PtrM2N(new m2n::M2N(participantsCom, distributionFactory));
-  
-  if(utils::Parallel::getProcessRank() < 2)
-  {
-    p2p->createDistributedCommunication(mesh);
-    ProvidedBoundingBox part(mesh, hasToSend, safetyFactor);
-    part.setM2N(m2n);
-    
-    part.communicateBoundingBox();
-    part.computeBoundingBox();
-
-    // if(utils::Parallel::getProcessRank() == 0 )
-    // {      
-    //   BOOST_TEST(mesh->getConnectedRanks().size() == 2);
-    // }
-    // else
-    // {
-    //   BOOST_TEST(mesh->getConnectedRanks().size() == 2);
-    // }
-
-    
-    // part.setM2N(p2p);
-    // p2p->requestSlavesPreConnection("Solid", "Fluid");
-
-    // mesh->getConnectedRanks().push_back(0);
-    // mesh->getConnectedRanks().push_back(1);
-
-    //part.communicate();
-    //part.compute();
-
-  }
-  else
-  {
-    p2p->createDistributedCommunication(receivedMesh);
-    mapping::PtrMapping boundingFromMapping = mapping::PtrMapping(new mapping::NearestNeighborMapping(mapping::Mapping::CONSISTENT, dimensions));
-    mapping::PtrMapping boundingToMapping = mapping::PtrMapping(new mapping::NearestNeighborMapping(mapping::Mapping::CONSERVATIVE, dimensions));
-    boundingFromMapping->setMeshes(receivedMesh, mesh);
-    boundingToMapping->setMeshes(mesh, receivedMesh);
-
-    ReceivedBoundingBox part(receivedMesh, safetyFactor);  // up to here
-    
-    part.setM2N(m2n);
-    part.setFromMapping(boundingFromMapping);
-    part.setToMapping(boundingToMapping);
-    part.communicateBoundingBox();    
-    part.computeBoundingBox();
-    receivedMesh->getConnectedRanks().push_back(0);
-    receivedMesh->getConnectedRanks().push_back(1);
-    part.setM2N(p2p);
-    p2p->acceptSlavesPreConnection("Solid", "Fluid");
-
-    //part.communicate();
-
-    BOOST_TEST(receivedMesh->vertices().size()==8);      
-    // part.compute();     
-
-    BOOST_TEST(receivedMesh->vertices().size()==2);
-
-    if(utils::Parallel::getProcessRank() == 2)
-    {
-      // BOOST_TEST(part._localCommunicationMap[1].size() == 0);
-      // BOOST_TEST(part._localCommunicationMap[0][0] == 0);
-      // BOOST_TEST(part._localCommunicationMap[0][1] == 1);
-    } else
-    {
-      // BOOST_TEST(part._localCommunicationMap[0].size() == 0);
-      // BOOST_TEST(part._localCommunicationMap[1][0] == 4);
-      // BOOST_TEST(part._localCommunicationMap[1][1] == 5);
-    }
-
-      
-
-      //If some one need the list of vertices in CommunicationMap:
-      
-      // if(utils::Parallel::getProcessRank() == 2)
-      // {
-      //   std::cout << "for global rank  " <<  utils::Parallel::getProcessRank() << std::endl;     
-      //   for (auto & ranks : part.localCommunicationMap ) {
-      //     std::cout << "vertices for rank = " <<  ranks.first << "are " ;
-      //     for (auto & vertices : ranks.second ) {
-      //       std::cout << vertices << ", ";
-      //     }
-      //     std::cout <<  std::endl;
-      //   }
-      // }      
-  } 
-  tearDownParallelEnvironment();
-}
-
-*/
 BOOST_AUTO_TEST_CASE(TestCompute2D, * testing::OnSize(4))
 {
   //mesh creation
   int dimensions = 2;
   bool flipNormals = true;
-  double safetyFactor = 0.0;
+  double safetyFactor = 0;
   bool hasToSend=true;
   mesh::PtrMesh mesh(new mesh::Mesh("mesh", dimensions, flipNormals));
-  mesh::PtrMesh receivedMesh(new mesh::Mesh("mesh", dimensions, flipNormals));  
+  mesh::PtrMesh receivedMesh(new mesh::Mesh("mesh", dimensions, flipNormals));
+
   
   switch (utils::Parallel::getProcessRank()) {
   case 0: {
@@ -711,7 +569,8 @@ BOOST_AUTO_TEST_CASE(TestCompute2D, * testing::OnSize(4))
     position << -1.0, 2.0;
     mesh->createVertex(position);
     position <<  0.0, 2.0;
-    mesh->createVertex(position);           
+    mesh->createVertex(position);
+
     break;
   }
   case 1: {
@@ -730,6 +589,7 @@ BOOST_AUTO_TEST_CASE(TestCompute2D, * testing::OnSize(4))
     mesh->createVertex(position);
     position <<  2.0, 2.0;
     mesh->createVertex(position);
+    
     break;
   }
   case 2: { 
@@ -745,7 +605,8 @@ BOOST_AUTO_TEST_CASE(TestCompute2D, * testing::OnSize(4))
     position << -2.0, -0.0;
     mesh->createVertex(position);
     position << -2.0, -1.0;
-    mesh->createVertex(position); 
+    mesh->createVertex(position);
+    
     break;
   }
   case 3: {
@@ -767,9 +628,9 @@ BOOST_AUTO_TEST_CASE(TestCompute2D, * testing::OnSize(4))
   }
 
   mesh->computeState();
-  
+
   // create communicatror for master com and bb exchange/com/initial com_map
-  com::PtrCommunication participantCom1 = com::PtrCommunication(new com::SocketCommunication());
+  com::PtrCommunication participantCom1 = com::PtrCommunication(new com::MPIDirectCommunication());
   m2n::DistributedComFactory::SharedPointer distrFactory = m2n::DistributedComFactory::SharedPointer(new m2n::GatherScatterComFactory(participantCom1));
   m2n::PtrM2N m2n = m2n::PtrM2N(new m2n::M2N(participantCom1, distrFactory));
   setupM2NEnvironment(m2n);
@@ -779,13 +640,14 @@ BOOST_AUTO_TEST_CASE(TestCompute2D, * testing::OnSize(4))
   com::PtrCommunicationFactory participantComFactory =  com::PtrCommunicationFactory(new com::SocketCommunicationFactory);
   m2n::DistributedComFactory::SharedPointer distributionFactory = m2n::DistributedComFactory::SharedPointer(new m2n::PointToPointComFactory(participantComFactory));
   m2n::PtrM2N p2p = m2n::PtrM2N(new m2n::M2N(participantsCom, distributionFactory));
-
+ 
+  
   if(utils::Parallel::getProcessRank() < 2)
   {
     p2p->createDistributedCommunication(mesh);
     ProvidedBoundingBox part(mesh, hasToSend, safetyFactor);
-    part.setM2N(m2n);
-    
+    part.addM2N(m2n);
+
     part.communicateBoundingBox();
     part.computeBoundingBox();
 
@@ -801,12 +663,19 @@ BOOST_AUTO_TEST_CASE(TestCompute2D, * testing::OnSize(4))
       BOOST_TEST(mesh->getConnectedRanks()[0] == 0);
       BOOST_TEST(mesh->getConnectedRanks()[1] == 1);
     }
- 
-    part.setM2N(p2p);
+
+     if(utils::Parallel::getProcessRank() == 0)
+     {
+       p2p->acceptMasterConnection("Fluid", "Solid");             
+     }
+
+     p2p->acceptSlavesPreConnection("FluidSlaves", "SolidSlaves");
     
-    p2p->requestSlavesPreConnection("Solid", "Fluid");
-    part.communicate();
-    part.compute();
+     part.setM2N(p2p);
+    
+    
+     part.communicate();
+     part.compute();
     
 
     if(utils::Parallel::getProcessRank() == 0 )
@@ -816,9 +685,9 @@ BOOST_AUTO_TEST_CASE(TestCompute2D, * testing::OnSize(4))
     }
     else
     {
-      BOOST_TEST(mesh->getCommunicationMap()[0][0] == 8);
-      BOOST_TEST(mesh->getCommunicationMap()[1][0] == 9);
-      BOOST_TEST(mesh->getCommunicationMap()[1][1] == 10);
+      BOOST_TEST(mesh->getCommunicationMap()[0][0] == 0);
+      BOOST_TEST(mesh->getCommunicationMap()[1][0] == 1);
+      BOOST_TEST(mesh->getCommunicationMap()[1][1] == 2);
     } 
     
   }
@@ -831,20 +700,32 @@ BOOST_AUTO_TEST_CASE(TestCompute2D, * testing::OnSize(4))
     boundingToMapping->setMeshes(mesh, receivedMesh);
 
     ReceivedBoundingBox part(receivedMesh, safetyFactor);  
-    
-    part.setM2N(m2n);
+   
+    part.addM2N(m2n);
+
     part.setFromMapping(boundingFromMapping);
     part.setToMapping(boundingToMapping);
+
     part.communicateBoundingBox();    
-    part.computeBoundingBox();
+    part.computeBoundingBox(); 
+
+
+    if(utils::Parallel::getProcessRank() == 2)
+    {
+      p2p->requestMasterConnection("Fluid", "Solid");       
+    }
+
+    p2p->requestSlavesPreConnection("FluidSlaves", "SolidSlaves");
     
     part.setM2N(p2p);
-    p2p->acceptSlavesPreConnection("Solid", "Fluid"); 
+    
     part.communicate();
     part.compute();
   }
   tearDownParallelEnvironment();
 }
+
+
 
 BOOST_AUTO_TEST_CASE(TestCompute3D, * testing::OnSize(4))
 {
@@ -855,7 +736,7 @@ BOOST_AUTO_TEST_CASE(TestCompute3D, * testing::OnSize(4))
   double safetyFactor = 0.0;
   bool hasToSend=true;
   mesh::PtrMesh mesh(new mesh::Mesh("mesh", dimensions, flipNormals));
-  mesh::PtrMesh receivedMesh(new mesh::Mesh("mesh", dimensions, flipNormals));  
+  mesh::PtrMesh receivedMesh(new mesh::Mesh("mesh", dimensions, flipNormals));
   
   switch (utils::Parallel::getProcessRank()) {
   case 0: {
@@ -870,6 +751,7 @@ BOOST_AUTO_TEST_CASE(TestCompute3D, * testing::OnSize(4))
     mesh->createVertex(position);
     position << -2.0, 1.0, 1.0;
     mesh->createVertex(position);
+
     break;
   }
   case 1: {
@@ -899,7 +781,8 @@ BOOST_AUTO_TEST_CASE(TestCompute3D, * testing::OnSize(4))
     position << -2.0, -0.0, 0.0;
     mesh->createVertex(position);
     position << -2.0, -1.0, 1.0;
-    mesh->createVertex(position); 
+    mesh->createVertex(position);
+    
     break;
   }
   case 3: {
@@ -921,9 +804,9 @@ BOOST_AUTO_TEST_CASE(TestCompute3D, * testing::OnSize(4))
   }
 
   mesh->computeState();
-  
-  // create communicatror for master com and bb exchange/com/initial com_map
-  com::PtrCommunication participantCom1 = com::PtrCommunication(new com::SocketCommunication());
+
+    // create communicatror for master com and bb exchange/com/initial com_map
+  com::PtrCommunication participantCom1 = com::PtrCommunication(new com::MPIDirectCommunication());
   m2n::DistributedComFactory::SharedPointer distrFactory = m2n::DistributedComFactory::SharedPointer(new m2n::GatherScatterComFactory(participantCom1));
   m2n::PtrM2N m2n = m2n::PtrM2N(new m2n::M2N(participantCom1, distrFactory));
   setupM2NEnvironment(m2n);
@@ -933,12 +816,13 @@ BOOST_AUTO_TEST_CASE(TestCompute3D, * testing::OnSize(4))
   com::PtrCommunicationFactory participantComFactory =  com::PtrCommunicationFactory(new com::SocketCommunicationFactory);
   m2n::DistributedComFactory::SharedPointer distributionFactory = m2n::DistributedComFactory::SharedPointer(new m2n::PointToPointComFactory(participantComFactory));
   m2n::PtrM2N p2p = m2n::PtrM2N(new m2n::M2N(participantsCom, distributionFactory));
+  
 
   if(utils::Parallel::getProcessRank() < 2)
   {
     p2p->createDistributedCommunication(mesh);
     ProvidedBoundingBox part(mesh, hasToSend, safetyFactor);
-    part.setM2N(m2n);
+    part.addM2N(m2n);
     
     part.communicateBoundingBox();
     part.computeBoundingBox();
@@ -955,10 +839,16 @@ BOOST_AUTO_TEST_CASE(TestCompute3D, * testing::OnSize(4))
       BOOST_TEST(mesh->getConnectedRanks()[0] == 0);
       BOOST_TEST(mesh->getConnectedRanks()[1] == 1);
     }
- 
-    part.setM2N(p2p);
+
+    if(utils::Parallel::getProcessRank() == 0)
+    {
+      p2p->acceptMasterConnection("Fluid", "Solid");
+    }
+
+    p2p->acceptSlavesPreConnection("FluidSlaves", "SolidSlaves");
     
-    p2p->requestSlavesPreConnection("Solid", "Fluid");
+    part.setM2N(p2p);
+        
     part.communicate();
     part.compute();
     
@@ -969,9 +859,9 @@ BOOST_AUTO_TEST_CASE(TestCompute3D, * testing::OnSize(4))
     }
     else
     {
-      BOOST_TEST(mesh->getCommunicationMap()[0][0] == 5);
-      BOOST_TEST(mesh->getCommunicationMap()[1][0] == 6);
-      BOOST_TEST(mesh->getCommunicationMap()[1][1] == 7);
+      BOOST_TEST(mesh->getCommunicationMap()[0][0] == 0);
+      BOOST_TEST(mesh->getCommunicationMap()[1][0] == 1);
+      BOOST_TEST(mesh->getCommunicationMap()[1][1] == 2);
     }     
   }
   else
@@ -984,19 +874,26 @@ BOOST_AUTO_TEST_CASE(TestCompute3D, * testing::OnSize(4))
 
     ReceivedBoundingBox part(receivedMesh, safetyFactor);  
     
-    part.setM2N(m2n);
+    part.addM2N(m2n);
     part.setFromMapping(boundingFromMapping);
     part.setToMapping(boundingToMapping);
     part.communicateBoundingBox();    
     part.computeBoundingBox();
-    
-    part.setM2N(p2p);
-    p2p->acceptSlavesPreConnection("Solid", "Fluid"); 
+
+    if(utils::Parallel::getProcessRank() == 2)
+    {
+      p2p->requestMasterConnection("Fluid", "Solid");
+    }
+    p2p->requestSlavesPreConnection("FluidSlaves", "SolidSlaves");
+     
+    part.setM2N(p2p);   
     part.communicate();
     part.compute();
   }
   tearDownParallelEnvironment();
 }
+
+
 
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()

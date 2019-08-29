@@ -35,7 +35,7 @@ void ProvidedBoundingBox::communicateBoundingBox()
 
   // each rank sends its bb to master
   if (utils::MasterSlave::isSlave()) { //slave
-    com::CommunicateBoundingBox(utils::MasterSlave::_communication).sendBoundingBox(_mesh->getBoundingBox(), 0);
+     com::CommunicateBoundingBox(utils::MasterSlave::_communication).sendBoundingBox(_mesh->getBoundingBox(), 0);
   } else { // Master
 
     PRECICE_ASSERT(utils::MasterSlave::getRank() == 0);
@@ -131,9 +131,11 @@ void ProvidedBoundingBox::computeBoundingBox()
   }
 }
 
-
 void ProvidedBoundingBox::communicate()
 {
+
+  if (!_hasToSend)
+    return;  
   /*
    * First we should set global index for each vertices
    * This gloabl vertex id is needed for final filtering in 
@@ -146,34 +148,42 @@ void ProvidedBoundingBox::communicate()
   int offset = 0;
 
   // a map from remote connected rank -> min/max global vertex index of current rank
-  std::map<int, std::vector<int>> vertexGlobalIndexDomain;
-  
-  if (not utils::MasterSlave::_slaveMode) {//Master    
-    int vertexCounter = 0;
+  std::map<int, std::vector<int>> vertexGlobalIndexDomain;  
+    
+  if (not utils::MasterSlave::isSlave()) {//Master
 
+    int vertexCounter = 0;
     // set global indexes for master rank mesh partition 
-    for(int i=0; i<(int)_mesh->vertices().size(); i++){      
+    for(int i=0; i<(int)_mesh->vertices().size(); i++){
+      _mesh->getVertexDistribution()[0].push_back(vertexCounter);
       _mesh->vertices()[i].setGlobalIndex(vertexCounter);
       vertexCounter++;
     }
 
     // in master rank max global id is equal to number of vertices-1 
     vertexMaxGlobalID = _mesh->vertices().size()-1;
-
+    
     // receive number of vertices for each rank at master to produce offset for the same rank
-    int numberOfVertices = 0;
-    for (int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++)
+    int numberOfVertices = -1;
+    for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++)
     {
       utils::MasterSlave::_communication->receive(numberOfVertices,rankSlave);
-      utils::MasterSlave::_communication->send(vertexCounter,rankSlave);      
-      vertexCounter = numberOfVertices + vertexCounter; 
+      utils::MasterSlave::_communication->send(vertexCounter,rankSlave);
+      for (int i = 0; i < numberOfVertices; i++) {
+        _mesh->getVertexDistribution()[rankSlave].push_back(vertexCounter);
+        vertexCounter++;
+      }
     }
+
+    _mesh->setGlobalNumberOfVertices(vertexCounter);
+    utils::MasterSlave::_communication->broadcast(vertexCounter);    
+    _m2ns[0]->getMasterCommunication()->send(vertexCounter, 0);
   }
   else
   {
     // send number of vertices to master
-    utils::MasterSlave::_communication->send((int) _mesh->vertices().size(),0);
-
+    utils::MasterSlave::_communication->send((int)_mesh->vertices().size() ,0);
+    
     // receive the offset from master
     utils::MasterSlave::_communication->receive(offset ,0);
 
@@ -181,11 +191,17 @@ void ProvidedBoundingBox::communicate()
     for(int i=0; i<(int)_mesh->vertices().size(); i++)
     {
       _mesh->vertices()[i].setGlobalIndex(offset+i);
-    }
+    }           
+     
     // set the max global index
-    vertexMaxGlobalID = offset + _mesh->vertices().size() -1; 
-  }
-  
+    vertexMaxGlobalID = offset + _mesh->vertices().size() -1;
+
+    int globalNumberOfVertices = -1;
+    utils::MasterSlave::_communication->broadcast(globalNumberOfVertices, 0);
+    PRECICE_ASSERT(globalNumberOfVertices != -1);
+    _mesh->setGlobalNumberOfVertices(globalNumberOfVertices);   
+  } 
+
   for(auto &rank : _mesh->getConnectedRanks())
   {
     // add the minimum global index 
@@ -193,25 +209,35 @@ void ProvidedBoundingBox::communicate()
     // add the maximum global index
     vertexGlobalIndexDomain[rank].push_back(vertexMaxGlobalID);
   }
+
+
+  // each rank sends its min/max global vertex index to connected remote ranks
+  _m2ns[0]->broadcastSendLCM(vertexGlobalIndexDomain, *_mesh);
+
+  // each rank sends its mesh partition to connected remote ranks
+  _m2ns[0]->broadcastSendLocalMesh(*_mesh);
+
+
+  createOwnerInformation();
   
-  // each rank sends its min/max global vertex index to connected remote ranks 
-  _m2n->broadcastSendLCM(vertexGlobalIndexDomain, *_mesh);
-
-
-  // each rank send its mesh partition to connected ranks at other participant
-  _m2ns[0]->broadcastSendLocalMesh(*_mesh);  
-
+  computeVertexOffsets();
 }
 
 void ProvidedBoundingBox::compute()
 {
-  // each rank receives its final communication map
-  _m2n->broadcastReceiveLCM(_mesh->getCommunicationMap(), *_mesh);   
+  if (!_hasToSend)
+    return;
 
+   _m2ns[0]->broadcastReceiveLCM(_mesh->getCommunicationMap(), *_mesh);    
 }
 
 void ProvidedBoundingBox::createOwnerInformation()
-{}
+{
+  PRECICE_TRACE();
+  for (mesh::Vertex &v : _mesh->vertices()) {
+    v.setOwner(true);
+  }
+}
 
 } // namespace partition
 } // namespace precice

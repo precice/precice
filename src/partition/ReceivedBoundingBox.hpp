@@ -68,14 +68,11 @@ private:
   /// number of other particpant ranks
   int _remoteParComSize = 0;
   
-  
   mesh::Mesh::BoundingBox _bb;
 
   int _dimensions;
 
   double _safetyFactor;
-
-  std::vector<int> _connectedRanks;
 
   /// bounding box map of other participant
   mesh::Mesh::BoundingBoxMap _remoteBBM;  
