@@ -299,6 +299,7 @@ target_sources(precice
     src/utils/assertion.hpp
     src/utils/stacktrace.cpp
     src/utils/stacktrace.hpp
+    src/versions.hpp
     src/xml/ConfigParser.cpp
     src/xml/ConfigParser.hpp
     src/xml/XMLAttribute.hpp
