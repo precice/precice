@@ -197,7 +197,7 @@ void XMLTag::readAttributes(std::map<std::string, std::string> &aAttributes)
     std::string name = xmlReader->getAttributeName(i);
     if (not utils::contained(name, _attributes)){
       std::string error = "Wrong attribute \"" + name + "\"";
-      throw error;
+      throw std::runtime_error{error};
     }
 //    else if (contained(name, _doubleAttributes)){
 //      XMLAttribute<double>& attr = _doubleAttributes[name];
@@ -228,7 +228,7 @@ void XMLTag::readAttributes(std::map<std::string, std::string> &aAttributes)
 //      attr.readValue(xmlReader);
 //    }
 //    else {
-//      throw "Internal error in readAttributes";
+//      throw std::runtime_error{"Internal error in readAttributes"};
 //    }
 //    readNames.insert(name);
   }
@@ -239,7 +239,7 @@ void XMLTag::readAttributes(std::map<std::string, std::string> &aAttributes)
 //
 //      std::ostringstream stream;
 //      stream << "Attribute \"" << name << "\" is not defined";
-//      throw stream.str();
+//      throw std::runtime_error{stream.str()};
 //    }
 //  }
 

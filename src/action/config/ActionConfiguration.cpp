@@ -246,19 +246,19 @@ void ActionConfiguration:: createAction()
     std::ostringstream stream;
     stream << "Data action uses mesh \"" << _configuredAction.mesh
            << "\" which is not configured";
-    throw stream.str();
+    throw std::runtime_error{stream.str()};
   }
   if ((not _configuredAction.sourceData.empty()) && (sourceDataID == -1)){
     std::ostringstream stream;
     stream << "Data action uses source data \"" << _configuredAction.sourceData
            << "\" which is not configured";
-    throw stream.str();
+    throw std::runtime_error{stream.str()};
   }
   if ((not _configuredAction.targetData.empty()) && (targetDataID == -1)){
     std::ostringstream stream;
     stream << "Data action uses target data \"" << _configuredAction.targetData
            << "\" which is not configured";
-    throw stream.str();
+    throw std::runtime_error{stream.str()};
   }
   action::PtrAction action;
   if (_configuredAction.type == NAME_ADD_TO_COORDINATES){
