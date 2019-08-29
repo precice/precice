@@ -1,7 +1,7 @@
 #pragma once
 
 #include "precice/MeshHandle.hpp"
-#include "precice/Constants.hpp"
+#include "precice/SolverInterface.hpp"
 #include "precice/impl/SharedPointer.hpp"
 #include "precice/impl/DataContext.hpp"
 #include "action/Action.hpp"
@@ -11,6 +11,8 @@
 #include "cplscheme/SharedPointer.hpp"
 #include "com/Communication.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
+#include "m2n/BoundM2N.hpp"
+#include "utils/MultiLock.hpp"
 #include <string>
 #include <vector>
 #include <set>
@@ -35,7 +37,7 @@ namespace precice {
 namespace impl {
 
 /// Implementation of solver interface.
-class SolverInterfaceImpl : private boost::noncopyable
+class SolverInterfaceImpl
 {
 public:
 
@@ -51,10 +53,44 @@ public:
    *                            xml configuration file.
    */
   SolverInterfaceImpl (
-    const std::string& participantName,
-    int                accessorProcessRank,
-    int                accessorCommunicatorSize,
-    bool               serverMode );
+    std::string participantName,
+    int         accessorProcessRank,
+    int         accessorCommunicatorSize,
+    bool        serverMode );
+
+  /// Deleted copy constructor
+  SolverInterfaceImpl(SolverInterfaceImpl const &) = delete;
+
+  /// Deleted copy assignment
+  SolverInterfaceImpl& operator=(SolverInterfaceImpl const &) = delete;
+  
+  /// Deleted move constructor
+  SolverInterfaceImpl(SolverInterfaceImpl &&) = delete;
+
+  /// Deleted move assignment
+  SolverInterfaceImpl& operator=(SolverInterfaceImpl &&) = delete;
+
+  /**
+   * @brief Constructor with support for custom MPI_COMM_WORLD.
+   *
+   * A solver that wants to use the SolverInterfaceImpl must instatiate an object
+   * of this class. The object has to be configured by one of the configure
+   * methods before it has a reasonable state and can be used.
+   *
+   * Use the parameter communicator to specify a custom global MPI communicator.
+   * Pass a null pointer to signal preCICE to use MPI_COMM_WORLD.
+   *
+   * @param[in] participantName Name of the participant using the interface. Has to
+   *                            match the name given for a participant in the
+   *                            xml configuration file.
+   * @param[in] communicator    A pointer to the MPI_Comm to use.
+   */
+  SolverInterfaceImpl (
+    std::string participantName,
+    int         accessorProcessRank,
+    int         accessorCommunicatorSize,
+    bool        serverMode,
+    void*       communicator);
 
   /**
    * @brief Configures the coupling interface from the given xml file.
@@ -132,36 +168,36 @@ public:
    * is retreived in the function initializeCoupling and updated in the
    * function exchangeData.
    */
-  bool isCouplingOngoing();
+  bool isCouplingOngoing() const;
 
   /**
    * @brief Returns true, if new data to be read is available.
    */
-  bool isReadDataAvailable();
+  bool isReadDataAvailable() const;
 
   /**
    * @brief Returns true, if new data has to be written.
    */
-  bool isWriteDataRequired ( double computedTimestepLength );
+  bool isWriteDataRequired ( double computedTimestepLength ) const;
 
   /**
    * @brief Returns true, if a global timestep is completed.
    */
-  bool isTimestepComplete();
+  bool isTimestepComplete() const;
 
   /**
    * @brief Returns whether the solver has to evaluate the surrogate model representation
    *        It does not automatically imply, that the solver does not have to evaluate the
    *        fine model representation
    */
-  bool hasToEvaluateSurrogateModel();
+  bool hasToEvaluateSurrogateModel() const;
 
   /**
    * @brief Returns whether the solver has to evaluate the fine model representation
    *        It does not automatically imply, that the solver does not have to evaluate the
    *        surrogate model representation
    */
-  bool hasToEvaluateFineModel();
+  bool hasToEvaluateFineModel() const;
 
   /**
    * @brief Returns true, if provided name of action is required.
@@ -172,7 +208,7 @@ public:
    * performing them on demand, and calling fulfilledAction() to signalize
    * preCICE the correct behavior of the solver.
    */
-  bool isActionRequired (	const std::string& action );
+  bool isActionRequired (	const std::string& action ) const;
 
   /**
    * @brief Tells preCICE that a required action has been fulfilled by a solver.
@@ -189,16 +225,19 @@ public:
    *
    * The existing names are determined from the configuration.
    */
-  int getMeshID (	const std::string& meshName );
+  int getMeshID (	const std::string& meshName ) const;
 
   /// Returns all mesh IDs (besides sub-ids).
-  std::set<int> getMeshIDs();
+  std::set<int> getMeshIDs() const;
 
   /// Returns true, if the data with given name is used in the given mesh.
-  bool hasData ( const std::string& dataName, int meshID );
+  bool hasData ( const std::string& dataName, int meshID ) const;
 
   /// Returns data id corresponding to the given name (from configuration) and mesh.
-  int getDataID ( const std::string& dataName, int meshID );
+  int getDataID ( const std::string& dataName, int meshID ) const;
+
+  /// Returns the number of nodes of a mesh.
+  int getMeshVertexSize ( int meshID ) const;
 
   /**
    * @brief Resets mesh with given ID.
@@ -210,27 +249,36 @@ public:
   void resetMesh ( int meshID );
 
   /**
+   * @brief Set the position of a solver mesh vertex.
+   *
+   * @return Vertex ID to be used when setting an edge.
+   */
+  int setMeshVertex (
+    int           meshID,
+    const double* position );
+
+  /**
    * @brief Sets several spatial positions for a mesh.
    *
    * @param[out] ids IDs for data from given positions.
    */
   void setMeshVertices (
-    int     meshID,
-    int     size,
-    double* positions,
-    int*    ids );
+    int           meshID,
+    int           size,
+    const double* positions,
+    int*          ids );
 
   /**
    * @brief Gets spatial positions of vertices for given IDs.
    *
    * @param[in] ids IDs obtained when setting write positions.
-   * @param[in] positions Positions corresponding to IDs.
+   * @param[out] positions Positions corresponding to IDs.
    */
   void getMeshVertices (
-    int     meshID,
-    size_t  size,
-    int*    ids,
-    double* positions );
+    int        meshID,
+    size_t     size,
+    const int* ids,
+    double*    positions ) const;
 
   /**
    * @brief Gets vertex data ids from positions.
@@ -240,22 +288,10 @@ public:
    * @param[out] ids IDs corresponding to positions.
    */
   void getMeshVertexIDsFromPositions (
-    int     meshID,
-    size_t  size,
-    double* positions,
-    int*    ids );
-
-  /// Returns the number of nodes of a mesh.
-  int getMeshVertexSize ( int meshID );
-
-  /**
-   * @brief Set the position of a solver mesh vertex.
-   *
-   * @return Vertex ID to be used when setting an edge.
-   */
-  int setMeshVertex (
     int           meshID,
-    const double* position );
+    size_t        size,
+    const double* positions,
+    int*          ids ) const;
 
   /**
    * @brief Set an edge of a solver mesh.
@@ -319,10 +355,10 @@ public:
    * @param[in] values Values of the data to be written.
    */
   void writeBlockVectorData (
-    int     fromDataID,
-    int     size,
-    int*    valueIndices,
-    double* values );
+    int           fromDataID,
+    int           size,
+    const int*    valueIndices,
+    const double* values );
 
 
   /**
@@ -347,10 +383,10 @@ public:
    * @param values [IN] Values of the data to be written.
    */
   void writeBlockScalarData (
-    int     fromDataID,
-    int     size,
-    int*    valueIndices,
-    double* values );
+    int           fromDataID,
+    int           size,
+    const int*    valueIndices,
+    const double* values );
 
   /**
    * @brief Write scalar data to the interface mesh
@@ -364,7 +400,7 @@ public:
   void writeScalarData(
     int    fromDataID,
     int    valueIndex,
-    double value );
+    double value);
 
   /**
    * @brief Reads vector data values given as block.
@@ -379,10 +415,10 @@ public:
    * @param values [IN] Values of the data to be read.
    */
   void readBlockVectorData (
-    int     toDataID,
-    int     size,
-    int*    valueIndices,
-    double* values );
+    int        toDataID,
+    int        size,
+    const int* valueIndices,
+    double*    values ) const;
 
   /**
    * @brief Reads vector data from the coupling mesh.
@@ -394,7 +430,7 @@ public:
   void readVectorData (
     int     toDataID,
     int     valueIndex,
-    double* value );
+    double* value ) const;
 
   /**
    * @brief Reads scalar data values given as block.
@@ -404,10 +440,10 @@ public:
    * @param[in] values Values of the data to be written.
    */
   void readBlockScalarData (
-    int     toDataID,
-    int     size,
-    int*    valueIndices,
-    double* values );
+    int        toDataID,
+    int        size,
+    const int* valueIndices,
+    double*    values ) const;
 
   /**
    * @brief Read scalar data from the interface mesh.
@@ -421,7 +457,7 @@ public:
   void readScalarData (
     int     toDataID,
     int     valueIndex,
-    double& value );
+    double& value ) const;
 
   /**
    * @brief Sets the location for all output of preCICE.
@@ -431,7 +467,7 @@ public:
    */
 //  void setExportLocation (
 //    const std::string& location,
-//    int                exportType = constants::exportAll() );
+//    int                exportType = io::constants::exportAll() );
 
   /**
    * @brief Writes a mesh to vtk file.
@@ -443,8 +479,7 @@ public:
    */
   void exportMesh (
     const std::string& filenameSuffix,
-    int                exportType = constants::exportAll() );
-
+    int                exportType = io::constants::exportAll() ) const;
 
   /**
    * @brief Scales data values according to configuration.
@@ -462,11 +497,6 @@ public:
   void runServer();
 
 private:
-
-  struct M2NWrap {
-    m2n::PtrM2N m2n;
-    bool isRequesting;
-  };
 
   mutable logging::Logger _log{"impl::SolverInterfaceImpl"};
 
@@ -487,6 +517,8 @@ private:
   /// If true, the interface uses a server to operate on coupling data.
   bool _clientMode = false;
 
+  utils::MultiLock<int> _meshLock;
+
   /// Communication when for client-server mode.
   //com::Communication::SharedPointer _clientServerCommunication;
 
@@ -499,7 +531,7 @@ private:
   /// For plotting of used mesh neighbor-relations
   query::ExportVTKNeighbors _exportVTKNeighbors;
 
-  std::map<std::string,M2NWrap> _m2ns;
+  std::map<std::string,m2n::BoundM2N> _m2ns;
 
   /// Holds information about solvers participating in the coupled simulation.
   std::vector<impl::PtrParticipant> _participants;
@@ -551,7 +583,7 @@ private:
   void addMeshesToCouplingScheme();
 
   /// Returns true, if the accessor uses the mesh with given name.
-  bool isUsingMesh ( const std::string& meshName );
+  bool isUsingMesh ( const std::string& meshName ) const;
 
   /// Determines participants providing meshes to other participants.
   void configurePartitions (
@@ -601,6 +633,7 @@ private:
 
   /// To allow white box tests.
   friend struct PreciceTests::Serial::TestConfiguration;
+
 };
 
 }} // namespace precice, impl

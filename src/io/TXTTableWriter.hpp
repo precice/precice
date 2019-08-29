@@ -1,9 +1,9 @@
 #pragma once
 
+#include <Eigen/Core>
+#include <fstream>
 #include <string>
 #include <vector>
-#include <fstream>
-#include <Eigen/Core>
 #include "logging/Logger.hpp"
 
 namespace precice {
@@ -16,10 +16,8 @@ namespace io {
  * Create the writer, add data entries in the wanted sequence, and write data
  * values cyclically in the same sequence.
  */
-class TXTTableWriter
-{
+class TXTTableWriter {
 public:
-
   /// Constants defining possible data types to be written.
   enum DataType {
     INT,
@@ -29,7 +27,7 @@ public:
   };
 
   /// Constructor, opens file.
-  explicit TXTTableWriter ( const std::string& filename );
+  explicit TXTTableWriter(const std::string &filename);
 
   /// Destructor, closes file, if not done yet.
   ~TXTTableWriter();
@@ -41,46 +39,45 @@ public:
    * The writeData() method has to be called in the order in which data entries
    * are added.
    */
-  void addData (
-    const std::string& name,
-    DataType           type );
+  void addData(
+      const std::string &name,
+      DataType           type);
 
   /**
    * @brief Writes a integral scalar data value associated to the entry name.
    *
    * The write order is fixed by the order addData() is called.
    */
-  void writeData (
-    const std::string& name,
-    int                value );
+  void writeData(
+      const std::string &name,
+      int                value);
 
   /**
    * @brief Writes a floating-point scalar data value associated to the entry name.
    *
    * The write order is fixed by the order addData() is called.
    */
-  void writeData (
-    const std::string& name,
-    double             value );
+  void writeData(
+      const std::string &name,
+      double             value);
 
   /**
    * @brief Writes a vector data value associated to the entry name.
    *
    * The write order is fixed by the order addData() is called.
    */
-  void writeData (
-    const std::string&     name,
-    const Eigen::Vector2d& value );
+  void writeData(
+      const std::string &    name,
+      const Eigen::Vector2d &value);
 
-  void writeData (
-    const std::string&     name,
-    const Eigen::Vector3d& value );
+  void writeData(
+      const std::string &    name,
+      const Eigen::Vector3d &value);
 
   /// Closes the file, is automatically called on destruction.
   void close();
 
 private:
-
   /// Represents one data entry to be written.
   struct Data {
 
@@ -88,7 +85,8 @@ private:
 
     DataType type;
 
-    bool operator== ( const Data& data ) const {
+    bool operator==(const Data &data) const
+    {
       return name == data.name;
     }
   };
@@ -102,4 +100,5 @@ private:
   std::ofstream _outputStream;
 };
 
-}} // namespace precice, io
+} // namespace io
+} // namespace precice

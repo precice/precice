@@ -4,6 +4,7 @@
 #include "mesh/Vertex.hpp"
 #include "mesh/Mesh.hpp"
 #include "math/math.hpp"
+#include "math/barycenter.hpp"
 
 namespace precice {
 namespace query {
@@ -34,7 +35,7 @@ double FindClosestTriangle:: getEuclidianDistance() const
 
 mesh::Triangle & FindClosestTriangle:: getClosestTriangle()
 {
-  assertion(_closestTriangle != nullptr);
+  PRECICE_ASSERT(_closestTriangle != nullptr);
   return *_closestTriangle;
 }
 
@@ -54,73 +55,28 @@ void FindClosestTriangle:: find
 {
   using Eigen::Vector2d; using Eigen::Vector3d;
   
-  Vector3d projected;
+  auto ret = math::barycenter::calcBarycentricCoordsForTriangle(
+          triangle.vertex(0).getCoords(),
+          triangle.vertex(1).getCoords(),
+          triangle.vertex(2).getCoords(),
+          triangle.getNormal(),
+          _searchPoint
+          );
+  PRECICE_ASSERT(ret.barycentricCoords.size() == 3);
 
-  // Methodology of book "Computational Geometry", Joseph O' Rourke, Chapter 7.3
-  // with the barycentric coordinates method and real projection into 2D, instead
-  // of outprojecting one coordinate
-
-  // Parametric representation for triangle plane:
-  // (x, y, z) * normal = d
-  Vector3d a = triangle.vertex(0).getCoords();
-  Vector3d normal = triangle.getNormal();
-  double d = normal.dot(a);
-
-  // Parametric description of line from searchpoint orthogonal to triangle:
-  // _searchPoint + t * normal = x     (where t is parameter)
-  // Determine t such that x lies on triangle plane:
-  double t = d - _searchPoint.dot(normal) / normal.dot(normal);
-
-  // Compute projected point with parameter t:
-  projected = normal;
-  projected *= t;
-  projected += _searchPoint;
-
-  // Project everything to 2D
-  Vector3d normalAbs;
-  int iMax;
-  normal.cwiseAbs().maxCoeff(&iMax);
-  int indices[2];
-  if (iMax == 0){
-    indices[0] = 1;
-    indices[1] = 2;
-  }
-  else if (iMax == 1){
-    indices[0] = 0;
-    indices[1] = 2;
-  }
-  else {
-    assertion(iMax == 2, iMax);
-    indices[0] = 0;
-    indices[1] = 1;
-  }
-  Vector2d a2D(triangle.vertex(0).getCoords()[indices[0]],
-               triangle.vertex(0).getCoords()[indices[1]]);
-  Vector2d b2D(triangle.vertex(1).getCoords()[indices[0]],
-               triangle.vertex(1).getCoords()[indices[1]]);
-  Vector2d c2D(triangle.vertex(2).getCoords()[indices[0]],
-               triangle.vertex(2).getCoords()[indices[1]]);
-  Vector2d projected2D(projected[indices[0]], projected[indices[1]]);
-  // Compute barycentric coordinates by solving linear 3x3 system
-  Vector3d rhs (projected2D(0), projected2D(1), 1);
-  Eigen::Matrix<double, 3,3> A;
-  A << a2D(0), b2D(0), c2D(0),
-    a2D(1), b2D(1), c2D(1),
-    1,      1,      1;
-  Eigen::Vector3d barycentricCoords = A.colPivHouseholderQr().solve(rhs);
   // Determine from barycentric coordinates, if point is inside triangle
-  bool inside = not (barycentricCoords.array() < - math::NUMERICAL_ZERO_DIFFERENCE).any();
+  const bool inside = not (ret.barycentricCoords.array() < - math::NUMERICAL_ZERO_DIFFERENCE).any();
 
   // If inside, compute distance to triangle and evtl. store distance
   if (inside) {
-    Vector3d distanceVector = projected - _searchPoint;
+    Vector3d distanceVector = ret.projected - _searchPoint;
     double distance = distanceVector.norm();
     if (_shortestDistance > distance){
       _shortestDistance = distance;
       _vectorToProjectionPoint = distanceVector;
-      _parametersProjectionPoint[0] = barycentricCoords(0);
-      _parametersProjectionPoint[1] = barycentricCoords(1);
-      _parametersProjectionPoint[2] = barycentricCoords(2);
+      _parametersProjectionPoint[0] = ret.barycentricCoords(0);
+      _parametersProjectionPoint[1] = ret.barycentricCoords(1);
+      _parametersProjectionPoint[2] = ret.barycentricCoords(2);
       _closestTriangle = &triangle;
     }
   }

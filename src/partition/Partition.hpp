@@ -5,6 +5,8 @@
 #include "mapping/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
 
+#include <vector>
+
 // ----------------------------------------------------------- CLASS DEFINITION
 
 namespace precice
@@ -33,6 +35,8 @@ public:
   /// Constructor.
   Partition(mesh::PtrMesh mesh);
 
+  Partition& operator=(Partition &&) = delete;
+
   virtual ~Partition() {}
 
   /// The mesh is communicated between both master ranks (if required)
@@ -51,9 +55,15 @@ public:
     _toMapping = toMapping;
   }
 
+  void addM2N(m2n::PtrM2N m2n)
+  {
+    _m2ns.push_back(m2n);
+  }
+
   void setM2N(m2n::PtrM2N m2n)
   {
-    _m2n = m2n;
+    _m2ns.clear();
+    _m2ns.push_back(m2n);
   }
 
 protected:
@@ -63,7 +73,8 @@ protected:
 
   mapping::PtrMapping _toMapping;
 
-  m2n::PtrM2N _m2n;
+  /// m2n connection to each connected participant
+  std::vector<m2n::PtrM2N> _m2ns;
 
   /// Decides which rank owns which vertex, information stored at each rank.
   virtual void createOwnerInformation() = 0;

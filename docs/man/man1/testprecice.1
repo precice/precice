@@ -1,0 +1,77 @@
+.TH testprecice 1  "January 18, 2019" "USER COMMANDS"
+
+.SH NAME
+testprecice \- runs the test suite of libprecice
+
+.SH SYNOPSIS
+.B testprecice [Boost.Test argument] ...
+
+.B testprecice --help
+
+.SH DESCRIPTION
+This program is a Boost.test module containing unit tests for the library libprecice.
+The test suite consists of parts, run based on the MPI environment they run in.
+The majority of the tests require configuration files which are located in the repository.
+This program loads these files using the environment variable PRECICE_ROOT.
+
+.TP
+.B 1 Rank | No MPI
+The base test suite containing unit tests which is always run.
+
+.TP
+.B 2 Ranks
+The base MPI test suite containing a fraction of MPI tests based on 2 Ranks.
+
+.TP
+.B 4 Rank
+The extended MPI test suite containing mainly integration tests based on 4 Ranks.
+
+Be aware that the intergration tests will produce a large amount of .log .vtk .vtu and .pvtu files.
+
+.SH OPTIONS
+.TP
+.B --help
+Prints boost test help.
+
+.SH RETURN VALUES
+Returns a zero exist status if all tests succeeded.
+Non zero is returned otherwise.
+
+.SH ENVIRONMENT
+.TP
+.B PRECICE_ROOT
+the path of the project root used to access configuration files for the integration tests.
+If you installed the debian package, set this to /usr/share/precice .
+
+.SH EXAMPLES
+.TP
+.B testprecice
+Runs the base test suite without MPI related tests
+.TP
+.B mpiexec -np 2 testprecice
+Runs the extended test suite with basic two-rank MPI tests enabled.
+.TP
+.B mpiexec -np 4 testprecice
+Runs the complete test suite.
+
+.SH BUGS
+.TP
+.B MPIPorts tests fail using OpenMPI
+This is due to the non-conformoning implementation of OpenMPI.
+Use the following to disable the tests: --run_test="\\!@MPI_Ports"
+.TP
+.B SocketCommunicationTests fail
+This is most likely due to a polluted environment.
+Please delete any .address files in the working directory.
+.TP
+.B TCP/IP related test fail
+This occurs on systems without an active network connection.
+This bug is safe to ignore.
+
+.SH AUTHOR
+Frédéric Simonis (simonis (at) in.tum.de)
+
+.SH SEE ALSO
+binprecice(1)
+.PP
+www.precice.org \- the website of the project

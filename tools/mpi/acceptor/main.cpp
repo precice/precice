@@ -32,7 +32,6 @@
 #include <iostream>
 
 using std::cout;
-using std::endl;
 using std::ofstream;
 using std::remove;
 using std::rename;
@@ -51,7 +50,7 @@ struct Sentinel {
     if (::rank != 0)
       return;
 
-    cout << "Acceptor: " << (::ack == 4 ? "Success!" : "Failure!") << endl;
+    cout << "Acceptor: " << (::ack == 4 ? "Success!" : "Failure!") << '\n';
   }
 } sentinel;
 
@@ -77,7 +76,7 @@ main(int argc, char** argv) {
 
     rename((address_file_name + "~").c_str(), address_file_name.c_str());
 
-    cout << "Address: " << port_name << endl;
+    cout << "Address: " << port_name << '\n';
 
     MPI_Comm communicator;
 

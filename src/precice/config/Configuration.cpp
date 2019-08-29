@@ -24,10 +24,8 @@ Configuration:: Configuration()
   _tag.addNamespace("coupling-scheme");
   _tag.addNamespace("post-processing");
 
-  xml::XMLAttribute<bool> attrSyncMode("sync-mode");
-  std::string doc = "sync-mode enabled additional inter- and intra-participant synchronizations";
-  attrSyncMode.setDefaultValue(false);
-  attrSyncMode.setDocumentation(doc);
+  auto attrSyncMode = xml::makeXMLAttribute("sync-mode", false)
+      .setDocumentation("sync-mode enabled additional inter- and intra-participant synchronizations");
   _tag.addAttribute(attrSyncMode);
 
 }
@@ -39,7 +37,7 @@ xml::XMLTag& Configuration:: getXMLTag()
 
 void Configuration::xmlTagCallback(xml::XMLTag& tag)
 {
-  TRACE(tag.getName());
+  PRECICE_TRACE(tag.getName());
   if (tag.getName() == "precice-configuration") {
     precice::syncMode = tag.getBooleanAttributeValue("sync-mode");
   }
@@ -49,7 +47,7 @@ void Configuration:: xmlEndTagCallback
 (
   xml::XMLTag& tag )
 {
-  TRACE(tag.getName());
+  PRECICE_TRACE(tag.getName());
 }
 
 const SolverInterfaceConfiguration&

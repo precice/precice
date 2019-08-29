@@ -16,19 +16,19 @@ void ParallelMatrixOperations::initialize(
     com::PtrCommunication rightComm,
     bool                  needCyclicComm)
 {
-  TRACE();
+  PRECICE_TRACE();
 
   _needCycliclComm = needCyclicComm;
-  if (utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode) {
+  if (utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave()) {
 
     _cyclicCommLeft  = leftComm;
     _cyclicCommRight = rightComm;
 
     if (_needCycliclComm) {
-      assertion(_cyclicCommLeft.get() != NULL);
-      assertion(_cyclicCommLeft->isConnected());
-      assertion(_cyclicCommRight.get() != NULL);
-      assertion(_cyclicCommRight->isConnected());
+      PRECICE_ASSERT(_cyclicCommLeft.get() != NULL);
+      PRECICE_ASSERT(_cyclicCommLeft->isConnected());
+      PRECICE_ASSERT(_cyclicCommRight.get() != NULL);
+      PRECICE_ASSERT(_cyclicCommRight->isConnected());
     }
   }
 }

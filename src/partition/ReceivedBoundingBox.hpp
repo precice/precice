@@ -44,6 +44,7 @@ private:
 
   logging::Logger _log{"partition::ReceivedBoundingBox"};
 
+
   /* Create filteredMesh from the filtered _mesh:
    * Copies all vertices/edges/triangles that are either contained in the bounding box
    * or tagged to the filteredMesh. Edges and triangles are copied, when ALL vertices
@@ -58,6 +59,7 @@ private:
   void prepareBoundingBox();
 
   /// Checks if vertex in contained in _bb
+
   bool isVertexInBB(const mesh::Vertex &vertex);
 
   /// will be implemented in 3rd work package
@@ -65,7 +67,6 @@ private:
 
   /// number of other particpant ranks
   int _remoteParComSize = 0;
-  
   
   mesh::Mesh::BoundingBox _bb;
 
@@ -76,7 +77,6 @@ private:
   /// bounding box map of other participant
   mesh::Mesh::BoundingBoxMap _remoteBBM;  
 
-  
 };
 
 }} // namespace precice, partition

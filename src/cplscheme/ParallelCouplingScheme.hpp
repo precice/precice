@@ -42,7 +42,7 @@ protected:
   /// Returns all data (receive and send)
   DataMap& getAllData()
   {
-    assertion(!doesFirstStep(), "Only the second participant should do the post processing." );
+    PRECICE_ASSERT(!doesFirstStep(), "Only the second participant should do the post processing." );
     return _allData;
   }
 

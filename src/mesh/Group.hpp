@@ -27,10 +27,10 @@ class Group
 {
 public:
 
-   typedef utils::ptr_vector<Vertex>   VertexContainer;
-   typedef utils::ptr_vector<Edge>     EdgeContainer;
-   typedef utils::ptr_vector<Triangle> TriangleContainer;
-   typedef utils::ptr_vector<Quad>     QuadContainer;
+  using VertexContainer   = utils::ptr_vector<Vertex>;
+  using EdgeContainer     = utils::ptr_vector<Edge>;
+  using TriangleContainer = utils::ptr_vector<Triangle>;
+  using QuadContainer     = utils::ptr_vector<Quad>;
 
    /**
     * @brief Adds a Vertex object to the Group.

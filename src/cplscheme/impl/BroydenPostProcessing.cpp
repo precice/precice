@@ -56,11 +56,8 @@ void BroydenPostProcessing::computeUnderrelaxationSecondaryData(
 void BroydenPostProcessing::updateDifferenceMatrices(
     DataMap &cplData)
 {
-  if (_firstIteration && _firstTimeStep) {
-  } else {
-    if (not _firstIteration) {
+  if (not _firstIteration) {
       _currentColumns++;
-    }
   }
 
   // call the base method for common update of V, W matrices
@@ -69,15 +66,15 @@ void BroydenPostProcessing::updateDifferenceMatrices(
 
 void BroydenPostProcessing::computeQNUpdate(PostProcessing::DataMap &cplData, Eigen::VectorXd &xUpdate)
 {
-  TRACE();
+  PRECICE_TRACE();
 
-  DEBUG("currentColumns=" << _currentColumns);
+  PRECICE_DEBUG("currentColumns=" << _currentColumns);
   if (_currentColumns > 1) {
-    ERROR("truncated IMVJ no longer supported, needs to be parallelized and datastructures need to be changed to Eigen datastructures.");
-    DEBUG("compute update with QR-dec");
+    PRECICE_ERROR("truncated IMVJ no longer supported, needs to be parallelized and datastructures need to be changed to Eigen datastructures.");
+    PRECICE_DEBUG("compute update with QR-dec");
     //computeNewtonFactorsQRDecomposition(cplData, xUpdate);
   } else {
-    DEBUG("compute update with Broyden");
+    PRECICE_DEBUG("compute update with Broyden");
     // ------------- update inverse Jacobian -----------
     // ------------- Broyden Update
     //
@@ -88,19 +85,19 @@ void BroydenPostProcessing::computeQNUpdate(PostProcessing::DataMap &cplData, Ei
     Eigen::VectorXd w       = _matrixW.col(0);
     Eigen::MatrixXd JUpdate = Eigen::MatrixXd::Zero(_invJacobian.rows(), _invJacobian.cols());
 
-    DEBUG("took latest column of V,W");
+    PRECICE_DEBUG("took latest column of V,W");
 
     double          dotproductV = v.dot(v);
     Eigen::VectorXd tmp         = _oldInvJacobian * v; // J_inv*v
     tmp                         = w - tmp;             // (w-J_inv*v)
     tmp                         = tmp / dotproductV;   // (w-J_inv*v)/|v|_l2
-    DEBUG("did step (W-J_inv*v)/|v|");
+    PRECICE_DEBUG("did step (W-J_inv*v)/|v|");
 
-    assertion(tmp.size() == v.size(), tmp.size(), v.size());
+    PRECICE_ASSERT(tmp.size() == v.size(), tmp.size(), v.size());
     JUpdate = tmp * v.transpose();
-    DEBUG("multiplied (w-J_inv*v)/|v| * v^T");
+    PRECICE_DEBUG("multiplied (w-J_inv*v)/|v| * v^T");
 
-    assertion(_invJacobian.rows() == JUpdate.rows(), _invJacobian.rows(), JUpdate.rows());
+    PRECICE_ASSERT(_invJacobian.rows() == JUpdate.rows(), _invJacobian.rows(), JUpdate.rows());
     _invJacobian = _oldInvJacobian + JUpdate;
 
     // solve delta_x = - J_inv*residuals

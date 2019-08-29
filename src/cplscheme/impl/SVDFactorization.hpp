@@ -58,19 +58,19 @@ public:
       const Eigen::MatrixBase<Derived1> &A,
       const Eigen::MatrixBase<Derived2> &B)
   {
-    TRACE();
-    assertion(_initialized);
+    PRECICE_TRACE();
+    PRECICE_ASSERT(_initialized);
     /** updates the truncated svd factorization of the Jacobian with a rank-1 modification
       *
       * \psi * \sigma * \phi <-- \psi * \sigma * \phi + A * B^T
       *
       */
     if (_initialSVD) {
-      assertion(A.rows() == _rows, A.rows(), _rows);
-      assertion(B.rows() == _rows, B.rows(), _rows);
+      PRECICE_ASSERT(A.rows() == _rows, A.rows(), _rows);
+      PRECICE_ASSERT(B.rows() == _rows, B.rows(), _rows);
     } else {
-      assertion(A.rows() == B.rows(), A.rows(), B.rows());
-      assertion(A.cols() == B.cols(), A.cols(), B.cols());
+      PRECICE_ASSERT(A.rows() == B.rows(), A.rows(), B.rows());
+      PRECICE_ASSERT(A.cols() == B.cols(), A.cols(), B.cols());
       _rows  = A.rows();
       _cols  = 0;
       _psi   = Matrix::Zero(_rows, 0);
@@ -108,7 +108,7 @@ public:
 
     //     e_orthModes.stop(true);
 
-    /** (3) construct matrix K \in (K_bar + m -x) x (K_bar +m -y) if
+    /** (3) construct matrix \f$ K \in (K_bar + m -x) x (K_bar +m -y) \f$ if
       *      x .. deleted columns in P -> (m-x) new modes from A (rows of R_A)
       *      y .. deleted columns in Q -> (m-y) new modes from B (rows of R_B)
       *
@@ -169,7 +169,7 @@ public:
     _psi.conservativeResize(_rows, _cols);
     _phi.conservativeResize(_rows, _cols);
     _sigma.conservativeResize(_cols);
-    DEBUG("SVD factorization of Jacobian is truncated to " << _cols << " DOFs. Cut off " << waste << " DOFs");
+    PRECICE_DEBUG("SVD factorization of Jacobian is truncated to " << _cols << " DOFs. Cut off " << waste << " DOFs");
 
     _initialSVD = true;
   }
