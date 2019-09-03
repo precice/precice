@@ -59,7 +59,7 @@ class TestBindings(TestCase):
             fake_vertices[i, 0] = i
             fake_vertices[i, 1] = i + n_fake_vertices
             fake_vertices[i, 2] = i + 2 * n_fake_vertices
-        self.assertTrue(np.array_equal(fake_vertices.flatten(), solver_interface.get_mesh_vertices(fake_mesh_id, range(n_fake_vertices))))
+        self.assertTrue(np.array_equal(fake_vertices, solver_interface.get_mesh_vertices(fake_mesh_id, range(n_fake_vertices))))
 
     def test_read_write_block_scalar_data(self):
         solver_interface = precice_future.Interface("test", 0, 1)
