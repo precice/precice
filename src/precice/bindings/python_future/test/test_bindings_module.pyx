@@ -33,7 +33,7 @@ class TestBindings(TestCase):
         fake_mesh_id = 0  # compare to test/SolverInterface.cpp, fake_mesh_id
         fake_dimension = 3  # compare to test/SolverInterface.cpp, fake_dimensions
         n_fake_vertices = 3  # compare to test/SolverInterface.cpp, n_fake_vertices
-        positions = np.random.rand(fake_dimension * n_fake_vertices)
+        positions = np.random.rand(n_fake_vertices, fake_dimension)
         self.assertTrue(np.array_equal(np.array(range(n_fake_vertices)), solver_interface.set_mesh_vertices(fake_mesh_id, positions)))
 
     def test_read_write_block_scalar_data(self):
@@ -66,7 +66,8 @@ class TestBindings(TestCase):
 
     def test_read_write_block_vector_data(self):
         solver_interface = precice_future.Interface("test", 0, 1)
-        write_data = np.array([3, 7, 8, 7 ,6, 5], dtype=np.double)
+        write_data = np.array([[3, 7, 8], 
+                               [7 ,6, 5]], dtype=np.double)
         solver_interface.write_block_vector_data(1, np.array([1, 2]), write_data)
         read_data = solver_interface.read_block_vector_data(1, np.array([1, 2]))
         self.assertTrue(np.array_equal(write_data, read_data))
@@ -78,11 +79,13 @@ class TestBindings(TestCase):
         Note: Check whether np.ndarray is contiguous via np.ndarray.flags.
         """
         solver_interface = precice_future.Interface("test", 0, 1)
-        dummy_array = np.random.rand(6, 3)
-        write_data = dummy_array[:, 1]
+        size = 6
+        dummy_array = np.random.rand(size, 5)
+        write_data = dummy_array[:, 1:4]
         assert(write_data.flags["C_CONTIGUOUS"] == False)
-        solver_interface.write_block_vector_data(1, np.array([1, 2]), write_data)
-        read_data = solver_interface.read_block_vector_data(1, np.array([1, 2]))
+        vertex_ids = np.arange(size)
+        solver_interface.write_block_vector_data(1, vertex_ids, write_data)
+        read_data = solver_interface.read_block_vector_data(1, vertex_ids)
         self.assertTrue(np.array_equal(write_data, read_data))
 
     def test_read_write_vector_data(self):
