@@ -510,6 +510,8 @@ void P2PComLCMTest(com::PtrCommunicationFactory cf)
     utils::MasterSlave::_communication->acceptConnection("Fluid.Master", "Fluid.Slave", utils::Parallel::getProcessRank());
     utils::MasterSlave::_communication->setRankOffset(1);
 
+    // The numbers are chosen in this way to make it easy to test weather
+    // correct values are communicated or not! 
     mesh->getConnectedRanks().push_back(0);    
     localCommunicationMap[0].push_back(102);
     localCommunicationMap[0].push_back(1022);
@@ -524,7 +526,9 @@ void P2PComLCMTest(com::PtrCommunicationFactory cf)
     utils::Parallel::splitCommunicator("Fluid.Slave");
     utils::MasterSlave::configure(1, 2);
     utils::MasterSlave::_communication->requestConnection("Fluid.Master", "Fluid.Slave", 0, 1);
-    
+
+    // The numbers are chosen in this way to make it easy to test weather
+    // correct values are communicated or not! 
     mesh->getConnectedRanks().push_back(1);    
     localCommunicationMap[0].push_back(112);
     localCommunicationMap[0].push_back(1122);
@@ -572,7 +576,9 @@ void P2PComLCMTest(com::PtrCommunicationFactory cf)
   }
 
  if(utils::Parallel::getProcessRank() == 2 )
-  {    
+  {
+    // The numbers are chosen in this way to make it easy to test weather
+    // correct values are communicated or not! 
     BOOST_TEST(localCommunicationMap.size() == 1);
     BOOST_TEST(localCommunicationMap[0].size() ==3);
     BOOST_TEST(localCommunicationMap[0][0] ==102);
@@ -581,6 +587,8 @@ void P2PComLCMTest(com::PtrCommunicationFactory cf)
     
   } else if(utils::Parallel::getProcessRank() == 3 )
   {
+    // The numbers are chosen in this way to make it easy to test weather
+    // correct values are communicated or not! 
     BOOST_TEST(localCommunicationMap.size() == 1);    
     BOOST_TEST(localCommunicationMap[1].size() ==3);
     BOOST_TEST(localCommunicationMap[1][0] ==113);
