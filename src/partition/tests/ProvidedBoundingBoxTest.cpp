@@ -56,6 +56,42 @@ void setupParallelEnvironment(m2n::PtrM2N m2n)
   }
 }
 
+// create a communciator with two participants: each one has one master and one slave ranks
+// only master-master channel and master-slave channels are created here
+// slave-slave channels must be created in the test.
+void setupM2NBaseEnvironment(m2n::PtrM2N m2n){
+  PRECICE_ASSERT(utils::Parallel::getCommunicatorSize() == 4);
+
+  com::PtrCommunication masterSlaveCom = com::PtrCommunication(new com::MPIDirectCommunication());
+  utils::MasterSlave::_communication = masterSlaveCom;
+
+  utils::Parallel::synchronizeProcesses();
+
+  if (utils::Parallel::getProcessRank() == 0){ //Master Fluid
+    utils::Parallel::splitCommunicator("FluidMaster");
+    utils::MasterSlave::configure(0, 2);
+    masterSlaveCom->acceptConnection("FluidMaster", "FluidSlave", utils::Parallel::getProcessRank());
+    masterSlaveCom->setRankOffset(1);   
+  }
+  else if(utils::Parallel::getProcessRank() == 1){//Slave1
+    utils::Parallel::splitCommunicator("FluidSlave");
+    utils::MasterSlave::configure(1, 2);
+    masterSlaveCom->requestConnection("FluidMaster", "FluidSlave", 0, 1);
+  }
+  else if(utils::Parallel::getProcessRank() == 2){//Master Solid
+    utils::Parallel::splitCommunicator("SolidMaster");
+    utils::MasterSlave::configure(0, 2);
+    masterSlaveCom->acceptConnection("SolidMaster", "SolidSlave", utils::Parallel::getProcessRank());
+    utils::MasterSlave::_communication->setRankOffset(1);   
+  }
+  else if(utils::Parallel::getProcessRank() == 3){//Slave2
+    utils::Parallel::splitCommunicator("SolidSlave");
+    utils::MasterSlave::configure(1, 2);
+    masterSlaveCom->requestConnection("SolidMaster", "SolidSlave", 0, 1);
+ }
+  
+}
+
 void tearDownParallelEnvironment(){
   utils::MasterSlave::_communication = nullptr;
   utils::MasterSlave::reset();
@@ -407,7 +443,9 @@ BOOST_AUTO_TEST_CASE(TestCommunicateLocalMeshPartitions, * testing::OnSize(4))
   com::PtrCommunicationFactory participantComFactory =  com::PtrCommunicationFactory(new com::SocketCommunicationFactory);
   m2n::DistributedComFactory::SharedPointer distributionFactory = m2n::DistributedComFactory::SharedPointer(new m2n::PointToPointComFactory(participantComFactory));
   m2n::PtrM2N p2p = m2n::PtrM2N(new m2n::M2N(participantsCom, distributionFactory));
-  
+
+  setupM2NBaseEnvironment(p2p);
+    
   if(utils::Parallel::getProcessRank() < 2)
   {
     p2p->createDistributedCommunication(mesh);
