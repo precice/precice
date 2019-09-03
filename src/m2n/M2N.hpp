@@ -141,6 +141,11 @@ public:
    */
   void broadcastSendLCM(std::map<int, std::vector<int>> &localCommunicationMap, mesh::Mesh &mesh);
 
+  /** 
+   * each rank send an ints to connected ranks
+   */
+  void broadcastSend(int &itemToSend, mesh::Mesh &mesh);
+
   /// All slaves receive an array of doubles (different for each slave).
   void receive(double *itemsToReceive,
                int     size,
@@ -162,6 +167,11 @@ public:
    * each rank receives local communication maps from connetcetd ranks
    */
   void broadcastReceiveLCM(std::map<int, std::vector<int>> &localCommunicationMap, mesh::Mesh &mesh);
+
+  /*
+   * each rank receives an int from connetcetd ranks
+   */
+  void broadcastReceive(std::vector<int> &itemToReceive, mesh::Mesh &mesh);
   
 private:
   logging::Logger _log{"m2n::M2N"};

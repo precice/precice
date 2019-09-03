@@ -144,13 +144,16 @@ void ProvidedBoundingBox::communicate()
 
   // the maximum vertex global index for each rank
   int vertexMaxGlobalID = 0;
+  // the minimum vertex global index for each rank
+  int vertexMinGlobalID = 0;
+  
   // offset to set global vertex id for each rank vertices
   int offset = 0;
 
   // a map from remote connected rank -> min/max global vertex index of current rank
   std::map<int, std::vector<int>> vertexGlobalIndexDomain;  
     
-  if (not utils::MasterSlave::isSlave()) {//Master
+  if (utils::MasterSlave::isMaster()) {//Master
 
     int vertexCounter = 0;
     // set global indexes for master rank mesh partition 
@@ -185,7 +188,8 @@ void ProvidedBoundingBox::communicate()
     utils::MasterSlave::_communication->send((int)_mesh->vertices().size() ,0);
     
     // receive the offset from master
-    utils::MasterSlave::_communication->receive(offset ,0);
+    utils::MasterSlave::_communication->receive(offset ,0);    
+    vertexMinGlobalID = offset;
 
     // set global indexes for each vertex
     for(int i=0; i<(int)_mesh->vertices().size(); i++)
@@ -212,14 +216,14 @@ void ProvidedBoundingBox::communicate()
 
 
   // each rank sends its min/max global vertex index to connected remote ranks
-  _m2ns[0]->broadcastSendLCM(vertexGlobalIndexDomain, *_mesh);
+  _m2ns[0]->broadcastSend(vertexMinGlobalID, *_mesh);
+  _m2ns[0]->broadcastSend(vertexMaxGlobalID, *_mesh);
 
   // each rank sends its mesh partition to connected remote ranks
   _m2ns[0]->broadcastSendLocalMesh(*_mesh);
 
-
-  createOwnerInformation();
   
+  createOwnerInformation();  
   computeVertexOffsets();
 }
 

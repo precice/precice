@@ -260,12 +260,13 @@ void connectionTest(com::PtrCommunicationFactory cf)
   int dimensions = 2;
   bool flipNormals = false;
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, flipNormals));
+  
+  std::vector<std::string> connections = {"same", "cross"};
 
-  std::vector<std::string> conections = {"same", "cross"};
-
-  for (auto & connectionType : conections)
+  for (auto & connectionType : connections)
   {
     utils::MasterSlave::_communication = std::make_shared<com::MPIDirectCommunication>();
+    mesh->getConnectedRanks().clear();
     
     switch (utils::Parallel::getProcessRank())
     {
@@ -335,18 +336,18 @@ void connectionTest(com::PtrCommunicationFactory cf)
 
   m2n::PointToPointCommunication c(cf, mesh);
 
-  double receiveData = 0;
+  std::vector<int>  receiveData;
 
   if (utils::Parallel::getProcessRank() == 0) {
   
     c.requestPreConnection("Solid", "Fluid");
-    double sendData = 5;
+    int sendData = 5;
     c.broadcastSend(sendData);    
    
   } else if (utils::Parallel::getProcessRank() == 1) {
   
     c.requestPreConnection("Solid", "Fluid");
-    double sendData = 10;
+    int sendData = 10;
     c.broadcastSend(sendData);    
    
   } else
@@ -359,20 +360,20 @@ void connectionTest(com::PtrCommunicationFactory cf)
   {
     if (connectionType == "same")
       {
-        BOOST_TEST(receiveData == 5);
+        BOOST_TEST(receiveData[0] == 5);
       } else
-      {
-        BOOST_TEST(receiveData == 10);
+      {       
+        BOOST_TEST(receiveData[0] == 10);
       }  
     
   } else if(utils::Parallel::getProcessRank() == 3 )
   {
     if (connectionType == "same")
-      {
-        BOOST_TEST(receiveData == 10);
+      {       
+        BOOST_TEST(receiveData[0] == 10);
       } else
-      {
-        BOOST_TEST(receiveData == 5);
+      {       
+        BOOST_TEST(receiveData[0] == 5);
       }  
   }
   

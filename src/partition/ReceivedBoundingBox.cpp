@@ -146,10 +146,11 @@ void ReceivedBoundingBox::communicate()
   }
 
   // each rank receives max/min global vertex indexes from connected remote ranks
-   _m2ns[0]->broadcastReceiveLCM(_maxVertexGlobalIndexDomain, *_mesh);
+  _m2ns[0]->broadcastReceive(_remoteVertexMinGlobalIDs, *_mesh);
+  _m2ns[0]->broadcastReceive(_remoteVertexMaxGlobalIDs, *_mesh);
 
   // each rank receives mesh partition from connected ranks
-   _m2ns[0]->broadcastReceiveLocalMesh(*_mesh);
+  _m2ns[0]->broadcastReceiveLocalMesh(*_mesh);
 
 }
 
@@ -236,14 +237,17 @@ void ReceivedBoundingBox::compute()
 
   std::vector<int> vertexIDs;  
 
+  int rank = 0;
   int index= 0;
   for (auto &remoteVertex : _mesh->vertices()) {
       vertexIDs.push_back(remoteVertex.getGlobalIndex());
-    for (auto &remoteRank : _maxVertexGlobalIndexDomain) {
-      if (remoteVertex.getGlobalIndex() <= remoteRank.second[1] && remoteVertex.getGlobalIndex() >= remoteRank.second[0]) {
-        localCommunicationMap[remoteRank.first].push_back(remoteVertex.getGlobalIndex() - remoteRank.second[0]);
-        _mesh->getCommunicationMap()[remoteRank.first].push_back(index);
+      rank = 0;
+    for (int remoteRank : _mesh->getConnectedRanks()) {
+      if (remoteVertex.getGlobalIndex() <= _remoteVertexMaxGlobalIDs[rank] && remoteVertex.getGlobalIndex() >= _remoteVertexMinGlobalIDs[rank]) {
+        localCommunicationMap[remoteRank].push_back(remoteVertex.getGlobalIndex() - _remoteVertexMinGlobalIDs[rank]);
+        _mesh->getCommunicationMap()[remoteRank].push_back(index);
       }
+      rank++;
     }
     index++;
   }

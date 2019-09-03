@@ -98,14 +98,14 @@ public:
                int     valueDimension = 1) override;
 
   /**
-   * @brief Broadcasts a double to connected ranks on remote participant       
+   * @brief Broadcasts an int to connected ranks on remote participant       
    */
-  virtual void broadcastSend(const double &itemToSend);
+  virtual void broadcastSend(const int &itemToSend);
 
   /**
-   * @brief Receives a double from a connected rank on remote participant
+   * @brief Receives an int from each connected rank on remote participant
    */
-  virtual void broadcastReceive(double &itemToReceive);
+  virtual void broadcastReceive(std::vector<int> &itemToReceive);
 
   /**
    * @brief All ranks send their mesh partition to remote local  connected ranks.

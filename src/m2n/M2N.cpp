@@ -236,6 +236,17 @@ void M2N::broadcastSendLCM(std::map<int, std::vector<int>> &localCommunicationMa
   }  
 }
 
+void M2N::broadcastSend(int &itemToSend, mesh::Mesh &mesh)
+{
+  int meshID = mesh.getID();
+  if (utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster()) {
+    PRECICE_ASSERT(_areSlavesConnected);
+    _distComs[meshID]->broadcastSend(itemToSend);
+  } else { //coupling mode
+    PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
+  }
+}
+
 void M2N::receive(double *itemsToReceive,
                   int     size,
                   int     meshID,
@@ -285,6 +296,17 @@ void M2N::receive(double &itemToReceive)
   utils::MasterSlave::broadcast(itemToReceive);
 
   PRECICE_DEBUG("receive(double): " << itemToReceive);
+}
+
+void M2N::broadcastReceive(std::vector<int> &itemToReceive, mesh::Mesh &mesh)
+{
+  if (utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster()) {
+    int meshID = mesh.getID();
+    PRECICE_ASSERT(_areSlavesConnected);
+    _distComs[meshID]->broadcastReceive(itemToReceive);
+  } else { //coupling mode
+    PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
+  }  
 }
 
 void M2N::broadcastReceiveLocalMesh(mesh::Mesh &mesh)
