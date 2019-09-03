@@ -105,3 +105,19 @@ class TestBindings(TestCase):
         solver_interface.write_vector_data(1, 1, write_data)
         read_data = solver_interface.read_vector_data(1, 1)
         self.assertTrue(np.array_equal(write_data, read_data))
+
+    def test_set_mesh_vertex(self):
+        # TODO: Add missing test
+        self.assertTrue(False)
+
+    def test_get_mesh_vertex_size(self):
+        # TODO: Add missing test
+        self.assertTrue(False)
+
+    def test_get_mesh_vertices(self):
+        # TODO: Add missing test
+        self.assertTrue(False)
+
+    def test_get_data_id(self):
+        # TODO: Add missing test
+        self.assertTrue(False)
