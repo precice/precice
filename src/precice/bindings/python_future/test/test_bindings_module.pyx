@@ -36,6 +36,31 @@ class TestBindings(TestCase):
         positions = np.random.rand(fake_dimension * n_fake_vertices)
         self.assertTrue(np.array_equal(np.array(range(n_fake_vertices)), solver_interface.set_mesh_vertices(fake_mesh_id, positions)))
 
+    def test_set_mesh_vertex(self):
+        solver_interface = precice_future.Interface("test", 0, 1)
+        fake_mesh_id = 0  # compare to test/SolverInterface.cpp, fake_mesh_id
+        fake_dimension = 3  # compare to test/SolverInterface.cpp, fake_dimensions
+        position = np.random.rand(fake_dimension)
+        self.assertTrue(0 == solver_interface.set_mesh_vertex(fake_mesh_id, position))
+
+    def test_get_mesh_vertex_size(self):
+        solver_interface = precice_future.Interface("test", 0, 1)
+        fake_mesh_id = 0  # compare to test/SolverInterface.cpp, fake_mesh_id
+        n_fake_vertices = 3  # compare to test/SolverInterface.cpp, n_fake_vertices
+        self.assertTrue(n_fake_vertices == solver_interface.get_mesh_vertex_size(fake_mesh_id))
+
+    def test_get_mesh_vertices(self):
+        solver_interface = precice_future.Interface("test", 0, 1)
+        fake_mesh_id = 0  # compare to test/SolverInterface.cpp, fake_mesh_id
+        n_fake_vertices = 3  # compare to test/SolverInterface.cpp, n_fake_vertices
+        fake_dimension = 3  # compare to test/SolverInterface.cpp, fake_dimensions
+        fake_vertices = np.zeros((n_fake_vertices, fake_dimension))
+        for i in range(n_fake_vertices):
+            fake_vertices[i, 0] = i
+            fake_vertices[i, 1] = i + n_fake_vertices
+            fake_vertices[i, 2] = i + 2 * n_fake_vertices
+        self.assertTrue(np.array_equal(fake_vertices.flatten(), solver_interface.get_mesh_vertices(fake_mesh_id, range(n_fake_vertices))))
+
     def test_read_write_block_scalar_data(self):
         solver_interface = precice_future.Interface("test", 0, 1)
         write_data = np.array([3, 7, 8], dtype=np.double)
@@ -105,3 +130,10 @@ class TestBindings(TestCase):
         solver_interface.write_vector_data(1, 1, write_data)
         read_data = solver_interface.read_vector_data(1, 1)
         self.assertTrue(np.array_equal(write_data, read_data))
+
+    def test_get_data_id(self):
+        solver_interface = precice_future.Interface("test", 0, 1)
+        fake_mesh_id = 0  # compare to test/SolverInterface.cpp, fake_mesh_id
+        fake_data_name = "FakeData"  # compare to test/SolverInterface.cpp, fake_data_name
+        fake_data_ID = 15;  # compare to test/SolverInterface.cpp, fake_data_ID
+        self.assertTrue(solver_interface.get_data_id(fake_data_name, fake_mesh_id) == fake_data_ID)
