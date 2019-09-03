@@ -373,16 +373,7 @@ void PointToPointCommunication::acceptPreConnection(std::string const &acceptorN
   PRECICE_CHECK(utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave(),
         "You can only use a point-to-point communication between two participants which both use a master. "
             << "Please use distribution-type gather-scatter instead.");
-
-  if (utils::MasterSlave::isMaster()) {
-    // Establish connection between participants' master processes.
-    auto c = _communicationFactory->newCommunication();
-    c->acceptConnection(acceptorName, requesterName, utils::MasterSlave::getRank());
-    
-  } else {
-    PRECICE_ASSERT(utils::MasterSlave::isSlave());
-  }
-
+  
   std::vector<int> localConnectedRanks = _mesh->getConnectedRanks();
 
   if (localConnectedRanks.empty()) {
@@ -535,15 +526,6 @@ void PointToPointCommunication::requestPreConnection(std::string const &acceptor
   PRECICE_CHECK(utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave(),
         "You can only use a point-to-point communication between two participants which both use a master. "
         << "Please use distribution-type gather-scatter instead.");
-
-  if (utils::MasterSlave::isMaster()) {
-    // Establish connection between participants' master processes.
-    auto c = _communicationFactory->newCommunication();
-    c->requestConnection(acceptorName, requesterName, 0, 1);
-    
-  } else {
-    PRECICE_ASSERT(utils::MasterSlave::isSlave());
-  }
 
   std::vector<int> localConnectedRanks = _mesh->getConnectedRanks();
 
