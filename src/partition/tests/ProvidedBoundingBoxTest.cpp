@@ -56,39 +56,6 @@ void setupParallelEnvironment(m2n::PtrM2N m2n)
   }
 }
 
-void setupM2NEnvironment(m2n::PtrM2N m2n){
-  PRECICE_ASSERT(utils::Parallel::getCommunicatorSize() == 4);
-
-  com::PtrCommunication masterSlaveCom =
-        com::PtrCommunication(new com::MPIDirectCommunication());
-  utils::MasterSlave::_communication = masterSlaveCom;
-
-  utils::Parallel::synchronizeProcesses();
-
-  if (utils::Parallel::getProcessRank() == 0){ //Master Fluid
-    utils::Parallel::splitCommunicator("FluidMaster");
-    utils::MasterSlave::configure(0, 2);
-    utils::MasterSlave::_communication->acceptConnection("FluidMaster", "FluidSlave", utils::Parallel::getProcessRank());
-    utils::MasterSlave::_communication->setRankOffset(1);   
-  }
-  else if(utils::Parallel::getProcessRank() == 1){//Slave1
-    utils::Parallel::splitCommunicator("FluidSlave");
-    utils::MasterSlave::configure(1, 2);
-    utils::MasterSlave::_communication->requestConnection("FluidMaster", "FluidSlave", 0, 1);
-  }
-  else if(utils::Parallel::getProcessRank() == 2){//Master Solid
-    utils::Parallel::splitCommunicator("SolidMaster");
-    utils::MasterSlave::configure(0, 2);
-    utils::MasterSlave::_communication->acceptConnection("SolidMaster", "SolidSlave", utils::Parallel::getProcessRank());
-    utils::MasterSlave::_communication->setRankOffset(1);   
-  }
-  else if(utils::Parallel::getProcessRank() == 3){//Slave2
-    utils::Parallel::splitCommunicator("SolidSlave");
-    utils::MasterSlave::configure(1, 2);
-    utils::MasterSlave::_communication->requestConnection("SolidMaster", "SolidSlave", 0, 1);
- }
-}
-
 void tearDownParallelEnvironment(){
   utils::MasterSlave::_communication = nullptr;
   utils::MasterSlave::reset();
@@ -435,13 +402,7 @@ BOOST_AUTO_TEST_CASE(TestCommunicateLocalMeshPartitions, * testing::OnSize(4))
 
   mesh->computeState();
 
-  // create communicatror for master com and bb exchange/com/initial com_map
-  com::PtrCommunication participantCom1 = com::PtrCommunication(new com::SocketCommunication());
-  m2n::DistributedComFactory::SharedPointer distrFactory = m2n::DistributedComFactory::SharedPointer(new m2n::GatherScatterComFactory(participantCom1));
-  m2n::PtrM2N m2n = m2n::PtrM2N(new m2n::M2N(participantCom1, distrFactory));
-  setupM2NEnvironment(m2n);
-  
-  // create second communicator for m2n mesh and communciation map exchange 
+  // create a communicator for m2n mesh and communciation map exchange 
   com::PtrCommunication participantsCom =  com::PtrCommunication(new com::SocketCommunication());
   com::PtrCommunicationFactory participantComFactory =  com::PtrCommunicationFactory(new com::SocketCommunicationFactory);
   m2n::DistributedComFactory::SharedPointer distributionFactory = m2n::DistributedComFactory::SharedPointer(new m2n::PointToPointComFactory(participantComFactory));
