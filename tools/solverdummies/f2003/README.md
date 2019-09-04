@@ -3,7 +3,7 @@ This is an experimental example of a Fortran2003 solver dummy. Please contribute
 # Compilation
 
 ```
-gfortran [path_to]/ConstantsF2003.f90 [path_to]/SolverInterfaceF2003.f90 -o solverdummy solverdummy.f03 -L[path_to_preCICE_lib] -lprecice
+gfortran [path_to]/SolverInterfaceF2003.f90 -o solverdummy solverdummy.f03 -L[path_to_preCICE_lib] -lprecice
 ```
 
 Note that you need preCICE build as a static library.

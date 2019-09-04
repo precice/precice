@@ -43,7 +43,7 @@ public:
     int           index);
 
 protected:
-  /// merges send and receive data into one map (for parallel post-processing)
+  /// merges send and receive data into one map (for parallel acceleration)
   virtual void mergeData();
 
 private:

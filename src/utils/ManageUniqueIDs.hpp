@@ -1,6 +1,6 @@
 #pragma once
 
-#include <set>
+#include <boost/container/flat_set.hpp>
 
 namespace precice
 {
@@ -27,7 +27,7 @@ public:
 
 private:
   /// Stores all used IDs.
-  std::set<int> _ids;
+  boost::container::flat_set<int> _ids;
 
   /// Marks next ID to be given, from lower to higher values.
   int _lowerLimit = 0;

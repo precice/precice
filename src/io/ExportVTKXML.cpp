@@ -1,55 +1,52 @@
 #include "ExportVTKXML.hpp"
-#include "mesh/Mesh.hpp"
-#include "mesh/Vertex.hpp"
-#include "mesh/Edge.hpp"
-#include "mesh/Triangle.hpp"
-#include "mesh/Quad.hpp"
-#include "Constants.hpp"
 #include <Eigen/Core>
-#include <string>
-#include <fstream>
 #include <boost/filesystem.hpp>
+#include <fstream>
+#include <string>
+#include "Constants.hpp"
+#include "mesh/Edge.hpp"
+#include "mesh/Mesh.hpp"
+#include "mesh/Quad.hpp"
+#include "mesh/Triangle.hpp"
+#include "mesh/Vertex.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/MasterSlave.hpp"
 
 namespace precice {
 namespace io {
 
-ExportVTKXML:: ExportVTKXML
-(
-  bool writeNormals )
-:
-  Export(),
-  _writeNormals(writeNormals),
-  _meshDimensions(-1)
+ExportVTKXML::ExportVTKXML(
+    bool writeNormals)
+    : Export(),
+      _writeNormals(writeNormals),
+      _meshDimensions(-1)
 {
 }
 
-int ExportVTKXML:: getType() const
+int ExportVTKXML::getType() const
 {
   return constants::exportVTKXML();
 }
 
-void ExportVTKXML:: doExport
-(
-  const std::string& name,
-  const std::string& location,
-  mesh::Mesh&        mesh)
+void ExportVTKXML::doExport(
+    const std::string &name,
+    const std::string &location,
+    mesh::Mesh &       mesh)
 {
-  TRACE(name, location, mesh.getName());
-  assertion(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode);
+  PRECICE_TRACE(name, location, mesh.getName());
+  PRECICE_ASSERT(utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster());
   processDataNamesAndDimensions(mesh);
-  if (utils::MasterSlave::_masterMode) {
+  if (not location.empty())
+    boost::filesystem::create_directories(location);
+  if (utils::MasterSlave::isMaster()) {
     writeMasterFile(name, location, mesh);
   }
-  if(mesh.vertices().size()>0){ //only procs at the coupling interface should write output (for performance reasons)
+  if (mesh.vertices().size() > 0) { //only procs at the coupling interface should write output (for performance reasons)
     writeSubFile(name, location, mesh);
   }
 }
 
-void ExportVTKXML::processDataNamesAndDimensions
-(
-  mesh::Mesh& mesh)
+void ExportVTKXML::processDataNamesAndDimensions(mesh::Mesh const &mesh)
 {
   _meshDimensions = mesh.getDimensions();
   _vectorDataNames.clear();
@@ -59,9 +56,9 @@ void ExportVTKXML::processDataNamesAndDimensions
   }
   for (mesh::PtrData data : mesh.data()) {
     int dataDimensions = data->getDimensions();
-    assertion(dataDimensions>=1);
+    PRECICE_ASSERT(dataDimensions >= 1);
     std::string dataName = data->getName();
-    if ( dataDimensions == 1) {
+    if (dataDimensions == 1) {
       _scalarDataNames.push_back(dataName);
     } else {
       _vectorDataNames.push_back(dataName);
@@ -69,22 +66,21 @@ void ExportVTKXML::processDataNamesAndDimensions
   }
 }
 
-void ExportVTKXML::writeMasterFile
-(
-  const std::string& name,
-  const std::string& location,
-  mesh::Mesh&        mesh)
+void ExportVTKXML::writeMasterFile(
+    const std::string &name,
+    const std::string &location,
+    mesh::Mesh &       mesh)
 {
   namespace fs = boost::filesystem;
   fs::path outfile(location);
   outfile = outfile / fs::path(name + "_master.pvtu");
   std::ofstream outMasterFile(outfile.string(), std::ios::trunc);
 
-  CHECK(outMasterFile, "Could not open master file \"" << outfile.c_str() << "\" for VTKXML export!");
+  PRECICE_CHECK(outMasterFile, "Could not open master file \"" << outfile.c_str() << "\" for VTKXML export!");
 
   outMasterFile << "<?xml version=\"1.0\"?>\n";
   outMasterFile << "<VTKFile type=\"PUnstructuredGrid\" version=\"0.1\" byte_order=\"";
-  outMasterFile << (utils::isMachineBigEndian() ? "BigEndian\">" : "LittleEndian\">")  << '\n';
+  outMasterFile << (utils::isMachineBigEndian() ? "BigEndian\">" : "LittleEndian\">") << '\n';
   outMasterFile << "   <PUnstructuredGrid GhostLevel=\"0\">\n";
 
   outMasterFile << "      <PPoints>\n";
@@ -110,16 +106,16 @@ void ExportVTKXML::writeMasterFile
   outMasterFile << "\">\n";
 
   for (size_t i = 0; i < _scalarDataNames.size(); ++i) {
-    outMasterFile << "         <PDataArray type=\"Float32\" Name=\""<< _scalarDataNames[i] << "\" NumberOfComponents=\"" << 1 << "\"/>\n";
+    outMasterFile << "         <PDataArray type=\"Float32\" Name=\"" << _scalarDataNames[i] << "\" NumberOfComponents=\"" << 1 << "\"/>\n";
   }
 
   for (size_t i = 0; i < _vectorDataNames.size(); ++i) {
-    outMasterFile << "         <PDataArray type=\"Float32\" Name=\""<< _vectorDataNames[i] << "\" NumberOfComponents=\"" << 3 << "\"/>\n";
+    outMasterFile << "         <PDataArray type=\"Float32\" Name=\"" << _vectorDataNames[i] << "\" NumberOfComponents=\"" << 3 << "\"/>\n";
   }
   outMasterFile << "      </PPointData>\n";
 
-  for (int i = 0; i < utils::MasterSlave::_size; i++) {
-    if(mesh.getVertexDistribution()[i].size()>0){ //only non-empty subfiles
+  for (int i = 0; i < utils::MasterSlave::getSize(); i++) {
+    if (mesh.getVertexDistribution()[i].size() > 0) { //only non-empty subfiles
       outMasterFile << "      <Piece Source=\"" << name << "_r" << i << ".vtu\"/>\n";
     }
   }
@@ -130,14 +126,13 @@ void ExportVTKXML::writeMasterFile
   outMasterFile.close();
 }
 
-void ExportVTKXML::writeSubFile
-(
-  const std::string& name,
-  const std::string& location,
-  mesh::Mesh&        mesh)
+void ExportVTKXML::writeSubFile(
+    const std::string &name,
+    const std::string &location,
+    mesh::Mesh &       mesh)
 {
   int numPoints = mesh.vertices().size(); // number of vertices
-  int numCells; // number of cells
+  int numCells;                           // number of cells
   if (_meshDimensions == 2) {
     numCells = mesh.edges().size();
   } else {
@@ -146,20 +141,20 @@ void ExportVTKXML::writeSubFile
 
   namespace fs = boost::filesystem;
   fs::path outfile(location);
-  outfile = outfile / fs::path(name + "_r" + std::to_string(utils::MasterSlave::_rank) + ".vtu");
+  outfile = outfile / fs::path(name + "_r" + std::to_string(utils::MasterSlave::getRank()) + ".vtu");
   std::ofstream outSubFile(outfile.string(), std::ios::trunc);
 
-  CHECK(outSubFile, "Could not open slave file \"" << outfile.c_str() << "\" for VTKXML export!");
+  PRECICE_CHECK(outSubFile, "Could not open slave file \"" << outfile.c_str() << "\" for VTKXML export!");
 
   outSubFile << "<?xml version=\"1.0\"?>\n";
   outSubFile << "<VTKFile type=\"UnstructuredGrid\" version=\"0.1\" byte_order=\"";
-  outSubFile << (utils::isMachineBigEndian() ? "BigEndian\">" : "LittleEndian\">")  << '\n';
+  outSubFile << (utils::isMachineBigEndian() ? "BigEndian\">" : "LittleEndian\">") << '\n';
 
   outSubFile << "   <UnstructuredGrid>\n";
   outSubFile << "      <Piece NumberOfPoints=\"" << numPoints << "\" NumberOfCells=\"" << numCells << "\"> \n";
   outSubFile << "         <Points> \n";
   outSubFile << "            <DataArray type=\"Float32\" Name=\"Position\" NumberOfComponents=\"" << 3 << "\" format=\"ascii\"> \n";
-  for (mesh::Vertex& vertex : mesh.vertices()) {
+  for (mesh::Vertex &vertex : mesh.vertices()) {
     writeVertex(vertex.getCoords(), outSubFile);
   }
   outSubFile << "            </DataArray>\n";
@@ -178,16 +173,15 @@ void ExportVTKXML::writeSubFile
   outSubFile.close();
 }
 
-void ExportVTKXML::exportMesh
-(
-  std::ofstream& outFile,
-  mesh::Mesh&    mesh)
+void ExportVTKXML::exportMesh(
+    std::ofstream &   outFile,
+    mesh::Mesh const &mesh)
 {
   if (_meshDimensions == 2) { // write edges as cells
     outFile << "         <Cells>\n";
     outFile << "            <DataArray type=\"Int32\" Name=\"connectivity\" NumberOfComponents=\"1\" format=\"ascii\">\n";
     outFile << "               ";
-    for (mesh::Edge & edge : mesh.edges()) {
+    for (mesh::Edge &edge : mesh.edges()) {
       writeLine(edge, outFile);
     }
     outFile << '\n';
@@ -195,7 +189,7 @@ void ExportVTKXML::exportMesh
     outFile << "            <DataArray type=\"Int32\" Name=\"offsets\" NumberOfComponents=\"1\" format=\"ascii\">\n";
     outFile << "               ";
     for (size_t i = 1; i <= mesh.edges().size(); i++) {
-      outFile << 2*i << "  ";
+      outFile << 2 * i << "  ";
     }
     outFile << '\n';
     outFile << "            </DataArray>\n";
@@ -212,10 +206,10 @@ void ExportVTKXML::exportMesh
     outFile << "         <Cells>\n";
     outFile << "            <DataArray type=\"Int32\" Name=\"connectivity\" NumberOfComponents=\"1\" format=\"ascii\">\n";
     outFile << "               ";
-    for (mesh::Triangle& triangle : mesh.triangles()) {
+    for (mesh::Triangle &triangle : mesh.triangles()) {
       writeTriangle(triangle, outFile);
     }
-    for (mesh::Quad& quad : mesh.quads()) {
+    for (mesh::Quad &quad : mesh.quads()) {
       writeQuadrangle(quad, outFile);
     }
     outFile << '\n';
@@ -223,10 +217,10 @@ void ExportVTKXML::exportMesh
     outFile << "            <DataArray type=\"Int32\" Name=\"offsets\" NumberOfComponents=\"1\" format=\"ascii\">\n";
     outFile << "               ";
     for (size_t i = 1; i <= mesh.triangles().size(); i++) {
-      outFile << 3*i << "  ";
+      outFile << 3 * i << "  ";
     }
     for (size_t i = 1; i <= mesh.quads().size(); i++) {
-      outFile << 4*i << "  ";
+      outFile << 4 * i << "  ";
     }
     outFile << '\n';
     outFile << "            </DataArray>\n";
@@ -244,10 +238,9 @@ void ExportVTKXML::exportMesh
   }
 }
 
-void ExportVTKXML:: exportData
-(
-  std::ofstream& outFile,
-  mesh::Mesh&    mesh)
+void ExportVTKXML::exportData(
+    std::ofstream &outFile,
+    mesh::Mesh &   mesh)
 {
   outFile << "         <PointData Scalars=\"";
   for (size_t i = 0; i < _scalarDataNames.size(); i++) {
@@ -259,92 +252,86 @@ void ExportVTKXML:: exportData
   }
   outFile << "\">\n";
 
-
   // Print VertexNormals
   if (_writeNormals) {
     const auto dimensions = mesh.getDimensions();
     outFile << "            <DataArray type=\"Float32\" Name=\"VertexNormals\" NumberOfComponents=\"";
     outFile << std::max(3, dimensions) << "\" format=\"ascii\">\n";
     outFile << "               ";
-    for (const auto& vertex : mesh.vertices()) {
-        const auto normal = vertex.getNormal();
-        for(int i=0; i < std::max(3, dimensions); i++){
-            if (i < dimensions) {
-                outFile << normal[i] << ' ';
-            } else {
-                outFile << "0.0 ";
-            }
-            outFile << ' ';
-        }
-    }
-    outFile << '\n' << "            </DataArray>\n";
-  }
-  for (mesh::PtrData data : mesh.data()) { // Plot vertex data
-    Eigen::VectorXd& values = data->values();
-    int dataDimensions = data->getDimensions();
-    std::string dataName(data->getName());
-    int numberOfComponents = (dataDimensions==2) ? 3 : dataDimensions;
-    outFile << "            <DataArray type=\"Float32\" Name=\"" << dataName << "\" NumberOfComponents=\"" << numberOfComponents;
-    outFile << "\" format=\"ascii\">\n";
-    outFile << "               ";
-    if(dataDimensions > 1) {
-      Eigen::VectorXd viewTemp(dataDimensions);
-      for (size_t count = 0; count < mesh.vertices().size(); count++) {
-        size_t offset = count * dataDimensions;
-        for(int i=0; i < dataDimensions; i++){
-          viewTemp[i] = values(offset + i);
-        }
-        for(int i = 0; i < dataDimensions; i++){
-          outFile << viewTemp[i] << ' ';
-        }
-        if(dataDimensions == 2){
-          outFile << "0.0" << ' '; //2D data needs to be 3D for vtk
+    for (const auto &vertex : mesh.vertices()) {
+      const auto normal = vertex.getNormal();
+      for (int i = 0; i < std::max(3, dimensions); i++) {
+        if (i < dimensions) {
+          outFile << normal[i] << ' ';
+        } else {
+          outFile << "0.0 ";
         }
         outFile << ' ';
       }
     }
-    else if(dataDimensions == 1) {
+    outFile << '\n'
+            << "            </DataArray>\n";
+  }
+  for (mesh::PtrData data : mesh.data()) { // Plot vertex data
+    Eigen::VectorXd &values         = data->values();
+    int              dataDimensions = data->getDimensions();
+    std::string      dataName(data->getName());
+    int              numberOfComponents = (dataDimensions == 2) ? 3 : dataDimensions;
+    outFile << "            <DataArray type=\"Float32\" Name=\"" << dataName << "\" NumberOfComponents=\"" << numberOfComponents;
+    outFile << "\" format=\"ascii\">\n";
+    outFile << "               ";
+    if (dataDimensions > 1) {
+      Eigen::VectorXd viewTemp(dataDimensions);
+      for (size_t count = 0; count < mesh.vertices().size(); count++) {
+        size_t offset = count * dataDimensions;
+        for (int i = 0; i < dataDimensions; i++) {
+          viewTemp[i] = values(offset + i);
+        }
+        for (int i = 0; i < dataDimensions; i++) {
+          outFile << viewTemp[i] << ' ';
+        }
+        if (dataDimensions == 2) {
+          outFile << "0.0" << ' '; //2D data needs to be 3D for vtk
+        }
+        outFile << ' ';
+      }
+    } else if (dataDimensions == 1) {
       for (size_t count = 0; count < mesh.vertices().size(); count++) {
         outFile << values(count) << ' ';
       }
     }
-    outFile << '\n' << "            </DataArray>\n";
+    outFile << '\n'
+            << "            </DataArray>\n";
   }
   outFile << "         </PointData> \n";
 }
 
-void ExportVTKXML::writeVertex
-(
-  const Eigen::VectorXd& position,
-  std::ofstream&         outFile)
+void ExportVTKXML::writeVertex(
+    const Eigen::VectorXd &position,
+    std::ofstream &        outFile)
 {
   outFile << "               ";
-  for (int i = 0; i < position.size(); i++){
+  for (int i = 0; i < position.size(); i++) {
     outFile << position(i) << "  ";
   }
-  if (position.size() ==2)
-  {
-    outFile << 0.0 << "  ";  //also for 2D scenario, vtk needs 3D data
+  if (position.size() == 2) {
+    outFile << 0.0 << "  "; //also for 2D scenario, vtk needs 3D data
   }
   outFile << '\n';
 }
 
-
-void ExportVTKXML:: writeTriangle
-(
-  mesh::Triangle& triangle,
-  std::ofstream&  outFile)
+void ExportVTKXML::writeTriangle(
+    mesh::Triangle &triangle,
+    std::ofstream & outFile)
 {
   outFile << triangle.vertex(0).getID() << "  ";
   outFile << triangle.vertex(1).getID() << "  ";
   outFile << triangle.vertex(2).getID() << "  ";
-
 }
 
-void ExportVTKXML:: writeQuadrangle
-(
-  mesh::Quad&    quad,
-  std::ofstream& outFile)
+void ExportVTKXML::writeQuadrangle(
+    mesh::Quad &   quad,
+    std::ofstream &outFile)
 {
   outFile << quad.vertex(0).getID() << "  ";
   outFile << quad.vertex(1).getID() << "  ";
@@ -352,13 +339,13 @@ void ExportVTKXML:: writeQuadrangle
   outFile << quad.vertex(3).getID() << "  ";
 }
 
-void ExportVTKXML:: writeLine
-(
-  mesh::Edge& edge,
-  std::ofstream& outFile)
+void ExportVTKXML::writeLine(
+    mesh::Edge &   edge,
+    std::ofstream &outFile)
 {
   outFile << edge.vertex(0).getID() << "  ";
   outFile << edge.vertex(1).getID() << "  ";
 }
 
-}} // namespace precice, io
+} // namespace io
+} // namespace precice

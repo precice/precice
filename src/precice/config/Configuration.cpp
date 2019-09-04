@@ -37,7 +37,7 @@ xml::XMLTag& Configuration:: getXMLTag()
 
 void Configuration::xmlTagCallback(xml::XMLTag& tag)
 {
-  TRACE(tag.getName());
+  PRECICE_TRACE(tag.getName());
   if (tag.getName() == "precice-configuration") {
     precice::syncMode = tag.getBooleanAttributeValue("sync-mode");
   }
@@ -47,7 +47,7 @@ void Configuration:: xmlEndTagCallback
 (
   xml::XMLTag& tag )
 {
-  TRACE(tag.getName());
+  PRECICE_TRACE(tag.getName());
 }
 
 const SolverInterfaceConfiguration&

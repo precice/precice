@@ -3,8 +3,80 @@
 All notable changes to this project will be documented in this file. For future plans, see our [Roadmap](https://github.com/precice/precice/wiki/Roadmap).
 
 ## develop
-- The SolverInterface is now hardened against invalid IDs and misconfiguration using a consitent mechanism to express requirements.
-- The SolverInterface now keeps track of the Mesh states, which results more informative error messages for mesh related functions.
+
+- Added CMake target to uninstall the project.
+- Added `INFO` log output of the connection build-up during the instantiation. This dramatically simplifies the identification of connection-related problems.
+- Added `precice::getVersionInformation()` to the interface. This returns a semicolon separated list of information containing the version, configuration, compiler and flags used to compile the library.
+- Added additional checks for wrong user input in SolverInterface.
+- Added basic index validation of user input to the SolverInterface
+- Added events for mapping internals such as the computation of the mapping and the index-generation.
+- Added more "pythonic" python bindings `precice_future`.
+- Added overrides for dependencies, allowing users to force CMake to use a given version. [Read more](https://github.com/precice/precice/wiki/Building:-Using-CMake#xsdk-compliance)
+- Added support for the `CPP` and `CPPFLAGS` environment variables. [Read more](https://github.com/precice/precice/wiki/Building:-Using-CMake#xsdk-compliance)
+- Added support for the xsdk default mode. [Read more](https://github.com/precice/precice/wiki/Building:-Using-CMake#xsdk-compliance)
+- Added the CMake variable `PRECICE_CTEST_MPI_FLAGS` which can be used to pass additional flags to `mpirun`. A common use-case is to enable oversubscribing on machines with only 2 cores by passing `--oversubscribe`.
+- Added the possibility to pass a custom `MPI_Comm` to preCICE via a new SolverInterface constructor. The passed communicator is then used as the global internal communicator. The user has to ensure that the mpi implementations of preCICE and the caller code are consistent and compatible.
+- Added the result of `git describe --tags --dirty` to the library, which is now displayed during the configuration of preCICE. This allows quickly check what commit you are actually using and whether there were local changes.
+- Added tests for python bindings using a mocked preCICE C++ Interface.
+- Added validation of dependencies in the CMake script.
+- Changed the connection publishing to a hash-based approach. This method is faster, more robust and NFS-friendly. The files are rooted in the folder `precice-run`, deleting this folder resolves most connection problems.
+- Changed the errors in the configuration stage to throw `std::runtime_error`.
+- Changed the id management from `std::set` to `boost::container::flat_set`. This reduces the peak memory consumption of meshes by about 9%.
+- Changed the log output for filtered vertices. Log level `INFO` prints the total number of filtered vertices. The detailed information was moved to `DEBUG`.
+- Changed the scope of the generated `version.[ch]pp` files to `precice/impl`. This prevents collisions with other random version headers.
+- Deprecated the python bindings `precice`, which will be removed in preCICE Version 2.0.0. If you still want to use them, please install `precice` and `precice_future`. Our recommendation, if you want to use the new bindings: Use `import precice_future as precice`.
+- Fixed a bug in the python bindings which ignored the memory layout of numpy array. We now use `numpy.ascontiguousarray` to guarantee a C-compatible layout of data structures.
+- Fixed a major memory issue due to excessive logger instantiations. This reduced peak memory consumption and allocation count of meshes by 50%.
+- Fixed compatibility with Eigen versions `>3.3.7`.
+- Fixed macro namespace by using the `PRECICE_` prefix. This prevents collisions with foreign macros.
+- Fixed the index-based version of the nearest projection mapping and reintegrated it.
+- Fixed wrong user input in Triangle creation to trigger assertions instead of a comprehensive user error.
+
+## 1.5.2
+
+- Fixed faulty communication in `master:sockets` leading to crashes.
+
+## 1.5.1
+
+- Fixed the exposure of `boost::asio` implementation details leading to version incompatibilities
+- Fixed the CMake linkage of Boost to become compatible with the generated CMake config of Boost 1.70.0
+
+## 1.5.0
+
+- Added CMake alias `precice::precice` which mimics the namespaced library name after calling `find_package(precice)`. This allows seamless use as a subproject.
+- Added state-awareness to the SolverInterface to keep track of the Mesh states. This results more informative error messages for mesh related functions.
+- Added faster `PetRadialBasisFctMapping` tagging using RTree queries.
+- Added potentially missing signal `SIGXCPU`.
+- Added sanitization of IDs to the SolverInterface and harden it against misconfiguration using a consistent mechanism to express requirements.
+- Added support for using preCICE directly from the binary tree using `precice_DIR` in other projects.
+- Added target `test_install`, which can be used to test the install. It configures builds and runs the cpp solverdummy using the installed preCICE library.
+- Added the ability to send a mesh to multiple participants.
+- Added the attribute `Participant` to the logger, which is now available in format and filter expressions.
+- Added the automatic creation of target directories, when exporting meshes with `<export:vtk ...>`.
+- Added the data name to the log output of convergence measures.
+- Added the generation of a pkg-config file for preCICE, which is usable after installing.
+- Added the generation of code coverage reports.
+- Changed the tested build-system in CI from SCons to CMake.
+- Fixed a **critical bug** in the nearest projection mapping rooting in the variant index tree. We decided to roll-back to the old implementation until there is a fix.
+- Fixed PETSc complaining about unused arguments when running tests.
+- Fixed `bindings/fortran` to use `precice::SolverInterface` instead of `precice::impl::SolverInterfaceImpl`
+- Fixed a potential integer overflow when parsing huge numbers in the configuration code.
+- Fixed a potential overflow in the computation of the side length of bounding boxes.
+- Fixed bug in preconditioner when we have convergence in the first iteration.
+- Fixed integration tests resetting the log-level by calling `configure`.
+- Fixed missing includes for Eigen
+- Fixed overuse of `std::endl` in code, file generation should be noticeably faster now.
+- Fixed the `const`ness of passed pointer arguments as well as some member functions of the `SolverInterface`.
+- Fixed the default safety factor for nearest projection mapping by increasing it from 0.1 to 0.5.
+- Fixed Python bindings now offer all preCICE API functions (except `get_mesh_handle`)
+- Fixed CMake now properly detects PETSc on systems with a directory-scoped MPI installation (`include/openmpi/mpi.h`) when the compiler was not set to the MPI compiler wrapper.
+- Refactored `Mesh::computeState` into two logical units, improving the trace information.
+- Refactored `computePartitions` using the stl.
+- Refactored logger which dramatically reduces compile times.
+- Refactored the M2N handling code, which improves the available trace information for issues related to the M2N initialization.
+- Removed [`#395`](https://github.com/precice/precice/pull/395) API functions `nameConfiguration(), dataDisplacements(), dataForces(), dataVelocities(), actionPlotOutput(), exportVTK(), exportAll()` from CPP API and all language bindings.
+- Removed ancient `PRECIE_NO_SOCKETS` definition.
+- Removed dead configuration code.
 - Sending data between participants is now fully asynchronous. This is relevant in one-way coupling scenarios, where the sending participant doesn't need to wait for the receiving one.
 
 ## 1.4.1

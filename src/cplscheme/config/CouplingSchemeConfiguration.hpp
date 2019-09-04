@@ -8,6 +8,7 @@
 #include "cplscheme/MultiCouplingScheme.hpp"
 #include "cplscheme/SharedPointer.hpp"
 #include "cplscheme/impl/SharedPointer.hpp"
+#include "acceleration/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
 #include "mesh/SharedPointer.hpp"
@@ -140,7 +141,7 @@ private:
     typedef std::tuple<mesh::PtrData, mesh::PtrMesh, std::string, std::string, bool> Exchange;
     std::vector<Exchange>                                                            exchanges;
     /// Tuples of data ID, mesh ID, and convergence measure.
-    std::vector<std::tuple<int, bool, std::string, int, impl::PtrConvergenceMeasure>> convMeasures;
+    std::vector<std::tuple<mesh::PtrData, bool, std::string, int, impl::PtrConvergenceMeasure>> convMeasures;
     int                                                                               maxIterations = -1;
     int                                                                               extrapolationOrder = 0;
 
@@ -150,7 +151,7 @@ private:
 
   m2n::M2NConfiguration::SharedPointer _m2nConfig;
 
-  PtrPostProcessingConfiguration _postProcConfig;
+  acceleration::PtrAccelerationConfiguration _accelerationConfig;
 
   /// Map from participant name to coupling scheme (composition).
   std::map<std::string, PtrCouplingScheme> _couplingSchemes;
@@ -182,7 +183,7 @@ private:
 
   void addTagExtrapolation(xml::XMLTag &tag);
 
-  void addTagPostProcessing(xml::XMLTag &tag);
+  void addTagAcceleration(xml::XMLTag &tag);
 
   void addAbsoluteConvergenceMeasure(
       const std::string &dataName,

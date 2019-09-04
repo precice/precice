@@ -9,21 +9,22 @@ int ManageUniqueIDs::getFreeID()
 {
   bool notFound = true;
   while (notFound) {
-    if (_ids.count(_lowerLimit) == 0) {
+    if (_ids.find(_lowerLimit) == _ids.end()) {
       notFound = false;
     }
     _lowerLimit++;
   }
-  _ids.insert(_lowerLimit - 1);
+  _ids.insert(_ids.end(), _lowerLimit - 1);
   return _lowerLimit - 1;
 }
 
 bool ManageUniqueIDs::insertID(int id)
 {
-  if (_ids.count(id) != 0)
+  if (_ids.find(id) != _ids.end()) {
     return false;
-  else
-    _ids.insert(id);
+  }
+
+  _ids.insert(_ids.end(), id);
   return true;
 }
 

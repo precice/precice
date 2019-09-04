@@ -1,7 +1,9 @@
 Python language bindings for preCICE
 ------------------------------------
 
-These are the python bindings for preCICE.
+These are the python bindings for preCICE. 
+
+**RECOMMENDATION: Use the new python bindings with `import precice_future as precice`.** This makes modifications to your adapter necessary, but these bindings are deprecated and will be removed in preCICE Version 2.
 
 # Installing the package
 
@@ -13,12 +15,17 @@ If preCICE was installed in a custom prefix, or not installed at all, you have t
 - `LIBRARY_PATH`, `LD_LIBRARY_PATH` to the library location, or `$prefix/lib`
 - `CPATH` either to the `src` directory or the `$prefix/include`
 
+## Dependencies
+
+Install `precice_future`. Follow the instructions given in `precice/src/precice/bindings/python_future/README.md`.
+
 ## Using pip3
 
 In this directory, execute:
 ```
 $ pip3 install --user .
 ```
+*note the dot at the end of the line*
 
 This will fetch cython, compile the bindings and finally install the precice package.
 
@@ -66,6 +73,10 @@ Run the following to test the installation:
 $ python3 -c "import precice"
 ```
 
+## additional preliminary tests
+
+You can find an extended solverdummy in `test`. Here some of the API functions are called and the results are checked with assertions. This is currently **not a proper automated unit test**. See also https://github.com/precice/precice/issues/409.
+
 # Using with MPI
 
 If precice was compiled with MPI, you have to initialize MPI prior to configuring a SolverInterface.
@@ -80,6 +91,6 @@ from mpi4py import MPI # Initialize MPI
 ```
 
 **NOTE:**
-- For an example of how the `precice` can be used, refer to the [1D elastic tube example](https://github.com/precice/precice/wiki/1D-elastic-tube-using-the-Python-API).
+- For an example of how `precice` can be used, refer to the [1D elastic tube example](https://github.com/precice/precice/wiki/1D-elastic-tube-using-the-Python-API).
 - In case the compilation fails with `shared_ptr.pxd not found` messages, check if you use the latest version of Cython.
 - If you want to use the old interface (precice version < 1.4.0), please also install the corresponding wrapper [`PySolverInterface`](https://github.com/precice/precice/tree/changingNameOfPySolverInterface/src/precice/bindings/PySolverInterface).

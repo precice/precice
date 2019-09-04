@@ -1,6 +1,5 @@
 #pragma once
 
-#include "precice/Constants.hpp"
 #include "SharedPointer.hpp"
 #include "action/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"

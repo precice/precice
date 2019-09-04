@@ -16,9 +16,9 @@ PROGRAM main
   readItCheckp(1:50)='                                                  '
   writeItCheckp(1:50)='                                                  '
   
-  CALL precicef_action_write_initial_data(writeInitialData)
-  CALL precicef_action_read_iter_checkp(readItCheckp)
-  CALL precicef_action_write_iter_checkp(writeItCheckp)
+  CALL precicef_action_write_initial_data(writeInitialData, 50)
+  CALL precicef_action_read_iter_checkp(readItCheckp, 50)
+  CALL precicef_action_write_iter_checkp(writeItCheckp, 50)
 
   WRITE (*,*) 'DUMMY: Starting Fortran solver dummy...'
   CALL getarg(1, config)
