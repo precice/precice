@@ -186,7 +186,11 @@ void SolverInterface:: getMeshVertexIDsFromPositions
   int           size,
   const double* positions,
   int*          ids ) const
-{}
+{
+  for(int i = 0; i < size; i++){
+    ids[i] = fake_ids[i];
+  }
+}
 
 int SolverInterface:: setMeshEdge
 (
