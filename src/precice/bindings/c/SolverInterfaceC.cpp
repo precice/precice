@@ -69,6 +69,24 @@ int precicec_isCouplingTimestepComplete()
   return 0;
 }
 
+int precicec_hasToEvaluateSurrogateModel()
+{
+  assertion ( impl != nullptr);
+  if (impl->hasToEvaluateSurrogateModel() ){
+    return 1;
+  }
+  return 0;
+}
+
+int precicec_hasToEvaluateFineModel()
+{
+  assertion ( impl != nullptr);
+  if (impl->hasToEvaluateFineModel() ){
+    return 1;
+  }
+  return 0;
+}
+
 int precicec_isReadDataAvailable()
 {
   assertion ( impl != nullptr );
@@ -102,6 +120,13 @@ void precicec_fulfilledAction ( const char* action )
   assertion ( impl != nullptr );
   assertion ( action != nullptr );
   impl->fulfilledAction ( std::string(action) );
+}
+
+int precicec_hasMesh ( const char* meshName)
+{
+  assertion ( impl != nullptr );
+  std::string stringMeshName (meshName);
+  return impl->hasMesh (stringMeshName);
 }
 
 int precicec_getMeshID ( const char* meshName )
@@ -165,6 +190,17 @@ int precicec_getMeshVertexSize
   return impl->getMeshVertexSize(meshID);
 }
 
+void precicec_getMeshVertexIDsFromPositions
+(
+  int           meshID,
+  int           size,
+  const double* positions,
+  int*          ids)
+{
+  assertion(impl != nullptr);
+  impl->getMeshVertexIDsFromPositions(meshID,size,positions,ids);
+}
+
 int precicec_setMeshEdge
 (
   int meshID,
@@ -195,6 +231,18 @@ void precicec_setMeshTriangleWithEdges
 {
   assertion ( impl != nullptr );
   impl->setMeshTriangleWithEdges ( meshID, firstVertexID, secondVertexID, thirdVertexID );
+}
+
+void precicec_setMeshQuad
+(
+  int meshID,
+  int firstEdgeID,
+  int secondEdgeID,
+  int thirdEdgeID,
+  int fourthEdgeID )
+{
+  assertion ( impl != nullptr );
+  impl->setMeshQuad(meshID,firstEdgeID,secondEdgeID,thirdEdgeID,fourthEdgeID);
 }
 
 void precicec_writeBlockVectorData
