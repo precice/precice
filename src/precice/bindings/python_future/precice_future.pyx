@@ -115,6 +115,8 @@ cdef class Interface:
 
     # creates a mesh vertex
     def set_mesh_vertex(self, mesh_id, position):
+        if not isinstance(position, np.ndarray):
+            position = np.asarray(position)
         dimensions = position.size
         assert(dimensions == self.get_dimensions())
         cdef np.ndarray[double, ndim=1] _position = np.ascontiguousarray(position, dtype=np.double)
@@ -127,6 +129,8 @@ cdef class Interface:
 
     # creates multiple mesh vertices
     def set_mesh_vertices (self, mesh_id, positions):
+        if not isinstance(positions, np.ndarray):
+            positions = np.asarray(positions)
         size, dimensions = positions.shape
         assert(dimensions == self.get_dimensions())
         cdef np.ndarray[double, ndim=1] _positions = np.ascontiguousarray(positions.flatten(), dtype=np.double)
@@ -144,6 +148,8 @@ cdef class Interface:
 
     # gets mesh vertex IDs from positions
     def get_mesh_vertex_ids_from_positions (self, mesh_id, positions):
+        if not isinstance(positions, np.ndarray):
+            positions = np.asarray(positions)
         size, dimensions = positions.shape
         assert(dimensions == self.get_dimensions())
         cdef np.ndarray[double, ndim=1] _positions = np.ascontiguousarray(positions.flatten(), dtype=np.double)
@@ -186,6 +192,8 @@ cdef class Interface:
         self.thisptr.mapWriteDataFrom (from_mesh_id)
 
     def write_block_vector_data (self, data_id, value_indices, values):
+        if not isinstance(values, np.ndarray):
+            values = np.asarray(values)
         size, dimensions = values.shape
         assert(dimensions == self.get_dimensions())
         cdef np.ndarray[int, ndim=1] _value_indices = np.ascontiguousarray(value_indices, dtype=np.int32)
@@ -195,6 +203,8 @@ cdef class Interface:
         self.thisptr.writeBlockVectorData (data_id, size, &_value_indices[0], &_values[0])
 
     def write_vector_data (self, data_id, value_index, value):
+        if not isinstance(value, np.ndarray):
+            value = np.asarray(value)
         dimensions = value.size
         assert(dimensions == self.get_dimensions())
         cdef np.ndarray[np.double_t, ndim=1] _value = np.ascontiguousarray(value, dtype=np.double)
