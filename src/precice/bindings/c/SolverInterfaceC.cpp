@@ -245,6 +245,18 @@ void precicec_setMeshQuad
   impl->setMeshQuad(meshID,firstEdgeID,secondEdgeID,thirdEdgeID,fourthEdgeID);
 }
 
+void precicec_setMeshQuadWithEdges
+(
+  int meshID,
+  int firstVertexID,
+  int secondVertexID,
+  int thirdVertexID,
+  int fourthVertexID )
+{
+  assertion ( impl != nullptr );
+  impl->setMeshQuadWithEdges(meshID,firstVertexID,secondVertexID,thirdVertexID,fourthVertexID);
+}
+
 void precicec_writeBlockVectorData
 (
   int           dataID,

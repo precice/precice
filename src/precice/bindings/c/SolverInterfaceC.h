@@ -269,6 +269,27 @@ void precicec_setMeshQuad (
 
 
 /**
+  * @brief Sets surface mesh quadrangle from vertex IDs.
+  *
+  * @param[in] meshID ID of the mesh to add the Quad to
+  * @param[in] firstVertexID ID of the first vertex of the Quad
+  * @param[in] secondVertexID ID of the second vertex of the Quad
+  * @param[in] thirdVertexID ID of the third vertex of the Quad
+  * @param[in] fourthVertexID ID of the fourth vertex of the Quad
+ */
+void precicec_setMeshQuadWithEdges (
+     int meshID,
+     int firstVertexID,
+     int secondVertexID,
+     int thirdVertexID,
+     int fourthVertexID );
+
+///@}
+
+///@name Data Access
+///@{
+
+/**
  * @brief Returns true (!=0), if data with given name is available.
  */
 int precicec_hasData ( const char* dataName, int meshID );
@@ -282,7 +303,15 @@ int precicec_hasData ( const char* dataName, int meshID );
  */
 int precicec_getDataID ( const char* dataName, int meshID );
 
+/**
+ * @brief Computes and maps all read data mapped to mesh with given ID.
+ */
+void precicec_mapReadDataTo ( int toMeshID );
 
+/**
+ * @brief Computes and maps all write data mapped from mesh with given ID.
+ */
+void precicec_mapWriteDataFrom ( int fromMeshID );
 
 /**
  * @brief Writes vector data values given as block.
@@ -384,17 +413,6 @@ void precicec_readScalarData (
   int     dataID,
   int     valueIndex,
   double* dataValue );
-
-/**
- * @brief Computes and maps all write data mapped from mesh with given ID.
- */
-void precicec_mapWriteDataFrom ( int fromMeshID );
-
-/**
- * @brief Computes and maps all read data mapped to mesh with given ID.
- */
-void precicec_mapReadDataTo ( int toMeshID );
-
 
 #ifdef __cplusplus
 }
