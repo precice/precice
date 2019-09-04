@@ -124,9 +124,12 @@ void precicec_fulfilledAction ( const char* action )
 
 int precicec_hasMesh ( const char* meshName)
 {
-  assertion ( impl != nullptr );
+  PRECICE_ASSERT( impl != nullptr );
   std::string stringMeshName (meshName);
-  return impl->hasMesh (stringMeshName);
+  if ( impl->hasMesh (stringMeshName) ){
+    return 1;
+  }
+  return 0;
 }
 
 int precicec_getMeshID ( const char* meshName )
