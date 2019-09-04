@@ -22,7 +22,7 @@ Configuration:: Configuration()
   _tag.addNamespace("action");
   _tag.addNamespace("server");
   _tag.addNamespace("coupling-scheme");
-  _tag.addNamespace("post-processing");
+  _tag.addNamespace("acceleration");
 
   auto attrSyncMode = xml::makeXMLAttribute("sync-mode", false)
       .setDocumentation("sync-mode enabled additional inter- and intra-participant synchronizations");
