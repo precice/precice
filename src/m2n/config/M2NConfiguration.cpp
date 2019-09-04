@@ -134,7 +134,7 @@ m2n::PtrM2N M2NConfiguration::getM2N(const std::string &from, const std::string 
   }
   std::ostringstream error;
   error << "No m2n communication configured between \"" << from << "\" and \"" << to << "\"!";
-  throw error.str();
+  throw std::runtime_error{error.str()};
 }
 
 void M2NConfiguration::xmlTagCallback(xml::XMLTag &tag)
@@ -163,7 +163,7 @@ void M2NConfiguration::xmlTagCallback(xml::XMLTag &tag)
       std::ostringstream error;
       error << "Communication type \"mpi\" can only be used"
             << "when preCICE is compiled with argument \"mpi=on\"";
-      throw error.str();
+      throw std::runtime_error{error.str()};
 #else
       comFactory = std::make_shared<com::MPIPortsCommunicationFactory>(dir);
       com        = comFactory->newCommunication();
@@ -174,7 +174,7 @@ void M2NConfiguration::xmlTagCallback(xml::XMLTag &tag)
       std::ostringstream error;
       error << "Communication type \"mpi-singleports\" can only be used "
             << "when preCICE is compiled with argument \"mpi=on\"";
-      throw error.str();
+      throw std::runtime_error{error.str()};
 #else
       comFactory = std::make_shared<com::MPISinglePortsCommunicationFactory>(dir);
       com        = comFactory->newCommunication();
@@ -184,7 +184,7 @@ void M2NConfiguration::xmlTagCallback(xml::XMLTag &tag)
       std::ostringstream error;
       error << "Communication type \"" << "mpi-single" << "\" can only be used "
             << "when preCICE is compiled with argument \"mpi=on\"";
-      throw error.str();
+      throw std::runtime_error{error.str()};
 #else
       com        = std::make_shared<com::MPIDirectCommunication>();
 #endif
@@ -221,7 +221,7 @@ void M2NConfiguration::checkDuplicates(
     std::ostringstream error;
     error << "Multiple communication defined between participant \"" << from
           << "\" and \"" << to << "\"";
-    throw error.str();
+    throw std::runtime_error{error.str()};
   }
 }
 

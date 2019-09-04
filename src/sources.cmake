@@ -4,7 +4,7 @@
 
 target_sources(precice
     PRIVATE
-    ${CMAKE_BINARY_DIR}/src/versions.cpp
+    ${CMAKE_BINARY_DIR}/src/precice/impl/versions.cpp
     src/acceleration/Acceleration.hpp
     src/acceleration/AitkenAcceleration.cpp
     src/acceleration/AitkenAcceleration.hpp
@@ -249,6 +249,7 @@ target_sources(precice
     src/precice/impl/ValidationMacros.hpp
     src/precice/impl/WatchPoint.cpp
     src/precice/impl/WatchPoint.hpp
+    src/precice/impl/versions.hpp
     src/query/ExportVTKNeighbors.cpp
     src/query/ExportVTKNeighbors.hpp
     src/query/ExportVTKVoxelQueries.cpp
@@ -292,10 +293,10 @@ target_sources(precice
     src/utils/TableWriter.cpp
     src/utils/TableWriter.hpp
     src/utils/TypeNames.hpp
+    src/utils/algorithm.hpp
     src/utils/assertion.hpp
     src/utils/stacktrace.cpp
     src/utils/stacktrace.hpp
-    src/versions.hpp
     src/xml/ConfigParser.cpp
     src/xml/ConfigParser.hpp
     src/xml/XMLAttribute.hpp

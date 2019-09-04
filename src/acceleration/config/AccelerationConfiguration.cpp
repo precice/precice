@@ -188,7 +188,7 @@ void AccelerationConfiguration::xmlTagCallback(
       std::ostringstream stream;
       stream << "Data with name \"" << dataName << "\" associated to mesh \""
              << _meshName << "\" not found on configuration of acceleration";
-      throw stream.str();
+      throw std::runtime_error{stream.str()};
     }
     _neededMeshes.push_back(_meshName);
   } else if (callingTag.getName() == TAG_INIT_RELAX) {
