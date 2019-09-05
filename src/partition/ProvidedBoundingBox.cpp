@@ -208,15 +208,6 @@ void ProvidedBoundingBox::communicate()
     _mesh->setGlobalNumberOfVertices(globalNumberOfVertices);   
   } 
 
-  for(auto &rank : _mesh->getConnectedRanks())
-  {
-    // add the minimum global index 
-    vertexGlobalIndexDomain[rank].push_back(offset);
-    // add the maximum global index
-    vertexGlobalIndexDomain[rank].push_back(vertexMaxGlobalID);
-  }
-
-
   // each rank sends its min/max global vertex index to connected remote ranks
   _m2ns[0]->broadcastSend(vertexMinGlobalID, *_mesh);
   _m2ns[0]->broadcastSend(vertexMaxGlobalID, *_mesh);
