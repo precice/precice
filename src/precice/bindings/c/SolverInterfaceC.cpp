@@ -71,7 +71,7 @@ int precicec_isCouplingTimestepComplete()
 
 int precicec_hasToEvaluateSurrogateModel()
 {
-  assertion ( impl != nullptr);
+  PRECICE_ASSERT( impl != nullptr);
   if (impl->hasToEvaluateSurrogateModel() ){
     return 1;
   }
@@ -80,7 +80,7 @@ int precicec_hasToEvaluateSurrogateModel()
 
 int precicec_hasToEvaluateFineModel()
 {
-  assertion ( impl != nullptr);
+  PRECICE_ASSERT( impl != nullptr);
   if (impl->hasToEvaluateFineModel() ){
     return 1;
   }
@@ -200,7 +200,7 @@ void precicec_getMeshVertexIDsFromPositions
   const double* positions,
   int*          ids)
 {
-  assertion(impl != nullptr);
+  PRECICE_ASSERT(impl != nullptr);
   impl->getMeshVertexIDsFromPositions(meshID,size,positions,ids);
 }
 
@@ -244,7 +244,7 @@ void precicec_setMeshQuad
   int thirdEdgeID,
   int fourthEdgeID )
 {
-  assertion ( impl != nullptr );
+  PRECICE_ASSERT( impl != nullptr );
   impl->setMeshQuad(meshID,firstEdgeID,secondEdgeID,thirdEdgeID,fourthEdgeID);
 }
 
@@ -256,7 +256,7 @@ void precicec_setMeshQuadWithEdges
   int thirdVertexID,
   int fourthVertexID )
 {
-  assertion ( impl != nullptr );
+  PRECICE_ASSERT( impl != nullptr );
   impl->setMeshQuadWithEdges(meshID,firstVertexID,secondVertexID,thirdVertexID,fourthVertexID);
 }
 
