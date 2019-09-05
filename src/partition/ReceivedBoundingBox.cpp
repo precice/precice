@@ -140,6 +140,7 @@ void ReceivedBoundingBox::communicate()
   
   if (utils::MasterSlave::isMaster())
   {
+    // Master receives remote mesh's global vertex number
     int globalNumberOfVertices = -1;
      _m2ns[0]->getMasterCommunication()->receive(globalNumberOfVertices, 0);
      _mesh->setGlobalNumberOfVertices(globalNumberOfVertices);
@@ -220,7 +221,7 @@ void ReceivedBoundingBox::compute()
   _mesh->computeState();
 
   // (6) Compute and feedback local communication map
-  PRECICE_INFO("Feedback Communicatin Map "); 
+  PRECICE_INFO("Feedback Communication Map "); 
   std::map<int, std::vector<int>> localCommunicationMap;
 
   /*
@@ -253,10 +254,16 @@ void ReceivedBoundingBox::compute()
   }
   
 
+  // communicate communication map to all remote conneceted ranks
   _m2ns[0]->broadcastSendLCM(localCommunicationMap, *_mesh);
 
+
+  /* 
+   * master broadcasts remote mesh's golbal vertex number to slaves.
+   * This data is needed later for implicit coupling schemes.
+   */
   
-  if (not utils::MasterSlave::isSlave())
+  if (utils::MasterSlave::isMaster())
   {
     _mesh->getVertexDistribution()[0] = vertexIDs;
 
