@@ -7,6 +7,7 @@
 #include "mesh/Mesh.hpp"
 #include "utils/Event.hpp"
 #include "utils/MasterSlave.hpp"
+#include <boost/container/flat_map.hpp>
 
 using precice::utils::Event;
 
@@ -234,22 +235,25 @@ std::map<int, std::vector<int>> buildCommunicationMap(
   if (iterator == thisVertexDistribution.end())
     return communicationMap;
 
+  // Build lookup table from otherIndex -> rank for the otherVertexDistribution
+  const auto lookupIndexRank = [&otherVertexDistribution] {
+      boost::container::flat_multimap<int, int> lookupIndexRank;
+      for (const auto &other : otherVertexDistribution) {
+          for (const auto &otherIndex : other.second) {
+              lookupIndexRank.emplace(otherIndex, other.first);
+          }
+      }
+      return lookupIndexRank;
+  }();
+
   auto const &indices = iterator->second;
 
-  int index = 0;
-
-  for (int thisIndex : indices) {
-    for (const auto &other : otherVertexDistribution) {
-      for (const auto &otherIndex : other.second) {
-        if (thisIndex == otherIndex) {
-          communicationMap[other.first].push_back(index);
-          break;
-        }
+  for (size_t index = 0lu; index < indices.size(); ++index) {
+      auto range = lookupIndexRank.equal_range(indices[index]);
+      for(auto iter = range.first; iter != range.second; ++iter){
+              communicationMap[iter->second].push_back(index);
       }
-    }
-    ++index;
   }
-
   return communicationMap;
 }
 
