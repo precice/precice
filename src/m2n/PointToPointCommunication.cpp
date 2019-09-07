@@ -218,9 +218,22 @@ void printLocalIndexCountStats(std::map<int, std::vector<int>> const &m)
   }
 }
 
-// The approximate complexity of this function is O((number of local data
-// indices for the current rank in `thisVertexDistribution') * (total number of
-// data indices for all ranks in `otherVertexDistribution')).
+/** builds the communication map for a local distribution given the global distribution.
+ *
+ *
+ * @param[in] thisVertexDistribution the local vertex distribution
+ * @param[in] otherVertexDistribution the total vertex distribution
+ * @param[in] thisRank the rank to build the map for
+ *
+ * @returns the resulting communication map for rank thisRank
+ *
+ * The approximate complexity of this function is:
+ * \f$ \mathcal{O}(n \log(n) + m \log(n)) \f$
+ *
+ * * n is the total number of data indices for all ranks in `otherVertexDistribution'
+ * * m is the number of local data indices for the current rank in `thisVertexDistribution`
+ *
+ */
 std::map<int, std::vector<int>> buildCommunicationMap(
     // `thisVertexDistribution' is input vertex distribution from this participant.
     mesh::Mesh::VertexDistribution const &thisVertexDistribution,
@@ -228,12 +241,9 @@ std::map<int, std::vector<int>> buildCommunicationMap(
     mesh::Mesh::VertexDistribution const &otherVertexDistribution,
     int                                    thisRank = utils::MasterSlave::getRank())
 {
-  std::map<int, std::vector<int>> communicationMap;
-
   auto iterator = thisVertexDistribution.find(thisRank);
-
   if (iterator == thisVertexDistribution.end())
-    return communicationMap;
+    return {};
 
   // Build lookup table from otherIndex -> rank for the otherVertexDistribution
   const auto lookupIndexRank = [&otherVertexDistribution] {
@@ -248,6 +258,7 @@ std::map<int, std::vector<int>> buildCommunicationMap(
 
   auto const &indices = iterator->second;
 
+  std::map<int, std::vector<int>> communicationMap;
   for (size_t index = 0lu; index < indices.size(); ++index) {
       auto range = lookupIndexRank.equal_range(indices[index]);
       for(auto iter = range.first; iter != range.second; ++iter){
