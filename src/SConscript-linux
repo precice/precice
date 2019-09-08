@@ -81,7 +81,7 @@ sourcesXml = [
 ]
 
 sourcesVersion = [
-    File('versions.cpp')
+    File('precice/impl/versions.cpp')
 ]
 
 sourcesAllNoMain = [

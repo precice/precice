@@ -49,7 +49,7 @@ sourcesCom = [
    ]
 
 sourcesVersion = [
-    File('versions.cpp')
+    File('precice/impl/versions.cpp')
 ]
    
 sourcesAll = [ 
