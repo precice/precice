@@ -299,6 +299,12 @@ if env["platform"] == "hazelhen":
 env.Append(CPPPATH = join(prefix, 'include/libxml2'))
 checkAdd("xml2")
 
+# ====== Prettyprint ======
+env.Append(CPPPATH = 'thirdparty/prettyprint/include')
+
+# ====== JSON ======
+env.Append(CPPPATH = 'thirdparty/json/include')
+
 print
 env = conf.Finish() # Used to check libraries
 
