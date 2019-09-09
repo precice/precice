@@ -476,7 +476,7 @@ void ReceivedPartition::createOwnerInformation()
 #endif
     auto filteredVertices = std::count(globalOwnerVec.begin(), globalOwnerVec.end(), 0);
     if (filteredVertices)
-      PRECICE_WARN(filteredVertices << " of " << _mesh->vertices().size()
+      PRECICE_WARN(filteredVertices << " of " << _mesh->getGlobalNumberOfVertices()
            << " vertices of mesh " << _mesh->getName() << " have been filtered out "
            << "since they have no influence on the mapping.");
     
