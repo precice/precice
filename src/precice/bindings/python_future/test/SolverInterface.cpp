@@ -1,5 +1,7 @@
 #include "precice/SolverInterface.hpp"
 #include <iostream>
+#include <numeric>
+#include <cassert>
 
 std::vector<double> fake_read_write_buffer;
 int fake_dimensions;
@@ -27,9 +29,8 @@ SolverInterface:: SolverInterface
   fake_data_id = 15;
   fake_data_name = "FakeData";
   n_fake_vertices = 3;
-  for(int i=0; i<n_fake_vertices; i++){
-    fake_ids.push_back(i);
-  }
+  fake_ids.resize(n_fake_vertices);
+  std::iota(fake_ids.begin(), fake_ids.end(), 0);
 }
 
 SolverInterface::~SolverInterface() = default;
@@ -161,9 +162,8 @@ void SolverInterface:: setMeshVertices
   const double* positions,
   int*          ids )
 {
-  for(int i = 0; i < size; i++){
-    ids[i] = fake_ids[i];
-  }
+  assert (size == fake_ids.size());
+  std::copy(fake_ids.begin(), fake_ids.end(), ids);
 }
 
 void SolverInterface:: getMeshVertices
@@ -187,9 +187,8 @@ void SolverInterface:: getMeshVertexIDsFromPositions
   const double* positions,
   int*          ids ) const
 {
-  for(int i = 0; i < size; i++){
-    ids[i] = fake_ids[i];
-  }
+  assert (size == fake_ids.size());
+  std::copy(fake_ids.begin(), fake_ids.end(), ids);
 }
 
 int SolverInterface:: setMeshEdge
