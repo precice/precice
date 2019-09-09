@@ -1,5 +1,11 @@
 # This is file src/Sconscript
 
+sourcesAcceleration = [
+    Glob('acceleration/*.cpp'),
+    Glob('acceleration/impl/*.cpp'),
+    Glob('acceleration/config/*.cpp')
+]
+
 sourcesCplscheme = [
    Glob('cplscheme/*.cpp'),
    Glob('cplscheme/impl/*.cpp'),
@@ -28,6 +34,7 @@ sourcesVersion = [
 ]
    
 sourcesAll = [ 
+   sourcesAcceleration,
    sourcesCplscheme,
    sourcesAction,
    sourcesPrecice,
