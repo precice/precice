@@ -100,6 +100,7 @@ void SolverInterfaceImpl:: configure
 (
   const std::string& configurationFileName )
 {
+  utils::Parallel::initializeMPI(nullptr, nullptr);
   config::Configuration config;
   xml::configure(config.getXMLTag(), configurationFileName);
   if(_accessorProcessRank==0){
@@ -186,7 +187,6 @@ void SolverInterfaceImpl:: configure
       _meshLock.add(meshID.second, false);
   }
   
-  utils::Parallel::initializeMPI(nullptr, nullptr);
   logging::setMPIRank(utils::Parallel::getProcessRank());
   utils::EventRegistry::instance().initialize("precice-" + _accessorName, "", utils::Parallel::getGlobalCommunicator());
   
