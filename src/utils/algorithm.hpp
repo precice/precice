@@ -17,13 +17,12 @@ auto make_array(Elements&&... elements) -> std::array<typename std::common_type<
 /** Checks weather the given elements contains no duplicates.
  *
  * \tparam Container type of the passed container.
- * \tparam Compare type of the comparator.
+ * \tparam BinaryPredicate the predicate used to compare two elements for equality.
  * \param c the container to check for unique elements.
- * \param comp the comparator to use for the elements.
  * \returns weather all elements in c are unique.
  */
-template <typename Container, typename Compare>
-bool unique_elements(const Container& c, Compare comp)
+template <typename Container, typename BinaryPredicate = std::equal_to<typename Container::value_type>>
+bool unique_elements(const Container& c, BinaryPredicate p = {})
 {
   // This algorithm runs on small containers, so the O(n^2) does not hurt.
   auto cbegin = c.begin();
@@ -35,26 +34,13 @@ bool unique_elements(const Container& c, Compare comp)
   auto cstart = cbegin + 1;
   for (; cstart < cend; ++cbegin, ++cstart) {
     if (std::find_if(cstart, cend,
-                [&comp, cbegin](const typename Container::value_type &v) -> bool {
-                    return comp(*cbegin, v); 
+                [&p, cbegin](const typename Container::value_type &v) -> bool {
+                    return p(*cbegin, v); 
                 }) != cend) {
       return false;
     }
   }
   return true;
-}
-
-/** Checks weather the given elements contains no duplicates.
- *
- * \tparam T type of items to check
- * \param c the elements to compare
- * \returns weather all elements are unique.
- */
-template <typename Container>
-bool unique_elements(const Container& c)
-{
-  using Comp = std::equal_to<typename Container::value_type>;
-  return unique_elements<Container, Comp>(c, Comp{});
 }
 
 

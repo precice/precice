@@ -834,7 +834,7 @@ void SolverInterfaceImpl:: setMeshTriangleWithEdges
     vertices[1] = &mesh->vertices()[secondVertexID];
     vertices[2] = &mesh->vertices()[thirdVertexID];
     PRECICE_CHECK(utils::unique_elements(utils::make_array(vertices[0]->getCoords(),
-                vertices[1]->getCoords(), vertices[2]->getCoords()), utils::ComponentWiseLess{}),
+                vertices[1]->getCoords(), vertices[2]->getCoords())),
             "The coordinates of the vertices must be unique!");
     mesh::Edge* edges[3];
     edges[0] = & mesh->createUniqueEdge(*vertices[0], *vertices[1]);
