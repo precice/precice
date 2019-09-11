@@ -372,7 +372,7 @@ symlink = env.Command(
     action = "ln -fns {0} {1}".format(os.path.split(buildpath)[-1], join(os.path.split(buildpath)[0], "last"))
 )
 
-Default(versions_cpp, versions_hpp, solib, tests, symlink)
+Default(versions_cpp, versions_hpp, solib, tests, bin, symlink)
 
 AlwaysBuild(versions_cpp, versions_hpp, symlink)
 
