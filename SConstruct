@@ -308,6 +308,29 @@ env.Append(CPPPATH = 'thirdparty/json/include')
 print
 env = conf.Finish() # Used to check libraries
 
+#--------------------------------------------- Generated sources
+
+# Substitute strings in version.hpp.in, save it as version.hpp
+versions_hpp = env.Substfile(
+    "src/precice/impl/versions.hpp.in",
+    SUBST_DICT =  {
+        "@preCICE_VERSION@": PRECICE_VERSION,
+        "@PETSC_VERSION_MAJOR@": PETSC_VERSION_MAJOR,
+        "@PETSC_VERSION_MINOR@": PETSC_VERSION_MINOR}
+)
+
+# Substitute strings in versions.cpp.in, save it as versions.cpp
+versions_cpp = env.Substfile(
+    "src/precice/impl/versions.cpp.in",
+    SUBST_DICT = {
+        "@preCICE_REVISION@": "no-info [SCons]",
+        "@preCICE_VERSION@": PRECICE_VERSION,
+        "@preCICE_VERSION_INFORMATION@": "MPI=" + ("Y" if env["mpi"] else "N") +
+                                          ";PETSC=" + ("Y" if env["petsc"] else "N") +
+                                          ";PYTHON=" + ("Y" if env["python"] else "N")
+    }
+)
+
 #--------------------------------------------- Define sources and build targets
 
 (sourcesAllNoMain, sourcesMain, sourcesTests) = SConscript (
@@ -347,27 +370,6 @@ symlink = env.Command(
     target = "symlink",
     source = None,
     action = "ln -fns {0} {1}".format(os.path.split(buildpath)[-1], join(os.path.split(buildpath)[0], "last"))
-)
-
-# Substitute strings in version.hpp.in, save it as version.hpp
-versions_hpp = env.Substfile(
-    "src/precice/impl/versions.hpp.in",
-    SUBST_DICT =  {
-        "@preCICE_VERSION@": PRECICE_VERSION,
-        "@PETSC_VERSION_MAJOR@": PETSC_VERSION_MAJOR,
-        "@PETSC_VERSION_MINOR@": PETSC_VERSION_MINOR}
-)
-
-# Substitute strings in versions.cpp.in, save it as versions.cpp
-versions_cpp = env.Substfile(
-    "src/precice/impl/versions.cpp.in",
-    SUBST_DICT = {
-        "@preCICE_REVISION@": "no-info [SCons]",
-        "@preCICE_VERSION@": PRECICE_VERSION,
-        "@preCICE_VERSION_INFORMATION@": "MPI=" + ("Y" if env["mpi"] else "N") +
-                                          ";PETSC=" + ("Y" if env["petsc"] else "N") +
-                                          ";PYTHON=" + ("Y" if env["python"] else "N")
-    }
 )
 
 Default(versions_cpp, versions_hpp, solib, tests, symlink)
