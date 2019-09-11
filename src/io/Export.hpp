@@ -14,6 +14,8 @@ namespace io {
 /// Abstract base class of all classes exporting container data structures.
 class Export {
 public:
+  Export& operator=(Export &&) = delete;
+
   virtual ~Export() {}
 
   /// Returns the export type ID.

@@ -84,7 +84,7 @@ vars.Add(BoolVariable("mpi", "Enables MPI-based communication and running coupli
 vars.Add(BoolVariable("petsc", "Enable use of the PETSc linear algebra library.", True))
 vars.Add(BoolVariable("python", "Used for Python scripted solver actions.", False))
 vars.Add(BoolVariable("gprof", "Used in detailed performance analysis.", False))
-vars.Add(EnumVariable('platform', 'Special configuration for certain platforms', "none", allowed_values=('none', 'supermuc', 'hazelhen')))
+vars.Add(EnumVariable('platform', 'Special configuration for certain platforms', "none", allowed_values=('none', 'hazelhen')))
 
 env = Environment(variables = vars, ENV = os.environ, tools = ["default", "textfile"])
 
@@ -106,7 +106,7 @@ env.Append(LIBPATH = [('#' + buildpath)])
 env.Append(CCFLAGS= ['-Wall', '-Wextra', '-Wno-unused-parameter', '-std=c++11'])
 
 # ====== PRECICE_VERSION number ======
-PRECICE_VERSION = "1.5.2"
+PRECICE_VERSION = "1.6.0"
 
 
 # ====== Compiler Settings ======
@@ -292,17 +292,44 @@ if env["gprof"]:
     buildpath += "-gprof"
 
 # ====== Special Platforms ======
-if env["platform"] == "supermuc":
-    env.Append(CPPDEFINES = ['SuperMUC_WORK'])
-elif env["platform"] == "hazelhen":
+if env["platform"] == "hazelhen":
     env.Append(LINKFLAGS = ['-dynamic']) # Needed for correct linking against boost.log
 
 # ====== LibXML2 ======
 env.Append(CPPPATH = join(prefix, 'include/libxml2'))
 checkAdd("xml2")
 
+# ====== Prettyprint ======
+env.Append(CPPPATH = 'thirdparty/prettyprint/include')
+
+# ====== JSON ======
+env.Append(CPPPATH = 'thirdparty/json/include')
+
 print
 env = conf.Finish() # Used to check libraries
+
+#--------------------------------------------- Generated sources
+
+# Substitute strings in version.hpp.in, save it as version.hpp
+versions_hpp = env.Substfile(
+    "src/precice/impl/versions.hpp.in",
+    SUBST_DICT =  {
+        "@preCICE_VERSION@": PRECICE_VERSION,
+        "@PETSC_VERSION_MAJOR@": PETSC_VERSION_MAJOR,
+        "@PETSC_VERSION_MINOR@": PETSC_VERSION_MINOR}
+)
+
+# Substitute strings in versions.cpp.in, save it as versions.cpp
+versions_cpp = env.Substfile(
+    "src/precice/impl/versions.cpp.in",
+    SUBST_DICT = {
+        "@preCICE_REVISION@": "no-info [SCons]",
+        "@preCICE_VERSION@": PRECICE_VERSION,
+        "@preCICE_VERSION_INFORMATION@": "MPI=" + ("Y" if env["mpi"] else "N") +
+                                          ";PETSC=" + ("Y" if env["petsc"] else "N") +
+                                          ";PYTHON=" + ("Y" if env["python"] else "N")
+    }
+)
 
 #--------------------------------------------- Define sources and build targets
 
@@ -345,19 +372,9 @@ symlink = env.Command(
     action = "ln -fns {0} {1}".format(os.path.split(buildpath)[-1], join(os.path.split(buildpath)[0], "last"))
 )
 
-# Substitute strings in version.hpp.in, save it as version.hpp
-versions = env.Substfile(
-    "src/versions.hpp.in",
-    SUBST_DICT =  {
-        "@preCICE_VERSION@" : PRECICE_VERSION,
-        "@PETSC_VERSION_MAJOR@" : PETSC_VERSION_MAJOR,
-        "@PETSC_VERSION_MINOR@" : PETSC_VERSION_MINOR}
-)
+Default(versions_cpp, versions_hpp, solib, tests, bin, symlink)
 
-
-Default(versions, solib, tests, symlink)
-
-AlwaysBuild(versions, symlink)
+AlwaysBuild(versions_cpp, versions_hpp, symlink)
 
 print("Targets:   " + ", ".join([str(i) for i in BUILD_TARGETS]))
 print("Buildpath: " + buildpath)

@@ -2,7 +2,6 @@
 
 #include <iostream>
 #include <algorithm>
-#include "boost/noncopyable.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/PropertyContainer.hpp"
 #include "mesh/RangeAccessor.hpp"
@@ -13,7 +12,7 @@ namespace mesh
 {
 
 /// Quadrilateral (or Quadrangle) geometric primitive.
-class Quad : public PropertyContainer, private boost::noncopyable
+class Quad : public PropertyContainer
 {
 public:
   /// Type of the read-only const random-access iterator over Vertex coords
@@ -39,7 +38,7 @@ public:
       int   id);
 
   /// Destructor, empty.
-  virtual ~Quad() {}
+  ~Quad() override {}
 
   /// Returns dimensionalty of space the quad is embedded in.
   int getDimensions() const;
@@ -143,13 +142,13 @@ private:
 
 inline Vertex &Quad::vertex(int i)
 {
-  assertion((i >= 0) && (i < 4), i);
+  PRECICE_ASSERT((i >= 0) && (i < 4), i);
   return edge(i).vertex(_vertexMap[i]);
 }
 
 inline const Vertex &Quad::vertex(int i) const
 {
-  assertion((i >= 0) && (i < 4), i);
+  PRECICE_ASSERT((i >= 0) && (i < 4), i);
   return edge(i).vertex(_vertexMap[i]);
 }
 
@@ -196,7 +195,7 @@ inline const Edge &Quad::edge(int i) const
 template <typename VECTOR_T>
 void Quad::setNormal(const VECTOR_T &normal)
 {
-  assertion(normal.size() == getDimensions(), normal.size(), getDimensions());
+  PRECICE_ASSERT(normal.size() == getDimensions(), normal.size(), getDimensions());
   _normal = normal;
 }
 

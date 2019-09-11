@@ -10,7 +10,7 @@ TXTReader::TXTReader(
 {
   _file.open(filename.c_str());
   if (not _file) {
-    ERROR("Could not open file \"" << filename << "\" for txt reading!");
+    PRECICE_ERROR("Could not open file \"" << filename << "\" for txt reading!");
   }
   _file.setf(std::ios::showpoint);
   _file.setf(std::ios::fixed);

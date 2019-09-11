@@ -7,10 +7,9 @@
 #include "mesh/Mesh.hpp"
 #include "utils/Event.hpp"
 #include "utils/MasterSlave.hpp"
-#include "utils/Publisher.hpp"
+#include <boost/container/flat_map.hpp>
 
 using precice::utils::Event;
-using precice::utils::Publisher;
 
 namespace precice
 {
@@ -81,7 +80,7 @@ void broadcast(mesh::Mesh::VertexDistribution &m)
     // Broadcast (send) vertex distributions.
     m2n::broadcastSend(m);
   } else {
-    assertion(utils::MasterSlave::isSlave());
+    PRECICE_ASSERT(utils::MasterSlave::isSlave());
     // Broadcast (receive) vertex distributions.
     m2n::broadcastReceive(m, 0);
   }
@@ -110,7 +109,7 @@ void print(std::map<int, std::vector<int>> const &m)
 
     std::cout << oss.str();
   } else {
-    assertion(utils::MasterSlave::isSlave());
+    PRECICE_ASSERT(utils::MasterSlave::isSlave());
 
     utils::MasterSlave::_communication->send(oss.str(), 0);
   }
@@ -159,7 +158,7 @@ void printCommunicationPartnerCountStats(std::map<int, std::vector<int>> const &
               << "Number of Interface Processes: " << count << "\n"
               << '\n';
   } else {
-    assertion(utils::MasterSlave::isSlave());
+    PRECICE_ASSERT(utils::MasterSlave::isSlave());
     utils::MasterSlave::_communication->send(size, 0);
   }
 }
@@ -213,15 +212,28 @@ void printLocalIndexCountStats(std::map<int, std::vector<int>> const &m)
               << "Number of Interface Processes: " << count << "\n"
               << '\n';
   } else {
-    assertion(utils::MasterSlave::isSlave());
+    PRECICE_ASSERT(utils::MasterSlave::isSlave());
 
     utils::MasterSlave::_communication->send(size, 0);
   }
 }
 
-// The approximate complexity of this function is O((number of local data
-// indices for the current rank in `thisVertexDistribution') * (total number of
-// data indices for all ranks in `otherVertexDistribution')).
+/** builds the communication map for a local distribution given the global distribution.
+ *
+ *
+ * @param[in] thisVertexDistribution the local vertex distribution
+ * @param[in] otherVertexDistribution the total vertex distribution
+ * @param[in] thisRank the rank to build the map for
+ *
+ * @returns the resulting communication map for rank thisRank
+ *
+ * The approximate complexity of this function is:
+ * \f$ \mathcal{O}(n \log(n) + m \log(n)) \f$
+ *
+ * * n is the total number of data indices for all ranks in `otherVertexDistribution'
+ * * m is the number of local data indices for the current rank in `thisVertexDistribution`
+ *
+ */
 std::map<int, std::vector<int>> buildCommunicationMap(
     // `thisVertexDistribution' is input vertex distribution from this participant.
     mesh::Mesh::VertexDistribution const &thisVertexDistribution,
@@ -229,29 +241,30 @@ std::map<int, std::vector<int>> buildCommunicationMap(
     mesh::Mesh::VertexDistribution const &otherVertexDistribution,
     int                                    thisRank = utils::MasterSlave::getRank())
 {
-  std::map<int, std::vector<int>> communicationMap;
-
   auto iterator = thisVertexDistribution.find(thisRank);
-
   if (iterator == thisVertexDistribution.end())
-    return communicationMap;
+    return {};
+
+  // Build lookup table from otherIndex -> rank for the otherVertexDistribution
+  const auto lookupIndexRank = [&otherVertexDistribution] {
+      boost::container::flat_multimap<int, int> lookupIndexRank;
+      for (const auto &other : otherVertexDistribution) {
+          for (const auto &otherIndex : other.second) {
+              lookupIndexRank.emplace(otherIndex, other.first);
+          }
+      }
+      return lookupIndexRank;
+  }();
 
   auto const &indices = iterator->second;
 
-  int index = 0;
-
-  for (int thisIndex : indices) {
-    for (const auto &other : otherVertexDistribution) {
-      for (const auto &otherIndex : other.second) {
-        if (thisIndex == otherIndex) {
-          communicationMap[other.first].push_back(index);
-          break;
-        }
+  std::map<int, std::vector<int>> communicationMap;
+  for (size_t index = 0lu; index < indices.size(); ++index) {
+      auto range = lookupIndexRank.equal_range(indices[index]);
+      for(auto iter = range.first; iter != range.second; ++iter){
+              communicationMap[iter->second].push_back(index);
       }
-    }
-    ++index;
   }
-
   return communicationMap;
 }
 
@@ -265,11 +278,11 @@ PointToPointCommunication::PointToPointCommunication(
 
 PointToPointCommunication::~PointToPointCommunication()
 {
-  TRACE(_isConnected);
+  PRECICE_TRACE(_isConnected);
   closeConnection();
 }
 
-bool PointToPointCommunication::isConnected()
+bool PointToPointCommunication::isConnected() const
 {
   return _isConnected;
 }
@@ -277,9 +290,9 @@ bool PointToPointCommunication::isConnected()
 void PointToPointCommunication::acceptConnection(std::string const &acceptorName,
                                                  std::string const &requesterName)
 {
-  TRACE(acceptorName, requesterName);
-  CHECK(not isConnected(), "Already connected!");
-  CHECK(utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave(),
+  PRECICE_TRACE(acceptorName, requesterName);
+  PRECICE_CHECK(not isConnected(), "Already connected!");
+  PRECICE_CHECK(utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave(),
         "You can only use a point-to-point communication between two participants which both use a master. "
             << "Please use distribution-type gather-scatter instead.");
 
@@ -297,7 +310,7 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
     m2n::send(vertexDistribution, 0, c);
     m2n::receive(requesterVertexDistribution, 0, c);
   } else {
-    assertion(utils::MasterSlave::isSlave());
+    PRECICE_ASSERT(utils::MasterSlave::isSlave());
   }
 
   Event e1("m2n.broadcastVertexDistributions", precice::syncMode);
@@ -338,23 +351,6 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
   printLocalIndexCountStats(communicationMap);
 #endif
 
-#ifdef SuperMUC_WORK
-  try {
-    auto addressDirectory = _communicationFactory->addressDirectory();
-
-    if (utils::MasterSlave::isMaster()) {
-      Event e3("m2n.createDirectories");
-
-      for (int rank = 0; rank < utils::MasterSlave::getSize(); ++rank) {
-        Publisher::createDirectory(addressDirectory + "/" + "." + acceptorName + "-" + _mesh->getName() +
-                                   "-" + std::to_string(rank) + ".address");
-      }
-    }
-    utils::Parallel::synchronizeProcesses();
-  } catch (...) {
-  }
-#endif
-
   Event e4("m2n.createCommunications");
   e4.addData("Connections", communicationMap.size());
   if (communicationMap.empty()) {
@@ -363,11 +359,6 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
   }
 
   _communication = _communicationFactory->newCommunication();
-
-#ifdef SuperMUC_WORK
-  Publisher::ScopedPushDirectory spd("." + acceptorName + "-" + _mesh->getName() + "-" +
-                                     std::to_string(utils::MasterSlave::getRank()) + ".address");
-#endif
 
   // Accept point-to-point connections (as server) between the current acceptor
   // process (in the current participant) with rank `utils::MasterSlave::getRank()'
@@ -390,9 +381,9 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
 void PointToPointCommunication::requestConnection(std::string const &acceptorName,
                                                   std::string const &requesterName)
 {
-  TRACE(acceptorName, requesterName);
-  CHECK(not isConnected(), "Already connected!");
-  CHECK(utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave(),
+  PRECICE_TRACE(acceptorName, requesterName);
+  PRECICE_CHECK(not isConnected(), "Already connected!");
+  PRECICE_CHECK(utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave(),
         "You can only use a point-to-point communication between two participants which both use a master. "
         << "Please use distribution-type gather-scatter instead.");
 
@@ -409,7 +400,7 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
     m2n::receive(acceptorVertexDistribution, 0, c);
     m2n::send(vertexDistribution, 0, c);
   } else {
-    assertion(utils::MasterSlave::isSlave());
+    PRECICE_ASSERT(utils::MasterSlave::isSlave());
   }
 
   Event e1("m2n.broadcastVertexDistributions", precice::syncMode);
@@ -450,15 +441,6 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
   printLocalIndexCountStats(communicationMap);
 #endif
 
-#ifdef SuperMUC_WORK
-  try {
-    auto addressDirectory = _communicationFactory->addressDirectory();
-
-    utils::Parallel::synchronizeProcesses();
-  } catch (...) {
-  }
-#endif
-
   Event e4("m2n.createCommunications");
   e4.addData("Connections", communicationMap.size());
   if (communicationMap.empty()) {
@@ -485,11 +467,6 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
     auto globalAcceptorRank = i.first;
     auto indices            = std::move(i.second);
 
-#ifdef SuperMUC_WORK
-    Publisher::ScopedPushDirectory spd("." + acceptorName + "-" + _mesh->getName() + "-" +
-                                       std::to_string(globalAcceptorRank) + ".address");
-#endif
-
     _mappings.push_back({globalAcceptorRank, std::move(indices), com::PtrRequest(), {}});
   }
   e4.stop();
@@ -498,7 +475,7 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
 
 void PointToPointCommunication::closeConnection()
 {
-  TRACE();
+  PRECICE_TRACE();
 
   if (not isConnected())
     return;
@@ -510,9 +487,9 @@ void PointToPointCommunication::closeConnection()
   _isConnected = false;
 }
 
-void PointToPointCommunication::send(double *itemsToSend,
-                                     size_t  size,
-                                     int     valueDimension)
+void PointToPointCommunication::send(double const  *itemsToSend,
+                                     size_t         size,
+                                     int            valueDimension)
 {
 
   if (_mappings.empty()) {
@@ -563,7 +540,7 @@ void PointToPointCommunication::receive(double *itemsToReceive,
 
 void PointToPointCommunication::checkBufferedRequests(bool blocking)
 {
-  TRACE(bufferedRequests.size());
+  PRECICE_TRACE(bufferedRequests.size());
   do {
     for (auto it = bufferedRequests.begin(); it != bufferedRequests.end();) {
       if (it->first->test())

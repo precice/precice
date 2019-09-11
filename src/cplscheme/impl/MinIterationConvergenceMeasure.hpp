@@ -25,10 +25,10 @@ public:
       const Eigen::VectorXd &newValues,
       const Eigen::VectorXd &designSpecification)
   {
-    TRACE();
+    PRECICE_TRACE();
     _currentIteration++;
     _isConvergence = (_minimumIterationCount <= _currentIteration);
-    DEBUG("Iteration number = " << _currentIteration << ", convergence = " << _isConvergence);
+    PRECICE_DEBUG("Iteration number = " << _currentIteration << ", convergence = " << _isConvergence);
   }
 
   virtual bool isConvergence() const

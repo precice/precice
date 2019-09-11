@@ -31,6 +31,11 @@ Group& Merge:: content()
   return _merged;
 }
 
+const Group& Merge:: content() const
+{
+  return _merged;
+}
+
 //int Merge:: getPropertyIndex()
 //{
 //  return PROPERTY_ID;

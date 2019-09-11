@@ -35,7 +35,7 @@ void BoundM2N::connectSlaves()
 
 void BoundM2N::cleanupEstablishment()
 {
-    m2n->prepareEstablishment();
+    m2n->cleanupEstablishment();
 }
 
 } // namespace m2n
