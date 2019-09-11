@@ -29,16 +29,11 @@ sourcesPrecice = [
    Glob('precice/bindings/c/*.cpp')
    ]
 
-sourcesVersion = [
-    File('precice/impl/versions.cpp')
-]
-   
 sourcesAll = [ 
    sourcesAcceleration,
    sourcesCplscheme,
    sourcesAction,
-   sourcesPrecice,
-   sourcesVersion
+   sourcesPrecice
    ]
    
 Return ('sourcesAll')

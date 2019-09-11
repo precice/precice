@@ -86,10 +86,6 @@ sourcesXml = [
     Glob('xml/*.cpp'),
 ]
 
-sourcesVersion = [
-    File('precice/impl/versions.cpp')
-]
-
 sourcesAllNoMain = [
     sourcesAcceleration,
     sourcesAction,
@@ -105,8 +101,7 @@ sourcesAllNoMain = [
     sourcesPrecice,
     sourcesQuery,
     sourcesUtils,
-    sourcesXml,
-    sourcesVersion
+    sourcesXml
 ]
 
 Return ('sourcesAllNoMain', 'sourcesMain', 'sourcesTests')
