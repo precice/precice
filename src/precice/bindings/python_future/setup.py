@@ -7,6 +7,7 @@ from setuptools.command.test import test
 from Cython.Distutils.extension import Extension
 from Cython.Distutils.build_ext import new_build_ext as build_ext
 from Cython.Build import cythonize
+import numpy
 from distutils.command.install import install
 from distutils.command.build import build
 
@@ -77,7 +78,8 @@ def get_extensions(mpi_compiler_wrapper, is_test):
                 libraries=[],
                 language="c++",
                 extra_compile_args=compile_args,
-                extra_link_args=link_args
+                extra_link_args=link_args,
+                include_dirs=[numpy.get_include()]
             ),
         Extension(
                 "test_bindings_module",
@@ -85,15 +87,15 @@ def get_extensions(mpi_compiler_wrapper, is_test):
                 libraries=[],
                 language="c++",
                 extra_compile_args=compile_args,
-                extra_link_args=link_args
+                extra_link_args=link_args,
+                include_dirs=[numpy.get_include()]
             )
     ]
 
 # some global definitions for an additional user input command
 mpicompiler_default = "mpic++"
 add_option = [('mpicompiler=', None, 'specify the mpi compiler wrapper')]
-dependencies = ['cython']
-dependencies.append('mpi4py')  # only needed, if preCICE was compiled with MPI, see https://github.com/precice/precice/issues/311
+dependencies = ['cython', 'numpy', 'mpi4py']  # mpi4py is only needed, if preCICE was compiled with MPI, see https://github.com/precice/precice/issues/311
 
 class my_build_ext(build_ext, object):
     description = "building with optional specification of an alternative mpi compiler wrapper"
