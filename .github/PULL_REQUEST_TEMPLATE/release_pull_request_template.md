@@ -1,7 +1,7 @@
 ## Step by step guide
 * [ ] Merge master to develop (No commits after the release on master) @MakisH 
 * [ ] Create branch `release-N` from develop. If needed, `git rebase develop`. @MakisH 
-* [ ] Open PR from `release-N` to `master` @MakisH 
+* [ ] Open PR from `release-N` to `master` (use [this template](https://github.com/precice/precice/blob/add_PR_template/.github/PULL_REQUEST_TEMPLATE/release_pull_request_template.md)) @MakisH 
 * [ ] Look over [`CHANGELOG.md`](https://github.com/precice/precice/blob/develop/CHANGELOG.md) and add things if necessary and extract summary (all) @fsimonis 
 * [ ] Do regression tests using the release branch (specific revision) _list below :arrow_down:_ (all)
 * [ ] Bump version in CMakeLists.txt, SConstruct, and CHANGELOG (and Python bindings). @MakisH 
@@ -49,4 +49,4 @@ Run all these tests manually on your system. If you succeed, please write a comm
    * [ ] Mention [xSDK](https://github.com/xsdk-project/xsdk-policy-compatibility/blob/master/precice-policy-compatibility.md)
 * [ ] Tweet @MakisH 
 * [ ] Format the code base @shkodm @fsimonis 
-* [ ] Update a PR template?
+* [ ] Update the [PR template](https://github.com/precice/precice/blob/add_PR_template/.github/PULL_REQUEST_TEMPLATE/release_pull_request_template.md)?
