@@ -31,6 +31,8 @@ All notable changes to this project will be documented in this file. For future 
 - Fixed macro namespace by using the `PRECICE_` prefix. This prevents collisions with foreign macros.
 - Fixed the index-based version of the nearest projection mapping and reintegrated it.
 - Fixed wrong user input in Triangle creation to trigger assertions instead of a comprehensive user error.
+- Fixed a bug in MPI initialization when using PETRBF mappings.
+- Fixed a warning message in `ReceivedPartition` displaying a wrong vertex count.
 
 ## 1.5.2
 
