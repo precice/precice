@@ -25,13 +25,9 @@ public:
     MexFunction(): constructed{false}, factory{}, interface{NULL} {}
 
     void operator()(ArgumentList outputs, ArgumentList inputs) {
-        bool valid=false;
-        // define the functionID
+        // Get the function ID from the input
         const TypedArray<uint8_t> functionIDArray = inputs[0];
         int functionID = functionIDArray[0];
-        
-        // Debug output
-        // std::cout << "Gateway function " << (int)functionID << " was called." << std::endl;
         
         // Abort if constructor was not called before, or if constructor 
         // was called on an existing solverInterface

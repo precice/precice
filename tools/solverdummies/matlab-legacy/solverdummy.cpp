@@ -12,13 +12,11 @@
 
 #include "precice/SolverInterface.hpp"
 #include "precice/Constants.hpp"
-#include <math.h>
 #include <matrix.h>
 #include <mex.h>
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-  mexPrintf("Hello World!\n");
   mexPrintf("Starting SolverDummy...\n");
   int commRank = 0;
   int commSize = 1;

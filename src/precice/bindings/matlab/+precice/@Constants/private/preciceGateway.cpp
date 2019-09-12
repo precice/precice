@@ -11,9 +11,6 @@ using namespace precice::constants;
 class MexFunction: public matlab::mex::Function {
 private:
     ArrayFactory factory;
-    void myMexPrint(const std::string text) {
-        std::cout << "MEX constants gateway: " << text << std::endl;
-    }
 
 public:
     MexFunction(): factory{} {}
@@ -22,7 +19,6 @@ public:
         // define the constantID
         TypedArray<uint8_t> functionIDArray = inputs[0];
         int constantID = functionIDArray[0];
-        std::cout << "Constant " << (int)constantID << " was called." << std::endl;
         std::string result;
         
         // assign
@@ -37,7 +33,7 @@ public:
                 result = actionReadIterationCheckpoint();
                 break;
             default:
-                myMexPrint("An unknown ID was passed.");
+                std::cout << "MEX constants gateway: An unknown ID was passed." << std::endl;
                 return;
         }
         
