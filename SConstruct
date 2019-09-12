@@ -372,7 +372,35 @@ symlink = env.Command(
     action = "ln -fns {0} {1}".format(os.path.split(buildpath)[-1], join(os.path.split(buildpath)[0], "last"))
 )
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+# Substitute strings in version.hpp.in, save it as version.hpp
+versions_hpp = env.Substfile(
+    "src/precice/impl/versions.hpp.in",
+    SUBST_DICT =  {
+        "@preCICE_VERSION@" : PRECICE_VERSION,
+        "@PETSC_VERSION_MAJOR@" : PETSC_VERSION_MAJOR,
+        "@PETSC_VERSION_MINOR@" : PETSC_VERSION_MINOR}
+)
+
+# Substitute strings in versions.cpp.in, save it as versions.cpp
+versions_cpp = env.Substfile(
+    "src/precice/impl/versions.cpp.in",
+    SUBST_DICT = {
+        "@preCICE_REVISION@" : "no-info [SCons]"
+        "@preCICE_VERSION@" : PRECICE_VERSION,
+        "@preCICE_VERSION_INFORMATION@" : "MPI=" + ("Y" if env["mpi"] else "N") +
+                                          ";PETSC=" + ("Y" if env["petsc"] else "N") +
+                                          ";PYTHON=" + ("Y" if env["python"] else "N")
+    }
+)
+
+=======
+>>>>>>> efdf4ea9739573b7593cb615b004b5f07fde3631
+Default(versions_cpp, versions_hpp, solib, tests, symlink)
+=======
 Default(versions_cpp, versions_hpp, solib, tests, bin, symlink)
+>>>>>>> c3acdbf1ef3b5fb64b9121ac239f7f07d9578e3d
 
 AlwaysBuild(versions_cpp, versions_hpp, symlink)
 

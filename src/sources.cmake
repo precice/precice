@@ -214,8 +214,12 @@ target_sources(precice
     src/mesh/impl/RTreeAdapter.hpp
     src/partition/Partition.cpp
     src/partition/Partition.hpp
+    src/partition/ProvidedBoundingBox.cpp
+    src/partition/ProvidedBoundingBox.hpp
     src/partition/ProvidedPartition.cpp
     src/partition/ProvidedPartition.hpp
+    src/partition/ReceivedBoundingBox.cpp
+    src/partition/ReceivedBoundingBox.hpp
     src/partition/ReceivedPartition.cpp
     src/partition/ReceivedPartition.hpp
     src/partition/SharedPointer.hpp
@@ -297,6 +301,7 @@ target_sources(precice
     src/utils/assertion.hpp
     src/utils/stacktrace.cpp
     src/utils/stacktrace.hpp
+    src/versions.hpp
     src/xml/ConfigParser.cpp
     src/xml/ConfigParser.hpp
     src/xml/XMLAttribute.hpp
