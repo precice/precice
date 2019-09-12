@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file. For future 
 
 ## develop
 
-## v1.6.0
+## 1.6.0
 
 - Added CMake target to uninstall the project.
 - Added `INFO` log output of the connection build-up during the instantiation. This dramatically simplifies the identification of connection-related problems.
