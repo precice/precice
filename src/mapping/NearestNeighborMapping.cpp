@@ -4,6 +4,7 @@
 #include "mesh/RTree.hpp"
 #include <Eigen/Core>
 #include <boost/function_output_iterator.hpp>
+#include <boost/container/flat_set.hpp>
 #include "utils/Event.hpp"
 
 
@@ -139,15 +140,20 @@ void NearestNeighborMapping::tagMeshFirstRound()
 
   computeMapping();
 
+  // Lookup table of all indices used in the mapping
+  const boost::container::flat_set<int> indexSet(_vertexIndices.begin(), _vertexIndices.end());
+
   if (getConstraint() == CONSISTENT){
     for(mesh::Vertex& v : input()->vertices()){
-      if(utils::contained(v.getID(),_vertexIndices)) v.tag();
+      if (indexSet.count(v.getID()) != 0)
+        v.tag();
     }
   }
   else {
     PRECICE_ASSERT(getConstraint() == CONSERVATIVE, getConstraint());
     for(mesh::Vertex& v : output()->vertices()){
-      if(utils::contained(v.getID(),_vertexIndices)) v.tag();
+      if (indexSet.count(v.getID()) != 0)
+        v.tag();
     }
   }
 

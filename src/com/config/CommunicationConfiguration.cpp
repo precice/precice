@@ -28,7 +28,7 @@ PtrCommunication CommunicationConfiguration::createCommunication(
     std::ostringstream error;
     error << "Communication type \"mpi\" can only be used "
           << "when preCICE is compiled with argument \"mpi=on\"";
-    throw error.str();
+    throw std::runtime_error{error.str()};
 #else
     com = std::make_shared<com::MPIPortsCommunication>(dir);
 #endif
@@ -38,7 +38,7 @@ PtrCommunication CommunicationConfiguration::createCommunication(
     std::ostringstream error;
     error << "Communication type \"mpi-single\" can only be used "
           << "when preCICE is compiled with argument \"mpi=on\"";
-    throw error.str();
+    throw std::runtime_error{error.str()};
 #else
     com = std::make_shared<com::MPIDirectCommunication>();
 

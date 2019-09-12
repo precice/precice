@@ -36,13 +36,13 @@ public:
 
 
 protected:
-  /// merges send and receive data into one map (for parallel post-processing)
+  /// merges send and receive data into one map (for parallel acceleration)
   virtual void mergeData();
 
   /// Returns all data (receive and send)
   DataMap& getAllData()
   {
-    PRECICE_ASSERT(!doesFirstStep(), "Only the second participant should do the post processing." );
+    PRECICE_ASSERT(!doesFirstStep(), "Only the second participant should do the acceleration." );
     return _allData;
   }
 

@@ -69,6 +69,24 @@ int precicec_isCouplingTimestepComplete()
   return 0;
 }
 
+int precicec_hasToEvaluateSurrogateModel()
+{
+  PRECICE_ASSERT( impl != nullptr);
+  if (impl->hasToEvaluateSurrogateModel() ){
+    return 1;
+  }
+  return 0;
+}
+
+int precicec_hasToEvaluateFineModel()
+{
+  PRECICE_ASSERT( impl != nullptr);
+  if (impl->hasToEvaluateFineModel() ){
+    return 1;
+  }
+  return 0;
+}
+
 int precicec_isReadDataAvailable()
 {
   PRECICE_ASSERT( impl != nullptr );
@@ -102,6 +120,16 @@ void precicec_fulfilledAction ( const char* action )
   PRECICE_ASSERT( impl != nullptr );
   PRECICE_ASSERT( action != nullptr );
   impl->fulfilledAction ( std::string(action) );
+}
+
+int precicec_hasMesh ( const char* meshName)
+{
+  PRECICE_ASSERT( impl != nullptr );
+  std::string stringMeshName (meshName);
+  if ( impl->hasMesh (stringMeshName) ){
+    return 1;
+  }
+  return 0;
 }
 
 int precicec_getMeshID ( const char* meshName )
@@ -165,6 +193,17 @@ int precicec_getMeshVertexSize
   return impl->getMeshVertexSize(meshID);
 }
 
+void precicec_getMeshVertexIDsFromPositions
+(
+  int           meshID,
+  int           size,
+  const double* positions,
+  int*          ids)
+{
+  PRECICE_ASSERT(impl != nullptr);
+  impl->getMeshVertexIDsFromPositions(meshID,size,positions,ids);
+}
+
 int precicec_setMeshEdge
 (
   int meshID,
@@ -195,6 +234,30 @@ void precicec_setMeshTriangleWithEdges
 {
   PRECICE_ASSERT( impl != nullptr );
   impl->setMeshTriangleWithEdges ( meshID, firstVertexID, secondVertexID, thirdVertexID );
+}
+
+void precicec_setMeshQuad
+(
+  int meshID,
+  int firstEdgeID,
+  int secondEdgeID,
+  int thirdEdgeID,
+  int fourthEdgeID )
+{
+  PRECICE_ASSERT( impl != nullptr );
+  impl->setMeshQuad(meshID,firstEdgeID,secondEdgeID,thirdEdgeID,fourthEdgeID);
+}
+
+void precicec_setMeshQuadWithEdges
+(
+  int meshID,
+  int firstVertexID,
+  int secondVertexID,
+  int thirdVertexID,
+  int fourthVertexID )
+{
+  PRECICE_ASSERT( impl != nullptr );
+  impl->setMeshQuadWithEdges(meshID,firstVertexID,secondVertexID,thirdVertexID,fourthVertexID);
 }
 
 void precicec_writeBlockVectorData
@@ -291,6 +354,11 @@ void precicec_mapReadDataTo ( int toMeshID )
 {
   PRECICE_ASSERT( impl != nullptr );
   impl->mapReadDataTo(toMeshID);
+}
+
+const char* precicec_actionWriteInitialData()
+{
+  return precice::constants::actionWriteInitialData().c_str();
 }
 
 const char* precicec_actionWriteIterationCheckpoint()

@@ -1,5 +1,5 @@
 #include "ParallelCouplingScheme.hpp"
-#include "impl/PostProcessing.hpp"
+#include "acceleration/Acceleration.hpp"
 #include "m2n/M2N.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/MasterSlave.hpp"
@@ -50,8 +50,8 @@ void ParallelCouplingScheme::initialize
       setupConvergenceMeasures(); // needs _couplingData configured
       mergeData(); // merge send and receive data for all pp calls
       setupDataMatrices(getAllData()); // Reserve memory and initialize data with zero
-      if (getPostProcessing().get() != nullptr) {
-        getPostProcessing()->initialize(getAllData()); // Reserve memory, initialize
+      if (getAcceleration().get() != nullptr) {
+        getAcceleration()->initialize(getAllData()); // Reserve memory, initialize
       }
     }
 
@@ -216,16 +216,16 @@ void ParallelCouplingScheme::implicitAdvance()
     else { // second participant
       receiveData(getM2N());
 
-      // get the current design specifications from the post processing (for convergence measure)
+      // get the current design specifications from the acceleration (for convergence measure)
       std::map<int, Eigen::VectorXd> designSpecifications;
-      if (getPostProcessing().get() != nullptr) {
-        designSpecifications = getPostProcessing()->getDesignSpecification(getAllData());
+      if (getAcceleration().get() != nullptr) {
+        designSpecifications = getAcceleration()->getDesignSpecification(getAllData());
       }
 
       // measure convergence for coarse model optimization
       if(_isCoarseModelOptimizationActive){
         PRECICE_DEBUG("measure convergence of coarse model optimization.");
-        // in case of multilevel post processing only: measure the convergence of the coarse model optimization
+        // in case of multilevel acceleration only: measure the convergence of the coarse model optimization
         convergenceCoarseOptimization = measureConvergenceCoarseModelOptimization(designSpecifications);
         // Stop, when maximal iteration count (given in config) is reached
         if (maxIterationsReached())
@@ -252,33 +252,33 @@ void ParallelCouplingScheme::implicitAdvance()
         if (maxIterationsReached())   convergence = true;
       }
 
-      // passed by reference, modified in MM post processing. No-op for all other post-processings
-      if (getPostProcessing().get() != nullptr) {
-        getPostProcessing()->setCoarseModelOptimizationActive(&_isCoarseModelOptimizationActive);
+      // passed by reference, modified in MM acceleration. No-op for all other accelerations
+      if (getAcceleration().get() != nullptr) {
+        getAcceleration()->setCoarseModelOptimizationActive(&_isCoarseModelOptimizationActive);
       }
 
 
       // for multi-level case, i.e., manifold mapping: after convergence of coarse problem
-      // we only want to evaluate the fine model for the new input, no post-processing etc..
+      // we only want to evaluate the fine model for the new input, no acceleration etc..
       if (not doOnlySolverEvaluation)
       {
         if (convergence) {
-          if (getPostProcessing().get() != nullptr) {
-            _deletedColumnsPPFiltering = getPostProcessing()->getDeletedColumns();
-            getPostProcessing()->iterationsConverged(getAllData());
+          if (getAcceleration().get() != nullptr) {
+            _deletedColumnsPPFiltering = getAcceleration()->getDeletedColumns();
+            getAcceleration()->iterationsConverged(getAllData());
           }
           newConvergenceMeasurements();
           timestepCompleted();
         }
-        else if (getPostProcessing().get() != nullptr) {
-          getPostProcessing()->performPostProcessing(getAllData());
+        else if (getAcceleration().get() != nullptr) {
+          getAcceleration()->performAcceleration(getAllData());
         }
 
         // extrapolate new input data for the solver evaluation in time.
         if (convergence && (getExtrapolationOrder() > 0)) {
           extrapolateData(getAllData()); // Also stores data
         }
-        else { // Store data for conv. measurement, post-processing, or extrapolation
+        else { // Store data for conv. measurement, acceleration, or extrapolation
           for (DataMap::value_type& pair : getSendData()) {
             if (pair.second->oldValues.size() > 0) {
               pair.second->oldValues.col(0) = *pair.second->values;
@@ -292,13 +292,13 @@ void ParallelCouplingScheme::implicitAdvance()
         }
       }else {
 
-       // if the coarse model problem converged within the first iteration, i.e., no post-processing at all
+       // if the coarse model problem converged within the first iteration, i.e., no acceleration at all
        // we need to register the coarse initialized data again on the fine input data,
        // otherwise the fine input data would be zero in this case, neither anything has been computed so far for the fine
-       // model nor the post processing did any data registration
+       // model nor the acceleration did any data registration
        // ATTENTION: assumes that coarse data is defined after fine data in same ordering.
-       if (_iterationsCoarseOptimization == 1   && getPostProcessing().get() != nullptr) {
-         auto fineIDs = getPostProcessing()->getDataIDs();
+       if (_iterationsCoarseOptimization == 1   && getAcceleration().get() != nullptr) {
+         auto fineIDs = getAcceleration()->getDataIDs();
          auto& allData = getAllData();
          for(auto& fineID : fineIDs) {
            *allData.at( fineID )->values = allData.at( fineID+fineIDs.size() )->oldValues.col(0);
@@ -332,7 +332,7 @@ void ParallelCouplingScheme::implicitAdvance()
 void ParallelCouplingScheme::mergeData()
 {
   PRECICE_TRACE();
-  PRECICE_ASSERT(!doesFirstStep(), "Only the second participant should do the post processing." );
+  PRECICE_ASSERT(!doesFirstStep(), "Only the second participant should do the acceleration." );
   PRECICE_ASSERT(_allData.empty(), "This function should only be called once.");
   _allData.insert(getSendData().begin(), getSendData().end());
   _allData.insert(getReceiveData().begin(), getReceiveData().end());
