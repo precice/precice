@@ -2,31 +2,30 @@
 
 #include "MasterSlave.hpp"
 
-#include "utils/assertion.hpp"
 #include "com/Communication.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace utils {
 
-int MasterSlave::_rank = -1;
-int MasterSlave::_size = -1;
-bool MasterSlave::_isMaster = false;
-bool MasterSlave::_isSlave = false;
+int                   MasterSlave::_rank     = -1;
+int                   MasterSlave::_size     = -1;
+bool                  MasterSlave::_isMaster = false;
+bool                  MasterSlave::_isSlave  = false;
 com::PtrCommunication MasterSlave::_communication;
 
+logging::Logger MasterSlave::_log("utils::MasterSlave");
 
-logging::Logger MasterSlave:: _log("utils::MasterSlave" );
-
-void MasterSlave:: configure(int rank, int size)
+void MasterSlave::configure(int rank, int size)
 {
   PRECICE_TRACE(rank, size);
-  PRECICE_CHECK(size>=2, "You cannot use a master with a serial participant.");
+  PRECICE_CHECK(size >= 2, "You cannot use a master with a serial participant.");
   _rank = rank;
   _size = size;
   PRECICE_ASSERT(_rank != -1 && _size != -1);
-  _isMaster = (rank==0);
-  _isSlave = (rank!=0);
-  PRECICE_DEBUG("isSlave: " << _isSlave <<", isMaster: " << _isMaster);
+  _isMaster = (rank == 0);
+  _isSlave  = (rank != 0);
+  PRECICE_DEBUG("isSlave: " << _isSlave << ", isMaster: " << _isMaster);
 }
 
 int MasterSlave::getRank()
@@ -49,27 +48,26 @@ bool MasterSlave::isSlave()
   return _isSlave;
 }
 
-
-double MasterSlave:: l2norm(const Eigen::VectorXd& vec)
+double MasterSlave::l2norm(const Eigen::VectorXd &vec)
 {
   PRECICE_TRACE();
 
-  if(not _isMaster && not _isSlave){ //old case
+  if (not _isMaster && not _isSlave) { //old case
     return vec.norm();
   }
 
   PRECICE_ASSERT(_communication.get() != nullptr);
   PRECICE_ASSERT(_communication->isConnected());
-  double localSum2 = 0.0;
+  double localSum2  = 0.0;
   double globalSum2 = 0.0;
 
-  for(int i=0; i<vec.size(); i++){
-    localSum2 += vec(i)*vec(i);
+  for (int i = 0; i < vec.size(); i++) {
+    localSum2 += vec(i) * vec(i);
   }
 
   // localSum is modified, do not use afterwards
   allreduceSum(localSum2, globalSum2, 1);
-   /* old loop over all slaves solution
+  /* old loop over all slaves solution
   if(_isSlave){
     _communication->send(localSum2, 0);
     _communication->receive(globalSum2, 0);
@@ -88,23 +86,22 @@ double MasterSlave:: l2norm(const Eigen::VectorXd& vec)
   return sqrt(globalSum2);
 }
 
-
-double MasterSlave:: dot(const Eigen::VectorXd& vec1, const Eigen::VectorXd& vec2)
+double MasterSlave::dot(const Eigen::VectorXd &vec1, const Eigen::VectorXd &vec2)
 {
   PRECICE_TRACE();
 
-  if(not _isMaster && not _isSlave){ //old case
+  if (not _isMaster && not _isSlave) { //old case
     return vec1.dot(vec2);
   }
 
   PRECICE_ASSERT(_communication.get() != nullptr);
   PRECICE_ASSERT(_communication->isConnected());
-  PRECICE_ASSERT(vec1.size()==vec2.size(), vec1.size(), vec2.size());
-  double localSum = 0.0;
+  PRECICE_ASSERT(vec1.size() == vec2.size(), vec1.size(), vec2.size());
+  double localSum  = 0.0;
   double globalSum = 0.0;
 
-  for(int i=0; i<vec1.size(); i++){
-    localSum += vec1(i)*vec2(i);
+  for (int i = 0; i < vec1.size(); i++) {
+    localSum += vec1(i) * vec2(i);
   }
 
   // localSum is modified, do not use afterwards
@@ -130,18 +127,17 @@ double MasterSlave:: dot(const Eigen::VectorXd& vec1, const Eigen::VectorXd& vec
   return globalSum;
 }
 
-void MasterSlave:: reset()
+void MasterSlave::reset()
 {
   PRECICE_TRACE();
   _isMaster = false;
-  _isSlave = false;
-  _rank = -1;
-  _size = -1;
+  _isSlave  = false;
+  _rank     = -1;
+  _size     = -1;
 }
 
-
-void
-MasterSlave::reduceSum(double* sendData, double* rcvData, int size) {
+void MasterSlave::reduceSum(double *sendData, double *rcvData, int size)
+{
   PRECICE_TRACE();
 
   if (not _isMaster && not _isSlave) {
@@ -162,8 +158,8 @@ MasterSlave::reduceSum(double* sendData, double* rcvData, int size) {
   }
 }
 
-void
-MasterSlave::reduceSum(int& sendData, int& rcvData, int size) {
+void MasterSlave::reduceSum(int &sendData, int &rcvData, int size)
+{
   PRECICE_TRACE();
 
   if (not _isMaster && not _isSlave) {
@@ -184,8 +180,8 @@ MasterSlave::reduceSum(int& sendData, int& rcvData, int size) {
   }
 }
 
-void
-MasterSlave::allreduceSum(double* sendData, double* rcvData, int size) {
+void MasterSlave::allreduceSum(double *sendData, double *rcvData, int size)
+{
   PRECICE_TRACE();
 
   if (not _isMaster && not _isSlave) {
@@ -206,8 +202,8 @@ MasterSlave::allreduceSum(double* sendData, double* rcvData, int size) {
   }
 }
 
-void
-MasterSlave::allreduceSum(double& sendData, double& rcvData, int size) {
+void MasterSlave::allreduceSum(double &sendData, double &rcvData, int size)
+{
   PRECICE_TRACE();
 
   if (not _isMaster && not _isSlave) {
@@ -228,8 +224,8 @@ MasterSlave::allreduceSum(double& sendData, double& rcvData, int size) {
   }
 }
 
-void
-MasterSlave::allreduceSum(int& sendData, int& rcvData, int size) {
+void MasterSlave::allreduceSum(int &sendData, int &rcvData, int size)
+{
   PRECICE_TRACE();
 
   if (not _isMaster && not _isSlave) {
@@ -250,8 +246,8 @@ MasterSlave::allreduceSum(int& sendData, int& rcvData, int size) {
   }
 }
 
-void
-MasterSlave::broadcast(bool& value) {
+void MasterSlave::broadcast(bool &value)
+{
   PRECICE_TRACE();
 
   if (not _isMaster && not _isSlave) {
@@ -272,9 +268,8 @@ MasterSlave::broadcast(bool& value) {
   }
 }
 
-
-void
-MasterSlave::broadcast(double& value) {
+void MasterSlave::broadcast(double &value)
+{
   PRECICE_TRACE();
 
   if (not _isMaster && not _isSlave) {
@@ -295,8 +290,8 @@ MasterSlave::broadcast(double& value) {
   }
 }
 
-void
-MasterSlave::broadcast(double* values, int size) {
+void MasterSlave::broadcast(double *values, int size)
+{
   PRECICE_TRACE();
 
   if (not _isMaster && not _isSlave) {
@@ -317,4 +312,5 @@ MasterSlave::broadcast(double* values, int size) {
   }
 }
 
-}} // precice, utils
+} // namespace utils
+} // namespace precice

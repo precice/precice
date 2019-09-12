@@ -1,15 +1,13 @@
 #include <limits>
 
+#include "acceleration/HierarchicalAitkenAcceleration.hpp"
 #include "cplscheme/CouplingData.hpp"
 #include "math/math.hpp"
-#include "acceleration/HierarchicalAitkenAcceleration.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/Helpers.hpp"
 
-namespace precice
-{
-namespace acceleration
-{
+namespace precice {
+namespace acceleration {
 
 HierarchicalAitkenAcceleration::HierarchicalAitkenAcceleration(
     double           initialRelaxation,
@@ -18,17 +16,17 @@ HierarchicalAitkenAcceleration::HierarchicalAitkenAcceleration(
       _dataIDs(dataIDs)
 {
   PRECICE_CHECK((_initialRelaxation > 0.0) && (_initialRelaxation <= 1.0),
-        "Initial relaxation factor for aitken acceleration has to "
-        << "be larger than zero and smaller or equal than one!");
+                "Initial relaxation factor for aitken acceleration has to "
+                    << "be larger than zero and smaller or equal than one!");
 }
 
 void HierarchicalAitkenAcceleration::initialize(DataMap &cplData)
 {
   PRECICE_TRACE();
   PRECICE_CHECK(utils::contained(*_dataIDs.begin(), cplData),
-        "Data with ID " << *_dataIDs.begin() << " is not contained in data given at initialization!");
+                "Data with ID " << *_dataIDs.begin() << " is not contained in data given at initialization!");
   size_t entries = cplData[*_dataIDs.begin()]->values->size(); // Add zero boundaries
-  PRECICE_ASSERT((entries - 1) % 2 == 0);                           // entries has to be an odd number
+  PRECICE_ASSERT((entries - 1) % 2 == 0);                      // entries has to be an odd number
   double          initializer = std::numeric_limits<double>::max();
   Eigen::VectorXd toAppend    = Eigen::VectorXd::Constant(entries, initializer);
   utils::append(_residual, toAppend);
@@ -269,5 +267,5 @@ void HierarchicalAitkenAcceleration::setDesignSpecification(
   _designSpecification = q;
   PRECICE_ERROR("design specification for Aitken relaxation is not supported yet.");
 }
-}
-} // namespace precice, acceleration
+} // namespace acceleration
+} // namespace precice

@@ -11,4 +11,5 @@ class MappingConfiguration;
 using PtrMapping              = std::shared_ptr<Mapping>;
 using PtrMappingConfiguration = std::shared_ptr<MappingConfiguration>;
 
-}} // namespace precice, mapping
+} // namespace mapping
+} // namespace precice

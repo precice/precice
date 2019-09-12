@@ -1,22 +1,19 @@
 #pragma once
 #ifndef PRECICE_NO_PYTHON
 
-#include "action/Action.hpp"
-#include "mesh/SharedPointer.hpp"
-#include "logging/Logger.hpp"
 #include <string>
+#include "action/Action.hpp"
+#include "logging/Logger.hpp"
+#include "mesh/SharedPointer.hpp"
 
 struct _object;
 using PyObject = _object;
 
-namespace precice
-{
-namespace action
-{
+namespace precice {
+namespace action {
 
 /// Action whose implementation is given in a Python file.
-class PythonAction : public Action
-{
+class PythonAction : public Action {
 public:
   PythonAction(
       Timing               timing,
@@ -61,7 +58,7 @@ private:
 
   PyObject *_vertexCallback = nullptr;
 
-  PyObject *_postAction = nullptr; 
+  PyObject *_postAction = nullptr;
 
   void initialize();
 

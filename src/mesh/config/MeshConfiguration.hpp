@@ -1,34 +1,32 @@
 #pragma once
 
-#include "mesh/SharedPointer.hpp"
-#include "logging/Logger.hpp"
-#include "xml/XMLTag.hpp"
-#include <vector>
 #include <list>
 #include <map>
 #include <string>
+#include <vector>
+#include "logging/Logger.hpp"
+#include "mesh/SharedPointer.hpp"
+#include "xml/XMLTag.hpp"
 
 namespace precice {
-  namespace mesh {
-    class DataConfiguration;
-  }
+namespace mesh {
+class DataConfiguration;
 }
+} // namespace precice
 
 // ----------------------------------------------------------- CLASS DEFINITION
 
 namespace precice {
 namespace mesh {
 
-class MeshConfiguration : public xml::XMLTag::Listener
-{
+class MeshConfiguration : public xml::XMLTag::Listener {
 public:
-
   /// Constructor, takes a valid data configuration as argument.
-  MeshConfiguration (
-    xml::XMLTag&       parent,
-    PtrDataConfiguration config );
+  MeshConfiguration(
+      xml::XMLTag &        parent,
+      PtrDataConfiguration config);
 
-  void setDimensions ( int dimensions );
+  void setDimensions(int dimensions);
 
   /**
    * @brief Has to be called after parsing all mesh tags.
@@ -39,32 +37,32 @@ public:
   void setMeshSubIDs();
 
   /// Returns all configured meshes.
-  const std::vector<PtrMesh>& meshes() const;
+  const std::vector<PtrMesh> &meshes() const;
 
   /// Returns all configured meshes.
-  std::vector<PtrMesh>& meshes();
+  std::vector<PtrMesh> &meshes();
 
   /// Returns the configured mesh with given name, or NULL.
-  mesh::PtrMesh getMesh ( const std::string& meshName ) const;
+  mesh::PtrMesh getMesh(const std::string &meshName) const;
 
-  virtual void xmlTagCallback ( xml::XMLTag& callingTag );
+  virtual void xmlTagCallback(xml::XMLTag &callingTag);
 
-  virtual void xmlEndTagCallback ( xml::XMLTag& callingTag );
+  virtual void xmlEndTagCallback(xml::XMLTag &callingTag);
 
-  const PtrDataConfiguration& getDataConfiguration() const;
+  const PtrDataConfiguration &getDataConfiguration() const;
 
-  void addMesh ( const mesh::PtrMesh& mesh );
+  void addMesh(const mesh::PtrMesh &mesh);
 
-  std::map<std::string, std::vector<std::string> >& getNeededMeshes(){
+  std::map<std::string, std::vector<std::string>> &getNeededMeshes()
+  {
     return _neededMeshes;
   }
 
   void addNeededMesh(
-    const std::string& participant,
-    const std::string& mesh);
+      const std::string &participant,
+      const std::string &mesh);
 
 private:
-
   logging::Logger _log{"mesh::MeshConfiguration"};
 
   const std::string TAG;
@@ -84,11 +82,11 @@ private:
 
   bool _setMeshSubIDs;
 
-  std::vector<std::list<std::string> > _meshSubIDs;
+  std::vector<std::list<std::string>> _meshSubIDs;
 
   /// to check later if all meshes that any coupling scheme needs are actually used by the participants
-  std::map<std::string,std::vector<std::string> > _neededMeshes;
+  std::map<std::string, std::vector<std::string>> _neededMeshes;
 };
 
-}} // namespace precice, mesh
-
+} // namespace mesh
+} // namespace precice

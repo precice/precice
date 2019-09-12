@@ -1,15 +1,13 @@
 #pragma once
 
+#include <map>
 #include "DistributedComFactory.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include "mesh/SharedPointer.hpp"
-#include <map>
 
-namespace precice
-{
-namespace m2n
-{
+namespace precice {
+namespace m2n {
 
 /**
  * @brief M2N communication class.
@@ -17,8 +15,7 @@ namespace m2n
  * each possibly with a different decomposition. In principle, this class is only a map from meshes to DistributedCommunications
  *
  */
-class M2N
-{
+class M2N {
 public:
   M2N(com::PtrCommunication masterCom, DistributedComFactory::SharedPointer distrFactory);
 
@@ -101,9 +98,9 @@ public:
 
   /// Sends an array of double values from all slaves (different for each slave).
   void send(double const *itemsToSend,
-            int     size,
-            int     meshID,
-            int     valueDimension);
+            int           size,
+            int           meshID,
+            int           valueDimension);
 
   /**
    * @brief The master sends a bool to the other master, for performance reasons, we

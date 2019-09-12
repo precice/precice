@@ -10,7 +10,7 @@
  */
 
 #ifdef __cplusplus
-extern"C" {
+extern "C" {
 #endif
 
 /**
@@ -27,12 +27,12 @@ extern"C" {
  * OUT: -
  */
 void precicef_create_(
-  const char* participantName,
-  const char* configFileName,
-  const int*  solverProcessIndex,
-  const int*  solverProcessSize,
-  int   lengthAccessorName,
-  int   lengthConfigFileName );
+    const char *participantName,
+    const char *configFileName,
+    const int * solverProcessIndex,
+    const int * solverProcessSize,
+    int         lengthAccessorName,
+    int         lengthConfigFileName);
 
 /**
  * @brief See precice::SolverInterface::initialize().
@@ -43,7 +43,7 @@ void precicef_create_(
  * IN:  -
  * OUT: timestepLengthLimit
  */
-void precicef_initialize_( double* timestepLengthLimit );
+void precicef_initialize_(double *timestepLengthLimit);
 
 /**
  * @brief See precice::SolverInterface::initializeData().
@@ -65,8 +65,7 @@ void precicef_initialize_data_();
  * IN:  timestepLengthLimit
  * OUT: timestepLengthLimit
  */
-void precicef_advance_( double* timestepLengthLimit );
-
+void precicef_advance_(double *timestepLengthLimit);
 
 /**
  * @brief See precice::SolverInterface::finalize().
@@ -85,7 +84,7 @@ void precicef_finalize_();
  * IN:  -
  * OUT: dimensions
  */
-void precicef_get_dims_( int* dimensions );
+void precicef_get_dims_(int *dimensions);
 
 /**
  * @brief See precice::SolverInterface::isOngoing().
@@ -96,7 +95,7 @@ void precicef_get_dims_( int* dimensions );
  * IN:  -
  * OUT: isOngoing(1:true, 0:false)
  */
-void precicef_ongoing_( int* isOngoing );
+void precicef_ongoing_(int *isOngoing);
 
 /**
  * @brief See precice::SolverInterface::isWriteDataRequired().
@@ -110,8 +109,8 @@ void precicef_ongoing_( int* isOngoing );
  * OUT: isRequired(1:true, 0:false)
  */
 void precicef_write_data_required_(
-  const double* computedTimestepLength,
-  int*          isRequired );
+    const double *computedTimestepLength,
+    int *         isRequired);
 
 /**
  * @brief See precice::SolverInterface::isReadDataAvailable().
@@ -122,7 +121,7 @@ void precicef_write_data_required_(
  * IN:  -
  * OUT: isAvailable(1:true, 0:false)
  */
-void precicef_read_data_available_( int* isAvailable );
+void precicef_read_data_available_(int *isAvailable);
 
 /**
  * @brief See precice::SolverInterface::isTimestepComplete().
@@ -133,7 +132,7 @@ void precicef_read_data_available_( int* isAvailable );
  * IN:  -
  * OUT: isComplete(1:true, 0:false)
  */
-void precicef_is_timestep_complete_( int* isComplete );
+void precicef_is_timestep_complete_(int *isComplete);
 
 /**
  * @brief See precice::SolverInterface::hasToEvaluateSurrogateModel().
@@ -144,7 +143,7 @@ void precicef_is_timestep_complete_( int* isComplete );
  * IN:  -
  * OUT: hasToEvaluate(1:true, 0:false)
  */
-void precicef_has_to_evaluate_surrogate_model_ ( int* hasToEvaluate );
+void precicef_has_to_evaluate_surrogate_model_(int *hasToEvaluate);
 
 /**
  * @brief See precice::SolverInterface::hasToEvaluateFineModel().
@@ -155,7 +154,7 @@ void precicef_has_to_evaluate_surrogate_model_ ( int* hasToEvaluate );
  * IN:  -
  * OUT: hasToEvaluate(1:true, 0:false)
  */
-void precicef_has_to_evaluate_fine_model_ ( int* hasToEvaluate );
+void precicef_has_to_evaluate_fine_model_(int *hasToEvaluate);
 
 /**
  * @brief See precice::SolverInterface::isActionRequired().
@@ -169,9 +168,9 @@ void precicef_has_to_evaluate_fine_model_ ( int* hasToEvaluate );
  * OUT: isRequired(1:true, 0:false)
  */
 void precicef_action_required_(
-  const char* action,
-  int*        isRequired,
-  int         lengthAction );
+    const char *action,
+    int *       isRequired,
+    int         lengthAction);
 
 /**
  * @brief See precice::SolverInterface::fulfilledAction().
@@ -183,8 +182,8 @@ void precicef_action_required_(
  * OUT: -
  */
 void precicef_fulfilled_action_(
-  const char* action,
-  int         lengthAction );
+    const char *action,
+    int         lengthAction);
 
 /**
  * @brief See precice::SolverInterface::hasMesh().
@@ -198,8 +197,8 @@ void precicef_fulfilled_action_(
  * OUT: hasMesh(1:true, 0:false)
  */
 void precicef_has_mesh_(
-    const char* meshName,
-    int*        hasMesh,
+    const char *meshName,
+    int *       hasMesh,
     int         lengthMeshName);
 
 /**
@@ -214,9 +213,9 @@ void precicef_has_mesh_(
  * OUT: meshID
  */
 void precicef_get_mesh_id_(
-  const char* meshName,
-  int*        meshID,
-  int         lengthMeshName );
+    const char *meshName,
+    int *       meshID,
+    int         lengthMeshName);
 
 /**
  * @brief See precice::SolverInterface::hasData().
@@ -232,10 +231,10 @@ void precicef_get_mesh_id_(
  * OUT: hasData(1:true, 0:false)
  */
 void precicef_has_data_(
-  const char* dataName,
-  const int*  meshID,
-  int*        hasData,
-  int         lengthDataName);
+    const char *dataName,
+    const int * meshID,
+    int *       hasData,
+    int         lengthDataName);
 
 /**
  * @brief See precice::SolverInterface::getDataID().
@@ -256,10 +255,10 @@ void precicef_has_data_(
  * OUT: dataID
  */
 void precicef_get_data_id_(
-  const char* dataName,
-  const int*  meshID,
-  int*        dataID,
-  int         lengthDataName);
+    const char *dataName,
+    const int * meshID,
+    int *       dataID,
+    int         lengthDataName);
 
 /**
  * @brief See precice::SolverInterface::setMeshVertex().
@@ -274,9 +273,9 @@ void precicef_get_data_id_(
  * OUT: vertexID
  */
 void precicef_set_vertex_(
-  const int*    meshID,
-  const double* position,
-  int*          vertexID );
+    const int *   meshID,
+    const double *position,
+    int *         vertexID);
 
 /**
  * @brief See precice::SolverInterface::getMeshVertexSize().
@@ -290,8 +289,8 @@ void precicef_set_vertex_(
  * OUT: meshSize
  */
 void precicef_get_mesh_vertex_size_(
-    int* meshID,
-    int* meshSize);
+    int *meshID,
+    int *meshSize);
 
 /**
  * @brief See precice::SolverInterface::setMeshVertices().
@@ -307,10 +306,10 @@ void precicef_get_mesh_vertex_size_(
  * OUT: positionIDs
  */
 void precicef_set_vertices_(
-  const int*    meshID,
-  const int*    size,
-  double*       positions,
-  int*          positionIDs );
+    const int *meshID,
+    const int *size,
+    double *   positions,
+    int *      positionIDs);
 
 /**
  * @brief See precice::SolverInterface::getMeshVertices().
@@ -326,10 +325,10 @@ void precicef_set_vertices_(
  * OUT: positions
  */
 void precicef_get_vertices_(
-    const int* meshID,
-    const int* size,
-    int*       ids,
-    double*    positions );
+    const int *meshID,
+    const int *size,
+    int *      ids,
+    double *   positions);
 
 /**
  * @brief See precice::SolverInterface::getMeshVertexIDsFromPositions().
@@ -345,10 +344,10 @@ void precicef_get_vertices_(
  * OUT: ids
  */
 void precicef_get_vertex_ids_from_positions_(
-    const int* meshID,
-    const int* size,
-    double*    positions,
-    int*       ids );
+    const int *meshID,
+    const int *size,
+    double *   positions,
+    int *      ids);
 
 /**
  * @brief See precice::SolverInterface::setMeshEdge().
@@ -364,10 +363,10 @@ void precicef_get_vertex_ids_from_positions_(
  * OUT: edgeID
  */
 void precicef_set_edge_(
-  const int* meshID,
-  const int* firstVertexID,
-  const int* secondVertexID,
-  int*       edgeID );
+    const int *meshID,
+    const int *firstVertexID,
+    const int *secondVertexID,
+    int *      edgeID);
 
 /**
  * @brief See precice::SolverInterface::setMeshTriangle().
@@ -383,10 +382,10 @@ void precicef_set_edge_(
  * OUT: -
  */
 void precicef_set_triangle_(
-  const int* meshID,
-  const int* firstEdgeID,
-  const int* secondEdgeID,
-  const int* thirdEdgeID );
+    const int *meshID,
+    const int *firstEdgeID,
+    const int *secondEdgeID,
+    const int *thirdEdgeID);
 
 /**
  * @brief See precice::SolverInterface::setMeshTriangleWithEdges().
@@ -402,10 +401,10 @@ void precicef_set_triangle_(
  * OUT: -
  */
 void precicef_set_triangle_we_(
-  const int* meshID,
-  const int* firstVertexID,
-  const int* secondVertexID,
-  const int* thirdVertexID );
+    const int *meshID,
+    const int *firstVertexID,
+    const int *secondVertexID,
+    const int *thirdVertexID);
 
 /**
  * @brief See precice::SolverInterface::setMeshQuad().
@@ -422,11 +421,11 @@ void precicef_set_triangle_we_(
  * OUT: -
  */
 void precicef_set_quad_(
-    const int* meshID,
-    const int* firstEdgeID,
-    const int* secondEdgeID,
-    const int* thirdEdgeID,
-    const int* fourthEdgeID);
+    const int *meshID,
+    const int *firstEdgeID,
+    const int *secondEdgeID,
+    const int *thirdEdgeID,
+    const int *fourthEdgeID);
 
 /**
  * @brief See precice::SolverInterface::setMeshQuadWithEdges().
@@ -443,11 +442,11 @@ void precicef_set_quad_(
  * OUT: -
  */
 void precicef_set_quad_we_(
-    const int* meshID,
-    const int* firstVertexID,
-    const int* secondVertexID,
-    const int* thirdVertexID,
-    const int* fourthVertexID);
+    const int *meshID,
+    const int *firstVertexID,
+    const int *secondVertexID,
+    const int *thirdVertexID,
+    const int *fourthVertexID);
 
 /**
  * @brief See precice::SolverInterface::writeBlockVectorData.
@@ -463,10 +462,10 @@ void precicef_set_quad_we_(
  * OUT: -
  */
 void precicef_write_bvdata_(
-  const int* dataID,
-  const int* size,
-  int*       valueIndices,
-  double*    values );
+    const int *dataID,
+    const int *size,
+    int *      valueIndices,
+    double *   values);
 
 /**
  * @brief precice::SolverInterface::writeVectorData.
@@ -481,9 +480,9 @@ void precicef_write_bvdata_(
  * OUT: -
  */
 void precicef_write_vdata_(
-  const int*    dataID,
-  const int*    valueIndex,
-  const double* dataValue );
+    const int *   dataID,
+    const int *   valueIndex,
+    const double *dataValue);
 
 /**
  * @brief See precice::SolverInterface::writeBlockScalarData.
@@ -499,10 +498,10 @@ void precicef_write_vdata_(
  * OUT: -
  */
 void precicef_write_bsdata_(
-  const int* dataID,
-  const int* size,
-  int*       valueIndices,
-  double*    values );
+    const int *dataID,
+    const int *size,
+    int *      valueIndices,
+    double *   values);
 
 /**
  * @brief precice::SolverInterface::writeScalarData.
@@ -517,9 +516,9 @@ void precicef_write_bsdata_(
  * OUT: -
  */
 void precicef_write_sdata_(
-  const int*    dataID,
-  const int*    valueIndex,
-  const double* dataValue );
+    const int *   dataID,
+    const int *   valueIndex,
+    const double *dataValue);
 
 /**
  * @brief See precice::SolverInterface::readBlockVectorData.
@@ -535,10 +534,10 @@ void precicef_write_sdata_(
  * OUT: values
  */
 void precicef_read_bvdata_(
-  const int* dataID,
-  const int* size,
-  int*       valueIndices,
-  double*    values );
+    const int *dataID,
+    const int *size,
+    int *      valueIndices,
+    double *   values);
 
 /**
  * @brief precice::SolverInterface::readVectorData.
@@ -553,9 +552,9 @@ void precicef_read_bvdata_(
  * OUT: dataValue
  */
 void precicef_read_vdata_(
-  const int* dataID,
-  const int* valueIndex,
-  double*    dataValue );
+    const int *dataID,
+    const int *valueIndex,
+    double *   dataValue);
 
 /**
  * @brief See precice::SolverInterface::readBlockScalarData.
@@ -571,10 +570,10 @@ void precicef_read_vdata_(
  * OUT: values
  */
 void precicef_read_bsdata_(
-  const int* dataID,
-  const int* size,
-  int*       valueIndices,
-  double*    values );
+    const int *dataID,
+    const int *size,
+    int *      valueIndices,
+    double *   values);
 
 /**
  * @brief precice::SolverInterface::readScalarData.
@@ -589,9 +588,9 @@ void precicef_read_bsdata_(
  * OUT: dataValue
  */
 void precicef_read_sdata_(
-  const int* dataID,
-  const int* valueIndex,
-  double*    dataValue );
+    const int *dataID,
+    const int *valueIndex,
+    double *   dataValue);
 
 /**
  * @brief See precice::SolverInterface::mapWriteDataFrom().
@@ -602,7 +601,7 @@ void precicef_read_sdata_(
  * IN:  meshID
  * OUT: -
  */
-void precicef_map_write_data_from_( const int* meshID );
+void precicef_map_write_data_from_(const int *meshID);
 
 /**
  * @brief See precice::SolverInterface::mapReadDataTo().
@@ -613,7 +612,7 @@ void precicef_map_write_data_from_( const int* meshID );
  * IN:  meshID
  * OUT: -
  */
-void precicef_map_read_data_to_( const int* meshID );
+void precicef_map_read_data_to_(const int *meshID);
 
 /**
  * @brief Name of action for writing iteration checkpoint.
@@ -622,8 +621,8 @@ void precicef_map_read_data_to_( const int* meshID );
  * precicef_action_write_iter_checkpoint( CHARACTER nameAction(*) )
  */
 void precicef_action_write_iter_checkp_(
-  char* nameAction,
-  int   lengthNameAction );
+    char *nameAction,
+    int   lengthNameAction);
 
 /**
  * @brief Name of action for writing initial data.
@@ -632,8 +631,8 @@ void precicef_action_write_iter_checkp_(
  * precicef_action_write_initial_data( CHARACTER nameAction(*) )
  */
 void precicef_action_write_initial_data_(
-  char* nameAction,
-  int   lengthNameAction );
+    char *nameAction,
+    int   lengthNameAction);
 
 /**
  * @brief Name of action for reading iteration checkpoint.
@@ -642,8 +641,8 @@ void precicef_action_write_initial_data_(
  * precicef_action_read_iter_checkpoint( CHARACTER nameAction(*) )
  */
 void precicef_action_read_iter_checkp_(
-  char* nameAction,
-  int   lengthNameAction );
+    char *nameAction,
+    int   lengthNameAction);
 
 #ifdef __cplusplus
 }

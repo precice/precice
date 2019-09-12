@@ -1,25 +1,23 @@
 #include "PointToPointCommunication.hpp"
+#include <boost/container/flat_map.hpp>
 #include <iomanip>
-#include <vector>
 #include <thread>
+#include <vector>
 #include "com/Communication.hpp"
 #include "com/CommunicationFactory.hpp"
 #include "mesh/Mesh.hpp"
 #include "utils/Event.hpp"
 #include "utils/MasterSlave.hpp"
-#include <boost/container/flat_map.hpp>
 
 using precice::utils::Event;
 
-namespace precice
-{
+namespace precice {
 bool extern syncMode;
-namespace m2n
-{
+namespace m2n {
 
 void send(mesh::Mesh::VertexDistribution const &m,
-          int                                    rankReceiver,
-          com::PtrCommunication                  communication)
+          int                                   rankReceiver,
+          com::PtrCommunication                 communication)
 {
   communication->send(static_cast<int>(m.size()), rankReceiver);
 
@@ -32,8 +30,8 @@ void send(mesh::Mesh::VertexDistribution const &m,
 }
 
 void receive(mesh::Mesh::VertexDistribution &m,
-             int                              rankSender,
-             com::PtrCommunication            communication)
+             int                             rankSender,
+             com::PtrCommunication           communication)
 {
   m.clear();
   int size = 0;
@@ -47,7 +45,7 @@ void receive(mesh::Mesh::VertexDistribution &m,
 }
 
 void broadcastSend(mesh::Mesh::VertexDistribution const &m,
-                   com::PtrCommunication                  communication = utils::MasterSlave::_communication)
+                   com::PtrCommunication                 communication = utils::MasterSlave::_communication)
 {
   communication->broadcast(static_cast<int>(m.size()));
 
@@ -60,8 +58,8 @@ void broadcastSend(mesh::Mesh::VertexDistribution const &m,
 }
 
 void broadcastReceive(mesh::Mesh::VertexDistribution &m,
-                      int                              rankBroadcaster,
-                      com::PtrCommunication            communication = utils::MasterSlave::_communication)
+                      int                             rankBroadcaster,
+                      com::PtrCommunication           communication = utils::MasterSlave::_communication)
 {
   m.clear();
   int size = 0;
@@ -239,7 +237,7 @@ std::map<int, std::vector<int>> buildCommunicationMap(
     mesh::Mesh::VertexDistribution const &thisVertexDistribution,
     // `otherVertexDistribution' is input vertex distribution from other participant.
     mesh::Mesh::VertexDistribution const &otherVertexDistribution,
-    int                                    thisRank = utils::MasterSlave::getRank())
+    int                                   thisRank = utils::MasterSlave::getRank())
 {
   auto iterator = thisVertexDistribution.find(thisRank);
   if (iterator == thisVertexDistribution.end())
@@ -247,23 +245,23 @@ std::map<int, std::vector<int>> buildCommunicationMap(
 
   // Build lookup table from otherIndex -> rank for the otherVertexDistribution
   const auto lookupIndexRank = [&otherVertexDistribution] {
-      boost::container::flat_multimap<int, int> lookupIndexRank;
-      for (const auto &other : otherVertexDistribution) {
-          for (const auto &otherIndex : other.second) {
-              lookupIndexRank.emplace(otherIndex, other.first);
-          }
+    boost::container::flat_multimap<int, int> lookupIndexRank;
+    for (const auto &other : otherVertexDistribution) {
+      for (const auto &otherIndex : other.second) {
+        lookupIndexRank.emplace(otherIndex, other.first);
       }
-      return lookupIndexRank;
+    }
+    return lookupIndexRank;
   }();
 
   auto const &indices = iterator->second;
 
   std::map<int, std::vector<int>> communicationMap;
   for (size_t index = 0lu; index < indices.size(); ++index) {
-      auto range = lookupIndexRank.equal_range(indices[index]);
-      for(auto iter = range.first; iter != range.second; ++iter){
-              communicationMap[iter->second].push_back(index);
-      }
+    auto range = lookupIndexRank.equal_range(indices[index]);
+    for (auto iter = range.first; iter != range.second; ++iter) {
+      communicationMap[iter->second].push_back(index);
+    }
   }
   return communicationMap;
 }
@@ -293,8 +291,8 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
   PRECICE_TRACE(acceptorName, requesterName);
   PRECICE_CHECK(not isConnected(), "Already connected!");
   PRECICE_CHECK(utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave(),
-        "You can only use a point-to-point communication between two participants which both use a master. "
-            << "Please use distribution-type gather-scatter instead.");
+                "You can only use a point-to-point communication between two participants which both use a master. "
+                    << "Please use distribution-type gather-scatter instead.");
 
   mesh::Mesh::VertexDistribution &vertexDistribution = _mesh->getVertexDistribution();
   mesh::Mesh::VertexDistribution  requesterVertexDistribution;
@@ -335,9 +333,9 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
   //   the remote process with rank 1;
   // - has to communicate (send/receive) data with local indices 0 and 2 with
   //   the remote process with rank 4.
-  Event e2("m2n.buildCommunicationMap", precice::syncMode);
+  Event                           e2("m2n.buildCommunicationMap", precice::syncMode);
   std::map<int, std::vector<int>> communicationMap = m2n::buildCommunicationMap(
-    vertexDistribution, requesterVertexDistribution);
+      vertexDistribution, requesterVertexDistribution);
   e2.stop();
 
 // Print `communicationMap'.
@@ -368,9 +366,9 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
                                            utils::MasterSlave::getRank(),
                                            communicationMap.size());
 
-  for (auto const & comMap : communicationMap) {
-    int globalRequesterRank = comMap.first;
-    auto indices = std::move(communicationMap[globalRequesterRank]);
+  for (auto const &comMap : communicationMap) {
+    int  globalRequesterRank = comMap.first;
+    auto indices             = std::move(communicationMap[globalRequesterRank]);
 
     _mappings.push_back({globalRequesterRank, std::move(indices), com::PtrRequest(), {}});
   }
@@ -384,8 +382,8 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
   PRECICE_TRACE(acceptorName, requesterName);
   PRECICE_CHECK(not isConnected(), "Already connected!");
   PRECICE_CHECK(utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave(),
-        "You can only use a point-to-point communication between two participants which both use a master. "
-        << "Please use distribution-type gather-scatter instead.");
+                "You can only use a point-to-point communication between two participants which both use a master. "
+                    << "Please use distribution-type gather-scatter instead.");
 
   mesh::Mesh::VertexDistribution &vertexDistribution = _mesh->getVertexDistribution();
   mesh::Mesh::VertexDistribution  acceptorVertexDistribution;
@@ -425,9 +423,9 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
   //   the remote process with rank 1;
   // - has to communicate (send/receive) data with local indices 0 and 2 with
   //   the remote process with rank 4.
-  Event e2("m2n.buildCommunicationMap", precice::syncMode);
+  Event                           e2("m2n.buildCommunicationMap", precice::syncMode);
   std::map<int, std::vector<int>> communicationMap = m2n::buildCommunicationMap(
-    vertexDistribution, acceptorVertexDistribution);
+      vertexDistribution, acceptorVertexDistribution);
   e2.stop();
 
 // Print `communicationMap'.
@@ -487,9 +485,9 @@ void PointToPointCommunication::closeConnection()
   _isConnected = false;
 }
 
-void PointToPointCommunication::send(double const  *itemsToSend,
-                                     size_t         size,
-                                     int            valueDimension)
+void PointToPointCommunication::send(double const *itemsToSend,
+                                     size_t        size,
+                                     int           valueDimension)
 {
 
   if (_mappings.empty()) {
@@ -554,9 +552,6 @@ void PointToPointCommunication::checkBufferedRequests(bool blocking)
       std::this_thread::yield(); // give up our time slice, so MPI may work
   } while (blocking);
 }
-
-
-
 
 } // namespace m2n
 } // namespace precice

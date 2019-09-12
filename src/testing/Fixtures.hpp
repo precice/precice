@@ -1,18 +1,16 @@
 #pragma once
 
 #include "Testing.hpp"
-#include "utils/Parallel.hpp"
-#include "utils/MasterSlave.hpp"
 #include "com/Communication.hpp"
 #include "com/MPIDirectCommunication.hpp"
-#include "m2n/M2N.hpp"
 #include "m2n/GatherScatterComFactory.hpp"
+#include "m2n/M2N.hpp"
 #include "m2n/SharedPointer.hpp"
+#include "utils/MasterSlave.hpp"
+#include "utils/Parallel.hpp"
 
-namespace precice
-{
-namespace testing
-{
+namespace precice {
+namespace testing {
 
 #ifndef PRECICE_NO_MPI
 
@@ -24,19 +22,18 @@ struct MasterComFixture {
   MasterComFixture()
   {
     utils::MasterSlave::_communication = com::PtrCommunication(new com::MPIDirectCommunication());
-    int size = Par::getCommunicatorSize();
+    int size                           = Par::getCommunicatorSize();
 
-    if (utils::Parallel::getProcessRank() == 0){ //Master
-      utils::Parallel::splitCommunicator( "Master" );
+    if (utils::Parallel::getProcessRank() == 0) { //Master
+      utils::Parallel::splitCommunicator("Master");
       utils::MasterSlave::configure(0, size);
-      utils::MasterSlave::_communication->acceptConnection ( "Master", "Slaves", utils::Parallel::getProcessRank() );
+      utils::MasterSlave::_communication->acceptConnection("Master", "Slaves", utils::Parallel::getProcessRank());
       utils::MasterSlave::_communication->setRankOffset(1);
-    }
-    else {//Slaves
+    } else { //Slaves
       PRECICE_ASSERT(utils::Parallel::getProcessRank() > 0 && utils::Parallel::getProcessRank() < size);
-      utils::Parallel::splitCommunicator( "Slaves" );
+      utils::Parallel::splitCommunicator("Slaves");
       utils::MasterSlave::configure(utils::Parallel::getProcessRank(), size);
-      utils::MasterSlave::_communication->requestConnection( "Master", "Slaves", utils::Parallel::getProcessRank()-1 , size-1 );
+      utils::MasterSlave::_communication->requestConnection("Master", "Slaves", utils::Parallel::getProcessRank() - 1, size - 1);
     }
   }
 
@@ -56,16 +53,15 @@ struct M2NFixture {
   {
     utils::MasterSlave::reset();
     auto participantCom = com::PtrCommunication(new com::MPIDirectCommunication());
-    auto distrFactory = m2n::DistributedComFactory::SharedPointer(new m2n::GatherScatterComFactory(participantCom));
-    m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory));
+    auto distrFactory   = m2n::DistributedComFactory::SharedPointer(new m2n::GatherScatterComFactory(participantCom));
+    m2n                 = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory));
 
-    if (utils::Parallel::getProcessRank() == 0){
-      utils::Parallel::splitCommunicator( "ParticipantOne" );
-      m2n->acceptMasterConnection ( "ParticipantOne", "ParticipantTwo");
-    }
-    else if(utils::Parallel::getProcessRank() == 1){//Master
-      utils::Parallel::splitCommunicator( "ParticipantTwo" );
-      m2n->requestMasterConnection ( "ParticipantOne", "ParticipantTwo" );
+    if (utils::Parallel::getProcessRank() == 0) {
+      utils::Parallel::splitCommunicator("ParticipantOne");
+      m2n->acceptMasterConnection("ParticipantOne", "ParticipantTwo");
+    } else if (utils::Parallel::getProcessRank() == 1) { //Master
+      utils::Parallel::splitCommunicator("ParticipantTwo");
+      m2n->requestMasterConnection("ParticipantOne", "ParticipantTwo");
     }
   }
 
@@ -83,15 +79,14 @@ struct SplitParticipantsFixture {
 
   SplitParticipantsFixture()
   {
-    if(utils::Parallel::getProcessRank()<=1){
-      utils::Parallel::splitCommunicator( "ParticipantOne" );
+    if (utils::Parallel::getProcessRank() <= 1) {
+      utils::Parallel::splitCommunicator("ParticipantOne");
       utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator());
       utils::Parallel::clearGroups(); //This is important, if the testcase uses MPI communication again
       participantID = 1;
-    }
-    else {
+    } else {
       PRECICE_ASSERT(utils::Parallel::getProcessRank() > 1 && utils::Parallel::getProcessRank() < 4);
-      utils::Parallel::splitCommunicator( "ParticipantTwo" );
+      utils::Parallel::splitCommunicator("ParticipantTwo");
       utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator());
       utils::Parallel::clearGroups();
       participantID = 2;
@@ -102,7 +97,7 @@ struct SplitParticipantsFixture {
   {
     utils::Parallel::setGlobalCommunicator(utils::Parallel::getCommunicatorWorld());
   }
-
 };
 
-}}
+} // namespace testing
+} // namespace precice

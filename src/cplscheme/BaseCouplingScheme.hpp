@@ -6,16 +6,14 @@
 #include "CouplingData.hpp"
 #include "CouplingScheme.hpp"
 #include "SharedPointer.hpp"
-#include "impl/SharedPointer.hpp"
 #include "acceleration/SharedPointer.hpp"
+#include "impl/SharedPointer.hpp"
 #include "io/TXTTableWriter.hpp"
 #include "logging/Logger.hpp"
 #include "m2n/SharedPointer.hpp"
 
-namespace precice
-{
-namespace cplscheme
-{
+namespace precice {
+namespace cplscheme {
 
 /**
  * @brief Abstract base class for standard coupling schemes.
@@ -45,8 +43,7 @@ namespace cplscheme
  * -# when the method isCouplingOngoing() returns false, call finalize() to
  *    stop the coupling scheme
  */
-class BaseCouplingScheme : public CouplingScheme
-{
+class BaseCouplingScheme : public CouplingScheme {
 public:
   BaseCouplingScheme(
       double maxTime,
@@ -581,5 +578,5 @@ private:
 
   int getVertexOffset(std::map<int, int> &vertexDistribution, int rank, int dim);
 };
-}
-} // namespace precice, cplscheme
+} // namespace cplscheme
+} // namespace precice

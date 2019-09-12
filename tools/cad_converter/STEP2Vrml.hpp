@@ -1,13 +1,13 @@
 #ifndef PRECICE_DATACONVERTER_STEP2VRML_HPP_
 #define PRECICE_DATACONVERTER_STEP2VRML_HPP_
 
-#include <config.h>     // occ variable for precompiler
-#include <STEPControl_Reader.hxx>   // Import -Tools
-#include <VrmlAPI_Writer.hxx>       // export -Tools
-#include <Standard_TypeDef.hxx>     //standard data type in Opencascade
-#include <TColStd_HSequenceOfTransient.hxx>  //save list of shapes for transfer
-#include <TopoDS_Shape.hxx>
+#include <STEPControl_Reader.hxx>           // Import -Tools
+#include <Standard_TypeDef.hxx>             //standard data type in Opencascade
+#include <TColStd_HSequenceOfTransient.hxx> //save list of shapes for transfer
 #include <TopTools_HSequenceOfShape.hxx>
+#include <TopoDS_Shape.hxx>
+#include <VrmlAPI_Writer.hxx> // export -Tools
+#include <config.h>           // occ variable for precompiler
 #include <string>
 
 /**
@@ -21,44 +21,39 @@
  * @author Yuan Fei, Beteuer: Bernhard Gatzhammer
  */
 
-class STEP2Vrml
-{
+class STEP2Vrml {
 public:
-
-   /**
+  /**
     * @brief Constructor
     */
-   STEP2Vrml ( void );
+  STEP2Vrml(void);
 
-   /**
+  /**
     * @brief Destructor
     */
-   virtual ~STEP2Vrml ( void );
+  virtual ~STEP2Vrml(void);
 
-   /**
+  /**
     * @brief setting input file
     */
-   bool readFile ( const std::string & inputFileName );
+  bool readFile(const std::string &inputFileName);
 
-   /**
+  /**
     * @brief prints Statistics of input file
     */
-   void loadReport ( void );
+  void loadReport(void);
 
-   /**
+  /**
     * @brief transform to VRML
     */
-   bool transfer ( const std::string & outputFileName );
+  bool transfer(const std::string &outputFileName);
 
 private:
+  // @brief reader for IGES file
+  STEPControl_Reader myReader;
 
-   // @brief reader for IGES file
-   STEPControl_Reader myReader;
-
-   // @brief path and name of input file, must be set before transform
-   Standard_CString mySTEPFileName;
-
+  // @brief path and name of input file, must be set before transform
+  Standard_CString mySTEPFileName;
 };
-
 
 #endif /* STEP2VRML_H_ */

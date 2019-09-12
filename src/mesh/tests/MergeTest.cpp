@@ -14,20 +14,20 @@ BOOST_AUTO_TEST_SUITE(MeshTests)
 BOOST_AUTO_TEST_CASE(MergeTest)
 {
   // Create visitables
-  int dim = 3;
+  int                 dim = 3;
   precice::mesh::Mesh mesh("MyMesh", dim, false);
-  Vertex &v0 = mesh.createVertex(Eigen::Vector3d::Zero());
-  Vertex &v1 = mesh.createVertex(Eigen::Vector3d::Zero());
-  Vertex &v2 = mesh.createVertex(Eigen::Vector3d::Zero());
-  Vertex &v3 = mesh.createVertex(Eigen::Vector3d::Zero());
-  Edge &e0 = mesh.createEdge(v0, v1);
-  Edge &e1 = mesh.createEdge(v1, v2);
-  Edge &e2 = mesh.createEdge(v2, v0);
-  Edge &e3 = mesh.createEdge(v2, v3);
-  Edge &e4 = mesh.createEdge(v3, v0);
-  Triangle &t1 = mesh.createTriangle(e0, e1, e2);
-  Triangle &t2 = mesh.createTriangle(e2, e1, e0);
-  Quad &q0 = mesh.createQuad(e0, e1, e3, e4);
+  Vertex &            v0 = mesh.createVertex(Eigen::Vector3d::Zero());
+  Vertex &            v1 = mesh.createVertex(Eigen::Vector3d::Zero());
+  Vertex &            v2 = mesh.createVertex(Eigen::Vector3d::Zero());
+  Vertex &            v3 = mesh.createVertex(Eigen::Vector3d::Zero());
+  Edge &              e0 = mesh.createEdge(v0, v1);
+  Edge &              e1 = mesh.createEdge(v1, v2);
+  Edge &              e2 = mesh.createEdge(v2, v0);
+  Edge &              e3 = mesh.createEdge(v2, v3);
+  Edge &              e4 = mesh.createEdge(v3, v0);
+  Triangle &          t1 = mesh.createTriangle(e0, e1, e2);
+  Triangle &          t2 = mesh.createTriangle(e2, e1, e0);
+  Quad &              q0 = mesh.createQuad(e0, e1, e3, e4);
 
   Group group;
   group.add(v1);

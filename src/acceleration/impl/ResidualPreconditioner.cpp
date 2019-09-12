@@ -1,18 +1,16 @@
 #include "acceleration/impl/ResidualPreconditioner.hpp"
 #include "utils/MasterSlave.hpp"
 
-namespace precice
-{
-namespace acceleration
-{
-namespace impl
-{
+namespace precice {
+namespace acceleration {
+namespace impl {
 
 ResidualPreconditioner::ResidualPreconditioner(int maxNonConstTimesteps)
     : Preconditioner(maxNonConstTimesteps)
-{}
+{
+}
 
-void ResidualPreconditioner::_update_(bool timestepComplete,
+void ResidualPreconditioner::_update_(bool                   timestepComplete,
                                       const Eigen::VectorXd &oldValues,
                                       const Eigen::VectorXd &res)
 {
@@ -43,4 +41,6 @@ void ResidualPreconditioner::_update_(bool timestepComplete,
   }
 }
 
-}}} // namespace precice, acceleration
+} // namespace impl
+} // namespace acceleration
+} // namespace precice

@@ -10,14 +10,11 @@
 #include <string>
 #include <vector>
 
-namespace precice
-{
-namespace m2n
-{
+namespace precice {
+namespace m2n {
 
 /// Configuration for communication channels between solvers.
-class M2NConfiguration : public xml::XMLTag::Listener
-{
+class M2NConfiguration : public xml::XMLTag::Listener {
 public:
   using SharedPointer = std::shared_ptr<M2NConfiguration>;
   using M2NTuple      = std::tuple<m2n::PtrM2N, std::string, std::string>;

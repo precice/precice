@@ -8,29 +8,24 @@
 #include "logging/Logger.hpp"
 #include "xml/ConfigParser.hpp"
 
-namespace precice
-{
-namespace xml
-{
+namespace precice {
+namespace xml {
 class ConfigParser;
 }
-}
+} // namespace precice
 
-namespace precice
-{
-namespace xml
-{
+namespace precice {
+namespace xml {
 
 /// Represents an XML tag to be configured automatically.
-class XMLTag
-{
+class XMLTag {
   friend class precice::xml::ConfigParser;
 
 public:
   /// Callback interface for configuration classes using XMLTag.
   struct Listener {
 
-    Listener& operator=(Listener &&) = delete;
+    Listener &operator=(Listener &&) = delete;
 
     virtual ~Listener(){};
     /**
@@ -79,7 +74,7 @@ public:
    *
    * The description and more information is printed with printDocumentation().
    */
-  XMLTag& setDocumentation(const std::string &documentation);
+  XMLTag &setDocumentation(const std::string &documentation);
 
   /**
    * @brief Adds a namespace to the tag.
@@ -87,28 +82,28 @@ public:
    * Only used for outputting correct XML format, such that, e.g., internet
    * browsers display no errors when viewing an XML configuration.
    */
-  XMLTag& addNamespace(const std::string &namespaceName);
+  XMLTag &addNamespace(const std::string &namespaceName);
 
   /// Adds an XML tag as subtag by making a copy of the given tag.
-  XMLTag& addSubtag(const XMLTag &tag);
+  XMLTag &addSubtag(const XMLTag &tag);
 
   /// Removes the XML subtag with given name
   //XMLTag& removeSubtag ( const std::string& tagName );
 
   /// Adds a XML attribute by making a copy of the given attribute.
-  XMLTag& addAttribute(const XMLAttribute<double> &attribute);
+  XMLTag &addAttribute(const XMLAttribute<double> &attribute);
 
   // Adds a XML attribute by making a copy of the given attribute.
-  XMLTag& addAttribute(const XMLAttribute<int> &attribute);
+  XMLTag &addAttribute(const XMLAttribute<int> &attribute);
 
   /// Adds a XML attribute by making a copy of the given attribute.
-  XMLTag& addAttribute(const XMLAttribute<std::string> &attribute);
+  XMLTag &addAttribute(const XMLAttribute<std::string> &attribute);
 
   /// Adds a XML attribute by making a copy of the given attribute.
-  XMLTag& addAttribute(const XMLAttribute<bool> &attribute);
+  XMLTag &addAttribute(const XMLAttribute<bool> &attribute);
 
   /// Adds a XML attribute by making a copy of the given attribute.
-  XMLTag& addAttribute(const XMLAttribute<Eigen::VectorXd> &attribute);
+  XMLTag &addAttribute(const XMLAttribute<Eigen::VectorXd> &attribute);
 
   bool hasAttribute(const std::string &attributeName);
 
@@ -249,7 +244,8 @@ void configure(
     XMLTag &           tag,
     const std::string &configurationFilename);
 
-}} // namespace precice, xml
+} // namespace xml
+} // namespace precice
 
 /**
  * @brief Adds documentation of tag to output stream os.

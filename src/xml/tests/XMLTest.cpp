@@ -3,7 +3,6 @@
 #include "xml/XMLAttribute.hpp"
 #include "xml/XMLTag.hpp"
 
-
 using namespace precice::xml;
 using precice::testing::getPathToSources;
 

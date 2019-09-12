@@ -1,15 +1,13 @@
 #include "PropertyContainer.hpp"
 #include "utils/ManageUniqueIDs.hpp"
 
-namespace precice
-{
-namespace mesh
-{
+namespace precice {
+namespace mesh {
 
 const int PropertyContainer::INDEX_GEOMETRY_ID = getFreePropertyID();
 
 std::unique_ptr<utils::ManageUniqueIDs> PropertyContainer::_manageUniqueIDs;
-logging::Logger PropertyContainer::_log{"mesh::PropertyContainer"};
+logging::Logger                         PropertyContainer::_log{"mesh::PropertyContainer"};
 
 const PropertyContainer &PropertyContainer::getParent(size_t index) const
 {
@@ -52,5 +50,5 @@ void PropertyContainer::resetPropertyIDCounter()
     _manageUniqueIDs->resetIDs();
   }
 }
-}
-}
+} // namespace mesh
+} // namespace precice

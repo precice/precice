@@ -8,12 +8,10 @@
 
 using precice::utils::Event;
 
-namespace precice
-{
+namespace precice {
 extern bool syncMode;
 
-namespace m2n
-{
+namespace m2n {
 
 M2N::M2N(com::PtrCommunication masterCom, DistributedComFactory::SharedPointer distrFactory)
     : _masterCom(masterCom),
@@ -144,9 +142,9 @@ void M2N::createDistributedCommunication(mesh::PtrMesh mesh)
 
 void M2N::send(
     double const *itemsToSend,
-    int     size,
-    int     meshID,
-    int     valueDimension)
+    int           size,
+    int           meshID,
+    int           valueDimension)
 {
   if (utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster()) {
     PRECICE_ASSERT(_areSlavesConnected);

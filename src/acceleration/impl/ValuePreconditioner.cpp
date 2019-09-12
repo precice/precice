@@ -1,12 +1,9 @@
 #include "acceleration/impl/ValuePreconditioner.hpp"
 #include "utils/MasterSlave.hpp"
 
-namespace precice
-{
-namespace acceleration
-{
-namespace impl
-{
+namespace precice {
+namespace acceleration {
+namespace impl {
 
 ValuePreconditioner::ValuePreconditioner(
     int maxNonConstTimesteps)
@@ -15,7 +12,7 @@ ValuePreconditioner::ValuePreconditioner(
 {
 }
 
-void ValuePreconditioner::_update_(bool timestepComplete,
+void ValuePreconditioner::_update_(bool                   timestepComplete,
                                    const Eigen::VectorXd &oldValues,
                                    const Eigen::VectorXd &res)
 {
@@ -48,4 +45,6 @@ void ValuePreconditioner::_update_(bool timestepComplete,
   }
 }
 
-}}} // namespace precice, acceleration, impl
+} // namespace impl
+} // namespace acceleration
+} // namespace precice

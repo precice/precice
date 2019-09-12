@@ -3,10 +3,8 @@
 #include "assertion.hpp"
 #include "com/MPIDirectCommunication.hpp"
 
-namespace precice
-{
-namespace utils
-{
+namespace precice {
+namespace utils {
 
 logging::Logger Parallel::_log("utils::Parallel");
 
@@ -14,8 +12,8 @@ Parallel::Communicator Parallel::_globalCommunicator = Parallel::getCommunicator
 
 Parallel::Communicator Parallel::_localCommunicator = MPI_COMM_NULL;
 
-bool Parallel::_isInitialized = false;
-bool Parallel::_isSplit = false;
+bool Parallel::_isInitialized           = false;
+bool Parallel::_isSplit                 = false;
 bool Parallel::_mpiInitializedByPrecice = false;
 
 std::vector<Parallel::AccessorGroup> Parallel::_accessorGroups;
@@ -30,7 +28,7 @@ Parallel::Communicator Parallel::getCommunicatorWorld()
 }
 
 void Parallel::initializeMPI(
-    int *argc,
+    int *   argc,
     char ***argv)
 {
 #ifndef PRECICE_NO_MPI
@@ -56,8 +54,8 @@ void Parallel::splitCommunicator(const std::string &groupName)
     PRECICE_DEBUG("Exchange group information");
     //_accessorGroups.clear(); // Makes reinitialization possible
     std::map<std::string, int> groupMap; // map from names to group ID
-    MPI_Comm globalComm = getGlobalCommunicator();
-    int rank = -1;
+    MPI_Comm                   globalComm = getGlobalCommunicator();
+    int                        rank       = -1;
     MPI_Comm_rank(globalComm, &rank);
     int size = -1;
     MPI_Comm_size(globalComm, &size);
@@ -69,10 +67,10 @@ void Parallel::splitCommunicator(const std::string &groupName)
       if (rank == 0) {
         groupMap[groupName] = 0;
         AccessorGroup newGroup;
-        newGroup.id = 0;
-        newGroup.size = 1;
+        newGroup.id         = 0;
+        newGroup.size       = 1;
         newGroup.leaderRank = 0;
-        newGroup.name = groupName;
+        newGroup.name       = groupName;
         _accessorGroups.push_back(newGroup);
         for (int i = 1; i < size; i++) {
           std::string name;
@@ -80,10 +78,10 @@ void Parallel::splitCommunicator(const std::string &groupName)
           if (groupMap.find(name) == groupMap.end()) {
             groupMap[name] = _accessorGroups.size();
             AccessorGroup newGroup;
-            newGroup.id = _accessorGroups.size();
-            newGroup.size = 1;
+            newGroup.id         = _accessorGroups.size();
+            newGroup.size       = 1;
             newGroup.leaderRank = i;
-            newGroup.name = name;
+            newGroup.name       = name;
             _accessorGroups.push_back(newGroup);
           } else {
             _accessorGroups[groupMap[name]].size++;
@@ -135,8 +133,8 @@ void Parallel::splitCommunicator(const std::string &groupName)
       PRECICE_DEBUG("Detected " << _accessorGroups.size() << " groups");
       for (const AccessorGroup &group : _accessorGroups) {
         PRECICE_DEBUG("Group " << group.id << ": name = " << group.name
-                       << ", leaderRank = " << group.leaderRank
-                       << ", size = " << group.size);
+                               << ", leaderRank = " << group.leaderRank
+                               << ", size = " << group.size);
       }
 #endif // NDEBUG
     }
@@ -226,7 +224,7 @@ void Parallel::setGlobalCommunicator(
     MPI_Comm_free(&_globalCommunicator);
   }
   _globalCommunicator = defaultCommunicator;
-  _localCommunicator = _globalCommunicator;
+  _localCommunicator  = _globalCommunicator;
   _accessorGroups.clear();
 #endif // not PRECICE_NO_MPI
 }
@@ -304,7 +302,7 @@ const std::vector<Parallel::AccessorGroup> &Parallel::getAccessorGroups()
   PRECICE_ASSERT(_isInitialized);
   return _accessorGroups;
 }
-}
-} // precice, utils
+} // namespace utils
+} // namespace precice
 
 //#endif // not PRECICE_NO_MPI

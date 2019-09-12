@@ -1,15 +1,12 @@
 #pragma once
 
-#include "Request.hpp"
 #include <condition_variable>
 #include <mutex>
+#include "Request.hpp"
 
-namespace precice
-{
-namespace com
-{
-class SocketRequest : public Request
-{
+namespace precice {
+namespace com {
+class SocketRequest : public Request {
 public:
   SocketRequest();
 

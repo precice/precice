@@ -6,13 +6,10 @@
 #include "acceleration/Acceleration.hpp"
 #include "logging/Logger.hpp"
 
-namespace precice
-{
-namespace acceleration
-{
+namespace precice {
+namespace acceleration {
 
-class HierarchicalAitkenAcceleration : public Acceleration
-{
+class HierarchicalAitkenAcceleration : public Acceleration {
 public:
   HierarchicalAitkenAcceleration(
       double           initialRelaxation,
@@ -56,5 +53,5 @@ private:
       double nominator,
       double denominator);
 };
-}
-} // namespace precice, acceleration
+} // namespace acceleration
+} // namespace precice

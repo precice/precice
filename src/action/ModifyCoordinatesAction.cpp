@@ -3,10 +3,8 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
 
-namespace precice
-{
-namespace action
-{
+namespace precice {
+namespace action {
 
 ModifyCoordinatesAction::ModifyCoordinatesAction(
     Timing               timing,

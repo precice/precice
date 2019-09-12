@@ -11,7 +11,6 @@ using namespace precice::mesh;
 
 BOOST_AUTO_TEST_SUITE(MeshTests)
 
-
 BOOST_AUTO_TEST_CASE(Quads)
 {
   using Eigen::Vector3d;
@@ -150,9 +149,9 @@ BOOST_AUTO_TEST_CASE(Quads)
     }
     {
       // Test begin(), end() for const
-      const Quad &cquad = quad;
-      auto            ibegin    = cquad.begin();
-      const auto      iend      = cquad.end();
+      const Quad &cquad  = quad;
+      auto        ibegin = cquad.begin();
+      const auto  iend   = cquad.end();
       BOOST_TEST(std::distance(ibegin, iend) == 4);
       BOOST_TEST(*ibegin == v0.getCoords());
       ++ibegin;
@@ -219,24 +218,24 @@ BOOST_AUTO_TEST_CASE(QuadEquality)
   //*    *
   Quad quad2(e4, e5, e6, e7, 0);
   Quad quad2n(e4, e5, e6, e7, 0);
-  quad2n.setNormal(Vector3d(0.,0.,1.));
+  quad2n.setNormal(Vector3d(0., 0., 1.));
   BOOST_TEST(quad2 != quad1);
   BOOST_TEST(quad2 != quad2n);
 }
 BOOST_AUTO_TEST_CASE(QuadWKTPrint)
 {
-    Vertex v1(Eigen::Vector3d(0.,0.,0.), 0);
-    Vertex v2(Eigen::Vector3d(0.,1.,0.), 0);
-    Vertex v3(Eigen::Vector3d(1.,1.,0.), 0);
-    Vertex v4(Eigen::Vector3d(1.,0.,0.), 0);
-    Edge e1(v1, v2, 0);
-    Edge e2(v2, v3, 0);
-    Edge e3(v3, v4, 0);
-    Edge e4(v4, v1, 0);
-    Quad q1(e1, e2, e3, e4, 0);
-    std::stringstream stream;
-    stream << q1;
-    std::string q1string("POLYGON ((0 0 0, 0 1 0, 1 1 0, 1 0 0, 0 0 0))");
-    BOOST_TEST(q1string == stream.str());
+  Vertex            v1(Eigen::Vector3d(0., 0., 0.), 0);
+  Vertex            v2(Eigen::Vector3d(0., 1., 0.), 0);
+  Vertex            v3(Eigen::Vector3d(1., 1., 0.), 0);
+  Vertex            v4(Eigen::Vector3d(1., 0., 0.), 0);
+  Edge              e1(v1, v2, 0);
+  Edge              e2(v2, v3, 0);
+  Edge              e3(v3, v4, 0);
+  Edge              e4(v4, v1, 0);
+  Quad              q1(e1, e2, e3, e4, 0);
+  std::stringstream stream;
+  stream << q1;
+  std::string q1string("POLYGON ((0 0 0, 0 1 0, 1 1 0, 1 0 0, 0 0 0))");
+  BOOST_TEST(q1string == stream.str());
 }
 BOOST_AUTO_TEST_SUITE_END() // Mesh

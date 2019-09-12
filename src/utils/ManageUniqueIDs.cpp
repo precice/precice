@@ -1,9 +1,7 @@
 #include "utils/ManageUniqueIDs.hpp"
 
-namespace precice
-{
-namespace utils
-{
+namespace precice {
+namespace utils {
 
 int ManageUniqueIDs::getFreeID()
 {

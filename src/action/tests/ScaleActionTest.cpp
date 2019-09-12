@@ -151,7 +151,7 @@ BOOST_AUTO_TEST_CASE(Configuration)
 {
   {
     std::string                filename = testing::getPathToSources() + "/action/tests/ScaleActionTest-testConfiguration-1.xml";
-    xml::XMLTag              tag      = xml::getRootTag();
+    xml::XMLTag                tag      = xml::getRootTag();
     mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(tag));
     dataConfig->setDimensions(3);
     mesh::PtrMeshConfiguration meshConfig(new mesh::MeshConfiguration(tag, dataConfig));
@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE(Configuration)
   }
   {
     std::string                filename = testing::getPathToSources() + "/action/tests/ScaleActionTest-testConfiguration-2.xml";
-    xml::XMLTag              tag      = xml::getRootTag();
+    xml::XMLTag                tag      = xml::getRootTag();
     mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(tag));
     dataConfig->setDimensions(3);
     mesh::PtrMeshConfiguration meshConfig(new mesh::MeshConfiguration(tag, dataConfig));
@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE(Configuration)
   }
   {
     std::string                filename = testing::getPathToSources() + "/action/tests/ScaleActionTest-testConfiguration-3.xml";
-    xml::XMLTag              tag      = xml::getRootTag();
+    xml::XMLTag                tag      = xml::getRootTag();
     mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(tag));
     dataConfig->setDimensions(3);
     mesh::PtrMeshConfiguration meshConfig(new mesh::MeshConfiguration(tag, dataConfig));
@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(Configuration)
   }
   {
     std::string                filename = testing::getPathToSources() + "/action/tests/ScaleActionTest-testConfiguration-4.xml";
-    xml::XMLTag              tag      = xml::getRootTag();
+    xml::XMLTag                tag      = xml::getRootTag();
     mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(tag));
     dataConfig->setDimensions(3);
     mesh::PtrMeshConfiguration meshConfig(new mesh::MeshConfiguration(tag, dataConfig));

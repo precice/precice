@@ -8,10 +8,8 @@
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
 
-namespace precice
-{
-namespace com
-{
+namespace precice {
+namespace com {
 CommunicateMesh::CommunicateMesh(
     com::PtrCommunication communication)
     : _communication(communication)
@@ -29,7 +27,7 @@ void CommunicateMesh::sendMesh(
   _communication->send(numberOfVertices, rankReceiver);
   if (not mesh.vertices().empty()) {
     std::vector<double> coords(static_cast<size_t>(numberOfVertices) * dim);
-    std::vector<int> globalIDs(numberOfVertices);
+    std::vector<int>    globalIDs(numberOfVertices);
     for (int i = 0; i < numberOfVertices; i++) {
       for (int d = 0; d < dim; d++) {
         coords[i * dim + d] = mesh.vertices()[i].getCoords()[d];
@@ -97,7 +95,7 @@ void CommunicateMesh::receiveMesh(
 
   if (numberOfVertices > 0) {
     std::vector<double> vertexCoords;
-    std::vector<int> globalIDs;
+    std::vector<int>    globalIDs;
     _communication->receive(vertexCoords, rankSender);
     _communication->receive(globalIDs, rankSender);
     for (int i = 0; i < numberOfVertices; i++) {
@@ -173,7 +171,7 @@ void CommunicateMesh::broadcastSendMesh(const mesh::Mesh &mesh)
   _communication->broadcast(numberOfVertices);
   if (numberOfVertices > 0) {
     std::vector<double> coords(static_cast<size_t>(numberOfVertices) * dim);
-    std::vector<int> globalIDs(numberOfVertices);
+    std::vector<int>    globalIDs(numberOfVertices);
     for (int i = 0; i < numberOfVertices; i++) {
       for (int d = 0; d < dim; d++) {
         coords[i * dim + d] = mesh.vertices()[i].getCoords()[d];
@@ -240,7 +238,7 @@ void CommunicateMesh::broadcastReceiveMesh(
 
   if (numberOfVertices > 0) {
     std::vector<double> vertexCoords;
-    std::vector<int> globalIDs;
+    std::vector<int>    globalIDs;
     _communication->broadcast(vertexCoords, rankBroadcaster);
     _communication->broadcast(globalIDs, rankBroadcaster);
     for (int i = 0; i < numberOfVertices; i++) {

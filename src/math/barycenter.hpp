@@ -4,13 +4,10 @@
 #include <Eigen/Dense>
 #include "math/geometry.hpp"
 
-namespace precice
-{
-namespace math
-{
+namespace precice {
+namespace math {
 /// Provides operations to calculate barycentric coordinates and projection from a point to a primitive.
-namespace barycenter
-{
+namespace barycenter {
 
 /// The result of calculating the barycentric coordinates.
 struct BarycentricCoordsAndProjected {

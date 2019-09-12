@@ -30,7 +30,7 @@ BOOST_AUTO_TEST_CASE(Collinear)
 }
 
 BOOST_AUTO_TEST_CASE(TetraVolume,
-                     * boost::unit_test::tolerance(1e-3))
+                     *boost::unit_test::tolerance(1e-3))
 {
   Eigen::Vector3d a(1, 2, 3);
   Eigen::Vector3d b(3, 2, 1);
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(TriangleArea)
 {
   { // 2D
     Eigen::Vector2d a, b, c;
-    double area;
+    double          area;
     a << 0.0, 0.0;
     b << 1.0, 0.0;
     c << 0.0, 1.0;
@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(TriangleArea)
   }
   { // 3D
     Eigen::Vector3d a, b, c;
-    double area;
+    double          area;
     a << 0.0, 0.0, 0.0;
     b << 1.0, 0.0, 1.0;
     c << 1.0, 1.0, 1.0;
@@ -134,12 +134,12 @@ BOOST_AUTO_TEST_CASE(SegmentsIntersect)
 BOOST_AUTO_TEST_CASE(SegmentPlaneIntersection)
 {
   using Eigen::Vector3d;
-  Vector3d planeNormal = Vector3d::Constant(1.0);
-  Vector3d pointOnPlane = Vector3d::Constant(0.0);
-  Vector3d firstSegmentPoint = Vector3d::Constant(1.0);
+  Vector3d planeNormal        = Vector3d::Constant(1.0);
+  Vector3d pointOnPlane       = Vector3d::Constant(0.0);
+  Vector3d firstSegmentPoint  = Vector3d::Constant(1.0);
   Vector3d secondSegmentPoint = Vector3d::Constant(-1.0);
-  Vector3d intersectionPoint = Vector3d::Constant(1.0);
-  Vector3d expected = Vector3d::Constant(0.0);
+  Vector3d intersectionPoint  = Vector3d::Constant(1.0);
+  Vector3d expected           = Vector3d::Constant(0.0);
 
   // True intersection
   int result = geometry::segmentPlaneIntersection(
@@ -150,16 +150,16 @@ BOOST_AUTO_TEST_CASE(SegmentPlaneIntersection)
 
   // Touching second segment vertex
   secondSegmentPoint = Vector3d::Constant(0.0);
-  result = geometry::segmentPlaneIntersection(
+  result             = geometry::segmentPlaneIntersection(
       pointOnPlane, planeNormal, firstSegmentPoint,
       secondSegmentPoint, intersectionPoint);
   BOOST_TEST(result == geometry::TOUCHING);
   BOOST_CHECK(equals(intersectionPoint, expected));
 
   // Touching first segment vertex
-  firstSegmentPoint = Vector3d::Constant(0.0);
+  firstSegmentPoint  = Vector3d::Constant(0.0);
   secondSegmentPoint = Vector3d::Constant(-1.0);
-  result = geometry::segmentPlaneIntersection(
+  result             = geometry::segmentPlaneIntersection(
       pointOnPlane, planeNormal, firstSegmentPoint,
       secondSegmentPoint, intersectionPoint);
   BOOST_TEST(result == geometry::TOUCHING);
@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(SegmentPlaneIntersection)
   firstSegmentPoint << 0.0, 0.0, -3.0;
   intersectionPoint << 1.0, 2.0, 3.0; // should not be modified
   expected = intersectionPoint;
-  result = geometry::segmentPlaneIntersection(
+  result   = geometry::segmentPlaneIntersection(
       pointOnPlane, planeNormal, firstSegmentPoint,
       secondSegmentPoint, intersectionPoint);
   BOOST_TEST(result == geometry::NO_INTERSECTION);
@@ -286,7 +286,7 @@ BOOST_AUTO_TEST_CASE(ContainedInHyperrectangle)
 
   // Not contained 2D
   Eigen::Vector2d testPoint2D(2, 2);
-  int result = geometry::containedInHyperrectangle(
+  int             result = geometry::containedInHyperrectangle(
       sidelengths2D, center2D, testPoint2D);
   BOOST_TEST(result == geometry::NOT_CONTAINED);
 
@@ -468,7 +468,7 @@ BOOST_AUTO_TEST_CASE(ContainedInHyperrectangle)
   BOOST_TEST(result == geometry::TOUCHING);
 
   // 3D
-  Eigen::Vector3d center3D = Eigen::Vector3d::Zero();
+  Eigen::Vector3d center3D      = Eigen::Vector3d::Zero();
   Eigen::Vector3d sidelengths3D = Eigen::Vector3d::Constant(1.0);
 
   // Not contained 3D

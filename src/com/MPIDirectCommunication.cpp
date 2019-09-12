@@ -4,10 +4,8 @@
 #include "utils/Parallel.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice
-{
-namespace com
-{
+namespace precice {
+namespace com {
 MPIDirectCommunication::MPIDirectCommunication()
     : _communicator(utils::Parallel::getGlobalCommunicator()),
       _globalCommunicator(utils::Parallel::getGlobalCommunicator()),
@@ -40,7 +38,7 @@ void MPIDirectCommunication::acceptConnection(std::string const &acceptorName,
   utils::Parallel::splitCommunicator(acceptorName);
 
   PRECICE_CHECK(utils::Parallel::getCommunicatorSize() > 1,
-        "MPI communication direct (i.e. single) can be only used with more than one process in base communicator!");
+                "MPI communication direct (i.e. single) can be only used with more than one process in base communicator!");
 
   _globalCommunicator = utils::Parallel::getGlobalCommunicator();
   _localCommunicator  = utils::Parallel::getLocalCommunicator();
@@ -76,7 +74,7 @@ void MPIDirectCommunication::requestConnection(std::string const &acceptorName,
   utils::Parallel::splitCommunicator(requesterName);
 
   PRECICE_CHECK(utils::Parallel::getCommunicatorSize() > 1,
-        "MPI communication direct (i.e. single) can be only used with more than one process in base communicator!");
+                "MPI communication direct (i.e. single) can be only used with more than one process in base communicator!");
 
   _globalCommunicator = utils::Parallel::getGlobalCommunicator();
   _localCommunicator  = utils::Parallel::getLocalCommunicator();
@@ -93,7 +91,7 @@ void MPIDirectCommunication::requestConnection(std::string const &acceptorName,
 int MPIDirectCommunication::getGroupID(std::string const &accessorName)
 {
   PRECICE_TRACE(accessorName);
-  using Par = utils::Parallel;
+  using Par                                      = utils::Parallel;
   const std::vector<Par::AccessorGroup> &_groups = Par::getAccessorGroups();
   for (const Par::AccessorGroup &group : _groups) {
     if (group.name == accessorName) {
@@ -107,7 +105,7 @@ int MPIDirectCommunication::getGroupID(std::string const &accessorName)
 int MPIDirectCommunication::getLeaderRank(std::string const &accessorName)
 {
   PRECICE_TRACE(accessorName);
-  using Par = utils::Parallel;
+  using Par                                      = utils::Parallel;
   const std::vector<Par::AccessorGroup> &_groups = Par::getAccessorGroups();
   for (const Par::AccessorGroup &group : _groups) {
     if (group.name == accessorName) {
@@ -195,7 +193,7 @@ void MPIDirectCommunication::allreduceSum(int itemToSend, int &itemToReceive, in
 void MPIDirectCommunication::broadcast(const int *itemsToSend, int size)
 {
   PRECICE_TRACE(size);
-  MPI_Bcast(const_cast<int*>(itemsToSend), size, MPI_INT, MPI_ROOT, _communicator);
+  MPI_Bcast(const_cast<int *>(itemsToSend), size, MPI_INT, MPI_ROOT, _communicator);
 }
 
 void MPIDirectCommunication::broadcast(int *itemsToReceive,
@@ -221,7 +219,7 @@ void MPIDirectCommunication::broadcast(int &itemToReceive, int rankBroadcaster)
 void MPIDirectCommunication::broadcast(const double *itemsToSend, int size)
 {
   PRECICE_TRACE(size);
-  MPI_Bcast(const_cast<double*>(itemsToSend), size, MPI_DOUBLE, MPI_ROOT, _communicator);
+  MPI_Bcast(const_cast<double *>(itemsToSend), size, MPI_DOUBLE, MPI_ROOT, _communicator);
 }
 
 void MPIDirectCommunication::broadcast(double *itemsToReceive,

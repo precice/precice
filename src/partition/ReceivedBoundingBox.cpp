@@ -9,10 +9,8 @@
 #include "utils/Helpers.hpp"
 #include "utils/MasterSlave.hpp"
 
-namespace precice
-{
-namespace partition
-{
+namespace precice {
+namespace partition {
 
 ReceivedBoundingBox::ReceivedBoundingBox(
     mesh::PtrMesh mesh, double safetyFactor)
@@ -61,7 +59,7 @@ void ReceivedBoundingBox::computeBoundingBox()
     com::CommunicateBoundingBox(utils::MasterSlave::_communication).broadcastSendBoundingBoxMap(_remoteBBM);
 
     std::map<int, std::vector<int>> connectionMap;
-    std::vector<int> connectedRanksList;
+    std::vector<int>                connectedRanksList;
 
     // connected ranks for master
     for (auto &remoteBB : _remoteBBM) {
@@ -69,12 +67,11 @@ void ReceivedBoundingBox::computeBoundingBox()
         _mesh->getConnectedRanks().push_back(remoteBB.first);
       }
     }
-    if (!_mesh->getConnectedRanks().empty())
-    {
-     connectionMap[0] = _mesh->getConnectedRanks();
-     connectedRanksList.push_back(0);
+    if (!_mesh->getConnectedRanks().empty()) {
+      connectionMap[0] = _mesh->getConnectedRanks();
+      connectedRanksList.push_back(0);
     }
-      
+
     // receive connected ranks from slaves and add them to the connection map
     std::vector<int> slaveConnectedRanks;
     for (int rank = 1; rank < utils::MasterSlave::getSize(); rank++) {
@@ -82,7 +79,7 @@ void ReceivedBoundingBox::computeBoundingBox()
       utils::MasterSlave::_communication->receive(connectedRanksSize, rank);
       if (connectedRanksSize != 0) {
         connectedRanksList.push_back(rank);
-        connectionMap[rank].push_back(-1);        
+        connectionMap[rank].push_back(-1);
         utils::MasterSlave::_communication->receive(slaveConnectedRanks, rank);
         connectionMap[rank] = slaveConnectedRanks;
         slaveConnectedRanks.clear();
@@ -91,10 +88,9 @@ void ReceivedBoundingBox::computeBoundingBox()
 
     // send connectionMap to other master
     _m2ns[0]->getMasterCommunication()->send(connectedRanksList, 0);
-    if (!connectionMap.empty()) { 
+    if (!connectionMap.empty()) {
       com::CommunicateBoundingBox(_m2ns[0]->getMasterCommunication()).sendConnectionMap(connectionMap, 0);
-    } else
-    {
+    } else {
       PRECICE_ERROR("This participant has no rank in the interface! Please check your test case and make sure that the mesh partition given to preCICE is loacted in the interface");
     }
 
@@ -123,7 +119,7 @@ void ReceivedBoundingBox::computeBoundingBox()
   }
 }
 
-bool ReceivedBoundingBox::overlapping(mesh::Mesh::BoundingBox const & currentBB, mesh::Mesh::BoundingBox const & receivedBB)
+bool ReceivedBoundingBox::overlapping(mesh::Mesh::BoundingBox const &currentBB, mesh::Mesh::BoundingBox const &receivedBB)
 {
   /*
    * Here two bounding boxes are compared to check whether they overlap or not!

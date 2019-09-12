@@ -1,22 +1,18 @@
 #pragma once
 
-#include "utils/assertion.hpp"
 #include <boost/any.hpp>
 #include <map>
 #include <vector>
+#include "utils/assertion.hpp"
 
-namespace precice
-{
-namespace utils
-{
+namespace precice {
+namespace utils {
 class ManageUniqueIDs;
 }
-}
+} // namespace precice
 
-namespace precice
-{
-namespace mesh
-{
+namespace precice {
+namespace mesh {
 
 /**
  * @brief Implements hierarchical dynamical properties of arbitrary type.
@@ -29,10 +25,9 @@ namespace mesh
  * parent pointers to higher level PropertyContainers. There can be multiple
  * parents.
  */
-class PropertyContainer
-{
+class PropertyContainer {
 public:
-  PropertyContainer& operator=(PropertyContainer &&) = delete;
+  PropertyContainer &operator=(PropertyContainer &&) = delete;
 
   virtual ~PropertyContainer(){};
 
@@ -108,7 +103,7 @@ public:
    */
   template <typename value_t>
   const value_t &getProperty(int propertyID) const;
-  
+
   /**
    * @brief Recursively looks up a property ID.
    *
@@ -173,5 +168,5 @@ void PropertyContainer::getProperties(int propertyID, std::vector<value_t> &prop
     }
   }
 }
-}
-} // namespace precice, mesh
+} // namespace mesh
+} // namespace precice

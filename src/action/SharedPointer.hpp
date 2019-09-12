@@ -2,10 +2,8 @@
 
 #include <memory>
 
-namespace precice
-{
-namespace action
-{
+namespace precice {
+namespace action {
 
 class Action;
 class ActionConfiguration;

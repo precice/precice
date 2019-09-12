@@ -253,7 +253,7 @@ void P2PComTest2(com::PtrCommunicationFactory cf)
 }
 
 BOOST_AUTO_TEST_CASE(SocketCommunication,
-                     * testing::OnSize(4))
+                     *testing::OnSize(4))
 {
   com::PtrCommunicationFactory cf(new com::SocketCommunicationFactory);
   if (utils::Parallel::getProcessRank() < 4) {
@@ -263,8 +263,7 @@ BOOST_AUTO_TEST_CASE(SocketCommunication,
 }
 
 BOOST_AUTO_TEST_CASE(MPIPortsCommunication,
-                     * testing::OnSize(4)
-                     * boost::unit_test::label("MPI_Ports"))
+                     *testing::OnSize(4) * boost::unit_test::label("MPI_Ports"))
 {
   com::PtrCommunicationFactory cf(new com::MPIPortsCommunicationFactory);
   if (utils::Parallel::getProcessRank() < 4) {
