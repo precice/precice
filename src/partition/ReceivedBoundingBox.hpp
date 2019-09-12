@@ -36,9 +36,7 @@ public:
 
   /// filter the received mesh partitions, fill in communication map and feed back to remote
   /// connected ranks
-  virtual void compute ();   
-
-  std::map<int, std::vector<int>> _maxVertexGlobalIndexDomain;
+  virtual void compute ();     
 
 private:
 
@@ -75,7 +73,13 @@ private:
   double _safetyFactor;
 
   /// bounding box map of other participant
-  mesh::Mesh::BoundingBoxMap _remoteBBM;  
+  mesh::Mesh::BoundingBoxMap _remoteBBM;
+
+  /// Max global veretex IDs owned by remote connected ranks 
+  std::vector<int> _remoteVertexMaxGlobalIDs;
+
+  /// Min global veretex IDs owned by remote connected ranks 
+  std::vector<int> _remoteVertexMinGlobalIDs;
 
 };
 

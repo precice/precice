@@ -95,20 +95,20 @@ public:
       int     valueDimension) override;
 
    /**
-   * @brief Broadcasts a double to connected ranks       
+   * @brief Broadcasts an int to connected ranks       
    *        This method has not beein implemented yet.    
    *
    * @todo: Ideally this should not be here
    */
-  virtual void broadcastSend(const double &itemToSend);
+  virtual void broadcastSend(const int &itemToSend);
 
   /**
-   * @brief Receives a double from a connected rank
+   * @brief Receives an int from each connected rank
    *        This method has not beein implemented yet.    
    *
    * @todo: Ideally this should not be here
    */
-  virtual void broadcastReceive(double &itemToReceive);
+  virtual void broadcastReceive(std::vector<int> &itemToReceive);
 
   /**
    * @brief All ranks send their mesh partition to remote local  connected ranks.

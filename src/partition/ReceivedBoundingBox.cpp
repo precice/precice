@@ -140,16 +140,18 @@ void ReceivedBoundingBox::communicate()
   
   if (utils::MasterSlave::isMaster())
   {
+    // Master receives remote mesh's global vertex number
     int globalNumberOfVertices = -1;
      _m2ns[0]->getMasterCommunication()->receive(globalNumberOfVertices, 0);
      _mesh->setGlobalNumberOfVertices(globalNumberOfVertices);
   }
 
   // each rank receives max/min global vertex indexes from connected remote ranks
-   _m2ns[0]->broadcastReceiveLCM(_maxVertexGlobalIndexDomain, *_mesh);
+  _m2ns[0]->broadcastReceive(_remoteVertexMinGlobalIDs, *_mesh);
+  _m2ns[0]->broadcastReceive(_remoteVertexMaxGlobalIDs, *_mesh);
 
   // each rank receives mesh partition from connected ranks
-   _m2ns[0]->broadcastReceiveLocalMesh(*_mesh);
+  _m2ns[0]->broadcastReceiveLocalMesh(*_mesh);
 
 }
 
@@ -219,7 +221,7 @@ void ReceivedBoundingBox::compute()
   _mesh->computeState();
 
   // (6) Compute and feedback local communication map
-  PRECICE_INFO("Feedback Communicatin Map "); 
+  PRECICE_INFO("Feedback Communication Map "); 
   std::map<int, std::vector<int>> localCommunicationMap;
 
   /*
@@ -236,23 +238,32 @@ void ReceivedBoundingBox::compute()
 
   std::vector<int> vertexIDs;  
 
+  int rank = 0;
   int index= 0;
   for (auto &remoteVertex : _mesh->vertices()) {
       vertexIDs.push_back(remoteVertex.getGlobalIndex());
-    for (auto &remoteRank : _maxVertexGlobalIndexDomain) {
-      if (remoteVertex.getGlobalIndex() <= remoteRank.second[1] && remoteVertex.getGlobalIndex() >= remoteRank.second[0]) {
-        localCommunicationMap[remoteRank.first].push_back(remoteVertex.getGlobalIndex() - remoteRank.second[0]);
-        _mesh->getCommunicationMap()[remoteRank.first].push_back(index);
+      rank = 0;
+    for (int remoteRank : _mesh->getConnectedRanks()) {
+      if (remoteVertex.getGlobalIndex() <= _remoteVertexMaxGlobalIDs[rank] && remoteVertex.getGlobalIndex() >= _remoteVertexMinGlobalIDs[rank]) {
+        localCommunicationMap[remoteRank].push_back(remoteVertex.getGlobalIndex() - _remoteVertexMinGlobalIDs[rank]);
+        _mesh->getCommunicationMap()[remoteRank].push_back(index);
       }
+      rank++;
     }
     index++;
   }
   
 
+  // communicate communication map to all remote conneceted ranks
   _m2ns[0]->broadcastSendLCM(localCommunicationMap, *_mesh);
 
+
+  /* 
+   * master broadcasts remote mesh's golbal vertex number to slaves.
+   * This data is needed later for implicit coupling schemes.
+   */
   
-  if (not utils::MasterSlave::isSlave())
+  if (utils::MasterSlave::isMaster())
   {
     _mesh->getVertexDistribution()[0] = vertexIDs;
 
