@@ -63,7 +63,7 @@ public:
 
   /// Deleted copy assignment
   SolverInterfaceImpl& operator=(SolverInterfaceImpl const &) = delete;
-  
+
   /// Deleted move constructor
   SolverInterfaceImpl(SolverInterfaceImpl &&) = delete;
 
@@ -490,6 +490,17 @@ public:
    */
 //  void scaleReadData ()
 
+  std::vector<std::string> getMeshNames () const;
+
+  std::vector<std::string> getReadDataNames (
+    const std::string meshName) const;
+
+  std::vector<std::string> getWriteDataNames (
+    const std::string meshName) const;
+
+  std::vector<std::string> getPatchNames (
+    const std::string meshName) const;
+
   /// Returns a handle to a created mesh.
   MeshHandle getMeshHandle ( const std::string& meshName );
 
@@ -621,7 +632,7 @@ private:
 
   int markedSkip() const { return 0; }
   int markedQueryDirectly() const { return 1; }
-  
+
   /// Initializes communication between data server and client.
   void initializeClientServerCommunication();
 

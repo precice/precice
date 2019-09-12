@@ -24,7 +24,7 @@ struct MeshContext
     * @param[in] requirement The requirement to upgrade to.
     */
    void require(mapping::Mapping::MeshRequirement requirement);
-  
+
    /// Mesh holding the geometry data structure.
    mesh::PtrMesh mesh;
 
@@ -43,6 +43,9 @@ struct MeshContext
    /// True, if accessor does create the mesh.
    bool provideMesh = false;
 
+   /// Name of the patch as called in the adapter
+   std::string patchName;
+
    /// type of geometric filter
    partition::ReceivedPartition::GeometricFilter geoFilter = partition::ReceivedPartition::GeometricFilter::UNDEFINED;
 
@@ -57,7 +60,7 @@ struct MeshContext
 
    /// Mapping used when mapping data to the mesh. Can be empty.
    MappingContext toMappingContext;
-   
+
 };
 
 inline void MeshContext::require(mapping::Mapping::MeshRequirement requirement) {

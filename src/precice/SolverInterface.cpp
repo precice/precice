@@ -335,6 +335,29 @@ void SolverInterface:: readScalarData
   return _impl->readScalarData ( dataID, valueIndex, value );
 }
 
+std::vector<std::string> SolverInterface:: getMeshNames () const
+{
+  return _impl->getMeshNames();
+}
+
+std::vector<std::string> SolverInterface:: getReadDataNames (
+  const std::string meshName) const
+{
+  return _impl->getReadDataNames(meshName);
+}
+
+std::vector<std::string> SolverInterface:: getWriteDataNames (
+  const std::string meshName) const
+{
+  return _impl->getWriteDataNames(meshName);
+}
+
+std::vector<std::string> SolverInterface:: getPatchNames (
+  const std::string meshName) const
+{
+  return _impl->getPatchNames(meshName);
+}
+
 MeshHandle SolverInterface:: getMeshHandle
 (
   const std::string & meshName )

@@ -186,10 +186,10 @@ void SolverInterfaceImpl:: configure
   for (const auto& meshID : _meshIDs) {
       _meshLock.add(meshID.second, false);
   }
-  
+
   logging::setMPIRank(utils::Parallel::getProcessRank());
   utils::EventRegistry::instance().initialize("precice-" + _accessorName, "", utils::Parallel::getGlobalCommunicator());
-  
+
   // Setup communication to server
   if (_clientMode){
     initializeClientServerCommunication();
@@ -209,7 +209,7 @@ double SolverInterfaceImpl:: initialize()
   solverInitEvent.pause(precice::syncMode);
   Event e("initialize", precice::syncMode);
   utils::ScopedEventPrefix sep("initialize/");
-  
+
   if (_clientMode){
     PRECICE_DEBUG("Request perform initializations");
     _requestManager->requestInitialize();
@@ -1232,6 +1232,45 @@ void SolverInterfaceImpl:: readScalarData
   PRECICE_DEBUG("Read value = " << value);
 }
 
+std::vector<std::string> SolverInterfaceImpl:: getMeshNames () const
+{
+  std::vector<std::string> meshNames;
+  for (const impl::MeshContext* context : _accessor->usedMeshContexts()) {
+    if( context->provideMesh) meshNames.push_back(context->mesh->getName());
+  }
+  return meshNames;
+}
+
+std::vector<std::string> SolverInterfaceImpl:: getReadDataNames (
+  const std::string meshName) const
+{
+  std::vector<std::string> dataNames;
+  for (impl::DataContext& context : _accessor->readDataContexts()) {
+    dataNames.push_back(context.toData->getName());
+  }
+  return dataNames;
+}
+
+std::vector<std::string> SolverInterfaceImpl:: getWriteDataNames (
+  const std::string meshName) const
+{
+  std::vector<std::string> dataNames;
+  for (impl::DataContext& context : _accessor->writeDataContexts()) {
+    dataNames.push_back(context.fromData->getName());
+  }
+  return dataNames;
+}
+
+std::vector<std::string> SolverInterfaceImpl:: getPatchNames (
+  const std::string meshName) const
+{
+  std::vector<std::string> patchNames;
+  for (const impl::MeshContext* context : _accessor->usedMeshContexts()) {
+    if( context->provideMesh) patchNames.push_back(context->patchName);
+  }
+  return patchNames;
+}
+
 void SolverInterfaceImpl:: exportMesh
 (
   const std::string& filenameSuffix,
@@ -1356,7 +1395,7 @@ void SolverInterfaceImpl:: configurePartitions
       std::string receiver ( _accessorName );
       std::string provider ( context->receiveMeshFrom );
       PRECICE_DEBUG( "Receiving mesh from " << provider );
-      
+
       context->partition = partition::PtrPartition(new partition::ReceivedPartition(context->mesh, context->geoFilter, context->safetyFactor));
 
       m2n::PtrM2N m2n = m2nConfig->getM2N ( receiver, provider );
