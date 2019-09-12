@@ -44,20 +44,15 @@ void ProvidedBoundingBox::communicateBoundingBox()
     // to store the collection of bounding boxes
     mesh::Mesh::BoundingBoxMap bbm;
 
-    // initialize bbm with dummy data
-    mesh::Mesh::BoundingBox initialBB;
-    for (int i = 0; i < _dimensions; i++) {
-      initialBB.push_back(std::make_pair(-1, -1));
-    }
-    for (int rank = 0; rank < utils::MasterSlave::getSize(); rank++) {
-      bbm[rank] = initialBB;
-    }
-
     // master stores its bb into bbm
     bbm[0] = _mesh->getBoundingBox();
 
     // master receives bbs from slaves and stores them in bbm
     for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
+
+      // initialize bbm
+      bbm[rankSlave] = mesh::Mesh::BoundingBox(_dimensions);
+
       com::CommunicateBoundingBox(utils::MasterSlave::_communication).receiveBoundingBox(bbm[rankSlave], rankSlave);
     }
 
@@ -80,7 +75,7 @@ void ProvidedBoundingBox::computeBoundingBox()
 
   std::map<int, std::vector<int>> remoteConnectionMap;
 
-  if (not utils::MasterSlave::isSlave()) { //Master
+  if (utils::MasterSlave::isMaster()) { //Master
     PRECICE_ASSERT(utils::MasterSlave::getSize() > 1);
 
     // master receives feedback map (map of other participant ranks -> connected ranks at this participant)
@@ -113,7 +108,7 @@ void ProvidedBoundingBox::computeBoundingBox()
 
     utils::MasterSlave::_communication->broadcast(connectedRanksList, 0);
 
-    if (connectedRanksList.size() != 0)
+    if (!connectedRanksList.empty())
     {
       for (auto &rank : connectedRanksList) {
         remoteConnectionMap[rank] = {-1};

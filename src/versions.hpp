@@ -6,8 +6,3 @@
   #define PETSC_MAJOR 0
   #define PETSC_MINOR 0
 #endif
-
-namespace precice {
-    extern const char * preciceRevision;
-    extern const char * versionInformation;
-}
