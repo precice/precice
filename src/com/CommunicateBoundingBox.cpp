@@ -63,7 +63,7 @@ void CommunicateBoundingBox::receiveBoundingBoxMap(
 }
 
 void CommunicateBoundingBox::sendConnectionMap(
-    std::map<int, std::vector<int>> &fbm,
+    std::map<int, std::vector<int>> const & fbm,
     int                              rankReceiver)
 {
   PRECICE_TRACE(rankReceiver);
