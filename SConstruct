@@ -106,7 +106,7 @@ env.Append(LIBPATH = [('#' + buildpath)])
 env.Append(CCFLAGS= ['-Wall', '-Wextra', '-Wno-unused-parameter', '-std=c++11'])
 
 # ====== PRECICE_VERSION number ======
-PRECICE_VERSION = "1.5.2"
+PRECICE_VERSION = "1.6.0"
 
 
 # ====== Compiler Settings ======
@@ -373,6 +373,7 @@ symlink = env.Command(
 )
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 # Substitute strings in version.hpp.in, save it as version.hpp
 versions_hpp = env.Substfile(
     "src/precice/impl/versions.hpp.in",
@@ -397,6 +398,9 @@ versions_cpp = env.Substfile(
 =======
 >>>>>>> efdf4ea9739573b7593cb615b004b5f07fde3631
 Default(versions_cpp, versions_hpp, solib, tests, symlink)
+=======
+Default(versions_cpp, versions_hpp, solib, tests, bin, symlink)
+>>>>>>> c3acdbf1ef3b5fb64b9121ac239f7f07d9578e3d
 
 AlwaysBuild(versions_cpp, versions_hpp, symlink)
 
