@@ -1,5 +1,11 @@
 # This is file src/Sconscript
 
+sourcesAcceleration = [
+    Glob('acceleration/*.cpp'),
+    Glob('acceleration/impl/*.cpp'),
+    Glob('acceleration/config/*.cpp')
+]
+
 sourcesUtils = [
    Glob('utils/*.cpp'),
    Glob('utils/xml/*.cpp'),
@@ -48,19 +54,15 @@ sourcesCom = [
    Glob('com/tests/*.cpp')
    ]
 
-sourcesVersion = [
-    File('versions.cpp')
-]
-   
 sourcesAll = [ 
+   sourcesAcceleration,
    sourcesUtils,
    sourcesMesh,
    sourcesIO,
    sourcesPartition,
    sourcesQuery,
    sourcesMapping,
-   sourcesCom,
-   sourcesVersion
+   sourcesCom
    ]
    
 Return ('sourcesAll')

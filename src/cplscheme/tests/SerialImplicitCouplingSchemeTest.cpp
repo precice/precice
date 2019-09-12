@@ -1,6 +1,6 @@
 #include "cplscheme/SerialCouplingScheme.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
-#include "cplscheme/config/PostProcessingConfiguration.hpp"
+#include "acceleration/config/AccelerationConfiguration.hpp"
 #include "cplscheme/impl/ConvergenceMeasure.hpp"
 #include "cplscheme/impl/AbsoluteConvergenceMeasure.hpp"
 #include "cplscheme/impl/MinIterationConvergenceMeasure.hpp"
@@ -415,7 +415,7 @@ BOOST_AUTO_TEST_CASE(testParseConfigurationWithRelaxation)
   CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
 
   xml::configure(root, path);
-  BOOST_CHECK(cplSchemeConfig._postProcConfig->getPostProcessing().get()); // no nullptr
+  BOOST_CHECK(cplSchemeConfig._accelerationConfig->getAcceleration().get()); // no nullptr
   meshConfig->setMeshSubIDs();
 }
 

@@ -1,29 +1,31 @@
-#include "cplscheme/ParallelCouplingScheme.hpp"
-#include "cplscheme/config/CouplingSchemeConfiguration.hpp"
-#include "cplscheme/config/PostProcessingConfiguration.hpp"
-#include "cplscheme/impl/ConvergenceMeasure.hpp"
-#include "cplscheme/impl/AbsoluteConvergenceMeasure.hpp"
-#include "cplscheme/impl/MinIterationConvergenceMeasure.hpp"
-#include "cplscheme/impl/IQNILSPostProcessing.hpp"
-#include "cplscheme/impl/MVQNPostProcessing.hpp"
-#include "cplscheme/impl/BaseQNPostProcessing.hpp"
-#include "cplscheme/impl/ConstantPreconditioner.hpp"
-#include "cplscheme/SharedPointer.hpp"
-#include "cplscheme/impl/SharedPointer.hpp"
+#include <Eigen/Core>
+#include <string>
+
+#include "com/MPIDirectCommunication.hpp"
 #include "cplscheme/Constants.hpp"
+#include "cplscheme/ParallelCouplingScheme.hpp"
+#include "cplscheme/SharedPointer.hpp"
+#include "cplscheme/config/CouplingSchemeConfiguration.hpp"
+#include "cplscheme/impl/AbsoluteConvergenceMeasure.hpp"
+#include "cplscheme/impl/ConvergenceMeasure.hpp"
+#include "cplscheme/impl/MinIterationConvergenceMeasure.hpp"
+#include "cplscheme/impl/SharedPointer.hpp"
+#include "m2n/GatherScatterCommunication.hpp"
+#include "m2n/M2N.hpp"
+#include "m2n/config/M2NConfiguration.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Vertex.hpp"
 #include "mesh/config/DataConfiguration.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
-#include "com/MPIDirectCommunication.hpp"
-#include "m2n/GatherScatterCommunication.hpp"
-#include "m2n/config/M2NConfiguration.hpp"
-#include "m2n/M2N.hpp"
-#include "xml/XMLTag.hpp"
-#include <Eigen/Core>
-#include <string>
+#include "acceleration/BaseQNAcceleration.hpp"
+#include "acceleration/impl/ConstantPreconditioner.hpp"
+#include "acceleration/impl/SharedPointer.hpp"
+#include "acceleration/IQNILSAcceleration.hpp"
+#include "acceleration/MVQNAcceleration.hpp"
+#include "acceleration/config/AccelerationConfiguration.hpp"
 #include "utils/EigenHelperFunctions.hpp"
+#include "xml/XMLTag.hpp"
 
 #include "testing/Testing.hpp"
 #include "testing/Fixtures.hpp"
@@ -64,7 +66,7 @@ BOOST_AUTO_TEST_CASE(testParseConfigurationWithRelaxation)
   CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
 
   xml::configure(root, path);
-  BOOST_CHECK(cplSchemeConfig._postProcConfig->getPostProcessing().get());
+  BOOST_CHECK(cplSchemeConfig._accelerationConfig->getAcceleration().get());
   meshConfig->setMeshSubIDs();
 }
 
@@ -76,8 +78,8 @@ BOOST_AUTO_TEST_CASE(testMVQNPP)
   int    timestepsReused = 6;
   int    reusedTimestepsAtRestart = 0;
   int    chunkSize = 0;
-  int filter = cplscheme::impl::PostProcessing::QR1FILTER;
-  int restartType = cplscheme::impl::MVQNPostProcessing::NO_RESTART;
+  int filter = acceleration::Acceleration::QR1FILTER;
+  int restartType = acceleration::MVQNAcceleration::NO_RESTART;
   double singularityLimit = 1e-10;
   double svdTruncationEps = 0.0;
   bool enforceInitialRelaxation = false;
@@ -87,11 +89,11 @@ BOOST_AUTO_TEST_CASE(testMVQNPP)
   dataIDs.push_back(1);
   std::vector<double> factors;
   factors.resize(2,1.0);
-  cplscheme::impl::PtrPreconditioner prec(new cplscheme::impl::ConstantPreconditioner(factors));
+  acceleration::impl::PtrPreconditioner prec(new acceleration::impl::ConstantPreconditioner(factors));
   mesh::PtrMesh dummyMesh ( new mesh::Mesh("DummyMesh", 3, false) );
 
 
-  cplscheme::impl::MVQNPostProcessing pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
+  acceleration::MVQNAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
       timestepsReused, filter, singularityLimit, dataIDs, prec, alwaysBuildJacobian,
       restartType, chunkSize, reusedTimestepsAtRestart, svdTruncationEps);
 
@@ -135,7 +137,7 @@ BOOST_AUTO_TEST_CASE(testMVQNPP)
   dpcd->oldValues.col(0) = dcol1;
   fpcd->oldValues.col(0) = fcol1;
 
-  pp.performPostProcessing(data);
+  pp.performAcceleration(data);
 
   BOOST_TEST(testing::equals((*data.at(0)->values)(0), 1.00000000000000000000));
   BOOST_TEST(testing::equals((*data.at(0)->values)(1), 1.01000000000000000888));
@@ -154,7 +156,7 @@ BOOST_AUTO_TEST_CASE(testMVQNPP)
 
   data.begin()->second->values = &newdvalues;
 
-  pp.performPostProcessing(data);
+  pp.performAcceleration(data);
 
   BOOST_TEST(testing::equals((*data.at(0)->values)(0), -5.63401340929695848558e-01));
   BOOST_TEST(testing::equals((*data.at(0)->values)(1), 6.10309919173602111186e-01));
@@ -173,7 +175,7 @@ BOOST_AUTO_TEST_CASE(testVIQNPP)
   double initialRelaxation = 0.01;
   int    maxIterationsUsed = 50;
   int    timestepsReused = 6;
-  int filter = cplscheme::impl::BaseQNPostProcessing::QR1FILTER;
+  int filter = acceleration::BaseQNAcceleration::QR1FILTER;
   double singularityLimit = 1e-10;
   bool enforceInitialRelaxation = false;
   std::vector<int> dataIDs;
@@ -181,14 +183,14 @@ BOOST_AUTO_TEST_CASE(testVIQNPP)
   dataIDs.push_back(1);
   std::vector<double> factors;
   factors.resize(2,1.0);
-  cplscheme::impl::PtrPreconditioner prec(new cplscheme::impl::ConstantPreconditioner(factors));
+  acceleration::impl::PtrPreconditioner prec(new acceleration::impl::ConstantPreconditioner(factors));
 
   std::map<int, double> scalings;
   scalings.insert(std::make_pair(0,1.0));
   scalings.insert(std::make_pair(1,1.0));
   mesh::PtrMesh dummyMesh ( new mesh::Mesh("DummyMesh", 3, false) );
 
-  cplscheme::impl::IQNILSPostProcessing pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
+  acceleration::IQNILSAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
       timestepsReused, filter, singularityLimit, dataIDs, prec);
 
 
@@ -232,7 +234,7 @@ BOOST_AUTO_TEST_CASE(testVIQNPP)
   dpcd->oldValues.col(0) = dcol1;
   fpcd->oldValues.col(0) = fcol1;
 
-  pp.performPostProcessing(data);
+  pp.performAcceleration(data);
 
   BOOST_TEST(testing::equals((*data.at(0)->values)(0), 1.00));
   BOOST_TEST(testing::equals((*data.at(0)->values)(1), 1.01));
@@ -250,7 +252,7 @@ BOOST_AUTO_TEST_CASE(testVIQNPP)
   utils::append(newdvalues, 10.0);
   data.begin()->second->values = &newdvalues;
 
-  pp.performPostProcessing(data);
+  pp.performAcceleration(data);
 
   BOOST_TEST(testing::equals((*data.at(0)->values)(0), -5.63401340929692295845e-01));
   BOOST_TEST(testing::equals((*data.at(0)->values)(1), 6.10309919173607440257e-01));
