@@ -1,5 +1,5 @@
 #include "MultiCouplingScheme.hpp"
-#include "impl/PostProcessing.hpp"
+#include "acceleration/Acceleration.hpp"
 #include "mesh/Mesh.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/MasterSlave.hpp"
@@ -50,11 +50,11 @@ void MultiCouplingScheme::initialize
   mergeData(); // merge send and receive data for all pp calls
   setupConvergenceMeasures(); // needs _couplingData configured
   setupDataMatrices(_allData); // Reserve memory and initialize data with zero
-  if (getPostProcessing().get() != nullptr) {
-    PRECICE_CHECK(getPostProcessing()->getDataIDs().size()>=3,
+  if (getAcceleration().get() != nullptr) {
+    PRECICE_CHECK(getAcceleration()->getDataIDs().size()>=3,
           "For parallel coupling, the number of coupling data vectors has to be at least 3, not: "
-          << getPostProcessing()->getDataIDs().size());
-    getPostProcessing()->initialize(_allData); // Reserve memory, initialize
+          << getAcceleration()->getDataIDs().size());
+    getAcceleration()->initialize(_allData); // Reserve memory, initialize
   }
 
 
@@ -152,7 +152,7 @@ void MultiCouplingScheme::advance()
 
     receiveData();
 
-    auto designSpecifications = getPostProcessing()->getDesignSpecification(_allData);
+    auto designSpecifications = getAcceleration()->getDesignSpecification(_allData);
     convergence = measureConvergence(designSpecifications);
 
     // Stop, when maximal iteration count (given in config) is reached
@@ -160,14 +160,14 @@ void MultiCouplingScheme::advance()
       convergence = true;
     }
     if (convergence) {
-      if (getPostProcessing().get() != nullptr) {
-        getPostProcessing()->iterationsConverged(_allData);
+      if (getAcceleration().get() != nullptr) {
+        getAcceleration()->iterationsConverged(_allData);
       }
       newConvergenceMeasurements();
       timestepCompleted();
     }
-    else if (getPostProcessing().get() != nullptr) {
-      getPostProcessing()->performPostProcessing(_allData);
+    else if (getAcceleration().get() != nullptr) {
+      getAcceleration()->performAcceleration(_allData);
     }
 
     for (m2n::PtrM2N m2n : _communications) {
@@ -179,7 +179,7 @@ void MultiCouplingScheme::advance()
     if (convergence && (getExtrapolationOrder() > 0)){
       extrapolateData(_allData); // Also stores data
     }
-    else { // Store data for conv. measurement, post-processing, or extrapolation
+    else { // Store data for conv. measurement, acceleration, or extrapolation
       for (DataMap::value_type& pair : _allData) {
         if (pair.second->oldValues.size() > 0){
           pair.second->oldValues.col(0) = *pair.second->values;

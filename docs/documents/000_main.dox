@@ -22,6 +22,7 @@ contained in the other components of preCICE. Every component has its own
 directory and namespace.
 The following components currently exist:
 
+- \ref precice::acceleration "acceleration" provides various acceleration schemes.
 - \ref precice::action "action" contains actions that can be executed to modify the exchanged data, can be written in Python.
 - \ref precice::com "com" defines a data communication abstraction layer and implementations.
 - \ref precice::cplscheme "cplscheme" takes coupling data and communication objects and implements coupling schemes for coupled simulations.

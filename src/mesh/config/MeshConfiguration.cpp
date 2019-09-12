@@ -103,7 +103,7 @@ void MeshConfiguration:: xmlTagCallback
       std::ostringstream stream;
       stream << "Data with name \"" << name << "\" is not available during "
              << "configuration of mesh \"" << _meshes.back()->getName() << "\"";
-      throw stream.str();
+      throw std::runtime_error{stream.str()};
     }
   }
 }
