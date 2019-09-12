@@ -186,14 +186,15 @@ void SolverInterfaceImpl:: configure
   for (const auto& meshID : _meshIDs) {
       _meshLock.add(meshID.second, false);
   }
-  
+
   logging::setMPIRank(utils::Parallel::getProcessRank());
   utils::EventRegistry::instance().initialize("precice-" + _accessorName, "", utils::Parallel::getGlobalCommunicator());
-  
+
   // Setup communication to server
   if (_clientMode){
     initializeClientServerCommunication();
   }
+  PRECICE_DEBUG("Initialize master-slave communication");
   if (utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave()){
     initializeMasterSlaveCommunication();
   }
@@ -209,7 +210,7 @@ double SolverInterfaceImpl:: initialize()
   solverInitEvent.pause(precice::syncMode);
   Event e("initialize", precice::syncMode);
   utils::ScopedEventPrefix sep("initialize/");
-  
+
   if (_clientMode){
     PRECICE_DEBUG("Request perform initializations");
     _requestManager->requestInitialize();
@@ -242,6 +243,7 @@ double SolverInterfaceImpl:: initialize()
     std::set<action::Action::Timing> timings;
     double dt = 0.0;
 
+    PRECICE_DEBUG("Initialize watchpoints");
     for (PtrWatchPoint& watchPoint : _accessor->watchPoints()){
       watchPoint->initialize();
     }
@@ -250,6 +252,7 @@ double SolverInterfaceImpl:: initialize()
     double time = 0.0;
     int timestep = 1;
 
+    PRECICE_DEBUG("Initialize coupling schemes");
     _couplingScheme->initialize(time, timestep);
 
     dt = _couplingScheme->getNextTimestepMaxLength();
@@ -283,6 +286,8 @@ void SolverInterfaceImpl:: initializeData ()
   Event e("initializeData", precice::syncMode);
   utils::ScopedEventPrefix sep("initializeData/");
 
+  PRECICE_DEBUG("Initialize data");
+
   PRECICE_CHECK(_couplingScheme->isInitialized(),
         "initialize() has to be called before initializeData()");
   if (_clientMode){
@@ -299,7 +304,7 @@ void SolverInterfaceImpl:: initializeData ()
     }
     performDataActions(timings, 0.0, 0.0, 0.0, dt);
     resetWrittenData();
-    PRECICE_DEBUG("Plot output...");
+    PRECICE_DEBUG("Plot output");
     for (const io::ExportContext& context : _accessor->exportContexts()){
       if (context.timestepInterval != -1){
         std::ostringstream suffix;
@@ -336,6 +341,7 @@ double SolverInterfaceImpl:: advance
   }
   else {
 #   ifndef NDEBUG
+    PRECICE_DEBUG("Synchronize timestep length");
     if(utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave()){
       syncTimestep(computedTimestepLength);
     }
@@ -370,7 +376,7 @@ double SolverInterfaceImpl:: advance
     }
     performDataActions(timings, time, computedTimestepLength, timestepPart, timestepLength);
 
-    PRECICE_DEBUG("Advancing coupling scheme");
+    PRECICE_DEBUG("Advance coupling scheme");
     _couplingScheme->advance();
 
     timings.clear();
@@ -389,6 +395,7 @@ double SolverInterfaceImpl:: advance
 
     PRECICE_INFO(_couplingScheme->printCouplingState());
 
+    PRECICE_DEBUG("Handle exports");
     handleExports();
 
     // deactivated the reset of written data, as it deletes all data that is not communicated
@@ -413,6 +420,7 @@ void SolverInterfaceImpl:: finalize()
   utils::ScopedEventPrefix sep("finalize/");
 
   PRECICE_CHECK(_couplingScheme->isInitialized(), "initialize() has to be called before finalize()");
+  PRECICE_DEBUG("Finalize coupling scheme");
   _couplingScheme->finalize();
   _couplingScheme.reset();
 
@@ -421,6 +429,7 @@ void SolverInterfaceImpl:: finalize()
     _accessor->getClientServerCommunication()->closeConnection();
   }
   else {
+    PRECICE_DEBUG("Handle exports");
     for (const io::ExportContext& context : _accessor->exportContexts()){
       if ( context.timestepInterval != -1 ){
         std::ostringstream suffix;
@@ -433,6 +442,7 @@ void SolverInterfaceImpl:: finalize()
     }
     // Apply some final ping-pong to synch solver that run e.g. with a uni-directional coupling only
     // afterwards close connections
+    PRECICE_DEBUG("Synchronize participants and close communication channels");
     std::string ping = "ping";
     std::string pong = "pong";
     for (auto &iter : _m2ns) {
@@ -453,6 +463,8 @@ void SolverInterfaceImpl:: finalize()
       iter.second.m2n->closeConnection();
     }
   }
+
+  PRECICE_DEBUG("Close master-slave communication");
   if(utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster()){
     utils::MasterSlave::_communication->closeConnection();
     utils::MasterSlave::_communication = nullptr;
@@ -604,7 +616,7 @@ int SolverInterfaceImpl:: getMeshVertexSize
     PRECICE_ASSERT(context.mesh.get() != nullptr);
     size = context.mesh->vertices().size();
   }
-  PRECICE_DEBUG("return " << size);
+  PRECICE_DEBUG("Return mesh size of " << size);
   return size;
 }
 
@@ -1356,7 +1368,7 @@ void SolverInterfaceImpl:: configurePartitions
       std::string receiver ( _accessorName );
       std::string provider ( context->receiveMeshFrom );
       PRECICE_DEBUG( "Receiving mesh from " << provider );
-      
+
       context->partition = partition::PtrPartition(new partition::ReceivedPartition(context->mesh, context->geoFilter, context->safetyFactor));
 
       m2n::PtrM2N m2n = m2nConfig->getM2N ( receiver, provider );
