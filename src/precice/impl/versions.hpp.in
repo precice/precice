@@ -8,6 +8,6 @@
 #endif
 
 namespace precice {
-    extern const char * preciceRevision;
-    extern const char * versionInformation;
+    extern char const * const preciceRevision;
+    extern char const * const versionInformation;
 }
