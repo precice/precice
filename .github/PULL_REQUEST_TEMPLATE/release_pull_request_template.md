@@ -9,7 +9,7 @@
 * [ ] Update documentation (all) @MakisH 
 * [ ] Fix potential problems in develop (all)
 * [ ] Merge develop to master @MakisH 
-* [ ] Tag release (on GitHub) and merge back to develop @MakisH 
+* [ ] Tag release (on GitHub, make sure to select the release branch as target) and merge back to develop
 
 ## Regression Tests
 
