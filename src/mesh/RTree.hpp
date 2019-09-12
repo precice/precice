@@ -1,18 +1,19 @@
 #pragma once
 
+#include <boost/geometry.hpp>
 #include <map>
 #include <memory>
-#include "mesh/impl/RTreeAdapter.hpp"
 #include "mesh/Mesh.hpp"
-#include <boost/geometry.hpp>
-#include "mesh/Triangle.hpp"
 #include "mesh/Quad.hpp"
+#include "mesh/Triangle.hpp"
+#include "mesh/impl/RTreeAdapter.hpp"
 
 // Forward declaration to friend the boost test struct
 namespace MeshTests {
 namespace RTree {
 struct CacheClearing;
-}}
+}
+} // namespace MeshTests
 
 namespace precice {
 namespace mesh {
@@ -29,7 +30,7 @@ enum class Primitive {
 };
 
 /// A standard print operator for Primitive
-std::ostream& operator<<(std::ostream& out, Primitive val);
+std::ostream &operator<<(std::ostream &out, Primitive val);
 
 /// The type traits to return the enum value of a primitive type.
 template <class T>
@@ -62,13 +63,13 @@ struct PrimitiveIndex {
 };
 
 /// Standard equality test for PrimitiveIndex
-bool operator==(const PrimitiveIndex& lhs, const PrimitiveIndex& rhs);
+bool operator==(const PrimitiveIndex &lhs, const PrimitiveIndex &rhs);
 
 /// Standard non-equality test for PrimitiveIndex
-bool operator!=(const PrimitiveIndex& lhs, const PrimitiveIndex& rhs);
+bool operator!=(const PrimitiveIndex &lhs, const PrimitiveIndex &rhs);
 
 /// A standard print operator for PrimitiveIndex
-std::ostream& operator<<(std::ostream& out, PrimitiveIndex val);
+std::ostream &operator<<(std::ostream &out, PrimitiveIndex val);
 
 /// The axis aligned bounding box based on the Vertex Type
 using AABB = boost::geometry::model::box<Eigen::VectorXd>;
@@ -93,32 +94,31 @@ PrimitiveRTree indexMesh(const Mesh &mesh);
 using RTreeBox = boost::geometry::model::box<Eigen::VectorXd>;
 
 /// Type trait to extract information based on the type of a Primitive
-template<class T>
+template <class T>
 struct PrimitiveTraits;
 
-template<>
+template <>
 struct PrimitiveTraits<pm::Vertex> {
-    using MeshContainer = Mesh::VertexContainer;
+  using MeshContainer = Mesh::VertexContainer;
 };
 
-template<>
+template <>
 struct PrimitiveTraits<pm::Edge> {
-    using MeshContainer = Mesh::EdgeContainer;
+  using MeshContainer = Mesh::EdgeContainer;
 };
 
-template<>
+template <>
 struct PrimitiveTraits<pm::Triangle> {
-    using MeshContainer = Mesh::TriangleContainer;
+  using MeshContainer = Mesh::TriangleContainer;
 };
 
-template<>
+template <>
 struct PrimitiveTraits<pm::Quad> {
-    using MeshContainer = Mesh::VertexContainer;
+  using MeshContainer = Mesh::VertexContainer;
 };
 
 /// The general rtree parameter type used in precice
 using RTreeParameters = boost::geometry::index::rstar<16>;
-
 
 namespace impl {
 template <typename Primitive>
@@ -149,16 +149,16 @@ private:
 public:
   using type = decltype(test<Primitive>(nullptr));
 };
-} // impl
+} // namespace impl
 
 template <class Primitive>
-struct IsDirectIndexable : impl::IsDirectIndexableHelper<Primitive>::type {};
-
+struct IsDirectIndexable : impl::IsDirectIndexableHelper<Primitive>::type {
+};
 
 /// The type traits of a rtree based on a Primitive
 template <class Primitive>
 struct RTreeTraits {
-  using MeshContainer = typename PrimitiveTraits<Primitive>::MeshContainer;
+  using MeshContainer      = typename PrimitiveTraits<Primitive>::MeshContainer;
   using MeshContainerIndex = typename MeshContainer::size_type;
 
   using IndexType = typename std::conditional<
@@ -175,7 +175,6 @@ struct RTreeTraits {
   using Ptr   = std::shared_ptr<RTree>;
 };
 
-
 class rtree {
 public:
   using vertex_traits   = RTreeTraits<Vertex>;
@@ -186,42 +185,43 @@ public:
   /*
    * Creates and fills the tree, if it wasn't requested before, otherwise it returns the cached tree.
    */
-  static vertex_traits::Ptr getVertexRTree(const PtrMesh& mesh);
+  static vertex_traits::Ptr getVertexRTree(const PtrMesh &mesh);
 
-  static edge_traits::Ptr getEdgeRTree(const PtrMesh& mesh);
+  static edge_traits::Ptr getEdgeRTree(const PtrMesh &mesh);
 
-  static triangle_traits::Ptr getTriangleRTree(const PtrMesh& mesh);
-  
+  static triangle_traits::Ptr getTriangleRTree(const PtrMesh &mesh);
+
   /// Returns the pointer to boost::geometry::rtree for the given mesh primitives
   /*
    * Creates and fills the tree, if it wasn't requested before, otherwise it returns the cached tree.
    */
-  static PtrPrimitiveRTree getPrimitiveRTree(const PtrMesh& mesh);
+  static PtrPrimitiveRTree getPrimitiveRTree(const PtrMesh &mesh);
 
   /// Only clear the trees of that specific mesh
-  static void clear(Mesh & mesh);
+  static void clear(Mesh &mesh);
 
   /// Clear the complete cache
   static void clear();
 
   friend struct MeshTests::RTree::CacheClearing;
+
 private:
   struct MeshIndices {
-      vertex_traits::Ptr vertices;
-      edge_traits::Ptr edges;
-      triangle_traits::Ptr triangles;
+    vertex_traits::Ptr   vertices;
+    edge_traits::Ptr     edges;
+    triangle_traits::Ptr triangles;
   };
 
-  static MeshIndices& cacheEntry(int MeshID);
+  static MeshIndices &cacheEntry(int MeshID);
 
-  static std::map<int, MeshIndices> _cached_trees; ///< Cache for all index trees
+  static std::map<int, MeshIndices>       _cached_trees;    ///< Cache for all index trees
   static std::map<int, PtrPrimitiveRTree> _primitive_trees; ///< Cache for the primitive trees
 };
-
 
 using Box3d = boost::geometry::model::box<boost::geometry::model::point<double, 3, boost::geometry::cs::cartesian>>;
 
 /// Returns a boost::geometry box that encloses a sphere of given radius around a middle point
-Box3d getEnclosingBox(Vertex const & middlePoint, double sphereRadius);
+Box3d getEnclosingBox(Vertex const &middlePoint, double sphereRadius);
 
-}}
+} // namespace mesh
+} // namespace precice

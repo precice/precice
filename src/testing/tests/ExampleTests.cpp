@@ -1,7 +1,6 @@
-#include "testing/Testing.hpp"
 #include "testing/Fixtures.hpp" // include that for the more advanced fixtures, e.g. to build up m2n com
+#include "testing/Testing.hpp"
 #include "utils/Parallel.hpp" // only required when using something from utils::Parallel
-
 
 using namespace precice;
 
@@ -34,7 +33,7 @@ BOOST_AUTO_TEST_CASE(SingleProcessor)
 
 /// Test with a modified numerical tolerance
 BOOST_AUTO_TEST_CASE(NumericalTolerance,
-                     * boost::unit_test::tolerance(1e-4))
+                     *boost::unit_test::tolerance(1e-4))
 {
   // Default tolerance is 1e-9, it can be changed for the entire case or even suite
   // using the decorator above
@@ -46,18 +45,17 @@ BOOST_AUTO_TEST_CASE(NumericalTolerance,
 
 /// Use testing::Deleted to unconditionally delete the test
 BOOST_AUTO_TEST_CASE(Deleted,
-                     * testing::Deleted())
+                     *testing::Deleted())
 {
   BOOST_TEST(false);
 }
-
 
 /// Test that requires 4 processors.
 /*
  * If less than 4 procs are available, the test is deleted, if more are available, procs > 4 are deleted
  */
 BOOST_AUTO_TEST_CASE(FourProcTests,
-                     * testing::OnSize(4))
+                     *testing::OnSize(4))
 {
   // Don't copy over that line, it's for testing the example
   BOOST_TEST(utils::Parallel::getCommunicatorSize() == 4);
@@ -69,14 +67,12 @@ BOOST_AUTO_TEST_CASE(FourProcTests,
  * ranks first, and then test if we execute at the correct ranks.
  */
 BOOST_AUTO_TEST_CASE(TwoProcTests,
-                     * testing::MinRanks(2)
-                     * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
+                     *testing::MinRanks(2) * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
 {
   if (utils::Parallel::getCommunicatorSize() != 2)
     return;
 
   // Put your test code here
-
 }
 
 #ifndef PRECICE_NO_MPI
@@ -86,8 +82,7 @@ BOOST_AUTO_TEST_CASE(TwoProcTests,
  * Please note: Such tests always need to be excluded for compilation without MPI (PRECICE_NO_MPI).
  */
 BOOST_AUTO_TEST_CASE(FourProcTestsWithMasterCommmunication,
-                     * testing::OnSize(4)
-                     * boost::unit_test::fixture<testing::MasterComFixture>())
+                     *testing::OnSize(4) * boost::unit_test::fixture<testing::MasterComFixture>())
 {
   // In this test you can use a master communication, here is an example how:
   BOOST_TEST(utils::MasterSlave::_communication->isConnected());
@@ -101,19 +96,16 @@ BOOST_AUTO_TEST_CASE(FourProcTestsWithMasterCommmunication,
  * Please note: Such tests always need to be excluded for compilation without MPI (PRECICE_NO_MPI).
  */
 BOOST_FIXTURE_TEST_CASE(TwoProcTestsWithM2NCommunication, testing::M2NFixture,
-                       * testing::MinRanks(2)
-                       * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
+                        *testing::MinRanks(2) * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
 {
   if (utils::Parallel::getCommunicatorSize() != 2)
     return;
 
   //This is how you can access the m2n communication
   BOOST_TEST(m2n->getMasterCommunication()->isConnected());
-
 }
 
 #endif // PRECICE_NO_MPI
-
 
 /// Integration tests with two participants.
 /*
@@ -127,17 +119,16 @@ BOOST_FIXTURE_TEST_CASE(TwoProcTestsWithM2NCommunication, testing::M2NFixture,
  * fixture as a decorator, but only the following way:
  */
 BOOST_FIXTURE_TEST_CASE(IntegrationTestsWithTwoParticipants, testing::SplitParticipantsFixture,
-                     * testing::OnSize(4))
+                        *testing::OnSize(4))
 {
-  if(participantID==1){
+  if (participantID == 1) {
 
     // Put here your preCICE API code for the first participant
 
     // Don't copy over that line, it's for testing the example
     BOOST_TEST(utils::Parallel::getCommunicatorSize() == 2);
-  }
-  else {
-    BOOST_TEST(participantID==2);
+  } else {
+    BOOST_TEST(participantID == 2);
 
     // Put here your preCICE API code for the second participant
 
@@ -145,9 +136,6 @@ BOOST_FIXTURE_TEST_CASE(IntegrationTestsWithTwoParticipants, testing::SplitParti
     BOOST_TEST(utils::Parallel::getCommunicatorSize() == 2);
   }
 }
-
-
-
 
 BOOST_AUTO_TEST_SUITE_END() // Examples
 BOOST_AUTO_TEST_SUITE_END() // TestingTests

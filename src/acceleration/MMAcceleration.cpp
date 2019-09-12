@@ -2,34 +2,32 @@
 
 #include <Eigen/Dense>
 
+#include "acceleration/MMAcceleration.hpp"
+#include "acceleration/impl/QRFactorization.hpp"
 #include "com/Communication.hpp"
 #include "cplscheme/CouplingData.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
-#include "acceleration/MMAcceleration.hpp"
-#include "acceleration/impl/QRFactorization.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/MasterSlave.hpp"
 
-namespace precice
-{
-namespace acceleration
-{
+namespace precice {
+namespace acceleration {
 
 /* ----------------------------------------------------------------------------
  *     Constructor
  * ----------------------------------------------------------------------------
  */
 MMAcceleration::MMAcceleration(
-    PtrAcceleration       coarseModelOptimization,
-    int                     maxIterationsUsed,
-    int                     timestepsReused,
-    int                     filter,
-    double                  singularityLimit,
-    bool                    estimateJacobian,
-    std::vector<int>        fineDataIDs,
-    std::vector<int>        coarseDataIDs,
+    PtrAcceleration  coarseModelOptimization,
+    int              maxIterationsUsed,
+    int              timestepsReused,
+    int              filter,
+    double           singularityLimit,
+    bool             estimateJacobian,
+    std::vector<int> fineDataIDs,
+    std::vector<int> coarseDataIDs,
     //std::map<int, double> scalings,
     impl::PtrPreconditioner preconditioner)
     : Acceleration(),
@@ -47,12 +45,12 @@ MMAcceleration::MMAcceleration(
       _filter(filter)
 {
   PRECICE_CHECK(_maxIterationsUsed > 0,
-        "Maximal iterations used for MM acceleration has to be larger than zero!");
+                "Maximal iterations used for MM acceleration has to be larger than zero!");
   PRECICE_CHECK(_maxIterCoarseModelOpt > 0,
-        "Maximal iterations used for coarse model optimization for MM acceleration has to "
-            << "be larger than zero!");
+                "Maximal iterations used for coarse model optimization for MM acceleration has to "
+                    << "be larger than zero!");
   PRECICE_CHECK(_timestepsReused >= 0,
-        "Number of old timesteps to be reused for MM acceleration has to be >= 0!");
+                "Number of old timesteps to be reused for MM acceleration has to be >= 0!");
 }
 
 /** ---------------------------------------------------------------------------------------------
@@ -76,14 +74,14 @@ void MMAcceleration::initialize(DataMap &cplData)
 
   for (auto &elem : _fineDataIDs) {
     PRECICE_CHECK(utils::contained(elem, cplData),
-          "Data with ID " << elem << " is not contained in data given at initialization!");
+                  "Data with ID " << elem << " is not contained in data given at initialization!");
     entries += cplData[elem]->values->size();
     subVectorSizes.push_back(cplData[elem]->values->size());
   }
 
   for (auto &elem : _coarseDataIDs) {
     PRECICE_CHECK(utils::contained(elem, cplData),
-          "Data with ID " << elem << " is not contained in data given at initialization!");
+                  "Data with ID " << elem << " is not contained in data given at initialization!");
     coarseEntries += cplData[elem]->values->size();
   }
 
@@ -491,15 +489,15 @@ void MMAcceleration::performAcceleration(
       //(*_isCoarseModelOptimizationActive)  = false;
       _notConvergedWithinMaxIter = true;
       PRECICE_WARN("The coarse model optimization in coupling iteration " << its
-                                                                  << " exceeds maximal number of optimization cycles (" << _maxIterCoarseModelOpt << " without convergence!");
+                                                                          << " exceeds maximal number of optimization cycles (" << _maxIterCoarseModelOpt << " without convergence!");
     }
   }
 
   if (_notConvergedWithinMaxIter) {
     if (std::isnan(utils::MasterSlave::l2norm(_input_Xstar))) {
       PRECICE_ERROR("The coupling iteration in time step " << tSteps << " failed to converge and NaN values occured throughout the coupling process. "
-                                                   << "This is most likely due to the fact that the coarse model failed to converge within "
-                                                   << "the given maximum number of allowed iterations: " << _maxIterCoarseModelOpt);
+                                                           << "This is most likely due to the fact that the coarse model failed to converge within "
+                                                           << "the given maximum number of allowed iterations: " << _maxIterCoarseModelOpt);
     }
   }
 
@@ -820,5 +818,5 @@ int MMAcceleration::getLSSystemRows()
   return _fineResiduals.size();
   //return _matrixF.rows();
 }
-}
-} // namespace precice, acceleration
+} // namespace acceleration
+} // namespace precice

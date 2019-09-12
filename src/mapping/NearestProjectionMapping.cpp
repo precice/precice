@@ -1,5 +1,5 @@
-#include <Eigen/Core>
 #include "NearestProjectionMapping.hpp"
+#include <Eigen/Core>
 #include "mesh/RTree.hpp"
 #include "query/FindClosest.hpp"
 #include "utils/Event.hpp"
@@ -45,18 +45,18 @@ struct MatchType {
 void NearestProjectionMapping::computeMapping()
 {
   PRECICE_TRACE(input()->vertices().size(), output()->vertices().size());
-  const std::string baseEvent = "map.np.computeMapping.From" + input()->getName() + "To" + output()->getName();
+  const std::string     baseEvent = "map.np.computeMapping.From" + input()->getName() + "To" + output()->getName();
   precice::utils::Event e(baseEvent, precice::syncMode);
 
   // Setup Direction of Mapping
   mesh::PtrMesh origins, search_space;
   if (getConstraint() == CONSISTENT) {
     PRECICE_DEBUG("Compute consistent mapping");
-    origins = output();
+    origins      = output();
     search_space = input();
   } else {
     PRECICE_DEBUG("Compute conservative mapping");
-    origins = input();
+    origins      = input();
     search_space = output();
   }
 
@@ -73,15 +73,15 @@ void NearestProjectionMapping::computeMapping()
   constexpr int nnearest = 4;
 
   if (getDimensions() == 2) {
-    if(!fVertices.empty() && tEdges.empty()) {
-        PRECICE_WARN("2D Mesh \"" << search_space->getName() << "\" does not contain edges. Nearest projection mapping falls back to nearest neighbor mapping.");
+    if (!fVertices.empty() && tEdges.empty()) {
+      PRECICE_WARN("2D Mesh \"" << search_space->getName() << "\" does not contain edges. Nearest projection mapping falls back to nearest neighbor mapping.");
     }
 
-    precice::utils::Event e2(baseEvent+".getIndexOnEdges", precice::syncMode);
-    auto indexEdges    = mesh::rtree::getEdgeRTree(search_space);
+    precice::utils::Event e2(baseEvent + ".getIndexOnEdges", precice::syncMode);
+    auto                  indexEdges = mesh::rtree::getEdgeRTree(search_space);
     e2.stop();
-    precice::utils::Event e3(baseEvent+".getIndexOnVertices", precice::syncMode);
-    auto indexVertices = mesh::rtree::getVertexRTree(search_space);
+    precice::utils::Event e3(baseEvent + ".getIndexOnVertices", precice::syncMode);
+    auto                  indexVertices = mesh::rtree::getVertexRTree(search_space);
     e3.stop();
 
     std::vector<MatchType> matches;
@@ -115,18 +115,18 @@ void NearestProjectionMapping::computeMapping()
     }
   } else {
     const auto &tTriangles = search_space->triangles();
-    if(!fVertices.empty() && tTriangles.empty()) {
-         PRECICE_WARN("3D Mesh \"" << search_space->getName() << "\" does not contain triangles. Nearest projection mapping will map to primitives of lower dimension.");
+    if (!fVertices.empty() && tTriangles.empty()) {
+      PRECICE_WARN("3D Mesh \"" << search_space->getName() << "\" does not contain triangles. Nearest projection mapping will map to primitives of lower dimension.");
     }
 
-    precice::utils::Event e2(baseEvent+".getIndexOnTriangles", precice::syncMode);
-    auto indexTriangles = mesh::rtree::getTriangleRTree(search_space);
+    precice::utils::Event e2(baseEvent + ".getIndexOnTriangles", precice::syncMode);
+    auto                  indexTriangles = mesh::rtree::getTriangleRTree(search_space);
     e2.stop();
-    precice::utils::Event e3(baseEvent+".getIndexOnEdges", precice::syncMode);
-    auto indexEdges     = mesh::rtree::getEdgeRTree(search_space);
+    precice::utils::Event e3(baseEvent + ".getIndexOnEdges", precice::syncMode);
+    auto                  indexEdges = mesh::rtree::getEdgeRTree(search_space);
     e3.stop();
-    precice::utils::Event e4(baseEvent+".getIndexOnVertices", precice::syncMode);
-    auto indexVertices  = mesh::rtree::getVertexRTree(search_space);
+    precice::utils::Event e4(baseEvent + ".getIndexOnVertices", precice::syncMode);
+    auto                  indexVertices = mesh::rtree::getVertexRTree(search_space);
     e4.stop();
 
     std::vector<MatchType> matches;
@@ -212,7 +212,7 @@ void NearestProjectionMapping::map(
   if (getConstraint() == CONSISTENT) {
     PRECICE_DEBUG("Map consistent");
     PRECICE_ASSERT(_weights.size() == output()->vertices().size(),
-              _weights.size(), output()->vertices().size());
+                   _weights.size(), output()->vertices().size());
     for (size_t i = 0; i < output()->vertices().size(); i++) {
       InterpolationElements &elems     = _weights[i];
       size_t                 outOffset = i * dimensions;
@@ -229,7 +229,7 @@ void NearestProjectionMapping::map(
     PRECICE_ASSERT(getConstraint() == CONSERVATIVE, getConstraint());
     PRECICE_DEBUG("Map conservative");
     PRECICE_ASSERT(_weights.size() == input()->vertices().size(),
-              _weights.size(), input()->vertices().size());
+                   _weights.size(), input()->vertices().size());
     for (size_t i = 0; i < input()->vertices().size(); i++) {
       size_t                 inOffset = i * dimensions;
       InterpolationElements &elems    = _weights[i];
@@ -266,7 +266,7 @@ void NearestProjectionMapping::tagMeshFirstRound()
   // Gather all vertices to be tagged in a first phase.
   // max_count is used to shortcut if all vertices have been tagged.
   std::unordered_set<mesh::Vertex const *> tagged;
-  const std::size_t max_count = origins->vertices().size();
+  const std::size_t                        max_count = origins->vertices().size();
 
   for (const InterpolationElements &elems : _weights) {
     for (const query::InterpolationElement &elem : elems) {
@@ -281,10 +281,10 @@ void NearestProjectionMapping::tagMeshFirstRound()
   }
 
   // Now tag all vertices to be tagged in the second phase.
-  for (auto& v : origins->vertices()) {
-      if(tagged.count(&v) == 1) {
-          v.tag();
-      }
+  for (auto &v : origins->vertices()) {
+    if (tagged.count(&v) == 1) {
+      v.tag();
+    }
   }
   PRECICE_DEBUG("First Round Tagged " << tagged.size() << "/" << max_count << " Vertices");
 

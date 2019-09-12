@@ -1,7 +1,7 @@
 #pragma once
 
-#include "FindClosest.hpp"
 #include <string>
+#include "FindClosest.hpp"
 
 namespace precice {
 namespace query {
@@ -15,35 +15,35 @@ namespace query {
  *
  * @author Bernhard Gatzhammer
  */
-class ExportVTKNeighbors
-{
+class ExportVTKNeighbors {
 public:
-
-   /**
+  /**
     * @brief Adds a neighborhood relation already computed.
     *
     * @param[in] queryPoint Point whose next neighbor was determined.
     * @param[in] closestNeighbor ClosestNeighbor of queryPoint.
     */
-   void addNeighbors (
-     const Eigen::VectorXd&  queryPoint,
-     const ClosestElement&   closestNeighbor );
+  void addNeighbors(
+      const Eigen::VectorXd &queryPoint,
+      const ClosestElement & closestNeighbor);
 
-   /**
+  /**
     * @brief Visualizes results of performed searches into vtk file
     */
-   void exportNeighbors ( const std::string& filename );
+  void exportNeighbors(const std::string &filename);
 
-   /**
+  /**
     * @brief Resets results of performed searches
     */
-   void resetElements() { _neighbors.clear(); };
+  void resetElements()
+  {
+    _neighbors.clear();
+  };
 
 private:
-
   /// Results of performed searches
   std::vector<std::pair<Eigen::VectorXd, query::ClosestElement>> _neighbors;
 };
 
-}} // namespace precice, query
-
+} // namespace query
+} // namespace precice

@@ -1,5 +1,8 @@
 #include <Eigen/Core>
 
+#include "acceleration/IQNILSAcceleration.hpp"
+#include "acceleration/impl/Preconditioner.hpp"
+#include "acceleration/impl/SharedPointer.hpp"
 #include "com/Communication.hpp"
 #include "cplscheme/CouplingData.hpp"
 #include "cplscheme/SharedPointer.hpp"
@@ -7,35 +10,30 @@
 #include "io/TXTWriter.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
-#include "acceleration/IQNILSAcceleration.hpp"
-#include "acceleration/impl/Preconditioner.hpp"
-#include "acceleration/impl/SharedPointer.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/MasterSlave.hpp"
-
 
 //#include "utils/NumericalCompare.hpp"
 
 using precice::cplscheme::PtrCouplingData;
 
-namespace precice
-{
-namespace acceleration
-{
+namespace precice {
+namespace acceleration {
 
 IQNILSAcceleration::IQNILSAcceleration(
-    double            initialRelaxation,
-    bool              forceInitialRelaxation,
-    int               maxIterationsUsed,
-    int               timestepsReused,
-    int               filter,
-    double            singularityLimit,
-    std::vector<int>  dataIDs,
+    double                  initialRelaxation,
+    bool                    forceInitialRelaxation,
+    int                     maxIterationsUsed,
+    int                     timestepsReused,
+    int                     filter,
+    double                  singularityLimit,
+    std::vector<int>        dataIDs,
     impl::PtrPreconditioner preconditioner)
     : BaseQNAcceleration(initialRelaxation, forceInitialRelaxation, maxIterationsUsed, timestepsReused,
-                           filter, singularityLimit, dataIDs, preconditioner)
-{}
+                         filter, singularityLimit, dataIDs, preconditioner)
+{
+}
 
 void IQNILSAcceleration::initialize(
     DataMap &cplData)
@@ -53,14 +51,14 @@ void IQNILSAcceleration::initialize(
 }
 
 void IQNILSAcceleration::updateDifferenceMatrices(
-  DataMap &cplData)
+    DataMap &cplData)
 {
   // Compute residuals of secondary data
   for (int id : _secondaryDataIDs) {
     Eigen::VectorXd &secResiduals = _secondaryResiduals[id];
     PtrCouplingData  data         = cplData[id];
     PRECICE_ASSERT(secResiduals.size() == data->values->size(),
-              secResiduals.size(), data->values->size());
+                   secResiduals.size(), data->values->size());
     secResiduals = *(data->values);
     secResiduals -= data->oldValues.col(0);
   }
@@ -96,7 +94,7 @@ void IQNILSAcceleration::updateDifferenceMatrices(
     // Store x_tildes for secondary data
     for (int id : _secondaryDataIDs) {
       PRECICE_ASSERT(_secondaryOldXTildes[id].size() == cplData[id]->values->size(),
-                _secondaryOldXTildes[id].size(), cplData[id]->values->size());
+                     _secondaryOldXTildes[id].size(), cplData[id]->values->size());
       _secondaryOldXTildes[id] = *(cplData[id]->values);
     }
   }
@@ -111,7 +109,7 @@ void IQNILSAcceleration::computeUnderrelaxationSecondaryData(
   //Store x_tildes for secondary data
   for (int id : _secondaryDataIDs) {
     PRECICE_ASSERT(_secondaryOldXTildes[id].size() == cplData[id]->values->size(),
-              _secondaryOldXTildes[id].size(), cplData[id]->values->size());
+                   _secondaryOldXTildes[id].size(), cplData[id]->values->size());
     _secondaryOldXTildes[id] = *(cplData[id]->values);
   }
 
@@ -188,7 +186,7 @@ void IQNILSAcceleration::computeQNUpdate(Acceleration::DataMap &cplData, Eigen::
     // broadcast coefficients c to all slaves
     utils::MasterSlave::broadcast(c.data(), c.size());
   }
-  
+
   PRECICE_DEBUG("   Apply Newton factors");
   // compute x updates from W and coefficients c, i.e, xUpdate = c*W
   xUpdate = _matrixW * c;
@@ -273,5 +271,5 @@ void IQNILSAcceleration::removeMatrixColumn(
 
   BaseQNAcceleration::removeMatrixColumn(columnIndex);
 }
-}
-} // namespace precice, acceleration
+} // namespace acceleration
+} // namespace precice

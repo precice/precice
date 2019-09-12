@@ -1,23 +1,22 @@
 #pragma once
 
-#include "Event.hpp"
 #include <chrono>
 #include <map>
-#include <vector>
 #include <string>
+#include <vector>
+#include "Event.hpp"
 
 #ifndef PRECICE_NO_MPI
-  #include <mpi.h>
+#include <mpi.h>
 #else
-  #include "utils/MPI_Mock.hpp"
+#include "utils/MPI_Mock.hpp"
 #endif
 
 namespace precice {
 namespace utils {
 
 /// Class that aggregates durations for a specific event.
-class EventData
-{
+class EventData {
 public:
   explicit EventData(std::string _name);
 
@@ -25,7 +24,7 @@ public:
             Event::Data data, Event::StateChanges stateChanges);
 
   /// Adds an Events data.
-  void put(Event const & event);
+  void put(Event const &event);
 
   std::string getName() const;
 
@@ -44,25 +43,23 @@ public:
   /// Get the number of all events so far
   long getCount() const;
 
-  Event::Data const & getData() const;
+  Event::Data const &getData() const;
 
-  Event::Clock::duration max = Event::Clock::duration::min();
-  Event::Clock::duration min = Event::Clock::duration::max();
+  Event::Clock::duration max   = Event::Clock::duration::min();
+  Event::Clock::duration min   = Event::Clock::duration::max();
   Event::Clock::duration total = Event::Clock::duration::zero();
 
   Event::StateChanges stateChanges;
 
 private:
-  std::string name;
-  long count = 0;
+  std::string                             name;
+  long                                    count = 0;
   std::map<std::string, std::vector<int>> data;
 };
 
 /// Holds all EventData of one particular rank
-class RankData
-{
+class RankData {
 public:
-
   /// Records the initialized timestamp
   void initialize();
 
@@ -70,7 +67,7 @@ public:
   void finalize();
 
   /// Adds a new event
-  void put(Event const & event);
+  void put(Event const &event);
 
   /// Adds aggregated data for a specific event
   void addEventData(EventData ed);
@@ -88,31 +85,27 @@ public:
 
   std::chrono::system_clock::time_point initializedAt;
   std::chrono::system_clock::time_point finalizedAt;
-  
+
 private:
   std::chrono::steady_clock::time_point initializedAtTicks;
   std::chrono::steady_clock::time_point finalizedAtTicks;
 
   bool isFinalized = true;
-  int rank = 0;
-
+  int  rank        = 0;
 };
 
 /// Holds data aggregated from all MPI ranks for one event
-struct GlobalEventStats
-{
-  int maxRank, minRank;
-  Event::Clock::duration max   = Event::Clock::duration::min();
-  Event::Clock::duration min   = Event::Clock::duration::max();
+struct GlobalEventStats {
+  int                    maxRank, minRank;
+  Event::Clock::duration max = Event::Clock::duration::min();
+  Event::Clock::duration min = Event::Clock::duration::max();
 };
-
 
 /// High level object that stores data of all events.
 /** Call EventRegistry::intialize at the beginning of your application and
 EventRegistry::finalize at the end. Event timings will be usuable without calling this
 function at all, but global timings as well as percentages do not work this way.  */
-class EventRegistry
-{
+class EventRegistry {
 public:
   /// Deleted copy operator for singleton pattern
   EventRegistry(EventRegistry const &) = delete;
@@ -121,7 +114,7 @@ public:
   void operator=(EventRegistry const &) = delete;
 
   /// Returns the only instance (singleton) of the EventRegistry class
-  static EventRegistry & instance();
+  static EventRegistry &instance();
 
   /// Sets the global start time
   /**
@@ -141,21 +134,21 @@ public:
   void signal_handler(int signal);
 
   /// Records the event.
-  void put(Event const & event);
+  void put(Event const &event);
 
   /// Returns or creates a stored event, i.e., an event with life beyond the current scope
-  Event & getStoredEvent(std::string const & name);
+  Event &getStoredEvent(std::string const &name);
 
   /// Prints a pretty report to stdout and a JSON report to appName-events.json
   void printAll();
 
   /// Prints the result table to an arbitrary stream, only prints at rank 0.
-  void writeSummary(std::ostream & out);
+  void writeSummary(std::ostream &out);
 
   /// Writes the aggregated timings and state changes at JSON, only at rank 0.
-  void writeJSON(std::ostream & out);
-  
-  MPI_Comm const & getMPIComm() const;
+  void writeJSON(std::ostream &out);
+
+  MPI_Comm const &getMPIComm() const;
 
   /// Currently active prefix. Changing that applies only to newly created events.
   std::string prefix;
@@ -166,8 +159,9 @@ public:
 private:
   /// Private, empty constructor for singleton pattern
   EventRegistry()
-    : globalEvent("_GLOBAL", true, false) // Unstarted, it's started in initialize
-  {}
+      : globalEvent("_GLOBAL", true, false) // Unstarted, it's started in initialize
+  {
+  }
 
   RankData localRankData;
 
@@ -205,4 +199,5 @@ private:
   MPI_Comm comm;
 };
 
-}}
+} // namespace utils
+} // namespace precice

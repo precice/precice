@@ -1,8 +1,8 @@
 #include "mesh/impl/RTree.hpp"
 #include "mesh/impl/RTreeAdapter.hpp"
 
-#include "mesh/RTree.hpp"
 #include <boost/range/irange.hpp>
+#include "mesh/RTree.hpp"
 
 namespace precice {
 namespace mesh {
@@ -11,63 +11,60 @@ namespace bg = boost::geometry;
 
 // Initialize static member
 std::map<int, rtree::MeshIndices> precice::mesh::rtree::_cached_trees;
-std::map<int, PtrPrimitiveRTree> precice::mesh::rtree::_primitive_trees;
+std::map<int, PtrPrimitiveRTree>  precice::mesh::rtree::_primitive_trees;
 
-rtree::MeshIndices& rtree::cacheEntry(int meshID)
+rtree::MeshIndices &rtree::cacheEntry(int meshID)
 {
-    auto result = _cached_trees.emplace(std::make_pair(meshID, rtree::MeshIndices{}));
-    return result.first->second;
+  auto result = _cached_trees.emplace(std::make_pair(meshID, rtree::MeshIndices{}));
+  return result.first->second;
 }
 
-
-rtree::vertex_traits::Ptr rtree::getVertexRTree(const PtrMesh& mesh)
+rtree::vertex_traits::Ptr rtree::getVertexRTree(const PtrMesh &mesh)
 {
   PRECICE_ASSERT(mesh);
-  auto& cache = cacheEntry(mesh->getID());
+  auto &cache = cacheEntry(mesh->getID());
   if (cache.vertices) {
-      return cache.vertices;
+    return cache.vertices;
   }
 
   // Generating the rtree is expensive, so passing everything in the ctor is
-  // the best we can do. Even passing an index range instead of calling 
+  // the best we can do. Even passing an index range instead of calling
   // tree->insert repeatedly is about 10x faster.
-  RTreeParameters params;
+  RTreeParameters            params;
   vertex_traits::IndexGetter ind(mesh->vertices());
-  auto tree = std::make_shared<vertex_traits::RTree>(
-          boost::irange(0lu, mesh->vertices().size()), params, ind);
+  auto                       tree = std::make_shared<vertex_traits::RTree>(
+      boost::irange(0lu, mesh->vertices().size()), params, ind);
 
   cache.vertices = tree;
   return tree;
 }
 
-
-rtree::edge_traits::Ptr rtree::getEdgeRTree(const PtrMesh& mesh)
+rtree::edge_traits::Ptr rtree::getEdgeRTree(const PtrMesh &mesh)
 {
   PRECICE_ASSERT(mesh);
-  auto& cache = cacheEntry(mesh->getID());
+  auto &cache = cacheEntry(mesh->getID());
   if (cache.edges) {
-      return cache.edges;
+    return cache.edges;
   }
 
   // Generating the rtree is expensive, so passing everything in the ctor is
-  // the best we can do. Even passing an index range instead of calling 
+  // the best we can do. Even passing an index range instead of calling
   // tree->insert repeatedly is about 10x faster.
-  RTreeParameters params;
+  RTreeParameters          params;
   edge_traits::IndexGetter ind(mesh->edges());
-  auto tree = std::make_shared<edge_traits::RTree>(
-          boost::irange(0lu, mesh->edges().size()), params, ind);
+  auto                     tree = std::make_shared<edge_traits::RTree>(
+      boost::irange(0lu, mesh->edges().size()), params, ind);
 
   cache.edges = tree;
   return tree;
 }
 
-
-rtree::triangle_traits::Ptr rtree::getTriangleRTree(const PtrMesh& mesh)
+rtree::triangle_traits::Ptr rtree::getTriangleRTree(const PtrMesh &mesh)
 {
   PRECICE_ASSERT(mesh);
-  auto& cache = cacheEntry(mesh->getID());
+  auto &cache = cacheEntry(mesh->getID());
   if (cache.triangles) {
-      return cache.triangles;
+    return cache.triangles;
   }
 
   // We first generate the values for the triangle rtree.
@@ -76,21 +73,20 @@ rtree::triangle_traits::Ptr rtree::getTriangleRTree(const PtrMesh& mesh)
   std::vector<triangle_traits::IndexType> elements;
   elements.reserve(mesh->triangles().size());
   for (size_t i = 0; i < mesh->triangles().size(); ++i) {
-      auto box = bg::return_envelope<RTreeBox>(mesh->triangles()[i]);
-      elements.emplace_back(std::move(box) , i);
+    auto box = bg::return_envelope<RTreeBox>(mesh->triangles()[i]);
+    elements.emplace_back(std::move(box), i);
   }
 
   // Generating the rtree is expensive, so passing everything in the ctor is
   // the best we can do.
-  RTreeParameters params;
+  RTreeParameters              params;
   triangle_traits::IndexGetter ind;
-  auto tree = std::make_shared<triangle_traits::RTree>(elements, params, ind);
-  cache.triangles = tree;
+  auto                         tree = std::make_shared<triangle_traits::RTree>(elements, params, ind);
+  cache.triangles                   = tree;
   return tree;
 }
 
-
-PtrPrimitiveRTree rtree::getPrimitiveRTree(const PtrMesh& mesh)
+PtrPrimitiveRTree rtree::getPrimitiveRTree(const PtrMesh &mesh)
 {
   PRECICE_ASSERT(mesh, "Empty meshes are not allowed.");
   auto iter = _primitive_trees.find(mesh->getID());
@@ -99,11 +95,10 @@ PtrPrimitiveRTree rtree::getPrimitiveRTree(const PtrMesh& mesh)
   }
   auto treeptr = std::make_shared<PrimitiveRTree>(indexMesh(*mesh));
   _primitive_trees.emplace(std::piecewise_construct,
-          std::forward_as_tuple(mesh->getID()),
-          std::forward_as_tuple(treeptr));
+                           std::forward_as_tuple(mesh->getID()),
+                           std::forward_as_tuple(treeptr));
   return treeptr;
 }
-
 
 void rtree::clear(Mesh &mesh)
 {
@@ -117,10 +112,10 @@ void rtree::clear()
   _primitive_trees.clear();
 }
 
-Box3d getEnclosingBox(Vertex const & middlePoint, double sphereRadius)
+Box3d getEnclosingBox(Vertex const &middlePoint, double sphereRadius)
 {
   namespace bg = boost::geometry;
-  auto & coords = middlePoint.getCoords();
+  auto &coords = middlePoint.getCoords();
 
   Box3d box;
   bg::set<bg::min_corner, 0>(box, bg::get<0>(coords) - sphereRadius);
@@ -130,10 +125,9 @@ Box3d getEnclosingBox(Vertex const & middlePoint, double sphereRadius)
   bg::set<bg::max_corner, 0>(box, bg::get<0>(coords) + sphereRadius);
   bg::set<bg::max_corner, 1>(box, bg::get<1>(coords) + sphereRadius);
   bg::set<bg::max_corner, 2>(box, bg::get<2>(coords) + sphereRadius);
-  
+
   return box;
 }
-
 
 PrimitiveRTree indexMesh(const Mesh &mesh)
 {
@@ -167,20 +161,21 @@ std::ostream &operator<<(std::ostream &out, Primitive val)
   return out;
 }
 
-std::ostream& operator<<(std::ostream& out, PrimitiveIndex val) {
-    return out << val.type << ":" << val.index;
+std::ostream &operator<<(std::ostream &out, PrimitiveIndex val)
+{
+  return out << val.type << ":" << val.index;
 }
 
-bool operator==(const PrimitiveIndex& lhs, const PrimitiveIndex& rhs)
+bool operator==(const PrimitiveIndex &lhs, const PrimitiveIndex &rhs)
 {
-    return lhs.type == rhs.type && lhs.index == rhs.index;
+  return lhs.type == rhs.type && lhs.index == rhs.index;
 }
 
 /// Standard non-equality test for PrimitiveIndex
-bool operator!=(const PrimitiveIndex& lhs, const PrimitiveIndex& rhs)
+bool operator!=(const PrimitiveIndex &lhs, const PrimitiveIndex &rhs)
 {
-    return !(lhs == rhs);
+  return !(lhs == rhs);
 }
 
-}}
-
+} // namespace mesh
+} // namespace precice

@@ -1,35 +1,33 @@
+#include "acceleration/BaseQNAcceleration.hpp"
+#include "acceleration/impl/Preconditioner.hpp"
+#include "acceleration/impl/QRFactorization.hpp"
 #include "com/Communication.hpp"
 #include "cplscheme/CouplingData.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
-#include "acceleration/BaseQNAcceleration.hpp"
-#include "acceleration/impl/QRFactorization.hpp"
-#include "acceleration/impl/Preconditioner.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/Event.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/MasterSlave.hpp"
 
-namespace precice
-{
+namespace precice {
 extern bool syncMode;
-namespace acceleration
-{
+namespace acceleration {
 
 /* ----------------------------------------------------------------------------
  *     Constructor
  * ----------------------------------------------------------------------------
  */
 BaseQNAcceleration::BaseQNAcceleration(
-    double            initialRelaxation,
-    bool              forceInitialRelaxation,
-    int               maxIterationsUsed,
-    int               timestepsReused,
-    int               filter,
-    double            singularityLimit,
-    std::vector<int>  dataIDs,
+    double                  initialRelaxation,
+    bool                    forceInitialRelaxation,
+    int                     maxIterationsUsed,
+    int                     timestepsReused,
+    int                     filter,
+    double                  singularityLimit,
+    std::vector<int>        dataIDs,
     impl::PtrPreconditioner preconditioner)
-  :   _preconditioner(preconditioner),
+    : _preconditioner(preconditioner),
       _initialRelaxation(initialRelaxation),
       _maxIterationsUsed(maxIterationsUsed),
       _timestepsReused(timestepsReused),
@@ -41,12 +39,12 @@ BaseQNAcceleration::BaseQNAcceleration(
       _infostringstream(std::ostringstream::ate)
 {
   PRECICE_CHECK((_initialRelaxation > 0.0) && (_initialRelaxation <= 1.0),
-        "Initial relaxation factor for QN acceleration has to "
-            << "be larger than zero and smaller or equal than one!");
+                "Initial relaxation factor for QN acceleration has to "
+                    << "be larger than zero and smaller or equal than one!");
   PRECICE_CHECK(_maxIterationsUsed > 0,
-        "Maximal iterations used for QN acceleration has to be larger than zero!");
+                "Maximal iterations used for QN acceleration has to be larger than zero!");
   PRECICE_CHECK(_timestepsReused >= 0,
-        "Number of old timesteps to be reused for QN acceleration has to be >= 0!");
+                "Number of old timesteps to be reused for QN acceleration has to be >= 0!");
 }
 
 /** ---------------------------------------------------------------------------------------------
@@ -84,7 +82,7 @@ void BaseQNAcceleration::initialize(
 
   for (auto &elem : _dataIDs) {
     PRECICE_CHECK(utils::contained(elem, cplData),
-          "Data with ID " << elem << " is not contained in data given at initialization!");
+                  "Data with ID " << elem << " is not contained in data given at initialization!");
     entries += cplData[elem]->values->size();
     subVectorSizes.push_back(cplData[elem]->values->size());
   }
@@ -571,7 +569,8 @@ void BaseQNAcceleration::iterationsConverged(
   // we need to do underrelax in the first iteration of the second timesteps
   // so "_firstTimeStep" is slightly misused, but still the best way to understand
   // the concept
-  if(not _firstIteration) _firstTimeStep = false;
+  if (not _firstIteration)
+    _firstTimeStep = false;
 
   // update preconditioner depending on residuals or values (must be after specialized iterations converged --> IMVJ)
   _preconditioner->update(true, _values, _residuals);
@@ -702,5 +701,5 @@ void BaseQNAcceleration::writeInfo(
   }
   _infostringstream << std::flush;
 }
-}
-} // namespace precice, acceleration
+} // namespace acceleration
+} // namespace precice

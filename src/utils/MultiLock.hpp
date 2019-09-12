@@ -4,19 +4,16 @@
 #include <exception>
 #include <map>
 
-namespace precice
-{
-namespace utils
-{
+namespace precice {
+namespace utils {
 
-class MultiLockException : public std::runtime_error
-{
+class MultiLockException : public std::runtime_error {
 public:
-  MultiLockException() : runtime_error("MultiLock") {}
+  MultiLockException()
+      : runtime_error("MultiLock") {}
 };
 
-class LockNotFoundException : public MultiLockException
-{
+class LockNotFoundException : public MultiLockException {
 public:
   LockNotFoundException() {}
   const char *what() const noexcept override
@@ -27,8 +24,7 @@ public:
 
 /// Class handling multiple locks allowing global lock and unlock operations.
 template <typename Key>
-class MultiLock
-{
+class MultiLock {
 public:
   /// The type of the key
   using key_type = Key;
@@ -92,7 +88,7 @@ public:
   /// Removes all known locks
   void clear() noexcept
   {
-      _locks.clear();
+    _locks.clear();
   }
 
   /** @brief Checks the status of a lock

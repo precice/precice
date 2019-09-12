@@ -3,10 +3,8 @@
 
 #include "com/SharedPointer.hpp"
 
-namespace precice
-{
-namespace m2n
-{
+namespace precice {
+namespace m2n {
 
 PointToPointComFactory::PointToPointComFactory(com::PtrCommunicationFactory comFactory)
     : _comFactory(comFactory) {}

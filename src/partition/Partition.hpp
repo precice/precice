@@ -9,10 +9,8 @@
 
 // ----------------------------------------------------------- CLASS DEFINITION
 
-namespace precice
-{
-namespace partition
-{
+namespace precice {
+namespace partition {
 
 /**
  * @brief Abstract base class for partitions.
@@ -29,13 +27,12 @@ namespace partition
  * Access to the associated mesh, to both mappings (from and to this mesh),
  * and to an m2n communication to another participant is necessary.
  */
-class Partition
-{
+class Partition {
 public:
   /// Constructor.
   Partition(mesh::PtrMesh mesh);
 
-  Partition& operator=(Partition &&) = delete;
+  Partition &operator=(Partition &&) = delete;
 
   virtual ~Partition() {}
 

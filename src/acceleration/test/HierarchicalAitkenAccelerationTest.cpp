@@ -1,7 +1,7 @@
 #include <Eigen/Core>
-#include "cplscheme/CouplingData.hpp"
-#include "acceleration/HierarchicalAitkenAcceleration.hpp"
 #include "acceleration/Acceleration.hpp"
+#include "acceleration/HierarchicalAitkenAcceleration.hpp"
+#include "cplscheme/CouplingData.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "testing/Testing.hpp"
@@ -15,9 +15,9 @@ using namespace acceleration;
 
 BOOST_AUTO_TEST_CASE(HierarchicalAitkenAccelerationTest)
 {
-  Acceleration::DataMap       dataMap;
-  int                           dataID = 0;
-  std::vector<int>              dataIDs;
+  Acceleration::DataMap dataMap;
+  int                   dataID = 0;
+  std::vector<int>      dataIDs;
   dataIDs.push_back(dataID);
 
   Eigen::VectorXd highF(5), midF(5), lowF(5), values(5), temp(5);
@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(HierarchicalAitkenAccelerationTest)
   utils::appendFront(ptrCplData->oldValues, temp);
   dataMap.insert(std::make_pair(dataID, ptrCplData));
 
-  double                                 initRelaxation = 1.0;
+  double                         initRelaxation = 1.0;
   HierarchicalAitkenAcceleration hierarchAitken(initRelaxation, dataIDs);
   hierarchAitken.initialize(dataMap);
   hierarchAitken.performAcceleration(dataMap);

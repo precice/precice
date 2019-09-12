@@ -1,22 +1,22 @@
 #pragma once
 
-#include "MeshHandle.hpp"
+#include <memory>
+#include <set>
 #include <string>
 #include <vector>
-#include <set>
-#include <memory>
+#include "MeshHandle.hpp"
 
 /**
  * forward declarations.
  */
 namespace precice {
-  namespace impl {
-    class SolverInterfaceImpl;
-  }
-  namespace testing {
-      struct WhiteboxAccessor;
-  }
+namespace impl {
+class SolverInterfaceImpl;
 }
+namespace testing {
+struct WhiteboxAccessor;
+}
+} // namespace precice
 
 // ----------------------------------------------------------- CLASS DEFINITION
 
@@ -37,10 +37,8 @@ namespace precice {
  *  We use solver, simulation code, and participant as synonyms.
  *  The preferred name in the documentation is participant.
  */
-class SolverInterface
-{
+class SolverInterface {
 public:
-
   ///@name Construction and Configuration
   ///@{
 
@@ -52,11 +50,10 @@ public:
    *        from 0 and end with solverProcessSize - 1.
    * @param[in] solverProcessSize The number of solver processes using preCICE.
    */
-  SolverInterface (
-    const std::string& participantName,
-    int                solverProcessIndex,
-    int                solverProcessSize);
-
+  SolverInterface(
+      const std::string &participantName,
+      int                solverProcessIndex,
+      int                solverProcessSize);
 
   /**
    * @param[in] participantName Name of the participant using the interface. Has to
@@ -67,11 +64,11 @@ public:
    * @param[in] solverProcessSize The number of solver processes using preCICE.
    * @param[in] communicator A pointer to an MPI_Comm to use as MPI_COMM_WORLD.
    */
-  SolverInterface (
-    const std::string& participantName,
-    int                solverProcessIndex,
-    int                solverProcessSize,
-    void*              communicator);
+  SolverInterface(
+      const std::string &participantName,
+      int                solverProcessIndex,
+      int                solverProcessSize,
+      void *             communicator);
 
   ~SolverInterface();
 
@@ -92,7 +89,7 @@ public:
    *
    * @param[in] configurationFileName Name (with path) of the xml configuration file to be read.
    */
-  void configure ( const std::string& configurationFileName );
+  void configure(const std::string &configurationFileName);
 
   ///@}
 
@@ -161,7 +158,7 @@ public:
    *
    * @return Maximum length of next timestep to be computed by solver.
    */
-  double advance ( double computedTimestepLength );
+  double advance(double computedTimestepLength);
 
   /**
    * @brief Finalizes preCICE.
@@ -176,7 +173,7 @@ public:
   void finalize();
 
   ///@}
-  
+
   ///@name Status Queries
   ///@{
 
@@ -248,7 +245,7 @@ public:
    * This is not recommended due to performance reasons.
    * Use this function to prevent unnecessary writes.
    */
-  bool isWriteDataRequired ( double computedTimestepLength ) const;
+  bool isWriteDataRequired(double computedTimestepLength) const;
 
   /**
    * @brief Checks if the current coupling timestep is completed.
@@ -314,7 +311,7 @@ public:
    * @see fulfilledAction()
    * @see cplscheme::constants
    */
-  bool isActionRequired ( const std::string& action ) const;
+  bool isActionRequired(const std::string &action) const;
 
   /**
    * @brief Indicates preCICE that a required action has been fulfilled by a solver.
@@ -326,7 +323,7 @@ public:
    * @see requireAction()
    * @see cplscheme::constants
    */
-  void fulfilledAction ( const std::string& action );
+  void fulfilledAction(const std::string &action);
 
   ///@}
 
@@ -341,7 +338,7 @@ public:
    * changes. Only has an effect, if the mapping used is non-stationary and
    * non-incremental.
    */
-//  void resetMesh ( int meshID );
+  //  void resetMesh ( int meshID );
 
   /**
    * @brief Checks if the mesh with given name is used by a solver.
@@ -349,7 +346,7 @@ public:
    * @param[in] meshName the name of the mesh
    * @returns whether the mesh is used.
    */
-  bool hasMesh ( const std::string& meshName ) const;
+  bool hasMesh(const std::string &meshName) const;
 
   /**
    * @brief Returns the ID belonging to the mesh with given name.
@@ -357,7 +354,7 @@ public:
    * @param[in] meshName the name of the mesh
    * @returns the id of the corresponding mesh
    */
-  int getMeshID ( const std::string& meshName ) const;
+  int getMeshID(const std::string &meshName) const;
 
   /**
    * @brief Returns a id-set of all used meshes by this participant.
@@ -374,7 +371,7 @@ public:
    *
    * @see precice::MeshHandle
    */
-  MeshHandle getMeshHandle ( const std::string& meshName );
+  MeshHandle getMeshHandle(const std::string &meshName);
 
   /**
    * @brief Creates a mesh vertex
@@ -388,9 +385,9 @@ public:
    *
    * @see getDimensions()
    */
-  int setMeshVertex (
-    int           meshID,
-    const double* position );
+  int setMeshVertex(
+      int           meshID,
+      const double *position);
 
   /**
    * @brief Returns the number of vertices of a mesh.
@@ -417,11 +414,11 @@ public:
    *
    * @see getDimensions()
    */
-  void setMeshVertices (
-    int           meshID,
-    int           size,
-    const double* positions,
-    int*          ids );
+  void setMeshVertices(
+      int           meshID,
+      int           size,
+      const double *positions,
+      int *         ids);
 
   /**
    * @brief Get vertex positions for multiple vertex ids from a given mesh
@@ -438,11 +435,11 @@ public:
    *
    * @see getDimensions()
    */
-  void getMeshVertices (
-    int        meshID,
-    int        size,
-    const int* ids,
-    double*    positions ) const;
+  void getMeshVertices(
+      int        meshID,
+      int        size,
+      const int *ids,
+      double *   positions) const;
 
   /**
    * @brief Gets mesh vertex IDs from positions.
@@ -459,11 +456,11 @@ public:
    *
    * @note prefer to reuse the IDs returned from calls to setMeshVertex() and setMeshVertices().
    */
-  void getMeshVertexIDsFromPositions (
-    int           meshID,
-    int           size,
-    const double* positions,
-    int*          ids ) const;
+  void getMeshVertexIDsFromPositions(
+      int           meshID,
+      int           size,
+      const double *positions,
+      int *         ids) const;
 
   /**
    * @brief Sets mesh edge from vertex IDs, returns edge ID.
@@ -476,10 +473,10 @@ public:
    *
    * @pre vertices with firstVertexID and secondVertexID were added to the mesh with the ID meshID
    */
-  int setMeshEdge (
-    int meshID,
-    int firstVertexID,
-    int secondVertexID );
+  int setMeshEdge(
+      int meshID,
+      int firstVertexID,
+      int secondVertexID);
 
   /**
    * @brief Sets mesh triangle from edge IDs
@@ -491,11 +488,11 @@ public:
    *
    * @pre edges with firstEdgeID, secondEdgeID, and thirdEdgeID were added to the mesh with the ID meshID
    */
-  void setMeshTriangle (
-    int meshID,
-    int firstEdgeID,
-    int secondEdgeID,
-    int thirdEdgeID );
+  void setMeshTriangle(
+      int meshID,
+      int firstEdgeID,
+      int secondEdgeID,
+      int thirdEdgeID);
 
   /**
    * @brief Sets mesh triangle from vertex IDs.
@@ -513,11 +510,11 @@ public:
    *
    * @pre edges with firstVertexID, secondVertexID, and thirdVertexID were added to the mesh with the ID meshID
    */
-  void setMeshTriangleWithEdges (
-    int meshID,
-    int firstVertexID,
-    int secondVertexID,
-    int thirdVertexID );
+  void setMeshTriangleWithEdges(
+      int meshID,
+      int firstVertexID,
+      int secondVertexID,
+      int thirdVertexID);
 
   /**
    * @brief Sets mesh Quad from edge IDs.
@@ -532,12 +529,12 @@ public:
    *
    * @warning Quads are not fully implemented yet.
    */
-  void setMeshQuad (
-    int meshID,
-    int firstEdgeID,
-    int secondEdgeID,
-    int thirdEdgeID,
-    int fourthEdgeID );
+  void setMeshQuad(
+      int meshID,
+      int firstEdgeID,
+      int secondEdgeID,
+      int thirdEdgeID,
+      int fourthEdgeID);
 
   /**
    * @brief Sets surface mesh quadrangle from vertex IDs.
@@ -557,12 +554,12 @@ public:
    * @pre edges with firstVertexID, secondVertexID, thirdVertexID, and fourthVertexID were added to the mesh with the ID meshID
    *
    */
-  void setMeshQuadWithEdges (
-    int meshID,
-    int firstVertexID,
-    int secondVertexID,
-    int thirdVertexID,
-    int fourthVertexID );
+  void setMeshQuadWithEdges(
+      int meshID,
+      int firstVertexID,
+      int secondVertexID,
+      int thirdVertexID,
+      int fourthVertexID);
 
   ///@}
 
@@ -576,7 +573,7 @@ public:
    * @param[in] meshID the id of the associated mesh
    * @returns whether the mesh is used.
    */
-  bool hasData ( const std::string& dataName, int meshID ) const;
+  bool hasData(const std::string &dataName, int meshID) const;
 
   /**
    * @brief Returns the ID of the data associated with the given name and mesh.
@@ -586,7 +583,7 @@ public:
    *
    * @returns the id of the corresponding data
    */
-  int getDataID ( const std::string& dataName, int meshID ) const;
+  int getDataID(const std::string &dataName, int meshID) const;
 
   /**
    * @brief Computes and maps all read data mapped to the mesh with given ID.
@@ -596,7 +593,7 @@ public:
    *
    * @pre A mapping to toMeshID was configured.
    */
-  void mapReadDataTo ( int toMeshID );
+  void mapReadDataTo(int toMeshID);
 
   /**
    * @brief Computes and maps all write data mapped from the mesh with given ID.
@@ -606,7 +603,7 @@ public:
    *
    * @pre A mapping from fromMeshID was configured.
    */
-  void mapWriteDataFrom ( int fromMeshID );
+  void mapWriteDataFrom(int fromMeshID);
 
   /**
    * @brief Writes vector data given as block.
@@ -629,11 +626,11 @@ public:
    *
    * @see SolverInterface::setMeshVertex()
    */
-  void writeBlockVectorData (
-    int           dataID,
-    int           size,
-    const int*    valueIndices,
-    const double* values );
+  void writeBlockVectorData(
+      int           dataID,
+      int           size,
+      const int *   valueIndices,
+      const double *values);
 
   /**
    * @brief Writes vector data to a vertex
@@ -653,11 +650,10 @@ public:
    *
    * @see SolverInterface::setMeshVertex()
    */
-  void writeVectorData (
-    int           dataID,
-    int           valueIndex,
-    const double* value );
-
+  void writeVectorData(
+      int           dataID,
+      int           valueIndex,
+      const double *value);
 
   /**
    * @brief Writes scalar data given as block.
@@ -677,11 +673,11 @@ public:
    *
    * @see SolverInterface::setMeshVertex()
    */
-  void writeBlockScalarData (
-    int           dataID,
-    int           size,
-    const int*    valueIndices,
-    const double* values );
+  void writeBlockScalarData(
+      int           dataID,
+      int           size,
+      const int *   valueIndices,
+      const double *values);
 
   /**
    * @brief Writes scalar data to a vertex
@@ -696,10 +692,10 @@ public:
    *
    * @see SolverInterface::setMeshVertex()
    */
-  void writeScalarData (
-    int    dataID,
-    int    valueIndex,
-    double value );
+  void writeScalarData(
+      int    dataID,
+      int    valueIndex,
+      double value);
 
   /**
    * @brief Reads vector data into a provided block.
@@ -724,11 +720,11 @@ public:
    *
    * @see SolverInterface::setMeshVertex()
    */
-  void readBlockVectorData (
-    int        dataID,
-    int        size,
-    const int* valueIndices,
-    double*    values ) const;
+  void readBlockVectorData(
+      int        dataID,
+      int        size,
+      const int *valueIndices,
+      double *   values) const;
 
   /**
    * @brief Reads vector data form a vertex
@@ -750,10 +746,10 @@ public:
    *
    * @see SolverInterface::setMeshVertex()
    */
-  void readVectorData (
-    int     dataID,
-    int     valueIndex,
-    double* value ) const;
+  void readVectorData(
+      int     dataID,
+      int     valueIndex,
+      double *value) const;
 
   /**
    * @brief Reads scalar data as a block.
@@ -775,11 +771,11 @@ public:
    *
    * @see SolverInterface::setMeshVertex()
    */
-  void readBlockScalarData (
-    int        dataID,
-    int        size,
-    const int* valueIndices,
-    double*    values ) const;
+  void readBlockScalarData(
+      int        dataID,
+      int        size,
+      const int *valueIndices,
+      double *   values) const;
 
   /**
    * @brief Reads scalar data of a vertex.
@@ -796,23 +792,22 @@ public:
    *
    * @see SolverInterface::setMeshVertex()
    */
-  void readScalarData (
-    int     dataID,
-    int     valueIndex,
-    double& value ) const;
+  void readScalarData(
+      int     dataID,
+      int     valueIndex,
+      double &value) const;
 
   ///@}
 
 private:
-
   /// Pointer to implementation of SolverInterface.
   std::unique_ptr<impl::SolverInterfaceImpl> _impl;
 
   /// Disable copy construction by making copy constructor private.
-  SolverInterface ( const SolverInterface& copy );
+  SolverInterface(const SolverInterface &copy);
 
   /// Disable assignment construction by making assign. constructor private.
-  SolverInterface& operator= ( const SolverInterface& assign );
+  SolverInterface &operator=(const SolverInterface &assign);
 
   // @brief To allow white box tests.
   friend struct testing::WhiteboxAccessor;
@@ -832,13 +827,13 @@ std::string getVersionInformation();
 namespace constants {
 
 // @brief Name of action for writing initial data.
-const std::string& actionWriteInitialData();
+const std::string &actionWriteInitialData();
 
 // @brief Name of action for writing iteration checkpoint
-const std::string& actionWriteIterationCheckpoint();
+const std::string &actionWriteIterationCheckpoint();
 
 // @brief Name of action for reading iteration checkpoint.
-const std::string& actionReadIterationCheckpoint();
+const std::string &actionReadIterationCheckpoint();
 
 } // namespace constants
 

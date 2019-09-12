@@ -11,10 +11,8 @@
 
 using precice::utils::Event;
 
-namespace precice
-{
-namespace partition
-{
+namespace precice {
+namespace partition {
 
 ProvidedBoundingBox::ProvidedBoundingBox(mesh::PtrMesh mesh,
                                          bool          hasToSend,
@@ -66,11 +64,11 @@ void ProvidedBoundingBox::computeBoundingBox()
 {
   if (!_hasToSend)
     return;
-  
+
   PRECICE_TRACE();
 
   // size of the feedbackmap
-  int remoteConnectionMapSize = 0;
+  int              remoteConnectionMapSize = 0;
   std::vector<int> connectedRanksList;
 
   std::map<int, std::vector<int>> remoteConnectionMap;
@@ -82,7 +80,7 @@ void ProvidedBoundingBox::computeBoundingBox()
     // from other participants master
     _m2ns[0]->getMasterCommunication()->receive(connectedRanksList, 0);
     remoteConnectionMapSize = connectedRanksList.size();
-    
+
     for (auto &rank : connectedRanksList) {
       remoteConnectionMap[rank] = {-1};
     }
@@ -108,8 +106,7 @@ void ProvidedBoundingBox::computeBoundingBox()
 
     utils::MasterSlave::_communication->broadcast(connectedRanksList, 0);
 
-    if (!connectedRanksList.empty())
-    {
+    if (!connectedRanksList.empty()) {
       for (auto &rank : connectedRanksList) {
         remoteConnectionMap[rank] = {-1};
       }

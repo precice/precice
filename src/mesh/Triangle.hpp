@@ -1,33 +1,28 @@
 #pragma once
 
 #include <Eigen/Core>
-#include <iostream>
 #include <algorithm>
+#include <iostream>
 
+#include "math/differences.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/PropertyContainer.hpp"
 #include "mesh/RangeAccessor.hpp"
 #include "utils/assertion.hpp"
-#include "math/differences.hpp"
 
-namespace precice
-{
-namespace mesh
-{
+namespace precice {
+namespace mesh {
 class Vertex;
 }
 } // namespace precice
 
 // ----------------------------------------------------------- CLASS DEFINITION
 
-namespace precice
-{
-namespace mesh
-{
+namespace precice {
+namespace mesh {
 
 /// Triangle of a mesh, defined by three edges (and vertices).
-class Triangle : public PropertyContainer
-{
+class Triangle : public PropertyContainer {
 public:
   /// Type of the read-only const random-access iterator over Vertex coords
   /**
@@ -132,10 +127,10 @@ public:
    * Two Triangles are equal if their normal vector is equal AND
    * if the three edges are equal, whereas the order of edges is NOT important.
    */
-  bool operator==(const Triangle& other) const;
+  bool operator==(const Triangle &other) const;
 
   /// Not equal, implemented in terms of equal.
-  bool operator!=(const Triangle& other) const;
+  bool operator!=(const Triangle &other) const;
 
 private:
   /// Edges defining the triangle.
@@ -214,13 +209,12 @@ void Triangle::setNormal(
   _normal = normal;
 }
 
-
 inline int Triangle::getID() const
 {
   return _id;
 }
 
-std::ostream& operator<<(std::ostream& os, const Triangle& t);
+std::ostream &operator<<(std::ostream &os, const Triangle &t);
 
 } // namespace mesh
 } // namespace precice

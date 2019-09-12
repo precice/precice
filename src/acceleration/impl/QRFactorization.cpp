@@ -3,17 +3,14 @@
 #include <iostream>
 #include <vector>
 
-#include "com/Communication.hpp"
 #include "acceleration/BaseQNAcceleration.hpp"
 #include "acceleration/impl/QRFactorization.hpp"
+#include "com/Communication.hpp"
 #include "utils/MasterSlave.hpp"
 
-namespace precice
-{
-namespace acceleration
-{
-namespace impl
-{
+namespace precice {
+namespace acceleration {
+namespace impl {
 
 QRFactorization::QRFactorization(
     Eigen::MatrixXd Q,
@@ -778,4 +775,6 @@ void QRFactorization::setFilter(int filter)
   _filter = filter;
 }
 
-}}} // namespace precice, acceleration
+} // namespace impl
+} // namespace acceleration
+} // namespace precice

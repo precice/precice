@@ -6,14 +6,11 @@
 #include "math/differences.hpp"
 #include "mesh/PropertyContainer.hpp"
 
-namespace precice
-{
-namespace mesh
-{
+namespace precice {
+namespace mesh {
 
 /// Vertex of a mesh.
-class Vertex : public PropertyContainer
-{
+class Vertex : public PropertyContainer {
 public:
   /// Constructor for vertex
   template <typename VECTOR_T>

@@ -1,8 +1,8 @@
-#include "testing/Testing.hpp"
+#include "mapping/Mapping.hpp"
+#include "mapping/config/MappingConfiguration.hpp"
 #include "mesh/config/DataConfiguration.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
-#include "mapping/config/MappingConfiguration.hpp"
-#include "mapping/Mapping.hpp"
+#include "testing/Testing.hpp"
 #include "xml/XMLTag.hpp"
 
 using namespace precice;
@@ -13,18 +13,18 @@ BOOST_AUTO_TEST_SUITE(Configuration)
 
 BOOST_AUTO_TEST_CASE(Configuration)
 {
-  
+
   std::string pathToTests = testing::getPathToSources() + "/mapping/tests/";
   std::string file(pathToTests + "mapping-config.xml");
   using xml::XMLTag;
-  XMLTag tag = xml::getRootTag();
-  mesh::PtrDataConfiguration dataConfig( new mesh::DataConfiguration(tag) );
+  XMLTag                     tag = xml::getRootTag();
+  mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(tag));
   dataConfig->setDimensions(3);
   mesh::PtrMeshConfiguration meshConfig(new mesh::MeshConfiguration(tag, dataConfig));
   meshConfig->setDimensions(3);
   mapping::MappingConfiguration mappingConfig(tag, meshConfig);
   xml::configure(tag, file);
-    
+
   BOOST_TEST(meshConfig->meshes().size() == 3);
   BOOST_TEST(mappingConfig.mappings().size() == 3);
   BOOST_TEST(mappingConfig.mappings()[0].timing == MappingConfiguration::ON_DEMAND);

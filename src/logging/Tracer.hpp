@@ -4,18 +4,16 @@
 namespace precice {
 namespace logging {
 
-class Tracer
-{
-public:  
-  
-  Tracer (Logger &log, LogLocation loc);
+class Tracer {
+public:
+  Tracer(Logger &log, LogLocation loc);
   ~Tracer();
 
 private:
-
   Logger _log;
 
   LogLocation _loc;
 };
 
-}} // namespace precice, logging
+} // namespace logging
+} // namespace precice

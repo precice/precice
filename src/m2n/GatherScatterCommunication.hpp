@@ -4,10 +4,8 @@
 #include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 
-namespace precice
-{
-namespace m2n
-{
+namespace precice {
+namespace m2n {
 
 /**
  * @brief Implements DistributedCommunication by using a gathering/scattering methodology.
@@ -15,8 +13,7 @@ namespace m2n
  * between slaves is used.
  * For more details see m2n/DistributedCommunication.hpp
  */
-class GatherScatterCommunication : public DistributedCommunication
-{
+class GatherScatterCommunication : public DistributedCommunication {
 public:
   GatherScatterCommunication(
       com::PtrCommunication com,
@@ -65,8 +62,8 @@ public:
   /// Sends an array of double values from all slaves (different for each slave).
   void send(
       double const *itemsToSend,
-      size_t  size,
-      int     valueDimension) override;
+      size_t        size,
+      int           valueDimension) override;
 
   /// All slaves receive an array of doubles (different for each slave).
   void receive(

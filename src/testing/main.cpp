@@ -1,18 +1,17 @@
+#include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/test/unit_test_parameters.hpp>
-#include <boost/filesystem.hpp>
-#include "utils/Parallel.hpp"
-#include "utils/Petsc.hpp"
+#include <iostream>
+#include "logging/LogConfiguration.hpp"
 #include "utils/EventUtils.hpp"
 #include "utils/MasterSlave.hpp"
-#include "logging/LogConfiguration.hpp"
-#include <iostream>
+#include "utils/Parallel.hpp"
+#include "utils/Petsc.hpp"
 
 namespace precice {
 extern bool testMode;
 extern bool syncMode;
-}
-
+} // namespace precice
 
 /// Boost test Initialization function
 /**
@@ -38,20 +37,20 @@ bool init_unit_test()
 {
   using namespace boost::unit_test;
   using namespace precice;
-  
-  auto & master_suite = framework::master_test_suite();
+
+  auto &master_suite        = framework::master_test_suite();
   master_suite.p_name.value = "preCICE Tests";
 
   auto logConfigs = logging::readLogConfFile("log.conf");
-  
+
   if (logConfigs.empty()) { // nothing has been read from log.conf
-    #if BOOST_VERSION == 106900
+#if BOOST_VERSION == 106900
     std::cerr << "Boost 1.69 get log_level is broken, preCICE log level set to debug.\n";
     auto logLevel = log_successful_tests;
-    #else
+#else
     auto logLevel = runtime_config::get<log_level>(runtime_config::btrt_log_level);
-    #endif
-    
+#endif
+
     logging::BackendConfiguration config;
     if (logLevel == log_successful_tests or logLevel == log_test_units)
       config.filter = "%Severity% >= debug";
@@ -61,7 +60,7 @@ bool init_unit_test()
       config.filter = "%Severity% >= warning";
     if (logLevel >= log_all_errors)
       config.filter = "%Severity% >= warning"; // log warnings in any case
-    
+
     logConfigs.push_back(config);
   }
 
@@ -69,23 +68,22 @@ bool init_unit_test()
   // or from the Boost Test log level.
   logging::setupLogging(logConfigs);
   logging::lockConf();
-  
 
   // Sets the default tolerance for floating point comparisions
   // Can be overwritten on a per-test or per-suite basis using decators
   // boost::unit_test::decorator::collector::instance() * boost::unit_test::tolerance(0.001);
-  * tolerance(1e-9); // Stores the decorator in the collector singleton
-  #if BOOST_VERSION < 106900
+  *tolerance(1e-9); // Stores the decorator in the collector singleton
+#if BOOST_VERSION < 106900
   decorator::collector::instance().store_in(master_suite);
-  #else
+#else
   decorator::collector_t::instance().store_in(master_suite);
-  #endif
-  
+#endif
+
   return true;
 }
 
 /// Entry point for the boost test executable
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
   using namespace precice;
 
@@ -96,7 +94,7 @@ int main(int argc, char* argv[])
   logging::setMPIRank(utils::Parallel::getProcessRank());
   utils::Petsc::initialize(&argc, &argv);
   utils::EventRegistry::instance().initialize("precice-Tests", "", utils::Parallel::getGlobalCommunicator());
-    
+
   if (utils::Parallel::getCommunicatorSize() < 4) {
     if (utils::Parallel::getProcessRank() == 0)
       std::cerr << "Running tests on less than four processors. Not all tests are executed.\n";
@@ -107,7 +105,7 @@ int main(int argc, char* argv[])
     std::exit(-1);
   }
 
-  int retCode = boost::unit_test::unit_test_main( &init_unit_test, argc, argv );
+  int retCode = boost::unit_test::unit_test_main(&init_unit_test, argc, argv);
 
   utils::EventRegistry::instance().finalize();
   utils::Petsc::finalize();

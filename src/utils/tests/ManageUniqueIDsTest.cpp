@@ -8,7 +8,7 @@ BOOST_AUTO_TEST_SUITE(UtilsTests)
 BOOST_AUTO_TEST_CASE(UniqueIDs)
 {
   ManageUniqueIDs uniqueIDs;
-  int id = uniqueIDs.getFreeID();
+  int             id = uniqueIDs.getFreeID();
   BOOST_TEST(id == 0);
   id = uniqueIDs.getFreeID();
   BOOST_TEST(id == 1);

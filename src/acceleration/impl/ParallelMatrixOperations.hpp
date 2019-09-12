@@ -10,16 +10,11 @@
 #include "utils/MasterSlave.hpp"
 #include "utils/assertion.hpp"
 
+namespace precice {
+namespace acceleration {
+namespace impl {
 
-namespace precice
-{
-namespace acceleration
-{
-namespace impl
-{
-
-class ParallelMatrixOperations
-{
+class ParallelMatrixOperations {
 public:
   /// Destructor, empty.
   virtual ~ParallelMatrixOperations(){};
@@ -267,7 +262,7 @@ private:
 
     // ensure that both matrices are stored in the same order. Important for reduce function, that adds serialized data.
     PRECICE_ASSERT(static_cast<int>(leftMatrix.IsRowMajor) == static_cast<int>(rightMatrix.IsRowMajor),
-              leftMatrix.IsRowMajor, rightMatrix.IsRowMajor);
+                   leftMatrix.IsRowMajor, rightMatrix.IsRowMajor);
 
     // multiply local block (saxpy-based approach)
     // dimension: (n_global x n_local) * (n_local x m) = (n_global x m)
@@ -316,6 +311,8 @@ private:
   bool _needCycliclComm = true;
 };
 
-}}} // namespace precice, acceleration, impl
+} // namespace impl
+} // namespace acceleration
+} // namespace precice
 
 #endif

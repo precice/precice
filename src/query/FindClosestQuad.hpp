@@ -1,15 +1,15 @@
 #pragma once
 
-#include <array>
 #include <Eigen/Core>
+#include <array>
 #include "logging/Logger.hpp"
 
 namespace precice {
-  namespace mesh {
-    class Mesh;
-    class Quad;
-  }
-}
+namespace mesh {
+class Mesh;
+class Quad;
+} // namespace mesh
+} // namespace precice
 
 // ----------------------------------------------------------- CLASS DEFINITION
 
@@ -19,27 +19,25 @@ namespace query {
 /**
  * @brief Finds the closest Quad object contained in a Mesh object.
  */
-class FindClosestQuad
-{
+class FindClosestQuad {
 public:
-
   /**
    * @brief Constructor.
    *
    * @param[in] searchPoint Origin from which the closest Quad object should be found.
    */
-  explicit FindClosestQuad ( const Eigen::VectorXd& searchPoint );
+  explicit FindClosestQuad(const Eigen::VectorXd &searchPoint);
 
   /**
    * @brief Searches for the closest quad on the given mesh object.
    *
    * @return True, if a closest quad could be found.
    */
-  template<typename CONTAINER_T>
-  bool operator() ( CONTAINER_T & container );
+  template <typename CONTAINER_T>
+  bool operator()(CONTAINER_T &container);
 
   /// Returns the coordinates of the search point.
-  const Eigen::VectorXd& getSearchPoint() const;
+  const Eigen::VectorXd &getSearchPoint() const;
 
   /// Returns true, if a closest quad has been found.
   bool hasFound() const;
@@ -56,20 +54,19 @@ public:
    *
    * @pre Find has been called and returned true.
    */
-  mesh::Quad& getClosestQuad();
+  mesh::Quad &getClosestQuad();
 
   /**
    * @brief Returns the vector from the search point to the projection point.
    *
    * @pre Find has been called and returned true.
    */
-  const Eigen::VectorXd& getVectorToProjectionPoint() const;
+  const Eigen::VectorXd &getVectorToProjectionPoint() const;
 
   /// Returns parametric description value (index 0, 1, 2) of proj. point.
-  double getProjectionPointParameter ( int index ) const;
+  double getProjectionPointParameter(int index) const;
 
 private:
-
   logging::Logger _log{"query::FindClosestQuad"};
 
   /// Search point coordinates.
@@ -82,25 +79,24 @@ private:
   Eigen::VectorXd _vectorToProjectionPoint;
 
   /// Quad coordinates of the projection point.
-  std::array<double,4> _parametersProjectionPoint; // Does this make sense?
+  std::array<double, 4> _parametersProjectionPoint; // Does this make sense?
 
   /// Pointer to found Quad object.
-  mesh::Quad* _closestQuad = nullptr;
+  mesh::Quad *_closestQuad = nullptr;
 
-  void find ( mesh::Quad& quad );
+  void find(mesh::Quad &quad);
 };
 
 // --------------------------------------------------------- HEADER DEFINITIONS
 
-template<typename CONTAINER_T>
-bool FindClosestQuad:: operator() ( CONTAINER_T& container )
+template <typename CONTAINER_T>
+bool FindClosestQuad::operator()(CONTAINER_T &container)
 {
-  for ( mesh::Quad& quad : container.quads() ) {
-    find ( quad );
+  for (mesh::Quad &quad : container.quads()) {
+    find(quad);
   }
   return _closestQuad != NULL;
 }
 
-}} // namespace precice, query
-
-
+} // namespace query
+} // namespace precice

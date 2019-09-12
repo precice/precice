@@ -2,10 +2,8 @@
 
 #include "mesh/SharedPointer.hpp"
 
-namespace precice
-{
-namespace m2n
-{
+namespace precice {
+namespace m2n {
 
 /**
  * @brief Interface for all distributed solver to solver communication classes.
@@ -28,14 +26,14 @@ namespace m2n
  * are broadcasted.
  *
  */
-class DistributedCommunication
-{
+class DistributedCommunication {
 public:
   using SharedPointer = std::shared_ptr<DistributedCommunication>;
 
   explicit DistributedCommunication(mesh::PtrMesh mesh)
       : _mesh(mesh)
-  {}
+  {
+  }
 
   /// Destructor, empty.
   virtual ~DistributedCommunication() {}
@@ -73,8 +71,8 @@ public:
   /// Sends an array of double values from all slaves (different for each slave).
   virtual void send(
       double const *itemsToSend,
-      size_t  size,
-      int     valueDimension) = 0;
+      size_t        size,
+      int           valueDimension) = 0;
 
   /// All slaves receive an array of doubles (different for each slave).
   virtual void receive(

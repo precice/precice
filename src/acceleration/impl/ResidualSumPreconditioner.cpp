@@ -1,12 +1,9 @@
 #include "acceleration/impl/ResidualSumPreconditioner.hpp"
 #include "utils/MasterSlave.hpp"
 
-namespace precice
-{
-namespace acceleration
-{
-namespace impl
-{
+namespace precice {
+namespace acceleration {
+namespace impl {
 
 ResidualSumPreconditioner::ResidualSumPreconditioner(
     int maxNonConstTimesteps)
@@ -22,7 +19,7 @@ void ResidualSumPreconditioner::initialize(std::vector<size_t> &svs)
   _residualSum.resize(_subVectorSizes.size(), 0.0);
 }
 
-void ResidualSumPreconditioner::_update_(bool timestepComplete,
+void ResidualSumPreconditioner::_update_(bool                   timestepComplete,
                                          const Eigen::VectorXd &oldValues,
                                          const Eigen::VectorXd &res)
 {
@@ -67,4 +64,6 @@ void ResidualSumPreconditioner::_update_(bool timestepComplete,
   }
 }
 
-}}} // namespace precice, acceleration
+} // namespace impl
+} // namespace acceleration
+} // namespace precice

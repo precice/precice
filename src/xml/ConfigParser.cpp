@@ -1,11 +1,9 @@
 #include "ConfigParser.hpp"
-#include <libxml/SAX.h>
 #include <fstream>
+#include <libxml/SAX.h>
 
-namespace precice
-{
-namespace xml
-{
+namespace precice {
+namespace xml {
 
 // ------------------------- Callback functions for libxml2  -------------------------
 
@@ -74,7 +72,7 @@ ConfigParser::ConfigParser(const std::string &filePath, std::shared_ptr<precice:
 
   try {
     connectTags(DefTags, SubTags);
-  } catch (const std::string& error) {
+  } catch (const std::string &error) {
     PRECICE_ERROR(error);
   }
 }
@@ -118,7 +116,7 @@ int ConfigParser::readXmlFile(std::string const &filePath)
 
   std::string content{std::istreambuf_iterator<char>(ifs), std::istreambuf_iterator<char>()};
 
-  xmlParserCtxtPtr ctxt = xmlCreatePushParserCtxt(&SAXHandler, static_cast<void*>(this),
+  xmlParserCtxtPtr ctxt = xmlCreatePushParserCtxt(&SAXHandler, static_cast<void *>(this),
                                                   content.c_str(), content.size(), nullptr);
 
   xmlParseChunk(ctxt, nullptr, 0, 1);
@@ -137,7 +135,7 @@ void ConfigParser::connectTags(std::vector<std::shared_ptr<XMLTag>> &DefTags, CT
     bool found = false;
 
     for (auto pDefSubTag : DefTags) {
-      
+
       if (pDefSubTag->_fullName == ((subtag->m_Prefix.length() ? subtag->m_Prefix + ":" : "") + subtag->m_Name)) {
         found = true;
         pDefSubTag->resetAttributes();
@@ -199,5 +197,5 @@ void ConfigParser::OnTextSection(std::string ch)
 {
   // This page intentionally left blank
 }
-}
-}
+} // namespace xml
+} // namespace precice

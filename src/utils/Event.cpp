@@ -5,15 +5,15 @@ namespace precice {
 namespace utils {
 
 Event::Event(std::string eventName, Clock::duration initialDuration)
-  : name(EventRegistry::instance().prefix + eventName),
-    duration(initialDuration)
+    : name(EventRegistry::instance().prefix + eventName),
+      duration(initialDuration)
 {
   EventRegistry::instance().put(*this);
 }
 
 Event::Event(std::string eventName, bool barrier, bool autostart)
-  : name(eventName),
-    _barrier(barrier)
+    : name(eventName),
+      _barrier(barrier)
 {
   // Set prefix here: workaround to omit data lock between instance() and Event ctor
   if (eventName != "_GLOBAL")
@@ -85,7 +85,7 @@ void Event::addData(std::string key, int value)
 
 // -----------------------------------------------------------------------
 
-ScopedEventPrefix::ScopedEventPrefix(std::string const & name)
+ScopedEventPrefix::ScopedEventPrefix(std::string const &name)
 {
   previousName = EventRegistry::instance().prefix;
   EventRegistry::instance().prefix += name;
@@ -96,4 +96,5 @@ ScopedEventPrefix::~ScopedEventPrefix()
   EventRegistry::instance().prefix = previousName;
 }
 
-}}
+} // namespace utils
+} // namespace precice

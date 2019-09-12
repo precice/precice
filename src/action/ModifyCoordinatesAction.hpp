@@ -4,14 +4,11 @@
 #include "logging/Logger.hpp"
 #include "mesh/SharedPointer.hpp"
 
-namespace precice
-{
-namespace action
-{
+namespace precice {
+namespace action {
 
 /// Modifies a mesh's coordinates by using a coupling data set.
-class ModifyCoordinatesAction : public Action
-{
+class ModifyCoordinatesAction : public Action {
 public:
   enum Mode {
     ADD_TO_COORDINATES_MODE,

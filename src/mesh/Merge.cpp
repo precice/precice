@@ -1,37 +1,37 @@
 #include "Merge.hpp"
+#include "mesh/Edge.hpp"
 #include "mesh/PropertyContainer.hpp"
 #include "mesh/Triangle.hpp"
-#include "mesh/Edge.hpp"
 #include "mesh/Vertex.hpp"
 
 namespace precice {
 namespace mesh {
 
-Merge:: Merge()
-:
-  //PROPERTY_ID ( PropertyContainer::getFreePropertyID() ),
-  _merged()
-{}
-
-Merge:: ~Merge()
+Merge::Merge()
+    : //PROPERTY_ID ( PropertyContainer::getFreePropertyID() ),
+      _merged()
 {
-//  for ( Vertex& vertex : _merged.vertices() ){
-//    vertex.deleteProperty ( PROPERTY_ID );
-//  }
-//  for ( Edge& edge : _merged.edges() ){
-//    edge.deleteProperty ( PROPERTY_ID );
-//  }
-//  for ( Triangle& triangle : _merged.triangles() ){
-//    triangle.deleteProperty ( PROPERTY_ID );
-//  }
 }
 
-Group& Merge:: content()
+Merge::~Merge()
+{
+  //  for ( Vertex& vertex : _merged.vertices() ){
+  //    vertex.deleteProperty ( PROPERTY_ID );
+  //  }
+  //  for ( Edge& edge : _merged.edges() ){
+  //    edge.deleteProperty ( PROPERTY_ID );
+  //  }
+  //  for ( Triangle& triangle : _merged.triangles() ){
+  //    triangle.deleteProperty ( PROPERTY_ID );
+  //  }
+}
+
+Group &Merge::content()
 {
   return _merged;
 }
 
-const Group& Merge:: content() const
+const Group &Merge::content() const
 {
   return _merged;
 }
@@ -52,5 +52,5 @@ const Group& Merge:: content() const
 //  return true;
 //}
 
-}} // namespace precice, mesh
-
+} // namespace mesh
+} // namespace precice
