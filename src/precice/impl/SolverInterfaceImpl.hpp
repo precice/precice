@@ -137,7 +137,7 @@ public:
    * - Sends and resets coupling data written by solver to coupling partners.
    * - Receives coupling data read by solver.
    * - Computes and applied data mappings.
-   * - Computes post-processing of coupling data.
+   * - Computes acceleration of coupling data.
    * - Exchanges and computes information regarding the state of the coupled
    *   simulation.
    *

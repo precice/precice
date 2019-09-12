@@ -100,6 +100,7 @@ void SolverInterfaceImpl:: configure
 (
   const std::string& configurationFileName )
 {
+  utils::Parallel::initializeMPI(nullptr, nullptr);
   config::Configuration config;
   xml::configure(config.getXMLTag(), configurationFileName);
   if(_accessorProcessRank==0){
@@ -186,7 +187,6 @@ void SolverInterfaceImpl:: configure
       _meshLock.add(meshID.second, false);
   }
   
-  utils::Parallel::initializeMPI(nullptr, nullptr);
   logging::setMPIRank(utils::Parallel::getProcessRank());
   utils::EventRegistry::instance().initialize("precice-" + _accessorName, "", utils::Parallel::getGlobalCommunicator());
   
@@ -827,14 +827,14 @@ void SolverInterfaceImpl:: setMeshTriangleWithEdges
     PRECICE_CHECK(mesh->isValidVertexID(firstVertexID),  "Given VertexID is invalid!");
     PRECICE_CHECK(mesh->isValidVertexID(secondVertexID), "Given VertexID is invalid!");
     PRECICE_CHECK(mesh->isValidVertexID(thirdVertexID),  "Given VertexID is invalid!");
-    PRECICE_CHECK(!utils::unique_elements(utils::make_array(firstVertexID, secondVertexID, thirdVertexID)),
+    PRECICE_CHECK(utils::unique_elements(utils::make_array(firstVertexID, secondVertexID, thirdVertexID)),
             "Given VertexIDs must be unique!");
     mesh::Vertex* vertices[3];
     vertices[0] = &mesh->vertices()[firstVertexID];
     vertices[1] = &mesh->vertices()[secondVertexID];
     vertices[2] = &mesh->vertices()[thirdVertexID];
-    PRECICE_CHECK(!utils::unique_elements(utils::make_array(vertices[0]->getCoords(),
-                vertices[1]->getCoords(), vertices[2]->getCoords()), utils::ComponentWiseLess{}),
+    PRECICE_CHECK(utils::unique_elements(utils::make_array(vertices[0]->getCoords(),
+                vertices[1]->getCoords(), vertices[2]->getCoords())),
             "The coordinates of the vertices must be unique!");
     mesh::Edge* edges[3];
     edges[0] = & mesh->createUniqueEdge(*vertices[0], *vertices[1]);

@@ -5,6 +5,42 @@
 target_sources(precice
     PRIVATE
     ${CMAKE_BINARY_DIR}/src/precice/impl/versions.cpp
+    src/acceleration/Acceleration.hpp
+    src/acceleration/AitkenAcceleration.cpp
+    src/acceleration/AitkenAcceleration.hpp
+    src/acceleration/BaseQNAcceleration.cpp
+    src/acceleration/BaseQNAcceleration.hpp
+    src/acceleration/BroydenAcceleration.cpp
+    src/acceleration/BroydenAcceleration.hpp
+    src/acceleration/ConstantRelaxationAcceleration.cpp
+    src/acceleration/ConstantRelaxationAcceleration.hpp
+    src/acceleration/HierarchicalAitkenAcceleration.cpp
+    src/acceleration/HierarchicalAitkenAcceleration.hpp
+    src/acceleration/IQNILSAcceleration.cpp
+    src/acceleration/IQNILSAcceleration.hpp
+    src/acceleration/MMAcceleration.cpp
+    src/acceleration/MMAcceleration.hpp
+    src/acceleration/MVQNAcceleration.cpp
+    src/acceleration/MVQNAcceleration.hpp
+    src/acceleration/SharedPointer.hpp
+    src/acceleration/config/AccelerationConfiguration.cpp
+    src/acceleration/config/AccelerationConfiguration.hpp
+    src/acceleration/impl/ConstantPreconditioner.cpp
+    src/acceleration/impl/ConstantPreconditioner.hpp
+    src/acceleration/impl/ParallelMatrixOperations.cpp
+    src/acceleration/impl/ParallelMatrixOperations.hpp
+    src/acceleration/impl/Preconditioner.hpp
+    src/acceleration/impl/QRFactorization.cpp
+    src/acceleration/impl/QRFactorization.hpp
+    src/acceleration/impl/ResidualPreconditioner.cpp
+    src/acceleration/impl/ResidualPreconditioner.hpp
+    src/acceleration/impl/ResidualSumPreconditioner.cpp
+    src/acceleration/impl/ResidualSumPreconditioner.hpp
+    src/acceleration/impl/SVDFactorization.cpp
+    src/acceleration/impl/SVDFactorization.hpp
+    src/acceleration/impl/SharedPointer.hpp
+    src/acceleration/impl/ValuePreconditioner.cpp
+    src/acceleration/impl/ValuePreconditioner.hpp
     src/action/Action.hpp
     src/action/ComputeCurvatureAction.cpp
     src/action/ComputeCurvatureAction.hpp
@@ -73,50 +109,16 @@ target_sources(precice
     src/cplscheme/SharedPointer.hpp
     src/cplscheme/config/CouplingSchemeConfiguration.cpp
     src/cplscheme/config/CouplingSchemeConfiguration.hpp
-    src/cplscheme/config/PostProcessingConfiguration.cpp
-    src/cplscheme/config/PostProcessingConfiguration.hpp
     src/cplscheme/impl/AbsoluteConvergenceMeasure.cpp
     src/cplscheme/impl/AbsoluteConvergenceMeasure.hpp
-    src/cplscheme/impl/AitkenPostProcessing.cpp
-    src/cplscheme/impl/AitkenPostProcessing.hpp
-    src/cplscheme/impl/BaseQNPostProcessing.cpp
-    src/cplscheme/impl/BaseQNPostProcessing.hpp
-    src/cplscheme/impl/BroydenPostProcessing.cpp
-    src/cplscheme/impl/BroydenPostProcessing.hpp
-    src/cplscheme/impl/ConstantPreconditioner.cpp
-    src/cplscheme/impl/ConstantPreconditioner.hpp
-    src/cplscheme/impl/ConstantRelaxationPostProcessing.cpp
-    src/cplscheme/impl/ConstantRelaxationPostProcessing.hpp
     src/cplscheme/impl/ConvergenceMeasure.hpp
-    src/cplscheme/impl/HierarchicalAitkenPostProcessing.cpp
-    src/cplscheme/impl/HierarchicalAitkenPostProcessing.hpp
-    src/cplscheme/impl/IQNILSPostProcessing.cpp
-    src/cplscheme/impl/IQNILSPostProcessing.hpp
-    src/cplscheme/impl/MMPostProcessing.cpp
-    src/cplscheme/impl/MMPostProcessing.hpp
-    src/cplscheme/impl/MVQNPostProcessing.cpp
-    src/cplscheme/impl/MVQNPostProcessing.hpp
     src/cplscheme/impl/MinIterationConvergenceMeasure.cpp
     src/cplscheme/impl/MinIterationConvergenceMeasure.hpp
-    src/cplscheme/impl/ParallelMatrixOperations.cpp
-    src/cplscheme/impl/ParallelMatrixOperations.hpp
-    src/cplscheme/impl/PostProcessing.hpp
-    src/cplscheme/impl/Preconditioner.hpp
-    src/cplscheme/impl/QRFactorization.cpp
-    src/cplscheme/impl/QRFactorization.hpp
     src/cplscheme/impl/RelativeConvergenceMeasure.cpp
     src/cplscheme/impl/RelativeConvergenceMeasure.hpp
-    src/cplscheme/impl/ResidualPreconditioner.cpp
-    src/cplscheme/impl/ResidualPreconditioner.hpp
     src/cplscheme/impl/ResidualRelativeConvergenceMeasure.cpp
     src/cplscheme/impl/ResidualRelativeConvergenceMeasure.hpp
-    src/cplscheme/impl/ResidualSumPreconditioner.cpp
-    src/cplscheme/impl/ResidualSumPreconditioner.hpp
-    src/cplscheme/impl/SVDFactorization.cpp
-    src/cplscheme/impl/SVDFactorization.hpp
     src/cplscheme/impl/SharedPointer.hpp
-    src/cplscheme/impl/ValuePreconditioner.cpp
-    src/cplscheme/impl/ValuePreconditioner.hpp
     src/io/Constants.cpp
     src/io/Constants.hpp
     src/io/Export.hpp
