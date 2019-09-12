@@ -9,7 +9,7 @@
 * [ ] Update documentation (all) @MakisH 
 * [ ] Fix potential problems in develop (all)
 * [ ] Approve the PR with at least two reviews (all)
-* [ ] Merge develop to master @MakisH 
+* [ ] Merge PR to master @MakisH 
 * [ ] Tag release (on GitHub, make sure to select the release branch as target) and merge back to develop
 
 ## Regression Tests
