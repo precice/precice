@@ -3,7 +3,7 @@
 <precice-configuration>
 
   <log>
-    <sink type="stream" output="stdout"  filter= "%Severity% > debug" format="Rank %Rank% at %TimeStamp% in %Function%: %Message%" enabled="true" />	
+    <sink type="stream" output="stdout"  filter= "%Severity% > debug" format="preCICE:%ColorizedSeverity% %Message%" enabled="true" />	
   </log>
 
   <solver-interface dimensions="2" >

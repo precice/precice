@@ -13,8 +13,6 @@ private:
     ArrayFactory factory;
 
 public:
-    MexFunction(): factory{} {}
-
     void operator()(ArgumentList outputs, ArgumentList inputs) {
         // define the constantID
         TypedArray<uint8_t> functionIDArray = inputs[0];
