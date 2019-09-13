@@ -402,33 +402,11 @@ void PointToPointCommunication::acceptPreConnection(std::string const &acceptorN
     return;
   }
 
-#ifdef SuperMUC_WORK
-  try {
-    auto addressDirectory = _communicationFactory->addressDirectory();
-
-    if (utils::MasterSlave::isMaster()) {
-      Event e("m2n.createDirectories");
-
-      for (int rank = 0; rank < utils::MasterSlave::_size; ++rank) {
-        Publisher::createDirectory(addressDirectory + "/" + "." + acceptorName + "-" + _mesh->getName() +
-                                   "-" + std::to_string(rank) + ".address");
-      }
-    }
-    utils::Parallel::synchronizeProcesses();
-  } catch (...) {
-  }
-#endif  
-
   // Accept point-to-point connections (as server) between the current acceptor
   // process (in the current participant) with rank `utils::MasterSlave::_rank'
   // and (multiple) requester processes (in the requester participant).
   auto c = _communicationFactory->newCommunication();
-
-#ifdef SuperMUC_WORK
-  Publisher::ScopedPushDirectory spd("." + acceptorName + "-" + _mesh->getName() + "-" +
-                                     std::to_string(utils::MasterSlave::_rank) + ".address");
-#endif
-
+  
   c->acceptConnectionAsServer(
       acceptorName,
       requesterName,
@@ -561,15 +539,6 @@ void PointToPointCommunication::requestPreConnection(std::string const &acceptor
     return;
   }
 
-#ifdef SuperMUC_WORK
-  try {
-    auto addressDirectory = _communicationFactory->addressDirectory();
-
-    utils::Parallel::synchronizeProcesses();
-  } catch (...) {
-  }
-#endif  
-
   std::vector<com::PtrRequest> requests;
   requests.reserve(localConnectedRanks.size());
   _connectionDataVector.reserve(localConnectedRanks.size());
@@ -587,12 +556,6 @@ void PointToPointCommunication::requestPreConnection(std::string const &acceptor
   // processes (in the acceptor participant) with ranks `globalAcceptorRank'
   // according to communication map.
   for (auto & connectedRank : localConnectedRanks) {
-
-#ifdef SuperMUC_WORK
-    Publisher::ScopedPushDirectory spd("." + acceptorName + "-" + _mesh->getName() + "-" +
-                                       std::to_string(connectedRank) + ".address");
-#endif
-
     // NOTE:
     // Everything is moved (efficiency)!
     // On the requester participant side, the communication objects behave
