@@ -39,6 +39,7 @@ void CommunicateBoundingBox::sendBoundingBoxMap(
     mesh::Mesh::BoundingBoxMap &bbm,
     int                         rankReceiver)
 {
+  
   PRECICE_TRACE(rankReceiver);
   _communication->send((int) bbm.size(), rankReceiver);
 
