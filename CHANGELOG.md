@@ -2,7 +2,11 @@
 
 All notable changes to this project will be documented in this file. For future plans, see our [Roadmap](https://github.com/precice/precice/wiki/Roadmap).
 
-## develop
+## 1.6.1
+
+- Fixed a platform-dependent issue with boost.
+
+## 1.6.0
 
 ## 1.6.0
 

@@ -302,6 +302,7 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
   mesh::Mesh::VertexDistribution  requesterVertexDistribution;
 
   if (utils::MasterSlave::isMaster()) {
+    PRECICE_DEBUG("Exchange vertex distribution between both masters");
     Event e0("m2n.exchangeVertexDistribution");
     // Establish connection between participants' master processes.
     auto c = _communicationFactory->newCommunication();
@@ -315,6 +316,7 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
     PRECICE_ASSERT(utils::MasterSlave::isSlave());
   }
 
+  PRECICE_DEBUG("Broadcast vertex distributions");
   Event e1("m2n.broadcastVertexDistributions", precice::syncMode);
   m2n::broadcast(vertexDistribution);
   m2n::broadcast(requesterVertexDistribution);
@@ -344,11 +346,13 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
 
 // Print `communicationMap'.
 #ifdef P2P_LCM_PRINT
+  PRECICE_DEBUG("Print communication map");
   print(communicationMap);
 #endif
 
 // Print statistics of `communicationMap'.
 #ifdef P2P_LCM_PRINT_STATS
+  PRECICE_DEBUG("Print communication map statistics");
   printCommunicationPartnerCountStats(communicationMap);
   printLocalIndexCountStats(communicationMap);
 #endif
@@ -360,6 +364,7 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
     return;
   }
 
+  PRECICE_DEBUG("Create and connect communication");
   _communication = _communicationFactory->newCommunication();
 
   // Accept point-to-point connections (as server) between the current acceptor
@@ -370,6 +375,7 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
                                            utils::MasterSlave::getRank(),
                                            communicationMap.size());
 
+  PRECICE_DEBUG("Store communication map");
   for (auto const & comMap : communicationMap) {
     int globalRequesterRank = comMap.first;
     auto indices = std::move(communicationMap[globalRequesterRank]);
@@ -451,6 +457,7 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
   mesh::Mesh::VertexDistribution  acceptorVertexDistribution;
 
   if (utils::MasterSlave::isMaster()) {
+    PRECICE_DEBUG("Exchange vertex distribution between both masters");
     Event e0("m2n.exchangeVertexDistribution");
     // Establish connection between participants' master processes.
     auto c = _communicationFactory->newCommunication();
@@ -463,6 +470,7 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
     PRECICE_ASSERT(utils::MasterSlave::isSlave());
   }
 
+  PRECICE_DEBUG("Broadcast vertex distributions");
   Event e1("m2n.broadcastVertexDistributions", precice::syncMode);
   m2n::broadcast(vertexDistribution);
   m2n::broadcast(acceptorVertexDistribution);
@@ -492,11 +500,13 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
 
 // Print `communicationMap'.
 #ifdef P2P_LCM_PRINT
+  PRECICE_DEBUG("Print communication map");
   print(communicationMap);
 #endif
 
 // Print statistics of `communicationMap'.
 #ifdef P2P_LCM_PRINT_STATS
+  PRECICE_DEBUG("Print communication map statistics");
   printCommunicationPartnerCountStats(communicationMap);
   printLocalIndexCountStats(communicationMap);
 #endif
@@ -515,6 +525,7 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
   for (auto &i : communicationMap)
     acceptingRanks.emplace(i.first);
 
+  PRECICE_DEBUG("Create and connect communication");
   _communication = _communicationFactory->newCommunication();
   // Request point-to-point connections (as client) between the current
   // requester process (in the current participant) and (multiple) acceptor
@@ -523,6 +534,7 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
   _communication->requestConnectionAsClient(acceptorName, requesterName,
                                             acceptingRanks, utils::MasterSlave::getRank());
 
+  PRECICE_DEBUG("Store communication map");
   for (auto &i : communicationMap) {
     auto globalAcceptorRank = i.first;
     auto indices            = std::move(i.second);
