@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file. For future 
 
 ## 1.6.1
 
-- Fixed a platform-dependant issue with boost.
+- Fixed a platform-dependent issue with boost.
 
 ## 1.6.0
 
