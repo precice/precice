@@ -395,16 +395,13 @@ void PointToPointCommunication::acceptPreConnection(std::string const &acceptorN
         "You can only use a point-to-point communication between two participants which both use a master. "
             << "Please use distribution-type gather-scatter instead.");
   
-  std::vector<int> localConnectedRanks = _mesh->getConnectedRanks();
+  const std::vector<int> & localConnectedRanks = _mesh->getConnectedRanks();
 
   if (localConnectedRanks.empty()) {
     _isConnected = true;
     return;
   }
 
-  // Accept point-to-point connections (as server) between the current acceptor
-  // process (in the current participant) with rank `utils::MasterSlave::_rank'
-  // and (multiple) requester processes (in the requester participant).
   auto c = _communicationFactory->newCommunication();
   
   c->acceptConnectionAsServer(
@@ -415,7 +412,7 @@ void PointToPointCommunication::acceptPreConnection(std::string const &acceptorN
 
   _connectionDataVector.reserve(localConnectedRanks.size());
 
-  for (int & connectedRank : localConnectedRanks) {
+  for (int connectedRank : localConnectedRanks) {
     _connectionDataVector.push_back({connectedRank, c, com::PtrRequest()});
   }
 
@@ -543,24 +540,13 @@ void PointToPointCommunication::requestPreConnection(std::string const &acceptor
   requests.reserve(localConnectedRanks.size());
   _connectionDataVector.reserve(localConnectedRanks.size());
 
-  std::set<int> acceptingRanks;
-  for (int &i : localConnectedRanks)
-    acceptingRanks.emplace(i);
-
+  std::set<int> acceptingRanks(localConnectedRanks.begin(), localConnectedRanks.end());
+  
   auto c = _communicationFactory->newCommunication();
   c->requestConnectionAsClient(acceptorName, requesterName,
                                acceptingRanks, utils::MasterSlave::getRank());
 
-  // Request point-to-point connections (as client) between the current
-  // requester process (in the current participant) and (multiple) acceptor
-  // processes (in the acceptor participant) with ranks `globalAcceptorRank'
-  // according to communication map.
   for (auto & connectedRank : localConnectedRanks) {
-    // NOTE:
-    // Everything is moved (efficiency)!
-    // On the requester participant side, the communication objects behave
-    // as clients, i.e. each of them requests only one connection to
-    // acceptor process (in the acceptor participant).
     _connectionDataVector.push_back({connectedRank, c, com::PtrRequest()});
   }
   _isConnected = true;
