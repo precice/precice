@@ -361,7 +361,7 @@ void BaseCouplingScheme::addComputedTime(
     double timeToAdd)
 {
   PRECICE_TRACE(timeToAdd, _time);
-  PRECICE_CHECK(isCouplingOngoing(), "Invalid call of addComputedTime() after simulation end!");
+  PRECICE_ASSERT(isCouplingOngoing(), "Invalid call of addComputedTime() after simulation end!");
 
   // add time interval that has been computed in the solver to get the correct time remainder
   _computedTimestepPart += timeToAdd;

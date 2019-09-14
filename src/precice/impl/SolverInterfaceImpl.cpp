@@ -335,6 +335,7 @@ double SolverInterfaceImpl:: advance
   utils::ScopedEventPrefix sep("advance/");
 
   PRECICE_CHECK(_couplingScheme->isInitialized(), "initialize() has to be called before advance()");
+  PRECICE_CHECK(isCouplingOngoing(), "advance() cannot be called when isCouplingOngoing() returns false");
   _numberAdvanceCalls++;
   if (_clientMode){
     _requestManager->requestAdvance(computedTimestepLength);
