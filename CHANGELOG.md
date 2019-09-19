@@ -2,11 +2,13 @@
 
 All notable changes to this project will be documented in this file. For future plans, see our [Roadmap](https://github.com/precice/precice/wiki/Roadmap).
 
+## develop
+
+- drop official python2 support for python bindings ([remove tests](https://github.com/precice/systemtests/commit/dba924447996574967b2295cf652fb32bec58020)).
+
 ## 1.6.1
 
 - Fixed a platform-dependent issue with boost.
-
-## 1.6.0
 
 ## 1.6.0
 
