@@ -62,6 +62,9 @@ public:
   /// Returns the radius of the enclosing circle of the edge.
   double getEnclosingRadius () const;
 
+  /// Checks whether both edges share a vertex.
+  bool connectedTo(const Edge& other) const;
+
   /**
    * @brief Compares two Edges for equality
    *
@@ -91,7 +94,7 @@ inline Vertex& Edge:: vertex
 (
   int i )
 {
-  assertion ( (i == 0) || (i == 1), i );
+  PRECICE_ASSERT( (i == 0) || (i == 1), i );
   return *_vertices[i];
 }
 
@@ -99,7 +102,7 @@ inline const Vertex& Edge:: vertex
 (
   int i ) const
 {
-  assertion ( (i==0) || (i==1), i );
+  PRECICE_ASSERT( (i==0) || (i==1), i );
   return *_vertices[i];
 }
 
@@ -113,7 +116,7 @@ void Edge:: setNormal
 (
   const VECTOR_T& normal )
 {
-  assertion ( normal.size() == _vertices[0]->getDimensions(), normal,
+  PRECICE_ASSERT( normal.size() == _vertices[0]->getDimensions(), normal,
                _vertices[0]->getDimensions() );
   _normal = normal;
 }

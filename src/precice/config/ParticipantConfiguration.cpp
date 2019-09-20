@@ -28,7 +28,7 @@ ParticipantConfiguration:: ParticipantConfiguration
 :
   _meshConfig(meshConfiguration)
 {
-  assertion(_meshConfig);
+  PRECICE_ASSERT(_meshConfig);
   using namespace xml;
   std::string doc;
   XMLTag tag(*this, TAG, XMLTag::OCCUR_ONCE_OR_MORE);
@@ -279,8 +279,8 @@ void ParticipantConfiguration:: setDimensions
 (
   int dimensions )
 {
-  TRACE(dimensions);
-  assertion((dimensions == 2) || (dimensions == 3), dimensions);
+  PRECICE_TRACE(dimensions);
+  PRECICE_ASSERT((dimensions == 2) || (dimensions == 3), dimensions);
   _dimensions = dimensions;
 }
 
@@ -289,14 +289,14 @@ void ParticipantConfiguration:: xmlTagCallback
 (
   xml::XMLTag& tag )
 {
-  TRACE(tag.getName() );
+  PRECICE_TRACE(tag.getName() );
   if (tag.getName() == TAG){
     std::string name = tag.getStringAttributeValue(ATTR_NAME);
     impl::PtrParticipant p(new impl::Participant(name, _meshConfig));
     _participants.push_back(p);
   }
   else if (tag.getName() == TAG_USE_MESH){
-    assertion(_dimensions != 0); // setDimensions() has been called
+    PRECICE_ASSERT(_dimensions != 0); // setDimensions() has been called
     std::string name = tag.getStringAttributeValue(ATTR_NAME);
     Eigen::VectorXd offset(_dimensions);
     /// @todo offset currently not supported
@@ -307,7 +307,7 @@ void ParticipantConfiguration:: xmlTagCallback
     if (safetyFactor < 0){
       std::ostringstream stream;
       stream << "Safety Factor must be positive or 0";
-      throw stream.str();
+      throw std::runtime_error{stream.str()};
     }
     bool provide = tag.getBooleanAttributeValue(ATTR_PROVIDE);
     mesh::PtrMesh mesh = _meshConfig->getMesh(name);
@@ -315,14 +315,14 @@ void ParticipantConfiguration:: xmlTagCallback
       std::ostringstream stream;
       stream << "Participant \"" << _participants.back()->getName()
              << "\" uses mesh \"" << name << "\" which is not defined";
-      throw stream.str();
+      throw std::runtime_error{stream.str()};
     }
     if ((geoFilter != partition::ReceivedPartition::GeometricFilter::BROADCAST_FILTER || safetyFactor != 0.5) && from==""){
       std::ostringstream stream;
       stream << "Participant \"" << _participants.back()->getName()
              << "\" uses mesh \"" << name << "\" which is not received (no \"from\"), but has a geometric-filter and/or"
              << " a safety factor defined. This is not valid.";
-      throw stream.str();
+      throw std::runtime_error{stream.str()};
     }
     _participants.back()->useMesh ( mesh, offset, false, from, safetyFactor, provide, geoFilter );
   }
@@ -330,7 +330,7 @@ void ParticipantConfiguration:: xmlTagCallback
     std::string dataName = tag.getStringAttributeValue(ATTR_NAME);
     std::string meshName = tag.getStringAttributeValue(ATTR_MESH);
     mesh::PtrMesh mesh = _meshConfig->getMesh ( meshName );
-    CHECK(mesh, "Participant "
+    PRECICE_CHECK(mesh, "Participant "
           << "\"" << _participants.back()->getName() << "\" has to use "
           << "mesh \"" << meshName << "\" in order to write data to it!" );
     mesh::PtrData data = getData ( mesh, dataName );
@@ -340,14 +340,14 @@ void ParticipantConfiguration:: xmlTagCallback
     std::string dataName = tag.getStringAttributeValue(ATTR_NAME);
     std::string meshName = tag.getStringAttributeValue(ATTR_MESH);
     mesh::PtrMesh mesh = _meshConfig->getMesh ( meshName );
-    CHECK(mesh, "Participant "
+    PRECICE_CHECK(mesh, "Participant "
           << "\"" << _participants.back()->getName() << "\" has to use "
           << "mesh \"" << meshName << "\" in order to read data from it!" );
     mesh::PtrData data = getData ( mesh, dataName );
     _participants.back()->addReadData ( data, mesh );
   }
   else if ( tag.getName() == TAG_WATCH_POINT ){
-    assertion(_dimensions != 0); // setDimensions() has been called
+    PRECICE_ASSERT(_dimensions != 0); // setDimensions() has been called
     WatchPointConfig config;
     config.name = tag.getStringAttributeValue(ATTR_NAME);
     config.nameMesh = tag.getStringAttributeValue(ATTR_MESH);
@@ -402,7 +402,7 @@ partition::ReceivedPartition::GeometricFilter ParticipantConfiguration:: getGeoF
     return partition::ReceivedPartition::GeometricFilter::BROADCAST_FILTER;
   }
   else {
-    assertion(geoFilter == VALUE_NO_FILTER);
+    PRECICE_ASSERT(geoFilter == VALUE_NO_FILTER);
     return partition::ReceivedPartition::GeometricFilter::NO_FILTER;
   }
 }
@@ -431,7 +431,7 @@ const mesh::PtrData & ParticipantConfiguration:: getData
       return data;
     }
   }
-  ERROR("Participant \"" << _participants.back()->getName()
+  PRECICE_ERROR("Participant \"" << _participants.back()->getName()
                  << "\" assignes data \"" << nameData << "\" wrongly to mesh \""
                  << mesh->getName() << "\"!" );
 }
@@ -440,7 +440,7 @@ void ParticipantConfiguration:: finishParticipantConfiguration
 (
   const impl::PtrParticipant& participant )
 {
-  TRACE(participant->getName());
+  PRECICE_TRACE(participant->getName());
 
   // Set input/output meshes for data mappings and mesh requirements
   using ConfMapping = mapping::MappingConfiguration::ConfiguredMapping;
@@ -448,10 +448,10 @@ void ParticipantConfiguration:: finishParticipantConfiguration
     int fromMeshID = confMapping.fromMesh->getID();
     int toMeshID = confMapping.toMesh->getID();
 
-    CHECK(participant->isMeshUsed(fromMeshID),
+    PRECICE_CHECK(participant->isMeshUsed(fromMeshID),
           "Participant \"" << participant->getName() << "\" has mapping"
           << " from mesh \"" << confMapping.fromMesh->getName() << "\" which he does not use!");
-    CHECK(participant->isMeshUsed(toMeshID),
+    PRECICE_CHECK(participant->isMeshUsed(toMeshID),
           "Participant \"" << participant->getName() << "\" has mapping"
           << " to mesh \"" << confMapping.toMesh->getName() << "\" which he does not use!");
     if(participant->useMaster()){
@@ -459,7 +459,7 @@ void ParticipantConfiguration:: finishParticipantConfiguration
           confMapping.mapping->getConstraint()==mapping::Mapping::CONSISTENT) ||
          (confMapping.direction == mapping::MappingConfiguration::READ &&
           confMapping.mapping->getConstraint()==mapping::Mapping::CONSERVATIVE)){
-        ERROR(
+        PRECICE_ERROR(
                        "If a participant uses a master parallelization, only the mapping"
                     << " combinations read-consistent and write-conservative are allowed");
       }
@@ -471,15 +471,15 @@ void ParticipantConfiguration:: finishParticipantConfiguration
     impl::MeshContext& toMeshContext = participant->meshContext(toMeshID);
 
     if(confMapping.direction == mapping::MappingConfiguration::READ){
-      CHECK(toMeshContext.provideMesh, "A read mapping of participant " << participant->getName() << " needs to map TO a provided mesh. "
+      PRECICE_CHECK(toMeshContext.provideMesh, "A read mapping of participant " << participant->getName() << " needs to map TO a provided mesh. "
           "Mesh " << confMapping.toMesh->getName() << " is not provided.");
-      CHECK(not fromMeshContext.receiveMeshFrom.empty(), "A read mapping of participant " << participant->getName() << " needs to map FROM a received mesh. "
+      PRECICE_CHECK(not fromMeshContext.receiveMeshFrom.empty(), "A read mapping of participant " << participant->getName() << " needs to map FROM a received mesh. "
           "Mesh " << confMapping.fromMesh->getName() << " is not received.");
     }
     else{
-      CHECK(fromMeshContext.provideMesh, "A write mapping of participant " << participant->getName() << " needs to map FROM a provided mesh. "
+      PRECICE_CHECK(fromMeshContext.provideMesh, "A write mapping of participant " << participant->getName() << " needs to map FROM a provided mesh. "
           "Mesh " << confMapping.fromMesh->getName() << " is not provided.");
-      CHECK(not toMeshContext.receiveMeshFrom.empty(), "A write mapping of participant " << participant->getName() << " needs to map TO a received mesh. "
+      PRECICE_CHECK(not toMeshContext.receiveMeshFrom.empty(), "A write mapping of participant " << participant->getName() << " needs to map TO a received mesh. "
           "Mesh " << confMapping.toMesh->getName() << " is not received.");
     }
 
@@ -494,12 +494,12 @@ void ParticipantConfiguration:: finishParticipantConfiguration
     mappingContext->timing = confMapping.timing;
 
     mapping::PtrMapping& map = mappingContext->mapping;
-    assertion(map.get() == nullptr);
+    PRECICE_ASSERT(map.get() == nullptr);
     map = confMapping.mapping;
 
     const mesh::PtrMesh& input = fromMeshContext.mesh;
     const mesh::PtrMesh& output = toMeshContext.mesh;
-    DEBUG("Configure mapping for input=" << input->getName()
+    PRECICE_DEBUG("Configure mapping for input=" << input->getName()
            << ", output=" << output->getName());
     map->setMeshes(input, output);
 
@@ -507,7 +507,7 @@ void ParticipantConfiguration:: finishParticipantConfiguration
       participant->addWriteMappingContext(mappingContext);
     }
     else {
-      assertion(confMapping.direction == mapping::MappingConfiguration::READ);
+      PRECICE_ASSERT(confMapping.direction == mapping::MappingConfiguration::READ);
       participant->addReadMappingContext(mappingContext);
     }
 
@@ -524,7 +524,7 @@ void ParticipantConfiguration:: finishParticipantConfiguration
   // Set participant data for data contexts
   for (impl::DataContext& dataContext : participant->writeDataContexts()){
     int fromMeshID = dataContext.mesh->getID();
-    CHECK(participant->isMeshUsed(fromMeshID),
+    PRECICE_CHECK(participant->isMeshUsed(fromMeshID),
           "Participant \"" << participant->getName() << "\" has to use mesh \""
           << dataContext.mesh->getName() << "\" when writing data to it!");
 
@@ -537,7 +537,7 @@ void ParticipantConfiguration:: finishParticipantConfiguration
             dataContext.toData = data;
           }
         }
-        CHECK(dataContext.fromData!=dataContext.toData,
+        PRECICE_CHECK(dataContext.fromData!=dataContext.toData,
               "The mesh \"" << meshContext.mesh->getName() << "\" needs to use the data \""
               << dataContext.fromData->getName() << "\"! to allow the write mapping");
       }
@@ -546,7 +546,7 @@ void ParticipantConfiguration:: finishParticipantConfiguration
 
   for (impl::DataContext& dataContext : participant->readDataContexts()){
     int toMeshID = dataContext.mesh->getID();
-    CHECK(participant->isMeshUsed(toMeshID),
+    PRECICE_CHECK(participant->isMeshUsed(toMeshID),
           "Participant \"" << participant->getName() << "\" has to use mesh \""
           << dataContext.mesh->getName() << "\" when writing data to it!");
 
@@ -559,7 +559,7 @@ void ParticipantConfiguration:: finishParticipantConfiguration
             dataContext.fromData = data;
           }
         }
-        CHECK(dataContext.toData!=dataContext.fromData,
+        PRECICE_CHECK(dataContext.toData!=dataContext.fromData,
               "The mesh \"" << meshContext.mesh->getName() << "\" needs to use the data \""
               << dataContext.toData->getName() << "\"! to allow the read mapping");
       }
@@ -569,7 +569,7 @@ void ParticipantConfiguration:: finishParticipantConfiguration
   // Add actions
   for (const action::PtrAction& action : _actionConfig->actions()){
     bool used = _participants.back()->isMeshUsed(action->getMesh()->getID());
-    CHECK(used, "Data action of participant "
+    PRECICE_CHECK(used, "Data action of participant "
           << _participants.back()->getName()
           << "\" uses mesh which is not used by the participant!");
     _participants.back()->addAction(action);
@@ -588,7 +588,7 @@ void ParticipantConfiguration:: finishParticipantConfiguration
       }
     }
     else {
-      ERROR("Unknown export type!");
+      PRECICE_ERROR("Unknown export type!");
     }
     context.exporter = exporter;
 
@@ -604,7 +604,7 @@ void ParticipantConfiguration:: finishParticipantConfiguration
         mesh = context->mesh;
       }
     }
-    CHECK(mesh,
+    PRECICE_CHECK(mesh,
           "Participant \"" << participant->getName()
           << "\" defines watchpoint \"" << config.name
           << "\" for mesh \"" << config.nameMesh

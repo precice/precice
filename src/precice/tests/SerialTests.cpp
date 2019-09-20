@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE(TestExplicit,
       solverName = "SolverOne";
     }
     else {
-      assertion(utils::Parallel::getProcessRank() == 1);
+      BOOST_TEST(utils::Parallel::getProcessRank() == 1);
       solverName = "SolverTwo";
     }
 
@@ -837,7 +837,7 @@ BOOST_AUTO_TEST_CASE(testStationaryMappingWithSolverMesh,
   std::string config2D = _pathToTests + "mapping-without-geo-2D.xml";
   std::string config3D = _pathToTests + "mapping-without-geo-3D.xml";
   int rank = utils::Parallel::getProcessRank();
-  assertion((rank == 0) || (rank == 1), rank);
+  BOOST_TEST(((rank == 0) || (rank == 1)), rank);
   std::string solverName = rank == 0 ? "SolverA" : "SolverB";
   std::string meshForcesA = "MeshForcesA";
   std::string meshDisplA = "MeshDisplacementsA";
@@ -938,7 +938,7 @@ BOOST_AUTO_TEST_CASE(testStationaryMappingWithSolverMesh,
       interface.finalize();
     }
     else {
-      assertion(rank == 1, rank);
+      BOOST_TEST(rank == 1, rank);
       int meshForcesID = interface.getMeshID(meshForcesB);
       int meshDisplID = interface.getMeshID(meshDisplB);
       int dataForcesID = interface.getDataID(dataForces, meshForcesID);
@@ -1021,7 +1021,7 @@ BOOST_AUTO_TEST_CASE(testBug,
   }
 
   int rank = utils::Parallel::getProcessRank();
-  assertion((rank == 0) || (rank == 1), rank);
+  BOOST_TEST(((rank == 0) || (rank == 1)), rank);
   std::string solverName = rank == 0 ? "Flite" : "Calculix";
   if (solverName == std::string("Flite")){
     SolverInterface precice("Flite", 0, 1);
@@ -1056,7 +1056,7 @@ BOOST_AUTO_TEST_CASE(testBug,
     precice.finalize();
   }
   else {
-    assertion(solverName == std::string("Calculix"), solverName);
+    BOOST_TEST(solverName == std::string("Calculix"), solverName);
     SolverInterface precice("Calculix", 0, 1);
     config::Configuration config;
     xml::configure(config.getXMLTag(), configName);
@@ -1118,7 +1118,7 @@ BOOST_AUTO_TEST_CASE(testThreeSolvers,
     reset();
 
     int rank = utils::Parallel::getProcessRank();
-    assertion((rank == 0) || (rank == 1) || (rank == 2), rank);
+    BOOST_TEST(((rank == 0) || (rank == 1) || (rank == 2)), rank);
 
     std::string writeIterCheckpoint(constants::actionWriteIterationCheckpoint());
     std::string readIterCheckpoint(constants::actionReadIterationCheckpoint());
@@ -1187,7 +1187,7 @@ BOOST_AUTO_TEST_CASE(testThreeSolvers,
       BOOST_TEST(callsOfAdvance == expectedCallsOfAdvance[k][1]);
     }
     else {
-      assertion(solverName == std::string("SolverThree"), solverName);
+      BOOST_TEST(solverName == std::string("SolverThree"), solverName);
       SolverInterface precice(solverName, 0, 1);
       config::Configuration config;
       xml::configure(config.getXMLTag(), configs[k]);
@@ -1322,7 +1322,7 @@ BOOST_AUTO_TEST_CASE(testMultiCoupling, * testing::OnSize(4))
 
   }
   else {
-    assertion(utils::Parallel::getProcessRank() == 3);
+    BOOST_TEST(utils::Parallel::getProcessRank() == 3);
     SolverInterface precice("NASTIN", 0, 1);
     config::Configuration config;
     xml::configure(config.getXMLTag(), _pathToTests + "/multi.xml");
@@ -1374,21 +1374,10 @@ BOOST_AUTO_TEST_CASE(testMultiCoupling, * testing::OnSize(4))
 
 }
 
-/**
- * @brief Tests the Nearest Projection Mapping between two participants
- *
- */
-BOOST_AUTO_TEST_CASE(testMappingNearestProjection,
-                     * testing::MinRanks(2)
-                     * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
+void testMappingNearestProjection(bool defineEdgesExplicitly, const std::string configFile)
 {
-  if (utils::Parallel::getCommunicatorSize() != 2)
-    return;
-
   mesh::Mesh::resetGeometryIDsGlobally();
   using Eigen::Vector3d;
-
-  const std::string configFile = _pathToTests + "mapping-nearest-projection.xml";
 
   const double z = 0.3;
 
@@ -1416,7 +1405,8 @@ BOOST_AUTO_TEST_CASE(testMappingNearestProjection,
     SolverInterface cplInterface("SolverOne", 0, 1);
     config::Configuration config;
     xml::configure(config.getXMLTag(), configFile);
-    impl(cplInterface).configure(config.getSolverInterfaceConfiguration());
+    // namespace is required because we are outside the fixture
+    testing::WhiteboxAccessor::impl(cplInterface).configure(config.getSolverInterfaceConfiguration());
     const int meshOneID = cplInterface.getMeshID("MeshOne");
 
     // Setup mesh one.
@@ -1425,14 +1415,21 @@ BOOST_AUTO_TEST_CASE(testMappingNearestProjection,
     int idC = cplInterface.setMeshVertex(meshOneID, coordOneC.data());
     int idD = cplInterface.setMeshVertex(meshOneID, coordOneD.data());
 
-    int idAB = cplInterface.setMeshEdge(meshOneID, idA, idB);
-    int idBC = cplInterface.setMeshEdge(meshOneID, idB, idC);
-    int idCD = cplInterface.setMeshEdge(meshOneID, idC, idD);
-    int idDA = cplInterface.setMeshEdge(meshOneID, idD, idA);
-    int idCA = cplInterface.setMeshEdge(meshOneID, idC, idA);
+    if (defineEdgesExplicitly){
 
-    cplInterface.setMeshTriangle(meshOneID, idAB, idBC, idCA);
-    cplInterface.setMeshTriangle(meshOneID, idCD, idDA, idCA);
+      int idAB = cplInterface.setMeshEdge(meshOneID, idA, idB);
+      int idBC = cplInterface.setMeshEdge(meshOneID, idB, idC);
+      int idCD = cplInterface.setMeshEdge(meshOneID, idC, idD);
+      int idDA = cplInterface.setMeshEdge(meshOneID, idD, idA);
+      int idCA = cplInterface.setMeshEdge(meshOneID, idC, idA);
+
+      cplInterface.setMeshTriangle(meshOneID, idAB, idBC, idCA);
+      cplInterface.setMeshTriangle(meshOneID, idCD, idDA, idCA);
+
+    } else {
+      cplInterface.setMeshTriangleWithEdges(meshOneID, idA, idB, idC);
+      cplInterface.setMeshTriangleWithEdges(meshOneID, idC, idD, idA);
+    }
 
     // Initialize, thus sending the mesh.
     double maxDt = cplInterface.initialize();
@@ -1454,7 +1451,8 @@ BOOST_AUTO_TEST_CASE(testMappingNearestProjection,
     SolverInterface cplInterface("SolverTwo", 0, 1);
     config::Configuration config;
     xml::configure(config.getXMLTag(), configFile);
-    impl(cplInterface).configure(config.getSolverInterfaceConfiguration());
+    // namespace is required because we are outside the fixture
+    testing::WhiteboxAccessor::impl(cplInterface).configure(config.getSolverInterfaceConfiguration());
     int meshTwoID = cplInterface.getMeshID("MeshTwo");
 
     // Setup receiving mesh.
@@ -1482,6 +1480,37 @@ BOOST_AUTO_TEST_CASE(testMappingNearestProjection,
     BOOST_TEST(!cplInterface.isCouplingOngoing(), "Receiving participant should have to advance once!");
     cplInterface.finalize();
   }
+}
+
+
+/**
+ * @brief Tests the Nearest Projection Mapping between two participants with explicit definition of edges
+ *
+ */
+BOOST_AUTO_TEST_CASE(testMappingNearestProjectionExplicitEdges,
+                     * testing::MinRanks(2)
+                     * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
+{
+  if (utils::Parallel::getCommunicatorSize() != 2)
+    return;
+  bool defineEdgesExplicitly = true;
+  const std::string configFile = _pathToTests + "mapping-nearest-projection.xml";
+  testMappingNearestProjection(defineEdgesExplicitly, configFile);
+}
+
+/**
+ * @brief Tests the Nearest Projection Mapping between two participants with explicit definition of edges
+ *
+ */
+BOOST_AUTO_TEST_CASE(testMappingNearestProjectionImplicitEdges,
+                     * testing::MinRanks(2)
+                     * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
+{
+  if (utils::Parallel::getCommunicatorSize() != 2)
+    return;
+  bool defineEdgesExplicitly = false;
+  const std::string configFile = _pathToTests + "mapping-nearest-projection.xml";
+  testMappingNearestProjection(defineEdgesExplicitly, configFile);
 }
 
 /**

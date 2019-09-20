@@ -80,7 +80,7 @@ public:
     */
    CONTENT_T & operator[] ( size_t index )
    {
-      assertion ( index < _content.size() );
+      PRECICE_ASSERT( index < _content.size() );
       return *_content[index];
    }
 
@@ -89,7 +89,7 @@ public:
     */
    const CONTENT_T & operator[] ( size_t index ) const
    {
-      assertion ( index < _content.size() );
+      PRECICE_ASSERT( index < _content.size() );
       return *_content[index];
    }
 
@@ -143,7 +143,7 @@ public:
    void deleteElements ()
    {
       for ( CONTENT_T * elem : _content ) {
-         assertion ( elem != NULL );
+         PRECICE_ASSERT( elem != NULL );
          delete ( elem );
       }
    }

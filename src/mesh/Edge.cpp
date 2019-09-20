@@ -14,7 +14,7 @@ Edge:: Edge
   _id ( id ),
   _normal ( Eigen::VectorXd::Constant(vertexOne.getDimensions(), 0.0) )
 {
-  assertion ( vertexOne.getDimensions() == vertexTwo.getDimensions(),
+  PRECICE_ASSERT( vertexOne.getDimensions() == vertexTwo.getDimensions(),
               vertexOne.getDimensions(), vertexTwo.getDimensions() );
 }
 
@@ -44,6 +44,14 @@ const Eigen::VectorXd Edge::getCenter () const
 double Edge:: getEnclosingRadius () const
 {
   return (_vertices[0]->getCoords() - getCenter()).norm();
+}
+
+bool Edge::connectedTo(const Edge& other) const
+{
+    return _vertices[0] == other._vertices[0]
+        || _vertices[0] == other._vertices[1]
+        || _vertices[1] == other._vertices[0]
+        || _vertices[1] == other._vertices[1];
 }
 
 bool Edge::operator==(const Edge& other) const

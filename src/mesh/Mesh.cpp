@@ -36,8 +36,8 @@ Mesh:: Mesh
   if (not _managePropertyIDs) {
     _managePropertyIDs.reset(new utils::ManageUniqueIDs);
   }
-  assertion((_dimensions == 2) || (_dimensions == 3), _dimensions);
-  assertion(_name != std::string(""));
+  PRECICE_ASSERT((_dimensions == 2) || (_dimensions == 3), _dimensions);
+  PRECICE_ASSERT(_name != std::string(""));
   _nameIDPairs[_name] = _managePropertyIDs->getFreeID ();
   setProperty(INDEX_GEOMETRY_ID, _nameIDPairs[_name]);
 
@@ -153,6 +153,11 @@ Triangle& Mesh:: createTriangle
   Edge& edgeTwo,
   Edge& edgeThree )
 {
+  PRECICE_CHECK(
+          edgeOne.connectedTo(edgeTwo) &&
+          edgeTwo.connectedTo(edgeThree) &&
+          edgeThree.connectedTo(edgeOne),
+          "Edges are not connected!");
   Triangle* newTriangle = new Triangle (
       edgeOne, edgeTwo, edgeThree, _manageTriangleIDs.getFreeID());
   newTriangle->addParent(*this);
@@ -187,9 +192,9 @@ PtrData& Mesh:: createData
   const std::string& name,
   int                dimension )
 {
-  TRACE(name, dimension);
+  PRECICE_TRACE(name, dimension);
   for (const PtrData data : _data) {
-    CHECK(data->getName() != name,
+    PRECICE_CHECK(data->getName() != name,
           "Data \"" << name << "\" cannot be created twice for " << "mesh \"" << _name << "\"!");
   }
   int id = Data::getDataCount();
@@ -212,22 +217,22 @@ const PtrData& Mesh:: data
       return data;
     }
   }
-  ERROR("Data with ID = " << dataID << " not found in mesh \"" << _name << "\"!" );
+  PRECICE_ERROR("Data with ID = " << dataID << " not found in mesh \"" << _name << "\"!" );
 }
 
 PropertyContainer& Mesh:: getPropertyContainer
 (
   const std::string & subIDName )
 {
-  TRACE(subIDName);
-  assertion(_nameIDPairs.count(subIDName) == 1);
+  PRECICE_TRACE(subIDName);
+  PRECICE_ASSERT(_nameIDPairs.count(subIDName) == 1);
   int id = _nameIDPairs[subIDName];
   for (PropertyContainer& cont : _propertyContainers) {
     if (cont.getProperty<int>(cont.INDEX_GEOMETRY_ID) == id){
       return cont;
     }
   }
-  ERROR("Unknown sub ID name \"" << subIDName << "\" in mesh \"" << _name << "\"!");
+  PRECICE_ERROR("Unknown sub ID name \"" << subIDName << "\" in mesh \"" << _name << "\"!");
 }
 
 const std::string& Mesh:: getName() const
@@ -251,11 +256,11 @@ PropertyContainer& Mesh:: setSubID
 (
   const std::string& subIDNamePostfix )
 {
-  TRACE(subIDNamePostfix);
-  CHECK(subIDNamePostfix != std::string(""),
+  PRECICE_TRACE(subIDNamePostfix);
+  PRECICE_CHECK(subIDNamePostfix != std::string(""),
       "Sub ID postfix of mesh \"" << _name << "\" is not allowed to be an empty string!");
   std::string idName(_name + "-" + subIDNamePostfix);
-  CHECK(_nameIDPairs.count(idName) == 0,
+  PRECICE_CHECK(_nameIDPairs.count(idName) == 0,
       "Sub ID postfix of mesh \"" << _name << "\" is already in use!");
   _nameIDPairs[idName] = _managePropertyIDs->getFreeID();
   PropertyContainer * newPropertyContainer = new PropertyContainer();
@@ -274,14 +279,14 @@ int Mesh:: getID
 (
   const std::string& name ) const
 {
-  assertion(_nameIDPairs.count(name) > 0);
+  PRECICE_ASSERT(_nameIDPairs.count(name) > 0);
   return _nameIDPairs.find(name)->second;
 }
 
 int Mesh:: getID() const
 {
   std::map<std::string,int>::const_iterator iter = _nameIDPairs.find(_name);
-  assertion(iter != _nameIDPairs.end());
+  PRECICE_ASSERT(iter != _nameIDPairs.end());
   return iter->second;
 }
 
@@ -297,20 +302,20 @@ bool Mesh::isValidEdgeID(int edgeID) const
 
 void Mesh:: allocateDataValues()
 {
-  TRACE(_content.vertices().size());
+  PRECICE_TRACE(_content.vertices().size());
   for (PtrData data : _data) {
     int total = _content.vertices().size() * data->getDimensions();
     int leftToAllocate = total - data->values().size();
     if (leftToAllocate > 0){
       utils::append(data->values(), (Eigen::VectorXd) Eigen::VectorXd::Zero(leftToAllocate));
     }
-    DEBUG("Data " << data->getName() << " now has " << data->values().size() << " values");
+    PRECICE_DEBUG("Data " << data->getName() << " now has " << data->values().size() << " values");
   }
 }
 
 void Mesh:: computeNormals()
 {
-  TRACE(_name);
+  PRECICE_TRACE(_name);
   // Compute normals only if faces to derive normal information are available
   size_t size2DFaces = _content.edges().size();
   size_t size3DFaces = _content.triangles().size() + _content.quads().size();
@@ -338,11 +343,11 @@ void Mesh:: computeNormals()
   if (_dimensions == 3){
       // Compute normals
       for (Triangle& triangle : _content.triangles()) {
-          assertion(triangle.vertex(0) != triangle.vertex(1),
+          PRECICE_ASSERT(triangle.vertex(0) != triangle.vertex(1),
                   triangle.vertex(0), triangle.getID());
-          assertion(triangle.vertex(1) != triangle.vertex(2),
+          PRECICE_ASSERT(triangle.vertex(1) != triangle.vertex(2),
                   triangle.vertex(1), triangle.getID());
-          assertion(triangle.vertex(2) != triangle.vertex(0),
+          PRECICE_ASSERT(triangle.vertex(2) != triangle.vertex(0),
                   triangle.vertex(2), triangle.getID());
 
           // Compute normals
@@ -357,10 +362,10 @@ void Mesh:: computeNormals()
 
       // Compute quad normals
       for (Quad& quad : _content.quads()) {
-          assertion(quad.vertex(0) != quad.vertex(1), quad.vertex(0).getCoords(), quad.getID());
-          assertion(quad.vertex(1) != quad.vertex(2), quad.vertex(1).getCoords(), quad.getID());
-          assertion(quad.vertex(2) != quad.vertex(3), quad.vertex(2).getCoords(), quad.getID());
-          assertion(quad.vertex(3) != quad.vertex(0), quad.vertex(3).getCoords(), quad.getID());
+          PRECICE_ASSERT(quad.vertex(0) != quad.vertex(1), quad.vertex(0).getCoords(), quad.getID());
+          PRECICE_ASSERT(quad.vertex(1) != quad.vertex(2), quad.vertex(1).getCoords(), quad.getID());
+          PRECICE_ASSERT(quad.vertex(2) != quad.vertex(3), quad.vertex(2).getCoords(), quad.getID());
+          PRECICE_ASSERT(quad.vertex(3) != quad.vertex(0), quad.vertex(3).getCoords(), quad.getID());
 
           // Compute normals (assuming all vertices are on same plane)
           Eigen::VectorXd weightednormal = quad.computeNormal(_flipNormals);
@@ -386,7 +391,7 @@ void Mesh:: computeNormals()
 
 void Mesh:: computeBoundingBox()
 {
-  TRACE(_name);
+  PRECICE_TRACE(_name);
   BoundingBox boundingBox(_dimensions,
                               std::make_pair(std::numeric_limits<double>::max(),
                                              std::numeric_limits<double>::lowest()));
@@ -397,15 +402,15 @@ void Mesh:: computeBoundingBox()
     }
   }
   for (int d = 0; d < _dimensions; d++) {
-    DEBUG("BoundingBox, dim: " << d << ", first: " << boundingBox[d].first << ", second: " << boundingBox[d].second);
+    PRECICE_DEBUG("BoundingBox, dim: " << d << ", first: " << boundingBox[d].first << ", second: " << boundingBox[d].second);
   }
   _boundingBox = std::move(boundingBox);
 }
 
 void Mesh:: computeState()
 {
-  TRACE(_name);
-  assertion(_dimensions==2 || _dimensions==3, _dimensions);
+  PRECICE_TRACE(_name);
+  PRECICE_ASSERT(_dimensions==2 || _dimensions==3, _dimensions);
 
   computeNormals();
   computeBoundingBox();
@@ -472,8 +477,8 @@ void Mesh::setGlobalNumberOfVertices(int num)
 void Mesh:: addMesh(
     Mesh& deltaMesh)
 {
-  TRACE();
-  assertion(_dimensions==deltaMesh.getDimensions());
+  PRECICE_TRACE();
+  PRECICE_ASSERT(_dimensions==deltaMesh.getDimensions());
 
   std::map<int, Vertex*> vertexMap;
   std::map<int, Edge*> edgeMap;
@@ -485,7 +490,7 @@ void Mesh:: addMesh(
     v.setGlobalIndex(vertex.getGlobalIndex());
     if(vertex.isTagged()) v.tag();
     v.setOwner(vertex.isOwner());
-    assertion ( vertex.getID() >= 0, vertex.getID() );
+    PRECICE_ASSERT( vertex.getID() >= 0, vertex.getID() );
     vertexMap[vertex.getID()] = &v;
   }
 
@@ -495,8 +500,8 @@ void Mesh:: addMesh(
   for (const Edge& edge : deltaMesh.edges()) {
     int vertexIndex1 = edge.vertex(0).getID();
     int vertexIndex2 = edge.vertex(1).getID();
-    assertion ( vertexMap.find(vertexIndex1) != vertexMap.end() );
-    assertion ( vertexMap.find(vertexIndex2) != vertexMap.end() );
+    PRECICE_ASSERT( vertexMap.find(vertexIndex1) != vertexMap.end() );
+    PRECICE_ASSERT( vertexMap.find(vertexIndex2) != vertexMap.end() );
     Edge& e = createEdge(*vertexMap[vertexIndex1], *vertexMap[vertexIndex2]);
     edgeMap[edge.getID()] = &e;
   }
@@ -506,9 +511,9 @@ void Mesh:: addMesh(
       int edgeIndex1 = triangle.edge(0).getID();
       int edgeIndex2 = triangle.edge(1).getID();
       int edgeIndex3 = triangle.edge(2).getID();
-      assertion ( edgeMap.find(edgeIndex1) != edgeMap.end() );
-      assertion ( edgeMap.find(edgeIndex2) != edgeMap.end() );
-      assertion ( edgeMap.find(edgeIndex3) != edgeMap.end() );
+      PRECICE_ASSERT( edgeMap.find(edgeIndex1) != edgeMap.end() );
+      PRECICE_ASSERT( edgeMap.find(edgeIndex2) != edgeMap.end() );
+      PRECICE_ASSERT( edgeMap.find(edgeIndex3) != edgeMap.end() );
       createTriangle(*edgeMap[edgeIndex1],*edgeMap[edgeIndex2],*edgeMap[edgeIndex3]);
     }
   }

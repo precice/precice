@@ -8,6 +8,7 @@
 #include "precice/impl/Participant.hpp"
 #include "precice/config/Configuration.hpp"
 #include "utils/Parallel.hpp"
+#include "utils/Petsc.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/Event.hpp"
 
@@ -31,7 +32,7 @@ struct ParallelTestFixture : testing::WhiteboxAccessor {
     reset();
     _pathToTests = testing::getPathToSources() + "/precice/tests/";
     utils::Parallel::restrictGlobalCommunicator({0,1,2,3});
-    assertion(utils::Parallel::getCommunicatorSize() == 4);
+    BOOST_TEST(utils::Parallel::getCommunicatorSize() == 4);
   }
 
   ~ParallelTestFixture()
@@ -114,7 +115,7 @@ BOOST_AUTO_TEST_CASE(GlobalRBFPartitioning, * testing::OnSize(4))
   if(utils::Parallel::getProcessRank()<=2){
     utils::Parallel::splitCommunicator( "SolverOne" );
     utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator()); //needed since this test uses PETSc
-    assertion(utils::Parallel::getCommunicatorSize() == 3);
+    BOOST_TEST(utils::Parallel::getCommunicatorSize() == 3);
     utils::Parallel::clearGroups();
     xml::configure(config.getXMLTag(), configFilename);
 
@@ -137,7 +138,7 @@ BOOST_AUTO_TEST_CASE(GlobalRBFPartitioning, * testing::OnSize(4))
   else {
     utils::Parallel::splitCommunicator( "SolverTwo" );
     utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator());
-    assertion(utils::Parallel::getCommunicatorSize() == 1);
+    BOOST_TEST(utils::Parallel::getCommunicatorSize() == 1);
     utils::Parallel::clearGroups();
     xml::configure(config.getXMLTag(), configFilename);
 
@@ -164,7 +165,7 @@ BOOST_AUTO_TEST_CASE(LocalRBFPartitioning, * testing::OnSize(4))
   if(utils::Parallel::getProcessRank()<=2){
     utils::Parallel::splitCommunicator( "SolverOne" );
     utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator());
-    assertion(utils::Parallel::getCommunicatorSize() == 3);
+    BOOST_TEST(utils::Parallel::getCommunicatorSize() == 3);
     utils::Parallel::clearGroups();
     xml::configure(config.getXMLTag(), configFilename);
 
@@ -186,7 +187,7 @@ BOOST_AUTO_TEST_CASE(LocalRBFPartitioning, * testing::OnSize(4))
   else {
     utils::Parallel::splitCommunicator( "SolverTwo" );
     utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator());
-    assertion(utils::Parallel::getCommunicatorSize() == 1);
+    BOOST_TEST(utils::Parallel::getCommunicatorSize() == 1);
     utils::Parallel::clearGroups();
     xml::configure(config.getXMLTag(), configFilename);
 
@@ -216,7 +217,7 @@ BOOST_AUTO_TEST_CASE(CouplingOnLine, * testing::OnSize(4))
   if(utils::Parallel::getProcessRank()<=2){
     utils::Parallel::splitCommunicator( "Ateles" );
     utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator());
-    assertion(utils::Parallel::getCommunicatorSize() == 3);
+    BOOST_TEST(utils::Parallel::getCommunicatorSize() == 3);
     utils::Parallel::clearGroups();
     xml::configure(config.getXMLTag(), configFilename);
     SolverInterface interface ( "Ateles", utils::Parallel::getProcessRank(), 3 );
@@ -239,7 +240,7 @@ BOOST_AUTO_TEST_CASE(CouplingOnLine, * testing::OnSize(4))
   else {
     utils::Parallel::splitCommunicator( "FASTEST" );
     utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator());
-    assertion(utils::Parallel::getCommunicatorSize() == 1);
+    BOOST_TEST(utils::Parallel::getCommunicatorSize() == 1);
     utils::Parallel::clearGroups();
     xml::configure(config.getXMLTag(), configFilename);
     SolverInterface interface ( "FASTEST", 0, 1 );
@@ -300,7 +301,7 @@ BOOST_AUTO_TEST_CASE(TestQN, * testing::OnSize(4))
 
   utils::Parallel::splitCommunicator( solverName );
   utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator());
-  assertion(utils::Parallel::getCommunicatorSize() == size);
+  BOOST_TEST(utils::Parallel::getCommunicatorSize() == size);
   utils::Parallel::clearGroups();
 
   for(int k=0; k<numberOfTests; k++){
@@ -595,7 +596,7 @@ BOOST_AUTO_TEST_CASE(NearestProjectionRePartitioning, * testing::OnSize(4))
   else {
     utils::Parallel::splitCommunicator( "SolidSolver" );
     utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator());
-    assertion(utils::Parallel::getCommunicatorSize() == 1);
+    BOOST_TEST(utils::Parallel::getCommunicatorSize() == 1);
     utils::Parallel::clearGroups();
     xml::configure(config.getXMLTag(), configFilename);
     SolverInterface interface ( "SolidSolver", 0, 1 );
@@ -692,12 +693,102 @@ BOOST_AUTO_TEST_CASE(MasterSockets, * testing::OnSize(4))
   impl(interface).configure(config.getSolverInterfaceConfiguration());
   int meshID = interface.getMeshID(myMeshName);
   double position[2] = {0, 0};
-  int vertexID = interface.setMeshVertex(meshID, position);
+  interface.setMeshVertex(meshID, position);
   interface.initialize();
   interface.advance(1.0);
   interface.finalize();
 }
 
+// Tests SolverInterface() with a user-defined MPI communicator.
+BOOST_AUTO_TEST_CASE(UserDefinedMPICommunicator, * testing::OnSize(4))
+{
+  std::string configFilename = _pathToTests + "userDefinedMPICommunicator.xml";
+  config::Configuration config;
+  
+  if(utils::Parallel::getProcessRank()<=2){
+    utils::Parallel::splitCommunicator( "SolverOne" );
+    MPI_Comm myComm = utils::Parallel::getLocalCommunicator();
+    int myCommSize;
+    MPI_Comm_size(myComm, &myCommSize);
+    BOOST_TEST(myCommSize == 3);
+    utils::Parallel::clearGroups();
+
+    xml::configure(config.getXMLTag(), configFilename);
+    SolverInterface interface ( "SolverOne", utils::Parallel::getProcessRank(), 3, &myComm );
+    impl(interface).configure(config.getSolverInterfaceConfiguration());
+    int meshID = interface.getMeshID("MeshOne");
+
+    int vertexIDs[2];
+    double xCoord = utils::Parallel::getProcessRank() * 0.4;
+    double positions[4] = {xCoord,0.0,xCoord+0.2,0.0};
+    interface.setMeshVertices(meshID, 2, positions, vertexIDs);
+    interface.initialize();
+    interface.finalize();
+  }
+  else {
+    utils::Parallel::splitCommunicator( "SolverTwo" );
+    utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator());
+    BOOST_TEST(utils::Parallel::getCommunicatorSize() == 1);
+    utils::Parallel::clearGroups();
+    xml::configure(config.getXMLTag(), configFilename);
+
+    SolverInterface interface ( "SolverTwo", 0, 1 );
+    impl(interface).configure(config.getSolverInterfaceConfiguration());
+    int meshID = interface.getMeshID("MeshTwo");
+    int vertexIDs[6];
+    double positions[12] = {0.0,0.0,0.2,0.0,0.4,0.0,0.6,0.0,0.8,0.0,1.0,0.0};
+    interface.setMeshVertices(meshID, 6, positions, vertexIDs);
+    interface.initialize();
+    interface.finalize();
+  }
+}
+
+#ifndef PRECICE_NO_PETSC
+// Tests SolverInterface() with a user-defined MPI communicator.
+// Since PETSc also uses MPI, we use petrbf mapping here.
+BOOST_AUTO_TEST_CASE(UserDefinedMPICommunicatorPetRBF, * testing::OnSize(4))
+{
+  std::string configFilename = _pathToTests + "userDefinedMPICommunicatorPetRBF.xml";
+  config::Configuration config;
+  
+  if(utils::Parallel::getProcessRank()<=2){
+    utils::Parallel::splitCommunicator( "SolverOne" );
+    MPI_Comm myComm = utils::Parallel::getLocalCommunicator();
+    int myCommSize;
+    MPI_Comm_size(myComm, &myCommSize);
+    BOOST_TEST(myCommSize == 3);
+    utils::Parallel::clearGroups();
+
+    SolverInterface interface ( "SolverOne", utils::Parallel::getProcessRank(), 3, &myComm );
+    xml::configure(config.getXMLTag(), configFilename);
+    impl(interface).configure(config.getSolverInterfaceConfiguration());
+    int meshID = interface.getMeshID("MeshOne");
+
+    int vertexIDs[2];
+    double xCoord = utils::Parallel::getProcessRank() * 0.4;
+    double positions[4] = {xCoord,0.0,xCoord+0.2,0.0};
+    interface.setMeshVertices(meshID, 2, positions, vertexIDs);
+    interface.initialize();
+    interface.finalize();
+  }
+  else {
+    utils::Parallel::splitCommunicator( "SolverTwo" );
+    utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator());
+    BOOST_TEST(utils::Parallel::getCommunicatorSize() == 1);
+    utils::Parallel::clearGroups();
+    xml::configure(config.getXMLTag(), configFilename);
+
+    SolverInterface interface ( "SolverTwo", 0, 1 );
+    impl(interface).configure(config.getSolverInterfaceConfiguration());
+    int meshID = interface.getMeshID("MeshTwo");
+    int vertexIDs[6];
+    double positions[12] = {0.0,0.0,0.2,0.0,0.4,0.0,0.6,0.0,0.8,0.0,1.0,0.0};
+    interface.setMeshVertices(meshID, 6, positions, vertexIDs);
+    interface.initialize();
+    interface.finalize();
+  }
+}
+#endif // PRECICE_NO_PETSC
 
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()

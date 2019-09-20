@@ -156,13 +156,13 @@ private:
 
 inline Vertex &Triangle::vertex(int i)
 {
-  assertion((i >= 0) && (i < 3), i);
+  PRECICE_ASSERT((i >= 0) && (i < 3), i);
   return edge(i).vertex(_vertexMap[i]);
 }
 
 inline const Vertex &Triangle::vertex(int i) const
 {
-  assertion((i >= 0) && (i < 3), i);
+  PRECICE_ASSERT((i >= 0) && (i < 3), i);
   return edge(i).vertex(_vertexMap[i]);
 }
 
@@ -210,7 +210,7 @@ template <typename VECTOR_T>
 void Triangle::setNormal(
     const VECTOR_T &normal)
 {
-  assertion(normal.size() == getDimensions(), normal.size(), getDimensions());
+  PRECICE_ASSERT(normal.size() == getDimensions(), normal.size(), getDimensions());
   _normal = normal;
 }
 

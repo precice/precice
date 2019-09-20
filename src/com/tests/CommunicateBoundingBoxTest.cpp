@@ -13,7 +13,7 @@ BOOST_AUTO_TEST_SUITE(CommunicationTests)
 BOOST_AUTO_TEST_SUITE(CommunicateBoundingBoxTests)
 
 BOOST_FIXTURE_TEST_CASE(SendAndReceiveBoundingBox, testing::M2NFixture,
-                        * testing::MinRanks(2)
+                        *testing::MinRanks(2)
                         * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
 {
   if (utils::Parallel::getCommunicatorSize() != 2)
@@ -45,7 +45,7 @@ BOOST_FIXTURE_TEST_CASE(SendAndReceiveBoundingBox, testing::M2NFixture,
 }
 
 BOOST_FIXTURE_TEST_CASE(SendAndReceiveBoundingBoxMap, testing::M2NFixture,
-                        * testing::MinRanks(2)
+                        *testing::MinRanks(2)
                         * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
 {
   if (utils::Parallel::getCommunicatorSize() != 2)
@@ -134,6 +134,97 @@ BOOST_AUTO_TEST_CASE(BroadcastSendAndReceiveBoundingBoxMap,
     for (int rank = 0; rank < 3; rank++) {
 
       BOOST_TEST(bbm[rank] == bbmCompare[rank]);
+    }
+  }
+}
+
+BOOST_FIXTURE_TEST_CASE(SendAndReceiveConnectionMap, testing::M2NFixture,
+                        *testing::MinRanks(2)
+                        * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
+{
+  if (utils::Parallel::getCommunicatorSize() != 2)
+    return;
+
+  std::vector<int>                fb;
+  std::map<int, std::vector<int>> fbm;
+
+  for (int rank = 0; rank < 3; rank++) {
+
+    for (int i = 0; i < 3; i++) {
+      fb.push_back(i + 1);
+    }
+
+    fbm[rank] = fb;
+    fb.clear();
+  }
+
+  CommunicateBoundingBox comBB(m2n->getMasterCommunication());
+
+  if (utils::Parallel::getProcessRank() == 0) {
+    comBB.sendConnectionMap(fbm, 0);
+  } else if (utils::Parallel::getProcessRank() == 1) {
+
+    std::vector<int>                fbCompare;
+    std::map<int, std::vector<int>> fbmCompare;
+
+    for (int rank = 0; rank < 3; rank++) {
+
+      for (int i = 0; i < 3; i++) {
+        fbCompare.push_back(-1);
+      }
+
+      fbmCompare[rank] = fbCompare;
+      fbCompare.clear();
+    }
+
+    comBB.receiveConnectionMap(fbmCompare, 0);
+
+    for (int rank = 0; rank < 3; rank++) {
+
+      BOOST_TEST(fbm[rank] == fbmCompare[rank]);
+    }
+  }
+}
+
+BOOST_AUTO_TEST_CASE(BroadcastSendAndReceiveConnectionMap,
+                     *testing::OnSize(4) * boost::unit_test::fixture<testing::MasterComFixture>())
+{
+
+  std::vector<int>                fb;
+  std::map<int, std::vector<int>> fbm;
+
+  for (int rank = 0; rank < 3; rank++) {
+
+    for (int i = 0; i < 3; i++) {
+      fb.push_back(i + 1);
+    }
+
+    fbm[rank] = fb;
+    fb.clear();
+  }
+
+  CommunicateBoundingBox comBB(utils::MasterSlave::_communication);
+
+  if (utils::Parallel::getProcessRank() == 0) {
+    comBB.broadcastSendConnectionMap(fbm);
+  } else {
+
+    std::vector<int>                fbCompare;
+    std::map<int, std::vector<int>> fbmCompare;
+
+    for (int rank = 0; rank < 3; rank++) {
+      for (int i = 0; i < 3; i++) {
+        fbCompare.push_back(-1);
+      }
+      fbmCompare[rank] = fbCompare;
+      fbCompare.clear();
+    }
+
+    comBB.broadcastReceiveConnectionMap(fbmCompare);
+
+    for (int rank = 0; rank < 3; rank++) {
+
+      BOOST_TEST(fbm[rank] == fbmCompare[rank]);
     }
   }
 }

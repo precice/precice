@@ -119,7 +119,13 @@ public:
   void getProperties(int propertyID, std::vector<value_t> &properties) const;
 
 private:
-  mutable logging::Logger _log{"mesh::PropertyContainer"};
+  /** The logger for the PropertyContainer.
+   *
+   * @attention There will be many instances of this class.
+   * Thus using a static logger is crucial, as creating a logger is a costly
+   * and an allocation-heavy operation,
+   */
+  static logging::Logger _log;
 
   /// Manager to ensure unique identification of all properties.
   static std::unique_ptr<utils::ManageUniqueIDs> _manageUniqueIDs;
@@ -144,11 +150,11 @@ const value_t &PropertyContainer::getProperty(int propertyID) const
         return prop->getProperty<value_t>(propertyID);
       }
     }
-    ERROR("No property with id = " << propertyID);
+    PRECICE_ERROR("No property with id = " << propertyID);
   }
-  assertion(not iter->second.empty());
+  PRECICE_ASSERT(not iter->second.empty());
   // When the type of value_t does not match that of the any, NULL is returned.
-  assertion(boost::any_cast<value_t>(&iter->second) != nullptr);
+  PRECICE_ASSERT(boost::any_cast<value_t>(&iter->second) != nullptr);
   return *boost::any_cast<value_t>(&iter->second);
 }
 
@@ -157,9 +163,9 @@ void PropertyContainer::getProperties(int propertyID, std::vector<value_t> &prop
 {
   auto iter = _properties.find(propertyID);
   if (iter != _properties.end()) {
-    assertion(not iter->second.empty());
+    PRECICE_ASSERT(not iter->second.empty());
     // When the type of value_t does not match that of the any, NULL is returned.
-    assertion(boost::any_cast<value_t>(&iter->second) != nullptr);
+    PRECICE_ASSERT(boost::any_cast<value_t>(&iter->second) != nullptr);
     properties.push_back(boost::any_cast<value_t>(iter->second));
   } else {
     for (size_t i = 0; i < _parents.size(); i++) {
