@@ -233,7 +233,7 @@ module PreCICE_solver_if_module
       integer(kind=c_int) :: fourthVertexID
     end subroutine precicef_set_quad_we    
 
-   subroutine precicef_has_data(dataName, hasData, lengthDataName, meshID) &
+   subroutine precicef_has_data(dataName, meshID, hasData, lengthDataName) &
       &  bind(c, name='precicef_has_data_')
 
       use, intrinsic :: iso_c_binding
