@@ -162,5 +162,29 @@ void GatherScatterCommunication::receive(
   } // Master
 }
 
+void GatherScatterCommunication::acceptPreConnection(
+  std::string const &acceptorName,
+  std::string const &requesterName)
+{  
+  PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
+}
+ 
+void GatherScatterCommunication::requestPreConnection(
+  std::string const &acceptorName,
+  std::string const &requesterName)
+{
+  PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
+}
+
+void GatherScatterCommunication::broadcastSend(const double &itemToSend)
+{
+  PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
+}
+
+void GatherScatterCommunication::broadcastReceive(double &itemToReceive)
+{
+  PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
+}
+
 } // namespace m2n
 } // namespace precice

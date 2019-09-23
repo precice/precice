@@ -4,6 +4,8 @@
 #include <thread>
 #include "com/Communication.hpp"
 #include "com/CommunicationFactory.hpp"
+#include "com/CommunicateMesh.hpp"
+#include "utils/EventUtils.hpp"
 #include "mesh/Mesh.hpp"
 #include "utils/Event.hpp"
 #include "utils/MasterSlave.hpp"
@@ -384,6 +386,39 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
   _isConnected = true;
 }
 
+void PointToPointCommunication::acceptPreConnection(std::string const &acceptorName,
+                                                 std::string const &requesterName)
+{
+  PRECICE_TRACE(acceptorName, requesterName);
+  PRECICE_ASSERT(not isConnected(), "Already connected!");
+  PRECICE_CHECK(utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave(),
+        "You can only use a point-to-point communication between two participants which both use a master. "
+            << "Please use distribution-type gather-scatter instead.");
+  
+  const std::vector<int> & localConnectedRanks = _mesh->getConnectedRanks();
+
+  if (localConnectedRanks.empty()) {
+    _isConnected = true;
+    return;
+  }
+
+  auto c = _communicationFactory->newCommunication();
+  
+  c->acceptConnectionAsServer(
+      acceptorName,
+      requesterName,
+      utils::MasterSlave::getRank(),
+      localConnectedRanks.size());
+
+  _connectionDataVector.reserve(localConnectedRanks.size());
+
+  for (int connectedRank : localConnectedRanks) {
+    _connectionDataVector.push_back({connectedRank, c, com::PtrRequest()});
+  }
+
+  _isConnected = true;
+}
+
 void PointToPointCommunication::requestConnection(std::string const &acceptorName,
                                                   std::string const &requesterName)
 {
@@ -485,6 +520,38 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
   _isConnected = true;
 }
 
+void PointToPointCommunication::requestPreConnection(std::string const &acceptorName,
+                                                     std::string const &requesterName)
+{
+  PRECICE_TRACE(acceptorName, requesterName);
+  PRECICE_CHECK(not isConnected(), "Already connected!");
+  PRECICE_CHECK(utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave(),
+        "You can only use a point-to-point communication between two participants which both use a master. "
+        << "Please use distribution-type gather-scatter instead.");
+
+  std::vector<int> localConnectedRanks = _mesh->getConnectedRanks();
+
+  if (localConnectedRanks.empty()) {
+    _isConnected = true;
+    return;
+  }
+
+  std::vector<com::PtrRequest> requests;
+  requests.reserve(localConnectedRanks.size());
+  _connectionDataVector.reserve(localConnectedRanks.size());
+
+  std::set<int> acceptingRanks(localConnectedRanks.begin(), localConnectedRanks.end());
+  
+  auto c = _communicationFactory->newCommunication();
+  c->requestConnectionAsClient(acceptorName, requesterName,
+                               acceptingRanks, utils::MasterSlave::getRank());
+
+  for (auto & connectedRank : localConnectedRanks) {
+    _connectionDataVector.push_back({connectedRank, c, com::PtrRequest()});
+  }
+  _isConnected = true;
+}
+
 void PointToPointCommunication::closeConnection()
 {
   PRECICE_TRACE();
@@ -550,6 +617,21 @@ void PointToPointCommunication::receive(double *itemsToReceive,
   }
 }
 
+void PointToPointCommunication::broadcastSend(const double &itemToSend)
+{  
+  for (auto &connectionData : _connectionDataVector) {
+    connectionData.communication->send(itemToSend, connectionData.remoteRank);
+  }  
+}
+
+void PointToPointCommunication::broadcastReceive(double &itemToReceive)
+                                
+{  
+  for (auto &connectionData : _connectionDataVector) {
+    connectionData.communication->receive(itemToReceive, connectionData.remoteRank);
+  }  
+}
+
 void PointToPointCommunication::checkBufferedRequests(bool blocking)
 {
   PRECICE_TRACE(bufferedRequests.size());
@@ -566,9 +648,6 @@ void PointToPointCommunication::checkBufferedRequests(bool blocking)
       std::this_thread::yield(); // give up our time slice, so MPI may work
   } while (blocking);
 }
-
-
-
 
 } // namespace m2n
 } // namespace precice
