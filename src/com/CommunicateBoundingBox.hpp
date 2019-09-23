@@ -33,7 +33,7 @@ public:
       int                         rankSender);
 
   void sendConnectionMap(
-      std::map<int, std::vector<int>> &fbm,
+      std::map<int, std::vector<int>> const &fbm,
       int                              rankReceiver);
 
   void receiveConnectionMap(
@@ -49,7 +49,7 @@ public:
       mesh::Mesh::BoundingBoxMap &bbm);
 
   void broadcastSendConnectionMap(
-      std::map<int, std::vector<int>> &fbm);
+      std::map<int, std::vector<int>> const &fbm);
 
   void broadcastReceiveConnectionMap(
       std::map<int, std::vector<int>> &fbm);

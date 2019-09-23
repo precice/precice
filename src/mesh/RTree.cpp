@@ -34,7 +34,7 @@ rtree::vertex_traits::Ptr rtree::getVertexRTree(const PtrMesh& mesh)
   RTreeParameters params;
   vertex_traits::IndexGetter ind(mesh->vertices());
   auto tree = std::make_shared<vertex_traits::RTree>(
-          boost::irange(0lu, mesh->vertices().size()), params, ind);
+          boost::irange<std::size_t>(0lu, mesh->vertices().size()), params, ind);
 
   cache.vertices = tree;
   return tree;
@@ -55,7 +55,7 @@ rtree::edge_traits::Ptr rtree::getEdgeRTree(const PtrMesh& mesh)
   RTreeParameters params;
   edge_traits::IndexGetter ind(mesh->edges());
   auto tree = std::make_shared<edge_traits::RTree>(
-          boost::irange(0lu, mesh->edges().size()), params, ind);
+          boost::irange<std::size_t>(0lu, mesh->edges().size()), params, ind);
 
   cache.edges = tree;
   return tree;
