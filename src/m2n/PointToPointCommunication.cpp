@@ -646,14 +646,14 @@ void PointToPointCommunication::broadcastReceiveMesh()
   }  
 }
 
-void PointToPointCommunication::broadcastSendLCM(std::map<int, std::vector<int>> &localCommunicationMap)
+void PointToPointCommunication::broadcastSendLCM(communicationMap &localCommunicationMap)
 {
  for (auto &connectionData : _connectionDataVector) {
     connectionData.communication->send(localCommunicationMap[connectionData.remoteRank], connectionData.remoteRank);
   } 
 }
 
-void PointToPointCommunication::broadcastReceiveLCM(std::map<int, std::vector<int>> &localCommunicationMap)
+void PointToPointCommunication::broadcastReceiveLCM(communicationMap &localCommunicationMap)
 {
   for (auto &connectionData : _connectionDataVector) {
     connectionData.communication->receive(localCommunicationMap[connectionData.remoteRank], connectionData.remoteRank);
