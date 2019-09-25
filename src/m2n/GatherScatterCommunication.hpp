@@ -123,13 +123,13 @@ public:
    *  All ranks Send their local communication maps to connected ranks
    */
   void broadcastSendLCM(
-    std::map<int, std::vector<int>> &localCommunicationMap) override;
+    CommunicationMap &localCommunicationMap) override;
 
   /*
    *  Each rank revives local communication maps from connected ranks
    */
   void broadcastReceiveLCM(
-    std::map<int, std::vector<int>> &localCommunicationMap) override;
+    CommunicationMap &localCommunicationMap) override;
 
 private:
   logging::Logger _log{"m2n::GatherScatterCommunication"};

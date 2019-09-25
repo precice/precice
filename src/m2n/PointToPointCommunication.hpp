@@ -121,13 +121,13 @@ public:
    *  @brief All ranks Send their local communication maps to connected ranks
    */
   void broadcastSendLCM(
-    communicationMap &localCommunicationMap) override;
+    CommunicationMap &localCommunicationMap) override;
 
   /**
    *  @brief Each rank revives local communication maps from connected ranks
    */
   void broadcastReceiveLCM(
-    communicationMap &localCommunicationMap) override;
+    CommunicationMap &localCommunicationMap) override;
 
 private:
   logging::Logger _log{"m2n::PointToPointCommunication"};

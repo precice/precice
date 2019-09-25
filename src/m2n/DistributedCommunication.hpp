@@ -133,19 +133,19 @@ public:
   /*
    * A mapping from remote local ranks to the IDs that must be communicated
    */
-  using communicationMap = std::map<int, std::vector<int>>;
+  using CommunicationMap = std::map<int, std::vector<int>>;
 
   /**
    *  All ranks Send their local communication maps to connected ranks
    */
   virtual void broadcastSendLCM(
-    communicationMap &localCommunicationMap)=0;
+    CommunicationMap &localCommunicationMap)=0;
 
   /*
    *  Each rank revives local communication maps from connected ranks
    */
   virtual void broadcastReceiveLCM(
-    communicationMap &localCommunicationMap)=0 ;
+    CommunicationMap &localCommunicationMap)=0 ;
   
 protected:
   /**
