@@ -1,10 +1,15 @@
 #include "precice/SolverInterface.hpp"
+#include <iostream>
+#include <numeric>
+#include <cassert>
 
 std::vector<double> fake_read_write_buffer;
 int fake_dimensions;
 int fake_mesh_id;
 std::vector<int> fake_ids;
 int n_fake_vertices;
+std::string fake_data_name;
+int fake_data_id;
 
 namespace precice {
 
@@ -21,10 +26,11 @@ SolverInterface:: SolverInterface
   fake_read_write_buffer = std::vector<double>();
   fake_dimensions = 3;
   fake_mesh_id = 0;
+  fake_data_id = 15;
+  fake_data_name = "FakeData";
   n_fake_vertices = 3;
-  for(int i=0; i<n_fake_vertices; i++){
-    fake_ids.push_back(i);
-  }
+  fake_ids.resize(n_fake_vertices);
+  std::iota(fake_ids.begin(), fake_ids.end(), 0);
 }
 
 SolverInterface::~SolverInterface() = default;
@@ -114,7 +120,14 @@ int SolverInterface:: getDataID
 (
   const std::string& dataName, int meshID ) const
 {
-  return -1;
+  if(meshID == fake_mesh_id && dataName == fake_data_name)
+  {
+    return fake_data_id;
+  }
+  else
+  {
+    return -1;
+  }
 }
 
 bool SolverInterface::hasToEvaluateSurrogateModel() const
@@ -132,14 +145,14 @@ int SolverInterface:: setMeshVertex
   int           meshID,
   const double* position )
 {
-  return -1;
+  return 0;
 }
 
 int SolverInterface:: getMeshVertexSize
 (
   int meshID) const
 {
-  return -1;
+  return n_fake_vertices;
 }
 
 void SolverInterface:: setMeshVertices
@@ -149,9 +162,8 @@ void SolverInterface:: setMeshVertices
   const double* positions,
   int*          ids )
 {
-  for(int i = 0; i < size; i++){
-    ids[i] = fake_ids[i];
-  }
+  assert (size == fake_ids.size());
+  std::copy(fake_ids.begin(), fake_ids.end(), ids);
 }
 
 void SolverInterface:: getMeshVertices
@@ -160,7 +172,13 @@ void SolverInterface:: getMeshVertices
   int        size,
   const int* ids,
   double*    positions ) const
-{}
+{
+  for(int i = 0; i < size; i++){
+      positions[fake_dimensions * i] = i;
+      positions[fake_dimensions * i + 1] = i + n_fake_vertices;
+      positions[fake_dimensions * i + 2] = i + 2 * n_fake_vertices;
+  }
+}
 
 void SolverInterface:: getMeshVertexIDsFromPositions
 (
@@ -168,7 +186,10 @@ void SolverInterface:: getMeshVertexIDsFromPositions
   int           size,
   const double* positions,
   int*          ids ) const
-{}
+{
+  assert (size == fake_ids.size());
+  std::copy(fake_ids.begin(), fake_ids.end(), ids);
+}
 
 int SolverInterface:: setMeshEdge
 (

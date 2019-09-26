@@ -5,7 +5,7 @@
 #include "com/Communication.hpp"
 #include "com/SharedPointer.hpp"
 #include "impl/ConvergenceMeasure.hpp"
-#include "impl/PostProcessing.hpp"
+#include "acceleration/Acceleration.hpp"
 #include "io/TXTReader.hpp"
 #include "io/TXTWriter.hpp"
 #include "m2n/M2N.hpp"
@@ -361,7 +361,7 @@ void BaseCouplingScheme::addComputedTime(
     double timeToAdd)
 {
   PRECICE_TRACE(timeToAdd, _time);
-  PRECICE_CHECK(isCouplingOngoing(), "Invalid call of addComputedTime() after simulation end!");
+  PRECICE_ASSERT(isCouplingOngoing(), "Invalid call of addComputedTime() after simulation end!");
 
   // add time interval that has been computed in the solver to get the correct time remainder
   _computedTimestepPart += timeToAdd;
@@ -567,18 +567,18 @@ void BaseCouplingScheme::setupDataMatrices(DataMap &data)
   }
 }
 
-void BaseCouplingScheme::setIterationPostProcessing(
-    impl::PtrPostProcessing postProcessing)
+void BaseCouplingScheme::setIterationAcceleration(
+    acceleration::PtrAcceleration acceleration)
 {
-  PRECICE_ASSERT(postProcessing.get() != nullptr);
-  _postProcessing = postProcessing;
+  PRECICE_ASSERT(acceleration.get() != nullptr);
+  _acceleration = acceleration;
 
   // if multilevel based approach, i.e., manifold mapping, we have to start
   // with the evaluation/optimization of the coarse model representation.
   // otherwise, we start with the fine model representation as it's the only one
-  _isCoarseModelOptimizationActive = _postProcessing->isMultilevelBasedApproach();
-  if (_postProcessing->isMultilevelBasedApproach()) {
-    _postProcessing->setCoarseModelOptimizationActive(&_isCoarseModelOptimizationActive);
+  _isCoarseModelOptimizationActive = _acceleration->isMultilevelBasedApproach();
+  if (_acceleration->isMultilevelBasedApproach()) {
+    _acceleration->setCoarseModelOptimizationActive(&_isCoarseModelOptimizationActive);
     // also initialize the iteration counters with 0, as scheme starts with coarse model evaluation
     _iterations      = 0;
     _totalIterations = 0;
@@ -817,8 +817,8 @@ void BaseCouplingScheme::updateTimeAndIterations(
     bool convergenceCoarseOptimization)
 {
   bool manifoldmapping = false;
-  if (getPostProcessing().get() != nullptr) {
-    manifoldmapping = _postProcessing->isMultilevelBasedApproach();
+  if (getAcceleration().get() != nullptr) {
+    manifoldmapping = _acceleration->isMultilevelBasedApproach();
   }
 
   if (not convergence) {

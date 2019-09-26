@@ -12,7 +12,7 @@ from distutils.command.build import build
 
 # name of Interfacing API
 APPNAME = "precice_future"
-APPVERSION = "1.5.2"  # todo: should be replaced with precice.get_version() as soon as it exists , see https://github.com/precice/precice/issues/261
+APPVERSION = "1.6.1"  # todo: should be replaced with precice.get_version() as soon as it exists , see https://github.com/precice/precice/issues/261
 
 PYTHON_BINDINGS_PATH = os.path.dirname(os.path.abspath(__file__))
 

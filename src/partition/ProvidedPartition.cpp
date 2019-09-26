@@ -46,7 +46,7 @@ void ProvidedPartition::communicate()
         PRECICE_DEBUG("Received sub-mesh, from slave: " << rankSlave << ", global vertexCount: " << globalMesh.vertices().size());
       }
     }
-    
+
     // Set global index
     if (not utils::MasterSlave::isSlave()) {
       int globalIndex = 0;
@@ -61,7 +61,7 @@ void ProvidedPartition::communicate()
     // Send (global) Mesh
     PRECICE_INFO("Send global mesh " << _mesh->getName());
     Event e2("partition.sendGlobalMesh." + _mesh->getName(), precice::syncMode);
-      
+
     for(auto m2n : _m2ns) {
       if (not utils::MasterSlave::isSlave()) {
         PRECICE_CHECK(globalMesh.vertices().size() > 0, "The provided mesh " << globalMesh.getName() << " is invalid (possibly empty).");
@@ -70,7 +70,7 @@ void ProvidedPartition::communicate()
     }
     e2.stop();
 
-  } 
+  }
 }
 
 void ProvidedPartition::compute()
@@ -84,8 +84,10 @@ void ProvidedPartition::compute()
   // Set global indices at every slave and vertexDistribution at master
   if (utils::MasterSlave::isSlave()) {
     int globalVertexCounter = -1;
+    PRECICE_DEBUG("Send number of vertices: " << numberOfVertices);
     utils::MasterSlave::_communication->send(numberOfVertices, 0);
     utils::MasterSlave::_communication->receive(globalVertexCounter, 0);
+    PRECICE_DEBUG("Set global vertex indices");
     for (int i = 0; i < numberOfVertices; i++) {
       _mesh->vertices()[i].setGlobalIndex(globalVertexCounter + i);
     }
@@ -98,6 +100,7 @@ void ProvidedPartition::compute()
     int vertexCounter = 0;
 
     // Add master vertices
+    PRECICE_DEBUG("Add master vertices to vertex distribution");
     for (int i = 0; i < numberOfVertices; i++) {
       _mesh->getVertexDistribution()[0].push_back(vertexCounter);
       _mesh->vertices()[i].setGlobalIndex(vertexCounter);
@@ -114,6 +117,7 @@ void ProvidedPartition::compute()
       }
     }
     _mesh->setGlobalNumberOfVertices(vertexCounter);
+    PRECICE_DEBUG("broadcast global number of vertices: " << vertexCounter);
     utils::MasterSlave::_communication->broadcast(vertexCounter);
   } else { // Coupling mode
     for (int i = 0; i < numberOfVertices; i++) {
@@ -122,6 +126,7 @@ void ProvidedPartition::compute()
     _mesh->setGlobalNumberOfVertices(numberOfVertices);
   }
 
+  PRECICE_DEBUG("Create owner information");
   createOwnerInformation();
 
   computeVertexOffsets();

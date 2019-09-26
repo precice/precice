@@ -3,6 +3,11 @@
 #
 target_sources(testprecice
     PRIVATE
+    src/acceleration/test/AccelerationMasterSlaveTest.cpp
+    src/acceleration/test/HierarchicalAitkenAccelerationTest.cpp
+    src/acceleration/test/ParallelMatrixOperationsTest.cpp
+    src/acceleration/test/PreconditionerTest.cpp
+    src/acceleration/test/QRFactorizationTest.cpp
     src/action/tests/ModifyCoordinatesActionTest.cpp
     src/action/tests/PythonActionTest.cpp
     src/action/tests/ScaleActionTest.cpp
@@ -17,13 +22,8 @@ target_sources(testprecice
     src/cplscheme/tests/DummyCouplingScheme.cpp
     src/cplscheme/tests/DummyCouplingScheme.hpp
     src/cplscheme/tests/ExplicitCouplingSchemeTest.cpp
-    src/cplscheme/tests/HierarchicalAitkenPostProcessingTest.cpp
     src/cplscheme/tests/MinIterationConvergenceMeasureTest.cpp
     src/cplscheme/tests/ParallelImplicitCouplingSchemeTest.cpp
-    src/cplscheme/tests/ParallelMatrixOperationsTest.cpp
-    src/cplscheme/tests/PostProcessingMasterSlaveTest.cpp
-    src/cplscheme/tests/PreconditionerTest.cpp
-    src/cplscheme/tests/QRFactorizationTest.cpp
     src/cplscheme/tests/RelativeConvergenceMeasureTest.cpp
     src/cplscheme/tests/SerialImplicitCouplingSchemeTest.cpp
     src/io/tests/ExportConfigurationTest.cpp
@@ -51,7 +51,9 @@ target_sources(testprecice
     src/mesh/tests/RTreeTests.cpp
     src/mesh/tests/TriangleTest.cpp
     src/mesh/tests/VertexTest.cpp
+    src/partition/tests/ProvidedBoundingBoxTest.cpp
     src/partition/tests/ProvidedPartitionTest.cpp
+    src/partition/tests/ReceivedBoundingBoxTest.cpp
     src/partition/tests/ReceivedPartitionTest.cpp
     src/precice/tests/MeshHandleTest.cpp
     src/precice/tests/ParallelTests.cpp

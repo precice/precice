@@ -32,11 +32,27 @@ public:
       mesh::Mesh::BoundingBoxMap &bbm,
       int                         rankSender);
 
+  void sendConnectionMap(
+      std::map<int, std::vector<int>> const &fbm,
+      int                              rankReceiver);
+
+  void receiveConnectionMap(
+      std::map<int, std::vector<int>> &fbm,
+      int                              rankSender);
+
+  /// This method broadcasts the set of bounding boxes (gathered in the master rank) to the slaves.
   void broadcastSendBoundingBoxMap(
       mesh::Mesh::BoundingBoxMap &bbm);
 
+  /// Slaves call this method to receive the set of bounding boxes sent by the master.
   void broadcastReceiveBoundingBoxMap(
       mesh::Mesh::BoundingBoxMap &bbm);
+
+  void broadcastSendConnectionMap(
+      std::map<int, std::vector<int>> const &fbm);
+
+  void broadcastReceiveConnectionMap(
+      std::map<int, std::vector<int>> &fbm);
 
 private:
   logging::Logger _log{"com::CommunicateBoundingBox"};

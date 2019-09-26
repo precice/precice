@@ -55,6 +55,23 @@ public:
       const std::string &acceptorName,
       const std::string &requesterName) override;
 
+  /** 
+   *  This method has not been implemented yet.    
+   *  @todo: Ideally this should not be here
+   */
+  virtual void acceptPreConnection(
+    std::string const &acceptorName,
+    std::string const &requesterName);
+  
+
+  /** 
+   *  This method has not beein implemented yet.    
+   *  @todo: Ideally this should not be here
+   */
+  virtual void requestPreConnection(
+    std::string const &acceptorName,
+    std::string const &requesterName);
+  
   /**
    * @brief Disconnects from communication space, i.e. participant.
    *
@@ -73,6 +90,22 @@ public:
       double *itemsToReceive,
       size_t  size,
       int     valueDimension) override;
+
+   /**
+   * @brief Broadcasts a double to connected ranks       
+   *        This method has not beein implemented yet.    
+   *
+   * @todo: Ideally this should not be here
+   */
+  virtual void broadcastSend(const double &itemToSend);
+
+  /**
+   * @brief Receives a double from a connected rank
+   *        This method has not beein implemented yet.    
+   *
+   * @todo: Ideally this should not be here
+   */
+  virtual void broadcastReceive(double &itemToReceive);
 
 private:
   logging::Logger _log{"m2n::GatherScatterCommunication"};

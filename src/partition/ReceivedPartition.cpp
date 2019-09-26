@@ -36,7 +36,7 @@ void ReceivedPartition::communicate()
   Event e("partition.receiveGlobalMesh." + _mesh->getName(), precice::syncMode);
   if (not utils::MasterSlave::isSlave()) {
     PRECICE_ASSERT(_mesh->vertices().empty());
-    // a ReceivedPartition can only have one communication, @todo nicer design 
+    // a ReceivedPartition can only have one communication, @todo nicer design
     com::CommunicateMesh(_m2ns[0]->getMasterCommunication()).receiveMesh(*_mesh, 0);
   }
 }
@@ -47,6 +47,7 @@ void ReceivedPartition::compute()
 
   // handle coupling mode first (i.e. serial participant)
   if (not utils::MasterSlave::isSlave() && not utils::MasterSlave::isMaster()) { //coupling mode
+    PRECICE_DEBUG("Handle partition data structures for serial participant");
     _mesh->setGlobalNumberOfVertices(_mesh->vertices().size());
     computeVertexOffsets();
     for (mesh::Vertex &v : _mesh->vertices()) {
@@ -63,12 +64,13 @@ void ReceivedPartition::compute()
   }
 
 
-  // To understand the following steps, it is recommended to look at BU's thesis, especially Figure 69 on page 89 
+  // To understand the following steps, it is recommended to look at BU's thesis, especially Figure 69 on page 89
   // for RBF-based filtering. https://mediatum.ub.tum.de/doc/1320661/document.pdf
 
 
   // (0) set global number of vertices before filtering
   if (utils::MasterSlave::isMaster()) {
+    PRECICE_DEBUG("Set global number of vertices");
     _mesh->setGlobalNumberOfVertices(_mesh->vertices().size());
   }
 
@@ -80,8 +82,10 @@ void ReceivedPartition::compute()
     Event e("partition.preFilterMesh." + _mesh->getName(), precice::syncMode);
 
     if (utils::MasterSlave::isSlave()) {
+      PRECICE_DEBUG("Send bounding box to master");
       prepareBoundingBox();
       com::CommunicateMesh(utils::MasterSlave::_communication).sendBoundingBox(_bb, 0);
+      PRECICE_DEBUG("Receive filtered mesh");
       com::CommunicateMesh(utils::MasterSlave::_communication).receiveMesh(*_mesh, 0);
 
       if(areProvidedMeshesEmpty()) {
@@ -105,6 +109,7 @@ void ReceivedPartition::compute()
               << ", " << _bb[0].second << " and " << _bb[1].first << ", " << _bb[1].second);
         mesh::Mesh slaveMesh("SlaveMesh", _dimensions, _mesh->isFlipNormals());
         filterMesh(slaveMesh, true);
+        PRECICE_DEBUG("Send filtered mesh to slave: " << rankSlave);
         com::CommunicateMesh(utils::MasterSlave::_communication).sendMesh(slaveMesh, rankSlave);
       }
 
@@ -209,6 +214,7 @@ void ReceivedPartition::compute()
       for (int i = 0; i < numberOfVertices; i++) {
         vertexIDs[i] = _mesh->vertices()[i].getGlobalIndex();
       }
+      PRECICE_DEBUG("Send partition feedback to master");
       utils::MasterSlave::_communication->send(vertexIDs, 0);
     }
     int globalNumberOfVertices = -1;
@@ -229,6 +235,7 @@ void ReceivedPartition::compute()
       PRECICE_ASSERT(numberOfSlaveVertices >= 0);
       std::vector<int> slaveVertexIDs(numberOfSlaveVertices, -1);
       if (numberOfSlaveVertices != 0) {
+        PRECICE_DEBUG("Receive partition feedback from slave rank " << rankSlave);
         utils::MasterSlave::_communication->receive(slaveVertexIDs, rankSlave);
       }
       _mesh->getVertexDistribution()[rankSlave] = std::move(slaveVertexIDs);
@@ -244,6 +251,7 @@ void ReceivedPartition::filterMesh(mesh::Mesh &filteredMesh, const bool filterBy
 {
   PRECICE_TRACE(filterByBB);
 
+  PRECICE_DEBUG("Filter mesh " << _mesh->getName());
   PRECICE_DEBUG("Bounding mesh. #vertices: " << _mesh->vertices().size()
         << ", #edges: " << _mesh->edges().size()
         << ", #triangles: " << _mesh->triangles().size()
@@ -253,8 +261,8 @@ void ReceivedPartition::filterMesh(mesh::Mesh &filteredMesh, const bool filterBy
   std::map<int, mesh::Edge *>   edgeMap;
   int                           vertexCounter = 0;
 
+  PRECICE_DEBUG("Filter vertices");
   for (const mesh::Vertex &vertex : _mesh->vertices()) {
-
     if ((filterByBB && isVertexInBB(vertex)) || (not filterByBB && vertex.isTagged())) {
       mesh::Vertex &v = filteredMesh.createVertex(vertex.getCoords());
       v.setGlobalIndex(vertex.getGlobalIndex());
@@ -267,6 +275,7 @@ void ReceivedPartition::filterMesh(mesh::Mesh &filteredMesh, const bool filterBy
   }
 
   // Add all edges formed by the contributing vertices
+  PRECICE_DEBUG("Add edges to filtered mesh");
   for (mesh::Edge &edge : _mesh->edges()) {
     int vertexIndex1 = edge.vertex(0).getID();
     int vertexIndex2 = edge.vertex(1).getID();
@@ -279,6 +288,7 @@ void ReceivedPartition::filterMesh(mesh::Mesh &filteredMesh, const bool filterBy
 
   // Add all triangles formed by the contributing edges
   if (_dimensions == 3) {
+    PRECICE_DEBUG("Add triangles to filtered mesh");
     for (mesh::Triangle &triangle : _mesh->triangles()) {
       int edgeIndex1 = triangle.edge(0).getID();
       int edgeIndex2 = triangle.edge(1).getID();
@@ -300,6 +310,8 @@ void ReceivedPartition::filterMesh(mesh::Mesh &filteredMesh, const bool filterBy
 void ReceivedPartition::prepareBoundingBox()
 {
   PRECICE_TRACE(_safetyFactor);
+
+  PRECICE_DEBUG("Merge bounding boxes and increase by safety factor");
 
   _bb.resize(_dimensions,
              std::make_pair(std::numeric_limits<double>::max(), std::numeric_limits<double>::lowest()));
@@ -356,6 +368,7 @@ void ReceivedPartition::createOwnerInformation()
     utils::MasterSlave::_communication->send(numberOfVertices, 0);
 
     if (numberOfVertices != 0) {
+      PRECICE_DEBUG("Tag vertices, number of vertices " << numberOfVertices);
       std::vector<int> tags(numberOfVertices, -1);
       std::vector<int> globalIDs(numberOfVertices, -1);
       bool             atInterface = false;
@@ -370,10 +383,12 @@ void ReceivedPartition::createOwnerInformation()
       }
       PRECICE_DEBUG("My tags: " << tags);
       PRECICE_DEBUG("My global IDs: " << globalIDs);
+      PRECICE_DEBUG("Send tags and global IDs");
       utils::MasterSlave::_communication->send(tags, 0);
       utils::MasterSlave::_communication->send(globalIDs, 0);
       utils::MasterSlave::_communication->send(atInterface, 0);
 
+      PRECICE_DEBUG("Receive owner information");
       std::vector<int> ownerVec(numberOfVertices, -1);
       utils::MasterSlave::_communication->receive(ownerVec, 0);
       PRECICE_DEBUG("My owner information: " << ownerVec);
@@ -392,6 +407,7 @@ void ReceivedPartition::createOwnerInformation()
     std::vector<std::vector<int>> slaveTags(utils::MasterSlave::getSize());
 
     // Fill master data
+    PRECICE_DEBUG("Tag master vertices");
     bool masterAtInterface = false;
     slaveOwnerVecs[0].resize(_mesh->vertices().size());
     slaveGlobalIDs[0].resize(_mesh->vertices().size());
@@ -419,10 +435,11 @@ void ReceivedPartition::createOwnerInformation()
       slaveOwnerVecs[rank].resize(localNumberOfVertices, 0);
 
       if (localNumberOfVertices != 0) {
+        PRECICE_DEBUG("Receive tags from slave rank " << rank);
         utils::MasterSlave::_communication->receive(slaveTags[rank], rank);
         utils::MasterSlave::_communication->receive(slaveGlobalIDs[rank], rank);
-        PRECICE_DEBUG("Rank " << rank << " has this tags " << slaveTags[rank]);
-        PRECICE_DEBUG("Rank " << rank << " has this global IDs " << slaveGlobalIDs[rank]);
+        PRECICE_DEBUG("Rank " << rank << " has tags " << slaveTags[rank]);
+        PRECICE_DEBUG("Rank " << rank << " has global IDs " << slaveGlobalIDs[rank]);
         bool atInterface = false;
         utils::MasterSlave::_communication->receive(atInterface, rank);
         if (atInterface)
@@ -431,6 +448,7 @@ void ReceivedPartition::createOwnerInformation()
     }
 
     // Decide upon owners,
+    PRECICE_DEBUG("Decide owners, first round by rough load balancing");
     int localGuess = _mesh->getGlobalNumberOfVertices() / ranksAtInterface; // Guess for a decent load balancing
     // First round: every slave gets localGuess vertices
     for (int rank = 0; rank < utils::MasterSlave::getSize(); rank++) {
@@ -448,6 +466,7 @@ void ReceivedPartition::createOwnerInformation()
     }
 
     // Second round: distribute all other vertices in a greedy way
+    PRECICE_DEBUG("Decide owners, second round in greedy way");
     for (int rank = 0; rank < utils::MasterSlave::getSize(); rank++) {
       for (size_t i = 0; i < slaveOwnerVecs[rank].size(); i++) {
         if (globalOwnerVec[slaveGlobalIDs[rank][i]] == 0 && slaveTags[rank][i] == 1) {
@@ -460,6 +479,7 @@ void ReceivedPartition::createOwnerInformation()
     // Send information back to slaves
     for (int rank = 1; rank < utils::MasterSlave::getSize(); rank++) {
       if (not slaveTags[rank].empty())
+        PRECICE_DEBUG("Send owner information to slave rank " << rank);
         utils::MasterSlave::_communication->send(slaveOwnerVecs[rank], rank);
     }
     // Master data
@@ -472,14 +492,14 @@ void ReceivedPartition::createOwnerInformation()
         PRECICE_DEBUG("The Vertex with global index " << i << " of mesh: " << _mesh->getName()
               << " was completely filtered out, since it has no influence on any mapping.");
       }
-    }    
+    }
 #endif
     auto filteredVertices = std::count(globalOwnerVec.begin(), globalOwnerVec.end(), 0);
     if (filteredVertices)
-      PRECICE_WARN(filteredVertices << " of " << _mesh->vertices().size()
+      PRECICE_WARN(filteredVertices << " of " << _mesh->getGlobalNumberOfVertices()
            << " vertices of mesh " << _mesh->getName() << " have been filtered out "
            << "since they have no influence on the mapping.");
-    
+
   }
 }
 

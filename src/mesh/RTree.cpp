@@ -2,6 +2,7 @@
 #include "mesh/impl/RTreeAdapter.hpp"
 
 #include "mesh/RTree.hpp"
+#include <boost/range/irange.hpp>
 
 namespace precice {
 namespace mesh {
@@ -27,12 +28,13 @@ rtree::vertex_traits::Ptr rtree::getVertexRTree(const PtrMesh& mesh)
       return cache.vertices;
   }
 
+  // Generating the rtree is expensive, so passing everything in the ctor is
+  // the best we can do. Even passing an index range instead of calling 
+  // tree->insert repeatedly is about 10x faster.
   RTreeParameters params;
   vertex_traits::IndexGetter ind(mesh->vertices());
-  auto tree = std::make_shared<vertex_traits::RTree>(params, ind);
-  for (size_t i = 0; i < mesh->vertices().size(); ++i) {
-      tree->insert(i);
-  }
+  auto tree = std::make_shared<vertex_traits::RTree>(
+          boost::irange<std::size_t>(0lu, mesh->vertices().size()), params, ind);
 
   cache.vertices = tree;
   return tree;
@@ -47,12 +49,13 @@ rtree::edge_traits::Ptr rtree::getEdgeRTree(const PtrMesh& mesh)
       return cache.edges;
   }
 
+  // Generating the rtree is expensive, so passing everything in the ctor is
+  // the best we can do. Even passing an index range instead of calling 
+  // tree->insert repeatedly is about 10x faster.
   RTreeParameters params;
   edge_traits::IndexGetter ind(mesh->edges());
-  auto tree = std::make_shared<edge_traits::RTree>(params, ind);
-  for (size_t i = 0; i < mesh->edges().size(); ++i) {
-      tree->insert(i);
-  }
+  auto tree = std::make_shared<edge_traits::RTree>(
+          boost::irange<std::size_t>(0lu, mesh->edges().size()), params, ind);
 
   cache.edges = tree;
   return tree;
@@ -67,14 +70,21 @@ rtree::triangle_traits::Ptr rtree::getTriangleRTree(const PtrMesh& mesh)
       return cache.triangles;
   }
 
-  RTreeParameters params;
-  triangle_traits::IndexGetter ind;
-  auto tree = std::make_shared<triangle_traits::RTree>(params, ind);
+  // We first generate the values for the triangle rtree.
+  // The resulting vector is a random access range, which can be passed to the
+  // constructor of the rtree for more efficient indexing.
+  std::vector<triangle_traits::IndexType> elements;
+  elements.reserve(mesh->triangles().size());
   for (size_t i = 0; i < mesh->triangles().size(); ++i) {
       auto box = bg::return_envelope<RTreeBox>(mesh->triangles()[i]);
-      tree->insert(std::make_pair(std::move(box) , i));
+      elements.emplace_back(std::move(box) , i);
   }
 
+  // Generating the rtree is expensive, so passing everything in the ctor is
+  // the best we can do.
+  RTreeParameters params;
+  triangle_traits::IndexGetter ind;
+  auto tree = std::make_shared<triangle_traits::RTree>(elements, params, ind);
   cache.triangles = tree;
   return tree;
 }

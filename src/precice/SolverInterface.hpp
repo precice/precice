@@ -156,7 +156,7 @@ public:
    * @post Coupling scheme state (computed time, computed timesteps, ...) is updated.
    * @post The coupling state is logged.
    * @post Configured data mapping schemes are applied.
-   * @post [Second Participant] Configured post processing schemes are applied.
+   * @post [Second Participant] Configured acceleration schemes are applied.
    * @post Meshes with data are exported to files if configured.
    *
    * @return Maximum length of next timestep to be computed by solver.

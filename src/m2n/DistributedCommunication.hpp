@@ -64,6 +64,31 @@ public:
       const std::string &requesterName) = 0;
 
   /**
+   * @brief Connects to another participant, which has to call requestPreConnection().
+   *        Exchanged vertex list is not included, only connection between ranks 
+   *        is established. 
+   *
+   * @param[in] acceptorName Name of calling participant.
+   * @param[in] requesterName Name of remote participant to connect to.
+   */
+  virtual void acceptPreConnection(
+    std::string const &acceptorName,
+    std::string const &requesterName) = 0;
+  
+
+  /**
+   * @brief Connects to another participant, which has to call acceptPreConnection().
+   *        Exchanged vertex list is not included, only connection between ranks 
+   *        is established. 
+   *
+   * @param[in] acceptorName Name of remote participant to connect to.
+   * @param[in] requesterName Name of calling participant.
+   */
+  virtual void requestPreConnection(
+    std::string const &acceptorName,
+    std::string const &requesterName) = 0;
+  
+  /**
    * @brief Disconnects from communication space, i.e. participant.
    *
    * This method is called on destruction.
@@ -81,6 +106,16 @@ public:
       double *itemsToReceive,
       size_t  size,
       int     valueDimension) = 0;
+
+  /**
+   * @brief Broadcasts a double to connected ranks on remote participant      
+   */
+  virtual void broadcastSend(const double &itemToSend) = 0;
+
+  /**
+   * @brief Receives a double from a connected rank on remote participant
+   */
+  virtual void broadcastReceive(double &itemToReceive) = 0;
 
 protected:
   /**
