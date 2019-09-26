@@ -11,6 +11,7 @@ MATLAB R2018a or later is required. The bindings were tested on R2018b and R2019
 - An issue causes MATLAB to crash upon SolverInterface initialization if precice was compiled with openmpi. This issue can be resolved by installing openmpi from source using the option `-disable-dlopen`. For reference, see e.g. [here](https://stackoverflow.com/questions/26901663/error-when-running-openmpi-based-library). Alternatively, the user can switch to a different MPI implementation, e.g. MPICH (other implemenations were not tested).
 - The API function `getMeshHandle` is missing. Also, there are no wrapper classes for MeshHandle etc.
 - Currently, only one instance of the `SolverInterface` class can exist at the same time in a single MATLAB instance. If the user wishes to couple multiple participants based on MATLAB, he is supposed to start them in different MATLAB instances. If, for some reason, the user needs multiple instances of `SolverInterface`, he should use the OOP variant (Multiple instances of `SolverInterfaceOOP` can exist at the same time).
+- There is a known bug, if the `SolverInterface` destructor is called. For a possible workaround refert to https://github.com/precice/precice/issues/378. 
 
 ## Compilation
 
