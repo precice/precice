@@ -290,9 +290,9 @@ void SolverInterface:: writeBlockScalarData
 
 void SolverInterface:: writeScalarData
 (
-  int           dataID,
-  int           valueIndex,
-  const double& value )
+  int    dataID,
+  int    valueIndex,
+  double value )
 {
   _impl->writeScalarData ( dataID, valueIndex, value );
 }

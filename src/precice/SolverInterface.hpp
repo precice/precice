@@ -697,9 +697,9 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void writeScalarData (
-    int           dataID,
-    int           valueIndex,
-    const double& value );
+    int    dataID,
+    int    valueIndex,
+    double value );
 
   /**
    * @brief Reads vector data into a provided block.
