@@ -252,6 +252,228 @@ void P2PComTest2(com::PtrCommunicationFactory cf)
   utils::Parallel::clearGroups();
 }
 
+void connectionTest(com::PtrCommunicationFactory cf)
+{
+
+  PRECICE_ASSERT(utils::Parallel::getCommunicatorSize() == 4);    
+  
+  int dimensions = 2;
+  bool flipNormals = false;
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, flipNormals));
+
+  std::vector<std::string> conections = {"same", "cross"};
+
+  for (auto & connectionType : conections)
+  {
+    utils::MasterSlave::_communication = std::make_shared<com::MPIDirectCommunication>();
+    
+    switch (utils::Parallel::getProcessRank())
+    {
+    case 0: {
+      utils::Parallel::splitCommunicator("Fluid.Master");
+      utils::MasterSlave::configure(0, 2);
+      utils::MasterSlave::_communication->acceptConnection("Fluid.Master", "Fluid.Slave", utils::Parallel::getProcessRank());
+      utils::MasterSlave::_communication->setRankOffset(1);
+
+      if (connectionType == "same")
+      {
+        mesh->getConnectedRanks().push_back(0);
+      } else
+      {
+        mesh->getConnectedRanks().push_back(1);
+      }
+      break;
+
+    }
+    case 1: {
+      utils::Parallel::splitCommunicator("Fluid.Slave");
+      utils::MasterSlave::configure(1, 2);
+      utils::MasterSlave::_communication->requestConnection("Fluid.Master", "Fluid.Slave", 0, 1);
+
+      if (connectionType == "same")
+      {
+        mesh->getConnectedRanks().push_back(1);
+      } else
+      {
+        mesh->getConnectedRanks().push_back(0);
+      }
+        break;
+        
+    }
+    case 2:
+    {
+      utils::Parallel::splitCommunicator("Solid.Master");
+      utils::MasterSlave::configure(0, 2);
+      utils::MasterSlave::_communication->acceptConnection("Solid.Master", "Solid.Slave", utils::Parallel::getProcessRank());
+      utils::MasterSlave::_communication->setRankOffset(1);
+
+      if (connectionType == "same")
+      {        
+        mesh->getConnectedRanks().push_back(0);
+      } else
+      {
+        mesh->getConnectedRanks().push_back(1);
+      }
+      break;
+    }
+    case 3:
+    {
+      utils::Parallel::splitCommunicator("Solid.Slave");
+      utils::MasterSlave::configure(1, 2);
+      utils::MasterSlave::_communication->requestConnection("Solid.Master", "Solid.Slave", 0, 1);   
+
+      if (connectionType == "same")
+      {
+        mesh->getConnectedRanks().push_back(1);
+      } else
+      {
+        mesh->getConnectedRanks().push_back(0);
+      }   
+      break;
+    }
+    }     
+
+  m2n::PointToPointCommunication c(cf, mesh);
+
+  double receiveData = 0;
+
+  if (utils::Parallel::getProcessRank() == 0) {
+  
+    c.requestPreConnection("Solid", "Fluid");
+    double sendData = 5;
+    c.broadcastSend(sendData);    
+   
+  } else if (utils::Parallel::getProcessRank() == 1) {
+  
+    c.requestPreConnection("Solid", "Fluid");
+    double sendData = 10;
+    c.broadcastSend(sendData);    
+   
+  } else
+  {    
+    c.acceptPreConnection("Solid", "Fluid");
+    c.broadcastReceive(receiveData);    
+  }
+
+  if(utils::Parallel::getProcessRank() == 2 )
+  {
+    if (connectionType == "same")
+      {
+        BOOST_TEST(receiveData == 5);
+      } else
+      {
+        BOOST_TEST(receiveData == 10);
+      }  
+    
+  } else if(utils::Parallel::getProcessRank() == 3 )
+  {
+    if (connectionType == "same")
+      {
+        BOOST_TEST(receiveData == 10);
+      } else
+      {
+        BOOST_TEST(receiveData == 5);
+      }  
+  }
+  
+  utils::MasterSlave::_communication = nullptr;
+  utils::MasterSlave::reset();
+  utils::Parallel::synchronizeProcesses();
+  utils::Parallel::clearGroups();
+  mesh::Mesh::resetGeometryIDsGlobally();
+  mesh::Data::resetDataCount();
+  utils::Parallel::setGlobalCommunicator(utils::Parallel::getCommunicatorWorld());
+    
+  }
+}
+
+void emptyConnectionTest(com::PtrCommunicationFactory cf)
+{
+
+  PRECICE_ASSERT(utils::Parallel::getCommunicatorSize() == 4);    
+  
+  int dimensions = 2;
+  bool flipNormals = false;
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, flipNormals));
+
+  utils::MasterSlave::_communication = std::make_shared<com::MPIDirectCommunication>();
+  
+  switch (utils::Parallel::getProcessRank())
+  {
+    case 0: {
+      utils::Parallel::splitCommunicator("Fluid.Master");
+      utils::MasterSlave::configure(0, 2);
+      utils::MasterSlave::_communication->acceptConnection("Fluid.Master", "Fluid.Slave", utils::Parallel::getProcessRank());
+      utils::MasterSlave::_communication->setRankOffset(1);
+
+      mesh->getConnectedRanks().push_back(0);
+
+      
+      break;
+    }
+    case 1: {
+      utils::Parallel::splitCommunicator("Fluid.Slave");
+      utils::MasterSlave::configure(1, 2);
+      utils::MasterSlave::_communication->requestConnection("Fluid.Master", "Fluid.Slave", 0, 1);
+ 
+      break;       
+    }
+    case 2:
+    {
+      utils::Parallel::splitCommunicator("Solid.Master");
+      utils::MasterSlave::configure(0, 2);
+      utils::MasterSlave::_communication->acceptConnection("Solid.Master", "Solid.Slave", utils::Parallel::getProcessRank());
+      utils::MasterSlave::_communication->setRankOffset(1);
+
+      mesh->getConnectedRanks().push_back(0);
+      
+      break;
+    }
+    case 3:
+    {
+      utils::Parallel::splitCommunicator("Solid.Slave");
+      utils::MasterSlave::configure(1, 2);
+      utils::MasterSlave::_communication->requestConnection("Solid.Master", "Solid.Slave", 0, 1);   
+
+      break;
+    }
+  }
+
+  m2n::PointToPointCommunication c(cf, mesh);
+
+  double receiveData = 0;
+
+  if (utils::Parallel::getProcessRank() < 2) {
+  
+    c.requestPreConnection("Solid", "Fluid");
+    double sendData = 5;
+    c.broadcastSend(sendData);      
+   
+  } else if (utils::Parallel::getProcessRank() > 1) 
+  {    
+    c.acceptPreConnection("Solid", "Fluid");
+    c.broadcastReceive(receiveData);    
+  }
+
+  if(utils::Parallel::getProcessRank() == 2 )
+  {
+    BOOST_TEST(receiveData == 5);
+    
+  } else if(utils::Parallel::getProcessRank() == 3 )
+  {
+    BOOST_TEST(receiveData == 0);
+  }
+  
+  utils::MasterSlave::_communication = nullptr;
+  utils::MasterSlave::reset();
+  utils::Parallel::synchronizeProcesses();
+  utils::Parallel::clearGroups();
+  mesh::Mesh::resetGeometryIDsGlobally();
+  mesh::Data::resetDataCount();
+  utils::Parallel::setGlobalCommunicator(utils::Parallel::getCommunicatorWorld());   
+  
+}
+
 BOOST_AUTO_TEST_CASE(SocketCommunication,
                      * testing::OnSize(4))
 {
@@ -259,6 +481,8 @@ BOOST_AUTO_TEST_CASE(SocketCommunication,
   if (utils::Parallel::getProcessRank() < 4) {
     P2PComTest1(cf);
     P2PComTest2(cf);
+    connectionTest(cf);
+    emptyConnectionTest(cf);    
   }
 }
 
@@ -270,8 +494,11 @@ BOOST_AUTO_TEST_CASE(MPIPortsCommunication,
   if (utils::Parallel::getProcessRank() < 4) {
     P2PComTest1(cf);
     P2PComTest2(cf);
+    connectionTest(cf);
+    emptyConnectionTest(cf);    
   }
 }
+
 
 BOOST_AUTO_TEST_SUITE_END()
 

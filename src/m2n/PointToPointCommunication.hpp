@@ -8,6 +8,7 @@
 #include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "mesh/Mesh.hpp"
 
 namespace precice
 {
@@ -55,6 +56,27 @@ public:
                          std::string const &requesterName) override;
 
   /**
+   * @brief Accepts connection from participant, which has to call
+   *        requestPreConnection().
+   *        Only initial connection is created.
+   *
+   * @param[in] acceptorName  Name of calling participant.
+   * @param[in] requesterName Name of remote participant to connect to.
+   */
+  virtual void acceptPreConnection(std::string const &acceptorName,
+                                   std::string const &requesterName);
+  
+  /**
+   * @brief Requests connection from participant, which has to call acceptConnection().
+   *        Only initial connection is created. 
+   *
+   * @param[in] acceptorName Name of remote participant to connect to.
+   * @param[in] requesterName Name of calling participant.
+   */
+  virtual void requestPreConnection(std::string const &acceptorName,
+                                    std::string const &requesterName);
+
+  /**
    * @brief Disconnects from communication space, i.e. participant.
    *
    * This method is called on destruction.
@@ -74,6 +96,16 @@ public:
   void receive(double *itemsToReceive,
                size_t  size,
                int     valueDimension = 1) override;
+
+  /**
+   * @brief Broadcasts a double to connected ranks on remote participant       
+   */
+  virtual void broadcastSend(const double &itemToSend);
+
+  /**
+   * @brief Receives a double from a connected rank on remote participant
+   */
+  virtual void broadcastReceive(double &itemToReceive);
 
 private:
   logging::Logger _log{"m2n::PointToPointCommunication"};
@@ -113,6 +145,25 @@ private:
    *        mappings (one to service each point-to-point connection).
    */
   std::vector<Mapping> _mappings;
+
+   /**
+   * @brief this data structure is used to store m2n communication information for the 1 step of 
+   *        bounding box initialization. It stores:
+   *        1. global remote process rank;
+   *        2. communication object (provides point-to-point communication routines).
+   *        3. Request holding information about pending communication
+   */
+  struct ConnectionData {
+    int                   remoteRank;
+    com::PtrCommunication communication;
+    com::PtrRequest       request;
+  };
+
+  /**
+   * @brief Local (for process rank in the current participant) vector of
+   *        ConnectionData (one to service each point-to-point connection).
+   */
+  std::vector<ConnectionData> _connectionDataVector;
 
   bool _isConnected = false;
 
