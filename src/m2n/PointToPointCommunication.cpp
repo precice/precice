@@ -632,6 +632,34 @@ void PointToPointCommunication::broadcastReceive(double &itemToReceive)
   }  
 }
 
+void PointToPointCommunication::broadcastSendMesh()
+{  
+  for (auto &connectionData : _connectionDataVector) {
+    com::CommunicateMesh(connectionData.communication).sendMesh(*_mesh, connectionData.remoteRank);
+  }  
+}
+
+void PointToPointCommunication::broadcastReceiveMesh()
+{  
+  for (auto &connectionData : _connectionDataVector) {
+    com::CommunicateMesh(connectionData.communication).receiveMesh(*_mesh, connectionData.remoteRank);
+  }  
+}
+
+void PointToPointCommunication::broadcastSendLCM(CommunicationMap &localCommunicationMap)
+{
+ for (auto &connectionData : _connectionDataVector) {
+    connectionData.communication->send(localCommunicationMap[connectionData.remoteRank], connectionData.remoteRank);
+  } 
+}
+
+void PointToPointCommunication::broadcastReceiveLCM(CommunicationMap &localCommunicationMap)
+{
+  for (auto &connectionData : _connectionDataVector) {
+    connectionData.communication->receive(localCommunicationMap[connectionData.remoteRank], connectionData.remoteRank);
+  }
+}
+
 void PointToPointCommunication::checkBufferedRequests(bool blocking)
 {
   PRECICE_TRACE(bufferedRequests.size());

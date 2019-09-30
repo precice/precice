@@ -1,11 +1,11 @@
 #ifndef PRECICE_NO_MPI
 #include "testing/Testing.hpp"
 #include "testing/Fixtures.hpp"
-
 #include "partition/ProvidedBoundingBox.hpp"
 #include "partition/ReceivedBoundingBox.hpp"
 #include "partition/SharedPointer.hpp"
 #include "utils/Parallel.hpp"
+#include "com/CommunicationFactory.hpp"
 #include "com/MPIDirectCommunication.hpp"
 #include "com/MPIPortsCommunication.hpp"
 #include "com/MPIPortsCommunicationFactory.hpp"
@@ -16,7 +16,7 @@
 #include "mapping/NearestProjectionMapping.hpp"
 #include "mapping/PetRadialBasisFctMapping.hpp"
 #include "utils/MasterSlave.hpp"
-#include "com/CommunicationFactory.hpp"
+#include "m2n/PointToPointComFactory.hpp"
 
 using namespace precice;
 using namespace partition;
@@ -56,6 +56,41 @@ void setupParallelEnvironment(m2n::PtrM2N m2n)
   }
 }
 
+// create a communciator with two participants: each one has one master and one slave ranks
+// only master-master channel and master-slave channels are created here
+// slave-slave channels must be created in the test.
+void setupM2NBaseEnvironment(m2n::PtrM2N m2n){
+  PRECICE_ASSERT(utils::Parallel::getCommunicatorSize() == 4);
+
+  com::PtrCommunication masterSlaveCom = com::PtrCommunication(new com::MPIDirectCommunication());
+  utils::MasterSlave::_communication = masterSlaveCom;
+
+  utils::Parallel::synchronizeProcesses();
+
+  if (utils::Parallel::getProcessRank() == 0){ //Master Fluid
+    utils::Parallel::splitCommunicator("FluidMaster");
+    utils::MasterSlave::configure(0, 2);
+    masterSlaveCom->acceptConnection("FluidMaster", "FluidSlave", utils::Parallel::getProcessRank());
+    masterSlaveCom->setRankOffset(1);   
+  }
+  else if(utils::Parallel::getProcessRank() == 1){//Slave1
+    utils::Parallel::splitCommunicator("FluidSlave");
+    utils::MasterSlave::configure(1, 2);
+    masterSlaveCom->requestConnection("FluidMaster", "FluidSlave", 0, 1);
+  }
+  else if(utils::Parallel::getProcessRank() == 2){//Master Solid
+    utils::Parallel::splitCommunicator("SolidMaster");
+    utils::MasterSlave::configure(0, 2);
+    masterSlaveCom->acceptConnection("SolidMaster", "SolidSlave", utils::Parallel::getProcessRank());
+    utils::MasterSlave::_communication->setRankOffset(1);   
+  }
+  else if(utils::Parallel::getProcessRank() == 3){//Slave2
+    utils::Parallel::splitCommunicator("SolidSlave");
+    utils::MasterSlave::configure(1, 2);
+    masterSlaveCom->requestConnection("SolidMaster", "SolidSlave", 0, 1);
+ }
+  
+}
 
 void tearDownParallelEnvironment(){
   utils::MasterSlave::_communication = nullptr;
@@ -336,6 +371,126 @@ BOOST_AUTO_TEST_CASE(TestComputeBoundingBox, * testing::OnSize(4))
     }
     
   }  
+  tearDownParallelEnvironment();
+}
+
+BOOST_AUTO_TEST_CASE(TestCommunicateLocalMeshPartitions, * testing::OnSize(4))
+{
+  //mesh creation
+  int dimensions = 2;
+  bool flipNormals = true;
+  double safetyFactor = 0.1;
+  bool hasToSend=true;
+  mesh::PtrMesh mesh(new mesh::Mesh("mesh", dimensions, flipNormals));  
+  
+  switch (utils::Parallel::getProcessRank()) {
+  case 0: {
+    Eigen::VectorXd position(dimensions);
+    position <<0.5, 0.0;
+    mesh::Vertex& v1 = mesh->createVertex(position);
+    position << 1.5, 0.0;
+    mesh::Vertex& v2 = mesh->createVertex(position);
+    position <<2.0, 1.0;
+    mesh::Vertex& v3 = mesh->createVertex(position);
+    position << 0.5, 1.0;
+    mesh::Vertex& v4 = mesh->createVertex(position);
+    mesh->createEdge(v1, v2);
+    mesh->createEdge(v2, v3);
+    mesh->createEdge(v3, v4);
+    mesh->createEdge(v4, v1);
+
+    mesh->getConnectedRanks().push_back(0);
+    
+    break;
+  }
+  case 1: {
+    Eigen::VectorXd position(dimensions);
+    position <<2.5, 0.0;
+    mesh::Vertex& v1 = mesh->createVertex(position);
+    position << 3.5, 0.0;
+    mesh::Vertex& v2 = mesh->createVertex(position);
+    position <<3.5, 1.0;
+    mesh::Vertex& v3 = mesh->createVertex(position);
+    position << 2.0, 1.0;
+    mesh::Vertex& v4 = mesh->createVertex(position);
+    mesh->createEdge(v1, v2);
+    mesh->createEdge(v2, v3);
+    mesh->createEdge(v3, v4);
+    mesh->createEdge(v4, v1);
+
+    mesh->getConnectedRanks().push_back(1);
+
+    break;
+  }
+  case 2: {    
+
+    mesh->getConnectedRanks().push_back(0);
+    
+    break;
+  }
+  case 3: {    
+
+    mesh->getConnectedRanks().push_back(1);
+
+    break;
+  }
+  }
+
+  mesh->computeState();
+
+  // create a communicator for m2n mesh and communciation map exchange 
+  com::PtrCommunication participantsCom =  com::PtrCommunication(new com::SocketCommunication());
+  com::PtrCommunicationFactory participantComFactory =  com::PtrCommunicationFactory(new com::SocketCommunicationFactory);
+  m2n::DistributedComFactory::SharedPointer distributionFactory = m2n::DistributedComFactory::SharedPointer(new m2n::PointToPointComFactory(participantComFactory));
+  m2n::PtrM2N p2p = m2n::PtrM2N(new m2n::M2N(participantsCom, distributionFactory));
+
+  setupM2NBaseEnvironment(p2p);
+    
+  if(utils::Parallel::getProcessRank() < 2)
+  {
+    p2p->createDistributedCommunication(mesh);
+    ProvidedBoundingBox part(mesh, hasToSend, safetyFactor);
+    part.addM2N(p2p);
+    p2p->requestSlavesPreConnection("Solid", "Fluid");
+
+    part.communicate();
+  }
+  else
+  {
+    p2p->createDistributedCommunication(mesh);
+    ReceivedBoundingBox part(mesh, safetyFactor);
+    part.addM2N(p2p);
+    p2p->acceptSlavesPreConnection("Solid", "Fluid");
+
+    part.communicate();
+
+    BOOST_TEST(mesh->vertices().size()==4);
+
+
+    if(utils::Parallel::getProcessRank() == 2)
+    {
+      BOOST_TEST(mesh->vertices()[0].getCoords()[0]==0.5);
+      BOOST_TEST(mesh->vertices()[0].getCoords()[1]==0.0);
+      BOOST_TEST(mesh->vertices()[1].getCoords()[0]==1.5);
+      BOOST_TEST(mesh->vertices()[1].getCoords()[1]==0.0);
+      BOOST_TEST(mesh->vertices()[2].getCoords()[0]==2.0);
+      BOOST_TEST(mesh->vertices()[2].getCoords()[1]==1.0);
+      BOOST_TEST(mesh->vertices()[3].getCoords()[0]==0.5);
+      BOOST_TEST(mesh->vertices()[3].getCoords()[1]==1.0);
+    } else
+    {
+      BOOST_TEST(mesh->vertices()[0].getCoords()[0]==2.5);
+      BOOST_TEST(mesh->vertices()[0].getCoords()[1]==0.0);
+      BOOST_TEST(mesh->vertices()[1].getCoords()[0]==3.5);
+      BOOST_TEST(mesh->vertices()[1].getCoords()[1]==0.0);
+      BOOST_TEST(mesh->vertices()[2].getCoords()[0]==3.5);
+      BOOST_TEST(mesh->vertices()[2].getCoords()[1]==1.0);
+      BOOST_TEST(mesh->vertices()[3].getCoords()[0]==2.0);
+      BOOST_TEST(mesh->vertices()[3].getCoords()[1]==1.0);
+    }
+
+  }
+  
   tearDownParallelEnvironment();
 }
 

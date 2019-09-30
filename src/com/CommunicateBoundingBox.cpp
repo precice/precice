@@ -55,8 +55,9 @@ void CommunicateBoundingBox::receiveBoundingBoxMap(
   PRECICE_TRACE(rankSender);
   int sizeOfReceivingMap;
   _communication->receive(sizeOfReceivingMap, rankSender);
+  
   PRECICE_ASSERT(sizeOfReceivingMap == (int) bbm.size());
-
+  
   for (auto &bb : bbm) {
     receiveBoundingBox(bb.second, rankSender);
   }

@@ -1,6 +1,9 @@
 #pragma once
 
 #include "mesh/SharedPointer.hpp"
+#include "mesh/Mesh.hpp"
+#include <map>
+#include <vector>
 
 namespace precice
 {
@@ -87,7 +90,7 @@ public:
   virtual void requestPreConnection(
     std::string const &acceptorName,
     std::string const &requesterName) = 0;
-  
+
   /**
    * @brief Disconnects from communication space, i.e. participant.
    *
@@ -117,6 +120,33 @@ public:
    */
   virtual void broadcastReceive(double &itemToReceive) = 0;
 
+  /**
+   * @brief All ranks send their mesh partition to remote local  connected ranks.
+   */
+  virtual void broadcastSendMesh() = 0;
+  
+  /**
+   * @brief All ranks receive mesh partition from remote local ranks.
+   */
+  virtual void broadcastReceiveMesh() = 0;
+
+  /*
+   * A mapping from remote local ranks to the IDs that must be communicated
+   */
+  using CommunicationMap = std::map<int, std::vector<int>>;
+
+  /**
+   *  All ranks Send their local communication maps to connected ranks
+   */
+  virtual void broadcastSendLCM(
+    CommunicationMap &localCommunicationMap)=0;
+
+  /*
+   *  Each rank revives local communication maps from connected ranks
+   */
+  virtual void broadcastReceiveLCM(
+    CommunicationMap &localCommunicationMap)=0 ;
+  
 protected:
   /**
    * @brief mesh that dictates the distribution of this mapping

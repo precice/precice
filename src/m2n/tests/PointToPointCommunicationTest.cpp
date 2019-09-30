@@ -51,15 +51,15 @@ void P2PComTest1(com::PtrCommunicationFactory cf)
     mesh->setGlobalNumberOfVertices(10);
 
     mesh->getVertexDistribution()[0].push_back(0);
-    mesh->getVertexDistribution()[0].push_back(1); // <-
+    mesh->getVertexDistribution()[0].push_back(1); 
     mesh->getVertexDistribution()[0].push_back(3);
-    mesh->getVertexDistribution()[0].push_back(5); // <-
+    mesh->getVertexDistribution()[0].push_back(5); 
     mesh->getVertexDistribution()[0].push_back(7);
 
-    mesh->getVertexDistribution()[1].push_back(1); // <-
+    mesh->getVertexDistribution()[1].push_back(1); 
     mesh->getVertexDistribution()[1].push_back(2);
     mesh->getVertexDistribution()[1].push_back(4);
-    mesh->getVertexDistribution()[1].push_back(5); // <-
+    mesh->getVertexDistribution()[1].push_back(5); 
     mesh->getVertexDistribution()[1].push_back(6);
 
     data         = {10, 20, 40, 60, 80};
@@ -87,16 +87,16 @@ void P2PComTest1(com::PtrCommunicationFactory cf)
 
     mesh->setGlobalNumberOfVertices(10);
 
-    mesh->getVertexDistribution()[0].push_back(1); // <-
+    mesh->getVertexDistribution()[0].push_back(1); 
     mesh->getVertexDistribution()[0].push_back(2);
-    mesh->getVertexDistribution()[0].push_back(5); // <-
+    mesh->getVertexDistribution()[0].push_back(5); 
     mesh->getVertexDistribution()[0].push_back(6);
 
     mesh->getVertexDistribution()[1].push_back(0);
-    mesh->getVertexDistribution()[1].push_back(1); // <-
+    mesh->getVertexDistribution()[1].push_back(1); 
     mesh->getVertexDistribution()[1].push_back(3);
     mesh->getVertexDistribution()[1].push_back(4);
-    mesh->getVertexDistribution()[1].push_back(5); // <-
+    mesh->getVertexDistribution()[1].push_back(5); 
     mesh->getVertexDistribution()[1].push_back(7);
 
     data.assign(4, -1);
@@ -165,15 +165,15 @@ void P2PComTest2(com::PtrCommunicationFactory cf)
     mesh->setGlobalNumberOfVertices(10);
 
     mesh->getVertexDistribution()[0].push_back(0);
-    mesh->getVertexDistribution()[0].push_back(1); // <-
+    mesh->getVertexDistribution()[0].push_back(1); 
     mesh->getVertexDistribution()[0].push_back(3);
-    mesh->getVertexDistribution()[0].push_back(5); // <-
+    mesh->getVertexDistribution()[0].push_back(5); 
     mesh->getVertexDistribution()[0].push_back(7);
 
-    mesh->getVertexDistribution()[1].push_back(1); // <-
+    mesh->getVertexDistribution()[1].push_back(1); 
     mesh->getVertexDistribution()[1].push_back(2);
     mesh->getVertexDistribution()[1].push_back(4);
-    mesh->getVertexDistribution()[1].push_back(5); // <-
+    mesh->getVertexDistribution()[1].push_back(5); 
     mesh->getVertexDistribution()[1].push_back(6);
 
     data         = {10, 20, 40, 60, 80};
@@ -201,16 +201,16 @@ void P2PComTest2(com::PtrCommunicationFactory cf)
 
     mesh->setGlobalNumberOfVertices(10);
 
-    mesh->getVertexDistribution()[0].push_back(1); // <-
+    mesh->getVertexDistribution()[0].push_back(1); 
     mesh->getVertexDistribution()[0].push_back(3);
-    mesh->getVertexDistribution()[0].push_back(5); // <-
+    mesh->getVertexDistribution()[0].push_back(5); 
     mesh->getVertexDistribution()[0].push_back(6);
 
     mesh->getVertexDistribution()[1].push_back(0);
-    mesh->getVertexDistribution()[1].push_back(1); // <-
+    mesh->getVertexDistribution()[1].push_back(1); 
     mesh->getVertexDistribution()[1].push_back(3);
     mesh->getVertexDistribution()[1].push_back(4);
-    mesh->getVertexDistribution()[1].push_back(5); // <-
+    mesh->getVertexDistribution()[1].push_back(5); 
     mesh->getVertexDistribution()[1].push_back(7);
 
     data.assign(4, -1);
@@ -471,8 +471,226 @@ void emptyConnectionTest(com::PtrCommunicationFactory cf)
   mesh::Mesh::resetGeometryIDsGlobally();
   mesh::Data::resetDataCount();
   utils::Parallel::setGlobalCommunicator(utils::Parallel::getCommunicatorWorld());   
-  
 }
+
+void P2PMeshBroadcastTest(com::PtrCommunicationFactory cf)
+{
+  PRECICE_ASSERT(utils::Parallel::getCommunicatorSize() == 4);
+  utils::MasterSlave::_communication = std::make_shared<com::MPIDirectCommunication>();
+  
+  int dimensions = 2;
+  bool flipNormals = false;
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, flipNormals));
+  
+  switch (utils::Parallel::getProcessRank()) {
+  case 0: {
+    utils::Parallel::splitCommunicator("Fluid.Master");
+    utils::MasterSlave::configure(0, 2);
+    utils::MasterSlave::_communication->acceptConnection("Fluid.Master", "Fluid.Slave", utils::Parallel::getProcessRank());
+    utils::MasterSlave::_communication->setRankOffset(1);
+
+    Eigen::VectorXd position(dimensions);
+    position <<5.5, 0.0;
+    mesh::Vertex& v1 = mesh->createVertex(position);
+    position << 1.0, 2.0;
+    mesh::Vertex& v2 = mesh->createVertex(position);
+    mesh->createEdge(v1, v2);
+
+    mesh->getConnectedRanks().push_back(0);
+    
+    break;
+  }
+  case 1: {
+    utils::Parallel::splitCommunicator("Fluid.Slave");
+    utils::MasterSlave::configure(1, 2);
+    utils::MasterSlave::_communication->requestConnection("Fluid.Master", "Fluid.Slave", 0, 1);
+
+    Eigen::VectorXd position(dimensions);
+    position <<1.5, 0.0;
+    mesh::Vertex& v1 = mesh->createVertex(position);
+    position << 1.5, 2.0;
+    mesh::Vertex& v2 = mesh->createVertex(position);
+    mesh->createEdge(v1, v2);
+
+    mesh->getConnectedRanks().push_back(1);
+    
+    break;
+  }
+  case 2: {
+    utils::Parallel::splitCommunicator("Solid.Master");
+    utils::MasterSlave::configure(0, 2);
+    utils::MasterSlave::_communication->acceptConnection("Solid.Master", "Solid.Slave", utils::Parallel::getProcessRank());
+    utils::MasterSlave::_communication->setRankOffset(1);
+
+    mesh->getConnectedRanks().push_back(0);
+
+    break;
+  }
+  case 3: {
+    utils::Parallel::splitCommunicator("Solid.Slave");
+    utils::MasterSlave::configure(1, 2);
+    utils::MasterSlave::_communication->requestConnection("Solid.Master", "Solid.Slave", 0, 1);
+    
+    mesh->getConnectedRanks().push_back(1);
+
+    break;
+  }
+  }
+
+  m2n::PointToPointCommunication c(cf, mesh);
+
+  if (utils::Parallel::getProcessRank() < 2) {
+  
+    c.requestPreConnection("Solid", "Fluid");
+    c.broadcastSendMesh();
+  } else {
+
+    c.acceptPreConnection("Solid", "Fluid");    
+    c.broadcastReceiveMesh();
+
+      if(utils::Parallel::getProcessRank() ==2 )
+      {
+        // This rank should receive the mesh from rank 0 (fluid master)
+        BOOST_TEST(mesh->vertices().size()==2);
+        BOOST_TEST(mesh->vertices()[0].getCoords()[0]==5.50);
+        BOOST_TEST(mesh->vertices()[0].getCoords()[1]==0.0);
+        BOOST_TEST(mesh->vertices()[1].getCoords()[0]==1.0);
+        BOOST_TEST(mesh->vertices()[1].getCoords()[1]==2.0);        
+      }
+
+      if(utils::Parallel::getProcessRank() ==3 )
+      {
+        // This rank should receive the mesh from rank 1 (fluid slave)
+        BOOST_TEST(mesh->vertices().size()==2);
+        BOOST_TEST(mesh->vertices()[0].getCoords()[0]==1.50);
+        BOOST_TEST(mesh->vertices()[0].getCoords()[1]==0.0);
+        BOOST_TEST(mesh->vertices()[1].getCoords()[0]==1.50);
+        BOOST_TEST(mesh->vertices()[1].getCoords()[1]==2.0);
+      }
+    
+  }
+  
+  utils::MasterSlave::_communication = nullptr;
+  utils::MasterSlave::reset();
+  utils::Parallel::synchronizeProcesses();
+  utils::Parallel::clearGroups();
+  mesh::Mesh::resetGeometryIDsGlobally();
+  mesh::Data::resetDataCount();
+  utils::Parallel::setGlobalCommunicator(utils::Parallel::getCommunicatorWorld());  
+}
+
+void P2PComLCMTest(com::PtrCommunicationFactory cf)
+{  
+  PRECICE_ASSERT(utils::Parallel::getCommunicatorSize() == 4);
+  utils::MasterSlave::_communication = std::make_shared<com::MPIDirectCommunication>();
+
+  int dimensions = 2;
+  bool flipNormals = false;
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, flipNormals)); 
+  std::map<int, std::vector<int>> localCommunicationMap;
+
+  switch (utils::Parallel::getProcessRank()) {
+  case 0: {
+    utils::Parallel::splitCommunicator("Fluid.Master");
+    utils::MasterSlave::configure(0, 2);
+    utils::MasterSlave::_communication->acceptConnection("Fluid.Master", "Fluid.Slave", utils::Parallel::getProcessRank());
+    utils::MasterSlave::_communication->setRankOffset(1);
+
+    // The numbers are chosen in this way to make it easy to test weather
+    // correct values are communicated or not! 
+    mesh->getConnectedRanks().push_back(0);    
+    localCommunicationMap[0].push_back(102);
+    localCommunicationMap[0].push_back(1022);
+    localCommunicationMap[0].push_back(10222);
+    localCommunicationMap[1].push_back(103);
+    localCommunicationMap[1].push_back(1033);
+    localCommunicationMap[1].push_back(10333);
+   
+    break;
+  }
+  case 1: {
+    utils::Parallel::splitCommunicator("Fluid.Slave");
+    utils::MasterSlave::configure(1, 2);
+    utils::MasterSlave::_communication->requestConnection("Fluid.Master", "Fluid.Slave", 0, 1);
+
+    // The numbers are chosen in this way to make it easy to test weather
+    // correct values are communicated or not! 
+    mesh->getConnectedRanks().push_back(1);    
+    localCommunicationMap[0].push_back(112);
+    localCommunicationMap[0].push_back(1122);
+    localCommunicationMap[0].push_back(11222);
+    localCommunicationMap[1].push_back(113);
+    localCommunicationMap[1].push_back(1133);
+    localCommunicationMap[1].push_back(11333);
+
+    break;
+  }
+  case 2: {
+    utils::Parallel::splitCommunicator("Solid.Master");
+    utils::MasterSlave::configure(0, 2);
+    utils::MasterSlave::_communication->acceptConnection("Solid.Master", "Solid.Slave", utils::Parallel::getProcessRank());
+    utils::MasterSlave::_communication->setRankOffset(1);
+    
+    mesh->getConnectedRanks().push_back(0);
+    
+    break;
+  }
+  case 3: {
+    utils::Parallel::splitCommunicator("Solid.Slave");
+    utils::MasterSlave::configure(1, 2);
+    utils::MasterSlave::_communication->requestConnection("Solid.Master", "Solid.Slave", 0, 1);
+
+    mesh->getConnectedRanks().push_back(1);
+    
+    break;
+  }
+  }
+
+  m2n::PointToPointCommunication c(cf, mesh);
+
+  if (utils::Parallel::getProcessRank() < 2) {
+  
+    c.requestPreConnection("Solid", "Fluid");
+    c.broadcastSendLCM(localCommunicationMap);
+    BOOST_TEST(mesh->getID()==0);
+   
+  } else
+  {
+    c.acceptPreConnection("Solid", "Fluid");
+    c.broadcastReceiveLCM(localCommunicationMap);
+    BOOST_TEST(mesh->getID()==0);
+  }
+
+ if(utils::Parallel::getProcessRank() == 2 )
+  {
+    // The numbers are chosen in this way to make it easy to test weather
+    // correct values are communicated or not! 
+    BOOST_TEST(localCommunicationMap.size() == 1);
+    BOOST_TEST(localCommunicationMap[0].size() ==3);
+    BOOST_TEST(localCommunicationMap[0][0] ==102);
+    BOOST_TEST(localCommunicationMap[0][1] ==1022);
+    BOOST_TEST(localCommunicationMap[0][2] ==10222);
+    
+  } else if(utils::Parallel::getProcessRank() == 3 )
+  {
+    // The numbers are chosen in this way to make it easy to test weather
+    // correct values are communicated or not! 
+    BOOST_TEST(localCommunicationMap.size() == 1);    
+    BOOST_TEST(localCommunicationMap[1].size() ==3);
+    BOOST_TEST(localCommunicationMap[1][0] ==113);
+    BOOST_TEST(localCommunicationMap[1][1] ==1133);
+    BOOST_TEST(localCommunicationMap[1][2] ==11333);   
+  }
+  
+  utils::MasterSlave::_communication = nullptr;
+  utils::MasterSlave::reset();
+  utils::Parallel::synchronizeProcesses();
+  utils::Parallel::clearGroups();
+  mesh::Mesh::resetGeometryIDsGlobally();
+  mesh::Data::resetDataCount();
+  utils::Parallel::setGlobalCommunicator(utils::Parallel::getCommunicatorWorld());  
+}
+
 
 BOOST_AUTO_TEST_CASE(SocketCommunication,
                      * testing::OnSize(4))
@@ -482,7 +700,9 @@ BOOST_AUTO_TEST_CASE(SocketCommunication,
     P2PComTest1(cf);
     P2PComTest2(cf);
     connectionTest(cf);
-    emptyConnectionTest(cf);    
+    emptyConnectionTest(cf);
+    P2PMeshBroadcastTest(cf);
+    P2PComLCMTest(cf);    
   }
 }
 
@@ -495,10 +715,9 @@ BOOST_AUTO_TEST_CASE(MPIPortsCommunication,
     P2PComTest1(cf);
     P2PComTest2(cf);
     connectionTest(cf);
-    emptyConnectionTest(cf);    
+    emptyConnectionTest(cf);
   }
 }
-
 
 BOOST_AUTO_TEST_SUITE_END()
 
