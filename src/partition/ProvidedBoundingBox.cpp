@@ -126,18 +126,18 @@ void ProvidedBoundingBox::computeBoundingBox()
   }
 }
 
-// these functions will be implemented in package 3
+
 void ProvidedBoundingBox::communicate()
 {
+  // each rank send its mesh partition to connected ranks at other participant
+  _m2ns[0]->broadcastSendLocalMesh(*_mesh);  
 }
 
 void ProvidedBoundingBox::compute()
-{
-}
+{}
 
 void ProvidedBoundingBox::createOwnerInformation()
-{
-}
+{}
 
 } // namespace partition
 } // namespace precice

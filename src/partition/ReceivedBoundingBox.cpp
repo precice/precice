@@ -184,6 +184,8 @@ void ReceivedBoundingBox::prepareBoundingBox()
 
 void ReceivedBoundingBox::communicate()
 {
+  // each rank receives mesh partition from connected ranks
+  _m2ns[0]->broadcastReceiveLocalMesh(*_mesh);
 }
 void ReceivedBoundingBox::compute()
 {

@@ -22,10 +22,11 @@ public:
   ProvidedBoundingBox(mesh::PtrMesh mesh, bool hasToSend, double safetyFactor);
 
   virtual ~ProvidedBoundingBox() {}
-
-  // These functions will be implemented in 3rd package
+  
   virtual void communicate();
+  
   virtual void compute();
+  
   virtual void createOwnerInformation();
   
   /// The bounding box is gathered and sent to another participant (if required)

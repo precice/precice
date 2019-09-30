@@ -53,8 +53,7 @@ public:
    */
   void requestConnection(
       const std::string &acceptorName,
-      const std::string &requesterName) override;
-
+      const std::string &requesterName);
   /** 
    *  This method has not been implemented yet.    
    *  @todo: Ideally this should not be here
@@ -62,16 +61,15 @@ public:
   virtual void acceptPreConnection(
     std::string const &acceptorName,
     std::string const &requesterName);
-  
 
   /** 
-   *  This method has not beein implemented yet.    
+   *  This method has not been implemented yet.    
    *  @todo: Ideally this should not be here
    */
   virtual void requestPreConnection(
     std::string const &acceptorName,
     std::string const &requesterName);
-  
+
   /**
    * @brief Disconnects from communication space, i.e. participant.
    *
@@ -93,19 +91,45 @@ public:
 
    /**
    * @brief Broadcasts a double to connected ranks       
-   *        This method has not beein implemented yet.    
+   *        This method has not been implemented yet.    
    *
    * @todo: Ideally this should not be here
    */
-  virtual void broadcastSend(const double &itemToSend);
+  void broadcastSend(const double &itemToSend) override;
 
   /**
    * @brief Receives a double from a connected rank
-   *        This method has not beein implemented yet.    
+   *        This method has not been implemented yet.    
    *
    * @todo: Ideally this should not be here
    */
-  virtual void broadcastReceive(double &itemToReceive);
+  void broadcastReceive(double &itemToReceive) override;
+
+  /**
+   * @brief All ranks send their mesh partition to remote local  connected ranks.
+   *
+   * @todo: Ideally this should not be here
+   */
+  void broadcastSendMesh() override;
+  
+  /**
+   * @brief All ranks receive mesh partition from remote local ranks.
+   *
+   * @todo: Ideally this should not be here
+   */
+  void broadcastReceiveMesh() override;
+
+  /**
+   *  All ranks Send their local communication maps to connected ranks
+   */
+  void broadcastSendLCM(
+    CommunicationMap &localCommunicationMap) override;
+
+  /*
+   *  Each rank revives local communication maps from connected ranks
+   */
+  void broadcastReceiveLCM(
+    CommunicationMap &localCommunicationMap) override;
 
 private:
   logging::Logger _log{"m2n::GatherScatterCommunication"};

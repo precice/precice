@@ -186,5 +186,25 @@ void GatherScatterCommunication::broadcastReceive(double &itemToReceive)
   PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
 }
 
+void GatherScatterCommunication::broadcastSendMesh()
+{
+  PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
+}
+
+void GatherScatterCommunication::broadcastReceiveMesh()
+{
+  PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
+}
+
+void GatherScatterCommunication::broadcastSendLCM(CommunicationMap &localCommunicationMap)
+{
+  PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
+}
+
+void GatherScatterCommunication::broadcastReceiveLCM(CommunicationMap &localCommunicationMap)
+{
+  PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
+}
+
 } // namespace m2n
 } // namespace precice

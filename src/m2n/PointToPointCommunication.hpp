@@ -100,12 +100,34 @@ public:
   /**
    * @brief Broadcasts a double to connected ranks on remote participant       
    */
-  virtual void broadcastSend(const double &itemToSend);
+  void broadcastSend(const double &itemToSend) override;
 
   /**
    * @brief Receives a double from a connected rank on remote participant
    */
-  virtual void broadcastReceive(double &itemToReceive);
+  void broadcastReceive(double &itemToReceive) override;
+
+  /**
+   * @brief All ranks send their mesh partition to remote local  connected ranks.
+   */
+  void broadcastSendMesh() override;
+  
+  /**
+   * @brief All ranks receive mesh partition from remote local ranks.
+   */
+  void broadcastReceiveMesh() override;
+
+  /**
+   *  @brief All ranks Send their local communication maps to connected ranks
+   */
+  void broadcastSendLCM(
+    CommunicationMap &localCommunicationMap) override;
+
+  /**
+   *  @brief Each rank revives local communication maps from connected ranks
+   */
+  void broadcastReceiveLCM(
+    CommunicationMap &localCommunicationMap) override;
 
 private:
   logging::Logger _log{"m2n::PointToPointCommunication"};
