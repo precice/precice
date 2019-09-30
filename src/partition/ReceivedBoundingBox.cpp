@@ -43,8 +43,7 @@ void ReceivedBoundingBox::communicateBoundingBox()
     }
 
     // master receives global_bb from other master
-    com::CommunicateBoundingBox(_m2ns[0]->getMasterCommunication()).receiveBoundingBoxMap(_remoteBBM, 0);
-   
+    com::CommunicateBoundingBox(_m2ns[0]->getMasterCommunication()).receiveBoundingBoxMap(_remoteBBM, 0);   
   }
 }
 
@@ -103,7 +102,6 @@ void ReceivedBoundingBox::computeBoundingBox()
     }
 
   } else if ( utils::MasterSlave::isSlave()) {    
-
     utils::MasterSlave::_communication->broadcast(_remoteParComSize, 0);
     
     for (int remoteRank = 0; remoteRank < _remoteParComSize; remoteRank++) {
@@ -325,7 +323,6 @@ void ReceivedBoundingBox::prepareBoundingBox()
         _bb[d].second = other_bb[d].second;
     }
   }
-
   
   if (_toMapping.use_count() > 0) {
     auto other_bb = _toMapping->getInputMesh()->getBoundingBox();
@@ -336,7 +333,6 @@ void ReceivedBoundingBox::prepareBoundingBox()
         _bb[d].second = other_bb[d].second;
     }
   }
-
   
   //enlarge BB
   PRECICE_ASSERT(_safetyFactor >= 0.0);
@@ -344,9 +340,10 @@ void ReceivedBoundingBox::prepareBoundingBox()
   double maxSideLength = 1e-6; // we need some minimum > 0 here
 
   for (int d = 0; d < _dimensions; d++) {
-
-    /// @Amin: This we have changed here: check later
-    maxSideLength = std::max(maxSideLength, _bb[d].second - _bb[d].first);
+    if(_bb[d].second > _bb[d].first)
+      maxSideLength = std::max(maxSideLength, _bb[d].second - _bb[d].first);
+  }
+  for (int d = 0; d < _dimensions; d++) {
     _bb[d].second += _safetyFactor * maxSideLength;
     _bb[d].first -= _safetyFactor * maxSideLength;
     PRECICE_DEBUG("Merged BoundingBox, dim: " << d << ", first: " << _bb[d].first << ", second: " << _bb[d].second);

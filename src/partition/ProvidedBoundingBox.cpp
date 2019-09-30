@@ -35,7 +35,7 @@ void ProvidedBoundingBox::communicateBoundingBox()
 
   // each rank sends its bb to master
   if (utils::MasterSlave::isSlave()) { //slave
-     com::CommunicateBoundingBox(utils::MasterSlave::_communication).sendBoundingBox(_mesh->getBoundingBox(), 0);
+    com::CommunicateBoundingBox(utils::MasterSlave::_communication).sendBoundingBox(_mesh->getBoundingBox(), 0);
   } else { // Master
 
     PRECICE_ASSERT(utils::MasterSlave::getRank() == 0);
@@ -73,7 +73,7 @@ void ProvidedBoundingBox::computeBoundingBox()
 
   std::map<int, std::vector<int>> remoteConnectionMap;
 
-  if (not utils::MasterSlave::isSlave()) { //Master
+  if (utils::MasterSlave::isMaster()) { 
     PRECICE_ASSERT(utils::MasterSlave::getSize() > 1);
 
     // master receives feedback map (map of other participant ranks -> connected ranks at this participant)
@@ -106,7 +106,7 @@ void ProvidedBoundingBox::computeBoundingBox()
 
     utils::MasterSlave::_communication->broadcast(connectedRanksList, 0);
 
-    if (connectedRanksList.size() != 0)
+    if (!connectedRanksList.empty())
     {
       for (auto &rank : connectedRanksList) {
         remoteConnectionMap[rank] = {-1};
