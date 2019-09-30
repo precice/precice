@@ -42,6 +42,7 @@ void M2N::acceptMasterConnection(
   Event e("m2n.acceptMasterConnection", precice::syncMode);
 
   if (not utils::MasterSlave::isSlave()) {
+    PRECICE_DEBUG("Accept master-master connection");
     PRECICE_ASSERT(_masterCom);
     _masterCom->acceptConnection(acceptorName, requesterName, utils::MasterSlave::getRank());
     _isMasterConnected = _masterCom->isConnected();
@@ -60,7 +61,7 @@ void M2N::requestMasterConnection(
 
   if (not utils::MasterSlave::isSlave()) {
     PRECICE_ASSERT(_masterCom);
-
+    PRECICE_DEBUG("Request master-master connection");
     _masterCom->requestConnection(acceptorName, requesterName, 0, 1);
     _isMasterConnected = _masterCom->isConnected();
   }
@@ -77,6 +78,7 @@ void M2N::acceptSlavesConnection(
 
   _areSlavesConnected = true;
   for (const auto &pair : _distComs) {
+    PRECICE_DEBUG("Accept slaves-slaves connections");
     pair.second->acceptConnection(acceptorName, requesterName);
     _areSlavesConnected = _areSlavesConnected && pair.second->isConnected();
   }
@@ -92,6 +94,7 @@ void M2N::requestSlavesConnection(
 
   _areSlavesConnected = true;
   for (const auto &pair : _distComs) {
+    PRECICE_DEBUG("Request slaves connections");
     pair.second->requestConnection(acceptorName, requesterName);
     _areSlavesConnected = _areSlavesConnected && pair.second->isConnected();
   }
@@ -164,6 +167,7 @@ com::PtrCommunication M2N::getMasterCommunication()
 
 void M2N::createDistributedCommunication(mesh::PtrMesh mesh)
 {
+  PRECICE_TRACE();
   DistributedCommunication::SharedPointer distCom = _distrFactory->newDistributedCommunication(mesh);
   _distComs[mesh->getID()]                        = distCom;
 }

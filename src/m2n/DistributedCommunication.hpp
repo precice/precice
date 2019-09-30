@@ -1,6 +1,7 @@
 #pragma once
 
 #include "mesh/SharedPointer.hpp"
+#include "mesh/Mesh.hpp"
 #include <map>
 #include <vector>
 
@@ -110,12 +111,12 @@ public:
       int     valueDimension) = 0;
 
   /**
-   * @brief Broadcasts an int to connected ranks on remote participant      
+   * @brief Broadcasts a double to connected ranks on remote participant      
    */
   virtual void broadcastSend(const int &itemToSend) = 0;
 
   /**
-   * @brief Receives an int from each connected rank on remote participant
+   * @brief Receives a double from a connected rank on remote participant
    */
   virtual void broadcastReceive(std::vector<int> &itemToReceive) = 0;
 
@@ -129,17 +130,22 @@ public:
    */
   virtual void broadcastReceiveMesh() = 0;
 
+  /*
+   * A mapping from remote local ranks to the IDs that must be communicated
+   */
+  using CommunicationMap = std::map<int, std::vector<int>>;
+
   /**
    *  All ranks Send their local communication maps to connected ranks
    */
   virtual void broadcastSendLCM(
-    std::map<int, std::vector<int>> &localCommunicationMap)=0;
+    CommunicationMap &localCommunicationMap)=0;
 
   /*
    *  Each rank revives local communication maps from connected ranks
    */
   virtual void broadcastReceiveLCM(
-    std::map<int, std::vector<int>> &localCommunicationMap)=0 ;
+    CommunicationMap &localCommunicationMap)=0 ;
   
 protected:
   /**

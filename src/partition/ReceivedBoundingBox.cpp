@@ -30,8 +30,7 @@ void ReceivedBoundingBox::communicateBoundingBox()
 {
   PRECICE_TRACE();
 
-  if (not utils::MasterSlave::isSlave()) {
-    
+  if (utils::MasterSlave::isMaster()) {
     _m2ns[0]->getMasterCommunication()->receive(_remoteParComSize, 0);
 
     // construct and initialize _remoteBBM
@@ -74,7 +73,7 @@ void ReceivedBoundingBox::computeBoundingBox()
         _mesh->getConnectedRanks().push_back(remoteBB.first);
       }
     }
-    if (_mesh->getConnectedRanks().size() != 0)
+    if (!_mesh->getConnectedRanks().empty())
     {
      connectionMap[0] = _mesh->getConnectedRanks();
      connectedRanksList.push_back(0);
@@ -96,7 +95,7 @@ void ReceivedBoundingBox::computeBoundingBox()
 
     // send connectionMap to other master
     _m2ns[0]->getMasterCommunication()->send(connectedRanksList, 0);
-    if (connectionMap.size() != 0) { 
+    if (!connectionMap.empty()) { 
       com::CommunicateBoundingBox(_m2ns[0]->getMasterCommunication()).sendConnectionMap(connectionMap, 0);
     } else
     {
@@ -106,14 +105,9 @@ void ReceivedBoundingBox::computeBoundingBox()
   } else if ( utils::MasterSlave::isSlave()) {    
 
     utils::MasterSlave::_communication->broadcast(_remoteParComSize, 0);
-       
-    // construct and initialize _remoteBBM
-    mesh::Mesh::BoundingBox initialBB;
-    for (int i = 0; i < _dimensions; i++) {
-      initialBB.push_back(std::make_pair(-1, -1));
-    }
+    
     for (int remoteRank = 0; remoteRank < _remoteParComSize; remoteRank++) {
-      _remoteBBM[remoteRank] = initialBB;
+      _remoteBBM[remoteRank] = mesh::Mesh::BoundingBox(_dimensions);
     }
 
     // receive _remoteBBM from master
@@ -129,11 +123,10 @@ void ReceivedBoundingBox::computeBoundingBox()
     utils::MasterSlave::_communication->send((int) _mesh->getConnectedRanks().size(), 0);
 
     // to prevent sending empty vector!
-    if (_mesh->getConnectedRanks().size() != 0)
+    if (!_mesh->getConnectedRanks().empty())
       utils::MasterSlave::_communication->send(_mesh->getConnectedRanks(), 0);
   }
 }
-
 
 void ReceivedBoundingBox::communicate()
 {
@@ -306,8 +299,8 @@ bool ReceivedBoundingBox::overlapping(mesh::Mesh::BoundingBox currentBB, mesh::M
    * We need to check if first AND second is smaller than first of the other BB to prevent false negatives
    * due to empty bounding boxes.
    */
-  
-  for (int i = 0; i < _dimensions; i++) {
+
+  for (int i = 0; i < currentBB.size(); i++) {
     if ((currentBB[i].first < receivedBB[i].first && currentBB[i].second < receivedBB[i].first) ||
         (receivedBB[i].first < currentBB[i].first && receivedBB[i].second < currentBB[i].first)) {      
       return false;
@@ -359,6 +352,7 @@ void ReceivedBoundingBox::prepareBoundingBox()
     PRECICE_DEBUG("Merged BoundingBox, dim: " << d << ", first: " << _bb[d].first << ", second: " << _bb[d].second);
   }
 }
+
 
 void ReceivedBoundingBox:: filterMesh(mesh::Mesh& filteredMesh, const bool filterByBB) {
   PRECICE_TRACE(filterByBB);
