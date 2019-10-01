@@ -382,8 +382,7 @@ void connectionTest(com::PtrCommunicationFactory cf)
   utils::Parallel::clearGroups();
   mesh::Mesh::resetGeometryIDsGlobally();
   mesh::Data::resetDataCount();
-  utils::Parallel::setGlobalCommunicator(utils::Parallel::getCommunicatorWorld());
-  
+  utils::Parallel::setGlobalCommunicator(utils::Parallel::getCommunicatorWorld());  
   }
 }
 

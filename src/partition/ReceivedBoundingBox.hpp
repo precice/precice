@@ -32,11 +32,11 @@ public:
   virtual void computeBoundingBox();
 
   /// receive mesh partition of remote connected ranks
-  virtual void communicate ();
+  virtual void communicate () override;
 
   /// filter the received mesh partitions, fill in communication map and feed back to remote
   /// connected ranks
-  virtual void compute ();     
+  virtual void compute () override;     
 
 private:
 
@@ -51,13 +51,12 @@ private:
   void filterMesh(mesh::Mesh &filteredMesh, const bool filterByBB);
 
   /// compares to bounding box and if they have intersection, returns true, otherwise flase!
-  bool overlapping(mesh::Mesh::BoundingBox currentBB, mesh::Mesh::BoundingBox receivedBB);
+  static bool overlapping(mesh::Mesh::BoundingBox const & currentBB, mesh::Mesh::BoundingBox const & receivedBB);
 
   /// Sets _bb to the union with the mesh from fromMapping resp. toMapping, also enlage by _safetyFactor
   void prepareBoundingBox();
 
   /// Checks if vertex in contained in _bb
-
   bool isVertexInBB(const mesh::Vertex &vertex);
 
   /// will be implemented in 3rd work package

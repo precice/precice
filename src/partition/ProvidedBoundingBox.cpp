@@ -144,7 +144,6 @@ void ProvidedBoundingBox::communicate()
   int offset = 0;
 
   if (utils::MasterSlave::isMaster()) {//Master
-
     int vertexCounter = 0;
 
     // set global indexes for master rank mesh partition 
@@ -207,7 +206,6 @@ void ProvidedBoundingBox::communicate()
 
   // each rank sends its mesh partition to connected remote ranks
   _m2ns[0]->broadcastSendLocalMesh(*_mesh);
-
   
   createOwnerInformation();  
   computeVertexOffsets();

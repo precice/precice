@@ -30,10 +30,10 @@ public:
   virtual void computeBoundingBox();
 
   /// sends mesh partition to remote connected ranks
-  virtual void communicate();
+  virtual void communicate() override;
 
   /// receive final communication map from remote connected ranks
-  virtual void compute();
+  virtual void compute() override;
 
   virtual void createOwnerInformation();
 

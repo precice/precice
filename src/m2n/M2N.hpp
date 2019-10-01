@@ -142,7 +142,7 @@ public:
   void broadcastSendLCM(std::map<int, std::vector<int>> &localCommunicationMap, mesh::Mesh &mesh);
 
   /** 
-   * each rank send an ints to connected ranks
+   * each rank send an int to connected ranks
    */
   void broadcastSend(int &itemToSend, mesh::Mesh &mesh);
 

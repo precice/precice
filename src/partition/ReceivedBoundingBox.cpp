@@ -100,7 +100,6 @@ void ReceivedBoundingBox::computeBoundingBox()
     {
       PRECICE_ERROR("This participant has no rank in the interface! Please check your test case and make sure that the mesh partition given to preCICE is loacted in the interface");
     }
-
   } else if ( utils::MasterSlave::isSlave()) {    
     utils::MasterSlave::_communication->broadcast(_remoteParComSize, 0);
     
@@ -127,8 +126,7 @@ void ReceivedBoundingBox::computeBoundingBox()
 }
 
 void ReceivedBoundingBox::communicate()
-{
-  
+{  
   if (utils::MasterSlave::isMaster())
   {
     // Master receives remote mesh's global vertex number
@@ -244,16 +242,13 @@ void ReceivedBoundingBox::compute()
     index++;
   }
   
-
   // communicate communication map to all remote conneceted ranks
   _m2ns[0]->broadcastSendLCM(localCommunicationMap, *_mesh);
-
 
   /* 
    * master broadcasts remote mesh's golbal vertex number to slaves.
    * This data is needed later for implicit coupling schemes.
-   */
-  
+   */  
   if (utils::MasterSlave::isMaster())
   {
     _mesh->getVertexDistribution()[0] = vertexIDs;
@@ -288,7 +283,7 @@ void ReceivedBoundingBox::compute()
   
 }
 
-bool ReceivedBoundingBox::overlapping(mesh::Mesh::BoundingBox currentBB, mesh::Mesh::BoundingBox receivedBB)
+bool ReceivedBoundingBox::overlapping(mesh::Mesh::BoundingBox const & currentBB, mesh::Mesh::BoundingBox const & receivedBB)
 {
   /*
    * Here two bounding boxes are compared to check whether they overlap or not!
@@ -300,7 +295,7 @@ bool ReceivedBoundingBox::overlapping(mesh::Mesh::BoundingBox currentBB, mesh::M
 
   for (int i = 0; i < currentBB.size(); i++) {
     if ((currentBB[i].first < receivedBB[i].first && currentBB[i].second < receivedBB[i].first) ||
-        (receivedBB[i].first < currentBB[i].first && receivedBB[i].second < currentBB[i].first)) {      
+        (receivedBB[i].first < currentBB[i].first && receivedBB[i].second < currentBB[i].first)) {
       return false;
     }
   }
