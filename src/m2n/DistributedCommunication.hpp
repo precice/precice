@@ -111,12 +111,12 @@ public:
       int     valueDimension) = 0;
 
   /**
-   * @brief Broadcasts a double to connected ranks on remote participant      
+   * @brief Broadcasts a int to connected ranks on remote participant      
    */
   virtual void broadcastSend(const int &itemToSend) = 0;
 
   /**
-   * @brief Receives a double from a connected rank on remote participant
+   * @brief Receives an int from a connected rank on remote participant
    */
   virtual void broadcastReceive(std::vector<int> &itemToReceive) = 0;
 

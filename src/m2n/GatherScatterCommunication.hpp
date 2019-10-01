@@ -90,7 +90,7 @@ public:
       int     valueDimension) override;
 
    /**
-   * @brief Broadcasts a double to connected ranks       
+   * @brief Broadcasts an int to connected ranks       
    *        This method has not been implemented yet.    
    *
    * @todo: Ideally this should not be here
@@ -98,7 +98,7 @@ public:
   void broadcastSend(const int &itemToSend) override;
 
   /**
-   * @brief Receives a double from a connected rank
+   * @brief Receives an int from a connected rank
    *        This method has not been implemented yet.    
    *
    * @todo: Ideally this should not be here

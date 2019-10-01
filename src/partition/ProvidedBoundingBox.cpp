@@ -130,8 +130,8 @@ void ProvidedBoundingBox::communicate()
   if (!_hasToSend)
     return;  
   /*
-   * First we should set global index for each vertices
-   * This gloabl vertex id is needed for final filtering in 
+   * First we should set global index for each vertex
+   * This global vertex id is needed for final filtering in 
    * the received partition
    */
 
@@ -157,6 +157,7 @@ void ProvidedBoundingBox::communicate()
     vertexMaxGlobalID = _mesh->vertices().size()-1;
     
     // receive number of vertices for each rank at master to produce offset for the same rank
+    // @todo: This is a gather operation which should be replaced with a better solution 
     int numberOfVertices = -1;
     for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++)
     {

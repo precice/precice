@@ -98,12 +98,12 @@ public:
                int     valueDimension = 1) override;
 
   /**
-   * @brief Broadcasts a double to connected ranks on remote participant       
+   * @brief Broadcasts an int to connected ranks on remote participant       
    */
   void broadcastSend(const int &itemToSend) override;
 
   /**
-   * @brief Receives a double from a connected rank on remote participant
+   * @brief Receives an int from a connected rank on remote participant
    */
   void broadcastReceive(std::vector<int> &itemToReceive) override;
 

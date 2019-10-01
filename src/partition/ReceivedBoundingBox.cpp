@@ -230,8 +230,8 @@ void ReceivedBoundingBox::compute()
   int rank = 0;
   int index= 0;
   for (auto &remoteVertex : _mesh->vertices()) {
-      vertexIDs.push_back(remoteVertex.getGlobalIndex());
-      rank = 0;
+    vertexIDs.push_back(remoteVertex.getGlobalIndex());
+    rank = 0;
     for (int remoteRank : _mesh->getConnectedRanks()) {
       if (remoteVertex.getGlobalIndex() <= _remoteVertexMaxGlobalIDs[rank] && remoteVertex.getGlobalIndex() >= _remoteVertexMinGlobalIDs[rank]) {
         localCommunicationMap[remoteRank].push_back(remoteVertex.getGlobalIndex() - _remoteVertexMinGlobalIDs[rank]);
