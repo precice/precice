@@ -196,12 +196,12 @@ void GatherScatterCommunication::broadcastReceiveMesh()
   PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
 }
 
-void GatherScatterCommunication::broadcastSendLCM(std::map<int, std::vector<int>> &localCommunicationMap)
+void GatherScatterCommunication::broadcastSendLCM(CommunicationMap &localCommunicationMap)
 {
   PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
 }
 
-void GatherScatterCommunication::broadcastReceiveLCM(std::map<int, std::vector<int>> &localCommunicationMap)
+void GatherScatterCommunication::broadcastReceiveLCM(CommunicationMap &localCommunicationMap)
 {
   PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
 }

@@ -30,8 +30,7 @@ void ReceivedBoundingBox::communicateBoundingBox()
 {
   PRECICE_TRACE();
 
-  if (not utils::MasterSlave::isSlave()) {
-    
+  if (utils::MasterSlave::isMaster()) {
     _m2ns[0]->getMasterCommunication()->receive(_remoteParComSize, 0);
 
     // construct and initialize _remoteBBM
@@ -44,8 +43,7 @@ void ReceivedBoundingBox::communicateBoundingBox()
     }
 
     // master receives global_bb from other master
-    com::CommunicateBoundingBox(_m2ns[0]->getMasterCommunication()).receiveBoundingBoxMap(_remoteBBM, 0);
-   
+    com::CommunicateBoundingBox(_m2ns[0]->getMasterCommunication()).receiveBoundingBoxMap(_remoteBBM, 0);   
   }
 }
 
@@ -74,7 +72,7 @@ void ReceivedBoundingBox::computeBoundingBox()
         _mesh->getConnectedRanks().push_back(remoteBB.first);
       }
     }
-    if (_mesh->getConnectedRanks().size() != 0)
+    if (!_mesh->getConnectedRanks().empty())
     {
      connectionMap[0] = _mesh->getConnectedRanks();
      connectedRanksList.push_back(0);
@@ -96,24 +94,17 @@ void ReceivedBoundingBox::computeBoundingBox()
 
     // send connectionMap to other master
     _m2ns[0]->getMasterCommunication()->send(connectedRanksList, 0);
-    if (connectionMap.size() != 0) { 
+    if (!connectionMap.empty()) { 
       com::CommunicateBoundingBox(_m2ns[0]->getMasterCommunication()).sendConnectionMap(connectionMap, 0);
     } else
     {
       PRECICE_ERROR("This participant has no rank in the interface! Please check your test case and make sure that the mesh partition given to preCICE is loacted in the interface");
     }
-
   } else if ( utils::MasterSlave::isSlave()) {    
-
     utils::MasterSlave::_communication->broadcast(_remoteParComSize, 0);
-       
-    // construct and initialize _remoteBBM
-    mesh::Mesh::BoundingBox initialBB;
-    for (int i = 0; i < _dimensions; i++) {
-      initialBB.push_back(std::make_pair(-1, -1));
-    }
+    
     for (int remoteRank = 0; remoteRank < _remoteParComSize; remoteRank++) {
-      _remoteBBM[remoteRank] = initialBB;
+      _remoteBBM[remoteRank] = mesh::Mesh::BoundingBox(_dimensions);
     }
 
     // receive _remoteBBM from master
@@ -129,15 +120,13 @@ void ReceivedBoundingBox::computeBoundingBox()
     utils::MasterSlave::_communication->send((int) _mesh->getConnectedRanks().size(), 0);
 
     // to prevent sending empty vector!
-    if (_mesh->getConnectedRanks().size() != 0)
+    if (!_mesh->getConnectedRanks().empty())
       utils::MasterSlave::_communication->send(_mesh->getConnectedRanks(), 0);
   }
 }
 
-
 void ReceivedBoundingBox::communicate()
-{
-  
+{  
   if (utils::MasterSlave::isMaster())
   {
     // Master receives remote mesh's global vertex number
@@ -241,8 +230,8 @@ void ReceivedBoundingBox::compute()
   int rank = 0;
   int index= 0;
   for (auto &remoteVertex : _mesh->vertices()) {
-      vertexIDs.push_back(remoteVertex.getGlobalIndex());
-      rank = 0;
+    vertexIDs.push_back(remoteVertex.getGlobalIndex());
+    rank = 0;
     for (int remoteRank : _mesh->getConnectedRanks()) {
       if (remoteVertex.getGlobalIndex() <= _remoteVertexMaxGlobalIDs[rank] && remoteVertex.getGlobalIndex() >= _remoteVertexMinGlobalIDs[rank]) {
         localCommunicationMap[remoteRank].push_back(remoteVertex.getGlobalIndex() - _remoteVertexMinGlobalIDs[rank]);
@@ -253,16 +242,13 @@ void ReceivedBoundingBox::compute()
     index++;
   }
   
-
   // communicate communication map to all remote conneceted ranks
   _m2ns[0]->broadcastSendLCM(localCommunicationMap, *_mesh);
-
 
   /* 
    * master broadcasts remote mesh's golbal vertex number to slaves.
    * This data is needed later for implicit coupling schemes.
-   */
-  
+   */  
   if (utils::MasterSlave::isMaster())
   {
     _mesh->getVertexDistribution()[0] = vertexIDs;
@@ -297,7 +283,7 @@ void ReceivedBoundingBox::compute()
   
 }
 
-bool ReceivedBoundingBox::overlapping(mesh::Mesh::BoundingBox currentBB, mesh::Mesh::BoundingBox receivedBB)
+bool ReceivedBoundingBox::overlapping(mesh::Mesh::BoundingBox const & currentBB, mesh::Mesh::BoundingBox const & receivedBB)
 {
   /*
    * Here two bounding boxes are compared to check whether they overlap or not!
@@ -306,10 +292,10 @@ bool ReceivedBoundingBox::overlapping(mesh::Mesh::BoundingBox currentBB, mesh::M
    * We need to check if first AND second is smaller than first of the other BB to prevent false negatives
    * due to empty bounding boxes.
    */
-  
-  for (int i = 0; i < _dimensions; i++) {
+
+  for (int i = 0; i < currentBB.size(); i++) {
     if ((currentBB[i].first < receivedBB[i].first && currentBB[i].second < receivedBB[i].first) ||
-        (receivedBB[i].first < currentBB[i].first && receivedBB[i].second < currentBB[i].first)) {      
+        (receivedBB[i].first < currentBB[i].first && receivedBB[i].second < currentBB[i].first)) {
       return false;
     }
   }
@@ -332,7 +318,6 @@ void ReceivedBoundingBox::prepareBoundingBox()
         _bb[d].second = other_bb[d].second;
     }
   }
-
   
   if (_toMapping.use_count() > 0) {
     auto other_bb = _toMapping->getInputMesh()->getBoundingBox();
@@ -343,7 +328,6 @@ void ReceivedBoundingBox::prepareBoundingBox()
         _bb[d].second = other_bb[d].second;
     }
   }
-
   
   //enlarge BB
   PRECICE_ASSERT(_safetyFactor >= 0.0);
@@ -351,14 +335,16 @@ void ReceivedBoundingBox::prepareBoundingBox()
   double maxSideLength = 1e-6; // we need some minimum > 0 here
 
   for (int d = 0; d < _dimensions; d++) {
-
-    /// @Amin: This we have changed here: check later
-    maxSideLength = std::max(maxSideLength, _bb[d].second - _bb[d].first);
+    if(_bb[d].second > _bb[d].first)
+      maxSideLength = std::max(maxSideLength, _bb[d].second - _bb[d].first);
+  }
+  for (int d = 0; d < _dimensions; d++) {
     _bb[d].second += _safetyFactor * maxSideLength;
     _bb[d].first -= _safetyFactor * maxSideLength;
     PRECICE_DEBUG("Merged BoundingBox, dim: " << d << ", first: " << _bb[d].first << ", second: " << _bb[d].second);
   }
 }
+
 
 void ReceivedBoundingBox:: filterMesh(mesh::Mesh& filteredMesh, const bool filterByBB) {
   PRECICE_TRACE(filterByBB);

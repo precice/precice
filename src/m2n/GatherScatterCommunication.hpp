@@ -96,45 +96,45 @@ public:
 
    /**
    * @brief Broadcasts an int to connected ranks       
-   *        This method has not beein implemented yet.    
+   *        This method has not been implemented yet.    
    *
    * @todo: Ideally this should not be here
    */
-  virtual void broadcastSend(const int &itemToSend);
+  void broadcastSend(const int &itemToSend) override;
 
   /**
-   * @brief Receives an int from each connected rank
-   *        This method has not beein implemented yet.    
+   * @brief Receives an int from a connected rank
+   *        This method has not been implemented yet.    
    *
    * @todo: Ideally this should not be here
    */
-  virtual void broadcastReceive(std::vector<int> &itemToReceive);
+  void broadcastReceive(std::vector<int> &itemToReceive) override;
 
   /**
    * @brief All ranks send their mesh partition to remote local  connected ranks.
    *
    * @todo: Ideally this should not be here
    */
-  virtual void broadcastSendMesh();
+  void broadcastSendMesh() override;
   
   /**
    * @brief All ranks receive mesh partition from remote local ranks.
    *
    * @todo: Ideally this should not be here
    */
-  virtual void broadcastReceiveMesh();
+  void broadcastReceiveMesh() override;
 
   /**
    *  All ranks Send their local communication maps to connected ranks
    */
-  virtual void broadcastSendLCM(
-    std::map<int, std::vector<int>> &localCommunicationMap);
+  void broadcastSendLCM(
+    CommunicationMap &localCommunicationMap) override;
 
   /*
    *  Each rank revives local communication maps from connected ranks
    */
-  virtual void broadcastReceiveLCM(
-    std::map<int, std::vector<int>> &localCommunicationMap);
+  void broadcastReceiveLCM(
+    CommunicationMap &localCommunicationMap) override;
 
 private:
   logging::Logger _log{"m2n::GatherScatterCommunication"};

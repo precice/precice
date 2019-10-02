@@ -135,20 +135,14 @@ public:
    * neglect the gathering and checking step.
    */
   void send(double itemToSend);
-
-  /** 
-   * each rank send its mesh partition to connected ranks
-   */
+   
+  /// each rank send its mesh partition to connected ranks  
   void broadcastSendLocalMesh(mesh::Mesh &mesh);
 
-  /*
-   * each rank sends local communication maps to connetcetd ranks
-   */
+  /// each rank sends local communication maps to the remote connetcetd ranks (of the other participant)  
   void broadcastSendLCM(std::map<int, std::vector<int>> &localCommunicationMap, mesh::Mesh &mesh);
 
-  /** 
-   * each rank send an ints to connected ranks
-   */
+  /// each rank send an int to the remote connected ranks  
   void broadcastSend(int &itemToSend, mesh::Mesh &mesh);
 
   /// All slaves receive an array of doubles (different for each slave).
@@ -163,19 +157,13 @@ public:
   /// All slaves receive a double (the same for each slave).
   void receive(double &itemToReceive);
 
-  /** 
-   * each rank receives mesh partition from connected ranks
-   */
+  /// each rank receives mesh partition from connected ranks
   void broadcastReceiveLocalMesh(mesh::Mesh &mesh);
 
-  /*
-   * each rank receives local communication maps from connetcetd ranks
-   */
+  /// each rank receives local communication maps from remote connetcetd ranks (of the other participant)  
   void broadcastReceiveLCM(std::map<int, std::vector<int>> &localCommunicationMap, mesh::Mesh &mesh);
 
-  /*
-   * each rank receives an int from connetcetd ranks
-   */
+  /// each rank receives an int from remote connetcetd ranks
   void broadcastReceive(std::vector<int> &itemToReceive, mesh::Mesh &mesh);
   
 private:

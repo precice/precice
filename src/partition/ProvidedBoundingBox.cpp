@@ -35,7 +35,7 @@ void ProvidedBoundingBox::communicateBoundingBox()
 
   // each rank sends its bb to master
   if (utils::MasterSlave::isSlave()) { //slave
-     com::CommunicateBoundingBox(utils::MasterSlave::_communication).sendBoundingBox(_mesh->getBoundingBox(), 0);
+    com::CommunicateBoundingBox(utils::MasterSlave::_communication).sendBoundingBox(_mesh->getBoundingBox(), 0);
   } else { // Master
 
     PRECICE_ASSERT(utils::MasterSlave::getRank() == 0);
@@ -44,20 +44,13 @@ void ProvidedBoundingBox::communicateBoundingBox()
     // to store the collection of bounding boxes
     mesh::Mesh::BoundingBoxMap bbm;
 
-    // initialize bbm with dummy data
-    mesh::Mesh::BoundingBox initialBB;
-    for (int i = 0; i < _dimensions; i++) {
-      initialBB.push_back(std::make_pair(-1, -1));
-    }
-    for (int rank = 0; rank < utils::MasterSlave::getSize(); rank++) {
-      bbm[rank] = initialBB;
-    }
-
     // master stores its bb into bbm
     bbm[0] = _mesh->getBoundingBox();
 
     // master receives bbs from slaves and stores them in bbm
     for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
+      // initialize bbm
+      bbm[rankSlave] = mesh::Mesh::BoundingBox(_dimensions);
       com::CommunicateBoundingBox(utils::MasterSlave::_communication).receiveBoundingBox(bbm[rankSlave], rankSlave);
     }
 
@@ -80,7 +73,7 @@ void ProvidedBoundingBox::computeBoundingBox()
 
   std::map<int, std::vector<int>> remoteConnectionMap;
 
-  if (not utils::MasterSlave::isSlave()) { //Master
+  if (utils::MasterSlave::isMaster()) { 
     PRECICE_ASSERT(utils::MasterSlave::getSize() > 1);
 
     // master receives feedback map (map of other participant ranks -> connected ranks at this participant)
@@ -113,7 +106,7 @@ void ProvidedBoundingBox::computeBoundingBox()
 
     utils::MasterSlave::_communication->broadcast(connectedRanksList, 0);
 
-    if (connectedRanksList.size() != 0)
+    if (!connectedRanksList.empty())
     {
       for (auto &rank : connectedRanksList) {
         remoteConnectionMap[rank] = {-1};
@@ -137,8 +130,8 @@ void ProvidedBoundingBox::communicate()
   if (!_hasToSend)
     return;  
   /*
-   * First we should set global index for each vertices
-   * This gloabl vertex id is needed for final filtering in 
+   * First we should set global index for each vertex
+   * This global vertex id is needed for final filtering in 
    * the received partition
    */
 
@@ -151,7 +144,6 @@ void ProvidedBoundingBox::communicate()
   int offset = 0;
 
   if (utils::MasterSlave::isMaster()) {//Master
-
     int vertexCounter = 0;
 
     // set global indexes for master rank mesh partition 
@@ -165,6 +157,7 @@ void ProvidedBoundingBox::communicate()
     vertexMaxGlobalID = _mesh->vertices().size()-1;
     
     // receive number of vertices for each rank at master to produce offset for the same rank
+    // @todo: This is a gather operation which should be replaced with a better solution 
     int numberOfVertices = -1;
     for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++)
     {
@@ -214,7 +207,6 @@ void ProvidedBoundingBox::communicate()
 
   // each rank sends its mesh partition to connected remote ranks
   _m2ns[0]->broadcastSendLocalMesh(*_mesh);
-
   
   createOwnerInformation();  
   computeVertexOffsets();

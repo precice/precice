@@ -259,14 +259,13 @@ void connectionTest(com::PtrCommunicationFactory cf)
   
   int dimensions = 2;
   bool flipNormals = false;
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, flipNormals));
-  
-  std::vector<std::string> connections = {"same", "cross"};
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, flipNormals));  
 
-  for (auto & connectionType : connections)
+  std::vector<std::string> conections = {"same", "cross"};
+
+  for (auto & connectionType : conections)
   {
     utils::MasterSlave::_communication = std::make_shared<com::MPIDirectCommunication>();
-    mesh->getConnectedRanks().clear();
     
     switch (utils::Parallel::getProcessRank())
     {
@@ -336,7 +335,7 @@ void connectionTest(com::PtrCommunicationFactory cf)
 
   m2n::PointToPointCommunication c(cf, mesh);
 
-  std::vector<int>  receiveData;
+  std::vector<int> receiveData;
 
   if (utils::Parallel::getProcessRank() == 0) {
   
@@ -362,18 +361,18 @@ void connectionTest(com::PtrCommunicationFactory cf)
       {
         BOOST_TEST(receiveData[0] == 5);
       } else
-      {       
-        BOOST_TEST(receiveData[0] == 10);
+      {        
+        BOOST_TEST(receiveData[1] == 10);
       }  
     
   } else if(utils::Parallel::getProcessRank() == 3 )
   {
     if (connectionType == "same")
-      {       
+      {        
         BOOST_TEST(receiveData[0] == 10);
       } else
-      {       
-        BOOST_TEST(receiveData[0] == 5);
+      {        
+        BOOST_TEST(receiveData[1] == 5);
       }  
   }
   
@@ -383,9 +382,94 @@ void connectionTest(com::PtrCommunicationFactory cf)
   utils::Parallel::clearGroups();
   mesh::Mesh::resetGeometryIDsGlobally();
   mesh::Data::resetDataCount();
-  utils::Parallel::setGlobalCommunicator(utils::Parallel::getCommunicatorWorld());
-    
+  utils::Parallel::setGlobalCommunicator(utils::Parallel::getCommunicatorWorld());  
   }
+}
+
+void emptyConnectionTest(com::PtrCommunicationFactory cf)
+{
+
+  PRECICE_ASSERT(utils::Parallel::getCommunicatorSize() == 4);    
+  
+  int dimensions = 2;
+  bool flipNormals = false;
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, flipNormals));
+
+  utils::MasterSlave::_communication = std::make_shared<com::MPIDirectCommunication>();
+  
+  switch (utils::Parallel::getProcessRank())
+  {
+    case 0: {
+      utils::Parallel::splitCommunicator("Fluid.Master");
+      utils::MasterSlave::configure(0, 2);
+      utils::MasterSlave::_communication->acceptConnection("Fluid.Master", "Fluid.Slave", utils::Parallel::getProcessRank());
+      utils::MasterSlave::_communication->setRankOffset(1);
+
+      mesh->getConnectedRanks().push_back(0);
+
+      
+      break;
+    }
+    case 1: {
+      utils::Parallel::splitCommunicator("Fluid.Slave");
+      utils::MasterSlave::configure(1, 2);
+      utils::MasterSlave::_communication->requestConnection("Fluid.Master", "Fluid.Slave", 0, 1);
+ 
+      break;       
+    }
+    case 2:
+    {
+      utils::Parallel::splitCommunicator("Solid.Master");
+      utils::MasterSlave::configure(0, 2);
+      utils::MasterSlave::_communication->acceptConnection("Solid.Master", "Solid.Slave", utils::Parallel::getProcessRank());
+      utils::MasterSlave::_communication->setRankOffset(1);
+
+      mesh->getConnectedRanks().push_back(0);
+      
+      break;
+    }
+    case 3:
+    {
+      utils::Parallel::splitCommunicator("Solid.Slave");
+      utils::MasterSlave::configure(1, 2);
+      utils::MasterSlave::_communication->requestConnection("Solid.Master", "Solid.Slave", 0, 1);   
+
+      break;
+    }
+  }
+
+  m2n::PointToPointCommunication c(cf, mesh);
+
+  std::vector<int> receiveData;
+
+  if (utils::Parallel::getProcessRank() < 2) {
+  
+    c.requestPreConnection("Solid", "Fluid");
+    int sendData = 5;
+    c.broadcastSend(sendData);      
+   
+  } else if (utils::Parallel::getProcessRank() > 1) 
+  {    
+    c.acceptPreConnection("Solid", "Fluid");
+    c.broadcastReceive(receiveData);    
+  }
+
+  if(utils::Parallel::getProcessRank() == 2 )
+  {
+    BOOST_TEST(receiveData[0] == 5);
+    
+  } else if(utils::Parallel::getProcessRank() == 3 )
+  {
+    BOOST_TEST(receiveData.size() == 0);
+  }
+  
+  utils::MasterSlave::_communication = nullptr;
+  utils::MasterSlave::reset();
+  utils::Parallel::synchronizeProcesses();
+  utils::Parallel::clearGroups();
+  mesh::Mesh::resetGeometryIDsGlobally();
+  mesh::Data::resetDataCount();
+  utils::Parallel::setGlobalCommunicator(utils::Parallel::getCommunicatorWorld());   
 }
 
 void P2PMeshBroadcastTest(com::PtrCommunicationFactory cf)
@@ -511,6 +595,8 @@ void P2PComLCMTest(com::PtrCommunicationFactory cf)
     utils::MasterSlave::_communication->acceptConnection("Fluid.Master", "Fluid.Slave", utils::Parallel::getProcessRank());
     utils::MasterSlave::_communication->setRankOffset(1);
 
+    // The numbers are chosen in this way to make it easy to test weather
+    // correct values are communicated or not! 
     mesh->getConnectedRanks().push_back(0);    
     localCommunicationMap[0].push_back(102);
     localCommunicationMap[0].push_back(1022);
@@ -525,7 +611,9 @@ void P2PComLCMTest(com::PtrCommunicationFactory cf)
     utils::Parallel::splitCommunicator("Fluid.Slave");
     utils::MasterSlave::configure(1, 2);
     utils::MasterSlave::_communication->requestConnection("Fluid.Master", "Fluid.Slave", 0, 1);
-    
+
+    // The numbers are chosen in this way to make it easy to test weather
+    // correct values are communicated or not! 
     mesh->getConnectedRanks().push_back(1);    
     localCommunicationMap[0].push_back(112);
     localCommunicationMap[0].push_back(1122);
@@ -573,7 +661,9 @@ void P2PComLCMTest(com::PtrCommunicationFactory cf)
   }
 
  if(utils::Parallel::getProcessRank() == 2 )
-  {    
+  {
+    // The numbers are chosen in this way to make it easy to test weather
+    // correct values are communicated or not! 
     BOOST_TEST(localCommunicationMap.size() == 1);
     BOOST_TEST(localCommunicationMap[0].size() ==3);
     BOOST_TEST(localCommunicationMap[0][0] ==102);
@@ -582,6 +672,8 @@ void P2PComLCMTest(com::PtrCommunicationFactory cf)
     
   } else if(utils::Parallel::getProcessRank() == 3 )
   {
+    // The numbers are chosen in this way to make it easy to test weather
+    // correct values are communicated or not! 
     BOOST_TEST(localCommunicationMap.size() == 1);    
     BOOST_TEST(localCommunicationMap[1].size() ==3);
     BOOST_TEST(localCommunicationMap[1][0] ==113);
@@ -607,6 +699,7 @@ BOOST_AUTO_TEST_CASE(SocketCommunication,
     P2PComTest1(cf);
     P2PComTest2(cf);
     connectionTest(cf);
+    emptyConnectionTest(cf);
     P2PMeshBroadcastTest(cf);
     P2PComLCMTest(cf);    
   }
@@ -620,7 +713,8 @@ BOOST_AUTO_TEST_CASE(MPIPortsCommunication,
   if (utils::Parallel::getProcessRank() < 4) {
     P2PComTest1(cf);
     P2PComTest2(cf);
-    connectionTest(cf);    
+    connectionTest(cf);
+    emptyConnectionTest(cf);
   }
 }
 
