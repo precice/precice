@@ -90,20 +90,19 @@ public:
       int     valueDimension) override;
 
    /**
-   * @brief Broadcasts a double to connected ranks       
-   *        This method has not been implemented yet.    
+   * @brief Broadcasts an int to connected ranks
    *
    * @todo: Ideally this should not be here
    */
-  void broadcastSend(const double &itemToSend) override;
+  void broadcastSend(const int &itemToSend) override;
 
   /**
-   * @brief Receives a double from a connected rank
-   *        This method has not been implemented yet.    
+   * @brief Receives an int per connected rank on remote participant
+   * @para[out] itemToReceive received ints from remote ranks are stored with the sender rank order    
    *
    * @todo: Ideally this should not be here
    */
-  void broadcastReceive(double &itemToReceive) override;
+  void broadcastReceiveAll(std::vector<int> &itemToReceive) override;
 
   /**
    * @brief All ranks send their mesh partition to remote local  connected ranks.
@@ -113,14 +112,14 @@ public:
   void broadcastSendMesh() override;
   
   /**
-   * @brief All ranks receive mesh partition from remote local ranks.
+   * @brief All ranks receive mesh partitions from remote local ranks.
    *
    * @todo: Ideally this should not be here
    */
   void broadcastReceiveMesh() override;
 
   /**
-   *  All ranks Send their local communication maps to connected ranks
+   *  All ranks Send their local communication map to connected ranks
    */
   void broadcastSendLCM(
     CommunicationMap &localCommunicationMap) override;

@@ -111,14 +111,15 @@ public:
       int     valueDimension) = 0;
 
   /**
-   * @brief Broadcasts a double to connected ranks on remote participant      
+   * @brief Broadcasts a int to connected ranks on remote participant      
    */
-  virtual void broadcastSend(const double &itemToSend) = 0;
+  virtual void broadcastSend(const int &itemToSend) = 0;
 
   /**
-   * @brief Receives a double from a connected rank on remote participant
+   * @brief Receives an int per connected rank on remote participant
+   * @para[out] itemToReceive received ints from remote ranks are stored with the sender rank order 
    */
-  virtual void broadcastReceive(double &itemToReceive) = 0;
+  virtual void broadcastReceiveAll(std::vector<int> &itemToReceive) = 0;
 
   /**
    * @brief All ranks send their mesh partition to remote local  connected ranks.

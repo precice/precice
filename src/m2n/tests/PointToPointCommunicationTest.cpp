@@ -259,7 +259,7 @@ void connectionTest(com::PtrCommunicationFactory cf)
   
   int dimensions = 2;
   bool flipNormals = false;
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, flipNormals));
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, flipNormals));  
 
   std::vector<std::string> conections = {"same", "cross"};
 
@@ -335,44 +335,44 @@ void connectionTest(com::PtrCommunicationFactory cf)
 
   m2n::PointToPointCommunication c(cf, mesh);
 
-  double receiveData = 0;
+  std::vector<int> receiveData;
 
   if (utils::Parallel::getProcessRank() == 0) {
   
     c.requestPreConnection("Solid", "Fluid");
-    double sendData = 5;
+    int sendData = 5;
     c.broadcastSend(sendData);    
    
   } else if (utils::Parallel::getProcessRank() == 1) {
   
     c.requestPreConnection("Solid", "Fluid");
-    double sendData = 10;
+    int sendData = 10;
     c.broadcastSend(sendData);    
    
   } else
   {    
     c.acceptPreConnection("Solid", "Fluid");
-    c.broadcastReceive(receiveData);    
+    c.broadcastReceiveAll(receiveData);    
   }
 
   if(utils::Parallel::getProcessRank() == 2 )
   {
     if (connectionType == "same")
       {
-        BOOST_TEST(receiveData == 5);
+        BOOST_TEST(receiveData[0] == 5);
       } else
-      {
-        BOOST_TEST(receiveData == 10);
+      {        
+        BOOST_TEST(receiveData[1] == 10);
       }  
     
   } else if(utils::Parallel::getProcessRank() == 3 )
   {
     if (connectionType == "same")
-      {
-        BOOST_TEST(receiveData == 10);
+      {        
+        BOOST_TEST(receiveData[0] == 10);
       } else
-      {
-        BOOST_TEST(receiveData == 5);
+      {        
+        BOOST_TEST(receiveData[1] == 5);
       }  
   }
   
@@ -382,8 +382,7 @@ void connectionTest(com::PtrCommunicationFactory cf)
   utils::Parallel::clearGroups();
   mesh::Mesh::resetGeometryIDsGlobally();
   mesh::Data::resetDataCount();
-  utils::Parallel::setGlobalCommunicator(utils::Parallel::getCommunicatorWorld());
-    
+  utils::Parallel::setGlobalCommunicator(utils::Parallel::getCommunicatorWorld());  
   }
 }
 
@@ -441,27 +440,27 @@ void emptyConnectionTest(com::PtrCommunicationFactory cf)
 
   m2n::PointToPointCommunication c(cf, mesh);
 
-  double receiveData = 0;
+  std::vector<int> receiveData;
 
   if (utils::Parallel::getProcessRank() < 2) {
   
     c.requestPreConnection("Solid", "Fluid");
-    double sendData = 5;
+    int sendData = 5;
     c.broadcastSend(sendData);      
    
   } else if (utils::Parallel::getProcessRank() > 1) 
   {    
     c.acceptPreConnection("Solid", "Fluid");
-    c.broadcastReceive(receiveData);    
+    c.broadcastReceiveAll(receiveData);    
   }
 
   if(utils::Parallel::getProcessRank() == 2 )
   {
-    BOOST_TEST(receiveData == 5);
+    BOOST_TEST(receiveData[0] == 5);
     
   } else if(utils::Parallel::getProcessRank() == 3 )
   {
-    BOOST_TEST(receiveData == 0);
+    BOOST_TEST(receiveData.size() == 0);
   }
   
   utils::MasterSlave::_communication = nullptr;

@@ -617,18 +617,20 @@ void PointToPointCommunication::receive(double *itemsToReceive,
   }
 }
 
-void PointToPointCommunication::broadcastSend(const double &itemToSend)
+void PointToPointCommunication::broadcastSend(const int &itemToSend)
 {  
   for (auto &connectionData : _connectionDataVector) {
     connectionData.communication->send(itemToSend, connectionData.remoteRank);
   }  
 }
 
-void PointToPointCommunication::broadcastReceive(double &itemToReceive)
+void PointToPointCommunication::broadcastReceiveAll(std::vector<int> &itemToReceive)
                                 
-{  
+{
+  int data = 0;
   for (auto &connectionData : _connectionDataVector) {
-    connectionData.communication->receive(itemToReceive, connectionData.remoteRank);
+    connectionData.communication->receive(data, connectionData.remoteRank);
+    itemToReceive.push_back(data);
   }  
 }
 
