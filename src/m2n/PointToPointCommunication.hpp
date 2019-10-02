@@ -113,12 +113,12 @@ public:
   void broadcastSendMesh() override;
   
   /**
-   * @brief All ranks receive mesh partition from remote local ranks.
+   * @brief All ranks receive mesh partitions from remote local ranks.
    */
   void broadcastReceiveMesh() override;
 
   /**
-   *  @brief All ranks Send their local communication maps to connected ranks
+   *  @brief All ranks send their local communication map to connected ranks
    */
   void broadcastSendLCM(
     CommunicationMap &localCommunicationMap) override;

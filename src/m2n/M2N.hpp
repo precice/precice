@@ -131,7 +131,7 @@ public:
    */
   void send(double itemToSend);
    
-  /// each rank send its mesh partition to connected ranks  
+  /// each rank sends its mesh partition to connected ranks  
   void broadcastSendLocalMesh(mesh::Mesh &mesh);
 
   /// each rank sends the local communication map to the remote connecetd ranks (of the other participant)  
