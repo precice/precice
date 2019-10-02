@@ -136,8 +136,8 @@ void ReceivedBoundingBox::communicate()
   }
 
   // each rank receives max/min global vertex indexes from connected remote ranks
-  _m2ns[0]->broadcastReceive(_remoteVertexMinGlobalIDs, *_mesh);
-  _m2ns[0]->broadcastReceive(_remoteVertexMaxGlobalIDs, *_mesh);
+  _m2ns[0]->broadcastReceiveAll(_remoteVertexMinGlobalIDs, *_mesh);
+  _m2ns[0]->broadcastReceiveAll(_remoteVertexMaxGlobalIDs, *_mesh);
 
   // each rank receives mesh partition from connected ranks
   _m2ns[0]->broadcastReceiveLocalMesh(*_mesh);

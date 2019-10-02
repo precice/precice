@@ -159,7 +159,7 @@ public:
   void broadcastReceiveLCM(std::map<int, std::vector<int>> &localCommunicationMap, mesh::Mesh &mesh);
 
   /// each rank receives an int from remote connetcetd ranks
-  void broadcastReceive(std::vector<int> &itemToReceive, mesh::Mesh &mesh);
+  void broadcastReceiveAll(std::vector<int> &itemToReceive, mesh::Mesh &mesh);
   
 private:
   logging::Logger _log{"m2n::M2N"};

@@ -90,20 +90,19 @@ public:
       int     valueDimension) override;
 
    /**
-   * @brief Broadcasts an int to connected ranks       
-   *        This method has not been implemented yet.    
+   * @brief Broadcasts an int to connected ranks
    *
    * @todo: Ideally this should not be here
    */
   void broadcastSend(const int &itemToSend) override;
 
   /**
-   * @brief Receives an int from a connected rank
-   *        This method has not been implemented yet.    
+   * @brief Receives an int per connected rank on remote participant
+   * @para[in] itemToReceive received ints from remote ranks are stored with the sender rank order    
    *
    * @todo: Ideally this should not be here
    */
-  void broadcastReceive(std::vector<int> &itemToReceive) override;
+  void broadcastReceiveAll(std::vector<int> &itemToReceive) override;
 
   /**
    * @brief All ranks send their mesh partition to remote local  connected ranks.

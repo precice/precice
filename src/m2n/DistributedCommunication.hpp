@@ -116,9 +116,10 @@ public:
   virtual void broadcastSend(const int &itemToSend) = 0;
 
   /**
-   * @brief Receives an int from a connected rank on remote participant
+   * @brief Receives an int per connected rank on remote participant
+   * @para[in] itemToReceive received ints from remote ranks are stored with the sender rank order 
    */
-  virtual void broadcastReceive(std::vector<int> &itemToReceive) = 0;
+  virtual void broadcastReceiveAll(std::vector<int> &itemToReceive) = 0;
 
   /**
    * @brief All ranks send their mesh partition to remote local  connected ranks.
