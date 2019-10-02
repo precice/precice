@@ -78,9 +78,10 @@ public:
   void requestSlavesPreConnection(const std::string &acceptorName,
                                   const std::string &requesterName);
 
-  /**
-   * Both participants must call this function to update vertex list
-   */
+  /*
+   * @brief This function must be called by both accepter and requester to update 
+   *        the vertex list in _mappings
+   */  
   void updateVertexList();
 
   /**

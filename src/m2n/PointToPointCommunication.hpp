@@ -76,9 +76,10 @@ public:
   virtual void requestPreConnection(std::string const &acceptorName,
                                     std::string const &requesterName);
 
-  /** This function should be called by both accepter and requester to update the vertex list in the 
-   *  mapping
-  */
+  /*
+   * @brief This function must be called by both accepter and requester to update 
+   *        the vertex list in _mappings
+   */
   virtual void updateVertexList();
 
   /**
