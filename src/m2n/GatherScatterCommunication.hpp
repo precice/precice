@@ -98,7 +98,7 @@ public:
 
   /**
    * @brief Receives an int per connected rank on remote participant
-   * @para[in] itemToReceive received ints from remote ranks are stored with the sender rank order    
+   * @para[out] itemToReceive received ints from remote ranks are stored with the sender rank order    
    *
    * @todo: Ideally this should not be here
    */
