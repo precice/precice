@@ -634,7 +634,7 @@ void PointToPointCommunication::broadcastSend(const int &itemToSend)
   }  
 }
 
-void PointToPointCommunication::broadcastReceive(std::vector<int> &itemToReceive)
+void PointToPointCommunication::broadcastReceiveAll(std::vector<int> &itemToReceive)
                                 
 {
   int data = 0;

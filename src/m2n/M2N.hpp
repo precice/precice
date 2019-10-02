@@ -136,13 +136,13 @@ public:
    */
   void send(double itemToSend);
    
-  /// each rank send its mesh partition to connected ranks  
+  /// each rank sends its mesh partition to connected ranks  
   void broadcastSendLocalMesh(mesh::Mesh &mesh);
 
-  /// each rank sends local communication maps to the remote connetcetd ranks (of the other participant)  
+  /// each rank sends the local communication map to the remote connecetd ranks (of the other participant)  
   void broadcastSendLCM(std::map<int, std::vector<int>> &localCommunicationMap, mesh::Mesh &mesh);
 
-  /// each rank send an int to the remote connected ranks  
+  /// each rank sends an int to the remote connected ranks  
   void broadcastSend(int &itemToSend, mesh::Mesh &mesh);
 
   /// All slaves receive an array of doubles (different for each slave).
@@ -164,7 +164,7 @@ public:
   void broadcastReceiveLCM(std::map<int, std::vector<int>> &localCommunicationMap, mesh::Mesh &mesh);
 
   /// each rank receives an int from remote connetcetd ranks
-  void broadcastReceive(std::vector<int> &itemToReceive, mesh::Mesh &mesh);
+  void broadcastReceiveAll(std::vector<int> &itemToReceive, mesh::Mesh &mesh);
   
 private:
   logging::Logger _log{"m2n::M2N"};

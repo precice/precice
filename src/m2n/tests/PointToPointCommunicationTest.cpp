@@ -352,7 +352,7 @@ void connectionTest(com::PtrCommunicationFactory cf)
   } else
   {    
     c.acceptPreConnection("Solid", "Fluid");
-    c.broadcastReceive(receiveData);    
+    c.broadcastReceiveAll(receiveData);    
   }
 
   if(utils::Parallel::getProcessRank() == 2 )
@@ -451,7 +451,7 @@ void emptyConnectionTest(com::PtrCommunicationFactory cf)
   } else if (utils::Parallel::getProcessRank() > 1) 
   {    
     c.acceptPreConnection("Solid", "Fluid");
-    c.broadcastReceive(receiveData);    
+    c.broadcastReceiveAll(receiveData);    
   }
 
   if(utils::Parallel::getProcessRank() == 2 )

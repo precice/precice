@@ -108,9 +108,10 @@ public:
   void broadcastSend(const int &itemToSend) override;
 
   /**
-   * @brief Receives an int from a connected rank on remote participant
+   * @brief Receives an int per connected rank on remote participant
+   * @para[out] itemToReceive received ints from remote ranks are stored with the sender rank order 
    */
-  void broadcastReceive(std::vector<int> &itemToReceive) override;
+  void broadcastReceiveAll(std::vector<int> &itemToReceive) override;
 
   /**
    * @brief All ranks send their mesh partition to remote local  connected ranks.
@@ -118,12 +119,12 @@ public:
   void broadcastSendMesh() override;
   
   /**
-   * @brief All ranks receive mesh partition from remote local ranks.
+   * @brief All ranks receive mesh partitions from remote local ranks.
    */
   void broadcastReceiveMesh() override;
 
   /**
-   *  @brief All ranks Send their local communication maps to connected ranks
+   *  @brief All ranks send their local communication map to connected ranks
    */
   void broadcastSendLCM(
     CommunicationMap &localCommunicationMap) override;

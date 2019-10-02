@@ -181,7 +181,7 @@ void GatherScatterCommunication::broadcastSend(const int &itemToSend)
   PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
 }
 
-void GatherScatterCommunication::broadcastReceive(std::vector<int> &itemToReceive)
+void GatherScatterCommunication::broadcastReceiveAll(std::vector<int> &itemToReceive)
 {
   PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
 }

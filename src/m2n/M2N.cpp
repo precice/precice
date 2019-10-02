@@ -309,12 +309,12 @@ void M2N::receive(double &itemToReceive)
   PRECICE_DEBUG("receive(double): " << itemToReceive);
 }
 
-void M2N::broadcastReceive(std::vector<int> &itemToReceive, mesh::Mesh &mesh)
+void M2N::broadcastReceiveAll(std::vector<int> &itemToReceive, mesh::Mesh &mesh)
 {
   if (utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster()) {
     int meshID = mesh.getID();
     PRECICE_ASSERT(_areSlavesConnected);
-    _distComs[meshID]->broadcastReceive(itemToReceive);
+    _distComs[meshID]->broadcastReceiveAll(itemToReceive);
   } else { //coupling mode
     PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
   }  
