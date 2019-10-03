@@ -76,7 +76,7 @@ public:
    *
    * @todo: Ideally this should not be here
    */
-  virtual void updateVertexList();
+  virtual void updateVertexList() override;
   
   /**
    * @brief Disconnects from communication space, i.e. participant.

@@ -80,7 +80,7 @@ public:
    * @brief This function must be called by both accepter and requester to update 
    *        the vertex list in _mappings
    */
-  virtual void updateVertexList();
+  virtual void updateVertexList() override;
 
   /**
    * @brief Disconnects from communication space, i.e. participant.
