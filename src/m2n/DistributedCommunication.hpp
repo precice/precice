@@ -92,7 +92,7 @@ public:
     std::string const &requesterName) = 0;
 
   /*
-   * @brief This function must be called by both accepter and requester to update the vertex list in _mappings
+   * @brief This function must be called by both acceptor and requester to update the vertex list in _mappings
    */
   virtual void updateVertexList() = 0;
   
