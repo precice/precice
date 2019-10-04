@@ -79,10 +79,12 @@ public:
                                   const std::string &requesterName);
 
   /*
-   * @brief This function must be called by both accepter and requester to update 
-   *        the vertex list in _mappings
+   * @brief After preliminary communication channels were set up and after 
+   *        the mesh partitions were communicated locally for every mesh, 
+   *        call this function to update and complete the communication 
+   *        channels for every communicated mesh
    */  
-  void updateVertexList();
+  void completeSlavesConnection();
 
   /**
    * @brief prepares to establish the connections

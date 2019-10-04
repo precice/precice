@@ -139,7 +139,7 @@ void M2N::requestSlavesPreConnection(
   PRECICE_ASSERT(_areSlavesConnected);
 }
 
-void M2N::updateVertexList()
+void M2N::completeSlavesConnection()
 {
   for (const auto &pair : _distComs) {
     pair.second->updateVertexList();
