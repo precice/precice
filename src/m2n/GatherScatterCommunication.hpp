@@ -70,6 +70,14 @@ public:
     std::string const &acceptorName,
     std::string const &requesterName);
 
+  /*
+   * @brief This function must be called by both acceptor and requester to update 
+   *        the vertex list in _mappings
+   *
+   * @todo: Ideally this should not be here
+   */
+  virtual void updateVertexList() override;
+  
   /**
    * @brief Disconnects from communication space, i.e. participant.
    *

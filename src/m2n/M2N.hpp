@@ -78,6 +78,14 @@ public:
   void requestSlavesPreConnection(const std::string &acceptorName,
                                   const std::string &requesterName);
 
+  /*
+   * @brief After preliminary communication channels were set up and after 
+   *        the mesh partitions were communicated locally for every mesh, 
+   *        call this function to update and complete the communication 
+   *        channels for every communicated mesh
+   */  
+  void completeSlavesConnection();
+
   /**
    * @brief prepares to establish the connections
    *
