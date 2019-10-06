@@ -1058,8 +1058,9 @@ BOOST_AUTO_TEST_CASE(UserDefinedMPICommunicatorPetRBF, * testing::OnSize(4))
     interface.finalize();
   }
 }
-*/
+
 #endif // PRECICE_NO_PETCTS
+*/
 
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
