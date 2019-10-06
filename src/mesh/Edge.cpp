@@ -1,4 +1,5 @@
 #include "Edge.hpp"
+#include "utils/EigenIO.hpp"
 
 namespace precice {
 namespace mesh {
@@ -13,13 +14,26 @@ Edge:: Edge
   _id ( id ),
   _normal ( Eigen::VectorXd::Constant(vertexOne.getDimensions(), 0.0) )
 {
-  assertion ( vertexOne.getDimensions() == vertexTwo.getDimensions(),
+  PRECICE_ASSERT( vertexOne.getDimensions() == vertexTwo.getDimensions(),
               vertexOne.getDimensions(), vertexTwo.getDimensions() );
 }
 
 int Edge:: getID () const
 {
   return _id;
+}
+
+const Eigen::VectorXd Edge::computeNormal(bool flip)
+{
+    // Compute normal
+    Eigen::VectorXd edgeVector = vertex(1).getCoords() - vertex(0).getCoords();
+    Eigen::VectorXd normal = Eigen::Vector2d(-edgeVector[1], edgeVector[0]);
+    if (not flip){
+        normal *= -1.0; // Invert direction if counterclockwise
+    }
+    _normal = normal.normalized();   // Scale normal vector to length 1
+
+    return normal * getEnclosingRadius() * 2.0; // Weight by length
 }
 
 const Eigen::VectorXd Edge::getCenter () const
@@ -30,6 +44,14 @@ const Eigen::VectorXd Edge::getCenter () const
 double Edge:: getEnclosingRadius () const
 {
   return (_vertices[0]->getCoords() - getCenter()).norm();
+}
+
+bool Edge::connectedTo(const Edge& other) const
+{
+    return _vertices[0] == other._vertices[0]
+        || _vertices[0] == other._vertices[1]
+        || _vertices[1] == other._vertices[0]
+        || _vertices[1] == other._vertices[1];
 }
 
 bool Edge::operator==(const Edge& other) const
@@ -44,13 +66,12 @@ bool Edge::operator!=(const Edge& other) const
 }
 
 std::ostream& operator<<(std::ostream& stream, const Edge& edge){
-    stream << "LINESTRING (";
-    for (int i = 0; i < 2; i++){
-        stream << edge.vertex(i).getCoords().transpose();
-        if (i < 1)
-            stream << ", ";
-    }
-    return stream << ")";
+    using utils::eigenio::wkt;
+    return stream << "LINESTRING ("
+                  << edge.vertex(0).getCoords().transpose().format(wkt())
+                  << ", "
+                  << edge.vertex(1).getCoords().transpose().format(wkt())
+                  << ')';
 }
 
 }} // namespace precice, mesh

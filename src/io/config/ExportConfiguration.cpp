@@ -1,16 +1,16 @@
 #include "ExportConfiguration.hpp"
 #include "io/Export.hpp"
-#include "xml/XMLTag.hpp"
 #include "xml/XMLAttribute.hpp"
+#include "xml/XMLTag.hpp"
 
 namespace precice {
 namespace io {
 
-ExportConfiguration:: ExportConfiguration(xml::XMLTag& parent)
+ExportConfiguration::ExportConfiguration(xml::XMLTag &parent)
 {
   using namespace xml;
-  std::string doc;
-  std::list<XMLTag> tags;
+  std::string        doc;
+  std::list<XMLTag>  tags;
   XMLTag::Occurrence occ = XMLTag::OCCUR_ARBITRARY;
   {
     XMLTag tag(*this, VALUE_VTK, occ, TAG);
@@ -18,32 +18,24 @@ ExportConfiguration:: ExportConfiguration(xml::XMLTag& parent)
     tags.push_back(tag);
   }
 
-  XMLAttribute<std::string> attrLocation(ATTR_LOCATION);
-  attrLocation.setDocumentation("Directory to export the files to.");
-  attrLocation.setDefaultValue("");
+  auto attrLocation = XMLAttribute<std::string>(ATTR_LOCATION, "")
+                          .setDocumentation("Directory to export the files to.");
 
-  XMLAttribute<int> attrTimestepInterval(ATTR_TIMESTEP_INTERVAL);
-  doc = "preCICE timestep interval for export of files. Choose -1 for no exports.";
-  attrTimestepInterval.setDocumentation(doc);
-  attrTimestepInterval.setDefaultValue(1);
+  auto attrTimestepInterval = makeXMLAttribute(ATTR_TIMESTEP_INTERVAL, 1)
+                                  .setDocumentation("preCICE timestep interval for export of files. Choose -1 for no exports.");
 
-  XMLAttribute<bool> attrTriggerSolver(ATTR_TRIGGER_SOLVER);
-  doc = "If set to on/yes, an action requirement is set for the participant ";
-  doc += "with frequency defined by attribute " + ATTR_TIMESTEP_INTERVAL + ".";
-  attrTriggerSolver.setDocumentation(doc);
-  attrTriggerSolver.setDefaultValue(false);
+  auto attrTriggerSolver = makeXMLAttribute(ATTR_TRIGGER_SOLVER, false)
+                               .setDocumentation(
+                                   std::string("If set to on/yes, an action requirement is set for the participant ") +
+                                   "with frequency defined by attribute " + ATTR_TIMESTEP_INTERVAL + ".");
 
-  XMLAttribute<bool> attrNormals(ATTR_NORMALS);
-  doc = "If set to on/yes, mesh normals (if available) are added to the export.";
-  attrNormals.setDocumentation(doc);
-  attrNormals.setDefaultValue(true);
+  auto attrNormals = makeXMLAttribute(ATTR_NORMALS, true)
+                         .setDocumentation("If set to on/yes, mesh normals (if available) are added to the export.");
 
-  XMLAttribute<bool> attrEveryIteration(ATTR_EVERY_ITERATION);
-  doc = "Exports in every coupling (sub)iteration. For debug purposes.";
-  attrEveryIteration.setDocumentation(doc);
-  attrEveryIteration.setDefaultValue(false);
+  auto attrEveryIteration = makeXMLAttribute(ATTR_EVERY_ITERATION, false)
+                                .setDocumentation("Exports in every coupling (sub)iteration. For debug purposes.");
 
-  for (XMLTag& tag : tags){
+  for (XMLTag &tag : tags) {
     tag.addAttribute(attrLocation);
     tag.addAttribute(attrTimestepInterval);
     tag.addAttribute(attrTriggerSolver);
@@ -53,22 +45,20 @@ ExportConfiguration:: ExportConfiguration(xml::XMLTag& parent)
   }
 }
 
-void ExportConfiguration:: xmlTagCallback
-(
-  xml::XMLTag& tag )
+void ExportConfiguration::xmlTagCallback(
+    xml::XMLTag &tag)
 {
-  if ( tag.getNamespace() == TAG ){
+  if (tag.getNamespace() == TAG) {
     ExportContext context;
-    context.location = tag.getStringAttributeValue(ATTR_LOCATION);
-    context.triggerSolverPlot =  tag.getBooleanAttributeValue(ATTR_TRIGGER_SOLVER);
-    context.timestepInterval = tag.getIntAttributeValue(ATTR_TIMESTEP_INTERVAL);
-    context.plotNormals = tag.getBooleanAttributeValue(ATTR_NORMALS);
-    context.everyIteration = tag.getBooleanAttributeValue(ATTR_EVERY_ITERATION);
-    context.type = tag.getName();
+    context.location          = tag.getStringAttributeValue(ATTR_LOCATION);
+    context.triggerSolverPlot = tag.getBooleanAttributeValue(ATTR_TRIGGER_SOLVER);
+    context.timestepInterval  = tag.getIntAttributeValue(ATTR_TIMESTEP_INTERVAL);
+    context.plotNormals       = tag.getBooleanAttributeValue(ATTR_NORMALS);
+    context.everyIteration    = tag.getBooleanAttributeValue(ATTR_EVERY_ITERATION);
+    context.type              = tag.getName();
     _contexts.push_back(context);
   }
 }
 
-
-}} // namespace precice, io
-
+} // namespace io
+} // namespace precice

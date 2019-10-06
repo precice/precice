@@ -19,5 +19,6 @@ int exportVTKXML()
   return 3;
 }
 
-}}} // namespace precice, io, constants
-
+} // namespace constants
+} // namespace io
+} // namespace precice

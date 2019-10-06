@@ -3,6 +3,8 @@
 #include "cplscheme/CouplingScheme.hpp"
 #include "precice/impl/SolverInterfaceImpl.hpp"
 #include <algorithm>
+#include <utility>
+#include <vector>
 
 namespace precice {
 namespace impl {
@@ -14,17 +16,17 @@ RequestManager:: RequestManager
   cplscheme::PtrCouplingScheme couplingScheme)
 :
   _interface(solverInterfaceImpl),
-  _com(clientServerCommunication),
-  _couplingScheme(couplingScheme)
+  _com(std::move(clientServerCommunication)),
+  _couplingScheme(std::move(couplingScheme))
 {}
 
 void RequestManager:: handleRequests()
 {
-  TRACE();
+  PRECICE_TRACE();
   int clientCommSize = _com->getRemoteCommunicatorSize();
   int clientCounter = 0;
   std::list<int> clientRanks;
-  DEBUG("ClientCommSize " << clientCommSize);
+  PRECICE_DEBUG("ClientCommSize " << clientCommSize);
 
   std::vector<com::PtrRequest> requests(clientCommSize);
   std::vector<int> requestIDs(clientCommSize,-1);
@@ -41,8 +43,8 @@ void RequestManager:: handleRequests()
     if((std::find(clientRanks.begin(), clientRanks.end(), rankSender) == clientRanks.end()) &&
        requests[rankSender]->test()){
       requestID = requestIDs[rankSender];
-      CHECK(requestID != -1, "Receiving of request ID failed");
-      DEBUG("Received request ID " << requestID << " from rank " << rankSender);
+      PRECICE_CHECK(requestID != -1, "Receiving of request ID failed");
+      PRECICE_DEBUG("Received request ID " << requestID << " from rank " << rankSender);
     }
     else{
       rankSender++;
@@ -52,9 +54,9 @@ void RequestManager:: handleRequests()
 
     switch (requestID){
     case REQUEST_INITIALIZE:
-      DEBUG("Request initialize by rank " << rankSender);
+      PRECICE_DEBUG("Request initialize by rank " << rankSender);
       clientCounter++;
-      assertion(clientCounter <= clientCommSize, clientCounter, clientCommSize);
+      PRECICE_ASSERT(clientCounter <= clientCommSize, clientCounter, clientCommSize);
       clientRanks.push_front(rankSender);
       if (clientCounter == clientCommSize){
         handleRequestInitialze(clientRanks);
@@ -62,9 +64,9 @@ void RequestManager:: handleRequests()
       }
       break;
     case REQUEST_INITIALIZE_DATA:
-      DEBUG("Request initialize data by rank " << rankSender);
+      PRECICE_DEBUG("Request initialize data by rank " << rankSender);
       clientCounter++;
-      assertion(clientCounter <= clientCommSize, clientCounter, clientCommSize);
+      PRECICE_ASSERT(clientCounter <= clientCommSize, clientCounter, clientCommSize);
       clientRanks.push_front(rankSender);
       if (clientCounter == clientCommSize){
         handleRequestInitialzeData(clientRanks);
@@ -72,9 +74,9 @@ void RequestManager:: handleRequests()
       }
       break;
     case REQUEST_ADVANCE:
-      DEBUG("Request advance by rank " << rankSender);
+      PRECICE_DEBUG("Request advance by rank " << rankSender);
       clientCounter++;
-      assertion(clientCounter <= clientCommSize, clientCounter, clientCommSize);
+      PRECICE_ASSERT(clientCounter <= clientCommSize, clientCounter, clientCommSize);
       clientRanks.push_front(rankSender);
       if (clientCounter == clientCommSize){
         handleRequestAdvance(clientRanks);
@@ -82,9 +84,9 @@ void RequestManager:: handleRequests()
       }
       break;
     case REQUEST_FINALIZE:
-      DEBUG("Request finalize by rank " << rankSender);
+      PRECICE_DEBUG("Request finalize by rank " << rankSender);
       clientCounter++;
-      assertion(clientCounter <= clientCommSize, clientCounter, clientCommSize);
+      PRECICE_ASSERT(clientCounter <= clientCommSize, clientCounter, clientCommSize);
       clientRanks.push_front(rankSender);
       if (clientCounter == clientCommSize){
         handleRequestFinalize();
@@ -173,9 +175,9 @@ void RequestManager:: handleRequests()
       singleRequest = true;
       break;
     case REQUEST_MAP_WRITE_DATA_FROM:
-      DEBUG("Request map written data by rank " << rankSender);
+      PRECICE_DEBUG("Request map written data by rank " << rankSender);
       clientCounter++;
-      assertion(clientCounter <= clientCommSize, clientCounter, clientCommSize);
+      PRECICE_ASSERT(clientCounter <= clientCommSize, clientCounter, clientCommSize);
       clientRanks.push_front(rankSender);
       if (clientCounter == clientCommSize){
         handleRequestMapWriteDataFrom(clientRanks);
@@ -183,9 +185,9 @@ void RequestManager:: handleRequests()
       }
       break;
     case REQUEST_MAP_READ_DATA_TO:
-      DEBUG("Request map read data by rank " << rankSender);
+      PRECICE_DEBUG("Request map read data by rank " << rankSender);
       clientCounter++;
-      assertion(clientCounter <= clientCommSize, clientCounter, clientCommSize);
+      PRECICE_ASSERT(clientCounter <= clientCommSize, clientCounter, clientCommSize);
       clientRanks.push_front(rankSender);
       if (clientCounter == clientCommSize){
         handleRequestMapReadDataTo(clientRanks);
@@ -198,7 +200,7 @@ void RequestManager:: handleRequests()
       singleRequest = true;
       break;
     default:
-      ERROR("Unknown RequestID \"" << requestID << "\"");
+      PRECICE_ERROR("Unknown RequestID \"" << requestID << "\"");
       break;
     }
 
@@ -209,7 +211,7 @@ void RequestManager:: handleRequests()
       singleRequest = false;
     }
     else if(collectiveRequest){
-      assertion(clientRanks.size()== static_cast<size_t>(clientCommSize));
+      PRECICE_ASSERT(clientRanks.size()== static_cast<size_t>(clientCommSize));
       for(int rank : clientRanks){
         requests[rank] = _com->aReceive(requestIDs[rank], rank);
       }
@@ -226,7 +228,7 @@ void RequestManager:: handleRequests()
 }
 void RequestManager:: requestPing()
 {
-  TRACE();
+  PRECICE_TRACE();
   _com->send(REQUEST_PING, 0);
   int dummy = 0;
   _com->receive(dummy, 0);
@@ -234,14 +236,14 @@ void RequestManager:: requestPing()
 
 void RequestManager:: requestInitialize()
 {
-  TRACE();
+  PRECICE_TRACE();
   _com->send(REQUEST_INITIALIZE, 0);
   _couplingScheme->receiveState(_com, 0);
 }
 
 void RequestManager:: requestInitialzeData()
 {
-  TRACE();
+  PRECICE_TRACE();
   _com->send(REQUEST_INITIALIZE_DATA, 0);
   _couplingScheme->receiveState(_com, 0);
 }
@@ -250,7 +252,7 @@ void RequestManager:: requestAdvance
 (
   double dt )
 {
-  TRACE();
+  PRECICE_TRACE();
   _com->send(REQUEST_ADVANCE, 0);
   _com->send(dt, 0);
   _couplingScheme->receiveState(_com, 0);
@@ -258,7 +260,7 @@ void RequestManager:: requestAdvance
 
 void RequestManager:: requestFinalize()
 {
-  TRACE();
+  PRECICE_TRACE();
   _com->send(REQUEST_FINALIZE, 0);
 }
 
@@ -267,7 +269,7 @@ void RequestManager:: requestFulfilledAction
 (
   const std::string& action )
 {
-  TRACE();
+  PRECICE_TRACE();
   _com->send(REQUEST_FULFILLED_ACTION, 0);
   _com->send(action, 0);
 }
@@ -277,7 +279,7 @@ int RequestManager:: requestSetMeshVertex
   int              meshID,
   Eigen::VectorXd& position )
 {
-  TRACE();
+  PRECICE_TRACE();
   _com->send(REQUEST_SET_MESH_VERTEX, 0);
   _com->send(meshID, 0);
   _com->send(position.data(), position.size(), 0);
@@ -290,7 +292,7 @@ int RequestManager:: requestGetMeshVertexSize
 (
   int meshID )
 {
-  TRACE(meshID);
+  PRECICE_TRACE(meshID);
   _com->send(REQUEST_GET_MESH_VERTEX_SIZE, 0);
   _com->send(meshID, 0);
   int size = -1;
@@ -302,19 +304,19 @@ void RequestManager:: requestResetMesh
 (
   int meshID )
 {
-  TRACE(meshID);
+  PRECICE_TRACE(meshID);
   _com->send(REQUEST_RESET_MESH, 0);
   _com->send(meshID, 0);
 }
 
 void RequestManager:: requestSetMeshVertices
 (
-  int     meshID,
-  int     size,
-  double* positions,
-  int*    ids )
+  int           meshID,
+  int           size,
+  const double* positions,
+  int*          ids )
 {
-  TRACE();
+  PRECICE_TRACE();
   _com->send(REQUEST_SET_MESH_VERTICES, 0);
   _com->send(meshID, 0);
   _com->send(size, 0);
@@ -324,12 +326,12 @@ void RequestManager:: requestSetMeshVertices
 
 void RequestManager:: requestGetMeshVertices
 (
-  int     meshID,
-  int     size,
-  int*    ids,
-  double* positions )
+  int        meshID,
+  int        size,
+  const int* ids,
+  double*    positions )
 {
-  TRACE();
+  PRECICE_TRACE();
   _com->send(REQUEST_GET_MESH_VERTICES, 0);
   _com->send(meshID, 0);
   _com->send(size, 0);
@@ -339,12 +341,12 @@ void RequestManager:: requestGetMeshVertices
 
 void RequestManager:: requestGetMeshVertexIDsFromPositions
 (
-  int     meshID,
-  int     size,
-  double* positions,
-  int*    ids )
+  int           meshID,
+  int           size,
+  const double* positions,
+  int*          ids )
 {
-  TRACE(size);
+  PRECICE_TRACE(size);
   _com->send(REQUEST_GET_MESH_VERTEX_IDS_FROM_POSITIONS, 0);
   _com->send(meshID, 0);
   _com->send(size, 0);
@@ -359,7 +361,7 @@ int RequestManager:: requestSetMeshEdge
   int firstVertexID,
   int secondVertexID )
 {
-  TRACE(meshID, firstVertexID, secondVertexID);
+  PRECICE_TRACE(meshID, firstVertexID, secondVertexID);
   _com->send(REQUEST_SET_MESH_EDGE, 0);
   int data[3] = { meshID, firstVertexID, secondVertexID };
   _com->send(data, 3, 0);
@@ -375,7 +377,7 @@ void RequestManager:: requestSetMeshTriangle
   int secondEdgeID,
   int thirdEdgeID )
 {
-  TRACE(meshID, firstEdgeID, secondEdgeID, thirdEdgeID);
+  PRECICE_TRACE(meshID, firstEdgeID, secondEdgeID, thirdEdgeID);
   _com->send(REQUEST_SET_MESH_TRIANGLE, 0);
   int data[4] = {meshID, firstEdgeID, secondEdgeID, thirdEdgeID};
   _com->send(data, 4, 0);
@@ -388,7 +390,7 @@ void RequestManager:: requestSetMeshTriangleWithEdges
   int secondVertexID,
   int thirdVertexID )
 {
-  TRACE(meshID, firstVertexID,
+  PRECICE_TRACE(meshID, firstVertexID,
                 secondVertexID, thirdVertexID);
   _com->send(REQUEST_SET_MESH_TRIANGLE_WITH_EDGES, 0);
   int data[4] = {meshID, firstVertexID, secondVertexID, thirdVertexID};
@@ -403,7 +405,7 @@ void RequestManager:: requestSetMeshQuad
   int thirdEdgeID,
   int fourthEdgeID )
 {
-  TRACE(meshID, firstEdgeID, secondEdgeID, thirdEdgeID, fourthEdgeID);
+  PRECICE_TRACE(meshID, firstEdgeID, secondEdgeID, thirdEdgeID, fourthEdgeID);
   _com->send(REQUEST_SET_MESH_QUAD, 0);
   int data[5] = {meshID, firstEdgeID, secondEdgeID, thirdEdgeID, fourthEdgeID};
   _com->send(data, 5, 0);
@@ -417,19 +419,19 @@ void RequestManager:: requestSetMeshQuadWithEdges
   int thirdVertexID,
   int fourthVertexID )
 {
-  TRACE(meshID, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID);
+  PRECICE_TRACE(meshID, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID);
   _com->send(REQUEST_SET_MESH_QUAD_WITH_EDGES, 0);
   int data[5] = {meshID, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID};
   _com->send(data, 5, 0);
 }
 
 void RequestManager:: requestWriteBlockScalarData (
-  int     dataID,
-  int     size,
-  int*    valueIndices,
-  double* values )
+  int           dataID,
+  int           size,
+  const int*    valueIndices,
+  const double* values )
 {
-  TRACE(dataID, size);
+  PRECICE_TRACE(dataID, size);
   _com->send(REQUEST_WRITE_BLOCK_SCALAR_DATA, 0);
   _com->send(dataID, 0);
   _com->send(size, 0);
@@ -443,7 +445,7 @@ void RequestManager:: requestWriteScalarData
   int    valueIndex,
   double value )
 {
-  TRACE();
+  PRECICE_TRACE();
   _com->send(REQUEST_WRITE_SCALAR_DATA, 0);
   _com->send(dataID, 0);
   _com->send(valueIndex, 0);
@@ -451,12 +453,12 @@ void RequestManager:: requestWriteScalarData
 }
 
 void RequestManager:: requestWriteBlockVectorData (
-  int     dataID,
-  int     size,
-  int*    valueIndices,
-  double* values )
+  int           dataID,
+  int           size,
+  const int*    valueIndices,
+  const double* values )
 {
-  TRACE(dataID);
+  PRECICE_TRACE(dataID);
   _com->send(REQUEST_WRITE_BLOCK_VECTOR_DATA, 0);
   _com->send(dataID, 0);
   _com->send(size, 0);
@@ -466,11 +468,11 @@ void RequestManager:: requestWriteBlockVectorData (
 
 void RequestManager:: requestWriteVectorData
 (
-  int     dataID,
-  int     valueIndex,
-  double* value )
+  int           dataID,
+  int           valueIndex,
+  const double* value )
 {
-  TRACE();
+  PRECICE_TRACE();
   _com->send(REQUEST_WRITE_VECTOR_DATA, 0);
   _com->send(dataID, 0);
   _com->send(valueIndex, 0);
@@ -478,12 +480,12 @@ void RequestManager:: requestWriteVectorData
 }
 
 void RequestManager:: requestReadBlockScalarData (
-  int     dataID,
-  int     size,
-  int*    valueIndices,
-  double* values )
+  int        dataID,
+  int        size,
+  const int* valueIndices,
+  double*    values )
 {
-  TRACE(dataID, size);
+  PRECICE_TRACE(dataID, size);
   _com->send(REQUEST_READ_BLOCK_SCALAR_DATA, 0);
   _com->send(dataID, 0);
   _com->send(size, 0);
@@ -497,7 +499,7 @@ void RequestManager:: requestReadScalarData
   int     valueIndex,
   double& value )
 {
-  TRACE();
+  PRECICE_TRACE();
   _com->send(REQUEST_READ_SCALAR_DATA, 0);
   _com->send(dataID, 0);
   _com->send(valueIndex, 0);
@@ -506,12 +508,12 @@ void RequestManager:: requestReadScalarData
 
 void RequestManager:: requestReadBlockVectorData
 (
-  int     dataID,
-  int     size,
-  int*    valueIndices,
-  double* values )
+  int        dataID,
+  int        size,
+  const int* valueIndices,
+  double*    values )
 {
-  TRACE(dataID, size);
+  PRECICE_TRACE(dataID, size);
   _com->send(REQUEST_READ_BLOCK_VECTOR_DATA, 0);
   _com->send(dataID, 0);
   _com->send(size, 0);
@@ -525,7 +527,7 @@ void RequestManager:: requestReadVectorData
   int     valueIndex,
   double* value )
 {
-  TRACE();
+  PRECICE_TRACE();
   _com->send(REQUEST_READ_VETOR_DATA, 0);
   _com->send(dataID, 0);
   _com->send(valueIndex, 0);
@@ -536,7 +538,7 @@ void RequestManager:: requestMapWriteDataFrom
 (
   int fromMeshID )
 {
-  TRACE(fromMeshID);
+  PRECICE_TRACE(fromMeshID);
   _com->send(REQUEST_MAP_WRITE_DATA_FROM, 0);
   int ping;
   _com->receive(ping, 0);
@@ -547,7 +549,7 @@ void RequestManager:: requestMapReadDataTo
 (
   int toMeshID )
 {
-  TRACE(toMeshID);
+  PRECICE_TRACE(toMeshID);
   _com->send(REQUEST_MAP_READ_DATA_TO, 0);
   int ping;
   _com->receive(ping, 0);
@@ -558,7 +560,7 @@ void RequestManager:: handleRequestInitialze
 (
   const std::list<int>& clientRanks )
 {
-  TRACE()
+  PRECICE_TRACE()
   _interface.initialize();
   for (int rank : clientRanks) {
     _couplingScheme->sendState(_com, rank);
@@ -569,7 +571,7 @@ void RequestManager:: handleRequestInitialzeData
 (
   const std::list<int>& clientRanks )
 {
-  TRACE();
+  PRECICE_TRACE();
   _interface.initializeData();
   for (int rank : clientRanks) {
     _couplingScheme->sendState(_com, rank);
@@ -580,15 +582,15 @@ void RequestManager:: handleRequestAdvance
 (
   const std::list<int>& clientRanks )
 {
-  TRACE();
-  std::list<int>::const_iterator iter = clientRanks.begin();
+  PRECICE_TRACE();
+  auto iter = clientRanks.begin();
   double oldDt;
   _com->receive(oldDt, *iter);
   iter++;
   for (; iter != clientRanks.end(); iter++){
     double dt;
     _com->receive(dt, *iter);
-    CHECK(math::equals(dt, oldDt),
+    PRECICE_CHECK(math::equals(dt, oldDt),
           "Ambiguous timestep length when calling request advance from several processes!");
     oldDt = dt;
   }
@@ -600,7 +602,7 @@ void RequestManager:: handleRequestAdvance
 
 void RequestManager:: handleRequestFinalize()
 {
-  TRACE();
+  PRECICE_TRACE();
   _interface.finalize();
 }
 
@@ -608,7 +610,7 @@ void RequestManager:: handleRequestFulfilledAction
 (
   int rankSender )
 {
-  TRACE(rankSender);
+  PRECICE_TRACE(rankSender);
   std::string action;
   _com->receive(action, rankSender);
   _interface.fulfilledAction(action);
@@ -618,12 +620,12 @@ void RequestManager:: handleRequestSetMeshVertex
 (
   int rankSender )
 {
-  TRACE(rankSender);
+  PRECICE_TRACE(rankSender);
   int meshID = -1;
   _com->receive(meshID, rankSender);
-  double position[_interface.getDimensions()];
-  _com->receive(position, _interface.getDimensions(), rankSender);
-  int index = _interface.setMeshVertex(meshID, position);
+  std::vector<double> position(_interface.getDimensions());
+  _com->receive(position.data(), _interface.getDimensions(), rankSender);
+  int index = _interface.setMeshVertex(meshID, position.data());
   _com->send(index, rankSender);
 }
 
@@ -631,7 +633,7 @@ void RequestManager:: handleRequestGetMeshVertexSize
 (
   int rankSender )
 {
-  TRACE(rankSender);
+  PRECICE_TRACE(rankSender);
   int meshID = -1;
   _com->receive(meshID, rankSender);
   int size = _interface.getMeshVertexSize(meshID);
@@ -642,7 +644,7 @@ void RequestManager:: handleRequestResetMesh
 (
   int rankSender )
 {
-  TRACE(rankSender);
+  PRECICE_TRACE(rankSender);
   int meshID = -1;
   _com->receive(meshID, rankSender);
   _interface.resetMesh(meshID);
@@ -653,64 +655,58 @@ void RequestManager:: handleRequestSetMeshVertices
 (
   int rankSender )
 {
-  TRACE(rankSender);
+  PRECICE_TRACE(rankSender);
   int meshID = -1;
   _com->receive(meshID, rankSender);
   int size = -1;
   _com->receive(size, rankSender);
-  CHECK(size > 0, "You cannot call setMeshVertices with size=0.");
-  double* positions = new double[size*_interface.getDimensions()];
-  _com->receive(positions, size*_interface.getDimensions(), rankSender);
-  int* ids = new int[size];
-  _interface.setMeshVertices(meshID, size, positions, ids);
-  _com->send(ids, size, rankSender);
-  delete[] positions;
-  delete[] ids;
+  PRECICE_CHECK(size > 0, "You cannot call setMeshVertices with size=0.");
+  std::vector<double> positions(static_cast<size_t>(size)*_interface.getDimensions());
+  _com->receive(positions, rankSender);
+  std::vector<int> ids(size);
+  _interface.setMeshVertices(meshID, size, positions.data(), ids.data());
+  _com->send(ids, rankSender);
 }
 
 void RequestManager:: handleRequestGetMeshVertices
 (
   int rankSender )
 {
-  TRACE(rankSender);
+  PRECICE_TRACE(rankSender);
   int meshID = -1;
   int size = -1;
   _com->receive(meshID, rankSender);
   _com->receive(size, rankSender);
-  assertion(size > 0, size);
-  int* ids = new int[size];
-  double* positions = new double[size*_interface.getDimensions()];
-  _com->receive(ids, size, rankSender);
-  _interface.getMeshVertices(meshID, size, ids, positions);
-  _com->send(positions, size*_interface.getDimensions(), rankSender);
-  delete[] ids;
-  delete[] positions;
+  PRECICE_ASSERT(size > 0, size);
+  std::vector<int> ids(size);
+  std::vector<double> positions(static_cast<size_t>(size)*_interface.getDimensions());
+  _com->receive(ids, rankSender);
+  _interface.getMeshVertices(meshID, size, ids.data(), positions.data());
+  _com->send(positions, rankSender);
 }
 
 void RequestManager:: handleRequestGetMeshVertexIDsFromPositions
 (
   int rankSender )
 {
-  TRACE(rankSender);
+  PRECICE_TRACE(rankSender);
   int meshID = -1;
   int size = -1;
   _com->receive(meshID, rankSender);
   _com->receive(size, rankSender);
-  assertion(size > 0, size);
-  int* ids = new int[size];
-  double* positions = new double[size*_interface.getDimensions()];
-  _com->receive(positions, size*_interface.getDimensions(), rankSender);
-  _interface.getMeshVertexIDsFromPositions(meshID, size, positions, ids);
-  _com->send(ids, size, rankSender);
-  delete[] ids;
-  delete[] positions;
+  PRECICE_ASSERT(size > 0, size);
+  std::vector<int> ids(size);
+  std::vector<double> positions(static_cast<size_t>(size)*_interface.getDimensions());
+  _com->receive(positions, rankSender);
+  _interface.getMeshVertexIDsFromPositions(meshID, size, positions.data(), ids.data());
+  _com->send(ids, rankSender);
 }
 
 void RequestManager:: handleRequestSetMeshEdge
 (
   int rankSender )
 {
-  TRACE(rankSender);
+  PRECICE_TRACE(rankSender);
   int data[3]; // 0: meshID, 1: firstVertexID, 2: secondVertexID
   _com->receive(data, 3, rankSender);
   int createEdgeID = _interface.setMeshEdge(data[0], data[1], data[2]);
@@ -721,7 +717,7 @@ void RequestManager:: handleRequestSetMeshTriangle
 (
   int rankSender )
 {
-  TRACE(rankSender);
+  PRECICE_TRACE(rankSender);
   int data[4]; // 0: meshID, 1,2,3: edge IDs
   _com->receive(data, 4, rankSender);
   _interface.setMeshTriangle(data[0], data[1], data[2], data[3]);
@@ -731,7 +727,7 @@ void RequestManager:: handleRequestSetMeshTriangleWithEdges
 (
   int rankSender )
 {
-  TRACE(rankSender);
+  PRECICE_TRACE(rankSender);
   int data[4]; // 0: meshID, 1,2,3: vertex IDs
   _com->receive(data, 4, rankSender);
   _interface.setMeshTriangleWithEdges(data[0], data[1], data[2], data[3]);
@@ -741,7 +737,7 @@ void RequestManager:: handleRequestSetMeshQuad
 (
   int rankSender )
 {
-  TRACE(rankSender);
+  PRECICE_TRACE(rankSender);
   int data[5]; // 0: meshID, 1,2,3,4: edge IDs
   _com->receive(data, 5, rankSender);
   _interface.setMeshQuad(data[0], data[1], data[2], data[3], data[4]);
@@ -751,7 +747,7 @@ void RequestManager:: handleRequestSetMeshQuadWithEdges
 (
   int rankSender )
 {
-  TRACE(rankSender);
+  PRECICE_TRACE(rankSender);
   int data[5]; // 0: meshID, 1,2,3,4: vertex IDs
   _com->receive(data, 5, rankSender);
   _interface.setMeshQuadWithEdges(data[0], data[1], data[2], data[3], data[4]);
@@ -761,7 +757,7 @@ void RequestManager:: handleRequestWriteScalarData
 (
   int rankSender )
 {
-  TRACE(rankSender);
+  PRECICE_TRACE(rankSender);
   int dataID = -1;
   _com->receive(dataID, rankSender);
   int index = -1;
@@ -775,57 +771,53 @@ void RequestManager:: handleRequestWriteBlockScalarData
 (
   int rankSender )
 {
-  TRACE(rankSender);
+  PRECICE_TRACE(rankSender);
   int dataID = -1;
   _com->receive(dataID, rankSender);
   int size = -1;
   _com->receive(size, rankSender);
-  int* indices = new int[size];
-  _com->receive(indices, size, rankSender);
-  double* data = new double[size];
-  _com->receive(data, size, rankSender);
-  _interface.writeBlockScalarData(dataID, size, indices, data);
-  delete[] indices;
-  delete[] data;
+  std::vector<int> indices(size);
+  _com->receive(indices, rankSender);
+  std::vector<double> data(size);
+  _com->receive(data, rankSender);
+  _interface.writeBlockScalarData(dataID, size, indices.data(), data.data());
 }
 
 void RequestManager:: handleRequestWriteBlockVectorData
 (
   int rankSender )
 {
-  TRACE(rankSender);
+  PRECICE_TRACE(rankSender);
   int dataID = -1;
   _com->receive(dataID, rankSender);
   int size = -1;
   _com->receive(size, rankSender);
-  int* indices = new int[size];
-  _com->receive(indices, size, rankSender);
-  double* data = new double[size*_interface.getDimensions()];
-  _com->receive(data, size*_interface.getDimensions(), rankSender);
-  _interface.writeBlockVectorData(dataID, size, indices, data);
-  delete[] indices;
-  delete[] data;
+  std::vector<int> indices(size);
+  _com->receive(indices, rankSender);
+  std::vector<double> data(static_cast<size_t>(size)*_interface.getDimensions());
+  _com->receive(data, rankSender);
+  _interface.writeBlockVectorData(dataID, size, indices.data(), data.data());
 }
 
 void RequestManager:: handleRequestWriteVectorData
 (
   int rankSender )
 {
-  TRACE(rankSender);
+  PRECICE_TRACE(rankSender);
   int dataID = -1;
   _com->receive(dataID, rankSender);
   int index = -1;
   _com->receive( index, rankSender);
-  double data[_interface.getDimensions()];
-  _com->receive(data, _interface.getDimensions(), rankSender);
-  _interface.writeVectorData(dataID, index, data);
+  std::vector<double> data(_interface.getDimensions());
+  _com->receive(data.data(), _interface.getDimensions(), rankSender);
+  _interface.writeVectorData(dataID, index, data.data());
 }
 
 void RequestManager:: handleRequestReadScalarData
 (
   int rankSender )
 {
-  TRACE(rankSender);
+  PRECICE_TRACE(rankSender);
   int dataID = -1;
   _com->receive(dataID, rankSender);
   int index = -1;
@@ -839,58 +831,54 @@ void RequestManager:: handleRequestReadBlockScalarData
 (
   int rankSender )
 {
-  TRACE(rankSender);
+  PRECICE_TRACE(rankSender);
   int dataID = -1;
   _com->receive(dataID, rankSender);
   int size = -1;
   _com->receive(size, rankSender);
-  int* indices = new int[size];
-  _com->receive(indices, size, rankSender);
-  double* data = new double[size];
-  _interface.readBlockScalarData(dataID, size, indices, data);
-  _com->send(data, size, rankSender);
-  delete[] indices;
-  delete[] data;
+  std::vector<int> indices(size);
+  _com->receive(indices, rankSender);
+  std::vector<double> data(size);
+  _interface.readBlockScalarData(dataID, size, indices.data(), data.data());
+  _com->send(data, rankSender);
 }
 
 void RequestManager:: handleRequestReadBlockVectorData
 (
   int rankSender )
 {
-  TRACE(rankSender);
+  PRECICE_TRACE(rankSender);
   int dataID = -1;
   _com->receive(dataID, rankSender);
   int size = -1;
   _com->receive(size, rankSender);
-  int* indices = new int[size];
-  _com->receive(indices, size, rankSender);
-  double* data = new double[size*_interface.getDimensions()];
-  _interface.readBlockVectorData(dataID, size, indices, data);
-  _com->send(data, size*_interface.getDimensions(), rankSender);
-  delete[] indices;
-  delete[] data;
+  std::vector<int> indices(size);
+  _com->receive(indices, rankSender);
+  std::vector<double> data(static_cast<size_t>(size)*_interface.getDimensions());
+  _interface.readBlockVectorData(dataID, size, indices.data(), data.data());
+  _com->send(data, rankSender);
 }
 
 void RequestManager:: handleRequestReadVectorData
 (
   int rankSender )
 {
-  TRACE(rankSender);
+  PRECICE_TRACE(rankSender);
   int dataID = -1;
   _com->receive(dataID, rankSender);
   int index = -1;
   _com->receive(index, rankSender);
-  double data[_interface.getDimensions()];
-  _interface.readVectorData(dataID, index, data);
-  _com->send(data, _interface.getDimensions(), rankSender);
+  std::vector<double> data(_interface.getDimensions());
+  _interface.readVectorData(dataID, index, data.data());
+  _com->send(data.data(), _interface.getDimensions(), rankSender);
 }
 
 void RequestManager:: handleRequestMapWriteDataFrom
 (
   const std::list<int>& clientRanks )
 {
-  TRACE();
-  std::list<int>::const_iterator iter = clientRanks.begin();
+  PRECICE_TRACE();
+  auto iter = clientRanks.begin();
   int ping = 0;
   _com->send(ping, *iter);
   int oldMeshID;
@@ -900,7 +888,7 @@ void RequestManager:: handleRequestMapWriteDataFrom
     _com->send(ping, *iter);
     int meshID;
     _com->receive(meshID, *iter);
-    CHECK(meshID == oldMeshID,
+    PRECICE_CHECK(meshID == oldMeshID,
           "Ambiguous mesh ID when calling map written data from several processes!");
     oldMeshID = meshID;
   }
@@ -911,8 +899,8 @@ void RequestManager:: handleRequestMapReadDataTo
 (
   const std::list<int>& clientRanks )
 {
-  TRACE();
-  std::list<int>::const_iterator iter = clientRanks.begin();
+  PRECICE_TRACE();
+  auto iter = clientRanks.begin();
   int ping = 0;
   _com->send(ping, *iter);
   int oldMeshID;
@@ -922,7 +910,7 @@ void RequestManager:: handleRequestMapReadDataTo
     _com->send(ping, *iter);
     int meshID;
     _com->receive(meshID, *iter);
-    CHECK(meshID == oldMeshID,
+    PRECICE_CHECK(meshID == oldMeshID,
           "Ambiguous mesh IDs (" << meshID << " and " << oldMeshID
           <<  ") when calling map read data from several processes!");
     oldMeshID = meshID;

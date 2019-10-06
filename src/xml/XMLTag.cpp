@@ -24,66 +24,74 @@ XMLTag::XMLTag(
   }
 }
 
-void XMLTag::setDocumentation(const std::string &documentation)
+XMLTag& XMLTag::setDocumentation(const std::string &documentation)
 {
   _doc = documentation;
+  return *this;
 }
 
-void XMLTag::addNamespace(const std::string &namespaceName)
+XMLTag& XMLTag::addNamespace(const std::string &namespaceName)
 {
   _namespaces.push_back(namespaceName);
+  return *this;
 }
 
-void XMLTag::addSubtag(const XMLTag &tag)
+XMLTag& XMLTag::addSubtag(const XMLTag &tag)
 {
-  TRACE(tag._fullName);
-  assertion(tag._name != std::string(""));
+  PRECICE_TRACE(tag._fullName);
+  PRECICE_ASSERT(tag._name != std::string(""));
   if (not tag._namespace.empty()) {
     _configuredNamespaces[tag._namespace] = false;
   }
 
   _subtags.push_back(std::make_shared<XMLTag>(tag));
+  return *this;
 }
 
-void XMLTag::addAttribute(const XMLAttribute<double> &attribute)
+XMLTag& XMLTag::addAttribute(const XMLAttribute<double> &attribute)
 {
-  TRACE(attribute.getName());
-  assertion(not utils::contained(attribute.getName(), _attributes));
+  PRECICE_TRACE(attribute.getName());
+  PRECICE_ASSERT(not utils::contained(attribute.getName(), _attributes));
   _attributes.insert(attribute.getName());
   _doubleAttributes.insert(std::pair<std::string, XMLAttribute<double>>(attribute.getName(), attribute));
+  return *this;
 }
 
-void XMLTag::addAttribute(const XMLAttribute<int> &attribute)
+XMLTag& XMLTag::addAttribute(const XMLAttribute<int> &attribute)
 {
-  TRACE(attribute.getName());
-  assertion(not utils::contained(attribute.getName(), _attributes));
+  PRECICE_TRACE(attribute.getName());
+  PRECICE_ASSERT(not utils::contained(attribute.getName(), _attributes));
   _attributes.insert(attribute.getName());
   _intAttributes.insert(std::pair<std::string, XMLAttribute<int>>(attribute.getName(), attribute));
+  return *this;
 }
 
-void XMLTag::addAttribute(const XMLAttribute<std::string> &attribute)
+XMLTag& XMLTag::addAttribute(const XMLAttribute<std::string> &attribute)
 {
-  TRACE(attribute.getName());
-  assertion(not utils::contained(attribute.getName(), _attributes));
+  PRECICE_TRACE(attribute.getName());
+  PRECICE_ASSERT(not utils::contained(attribute.getName(), _attributes));
   _attributes.insert(attribute.getName());
   _stringAttributes.insert(std::pair<std::string, XMLAttribute<std::string>>(attribute.getName(), attribute));
+  return *this;
 }
 
-void XMLTag::addAttribute(const XMLAttribute<bool> &attribute)
+XMLTag& XMLTag::addAttribute(const XMLAttribute<bool> &attribute)
 {
-  TRACE(attribute.getName());
-  assertion(not utils::contained(attribute.getName(), _attributes));
+  PRECICE_TRACE(attribute.getName());
+  PRECICE_ASSERT(not utils::contained(attribute.getName(), _attributes));
   _attributes.insert(attribute.getName());
   _booleanAttributes.insert(std::pair<std::string, XMLAttribute<bool>>(attribute.getName(), attribute));
+  return *this;
 }
 
-void XMLTag::addAttribute(const XMLAttribute<Eigen::VectorXd> &attribute)
+XMLTag& XMLTag::addAttribute(const XMLAttribute<Eigen::VectorXd> &attribute)
 {
-  TRACE(attribute.getName());
-  assertion(not utils::contained(attribute.getName(), _attributes));
+  PRECICE_TRACE(attribute.getName());
+  PRECICE_ASSERT(not utils::contained(attribute.getName(), _attributes));
   _attributes.insert(attribute.getName());
   _eigenVectorXdAttributes.insert(
       std::pair<std::string, XMLAttribute<Eigen::VectorXd>>(attribute.getName(), attribute));
+  return *this;
 }
 
 bool XMLTag::hasAttribute(const std::string &attributeName)
@@ -95,7 +103,7 @@ double XMLTag::getDoubleAttributeValue(const std::string &name) const
 {
   std::map<std::string, XMLAttribute<double>>::const_iterator iter;
   iter = _doubleAttributes.find(name);
-  assertion(iter != _doubleAttributes.end());
+  PRECICE_ASSERT(iter != _doubleAttributes.end());
   return iter->second.getValue();
 }
 
@@ -103,7 +111,7 @@ int XMLTag::getIntAttributeValue(const std::string &name) const
 {
   std::map<std::string, XMLAttribute<int>>::const_iterator iter;
   iter = _intAttributes.find(name);
-  assertion(iter != _intAttributes.end());
+  PRECICE_ASSERT(iter != _intAttributes.end());
   return iter->second.getValue();
 }
 
@@ -111,7 +119,7 @@ const std::string &XMLTag::getStringAttributeValue(const std::string &name) cons
 {
   std::map<std::string, XMLAttribute<std::string>>::const_iterator iter;
   iter = _stringAttributes.find(name);
-  assertion(iter != _stringAttributes.end(), name);
+  PRECICE_ASSERT(iter != _stringAttributes.end(), name);
   return iter->second.getValue();
 }
 
@@ -119,17 +127,17 @@ bool XMLTag::getBooleanAttributeValue(const std::string &name) const
 {
   std::map<std::string, XMLAttribute<bool>>::const_iterator iter;
   iter = _booleanAttributes.find(name);
-  assertion(iter != _booleanAttributes.end());
+  PRECICE_ASSERT(iter != _booleanAttributes.end());
   return iter->second.getValue();
 }
 
 Eigen::VectorXd XMLTag::getEigenVectorXdAttributeValue(const std::string &name, int dimensions) const
 {
-  TRACE(name, dimensions);
+  PRECICE_TRACE(name, dimensions);
   // std::map<std::string, XMLAttribute<utils::DynVector> >::const_iterator iter;
   auto iter = _eigenVectorXdAttributes.find(name);
-  assertion(iter != _eigenVectorXdAttributes.end());
-  CHECK(iter->second.getValue().size() >= dimensions,
+  PRECICE_ASSERT(iter != _eigenVectorXdAttributes.end());
+  PRECICE_CHECK(iter->second.getValue().size() >= dimensions,
         "Vector attribute \"" << name << "\" of tag <" << getFullName()
                               << "> has less dimensions than required (" << iter->second.getValue().size()
                               << " instead of " << dimensions << ")!");
@@ -140,27 +148,21 @@ Eigen::VectorXd XMLTag::getEigenVectorXdAttributeValue(const std::string &name, 
   for (int i = 0; i < dimensions; i++) {
     result[i] = parsed[i];
   }
-  DEBUG("Returning value = " << result);
+  PRECICE_DEBUG("Returning value = " << result);
   return result;
 }
 
 // new readattributes fx
 void XMLTag::readAttributes(std::map<std::string, std::string> &aAttributes)
 {
-  TRACE();
+  PRECICE_TRACE();
 
   for (auto &element : aAttributes) {
     auto name = element.first;
 
     if (not utils::contained(name, _attributes)) {
-      std::string error = "Wrong attribute \"" + name + "\"";
-
-      std::cout << error << std::endl;
-      throw error;
+      PRECICE_ERROR("Wrong attribute \"" << name << '\"');
     }
-
-    auto value = element.second;
-    //std::cout << name << " :: " << value << std::endl;
   }
 
   for (auto &pair : _doubleAttributes) {
@@ -188,14 +190,14 @@ void XMLTag::readAttributes(std::map<std::string, std::string> &aAttributes)
 (
   XMLReader* xmlReader )
 {
-  TRACE();
+  PRECICE_TRACE();
 //  using utils::contained;
 //  std::set<std::string> readNames;
   for (int i=0; i < xmlReader->getAttributeCount(); i++){
     std::string name = xmlReader->getAttributeName(i);
     if (not utils::contained(name, _attributes)){
       std::string error = "Wrong attribute \"" + name + "\"";
-      throw error;
+      throw std::runtime_error{error};
     }
 //    else if (contained(name, _doubleAttributes)){
 //      XMLAttribute<double>& attr = _doubleAttributes[name];
@@ -226,7 +228,7 @@ void XMLTag::readAttributes(std::map<std::string, std::string> &aAttributes)
 //      attr.readValue(xmlReader);
 //    }
 //    else {
-//      throw "Internal error in readAttributes";
+//      throw std::runtime_error{"Internal error in readAttributes"};
 //    }
 //    readNames.insert(name);
   }
@@ -237,7 +239,7 @@ void XMLTag::readAttributes(std::map<std::string, std::string> &aAttributes)
 //
 //      std::ostringstream stream;
 //      stream << "Attribute \"" << name << "\" is not defined";
-//      throw stream.str();
+//      throw std::runtime_error{stream.str()};
 //    }
 //  }
 
@@ -264,8 +266,6 @@ void XMLTag::readAttributes(std::map<std::string, std::string> &aAttributes)
 
 void XMLTag::areAllSubtagsConfigured() const
 {
-  std::ostringstream stream;
-
   for (auto tag : _subtags) {
     std::string ns         = tag->_namespace;
     bool        configured = tag->isConfigured();
@@ -274,18 +274,17 @@ void XMLTag::areAllSubtagsConfigured() const
     bool occurOnceOrMore = tag->getOccurrence() == OCCUR_ONCE_OR_MORE;
 
     if (not ns.empty()) {
-      assertion(utils::contained(ns, _configuredNamespaces));
+      PRECICE_ASSERT(utils::contained(ns, _configuredNamespaces));
       configured |= _configuredNamespaces.find(ns)->second;
     }
 
     if ((not configured) && (occurOnce || occurOnceOrMore)) {
 
       if (tag->getNamespace().empty()) {
-        stream << "Tag <" << tag->getName() << "> is missing";
+        PRECICE_ERROR("Tag <" << tag->getName() << "> is missing");
       } else {
-        stream << "Tag <" << tag->getNamespace() << ":...> is missing";
+        PRECICE_ERROR("Tag <" << tag->getNamespace() << ":...> is missing");
       }
-      throw stream.str();
     }
   }
 }
@@ -338,7 +337,7 @@ std::string XMLTag::printDTD(const bool start) const
   std::ostringstream dtd;
 
   if (start)
-    dtd << "<!DOCTYPE " << _fullName << " [" << std::endl;
+    dtd << "<!DOCTYPE " << _fullName << " [\n";
 
   dtd << "<!ELEMENT " << _fullName << " ";
 
@@ -364,9 +363,9 @@ std::string XMLTag::printDTD(const bool start) const
       first = false;
     }
 
-    dtd << ")>" << std::endl;
+    dtd << ")>\n";
   } else {
-    dtd << "EMPTY>" << std::endl;
+    dtd << "EMPTY>\n";
   }
 
   for (const auto &pair : _doubleAttributes) {
@@ -395,17 +394,17 @@ std::string XMLTag::printDTD(const bool start) const
     }
   }
 
-  dtd << std::endl;
+  dtd << '\n';
 
   if (start)
-    dtd << "]>" << std::endl;
+    dtd << "]>\n";
 
   return dtd.str();
 }
 
 std::string XMLTag::printDocumentation(int indentation) const
 {
-  TRACE(indentation);
+  PRECICE_TRACE(indentation);
   const int   linewidth = 1000;
   std::string indent;
   for (int i = 0; i < indentation; i++) {
@@ -413,17 +412,17 @@ std::string XMLTag::printDocumentation(int indentation) const
   }
 
   std::ostringstream doc;
-  doc << indent << "<!-- TAG " << _fullName << std::endl;
+  doc << indent << "<!-- TAG " << _fullName << '\n';
   if (not _doc.empty()) {
     std::string indentedDoc = indent + "         " + _doc;
     doc << utils::wrapText(indentedDoc, linewidth, indentation + 9);
-    doc << std::endl;
+    doc << '\n';
   }
   doc << indent << "         (can occur " << getOccurrenceString(_occurrence) << " times)";
 
   for (const auto &pair : _doubleAttributes) {
     std::ostringstream attrDoc;
-    doc << std::endl;
+    doc << '\n';
     attrDoc << indent << "     ATTR " << pair.first << ": "
             << pair.second.getUserDocumentation();
     doc << utils::wrapText(attrDoc.str(), linewidth, indentation + 10);
@@ -431,7 +430,7 @@ std::string XMLTag::printDocumentation(int indentation) const
 
   for (const auto &pair : _intAttributes) {
     std::ostringstream attrDoc;
-    doc << std::endl;
+    doc << '\n';
     attrDoc << indent << "     ATTR " << pair.first << ": "
             << pair.second.getUserDocumentation();
     doc << utils::wrapText(attrDoc.str(), linewidth, indentation + 10);
@@ -439,7 +438,7 @@ std::string XMLTag::printDocumentation(int indentation) const
 
   for (const auto &pair : _stringAttributes) {
     std::ostringstream attrDoc;
-    doc << std::endl;
+    doc << '\n';
     attrDoc << indent << "     ATTR " << pair.first << ": "
             << pair.second.getUserDocumentation();
     doc << utils::wrapText(attrDoc.str(), linewidth, indentation + 10);
@@ -447,7 +446,7 @@ std::string XMLTag::printDocumentation(int indentation) const
 
   for (const auto &pair : _booleanAttributes) {
     std::ostringstream attrDoc;
-    doc << std::endl;
+    doc << '\n';
     attrDoc << indent << "     ATTR " << pair.first << ": "
             << pair.second.getUserDocumentation();
     doc << utils::wrapText(attrDoc.str(), linewidth, indentation + 10);
@@ -455,13 +454,13 @@ std::string XMLTag::printDocumentation(int indentation) const
 
   for (const auto &pair : _eigenVectorXdAttributes) {
     std::ostringstream attrDoc;
-    doc << std::endl;
+    doc << '\n';
     attrDoc << indent << "     ATTR " << pair.first << ": "
             << pair.second.getUserDocumentation();
     doc << utils::wrapText(attrDoc.str(), linewidth, indentation + 10);
   }
 
-  doc << " -->" << std::endl;
+  doc << " -->\n";
   std::ostringstream tagHead;
   tagHead << indent << "<" << _fullName;
 
@@ -493,13 +492,13 @@ std::string XMLTag::printDocumentation(int indentation) const
   doc << utils::wrapText(tagHead.str(), linewidth, indentation + 3);
 
   if (not _subtags.empty()) {
-    doc << ">" << std::endl << std::endl;
+    doc << ">\n\n";
     for (auto const subtag : _subtags) {
       doc << subtag->printDocumentation(indentation + 3);
     }
-    doc << indent << "</" << _fullName << ">" << std::endl << std::endl;
+    doc << indent << "</" << _fullName << ">\n\n";
   } else {
-    doc << "/>" << std::endl << std::endl;
+    doc << "/>\n\n";
   }
 
   return doc.str();
@@ -522,7 +521,7 @@ void configure(
     const std::string &configurationFilename)
 {
   logging::Logger _log("xml");
-  TRACE(tag.getFullName(), configurationFilename);
+  PRECICE_TRACE(tag.getFullName(), configurationFilename);
 
   NoPListener nopListener;
   XMLTag      root(nopListener, "", XMLTag::OCCUR_ONCE);
@@ -543,7 +542,7 @@ std::string XMLTag::getOccurrenceString(Occurrence occurrence) const
   } else if (occurrence == OCCUR_ONCE_OR_MORE) {
     return std::string("1..*");
   }
-  ERROR("Unknown occurrence type = " << occurrence);
+  PRECICE_ERROR("Unknown occurrence type = " << occurrence);
   return "";
 }
 }

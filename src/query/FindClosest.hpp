@@ -4,6 +4,7 @@
 #include "FindClosestEdge.hpp"
 #include "FindClosestTriangle.hpp"
 #include "FindClosestQuad.hpp"
+#include <vector>
 
 namespace precice {
    namespace mesh {
@@ -21,12 +22,18 @@ namespace query {
  */
 struct InterpolationElement
 {
-  mesh::Vertex* element;
-  double weight;
+  const mesh::Vertex* element = nullptr;
+  double weight = 0.0;
 
-  InterpolationElement ()
-  : element(NULL), weight(0.0) {}
+  InterpolationElement() = default;
+  InterpolationElement(const mesh::Vertex* element_, double weight_): element(element_), weight(weight_) {}
+  InterpolationElement(const mesh::Vertex& element_, double weight_): element(&element_), weight(weight_) {}
 };
+
+std::ostream& operator<<(std::ostream& out, const InterpolationElement& val);
+
+/// A vector of InterpolationElement
+using InterpolationElements = std::vector<InterpolationElement>;
 
 /**
  * @brief Closest element to all objects with given mesh ID
@@ -36,13 +43,32 @@ struct ClosestElement
   std::vector<int> meshIDs;
   double distance = 0;
   Eigen::VectorXd vectorToElement;
-  std::vector<InterpolationElement> interpolationElements;
+  InterpolationElements interpolationElements;
 
   ClosestElement (int dim)
     : vectorToElement(Eigen::VectorXd::Zero(dim))
   {}
 };
 
+/// Generates the InterpolationElements for directly projecting a Vertex on another Vertex
+InterpolationElements generateInterpolationElements(
+    const mesh::Vertex& location,
+    const mesh::Vertex& element);
+
+/// Generates the InterpolationElements for projecting a Vertex on an Edge
+InterpolationElements generateInterpolationElements(
+    const mesh::Vertex& location,
+    const mesh::Edge&   element);
+
+/// Generates the InterpolationElements for projecting a Vertex on a Triangle
+InterpolationElements generateInterpolationElements(
+    const mesh::Vertex&   location,
+    const mesh::Triangle& element);
+
+/// Generates the InterpolationElements for projecting a Vertex on a Quad
+InterpolationElements generateInterpolationElements(
+    const mesh::Vertex& location,
+    const mesh::Quad&   element);
 
 /**
  * @brief Determines closest Triangle, Edge, or Vertex object to a given point.

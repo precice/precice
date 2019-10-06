@@ -24,53 +24,35 @@ using namespace partition;
 BOOST_AUTO_TEST_SUITE(PartitionTests)
 BOOST_AUTO_TEST_SUITE(ReceivedBoundingBoxTests)
 
-void setupParallelEnvironment(m2n::PtrM2N m2n){
-  assertion(utils::Parallel::getCommunicatorSize() == 4);
+void setupParallelEnvironment(m2n::PtrM2N m2n)
+{
+  PRECICE_ASSERT(utils::Parallel::getCommunicatorSize() == 4);
 
-  com::PtrCommunication masterSlaveCom =
-        com::PtrCommunication(new com::SocketCommunication());
-  utils::MasterSlave::_communication = masterSlaveCom;
+  com::PtrCommunication masterSlaveCom = com::PtrCommunication(new com::MPIDirectCommunication());
+  utils::MasterSlave::_communication   = masterSlaveCom;
 
-  utils::Parallel::synchronizeProcesses();
-
-  if (utils::Parallel::getProcessRank() == 0){ //Master-A
-    utils::Parallel::splitCommunicator( "Fluid" );
-    m2n->acceptMasterConnection ( "Fluid", "SolidMaster");
-    utils::MasterSlave::_slaveMode = false;
-    utils::MasterSlave::_masterMode = false;
-  }
-  else if(utils::Parallel::getProcessRank() == 1){//Master-B
-    utils::Parallel::splitCommunicator( "SolidMaster" );
-    m2n->requestMasterConnection ( "Fluid", "SolidMaster" );
-    utils::MasterSlave::_rank = 0;
-    utils::MasterSlave::_size = 3;
-    utils::MasterSlave::_slaveMode = false;
-    utils::MasterSlave::_masterMode = true;
-  }
-  else if(utils::Parallel::getProcessRank() == 2){//Slave1-B
-    utils::Parallel::splitCommunicator( "SolidSlaves");
-    utils::MasterSlave::_rank = 1;
-    utils::MasterSlave::_size = 3;
-    utils::MasterSlave::_slaveMode = true;
-    utils::MasterSlave::_masterMode = false;
-  }
-  else if(utils::Parallel::getProcessRank() == 3){//Slave2-B
-    utils::Parallel::splitCommunicator( "SolidSlaves");
-    utils::MasterSlave::_rank = 2;
-    utils::MasterSlave::_size = 3;
-    utils::MasterSlave::_slaveMode = true;
-    utils::MasterSlave::_masterMode = false;
+  if (utils::Parallel::getProcessRank() == 0) { 
+    utils::Parallel::splitCommunicator("Fluid");
+    m2n->acceptMasterConnection("Fluid", "SolidMaster");
+  } else if (utils::Parallel::getProcessRank() == 1) { //Master
+    utils::Parallel::splitCommunicator("SolidMaster");
+    m2n->requestMasterConnection("Fluid", "SolidMaster");
+    utils::MasterSlave::configure(0, 3);
+  } else if (utils::Parallel::getProcessRank() == 2) { //Slave1
+    utils::Parallel::splitCommunicator("SolidSlaves");
+    utils::MasterSlave::configure(1, 3);
+  } else if (utils::Parallel::getProcessRank() == 3) { //Slave2
+    utils::Parallel::splitCommunicator("SolidSlaves");
+    utils::MasterSlave::configure(2, 3);
   }
 
   if(utils::Parallel::getProcessRank() == 1){//Master
     masterSlaveCom->acceptConnection ( "SolidMaster", "SolidSlaves", utils::Parallel::getProcessRank());
     masterSlaveCom->setRankOffset(1);
-  }
-  else if(utils::Parallel::getProcessRank() == 2){//Slave1
-    masterSlaveCom->requestConnection( "SolidMaster", "SolidSlaves", 0 , 2 );
-  }
-  else if(utils::Parallel::getProcessRank() == 3){//Slave2
-    masterSlaveCom->requestConnection( "SolidMaster", "SolidSlaves", 1 , 2 );
+  } else if (utils::Parallel::getProcessRank() == 2) { //Slave1
+    masterSlaveCom->requestConnection("SolidMaster", "SolidSlaves", 0, 2);
+  } else if (utils::Parallel::getProcessRank() == 3) { //Slave2
+    masterSlaveCom->requestConnection("SolidMaster", "SolidSlaves", 1, 2);
   }
 }
 
@@ -89,8 +71,8 @@ void tearDownParallelEnvironment(){
 void createNastinMesh2D(mesh::PtrMesh pNastinMesh)
 {
   int dimensions = 2;
-  assertion(pNastinMesh.use_count() > 0);
-  assertion(pNastinMesh->getDimensions() == dimensions);
+  PRECICE_ASSERT(pNastinMesh.use_count() > 0);
+  PRECICE_ASSERT(pNastinMesh->getDimensions() == dimensions);
 
   if (utils::Parallel::getProcessRank() == 1) {
 
@@ -114,8 +96,8 @@ void createNastinMesh2D(mesh::PtrMesh pNastinMesh)
 void createNastinMesh3D(mesh::PtrMesh pNastinMesh)
 {
   int dimensions = 3;
-  assertion(pNastinMesh.use_count() > 0);
-  assertion(pNastinMesh->getDimensions() == dimensions);
+  PRECICE_ASSERT(pNastinMesh.use_count() > 0);
+  PRECICE_ASSERT(pNastinMesh->getDimensions() == dimensions);
 
   if (utils::Parallel::getProcessRank() == 1) {
 
@@ -209,7 +191,7 @@ BOOST_AUTO_TEST_CASE(TestConnectionMap2D, * testing::OnSize(4))
     double safetyFactor = 0.0;
     
     ReceivedBoundingBox part(pSolidzMesh, safetyFactor);
-    part.setM2N(m2n);
+    part.addM2N(m2n);
     part.setFromMapping(boundingFromMapping);
     part.setToMapping(boundingToMapping);
     part.communicateBoundingBox();
@@ -290,7 +272,7 @@ BOOST_AUTO_TEST_CASE(TestConnectionMap3D, * testing::OnSize(4))
     double safetyFactor = 0.0;
     
     ReceivedBoundingBox part(pSolidzMesh, safetyFactor);
-    part.setM2N(m2n);
+    part.addM2N(m2n);
     part.setFromMapping(boundingFromMapping);
     part.setToMapping(boundingToMapping);
     part.communicateBoundingBox();

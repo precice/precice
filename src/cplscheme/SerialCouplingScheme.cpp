@@ -1,5 +1,5 @@
 #include "SerialCouplingScheme.hpp"
-#include "impl/PostProcessing.hpp"
+#include "acceleration/Acceleration.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/MasterSlave.hpp"
 #include "m2n/M2N.hpp"
@@ -27,9 +27,9 @@ SerialCouplingScheme::SerialCouplingScheme
 {
   _couplingMode = cplMode;
   // Coupling mode must be either Explicit or Implicit when using SerialCouplingScheme.
-  assertion(_couplingMode != Undefined);
+  PRECICE_ASSERT(_couplingMode != Undefined);
   if (_couplingMode == Explicit) {
-    assertion(maxIterations == 1);
+    PRECICE_ASSERT(maxIterations == 1);
   }
 }
 
@@ -38,30 +38,28 @@ void SerialCouplingScheme::initialize
   double startTime,
   int    startTimestep)
 {
-  TRACE(startTime, startTimestep);
-  assertion(not isInitialized());
-  assertion(math::greaterEquals(startTime, 0.0), startTime);
-  assertion(startTimestep >= 0, startTimestep);
+  PRECICE_TRACE(startTime, startTimestep);
+  PRECICE_ASSERT(not isInitialized());
+  PRECICE_ASSERT(math::greaterEquals(startTime, 0.0), startTime);
+  PRECICE_ASSERT(startTimestep >= 0, startTimestep);
   setTime(startTime);
   setTimesteps(startTimestep);
 
   if (_couplingMode == Implicit) {
-    CHECK(not getSendData().empty(), "No send data configured! Use explicit scheme for one-way coupling.");
+    PRECICE_CHECK(not getSendData().empty(), "No send data configured! Use explicit scheme for one-way coupling.");
     if (not doesFirstStep()) {
       if (not _convergenceMeasures.empty()) {
         setupConvergenceMeasures(); // needs _couplingData configured
         setupDataMatrices(getSendData()); // Reserve memory and initialize data with zero
       }
-      if (getPostProcessing().get() != nullptr) {
-        CHECK(getPostProcessing()->getDataIDs().size()<2,
-              "For serial coupling, the number of post-processing data vectors has to be 1 (or 0 for constant underrelaxation)");
-        getPostProcessing()->initialize(getSendData()); // Reserve memory, initialize
+      if (getAcceleration().get() != nullptr) {
+        getAcceleration()->initialize(getSendData()); // Reserve memory, initialize
       }
     }
-    else if (getPostProcessing().get() != nullptr && getPostProcessing()->getDataIDs().size()>0) {
-      int dataID = *(getPostProcessing()->getDataIDs().begin());
-      CHECK(getSendData(dataID) == nullptr,
-            "In case of serial coupling, post-processing can be defined for "
+    else if (getAcceleration().get() != nullptr && getAcceleration()->getDataIDs().size()>0) {
+      int dataID = *(getAcceleration()->getDataIDs().begin());
+      PRECICE_CHECK(getSendData(dataID) == nullptr,
+            "In case of serial coupling, acceleration can be defined for "
             << "data of second participant only!");
     }
     requireAction(constants::actionWriteIterationCheckpoint());
@@ -69,8 +67,8 @@ void SerialCouplingScheme::initialize
 
   for (DataMap::value_type & pair : getSendData()) {
     if (pair.second->initialize) {
-      CHECK(not doesFirstStep(), "Only second participant can initialize data!");
-      DEBUG("Initialized data to be written");
+      PRECICE_CHECK(not doesFirstStep(), "Only second participant can initialize data!");
+      PRECICE_DEBUG("Initialized data to be written");
       setHasToSendInitData(true);
       break;
     }
@@ -78,8 +76,8 @@ void SerialCouplingScheme::initialize
 
   for (DataMap::value_type & pair : getReceiveData()) {
     if (pair.second->initialize) {
-      CHECK(doesFirstStep(), "Only first participant can receive initial data!");
-      DEBUG("Initialized data to be received");
+      PRECICE_CHECK(doesFirstStep(), "Only first participant can receive initial data!");
+      PRECICE_DEBUG("Initialized data to be received");
       setHasToReceiveInitData(true);
     }
   }
@@ -87,7 +85,7 @@ void SerialCouplingScheme::initialize
   // If the second participant initializes data, the first receive for the
   // second participant is done in initializeData() instead of initialize().
   if (not doesFirstStep() && not hasToSendInitData() && isCouplingOngoing()) {
-    DEBUG("Receiving data");
+    PRECICE_DEBUG("Receiving data");
     receiveAndSetDt();
     receiveData(getM2N());
     setHasDataBeenExchanged(true);
@@ -104,30 +102,30 @@ void SerialCouplingScheme::initialize
 
 void SerialCouplingScheme::initializeData()
 {
-  TRACE();
-  CHECK(isInitialized(), "initializeData() can be called after initialize() only!");
+  PRECICE_TRACE();
+  PRECICE_CHECK(isInitialized(), "initializeData() can be called after initialize() only!");
 
   if (not hasToSendInitData() && not hasToReceiveInitData()) {
-    INFO("initializeData is skipped since no data has to be initialized");
+    PRECICE_INFO("initializeData is skipped since no data has to be initialized");
     return;
   }
 
-  DEBUG("Initializing Data ...");
+  PRECICE_DEBUG("Initializing Data ...");
 
-  CHECK(not (hasToSendInitData() && isActionRequired(constants::actionWriteInitialData())),
+  PRECICE_CHECK(not (hasToSendInitData() && isActionRequired(constants::actionWriteInitialData())),
         "InitialData has to be written to preCICE before calling initializeData()");
 
   setHasDataBeenExchanged(false);
 
   if (hasToReceiveInitData() && isCouplingOngoing() )  {
-    assertion(doesFirstStep());
-    DEBUG("Receiving data");
+    PRECICE_ASSERT(doesFirstStep());
+    PRECICE_DEBUG("Receiving data");
     receiveData(getM2N());
     setHasDataBeenExchanged(true);
   }
 
   if (hasToSendInitData() && isCouplingOngoing()) {
-    assertion(not doesFirstStep());
+    PRECICE_ASSERT(not doesFirstStep());
     for (DataMap::value_type & pair : getSendData()) {
       if (pair.second->oldValues.cols() == 0)
         break;
@@ -152,7 +150,7 @@ void SerialCouplingScheme::initializeData()
 
 void SerialCouplingScheme::advance()
 {
-  TRACE(getTimesteps(), getTime());
+  PRECICE_TRACE(getTimesteps(), getTime());
   #ifndef NDEBUG
   for (const DataMap::value_type & pair : getReceiveData()) {
     Eigen::VectorXd& values = *pair.second->values;
@@ -161,12 +159,12 @@ void SerialCouplingScheme::advance()
     for (int i=0; (i < max) && (i < 10); i++){
       stream << values[i] << " ";
     }
-    DEBUG("Begin advance, first New Values: " << stream.str() );
+    PRECICE_DEBUG("Begin advance, first New Values: " << stream.str() );
   }
   #endif
   checkCompletenessRequiredActions();
 
-  CHECK(not hasToReceiveInitData() && not hasToSendInitData(),
+  PRECICE_CHECK(not hasToReceiveInitData() && not hasToSendInitData(),
         "initializeData() needs to be called before advance if data has to be initialized!");
 
   setHasDataBeenExchanged(false);
@@ -176,12 +174,12 @@ void SerialCouplingScheme::advance()
     if (math::equals(getThisTimestepRemainder(), 0.0, _eps)) {
       setIsCouplingTimestepComplete(true);
       setTimesteps(getTimesteps() + 1);
-      DEBUG("Sending data...");
+      PRECICE_DEBUG("Sending data...");
       sendDt();
       sendData(getM2N());
 
       if (isCouplingOngoing() || doesFirstStep()) {
-        DEBUG("Receiving data...");
+        PRECICE_DEBUG("Receiving data...");
         receiveAndSetDt();
         receiveData(getM2N());
         setHasDataBeenExchanged(true);
@@ -195,7 +193,7 @@ void SerialCouplingScheme::advance()
     bool doOnlySolverEvaluation = false;
 
     if (math::equals(getThisTimestepRemainder(), 0.0, _eps)) {
-      DEBUG("Computed full length of iteration");
+      PRECICE_DEBUG("Computed full length of iteration");
       if (doesFirstStep()) {
         sendDt();
         sendData(getM2N());
@@ -211,16 +209,16 @@ void SerialCouplingScheme::advance()
       }
       else {
 
-        // get the current design specifications from the post processing (for convergence measure)
+        // get the current design specifications from the acceleration (for convergence measure)
         std::map<int, Eigen::VectorXd> designSpecifications;
-        if (getPostProcessing().get() != nullptr) {
-          designSpecifications = getPostProcessing()->getDesignSpecification(getSendData());
+        if (getAcceleration().get() != nullptr) {
+          designSpecifications = getAcceleration()->getDesignSpecification(getSendData());
         }
         // measure convergence of coupling iteration
         // measure convergence for coarse model optimization
         if(_isCoarseModelOptimizationActive){
-          DEBUG("measure convergence of coarse model optimization.");
-          // in case of multilevel post processing only: measure the convergence of the coarse model optimization
+          PRECICE_DEBUG("measure convergence of coarse model optimization.");
+          // in case of multilevel acceleration only: measure the convergence of the coarse model optimization
           convergenceCoarseOptimization = measureConvergenceCoarseModelOptimization(designSpecifications);
           // Stop, when maximal iteration count (given in config) is reached
           if (maxIterationsReached())
@@ -238,7 +236,7 @@ void SerialCouplingScheme::advance()
         }
         // measure convergence of coupling iteration
         else{
-          DEBUG("measure convergence.");
+          PRECICE_DEBUG("measure convergence.");
           doOnlySolverEvaluation = false;
 
           // measure convergence of the coupling iteration,
@@ -247,34 +245,34 @@ void SerialCouplingScheme::advance()
           if (maxIterationsReached())   convergence = true;
         }
 
-        // passed by reference, modified in MM post processing. No-op for all other post-processings
-        if (getPostProcessing().get() != nullptr) {
-          getPostProcessing()->setCoarseModelOptimizationActive(&_isCoarseModelOptimizationActive);
+        // passed by reference, modified in MM acceleration. No-op for all other accelerations
+        if (getAcceleration().get() != nullptr) {
+          getAcceleration()->setCoarseModelOptimizationActive(&_isCoarseModelOptimizationActive);
         }
 
         // for multi-level case, i.e., manifold mapping: after convergence of coarse problem
-        // we only want to evaluate the fine model for the new input, no post-processing etc..
+        // we only want to evaluate the fine model for the new input, no acceleration etc..
         if (not doOnlySolverEvaluation)
         {
           // coupling iteration converged for current time step. Advance in time.
           if (convergence) {
-            if (getPostProcessing().get() != nullptr) {
-              _deletedColumnsPPFiltering = getPostProcessing()->getDeletedColumns();
-              getPostProcessing()->iterationsConverged(getSendData());
+            if (getAcceleration().get() != nullptr) {
+              _deletedColumnsPPFiltering = getAcceleration()->getDeletedColumns();
+              getAcceleration()->iterationsConverged(getSendData());
             }
             newConvergenceMeasurements();
             timestepCompleted();
 
             // no convergence achieved for the coupling iteration within the current time step
-          } else if (getPostProcessing().get() != nullptr) {
-            getPostProcessing()->performPostProcessing(getSendData());
+          } else if (getAcceleration().get() != nullptr) {
+            getAcceleration()->performAcceleration(getSendData());
           }
 
           // extrapolate new input data for the solver evaluation in time.
           if (convergence && (getExtrapolationOrder() > 0)) {
             extrapolateData(getSendData()); // Also stores data
           }
-          else { // Store data for conv. measurement, post-processing, or extrapolation
+          else { // Store data for conv. measurement, acceleration, or extrapolation
             for (DataMap::value_type& pair : getSendData()) {
               if (pair.second->oldValues.size() > 0) {
                 pair.second->oldValues.col(0) = *pair.second->values;
@@ -291,9 +289,9 @@ void SerialCouplingScheme::advance()
           /// @todo: (Edit: Done in the solver now) need to copy coarse old values to fine old values, as first solver always sends zeros to the second solver (as pressure vals)
           //       in the serial scheme, only the sendData is registered in MM PP, we also need to register the pressure values, i.e.
           //       old fine pressure vals = old coarse pressure vals TODO: find better solution,
-          //auto fineIDs = getPostProcessing()->getDataIDs();
+          //auto fineIDs = getAcceleration()->getDataIDs();
           //for(auto id: fineIDs){
-          //  std::cout<<"id: "<<id<<", fineIds.size(): "<<fineIDs.size()<<std::endl;
+          //  std::cout<<"id: "<<id<<", fineIds.size(): "<<fineIDs.size()<<'\n';
           //  getReceiveData(id)->oldValues.column(0) = getReceiveData(id+fineIDs.size())->oldValues.column(0);
           //}
            */
@@ -301,13 +299,13 @@ void SerialCouplingScheme::advance()
         // only fine model solver evaluation is done, no PP
         } else {
 
-          // if the coarse model problem converged within the first iteration, i.e., no post-processing at all
+          // if the coarse model problem converged within the first iteration, i.e., no acceleration at all
           // we need to register the coarse initialized data again on the fine input data,
           // otherwise the fine input data would be zero in this case, neither anything has been computed so far for the fine
-          // model nor the post processing did any data registration
+          // model nor the acceleration did any data registration
           // ATTENTION: assumes that coarse data is defined after fine data in same ordering.
-          if(_iterationsCoarseOptimization == 1   && getPostProcessing().get() != nullptr){
-            auto fineIDs = getPostProcessing()->getDataIDs();
+          if(_iterationsCoarseOptimization == 1   && getAcceleration().get() != nullptr){
+            auto fineIDs = getAcceleration()->getDataIDs();
             for (auto& fineID : fineIDs) {
               (*getSendData(fineID)->values) = getSendData(fineID+fineIDs.size()+1)->oldValues.col(0);
             }
@@ -329,11 +327,11 @@ void SerialCouplingScheme::advance()
       }
 
       if (not convergence) {
-        DEBUG("No convergence achieved");
+        PRECICE_DEBUG("No convergence achieved");
         requireAction(constants::actionReadIterationCheckpoint());
       }
       else {
-        DEBUG("Convergence achieved");
+        PRECICE_DEBUG("Convergence achieved");
         advanceTXTWriters();
       }
       updateTimeAndIterations(convergence, convergenceCoarseOptimization);

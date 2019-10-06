@@ -78,10 +78,35 @@ public:
   void requestSlavesPreConnection(const std::string &acceptorName,
                                   const std::string &requesterName);
 
+  /*
+   * @brief After preliminary communication channels were set up and after 
+   *        the mesh partitions were communicated locally for every mesh, 
+   *        call this function to update and complete the communication 
+   *        channels for every communicated mesh
+   */  
+  void completeSlavesConnection();
+
   /**
-   * Both participants must call this function to update vertex list
+   * @brief prepares to establish the connections
+   *
+   * This should be called before calling the accept and request methods.
+   * Calling this function forwards the call to the configured master communication.
+   *
+   * @see com::Communication::prepareEstablishment()
+   * @see cleanupEstablishment()
    */
-  void updateVertexList();
+  void prepareEstablishment();
+
+  /**
+   * @brief cleans-up to establish the connections
+   *
+   * This should be called after calling the accept and request methods.
+   * Calling this function forwards the call to the configured master communication.
+   *
+   * @see com::Communication::cleanupEstablishment()
+   * @see prepareEstablishment()
+   */
+  void cleanupEstablishment();
 
   /**
    * @brief Disconnects from communication space, i.e. participant.
@@ -97,7 +122,7 @@ public:
   void createDistributedCommunication(mesh::PtrMesh mesh);
 
   /// Sends an array of double values from all slaves (different for each slave).
-  void send(double *itemsToSend,
+  void send(double const *itemsToSend,
             int     size,
             int     meshID,
             int     valueDimension);
@@ -113,16 +138,15 @@ public:
    * neglect the gathering and checking step.
    */
   void send(double itemToSend);
-
-  /** 
-   * each rank send its mesh partition to connected ranks
-   */
+   
+  /// each rank sends its mesh partition to connected ranks  
   void broadcastSendLocalMesh(mesh::Mesh &mesh);
 
-  /*
-   * each rank sends local communication maps to connetcetd ranks
-   */
+  /// each rank sends the local communication map to the remote connecetd ranks (of the other participant)  
   void broadcastSendLCM(std::map<int, std::vector<int>> &localCommunicationMap, mesh::Mesh &mesh);
+
+  /// each rank sends an int to the remote connected ranks  
+  void broadcastSend(int &itemToSend, mesh::Mesh &mesh);
 
   /// All slaves receive an array of doubles (different for each slave).
   void receive(double *itemsToReceive,
@@ -136,15 +160,14 @@ public:
   /// All slaves receive a double (the same for each slave).
   void receive(double &itemToReceive);
 
-  /** 
-   * each rank receives mesh partition from connected ranks
-   */
+  /// each rank receives mesh partition from connected ranks
   void broadcastReceiveLocalMesh(mesh::Mesh &mesh);
 
-  /*
-   * each rank receives local communication maps from connetcetd ranks
-   */
+  /// each rank receives local communication maps from remote connetcetd ranks (of the other participant)  
   void broadcastReceiveLCM(std::map<int, std::vector<int>> &localCommunicationMap, mesh::Mesh &mesh);
+
+  /// each rank receives an int from remote connetcetd ranks
+  void broadcastReceiveAll(std::vector<int> &itemToReceive, mesh::Mesh &mesh);
   
 private:
   logging::Logger _log{"m2n::M2N"};

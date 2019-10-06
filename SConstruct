@@ -33,7 +33,7 @@ def checkAdd(lib = None, header = None, usage = ""):
 
 
 def print_options(vars):
-    """ Print all build option and if they have been modified from their default value. """
+    """ Print all build options and if they have been modified from their default value. """
     for opt in vars.options:
         try:
             is_default = vars.args[opt.key] == opt.default
@@ -45,7 +45,7 @@ def vprint(name, value, default=True, description = None):
     """ Pretty prints an environment variabe with value and modified or not. """
     mod = "(default)" if default else "(modified)"
     desc = "   " + description if description else ""
-    print("{0:10} {1:10} = {2!s:8}{3}".format(mod, name, value, desc))
+    print("{0:10} {1:10} = {2!s:12}{3}".format(mod, name, value, desc))
 
 def checkset_var(varname, default):
     """ Checks if environment variable is set, use default otherwise and print the value. """
@@ -61,7 +61,7 @@ def get_real_compiler(compiler):
     """ Gets the compiler behind the MPI compiler wrapper. """
     if compiler.startswith("mpi"):
         try:
-            output = subprocess.check_output("%s -show" % compiler, shell=True)
+            output = subprocess.check_output("%s -show" % compiler, shell=True).decode()
         except (OSError, subprocess.CalledProcessError) as e:
             print("Error getting wrapped compiler from MPI compiler")
             print("Command was:", e.cmd, "Output was:", e.output)
@@ -77,14 +77,14 @@ def get_real_compiler(compiler):
 vars = Variables(None, ARGUMENTS)
 
 vars.Add(PathVariable("builddir", "Directory holding build files.", "build", PathVariable.PathAccept))
-vars.Add(EnumVariable('build', 'Build type', "Debug", allowed_values=('release', 'debug', 'Release', 'Debug')))
+vars.Add(EnumVariable('build', 'Build type', "Debug", allowed_values=('Release', 'Debug', 'RelWithDebInfo')))
 vars.Add(PathVariable("libprefix", "Path prefix for libraries", "/usr", PathVariable.PathIsDir))
 vars.Add("compiler", "Compiler to use.", "mpicxx")
 vars.Add(BoolVariable("mpi", "Enables MPI-based communication and running coupling tests.", True))
-vars.Add(BoolVariable("petsc", "Enable use of the Petsc linear algebra library.", True))
+vars.Add(BoolVariable("petsc", "Enable use of the PETSc linear algebra library.", True))
 vars.Add(BoolVariable("python", "Used for Python scripted solver actions.", False))
 vars.Add(BoolVariable("gprof", "Used in detailed performance analysis.", False))
-vars.Add(EnumVariable('platform', 'Special configuration for certain platforms', "none", allowed_values=('none', 'supermuc', 'hazelhen')))
+vars.Add(EnumVariable('platform', 'Special configuration for certain platforms', "none", allowed_values=('none', 'hazelhen')))
 
 env = Environment(variables = vars, ENV = os.environ, tools = ["default", "textfile"])
 
@@ -96,14 +96,6 @@ env.Append(CPPPATH = ['#src'])
 print
 print_options(vars)
 
-if env["build"] == 'debug':
-    env["build"] = 'Debug'
-    print("WARNING: Lower-case build type 'debug' is deprecated, use 'Debug' instead!")
-
-if env["build"] == 'release':
-    env["build"] = 'Release'
-    print("WARNING: Lower-case build type 'release' is deprecated, use 'Release' instead!")
-
 
 prefix = env["libprefix"]
 buildpath = join(env["builddir"], "") # Ensures to have a trailing slash
@@ -114,7 +106,7 @@ env.Append(LIBPATH = [('#' + buildpath)])
 env.Append(CCFLAGS= ['-Wall', '-Wextra', '-Wno-unused-parameter', '-std=c++11'])
 
 # ====== PRECICE_VERSION number ======
-PRECICE_VERSION = "1.2.0"
+PRECICE_VERSION = "1.6.1"
 
 
 # ====== Compiler Settings ======
@@ -123,16 +115,16 @@ PRECICE_VERSION = "1.2.0"
 env.Append(CCFLAGS = ['-fPIC'])
 
 real_compiler = get_real_compiler(env["compiler"])
-if real_compiler == 'icc':
+if real_compiler.startswith('icc'):
     env.AppendUnique(LIBPATH = ['/usr/lib/'])
     env.Append(LIBS = ['stdc++'])
-    if env["build"] == 'debug':
+    if env["build"] == 'Debug':
         env.Append(CCFLAGS = ['-align'])
-    elif env["build"] == 'release':
+    elif env["build"] == 'Release':
         env.Append(CCFLAGS = ['-w', '-fast', '-align', '-ansi-alias'])
-elif real_compiler == 'g++':
-    pass
-elif real_compiler == "clang++":
+elif real_compiler.startswith('g++'):
+    env.Append(CCFLAGS= ['-Wno-literal-suffix'])
+elif real_compiler.startswith("clang++"):
     env.Append(CCFLAGS= ['-Wsign-compare']) # sign-compare not enabled in Wall with clang.
 elif real_compiler == "g++-mp-4.9":
     # Some special treatment that seems to be necessary for Mac OS.
@@ -152,8 +144,6 @@ if not conf.CheckCXX():
 
 # ====== Build Directories ======
 if env["build"] == 'Debug':
-    # The Assert define does not actually switches asserts on/off, these are controlled by NDEBUG.
-    # It's kept in place for some legacy code.
     env.Append(CCFLAGS = ['-g3', '-O0'])
     env.Append(LINKFLAGS = ["-rdynamic"]) # Gives more informative backtraces
     buildpath += "debug"
@@ -161,6 +151,10 @@ elif env["build"] == 'Release':
     env.Append(CPPDEFINES = ['NDEBUG']) # Standard C++ macro which disables all asserts, also used by Eigen
     env.Append(CCFLAGS = ['-O3'])
     buildpath += "release"
+elif env["build"] == 'RelWithDebInfo':
+    env.Append(CPPDEFINES = ['NDEBUG']) # Standard C++ macro which disables all asserts, also used by Eigen
+    env.Append(CCFLAGS = ['-O3', '-g'])
+    buildpath += "relwithdebinfo"
 
 
 # ====== libpthread ======
@@ -185,8 +179,15 @@ if env["petsc"]:
         checkAdd("craypetsc_gnu_real")
     else:
         checkAdd("petsc")
+        
+    petsc_path = []
+    if ( FindFile( "petscversion.h", join( PETSC_DIR, PETSC_ARCH, "include/" ) ) == None ):
+      petsc_path = PETSC_DIR
+    else:
+      petsc_path = join( PETSC_DIR, PETSC_ARCH )
+
     # Set PETSC_VERSION to correct values 
-    with open(PETSC_DIR + "/include/petscversion.h", "r") as versionfile:
+    with open(join( petsc_path, "include/petscversion.h"), "r") as versionfile:
         for line in versionfile:
             tokens = line.split()
             try:
@@ -204,7 +205,7 @@ else:
 env.Append(CPPPATH = join(prefix, 'include/eigen3'))
 
 checkAdd(header = "Eigen/Dense", usage = "Eigen")
-if env["build"] == "debug":
+if env["build"] == "Debug":
     env.Append(CPPDEFINES = ['EIGEN_INITIALIZE_MATRICES_BY_NAN'])
 
 # ====== Boost ======
@@ -228,6 +229,7 @@ checkAdd("boost_unit_test_framework")
 checkAdd(header = 'boost/vmd/is_empty.hpp', usage = 'Boost Variadic Macro Data Library')
 checkAdd(header = 'boost/geometry.hpp', usage = 'Boost Geometry Library')
 checkAdd(header = 'boost/signals2.hpp', usage = 'Boost Signals2')
+checkAdd(lib = 'dl', usage = 'Boost Stacktrace Requirement')
 
 # ====== MPI ======
 if env["mpi"]:
@@ -290,17 +292,44 @@ if env["gprof"]:
     buildpath += "-gprof"
 
 # ====== Special Platforms ======
-if env["platform"] == "supermuc":
-    env.Append(CPPDEFINES = ['SuperMUC_WORK'])
-elif env["platform"] == "hazelhen":
+if env["platform"] == "hazelhen":
     env.Append(LINKFLAGS = ['-dynamic']) # Needed for correct linking against boost.log
 
 # ====== LibXML2 ======
 env.Append(CPPPATH = join(prefix, 'include/libxml2'))
 checkAdd("xml2")
 
+# ====== Prettyprint ======
+env.Append(CPPPATH = 'thirdparty/prettyprint/include')
+
+# ====== JSON ======
+env.Append(CPPPATH = 'thirdparty/json/include')
+
 print
 env = conf.Finish() # Used to check libraries
+
+#--------------------------------------------- Generated sources
+
+# Substitute strings in version.hpp.in, save it as version.hpp
+versions_hpp = env.Substfile(
+    "src/precice/impl/versions.hpp.in",
+    SUBST_DICT =  {
+        "@preCICE_VERSION@": PRECICE_VERSION,
+        "@PETSC_VERSION_MAJOR@": PETSC_VERSION_MAJOR,
+        "@PETSC_VERSION_MINOR@": PETSC_VERSION_MINOR}
+)
+
+# Substitute strings in versions.cpp.in, save it as versions.cpp
+versions_cpp = env.Substfile(
+    "src/precice/impl/versions.cpp.in",
+    SUBST_DICT = {
+        "@preCICE_REVISION@": "no-info [SCons]",
+        "@preCICE_VERSION@": PRECICE_VERSION,
+        "@preCICE_VERSION_INFORMATION@": "MPI=" + ("Y" if env["mpi"] else "N") +
+                                          ";PETSC=" + ("Y" if env["petsc"] else "N") +
+                                          ";PYTHON=" + ("Y" if env["python"] else "N")
+    }
+)
 
 #--------------------------------------------- Define sources and build targets
 
@@ -343,19 +372,9 @@ symlink = env.Command(
     action = "ln -fns {0} {1}".format(os.path.split(buildpath)[-1], join(os.path.split(buildpath)[0], "last"))
 )
 
-# Substitute strings in version.hpp.in, save it as version.hpp
-versions = env.Substfile(
-    "src/versions.hpp.in",
-    SUBST_DICT =  {
-        "@preCICE_VERSION@" : PRECICE_VERSION,
-        "@PETSC_VERSION_MAJOR@" : PETSC_VERSION_MAJOR,
-        "@PETSC_VERSION_MINOR@" : PETSC_VERSION_MINOR}
-)
+Default(versions_cpp, versions_hpp, solib, tests, bin, symlink)
 
-
-Default(versions, solib, tests, symlink)
-
-AlwaysBuild(versions, symlink)
+AlwaysBuild(versions_cpp, versions_hpp, symlink)
 
 print("Targets:   " + ", ".join([str(i) for i in BUILD_TARGETS]))
 print("Buildpath: " + buildpath)

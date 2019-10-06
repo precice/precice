@@ -8,4 +8,6 @@ int exportVTK();
 int exportAll();
 int exportVTKXML();
 
-}}} // namespace precice, io, constants
+} // namespace constants
+} // namespace io
+} // namespace precice

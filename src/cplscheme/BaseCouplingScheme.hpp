@@ -7,6 +7,7 @@
 #include "CouplingScheme.hpp"
 #include "SharedPointer.hpp"
 #include "impl/SharedPointer.hpp"
+#include "acceleration/SharedPointer.hpp"
 #include "io/TXTTableWriter.hpp"
 #include "logging/Logger.hpp"
 #include "m2n/SharedPointer.hpp"
@@ -252,13 +253,13 @@ public:
 
   /// Adds a measure to determine the convergence of coupling iterations.
   void addConvergenceMeasure(
-      int                         dataID,
+      mesh::PtrData               data,
       bool                        suffices,
       int                         level,
       impl::PtrConvergenceMeasure measure);
 
-  /// Set a coupling iteration post-processing technique.
-  void setIterationPostProcessing(impl::PtrPostProcessing postProcessing);
+  /// Set a coupling iteration acceleration technique.
+  void setIterationAcceleration(acceleration::PtrAcceleration acceleration);
 
 protected:
   /// Sets whether explicit or implicit coupling is being done.
@@ -399,7 +400,7 @@ protected:
   /// @return Communication device to the other coupling participant.
   m2n::PtrM2N getM2N()
   {
-    assertion(_m2n.use_count() > 0);
+    PRECICE_ASSERT(_m2n);
     return _m2n;
   }
 
@@ -435,8 +436,8 @@ protected:
 
   /// Holds relevant variables to perform a convergence measurement.
   struct ConvergenceMeasure {
-    int                         dataID;
-    CouplingData *              data;
+    mesh::PtrData               data;
+    CouplingData *              couplingData;
     bool                        suffices;
     int                         level;
     impl::PtrConvergenceMeasure measure;
@@ -470,9 +471,9 @@ protected:
    */
   void setupDataMatrices(DataMap &data);
 
-  impl::PtrPostProcessing getPostProcessing()
+  acceleration::PtrAcceleration getAcceleration()
   {
-    return _postProcessing;
+    return _acceleration;
   }
 
   void initializeTXTWriters();
@@ -549,8 +550,8 @@ private:
 
   bool _isCouplingTimestepComplete = false;
 
-  /// Post-processing method to speedup iteration convergence.
-  impl::PtrPostProcessing _postProcessing;
+  /// Acceleration method to speedup iteration convergence.
+  acceleration::PtrAcceleration _acceleration;
 
   /// To carry initData information from initialize to initData
   bool _hasToSendInitData = false;

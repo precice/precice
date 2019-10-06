@@ -6,11 +6,11 @@
 using precice::math::equals;
 
 #define validate(booleanExpr, msg) if (!(booleanExpr)) { \
-    std::cerr << "  boolean test failed " << std::endl \
-              << "  file: " << __FILE__ << " \t line: " << __LINE__ << std::endl \
+    std::cerr << "  boolean test failed \n" \
+              << "  file: " << __FILE__ << " \t line: " << __LINE__ << '\n' \
               << "  statement: " << #booleanExpr \
               << "  msg: " << msg \
-              << std::endl; \
+              << '\n'; \
     return;\
   }
 

@@ -30,12 +30,12 @@ const Eigen::VectorXd& delinearize
   int dimensions )
 {
   if ( dimensions == 2 ){
-    assertion ( (toDelinearize >= 0) && (toDelinearize < 4), toDelinearize );
+    PRECICE_ASSERT( (toDelinearize >= 0) && (toDelinearize < 4), toDelinearize );
     return DELINEARIZE_2D[toDelinearize];
   }
   else {
-    assertion ( dimensions == 3, dimensions );
-    assertion ( (toDelinearize >= 0) && (toDelinearize < 8), toDelinearize );
+    PRECICE_ASSERT( dimensions == 3, dimensions );
+    PRECICE_ASSERT( (toDelinearize >= 0) && (toDelinearize < 8), toDelinearize );
     return DELINEARIZE_3D[toDelinearize];
   }
 }

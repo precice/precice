@@ -19,7 +19,7 @@ class ProvidedPartition : public Partition
 {
 public:
 
-  ProvidedPartition(mesh::PtrMesh mesh, bool hasToSend);
+  ProvidedPartition(mesh::PtrMesh mesh);
 
   virtual ~ProvidedPartition() {}
 
@@ -38,7 +38,6 @@ private:
 
   logging::Logger _log{"partition::ProvidedPartition"};
 
-  bool _hasToSend;
 };
 
 } // namespace partition

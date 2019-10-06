@@ -1,0 +1,67 @@
+/** @namespace precice
+ *  @brief Main namespace of the precice library.
+ */
+
+/** @namespace precice::acceleration
+ *  @brief contains implementations of acceleration schemes.
+ */
+
+/** @namespace precice::action
+ *  @brief contains actions to modify exchanged data.
+ */
+
+/** @namespace precice::com
+ *  @brief contains the data communication abstraction layer.
+ */
+
+/** @namespace precice::constants
+ *  @brief contains names for files and common value types.
+ */
+
+/** @namespace precice::cplscheme
+ *  @brief contains implementations of coupling schemes for coupled simulations.
+ */
+
+/** @namespace precice::io
+ *  @brief provides Import and Export of the coupling \ref mesh::Mesh "mesh" and \ref mesh::Data "data".
+ */
+
+/** @namespace precice::logging
+ *  @brief contains the logging framework.
+ */
+
+/** @namespace precice::m2n
+ *  @brief contains the logic of the parallel communication between participants.
+ */
+
+/** @namespace precice::mapping
+ *  @brief contains data mapping from \ref mesh::Vertex "points" to \ref mesh::Mesh "meshes".
+ */
+
+/** @namespace precice::math
+ *  @brief provides general mathematical constants and functions.
+ */
+
+/** @namespace precice::mesh
+ *  @brief provides Mesh, Data and primitives.
+ */
+
+/** @namespace precice::partition
+ *  @brief contains the partitioning of distributed meshes.
+ */
+
+/** @namespace precice::query
+ *  @brief contains geometrical queries.
+ */
+
+/** @namespace precice::testing
+ *  @brief contains the testing framework.
+ */
+
+/** @namespace precice::utils
+ *  @brief contains precice-related utilites.
+ */
+
+/** @namespace precice::xml
+ *  @brief contains the XML configuration parser.
+ */

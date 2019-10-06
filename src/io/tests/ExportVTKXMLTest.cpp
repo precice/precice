@@ -12,7 +12,7 @@
 
 // void ExportVTKXMLTest:: run()
 // {
-//   TRACE();
+//   PRECICE_TRACE();
 //   typedef utils::Parallel Par;
 //   if (Par::getCommunicatorSize() > 3){
 //     const std::vector<int> ranksWanted = {0, 1, 2, 3};
@@ -34,7 +34,7 @@ using namespace precice;
 struct SetupMasterSlaveFixture {
   SetupMasterSlaveFixture()
   {
-    assertion(utils::Parallel::getCommunicatorSize() == 4);
+    BOOST_TEST(utils::Parallel::getCommunicatorSize() == 4);
 
     auto masterSlaveCom                = std::make_shared<com::MPIDirectCommunication>();
     utils::MasterSlave::_communication = masterSlaveCom;
@@ -45,39 +45,25 @@ struct SetupMasterSlaveFixture {
       utils::Parallel::splitCommunicator("Master");
       masterSlaveCom->acceptConnection("Master", "Slaves", utils::Parallel::getProcessRank());
       masterSlaveCom->setRankOffset(1);
-      utils::MasterSlave::_masterMode = true;
-      utils::MasterSlave::_slaveMode  = false;
-      utils::MasterSlave::_rank       = 0;
+      utils::MasterSlave::configure(0, 4);
     } else if (utils::Parallel::getProcessRank() == 1) {
       utils::Parallel::splitCommunicator("Slaves");
       masterSlaveCom->requestConnection("Master", "Slaves", 0, 3);
-      utils::MasterSlave::_masterMode = false;
-      utils::MasterSlave::_slaveMode  = true;
-      utils::MasterSlave::_rank       = 1;
+      utils::MasterSlave::configure(1, 4);
     } else if (utils::Parallel::getProcessRank() == 2) {
       utils::Parallel::splitCommunicator("Slaves");
       masterSlaveCom->requestConnection("Master", "Slaves", 1, 3);
-      utils::MasterSlave::_masterMode = false;
-      utils::MasterSlave::_slaveMode  = true;
-      utils::MasterSlave::_rank       = 2;
+      utils::MasterSlave::configure(2, 4);
     } else if (utils::Parallel::getProcessRank() == 3) {
       utils::Parallel::splitCommunicator("Slaves");
       masterSlaveCom->requestConnection("Master", "Slaves", 2, 3);
-      utils::MasterSlave::_masterMode = false;
-      utils::MasterSlave::_slaveMode  = true;
-      utils::MasterSlave::_rank       = 3;
+      utils::MasterSlave::configure(3, 4);
     }
-
-    utils::MasterSlave::_size = 4;
   }
 
   ~SetupMasterSlaveFixture()
   {
     utils::Parallel::synchronizeProcesses();
-    utils::MasterSlave::_slaveMode  = false;
-    utils::MasterSlave::_masterMode = false;
-    utils::MasterSlave::_rank       = -1;
-    utils::MasterSlave::_size       = -1;
     utils::Parallel::clearGroups();
     utils::MasterSlave::_communication.reset();
   }
@@ -124,7 +110,7 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
 
   mesh.computeState();
 
-  bool             exportNormals = false;
+  bool             exportNormals = true;
   io::ExportVTKXML exportVTKXML(exportNormals);
   std::string      filename = "io-ExportVTKXMLTest-testExportPolygonalMesh";
   std::string      location = "";

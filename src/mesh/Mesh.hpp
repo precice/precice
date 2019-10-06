@@ -6,7 +6,6 @@
 #include "mesh/Vertex.hpp"
 #include "utils/PointerVector.hpp"
 #include "utils/ManageUniqueIDs.hpp"
-#include <boost/noncopyable.hpp>
 #include <map>
 #include <list>
 #include <vector>
@@ -36,22 +35,18 @@ namespace mesh {
  *
  * Usage example: precice::mesh::tests::MeshTest::testDemonstration()
  */
-class Mesh : public PropertyContainer, private boost::noncopyable
+class Mesh : public PropertyContainer
 {
 public:
 
-
-  typedef utils::ptr_vector<Vertex>              VertexContainer;
-  typedef utils::ptr_vector<Edge>                EdgeContainer;
-  typedef utils::ptr_vector<Triangle>            TriangleContainer;
-  typedef utils::ptr_vector<Quad>                QuadContainer;
-  typedef std::vector<PtrData>                   DataContainer;
-  typedef utils::ptr_vector<PropertyContainer>   PropertyContainerContainer;
-  /// a vector of pairs that represents the physical range of vertices owned by a rank. 
-  typedef std::vector<std::pair<double, double>> BoundingBox;
-  /// set of boundingboxes owned by each rank gathered in the master rank.
-  /// A map : each rank -> boundingbox around it's mesh partition.
-  typedef std::map<int,BoundingBox>              BoundingBoxMap;
+  using VertexContainer            = utils::ptr_vector<Vertex>;
+  using EdgeContainer              = utils::ptr_vector<Edge>;
+  using TriangleContainer          = utils::ptr_vector<Triangle>;
+  using QuadContainer              = utils::ptr_vector<Quad>;
+  using DataContainer              = std::vector<PtrData>;
+  using PropertyContainerContainer = utils::ptr_vector<PropertyContainer>;
+  using BoundingBox                = std::vector<std::pair<double, double>>;
+  using BoundingBoxMap             = std::map<int,BoundingBox>; 
 
   /// A mapping from rank to used (not necessarily owned) vertex IDs
   using VertexDistribution = std::map<int, std::vector<int>>;
@@ -123,7 +118,7 @@ public:
   template<typename VECTOR_T>
   Vertex& createVertex ( const VECTOR_T& coords )
   {
-    assertion(coords.size() == _dimensions, coords.size(), _dimensions);
+    PRECICE_ASSERT(coords.size() == _dimensions, coords.size(), _dimensions);
     Vertex* newVertex = new Vertex(coords, _manageVertexIDs.getFreeID());
     newVertex->addParent(*this);
     _content.add(newVertex);
@@ -137,6 +132,16 @@ public:
    * @param[in] vertexTwo Reference to second Vertex defining the Edge.
    */
   Edge& createEdge (
+    Vertex& vertexOne,
+    Vertex& vertexTwo );
+
+  /**
+   * @brief Creates and initializes an Edge object or returns an already existing one.
+   *
+   * @param[in] vertexOne Reference to first Vertex defining the Edge.
+   * @param[in] vertexTwo Reference to second Vertex defining the Edge.
+   */
+  Edge& createUniqueEdge (
     Vertex& vertexOne,
     Vertex& vertexTwo );
 
@@ -212,6 +217,12 @@ public:
   /// Returns the base ID of the mesh.
   int getID() const;
 
+  /// Returns true if the given vertexID is valid
+  bool isValidVertexID(int vertexID) const;
+
+  /// Returns true if the given edgeID is valid
+  bool isValidEdgeID(int edgeID) const;
+
   /// Allocates memory for the vertex data values.
   void allocateDataValues();
 
@@ -240,31 +251,20 @@ public:
   void clear();
 
   /// Returns a mapping from rank to used (not necessarily owned) vertex IDs
-  VertexDistribution & getVertexDistribution()
-  {
-    return _vertexDistribution;
-  }
+  VertexDistribution & getVertexDistribution();
 
-  std::vector<int>& getVertexOffsets()
-  {
-    return _vertexOffsets;
-  }
+  VertexDistribution const & getVertexDistribution() const;
+
+  std::vector<int>& getVertexOffsets();
+
+  const std::vector<int>& getVertexOffsets() const;
 
   /// Only used for tests
-  void setVertexOffsets(std::vector<int> & vertexOffsets)
-  {
-    _vertexOffsets = vertexOffsets;
-  }
+  void setVertexOffsets(std::vector<int> & vertexOffsets);
 
-  int getGlobalNumberOfVertices()
-  {
-    return _globalNumberOfVertices;
-  }
+  int getGlobalNumberOfVertices() const;
 
-  void setGlobalNumberOfVertices(int num)
-  {
-    _globalNumberOfVertices = num;
-  }
+  void setGlobalNumberOfVertices(int num);
 
   /// Returns a vector of connected ranks
   std::vector<int> & getConnectedRanks()
@@ -301,6 +301,12 @@ public:
   bool operator!=(const Mesh& other) const;
 
 private:
+
+  /// Computes the normals for all primitives.
+  void computeNormals();
+
+  /// Computes the boundingBox for the vertices.
+  void computeBoundingBox();
 
   mutable logging::Logger _log{"mesh::Mesh"};
 
@@ -346,7 +352,7 @@ private:
   /// Holds the index of the last vertex for each slave.
   /**
    * The last entry holds the total number of vertices.
-   * Needed for the matrix-matrix multiplication of the IMVJ postprocessing.
+   * Needed for the matrix-matrix multiplication of the IMVJ acceleration.
    */
   std::vector<int> _vertexOffsets;
 

@@ -32,7 +32,6 @@
 #include <iostream>
 
 using std::cout;
-using std::endl;
 using std::ifstream;
 using std::remove;
 using std::rename;
@@ -51,7 +50,7 @@ struct Sentinel {
     if (::rank != 0)
       return;
 
-    cout << "Requester: " << (::ack == 4 ? "Success!" : "Failure!") << endl;
+    cout << "Requester: " << (::ack == 4 ? "Success!" : "Failure!") << '\n';
   }
 } sentinel;
 
@@ -77,7 +76,7 @@ main(int argc, char** argv) {
       ifs.getline(port_name, MPI_MAX_PORT_NAME);
     }
 
-    cout << "Address: " << port_name << endl;
+    cout << "Address: " << port_name << '\n';
 
     MPI_Comm communicator;
 

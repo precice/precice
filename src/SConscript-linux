@@ -1,3 +1,9 @@
+sourcesAcceleration = [
+    Glob('acceleration/*.cpp'),
+    Glob('acceleration/impl/*.cpp'),
+    Glob('acceleration/config/*.cpp')
+]
+
 sourcesAction = [
     Glob('action/*.cpp'),
     Glob('action/config/*.cpp')
@@ -81,6 +87,7 @@ sourcesXml = [
 ]
 
 sourcesAllNoMain = [
+    sourcesAcceleration,
     sourcesAction,
     sourcesCom,
     sourcesCplscheme,
@@ -94,7 +101,7 @@ sourcesAllNoMain = [
     sourcesPrecice,
     sourcesQuery,
     sourcesUtils,
-    sourcesXml,
+    sourcesXml
 ]
 
 Return ('sourcesAllNoMain', 'sourcesMain', 'sourcesTests')

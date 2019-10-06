@@ -19,7 +19,7 @@ BOOST_AUTO_TEST_SUITE(ProvidedPartitionTests)
 
 void setupParallelEnvironment(m2n::PtrM2N m2n)
 {
-  assertion(utils::Parallel::getCommunicatorSize() == 4);
+  BOOST_TEST(utils::Parallel::getCommunicatorSize() == 4);
 
   com::PtrCommunication masterSlaveCom = com::PtrCommunication(new com::MPIDirectCommunication());
   utils::MasterSlave::_communication   = masterSlaveCom;
@@ -29,27 +29,16 @@ void setupParallelEnvironment(m2n::PtrM2N m2n)
   if (utils::Parallel::getProcessRank() == 0) { //NASTIN
     utils::Parallel::splitCommunicator("Fluid");
     m2n->acceptMasterConnection("Fluid", "SolidMaster");
-    utils::MasterSlave::_slaveMode  = false;
-    utils::MasterSlave::_masterMode = false;
   } else if (utils::Parallel::getProcessRank() == 1) { //Master
     utils::Parallel::splitCommunicator("SolidMaster");
     m2n->requestMasterConnection("Fluid", "SolidMaster");
-    utils::MasterSlave::_rank       = 0;
-    utils::MasterSlave::_size       = 3;
-    utils::MasterSlave::_slaveMode  = false;
-    utils::MasterSlave::_masterMode = true;
+    utils::MasterSlave::configure(0, 3);
   } else if (utils::Parallel::getProcessRank() == 2) { //Slave1
     utils::Parallel::splitCommunicator("SolidSlaves");
-    utils::MasterSlave::_rank       = 1;
-    utils::MasterSlave::_size       = 3;
-    utils::MasterSlave::_slaveMode  = true;
-    utils::MasterSlave::_masterMode = false;
+    utils::MasterSlave::configure(1, 3);
   } else if (utils::Parallel::getProcessRank() == 3) { //Slave2
     utils::Parallel::splitCommunicator("SolidSlaves");
-    utils::MasterSlave::_rank       = 2;
-    utils::MasterSlave::_size       = 3;
-    utils::MasterSlave::_slaveMode  = true;
-    utils::MasterSlave::_masterMode = false;
+    utils::MasterSlave::configure(3, 2);
   }
 
   if(utils::Parallel::getProcessRank() == 1){//Master
@@ -92,7 +81,7 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate2D, *testing::OnSize(4))
     double safetyFactor = 0.1;
 
     ReceivedPartition part(pSolidzMesh, ReceivedPartition::BROADCAST_FILTER, safetyFactor);
-    part.setM2N(m2n);
+    part.addM2N(m2n);
     part.communicate();
 
     BOOST_TEST(pSolidzMesh->vertices().size() == 6);
@@ -127,9 +116,8 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate2D, *testing::OnSize(4))
       pSolidzMesh->createEdge(v5, v6);
     }
 
-    bool              hasToSend = true;
-    ProvidedPartition part(pSolidzMesh, hasToSend);
-    part.setM2N(m2n);
+    ProvidedPartition part(pSolidzMesh);
+    part.addM2N(m2n);
     part.communicate();
     part.compute();
 
@@ -169,7 +157,7 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate3D, *testing::OnSize(4))
     double safetyFactor = 0.1;
 
     ReceivedPartition part(pSolidzMesh, ReceivedPartition::BROADCAST_FILTER, safetyFactor);
-    part.setM2N(m2n);
+    part.addM2N(m2n);
     part.communicate();
 
     BOOST_TEST(pSolidzMesh->vertices().size() == 6);
@@ -210,9 +198,8 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate3D, *testing::OnSize(4))
       pSolidzMesh->createTriangle(e4, e5, e3);
     }
 
-    bool              hasToSend = true;
-    ProvidedPartition part(pSolidzMesh, hasToSend);
-    part.setM2N(m2n);
+    ProvidedPartition part(pSolidzMesh);
+    part.addM2N(m2n);
     part.communicate();
     part.compute();
 
@@ -289,8 +276,7 @@ BOOST_AUTO_TEST_CASE(TestOnlyDistribution2D,
     pMesh->createVertex(position);
   }
 
-  bool              hasToSend = false;
-  ProvidedPartition part(pMesh, hasToSend);
+  ProvidedPartition part(pMesh);
   part.communicate();
   part.compute();
 

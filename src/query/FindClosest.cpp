@@ -3,11 +3,92 @@
 #include "mesh/Edge.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Quad.hpp"
+#include "math/barycenter.hpp"
 #include "math/math.hpp"
 #include <limits>
+#include <utility>
 
 namespace precice {
 namespace query {
+
+std::ostream& operator<<(std::ostream& out, const InterpolationElement& val)
+{
+    out << '(' << *val.element << ", w:" << val.weight << ')';
+    return out;
+}
+
+InterpolationElements generateInterpolationElements(
+    const mesh::Vertex& /*location*/,
+    const mesh::Vertex& element)
+{
+  return {{element, 1.0}};
+}
+
+InterpolationElements generateInterpolationElements(
+    const mesh::Vertex& location,
+    const mesh::Edge&   element)
+{
+  auto &A = element.vertex(0);
+  auto &B = element.vertex(1);
+
+  const auto bcoords = math::barycenter::calcBarycentricCoordsForEdge(
+      A.getCoords(),
+      B.getCoords(),
+      element.getNormal(),
+      location.getCoords()).barycentricCoords;
+
+  InterpolationElements elems;
+  elems.emplace_back(A, bcoords(0));
+  elems.emplace_back(B, bcoords(1));
+  return elems;
+}
+
+InterpolationElements generateInterpolationElements(
+    const mesh::Vertex&   location,
+    const mesh::Triangle& element)
+{
+  auto &A = element.vertex(0);
+  auto &B = element.vertex(1);
+  auto &C = element.vertex(2);
+
+  const auto bcoords = math::barycenter::calcBarycentricCoordsForTriangle(
+      A.getCoords(),
+      B.getCoords(),
+      C.getCoords(),
+      element.getNormal(),
+      location.getCoords()).barycentricCoords;
+
+  InterpolationElements elems;
+  elems.emplace_back(A, bcoords(0));
+  elems.emplace_back(B, bcoords(1));
+  elems.emplace_back(C, bcoords(2));
+  return elems;
+}
+
+InterpolationElements generateInterpolationElements(
+    const mesh::Vertex& location,
+    const mesh::Quad&   element)
+{
+  auto &A = element.vertex(0);
+  auto &B = element.vertex(1);
+  auto &C = element.vertex(2);
+  auto &D = element.vertex(3);
+
+  const auto bcoords = math::barycenter::calcBarycentricCoordsForQuad(
+      A.getCoords(),
+      B.getCoords(),
+      C.getCoords(),
+      D.getCoords(),
+      element.getNormal(),
+      location.getCoords()).barycentricCoords;
+
+  InterpolationElements elems;
+  elems.emplace_back(A, bcoords(0));
+  elems.emplace_back(B, bcoords(1));
+  elems.emplace_back(C, bcoords(2));
+  elems.emplace_back(D, bcoords(3));
+  return elems;
+}
 
 bool FindClosest:: hasFound() const
 {
@@ -31,7 +112,7 @@ const Eigen::VectorXd& FindClosest:: getSearchPoint() const
 
 bool FindClosest:: determineClosest()
 {
-  TRACE(_searchpoint);
+  PRECICE_TRACE(_searchpoint);
   using math::greater;
   _closest = ClosestElement(_searchpoint.size());
   _closest.distance = std::numeric_limits<double>::max();

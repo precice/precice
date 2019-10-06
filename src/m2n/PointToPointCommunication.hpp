@@ -1,7 +1,10 @@
 #pragma once
 
-#include "DistributedCommunication.hpp"
 #include <list>
+#include <vector>
+#include <string>
+
+#include "DistributedCommunication.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include "mesh/SharedPointer.hpp"
@@ -28,10 +31,10 @@ public:
   PointToPointCommunication(com::PtrCommunicationFactory communicationFactory,
                             mesh::PtrMesh                mesh);
 
-  virtual ~PointToPointCommunication();
+  ~PointToPointCommunication() override;
 
   /// Returns true, if a connection to a remote participant has been established.
-  virtual bool isConnected();
+  bool isConnected() const override;
 
   /**
    * @brief Accepts connection from participant, which has to call
@@ -40,8 +43,8 @@ public:
    * @param[in] acceptorName  Name of calling participant.
    * @param[in] requesterName Name of remote participant to connect to.
    */
-  virtual void acceptConnection(std::string const &acceptorName,
-                                std::string const &requesterName);
+  void acceptConnection(std::string const &acceptorName,
+                        std::string const &requesterName) override;
 
   /**
    * @brief Requests connection from participant, which has to call acceptConnection().
@@ -49,82 +52,89 @@ public:
    * @param[in] acceptorName Name of remote participant to connect to.
    * @param[in] requesterName Name of calling participant.
    */
-  virtual void requestConnection(std::string const &acceptorName,
-                                 std::string const &requesterName);
+  void requestConnection(std::string const &acceptorName,
+                         std::string const &requesterName) override;
 
-  /** same as acceptconnection, but this one does not need vertex distribution
-      and instead gets connected ranks directly from mesh. 
-   
-   *  This one is used only to create initial communication Map.    
+  /**
+   * @brief Accepts connection from participant, which has to call
+   *        requestPreConnection().
+   *        Only initial connection is created.
+   *
+   * @param[in] acceptorName  Name of calling participant.
+   * @param[in] requesterName Name of remote participant to connect to.
    */
   virtual void acceptPreConnection(std::string const &acceptorName,
                                    std::string const &requesterName);
   
-  /** same as requestConnection, but this one does not need vertex distribution
-      and instead gets connected ranks directly from mesh. 
-   
-   *  This one is used only to create initial communication Map.    
+  /**
+   * @brief Requests connection from participant, which has to call acceptConnection().
+   *        Only initial connection is created. 
+   *
+   * @param[in] acceptorName Name of remote participant to connect to.
+   * @param[in] requesterName Name of calling participant.
    */
   virtual void requestPreConnection(std::string const &acceptorName,
                                     std::string const &requesterName);
 
-  /** This function should be called by both accepter and requester to update the vertex list in the 
-   *  mapping
-  */
-  virtual void updateVertexList();
+  /*
+   * @brief This function must be called by both acceptor and requester to update 
+   *        the vertex list in _mappings
+   */
+  virtual void updateVertexList() override;
 
   /**
    * @brief Disconnects from communication space, i.e. participant.
    *
    * This method is called on destruction.
    */
-  virtual void closeConnection();
+  void closeConnection() override;
 
   /**
    * @brief Sends a subset of local double values corresponding to local indices
    *        deduced from the current and remote vertex distributions.
    */
-  virtual void send(double *itemsToSend, size_t size, int valueDimension = 1);
+  void send(double const *itemsToSend, size_t size, int valueDimension = 1) override;
 
   /**
    * @brief Receives a subset of local double values corresponding to local
    *        indices deduced from the current and remote vertex distributions.
    */
-  virtual void receive(double *itemsToReceive,
-                       size_t  size,
-                       int     valueDimension = 1);
+  void receive(double *itemsToReceive,
+               size_t  size,
+               int     valueDimension = 1) override;
 
   /**
-   * @brief Sends a double to connected ranks       
+   * @brief Broadcasts an int to connected ranks on remote participant       
    */
-  virtual void broadcastSend(double &itemToSend);
+  void broadcastSend(const int &itemToSend) override;
 
   /**
-   * @brief Receives a double from a connected rank
+   * @brief Receives an int per connected rank on remote participant
+   * @para[out] itemToReceive received ints from remote ranks are stored with the sender rank order 
    */
-  virtual void broadcastReceive(double &itemToReceive);
+  void broadcastReceiveAll(std::vector<int> &itemToReceive) override;
 
   /**
-   * All ranks send their mesh partition to remote local  connected ranks.
+   * @brief All ranks send their mesh partition to remote local  connected ranks.
    */
-  virtual void broadcastSendMesh(mesh::Mesh &mesh);
+  void broadcastSendMesh() override;
   
   /**
-   * All ranks receive mesh partition from remote local ranks.
+   * @brief All ranks receive mesh partitions from remote local ranks.
    */
-  virtual void broadcastReceiveMesh(mesh::Mesh &mesh);
+  void broadcastReceiveMesh() override;
 
   /**
-   *  All ranks Send their local communication maps to connected ranks
+   *  @brief All ranks send their local communication map to connected ranks
    */
-  virtual void broadcastSendLCM(
-    std::map<int, std::vector<int>> &localCommunicationMap);
+  void broadcastSendLCM(
+    CommunicationMap &localCommunicationMap) override;
 
   /**
-   *  Each rank revives local communication maps from connected ranks
+   *  @brief Each rank revives local communication maps from connected ranks
    */
-  virtual void broadcastReceiveLCM(
-    std::map<int, std::vector<int>> &localCommunicationMap);
+  void broadcastReceiveLCM(
+    CommunicationMap &localCommunicationMap) override;
 
 private:
   logging::Logger _log{"m2n::PointToPointCommunication"};
@@ -137,21 +147,26 @@ private:
   
   com::PtrCommunicationFactory _communicationFactory;
 
+  /// Communication class used for this PointToPointCommunication
+  /**
+   * A Communication object represents all connections to all ranks made by this P2P instance.
+   **/
+  com::PtrCommunication _communication;
+  
   /**
    * @brief Defines mapping between:
    *        1. global remote process rank;
    *        2. local data indices, which define a subset of local (for process
    *           rank in the current participant) data to be communicated between
    *           the current process rank and the remote process rank;
-   *        3. communication object (provides point-to-point communication routines).
-   *        5. Appropriatly sized buffer to receive elements
+   *        3. Request holding information about pending communication
+   *        4. Appropriately sized buffer to receive elements
    */
   struct Mapping {
-    int                   remoteRank;
-    std::vector<int>      indices;
-    com::PtrCommunication communication;
-    com::PtrRequest       request;
-    std::vector<double>   recvBuffer;
+    int                 remoteRank;
+    std::vector<int>    indices;
+    com::PtrRequest     request;
+    std::vector<double> recvBuffer;
   };
 
   /**
@@ -165,20 +180,19 @@ private:
    *        bounding box initialization. It stores:
    *        1. global remote process rank;
    *        2. communication object (provides point-to-point communication routines).
-   *        3. Appropriatly sized buffer to receive elements
+   *        3. Request holding information about pending communication
    */
   struct ConnectionData {
     int                   remoteRank;
     com::PtrCommunication communication;
     com::PtrRequest       request;
-    std::vector<double>   recvBuffer;
   };
 
   /**
    * @brief Local (for process rank in the current participant) vector of
    *        ConnectionData (one to service each point-to-point connection).
    */
-  std::vector<ConnectionData> _connectionData;
+  std::vector<ConnectionData> _connectionDataVector;
 
   bool _isConnected = false;
 

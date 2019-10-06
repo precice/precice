@@ -1,6 +1,7 @@
 #pragma once
 
 #include "mesh/SharedPointer.hpp"
+#include "mesh/Mesh.hpp"
 #include <map>
 #include <vector>
 
@@ -43,7 +44,7 @@ public:
   virtual ~DistributedCommunication() {}
 
   /// Returns true, if a connection to a remote participant has been setup.
-  virtual bool isConnected() = 0;
+  virtual bool isConnected() const = 0;
 
   /**
    * @brief Connects to another participant, which has to call requestConnection().
@@ -65,27 +66,34 @@ public:
       const std::string &acceptorName,
       const std::string &requesterName) = 0;
 
-  /** same as acceptconnection, but this one does not need vertex distribution
-      and instead gets communication map directly from mesh. 
-   
-   *  This one is used only to create initial communication Map.    
+  /**
+   * @brief Connects to another participant, which has to call requestPreConnection().
+   *        Exchanged vertex list is not included, only connection between ranks 
+   *        is established. 
+   *
+   * @param[in] acceptorName Name of calling participant.
+   * @param[in] requesterName Name of remote participant to connect to.
    */
   virtual void acceptPreConnection(
     std::string const &acceptorName,
     std::string const &requesterName) = 0;
   
-  /** same as requestConnection, but this one does not need vertex distribution
-      and instead gets communication map directly from mesh. 
-   
-   *  This one is used only to create initial communication Map.    
+
+  /**
+   * @brief Connects to another participant, which has to call acceptPreConnection().
+   *        Exchanged vertex list is not included, only connection between ranks 
+   *        is established. 
+   *
+   * @param[in] acceptorName Name of remote participant to connect to.
+   * @param[in] requesterName Name of calling participant.
    */
   virtual void requestPreConnection(
     std::string const &acceptorName,
     std::string const &requesterName) = 0;
 
-  /** This function should be called by both accepter and requester to update the vertex list in the 
-   *  mapping
-  */
+  /*
+   * @brief This function must be called by both acceptor and requester to update the vertex list in _mappings
+   */
   virtual void updateVertexList() = 0;
   
   /**
@@ -97,7 +105,7 @@ public:
 
   /// Sends an array of double values from all slaves (different for each slave).
   virtual void send(
-      double *itemsToSend,
+      double const *itemsToSend,
       size_t  size,
       int     valueDimension) = 0;
 
@@ -108,38 +116,42 @@ public:
       int     valueDimension) = 0;
 
   /**
-   * @brief Sends a double to connected ranks       
+   * @brief Broadcasts a int to connected ranks on remote participant      
    */
-  virtual void broadcastSend(double &itemToSend) = 0;
+  virtual void broadcastSend(const int &itemToSend) = 0;
 
   /**
-   * @brief Receives a double from a connected rank
+   * @brief Receives an int per connected rank on remote participant
+   * @para[out] itemToReceive received ints from remote ranks are stored with the sender rank order 
    */
-  virtual void broadcastReceive(double &itemToReceive) = 0;
+  virtual void broadcastReceiveAll(std::vector<int> &itemToReceive) = 0;
 
   /**
-   * All ranks send their mesh partition to remote local  connected ranks.
+   * @brief All ranks send their mesh partition to remote local  connected ranks.
    */
-  virtual void broadcastSendMesh(
-    mesh::Mesh &mesh) = 0;
+  virtual void broadcastSendMesh() = 0;
   
   /**
-   * All ranks receive mesh partition from remote local ranks.
+   * @brief All ranks receive mesh partition from remote local ranks.
    */
-  virtual void broadcastReceiveMesh(
-    mesh::Mesh &mesh) = 0;
+  virtual void broadcastReceiveMesh() = 0;
+
+  /*
+   * A mapping from remote local ranks to the IDs that must be communicated
+   */
+  using CommunicationMap = std::map<int, std::vector<int>>;
 
   /**
    *  All ranks Send their local communication maps to connected ranks
    */
   virtual void broadcastSendLCM(
-    std::map<int, std::vector<int>> &localCommunicationMap)=0;
+    CommunicationMap &localCommunicationMap)=0;
 
   /*
    *  Each rank revives local communication maps from connected ranks
    */
   virtual void broadcastReceiveLCM(
-    std::map<int, std::vector<int>> &localCommunicationMap)=0 ;
+    CommunicationMap &localCommunicationMap)=0 ;
   
 protected:
   /**

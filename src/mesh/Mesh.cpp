@@ -8,6 +8,8 @@
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 #include "RTree.hpp"
+#include <array>
+#include <algorithm>
 
 namespace precice {
 namespace mesh {
@@ -34,13 +36,13 @@ Mesh:: Mesh
   if (not _managePropertyIDs) {
     _managePropertyIDs.reset(new utils::ManageUniqueIDs);
   }
-  assertion((_dimensions == 2) || (_dimensions == 3), _dimensions);
-  assertion(_name != std::string(""));
+  PRECICE_ASSERT((_dimensions == 2) || (_dimensions == 3), _dimensions);
+  PRECICE_ASSERT(_name != std::string(""));
   _nameIDPairs[_name] = _managePropertyIDs->getFreeID ();
   setProperty(INDEX_GEOMETRY_ID, _nameIDPairs[_name]);
 
-  meshChanged.connect(&rtree::clear);
-  meshDestroyed.connect(&rtree::clear);
+  meshChanged.connect([](Mesh & m){rtree::clear(m);});
+  meshDestroyed.connect([](Mesh & m){rtree::clear(m);});
 }
 
 Mesh:: ~Mesh()
@@ -49,6 +51,7 @@ Mesh:: ~Mesh()
   _content.triangles().deleteElements();
   _content.edges().deleteElements();
   _content.vertices().deleteElements();
+  _propertyContainers.deleteElements();
 
   meshDestroyed(*this); // emit signal
 }
@@ -124,12 +127,37 @@ Edge& Mesh:: createEdge
   return *newEdge;
 }
 
+Edge& Mesh::createUniqueEdge
+(
+    Vertex& vertexOne,
+    Vertex& vertexTwo
+)
+{ 
+    const std::array<int, 2> vids{vertexOne.getID(), vertexTwo.getID()};
+    const auto eend = edges().end();
+    auto pos = std::find_if(edges().begin(), eend,
+            [&vids](const Edge& e) -> bool {
+                const std::array<int, 2> eids{e.vertex(0).getID(), e.vertex(1).getID()};
+                return std::is_permutation(vids.begin(), vids.end(), eids.begin());
+            });
+    if (pos != eend) {
+        return *pos;
+    } else {
+        return createEdge(vertexOne, vertexTwo);
+    }
+}
+
 Triangle& Mesh:: createTriangle
 (
   Edge& edgeOne,
   Edge& edgeTwo,
   Edge& edgeThree )
 {
+  PRECICE_CHECK(
+          edgeOne.connectedTo(edgeTwo) &&
+          edgeTwo.connectedTo(edgeThree) &&
+          edgeThree.connectedTo(edgeOne),
+          "Edges are not connected!");
   Triangle* newTriangle = new Triangle (
       edgeOne, edgeTwo, edgeThree, _manageTriangleIDs.getFreeID());
   newTriangle->addParent(*this);
@@ -164,9 +192,9 @@ PtrData& Mesh:: createData
   const std::string& name,
   int                dimension )
 {
-  TRACE(name, dimension);
+  PRECICE_TRACE(name, dimension);
   for (const PtrData data : _data) {
-    CHECK(data->getName() != name,
+    PRECICE_CHECK(data->getName() != name,
           "Data \"" << name << "\" cannot be created twice for " << "mesh \"" << _name << "\"!");
   }
   int id = Data::getDataCount();
@@ -189,22 +217,22 @@ const PtrData& Mesh:: data
       return data;
     }
   }
-  ERROR("Data with ID = " << dataID << " not found in mesh \"" << _name << "\"!" );
+  PRECICE_ERROR("Data with ID = " << dataID << " not found in mesh \"" << _name << "\"!" );
 }
 
 PropertyContainer& Mesh:: getPropertyContainer
 (
   const std::string & subIDName )
 {
-  TRACE(subIDName);
-  assertion(_nameIDPairs.count(subIDName) == 1);
+  PRECICE_TRACE(subIDName);
+  PRECICE_ASSERT(_nameIDPairs.count(subIDName) == 1);
   int id = _nameIDPairs[subIDName];
   for (PropertyContainer& cont : _propertyContainers) {
     if (cont.getProperty<int>(cont.INDEX_GEOMETRY_ID) == id){
       return cont;
     }
   }
-  ERROR("Unknown sub ID name \"" << subIDName << "\" in mesh \"" << _name << "\"!");
+  PRECICE_ERROR("Unknown sub ID name \"" << subIDName << "\" in mesh \"" << _name << "\"!");
 }
 
 const std::string& Mesh:: getName() const
@@ -228,11 +256,11 @@ PropertyContainer& Mesh:: setSubID
 (
   const std::string& subIDNamePostfix )
 {
-  TRACE(subIDNamePostfix);
-  CHECK(subIDNamePostfix != std::string(""),
+  PRECICE_TRACE(subIDNamePostfix);
+  PRECICE_CHECK(subIDNamePostfix != std::string(""),
       "Sub ID postfix of mesh \"" << _name << "\" is not allowed to be an empty string!");
   std::string idName(_name + "-" + subIDNamePostfix);
-  CHECK(_nameIDPairs.count(idName) == 0,
+  PRECICE_CHECK(_nameIDPairs.count(idName) == 0,
       "Sub ID postfix of mesh \"" << _name << "\" is already in use!");
   _nameIDPairs[idName] = _managePropertyIDs->getFreeID();
   PropertyContainer * newPropertyContainer = new PropertyContainer();
@@ -251,177 +279,141 @@ int Mesh:: getID
 (
   const std::string& name ) const
 {
-  assertion(_nameIDPairs.count(name) > 0);
+  PRECICE_ASSERT(_nameIDPairs.count(name) > 0);
   return _nameIDPairs.find(name)->second;
 }
 
 int Mesh:: getID() const
 {
   std::map<std::string,int>::const_iterator iter = _nameIDPairs.find(_name);
-  assertion(iter != _nameIDPairs.end());
+  PRECICE_ASSERT(iter != _nameIDPairs.end());
   return iter->second;
+}
+
+bool Mesh::isValidVertexID(int vertexID) const
+{
+    return (0 <= vertexID) && (static_cast<size_t>(vertexID) < vertices().size());
+}
+
+bool Mesh::isValidEdgeID(int edgeID) const
+{
+    return (0 <= edgeID) && (static_cast<size_t>(edgeID) < edges().size());
 }
 
 void Mesh:: allocateDataValues()
 {
-  TRACE(_content.vertices().size());
+  PRECICE_TRACE(_content.vertices().size());
   for (PtrData data : _data) {
     int total = _content.vertices().size() * data->getDimensions();
     int leftToAllocate = total - data->values().size();
     if (leftToAllocate > 0){
       utils::append(data->values(), (Eigen::VectorXd) Eigen::VectorXd::Zero(leftToAllocate));
     }
-    DEBUG("Data " << data->getName() << " no has " << data->values().size() << " values");
+    PRECICE_DEBUG("Data " << data->getName() << " now has " << data->values().size() << " values");
   }
+}
+
+void Mesh:: computeNormals()
+{
+  PRECICE_TRACE(_name);
+  // Compute normals only if faces to derive normal information are available
+  size_t size2DFaces = _content.edges().size();
+  size_t size3DFaces = _content.triangles().size() + _content.quads().size();
+  if (_dimensions == 2 && size2DFaces == 0){
+      return;
+  }
+  if (_dimensions == 3 && size3DFaces == 0){
+    return;
+  }
+
+  // Compute (in 2D) edge normals
+  if (_dimensions == 2) {
+      for (Edge& edge : _content.edges()) {
+          Eigen::VectorXd weightednormal = edge.computeNormal(_flipNormals);
+
+          // Accumulate normal in associated vertices
+          for (int i=0; i < 2; i++){
+              Eigen::VectorXd vertexNormal = edge.vertex(i).getNormal();
+              vertexNormal += weightednormal;
+              edge.vertex(i).setNormal(vertexNormal);
+          }
+      }
+  }
+
+  if (_dimensions == 3){
+      // Compute normals
+      for (Triangle& triangle : _content.triangles()) {
+          PRECICE_ASSERT(triangle.vertex(0) != triangle.vertex(1),
+                  triangle.vertex(0), triangle.getID());
+          PRECICE_ASSERT(triangle.vertex(1) != triangle.vertex(2),
+                  triangle.vertex(1), triangle.getID());
+          PRECICE_ASSERT(triangle.vertex(2) != triangle.vertex(0),
+                  triangle.vertex(2), triangle.getID());
+
+          // Compute normals
+          Eigen::VectorXd weightednormal = triangle.computeNormal(_flipNormals);
+
+          // Accumulate area-weighted normal in associated vertices and edges
+          for (int i=0; i < 3; i++){
+              triangle.edge(i).setNormal(triangle.edge(i).getNormal() + weightednormal);
+              triangle.vertex(i).setNormal(triangle.vertex(i).getNormal() + weightednormal);
+          }
+      }
+
+      // Compute quad normals
+      for (Quad& quad : _content.quads()) {
+          PRECICE_ASSERT(quad.vertex(0) != quad.vertex(1), quad.vertex(0).getCoords(), quad.getID());
+          PRECICE_ASSERT(quad.vertex(1) != quad.vertex(2), quad.vertex(1).getCoords(), quad.getID());
+          PRECICE_ASSERT(quad.vertex(2) != quad.vertex(3), quad.vertex(2).getCoords(), quad.getID());
+          PRECICE_ASSERT(quad.vertex(3) != quad.vertex(0), quad.vertex(3).getCoords(), quad.getID());
+
+          // Compute normals (assuming all vertices are on same plane)
+          Eigen::VectorXd weightednormal = quad.computeNormal(_flipNormals);
+          // Accumulate area-weighted normal in associated vertices and edges
+          for (int i=0; i < 4; i++){
+              quad.edge(i).setNormal(quad.edge(i).getNormal() + weightednormal);
+              quad.vertex(i).setNormal(quad.vertex(i).getNormal() + weightednormal);
+          }
+      }
+
+      // Normalize edge normals (only done in 3D)
+      for (Edge& edge : _content.edges()) {
+          // there can be cases when an edge has no adjacent triangle though triangles exist in general (e.g. after filtering)
+          edge.setNormal(edge.getNormal().normalized());
+      }
+  }
+
+  for (Vertex& vertex : _content.vertices()) {
+      // there can be cases when a vertex has no edge though edges exist in general (e.g. after filtering)
+      vertex.setNormal(vertex.getNormal().normalized());
+  }
+}
+
+void Mesh:: computeBoundingBox()
+{
+  PRECICE_TRACE(_name);
+  BoundingBox boundingBox(_dimensions,
+                              std::make_pair(std::numeric_limits<double>::max(),
+                                             std::numeric_limits<double>::lowest()));
+  for (const Vertex& vertex : _content.vertices()) {
+    for (int d = 0; d < _dimensions; d++) {
+      boundingBox[d].first  = std::min(vertex.getCoords()[d], boundingBox[d].first);
+      boundingBox[d].second = std::max(vertex.getCoords()[d], boundingBox[d].second);
+    }
+  }
+  for (int d = 0; d < _dimensions; d++) {
+    PRECICE_DEBUG("BoundingBox, dim: " << d << ", first: " << boundingBox[d].first << ", second: " << boundingBox[d].second);
+  }
+  _boundingBox = std::move(boundingBox);
 }
 
 void Mesh:: computeState()
 {
-  TRACE(_name);
-  assertion(_dimensions==2 || _dimensions==3, _dimensions);
+  PRECICE_TRACE(_name);
+  PRECICE_ASSERT(_dimensions==2 || _dimensions==3, _dimensions);
 
-  // Compute normals only if faces to derive normal information are available
-  bool computeNormals = true;
-  size_t size2DFaces = _content.edges().size();
-  size_t size3DFaces = _content.triangles().size() + _content.quads().size();
-  if (_dimensions == 2){
-    if (size2DFaces == 0){
-      computeNormals = false;
-    }
-  }
-  else if (size3DFaces == 0){
-    assertion(_dimensions == 3, _dimensions);
-    computeNormals = false;
-  }
-
-  // Compute (in 2D) edge normals
-  for (Edge& edge : _content.edges()) {
-    if (_dimensions == 2 && computeNormals){
-      // Compute normal
-      Eigen::VectorXd vectorA = edge.vertex(1).getCoords();
-      vectorA -= edge.vertex(0).getCoords();
-      Eigen::Vector2d normal(-1.0 *vectorA[1], vectorA[0]);
-      if (not _flipNormals){
-        normal *= -1.0; // Invert direction if counterclockwise
-      }
-      double length = normal.norm();
-      assertion(math::greater(length, 0.0));
-      normal.normalize();   // Scale normal vector to length 1
-      edge.setNormal(normal);
-
-      // Accumulate normal in associated vertices
-      normal *= edge.getEnclosingRadius() * 2.0; // Weight by length
-      for (int i=0; i < 2; i++){
-        Eigen::VectorXd vertexNormal = edge.vertex(i).getNormal();
-        vertexNormal += normal;
-        edge.vertex(i).setNormal(vertexNormal);
-      }
-    }
-  }
-
-  if (_dimensions == 3){
-    // Compute normals
-    for (Triangle& triangle : _content.triangles()) {
-      assertion(triangle.vertex(0) != triangle.vertex(1),
-                triangle.vertex(0), triangle.getID());
-      assertion(triangle.vertex(1) != triangle.vertex(2),
-                triangle.vertex(1), triangle.getID());
-      assertion(triangle.vertex(2) != triangle.vertex(0),
-                triangle.vertex(2), triangle.getID());
-
-      // Compute normals
-      if (computeNormals){
-        Eigen::Vector3d vectorA = triangle.edge(1).getCenter() - triangle.edge(0).getCenter(); // edge() is faster than vertex()
-        Eigen::Vector3d vectorB = triangle.edge(2).getCenter() - triangle.edge(0).getCenter();
-        // Compute cross-product of vector A and vector B
-        auto normal = vectorA.cross(vectorB);
-        if ( _flipNormals ){
-          normal *= -1.0; // Invert direction if counterclockwise
-        }
-
-        // Accumulate area-weighted normal in associated vertices and edges
-        for (int i=0; i < 3; i++){
-          triangle.edge(i).setNormal(triangle.edge(i).getNormal() + normal);
-          triangle.vertex(i).setNormal(triangle.vertex(i).getNormal() + normal);
-        }
-
-        // Normalize triangle normal
-        triangle.setNormal(normal.normalized());
-      }
-    }
-
-    // Compute quad normals
-    for (Quad& quad : _content.quads()) {
-      assertion(quad.vertex(0) != quad.vertex(1), quad.vertex(0).getCoords(), quad.getID());
-      assertion(quad.vertex(1) != quad.vertex(2), quad.vertex(1).getCoords(), quad.getID());
-      assertion(quad.vertex(2) != quad.vertex(3), quad.vertex(2).getCoords(), quad.getID());
-      assertion(quad.vertex(3) != quad.vertex(0), quad.vertex(3).getCoords(), quad.getID());
-
-      // Compute normals (assuming all vertices are on same plane)
-      if (computeNormals) {
-        // Two triangles are thought by splitting the quad from vertex 0 to 2.
-        // The cross prodcut of the outer edges of the triangles is used to compute
-        // the normal direction and area of the triangles. The direction must be
-        // the same, while the areas differ in general. The normals are added up
-        // and divided by 2 to get the area of the overall quad, since the length
-        // does correspond to the parallelogram spanned by the vectors of the
-        // cross product, which is twice the area of the corresponding triangles.
-        Eigen::Vector3d vectorA = quad.vertex(2).getCoords() - quad.vertex(1).getCoords();
-        Eigen::Vector3d vectorB = quad.vertex(0).getCoords() - quad.vertex(1).getCoords();
-        // Compute cross-product of vector A and vector B
-        auto normal = vectorA.cross(vectorB);
-        
-        vectorA = quad.vertex(0).getCoords() - quad.vertex(3).getCoords();
-        vectorB = quad.vertex(2).getCoords() - quad.vertex(3).getCoords();
-        auto normalSecondPart = vectorA.cross(vectorB);
-        
-        assertion(math::equals(normal.normalized(), normalSecondPart.normalized()),
-                  normal, normalSecondPart);
-        normal += normalSecondPart;
-        normal *= 0.5;
-
-        if ( _flipNormals ){
-          normal *= -1.0; // Invert direction if counterclockwise
-        }
-
-        // Accumulate area-weighted normal in associated vertices and edges
-        for (int i=0; i < 4; i++){
-          quad.edge(i).setNormal(quad.edge(i).getNormal() + normal);
-          quad.vertex(i).setNormal(quad.vertex(i).getNormal() + normal);
-        }
-
-        quad.setNormal(normal.normalized());
-      }
-    }
-
-    // Normalize edge normals (only done in 3D)
-    if (computeNormals){
-      for (Edge& edge : _content.edges()) {
-        // there can be cases when an edge has no adjacent triangle though triangles exist in general (e.g. after filtering)
-        edge.setNormal(edge.getNormal().normalized());
-      }
-    }
-  }
-
-  // Normalize vertex normals & compute bounding box
-  _boundingBox = BoundingBox (_dimensions,
-                              std::make_pair(std::numeric_limits<double>::max(),
-                                             std::numeric_limits<double>::lowest()));
-
-  for (Vertex& vertex : _content.vertices()) {
-    if (computeNormals) {
-      // there can be cases when a vertex has no edge though edges exist in general (e.g. after filtering)
-      vertex.setNormal(vertex.getNormal().normalized());
-    }
-    
-    for (int d = 0; d < _dimensions; d++) {
-      _boundingBox[d].first  = std::min(vertex.getCoords()[d], _boundingBox[d].first);
-      _boundingBox[d].second = std::max(vertex.getCoords()[d], _boundingBox[d].second);
-    }
-  }
-  for (int d = 0; d < _dimensions; d++) {
-    DEBUG("BoundingBox, dim: " << d << ", first: " << _boundingBox[d].first << ", second: " << _boundingBox[d].second);
-  }
+  computeNormals();
+  computeBoundingBox();
 }
 
 void Mesh:: buildBoundingBox()
@@ -436,7 +428,7 @@ void Mesh:: buildBoundingBox()
     }
   }
   else if (size3DFaces == 0){
-    assertion(_dimensions == 3, _dimensions);
+  PRECICE_ASSERT(_dimensions == 3, _dimensions);
     computeNormals = false;
   }
   
@@ -456,13 +448,14 @@ void Mesh:: buildBoundingBox()
     }
   }
   for (int d = 0; d < _dimensions; d++) {
-    DEBUG("BoundingBox, dim: " << d << ", first: " << _boundingBox[d].first << ", second: " << _boundingBox[d].second);
+    PRECICE_DEBUG("BoundingBox, dim: " << d << ", first: " << _boundingBox[d].first << ", second: " << _boundingBox[d].second);
   }
 }
 
     
 void Mesh:: clear()
 {
+  _content.quads().deleteElements();
   _content.triangles().deleteElements();
   _content.edges().deleteElements();
   _content.vertices().deleteElements();
@@ -482,12 +475,46 @@ void Mesh:: clear()
   }
 }
 
+Mesh::VertexDistribution &Mesh::getVertexDistribution()
+{
+  return _vertexDistribution;
+}
+
+const Mesh::VertexDistribution &Mesh::getVertexDistribution() const
+{
+  return _vertexDistribution;
+}
+
+std::vector<int> &Mesh::getVertexOffsets()
+{
+  return _vertexOffsets;
+}
+
+const std::vector<int> &Mesh::getVertexOffsets() const
+{
+  return _vertexOffsets;
+}
+
+void Mesh::setVertexOffsets(std::vector<int> &vertexOffsets)
+{
+  _vertexOffsets = vertexOffsets;
+}
+
+int Mesh::getGlobalNumberOfVertices() const
+{
+  return _globalNumberOfVertices;
+}
+
+void Mesh::setGlobalNumberOfVertices(int num)
+{
+  _globalNumberOfVertices = num;
+}
 
 void Mesh:: addMesh(
     Mesh& deltaMesh)
 {
-  TRACE();
-  assertion(_dimensions==deltaMesh.getDimensions());
+  PRECICE_TRACE();
+  PRECICE_ASSERT(_dimensions==deltaMesh.getDimensions());
 
   std::map<int, Vertex*> vertexMap;
   std::map<int, Edge*> edgeMap;
@@ -499,7 +526,7 @@ void Mesh:: addMesh(
     v.setGlobalIndex(vertex.getGlobalIndex());
     if(vertex.isTagged()) v.tag();
     v.setOwner(vertex.isOwner());
-    assertion ( vertex.getID() >= 0, vertex.getID() );
+    PRECICE_ASSERT( vertex.getID() >= 0, vertex.getID() );
     vertexMap[vertex.getID()] = &v;
   }
 
@@ -509,8 +536,8 @@ void Mesh:: addMesh(
   for (const Edge& edge : deltaMesh.edges()) {
     int vertexIndex1 = edge.vertex(0).getID();
     int vertexIndex2 = edge.vertex(1).getID();
-    assertion ( vertexMap.find(vertexIndex1) != vertexMap.end() );
-    assertion ( vertexMap.find(vertexIndex2) != vertexMap.end() );
+    PRECICE_ASSERT( vertexMap.find(vertexIndex1) != vertexMap.end() );
+    PRECICE_ASSERT( vertexMap.find(vertexIndex2) != vertexMap.end() );
     Edge& e = createEdge(*vertexMap[vertexIndex1], *vertexMap[vertexIndex2]);
     edgeMap[edge.getID()] = &e;
   }
@@ -520,9 +547,9 @@ void Mesh:: addMesh(
       int edgeIndex1 = triangle.edge(0).getID();
       int edgeIndex2 = triangle.edge(1).getID();
       int edgeIndex3 = triangle.edge(2).getID();
-      assertion ( edgeMap.find(edgeIndex1) != edgeMap.end() );
-      assertion ( edgeMap.find(edgeIndex2) != edgeMap.end() );
-      assertion ( edgeMap.find(edgeIndex3) != edgeMap.end() );
+      PRECICE_ASSERT( edgeMap.find(edgeIndex1) != edgeMap.end() );
+      PRECICE_ASSERT( edgeMap.find(edgeIndex2) != edgeMap.end() );
+      PRECICE_ASSERT( edgeMap.find(edgeIndex3) != edgeMap.end() );
       createTriangle(*edgeMap[edgeIndex1],*edgeMap[edgeIndex2],*edgeMap[edgeIndex3]);
     }
   }
@@ -552,7 +579,7 @@ bool Mesh::operator==(const Mesh& other) const
         std::is_permutation(myContent.vertices().begin(), myContent.vertices().end(), otherContent.vertices().begin());
     equal &= myContent.edges().size() == otherContent.edges().size() &&
         std::is_permutation(myContent.edges().begin(), myContent.edges().end(), otherContent.edges().begin());
-    equal &= myContent.triangles().size() == otherContent.triangles().size() && 
+    equal &= myContent.triangles().size() == otherContent.triangles().size() &&
         std::is_permutation(myContent.triangles().begin(), myContent.triangles().end(), otherContent.triangles().begin());
     equal &= myContent.quads().size() == otherContent.quads().size() &&
         std::is_permutation(myContent.quads().begin(), myContent.quads().end(), otherContent.quads().begin());
@@ -566,18 +593,30 @@ bool Mesh::operator!=(const Mesh& other) const
 
 std::ostream& operator<<(std::ostream& os, const Mesh& m)
 {
-  os << "Mesh " << m.getName() << " consisting the Vertices:\n";
-  for (auto& vertex : m.content().edges())
-      os << "\t" << vertex;
-  os << "And the Edges:\n";
-  for (auto& edge : m.content().edges())
-      os << "\t" << edge;
-  os << "And the Triangles:\n";
-  for (auto& triangle : m.content().edges())
-      os << "\t" << triangle;
-  os << "And the Quads:\n";
-  for (auto& quad : m.content().quads())
-      os << "\t" << quad;
+  os << "Mesh \"" << m.getName() << "\", dimensionality = " << m.getDimensions() << ":\n";
+  os << "GEOMETRYCOLLECTION(\n";
+  const auto token = ", ";
+  const auto* sep = "";
+  for (auto& vertex : m.content().vertices()){
+      os << sep << vertex; 
+      sep = token;
+  }
+  sep = ",\n";
+  for (auto& edge : m.content().edges()){
+      os << sep << edge;
+      sep = token;
+  }
+  sep = ",\n";
+  for (auto& triangle : m.content().triangles()){
+      os << sep << triangle;
+      sep = token;
+  }
+  sep = ",\n";
+  for (auto& quad : m.content().quads()){
+      os << sep << quad;
+      sep = token;
+  }
+  os << "\n)";
   return os;
 }
 
