@@ -131,13 +131,13 @@ public:
    * Both participants need to call initializeData().
    *
    * @pre initialize() has been called successfully.
-   * @pre The action WriteInitialData is required 
+   * @pre The action WriteInitialData is required
    * @pre advance() has not yet been called.
    * @pre finalize() has not yet been called.
    *
    * @post Initial coupling data was exchanged.
    *
-   * @see isActionRequired  
+   * @see isActionRequired
    * @see precice::constants::actionWriteInitialData
    */
   void initializeData();
@@ -176,7 +176,7 @@ public:
   void finalize();
 
   ///@}
-  
+
   ///@name Status Queries
   ///@{
 
@@ -353,7 +353,7 @@ public:
 
   /**
    * @brief Returns the ID belonging to the mesh with given name.
-   * 
+   *
    * @param[in] meshName the name of the mesh
    * @returns the id of the corresponding mesh
    */
@@ -368,7 +368,7 @@ public:
 
   /**
    * @brief Returns a handle to a created mesh.
-   * 
+   *
    * @param[in] meshName the name of the mesh
    * @returns the handle to the mesh
    *
@@ -505,7 +505,7 @@ public:
    * per se. Edges are created on the fly within preCICE. This routine is
    * significantly slower than the one using edge IDs, since it needs to check,
    * whether an edge is created already or not.
-   * 
+   *
    * @param[in] meshID ID of the mesh to add the triangle to
    * @param[in] firstVertexID ID of the first vertex of the triangle
    * @param[in] secondVertexID ID of the second vertex of the triangle
@@ -547,7 +547,7 @@ public:
    * per se. Edges are created on the fly within preCICE. This routine is
    * significantly slower than the one using edge IDs, since it needs to check,
    * whether an edge is created already or not.
-   * 
+   *
    * @param[in] meshID ID of the mesh to add the Quad to
    * @param[in] firstVertexID ID of the first vertex of the Quad
    * @param[in] secondVertexID ID of the second vertex of the Quad
@@ -580,7 +580,7 @@ public:
 
   /**
    * @brief Returns the ID of the data associated with the given name and mesh.
-   * 
+   *
    * @param[in] dataName the name of the data
    * @param[in] meshID the id of the associated mesh
    *
@@ -803,6 +803,58 @@ public:
 
   ///@}
 
+  ///@name Configuration Access
+  ///@{
+
+  /**
+   * @brief Returns the names of all provided meshes.
+   *
+   * This function can be used to avoid definitions of mesh names in adapter configurations
+   *
+   * @param[out] vector of provided mesh names.
+   *
+   * @pre configure() has been called
+   */
+  std::vector<std::string> getMeshNames () const;
+
+  /**
+   * @brief Returns the names of all read data for a specific mesh.
+   *
+   * This function can be used to avoid definitions of mesh names in adapter configurations
+   *
+   * @param[out] vector of read data names.
+   *
+   * @pre configure() has been called
+   */
+  std::vector<std::string> getReadDataNames (
+    const std::string meshName) const;
+
+  /**
+   * @brief Returns the names of all write data for a specific mesh.
+   *
+   * This function can be used to avoid definitions of mesh names in adapter configurations
+   *
+   * @param[out] vector of write data names.
+   *
+   * @pre configure() has been called
+   */
+  std::vector<std::string> getWriteDataNames (
+    const std::string meshName) const;
+
+  /**
+   * @brief Returns the names of all adapter patches for a specific mesh.
+   *
+   * This function can be used to avoid definitions of mesh names in adapter configurations
+   *
+   * @param[out] vector of patch names.
+   *
+   * @pre configure() has been called
+   */
+  std::vector<std::string> getPatchNames (
+    const std::string meshName) const;
+
+  ///@}
+
 private:
 
   /// Pointer to implementation of SolverInterface.
@@ -818,11 +870,11 @@ private:
   friend struct testing::WhiteboxAccessor;
 };
 
-/** 
+/**
  * @brief Returns information on the version of preCICE.
  *
  * Returns a semicolon-separated C-string containing:
- * 
+ *
  * 1) the version of preCICE
  * 2) the revision information of preCICE
  * 3) the configuration of preCICE including MPI, PETSC, PYTHON

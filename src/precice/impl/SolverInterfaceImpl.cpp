@@ -1245,6 +1245,45 @@ void SolverInterfaceImpl:: readScalarData
   PRECICE_DEBUG("Read value = " << value);
 }
 
+std::vector<std::string> SolverInterfaceImpl:: getMeshNames () const
+{
+  std::vector<std::string> meshNames;
+  for (const impl::MeshContext* context : _accessor->usedMeshContexts()) {
+    if( context->provideMesh) meshNames.push_back(context->mesh->getName());
+  }
+  return meshNames;
+}
+
+std::vector<std::string> SolverInterfaceImpl:: getReadDataNames (
+  const std::string meshName) const
+{
+  std::vector<std::string> dataNames;
+  for (impl::DataContext& context : _accessor->readDataContexts()) {
+    dataNames.push_back(context.toData->getName());
+  }
+  return dataNames;
+}
+
+std::vector<std::string> SolverInterfaceImpl:: getWriteDataNames (
+  const std::string meshName) const
+{
+  std::vector<std::string> dataNames;
+  for (impl::DataContext& context : _accessor->writeDataContexts()) {
+    dataNames.push_back(context.fromData->getName());
+  }
+  return dataNames;
+}
+
+std::vector<std::string> SolverInterfaceImpl:: getPatchNames (
+  const std::string meshName) const
+{
+  std::vector<std::string> patchNames;
+  for (const impl::MeshContext* context : _accessor->usedMeshContexts()) {
+    if( context->provideMesh) patchNames.push_back(context->patchName);
+  }
+  return patchNames;
+}
+
 void SolverInterfaceImpl:: exportMesh
 (
   const std::string& filenameSuffix,
