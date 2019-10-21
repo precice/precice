@@ -27,6 +27,13 @@ class XMLTag
   friend class precice::xml::ConfigParser;
 
 public:
+  /// Tightly coupled to the parameters of SolverInterface()
+  struct ConfigurationContext {
+      std::string name;
+      int rank;
+      int size;
+  };
+
   /// Callback interface for configuration classes using XMLTag.
   struct Listener {
 
@@ -39,7 +46,7 @@ public:
      * At this callback, the attributes of the callingTag are already parsed and
      * available, while the subtags are not yet parsed.
      */
-    virtual void xmlTagCallback(XMLTag &callingTag) = 0;
+    virtual void xmlTagCallback(ConfigurationContext const& context, XMLTag &callingTag) = 0;
 
     /**
      * @brief Callback at end of XML tag and at end of subtag.
@@ -48,7 +55,7 @@ public:
      * This callback is first done for the listener, and then for the parent tag
      * listener (if existing).
      */
-    virtual void xmlEndTagCallback(XMLTag &callingTag) = 0;
+    virtual void xmlEndTagCallback(ConfigurationContext const& context, XMLTag &callingTag) = 0;
   };
 
   /// Types of occurrences of an XML tag.
