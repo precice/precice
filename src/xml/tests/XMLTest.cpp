@@ -12,14 +12,14 @@ BOOST_AUTO_TEST_SUITE(XML)
 struct CallbackHost : public XMLTag::Listener {
   Eigen::VectorXd eigenVectorXd;
 
-  void xmlTagCallback(XMLTag &callingTag)
+  void xmlTagCallback(const ConfigurationContext& context, XMLTag &callingTag) override
   {
     if (callingTag.getName() == "test-eigen-vectorxd-attributes") {
       eigenVectorXd = callingTag.getEigenVectorXdAttributeValue("value", 3);
     }
   }
 
-  void xmlEndTagCallback(XMLTag &callingTag)
+  void xmlEndTagCallback(const ConfigurationContext& context, XMLTag &callingTag) override
   {
     std::ignore = callingTag;
   }
@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(AttributeConcatenation)
   testcaseTag.addSubtag(testTag);
   rootTag.addSubtag(testcaseTag);
 
-  configure(rootTag, filename);
+  configure(rootTag, ConfigurationContext{}, filename);
 }
 
 BOOST_AUTO_TEST_CASE(VectorAttributes)
@@ -55,10 +55,11 @@ BOOST_AUTO_TEST_CASE(VectorAttributes)
   testTagEigenXd.addAttribute(attrEigenXd);
   rootTag.addSubtag(testTagEigenXd);
 
-  configure(rootTag, filename);
+  configure(rootTag, ConfigurationContext{}, filename);
   BOOST_TEST(cb.eigenVectorXd(0) == 3.0);
   BOOST_TEST(cb.eigenVectorXd(1) == 2.0);
   BOOST_TEST(cb.eigenVectorXd(2) == 1.0);
 }
+
 
 BOOST_AUTO_TEST_SUITE_END()
