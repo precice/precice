@@ -59,7 +59,7 @@ void OnCharacters(void *ctx, const xmlChar *ch, int len)
 
 precice::logging::Logger ConfigParser::_log("xml::XMLParser");
 
-ConfigParser::ConfigParser(const std::string &filePath, std::shared_ptr<precice::xml::XMLTag> pXmlTag)
+ConfigParser::ConfigParser(const std::string &filePath, const ConfigurationContext& context, std::shared_ptr<precice::xml::XMLTag> pXmlTag)
 {
   m_pXmlTag = pXmlTag;
   readXmlFile(filePath);
@@ -73,7 +73,7 @@ ConfigParser::ConfigParser(const std::string &filePath, std::shared_ptr<precice:
     SubTags.push_back(m_AllTags[0]);
 
   try {
-    connectTags(DefTags, SubTags);
+    connectTags(context, DefTags, SubTags);
   } catch (const std::string& error) {
     PRECICE_ERROR(error);
   }

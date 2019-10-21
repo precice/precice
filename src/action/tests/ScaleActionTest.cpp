@@ -157,7 +157,7 @@ BOOST_AUTO_TEST_CASE(Configuration)
     mesh::PtrMeshConfiguration meshConfig(new mesh::MeshConfiguration(tag, dataConfig));
     meshConfig->setDimensions(3);
     action::ActionConfiguration config(tag, meshConfig);
-    xml::configure(tag, filename);
+    xml::configure(tag, xml::ConfigurationContext{}, filename);
     BOOST_TEST(config.actions().size() == 1);
     action::PtrAction action = config.actions().front();
     BOOST_TEST(action);
@@ -170,7 +170,7 @@ BOOST_AUTO_TEST_CASE(Configuration)
     mesh::PtrMeshConfiguration meshConfig(new mesh::MeshConfiguration(tag, dataConfig));
     meshConfig->setDimensions(3);
     action::ActionConfiguration config(tag, meshConfig);
-    xml::configure(tag, filename);
+    xml::configure(tag, xml::ConfigurationContext{}, filename);
     BOOST_TEST(config.actions().size() == 1);
     action::PtrAction action = config.actions().front();
     BOOST_TEST(action);
@@ -183,7 +183,7 @@ BOOST_AUTO_TEST_CASE(Configuration)
     mesh::PtrMeshConfiguration meshConfig(new mesh::MeshConfiguration(tag, dataConfig));
     meshConfig->setDimensions(3);
     action::ActionConfiguration config(tag, meshConfig);
-    xml::configure(tag, filename);
+    xml::configure(tag, xml::ConfigurationContext{}, filename);
     BOOST_TEST(config.actions().size() == 1);
     action::PtrAction action = config.actions().front();
     BOOST_TEST(action);
@@ -196,7 +196,7 @@ BOOST_AUTO_TEST_CASE(Configuration)
     mesh::PtrMeshConfiguration meshConfig(new mesh::MeshConfiguration(tag, dataConfig));
     meshConfig->setDimensions(3);
     action::ActionConfiguration config(tag, meshConfig);
-    xml::configure(tag, filename);
+    xml::configure(tag, xml::ConfigurationContext{}, filename);
     BOOST_TEST(config.actions().size() == 1);
     action::PtrAction action = config.actions().front();
     BOOST_TEST(action);

@@ -72,10 +72,10 @@ public:
   const std::string &getDataToExchange(int index) const;
 
   /// Callback method required when using xml::XMLTag.
-  virtual void xmlTagCallback(xml::XMLTag &callingTag);
+  virtual void xmlTagCallback(const xml::ConfigurationContext& context, xml::XMLTag &callingTag);
 
   /// Callback method required when using xml::XMLTag.
-  virtual void xmlEndTagCallback(xml::XMLTag &callingTag);
+  virtual void xmlEndTagCallback(const xml::ConfigurationContext& context, xml::XMLTag &callingTag);
 
   /// Adds a manually configured coupling scheme for a participant.
   void addCouplingScheme(PtrCouplingScheme cplScheme, const std::string &participantName);

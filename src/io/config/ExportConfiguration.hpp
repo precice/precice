@@ -24,10 +24,10 @@ public:
     return _contexts;
   }
 
-  virtual void xmlTagCallback(xml::XMLTag &callingTag);
+  virtual void xmlTagCallback(const xml::ConfigurationContext& context, xml::XMLTag &callingTag);
 
   /// Callback from automatic configuration. Not utilitzed here.
-  virtual void xmlEndTagCallback(xml::XMLTag &callingTag) {}
+  virtual void xmlEndTagCallback(const xml::ConfigurationContext& context, xml::XMLTag &callingTag) {}
 
   void resetExports()
   {

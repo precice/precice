@@ -23,7 +23,7 @@ BOOST_AUTO_TEST_CASE(Configuration)
   mesh::PtrMeshConfiguration meshConfig(new mesh::MeshConfiguration(tag, dataConfig));
   meshConfig->setDimensions(3);
   mapping::MappingConfiguration mappingConfig(tag, meshConfig);
-  xml::configure(tag, file);
+  xml::configure(tag, xml::ConfigurationContext{}, file);
     
   BOOST_TEST(meshConfig->meshes().size() == 3);
   BOOST_TEST(mappingConfig.mappings().size() == 3);

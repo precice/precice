@@ -151,6 +151,7 @@ PtrAccelerationConfiguration AccelerationConfiguration::getCoarseModelOptimizati
 }
 
 void AccelerationConfiguration::xmlTagCallback(
+    const xml::ConfigurationContext& context,
     xml::XMLTag &callingTag)
 {
   PRECICE_TRACE(callingTag.getFullName());
@@ -247,6 +248,7 @@ void AccelerationConfiguration::xmlTagCallback(
 }
 
 void AccelerationConfiguration::xmlEndTagCallback(
+    const xml::ConfigurationContext& context,
     xml::XMLTag &callingTag)
 {
   PRECICE_TRACE(callingTag.getName());

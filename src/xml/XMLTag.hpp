@@ -21,19 +21,19 @@ namespace precice
 namespace xml
 {
 
+/// Tightly coupled to the parameters of SolverInterface()
+struct ConfigurationContext {
+    std::string name;
+    int rank;
+    int size;
+};
+
 /// Represents an XML tag to be configured automatically.
 class XMLTag
 {
   friend class precice::xml::ConfigParser;
 
 public:
-  /// Tightly coupled to the parameters of SolverInterface()
-  struct ConfigurationContext {
-      std::string name;
-      int rank;
-      int size;
-  };
-
   /// Callback interface for configuration classes using XMLTag.
   struct Listener {
 
@@ -233,8 +233,8 @@ private:
 
 /// No operation listener for tests.
 struct NoPListener : public XMLTag::Listener {
-  void xmlTagCallback(XMLTag &callingTag) override {}
-  void xmlEndTagCallback(XMLTag &callingTag) override {}
+  void xmlTagCallback(ConfigurationContext const & context, XMLTag &callingTag) override {}
+  void xmlEndTagCallback(ConfigurationContext const & context, XMLTag &callingTag) override {}
 };
 
 /**
@@ -254,6 +254,7 @@ XMLTag getRootTag();
 /// Configures the given configuration from file configurationFilename.
 void configure(
     XMLTag &           tag,
+    const precice::xml::ConfigurationContext& context,
     const std::string &configurationFilename);
 
 }} // namespace precice, xml

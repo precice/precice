@@ -164,7 +164,8 @@ ActionConfiguration:: ActionConfiguration
 }
 
 void ActionConfiguration:: xmlTagCallback
-(
+( 
+  const xml::ConfigurationContext& context,
   xml::XMLTag& callingTag )
 {
   PRECICE_TRACE(callingTag.getName());
@@ -198,6 +199,7 @@ void ActionConfiguration:: xmlTagCallback
 
 void ActionConfiguration:: xmlEndTagCallback
 (
+  const xml::ConfigurationContext& context,
   xml::XMLTag& callingTag )
 {
   if (callingTag.getNamespace() == TAG){

@@ -11,6 +11,7 @@ namespace precice
 namespace xml
 {
 class XMLTag; // forward declaration to resolve circular import
+struct ConfigurationContext;
 
 class ConfigParser
 {

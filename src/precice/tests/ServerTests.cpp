@@ -48,8 +48,9 @@ BOOST_AUTO_TEST_CASE(testCouplingModeWithOneServer,
   std::string configFile = _pathToTests + "cplmode-1.xml";
   if ( rank == 0 ){
     SolverInterface interface("ParticipantA", 0, 1);
+    xml::ConfigurationContext context{"ParticipantA", 0, 1};
     config::Configuration config;
-    xml::configure(config.getXMLTag(), configFile);
+    xml::configure(config.getXMLTag(), context, configFile);
     impl(interface).configure(config.getSolverInterfaceConfiguration());
     double time = 0.0;
     int timesteps = 0;
@@ -70,8 +71,9 @@ BOOST_AUTO_TEST_CASE(testCouplingModeWithOneServer,
   }
   else if ( rank == 1 ){
     SolverInterface interface("ParticipantB", 0, 1);
+    xml::ConfigurationContext context{"ParticipantB", 0, 1};
     config::Configuration config;
-    xml::configure(config.getXMLTag(), configFile);
+    xml::configure(config.getXMLTag(), context, configFile);
     impl(interface).configure(config.getSolverInterfaceConfiguration());
     double time = 0.0;
     int timesteps = 0;
@@ -89,13 +91,14 @@ BOOST_AUTO_TEST_CASE(testCouplingModeWithOneServer,
     BOOST_TEST (rank == 2, rank);
     bool isServer = true;
     impl::SolverInterfaceImpl server("ParticipantB", 0, 1, isServer);
+    xml::ConfigurationContext context{"ParticipantB", 0, 1};
 
     // Perform manual configuration without overwritting logging config
     mesh::Mesh::resetGeometryIDsGlobally();
     mesh::Data::resetDataCount();
     impl::Participant::resetParticipantCount();
     config::Configuration config;
-    xml::configure ( config.getXMLTag(), configFile );
+    xml::configure ( config.getXMLTag(), context, configFile );
     server.configure ( config.getSolverInterfaceConfiguration() );
 
     server.runServer();
@@ -109,8 +112,9 @@ BOOST_AUTO_TEST_CASE(testCouplingModeParallelWithOneServer, * testing::OnSize(4)
   std::string configFile = _pathToTests + "cplmode-1.xml";
   if (rank == 0){
     SolverInterface interface("ParticipantA", 0, 1);
+    xml::ConfigurationContext context{"ParticipantA", 0, 1};
     config::Configuration config;
-    xml::configure(config.getXMLTag(), configFile);
+    xml::configure(config.getXMLTag(), context, configFile);
     impl(interface).configure(config.getSolverInterfaceConfiguration());
     double time = 0.0;
     int timesteps = 0;
@@ -148,8 +152,9 @@ BOOST_AUTO_TEST_CASE(testCouplingModeParallelWithOneServer, * testing::OnSize(4)
   }
   else if ((rank == 1) || (rank == 2)){
     SolverInterface interface("ParticipantB", rank-1, 2);
+    xml::ConfigurationContext context{"ParticipantB", rank-1, 2};
     config::Configuration config;
-    xml::configure(config.getXMLTag(), configFile);
+    xml::configure(config.getXMLTag(), context, configFile);
     impl(interface).configure(config.getSolverInterfaceConfiguration());
     double time = 0.0;
     int timesteps = 0;
@@ -177,13 +182,14 @@ BOOST_AUTO_TEST_CASE(testCouplingModeParallelWithOneServer, * testing::OnSize(4)
     BOOST_TEST(rank == 3, rank);
     bool isServer = true;
     impl::SolverInterfaceImpl server("ParticipantB", 0, 1, isServer);
+    xml::ConfigurationContext context{"ParticipantB", 0, 1};
 
     // Perform manual configuration without overwritting logging config
     mesh::Mesh::resetGeometryIDsGlobally();
     mesh::Data::resetDataCount();
     impl::Participant::resetParticipantCount();
     config::Configuration config;
-    xml::configure(config.getXMLTag(), configFile);
+    xml::configure(config.getXMLTag(), context, configFile);
     server.configure(config.getSolverInterfaceConfiguration());
     server.runServer();
   }

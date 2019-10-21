@@ -145,6 +145,7 @@ const PtrCouplingScheme &CouplingSchemeConfiguration::getCouplingScheme(
 }
 
 void CouplingSchemeConfiguration::xmlTagCallback(
+    const xml::ConfigurationContext& context,
     xml::XMLTag &tag)
 {
   PRECICE_TRACE(tag.getFullName());
@@ -249,6 +250,7 @@ void CouplingSchemeConfiguration::xmlTagCallback(
 }
 
 void CouplingSchemeConfiguration::xmlEndTagCallback(
+    const xml::ConfigurationContext& context,
     xml::XMLTag &tag)
 {
   PRECICE_TRACE(tag.getFullName());
