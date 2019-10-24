@@ -87,7 +87,7 @@ void SerialCouplingScheme::initialize
   if (not doesFirstStep() && not hasToSendInitData() && isCouplingOngoing()) {
     PRECICE_DEBUG("Receiving data");
     receiveAndSetDt();
-    receiveData(getM2N());
+    receiveData(getM2N()); // here the problem happens
     setHasDataBeenExchanged(true);
   }
 

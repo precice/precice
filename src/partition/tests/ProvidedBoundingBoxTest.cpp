@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_CASE(TestCommunicateBoundingBox2D, * testing::OnSize(4))
     bool hasToSend = true;    
     pSolidzMesh->computeState();
     
-    ProvidedBoundingBox part(pSolidzMesh, hasToSend, safetyFactor);
+    ProvidedBoundingBox part(pSolidzMesh/*, hasToSend*/, safetyFactor);
     part.addM2N(m2n);
     part.communicateBoundingBox();
     
@@ -265,7 +265,7 @@ BOOST_AUTO_TEST_CASE(TestCommunicateBoundingBox3D, * testing::OnSize(4))
     bool hasToSend = true;    
     pSolidzMesh->computeState();
     
-    ProvidedBoundingBox part(pSolidzMesh, hasToSend, safetyFactor);
+    ProvidedBoundingBox part(pSolidzMesh, /*hasToSend,*/ safetyFactor);
     part.addM2N(m2n);
     part.communicateBoundingBox();
     
@@ -358,7 +358,7 @@ BOOST_AUTO_TEST_CASE(TestComputeBoundingBox, * testing::OnSize(4))
     bool hasToSend = true;    
     pSolidzMesh->computeState();
     
-    ProvidedBoundingBox part(pSolidzMesh, hasToSend, safetyFactor);
+    ProvidedBoundingBox part(pSolidzMesh, /*hasToSend,*/ safetyFactor);
     part.addM2N(m2n);
     part.computeBoundingBox();
 
@@ -461,7 +461,7 @@ BOOST_AUTO_TEST_CASE(TestCommunicateLocalMeshPartitions, * testing::OnSize(4))
   if(utils::Parallel::getProcessRank() < 2)
   {
     p2p->createDistributedCommunication(mesh);
-    ProvidedBoundingBox part(mesh, hasToSend, safetyFactor);
+    ProvidedBoundingBox part(mesh, /*hasToSend,*/ safetyFactor);
     p2p->acceptSlavesPreConnection("SolidSlaves", "FluidSlaves");
     part.addM2N(p2p);
     
@@ -607,7 +607,7 @@ BOOST_AUTO_TEST_CASE(TestCompute2D, * testing::OnSize(4))
   if(utils::Parallel::getProcessRank() < 2)
   {
     p2p->createDistributedCommunication(mesh);
-    ProvidedBoundingBox part(mesh, hasToSend, safetyFactor);
+    ProvidedBoundingBox part(mesh, /*hasToSend,*/ safetyFactor);
     part.addM2N(p2p);
 
     part.communicateBoundingBox();
@@ -763,7 +763,7 @@ BOOST_AUTO_TEST_CASE(TestCompute3D, * testing::OnSize(4))
   if(utils::Parallel::getProcessRank() < 2)
   {
     p2p->createDistributedCommunication(mesh);
-    ProvidedBoundingBox part(mesh, hasToSend, safetyFactor);
+    ProvidedBoundingBox part(mesh, /*hasToSend,*/ safetyFactor);
     part.addM2N(p2p);
     
     part.communicateBoundingBox();

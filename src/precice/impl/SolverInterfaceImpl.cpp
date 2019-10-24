@@ -227,9 +227,10 @@ double SolverInterfaceImpl:: initialize()
         bm2n.connectMasters();
         PRECICE_DEBUG("Established master connection " << (bm2n.isRequesting?"from ":"to ") << bm2n.remoteName);
     }
+    
     PRECICE_INFO("Masters are connected");
 
-    computeBoundingBoxs();
+    computeBoundingBoxs();    
 
     PRECICE_INFO("Setting up slaves communication to coupling partner/s" );
 
@@ -244,7 +245,7 @@ double SolverInterfaceImpl:: initialize()
     PRECICE_INFO("Slaves are connected" );      
 
     computePartitions();
-
+   
     for (auto& m2nPair : _m2ns) {
       auto& m2n = m2nPair.second.m2n;
       m2n->completeSlavesConnection();     
@@ -1359,13 +1360,13 @@ void SolverInterfaceImpl:: configurePartitions
               "Participant \"" << _accessorName << "\" cannot provide "
               << "and receive mesh " << context->mesh->getName() << "!" );
 
-      context->partition = partition::PtrPartition(new partition::ProvidedPartition(context->mesh));
+      // context->partition = partition::PtrPartition(new partition::ProvidedPartition(context->mesh));
+      context->partition = partition::PtrPartition(new partition::ProvidedBoundingBox(context->mesh, context->safetyFactor));
 
       for (auto& receiver : _participants ) {
         for (auto& receiverContext : receiver->usedMeshContexts()) {
           if(receiverContext->receiveMeshFrom == _accessorName && receiverContext->mesh->getName() == context->mesh->getName()){
             //PRECICE_CHECK( not hasToSend, "Mesh " << context->mesh->getName() << " can currently only be received once.")
-
             // meshRequirement has to be copied from "from" to provide", since
             // mapping are only defined at "provide"
             if(receiverContext->meshRequirement > context->meshRequirement){
@@ -1414,19 +1415,16 @@ void SolverInterfaceImpl:: computeBoundingBoxs()
                return lhs->mesh->getName() < rhs->mesh->getName();
              }
     );
-  
-  
+   
   for (MeshContext* meshContext : _accessor->usedMeshContexts())
   {
     meshContext->mesh->buildBoundingBox();
     meshContext->partition->communicateBoundingBox();    
   }
-
   
   for (MeshContext* meshContext : _accessor->usedMeshContexts()){
     meshContext->partition->computeBoundingBox();
   }
-
 }
 
 

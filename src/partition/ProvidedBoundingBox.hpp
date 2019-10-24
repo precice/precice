@@ -19,7 +19,7 @@ class ProvidedBoundingBox :  public Partition
 public:
 
    /// Constructor
-  ProvidedBoundingBox(mesh::PtrMesh mesh, bool hasToSend, double safetyFactor);
+  ProvidedBoundingBox(mesh::PtrMesh mesh,/* bool hasToSend,*/ double safetyFactor);
 
   virtual ~ProvidedBoundingBox() {}
   

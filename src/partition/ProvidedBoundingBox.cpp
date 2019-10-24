@@ -17,10 +17,10 @@ namespace partition
 {
 
 ProvidedBoundingBox::ProvidedBoundingBox(mesh::PtrMesh mesh,
-                                         bool          hasToSend,
+                                         // bool          hasToSend,
                                          double        safetyFactor)
     : Partition(mesh),
-      _hasToSend(hasToSend),
+      // _hasToSend(hasToSend),
       _dimensions(mesh->getDimensions()),
       _safetyFactor(safetyFactor)
 {
@@ -29,9 +29,10 @@ ProvidedBoundingBox::ProvidedBoundingBox(mesh::PtrMesh mesh,
 void ProvidedBoundingBox::communicateBoundingBox()
 {
   PRECICE_TRACE();
-
-  if (!_hasToSend)
+  if(_m2ns.empty())
     return;
+  // if (!_hasToSend)
+  //   return;
 
   // each rank sends its bb to master
   if (utils::MasterSlave::isSlave()) { //slave
@@ -62,7 +63,7 @@ void ProvidedBoundingBox::communicateBoundingBox()
 
 void ProvidedBoundingBox::computeBoundingBox()
 {
-  if (!_hasToSend)
+  if(_m2ns.empty())
     return;
   
   PRECICE_TRACE();
@@ -103,15 +104,15 @@ void ProvidedBoundingBox::computeBoundingBox()
     }
 
   } else { // Slave
-
-    utils::MasterSlave::_communication->broadcast(connectedRanksList, 0);
-
+    
+    utils::MasterSlave::_communication->broadcast(connectedRanksList, 0);   
+    
     if (!connectedRanksList.empty())
     {
       for (auto &rank : connectedRanksList) {
         remoteConnectionMap[rank] = {-1};
-      }
-      com::CommunicateBoundingBox(utils::MasterSlave::_communication).broadcastReceiveConnectionMap(remoteConnectionMap);
+      }      
+      com::CommunicateBoundingBox(utils::MasterSlave::_communication).broadcastReceiveConnectionMap(remoteConnectionMap);      
     }
 
     for (auto &remoteRank : remoteConnectionMap) {
@@ -121,14 +122,17 @@ void ProvidedBoundingBox::computeBoundingBox()
         }
       }
     }
-  }
+  }  
 }
 
 void ProvidedBoundingBox::communicate()
 {
 
-  if (!_hasToSend)
-    return;  
+  if(_m2ns.empty())
+    return;
+      
+  // if (!_hasToSend)
+  //   return;  
   /*
    * First we should set global index for each vertex
    * This global vertex id is needed for final filtering in 
@@ -214,11 +218,11 @@ void ProvidedBoundingBox::communicate()
 
 void ProvidedBoundingBox::compute()
 {
-  if (!_hasToSend)
+  if(_m2ns.empty())
     return;
 
   // receive communication map from all remote connected ranks
-   _m2ns[0]->broadcastReceiveLCM(_mesh->getCommunicationMap(), *_mesh);    
+   _m2ns[0]->broadcastReceiveLCM(_mesh->getCommunicationMap(), *_mesh);
 }
 
 void ProvidedBoundingBox::createOwnerInformation()
