@@ -1,13 +1,12 @@
 #include "NearestNeighborMapping.hpp"
 #include "query/FindClosestVertex.hpp"
 #include "utils/Helpers.hpp"
+#include "utils/Statistics.hpp"
 #include "mesh/RTree.hpp"
 #include <Eigen/Core>
 #include <boost/function_output_iterator.hpp>
 #include <boost/container/flat_set.hpp>
 #include "utils/Event.hpp"
-
-
 
 namespace precice {
 extern bool syncMode;
@@ -42,15 +41,19 @@ void NearestNeighborMapping:: computeMapping()
     e2.stop();
     size_t verticesSize = output()->vertices().size();
     _vertexIndices.resize(verticesSize);
+    utils::statistics::DistanceAccumulator distanceStatistics;
     const mesh::Mesh::VertexContainer& outputVertices = output()->vertices();
     for ( size_t i=0; i < verticesSize; i++ ) {
         const Eigen::VectorXd& coords = outputVertices[i].getCoords();
         // Search for the output vertex inside the input mesh and add index to _vertexIndices
         rtree->query(boost::geometry::index::nearest(coords, 1),
                      boost::make_function_output_iterator([&](size_t const& val) {
-                         _vertexIndices[i] =  input()->vertices()[val].getID();
+                         const auto& match = input()->vertices()[val];
+                         _vertexIndices[i] =  match.getID();
+                         distanceStatistics(bg::distance(match, coords));
                        }));
     }
+    PRECICE_INFO("Mapping distance " << distanceStatistics);
   }
   else {
     PRECICE_ASSERT(getConstraint() == CONSERVATIVE, getConstraint());
@@ -60,15 +63,19 @@ void NearestNeighborMapping:: computeMapping()
     e2.stop();
     size_t verticesSize = input()->vertices().size();
     _vertexIndices.resize(verticesSize);
+    utils::statistics::DistanceAccumulator distanceStatistics;
     const mesh::Mesh::VertexContainer& inputVertices = input()->vertices();
     for ( size_t i=0; i < verticesSize; i++ ){
       const Eigen::VectorXd& coords = inputVertices[i].getCoords();
       // Search for the input vertex inside the output mesh and add index to _vertexIndices
       rtree->query(boost::geometry::index::nearest(coords, 1),
                    boost::make_function_output_iterator([&](size_t const& val) {
-                       _vertexIndices[i] =  output()->vertices()[val].getID();
+                       const auto& match = output()->vertices()[val];
+                       _vertexIndices[i] =  match.getID();
+                       distanceStatistics(bg::distance(match, coords));
                      }));
     }
+    PRECICE_INFO("Mapping distance " << distanceStatistics);
   }
   _hasComputedMapping = true;
 }
