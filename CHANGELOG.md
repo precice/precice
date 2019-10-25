@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file. For future 
 ## develop
 
 - drop official python2 support for python bindings ([remove tests](https://github.com/precice/systemtests/commit/dba924447996574967b2295cf652fb32bec58020)).
+- Introduce preCICE-MATLAB bindings (https://github.com/precice/precice/pull/494)
 
 ## 1.6.1
 
