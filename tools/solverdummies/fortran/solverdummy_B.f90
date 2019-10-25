@@ -27,13 +27,14 @@ PROGRAM main
   CALL precicef_get_dims(dimensions)
   ALLOCATE(vertex(n*dimensions))
   ALLOCATE(vertexID(n))
-  vertex = 0
-  vertexID = 0
-  n = 3
+  vertex = 0	!set vertex values to zero
+  vertexID = 0	!set vertex IDs to zero
+  n = 3		!Total number of vertices
   dtlimit = 1
 
   CALL precicef_get_mesh_id('dummy_Mesh_Two', meshID)
 
+  !setting the x, y and z coordinate of each vertex and setting the vertex ID
   do i = 1,n,1
     do j = 1,dimensions,1
       vertex((i-1)*dimensions + i ) = i
@@ -82,7 +83,7 @@ PROGRAM main
       CALL precicef_write_sdata(solver_Two_Data_ID, vertexID(i), solver_Two_Data(i));
     enddo
 
-    read(*,*)
+    read(*,*)		!Wait for keystroke before running advance
     CALL precicef_advance(dtlimit)
     CALL precicef_ongoing(ongoing)
 

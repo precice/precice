@@ -16,8 +16,8 @@ configuration_file_name = "precice-config.xml"
 participant_name = "dummy_Solver_Two"
 mesh_name = "dummy_Mesh_Two"
 
-n = 3
-nodeVertexIDs = n*[0.0]
+n = 3				# Number of vertices
+nodeVertexIDs = n*[0.0]		# vertex ID's
 
 solver_process_index = 0
 solver_process_size = 1
@@ -31,7 +31,7 @@ dimensions = interface.get_dimensions()
 mesh_id = interface.get_mesh_id(mesh_name)
 
 vertices = np.zeros((n, dimensions))
-
+# Set x, y and z coordinate of vertices 
 i = 0
 for x in range(0,n):
     for y in range(0,3):
@@ -70,7 +70,7 @@ while interface.is_coupling_ongoing():
         print("data_indices[i] = ", data_indices[i])
         interface.write_scalar_data(solver_Two_Data_ID, data_indices[i], solver_Two_Data[i])
 
-    input("Press Enter to continue...")
+    input("Press Enter to continue...")		# Wait for keystroke before advance
     dt = interface.advance(dt)
 
 interface.finalize()
