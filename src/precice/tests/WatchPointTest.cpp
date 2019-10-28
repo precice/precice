@@ -33,6 +33,8 @@ BOOST_AUTO_TEST_CASE(WatchPoint)
   auto &  vectorValues = vectorData->values();
   mesh->computeState();
   mesh->allocateDataValues();
+  doubleValues.setConstant(1.0);
+  vectorValues.setConstant(1.0);
 
   // Create watchpoints
   Eigen::Vector2d  pointToWatch0(1.0, 1.0);
@@ -50,19 +52,19 @@ BOOST_AUTO_TEST_CASE(WatchPoint)
   watchpoint0.exportPointData(0.0);
   watchpoint1.exportPointData(0.0);
 
-  // Change geometry and write output again
-  for (mesh::Vertex &vertex : mesh->vertices()) {
-    BOOST_TEST(vectorValues.size() > vertex.getID());
-    doubleValues[vertex.getID()] = 1.0;
-  }
+  // Change data and write output again
+  doubleValues.setConstant(3.0);
+  vectorValues.setConstant(3.0);
   watchpoint0.exportPointData(1.0);
   watchpoint1.exportPointData(1.0);
 
-  // Change Mesh
+  // Change Mesh and data
   mesh::Vertex& v5 = mesh->createVertex(Eigen::Vector2d(3.0, 2.0));
   mesh->createEdge(v4,v5);
   mesh->allocateDataValues();
   mesh->computeState();
+  doubleValues.setConstant(5.0);
+  vectorValues.setConstant(5.0);
 
   // Re-Initialize
   watchpoint0.initialize();
