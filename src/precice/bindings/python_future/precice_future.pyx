@@ -120,7 +120,7 @@ cdef class Interface:
         dimensions = position.size
         assert(dimensions == self.get_dimensions())
         cdef np.ndarray[double, ndim=1] _position = np.ascontiguousarray(position, dtype=np.double)
-        vertex_id = self.thisptr.setMeshVertex(mesh_id, &_position[0])
+        vertex_id = self.thisptr.setMeshVertex(mesh_id, <const double*>_position.data)
         return vertex_id
 
     # returns the number of vertices of a mesh
@@ -135,7 +135,7 @@ cdef class Interface:
         assert(dimensions == self.get_dimensions())
         cdef np.ndarray[double, ndim=1] _positions = np.ascontiguousarray(positions.flatten(), dtype=np.double)
         cdef np.ndarray[int, ndim=1] _ids = np.empty(size, dtype=np.int32)
-        self.thisptr.setMeshVertices (mesh_id, size, &_positions[0], &_ids[0])
+        self.thisptr.setMeshVertices (mesh_id, size, <const double*>_positions.data, <int*>_ids.data)
         return _ids
 
     # get vertex positions for multiple vertex ids from a given mesh
@@ -143,7 +143,7 @@ cdef class Interface:
         cdef np.ndarray[int, ndim=1] _ids = np.ascontiguousarray(ids, dtype=np.int32)
         size = _ids.size
         cdef np.ndarray[double, ndim=1] _positions = np.empty(size * self.get_dimensions(), dtype=np.double)
-        self.thisptr.getMeshVertices (mesh_id, size, &_ids[0], &_positions[0])
+        self.thisptr.getMeshVertices (mesh_id, size, <const int*>_ids.data, <double*>_positions.data)
         return _positions.reshape((size, self.get_dimensions()))
 
     # gets mesh vertex IDs from positions
@@ -154,7 +154,7 @@ cdef class Interface:
         assert(dimensions == self.get_dimensions())
         cdef np.ndarray[double, ndim=1] _positions = np.ascontiguousarray(positions.flatten(), dtype=np.double)
         cdef np.ndarray[int, ndim=1] _ids = np.empty(int(size), dtype=np.int32)
-        self.thisptr.getMeshVertexIDsFromPositions (mesh_id, size, &_positions[0], &_ids[0])
+        self.thisptr.getMeshVertexIDsFromPositions (mesh_id, size, <const double*>_positions.data, <int*>_ids.data)
         return _ids
 
     # sets mesh edge from vertex IDs, returns edge ID
@@ -200,7 +200,7 @@ cdef class Interface:
         cdef np.ndarray[double, ndim=1] _values = np.ascontiguousarray(values.flatten(), dtype=np.double)
         assert(size == _value_indices.size)
         size = value_indices.size
-        self.thisptr.writeBlockVectorData (data_id, size, &_value_indices[0], &_values[0])
+        self.thisptr.writeBlockVectorData (data_id, size, <const int*>_value_indices.data, <const double*>_values.data)
 
     def write_vector_data (self, data_id, value_index, value):
         if not isinstance(value, np.ndarray):
@@ -208,14 +208,14 @@ cdef class Interface:
         dimensions = value.size
         assert(dimensions == self.get_dimensions())
         cdef np.ndarray[np.double_t, ndim=1] _value = np.ascontiguousarray(value, dtype=np.double)
-        self.thisptr.writeVectorData (data_id, value_index, &_value[0])
+        self.thisptr.writeVectorData (data_id, value_index, <const double*>_value.data)
 
     def write_block_scalar_data (self, data_id, value_indices, values):
         cdef np.ndarray[int, ndim=1] _value_indices = np.ascontiguousarray(value_indices, dtype=np.int32)
         cdef np.ndarray[double, ndim=1] _values = np.ascontiguousarray(values, dtype=np.double)
         assert(_values.size == _value_indices.size)
         size = value_indices.size
-        self.thisptr.writeBlockScalarData (data_id, size, &_value_indices[0], &_values[0])
+        self.thisptr.writeBlockScalarData (data_id, size, <const int*>_value_indices.data, <const double*>_values.data)
 
     def write_scalar_data (self, data_id, value_index, double value):
         self.thisptr.writeScalarData (data_id, value_index, value)
@@ -225,20 +225,20 @@ cdef class Interface:
         size = _value_indices.size
         dimensions = self.get_dimensions()
         cdef np.ndarray[np.double_t, ndim=1] _values = np.empty(size * dimensions, dtype=np.double)
-        self.thisptr.readBlockVectorData (data_id, size, &_value_indices[0], &_values[0])
+        self.thisptr.readBlockVectorData (data_id, size, <const int*>_value_indices.data, <double*>_values.data)
         return _values.reshape((size, dimensions))
 
     def read_vector_data (self, data_id, value_index):
         dimensions = self.get_dimensions()
         cdef np.ndarray[double, ndim=1] _value = np.empty(dimensions, dtype=np.double)
-        self.thisptr.readVectorData (data_id, value_index, &_value[0])
+        self.thisptr.readVectorData (data_id, value_index, <double*>_value.data)
         return _value
 
     def read_block_scalar_data (self, data_id, value_indices):
         cdef np.ndarray[int, ndim=1] _value_indices = np.ascontiguousarray(value_indices, dtype=np.int32)
         size = _value_indices.size
         cdef np.ndarray[double, ndim=1] _values = np.empty(size, dtype=np.double)
-        self.thisptr.readBlockScalarData (data_id, size, &_value_indices[0], &_values[0])
+        self.thisptr.readBlockScalarData (data_id, size, <const int*>_value_indices.data, <double*>_values.data)
         return _values
 
     def read_scalar_data (self, data_id, value_index):

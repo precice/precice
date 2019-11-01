@@ -36,6 +36,14 @@ class TestBindings(TestCase):
         positions = np.random.rand(n_fake_vertices, fake_dimension)
         self.assertTrue(np.array_equal(np.array(range(n_fake_vertices)), solver_interface.set_mesh_vertices(fake_mesh_id, positions)))
 
+    def test_set_mesh_vertices_empty (self):
+        solver_interface = precice_future.Interface("test", 0, 1)
+        fake_mesh_id = 0  # compare to test/SolverInterface.cpp, fake_mesh_id
+        fake_dimension = 3  # compare to test/SolverInterface.cpp, fake_dimensions
+        n_fake_vertices = 0  # compare to test/SolverInterface.cpp, n_fake_vertices
+        positions = np.random.rand(n_fake_vertices, fake_dimension)
+        self.assertTrue(np.array_equal(np.array(range(n_fake_vertices)), solver_interface.set_mesh_vertices(fake_mesh_id, positions)))
+
     def test_set_mesh_vertices_list (self):
         solver_interface = precice_future.Interface("test", 0, 1)
         fake_mesh_id = 0  # compare to test/SolverInterface.cpp, fake_mesh_id
