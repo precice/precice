@@ -580,40 +580,45 @@ void PointToPointCommunication::send(double const  *itemsToSend,
                                      size_t         size,
                                      int            valueDimension)
 {
-
+  
   if (_mappings.empty()) {
     return;
   }
-
+  
   for (auto &mapping : _mappings) {
+    if (utils::MasterSlave::isMaster())
+      std::cout<< "indices " << mapping.indices << std::endl; 
     auto buffer = std::make_shared<std::vector<double>>();
     buffer->reserve(mapping.indices.size() * valueDimension);
     for (auto index : mapping.indices) {
       for (int d = 0; d < valueDimension; ++d) {
         buffer->push_back(itemsToSend[index * valueDimension + d]);
       }
-    }
+    }    
     auto request = _communication->aSend(*buffer, mapping.remoteRank);
-    bufferedRequests.emplace_back(request, buffer);
+    bufferedRequests.emplace_back(request, buffer);    
   }
-  checkBufferedRequests(false);
+  checkBufferedRequests(true);
 }
 
 void PointToPointCommunication::receive(double *itemsToReceive,
                                         size_t  size,
                                         int     valueDimension)
-{
+{  
   if (_mappings.empty()) {
     return;
   }
 
+   
   std::fill(itemsToReceive, itemsToReceive + size, 0);
 
   for (auto &mapping : _mappings) {
-    mapping.recvBuffer.resize(mapping.indices.size() * valueDimension);
+    if (not utils::MasterSlave::isMaster())
+      std::cout<< "indices " << mapping.indices << std::endl; 
+    mapping.recvBuffer.resize(mapping.indices.size() * valueDimension);    
     mapping.request = _communication->aReceive(mapping.recvBuffer, mapping.remoteRank);
   }
-
+  
   for (auto &mapping : _mappings) {
     mapping.request->wait();
 

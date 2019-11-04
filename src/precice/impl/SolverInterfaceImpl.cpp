@@ -357,6 +357,7 @@ double SolverInterfaceImpl:: advance
   PRECICE_CHECK(_couplingScheme->isInitialized(), "initialize() has to be called before advance()");
   PRECICE_CHECK(isCouplingOngoing(), "advance() cannot be called when isCouplingOngoing() returns false");
   _numberAdvanceCalls++;
+
   if (_clientMode){
     _requestManager->requestAdvance(computedTimestepLength);
   }
@@ -371,7 +372,7 @@ double SolverInterfaceImpl:: advance
     double timestepLength = 0.0; // Length of (full) current dt
     double timestepPart = 0.0;   // Length of computed part of (full) curr. dt
     double time = 0.0;
-    
+
     // Update the coupling scheme time state. Necessary to get correct remainder.
     _couplingScheme->addComputedTime(computedTimestepLength);
 
@@ -395,8 +396,8 @@ double SolverInterfaceImpl:: advance
     }
     performDataActions(timings, time, computedTimestepLength, timestepPart, timestepLength);
 
-
     PRECICE_DEBUG("Advance coupling scheme");
+    
     _couplingScheme->advance();
     
     timings.clear();

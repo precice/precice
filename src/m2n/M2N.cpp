@@ -184,7 +184,7 @@ void M2N::send(
     int     size,
     int     meshID,
     int     valueDimension)
-{
+{  
   if (utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster()) {
     PRECICE_ASSERT(_areSlavesConnected);
     PRECICE_ASSERT(_distComs.find(meshID) != _distComs.end());
@@ -197,9 +197,9 @@ void M2N::send(
         _masterCom->receive(ack, 0);
         _masterCom->send(ack, 0);
       }
-    }
+    }    
     Event e("m2n.sendData", precice::syncMode);
-    _distComs[meshID]->send(itemsToSend, size, valueDimension);
+    _distComs[meshID]->send(itemsToSend, size, valueDimension);   
   } else { //coupling mode
     PRECICE_ASSERT(_isMasterConnected);
     _masterCom->send(itemsToSend, size, 0);
@@ -262,8 +262,8 @@ void M2N::receive(double *itemsToReceive,
                   int     size,
                   int     meshID,
                   int     valueDimension)
-{
-  if (utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster()) {
+{  
+  if (utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster()) {    
     PRECICE_ASSERT(_areSlavesConnected);
     PRECICE_ASSERT(_distComs.find(meshID) != _distComs.end());
     PRECICE_ASSERT(_distComs[meshID].get() != nullptr);
@@ -275,14 +275,15 @@ void M2N::receive(double *itemsToReceive,
         _masterCom->receive(ack, 0);
         _masterCom->send(ack, 0);
         _masterCom->receive(ack, 0);
-      }
-    }
+      }      
+    } 
     Event e("m2n.receiveData", precice::syncMode);
-    _distComs[meshID]->receive(itemsToReceive, size, valueDimension);
-  } else { //coupling mode
+    _distComs[meshID]->receive(itemsToReceive, size, valueDimension);    
+  } else { //coupling mode    
     PRECICE_ASSERT(_isMasterConnected);
-    _masterCom->receive(itemsToReceive, size, 0);
+    _masterCom->receive(itemsToReceive, size, 0);    
   }
+  std::cout<< "receiving 5 " << std::endl; 
 }
 
 void M2N::receive(bool &itemToReceive)

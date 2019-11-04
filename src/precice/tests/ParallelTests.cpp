@@ -580,28 +580,24 @@ BOOST_AUTO_TEST_CASE(testBoundingBoxInitialization, * testing::OnSize(4))
         precice.writeVectorData(forcesID, vertexIDs[i], data[i+i1].data());
       }
     }
-
-    
-
-    // precice.advance(1.0);
-
-    // if (utils::Parallel::getProcessRank() > 1){ //Structure
-      
-    //   for( size_t i=0; i<vertexIDs.size(); i++){
-    //     precice.readVectorData(forcesID, vertexIDs[i], data[i+i1].data());        
-    //   }
-    // }
-
-    // if (utils::Parallel::getProcessRank() > 1){ //Fluid
-    //   for( size_t i=0; i<vertexIDs.size(); i++){
-    //     for (size_t d=0; d<3; d++){
-    //       BOOST_TEST(expectedData[i+i1][d] == data[i+i1][d]);
-    //     }
-    //   }
-    // }
-
-    precice.finalize();
    
+    precice.advance(1.0);
+
+    if (utils::Parallel::getProcessRank() > 1){ //Structure
+      
+      for( size_t i=0; i<vertexIDs.size(); i++){
+        precice.readVectorData(forcesID, vertexIDs[i], data[i+i1].data());        
+      }
+    }
+
+    if (utils::Parallel::getProcessRank() > 1){ //Fluid
+      for( size_t i=0; i<vertexIDs.size(); i++){
+        for (size_t d=0; d<3; d++){
+          BOOST_TEST(expectedData[i+i1][d] == data[i+i1][d]);
+        }
+      }
+    }
+    precice.finalize();   
 }
 
 /*

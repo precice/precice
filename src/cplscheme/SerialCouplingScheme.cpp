@@ -163,7 +163,7 @@ void SerialCouplingScheme::advance()
   }
   #endif
   checkCompletenessRequiredActions();
-
+  
   PRECICE_CHECK(not hasToReceiveInitData() && not hasToSendInitData(),
         "initializeData() needs to be called before advance if data has to be initialized!");
 
@@ -177,7 +177,7 @@ void SerialCouplingScheme::advance()
       PRECICE_DEBUG("Sending data...");
       sendDt();
       sendData(getM2N());
-
+      
       if (isCouplingOngoing() || doesFirstStep()) {
         PRECICE_DEBUG("Receiving data...");
         receiveAndSetDt();
@@ -185,7 +185,7 @@ void SerialCouplingScheme::advance()
         setHasDataBeenExchanged(true);
       }
       setComputedTimestepPart(0.0);
-    }
+    } 
   }
   else if (_couplingMode == Implicit) {
     bool convergence = true;
@@ -324,7 +324,7 @@ void SerialCouplingScheme::advance()
           receiveData(getM2N());
           setHasDataBeenExchanged(true);
         }
-      }
+      } // implicit end
 
       if (not convergence) {
         PRECICE_DEBUG("No convergence achieved");
