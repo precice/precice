@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.9)
+cmake_minimum_required(VERSION 3.10.2)
 project(SolverdummyCPP LANGUAGES CXX DESCRIPTION "preCICE CPP solver dummy")
 
 find_package(precice REQUIRED CONFIG)

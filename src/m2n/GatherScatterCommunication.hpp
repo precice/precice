@@ -22,12 +22,12 @@ public:
       com::PtrCommunication com,
       mesh::PtrMesh         mesh);
 
-  virtual ~GatherScatterCommunication();
+  ~GatherScatterCommunication() override;
 
   /**
    * @brief Returns true, if a connection to a remote participant has been setup.
    */
-  virtual bool isConnected();
+  bool isConnected() const override;
 
   /**
    * @brief Accepts connection from participant, which has to call requestConnection().
@@ -38,9 +38,9 @@ public:
    * @param[in] acceptorName Name of calling participant.
    * @param[in] requesterName Name of remote participant to connect to.
    */
-  virtual void acceptConnection(
+  void acceptConnection(
       const std::string &acceptorName,
-      const std::string &requesterName);
+      const std::string &requesterName) override;
 
   /**
    * @brief Requests connection from participant, which has to call acceptConnection().
@@ -51,28 +51,92 @@ public:
    * @param[in] acceptorName Name of remote participant to connect to.
    * @param[in] nameReuester Name of calling participant.
    */
-  virtual void requestConnection(
+  void requestConnection(
       const std::string &acceptorName,
       const std::string &requesterName);
+  /** 
+   *  This method has not been implemented yet.    
+   *  @todo: Ideally this should not be here
+   */
+  virtual void acceptPreConnection(
+    std::string const &acceptorName,
+    std::string const &requesterName);
 
+  /** 
+   *  This method has not been implemented yet.    
+   *  @todo: Ideally this should not be here
+   */
+  virtual void requestPreConnection(
+    std::string const &acceptorName,
+    std::string const &requesterName);
+
+  /*
+   * @brief This function must be called by both acceptor and requester to update 
+   *        the vertex list in _mappings
+   *
+   * @todo: Ideally this should not be here
+   */
+  virtual void updateVertexList() override;
+  
   /**
    * @brief Disconnects from communication space, i.e. participant.
    *
    * This method is called on destruction.
    */
-  virtual void closeConnection();
+  void closeConnection() override;
 
   /// Sends an array of double values from all slaves (different for each slave).
-  virtual void send(
-      double *itemsToSend,
+  void send(
+      double const *itemsToSend,
       size_t  size,
-      int     valueDimension);
+      int     valueDimension) override;
 
   /// All slaves receive an array of doubles (different for each slave).
-  virtual void receive(
+  void receive(
       double *itemsToReceive,
       size_t  size,
-      int     valueDimension);
+      int     valueDimension) override;
+
+   /**
+   * @brief Broadcasts an int to connected ranks
+   *
+   * @todo: Ideally this should not be here
+   */
+  void broadcastSend(const int &itemToSend) override;
+
+  /**
+   * @brief Receives an int per connected rank on remote participant
+   * @para[out] itemToReceive received ints from remote ranks are stored with the sender rank order    
+   *
+   * @todo: Ideally this should not be here
+   */
+  void broadcastReceiveAll(std::vector<int> &itemToReceive) override;
+
+  /**
+   * @brief All ranks send their mesh partition to remote local  connected ranks.
+   *
+   * @todo: Ideally this should not be here
+   */
+  void broadcastSendMesh() override;
+  
+  /**
+   * @brief All ranks receive mesh partitions from remote local ranks.
+   *
+   * @todo: Ideally this should not be here
+   */
+  void broadcastReceiveMesh() override;
+
+  /**
+   *  All ranks Send their local communication map to connected ranks
+   */
+  void broadcastSendLCM(
+    CommunicationMap &localCommunicationMap) override;
+
+  /*
+   *  Each rank revives local communication maps from connected ranks
+   */
+  void broadcastReceiveLCM(
+    CommunicationMap &localCommunicationMap) override;
 
 private:
   logging::Logger _log{"m2n::GatherScatterCommunication"};

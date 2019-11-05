@@ -22,7 +22,7 @@ void CommunicateMesh::sendMesh(
     const mesh::Mesh &mesh,
     int               rankReceiver)
 {
-  TRACE(mesh.getName(), rankReceiver);
+  PRECICE_TRACE(mesh.getName(), rankReceiver);
   int dim = mesh.getDimensions();
 
   int numberOfVertices = mesh.vertices().size();
@@ -86,14 +86,14 @@ void CommunicateMesh::receiveMesh(
     mesh::Mesh &mesh,
     int         rankSender)
 {
-  TRACE(mesh.getName(), rankSender);
+  PRECICE_TRACE(mesh.getName(), rankSender);
   int dim = mesh.getDimensions();
 
   std::vector<mesh::Vertex *>   vertices;
   std::map<int, mesh::Vertex *> vertexMap;
   int                           numberOfVertices = 0;
   _communication->receive(numberOfVertices, rankSender);
-  DEBUG("Number of vertices to receive: " << numberOfVertices);
+  PRECICE_DEBUG("Number of vertices to receive: " << numberOfVertices);
 
   if (numberOfVertices > 0) {
     std::vector<double> vertexCoords;
@@ -106,7 +106,7 @@ void CommunicateMesh::receiveMesh(
         coords[d] = vertexCoords[i * dim + d];
       }
       mesh::Vertex &v = mesh.createVertex(coords);
-      assertion(v.getID() >= 0, v.getID());
+      PRECICE_ASSERT(v.getID() >= 0, v.getID());
       v.setGlobalIndex(globalIDs[i]);
       vertices.push_back(&v);
     }
@@ -115,7 +115,7 @@ void CommunicateMesh::receiveMesh(
   int                       numberOfEdges = 0;
   std::vector<mesh::Edge *> edges;
   _communication->receive(numberOfEdges, rankSender);
-  DEBUG("Number of edges to receive: " << numberOfEdges);
+  PRECICE_DEBUG("Number of edges to receive: " << numberOfEdges);
   if (numberOfEdges > 0) {
     std::vector<int> vertexIDs;
     _communication->receive(vertexIDs, rankSender);
@@ -126,9 +126,9 @@ void CommunicateMesh::receiveMesh(
     std::vector<int> edgeIDs;
     _communication->receive(edgeIDs, rankSender);
     for (int i = 0; i < numberOfEdges; i++) {
-      assertion(vertexMap.find(edgeIDs[i * 2]) != vertexMap.end());
-      assertion(vertexMap.find(edgeIDs[i * 2 + 1]) != vertexMap.end());
-      assertion(edgeIDs[i * 2] != edgeIDs[i * 2 + 1]);
+      PRECICE_ASSERT(vertexMap.find(edgeIDs[i * 2]) != vertexMap.end());
+      PRECICE_ASSERT(vertexMap.find(edgeIDs[i * 2 + 1]) != vertexMap.end());
+      PRECICE_ASSERT(edgeIDs[i * 2] != edgeIDs[i * 2 + 1]);
       mesh::Edge &e = mesh.createEdge(*vertexMap[edgeIDs[i * 2]], *vertexMap[edgeIDs[i * 2 + 1]]);
       edges.push_back(&e);
     }
@@ -137,10 +137,10 @@ void CommunicateMesh::receiveMesh(
   if (dim == 3) {
     int numberOfTriangles = 0;
     _communication->receive(numberOfTriangles, rankSender);
-    DEBUG("Number of Triangles to receive: " << numberOfTriangles);
-    DEBUG("Number of Edges: " << edges.size());
+    PRECICE_DEBUG("Number of Triangles to receive: " << numberOfTriangles);
+    PRECICE_DEBUG("Number of Edges: " << edges.size());
     if (numberOfTriangles > 0) {
-      assertion((edges.size() > 0) || (numberOfTriangles == 0));
+      PRECICE_ASSERT((edges.size() > 0) || (numberOfTriangles == 0));
       std::vector<int> edgeIDs;
       _communication->receive(edgeIDs, rankSender);
       std::map<int, mesh::Edge *> edgeMap;
@@ -152,12 +152,12 @@ void CommunicateMesh::receiveMesh(
       _communication->receive(triangleIDs, rankSender);
 
       for (int i = 0; i < numberOfTriangles; i++) {
-        assertion(edgeMap.find(triangleIDs[i * 3]) != edgeMap.end());
-        assertion(edgeMap.find(triangleIDs[i * 3 + 1]) != edgeMap.end());
-        assertion(edgeMap.find(triangleIDs[i * 3 + 2]) != edgeMap.end());
-        assertion(triangleIDs[i * 3] != triangleIDs[i * 3 + 1]);
-        assertion(triangleIDs[i * 3 + 1] != triangleIDs[i * 3 + 2]);
-        assertion(triangleIDs[i * 3 + 2] != triangleIDs[i * 3]);
+        PRECICE_ASSERT(edgeMap.find(triangleIDs[i * 3]) != edgeMap.end());
+        PRECICE_ASSERT(edgeMap.find(triangleIDs[i * 3 + 1]) != edgeMap.end());
+        PRECICE_ASSERT(edgeMap.find(triangleIDs[i * 3 + 2]) != edgeMap.end());
+        PRECICE_ASSERT(triangleIDs[i * 3] != triangleIDs[i * 3 + 1]);
+        PRECICE_ASSERT(triangleIDs[i * 3 + 1] != triangleIDs[i * 3 + 2]);
+        PRECICE_ASSERT(triangleIDs[i * 3 + 2] != triangleIDs[i * 3]);
         mesh.createTriangle(*edgeMap[triangleIDs[i * 3]], *edgeMap[triangleIDs[i * 3 + 1]], *edgeMap[triangleIDs[i * 3 + 2]]);
       }
     }
@@ -166,7 +166,7 @@ void CommunicateMesh::receiveMesh(
 
 void CommunicateMesh::broadcastSendMesh(const mesh::Mesh &mesh)
 {
-  TRACE(mesh.getName());
+  PRECICE_TRACE(mesh.getName());
   int dim = mesh.getDimensions();
 
   int numberOfVertices = mesh.vertices().size();
@@ -229,7 +229,7 @@ void CommunicateMesh::broadcastSendMesh(const mesh::Mesh &mesh)
 void CommunicateMesh::broadcastReceiveMesh(
     mesh::Mesh &mesh)
 {
-  TRACE(mesh.getName());
+  PRECICE_TRACE(mesh.getName());
   int dim             = mesh.getDimensions();
   int rankBroadcaster = 0;
 
@@ -249,7 +249,7 @@ void CommunicateMesh::broadcastReceiveMesh(
         coords[d] = vertexCoords[i * dim + d];
       }
       mesh::Vertex &v = mesh.createVertex(coords);
-      assertion(v.getID() >= 0, v.getID());
+      PRECICE_ASSERT(v.getID() >= 0, v.getID());
       v.setGlobalIndex(globalIDs[i]);
       vertices.push_back(&v);
     }
@@ -268,9 +268,9 @@ void CommunicateMesh::broadcastReceiveMesh(
     std::vector<int> edgeIDs;
     _communication->broadcast(edgeIDs, rankBroadcaster);
     for (int i = 0; i < numberOfEdges; i++) {
-      assertion(vertexMap.find(edgeIDs[i * 2]) != vertexMap.end());
-      assertion(vertexMap.find(edgeIDs[i * 2 + 1]) != vertexMap.end());
-      assertion(edgeIDs[i * 2] != edgeIDs[i * 2 + 1]);
+      PRECICE_ASSERT(vertexMap.find(edgeIDs[i * 2]) != vertexMap.end());
+      PRECICE_ASSERT(vertexMap.find(edgeIDs[i * 2 + 1]) != vertexMap.end());
+      PRECICE_ASSERT(edgeIDs[i * 2] != edgeIDs[i * 2 + 1]);
       mesh::Edge &e = mesh.createEdge(*vertexMap[edgeIDs[i * 2]], *vertexMap[edgeIDs[i * 2 + 1]]);
       edges.push_back(&e);
     }
@@ -280,7 +280,7 @@ void CommunicateMesh::broadcastReceiveMesh(
     int numberOfTriangles = 0;
     _communication->broadcast(numberOfTriangles, rankBroadcaster);
     if (numberOfTriangles > 0) {
-      assertion((edges.size() > 0) || (numberOfTriangles == 0));
+      PRECICE_ASSERT((edges.size() > 0) || (numberOfTriangles == 0));
       std::vector<int> edgeIDs;
       _communication->broadcast(edgeIDs, rankBroadcaster);
       std::map<int, mesh::Edge *> edgeMap;
@@ -292,12 +292,12 @@ void CommunicateMesh::broadcastReceiveMesh(
       _communication->broadcast(triangleIDs, rankBroadcaster);
 
       for (int i = 0; i < numberOfTriangles; i++) {
-        assertion(edgeMap.find(triangleIDs[i * 3]) != edgeMap.end());
-        assertion(edgeMap.find(triangleIDs[i * 3 + 1]) != edgeMap.end());
-        assertion(edgeMap.find(triangleIDs[i * 3 + 2]) != edgeMap.end());
-        assertion(triangleIDs[i * 3] != triangleIDs[i * 3 + 1]);
-        assertion(triangleIDs[i * 3 + 1] != triangleIDs[i * 3 + 2]);
-        assertion(triangleIDs[i * 3 + 2] != triangleIDs[i * 3]);
+        PRECICE_ASSERT(edgeMap.find(triangleIDs[i * 3]) != edgeMap.end());
+        PRECICE_ASSERT(edgeMap.find(triangleIDs[i * 3 + 1]) != edgeMap.end());
+        PRECICE_ASSERT(edgeMap.find(triangleIDs[i * 3 + 2]) != edgeMap.end());
+        PRECICE_ASSERT(triangleIDs[i * 3] != triangleIDs[i * 3 + 1]);
+        PRECICE_ASSERT(triangleIDs[i * 3 + 1] != triangleIDs[i * 3 + 2]);
+        PRECICE_ASSERT(triangleIDs[i * 3 + 2] != triangleIDs[i * 3]);
         mesh.createTriangle(*edgeMap[triangleIDs[i * 3]], *edgeMap[triangleIDs[i * 3 + 1]], *edgeMap[triangleIDs[i * 3 + 2]]);
       }
     }
@@ -308,7 +308,7 @@ void CommunicateMesh::sendBoundingBox(
     const mesh::Mesh::BoundingBox &bb,
     int                            rankReceiver)
 {
-  TRACE(rankReceiver);
+  PRECICE_TRACE(rankReceiver);
   int dim = bb.size();
   for (int d = 0; d < dim; d++) {
     _communication->send(bb[d].first, rankReceiver);
@@ -320,7 +320,7 @@ void CommunicateMesh::receiveBoundingBox(
     mesh::Mesh::BoundingBox &bb,
     int                      rankSender)
 {
-  TRACE(rankSender);
+  PRECICE_TRACE(rankSender);
   int dim = bb.size();
   for (int d = 0; d < dim; d++) {
     _communication->receive(bb[d].first, rankSender);

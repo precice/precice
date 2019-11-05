@@ -15,12 +15,17 @@ If preCICE was installed in a custom prefix, or not installed at all, you have t
 - `LIBRARY_PATH`, `LD_LIBRARY_PATH` to the library location, or `$prefix/lib`
 - `CPATH` either to the `src` directory or the `$prefix/include`
 
+## Dependencies
+
+Install `precice_future`. Follow the instructions given in `precice/src/precice/bindings/python_future/README.md`.
+
 ## Using pip3
 
 In this directory, execute:
 ```
 $ pip3 install --user .
 ```
+*note the dot at the end of the line*
 
 This will fetch cython, compile the bindings and finally install the precice package.
 

@@ -66,5 +66,5 @@ int main(int argc, char **argv)
   precicec_finalize();
   printf("DUMMY: Closing C solver dummy...");
 
-  return 1;
+  return 0;
 }

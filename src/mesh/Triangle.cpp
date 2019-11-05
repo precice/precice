@@ -1,6 +1,7 @@
 #include "Triangle.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Vertex.hpp"
+#include "utils/EigenIO.hpp"
 #include <boost/range/concepts.hpp>
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
@@ -25,11 +26,11 @@ Triangle::Triangle(
       _id(id),
       _normal(Eigen::VectorXd::Zero(edgeOne.getDimensions()))
 {
-  assertion(edgeOne.getDimensions() == edgeTwo.getDimensions(),
+  PRECICE_ASSERT(edgeOne.getDimensions() == edgeTwo.getDimensions(),
             edgeOne.getDimensions(), edgeTwo.getDimensions());
-  assertion(edgeTwo.getDimensions() == edgeThree.getDimensions(),
+  PRECICE_ASSERT(edgeTwo.getDimensions() == edgeThree.getDimensions(),
             edgeTwo.getDimensions(), edgeThree.getDimensions());
-  assertion(getDimensions() == 3, getDimensions());
+  PRECICE_ASSERT(getDimensions() == 3, getDimensions());
 
   // Determine vertex map
   Vertex &v0 = edge(0).vertex(0);
@@ -45,7 +46,7 @@ Triangle::Triangle(
     _vertexMap[0] = 0;
     _vertexMap[1] = 0;
   } else {
-    assertion(&edge(1).vertex(1) == &v1);
+    PRECICE_ASSERT(&edge(1).vertex(1) == &v1);
     _vertexMap[0] = 0;
     _vertexMap[1] = 1;
   }
@@ -54,23 +55,23 @@ Triangle::Triangle(
     if (&edge(2).vertex(0) == &edge(1).vertex(1)) {
       _vertexMap[2] = 0;
     } else {
-      assertion(&edge(2).vertex(1) == &edge(1).vertex(1));
+      PRECICE_ASSERT(&edge(2).vertex(1) == &edge(1).vertex(1));
       _vertexMap[2] = 1;
     }
   } else if (_vertexMap[1] == 1) {
     if (&edge(2).vertex(0) == &edge(1).vertex(0)) {
       _vertexMap[2] = 0;
     } else {
-      assertion(&edge(2).vertex(1) == &edge(1).vertex(0));
+      PRECICE_ASSERT(&edge(2).vertex(1) == &edge(1).vertex(0));
       _vertexMap[2] = 1;
     }
   }
-  assertion(&edge(0).vertex(_vertexMap[0]) != &edge(1).vertex(_vertexMap[1]));
-  assertion(&edge(0).vertex(_vertexMap[0]) != &edge(2).vertex(_vertexMap[2]));
-  assertion(&edge(1).vertex(_vertexMap[1]) != &edge(2).vertex(_vertexMap[2]));
-  assertion((_vertexMap[0] == 0) || (_vertexMap[0] == 1), _vertexMap[0]);
-  assertion((_vertexMap[1] == 0) || (_vertexMap[1] == 1), _vertexMap[0]);
-  assertion((_vertexMap[2] == 0) || (_vertexMap[2] == 1), _vertexMap[0]);
+
+  PRECICE_ASSERT(
+          (&edge(0).vertex(_vertexMap[0]) != &edge(1).vertex(_vertexMap[1])) &&
+          (&edge(0).vertex(_vertexMap[0]) != &edge(2).vertex(_vertexMap[2])) &&
+          (&edge(1).vertex(_vertexMap[1]) != &edge(2).vertex(_vertexMap[2])),
+          "Triangle vertices are not unique!");
 }
 
 const Eigen::VectorXd Triangle::computeNormal(bool flip)
@@ -123,13 +124,12 @@ bool Triangle::operator!=(const Triangle& other) const
 
 std::ostream& operator<<(std::ostream& os, const Triangle& t)
 {
-    os << "POLYGON ((";
-    for (int i = 0; i < 3; i++){
-        os << t.vertex(i).getCoords().transpose();
-        if (i < 2)
-            os << ", ";
-    }
-    return os <<", " << t.vertex(0).getCoords().transpose() << "))";
+    using utils::eigenio::wkt;
+    return os << "POLYGON (("
+              << t.vertex(0).getCoords().transpose().format(wkt()) << ", "
+              << t.vertex(1).getCoords().transpose().format(wkt()) << ", "
+              << t.vertex(2).getCoords().transpose().format(wkt()) << ", "
+              << t.vertex(0).getCoords().transpose().format(wkt()) << "))";
 }
 
 } // namespace mesh

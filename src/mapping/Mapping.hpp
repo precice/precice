@@ -46,6 +46,8 @@ public:
   /// Constructor, takes mapping constraint.
   Mapping ( Constraint constraint, int dimensions );
 
+  Mapping& operator=(Mapping &&) = delete;
+
   /// Destructor, empty.
   virtual ~Mapping() {}
 

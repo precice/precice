@@ -24,6 +24,8 @@ class Import {
 public:
   Import(const std::string &location);
 
+  Import& operator=(Import &&) = delete;
+
   virtual ~Import() {}
 
   /**

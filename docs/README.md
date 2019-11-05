@@ -4,6 +4,9 @@
 <a style="text-decoration: none" href="https://gitter.im/precice/Lobby" target="_blank">
     <img src="https://img.shields.io/badge/chat-on%20gitter-9c3375.svg" alt="Gitter chat">
 </a>
+<a style="text-decoration: none" href="https://precice.discourse.group" target="_blank">
+    <img alt="Discourse posts" src="https://img.shields.io/discourse/posts?label=discourse%20QA&server=https%3A%2F%2Fprecice.discourse.group">
+</a>
 <a style="text-decoration: none" href="https://mailman.informatik.uni-stuttgart.de/mailman/listinfo/precice" target="_blank">
     <img src="https://img.shields.io/badge/mailing%20list-subscribe-blue.svg" alt="Mailing list">
 </a>
@@ -33,7 +36,7 @@
 
 preCICE stands for Precise Code Interaction Coupling Environment. Its main component is a library that can be used by simulation programs to be coupled together in a partitioned way, enabling multi-physics simulations, such as fluid-structure interaction.
 
-If you are new to preCICE, please have a look at our [wiki (documentation)](https://github.com/precice/precice/wiki) and at [precice.org](https://www.precice.org).
+If you are new to preCICE, please have a look at our [wiki (documentation)](https://github.com/precice/precice/wiki) and at [precice.org](https://www.precice.org). You may also prefer to [get and install a binary package for the latest release](https://github.com/precice/precice/releases/latest) ([master branch](https://github.com/precice/precice/tree/master)).
 
 <div align="center" style="margin-bottom:30px">
 <img src="https://www.precice.org/assets/precice_overview.png" alt="preCICE overview" style="max-height: 100%; max-width: 100%">

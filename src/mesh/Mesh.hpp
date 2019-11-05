@@ -6,7 +6,6 @@
 #include "mesh/Vertex.hpp"
 #include "utils/PointerVector.hpp"
 #include "utils/ManageUniqueIDs.hpp"
-#include <boost/noncopyable.hpp>
 #include <map>
 #include <list>
 #include <vector>
@@ -36,10 +35,9 @@ namespace mesh {
  *
  * Usage example: precice::mesh::tests::MeshTest::testDemonstration()
  */
-class Mesh : public PropertyContainer, private boost::noncopyable
+class Mesh : public PropertyContainer
 {
 public:
-
 
   using VertexContainer            = utils::ptr_vector<Vertex>;
   using EdgeContainer              = utils::ptr_vector<Edge>;
@@ -52,6 +50,9 @@ public:
 
   /// A mapping from rank to used (not necessarily owned) vertex IDs
   using VertexDistribution = std::map<int, std::vector<int>>;
+
+  /// A mapping from remote local ranks to the IDs that must be communicated
+  using CommunicationMap = std::map<int, std::vector<int>>;
 
   /// Signal is emitted when the mesh is changed
   boost::signals2::signal<void(Mesh &)> meshChanged;
@@ -117,7 +118,7 @@ public:
   template<typename VECTOR_T>
   Vertex& createVertex ( const VECTOR_T& coords )
   {
-    assertion(coords.size() == _dimensions, coords.size(), _dimensions);
+    PRECICE_ASSERT(coords.size() == _dimensions, coords.size(), _dimensions);
     Vertex* newVertex = new Vertex(coords, _manageVertexIDs.getFreeID());
     newVertex->addParent(*this);
     _content.add(newVertex);
@@ -263,6 +264,18 @@ public:
 
   void setGlobalNumberOfVertices(int num);
 
+  /// Returns a vector of connected ranks
+  std::vector<int> & getConnectedRanks()
+  {
+    return _connectedRanks;
+  }
+  
+  /// Returns a mapping from remote local connected ranks to the corresponding vertex IDs
+  CommunicationMap & getCommunicationMap()
+  {
+    return _communicationMap;
+  }
+
   void addMesh(Mesh& deltaMesh);
 
   /**
@@ -337,7 +350,7 @@ private:
   /// Holds the index of the last vertex for each slave.
   /**
    * The last entry holds the total number of vertices.
-   * Needed for the matrix-matrix multiplication of the IMVJ postprocessing.
+   * Needed for the matrix-matrix multiplication of the IMVJ acceleration.
    */
   std::vector<int> _vertexOffsets;
 
@@ -348,6 +361,18 @@ private:
    * Duplicated vertices are only accounted once.
    */
   int _globalNumberOfVertices = -1;
+
+  /**
+   * @brief each rank stores list of connected remote ranks.
+   * In the m2n package, this is used to create the initial communication channels.
+   */
+  std::vector<int> _connectedRanks;
+
+  /**
+   * @brief each rank stores list of connected ranks and corresponding vertex IDs here. 
+   * In the m2n package, this is used to create the final communication channels.
+   */
+  CommunicationMap _communicationMap;
 
   BoundingBox _boundingBox;
 

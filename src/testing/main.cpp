@@ -4,6 +4,7 @@
 #include "utils/Parallel.hpp"
 #include "utils/Petsc.hpp"
 #include "utils/EventUtils.hpp"
+#include "utils/MasterSlave.hpp"
 #include "logging/LogConfiguration.hpp"
 #include <iostream>
 
@@ -111,5 +112,6 @@ int main(int argc, char* argv[])
   utils::EventRegistry::instance().finalize();
   utils::Petsc::finalize();
   utils::Parallel::finalizeMPI();
+  utils::MasterSlave::_communication = nullptr;
   return retCode;
 }

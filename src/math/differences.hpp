@@ -30,8 +30,8 @@ bool oneGreater(const Eigen::MatrixBase<DerivedA> & A,
                 const Eigen::MatrixBase<DerivedB> & B,
                 double tolerance = math::NUMERICAL_ZERO_DIFFERENCE)
 {
-  assertion(A.rows() == B.rows(), "Matrices with different number of rows can't be compared.");
-  assertion(A.cols() == B.cols(), "Matrices with different number of cols can't be compared.");
+  PRECICE_ASSERT(A.rows() == B.rows(), "Matrices with different number of rows can't be compared.");
+  PRECICE_ASSERT(A.cols() == B.cols(), "Matrices with different number of cols can't be compared.");
   
   return ((A-B).array() > tolerance).any();
 }
@@ -41,8 +41,8 @@ bool oneGreaterEquals(const Eigen::MatrixBase<DerivedA> & A,
                       const Eigen::MatrixBase<DerivedB> & B,
                       double tolerance = math::NUMERICAL_ZERO_DIFFERENCE)
 {
-  assertion(A.rows() == B.rows(), "Matrices with different number of rows can't be compared.");
-  assertion(A.cols() == B.cols(), "Matrices with different number of cols can't be compared.");
+  PRECICE_ASSERT(A.rows() == B.rows(), "Matrices with different number of rows can't be compared.");
+  PRECICE_ASSERT(A.cols() == B.cols(), "Matrices with different number of cols can't be compared.");
   
   return ((A-B).array() >= -tolerance).any();
 }
@@ -52,8 +52,8 @@ bool allGreater(const Eigen::MatrixBase<DerivedA> & A,
                 const Eigen::MatrixBase<DerivedB> & B,
                 double tolerance = math::NUMERICAL_ZERO_DIFFERENCE)
 {
-  assertion(A.rows() == B.rows(), "Matrices with different number of rows can't be compared.");
-  assertion(A.cols() == B.cols(), "Matrices with different number of cols can't be compared.");
+  PRECICE_ASSERT(A.rows() == B.rows(), "Matrices with different number of rows can't be compared.");
+  PRECICE_ASSERT(A.cols() == B.cols(), "Matrices with different number of cols can't be compared.");
   
   return ((A-B).array() > tolerance).all();
 }
@@ -63,8 +63,8 @@ bool allGreaterEquals(const Eigen::MatrixBase<DerivedA> & A,
                       const Eigen::MatrixBase<DerivedB> & B,
                       double tolerance = math::NUMERICAL_ZERO_DIFFERENCE)
 {
-  assertion(A.rows() == B.rows(), "Matrices with different number of rows can't be compared.");
-  assertion(A.cols() == B.cols(), "Matrices with different number of cols can't be compared.");
+  PRECICE_ASSERT(A.rows() == B.rows(), "Matrices with different number of rows can't be compared.");
+  PRECICE_ASSERT(A.cols() == B.cols(), "Matrices with different number of cols can't be compared.");
   
   return ((A-B).array() >= tolerance).all();
 }

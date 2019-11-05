@@ -17,6 +17,7 @@ In this directory, execute:
 ```
 $ pip3 install --user .
 ```
+*note the dot at the end of the line*
 
 This will fetch cython, compile the bindings and finally install the precice package.
 

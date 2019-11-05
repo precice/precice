@@ -1,5 +1,7 @@
 #include "EventUtils.hpp"
-#include "json.hpp"
+
+#include <nlohmann/json.hpp>
+#include <prettyprint/prettyprint.hpp>
 
 #include <cassert>
 #include <algorithm>
@@ -10,7 +12,6 @@
 #include <sstream>
 #include <ctime>
 #include <utility>
-#include "prettyprint.hpp"
 #include "TableWriter.hpp"
 #include "utils/assertion.hpp"
 
@@ -170,7 +171,7 @@ void RankData::addEventData(EventData ed)
 void RankData::normalizeTo(sys_clk::time_point t0)
 {
   auto const delta = initializedAt - t0; // duration that this rank initialized after the first rank
-  assertion(t0 <= initializedAt); // t0 should always be before or equal my init time
+  PRECICE_ASSERT(t0 <= initializedAt); // t0 should always be before or equal my init time
 
   for (auto & events : evData) {
     for (auto & sc : events.second.stateChanges) {
@@ -216,10 +217,13 @@ void EventRegistry::initialize(std::string applicationName, std::string runName,
 
   globalEvent.start(false);
   initialized = true;
+  finalized = false;
 }
 
 void EventRegistry::finalize()
 {
+  if (finalized) return;
+
   globalEvent.stop();
   localRankData.finalize();
 
@@ -232,6 +236,7 @@ void EventRegistry::finalize()
   collect();
 
   initialized = false;
+  finalized = true;
 }
 
 void EventRegistry::clear()

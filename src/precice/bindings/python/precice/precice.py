@@ -57,18 +57,26 @@ class Interface:
         return self.interface.get_data_id(data_name, mesh_id)
 
     def set_mesh_vertices(self, mesh_id, size, positions, ids):
-        out_ids = self.interface.set_mesh_vertices(mesh_id, positions)
+        dimensions = self.get_dimensions()
+        assert(positions.size == size * dimensions)
+        out_ids = self.interface.set_mesh_vertices(mesh_id, positions.reshape((size, dimensions)))
         ids[:] = out_ids[:]
 
+    def set_mesh_vertex(self, mesh_id, position):
+        return self.interface.set_mesh_vertex(mesh_id, position)
+
     def get_mesh_vertices(self, mesh_id, size, ids, positions):
+        assert (positions.size == size * self.get_dimensions())
         out_positions = self.interface.get_mesh_vertices(mesh_id, ids)
-        positions[:] = out_positions[:]
+        positions[:] = out_positions.flatten()[:]
 
     def get_mesh_vertex_size(self, mesh_id):
         return self.interface.get_mesh_vertex_size(mesh_id)
 
     def get_mesh_vertex_ids_from_positions(self, mesh_id, size, positions, ids):
-        out_ids = self.interface.get_mesh_vertex_ids_from_positions(mesh_id, positions)
+        dimensions = self.get_dimensions()
+        assert (positions.size == size * dimensions)
+        out_ids = self.interface.get_mesh_vertex_ids_from_positions(mesh_id, positions.reshape((size, dimensions)))
         ids[:] = out_ids[:]
 
     def set_mesh_edge(self, mesh_id, first_vertex_id, second_vertex_id):
@@ -93,30 +101,38 @@ class Interface:
         self.interface.map_write_data_from(from_mesh_id)
 
     def write_block_vector_data(self, data_id, size, value_indices, values):
-        self.interface.write_block_vector_data(data_id, value_indices, values)
+        dimensions = self.get_dimensions()
+        assert (values.size == size * dimensions)
+        assert (value_indices.size == size)
+        self.interface.write_block_vector_data(data_id, value_indices, values.reshape((size, dimensions)))
 
     def write_vector_data(self, data_id, value_index, value):
         self.interface.write_vector_data(data_id, value_index, value)
 
     def write_block_scalar_data(self, data_id, size, value_indices, values):
+        assert (values.size == size)
+        assert (value_indices.size == size)
         self.interface.write_block_scalar_data(data_id, value_indices, values)
 
     def write_scalar_data(self, data_id, value_index, value):
         self.interface.write_scalar_data(data_id, value_index, value)
 
     def read_block_vector_data(self, data_id, size, value_indices, values):
+        assert (values.size == size * self.get_dimensions())
+        assert (value_indices.size == size)
         out_values = self.interface.read_block_vector_data(data_id, value_indices)
-        values[:] = out_values[:]
+        values[:] = out_values.flatten()[:]
 
-    def read_vector_data(self, dataID, valueIndex, value):
-        out_value = self.interface.read_vector_data(dataID, valueIndex)
+    def read_vector_data(self, data_id, value_index, value):
+        out_value = self.interface.read_vector_data(data_id, value_index)
         value[:] = out_value[:]
 
-    def read_block_scalar_data(self, dataID, size, valueIndices, values):
-        out_values = self.interface.read_block_scalar_data(dataID, valueIndices)
+    def read_block_scalar_data(self, data_id, size, value_indices, values):
+        assert (values.size == size)
+        assert (value_indices.size == size)
+        out_values = self.interface.read_block_scalar_data(data_id, value_indices)
         values[:] = out_values[:]
 
-    def read_scalar_data(self, dataID, valueIndex, value):
-        out_value = self.interface.read_scalar_data(dataID, valueIndex)
+    def read_scalar_data(self, data_id, value_index, value):
+        out_value = self.interface.read_scalar_data(data_id, value_index)
         value[:] = out_value[:]
-

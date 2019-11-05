@@ -1,6 +1,6 @@
 #include "cplscheme/SerialCouplingScheme.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
-#include "cplscheme/config/PostProcessingConfiguration.hpp"
+#include "acceleration/config/AccelerationConfiguration.hpp"
 #include "cplscheme/impl/ConvergenceMeasure.hpp"
 #include "cplscheme/impl/AbsoluteConvergenceMeasure.hpp"
 #include "cplscheme/impl/MinIterationConvergenceMeasure.hpp"
@@ -48,7 +48,7 @@ void runCoupling(
   int computedTimesteps = 0;
   std::string nameParticipant0("Participant0");
   std::string nameParticipant1("Participant1");
-  assertion ((nameParticipant == nameParticipant0) || (nameParticipant == nameParticipant1));
+  BOOST_TEST (((nameParticipant == nameParticipant0) || (nameParticipant == nameParticipant1)));
   int iterationCount = 0;
   std::vector<int>::const_iterator iterValidIterations = validIterations.begin();
 
@@ -213,7 +213,7 @@ void runCouplingWithSubcycling
   int computedTimesteps = 0;
   std::string nameParticipant0 ( "Participant0");
   std::string nameParticipant1 ( "Participant1");
-  assertion((nameParticipant == nameParticipant0) || (nameParticipant == nameParticipant1));
+  BOOST_TEST(((nameParticipant == nameParticipant0) || (nameParticipant == nameParticipant1)));
   int iterationCount = 0;
   std::vector<int>::const_iterator iterValidIterations =
       validIterations.begin();
@@ -415,7 +415,7 @@ BOOST_AUTO_TEST_CASE(testParseConfigurationWithRelaxation)
   CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
 
   xml::configure(root, path);
-  BOOST_CHECK(cplSchemeConfig._postProcConfig->getPostProcessing().get()); // no nullptr
+  BOOST_CHECK(cplSchemeConfig._accelerationConfig->getAcceleration().get()); // no nullptr
   meshConfig->setMeshSubIDs();
 }
 
@@ -832,7 +832,7 @@ BOOST_FIXTURE_TEST_CASE(testInitializeData, testing::M2NFixture,
     }
   }
   else {
-    assertion(nameLocalParticipant == nameParticipant1);
+    BOOST_TEST(nameLocalParticipant == nameParticipant1);
     BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteInitialData()));
     cplScheme.performedAction(constants::actionWriteInitialData());
     auto& values = mesh->data(dataID0)->values();

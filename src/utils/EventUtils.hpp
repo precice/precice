@@ -194,6 +194,8 @@ private:
 
   bool initialized = false;
 
+  bool finalized = false;
+
   std::map<std::string, Event> storedEvents;
 
   /// A name that is added to the logfile to distinguish different participants

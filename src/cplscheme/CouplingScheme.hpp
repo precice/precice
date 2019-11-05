@@ -49,6 +49,8 @@ public:
   /// To be used, when the coupling timestep length is determined dynamically during the coupling.
   static const double UNDEFINED_TIMESTEP_LENGTH;
 
+  CouplingScheme& operator=(CouplingScheme &&) = delete;
+
   virtual ~CouplingScheme() {}
 
   /**

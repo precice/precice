@@ -1,6 +1,7 @@
 #include "precice/SolverInterface.hpp"
 #include "precice/impl/SolverInterfaceImpl.hpp"
 #include "cplscheme/Constants.hpp"
+#include "precice/impl/versions.hpp"
 
 namespace precice {
 
@@ -11,6 +12,16 @@ SolverInterface:: SolverInterface
   int                solverProcessSize )
 :
   _impl ( new impl::SolverInterfaceImpl(participantName, solverProcessIndex, solverProcessSize, false) )
+{}
+
+SolverInterface:: SolverInterface
+(
+  const std::string& participantName,
+  int                solverProcessIndex,
+  int                solverProcessSize,
+  void*              communicator)
+:
+  _impl ( new impl::SolverInterfaceImpl(participantName, solverProcessIndex, solverProcessSize, false, communicator) )
 {}
 
 SolverInterface::~SolverInterface() = default;
@@ -329,6 +340,11 @@ MeshHandle SolverInterface:: getMeshHandle
   const std::string & meshName )
 {
   return _impl->getMeshHandle ( meshName );
+}
+
+std::string getVersionInformation()
+{
+    return {precice::versionInformation};
 }
 
 namespace constants {

@@ -46,6 +46,8 @@ public:
   {
   }
 
+  Action& operator=(Action &&) = delete;
+
   /// Destructor, empty.
   virtual ~Action() {}
 

@@ -10,6 +10,7 @@ cimport numpy as np
 cimport cython
 from mpi4py import MPI
 
+
 from cpython.version cimport PY_MAJOR_VERSION  # important for determining python version in order to properly normalize string input. See http://docs.cython.org/en/latest/src/tutorial/strings.html#general-notes-about-c-strings and https://github.com/precice/precice/issues/68 .
 
 cdef bytes convert(s):
@@ -28,7 +29,7 @@ cdef class Interface:
     # construction and configuration
     # constructor
 
-    def __cinit__ (self, str solver_name, int solver_process_index, int solver_process_size):
+    def __cinit__ (self, solver_name, solver_process_index, solver_process_size):
         self.thisptr = new SolverInterface.SolverInterface (convert(solver_name), solver_process_index, solver_process_size)
         pass
 
@@ -97,11 +98,11 @@ cdef class Interface:
 
     # mesh access
     # hasMesh
-    def has_mesh(self, str mesh_name):
+    def has_mesh(self, mesh_name):
         return self.thisptr.hasMesh (convert(mesh_name))
 
     # get mesh ID
-    def get_mesh_id (self, str mesh_name):
+    def get_mesh_id (self, mesh_name):
         return self.thisptr.getMeshID (convert(mesh_name))
 
     # get mesh IDs
@@ -109,120 +110,141 @@ cdef class Interface:
         return self.thisptr.getMeshIDs ()
 
     # returns a handle to a created mesh
-    def get_mesh_handle(self, str mesh_name):
+    def get_mesh_handle(self, mesh_name):
         raise Exception("The API method get_mesh_handle is not yet available for the Python bindings.")
 
     # creates a mesh vertex
-    def set_mesh_vertex(self, int mesh_id, np.ndarray[np.double_t, ndim=1] position):
-        vertex_id = self.thisptr.setMeshVertex(mesh_id, &position[0])
+    def set_mesh_vertex(self, mesh_id, position):
+        if not isinstance(position, np.ndarray):
+            position = np.asarray(position)
+        dimensions = position.size
+        assert(dimensions == self.get_dimensions())
+        cdef np.ndarray[double, ndim=1] _position = np.ascontiguousarray(position, dtype=np.double)
+        vertex_id = self.thisptr.setMeshVertex(mesh_id, <const double*>_position.data)
         return vertex_id
 
     # returns the number of vertices of a mesh
-    def get_mesh_vertex_size (self, int mesh_id):
+    def get_mesh_vertex_size (self, mesh_id):
         return self.thisptr.getMeshVertexSize(mesh_id)
 
     # creates multiple mesh vertices
-    def set_mesh_vertices (self, int mesh_id, np.ndarray[np.double_t, ndim=1] positions):
-        size = positions.size/self.get_dimensions()
-        assert(size.is_integer())
-        size = int(size)
-        cdef np.ndarray[int] ids = np.empty(int(size), dtype=np.int32)
-        self.thisptr.setMeshVertices (mesh_id, size, &positions[0], &ids[0])
-        return ids
+    def set_mesh_vertices (self, mesh_id, positions):
+        if not isinstance(positions, np.ndarray):
+            positions = np.asarray(positions)
+        size, dimensions = positions.shape
+        assert(dimensions == self.get_dimensions())
+        cdef np.ndarray[double, ndim=1] _positions = np.ascontiguousarray(positions.flatten(), dtype=np.double)
+        cdef np.ndarray[int, ndim=1] _ids = np.empty(size, dtype=np.int32)
+        self.thisptr.setMeshVertices (mesh_id, size, <const double*>_positions.data, <int*>_ids.data)
+        return _ids
 
     # get vertex positions for multiple vertex ids from a given mesh
-    def get_mesh_vertices(self, int mesh_id, ids):
-        cdef np.ndarray[int, ndim=1] ids_int = np.array(ids, dtype=np.int32)
-        size = ids.size
-        cdef np.ndarray[double] positions = np.empty(size * self.get_dimensions(), dtype=np.double)
-        self.thisptr.getMeshVertices (mesh_id, size, &ids_int[0], &positions[0])
-        return positions
+    def get_mesh_vertices(self, mesh_id, ids):
+        cdef np.ndarray[int, ndim=1] _ids = np.ascontiguousarray(ids, dtype=np.int32)
+        size = _ids.size
+        cdef np.ndarray[double, ndim=1] _positions = np.empty(size * self.get_dimensions(), dtype=np.double)
+        self.thisptr.getMeshVertices (mesh_id, size, <const int*>_ids.data, <double*>_positions.data)
+        return _positions.reshape((size, self.get_dimensions()))
 
     # gets mesh vertex IDs from positions
-    def get_mesh_vertex_ids_from_positions (self, int mesh_id, np.ndarray[np.double_t, ndim=1] positions):
-        size = positions.size/self.get_dimensions()
-        assert(size.is_integer())
-        cdef np.ndarray[int] ids = np.empty(int(size), dtype=np.int32)
-
-        self.thisptr.getMeshVertexIDsFromPositions (mesh_id, size, &positions[0], &ids[0])
-
-        return ids
+    def get_mesh_vertex_ids_from_positions (self, mesh_id, positions):
+        if not isinstance(positions, np.ndarray):
+            positions = np.asarray(positions)
+        size, dimensions = positions.shape
+        assert(dimensions == self.get_dimensions())
+        cdef np.ndarray[double, ndim=1] _positions = np.ascontiguousarray(positions.flatten(), dtype=np.double)
+        cdef np.ndarray[int, ndim=1] _ids = np.empty(int(size), dtype=np.int32)
+        self.thisptr.getMeshVertexIDsFromPositions (mesh_id, size, <const double*>_positions.data, <int*>_ids.data)
+        return _ids
 
     # sets mesh edge from vertex IDs, returns edge ID
-    def set_mesh_edge (self, int mesh_id, int first_vertex_id, int second_vertex_id):
+    def set_mesh_edge (self, mesh_id, first_vertex_id, second_vertex_id):
         return self.thisptr.setMeshEdge (mesh_id, first_vertex_id, second_vertex_id)
 
     # sets mesh triangle from edges
-    def set_mesh_triangle (self, int mesh_id, int first_edge_id, int second_edge_id, int third_edge_id):
+    def set_mesh_triangle (self, mesh_id, first_edge_id, second_edge_id, third_edge_id):
         self.thisptr.setMeshTriangle (mesh_id, first_edge_id, second_edge_id, third_edge_id)
 
     # sets mesh triangle from vertices
-    def set_mesh_triangle_with_edges (self, int mesh_id, int first_vertex_id, int second_vertex_id, int third_vertex_id):
+    def set_mesh_triangle_with_edges (self, mesh_id, first_vertex_id, second_vertex_id, third_vertex_id):
         self.thisptr.setMeshTriangleWithEdges (mesh_id, first_vertex_id, second_vertex_id, third_vertex_id)
 
     # sets mesh quad from edges
-    def set_mesh_quad (self, int mesh_id, int first_edge_id, int second_edge_id, int third_edge_id, int fourth_edge_id):
+    def set_mesh_quad (self, mesh_id, first_edge_id, second_edge_id, third_edge_id, fourth_edge_id):
         self.thisptr.setMeshQuad (mesh_id, first_edge_id, second_edge_id, third_edge_id, fourth_edge_id)
 
     # sets mesh quad from vertices
-    def set_mesh_quad_with_edges (self, int mesh_id, int first_vertex_id, int second_vertex_id, int third_vertex_id, int fourth_vertex_id):
+    def set_mesh_quad_with_edges (self, mesh_id, first_vertex_id, second_vertex_id, third_vertex_id, fourth_vertex_id):
         self.thisptr.setMeshQuadWithEdges (mesh_id, first_vertex_id, second_vertex_id, third_vertex_id, fourth_vertex_id)
 
     # data access
     # hasData
-    def has_data (self, str data_name, int mesh_id):
+    def has_data (self, str data_name, mesh_id):
         return self.thisptr.hasData(convert(data_name), mesh_id)
 
-    def get_data_id (self, str data_name, int mesh_id):
+    def get_data_id (self, str data_name, mesh_id):
         return self.thisptr.getDataID (convert(data_name), mesh_id)
 
-    def map_read_data_to (self, int to_mesh_id):
+    def map_read_data_to (self, to_mesh_id):
         self.thisptr.mapReadDataTo (to_mesh_id)
 
-    def map_write_data_from (self, int from_mesh_id):
+    def map_write_data_from (self, from_mesh_id):
         self.thisptr.mapWriteDataFrom (from_mesh_id)
 
-    def write_block_vector_data (self, int data_id, value_indices, np.ndarray[np.double_t, ndim=1] values):
-        assert(values.size / self.get_dimensions() == value_indices.size)
+    def write_block_vector_data (self, data_id, value_indices, values):
+        if not isinstance(values, np.ndarray):
+            values = np.asarray(values)
+        size, dimensions = values.shape
+        assert(dimensions == self.get_dimensions())
+        cdef np.ndarray[int, ndim=1] _value_indices = np.ascontiguousarray(value_indices, dtype=np.int32)
+        cdef np.ndarray[double, ndim=1] _values = np.ascontiguousarray(values.flatten(), dtype=np.double)
+        assert(size == _value_indices.size)
         size = value_indices.size
-        cdef np.ndarray[int, ndim=1] value_indices_int = np.array(value_indices, dtype=np.int32)
-        self.thisptr.writeBlockVectorData (data_id, size, &value_indices_int[0], &values[0])
+        self.thisptr.writeBlockVectorData (data_id, size, <const int*>_value_indices.data, <const double*>_values.data)
 
-    def write_vector_data (self, int data_id, value_index, np.ndarray[np.double_t, ndim=1] value):
-        self.thisptr.writeVectorData (data_id, value_index, &value[0])
+    def write_vector_data (self, data_id, value_index, value):
+        if not isinstance(value, np.ndarray):
+            value = np.asarray(value)
+        dimensions = value.size
+        assert(dimensions == self.get_dimensions())
+        cdef np.ndarray[np.double_t, ndim=1] _value = np.ascontiguousarray(value, dtype=np.double)
+        self.thisptr.writeVectorData (data_id, value_index, <const double*>_value.data)
 
-    def write_block_scalar_data (self, int data_id, value_indices, np.ndarray[np.double_t, ndim=1] values):
-        assert(values.size == value_indices.size)
+    def write_block_scalar_data (self, data_id, value_indices, values):
+        cdef np.ndarray[int, ndim=1] _value_indices = np.ascontiguousarray(value_indices, dtype=np.int32)
+        cdef np.ndarray[double, ndim=1] _values = np.ascontiguousarray(values, dtype=np.double)
+        assert(_values.size == _value_indices.size)
         size = value_indices.size
-        cdef np.ndarray[int, ndim=1] value_indices_int = np.array(value_indices, dtype=np.int32)
-        self.thisptr.writeBlockScalarData (data_id, size, &value_indices_int[0], &values[0])
+        self.thisptr.writeBlockScalarData (data_id, size, <const int*>_value_indices.data, <const double*>_values.data)
 
-    def write_scalar_data (self, int data_id, int value_index, double value):
+    def write_scalar_data (self, data_id, value_index, double value):
         self.thisptr.writeScalarData (data_id, value_index, value)
 
-    def read_block_vector_data (self, int data_id, value_indices):
-        size = value_indices.size
-        cdef np.ndarray[int, ndim=1] value_indices_int = np.array(value_indices, dtype=np.int32)
-        cdef np.ndarray[np.double_t] values = np.empty(size * self.get_dimensions(), dtype=np.double)
-        self.thisptr.readBlockVectorData (data_id, size, &value_indices_int[0], &values[0])
-        return values
+    def read_block_vector_data (self, data_id, value_indices):
+        cdef np.ndarray[int, ndim=1] _value_indices = np.ascontiguousarray(value_indices, dtype=np.int32)
+        size = _value_indices.size
+        dimensions = self.get_dimensions()
+        cdef np.ndarray[np.double_t, ndim=1] _values = np.empty(size * dimensions, dtype=np.double)
+        self.thisptr.readBlockVectorData (data_id, size, <const int*>_value_indices.data, <double*>_values.data)
+        return _values.reshape((size, dimensions))
 
-    def read_vector_data (self, int data_id, int value_index):
-        cdef np.ndarray[np.double_t] value = np.empty(self.get_dimensions(), dtype=np.double)
-        self.thisptr.readVectorData (data_id, value_index, &value[0])
-        return value
+    def read_vector_data (self, data_id, value_index):
+        dimensions = self.get_dimensions()
+        cdef np.ndarray[double, ndim=1] _value = np.empty(dimensions, dtype=np.double)
+        self.thisptr.readVectorData (data_id, value_index, <double*>_value.data)
+        return _value
 
-    def read_block_scalar_data (self, int data_id, value_indices):
-        size = value_indices.size
-        cdef np.ndarray[int, ndim=1] value_indices_int = np.array(value_indices, dtype=np.int32)
-        cdef np.ndarray[np.double_t] values = np.empty(size, dtype=np.double)
-        self.thisptr.readBlockScalarData (data_id, size, &value_indices_int[0], &values[0])
-        return values
+    def read_block_scalar_data (self, data_id, value_indices):
+        cdef np.ndarray[int, ndim=1] _value_indices = np.ascontiguousarray(value_indices, dtype=np.int32)
+        size = _value_indices.size
+        cdef np.ndarray[double, ndim=1] _values = np.empty(size, dtype=np.double)
+        self.thisptr.readBlockScalarData (data_id, size, <const int*>_value_indices.data, <double*>_values.data)
+        return _values
 
-    def read_scalar_data (self, int data_id, int value_index):
-        cdef double value;
-        self.thisptr.readScalarData (data_id, value_index, value)
-        return value
+    def read_scalar_data (self, data_id, value_index):
+        cdef double _value
+        self.thisptr.readScalarData (data_id, value_index, _value)
+        return _value
 
 def action_write_initial_data ():
     return SolverInterface.actionWriteInitialData()
