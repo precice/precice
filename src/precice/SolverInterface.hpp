@@ -803,10 +803,10 @@ public:
 
   ///@}
 
-  /// Disable copy construction by making copy constructor private.
+  /// Disable copy construction 
   SolverInterface ( const SolverInterface& copy ) = delete;
 
-  /// Disable assignment construction by making assign. constructor private.
+  /// Disable assignment construction
   SolverInterface& operator= ( const SolverInterface& assign ) = delete;
 
 private:
