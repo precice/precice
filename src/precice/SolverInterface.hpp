@@ -803,16 +803,17 @@ public:
 
   ///@}
 
+  /// Disable copy construction 
+  SolverInterface ( const SolverInterface& copy ) = delete;
+
+  /// Disable assignment construction
+  SolverInterface& operator= ( const SolverInterface& assign ) = delete;
+
 private:
 
   /// Pointer to implementation of SolverInterface.
   std::unique_ptr<impl::SolverInterfaceImpl> _impl;
 
-  /// Disable copy construction by making copy constructor private.
-  SolverInterface ( const SolverInterface& copy );
-
-  /// Disable assignment construction by making assign. constructor private.
-  SolverInterface& operator= ( const SolverInterface& assign );
 
   // @brief To allow white box tests.
   friend struct testing::WhiteboxAccessor;
