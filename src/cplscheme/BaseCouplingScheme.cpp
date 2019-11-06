@@ -236,11 +236,7 @@ std::vector<int> BaseCouplingScheme::sendData(m2n::PtrM2N m2n)
   for (const DataMap::value_type &pair : _sendData) {
     //std::cout<<"\nsend data id="<<pair.first<<": "<<*(pair.second->values)<<'\n';
     int size = pair.second->values->size();
-    // if (not utils::MasterSlave::isMaster())
-    //   std::cout <<  " data is " << pair.second->values << " size is " << size << " mesh id is " << pair.second->mesh->getID() << " dimension is " << pair.second->dimension << std::endl;
     m2n->send(pair.second->values->data(), size, pair.second->mesh->getID(), pair.second->dimension);
-    if (utils::MasterSlave::isMaster())
-      std::cout <<  "send 3 " << std::endl;
     sentDataIDs.push_back(pair.first);
   }
   PRECICE_DEBUG("Number of sent data sets = " << sentDataIDs.size());
@@ -254,12 +250,8 @@ std::vector<int> BaseCouplingScheme::receiveData(
   std::vector<int> receivedDataIDs;
   PRECICE_ASSERT(m2n.get() != nullptr);
   PRECICE_ASSERT(m2n->isConnected());
-  
   for (DataMap::value_type &pair : _receiveData) {
-    int size = pair.second->values->size();    
-    // std::cout<<"\nreceive data id="<<pair.first<<": "<<*(pair.second->values)<<'\n';
-    // if (not utils::MasterSlave::isMaster())
-    //   std::cout <<  " data is " << pair.second->values << " size is " << size << " mesh id is " << pair.second->mesh->getID() << " dimension is " << pair.second->dimension << std::endl;
+    int size = pair.second->values->size();
     m2n->receive(pair.second->values->data(), size, pair.second->mesh->getID(), pair.second->dimension);
     receivedDataIDs.push_back(pair.first);
   }

@@ -600,7 +600,7 @@ BOOST_AUTO_TEST_CASE(testBoundingBoxInitialization, * testing::OnSize(4))
     precice.finalize();   
 }
 
-/*
+
 BOOST_AUTO_TEST_CASE(testBoundingBoxInitializationTwoWay, * testing::OnSize(4))
 {
   reset();
@@ -757,7 +757,7 @@ BOOST_AUTO_TEST_CASE(testBoundingBoxInitializationTwoWay, * testing::OnSize(4))
     precice.finalize();
    
 }
-
+/*
 /// This testcase is based on a bug documented in issue #371
 BOOST_AUTO_TEST_CASE(NearestProjectionRePartitioning, * testing::OnSize(4))
 {

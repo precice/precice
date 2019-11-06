@@ -30,7 +30,7 @@
 
       </participant>
 
-      <m2n:mpi distribution-type="point-to-point" from="Fluid" to="Structure" exchange-directory=".."/>
+      <m2n:sockets distribution-type="point-to-point" from="Fluid" to="Structure" exchange-directory=".."/>
 
       <coupling-scheme:serial-explicit>
          <participants first="Fluid" second="Structure" />

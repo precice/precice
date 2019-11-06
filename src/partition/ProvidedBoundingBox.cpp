@@ -31,9 +31,9 @@ void ProvidedBoundingBox::communicateBoundingBox()
   PRECICE_TRACE();
   if(_m2ns.empty())
     return;
-  // if (!_hasToSend)
-  //   return;
 
+  _mesh->computeState();
+  
   // each rank sends its bb to master
   if (utils::MasterSlave::isSlave()) { //slave
     com::CommunicateBoundingBox(utils::MasterSlave::_communication).sendBoundingBox(_mesh->getBoundingBox(), 0);
@@ -129,10 +129,8 @@ void ProvidedBoundingBox::communicate()
 {
 
   if(_m2ns.empty())
-    return;
-      
-  // if (!_hasToSend)
-  //   return;  
+    return;  
+  
   /*
    * First we should set global index for each vertex
    * This global vertex id is needed for final filtering in 

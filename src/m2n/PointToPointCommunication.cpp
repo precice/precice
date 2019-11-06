@@ -394,7 +394,7 @@ void PointToPointCommunication::acceptPreConnection(std::string const &acceptorN
   PRECICE_CHECK(utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave(),
         "You can only use a point-to-point communication between two participants which both use a master. "
             << "Please use distribution-type gather-scatter instead.");
-  
+
   const std::vector<int> & localConnectedRanks = _mesh->getConnectedRanks();
 
   if (localConnectedRanks.empty()) {
@@ -402,9 +402,9 @@ void PointToPointCommunication::acceptPreConnection(std::string const &acceptorN
     return;
   }
 
-  auto c = _communicationFactory->newCommunication();
+  _communication = _communicationFactory->newCommunication();
   
-  c->acceptConnectionAsServer(
+  _communication->acceptConnectionAsServer(
       acceptorName,
       requesterName,
       utils::MasterSlave::getRank(),
@@ -413,7 +413,7 @@ void PointToPointCommunication::acceptPreConnection(std::string const &acceptorN
   _connectionDataVector.reserve(localConnectedRanks.size());
 
   for (int connectedRank : localConnectedRanks) {
-    _connectionDataVector.push_back({connectedRank, c, com::PtrRequest()});
+    _connectionDataVector.push_back({connectedRank, _communication, com::PtrRequest()});
   }
 
   _isConnected = true;
@@ -528,7 +528,7 @@ void PointToPointCommunication::requestPreConnection(std::string const &acceptor
   PRECICE_CHECK(utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave(),
         "You can only use a point-to-point communication between two participants which both use a master. "
         << "Please use distribution-type gather-scatter instead.");
-
+  
   std::vector<int> localConnectedRanks = _mesh->getConnectedRanks();
 
   if (localConnectedRanks.empty()) {
@@ -541,13 +541,13 @@ void PointToPointCommunication::requestPreConnection(std::string const &acceptor
   _connectionDataVector.reserve(localConnectedRanks.size());
 
   std::set<int> acceptingRanks(localConnectedRanks.begin(), localConnectedRanks.end());
-  
-  auto c = _communicationFactory->newCommunication();
-  c->requestConnectionAsClient(acceptorName, requesterName,
+
+  _communication = _communicationFactory->newCommunication();
+  _communication->requestConnectionAsClient(acceptorName, requesterName,
                                acceptingRanks, utils::MasterSlave::getRank());
 
   for (auto & connectedRank : localConnectedRanks) {
-    _connectionDataVector.push_back({connectedRank, c, com::PtrRequest()});
+    _connectionDataVector.push_back({connectedRank, _communication, com::PtrRequest()});
   }
   _isConnected = true;
 }
@@ -586,8 +586,8 @@ void PointToPointCommunication::send(double const  *itemsToSend,
   }
   
   for (auto &mapping : _mappings) {
-    if (utils::MasterSlave::isMaster())
-      std::cout<< "indices " << mapping.indices << std::endl; 
+    // if (utils::MasterSlave::isMaster())
+    //   std::cout<< "indices " << mapping.indices << std::endl; 
     auto buffer = std::make_shared<std::vector<double>>();
     buffer->reserve(mapping.indices.size() * valueDimension);
     for (auto index : mapping.indices) {
@@ -613,8 +613,8 @@ void PointToPointCommunication::receive(double *itemsToReceive,
   std::fill(itemsToReceive, itemsToReceive + size, 0);
 
   for (auto &mapping : _mappings) {
-    if (not utils::MasterSlave::isMaster())
-      std::cout<< "indices " << mapping.indices << std::endl; 
+    // if (not utils::MasterSlave::isMaster())
+    //   std::cout<< "indices " << mapping.indices << std::endl; 
     mapping.recvBuffer.resize(mapping.indices.size() * valueDimension);    
     mapping.request = _communication->aReceive(mapping.recvBuffer, mapping.remoteRank);
   }

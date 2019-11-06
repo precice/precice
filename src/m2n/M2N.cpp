@@ -283,7 +283,6 @@ void M2N::receive(double *itemsToReceive,
     PRECICE_ASSERT(_isMasterConnected);
     _masterCom->receive(itemsToReceive, size, 0);    
   }
-  std::cout<< "receiving 5 " << std::endl; 
 }
 
 void M2N::receive(bool &itemToReceive)
