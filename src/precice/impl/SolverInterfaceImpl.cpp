@@ -219,7 +219,7 @@ double SolverInterfaceImpl:: initialize()
   else {
     // Setup communication
 
-    PRECICE_INFO("Setting up master communication to coupling partner/s " );
+    PRECICE_INFO("Setting up master communication to coupling partner/s" );
     for (auto& m2nPair : _m2ns) {
         auto& bm2n = m2nPair.second;
         PRECICE_DEBUG((bm2n.isRequesting?"Awaiting master connection from ":"Establishing master connection to ") << bm2n.remoteName);

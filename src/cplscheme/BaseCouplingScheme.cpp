@@ -115,10 +115,10 @@ BaseCouplingScheme::BaseCouplingScheme(
 
 void BaseCouplingScheme::receiveAndSetDt()
 {
-  PRECICE_TRACE();  
+  PRECICE_TRACE();
   if (participantReceivesDt()) {
-    double dt = UNDEFINED_TIMESTEP_LENGTH;    
-    getM2N()->receive(dt);    
+    double dt = UNDEFINED_TIMESTEP_LENGTH;
+    getM2N()->receive(dt);
     PRECICE_DEBUG("Received timestep length of " << dt);
     PRECICE_ASSERT(not math::equals(dt, UNDEFINED_TIMESTEP_LENGTH));
     setTimestepLength(dt);
@@ -229,7 +229,8 @@ void BaseCouplingScheme::receiveState(
 
 std::vector<int> BaseCouplingScheme::sendData(m2n::PtrM2N m2n)
 { 
-  PRECICE_TRACE(); 
+  PRECICE_TRACE();
+  
   std::vector<int> sentDataIDs;
   PRECICE_ASSERT(m2n.get() != nullptr);
   PRECICE_ASSERT(m2n->isConnected());
@@ -250,6 +251,7 @@ std::vector<int> BaseCouplingScheme::receiveData(
   std::vector<int> receivedDataIDs;
   PRECICE_ASSERT(m2n.get() != nullptr);
   PRECICE_ASSERT(m2n->isConnected());
+  
   for (DataMap::value_type &pair : _receiveData) {
     int size = pair.second->values->size();
     m2n->receive(pair.second->values->data(), size, pair.second->mesh->getID(), pair.second->dimension);

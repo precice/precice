@@ -17,10 +17,8 @@ namespace partition
 {
 
 ProvidedBoundingBox::ProvidedBoundingBox(mesh::PtrMesh mesh,
-                                         // bool          hasToSend,
                                          double        safetyFactor)
     : Partition(mesh),
-      // _hasToSend(hasToSend),
       _dimensions(mesh->getDimensions()),
       _safetyFactor(safetyFactor)
 {
