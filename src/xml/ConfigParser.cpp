@@ -1,6 +1,7 @@
 #include "ConfigParser.hpp"
 #include <libxml/SAX.h>
 #include <fstream>
+#include <string>
 
 namespace precice
 {
@@ -55,6 +56,18 @@ void OnCharacters(void *ctx, const xmlChar *ch, int len)
   pParser->OnTextSection(std::string(reinterpret_cast<const char *>(ch), len));
 }
 
+void OnStructuredErrorFunc(void * userData, xmlError* error)
+{
+    const std::string message{error->message};
+
+    // Ignore all namespace-related messages
+    if (message.find("Namespace") != std::string::npos) {
+        return;
+    }
+
+    ConfigParser::MessageProxy(error->level, message);
+}
+
 // ------------------------- ConfigParser implementation  -------------------------
 
 precice::logging::Logger ConfigParser::_log("xml::XMLParser");
@@ -84,24 +97,22 @@ ConfigParser::ConfigParser(const std::string &filePath)
   readXmlFile(filePath);
 }
 
-void ConfigParser::GenericErrorFunc(void *ctx, const char *msg, ...)
+void ConfigParser::MessageProxy(int level, const std::string& mess)
 {
-  const int TMP_BUF_SIZE = 256;
-
-  char    err[TMP_BUF_SIZE];
-  va_list arg_ptr;
-  va_start(arg_ptr, msg);
-  vsnprintf(err, TMP_BUF_SIZE, msg, arg_ptr);
-  va_end(arg_ptr);
-
-  PRECICE_ERROR(err);
+    switch (level) {
+        case (XML_ERR_FATAL):
+        case (XML_ERR_ERROR):
+            PRECICE_ERROR(mess);
+            break;
+        case (XML_ERR_WARNING):
+            PRECICE_WARN(mess);
+        default:
+            PRECICE_INFO(mess);
+    }
 }
 
 int ConfigParser::readXmlFile(std::string const &filePath)
 {
-  auto handler = static_cast<xmlGenericErrorFunc>(ConfigParser::GenericErrorFunc);
-  initGenericErrorDefaultFunc(&handler);
-
   xmlSAXHandler SAXHandler;
 
   memset(&SAXHandler, 0, sizeof(xmlSAXHandler));
@@ -110,6 +121,7 @@ int ConfigParser::readXmlFile(std::string const &filePath)
   SAXHandler.startElementNs = OnStartElementNs;
   SAXHandler.endElementNs   = OnEndElementNs;
   SAXHandler.characters     = OnCharacters;
+  SAXHandler.serror         = OnStructuredErrorFunc;
 
   std::ifstream ifs(filePath);
   if (not ifs) {

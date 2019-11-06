@@ -35,9 +35,7 @@ private:
   CTagPtrVec m_CurrentTags;
 
   std::shared_ptr<precice::xml::XMLTag> m_pXmlTag;
-
-  static void GenericErrorFunc(void *ctx, const char *msg, ...);
-
+   
 public:
   /// Parser ctor for Callback init
   ConfigParser(const std::string &filePath, std::shared_ptr<XMLTag> pXmlTag);
@@ -64,8 +62,11 @@ public:
   /// Callback for End-Tag
   void OnEndElement();
 
-  // Callback for text sections in xml file
+  /// Callback for text sections in xml file
   void OnTextSection(std::string ch);
+
+  /// Proxy for error and warning messages from libxml2
+  static void MessageProxy(int level, const std::string& mess);
 };
 }
 }
