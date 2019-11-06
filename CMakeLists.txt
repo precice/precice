@@ -139,19 +139,22 @@ endif()
 
 # Option: PETSC
 if (PETSC)
+  find_package(PkgConfig REQUIRED)
   if (TPL_ENABLE_PETSC)
     xsdk_tpl_require(PETSC PETSC_DIR PETSC_ARCH)
-    # PETSc detection uses primarily these ENVs
-    unset(ENV{PETSC_DIR})
-    unset(ENV{PETSC_ARCH})
+    unset(CMAKE_PREFIX_PATH)
+    unset(ENV{CMAKE_PREFIX_PATH})
+    set(CMAKE_PREFIX_PATH ${PETSC_DIR}/${PETSC_ARCH})
+    pkg_check_modules(PETSc REQUIRED IMPORTED_TARGET NO_CMAKE_ENVIRONMENT_PATH GLOBAL PETSc>=3.6)
+  else()
+    pkg_check_modules(PETSc REQUIRED IMPORTED_TARGET GLOBAL PETSc>=3.6)
   endif()
-  find_package(PETSc 3.6 REQUIRED)
-  # No validation required as PETSc does this internally
+  add_library(PETSc::PETSc ALIAS PkgConfig::PETSc)
 
   set(PETSC_VERSIONS "")
   set(PETSC_VERSION_MAJOR "")
   set(PETSC_VERSION_MINOR "")
-  string(REGEX MATCHALL "[0-9]+" PETSC_VERSIONS ${PETSC_VERSION})
+  string(REGEX MATCHALL "[0-9]+" PETSC_VERSIONS ${PETSc_VERSION})
   list(GET PETSC_VERSIONS 0 PETSC_VERSION_MAJOR)
   list(GET PETSC_VERSIONS 1 PETSC_VERSION_MINOR)
 else()
@@ -242,8 +245,7 @@ endif()
 
 # Setup PETSC
 if (PETSC AND MPI)
-  target_include_directories(precice PRIVATE ${PETSC_INCLUDES})
-  target_link_libraries(precice PRIVATE ${PETSC_LIBRARIES})
+  target_link_libraries(precice PRIVATE PETSc::PETSc)
 else()
   target_compile_definitions(precice PRIVATE PRECICE_NO_PETSC)
 endif()
@@ -307,8 +309,7 @@ if(MPI)
   target_link_libraries(binprecice PRIVATE MPI::MPI_CXX)
 endif()
 if(MPI AND PETSC)
-  target_include_directories(binprecice PRIVATE ${PETSC_INCLUDES})
-  target_link_libraries(binprecice PRIVATE ${PETSC_LIBRARIES})
+  target_link_libraries(binprecice PRIVATE PETSc::PETSc)
 endif()
 
 
@@ -346,8 +347,7 @@ if(MPI)
   target_link_libraries(testprecice PRIVATE MPI::MPI_CXX)
 endif()
 if(MPI AND PETSC)
-  target_include_directories(testprecice PRIVATE ${PETSC_INCLUDES})
-  target_link_libraries(testprecice PRIVATE ${PETSC_LIBRARIES})
+  target_link_libraries(testprecice PRIVATE PETSc::PETSc)
 endif()
 
 # Test Sources Configuration
