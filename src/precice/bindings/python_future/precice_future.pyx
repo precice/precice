@@ -10,6 +10,7 @@ cimport numpy as np
 cimport cython
 from mpi4py import MPI
 
+from error_handling import check1D, check2D
 
 from cpython.version cimport PY_MAJOR_VERSION  # important for determining python version in order to properly normalize string input. See http://docs.cython.org/en/latest/src/tutorial/strings.html#general-notes-about-c-strings and https://github.com/precice/precice/issues/68 .
 
@@ -118,7 +119,8 @@ cdef class Interface:
         if not isinstance(position, np.ndarray):
             position = np.asarray(position)
         dimensions = position.size
-        assert(dimensions == self.get_dimensions(), "Function set_mesh_vertex expects a 1d numpy array with coordinates of point as position input")
+        # assert(dimensions == self.get_dimensions(), "Function set_mesh_vertex expects a 1d numpy array with coordinates of point as position input")
+        check1D("set_mesh_vertex",dimensions,self.get_dimensions())
         cdef np.ndarray[double, ndim=1] _position = np.ascontiguousarray(position, dtype=np.double)
         vertex_id = self.thisptr.setMeshVertex(mesh_id, <const double*>_position.data)
         return vertex_id
@@ -132,7 +134,8 @@ cdef class Interface:
         if not isinstance(positions, np.ndarray):
             positions = np.asarray(positions)
         size, dimensions = positions.shape
-        assert(dimensions == self.get_dimensions(),"Function set_mesh_vertices expects a numpy array [no. of vertices x dimension of domain] as positions input")
+        # assert(dimensions == self.get_dimensions(),"Function set_mesh_vertices expects a numpy array [no. of vertices x dimension of domain] as positions input")
+        check2D("set_mesh_vertices",dimensions,self.get_dimensions())
         cdef np.ndarray[double, ndim=1] _positions = np.ascontiguousarray(positions.flatten(), dtype=np.double)
         cdef np.ndarray[int, ndim=1] _ids = np.empty(size, dtype=np.int32)
         self.thisptr.setMeshVertices (mesh_id, size, <const double*>_positions.data, <int*>_ids.data)
@@ -151,7 +154,8 @@ cdef class Interface:
         if not isinstance(positions, np.ndarray):
             positions = np.asarray(positions)
         size, dimensions = positions.shape
-        assert(dimensions == self.get_dimensions(),"Function get_mesh_vertex_ids_from_positions expects a numpy array of shape: [no. of vertices x dimension of domain] as positions input" )
+        # assert(dimensions == self.get_dimensions(),"Function get_mesh_vertex_ids_from_positions expects a numpy array of shape: [no. of vertices x dimension of domain] as positions input" )
+        check2D("get_mesh_vertex_ids_from_positions",dimensions,self.get_dimensions())
         cdef np.ndarray[double, ndim=1] _positions = np.ascontiguousarray(positions.flatten(), dtype=np.double)
         cdef np.ndarray[int, ndim=1] _ids = np.empty(int(size), dtype=np.int32)
         self.thisptr.getMeshVertexIDsFromPositions (mesh_id, size, <const double*>_positions.data, <int*>_ids.data)
@@ -195,7 +199,8 @@ cdef class Interface:
         if not isinstance(values, np.ndarray):
             values = np.asarray(values)
         size, dimensions = values.shape
-        assert(dimensions == self.get_dimensions(),"Function write_block_vector_data expects a numpy array of shape: [no. of values x dimension of domain] as values input")
+        # assert(dimensions == self.get_dimensions(),"Function write_block_vector_data expects a numpy array of shape: [no. of values x dimension of domain] as values input")
+        check2D("write_block_vector_data", dimensions, self.get_dimensions())
         cdef np.ndarray[int, ndim=1] _value_indices = np.ascontiguousarray(value_indices, dtype=np.int32)
         cdef np.ndarray[double, ndim=1] _values = np.ascontiguousarray(values.flatten(), dtype=np.double)
         assert(size == _value_indices.size,"Function write_block_vector_data expects that number of columns in numpy array values is equal to number of value_indices provided")
@@ -206,14 +211,16 @@ cdef class Interface:
         if not isinstance(value, np.ndarray):
             value = np.asarray(value)
         dimensions = value.size
-        assert(dimensions == self.get_dimensions(),"Function write_vector_data expects a 1D numpy array as values input with number of entires equal to the dimension of domain")
+        # assert(dimensions == self.get_dimensions(),"Function write_vector_data expects a 1D numpy array as values input with number of entires equal to the dimension of domain")
+        check1D("write_vector_data", dimensions, self.get_dimensions())
         cdef np.ndarray[np.double_t, ndim=1] _value = np.ascontiguousarray(value, dtype=np.double)
         self.thisptr.writeVectorData (data_id, value_index, <const double*>_value.data)
 
     def write_block_scalar_data (self, data_id, value_indices, values):
         cdef np.ndarray[int, ndim=1] _value_indices = np.ascontiguousarray(value_indices, dtype=np.int32)
         cdef np.ndarray[double, ndim=1] _values = np.ascontiguousarray(values, dtype=np.double)
-        assert(_values.size == _value_indices.size,"Function write_block_scalar_data expects that number of entries in numpy array values is equal to number of value_indices provided")
+        # assert(_values.size == _value_indices.size,"Function write_block_scalar_data expects that number of entries in numpy array values is equal to number of value_indices provided")
+        check2D("write_block_scalar_data", _values.size, _value_indices.size)
         size = value_indices.size
         self.thisptr.writeBlockScalarData (data_id, size, <const int*>_value_indices.data, <const double*>_values.data)
 
