@@ -1,6 +1,6 @@
 include(CheckCXXSourceCompiles)
 
-function(check_cpp_11_library)
+function(check_cpp_11_library_support)
   unset(CPP11LibraryConforming)
   set(CPP11CheckSource "
   #include <iostream>
@@ -19,6 +19,6 @@ function(check_cpp_11_library)
   unset(CPP11CheckSource)
   unset(CMAKE_CXX_STANDARD)
   unset(CMAKE_CXX_STANDARD_REQUIRED)
-endfunction(check_cpp_11_library)
+endfunction(check_cpp_11_library_support)
 
 check_cpp_11_library_support()
