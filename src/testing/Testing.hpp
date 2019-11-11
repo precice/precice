@@ -212,7 +212,7 @@ struct WhiteboxAccessor {
 struct SlimConfigurator : WhiteboxAccessor {
     /** Configures the interface given a fileName in a slim and quiet manner.
      *
-     * This first genenrates a ConfigurationContext from the SolverInterface.
+     * This first generates a ConfigurationContext from the SolverInterface.
      * It then configures a config::Configuration using the context and the given file.
      * Finally, it calls SolverInterface::configure with the configuration.
      * 
