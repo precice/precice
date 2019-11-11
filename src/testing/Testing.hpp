@@ -220,7 +220,7 @@ struct SlimConfigurator : WhiteboxAccessor {
      * @param[in] configFilename The filename of the configuration file.
      */
     template<typename T>
-    static void slimConfig(T& interface, const std::string& configFilename) {
+    static void slimConfigure(T& interface, const std::string& configFilename) {
         auto & interfaceImpl = impl(interface);
         precice::xml::ConfigurationContext context{
             interfaceImpl.getAccessorName(),

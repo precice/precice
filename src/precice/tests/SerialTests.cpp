@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(TestConfiguration)
   std::string filename = _pathToTests + "/configuration.xml";
   // Test configuration for accessor "Peano"
   SolverInterface interfacePeano ("Peano", 0, 1);
-  slimConfig(interfacePeano, filename);
+  slimConfigure(interfacePeano, filename);
 
   BOOST_TEST(impl(interfacePeano)._participants.size() == 2);
   BOOST_TEST(interfacePeano.getDimensions() == 2);
@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(TestConfiguration)
 
   // Test configuration for accessor "Comsol"
   SolverInterface interfaceComsol ("Comsol", 0, 1);
-  slimConfig(interfaceComsol, filename);
+  slimConfigure(interfaceComsol, filename);
   BOOST_TEST(impl(interfaceComsol)._participants.size() == 2);
   BOOST_TEST(interfaceComsol.getDimensions() == 2);
 
@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(TestExplicit,
     }
 
     SolverInterface couplingInterface(solverName, 0, 1);
-    slimConfig(couplingInterface, configurationFileName);
+    slimConfigure(couplingInterface, configurationFileName);
 
     //was necessary to replace pre-defined geometries
     if(solverName=="SolverOne" && couplingInterface.hasMesh("MeshOne")){
@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithSubcycling,
 
   if (utils::Parallel::getProcessRank() == 0){
     SolverInterface precice("SolverOne", 0, 1);
-    slimConfig(precice, _pathToTests + "explicit-mpi-single.xml");
+    slimConfigure(precice, _pathToTests + "explicit-mpi-single.xml");
 
     double maxDt = precice.initialize();
     int timestep = 0;
@@ -163,7 +163,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithSubcycling,
   }
   else if (utils::Parallel::getProcessRank() == 1){
     SolverInterface precice("SolverTwo", 0, 1);
-    slimConfig(precice, _pathToTests + "explicit-mpi-single.xml");
+    slimConfigure(precice, _pathToTests + "explicit-mpi-single.xml");
     int meshID = precice.getMeshID("Test-Square");
     precice.setMeshVertex(meshID, Eigen::Vector3d(0.0,0.0,0.0).data());
     precice.setMeshVertex(meshID, Eigen::Vector3d(1.0,0.0,0.0).data());
@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDataExchange,
 
   if (utils::Parallel::getProcessRank() == 0){
     SolverInterface cplInterface("SolverOne", 0, 1);
-    slimConfig(cplInterface, _pathToTests + "explicit-mpi-single.xml");
+    slimConfigure(cplInterface, _pathToTests + "explicit-mpi-single.xml");
 
     int meshOneID = cplInterface.getMeshID("MeshOne");
     /* int squareID = */ cplInterface.getMeshID("Test-Square");
@@ -239,7 +239,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDataExchange,
   }
   else if (utils::Parallel::getProcessRank() == 1){
     SolverInterface cplInterface("SolverTwo", 0, 1);
-    slimConfig(cplInterface, _pathToTests + "explicit-mpi-single.xml");
+    slimConfigure(cplInterface, _pathToTests + "explicit-mpi-single.xml");
 
     int meshID = cplInterface.getMeshID("Test-Square");
     cplInterface.setMeshVertex(meshID, Eigen::Vector3d(0.0,0.0,0.0).data());
@@ -296,7 +296,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDataInitialization,
 
   if (utils::Parallel::getProcessRank() == 0){
     SolverInterface cplInterface("SolverOne", 0, 1);
-    slimConfig(cplInterface, _pathToTests + "explicit-data-init.xml");
+    slimConfigure(cplInterface, _pathToTests + "explicit-data-init.xml");
 
     int meshOneID = cplInterface.getMeshID("MeshOne");
     cplInterface.setMeshVertex(meshOneID, Vector3d(1.0,2.0,3.0).data());
@@ -318,7 +318,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDataInitialization,
   }
   else if (utils::Parallel::getProcessRank() == 1){
     SolverInterface cplInterface("SolverTwo", 0, 1);
-    slimConfig(cplInterface, _pathToTests + "explicit-data-init.xml");
+    slimConfigure(cplInterface, _pathToTests + "explicit-data-init.xml");
 
     int meshTwoID = cplInterface.getMeshID("MeshTwo");
     Vector3d pos = Vector3d::Zero();
@@ -357,7 +357,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithBlockDataExchange,
 
   if (utils::Parallel::getProcessRank() == 0){
     SolverInterface cplInterface("SolverOne", 0, 1);
-    slimConfig(cplInterface, _pathToTests + "explicit-mpi-single-non-inc.xml");
+    slimConfigure(cplInterface, _pathToTests + "explicit-mpi-single-non-inc.xml");
 
     int meshOneID = cplInterface.getMeshID("MeshOne");
     double maxDt = cplInterface.initialize();
@@ -436,7 +436,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithBlockDataExchange,
   }
   else if ( utils::Parallel::getProcessRank() == 1 ) {
     SolverInterface cplInterface ( "SolverTwo", 0, 1 );
-    slimConfig(cplInterface, _pathToTests + "explicit-mpi-single-non-inc.xml");
+    slimConfigure(cplInterface, _pathToTests + "explicit-mpi-single-non-inc.xml");
 
     int squareID = cplInterface.getMeshID("Test-Square");
     int forcesID = cplInterface.getDataID ( "Forces", squareID );
@@ -508,7 +508,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithSolverGeometry,
   if ( utils::Parallel::getProcessRank() == 0 ){
 
     SolverInterface couplingInterface("SolverOne", 0, 1);
-    slimConfig(couplingInterface, _pathToTests + "explicit-solvergeometry.xml");
+    slimConfigure(couplingInterface, _pathToTests + "explicit-solvergeometry.xml");
 
     //was necessary to replace pre-defined geometries
     int meshID = couplingInterface.getMeshID("MeshOne");
@@ -526,7 +526,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithSolverGeometry,
   }
   else if ( utils::Parallel::getProcessRank() == 1 ){
     SolverInterface cplInterface ( "SolverTwo", 0, 1 );
-    slimConfig(cplInterface, _pathToTests + "explicit-solvergeometry.xml");
+    slimConfigure(cplInterface, _pathToTests + "explicit-solvergeometry.xml");
 
     BOOST_TEST(cplInterface.getDimensions() == 3);
     int meshID = cplInterface.getMeshID ( "SolverGeometry" );
@@ -572,7 +572,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDisplacingGeometry,
   if ( utils::Parallel::getProcessRank() == 0 ) { // SolverOne part
 
     SolverInterface cplInterface ( "SolverOne", 0, 1 );
-    slimConfig(cplInterface, _pathToTests + "explicit-solvergeometry.xml");
+    slimConfigure(cplInterface, _pathToTests + "explicit-solvergeometry.xml");
 
     double dt = cplInterface.initialize();
 
@@ -607,7 +607,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDisplacingGeometry,
   }
   else if ( utils::Parallel::getProcessRank() == 1 ){
     SolverInterface cplInterface ( "SolverTwo", 0, 1 );
-    slimConfig(cplInterface, _pathToTests + "explicit-solvergeometry.xml");
+    slimConfigure(cplInterface, _pathToTests + "explicit-solvergeometry.xml");
     int meshID = cplInterface.getMeshID("SolverGeometry");
     int i0 = cplInterface.setMeshVertex(meshID, zero.data());
     int i1 = cplInterface.setMeshVertex(meshID, one.data());
@@ -668,7 +668,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDataScaling,
   double dt;
   if ( utils::Parallel::getProcessRank() == 0 ) { // SolverOne part
     SolverInterface cplInterface ( "SolverOne", 0, 1 );
-    slimConfig(cplInterface, _pathToTests + "explicit-datascaling.xml");
+    slimConfigure(cplInterface, _pathToTests + "explicit-datascaling.xml");
 
     BOOST_TEST ( cplInterface.getDimensions() == 2 );
 
@@ -695,7 +695,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDataScaling,
   }
   else if ( utils::Parallel::getProcessRank() == 1 ){
     SolverInterface cplInterface ( "SolverTwo", 0, 1 );
-    slimConfig(cplInterface, _pathToTests + "explicit-datascaling.xml");
+    slimConfigure(cplInterface, _pathToTests + "explicit-datascaling.xml");
 
     BOOST_TEST ( cplInterface.getDimensions() == 2 );
     dt = cplInterface.initialize();
@@ -734,7 +734,7 @@ BOOST_AUTO_TEST_CASE(testImplicit,
 
   if (utils::Parallel::getProcessRank() == 0){
     SolverInterface couplingInterface("SolverOne", 0, 1);
-    slimConfig(couplingInterface, _pathToTests + "implicit.xml");
+    slimConfigure(couplingInterface, _pathToTests + "implicit.xml");
 
     int meshID = couplingInterface.getMeshID("Square");
     double pos[3];
@@ -772,7 +772,7 @@ BOOST_AUTO_TEST_CASE(testImplicit,
   }
   else if (utils::Parallel::getProcessRank() == 1){
     SolverInterface couplingInterface("SolverTwo", 0, 1);
-    slimConfig(couplingInterface, _pathToTests + "implicit.xml");
+    slimConfigure(couplingInterface, _pathToTests + "implicit.xml");
 
     double maxDt = couplingInterface.initialize();
     while (couplingInterface.isCouplingOngoing()){
@@ -826,7 +826,7 @@ BOOST_AUTO_TEST_CASE(testStationaryMappingWithSolverMesh,
     mesh::Data::resetDataCount();
     impl::Participant::resetParticipantCount();
     SolverInterface interface(solverName, 0, 1);
-    slimConfig(interface, (dim == 2 ? config2D : config3D));
+    slimConfigure(interface, (dim == 2 ? config2D : config3D));
     BOOST_TEST(interface.getDimensions() == dim);
 
     std::vector<Eigen::VectorXd> positions;
@@ -989,7 +989,7 @@ BOOST_AUTO_TEST_CASE(testBug,
   std::string solverName = rank == 0 ? "Flite" : "Calculix";
   if (solverName == std::string("Flite")){
     SolverInterface precice("Flite", 0, 1);
-    slimConfig(precice, configName);
+    slimConfigure(precice, configName);
 
     int meshID = precice.getMeshID("FliteNodes");
     int forcesID = precice.getDataID("Forces", meshID);
@@ -1021,7 +1021,7 @@ BOOST_AUTO_TEST_CASE(testBug,
   else {
     BOOST_TEST(solverName == std::string("Calculix"), solverName);
     SolverInterface precice("Calculix", 0, 1);
-    slimConfig(precice, configName);
+    slimConfigure(precice, configName);
 
     int meshID = precice.getMeshID("CalculixNodes");
     for (Vector3d& coord : coords){
@@ -1094,7 +1094,7 @@ BOOST_AUTO_TEST_CASE(testThreeSolvers,
 
     if (solverName == std::string("SolverOne")){
       SolverInterface precice(solverName, 0, 1);
-      slimConfig(precice, configs[k]);
+      slimConfigure(precice, configs[k]);
 
       int meshAID = precice.getMeshID("MeshA");
       int meshBID = precice.getMeshID("MeshB");
@@ -1122,7 +1122,7 @@ BOOST_AUTO_TEST_CASE(testThreeSolvers,
     }
     else if (solverName == std::string("SolverTwo")){
       SolverInterface precice(solverName, 0, 1);
-      slimConfig(precice, configs[k]);
+      slimConfigure(precice, configs[k]);
 
       int meshID = precice.getMeshID("MeshC");
       precice.setMeshVertex(meshID, Eigen::Vector2d(0, 0).data());
@@ -1149,7 +1149,7 @@ BOOST_AUTO_TEST_CASE(testThreeSolvers,
     else {
       BOOST_TEST(solverName == std::string("SolverThree"), solverName);
       SolverInterface precice(solverName, 0, 1);
-      slimConfig(precice, configs[k]);
+      slimConfigure(precice, configs[k]);
 
       int meshID = precice.getMeshID("MeshD");
       precice.setMeshVertex(meshID, Eigen::Vector2d(0, 0).data());
@@ -1222,7 +1222,7 @@ BOOST_AUTO_TEST_CASE(testMultiCoupling, * testing::OnSize(4))
     }
 
     SolverInterface precice(participant, 0, 1);
-    slimConfig(precice, _pathToTests + "/multi.xml");
+    slimConfigure(precice, _pathToTests + "/multi.xml");
     BOOST_TEST(precice.getDimensions() == 2);
 
     if (utils::Parallel::getProcessRank() == 0){
@@ -1281,7 +1281,7 @@ BOOST_AUTO_TEST_CASE(testMultiCoupling, * testing::OnSize(4))
   else {
     BOOST_TEST(utils::Parallel::getProcessRank() == 3);
     SolverInterface precice("NASTIN", 0, 1);
-    slimConfig(precice, _pathToTests + "/multi.xml");
+    slimConfigure(precice, _pathToTests + "/multi.xml");
     BOOST_TEST(precice.getDimensions() == 2);
     int meshID1 = precice.getMeshID("NASTIN_Mesh1");
     int meshID2 = precice.getMeshID("NASTIN_Mesh2");
@@ -1359,7 +1359,7 @@ void testMappingNearestProjection(bool defineEdgesExplicitly, const std::string 
   if (utils::Parallel::getProcessRank() == 0){
     SolverInterface cplInterface("SolverOne", 0, 1);
     // namespace is required because we are outside the fixture
-    testing::SlimConfigurator::slimConfig(cplInterface, configFile);
+    testing::SlimConfigurator::slimConfigure(cplInterface, configFile);
     const int meshOneID = cplInterface.getMeshID("MeshOne");
 
     // Setup mesh one.
@@ -1403,7 +1403,7 @@ void testMappingNearestProjection(bool defineEdgesExplicitly, const std::string 
   else if (utils::Parallel::getProcessRank() == 1){
     SolverInterface cplInterface("SolverTwo", 0, 1);
     // namespace is required because we are outside the fixture
-    testing::SlimConfigurator::slimConfig(cplInterface, configFile);
+    testing::SlimConfigurator::slimConfigure(cplInterface, configFile);
     int meshTwoID = cplInterface.getMeshID("MeshTwo");
 
     // Setup receiving mesh.
@@ -1499,7 +1499,7 @@ BOOST_AUTO_TEST_CASE(testSendMeshToMultipleParticipants,
   }
 
   SolverInterface cplInterface(solverName, 0, 1);
-  slimConfig(cplInterface, configFile);
+  slimConfigure(cplInterface, configFile);
 
   const int meshID = cplInterface.getMeshID(meshName);
 
@@ -1543,7 +1543,7 @@ BOOST_AUTO_TEST_CASE(testPreconditionerBug,
   std::string meshName = utils::Parallel::getProcessRank() == 0 ? "MeshOne" : "MeshTwo";
 
   SolverInterface cplInterface(participantName, 0, 1);
-  slimConfig(cplInterface, configFile);
+  slimConfigure(cplInterface, configFile);
   const int meshID = cplInterface.getMeshID(meshName);
 
   Vector2d vertex{0.0, 0.0};
