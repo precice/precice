@@ -86,7 +86,7 @@ void AccelerationConfiguration::connectTags(xml::XMLTag &parent)
   // static int recursionCounter = 0;
   // recursionCounter++;
 
-  XMLTag::Occurrence occ = XMLTag::OCCUR_NOT_OR_ONCE;
+  XMLTag::Occurrence occ = XMLTag::OCCUR_ONCE;
   std::list<XMLTag>  tags;
   {
     XMLTag tag(*this, VALUE_CONSTANT, occ, TAG);
