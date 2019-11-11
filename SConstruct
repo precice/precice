@@ -315,8 +315,8 @@ versions_hpp = env.Substfile(
     "src/precice/impl/versions.hpp.in",
     SUBST_DICT =  {
         "@preCICE_VERSION@": PRECICE_VERSION,
-        "@PETSC_VERSION_MAJOR@": PETSC_VERSION_MAJOR,
-        "@PETSC_VERSION_MINOR@": PETSC_VERSION_MINOR}
+        "@PETSc_VERSION_MAJOR@": PETSC_VERSION_MAJOR,
+        "@PETSc_VERSION_MINOR@": PETSC_VERSION_MINOR}
 )
 
 # Substitute strings in versions.cpp.in, save it as versions.cpp

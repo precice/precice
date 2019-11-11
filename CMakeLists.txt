@@ -139,43 +139,14 @@ endif()
 
 # Option: PETSC
 if (PETSC)
-  find_package(PkgConfig REQUIRED QUIET)
-  include(LibraryHelpers)
-
-  # Record a macro which searches PETSc while in the invoked scope
-  macro(pkg_check_petsc args)
-    if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.13.5") 
-      pkg_check_modules(PETSc REQUIRED IMPORTED_TARGET GLOBAL ${args} PETSc>=3.6)
-      add_library(PETSc::PETSc ALIAS PkgConfig::PETSc)
-    else()
-      pkg_check_modules(PETSc REQUIRED ${args} PETSc>=3.6)
-      add_library(PETSc::PETSc INTERFACE IMPORTED GLOBAL)
-      unset(_libs)
-      resolve_library_locations(PETSc "${PETSc_LIBRARIES}" "${PETSc_LIBRARY_DIRS}")
-      set_target_properties(PETSc::PETSc PROPERTIES
-        INTERFACE_INCLUDE_DIRECTORIES "${PETSc_INCLUDE_DIRS}"
-        INTERFACE_LINK_LIBRARIES "${PETSc_LIBRARIES_RESOLVED}"
-        INTERFACE_COMPILE_OPTIONS "${PETSc_CFLAGS_OTHER}"
-        ) 
-    endif()
-  endmacro(pkg_check_petsc)
-
   if (TPL_ENABLE_PETSC)
     xsdk_tpl_require(PETSC PETSC_DIR PETSC_ARCH)
     unset(CMAKE_PREFIX_PATH)
     unset(ENV{CMAKE_PREFIX_PATH})
     set(CMAKE_PREFIX_PATH ${PETSC_DIR}/${PETSC_ARCH})
-    pkg_check_petsc(NO_CMAKE_ENVIRONMENT_PATH)
-  else()
-    pkg_check_petsc("")
+    set(PETSc_NO_PATH True)
   endif()
-
-  set(PETSC_VERSIONS "")
-  set(PETSC_VERSION_MAJOR "")
-  set(PETSC_VERSION_MINOR "")
-  string(REGEX MATCHALL "[0-9]+" PETSC_VERSIONS ${PETSc_VERSION})
-  list(GET PETSC_VERSIONS 0 PETSC_VERSION_MAJOR)
-  list(GET PETSC_VERSIONS 1 PETSC_VERSION_MINOR)
+  find_package(PETSc 3.6 REQUIRED)
 else()
   message(STATUS "PETSc support disabled")
 endif()
