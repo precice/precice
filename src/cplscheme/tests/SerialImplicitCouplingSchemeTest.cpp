@@ -414,7 +414,7 @@ BOOST_AUTO_TEST_CASE(testParseConfigurationWithRelaxation)
       new m2n::M2NConfiguration(root));
   CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
 
-  xml::configure(root, path);
+  xml::configure(root, xml::ConfigurationContext{}, path);
   BOOST_CHECK(cplSchemeConfig._accelerationConfig->getAcceleration().get()); // no nullptr
   meshConfig->setMeshSubIDs();
 }
@@ -593,7 +593,7 @@ BOOST_AUTO_TEST_CASE(testConfiguredAbsConvergenceMeasureSynchronized,
   m2n::M2NConfiguration::SharedPointer m2nConfig(new m2n::M2NConfiguration(root));
   CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
 
-  xml::configure(root, configurationPath);
+  xml::configure(root, xml::ConfigurationContext{}, configurationPath);
   meshConfig->setMeshSubIDs();
   m2n::PtrM2N m2n = m2nConfig->getM2N("Participant0", "Participant1");
 

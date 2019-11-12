@@ -496,6 +496,15 @@ public:
   /// Runs the solver interface in server mode.
   void runServer();
 
+  /// Returns the name of the accessor
+  std::string getAccessorName() const { return _accessorName; }
+
+  /// Returns the rank of the accessor
+  int getAccessorProcessRank() const { return _accessorProcessRank; }
+
+  /// Returns the size of the accessors communicator
+  int getAccessorCommunicatorSize() const { return _accessorCommunicatorSize; }
+
 private:
 
   mutable logging::Logger _log{"impl::SolverInterfaceImpl"};

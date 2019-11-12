@@ -518,6 +518,7 @@ XMLTag getRootTag()
 
 void configure(
     XMLTag &           tag,
+    const precice::xml::ConfigurationContext& context,
     const std::string &configurationFilename)
 {
   logging::Logger _log("xml");
@@ -526,7 +527,7 @@ void configure(
   NoPListener nopListener;
   XMLTag      root(nopListener, "", XMLTag::OCCUR_ONCE);
 
-  precice::xml::ConfigParser p(configurationFilename, std::make_shared<XMLTag>(tag));
+  precice::xml::ConfigParser p(configurationFilename, context, std::make_shared<XMLTag>(tag));
 
   root.addSubtag(tag);
 }

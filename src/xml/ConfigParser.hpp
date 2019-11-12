@@ -11,6 +11,7 @@ namespace precice
 namespace xml
 {
 class XMLTag; // forward declaration to resolve circular import
+struct ConfigurationContext;
 
 class ConfigParser
 {
@@ -38,7 +39,7 @@ private:
    
 public:
   /// Parser ctor for Callback init
-  ConfigParser(const std::string &filePath, std::shared_ptr<XMLTag> pXmlTag);
+  ConfigParser(const std::string &filePath, const ConfigurationContext& context, std::shared_ptr<XMLTag> pXmlTag);
 
   /// Parser ctor without Callbacks
   ConfigParser(const std::string &filePath);
@@ -51,7 +52,7 @@ public:
    * @param DefTags predefined tags
    * @param SubTags actual tags from xml file
    */
-  void connectTags(std::vector<std::shared_ptr<precice::xml::XMLTag>> &DefTags, CTagPtrVec &SubTags);
+  void connectTags(const ConfigurationContext& context, std::vector<std::shared_ptr<precice::xml::XMLTag>> &DefTags, CTagPtrVec &SubTags);
 
   /// Callback for Start-Tag
   void OnStartElement(

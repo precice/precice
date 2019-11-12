@@ -35,7 +35,7 @@ xml::XMLTag& Configuration:: getXMLTag()
   return _tag;
 }
 
-void Configuration::xmlTagCallback(xml::XMLTag& tag)
+void Configuration::xmlTagCallback(const xml::ConfigurationContext& context, xml::XMLTag& tag)
 {
   PRECICE_TRACE(tag.getName());
   if (tag.getName() == "precice-configuration") {
@@ -45,6 +45,7 @@ void Configuration::xmlTagCallback(xml::XMLTag& tag)
 
 void Configuration:: xmlEndTagCallback
 (
+  const xml::ConfigurationContext& context,
   xml::XMLTag& tag )
 {
   PRECICE_TRACE(tag.getName());

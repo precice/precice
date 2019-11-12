@@ -39,6 +39,7 @@ SolverInterfaceConfiguration:: SolverInterfaceConfiguration(xml::XMLTag& parent 
 
 void SolverInterfaceConfiguration:: xmlTagCallback
 (
+  const xml::ConfigurationContext& context,
   xml::XMLTag& tag )
 {
   PRECICE_TRACE();
@@ -55,6 +56,7 @@ void SolverInterfaceConfiguration:: xmlTagCallback
 
 void SolverInterfaceConfiguration:: xmlEndTagCallback
 (
+  const xml::ConfigurationContext& context,
   xml::XMLTag& tag )
 {
   PRECICE_TRACE();

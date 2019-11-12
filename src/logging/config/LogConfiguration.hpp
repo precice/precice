@@ -12,9 +12,9 @@ class LogConfiguration : public xml::XMLTag::Listener
 public:
   LogConfiguration(xml::XMLTag& parent);
 
-  virtual void xmlTagCallback(xml::XMLTag& tag);
+  virtual void xmlTagCallback(const xml::ConfigurationContext& context, xml::XMLTag& tag);
 
-  virtual void xmlEndTagCallback(xml::XMLTag& tag);
+  virtual void xmlEndTagCallback(const xml::ConfigurationContext& context, xml::XMLTag& tag);
 
 private:
   precice::logging::Logger _log{"logging::config::LogConfiguration"};

@@ -27,14 +27,14 @@ public:
    *
    * @return True, if successful.
    */
-  virtual void xmlTagCallback ( xml::XMLTag& callingTag );
+  virtual void xmlTagCallback(const xml::ConfigurationContext& context, xml::XMLTag& callingTag);
 
   /**
    * @brief Callback function required for use of automatic configuration.
    *
    * @return True, if successful.
    */
-  virtual void xmlEndTagCallback ( xml::XMLTag& callingTag );
+  virtual void xmlEndTagCallback(const xml::ConfigurationContext& context, xml::XMLTag& callingTag);
 
   /**
    * @brief Returns the id of the mesh used in the data action.
