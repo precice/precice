@@ -82,6 +82,9 @@ protected:
   /// Generate vertex offsets from the vertexDistribution, broadcast it to all slaves
   void computeVertexOffsets();
 
+  /// Generate vertex offsets from the connection map, broadcast it to all slaves
+  void computeVertexOffsetsBB(int numberOfVertices);
+
 private:
   logging::Logger _log{"partition::Partition"};
 };

@@ -250,36 +250,17 @@ void ReceivedBoundingBox::compute()
    * This data is needed later for implicit coupling schemes.
    */  
   if (utils::MasterSlave::isMaster())
-  {
-    _mesh->getVertexDistribution()[0] = vertexIDs;
-
-    for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
-      int numberOfSlaveVertices = 0;
-      utils::MasterSlave::_communication->receive(numberOfSlaveVertices, rankSlave);
-      vertexIDs.clear();
-      if (numberOfSlaveVertices != 0) {
-        utils::MasterSlave::_communication->receive(vertexIDs, rankSlave);
-      }
-      _mesh->getVertexDistribution()[rankSlave] = vertexIDs;
-    }
+  {    
     utils::MasterSlave::_communication->broadcast(_mesh->getGlobalNumberOfVertices());
   } else
-  {  
-    int numberOfVertices = _mesh->vertices().size();
-    utils::MasterSlave::_communication->send(numberOfVertices, 0);
-    if (numberOfVertices != 0) {
-      for (int i = 0; i < numberOfVertices; i++) {
-        vertexIDs[i] = _mesh->vertices()[i].getID();
-      }
-      utils::MasterSlave::_communication->send(vertexIDs, 0);
-    }
+  {     
     int globalNumberOfVertices = -1;
     utils::MasterSlave::_communication->broadcast(globalNumberOfVertices, 0);
     PRECICE_ASSERT(globalNumberOfVertices != -1);
     _mesh->setGlobalNumberOfVertices(globalNumberOfVertices);
   }
-
-  computeVertexOffsets();    
+  
+  computeVertexOffsetsBB(_mesh->vertices().size());    
   
 }
 
