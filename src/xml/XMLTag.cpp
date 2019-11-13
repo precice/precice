@@ -346,20 +346,17 @@ std::string XMLTag::printDTD(const bool start) const
     dtd << "(";
 
     bool first = true;
-    for (auto const subtag : _subtags) {
-
-      std::string occurrenceChar = "";
-
-      Occurrence occ = subtag->getOccurrence();
-
-      if (occ == OCCUR_ARBITRARY)
-        occurrenceChar = "*";
-      else if (occ == OCCUR_NOT_OR_ONCE)
-        occurrenceChar = "?";
-      else if (occ == OCCUR_ONCE_OR_MORE)
-        occurrenceChar = "+";
-
-      dtd << (first ? "" : ", ") << subtag->getFullName() << occurrenceChar;
+    for (auto const &subtag : _subtags) {
+       dtd << (first ? "" : ", ") << subtag->getFullName();
+       switch(subtag->getOccurrence()) {
+           case OCCUR_ARBITRARY:
+               dtd << '*';
+           case OCCUR_NOT_OR_ONCE:
+               dtd << '?';
+           case OCCUR_ONCE_OR_MORE:
+               dtd << '+';
+            default:;
+       }
       first = false;
     }
 
