@@ -76,10 +76,10 @@ public:
    * @param[in] xmlNamespace Defines a prefix/namespace for the tag. Tags with equal namespace or treated as group.
    */
   XMLTag(
-      Listener &         listener,
-      const std::string &name,
-      Occurrence         occurrence,
-      const std::string &xmlNamespace = "");
+      Listener &  listener,
+      std::string name,
+      Occurrence  occurrence,
+      std::string xmlNamespace = "");
 
   /**
    * @brief Adds a description of the purpose of this XML tag.
