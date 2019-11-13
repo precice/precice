@@ -8,13 +8,13 @@ namespace xml
 {
 
 XMLTag::XMLTag(
-    Listener &         listener,
-    const std::string &tagName,
-    Occurrence         occurrence,
-    const std::string &xmlNamespace)
+    Listener &  listener,
+    std::string tagName,
+    Occurrence  occurrence,
+    std::string xmlNamespace)
     : _listener(listener),
-      _name(tagName),
-      _namespace(xmlNamespace),
+      _name(std::move(tagName)),
+      _namespace(std::move(xmlNamespace)),
       _occurrence(occurrence)
 {
   if (not _namespace.empty()) {
