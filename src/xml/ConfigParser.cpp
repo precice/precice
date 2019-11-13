@@ -26,14 +26,14 @@ void OnStartElementNs(
   for (int indexAttribute = 0; indexAttribute < nb_attributes; ++indexAttribute, index += 5) {
     std::string attributeName(reinterpret_cast<const char *>(attributes[index]));
 
-    const xmlChar *valueBegin = attributes[index + 3];
-    const xmlChar *valueEnd   = attributes[index + 4];
-    std::string    value((const char *) valueBegin, (const char *) valueEnd);
+    auto valueBegin = reinterpret_cast<const char*>(attributes[index + 3]);
+    auto valueEnd   = reinterpret_cast<const char*>(attributes[index + 4]);
+    std::string value(valueBegin, valueEnd);
 
     attributesMap[attributeName] = value;
   }
 
-  ConfigParser *pParser = static_cast<ConfigParser *>(ctx);
+  auto pParser = static_cast<ConfigParser *>(ctx);
 
   std::string sPrefix(prefix == nullptr ? "" : reinterpret_cast<const char *>(prefix));
 
@@ -73,13 +73,11 @@ void OnStructuredErrorFunc(void * userData, xmlError* error)
 precice::logging::Logger ConfigParser::_log("xml::XMLParser");
 
 ConfigParser::ConfigParser(const std::string &filePath, const ConfigurationContext& context, std::shared_ptr<precice::xml::XMLTag> pXmlTag)
+    :m_pXmlTag(std::move(pXmlTag))
 {
-  m_pXmlTag = pXmlTag;
   readXmlFile(filePath);
 
-  std::vector<std::shared_ptr<XMLTag>> DefTags;
-  DefTags.push_back(m_pXmlTag);
-
+  std::vector<std::shared_ptr<XMLTag>> DefTags{m_pXmlTag};
   CTagPtrVec SubTags;
   // Initialize with the root tag, if any.
   if (not m_AllTags.empty())
