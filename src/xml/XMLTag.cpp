@@ -534,20 +534,21 @@ void configure(
 
 std::string XMLTag::getOccurrenceString(Occurrence occurrence) const
 {
-  if (occurrence == OCCUR_ARBITRARY) {
-    return std::string("0..*");
-  } else if (occurrence == OCCUR_NOT_OR_ONCE) {
-    return std::string("0..1");
-  } else if (occurrence == OCCUR_ONCE) {
-    return std::string("1");
-  } else if (occurrence == OCCUR_ONCE_OR_MORE) {
-    return std::string("1..*");
+  switch (occurrence) {
+  case OCCUR_ARBITRARY:
+    return "0..*";
+  case OCCUR_NOT_OR_ONCE:
+    return "0..1";
+  case OCCUR_ONCE:
+    return "1";
+  case OCCUR_ONCE_OR_MORE:
+    return "1..*";
+  default:
+    PRECICE_ASSERT(false, "Unknown occurrence type = " << occurrence);
+    return "";
   }
-  PRECICE_ERROR("Unknown occurrence type = " << occurrence);
-  return "";
 }
-}
-} // namespace precice, xml
+}} // namespace precice, xml
 
 //std::ostream& operator<<
 //(
