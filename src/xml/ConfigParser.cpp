@@ -2,6 +2,7 @@
 #include <libxml/SAX.h>
 #include <fstream>
 #include <string>
+#include <unordered_set>
 
 namespace precice
 {
@@ -140,41 +141,40 @@ int ConfigParser::readXmlFile(std::string const &filePath)
 
 void ConfigParser::connectTags(const ConfigurationContext& context, std::vector<std::shared_ptr<XMLTag>> &DefTags, CTagPtrVec &SubTags)
 {
-  std::vector<std::string> usedTags;
+  std::unordered_set<std::string> usedTags;
 
-  for (auto subtag : SubTags) {
+  for (auto &subtag : SubTags) {
+      std::string expectedName = (subtag->m_Prefix.length() ? subtag->m_Prefix + ":" : "") + subtag->m_Name;
+      const auto tagPosition = std::find_if(
+              DefTags.begin(),
+              DefTags.end(),
+              [expectedName](const std::shared_ptr<XMLTag>& pTag) {
+              return pTag->_fullName == expectedName;
+              });
 
-    bool found = false;
-
-    for (auto pDefSubTag : DefTags) {
-      
-      if (pDefSubTag->_fullName == ((subtag->m_Prefix.length() ? subtag->m_Prefix + ":" : "") + subtag->m_Name)) {
-        found = true;
-        pDefSubTag->resetAttributes();
-
-        if ((pDefSubTag->_occurrence == XMLTag::OCCUR_ONCE) || (pDefSubTag->_occurrence == XMLTag::OCCUR_NOT_OR_ONCE)) {
-          if (std::find(usedTags.begin(), usedTags.end(), pDefSubTag->_fullName) != usedTags.end()) {
-            PRECICE_ERROR("Tag <" + pDefSubTag->_fullName + "> is already used");
-          }
-          usedTags.push_back(pDefSubTag->_fullName);
-        }
-
-        pDefSubTag->_configuredNamespaces[pDefSubTag->_namespace] = true;
-        pDefSubTag->readAttributes(subtag->m_aAttributes);
-        pDefSubTag->_listener.xmlTagCallback(context, *pDefSubTag);
-        pDefSubTag->_configured = true;
-
-        connectTags(context, pDefSubTag->_subtags, subtag->m_aSubTags);
-
-        pDefSubTag->areAllSubtagsConfigured();
-        pDefSubTag->_listener.xmlEndTagCallback(context, *pDefSubTag);
-
-        break;
+      if (tagPosition == DefTags.end()) {
+          PRECICE_ERROR("Tag <" + expectedName + "> is unknown");
       }
-    }
 
-    if (!found)
-      PRECICE_ERROR("Tag <" + ((subtag->m_Prefix.length() ? subtag->m_Prefix + ":" : "") + subtag->m_Name) + "> is unknown");
+      auto pDefSubTag = *tagPosition;
+      pDefSubTag->resetAttributes();
+
+      if ((pDefSubTag->_occurrence == XMLTag::OCCUR_ONCE) || (pDefSubTag->_occurrence == XMLTag::OCCUR_NOT_OR_ONCE)) {
+          if (usedTags.count(pDefSubTag->_fullName)) {
+              PRECICE_ERROR("Tag <" + pDefSubTag->_fullName + "> is already used");
+          }
+          usedTags.emplace(pDefSubTag->_fullName);
+      }
+
+      pDefSubTag->_configuredNamespaces[pDefSubTag->_namespace] = true;
+      pDefSubTag->readAttributes(subtag->m_aAttributes);
+      pDefSubTag->_listener.xmlTagCallback(context, *pDefSubTag);
+      pDefSubTag->_configured = true;
+
+      connectTags(context, pDefSubTag->_subtags, subtag->m_aSubTags);
+
+      pDefSubTag->areAllSubtagsConfigured();
+      pDefSubTag->_listener.xmlEndTagCallback(context, *pDefSubTag);
   }
 }
 
