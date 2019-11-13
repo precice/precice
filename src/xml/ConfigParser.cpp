@@ -203,7 +203,7 @@ void ConfigParser::OnEndElement()
   m_CurrentTags.pop_back();
 }
 
-void ConfigParser::OnTextSection(std::string ch)
+void ConfigParser::OnTextSection(const std::string&)
 {
   // This page intentionally left blank
 }
