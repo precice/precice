@@ -154,7 +154,7 @@ void ConfigParser::connectTags(const ConfigurationContext& context, std::vector<
         found = true;
         pDefSubTag->resetAttributes();
 
-        if (pDefSubTag->_occurrence == XMLTag::OCCUR_ONCE) {
+        if ((pDefSubTag->_occurrence == XMLTag::OCCUR_ONCE) || (pDefSubTag->_occurrence == XMLTag::OCCUR_NOT_OR_ONCE)) {
           if (std::find(usedTags.begin(), usedTags.end(), pDefSubTag->_fullName) != usedTags.end()) {
             PRECICE_ERROR("Tag <" + pDefSubTag->_fullName + "> is already used");
           }
