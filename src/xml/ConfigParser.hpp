@@ -64,7 +64,7 @@ public:
   void OnEndElement();
 
   /// Callback for text sections in xml file
-  void OnTextSection(std::string ch);
+  void OnTextSection(const std::string& ch);
 
   /// Proxy for error and warning messages from libxml2
   static void MessageProxy(int level, const std::string& mess);
