@@ -317,7 +317,7 @@ void XMLTag::resetAttributes()
     pair.second.setRead(false);
   }
 
-  for (auto tag : _subtags) {
+  for (auto &tag : _subtags) {
     tag->_configured = false;
     tag->resetAttributes();
   }
@@ -389,7 +389,7 @@ std::string XMLTag::printDTD(const bool start) const
   }
 
   if (not _subtags.empty()) {
-    for (auto const subtag : _subtags) {
+    for (auto const &subtag : _subtags) {
       dtd << subtag->printDTD();
     }
   }
@@ -493,7 +493,7 @@ std::string XMLTag::printDocumentation(int indentation) const
 
   if (not _subtags.empty()) {
     doc << ">\n\n";
-    for (auto const subtag : _subtags) {
+    for (auto const &subtag : _subtags) {
       doc << subtag->printDocumentation(indentation + 3);
     }
     doc << indent << "</" << _fullName << ">\n\n";
