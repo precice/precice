@@ -1,8 +1,8 @@
 include(CheckCXXSourceCompiles)
 
-function(check_cpp_11_library_support)
-  unset(CPP11LibraryConforming)
-  set(CPP11CheckSource "
+function(_check_cxx_11_n2071_n2072)
+  unset(CXX11_N2071_N2072)
+  set(CheckSourceN2071N2072 "
   #include <iostream>
   #include <iomanip>
   #include <ctime>
@@ -11,8 +11,8 @@ function(check_cpp_11_library_support)
 
   set(CMAKE_CXX_STANDARD 11)
   set(CMAKE_CXX_STANDARD_REQUIRED ON)
-  check_cxx_source_compiles("${CPP11CheckSource}" CPP11LibraryConforming)
-  if(NOT "${CPP11LibraryConforming}")
+  check_cxx_source_compiles("${CheckSourceN2071N2072}" CXX11_N2071_N2072)
+  if(NOT "${CXX11_N2071_N2072}")
     message(FATAL_ERROR "
     The standard library used by your compiler ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION} is not C++11 compliant.
     It does not support time manipulation (N2071 and N2072)!
@@ -28,6 +28,11 @@ function(check_cpp_11_library_support)
   unset(CPP11CheckSource)
   unset(CMAKE_CXX_STANDARD)
   unset(CMAKE_CXX_STANDARD_REQUIRED)
-endfunction(check_cpp_11_library_support)
+endfunction(_check_cxx_11_n2071_n2072)
 
-check_cpp_11_library_support()
+
+function(check_cxx_11_library_support)
+  _check_cxx_11_n2071_n2072()
+endfunction(check_cxx_11_library_support)
+
+check_cxx_11_library_support()
