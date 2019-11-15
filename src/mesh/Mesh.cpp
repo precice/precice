@@ -9,6 +9,7 @@
 #include "RTree.hpp"
 #include <array>
 #include <algorithm>
+#include <boost/container/flat_map.hpp>
 
 namespace precice {
 namespace mesh {
@@ -376,9 +377,8 @@ void Mesh:: addMesh(
   PRECICE_TRACE();
   PRECICE_ASSERT(_dimensions==deltaMesh.getDimensions());
 
-  std::map<int, Vertex*> vertexMap;
-  std::map<int, Edge*> edgeMap;
-
+  boost::container::flat_map<int, Vertex*> vertexMap;
+  vertexMap.reserve(deltaMesh.vertices().size());
   Eigen::VectorXd coords(_dimensions);
   for ( const Vertex& vertex : deltaMesh.vertices() ){
     coords = vertex.getCoords();
@@ -390,14 +390,16 @@ void Mesh:: addMesh(
     vertexMap[vertex.getID()] = &v;
   }
 
+  boost::container::flat_map<int, Edge*> edgeMap;
+  edgeMap.reserve(deltaMesh.edges().size());
   // you cannot just take the vertices from the edge and add them,
   // since you need the vertices from the new mesh
   // (which may differ in IDs)
   for (const Edge& edge : deltaMesh.edges()) {
     int vertexIndex1 = edge.vertex(0).getID();
     int vertexIndex2 = edge.vertex(1).getID();
-    PRECICE_ASSERT( vertexMap.find(vertexIndex1) != vertexMap.end() );
-    PRECICE_ASSERT( vertexMap.find(vertexIndex2) != vertexMap.end() );
+    PRECICE_ASSERT((vertexMap.count(vertexIndex1) ==  1) &&
+                   (vertexMap.count(vertexIndex2) ==  1));
     Edge& e = createEdge(*vertexMap[vertexIndex1], *vertexMap[vertexIndex2]);
     edgeMap[edge.getID()] = &e;
   }
@@ -407,9 +409,9 @@ void Mesh:: addMesh(
       int edgeIndex1 = triangle.edge(0).getID();
       int edgeIndex2 = triangle.edge(1).getID();
       int edgeIndex3 = triangle.edge(2).getID();
-      PRECICE_ASSERT( edgeMap.find(edgeIndex1) != edgeMap.end() );
-      PRECICE_ASSERT( edgeMap.find(edgeIndex2) != edgeMap.end() );
-      PRECICE_ASSERT( edgeMap.find(edgeIndex3) != edgeMap.end() );
+      PRECICE_ASSERT((edgeMap.count(edgeIndex1) == 1) &&
+                     (edgeMap.count(edgeIndex2) == 1) &&
+                     (edgeMap.count(edgeIndex3) == 1));
       createTriangle(*edgeMap[edgeIndex1],*edgeMap[edgeIndex2],*edgeMap[edgeIndex3]);
     }
   }
