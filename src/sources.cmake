@@ -182,6 +182,7 @@ target_sources(precice
     src/mesh/Data.hpp
     src/mesh/Edge.cpp
     src/mesh/Edge.hpp
+    src/mesh/Filter.hpp
     src/mesh/Mesh.cpp
     src/mesh/Mesh.hpp
     src/mesh/Quad.cpp

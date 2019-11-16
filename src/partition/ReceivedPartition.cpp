@@ -7,6 +7,7 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
+#include "mesh/Filter.hpp"
 #include "utils/Event.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/MasterSlave.hpp"
@@ -111,7 +112,7 @@ void ReceivedPartition::compute()
         PRECICE_DEBUG("From slave " << rankSlave << ", bounding mesh: " << _bb[0].first
               << ", " << _bb[0].second << " and " << _bb[1].first << ", " << _bb[1].second);
         mesh::Mesh slaveMesh("SlaveMesh", _dimensions, _mesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
-        filterMesh(slaveMesh, true);
+        mesh::filterMesh(slaveMesh, *_mesh, [&](const mesh::Vertex& v){ return isVertexInBB(v);});
         PRECICE_DEBUG("Send filtered mesh to slave: " << rankSlave);
         com::CommunicateMesh(utils::MasterSlave::_communication).sendMesh(slaveMesh, rankSlave);
       }
@@ -119,7 +120,7 @@ void ReceivedPartition::compute()
       // Now also filter the remaining master mesh
       prepareBoundingBox();
       mesh::Mesh filteredMesh("FilteredMesh", _dimensions, _mesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
-      filterMesh(filteredMesh, true);
+      mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex& v){ return isVertexInBB(v);});
       _mesh->clear();
       _mesh->addMesh(filteredMesh);
       _mesh->computeState();
@@ -155,7 +156,7 @@ void ReceivedPartition::compute()
 
       prepareBoundingBox();
       mesh::Mesh filteredMesh("FilteredMesh", _dimensions, _mesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
-      filterMesh(filteredMesh, true);
+      mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex& v){ return isVertexInBB(v);});
 
       if(areProvidedMeshesEmpty()) {
         std::string msg = "The re-partitioning completely filtered out the mesh " + _mesh->getName() + " received on this rank at the coupling interface. "
@@ -199,7 +200,7 @@ void ReceivedPartition::compute()
   PRECICE_INFO("Filter mesh " << _mesh->getName() << " by mappings");
   Event e5("partition.filterMeshMappings" + _mesh->getName(), precice::syncMode);
   mesh::Mesh filteredMesh("FilteredMesh", _dimensions, _mesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
-  filterMesh(filteredMesh, false);
+  mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex& v){ return v.isTagged();});
   PRECICE_DEBUG("Mapping filter, filtered from " << _mesh->vertices().size() << " vertices to " << filteredMesh.vertices().size() << " vertices.");
   _mesh->clear();
   _mesh->addMesh(filteredMesh);
@@ -248,66 +249,6 @@ void ReceivedPartition::compute()
   e6.stop();
 
   computeVertexOffsets();
-}
-
-void ReceivedPartition::filterMesh(mesh::Mesh &filteredMesh, const bool filterByBB)
-{
-  PRECICE_TRACE(filterByBB);
-
-  PRECICE_DEBUG("Filter mesh " << _mesh->getName());
-  PRECICE_DEBUG("Bounding mesh. #vertices: " << _mesh->vertices().size()
-        << ", #edges: " << _mesh->edges().size()
-        << ", #triangles: " << _mesh->triangles().size()
-        << ", rank: " << utils::MasterSlave::getRank());
-
-  std::map<int, mesh::Vertex *> vertexMap;
-  std::map<int, mesh::Edge *>   edgeMap;
-  int                           vertexCounter = 0;
-
-  PRECICE_DEBUG("Filter vertices");
-  for (const mesh::Vertex &vertex : _mesh->vertices()) {
-    if ((filterByBB && isVertexInBB(vertex)) || (not filterByBB && vertex.isTagged())) {
-      mesh::Vertex &v = filteredMesh.createVertex(vertex.getCoords());
-      v.setGlobalIndex(vertex.getGlobalIndex());
-      if (vertex.isTagged())
-        v.tag();
-      v.setOwner(vertex.isOwner());
-      vertexMap[vertex.getID()] = &v;
-    }
-    vertexCounter++;
-  }
-
-  // Add all edges formed by the contributing vertices
-  PRECICE_DEBUG("Add edges to filtered mesh");
-  for (mesh::Edge &edge : _mesh->edges()) {
-    int vertexIndex1 = edge.vertex(0).getID();
-    int vertexIndex2 = edge.vertex(1).getID();
-    if (utils::contained(vertexIndex1, vertexMap) &&
-        utils::contained(vertexIndex2, vertexMap)) {
-      mesh::Edge &e         = filteredMesh.createEdge(*vertexMap[vertexIndex1], *vertexMap[vertexIndex2]);
-      edgeMap[edge.getID()] = &e;
-    }
-  }
-
-  // Add all triangles formed by the contributing edges
-  if (_dimensions == 3) {
-    PRECICE_DEBUG("Add triangles to filtered mesh");
-    for (mesh::Triangle &triangle : _mesh->triangles()) {
-      int edgeIndex1 = triangle.edge(0).getID();
-      int edgeIndex2 = triangle.edge(1).getID();
-      int edgeIndex3 = triangle.edge(2).getID();
-      if (utils::contained(edgeIndex1, edgeMap) &&
-          utils::contained(edgeIndex2, edgeMap) &&
-          utils::contained(edgeIndex3, edgeMap)) {
-        filteredMesh.createTriangle(*edgeMap[edgeIndex1], *edgeMap[edgeIndex2], *edgeMap[edgeIndex3]);
-      }
-    }
-  }
-
-  PRECICE_DEBUG("Filtered mesh. #vertices: " << filteredMesh.vertices().size()
-        << ", #edges: " << filteredMesh.edges().size()
-        << ", #triangles: " << filteredMesh.triangles().size()
-        << ", rank: " << utils::MasterSlave::getRank());
 }
 
 void ReceivedPartition::prepareBoundingBox()

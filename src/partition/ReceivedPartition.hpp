@@ -42,14 +42,6 @@ public:
   virtual void compute() override;
 
 private:
-  /// Create filteredMesh from the filtered _mesh.
-  /*
-   * Copies all vertices/edges/triangles that are either contained in the bounding box
-   * or tagged to the filteredMesh. Edges and triangles are copied, when ALL vertices
-   * are part of the filteredMesh i.e. their IDs are contained in vertexMap.
-   */
-  void filterMesh(mesh::Mesh &filteredMesh, const bool filterByBB);
-  
   /// Sets _bb to the union with the mesh from fromMapping resp. toMapping, also enlage by _safetyFactor
   void prepareBoundingBox();
 
