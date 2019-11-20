@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
 {
   int        dim           = 2;
   bool       invertNormals = false;
-  mesh::Mesh mesh("MyMesh", dim, invertNormals);
+  mesh::Mesh mesh("MyMesh", dim, invertNormals, testing::meshIDManager());
 
   if (utils::Parallel::getProcessRank() == 0) {
     mesh::Vertex &  v1      = mesh.createVertex(Eigen::VectorXd::Zero(dim));
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
 {
   int        dim           = 3;
   bool       invertNormals = false;
-  mesh::Mesh mesh("MyMesh", dim, invertNormals);
+  mesh::Mesh mesh("MyMesh", dim, invertNormals, testing::meshIDManager());
 
   if (utils::Parallel::getProcessRank() == 0) {
     mesh::Vertex &  v1      = mesh.createVertex(Eigen::VectorXd::Zero(dim));
@@ -170,7 +170,7 @@ BOOST_AUTO_TEST_CASE(ExportQuadMesh)
   using namespace mesh;
   int  dim           = 3;
   bool invertNormals = false;
-  Mesh mesh("QuadMesh", dim, invertNormals);
+  mesh::Mesh mesh("QuadMesh", dim, invertNormals, testing::meshIDManager());
 
   if (utils::Parallel::getProcessRank() == 0) {
     mesh.getVertexDistribution()[0] = {};

@@ -17,7 +17,6 @@ using namespace precice;
 
 void reset ()
 {
-  mesh::Mesh::resetGeometryIDsGlobally();
   mesh::Data::resetDataCount();
   impl::Participant::resetParticipantCount();
   utils::MasterSlave::reset();

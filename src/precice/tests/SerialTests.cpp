@@ -19,7 +19,6 @@ struct SerialTestFixture : testing::SlimConfigurator {
   std::string _pathToTests;
 
   void reset(){
-     mesh::Mesh::resetGeometryIDsGlobally();
      mesh::Data::resetDataCount();
      impl::Participant::resetParticipantCount();
      utils::MasterSlave::reset();
@@ -291,7 +290,6 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDataInitialization,
   if (utils::Parallel::getCommunicatorSize() != 2)
     return;
 
-  mesh::Mesh::resetGeometryIDsGlobally();
   using Eigen::Vector3d;
 
   if (utils::Parallel::getProcessRank() == 0){
@@ -499,8 +497,6 @@ BOOST_AUTO_TEST_CASE(testExplicitWithSolverGeometry,
 {
   if (utils::Parallel::getCommunicatorSize() != 2)
     return;
-
-  mesh::Mesh::resetGeometryIDsGlobally ();
 
   int timesteps = 0;
   double time = 0;
@@ -723,7 +719,6 @@ BOOST_AUTO_TEST_CASE(testStationaryMappingWithSolverMesh,
 
   for (int dim: {2, 3}){
     // @todo this should normally happen in finalize and should not be necessary
-    mesh::Mesh::resetGeometryIDsGlobally();
     mesh::Data::resetDataCount();
     impl::Participant::resetParticipantCount();
     SolverInterface interface(solverName, 0, 1);
@@ -1232,7 +1227,6 @@ BOOST_AUTO_TEST_CASE(testMultiCoupling, * testing::OnSize(4))
 
 void testMappingNearestProjection(bool defineEdgesExplicitly, const std::string configFile)
 {
-  mesh::Mesh::resetGeometryIDsGlobally();
   using Eigen::Vector3d;
 
   const double z = 0.3;
@@ -1376,8 +1370,6 @@ BOOST_AUTO_TEST_CASE(testSendMeshToMultipleParticipants,
   if (utils::Parallel::getCommunicatorSize() != 3)
     return;
 
-  mesh::Mesh::resetGeometryIDsGlobally();
-
   const std::string configFile = _pathToTests + "send-mesh-to-multiple-participants.xml";
   std::string solverName;
   std::string meshName;
@@ -1434,7 +1426,6 @@ BOOST_AUTO_TEST_CASE(testPreconditionerBug,
   if (utils::Parallel::getCommunicatorSize() != 2)
     return;
 
-  mesh::Mesh::resetGeometryIDsGlobally();
   using Eigen::Vector2d;
   using namespace precice::constants;
 

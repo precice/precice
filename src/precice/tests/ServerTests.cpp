@@ -18,7 +18,6 @@ struct ServerTestFixture : testing::WhiteboxAccessor {
   std::string _pathToTests;
 
   void reset(){
-     mesh::Mesh::resetGeometryIDsGlobally();
      mesh::Data::resetDataCount();
      impl::Participant::resetParticipantCount();
      utils::MasterSlave::reset();
@@ -94,7 +93,6 @@ BOOST_AUTO_TEST_CASE(testCouplingModeWithOneServer,
     xml::ConfigurationContext context{"ParticipantB", 0, 1};
 
     // Perform manual configuration without overwritting logging config
-    mesh::Mesh::resetGeometryIDsGlobally();
     mesh::Data::resetDataCount();
     impl::Participant::resetParticipantCount();
     config::Configuration config;
@@ -185,7 +183,6 @@ BOOST_AUTO_TEST_CASE(testCouplingModeParallelWithOneServer, * testing::OnSize(4)
     xml::ConfigurationContext context{"ParticipantB", 0, 1};
 
     // Perform manual configuration without overwritting logging config
-    mesh::Mesh::resetGeometryIDsGlobally();
     mesh::Data::resetDataCount();
     impl::Participant::resetParticipantCount();
     config::Configuration config;

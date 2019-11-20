@@ -16,7 +16,7 @@ BOOST_AUTO_TEST_SUITE(FindClosestTests, *testing::OnMaster())
 BOOST_AUTO_TEST_CASE(FindClosestDistanceToVertices)
 {
   for (int dim = 2; dim <= 3; dim++) {
-    mesh::Mesh mesh("RootMesh", dim, false);
+    mesh::Mesh mesh("RootMesh", dim, false, testing::meshIDManager());
     mesh.createVertex(Eigen::VectorXd::Zero(dim));
     Eigen::VectorXd queryCoords0 = Eigen::VectorXd::Zero(dim);
     queryCoords0[0]              = 1.0;
@@ -26,7 +26,7 @@ BOOST_AUTO_TEST_CASE(FindClosestDistanceToVertices)
     double                distance = closest.distance;
     BOOST_TEST(distance == 1.0);
     if (dim == 3) {
-      mesh::Mesh mesh3D("Mesh3D", dim, false);
+      mesh::Mesh mesh3D("Mesh3D", dim, false, testing::meshIDManager());
       mesh3D.createVertex(Eigen::Vector3d::Constant(1));
       FindClosest find2(Eigen::Vector3d::Constant(-1));
       find2(mesh3D);
@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE(FindClosestDistanceToVertices)
 BOOST_AUTO_TEST_CASE(SignOfShortestDistance)
 {
   for (int dim = 2; dim <= 3; dim++) {
-    mesh::Mesh      mesh("Mesh", dim, false);
+    mesh::Mesh      mesh("Mesh", dim, false, testing::meshIDManager());
     mesh::Vertex &  vertex = mesh.createVertex(Eigen::VectorXd::Zero(dim));
     Eigen::VectorXd normal = Eigen::VectorXd::Zero(dim);
     normal[0]              = 1.0;
@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(SignOfShortestDistance)
 BOOST_AUTO_TEST_CASE(IndependenceOfSignOfShortestDistance)
 {
   for (int dim = 2; dim <= 3; dim++) {
-    mesh::Mesh    mesh("Mesh", dim, false);
+    mesh::Mesh    mesh("Mesh", dim, false, testing::meshIDManager());
     mesh::Vertex &vertex = mesh.createVertex(Eigen::VectorXd::Constant(dim, 1));
     vertex.setNormal(Eigen::VectorXd::Constant(dim, 1));
     mesh::Vertex &vertex2 = mesh.createVertex(Eigen::VectorXd::Constant(dim, -2));
@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(FindClosestDistanceToEdges)
 {
   for (int dim = 2; dim <= 3; dim++) {
     // Create mesh consisting of two vertices and an edge
-    mesh::Mesh      mesh("Mesh", dim, false);
+    mesh::Mesh      mesh("Mesh", dim, false, testing::meshIDManager());
     mesh::Vertex &  v1     = mesh.createVertex(Eigen::VectorXd::Constant(dim, -1));
     mesh::Vertex &  v2     = mesh.createVertex(Eigen::VectorXd::Constant(dim, 1));
     mesh::Edge &    edge   = mesh.createEdge(v1, v2);
@@ -150,7 +150,7 @@ BOOST_AUTO_TEST_CASE(FindClosestDistanceToEdges3D)
 {
   int dim = 3;
   // Cremeshetry consisting of two vertices and an edge
-  mesh::Mesh      mesh("Mesh", dim, false);
+  mesh::Mesh      mesh("Mesh", dim, false, testing::meshIDManager());
   mesh::Vertex &  v1   = mesh.createVertex(Eigen::Vector3d(-1.0, -1.0, 0.0));
   mesh::Vertex &  v2   = mesh.createVertex(Eigen::Vector3d(1.0, 1.0, 0.0));
   mesh::Edge &    edge = mesh.createEdge(v1, v2);
@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(FindClosestDistanceToEdges3D)
 BOOST_AUTO_TEST_CASE(FindClosestDistanceToTriangles)
 {
   // Create mesh to query
-  mesh::Mesh    mesh("Mesh", 3, true);
+  mesh::Mesh    mesh("Mesh", 3, true, testing::meshIDManager());
   mesh::Vertex &v0 = mesh.createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
   mesh::Vertex &v1 = mesh.createVertex(Eigen::Vector3d(1.0, 1.0, 0.0));
   mesh::Vertex &v2 = mesh.createVertex(Eigen::Vector3d(1.0, 1.0, 1.0));
@@ -256,7 +256,7 @@ BOOST_AUTO_TEST_CASE(FindClosestDistanceToTriangles)
 BOOST_AUTO_TEST_CASE(FindClosestDistanceToTrianglesAndVertices)
 {
   int           dim = 2;
-  mesh::Mesh    mesh("Mesh", dim, false);
+  mesh::Mesh    mesh("Mesh", dim, false, testing::meshIDManager());
   mesh::Vertex &vertex1 = mesh.createVertex(Eigen::Vector2d(0.0, 0.0));
   vertex1.setNormal(Eigen::Vector2d(-0.5, 0.5));
 
@@ -297,7 +297,7 @@ BOOST_AUTO_TEST_CASE(WeigthsOfVertices)
   int dim = 2;
 
   // Create mesh
-  mesh::Mesh mesh("Mesh", dim, true);
+  mesh::Mesh mesh("Mesh", dim, true, testing::meshIDManager());
   mesh::Vertex &vertex1 = mesh.createVertex(Eigen::Vector2d(0.0, 0.0));
   mesh::Vertex &vertex2 = mesh.createVertex(Eigen::Vector2d(1.0, 0.0));
   mesh.createEdge(vertex1, vertex2);
@@ -326,7 +326,7 @@ struct MeshFixture {
     mesh::Vertex *v1, *v2, *v3, *vinside, *voutside;
     mesh::Edge *e12, *e23, *e31;
     mesh::Triangle* t;
-    MeshFixture() : mesh("Mesh", dimension, true)
+    MeshFixture() : mesh("Mesh", dimension, true, testing::meshIDManager())
     {
         v1 = &mesh.createVertex(Eigen::Vector3d(0.0, 0.0, z));
         v2 = &mesh.createVertex(Eigen::Vector3d(1.0, 0.0, z));
