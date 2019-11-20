@@ -5,6 +5,7 @@
 #include <boost/test/unit_test.hpp>
 #include "precice/config/Configuration.hpp"
 #include "xml/XMLTag.hpp"
+#include "utils/ManageUniqueIDs.hpp"
 
 namespace precice
 {
@@ -268,6 +269,18 @@ typename std::enable_if<std::is_arithmetic<Scalar>::value, boost::test_tools::pr
 
 /// Returns $PRECICE_ROOT/src, the base path to the sources.
 std::string getPathToSources();
+
+/** Reference to testing mesh id manager
+ *
+ * This is the accessor for the mesh::Mesh ID manager to be used in testing.
+ *
+ * @returns a reference to the Singleton
+ */
+inline utils::ManageUniqueIDs& meshIDManager()
+{
+    static utils::ManageUniqueIDs manager;
+    return manager;
+}
 
 } // namespace testing
 } // namespace precice
