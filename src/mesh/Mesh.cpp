@@ -13,31 +13,20 @@
 namespace precice {
 namespace mesh {
 
-std::unique_ptr<utils::ManageUniqueIDs> Mesh::_managePropertyIDs;
-
-void Mesh:: resetGeometryIDsGlobally()
+Mesh::Mesh(
+    const std::string &     name,
+    int                     dimensions,
+    bool                    flipNormals,
+    utils::ManageUniqueIDs &meshIdManager)
+    : _name(name),
+      _dimensions(dimensions),
+      _flipNormals(flipNormals),
+      _managePropertyIDs(meshIdManager)
 {
-  if (_managePropertyIDs) {
-    _managePropertyIDs->resetIDs();
-  }
-}
-
-Mesh:: Mesh
-(
-  const std::string& name,
-  int                dimensions,
-  bool               flipNormals )
-:
-  _name(name),
-  _dimensions(dimensions),
-  _flipNormals(flipNormals)
-{
-  if (not _managePropertyIDs) {
-    _managePropertyIDs.reset(new utils::ManageUniqueIDs);
-  }
   PRECICE_ASSERT((_dimensions == 2) || (_dimensions == 3), _dimensions);
   PRECICE_ASSERT(_name != std::string(""));
-  _nameIDPairs[_name] = _managePropertyIDs->getFreeID ();
+  _nameIDPairs[_name] = _managePropertyIDs.getFreeID ();
+  setProperty(INDEX_GEOMETRY_ID, _nameIDPairs[_name]);
 
   meshChanged.connect([](Mesh & m){rtree::clear(m);});
   meshDestroyed.connect([](Mesh & m){rtree::clear(m);});

@@ -54,23 +54,17 @@ public:
   boost::signals2::signal<void(Mesh &)> meshDestroyed;
 
   /**
-   * @brief Resets the internal geometry ID counter to start from anew.
-   *
-   * This method is only used for test cases.
-   */
-  static void resetGeometryIDsGlobally();
-
-  /**
    * @brief Constructor.
    *
    * @param[in] name Unique name of the mesh.
    * @param[in] dimensions Dimensionalty of the mesh.
    * @param[in] flipNormals Inverts the standard direction of normals.
    */
-  Mesh (
-    const std::string& name,
-    int                dimensions,
-    bool               flipNormals );
+  Mesh(
+      const std::string &     name,
+      int                     dimensions,
+      bool                    flipNormals,
+      utils::ManageUniqueIDs &meshIdManager);
 
   /// Destructor, deletes created objects.
   ~Mesh();
@@ -259,6 +253,12 @@ public:
   
   bool operator!=(const Mesh& other) const;
 
+  /// returns the used id Manager
+  utils::ManageUniqueIDs& getIDManager()
+  {
+      return _managePropertyIDs;
+  }
+
 private:
 
   /// Computes the normals for all primitives.
@@ -270,7 +270,7 @@ private:
   mutable logging::Logger _log{"mesh::Mesh"};
 
   /// Provides unique IDs for all geometry objects
-  static std::unique_ptr<utils::ManageUniqueIDs> _managePropertyIDs;
+  utils::ManageUniqueIDs& _managePropertyIDs;
 
   /// Name of the mesh.
   std::string _name;

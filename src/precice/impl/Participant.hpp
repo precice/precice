@@ -11,6 +11,7 @@
 #include "utils/PointerVector.hpp"
 #include "partition/ReceivedPartition.hpp"
 #include "utils/MasterSlave.hpp"
+#include "utils/ManageUniqueIDs.hpp"
 #include <string>
 
 namespace precice {
@@ -144,6 +145,10 @@ public:
 
   void setUseMaster(bool useMaster);
 
+  void setMeshIdManager(std::unique_ptr<utils::ManageUniqueIDs>&& idm) {
+      _meshIdManager = std::move(idm);
+  }
+
   /**
    * @brief Returns true, if the
    */
@@ -191,6 +196,8 @@ private:
   com::PtrCommunication _clientServerCommunication;
 
   bool _useMaster = false;
+
+  std::unique_ptr<utils::ManageUniqueIDs> _meshIdManager;
 
   template<typename ELEMENT_T>
   bool isDataValid (

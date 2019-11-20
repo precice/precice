@@ -123,13 +123,13 @@ void SolverInterfaceImpl:: configure
   Event e("configure"); // no precice::syncMode as this is not yet configured here
   utils::ScopedEventPrefix sep("configure/");
 
-  mesh::Mesh::resetGeometryIDsGlobally();
   mesh::Data::resetDataCount();
   Participant::resetParticipantCount();
   _meshLock.clear();
 
   _dimensions = config.getDimensions();
   _accessor = determineAccessingParticipant(config);
+  _accessor->setMeshIdManager(config.getMeshConfiguration()->extractMeshIdManager());
 
   PRECICE_CHECK(not (_accessor->useServer() && _accessor->useMaster()), "You cannot use a server and a master.");
   PRECICE_CHECK(_accessorCommunicatorSize==1 || _accessor->useMaster() || _accessor->useServer(),

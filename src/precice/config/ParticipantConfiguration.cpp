@@ -416,7 +416,7 @@ mesh::PtrMesh ParticipantConfiguration:: copy
   int dim = mesh->getDimensions();
   std::string name(mesh->getName());
   bool flipNormals = mesh->isFlipNormals();
-  mesh::Mesh* meshCopy = new mesh::Mesh("Local_" + name, dim, flipNormals);
+  mesh::Mesh* meshCopy = new mesh::Mesh("Local_" + name, dim, flipNormals, mesh->getIDManager());
   for (const mesh::PtrData& data : mesh->data()){
     meshCopy->createData(data->getName(), data->getDimensions());
   }
