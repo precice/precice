@@ -583,6 +583,7 @@ void P2PComLCMTest(com::PtrCommunicationFactory cf)
   int dimensions = 2;
   bool flipNormals = false;
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, flipNormals, testing::meshIDManager())); 
+  const auto expectedId = mesh->getID();
   std::map<int, std::vector<int>> localCommunicationMap;
 
   switch (utils::Parallel::getProcessRank()) {
@@ -648,13 +649,13 @@ void P2PComLCMTest(com::PtrCommunicationFactory cf)
   
     c.requestPreConnection("Solid", "Fluid");
     c.broadcastSendLCM(localCommunicationMap);
-    BOOST_TEST(mesh->getID()==0);
+    BOOST_TEST(mesh->getID()==expectedId);
    
   } else
   {
     c.acceptPreConnection("Solid", "Fluid");
     c.broadcastReceiveLCM(localCommunicationMap);
-    BOOST_TEST(mesh->getID()==0);
+    BOOST_TEST(mesh->getID()==expectedId);
   }
 
  if(utils::Parallel::getProcessRank() == 2 )
