@@ -158,7 +158,7 @@ void ReceivedBoundingBox::compute()
   // (1) Bounding Box Filter
 
   PRECICE_INFO("Filter mesh " << _mesh->getName() << " by bounding-box");  
-  mesh::Mesh filteredMesh("FilteredMesh", _dimensions, _mesh->isFlipNormals());
+  mesh::Mesh filteredMesh("FilteredMesh", _dimensions, _mesh->isFlipNormals(), _mesh->getIDManager());
   
   filterMesh(filteredMesh, true);
     

@@ -107,7 +107,7 @@ void ReceivedPartition::compute()
 
         PRECICE_DEBUG("From slave " << rankSlave << ", bounding mesh: " << _bb[0].first
               << ", " << _bb[0].second << " and " << _bb[1].first << ", " << _bb[1].second);
-        mesh::Mesh slaveMesh("SlaveMesh", _dimensions, _mesh->isFlipNormals());
+        mesh::Mesh slaveMesh("SlaveMesh", _dimensions, _mesh->isFlipNormals(), _mesh->getIDManager());
         filterMesh(slaveMesh, true);
         PRECICE_DEBUG("Send filtered mesh to slave: " << rankSlave);
         com::CommunicateMesh(utils::MasterSlave::_communication).sendMesh(slaveMesh, rankSlave);
@@ -115,7 +115,7 @@ void ReceivedPartition::compute()
 
       // Now also filter the remaining master mesh
       prepareBoundingBox();
-      mesh::Mesh filteredMesh("FilteredMesh", _dimensions, _mesh->isFlipNormals());
+      mesh::Mesh filteredMesh("FilteredMesh", _dimensions, _mesh->isFlipNormals(), _mesh->getIDManager());
       filterMesh(filteredMesh, true);
       _mesh->clear();
       _mesh->addMesh(filteredMesh);
@@ -151,7 +151,7 @@ void ReceivedPartition::compute()
       Event e2("partition.filterMeshBB." + _mesh->getName(), precice::syncMode);
 
       prepareBoundingBox();
-      mesh::Mesh filteredMesh("FilteredMesh", _dimensions, _mesh->isFlipNormals());
+      mesh::Mesh filteredMesh("FilteredMesh", _dimensions, _mesh->isFlipNormals(), _mesh->getIDManager());
       filterMesh(filteredMesh, true);
 
       if(areProvidedMeshesEmpty()) {
@@ -195,7 +195,7 @@ void ReceivedPartition::compute()
   // (5) Filter mesh according to tag
   PRECICE_INFO("Filter mesh " << _mesh->getName() << " by mappings");
   Event e5("partition.filterMeshMappings" + _mesh->getName(), precice::syncMode);
-  mesh::Mesh filteredMesh("FilteredMesh", _dimensions, _mesh->isFlipNormals());
+  mesh::Mesh filteredMesh("FilteredMesh", _dimensions, _mesh->isFlipNormals(), _mesh->getIDManager());
   filterMesh(filteredMesh, false);
   PRECICE_DEBUG("Mapping filter, filtered from " << _mesh->vertices().size() << " vertices to " << filteredMesh.vertices().size() << " vertices.");
   _mesh->clear();

@@ -26,7 +26,7 @@ void ProvidedPartition::communicate()
     Event e1("partition.gatherMesh." + _mesh->getName(), precice::syncMode);
 
     // Temporary globalMesh such that the master also keeps his local mesh
-    mesh::Mesh globalMesh(_mesh->getName(), _mesh->getDimensions(), _mesh->isFlipNormals());
+    mesh::Mesh globalMesh(_mesh->getName(), _mesh->getDimensions(), _mesh->isFlipNormals(), _mesh->getIDManager());
 
     if (not utils::MasterSlave::isSlave()) {
       globalMesh.addMesh(*_mesh); // Add local master mesh to global mesh
