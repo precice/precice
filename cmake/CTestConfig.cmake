@@ -4,6 +4,7 @@
 
 set(PRECICE_TEST_DIR "${preCICE_BINARY_DIR}/TestOutput")
 mark_as_advanced(PRECICE_TEST_DIR)
+file(MAKE_DIRECTORY "${PRECICE_TEST_DIR}")
 
 function(add_precice_test)
   cmake_parse_arguments(PARSE_ARGV 0 PAT "MPI;CANFAIL" "NAME;ARGUMENTS;TIMEOUT" "")
@@ -15,7 +16,12 @@ function(add_precice_test)
   message(STATUS "Adding Test ${PAT_FULL_NAME}")
   # Generate working directory
   set(PAT_WDIR "${PRECICE_TEST_DIR}/${PAT_NAME}")
-  file(MAKE_DIRECTORY "${PAT_WDIR}")
+  add_test(NAME ${PAT_FULL_NAME}.setup
+    COMMAND ${CMAKE_COMMAND} -DDIR=${PAT_WDIR} -P ${CMAKE_CURRENT_LIST_DIR}/setuptest.cmake)
+  set_tests_properties(${PAT_FULL_NAME}.setup
+    PROPERTIES
+    FIXTURES_SETUP ${PAT_FULL_NAME}.fixture)
+
   # Assemble the command
   if(PAT_MPI)
     add_test(NAME ${PAT_FULL_NAME}
@@ -31,6 +37,7 @@ function(add_precice_test)
     RUN_SERIAL TRUE # Do not run this test in parallel with others
     WORKING_DIRECTORY "${PAT_WDIR}"
     ENVIRONMENT PRECICE_ROOT=${preCICE_SOURCE_DIR}
+    FIXTURES_REQUIRES "${PAT_FULL_NAME}.fixture"
     )
   if(PAT_TIMEOUT)
     set_tests_properties(${PAT_FULL_NAME} PROPERTIES TIMEOUT ${PAT_TIMEOUT} )
