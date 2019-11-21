@@ -156,7 +156,7 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorNa
 
     for (int connection = 0; connection < requesterCommunicatorSize; ++connection) {
       auto socket = std::make_shared<Socket>(*_ioService);
-      acceptor.accept(*socket);
+      acceptor.accept(*socket); // Amin: here it hangs       
       PRECICE_DEBUG("Accepted connection at " << address);
       _isConnected = true;
 
@@ -259,6 +259,8 @@ void SocketCommunication::requestConnectionAsClient(std::string      const &acce
       PRECICE_DEBUG("Requesting connection to " << ipAddress << ", port " << portNumber);
 
       tcp::resolver::query query(tcp::v4(), ipAddress, portNumber);
+
+      // Amin here it stays inside the loop forever
 
       while (not isConnected()) {
         tcp::resolver resolver(*_ioService);

@@ -36,10 +36,10 @@ void BoundM2N::connectSlaves()
 void BoundM2N::preConnectSlaves()
 {
     if (isRequesting){
-        m2n->requestSlavesPreConnection(remoteName, localName);
+      m2n->requestSlavesPreConnection(remoteName, localName);
     }
     else {
-        m2n->acceptSlavesPreConnection(localName, remoteName);
+      m2n->acceptSlavesPreConnection(localName, remoteName);
     }
 }
 
