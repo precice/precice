@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+
+<precice-configuration>
+
+  <solver-interface dimensions="2" >
+   
+    <data:scalar name="I"  />
+    <data:scalar name="U"  />
+
+    <mesh name="MeshI">
+      <use-data name="I" />
+      <use-data name="U" />
+    </mesh>
+
+    <mesh name="MeshU">
+      <use-data name="U" />
+      <use-data name="I" />
+    </mesh>
+
+    <participant name="SolverI">
+      <use-mesh name="MeshI" provide="yes"/>
+      <use-mesh name="MeshU" from="SolverU"/>
+      <write-data name="I"     mesh="MeshI" />
+      <read-data  name="U" mesh="MeshI" />
+      <mapping:nearest-neighbor
+        direction="write" from="MeshI" to="MeshU" constraint="consistent"/>
+      <mapping:nearest-neighbor
+        direction="read" from="MeshU" to="MeshI" constraint="consistent"/>
+    </participant>
+
+    <participant name="SolverU">
+      <use-mesh name="MeshU" provide="yes"/>
+      <use-mesh name="MeshI" from="SolverI"/>
+      <write-data name="U"     mesh="MeshU" />
+      <read-data  name="I" mesh="MeshU" />
+      <mapping:nearest-neighbor
+        direction="write" from="MeshU" to="MeshI" constraint="consistent"/>
+      <mapping:nearest-neighbor
+        direction="read" from="MeshI" to="MeshU" constraint="consistent"/>
+    </participant>
+
+    <m2n:sockets from="SolverI" to="SolverU" distribution-type="gather-scatter"/>
+    
+    <coupling-scheme:serial-implicit> 
+      <participants first="SolverI" second="SolverU" /> 
+      <max-timesteps value="1000" />
+      <timestep-length value="0.01" />
+      <max-iterations value="3" />
+      <min-iteration-convergence-measure min-iterations="5" data="I" mesh="MeshI"/>
+      <exchange data="I" mesh="MeshI" from="SolverI" to="SolverU"/>
+      <exchange data="U" mesh="MeshU" from="SolverU" to="SolverI"/>
+    </coupling-scheme:serial-implicit>     
+
+  </solver-interface>
+
+</precice-configuration>

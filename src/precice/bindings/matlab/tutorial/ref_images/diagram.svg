@@ -1,0 +1,45 @@
+
+
+<svg height="220" width="300" 
+    xmlns="http://www.w3.org/2000/svg" version="1.1">
+
+    <!-- wires -->
+
+    <polyline points="70,70 70,30 230,30 230,70" 
+        style="fill:none;stroke:black;stroke-width:2"/>
+
+    <polyline points="70,150 70,190 230,190 230,150" 
+        style="fill:none;stroke:black;stroke-width:2"/>
+
+
+    <!-- Electric current arrow and label -->
+
+    <polygon points="125,30 115,25 115,35" 
+        style="fill:black;stroke:black;stroke-width:1"/>
+
+    <text x="125" y="20" fill="black" font-size="18" style="font-family:Verdana;font-style:italic;">i</text>
+
+
+    <!-- Inductor -->
+    <path id="inductor" d="M 70 70  l 0 15   q -40 5 0 10   q -40 5 0 10   
+        q -40 5 0 10   q -40 5 0 10  q -40 5 0 10   l 0 15 "
+        stroke="black" stroke-width="2" fill="none" />
+
+    <text x="20" y="120" fill="black" font-size="24" style="font-family:Verdana">L</text>
+
+
+
+    <!-- Capacitor -->
+    <path id="capacitor" d="M 230 70 l 0 35   m -20 0   l 40 0    m 0 10  l -40 0  m 20 0 l 0 35 "
+        stroke="black" stroke-width="2" fill="none" />
+
+    <text x="260" y="120" fill="black" font-size="24" style="font-family:Verdana">C</text>
+
+    
+    <text x="140" y="50" fill="black" font-size="12" style="font-family:Verdana">+</text>
+    <text x="140" y="115" fill="black" font-size="18" style="font-family:Verdana;font-style:italic;">v</text>
+    <text x="140" y="180" fill="black" font-size="12" style="font-family:Verdana">-</text>
+	
+
+
+</svg>
