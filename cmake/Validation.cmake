@@ -29,7 +29,8 @@ function(precice_validate_lib ARG_CODE)
   endif()
 
   set(_filename validate${ARG_NAME}.cpp)
-  set(_wdir ${CMAKE_CURRENT_BINARY_DIR})
+  set(_wdir ${CMAKE_CURRENT_BINARY_DIR}/validation)
+  file(MAKE_DIRECTORY ${_wdir})
   set(_cache_success PRECICE_VALIDATE_${ARG_NAME}_SUCCESS)
 
   message(STATUS "Validating ${ARG_NAME}")
