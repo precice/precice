@@ -11,6 +11,7 @@ void printUsage()
   std::cout << "Run server (deprecated)  :  binprecice server ParticipantName ConfigurationName [LogConfFile]\n";
   std::cout << "Print XML reference      :  binprecice xml\n";
   std::cout << "Print DTD for XML config :  binprecice dtd" << std::endl;
+  std::cout << "Print Markdown reference :  binprecice md" << std::endl;
 }
 
 int main ( int argc, char** argv )
@@ -18,6 +19,7 @@ int main ( int argc, char** argv )
   bool runServer = false;
   bool runHelp = false;
   bool runDtd = false;
+  bool runMD = false;
   bool hasLogConfFile = false;
 
   bool wrongParameters = true;
@@ -27,6 +29,10 @@ int main ( int argc, char** argv )
     if ( action == "dtd" ) {
       wrongParameters = false;
       runDtd = true;
+    }
+    if ( action == "md" ) {
+      wrongParameters = false;
+      runMD = true;
     }
     if ( action == "xml" ) {
       wrongParameters = false;
@@ -82,6 +88,11 @@ int main ( int argc, char** argv )
 	PRECICE_ASSERT(not runServer);
     precice::config::Configuration config;
     std::cout << config.getXMLTag().printDTD(true) << "\n\n";
+  }
+  else if (runMD) {
+	PRECICE_ASSERT(not runServer);
+    precice::config::Configuration config;
+    std::cout << config.getXMLTag().printMD() << "\n\n";
   }
   else {
     PRECICE_ASSERT( false );

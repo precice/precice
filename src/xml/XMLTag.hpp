@@ -181,6 +181,9 @@ public:
   /// Prints a DTD string for this tag.
   std::string printDTD(const bool start = false) const;
 
+  /// Prints a Markdown string for this tag.
+  std::string printMD(int level = 1) const;
+
   /// reads all attributes of this tag
   void readAttributes(std::map<std::string, std::string> &aAttributes);
 

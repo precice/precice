@@ -90,6 +90,8 @@ public:
 
   std::string printDTD(const std::string &ElementName) const;
 
+  std::string printMD() const;
+
 private:
   logging::Logger _log{"xml::XMLAttribute"};
 
@@ -307,6 +309,32 @@ std::string XMLAttribute<ATTRIBUTE_T>::printDTD(const std::string &ElementName) 
   }
 
   dtd << ">\n";
+
+  return dtd.str();
+}
+
+template <typename ATTRIBUTE_T>
+std::string XMLAttribute<ATTRIBUTE_T>::printMD() const
+{
+  std::ostringstream dtd;
+  dtd << "| " << _name << " | " << _doc << " | ";
+  if (_hasDefaultValue) {
+      dtd << '`' << _defaultValue << '`';
+  } else {
+      dtd << "_none_";
+  }
+  dtd << " | ";
+
+  if(_options.empty()) {
+      dtd << "none";
+  } else {
+      dtd << '`' << _options.front() << '`';
+      for(auto iter = ++_options.cbegin(); iter != _options.cend(); ++iter) {
+          dtd << ", " << '`' << *iter << '`' ;
+      }
+  }
+
+  dtd << " |";
 
   return dtd.str();
 }
