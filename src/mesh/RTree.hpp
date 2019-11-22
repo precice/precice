@@ -168,7 +168,7 @@ struct RTreeTraits {
 
   using IndexGetter = typename std::conditional<
       IsDirectIndexable<Primitive>::value,
-      impl::PtrVectorIndexable<MeshContainer>,
+      impl::VectorIndexable<MeshContainer>,
       boost::geometry::index::indexable<IndexType>>::type;
 
   using RTree = boost::geometry::index::rtree<IndexType, RTreeParameters, IndexGetter>;
