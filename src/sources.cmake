@@ -184,8 +184,6 @@ target_sources(precice
     src/mesh/Edge.hpp
     src/mesh/Group.cpp
     src/mesh/Group.hpp
-    src/mesh/Merge.cpp
-    src/mesh/Merge.hpp
     src/mesh/Mesh.cpp
     src/mesh/Mesh.hpp
     src/mesh/Quad.cpp
