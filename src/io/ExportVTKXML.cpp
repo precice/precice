@@ -154,7 +154,7 @@ void ExportVTKXML::writeSubFile(
   outSubFile << "      <Piece NumberOfPoints=\"" << numPoints << "\" NumberOfCells=\"" << numCells << "\"> \n";
   outSubFile << "         <Points> \n";
   outSubFile << "            <DataArray type=\"Float32\" Name=\"Position\" NumberOfComponents=\"" << 3 << "\" format=\"ascii\"> \n";
-  for (mesh::Vertex &vertex : mesh.vertices()) {
+  for (const mesh::Vertex &vertex : mesh.vertices()) {
     writeVertex(vertex.getCoords(), outSubFile);
   }
   outSubFile << "            </DataArray>\n";
@@ -181,7 +181,7 @@ void ExportVTKXML::exportMesh(
     outFile << "         <Cells>\n";
     outFile << "            <DataArray type=\"Int32\" Name=\"connectivity\" NumberOfComponents=\"1\" format=\"ascii\">\n";
     outFile << "               ";
-    for (mesh::Edge &edge : mesh.edges()) {
+    for (const mesh::Edge &edge : mesh.edges()) {
       writeLine(edge, outFile);
     }
     outFile << '\n';
@@ -206,10 +206,10 @@ void ExportVTKXML::exportMesh(
     outFile << "         <Cells>\n";
     outFile << "            <DataArray type=\"Int32\" Name=\"connectivity\" NumberOfComponents=\"1\" format=\"ascii\">\n";
     outFile << "               ";
-    for (mesh::Triangle &triangle : mesh.triangles()) {
+    for (const mesh::Triangle &triangle : mesh.triangles()) {
       writeTriangle(triangle, outFile);
     }
-    for (mesh::Quad &quad : mesh.quads()) {
+    for (const mesh::Quad &quad : mesh.quads()) {
       writeQuadrangle(quad, outFile);
     }
     outFile << '\n';
@@ -321,7 +321,7 @@ void ExportVTKXML::writeVertex(
 }
 
 void ExportVTKXML::writeTriangle(
-    mesh::Triangle &triangle,
+    const mesh::Triangle &triangle,
     std::ofstream & outFile)
 {
   outFile << triangle.vertex(0).getID() << "  ";
@@ -330,7 +330,7 @@ void ExportVTKXML::writeTriangle(
 }
 
 void ExportVTKXML::writeQuadrangle(
-    mesh::Quad &   quad,
+    const mesh::Quad &   quad,
     std::ofstream &outFile)
 {
   outFile << quad.vertex(0).getID() << "  ";
@@ -340,7 +340,7 @@ void ExportVTKXML::writeQuadrangle(
 }
 
 void ExportVTKXML::writeLine(
-    mesh::Edge &   edge,
+    const mesh::Edge &   edge,
     std::ofstream &outFile)
 {
   outFile << edge.vertex(0).getID() << "  ";
