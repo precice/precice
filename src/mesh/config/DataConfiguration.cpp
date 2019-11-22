@@ -1,6 +1,5 @@
 #include "DataConfiguration.hpp"
 #include "mesh/Data.hpp"
-#include "mesh/PropertyContainer.hpp"
 #include "xml/XMLAttribute.hpp"
 
 namespace precice {

@@ -61,8 +61,6 @@ void SolverInterfaceConfiguration:: xmlEndTagCallback
 {
   PRECICE_TRACE();
   if (tag.getName() == "solver-interface"){
-    _meshConfiguration->setMeshSubIDs();
-
     //test if both participants do have the exchange meshes
     typedef std::map<std::string, std::vector<std::string> >::value_type neededMeshPair;
     for (const neededMeshPair& neededMeshes : _meshConfiguration->getNeededMeshes()){

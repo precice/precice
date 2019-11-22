@@ -30,14 +30,6 @@ public:
 
   void setDimensions ( int dimensions );
 
-  /**
-   * @brief Has to be called after parsing all mesh tags.
-   *
-   * To separate the sub ID setting from the setting of the main mesh IDs makes
-   * it possible to have all main IDs in a continously increasing sequence.
-   */
-  void setMeshSubIDs();
-
   /// Returns all configured meshes.
   const std::vector<PtrMesh>& meshes() const;
 
@@ -73,7 +65,6 @@ private:
   const std::string ATTR_NAME;
   const std::string ATTR_FLIP_NORMALS;
   const std::string TAG_DATA;
-  const std::string TAG_SUB_ID;
   const std::string ATTR_SIDE_INDEX;
 
   int _dimensions;
@@ -83,10 +74,6 @@ private:
 
   /// Configured meshes.
   std::vector<PtrMesh> _meshes;
-
-  bool _setMeshSubIDs;
-
-  std::vector<std::list<std::string> > _meshSubIDs;
 
   /// to check later if all meshes that any coupling scheme needs are actually used by the participants
   std::map<std::string,std::vector<std::string> > _neededMeshes;

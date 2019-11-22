@@ -21,8 +21,7 @@ Triangle::Triangle(
     Edge &edgeTwo,
     Edge &edgeThree,
     int   id)
-    : PropertyContainer(),
-      _edges({&edgeOne, &edgeTwo, &edgeThree}),
+    : _edges({&edgeOne, &edgeTwo, &edgeThree}),
       _id(id),
       _normal(Eigen::VectorXd::Zero(edgeOne.getDimensions()))
 {

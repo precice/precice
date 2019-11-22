@@ -3,7 +3,6 @@
 #include <Eigen/Core>
 #include <iostream>
 
-#include "mesh/PropertyContainer.hpp"
 #include "mesh/Vertex.hpp"
 #include "math/differences.hpp"
 
@@ -15,7 +14,7 @@ struct EdgeIteratorTypes;
 template<typename Types> class EdgeIterator;
 
 /// Linear edge of a mesh, defined by two Vertex objects.
-class Edge : public PropertyContainer
+class Edge
 {
 public:
 
@@ -30,9 +29,6 @@ public:
     Vertex& vertexOne,
     Vertex& vertexTwo,
     int     id );
-
-  /// Destructor, empty.
-  ~Edge () override {}
 
   /// Returns number of spatial dimensions (2 or 3) the edge is embedded to.
   int getDimensions() const;

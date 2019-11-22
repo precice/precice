@@ -2,7 +2,6 @@
 #include "Edge.hpp"
 #include "Triangle.hpp"
 #include "Quad.hpp"
-#include "PropertyContainer.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "math/math.hpp"
 #include <Eigen/Core>
@@ -39,7 +38,6 @@ Mesh:: Mesh
   PRECICE_ASSERT((_dimensions == 2) || (_dimensions == 3), _dimensions);
   PRECICE_ASSERT(_name != std::string(""));
   _nameIDPairs[_name] = _managePropertyIDs->getFreeID ();
-  setProperty(INDEX_GEOMETRY_ID, _nameIDPairs[_name]);
 
   meshChanged.connect([](Mesh & m){rtree::clear(m);});
   meshDestroyed.connect([](Mesh & m){rtree::clear(m);});
@@ -51,7 +49,6 @@ Mesh:: ~Mesh()
   _content.triangles().deleteElements();
   _content.edges().deleteElements();
   _content.vertices().deleteElements();
-  _propertyContainers.deleteElements();
 
   meshDestroyed(*this); // emit signal
 }
@@ -91,11 +88,6 @@ const Mesh::TriangleContainer& Mesh:: triangles() const
   return _content.triangles();
 }
 
-Mesh::PropertyContainerContainer& Mesh:: propertyContainers()
-{
-  return _propertyContainers;
-}
-
 Mesh::QuadContainer& Mesh:: quads()
 {
    return _content.quads();
@@ -104,11 +96,6 @@ Mesh::QuadContainer& Mesh:: quads()
 const Mesh::QuadContainer& Mesh:: quads() const
 {
   return _content.quads();
-}
-
-const Mesh::PropertyContainerContainer& Mesh:: propertyContainers() const
-{
-  return _propertyContainers;
 }
 
 int Mesh:: getDimensions() const
@@ -122,7 +109,6 @@ Edge& Mesh:: createEdge
   Vertex& vertexTwo )
 {
   Edge* newEdge = new Edge(vertexOne, vertexTwo, _manageEdgeIDs.getFreeID());
-  newEdge->addParent(*this);
   _content.add(newEdge);
   return *newEdge;
 }
@@ -160,7 +146,6 @@ Triangle& Mesh:: createTriangle
           "Edges are not connected!");
   Triangle* newTriangle = new Triangle (
       edgeOne, edgeTwo, edgeThree, _manageTriangleIDs.getFreeID());
-  newTriangle->addParent(*this);
   _content.add(newTriangle);
   return *newTriangle;
 }
@@ -174,17 +159,8 @@ Quad& Mesh:: createQuad
 {
   Quad* newQuad = new Quad (
       edgeOne, edgeTwo, edgeThree, edgeFour, _manageQuadIDs.getFreeID());
-  newQuad->addParent(*this);
   _content.add(newQuad);
   return *newQuad;
-}
-
-PropertyContainer& Mesh:: createPropertyContainer()
-{
-  PropertyContainer* newPropertyContainer = new PropertyContainer();
-  newPropertyContainer->addParent(*this);
-  _propertyContainers.push_back(newPropertyContainer);
-  return *newPropertyContainer;
 }
 
 PtrData& Mesh:: createData
@@ -220,21 +196,6 @@ const PtrData& Mesh:: data
   PRECICE_ERROR("Data with ID = " << dataID << " not found in mesh \"" << _name << "\"!" );
 }
 
-PropertyContainer& Mesh:: getPropertyContainer
-(
-  const std::string & subIDName )
-{
-  PRECICE_TRACE(subIDName);
-  PRECICE_ASSERT(_nameIDPairs.count(subIDName) == 1);
-  int id = _nameIDPairs[subIDName];
-  for (PropertyContainer& cont : _propertyContainers) {
-    if (cont.getProperty<int>(cont.INDEX_GEOMETRY_ID) == id){
-      return cont;
-    }
-  }
-  PRECICE_ERROR("Unknown sub ID name \"" << subIDName << "\" in mesh \"" << _name << "\"!");
-}
-
 const std::string& Mesh:: getName() const
 {
   return _name;
@@ -250,24 +211,6 @@ void Mesh:: setFlipNormals
   bool flipNormals )
 {
   _flipNormals = flipNormals;
-}
-
-PropertyContainer& Mesh:: setSubID
-(
-  const std::string& subIDNamePostfix )
-{
-  PRECICE_TRACE(subIDNamePostfix);
-  PRECICE_CHECK(subIDNamePostfix != std::string(""),
-      "Sub ID postfix of mesh \"" << _name << "\" is not allowed to be an empty string!");
-  std::string idName(_name + "-" + subIDNamePostfix);
-  PRECICE_CHECK(_nameIDPairs.count(idName) == 0,
-      "Sub ID postfix of mesh \"" << _name << "\" is already in use!");
-  _nameIDPairs[idName] = _managePropertyIDs->getFreeID();
-  PropertyContainer * newPropertyContainer = new PropertyContainer();
-  newPropertyContainer->setProperty<int>(PropertyContainer::INDEX_GEOMETRY_ID,
-    _nameIDPairs[idName]);
-  _propertyContainers.push_back(newPropertyContainer);
-  return *newPropertyContainer;
 }
 
 const std::map<std::string,int>& Mesh:: getNameIDPairs()
@@ -423,10 +366,8 @@ void Mesh:: clear()
   _content.triangles().deleteElements();
   _content.edges().deleteElements();
   _content.vertices().deleteElements();
-  _propertyContainers.deleteElements();
 
   _content.clear();
-  _propertyContainers.clear();
 
   _manageTriangleIDs.resetIDs();
   _manageEdgeIDs.resetIDs();

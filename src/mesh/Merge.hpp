@@ -27,10 +27,7 @@ class Merge
 {
 public:
 
-  Merge();
-
-  /// Destructor. Removes temporary property from merged objects.
-  ~Merge();
+  Merge() = default;;
 
   /// Merges the content of a CONTAINER_T with already merged content.
   template<typename CONTAINER_T>

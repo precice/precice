@@ -3,7 +3,6 @@
 #include <iostream>
 #include <algorithm>
 #include "mesh/Edge.hpp"
-#include "mesh/PropertyContainer.hpp"
 #include "mesh/RangeAccessor.hpp"
 
 namespace precice
@@ -12,7 +11,7 @@ namespace mesh
 {
 
 /// Quadrilateral (or Quadrangle) geometric primitive.
-class Quad : public PropertyContainer
+class Quad
 {
 public:
   /// Type of the read-only const random-access iterator over Vertex coords
@@ -36,9 +35,6 @@ public:
       Edge &edgeThree,
       Edge &edgeFour,
       int   id);
-
-  /// Destructor, empty.
-  ~Quad() override {}
 
   /// Returns dimensionalty of space the quad is embedded in.
   int getDimensions() const;
