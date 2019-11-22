@@ -2,7 +2,6 @@
 #include "io/ExportVTK.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Mesh.hpp"
-#include "mesh/PropertyContainer.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
 #include "query/FindClosest.hpp"
@@ -293,69 +292,12 @@ BOOST_AUTO_TEST_CASE(FindClosestDistanceToTrianglesAndVertices)
   BOOST_TEST(distance == -1.0);
 }
 
-BOOST_AUTO_TEST_CASE(MultipleMeshIDs)
-{
-  int                         dim = 2;
-  mesh::Mesh                  mesh("Mesh", dim, true);
-  std::vector<mesh::Vertex *> vertices(dim);
-  for (int i = 0; i < dim; i++) {
-    Eigen::VectorXd vertexCoords = Eigen::VectorXd::Zero(dim);
-    vertexCoords[i]              = 1.0;
-    vertices[i]                  = &mesh.createVertex(vertexCoords);
-  }
-  mesh::Edge &face = mesh.createEdge(*vertices[0], *vertices[1]);
-  face.addParent(mesh.setSubID("face-2"));
-  int idFace = mesh.getID("Mesh-face-2");
-  int idsVertices[2];
-  mesh.computeState();
-  for (int i = 0; i < 2; i++) {
-    std::ostringstream stream;
-    stream << "vertex-" << i;
-    face.vertex(i).addParent(mesh.setSubID(stream.str()));
-    idsVertices[i] = mesh.getID("Mesh-" + stream.str());
-  }
-
-  // Perform queries
-  std::vector<double>           distances(dim);
-  std::vector<std::vector<int>> geoIDs(dim);
-  query::ClosestElement         closest(dim);
-  for (int i = 0; i < dim; i++) {
-    Eigen::VectorXd query = Eigen::VectorXd::Zero(dim);
-    query[i]              = 2.0;
-    FindClosest findClosest(query);
-    BOOST_TEST(findClosest(mesh));
-    closest = findClosest.getClosest();
-    distances[i] = closest.distance;
-    geoIDs[i]    = closest.meshIDs;
-  }
-  Eigen::VectorXd query = Eigen::VectorXd::Zero(dim);
-  FindClosest     findClosest(query);
-  BOOST_TEST(findClosest(mesh));
-  closest = findClosest.getClosest();
-  double           faceDistance = closest.distance;
-  std::vector<int> faceGeoIDs   = closest.meshIDs;
-
-  // Visualize queries
-  io::ExportVTK exportVTK(true);
-  std::string   location = "";
-  exportVTK.doExport("query-FindClosestTest-testMultipleMeshIDs.vtk", location, mesh);
-
-  // Validate queries
-  for (int i = 0; i < dim; i++) {
-    BOOST_TEST(distances[i], -1.0);
-    BOOST_TEST(geoIDs[i][1] == idsVertices[i]);
-  }
-  BOOST_TEST(faceDistance == std::sqrt(1.0 / (double) dim));
-  BOOST_TEST(faceGeoIDs[1] == idFace);
-}
-
 BOOST_AUTO_TEST_CASE(WeigthsOfVertices)
 {
   int dim = 2;
 
   // Create mesh
   mesh::Mesh mesh("Mesh", dim, true);
-  mesh.setProperty(mesh.INDEX_GEOMETRY_ID, 0);
   mesh::Vertex &vertex1 = mesh.createVertex(Eigen::Vector2d(0.0, 0.0));
   mesh::Vertex &vertex2 = mesh.createVertex(Eigen::Vector2d(1.0, 0.0));
   mesh.createEdge(vertex1, vertex2);

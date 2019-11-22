@@ -5,7 +5,6 @@
 #include "mesh/Edge.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Mesh.hpp"
-#include "mesh/PropertyContainer.hpp"
 #include "mesh/Vertex.hpp"
 #include "testing/Testing.hpp"
 #include "utils/Parallel.hpp"
@@ -22,7 +21,6 @@ BOOST_AUTO_TEST_CASE(VertexEdgeMesh,
 {
   utils::Parallel::synchronizeProcesses();
   BOOST_TEST(utils::Parallel::getCommunicatorSize() > 1);
-  mesh::PropertyContainer::resetPropertyIDCounter();
 
   std::string participant0("rank0");
   std::string participant1("rank1");
@@ -78,7 +76,6 @@ BOOST_AUTO_TEST_CASE(VertexEdgeTriangleMesh,
 {
   utils::Parallel::synchronizeProcesses();
   BOOST_TEST(utils::Parallel::getCommunicatorSize() > 1);
-  mesh::PropertyContainer::resetPropertyIDCounter();
 
   std::string participant0("rank0");
   std::string participant1("rank1");
@@ -136,7 +133,6 @@ BOOST_AUTO_TEST_CASE(BroadcastVertexEdgeTriangleMesh,
 {
   utils::Parallel::synchronizeProcesses();
   BOOST_TEST(utils::Parallel::getCommunicatorSize() > 1);
-  mesh::PropertyContainer::resetPropertyIDCounter();
 
   std::string participant0("rank0");
   std::string participant1("rank1");
