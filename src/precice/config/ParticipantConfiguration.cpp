@@ -610,8 +610,8 @@ void ParticipantConfiguration:: finishParticipantConfiguration
   _watchPointConfigs.clear ();
 
 
-  // create default master communication if needed  
-  if(context.size > 1 && not isParallelSolutionDefined){
+  // create default master communication if needed
+  if(context.size > 1 && not isParallelSolutionDefined && participant->getName() == context.name){
     #ifdef PRECICE_NO_MPI
         std::ostringstream error;
         error << "When building with \"mpi=off\", you need to specify an alternative \"master\" "
