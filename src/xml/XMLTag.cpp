@@ -401,52 +401,52 @@ std::string XMLTag::printDTD(const bool start) const
 
 std::string XMLTag::printMD(int level) const
 {
-  std::ostringstream dtd;
+  std::ostringstream oss;
 
-  dtd << std::string(level, '#') << ' ' << _fullName << "\n\n";
+  oss << std::string(level, '#') << ' ' << _fullName << "\n\n";
 
-  dtd << _doc << "\n\n";
+  oss << _doc << "\n\n";
 
-  dtd << "| Attribute | Description | Default | Options |\n";
-  dtd << "| --- | --- | --- | --- |\n";
+  oss << "| Attribute | Description | Default | Options |\n";
+  oss << "| --- | --- | --- | --- |\n";
   for (const auto &pair : _doubleAttributes) {
-    dtd << pair.second.printMD() << '\n';
+    oss << pair.second.printMD() << '\n';
   }
 
   for (const auto &pair : _intAttributes) {
-    dtd << pair.second.printMD() << '\n';
+    oss << pair.second.printMD() << '\n';
   }
 
   for (const auto &pair : _stringAttributes) {
-    dtd << pair.second.printMD() << '\n';
+    oss << pair.second.printMD() << '\n';
   }
 
   for (const auto &pair : _booleanAttributes) {
-    dtd << pair.second.printMD() << '\n';
+    oss << pair.second.printMD() << '\n';
   }
 
   for (const auto &pair : _eigenVectorXdAttributes) {
-    dtd << pair.second.printMD() << '\n';
+    oss << pair.second.printMD() << '\n';
   }
-  dtd << "\n";
+  oss << "\n";
   
   if (not _subtags.empty()) {
-    dtd << "**Valid subtags:**\n\n";
+    oss << "**Valid subtags:**\n\n";
 
     for (const auto& subtag : _subtags) {
-      dtd << "* " << subtag->getFullName() << " `" << subtag->getOccurrenceString(subtag->getOccurrence()) << "`\n";
+      oss << "* " << subtag->getFullName() << " `" << subtag->getOccurrenceString(subtag->getOccurrence()) << "`\n";
     }
 
-    dtd << "\n\n";
+    oss << "\n\n";
 
     for (const auto& subtag : _subtags) {
-      dtd << subtag->printMD(level+1) << '\n';
+      oss << subtag->printMD(level+1) << '\n';
     }
   }
 
-  dtd << '\n';
+  oss << '\n';
 
-  return dtd.str();
+  return oss.str();
 }
 
 

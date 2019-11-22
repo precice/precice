@@ -316,27 +316,27 @@ std::string XMLAttribute<ATTRIBUTE_T>::printDTD(const std::string &ElementName) 
 template <typename ATTRIBUTE_T>
 std::string XMLAttribute<ATTRIBUTE_T>::printMD() const
 {
-  std::ostringstream dtd;
-  dtd << "| " << _name << " | " << _doc << " | ";
+  std::ostringstream oss;
+  oss << "| " << _name << " | " << _doc << " | ";
   if (_hasDefaultValue) {
-      dtd << '`' << _defaultValue << '`';
+      oss << '`' << _defaultValue << '`';
   } else {
-      dtd << "_none_";
+      oss << "_none_";
   }
-  dtd << " | ";
+  oss << " | ";
 
   if(_options.empty()) {
-      dtd << "none";
+      oss << "none";
   } else {
-      dtd << '`' << _options.front() << '`';
+      oss << '`' << _options.front() << '`';
       for(auto iter = ++_options.cbegin(); iter != _options.cend(); ++iter) {
-          dtd << ", " << '`' << *iter << '`' ;
+          oss << ", " << '`' << *iter << '`' ;
       }
   }
 
-  dtd << " |";
+  oss << " |";
 
-  return dtd.str();
+  return oss.str();
 }
 
 template <typename ATTRIBUTE_T>
