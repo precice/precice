@@ -47,15 +47,15 @@ public:
       std::ofstream &        outFile);
 
   static void writeLine(
-      mesh::Edge &   edge,
+      const mesh::Edge &   edge,
       std::ofstream &outFile);
 
   static void writeTriangle(
-      mesh::Triangle &triangle,
+      const mesh::Triangle &triangle,
       std::ofstream & outFile);
 
   static void writeQuadrangle(
-      mesh::Quad &   quad,
+      const mesh::Quad &   quad,
       std::ofstream &outFile);
 
 private:
