@@ -67,7 +67,6 @@ BOOST_AUTO_TEST_CASE(testParseConfigurationWithRelaxation)
 
   xml::configure(root, xml::ConfigurationContext{}, path);
   BOOST_CHECK(cplSchemeConfig._accelerationConfig->getAcceleration().get());
-  meshConfig->setMeshSubIDs();
 }
 
 BOOST_AUTO_TEST_CASE(testMVQNPP)

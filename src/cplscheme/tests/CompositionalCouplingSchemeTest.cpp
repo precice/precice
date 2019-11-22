@@ -3,7 +3,6 @@
 #include "../CompositionalCouplingScheme.hpp"
 #include "../Constants.hpp"
 #include "../config/CouplingSchemeConfiguration.hpp"
-#include "mesh/PropertyContainer.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
@@ -37,7 +36,6 @@ struct CompositionalCouplingSchemeFixture
     using namespace mesh;
     utils::Parallel::synchronizeProcesses();
     BOOST_TEST(utils::Parallel::getCommunicatorSize() > 1);
-    mesh::PropertyContainer::resetPropertyIDCounter();
 
     std::string configurationPath(configFilename);
     std::string nameParticipant0("Participant0");
@@ -68,7 +66,6 @@ struct CompositionalCouplingSchemeFixture
     xml::ConfigurationContext context{localParticipant, 0, 1};
     xml::configure(root, context, configurationPath);
 
-    meshConfig->setMeshSubIDs();
     m2n::PtrM2N m2n0 = m2nConfig->getM2N(nameParticipant0, nameParticipant1);
     m2n::PtrM2N m2n1 = m2nConfig->getM2N(nameParticipant1, nameParticipant2);
 

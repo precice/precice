@@ -416,7 +416,6 @@ BOOST_AUTO_TEST_CASE(testParseConfigurationWithRelaxation)
 
   xml::configure(root, xml::ConfigurationContext{}, path);
   BOOST_CHECK(cplSchemeConfig._accelerationConfig->getAcceleration().get()); // no nullptr
-  meshConfig->setMeshSubIDs();
 }
 
 BOOST_AUTO_TEST_CASE(testExtrapolateData)
@@ -594,7 +593,6 @@ BOOST_AUTO_TEST_CASE(testConfiguredAbsConvergenceMeasureSynchronized,
   CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
 
   xml::configure(root, xml::ConfigurationContext{}, configurationPath);
-  meshConfig->setMeshSubIDs();
   m2n::PtrM2N m2n = m2nConfig->getM2N("Participant0", "Participant1");
 
   // some dummy mesh
