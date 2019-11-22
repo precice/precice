@@ -45,57 +45,47 @@ Mesh:: Mesh
 
 Mesh:: ~Mesh()
 {
-  _content.quads().deleteElements();
-  _content.triangles().deleteElements();
-  _content.edges().deleteElements();
-  _content.vertices().deleteElements();
-
   meshDestroyed(*this); // emit signal
-}
-
-const Group& Mesh:: content() const
-{
-  return _content;
 }
 
 Mesh::VertexContainer& Mesh:: vertices()
 {
-   return _content.vertices();
+   return _vertices;
 }
 
 const Mesh::VertexContainer& Mesh:: vertices() const
 {
-   return _content.vertices();
+   return _vertices;
 }
 
 Mesh::EdgeContainer& Mesh:: edges()
 {
-   return _content.edges();
+   return _edges;
 }
 
 const Mesh::EdgeContainer& Mesh:: edges() const
 {
-   return _content.edges();
+   return _edges;
 }
 
 Mesh::TriangleContainer& Mesh:: triangles()
 {
-   return _content.triangles();
+   return _triangles;
 }
 
 const Mesh::TriangleContainer& Mesh:: triangles() const
 {
-  return _content.triangles();
+  return _triangles;
 }
 
 Mesh::QuadContainer& Mesh:: quads()
 {
-   return _content.quads();
+   return _quads;
 }
 
 const Mesh::QuadContainer& Mesh:: quads() const
 {
-  return _content.quads();
+  return _quads;
 }
 
 int Mesh:: getDimensions() const
@@ -108,9 +98,8 @@ Edge& Mesh:: createEdge
   Vertex& vertexOne,
   Vertex& vertexTwo )
 {
-  Edge* newEdge = new Edge(vertexOne, vertexTwo, _manageEdgeIDs.getFreeID());
-  _content.add(newEdge);
-  return *newEdge;
+  _edges.emplace_back(vertexOne, vertexTwo, _manageEdgeIDs.getFreeID());
+  return _edges.back();
 }
 
 Edge& Mesh::createUniqueEdge
@@ -144,10 +133,8 @@ Triangle& Mesh:: createTriangle
           edgeTwo.connectedTo(edgeThree) &&
           edgeThree.connectedTo(edgeOne),
           "Edges are not connected!");
-  Triangle* newTriangle = new Triangle (
-      edgeOne, edgeTwo, edgeThree, _manageTriangleIDs.getFreeID());
-  _content.add(newTriangle);
-  return *newTriangle;
+  _triangles.emplace_back(edgeOne, edgeTwo, edgeThree, _manageTriangleIDs.getFreeID());
+  return _triangles.back();
 }
 
 Quad& Mesh:: createQuad
@@ -157,10 +144,8 @@ Quad& Mesh:: createQuad
   Edge& edgeThree,
   Edge& edgeFour )
 {
-  Quad* newQuad = new Quad (
-      edgeOne, edgeTwo, edgeThree, edgeFour, _manageQuadIDs.getFreeID());
-  _content.add(newQuad);
-  return *newQuad;
+  _quads.emplace_back(edgeOne, edgeTwo, edgeThree, edgeFour, _manageQuadIDs.getFreeID());
+  return _quads.back();
 }
 
 PtrData& Mesh:: createData
@@ -245,9 +230,9 @@ bool Mesh::isValidEdgeID(int edgeID) const
 
 void Mesh:: allocateDataValues()
 {
-  PRECICE_TRACE(_content.vertices().size());
+  PRECICE_TRACE(_vertices.size());
   for (PtrData data : _data) {
-    int total = _content.vertices().size() * data->getDimensions();
+    int total = _vertices.size() * data->getDimensions();
     int leftToAllocate = total - data->values().size();
     if (leftToAllocate > 0){
       utils::append(data->values(), (Eigen::VectorXd) Eigen::VectorXd::Zero(leftToAllocate));
@@ -260,8 +245,8 @@ void Mesh:: computeNormals()
 {
   PRECICE_TRACE(_name);
   // Compute normals only if faces to derive normal information are available
-  size_t size2DFaces = _content.edges().size();
-  size_t size3DFaces = _content.triangles().size() + _content.quads().size();
+  size_t size2DFaces = _edges.size();
+  size_t size3DFaces = _triangles.size() + _quads.size();
   if (_dimensions == 2 && size2DFaces == 0){
       return;
   }
@@ -271,7 +256,7 @@ void Mesh:: computeNormals()
 
   // Compute (in 2D) edge normals
   if (_dimensions == 2) {
-      for (Edge& edge : _content.edges()) {
+      for (Edge& edge : _edges) {
           Eigen::VectorXd weightednormal = edge.computeNormal(_flipNormals);
 
           // Accumulate normal in associated vertices
@@ -285,7 +270,7 @@ void Mesh:: computeNormals()
 
   if (_dimensions == 3){
       // Compute normals
-      for (Triangle& triangle : _content.triangles()) {
+      for (Triangle& triangle : _triangles) {
           PRECICE_ASSERT(triangle.vertex(0) != triangle.vertex(1),
                   triangle.vertex(0), triangle.getID());
           PRECICE_ASSERT(triangle.vertex(1) != triangle.vertex(2),
@@ -304,7 +289,7 @@ void Mesh:: computeNormals()
       }
 
       // Compute quad normals
-      for (Quad& quad : _content.quads()) {
+      for (Quad& quad : _quads) {
           PRECICE_ASSERT(quad.vertex(0) != quad.vertex(1), quad.vertex(0).getCoords(), quad.getID());
           PRECICE_ASSERT(quad.vertex(1) != quad.vertex(2), quad.vertex(1).getCoords(), quad.getID());
           PRECICE_ASSERT(quad.vertex(2) != quad.vertex(3), quad.vertex(2).getCoords(), quad.getID());
@@ -320,13 +305,13 @@ void Mesh:: computeNormals()
       }
 
       // Normalize edge normals (only done in 3D)
-      for (Edge& edge : _content.edges()) {
+      for (Edge& edge : _edges) {
           // there can be cases when an edge has no adjacent triangle though triangles exist in general (e.g. after filtering)
           edge.setNormal(edge.getNormal().normalized());
       }
   }
 
-  for (Vertex& vertex : _content.vertices()) {
+  for (Vertex& vertex : _vertices) {
       // there can be cases when a vertex has no edge though edges exist in general (e.g. after filtering)
       vertex.setNormal(vertex.getNormal().normalized());
   }
@@ -338,7 +323,7 @@ void Mesh:: computeBoundingBox()
   BoundingBox boundingBox(_dimensions,
                               std::make_pair(std::numeric_limits<double>::max(),
                                              std::numeric_limits<double>::lowest()));
-  for (const Vertex& vertex : _content.vertices()) {
+  for (const Vertex& vertex : _vertices) {
     for (int d = 0; d < _dimensions; d++) {
       boundingBox[d].first  = std::min(vertex.getCoords()[d], boundingBox[d].first);
       boundingBox[d].second = std::max(vertex.getCoords()[d], boundingBox[d].second);
@@ -362,12 +347,10 @@ void Mesh:: computeState()
     
 void Mesh:: clear()
 {
-  _content.quads().deleteElements();
-  _content.triangles().deleteElements();
-  _content.edges().deleteElements();
-  _content.vertices().deleteElements();
-
-  _content.clear();
+  _quads.clear();
+  _triangles.clear();
+  _edges.clear();
+  _vertices.clear();
 
   _manageTriangleIDs.resetIDs();
   _manageEdgeIDs.resetIDs();
@@ -477,17 +460,15 @@ const std::vector<double> Mesh::getCOG() const
 
 bool Mesh::operator==(const Mesh& other) const
 {
-    auto& myContent = _content;
-    auto& otherContent = other._content;
     bool equal = true;
-    equal &= myContent.vertices().size() == otherContent.vertices().size() &&
-        std::is_permutation(myContent.vertices().begin(), myContent.vertices().end(), otherContent.vertices().begin());
-    equal &= myContent.edges().size() == otherContent.edges().size() &&
-        std::is_permutation(myContent.edges().begin(), myContent.edges().end(), otherContent.edges().begin());
-    equal &= myContent.triangles().size() == otherContent.triangles().size() &&
-        std::is_permutation(myContent.triangles().begin(), myContent.triangles().end(), otherContent.triangles().begin());
-    equal &= myContent.quads().size() == otherContent.quads().size() &&
-        std::is_permutation(myContent.quads().begin(), myContent.quads().end(), otherContent.quads().begin());
+    equal &= _vertices.size() == other._vertices.size() &&
+        std::is_permutation(_vertices.begin(), _vertices.end(), other._vertices.begin());
+    equal &= _edges.size() == other._edges.size() &&
+        std::is_permutation(_edges.begin(), _edges.end(), other._edges.begin());
+    equal &= _triangles.size() == other._triangles.size() &&
+        std::is_permutation(_triangles.begin(), _triangles.end(), other._triangles.begin());
+    equal &= _quads.size() == other._quads.size() &&
+        std::is_permutation(_quads.begin(), _quads.end(), other._quads.begin());
     return equal;
 }
 
@@ -502,22 +483,22 @@ std::ostream& operator<<(std::ostream& os, const Mesh& m)
   os << "GEOMETRYCOLLECTION(\n";
   const auto token = ", ";
   const auto* sep = "";
-  for (auto& vertex : m.content().vertices()){
+  for (auto& vertex : m.vertices()){
       os << sep << vertex; 
       sep = token;
   }
   sep = ",\n";
-  for (auto& edge : m.content().edges()){
+  for (auto& edge : m.edges()){
       os << sep << edge;
       sep = token;
   }
   sep = ",\n";
-  for (auto& triangle : m.content().triangles()){
+  for (auto& triangle : m.triangles()){
       os << sep << triangle;
       sep = token;
   }
   sep = ",\n";
-  for (auto& quad : m.content().quads()){
+  for (auto& quad : m.quads()){
       os << sep << quad;
       sep = token;
   }
