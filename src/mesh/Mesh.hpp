@@ -9,6 +9,7 @@
 #include <map>
 #include <list>
 #include <vector>
+#include <deque>
 #include <boost/signals2.hpp>
 
 namespace precice {
@@ -30,10 +31,10 @@ class Mesh
 {
 public:
 
-  using VertexContainer            = utils::ptr_vector<Vertex>;
-  using EdgeContainer              = utils::ptr_vector<Edge>;
-  using TriangleContainer          = utils::ptr_vector<Triangle>;
-  using QuadContainer              = utils::ptr_vector<Quad>;
+  using VertexContainer            = std::deque<Vertex>;
+  using EdgeContainer              = std::deque<Edge>;
+  using TriangleContainer          = std::deque<Triangle>;
+  using QuadContainer              = std::deque<Quad>;
   using DataContainer              = std::vector<PtrData>;
   using BoundingBox                = std::vector<std::pair<double, double>>;
   using BoundingBoxMap             = std::map<int,BoundingBox>; 
@@ -72,9 +73,6 @@ public:
   /// Destructor, deletes created objects.
   ~Mesh();
 
-  /// Returns group object with all Triangle, Edge, Vertex objects.
-  const Group& content() const;
-
   /// Returns modifieable container holding all vertices.
   VertexContainer& vertices();
 
@@ -105,9 +103,8 @@ public:
   Vertex& createVertex ( const VECTOR_T& coords )
   {
     PRECICE_ASSERT(coords.size() == _dimensions, coords.size(), _dimensions);
-    Vertex* newVertex = new Vertex(coords, _manageVertexIDs.getFreeID());
-    _content.add(newVertex);
-    return *newVertex;
+    _vertices.emplace_back(coords, _manageVertexIDs.getFreeID());
+    return _vertices.back();
   }
 
   /**
@@ -286,7 +283,10 @@ private:
   std::map<std::string,int> _nameIDPairs;
 
   /// Holds vertices, edges, and triangles.
-  Group _content;
+  VertexContainer _vertices;
+  EdgeContainer _edges;
+  TriangleContainer _triangles;
+  QuadContainer _quads;
 
   /// Data hold by the vertices of the mesh.
   DataContainer _data;
