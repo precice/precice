@@ -7,7 +7,6 @@
 namespace precice {
   namespace mesh {
     class Mesh;
-    class Group;
   }
   namespace impl {
     struct VertexIteratorImplementation;
@@ -41,7 +40,7 @@ public:
    * @param[in] begin true for the begin, and false for the end-iterator
    */
   VertexIterator (
-    const mesh::Group& content,
+    const mesh::Mesh& content,
     bool               begin );
 
   VertexIterator ( const VertexIterator& other );
@@ -83,7 +82,7 @@ public:
   using const_iterator = VertexIterator;
 
   /// Constructor, reference to mesh object holding vertices required.
-  VertexHandle ( const mesh::Group& content );
+  VertexHandle ( const mesh::Mesh& content );
 
   /// Returns iterator to begin of the geometry's vertices.
   VertexIterator begin() const;
@@ -96,7 +95,7 @@ public:
 private:
 
   /// Group instance holding vertices.
-  const mesh::Group& _content;
+  const mesh::Mesh& _content;
 };
 
 class EdgeIterator
@@ -117,7 +116,7 @@ public:
    * @param[in] begin true for the begin, and false for the end-iterator
    */
   EdgeIterator (
-    const mesh::Group& mesh,
+    const mesh::Mesh& mesh,
     bool              begin );
 
 
@@ -166,7 +165,7 @@ public:
    /**
     * @brief Constructor, reference to mesh object holding edges required.
     */
-   EdgeHandle ( const mesh::Group& mesh );
+   EdgeHandle ( const mesh::Mesh& mesh );
 
    /**
     * @brief Returns iterator to begin of the geometry's edges.
@@ -183,7 +182,7 @@ public:
 private:
 
    // @brief Mesh instance holding edges.
-   const mesh::Group& _content;
+   const mesh::Mesh& _content;
 };
 
 class TriangleIterator
@@ -204,7 +203,7 @@ public:
    * @param[in] begin true for the begin, and false for the end-iterator
    */
   TriangleIterator (
-    const mesh::Group& content,
+    const mesh::Mesh& content,
     bool               begin );
 
   TriangleIterator (const TriangleIterator& other);
@@ -252,7 +251,7 @@ public:
    /**
     * @brief Constructor, reference to mesh object holding triangles required.
     */
-   TriangleHandle ( const mesh::Group& content );
+   TriangleHandle ( const mesh::Mesh& content );
 
    /**
     * @brief Returns iterator to begin of the geometry's triangles.
@@ -269,7 +268,7 @@ public:
 private:
 
    /// Mesh instance holding triangles.
-   const mesh::Group& _content;
+   const mesh::Mesh& _content;
 };
 
 /**
@@ -298,7 +297,7 @@ public:
     *
     * @API precice::SolverInterface::getMeshHandle()
     */
-   MeshHandle ( const mesh::Group& content );
+   MeshHandle ( const mesh::Mesh& mesh );
 
    /**
     * @brief Returns handle for Vertex objects.
