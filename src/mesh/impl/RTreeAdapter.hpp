@@ -234,5 +234,25 @@ public:
   }
 };
 
+/// Makes a std::vector indexable and thus be usable in boost::geometry::rtree
+template <typename Container>
+class VectorIndexable
+{
+  using size_type = typename Container::size_type;
+  using cref = const typename Container::value_type&;
+  Container const& container;
+
+public:
+  using result_type = cref;
+
+  explicit VectorIndexable(Container const& c) : container(c)
+  {}
+
+  result_type operator()(size_type i) const
+  {
+    return container[i];
+  }
+};
+
 
 }}}
