@@ -5,6 +5,8 @@
 #include "mesh/Mesh.hpp"
 #include "utils/Event.hpp"
 #include "utils/MasterSlave.hpp"
+#include<thread>
+#include<chrono>
 
 using precice::utils::Event;
 
@@ -122,6 +124,7 @@ void M2N::acceptSlavesPreConnection(
   for (const auto &pair : _distComs) {
     pair.second->acceptPreConnection(acceptorName, requesterName);
     _areSlavesConnected = _areSlavesConnected && pair.second->isConnected();
+    std::this_thread::sleep_for(std::chrono::seconds(10));
     }
   PRECICE_ASSERT(_areSlavesConnected);
 }
@@ -135,6 +138,7 @@ void M2N::requestSlavesPreConnection(
   for (const auto &pair : _distComs) {
     pair.second->requestPreConnection(acceptorName, requesterName);
     _areSlavesConnected = _areSlavesConnected && pair.second->isConnected();
+    std::this_thread::sleep_for(std::chrono::seconds(10));
     }
   PRECICE_ASSERT(_areSlavesConnected);
 }
