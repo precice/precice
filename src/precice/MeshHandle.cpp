@@ -2,21 +2,21 @@
 #include "mesh/Vertex.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Triangle.hpp"
-#include "mesh/Group.hpp"
+#include "mesh/Mesh.hpp"
 
 namespace precice {
   namespace impl {
 
     struct VertexIteratorImplementation {
-      mesh::Group::VertexContainer::const_iterator iterator;
+      mesh::Mesh::VertexContainer::const_iterator iterator;
     };
 
     struct EdgeIteratorImplementation {
-      mesh::Group::EdgeContainer::const_iterator iterator;
+      mesh::Mesh::EdgeContainer::const_iterator iterator;
     };
 
     struct TriangleIteratorImplementation {
-      mesh::Group::TriangleContainer::const_iterator iterator;
+      mesh::Mesh::TriangleContainer::const_iterator iterator;
     };
   }
 }
@@ -35,7 +35,7 @@ VertexIterator::~VertexIterator()
 
 VertexIterator:: VertexIterator
 (
-  const mesh::Group& content,
+  const mesh::Mesh& content,
   bool               begin )
 {
   if ( begin ) {
@@ -117,9 +117,9 @@ void swap(VertexIterator& lhs, VertexIterator& rhs)
 
 VertexHandle:: VertexHandle
 (
-  const mesh::Group& content )
+  const mesh::Mesh& mesh )
 :
-  _content ( content )
+  _content ( mesh )
 {}
 
 VertexIterator VertexHandle:: begin() const
@@ -149,7 +149,7 @@ EdgeIterator::~EdgeIterator()
 
 EdgeIterator:: EdgeIterator
 (
-  const mesh::Group& content,
+  const mesh::Mesh& content,
   bool               begin )
 {
   if ( begin ) {
@@ -228,7 +228,7 @@ void swap(EdgeIterator& lhs, EdgeIterator& rhs)
 
 EdgeHandle:: EdgeHandle
 (
-  const mesh::Group & content )
+  const mesh::Mesh & content )
 :
   _content ( content )
 {}
@@ -260,7 +260,7 @@ TriangleIterator::~TriangleIterator()
 
 TriangleIterator:: TriangleIterator
 (
-  const mesh::Group& content,
+  const mesh::Mesh& content,
   bool               begin )
 {
   if ( begin ) {
@@ -339,7 +339,7 @@ void swap(TriangleIterator& lhs, TriangleIterator& rhs)
 
 TriangleHandle:: TriangleHandle
 (
-  const mesh::Group & content )
+  const mesh::Mesh & content )
 :
   _content ( content )
 {}
@@ -365,7 +365,7 @@ std::size_t TriangleHandle:: size () const
 
 MeshHandle:: MeshHandle
 (
-  const mesh::Group & content )
+  const mesh::Mesh & content )
 :
   _vertexHandle ( content ),
   _edgeHandle ( content ),

@@ -1278,7 +1278,7 @@ MeshHandle SolverInterfaceImpl:: getMeshHandle
   PRECICE_ASSERT(not _clientMode);
   for (MeshContext* context : _accessor->usedMeshContexts()){
     if (context->mesh->getName() == meshName){
-      return {context->mesh->content()};
+      return {*context->mesh};
     }
   }
   PRECICE_ERROR("Participant \"" << _accessorName

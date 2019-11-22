@@ -4,6 +4,9 @@
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Vertex.hpp"
+#include "mesh/Edge.hpp"
+#include "mesh/Triangle.hpp"
+#include "mesh/Quad.hpp"
 #include "utils/PointerVector.hpp"
 #include "utils/ManageUniqueIDs.hpp"
 #include <map>
