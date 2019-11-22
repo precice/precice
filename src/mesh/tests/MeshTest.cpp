@@ -3,7 +3,6 @@
 #include "mesh/Triangle.hpp"
 #include "mesh/Quad.hpp"
 #include "mesh/Mesh.hpp"
-#include "mesh/PropertyContainer.hpp"
 #include "mesh/Data.hpp"
 #include <Eigen/Core>
 #include "testing/Testing.hpp"
@@ -18,26 +17,6 @@ using Eigen::Vector3d;
 BOOST_AUTO_TEST_SUITE(MeshTests)
 
 BOOST_AUTO_TEST_SUITE(MeshTests, *testing::OnMaster())
-
-
-BOOST_AUTO_TEST_CASE(SubIDs)
-{
-  for (int dim=2; dim <= 3; dim++) {
-    mesh::Mesh mesh("MyMesh", dim, false);
-    Vertex& v0 = mesh.createVertex(Eigen::VectorXd::Constant(dim, 0.0));
-    Vertex& v1 = mesh.createVertex(Eigen::VectorXd::Constant(dim, 1.0));
-    PropertyContainer& cont0 = mesh.setSubID("subID0");
-    PropertyContainer& cont1 = mesh.setSubID("subID1");
-    v0.addParent(cont0);
-    v1.addParent(cont0);
-    v1.addParent(cont1);
-    std::vector<int> properties;
-    v0.getProperties(PropertyContainer::INDEX_GEOMETRY_ID, properties);
-    BOOST_TEST(properties.size() == 2);
-    BOOST_TEST(properties[0] == mesh.getID("MyMesh"));
-    BOOST_TEST(properties[1] == mesh.getID("MyMesh-subID0"));
-  }
-}
 
 
 BOOST_AUTO_TEST_CASE(ComputeState_2D)
@@ -278,7 +257,6 @@ BOOST_AUTO_TEST_CASE(Demonstration)
     std::string meshName ( "MyMesh" );
     bool flipNormals = false; // The normals of triangles, edges, vertices
     precice::mesh::Mesh mesh ( meshName, dim, flipNormals );
-    int geometryID = mesh.getProperty<int> ( mesh.INDEX_GEOMETRY_ID );
 
     // Validate mesh object state
     BOOST_TEST(mesh.getName() == meshName);
@@ -370,55 +348,6 @@ BOOST_AUTO_TEST_CASE(Demonstration)
     // Validate state of mesh with data
     BOOST_TEST ( mesh.data().size() == 1 );
     BOOST_TEST ( mesh.data()[0]->getName() == dataName );
-
-    // Create sub-id
-    std::string nameSubIDPrefix ( "sub-id" );
-    PropertyContainer & cont = mesh.setSubID ( nameSubIDPrefix );
-    int subID = cont.getFreePropertyID();
-    cont.setProperty ( cont.INDEX_GEOMETRY_ID, subID );
-
-    // Add sub-id to selected mesh elements
-    v0.addParent ( cont );
-    v1.addParent ( cont );
-    e0.addParent ( cont );
-
-    // Validate geometry IDs
-    std::vector<int> geometryIDs;
-    v0.getProperties ( v0.INDEX_GEOMETRY_ID, geometryIDs );
-    BOOST_TEST ( geometryIDs.size() == 2 );
-    BOOST_TEST ( utils::contained(geometryID, geometryIDs) );
-    BOOST_TEST ( utils::contained(subID, geometryIDs) );
-    geometryIDs.clear();
-    v1.getProperties ( v1.INDEX_GEOMETRY_ID, geometryIDs );
-    BOOST_TEST ( geometryIDs.size() == 2 );
-    BOOST_TEST ( utils::contained(geometryID, geometryIDs) );
-    BOOST_TEST ( utils::contained(subID, geometryIDs) );
-    geometryIDs.clear();
-    v2.getProperties ( v1.INDEX_GEOMETRY_ID, geometryIDs );
-    BOOST_TEST ( geometryIDs.size() == 1 );
-    BOOST_TEST ( utils::contained(geometryID, geometryIDs) );
-    geometryIDs.clear();
-    e0.getProperties ( e0.INDEX_GEOMETRY_ID, geometryIDs );
-    BOOST_TEST ( geometryIDs.size() == 2 );
-    BOOST_TEST ( utils::contained(geometryID, geometryIDs) );
-    BOOST_TEST ( utils::contained(subID, geometryIDs) );
-    geometryIDs.clear();
-    e1.getProperties ( e1.INDEX_GEOMETRY_ID, geometryIDs );
-    BOOST_TEST ( geometryIDs.size() == 1 );
-    BOOST_TEST ( utils::contained(geometryID, geometryIDs) );
-    geometryIDs.clear();
-    e2.getProperties ( e2.INDEX_GEOMETRY_ID, geometryIDs );
-    BOOST_TEST ( geometryIDs.size() == 1 );
-    BOOST_TEST ( utils::contained(geometryID, geometryIDs) );
-    if ( dim == 3 ){
-      geometryIDs.clear();
-      t->getProperties ( t->INDEX_GEOMETRY_ID, geometryIDs );
-      BOOST_TEST ( geometryIDs.size() == 1 );
-      BOOST_TEST ( utils::contained(geometryID, geometryIDs) );
-    }
-    BOOST_TEST ( mesh.getNameIDPairs().size() == 2 );
-    BOOST_TEST ( mesh.getNameIDPairs().count("MyMesh") == 1 );
-    BOOST_TEST ( mesh.getNameIDPairs().count("MyMesh-sub-id") == 1 );
 
     // Compute the state of the mesh elements (vertices, edges, triangles)
     mesh.computeState();

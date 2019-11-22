@@ -12,30 +12,21 @@
 #include <boost/signals2.hpp>
 
 namespace precice {
-  namespace mesh {
-    class PropertyContainer;
-  }
-}
-
-// ----------------------------------------------------------- CLASS DEFINITION
-
-namespace precice {
 namespace mesh {
 
 
 /**
  * @brief Container and creator for meshes.
  *
- * A Mesh can consist of Vertices, Edges, Triangles, nested Meshes, and
- * PropertyContainers. It provides functionality to conveniently create those
- * objects.
+ * A Mesh can consist of Vertices, Edges, Triangles, and nested Meshes.
+ * It provides functionality to conveniently create those objects.
  *
  * In addition to creating the topological information of a mesh, the Mesh class
  * can also be used to add data to the vertices of a mesh.
  *
  * Usage example: precice::mesh::tests::MeshTest::testDemonstration()
  */
-class Mesh : public PropertyContainer
+class Mesh
 {
 public:
 
@@ -44,7 +35,6 @@ public:
   using TriangleContainer          = utils::ptr_vector<Triangle>;
   using QuadContainer              = utils::ptr_vector<Quad>;
   using DataContainer              = std::vector<PtrData>;
-  using PropertyContainerContainer = utils::ptr_vector<PropertyContainer>;
   using BoundingBox                = std::vector<std::pair<double, double>>;
   using BoundingBoxMap             = std::map<int,BoundingBox>; 
 
@@ -80,7 +70,7 @@ public:
     bool               flipNormals );
 
   /// Destructor, deletes created objects.
-  virtual ~Mesh();
+  ~Mesh();
 
   /// Returns group object with all Triangle, Edge, Vertex objects.
   const Group& content() const;
@@ -109,10 +99,6 @@ public:
   /// Returns const container holding all quads.
   const QuadContainer& quads() const;
 
-  PropertyContainerContainer& propertyContainers();
-
-  const PropertyContainerContainer& propertyContainers() const;
-
   int getDimensions() const;
 
   template<typename VECTOR_T>
@@ -120,7 +106,6 @@ public:
   {
     PRECICE_ASSERT(coords.size() == _dimensions, coords.size(), _dimensions);
     Vertex* newVertex = new Vertex(coords, _manageVertexIDs.getFreeID());
-    newVertex->addParent(*this);
     _content.add(newVertex);
     return *newVertex;
   }
@@ -171,16 +156,6 @@ public:
     Edge& edgeThree,
     Edge& edgeFour);
 
-  /**
-   * @brief Creates and initializes a PropertyContainer object.
-   *
-   * A PropertyContainer can be used to serve as Property parent for other
-   * objects in the mesh. It is used, to define multiple geometry IDs for
-   * Vertices and Edges lying at the intersection of regions with different
-   * geometry IDs.
-   */
-  PropertyContainer& createPropertyContainer();
-
   PtrData& createData (
     const std::string& name,
     int                dimension );
@@ -189,24 +164,12 @@ public:
 
   const PtrData& data ( int dataID ) const;
 
-  PropertyContainer& getPropertyContainer (const std::string & subIDName);
-
   /// Returns the name of the mesh, as set in the config file.
   const std::string& getName() const;
 
   bool isFlipNormals() const;
 
   void setFlipNormals ( bool flipNormals );
-
-  /**
-   * @brief Associates a new geometry ID to the mesh.
-   *
-   * The full name of the ID is given by:
-   * getName() + "-" + subIDNamePostfix
-   *
-   * @return Newly created property container holding the new ID.
-   */
-  PropertyContainer& setSubID ( const std::string& subIDNamePostfix );
 
   /// Returns all used geometry IDs paired with their names
   const std::map<std::string,int>& getNameIDPairs();
@@ -244,7 +207,6 @@ public:
    * - vertex
    * - edge
    * - triangle
-   * - property container
    */
   void clear();
 
@@ -325,9 +287,6 @@ private:
 
   /// Holds vertices, edges, and triangles.
   Group _content;
-
-  /// All property containers created by the mesh.
-  PropertyContainerContainer _propertyContainers;
 
   /// Data hold by the vertices of the mesh.
   DataContainer _data;

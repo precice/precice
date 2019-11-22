@@ -188,8 +188,6 @@ target_sources(precice
     src/mesh/Merge.hpp
     src/mesh/Mesh.cpp
     src/mesh/Mesh.hpp
-    src/mesh/PropertyContainer.cpp
-    src/mesh/PropertyContainer.hpp
     src/mesh/Quad.cpp
     src/mesh/Quad.hpp
     src/mesh/RTree.cpp

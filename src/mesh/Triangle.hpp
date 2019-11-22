@@ -5,7 +5,6 @@
 #include <algorithm>
 
 #include "mesh/Edge.hpp"
-#include "mesh/PropertyContainer.hpp"
 #include "mesh/RangeAccessor.hpp"
 #include "utils/assertion.hpp"
 #include "math/differences.hpp"
@@ -26,7 +25,7 @@ namespace mesh
 {
 
 /// Triangle of a mesh, defined by three edges (and vertices).
-class Triangle : public PropertyContainer
+class Triangle
 {
 public:
   /// Type of the read-only const random-access iterator over Vertex coords
@@ -49,9 +48,6 @@ public:
       Edge &edgeTwo,
       Edge &edgeThree,
       int   id);
-
-  /// Destructor, empty.
-  virtual ~Triangle() {}
 
   /// Returns dimensionalty of space the triangle is embedded in.
   int getDimensions() const;

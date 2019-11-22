@@ -17,13 +17,10 @@ MeshConfiguration:: MeshConfiguration
   ATTR_NAME("name"),
   ATTR_FLIP_NORMALS("flip-normals"),
   TAG_DATA("use-data"),
-  TAG_SUB_ID("sub-id"),
   ATTR_SIDE_INDEX("side"),
   _dimensions(0),
   _dataConfig(config),
   _meshes(),
-  _setMeshSubIDs(),
-  _meshSubIDs(),
   _neededMeshes()
 {
   using namespace xml;
@@ -50,15 +47,6 @@ MeshConfiguration:: MeshConfiguration
   subtagData.addAttribute(attrName);
   tag.addSubtag(subtagData);
 
-  xml::XMLTag tagSubID(*this, TAG_SUB_ID, xml::XMLTag::OCCUR_ARBITRARY);
-  doc = "Every mesh has a global ID (determined by preCICE). It is possible ";
-  doc += "to set additional sub-ids to distinguish parts of the mesh in ";
-  doc += "queries.";
-  tagSubID.setDocumentation(doc);
-  xml::XMLAttribute<int> attrSideIndex(ATTR_SIDE_INDEX);
-  tagSubID.addAttribute(attrSideIndex);
-  tag.addSubtag(tagSubID);
-
   parent.addSubtag(tag);
 }
 
@@ -82,13 +70,6 @@ void MeshConfiguration:: xmlTagCallback
     std::string name = tag.getStringAttributeValue(ATTR_NAME);
     bool flipNormals = tag.getBooleanAttributeValue(ATTR_FLIP_NORMALS);
     _meshes.push_back(PtrMesh(new Mesh(name, _dimensions, flipNormals)));
-    _meshSubIDs.push_back(std::list<std::string>());
-  }
-  else if (tag.getName() == TAG_SUB_ID){
-    int side = tag.getIntAttributeValue(ATTR_SIDE_INDEX);
-    std::stringstream conv;
-    conv << "side-" << side;
-    _meshSubIDs.back().push_back(conv.str());
   }
   else if (tag.getName() == TAG_DATA){
     std::string name = tag.getStringAttributeValue(ATTR_NAME);
@@ -138,18 +119,6 @@ void MeshConfiguration:: addMesh
     PRECICE_CHECK(found, "Data " << dataNewMesh->getName() << " is not available in data configuration!");
   }
   _meshes.push_back(mesh);
-}
-
-void MeshConfiguration:: setMeshSubIDs()
-{
-  PRECICE_ASSERT( _meshes.size() == _meshSubIDs.size() );
-  PRECICE_ASSERT( not _setMeshSubIDs );
-  for ( size_t i=0; i < _meshes.size(); i++ ) {
-    for ( const std::string & subIDName : _meshSubIDs[i] ) {
-      _meshes[i]->setSubID ( subIDName );
-    }
-  }
-  _setMeshSubIDs = true;
 }
 
 const std::vector<PtrMesh>& MeshConfiguration:: meshes() const
