@@ -12,7 +12,6 @@
 #include "mesh/Vertex.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Triangle.hpp"
-#include "mesh/Merge.hpp"
 #include "io/ExportContext.hpp"
 #include "io/Export.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
