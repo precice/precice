@@ -20,7 +20,7 @@ logging::Logger MasterSlave:: _log("utils::MasterSlave" );
 void MasterSlave:: configure(int rank, int size)
 {
   PRECICE_TRACE(rank, size);
-  PRECICE_CHECK(size>=2, "You cannot use a master with a serial participant.");
+  PRECICE_ASSERT(size>=2);
   _rank = rank;
   _size = size;
   PRECICE_ASSERT(_rank != -1 && _size != -1);

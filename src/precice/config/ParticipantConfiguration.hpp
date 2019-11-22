@@ -42,13 +42,6 @@ public:
           const xml::ConfigurationContext& context,
           xml::XMLTag& callingTag );
 
-  /**
-   * @brief For manual configuration.
-   */
-  void addParticipant (
-    const impl::PtrParticipant&             participant,
-    const mapping::PtrMappingConfiguration& mappingConfig );
-
   /// Returns all configured participants.
   const std::vector<impl::PtrParticipant>& getParticipants() const;
 
@@ -119,7 +112,11 @@ private:
 
   mapping::PtrMapping getMapping ( const std::string& mappingName );
 
-  void finishParticipantConfiguration ( const impl::PtrParticipant& participant );
+  bool isParallelSolutionDefined = false;
+
+  void finishParticipantConfiguration (
+         const xml::ConfigurationContext& context,
+         const impl::PtrParticipant& participant );
 
 };
 

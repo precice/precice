@@ -359,12 +359,13 @@ void ParticipantConfiguration:: xmlTagCallback
     com::CommunicationConfiguration comConfig;
     com::PtrCommunication com = comConfig.createCommunication(tag);
     _participants.back()->setClientServerCommunication(com);
+    isParallelSolutionDefined = true;
   }
   else if (tag.getNamespace() == TAG_MASTER){
     com::CommunicationConfiguration comConfig;
     com::PtrCommunication com = comConfig.createCommunication(tag);
     utils::MasterSlave::_communication = com;
-
+    isParallelSolutionDefined = true;
     _participants.back()->setUseMaster(true);
   }
 }
@@ -375,18 +376,8 @@ void ParticipantConfiguration:: xmlEndTagCallback
   xml::XMLTag& tag )
 {
   if (tag.getName() == TAG){
-    finishParticipantConfiguration(_participants.back());
+    finishParticipantConfiguration(context, _participants.back());
   }
-}
-
-void ParticipantConfiguration:: addParticipant
-(
-  const impl::PtrParticipant&             participant,
-  const mapping::PtrMappingConfiguration& mappingConfig )
-{
-  _participants.push_back ( participant );
-  _mappingConfig = mappingConfig;
-  finishParticipantConfiguration ( participant );
 }
 
 const std::vector<impl::PtrParticipant>&
@@ -440,6 +431,7 @@ const mesh::PtrData & ParticipantConfiguration:: getData
 
 void ParticipantConfiguration:: finishParticipantConfiguration
 (
+  const xml::ConfigurationContext& context,
   const impl::PtrParticipant& participant )
 {
   PRECICE_TRACE(participant->getName());
@@ -616,6 +608,23 @@ void ParticipantConfiguration:: finishParticipantConfiguration
     participant->addWatchPoint ( watchPoint );
   }
   _watchPointConfigs.clear ();
+
+
+  // create default master communication if needed  
+  if(context.size > 1 && not isParallelSolutionDefined){
+    #ifdef PRECICE_NO_MPI
+        std::ostringstream error;
+        error << "When building with \"mpi=off\", you need to specify an alternative \"master\" "
+              << "communication (e.g. sockets) for every parallel participant";
+        throw std::runtime_error{error.str()};
+    #else
+        com::PtrCommunication com = std::make_shared<com::MPIDirectCommunication>();
+        utils::MasterSlave::_communication = com;
+        participant->setUseMaster(true);
+    #endif
+  }
+  isParallelSolutionDefined = false; // to not mess up with previous participant
+
 }
 
 
