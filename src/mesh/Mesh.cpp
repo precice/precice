@@ -198,10 +198,18 @@ bool Mesh::isValidEdgeID(int edgeID) const
 void Mesh::allocateDataValues()
 {
   PRECICE_TRACE(_vertices.size());
+  const auto expectedCount = _vertices.size();
+  using SizeType = decltype(expectedCount);
   for (PtrData data : _data) {
-    int total          = _vertices.size() * data->getDimensions();
-    int leftToAllocate = total - data->values().size();
-    if (leftToAllocate > 0) {
+    const SizeType expectedSize = expectedCount * data->getDimensions();
+    const auto actualSize = static_cast<SizeType>(data->values().size());
+    // Shrink Buffer
+    if (expectedSize < actualSize) {
+        data->values().resize(expectedSize);
+    }
+    // Enlarge Buffer
+    if (expectedSize > actualSize) {
+      const auto leftToAllocate = expectedSize - actualSize;
       utils::append(data->values(), (Eigen::VectorXd) Eigen::VectorXd::Zero(leftToAllocate));
     }
     PRECICE_DEBUG("Data " << data->getName() << " now has " << data->values().size() << " values");
