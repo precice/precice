@@ -456,9 +456,11 @@ std::string XMLTag::printMD(int level, std::map<std::string, int>& occurrences) 
     oss << pair.second.printMD() << '\n';
   }
   oss << "\n";
-  
+ 
   if (not _subtags.empty()) {
     oss << "**Valid subtags:**\n\n";
+
+    std::map<std::string, std::vector<std::string>> groupedTags;
 
     for (const auto& subtag : _subtags) {
       const auto heading = subtag->getFullName();
@@ -470,7 +472,20 @@ std::string XMLTag::printMD(int level, std::map<std::string, int>& occurrences) 
       } else {
           occurrences.emplace(heading, 1);
       }
-      oss << "* [" << heading << "](" << link << ") `" << subtag->getOccurrenceString(subtag->getOccurrence()) << "`\n";
+
+      const auto ns = subtag->getNamespace();
+      if(ns.empty()) {
+          oss << "* [" << heading << "](" << link << ") `" << subtag->getOccurrenceString(subtag->getOccurrence()) << "`\n";
+      } else {
+          auto& tags = groupedTags[ns];
+          tags.emplace_back("[" + subtag->getName() + "](" + link + ") `" + subtag->getOccurrenceString(subtag->getOccurrence()) + "`");
+      }
+    }
+    for (const auto& kv: groupedTags) {
+        oss << "* " << kv.first << "\n";
+        for (const auto& link: kv.second) {
+            oss << "  * " << link << "\n";
+        }
     }
 
     oss << "\n\n";
