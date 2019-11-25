@@ -434,28 +434,34 @@ std::string XMLTag::printMD(int level, std::map<std::string, int>& occurrences) 
   
   oss << "**Example:**  \n```xml\n" << printExample(0) << "\n```\n\n";
 
-  oss << "| Attribute | Type | Description | Default | Options |\n";
-  oss << "| --- | --- | --- | --- | --- |\n";
-  for (const auto &pair : _doubleAttributes) {
-    oss << pair.second.printMD() << '\n';
-  }
+  if(!(_doubleAttributes.empty() &&
+          _intAttributes.empty() &&
+          _stringAttributes.empty() &&
+          _booleanAttributes.empty() &&
+          _eigenVectorXdAttributes.empty())) {
+      oss << "| Attribute | Type | Description | Default | Options |\n";
+      oss << "| --- | --- | --- | --- | --- |\n";
+      for (const auto &pair : _doubleAttributes) {
+          oss << pair.second.printMD() << '\n';
+      }
 
-  for (const auto &pair : _intAttributes) {
-    oss << pair.second.printMD() << '\n';
-  }
+      for (const auto &pair : _intAttributes) {
+          oss << pair.second.printMD() << '\n';
+      }
 
-  for (const auto &pair : _stringAttributes) {
-    oss << pair.second.printMD() << '\n';
-  }
+      for (const auto &pair : _stringAttributes) {
+          oss << pair.second.printMD() << '\n';
+      }
 
-  for (const auto &pair : _booleanAttributes) {
-    oss << pair.second.printMD() << '\n';
-  }
+      for (const auto &pair : _booleanAttributes) {
+          oss << pair.second.printMD() << '\n';
+      }
 
-  for (const auto &pair : _eigenVectorXdAttributes) {
-    oss << pair.second.printMD() << '\n';
+      for (const auto &pair : _eigenVectorXdAttributes) {
+          oss << pair.second.printMD() << '\n';
+      }
+      oss << "\n";
   }
-  oss << "\n";
  
   if (not _subtags.empty()) {
     oss << "**Valid subtags:**\n\n";
