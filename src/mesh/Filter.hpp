@@ -14,8 +14,6 @@ namespace mesh {
 template <typename UnaryPredicate>
 void filterMesh(Mesh &destination, const Mesh &source, UnaryPredicate p)
 {
-  PRECICE_TRACE();
-
   // Create a flat_map which can contain all vertices of the original mesh.
   // This prevents resizes during the map build-up.
   boost::container::flat_map<int, Vertex *> vertexMap;
@@ -38,7 +36,7 @@ void filterMesh(Mesh &destination, const Mesh &source, UnaryPredicate p)
   edgeMap.reserve(source.edges().size());
 
   // Add all edges formed by the contributing vertices
-  for (Edge &edge : source.edges()) {
+  for (const Edge &edge : source.edges()) {
     int vertexIndex1 = edge.vertex(0).getID();
     int vertexIndex2 = edge.vertex(1).getID();
     if (vertexMap.count(vertexIndex1) == 1 &&
@@ -50,7 +48,7 @@ void filterMesh(Mesh &destination, const Mesh &source, UnaryPredicate p)
 
   // Add all triangles formed by the contributing edges
   if (source.getDimensions() == 3) {
-    for (Triangle &triangle : source.triangles()) {
+    for (const Triangle &triangle : source.triangles()) {
       int edgeIndex1 = triangle.edge(0).getID();
       int edgeIndex2 = triangle.edge(1).getID();
       int edgeIndex3 = triangle.edge(2).getID();
