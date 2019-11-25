@@ -319,7 +319,7 @@ template <typename ATTRIBUTE_T>
 std::string XMLAttribute<ATTRIBUTE_T>::printMD() const
 {
   std::ostringstream oss;
-  oss << "| " << _name << " | " << _doc << " | ";
+  oss << "| " << _name << " | " << utils::getTypeName(_defaultValue) << " | " << _doc << " | ";
   if (_hasDefaultValue) {
       oss << '`' << _defaultValue << '`';
   } else {

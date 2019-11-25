@@ -434,8 +434,8 @@ std::string XMLTag::printMD(int level, std::map<std::string, int>& occurrences) 
   
   oss << "**Example:**  \n```xml\n" << printExample(0) << "\n```\n\n";
 
-  oss << "| Attribute | Description | Default | Options |\n";
-  oss << "| --- | --- | --- | --- |\n";
+  oss << "| Attribute | Type | Description | Default | Options |\n";
+  oss << "| --- | --- | --- | --- | --- |\n";
   for (const auto &pair : _doubleAttributes) {
     oss << pair.second.printMD() << '\n';
   }
