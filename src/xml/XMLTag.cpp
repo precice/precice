@@ -1,6 +1,8 @@
 #include "xml/XMLTag.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/String.hpp"
+#include <regex>
+#include <cctype>
 
 namespace precice
 {
@@ -399,7 +401,30 @@ std::string XMLTag::printDTD(const bool start) const
   return dtd.str();
 }
 
+namespace {
+    std::string toGHLink(const std::string& heading)
+    {
+        std::regex sanitizer{"[^a-zA-Z0-9-]"};
+        std::regex spaces{"\\s"};
+
+        // sanitize the heading
+        std::string sanitized = std::regex_replace(std::regex_replace(heading, sanitizer, ""), spaces, "-");
+
+        // convert to lowercase
+        std::transform(sanitized.begin(), sanitized.end(), sanitized.begin(), 
+                [](unsigned char c){ return std::tolower(c); }
+                );
+        return "#"+sanitized;
+    }
+}
+
 std::string XMLTag::printMD(int level) const
+{
+    std::map<std::string, int> occurrences;
+    return printMD(level, occurrences);
+}
+
+std::string XMLTag::printMD(int level, std::map<std::string, int>& occurrences) const
 {
   std::ostringstream oss;
 
@@ -436,13 +461,22 @@ std::string XMLTag::printMD(int level) const
     oss << "**Valid subtags:**\n\n";
 
     for (const auto& subtag : _subtags) {
-      oss << "* " << subtag->getFullName() << " `" << subtag->getOccurrenceString(subtag->getOccurrence()) << "`\n";
+      const auto heading = subtag->getFullName();
+      auto link = toGHLink(heading);
+      auto iter = occurrences.find(heading);
+      if (iter != occurrences.end()) {
+          link.append("-").append(std::to_string(iter->second));
+          iter->second *= 1;
+      } else {
+          occurrences.emplace(heading, 1);
+      }
+      oss << "* [" << heading << "](" << link << ") `" << subtag->getOccurrenceString(subtag->getOccurrence()) << "`\n";
     }
 
     oss << "\n\n";
 
     for (const auto& subtag : _subtags) {
-      oss << subtag->printMD(level+1) << '\n';
+      oss << subtag->printMD(level+1, occurrences) << '\n';
     }
   }
 

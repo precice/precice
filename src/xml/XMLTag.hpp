@@ -233,6 +233,9 @@ private:
   void resetAttributes();
 
   std::string getOccurrenceString(Occurrence occurrence) const;
+
+  /// Prints a Markdown string for this tag given prior occurences.
+  std::string printMD(int level, std::map<std::string, int>& occurences) const;
 };
 
 // ------------------------------------------------------ HEADER IMPLEMENTATION
