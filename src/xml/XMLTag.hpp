@@ -184,6 +184,9 @@ public:
   /// Prints a Markdown string for this tag.
   std::string printMD(int level = 1) const;
 
+  /// Prints an example string for this tag.
+  std::string printExample(int level = 0) const;
+
   /// reads all attributes of this tag
   void readAttributes(std::map<std::string, std::string> &aAttributes);
 

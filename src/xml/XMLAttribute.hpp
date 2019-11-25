@@ -92,6 +92,8 @@ public:
 
   std::string printMD() const;
 
+  std::string printExample() const;
+
 private:
   logging::Logger _log{"xml::XMLAttribute"};
 
@@ -337,6 +339,20 @@ std::string XMLAttribute<ATTRIBUTE_T>::printMD() const
   oss << " |";
 
   return oss.str();
+}
+
+template <typename ATTRIBUTE_T>
+std::string XMLAttribute<ATTRIBUTE_T>::printExample() const
+{
+  std::ostringstream ex;
+  ex << _name << "=\"";
+  if (_hasDefaultValue) {
+   ex << _defaultValue;
+  } else {
+    ex << '{' << utils::getTypeName(_defaultValue) << '}';
+  }
+  ex << '"';
+  return ex.str();
 }
 
 template <typename ATTRIBUTE_T>

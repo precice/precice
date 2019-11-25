@@ -406,6 +406,8 @@ std::string XMLTag::printMD(int level) const
   oss << std::string(level, '#') << ' ' << _fullName << "\n\n";
 
   oss << _doc << "\n\n";
+  
+  oss << "**Example:**  \n```xml\n" << printExample(0) << "\n```\n\n";
 
   oss << "| Attribute | Description | Default | Options |\n";
   oss << "| --- | --- | --- | --- |\n";
@@ -446,6 +448,50 @@ std::string XMLTag::printMD(int level) const
 
   oss << '\n';
 
+  return oss.str();
+}
+
+
+
+std::string XMLTag::printExample(int level) const
+{
+  std::string prefix(level*2, ' ');
+  std::ostringstream oss;
+  oss << prefix << '<' << _fullName;
+  for (const auto &pair : _doubleAttributes) {
+    oss << ' ' << pair.second.printExample();
+  }
+  for (const auto &pair : _intAttributes) {
+    oss << ' ' << pair.second.printExample();
+  }
+  for (const auto &pair : _stringAttributes) {
+    oss << ' ' << pair.second.printExample();
+  }
+  for (const auto &pair : _booleanAttributes) {
+    oss << ' ' << pair.second.printExample();
+  }
+  for (const auto &pair : _eigenVectorXdAttributes) {
+    oss << ' ' << pair.second.printExample();
+  }
+  if (_subtags.empty()) {
+      oss << "/>";
+      return oss.str();
+  }
+  oss << ">\n";
+
+  std::set<std::string> namespaces;
+  for (const auto& subtag : _subtags) {
+      const auto ns = subtag->getNamespace();
+      if (!ns.empty()) {
+          if (namespaces.count(subtag->getNamespace()) > 0) {
+              continue;
+          }
+          namespaces.emplace(ns);
+      }
+      oss << subtag->printExample(level+1) << '\n';
+  }
+
+  oss << prefix << "</" << _fullName << '>';
   return oss.str();
 }
 
