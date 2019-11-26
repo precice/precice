@@ -365,30 +365,31 @@ include(${CMAKE_CURRENT_LIST_DIR}/src/tests.cmake)
 # Setup General Install for:
 # precice - the library
 # binprecice - the precice binary
+include(GNUInstallDirs)
 install(TARGETS precice binprecice
   EXPORT preciceTargets
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION bin
-  PUBLIC_HEADER DESTINATION include/precice
-  INCLUDES DESTINATION include/precice
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+  PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/precice
+  INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/precice
   )
 
 if(PRECICE_InstallTest)
   # Install the testprecice target
   install(TARGETS testprecice
     EXPORT preciceTargets
-    RUNTIME DESTINATION bin
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     )
 
   # Install the resources necessary for the tests
   install(DIRECTORY src
-    DESTINATION share/precice
+    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/precice
     FILES_MATCHING
     PATTERN "*.xml"
     )
   install(DIRECTORY src/action/tests/
-    DESTINATION share/precice/src/action/tests
+    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/precice/src/action/tests
     FILES_MATCHING
     PATTERN "*.py"
     )
@@ -398,7 +399,7 @@ endif()
 install(EXPORT preciceTargets
   FILE preciceTargets.cmake
   NAMESPACE precice::
-  DESTINATION lib/cmake/precice
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/precice
   )
 
 # Generate a Package Config File for precice
@@ -410,7 +411,7 @@ write_basic_package_version_file("preciceConfigVersion.cmake"
 
 # Install the Config and the ConfigVersion files
 install(FILES "cmake/preciceConfig.cmake" "${preCICE_BINARY_DIR}/preciceConfigVersion.cmake"
-  DESTINATION lib/cmake/precice
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/precice
   )
 
 # Setup the config in the build directory
@@ -437,7 +438,7 @@ if(GZIP_EXE)
   execute_process(COMMAND "${GZIP_EXE}" "-9nf" "${PRECICE_PACKAGING_DIR}/CHANGELOG.md")
   # Install compressed changelog
   install(FILES ${PRECICE_PACKAGING_DIR}/CHANGELOG.md.gz
-    DESTINATION share/doc/libprecice${preCICE_VERSION}
+    DESTINATION share/doc/libprecice${preCICE_VERSION} # TODO: CMAKE_INSTALL_DOCDIR
     RENAME changelog.gz
     )
 
@@ -453,18 +454,18 @@ if(GZIP_EXE)
   endforeach()
   # Install compressed manpages
   install(DIRECTORY ${PRECICE_PACKAGING_DIR}/man1
-    DESTINATION share/man
+    DESTINATION ${CMAKE_INSTALL_MANDIR}
     )
 else()
   message(WARNING "Installing uncompressed changelog and manpages")
   # Install uncompressed changelog
   install(FILES CHANGELOG.md
-    DESTINATION share/doc/libprecice${preCICE_VERSION}
+    DESTINATION share/doc/libprecice${preCICE_VERSION} # TODO CMAKE_INSTALL_DOCDIR
     RENAME changelog
     )
   # Install uncompressed manpages
-  install(FILES docs/man/man1/binprecice.1
-    DESTINATION share/man
+  install(DIRECTORY docs/man/man1
+    DESTINATION ${CMAKE_INSTALL_MANDIR}
     )
   if(PRECICE_InstallTest)
     install(FILES docs/man/man1/testprecice.1
@@ -480,7 +481,7 @@ configure_file(
   @ONLY
   )
 install(DIRECTORY "${preCICE_BINARY_DIR}/lib/pkgconfig" 
-  DESTINATION lib
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
 #
