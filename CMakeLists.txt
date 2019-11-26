@@ -2,6 +2,7 @@ cmake_minimum_required (VERSION 3.10.2)
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/XSDKCompilerDetect.cmake)
 
 project(preCICE VERSION 1.6.1 LANGUAGES CXX)
+set(preCICE_SOVERSION ${preCICE_VERSION_MAJOR})
 
 #
 # Overview of this configuration
@@ -208,7 +209,7 @@ set_target_properties(precice PROPERTIES
   CXX_STANDARD_REQUIRED Yes
   CXX_EXTENSIONS No
   VERSION ${preCICE_VERSION}
-  SOVERSION ${preCICE_VERSION_MAJOR}
+  SOVERSION ${preCICE_SOVERSION}
   )
 
 # Setup Boost
