@@ -2,7 +2,7 @@ from __future__ import division
 
 import argparse
 import numpy as np
-import precice_future as precice
+import precice
 
 parser = argparse.ArgumentParser()
 parser.add_argument("configurationFileName", help="Name of the xml config file.", type=str)

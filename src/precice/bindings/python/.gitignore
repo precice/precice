@@ -1,5 +1,5 @@
 /build
-precice_future.cpp
+precice.cpp
 *egg-info*
 *.so
 *.orig

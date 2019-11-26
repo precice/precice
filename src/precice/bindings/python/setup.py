@@ -11,8 +11,8 @@ from distutils.command.install import install
 from distutils.command.build import build
 
 # name of Interfacing API
-APPNAME = "precice_future"
-APPVERSION = "1.6.1"  # todo: should be replaced with precice.get_version() as soon as it exists , see https://github.com/precice/precice/issues/261
+APPNAME = "precice"
+APPVERSION = "2.0.0"  # todo: should be replaced with precice.get_version() as soon as it exists , see https://github.com/precice/precice/issues/261
 
 PYTHON_BINDINGS_PATH = os.path.dirname(os.path.abspath(__file__))
 
@@ -184,7 +184,7 @@ setup(
               'build': my_build,
               'install': my_install},
     #ensure pxd-files:
-    package_data={ 'precice_future': ['*.pxd']},
+    package_data={ 'precice': ['*.pxd']},
     include_package_data=True,
     zip_safe=False  #needed because setuptools are used
 )

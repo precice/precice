@@ -89,7 +89,7 @@ $ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PRECICE_ROOT/build/last
 
 Run the following to test the installation:
 ```
-$ python3 -c "import precice_future as precice"
+$ python3 -c "import precice"
 ```
 
 ## Unit tests
