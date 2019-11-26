@@ -204,6 +204,8 @@ add_library(precice ${preCICE_DUMMY})
 set_target_properties(precice PROPERTIES
   # precice is a C++11 project
   CXX_STANDARD 11
+  CXX_STANDARD_REQUIRED Yes
+  CXX_EXTENSIONS No
   SOVERSION ${preCICE_VERSION}
   )
 
