@@ -92,20 +92,18 @@ find_program(GZIP_EXE gzip DOC "The gzip executable")
 if(GZIP_EXE)
   # Process the changelog for debian package
   message(STATUS "Compressing changelog")
-  file(COPY CHANGELOG.md DESTINATION ${PRECICE_PACKAGING_DIR})
-  execute_process(COMMAND "${GZIP_EXE}" "-9nf" "${PRECICE_PACKAGING_DIR}/CHANGELOG.md")
+  file(COPY tools/packaging/debian/changelog DESTINATION ${PRECICE_PACKAGING_DIR})
+  execute_process(COMMAND "${GZIP_EXE}" "-9nf" "${PRECICE_PACKAGING_DIR}/changelog")
 
   # Install compressed changelog
-  install(FILES ${PRECICE_PACKAGING_DIR}/CHANGELOG.md.gz
+  install(FILES ${PRECICE_PACKAGING_DIR}/changelog.gz
     DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/doc/${CPACK_PACKAGE_NAME}
-    RENAME changelog.gz
     )
 else()
   message(WARNING "Installing uncompressed changelog")
   # Install uncompressed changelog
-  install(FILES CHANGELOG.md
+  install(FILES tools/packaging/debian/changelog
     DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/doc/${CPACK_PACKAGE_NAME}
-    RENAME changelog
     )
 endif()
 
