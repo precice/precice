@@ -192,6 +192,7 @@ endif()
 #
 
 # Add a dummy to silence add_library warning for cmake < 3.11.
+set(preCICE_DUMMY "")
 if(CMAKE_VERSION VERSION_LESS "3.11")
   set(preCICE_DUMMY "${CMAKE_CURRENT_BINARY_DIR}/dummy.cpp")
   if(NOT EXISTS "${preCICE_DUMMY}")
