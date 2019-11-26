@@ -6,11 +6,6 @@
 #  Debian Packages https://cmake.org/cmake/help/latest/cpack_gen/deb.html#cpack_gen:CPack%20DEB%20Generator
 #
 
-# Install doc files
-install(FILES tools/packaging/debian/copyright
-  DESTINATION share/doc/libprecice${preCICE_VERSION}
-  )
-
 # Detect the system name
 if(WIN32)
   set(CPACK_SYSTEM_NAME "win32")
@@ -32,8 +27,9 @@ else()
 endif()
 
 # General
-set(CPACK_PACKAGE_NAME "libprecice${preCICE_VERSION}")
-set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_SYSTEM_NAME}")
+set(CPACK_PACKAGE_NAME "libprecice${preCICE_SOVERSION}")
+set(CPACK_PACKAGE_VERSION "${preCICE_VERSION}")
+#set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}_${CPACK_SYSTEM_NAME}")
 set(CPACK_PACKAGE_VENDOR "precice.org")
 set(CPACK_PACKAGE_CONTACT "The precice developers <precice@mailman.informatik.uni-stuttgart.de>")
 set(CPACK_PACKAGE_MAINTAINER "The precice developers <precice@mailman.informatik.uni-stuttgart.de>")
@@ -75,13 +71,42 @@ set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "Precise Code Interaction Coupling Environm
  time-to-solution for complex multi-physics scenarios.\
 ")
 set(CPACK_DEBIAN_PACKAGE_CONTROL_STRUCT_PERMISSION TRUE)
+set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${preCICE_SOURCE_DIR}/tools/packaging/debian/triggers")
 set(CPACK_DEBIAN_PACKAGE_GENERATE_SHLIBS TRUE)
 set(CPACK_DEBIAN_PACKAGE_GENERATE_SHLIBS_POLICY "=")
 
+# Install doc files
+install(FILES tools/packaging/debian/copyright
+  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/doc/${CPACK_PACKAGE_NAME}
+  )
+
+# Install lintian override
 file(WRITE "${PRECICE_PACKAGING_DIR}/lintian-override" "${CPACK_PACKAGE_NAME} binary: non-dev-pkg-with-shlib-symlink")
 install(FILES "${PRECICE_PACKAGING_DIR}/lintian-override" 
-  DESTINATION share/lintian/overrides
+  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/lintian/overrides
   RENAME ${CPACK_PACKAGE_NAME}
   )
+
+# Compress and install the debian changelog
+find_program(GZIP_EXE gzip DOC "The gzip executable")
+if(GZIP_EXE)
+  # Process the changelog for debian package
+  message(STATUS "Compressing changelog")
+  file(COPY CHANGELOG.md DESTINATION ${PRECICE_PACKAGING_DIR})
+  execute_process(COMMAND "${GZIP_EXE}" "-9nf" "${PRECICE_PACKAGING_DIR}/CHANGELOG.md")
+
+  # Install compressed changelog
+  install(FILES ${PRECICE_PACKAGING_DIR}/CHANGELOG.md.gz
+    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/doc/${CPACK_PACKAGE_NAME}
+    RENAME changelog.gz
+    )
+else()
+  message(WARNING "Installing uncompressed changelog")
+  # Install uncompressed changelog
+  install(FILES CHANGELOG.md
+    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/doc/${CPACK_PACKAGE_NAME}
+    RENAME changelog
+    )
+endif()
 
 include(CPack)

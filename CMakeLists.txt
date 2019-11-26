@@ -434,19 +434,9 @@ add_library(precice::precice ALIAS precice)
 set(PRECICE_PACKAGING_DIR "${CMAKE_CURRENT_BINARY_DIR}/packaging")
 mark_as_advanced(PRECICE_PACKAGING_DIR)
 
-# Compress and install changelog and manpages
+# Compress and install the manpages
 find_program(GZIP_EXE gzip DOC "The gzip executable")
 if(GZIP_EXE)
-  # Process the changelog
-  message(STATUS "Compressing changelog")
-  file(COPY CHANGELOG.md DESTINATION ${PRECICE_PACKAGING_DIR})
-  execute_process(COMMAND "${GZIP_EXE}" "-9nf" "${PRECICE_PACKAGING_DIR}/CHANGELOG.md")
-  # Install compressed changelog
-  install(FILES ${PRECICE_PACKAGING_DIR}/CHANGELOG.md.gz
-    DESTINATION share/doc/libprecice${preCICE_VERSION} # TODO: CMAKE_INSTALL_DOCDIR
-    RENAME changelog.gz
-    )
-
   # Process manpages for binaries
   file(COPY docs/man/man1/binprecice.1 DESTINATION packaging/man1)
   if(PRECICE_InstallTest)
@@ -457,17 +447,13 @@ if(GZIP_EXE)
     message(STATUS "Compressing manpage: ${manpage}")
     execute_process(COMMAND "${GZIP_EXE}" "-9nf" "${manpage}")
   endforeach()
+
   # Install compressed manpages
   install(DIRECTORY ${PRECICE_PACKAGING_DIR}/man1
     DESTINATION ${CMAKE_INSTALL_MANDIR}
     )
 else()
-  message(WARNING "Installing uncompressed changelog and manpages")
-  # Install uncompressed changelog
-  install(FILES CHANGELOG.md
-    DESTINATION share/doc/libprecice${preCICE_VERSION} # TODO CMAKE_INSTALL_DOCDIR
-    RENAME changelog
-    )
+  message(WARNING "Installing uncompressed manpages")
   # Install uncompressed manpages
   install(DIRECTORY docs/man/man1
     DESTINATION ${CMAKE_INSTALL_MANDIR}
