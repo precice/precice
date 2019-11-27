@@ -122,4 +122,4 @@ from mpi4py import MPI # Initialize MPI
 **NOTE:**
 - For an example of how `precice` can be used, refer to the [1D elastic tube example](https://github.com/precice/precice/wiki/1D-elastic-tube-using-the-Python-API).
 - In case the compilation fails with `shared_ptr.pxd not found` messages, check if you use the latest version of Cython.
-- If you want to use the old interface (precice version < 1.4.0), please also install the corresponding wrapper [`PySolverInterface`](https://github.com/precice/precice/tree/changingNameOfPySolverInterface/src/precice/bindings/PySolverInterface).
+- If you want to use the old interface (precice version < 2.0.0), please refer to the documentation of the corresponding preCICE version
