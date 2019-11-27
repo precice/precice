@@ -1504,7 +1504,7 @@ void SolverInterfaceImpl:: mapReadData()
       PRECICE_DEBUG("Map read data \"" << context.fromData->getName()
                    << "\" to mesh \"" << context.mesh->getName() << "\"");
       context.mappingContext.mapping->map(inDataID, outDataID);
-      PRECICE_DEBUG("First mapped values = " << utils::previewRange(3, context.toData->values()));
+      PRECICE_DEBUG("Mapped values = " << utils::previewRange(3, context.toData->values()));
     }
   }
 
