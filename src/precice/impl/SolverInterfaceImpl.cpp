@@ -1454,7 +1454,7 @@ void SolverInterfaceImpl:: mapWrittenData()
       context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
       PRECICE_DEBUG("Map from dataID " << inDataID << " to dataID: " << outDataID);
       context.mappingContext.mapping->map(inDataID, outDataID);
-      PRECICE_DEBUG("First mapped values = " << utils::previewRange(3, context.toData->values()));
+      PRECICE_DEBUG("Mapped values = " << utils::previewRange(3, context.toData->values()));
     }
   }
 
