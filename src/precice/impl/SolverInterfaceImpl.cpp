@@ -999,7 +999,7 @@ void SolverInterfaceImpl:: mapReadDataTo
                    << "\" to mesh \"" << context.mesh->getName() << "\"");
       PRECICE_ASSERT(mappingContext.mapping==context.mappingContext.mapping);
       mappingContext.mapping->map(inDataID, outDataID);
-      PRECICE_DEBUG("First mapped values = " << utils::previewRange(3, context.toData->values()));
+      PRECICE_DEBUG("Mapped values = " << utils::previewRange(3, context.toData->values()));
     }
   }
   mappingContext.hasMappedData = true;
