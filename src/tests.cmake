@@ -4,7 +4,6 @@
 target_sources(testprecice
     PRIVATE
     src/acceleration/test/AccelerationMasterSlaveTest.cpp
-    src/acceleration/test/HierarchicalAitkenAccelerationTest.cpp
     src/acceleration/test/ParallelMatrixOperationsTest.cpp
     src/acceleration/test/PreconditionerTest.cpp
     src/acceleration/test/QRFactorizationTest.cpp

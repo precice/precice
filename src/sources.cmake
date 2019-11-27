@@ -14,8 +14,6 @@ target_sources(precice
     src/acceleration/BroydenAcceleration.hpp
     src/acceleration/ConstantRelaxationAcceleration.cpp
     src/acceleration/ConstantRelaxationAcceleration.hpp
-    src/acceleration/HierarchicalAitkenAcceleration.cpp
-    src/acceleration/HierarchicalAitkenAcceleration.hpp
     src/acceleration/IQNILSAcceleration.cpp
     src/acceleration/IQNILSAcceleration.hpp
     src/acceleration/MMAcceleration.cpp
