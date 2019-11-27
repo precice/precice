@@ -248,8 +248,6 @@ target_sources(precice
     src/precice/impl/WatchPoint.cpp
     src/precice/impl/WatchPoint.hpp
     src/precice/impl/versions.hpp
-    src/query/ExportVTKNeighbors.cpp
-    src/query/ExportVTKNeighbors.hpp
     src/query/FindClosest.cpp
     src/query/FindClosest.hpp
     src/query/FindClosestEdge.cpp
