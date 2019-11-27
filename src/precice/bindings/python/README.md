@@ -59,8 +59,6 @@ $ python3 setup.py build_ext --mpicompiler=mpicc --include-dirs=$PRECICE_ROOT/sr
 **Options:**
 - `--include-dirs=`, default: `''` 
   Path to the headers of preCICE, point to the sources `$PRECICE_ROOT/src`, or the your custom install prefix `$prefix/include`.
-- `--library-dirs=`, default: `''` 
-  Path to the libary of preCICE, point to the build directory (scons: `$PRECICE_ROOT/build/last`, cmake: wherever you configured the build), or to the custom install prefix `$prefix/lib`.
 - `--mpicompiler=`, default: `mpic++` 
   MPI compiler wrapper of choice.
 
@@ -68,7 +66,6 @@ $ python3 setup.py build_ext --mpicompiler=mpicc --include-dirs=$PRECICE_ROOT/sr
 
 - If you build preCICE using CMake, you can pass the path to the CMake binary directory using `--library-dirs`.
 - It is recommended to use preCICE as a shared library here.
-- If you used scons for building precice and `PRECICE_ROOT` is defined, you can also use the script `build_and_install.sh`.
 
 4. Install the bindings
 ```
