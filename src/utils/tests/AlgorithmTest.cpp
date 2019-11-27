@@ -81,7 +81,37 @@ BOOST_AUTO_TEST_CASE(Mismatch)
     BOOST_TEST(*ab.second == 0);
 }
 
+BOOST_AUTO_TEST_SUITE(RangePreview)
 
+BOOST_AUTO_TEST_CASE(NormalRangePreview)
+{
+    Eigen::VectorXd a(7);
+    a << 1, 2, 3, 4, 5, 6, 0;
+    std::ostringstream oss;
+    oss << pu::previewRange(2, a);
+    std::string str{oss.str()};
+    BOOST_TEST(str == "[1, 2, ... , 6, 0] min:0 max:6");
+}
 
+BOOST_AUTO_TEST_CASE(PrintNoElements)
+{
+    Eigen::VectorXd a(7);
+    a << 1, 2, 3, 4, 5, 6, 0;
+    std::ostringstream oss;
+    oss << pu::previewRange(0, a);
+    std::string str{oss.str()};
+    BOOST_TEST(str == "[ ... ] min:0 max:6");
+}
+
+BOOST_AUTO_TEST_CASE(EmptyRange)
+{
+    auto a = Eigen::VectorXd::Zero(0);
+    std::ostringstream oss;
+    oss << pu::previewRange(3, a);
+    std::string str{oss.str()};
+    BOOST_TEST(str == "<Empty Range>");
+}
+
+BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()
