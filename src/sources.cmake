@@ -250,8 +250,6 @@ target_sources(precice
     src/precice/impl/versions.hpp
     src/query/ExportVTKNeighbors.cpp
     src/query/ExportVTKNeighbors.hpp
-    src/query/ExportVTKVoxelQueries.cpp
-    src/query/ExportVTKVoxelQueries.hpp
     src/query/FindClosest.cpp
     src/query/FindClosest.hpp
     src/query/FindClosestEdge.cpp
@@ -262,8 +260,6 @@ target_sources(precice
     src/query/FindClosestTriangle.hpp
     src/query/FindClosestVertex.cpp
     src/query/FindClosestVertex.hpp
-    src/query/FindVoxelContent.cpp
-    src/query/FindVoxelContent.hpp
     src/utils/Dimensions.cpp
     src/utils/Dimensions.hpp
     src/utils/EigenHelperFunctions.cpp
