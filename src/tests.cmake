@@ -7,7 +7,6 @@ target_sources(testprecice
     src/acceleration/test/ParallelMatrixOperationsTest.cpp
     src/acceleration/test/PreconditionerTest.cpp
     src/acceleration/test/QRFactorizationTest.cpp
-    src/action/tests/ModifyCoordinatesActionTest.cpp
     src/action/tests/PythonActionTest.cpp
     src/action/tests/ScaleActionTest.cpp
     src/com/tests/CommunicateBoundingBoxTest.cpp

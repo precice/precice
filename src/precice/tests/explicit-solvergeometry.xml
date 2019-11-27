@@ -2,25 +2,25 @@
 
 <precice-configuration>
   <solver-interface dimensions="3">
-   
+
       <data:vector name="Forces"         />
       <data:vector name="Velocities"      />
       <data:vector name="Displacements"  />
-      
+
       <m2n:mpi-single from="SolverOne" to="SolverTwo" />
-      
+
       <mesh name="MeshOne">
          <use-data name="Forces" />
          <use-data name="Velocities" />
          <use-data name="Displacements" />
       </mesh>
-      
+
       <mesh name="SolverGeometry" flip-normals="inside">
          <use-data name="Forces" />
          <use-data name="Velocities" />
          <use-data name="Displacements" />
       </mesh>
-               
+
       <participant name="SolverOne">
          <use-mesh name="MeshOne" provide="yes"/>
          <use-mesh name="SolverGeometry" from="SolverTwo" />
@@ -31,30 +31,24 @@
          <write-data name="Forces"        mesh="MeshOne" />
          <read-data  name="Velocities"    mesh="MeshOne" />
          <read-data  name="Displacements" mesh="MeshOne" />
-         <action:add-to-coordinates mesh="SolverGeometry" timing="on-exchange-post">
-            <source-data name="Displacements"/> 
-         </action:add-to-coordinates>
       </participant>
-      
+
       <participant name="SolverTwo">
          <use-mesh name="SolverGeometry" provide="yes" />
          <write-data name="Displacements" mesh="SolverGeometry" />
          <write-data name="Velocities"    mesh="SolverGeometry" />
          <read-data name="Forces"         mesh="SolverGeometry" />
-         <action:add-to-coordinates mesh="SolverGeometry" timing="regular-prior">
-            <source-data name="Displacements"/> 
-         </action:add-to-coordinates>
       </participant>
-      
+
       <coupling-scheme:serial-explicit>
-         <participants first="SolverOne" second="SolverTwo" /> 
-         <max-timesteps value="5" /> 
+         <participants first="SolverOne" second="SolverTwo" />
+         <max-timesteps value="5" />
          <timestep-length value="0.01" />
          <exchange data="Forces"        mesh="SolverGeometry" from="SolverOne" to="SolverTwo"/>
          <exchange data="Velocities"    mesh="SolverGeometry" from="SolverTwo" to="SolverOne"/>
          <exchange data="Displacements" mesh="SolverGeometry" from="SolverTwo" to="SolverOne"/>
       </coupling-scheme:serial-explicit>
-                   
+
    </solver-interface>
 
 </precice-configuration>

@@ -42,8 +42,6 @@ target_sources(precice
     src/action/Action.hpp
     src/action/ComputeCurvatureAction.cpp
     src/action/ComputeCurvatureAction.hpp
-    src/action/ModifyCoordinatesAction.cpp
-    src/action/ModifyCoordinatesAction.hpp
     src/action/PythonAction.cpp
     src/action/PythonAction.hpp
     src/action/ScaleByAreaAction.cpp
