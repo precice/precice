@@ -7,7 +7,6 @@
 #include "action/Action.hpp"
 #include "boost/noncopyable.hpp"
 #include "io/Constants.hpp"
-#include "query/ExportVTKNeighbors.hpp"
 #include "cplscheme/SharedPointer.hpp"
 #include "com/Communication.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
@@ -63,7 +62,7 @@ public:
 
   /// Deleted copy assignment
   SolverInterfaceImpl& operator=(SolverInterfaceImpl const &) = delete;
-  
+
   /// Deleted move constructor
   SolverInterfaceImpl(SolverInterfaceImpl &&) = delete;
 
@@ -537,9 +536,6 @@ private:
   /// dataIDs referenced by meshID and data name
   std::map<int,std::map<std::string,int> > _dataIDs;
 
-  /// For plotting of used mesh neighbor-relations
-  query::ExportVTKNeighbors _exportVTKNeighbors;
-
   std::map<std::string,m2n::BoundM2N> _m2ns;
 
   /// Holds information about solvers participating in the coupled simulation.
@@ -630,7 +626,7 @@ private:
 
   int markedSkip() const { return 0; }
   int markedQueryDirectly() const { return 1; }
-  
+
   /// Initializes communication between data server and client.
   void initializeClientServerCommunication();
 
