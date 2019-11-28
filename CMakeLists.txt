@@ -26,6 +26,7 @@ project(preCICE VERSION 1.6.1 LANGUAGES CXX)
 list (APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 list (APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/modules")
 
+include(CheckCXX11Library)
 include(CopyTargetProperty)
 include(XSDKMacros)
 include(Validation)
