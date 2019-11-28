@@ -31,10 +31,9 @@ interface.configure(configuration_file_name)
 mesh_id = interface.get_mesh_id(mesh_name)
 
 dimensions = interface.get_dimensions()
-vertex = np.zeros(dimensions)
-data_indices = np.zeros(n)
+vertices = np.zeros((n, dimensions))
 
-interface.set_mesh_vertices(mesh_id, n, vertex, data_indices)
+data_indices = interface.set_mesh_vertices(mesh_id, vertices)
 
 dt = interface.initialize()
     
