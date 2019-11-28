@@ -80,7 +80,7 @@ std::pair<InputIt1, InputIt2>
 /// The RangePreview object used as a lazy proxy struct for proviewing the content of a Range
 template<typename InputIter>
 struct RangePreview {
-    using Size = typename InputIter::difference_type;
+    using Size = typename std::iterator_traits<InputIter>::difference_type;
     Size n;
     InputIter begin;
     InputIter end;

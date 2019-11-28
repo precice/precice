@@ -85,8 +85,7 @@ BOOST_AUTO_TEST_SUITE(RangePreview)
 
 BOOST_AUTO_TEST_CASE(NormalRangePreview)
 {
-    Eigen::VectorXd a(7);
-    a << 1, 2, 3, 4, 5, 6, 0;
+    std::vector<int> a{1, 2, 3, 4, 5, 6, 0};
     std::ostringstream oss;
     oss << pu::previewRange(2, a);
     std::string str{oss.str()};
@@ -95,8 +94,7 @@ BOOST_AUTO_TEST_CASE(NormalRangePreview)
 
 BOOST_AUTO_TEST_CASE(PrintNoElements)
 {
-    Eigen::VectorXd a(7);
-    a << 1, 2, 3, 4, 5, 6, 0;
+    std::vector<int> a{1, 2, 3, 4, 5, 6, 0};
     std::ostringstream oss;
     oss << pu::previewRange(0, a);
     std::string str{oss.str()};
@@ -105,7 +103,7 @@ BOOST_AUTO_TEST_CASE(PrintNoElements)
 
 BOOST_AUTO_TEST_CASE(EmptyRange)
 {
-    auto a = Eigen::VectorXd::Zero(0);
+    std::vector<int> a;
     std::ostringstream oss;
     oss << pu::previewRange(3, a);
     std::string str{oss.str()};
