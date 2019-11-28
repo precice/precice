@@ -78,14 +78,14 @@ std::pair<InputIt1, InputIt2>
 
 
 /// The RangePreview object used as a lazy proxy struct for proviewing the content of a Range
-template<typename Range>
+template<typename InputIter>
 struct RangePreview {
-    using Size = typename Range::const_iterator::difference_type;
+    using Size = typename InputIter::difference_type;
     Size n;
-    typename Range::const_iterator begin;
-    typename Range::const_iterator end;
+    InputIter begin;
+    InputIter end;
 
-    RangePreview(Size n, const Range & range) : n(n), begin(range.begin()), end(range.end()) {}
+    RangePreview(Size n, InputIter begin, InputIter end) : n(n), begin(begin), end(end) {}
 
     void print(std::ostream& out) const
     {
@@ -120,8 +120,8 @@ struct RangePreview {
 };
 
 /// Allows streaming of RangePreview objects
-template<typename Range>
-std::ostream& operator<<(std::ostream& out, const RangePreview<Range>& rp) {
+template<typename Iter>
+std::ostream& operator<<(std::ostream& out, const RangePreview<Iter>& rp) {
     rp.print(out);
     return out;
 }
@@ -130,11 +130,10 @@ std::ostream& operator<<(std::ostream& out, const RangePreview<Range>& rp) {
  *
  * The preview contains the first and last n elements and the minmax-elements.
  */
-template<typename Range, typename Size = typename Range::const_iterator::difference_type>
-const RangePreview<Range> previewRange(Size n, const Range& range) {
-    return {n, range};
+template<typename Range, typename Iter = typename Range::const_iterator, typename Size = typename std::iterator_traits<Iter>::difference_type>
+const RangePreview<Iter> previewRange(Size n, const Range& range) {
+    return {n, std::begin(range), std::end(range)};
 }
-
 
 } // namespace utils
 } // namespace precice
