@@ -120,7 +120,9 @@ void ProvidedPartition::compute()
     PRECICE_DEBUG("broadcast global number of vertices: " << vertexCounter);
     utils::MasterSlave::_communication->broadcast(vertexCounter);
   } else { // Coupling mode
+    
     for (int i = 0; i < numberOfVertices; i++) {
+      _mesh->getVertexDistribution()[0].push_back(i);
       _mesh->vertices()[i].setGlobalIndex(i);
     }
     _mesh->setGlobalNumberOfVertices(numberOfVertices);

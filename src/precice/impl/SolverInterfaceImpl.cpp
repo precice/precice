@@ -142,9 +142,9 @@ void SolverInterfaceImpl:: configure
 
   _clientMode = (not _serverMode) && _accessor->useServer();
 
-  if(_accessor->useMaster()){
+  //if(_accessor->useMaster()){
     utils::MasterSlave::configure(_accessorProcessRank, _accessorCommunicatorSize);
-  }
+  //}
 
   _participants = config.getParticipantConfiguration()->getParticipants();
   configureM2Ns(config.getM2NConfiguration());

@@ -50,8 +50,11 @@ void ReceivedPartition::compute()
     PRECICE_DEBUG("Handle partition data structures for serial participant");
     _mesh->setGlobalNumberOfVertices(_mesh->vertices().size());
     computeVertexOffsets();
+    int vertexCounter = 0;
     for (mesh::Vertex &v : _mesh->vertices()) {
       v.setOwner(true);
+      _mesh->getVertexDistribution()[0].push_back(vertexCounter);
+      vertexCounter++;
     }
     return;
   }
