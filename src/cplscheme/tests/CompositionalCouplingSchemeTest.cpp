@@ -212,6 +212,7 @@ struct CompositionalCouplingSchemeFixture
     BOOST_TEST ( communication );
     BOOST_TEST ( not communication->isConnected() );
     utils::Parallel::splitCommunicator( localParticipant );
+    communication->_useOnlyMasterCom = true;
     if ( participant0 == localParticipant ) {
       communication->requestMasterConnection ( participant1, participant0 );
     }

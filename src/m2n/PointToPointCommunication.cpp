@@ -293,9 +293,6 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
 {
   PRECICE_TRACE(acceptorName, requesterName);
   PRECICE_CHECK(not isConnected(), "Already connected!");
-  // PRECICE_CHECK(utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave(),
-  //       "You can only use a point-to-point communication between two participants which both use a master. "
-  //           << "Please use distribution-type gather-scatter instead.");
 
   mesh::Mesh::VertexDistribution &vertexDistribution = _mesh->getVertexDistribution();
   mesh::Mesh::VertexDistribution  requesterVertexDistribution;
@@ -421,9 +418,6 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
 {
   PRECICE_TRACE(acceptorName, requesterName);
   PRECICE_CHECK(not isConnected(), "Already connected!");
-  // PRECICE_CHECK(utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave(),
-  //       "You can only use a point-to-point communication between two participants which both use a master. "
-  //       << "Please use distribution-type gather-scatter instead.");
 
   mesh::Mesh::VertexDistribution &vertexDistribution = _mesh->getVertexDistribution();
   mesh::Mesh::VertexDistribution  acceptorVertexDistribution;

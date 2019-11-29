@@ -18,7 +18,7 @@ namespace testing
 
 /// Fixture to create and destroy a master communication
 /**
- * Many tests with parallel features need a working master communication. This fixture avoid code duplication for such tests.
+ * Many tests with parallel features need a working master-slave communication. This fixture avoid code duplication for such tests.
  */
 struct MasterComFixture {
   MasterComFixture()
@@ -57,7 +57,8 @@ struct M2NFixture {
     utils::MasterSlave::reset();
     auto participantCom = com::PtrCommunication(new com::MPIDirectCommunication());
     auto distrFactory = m2n::DistributedComFactory::SharedPointer(new m2n::GatherScatterComFactory(participantCom));
-    m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory));
+    bool useOnlyMasterCom = true;
+    m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory, useOnlyMasterCom));
 
     if (utils::Parallel::getProcessRank() == 0){
       utils::Parallel::splitCommunicator( "ParticipantOne" );
