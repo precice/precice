@@ -461,9 +461,14 @@ else()
     RENAME changelog
     )
   # Install uncompressed manpages
-  install(DIRECTORY docs/man/man1
+  install(FILES docs/man/man1/binprecice.1
     DESTINATION share/man
     )
+  if(PRECICE_InstallTest)
+    install(FILES docs/man/man1/testprecice.1
+      DESTINATION share/man
+      )
+  endif()
 endif()
 
 # Configure a pkg-config file
