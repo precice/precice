@@ -26,7 +26,7 @@ classdef SolverInterfaceOOP < precice.SolverInterface
     methods
         %% Construction and configuration
         % Constructor
-        function obj = SolverInterface(SolverName)
+        function obj = SolverInterface(SolverName,configFileName)
             %SOLVERINTERFACE Construct an instance of this class
             % Initialize the mex host
             obj.oMexHost = mexhost;
@@ -35,7 +35,10 @@ classdef SolverInterfaceOOP < precice.SolverInterface
             if ischar(SolverName)
                 SolverName = string(SolverName);
             end
-            feval(obj.oMexHost,"preciceGateway",uint8(0),SolverName);
+            if ischar(configFileName)
+                configFileName = string(configFileName);
+            end
+            feval(obj.oMexHost,"preciceGateway",uint8(0),SolverName,configFileName);
         end
         
         % Destructor
@@ -43,14 +46,6 @@ classdef SolverInterfaceOOP < precice.SolverInterface
             % Delete the mex host
             feval(obj.oMexHost,"preciceGateway",uint8(1));
             delete(obj.oMexHost);
-        end
-        
-        % configure
-        function configure(obj,configFileName)
-            if ischar(configFileName)
-                configFileName = string(configFileName);
-            end
-            feval(obj.oMexHost,"preciceGateway",uint8(2),configFileName);
         end
         
         %% Steering methods

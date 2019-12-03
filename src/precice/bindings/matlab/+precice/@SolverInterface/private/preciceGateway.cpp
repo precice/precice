@@ -13,7 +13,6 @@ using namespace precice::constants;
 enum class FunctionID {
     _constructor_ = 0,
     _destructor_ = 1,
-    configure = 2,
     
     initialize = 10,
     initializeData = 11,
@@ -100,20 +99,16 @@ public:
             case FunctionID::_constructor_:
             {
                 const StringArray solverName = inputs[1];
+                const StringArray configFileName = inputs[2];
                 interface = new SolverInterface(solverName[0],0,1);
                 constructed = true;
+                interface->configure(configFileName[0]);
                 break;
             }
             case FunctionID::_destructor_:
             {
                 delete interface;
                 constructed = false;
-                break;
-            }
-            case FunctionID::configure:
-            {
-                const StringArray configFileName = inputs[1];
-                interface->configure(configFileName[0]);
                 break;
             }
             

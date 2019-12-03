@@ -12,8 +12,7 @@ function solverdummy(configFileName,solverName,meshName)
         return;
     end
     
-    interface = precice.SolverInterface(solverName);
-    interface.configure(configFileName);
+    interface = precice.SolverInterface(solverName, configFileName);
     
     meshID = interface.getMeshID(meshName);
     dims = interface.getDimensions();

@@ -23,10 +23,6 @@ For running this tutorial, you have to install
 
 After installing both preCICE and MATLAB, you need to [build the MATLAB bindings](https://github.com/gilbertolem/precice/tree/develop/src/precice/bindings/matlab#compilation).
 
-## Getting the code for the tutorial
-
-This tutorial is part of the [`precice/tutorials`](https://github.com/precice/tutorials) repository. Please clone the repository. You will find the setup for the structure part of the domain in [`blablabla`]().
-
 ## Running
 
 There are two different versions available, one with explicit coupling and one with implicit coupling, located in the `explicit` and `implicit` folders respectively.

@@ -20,26 +20,21 @@ classdef SolverInterface < handle
     methods
         %% Construction and configuration
         % Constructor
-        function obj = SolverInterface(SolverName)
+        function obj = SolverInterface(SolverName,configFileName)
             %SOLVERINTERFACE Construct an instance of this class
             if ischar(SolverName)
                 SolverName = string(SolverName);
             end
-            preciceGateway(uint8(0),SolverName);
+            if ischar(configFileName)
+                configFileName = string(configFileName);
+            end
+            preciceGateway(uint8(0),SolverName,configFileName);
         end
         
         % Destructor
         function delete(obj)
             % Delete the mex host
             preciceGateway(uint8(1));
-        end
-        
-        % configure
-        function configure(obj,configFileName)
-            if ischar(configFileName)
-                configFileName = string(configFileName);
-            end
-            preciceGateway(uint8(2),configFileName);
         end
         
         %% Steering methods
