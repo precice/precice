@@ -102,7 +102,12 @@ void SolverInterfaceImpl:: configure
 {
   utils::Parallel::initializeMPI(nullptr, nullptr);
   config::Configuration config;
-  xml::configure(config.getXMLTag(), configurationFileName);
+  xml::ConfigurationContext context{
+      _accessorName,
+      _accessorProcessRank,
+      _accessorCommunicatorSize
+  };
+  xml::configure(config.getXMLTag(), context, configurationFileName);
   if(_accessorProcessRank==0){
     PRECICE_INFO("This is preCICE version " << PRECICE_VERSION);
     PRECICE_INFO("Revision info: " << precice::preciceRevision);
@@ -742,7 +747,6 @@ void SolverInterfaceImpl:: getMeshVertexIDsFromPositions (
     mesh::PtrMesh mesh(context.mesh);
     PRECICE_DEBUG("Get IDs");
     const auto &vertices = mesh->vertices();
-    PRECICE_ASSERT(vertices.size() <= size, vertices.size(), size);
     Eigen::Map<const Eigen::MatrixXd> posMatrix{
         positions, _dimensions, static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(size)};
     const auto vsize = vertices.size();

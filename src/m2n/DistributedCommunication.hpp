@@ -1,6 +1,9 @@
 #pragma once
 
 #include "mesh/SharedPointer.hpp"
+#include "mesh/Mesh.hpp"
+#include <map>
+#include <vector>
 
 namespace precice
 {
@@ -87,6 +90,11 @@ public:
   virtual void requestPreConnection(
     std::string const &acceptorName,
     std::string const &requesterName) = 0;
+
+  /*
+   * @brief This function must be called by both acceptor and requester to update the vertex list in _mappings
+   */
+  virtual void updateVertexList() = 0;
   
   /**
    * @brief Disconnects from communication space, i.e. participant.
@@ -108,15 +116,43 @@ public:
       int     valueDimension) = 0;
 
   /**
-   * @brief Broadcasts a double to connected ranks on remote participant      
+   * @brief Broadcasts a int to connected ranks on remote participant      
    */
-  virtual void broadcastSend(const double &itemToSend) = 0;
+  virtual void broadcastSend(const int &itemToSend) = 0;
 
   /**
-   * @brief Receives a double from a connected rank on remote participant
+   * @brief Receives an int per connected rank on remote participant
+   * @para[out] itemToReceive received ints from remote ranks are stored with the sender rank order 
    */
-  virtual void broadcastReceive(double &itemToReceive) = 0;
+  virtual void broadcastReceiveAll(std::vector<int> &itemToReceive) = 0;
 
+  /**
+   * @brief All ranks send their mesh partition to remote local  connected ranks.
+   */
+  virtual void broadcastSendMesh() = 0;
+  
+  /**
+   * @brief All ranks receive mesh partition from remote local ranks.
+   */
+  virtual void broadcastReceiveMesh() = 0;
+
+  /*
+   * A mapping from remote local ranks to the IDs that must be communicated
+   */
+  using CommunicationMap = std::map<int, std::vector<int>>;
+
+  /**
+   *  All ranks Send their local communication maps to connected ranks
+   */
+  virtual void broadcastSendLCM(
+    CommunicationMap &localCommunicationMap)=0;
+
+  /*
+   *  Each rank revives local communication maps from connected ranks
+   */
+  virtual void broadcastReceiveLCM(
+    CommunicationMap &localCommunicationMap)=0 ;
+  
 protected:
   /**
    * @brief mesh that dictates the distribution of this mapping

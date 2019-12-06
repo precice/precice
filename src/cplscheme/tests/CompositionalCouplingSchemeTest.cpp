@@ -53,7 +53,21 @@ struct CompositionalCouplingSchemeFixture
     m2n::M2NConfiguration::SharedPointer m2nConfig(new m2n::M2NConfiguration(root));
     CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig );
 
-    xml::configure(root, configurationPath);
+    if (utils::Parallel::getProcessRank() == 0){
+      localParticipant = nameParticipant0;
+    }
+    else if (utils::Parallel::getProcessRank() == 1){
+      localParticipant = nameParticipant1;
+    }
+    else {
+      BOOST_TEST(utils::Parallel::getProcessRank() == 2,
+          utils::Parallel::getProcessRank());
+      localParticipant = nameParticipant2;
+    }
+
+    xml::ConfigurationContext context{localParticipant, 0, 1};
+    xml::configure(root, context, configurationPath);
+
     meshConfig->setMeshSubIDs();
     m2n::PtrM2N m2n0 = m2nConfig->getM2N(nameParticipant0, nameParticipant1);
     m2n::PtrM2N m2n1 = m2nConfig->getM2N(nameParticipant1, nameParticipant2);
@@ -65,18 +79,13 @@ struct CompositionalCouplingSchemeFixture
     meshConfig->meshes()[0]->createVertex(Eigen::Vector3d(4.0, 1.0, -1.0));
 
     if (utils::Parallel::getProcessRank() == 0){
-      localParticipant = nameParticipant0;
       connect(nameParticipant0, nameParticipant1, localParticipant, m2n0);
     }
     else if (utils::Parallel::getProcessRank() == 1){
-      localParticipant = nameParticipant1;
       connect(nameParticipant0, nameParticipant1, localParticipant, m2n0);
       connect(nameParticipant1, nameParticipant2, localParticipant, m2n1);
     }
     else {
-      BOOST_TEST(utils::Parallel::getProcessRank() == 2,
-          utils::Parallel::getProcessRank());
-      localParticipant = nameParticipant2;
       connect(nameParticipant1, nameParticipant2, localParticipant, m2n1);
     }
 

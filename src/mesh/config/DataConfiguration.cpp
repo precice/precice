@@ -53,6 +53,7 @@ DataConfiguration::ConfiguredData DataConfiguration:: getRecentlyConfiguredData(
 
 void DataConfiguration:: xmlTagCallback
 (
+  const xml::ConfigurationContext& context,
   xml::XMLTag& tag )
 {
   if (tag.getNamespace() == TAG){
@@ -69,6 +70,7 @@ void DataConfiguration:: xmlTagCallback
 
 void DataConfiguration:: xmlEndTagCallback
 (
+  const xml::ConfigurationContext& context,
   xml::XMLTag& tag )
 {
 }

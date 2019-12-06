@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(testParseConfigurationWithRelaxation)
       new m2n::M2NConfiguration(root));
   CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
 
-  xml::configure(root, path);
+  xml::configure(root, xml::ConfigurationContext{}, path);
   BOOST_CHECK(cplSchemeConfig._accelerationConfig->getAcceleration().get());
   meshConfig->setMeshSubIDs();
 }

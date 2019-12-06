@@ -22,17 +22,20 @@ public:
   ProvidedBoundingBox(mesh::PtrMesh mesh, bool hasToSend, double safetyFactor);
 
   virtual ~ProvidedBoundingBox() {}
-
-  // These functions will be implemented in 3rd package
-  virtual void communicate();
-  virtual void compute();
-  virtual void createOwnerInformation();
   
   /// The bounding box is gathered and sent to another participant (if required)
   virtual void communicateBoundingBox();
 
   /// The feedback from the other participant is received and the initial connection map is build
   virtual void computeBoundingBox();
+
+  /// sends mesh partition to remote connected ranks
+  virtual void communicate() override;
+
+  /// receive final communication map from remote connected ranks
+  virtual void compute() override;
+
+  virtual void createOwnerInformation();
 
 private:
 

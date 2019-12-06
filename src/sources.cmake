@@ -14,8 +14,6 @@ target_sources(precice
     src/acceleration/BroydenAcceleration.hpp
     src/acceleration/ConstantRelaxationAcceleration.cpp
     src/acceleration/ConstantRelaxationAcceleration.hpp
-    src/acceleration/HierarchicalAitkenAcceleration.cpp
-    src/acceleration/HierarchicalAitkenAcceleration.hpp
     src/acceleration/IQNILSAcceleration.cpp
     src/acceleration/IQNILSAcceleration.hpp
     src/acceleration/MMAcceleration.cpp
@@ -44,8 +42,6 @@ target_sources(precice
     src/action/Action.hpp
     src/action/ComputeCurvatureAction.cpp
     src/action/ComputeCurvatureAction.hpp
-    src/action/ModifyCoordinatesAction.cpp
-    src/action/ModifyCoordinatesAction.hpp
     src/action/PythonAction.cpp
     src/action/PythonAction.hpp
     src/action/ScaleByAreaAction.cpp
@@ -127,8 +123,6 @@ target_sources(precice
     src/io/ExportVTK.hpp
     src/io/ExportVTKXML.cpp
     src/io/ExportVTKXML.hpp
-    src/io/Import.cpp
-    src/io/Import.hpp
     src/io/SharedPointer.hpp
     src/io/TXTReader.cpp
     src/io/TXTReader.hpp
@@ -254,10 +248,6 @@ target_sources(precice
     src/precice/impl/WatchPoint.cpp
     src/precice/impl/WatchPoint.hpp
     src/precice/impl/versions.hpp
-    src/query/ExportVTKNeighbors.cpp
-    src/query/ExportVTKNeighbors.hpp
-    src/query/ExportVTKVoxelQueries.cpp
-    src/query/ExportVTKVoxelQueries.hpp
     src/query/FindClosest.cpp
     src/query/FindClosest.hpp
     src/query/FindClosestEdge.cpp
@@ -268,8 +258,6 @@ target_sources(precice
     src/query/FindClosestTriangle.hpp
     src/query/FindClosestVertex.cpp
     src/query/FindClosestVertex.hpp
-    src/query/FindVoxelContent.cpp
-    src/query/FindVoxelContent.hpp
     src/utils/Dimensions.cpp
     src/utils/Dimensions.hpp
     src/utils/EigenHelperFunctions.cpp
@@ -292,6 +280,7 @@ target_sources(precice
     src/utils/Petsc.cpp
     src/utils/Petsc.hpp
     src/utils/PointerVector.hpp
+    src/utils/Statistics.hpp
     src/utils/String.cpp
     src/utils/String.hpp
     src/utils/TableWriter.cpp

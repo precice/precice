@@ -147,7 +147,7 @@ LoggingConfiguration readLogConfFile(std::string const & filename)
 }
 
 // Default values for filter and format. They are also used from config/LogConfiguration.cpp
-const std::string BackendConfiguration::default_filter = "%Severity% > debug";
+const std::string BackendConfiguration::default_filter = "(%Severity% > debug) and not ((%Severity% = info) and (%Rank% != 0))";
 const std::string BackendConfiguration::default_formatter = "(%Rank%) %TimeStamp(format=\"%H:%M:%S\")% [%Module%]:%Line% in %Function%: %ColorizedSeverity%%Message%";
 const std::string BackendConfiguration::default_type = "stream";
 const std::string BackendConfiguration::default_output = "stdout";

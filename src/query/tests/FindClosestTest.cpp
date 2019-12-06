@@ -5,7 +5,6 @@
 #include "mesh/PropertyContainer.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
-#include "query/ExportVTKNeighbors.hpp"
 #include "query/FindClosest.hpp"
 #include "testing/Testing.hpp"
 
@@ -182,13 +181,10 @@ BOOST_AUTO_TEST_CASE(FindClosestDistanceToEdges3D)
   }
 
   // Perform queries
-  ExportVTKNeighbors exportNeighbors;
   for (size_t i = 0; i < finds.size(); i++) {
     BOOST_TEST((*finds[i])(mesh));
-    exportNeighbors.addNeighbors(queryPoints[i], finds[i]->getClosest());
   }
 
-  exportNeighbors.exportNeighbors("query-FindClosestTest-testFindClosestDistanceToEdges3D-neighbors");
 
   // Evaluate query results
   BOOST_TEST(finds[0]->getClosest().distance == std::sqrt(1.0 / 8.0));
@@ -301,7 +297,6 @@ BOOST_AUTO_TEST_CASE(MultipleMeshIDs)
 {
   int                         dim = 2;
   mesh::Mesh                  mesh("Mesh", dim, true);
-  query::ExportVTKNeighbors   exportNeighbors;
   std::vector<mesh::Vertex *> vertices(dim);
   for (int i = 0; i < dim; i++) {
     Eigen::VectorXd vertexCoords = Eigen::VectorXd::Zero(dim);
@@ -330,7 +325,6 @@ BOOST_AUTO_TEST_CASE(MultipleMeshIDs)
     FindClosest findClosest(query);
     BOOST_TEST(findClosest(mesh));
     closest = findClosest.getClosest();
-    exportNeighbors.addNeighbors(query, closest);
     distances[i] = closest.distance;
     geoIDs[i]    = closest.meshIDs;
   }
@@ -338,7 +332,6 @@ BOOST_AUTO_TEST_CASE(MultipleMeshIDs)
   FindClosest     findClosest(query);
   BOOST_TEST(findClosest(mesh));
   closest = findClosest.getClosest();
-  exportNeighbors.addNeighbors(query, closest);
   double           faceDistance = closest.distance;
   std::vector<int> faceGeoIDs   = closest.meshIDs;
 
@@ -346,7 +339,6 @@ BOOST_AUTO_TEST_CASE(MultipleMeshIDs)
   io::ExportVTK exportVTK(true);
   std::string   location = "";
   exportVTK.doExport("query-FindClosestTest-testMultipleMeshIDs.vtk", location, mesh);
-  exportNeighbors.exportNeighbors("query-FindClosestTest-testMultipleMeshIDs_neighb.vtk");
 
   // Validate queries
   for (int i = 0; i < dim; i++) {

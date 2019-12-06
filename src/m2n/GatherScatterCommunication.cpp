@@ -176,12 +176,37 @@ void GatherScatterCommunication::requestPreConnection(
   PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
 }
 
-void GatherScatterCommunication::broadcastSend(const double &itemToSend)
+void GatherScatterCommunication::broadcastSend(const int &itemToSend)
 {
   PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
 }
 
-void GatherScatterCommunication::broadcastReceive(double &itemToReceive)
+void GatherScatterCommunication::broadcastReceiveAll(std::vector<int> &itemToReceive)
+{
+  PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
+}
+
+void GatherScatterCommunication::broadcastSendMesh()
+{
+  PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
+}
+
+void GatherScatterCommunication::broadcastReceiveMesh()
+{
+  PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
+}
+
+void GatherScatterCommunication::broadcastSendLCM(CommunicationMap &localCommunicationMap)
+{
+  PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
+}
+
+void GatherScatterCommunication::broadcastReceiveLCM(CommunicationMap &localCommunicationMap)
+{
+  PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
+}
+
+void GatherScatterCommunication::updateVertexList()
 {
   PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
 }

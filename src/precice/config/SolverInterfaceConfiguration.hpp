@@ -35,12 +35,12 @@ public:
   /**
    * @brief Callback method required when using xml::XMLTag.
    */
-  virtual void xmlTagCallback ( xml::XMLTag& callingTag );
+  virtual void xmlTagCallback(const xml::ConfigurationContext& context, xml::XMLTag& callingTag );
 
   /**
    * @brief Callback method required when using xml::XMLTag.
    */
-  virtual void xmlEndTagCallback ( xml::XMLTag& callingTag );
+  virtual void xmlEndTagCallback(const xml::ConfigurationContext& context, xml::XMLTag& callingTag );
 
   /**
    * @brief Returns number of spatial dimensions configured.

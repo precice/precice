@@ -287,6 +287,7 @@ void ParticipantConfiguration:: setDimensions
 
 void ParticipantConfiguration:: xmlTagCallback
 (
+  const xml::ConfigurationContext& context,
   xml::XMLTag& tag )
 {
   PRECICE_TRACE(tag.getName() );
@@ -370,6 +371,7 @@ void ParticipantConfiguration:: xmlTagCallback
 
 void ParticipantConfiguration:: xmlEndTagCallback
 (
+  const xml::ConfigurationContext& context,
   xml::XMLTag& tag )
 {
   if (tag.getName() == TAG){

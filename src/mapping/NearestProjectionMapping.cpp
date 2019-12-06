@@ -3,6 +3,8 @@
 #include "mesh/RTree.hpp"
 #include "query/FindClosest.hpp"
 #include "utils/Event.hpp"
+#include "utils/Statistics.hpp"
+
 
 namespace bg  = boost::geometry;
 namespace bgi = boost::geometry::index;
@@ -80,9 +82,12 @@ void NearestProjectionMapping::computeMapping()
     precice::utils::Event e2(baseEvent+".getIndexOnEdges", precice::syncMode);
     auto indexEdges    = mesh::rtree::getEdgeRTree(search_space);
     e2.stop();
-    precice::utils::Event e3(baseEvent+".getIndexOnVertices", precice::syncMode);
-    auto indexVertices = mesh::rtree::getVertexRTree(search_space);
-    e3.stop();
+
+    // Lazy evaluation of the vertex index.
+    // This is not necessary in the case of matching meshes.
+    mesh::rtree::vertex_traits::Ptr indexVertices;
+
+    utils::statistics::DistanceAccumulator distanceStatistics;
 
     std::vector<MatchType> matches;
     matches.reserve(nnearest);
@@ -100,19 +105,26 @@ void NearestProjectionMapping::computeMapping()
         auto weights = query::generateInterpolationElements(fVertices[i], tEdges[match.index]);
         if (std::all_of(weights.begin(), weights.end(), [](query::InterpolationElement const &elem) { return elem.weight >= 0.0; })) {
           _weights[i] = std::move(weights);
+          distanceStatistics(match.distance);
           found       = true;
           break;
         }
       }
 
       if (not found) {
+        if(!indexVertices) {
+            precice::utils::Event e3(baseEvent+".getIndexOnVertices", precice::syncMode);
+            indexVertices = mesh::rtree::getVertexRTree(search_space);
+        }
         // Search for the origin inside the destination meshes vertices
         indexVertices->query(bg::index::nearest(coords, 1),
                              boost::make_function_output_iterator([&](int match) {
                                _weights[i] = query::generateInterpolationElements(fVertices[i], tVertices[match]);
+                               distanceStatistics(bg::distance(fVertices[i], tVertices[match]));
                              }));
       }
     }
+    PRECICE_INFO("Mapping distance " << distanceStatistics);
   } else {
     const auto &tTriangles = search_space->triangles();
     if(!fVertices.empty() && tTriangles.empty()) {
@@ -122,12 +134,13 @@ void NearestProjectionMapping::computeMapping()
     precice::utils::Event e2(baseEvent+".getIndexOnTriangles", precice::syncMode);
     auto indexTriangles = mesh::rtree::getTriangleRTree(search_space);
     e2.stop();
-    precice::utils::Event e3(baseEvent+".getIndexOnEdges", precice::syncMode);
-    auto indexEdges     = mesh::rtree::getEdgeRTree(search_space);
-    e3.stop();
-    precice::utils::Event e4(baseEvent+".getIndexOnVertices", precice::syncMode);
-    auto indexVertices  = mesh::rtree::getVertexRTree(search_space);
-    e4.stop();
+
+    // Lazy evaluation of indices for edges and vertices.
+    // These are not necessary in the case of matching meshes.
+    mesh::rtree::edge_traits::Ptr indexEdges;
+    mesh::rtree::vertex_traits::Ptr indexVertices;
+
+    utils::statistics::DistanceAccumulator distanceStatistics;
 
     std::vector<MatchType> matches;
     matches.reserve(nnearest);
@@ -147,11 +160,16 @@ void NearestProjectionMapping::computeMapping()
         if (std::all_of(weights.begin(), weights.end(), [](query::InterpolationElement const &elem) { return elem.weight >= 0.0; })) {
           _weights[i] = std::move(weights);
           found       = true;
+          distanceStatistics(match.distance);
           break;
         }
       }
 
       if (not found) {
+        if (!indexEdges) {
+            precice::utils::Event e3(baseEvent+".getIndexOnEdges", precice::syncMode);
+            indexEdges = mesh::rtree::getEdgeRTree(search_space);
+        }
         // Search for the vertex inside the destination meshes edges
         matches.clear();
         indexEdges->query(bg::index::nearest(coords, nnearest),
@@ -164,19 +182,26 @@ void NearestProjectionMapping::computeMapping()
           if (std::all_of(weights.begin(), weights.end(), [](query::InterpolationElement const &elem) { return elem.weight >= 0.0; })) {
             _weights[i] = std::move(weights);
             found       = true;
+            distanceStatistics(match.distance);
             break;
           }
         }
       }
 
       if (not found) {
+          if(!indexVertices) {
+            precice::utils::Event e4(baseEvent+".getIndexOnVertices", precice::syncMode);
+            indexVertices = mesh::rtree::getVertexRTree(search_space);
+          }
         // Search for the vertex inside the destination meshes vertices
         indexVertices->query(bg::index::nearest(coords, 1),
                              boost::make_function_output_iterator([&](int match) {
                                _weights[i] = query::generateInterpolationElements(fVertices[i], tVertices[match]);
+                               distanceStatistics(bg::distance(fVertices[i], tVertices[match]));
                              }));
       }
     }
+    PRECICE_INFO("Mapping distance " << distanceStatistics);
   }
   _hasComputedMapping = true;
 }
