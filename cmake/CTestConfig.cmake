@@ -17,15 +17,17 @@ function(add_precice_test)
   set(PAT_WDIR "${PRECICE_TEST_DIR}/${PAT_NAME}")
   file(MAKE_DIRECTORY "${PAT_WDIR}")
   # Assemble the command
+
   if(PAT_MPI)
     add_test(NAME ${PAT_FULL_NAME}
-      COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 4 ${PRECICE_CTEST_MPI_FLAGS} ${MPIEXEC_PREFLAGS} $<TARGET_FILE:testprecice> ${PAT_ARGUMENTS} ${MPIEXEC_POSTFLAGS}
+      COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 4 ${PRECICE_CTEST_MPI_FLAGS} ${MPIEXEC_PREFLAGS} $<TARGET_FILE:testprecice> ${PAT_ARGUMENTS} --log_level=all ${MPIEXEC_POSTFLAGS}
       )
   else()
     add_test(NAME ${PAT_FULL_NAME}
       COMMAND $<TARGET_FILE:testprecice> ${PAT_ARGUMENTS} --log_level=all
       )
   endif()
+
   set_tests_properties(${PAT_FULL_NAME}
     PROPERTIES
     RUN_SERIAL TRUE # Do not run this test in parallel with others
