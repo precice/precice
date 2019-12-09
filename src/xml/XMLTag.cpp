@@ -534,16 +534,21 @@ std::string XMLTag::printExample(int level) const
   }
   oss << ">\n";
 
-  std::set<std::string> namespaces;
-  for (const auto& subtag : _subtags) {
-      const auto ns = subtag->getNamespace();
-      if (!ns.empty()) {
-          if (namespaces.count(subtag->getNamespace()) > 0) {
-              continue;
+  constexpr int threshold{1};
+  if(level >= threshold) {
+      oss << std::string((level+1)*2, ' ') << "...\n";
+  } else {
+      std::set<std::string> namespaces;
+      for (const auto& subtag : _subtags) {
+          const auto ns = subtag->getNamespace();
+          if (!ns.empty()) {
+              if (namespaces.count(subtag->getNamespace()) > 0) {
+                  continue;
+              }
+              namespaces.emplace(ns);
           }
-          namespaces.emplace(ns);
+          oss << subtag->printExample(level+1) << '\n';
       }
-      oss << subtag->printExample(level+1) << '\n';
   }
 
   oss << prefix << "</" << _fullName << '>';
