@@ -41,7 +41,6 @@ public:
 
   XMLAttribute& setOptions(std::vector<ATTRIBUTE_T> options);
 
-
   template<class T>
   XMLAttribute& setOptions(std::initializer_list<T>&& options)
   {
@@ -49,7 +48,15 @@ public:
     return setOptions(std::vector<ATTRIBUTE_T>(options.begin(), options.end()));
   }
 
+  const std::vector<ATTRIBUTE_T>& getOptions() const { return _options; };
+
   XMLAttribute& setDefaultValue(const ATTRIBUTE_T &defaultValue);
+
+  const ATTRIBUTE_T& getDefaultValue() const {return _defaultValue; };
+
+  bool hasDefaultValue() const { return _hasDefaultValue; };
+
+  bool hasValidation() const { return _hasValidation; };
 
   void readValue(std::map<std::string, std::string> &aAttributes);
 
@@ -84,15 +91,6 @@ public:
   {
     return _read;
   };
-
-  /// Returns a documentation string about the attribute.
-  std::string printDocumentation() const;
-
-  std::string printDTD(const std::string &ElementName) const;
-
-  std::string printMD() const;
-
-  std::string printExample() const;
 
 private:
   logging::Logger _log{"xml::XMLAttribute"};
@@ -298,87 +296,6 @@ Eigen::VectorXd XMLAttribute<Eigen::VectorXd>::getAttributeValueAsEigenVectorXd(
   return vec;
 }*/
 
-template <typename ATTRIBUTE_T>
-std::string XMLAttribute<ATTRIBUTE_T>::printDTD(const std::string &ElementName) const
-{
-  std::ostringstream dtd;
-  dtd << "<!ATTLIST " << ElementName << " " << _name << " CDATA ";
-
-  if (_hasDefaultValue) {
-    dtd << "\"" << _defaultValue << "\"";
-  } else {
-    dtd << "#REQUIRED";
-  }
-
-  dtd << ">\n";
-
-  return dtd.str();
-}
-
-template <typename ATTRIBUTE_T>
-std::string XMLAttribute<ATTRIBUTE_T>::printMD() const
-{
-  std::ostringstream oss;
-  oss << "| " << _name << " | " << utils::getTypeName(_defaultValue) << " | " << _doc << " | ";
-  if (_hasDefaultValue) {
-      oss << '`' << _defaultValue << '`';
-  } else {
-      oss << "_none_";
-  }
-  oss << " | ";
-
-  if(_options.empty()) {
-      oss << "none";
-  } else {
-      oss << '`' << _options.front() << '`';
-      for(auto iter = ++_options.cbegin(); iter != _options.cend(); ++iter) {
-          oss << ", " << '`' << *iter << '`' ;
-      }
-  }
-
-  oss << " |";
-
-  return oss.str();
-}
-
-template <typename ATTRIBUTE_T>
-std::string XMLAttribute<ATTRIBUTE_T>::printExample() const
-{
-  std::ostringstream ex;
-  ex << _name << "=\"";
-  if (_hasDefaultValue) {
-   ex << _defaultValue;
-  } else {
-    ex << '{' << utils::getTypeName(_defaultValue) << '}';
-  }
-  ex << '"';
-  return ex.str();
-}
-
-template <typename ATTRIBUTE_T>
-std::string XMLAttribute<ATTRIBUTE_T>::printDocumentation() const
-{
-  std::ostringstream doc;
-  doc << _name << "=\"{" << utils::getTypeName(_value);
-  if (_hasValidation) {
-    PRECICE_ASSERT(!_options.empty());
-    doc << ":";
-    // print the first item
-    auto first = _options.begin();
-    doc << '\'' << *first << '\'';
-    ++first;
-    // print the remaining items with separator
-    for(;first != _options.end(); ++first) {
-        doc << " or '" << *first << '\'';
-    }
-  }
-  doc << "}";
-  if (_hasDefaultValue) {
-    doc << "(default:'" << _defaultValue << "')";
-  }
-  doc << "\"";
-  return doc.str();
-}
 
 template <typename ATTRIBUTE_T>
 template <typename VALUE_T>

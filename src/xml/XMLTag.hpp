@@ -34,6 +34,13 @@ class XMLTag
   friend class precice::xml::ConfigParser;
 
 public:
+  using Namespaces = typename std::vector<std::string>;
+
+  using Subtags = typename std::vector<std::shared_ptr<XMLTag>>;
+
+  template <typename T>
+  using AttributeMap = typename std::map<std::string, XMLAttribute<T>>;
+
   /// Callback interface for configuration classes using XMLTag.
   struct Listener {
 
@@ -67,6 +74,8 @@ public:
     OCCUR_ARBITRARY_NESTED
   };
 
+  static std::string getOccurrenceString(Occurrence occurrence);
+
   /**
    * @brief Standard constructor
    *
@@ -88,6 +97,8 @@ public:
    */
   XMLTag& setDocumentation(const std::string &documentation);
 
+  std::string getDocumentation() const { return _doc; };
+
   /**
    * @brief Adds a namespace to the tag.
    *
@@ -98,6 +109,9 @@ public:
 
   /// Adds an XML tag as subtag by making a copy of the given tag.
   XMLTag& addSubtag(const XMLTag &tag);
+
+  const Subtags& getSubtags() const { return _subtags; };
+
 
   /// Removes the XML subtag with given name
   //XMLTag& removeSubtag ( const std::string& tagName );
@@ -135,6 +149,8 @@ public:
     return _namespace;
   }
 
+  const Namespaces& getNamespaces() const { return _namespaces; };
+
   /// Returns full name consisting of xml namespace + ":" + name.
   const std::string &getFullName() const
   {
@@ -148,6 +164,31 @@ public:
   const std::string &getStringAttributeValue(const std::string &name) const;
 
   bool getBooleanAttributeValue(const std::string &name) const;
+
+  const AttributeMap<double> &getDoubleAttributes() const
+  {
+      return _doubleAttributes;
+  };
+
+  const AttributeMap<int> &getIntAttributes() const
+  {
+      return _intAttributes;
+  };
+
+  const AttributeMap<std::string> &getStringAttributes() const
+  {
+      return _stringAttributes;
+  };
+
+  const AttributeMap<bool> &getBooleanAttributes() const
+  {
+      return _booleanAttributes;
+  };
+  
+  const AttributeMap<Eigen::VectorXd> &getEigenVectorXdAttributes() const
+  {
+      return _eigenVectorXdAttributes;
+  };
 
   /**
    * @brief Returns Eigen vector attribute value with given dimensions.
@@ -175,18 +216,6 @@ public:
   /// Removes all attributes and subtags
   void clear();
 
-  /// Prints a documentation string for this tag.
-  std::string printDocumentation(int indentation) const;
-
-  /// Prints a DTD string for this tag.
-  std::string printDTD(const bool start = false) const;
-
-  /// Prints a Markdown string for this tag.
-  std::string printMD(int level = 1) const;
-
-  /// Prints an example string for this tag.
-  std::string printExample(int level = 0) const;
-
   /// reads all attributes of this tag
   void readAttributes(std::map<std::string, std::string> &aAttributes);
 
@@ -210,32 +239,27 @@ private:
 
   Occurrence _occurrence;
 
-  std::vector<std::string> _namespaces;
+  Namespaces _namespaces;
 
-  std::vector<std::shared_ptr<XMLTag>> _subtags;
+  Subtags _subtags;
 
   std::map<std::string, bool> _configuredNamespaces;
 
   std::set<std::string> _attributes;
 
-  std::map<std::string, XMLAttribute<double>> _doubleAttributes;
+  AttributeMap<double> _doubleAttributes;
 
-  std::map<std::string, XMLAttribute<int>> _intAttributes;
+  AttributeMap<int> _intAttributes;
 
-  std::map<std::string, XMLAttribute<std::string>> _stringAttributes;
+  AttributeMap<std::string> _stringAttributes;
 
-  std::map<std::string, XMLAttribute<bool>> _booleanAttributes;
+  AttributeMap<bool> _booleanAttributes;
 
-  std::map<std::string, XMLAttribute<Eigen::VectorXd>> _eigenVectorXdAttributes;
+  AttributeMap<Eigen::VectorXd> _eigenVectorXdAttributes;
 
   void areAllSubtagsConfigured() const;
 
   void resetAttributes();
-
-  std::string getOccurrenceString(Occurrence occurrence) const;
-
-  /// Prints a Markdown string for this tag given prior occurences.
-  std::string printMD(int level, std::map<std::string, int>& occurences) const;
 };
 
 // ------------------------------------------------------ HEADER IMPLEMENTATION
