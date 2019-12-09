@@ -50,7 +50,7 @@ if(MPI AND MPIEXEC_EXECUTABLE)
   add_precice_test(
     NAME Base
     ARGUMENTS "--run_test=\!@MPI_Ports:\!MappingTests/PetRadialBasisFunctionMapping/Parallel/\*"
-    TIMEOUT 180
+    TIMEOUT 400
     MPI
     )
   add_precice_test(
