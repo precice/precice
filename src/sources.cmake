@@ -292,6 +292,8 @@ target_sources(precice
     src/utils/stacktrace.hpp
     src/xml/ConfigParser.cpp
     src/xml/ConfigParser.hpp
+    src/xml/Printer.cpp
+    src/xml/Printer.hpp
     src/xml/XMLAttribute.hpp
     src/xml/XMLTag.cpp
     src/xml/XMLTag.hpp

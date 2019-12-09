@@ -4,6 +4,7 @@
 #include "precice/config/Configuration.hpp"
 #include <iostream>
 #include "logging/Logger.hpp"
+#include "xml/Printer.hpp"
 
 void printUsage()
 {
@@ -82,17 +83,17 @@ int main ( int argc, char** argv )
   else if (runHelp){
     PRECICE_ASSERT(not runServer);
     precice::config::Configuration config;
-    std::cout << config.getXMLTag().printDocumentation(0) << "\n\n";
+    precice::xml::toDocumentation(std::cout, config.getXMLTag());
   }
   else if (runDtd) {
 	PRECICE_ASSERT(not runServer);
     precice::config::Configuration config;
-    std::cout << config.getXMLTag().printDTD(true) << "\n\n";
+    precice::xml::toDTD(std::cout, config.getXMLTag());
   }
   else if (runMD) {
 	PRECICE_ASSERT(not runServer);
     precice::config::Configuration config;
-    std::cout << config.getXMLTag().printMD() << "\n\n";
+    precice::xml::toMarkdown(std::cout, config.getXMLTag());
   }
   else {
     PRECICE_ASSERT( false );
