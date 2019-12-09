@@ -22,15 +22,3 @@ else
     cmake --build . -- -j $(nproc)
     ctest --output-on-failure -O $TRAVIS_BUILD_DIR/tests/boost-test-output
 fi
-
-export PYTHON_BINDINGS_DIR=$TRAVIS_BUILD_DIR/src/precice/bindings/python
-cd $PYTHON_BINDINGS_DIR
-
-# test bindings
-export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:$TRAVIS_BUILD_DIR/src
-python3 setup.py test
-
-# install bindings
-python3 setup.py build_ext --include-dirs=$TRAVIS_BUILD_DIR/src --library-dirs=$PRECICE_BUILD_DIR
-python3 setup.py install --user
-python3 -c "import precice"
