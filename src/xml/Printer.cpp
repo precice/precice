@@ -28,106 +28,98 @@ std::string toGHLink(const std::string &heading)
 /// Attribute
 
 template <typename ATTRIBUTE_T>
-std::string printDTD(const XMLAttribute<ATTRIBUTE_T> &attr, const std::string &ElementName)
+std::ostream& printDTD(std::ostream& out, const XMLAttribute<ATTRIBUTE_T> &attr, const std::string &ElementName)
 {
-  std::ostringstream dtd;
-  dtd << "<!ATTLIST " << ElementName << " " << attr.getName() << " CDATA ";
+  out << "<!ATTLIST " << ElementName << " " << attr.getName() << " CDATA ";
 
   if (attr.hasDefaultValue()) {
-    dtd << "\"" << attr.getDefaultValue() << "\"";
+    out << "\"" << attr.getDefaultValue() << "\"";
   } else {
-    dtd << "#REQUIRED";
+    out << "#REQUIRED";
   }
 
-  dtd << ">\n";
-
-  return dtd.str();
+  out << ">\n";
+  return out;
 }
 
 template <typename ATTRIBUTE_T>
-std::string printMD(const XMLAttribute<ATTRIBUTE_T> &attr)
+std::ostream& printMD(std::ostream& out, const XMLAttribute<ATTRIBUTE_T> &attr)
 {
-  std::ostringstream oss;
-  oss << "| " << attr.getName() << " | " << utils::getTypeName(attr.getDefaultValue()) << " | " << attr.getUserDocumentation() << " | ";
+  out << "| " << attr.getName() << " | " << utils::getTypeName(attr.getDefaultValue()) << " | " << attr.getUserDocumentation() << " | ";
   if (attr.hasDefaultValue()) {
-    oss << '`' << attr.getDefaultValue() << '`';
+    out << '`' << attr.getDefaultValue() << '`';
   } else {
-    oss << "_none_";
+    out << "_none_";
   }
-  oss << " | ";
+  out << " | ";
 
   const auto &options = attr.getOptions();
   if (options.empty()) {
-    oss << "none";
+    out << "none";
   } else {
-    oss << '`' << options.front() << '`';
+    out << '`' << options.front() << '`';
     for (auto iter = ++options.cbegin(); iter != options.cend(); ++iter) {
-      oss << ", " << '`' << *iter << '`';
+      out << ", " << '`' << *iter << '`';
     }
   }
 
-  oss << " |";
-
-  return oss.str();
+  out << " |";
+  return out;
 }
 
 template <typename ATTRIBUTE_T>
-std::string printExample(const XMLAttribute<ATTRIBUTE_T> &attr)
+std::ostream& printExample(std::ostream& out, const XMLAttribute<ATTRIBUTE_T> &attr)
 {
-  std::ostringstream ex;
-  ex << attr.getName() << "=\"";
+  out << attr.getName() << "=\"";
   if (attr.hasDefaultValue()) {
-    ex << attr.getDefaultValue();
+    out << attr.getDefaultValue();
   } else {
-    ex << '{' << utils::getTypeName(attr.getDefaultValue()) << '}';
+    out << '{' << utils::getTypeName(attr.getDefaultValue()) << '}';
   }
-  ex << '"';
-  return ex.str();
+  out << '"';
+  return out;
 }
 
 template <typename ATTRIBUTE_T>
-std::string printDocumentation(const XMLAttribute<ATTRIBUTE_T> &attr)
+std::ostream& printDocumentation(std::ostream& out, const XMLAttribute<ATTRIBUTE_T> &attr)
 {
-  std::ostringstream doc;
-  doc << attr.getName() << "=\"{" << utils::getTypeName(attr.getDefaultValue());
+  out << attr.getName() << "=\"{" << utils::getTypeName(attr.getDefaultValue());
   if (attr.hasValidation()) {
-    doc << ":";
+    out << ":";
     // print the first item
     auto first = attr.getOptions().begin();
-    doc << '\'' << *first << '\'';
+    out << '\'' << *first << '\'';
     ++first;
     // print the remaining items with separator
     for (; first != attr.getOptions().end(); ++first) {
-      doc << " or '" << *first << '\'';
+      out << " or '" << *first << '\'';
     }
   }
-  doc << "}";
+  out << "}";
   if (attr.hasDefaultValue()) {
-    doc << "(default:'" << attr.getDefaultValue() << "')";
+    out << "(default:'" << attr.getDefaultValue() << "')";
   }
-  doc << "\"";
-  return doc.str();
+  out << "\"";
+  return out;
 }
 
 /// XMLTag
 
-std::string printDTD(const XMLTag &tag, bool start = 0)
+std::ostream& printDTD(std::ostream& out, const XMLTag &tag, bool start = false)
 {
-  std::ostringstream dtd;
-
   if (start)
-    dtd << "<!DOCTYPE " << tag.getFullName() << " [\n";
+    out << "<!DOCTYPE " << tag.getFullName() << " [\n";
 
-  dtd << "<!ELEMENT " << tag.getFullName() << " ";
+  out << "<!ELEMENT " << tag.getFullName() << " ";
 
   if (not tag.getSubtags().empty()) {
 
-    dtd << "(";
+    out << "(";
 
     bool first = true;
-    for (auto const subtag : tag.getSubtags()) {
+    for (auto const& subtag : tag.getSubtags()) {
 
-      std::string occurrenceChar = "";
+      std::string occurrenceChar;
 
       XMLTag::Occurrence occ = subtag->getOccurrence();
 
@@ -138,78 +130,76 @@ std::string printDTD(const XMLTag &tag, bool start = 0)
       else if (occ == XMLTag::OCCUR_ONCE_OR_MORE)
         occurrenceChar = "+";
 
-      dtd << (first ? "" : ", ") << subtag->getFullName() << occurrenceChar;
+      out << (first ? "" : ", ") << subtag->getFullName() << occurrenceChar;
       first = false;
     }
 
-    dtd << ")>\n";
+    out << ")>\n";
   } else {
-    dtd << "EMPTY>\n";
+    out << "EMPTY>\n";
   }
 
   for (const auto &pair : tag.getDoubleAttributes()) {
-    dtd << printDTD(pair.second, tag.getFullName());
+    printDTD(out, pair.second, tag.getFullName());
   }
 
   for (const auto &pair : tag.getIntAttributes()) {
-    dtd << printDTD(pair.second, tag.getFullName());
+    printDTD(out, pair.second, tag.getFullName());
   }
 
   for (const auto &pair : tag.getStringAttributes()) {
-    dtd << printDTD(pair.second, tag.getFullName());
+    printDTD(out, pair.second, tag.getFullName());
   }
 
   for (const auto &pair : tag.getBooleanAttributes()) {
-    dtd << printDTD(pair.second, tag.getFullName());
+    printDTD(out, pair.second, tag.getFullName());
   }
 
   for (const auto &pair : tag.getEigenVectorXdAttributes()) {
-    dtd << printDTD(pair.second, tag.getFullName());
+    printDTD(out, pair.second, tag.getFullName());
   }
 
   if (not tag.getSubtags().empty()) {
-    for (auto const subtag : tag.getSubtags()) {
-      dtd << printDTD(*subtag);
+    for (const auto& subtag : tag.getSubtags()) {
+      printDTD(out, *subtag);
     }
   }
 
-  dtd << '\n';
+  out << '\n';
 
   if (start)
-    dtd << "]>\n";
-
-  return dtd.str();
+    out << "]>\n";
+  return out;
 }
 
-std::string printExample(const XMLTag &tag, int level)
+std::ostream& printExample(std::ostream& out, const XMLTag &tag, int level)
 {
   std::string        prefix(level * 2, ' ');
-  std::ostringstream oss;
-  oss << prefix << '<' << tag.getFullName();
+  out << prefix << '<' << tag.getFullName();
   for (const auto &pair : tag.getDoubleAttributes()) {
-    oss << ' ' << printExample(pair.second);
+    out << ' '; printExample(out, pair.second);
   }
   for (const auto &pair : tag.getIntAttributes()) {
-    oss << ' ' << printExample(pair.second);
+    out << ' '; printExample(out, pair.second);
   }
   for (const auto &pair : tag.getStringAttributes()) {
-    oss << ' ' << printExample(pair.second);
+    out << ' '; printExample(out, pair.second);
   }
   for (const auto &pair : tag.getBooleanAttributes()) {
-    oss << ' ' << printExample(pair.second);
+    out << ' '; printExample(out, pair.second);
   }
   for (const auto &pair : tag.getEigenVectorXdAttributes()) {
-    oss << ' ' << printExample(pair.second);
+    out << ' '; printExample(out, pair.second);
   }
   if (tag.getSubtags().empty()) {
-    oss << "/>";
-    return oss.str();
+    out << "/>";
+    return out;
   }
-  oss << ">\n";
+  out << ">\n";
 
   constexpr int threshold{1};
   if (level >= threshold) {
-    oss << std::string((level + 1) * 2, ' ') << "...\n";
+    out << std::string((level + 1) * 2, ' ') << "...\n";
   } else {
     std::set<std::string> namespaces;
     for (const auto &subtag : tag.getSubtags()) {
@@ -220,56 +210,54 @@ std::string printExample(const XMLTag &tag, int level)
         }
         namespaces.emplace(ns);
       }
-      oss << printExample(*subtag, level + 1) << '\n';
+      printExample(out, *subtag, level + 1) << '\n';
     }
   }
 
-  oss << prefix << "</" << tag.getFullName() << '>';
-  return oss.str();
+  out << prefix << "</" << tag.getFullName() << '>';
+  return out;
 }
 
-std::string printMD(const XMLTag &tag, int level, std::map<std::string, int> &occurrences)
+std::ostream& printMD(std::ostream& out, const XMLTag &tag, int level, std::map<std::string, int> &occurrences)
 {
-  std::ostringstream oss;
+  out << std::string(level, '#') << ' ' << tag.getFullName() << "\n\n";
 
-  oss << std::string(level, '#') << ' ' << tag.getFullName() << "\n\n";
+  out << tag.getDocumentation() << "\n\n";
 
-  oss << tag.getDocumentation() << "\n\n";
-
-  oss << "**Example:**  \n```xml\n"
-      << printExample(tag, 0) << "\n```\n\n";
+  out << "**Example:**  \n```xml\n";
+  printExample(out, tag, 0) << "\n```\n\n";
 
   if (!(tag.getDoubleAttributes().empty() &&
         tag.getIntAttributes().empty() &&
         tag.getStringAttributes().empty() &&
         tag.getBooleanAttributes().empty() &&
         tag.getEigenVectorXdAttributes().empty())) {
-    oss << "| Attribute | Type | Description | Default | Options |\n";
-    oss << "| --- | --- | --- | --- | --- |\n";
+    out << "| Attribute | Type | Description | Default | Options |\n";
+    out << "| --- | --- | --- | --- | --- |\n";
     for (const auto &pair : tag.getDoubleAttributes()) {
-      oss << printMD(pair.second) << '\n';
+      printMD(out, pair.second) << '\n';
     }
 
     for (const auto &pair : tag.getIntAttributes()) {
-      oss << printMD(pair.second) << '\n';
+      printMD(out, pair.second) << '\n';
     }
 
     for (const auto &pair : tag.getStringAttributes()) {
-      oss << printMD(pair.second) << '\n';
+      printMD(out, pair.second) << '\n';
     }
 
     for (const auto &pair : tag.getBooleanAttributes()) {
-      oss << printMD(pair.second) << '\n';
+      printMD(out, pair.second) << '\n';
     }
 
     for (const auto &pair : tag.getEigenVectorXdAttributes()) {
-      oss << printMD(pair.second) << '\n';
+      printMD(out, pair.second) << '\n';
     }
-    oss << "\n";
+    out << "\n";
   }
 
   if (not tag.getSubtags().empty()) {
-    oss << "**Valid Subtags:**\n\n";
+    out << "**Valid Subtags:**\n\n";
 
     std::map<std::string, std::vector<std::string>> groupedTags;
 
@@ -286,38 +274,38 @@ std::string printMD(const XMLTag &tag, int level, std::map<std::string, int> &oc
 
       const auto ns = subtag->getNamespace();
       if (ns.empty()) {
-        oss << "* [" << heading << "](" << link << ") `" << subtag->getOccurrenceString(subtag->getOccurrence()) << "`\n";
+        out << "* [" << heading << "](" << link << ") `" << subtag->getOccurrenceString(subtag->getOccurrence()) << "`\n";
       } else {
         auto &tags = groupedTags[ns];
         tags.emplace_back("[" + subtag->getName() + "](" + link + ") `" + subtag->getOccurrenceString(subtag->getOccurrence()) + "`");
       }
     }
     for (const auto &kv : groupedTags) {
-      oss << "* " << kv.first << "\n";
+      out << "* " << kv.first << "\n";
       for (const auto &link : kv.second) {
-        oss << "  * " << link << "\n";
+        out << "  * " << link << "\n";
       }
     }
 
-    oss << "\n\n";
+    out << "\n\n";
 
     for (const auto &subtag : tag.getSubtags()) {
-      oss << printMD(*subtag, level + 1, occurrences) << '\n';
+      printMD(out, *subtag, level + 1, occurrences) << '\n';
     }
   }
 
-  oss << '\n';
-
-  return oss.str();
+  out << '\n';
+  return out;
 }
 
-std::string printMD(const XMLTag &tag, int level = 0)
+std::ostream& printMD(std::ostream& out, const XMLTag &tag, int level = 1)
 {
   std::map<std::string, int> occurrences;
-  return printMD(tag, level, occurrences);
+  printMD(out, tag, level, occurrences);
+  return out;
 }
 
-std::string printDocumentation(const XMLTag &tag, int indentation)
+std::ostream& printDocumentation(std::ostream& out, const XMLTag &tag, int indentation)
 {
   const int   linewidth = 1000;
   std::string indent;
@@ -325,56 +313,55 @@ std::string printDocumentation(const XMLTag &tag, int indentation)
     indent += " ";
   }
 
-  std::ostringstream doc;
-  doc << indent << "<!-- TAG " << tag.getFullName() << '\n';
+  out << indent << "<!-- TAG " << tag.getFullName() << '\n';
   if (not tag.getDocumentation().empty()) {
     std::string indentedDoc = indent + "         " + tag.getDocumentation();
-    doc << utils::wrapText(indentedDoc, linewidth, indentation + 9);
-    doc << '\n';
+    out << utils::wrapText(indentedDoc, linewidth, indentation + 9);
+    out << '\n';
   }
-  doc << indent << "         (can occur " << XMLTag::getOccurrenceString(tag.getOccurrence()) << " times)";
+  out << indent << "         (can occur " << XMLTag::getOccurrenceString(tag.getOccurrence()) << " times)";
 
   for (const auto &pair : tag.getDoubleAttributes()) {
+    out << '\n';
     std::ostringstream attrDoc;
-    doc << '\n';
     attrDoc << indent << "     ATTR " << pair.first << ": "
             << pair.second.getUserDocumentation();
-    doc << utils::wrapText(attrDoc.str(), linewidth, indentation + 10);
+    out << utils::wrapText(attrDoc.str(), linewidth, indentation + 10);
   }
 
   for (const auto &pair : tag.getIntAttributes()) {
+    out << '\n';
     std::ostringstream attrDoc;
-    doc << '\n';
     attrDoc << indent << "     ATTR " << pair.first << ": "
             << pair.second.getUserDocumentation();
-    doc << utils::wrapText(attrDoc.str(), linewidth, indentation + 10);
+    out << utils::wrapText(attrDoc.str(), linewidth, indentation + 10);
   }
 
   for (const auto &pair : tag.getStringAttributes()) {
+    out << '\n';
     std::ostringstream attrDoc;
-    doc << '\n';
     attrDoc << indent << "     ATTR " << pair.first << ": "
             << pair.second.getUserDocumentation();
-    doc << utils::wrapText(attrDoc.str(), linewidth, indentation + 10);
+    out << utils::wrapText(attrDoc.str(), linewidth, indentation + 10);
   }
 
   for (const auto &pair : tag.getBooleanAttributes()) {
+    out << '\n';
     std::ostringstream attrDoc;
-    doc << '\n';
     attrDoc << indent << "     ATTR " << pair.first << ": "
             << pair.second.getUserDocumentation();
-    doc << utils::wrapText(attrDoc.str(), linewidth, indentation + 10);
+    out << utils::wrapText(attrDoc.str(), linewidth, indentation + 10);
   }
 
   for (const auto &pair : tag.getEigenVectorXdAttributes()) {
+    out << '\n';
     std::ostringstream attrDoc;
-    doc << '\n';
     attrDoc << indent << "     ATTR " << pair.first << ": "
             << pair.second.getUserDocumentation();
-    doc << utils::wrapText(attrDoc.str(), linewidth, indentation + 10);
+    out << utils::wrapText(attrDoc.str(), linewidth, indentation + 10);
   }
 
-  doc << " -->\n";
+  out << " -->\n";
   std::ostringstream tagHead;
   tagHead << indent << "<" << tag.getFullName();
 
@@ -384,55 +371,54 @@ std::string printDocumentation(const XMLTag &tag, int indentation)
   }
 
   for (const auto &pair : tag.getDoubleAttributes()) {
-    tagHead << indent << "   " << printDocumentation(pair.second);
+    tagHead << indent << "   "; printDocumentation(tagHead, pair.second);
   }
 
   for (const auto &pair : tag.getIntAttributes()) {
-    tagHead << indent << "   " << printDocumentation(pair.second);
+    tagHead << indent << "   "; printDocumentation(tagHead, pair.second);
   }
 
   for (const auto &pair : tag.getStringAttributes()) {
-    tagHead << indent << "   " << printDocumentation(pair.second);
+    tagHead << indent << "   "; printDocumentation(tagHead, pair.second);
   }
 
   for (const auto &pair : tag.getBooleanAttributes()) {
-    tagHead << indent << "   " << printDocumentation(pair.second);
+    tagHead << indent << "   "; printDocumentation(tagHead, pair.second);
   }
 
   for (const auto &pair : tag.getEigenVectorXdAttributes()) {
-    tagHead << indent << "   " << printDocumentation(pair.second);
+    tagHead << indent << "   "; printDocumentation(tagHead, pair.second);
   }
 
-  doc << utils::wrapText(tagHead.str(), linewidth, indentation + 3);
+  out << utils::wrapText(tagHead.str(), linewidth, indentation + 3);
 
   if (not tag.getSubtags().empty()) {
-    doc << ">\n\n";
-    for (auto const subtag : tag.getSubtags()) {
-      doc << printDocumentation(*subtag, indentation + 3);
+    out << ">\n\n";
+    for (const auto& subtag : tag.getSubtags()) {
+      printDocumentation(out, *subtag, indentation + 3);
     }
-    doc << indent << "</" << tag.getFullName() << ">\n\n";
+    out << indent << "</" << tag.getFullName() << ">\n\n";
   } else {
-    doc << "/>\n\n";
+    out << "/>\n\n";
   }
-
-  return doc.str();
+  return out;
 }
 
 } // namespace
 
 void toMarkdown(std::ostream &out, const XMLTag &tag)
 {
-  out << printMD(tag);
+  printMD(out, tag);
 }
 
 void toDTD(std::ostream &out, const XMLTag &tag)
 {
-  out << printDTD(tag);
+  printDTD(out, tag);
 }
 
 void toDocumentation(std::ostream &out, const XMLTag &tag)
 {
-  out << printDocumentation(tag, 0);
+  printDocumentation(out, tag, 0);
 }
 
 } // namespace xml
