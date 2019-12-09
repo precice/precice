@@ -23,7 +23,7 @@ function(add_precice_test)
       )
   else()
     add_test(NAME ${PAT_FULL_NAME}
-      COMMAND $<TARGET_FILE:testprecice> ${PAT_ARGUMENTS}
+      COMMAND $<TARGET_FILE:testprecice> ${PAT_ARGUMENTS} --log_level=all
       )
   endif()
   set_tests_properties(${PAT_FULL_NAME}
