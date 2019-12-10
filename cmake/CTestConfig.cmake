@@ -24,13 +24,21 @@ function(add_precice_test)
   # We always prefix our tests
   set(PAT_FULL_NAME "precice.${PAT_NAME}")
 
+  # Are direct dependencies fullfilled?
+  if( (PAT_MPI AND NOT MPI) OR (PAT_PETSC AND NOT PETSC) )
+    message(STATUS "Test ${PAT_FULL_NAME} - skipped")
+    return()
+  endif()
+
   # Assemble the command
-  if(NOT PAT_NOMPI AND MPI)
+  if(PAT_PETSC OR (NOT PAT_NOMPI AND MPI))
+    # Parallel tests, dispatched by MPI
     message(STATUS "Test ${PAT_FULL_NAME} - parallel")
     add_test(NAME ${PAT_FULL_NAME}
       COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 4 ${PRECICE_CTEST_MPI_FLAGS} ${MPIEXEC_PREFLAGS} $<TARGET_FILE:testprecice> ${PAT_ARGUMENTS} ${MPIEXEC_POSTFLAGS}
       )
   elseif(NOT PAT_MPI)
+    # Serial tests, called directly
     message(STATUS "Test ${PAT_FULL_NAME} - serial")
     add_test(NAME ${PAT_FULL_NAME}
       COMMAND $<TARGET_FILE:testprecice> ${PAT_ARGUMENTS}
