@@ -750,7 +750,6 @@ void SolverInterfaceImpl:: getMeshVertexIDsFromPositions (
     mesh::PtrMesh mesh(context.mesh);
     PRECICE_DEBUG("Get IDs");
     const auto &vertices = mesh->vertices();
-    PRECICE_ASSERT(vertices.size() <= size, vertices.size(), size);
     Eigen::Map<const Eigen::MatrixXd> posMatrix{
         positions, _dimensions, static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(size)};
     const auto vsize = vertices.size();

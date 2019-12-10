@@ -34,6 +34,7 @@ env:
     - BOOST_ROOT=${LOCAL_INSTALL}
     - BUILD_TYPE=CMAKE
     - CXXFLAGS="-Wall -Wextra -Wno-unused-parameter"
+    - BOOST_TEST_LOG_LEVEL=test_suite
 
   matrix:
     - MPI=on PETSC=on
@@ -74,19 +75,6 @@ matrix:
         - lcov --list coverage.info # debug info
         - bash <(curl -s https://codecov.io/bash) -f coverage.info || echo "Codecov did not collect coverage reports"
 
-    # Test Bindings
-    - name: "Mock Test Python Bindings"
-      cache: false
-      before_install:
-        - pyenv global $(pyenv whence 2to3)  # activate all python versions
-        - PYTHONPATH=""
-        - PY_CMD=python3
-        - $PY_CMD -m pip install --user --upgrade pip wheel setuptools
-      install:
-        - pip3 install --user cython numpy mpi4py
-      script:
-        - $TRAVIS_BUILD_DIR/tools/travis-bindings-test.sh
-
 cache:
   ccache: true
   directories:
@@ -103,7 +91,7 @@ before_install:
 
 install:
   - $TRAVIS_BUILD_DIR/tools/travis-install-dependencies.sh $LOCAL_INSTALL
-  - pip3 install --user cython numpy mpi4py
+  - pip3 install --user cython numpy mpi4py packaging
   - export PATH=${LOCAL_INSTALL}/cmake/bin:${LOCAL_INSTALL}/bin:${PATH}
 
 before_script:

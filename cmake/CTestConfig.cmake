@@ -2,6 +2,9 @@
 # CTest
 #
 
+set(PRECICE_TEST_TIMEOUT_LONG 180 CACHE STRING "The timeout in seconds for longer tests.")
+set(PRECICE_TEST_TIMEOUT_SHORT 20 CACHE STRING "The timeout in seconds for shorter tests.")
+
 set(PRECICE_TEST_DIR "${preCICE_BINARY_DIR}/TestOutput")
 mark_as_advanced(PRECICE_TEST_DIR)
 
@@ -50,13 +53,14 @@ if(MPI AND MPIEXEC_EXECUTABLE)
   add_precice_test(
     NAME Base
     ARGUMENTS "--run_test=\!@MPI_Ports:\!MappingTests/PetRadialBasisFunctionMapping/Parallel/\*"
-    TIMEOUT 400
+    TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
     MPI
     )
   add_precice_test(
     NAME MPI_Ports
     ARGUMENTS "--run_test=@MPI_Ports"
-    TIMEOUT 20
+    TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
+
     MPI
     CANFAIL
     )
@@ -64,18 +68,20 @@ if(MPI AND MPIEXEC_EXECUTABLE)
     add_precice_test(
       NAME PetRBFParallel
       ARGUMENTS "--run_test=MappingTests/PetRadialBasisFunctionMapping/Parallel/\*"
-      TIMEOUT 20
+      TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
       MPI
       CANFAIL
       )
   endif()
   add_precice_test(
     NAME NoMPI
+    TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
     )
 else()
   # Configured without MPI
   add_precice_test(
     NAME Base
+    TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
     )
 endif()
 
