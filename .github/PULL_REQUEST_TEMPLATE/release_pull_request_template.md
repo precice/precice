@@ -9,7 +9,10 @@
 * [ ] Open PR from `release-N` to `master` (use [this template](https://github.com/precice/precice/blob/add_PR_template/.github/PULL_REQUEST_TEMPLATE/release_pull_request_template.md))
 * [ ] Look over [`CHANGELOG.md`](https://github.com/precice/precice/blob/develop/CHANGELOG.md) and add things if necessary and extract summary (all)
 * [ ] Do regression tests using the release branch (specific revision) _list below :arrow_down:_ (all)
-* [ ] Bump version in CMakeLists.txt, SConstruct, and CHANGELOG (and Python bindings).
+* [ ] Bump version in:
+   * [ ] [CHANGELOG](https://github.com/precice/precice/blob/develop/CHANGELOG.md)
+   * [ ] [CMakeLists.txt](https://github.com/precice/precice/blob/develop/CMakeLists.txt)
+   * [ ] **???** [Python bindings](https://github.com/precice/python-bindings) 
 * [ ] Draft message to mailing list
 * [ ] Update documentation (all)
 * [ ] Fix potential problems in develop (all)
