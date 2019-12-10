@@ -344,6 +344,8 @@ BOOST_AUTO_TEST_CASE(testConfiguredSimpleExplicitCoupling,
   else if ( utils::Parallel::getProcessRank() == 1 ) {
     nameLocalParticipant = nameParticipant1;
   }
+  xml::ConfigurationContext context{nameLocalParticipant, 0, 1};
+
   xml::XMLTag root = xml::getRootTag();
   PtrDataConfiguration dataConfig(new DataConfiguration(root));
   dataConfig->setDimensions(3);
@@ -352,7 +354,7 @@ BOOST_AUTO_TEST_CASE(testConfiguredSimpleExplicitCoupling,
   m2n::M2NConfiguration::SharedPointer m2nConfig(new m2n::M2NConfiguration(root));
   CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
 
-  xml::configure(root, configurationPath);
+  xml::configure(root, context, configurationPath);
   meshConfig->setMeshSubIDs();
   m2n::PtrM2N m2n = m2nConfig->getM2N(nameParticipant0, nameParticipant1);
 
@@ -387,6 +389,7 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingFirstParticipantSetsDt,
   else if ( utils::Parallel::getProcessRank() == 1 ){
     nameLocalParticipant = nameParticipant1;
   }
+  xml::ConfigurationContext context{nameLocalParticipant, 0, 1};
 
   xml::XMLTag root = xml::getRootTag();
   PtrDataConfiguration dataConfig(new DataConfiguration(root));
@@ -396,7 +399,7 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingFirstParticipantSetsDt,
   m2n::M2NConfiguration::SharedPointer m2nConfig(new m2n::M2NConfiguration(root));
   CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
 
-  xml::configure(root, configurationPath);
+  xml::configure(root, context, configurationPath);
   meshConfig->setMeshSubIDs();
   m2n::PtrM2N m2n = m2nConfig->getM2N(nameParticipant0, nameParticipant1);
 
@@ -481,6 +484,8 @@ BOOST_AUTO_TEST_CASE(testSerialDataInitialization,
   else if (utils::Parallel::getProcessRank() == 1){
     nameLocalParticipant = nameParticipant1;
   }
+  xml::ConfigurationContext context{nameLocalParticipant, 0, 1};
+
   xml::XMLTag root = xml::getRootTag();
   PtrDataConfiguration dataConfig(new DataConfiguration(root));
   dataConfig->setDimensions(2);
@@ -489,7 +494,7 @@ BOOST_AUTO_TEST_CASE(testSerialDataInitialization,
   m2n::M2NConfiguration::SharedPointer m2nConfig(new m2n::M2NConfiguration(root));
   CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
 
-  xml::configure(root, configurationPath);
+  xml::configure(root, context, configurationPath);
   meshConfig->setMeshSubIDs();
   m2n::PtrM2N m2n = m2nConfig->getM2N(nameParticipant0, nameParticipant1);
 
@@ -559,6 +564,8 @@ BOOST_AUTO_TEST_CASE(testParallelDataInitialization,
   else if (utils::Parallel::getProcessRank() == 1){
     nameLocalParticipant = nameParticipant1;
   }
+  xml::ConfigurationContext context{nameLocalParticipant, 0, 1};
+
   xml::XMLTag root = xml::getRootTag();
   PtrDataConfiguration dataConfig(new DataConfiguration(root));
   dataConfig->setDimensions(2);
@@ -567,7 +574,7 @@ BOOST_AUTO_TEST_CASE(testParallelDataInitialization,
   m2n::M2NConfiguration::SharedPointer m2nConfig(new m2n::M2NConfiguration(root));
   CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
 
-  xml::configure(root, configurationPath);
+  xml::configure(root, context, configurationPath);
   meshConfig->setMeshSubIDs();
   m2n::PtrM2N m2n = m2nConfig->getM2N(nameParticipant0, nameParticipant1);
 
@@ -692,6 +699,7 @@ BOOST_AUTO_TEST_CASE(testConfiguredExplicitCouplingWithSubcycling,
   else if ( utils::Parallel::getProcessRank() == 1 ) {
     nameLocalParticipant = nameParticipant1;
   }
+  xml::ConfigurationContext context{nameLocalParticipant, 0, 1};
 
   xml::XMLTag root = xml::getRootTag();
   PtrDataConfiguration dataConfig(new DataConfiguration(root));
@@ -701,7 +709,7 @@ BOOST_AUTO_TEST_CASE(testConfiguredExplicitCouplingWithSubcycling,
   m2n::M2NConfiguration::SharedPointer m2nConfig(new m2n::M2NConfiguration(root));
   CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
 
-  xml::configure(root, configurationPath);
+  xml::configure(root, context, configurationPath);
   meshConfig->setMeshSubIDs();
   m2n::PtrM2N m2n = m2nConfig->getM2N(nameParticipant0, nameParticipant1);
   // some dummy mesh

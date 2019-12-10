@@ -8,6 +8,7 @@
 #include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "mesh/Mesh.hpp"
 
 namespace precice
 {
@@ -55,6 +56,33 @@ public:
                          std::string const &requesterName) override;
 
   /**
+   * @brief Accepts connection from participant, which has to call
+   *        requestPreConnection().
+   *        Only initial connection is created.
+   *
+   * @param[in] acceptorName  Name of calling participant.
+   * @param[in] requesterName Name of remote participant to connect to.
+   */
+  virtual void acceptPreConnection(std::string const &acceptorName,
+                                   std::string const &requesterName);
+  
+  /**
+   * @brief Requests connection from participant, which has to call acceptConnection().
+   *        Only initial connection is created. 
+   *
+   * @param[in] acceptorName Name of remote participant to connect to.
+   * @param[in] requesterName Name of calling participant.
+   */
+  virtual void requestPreConnection(std::string const &acceptorName,
+                                    std::string const &requesterName);
+
+  /*
+   * @brief This function must be called by both acceptor and requester to update 
+   *        the vertex list in _mappings
+   */
+  virtual void updateVertexList() override;
+
+  /**
    * @brief Disconnects from communication space, i.e. participant.
    *
    * This method is called on destruction.
@@ -74,6 +102,39 @@ public:
   void receive(double *itemsToReceive,
                size_t  size,
                int     valueDimension = 1) override;
+
+  /**
+   * @brief Broadcasts an int to connected ranks on remote participant       
+   */
+  void broadcastSend(const int &itemToSend) override;
+
+  /**
+   * @brief Receives an int per connected rank on remote participant
+   * @para[out] itemToReceive received ints from remote ranks are stored with the sender rank order 
+   */
+  void broadcastReceiveAll(std::vector<int> &itemToReceive) override;
+
+  /**
+   * @brief All ranks send their mesh partition to remote local  connected ranks.
+   */
+  void broadcastSendMesh() override;
+  
+  /**
+   * @brief All ranks receive mesh partitions from remote local ranks.
+   */
+  void broadcastReceiveMesh() override;
+
+  /**
+   *  @brief All ranks send their local communication map to connected ranks
+   */
+  void broadcastSendLCM(
+    CommunicationMap &localCommunicationMap) override;
+
+  /**
+   *  @brief Each rank revives local communication maps from connected ranks
+   */
+  void broadcastReceiveLCM(
+    CommunicationMap &localCommunicationMap) override;
 
 private:
   logging::Logger _log{"m2n::PointToPointCommunication"};
@@ -113,6 +174,25 @@ private:
    *        mappings (one to service each point-to-point connection).
    */
   std::vector<Mapping> _mappings;
+
+   /**
+   * @brief this data structure is used to store m2n communication information for the 1 step of 
+   *        bounding box initialization. It stores:
+   *        1. global remote process rank;
+   *        2. communication object (provides point-to-point communication routines).
+   *        3. Request holding information about pending communication
+   */
+  struct ConnectionData {
+    int                   remoteRank;
+    com::PtrCommunication communication;
+    com::PtrRequest       request;
+  };
+
+  /**
+   * @brief Local (for process rank in the current participant) vector of
+   *        ConnectionData (one to service each point-to-point connection).
+   */
+  std::vector<ConnectionData> _connectionDataVector;
 
   bool _isConnected = false;
 

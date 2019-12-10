@@ -27,14 +27,14 @@ public:
    *
    * @return True, if successful.
    */
-  virtual void xmlTagCallback ( xml::XMLTag& callingTag );
+  virtual void xmlTagCallback(const xml::ConfigurationContext& context, xml::XMLTag& callingTag);
 
   /**
    * @brief Callback function required for use of automatic configuration.
    *
    * @return True, if successful.
    */
-  virtual void xmlEndTagCallback ( xml::XMLTag& callingTag );
+  virtual void xmlEndTagCallback(const xml::ConfigurationContext& context, xml::XMLTag& callingTag);
 
   /**
    * @brief Returns the id of the mesh used in the data action.
@@ -81,8 +81,6 @@ private:
   const std::string NAME_SCALE_BY_COMPUTED_DT_RATIO;
   const std::string NAME_SCALE_BY_COMPUTED_DT_PART_RATIO;
   const std::string NAME_SCALE_BY_DT;
-  const std::string NAME_ADD_TO_COORDINATES;
-  const std::string NAME_SUBTRACT_FROM_COORDINATES;
   const std::string NAME_COMPUTE_CURVATURE;
   const std::string NAME_PYTHON;
 

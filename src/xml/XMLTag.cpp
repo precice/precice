@@ -8,13 +8,13 @@ namespace xml
 {
 
 XMLTag::XMLTag(
-    Listener &         listener,
-    const std::string &tagName,
-    Occurrence         occurrence,
-    const std::string &xmlNamespace)
+    Listener &  listener,
+    std::string tagName,
+    Occurrence  occurrence,
+    std::string xmlNamespace)
     : _listener(listener),
-      _name(tagName),
-      _namespace(xmlNamespace),
+      _name(std::move(tagName)),
+      _namespace(std::move(xmlNamespace)),
       _occurrence(occurrence)
 {
   if (not _namespace.empty()) {
@@ -317,7 +317,7 @@ void XMLTag::resetAttributes()
     pair.second.setRead(false);
   }
 
-  for (auto tag : _subtags) {
+  for (auto &tag : _subtags) {
     tag->_configured = false;
     tag->resetAttributes();
   }
@@ -346,20 +346,17 @@ std::string XMLTag::printDTD(const bool start) const
     dtd << "(";
 
     bool first = true;
-    for (auto const subtag : _subtags) {
-
-      std::string occurrenceChar = "";
-
-      Occurrence occ = subtag->getOccurrence();
-
-      if (occ == OCCUR_ARBITRARY)
-        occurrenceChar = "*";
-      else if (occ == OCCUR_NOT_OR_ONCE)
-        occurrenceChar = "?";
-      else if (occ == OCCUR_ONCE_OR_MORE)
-        occurrenceChar = "+";
-
-      dtd << (first ? "" : ", ") << subtag->getFullName() << occurrenceChar;
+    for (auto const &subtag : _subtags) {
+       dtd << (first ? "" : ", ") << subtag->getFullName();
+       switch(subtag->getOccurrence()) {
+           case OCCUR_ARBITRARY:
+               dtd << '*';
+           case OCCUR_NOT_OR_ONCE:
+               dtd << '?';
+           case OCCUR_ONCE_OR_MORE:
+               dtd << '+';
+            default:;
+       }
       first = false;
     }
 
@@ -389,7 +386,7 @@ std::string XMLTag::printDTD(const bool start) const
   }
 
   if (not _subtags.empty()) {
-    for (auto const subtag : _subtags) {
+    for (auto const &subtag : _subtags) {
       dtd << subtag->printDTD();
     }
   }
@@ -493,7 +490,7 @@ std::string XMLTag::printDocumentation(int indentation) const
 
   if (not _subtags.empty()) {
     doc << ">\n\n";
-    for (auto const subtag : _subtags) {
+    for (auto const &subtag : _subtags) {
       doc << subtag->printDocumentation(indentation + 3);
     }
     doc << indent << "</" << _fullName << ">\n\n";
@@ -518,6 +515,7 @@ XMLTag getRootTag()
 
 void configure(
     XMLTag &           tag,
+    const precice::xml::ConfigurationContext& context,
     const std::string &configurationFilename)
 {
   logging::Logger _log("xml");
@@ -526,27 +524,28 @@ void configure(
   NoPListener nopListener;
   XMLTag      root(nopListener, "", XMLTag::OCCUR_ONCE);
 
-  precice::xml::ConfigParser p(configurationFilename, std::make_shared<XMLTag>(tag));
+  precice::xml::ConfigParser p(configurationFilename, context, std::make_shared<XMLTag>(tag));
 
   root.addSubtag(tag);
 }
 
 std::string XMLTag::getOccurrenceString(Occurrence occurrence) const
 {
-  if (occurrence == OCCUR_ARBITRARY) {
-    return std::string("0..*");
-  } else if (occurrence == OCCUR_NOT_OR_ONCE) {
-    return std::string("0..1");
-  } else if (occurrence == OCCUR_ONCE) {
-    return std::string("1");
-  } else if (occurrence == OCCUR_ONCE_OR_MORE) {
-    return std::string("1..*");
+  switch (occurrence) {
+  case OCCUR_ARBITRARY:
+    return "0..*";
+  case OCCUR_NOT_OR_ONCE:
+    return "0..1";
+  case OCCUR_ONCE:
+    return "1";
+  case OCCUR_ONCE_OR_MORE:
+    return "1..*";
+  default:
+    PRECICE_ASSERT(false, "Unknown occurrence type = " << occurrence);
+    return "";
   }
-  PRECICE_ERROR("Unknown occurrence type = " << occurrence);
-  return "";
 }
-}
-} // namespace precice, xml
+}} // namespace precice, xml
 
 //std::ostream& operator<<
 //(

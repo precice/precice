@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file. For future 
 
 ## develop
 
+- drop official python2 support for python bindings ([remove tests](https://github.com/precice/systemtests/commit/dba924447996574967b2295cf652fb32bec58020)).
+- Move python bindings to independent repository: [`precice/python-bindings`](https://github.com/precice/python-bindings)
+- End support for deprecated python bindings [`precice`](https://github.com/precice/precice/tree/v1.6.1/src/precice/bindings/python) and [`PySolverInterface`](https://github.com/precice/precice/tree/v1.6.1/src/precice/bindings/PySolverInterface). 
+- Only support a single version of the python bindings from now on provided in [`precice/python-bindings`](https://github.com/precice/python-bindings). Package [`precice_future`](https://github.com/precice/precice/blob/v1.6.1/src/precice/bindings/python_future/setup.py#L14) (previous to `v2.0.0`) is renamed to [`precice`](https://github.com/precice/python-bindings/blob/3b9aec6c529814e6904a6a4697cf92388d4c4bf0/setup.py#L18) (from `v2.0.0`).
+
+## 1.6.1
+
+- Fixed a platform-dependent issue with boost.
+
+## 1.6.0
+
 - Added CMake target to uninstall the project.
 - Added `INFO` log output of the connection build-up during the instantiation. This dramatically simplifies the identification of connection-related problems.
 - Added `precice::getVersionInformation()` to the interface. This returns a semicolon separated list of information containing the version, configuration, compiler and flags used to compile the library.

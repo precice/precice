@@ -204,6 +204,7 @@ MappingConfiguration:: MappingConfiguration
 
 void MappingConfiguration:: xmlTagCallback
 (
+  const xml::ConfigurationContext& context,
   xml::XMLTag& tag )
 {
   PRECICE_TRACE(tag.getName());
@@ -271,7 +272,7 @@ void MappingConfiguration:: xmlTagCallback
   }
 }
 
-void MappingConfiguration::xmlEndTagCallback(xml::XMLTag& tag)
+void MappingConfiguration::xmlEndTagCallback(const xml::ConfigurationContext& context, xml::XMLTag& tag)
 {
 }
 

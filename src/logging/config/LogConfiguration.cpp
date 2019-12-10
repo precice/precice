@@ -52,6 +52,7 @@ LogConfiguration::LogConfiguration
 
 void LogConfiguration::xmlTagCallback
 (
+  const xml::ConfigurationContext& context,
   xml::XMLTag& tag )
 {
   PRECICE_TRACE(tag.getFullName());
@@ -69,6 +70,7 @@ void LogConfiguration::xmlTagCallback
 
 void LogConfiguration::xmlEndTagCallback
 (
+  const xml::ConfigurationContext& context,
   xml::XMLTag& tag )
 {
   PRECICE_TRACE(tag.getFullName());

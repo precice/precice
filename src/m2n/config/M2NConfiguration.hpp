@@ -43,9 +43,9 @@ public:
     return _m2ns;
   }
 
-  virtual void xmlTagCallback(xml::XMLTag &callingTag);
+  virtual void xmlTagCallback(const xml::ConfigurationContext& context, xml::XMLTag &callingTag);
 
-  virtual void xmlEndTagCallback(xml::XMLTag &callingTag) {}
+  virtual void xmlEndTagCallback(const xml::ConfigurationContext& context, xml::XMLTag &callingTag) {}
 
 private:
   logging::Logger _log{"m2n::M2NConfiguration"};

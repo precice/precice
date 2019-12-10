@@ -5,7 +5,6 @@
 #include "acceleration/BaseQNAcceleration.hpp"
 #include "acceleration/BroydenAcceleration.hpp"
 #include "acceleration/ConstantRelaxationAcceleration.hpp"
-#include "acceleration/HierarchicalAitkenAcceleration.hpp"
 #include "acceleration/IQNILSAcceleration.hpp"
 #include "acceleration/MMAcceleration.hpp"
 #include "acceleration/MVQNAcceleration.hpp"
@@ -51,7 +50,6 @@ AccelerationConfiguration::AccelerationConfiguration(
       ATTR_PRECOND_NONCONST_TIMESTEPS("freeze-after"),
       VALUE_CONSTANT("constant"),
       VALUE_AITKEN("aitken"),
-      VALUE_HIERARCHICAL_AITKEN("hierarchical-aitken"),
       VALUE_IQNILS("IQN-ILS"),
       VALUE_MVQN("IQN-IMVJ"),
       VALUE_ManifoldMapping("MM"),
@@ -95,11 +93,6 @@ void AccelerationConfiguration::connectTags(xml::XMLTag &parent)
   }
   {
     XMLTag tag(*this, VALUE_AITKEN, occ, TAG);
-    addTypeSpecificSubtags(tag);
-    tags.push_back(tag);
-  }
-  {
-    XMLTag tag(*this, VALUE_HIERARCHICAL_AITKEN, occ, TAG);
     addTypeSpecificSubtags(tag);
     tags.push_back(tag);
   }
@@ -151,6 +144,7 @@ PtrAccelerationConfiguration AccelerationConfiguration::getCoarseModelOptimizati
 }
 
 void AccelerationConfiguration::xmlTagCallback(
+    const xml::ConfigurationContext& context,
     xml::XMLTag &callingTag)
 {
   PRECICE_TRACE(callingTag.getFullName());
@@ -247,6 +241,7 @@ void AccelerationConfiguration::xmlTagCallback(
 }
 
 void AccelerationConfiguration::xmlEndTagCallback(
+    const xml::ConfigurationContext& context,
     xml::XMLTag &callingTag)
 {
   PRECICE_TRACE(callingTag.getName());
@@ -289,10 +284,6 @@ void AccelerationConfiguration::xmlEndTagCallback(
     } else if (callingTag.getName() == VALUE_AITKEN) {
       _acceleration = PtrAcceleration(
           new AitkenAcceleration(
-              _config.relaxationFactor, _config.dataIDs));
-    } else if (callingTag.getName() == VALUE_HIERARCHICAL_AITKEN) {
-      _acceleration = PtrAcceleration(
-          new HierarchicalAitkenAcceleration(
               _config.relaxationFactor, _config.dataIDs));
     } else if (callingTag.getName() == VALUE_IQNILS) {
       _acceleration = PtrAcceleration(
@@ -373,20 +364,6 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
     tagRelax.addAttribute(attrValue);
     tag.addSubtag(tagRelax);
   } else if (tag.getName() == VALUE_AITKEN) {
-    XMLTag               tagInitRelax(*this, TAG_INIT_RELAX, XMLTag::OCCUR_ONCE);
-    XMLAttribute<double> attrValue(ATTR_VALUE);
-    tagInitRelax.addAttribute(attrValue);
-    XMLAttribute<bool> attrEnforce(ATTR_ENFORCE, false);
-    tagInitRelax.addAttribute(attrEnforce);
-    tag.addSubtag(tagInitRelax);
-
-    XMLTag                    tagData(*this, TAG_DATA, XMLTag::OCCUR_ONCE_OR_MORE);
-    XMLAttribute<std::string> attrName(ATTR_NAME);
-    XMLAttribute<std::string> attrMesh(ATTR_MESH);
-    tagData.addAttribute(attrName);
-    tagData.addAttribute(attrMesh);
-    tag.addSubtag(tagData);
-  } else if (tag.getName() == VALUE_HIERARCHICAL_AITKEN) {
     XMLTag               tagInitRelax(*this, TAG_INIT_RELAX, XMLTag::OCCUR_ONCE);
     XMLAttribute<double> attrValue(ATTR_VALUE);
     tagInitRelax.addAttribute(attrValue);

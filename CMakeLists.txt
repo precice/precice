@@ -1,7 +1,7 @@
 cmake_minimum_required (VERSION 3.10.2)
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/XSDKCompilerDetect.cmake)
 
-project(preCICE VERSION 1.5.2 LANGUAGES CXX)
+project(preCICE VERSION 1.6.1 LANGUAGES CXX)
 
 #
 # Overview of this configuration
@@ -26,6 +26,7 @@ project(preCICE VERSION 1.5.2 LANGUAGES CXX)
 list (APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 list (APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/modules")
 
+include(CheckCXX11Library)
 include(CopyTargetProperty)
 include(XSDKMacros)
 include(Validation)
@@ -49,8 +50,9 @@ option(MPI "Enables MPI-based communication and running coupling tests." ON)
 option(PETSC "Enable use of the PETSc linear algebra library." ON)
 option(PYTHON "Python support" ON)
 option(PRECICE_Packages "Configure package generation." ON)
-option(PRECICE_InstallTest "Add test binary and necessary files to install target." ON)
+option(PRECICE_InstallTest "Add test binary and necessary files to install target." OFF)
 option(BUILD_SHARED_LIBS "Build shared libraries by default" OFF)
+option(PRECICE_ALWAYS_VALIDATE_LIBS "Validate libraries even after the validatation succeeded." OFF)
 xsdk_tpl_option_override(MPI TPL_ENABLE_MPI)
 xsdk_tpl_option_override(PETSC TPL_ENABLE_PETSC)
 xsdk_tpl_option_override(PYTHON TPL_ENABLE_PYTHON)
@@ -459,9 +461,14 @@ else()
     RENAME changelog
     )
   # Install uncompressed manpages
-  install(DIRECTORY docs/man/man1
+  install(FILES docs/man/man1/binprecice.1
     DESTINATION share/man
     )
+  if(PRECICE_InstallTest)
+    install(FILES docs/man/man1/testprecice.1
+      DESTINATION share/man
+      )
+  endif()
 endif()
 
 # Configure a pkg-config file

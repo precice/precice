@@ -21,6 +21,13 @@ namespace precice
 namespace xml
 {
 
+/// Tightly coupled to the parameters of SolverInterface()
+struct ConfigurationContext {
+    std::string name;
+    int rank;
+    int size;
+};
+
 /// Represents an XML tag to be configured automatically.
 class XMLTag
 {
@@ -39,7 +46,7 @@ public:
      * At this callback, the attributes of the callingTag are already parsed and
      * available, while the subtags are not yet parsed.
      */
-    virtual void xmlTagCallback(XMLTag &callingTag) = 0;
+    virtual void xmlTagCallback(ConfigurationContext const& context, XMLTag &callingTag) = 0;
 
     /**
      * @brief Callback at end of XML tag and at end of subtag.
@@ -48,7 +55,7 @@ public:
      * This callback is first done for the listener, and then for the parent tag
      * listener (if existing).
      */
-    virtual void xmlEndTagCallback(XMLTag &callingTag) = 0;
+    virtual void xmlEndTagCallback(ConfigurationContext const& context, XMLTag &callingTag) = 0;
   };
 
   /// Types of occurrences of an XML tag.
@@ -69,10 +76,10 @@ public:
    * @param[in] xmlNamespace Defines a prefix/namespace for the tag. Tags with equal namespace or treated as group.
    */
   XMLTag(
-      Listener &         listener,
-      const std::string &name,
-      Occurrence         occurrence,
-      const std::string &xmlNamespace = "");
+      Listener &  listener,
+      std::string name,
+      Occurrence  occurrence,
+      std::string xmlNamespace = "");
 
   /**
    * @brief Adds a description of the purpose of this XML tag.
@@ -226,8 +233,8 @@ private:
 
 /// No operation listener for tests.
 struct NoPListener : public XMLTag::Listener {
-  void xmlTagCallback(XMLTag &callingTag) override {}
-  void xmlEndTagCallback(XMLTag &callingTag) override {}
+  void xmlTagCallback(ConfigurationContext const & context, XMLTag &callingTag) override {}
+  void xmlEndTagCallback(ConfigurationContext const & context, XMLTag &callingTag) override {}
 };
 
 /**
@@ -247,6 +254,7 @@ XMLTag getRootTag();
 /// Configures the given configuration from file configurationFilename.
 void configure(
     XMLTag &           tag,
+    const precice::xml::ConfigurationContext& context,
     const std::string &configurationFilename);
 
 }} // namespace precice, xml

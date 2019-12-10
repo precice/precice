@@ -64,6 +64,28 @@ public:
   void requestSlavesConnection(const std::string &acceptorName,
                                const std::string &requesterName);
 
+    /**
+   * Same as acceptSlavesConnection except this only creates the channels, 
+   * no vertex list needed!
+   */
+  void acceptSlavesPreConnection(const std::string &acceptorName,
+                                 const std::string &requesterName);
+
+  /** 
+   * Same as requestSlavesConnection except this only creates the channels, 
+   * no vertex list needed!
+   */
+  void requestSlavesPreConnection(const std::string &acceptorName,
+                                  const std::string &requesterName);
+
+  /*
+   * @brief After preliminary communication channels were set up and after 
+   *        the mesh partitions were communicated locally for every mesh, 
+   *        call this function to update and complete the communication 
+   *        channels for every communicated mesh
+   */  
+  void completeSlavesConnection();
+
   /**
    * @brief prepares to establish the connections
    *
@@ -116,6 +138,15 @@ public:
    * neglect the gathering and checking step.
    */
   void send(double itemToSend);
+   
+  /// each rank sends its mesh partition to connected ranks  
+  void broadcastSendLocalMesh(mesh::Mesh &mesh);
+
+  /// each rank sends the local communication map to the remote connecetd ranks (of the other participant)  
+  void broadcastSendLCM(std::map<int, std::vector<int>> &localCommunicationMap, mesh::Mesh &mesh);
+
+  /// each rank sends an int to the remote connected ranks  
+  void broadcastSend(int &itemToSend, mesh::Mesh &mesh);
 
   /// All slaves receive an array of doubles (different for each slave).
   void receive(double *itemsToReceive,
@@ -129,6 +160,15 @@ public:
   /// All slaves receive a double (the same for each slave).
   void receive(double &itemToReceive);
 
+  /// each rank receives mesh partition from connected ranks
+  void broadcastReceiveLocalMesh(mesh::Mesh &mesh);
+
+  /// each rank receives local communication maps from remote connetcetd ranks (of the other participant)  
+  void broadcastReceiveLCM(std::map<int, std::vector<int>> &localCommunicationMap, mesh::Mesh &mesh);
+
+  /// each rank receives an int from remote connetcetd ranks
+  void broadcastReceiveAll(std::vector<int> &itemToReceive, mesh::Mesh &mesh);
+  
 private:
   logging::Logger _log{"m2n::M2N"};
 

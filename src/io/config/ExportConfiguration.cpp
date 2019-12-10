@@ -46,6 +46,7 @@ ExportConfiguration::ExportConfiguration(xml::XMLTag &parent)
 }
 
 void ExportConfiguration::xmlTagCallback(
+    const xml::ConfigurationContext& context,
     xml::XMLTag &tag)
 {
   if (tag.getNamespace() == TAG) {
