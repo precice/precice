@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file. For future 
 ## develop
 
 - drop official python2 support for python bindings ([remove tests](https://github.com/precice/systemtests/commit/dba924447996574967b2295cf652fb32bec58020)).
+- Move python bindings to independent repository: [`precice/python-bindings`](https://github.com/precice/python-bindings)
 
 ## 1.6.1
 
