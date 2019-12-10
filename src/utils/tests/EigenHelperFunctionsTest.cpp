@@ -1,9 +1,11 @@
 #include "testing/Testing.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 
+using namespace precice;
 using namespace precice::utils;
 
 BOOST_AUTO_TEST_SUITE(UtilsTests)
+BOOST_AUTO_TEST_SUITE(EigenHelperFunctionsTests, *testing::OnMaster())
 
 BOOST_AUTO_TEST_CASE(FirstN)
 {
@@ -52,4 +54,5 @@ BOOST_AUTO_TEST_CASE(ComponentWiseLess)
 }
 
 
+BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()

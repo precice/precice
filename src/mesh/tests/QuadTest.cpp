@@ -7,9 +7,11 @@
 
 #include <vector>
 
+using namespace precice;
 using namespace precice::mesh;
 
 BOOST_AUTO_TEST_SUITE(MeshTests)
+BOOST_AUTO_TEST_SUITE(QuadTests, *testing::OnMaster())
 
 
 BOOST_AUTO_TEST_CASE(Quads)
@@ -239,4 +241,6 @@ BOOST_AUTO_TEST_CASE(QuadWKTPrint)
     std::string q1string("POLYGON ((0 0 0, 0 1 0, 1 1 0, 1 0 0, 0 0 0))");
     BOOST_TEST(q1string == stream.str());
 }
+
+BOOST_AUTO_TEST_SUITE_END() // Quad
 BOOST_AUTO_TEST_SUITE_END() // Mesh

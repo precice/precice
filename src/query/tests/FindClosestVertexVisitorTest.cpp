@@ -6,7 +6,7 @@
 using namespace precice;
 using namespace precice::query;
 
-BOOST_AUTO_TEST_SUITE(QueryTests)
+BOOST_AUTO_TEST_SUITE(QueryTests, *testing::OnMaster())
 
 BOOST_AUTO_TEST_CASE(FindClosestVertexVisitor)
 {

@@ -2,9 +2,11 @@
 #include "utils/algorithm.hpp"
 #include <Eigen/Core>
 
+using namespace precice;
 namespace pu = precice::utils;
 
 BOOST_AUTO_TEST_SUITE(UtilsTests)
+BOOST_AUTO_TEST_SUITE(AlgorithmTests, *testing::OnMaster())
 
 BOOST_AUTO_TEST_CASE(MakeArray)
 {
@@ -110,6 +112,8 @@ BOOST_AUTO_TEST_CASE(EmptyRange)
     BOOST_TEST(str == "<Empty Range>");
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END() // Range
 
-BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END() // Alorithm
+
+BOOST_AUTO_TEST_SUITE_END() // Utils

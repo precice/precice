@@ -2,10 +2,11 @@
 
 #include "math/math.hpp"
 
+using namespace precice;
 using namespace precice::math;
 
 BOOST_AUTO_TEST_SUITE(MathTests)
-BOOST_AUTO_TEST_SUITE(Differences)
+BOOST_AUTO_TEST_SUITE(Differences, *testing::OnMaster())
 
 BOOST_AUTO_TEST_CASE(Scalar)
 {
