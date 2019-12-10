@@ -5,9 +5,11 @@
 #include "mesh/Vertex.hpp"
 #include "testing/Testing.hpp"
 
+using namespace precice;
 using namespace precice::mesh;
 
 BOOST_AUTO_TEST_SUITE(MeshTests)
+BOOST_AUTO_TEST_SUITE(GroupTests, *testing::OnMaster())
 
 BOOST_AUTO_TEST_CASE(Groups)
 {
@@ -59,4 +61,5 @@ BOOST_AUTO_TEST_CASE(Groups)
   BOOST_TEST(group.size() == 11);
 }
 
+BOOST_AUTO_TEST_SUITE_END() // Group
 BOOST_AUTO_TEST_SUITE_END() // Mesh

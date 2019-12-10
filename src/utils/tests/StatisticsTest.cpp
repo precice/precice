@@ -2,11 +2,12 @@
 #include "utils/Statistics.hpp"
 #include <Eigen/Core>
 
+using namespace precice;
 namespace pu = precice::utils;
 
 BOOST_AUTO_TEST_SUITE(UtilsTests)
 
-BOOST_AUTO_TEST_CASE(DistanceAccumulator)
+BOOST_AUTO_TEST_CASE(DistanceAccumulator, *testing::OnMaster())
 {
     pu::statistics::DistanceAccumulator acc;
     acc(0);

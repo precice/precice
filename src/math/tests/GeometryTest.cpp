@@ -1,10 +1,11 @@
 #include "../geometry.hpp"
 #include "testing/Testing.hpp"
 
+using namespace precice;
 using namespace precice::math;
 
 BOOST_AUTO_TEST_SUITE(MathTests)
-BOOST_AUTO_TEST_SUITE(Geometry)
+BOOST_AUTO_TEST_SUITE(Geometry, *testing::OnMaster())
 
 BOOST_AUTO_TEST_CASE(Collinear)
 {
