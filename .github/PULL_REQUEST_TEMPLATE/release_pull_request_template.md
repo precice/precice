@@ -3,6 +3,8 @@
 * [ ] assign a release manager, who takes care of the process
 * [ ] assign each point below to a responsible person, before you continue. Use `@member`.
 
+Only the release manager should update this post (even tickboxes, due to race conditions in editing). Everybody else should comment on the PR with the progress.
+
 ## Step by step guide
 * [ ] Merge master to develop (No commits after the release on master)
 * [ ] Create branch `release-N` from develop. If needed, `git rebase develop`.
