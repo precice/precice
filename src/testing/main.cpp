@@ -95,7 +95,7 @@ int main(int argc, char* argv[])
   utils::Parallel::initializeMPI(&argc, &argv);
   logging::setMPIRank(utils::Parallel::getProcessRank());
   utils::Petsc::initialize(&argc, &argv);
-  //utils::EventRegistry::instance().initialize("precice-Tests", "", utils::Parallel::getGlobalCommunicator());
+  utils::EventRegistry::instance().initialize("precice-Tests", "", utils::Parallel::getGlobalCommunicator());
 
   if (utils::Parallel::getCommunicatorSize() < 4) {
     if (utils::Parallel::getProcessRank() == 0)
@@ -109,7 +109,7 @@ int main(int argc, char* argv[])
 
   int retCode = boost::unit_test::unit_test_main( &init_unit_test, argc, argv );
 
-  //utils::EventRegistry::instance().finalize();
+  utils::EventRegistry::instance().finalize();
   utils::Petsc::finalize();
   utils::Parallel::finalizeMPI();
   utils::MasterSlave::_communication = nullptr;
