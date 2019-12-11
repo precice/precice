@@ -11,6 +11,7 @@ namespace {
 
 /// GENERAL
 
+/// Transforms a given heading into the id of the sanitized GitHub link
 std::string toGHLink(const std::string &heading)
 {
   std::regex sanitizer{"[^a-zA-Z0-9-]"};
@@ -27,6 +28,7 @@ std::string toGHLink(const std::string &heading)
 
 /// Attribute
 
+/// Prints the DTD attribute spec for an XMLAttribute given its name.
 template <typename ATTRIBUTE_T>
 std::ostream& printDTD(std::ostream& out, const XMLAttribute<ATTRIBUTE_T> &attr, const std::string &ElementName)
 {
@@ -42,6 +44,7 @@ std::ostream& printDTD(std::ostream& out, const XMLAttribute<ATTRIBUTE_T> &attr,
   return out;
 }
 
+/// Prints the attribute as a markdown table row.
 template <typename ATTRIBUTE_T>
 std::ostream& printMD(std::ostream& out, const XMLAttribute<ATTRIBUTE_T> &attr)
 {
@@ -67,6 +70,7 @@ std::ostream& printMD(std::ostream& out, const XMLAttribute<ATTRIBUTE_T> &attr)
   return out;
 }
 
+/// Prints an example of a given XMLAttribute.
 template <typename ATTRIBUTE_T>
 std::ostream& printExample(std::ostream& out, const XMLAttribute<ATTRIBUTE_T> &attr)
 {
@@ -80,6 +84,7 @@ std::ostream& printExample(std::ostream& out, const XMLAttribute<ATTRIBUTE_T> &a
   return out;
 }
 
+/// Prints the xml documentation of a given XMLAttribute
 template <typename ATTRIBUTE_T>
 std::ostream& printDocumentation(std::ostream& out, const XMLAttribute<ATTRIBUTE_T> &attr)
 {
@@ -105,6 +110,9 @@ std::ostream& printDocumentation(std::ostream& out, const XMLAttribute<ATTRIBUTE
 
 /// XMLTag
 
+/** Prints the dtd of a given XMLTag.
+ * Also prints the doctype if start is true.
+ */
 std::ostream& printDTD(std::ostream& out, const XMLTag &tag, bool start = false)
 {
   if (start)
@@ -172,6 +180,11 @@ std::ostream& printDTD(std::ostream& out, const XMLTag &tag, bool start = false)
   return out;
 }
 
+/** Prints an Example of the given XMLTag at a given level of nesting.
+ *
+ * For the sake of readability, the example depth is trucated.
+ * level is used to trucate and for indentation purposes.
+ */
 std::ostream& printExample(std::ostream& out, const XMLTag &tag, int level)
 {
   std::string        prefix(level * 2, ' ');
@@ -218,6 +231,12 @@ std::ostream& printExample(std::ostream& out, const XMLTag &tag, int level)
   return out;
 }
 
+/** Prints the markdown reference for a given XMLTag
+ *
+ * @param[in] tag the tag to print
+ * @param[in] level the level of nesting
+ * @param[in] occurrences the occuences of tags, required to generate links
+ */
 std::ostream& printMD(std::ostream& out, const XMLTag &tag, int level, std::map<std::string, int> &occurrences)
 {
   out << std::string(level, '#') << ' ' << tag.getFullName() << "\n\n";
@@ -298,6 +317,9 @@ std::ostream& printMD(std::ostream& out, const XMLTag &tag, int level, std::map<
   return out;
 }
 
+/** Print the markdown reference for a given XMLTag.
+ * @note Use this as an initial call
+ */
 std::ostream& printMD(std::ostream& out, const XMLTag &tag, int level = 1)
 {
   std::map<std::string, int> occurrences;
@@ -305,6 +327,7 @@ std::ostream& printMD(std::ostream& out, const XMLTag &tag, int level = 1)
   return out;
 }
 
+/// Print the xml documentation of an XMLTag at a given level of indentation.
 std::ostream& printDocumentation(std::ostream& out, const XMLTag &tag, int indentation)
 {
   const int   linewidth = 1000;
