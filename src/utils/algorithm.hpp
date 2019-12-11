@@ -4,6 +4,7 @@
 #include<array>
 #include<functional>
 #include<type_traits>
+#include<iterator>
 
 namespace precice {
 namespace utils {
@@ -44,6 +45,24 @@ bool unique_elements(const Container& c, BinaryPredicate p = {})
 }
 
 
+/** intersperse a the range [first, last[ with a given element.
+ * 
+ * This results in a range [first, elem, first+1, elem, ... , elem, last[
+ * 
+ * \tparam InputIter the type of the input iterators
+ * \tparam ElemT the type of the element to intersperse
+ */
+template<class InputIter, class ElemT>
+void intersperse(InputIter first, InputIter last, const ElemT& elem, std::ostream& out) {
+    if (first == last) return;
+
+    out << *first++;
+    for (;first != last; ++first) {
+        out << elem << *first;
+    }
+}
+
+
 /** std::mismatch
  * @todo{Remove when migrating to c++14}
  */
@@ -57,6 +76,64 @@ std::pair<InputIt1, InputIt2>
     return std::make_pair(first1, first2);
 }
 
+
+/// The RangePreview object used as a lazy proxy struct for proviewing the content of a Range
+template<typename InputIter>
+struct RangePreview {
+    using Size = typename std::iterator_traits<InputIter>::difference_type;
+    Size n;
+    InputIter begin;
+    InputIter end;
+
+    RangePreview(Size n, InputIter begin, InputIter end) : n(n), begin(begin), end(end) {}
+
+    void print(std::ostream& out) const
+    {
+        if (begin == end) {
+            out << "<Empty Range>";
+            return;
+        }
+
+        out << '[';
+
+        if (n == 0) {
+            out << " ... ";
+        } else {
+            auto dist = std::distance(begin, end);
+            const std::string sep{", "};
+            if (dist <= n*2) {
+                intersperse(begin, end, sep, out);
+            } else {
+                auto last1 = begin;
+                std::advance(last1, n);
+                intersperse(begin, last1, sep, out);
+                out << sep << "... " << sep;
+                auto first2 = begin;
+                std::advance(first2, dist-n);
+                intersperse(first2, end, sep, out);
+            }
+        }
+
+        auto mm = std::minmax_element(begin, end);
+        out << "] min:" << *mm.first << " max:" << *mm.second;
+    }
+};
+
+/// Allows streaming of RangePreview objects
+template<typename Iter>
+std::ostream& operator<<(std::ostream& out, const RangePreview<Iter>& rp) {
+    rp.print(out);
+    return out;
+}
+
+/** returns a display object which previews a range
+ *
+ * The preview contains the first and last n elements and the minmax-elements.
+ */
+template<typename Range, typename Iter = typename Range::const_iterator, typename Size = typename std::iterator_traits<Iter>::difference_type>
+const RangePreview<Iter> previewRange(Size n, const Range& range) {
+    return {n, std::begin(range), std::end(range)};
+}
 
 } // namespace utils
 } // namespace precice

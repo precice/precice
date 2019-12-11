@@ -59,6 +59,14 @@ auto firstN(const Eigen::PlainObjectBase<Derived>& val, unsigned n) -> const Eig
     return {val.data(), std::min<Eigen::Index>(n,val.size())};
 }
 
+template<typename Derived, typename Iter = const typename Derived::Scalar*, typename Size = typename std::iterator_traits<Iter>::difference_type>
+const RangePreview<Iter> previewRange(Size n, const Eigen::PlainObjectBase<Derived>& eigen) {
+    auto begin = eigen.data();
+    auto end = begin;
+    std::advance(end, eigen.size());
+    return {n, begin, end};
+}
+
 
 template<typename DerivedLHS, typename DerivedRHS>
 bool componentWiseLess(const Eigen::PlainObjectBase<DerivedLHS>& lhs, const Eigen::PlainObjectBase<DerivedRHS>& rhs)
