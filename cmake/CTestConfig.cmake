@@ -157,10 +157,16 @@ add_precice_test(
   )
 add_precice_test(
   NAME parallel
-  ARGUMENTS "--run_test=PreciceTests/Parallel"
+  ARGUMENTS "--run_test=PreciceTests/Parallel:\!PreciceTests/Parallel/CouplingOnLine"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
   MPI
   )
+add_precice_test(
+  NAME couplingonline
+  ARGUMENTS "--run_test=PreciceTests/Parallel/CouplingOnLine"
+  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
+  MPI
+  )  
 add_precice_test(
   NAME query
   ARGUMENTS "--run_test=QueryTests"
