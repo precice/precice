@@ -58,4 +58,6 @@ Run all these tests manually on your system. If you succeed, please write a comm
 * [ ] Send email and do marketing
 * [ ] Tweet
 * [ ] Format the code base
-* [ ] Update the [PR template](https://github.com/precice/precice/blob/add_PR_template/.github/PULL_REQUEST_TEMPLATE/release_pull_request_template.md)?
+* [ ] Update the [PR template](https://github.com/precice/precice/blob/add_PR_template/.github/PULL_REQUEST_TEMPLATE/release_pull_request_template.md)
+
+To open a new PR with this template, use this [PR template query](https://github.com/precice/precice/compare/new?template=release_pull_request_template.md)
