@@ -1,6 +1,5 @@
 #pragma once
 
-#include "mesh/Group.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Vertex.hpp"
