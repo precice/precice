@@ -9,7 +9,9 @@ Only the release manager should update this post (even tickboxes, due to race co
 * [ ] Merge master to develop (No commits after the release on master)
 * [ ] Create branch `release-N` from develop. If needed, `git rebase develop`.
 * [ ] Open PR from `release-N` to `master` (use [this template](https://github.com/precice/precice/blob/add_PR_template/.github/PULL_REQUEST_TEMPLATE/release_pull_request_template.md))
-* [ ] Look over [`CHANGELOG.md`](https://github.com/precice/precice/blob/develop/CHANGELOG.md) and add things if necessary and extract summary (all)
+* [ ] Look over [`CHANGELOG.md`](https://github.com/precice/precice/blob/develop/CHANGELOG.md) (all)
+   * Add things, if necessary
+   * Extract summary
 * [ ] Look over the Roadmap and update entries.
 * [ ] Do regression tests using the release branch (specific revision) _list below :arrow_down:_ (all)
 * [ ] Bump version in:
