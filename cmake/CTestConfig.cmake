@@ -3,7 +3,7 @@
 #
 
 set(PRECICE_TEST_TIMEOUT_LONG 180 CACHE STRING "The timeout in seconds for longer tests.")
-set(PRECICE_TEST_TIMEOUT_SHORT 20 CACHE STRING "The timeout in seconds for shorter tests.")
+set(PRECICE_TEST_TIMEOUT_SHORT 100 CACHE STRING "The timeout in seconds for shorter tests.")
 
 set(PRECICE_TEST_DIR "${preCICE_BINARY_DIR}/TestOutput")
 mark_as_advanced(PRECICE_TEST_DIR)
