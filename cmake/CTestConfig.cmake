@@ -180,18 +180,6 @@ add_precice_test(
   MPI
   )  
 add_precice_test(
-  NAME GlobalRBFPartitioning
-  ARGUMENTS "--run_test=PreciceTests/Parallel/GlobalRBFPartitioning"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  MPI
-  )      
-add_precice_test(
-  NAME LocalRBFPartitioning
-  ARGUMENTS "--run_test=PreciceTests/Parallel/LocalRBFPartitioning"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  MPI
-  )    
-add_precice_test(
   NAME TestQN
   ARGUMENTS "--run_test=PreciceTests/Parallel/TestQN"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
@@ -221,12 +209,6 @@ add_precice_test(
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
   MPI
   )  
-add_precice_test(
-  NAME UserDefinedMPICommunicatorPetRBF
-  ARGUMENTS "--run_test=PreciceTests/Parallel/UserDefinedMPICommunicatorPetRBF"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  MPI
-)   
 add_precice_test(
   NAME query
   ARGUMENTS "--run_test=QueryTests"
