@@ -117,7 +117,7 @@ add_precice_test(
   )
 add_precice_test(
   NAME mapping
-  ARGUMENTS "--run_test=MappingTests:\!MappingTests/PetRadiaBasisFunctionMapping"
+  ARGUMENTS "--run_test=MappingTests:\!MappingTests/PetRadialBasisFunctionMapping"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
   )
 add_precice_test(
