@@ -3,7 +3,7 @@
 #
 
 set(PRECICE_TEST_TIMEOUT_LONG 180 CACHE STRING "The timeout in seconds for longer tests.")
-set(PRECICE_TEST_TIMEOUT_SHORT 100 CACHE STRING "The timeout in seconds for shorter tests.")
+set(PRECICE_TEST_TIMEOUT_SHORT 20 CACHE STRING "The timeout in seconds for shorter tests.")
 
 set(PRECICE_TEST_DIR "${preCICE_BINARY_DIR}/TestOutput")
 mark_as_advanced(PRECICE_TEST_DIR)
@@ -161,54 +161,6 @@ add_precice_test(
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
   MPI
   )
-add_precice_test(
-  NAME CouplingOnLine
-  ARGUMENTS "--run_test=PreciceTests/Parallel/CouplingOnLine"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  MPI
-  )  
-add_precice_test(
-  NAME TestMasterSlaveSetup
-  ARGUMENTS "--run_test=PreciceTests/Parallel/TestMasterSlaveSetup"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  MPI
-  )    
-add_precice_test(
-  NAME TestFinalize
-  ARGUMENTS "--run_test=PreciceTests/Parallel/TestFinalize"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  MPI
-  )  
-add_precice_test(
-  NAME TestQN
-  ARGUMENTS "--run_test=PreciceTests/Parallel/TestQN"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  MPI
-  )  
-add_precice_test(
-  NAME testDistributedCommunications
-  ARGUMENTS "--run_test=PreciceTests/Parallel/testDistributedCommunications"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  MPI
-  ) 
-add_precice_test(
-  NAME NearestProjectionRePartitioning
-  ARGUMENTS "--run_test=PreciceTests/Parallel/NearestProjectionRePartitioning"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  MPI
-  ) 
-add_precice_test(
-  NAME MasterSockets
-  ARGUMENTS "--run_test=PreciceTests/Parallel/MasterSockets"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  MPI
-  ) 
-add_precice_test(
-  NAME UserDefinedMPICommunicator
-  ARGUMENTS "--run_test=PreciceTests/Parallel/UserDefinedMPICommunicator"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  MPI
-  )  
 add_precice_test(
   NAME query
   ARGUMENTS "--run_test=QueryTests"
