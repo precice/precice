@@ -9,7 +9,7 @@ using namespace precice;
 using namespace precice::action;
 
 BOOST_AUTO_TEST_SUITE(ActionTests)
-BOOST_AUTO_TEST_SUITE(Python)
+BOOST_AUTO_TEST_SUITE(Python, *testing::OnMaster())
 
 BOOST_AUTO_TEST_CASE(AllMethods)
 {

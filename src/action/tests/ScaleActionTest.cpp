@@ -12,7 +12,7 @@
 using namespace precice;
 
 BOOST_AUTO_TEST_SUITE(ActionTests)
-BOOST_AUTO_TEST_SUITE(Scale)
+BOOST_AUTO_TEST_SUITE(Scale, *testing::OnMaster())
 
 BOOST_AUTO_TEST_CASE(DivideByArea)
 {

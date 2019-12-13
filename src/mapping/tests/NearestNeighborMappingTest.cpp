@@ -10,7 +10,7 @@ using namespace precice;
 using namespace precice::mesh;
 
 BOOST_AUTO_TEST_SUITE(MappingTests)
-BOOST_AUTO_TEST_SUITE(NearestNeighborMapping)
+BOOST_AUTO_TEST_SUITE(NearestNeighborMapping, *testing::OnMaster())
 
 BOOST_AUTO_TEST_CASE(ConsistentNonIncremental)
 {

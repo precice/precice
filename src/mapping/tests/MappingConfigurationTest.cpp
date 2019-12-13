@@ -9,7 +9,7 @@ using namespace precice;
 using namespace precice::mapping;
 
 BOOST_AUTO_TEST_SUITE(MappingTests)
-BOOST_AUTO_TEST_SUITE(Configuration)
+BOOST_AUTO_TEST_SUITE(Configuration, *testing::OnMaster())
 
 BOOST_AUTO_TEST_CASE(Configuration)
 {

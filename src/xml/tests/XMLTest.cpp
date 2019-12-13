@@ -4,10 +4,11 @@
 #include "xml/XMLTag.hpp"
 
 
+using namespace precice;
 using namespace precice::xml;
 using precice::testing::getPathToSources;
 
-BOOST_AUTO_TEST_SUITE(XML)
+BOOST_AUTO_TEST_SUITE(XML, *testing::OnMaster())
 
 struct CallbackHost : public XMLTag::Listener {
   Eigen::VectorXd eigenVectorXd;
