@@ -192,7 +192,8 @@ private:
 
   bool _areSlavesConnected = false;
 
-  /// between two serial participants, only the master com should be used (for unit testing)
+
+  /// between two serial participants, only use the master-master com (required only in some unit tests)
   bool _useOnlyMasterCom = false;
 
   // to set _useOnlyMasterCom to true for unit tests

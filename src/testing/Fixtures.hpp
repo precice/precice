@@ -18,7 +18,7 @@ namespace testing
 
 /// Fixture to create and destroy a master communication
 /**
- * Many tests with parallel features need a working master-slave communication. This fixture avoid code duplication for such tests.
+ * Many tests with parallel features need a working master-slave communication. This fixture avoids code duplication for such tests.
  */
 struct MasterComFixture {
   MasterComFixture()

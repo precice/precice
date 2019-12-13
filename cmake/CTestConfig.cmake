@@ -35,13 +35,13 @@ function(add_precice_test)
     # Parallel tests, dispatched by MPI
     message(STATUS "Test ${PAT_FULL_NAME} - parallel")
     add_test(NAME ${PAT_FULL_NAME}
-      COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 4 ${PRECICE_CTEST_MPI_FLAGS} ${MPIEXEC_PREFLAGS} $<TARGET_FILE:testprecice> ${PAT_ARGUMENTS} --log_level=all ${MPIEXEC_POSTFLAGS}
+      COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 4 ${PRECICE_CTEST_MPI_FLAGS} ${MPIEXEC_PREFLAGS} $<TARGET_FILE:testprecice> ${PAT_ARGUMENTS} ${MPIEXEC_POSTFLAGS}
       )
   elseif(NOT PAT_MPI)
     # Serial tests, called directly
     message(STATUS "Test ${PAT_FULL_NAME} - serial")
     add_test(NAME ${PAT_FULL_NAME}
-      COMMAND $<TARGET_FILE:testprecice> ${PAT_ARGUMENTS} --log_level=all
+      COMMAND $<TARGET_FILE:testprecice> ${PAT_ARGUMENTS}
       )
   else()
     message(STATUS "Test ${PAT_FULL_NAME} - skipped")

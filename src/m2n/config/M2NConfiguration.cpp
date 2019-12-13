@@ -86,7 +86,7 @@ M2NConfiguration::M2NConfiguration(xml::XMLTag &parent)
   }
 
   XMLAttribute<bool> attrEnforce(ATTR_ENFORCE_GATHER_SCATTER, false);
-  attrEnforce.setDocumentation("Enfore the distributed communication to a gather-scatter scheme. "
+  attrEnforce.setDocumentation("Enforce the distributed communication to a gather-scatter scheme. "
                              "Only recommended for trouble shooting.");
 
   auto attrFrom = XMLAttribute<std::string>("from")

@@ -99,7 +99,7 @@ void print(std::map<int, std::vector<int>> const &m)
     }
   }
 
-  if(utils::MasterSlave::isSlave()) {
+  if (utils::MasterSlave::isSlave()) {
     utils::MasterSlave::_communication->send(oss.str(), 0);
   }
   else{

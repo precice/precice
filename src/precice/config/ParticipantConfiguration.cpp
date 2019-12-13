@@ -359,13 +359,13 @@ void ParticipantConfiguration:: xmlTagCallback
     com::CommunicationConfiguration comConfig;
     com::PtrCommunication com = comConfig.createCommunication(tag);
     _participants.back()->setClientServerCommunication(com);
-    isParallelSolutionDefined = true;
+    _isParallelSolutionDefined = true;
   }
   else if (tag.getNamespace() == TAG_MASTER){
     com::CommunicationConfiguration comConfig;
     com::PtrCommunication com = comConfig.createCommunication(tag);
     utils::MasterSlave::_communication = com;
-    isParallelSolutionDefined = true;
+    _isParallelSolutionDefined = true;
     _participants.back()->setUseMaster(true);
   }
 }
@@ -611,7 +611,7 @@ void ParticipantConfiguration:: finishParticipantConfiguration
 
 
   // create default master communication if needed
-  if(context.size > 1 && not isParallelSolutionDefined && participant->getName() == context.name){
+  if(context.size > 1 && not _isParallelSolutionDefined && participant->getName() == context.name){
     #ifdef PRECICE_NO_MPI
         std::ostringstream error;
         error << "When building with \"mpi=off\", you need to specify an alternative \"master\" "
@@ -623,7 +623,7 @@ void ParticipantConfiguration:: finishParticipantConfiguration
         participant->setUseMaster(true);
     #endif
   }
-  isParallelSolutionDefined = false; // to not mess up with previous participant
+  _isParallelSolutionDefined = false; // to not mess up with previous participant
 
 }
 

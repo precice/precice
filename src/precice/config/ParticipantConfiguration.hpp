@@ -112,7 +112,8 @@ private:
 
   mapping::PtrMapping getMapping ( const std::string& mappingName );
 
-  bool isParallelSolutionDefined = false;
+  /// does the config already provide a solution for a parallel participant (master or server)
+  bool _isParallelSolutionDefined = false;
 
   void finishParticipantConfiguration (
          const xml::ConfigurationContext& context,
