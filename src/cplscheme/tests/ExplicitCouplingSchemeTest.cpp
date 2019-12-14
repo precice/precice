@@ -242,7 +242,7 @@ void runExplicitCouplingWithSubcycling(
   }
 }
 
-struct ExplicitCouplingSchemeFixture
+struct ExplicitCouplingSchemeFixture : m2n::WhiteboxAccessor
 {
   std::string _pathToTests;
 
@@ -259,7 +259,7 @@ struct ExplicitCouplingSchemeFixture
     BOOST_TEST(communication);
     BOOST_TEST(not communication->isConnected());
     utils::Parallel::splitCommunicator( localParticipant );
-    communication->_useOnlyMasterCom = true;
+    useOnlyMasterCom(communication) = true;
     if ( participant0 == localParticipant ) {
       communication->requestMasterConnection ( participant1, participant0);
     }

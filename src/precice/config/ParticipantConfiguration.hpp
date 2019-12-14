@@ -112,7 +112,9 @@ private:
 
   mapping::PtrMapping getMapping ( const std::string& mappingName );
 
-  /// does the config already provide a solution for a parallel participant (master or server)
+  // Does this participant already define a master or server tag?
+  // This context information is needed in xmlEndTagCallback to create a default
+  // master com if required (i.e. no solution yet defined and parallel).
   bool _isParallelSolutionDefined = false;
 
   void finishParticipantConfiguration (

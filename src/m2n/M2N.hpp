@@ -4,21 +4,17 @@
 #include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "SharedPointer.hpp"
 #include <map>
 
-// Forward declaration to friend unit tests which only use the master com
-namespace CplSchemeTests {
-namespace SerialImplicitCouplingSchemeTests{
-struct testConfiguredAbsConvergenceMeasureSynchronized;
-}
-struct CompositionalCouplingSchemeFixture;
-struct ExplicitCouplingSchemeFixture;
-}
 
 namespace precice
 {
 namespace m2n
 {
+
+// Forward declaration to friend unit tests which only use the master com
+struct WhiteboxAccessor;
 
 /**
  * @brief M2N communication class.
@@ -192,14 +188,26 @@ private:
 
   bool _areSlavesConnected = false;
 
+  // The following flag is (solely) needed for unit tests between two serial participants.
+  // To also use the slaves-slaves communication would require a lengthy setup of meshes
+  // and their re-partitioning, which could also not be moved to some fixture as the M2Ns
+  // are created through the configuration.
+  // See e.g. "CplSchemeTests/ExplicitCouplingSchemeTests/testConfiguredSimpleExplicitCoupling"
+  // This flag gives a loophole. It is set to false for normal use and modfied in the
+  // respective tests through a fried decleration.
 
-  /// between two serial participants, only use the master-master com (required only in some unit tests)
+  /// between two serial participants, only use the master-master com and no slaves-slaves com
   bool _useOnlyMasterCom = false;
 
-  // to set _useOnlyMasterCom to true for unit tests
-  friend struct CplSchemeTests::SerialImplicitCouplingSchemeTests::testConfiguredAbsConvergenceMeasureSynchronized;
-  friend struct CplSchemeTests::CompositionalCouplingSchemeFixture;
-  friend struct CplSchemeTests::ExplicitCouplingSchemeFixture;
+  // @brief To allow access to _useOnlyMasterCom
+  friend struct WhiteboxAccessor;
+};
+
+/// struct giving access _useOnlyMasterCom
+struct WhiteboxAccessor {
+    static auto useOnlyMasterCom(PtrM2N m2n) -> typename std::add_lvalue_reference<decltype(m2n->_useOnlyMasterCom)>::type {
+        return m2n->_useOnlyMasterCom;
+    }
 };
 
 } // namespace m2n

@@ -613,10 +613,8 @@ void ParticipantConfiguration:: finishParticipantConfiguration
   // create default master communication if needed
   if(context.size > 1 && not _isParallelSolutionDefined && participant->getName() == context.name){
     #ifdef PRECICE_NO_MPI
-        std::ostringstream error;
-        error << "When building with \"mpi=off\", you need to specify an alternative \"master\" "
-              << "communication (e.g. sockets) for every parallel participant";
-        throw std::runtime_error{error.str()};
+        throw std::runtime_error{ "When building with \"mpi=off\", you need to specify an alternative \"master\" "
+                      "communication (e.g. sockets) for every parallel participant"};
     #else
         com::PtrCommunication com = std::make_shared<com::MPIDirectCommunication>();
         utils::MasterSlave::_communication = com;

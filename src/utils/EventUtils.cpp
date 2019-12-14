@@ -234,6 +234,7 @@ void EventRegistry::finalize()
   for (auto & e : storedEvents)
     e.second.stop();
 
+  // @todo remove testMode flag once we have properly refactored the tests, cf. issue #597 
   if (initialized && not precice::testMode) // this makes only sense when it was properly initialized
     normalize();
 

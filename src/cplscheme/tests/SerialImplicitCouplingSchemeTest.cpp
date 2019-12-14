@@ -388,7 +388,7 @@ void runCouplingWithSubcycling
   }
 }
 
-struct SerialImplicitCouplingSchemeFixture
+struct SerialImplicitCouplingSchemeFixture : m2n::WhiteboxAccessor
 {
   std::string _pathToTests;
 
@@ -596,7 +596,7 @@ BOOST_AUTO_TEST_CASE(testConfiguredAbsConvergenceMeasureSynchronized,
   xml::configure(root, xml::ConfigurationContext{}, configurationPath);
   meshConfig->setMeshSubIDs();
   m2n::PtrM2N m2n = m2nConfig->getM2N("Participant0", "Participant1");
-  m2n->_useOnlyMasterCom = true;
+  useOnlyMasterCom(m2n) = true;
 
   // some dummy mesh
   meshConfig->meshes()[0]->createVertex(Eigen::Vector3d(1.0, 1.0, 1.0));
