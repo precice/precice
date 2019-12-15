@@ -33,7 +33,6 @@ env:
     - LIBRARY_PATH="$PETSC_DIR/$PETSC_ARCH/lib:$LOCAL_INSTALL/lib:$LIBRARY_PATH"
     - PYTHONPATH="$PETSC_DIR/$PETSC_ARCH/lib:/usr/lib/python2.7:/usr/lib/python2.7/dist-packages:/usr/lib/python2.7/plat-x86_64-linux-gnu"
     - BOOST_ROOT=${LOCAL_INSTALL}
-    - BUILD_TYPE=CMAKE
     - CXXFLAGS="-Wall -Wextra -Wno-unused-parameter"
     - BOOST_TEST_LOG_LEVEL=test_suite
 
@@ -44,26 +43,6 @@ env:
 
 matrix:
   include:
-
-      # testing builds on scons
-    - if: type = cron or branch = master
-      compiler: gcc
-      env: BUILD_TYPE=SCONS MPI=on PETSC=on
-    - if: type = cron or branch = master
-      compiler: gcc
-      env: BUILD_TYPE=SCONS MPI=on PETSC=off
-    - if: type = cron or branch = master
-      compiler: gcc
-      env: BUILD_TYPE=SCONS MPI=off PETSC=off
-    - if: type = cron or branch = master
-      compiler: clang
-      env: BUILD_TYPE=SCONS MPI=on PETSC=on
-    - if: type = cron or branch = master
-      compiler: clang
-      env: BUILD_TYPE=SCONS MPI=on PETSC=off
-    - if: type = cron or branch = master
-      compiler: clang
-      env: BUILD_TYPE=SCONS MPI=off PETSC=off
 
     # Test coverage
     - name: "Test Coverage"
