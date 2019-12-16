@@ -4,7 +4,6 @@
 #include <boost/test/tree/test_case_counter.hpp> 
 #include <boost/filesystem.hpp>
 #include "utils/Parallel.hpp"
-#include "utils/Petsc.hpp"
 #include "utils/EventUtils.hpp"
 #include "utils/MasterSlave.hpp"
 #include "logging/LogConfiguration.hpp"
@@ -104,7 +103,6 @@ int main(int argc, char* argv[])
   logging::setupLogging(); // first logging initalization, as early as possible
   utils::Parallel::initializeMPI(&argc, &argv);
   logging::setMPIRank(utils::Parallel::getProcessRank());
-  utils::Petsc::initialize(&argc, &argv);
   utils::EventRegistry::instance().initialize("precice-Tests", "", utils::Parallel::getGlobalCommunicator());
     
   if (utils::Parallel::getCommunicatorSize() < 4) {
@@ -124,7 +122,6 @@ int main(int argc, char* argv[])
   }
 
   utils::EventRegistry::instance().finalize();
-  utils::Petsc::finalize();
   utils::Parallel::finalizeMPI();
   utils::MasterSlave::_communication = nullptr;
   return retCode;
