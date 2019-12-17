@@ -20,15 +20,18 @@ classdef SolverInterface < handle
     methods
         %% Construction and configuration
         % Constructor
-        function obj = SolverInterface(SolverName,configFileName)
+        function obj = SolverInterface(SolverName,configFileName,solverProcessIndex,solverProcessSize)
             %SOLVERINTERFACE Construct an instance of this class
+            if (solverProcessIndex > 0 || solverProcessSize > 1)
+                error('Parallel runs are currently not supported with the MATLAB bindings.')    
+            end
             if ischar(SolverName)
                 SolverName = string(SolverName);
             end
             if ischar(configFileName)
                 configFileName = string(configFileName);
             end
-            preciceGateway(uint8(0),SolverName,configFileName);
+            preciceGateway(uint8(0),SolverName,configFileName,int32(solverProcessIndex),int32(solverProcessSize));
         end
         
         % Destructor

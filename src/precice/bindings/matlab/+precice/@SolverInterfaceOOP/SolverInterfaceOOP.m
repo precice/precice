@@ -26,19 +26,22 @@ classdef SolverInterfaceOOP < precice.SolverInterface
     methods
         %% Construction and configuration
         % Constructor
-        function obj = SolverInterface(SolverName,configFileName)
+        function obj = SolverInterface(SolverName,configFileName,solverProcessIndex,solverProcessSize)
             %SOLVERINTERFACE Construct an instance of this class
             % Initialize the mex host
             obj.oMexHost = mexhost;
             obj.bMexHostRunning = true;
             
+            if (solverProcessIndex > 0 || solverProcessSize > 1)
+                error('Parallel runs are currently not supported with the MATLAB bindings.')    
+            end
             if ischar(SolverName)
                 SolverName = string(SolverName);
             end
             if ischar(configFileName)
                 configFileName = string(configFileName);
             end
-            feval(obj.oMexHost,"preciceGateway",uint8(0),SolverName,configFileName);
+            feval(obj.oMexHost,"preciceGateway",uint8(0),SolverName,configFileName,int32(solverProcessIndex),int32(solverProcessSize));
         end
         
         % Destructor
