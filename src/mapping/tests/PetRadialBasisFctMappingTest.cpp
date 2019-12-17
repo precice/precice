@@ -8,6 +8,7 @@
 #include "mesh/Vertex.hpp"
 #include "math/math.hpp"
 #include "testing/Testing.hpp"
+#include "testing/Fixtures.hpp"
 
 using namespace precice;
 using namespace precice::mesh;
@@ -23,9 +24,8 @@ void addGlobalIndex(mesh::PtrMesh &mesh, int offset = 0)
   }
 }
 
-
-BOOST_AUTO_TEST_SUITE(Parallel,
-                      * testing::MinRanks(4))
+BOOST_FIXTURE_TEST_SUITE(Parallel, testing::PETScTestFixture<4>,
+                         *testing::MinRanks(4))
 
 
 /// Holds rank, owner, position and value of a single vertex
@@ -729,8 +729,7 @@ BOOST_AUTO_TEST_CASE(testTagFirstRound){
 
 BOOST_AUTO_TEST_SUITE_END() // Parallel
 
-BOOST_AUTO_TEST_SUITE(Serial,
-                      * boost::unit_test::fixture<testing::SingleRankFixture>())
+BOOST_FIXTURE_TEST_SUITE(Serial, testing::PETScTestFixture<1>, * testing::OnMaster())
 
 
 void perform2DTestConsistentMapping(Mapping& mapping)

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Testing.hpp"
+#include "testing/Testing.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/MasterSlave.hpp"
 #include "com/Communication.hpp"
@@ -8,6 +8,8 @@
 #include "m2n/M2N.hpp"
 #include "m2n/GatherScatterComFactory.hpp"
 #include "m2n/SharedPointer.hpp"
+#include "utils/Petsc.hpp"
+#include <numeric>
 
 namespace precice
 {
@@ -104,5 +106,36 @@ struct SplitParticipantsFixture {
   }
 
 };
+
+#ifndef PRECICE_NO_PETSC
+
+/** Fixture to initialize and finalize PETSc for a given amount of ranks.
+ *
+ * @note This fixture also restricts the communicator.
+ *
+ */
+template <int ranks>
+struct PETScTestFixture {
+  static_assert(ranks > 0, "Ranks must be positive.");
+  PETScTestFixture()
+    :restriction{[]{ std::vector<int> r(ranks); std::iota(r.begin(), r.end(), 0); return r; }()}
+  {
+    if (utils::Parallel::getProcessRank() < ranks) {
+      utils::Petsc::initialize(nullptr, nullptr);
+    }
+  }
+
+  ~PETScTestFixture()
+  {
+      if (utils::Parallel::getProcessRank() < ranks) {
+          utils::Petsc::finalize();
+      }
+  }
+
+  MPICommRestrictFixture restriction;
+};
+
+#endif
+
 
 }}

@@ -16,7 +16,7 @@ using Par = precice::utils::Parallel;
 
 /// Fixture to set and reset MPI communicator
 struct MPICommRestrictFixture {
-  explicit MPICommRestrictFixture(std::vector<int> &ranks)
+  explicit MPICommRestrictFixture(const std::vector<int> &ranks)
   {
     // Restriction MUST always be called on all ranks, otherwise we hang
     if (static_cast<int>(ranks.size()) < Par::getCommunicatorSize()) {

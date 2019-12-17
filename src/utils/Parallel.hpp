@@ -112,6 +112,9 @@ public:
    * @attention Has to be called by every process in the communicator to be
    *            restricted, otherwise, a deadlock is achieved!
    *
+   * @note Requesting a restricted communicator given a single rank will return
+   *       MPI_COMM_SELF.
+   *
    * @param[in] ranks Process ranks to be selected for restricted comm.
    */
   static Communicator getRestrictedCommunicator(const std::vector<int> &ranks);

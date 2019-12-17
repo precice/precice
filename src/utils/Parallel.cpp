@@ -252,6 +252,11 @@ Parallel::Communicator Parallel::getRestrictedCommunicator(const std::vector<int
   PRECICE_ASSERT(_isInitialized);
   PRECICE_ASSERT(not ranks.empty());
   PRECICE_ASSERT(ranks.size() <= static_cast<size_t>(getCommunicatorSize()));
+
+  // When asked to restrict to a single rank, then we can simply use MPI_COMM_SELF.
+  if (ranks.size() == 1) {
+      return MPI_COMM_SELF;
+  }
   // Create group, containing all processes of communicator
   MPI_Group currentGroup;
   MPI_Comm_group(_globalCommunicator, &currentGroup);
@@ -293,6 +298,7 @@ Parallel::Communicator Parallel::getRestrictedCommunicator(const std::vector<int
 
 void Parallel::restrictGlobalCommunicator(const std::vector<int> &ranks)
 {
+  PRECICE_ASSERT(!ranks.empty());
   auto restrComm = getRestrictedCommunicator(ranks);
   if (std::find(ranks.begin(), ranks.end(), getProcessRank()) != ranks.end())
     setGlobalCommunicator(restrComm);
