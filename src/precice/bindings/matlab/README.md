@@ -37,13 +37,17 @@ The API introduces MATLAB wrapper classes for the `SolverInterface` class and th
 The function syntax is mostly identical to the syntax of the C++ API. The following things should be noted:
 - C++ `int`s correspond to MATLAB `int32`s.
 - Wherever the C++ API expects pointers, the MATLAB API expects a matrix/vector instead. If the user wants to pass vector data (e.g. vertex coordinates) for multiple vertices, the shape of the corresponding matrix must be `[dim numVertices]`, where `dim` is the problem dimension. Thus, each **column** must correspond to a vertex, and each line must correspond to a coordinate - **not** vice versa. Users should try to respect this in their MATLAB code from the start, because transposing can be costly for huge matrices.
-- Output arguments which are pointers passed input arguments to the C++ preCICE API are replaced by output matrices. E.g., the C++ API function
+- There are two changes in the input arguments for the MATLAB API with respect to the C++ API: 
+    - Output arguments which are pointers passed as input arguments to the C++ preCICE API are replaced by output matrices.
+    - As the MATLAB API receives matrices/vectors instead of pointers, the size (e.g. number of vertices) of the arrays is not an input argument, but instead it is inferred from the array.
+
+As an example, the C++ API function
 ```
 readBlockScalarData(int dataID, int size, const int *valueIndices, double *values)
 ```
 is found in the MATLAB bindings as
 ```
-values = readBlockScalarData(dataID, size, valueIndices)
+values = readBlockScalarData(dataID, valueIndices)
 ```
 
 ## Out of process variant
@@ -52,4 +56,4 @@ The C++ MEX API supports [out of process execution](https://de.mathworks.com/hel
 This has the following advantages:
 - Multiple instances of `SolverInterfaceOOP` can exist at the same time.
 - If the gateway function crashes, then MATLAB will not crash. Only the mexHost object will crash.
-However, using the OOP variant is **significantly** slower than the normal in process 
+However, using the OOP variant is **significantly** slower than the normal process.

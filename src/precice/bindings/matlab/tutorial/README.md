@@ -53,11 +53,8 @@ cd explicit
 # Add bindings to MATLAB path
 export MATLABPATH=$PRECICE_ROOT/src/precice/bindings/matlab/
 
-# If necessary specify MATLAB to use sytstem's libstdc++ library (see guide for compiling the bindings)
-LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libstdc++.so.6
-
 # Run matlab code without GUI
-matlab -nodisplay -nosplash -nodesktop -r "Solver_I;exit;"
+LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libstdc++.so.6 matlab -nodisplay -nosplash -nodesktop -r "Solver_I;exit;"
 
 ```
 
@@ -69,11 +66,8 @@ cd explicit
 # Add bindings to MATLAB path
 export MATLABPATH=$PRECICE_ROOT/src/precice/bindings/matlab/
 
-# If necessary specify MATLAB to use sytstem's libstdc++ library (see guide for compiling the bindings)
-LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libstdc++.so.6
-
 # Run matlab code without GUI
-matlab -nodisplay -nosplash -nodesktop -r "Solver_U;exit;"
+LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libstdc++.so.6 matlab -nodisplay -nosplash -nodesktop -r "Solver_U;exit;"
 
 ```
 
