@@ -148,7 +148,6 @@ void ProvidedBoundingBox::communicate()
 
     // set global indexes for master rank mesh partition 
     for(int i=0; i<(int)_mesh->vertices().size(); i++){
-      // _mesh->getVertexDistribution()[0].push_back(vertexCounter);
       _mesh->vertices()[i].setGlobalIndex(vertexCounter);
       vertexCounter++;
     }
