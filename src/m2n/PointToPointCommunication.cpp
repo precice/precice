@@ -544,7 +544,6 @@ void PointToPointCommunication::requestPreConnection(std::string const &acceptor
   for (auto &i : localConnectedRanks)
     acceptingRanks.emplace(i);
 
-  // std::set<int> acceptingRanks(localConnectedRanks.begin(), localConnectedRanks.end());
 
   _communication = _communicationFactory->newCommunication();
   _communication->requestConnectionAsClient(acceptorName, requesterName,
