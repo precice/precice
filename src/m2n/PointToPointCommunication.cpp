@@ -413,7 +413,7 @@ void PointToPointCommunication::acceptPreConnection(std::string const &acceptorN
   _connectionDataVector.reserve(localConnectedRanks.size());
 
   for (int connectedRank : localConnectedRanks) {
-    _connectionDataVector.push_back({connectedRank, _communication, com::PtrRequest()});
+    _connectionDataVector.push_back({connectedRank, com::PtrRequest()});
   }
 
   _isConnected = true;
@@ -540,14 +540,17 @@ void PointToPointCommunication::requestPreConnection(std::string const &acceptor
   requests.reserve(localConnectedRanks.size());
   _connectionDataVector.reserve(localConnectedRanks.size());
 
-  std::set<int> acceptingRanks(localConnectedRanks.begin(), localConnectedRanks.end());
+  std::set<int> acceptingRanks;
+  for (auto &i : localConnectedRanks)
+    acceptingRanks.emplace(i);
+
 
   _communication = _communicationFactory->newCommunication();
   _communication->requestConnectionAsClient(acceptorName, requesterName,
                                acceptingRanks, utils::MasterSlave::getRank());
 
   for (auto & connectedRank : localConnectedRanks) {
-    _connectionDataVector.push_back({connectedRank, _communication, com::PtrRequest()});
+    _connectionDataVector.push_back({connectedRank, com::PtrRequest()});
   }
   _isConnected = true;
 }
@@ -635,7 +638,7 @@ void PointToPointCommunication::receive(double *itemsToReceive,
 void PointToPointCommunication::broadcastSend(const int &itemToSend)
 {  
   for (auto &connectionData : _connectionDataVector) {
-    connectionData.communication->send(itemToSend, connectionData.remoteRank);
+    _communication->send(itemToSend, connectionData.remoteRank);
   }  
 }
 
@@ -644,7 +647,7 @@ void PointToPointCommunication::broadcastReceiveAll(std::vector<int> &itemToRece
 {
   int data = 0;
   for (auto &connectionData : _connectionDataVector) {
-    connectionData.communication->receive(data, connectionData.remoteRank);
+    _communication->receive(data, connectionData.remoteRank);
     itemToReceive.push_back(data);
   }  
 }
@@ -652,28 +655,28 @@ void PointToPointCommunication::broadcastReceiveAll(std::vector<int> &itemToRece
 void PointToPointCommunication::broadcastSendMesh()
 {  
   for (auto &connectionData : _connectionDataVector) {
-    com::CommunicateMesh(connectionData.communication).sendMesh(*_mesh, connectionData.remoteRank);
+    com::CommunicateMesh(_communication).sendMesh(*_mesh, connectionData.remoteRank);
   }  
 }
 
 void PointToPointCommunication::broadcastReceiveMesh()
 {  
   for (auto &connectionData : _connectionDataVector) {
-    com::CommunicateMesh(connectionData.communication).receiveMesh(*_mesh, connectionData.remoteRank);
+    com::CommunicateMesh(_communication).receiveMesh(*_mesh, connectionData.remoteRank);
   }  
 }
 
 void PointToPointCommunication::broadcastSendLCM(CommunicationMap &localCommunicationMap)
 {
  for (auto &connectionData : _connectionDataVector) {
-    connectionData.communication->send(localCommunicationMap[connectionData.remoteRank], connectionData.remoteRank);
+    _communication->send(localCommunicationMap[connectionData.remoteRank], connectionData.remoteRank);
   } 
 }
 
 void PointToPointCommunication::broadcastReceiveLCM(CommunicationMap &localCommunicationMap)
 {
   for (auto &connectionData : _connectionDataVector) {
-    connectionData.communication->receive(localCommunicationMap[connectionData.remoteRank], connectionData.remoteRank);
+    _communication->receive(localCommunicationMap[connectionData.remoteRank], connectionData.remoteRank);
   }
 }
 

@@ -183,8 +183,7 @@ private:
    *        3. Request holding information about pending communication
    */
   struct ConnectionData {
-    int                   remoteRank;
-    com::PtrCommunication communication;
+    int                   remoteRank;    
     com::PtrRequest       request;
   };
 

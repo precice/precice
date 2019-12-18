@@ -415,43 +415,6 @@ void Mesh:: computeState()
   computeNormals();
   computeBoundingBox();
 }
-
-void Mesh:: buildBoundingBox()
-{
-  // Compute normals only if faces to derive normal information are available
-  bool computeNormals = true;
-  size_t size2DFaces = _content.edges().size();
-  size_t size3DFaces = _content.triangles().size() + _content.quads().size();
-  if (_dimensions == 2){
-    if (size2DFaces == 0){
-      computeNormals = false;
-    }
-  }
-  else if (size3DFaces == 0){
-  PRECICE_ASSERT(_dimensions == 3, _dimensions);
-    computeNormals = false;
-  }
-  
- // Normalize vertex normals & compute bounding box
-  _boundingBox = BoundingBox (_dimensions,
-                              std::make_pair(std::numeric_limits<double>::max(),
-                                             std::numeric_limits<double>::lowest()));
-  for (Vertex& vertex : _content.vertices()) {
-    if (computeNormals) {
-      // there can be cases when a vertex has no edge though edges exist in general (e.g. after filtering)
-      vertex.setNormal(vertex.getNormal().normalized());
-    }
-    
-    for (int d = 0; d < _dimensions; d++) {
-      _boundingBox[d].first  = std::min(vertex.getCoords()[d], _boundingBox[d].first);
-      _boundingBox[d].second = std::max(vertex.getCoords()[d], _boundingBox[d].second);
-    }
-  }
-  for (int d = 0; d < _dimensions; d++) {
-    PRECICE_DEBUG("BoundingBox, dim: " << d << ", first: " << _boundingBox[d].first << ", second: " << _boundingBox[d].second);
-  }
-}
-
     
 void Mesh:: clear()
 {

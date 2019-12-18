@@ -237,7 +237,8 @@ public:
    */
   void computeState();
   
-  void buildBoundingBox();
+  /// Computes the boundingBox for the vertices.
+  void computeBoundingBox();
 
   /**
    * @brief Removes all mesh elements and data values (does not remove data).
@@ -304,9 +305,6 @@ private:
 
   /// Computes the normals for all primitives.
   void computeNormals();
-
-  /// Computes the boundingBox for the vertices.
-  void computeBoundingBox();
 
   mutable logging::Logger _log{"mesh::Mesh"};
 

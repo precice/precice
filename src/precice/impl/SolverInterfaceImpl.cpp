@@ -1419,7 +1419,7 @@ void SolverInterfaceImpl:: computeBoundingBoxs()
    
   for (MeshContext* meshContext : _accessor->usedMeshContexts())
   {
-    meshContext->mesh->buildBoundingBox();
+    meshContext->mesh->computeBoundingBox();
     meshContext->partition->communicateBoundingBox();    
   }
   

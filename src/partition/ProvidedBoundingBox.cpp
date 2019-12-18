@@ -148,10 +148,12 @@ void ProvidedBoundingBox::communicate()
 
     // set global indexes for master rank mesh partition 
     for(int i=0; i<(int)_mesh->vertices().size(); i++){
-      _mesh->getVertexDistribution()[0].push_back(vertexCounter);
       _mesh->vertices()[i].setGlobalIndex(vertexCounter);
       vertexCounter++;
     }
+
+    _mesh->getVertexOffsets().resize(utils::MasterSlave::getSize());
+    _mesh->getVertexOffsets()[0] = vertexCounter;
 
     // in master rank max global id is equal to number of vertices-1 
     vertexMaxGlobalID = _mesh->vertices().size()-1;
@@ -163,11 +165,13 @@ void ProvidedBoundingBox::communicate()
     {
       utils::MasterSlave::_communication->receive(numberOfVertices,rankSlave);
       utils::MasterSlave::_communication->send(vertexCounter,rankSlave);
-      for (int i = 0; i < numberOfVertices; i++) {
-        _mesh->getVertexDistribution()[rankSlave].push_back(vertexCounter);
-        vertexCounter++;
-      }
+      vertexCounter+=numberOfVertices;
+      _mesh->getVertexOffsets()[rankSlave] = vertexCounter;
     }
+
+    // broadcast the vertex offsets
+    PRECICE_DEBUG("My vertex offsets: " << _mesh->getVertexOffsets());
+    utils::MasterSlave::_communication->broadcast(_mesh->getVertexOffsets());
 
     // set the total number of vertices for this participant
     _mesh->setGlobalNumberOfVertices(vertexCounter);
@@ -194,6 +198,10 @@ void ProvidedBoundingBox::communicate()
     // set the max global index
     vertexMaxGlobalID = offset + _mesh->vertices().size() -1;
 
+    // get the vertex offsets from master
+    utils::MasterSlave::_communication->broadcast(_mesh->getVertexOffsets(), 0);
+    PRECICE_DEBUG("My vertex offsets: " << _mesh->getVertexOffsets());
+
     // receive global number of vertices for this participant from master
     int globalNumberOfVertices = -1;
     utils::MasterSlave::_communication->broadcast(globalNumberOfVertices, 0);
@@ -208,8 +216,8 @@ void ProvidedBoundingBox::communicate()
   // each rank sends its mesh partition to connected remote ranks
   _m2ns[0]->broadcastSendLocalMesh(*_mesh);
   
-  createOwnerInformation();  
-  computeVertexOffsets();
+  createOwnerInformation();    
+  computeVertexOffsetsBB(_mesh->vertices().size());    
 }
 
 void ProvidedBoundingBox::compute()
