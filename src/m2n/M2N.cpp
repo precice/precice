@@ -5,6 +5,7 @@
 #include "mesh/Mesh.hpp"
 #include "utils/Event.hpp"
 #include "utils/MasterSlave.hpp"
+// @todo Remove workaround as soon as we have a proper solution
 #include<thread>
 #include<chrono>
 
