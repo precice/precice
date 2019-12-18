@@ -218,7 +218,7 @@ void ProvidedBoundingBox::communicate()
   _m2ns[0]->broadcastSendLocalMesh(*_mesh);
   
   createOwnerInformation();    
-  // computeVertexOffsetsBB(_mesh->vertices().size());    
+  computeVertexOffsetsBB(_mesh->vertices().size());    
 }
 
 void ProvidedBoundingBox::compute()
