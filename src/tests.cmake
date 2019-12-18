@@ -76,5 +76,6 @@ target_sources(testprecice
     src/utils/tests/StatisticsTest.cpp
     src/utils/tests/StringTest.cpp
     src/xml/tests/ParserTest.cpp
+    src/xml/tests/PrinterTest.cpp
     src/xml/tests/XMLTest.cpp
     )
