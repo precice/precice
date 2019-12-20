@@ -1,7 +1,7 @@
 clear; close all; clc;
 
 % Initialize and configure preCICE
-interface = precice.SolverInterface("SolverU", "precice-config.xml");
+interface = precice.SolverInterface("SolverU", "precice-config.xml", 0, 1);
 cowid = precice.Constants.actionWriteInitialData(); % Required for data initialization
 coric = precice.Constants.actionReadIterationCheckpoint(); % For implicit coupling
 cowic = precice.Constants.actionWriteIterationCheckpoint(); % For implicit coupling

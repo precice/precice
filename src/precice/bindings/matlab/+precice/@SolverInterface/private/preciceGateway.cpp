@@ -100,7 +100,9 @@ public:
             {
                 const StringArray solverName = inputs[1];
                 const StringArray configFileName = inputs[2];
-                interface = new SolverInterface(solverName[0],0,1);
+                const TypedArray<int32_t> procIndex = inputs[3];
+                const TypedArray<int32_t> procSize = inputs[4];
+                interface = new SolverInterface(solverName[0],procIndex[0],procSize[0]);
                 constructed = true;
                 interface->configure(configFileName[0]);
                 break;
@@ -111,7 +113,6 @@ public:
                 constructed = false;
                 break;
             }
-            
             case FunctionID::initialize:
             {
                 double dt = interface->initialize();

@@ -20,15 +20,18 @@ classdef SolverInterface < handle
     methods
         %% Construction and configuration
         % Constructor
-        function obj = SolverInterface(SolverName,configFileName)
+        function obj = SolverInterface(SolverName,configFileName,solverProcessIndex,solverProcessSize)
             %SOLVERINTERFACE Construct an instance of this class
+            if (solverProcessIndex > 0 || solverProcessSize > 1)
+                error('Parallel runs are currently not supported with the MATLAB bindings.')    
+            end
             if ischar(SolverName)
                 SolverName = string(SolverName);
             end
             if ischar(configFileName)
                 configFileName = string(configFileName);
             end
-            preciceGateway(uint8(0),SolverName,configFileName);
+            preciceGateway(uint8(0),SolverName,configFileName,int32(solverProcessIndex),int32(solverProcessSize));
         end
         
         % Destructor
@@ -146,26 +149,20 @@ classdef SolverInterface < handle
         end
         
         % setMeshVertices
-        function vertexIds = setMeshVertices(obj,meshID,inSize,positions)
-            if size(positions,2) ~= inSize
-                error('Number of columns in position vector must match size!');
-            end
+        function vertexIds = setMeshVertices(obj,meshID,positions)
+            inSize = size(positions, 2);
             vertexIds = preciceGateway(uint8(46),int32(meshID),int32(inSize),positions);
         end
         
         % getMeshVertices
-        function positions = getMeshVertices(obj,meshID,inSize,vertexIds)
-            if size(ids,2) ~= inSize
-                error('Number of columns in position vector must match size!');
-            end
+        function positions = getMeshVertices(obj,meshID,vertexIds)
+            inSize = size(vertexIds, 2);
             positions = preciceGateway(uint8(47),int32(meshID),int32(inSize),vertexIds);
         end
         
         % getMeshVertexIDsFromPositions
-        function vertexIds = getMeshVertexIDsFromPositions(obj,meshID,inSize,positions)
-            if size(positions,2) ~= inSize
-                error('Number of columns in position vector must match size!');
-            end
+        function vertexIds = getMeshVertexIDsFromPositions(obj,meshID,positions)
+            inSize = size(positions, 2);
             vertexIds = preciceGateway(uint8(48),int32(meshID),int32(inSize),positions);
         end
         
@@ -222,11 +219,12 @@ classdef SolverInterface < handle
         end
         
         % writeBlockVectorData
-        function writeBlockVectorData(obj,dataID,inSize,valueIndices,values)
+        function writeBlockVectorData(obj,dataID,valueIndices,values)
             if ~isa(valueIndices,'int32')
                 warning('valueIndices should be allocated as int32 to prevent copying.');
                 valueIndices = int32(valueIndices);
             end
+            inSize = size(valueIndices, 2);
             preciceGateway(uint8(64),int32(dataID),int32(inSize),valueIndices,values);
         end
         
@@ -236,11 +234,12 @@ classdef SolverInterface < handle
         end
         
         % writeBlockScalarData
-        function writeBlockScalarData(obj,dataID,inSize,valueIndices,values)
+        function writeBlockScalarData(obj,dataID,valueIndices,values)
             if ~isa(valueIndices,'int32')
                 warning('valueIndices should be allocated as int32 to prevent copying.');
                 valueIndices = int32(valueIndices);
             end
+            inSize = size(valueIndices, 2);
             preciceGateway(uint8(66),int32(dataID),int32(inSize),valueIndices,values);
         end
         
@@ -250,11 +249,12 @@ classdef SolverInterface < handle
         end
         
         % readBlockVectorData
-        function values = readBlockVectorData(obj,dataID,inSize,valueIndices)
+        function values = readBlockVectorData(obj,dataID,valueIndices)
             if ~isa(valueIndices,'int32')
                 warning('valueIndices should be allocated as int32 to prevent copying.');
                 valueIndices = int32(valueIndices);
             end
+            inSize = size(valueIndices, 2);
             values = preciceGateway(uint8(68),int32(dataID),int32(inSize),valueIndices);
         end
         
@@ -264,14 +264,15 @@ classdef SolverInterface < handle
         end
         
         % readBlockScalarData
-        function values = readBlockScalarData(obj,dataID,inSize,valueIndices,transpose)
-            if nargin<5
+        function values = readBlockScalarData(obj,dataID,valueIndices,transpose)
+            if nargin<4
                 transpose=false;
             end
             if ~isa(valueIndices,'int32')
                 warning('valueIndices should be allocated as int32 to prevent copying.');
                 valueIndices = int32(valueIndices);
             end
+            inSize = size(valueIndices, 2);
             values = preciceGateway(uint8(70),int32(dataID),int32(inSize),valueIndices,transpose);
         end
         
