@@ -161,6 +161,10 @@ void ReceivedBoundingBox::compute()
 
   PRECICE_INFO("Filter mesh " << _mesh->getName() << " by bounding-box");  
   mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex& v){ return isVertexInBB(v);});
+  PRECICE_DEBUG("Filtered mesh. #vertices: " << filteredMesh.vertices().size()
+          << ", #edges: " << filteredMesh.edges().size()
+          << ", #triangles: " << filteredMesh.triangles().size()
+          << ", rank: " << utils::MasterSlave::getRank());
     
   if ((_fromMapping.use_count() > 0 && _fromMapping->getOutputMesh()->vertices().size() > 0) ||
       (_toMapping.use_count() > 0 && _toMapping->getInputMesh()->vertices().size() > 0))
@@ -174,7 +178,10 @@ void ReceivedBoundingBox::compute()
       "of the decomposition strategy might be necessary.";
     //PRECICE_CHECK(filteredMesh.vertices().size() > 0, msg);
   }
-  PRECICE_DEBUG("Bounding box filter, filtered from " << _mesh->vertices().size() << " vertices to " << filteredMesh.vertices().size() << " vertices.");
+  PRECICE_DEBUG("Bounding box filter, filtered from "
+          << _mesh->vertices().size() << " to " << filteredMesh.vertices().size() << " vertices, "
+          << _mesh->edges().size() << " to " << filteredMesh.edges().size() << " edges, and "
+          << _mesh->triangles().size() << " to " << filteredMesh.triangles().size() << " triangles.");
   _mesh->clear();
   _mesh->addMesh(filteredMesh);
   _mesh->computeState();
@@ -204,7 +211,10 @@ void ReceivedBoundingBox::compute()
   PRECICE_INFO("Filter mesh " << _mesh->getName() << " by mappings");
   filteredMesh.clear();
   mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex& v){ return v.isTagged();});
-  PRECICE_DEBUG("Mapping filter, filtered from " << _mesh->vertices().size() << " vertices to " << filteredMesh.vertices().size() << " vertices.");
+  PRECICE_DEBUG("Mapping filter, filtered from "
+          << _mesh->vertices().size() << " to " << filteredMesh.vertices().size() << " vertices, "
+          << _mesh->edges().size() << " to " << filteredMesh.edges().size() << " edges, and "
+          << _mesh->triangles().size() << " to " << filteredMesh.triangles().size() << " triangles.");
   _mesh->clear();
   _mesh->addMesh(filteredMesh);
   _mesh->computeState();

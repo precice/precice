@@ -124,7 +124,10 @@ void ReceivedPartition::compute()
       _mesh->clear();
       _mesh->addMesh(filteredMesh);
       _mesh->computeState();
-      PRECICE_DEBUG("Master mesh after filtering, #vertices " << _mesh->vertices().size());
+      PRECICE_DEBUG("Master mesh, filtered from "
+              << _mesh->vertices().size() << " to " << filteredMesh.vertices().size() << " vertices, "
+              << _mesh->edges().size() << " to " << filteredMesh.edges().size() << " edges, and "
+              << _mesh->triangles().size() << " to " << filteredMesh.triangles().size() << " triangles.");
 
       if(areProvidedMeshesEmpty()) {
         std::string msg = "The re-partitioning completely filtered out the mesh " + _mesh->getName() + " received on this rank at the coupling interface. "
@@ -167,7 +170,11 @@ void ReceivedPartition::compute()
         PRECICE_CHECK(not filteredMesh.vertices().empty(), msg);
       }
 
-      PRECICE_DEBUG("Bounding box filter, filtered from " << _mesh->vertices().size() << " vertices to " << filteredMesh.vertices().size() << " vertices.");
+      PRECICE_DEBUG("Bounding box filter, filtered from "
+              << _mesh->vertices().size() << " to " << filteredMesh.vertices().size() << " vertices, "
+              << _mesh->edges().size() << " to " << filteredMesh.edges().size() << " edges, and "
+              << _mesh->triangles().size() << " to " << filteredMesh.triangles().size() << " triangles.");
+
       _mesh->clear();
       _mesh->addMesh(filteredMesh);
       _mesh->computeState();
@@ -201,7 +208,11 @@ void ReceivedPartition::compute()
   Event e5("partition.filterMeshMappings" + _mesh->getName(), precice::syncMode);
   mesh::Mesh filteredMesh("FilteredMesh", _dimensions, _mesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
   mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex& v){ return v.isTagged();});
-  PRECICE_DEBUG("Mapping filter, filtered from " << _mesh->vertices().size() << " vertices to " << filteredMesh.vertices().size() << " vertices.");
+  PRECICE_DEBUG("Mapping filter, filtered from "
+          << _mesh->vertices().size() << " to " << filteredMesh.vertices().size() << " vertices, "
+          << _mesh->edges().size() << " to " << filteredMesh.edges().size() << " edges, and "
+          << _mesh->triangles().size() << " to " << filteredMesh.triangles().size() << " triangles.");
+
   _mesh->clear();
   _mesh->addMesh(filteredMesh);
   _mesh->computeState();
