@@ -85,12 +85,25 @@ public:
     int firstVertexID,
     int secondVertexID );
 
+  /// Requests set mesh edges from server.
+  void requestSetMeshEdges (
+    int meshID,
+    int size,
+    const int* vertexIDs,
+    int* edgeIDs );
+
   /// Requests set mesh triangle from server.
   void requestSetMeshTriangle (
     int meshID,
     int firstEdgeID,
     int secondEdgeID,
     int thirdEdgeID );
+
+  /// Requests set mesh triangles from server.
+  void requestSetMeshTriangles (
+    int meshID,
+    int size,
+    const int* edgeIDs );
 
   /// Requests set mesh triangle with edges from server.
   void requestSetMeshTriangleWithEdges (
@@ -189,7 +202,9 @@ private:
     REQUEST_GET_MESH_VERTICES,
     REQUEST_GET_MESH_VERTEX_IDS_FROM_POSITIONS,
     REQUEST_SET_MESH_EDGE,
+    REQUEST_SET_MESH_EDGES,
     REQUEST_SET_MESH_TRIANGLE,
+    REQUEST_SET_MESH_TRIANGLES,
     REQUEST_SET_MESH_TRIANGLE_WITH_EDGES,
     REQUEST_SET_MESH_QUAD,
     REQUEST_SET_MESH_QUAD_WITH_EDGES,
@@ -250,8 +265,14 @@ private:
   /// Handles request set mesh edge from client.
   void handleRequestSetMeshEdge ( int rankSender );
 
+  /// Handles request set mesh edge from client.
+  void handleRequestSetMeshEdges ( int rankSender );
+
   /// Handles request set mesh triangle from client.
   void handleRequestSetMeshTriangle ( int rankSender );
+
+  /// Handles request set mesh triangle from client.
+  void handleRequestSetMeshTriangles ( int rankSender );
 
   /// Handles request set mesh triangle with edges from client.
   void handleRequestSetMeshTriangleWithEdges ( int rankSender );

@@ -126,8 +126,16 @@ void RequestManager:: handleRequests()
       handleRequestSetMeshEdge(rankSender);
       singleRequest = true;
       break;
+    case REQUEST_SET_MESH_EDGES:
+      handleRequestSetMeshEdges(rankSender);
+      singleRequest = true;
+      break;
     case REQUEST_SET_MESH_TRIANGLE:
       handleRequestSetMeshTriangle(rankSender);
+      singleRequest = true;
+      break;
+    case REQUEST_SET_MESH_TRIANGLES:
+      handleRequestSetMeshTriangles(rankSender);
       singleRequest = true;
       break;
     case REQUEST_SET_MESH_TRIANGLE_WITH_EDGES:
@@ -370,6 +378,25 @@ int RequestManager:: requestSetMeshEdge
   return createdEdgeID;
 }
 
+
+void RequestManager:: requestSetMeshEdges
+(
+    int meshID,
+    int size,
+    const int* vertexIDs,
+    int* edgeIDs )
+{
+  TRACE(meshID, size);
+  _com->send(REQUEST_SET_MESH_EDGES, 0);
+  _com->send(size, 0);
+  if (size > 0) {
+      _com->send(meshID, 0);
+      _com->send(vertexIDs, size*2, 0);
+      _com->receive(edgeIDs, size, 0);
+  }
+}
+
+
 void RequestManager:: requestSetMeshTriangle
 (
   int meshID,
@@ -381,6 +408,21 @@ void RequestManager:: requestSetMeshTriangle
   _com->send(REQUEST_SET_MESH_TRIANGLE, 0);
   int data[4] = {meshID, firstEdgeID, secondEdgeID, thirdEdgeID};
   _com->send(data, 4, 0);
+}
+
+void RequestManager:: requestSetMeshTriangles
+(
+    int meshID,
+    int size,
+    const int* edgeIDs )
+{
+  TRACE(meshID, size);
+  _com->send(REQUEST_SET_MESH_EDGES, 0);
+  _com->send(size, 0);
+  if (size > 0) {
+      _com->send(meshID, 0);
+      _com->send(edgeIDs, size*3, 0);
+  }
 }
 
 void RequestManager:: requestSetMeshTriangleWithEdges
@@ -713,6 +755,24 @@ void RequestManager:: handleRequestSetMeshEdge
   _com->send(createEdgeID, rankSender);
 }
 
+void RequestManager:: handleRequestSetMeshEdges
+(
+  int rankSender )
+{
+  TRACE(rankSender);
+  int size = -1;
+  _com->receive(size, rankSender);
+  if (size > 0) {
+    int meshID = -1;
+    _com->receive(meshID, rankSender);
+    std::vector<int> vertexIDs(size*2, -1);
+    _com->receive(vertexIDs.data(), size*2, rankSender);
+    std::vector<int> edgeIDs(size, -1);
+    _interface.setMeshEdges(meshID, size, vertexIDs.data(), edgeIDs.data());
+    _com->send(edgeIDs.data(), size, rankSender);
+  }
+}
+
 void RequestManager:: handleRequestSetMeshTriangle
 (
   int rankSender )
@@ -721,6 +781,22 @@ void RequestManager:: handleRequestSetMeshTriangle
   int data[4]; // 0: meshID, 1,2,3: edge IDs
   _com->receive(data, 4, rankSender);
   _interface.setMeshTriangle(data[0], data[1], data[2], data[3]);
+}
+
+void RequestManager:: handleRequestSetMeshTriangles
+(
+  int rankSender )
+{
+  TRACE(rankSender);
+  int size = -1;
+  _com->receive(size, rankSender);
+  if (size > 0) {
+    int meshID = -1;
+    _com->receive(meshID, rankSender);
+    std::vector<int> edgeIDs(size*3, -1);
+    _com->receive(edgeIDs.data(), size*3, rankSender);
+    _interface.setMeshTriangles(meshID, size, edgeIDs.data());
+  }
 }
 
 void RequestManager:: handleRequestSetMeshTriangleWithEdges
