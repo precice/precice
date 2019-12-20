@@ -8,7 +8,7 @@
 using namespace precice;
 
 BOOST_AUTO_TEST_SUITE(MappingTests)
-BOOST_AUTO_TEST_SUITE(NearestProjectionMapping)
+BOOST_AUTO_TEST_SUITE(NearestProjectionMapping, *testing::OnMaster())
 
 BOOST_AUTO_TEST_CASE(testConservativeNonIncremental)                
 {

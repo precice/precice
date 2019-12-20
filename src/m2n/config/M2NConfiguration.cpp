@@ -137,7 +137,7 @@ m2n::PtrM2N M2NConfiguration::getM2N(const std::string &from, const std::string 
   throw std::runtime_error{error.str()};
 }
 
-void M2NConfiguration::xmlTagCallback(xml::XMLTag &tag)
+void M2NConfiguration::xmlTagCallback(const xml::ConfigurationContext& context, xml::XMLTag &tag)
 {
   if (tag.getNamespace() == TAG) {
     std::string from = tag.getStringAttributeValue("from");

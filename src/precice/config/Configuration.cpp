@@ -22,7 +22,7 @@ Configuration:: Configuration()
   _tag.addNamespace("action");
   _tag.addNamespace("server");
   _tag.addNamespace("coupling-scheme");
-  _tag.addNamespace("post-processing");
+  _tag.addNamespace("acceleration");
 
   auto attrSyncMode = xml::makeXMLAttribute("sync-mode", false)
       .setDocumentation("sync-mode enabled additional inter- and intra-participant synchronizations");
@@ -35,7 +35,7 @@ xml::XMLTag& Configuration:: getXMLTag()
   return _tag;
 }
 
-void Configuration::xmlTagCallback(xml::XMLTag& tag)
+void Configuration::xmlTagCallback(const xml::ConfigurationContext& context, xml::XMLTag& tag)
 {
   PRECICE_TRACE(tag.getName());
   if (tag.getName() == "precice-configuration") {
@@ -45,6 +45,7 @@ void Configuration::xmlTagCallback(xml::XMLTag& tag)
 
 void Configuration:: xmlEndTagCallback
 (
+  const xml::ConfigurationContext& context,
   xml::XMLTag& tag )
 {
   PRECICE_TRACE(tag.getName());

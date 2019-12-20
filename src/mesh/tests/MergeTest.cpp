@@ -7,9 +7,11 @@
 #include "mesh/Vertex.hpp"
 #include "testing/Testing.hpp"
 
+using namespace precice;
 using namespace precice::mesh;
 
 BOOST_AUTO_TEST_SUITE(MeshTests)
+BOOST_AUTO_TEST_SUITE(MergeTests, *testing::OnMaster())
 
 BOOST_AUTO_TEST_CASE(MergeTest)
 {
@@ -68,4 +70,5 @@ BOOST_AUTO_TEST_CASE(MergeTest)
   BOOST_TEST(merge.content().size() == 10);
 }
 
+BOOST_AUTO_TEST_SUITE_END() // Merge
 BOOST_AUTO_TEST_SUITE_END() // Mesh

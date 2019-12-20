@@ -45,6 +45,8 @@ protected:
    * (acceptorName, requesterName, rank)/rest of hash.
    */
   std::string getFilename() const;
+
+  mutable logging::Logger _log{"com::ConnectionInfoPublisher"};
 };
 
 
@@ -105,10 +107,6 @@ public:
    * set at construction.
    */
   void write(std::string const & info) const;
-
-private:
-
-  mutable logging::Logger _log{"com::ConnectionInfoPublisher"};
 };
 
 

@@ -35,14 +35,14 @@ public:
    *
    * @return True, if successful.
    */
-  virtual void xmlTagCallback ( xml::XMLTag& tag );
+  virtual void xmlTagCallback (const xml::ConfigurationContext& context, xml::XMLTag& tag );
 
   /**
    * @brief Callback function required for use of automatic configuration.
    *
    * @return True, if successful.
    */
-  virtual void xmlEndTagCallback ( xml::XMLTag& tag );
+  virtual void xmlEndTagCallback (const xml::ConfigurationContext& context, xml::XMLTag& tag );
 
   /**
    * @brief Returns solver interface configuration.

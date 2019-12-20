@@ -1,6 +1,5 @@
 #include "ActionConfiguration.hpp"
 #include "xml/XMLAttribute.hpp"
-#include "action/ModifyCoordinatesAction.hpp"
 #include "action/ScaleByAreaAction.hpp"
 #include "action/ScaleByDtAction.hpp"
 #include "action/ComputeCurvatureAction.hpp"
@@ -22,8 +21,6 @@ ActionConfiguration:: ActionConfiguration
   NAME_SCALE_BY_COMPUTED_DT_RATIO ( "scale-by-computed-dt-ratio" ),
   NAME_SCALE_BY_COMPUTED_DT_PART_RATIO ( "scale-by-computed-dt-part-ratio" ),
   NAME_SCALE_BY_DT ( "scale-by-dt" ),
-  NAME_ADD_TO_COORDINATES ( "add-to-coordinates" ),
-  NAME_SUBTRACT_FROM_COORDINATES ( "subtract-from-coordinates" ),
   NAME_COMPUTE_CURVATURE ( "compute-curvature" ),
   NAME_PYTHON ( "python" ),
   TAG_SOURCE_DATA ( "source-data" ),
@@ -52,20 +49,6 @@ ActionConfiguration:: ActionConfiguration
 
   std::list<XMLTag> tags;
   XMLTag::Occurrence occ = XMLTag::OCCUR_ARBITRARY;
-  {
-    XMLTag tag(*this, NAME_ADD_TO_COORDINATES, occ, TAG);
-    doc = "Adds data values to mesh vertex coordinates. Data type has to be vector.";
-    tag.setDocumentation(doc);
-    tag.addSubtag(tagSourceData);
-    tags.push_back(tag);
-  }
-  {
-    XMLTag tag(*this, NAME_SUBTRACT_FROM_COORDINATES, occ, TAG);
-    doc = "Subtracts data values to mesh vertex coordinates. Data type has to be vector.";
-    tag.setDocumentation(doc);
-    tag.addSubtag(tagSourceData);
-    tags.push_back(tag);
-  }
   {
     XMLTag tag(*this, NAME_MULTIPLY_BY_AREA, occ, TAG);
     doc = "Multiplies data values with mesh area associated to vertex holding the value.";
@@ -165,6 +148,7 @@ ActionConfiguration:: ActionConfiguration
 
 void ActionConfiguration:: xmlTagCallback
 (
+  const xml::ConfigurationContext& context,
   xml::XMLTag& callingTag )
 {
   PRECICE_TRACE(callingTag.getName());
@@ -198,6 +182,7 @@ void ActionConfiguration:: xmlTagCallback
 
 void ActionConfiguration:: xmlEndTagCallback
 (
+  const xml::ConfigurationContext& context,
   xml::XMLTag& callingTag )
 {
   if (callingTag.getNamespace() == TAG){
@@ -261,19 +246,7 @@ void ActionConfiguration:: createAction()
     throw std::runtime_error{stream.str()};
   }
   action::PtrAction action;
-  if (_configuredAction.type == NAME_ADD_TO_COORDINATES){
-    typedef action::ModifyCoordinatesAction Action;
-    Action::Mode mode = Action::ADD_TO_COORDINATES_MODE;
-    action = action::PtrAction (
-        new Action(timing, sourceDataID, mesh, mode) );
-  }
-  else if (_configuredAction.type == NAME_SUBTRACT_FROM_COORDINATES){
-    typedef action::ModifyCoordinatesAction Action;
-    Action::Mode mode = Action::SUBTRACT_FROM_COORDINATES_MODE;
-    action = action::PtrAction (
-        new Action(timing, sourceDataID, mesh, mode) );
-  }
-  else if (_configuredAction.type == NAME_MULTIPLY_BY_AREA){
+  if (_configuredAction.type == NAME_MULTIPLY_BY_AREA){
     action = action::PtrAction(
         new action::ScaleByAreaAction(timing, targetDataID,
         mesh, action::ScaleByAreaAction::SCALING_MULTIPLY_BY_AREA));
@@ -340,4 +313,3 @@ action::Action::Timing ActionConfiguration:: getTiming () const
 }
 
 }} // namespace precice, config
-

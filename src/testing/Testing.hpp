@@ -3,6 +3,8 @@
 #include "math/math.hpp"
 #include "utils/Parallel.hpp"
 #include <boost/test/unit_test.hpp>
+#include "precice/config/Configuration.hpp"
+#include "xml/XMLTag.hpp"
 
 namespace precice
 {
@@ -206,6 +208,30 @@ struct WhiteboxAccessor {
     }
 };
 
+/// struct extending WhiteboxAccessor by a slim configuration call.
+struct SlimConfigurator : WhiteboxAccessor {
+    /** Configures the interface given a fileName in a slim and quiet manner.
+     *
+     * This first generates a ConfigurationContext from the SolverInterface.
+     * It then configures a config::Configuration using the context and the given file.
+     * Finally, it calls SolverInterface::configure with the configuration.
+     * 
+     * @param[in] interface The SolverInterface to configure.
+     * @param[in] configFilename The filename of the configuration file.
+     */
+    template<typename T>
+    static void slimConfigure(T& interface, const std::string& configFilename) {
+        auto & interfaceImpl = impl(interface);
+        precice::xml::ConfigurationContext context{
+            interfaceImpl.getAccessorName(),
+            interfaceImpl.getAccessorProcessRank(),
+            interfaceImpl.getAccessorCommunicatorSize()
+        };
+        precice::config::Configuration config;
+        precice::xml::configure(config.getXMLTag(), context, configFilename);
+        interfaceImpl.configure(config.getSolverInterfaceConfiguration());
+    }
+};
 
 /// equals to be used in tests. Prints both operatorans on failure
 template <class DerivedA, class DerivedB>

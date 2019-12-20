@@ -73,6 +73,7 @@ void MeshConfiguration:: setDimensions
 
 void MeshConfiguration:: xmlTagCallback
 (
+  const xml::ConfigurationContext& context,
   xml::XMLTag& tag )
 {
   PRECICE_TRACE(tag.getName());
@@ -110,6 +111,7 @@ void MeshConfiguration:: xmlTagCallback
 
 void MeshConfiguration:: xmlEndTagCallback
 (
+  const xml::ConfigurationContext& context,
   xml::XMLTag& tag )
 {
 }

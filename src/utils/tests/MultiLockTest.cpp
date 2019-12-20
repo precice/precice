@@ -2,9 +2,11 @@
 #include "testing/Testing.hpp"
 #include "utils/MultiLock.hpp"
 
+using namespace precice;
 using namespace precice::utils;
 
 BOOST_AUTO_TEST_SUITE(UtilsTests)
+BOOST_AUTO_TEST_SUITE(MultiLockTests, *testing::OnMaster())
 
 BOOST_AUTO_TEST_CASE(MultiLockTest)
 {
@@ -44,4 +46,5 @@ BOOST_AUTO_TEST_CASE(MultiLockTest)
     BOOST_TEST(mlock.checkAll());
 }
 
+BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()

@@ -3,9 +3,11 @@
 #include "mesh/Edge.hpp"
 #include <Eigen/Core>
 
+using namespace precice;
 using namespace precice::mesh;
 
 BOOST_AUTO_TEST_SUITE(MeshTests)
+BOOST_AUTO_TEST_SUITE(EdgeTests, *testing::OnMaster())
 
 BOOST_AUTO_TEST_CASE(Edges)
 {
@@ -72,4 +74,5 @@ BOOST_AUTO_TEST_CASE(EdgeConnectedTo)
 }
 
 
+BOOST_AUTO_TEST_SUITE_END() // Edge
 BOOST_AUTO_TEST_SUITE_END() // Mesh

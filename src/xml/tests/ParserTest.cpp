@@ -4,10 +4,11 @@
 #include "xml/XMLAttribute.hpp"
 #include "xml/XMLTag.hpp"
 
+using namespace precice;
 using namespace precice::xml;
 using precice::testing::getPathToSources;
 
-BOOST_AUTO_TEST_SUITE(XML)
+BOOST_AUTO_TEST_SUITE(XML, *testing::OnMaster())
 
 struct CallbackHostAttr : public XMLTag::Listener {
   Eigen::VectorXd eigenValue;
@@ -16,7 +17,7 @@ struct CallbackHostAttr : public XMLTag::Listener {
   bool            boolValue;
   std::string     stringValue;
 
-  void xmlTagCallback(XMLTag &callingTag)
+  void xmlTagCallback(const ConfigurationContext& context, XMLTag &callingTag) override
   {
     if (callingTag.getName() == "test-double") {
       doubleValue = callingTag.getDoubleAttributeValue("attribute");
@@ -39,7 +40,7 @@ struct CallbackHostAttr : public XMLTag::Listener {
     }
   }
 
-  void xmlEndTagCallback(XMLTag &callingTag)
+  void xmlEndTagCallback(const ConfigurationContext& context, XMLTag &callingTag) override
   {
     std::ignore = callingTag;
   }
@@ -79,7 +80,7 @@ BOOST_AUTO_TEST_CASE(AttributeTypeTest)
 
   rootTag.addSubtag(testcaseTag);
 
-  configure(rootTag, filename);
+  configure(rootTag, ConfigurationContext{}, filename);
 
   BOOST_TEST(cb.boolValue == true);
   BOOST_TEST(cb.doubleValue == 3.1);
@@ -117,7 +118,7 @@ BOOST_AUTO_TEST_CASE(OccurenceTest)
 
   rootTag.addSubtag(testcaseTag);
 
-  configure(rootTag, filename);
+  configure(rootTag, ConfigurationContext{}, filename);
 }
 
 BOOST_AUTO_TEST_CASE(NamespaceTest)
@@ -138,7 +139,37 @@ BOOST_AUTO_TEST_CASE(NamespaceTest)
 
   rootTag.addSubtag(testcaseTag);
 
-  configure(rootTag, filename);
+  configure(rootTag, ConfigurationContext{}, filename);
+}
+
+struct ContextListener: public XMLTag::Listener {
+  ConfigurationContext startContext;
+  ConfigurationContext endContext;
+
+  void xmlTagCallback(const ConfigurationContext& context, XMLTag &callingTag)
+  {
+      startContext = context;
+  }
+
+  void xmlEndTagCallback(const ConfigurationContext& context, XMLTag &callingTag){
+      endContext = context;
+  }
+};
+
+BOOST_AUTO_TEST_CASE(Context)
+{
+  std::string filename(getPathToSources() + "/xml/tests/config_xmltest_context.xml");
+
+  ContextListener cl;
+  XMLTag          rootTag(cl, "configuration", XMLTag::OCCUR_ONCE);
+  ConfigurationContext context{"test", 12, 32};
+  configure(rootTag, context, filename);
+  BOOST_TEST(cl.startContext.name == "test");
+  BOOST_TEST(cl.startContext.rank == 12);
+  BOOST_TEST(cl.startContext.size == 32);
+  BOOST_TEST(cl.endContext.name == "test");
+  BOOST_TEST(cl.endContext.rank == 12);
+  BOOST_TEST(cl.endContext.size == 32);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

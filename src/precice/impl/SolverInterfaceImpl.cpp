@@ -102,7 +102,12 @@ void SolverInterfaceImpl:: configure
 {
   utils::Parallel::initializeMPI(nullptr, nullptr);
   config::Configuration config;
-  xml::configure(config.getXMLTag(), configurationFileName);
+  xml::ConfigurationContext context{
+      _accessorName,
+      _accessorProcessRank,
+      _accessorCommunicatorSize
+  };
+  xml::configure(config.getXMLTag(), context, configurationFileName);
   if(_accessorProcessRank==0){
     PRECICE_INFO("This is preCICE version " << PRECICE_VERSION);
     PRECICE_INFO("Revision info: " << precice::preciceRevision);
@@ -742,7 +747,6 @@ void SolverInterfaceImpl:: getMeshVertexIDsFromPositions (
     mesh::PtrMesh mesh(context.mesh);
     PRECICE_DEBUG("Get IDs");
     const auto &vertices = mesh->vertices();
-    PRECICE_ASSERT(vertices.size() <= size, vertices.size(), size);
     Eigen::Map<const Eigen::MatrixXd> posMatrix{
         positions, _dimensions, static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(size)};
     const auto vsize = vertices.size();
@@ -994,7 +998,7 @@ void SolverInterfaceImpl:: mapReadDataTo
                    << "\" to mesh \"" << context.mesh->getName() << "\"");
       PRECICE_ASSERT(mappingContext.mapping==context.mappingContext.mapping);
       mappingContext.mapping->map(inDataID, outDataID);
-      PRECICE_DEBUG("First mapped values = " << utils::firstN(context.toData->values(), 10));
+      PRECICE_DEBUG("Mapped values = " << utils::previewRange(3, context.toData->values()));
     }
   }
   mappingContext.hasMappedData = true;
@@ -1449,7 +1453,7 @@ void SolverInterfaceImpl:: mapWrittenData()
       context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
       PRECICE_DEBUG("Map from dataID " << inDataID << " to dataID: " << outDataID);
       context.mappingContext.mapping->map(inDataID, outDataID);
-      PRECICE_DEBUG("First mapped values = " << utils::firstN(context.toData->values(), 10));
+      PRECICE_DEBUG("Mapped values = " << utils::previewRange(3, context.toData->values()));
     }
   }
 
@@ -1499,7 +1503,7 @@ void SolverInterfaceImpl:: mapReadData()
       PRECICE_DEBUG("Map read data \"" << context.fromData->getName()
                    << "\" to mesh \"" << context.mesh->getName() << "\"");
       context.mappingContext.mapping->map(inDataID, outDataID);
-      PRECICE_DEBUG("First mapped values = " << utils::firstN(context.toData->values(), 10));
+      PRECICE_DEBUG("Mapped values = " << utils::previewRange(3, context.toData->values()));
     }
   }
 

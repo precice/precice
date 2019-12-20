@@ -6,44 +6,41 @@
       <data:vector name="Velocities"      />
       <data:vector name="Displacements"   />
       <data:vector name="VelocityDeltas"  />
-      
+
       <mesh name="PeanoNodes" flip-normals="no">
          <use-data name="Forces" />
          <use-data name="Velocities" />
          <use-data name="Displacements" />
          <use-data name="VelocityDeltas" />
       </mesh>
-      
+
       <mesh name="ComsolNodes" flip-normals="no">
          <use-data name="Forces" />
          <use-data name="Velocities" />
          <use-data name="Displacements" />
          <use-data name="VelocityDeltas" />
       </mesh>
-      
+
       <m2n:mpi-single from="Comsol" to="Peano" />
-         
+
       <participant name="Peano">
          <use-mesh name="PeanoNodes" provide="yes" />
          <use-mesh name="ComsolNodes" from="Comsol"/>
          <mapping:nearest-projection direction="write" from="PeanoNodes"
-                  to="ComsolNodes" 
+                  to="ComsolNodes"
                   constraint="conservative" timing="onadvance" />
          <mapping:nearest-projection direction="read" from="ComsolNodes"
-                  to="PeanoNodes" 
+                  to="PeanoNodes"
                   constraint="consistent" timing="onadvance" />
          <write-data name="Forces"         mesh="PeanoNodes" />
          <read-data  name="Displacements"  mesh="PeanoNodes" />
          <read-data  name="Velocities"     mesh="PeanoNodes" />
          <read-data  name="VelocityDeltas" mesh="PeanoNodes" />
-         <action:add-to-coordinates mesh="PeanoNodes" timing="on-exchange-post">
-            <source-data name="Displacements"/>   
-         </action:add-to-coordinates>
          <export:vtk timestep-interval="100" directory="output/"/>
-         <export:vtk timestep-interval="100" directory=""/>   
+         <export:vtk timestep-interval="100" directory=""/>
          <watch-point name="pointa" mesh="PeanoNodes" coordinate="1.0; 1.0" />
       </participant>
-      
+
       <participant name="Comsol">
          <use-mesh name="ComsolNodes" provide="yes" />
          <write-data name="Displacements"  mesh="ComsolNodes" />
@@ -51,10 +48,10 @@
          <write-data name="VelocityDeltas" mesh="ComsolNodes" />
          <read-data  name="Forces"         mesh="ComsolNodes" />
          <action:divide-by-area mesh="ComsolNodes" timing="on-exchange-post">
-            <target-data name="Forces"/>   
+            <target-data name="Forces"/>
          </action:divide-by-area>
       </participant>
-      
+
       <coupling-scheme:serial-explicit>
          <participants first="Peano" second="Comsol" />
          <max-time value="1.0" />
@@ -64,6 +61,6 @@
          <exchange data="Displacements"  mesh="ComsolNodes" from="Comsol" to="Peano"/>
          <exchange data="VelocityDeltas" mesh="ComsolNodes" from="Comsol" to="Peano"/>
       </coupling-scheme:serial-explicit>
-      
+
    </solver-interface>
 </precice-configuration>

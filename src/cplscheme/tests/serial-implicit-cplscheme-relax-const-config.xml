@@ -33,9 +33,9 @@
       <max-iterations value="100"/>
       <exchange data="Data0" mesh="Mesh" from="Participant0" to="Participant1" />
       <exchange data="Data1" mesh="Mesh" from="Participant1" to="Participant0"/>
-      <post-processing:constant>
+      <acceleration:constant>
          <relaxation value="0.01" />
-      </post-processing:constant>
+      </acceleration:constant>
       <absolute-convergence-measure 
          data="Data1" 
          mesh="Mesh"
