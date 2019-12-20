@@ -7,9 +7,11 @@
 
 #include <iterator>
 
+using namespace precice;
 using namespace precice::mesh;
 
 BOOST_AUTO_TEST_SUITE(MeshTests)
+BOOST_AUTO_TEST_SUITE(TriangleTests, *testing::OnMaster())
 
 BOOST_AUTO_TEST_CASE(Triangles)
 {
@@ -218,4 +220,5 @@ BOOST_AUTO_TEST_CASE(TriangleWKTPrint)
     BOOST_TEST(t1string == stream.str());
 }
 
+BOOST_AUTO_TEST_SUITE_END() // Triangle
 BOOST_AUTO_TEST_SUITE_END() // Mesh

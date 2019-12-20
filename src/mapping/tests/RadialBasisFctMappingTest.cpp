@@ -10,7 +10,7 @@ using namespace precice;
 using namespace precice::mapping;
 
 BOOST_AUTO_TEST_SUITE(MappingTests)
-BOOST_AUTO_TEST_SUITE(RadialBasisFunctionMapping)
+BOOST_AUTO_TEST_SUITE(RadialBasisFunctionMapping, *testing::OnMaster())
 
 // Forward declarations, see end of file for definitions
 void perform2DTestConsistentMapping(Mapping& mapping);

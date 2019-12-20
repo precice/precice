@@ -1,5 +1,7 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/test/unit_test_parameters.hpp>
+#include <boost/test/tree/traverse.hpp>                                          
+#include <boost/test/tree/test_case_counter.hpp> 
 #include <boost/filesystem.hpp>
 #include "utils/Parallel.hpp"
 #include "utils/Petsc.hpp"
@@ -11,7 +13,9 @@
 namespace precice {
 extern bool testMode;
 extern bool syncMode;
+static int testCount{0};
 }
+
 
 
 /// Boost test Initialization function
@@ -41,6 +45,12 @@ bool init_unit_test()
   
   auto & master_suite = framework::master_test_suite();
   master_suite.p_name.value = "preCICE Tests";
+
+  {
+      test_case_counter tcc;                                                       
+      traverse_test_tree( master_suite.p_id, tcc );
+      precice::testCount = tcc.p_count;
+  }
 
   auto logConfigs = logging::readLogConfFile("log.conf");
   
@@ -108,6 +118,10 @@ int main(int argc, char* argv[])
   }
 
   int retCode = boost::unit_test::unit_test_main( &init_unit_test, argc, argv );
+  // Override the return code if the slaves have nothing to test
+  if ((precice::testCount == 0) && (utils::Parallel::getProcessRank() != 0)) {
+     retCode = EXIT_SUCCESS;
+  }
 
   utils::EventRegistry::instance().finalize();
   utils::Petsc::finalize();

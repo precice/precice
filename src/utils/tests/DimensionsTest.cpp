@@ -3,9 +3,11 @@
 #include "testing/Testing.hpp"
 #include "utils/Dimensions.hpp"
 
+using namespace precice;
 using namespace precice::utils;
 
-BOOST_AUTO_TEST_SUITE(UtilsTests)
+BOOST_AUTO_TEST_SUITE(DimensionTests)
+BOOST_AUTO_TEST_SUITE(UtilsTests, *testing::OnMaster())
 
 BOOST_AUTO_TEST_CASE(LinearizeDelinearize)
 {
@@ -86,4 +88,5 @@ BOOST_AUTO_TEST_CASE(LinearizeDelinearize)
   }
 }
 
+BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()

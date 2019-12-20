@@ -1,9 +1,11 @@
 #include "testing/Testing.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 
+using namespace precice;
 using namespace precice::utils;
 
 BOOST_AUTO_TEST_SUITE(UtilsTests)
+BOOST_AUTO_TEST_SUITE(EigenHelperFunctionsTests, *testing::OnMaster())
 
 BOOST_AUTO_TEST_CASE(FirstN)
 {
@@ -13,6 +15,20 @@ BOOST_AUTO_TEST_CASE(FirstN)
     b << 1, 2, 3;
     BOOST_TEST(firstN(a, 3) == b);
 }
+
+BOOST_AUTO_TEST_SUITE(RangePreview)
+
+BOOST_AUTO_TEST_CASE(EigenVector)
+{
+    Eigen::VectorXd a{7};
+    a << 1, 2, 3, 4, 5, 6, 0;
+    std::ostringstream oss;
+    oss << previewRange(2, a);
+    std::string str{oss.str()};
+    BOOST_TEST(str == "[1, 2, ... , 6, 0] min:0 max:6");
+}
+
+BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_CASE(ComponentWiseLess)
 {
@@ -38,4 +54,5 @@ BOOST_AUTO_TEST_CASE(ComponentWiseLess)
 }
 
 
+BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()

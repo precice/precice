@@ -32,8 +32,8 @@ env:
     - LIBRARY_PATH="$PETSC_DIR/$PETSC_ARCH/lib:$LOCAL_INSTALL/lib:$LIBRARY_PATH"
     - PYTHONPATH="$PETSC_DIR/$PETSC_ARCH/lib:/usr/lib/python2.7:/usr/lib/python2.7/dist-packages:/usr/lib/python2.7/plat-x86_64-linux-gnu"
     - BOOST_ROOT=${LOCAL_INSTALL}
-    - BUILD_TYPE=CMAKE
     - CXXFLAGS="-Wall -Wextra -Wno-unused-parameter"
+    - BOOST_TEST_LOG_LEVEL=test_suite
 
   matrix:
     - MPI=on PETSC=on
@@ -42,26 +42,6 @@ env:
 
 matrix:
   include:
-
-      # testing builds on scons
-    - if: type = cron or branch = master
-      compiler: gcc
-      env: BUILD_TYPE=SCONS MPI=on PETSC=on
-    - if: type = cron or branch = master
-      compiler: gcc
-      env: BUILD_TYPE=SCONS MPI=on PETSC=off
-    - if: type = cron or branch = master
-      compiler: gcc
-      env: BUILD_TYPE=SCONS MPI=off PETSC=off
-    - if: type = cron or branch = master
-      compiler: clang
-      env: BUILD_TYPE=SCONS MPI=on PETSC=on
-    - if: type = cron or branch = master
-      compiler: clang
-      env: BUILD_TYPE=SCONS MPI=on PETSC=off
-    - if: type = cron or branch = master
-      compiler: clang
-      env: BUILD_TYPE=SCONS MPI=off PETSC=off
 
     # Test coverage
     - name: "Test Coverage"
@@ -73,19 +53,6 @@ matrix:
         - lcov --remove coverage.info '/usr/*' "$LOCAL_INSTALL/*" --output-file coverage.info # filter system-files and local-dependencies
         - lcov --list coverage.info # debug info
         - bash <(curl -s https://codecov.io/bash) -f coverage.info || echo "Codecov did not collect coverage reports"
-
-    # Test Bindings
-    - name: "Mock Test Python Bindings"
-      cache: false
-      before_install:
-        - pyenv global $(pyenv whence 2to3)  # activate all python versions
-        - PYTHONPATH=""
-        - PY_CMD=python3
-        - $PY_CMD -m pip install --user --upgrade pip wheel setuptools
-      install:
-        - pip3 install --user cython numpy mpi4py packaging
-      script:
-        - $TRAVIS_BUILD_DIR/tools/travis-bindings-test.sh
 
 cache:
   ccache: true

@@ -4,13 +4,14 @@
 #include "mesh/impl/RTreeAdapter.hpp"
 #include "math/geometry.hpp"
 
+using namespace precice;
 using namespace precice::mesh;
 
 namespace bg = boost::geometry;
 namespace bgi = boost::geometry::index;
 
 BOOST_AUTO_TEST_SUITE(MeshTests)
-BOOST_AUTO_TEST_SUITE(RTree)
+BOOST_AUTO_TEST_SUITE(RTree, *testing::OnMaster())
 BOOST_AUTO_TEST_SUITE(BGAdapters)
 
 BOOST_AUTO_TEST_CASE(VectorAdapter)
@@ -572,9 +573,9 @@ BOOST_AUTO_TEST_CASE(PrimitveIndexComparison) {
 
 BOOST_FIXTURE_TEST_CASE(IndexSinglePrimitiveType, MeshFixture) {
   PrimitiveRTree rtree;
-  impl::AABBGenerator gen{mesh};
+  mesh::impl::AABBGenerator gen{mesh};
 
-  using impl::indexPrimitive;
+  using mesh::impl::indexPrimitive;
   BOOST_TEST(rtree.empty());
   indexPrimitive(rtree, gen, mesh.vertices());
   BOOST_TEST(rtree.size() == vertex_cnt);
