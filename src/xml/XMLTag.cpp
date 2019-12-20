@@ -1,6 +1,7 @@
 #include "xml/XMLTag.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/String.hpp"
+#include <cctype>
 
 namespace precice
 {
@@ -332,175 +333,6 @@ void XMLTag::clear()
   _subtags.clear();
 }
 
-std::string XMLTag::printDTD(const bool start) const
-{
-  std::ostringstream dtd;
-
-  if (start)
-    dtd << "<!DOCTYPE " << _fullName << " [\n";
-
-  dtd << "<!ELEMENT " << _fullName << " ";
-
-  if (not _subtags.empty()) {
-
-    dtd << "(";
-
-    bool first = true;
-    for (auto const &subtag : _subtags) {
-       dtd << (first ? "" : ", ") << subtag->getFullName();
-       switch(subtag->getOccurrence()) {
-           case OCCUR_ARBITRARY:
-               dtd << '*';
-           case OCCUR_NOT_OR_ONCE:
-               dtd << '?';
-           case OCCUR_ONCE_OR_MORE:
-               dtd << '+';
-            default:;
-       }
-      first = false;
-    }
-
-    dtd << ")>\n";
-  } else {
-    dtd << "EMPTY>\n";
-  }
-
-  for (const auto &pair : _doubleAttributes) {
-    dtd << pair.second.printDTD(_fullName);
-  }
-
-  for (const auto &pair : _intAttributes) {
-    dtd << pair.second.printDTD(_fullName);
-  }
-
-  for (const auto &pair : _stringAttributes) {
-    dtd << pair.second.printDTD(_fullName);
-  }
-
-  for (const auto &pair : _booleanAttributes) {
-    dtd << pair.second.printDTD(_fullName);
-  }
-
-  for (const auto &pair : _eigenVectorXdAttributes) {
-    dtd << pair.second.printDTD(_fullName);
-  }
-
-  if (not _subtags.empty()) {
-    for (auto const &subtag : _subtags) {
-      dtd << subtag->printDTD();
-    }
-  }
-
-  dtd << '\n';
-
-  if (start)
-    dtd << "]>\n";
-
-  return dtd.str();
-}
-
-std::string XMLTag::printDocumentation(int indentation) const
-{
-  PRECICE_TRACE(indentation);
-  const int   linewidth = 1000;
-  std::string indent;
-  for (int i = 0; i < indentation; i++) {
-    indent += " ";
-  }
-
-  std::ostringstream doc;
-  doc << indent << "<!-- TAG " << _fullName << '\n';
-  if (not _doc.empty()) {
-    std::string indentedDoc = indent + "         " + _doc;
-    doc << utils::wrapText(indentedDoc, linewidth, indentation + 9);
-    doc << '\n';
-  }
-  doc << indent << "         (can occur " << getOccurrenceString(_occurrence) << " times)";
-
-  for (const auto &pair : _doubleAttributes) {
-    std::ostringstream attrDoc;
-    doc << '\n';
-    attrDoc << indent << "     ATTR " << pair.first << ": "
-            << pair.second.getUserDocumentation();
-    doc << utils::wrapText(attrDoc.str(), linewidth, indentation + 10);
-  }
-
-  for (const auto &pair : _intAttributes) {
-    std::ostringstream attrDoc;
-    doc << '\n';
-    attrDoc << indent << "     ATTR " << pair.first << ": "
-            << pair.second.getUserDocumentation();
-    doc << utils::wrapText(attrDoc.str(), linewidth, indentation + 10);
-  }
-
-  for (const auto &pair : _stringAttributes) {
-    std::ostringstream attrDoc;
-    doc << '\n';
-    attrDoc << indent << "     ATTR " << pair.first << ": "
-            << pair.second.getUserDocumentation();
-    doc << utils::wrapText(attrDoc.str(), linewidth, indentation + 10);
-  }
-
-  for (const auto &pair : _booleanAttributes) {
-    std::ostringstream attrDoc;
-    doc << '\n';
-    attrDoc << indent << "     ATTR " << pair.first << ": "
-            << pair.second.getUserDocumentation();
-    doc << utils::wrapText(attrDoc.str(), linewidth, indentation + 10);
-  }
-
-  for (const auto &pair : _eigenVectorXdAttributes) {
-    std::ostringstream attrDoc;
-    doc << '\n';
-    attrDoc << indent << "     ATTR " << pair.first << ": "
-            << pair.second.getUserDocumentation();
-    doc << utils::wrapText(attrDoc.str(), linewidth, indentation + 10);
-  }
-
-  doc << " -->\n";
-  std::ostringstream tagHead;
-  tagHead << indent << "<" << _fullName;
-
-  // Print XML namespaces, necessary for correct XML format and display in browser
-  for (const std::string &namespaceName : _namespaces) {
-    tagHead << " xmlns:" << namespaceName << "=\"precice." << namespaceName << "\"";
-  }
-
-  for (const auto &pair : _doubleAttributes) {
-    tagHead << indent << "   " << pair.second.printDocumentation();
-  }
-
-  for (const auto &pair : _intAttributes) {
-    tagHead << indent << "   " << pair.second.printDocumentation();
-  }
-
-  for (const auto &pair : _stringAttributes) {
-    tagHead << indent << "   " << pair.second.printDocumentation();
-  }
-
-  for (const auto &pair : _booleanAttributes) {
-    tagHead << indent << "   " << pair.second.printDocumentation();
-  }
-
-  for (const auto &pair : _eigenVectorXdAttributes) {
-    tagHead << indent << "   " << pair.second.printDocumentation();
-  }
-
-  doc << utils::wrapText(tagHead.str(), linewidth, indentation + 3);
-
-  if (not _subtags.empty()) {
-    doc << ">\n\n";
-    for (auto const &subtag : _subtags) {
-      doc << subtag->printDocumentation(indentation + 3);
-    }
-    doc << indent << "</" << _fullName << ">\n\n";
-  } else {
-    doc << "/>\n\n";
-  }
-
-  return doc.str();
-}
-
 //NoPListener& getNoPListener()
 //{
 //  static NoPListener listener;
@@ -529,21 +361,18 @@ void configure(
   root.addSubtag(tag);
 }
 
-std::string XMLTag::getOccurrenceString(Occurrence occurrence) const
+std::string XMLTag::getOccurrenceString(XMLTag::Occurrence occurrence)
 {
-  switch (occurrence) {
-  case OCCUR_ARBITRARY:
-    return "0..*";
-  case OCCUR_NOT_OR_ONCE:
-    return "0..1";
-  case OCCUR_ONCE:
-    return "1";
-  case OCCUR_ONCE_OR_MORE:
-    return "1..*";
-  default:
-    PRECICE_ASSERT(false, "Unknown occurrence type = " << occurrence);
-    return "";
+  if (occurrence == XMLTag::OCCUR_ARBITRARY) {
+    return std::string("0..*");
+  } else if (occurrence == XMLTag::OCCUR_NOT_OR_ONCE) {
+    return std::string("0..1");
+  } else if (occurrence == XMLTag::OCCUR_ONCE) {
+    return std::string("1");
+  } else if (occurrence == XMLTag::OCCUR_ONCE_OR_MORE) {
+    return std::string("1..*");
   }
+  return "";
 }
 }} // namespace precice, xml
 
