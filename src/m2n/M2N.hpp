@@ -1,17 +1,14 @@
 #pragma once
 
+#include <map>
 #include "DistributedComFactory.hpp"
+#include "SharedPointer.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include "mesh/SharedPointer.hpp"
-#include "SharedPointer.hpp"
-#include <map>
 
-
-namespace precice
-{
-namespace m2n
-{
+namespace precice {
+namespace m2n {
 
 // Forward declaration to friend unit tests which only use the master com
 struct WhiteboxAccessor;
@@ -22,8 +19,7 @@ struct WhiteboxAccessor;
  * each possibly with a different decomposition. In principle, this class is only a map from meshes to DistributedCommunications
  *
  */
-class M2N
-{
+class M2N {
 public:
   M2N(com::PtrCommunication masterCom, DistributedComFactory::SharedPointer distrFactory, bool useOnlyMasterCom = false);
 
@@ -69,7 +65,7 @@ public:
   void requestSlavesConnection(const std::string &acceptorName,
                                const std::string &requesterName);
 
-    /**
+  /**
    * Same as acceptSlavesConnection except this only creates the channels,
    * no vertex list needed!
    */
@@ -128,9 +124,9 @@ public:
 
   /// Sends an array of double values from all slaves (different for each slave).
   void send(double const *itemsToSend,
-            int     size,
-            int     meshID,
-            int     valueDimension);
+            int           size,
+            int           meshID,
+            int           valueDimension);
 
   /**
    * @brief The master sends a bool to the other master, for performance reasons, we
@@ -205,9 +201,10 @@ private:
 
 /// struct giving access _useOnlyMasterCom
 struct WhiteboxAccessor {
-    static auto useOnlyMasterCom(PtrM2N m2n) -> typename std::add_lvalue_reference<decltype(m2n->_useOnlyMasterCom)>::type {
-        return m2n->_useOnlyMasterCom;
-    }
+  static auto useOnlyMasterCom(PtrM2N m2n) -> typename std::add_lvalue_reference<decltype(m2n->_useOnlyMasterCom)>::type
+  {
+    return m2n->_useOnlyMasterCom;
+  }
 };
 
 } // namespace m2n

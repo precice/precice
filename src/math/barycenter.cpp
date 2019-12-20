@@ -1,11 +1,8 @@
 #include "math/barycenter.hpp"
 
-namespace precice
-{
-namespace math
-{
-namespace barycenter
-{
+namespace precice {
+namespace math {
+namespace barycenter {
 
 BarycentricCoordsAndProjected calcBarycentricCoordsForEdge(
     const Eigen::VectorXd &edgeA,
@@ -19,7 +16,7 @@ BarycentricCoordsAndProjected calcBarycentricCoordsForEdge(
 
   const int dimensions = edgeA.size();
   PRECICE_ASSERT(dimensions == edgeB.size() && dimensions == edgeNormal.size() && dimensions == location.size(),
-            "The inputs need to have the same dimensions.");
+                 "The inputs need to have the same dimensions.");
   PRECICE_ASSERT((dimensions == 2) || (dimensions == 3), dimensions);
 
   Vector2d barycentricCoords;

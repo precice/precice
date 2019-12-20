@@ -2,10 +2,8 @@
 
 #include "GatherScatterComFactory.hpp"
 
-namespace precice
-{
-namespace m2n
-{
+namespace precice {
+namespace m2n {
 GatherScatterComFactory::GatherScatterComFactory(
     com::PtrCommunication masterCom)
     : _masterCom(masterCom)

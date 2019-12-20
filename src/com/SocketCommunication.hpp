@@ -1,20 +1,17 @@
 #pragma once
 
-#include "com/Communication.hpp"
 #include <boost/asio.hpp>
-#include "logging/Logger.hpp"
+#include <map>
 #include <thread>
 #include <vector>
-#include <map>
+#include "com/Communication.hpp"
 #include "com/SocketSendQueue.hpp"
+#include "logging/Logger.hpp"
 
-namespace precice
-{
-namespace com
-{
+namespace precice {
+namespace com {
 /// Implements Communication by using sockets.
-class SocketCommunication : public Communication
-{
+class SocketCommunication : public Communication {
 public:
   SocketCommunication(unsigned short     portNumber       = 0,
                       bool               reuseAddress     = false,
@@ -41,11 +38,10 @@ public:
                                  int                requesterRank,
                                  int                requesterCommunicatorSize) override;
 
-  virtual void requestConnectionAsClient(std::string   const &acceptorName,
-                                         std::string   const &requesterName,
+  virtual void requestConnectionAsClient(std::string const &  acceptorName,
+                                         std::string const &  requesterName,
                                          std::set<int> const &acceptorRanks,
                                          int                  requesterRank) override;
-
 
   virtual void closeConnection() override;
 
@@ -64,25 +60,25 @@ public:
   /// Asynchronously sends an array of double values.
   virtual PtrRequest aSend(const double *itemsToSend, int size, int rankReceiver) override;
 
-  virtual PtrRequest aSend(std::vector<double> const & itemsToSend, int rankReceiver) override;
-  
+  virtual PtrRequest aSend(std::vector<double> const &itemsToSend, int rankReceiver) override;
+
   /// Sends a double to process with given rank.
   virtual void send(double itemToSend, int rankReceiver) override;
 
   /// Asynchronously sends a double to process with given rank.
-  virtual PtrRequest aSend(const double & itemToSend, int rankReceiver) override;
+  virtual PtrRequest aSend(const double &itemToSend, int rankReceiver) override;
 
   /// Sends an int to process with given rank.
   virtual void send(int itemToSend, int rankReceiver) override;
 
   /// Asynchronously sends an int to process with given rank.
-  virtual PtrRequest aSend(const int & itemToSend, int rankReceiver) override;
+  virtual PtrRequest aSend(const int &itemToSend, int rankReceiver) override;
 
   /// Sends a bool to process with given rank.
   virtual void send(bool itemToSend, int rankReceiver) override;
 
   /// Asynchronously sends a bool to process with given rank.
-  virtual PtrRequest aSend(const bool & itemToSend, int rankReceiver) override;
+  virtual PtrRequest aSend(const bool &itemToSend, int rankReceiver) override;
 
   /// Receives a std::string from process with given rank.
   virtual void receive(std::string &itemToReceive, int rankSender) override;
@@ -98,8 +94,8 @@ public:
                               int     size,
                               int     rankSender) override;
 
-  virtual PtrRequest aReceive(std::vector<double> & itemsToReceive, int rankSender) override;
-  
+  virtual PtrRequest aReceive(std::vector<double> &itemsToReceive, int rankSender) override;
+
   /// Receives a double from process with given rank.
   virtual void receive(double &itemToReceive, int rankSender) override;
 
@@ -123,7 +119,7 @@ public:
 
   void send(std::vector<double> const &v, int rankReceiver) override;
   void receive(std::vector<double> &v, int rankSender) override;
-  
+
 private:
   logging::Logger _log{"com::SocketCommunication"};
 
@@ -138,14 +134,14 @@ private:
   /// Directory where IP address is exchanged by file.
   std::string _addressDirectory;
 
-  using IOService     = boost::asio::io_service;
-  using Socket        = boost::asio::ip::tcp::socket;
-  using Work          = boost::asio::io_service::work;
-  
+  using IOService = boost::asio::io_service;
+  using Socket    = boost::asio::ip::tcp::socket;
+  using Work      = boost::asio::io_service::work;
+
   std::shared_ptr<IOService> _ioService;
-  std::shared_ptr<Work> _work;
-  std::thread _thread;
-  
+  std::shared_ptr<Work>      _work;
+  std::thread                _thread;
+
   /// Remote rank -> socket map
   std::map<int, std::shared_ptr<Socket>> _sockets;
 
@@ -158,4 +154,3 @@ private:
 };
 } // namespace com
 } // namespace precice
-

@@ -184,7 +184,6 @@ BOOST_AUTO_TEST_CASE(FindClosestDistanceToEdges3D)
     BOOST_TEST((*finds[i])(mesh));
   }
 
-
   // Evaluate query results
   BOOST_TEST(finds[0]->getClosest().distance == std::sqrt(1.0 / 8.0));
   BOOST_TEST(finds[1]->getClosest().distance == std::sqrt(1.0 / 8.0));
@@ -297,7 +296,7 @@ BOOST_AUTO_TEST_CASE(WeigthsOfVertices)
   int dim = 2;
 
   // Create mesh
-  mesh::Mesh mesh("Mesh", dim, true, testing::nextMeshID());
+  mesh::Mesh    mesh("Mesh", dim, true, testing::nextMeshID());
   mesh::Vertex &vertex1 = mesh.createVertex(Eigen::Vector2d(0.0, 0.0));
   mesh::Vertex &vertex2 = mesh.createVertex(Eigen::Vector2d(1.0, 0.0));
   mesh.createEdge(vertex1, vertex2);
@@ -318,28 +317,28 @@ BOOST_AUTO_TEST_CASE(WeigthsOfVertices)
   BOOST_TEST(closest.interpolationElements[1].weight == 0.3);
 }
 
-
 struct MeshFixture {
-    int dimension = 3;
-    double z = 0.0;
-    mesh::Mesh mesh;
-    mesh::Vertex *v1, *v2, *v3, *vinside, *voutside;
-    mesh::Edge *e12, *e23, *e31;
-    mesh::Triangle* t;
-    MeshFixture() : mesh("Mesh", dimension, true, testing::nextMeshID())
-    {
-        v1 = &mesh.createVertex(Eigen::Vector3d(0.0, 0.0, z));
-        v2 = &mesh.createVertex(Eigen::Vector3d(1.0, 0.0, z));
-        v3 = &mesh.createVertex(Eigen::Vector3d(0.5, 0.5, z));
-        vinside = &mesh.createVertex(Eigen::Vector3d(0.1, 0.1, z));
-        voutside = &mesh.createVertex(Eigen::Vector3d(1.0, 1.0, z));
-        e12 = &mesh.createEdge(*v1, *v2);
-        e23= &mesh.createEdge(*v2, *v3);
-        e31= &mesh.createEdge(*v3, *v1);
-        t=&mesh.createTriangle(*e12, *e23, *e31);
-        mesh.computeState();
-    }
-    ~MeshFixture(){}
+  int             dimension = 3;
+  double          z         = 0.0;
+  mesh::Mesh      mesh;
+  mesh::Vertex *  v1, *v2, *v3, *vinside, *voutside;
+  mesh::Edge *    e12, *e23, *e31;
+  mesh::Triangle *t;
+  MeshFixture()
+      : mesh("Mesh", dimension, true, testing::nextMeshID())
+  {
+    v1       = &mesh.createVertex(Eigen::Vector3d(0.0, 0.0, z));
+    v2       = &mesh.createVertex(Eigen::Vector3d(1.0, 0.0, z));
+    v3       = &mesh.createVertex(Eigen::Vector3d(0.5, 0.5, z));
+    vinside  = &mesh.createVertex(Eigen::Vector3d(0.1, 0.1, z));
+    voutside = &mesh.createVertex(Eigen::Vector3d(1.0, 1.0, z));
+    e12      = &mesh.createEdge(*v1, *v2);
+    e23      = &mesh.createEdge(*v2, *v3);
+    e31      = &mesh.createEdge(*v3, *v1);
+    t        = &mesh.createTriangle(*e12, *e23, *e31);
+    mesh.computeState();
+  }
+  ~MeshFixture() {}
 };
 
 BOOST_FIXTURE_TEST_SUITE(InterpolationElements, MeshFixture)
@@ -367,8 +366,8 @@ BOOST_AUTO_TEST_CASE(TriangleInside)
   auto elems = query::generateInterpolationElements(*vinside, *t);
   BOOST_TEST(elems.size() == 3);
   std::map<mesh::Vertex const *, double> weights;
-  for(const auto& elem : elems) {
-      weights[elem.element] = elem.weight;
+  for (const auto &elem : elems) {
+    weights[elem.element] = elem.weight;
   }
   BOOST_TEST(weights.at(v1) == 0.8);
   BOOST_TEST(weights.at(v2) == 0.0);
@@ -380,8 +379,8 @@ BOOST_AUTO_TEST_CASE(TriangleOutside)
   auto elems = query::generateInterpolationElements(*voutside, *t);
   BOOST_TEST(elems.size() == 3);
   std::map<mesh::Vertex const *, double> weights;
-  for(const auto& elem : elems) {
-      weights[elem.element] = elem.weight;
+  for (const auto &elem : elems) {
+    weights[elem.element] = elem.weight;
   }
   // Extrapolating
   BOOST_TEST(weights.at(v1) == -1.0);
@@ -390,7 +389,6 @@ BOOST_AUTO_TEST_CASE(TriangleOutside)
 }
 
 BOOST_AUTO_TEST_SUITE_END() // InterpolationElements
-
 
 BOOST_AUTO_TEST_SUITE_END() // FindClosestTests
 BOOST_AUTO_TEST_SUITE_END() // QueryTests

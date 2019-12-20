@@ -1,29 +1,28 @@
 #include <Eigen/Core>
 
+#include "acceleration/BroydenAcceleration.hpp"
 #include "cplscheme/CouplingData.hpp"
 #include "cplscheme/SharedPointer.hpp"
-#include "acceleration/BroydenAcceleration.hpp"
 
-namespace precice
-{
-namespace acceleration
-{
+namespace precice {
+namespace acceleration {
 
 using namespace precice::acceleration::impl;
 
 BroydenAcceleration::BroydenAcceleration(
-    double            initialRelaxation,
-    bool              forceInitialRelaxation,
-    int               maxIterationsUsed,
-    int               timestepsReused,
-    int               filter,
-    double            singularityLimit,
-    std::vector<int>  dataIDs,
+    double                  initialRelaxation,
+    bool                    forceInitialRelaxation,
+    int                     maxIterationsUsed,
+    int                     timestepsReused,
+    int                     filter,
+    double                  singularityLimit,
+    std::vector<int>        dataIDs,
     impl::PtrPreconditioner preconditioner)
     : BaseQNAcceleration(initialRelaxation, forceInitialRelaxation, maxIterationsUsed, timestepsReused,
-                           filter, singularityLimit, dataIDs, preconditioner),
+                         filter, singularityLimit, dataIDs, preconditioner),
       _maxColumns(maxIterationsUsed)
-{}
+{
+}
 
 void BroydenAcceleration::initialize(
     DataMap &cplData)
@@ -42,8 +41,8 @@ void BroydenAcceleration::computeUnderrelaxationSecondaryData(
 {
   // Perform underrelaxation with initial relaxation factor for secondary data
   for (int id : _secondaryDataIDs) {
-    cplscheme::PtrCouplingData  data   = cplData[id];
-    Eigen::VectorXd &values = *(data->values);
+    cplscheme::PtrCouplingData data   = cplData[id];
+    Eigen::VectorXd &          values = *(data->values);
     values *= _initialRelaxation; // new * omg
     Eigen::VectorXd &secResiduals = _secondaryResiduals[id];
     secResiduals                  = data->oldValues.col(0); // old
@@ -56,7 +55,7 @@ void BroydenAcceleration::updateDifferenceMatrices(
     DataMap &cplData)
 {
   if (not _firstIteration) {
-      _currentColumns++;
+    _currentColumns++;
   }
 
   // call the base method for common update of V, W matrices
@@ -116,5 +115,5 @@ void BroydenAcceleration::specializedIterationsConverged(
   // store old Jacobian
   _oldInvJacobian = _invJacobian;
 }
-}
-} // namespace precice, acceleration
+} // namespace acceleration
+} // namespace precice

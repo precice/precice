@@ -7,22 +7,17 @@
 #include "cplscheme/BaseCouplingScheme.hpp"
 #include "cplscheme/SharedPointer.hpp"
 
-namespace precice
-{
-namespace io
-{
+namespace precice {
+namespace io {
 class TXTWriter;
 class TXTReader;
-}
-}
+} // namespace io
+} // namespace precice
 
-namespace precice
-{
-namespace acceleration
-{
+namespace precice {
+namespace acceleration {
 
-class Acceleration
-{
+class Acceleration {
 public:
   static const int NOFILTER      = 0;
   static const int QR1FILTER     = 1;
@@ -92,5 +87,5 @@ public:
     return false;
   }
 };
-}
-} // namespace precice, acceleration
+} // namespace acceleration
+} // namespace precice

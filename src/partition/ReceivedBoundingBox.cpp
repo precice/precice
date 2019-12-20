@@ -5,18 +5,16 @@
 #include "com/Communication.hpp"
 #include "m2n/M2N.hpp"
 #include "mapping/Mapping.hpp"
-#include "mesh/Mesh.hpp"
-#include "mesh/Vertex.hpp"
 #include "mesh/Edge.hpp"
-#include "mesh/Triangle.hpp"
 #include "mesh/Filter.hpp"
+#include "mesh/Mesh.hpp"
+#include "mesh/Triangle.hpp"
+#include "mesh/Vertex.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/MasterSlave.hpp"
 
-namespace precice
-{
-namespace partition
-{
+namespace precice {
+namespace partition {
 
 ReceivedBoundingBox::ReceivedBoundingBox(
     mesh::PtrMesh mesh, double safetyFactor)
@@ -44,7 +42,7 @@ void ReceivedBoundingBox::communicateBoundingBox()
     }
 
     // master receives global_bb from other master
-    com::CommunicateBoundingBox(_m2ns[0]->getMasterCommunication()).receiveBoundingBoxMap(_remoteBBM, 0);   
+    com::CommunicateBoundingBox(_m2ns[0]->getMasterCommunication()).receiveBoundingBoxMap(_remoteBBM, 0);
   }
 }
 
@@ -60,12 +58,12 @@ void ReceivedBoundingBox::computeBoundingBox()
     PRECICE_ASSERT(utils::MasterSlave::getRank() == 0);
     PRECICE_ASSERT(utils::MasterSlave::getSize() > 1);
 
-    // broadcast _remoteBBM to all slaves    
-    utils::MasterSlave::_communication->broadcast(_remoteParComSize);    
+    // broadcast _remoteBBM to all slaves
+    utils::MasterSlave::_communication->broadcast(_remoteParComSize);
     com::CommunicateBoundingBox(utils::MasterSlave::_communication).broadcastSendBoundingBoxMap(_remoteBBM);
 
     std::map<int, std::vector<int>> connectionMap;
-    std::vector<int> connectedRanksList;
+    std::vector<int>                connectedRanksList;
 
     // connected ranks for master
     for (auto &remoteBB : _remoteBBM) {
@@ -73,12 +71,11 @@ void ReceivedBoundingBox::computeBoundingBox()
         _mesh->getConnectedRanks().push_back(remoteBB.first);
       }
     }
-    if (!_mesh->getConnectedRanks().empty())
-    {
-     connectionMap[0] = _mesh->getConnectedRanks();
-     connectedRanksList.push_back(0);
+    if (!_mesh->getConnectedRanks().empty()) {
+      connectionMap[0] = _mesh->getConnectedRanks();
+      connectedRanksList.push_back(0);
     }
-      
+
     // receive connected ranks from slaves and add them to the connection map
     std::vector<int> slaveConnectedRanks;
     for (int rank = 1; rank < utils::MasterSlave::getSize(); rank++) {
@@ -86,7 +83,7 @@ void ReceivedBoundingBox::computeBoundingBox()
       utils::MasterSlave::_communication->receive(connectedRanksSize, rank);
       if (connectedRanksSize != 0) {
         connectedRanksList.push_back(rank);
-        connectionMap[rank].push_back(-1);        
+        connectionMap[rank].push_back(-1);
         utils::MasterSlave::_communication->receive(slaveConnectedRanks, rank);
         connectionMap[rank] = slaveConnectedRanks;
         slaveConnectedRanks.clear();
@@ -95,15 +92,14 @@ void ReceivedBoundingBox::computeBoundingBox()
 
     // send connectionMap to other master
     _m2ns[0]->getMasterCommunication()->send(connectedRanksList, 0);
-    if (!connectionMap.empty()) { 
+    if (!connectionMap.empty()) {
       com::CommunicateBoundingBox(_m2ns[0]->getMasterCommunication()).sendConnectionMap(connectionMap, 0);
-    } else
-    {
+    } else {
       PRECICE_ERROR("This participant has no rank in the interface! Please check your test case and make sure that the mesh partition given to preCICE is loacted in the interface");
     }
-  } else if ( utils::MasterSlave::isSlave()) {    
+  } else if (utils::MasterSlave::isSlave()) {
     utils::MasterSlave::_communication->broadcast(_remoteParComSize, 0);
-    
+
     for (int remoteRank = 0; remoteRank < _remoteParComSize; remoteRank++) {
       _remoteBBM[remoteRank] = mesh::Mesh::BoundingBox(_dimensions);
     }
@@ -115,7 +111,7 @@ void ReceivedBoundingBox::computeBoundingBox()
       if (overlapping(_bb, remoteBB.second)) {
         _mesh->getConnectedRanks().push_back(remoteBB.first);
       }
-    }    
+    }
 
     // send feedback size to master
     utils::MasterSlave::_communication->send((int) _mesh->getConnectedRanks().size(), 0);
@@ -127,13 +123,12 @@ void ReceivedBoundingBox::computeBoundingBox()
 }
 
 void ReceivedBoundingBox::communicate()
-{  
-  if (utils::MasterSlave::isMaster())
-  {
+{
+  if (utils::MasterSlave::isMaster()) {
     // Master receives remote mesh's global vertex number
     int globalNumberOfVertices = -1;
-     _m2ns[0]->getMasterCommunication()->receive(globalNumberOfVertices, 0);
-     _mesh->setGlobalNumberOfVertices(globalNumberOfVertices);
+    _m2ns[0]->getMasterCommunication()->receive(globalNumberOfVertices, 0);
+    _mesh->setGlobalNumberOfVertices(globalNumberOfVertices);
   }
 
   // each rank receives max/min global vertex indexes from connected remote ranks
@@ -142,46 +137,44 @@ void ReceivedBoundingBox::communicate()
 
   // each rank receives mesh partition from connected ranks
   _m2ns[0]->broadcastReceiveLocalMesh(*_mesh);
-
 }
 
 void ReceivedBoundingBox::compute()
 {
   if (not utils::MasterSlave::isSlave()) {
     PRECICE_CHECK(_fromMapping.use_count() > 0 || _toMapping.use_count() > 0,
-          "The received mesh " << _mesh->getName()
-          << " needs a mapping, either from it, to it, or both. Maybe you don't want to receive this mesh at all?")
+                  "The received mesh " << _mesh->getName()
+                                       << " needs a mapping, either from it, to it, or both. Maybe you don't want to receive this mesh at all?")
   }
-  
+
   // _mesh->buildBoundingBox();
-  prepareBoundingBox();  
+  prepareBoundingBox();
   mesh::Mesh filteredMesh{"FilteredMesh", _dimensions, _mesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED};
-  
+
   // (1) Bounding Box Filter
 
-  PRECICE_INFO("Filter mesh " << _mesh->getName() << " by bounding-box");  
-  mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex& v){ return isVertexInBB(v);});
+  PRECICE_INFO("Filter mesh " << _mesh->getName() << " by bounding-box");
+  mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { return isVertexInBB(v); });
   PRECICE_DEBUG("Filtered mesh. #vertices: " << filteredMesh.vertices().size()
-          << ", #edges: " << filteredMesh.edges().size()
-          << ", #triangles: " << filteredMesh.triangles().size()
-          << ", rank: " << utils::MasterSlave::getRank());
-    
+                                             << ", #edges: " << filteredMesh.edges().size()
+                                             << ", #triangles: " << filteredMesh.triangles().size()
+                                             << ", rank: " << utils::MasterSlave::getRank());
+
   if ((_fromMapping.use_count() > 0 && _fromMapping->getOutputMesh()->vertices().size() > 0) ||
-      (_toMapping.use_count() > 0 && _toMapping->getInputMesh()->vertices().size() > 0))
-  {
-      // this rank has vertices at the coupling interface
-      // then, also the filtered mesh should still have vertices
+      (_toMapping.use_count() > 0 && _toMapping->getInputMesh()->vertices().size() > 0)) {
+    // this rank has vertices at the coupling interface
+    // then, also the filtered mesh should still have vertices
     std::string msg = "The re-partitioning completely filtered out the mesh " + _mesh->getName() + " received on this rank at the coupling interface. "
-      "Most probably, the coupling interfaces of your coupled participants do not match geometry-wise. "
-      "Please check your geometry setup again. Small overlaps or gaps are no problem. "
-      "If your geometry setup is correct and if you have very different mesh resolutions on both sides, increasing the safety-factor "
-      "of the decomposition strategy might be necessary.";
+                                                                                                   "Most probably, the coupling interfaces of your coupled participants do not match geometry-wise. "
+                                                                                                   "Please check your geometry setup again. Small overlaps or gaps are no problem. "
+                                                                                                   "If your geometry setup is correct and if you have very different mesh resolutions on both sides, increasing the safety-factor "
+                                                                                                   "of the decomposition strategy might be necessary.";
     //PRECICE_CHECK(filteredMesh.vertices().size() > 0, msg);
   }
   PRECICE_DEBUG("Bounding box filter, filtered from "
-          << _mesh->vertices().size() << " to " << filteredMesh.vertices().size() << " vertices, "
-          << _mesh->edges().size() << " to " << filteredMesh.edges().size() << " edges, and "
-          << _mesh->triangles().size() << " to " << filteredMesh.triangles().size() << " triangles.");
+                << _mesh->vertices().size() << " to " << filteredMesh.vertices().size() << " vertices, "
+                << _mesh->edges().size() << " to " << filteredMesh.edges().size() << " edges, and "
+                << _mesh->triangles().size() << " to " << filteredMesh.triangles().size() << " triangles.");
   _mesh->clear();
   _mesh->addMesh(filteredMesh);
   _mesh->computeState();
@@ -194,33 +187,32 @@ void ReceivedBoundingBox::compute()
     _fromMapping->tagMeshFirstRound();
   if (_toMapping.use_count() > 0)
     _toMapping->tagMeshFirstRound();
-  
+
   // (3) Define which vertices are owned by this rank
   PRECICE_DEBUG("Create owner information.");
   createOwnerInformation();
-  
+
   // (4) Tag vertices 2nd round (what should be filtered out)
   PRECICE_DEBUG("Tag vertices for filtering: 2nd round.");
   if (_fromMapping.use_count() > 0)
     _fromMapping->tagMeshSecondRound();
   if (_toMapping.use_count() > 0)
     _toMapping->tagMeshSecondRound();
-  
-  
+
   // (5) Filter mesh according to tag
   PRECICE_INFO("Filter mesh " << _mesh->getName() << " by mappings");
   filteredMesh.clear();
-  mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex& v){ return v.isTagged();});
+  mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { return v.isTagged(); });
   PRECICE_DEBUG("Mapping filter, filtered from "
-          << _mesh->vertices().size() << " to " << filteredMesh.vertices().size() << " vertices, "
-          << _mesh->edges().size() << " to " << filteredMesh.edges().size() << " edges, and "
-          << _mesh->triangles().size() << " to " << filteredMesh.triangles().size() << " triangles.");
+                << _mesh->vertices().size() << " to " << filteredMesh.vertices().size() << " vertices, "
+                << _mesh->edges().size() << " to " << filteredMesh.edges().size() << " edges, and "
+                << _mesh->triangles().size() << " to " << filteredMesh.triangles().size() << " triangles.");
   _mesh->clear();
   _mesh->addMesh(filteredMesh);
   _mesh->computeState();
 
   // (6) Compute and feedback local communication map
-  PRECICE_INFO("Feedback Communication Map "); 
+  PRECICE_INFO("Feedback Communication Map ");
   std::map<int, std::vector<int>> localCommunicationMap;
 
   /*
@@ -235,10 +227,10 @@ void ReceivedBoundingBox::compute()
    * remore rank, this vertex belongs to that rank
    */
 
-  std::vector<int> vertexIDs;  
+  std::vector<int> vertexIDs;
 
-  int rank = 0;
-  int index= 0;
+  int rank  = 0;
+  int index = 0;
   for (auto &remoteVertex : _mesh->vertices()) {
     vertexIDs.push_back(remoteVertex.getGlobalIndex());
     rank = 0;
@@ -251,16 +243,15 @@ void ReceivedBoundingBox::compute()
     }
     index++;
   }
-  
+
   // communicate communication map to all remote conneceted ranks
   _m2ns[0]->broadcastSendLCM(localCommunicationMap, *_mesh);
 
   /* 
    * master broadcasts remote mesh's golbal vertex number to slaves.
    * This data is needed later for implicit coupling schemes.
-   */  
-  if (utils::MasterSlave::isMaster())
-  {
+   */
+  if (utils::MasterSlave::isMaster()) {
     _mesh->getVertexDistribution()[0] = vertexIDs;
 
     for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
@@ -273,8 +264,7 @@ void ReceivedBoundingBox::compute()
       _mesh->getVertexDistribution()[rankSlave] = vertexIDs;
     }
     utils::MasterSlave::_communication->broadcast(_mesh->getGlobalNumberOfVertices());
-  } else
-  {  
+  } else {
     int numberOfVertices = _mesh->vertices().size();
     utils::MasterSlave::_communication->send(numberOfVertices, 0);
     if (numberOfVertices != 0) {
@@ -289,11 +279,10 @@ void ReceivedBoundingBox::compute()
     _mesh->setGlobalNumberOfVertices(globalNumberOfVertices);
   }
 
-  computeVertexOffsets();    
-  
+  computeVertexOffsets();
 }
 
-bool ReceivedBoundingBox::overlapping(mesh::Mesh::BoundingBox const & currentBB, mesh::Mesh::BoundingBox const & receivedBB)
+bool ReceivedBoundingBox::overlapping(mesh::Mesh::BoundingBox const &currentBB, mesh::Mesh::BoundingBox const &receivedBB)
 {
   /*
    * Here two bounding boxes are compared to check whether they overlap or not!
@@ -328,7 +317,7 @@ void ReceivedBoundingBox::prepareBoundingBox()
         _bb[d].second = other_bb[d].second;
     }
   }
-  
+
   if (_toMapping.use_count() > 0) {
     auto other_bb = _toMapping->getInputMesh()->getBoundingBox();
     for (int d = 0; d < _dimensions; d++) {
@@ -338,14 +327,14 @@ void ReceivedBoundingBox::prepareBoundingBox()
         _bb[d].second = other_bb[d].second;
     }
   }
-  
+
   //enlarge BB
   PRECICE_ASSERT(_safetyFactor >= 0.0);
 
   double maxSideLength = 1e-6; // we need some minimum > 0 here
 
   for (int d = 0; d < _dimensions; d++) {
-    if(_bb[d].second > _bb[d].first)
+    if (_bb[d].second > _bb[d].first)
       maxSideLength = std::max(maxSideLength, _bb[d].second - _bb[d].first);
   }
   for (int d = 0; d < _dimensions; d++) {
@@ -355,9 +344,10 @@ void ReceivedBoundingBox::prepareBoundingBox()
   }
 }
 
-bool ReceivedBoundingBox::isVertexInBB(const mesh::Vertex& vertex) {
-  for (int d=0; d<_dimensions; d++) {
-    if (vertex.getCoords()[d] < _bb[d].first || vertex.getCoords()[d] > _bb[d].second ) {
+bool ReceivedBoundingBox::isVertexInBB(const mesh::Vertex &vertex)
+{
+  for (int d = 0; d < _dimensions; d++) {
+    if (vertex.getCoords()[d] < _bb[d].first || vertex.getCoords()[d] > _bb[d].second) {
       return false;
     }
   }
@@ -365,30 +355,24 @@ bool ReceivedBoundingBox::isVertexInBB(const mesh::Vertex& vertex) {
 }
 
 void ReceivedBoundingBox::createOwnerInformation()
-{ 
+{
 
-  int numberOfVertices = _mesh->vertices().size();    
-  if (numberOfVertices != 0)
-  {
+  int numberOfVertices = _mesh->vertices().size();
+  if (numberOfVertices != 0) {
     std::vector<int> tags(numberOfVertices, -1);
     std::vector<int> globalIDs(numberOfVertices, -1);
-    for (int i = 0; i < numberOfVertices; i++)
-    {
+    for (int i = 0; i < numberOfVertices; i++) {
       globalIDs[i] = _mesh->vertices()[i].getGlobalIndex();
-      if (_mesh->vertices()[i].isTagged())
-      {
-        tags[i]     = 1;
-      }
-      else
-      {
+      if (_mesh->vertices()[i].isTagged()) {
+        tags[i] = 1;
+      } else {
         tags[i] = 0;
       }
     }
     PRECICE_DEBUG("My tags: " << tags);
-    PRECICE_DEBUG("My global IDs: " << globalIDs); 
-  }    
+    PRECICE_DEBUG("My global IDs: " << globalIDs);
+  }
 }
-
 
 } // namespace partition
 } // namespace precice

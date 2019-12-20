@@ -1,30 +1,28 @@
 #pragma once
 
-#include "cplscheme/SharedPointer.hpp"
-#include "com/SharedPointer.hpp"
-#include "logging/Logger.hpp"
-#include <set>
-#include <list>
 #include <Eigen/Core>
+#include <list>
+#include <set>
+#include "com/SharedPointer.hpp"
+#include "cplscheme/SharedPointer.hpp"
+#include "logging/Logger.hpp"
 
 namespace precice {
-  namespace impl {
-    class SolverInterfaceImpl;
-  }
+namespace impl {
+class SolverInterfaceImpl;
 }
+} // namespace precice
 
 namespace precice {
 namespace impl {
 
 /// Takes requests from clients and handles requests on server side.
-class RequestManager
-{
+class RequestManager {
 public:
-
-  RequestManager (
-    SolverInterfaceImpl&  solverInterfaceImpl,
-    com::PtrCommunication clientServerCommunication,
-    cplscheme::PtrCouplingScheme couplingScheme);
+  RequestManager(
+      SolverInterfaceImpl &        solverInterfaceImpl,
+      com::PtrCommunication        clientServerCommunication,
+      cplscheme::PtrCouplingScheme couplingScheme);
 
   /// Redirects all requests from client to corresponding handle methods.
   void handleRequests();
@@ -39,18 +37,18 @@ public:
   void requestInitialzeData();
 
   /// Requests advance from server.
-  void requestAdvance ( double dt );
+  void requestAdvance(double dt);
 
   /// Requests finalize from server.
   void requestFinalize();
 
   /// Requests fulfilled action from server.
-  void requestFulfilledAction ( const std::string& action );
+  void requestFulfilledAction(const std::string &action);
 
   /// Requests set position of solver mesh from server.
-  int requestSetMeshVertex (
-    int               meshID,
-    Eigen::VectorXd&  position );
+  int requestSetMeshVertex(
+      int              meshID,
+      Eigen::VectorXd &position);
 
   /// Requests get size of vertices of preCICE mesh.
   int requestGetMeshVertexSize(int meshID);
@@ -59,122 +57,121 @@ public:
   void requestResetMesh(int meshID);
 
   /// Requests set vertex positions from server.
-  void requestSetMeshVertices (
-    int           meshID,
-    int           size,
-    const double* positions,
-    int*          ids );
+  void requestSetMeshVertices(
+      int           meshID,
+      int           size,
+      const double *positions,
+      int *         ids);
 
   /// Requests get vertex positions from server.
-  void requestGetMeshVertices (
-    int        meshID,
-    int        size,
-    const int* ids,
-    double*    positions );
+  void requestGetMeshVertices(
+      int        meshID,
+      int        size,
+      const int *ids,
+      double *   positions);
 
   /// Requests get vertex ids from server.
-  void requestGetMeshVertexIDsFromPositions (
-    int           meshID,
-    int           size,
-    const double* positions,
-    int*          ids );
+  void requestGetMeshVertexIDsFromPositions(
+      int           meshID,
+      int           size,
+      const double *positions,
+      int *         ids);
 
   /// Requests set mesh edge from server.
-  int requestSetMeshEdge (
-    int meshID,
-    int firstVertexID,
-    int secondVertexID );
+  int requestSetMeshEdge(
+      int meshID,
+      int firstVertexID,
+      int secondVertexID);
 
   /// Requests set mesh triangle from server.
-  void requestSetMeshTriangle (
-    int meshID,
-    int firstEdgeID,
-    int secondEdgeID,
-    int thirdEdgeID );
+  void requestSetMeshTriangle(
+      int meshID,
+      int firstEdgeID,
+      int secondEdgeID,
+      int thirdEdgeID);
 
   /// Requests set mesh triangle with edges from server.
-  void requestSetMeshTriangleWithEdges (
-    int meshID,
-    int firstVertexID,
-    int secondVertexID,
-    int thirdVertexID );
+  void requestSetMeshTriangleWithEdges(
+      int meshID,
+      int firstVertexID,
+      int secondVertexID,
+      int thirdVertexID);
 
   /// Requests set mesh quad from server.
-  void requestSetMeshQuad (
-    int meshID,
-    int firstEdgeID,
-    int secondEdgeID,
-    int thirdEdgeID,
-    int fourthEdgeID );
+  void requestSetMeshQuad(
+      int meshID,
+      int firstEdgeID,
+      int secondEdgeID,
+      int thirdEdgeID,
+      int fourthEdgeID);
 
   /// Requests set mesh quad with edges from server.
-  void requestSetMeshQuadWithEdges (
-    int meshID,
-    int firstVertexID,
-    int secondVertexID,
-    int thirdVertexID,
-    int fourthVertexID );
+  void requestSetMeshQuadWithEdges(
+      int meshID,
+      int firstVertexID,
+      int secondVertexID,
+      int thirdVertexID,
+      int fourthVertexID);
 
   /// Requests write block scalar data from server.
-  void requestWriteBlockScalarData (
-    int           dataID,
-    int           size,
-    const int*    valueIndices,
-    const double* values );
+  void requestWriteBlockScalarData(
+      int           dataID,
+      int           size,
+      const int *   valueIndices,
+      const double *values);
 
   /// Requests write scalar data from server.
-  void requestWriteScalarData (
-    int    dataID,
-    int    valueIndex,
-    double value );
+  void requestWriteScalarData(
+      int    dataID,
+      int    valueIndex,
+      double value);
 
   /// Requests write block vector data from server.
-  void requestWriteBlockVectorData (
-    int           dataID,
-    int           size,
-    const int*    valueIndices,
-    const double* values );
+  void requestWriteBlockVectorData(
+      int           dataID,
+      int           size,
+      const int *   valueIndices,
+      const double *values);
 
   /// Requests write vector data from server.
-  void requestWriteVectorData (
-    int           dataID,
-    int           valueIndex,
-    const double* value );
+  void requestWriteVectorData(
+      int           dataID,
+      int           valueIndex,
+      const double *value);
 
   /// Requests read block scalar data from server.
-  void requestReadBlockScalarData (
-    int        dataID,
-    int        size,
-    const int* valueIndices,
-    double*    values );
+  void requestReadBlockScalarData(
+      int        dataID,
+      int        size,
+      const int *valueIndices,
+      double *   values);
 
   /// Requests read scalar data from server.
-  void requestReadScalarData (
-    int     dataID,
-    int     valueIndex,
-    double& value );
+  void requestReadScalarData(
+      int     dataID,
+      int     valueIndex,
+      double &value);
 
   /// Requests read block vector data from server.
-  void requestReadBlockVectorData (
-    int        dataID,
-    int        size,
-    const int* valueIndices,
-    double*    values );
+  void requestReadBlockVectorData(
+      int        dataID,
+      int        size,
+      const int *valueIndices,
+      double *   values);
 
   /// Requests read vector data from server.
-  void requestReadVectorData (
-    int     dataID,
-    int     valueIndex,
-    double* value );
+  void requestReadVectorData(
+      int     dataID,
+      int     valueIndex,
+      double *value);
 
   /// Requests write mapping data from server.
-  void requestMapWriteDataFrom ( int fromMeshID );
+  void requestMapWriteDataFrom(int fromMeshID);
 
   /// Requests read mapping data from server.
-  void requestMapReadDataTo( int toMeshID );
+  void requestMapReadDataTo(int toMeshID);
 
 private:
-
   /// IDs for requests from clients.
   enum Request {
     REQUEST_INITIALIZE,
@@ -208,29 +205,29 @@ private:
 
   logging::Logger _log{"impl::RequestManager"};
 
-  SolverInterfaceImpl& _interface;
+  SolverInterfaceImpl &_interface;
 
   com::PtrCommunication _com;
 
   cplscheme::PtrCouplingScheme _couplingScheme;
 
   /// Handles request initialize from client.
-  void handleRequestInitialze ( const std::list<int>& clientRanks );
+  void handleRequestInitialze(const std::list<int> &clientRanks);
 
   /// Handles request initialize data from client.
-  void handleRequestInitialzeData ( const std::list<int>& clientRanks );
+  void handleRequestInitialzeData(const std::list<int> &clientRanks);
 
   /// Handles request advance from client.
-  void handleRequestAdvance ( const std::list<int>& clientRanks );
+  void handleRequestAdvance(const std::list<int> &clientRanks);
 
   /// Handles request finalize from client.
   void handleRequestFinalize();
 
   /// Handles request fulfilled action from client.
-  void handleRequestFulfilledAction ( int rankSender );
+  void handleRequestFulfilledAction(int rankSender);
 
   /// Handles request set mesh vertex from client.
-  void handleRequestSetMeshVertex ( int rankSender );
+  void handleRequestSetMeshVertex(int rankSender);
 
   /// Handles request get mesh vertex size from client.
   void handleRequestGetMeshVertexSize(int rankSender);
@@ -239,59 +236,59 @@ private:
   void handleRequestResetMesh(int rankSender);
 
   /// Handles request set vertex positions from client.
-  void handleRequestSetMeshVertices ( int rankSender );
+  void handleRequestSetMeshVertices(int rankSender);
 
   /// Handles request get vertex positions from client.
-  void handleRequestGetMeshVertices ( int rankSender );
+  void handleRequestGetMeshVertices(int rankSender);
 
   /// Handles request get vertex IDs from client.
-  void handleRequestGetMeshVertexIDsFromPositions ( int rankSender );
+  void handleRequestGetMeshVertexIDsFromPositions(int rankSender);
 
   /// Handles request set mesh edge from client.
-  void handleRequestSetMeshEdge ( int rankSender );
+  void handleRequestSetMeshEdge(int rankSender);
 
   /// Handles request set mesh triangle from client.
-  void handleRequestSetMeshTriangle ( int rankSender );
+  void handleRequestSetMeshTriangle(int rankSender);
 
   /// Handles request set mesh triangle with edges from client.
-  void handleRequestSetMeshTriangleWithEdges ( int rankSender );
+  void handleRequestSetMeshTriangleWithEdges(int rankSender);
 
   /// Handles request set mesh quad from client.
-  void handleRequestSetMeshQuad ( int rankSender );
+  void handleRequestSetMeshQuad(int rankSender);
 
   /// Handles request set mesh quad with edges from client.
-  void handleRequestSetMeshQuadWithEdges ( int rankSender );
+  void handleRequestSetMeshQuadWithEdges(int rankSender);
 
   /// Handles request write block scalar data from client.
-  void handleRequestWriteBlockScalarData ( int rankSender );
+  void handleRequestWriteBlockScalarData(int rankSender);
 
   /// Handles request write scalar data from client.
-  void handleRequestWriteScalarData ( int rankSender );
+  void handleRequestWriteScalarData(int rankSender);
 
   /// Handles request write block vector data from client.
-  void handleRequestWriteBlockVectorData ( int rankSender );
+  void handleRequestWriteBlockVectorData(int rankSender);
 
   /// Handles request write vector data from client.
-  void handleRequestWriteVectorData ( int rankSender );
+  void handleRequestWriteVectorData(int rankSender);
 
   /// Handles request read block scalar data from client.
-  void handleRequestReadBlockScalarData ( int rankSender );
+  void handleRequestReadBlockScalarData(int rankSender);
 
   /// Handles request read scalar data from client.
-  void handleRequestReadScalarData ( int rankSender );
+  void handleRequestReadScalarData(int rankSender);
 
   /// Handles request read block vector data from client.
-  void handleRequestReadBlockVectorData ( int rankSender );
+  void handleRequestReadBlockVectorData(int rankSender);
 
   /// Handles request read vector data from client.
-  void handleRequestReadVectorData ( int rankSender );
+  void handleRequestReadVectorData(int rankSender);
 
   /// Handles request map written data from client.
-  void handleRequestMapWriteDataFrom ( const std::list<int>& clientRanks );
+  void handleRequestMapWriteDataFrom(const std::list<int> &clientRanks);
 
   /// Handles request map read data from client.
-  void handleRequestMapReadDataTo ( const std::list<int>& clientRanks );
-
+  void handleRequestMapReadDataTo(const std::list<int> &clientRanks);
 };
 
-}} // namespace precice, impl
+} // namespace impl
+} // namespace precice

@@ -2,10 +2,10 @@
 #include <Eigen/Core>
 #include <limits>
 #include <sstream>
+#include "acceleration/Acceleration.hpp"
 #include "com/Communication.hpp"
 #include "com/SharedPointer.hpp"
 #include "impl/ConvergenceMeasure.hpp"
-#include "acceleration/Acceleration.hpp"
 #include "io/TXTReader.hpp"
 #include "io/TXTWriter.hpp"
 #include "m2n/M2N.hpp"
@@ -16,10 +16,8 @@
 #include "utils/Helpers.hpp"
 #include "utils/MasterSlave.hpp"
 
-namespace precice
-{
-namespace cplscheme
-{
+namespace precice {
+namespace cplscheme {
 
 BaseCouplingScheme::BaseCouplingScheme(
     double maxTime,
@@ -43,13 +41,13 @@ BaseCouplingScheme::BaseCouplingScheme(
       _validDigits(validDigits)
 {
   PRECICE_CHECK(not((maxTime != UNDEFINED_TIME) && (maxTime < 0.0)),
-        "Maximum time has to be larger than zero!");
+                "Maximum time has to be larger than zero!");
   PRECICE_CHECK(not((maxTimesteps != UNDEFINED_TIMESTEPS) && (maxTimesteps < 0)),
-        "Maximum timestep number has to be larger than zero!");
+                "Maximum timestep number has to be larger than zero!");
   PRECICE_CHECK(not((timestepLength != UNDEFINED_TIMESTEP_LENGTH) && (timestepLength < 0.0)),
-        "Timestep length has to be larger than zero!");
+                "Timestep length has to be larger than zero!");
   PRECICE_CHECK((_validDigits >= 1) && (_validDigits < 17),
-        "Valid digits of timestep length has to be between 1 and 16!");
+                "Valid digits of timestep length has to be between 1 and 16!");
 }
 
 BaseCouplingScheme::BaseCouplingScheme(
@@ -63,7 +61,7 @@ BaseCouplingScheme::BaseCouplingScheme(
     m2n::PtrM2N                   m2n,
     int                           maxIterations,
     constants::TimesteppingMethod dtMethod)
-  :   _firstParticipant(firstParticipant),
+    : _firstParticipant(firstParticipant),
       _secondParticipant(secondParticipant),
       _localParticipant(localParticipant),
       _eps(std::pow(10.0, -1 * validDigits)),
@@ -80,19 +78,19 @@ BaseCouplingScheme::BaseCouplingScheme(
       _validDigits(validDigits)
 {
   PRECICE_CHECK(not((maxTime != UNDEFINED_TIME) && (maxTime < 0.0)),
-        "Maximum time has to be larger than zero!");
+                "Maximum time has to be larger than zero!");
   PRECICE_CHECK(not((maxTimesteps != UNDEFINED_TIMESTEPS) && (maxTimesteps < 0)),
-        "Maximum timestep number has to be larger than zero!");
+                "Maximum timestep number has to be larger than zero!");
   PRECICE_CHECK(not((timestepLength != UNDEFINED_TIMESTEP_LENGTH) && (timestepLength < 0.0)),
-        "Timestep length has to be larger than zero!");
+                "Timestep length has to be larger than zero!");
   PRECICE_CHECK((_validDigits >= 1) && (_validDigits < 17),
-        "Valid digits of timestep length has to be between 1 and 16!");
+                "Valid digits of timestep length has to be between 1 and 16!");
   PRECICE_CHECK(_firstParticipant != _secondParticipant,
-        "First participant and second participant must have different names! Called from BaseCoupling.");
+                "First participant and second participant must have different names! Called from BaseCoupling.");
   if (dtMethod == constants::FIXED_DT) {
     PRECICE_CHECK(hasTimestepLength(),
-          "Timestep length value has to be given when the fixed timestep length method "
-          << "is chosen for an implicit coupling scheme!");
+                  "Timestep length value has to be given when the fixed timestep length method "
+                      << "is chosen for an implicit coupling scheme!");
   }
   if (localParticipant == _firstParticipant) {
     _doesFirstStep = true;
@@ -106,11 +104,11 @@ BaseCouplingScheme::BaseCouplingScheme(
     }
   } else {
     PRECICE_ERROR("Name of local participant \""
-          << localParticipant << "\" does not match any "
-          << "participant specified for the coupling scheme!");
+                  << localParticipant << "\" does not match any "
+                  << "participant specified for the coupling scheme!");
   }
   PRECICE_CHECK((maxIterations > 0) || (maxIterations == -1),
-        "Maximal iteration limit has to be larger than zero!");
+                "Maximal iteration limit has to be larger than zero!");
 }
 
 void BaseCouplingScheme::receiveAndSetDt()
@@ -308,7 +306,7 @@ void BaseCouplingScheme::setExtrapolationOrder(
     int order)
 {
   PRECICE_CHECK((order == 0) || (order == 1) || (order == 2),
-        "Extrapolation order has to be  0, 1, or 2!");
+                "Extrapolation order has to be  0, 1, or 2!");
   _extrapolationOrder = order;
 }
 
@@ -370,9 +368,9 @@ void BaseCouplingScheme::addComputedTime(
   // Check validness
   bool valid = math::greaterEquals(getThisTimestepRemainder(), 0.0, _eps);
   PRECICE_CHECK(valid, "The computed timestep length of "
-                   << timeToAdd << " exceeds the maximum timestep limit of "
-                   << _timestepLength - _computedTimestepPart + timeToAdd
-                   << " for this time step!");
+                           << timeToAdd << " exceeds the maximum timestep limit of "
+                           << _timestepLength - _computedTimestepPart + timeToAdd
+                           << " for this time step!");
 }
 
 bool BaseCouplingScheme::willDataBeExchanged(
@@ -590,8 +588,8 @@ void BaseCouplingScheme::setupConvergenceMeasures()
   PRECICE_TRACE();
   PRECICE_ASSERT(not doesFirstStep());
   PRECICE_CHECK(not _convergenceMeasures.empty(),
-        "At least one convergence measure has to be defined for "
-            << "an implicit coupling scheme!");
+                "At least one convergence measure has to be defined for "
+                    << "an implicit coupling scheme!");
   for (ConvergenceMeasure &convMeasure : _convergenceMeasures) {
     int dataID = convMeasure.data->getID();
     if ((getSendData(dataID) != nullptr)) {
@@ -619,11 +617,11 @@ void BaseCouplingScheme::addConvergenceMeasure(
     impl::PtrConvergenceMeasure measure)
 {
   ConvergenceMeasure convMeasure;
-  convMeasure.data     = std::move(data);
+  convMeasure.data         = std::move(data);
   convMeasure.couplingData = nullptr;
-  convMeasure.suffices = suffices;
-  convMeasure.level    = level;
-  convMeasure.measure  = std::move(measure);
+  convMeasure.suffices     = suffices;
+  convMeasure.level        = level;
+  convMeasure.measure      = std::move(measure);
   _convergenceMeasures.push_back(convMeasure);
   _firstResiduumNorm.push_back(0);
 }
@@ -869,5 +867,5 @@ bool BaseCouplingScheme::maxIterationsReached()
     return _iterationsCoarseOptimization == _maxIterations;
   }
 }
-}
-} // namespace precice, cplscheme
+} // namespace cplscheme
+} // namespace precice

@@ -1,12 +1,10 @@
 #include "xml/XMLTag.hpp"
+#include <cctype>
 #include "utils/Helpers.hpp"
 #include "utils/String.hpp"
-#include <cctype>
 
-namespace precice
-{
-namespace xml
-{
+namespace precice {
+namespace xml {
 
 XMLTag::XMLTag(
     Listener &  listener,
@@ -25,19 +23,19 @@ XMLTag::XMLTag(
   }
 }
 
-XMLTag& XMLTag::setDocumentation(const std::string &documentation)
+XMLTag &XMLTag::setDocumentation(const std::string &documentation)
 {
   _doc = documentation;
   return *this;
 }
 
-XMLTag& XMLTag::addNamespace(const std::string &namespaceName)
+XMLTag &XMLTag::addNamespace(const std::string &namespaceName)
 {
   _namespaces.push_back(namespaceName);
   return *this;
 }
 
-XMLTag& XMLTag::addSubtag(const XMLTag &tag)
+XMLTag &XMLTag::addSubtag(const XMLTag &tag)
 {
   PRECICE_TRACE(tag._fullName);
   PRECICE_ASSERT(tag._name != std::string(""));
@@ -49,7 +47,7 @@ XMLTag& XMLTag::addSubtag(const XMLTag &tag)
   return *this;
 }
 
-XMLTag& XMLTag::addAttribute(const XMLAttribute<double> &attribute)
+XMLTag &XMLTag::addAttribute(const XMLAttribute<double> &attribute)
 {
   PRECICE_TRACE(attribute.getName());
   PRECICE_ASSERT(not utils::contained(attribute.getName(), _attributes));
@@ -58,7 +56,7 @@ XMLTag& XMLTag::addAttribute(const XMLAttribute<double> &attribute)
   return *this;
 }
 
-XMLTag& XMLTag::addAttribute(const XMLAttribute<int> &attribute)
+XMLTag &XMLTag::addAttribute(const XMLAttribute<int> &attribute)
 {
   PRECICE_TRACE(attribute.getName());
   PRECICE_ASSERT(not utils::contained(attribute.getName(), _attributes));
@@ -67,7 +65,7 @@ XMLTag& XMLTag::addAttribute(const XMLAttribute<int> &attribute)
   return *this;
 }
 
-XMLTag& XMLTag::addAttribute(const XMLAttribute<std::string> &attribute)
+XMLTag &XMLTag::addAttribute(const XMLAttribute<std::string> &attribute)
 {
   PRECICE_TRACE(attribute.getName());
   PRECICE_ASSERT(not utils::contained(attribute.getName(), _attributes));
@@ -76,7 +74,7 @@ XMLTag& XMLTag::addAttribute(const XMLAttribute<std::string> &attribute)
   return *this;
 }
 
-XMLTag& XMLTag::addAttribute(const XMLAttribute<bool> &attribute)
+XMLTag &XMLTag::addAttribute(const XMLAttribute<bool> &attribute)
 {
   PRECICE_TRACE(attribute.getName());
   PRECICE_ASSERT(not utils::contained(attribute.getName(), _attributes));
@@ -85,7 +83,7 @@ XMLTag& XMLTag::addAttribute(const XMLAttribute<bool> &attribute)
   return *this;
 }
 
-XMLTag& XMLTag::addAttribute(const XMLAttribute<Eigen::VectorXd> &attribute)
+XMLTag &XMLTag::addAttribute(const XMLAttribute<Eigen::VectorXd> &attribute)
 {
   PRECICE_TRACE(attribute.getName());
   PRECICE_ASSERT(not utils::contained(attribute.getName(), _attributes));
@@ -139,9 +137,9 @@ Eigen::VectorXd XMLTag::getEigenVectorXdAttributeValue(const std::string &name, 
   auto iter = _eigenVectorXdAttributes.find(name);
   PRECICE_ASSERT(iter != _eigenVectorXdAttributes.end());
   PRECICE_CHECK(iter->second.getValue().size() >= dimensions,
-        "Vector attribute \"" << name << "\" of tag <" << getFullName()
-                              << "> has less dimensions than required (" << iter->second.getValue().size()
-                              << " instead of " << dimensions << ")!");
+                "Vector attribute \"" << name << "\" of tag <" << getFullName()
+                                      << "> has less dimensions than required (" << iter->second.getValue().size()
+                                      << " instead of " << dimensions << ")!");
 
   // Read only first "dimensions" components of the parsed vector values
   Eigen::VectorXd        result(dimensions);
@@ -346,9 +344,9 @@ XMLTag getRootTag()
 }
 
 void configure(
-    XMLTag &           tag,
-    const precice::xml::ConfigurationContext& context,
-    const std::string &configurationFilename)
+    XMLTag &                                  tag,
+    const precice::xml::ConfigurationContext &context,
+    const std::string &                       configurationFilename)
 {
   logging::Logger _log("xml");
   PRECICE_TRACE(tag.getFullName(), configurationFilename);
@@ -374,7 +372,8 @@ std::string XMLTag::getOccurrenceString(XMLTag::Occurrence occurrence)
   }
   return "";
 }
-}} // namespace precice, xml
+} // namespace xml
+} // namespace precice
 
 //std::ostream& operator<<
 //(

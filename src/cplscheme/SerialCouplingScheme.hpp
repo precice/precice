@@ -5,10 +5,10 @@
 
 // Forward declaration to friend the boost test struct
 namespace CplSchemeTests {
-namespace SerialImplicitCouplingSchemeTests{
+namespace SerialImplicitCouplingSchemeTests {
 struct testExtrapolateData;
-}}
-
+}
+} // namespace CplSchemeTests
 
 namespace precice {
 namespace cplscheme {
@@ -19,11 +19,9 @@ namespace cplscheme {
  * For more information, look into Benjamin's thesis, Section 3.5. 
  * https://mediatum.ub.tum.de/doc/1320661/document.pdf
  */
-class SerialCouplingScheme : public BaseCouplingScheme
-{
+class SerialCouplingScheme : public BaseCouplingScheme {
 public:
-
-/**
+  /**
  * @brief Constructor.
  *
  * @param[in] maxTime Simulation time limit, or UNDEFINED_TIME.
@@ -35,19 +33,18 @@ public:
  * @param[in] communication Communication object for com. between participants.
  * @param[in] monitorIterations If true, a txt file monitoring iterations is written.
  */
-  SerialCouplingScheme (
-    double                      maxTime,
-    int                         maxTimesteps,
-    double                      timestepLength,
-    int                         validDigits,
-    const std::string&          firstParticipant,
-    const std::string&          secondParticipant,
-    const std::string&          localParticipant,
-    m2n::PtrM2N                 m2n,
-    constants::TimesteppingMethod dtMethod,
-    CouplingMode                cplMode,
-    int                         maxIterations = 1
-    );
+  SerialCouplingScheme(
+      double                        maxTime,
+      int                           maxTimesteps,
+      double                        timestepLength,
+      int                           validDigits,
+      const std::string &           firstParticipant,
+      const std::string &           secondParticipant,
+      const std::string &           localParticipant,
+      m2n::PtrM2N                   m2n,
+      constants::TimesteppingMethod dtMethod,
+      CouplingMode                  cplMode,
+      int                           maxIterations = 1);
 
   virtual void initialize(double startTime, int startTimestep);
 
@@ -57,8 +54,8 @@ public:
 
   logging::Logger _log{"cplschemes::SerialCouplingSchemes"};
 
-  friend struct CplSchemeTests::SerialImplicitCouplingSchemeTests::testExtrapolateData;  // For whitebox tests
-
+  friend struct CplSchemeTests::SerialImplicitCouplingSchemeTests::testExtrapolateData; // For whitebox tests
 };
 
-}}
+} // namespace cplscheme
+} // namespace precice

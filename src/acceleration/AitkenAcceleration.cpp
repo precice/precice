@@ -1,36 +1,34 @@
 #include <Eigen/Core>
 #include <limits>
 
+#include "acceleration/AitkenAcceleration.hpp"
 #include "cplscheme/CouplingData.hpp"
 #include "math/math.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
-#include "acceleration/AitkenAcceleration.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/MasterSlave.hpp"
 
-namespace precice
-{
-namespace acceleration
-{
+namespace precice {
+namespace acceleration {
 
-AitkenAcceleration::AitkenAcceleration(double initialRelaxation,
-                                           std::vector<int> dataIDs)
-  :_initialRelaxation(initialRelaxation),
-   _dataIDs(dataIDs),
-   _aitkenFactor(initialRelaxation)
+AitkenAcceleration::AitkenAcceleration(double           initialRelaxation,
+                                       std::vector<int> dataIDs)
+    : _initialRelaxation(initialRelaxation),
+      _dataIDs(dataIDs),
+      _aitkenFactor(initialRelaxation)
 {
   PRECICE_CHECK((_initialRelaxation > 0.0) && (_initialRelaxation <= 1.0),
-        "Initial relaxation factor for aitken acceleration has to "
-        << "be larger than zero and smaller or equal than one!");
+                "Initial relaxation factor for aitken acceleration has to "
+                    << "be larger than zero and smaller or equal than one!");
 }
 
 void AitkenAcceleration::initialize(DataMap &cplData)
 {
   PRECICE_CHECK(utils::contained(*_dataIDs.begin(), cplData),
-        "Data with ID " << *_dataIDs.begin() << " is not contained in data given at initialization!");
+                "Data with ID " << *_dataIDs.begin() << " is not contained in data given at initialization!");
   size_t entries = 0;
   if (_dataIDs.size() == 1) {
     entries = cplData[_dataIDs.at(0)]->values->size();
@@ -147,5 +145,5 @@ void AitkenAcceleration::setDesignSpecification(
   _designSpecification = q;
   PRECICE_ERROR("design specification for Aitken relaxation is not supported yet.");
 }
-}
-} // namespace precice, acceleration
+} // namespace acceleration
+} // namespace precice
