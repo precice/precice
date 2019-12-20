@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(testMVQNPP)
   std::vector<double> factors;
   factors.resize(2,1.0);
   acceleration::impl::PtrPreconditioner prec(new acceleration::impl::ConstantPreconditioner(factors));
-  mesh::PtrMesh dummyMesh ( new mesh::Mesh("DummyMesh", 3, false) );
+  mesh::PtrMesh dummyMesh ( new mesh::Mesh("DummyMesh", 3, false, testing::nextMeshID()) );
 
 
   acceleration::MVQNAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
@@ -187,7 +187,7 @@ BOOST_AUTO_TEST_CASE(testVIQNPP)
   std::map<int, double> scalings;
   scalings.insert(std::make_pair(0,1.0));
   scalings.insert(std::make_pair(1,1.0));
-  mesh::PtrMesh dummyMesh ( new mesh::Mesh("DummyMesh", 3, false) );
+  mesh::PtrMesh dummyMesh ( new mesh::Mesh("DummyMesh", 3, false, testing::nextMeshID()) );
 
   acceleration::IQNILSAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
       timestepsReused, filter, singularityLimit, dataIDs, prec);
@@ -281,7 +281,7 @@ BOOST_FIXTURE_TEST_CASE(testInitializeData, testing::M2NFixture,
 
   mesh::MeshConfiguration meshConfig(root, dataConfig);
   meshConfig.setDimensions(3);
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, false));
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, false, testing::nextMeshID()));
   const auto dataID0 = mesh->createData("Data0", 1)->getID();
   const auto dataID1 = mesh->createData("Data1", 3)->getID();
   mesh->createVertex(Eigen::Vector3d::Zero());

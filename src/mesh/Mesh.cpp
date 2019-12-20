@@ -13,31 +13,18 @@
 namespace precice {
 namespace mesh {
 
-std::unique_ptr<utils::ManageUniqueIDs> Mesh::_managePropertyIDs;
-
-void Mesh:: resetGeometryIDsGlobally()
+Mesh::Mesh(
+    const std::string &     name,
+    int                     dimensions,
+    bool                    flipNormals,
+    int                     id)
+    : _name(name),
+      _dimensions(dimensions),
+      _flipNormals(flipNormals),
+      _id(id)
 {
-  if (_managePropertyIDs) {
-    _managePropertyIDs->resetIDs();
-  }
-}
-
-Mesh:: Mesh
-(
-  const std::string& name,
-  int                dimensions,
-  bool               flipNormals )
-:
-  _name(name),
-  _dimensions(dimensions),
-  _flipNormals(flipNormals)
-{
-  if (not _managePropertyIDs) {
-    _managePropertyIDs.reset(new utils::ManageUniqueIDs);
-  }
   PRECICE_ASSERT((_dimensions == 2) || (_dimensions == 3), _dimensions);
   PRECICE_ASSERT(_name != std::string(""));
-  _nameIDPairs[_name] = _managePropertyIDs->getFreeID ();
 
   meshChanged.connect([](Mesh & m){rtree::clear(m);});
   meshDestroyed.connect([](Mesh & m){rtree::clear(m);});
@@ -198,24 +185,9 @@ void Mesh:: setFlipNormals
   _flipNormals = flipNormals;
 }
 
-const std::map<std::string,int>& Mesh:: getNameIDPairs()
-{
-  return _nameIDPairs;
-}
-
-int Mesh:: getID
-(
-  const std::string& name ) const
-{
-  PRECICE_ASSERT(_nameIDPairs.count(name) > 0);
-  return _nameIDPairs.find(name)->second;
-}
-
 int Mesh:: getID() const
 {
-  std::map<std::string,int>::const_iterator iter = _nameIDPairs.find(_name);
-  PRECICE_ASSERT(iter != _nameIDPairs.end());
-  return iter->second;
+  return _id;
 }
 
 bool Mesh::isValidVertexID(int vertexID) const

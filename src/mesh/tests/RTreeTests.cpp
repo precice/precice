@@ -26,7 +26,7 @@ BOOST_AUTO_TEST_CASE(VectorAdapter)
 
 BOOST_AUTO_TEST_CASE(VertexAdapter)
 {
-  precice::mesh::Mesh mesh("MyMesh", 2, false);
+  precice::mesh::Mesh mesh("MyMesh", 2, false, precice::testing::nextMeshID());
   auto & v = mesh.createVertex(Eigen::Vector2d(1, 2));
   BOOST_TEST(bg::get<0>(v) == 1);
   BOOST_TEST(bg::get<1>(v) == 2);
@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE(VertexAdapter)
 
 BOOST_AUTO_TEST_CASE(EdgeAdapter)
 {
-  precice::mesh::Mesh mesh("MyMesh", 2, false);
+  precice::mesh::Mesh mesh("MyMesh", 2, false, precice::testing::nextMeshID());
   auto & v1 = mesh.createVertex(Eigen::Vector2d(1, 2));
   auto & v2 = mesh.createVertex(Eigen::Vector2d(3, 4));
   auto & e = mesh.createEdge(v1, v2);
@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(EdgeAdapter)
 
 BOOST_AUTO_TEST_CASE(TriangleAdapter)
 {
-  precice::mesh::Mesh mesh("MyMesh", 3, false);
+  precice::mesh::Mesh mesh("MyMesh", 3, false, precice::testing::nextMeshID());
   auto & v1 = mesh.createVertex(Eigen::Vector3d(0, 2, 0));
   auto & v2 = mesh.createVertex(Eigen::Vector3d(2, 1, 0));
   auto & v3 = mesh.createVertex(Eigen::Vector3d(1, 0, 0));
@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(TriangleAdapter)
 
 BOOST_AUTO_TEST_CASE(QuadAdapter)
 {
-  precice::mesh::Mesh mesh("MyMesh", 3, false);
+  precice::mesh::Mesh mesh("MyMesh", 3, false, testing::nextMeshID());
   auto & v1 = mesh.createVertex(Eigen::Vector3d(0, 2, 0));
   auto & v2 = mesh.createVertex(Eigen::Vector3d(2, 1, 0));
   auto & v3 = mesh.createVertex(Eigen::Vector3d(3, 0, 0));
@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(QuadAdapter)
 
 BOOST_AUTO_TEST_CASE(DistanceTestFlatSingleTriangle)
 {
-  precice::mesh::Mesh mesh("MyMesh", 3, false);
+  precice::mesh::Mesh mesh("MyMesh", 3, false, testing::nextMeshID());
   auto & v1 = mesh.createVertex(Eigen::Vector3d(0, 0, 0));
   auto & v2 = mesh.createVertex(Eigen::Vector3d(0, 1, 0));
   auto & v3 = mesh.createVertex(Eigen::Vector3d(1, 0, 0));
@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(DistanceTestFlatSingleTriangle)
 
 BOOST_AUTO_TEST_CASE(DistanceTestFlatDoubleTriangle)
 {
-  precice::mesh::Mesh mesh("MyMesh", 3, false);
+  precice::mesh::Mesh mesh("MyMesh", 3, false, testing::nextMeshID());
   auto & lv1 = mesh.createVertex(Eigen::Vector3d(-1, 1, 0.1));
   auto & lv2 = mesh.createVertex(Eigen::Vector3d( 0,-1, 0));
   auto & lv3 = mesh.createVertex(Eigen::Vector3d(-2, 0,-0.1));
@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE(DistanceTestFlatDoubleTriangle)
 
 BOOST_AUTO_TEST_CASE(DistanceTestFlatDoubleTriangleInsideOutside)
 {
-  precice::mesh::Mesh mesh("MyMesh", 3, false);
+  precice::mesh::Mesh mesh("MyMesh", 3, false, testing::nextMeshID());
   auto & a = mesh.createVertex(Eigen::Vector3d(0, 0, 0));
   auto & b = mesh.createVertex(Eigen::Vector3d(1, 0, 0));
   auto & c = mesh.createVertex(Eigen::Vector3d(1, 1, 0));
@@ -191,7 +191,7 @@ BOOST_AUTO_TEST_CASE(DistanceTestFlatDoubleTriangleInsideOutside)
 
 BOOST_AUTO_TEST_CASE(DistanceTestSlopedTriangle)
 {
-  precice::mesh::Mesh mesh("MyMesh", 3, false);
+  precice::mesh::Mesh mesh("MyMesh", 3, false, testing::nextMeshID());
   auto & v1 = mesh.createVertex(Eigen::Vector3d(0, 1, 0));
   auto & v2 = mesh.createVertex(Eigen::Vector3d(1, 1, 1));
   auto & v3 = mesh.createVertex(Eigen::Vector3d(0, 0, 1));
@@ -220,7 +220,7 @@ BOOST_AUTO_TEST_CASE(DistanceTestSlopedTriangle)
 BOOST_AUTO_TEST_CASE(EnvelopeTriangleClockWise)
 {
   using precice::testing::equals;
-  precice::mesh::Mesh mesh("MyMesh", 3, false);
+  precice::mesh::Mesh mesh("MyMesh", 3, false, testing::nextMeshID());
   auto & v1 = mesh.createVertex(Eigen::Vector3d(0, 1, 0));
   auto & v2 = mesh.createVertex(Eigen::Vector3d(1, 1, 1));
   auto & v3 = mesh.createVertex(Eigen::Vector3d(0, 0, 1));
@@ -236,7 +236,7 @@ BOOST_AUTO_TEST_CASE(EnvelopeTriangleClockWise)
 BOOST_AUTO_TEST_CASE(EnvelopeTriangleCounterclockWise)
 {
   using precice::testing::equals;
-  precice::mesh::Mesh mesh("MyMesh", 3, false);
+  precice::mesh::Mesh mesh("MyMesh", 3, false, testing::nextMeshID());
   auto & v1 = mesh.createVertex(Eigen::Vector3d(0, 1, 0));
   auto & v2 = mesh.createVertex(Eigen::Vector3d(1, 1, 1));
   auto & v3 = mesh.createVertex(Eigen::Vector3d(0, 0, 1));
@@ -252,7 +252,7 @@ BOOST_AUTO_TEST_CASE(EnvelopeTriangleCounterclockWise)
 BOOST_AUTO_TEST_SUITE_END() // BG Adapters
 
 struct MeshFixture {
-  MeshFixture() : mesh("MyMesh", 3, false) {
+  MeshFixture() : mesh("MyMesh", 3, false, testing::nextMeshID()) {
     auto & v1 = mesh.createVertex(Eigen::Vector3d(0, 2, 0));
     auto & v2 = mesh.createVertex(Eigen::Vector3d(2, 1, 0));
     auto & v3 = mesh.createVertex(Eigen::Vector3d(3, 0, 0));
@@ -288,7 +288,7 @@ struct MeshFixture {
 
 BOOST_AUTO_TEST_CASE(Query_2D)
 {
-  PtrMesh mesh(new precice::mesh::Mesh("MyMesh", 2, false));
+  PtrMesh mesh(new precice::mesh::Mesh("MyMesh", 2, false, testing::nextMeshID()));
   mesh->createVertex(Eigen::Vector2d(0, 0));
   mesh->createVertex(Eigen::Vector2d(0, 1));
   auto& v1 = mesh->createVertex(Eigen::Vector2d(1, 0));
@@ -329,7 +329,7 @@ BOOST_AUTO_TEST_CASE(Query_2D)
 
 BOOST_AUTO_TEST_CASE(Query_3D)
 {
-  PtrMesh mesh(new precice::mesh::Mesh("MyMesh", 3, false));
+  PtrMesh mesh(new precice::mesh::Mesh("MyMesh", 3, false, precice::testing::nextMeshID()));
   mesh->createVertex(Eigen::Vector3d(0, 0, 0));
   mesh->createVertex(Eigen::Vector3d(0, 0, 1));
   mesh->createVertex(Eigen::Vector3d(0, 1, 0));
@@ -391,7 +391,7 @@ BOOST_AUTO_TEST_CASE(Query_3D)
 
 BOOST_AUTO_TEST_CASE(Query_3D_FullMesh)
 {
-  PtrMesh mesh(new precice::mesh::Mesh("MyMesh", 3, false));
+  PtrMesh mesh(new precice::mesh::Mesh("MyMesh", 3, false, precice::testing::nextMeshID()));
   const double z1 = 0.1;
   const double z2 = -0.1;
   auto& v00 = mesh->createVertex(Eigen::Vector3d(0, 0, 0));
@@ -474,7 +474,7 @@ BOOST_AUTO_TEST_CASE(Query_3D_FullMesh)
 /// Resembles how boost geometry is used inside the PetRBF
 BOOST_AUTO_TEST_CASE(QueryWithBox)
 {
-  PtrMesh mesh(new precice::mesh::Mesh("MyMesh", 3, false));
+  PtrMesh mesh(new precice::mesh::Mesh("MyMesh", 3, false, precice::testing::nextMeshID()));
   mesh->createVertex(Eigen::Vector3d(0, 0, 0));
   mesh->createVertex(Eigen::Vector3d(0, 0, 1));
   mesh->createVertex(Eigen::Vector3d(0, 1, 0));
@@ -536,7 +536,7 @@ BOOST_AUTO_TEST_CASE(QueryWithBox)
 
 BOOST_AUTO_TEST_CASE(CacheClearing)
 {
-  PtrMesh mesh(new precice::mesh::Mesh("MyMesh", 2, false));
+  PtrMesh mesh(new precice::mesh::Mesh("MyMesh", 2, false, precice::testing::nextMeshID()));
   mesh->createVertex(Eigen::Vector2d(0, 0));
 
   

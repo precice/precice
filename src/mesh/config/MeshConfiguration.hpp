@@ -3,6 +3,7 @@
 #include "mesh/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include "xml/XMLTag.hpp"
+#include "utils/ManageUniqueIDs.hpp"
 #include <vector>
 #include <list>
 #include <map>
@@ -57,6 +58,10 @@ public:
     const std::string& participant,
     const std::string& mesh);
 
+  std::unique_ptr<utils::ManageUniqueIDs> extractMeshIdManager() {
+      return std::move(_meshIdManager);
+  }
+
 private:
 
   logging::Logger _log{"mesh::MeshConfiguration"};
@@ -77,6 +82,8 @@ private:
 
   /// to check later if all meshes that any coupling scheme needs are actually used by the participants
   std::map<std::string,std::vector<std::string> > _neededMeshes;
+
+  std::unique_ptr<utils::ManageUniqueIDs> _meshIdManager;
 };
 
 }} // namespace precice, mesh

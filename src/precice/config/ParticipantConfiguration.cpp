@@ -400,6 +400,7 @@ partition::ReceivedPartition::GeometricFilter ParticipantConfiguration:: getGeoF
   }
 }
 
+/// @todo remove
 mesh::PtrMesh ParticipantConfiguration:: copy
 (
   const mesh::PtrMesh& mesh ) const
@@ -407,7 +408,7 @@ mesh::PtrMesh ParticipantConfiguration:: copy
   int dim = mesh->getDimensions();
   std::string name(mesh->getName());
   bool flipNormals = mesh->isFlipNormals();
-  mesh::Mesh* meshCopy = new mesh::Mesh("Local_" + name, dim, flipNormals);
+  mesh::Mesh* meshCopy = new mesh::Mesh("Local_" + name, dim, flipNormals, mesh::Mesh::MESH_ID_UNDEFINED);
   for (const mesh::PtrData& data : mesh->data()){
     meshCopy->createData(data->getName(), data->getDimensions());
   }

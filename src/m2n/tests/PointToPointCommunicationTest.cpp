@@ -32,7 +32,7 @@ void P2PComTest1(com::PtrCommunicationFactory cf)
 
   MasterSlave::_communication = std::make_shared<com::MPIDirectCommunication>();
 
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 2, true));
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 2, true, testing::nextMeshID()));
 
   m2n::PointToPointCommunication c(cf, mesh);
 
@@ -147,7 +147,7 @@ void P2PComTest2(com::PtrCommunicationFactory cf)
 
   MasterSlave::_communication = std::make_shared<com::MPIDirectCommunication>();
 
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 2, true));
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 2, true, testing::nextMeshID()));
 
   m2n::PointToPointCommunication c(cf, mesh);
 
@@ -259,7 +259,7 @@ void connectionTest(com::PtrCommunicationFactory cf)
   
   int dimensions = 2;
   bool flipNormals = false;
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, flipNormals));  
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, flipNormals, testing::nextMeshID()));  
 
   std::vector<std::string> conections = {"same", "cross"};
 
@@ -380,7 +380,6 @@ void connectionTest(com::PtrCommunicationFactory cf)
   utils::MasterSlave::reset();
   utils::Parallel::synchronizeProcesses();
   utils::Parallel::clearGroups();
-  mesh::Mesh::resetGeometryIDsGlobally();
   mesh::Data::resetDataCount();
   utils::Parallel::setGlobalCommunicator(utils::Parallel::getCommunicatorWorld());  
   }
@@ -393,7 +392,7 @@ void emptyConnectionTest(com::PtrCommunicationFactory cf)
   
   int dimensions = 2;
   bool flipNormals = false;
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, flipNormals));
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, flipNormals, testing::nextMeshID()));
 
   utils::MasterSlave::_communication = std::make_shared<com::MPIDirectCommunication>();
   
@@ -467,7 +466,6 @@ void emptyConnectionTest(com::PtrCommunicationFactory cf)
   utils::MasterSlave::reset();
   utils::Parallel::synchronizeProcesses();
   utils::Parallel::clearGroups();
-  mesh::Mesh::resetGeometryIDsGlobally();
   mesh::Data::resetDataCount();
   utils::Parallel::setGlobalCommunicator(utils::Parallel::getCommunicatorWorld());   
 }
@@ -479,7 +477,7 @@ void P2PMeshBroadcastTest(com::PtrCommunicationFactory cf)
   
   int dimensions = 2;
   bool flipNormals = false;
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, flipNormals));
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, flipNormals, testing::nextMeshID()));
   
   switch (utils::Parallel::getProcessRank()) {
   case 0: {
@@ -573,7 +571,6 @@ void P2PMeshBroadcastTest(com::PtrCommunicationFactory cf)
   utils::MasterSlave::reset();
   utils::Parallel::synchronizeProcesses();
   utils::Parallel::clearGroups();
-  mesh::Mesh::resetGeometryIDsGlobally();
   mesh::Data::resetDataCount();
   utils::Parallel::setGlobalCommunicator(utils::Parallel::getCommunicatorWorld());  
 }
@@ -585,7 +582,8 @@ void P2PComLCMTest(com::PtrCommunicationFactory cf)
 
   int dimensions = 2;
   bool flipNormals = false;
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, flipNormals)); 
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, flipNormals, testing::nextMeshID())); 
+  const auto expectedId = mesh->getID();
   std::map<int, std::vector<int>> localCommunicationMap;
 
   switch (utils::Parallel::getProcessRank()) {
@@ -651,13 +649,13 @@ void P2PComLCMTest(com::PtrCommunicationFactory cf)
   
     c.requestPreConnection("Solid", "Fluid");
     c.broadcastSendLCM(localCommunicationMap);
-    BOOST_TEST(mesh->getID()==0);
+    BOOST_TEST(mesh->getID()==expectedId);
    
   } else
   {
     c.acceptPreConnection("Solid", "Fluid");
     c.broadcastReceiveLCM(localCommunicationMap);
-    BOOST_TEST(mesh->getID()==0);
+    BOOST_TEST(mesh->getID()==expectedId);
   }
 
  if(utils::Parallel::getProcessRank() == 2 )
@@ -685,7 +683,6 @@ void P2PComLCMTest(com::PtrCommunicationFactory cf)
   utils::MasterSlave::reset();
   utils::Parallel::synchronizeProcesses();
   utils::Parallel::clearGroups();
-  mesh::Mesh::resetGeometryIDsGlobally();
   mesh::Data::resetDataCount();
   utils::Parallel::setGlobalCommunicator(utils::Parallel::getCommunicatorWorld());  
 }

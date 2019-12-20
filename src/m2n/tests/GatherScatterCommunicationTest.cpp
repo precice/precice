@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(GatherScatterTest, *testing::OnSize(4))
   Eigen::VectorXd offset           = Eigen::VectorXd::Zero(dimensions);
 
   if (utils::Parallel::getProcessRank() == 0) { // Part1
-    mesh::PtrMesh pMesh(new mesh::Mesh("Mesh", dimensions, flipNormals));
+    mesh::PtrMesh pMesh(new mesh::Mesh("Mesh", dimensions, flipNormals, testing::nextMeshID()));
     m2n->createDistributedCommunication(pMesh);
 
     pMesh->setGlobalNumberOfVertices(numberOfVertices);
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(GatherScatterTest, *testing::OnSize(4))
     BOOST_TEST(values[5] == 12.0);
 
   } else {
-    mesh::PtrMesh pMesh(new mesh::Mesh("Mesh", dimensions, flipNormals));
+    mesh::PtrMesh pMesh(new mesh::Mesh("Mesh", dimensions, flipNormals, testing::nextMeshID()));
     m2n->createDistributedCommunication(pMesh);
     m2n->requestSlavesConnection("Part1", "Part2Master");
 

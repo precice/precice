@@ -17,7 +17,7 @@ BOOST_AUTO_TEST_SUITE(Scale, *testing::OnMaster())
 BOOST_AUTO_TEST_CASE(DivideByArea)
 {
   using namespace mesh;
-  PtrMesh mesh(new Mesh("Mesh", 2, true));
+  PtrMesh mesh(new Mesh("Mesh", 2, true, testing::nextMeshID()));
   PtrData data   = mesh->createData("test-data", 1);
   int     dataID = data->getID();
   Vertex &v0     = mesh->createVertex(Eigen::Vector2d(0.0, 0.0));
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(DivideByArea)
 BOOST_AUTO_TEST_CASE(ScaleByComputedTimestepLength)
 {
   using namespace mesh;
-  PtrMesh mesh(new Mesh("Mesh", 3, true));
+  PtrMesh mesh(new Mesh("Mesh", 3, true, testing::nextMeshID()));
   PtrData sourceData   = mesh->createData("SourceData", 1);
   PtrData targetData   = mesh->createData("TargetData", 1);
   int     sourceDataID = sourceData->getID();
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(ScaleByComputedTimestepLength)
 BOOST_AUTO_TEST_CASE(ScaleByComputedTimestepPartLength)
 {
   using namespace mesh;
-  PtrMesh mesh(new Mesh("Mesh", 3, true));
+  PtrMesh mesh(new Mesh("Mesh", 3, true, testing::nextMeshID()));
   PtrData sourceData   = mesh->createData("SourceData", 1);
   PtrData targetData   = mesh->createData("TargetData", 1);
   int     sourceDataID = sourceData->getID();

@@ -123,13 +123,13 @@ void SolverInterfaceImpl:: configure
   Event e("configure"); // no precice::syncMode as this is not yet configured here
   utils::ScopedEventPrefix sep("configure/");
 
-  mesh::Mesh::resetGeometryIDsGlobally();
   mesh::Data::resetDataCount();
   Participant::resetParticipantCount();
   _meshLock.clear();
 
   _dimensions = config.getDimensions();
   _accessor = determineAccessingParticipant(config);
+  _accessor->setMeshIdManager(config.getMeshConfiguration()->extractMeshIdManager());
 
   PRECICE_CHECK(not (_accessor->useServer() && _accessor->useMaster()),
         "You cannot use a server and a master.");
@@ -171,16 +171,14 @@ void SolverInterfaceImpl:: configure
   // Add meshIDs and data IDs
   for (const MeshContext* meshContext : _accessor->usedMeshContexts()) {
     const mesh::PtrMesh& mesh = meshContext->mesh;
-    for (std::pair<std::string,int> nameID : mesh->getNameIDPairs()) {
-      PRECICE_ASSERT(not utils::contained(nameID.first, _meshIDs));
-      _meshIDs[nameID.first] = nameID.second;
-    }
-    PRECICE_ASSERT(_dataIDs.find(mesh->getID())==_dataIDs.end());
-    _dataIDs[mesh->getID()] = std::map<std::string,int>();
-    PRECICE_ASSERT(_dataIDs.find(mesh->getID())!=_dataIDs.end());
+    const auto meshID = mesh->getID();
+    _meshIDs[mesh->getName()] = meshID;
+    PRECICE_ASSERT(_dataIDs.find(meshID)==_dataIDs.end());
+    _dataIDs[meshID] = std::map<std::string,int>();
+    PRECICE_ASSERT(_dataIDs.find(meshID)!=_dataIDs.end());
     for (const mesh::PtrData& data : mesh->data()) {
-      PRECICE_ASSERT(_dataIDs[mesh->getID()].find(data->getName())==_dataIDs[mesh->getID()].end());
-      _dataIDs[mesh->getID()][data->getName()] = data->getID();
+      PRECICE_ASSERT(_dataIDs[meshID].find(data->getName())==_dataIDs[meshID].end());
+      _dataIDs[meshID][data->getName()] = data->getID();
     }
     std::string meshName = mesh->getName();
     mesh::PtrMeshConfiguration meshConfig = config.getMeshConfiguration();
