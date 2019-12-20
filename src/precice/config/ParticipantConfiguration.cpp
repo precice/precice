@@ -448,7 +448,7 @@ void ParticipantConfiguration:: finishParticipantConfiguration
     PRECICE_CHECK(participant->isMeshUsed(toMeshID),
           "Participant \"" << participant->getName() << "\" has mapping"
           << " to mesh \"" << confMapping.toMesh->getName() << "\" which he does not use!");
-    if(participant->useMaster()){
+    if(context.size > 1){
       if((confMapping.direction == mapping::MappingConfiguration::WRITE &&
           confMapping.mapping->getConstraint()==mapping::Mapping::CONSISTENT) ||
          (confMapping.direction == mapping::MappingConfiguration::READ &&
@@ -571,22 +571,22 @@ void ParticipantConfiguration:: finishParticipantConfiguration
   _actionConfig->resetActions();
 
   // Add export contexts
-  for (io::ExportContext& context : _exportConfig->exportContexts()){
+  for (io::ExportContext& exportContext : _exportConfig->exportContexts()){
     io::PtrExport exporter;
-    if (context.type == VALUE_VTK){
-      if(_participants.back()->useMaster()){
-        exporter = io::PtrExport(new io::ExportVTKXML(context.plotNormals));
+    if (exportContext.type == VALUE_VTK){
+      if(context.size > 1){
+        exporter = io::PtrExport(new io::ExportVTKXML(exportContext.plotNormals));
       }
       else{
-        exporter = io::PtrExport(new io::ExportVTK(context.plotNormals));
+        exporter = io::PtrExport(new io::ExportVTK(exportContext.plotNormals));
       }
     }
     else {
       PRECICE_ERROR("Unknown export type!");
     }
-    context.exporter = exporter;
+    exportContext.exporter = exporter;
 
-    _participants.back()->addExportContext(context);
+    _participants.back()->addExportContext(exportContext);
   }
   _exportConfig->resetExports();
 
