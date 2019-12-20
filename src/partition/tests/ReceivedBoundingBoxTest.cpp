@@ -150,7 +150,7 @@ BOOST_AUTO_TEST_CASE(TestConnectionMap2D, * testing::OnSize(4))
     std::vector<int> connectedRanksList;
     int connectionMapSize = 0;
     std::map<int, std::vector<int>> receivedConnectionMap;
-    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::meshIDManager()));     
+    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::nextMeshID()));     
     m2n->getMasterCommunication()->send(3, 0);     
     com::CommunicateBoundingBox(m2n->getMasterCommunication()).sendBoundingBoxMap(sendGlobalBB, 0 );
     m2n->getMasterCommunication()->receive(connectedRanksList, 0);
@@ -173,8 +173,8 @@ BOOST_AUTO_TEST_CASE(TestConnectionMap2D, * testing::OnSize(4))
   }  
   else
   {
-    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::meshIDManager()));
-    mesh::PtrMesh pNastinMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::meshIDManager()));
+    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::nextMeshID()));
+    mesh::PtrMesh pNastinMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::nextMeshID()));
 
     mapping::PtrMapping boundingFromMapping = mapping::PtrMapping(
         new mapping::NearestNeighborMapping(mapping::Mapping::CONSISTENT, dimensions));
@@ -231,7 +231,7 @@ BOOST_AUTO_TEST_CASE(TestConnectionMap3D, * testing::OnSize(4))
     std::vector<int> connectedRanksList;
     int connectionMapSize = 0;
     std::map<int, std::vector<int>> receivedConnectionMap;
-    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::meshIDManager()));     
+    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::nextMeshID()));     
     m2n->getMasterCommunication()->send(3, 0);     
     com::CommunicateBoundingBox(m2n->getMasterCommunication()).sendBoundingBoxMap(sendGlobalBB, 0 );
     m2n->getMasterCommunication()->receive(connectedRanksList, 0);
@@ -254,8 +254,8 @@ BOOST_AUTO_TEST_CASE(TestConnectionMap3D, * testing::OnSize(4))
   }  
   else
   {
-    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::meshIDManager()));
-    mesh::PtrMesh pNastinMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::meshIDManager()));
+    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::nextMeshID()));
+    mesh::PtrMesh pNastinMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::nextMeshID()));
 
     mapping::PtrMapping boundingFromMapping = mapping::PtrMapping(
         new mapping::NearestNeighborMapping(mapping::Mapping::CONSISTENT, dimensions));

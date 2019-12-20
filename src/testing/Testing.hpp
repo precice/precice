@@ -270,16 +270,14 @@ typename std::enable_if<std::is_arithmetic<Scalar>::value, boost::test_tools::pr
 /// Returns $PRECICE_ROOT/src, the base path to the sources.
 std::string getPathToSources();
 
-/** Reference to testing mesh id manager
+/** Generates a new mesh id for use in tests.
  *
- * This is the accessor for the mesh::Mesh ID manager to be used in testing.
- *
- * @returns a reference to the Singleton
+ * @returns a new unique mesh ID
  */
-inline utils::ManageUniqueIDs& meshIDManager()
+inline int nextMeshID()
 {
     static utils::ManageUniqueIDs manager;
-    return manager;
+    return manager.getFreeID();
 }
 
 } // namespace testing

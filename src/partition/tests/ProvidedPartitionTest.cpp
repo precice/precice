@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate2D, *testing::OnSize(4))
   bool flipNormals = false;
 
   if (utils::Parallel::getProcessRank() == 0) { //NASTIN
-    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::meshIDManager()));
+    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::nextMeshID()));
 
     double safetyFactor = 0.1;
 
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate2D, *testing::OnSize(4))
       BOOST_TEST(pSolidzMesh->vertices()[i].getGlobalIndex() == i);
     }
   } else { //SOLIDZ
-    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::meshIDManager()));
+    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::nextMeshID()));
 
     if (utils::Parallel::getProcessRank() == 1) { //Master
       Eigen::VectorXd position(dimensions);
@@ -151,7 +151,7 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate3D, *testing::OnSize(4))
   bool flipNormals = false;
 
   if (utils::Parallel::getProcessRank() == 0) { //NASTIN
-    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::meshIDManager()));
+    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::nextMeshID()));
 
     double safetyFactor = 0.1;
 
@@ -167,7 +167,7 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate3D, *testing::OnSize(4))
       BOOST_TEST(pSolidzMesh->vertices()[i].getGlobalIndex() == i);
     }
   } else { //SOLIDZ
-    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::meshIDManager()));
+    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::nextMeshID()));
 
     if (utils::Parallel::getProcessRank() == 1) { //Master
       Eigen::VectorXd position(dimensions);
@@ -254,7 +254,7 @@ BOOST_AUTO_TEST_CASE(TestOnlyDistribution2D,
   std::string   meshName("MyMesh");
   int           dim         = 2;
   bool          flipNormals = false; // The normals of triangles, edges, vertices
-  mesh::PtrMesh pMesh(new mesh::Mesh(meshName, dim, flipNormals, testing::meshIDManager()));
+  mesh::PtrMesh pMesh(new mesh::Mesh(meshName, dim, flipNormals, testing::nextMeshID()));
 
   if (utils::Parallel::getProcessRank() == 0) { //Master
     Eigen::VectorXd position(dim);

@@ -211,14 +211,14 @@ BOOST_AUTO_TEST_CASE(RePartitionNNBroadcastFilter2D, *testing::OnSize(4))
   Eigen::VectorXd offset      = Eigen::VectorXd::Zero(dimensions);
 
   if (utils::Parallel::getProcessRank() == 0) { //SOLIDZ
-    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::meshIDManager()));
+    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::nextMeshID()));
     createSolidzMesh2D(pSolidzMesh);
     ProvidedPartition part(pSolidzMesh);
     part.addM2N(m2n);
     part.communicate();
   } else {
-    mesh::PtrMesh pNastinMesh(new mesh::Mesh("NastinMesh", dimensions, flipNormals, testing::meshIDManager()));
-    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::meshIDManager()));
+    mesh::PtrMesh pNastinMesh(new mesh::Mesh("NastinMesh", dimensions, flipNormals, testing::nextMeshID()));
+    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::nextMeshID()));
 
     mapping::PtrMapping boundingFromMapping = mapping::PtrMapping(
         new mapping::NearestNeighborMapping(mapping::Mapping::CONSISTENT, dimensions));
@@ -270,14 +270,14 @@ BOOST_AUTO_TEST_CASE(RePartitionNNDoubleNode2D, *testing::OnSize(4))
   Eigen::VectorXd offset      = Eigen::VectorXd::Zero(dimensions);
 
   if (utils::Parallel::getProcessRank() == 0) { //SOLIDZ
-    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::meshIDManager()));
+    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::nextMeshID()));
     createSolidzMesh2DSmall(pSolidzMesh);
     ProvidedPartition part(pSolidzMesh);
     part.addM2N(m2n);
     part.communicate();
   } else {
-    mesh::PtrMesh pNastinMesh(new mesh::Mesh("NastinMesh", dimensions, flipNormals, testing::meshIDManager()));
-    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::meshIDManager()));
+    mesh::PtrMesh pNastinMesh(new mesh::Mesh("NastinMesh", dimensions, flipNormals, testing::nextMeshID()));
+    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::nextMeshID()));
 
     mapping::PtrMapping boundingFromMapping = mapping::PtrMapping(
         new mapping::NearestNeighborMapping(mapping::Mapping::CONSISTENT, dimensions));
@@ -327,14 +327,14 @@ BOOST_AUTO_TEST_CASE(RePartitionNPPreFilterPostFilter2D, *testing::OnSize(4))
   bool flipNormals = false;
 
   if (utils::Parallel::getProcessRank() == 0) { //SOLIDZ
-    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::meshIDManager()));
+    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::nextMeshID()));
     createSolidzMesh2D(pSolidzMesh);
     ProvidedPartition part(pSolidzMesh);
     part.addM2N(m2n);
     part.communicate();
   } else {
-    mesh::PtrMesh pNastinMesh(new mesh::Mesh("NastinMesh", dimensions, flipNormals, testing::meshIDManager()));
-    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::meshIDManager()));
+    mesh::PtrMesh pNastinMesh(new mesh::Mesh("NastinMesh", dimensions, flipNormals, testing::nextMeshID()));
+    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::nextMeshID()));
 
     mapping::PtrMapping boundingFromMapping = mapping::PtrMapping(
         new mapping::NearestProjectionMapping(mapping::Mapping::CONSISTENT, dimensions));
@@ -375,8 +375,8 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFGlobal2D,
 {
   int           dimensions  = 2;
   bool          flipNormals = false;
-  mesh::PtrMesh pMesh(new mesh::Mesh("MyMesh", dimensions, flipNormals, testing::meshIDManager()));
-  mesh::PtrMesh pOtherMesh(new mesh::Mesh("OtherMesh", dimensions, flipNormals, testing::meshIDManager()));
+  mesh::PtrMesh pMesh(new mesh::Mesh("MyMesh", dimensions, flipNormals, testing::nextMeshID()));
+  mesh::PtrMesh pOtherMesh(new mesh::Mesh("OtherMesh", dimensions, flipNormals, testing::nextMeshID()));
 
   mapping::PtrMapping boundingFromMapping = mapping::PtrMapping(
       new mapping::PetRadialBasisFctMapping<mapping::ThinPlateSplines>(mapping::Mapping::CONSISTENT, dimensions,
@@ -455,8 +455,8 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D1,
 {
   int           dimensions  = 2;
   bool          flipNormals = false;
-  mesh::PtrMesh pMesh(new mesh::Mesh("MyMesh", dimensions, flipNormals, testing::meshIDManager()));
-  mesh::PtrMesh pOtherMesh(new mesh::Mesh("OtherMesh", dimensions, flipNormals, testing::meshIDManager()));
+  mesh::PtrMesh pMesh(new mesh::Mesh("MyMesh", dimensions, flipNormals, testing::nextMeshID()));
+  mesh::PtrMesh pOtherMesh(new mesh::Mesh("OtherMesh", dimensions, flipNormals, testing::nextMeshID()));
 
   double supportRadius = 0.25;
 
@@ -525,8 +525,8 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D2,
 {
   int           dimensions  = 2;
   bool          flipNormals = false;
-  mesh::PtrMesh pMesh(new mesh::Mesh("MyMesh", dimensions, flipNormals, testing::meshIDManager()));
-  mesh::PtrMesh pOtherMesh(new mesh::Mesh("OtherMesh", dimensions, flipNormals, testing::meshIDManager()));
+  mesh::PtrMesh pMesh(new mesh::Mesh("MyMesh", dimensions, flipNormals, testing::nextMeshID()));
+  mesh::PtrMesh pOtherMesh(new mesh::Mesh("OtherMesh", dimensions, flipNormals, testing::nextMeshID()));
 
   double supportRadius = 2.45;
 
@@ -601,8 +601,8 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal3D,
 {
   int           dimensions  = 3;
   bool          flipNormals = false;
-  mesh::PtrMesh pMesh(new mesh::Mesh("MyMesh", dimensions, flipNormals, testing::meshIDManager()));
-  mesh::PtrMesh pOtherMesh(new mesh::Mesh("OtherMesh", dimensions, flipNormals, testing::meshIDManager()));
+  mesh::PtrMesh pMesh(new mesh::Mesh("MyMesh", dimensions, flipNormals, testing::nextMeshID()));
+  mesh::PtrMesh pOtherMesh(new mesh::Mesh("OtherMesh", dimensions, flipNormals, testing::nextMeshID()));
 
   double supportRadius1 = 1.2;
   double supportRadius2 = 0.2;
@@ -696,14 +696,14 @@ BOOST_AUTO_TEST_CASE(RePartitionNPBroadcastFilter3D, *testing::OnSize(4))
   bool flipNormals = false;
 
   if (utils::Parallel::getProcessRank() == 0) { //SOLIDZ
-    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::meshIDManager()));
+    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::nextMeshID()));
     createSolidzMesh3D(pSolidzMesh);
     ProvidedPartition part(pSolidzMesh);
     part.addM2N(m2n);
     part.communicate();
   } else {
-    mesh::PtrMesh pNastinMesh(new mesh::Mesh("NastinMesh", dimensions, flipNormals, testing::meshIDManager()));
-    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::meshIDManager()));
+    mesh::PtrMesh pNastinMesh(new mesh::Mesh("NastinMesh", dimensions, flipNormals, testing::nextMeshID()));
+    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::nextMeshID()));
 
     mapping::PtrMapping boundingFromMapping = mapping::PtrMapping(
         new mapping::NearestProjectionMapping(mapping::Mapping::CONSISTENT, dimensions));
@@ -747,8 +747,8 @@ BOOST_AUTO_TEST_CASE(TestRepartitionAndDistribution2D,
   // Create mesh object
   int           dimensions  = 2;
   bool          flipNormals = false; // The normals of triangles, edges, vertices
-  mesh::PtrMesh pMesh(new mesh::Mesh("MyMesh", dimensions, flipNormals, testing::meshIDManager()));
-  mesh::PtrMesh pOtherMesh(new mesh::Mesh("OtherMesh", dimensions, flipNormals, testing::meshIDManager()));
+  mesh::PtrMesh pMesh(new mesh::Mesh("MyMesh", dimensions, flipNormals, testing::nextMeshID()));
+  mesh::PtrMesh pOtherMesh(new mesh::Mesh("OtherMesh", dimensions, flipNormals, testing::nextMeshID()));
 
   mapping::PtrMapping boundingFromMapping = mapping::PtrMapping(
       new mapping::NearestNeighborMapping(mapping::Mapping::CONSISTENT, dimensions));
@@ -844,7 +844,7 @@ BOOST_FIXTURE_TEST_CASE(ProvideAndReceiveCouplingMode, testing::M2NFixture,
   bool flipNormals = false;
 
   if (utils::Parallel::getProcessRank() == 0) {
-    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::meshIDManager()));
+    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::nextMeshID()));
     createSolidzMesh2D(pSolidzMesh);
     ProvidedPartition part(pSolidzMesh);
     part.addM2N(m2n);
@@ -869,9 +869,9 @@ BOOST_FIXTURE_TEST_CASE(ProvideAndReceiveCouplingMode, testing::M2NFixture,
     BOOST_TEST(pSolidzMesh->vertices()[4].isOwner() == true);
     BOOST_TEST(pSolidzMesh->vertices()[5].isOwner() == true);
   } else {
-    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::meshIDManager()));
+    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::nextMeshID()));
 
-    mesh::PtrMesh       pOtherMesh(new mesh::Mesh("OtherMesh", dimensions, flipNormals, testing::meshIDManager()));
+    mesh::PtrMesh       pOtherMesh(new mesh::Mesh("OtherMesh", dimensions, flipNormals, testing::nextMeshID()));
     mapping::PtrMapping boundingFromMapping = mapping::PtrMapping(
         new mapping::NearestNeighborMapping(mapping::Mapping::CONSISTENT, dimensions));
     boundingFromMapping->setMeshes(pSolidzMesh, pOtherMesh);

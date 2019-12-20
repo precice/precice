@@ -20,7 +20,7 @@ BOOST_AUTO_TEST_SUITE(MeshTests, *testing::OnMaster())
 
 BOOST_AUTO_TEST_CASE(ComputeState_2D)
 {  
-  mesh::Mesh mesh ( "MyMesh", 2, true , testing::meshIDManager());
+  mesh::Mesh mesh ( "MyMesh", 2, true , testing::nextMeshID());
   // Create mesh
   Vertex& v1 = mesh.createVertex ( Vector2d(0.0, 0.0) );
   Vertex& v2 = mesh.createVertex ( Vector2d(1.0, 0.0) );
@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(ComputeState_2D)
 
 BOOST_AUTO_TEST_CASE(ComputeState_3D_Triangle)
 {
-  precice::mesh::Mesh mesh ( "MyMesh", 3, true , testing::meshIDManager());
+  precice::mesh::Mesh mesh ( "MyMesh", 3, true , testing::nextMeshID());
   // Create mesh
   Vertex& v1 = mesh.createVertex ( Vector3d(0.0, 0.0, 0.0) );
   Vertex& v2 = mesh.createVertex ( Vector3d(1.0, 0.0, 1.0) );
@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE(ComputeState_3D_Triangle)
 
 BOOST_AUTO_TEST_CASE(ComputeState_3D_Quad)
 {
-  mesh::Mesh mesh("MyMesh", 3, true, testing::meshIDManager());
+  mesh::Mesh mesh("MyMesh", 3, true, testing::nextMeshID());
   // Create mesh (Two rectangles with a common edge at z-axis. One extends in
   // x-y-plane (2 long), the other in y-z-plane (1 long))
   Vertex& v0 = mesh.createVertex(Vector3d(0.0, 0.0, 0.0));
@@ -184,7 +184,7 @@ BOOST_AUTO_TEST_CASE(BoundingBoxCOG_2D)
   Eigen::Vector2d coords1(-1, 4);
   Eigen::Vector2d coords2(0, 1);
 
-  mesh::Mesh mesh ("2D Testmesh", 2, false , testing::meshIDManager());
+  mesh::Mesh mesh ("2D Testmesh", 2, false , testing::nextMeshID());
   mesh.createVertex(coords0);
   mesh.createVertex(coords1);
   mesh.createVertex(coords2);
@@ -219,7 +219,7 @@ BOOST_AUTO_TEST_CASE(BoundingBoxCOG_3D)
   Eigen::Vector3d coords2(0, 1, -2);
   Eigen::Vector3d coords3(3.5, 2, -2);
 
-  mesh::Mesh mesh ("3D Testmesh", 3, false , testing::meshIDManager());
+  mesh::Mesh mesh ("3D Testmesh", 3, false , testing::nextMeshID());
   mesh.createVertex(coords0);
   mesh.createVertex(coords1);
   mesh.createVertex(coords2);
@@ -255,7 +255,7 @@ BOOST_AUTO_TEST_CASE(Demonstration)
     // Create mesh object
     std::string meshName ( "MyMesh" );
     bool flipNormals = false; // The normals of triangles, edges, vertices
-    precice::mesh::Mesh mesh ( meshName, dim, flipNormals , testing::meshIDManager());
+    precice::mesh::Mesh mesh ( meshName, dim, flipNormals , testing::nextMeshID());
 
     // Validate mesh object state
     BOOST_TEST(mesh.getName() == meshName);
@@ -369,9 +369,9 @@ BOOST_AUTO_TEST_CASE(Demonstration)
 BOOST_AUTO_TEST_CASE(MeshEquality)
 {
     int dim = 3;
-    Mesh mesh1 ( "Mesh1", dim, false, testing::meshIDManager());
-    Mesh mesh1flipped ( "Mesh1flipped", dim, true, testing::meshIDManager());
-    Mesh mesh2 ( "Mesh2", dim, false, testing::meshIDManager());
+    Mesh mesh1 ( "Mesh1", dim, false, testing::nextMeshID());
+    Mesh mesh1flipped ( "Mesh1flipped", dim, true, testing::nextMeshID());
+    Mesh mesh2 ( "Mesh2", dim, false, testing::nextMeshID());
     Mesh *meshes[3] = {&mesh1, &mesh1flipped, &mesh2};
     for (auto ptr : meshes){
         auto& mesh = *ptr;
@@ -402,7 +402,7 @@ BOOST_AUTO_TEST_CASE(MeshEquality)
 
 BOOST_AUTO_TEST_CASE(MeshWKTPrint)
 {
-    Mesh mesh ("WKTMesh", 3, false, testing::meshIDManager());
+    Mesh mesh ("WKTMesh", 3, false, testing::nextMeshID());
     Vertex& v0 = mesh.createVertex(Eigen::Vector3d(0., 0., 0.));
     Vertex& v1 = mesh.createVertex(Eigen::Vector3d(1., 0., 0.));
     Vertex& v2 = mesh.createVertex(Eigen::Vector3d(0., 0., 1.));
@@ -431,7 +431,7 @@ BOOST_AUTO_TEST_CASE(MeshWKTPrint)
 BOOST_AUTO_TEST_CASE(CreateUniqueEdge)
 {
     int dim = 3;
-    Mesh mesh1 ( "Mesh1", dim, false, testing::meshIDManager() );
+    Mesh mesh1 ( "Mesh1", dim, false, testing::nextMeshID() );
     auto& mesh = mesh1;
     Eigen::VectorXd coords0(dim);
     Eigen::VectorXd coords1(dim);

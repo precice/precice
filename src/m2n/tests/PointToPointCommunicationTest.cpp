@@ -32,7 +32,7 @@ void P2PComTest1(com::PtrCommunicationFactory cf)
 
   MasterSlave::_communication = std::make_shared<com::MPIDirectCommunication>();
 
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 2, true, testing::meshIDManager()));
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 2, true, testing::nextMeshID()));
 
   m2n::PointToPointCommunication c(cf, mesh);
 
@@ -147,7 +147,7 @@ void P2PComTest2(com::PtrCommunicationFactory cf)
 
   MasterSlave::_communication = std::make_shared<com::MPIDirectCommunication>();
 
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 2, true, testing::meshIDManager()));
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 2, true, testing::nextMeshID()));
 
   m2n::PointToPointCommunication c(cf, mesh);
 
@@ -259,7 +259,7 @@ void connectionTest(com::PtrCommunicationFactory cf)
   
   int dimensions = 2;
   bool flipNormals = false;
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, flipNormals, testing::meshIDManager()));  
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, flipNormals, testing::nextMeshID()));  
 
   std::vector<std::string> conections = {"same", "cross"};
 
@@ -392,7 +392,7 @@ void emptyConnectionTest(com::PtrCommunicationFactory cf)
   
   int dimensions = 2;
   bool flipNormals = false;
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, flipNormals, testing::meshIDManager()));
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, flipNormals, testing::nextMeshID()));
 
   utils::MasterSlave::_communication = std::make_shared<com::MPIDirectCommunication>();
   
@@ -477,7 +477,7 @@ void P2PMeshBroadcastTest(com::PtrCommunicationFactory cf)
   
   int dimensions = 2;
   bool flipNormals = false;
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, flipNormals, testing::meshIDManager()));
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, flipNormals, testing::nextMeshID()));
   
   switch (utils::Parallel::getProcessRank()) {
   case 0: {
@@ -582,7 +582,7 @@ void P2PComLCMTest(com::PtrCommunicationFactory cf)
 
   int dimensions = 2;
   bool flipNormals = false;
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, flipNormals, testing::meshIDManager())); 
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, flipNormals, testing::nextMeshID())); 
   const auto expectedId = mesh->getID();
   std::map<int, std::vector<int>> localCommunicationMap;
 

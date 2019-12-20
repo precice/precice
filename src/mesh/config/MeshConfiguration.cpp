@@ -22,7 +22,6 @@ MeshConfiguration:: MeshConfiguration
   _dataConfig(config),
   _meshes(),
   _neededMeshes(),
-  _neededMeshes(),
   _meshIdManager(new utils::ManageUniqueIDs())
 {
   using namespace xml;
@@ -72,7 +71,7 @@ void MeshConfiguration:: xmlTagCallback
     std::string name = tag.getStringAttributeValue(ATTR_NAME);
     bool flipNormals = tag.getBooleanAttributeValue(ATTR_FLIP_NORMALS);
     PRECICE_ASSERT(_meshIdManager);
-    _meshes.push_back(PtrMesh(new Mesh(name, _dimensions, flipNormals, *_meshIdManager)));
+    _meshes.push_back(PtrMesh(new Mesh(name, _dimensions, flipNormals, _meshIdManager->getFreeID())));
   }
   else if (tag.getName() == TAG_DATA){
     std::string name = tag.getStringAttributeValue(ATTR_NAME);

@@ -102,13 +102,13 @@ void testDistributed(Mapping& mapping,
   int meshDimension = inMeshSpec[0].position.size();
   int valueDimension = inMeshSpec[0].value.size();
 
-  mesh::PtrMesh inMesh ( new mesh::Mesh("InMesh", meshDimension, false, testing::meshIDManager()) );
+  mesh::PtrMesh inMesh ( new mesh::Mesh("InMesh", meshDimension, false, testing::nextMeshID()) );
   mesh::PtrData inData = inMesh->createData("InData", valueDimension);
   int inDataID = inData->getID();
 
   getDistributedMesh(inMeshSpec, inMesh, inData, inGlobalIndexOffset);
 
-  mesh::PtrMesh outMesh ( new mesh::Mesh("outMesh", meshDimension, false, testing::meshIDManager()) );
+  mesh::PtrMesh outMesh ( new mesh::Mesh("outMesh", meshDimension, false, testing::nextMeshID()) );
   mesh::PtrData outData = outMesh->createData( "OutData", valueDimension );
   int outDataID = outData->getID();
 
@@ -642,11 +642,11 @@ void testTagging(MeshSpecification inMeshSpec,
   int meshDimension = inMeshSpec[0].position.size();
   int valueDimension = inMeshSpec[0].value.size();
 
-  mesh::PtrMesh inMesh ( new mesh::Mesh("InMesh", meshDimension, false, testing::meshIDManager()) );
+  mesh::PtrMesh inMesh ( new mesh::Mesh("InMesh", meshDimension, false, testing::nextMeshID()) );
   mesh::PtrData inData = inMesh->createData("InData", valueDimension);
   getDistributedMesh(inMeshSpec, inMesh, inData);
 
-  mesh::PtrMesh outMesh ( new mesh::Mesh("outMesh", meshDimension, false, testing::meshIDManager()) );
+  mesh::PtrMesh outMesh ( new mesh::Mesh("outMesh", meshDimension, false, testing::nextMeshID()) );
   mesh::PtrData outData = outMesh->createData( "OutData", valueDimension);
   getDistributedMesh(outMeshSpec, outMesh, outData);
 
@@ -739,7 +739,7 @@ void perform2DTestConsistentMapping(Mapping& mapping)
   using Eigen::Vector2d;
 
   // Create mesh to map from
-  mesh::PtrMesh inMesh ( new mesh::Mesh("InMesh", dimensions, false, testing::meshIDManager()) );
+  mesh::PtrMesh inMesh ( new mesh::Mesh("InMesh", dimensions, false, testing::nextMeshID()) );
   mesh::PtrData inData = inMesh->createData ( "InData", 1 );
   int inDataID = inData->getID ();
   inMesh->createVertex ( Vector2d(0.0, 0.0) );
@@ -753,7 +753,7 @@ void perform2DTestConsistentMapping(Mapping& mapping)
   values << 1.0, 2.0, 2.0, 1.0;
 
   // Create mesh to map to
-  mesh::PtrMesh outMesh ( new mesh::Mesh("OutMesh", dimensions, false, testing::meshIDManager()) );
+  mesh::PtrMesh outMesh ( new mesh::Mesh("OutMesh", dimensions, false, testing::nextMeshID()) );
   mesh::PtrData outData = outMesh->createData ( "OutData", 1 );
   int outDataID = outData->getID();
   mesh::Vertex& vertex = outMesh->createVertex ( Vector2d(0, 0) );
@@ -833,7 +833,7 @@ void perform3DTestConsistentMapping(Mapping& mapping)
   int dimensions = 3;
 
   // Create mesh to map from
-  mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, false, testing::meshIDManager()));
+  mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, false, testing::nextMeshID()));
   mesh::PtrData inData = inMesh->createData("InData", 1);
   int inDataID = inData->getID();
   inMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
@@ -851,7 +851,7 @@ void perform3DTestConsistentMapping(Mapping& mapping)
   values << 1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 2.0;
 
   // Create mesh to map to
-  mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, false, testing::meshIDManager()));
+  mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, false, testing::nextMeshID()));
   mesh::PtrData outData = outMesh->createData("OutData", 1);
   int outDataID = outData->getID();
   mesh::Vertex& vertex = outMesh->createVertex(Eigen::Vector3d::Zero());
@@ -968,7 +968,7 @@ void perform2DTestConservativeMapping(Mapping& mapping)
   using Eigen::Vector2d;
 
   // Create mesh to map from
-  mesh::PtrMesh inMesh ( new mesh::Mesh("InMesh", dimensions, false, testing::meshIDManager()) );
+  mesh::PtrMesh inMesh ( new mesh::Mesh("InMesh", dimensions, false, testing::nextMeshID()) );
   mesh::PtrData inData = inMesh->createData ( "InData", 1 );
   int inDataID = inData->getID ();
   mesh::Vertex& vertex0 = inMesh->createVertex ( Vector2d(0,0) );
@@ -978,7 +978,7 @@ void perform2DTestConservativeMapping(Mapping& mapping)
   addGlobalIndex(inMesh);
 
   // Create mesh to map to
-  mesh::PtrMesh outMesh ( new mesh::Mesh("OutMesh", dimensions, false, testing::meshIDManager()) );
+  mesh::PtrMesh outMesh ( new mesh::Mesh("OutMesh", dimensions, false, testing::nextMeshID()) );
   mesh::PtrData outData = outMesh->createData ( "OutData", 1 );
   int outDataID = outData->getID ();
   outMesh->createVertex ( Vector2d(0.0, 0.0) );
@@ -1037,7 +1037,7 @@ void perform3DTestConservativeMapping(Mapping& mapping)
   int dimensions = 3;
 
   // Create mesh to map from
-  mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, false, testing::meshIDManager()));
+  mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, false, testing::nextMeshID()));
   mesh::PtrData inData = inMesh->createData("InData", 1);
   int inDataID = inData->getID();
   mesh::Vertex& vertex0 = inMesh->createVertex(Vector3d(0,0,0));
@@ -1047,7 +1047,7 @@ void perform3DTestConservativeMapping(Mapping& mapping)
   addGlobalIndex(inMesh);
 
   // Create mesh to map to
-  mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, false, testing::meshIDManager()));
+  mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, false, testing::nextMeshID()));
   mesh::PtrData outData = outMesh->createData("OutData", 1);
   int outDataID = outData->getID();
   outMesh->createVertex(Vector3d(0.0, 0.0, 0.0));
@@ -1224,7 +1224,7 @@ BOOST_AUTO_TEST_CASE(DeadAxis2)
                                                      xDead, yDead, zDead);
 
   // Create mesh to map from
-  mesh::PtrMesh inMesh ( new mesh::Mesh("InMesh", dimensions, false, testing::meshIDManager()) );
+  mesh::PtrMesh inMesh ( new mesh::Mesh("InMesh", dimensions, false, testing::nextMeshID()) );
   mesh::PtrData inData = inMesh->createData ( "InData", 1 );
   int inDataID = inData->getID ();
   inMesh->createVertex ( Vector2d(0.0, 1.0) );
@@ -1238,7 +1238,7 @@ BOOST_AUTO_TEST_CASE(DeadAxis2)
   values << 1.0, 2.0, 2.0, 1.0;
 
   // Create mesh to map to
-  mesh::PtrMesh outMesh ( new mesh::Mesh("OutMesh", dimensions, false, testing::meshIDManager()) );
+  mesh::PtrMesh outMesh ( new mesh::Mesh("OutMesh", dimensions, false, testing::nextMeshID()) );
   mesh::PtrData outData = outMesh->createData ( "OutData", 1 );
   int outDataID = outData->getID();
   mesh::Vertex& vertex = outMesh->createVertex ( Vector2d(0,0) );
@@ -1271,7 +1271,7 @@ BOOST_AUTO_TEST_CASE(DeadAxis3D)
   Mapping mapping(Mapping::CONSISTENT, dimensions, fct, xDead, yDead, zDead);
 
   // Create mesh to map from
-  mesh::PtrMesh inMesh ( new mesh::Mesh("InMesh", dimensions, false, testing::meshIDManager()) );
+  mesh::PtrMesh inMesh ( new mesh::Mesh("InMesh", dimensions, false, testing::nextMeshID()) );
   mesh::PtrData inData = inMesh->createData ( "InData", 1 );
   int inDataID = inData->getID ();
   inMesh->createVertex ( Vector3d(0.0, 3.0, 0.0) );
@@ -1285,7 +1285,7 @@ BOOST_AUTO_TEST_CASE(DeadAxis3D)
   values << 1.0, 2.0, 3.0, 4.0;
 
   // Create mesh to map to
-  mesh::PtrMesh outMesh ( new mesh::Mesh("OutMesh", dimensions, false, testing::meshIDManager()) );
+  mesh::PtrMesh outMesh ( new mesh::Mesh("OutMesh", dimensions, false, testing::nextMeshID()) );
   mesh::PtrData outData = outMesh->createData ( "OutData", 1 );
   int outDataID = outData->getID();
   outMesh->createVertex ( Vector3d(0.0, 2.9, 0.0) );
@@ -1321,7 +1321,7 @@ BOOST_AUTO_TEST_CASE(SolutionCaching)
                                                      xDead, yDead, zDead);
 
   // Create mesh to map from
-  mesh::PtrMesh inMesh ( new mesh::Mesh("InMesh", dimensions, false, testing::meshIDManager()) );
+  mesh::PtrMesh inMesh ( new mesh::Mesh("InMesh", dimensions, false, testing::nextMeshID()) );
   mesh::PtrData inData = inMesh->createData ( "InData", 1 );
   int inDataID = inData->getID ();
   inMesh->createVertex ( Vector2d(0.0, 1.0) );  inMesh->createVertex ( Vector2d(1.0, 1.0) );
@@ -1332,7 +1332,7 @@ BOOST_AUTO_TEST_CASE(SolutionCaching)
   inData->values() << 1.0, 2.0, 2.0, 1.0;
 
   // Create mesh to map to
-  mesh::PtrMesh outMesh( new mesh::Mesh("OutMesh", dimensions, false, testing::meshIDManager()) );
+  mesh::PtrMesh outMesh( new mesh::Mesh("OutMesh", dimensions, false, testing::nextMeshID()) );
   mesh::PtrData outData = outMesh->createData( "OutData", 1 );
   int outDataID = outData->getID();
   outMesh->createVertex(Vector2d(0, 3));
@@ -1369,7 +1369,7 @@ BOOST_AUTO_TEST_CASE(ConsistentPolynomialSwitch,
   Gaussian fct(1); // supportRadius = 4.55
 
   // Create mesh to map from
-  mesh::PtrMesh inMesh ( new mesh::Mesh("InMesh", dimensions, false, testing::meshIDManager()) );
+  mesh::PtrMesh inMesh ( new mesh::Mesh("InMesh", dimensions, false, testing::nextMeshID()) );
   mesh::PtrData inData = inMesh->createData ( "InData", 1 );
   int inDataID = inData->getID ();
   inMesh->createVertex ( Vector2d(1, 1) );  inMesh->createVertex ( Vector2d(1, 0) );
@@ -1379,7 +1379,7 @@ BOOST_AUTO_TEST_CASE(ConsistentPolynomialSwitch,
   inData->values() << 1, 1, 1, 1;
 
   // Create mesh to map to
-  mesh::PtrMesh outMesh( new mesh::Mesh("OutMesh", dimensions, false, testing::meshIDManager()) );
+  mesh::PtrMesh outMesh( new mesh::Mesh("OutMesh", dimensions, false, testing::nextMeshID()) );
   mesh::PtrData outData = outMesh->createData( "OutData", 1 );
   int outDataID = outData->getID();
   outMesh->createVertex(Vector2d(3, 3)); // Point is outside the inMesh
@@ -1431,7 +1431,7 @@ BOOST_AUTO_TEST_CASE(ConservativePolynomialSwitch,
   Gaussian fct(1); // supportRadius = 4.55
 
   // Create mesh to map from
-  mesh::PtrMesh inMesh ( new mesh::Mesh("InMesh", dimensions, false, testing::meshIDManager()) );
+  mesh::PtrMesh inMesh ( new mesh::Mesh("InMesh", dimensions, false, testing::nextMeshID()) );
   mesh::PtrData inData = inMesh->createData ( "InData", 1 );
   int inDataID = inData->getID ();
   inMesh->createVertex ( Vector2d(0, 0) );  inMesh->createVertex ( Vector2d(1, 0) );
@@ -1441,7 +1441,7 @@ BOOST_AUTO_TEST_CASE(ConservativePolynomialSwitch,
   inData->values() << 1, 1, 1, 1;
 
   // Create mesh to map to
-  mesh::PtrMesh outMesh( new mesh::Mesh("OutMesh", dimensions, false, testing::meshIDManager()) );
+  mesh::PtrMesh outMesh( new mesh::Mesh("OutMesh", dimensions, false, testing::nextMeshID()) );
   mesh::PtrData outData = outMesh->createData( "OutData", 1 );
   int outDataID = outData->getID();
   outMesh->createVertex(Vector2d(0.4, 0));
@@ -1513,13 +1513,13 @@ BOOST_AUTO_TEST_CASE(NoMapping)
 
   {
     // Call only computeMapping
-    mesh::PtrMesh inMesh ( new mesh::Mesh("InMesh", 2, false, testing::meshIDManager()) );
+    mesh::PtrMesh inMesh ( new mesh::Mesh("InMesh", 2, false, testing::nextMeshID()) );
     mesh::PtrData inData = inMesh->createData ( "InData", 1 );
     inMesh->createVertex ( Eigen::Vector2d(0, 0) );
     inMesh->allocateDataValues();
     addGlobalIndex(inMesh);
 
-    mesh::PtrMesh outMesh( new mesh::Mesh("OutMesh", 2, false, testing::meshIDManager()) );
+    mesh::PtrMesh outMesh( new mesh::Mesh("OutMesh", 2, false, testing::nextMeshID()) );
     mesh::PtrData outData = outMesh->createData( "OutData", 1 );
     outMesh->createVertex( Eigen::Vector2d(0, 0));
     outMesh->allocateDataValues();
@@ -1543,7 +1543,7 @@ BOOST_AUTO_TEST_CASE(TestNonHomongenousGlobalIndex)
   Gaussian fct(1); // supportRadius = 4.55
 
   // Create mesh to map from
-  mesh::PtrMesh inMesh ( new mesh::Mesh("InMesh", dimensions, false, testing::meshIDManager()) );
+  mesh::PtrMesh inMesh ( new mesh::Mesh("InMesh", dimensions, false, testing::nextMeshID()) );
   mesh::PtrData inData = inMesh->createData ( "InData", 1 );
   int inDataID = inData->getID ();
   inMesh->createVertex ( Vector2d(1, 1) ).setGlobalIndex(2);
@@ -1555,7 +1555,7 @@ BOOST_AUTO_TEST_CASE(TestNonHomongenousGlobalIndex)
   inData->values() << 1, 1, 1, 1;
 
   // Create mesh to map to
-  mesh::PtrMesh outMesh( new mesh::Mesh("OutMesh", dimensions, false, testing::meshIDManager()) );
+  mesh::PtrMesh outMesh( new mesh::Mesh("OutMesh", dimensions, false, testing::nextMeshID()) );
   mesh::PtrData outData = outMesh->createData( "OutData", 1 );
   int outDataID = outData->getID();
   outMesh->createVertex(Vector2d(0.5, 0.5));

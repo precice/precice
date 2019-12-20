@@ -53,18 +53,22 @@ public:
   /// Signal is emitted when the mesh is destroyed
   boost::signals2::signal<void(Mesh &)> meshDestroyed;
 
+  /// Use if the id of the mesh is not necessary
+  static constexpr int MESH_ID_UNDEFINED{-1};
+
   /**
    * @brief Constructor.
    *
    * @param[in] name Unique name of the mesh.
    * @param[in] dimensions Dimensionalty of the mesh.
    * @param[in] flipNormals Inverts the standard direction of normals.
+   * @param[in] id The id of this mesh
    */
   Mesh(
       const std::string &     name,
       int                     dimensions,
       bool                    flipNormals,
-      utils::ManageUniqueIDs &meshIdManager);
+      int                     id);
 
   /// Destructor, deletes created objects.
   ~Mesh();
@@ -164,12 +168,6 @@ public:
 
   void setFlipNormals ( bool flipNormals );
 
-  /// Returns all used geometry IDs paired with their names
-  const std::map<std::string,int>& getNameIDPairs();
-
-  /// Returns the geometry ID corresponding to the given name.
-  int getID ( const std::string& name ) const;
-
   /// Returns the base ID of the mesh.
   int getID() const;
 
@@ -253,12 +251,6 @@ public:
   
   bool operator!=(const Mesh& other) const;
 
-  /// returns the used id Manager
-  utils::ManageUniqueIDs& getIDManager()
-  {
-      return _managePropertyIDs;
-  }
-
 private:
 
   /// Computes the normals for all primitives.
@@ -269,9 +261,6 @@ private:
 
   mutable logging::Logger _log{"mesh::Mesh"};
 
-  /// Provides unique IDs for all geometry objects
-  utils::ManageUniqueIDs& _managePropertyIDs;
-
   /// Name of the mesh.
   std::string _name;
 
@@ -281,8 +270,8 @@ private:
   /// Flag for flipping normals direction.
   bool _flipNormals;
 
-  /// Holds all mesh names and the corresponding IDs belonging to the mesh.
-  std::map<std::string,int> _nameIDPairs;
+  /// The ID of this mesh.
+  int _id;
 
   /// Holds vertices, edges, and triangles.
   VertexContainer _vertices;

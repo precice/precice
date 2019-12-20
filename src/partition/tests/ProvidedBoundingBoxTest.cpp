@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(TestCommunicateBoundingBox2D, * testing::OnSize(4))
 
   if (utils::Parallel::getProcessRank() != 0) { //NASTIN
   
-    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::meshIDManager()));
+    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::nextMeshID()));
 
     if(utils::Parallel::getProcessRank() == 1){//Master
       Eigen::VectorXd position(dimensions);
@@ -229,7 +229,7 @@ BOOST_AUTO_TEST_CASE(TestCommunicateBoundingBox3D, * testing::OnSize(4))
 
   if (utils::Parallel::getProcessRank() != 0) { //NASTIN
   
-    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::meshIDManager()));
+    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::nextMeshID()));
 
     if(utils::Parallel::getProcessRank() == 1){//Master
       Eigen::VectorXd position(dimensions);
@@ -351,7 +351,7 @@ BOOST_AUTO_TEST_CASE(TestComputeBoundingBox, * testing::OnSize(4))
   else
   { //NASTIN
   
-    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::meshIDManager()));    
+    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::nextMeshID()));    
  
     double safetyFactor = 0.0;
     bool hasToSend = true;    
@@ -392,7 +392,7 @@ BOOST_AUTO_TEST_CASE(TestCommunicateLocalMeshPartitions, * testing::OnSize(4))
   bool flipNormals = true;
   double safetyFactor = 0.1;
   bool hasToSend=true;
-  mesh::PtrMesh mesh(new mesh::Mesh("mesh", dimensions, flipNormals, testing::meshIDManager()));
+  mesh::PtrMesh mesh(new mesh::Mesh("mesh", dimensions, flipNormals, testing::nextMeshID()));
 
   // create second communicator for m2n mesh and communciation map exchange 
   com::PtrCommunication participantsCom =  com::PtrCommunication(new com::SocketCommunication());
@@ -513,8 +513,8 @@ BOOST_AUTO_TEST_CASE(TestCompute2D, * testing::OnSize(4))
   bool flipNormals = true;
   double safetyFactor = 0;
   bool hasToSend=true;
-  mesh::PtrMesh mesh(new mesh::Mesh("mesh", dimensions, flipNormals, testing::meshIDManager()));
-  mesh::PtrMesh receivedMesh(new mesh::Mesh("mesh", dimensions, flipNormals, testing::meshIDManager()));
+  mesh::PtrMesh mesh(new mesh::Mesh("mesh", dimensions, flipNormals, testing::nextMeshID()));
+  mesh::PtrMesh receivedMesh(new mesh::Mesh("mesh", dimensions, flipNormals, testing::nextMeshID()));
 
   
   switch (utils::Parallel::getProcessRank()) {
@@ -680,8 +680,8 @@ BOOST_AUTO_TEST_CASE(TestCompute3D, * testing::OnSize(4))
   bool flipNormals = true;
   double safetyFactor = 0.0;
   bool hasToSend=true;
-  mesh::PtrMesh mesh(new mesh::Mesh("mesh", dimensions, flipNormals, testing::meshIDManager()));
-  mesh::PtrMesh receivedMesh(new mesh::Mesh("mesh", dimensions, flipNormals, testing::meshIDManager()));
+  mesh::PtrMesh mesh(new mesh::Mesh("mesh", dimensions, flipNormals, testing::nextMeshID()));
+  mesh::PtrMesh receivedMesh(new mesh::Mesh("mesh", dimensions, flipNormals, testing::nextMeshID()));
   
   switch (utils::Parallel::getProcessRank()) {
   case 0: {

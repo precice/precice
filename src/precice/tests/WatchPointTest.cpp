@@ -16,7 +16,7 @@ BOOST_AUTO_TEST_CASE(WatchPoint)
   // Setup geometry
   std::string name("rectangle");
   bool flipNormals = false;
-  PtrMesh mesh(new Mesh(name, dim, flipNormals, testing::meshIDManager()));
+  PtrMesh mesh(new Mesh(name, dim, flipNormals, testing::nextMeshID()));
 
   mesh::Vertex& v1 = mesh->createVertex(Eigen::Vector2d(1.0, 1.0));
   mesh::Vertex& v2 = mesh->createVertex(Eigen::Vector2d(2.0, 1.0));

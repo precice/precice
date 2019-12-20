@@ -8,7 +8,7 @@
 using namespace precice;
 
 struct MeshFixture {
-    MeshFixture() : mesh("MyMesh", 3, false, testing::meshIDManager()), handle(mesh.content()) {
+    MeshFixture() : mesh("MyMesh", 3, false, testing::nextMeshID()), handle(mesh) {
         auto & v1 = mesh.createVertex(Eigen::Vector3d(0, 2, 0));
         auto & v2 = mesh.createVertex(Eigen::Vector3d(2, 1, 0));
         auto & v3 = mesh.createVertex(Eigen::Vector3d(3, 0, 0));
