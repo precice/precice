@@ -8,7 +8,7 @@ FILES="$(find . -type f -name \*.hpp -or -name \*.h -or -name \*.cpp -or -name \
 
 DIFFS=""
 for cfile in $FILES; do
-    DIFF=$(diff "$cfile" <(clang-format -style=file $cfile))
+    DIFF=$(diff "$cfile" <(clang-format-8 -style=file $cfile))
     if [[ -n "$DIFF" ]]; then
         DIFFS="$DIFFS $cfile"
     fi

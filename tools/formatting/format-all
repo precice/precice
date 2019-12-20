@@ -7,7 +7,7 @@ SPIN=0
 echo "Formatting files"
 for cfile in $FILES
 do
-    clang-format -style=file -i $cfile
+    clang-format-8 -style=file -i $cfile
     echo -n "."
 done
 echo -e "\nDone"
