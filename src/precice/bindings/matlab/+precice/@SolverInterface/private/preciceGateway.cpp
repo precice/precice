@@ -113,7 +113,6 @@ public:
                 constructed = false;
                 break;
             }
-            
             case FunctionID::initialize:
             {
                 double dt = interface->initialize();
