@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file. For future 
 - Move python bindings to independent repository: [`precice/python-bindings`](https://github.com/precice/python-bindings)
 - End support for deprecated python bindings [`precice`](https://github.com/precice/precice/tree/v1.6.1/src/precice/bindings/python) and [`PySolverInterface`](https://github.com/precice/precice/tree/v1.6.1/src/precice/bindings/PySolverInterface). 
 - Only support a single version of the python bindings from now on provided in [`precice/python-bindings`](https://github.com/precice/python-bindings). Package [`precice_future`](https://github.com/precice/precice/blob/v1.6.1/src/precice/bindings/python_future/setup.py#L14) (previous to `v2.0.0`) is renamed to [`precice`](https://github.com/precice/python-bindings/blob/3b9aec6c529814e6904a6a4697cf92388d4c4bf0/setup.py#L18) (from `v2.0.0`).
+- Introduce preCICE-MATLAB bindings (https://github.com/precice/precice/pull/494, https://github.com/precice/precice/pull/580) and provide them in [`precice/matlab-bindings`](https://github.com/precice/matlab-bindings).
 
 ## 1.6.1
 
