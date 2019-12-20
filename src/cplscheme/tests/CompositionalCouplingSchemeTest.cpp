@@ -23,7 +23,7 @@ using namespace precice::cplscheme;
 
 BOOST_AUTO_TEST_SUITE(CplSchemeTests)
 
-struct CompositionalCouplingSchemeFixture
+struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor
 {
   std::string _pathToTests;
 
@@ -209,6 +209,7 @@ struct CompositionalCouplingSchemeFixture
     BOOST_TEST ( communication );
     BOOST_TEST ( not communication->isConnected() );
     utils::Parallel::splitCommunicator( localParticipant );
+    useOnlyMasterCom(communication) = true;
     if ( participant0 == localParticipant ) {
       communication->requestMasterConnection ( participant1, participant0 );
     }

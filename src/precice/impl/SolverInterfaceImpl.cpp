@@ -131,15 +131,16 @@ void SolverInterfaceImpl:: configure
   _dimensions = config.getDimensions();
   _accessor = determineAccessingParticipant(config);
 
-  PRECICE_CHECK(not (_accessor->useServer() && _accessor->useMaster()), "You cannot use a server and a master.");
-  PRECICE_CHECK(_accessorCommunicatorSize==1 || _accessor->useMaster() || _accessor->useServer(),
-        "A parallel participant needs either a master or a server communication configured");
+  PRECICE_CHECK(not (_accessor->useServer() && _accessor->useMaster()),
+        "You cannot use a server and a master.");
+  PRECICE_ASSERT(_accessorCommunicatorSize==1 || _accessor->useMaster() || _accessor->useServer(),
+        "A parallel participant needs either a master or a server communication");
+  PRECICE_CHECK(not (_accessorCommunicatorSize==1 && _accessor->useMaster()),
+        "You cannot use a master with a serial participant.");
 
   _clientMode = (not _serverMode) && _accessor->useServer();
 
-  if(_accessor->useMaster()){
-    utils::MasterSlave::configure(_accessorProcessRank, _accessorCommunicatorSize);
-  }
+  utils::MasterSlave::configure(_accessorProcessRank, _accessorCommunicatorSize);
 
   _participants = config.getParticipantConfiguration()->getParticipants();
   configureM2Ns(config.getM2NConfiguration());

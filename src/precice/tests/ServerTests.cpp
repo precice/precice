@@ -105,8 +105,10 @@ BOOST_AUTO_TEST_CASE(testCouplingModeWithOneServer,
   }
 }
 
+// deleted as parallel solvers in server mode are no longer supported
 /// Two solvers in coupling mode, one in parallel using a server
-BOOST_AUTO_TEST_CASE(testCouplingModeParallelWithOneServer, * testing::OnSize(4))
+BOOST_AUTO_TEST_CASE(testCouplingModeParallelWithOneServer, * testing::OnSize(4)
+                                                            * testing::Deleted())
 {
   int rank = utils::Parallel::getProcessRank();
   std::string configFile = _pathToTests + "cplmode-1.xml";

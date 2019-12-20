@@ -16,6 +16,10 @@
 #include "utils/assertion.hpp"
 
 namespace precice {
+extern bool testMode;
+}
+
+namespace precice {
 namespace utils {
 
 using sys_clk = std::chrono::system_clock;
@@ -31,7 +35,7 @@ std::string timepoint_to_string(sys_clk::time_point c)
 
   std::stringstream ss;
   ss << std::put_time(std::localtime(&ts), "%FT%T") << "." << std::setw(3) << std::setfill('0') << ms.count();
-  return ss.str();    
+  return ss.str();
 }
 
 
@@ -230,10 +234,12 @@ void EventRegistry::finalize()
   for (auto & e : storedEvents)
     e.second.stop();
 
-  if (initialized) // this makes only sense when it was properly initialized
+  // @todo remove testMode flag once we have properly refactored the tests, cf. issue #597 
+  if (initialized && not precice::testMode) // this makes only sense when it was properly initialized
     normalize();
 
-  collect();
+  if(not precice::testMode)
+    collect();
 
   initialized = false;
   finalized = true;
@@ -306,7 +312,7 @@ void EventRegistry::writeSummary(std::ostream &out)
     { // Print per event stats
       std::time_t ts = sys_clk::to_time_t(localRankData.finalizedAt);
       double const duration = std::chrono::duration_cast<std::chrono::milliseconds>(localRankData.getDuration()).count();
-    
+
       out << "Run finished at " << std::asctime(std::localtime(&ts));
 
       out << "Global runtime       = "
@@ -324,7 +330,7 @@ void EventRegistry::writeSummary(std::ostream &out)
       table.addColumn("Avg[ms]", 10);
       table.addColumn("Time Ratio", 6, 3);
       table.printHeader();
-    
+
       for (auto & e : localRankData.evData) {
         auto & ev = e.second;
         table.printRow(ev.getName(), ev.getCount(), ev.getTotal(), ev.getMax(),  ev.getMin(), ev.getAvg(),
@@ -348,7 +354,7 @@ void EventRegistry::writeSummary(std::ostream &out)
         double rel = 0;
         if (ev.max != stdy_clk::duration::zero()) // Guard against division by zero
           rel = static_cast<double>(ev.min.count()) / ev.max.count();
-      
+
         t.printRow(e.first, ev.max, ev.maxRank, ev.min, ev.minRank, rel);
       }
     }
@@ -398,7 +404,7 @@ void EventRegistry::writeJSON(std::ostream & out)
         {"StateChanges", jStateChanges}
       });
   }
-  
+
   out << std::setw(2) << js << std::endl;
 }
 
@@ -435,12 +441,12 @@ void EventRegistry::collect()
   int i = 0;
 
   MPI_Request req;
-  
+
   // Send the times from the local RankData
   std::array<long, 2> times= {localRankData.initializedAt.time_since_epoch().count(),
                               localRankData.finalizedAt.time_since_epoch().count()};
   MPI_Isend(&times, times.size(), MPI_LONG, 0, 0, comm, &req);
-  requests.push_back(req);  
+  requests.push_back(req);
 
   // Send all events from all ranks, including rank 0, to rank 0
   for (auto const & evData : localRankData.evData) {
@@ -458,8 +464,8 @@ void EventRegistry::collect()
     eventSendBuf[i].stateChangesSize = ev.stateChanges.size();
     MPI_Isend(&eventSendBuf[i], 1, MPI_EVENTDATA, 0, 0, comm, &req);
     requests.push_back(req);
-    
-    // Send the state changes 
+
+    // Send the state changes
     for (auto const & sc : ev.stateChanges) {
       stateChangesBuf[i].push_back(static_cast<long>(sc.first)); // state
       stateChangesBuf[i].push_back(
@@ -477,7 +483,7 @@ void EventRegistry::collect()
       MPI_Isend(const_cast<int*>(val.data()), val.size(), MPI_INT, 0, 0, comm, &req);
       requests.push_back(req);
     }
-    
+
     ++i;
   }
 
@@ -527,7 +533,7 @@ void EventRegistry::collect()
         EventData ed(ev.name, ev.count, ev.total, ev.max, ev.min, dataMap, stateChanges);
         data.addEventData(std::move(ed));
       }
-      globalRankData.push_back(data);      
+      globalRankData.push_back(data);
     }
   }
   MPI_Waitall(requests.size(), requests.data(), MPI_STATUSES_IGNORE);
@@ -588,7 +594,7 @@ std::pair<sys_clk::time_point, sys_clk::time_point> EventRegistry::findFirstAndL
                                { return a.finalizedAt < b.finalizedAt; });
 
   return std::make_pair(first->initializedAt, last->finalizedAt);
- 
+
 }
 
 }}

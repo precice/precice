@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file. For future 
 
 ## develop
 
+- Simplify parallel configuration
+  - automatically add `master:mpi-single` for parallel participant if necessary
+  - no longer require `gather-scatter` distribution type for a `m2n` with at least one serial participant
+  - automatically choose suitable RBF implementation based on whether preCICE was built with PETSc and whether the participant is serial or parallel 
 - Added a generator for markdown references `binprecice md`.
 - Refactored the XML documentation generation out of the `xml::XMLAttribute` and `xml::XMLTag` classes into `xml/Printer.[ch]pp`.
 - Changed the internal handling of Meshes by removing sub-meshes, the type hierarchy based on `mesh::PropertyContainer`, and the obsolete `mesh::Group` and `mesh::Merge`.

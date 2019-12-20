@@ -81,8 +81,7 @@ void broadcast(mesh::Mesh::VertexDistribution &m)
   if (utils::MasterSlave::isMaster()) {
     // Broadcast (send) vertex distributions.
     m2n::broadcastSend(m);
-  } else {
-    PRECICE_ASSERT(utils::MasterSlave::isSlave());
+  } else if(utils::MasterSlave::isSlave()) {
     // Broadcast (receive) vertex distributions.
     m2n::broadcastReceive(m, 0);
   }
@@ -100,7 +99,11 @@ void print(std::map<int, std::vector<int>> const &m)
     }
   }
 
-  if (utils::MasterSlave::isMaster()) {
+  if (utils::MasterSlave::isSlave()) {
+    utils::MasterSlave::_communication->send(oss.str(), 0);
+  }
+  else{
+
     std::string s;
 
     for (int rank = 1; rank < utils::MasterSlave::getSize(); ++rank) {
@@ -110,10 +113,6 @@ void print(std::map<int, std::vector<int>> const &m)
     }
 
     std::cout << oss.str();
-  } else {
-    PRECICE_ASSERT(utils::MasterSlave::isSlave());
-
-    utils::MasterSlave::_communication->send(oss.str(), 0);
   }
 }
 
@@ -294,14 +293,11 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
 {
   PRECICE_TRACE(acceptorName, requesterName);
   PRECICE_CHECK(not isConnected(), "Already connected!");
-  PRECICE_CHECK(utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave(),
-        "You can only use a point-to-point communication between two participants which both use a master. "
-            << "Please use distribution-type gather-scatter instead.");
 
   mesh::Mesh::VertexDistribution &vertexDistribution = _mesh->getVertexDistribution();
   mesh::Mesh::VertexDistribution  requesterVertexDistribution;
 
-  if (utils::MasterSlave::isMaster()) {
+  if (not utils::MasterSlave::isSlave()) {
     PRECICE_DEBUG("Exchange vertex distribution between both masters");
     Event e0("m2n.exchangeVertexDistribution");
     // Establish connection between participants' master processes.
@@ -312,8 +308,6 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
     // Exchange vertex distributions.
     m2n::send(vertexDistribution, 0, c);
     m2n::receive(requesterVertexDistribution, 0, c);
-  } else {
-    PRECICE_ASSERT(utils::MasterSlave::isSlave());
   }
 
   PRECICE_DEBUG("Broadcast vertex distributions");
@@ -394,7 +388,7 @@ void PointToPointCommunication::acceptPreConnection(std::string const &acceptorN
   PRECICE_CHECK(utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave(),
         "You can only use a point-to-point communication between two participants which both use a master. "
             << "Please use distribution-type gather-scatter instead.");
-  
+
   const std::vector<int> & localConnectedRanks = _mesh->getConnectedRanks();
 
   if (localConnectedRanks.empty()) {
@@ -403,7 +397,7 @@ void PointToPointCommunication::acceptPreConnection(std::string const &acceptorN
   }
 
   auto c = _communicationFactory->newCommunication();
-  
+
   c->acceptConnectionAsServer(
       acceptorName,
       requesterName,
@@ -424,14 +418,11 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
 {
   PRECICE_TRACE(acceptorName, requesterName);
   PRECICE_CHECK(not isConnected(), "Already connected!");
-  PRECICE_CHECK(utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave(),
-        "You can only use a point-to-point communication between two participants which both use a master. "
-        << "Please use distribution-type gather-scatter instead.");
 
   mesh::Mesh::VertexDistribution &vertexDistribution = _mesh->getVertexDistribution();
   mesh::Mesh::VertexDistribution  acceptorVertexDistribution;
 
-  if (utils::MasterSlave::isMaster()) {
+  if (not utils::MasterSlave::isSlave()) {
     PRECICE_DEBUG("Exchange vertex distribution between both masters");
     Event e0("m2n.exchangeVertexDistribution");
     // Establish connection between participants' master processes.
@@ -441,8 +432,6 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
     // Exchange vertex distributions.
     m2n::receive(acceptorVertexDistribution, 0, c);
     m2n::send(vertexDistribution, 0, c);
-  } else {
-    PRECICE_ASSERT(utils::MasterSlave::isSlave());
   }
 
   PRECICE_DEBUG("Broadcast vertex distributions");
@@ -472,6 +461,7 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
   std::map<int, std::vector<int>> communicationMap = m2n::buildCommunicationMap(
     vertexDistribution, acceptorVertexDistribution);
   e2.stop();
+
 
 // Print `communicationMap'.
 #ifdef P2P_LCM_PRINT
@@ -541,7 +531,7 @@ void PointToPointCommunication::requestPreConnection(std::string const &acceptor
   _connectionDataVector.reserve(localConnectedRanks.size());
 
   std::set<int> acceptingRanks(localConnectedRanks.begin(), localConnectedRanks.end());
-  
+
   auto c = _communicationFactory->newCommunication();
   c->requestConnectionAsClient(acceptorName, requesterName,
                                acceptingRanks, utils::MasterSlave::getRank());
@@ -628,41 +618,41 @@ void PointToPointCommunication::receive(double *itemsToReceive,
 }
 
 void PointToPointCommunication::broadcastSend(const int &itemToSend)
-{  
+{
   for (auto &connectionData : _connectionDataVector) {
     connectionData.communication->send(itemToSend, connectionData.remoteRank);
-  }  
+  }
 }
 
 void PointToPointCommunication::broadcastReceiveAll(std::vector<int> &itemToReceive)
-                                
+
 {
   int data = 0;
   for (auto &connectionData : _connectionDataVector) {
     connectionData.communication->receive(data, connectionData.remoteRank);
     itemToReceive.push_back(data);
-  }  
+  }
 }
 
 void PointToPointCommunication::broadcastSendMesh()
-{  
+{
   for (auto &connectionData : _connectionDataVector) {
     com::CommunicateMesh(connectionData.communication).sendMesh(*_mesh, connectionData.remoteRank);
-  }  
+  }
 }
 
 void PointToPointCommunication::broadcastReceiveMesh()
-{  
+{
   for (auto &connectionData : _connectionDataVector) {
     com::CommunicateMesh(connectionData.communication).receiveMesh(*_mesh, connectionData.remoteRank);
-  }  
+  }
 }
 
 void PointToPointCommunication::broadcastSendLCM(CommunicationMap &localCommunicationMap)
 {
  for (auto &connectionData : _connectionDataVector) {
     connectionData.communication->send(localCommunicationMap[connectionData.remoteRank], connectionData.remoteRank);
-  } 
+  }
 }
 
 void PointToPointCommunication::broadcastReceiveLCM(CommunicationMap &localCommunicationMap)
