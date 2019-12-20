@@ -1,6 +1,6 @@
+#include "precice/config/Configuration.hpp"
 #include "testing/Testing.hpp"
 #include "xml/Printer.hpp"
-#include "precice/config/Configuration.hpp"
 
 #include <sstream>
 

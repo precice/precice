@@ -4,10 +4,8 @@
 #include "com/SocketCommunication.hpp"
 #include "utils/Helpers.hpp"
 
-namespace precice
-{
-namespace com
-{
+namespace precice {
+namespace com {
 PtrCommunication CommunicationConfiguration::createCommunication(
     const xml::XMLTag &tag) const
 {
@@ -17,12 +15,11 @@ PtrCommunication CommunicationConfiguration::createCommunication(
     int         port    = tag.getIntAttributeValue("port");
 
     PRECICE_CHECK(not utils::isTruncated<unsigned short>(port),
-          "The value given for the \"port\" attribute is not a 16-bit unsigned integer: " << port);
+                  "The value given for the \"port\" attribute is not a 16-bit unsigned integer: " << port);
 
     std::string dir = tag.getStringAttributeValue("exchange-directory");
     com             = std::make_shared<com::SocketCommunication>(port, false, network, dir);
-  }
-  else if (tag.getName() == "mpi") {
+  } else if (tag.getName() == "mpi") {
     std::string dir = tag.getStringAttributeValue("exchange-directory");
 #ifdef PRECICE_NO_MPI
     std::ostringstream error;
@@ -32,8 +29,7 @@ PtrCommunication CommunicationConfiguration::createCommunication(
 #else
     com = std::make_shared<com::MPIPortsCommunication>(dir);
 #endif
-  }
-  else if (tag.getName() == "mpi-single") {
+  } else if (tag.getName() == "mpi-single") {
 #ifdef PRECICE_NO_MPI
     std::ostringstream error;
     error << "Communication type \"mpi-single\" can only be used "

@@ -2,12 +2,9 @@
 
 #include <Eigen/Core>
 
-namespace precice
-{
-namespace cplscheme
-{
-namespace impl
-{
+namespace precice {
+namespace cplscheme {
+namespace impl {
 
 /**
  * @brief Interface for measures checking the convergence of a series of datasets.
@@ -22,8 +19,7 @@ namespace impl
  * -# call measure() for convergence measurement
  * -# retrieve the convergence status via isConvergence()
  */
-class ConvergenceMeasure
-{
+class ConvergenceMeasure {
 public:
   /// Destructor, empty.
   virtual ~ConvergenceMeasure() {}
@@ -54,6 +50,6 @@ public:
     return 0;
   }
 };
-}
-}
-} // namespace precice, cplscheme, impl
+} // namespace impl
+} // namespace cplscheme
+} // namespace precice

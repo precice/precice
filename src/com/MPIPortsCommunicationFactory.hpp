@@ -7,12 +7,9 @@
 
 #include <string>
 
-namespace precice
-{
-namespace com
-{
-class MPIPortsCommunicationFactory : public CommunicationFactory
-{
+namespace precice {
+namespace com {
+class MPIPortsCommunicationFactory : public CommunicationFactory {
 public:
   explicit MPIPortsCommunicationFactory(std::string const &addressDirectory = ".");
 

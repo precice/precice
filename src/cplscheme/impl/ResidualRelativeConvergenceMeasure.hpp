@@ -6,12 +6,9 @@
 #include "logging/Logger.hpp"
 #include "utils/MasterSlave.hpp"
 
-namespace precice
-{
-namespace cplscheme
-{
-namespace impl
-{
+namespace precice {
+namespace cplscheme {
+namespace impl {
 
 /**
  * @brief Measures the convergence from an old data set to a new one.
@@ -24,8 +21,7 @@ namespace impl
  * For a description of how to perform the measurement, see class
  * ConvergenceMeasure.
  */
-class ResidualRelativeConvergenceMeasure : public ConvergenceMeasure
-{
+class ResidualRelativeConvergenceMeasure : public ConvergenceMeasure {
 public:
   /**
     * @brief Constructor.
@@ -96,6 +92,6 @@ private:
 
   bool _isConvergence = false;
 };
-}
-}
-} // namespace precice, cplscheme, impl
+} // namespace impl
+} // namespace cplscheme
+} // namespace precice

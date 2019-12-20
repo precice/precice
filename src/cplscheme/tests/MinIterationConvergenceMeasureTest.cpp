@@ -9,7 +9,7 @@ using namespace cplscheme;
 BOOST_AUTO_TEST_CASE(MinIterationConvergenceMeasureTest)
 {
   cplscheme::impl::MinIterationConvergenceMeasure measure(5);
-  Eigen::VectorXd                      emptyValues; // No values needed for min-iter
+  Eigen::VectorXd                                 emptyValues; // No values needed for min-iter
 
   for (int iSeries = 0; iSeries < 3; iSeries++) {
     measure.newMeasurementSeries();

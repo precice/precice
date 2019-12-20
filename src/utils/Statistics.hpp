@@ -1,13 +1,13 @@
 #pragma once
 
-#include <iosfwd>
 #include <boost/accumulators/accumulators.hpp>
-#include <boost/accumulators/statistics/stats.hpp>
-#include <boost/accumulators/statistics/min.hpp>
+#include <boost/accumulators/statistics/count.hpp>
 #include <boost/accumulators/statistics/max.hpp>
 #include <boost/accumulators/statistics/mean.hpp>
+#include <boost/accumulators/statistics/min.hpp>
+#include <boost/accumulators/statistics/stats.hpp>
 #include <boost/accumulators/statistics/variance.hpp>
-#include <boost/accumulators/statistics/count.hpp>
+#include <iosfwd>
 
 namespace precice {
 namespace utils {
@@ -45,7 +45,7 @@ public:
   /// Returns how many values have been accumulated
   std::size_t count() const
   {
-      return boost::accumulators::extract::count(_acc);
+    return boost::accumulators::extract::count(_acc);
   }
 
   /// Returns the sample variance based on all accumulated values
@@ -56,11 +56,11 @@ public:
 
 private:
   boost::accumulators::accumulator_set<double, boost::accumulators::stats<
-      boost::accumulators::tag::min,
-      boost::accumulators::tag::max,
-      boost::accumulators::tag::mean,
-      boost::accumulators::tag::lazy_variance
-          >> _acc;
+                                                   boost::accumulators::tag::min,
+                                                   boost::accumulators::tag::max,
+                                                   boost::accumulators::tag::mean,
+                                                   boost::accumulators::tag::lazy_variance>>
+      _acc;
 };
 
 inline std::ostream &operator<<(std::ostream &out, const DistanceAccumulator &accumulator)

@@ -1,33 +1,31 @@
 #include <Eigen/Core>
 
+#include "acceleration/ConstantRelaxationAcceleration.hpp"
 #include "cplscheme/CouplingData.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
-#include "acceleration/ConstantRelaxationAcceleration.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/Helpers.hpp"
 
-namespace precice
-{
-namespace acceleration
-{
+namespace precice {
+namespace acceleration {
 
 ConstantRelaxationAcceleration::ConstantRelaxationAcceleration(
     double           relaxation,
     std::vector<int> dataIDs)
-  : _relaxation(relaxation),
-    _dataIDs(dataIDs)
+    : _relaxation(relaxation),
+      _dataIDs(dataIDs)
 {
   PRECICE_CHECK((relaxation > 0.0) && (relaxation <= 1.0),
-        "Relaxation factor for constant relaxation acceleration "
-        << "has to be larger than zero and smaller or equal than one!");
+                "Relaxation factor for constant relaxation acceleration "
+                    << "has to be larger than zero and smaller or equal than one!");
 }
 
 void ConstantRelaxationAcceleration::initialize(DataMap &cplData)
 {
   PRECICE_CHECK(_dataIDs.empty() || utils::contained(*_dataIDs.begin(), cplData),
-        "Data with ID " << *_dataIDs.begin()
-                        << " is not contained in data given at initialization!");
+                "Data with ID " << *_dataIDs.begin()
+                                << " is not contained in data given at initialization!");
 
   // Append column for old values if not done by coupling scheme yet
   int entries = 0;
@@ -88,5 +86,5 @@ void ConstantRelaxationAcceleration::setDesignSpecification(Eigen::VectorXd &q)
   _designSpecification = q;
   PRECICE_ERROR("Design specification for constant relaxation is not supported yet.");
 }
-}
-} // namespace precice, acceleration
+} // namespace acceleration
+} // namespace precice

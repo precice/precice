@@ -4,13 +4,10 @@
 #include "logging/Logger.hpp"
 #include "mesh/SharedPointer.hpp"
 
-namespace precice
-{
-namespace action
-{
+namespace precice {
+namespace action {
 
-class ScaleByDtAction : public Action
-{
+class ScaleByDtAction : public Action {
 public:
   enum Scaling {
     /// Scales data by ratio of last computed timestep to full timestep length.

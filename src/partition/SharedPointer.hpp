@@ -2,10 +2,8 @@
 
 #include <memory>
 
-namespace precice
-{
-namespace partition
-{
+namespace precice {
+namespace partition {
 
 class Partition;
 

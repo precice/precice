@@ -3,14 +3,11 @@
 #include "logging/Logger.hpp"
 #include "mesh/Mesh.hpp"
 
-namespace precice
-{
-namespace com
-{
+namespace precice {
+namespace com {
 
 /// Copies either a bounding box around a mesh partition or complete maps of bounding boxes from a sender to a receiver.
-class CommunicateBoundingBox
-{
+class CommunicateBoundingBox {
 public:
   /// Constructor, takes communication to be used in transfer.
   explicit CommunicateBoundingBox(
@@ -34,7 +31,7 @@ public:
 
   void sendConnectionMap(
       std::map<int, std::vector<int>> const &fbm,
-      int                              rankReceiver);
+      int                                    rankReceiver);
 
   void receiveConnectionMap(
       std::map<int, std::vector<int>> &fbm,

@@ -1,13 +1,13 @@
 #pragma once
 
-#include "CouplingScheme.hpp"
 #include "Constants.hpp"
+#include "CouplingScheme.hpp"
 #include "SharedPointer.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 
-#include <vector>
 #include <list>
+#include <vector>
 
 namespace precice {
 namespace cplscheme {
@@ -54,10 +54,8 @@ namespace cplscheme {
  * on how the participants are configured to be first and second in the schemes.
  * If not configured properly, a deadlock might be created.
  */
-class CompositionalCouplingScheme : public CouplingScheme
-{
+class CompositionalCouplingScheme : public CouplingScheme {
 public:
-
   /// Destructor, empty.
   virtual ~CompositionalCouplingScheme() {}
 
@@ -77,9 +75,9 @@ public:
    * @brief Initializes the coupling scheme and establishes a communiation
    *        connection to the coupling partner.
    */
-  virtual void initialize (
-    double startTime,
-    int    startTimesteps );
+  virtual void initialize(
+      double startTime,
+      int    startTimesteps);
 
   /// Returns true, if initialize has been called.
   virtual bool isInitialized() const;
@@ -213,13 +211,13 @@ public:
    *
    * True, if any of the composed coupling schemes requires the action.
    */
-  virtual bool isActionRequired(const std::string& actionName) const;
+  virtual bool isActionRequired(const std::string &actionName) const;
 
   /// Tells the coupling scheme that the accessor has performed the given action.
-  virtual void performedAction(const std::string& actionName);
+  virtual void performedAction(const std::string &actionName);
 
   /// Sets an action required to be performed by the accessor.
-  virtual void requireAction(const std::string& actionName);
+  virtual void requireAction(const std::string &actionName);
 
   /// Returns a string representation of the current coupling state.
   virtual std::string printCouplingState() const;
@@ -232,9 +230,9 @@ public:
    * is transferred between the solver coupling scheme and the server coupling
    * scheme via sendState and receiveState.
    */
-  virtual void sendState (
-   com::PtrCommunication communication,
-   int                   rankReceiver );
+  virtual void sendState(
+      com::PtrCommunication communication,
+      int                   rankReceiver);
 
   /**
    * @brief Receive the state of the coupling scheme from another remote scheme.
@@ -244,16 +242,16 @@ public:
    * is transferred between the solver coupling scheme and the server coupling
    * scheme via sendState and receiveState.
    */
-  virtual void receiveState (
-   com::PtrCommunication communication,
-   int                   rankSender );
+  virtual void receiveState(
+      com::PtrCommunication communication,
+      int                   rankSender);
 
 private:
   mutable logging::Logger _log{"cplscheme::CompositionalCouplingScheme"};
 
   /// Groups a coupling scheme with additional associated variables.
   struct Scheme {
-    
+
     /// The actual coupling scheme
     PtrCouplingScheme scheme;
 
@@ -268,10 +266,10 @@ private:
     bool onHold;
 
     Scheme(PtrCouplingScheme scheme)
-    : scheme(scheme), onHold(false) {}
+        : scheme(scheme), onHold(false) {}
   };
 
-  typedef std::list<Scheme> Schemes;
+  typedef std::list<Scheme>           Schemes;
   typedef std::list<Scheme>::iterator SchemesIt;
   //typedef std::list<PtrCouplingScheme>::const_iterator ConstSchemesIt;
 
@@ -284,7 +282,7 @@ private:
   SchemesIt _activeSchemesBegin = _couplingSchemes.end();
 
   /// Iterator to behind the end of coupling schemes currently active.
-  SchemesIt _activeSchemesEnd  = _couplingSchemes.end();
+  SchemesIt _activeSchemesEnd = _couplingSchemes.end();
 
   /// Stores time added since last call of advance.
   double _lastAddedTime = 0;
@@ -307,4 +305,5 @@ private:
   void advanceActiveCouplingSchemes();
 };
 
-}} // namespace precice, cplscheme
+} // namespace cplscheme
+} // namespace precice

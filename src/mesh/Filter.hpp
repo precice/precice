@@ -1,7 +1,7 @@
 #pragma once
 
-#include "mesh/Mesh.hpp"
 #include <boost/container/flat_map.hpp>
+#include "mesh/Mesh.hpp"
 
 namespace precice {
 namespace mesh {
@@ -41,7 +41,7 @@ void filterMesh(Mesh &destination, const Mesh &source, UnaryPredicate p)
     int vertexIndex2 = edge.vertex(1).getID();
     if (vertexMap.count(vertexIndex1) == 1 &&
         vertexMap.count(vertexIndex2) == 1) {
-      Edge &e         = destination.createEdge(*vertexMap[vertexIndex1], *vertexMap[vertexIndex2]);
+      Edge &e               = destination.createEdge(*vertexMap[vertexIndex1], *vertexMap[vertexIndex2]);
       edgeMap[edge.getID()] = &e;
     }
   }

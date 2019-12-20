@@ -11,10 +11,8 @@
 
 // ----------------------------------------------------------- CLASS DEFINITION
 
-namespace precice
-{
-namespace acceleration
-{
+namespace precice {
+namespace acceleration {
 
 /**
  * @brief Multi vector quasi-Newton update scheme 
@@ -29,8 +27,7 @@ namespace acceleration
  * MVQN-related data. The data is called "secondary" henceforth and additional
  * old value and data matrices are needed for it.
  */
-class MVQNAcceleration : public BaseQNAcceleration
-{
+class MVQNAcceleration : public BaseQNAcceleration {
 public:
   static const int NO_RESTART = 0;
   static const int RS_ZERO    = 1;
@@ -42,19 +39,19 @@ public:
    * @brief Constructor.
    */
   MVQNAcceleration(
-      double            initialRelaxation,
-      bool              forceInitialRelaxation,
-      int               maxIterationsUsed,
-      int               timestepsReused,
-      int               filter,
-      double            singularityLimit,
-      std::vector<int>  dataIDs,
+      double                  initialRelaxation,
+      bool                    forceInitialRelaxation,
+      int                     maxIterationsUsed,
+      int                     timestepsReused,
+      int                     filter,
+      double                  singularityLimit,
+      std::vector<int>        dataIDs,
       impl::PtrPreconditioner preconditioner,
-      bool              alwaysBuildJacobian,
-      int               imvjRestartType,
-      int               chunkSize,
-      int               RSLSreusedTimesteps,
-      double            RSSVDtruncationEps);
+      bool                    alwaysBuildJacobian,
+      int                     imvjRestartType,
+      int                     chunkSize,
+      int                     RSLSreusedTimesteps,
+      double                  RSSVDtruncationEps);
 
   /**
     * @brief Destructor, empty.
@@ -203,7 +200,7 @@ private:
   /// @brief: Removes one column form the V_RSLS and W_RSLS matrices and adapts _matrixCols_RSLS
   void removeMatrixColumnRSLS(int columnINdex);
 };
-}
-} // namespace precice, acceleration
+} // namespace acceleration
+} // namespace precice
 
 #endif /* PRECICE_NO_MPI */

@@ -3,10 +3,8 @@
 #include "mesh/Mesh.hpp"
 #include "utils/MasterSlave.hpp"
 
-namespace precice
-{
-namespace m2n
-{
+namespace precice {
+namespace m2n {
 GatherScatterCommunication::GatherScatterCommunication(
     com::PtrCommunication com,
     mesh::PtrMesh         mesh)
@@ -55,8 +53,8 @@ void GatherScatterCommunication::closeConnection()
 
 void GatherScatterCommunication::send(
     double const *itemsToSend,
-    size_t  size,
-    int     valueDimension)
+    size_t        size,
+    int           valueDimension)
 {
   PRECICE_TRACE(size);
 
@@ -67,8 +65,8 @@ void GatherScatterCommunication::send(
     }
   } else { // Master or coupling mode
     PRECICE_ASSERT(utils::MasterSlave::getRank() == 0);
-    mesh::Mesh::VertexDistribution  &vertexDistribution = _mesh->getVertexDistribution();
-    int                              globalSize         = _mesh->getGlobalNumberOfVertices() * valueDimension;
+    mesh::Mesh::VertexDistribution &vertexDistribution = _mesh->getVertexDistribution();
+    int                             globalSize         = _mesh->getGlobalNumberOfVertices() * valueDimension;
     PRECICE_DEBUG("Global Size = " << globalSize);
     std::vector<double> globalItemsToSend(globalSize);
 
@@ -159,15 +157,15 @@ void GatherScatterCommunication::receive(
 }
 
 void GatherScatterCommunication::acceptPreConnection(
-  std::string const &acceptorName,
-  std::string const &requesterName)
+    std::string const &acceptorName,
+    std::string const &requesterName)
 {
   PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
 }
 
 void GatherScatterCommunication::requestPreConnection(
-  std::string const &acceptorName,
-  std::string const &requesterName)
+    std::string const &acceptorName,
+    std::string const &requesterName)
 {
   PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
 }

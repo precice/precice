@@ -2,11 +2,11 @@
 
 #include <Eigen/Core>
 
+#include "acceleration/impl/ParallelMatrixOperations.hpp"
 #include "com/Communication.hpp"
 #include "com/MPIDirectCommunication.hpp"
 #include "com/MPIPortsCommunication.hpp"
 #include "cplscheme/Constants.hpp"
-#include "acceleration/impl/ParallelMatrixOperations.hpp"
 #include "testing/Fixtures.hpp"
 #include "testing/Testing.hpp"
 #include "utils/MasterSlave.hpp"
@@ -41,7 +41,7 @@ void validate_result_equals_reference(
   }
 }
 
-BOOST_AUTO_TEST_CASE(ParVectorOperations, * boost::unit_test::fixture<testing::MasterComFixture>())
+BOOST_AUTO_TEST_CASE(ParVectorOperations, *boost::unit_test::fixture<testing::MasterComFixture>())
 {
   int              n_global = 10;
   int              n_local;
@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE(ParVectorOperations, * boost::unit_test::fixture<testing::M
   BOOST_TEST(testing::equals(dotproduct, 7.069617899295469));
 }
 
-BOOST_AUTO_TEST_CASE(ParallelMatrixMatrixOp,  * boost::unit_test::fixture<testing::MasterComFixture>())
+BOOST_AUTO_TEST_CASE(ParallelMatrixMatrixOp, *boost::unit_test::fixture<testing::MasterComFixture>())
 {
   com::PtrCommunication _cyclicCommLeft  = com::PtrCommunication(new com::MPIPortsCommunication("."));
   com::PtrCommunication _cyclicCommRight = com::PtrCommunication(new com::MPIPortsCommunication("."));

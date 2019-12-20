@@ -27,11 +27,11 @@ extern "C" {
  *                               from 0 and end with solverProcessSize - 1.
  * @param[in] solverProcessSize The number of solver processes using preCICE.
  */
-void precicec_createSolverInterface (
-  const char* participantName,
-  const char* configFileName,
-  int         solverProcessIndex,
-  int         solverProcessSize );
+void precicec_createSolverInterface(
+    const char *participantName,
+    const char *configFileName,
+    int         solverProcessIndex,
+    int         solverProcessSize);
 
 ///@}
 
@@ -56,7 +56,7 @@ void precicec_initialize_data();
  * @param[in] computedTimestepLength Length of timestep computed by solver.
  * @return Maximal length of next timestep to be computed by solver.
  */
-double precicec_advance ( double computedTimestepLength );
+double precicec_advance(double computedTimestepLength);
 
 /**
  * @brief Finalizes the coupling to the coupling supervisor.
@@ -90,7 +90,7 @@ int precicec_isReadDataAvailable();
  *
  * @return true (->1) if new data has to be written.
  */
-int precicec_isWriteDataRequired ( double computedTimestepLength );
+int precicec_isWriteDataRequired(double computedTimestepLength);
 
 /**
  * @brief Returns true (->1), if the coupling timestep is completed.
@@ -117,7 +117,7 @@ int precicec_hasToEvaluateFineModel();
  * @param[in] action the name of the action
  * @returns whether the action is required
  */
-int precicec_isActionRequired ( const char* action );
+int precicec_isActionRequired(const char *action);
 
 /**
  * @brief Indicates preCICE that a required action has been fulfilled by a solver.
@@ -125,7 +125,7 @@ int precicec_isActionRequired ( const char* action );
  *
  * @param[in] action the name of the action
  */
-void precicec_fulfilledAction ( const char* action );
+void precicec_fulfilledAction(const char *action);
 
 ///@}
 
@@ -139,12 +139,12 @@ void precicec_fulfilledAction ( const char* action );
  * @param[in] meshName the name of the mesh
  * @returns whether the mesh is used.
  */
-int precicec_hasMesh ( const char* meshName );
+int precicec_hasMesh(const char *meshName);
 
 /**
  * @brief Returns id belonging to the given mesh name
  */
-int precicec_getMeshID ( const char* meshName );
+int precicec_getMeshID(const char *meshName);
 
 /**
  * @brief Creates a mesh vertex
@@ -153,9 +153,9 @@ int precicec_getMeshID ( const char* meshName );
  * @param[in] position a pointer to the coordinates of the vertex.
  * @returns the id of the created vertex
  */
-int precicec_setMeshVertex (
-  int           meshID,
-  const double* position );
+int precicec_setMeshVertex(
+    int           meshID,
+    const double *position);
 
 /**
  * @brief Returns the number of vertices of a mesh.
@@ -163,7 +163,7 @@ int precicec_setMeshVertex (
  * @param[in] meshID the id of the mesh
  * @returns the amount of the vertices of the mesh
  */
-int precicec_getMeshVertexSize ( int meshID );
+int precicec_getMeshVertexSize(int meshID);
 
 /**
  * @brief Creates multiple mesh vertices
@@ -176,11 +176,11 @@ int precicec_getMeshVertexSize ( int meshID );
  *
  * @param[out] ids The ids of the created vertices
  */
-void precicec_setMeshVertices (
-  int           meshID,
-  int           size,
-  const double* positions,
-  int*          ids );
+void precicec_setMeshVertices(
+    int           meshID,
+    int           size,
+    const double *positions,
+    int *         ids);
 
 /**
  * @brief Get vertex positions for multiple vertex ids from a given mesh
@@ -192,11 +192,11 @@ void precicec_setMeshVertices (
  *            The 2D-format is (d0x, d0y, d1x, d1y, ..., dnx, dny)
  *            The 3D-format is (d0x, d0y, d0z, d1x, d1y, d1z, ..., dnx, dny, dnz)
  */
-void precicec_getMeshVertices (
-  int        meshID,
-  int        size,
-  const int* ids,
-  double*    positions );
+void precicec_getMeshVertices(
+    int        meshID,
+    int        size,
+    const int *ids,
+    double *   positions);
 
 /**
  * @brief Gets mesh vertex IDs from positions.
@@ -209,10 +209,10 @@ void precicec_getMeshVertices (
  * @param[out] ids IDs corresponding to positions.
  */
 void precicec_getMeshVertexIDsFromPositions(
-  int           meshID,
-  int           size,
-  const double* positions,
-  int*          ids );
+    int           meshID,
+    int           size,
+    const double *positions,
+    int *         ids);
 
 /**
  * @brief Sets mesh edge from vertex IDs, returns edge ID.
@@ -223,10 +223,10 @@ void precicec_getMeshVertexIDsFromPositions(
  *
  * @return the ID of the edge
  */
-int precicec_setMeshEdge (
-  int meshID,
-  int firstVertexID,
-  int secondVertexID );
+int precicec_setMeshEdge(
+    int meshID,
+    int firstVertexID,
+    int secondVertexID);
 
 /**
  * @brief Sets mesh triangle from edge IDs
@@ -236,20 +236,20 @@ int precicec_setMeshEdge (
  * @param[in] secondEdgeID ID of the second edge of the triangle
  * @param[in] thirdEdgeID ID of the third edge of the triangle
  */
-void precicec_setMeshTriangle (
-  int meshID,
-  int firstEdgeID,
-  int secondEdgeID,
-  int thirdEdgeID );
+void precicec_setMeshTriangle(
+    int meshID,
+    int firstEdgeID,
+    int secondEdgeID,
+    int thirdEdgeID);
 
 /**
  * @brief Sets a triangle from vertex IDs. Creates missing edges.
  */
-void precicec_setMeshTriangleWithEdges (
-  int meshID,
-  int firstVertexID,
-  int secondVertexID,
-  int thirdVertexID );
+void precicec_setMeshTriangleWithEdges(
+    int meshID,
+    int firstVertexID,
+    int secondVertexID,
+    int thirdVertexID);
 
 /**
  * @brief Sets mesh Quad from edge IDs.
@@ -260,13 +260,12 @@ void precicec_setMeshTriangleWithEdges (
  * @param[in] thirdEdgeID ID of the third edge of the Quad
  * @param[in] fourthEdgeID ID of the forth edge of the Quad
  */
-void precicec_setMeshQuad (
-   int meshID,
-   int firstEdgeID,
-   int secondEdgeID,
-   int thirdEdgeID,
-   int fourthEdgeID );
-
+void precicec_setMeshQuad(
+    int meshID,
+    int firstEdgeID,
+    int secondEdgeID,
+    int thirdEdgeID,
+    int fourthEdgeID);
 
 /**
   * @brief Sets surface mesh quadrangle from vertex IDs.
@@ -277,12 +276,12 @@ void precicec_setMeshQuad (
   * @param[in] thirdVertexID ID of the third vertex of the Quad
   * @param[in] fourthVertexID ID of the fourth vertex of the Quad
  */
-void precicec_setMeshQuadWithEdges (
-     int meshID,
-     int firstVertexID,
-     int secondVertexID,
-     int thirdVertexID,
-     int fourthVertexID );
+void precicec_setMeshQuadWithEdges(
+    int meshID,
+    int firstVertexID,
+    int secondVertexID,
+    int thirdVertexID,
+    int fourthVertexID);
 
 ///@}
 
@@ -292,7 +291,7 @@ void precicec_setMeshQuadWithEdges (
 /**
  * @brief Returns true (!=0), if data with given name is available.
  */
-int precicec_hasData ( const char* dataName, int meshID );
+int precicec_hasData(const char *dataName, int meshID);
 
 /**
  * @brief Returns the data id belonging to the given name.
@@ -301,17 +300,17 @@ int precicec_hasData ( const char* dataName, int meshID );
  * configuration file. The data id obtained can be used to read and write
  * data to and from the coupling mesh.
  */
-int precicec_getDataID ( const char* dataName, int meshID );
+int precicec_getDataID(const char *dataName, int meshID);
 
 /**
  * @brief Computes and maps all read data mapped to mesh with given ID.
  */
-void precicec_mapReadDataTo ( int toMeshID );
+void precicec_mapReadDataTo(int toMeshID);
 
 /**
  * @brief Computes and maps all write data mapped from mesh with given ID.
  */
-void precicec_mapWriteDataFrom ( int fromMeshID );
+void precicec_mapWriteDataFrom(int fromMeshID);
 
 /**
  * @brief Writes vector data values given as block.
@@ -324,11 +323,11 @@ void precicec_mapWriteDataFrom ( int fromMeshID );
  * @param[in] size Number of indices, and number of values * dimensions.
  * @param[in] values Values of the data to be written.
  */
-void precicec_writeBlockVectorData (
-  int           dataID,
-  int           size,
-  const int*    valueIndices,
-  const double* values );
+void precicec_writeBlockVectorData(
+    int           dataID,
+    int           size,
+    const int *   valueIndices,
+    const double *values);
 
 /**
  * @brief Writes vectorial foating point data to the coupling mesh.
@@ -337,19 +336,19 @@ void precicec_writeBlockVectorData (
  * @param[in] dataPosition Spatial position of the data to be written.
  * @param[in] dataValue Vectorial data value to be written.
  */
-void precicec_writeVectorData (
-  int           dataID,
-  int           valueIndex,
-  const double* dataValue );
+void precicec_writeVectorData(
+    int           dataID,
+    int           valueIndex,
+    const double *dataValue);
 
 /**
  * @brief See precice::SolverInterface::writeBlockScalarData().
  */
-void precicec_writeBlockScalarData (
-  int           dataID,
-  int           size,
-  const int*    valueIndices,
-  const double* values );
+void precicec_writeBlockScalarData(
+    int           dataID,
+    int           size,
+    const int *   valueIndices,
+    const double *values);
 
 /**
  * @brief Writes scalar floating point data to the coupling mesh.
@@ -358,10 +357,10 @@ void precicec_writeBlockScalarData (
  * @param[in] dataPosition Spatial position of the data to be written.
  * @param[in] dataValue Scalar data value to be written.
  */
-void precicec_writeScalarData (
-  int    dataID,
-  int    valueIndex,
-  double dataValue );
+void precicec_writeScalarData(
+    int    dataID,
+    int    valueIndex,
+    double dataValue);
 
 /**
  * @brief Reads vector data values given as block.
@@ -375,11 +374,11 @@ void precicec_writeScalarData (
  * @param[in] valueIndices Indices (from setReadPosition()) of data values.
  * @param[in] values Values of the data to be read.
  */
-void precicec_readBlockVectorData (
-  int        dataID,
-  int        size,
-  const int* valueIndices,
-  double*    values );
+void precicec_readBlockVectorData(
+    int        dataID,
+    int        size,
+    const int *valueIndices,
+    double *   values);
 
 /**
  * @brief Reads vectorial foating point data from the coupling mesh.
@@ -388,19 +387,19 @@ void precicec_readBlockVectorData (
  * @param[in] dataPosition Position where the read data should be mapped to.
  * @param[out] dataValue Vectorial data value read.
  */
-void precicec_readVectorData (
-  int     dataID,
-  int     valueIndex,
-  double* dataValue );
+void precicec_readVectorData(
+    int     dataID,
+    int     valueIndex,
+    double *dataValue);
 
 /**
  * @brief See precice::SolverInterface::readBlockScalarData().
  */
-void precicec_readBlockScalarData (
-  int        dataID,
-  int        size,
-  const int* valueIndices,
-  double*    values );
+void precicec_readBlockScalarData(
+    int        dataID,
+    int        size,
+    const int *valueIndices,
+    double *   values);
 
 /**
  * @brief Reads scalar foating point data from the coupling mesh.
@@ -409,19 +408,19 @@ void precicec_readBlockScalarData (
  * @param[in] dataPosition Position where the read data should be mapped to.
  * @param[out] dataValue Scalar data value read.
  */
-void precicec_readScalarData (
-  int     dataID,
-  int     valueIndex,
-  double* dataValue );
+void precicec_readScalarData(
+    int     dataID,
+    int     valueIndex,
+    double *dataValue);
 
 // @brief Name of action for writing initial data.
-const char* precicec_actionWriteInitialData();
+const char *precicec_actionWriteInitialData();
 
 // @brief Name of action for writing iteration checkpoint
-const char* precicec_actionWriteIterationCheckpoint();
+const char *precicec_actionWriteIterationCheckpoint();
 
 // @brief Name of action for reading iteration checkpoint.
-const char* precicec_actionReadIterationCheckpoint();
+const char *precicec_actionReadIterationCheckpoint();
 
 #ifdef __cplusplus
 }

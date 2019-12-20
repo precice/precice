@@ -14,7 +14,7 @@ void toMarkdown(std::ostream &out, const XMLTag &tag);
 void toDTD(std::ostream &out, const XMLTag &tag);
 
 /// Prints the XML reference for the given tag.
-void toDocumentation(std::ostream & out, const XMLTag &tag);
+void toDocumentation(std::ostream &out, const XMLTag &tag);
 
 } // namespace xml
 } // namespace precice

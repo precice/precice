@@ -5,14 +5,11 @@
 
 #include "math/differences.hpp"
 
-namespace precice
-{
-namespace mesh
-{
+namespace precice {
+namespace mesh {
 
 /// Vertex of a mesh.
-class Vertex
-{
+class Vertex {
 public:
   /// Constructor for vertex
   template <typename VECTOR_T>
