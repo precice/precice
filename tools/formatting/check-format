@@ -6,13 +6,21 @@
 
 FILES="$(find . -type f -name \*.hpp -or -name \*.h -or -name \*.cpp -or -name \*.c)"
 
+echo "Checking $(echo "$FILES" | wc -l) files. This may take a while."
 DIFFS=""
-for cfile in $FILES; do
-    DIFF=$(diff "$cfile" <(clang-format-8 -style=file $cfile))
-    if [[ -n "$DIFF" ]]; then
-        DIFFS="$DIFFS $cfile"
-    fi
-done
+if command -v parallel > /dev/null; then
+    CMD='clang-format-8 -style=file --output-replacements-xml {} | grep "<replacement " > /dev/null && echo {}'
+    DIFFS=$( echo "$FILES" | parallel --group "$CMD" )
+else
+    echo "Install GNU parallel to format in parallel."
+    for cfile in $FILES; do
+        clang-format-8 -style=file --output-replacements-xml $cfile | grep "<replacement " > /dev/null
+        RET=$?
+        if [ $RET -eq 0 ]; then
+            DIFFS="$DIFFS $cfile"
+        fi
+    done
+fi
 
 if [[ -n "$DIFFS" ]]; then
     echo "The following files are not formatted correctly:"
