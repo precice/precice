@@ -5,7 +5,7 @@ project(preCICE VERSION 1.6.1 LANGUAGES CXX)
 
 #
 # Overview of this configuration
-# 
+#
 # PREAMBLE
 # Setup Options
 # Find Mandatory Dependencies
@@ -30,6 +30,7 @@ include(CheckCXX11Library)
 include(CopyTargetProperty)
 include(XSDKMacros)
 include(Validation)
+include(GNUInstallDirs)
 
 # CMake Policies
 
@@ -197,7 +198,7 @@ if(CMAKE_VERSION VERSION_LESS "3.11")
   endif()
 endif()
 
-# Add precice as an empty target 
+# Add precice as an empty target
 add_library(precice ${preCICE_DUMMY})
 set_target_properties(precice PROPERTIES
   # precice is a C++11 project
@@ -267,7 +268,7 @@ include(${CMAKE_CURRENT_LIST_DIR}/cmake/DetectGitRevision.cmake)
 configure_file("${PROJECT_SOURCE_DIR}/src/precice/impl/versions.hpp.in" "${PROJECT_BINARY_DIR}/src/precice/impl/versions.hpp" @ONLY)
 
 # Includes Configuration
-target_include_directories(precice PUBLIC 
+target_include_directories(precice PUBLIC
   $<BUILD_INTERFACE:${preCICE_SOURCE_DIR}/src>
   $<BUILD_INTERFACE:${preCICE_BINARY_DIR}/src>
   $<INSTALL_INTERFACE:include>
@@ -282,7 +283,7 @@ include(${CMAKE_CURRENT_LIST_DIR}/src/sources.cmake)
 #
 
 add_executable(binprecice "src/drivers/main.cpp")
-target_link_libraries(binprecice 
+target_link_libraries(binprecice
   PRIVATE
   Threads::Threads
   precice
@@ -365,18 +366,18 @@ include(${CMAKE_CURRENT_LIST_DIR}/src/tests.cmake)
 # binprecice - the precice binary
 install(TARGETS precice binprecice
   EXPORT preciceTargets
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION bin
-  PUBLIC_HEADER DESTINATION include/precice
-  INCLUDES DESTINATION include/precice
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}/static
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+  PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/precice
+  INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/precice
   )
 
 if(PRECICE_InstallTest)
   # Install the testprecice target
   install(TARGETS testprecice
     EXPORT preciceTargets
-    RUNTIME DESTINATION bin
+    RUNTIME DESTINATION  ${CMAKE_INSTALL_BINDIR}
     )
 
   # Install the resources necessary for the tests
@@ -396,7 +397,7 @@ endif()
 install(EXPORT preciceTargets
   FILE preciceTargets.cmake
   NAMESPACE precice::
-  DESTINATION lib/cmake/precice
+  DESTINATION  ${CMAKE_INSTALL_LIBDIR}/cmake/precice
   )
 
 # Generate a Package Config File for precice
@@ -408,7 +409,7 @@ write_basic_package_version_file("preciceConfigVersion.cmake"
 
 # Install the Config and the ConfigVersion files
 install(FILES "cmake/preciceConfig.cmake" "${preCICE_BINARY_DIR}/preciceConfigVersion.cmake"
-  DESTINATION lib/cmake/precice
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/precice
   )
 
 # Setup the config in the build directory
@@ -477,7 +478,7 @@ configure_file(
   "lib/pkgconfig/libprecice.pc"
   @ONLY
   )
-install(DIRECTORY "${preCICE_BINARY_DIR}/lib/pkgconfig" 
+install(DIRECTORY "${preCICE_BINARY_DIR}/lib/pkgconfig"
   DESTINATION lib
 )
 
