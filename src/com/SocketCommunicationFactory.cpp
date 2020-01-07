@@ -3,10 +3,8 @@
 #include "SocketCommunicationFactory.hpp"
 #include "com/SharedPointer.hpp"
 
-namespace precice
-{
-namespace com
-{
+namespace precice {
+namespace com {
 SocketCommunicationFactory::SocketCommunicationFactory(
     unsigned short     portNumber,
     bool               reuseAddress,

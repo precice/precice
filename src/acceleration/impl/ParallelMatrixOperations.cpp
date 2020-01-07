@@ -1,15 +1,12 @@
 #ifndef PRECICE_NO_MPI
 
-#include "com/MPIPortsCommunication.hpp"
 #include "acceleration/impl/ParallelMatrixOperations.hpp"
+#include "com/MPIPortsCommunication.hpp"
 #include "utils/MasterSlave.hpp"
 
-namespace precice
-{
-namespace acceleration
-{
-namespace impl
-{
+namespace precice {
+namespace acceleration {
+namespace impl {
 
 void ParallelMatrixOperations::initialize(
     com::PtrCommunication leftComm,
@@ -33,6 +30,8 @@ void ParallelMatrixOperations::initialize(
   }
 }
 
-}}} // namespace precice, acceleration, impl
+} // namespace impl
+} // namespace acceleration
+} // namespace precice
 
 #endif

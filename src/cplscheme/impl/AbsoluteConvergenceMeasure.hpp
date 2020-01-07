@@ -4,23 +4,17 @@
 #include "logging/Logger.hpp"
 #include "utils/MasterSlave.hpp"
 
-namespace precice
-{
-namespace cplscheme
-{
-namespace tests
-{
+namespace precice {
+namespace cplscheme {
+namespace tests {
 class AbsoluteConvergenceMeasureTest;
 }
-}
-}
+} // namespace cplscheme
+} // namespace precice
 
-namespace precice
-{
-namespace cplscheme
-{
-namespace impl
-{
+namespace precice {
+namespace cplscheme {
+namespace impl {
 
 /**
  * @brief Measures the convergence from an old data set to a new one.
@@ -32,8 +26,7 @@ namespace impl
  * For a description of how to perform the measurement, see class
  * ConvergenceMeasure.
  */
-class AbsoluteConvergenceMeasure : public ConvergenceMeasure
-{
+class AbsoluteConvergenceMeasure : public ConvergenceMeasure {
 public:
   explicit AbsoluteConvergenceMeasure(double convergenceLimit);
 
@@ -91,6 +84,6 @@ private:
 
   bool _isConvergence = false;
 };
-}
-}
-} // namespace precice, cplscheme, impl
+} // namespace impl
+} // namespace cplscheme
+} // namespace precice

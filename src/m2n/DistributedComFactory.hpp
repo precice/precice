@@ -4,12 +4,9 @@
 
 #include <memory>
 
-namespace precice
-{
-namespace m2n
-{
-class DistributedComFactory
-{
+namespace precice {
+namespace m2n {
+class DistributedComFactory {
 
 public:
   using SharedPointer = std::shared_ptr<DistributedComFactory>;

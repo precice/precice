@@ -1,35 +1,32 @@
 #include "Triangle.hpp"
+#include <Eigen/Dense>
+#include <Eigen/Geometry>
+#include <boost/range/concepts.hpp>
 #include "mesh/Edge.hpp"
 #include "mesh/Vertex.hpp"
 #include "utils/EigenIO.hpp"
-#include <boost/range/concepts.hpp>
-#include <Eigen/Dense>
-#include <Eigen/Geometry>
 
-namespace precice
-{
-namespace mesh
-{
+namespace precice {
+namespace mesh {
 
-BOOST_CONCEPT_ASSERT((boost::RandomAccessIteratorConcept<Triangle::iterator>));
-BOOST_CONCEPT_ASSERT((boost::RandomAccessIteratorConcept<Triangle::const_iterator>));
-BOOST_CONCEPT_ASSERT((boost::RandomAccessRangeConcept<Triangle>));
-BOOST_CONCEPT_ASSERT((boost::RandomAccessRangeConcept<const Triangle>));
+BOOST_CONCEPT_ASSERT((boost::RandomAccessIteratorConcept<Triangle::iterator>) );
+BOOST_CONCEPT_ASSERT((boost::RandomAccessIteratorConcept<Triangle::const_iterator>) );
+BOOST_CONCEPT_ASSERT((boost::RandomAccessRangeConcept<Triangle>) );
+BOOST_CONCEPT_ASSERT((boost::RandomAccessRangeConcept<const Triangle>) );
 
 Triangle::Triangle(
     Edge &edgeOne,
     Edge &edgeTwo,
     Edge &edgeThree,
     int   id)
-    : PropertyContainer(),
-      _edges({&edgeOne, &edgeTwo, &edgeThree}),
+    : _edges({&edgeOne, &edgeTwo, &edgeThree}),
       _id(id),
       _normal(Eigen::VectorXd::Zero(edgeOne.getDimensions()))
 {
   PRECICE_ASSERT(edgeOne.getDimensions() == edgeTwo.getDimensions(),
-            edgeOne.getDimensions(), edgeTwo.getDimensions());
+                 edgeOne.getDimensions(), edgeTwo.getDimensions());
   PRECICE_ASSERT(edgeTwo.getDimensions() == edgeThree.getDimensions(),
-            edgeTwo.getDimensions(), edgeThree.getDimensions());
+                 edgeTwo.getDimensions(), edgeThree.getDimensions());
   PRECICE_ASSERT(getDimensions() == 3, getDimensions());
 
   // Determine vertex map
@@ -68,23 +65,23 @@ Triangle::Triangle(
   }
 
   PRECICE_ASSERT(
-          (&edge(0).vertex(_vertexMap[0]) != &edge(1).vertex(_vertexMap[1])) &&
+      (&edge(0).vertex(_vertexMap[0]) != &edge(1).vertex(_vertexMap[1])) &&
           (&edge(0).vertex(_vertexMap[0]) != &edge(2).vertex(_vertexMap[2])) &&
           (&edge(1).vertex(_vertexMap[1]) != &edge(2).vertex(_vertexMap[2])),
-          "Triangle vertices are not unique!");
+      "Triangle vertices are not unique!");
 }
 
 const Eigen::VectorXd Triangle::computeNormal(bool flip)
 {
-    Eigen::Vector3d vectorA = edge(1).getCenter() - edge(0).getCenter();
-    Eigen::Vector3d vectorB = edge(2).getCenter() - edge(0).getCenter();
-    // Compute cross-product of vector A and vector B
-    auto normal = vectorA.cross(vectorB);
-    if (flip){
-      normal *= -1.0; // Invert direction if counterclockwise
-    }
-    _normal = normal.normalized();
-    return normal;
+  Eigen::Vector3d vectorA = edge(1).getCenter() - edge(0).getCenter();
+  Eigen::Vector3d vectorB = edge(2).getCenter() - edge(0).getCenter();
+  // Compute cross-product of vector A and vector B
+  auto normal = vectorA.cross(vectorB);
+  if (flip) {
+    normal *= -1.0; // Invert direction if counterclockwise
+  }
+  _normal = normal.normalized();
+  return normal;
 }
 
 int Triangle::getDimensions() const
@@ -99,7 +96,7 @@ const Eigen::VectorXd &Triangle::getNormal() const
 
 const Eigen::VectorXd Triangle::getCenter() const
 {
-  return (_edges[0]->getCenter() +_edges[1]->getCenter() + _edges[2]->getCenter()) / 3.0;
+  return (_edges[0]->getCenter() + _edges[1]->getCenter() + _edges[2]->getCenter()) / 3.0;
 }
 
 double Triangle::getEnclosingRadius() const
@@ -110,26 +107,26 @@ double Triangle::getEnclosingRadius() const
                    (center - vertex(2).getCoords()).norm()});
 }
 
-bool Triangle::operator==(const Triangle& other) const
+bool Triangle::operator==(const Triangle &other) const
 {
-    return math::equals(_normal, other._normal) &&
-        std::is_permutation(_edges.begin(), _edges.end(), other._edges.begin(),
-                [](const Edge* e1, const Edge* e2){return *e1 == *e2;});
+  return math::equals(_normal, other._normal) &&
+         std::is_permutation(_edges.begin(), _edges.end(), other._edges.begin(),
+                             [](const Edge *e1, const Edge *e2) { return *e1 == *e2; });
 }
 
-bool Triangle::operator!=(const Triangle& other) const
+bool Triangle::operator!=(const Triangle &other) const
 {
-    return !(*this == other);
+  return !(*this == other);
 }
 
-std::ostream& operator<<(std::ostream& os, const Triangle& t)
+std::ostream &operator<<(std::ostream &os, const Triangle &t)
 {
-    using utils::eigenio::wkt;
-    return os << "POLYGON (("
-              << t.vertex(0).getCoords().transpose().format(wkt()) << ", "
-              << t.vertex(1).getCoords().transpose().format(wkt()) << ", "
-              << t.vertex(2).getCoords().transpose().format(wkt()) << ", "
-              << t.vertex(0).getCoords().transpose().format(wkt()) << "))";
+  using utils::eigenio::wkt;
+  return os << "POLYGON (("
+            << t.vertex(0).getCoords().transpose().format(wkt()) << ", "
+            << t.vertex(1).getCoords().transpose().format(wkt()) << ", "
+            << t.vertex(2).getCoords().transpose().format(wkt()) << ", "
+            << t.vertex(0).getCoords().transpose().format(wkt()) << "))";
 }
 
 } // namespace mesh

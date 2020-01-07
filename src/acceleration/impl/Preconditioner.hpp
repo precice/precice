@@ -6,12 +6,9 @@
 #include "cplscheme/SharedPointer.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice
-{
-namespace acceleration
-{
-namespace impl
-{
+namespace precice {
+namespace acceleration {
+namespace impl {
 
 /**
  * @brief Interface for preconditioner variants that can be applied to quasi-Newton acceleration schemes.
@@ -22,21 +19,21 @@ namespace impl
  * revert() reverts the weighting, i.e. transforms from balanced values back to physical values.
  * update() updates the preconditioner, after every FSI iteration (though some variants might only be updated after a complete timestep)
  */
-class Preconditioner
-{
+class Preconditioner {
 public:
   Preconditioner(int maxNonConstTimesteps)
-    : _maxNonConstTimesteps(maxNonConstTimesteps)
-  {}
-      
+      : _maxNonConstTimesteps(maxNonConstTimesteps)
+  {
+  }
+
   /// Destructor, empty.
   virtual ~Preconditioner() {}
-  
+
   /**
    * @brief initialize the preconditioner
    * @param size of the pp system (e.g. rows of V)
    */
-  virtual void initialize(std::vector<size_t> & svs)
+  virtual void initialize(std::vector<size_t> &svs)
   {
     PRECICE_TRACE();
 
@@ -238,4 +235,6 @@ private:
   logging::Logger _log{"acceleration::Preconditioner"};
 };
 
-}}} // namespace precice, acceleration
+} // namespace impl
+} // namespace acceleration
+} // namespace precice

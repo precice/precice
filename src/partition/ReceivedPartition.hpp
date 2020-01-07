@@ -6,10 +6,8 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
 
-namespace precice
-{
-namespace partition
-{
+namespace precice {
+namespace partition {
 
 /**
  * @brief A partition that is computed from a mesh received from another participant.
@@ -17,8 +15,7 @@ namespace partition
  * A mesh is received by the master rank and re-partitioned among all slave ranks.
  * Afterwards necessary distribution data structures are set up.
  */
-class ReceivedPartition : public Partition
-{
+class ReceivedPartition : public Partition {
 public:
   /// Defines the typ of geometric filter used
   enum GeometricFilter {
@@ -42,14 +39,6 @@ public:
   virtual void compute() override;
 
 private:
-  /// Create filteredMesh from the filtered _mesh.
-  /*
-   * Copies all vertices/edges/triangles that are either contained in the bounding box
-   * or tagged to the filteredMesh. Edges and triangles are copied, when ALL vertices
-   * are part of the filteredMesh i.e. their IDs are contained in vertexMap.
-   */
-  void filterMesh(mesh::Mesh &filteredMesh, const bool filterByBB);
-  
   /// Sets _bb to the union with the mesh from fromMapping resp. toMapping, also enlage by _safetyFactor
   void prepareBoundingBox();
 

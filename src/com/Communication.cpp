@@ -1,10 +1,8 @@
 #include "Communication.hpp"
 #include "Request.hpp"
 
-namespace precice
-{
-namespace com
-{
+namespace precice {
+namespace com {
 /**
  * @attention This method modifies the input buffer.
  */
@@ -13,7 +11,7 @@ void Communication::reduceSum(double *itemsToSend, double *itemsToReceive, int s
   PRECICE_TRACE(size);
 
   std::copy(itemsToSend, itemsToSend + size, itemsToReceive);
-  
+
   // receive local results from slaves
   for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
     auto request = aReceive(itemsToSend, size, rank + _rankOffset);
@@ -62,7 +60,7 @@ void Communication::allreduceSum(double *itemsToSend, double *itemsToReceive, in
   PRECICE_TRACE(size);
 
   std::copy(itemsToSend, itemsToSend + size, itemsToReceive);
-  
+
   // receive local results from slaves
   for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
     auto request = aReceive(itemsToSend, size, rank + _rankOffset);
@@ -75,7 +73,7 @@ void Communication::allreduceSum(double *itemsToSend, double *itemsToReceive, in
   // send reduced result to all slaves
   std::vector<PtrRequest> requests(getRemoteCommunicatorSize());
   for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
-    auto request = aSend(itemsToReceive, size, rank + _rankOffset);
+    auto request   = aSend(itemsToReceive, size, rank + _rankOffset);
     requests[rank] = request;
   }
   Request::wait(requests);
@@ -110,7 +108,7 @@ void Communication::allreduceSum(double itemToSend, double &itemToReceive)
   // send reduced result to all slaves
   std::vector<PtrRequest> requests(getRemoteCommunicatorSize());
   for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
-    auto request = aSend(&itemToReceive, 1, rank + _rankOffset);
+    auto request   = aSend(&itemToReceive, 1, rank + _rankOffset);
     requests[rank] = request;
   }
   Request::wait(requests);
@@ -142,7 +140,7 @@ void Communication::allreduceSum(int itemToSend, int &itemToReceive)
   // send reduced result to all slaves
   std::vector<PtrRequest> requests(getRemoteCommunicatorSize());
   for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
-    auto request = aSend(&itemToReceive, 1, rank + _rankOffset);
+    auto request   = aSend(&itemToReceive, 1, rank + _rankOffset);
     requests[rank] = request;
   }
   Request::wait(requests);
@@ -165,7 +163,7 @@ void Communication::broadcast(const int *itemsToSend, int size)
   std::vector<PtrRequest> requests(getRemoteCommunicatorSize());
 
   for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
-    auto request = aSend(itemsToSend, size, rank + _rankOffset);
+    auto request   = aSend(itemsToSend, size, rank + _rankOffset);
     requests[rank] = request;
   }
 
@@ -186,7 +184,7 @@ void Communication::broadcast(int itemToSend)
   std::vector<PtrRequest> requests(getRemoteCommunicatorSize());
 
   for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
-    auto request = aSend(itemToSend, rank + _rankOffset);
+    auto request   = aSend(itemToSend, rank + _rankOffset);
     requests[rank] = request;
   }
 
@@ -206,7 +204,7 @@ void Communication::broadcast(const double *itemsToSend, int size)
   std::vector<PtrRequest> requests(getRemoteCommunicatorSize());
 
   for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
-    auto request = aSend(itemsToSend, size, rank + _rankOffset);
+    auto request   = aSend(itemsToSend, size, rank + _rankOffset);
     requests[rank] = request;
   }
 
@@ -228,7 +226,7 @@ void Communication::broadcast(double itemToSend)
   std::vector<PtrRequest> requests(getRemoteCommunicatorSize());
 
   for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
-    auto request = aSend(itemToSend, rank + _rankOffset);
+    auto request   = aSend(itemToSend, rank + _rankOffset);
     requests[rank] = request;
   }
 
@@ -259,7 +257,7 @@ void Communication::broadcast(bool &itemToReceive, int rankBroadcaster)
 void Communication::broadcast(std::vector<int> const &v)
 {
   broadcast(static_cast<int>(v.size()));
-  broadcast(const_cast<int*>(v.data()), v.size()); // make it send vector
+  broadcast(const_cast<int *>(v.data()), v.size()); // make it send vector
 }
 
 void Communication::broadcast(std::vector<int> &v, int rankBroadcaster)

@@ -4,10 +4,8 @@
 
 // ----------------------------------------------------------- CLASS DEFINITION
 
-namespace precice
-{
-namespace acceleration
-{
+namespace precice {
+namespace acceleration {
 
 /**
  * @brief Multi vector quasi-Newton update scheme 
@@ -22,20 +20,19 @@ namespace acceleration
  * MVQN-related data. The data is called "secondary" henceforth and additional
  * old value and data matrices are needed for it.
  */
-class BroydenAcceleration : public BaseQNAcceleration
-{
+class BroydenAcceleration : public BaseQNAcceleration {
 public:
   /**
    * @brief Constructor.
    */
   BroydenAcceleration(
-      double            initialRelaxation,
-      bool              forceInitialRelaxation,
-      int               maxIterationsUsed,
-      int               timestepsReused,
-      int               filter,
-      double            singularityLimit,
-      std::vector<int>  dataIDs,
+      double                  initialRelaxation,
+      bool                    forceInitialRelaxation,
+      int                     maxIterationsUsed,
+      int                     timestepsReused,
+      int                     filter,
+      double                  singularityLimit,
+      std::vector<int>        dataIDs,
       impl::PtrPreconditioner preconditioner);
 
   /**
@@ -80,5 +77,5 @@ private:
   virtual void computeUnderrelaxationSecondaryData(DataMap &cplData);
   //void computeNewtonFactorsQRDecomposition(DataMap& cplData, Eigen::VectorXd& update);
 };
-}
-} // namespace precice, acceleration
+} // namespace acceleration
+} // namespace precice

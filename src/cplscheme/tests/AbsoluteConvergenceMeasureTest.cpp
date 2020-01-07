@@ -10,7 +10,7 @@ BOOST_AUTO_TEST_CASE(AbsoluteConvergenceMeasureTest, *testing::OnMaster())
 {
   using Eigen::Vector3d;
   // Create convergence measure for Vector data
-  double                           convergenceLimit = 9.0;
+  double                                      convergenceLimit = 9.0;
   cplscheme::impl::AbsoluteConvergenceMeasure measure(convergenceLimit);
 
   // Create data sets for old state of data and new state of data

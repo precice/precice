@@ -17,4 +17,5 @@ using PtrMesh              = std::shared_ptr<Mesh>;
 using PtrDataConfiguration = std::shared_ptr<DataConfiguration>;
 using PtrMeshConfiguration = std::shared_ptr<MeshConfiguration>;
 
-}} // namespace precice, mesh
+} // namespace mesh
+} // namespace precice

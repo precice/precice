@@ -6,12 +6,10 @@ namespace precice {
 namespace mesh {
 namespace impl {
 
-
 /** Holding a reference to a Mesh it is a functor for packing
  *  PrimitiveIndex into AABBs.
  */
-class AABBGenerator
-{
+class AABBGenerator {
 public:
   /// Constructs a generator for a given mesh
   explicit AABBGenerator(const mesh::Mesh &mesh)
@@ -56,7 +54,7 @@ private:
  * @param conti the Container to index
  */
 template <typename Container, typename Generator = AABBGenerator>
-void indexPrimitive(PrimitiveRTree &rtree, const Generator& gen, const Container &conti)
+void indexPrimitive(PrimitiveRTree &rtree, const Generator &gen, const Container &conti)
 {
   using ValueType = typename std::remove_reference<typename std::remove_cv<typename Container::value_type>::type>::type;
   for (size_t i = 0; i < conti.size(); ++i) {
@@ -65,4 +63,6 @@ void indexPrimitive(PrimitiveRTree &rtree, const Generator& gen, const Container
   }
 }
 
-}}}
+} // namespace impl
+} // namespace mesh
+} // namespace precice

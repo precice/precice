@@ -14,23 +14,23 @@ BOOST_AUTO_TEST_CASE(StringWrap)
   std::string wrapped = wrapText(text, 4, 0);
   BOOST_TEST(wrapped == std::string("123456\n1234567\n12345678"));
 
-  text = "1234 1234 1234";
+  text    = "1234 1234 1234";
   wrapped = wrapText(text, 5, 0);
   BOOST_TEST(wrapped == std::string("1234\n1234\n1234"));
 
-  text = "1234 123 5";
+  text    = "1234 123 5";
   wrapped = wrapText(text, 5, 0);
   BOOST_TEST(wrapped == std::string("1234\n123 5"));
 
-  text = "1234 1234 1234";
+  text    = "1234 1234 1234";
   wrapped = wrapText(text, 7, 2);
   BOOST_TEST(wrapped == std::string("1234\n  1234\n  1234"));
 
-  text = "1234 1234 1234";
+  text    = "1234 1234 1234";
   wrapped = wrapText(text, 5, 2);
   BOOST_TEST(wrapped == std::string("1234\n  1234\n  1234"));
 
-  text = "12345678 1234 1 1234";
+  text    = "12345678 1234 1 1234";
   wrapped = wrapText(text, 8, 2);
   BOOST_TEST(wrapped == std::string("12345678\n  1234 1\n  1234"));
 }
@@ -64,7 +64,6 @@ BOOST_AUTO_TEST_CASE(ConvertStringToBool)
   BOOST_TEST(convertStringToBool("yes") == true);
   BOOST_TEST(convertStringToBool("no") == false);
 }
-
 
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()

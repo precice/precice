@@ -182,14 +182,9 @@ target_sources(precice
     src/mesh/Data.hpp
     src/mesh/Edge.cpp
     src/mesh/Edge.hpp
-    src/mesh/Group.cpp
-    src/mesh/Group.hpp
-    src/mesh/Merge.cpp
-    src/mesh/Merge.hpp
+    src/mesh/Filter.hpp
     src/mesh/Mesh.cpp
     src/mesh/Mesh.hpp
-    src/mesh/PropertyContainer.cpp
-    src/mesh/PropertyContainer.hpp
     src/mesh/Quad.cpp
     src/mesh/Quad.hpp
     src/mesh/RTree.cpp

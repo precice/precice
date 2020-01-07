@@ -1,15 +1,13 @@
 #ifndef PRECICE_NO_PYTHON
+#include "PythonAction.hpp"
 #include <Python.h>
 #include <numpy/arrayobject.h>
-#include "PythonAction.hpp"
+#include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
-#include "mesh/Data.hpp"
 
-namespace precice
-{
-namespace action
-{
+namespace precice {
+namespace action {
 
 PythonAction::PythonAction(
     Timing               timing,
@@ -81,7 +79,7 @@ void PythonAction::performAction(double time,
     if (PyErr_Occurred()) {
       PyErr_Print();
       PRECICE_ERROR("Error occurred during call of function "
-            << "performAction() python module \"" << _moduleName << "\"!");
+                    << "performAction() python module \"" << _moduleName << "\"!");
     }
   }
 
@@ -108,7 +106,7 @@ void PythonAction::performAction(double time,
       if (PyErr_Occurred()) {
         PyErr_Print();
         PRECICE_ERROR("Error occurred during call of function "
-              << "vertexCallback() python module \"" << _moduleName << "\"!");
+                      << "vertexCallback() python module \"" << _moduleName << "\"!");
       }
     }
     Py_DECREF(vertexArgs);
@@ -120,7 +118,7 @@ void PythonAction::performAction(double time,
     if (PyErr_Occurred()) {
       PyErr_Print();
       PRECICE_ERROR("Error occurred during call of function "
-            << "postAction() in python module \"" << _moduleName << "\"!");
+                    << "postAction() in python module \"" << _moduleName << "\"!");
     }
     Py_DECREF(postActionArgs);
   }

@@ -2,13 +2,18 @@
 # Call this script to format every c[pp] & h[pp] file
 # in the parent directory using clang-format
 
-FILES="$(find . -type f -name \*.hpp -or -name \*.h -or -name \*.cpp -or -name \*.c)"
-SPIN=0
-echo "Formatting files"
-for cfile in $FILES
-do
-    clang-format -style=file -i $cfile
-    echo -n "."
-done
+FILES=$(find . -type f -name \*.hpp -or -name \*.h -or -name \*.cpp -or -name \*.c)
+echo "Formatting $(echo "$FILES" | wc -l) files"
+if command -v parallel > /dev/null ; then
+    echo "$FILES" | parallel "clang-format-8 -style=file -i {} ; echo -n ."
+else
+    echo "Install GNU parallel to format in parallel."
+    for cfile in $FILES
+    do
+        clang-format-8 -style=file -i $cfile
+        echo -n "."
+    done
+fi
+
 echo -e "\nDone"
 exit 0

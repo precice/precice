@@ -5,12 +5,19 @@ All notable changes to this project will be documented in this file. For future 
 ## develop
 
 - Added support for python 3 in python actions
+- Simplify parallel configuration
+  - automatically add `master:mpi-single` for parallel participant if necessary
+  - no longer require `gather-scatter` distribution type for a `m2n` with at least one serial participant
+  - automatically choose suitable RBF implementation based on whether preCICE was built with PETSc and whether the participant is serial or parallel 
 - Added a generator for markdown references `binprecice md`.
 - Refactored the XML documentation generation out of the `xml::XMLAttribute` and `xml::XMLTag` classes into `xml/Printer.[ch]pp`.
+- Changed the internal handling of Meshes by removing sub-meshes, the type hierarchy based on `mesh::PropertyContainer`, and the obsolete `mesh::Group` and `mesh::Merge`.
+  This improves memory consumption, dramatically reduces allocations and improves locality when traversing primitives.
 - drop official python2 support for python bindings ([remove tests](https://github.com/precice/systemtests/commit/dba924447996574967b2295cf652fb32bec58020)).
 - Move python bindings to independent repository: [`precice/python-bindings`](https://github.com/precice/python-bindings)
 - End support for deprecated python bindings [`precice`](https://github.com/precice/precice/tree/v1.6.1/src/precice/bindings/python) and [`PySolverInterface`](https://github.com/precice/precice/tree/v1.6.1/src/precice/bindings/PySolverInterface). 
 - Only support a single version of the python bindings from now on provided in [`precice/python-bindings`](https://github.com/precice/python-bindings). Package [`precice_future`](https://github.com/precice/precice/blob/v1.6.1/src/precice/bindings/python_future/setup.py#L14) (previous to `v2.0.0`) is renamed to [`precice`](https://github.com/precice/python-bindings/blob/3b9aec6c529814e6904a6a4697cf92388d4c4bf0/setup.py#L18) (from `v2.0.0`).
+- Introduce preCICE-MATLAB bindings (https://github.com/precice/precice/pull/494, https://github.com/precice/precice/pull/580) and provide them in [`precice/matlab-bindings`](https://github.com/precice/matlab-bindings).
 
 ## 1.6.1
 

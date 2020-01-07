@@ -1,39 +1,37 @@
 #pragma once
 
-#include "SharedPointer.hpp"
-#include "io/TXTTableWriter.hpp"
-#include "mesh/SharedPointer.hpp"
-#include "logging/Logger.hpp"
 #include <string>
 #include <vector>
+#include "SharedPointer.hpp"
+#include "io/TXTTableWriter.hpp"
+#include "logging/Logger.hpp"
+#include "mesh/SharedPointer.hpp"
 
 namespace precice {
 namespace mesh {
 class Vertex;
 }
-}
+} // namespace precice
 
 namespace precice {
 namespace impl {
 
 /// Observes and exports coordinates of a point on the geometry.
-class WatchPoint
-{
+class WatchPoint {
 public:
-
   /**
    * @brief Constructor.
    *
    * @param[in] meshToWatch Mesh to be watched, can be empty on construction.
    */
-  WatchPoint (
-    Eigen::VectorXd    pointCoords,
-    mesh::PtrMesh      meshToWatch,
-    const std::string& exportFilename );
+  WatchPoint(
+      Eigen::VectorXd    pointCoords,
+      mesh::PtrMesh      meshToWatch,
+      const std::string &exportFilename);
 
-  const mesh::PtrMesh& mesh() const;
-  
-  const std::string& filename() const;
+  const mesh::PtrMesh &mesh() const;
+
+  const std::string &filename() const;
 
   /// Initializes the watch point for exporting point data.
   void initialize();
@@ -42,7 +40,6 @@ public:
   void exportPointData(double time);
 
 private:
-
   logging::Logger _log{"impl::WatchPoint"};
 
   Eigen::VectorXd _point;
@@ -55,20 +52,21 @@ private:
 
   std::vector<double> _weights;
 
-  std::vector<mesh::Vertex*> _vertices;
+  std::vector<mesh::Vertex *> _vertices;
 
   std::vector<mesh::PtrData> _dataToExport;
 
   /// Holds the information if this processor is the closest
   bool _isClosest = true;
 
-  void getValue (
-    Eigen::VectorXd&  value,
-    mesh::PtrData&    data );
+  void getValue(
+      Eigen::VectorXd &value,
+      mesh::PtrData &  data);
 
-  void getValue (
-    double&        value,
-    mesh::PtrData& data );
+  void getValue(
+      double &       value,
+      mesh::PtrData &data);
 };
 
-}} // namespace precice, impl
+} // namespace impl
+} // namespace precice

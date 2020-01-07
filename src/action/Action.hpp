@@ -1,12 +1,10 @@
 #pragma once
 
-#include "mesh/SharedPointer.hpp"
 #include "mapping/Mapping.hpp"
+#include "mesh/SharedPointer.hpp"
 
-namespace precice
-{
-namespace action
-{
+namespace precice {
+namespace action {
 
 /**
  * @brief Abstract base class for configurable actions on data and/or meshes.
@@ -15,8 +13,7 @@ namespace action
  * precice::SolverInterface::initializeData(), and precice::SolverInterface::advance(). They can change meshes and in particular
  * data values.
  */
-class Action
-{
+class Action {
 public:
   /// Defines the time and place of application of the action.
   enum Timing {
@@ -28,8 +25,8 @@ public:
   };
 
   Action(
-      Timing               timing,
-      const mesh::PtrMesh &mesh,
+      Timing                            timing,
+      const mesh::PtrMesh &             mesh,
       mapping::Mapping::MeshRequirement requirement)
       : _timing(timing),
         _mesh(mesh),
@@ -39,14 +36,13 @@ public:
 
   Action(
       Timing               timing,
-      const mesh::PtrMesh &mesh
-      )
+      const mesh::PtrMesh &mesh)
       : _timing(timing),
         _mesh(mesh)
   {
   }
 
-  Action& operator=(Action &&) = delete;
+  Action &operator=(Action &&) = delete;
 
   /// Destructor, empty.
   virtual ~Action() {}

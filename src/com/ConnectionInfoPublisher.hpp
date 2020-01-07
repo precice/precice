@@ -5,38 +5,32 @@
 namespace precice {
 namespace com {
 
-
-class ConnectionInfoPublisher
-{
+class ConnectionInfoPublisher {
 public:
-  
   ConnectionInfoPublisher(std::string acceptorName,
                           std::string requesterName,
-                          int rank,
+                          int         rank,
                           std::string addressDirectory) noexcept
-    :
-    acceptorName(std::move(acceptorName)),
-    requesterName(std::move(requesterName)),
-    rank(rank),
-    addressDirectory(std::move(addressDirectory))
-  {}
-
+      : acceptorName(std::move(acceptorName)),
+        requesterName(std::move(requesterName)),
+        rank(rank),
+        addressDirectory(std::move(addressDirectory))
+  {
+  }
 
   ConnectionInfoPublisher(std::string acceptorName,
                           std::string requesterName,
                           std::string addressDirectory) noexcept
-    :
-    acceptorName(std::move(acceptorName)),
-    requesterName(std::move(requesterName)),
-    addressDirectory(std::move(addressDirectory))
-  {}
-
+      : acceptorName(std::move(acceptorName)),
+        requesterName(std::move(requesterName)),
+        addressDirectory(std::move(addressDirectory))
+  {
+  }
 
 protected:
-
   std::string const acceptorName;
   std::string const requesterName;
-  int const rank = -1;
+  int const         rank = -1;
   std::string const addressDirectory;
 
   /// Returns the file name for the connection information.
@@ -49,54 +43,48 @@ protected:
   mutable logging::Logger _log{"com::ConnectionInfoPublisher"};
 };
 
-
 /// Reads the connection info for the given participant/rank information
-class ConnectionInfoReader : public ConnectionInfoPublisher
-{
+class ConnectionInfoReader : public ConnectionInfoPublisher {
 public:
-  
   ConnectionInfoReader(std::string acceptorName,
                        std::string requesterName,
-                       int rank,
+                       int         rank,
                        std::string addressDirectory) noexcept
-    : ConnectionInfoPublisher(acceptorName, requesterName, rank, addressDirectory)
-  {}
-
+      : ConnectionInfoPublisher(acceptorName, requesterName, rank, addressDirectory)
+  {
+  }
 
   ConnectionInfoReader(std::string acceptorName,
                        std::string requesterName,
                        std::string addressDirectory) noexcept
-    : ConnectionInfoPublisher(acceptorName, requesterName, addressDirectory)
-  {}
-
+      : ConnectionInfoPublisher(acceptorName, requesterName, addressDirectory)
+  {
+  }
 
   /// Reads the info from the connection info file. Will block, if the the file is not present.
   std::string read() const;
 };
 
-
 /// Writes the connection info for the given participant/rank information.
 /**
  * The file is removed, when the object is destroyed.
  */
-class ConnectionInfoWriter : public ConnectionInfoPublisher
-{
+class ConnectionInfoWriter : public ConnectionInfoPublisher {
 public:
-  
   ConnectionInfoWriter(std::string acceptorName,
                        std::string requesterName,
-                       int rank,
+                       int         rank,
                        std::string addressDirectory) noexcept
-    : ConnectionInfoPublisher(acceptorName, requesterName, rank, addressDirectory)
-  {}
-  
-  
-  ConnectionInfoWriter(std::string acceptorName,
-                       std::string requesterName,
-                       std::string addressDirectory) noexcept
-    : ConnectionInfoPublisher(acceptorName, requesterName, addressDirectory)
-  {}
+      : ConnectionInfoPublisher(acceptorName, requesterName, rank, addressDirectory)
+  {
+  }
 
+  ConnectionInfoWriter(std::string acceptorName,
+                       std::string requesterName,
+                       std::string addressDirectory) noexcept
+      : ConnectionInfoPublisher(acceptorName, requesterName, addressDirectory)
+  {
+  }
 
   /// Removes the connection info file and the directories ./precice-run/[hash], is empty.
   ~ConnectionInfoWriter();
@@ -106,9 +94,8 @@ public:
    * which is determined by acceptorName, requesterName, rank, addressDirectory
    * set at construction.
    */
-  void write(std::string const & info) const;
+  void write(std::string const &info) const;
 };
 
-
-}
-}
+} // namespace com
+} // namespace precice

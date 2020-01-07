@@ -1,14 +1,14 @@
 #include "CouplingSchemeConfiguration.hpp"
+#include "acceleration/Acceleration.hpp"
+#include "acceleration/config/AccelerationConfiguration.hpp"
 #include "cplscheme/CompositionalCouplingScheme.hpp"
 #include "cplscheme/MultiCouplingScheme.hpp"
 #include "cplscheme/ParallelCouplingScheme.hpp"
 #include "cplscheme/SerialCouplingScheme.hpp"
 #include "cplscheme/SharedPointer.hpp"
-#include "acceleration/config/AccelerationConfiguration.hpp"
 #include "cplscheme/impl/AbsoluteConvergenceMeasure.hpp"
 #include "cplscheme/impl/ConvergenceMeasure.hpp"
 #include "cplscheme/impl/MinIterationConvergenceMeasure.hpp"
-#include "acceleration/Acceleration.hpp"
 #include "cplscheme/impl/RelativeConvergenceMeasure.hpp"
 #include "cplscheme/impl/ResidualRelativeConvergenceMeasure.hpp"
 #include "m2n/M2N.hpp"
@@ -21,10 +21,8 @@
 #include "xml/XMLAttribute.hpp"
 #include "xml/XMLTag.hpp"
 
-namespace precice
-{
-namespace cplscheme
-{
+namespace precice {
+namespace cplscheme {
 
 using precice::impl::PtrParticipant;
 
@@ -139,14 +137,14 @@ const PtrCouplingScheme &CouplingSchemeConfiguration::getCouplingScheme(
     const std::string &participantName) const
 {
   PRECICE_CHECK(utils::contained(participantName, _couplingSchemes),
-        "No coupling scheme defined for "
-            << "participant \"" << participantName << "\"!");
+                "No coupling scheme defined for "
+                    << "participant \"" << participantName << "\"!");
   return _couplingSchemes.find(participantName)->second;
 }
 
 void CouplingSchemeConfiguration::xmlTagCallback(
-    const xml::ConfigurationContext& context,
-    xml::XMLTag &tag)
+    const xml::ConfigurationContext &context,
+    xml::XMLTag &                    tag)
 {
   PRECICE_TRACE(tag.getFullName());
   if (tag.getNamespace() == TAG) {
@@ -160,7 +158,7 @@ void CouplingSchemeConfiguration::xmlTagCallback(
     bool control = tag.getBooleanAttributeValue(ATTR_CONTROL);
     if (control) {
       PRECICE_CHECK(not _config.setController,
-            "Only one controller per MultiCoupling can be defined");
+                    "Only one controller per MultiCoupling can be defined");
       _config.controller    = tag.getStringAttributeValue(ATTR_NAME);
       _config.setController = true;
     } else {
@@ -250,8 +248,8 @@ void CouplingSchemeConfiguration::xmlTagCallback(
 }
 
 void CouplingSchemeConfiguration::xmlEndTagCallback(
-    const xml::ConfigurationContext& context,
-    xml::XMLTag &tag)
+    const xml::ConfigurationContext &context,
+    xml::XMLTag &                    tag)
 {
   PRECICE_TRACE(tag.getFullName());
   if (tag.getNamespace() == TAG) {
@@ -295,7 +293,7 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
       _config = Config();
     } else if (_config.type == VALUE_MULTI) {
       PRECICE_CHECK(_config.setController,
-            "One controller per MultiCoupling need to be defined");
+                    "One controller per MultiCoupling need to be defined");
       for (std::string &accessor : _config.participants) {
         PtrCouplingScheme scheme = createMultiCouplingScheme(accessor);
         addCouplingScheme(scheme, accessor);
@@ -403,13 +401,13 @@ void CouplingSchemeConfiguration::addTransientLimitTags(
   tagMaxTimesteps.addAttribute(attrValueMaxTimesteps);
   tag.addSubtag(tagMaxTimesteps);
 
-  XMLTag               tagTimestepLength(*this, TAG_TIMESTEP_LENGTH, XMLTag::OCCUR_ONCE);
-  auto attrValueTimestepLength = makeXMLAttribute(ATTR_VALUE, CouplingScheme::UNDEFINED_TIMESTEP_LENGTH);
+  XMLTag tagTimestepLength(*this, TAG_TIMESTEP_LENGTH, XMLTag::OCCUR_ONCE);
+  auto   attrValueTimestepLength = makeXMLAttribute(ATTR_VALUE, CouplingScheme::UNDEFINED_TIMESTEP_LENGTH);
   tagTimestepLength.addAttribute(attrValueTimestepLength);
   XMLAttribute<int> attrValidDigits(ATTR_VALID_DIGITS, 10);
   tagTimestepLength.addAttribute(attrValidDigits);
   auto attrMethod = makeXMLAttribute(ATTR_METHOD, VALUE_FIXED)
-      .setOptions({ VALUE_FIXED, VALUE_FIRST_PARTICIPANT});
+                        .setOptions({VALUE_FIXED, VALUE_FIRST_PARTICIPANT});
   tagTimestepLength.addAttribute(attrMethod);
   tag.addSubtag(tagTimestepLength);
 }
@@ -506,16 +504,16 @@ void CouplingSchemeConfiguration::addBaseAttributesTagConvergenceMeasure(
 {
   using namespace xml;
   auto attrData = XMLAttribute<std::string>(ATTR_DATA)
-      .setDocumentation("Data to be measured.");
+                      .setDocumentation("Data to be measured.");
   tag.addAttribute(attrData);
   auto attrMesh = XMLAttribute<std::string>(ATTR_MESH)
-      .setDocumentation("Mesh holding the data.");
+                      .setDocumentation("Mesh holding the data.");
   tag.addAttribute(attrMesh);
   auto attrSuffices = makeXMLAttribute(ATTR_SUFFICES, false)
-      .setDocumentation("If true, suffices to lead to convergence.");
+                          .setDocumentation("If true, suffices to lead to convergence.");
   tag.addAttribute(attrSuffices);
   auto attrLevel = makeXMLAttribute(ATTR_LEVEL, 0)
-      .setDocumentation("For multi-level based coupling schemes: Indicates the coarseness level of the associated coupling data for this convergence measure.");
+                       .setDocumentation("For multi-level based coupling schemes: Indicates the coarseness level of the associated coupling data for this convergence measure.");
   tag.addAttribute(attrLevel);
 }
 
@@ -617,7 +615,7 @@ mesh::PtrData CouplingSchemeConfiguration::getData(
     }
   }
   PRECICE_ERROR("Data \"" << dataName << "\" used by mesh \""
-                  << meshName << "\" is not configured!");
+                          << meshName << "\" is not configured!");
 }
 
 PtrCouplingScheme CouplingSchemeConfiguration::createSerialExplicitCouplingScheme(
@@ -811,7 +809,7 @@ CouplingSchemeConfiguration::getTimesteppingMethod(
   //    return constants::SECOND_PARTICIPANT_SETS_DT;
   //  }
   PRECICE_ERROR("Unknown timestepping method \""
-        << method << "\"!");
+                << method << "\"!");
 }
 
 void CouplingSchemeConfiguration::addDataToBeExchanged(
@@ -905,8 +903,8 @@ void CouplingSchemeConfiguration::checkIfDataIsExchanged(
     }
   }
   PRECICE_CHECK(hasFound,
-        "You need to exchange every data that you use for convergence measures"
-            << " and/or the iteration acceleration");
+                "You need to exchange every data that you use for convergence measures"
+                    << " and/or the iteration acceleration");
 }
 
 bool CouplingSchemeConfiguration::checkIfDataIsCoarse(
@@ -954,5 +952,5 @@ bool CouplingSchemeConfiguration::checkIfDataIsCoarse(
     PRECICE_ERROR("Data ID " << id << " is not contained in the exchange data for the fine model and no coarse model optimization method is defined.");
   return true;
 }
-}
-} // namespace precice, cplscheme
+} // namespace cplscheme
+} // namespace precice

@@ -52,7 +52,7 @@ void ExportVTK::exportMesh(std::ofstream &outFile, mesh::Mesh const &mesh)
 
   // Plot vertices
   outFile << "POINTS " << mesh.vertices().size() << " float \n\n";
-  for (mesh::Vertex &vertex : mesh.vertices()) {
+  for (const mesh::Vertex &vertex : mesh.vertices()) {
     writeVertex(vertex.getCoords(), outFile);
   }
   outFile << '\n';
@@ -145,7 +145,7 @@ void ExportVTK::exportData(std::ofstream &outFile, mesh::Mesh const &mesh)
     if (data->getDimensions() > 1) {
       Eigen::VectorXd viewTemp(data->getDimensions());
       outFile << "VECTORS " << data->getName() << " float\n";
-      for (mesh::Vertex &vertex : mesh.vertices()) {
+      for (const mesh::Vertex &vertex : mesh.vertices()) {
         int offset = vertex.getID() * data->getDimensions();
         for (int i = 0; i < data->getDimensions(); i++) {
           viewTemp[i] = values(offset + i);
@@ -163,7 +163,7 @@ void ExportVTK::exportData(std::ofstream &outFile, mesh::Mesh const &mesh)
     } else if (data->getDimensions() == 1) {
       outFile << "SCALARS " << data->getName() << " float\n";
       outFile << "LOOKUP_TABLE default\n";
-      for (mesh::Vertex &vertex : mesh.vertices()) {
+      for (const mesh::Vertex &vertex : mesh.vertices()) {
         outFile << values(vertex.getID()) << '\n';
       }
       outFile << '\n';

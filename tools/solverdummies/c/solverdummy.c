@@ -5,60 +5,59 @@
 
 int main(int argc, char **argv)
 {
-  double dt = 0.0;
-  int solverProcessIndex = 0;
-  int solverProcessSize = 1;
-  int dimensions = -1;
-  double* vertex;
-  int meshID = -1;
-  int dataID = -1;
-  int vertexID = -1;
+  double  dt                 = 0.0;
+  int     solverProcessIndex = 0;
+  int     solverProcessSize  = 1;
+  int     dimensions         = -1;
+  double *vertex;
+  int     meshID   = -1;
+  int     dataID   = -1;
+  int     vertexID = -1;
 
-  if(argc != 4){
-    printf ("Usage: ./exec precice-config participant-name mesh-name \n");
+  if (argc != 4) {
+    printf("Usage: ./exec precice-config participant-name mesh-name \n");
     return 1;
   }
-         
-  const char* configFileName = argv[1]; 
-  const char* participantName = argv[2]; 
-  const char* meshName = argv[3];        
+
+  const char *configFileName  = argv[1];
+  const char *participantName = argv[2];
+  const char *meshName        = argv[3];
 
   printf("DUMMY: Running solver dummy with preCICE config file \"%s\", participant name \"%s\", and mesh name \"%s\".\n",
          configFileName, participantName, meshName);
 
-  const char* writeItCheckp = precicec_actionWriteIterationCheckpoint();
-  const char* readItCheckp = precicec_actionReadIterationCheckpoint();
+  const char *writeItCheckp = precicec_actionWriteIterationCheckpoint();
+  const char *readItCheckp  = precicec_actionReadIterationCheckpoint();
 
   precicec_createSolverInterface(participantName, configFileName, solverProcessIndex, solverProcessSize);
 
   meshID = precicec_getMeshID(meshName);
 
   dimensions = precicec_getDimensions();
-  vertex = malloc(dimensions * sizeof(double));    
+  vertex     = malloc(dimensions * sizeof(double));
 
-  for(int i=0; i<dimensions; i++){
+  for (int i = 0; i < dimensions; i++) {
     vertex[i] = 0.0;
   }
 
   vertexID = precicec_setMeshVertex(meshID, vertex);
-  free(vertex);    
+  free(vertex);
 
   dt = precicec_initialize();
 
-  while(precicec_isCouplingOngoing()){
-  
-    if(precicec_isActionRequired(writeItCheckp)){
+  while (precicec_isCouplingOngoing()) {
+
+    if (precicec_isActionRequired(writeItCheckp)) {
       printf("DUMMY: Writing iteration checkpoint");
       precicec_fulfilledAction(writeItCheckp);
     }
-  
+
     dt = precicec_advance(dt);
-    
-    if(precicec_isActionRequired(readItCheckp)){
+
+    if (precicec_isActionRequired(readItCheckp)) {
       precicec_fulfilledAction(readItCheckp);
       printf("DUMMY: Reading iteration checkpoint");
-    }
-    else{
+    } else {
       printf("DUMMY: Advancing in time");
     }
   }

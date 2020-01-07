@@ -1,6 +1,6 @@
+#include "xml/Printer.hpp"
 #include <iostream>
 #include <regex>
-#include "xml/Printer.hpp"
 #include "xml/XMLAttribute.hpp"
 #include "xml/XMLTag.hpp"
 
@@ -30,7 +30,7 @@ std::string toGHLink(const std::string &heading)
 
 /// Prints the DTD attribute spec for an XMLAttribute given its name.
 template <typename ATTRIBUTE_T>
-std::ostream& printDTD(std::ostream& out, const XMLAttribute<ATTRIBUTE_T> &attr, const std::string &ElementName)
+std::ostream &printDTD(std::ostream &out, const XMLAttribute<ATTRIBUTE_T> &attr, const std::string &ElementName)
 {
   out << "<!ATTLIST " << ElementName << " " << attr.getName() << " CDATA ";
 
@@ -46,7 +46,7 @@ std::ostream& printDTD(std::ostream& out, const XMLAttribute<ATTRIBUTE_T> &attr,
 
 /// Prints the attribute as a markdown table row.
 template <typename ATTRIBUTE_T>
-std::ostream& printMD(std::ostream& out, const XMLAttribute<ATTRIBUTE_T> &attr)
+std::ostream &printMD(std::ostream &out, const XMLAttribute<ATTRIBUTE_T> &attr)
 {
   out << "| " << attr.getName() << " | " << utils::getTypeName(attr.getDefaultValue()) << " | " << attr.getUserDocumentation() << " | ";
   if (attr.hasDefaultValue()) {
@@ -72,7 +72,7 @@ std::ostream& printMD(std::ostream& out, const XMLAttribute<ATTRIBUTE_T> &attr)
 
 /// Prints an example of a given XMLAttribute.
 template <typename ATTRIBUTE_T>
-std::ostream& printExample(std::ostream& out, const XMLAttribute<ATTRIBUTE_T> &attr)
+std::ostream &printExample(std::ostream &out, const XMLAttribute<ATTRIBUTE_T> &attr)
 {
   out << attr.getName() << "=\"";
   if (attr.hasDefaultValue()) {
@@ -86,7 +86,7 @@ std::ostream& printExample(std::ostream& out, const XMLAttribute<ATTRIBUTE_T> &a
 
 /// Prints the xml documentation of a given XMLAttribute
 template <typename ATTRIBUTE_T>
-std::ostream& printDocumentation(std::ostream& out, const XMLAttribute<ATTRIBUTE_T> &attr)
+std::ostream &printDocumentation(std::ostream &out, const XMLAttribute<ATTRIBUTE_T> &attr)
 {
   out << attr.getName() << "=\"{" << utils::getTypeName(attr.getDefaultValue());
   if (attr.hasValidation()) {
@@ -113,7 +113,7 @@ std::ostream& printDocumentation(std::ostream& out, const XMLAttribute<ATTRIBUTE
 /** Prints the dtd of a given XMLTag.
  * Also prints the doctype if start is true.
  */
-std::ostream& printDTD(std::ostream& out, const XMLTag &tag, bool start = false)
+std::ostream &printDTD(std::ostream &out, const XMLTag &tag, bool start = false)
 {
   if (start)
     out << "<!DOCTYPE " << tag.getFullName() << " [\n";
@@ -125,7 +125,7 @@ std::ostream& printDTD(std::ostream& out, const XMLTag &tag, bool start = false)
     out << "(";
 
     bool first = true;
-    for (auto const& subtag : tag.getSubtags()) {
+    for (auto const &subtag : tag.getSubtags()) {
 
       std::string occurrenceChar;
 
@@ -168,7 +168,7 @@ std::ostream& printDTD(std::ostream& out, const XMLTag &tag, bool start = false)
   }
 
   if (not tag.getSubtags().empty()) {
-    for (const auto& subtag : tag.getSubtags()) {
+    for (const auto &subtag : tag.getSubtags()) {
       printDTD(out, *subtag);
     }
   }
@@ -185,24 +185,29 @@ std::ostream& printDTD(std::ostream& out, const XMLTag &tag, bool start = false)
  * For the sake of readability, the example depth is trucated.
  * level is used to trucate and for indentation purposes.
  */
-std::ostream& printExample(std::ostream& out, const XMLTag &tag, int level)
+std::ostream &printExample(std::ostream &out, const XMLTag &tag, int level)
 {
-  std::string        prefix(level * 2, ' ');
+  std::string prefix(level * 2, ' ');
   out << prefix << '<' << tag.getFullName();
   for (const auto &pair : tag.getDoubleAttributes()) {
-    out << ' '; printExample(out, pair.second);
+    out << ' ';
+    printExample(out, pair.second);
   }
   for (const auto &pair : tag.getIntAttributes()) {
-    out << ' '; printExample(out, pair.second);
+    out << ' ';
+    printExample(out, pair.second);
   }
   for (const auto &pair : tag.getStringAttributes()) {
-    out << ' '; printExample(out, pair.second);
+    out << ' ';
+    printExample(out, pair.second);
   }
   for (const auto &pair : tag.getBooleanAttributes()) {
-    out << ' '; printExample(out, pair.second);
+    out << ' ';
+    printExample(out, pair.second);
   }
   for (const auto &pair : tag.getEigenVectorXdAttributes()) {
-    out << ' '; printExample(out, pair.second);
+    out << ' ';
+    printExample(out, pair.second);
   }
   if (tag.getSubtags().empty()) {
     out << "/>";
@@ -237,7 +242,7 @@ std::ostream& printExample(std::ostream& out, const XMLTag &tag, int level)
  * @param[in] level the level of nesting
  * @param[in] occurrences the occuences of tags, required to generate links
  */
-std::ostream& printMD(std::ostream& out, const XMLTag &tag, int level, std::map<std::string, int> &occurrences)
+std::ostream &printMD(std::ostream &out, const XMLTag &tag, int level, std::map<std::string, int> &occurrences)
 {
   out << std::string(level, '#') << ' ' << tag.getFullName() << "\n\n";
 
@@ -320,7 +325,7 @@ std::ostream& printMD(std::ostream& out, const XMLTag &tag, int level, std::map<
 /** Print the markdown reference for a given XMLTag.
  * @note Use this as an initial call
  */
-std::ostream& printMD(std::ostream& out, const XMLTag &tag, int level = 1)
+std::ostream &printMD(std::ostream &out, const XMLTag &tag, int level = 1)
 {
   std::map<std::string, int> occurrences;
   printMD(out, tag, level, occurrences);
@@ -328,7 +333,7 @@ std::ostream& printMD(std::ostream& out, const XMLTag &tag, int level = 1)
 }
 
 /// Print the xml documentation of an XMLTag at a given level of indentation.
-std::ostream& printDocumentation(std::ostream& out, const XMLTag &tag, int indentation)
+std::ostream &printDocumentation(std::ostream &out, const XMLTag &tag, int indentation)
 {
   const int   linewidth = 1000;
   std::string indent;
@@ -394,30 +399,35 @@ std::ostream& printDocumentation(std::ostream& out, const XMLTag &tag, int inden
   }
 
   for (const auto &pair : tag.getDoubleAttributes()) {
-    tagHead << indent << "   "; printDocumentation(tagHead, pair.second);
+    tagHead << indent << "   ";
+    printDocumentation(tagHead, pair.second);
   }
 
   for (const auto &pair : tag.getIntAttributes()) {
-    tagHead << indent << "   "; printDocumentation(tagHead, pair.second);
+    tagHead << indent << "   ";
+    printDocumentation(tagHead, pair.second);
   }
 
   for (const auto &pair : tag.getStringAttributes()) {
-    tagHead << indent << "   "; printDocumentation(tagHead, pair.second);
+    tagHead << indent << "   ";
+    printDocumentation(tagHead, pair.second);
   }
 
   for (const auto &pair : tag.getBooleanAttributes()) {
-    tagHead << indent << "   "; printDocumentation(tagHead, pair.second);
+    tagHead << indent << "   ";
+    printDocumentation(tagHead, pair.second);
   }
 
   for (const auto &pair : tag.getEigenVectorXdAttributes()) {
-    tagHead << indent << "   "; printDocumentation(tagHead, pair.second);
+    tagHead << indent << "   ";
+    printDocumentation(tagHead, pair.second);
   }
 
   out << utils::wrapText(tagHead.str(), linewidth, indentation + 3);
 
   if (not tag.getSubtags().empty()) {
     out << ">\n\n";
-    for (const auto& subtag : tag.getSubtags()) {
+    for (const auto &subtag : tag.getSubtags()) {
       printDocumentation(out, *subtag, indentation + 3);
     }
     out << indent << "</" << tag.getFullName() << ">\n\n";

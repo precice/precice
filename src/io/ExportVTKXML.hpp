@@ -47,16 +47,16 @@ public:
       std::ofstream &        outFile);
 
   static void writeLine(
-      mesh::Edge &   edge,
-      std::ofstream &outFile);
+      const mesh::Edge &edge,
+      std::ofstream &   outFile);
 
   static void writeTriangle(
-      mesh::Triangle &triangle,
-      std::ofstream & outFile);
+      const mesh::Triangle &triangle,
+      std::ofstream &       outFile);
 
   static void writeQuadrangle(
-      mesh::Quad &   quad,
-      std::ofstream &outFile);
+      const mesh::Quad &quad,
+      std::ofstream &   outFile);
 
 private:
   logging::Logger _log{"io::ExportVTKXML"};

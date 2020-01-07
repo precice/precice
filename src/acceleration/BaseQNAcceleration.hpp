@@ -5,10 +5,10 @@
 #include <fstream>
 #include <sstream>
 
-#include "logging/Logger.hpp"
 #include "acceleration/Acceleration.hpp"
 #include "acceleration/impl/QRFactorization.hpp"
 #include "acceleration/impl/SharedPointer.hpp"
+#include "logging/Logger.hpp"
 
 /* ****************************************************************************
  * 
@@ -45,27 +45,23 @@
 
 // ----------------------------------------------------------- CLASS DEFINITION
 
-namespace precice
-{
-namespace acceleration
-{
+namespace precice {
+namespace acceleration {
 
 /**
  * @brief Base Class for quasi-Newton acceleration schemes
  * 
  */
-class BaseQNAcceleration : public Acceleration
-{
+class BaseQNAcceleration : public Acceleration {
 public:
-
   BaseQNAcceleration(
-      double            initialRelaxation,
-      bool              forceInitialRelaxation,
-      int               maxIterationsUsed,
-      int               timestepsReused,
-      int               filter,
-      double            singularityLimit,
-      std::vector<int>  dataIDs,
+      double                  initialRelaxation,
+      bool                    forceInitialRelaxation,
+      int                     maxIterationsUsed,
+      int                     timestepsReused,
+      int                     filter,
+      double                  singularityLimit,
+      std::vector<int>        dataIDs,
       impl::PtrPreconditioner preconditioner);
 
   /**
@@ -308,5 +304,5 @@ private:
   /// Additional debugging info, is not important for computation:
   int _nbDelCols = 0;
 };
-}
-} // namespace precice, acceleration
+} // namespace acceleration
+} // namespace precice

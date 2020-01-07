@@ -8,13 +8,11 @@
 #include "m2n/GatherScatterComFactory.hpp"
 #include "m2n/M2N.hpp"
 #include "m2n/PointToPointComFactory.hpp"
-#include "xml/XMLAttribute.hpp"
 #include "utils/Helpers.hpp"
+#include "xml/XMLAttribute.hpp"
 
-namespace precice
-{
-namespace m2n
-{
+namespace precice {
+namespace m2n {
 M2NConfiguration::M2NConfiguration(xml::XMLTag &parent)
 {
   using namespace xml;
@@ -27,27 +25,27 @@ M2NConfiguration::M2NConfiguration(xml::XMLTag &parent)
     tag.setDocumentation(doc);
 
     auto attrPort = makeXMLAttribute("port", 0)
-        .setDocumentation(
-                "Port number (16-bit unsigned integer) to be used for socket "
-                "communication. The default is \"0\", what means that the OS will "
-                "dynamically search for a free port (if at least one exists) and "
-                "bind it automatically.");
+                        .setDocumentation(
+                            "Port number (16-bit unsigned integer) to be used for socket "
+                            "communication. The default is \"0\", what means that the OS will "
+                            "dynamically search for a free port (if at least one exists) and "
+                            "bind it automatically.");
     tag.addAttribute(attrPort);
 
     auto attrNetwork = makeXMLAttribute("network", "lo")
-        .setDocumentation(
-                "Interface name to be used for socket communiation. "
-                "Default is \"lo\", i.e., the local host loopback. "
-                "Might be different on supercomputing systems, e.g. \"ib0\" "
-                "for the InfiniBand on SuperMUC. "
-                "For macOS use \"lo0\". ");
+                           .setDocumentation(
+                               "Interface name to be used for socket communiation. "
+                               "Default is \"lo\", i.e., the local host loopback. "
+                               "Might be different on supercomputing systems, e.g. \"ib0\" "
+                               "for the InfiniBand on SuperMUC. "
+                               "For macOS use \"lo0\". ");
     tag.addAttribute(attrNetwork);
 
-   auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, "")
-        .setDocumentation(
-                "Directory where connection information is exchanged. By default, the "
-                "directory of startup is chosen, and both solvers have to be started "
-                "in the same directory.");
+    auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, "")
+                                     .setDocumentation(
+                                         "Directory where connection information is exchanged. By default, the "
+                                         "directory of startup is chosen, and both solvers have to be started "
+                                         "in the same directory.");
     tag.addAttribute(attrExchangeDirectory);
     tags.push_back(tag);
   }
@@ -57,10 +55,10 @@ M2NConfiguration::M2NConfiguration(xml::XMLTag &parent)
     tag.setDocumentation(doc);
 
     auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, "")
-        .setDocumentation(
-                "Directory where connection information is exchanged. By default, the "
-                "directory of startup is chosen, and both solvers have to be started "
-                "in the same directory.");
+                                     .setDocumentation(
+                                         "Directory where connection information is exchanged. By default, the "
+                                         "directory of startup is chosen, and both solvers have to be started "
+                                         "in the same directory.");
     tag.addAttribute(attrExchangeDirectory);
     tags.push_back(tag);
   }
@@ -69,11 +67,11 @@ M2NConfiguration::M2NConfiguration(xml::XMLTag &parent)
     doc = "Communication via MPI with startup in separated communication spaces, using a single communicator";
     tag.setDocumentation(doc);
 
-   auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, "")
-        .setDocumentation(
-                "Directory where connection information is exchanged. By default, the "
-                "directory of startup is chosen, and both solvers have to be started "
-                "in the same directory.");
+    auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, "")
+                                     .setDocumentation(
+                                         "Directory where connection information is exchanged. By default, the "
+                                         "directory of startup is chosen, and both solvers have to be started "
+                                         "in the same directory.");
     tag.addAttribute(attrExchangeDirectory);
     tags.push_back(tag);
   }
@@ -85,39 +83,21 @@ M2NConfiguration::M2NConfiguration(xml::XMLTag &parent)
     tags.push_back(tag);
   }
 
- auto attrDistrTypeBoth = XMLAttribute<std::string>(ATTR_DISTRIBUTION_TYPE)
-      .setDocumentation(
-              "Distribution manner of the M2N communication. "
-              "\"" + VALUE_POINT_TO_POINT + "\" uses a pure point to point communication and is recommended. "
-              "\"" + VALUE_GATHER_SCATTER + "\" should only be used if at least one serial participant is used "
-              "or for troubleshooting.")
-      .setOptions({VALUE_GATHER_SCATTER, VALUE_POINT_TO_POINT})
-      .setDefaultValue(VALUE_POINT_TO_POINT);
+  XMLAttribute<bool> attrEnforce(ATTR_ENFORCE_GATHER_SCATTER, false);
+  attrEnforce.setDocumentation("Enforce the distributed communication to a gather-scatter scheme. "
+                               "Only recommended for trouble shooting.");
 
- auto attrDistrTypeOnly = XMLAttribute<std::string>(ATTR_DISTRIBUTION_TYPE)
-      .setDocumentation(
-              "Distribution manner of the M2N communication ."
-              "\"" + VALUE_POINT_TO_POINT + "\" uses a pure point to point communication and is recommended. "
-              "\"" + VALUE_GATHER_SCATTER + "\" should only be used if at least one serial participant is used "
-              "or for troubleshooting.")
-      .setOptions({VALUE_GATHER_SCATTER, VALUE_POINT_TO_POINT})
-      .setDefaultValue(VALUE_GATHER_SCATTER);
-
- auto attrFrom = XMLAttribute<std::string>("from")
-      .setDocumentation(
-              "First participant name involved in communication. For performance reasons, we recommend to use "
-              "the participant with less ranks at the coupling interface as \"from\" in the m2n communication.");
- auto attrTo = XMLAttribute<std::string>("to")
-      .setDocumentation("Second participant name involved in communication.");
+  auto attrFrom = XMLAttribute<std::string>("from")
+                      .setDocumentation(
+                          "First participant name involved in communication. For performance reasons, we recommend to use "
+                          "the participant with less ranks at the coupling interface as \"from\" in the m2n communication.");
+  auto attrTo = XMLAttribute<std::string>("to")
+                    .setDocumentation("Second participant name involved in communication.");
 
   for (XMLTag &tag : tags) {
     tag.addAttribute(attrFrom);
     tag.addAttribute(attrTo);
-    if (tag.getName() == "mpi" || tag.getName() == "mpi-singleports" || tag.getName() == "sockets") {
-      tag.addAttribute(attrDistrTypeBoth);
-    } else {
-      tag.addAttribute(attrDistrTypeOnly);
-    }
+    tag.addAttribute(attrEnforce);
     parent.addSubtag(tag);
   }
 }
@@ -137,13 +117,13 @@ m2n::PtrM2N M2NConfiguration::getM2N(const std::string &from, const std::string 
   throw std::runtime_error{error.str()};
 }
 
-void M2NConfiguration::xmlTagCallback(const xml::ConfigurationContext& context, xml::XMLTag &tag)
+void M2NConfiguration::xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &tag)
 {
   if (tag.getNamespace() == TAG) {
     std::string from = tag.getStringAttributeValue("from");
     std::string to   = tag.getStringAttributeValue("to");
     checkDuplicates(from, to);
-    std::string distrType = tag.getStringAttributeValue(ATTR_DISTRIBUTION_TYPE);
+    bool enforceGatherScatter = tag.getBooleanAttributeValue(ATTR_ENFORCE_GATHER_SCATTER);
 
     com::PtrCommunicationFactory comFactory;
     com::PtrCommunication        com;
@@ -152,7 +132,7 @@ void M2NConfiguration::xmlTagCallback(const xml::ConfigurationContext& context, 
       int         port    = tag.getIntAttributeValue("port");
 
       PRECICE_CHECK(not utils::isTruncated<unsigned short>(port),
-            "The value given for the \"port\" attribute is not a 16-bit unsigned integer: " << port);
+                    "The value given for the \"port\" attribute is not a 16-bit unsigned integer: " << port);
 
       std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
       comFactory      = std::make_shared<com::SocketCommunicationFactory>(port, false, network, dir);
@@ -182,7 +162,9 @@ void M2NConfiguration::xmlTagCallback(const xml::ConfigurationContext& context, 
     } else if (tag.getName() == "mpi-single") {
 #ifdef PRECICE_NO_MPI
       std::ostringstream error;
-      error << "Communication type \"" << "mpi-single" << "\" can only be used "
+      error << "Communication type \""
+            << "mpi-single"
+            << "\" can only be used "
             << "when preCICE is compiled with argument \"mpi=on\"";
       throw std::runtime_error{error.str()};
 #else
@@ -193,11 +175,9 @@ void M2NConfiguration::xmlTagCallback(const xml::ConfigurationContext& context, 
     PRECICE_ASSERT(com.get() != nullptr);
 
     DistributedComFactory::SharedPointer distrFactory;
-    if (tag.getName() == "mpi-single" || distrType == VALUE_GATHER_SCATTER) {
-      PRECICE_ASSERT(distrType == VALUE_GATHER_SCATTER);
+    if (tag.getName() == "mpi-single" || enforceGatherScatter) {
       distrFactory = std::make_shared<GatherScatterComFactory>(com);
-    } else if (distrType == VALUE_POINT_TO_POINT) {
-      PRECICE_ASSERT(tag.getName() == "mpi" or tag.getName() == "mpi-singleports" or tag.getName() == "sockets");
+    } else {
       distrFactory = std::make_shared<PointToPointComFactory>(comFactory);
     }
     PRECICE_ASSERT(distrFactory.get() != nullptr);
