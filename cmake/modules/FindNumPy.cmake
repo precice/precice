@@ -86,7 +86,7 @@ endif()
 
 find_path(NumPy_INCLUDE_DIR
   numpy/arrayobject.h
-  PATHS "${_numpy_include_dir}" "${PYTHON_INCLUDE_DIR}"
+  HINTS "${_numpy_include_dir}" "${PYTHON_INCLUDE_DIR}"
   PATH_SUFFIXES numpy/core/include
   )
 
