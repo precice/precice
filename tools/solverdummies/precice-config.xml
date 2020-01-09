@@ -36,7 +36,7 @@
       <read-data  name="Forces"     mesh="MeshTwo" />
     </participant>
 
-    <m2n:sockets from="SolverOne" to="SolverTwo" distribution-type="gather-scatter"/>
+    <m2n:sockets from="SolverOne" to="SolverTwo"/>
 
     <coupling-scheme:serial-implicit> 
       <participants first="SolverOne" second="SolverTwo" /> 
