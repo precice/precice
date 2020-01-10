@@ -18,7 +18,6 @@ Configuration::Configuration()
   _tag.addNamespace("mapping");
   _tag.addNamespace("export");
   _tag.addNamespace("action");
-  _tag.addNamespace("server");
   _tag.addNamespace("coupling-scheme");
   _tag.addNamespace("acceleration");
 

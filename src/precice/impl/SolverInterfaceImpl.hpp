@@ -17,9 +17,6 @@
 #include "utils/MultiLock.hpp"
 
 namespace precice {
-namespace impl {
-class RequestManager;
-}
 namespace config {
 class SolverInterfaceConfiguration;
 }
@@ -52,8 +49,7 @@ public:
   SolverInterfaceImpl(
       std::string participantName,
       int         accessorProcessRank,
-      int         accessorCommunicatorSize,
-      bool        serverMode);
+      int         accessorCommunicatorSize);
 
   /// Deleted copy constructor
   SolverInterfaceImpl(SolverInterfaceImpl const &) = delete;
@@ -86,7 +82,6 @@ public:
       std::string participantName,
       int         accessorProcessRank,
       int         accessorCommunicatorSize,
-      bool        serverMode,
       void *      communicator);
 
   /**
@@ -489,9 +484,6 @@ public:
   /// Returns a handle to a created mesh.
   MeshHandle getMeshHandle(const std::string &meshName);
 
-  /// Runs the solver interface in server mode.
-  void runServer();
-
   /// Returns the name of the accessor
   std::string getAccessorName() const
   {
@@ -524,16 +516,7 @@ private:
   /// Spatial dimensions of problem.
   int _dimensions = 0;
 
-  /// If true, the interface is run as server for another interface
-  bool _serverMode;
-
-  /// If true, the interface uses a server to operate on coupling data.
-  bool _clientMode = false;
-
   utils::MultiLock<int> _meshLock;
-
-  /// Communication when for client-server mode.
-  //com::Communication::SharedPointer _clientServerCommunication;
 
   /// mesh name to mesh ID mapping.
   std::map<std::string, int> _meshIDs;
@@ -550,16 +533,6 @@ private:
 
   /// Counts calls to advance for plotting.
   long int _numberAdvanceCalls = 0;
-
-  //  // @brief Locks the next receive operation of the server to a specific client.
-  //  int _lockServerToClient;
-
-  /// Manages client-server requests, when a server is used.
-  std::shared_ptr<RequestManager> _requestManager;
-
-  // @brief In case of a server lock (_lockServerToClient), a specific request
-  //        is expected.
-  //int _expectRequest;
 
   void configureM2Ns(const m2n::M2NConfiguration::SharedPointer &config);
 
@@ -637,9 +610,6 @@ private:
   {
     return 1;
   }
-
-  /// Initializes communication between data server and client.
-  void initializeClientServerCommunication();
 
   /// Initializes communication between master and slaves.
   void initializeMasterSlaveCommunication();
