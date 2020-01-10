@@ -188,7 +188,6 @@ public:
 
   /// Returns a string representation of the current coupling state.
   virtual std::string printCouplingState() const = 0;
-
 };
 
 } // namespace cplscheme

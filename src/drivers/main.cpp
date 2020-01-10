@@ -12,9 +12,9 @@ void printUsage()
 
 int main(int argc, char **argv)
 {
-  bool runHelp        = false;
-  bool runDtd         = false;
-  bool runMD          = false;
+  bool runHelp = false;
+  bool runDtd  = false;
+  bool runMD   = false;
 
   bool wrongParameters = true;
 
@@ -39,7 +39,7 @@ int main(int argc, char **argv)
     return 1;
   }
 
-if (runHelp) {
+  if (runHelp) {
     precice::config::Configuration config;
     precice::xml::toDocumentation(std::cout, config.getXMLTag());
   } else if (runDtd) {

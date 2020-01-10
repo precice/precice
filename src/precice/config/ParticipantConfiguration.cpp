@@ -143,7 +143,7 @@ ParticipantConfiguration::ParticipantConfiguration(
   {
     XMLTag tagMaster(*this, "sockets", masterOcc, TAG_MASTER);
     doc = "A solver in parallel needs a communication between its ranks. ";
-    doc += "By default, the participant's MPI_COM_WORLD is reused." ;
+    doc += "By default, the participant's MPI_COM_WORLD is reused.";
     doc += "Use this tag to use TCP/IP sockets instead.";
     tagMaster.setDocumentation(doc);
 
@@ -172,7 +172,7 @@ ParticipantConfiguration::ParticipantConfiguration(
   {
     XMLTag tagMaster(*this, "mpi", masterOcc, TAG_MASTER);
     doc = "A solver in parallel needs a communication between its ranks. ";
-    doc += "By default, the participant's MPI_COM_WORLD is reused." ;
+    doc += "By default, the participant's MPI_COM_WORLD is reused.";
     doc += "Use this tag to use MPI with separated communication spaces instead instead.";
     tagMaster.setDocumentation(doc);
 
@@ -187,7 +187,7 @@ ParticipantConfiguration::ParticipantConfiguration(
   {
     XMLTag tagMaster(*this, "mpi-single", masterOcc, TAG_MASTER);
     doc = "A solver in parallel needs a communication between its ranks. ";
-    doc += "By default (which is this option), the participant's MPI_COM_WORLD is reused." ;
+    doc += "By default (which is this option), the participant's MPI_COM_WORLD is reused.";
     doc += "This tag is only used to ensure backwards compatibility.";
     tagMaster.setDocumentation(doc);
 
@@ -276,7 +276,7 @@ void ParticipantConfiguration::xmlTagCallback(
     com::CommunicationConfiguration comConfig;
     com::PtrCommunication           com = comConfig.createCommunication(tag);
     utils::MasterSlave::_communication  = com;
-    _isMasterDefined          = true;
+    _isMasterDefined                    = true;
     _participants.back()->setUseMaster(true);
   }
 }
