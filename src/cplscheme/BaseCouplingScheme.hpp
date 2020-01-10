@@ -186,30 +186,6 @@ public:
   /// Sets an action required to be performed by the accessor.
   virtual void requireAction(const std::string &actionName);
 
-  /**
-   * @brief Send the state of the coupling scheme to another remote scheme.
-   *
-   * Used in client-server approach for parallel solvers. There, the solver
-   * interface does hold a coupling scheme with no data but state. The state
-   * is transferred between the solver coupling scheme and the server coupling
-   * scheme via sendState and receiveState.
-   */
-  virtual void sendState(
-      com::PtrCommunication communication,
-      int                   rankReceiver);
-
-  /**
-   * @brief Receive the state of the coupling scheme from another remote scheme.
-   *
-   * Used in client-server approach for parallel solvers. There, the solver
-   * interface does hold a coupling scheme with no data but state. The state
-   * is transferred between the solver coupling scheme and the server coupling
-   * scheme via sendState and receiveState.
-   */
-  virtual void receiveState(
-      com::PtrCommunication communication,
-      int                   rankSender);
-
   /// Finalizes the coupling scheme.
   virtual void finalize();
 
