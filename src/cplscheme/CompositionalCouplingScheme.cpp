@@ -339,26 +339,6 @@ std::string CompositionalCouplingScheme::printCouplingState() const
   return state;
 }
 
-void CompositionalCouplingScheme::sendState(
-    com::PtrCommunication communication,
-    int                   rankReceiver)
-{
-  PRECICE_TRACE();
-  for (Scheme scheme : _couplingSchemes) {
-    scheme.scheme->sendState(communication, rankReceiver);
-  }
-}
-
-void CompositionalCouplingScheme::receiveState(
-    com::PtrCommunication communication,
-    int                   rankSender)
-{
-  PRECICE_TRACE();
-  for (Scheme scheme : _couplingSchemes) {
-    scheme.scheme->receiveState(communication, rankSender);
-  }
-}
-
 bool CompositionalCouplingScheme::determineActiveCouplingSchemes()
 {
   PRECICE_TRACE();

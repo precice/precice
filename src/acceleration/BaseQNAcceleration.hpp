@@ -11,35 +11,35 @@
 #include "logging/Logger.hpp"
 
 /* ****************************************************************************
- * 
+ *
  * A few comments concerning the present design choice.
- * 
+ *
  * All the functions from the base class BAseQNAcceleration are specialized in
- * the sub classes as needed. This is done vi overwriting the base functions in 
- * the specialized sub classes and calling the respective base function after 
- * performing the specialized stuff (in order to perform the common, generalized 
+ * the sub classes as needed. This is done vi overwriting the base functions in
+ * the specialized sub classes and calling the respective base function after
+ * performing the specialized stuff (in order to perform the common, generalized
  * computations i.e. handling of V,W matrices etc.)
  * However, for the performAcceleration Method we decided (for better readability)
- * to have this method only in the base class, while introducing a function 
+ * to have this method only in the base class, while introducing a function
  * performPPSecondaryData that handles all the specialized stuff concerning acceleration
  * processing for the secondary data in the sub classes.
  *
  * Another possibility would have been to introduce a bunch of functions like
- * initializeSpecialized(), removeMatrixColumnSpecialized(), 
- * iterationsConvergedSpecialized(), etc 
+ * initializeSpecialized(), removeMatrixColumnSpecialized(),
+ * iterationsConvergedSpecialized(), etc
  * and call those function from the base class top down to the sub classes.
  *
  * The third possibility was to separate the approximation of the Jacobian from
- * the common stuff like handling V,W matrices in the acceleration. 
+ * the common stuff like handling V,W matrices in the acceleration.
  * Here, we have a class QNAcceleration that handles the V,W stuff an d the basic
- * scheme of the QN update. Furthermore we have a base class (or rather interface) 
- * JacobianApproximation with sub classes MVQNAPX and IQNAPX that handle all the 
- * specialized stuff like Jacobian approximation, handling of secondary data etc. 
- * However, this approach is not feasible, as we have to call the function 
+ * scheme of the QN update. Furthermore we have a base class (or rather interface)
+ * JacobianApproximation with sub classes MVQNAPX and IQNAPX that handle all the
+ * specialized stuff like Jacobian approximation, handling of secondary data etc.
+ * However, this approach is not feasible, as we have to call the function
  * removeMatrixColumn() down in the specialized sub classes MVQNApx and IQNApx.
- * This is not possible as the function works on the V, W matrices that are 
+ * This is not possible as the function works on the V, W matrices that are
  * completely treated by QNAcceleration.
- * 
+ *
  * ****************************************************************************
  */
 
@@ -50,7 +50,7 @@ namespace acceleration {
 
 /**
  * @brief Base Class for quasi-Newton acceleration schemes
- * 
+ *
  */
 class BaseQNAcceleration : public Acceleration {
 public:
@@ -167,7 +167,6 @@ protected:
 
   /*
     * @brief If in master-slave mode: True if this process has nodes at the coupling interface
-    *        If in server mode: Always true.
     */
   bool _hasNodesOnInterface = true;
 

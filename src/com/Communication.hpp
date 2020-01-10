@@ -35,7 +35,7 @@ namespace com {
  * 2. Efficiency --- allows one to perform some useful computational work while
  *    sending is happening on the background.
  *
- * @attention All receive methods, that accept a raw array, expect it to be 
+ * @attention All receive methods, that accept a raw array, expect it to be
  * sized appropriatly. Asynchronous receive methods also expect the vector
  * be sized correctly.
  */
@@ -71,9 +71,8 @@ public:
    * Establishes a 1-to-N communication, whereas the acceptor's side is the "1". Contrary to
    * acceptConnectionAsServer(), the other side needs to be a proper communicator with ranks
    * from 0 to N-1. It is not necessary to know this "N" a-priori on the acceptor's side.
-   * This communication is used for the 1:1 communication between two master ranks, for the
-   * 1:N communication to a preCICE server, and for the master-slave communication. For the
-   * last case, setRankOffset() has to be set.
+   * This communication is used for the 1:1 communication between two master ranks
+   * and for the master-slave communication. For the last case, setRankOffset() has to be set.
    *
    * @param[in] acceptorName Name of calling participant.
    * @param[in] requesterName Name of remote participant to connect to.
@@ -108,8 +107,8 @@ public:
    * Establishes a 1-to-N communication, whereas the requestor's side is the "N". Contrary to
    * requestConnectionAsClient(), this side needs to be a proper communicator with ranks
    * from 0 to N-1. All ranks need to call this function.
-   * This communication is used for the 1:1 communication between two master ranks, for the
-   * 1:N communication to a preCICE server, and for the master-slave communication.
+   * This communication is used for the 1:1 communication between two master ranks,
+   * and for the master-slave communication.
    *
    * @param[in] acceptorName Name of remote participant to connect to.
    * @param[in] requesterName Name of calling participant.

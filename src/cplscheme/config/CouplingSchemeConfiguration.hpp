@@ -223,10 +223,6 @@ private:
   PtrCouplingScheme createMultiCouplingScheme(
       const std::string &accessor) const;
 
-  /// returns name of the actual scheme holder (i.e. server name)
-  std::string determineCouplingSchemeHolder(
-      const std::string &accessorName) const;
-
   constants::TimesteppingMethod getTimesteppingMethod(
       const std::string &method) const;
 
