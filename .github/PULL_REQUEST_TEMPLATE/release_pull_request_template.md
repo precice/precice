@@ -20,6 +20,7 @@ Only the release manager should update this post (even tickboxes, due to race co
    * [ ] **???** [Python bindings](https://github.com/precice/python-bindings) 
 * [ ] Draft message to mailing list
 * [ ] Update documentation (all)
+  * [ ] Update markdown configuration reference in wiki
 * [ ] Fix potential problems in develop (all)
 * [ ] Approve the PR with at least two reviews (all)
 * [ ] Merge PR to master 
