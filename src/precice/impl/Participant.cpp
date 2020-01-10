@@ -290,23 +290,6 @@ void Participant::checkDuplicatedData(
                                  << data->getName() << "\" only once!");
 }
 
-bool Participant::useServer()
-{
-  return static_cast<bool>(_clientServerCommunication);
-}
-
-void Participant::setClientServerCommunication(
-    com::PtrCommunication communication)
-{
-  PRECICE_ASSERT(communication);
-  _clientServerCommunication = std::move(communication);
-}
-
-com::PtrCommunication Participant::getClientServerCommunication() const
-{
-  return _clientServerCommunication;
-}
-
 bool Participant::useMaster()
 {
   return _useMaster;

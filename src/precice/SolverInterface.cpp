@@ -9,7 +9,7 @@ SolverInterface::SolverInterface(
     const std::string &participantName,
     int                solverProcessIndex,
     int                solverProcessSize)
-    : _impl(new impl::SolverInterfaceImpl(participantName, solverProcessIndex, solverProcessSize, false))
+    : _impl(new impl::SolverInterfaceImpl(participantName, solverProcessIndex, solverProcessSize))
 {
 }
 
@@ -18,7 +18,7 @@ SolverInterface::SolverInterface(
     int                solverProcessIndex,
     int                solverProcessSize,
     void *             communicator)
-    : _impl(new impl::SolverInterfaceImpl(participantName, solverProcessIndex, solverProcessSize, false, communicator))
+    : _impl(new impl::SolverInterfaceImpl(participantName, solverProcessIndex, solverProcessSize, communicator))
 {
 }
 

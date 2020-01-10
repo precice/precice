@@ -164,67 +164,6 @@ void BaseCouplingScheme::addDataToReceive(
   }
 }
 
-void BaseCouplingScheme::sendState(
-    com::PtrCommunication communication,
-    int                   rankReceiver)
-{
-  PRECICE_TRACE(rankReceiver);
-  PRECICE_ASSERT(communication.get() != nullptr);
-  PRECICE_ASSERT(communication->isConnected());
-  communication->send(_maxTime, rankReceiver);
-  communication->send(_maxTimesteps, rankReceiver);
-  communication->send(_timestepLength, rankReceiver);
-  communication->send(_time, rankReceiver);
-  communication->send(_timesteps, rankReceiver);
-  communication->send(_computedTimestepPart, rankReceiver);
-  //communication->send(_maxLengthNextTimestep, rankReceiver);
-  communication->send(_isInitialized, rankReceiver);
-  communication->send(_isCouplingTimestepComplete, rankReceiver);
-  communication->send(_hasDataBeenExchanged, rankReceiver);
-  communication->send((int) _actions.size(), rankReceiver);
-  for (const std::string &action : _actions) {
-    communication->send(action, rankReceiver);
-  }
-  communication->send(_maxIterations, rankReceiver);
-  communication->send(_iterations, rankReceiver);
-  communication->send(_iterationsCoarseOptimization, rankReceiver); // new, correct?? TODO
-  communication->send(_totalIterations, rankReceiver);
-}
-
-void BaseCouplingScheme::receiveState(
-    com::PtrCommunication communication,
-    int                   rankSender)
-{
-  PRECICE_TRACE(rankSender);
-  PRECICE_ASSERT(communication.get() != nullptr);
-  PRECICE_ASSERT(communication->isConnected());
-  communication->receive(_maxTime, rankSender);
-  communication->receive(_maxTimesteps, rankSender);
-  communication->receive(_timestepLength, rankSender);
-  communication->receive(_time, rankSender);
-  communication->receive(_timesteps, rankSender);
-  communication->receive(_computedTimestepPart, rankSender);
-  //communication->receive(_maxLengthNextTimestep, rankSender);
-  communication->receive(_isInitialized, rankSender);
-  communication->receive(_isCouplingTimestepComplete, rankSender);
-  communication->receive(_hasDataBeenExchanged, rankSender);
-  int actionsSize = 0;
-  communication->receive(actionsSize, rankSender);
-  _actions.clear();
-  for (int i = 0; i < actionsSize; i++) {
-    std::string action;
-    communication->receive(action, rankSender);
-    _actions.insert(action);
-  }
-  communication->receive(_maxIterations, rankSender);
-  int subIteration = -1;
-  communication->receive(subIteration, rankSender);
-  _iterations = subIteration;
-  communication->receive(subIteration, rankSender); // new, correct?? TODO
-  _iterationsCoarseOptimization = subIteration;     // new, correct? TODO
-  communication->receive(_totalIterations, rankSender);
-}
-
 std::vector<int> BaseCouplingScheme::sendData(m2n::PtrM2N m2n)
 {
   PRECICE_TRACE();

@@ -58,7 +58,6 @@ private:
   const std::string TAG_DATA_ACTION = "data-action";
   const std::string TAG_USE_MESH    = "use-mesh";
   const std::string TAG_WATCH_POINT = "watch-point";
-  const std::string TAG_SERVER      = "server";
   const std::string TAG_MASTER      = "master";
 
   const std::string ATTR_NAME               = "name";
@@ -108,10 +107,10 @@ private:
 
   mapping::PtrMapping getMapping(const std::string &mappingName);
 
-  // Does this participant already define a master or server tag?
+  // Does this participant already define a master tag?
   // This context information is needed in xmlEndTagCallback to create a default
   // master com if required (i.e. no solution yet defined and parallel).
-  bool _isParallelSolutionDefined = false;
+  bool _isMasterDefined = false;
 
   void finishParticipantConfiguration(
       const xml::ConfigurationContext &context,

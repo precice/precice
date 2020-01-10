@@ -687,7 +687,7 @@ void BaseQNAcceleration::writeInfo(
     std::string s, bool allProcs)
 {
   if (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()) {
-    // serial acceleration mode, server mode
+    // serial acceleration mode
     _infostringstream << s;
 
     // parallel acceleration, master-slave mode
