@@ -583,7 +583,7 @@ void PointToPointCommunication::send(double const *itemsToSend,
     auto request = _communication->aSend(*buffer, mapping.remoteRank);
     bufferedRequests.emplace_back(request, buffer);
   }
-  checkBufferedRequests(true);
+  checkBufferedRequests(false);
 }
 
 void PointToPointCommunication::receive(double *itemsToReceive,
