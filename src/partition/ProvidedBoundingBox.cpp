@@ -128,7 +128,7 @@ void ProvidedBoundingBox::communicate()
 
   /*
    * First we should set global index for each vertex
-   * This global vertex id is needed for final filtering in 
+   * This global vertex id is needed for final filtering in
    * the received partition
    */
 

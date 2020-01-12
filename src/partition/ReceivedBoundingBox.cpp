@@ -223,7 +223,7 @@ void ReceivedBoundingBox::compute()
    * 8->{45, 49, 55}
    * this rank needs vertices 6 ,8 and 9 from rank 4 and vertices 45, 49 and 55
    * from rank 8
-   * If global index of a vertex is between min/max global index of a specific 
+   * If global index of a vertex is between min/max global index of a specific
    * remore rank, this vertex belongs to that rank
    */
 
@@ -247,7 +247,7 @@ void ReceivedBoundingBox::compute()
   // communicate communication map to all remote conneceted ranks
   _m2ns[0]->broadcastSendLCM(localCommunicationMap, *_mesh);
 
-  /* 
+  /*
    * master broadcasts remote mesh's golbal vertex number to slaves.
    * This data is needed later for implicit coupling schemes.
    */

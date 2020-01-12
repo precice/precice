@@ -1,7 +1,5 @@
 #include "SolverInterfaceImpl.hpp"
 #include <Eigen/Core>
-#include <algorithm>
-#include <utility>
 #include "cplscheme/CouplingScheme.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
 #include "io/Export.hpp"
@@ -35,6 +33,9 @@
 #include "utils/Parallel.hpp"
 #include "utils/Petsc.hpp"
 #include "utils/algorithm.hpp"
+
+#include <algorithm>
+#include <utility>
 
 #include "logging/LogConfiguration.hpp"
 #include "logging/Logger.hpp"
@@ -228,7 +229,6 @@ double SolverInterfaceImpl::initialize()
     computeBoundingBoxs();
 
     PRECICE_INFO("Setting up slaves communication to coupling partner/s");
-
     for (auto &m2nPair : _m2ns) {
       auto &bm2n = m2nPair.second;
       PRECICE_DEBUG((bm2n.isRequesting ? "Awaiting slaves connection from " : "Establishing slaves connection to ") << bm2n.remoteName);
@@ -298,7 +298,6 @@ void SolverInterfaceImpl::initializeData()
 
   PRECICE_CHECK(_couplingScheme->isInitialized(),
                 "initialize() has to be called before initializeData()");
-
   if (_clientMode) {
     _requestManager->requestInitialzeData();
   } else {
@@ -337,17 +336,14 @@ double SolverInterfaceImpl::advance(
   auto &solverEvent = EventRegistry::instance().getStoredEvent("solver.advance");
   solverEvent.stop(precice::syncMode);
   auto &solverInitEvent = EventRegistry::instance().getStoredEvent("solver.initialize");
-
   solverInitEvent.stop(precice::syncMode);
 
-  Event e("advance", precice::syncMode);
-
+  Event                    e("advance", precice::syncMode);
   utils::ScopedEventPrefix sep("advance/");
 
   PRECICE_CHECK(_couplingScheme->isInitialized(), "initialize() has to be called before advance()");
   PRECICE_CHECK(isCouplingOngoing(), "advance() cannot be called when isCouplingOngoing() returns false");
   _numberAdvanceCalls++;
-
   if (_clientMode) {
     _requestManager->requestAdvance(computedTimestepLength);
   } else {

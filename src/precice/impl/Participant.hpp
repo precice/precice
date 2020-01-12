@@ -9,7 +9,6 @@
 #include "logging/Logger.hpp"
 #include "mapping/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
-#include "partition/ReceivedBoundingBox.hpp"
 #include "partition/ReceivedPartition.hpp"
 #include "utils/ManageUniqueIDs.hpp"
 #include "utils/MasterSlave.hpp"

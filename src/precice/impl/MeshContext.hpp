@@ -6,7 +6,6 @@
 #include "com/Communication.hpp"
 #include "mapping/Mapping.hpp"
 #include "mesh/SharedPointer.hpp"
-#include "partition/ReceivedBoundingBox.hpp"
 #include "partition/ReceivedPartition.hpp"
 #include "partition/SharedPointer.hpp"
 

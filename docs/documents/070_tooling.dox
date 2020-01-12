@@ -11,6 +11,8 @@ clang-format
 
 The tool [clang-format](https://clang.llvm.org/docs/ClangFormat.html) applies a configured code style to C and C++ files.
 It checks parent directories for a `.clang-format` file and applies the style to a given source file.
+To keep the code-base consistent, please use `clang-format` version 8.
+Scripts will explicitly use `clang-format-8` to prevent any problems.
 
 To use the tool form the shell, run:
 ```

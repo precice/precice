@@ -10,7 +10,6 @@
 #include "mapping/Mapping.hpp"
 #include "mapping/config/MappingConfiguration.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
-#include "partition/ReceivedBoundingBox.hpp"
 #include "partition/ReceivedPartition.hpp"
 #include "precice/impl/DataContext.hpp"
 #include "precice/impl/MappingContext.hpp"
