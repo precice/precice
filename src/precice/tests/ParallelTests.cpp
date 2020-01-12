@@ -42,7 +42,7 @@ struct ParallelTestFixture : testing::SlimConfigurator {
 BOOST_AUTO_TEST_SUITE(PreciceTests)
 BOOST_FIXTURE_TEST_SUITE(Parallel, ParallelTestFixture)
 
-/*
+
 BOOST_AUTO_TEST_CASE(TestMasterSlaveSetup, * testing::OnSize(4))
 {
   SolverInterface interface("SolverOne", utils::Parallel::getProcessRank(), 4);
@@ -447,7 +447,6 @@ BOOST_AUTO_TEST_CASE(testDistributedCommunications, *testing::OnSize(4))
     precice.finalize();
   }
 }
-*/
 
 BOOST_AUTO_TEST_CASE(testBoundingBoxInitialization, *testing::OnSize(4))
 {
@@ -709,7 +708,7 @@ BOOST_AUTO_TEST_CASE(testBoundingBoxInitializationTwoWay, *testing::OnSize(4))
 
   precice.finalize();
 }
-/*
+
 /// This testcase is based on a bug documented in issue #371
 BOOST_AUTO_TEST_CASE(NearestProjectionRePartitioning, *testing::OnSize(4))
 {
@@ -996,7 +995,6 @@ BOOST_AUTO_TEST_CASE(UserDefinedMPICommunicatorPetRBF, *testing::OnSize(4))
 }
 
 #endif // PRECICE_NO_PETCTS
-*/
 
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
