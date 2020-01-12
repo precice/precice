@@ -382,9 +382,6 @@ void PointToPointCommunication::acceptPreConnection(std::string const &acceptorN
 {
   PRECICE_TRACE(acceptorName, requesterName);
   PRECICE_ASSERT(not isConnected(), "Already connected!");
-  PRECICE_CHECK(utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave(),
-                "You can only use a point-to-point communication between two participants which both use a master. "
-                    << "Please use distribution-type gather-scatter instead.");
 
   const std::vector<int> &localConnectedRanks = _mesh->getConnectedRanks();
 
@@ -511,9 +508,6 @@ void PointToPointCommunication::requestPreConnection(std::string const &acceptor
 {
   PRECICE_TRACE(acceptorName, requesterName);
   PRECICE_CHECK(not isConnected(), "Already connected!");
-  PRECICE_CHECK(utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave(),
-                "You can only use a point-to-point communication between two participants which both use a master. "
-                    << "Please use distribution-type gather-scatter instead.");
 
   std::vector<int> localConnectedRanks = _mesh->getConnectedRanks();
 
