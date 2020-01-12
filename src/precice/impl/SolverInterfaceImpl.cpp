@@ -195,27 +195,30 @@ double SolverInterfaceImpl::initialize()
 
   PRECICE_INFO("Masters are connected");
 
-  computeBoundingBoxs();
+
+  // computeBoundingBoxs();
+  computePartitions();
 
   PRECICE_INFO("Setting up slaves communication to coupling partner/s");
   for (auto &m2nPair : _m2ns) {
     auto &bm2n = m2nPair.second;
     PRECICE_DEBUG((bm2n.isRequesting ? "Awaiting slaves connection from " : "Establishing slaves connection to ") << bm2n.remoteName);
-    bm2n.preConnectSlaves();
+    bm2n.connectSlaves();
+    // bm2n.preConnectSlaves();
     bm2n.cleanupEstablishment();
     PRECICE_DEBUG("Established slaves connection " << (bm2n.isRequesting ? "from " : "to ") << bm2n.remoteName);
   }
 
   PRECICE_INFO("Slaves are connected");
 
-  computePartitions();
-
-  for (auto &m2nPair : _m2ns) {
-    auto &m2n = m2nPair.second.m2n;
-    m2n->completeSlavesConnection();
-  }
-
-  PRECICE_INFO("Vertex lists are updated!");
+  // computePartitions();
+  //
+  // for (auto &m2nPair : _m2ns) {
+  //   auto &m2n = m2nPair.second.m2n;
+  //   m2n->completeSlavesConnection();
+  // }
+  //
+  // PRECICE_INFO("Vertex lists are updated!");
 
   PRECICE_DEBUG("Initialize watchpoints");
   for (PtrWatchPoint &watchPoint : _accessor->watchPoints()) {
@@ -1131,13 +1134,12 @@ void SolverInterfaceImpl::configurePartitions(
                     "Participant \"" << _accessorName << "\" cannot provide "
                                      << "and receive mesh " << context->mesh->getName() << "!");
 
-      // context->partition = partition::PtrPartition(new partition::ProvidedPartition(context->mesh));
-      context->partition = partition::PtrPartition(new partition::ProvidedBoundingBox(context->mesh, context->safetyFactor));
+      context->partition = partition::PtrPartition(new partition::ProvidedPartition(context->mesh));
+      // context->partition = partition::PtrPartition(new partition::ProvidedBoundingBox(context->mesh, context->safetyFactor));
 
       for (auto &receiver : _participants) {
         for (auto &receiverContext : receiver->usedMeshContexts()) {
           if (receiverContext->receiveMeshFrom == _accessorName && receiverContext->mesh->getName() == context->mesh->getName()) {
-            //PRECICE_CHECK( not hasToSend, "Mesh " << context->mesh->getName() << " can currently only be received once.")
             // meshRequirement has to be copied from "from" to provide", since
             // mapping are only defined at "provide"
             if (receiverContext->meshRequirement > context->meshRequirement) {
@@ -1162,9 +1164,9 @@ void SolverInterfaceImpl::configurePartitions(
 
       PRECICE_DEBUG("Receiving mesh from " << provider);
 
-      context->partition = partition::PtrPartition(new partition::ReceivedBoundingBox(context->mesh, context->safetyFactor));
+      // context->partition = partition::PtrPartition(new partition::ReceivedBoundingBox(context->mesh, context->safetyFactor));
 
-      // context->partition = partition::PtrPartition(new partition::ReceivedPartition(context->mesh, context->geoFilter, context->safetyFactor));
+      context->partition = partition::PtrPartition(new partition::ReceivedPartition(context->mesh, context->geoFilter, context->safetyFactor));
 
       m2n::PtrM2N m2n = m2nConfig->getM2N(receiver, provider);
       m2n->createDistributedCommunication(context->mesh);
@@ -1195,18 +1197,28 @@ void SolverInterfaceImpl::computeBoundingBoxs()
 
 void SolverInterfaceImpl::computePartitions()
 {
+  //We need to do this in two loops: First, communicate the mesh and later compute the partition.
+  //Originally, this was done in one loop. This however gave deadlock if two meshes needed to be communicated cross-wise.
+  //Both loops need a different sorting
 
-  // sort meshContexts by name, for communication in right order.
-  std::sort(_accessor->usedMeshContexts().begin(), _accessor->usedMeshContexts().end(),
+  auto &contexts = _accessor->usedMeshContexts();
+
+  std::sort(contexts.begin(), contexts.end(),
             [](MeshContext *lhs, const MeshContext *rhs) -> bool {
               return lhs->mesh->getName() < rhs->mesh->getName();
             });
 
-  for (MeshContext *meshContext : _accessor->usedMeshContexts()) {
+  for (MeshContext *meshContext : contexts) {
     meshContext->partition->communicate();
   }
 
-  for (MeshContext *meshContext : _accessor->usedMeshContexts()) {
+  // pull provided meshes up front, to have them ready for the decomposition
+  std::stable_partition(contexts.begin(), contexts.end(),
+                        [](MeshContext const *const meshContext) -> bool {
+                          return meshContext->provideMesh;
+                        });
+
+  for (MeshContext *meshContext : contexts) {
     meshContext->partition->compute();
     meshContext->mesh->computeState();
     meshContext->mesh->allocateDataValues();
