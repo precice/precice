@@ -38,10 +38,12 @@ std::string ConnectionInfoReader::read() const
 {
   std::ifstream ifs;
   auto path = getFilename();
+  PRECICE_DEBUG("Waiting for connection file " << path);
   do {
     ifs.open(path, std::ifstream::in);
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
   } while (not ifs);
+  PRECICE_DEBUG("Found connection file " << path);
   
   std::string addressData;
   ifs >> addressData;

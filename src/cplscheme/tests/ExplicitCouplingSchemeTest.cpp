@@ -242,7 +242,7 @@ void runExplicitCouplingWithSubcycling(
   }
 }
 
-struct ExplicitCouplingSchemeFixture
+struct ExplicitCouplingSchemeFixture : m2n::WhiteboxAccessor
 {
   std::string _pathToTests;
 
@@ -259,6 +259,7 @@ struct ExplicitCouplingSchemeFixture
     BOOST_TEST(communication);
     BOOST_TEST(not communication->isConnected());
     utils::Parallel::splitCommunicator( localParticipant );
+    useOnlyMasterCom(communication) = true;
     if ( participant0 == localParticipant ) {
       communication->requestMasterConnection ( participant1, participant0);
     }
@@ -280,13 +281,12 @@ BOOST_FIXTURE_TEST_CASE(testSimpleExplicitCoupling, testing::M2NFixture,
   if (utils::Parallel::getCommunicatorSize() != 2) // only run test on ranks {0,1}, for other ranks return
     return;
 
-  mesh::PropertyContainer::resetPropertyIDCounter();
   xml::XMLTag root = xml::getRootTag();
   mesh::PtrDataConfiguration dataConfig ( new mesh::DataConfiguration(root) );
   dataConfig->addData ( "Data0", 1 );
   dataConfig->addData ( "Data1", 3 );
   mesh::MeshConfiguration meshConfig ( root, dataConfig );
-  mesh::PtrMesh mesh ( new mesh::Mesh("Mesh", 3, false) );
+  mesh::PtrMesh mesh ( new mesh::Mesh("Mesh", 3, false, testing::nextMeshID()) );
   mesh->createData ( "Data0", 1 );
   mesh->createData ( "Data1", 3 );
   mesh->createVertex ( Eigen::Vector3d::Zero() );
@@ -330,7 +330,6 @@ BOOST_AUTO_TEST_CASE(testConfiguredSimpleExplicitCoupling,
 
   using namespace mesh;
   BOOST_TEST ( utils::Parallel::getCommunicatorSize() > 1 );
-  mesh::PropertyContainer::resetPropertyIDCounter ();
 
   std::string configurationPath ( _pathToTests + "explicit-coupling-scheme-1.xml" );
 
@@ -344,6 +343,8 @@ BOOST_AUTO_TEST_CASE(testConfiguredSimpleExplicitCoupling,
   else if ( utils::Parallel::getProcessRank() == 1 ) {
     nameLocalParticipant = nameParticipant1;
   }
+  xml::ConfigurationContext context{nameLocalParticipant, 0, 1};
+
   xml::XMLTag root = xml::getRootTag();
   PtrDataConfiguration dataConfig(new DataConfiguration(root));
   dataConfig->setDimensions(3);
@@ -352,8 +353,7 @@ BOOST_AUTO_TEST_CASE(testConfiguredSimpleExplicitCoupling,
   m2n::M2NConfiguration::SharedPointer m2nConfig(new m2n::M2NConfiguration(root));
   CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
 
-  xml::configure(root, configurationPath);
-  meshConfig->setMeshSubIDs();
+  xml::configure(root, context, configurationPath);
   m2n::PtrM2N m2n = m2nConfig->getM2N(nameParticipant0, nameParticipant1);
 
   // some dummy mesh
@@ -387,6 +387,7 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingFirstParticipantSetsDt,
   else if ( utils::Parallel::getProcessRank() == 1 ){
     nameLocalParticipant = nameParticipant1;
   }
+  xml::ConfigurationContext context{nameLocalParticipant, 0, 1};
 
   xml::XMLTag root = xml::getRootTag();
   PtrDataConfiguration dataConfig(new DataConfiguration(root));
@@ -396,8 +397,7 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingFirstParticipantSetsDt,
   m2n::M2NConfiguration::SharedPointer m2nConfig(new m2n::M2NConfiguration(root));
   CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
 
-  xml::configure(root, configurationPath);
-  meshConfig->setMeshSubIDs();
+  xml::configure(root, context, configurationPath);
   m2n::PtrM2N m2n = m2nConfig->getM2N(nameParticipant0, nameParticipant1);
 
   // some dummy mesh
@@ -469,7 +469,6 @@ BOOST_AUTO_TEST_CASE(testSerialDataInitialization,
     return;
 
   using namespace mesh;
-  mesh::PropertyContainer::resetPropertyIDCounter();
 
   std::string configurationPath(_pathToTests + "serial-explicit-coupling-datainit.xml");
   std::string nameParticipant0 ( "Participant0" );
@@ -481,6 +480,8 @@ BOOST_AUTO_TEST_CASE(testSerialDataInitialization,
   else if (utils::Parallel::getProcessRank() == 1){
     nameLocalParticipant = nameParticipant1;
   }
+  xml::ConfigurationContext context{nameLocalParticipant, 0, 1};
+
   xml::XMLTag root = xml::getRootTag();
   PtrDataConfiguration dataConfig(new DataConfiguration(root));
   dataConfig->setDimensions(2);
@@ -489,8 +490,7 @@ BOOST_AUTO_TEST_CASE(testSerialDataInitialization,
   m2n::M2NConfiguration::SharedPointer m2nConfig(new m2n::M2NConfiguration(root));
   CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
 
-  xml::configure(root, configurationPath);
-  meshConfig->setMeshSubIDs();
+  xml::configure(root, context, configurationPath);
   m2n::PtrM2N m2n = m2nConfig->getM2N(nameParticipant0, nameParticipant1);
 
   // some dummy mesh
@@ -547,7 +547,6 @@ BOOST_AUTO_TEST_CASE(testParallelDataInitialization,
     return;
 
   using namespace mesh;
-  mesh::PropertyContainer::resetPropertyIDCounter();
 
   std::string configurationPath(_pathToTests + "parallel-explicit-coupling-datainit.xml");
   std::string nameParticipant0 ( "Participant0" );
@@ -559,6 +558,8 @@ BOOST_AUTO_TEST_CASE(testParallelDataInitialization,
   else if (utils::Parallel::getProcessRank() == 1){
     nameLocalParticipant = nameParticipant1;
   }
+  xml::ConfigurationContext context{nameLocalParticipant, 0, 1};
+
   xml::XMLTag root = xml::getRootTag();
   PtrDataConfiguration dataConfig(new DataConfiguration(root));
   dataConfig->setDimensions(2);
@@ -567,8 +568,7 @@ BOOST_AUTO_TEST_CASE(testParallelDataInitialization,
   m2n::M2NConfiguration::SharedPointer m2nConfig(new m2n::M2NConfiguration(root));
   CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
 
-  xml::configure(root, configurationPath);
-  meshConfig->setMeshSubIDs();
+  xml::configure(root, context, configurationPath);
   m2n::PtrM2N m2n = m2nConfig->getM2N(nameParticipant0, nameParticipant1);
 
   // some dummy mesh
@@ -630,7 +630,6 @@ BOOST_FIXTURE_TEST_CASE(testExplicitCouplingWithSubcycling, testing::M2NFixture,
   if (utils::Parallel::getCommunicatorSize() != 2) // only run test on ranks {0,1}, for other ranks return
     return;
 
-  mesh::PropertyContainer::resetPropertyIDCounter ();
   xml::XMLTag root = xml::getRootTag();
   mesh::PtrDataConfiguration dataConfig ( new mesh::DataConfiguration(root) );
   dataConfig->setDimensions(3);
@@ -638,7 +637,7 @@ BOOST_FIXTURE_TEST_CASE(testExplicitCouplingWithSubcycling, testing::M2NFixture,
   dataConfig->addData ( "Data1", 3 );
   mesh::MeshConfiguration meshConfig ( root, dataConfig );
   meshConfig.setDimensions(3);
-  mesh::PtrMesh mesh ( new mesh::Mesh("Mesh", 3, false) );
+  mesh::PtrMesh mesh ( new mesh::Mesh("Mesh", 3, false, testing::nextMeshID()) );
   mesh->createData ( "Data0", 1 );
   mesh->createData ( "Data1", 3 );
   mesh->createVertex ( Eigen::Vector3d::Zero() );
@@ -692,6 +691,7 @@ BOOST_AUTO_TEST_CASE(testConfiguredExplicitCouplingWithSubcycling,
   else if ( utils::Parallel::getProcessRank() == 1 ) {
     nameLocalParticipant = nameParticipant1;
   }
+  xml::ConfigurationContext context{nameLocalParticipant, 0, 1};
 
   xml::XMLTag root = xml::getRootTag();
   PtrDataConfiguration dataConfig(new DataConfiguration(root));
@@ -701,8 +701,7 @@ BOOST_AUTO_TEST_CASE(testConfiguredExplicitCouplingWithSubcycling,
   m2n::M2NConfiguration::SharedPointer m2nConfig(new m2n::M2NConfiguration(root));
   CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
 
-  xml::configure(root, configurationPath);
-  meshConfig->setMeshSubIDs();
+  xml::configure(root, context, configurationPath);
   m2n::PtrM2N m2n = m2nConfig->getM2N(nameParticipant0, nameParticipant1);
   // some dummy mesh
   meshConfig->meshes()[0]->createVertex(Eigen::Vector3d(1.0, 1.0, 1.0));

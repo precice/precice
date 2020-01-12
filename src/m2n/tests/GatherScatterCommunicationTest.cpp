@@ -33,6 +33,7 @@ BOOST_AUTO_TEST_CASE(GatherScatterTest, *testing::OnSize(4))
 
   if (utils::Parallel::getProcessRank() == 0) { // Participant 1
     utils::Parallel::splitCommunicator("Part1");
+    utils::MasterSlave::configure(0, 1);
   } else if (utils::Parallel::getProcessRank() == 1) { // Participant 2 - Master
     utils::Parallel::splitCommunicator("Part2Master");
     utils::MasterSlave::configure(0, 3);
@@ -69,8 +70,17 @@ BOOST_AUTO_TEST_CASE(GatherScatterTest, *testing::OnSize(4))
   Eigen::VectorXd offset           = Eigen::VectorXd::Zero(dimensions);
 
   if (utils::Parallel::getProcessRank() == 0) { // Part1
-    mesh::PtrMesh pMesh(new mesh::Mesh("Mesh", dimensions, flipNormals));
+    mesh::PtrMesh pMesh(new mesh::Mesh("Mesh", dimensions, flipNormals, testing::nextMeshID()));
     m2n->createDistributedCommunication(pMesh);
+
+    pMesh->setGlobalNumberOfVertices(numberOfVertices);
+    pMesh->getVertexDistribution()[0].push_back(0);
+    pMesh->getVertexDistribution()[0].push_back(1);
+    pMesh->getVertexDistribution()[0].push_back(2);
+    pMesh->getVertexDistribution()[0].push_back(3);
+    pMesh->getVertexDistribution()[0].push_back(4);
+    pMesh->getVertexDistribution()[0].push_back(5);
+
     m2n->acceptSlavesConnection("Part1", "Part2Master");
     Eigen::VectorXd values = Eigen::VectorXd::Zero(numberOfVertices);
     values << 1.0, 2.0, 3.0, 4.0, 5.0, 6.0;
@@ -85,7 +95,7 @@ BOOST_AUTO_TEST_CASE(GatherScatterTest, *testing::OnSize(4))
     BOOST_TEST(values[5] == 12.0);
 
   } else {
-    mesh::PtrMesh pMesh(new mesh::Mesh("Mesh", dimensions, flipNormals));
+    mesh::PtrMesh pMesh(new mesh::Mesh("Mesh", dimensions, flipNormals, testing::nextMeshID()));
     m2n->createDistributedCommunication(pMesh);
     m2n->requestSlavesConnection("Part1", "Part2Master");
 

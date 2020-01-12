@@ -32,7 +32,7 @@
          <read-data name="Data1" mesh="MeshTwo" />
       </participant>
 
-      <m2n:sockets from="SolverOne" to="SolverTwo" distribution-type="gather-scatter" />
+      <m2n:sockets from="SolverOne" to="SolverTwo" enforce-gather-scatter="true" />
 
       <coupling-scheme:parallel-implicit>
          <participants first="SolverOne" second="SolverTwo" />
@@ -43,7 +43,7 @@
          <max-iterations value="100"/>
          <relative-convergence-measure limit="1e-2" data="Data1" mesh="MeshOne"/>
          <relative-convergence-measure limit="1e-2" data="Data2" mesh="MeshOne"/>
-         <post-processing:IQN-ILS>
+         <acceleration:IQN-ILS>
             <data name="Data1" mesh="MeshOne"/>
             <data name="Data2" mesh="MeshOne"/>
             <preconditioner type="residual-sum"/>
@@ -51,7 +51,7 @@
             <initial-relaxation value="0.001"/>
             <max-used-iterations value="30"/>
             <timesteps-reused value="2"/>
-     </post-processing:IQN-ILS>
+     </acceleration:IQN-ILS>
       </coupling-scheme:parallel-implicit>
 
    </solver-interface>

@@ -3,7 +3,6 @@
 #include "mesh/Triangle.hpp"
 #include "mesh/Quad.hpp"
 #include "mesh/Mesh.hpp"
-#include "mesh/PropertyContainer.hpp"
 #include "mesh/Data.hpp"
 #include <Eigen/Core>
 #include "testing/Testing.hpp"
@@ -17,32 +16,11 @@ using Eigen::Vector3d;
 
 BOOST_AUTO_TEST_SUITE(MeshTests)
 
-BOOST_AUTO_TEST_SUITE(MeshTests)
-
-
-BOOST_AUTO_TEST_CASE(SubIDs)
-{
-  for (int dim=2; dim <= 3; dim++) {
-    mesh::Mesh mesh("MyMesh", dim, false);
-    Vertex& v0 = mesh.createVertex(Eigen::VectorXd::Constant(dim, 0.0));
-    Vertex& v1 = mesh.createVertex(Eigen::VectorXd::Constant(dim, 1.0));
-    PropertyContainer& cont0 = mesh.setSubID("subID0");
-    PropertyContainer& cont1 = mesh.setSubID("subID1");
-    v0.addParent(cont0);
-    v1.addParent(cont0);
-    v1.addParent(cont1);
-    std::vector<int> properties;
-    v0.getProperties(PropertyContainer::INDEX_GEOMETRY_ID, properties);
-    BOOST_TEST(properties.size() == 2);
-    BOOST_TEST(properties[0] == mesh.getID("MyMesh"));
-    BOOST_TEST(properties[1] == mesh.getID("MyMesh-subID0"));
-  }
-}
-
+BOOST_AUTO_TEST_SUITE(MeshTests, *testing::OnMaster())
 
 BOOST_AUTO_TEST_CASE(ComputeState_2D)
 {  
-  mesh::Mesh mesh ( "MyMesh", 2, true );
+  mesh::Mesh mesh ( "MyMesh", 2, true , testing::nextMeshID());
   // Create mesh
   Vertex& v1 = mesh.createVertex ( Vector2d(0.0, 0.0) );
   Vertex& v2 = mesh.createVertex ( Vector2d(1.0, 0.0) );
@@ -72,7 +50,7 @@ BOOST_AUTO_TEST_CASE(ComputeState_2D)
 
 BOOST_AUTO_TEST_CASE(ComputeState_3D_Triangle)
 {
-  precice::mesh::Mesh mesh ( "MyMesh", 3, true );
+  precice::mesh::Mesh mesh ( "MyMesh", 3, true , testing::nextMeshID());
   // Create mesh
   Vertex& v1 = mesh.createVertex ( Vector3d(0.0, 0.0, 0.0) );
   Vertex& v2 = mesh.createVertex ( Vector3d(1.0, 0.0, 1.0) );
@@ -132,7 +110,7 @@ BOOST_AUTO_TEST_CASE(ComputeState_3D_Triangle)
 
 BOOST_AUTO_TEST_CASE(ComputeState_3D_Quad)
 {
-  mesh::Mesh mesh("MyMesh", 3, true);
+  mesh::Mesh mesh("MyMesh", 3, true, testing::nextMeshID());
   // Create mesh (Two rectangles with a common edge at z-axis. One extends in
   // x-y-plane (2 long), the other in y-z-plane (1 long))
   Vertex& v0 = mesh.createVertex(Vector3d(0.0, 0.0, 0.0));
@@ -206,7 +184,7 @@ BOOST_AUTO_TEST_CASE(BoundingBoxCOG_2D)
   Eigen::Vector2d coords1(-1, 4);
   Eigen::Vector2d coords2(0, 1);
 
-  mesh::Mesh mesh ("2D Testmesh", 2, false );
+  mesh::Mesh mesh ("2D Testmesh", 2, false , testing::nextMeshID());
   mesh.createVertex(coords0);
   mesh.createVertex(coords1);
   mesh.createVertex(coords2);
@@ -241,7 +219,7 @@ BOOST_AUTO_TEST_CASE(BoundingBoxCOG_3D)
   Eigen::Vector3d coords2(0, 1, -2);
   Eigen::Vector3d coords3(3.5, 2, -2);
 
-  mesh::Mesh mesh ("3D Testmesh", 3, false );
+  mesh::Mesh mesh ("3D Testmesh", 3, false , testing::nextMeshID());
   mesh.createVertex(coords0);
   mesh.createVertex(coords1);
   mesh.createVertex(coords2);
@@ -277,8 +255,7 @@ BOOST_AUTO_TEST_CASE(Demonstration)
     // Create mesh object
     std::string meshName ( "MyMesh" );
     bool flipNormals = false; // The normals of triangles, edges, vertices
-    precice::mesh::Mesh mesh ( meshName, dim, flipNormals );
-    int geometryID = mesh.getProperty<int> ( mesh.INDEX_GEOMETRY_ID );
+    precice::mesh::Mesh mesh ( meshName, dim, flipNormals , testing::nextMeshID());
 
     // Validate mesh object state
     BOOST_TEST(mesh.getName() == meshName);
@@ -371,55 +348,6 @@ BOOST_AUTO_TEST_CASE(Demonstration)
     BOOST_TEST ( mesh.data().size() == 1 );
     BOOST_TEST ( mesh.data()[0]->getName() == dataName );
 
-    // Create sub-id
-    std::string nameSubIDPrefix ( "sub-id" );
-    PropertyContainer & cont = mesh.setSubID ( nameSubIDPrefix );
-    int subID = cont.getFreePropertyID();
-    cont.setProperty ( cont.INDEX_GEOMETRY_ID, subID );
-
-    // Add sub-id to selected mesh elements
-    v0.addParent ( cont );
-    v1.addParent ( cont );
-    e0.addParent ( cont );
-
-    // Validate geometry IDs
-    std::vector<int> geometryIDs;
-    v0.getProperties ( v0.INDEX_GEOMETRY_ID, geometryIDs );
-    BOOST_TEST ( geometryIDs.size() == 2 );
-    BOOST_TEST ( utils::contained(geometryID, geometryIDs) );
-    BOOST_TEST ( utils::contained(subID, geometryIDs) );
-    geometryIDs.clear();
-    v1.getProperties ( v1.INDEX_GEOMETRY_ID, geometryIDs );
-    BOOST_TEST ( geometryIDs.size() == 2 );
-    BOOST_TEST ( utils::contained(geometryID, geometryIDs) );
-    BOOST_TEST ( utils::contained(subID, geometryIDs) );
-    geometryIDs.clear();
-    v2.getProperties ( v1.INDEX_GEOMETRY_ID, geometryIDs );
-    BOOST_TEST ( geometryIDs.size() == 1 );
-    BOOST_TEST ( utils::contained(geometryID, geometryIDs) );
-    geometryIDs.clear();
-    e0.getProperties ( e0.INDEX_GEOMETRY_ID, geometryIDs );
-    BOOST_TEST ( geometryIDs.size() == 2 );
-    BOOST_TEST ( utils::contained(geometryID, geometryIDs) );
-    BOOST_TEST ( utils::contained(subID, geometryIDs) );
-    geometryIDs.clear();
-    e1.getProperties ( e1.INDEX_GEOMETRY_ID, geometryIDs );
-    BOOST_TEST ( geometryIDs.size() == 1 );
-    BOOST_TEST ( utils::contained(geometryID, geometryIDs) );
-    geometryIDs.clear();
-    e2.getProperties ( e2.INDEX_GEOMETRY_ID, geometryIDs );
-    BOOST_TEST ( geometryIDs.size() == 1 );
-    BOOST_TEST ( utils::contained(geometryID, geometryIDs) );
-    if ( dim == 3 ){
-      geometryIDs.clear();
-      t->getProperties ( t->INDEX_GEOMETRY_ID, geometryIDs );
-      BOOST_TEST ( geometryIDs.size() == 1 );
-      BOOST_TEST ( utils::contained(geometryID, geometryIDs) );
-    }
-    BOOST_TEST ( mesh.getNameIDPairs().size() == 2 );
-    BOOST_TEST ( mesh.getNameIDPairs().count("MyMesh") == 1 );
-    BOOST_TEST ( mesh.getNameIDPairs().count("MyMesh-sub-id") == 1 );
-
     // Compute the state of the mesh elements (vertices, edges, triangles)
     mesh.computeState();
 
@@ -441,9 +369,9 @@ BOOST_AUTO_TEST_CASE(Demonstration)
 BOOST_AUTO_TEST_CASE(MeshEquality)
 {
     int dim = 3;
-    Mesh mesh1 ( "Mesh1", dim, false );
-    Mesh mesh1flipped ( "Mesh1flipped", dim, true );
-    Mesh mesh2 ( "Mesh2", dim, false );
+    Mesh mesh1 ( "Mesh1", dim, false, testing::nextMeshID());
+    Mesh mesh1flipped ( "Mesh1flipped", dim, true, testing::nextMeshID());
+    Mesh mesh2 ( "Mesh2", dim, false, testing::nextMeshID());
     Mesh *meshes[3] = {&mesh1, &mesh1flipped, &mesh2};
     for (auto ptr : meshes){
         auto& mesh = *ptr;
@@ -474,7 +402,7 @@ BOOST_AUTO_TEST_CASE(MeshEquality)
 
 BOOST_AUTO_TEST_CASE(MeshWKTPrint)
 {
-    Mesh mesh ("WKTMesh", 3, false);
+    Mesh mesh ("WKTMesh", 3, false, testing::nextMeshID());
     Vertex& v0 = mesh.createVertex(Eigen::Vector3d(0., 0., 0.));
     Vertex& v1 = mesh.createVertex(Eigen::Vector3d(1., 0., 0.));
     Vertex& v2 = mesh.createVertex(Eigen::Vector3d(0., 0., 1.));
@@ -503,7 +431,7 @@ BOOST_AUTO_TEST_CASE(MeshWKTPrint)
 BOOST_AUTO_TEST_CASE(CreateUniqueEdge)
 {
     int dim = 3;
-    Mesh mesh1 ( "Mesh1", dim, false );
+    Mesh mesh1 ( "Mesh1", dim, false, testing::nextMeshID() );
     auto& mesh = mesh1;
     Eigen::VectorXd coords0(dim);
     Eigen::VectorXd coords1(dim);

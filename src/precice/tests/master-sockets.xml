@@ -3,7 +3,7 @@
 <precice-configuration>
 
   <solver-interface dimensions="2">
-    
+
     <data:scalar name="MyData1"/>
     <data:scalar name="MyData2"/>
 
@@ -26,14 +26,14 @@
       <mapping:nearest-neighbor direction="write" from="ParallelMesh" to="SerialMesh"    constraint="conservative" timing="initial"/>
       <mapping:nearest-neighbor direction="read"  from="SerialMesh"   to="ParallelMesh"  constraint="consistent" timing="initial"/>
     </participant>
-    
+
     <participant name="SerialSolver">
       <use-mesh name="SerialMesh"         provide="yes"/>
       <read-data  name="MyData1"      mesh="SerialMesh"/>
       <write-data  name="MyData2"      mesh="SerialMesh"/>
     </participant>
 
-    <m2n:sockets from="ParallelSolver" to="SerialSolver" network="lo" distribution-type="gather-scatter" />
+    <m2n:sockets from="ParallelSolver" to="SerialSolver" network="lo" enforce-gather-scatter="true" />
 
     <coupling-scheme:parallel-explicit>
       <participants first="ParallelSolver" second="SerialSolver"/>
@@ -42,7 +42,6 @@
       <exchange data="MyData1"      mesh="SerialMesh"   from="ParallelSolver" to="SerialSolver" />
       <exchange data="MyData2"      mesh="SerialMesh"   from="SerialSolver"   to="ParallelSolver" />
     </coupling-scheme:parallel-explicit>
-    
+
   </solver-interface>
 </precice-configuration>
-

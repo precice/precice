@@ -76,14 +76,18 @@ public:
    *
    * @return True, if successful.
    */
-  virtual void xmlTagCallback ( xml::XMLTag& callingTag );
+  virtual void xmlTagCallback(
+          const xml::ConfigurationContext& context,
+          xml::XMLTag& callingTag);
 
   /**
    * @brief Callback function required for use of automatic configuration.
    *
    * @return True, if successful.
    */
-  virtual void xmlEndTagCallback ( xml::XMLTag& callingTag );
+  virtual void xmlEndTagCallback(
+          const xml::ConfigurationContext& context,
+          xml::XMLTag& callingTag);
 
   /// Returns all configured mappings.
   const std::vector<ConfiguredMapping>& mappings();
@@ -108,31 +112,24 @@ private:
   const std::string ATTR_X_DEAD = "x-dead";
   const std::string ATTR_Y_DEAD = "y-dead";
   const std::string ATTR_Z_DEAD = "z-dead";
+  const std::string ATTR_USE_LU = "use-lu-decomposition";
 
   const std::string VALUE_WRITE = "write";
   const std::string VALUE_READ = "read";
   const std::string VALUE_CONSISTENT = "consistent";
   const std::string VALUE_CONSERVATIVE = "conservative";
-  const std::string VALUE_NEAREST_NEIGHBOR;
-  const std::string VALUE_NEAREST_PROJECTION;
-  const std::string VALUE_RBF_TPS;
-  const std::string VALUE_RBF_MULTIQUADRICS;
-  const std::string VALUE_RBF_INV_MULTIQUADRICS;
-  const std::string VALUE_RBF_VOLUME_SPLINES;
-  const std::string VALUE_RBF_GAUSSIAN;
-  const std::string VALUE_RBF_CTPS_C2;
-  const std::string VALUE_RBF_CPOLYNOMIAL_C0;
-  const std::string VALUE_RBF_CPOLYNOMIAL_C6;
 
-  const std::string VALUE_PETRBF_TPS;
-  const std::string VALUE_PETRBF_MULTIQUADRICS;
-  const std::string VALUE_PETRBF_INV_MULTIQUADRICS;
-  const std::string VALUE_PETRBF_VOLUME_SPLINES;
-  const std::string VALUE_PETRBF_GAUSSIAN;
-  const std::string VALUE_PETRBF_CTPS_C2;
-  const std::string VALUE_PETRBF_CPOLYNOMIAL_C0;
-  const std::string VALUE_PETRBF_CPOLYNOMIAL_C6;
-  
+  const std::string VALUE_NEAREST_NEIGHBOR = "nearest-neighbor";
+  const std::string VALUE_NEAREST_PROJECTION = "nearest-projection";
+  const std::string VALUE_RBF_TPS = "rbf-thin-plate-splines";
+  const std::string VALUE_RBF_MULTIQUADRICS = "rbf-multiquadrics";
+  const std::string VALUE_RBF_INV_MULTIQUADRICS = "rbf-inverse-multiquadrics";
+  const std::string VALUE_RBF_VOLUME_SPLINES = "rbf-volume-splines";
+  const std::string VALUE_RBF_GAUSSIAN = "rbf-gaussian";
+  const std::string VALUE_RBF_CTPS_C2 = "rbf-compact-tps-c2";
+  const std::string VALUE_RBF_CPOLYNOMIAL_C0 = "rbf-compact-polynomial-c0";
+  const std::string VALUE_RBF_CPOLYNOMIAL_C6 = "rbf-compact-polynomial-c6";
+
   const std::string VALUE_TIMING_INITIAL = "initial";
   const std::string VALUE_TIMING_ON_ADVANCE = "onadvance";
   const std::string VALUE_TIMING_ON_DEMAND = "ondemand";
@@ -142,6 +139,7 @@ private:
   std::vector<ConfiguredMapping> _mappings;
 
   ConfiguredMapping createMapping (
+    const xml::ConfigurationContext& context,
     const std::string& direction,
     const std::string& type,
     const std::string& constraint,
@@ -154,6 +152,7 @@ private:
     bool               xDead,
     bool               yDead,
     bool               zDead,
+    bool               useLU,
     Polynomial         polynomial,
     Preallocation      preallocation) const;
 

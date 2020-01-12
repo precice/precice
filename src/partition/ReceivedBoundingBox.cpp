@@ -9,6 +9,7 @@
 #include "mesh/Vertex.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Triangle.hpp"
+#include "mesh/Filter.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/MasterSlave.hpp"
 
@@ -154,13 +155,16 @@ void ReceivedBoundingBox::compute()
   
   // _mesh->buildBoundingBox();
   prepareBoundingBox();  
+  mesh::Mesh filteredMesh{"FilteredMesh", _dimensions, _mesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED};
   
   // (1) Bounding Box Filter
 
   PRECICE_INFO("Filter mesh " << _mesh->getName() << " by bounding-box");  
-  mesh::Mesh filteredMesh("FilteredMesh", _dimensions, _mesh->isFlipNormals());
-  
-  filterMesh(filteredMesh, true);
+  mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex& v){ return isVertexInBB(v);});
+  PRECICE_DEBUG("Filtered mesh. #vertices: " << filteredMesh.vertices().size()
+          << ", #edges: " << filteredMesh.edges().size()
+          << ", #triangles: " << filteredMesh.triangles().size()
+          << ", rank: " << utils::MasterSlave::getRank());
     
   if ((_fromMapping.use_count() > 0 && _fromMapping->getOutputMesh()->vertices().size() > 0) ||
       (_toMapping.use_count() > 0 && _toMapping->getInputMesh()->vertices().size() > 0))
@@ -174,7 +178,10 @@ void ReceivedBoundingBox::compute()
       "of the decomposition strategy might be necessary.";
     //PRECICE_CHECK(filteredMesh.vertices().size() > 0, msg);
   }
-  PRECICE_DEBUG("Bounding box filter, filtered from " << _mesh->vertices().size() << " vertices to " << filteredMesh.vertices().size() << " vertices.");
+  PRECICE_DEBUG("Bounding box filter, filtered from "
+          << _mesh->vertices().size() << " to " << filteredMesh.vertices().size() << " vertices, "
+          << _mesh->edges().size() << " to " << filteredMesh.edges().size() << " edges, and "
+          << _mesh->triangles().size() << " to " << filteredMesh.triangles().size() << " triangles.");
   _mesh->clear();
   _mesh->addMesh(filteredMesh);
   _mesh->computeState();
@@ -201,10 +208,13 @@ void ReceivedBoundingBox::compute()
   
   
   // (5) Filter mesh according to tag
-  filteredMesh.clear();
   PRECICE_INFO("Filter mesh " << _mesh->getName() << " by mappings");
-  filterMesh(filteredMesh, false);
-  PRECICE_DEBUG("Mapping filter, filtered from " << _mesh->vertices().size() << " vertices to " << filteredMesh.vertices().size() << " vertices.");
+  filteredMesh.clear();
+  mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex& v){ return v.isTagged();});
+  PRECICE_DEBUG("Mapping filter, filtered from "
+          << _mesh->vertices().size() << " to " << filteredMesh.vertices().size() << " vertices, "
+          << _mesh->edges().size() << " to " << filteredMesh.edges().size() << " edges, and "
+          << _mesh->triangles().size() << " to " << filteredMesh.triangles().size() << " triangles.");
   _mesh->clear();
   _mesh->addMesh(filteredMesh);
   _mesh->computeState();
@@ -324,65 +334,6 @@ void ReceivedBoundingBox::prepareBoundingBox()
     _bb[d].first -= _safetyFactor * maxSideLength;
     PRECICE_DEBUG("Merged BoundingBox, dim: " << d << ", first: " << _bb[d].first << ", second: " << _bb[d].second);
   }
-}
-
-
-void ReceivedBoundingBox:: filterMesh(mesh::Mesh& filteredMesh, const bool filterByBB) {
-  PRECICE_TRACE(filterByBB);
-
-  PRECICE_DEBUG("Bounding mesh. #vertices: " << _mesh->vertices().size()
-               <<", #edges: " << _mesh->edges().size()
-               <<", #triangles: " << _mesh->triangles().size() << ", rank: " << utils::MasterSlave::getRank());
-
-  std::map<int, mesh::Vertex*> vertexMap;
-  std::map<int, mesh::Edge*> edgeMap;
-  int vertexCounter = 0;
-
-  for (const mesh::Vertex& vertex : _mesh->vertices())
-  {
-    if ((filterByBB && isVertexInBB(vertex)) || (not filterByBB && vertex.isTagged()))
-    {
-      mesh::Vertex& v = filteredMesh.createVertex(vertex.getCoords());
-      v.setGlobalIndex(vertex.getGlobalIndex());
-      if(vertex.isTagged()) v.tag();
-      v.setOwner(vertex.isOwner());
-      vertexMap[vertex.getID()] = &v;
-    }
-    vertexCounter++;
-  }
-
-  // Add all edges formed by the contributing vertices
-  for (mesh::Edge& edge : _mesh->edges())
-  {
-    int vertexIndex1 = edge.vertex(0).getID();
-    int vertexIndex2 = edge.vertex(1).getID();
-    if (utils::contained(vertexIndex1, vertexMap) &&
-        utils::contained(vertexIndex2, vertexMap)) {
-      mesh::Edge& e = filteredMesh.createEdge(*vertexMap[vertexIndex1], *vertexMap[vertexIndex2]);
-      edgeMap[edge.getID()] = &e;
-    }
-  }
-
-  // Add all triangles formed by the contributing edges
-  if (_dimensions==3)
-  {
-    for (mesh::Triangle& triangle : _mesh->triangles() )
-    {
-      int edgeIndex1 = triangle.edge(0).getID();
-      int edgeIndex2 = triangle.edge(1).getID();
-      int edgeIndex3 = triangle.edge(2).getID();
-      if (utils::contained(edgeIndex1, edgeMap) &&
-          utils::contained(edgeIndex2, edgeMap) &&
-          utils::contained(edgeIndex3, edgeMap))
-      {
-        filteredMesh.createTriangle(*edgeMap[edgeIndex1],*edgeMap[edgeIndex2],*edgeMap[edgeIndex3]);
-      }
-    }
-  }
-
-  PRECICE_DEBUG("Filtered mesh. #vertices: " << filteredMesh.vertices().size()
-               <<", #edges: " << filteredMesh.edges().size()
-               <<", #triangles: " << filteredMesh.triangles().size() << ", rank: " << utils::MasterSlave::getRank());
 }
 
 bool ReceivedBoundingBox::isVertexInBB(const mesh::Vertex& vertex) {

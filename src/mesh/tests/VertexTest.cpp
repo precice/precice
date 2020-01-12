@@ -5,6 +5,7 @@
 using namespace precice;
 
 BOOST_AUTO_TEST_SUITE(MeshTests)
+BOOST_AUTO_TEST_SUITE(VertexTests, *testing::OnMaster())
 
 BOOST_AUTO_TEST_CASE(Vertices)
 {
@@ -45,4 +46,6 @@ BOOST_AUTO_TEST_CASE(VertexWKTPrint)
     std::string v2str("POINT (1 2 3)");
     BOOST_TEST(v2str == v2stream.str());
 }
+
+BOOST_AUTO_TEST_SUITE_END() // Vertex
 BOOST_AUTO_TEST_SUITE_END() // Mesh

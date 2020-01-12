@@ -125,7 +125,7 @@
          <relative-convergence-measure data="Forces2" mesh="SOLIDZ_Mesh2" limit="1e-4"/>
          <relative-convergence-measure data="Forces3" mesh="SOLIDZ_Mesh3" limit="1e-4"/>
          <extrapolation-order value="2"/>
-         <post-processing:IQN-ILS>
+         <acceleration:IQN-ILS>
             <data name="DisplacementDeltas1" mesh="SOLIDZ_Mesh1"/>
             <data name="DisplacementDeltas2" mesh="SOLIDZ_Mesh2"/>
             <data name="DisplacementDeltas3" mesh="SOLIDZ_Mesh3"/>
@@ -137,7 +137,7 @@
             <initial-relaxation value="0.001"/>
             <max-used-iterations value="100"/>
             <timesteps-reused value="8"/>
-         </post-processing:IQN-ILS>
+         </acceleration:IQN-ILS>
       </coupling-scheme:multi>
 
    </solver-interface>

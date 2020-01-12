@@ -42,14 +42,6 @@ private:
 
   logging::Logger _log{"partition::ReceivedBoundingBox"};
 
-
-  /* Create filteredMesh from the filtered _mesh:
-   * Copies all vertices/edges/triangles that are either contained in the bounding box
-   * or tagged to the filteredMesh. Edges and triangles are copied, when ALL vertices
-   * are part of the filteredMesh i.e. their IDs are contained in vertexMap.
-   */
-  void filterMesh(mesh::Mesh &filteredMesh, const bool filterByBB);
-
   /// compares to bounding box and if they have intersection, returns true, otherwise flase!
   static bool overlapping(mesh::Mesh::BoundingBox const & currentBB, mesh::Mesh::BoundingBox const & receivedBB);
 

@@ -4,11 +4,9 @@
 target_sources(testprecice
     PRIVATE
     src/acceleration/test/AccelerationMasterSlaveTest.cpp
-    src/acceleration/test/HierarchicalAitkenAccelerationTest.cpp
     src/acceleration/test/ParallelMatrixOperationsTest.cpp
     src/acceleration/test/PreconditionerTest.cpp
     src/acceleration/test/QRFactorizationTest.cpp
-    src/action/tests/ModifyCoordinatesActionTest.cpp
     src/action/tests/PythonActionTest.cpp
     src/action/tests/ScaleActionTest.cpp
     src/com/tests/CommunicateBoundingBoxTest.cpp
@@ -43,10 +41,7 @@ target_sources(testprecice
     src/math/tests/GeometryTest.cpp
     src/mesh/tests/DataConfigurationTest.cpp
     src/mesh/tests/EdgeTest.cpp
-    src/mesh/tests/GroupTest.cpp
-    src/mesh/tests/MergeTest.cpp
     src/mesh/tests/MeshTest.cpp
-    src/mesh/tests/PropertyContainerTest.cpp
     src/mesh/tests/QuadTest.cpp
     src/mesh/tests/RTreeTests.cpp
     src/mesh/tests/TriangleTest.cpp
@@ -63,7 +58,6 @@ target_sources(testprecice
     src/precice/tests/WatchPointTest.cpp
     src/query/tests/FindClosestTest.cpp
     src/query/tests/FindClosestVertexVisitorTest.cpp
-    src/query/tests/FindVoxelContentTest.cpp
     src/testing/Fixtures.hpp
     src/testing/Testing.cpp
     src/testing/Testing.hpp
@@ -79,5 +73,6 @@ target_sources(testprecice
     src/utils/tests/StatisticsTest.cpp
     src/utils/tests/StringTest.cpp
     src/xml/tests/ParserTest.cpp
+    src/xml/tests/PrinterTest.cpp
     src/xml/tests/XMLTest.cpp
     )

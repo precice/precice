@@ -9,11 +9,11 @@ using namespace precice;
 using namespace precice::action;
 
 BOOST_AUTO_TEST_SUITE(ActionTests)
-BOOST_AUTO_TEST_SUITE(Python)
+BOOST_AUTO_TEST_SUITE(Python, *testing::OnMaster())
 
 BOOST_AUTO_TEST_CASE(AllMethods)
 {
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, false));
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, false, testing::nextMeshID()));
   mesh->createVertex(Eigen::Vector3d::Constant(1.0));
   mesh->createVertex(Eigen::Vector3d::Constant(2.0));
   mesh->createVertex(Eigen::Vector3d::Constant(3.0));
@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(OmitMethods)
     action.performAction(0.0, 0.0, 0.0, 0.0);
   }
   {
-    mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, false));
+    mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, false, testing::nextMeshID()));
     mesh->createVertex(Eigen::Vector3d::Zero());
     mesh::PtrData data = mesh->createData("TargetData", 1);
     mesh->allocateDataValues();
@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(OmitMethods)
     action.performAction(0.0, 0.0, 0.0, 0.0);
   }
   {
-    mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, false));
+    mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, false, testing::nextMeshID()));
     mesh->createVertex(Eigen::Vector3d::Zero());
     mesh::PtrData data = mesh->createData("SourceData", 1);
     mesh->allocateDataValues();

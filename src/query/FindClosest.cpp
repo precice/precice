@@ -137,7 +137,6 @@ bool FindClosest:: determineClosest()
   Eigen::VectorXd normal = Eigen::VectorXd::Zero(_searchpoint.size());
   if ( closestType == 0 ) { // Vertex
     mesh::Vertex& vertex = _findClosestVertex.getClosestVertex ();
-    vertex.getProperties ( vertex.INDEX_GEOMETRY_ID, _closest.meshIDs );
     _closest.vectorToElement = vertex.getCoords() - _searchpoint;
     normal = vertex.getNormal();
     InterpolationElement element;
@@ -147,7 +146,6 @@ bool FindClosest:: determineClosest()
   }
   else if ( closestType == 1 ) { // Edge
     mesh::Edge& edge = _findClosestEdge.getClosestEdge();
-    edge.getProperties ( edge.INDEX_GEOMETRY_ID, _closest.meshIDs );
     _closest.vectorToElement = _findClosestEdge.getVectorToProjectionPoint();
     normal = edge.getNormal();
     InterpolationElement element0, element1;
@@ -160,7 +158,6 @@ bool FindClosest:: determineClosest()
   }
   else if ( closestType == 2 ) { // Triangle
     mesh::Triangle& triangle = _findClosestTriangle.getClosestTriangle ();
-    triangle.getProperties ( triangle.INDEX_GEOMETRY_ID, _closest.meshIDs );
     _closest.vectorToElement = _findClosestTriangle.getVectorToProjectionPoint();
     normal = triangle.getNormal();
     InterpolationElement element0, element1, element2;
@@ -176,7 +173,6 @@ bool FindClosest:: determineClosest()
   }
   else if ( closestType == 3 ) { // Quad
     mesh::Quad& quad = _findClosestQuad.getClosestQuad();
-    quad.getProperties(quad.INDEX_GEOMETRY_ID, _closest.meshIDs);
     _closest.vectorToElement = _findClosestQuad.getVectorToProjectionPoint();
     normal = quad.getNormal();
     InterpolationElement element0, element1, element2, element3;

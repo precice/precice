@@ -388,7 +388,7 @@ void runCouplingWithSubcycling
   }
 }
 
-struct SerialImplicitCouplingSchemeFixture
+struct SerialImplicitCouplingSchemeFixture : m2n::WhiteboxAccessor
 {
   std::string _pathToTests;
 
@@ -414,16 +414,15 @@ BOOST_AUTO_TEST_CASE(testParseConfigurationWithRelaxation)
       new m2n::M2NConfiguration(root));
   CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
 
-  xml::configure(root, path);
+  xml::configure(root, xml::ConfigurationContext{}, path);
   BOOST_CHECK(cplSchemeConfig._accelerationConfig->getAcceleration().get()); // no nullptr
-  meshConfig->setMeshSubIDs();
 }
 
 BOOST_AUTO_TEST_CASE(testExtrapolateData)
 {
   using namespace mesh;
 
-  PtrMesh mesh(new Mesh("MyMesh", 3, false));
+  PtrMesh mesh(new Mesh("MyMesh", 3, false, testing::nextMeshID()));
   PtrData data = mesh->createData("MyData", 1);
   int dataID = data->getID();
   mesh->createVertex(Eigen::Vector3d::Zero());
@@ -527,7 +526,7 @@ BOOST_FIXTURE_TEST_CASE(testAbsConvergenceMeasureSynchronized, testing::M2NFixtu
 
   MeshConfiguration meshConfig(root, dataConfig);
   meshConfig.setDimensions(3);
-  mesh::PtrMesh mesh(new Mesh("Mesh", 3, false));
+  mesh::PtrMesh mesh(new Mesh("Mesh", 3, false, testing::nextMeshID()));
   mesh->createData("data0", 1);
   mesh->createData("data1", 3);
   mesh->createVertex(Eigen::Vector3d::Zero());
@@ -593,9 +592,9 @@ BOOST_AUTO_TEST_CASE(testConfiguredAbsConvergenceMeasureSynchronized,
   m2n::M2NConfiguration::SharedPointer m2nConfig(new m2n::M2NConfiguration(root));
   CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
 
-  xml::configure(root, configurationPath);
-  meshConfig->setMeshSubIDs();
+  xml::configure(root, xml::ConfigurationContext{}, configurationPath);
   m2n::PtrM2N m2n = m2nConfig->getM2N("Participant0", "Participant1");
+  useOnlyMasterCom(m2n) = true;
 
   // some dummy mesh
   meshConfig->meshes()[0]->createVertex(Eigen::Vector3d(1.0, 1.0, 1.0));
@@ -639,7 +638,7 @@ BOOST_FIXTURE_TEST_CASE(testMinIterConvergenceMeasureSynchronized, testing::M2NF
 
   mesh::MeshConfiguration meshConfig (root, dataConfig);
   meshConfig.setDimensions(3);
-  mesh::PtrMesh mesh (new mesh::Mesh("Mesh", 3, false));
+  mesh::PtrMesh mesh (new mesh::Mesh("Mesh", 3, false, testing::nextMeshID()));
   mesh->createData ("data0", 1);
   mesh->createData ("data1", 3);
   mesh->createVertex (Eigen::Vector3d::Zero());
@@ -701,7 +700,7 @@ BOOST_FIXTURE_TEST_CASE(testMinIterConvergenceMeasureSynchronizedWithSubcycling,
 
   mesh::MeshConfiguration meshConfig ( root, dataConfig);
   meshConfig.setDimensions(3);
-  mesh::PtrMesh mesh ( new mesh::Mesh("Mesh", 3, false));
+  mesh::PtrMesh mesh ( new mesh::Mesh("Mesh", 3, false, testing::nextMeshID()));
   mesh->createData ( "data0", 1);
   mesh->createData ( "data1", 3);
   mesh->createVertex ( Eigen::Vector3d::Zero());
@@ -766,7 +765,7 @@ BOOST_FIXTURE_TEST_CASE(testInitializeData, testing::M2NFixture,
 
   mesh::MeshConfiguration meshConfig(root, dataConfig);
   meshConfig.setDimensions(3);
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, false));
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, false, testing::nextMeshID()));
   const auto dataID0 = mesh->createData("Data0", 1)->getID();
   const auto dataID1 = mesh->createData("Data1", 3)->getID();;
   mesh->createVertex(Eigen::Vector3d::Zero());

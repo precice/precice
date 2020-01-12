@@ -17,13 +17,12 @@ using namespace precice;
 
 void reset ()
 {
-  mesh::Mesh::resetGeometryIDsGlobally();
   mesh::Data::resetDataCount();
   impl::Participant::resetParticipantCount();
   utils::MasterSlave::reset();
 }
 
-struct ParallelTestFixture : testing::WhiteboxAccessor {
+struct ParallelTestFixture : testing::SlimConfigurator {
 
   std::string _pathToTests;
 
@@ -52,10 +51,7 @@ BOOST_AUTO_TEST_CASE(TestMasterSlaveSetup, * testing::OnSize(4))
 {
   SolverInterface interface ( "SolverOne", utils::Parallel::getProcessRank(), 4 );
   std::string configFilename = _pathToTests + "config1.xml";
-  config::Configuration config;
-  xml::configure(config.getXMLTag(), configFilename);
-  impl(interface).configure(config.getSolverInterfaceConfiguration());
-
+  slimConfigure(interface, configFilename);
   BOOST_TEST ( interface.getDimensions() == 3 );
 
   if(utils::Parallel::getProcessRank()==0){
@@ -81,11 +77,9 @@ BOOST_AUTO_TEST_CASE(TestMasterSlaveSetup, * testing::OnSize(4))
 BOOST_AUTO_TEST_CASE(TestFinalize, * testing::OnSize(4))
 {
   std::string configFilename = _pathToTests + "config1.xml";
-  config::Configuration config;
-  xml::configure(config.getXMLTag(), configFilename);
   if(utils::Parallel::getProcessRank()<=1){
     SolverInterface interface ( "SolverOne", utils::Parallel::getProcessRank(), 2 );
-    impl(interface).configure(config.getSolverInterfaceConfiguration());
+    slimConfigure(interface, configFilename);
     int meshID = interface.getMeshID("MeshOne");
     double xCoord = 0.0 + utils::Parallel::getProcessRank();
     interface.setMeshVertex(meshID, Eigen::Vector3d(xCoord,0.0,0.0).data());
@@ -96,7 +90,7 @@ BOOST_AUTO_TEST_CASE(TestFinalize, * testing::OnSize(4))
   }
   else {
     SolverInterface interface ( "SolverTwo", utils::Parallel::getProcessRank()-2, 2 );
-    impl(interface).configure(config.getSolverInterfaceConfiguration());
+    slimConfigure(interface, configFilename);
     int meshID = interface.getMeshID("MeshTwo");
     double xCoord = -2.0 + utils::Parallel::getProcessRank();
     interface.setMeshVertex(meshID, Eigen::Vector3d(xCoord,0.0,0.0).data());
@@ -110,17 +104,15 @@ BOOST_AUTO_TEST_CASE(TestFinalize, * testing::OnSize(4))
 BOOST_AUTO_TEST_CASE(GlobalRBFPartitioning, * testing::OnSize(4))
 {
   std::string configFilename = _pathToTests + "globalRBFPartitioning.xml";
-  config::Configuration config;
 
   if(utils::Parallel::getProcessRank()<=2){
     utils::Parallel::splitCommunicator( "SolverOne" );
     utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator()); //needed since this test uses PETSc
     BOOST_TEST(utils::Parallel::getCommunicatorSize() == 3);
     utils::Parallel::clearGroups();
-    xml::configure(config.getXMLTag(), configFilename);
 
     SolverInterface interface ( "SolverOne", utils::Parallel::getProcessRank(), 3 );
-    impl(interface).configure(config.getSolverInterfaceConfiguration());
+    slimConfigure(interface, configFilename);
     int meshID = interface.getMeshID("MeshOne");
     int dataID = interface.getDataID("Data2", meshID);
 
@@ -140,10 +132,9 @@ BOOST_AUTO_TEST_CASE(GlobalRBFPartitioning, * testing::OnSize(4))
     utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator());
     BOOST_TEST(utils::Parallel::getCommunicatorSize() == 1);
     utils::Parallel::clearGroups();
-    xml::configure(config.getXMLTag(), configFilename);
 
     SolverInterface interface ( "SolverTwo", 0, 1 );
-    impl(interface).configure(config.getSolverInterfaceConfiguration());
+    slimConfigure(interface, configFilename);
     int meshID = interface.getMeshID("MeshTwo");
     int vertexIDs[6];
     double positions[12] = {0.0,0.0,0.2,0.0,0.4,0.0,0.6,0.0,0.8,0.0,1.0,0.0};
@@ -160,17 +151,15 @@ BOOST_AUTO_TEST_CASE(GlobalRBFPartitioning, * testing::OnSize(4))
 BOOST_AUTO_TEST_CASE(LocalRBFPartitioning, * testing::OnSize(4))
 {
   std::string configFilename = _pathToTests + "localRBFPartitioning.xml";
-  config::Configuration config;
 
   if(utils::Parallel::getProcessRank()<=2){
     utils::Parallel::splitCommunicator( "SolverOne" );
     utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator());
     BOOST_TEST(utils::Parallel::getCommunicatorSize() == 3);
     utils::Parallel::clearGroups();
-    xml::configure(config.getXMLTag(), configFilename);
 
     SolverInterface interface ( "SolverOne", utils::Parallel::getProcessRank(), 3 );
-    impl(interface).configure(config.getSolverInterfaceConfiguration());
+    slimConfigure(interface, configFilename);
     int meshID = interface.getMeshID("MeshOne");
     int dataID = interface.getDataID("Data2", meshID);
 
@@ -189,10 +178,9 @@ BOOST_AUTO_TEST_CASE(LocalRBFPartitioning, * testing::OnSize(4))
     utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator());
     BOOST_TEST(utils::Parallel::getCommunicatorSize() == 1);
     utils::Parallel::clearGroups();
-    xml::configure(config.getXMLTag(), configFilename);
 
     SolverInterface interface ( "SolverTwo", 0, 1 );
-    impl(interface).configure(config.getSolverInterfaceConfiguration());
+    slimConfigure(interface, configFilename);
     int meshID = interface.getMeshID("MeshTwo");
     int vertexIDs[6];
     double positions[12] = {0.0,0.0,0.2,0.0,0.4,0.0,0.6,0.0,0.8,0.0,1.0,0.0};
@@ -212,16 +200,14 @@ BOOST_AUTO_TEST_CASE(LocalRBFPartitioning, * testing::OnSize(4))
 BOOST_AUTO_TEST_CASE(CouplingOnLine, * testing::OnSize(4))
 {
   std::string configFilename = _pathToTests + "line-coupling.xml";
-  config::Configuration config;
 
   if(utils::Parallel::getProcessRank()<=2){
     utils::Parallel::splitCommunicator( "Ateles" );
     utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator());
     BOOST_TEST(utils::Parallel::getCommunicatorSize() == 3);
     utils::Parallel::clearGroups();
-    xml::configure(config.getXMLTag(), configFilename);
     SolverInterface interface ( "Ateles", utils::Parallel::getProcessRank(), 3 );
-    impl(interface).configure(config.getSolverInterfaceConfiguration());
+    slimConfigure(interface, configFilename);
     int meshID = interface.getMeshID("Ateles_Mesh");
 
     int vertexIDs[4];
@@ -242,9 +228,8 @@ BOOST_AUTO_TEST_CASE(CouplingOnLine, * testing::OnSize(4))
     utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator());
     BOOST_TEST(utils::Parallel::getCommunicatorSize() == 1);
     utils::Parallel::clearGroups();
-    xml::configure(config.getXMLTag(), configFilename);
     SolverInterface interface ( "FASTEST", 0, 1 );
-    impl(interface).configure(config.getSolverInterfaceConfiguration());
+    slimConfigure(interface, configFilename);
     int meshID = interface.getMeshID("FASTEST_Mesh");
     int vertexIDs[10];
     double xCoord = -0.0001;
@@ -306,13 +291,9 @@ BOOST_AUTO_TEST_CASE(TestQN, * testing::OnSize(4))
 
   for(int k=0; k<numberOfTests; k++){
     reset();
-    config::Configuration config;
-    std::string configFilename = configs[k];
-
-    xml::configure(config.getXMLTag(), configFilename);
 
     SolverInterface interface ( solverName, rank, size );
-    impl(interface).configure(config.getSolverInterfaceConfiguration());
+    slimConfigure(interface, configs[k]);
     int meshID = interface.getMeshID(meshName);
     int writeDataID = interface.getDataID(writeDataName, meshID);
     int readDataID = interface.getDataID(readDataName, meshID);
@@ -396,7 +377,7 @@ BOOST_AUTO_TEST_CASE(testDistributedCommunications, * testing::OnSize(4))
     std::vector<Eigen::VectorXd> expectedData;
 
     Eigen::Vector3d position;
-    Eigen::Vector3d datum;  
+    Eigen::Vector3d datum;
 
     if (utils::Parallel::getProcessRank() == 0){
       solverName = "Fluid";
@@ -432,9 +413,7 @@ BOOST_AUTO_TEST_CASE(testDistributedCommunications, * testing::OnSize(4))
     }
 
     SolverInterface precice(solverName, rank, size);
-    config::Configuration config;
-    xml::configure(config.getXMLTag(), _pathToTests + fileName);
-    impl(precice).configure(config.getSolverInterfaceConfiguration());
+    slimConfigure(precice, _pathToTests + fileName);
     int meshID = precice.getMeshID(meshName);
     int forcesID = precice.getDataID("Forces", meshID);
     int velocID = precice.getDataID("Velocities", meshID);
@@ -470,7 +449,7 @@ BOOST_AUTO_TEST_CASE(testDistributedCommunications, * testing::OnSize(4))
         }
       }
     }
-    
+
     precice.finalize();
   }
 }
@@ -491,7 +470,7 @@ BOOST_AUTO_TEST_CASE(testBoundingBoxInitialization, * testing::OnSize(4))
 
   Eigen::Vector3d position;
   Eigen::Vector3d datum;
-  
+
   if (utils::Parallel::getProcessRank() <= 1){
       for( int i=0; i<4; i++){
         position[0] = i*1.0;
@@ -501,7 +480,7 @@ BOOST_AUTO_TEST_CASE(testBoundingBoxInitialization, * testing::OnSize(4))
         datum[0] = i*1.0;
         datum[1] = i*2.0;
         datum[2] = i*3.0;
-        data.push_back(datum);        
+        data.push_back(datum);
       }
     }
 
@@ -523,7 +502,7 @@ BOOST_AUTO_TEST_CASE(testBoundingBoxInitialization, * testing::OnSize(4))
         expectedData.push_back(datum);
       }
     }
-  
+
 
   if (utils::Parallel::getProcessRank() == 0){
       solverName = "Fluid";
@@ -531,7 +510,7 @@ BOOST_AUTO_TEST_CASE(testBoundingBoxInitialization, * testing::OnSize(4))
       size = 2;
       meshName = "FluidMesh";
       i1 = 2;
-      i2 = 4;     
+      i2 = 4;
   }
   else if(utils::Parallel::getProcessRank() == 1){
       solverName = "Fluid";
@@ -561,9 +540,7 @@ BOOST_AUTO_TEST_CASE(testBoundingBoxInitialization, * testing::OnSize(4))
 
     SolverInterface precice(solverName, rank, size);
     std::string configFilename = _pathToTests + "BB-sockets-explicit-oneway.xml";
-    config::Configuration config;
-    xml::configure(config.getXMLTag(), configFilename);
-    impl(precice).configure(config.getSolverInterfaceConfiguration());
+    slimConfigure(precice, configFilename);
     int meshID = precice.getMeshID(meshName);
     int forcesID = precice.getDataID("Forces", meshID);
 
@@ -571,22 +548,22 @@ BOOST_AUTO_TEST_CASE(testBoundingBoxInitialization, * testing::OnSize(4))
     for(int i=i1; i<i2; i++){
       int vertexID = precice.setMeshVertex(meshID, positions[i].data());
       vertexIDs.push_back(vertexID);
-    }   
-      
+    }
+
     precice.initialize();
 
-    if (utils::Parallel::getProcessRank() <= 1){ //Fluid      
+    if (utils::Parallel::getProcessRank() <= 1){ //Fluid
       for( size_t i=0; i<vertexIDs.size(); i++){
         precice.writeVectorData(forcesID, vertexIDs[i], data[i+i1].data());
       }
     }
-   
+
     precice.advance(1.0);
 
     if (utils::Parallel::getProcessRank() > 1){ //Structure
-      
+
       for( size_t i=0; i<vertexIDs.size(); i++){
-        precice.readVectorData(forcesID, vertexIDs[i], data[i+i1].data());        
+        precice.readVectorData(forcesID, vertexIDs[i], data[i+i1].data());
       }
     }
 
@@ -597,7 +574,7 @@ BOOST_AUTO_TEST_CASE(testBoundingBoxInitialization, * testing::OnSize(4))
         }
       }
     }
-    precice.finalize();   
+    precice.finalize();
 }
 
 
@@ -616,7 +593,7 @@ BOOST_AUTO_TEST_CASE(testBoundingBoxInitializationTwoWay, * testing::OnSize(4))
 
   Eigen::Vector3d position;
   Eigen::Vector3d datum;
-  
+
   if (utils::Parallel::getProcessRank() <= 1){
       for( int i=0; i<4; i++){
         position[0] = i*1.0;
@@ -652,7 +629,7 @@ BOOST_AUTO_TEST_CASE(testBoundingBoxInitializationTwoWay, * testing::OnSize(4))
         expectedData.push_back(datum);
       }
     }
-  
+
 
   if (utils::Parallel::getProcessRank() == 0){
       solverName = "Fluid";
@@ -660,7 +637,7 @@ BOOST_AUTO_TEST_CASE(testBoundingBoxInitializationTwoWay, * testing::OnSize(4))
       size = 2;
       meshName = "FluidMesh";
       i1 = 0;
-      i2 = 2;     
+      i2 = 2;
   }
   else if(utils::Parallel::getProcessRank() == 1){
       solverName = "Fluid";
@@ -690,9 +667,7 @@ BOOST_AUTO_TEST_CASE(testBoundingBoxInitializationTwoWay, * testing::OnSize(4))
 
     SolverInterface precice(solverName, rank, size);
     std::string configFilename = _pathToTests + "BB-sockets-explicit-twoway.xml";
-    config::Configuration config;
-    xml::configure(config.getXMLTag(), configFilename);
-    impl(precice).configure(config.getSolverInterfaceConfiguration());
+    slimConfigure(precice, configFilename);
     int meshID = precice.getMeshID(meshName);
     int forcesID = precice.getDataID("Forces", meshID);
     int velocitiesID = precice.getDataID("Velocities", meshID);
@@ -703,24 +678,24 @@ BOOST_AUTO_TEST_CASE(testBoundingBoxInitializationTwoWay, * testing::OnSize(4))
       vertexIDs.push_back(vertexID);
     }
 
-      
+
     precice.initialize();
 
-    if (utils::Parallel::getProcessRank() <= 1){ //Fluid      
+    if (utils::Parallel::getProcessRank() <= 1){ //Fluid
       for( size_t i=0; i<vertexIDs.size(); i++){
         precice.writeVectorData(forcesID, vertexIDs[i], data[i+i1].data());
       }
-    }   
+    }
 
     precice.advance(1.0);
 
     if (utils::Parallel::getProcessRank() > 1){ //Structure
 
       for( size_t i=0; i<vertexIDs.size(); i++){
-        precice.readVectorData(forcesID, vertexIDs[i], data[i+i1].data());        
+        precice.readVectorData(forcesID, vertexIDs[i], data[i+i1].data());
       }
 
-      
+
 
       for( size_t j=0; j<vertexIDs.size(); j++){
         for (size_t d=0; d<3; d++){
@@ -733,16 +708,16 @@ BOOST_AUTO_TEST_CASE(testBoundingBoxInitializationTwoWay, * testing::OnSize(4))
       }
 
       for( size_t i=0; i<vertexIDs.size(); i++){
-        precice.writeVectorData(velocitiesID, vertexIDs[i], data[i+i1].data());        
+        precice.writeVectorData(velocitiesID, vertexIDs[i], data[i+i1].data());
       }
     }
 
     precice.advance(1.0);
 
     if (utils::Parallel::getProcessRank() <= 1){ //fluid
-      
+
       for( size_t i=0; i<vertexIDs.size(); i++){
-        precice.readVectorData(velocitiesID, vertexIDs[i], data[i+i1].data());        
+        precice.readVectorData(velocitiesID, vertexIDs[i], data[i+i1].data());
       }
     }
 
@@ -755,23 +730,21 @@ BOOST_AUTO_TEST_CASE(testBoundingBoxInitializationTwoWay, * testing::OnSize(4))
     }
 
     precice.finalize();
-   
+
 }
 /*
 /// This testcase is based on a bug documented in issue #371
 BOOST_AUTO_TEST_CASE(NearestProjectionRePartitioning, * testing::OnSize(4))
 {
   std::string configFilename = _pathToTests + "np-repartitioning.xml";
-  config::Configuration config;
 
   if(utils::Parallel::getProcessRank()<=2){
     utils::Parallel::splitCommunicator( "FluidSolver" );
     utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator());
     BOOST_TEST(utils::Parallel::getCommunicatorSize() == 3);
     utils::Parallel::clearGroups();
-    xml::configure(config.getXMLTag(), configFilename);
     SolverInterface interface ( "FluidSolver", utils::Parallel::getProcessRank(), 3 );
-    impl(interface).configure(config.getSolverInterfaceConfiguration());
+    slimConfigure(interface, configFilename);
 
     if(utils::Parallel::getProcessRank()==1) {
 
@@ -866,9 +839,8 @@ BOOST_AUTO_TEST_CASE(NearestProjectionRePartitioning, * testing::OnSize(4))
     utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator());
     BOOST_TEST(utils::Parallel::getCommunicatorSize() == 1);
     utils::Parallel::clearGroups();
-    xml::configure(config.getXMLTag(), configFilename);
     SolverInterface interface ( "SolidSolver", 0, 1 );
-    impl(interface).configure(config.getSolverInterfaceConfiguration());
+    slimConfigure(interface, configFilename);
     const int meshID = interface.getMeshID("Nodes");
     const int dimensions = 3;
     BOOST_TEST(interface.getDimensions()==dimensions);
@@ -943,8 +915,6 @@ BOOST_AUTO_TEST_CASE(MasterSockets, * testing::OnSize(4))
   std::string configFilename = _pathToTests + "master-sockets.xml";
   std::string myName, myMeshName;
   int myRank, mySize;
-  config::Configuration config;
-  xml::configure(config.getXMLTag(), configFilename);
   if(utils::Parallel::getProcessRank()<=2){
     myName = "ParallelSolver";
     myRank = utils::Parallel::getProcessRank();
@@ -958,7 +928,7 @@ BOOST_AUTO_TEST_CASE(MasterSockets, * testing::OnSize(4))
     myMeshName = "SerialMesh";
   }
   SolverInterface interface(myName, myRank, mySize);
-  impl(interface).configure(config.getSolverInterfaceConfiguration());
+  slimConfigure(interface, configFilename);
   int meshID = interface.getMeshID(myMeshName);
   double position[2] = {0, 0};
   interface.setMeshVertex(meshID, position);
@@ -971,8 +941,7 @@ BOOST_AUTO_TEST_CASE(MasterSockets, * testing::OnSize(4))
 BOOST_AUTO_TEST_CASE(UserDefinedMPICommunicator, * testing::OnSize(4))
 {
   std::string configFilename = _pathToTests + "userDefinedMPICommunicator.xml";
-  config::Configuration config;
-  
+
   if(utils::Parallel::getProcessRank()<=2){
     utils::Parallel::splitCommunicator( "SolverOne" );
     MPI_Comm myComm = utils::Parallel::getLocalCommunicator();
@@ -981,9 +950,8 @@ BOOST_AUTO_TEST_CASE(UserDefinedMPICommunicator, * testing::OnSize(4))
     BOOST_TEST(myCommSize == 3);
     utils::Parallel::clearGroups();
 
-    xml::configure(config.getXMLTag(), configFilename);
     SolverInterface interface ( "SolverOne", utils::Parallel::getProcessRank(), 3, &myComm );
-    impl(interface).configure(config.getSolverInterfaceConfiguration());
+    slimConfigure(interface, configFilename);
     int meshID = interface.getMeshID("MeshOne");
 
     int vertexIDs[2];
@@ -998,10 +966,9 @@ BOOST_AUTO_TEST_CASE(UserDefinedMPICommunicator, * testing::OnSize(4))
     utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator());
     BOOST_TEST(utils::Parallel::getCommunicatorSize() == 1);
     utils::Parallel::clearGroups();
-    xml::configure(config.getXMLTag(), configFilename);
 
     SolverInterface interface ( "SolverTwo", 0, 1 );
-    impl(interface).configure(config.getSolverInterfaceConfiguration());
+    slimConfigure(interface, configFilename);
     int meshID = interface.getMeshID("MeshTwo");
     int vertexIDs[6];
     double positions[12] = {0.0,0.0,0.2,0.0,0.4,0.0,0.6,0.0,0.8,0.0,1.0,0.0};
@@ -1018,7 +985,7 @@ BOOST_AUTO_TEST_CASE(UserDefinedMPICommunicatorPetRBF, * testing::OnSize(4))
 {
   std::string configFilename = _pathToTests + "userDefinedMPICommunicatorPetRBF.xml";
   config::Configuration config;
-  
+
   if(utils::Parallel::getProcessRank()<=2){
     utils::Parallel::splitCommunicator( "SolverOne" );
     MPI_Comm myComm = utils::Parallel::getLocalCommunicator();
@@ -1028,8 +995,7 @@ BOOST_AUTO_TEST_CASE(UserDefinedMPICommunicatorPetRBF, * testing::OnSize(4))
     utils::Parallel::clearGroups();
 
     SolverInterface interface ( "SolverOne", utils::Parallel::getProcessRank(), 3, &myComm );
-    xml::configure(config.getXMLTag(), configFilename);
-    impl(interface).configure(config.getSolverInterfaceConfiguration());
+    slimConfigure(interface, configFilename);
     int meshID = interface.getMeshID("MeshOne");
 
     int vertexIDs[2];
@@ -1044,10 +1010,9 @@ BOOST_AUTO_TEST_CASE(UserDefinedMPICommunicatorPetRBF, * testing::OnSize(4))
     utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator());
     BOOST_TEST(utils::Parallel::getCommunicatorSize() == 1);
     utils::Parallel::clearGroups();
-    xml::configure(config.getXMLTag(), configFilename);
 
     SolverInterface interface ( "SolverTwo", 0, 1 );
-    impl(interface).configure(config.getSolverInterfaceConfiguration());
+    slimConfigure(interface, configFilename);
     int meshID = interface.getMeshID("MeshTwo");
     int vertexIDs[6];
     double positions[12] = {0.0,0.0,0.2,0.0,0.4,0.0,0.6,0.0,0.8,0.0,1.0,0.0};

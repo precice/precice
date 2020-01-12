@@ -82,9 +82,10 @@ void NearestProjectionMapping::computeMapping()
     precice::utils::Event e2(baseEvent+".getIndexOnEdges", precice::syncMode);
     auto indexEdges    = mesh::rtree::getEdgeRTree(search_space);
     e2.stop();
-    precice::utils::Event e3(baseEvent+".getIndexOnVertices", precice::syncMode);
-    auto indexVertices = mesh::rtree::getVertexRTree(search_space);
-    e3.stop();
+
+    // Lazy evaluation of the vertex index.
+    // This is not necessary in the case of matching meshes.
+    mesh::rtree::vertex_traits::Ptr indexVertices;
 
     utils::statistics::DistanceAccumulator distanceStatistics;
 
@@ -111,6 +112,10 @@ void NearestProjectionMapping::computeMapping()
       }
 
       if (not found) {
+        if(!indexVertices) {
+            precice::utils::Event e3(baseEvent+".getIndexOnVertices", precice::syncMode);
+            indexVertices = mesh::rtree::getVertexRTree(search_space);
+        }
         // Search for the origin inside the destination meshes vertices
         indexVertices->query(bg::index::nearest(coords, 1),
                              boost::make_function_output_iterator([&](int match) {
@@ -129,12 +134,11 @@ void NearestProjectionMapping::computeMapping()
     precice::utils::Event e2(baseEvent+".getIndexOnTriangles", precice::syncMode);
     auto indexTriangles = mesh::rtree::getTriangleRTree(search_space);
     e2.stop();
-    precice::utils::Event e3(baseEvent+".getIndexOnEdges", precice::syncMode);
-    auto indexEdges     = mesh::rtree::getEdgeRTree(search_space);
-    e3.stop();
-    precice::utils::Event e4(baseEvent+".getIndexOnVertices", precice::syncMode);
-    auto indexVertices  = mesh::rtree::getVertexRTree(search_space);
-    e4.stop();
+
+    // Lazy evaluation of indices for edges and vertices.
+    // These are not necessary in the case of matching meshes.
+    mesh::rtree::edge_traits::Ptr indexEdges;
+    mesh::rtree::vertex_traits::Ptr indexVertices;
 
     utils::statistics::DistanceAccumulator distanceStatistics;
 
@@ -162,6 +166,10 @@ void NearestProjectionMapping::computeMapping()
       }
 
       if (not found) {
+        if (!indexEdges) {
+            precice::utils::Event e3(baseEvent+".getIndexOnEdges", precice::syncMode);
+            indexEdges = mesh::rtree::getEdgeRTree(search_space);
+        }
         // Search for the vertex inside the destination meshes edges
         matches.clear();
         indexEdges->query(bg::index::nearest(coords, nnearest),
@@ -181,6 +189,10 @@ void NearestProjectionMapping::computeMapping()
       }
 
       if (not found) {
+          if(!indexVertices) {
+            precice::utils::Event e4(baseEvent+".getIndexOnVertices", precice::syncMode);
+            indexVertices = mesh::rtree::getVertexRTree(search_space);
+          }
         // Search for the vertex inside the destination meshes vertices
         indexVertices->query(bg::index::nearest(coords, 1),
                              boost::make_function_output_iterator([&](int match) {

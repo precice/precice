@@ -1,6 +1,5 @@
 #include "DataConfiguration.hpp"
 #include "mesh/Data.hpp"
-#include "mesh/PropertyContainer.hpp"
 #include "xml/XMLAttribute.hpp"
 
 namespace precice {
@@ -53,6 +52,7 @@ DataConfiguration::ConfiguredData DataConfiguration:: getRecentlyConfiguredData(
 
 void DataConfiguration:: xmlTagCallback
 (
+  const xml::ConfigurationContext& context,
   xml::XMLTag& tag )
 {
   if (tag.getNamespace() == TAG){
@@ -69,6 +69,7 @@ void DataConfiguration:: xmlTagCallback
 
 void DataConfiguration:: xmlEndTagCallback
 (
+  const xml::ConfigurationContext& context,
   xml::XMLTag& tag )
 {
 }

@@ -6,11 +6,11 @@
 using namespace precice;
 using namespace precice::query;
 
-BOOST_AUTO_TEST_SUITE(QueryTests)
+BOOST_AUTO_TEST_SUITE(QueryTests, *testing::OnMaster())
 
 BOOST_AUTO_TEST_CASE(FindClosestVertexVisitor)
 {
-  mesh::Mesh mesh("Mesh", 2, false);
+  mesh::Mesh mesh("Mesh", 2, false, testing::nextMeshID());
   mesh.createVertex(Eigen::Vector2d(0.0, 0.0));
   mesh.createVertex(Eigen::Vector2d(0.0, 5.0));
   FindClosestVertex find(Eigen::Vector2d(1, 0));

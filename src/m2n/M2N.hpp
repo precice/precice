@@ -4,12 +4,17 @@
 #include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "SharedPointer.hpp"
 #include <map>
+
 
 namespace precice
 {
 namespace m2n
 {
+
+// Forward declaration to friend unit tests which only use the master com
+struct WhiteboxAccessor;
 
 /**
  * @brief M2N communication class.
@@ -20,7 +25,7 @@ namespace m2n
 class M2N
 {
 public:
-  M2N(com::PtrCommunication masterCom, DistributedComFactory::SharedPointer distrFactory);
+  M2N(com::PtrCommunication masterCom, DistributedComFactory::SharedPointer distrFactory, bool useOnlyMasterCom = false);
 
   /// Destructor, empty.
   ~M2N();
@@ -65,25 +70,25 @@ public:
                                const std::string &requesterName);
 
     /**
-   * Same as acceptSlavesConnection except this only creates the channels, 
+   * Same as acceptSlavesConnection except this only creates the channels,
    * no vertex list needed!
    */
   void acceptSlavesPreConnection(const std::string &acceptorName,
                                  const std::string &requesterName);
 
-  /** 
-   * Same as requestSlavesConnection except this only creates the channels, 
+  /**
+   * Same as requestSlavesConnection except this only creates the channels,
    * no vertex list needed!
    */
   void requestSlavesPreConnection(const std::string &acceptorName,
                                   const std::string &requesterName);
 
   /*
-   * @brief After preliminary communication channels were set up and after 
-   *        the mesh partitions were communicated locally for every mesh, 
-   *        call this function to update and complete the communication 
+   * @brief After preliminary communication channels were set up and after
+   *        the mesh partitions were communicated locally for every mesh,
+   *        call this function to update and complete the communication
    *        channels for every communicated mesh
-   */  
+   */
   void completeSlavesConnection();
 
   /**
@@ -138,14 +143,14 @@ public:
    * neglect the gathering and checking step.
    */
   void send(double itemToSend);
-   
-  /// each rank sends its mesh partition to connected ranks  
+
+  /// each rank sends its mesh partition to connected ranks
   void broadcastSendLocalMesh(mesh::Mesh &mesh);
 
-  /// each rank sends the local communication map to the remote connecetd ranks (of the other participant)  
+  /// each rank sends the local communication map to the remote connecetd ranks (of the other participant)
   void broadcastSendLCM(std::map<int, std::vector<int>> &localCommunicationMap, mesh::Mesh &mesh);
 
-  /// each rank sends an int to the remote connected ranks  
+  /// each rank sends an int to the remote connected ranks
   void broadcastSend(int &itemToSend, mesh::Mesh &mesh);
 
   /// All slaves receive an array of doubles (different for each slave).
@@ -163,12 +168,12 @@ public:
   /// each rank receives mesh partition from connected ranks
   void broadcastReceiveLocalMesh(mesh::Mesh &mesh);
 
-  /// each rank receives local communication maps from remote connetcetd ranks (of the other participant)  
+  /// each rank receives local communication maps from remote connetcetd ranks (of the other participant)
   void broadcastReceiveLCM(std::map<int, std::vector<int>> &localCommunicationMap, mesh::Mesh &mesh);
 
   /// each rank receives an int from remote connetcetd ranks
   void broadcastReceiveAll(std::vector<int> &itemToReceive, mesh::Mesh &mesh);
-  
+
 private:
   logging::Logger _log{"m2n::M2N"};
 
@@ -182,6 +187,27 @@ private:
   bool _isMasterConnected = false;
 
   bool _areSlavesConnected = false;
+
+  // The following flag is (solely) needed for unit tests between two serial participants.
+  // To also use the slaves-slaves communication would require a lengthy setup of meshes
+  // and their re-partitioning, which could also not be moved to some fixture as the M2Ns
+  // are created through the configuration.
+  // See e.g. "CplSchemeTests/ExplicitCouplingSchemeTests/testConfiguredSimpleExplicitCoupling"
+  // This flag gives a loophole. It is set to false for normal use and modfied in the
+  // respective tests through a fried decleration.
+
+  /// between two serial participants, only use the master-master com and no slaves-slaves com
+  bool _useOnlyMasterCom = false;
+
+  // @brief To allow access to _useOnlyMasterCom
+  friend struct WhiteboxAccessor;
+};
+
+/// struct giving access _useOnlyMasterCom
+struct WhiteboxAccessor {
+    static auto useOnlyMasterCom(PtrM2N m2n) -> typename std::add_lvalue_reference<decltype(m2n->_useOnlyMasterCom)>::type {
+        return m2n->_useOnlyMasterCom;
+    }
 };
 
 } // namespace m2n

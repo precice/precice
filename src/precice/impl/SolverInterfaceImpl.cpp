@@ -9,11 +9,9 @@
 #include "mesh/config/DataConfiguration.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
 #include "mesh/Mesh.hpp"
-#include "mesh/PropertyContainer.hpp"
 #include "mesh/Vertex.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Triangle.hpp"
-#include "mesh/Merge.hpp"
 #include "io/ExportContext.hpp"
 #include "io/Export.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
@@ -103,7 +101,12 @@ void SolverInterfaceImpl:: configure
 {
   utils::Parallel::initializeMPI(nullptr, nullptr);
   config::Configuration config;
-  xml::configure(config.getXMLTag(), configurationFileName);
+  xml::ConfigurationContext context{
+      _accessorName,
+      _accessorProcessRank,
+      _accessorCommunicatorSize
+  };
+  xml::configure(config.getXMLTag(), context, configurationFileName);
   if(_accessorProcessRank==0){
     PRECICE_INFO("This is preCICE version " << PRECICE_VERSION);
     PRECICE_INFO("Revision info: " << precice::preciceRevision);
@@ -121,23 +124,24 @@ void SolverInterfaceImpl:: configure
   Event e("configure"); // no precice::syncMode as this is not yet configured here
   utils::ScopedEventPrefix sep("configure/");
 
-  mesh::Mesh::resetGeometryIDsGlobally();
   mesh::Data::resetDataCount();
   Participant::resetParticipantCount();
   _meshLock.clear();
 
   _dimensions = config.getDimensions();
   _accessor = determineAccessingParticipant(config);
+  _accessor->setMeshIdManager(config.getMeshConfiguration()->extractMeshIdManager());
 
-  PRECICE_CHECK(not (_accessor->useServer() && _accessor->useMaster()), "You cannot use a server and a master.");
-  PRECICE_CHECK(_accessorCommunicatorSize==1 || _accessor->useMaster() || _accessor->useServer(),
-        "A parallel participant needs either a master or a server communication configured");
+  PRECICE_CHECK(not (_accessor->useServer() && _accessor->useMaster()),
+        "You cannot use a server and a master.");
+  PRECICE_ASSERT(_accessorCommunicatorSize==1 || _accessor->useMaster() || _accessor->useServer(),
+        "A parallel participant needs either a master or a server communication");
+  PRECICE_CHECK(not (_accessorCommunicatorSize==1 && _accessor->useMaster()),
+        "You cannot use a master with a serial participant.");
 
   _clientMode = (not _serverMode) && _accessor->useServer();
 
-  if(_accessor->useMaster()){
-    utils::MasterSlave::configure(_accessorProcessRank, _accessorCommunicatorSize);
-  }
+  utils::MasterSlave::configure(_accessorProcessRank, _accessorCommunicatorSize);
 
   _participants = config.getParticipantConfiguration()->getParticipants();
   configureM2Ns(config.getM2NConfiguration());
@@ -168,16 +172,14 @@ void SolverInterfaceImpl:: configure
   // Add meshIDs and data IDs
   for (const MeshContext* meshContext : _accessor->usedMeshContexts()) {
     const mesh::PtrMesh& mesh = meshContext->mesh;
-    for (std::pair<std::string,int> nameID : mesh->getNameIDPairs()) {
-      PRECICE_ASSERT(not utils::contained(nameID.first, _meshIDs));
-      _meshIDs[nameID.first] = nameID.second;
-    }
-    PRECICE_ASSERT(_dataIDs.find(mesh->getID())==_dataIDs.end());
-    _dataIDs[mesh->getID()] = std::map<std::string,int>();
-    PRECICE_ASSERT(_dataIDs.find(mesh->getID())!=_dataIDs.end());
+    const auto meshID = mesh->getID();
+    _meshIDs[mesh->getName()] = meshID;
+    PRECICE_ASSERT(_dataIDs.find(meshID)==_dataIDs.end());
+    _dataIDs[meshID] = std::map<std::string,int>();
+    PRECICE_ASSERT(_dataIDs.find(meshID)!=_dataIDs.end());
     for (const mesh::PtrData& data : mesh->data()) {
-      PRECICE_ASSERT(_dataIDs[mesh->getID()].find(data->getName())==_dataIDs[mesh->getID()].end());
-      _dataIDs[mesh->getID()][data->getName()] = data->getID();
+      PRECICE_ASSERT(_dataIDs[meshID].find(data->getName())==_dataIDs[meshID].end());
+      _dataIDs[meshID][data->getName()] = data->getID();
     }
     std::string meshName = mesh->getName();
     mesh::PtrMeshConfiguration meshConfig = config.getMeshConfiguration();
@@ -762,7 +764,6 @@ void SolverInterfaceImpl:: getMeshVertexIDsFromPositions (
     mesh::PtrMesh mesh(context.mesh);
     PRECICE_DEBUG("Get IDs");
     const auto &vertices = mesh->vertices();
-    PRECICE_ASSERT(vertices.size() <= size, vertices.size(), size);
     Eigen::Map<const Eigen::MatrixXd> posMatrix{
         positions, _dimensions, static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(size)};
     const auto vsize = vertices.size();
@@ -1014,7 +1015,7 @@ void SolverInterfaceImpl:: mapReadDataTo
                    << "\" to mesh \"" << context.mesh->getName() << "\"");
       PRECICE_ASSERT(mappingContext.mapping==context.mappingContext.mapping);
       mappingContext.mapping->map(inDataID, outDataID);
-      PRECICE_DEBUG("First mapped values = " << utils::firstN(context.toData->values(), 10));
+      PRECICE_DEBUG("Mapped values = " << utils::previewRange(3, context.toData->values()));
     }
   }
   mappingContext.hasMappedData = true;
@@ -1296,7 +1297,7 @@ MeshHandle SolverInterfaceImpl:: getMeshHandle
   PRECICE_ASSERT(not _clientMode);
   for (MeshContext* context : _accessor->usedMeshContexts()){
     if (context->mesh->getName() == meshName){
-      return {context->mesh->content()};
+      return {*context->mesh};
     }
   }
   PRECICE_ERROR("Participant \"" << _accessorName
@@ -1489,7 +1490,7 @@ void SolverInterfaceImpl:: mapWrittenData()
       context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
       PRECICE_DEBUG("Map from dataID " << inDataID << " to dataID: " << outDataID);
       context.mappingContext.mapping->map(inDataID, outDataID);
-      PRECICE_DEBUG("First mapped values = " << utils::firstN(context.toData->values(), 10));
+      PRECICE_DEBUG("Mapped values = " << utils::previewRange(3, context.toData->values()));
     }
   }
 
@@ -1540,7 +1541,7 @@ void SolverInterfaceImpl:: mapReadData()
       PRECICE_DEBUG("Map read data \"" << context.fromData->getName()
                    << "\" to mesh \"" << context.mesh->getName() << "\"");
       context.mappingContext.mapping->map(inDataID, outDataID);
-      PRECICE_DEBUG("First mapped values = " << utils::firstN(context.toData->values(), 10));
+      PRECICE_DEBUG("Mapped values = " << utils::previewRange(3, context.toData->values()));
     }
 
   }

@@ -85,39 +85,21 @@ M2NConfiguration::M2NConfiguration(xml::XMLTag &parent)
     tags.push_back(tag);
   }
 
- auto attrDistrTypeBoth = XMLAttribute<std::string>(ATTR_DISTRIBUTION_TYPE)
-      .setDocumentation(
-              "Distribution manner of the M2N communication. "
-              "\"" + VALUE_POINT_TO_POINT + "\" uses a pure point to point communication and is recommended. "
-              "\"" + VALUE_GATHER_SCATTER + "\" should only be used if at least one serial participant is used "
-              "or for troubleshooting.")
-      .setOptions({VALUE_GATHER_SCATTER, VALUE_POINT_TO_POINT})
-      .setDefaultValue(VALUE_POINT_TO_POINT);
+  XMLAttribute<bool> attrEnforce(ATTR_ENFORCE_GATHER_SCATTER, false);
+  attrEnforce.setDocumentation("Enforce the distributed communication to a gather-scatter scheme. "
+                             "Only recommended for trouble shooting.");
 
- auto attrDistrTypeOnly = XMLAttribute<std::string>(ATTR_DISTRIBUTION_TYPE)
-      .setDocumentation(
-              "Distribution manner of the M2N communication ."
-              "\"" + VALUE_POINT_TO_POINT + "\" uses a pure point to point communication and is recommended. "
-              "\"" + VALUE_GATHER_SCATTER + "\" should only be used if at least one serial participant is used "
-              "or for troubleshooting.")
-      .setOptions({VALUE_GATHER_SCATTER, VALUE_POINT_TO_POINT})
-      .setDefaultValue(VALUE_GATHER_SCATTER);
-
- auto attrFrom = XMLAttribute<std::string>("from")
+  auto attrFrom = XMLAttribute<std::string>("from")
       .setDocumentation(
               "First participant name involved in communication. For performance reasons, we recommend to use "
               "the participant with less ranks at the coupling interface as \"from\" in the m2n communication.");
- auto attrTo = XMLAttribute<std::string>("to")
+  auto attrTo = XMLAttribute<std::string>("to")
       .setDocumentation("Second participant name involved in communication.");
 
   for (XMLTag &tag : tags) {
     tag.addAttribute(attrFrom);
     tag.addAttribute(attrTo);
-    if (tag.getName() == "mpi" || tag.getName() == "mpi-singleports" || tag.getName() == "sockets") {
-      tag.addAttribute(attrDistrTypeBoth);
-    } else {
-      tag.addAttribute(attrDistrTypeOnly);
-    }
+    tag.addAttribute(attrEnforce);
     parent.addSubtag(tag);
   }
 }
@@ -137,13 +119,13 @@ m2n::PtrM2N M2NConfiguration::getM2N(const std::string &from, const std::string 
   throw std::runtime_error{error.str()};
 }
 
-void M2NConfiguration::xmlTagCallback(xml::XMLTag &tag)
+void M2NConfiguration::xmlTagCallback(const xml::ConfigurationContext& context, xml::XMLTag &tag)
 {
   if (tag.getNamespace() == TAG) {
     std::string from = tag.getStringAttributeValue("from");
     std::string to   = tag.getStringAttributeValue("to");
     checkDuplicates(from, to);
-    std::string distrType = tag.getStringAttributeValue(ATTR_DISTRIBUTION_TYPE);
+    bool enforceGatherScatter = tag.getBooleanAttributeValue(ATTR_ENFORCE_GATHER_SCATTER);
 
     com::PtrCommunicationFactory comFactory;
     com::PtrCommunication        com;
@@ -193,11 +175,9 @@ void M2NConfiguration::xmlTagCallback(xml::XMLTag &tag)
     PRECICE_ASSERT(com.get() != nullptr);
 
     DistributedComFactory::SharedPointer distrFactory;
-    if (tag.getName() == "mpi-single" || distrType == VALUE_GATHER_SCATTER) {
-      PRECICE_ASSERT(distrType == VALUE_GATHER_SCATTER);
+    if (tag.getName() == "mpi-single" || enforceGatherScatter) {
       distrFactory = std::make_shared<GatherScatterComFactory>(com);
-    } else if (distrType == VALUE_POINT_TO_POINT) {
-      PRECICE_ASSERT(tag.getName() == "mpi" or tag.getName() == "mpi-singleports" or tag.getName() == "sockets");
+    } else {
       distrFactory = std::make_shared<PointToPointComFactory>(comFactory);
     }
     PRECICE_ASSERT(distrFactory.get() != nullptr);

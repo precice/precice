@@ -3,7 +3,6 @@
 #include "../CompositionalCouplingScheme.hpp"
 #include "../Constants.hpp"
 #include "../config/CouplingSchemeConfiguration.hpp"
-#include "mesh/PropertyContainer.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
@@ -24,7 +23,7 @@ using namespace precice::cplscheme;
 
 BOOST_AUTO_TEST_SUITE(CplSchemeTests)
 
-struct CompositionalCouplingSchemeFixture
+struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor
 {
   std::string _pathToTests;
 
@@ -37,7 +36,6 @@ struct CompositionalCouplingSchemeFixture
     using namespace mesh;
     utils::Parallel::synchronizeProcesses();
     BOOST_TEST(utils::Parallel::getCommunicatorSize() > 1);
-    mesh::PropertyContainer::resetPropertyIDCounter();
 
     std::string configurationPath(configFilename);
     std::string nameParticipant0("Participant0");
@@ -53,8 +51,21 @@ struct CompositionalCouplingSchemeFixture
     m2n::M2NConfiguration::SharedPointer m2nConfig(new m2n::M2NConfiguration(root));
     CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig );
 
-    xml::configure(root, configurationPath);
-    meshConfig->setMeshSubIDs();
+    if (utils::Parallel::getProcessRank() == 0){
+      localParticipant = nameParticipant0;
+    }
+    else if (utils::Parallel::getProcessRank() == 1){
+      localParticipant = nameParticipant1;
+    }
+    else {
+      BOOST_TEST(utils::Parallel::getProcessRank() == 2,
+          utils::Parallel::getProcessRank());
+      localParticipant = nameParticipant2;
+    }
+
+    xml::ConfigurationContext context{localParticipant, 0, 1};
+    xml::configure(root, context, configurationPath);
+
     m2n::PtrM2N m2n0 = m2nConfig->getM2N(nameParticipant0, nameParticipant1);
     m2n::PtrM2N m2n1 = m2nConfig->getM2N(nameParticipant1, nameParticipant2);
 
@@ -65,18 +76,13 @@ struct CompositionalCouplingSchemeFixture
     meshConfig->meshes()[0]->createVertex(Eigen::Vector3d(4.0, 1.0, -1.0));
 
     if (utils::Parallel::getProcessRank() == 0){
-      localParticipant = nameParticipant0;
       connect(nameParticipant0, nameParticipant1, localParticipant, m2n0);
     }
     else if (utils::Parallel::getProcessRank() == 1){
-      localParticipant = nameParticipant1;
       connect(nameParticipant0, nameParticipant1, localParticipant, m2n0);
       connect(nameParticipant1, nameParticipant2, localParticipant, m2n1);
     }
     else {
-      BOOST_TEST(utils::Parallel::getProcessRank() == 2,
-          utils::Parallel::getProcessRank());
-      localParticipant = nameParticipant2;
       connect(nameParticipant1, nameParticipant2, localParticipant, m2n1);
     }
 
@@ -203,6 +209,7 @@ struct CompositionalCouplingSchemeFixture
     BOOST_TEST ( communication );
     BOOST_TEST ( not communication->isConnected() );
     utils::Parallel::splitCommunicator( localParticipant );
+    useOnlyMasterCom(communication) = true;
     if ( participant0 == localParticipant ) {
       communication->requestMasterConnection ( participant1, participant0 );
     }
