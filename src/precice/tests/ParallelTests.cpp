@@ -450,7 +450,6 @@ BOOST_AUTO_TEST_CASE(testDistributedCommunications, *testing::OnSize(4))
 
 BOOST_AUTO_TEST_CASE(testBoundingBoxInitialization, *testing::OnSize(4))
 {
-  reset();
 
   std::string solverName;
   int         rank = -1, size = -1;
@@ -548,19 +547,14 @@ BOOST_AUTO_TEST_CASE(testBoundingBoxInitialization, *testing::OnSize(4))
   precice.advance(1.0);
 
   if (utils::Parallel::getProcessRank() > 1) { //Structure
-
     for (size_t i = 0; i < vertexIDs.size(); i++) {
       precice.readVectorData(forcesID, vertexIDs[i], data[i + i1].data());
-    }
-  }
-
-  if (utils::Parallel::getProcessRank() > 1) { //Fluid
-    for (size_t i = 0; i < vertexIDs.size(); i++) {
       for (size_t d = 0; d < 3; d++) {
         BOOST_TEST(expectedData[i + i1][d] == data[i + i1][d]);
       }
     }
   }
+
   precice.finalize();
 }
 
@@ -672,11 +666,8 @@ BOOST_AUTO_TEST_CASE(testBoundingBoxInitializationTwoWay, *testing::OnSize(4))
 
     for (size_t i = 0; i < vertexIDs.size(); i++) {
       precice.readVectorData(forcesID, vertexIDs[i], data[i + i1].data());
-    }
-
-    for (size_t j = 0; j < vertexIDs.size(); j++) {
       for (size_t d = 0; d < 3; d++) {
-        BOOST_TEST(expectedData[j + i1][d] == data[j + i1][d]);
+        BOOST_TEST(expectedData[i + i1][d] == data[i + i1][d]);
       }
     }
 
@@ -695,13 +686,8 @@ BOOST_AUTO_TEST_CASE(testBoundingBoxInitializationTwoWay, *testing::OnSize(4))
 
     for (size_t i = 0; i < vertexIDs.size(); i++) {
       precice.readVectorData(velocitiesID, vertexIDs[i], data[i + i1].data());
-    }
-  }
-
-  if (utils::Parallel::getProcessRank() <= 1) { //fluid
-    for (size_t j = 0; j < vertexIDs.size(); j++) {
       for (size_t d = 0; d < 3; d++) {
-        BOOST_TEST(expectedData[j + i1][d] == data[j + i1][d]);
+        BOOST_TEST(expectedData[i + i1][d] == data[i + i1][d]);
       }
     }
   }

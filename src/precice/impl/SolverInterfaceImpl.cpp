@@ -217,16 +217,6 @@ double SolverInterfaceImpl::initialize()
 
   PRECICE_INFO("Vertex lists are updated!");
 
-  PRECICE_INFO("Setting up slaves communication to coupling partner/s");
-  for (auto &m2nPair : _m2ns) {
-    auto &bm2n = m2nPair.second;
-    PRECICE_DEBUG((bm2n.isRequesting ? "Awaiting slaves connection from " : "Establishing slaves connection to ") << bm2n.remoteName);
-    bm2n.connectSlaves();
-    bm2n.cleanupEstablishment();
-    PRECICE_DEBUG("Established slaves connection " << (bm2n.isRequesting ? "from " : "to ") << bm2n.remoteName);
-  }
-  PRECICE_INFO("Slaves are connected");
-
   PRECICE_DEBUG("Initialize watchpoints");
   for (PtrWatchPoint &watchPoint : _accessor->watchPoints()) {
     watchPoint->initialize();
