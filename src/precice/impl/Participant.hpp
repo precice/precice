@@ -129,14 +129,6 @@ public:
   /// Returns all export contexts for exporting meshes and data.
   const std::vector<io::ExportContext> &exportContexts() const;
 
-  /// Returns true, if the participant uses a precice in form of a server.
-  bool useServer();
-
-  /// Sets the client-server com. for the participant.
-  void setClientServerCommunication(com::PtrCommunication communication);
-
-  com::PtrCommunication getClientServerCommunication() const;
-
   /// Returns true, if the participant uses a master process.
   bool useMaster();
 
@@ -146,13 +138,6 @@ public:
   {
     _meshIdManager = std::move(idm);
   }
-
-  /**
-   * @brief Returns true, if the
-   */
-  //bool isServer();
-
-  //void setIsServer ( bool value );
 
 private:
   logging::Logger _log{"impl::Participant"};
@@ -189,8 +174,6 @@ private:
   utils::ptr_vector<DataContext> _readDataContexts;
 
   //io::ExportContext _exportContext;
-
-  com::PtrCommunication _clientServerCommunication;
 
   bool _useMaster = false;
 

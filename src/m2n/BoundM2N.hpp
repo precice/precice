@@ -27,7 +27,6 @@ struct BoundM2N {
   std::string localName;
   std::string remoteName;
   bool        isRequesting;
-  bool        localServer;
 };
 
 } // namespace m2n

@@ -13,8 +13,6 @@ void BoundM2N::prepareEstablishment()
 void BoundM2N::connectMasters()
 {
   std::string fullLocalName = localName;
-  if (localServer)
-    fullLocalName += "Server";
 
   if (isRequesting) {
     m2n->requestMasterConnection(remoteName, fullLocalName);

@@ -138,78 +138,13 @@ ParticipantConfiguration::ParticipantConfiguration(
   tagUseMesh.addAttribute(attrProvide);
   tag.addSubtag(tagUseMesh);
 
-  std::list<XMLTag>  serverTags;
-  XMLTag::Occurrence serverOcc = XMLTag::OCCUR_NOT_OR_ONCE;
-  {
-    XMLTag tagServer(*this, "sockets", serverOcc, TAG_SERVER);
-    doc = "When a solver runs in parallel, it can use preCICE in form of a ";
-    doc += "separately running server (deprecated feature). This is enabled by this tag. ";
-    doc += "The communication between participant and server is done by sockets.";
-    tagServer.setDocumentation(doc);
-
-    auto attrPort = makeXMLAttribute("port", 0)
-                        .setDocumentation(
-                            "Port number (16-bit unsigned integer) to be used for socket "
-                            "communiation. The default is \"0\", what means that OS will "
-                            "dynamically search for a free port (if at least one exists) and "
-                            "bind it automatically.");
-    tagServer.addAttribute(attrPort);
-
-    auto attrNetwork = makeXMLAttribute(ATTR_NETWORK, "lo")
-                           .setDocumentation(
-                               "Network name to be used for socket communiation. "
-                               "Default is \"lo\", i.e., the local host loopback.");
-    tagServer.addAttribute(attrNetwork);
-
-    auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, "")
-                                     .setDocumentation(
-                                         "Directory where connection information is exchanged. By default, the "
-                                         "directory of startup is chosen, and both solvers have to be started "
-                                         "in the same directory.");
-    tagServer.addAttribute(attrExchangeDirectory);
-
-    serverTags.push_back(tagServer);
-  }
-  {
-    XMLTag tagServer(*this, "mpi", serverOcc, TAG_SERVER);
-    doc = "When a solver runs in parallel, it can use preCICE in form of a ";
-    doc += "separately running server (deprecated feature). This is enabled by this tag. ";
-    doc += "The communication between participant and server is done by mpi ";
-    doc += "with startup in separated communication spaces.";
-    tagServer.setDocumentation(doc);
-
-    auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, "")
-                                     .setDocumentation(
-                                         "Directory where connection information is exchanged. By default, the "
-                                         "directory of startup is chosen, and both solvers have to be started "
-                                         "in the same directory.");
-    tagServer.addAttribute(attrExchangeDirectory);
-
-    serverTags.push_back(tagServer);
-  }
-  {
-    XMLTag tagServer(*this, "mpi-single", serverOcc, TAG_SERVER);
-    doc = "When a solver runs in parallel, it can use preCICE in form of a ";
-    doc += "separately running server (deprecated feature). This is enabled by this tag. ";
-    doc += "The communication between participant and server is done by mpi ";
-    doc += "with startup in a common communication space.";
-    tagServer.setDocumentation(doc);
-    serverTags.push_back(tagServer);
-  }
-  for (XMLTag &tagServer : serverTags) {
-    tag.addSubtag(tagServer);
-  }
-
   std::list<XMLTag>  masterTags;
   XMLTag::Occurrence masterOcc = XMLTag::OCCUR_NOT_OR_ONCE;
   {
     XMLTag tagMaster(*this, "sockets", masterOcc, TAG_MASTER);
-    doc = "A solver in parallel has to use either a Master or a Server (Master is recommended), but not both. ";
-    doc += "If you use a Master, you do not have to start-up a further executable, ";
-    doc += "all communication is handled peer to peer. One solver process becomes the ";
-    doc += " Master handling the synchronization of all slaves. Here, you define then ";
-    doc += " the communication between the Master and all slaves. ";
-    doc += "The communication between Master and slaves is done by sockets.";
+    doc = "A solver in parallel needs a communication between its ranks. ";
+    doc += "By default, the participant's MPI_COM_WORLD is reused.";
+    doc += "Use this tag to use TCP/IP sockets instead.";
     tagMaster.setDocumentation(doc);
 
     auto attrPort = makeXMLAttribute("port", 0)
@@ -236,13 +171,9 @@ ParticipantConfiguration::ParticipantConfiguration(
   }
   {
     XMLTag tagMaster(*this, "mpi", masterOcc, TAG_MASTER);
-    doc = "A solver in parallel has to use either a Master or a Server (Master is recommended), but not both. ";
-    doc += "If you use a Master, you do not have to start-up a further executable, ";
-    doc += "all communication is handled peer to peer. One solver process becomes the ";
-    doc += " Master handling the synchronization of all slaves. Here, you define then ";
-    doc += " the communication between the Master and all slaves. ";
-    doc += "The communication between Master and slaves is done by mpi ";
-    doc += "with startup in separated communication spaces.";
+    doc = "A solver in parallel needs a communication between its ranks. ";
+    doc += "By default, the participant's MPI_COM_WORLD is reused.";
+    doc += "Use this tag to use MPI with separated communication spaces instead instead.";
     tagMaster.setDocumentation(doc);
 
     auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, "")
@@ -255,13 +186,9 @@ ParticipantConfiguration::ParticipantConfiguration(
   }
   {
     XMLTag tagMaster(*this, "mpi-single", masterOcc, TAG_MASTER);
-    doc = "A solver in parallel has to use either a Master or a Server (Master is recommended), but not both. ";
-    doc += "If you use a Master, you do not have to start-up a further executable, ";
-    doc += "all communication is handled peer to peer. One solver process becomes the ";
-    doc += " Master handling the synchronization of all slaves. Here, you define then ";
-    doc += " the communication between the Master and all slaves. ";
-    doc += "The communication between Master and slaves is done by mpi ";
-    doc += "with startup in one communication spaces. (This choice is recommended)";
+    doc = "A solver in parallel needs a communication between its ranks. ";
+    doc += "By default (which is this option), the participant's MPI_COM_WORLD is reused.";
+    doc += "This tag is only used to ensure backwards compatibility.";
     tagMaster.setDocumentation(doc);
 
     masterTags.push_back(tagMaster);
@@ -345,16 +272,11 @@ void ParticipantConfiguration::xmlTagCallback(
     config.nameMesh    = tag.getStringAttributeValue(ATTR_MESH);
     config.coordinates = tag.getEigenVectorXdAttributeValue(ATTR_COORDINATE, _dimensions);
     _watchPointConfigs.push_back(config);
-  } else if (tag.getNamespace() == TAG_SERVER) {
-    com::CommunicationConfiguration comConfig;
-    com::PtrCommunication           com = comConfig.createCommunication(tag);
-    _participants.back()->setClientServerCommunication(com);
-    _isParallelSolutionDefined = true;
   } else if (tag.getNamespace() == TAG_MASTER) {
     com::CommunicationConfiguration comConfig;
     com::PtrCommunication           com = comConfig.createCommunication(tag);
     utils::MasterSlave::_communication  = com;
-    _isParallelSolutionDefined          = true;
+    _isMasterDefined                    = true;
     _participants.back()->setUseMaster(true);
   }
 }
@@ -592,7 +514,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
   _watchPointConfigs.clear();
 
   // create default master communication if needed
-  if (context.size > 1 && not _isParallelSolutionDefined && participant->getName() == context.name) {
+  if (context.size > 1 && not _isMasterDefined && participant->getName() == context.name) {
 #ifdef PRECICE_NO_MPI
     throw std::runtime_error{"When building with \"mpi=off\", you need to specify an alternative \"master\" "
                              "communication (e.g. sockets) for every parallel participant"};
@@ -602,7 +524,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     participant->setUseMaster(true);
 #endif
   }
-  _isParallelSolutionDefined = false; // to not mess up with previous participant
+  _isMasterDefined = false; // to not mess up with previous participant
 }
 
 } // namespace config

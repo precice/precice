@@ -8,7 +8,7 @@ namespace precice {
 namespace com {
 
 /**
- * @brief Configuration for communication channels between server and clients or master and slaves.
+ * @brief Configuration for communication channels between a master and its slaves.
  * The communication between two solvers is configured in m2n::M2NConfiguration
  */
 class CommunicationConfiguration {

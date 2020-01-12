@@ -162,10 +162,9 @@ endif()
 
 # Option Python
 if (PYTHON)
-  set(Python_ADDITIONAL_VERSIONS "2.7")
   if (TPL_ENABLE_PYTHON)
     xsdk_tpl_require(PYTHON PYTHON_LIBRARY PYTHON_INCLUDE_DIR NumPy_INCLUDE_DIR)
-    find_package(PythonLibs 2.7 REQUIRED)
+    find_package(PythonLibs REQUIRED)
 
     # Override NumPy
     # TODO: Incorporate into the FindNumPy module
@@ -175,8 +174,11 @@ if (PYTHON)
       set_property(TARGET NumPy::NumPy PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${NumPy_INCLUDE_DIR}")
     endif()
   else()
-    find_package(PythonLibs 2.7 REQUIRED)
+    find_package(PythonLibs REQUIRED)
     find_package(NumPy REQUIRED)
+  endif()
+  if(PYTHONLIBS_VERSION_STRING VERSION_LESS 2.7)
+    message(FATAL_ERROR "The selected Python Version is too old: ${PYTHONLIBS_VERSION_STRING} (minimum 2.7)")
   endif()
   precice_validate_libpython()
   precice_validate_numpy()

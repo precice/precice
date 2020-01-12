@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file. For future 
 
 ## develop
 
+- Completely remove server mode. Now, the only supported parallelization concept is the peer-to-peer master-slave mode.
+- Added support for python 3 in python actions
 - Simplify parallel configuration
   - automatically add `master:mpi-single` for parallel participant if necessary
   - no longer require `gather-scatter` distribution type for a `m2n` with at least one serial participant
