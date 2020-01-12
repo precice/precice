@@ -1,19 +1,18 @@
 #pragma once
 
+#include <Eigen/Core>
+#include "mesh/Data.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "utils/assertion.hpp"
-#include "mesh/Data.hpp"
-#include <Eigen/Core>
 
 namespace precice {
 namespace cplscheme {
 
-struct CouplingData
-{
+struct CouplingData {
   using DataMatrix = Eigen::MatrixXd;
 
   /// Data values of current iteration.
-  Eigen::VectorXd* values;
+  Eigen::VectorXd *values;
 
   /// Data values of previous iteration (1st col) and previous timesteps.
   DataMatrix oldValues;
@@ -31,25 +30,25 @@ struct CouplingData
    *
    * Necessary when compiler creates template code for std::map::operator[].
    */
-  CouplingData ()
-    {
-      PRECICE_ASSERT( false );
-    }
+  CouplingData()
+  {
+    PRECICE_ASSERT(false);
+  }
 
-  CouplingData (
-    Eigen::VectorXd*  values,
-    mesh::PtrMesh     mesh,
-    bool              initialize,
-    int               dimension)
-    :
-    values ( values ),
-    mesh(mesh),
-    initialize ( initialize ),
-    dimension(dimension)
-    {
-      PRECICE_ASSERT( values != NULL );
-      PRECICE_ASSERT( mesh.use_count()>0);
-    }
+  CouplingData(
+      Eigen::VectorXd *values,
+      mesh::PtrMesh    mesh,
+      bool             initialize,
+      int              dimension)
+      : values(values),
+        mesh(mesh),
+        initialize(initialize),
+        dimension(dimension)
+  {
+    PRECICE_ASSERT(values != NULL);
+    PRECICE_ASSERT(mesh.use_count() > 0);
+  }
 };
 
-}} // namespace precice, cplscheme
+} // namespace cplscheme
+} // namespace precice

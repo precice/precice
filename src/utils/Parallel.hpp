@@ -8,28 +8,25 @@
 #include <mpi.h>
 #endif // not PRECICE_NO_MPI
 
-namespace precice
-{
-namespace utils
-{
+namespace precice {
+namespace utils {
 
 /// Utility class for managing MPI operations.
-class Parallel
-{
+class Parallel {
 public:
 #ifndef PRECICE_NO_MPI
   using Communicator = MPI_Comm;
 #else
   using Communicator = std::nullptr_t;
-  #define MPI_COMM_NULL nullptr
+#define MPI_COMM_NULL nullptr
 #endif
 
   /// Used to sort and order all coupling participants.
   struct AccessorGroup {
     std::string name;
-    int id;
-    int leaderRank;
-    int size;
+    int         id;
+    int         leaderRank;
+    int         size;
   };
 
   static Communicator getCommunicatorWorld();
@@ -48,7 +45,7 @@ public:
    * @param[in] argv Parameter values, is passed to MPI_Init
    */
   static void initializeMPI(
-      int *argc,
+      int *   argc,
       char ***argv);
 
   /// Finalizes MPI environment.
@@ -144,5 +141,5 @@ private:
 
   static bool _mpiInitializedByPrecice;
 };
-}
-} // namespace precice, utils
+} // namespace utils
+} // namespace precice

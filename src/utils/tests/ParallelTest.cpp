@@ -10,12 +10,12 @@ BOOST_AUTO_TEST_SUITE(UtilsTests)
 
 BOOST_AUTO_TEST_CASE(Parallel, *testing::MinRanks{3})
 {
-  using Par = utils::Parallel;
+  using Par     = utils::Parallel;
   MPI_Comm comm = Par::getRestrictedCommunicator({0, 1, 2});
   if (Par::getProcessRank() <= 2) {
     Par::setGlobalCommunicator(comm);
     std::string group;
-    int rank = Par::getProcessRank();
+    int         rank = Par::getProcessRank();
     if ((rank == 0) || (rank == 1)) {
       group = "GroupOne";
     } else {

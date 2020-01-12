@@ -5,10 +5,8 @@
 #include "MPICommunication.hpp"
 #include "logging/Logger.hpp"
 
-namespace precice
-{
-namespace com
-{
+namespace precice {
+namespace com {
 /**
  * @brief Provides connection methods based on MPI ports (part of MPI 2.0).
  *
@@ -29,8 +27,7 @@ namespace com
  *
  * If we agree, that acceptConnection / requestConnection just does 1:1 connection, we can rewrite and simplifiy the code.
 **/
-class MPISinglePortsCommunication : public MPICommunication
-{
+class MPISinglePortsCommunication : public MPICommunication {
 public:
   explicit MPISinglePortsCommunication(std::string const &addressDirectory = ".");
 
@@ -52,10 +49,10 @@ public:
                                  int                requesterRank,
                                  int                requesterCommunicatorSize) override;
 
-  virtual void requestConnectionAsClient(std::string      const &acceptorName,
-                                         std::string      const &requesterName,
-                                         std::set<int>    const &acceptorRanks,
-                                         int                     requesterRank) override;
+  virtual void requestConnectionAsClient(std::string const &  acceptorName,
+                                         std::string const &  requesterName,
+                                         std::set<int> const &acceptorRanks,
+                                         int                  requesterRank) override;
 
   virtual void closeConnection() override;
 
@@ -75,7 +72,6 @@ private:
   std::string _portName = std::string(MPI_MAX_PORT_NAME, '\0');
 
   bool _isAcceptor = false;
-
 };
 } // namespace com
 } // namespace precice

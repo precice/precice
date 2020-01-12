@@ -6,14 +6,10 @@
 #include "acceleration/Acceleration.hpp"
 #include "logging/Logger.hpp"
 
+namespace precice {
+namespace acceleration {
 
-namespace precice
-{
-namespace acceleration
-{
-
-class AitkenAcceleration : public Acceleration
-{
+class AitkenAcceleration : public Acceleration {
 public:
   AitkenAcceleration(
       double           initialRelaxationFactor,
@@ -55,5 +51,5 @@ private:
 
   Eigen::VectorXd _designSpecification;
 };
-}
-} // namespace precice, acceleration
+} // namespace acceleration
+} // namespace precice

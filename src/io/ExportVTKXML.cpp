@@ -322,7 +322,7 @@ void ExportVTKXML::writeVertex(
 
 void ExportVTKXML::writeTriangle(
     const mesh::Triangle &triangle,
-    std::ofstream & outFile)
+    std::ofstream &       outFile)
 {
   outFile << triangle.vertex(0).getID() << "  ";
   outFile << triangle.vertex(1).getID() << "  ";
@@ -330,8 +330,8 @@ void ExportVTKXML::writeTriangle(
 }
 
 void ExportVTKXML::writeQuadrangle(
-    const mesh::Quad &   quad,
-    std::ofstream &outFile)
+    const mesh::Quad &quad,
+    std::ofstream &   outFile)
 {
   outFile << quad.vertex(0).getID() << "  ";
   outFile << quad.vertex(1).getID() << "  ";
@@ -340,8 +340,8 @@ void ExportVTKXML::writeQuadrangle(
 }
 
 void ExportVTKXML::writeLine(
-    const mesh::Edge &   edge,
-    std::ofstream &outFile)
+    const mesh::Edge &edge,
+    std::ofstream &   outFile)
 {
   outFile << edge.vertex(0).getID() << "  ";
   outFile << edge.vertex(1).getID() << "  ";

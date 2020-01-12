@@ -3,10 +3,8 @@
 #include "mesh/Edge.hpp"
 #include "mesh/Mesh.hpp"
 
-namespace precice
-{
-namespace action
-{
+namespace precice {
+namespace action {
 
 ScaleByAreaAction::ScaleByAreaAction(
     Timing               timing,

@@ -1,10 +1,8 @@
 #include "Vertex.hpp"
 #include "utils/EigenIO.hpp"
 
-namespace precice
-{
-namespace mesh
-{
+namespace precice {
+namespace mesh {
 
 int Vertex::getDimensions() const
 {

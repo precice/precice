@@ -2,10 +2,8 @@
 
 #include <memory>
 
-namespace precice
-{
-namespace m2n
-{
+namespace precice {
+namespace m2n {
 
 class M2N;
 

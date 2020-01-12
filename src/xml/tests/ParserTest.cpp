@@ -17,7 +17,7 @@ struct CallbackHostAttr : public XMLTag::Listener {
   bool            boolValue;
   std::string     stringValue;
 
-  void xmlTagCallback(const ConfigurationContext& context, XMLTag &callingTag) override
+  void xmlTagCallback(const ConfigurationContext &context, XMLTag &callingTag) override
   {
     if (callingTag.getName() == "test-double") {
       doubleValue = callingTag.getDoubleAttributeValue("attribute");
@@ -40,7 +40,7 @@ struct CallbackHostAttr : public XMLTag::Listener {
     }
   }
 
-  void xmlEndTagCallback(const ConfigurationContext& context, XMLTag &callingTag) override
+  void xmlEndTagCallback(const ConfigurationContext &context, XMLTag &callingTag) override
   {
     std::ignore = callingTag;
   }
@@ -142,17 +142,18 @@ BOOST_AUTO_TEST_CASE(NamespaceTest)
   configure(rootTag, ConfigurationContext{}, filename);
 }
 
-struct ContextListener: public XMLTag::Listener {
+struct ContextListener : public XMLTag::Listener {
   ConfigurationContext startContext;
   ConfigurationContext endContext;
 
-  void xmlTagCallback(const ConfigurationContext& context, XMLTag &callingTag)
+  void xmlTagCallback(const ConfigurationContext &context, XMLTag &callingTag)
   {
-      startContext = context;
+    startContext = context;
   }
 
-  void xmlEndTagCallback(const ConfigurationContext& context, XMLTag &callingTag){
-      endContext = context;
+  void xmlEndTagCallback(const ConfigurationContext &context, XMLTag &callingTag)
+  {
+    endContext = context;
   }
 };
 
@@ -160,8 +161,8 @@ BOOST_AUTO_TEST_CASE(Context)
 {
   std::string filename(getPathToSources() + "/xml/tests/config_xmltest_context.xml");
 
-  ContextListener cl;
-  XMLTag          rootTag(cl, "configuration", XMLTag::OCCUR_ONCE);
+  ContextListener      cl;
+  XMLTag               rootTag(cl, "configuration", XMLTag::OCCUR_ONCE);
   ConfigurationContext context{"test", 12, 32};
   configure(rootTag, context, filename);
   BOOST_TEST(cl.startContext.name == "test");

@@ -1,10 +1,10 @@
 #include "testing/Testing.hpp"
 
 #include "mapping/NearestNeighborMapping.hpp"
+#include "math/math.hpp"
+#include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
-#include "mesh/Data.hpp"
-#include "math/math.hpp"
 
 using namespace precice;
 using namespace precice::mesh;
@@ -19,26 +19,26 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncremental)
 
   // Create mesh to map from
   PtrMesh inMesh(new Mesh("InMesh", dimensions, false, testing::nextMeshID()));
-  PtrData inDataScalar = inMesh->createData("InDataScalar", 1);
-  PtrData inDataVector = inMesh->createData("InDataVector", 2);
-  int inDataScalarID = inDataScalar->getID();
-  int inDataVectorID = inDataVector->getID();
-  Vertex& inVertex0 = inMesh->createVertex(Eigen::Vector2d::Constant(0.0));
-  Vertex& inVertex1 = inMesh->createVertex(Eigen::Vector2d::Constant(1.0));
+  PtrData inDataScalar   = inMesh->createData("InDataScalar", 1);
+  PtrData inDataVector   = inMesh->createData("InDataVector", 2);
+  int     inDataScalarID = inDataScalar->getID();
+  int     inDataVectorID = inDataVector->getID();
+  Vertex &inVertex0      = inMesh->createVertex(Eigen::Vector2d::Constant(0.0));
+  Vertex &inVertex1      = inMesh->createVertex(Eigen::Vector2d::Constant(1.0));
   inMesh->allocateDataValues();
-  Eigen::VectorXd& inValuesScalar = inDataScalar->values();
-  Eigen::VectorXd& inValuesVector = inDataVector->values();
+  Eigen::VectorXd &inValuesScalar = inDataScalar->values();
+  Eigen::VectorXd &inValuesVector = inDataVector->values();
   inValuesScalar << 1.0, 2.0;
   inValuesVector << 1.0, 2.0, 3.0, 4.0;
 
   // Create mesh to map to
   PtrMesh outMesh(new Mesh("OutMesh", dimensions, false, testing::nextMeshID()));
-  PtrData outDataScalar = outMesh->createData("OutDataScalar", 1);
-  PtrData outDataVector = outMesh->createData("OutDataVector", 2);
-  int outDataScalarID = outDataScalar->getID();
-  int outDataVectorID = outDataVector->getID();
-  Vertex& outVertex0 = outMesh->createVertex(Eigen::Vector2d::Constant(0.0));
-  Vertex& outVertex1 = outMesh->createVertex(Eigen::Vector2d::Constant(1.0));
+  PtrData outDataScalar   = outMesh->createData("OutDataScalar", 1);
+  PtrData outDataVector   = outMesh->createData("OutDataVector", 2);
+  int     outDataScalarID = outDataScalar->getID();
+  int     outDataVectorID = outDataVector->getID();
+  Vertex &outVertex0      = outMesh->createVertex(Eigen::Vector2d::Constant(0.0));
+  Vertex &outVertex1      = outMesh->createVertex(Eigen::Vector2d::Constant(1.0));
   outMesh->allocateDataValues();
 
   // Setup mapping with mapping coordinates and geometry used
@@ -49,14 +49,14 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncremental)
   // Map data with coinciding vertices, has to result in equal values.
   mapping.computeMapping();
   mapping.map(inDataScalarID, outDataScalarID);
-  const Eigen::VectorXd& outValuesScalar = outDataScalar->values();
+  const Eigen::VectorXd &outValuesScalar = outDataScalar->values();
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(outValuesScalar(0) == inValuesScalar(0));
   BOOST_TEST(outValuesScalar(1) == inValuesScalar(1));
   mapping.map(inDataVectorID, outDataVectorID);
-  const Eigen::VectorXd& outValuesVector = outDataVector->values();
+  const Eigen::VectorXd &outValuesVector = outDataVector->values();
   BOOST_CHECK(equals(inValuesVector, outValuesVector));
-              
+
   // Map data with almost coinciding vertices, has to result in equal values.
   inVertex0.setCoords(outVertex0.getCoords() + Eigen::Vector2d::Constant(0.1));
   inVertex1.setCoords(outVertex1.getCoords() + Eigen::Vector2d::Constant(0.1));
@@ -98,21 +98,21 @@ BOOST_AUTO_TEST_CASE(ConservativeNonIncremental)
 
   // Create mesh to map from
   PtrMesh inMesh(new Mesh("InMesh", dimensions, false, testing::nextMeshID()));
-  PtrData inData = inMesh->createData("InData", 1);
-  int inDataID = inData->getID();
-  Vertex& inVertex0 = inMesh->createVertex(Eigen::Vector2d::Constant(0.0));
-  Vertex& inVertex1 = inMesh->createVertex(Eigen::Vector2d::Constant(1.0));
+  PtrData inData    = inMesh->createData("InData", 1);
+  int     inDataID  = inData->getID();
+  Vertex &inVertex0 = inMesh->createVertex(Eigen::Vector2d::Constant(0.0));
+  Vertex &inVertex1 = inMesh->createVertex(Eigen::Vector2d::Constant(1.0));
   inMesh->allocateDataValues();
-  Eigen::VectorXd& inValues = inData->values();
-  inValues(0) = 1.0;
-  inValues(1) = 2.0;
+  Eigen::VectorXd &inValues = inData->values();
+  inValues(0)               = 1.0;
+  inValues(1)               = 2.0;
 
   // Create mesh to map to
   PtrMesh outMesh(new Mesh("OutMesh", dimensions, false, testing::nextMeshID()));
-  PtrData outData = outMesh->createData("OutData", 1);
-  int outDataID = outData->getID();
-  Vertex& outVertex0 = outMesh->createVertex(Eigen::Vector2d::Constant(0.0));
-  Vertex& outVertex1 = outMesh->createVertex(Eigen::Vector2d::Constant(1.0));
+  PtrData outData    = outMesh->createData("OutData", 1);
+  int     outDataID  = outData->getID();
+  Vertex &outVertex0 = outMesh->createVertex(Eigen::Vector2d::Constant(0.0));
+  Vertex &outVertex1 = outMesh->createVertex(Eigen::Vector2d::Constant(1.0));
   outMesh->allocateDataValues();
 
   // Setup mapping with mapping coordinates and geometry used
@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(ConservativeNonIncremental)
   // Map data with coinciding vertices, has to result in equal values.
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
-  Eigen::VectorXd& outValues = outData->values();
+  Eigen::VectorXd &outValues = outData->values();
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(outValues(0) == inValues(0));
   BOOST_TEST(outValues(1) == inValues(1));

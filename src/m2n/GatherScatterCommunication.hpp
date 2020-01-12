@@ -4,10 +4,8 @@
 #include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 
-namespace precice
-{
-namespace m2n
-{
+namespace precice {
+namespace m2n {
 
 /**
  * @brief Implements DistributedCommunication by using a gathering/scattering methodology.
@@ -15,8 +13,7 @@ namespace m2n
  * between slaves is used.
  * For more details see m2n/DistributedCommunication.hpp
  */
-class GatherScatterCommunication : public DistributedCommunication
-{
+class GatherScatterCommunication : public DistributedCommunication {
 public:
   GatherScatterCommunication(
       com::PtrCommunication com,
@@ -59,16 +56,16 @@ public:
    *  @todo: Ideally this should not be here
    */
   virtual void acceptPreConnection(
-    std::string const &acceptorName,
-    std::string const &requesterName);
+      std::string const &acceptorName,
+      std::string const &requesterName);
 
   /** 
    *  This method has not been implemented yet.    
    *  @todo: Ideally this should not be here
    */
   virtual void requestPreConnection(
-    std::string const &acceptorName,
-    std::string const &requesterName);
+      std::string const &acceptorName,
+      std::string const &requesterName);
 
   /*
    * @brief This function must be called by both acceptor and requester to update 
@@ -77,7 +74,7 @@ public:
    * @todo: Ideally this should not be here
    */
   virtual void updateVertexList() override;
-  
+
   /**
    * @brief Disconnects from communication space, i.e. participant.
    *
@@ -88,8 +85,8 @@ public:
   /// Sends an array of double values from all slaves (different for each slave).
   void send(
       double const *itemsToSend,
-      size_t  size,
-      int     valueDimension) override;
+      size_t        size,
+      int           valueDimension) override;
 
   /// All slaves receive an array of doubles (different for each slave).
   void receive(
@@ -97,7 +94,7 @@ public:
       size_t  size,
       int     valueDimension) override;
 
-   /**
+  /**
    * @brief Broadcasts an int to connected ranks
    *
    * @todo: Ideally this should not be here
@@ -118,7 +115,7 @@ public:
    * @todo: Ideally this should not be here
    */
   void broadcastSendMesh() override;
-  
+
   /**
    * @brief All ranks receive mesh partitions from remote local ranks.
    *
@@ -130,13 +127,13 @@ public:
    *  All ranks Send their local communication map to connected ranks
    */
   void broadcastSendLCM(
-    CommunicationMap &localCommunicationMap) override;
+      CommunicationMap &localCommunicationMap) override;
 
   /*
    *  Each rank revives local communication maps from connected ranks
    */
   void broadcastReceiveLCM(
-    CommunicationMap &localCommunicationMap) override;
+      CommunicationMap &localCommunicationMap) override;
 
 private:
   logging::Logger _log{"m2n::GatherScatterCommunication"};

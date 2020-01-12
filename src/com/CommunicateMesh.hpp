@@ -4,14 +4,11 @@
 #include "logging/Logger.hpp"
 #include "mesh/Mesh.hpp"
 
-namespace precice
-{
-namespace com
-{
+namespace precice {
+namespace com {
 
 /// Copies a Mesh object from a sender to a receiver.
-class CommunicateMesh
-{
+class CommunicateMesh {
 public:
   /// Constructor, takes communication to be used in transfer.
   explicit CommunicateMesh(
@@ -43,7 +40,7 @@ public:
 
 private:
   logging::Logger _log{"com::CommunicateMesh"};
-  
+
   /// Communication means used for the transfer of the geometry.
   com::PtrCommunication _communication;
 };

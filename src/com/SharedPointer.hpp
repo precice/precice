@@ -2,10 +2,8 @@
 
 #include <memory>
 
-namespace precice
-{
-namespace com
-{
+namespace precice {
+namespace com {
 
 class Communication;
 class CommunicationFactory;

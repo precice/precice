@@ -62,8 +62,8 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
 BOOST_AUTO_TEST_CASE(ExportQuadMesh)
 {
   using namespace mesh;
-  int  dim           = 3;
-  bool invertNormals = false;
+  int        dim           = 3;
+  bool       invertNormals = false;
   mesh::Mesh mesh("QuadMesh", dim, invertNormals, testing::nextMeshID());
   // z=0 plane
   Vertex &v0 = mesh.createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));

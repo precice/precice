@@ -1,10 +1,8 @@
 #include "CommunicateBoundingBox.hpp"
 #include "Communication.hpp"
 
-namespace precice
-{
-namespace com
-{
+namespace precice {
+namespace com {
 CommunicateBoundingBox::CommunicateBoundingBox(
     com::PtrCommunication communication)
     : _communication(communication)
@@ -39,7 +37,7 @@ void CommunicateBoundingBox::sendBoundingBoxMap(
     mesh::Mesh::BoundingBoxMap &bbm,
     int                         rankReceiver)
 {
-  
+
   PRECICE_TRACE(rankReceiver);
   _communication->send((int) bbm.size(), rankReceiver);
 
@@ -55,9 +53,9 @@ void CommunicateBoundingBox::receiveBoundingBoxMap(
   PRECICE_TRACE(rankSender);
   int sizeOfReceivingMap;
   _communication->receive(sizeOfReceivingMap, rankSender);
-  
+
   PRECICE_ASSERT(sizeOfReceivingMap == (int) bbm.size());
-  
+
   for (auto &bb : bbm) {
     receiveBoundingBox(bb.second, rankSender);
   }
@@ -65,7 +63,7 @@ void CommunicateBoundingBox::receiveBoundingBoxMap(
 
 void CommunicateBoundingBox::sendConnectionMap(
     std::map<int, std::vector<int>> const &fbm,
-    int                              rankReceiver)
+    int                                    rankReceiver)
 {
   PRECICE_TRACE(rankReceiver);
   _communication->send((int) fbm.size(), rankReceiver);
@@ -87,9 +85,9 @@ void CommunicateBoundingBox::receiveConnectionMap(
   PRECICE_ASSERT(sizeOfReceivingMap == (int) fbm.size());
 
   std::vector<int> connected_ranks;
-  
+
   for (size_t i = 0; i < fbm.size(); ++i) {
-    int              rank;  
+    int rank;
     _communication->receive(rank, rankSender);
     _communication->receive(connected_ranks, rankSender);
     fbm[rank] = connected_ranks;

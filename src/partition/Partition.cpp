@@ -3,10 +3,8 @@
 #include "mesh/Mesh.hpp"
 #include "utils/MasterSlave.hpp"
 
-namespace precice
-{
-namespace partition
-{
+namespace precice {
+namespace partition {
 
 Partition::Partition(mesh::PtrMesh mesh)
     : _mesh(mesh)
@@ -20,7 +18,7 @@ void Partition::computeVertexOffsets()
   if (utils::MasterSlave::isSlave()) {
     utils::MasterSlave::_communication->broadcast(_mesh->getVertexOffsets(), 0);
     PRECICE_DEBUG("My vertex offsets: " << _mesh->getVertexOffsets());
-    
+
   } else if (utils::MasterSlave::isMaster()) {
     _mesh->getVertexOffsets().resize(utils::MasterSlave::getSize());
     _mesh->getVertexOffsets()[0] = _mesh->getVertexDistribution()[0].size();
@@ -29,7 +27,7 @@ void Partition::computeVertexOffsets()
     }
     PRECICE_DEBUG("My vertex offsets: " << _mesh->getVertexOffsets());
     utils::MasterSlave::_communication->broadcast(_mesh->getVertexOffsets());
-    
+
   } else { //coupling mode
     _mesh->getVertexOffsets().push_back(_mesh->vertices().size());
   }
@@ -43,17 +41,17 @@ void Partition::computeVertexOffsetsBB(int numberOfVertices)
     utils::MasterSlave::_communication->send(numberOfVertices, 0);
     utils::MasterSlave::_communication->broadcast(_mesh->getVertexOffsets(), 0);
     PRECICE_DEBUG("My vertex offsets: " << _mesh->getVertexOffsets());
-    
+
   } else if (utils::MasterSlave::isMaster()) {
     _mesh->getVertexOffsets().resize(utils::MasterSlave::getSize());
     _mesh->getVertexOffsets()[0] = numberOfVertices;
     for (int rank = 1; rank < utils::MasterSlave::getSize(); rank++) {
       utils::MasterSlave::_communication->receive(numberOfVertices, rank);
-      _mesh->getVertexOffsets()[rank] =  numberOfVertices + _mesh->getVertexOffsets()[rank - 1];
+      _mesh->getVertexOffsets()[rank] = numberOfVertices + _mesh->getVertexOffsets()[rank - 1];
     }
     PRECICE_DEBUG("My vertex offsets: " << _mesh->getVertexOffsets());
     utils::MasterSlave::_communication->broadcast(_mesh->getVertexOffsets());
-    
+
   } else { //coupling mode
     //todo
   }
