@@ -217,9 +217,6 @@ double SolverInterfaceImpl::initialize()
 
   PRECICE_INFO("Vertex lists are updated!");
 
-  std::set<action::Action::Timing> timings;
-  double                           dt = 0.0;
-
   PRECICE_INFO("Setting up slaves communication to coupling partner/s");
   for (auto &m2nPair : _m2ns) {
     auto &bm2n = m2nPair.second;
@@ -229,9 +226,6 @@ double SolverInterfaceImpl::initialize()
     PRECICE_DEBUG("Established slaves connection " << (bm2n.isRequesting ? "from " : "to ") << bm2n.remoteName);
   }
   PRECICE_INFO("Slaves are connected");
-
-  std::set<action::Action::Timing> timings;
-  double                           dt = 0.0;
 
   PRECICE_DEBUG("Initialize watchpoints");
   for (PtrWatchPoint &watchPoint : _accessor->watchPoints()) {
@@ -244,6 +238,9 @@ double SolverInterfaceImpl::initialize()
 
   PRECICE_DEBUG("Initialize coupling schemes");
   _couplingScheme->initialize(time, timestep);
+
+  std::set<action::Action::Timing> timings;
+  double                           dt = 0.0;
 
   dt = _couplingScheme->getNextTimestepMaxLength();
 
