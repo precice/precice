@@ -7,6 +7,8 @@ All notable changes to this project will be documented in this file. For future 
 - Remove `MeshHandle` from API and replace use in integration tests by `SolverInterfaceImpl::mesh()`.
 - Added the mesh name to the information used to generate connection information files, which is required for the two-level initialization.
 - Merged the `SolverInterface::configure()` into the `SolverInterface` constructors. They now have a second parameter for the configuration file.
+- Add CMake build type fallback to `Debug` in case it wasn't provided.
+- Renamed CMake variables `MPI`, `PETSC`, `PYTHON` to `PRECICE_MPICommunication`, `PRECICE_PETScMapping`, `PRECICE_PythonActions`
 - Completely remove server mode. Now, the only supported parallelization concept is the peer-to-peer master-slave mode.
 - Added support for python 3 in python actions
 - Simplify parallel configuration
