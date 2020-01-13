@@ -1059,19 +1059,6 @@ void SolverInterfaceImpl::exportMesh(
   }
 }
 
-MeshHandle SolverInterfaceImpl::getMeshHandle(
-    const std::string &meshName)
-{
-  PRECICE_TRACE(meshName);
-  for (MeshContext *context : _accessor->usedMeshContexts()) {
-    if (context->mesh->getName() == meshName) {
-      return {*context->mesh};
-    }
-  }
-  PRECICE_ERROR("Participant \"" << _accessorName
-                                 << "\" does not use mesh \"" << meshName << "\"!");
-}
-
 void SolverInterfaceImpl::configureM2Ns(
     const m2n::M2NConfiguration::SharedPointer &config)
 {
@@ -1390,6 +1377,19 @@ void SolverInterfaceImpl::syncTimestep(double computedTimestepLength)
                     "Ambiguous timestep length when calling request advance from several processes!");
     }
   }
+}
+
+const mesh::Mesh &SolverInterfaceImpl::mesh(const std::string &meshName) const
+{
+  PRECICE_TRACE(meshName);
+  for (MeshContext *context : _accessor->usedMeshContexts()) {
+    if (context->mesh->getName() == meshName) {
+      PRECICE_ASSERT(context->mesh);
+      return *context->mesh;
+    }
+  }
+  PRECICE_ERROR("Participant \"" << _accessorName
+                                 << "\" does not use mesh \"" << meshName << "\"!");
 }
 
 } // namespace impl

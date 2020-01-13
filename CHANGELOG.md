@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file. For future 
 
 ## develop
 
+- Remove `MeshHandle` and replace only valid use by adding `SolverInterfaceImpl::mesh()`.
 - Completely remove server mode. Now, the only supported parallelization concept is the peer-to-peer master-slave mode.
 - Added support for python 3 in python actions
 - Simplify parallel configuration
