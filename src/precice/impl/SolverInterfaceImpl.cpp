@@ -51,10 +51,11 @@ bool syncMode = false;
 namespace impl {
 
 SolverInterfaceImpl::SolverInterfaceImpl(
-    std::string participantName,
-    int         accessorProcessRank,
-    int         accessorCommunicatorSize,
-    void *      communicator)
+    std::string        participantName,
+    const std::string &configurationFileName,
+    int                accessorProcessRank,
+    int                accessorCommunicatorSize,
+    void *             communicator)
     : _accessorName(std::move(participantName)),
       _accessorProcessRank(accessorProcessRank),
       _accessorCommunicatorSize(accessorCommunicatorSize)
@@ -77,6 +78,8 @@ SolverInterfaceImpl::SolverInterfaceImpl(
 #endif
 
   logging::setParticipant(_accessorName);
+
+  configure(configurationFileName);
 }
 
 SolverInterfaceImpl::SolverInterfaceImpl(

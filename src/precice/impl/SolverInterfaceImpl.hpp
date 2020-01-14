@@ -78,10 +78,11 @@ public:
    * @param[in] communicator    A pointer to the MPI_Comm to use.
    */
   SolverInterfaceImpl(
-      std::string participantName,
-      int         accessorProcessRank,
-      int         accessorCommunicatorSize,
-      void *      communicator);
+      std::string        participantName,
+      const std::string &configurationFileName,
+      int                accessorProcessRank,
+      int                accessorCommunicatorSize,
+      void *             communicator);
 
   /**
    * @brief Configures the coupling interface from the given xml file.
