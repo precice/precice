@@ -302,12 +302,6 @@ void SolverInterface::readScalarData(
   return _impl->readScalarData(dataID, valueIndex, value);
 }
 
-MeshHandle SolverInterface::getMeshHandle(
-    const std::string &meshName)
-{
-  return _impl->getMeshHandle(meshName);
-}
-
 std::string getVersionInformation()
 {
   return {precice::versionInformation};

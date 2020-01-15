@@ -4,7 +4,6 @@
 #include <set>
 #include <string>
 #include <vector>
-#include "MeshHandle.hpp"
 
 /**
  * forward declarations.
@@ -362,16 +361,6 @@ public:
    * @returns the set of ids.
    */
   std::set<int> getMeshIDs() const;
-
-  /**
-   * @brief Returns a handle to a created mesh.
-   * 
-   * @param[in] meshName the name of the mesh
-   * @returns the handle to the mesh
-   *
-   * @see precice::MeshHandle
-   */
-  MeshHandle getMeshHandle(const std::string &meshName);
 
   /**
    * @brief Creates a mesh vertex

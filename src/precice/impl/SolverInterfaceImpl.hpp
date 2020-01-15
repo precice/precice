@@ -10,7 +10,6 @@
 #include "io/Constants.hpp"
 #include "m2n/BoundM2N.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
-#include "precice/MeshHandle.hpp"
 #include "precice/SolverInterface.hpp"
 #include "precice/impl/DataContext.hpp"
 #include "precice/impl/SharedPointer.hpp"
@@ -481,9 +480,6 @@ public:
    */
   //  void scaleReadData ()
 
-  /// Returns a handle to a created mesh.
-  MeshHandle getMeshHandle(const std::string &meshName);
-
   /// Returns the name of the accessor
   std::string getAccessorName() const
   {
@@ -501,6 +497,9 @@ public:
   {
     return _accessorCommunicatorSize;
   }
+
+  /// Allows to access a registered mesh
+  const mesh::Mesh &mesh(const std::string &meshName) const;
 
 private:
   mutable logging::Logger _log{"impl::SolverInterfaceImpl"};
