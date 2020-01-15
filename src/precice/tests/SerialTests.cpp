@@ -218,7 +218,6 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDataExchange,
       maxDt = cplInterface.advance(maxDt);
       if (cplInterface.isCouplingOngoing()) {
         i = 0;
-        //for (VertexIterator it = vertices.begin(); it != vertices.end(); it++) {
         for (auto &vertex : vertices) {
           Vector3d vel   = Vector3d::Zero();
           int      index = indices[i];
