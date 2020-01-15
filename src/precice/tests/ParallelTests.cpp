@@ -77,8 +77,8 @@ BOOST_AUTO_TEST_CASE(TestFinalize, *testing::OnSize(4))
     double xCoord = 0.0 + utils::Parallel::getProcessRank();
     interface.setMeshVertex(meshID, Eigen::Vector3d(xCoord, 0.0, 0.0).data());
     interface.initialize();
-    BOOST_TEST(interface.getMeshHandle("MeshOne").vertices().size() == 1);
-    BOOST_TEST(interface.getMeshHandle("MeshTwo").vertices().size() == 1);
+    BOOST_TEST(impl(interface).mesh("MeshOne").vertices().size() == 1);
+    BOOST_TEST(impl(interface).mesh("MeshTwo").vertices().size() == 1);
     interface.finalize();
   } else {
     SolverInterface interface("SolverTwo", utils::Parallel::getProcessRank() - 2, 2);
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(TestFinalize, *testing::OnSize(4))
     double xCoord = -2.0 + utils::Parallel::getProcessRank();
     interface.setMeshVertex(meshID, Eigen::Vector3d(xCoord, 0.0, 0.0).data());
     interface.initialize();
-    BOOST_TEST(interface.getMeshHandle("MeshTwo").vertices().size() == 1);
+    BOOST_TEST(impl(interface).mesh("MeshTwo").vertices().size() == 1);
     interface.finalize();
   }
 }
@@ -539,7 +539,7 @@ BOOST_AUTO_TEST_CASE(NearestProjectionRePartitioning, *testing::OnSize(4))
       std::vector<int> vertexIDs(numberOfVertices);
       interface.setMeshVertices(meshID, numberOfVertices, positions.data(), vertexIDs.data());
       interface.initialize();
-      BOOST_TEST(impl(interface).getMeshHandle("Nodes").triangles().size() == 15);
+      BOOST_TEST(impl(interface).mesh("Nodes").triangles().size() == 15);
       interface.advance(1.0);
       interface.finalize();
     } else {

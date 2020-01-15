@@ -212,8 +212,6 @@ target_sources(precice
     src/partition/ReceivedPartition.cpp
     src/partition/ReceivedPartition.hpp
     src/partition/SharedPointer.hpp
-    src/precice/MeshHandle.cpp
-    src/precice/MeshHandle.hpp
     src/precice/SolverInterface.cpp
     src/precice/SolverInterface.hpp
     src/precice/bindings/c/SolverInterfaceC.cpp
@@ -297,7 +295,6 @@ target_sources(precice
 #
 
 set_property(TARGET precice PROPERTY PUBLIC_HEADER
-    src/precice/MeshHandle.hpp
     src/precice/SolverInterface.hpp
     src/precice/bindings/c/SolverInterfaceC.h
     )

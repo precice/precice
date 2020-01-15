@@ -200,29 +200,30 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDataExchange,
     cplInterface.setMeshVertex(meshOneID, vertex.data());
     double maxDt = cplInterface.initialize();
 
-    VertexHandle vertices = cplInterface.getMeshHandle("Test-Square").vertices();
+    const auto &vertices = impl(cplInterface).mesh("Test-Square").vertices();
     while (cplInterface.isCouplingOngoing()) {
       impl(cplInterface).resetMesh(meshOneID);
       i = 0;
-      for (VertexIterator it = vertices.begin(); it != vertices.end(); it++) {
-        int index = cplInterface.setMeshVertex(meshOneID, it.vertexCoords());
-        BOOST_TEST(index == it.vertexID());
+      for (auto &vertex : vertices) {
+        int index = cplInterface.setMeshVertex(meshOneID, vertex.getCoords().data());
+        BOOST_TEST(index == vertex.getID());
         indices[i] = index;
         i++;
       }
-      for (VertexIterator it = vertices.begin(); it != vertices.end(); it++) {
-        Vector3d force(Vector3d::Constant(counter) + Eigen::Map<const Vector3d>(it.vertexCoords()));
-        cplInterface.writeVectorData(forcesID, it.vertexID(), force.data());
+      //for (VertexIterator it = vertices.begin(); it != vertices.end(); it++) {
+      for (auto &vertex : vertices) {
+        Vector3d force(Vector3d::Constant(counter) + vertex.getCoords());
+        cplInterface.writeVectorData(forcesID, vertex.getID(), force.data());
       }
       maxDt = cplInterface.advance(maxDt);
       if (cplInterface.isCouplingOngoing()) {
         i = 0;
-        for (VertexIterator it = vertices.begin(); it != vertices.end(); it++) {
+        for (auto &vertex : vertices) {
           Vector3d vel   = Vector3d::Zero();
           int      index = indices[i];
           i++;
           cplInterface.readVectorData(velocitiesID, index, vel.data());
-          BOOST_TEST(vel == Vector3d::Constant(counter) + Eigen::Map<const Vector3d>(it.vertexCoords()));
+          BOOST_TEST(vel == Vector3d::Constant(counter) + vertex.getCoords());
         }
         counter += 1.0;
       }
@@ -237,30 +238,30 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDataExchange,
     cplInterface.setMeshVertex(meshID, Eigen::Vector3d(1.0, 0.0, 0.0).data());
     cplInterface.setMeshVertex(meshID, Eigen::Vector3d(0.0, 1.0, 0.0).data());
     cplInterface.setMeshVertex(meshID, Eigen::Vector3d(1.0, 1.0, 0.0).data());
-    int          forcesID     = cplInterface.getDataID("Forces", meshID);
-    int          velocitiesID = cplInterface.getDataID("Velocities", meshID);
-    double       maxDt        = cplInterface.initialize();
-    VertexHandle vertices     = cplInterface.getMeshHandle("Test-Square").vertices();
+    int    forcesID     = cplInterface.getDataID("Forces", meshID);
+    int    velocitiesID = cplInterface.getDataID("Velocities", meshID);
+    double maxDt        = cplInterface.initialize();
+    auto & vertices     = impl(cplInterface).mesh("Test-Square").vertices();
     // SolverTwo does not start the coupled simulation and has, hence,
     // already received the first data to be validated.
-    for (VertexIterator it = vertices.begin(); it != vertices.end(); it++) {
+    for (auto &vertex : vertices) {
       Vector3d force = Vector3d::Zero();
-      cplInterface.readVectorData(forcesID, it.vertexID(), force.data());
-      BOOST_TEST(force == Vector3d::Constant(counter) + Eigen::Map<const Vector3d>(it.vertexCoords()));
+      cplInterface.readVectorData(forcesID, vertex.getID(), force.data());
+      BOOST_TEST(force == Vector3d::Constant(counter) + vertex.getCoords());
     }
     counter += 1.0;
 
     while (cplInterface.isCouplingOngoing()) {
-      for (VertexIterator it = vertices.begin(); it != vertices.end(); it++) {
-        Vector3d vel(Vector3d::Constant(counter - 1.0) + Eigen::Map<const Vector3d>(it.vertexCoords()));
-        cplInterface.writeVectorData(velocitiesID, it.vertexID(), vel.data());
+      for (auto &vertex : vertices) {
+        Vector3d vel(Vector3d::Constant(counter - 1.0) + vertex.getCoords());
+        cplInterface.writeVectorData(velocitiesID, vertex.getID(), vel.data());
       }
       maxDt = cplInterface.advance(maxDt);
       if (cplInterface.isCouplingOngoing()) {
-        for (VertexIterator it = vertices.begin(); it != vertices.end(); it++) {
+        for (auto &vertex : vertices) {
           Vector3d force = Vector3d::Zero();
-          cplInterface.readVectorData(forcesID, it.vertexID(), force.data());
-          BOOST_TEST(force == Vector3d::Constant(counter) + Eigen::Map<const Vector3d>(it.vertexCoords()));
+          cplInterface.readVectorData(forcesID, vertex.getID(), force.data());
+          BOOST_TEST(force == Vector3d::Constant(counter) + vertex.getCoords());
         }
         counter += 1.0;
       }
@@ -352,7 +353,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithBlockDataExchange,
     int             pressuresID    = cplInterface.getDataID("Pressures", meshOneID);
     int             velocitiesID   = cplInterface.getDataID("Velocities", meshOneID);
     int             temperaturesID = cplInterface.getDataID("Temperatures", meshOneID);
-    VertexHandle    vertices       = cplInterface.getMeshHandle("Test-Square").vertices();
+    auto &          vertices       = impl(cplInterface).mesh("Test-Square").vertices();
     int             size           = vertices.size();
     Eigen::VectorXd writePositions(size * 3);
     Eigen::VectorXd getWritePositions(size * 3);
@@ -371,20 +372,19 @@ BOOST_AUTO_TEST_CASE(testExplicitWithBlockDataExchange,
 
     while (cplInterface.isCouplingOngoing()) {
       impl(cplInterface).resetMesh(meshOneID);
-      for (VertexIterator it = vertices.begin(); it != vertices.end(); it++) {
+      for (auto &vertex : vertices) {
         for (int dim = 0; dim < 3; dim++) {
-          writePositions[it.vertexID() * 3 + dim] = it.vertexCoords()[dim];
+          writePositions[vertex.getID() * 3 + dim] = vertex.getCoords()[dim];
         }
       }
       cplInterface.setMeshVertices(meshOneID, size, writePositions.data(),
                                    writeIDs.data());
-      for (VertexIterator it = vertices.begin(); it != vertices.end(); it++) {
-        // Vector3d force ( Vector3D(counter) + wrap<3,double>(it.vertexCoords()) );
-        Vector3d force(Vector3d::Constant(counter) +
-                       Eigen::Map<const Vector3d>(it.vertexCoords()));
+      for (auto &vertex : vertices) {
+        // Vector3d force ( Vector3D(counter) + wrap<3,double>(vertex.getCoords()) );
+        Vector3d force(Vector3d::Constant(counter) + vertex.getCoords());
         for (int dim = 0; dim < 3; dim++)
-          forces[it.vertexID() * 3 + dim] = force[dim];
-        pressures[it.vertexID()] = counter + it.vertexCoords()[0];
+          forces[vertex.getID() * 3 + dim] = force[dim];
+        pressures[vertex.getID()] = counter + vertex.getCoords()[0];
       }
       cplInterface.writeBlockVectorData(forcesID, size, writeIDs.data(), forces.data());
       cplInterface.writeBlockScalarData(pressuresID, size, writeIDs.data(), pressures.data());
@@ -399,13 +399,13 @@ BOOST_AUTO_TEST_CASE(testExplicitWithBlockDataExchange,
       //cplInterface.mapWrittenData(meshID);
       maxDt = cplInterface.advance(maxDt);
       if (cplInterface.isCouplingOngoing()) {
-        for (VertexIterator it = vertices.begin(); it != vertices.end(); it++) {
+        for (auto &vertex : vertices) {
           for (int dim = 0; dim < 3; dim++) {
-            int index                 = it.vertexID() * 3 + dim;
-            readPositions[index]      = it.vertexCoords()[dim];
-            expectedVelocities[index] = counter + it.vertexCoords()[dim];
+            int index                 = vertex.getID() * 3 + dim;
+            readPositions[index]      = vertex.getCoords()[dim];
+            expectedVelocities[index] = counter + vertex.getCoords()[dim];
           }
-          expectedTemperatures[it.vertexID()] = counter + it.vertexCoords()[0];
+          expectedTemperatures[vertex.getID()] = counter + vertex.getCoords()[0];
         }
         impl(cplInterface).resetMesh(meshOneID);
         cplInterface.setMeshVertices(meshOneID, size, readPositions.data(), readIDs.data());
@@ -435,36 +435,36 @@ BOOST_AUTO_TEST_CASE(testExplicitWithBlockDataExchange,
     cplInterface.setMeshVertex(meshID, Eigen::Vector3d(1.0, 0.0, 0.0).data());
     cplInterface.setMeshVertex(meshID, Eigen::Vector3d(0.0, 1.0, 0.0).data());
     cplInterface.setMeshVertex(meshID, Eigen::Vector3d(1.0, 1.0, 0.0).data());
-    double       maxDt    = cplInterface.initialize();
-    VertexHandle vertices = cplInterface.getMeshHandle("Test-Square").vertices();
+    double      maxDt    = cplInterface.initialize();
+    const auto &vertices = impl(cplInterface).mesh("Test-Square").vertices();
     // SolverTwo does not start the coupled simulation and has, hence,
     // already received the first data to be validated.
-    for (VertexIterator it = vertices.begin(); it != vertices.end(); it++) {
+    for (auto &vertex : vertices) {
       Vector3d force    = Vector3d::Zero();
       double   pressure = 0.0;
-      cplInterface.readVectorData(forcesID, it.vertexID(), force.data());
-      cplInterface.readScalarData(pressuresID, it.vertexID(), pressure);
-      BOOST_TEST(force == Vector3d::Constant(counter) + Eigen::Map<const Vector3d>(it.vertexCoords()));
-      BOOST_TEST(pressure == counter + it.vertexCoords()[0]);
+      cplInterface.readVectorData(forcesID, vertex.getID(), force.data());
+      cplInterface.readScalarData(pressuresID, vertex.getID(), pressure);
+      BOOST_TEST(force == Vector3d::Constant(counter) + vertex.getCoords());
+      BOOST_TEST(pressure == counter + vertex.getCoords()[0]);
     }
     counter += 1.0;
 
     while (cplInterface.isCouplingOngoing()) {
-      for (VertexIterator it = vertices.begin(); it != vertices.end(); it++) {
-        Vector3d vel(Vector3d::Constant(counter - 1.0) + Eigen::Map<const Vector3d>(it.vertexCoords()));
-        cplInterface.writeVectorData(velocitiesID, it.vertexID(), vel.data());
-        double temperature = counter - 1.0 + it.vertexCoords()[0];
-        cplInterface.writeScalarData(temperaturesID, it.vertexID(), temperature);
+      for (auto &vertex : vertices) {
+        Vector3d vel(Vector3d::Constant(counter - 1.0) + vertex.getCoords());
+        cplInterface.writeVectorData(velocitiesID, vertex.getID(), vel.data());
+        double temperature = counter - 1.0 + vertex.getCoords()[0];
+        cplInterface.writeScalarData(temperaturesID, vertex.getID(), temperature);
       }
       maxDt = cplInterface.advance(maxDt);
       if (cplInterface.isCouplingOngoing()) {
-        for (VertexIterator it = vertices.begin(); it != vertices.end(); it++) {
+        for (auto &vertex : vertices) {
           Vector3d force    = Vector3d::Zero();
           double   pressure = 0.0;
-          cplInterface.readVectorData(forcesID, it.vertexID(), force.data());
-          cplInterface.readScalarData(pressuresID, it.vertexID(), pressure);
-          BOOST_TEST(force == Vector3d::Constant(counter) + Eigen::Map<const Vector3d>(it.vertexCoords()));
-          BOOST_TEST(pressure == counter + it.vertexCoords()[0]);
+          cplInterface.readVectorData(forcesID, vertex.getID(), force.data());
+          cplInterface.readScalarData(pressuresID, vertex.getID(), pressure);
+          BOOST_TEST(force == Vector3d::Constant(counter) + vertex.getCoords());
+          BOOST_TEST(pressure == counter + vertex.getCoords()[0]);
         }
         counter += 1.0;
       }
@@ -565,9 +565,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDataScaling,
 
     int velocitiesID = cplInterface.getDataID("Velocities", meshID);
     while (cplInterface.isCouplingOngoing()) {
-      MeshHandle     handle = cplInterface.getMeshHandle("Test-Square");
-      VertexIterator iter   = handle.vertices().begin();
-      for (size_t i = 0; iter != handle.vertices().end(); i++, iter++) {
+      for (size_t i = 0; i < impl(cplInterface).mesh("Test-Square").vertices().size(); ++i) {
         Eigen::Vector2d data = Eigen::Vector2d::Constant(i);
         cplInterface.writeVectorData(velocitiesID, i, data.data());
       }
@@ -584,9 +582,8 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDataScaling,
     int meshID       = cplInterface.getMeshID("Test-Square");
     int velocitiesID = cplInterface.getDataID("Velocities", meshID);
     while (cplInterface.isCouplingOngoing()) {
-      MeshHandle     handle = cplInterface.getMeshHandle("Test-Square");
-      VertexIterator iter   = handle.vertices().begin();
-      for (size_t i = 0; iter != handle.vertices().end(); iter++, i++) {
+      const auto size = impl(cplInterface).mesh("Test-Square").vertices().size();
+      for (size_t i = 0; i < size; ++i) {
         Eigen::Vector2d readData;
         cplInterface.readVectorData(velocitiesID, i, readData.data());
         Eigen::Vector2d expectedData = Eigen::Vector2d::Constant(i * 10.0);
