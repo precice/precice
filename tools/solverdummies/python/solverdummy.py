@@ -25,8 +25,7 @@ n = 1
 solver_process_index = 0
 solver_process_size = 1
 
-interface = precice.Interface(participant_name, solver_process_index, solver_process_size)
-interface.configure(configuration_file_name)
+interface = precice.Interface(participant_name, configuration_file_name, solver_process_index, solver_process_size)
     
 mesh_id = interface.get_mesh_id(mesh_name)
 
