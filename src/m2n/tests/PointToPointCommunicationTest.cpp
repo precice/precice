@@ -45,7 +45,7 @@ void P2PComTest1(com::PtrCommunicationFactory cf)
 
     utils::MasterSlave::configure(0, 2);
 
-    MasterSlave::_communication->acceptConnection("A.Master", "A.Slave", 0);
+    MasterSlave::_communication->acceptConnection("A.Master", "A.Slave", "Test", 0);
     MasterSlave::_communication->setRankOffset(1);
 
     mesh->setGlobalNumberOfVertices(10);
@@ -71,7 +71,7 @@ void P2PComTest1(com::PtrCommunicationFactory cf)
     Parallel::splitCommunicator("A.Slave");
     MasterSlave::configure(1, 2);
 
-    MasterSlave::_communication->requestConnection("A.Master", "A.Slave", 1, 1);
+    MasterSlave::_communication->requestConnection("A.Master", "A.Slave", "Test", 1, 1);
 
     data         = {20, 30, 50, 60, 70};
     expectedData = {4 * 20 + 3, 30 + 1, 50 + 2, 4 * 60 + 3, 70 + 1};
@@ -82,7 +82,7 @@ void P2PComTest1(com::PtrCommunicationFactory cf)
     Parallel::splitCommunicator("B.Master");
     MasterSlave::configure(0, 2);
 
-    MasterSlave::_communication->acceptConnection("B.Master", "B.Slave", 0);
+    MasterSlave::_communication->acceptConnection("B.Master", "B.Slave", "Test", 0);
     MasterSlave::_communication->setRankOffset(1);
 
     mesh->setGlobalNumberOfVertices(10);
@@ -108,7 +108,7 @@ void P2PComTest1(com::PtrCommunicationFactory cf)
     Parallel::splitCommunicator("B.Slave");
     MasterSlave::configure(1, 2);
 
-    MasterSlave::_communication->requestConnection("B.Master", "B.Slave", 1, 1);
+    MasterSlave::_communication->requestConnection("B.Master", "B.Slave", "Test", 1, 1);
 
     data.assign(6, -1);
     expectedData = {10, 2 * 20, 40, 50, 2 * 60, 80};
@@ -159,7 +159,7 @@ void P2PComTest2(com::PtrCommunicationFactory cf)
     Parallel::splitCommunicator("A.Master");
     MasterSlave::configure(0, 2);
 
-    MasterSlave::_communication->acceptConnection("A.Master", "A.Slave", utils::Parallel::getProcessRank());
+    MasterSlave::_communication->acceptConnection("A.Master", "A.Slave", "Test", utils::Parallel::getProcessRank());
     MasterSlave::_communication->setRankOffset(1);
 
     mesh->setGlobalNumberOfVertices(10);
@@ -185,7 +185,7 @@ void P2PComTest2(com::PtrCommunicationFactory cf)
     Parallel::splitCommunicator("A.Slave");
     utils::MasterSlave::configure(1, 2);
 
-    MasterSlave::_communication->requestConnection("A.Master", "A.Slave", 0, 1);
+    MasterSlave::_communication->requestConnection("A.Master", "A.Slave", "Test", 0, 1);
 
     data         = {20, 30, 50, 60, 70};
     expectedData = {4 * 20 + 3, 0, 50 + 2, 4 * 60 + 3, 70 + 1};
@@ -196,7 +196,7 @@ void P2PComTest2(com::PtrCommunicationFactory cf)
     Parallel::splitCommunicator("B.Master");
     utils::MasterSlave::configure(0, 2);
 
-    MasterSlave::_communication->acceptConnection("B.Master", "B.Slave", utils::Parallel::getProcessRank());
+    MasterSlave::_communication->acceptConnection("B.Master", "B.Slave", "Test", utils::Parallel::getProcessRank());
     MasterSlave::_communication->setRankOffset(1);
 
     mesh->setGlobalNumberOfVertices(10);
@@ -221,7 +221,7 @@ void P2PComTest2(com::PtrCommunicationFactory cf)
   case 3: {
     Parallel::splitCommunicator("B.Slave");
     MasterSlave::configure(1, 2);
-    MasterSlave::_communication->requestConnection("B.Master", "B.Slave", 0, 1);
+    MasterSlave::_communication->requestConnection("B.Master", "B.Slave", "Test", 0, 1);
 
     data.assign(6, -1);
     expectedData = {10, 2 * 20, 40, 50, 2 * 60, 80};
@@ -270,7 +270,7 @@ void connectionTest(com::PtrCommunicationFactory cf)
     case 0: {
       utils::Parallel::splitCommunicator("Fluid.Master");
       utils::MasterSlave::configure(0, 2);
-      utils::MasterSlave::_communication->acceptConnection("Fluid.Master", "Fluid.Slave", utils::Parallel::getProcessRank());
+      utils::MasterSlave::_communication->acceptConnection("Fluid.Master", "Fluid.Slave", "Test", utils::Parallel::getProcessRank());
       utils::MasterSlave::_communication->setRankOffset(1);
 
       if (connectionType == "same") {
@@ -283,7 +283,7 @@ void connectionTest(com::PtrCommunicationFactory cf)
     case 1: {
       utils::Parallel::splitCommunicator("Fluid.Slave");
       utils::MasterSlave::configure(1, 2);
-      utils::MasterSlave::_communication->requestConnection("Fluid.Master", "Fluid.Slave", 0, 1);
+      utils::MasterSlave::_communication->requestConnection("Fluid.Master", "Fluid.Slave", "Test", 0, 1);
 
       if (connectionType == "same") {
         mesh->getConnectedRanks().push_back(1);
@@ -295,7 +295,7 @@ void connectionTest(com::PtrCommunicationFactory cf)
     case 2: {
       utils::Parallel::splitCommunicator("Solid.Master");
       utils::MasterSlave::configure(0, 2);
-      utils::MasterSlave::_communication->acceptConnection("Solid.Master", "Solid.Slave", utils::Parallel::getProcessRank());
+      utils::MasterSlave::_communication->acceptConnection("Solid.Master", "Solid.Slave", "Test", utils::Parallel::getProcessRank());
       utils::MasterSlave::_communication->setRankOffset(1);
 
       if (connectionType == "same") {
@@ -308,7 +308,7 @@ void connectionTest(com::PtrCommunicationFactory cf)
     case 3: {
       utils::Parallel::splitCommunicator("Solid.Slave");
       utils::MasterSlave::configure(1, 2);
-      utils::MasterSlave::_communication->requestConnection("Solid.Master", "Solid.Slave", 0, 1);
+      utils::MasterSlave::_communication->requestConnection("Solid.Master", "Solid.Slave", "Test", 0, 1);
 
       if (connectionType == "same") {
         mesh->getConnectedRanks().push_back(1);
@@ -379,7 +379,7 @@ void emptyConnectionTest(com::PtrCommunicationFactory cf)
   case 0: {
     utils::Parallel::splitCommunicator("Fluid.Master");
     utils::MasterSlave::configure(0, 2);
-    utils::MasterSlave::_communication->acceptConnection("Fluid.Master", "Fluid.Slave", utils::Parallel::getProcessRank());
+    utils::MasterSlave::_communication->acceptConnection("Fluid.Master", "Fluid.Slave", "Test", utils::Parallel::getProcessRank());
     utils::MasterSlave::_communication->setRankOffset(1);
 
     mesh->getConnectedRanks().push_back(0);
@@ -389,14 +389,14 @@ void emptyConnectionTest(com::PtrCommunicationFactory cf)
   case 1: {
     utils::Parallel::splitCommunicator("Fluid.Slave");
     utils::MasterSlave::configure(1, 2);
-    utils::MasterSlave::_communication->requestConnection("Fluid.Master", "Fluid.Slave", 0, 1);
+    utils::MasterSlave::_communication->requestConnection("Fluid.Master", "Fluid.Slave", "Test", 0, 1);
 
     break;
   }
   case 2: {
     utils::Parallel::splitCommunicator("Solid.Master");
     utils::MasterSlave::configure(0, 2);
-    utils::MasterSlave::_communication->acceptConnection("Solid.Master", "Solid.Slave", utils::Parallel::getProcessRank());
+    utils::MasterSlave::_communication->acceptConnection("Solid.Master", "Solid.Slave", "Test", utils::Parallel::getProcessRank());
     utils::MasterSlave::_communication->setRankOffset(1);
 
     mesh->getConnectedRanks().push_back(0);
@@ -406,7 +406,7 @@ void emptyConnectionTest(com::PtrCommunicationFactory cf)
   case 3: {
     utils::Parallel::splitCommunicator("Solid.Slave");
     utils::MasterSlave::configure(1, 2);
-    utils::MasterSlave::_communication->requestConnection("Solid.Master", "Solid.Slave", 0, 1);
+    utils::MasterSlave::_communication->requestConnection("Solid.Master", "Solid.Slave", "Test", 0, 1);
 
     break;
   }
@@ -455,7 +455,7 @@ void P2PMeshBroadcastTest(com::PtrCommunicationFactory cf)
   case 0: {
     utils::Parallel::splitCommunicator("Fluid.Master");
     utils::MasterSlave::configure(0, 2);
-    utils::MasterSlave::_communication->acceptConnection("Fluid.Master", "Fluid.Slave", utils::Parallel::getProcessRank());
+    utils::MasterSlave::_communication->acceptConnection("Fluid.Master", "Fluid.Slave", "Test", utils::Parallel::getProcessRank());
     utils::MasterSlave::_communication->setRankOffset(1);
 
     Eigen::VectorXd position(dimensions);
@@ -472,7 +472,7 @@ void P2PMeshBroadcastTest(com::PtrCommunicationFactory cf)
   case 1: {
     utils::Parallel::splitCommunicator("Fluid.Slave");
     utils::MasterSlave::configure(1, 2);
-    utils::MasterSlave::_communication->requestConnection("Fluid.Master", "Fluid.Slave", 0, 1);
+    utils::MasterSlave::_communication->requestConnection("Fluid.Master", "Fluid.Slave", "Test", 0, 1);
 
     Eigen::VectorXd position(dimensions);
     position << 1.5, 0.0;
@@ -488,7 +488,7 @@ void P2PMeshBroadcastTest(com::PtrCommunicationFactory cf)
   case 2: {
     utils::Parallel::splitCommunicator("Solid.Master");
     utils::MasterSlave::configure(0, 2);
-    utils::MasterSlave::_communication->acceptConnection("Solid.Master", "Solid.Slave", utils::Parallel::getProcessRank());
+    utils::MasterSlave::_communication->acceptConnection("Solid.Master", "Solid.Slave", "Test", utils::Parallel::getProcessRank());
     utils::MasterSlave::_communication->setRankOffset(1);
 
     mesh->getConnectedRanks().push_back(0);
@@ -498,7 +498,7 @@ void P2PMeshBroadcastTest(com::PtrCommunicationFactory cf)
   case 3: {
     utils::Parallel::splitCommunicator("Solid.Slave");
     utils::MasterSlave::configure(1, 2);
-    utils::MasterSlave::_communication->requestConnection("Solid.Master", "Solid.Slave", 0, 1);
+    utils::MasterSlave::_communication->requestConnection("Solid.Master", "Solid.Slave", "Test", 0, 1);
 
     mesh->getConnectedRanks().push_back(1);
 
@@ -559,7 +559,7 @@ void P2PComLCMTest(com::PtrCommunicationFactory cf)
   case 0: {
     utils::Parallel::splitCommunicator("Fluid.Master");
     utils::MasterSlave::configure(0, 2);
-    utils::MasterSlave::_communication->acceptConnection("Fluid.Master", "Fluid.Slave", utils::Parallel::getProcessRank());
+    utils::MasterSlave::_communication->acceptConnection("Fluid.Master", "Fluid.Slave", "Test", utils::Parallel::getProcessRank());
     utils::MasterSlave::_communication->setRankOffset(1);
 
     // The numbers are chosen in this way to make it easy to test weather
@@ -577,7 +577,7 @@ void P2PComLCMTest(com::PtrCommunicationFactory cf)
   case 1: {
     utils::Parallel::splitCommunicator("Fluid.Slave");
     utils::MasterSlave::configure(1, 2);
-    utils::MasterSlave::_communication->requestConnection("Fluid.Master", "Fluid.Slave", 0, 1);
+    utils::MasterSlave::_communication->requestConnection("Fluid.Master", "Fluid.Slave", "Test", 0, 1);
 
     // The numbers are chosen in this way to make it easy to test weather
     // correct values are communicated or not!
@@ -594,7 +594,7 @@ void P2PComLCMTest(com::PtrCommunicationFactory cf)
   case 2: {
     utils::Parallel::splitCommunicator("Solid.Master");
     utils::MasterSlave::configure(0, 2);
-    utils::MasterSlave::_communication->acceptConnection("Solid.Master", "Solid.Slave", utils::Parallel::getProcessRank());
+    utils::MasterSlave::_communication->acceptConnection("Solid.Master", "Solid.Slave", "Test", utils::Parallel::getProcessRank());
     utils::MasterSlave::_communication->setRankOffset(1);
 
     mesh->getConnectedRanks().push_back(0);
@@ -604,7 +604,7 @@ void P2PComLCMTest(com::PtrCommunicationFactory cf)
   case 3: {
     utils::Parallel::splitCommunicator("Solid.Slave");
     utils::MasterSlave::configure(1, 2);
-    utils::MasterSlave::_communication->requestConnection("Solid.Master", "Solid.Slave", 0, 1);
+    utils::MasterSlave::_communication->requestConnection("Solid.Master", "Solid.Slave", "Test", 0, 1);
 
     mesh->getConnectedRanks().push_back(1);
 

@@ -161,11 +161,11 @@ BOOST_AUTO_TEST_CASE(ParallelMatrixMatrixOp, *boost::unit_test::fixture<testing:
   // initialize cyclic communication between successive slaves
   int prevProc = (utils::Parallel::getProcessRank() - 1 < 0) ? utils::Parallel::getCommunicatorSize() - 1 : utils::Parallel::getProcessRank() - 1;
   if ((utils::Parallel::getProcessRank() % 2) == 0) {
-    _cyclicCommLeft->acceptConnection("cyclicComm-" + std::to_string(prevProc), "", utils::Parallel::getProcessRank());
-    _cyclicCommRight->requestConnection("cyclicComm-" + std::to_string(utils::Parallel::getProcessRank()), "", 0, 1);
+    _cyclicCommLeft->acceptConnection("cyclicComm-" + std::to_string(prevProc), "", "Test", utils::Parallel::getProcessRank());
+    _cyclicCommRight->requestConnection("cyclicComm-" + std::to_string(utils::Parallel::getProcessRank()), "", "Test", 0, 1);
   } else {
-    _cyclicCommRight->requestConnection("cyclicComm-" + std::to_string(utils::Parallel::getProcessRank()), "", 0, 1);
-    _cyclicCommLeft->acceptConnection("cyclicComm-" + std::to_string(prevProc), "", utils::Parallel::getProcessRank());
+    _cyclicCommRight->requestConnection("cyclicComm-" + std::to_string(utils::Parallel::getProcessRank()), "", "Test", 0, 1);
+    _cyclicCommLeft->acceptConnection("cyclicComm-" + std::to_string(prevProc), "", "Test", utils::Parallel::getProcessRank());
   }
 
   int              n_global = 10, m_global = 5;

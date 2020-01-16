@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file. For future 
 ## develop
 
 - Remove `MeshHandle` from API and replace use in integration tests by `SolverInterfaceImpl::mesh()`.
+- Added the mesh name to the information used to generate connection information files, which is required for the two-level initialization.
 - Completely remove server mode. Now, the only supported parallelization concept is the peer-to-peer master-slave mode.
 - Added support for python 3 in python actions
 - Simplify parallel configuration

@@ -43,20 +43,20 @@ struct SetupMasterSlaveFixture {
 
     if (utils::Parallel::getProcessRank() == 0) {
       utils::Parallel::splitCommunicator("Master");
-      masterSlaveCom->acceptConnection("Master", "Slaves", utils::Parallel::getProcessRank());
+      masterSlaveCom->acceptConnection("Master", "Slaves", "Test", utils::Parallel::getProcessRank());
       masterSlaveCom->setRankOffset(1);
       utils::MasterSlave::configure(0, 4);
     } else if (utils::Parallel::getProcessRank() == 1) {
       utils::Parallel::splitCommunicator("Slaves");
-      masterSlaveCom->requestConnection("Master", "Slaves", 0, 3);
+      masterSlaveCom->requestConnection("Master", "Slaves", "Test", 0, 3);
       utils::MasterSlave::configure(1, 4);
     } else if (utils::Parallel::getProcessRank() == 2) {
       utils::Parallel::splitCommunicator("Slaves");
-      masterSlaveCom->requestConnection("Master", "Slaves", 1, 3);
+      masterSlaveCom->requestConnection("Master", "Slaves", "Test", 1, 3);
       utils::MasterSlave::configure(2, 4);
     } else if (utils::Parallel::getProcessRank() == 3) {
       utils::Parallel::splitCommunicator("Slaves");
-      masterSlaveCom->requestConnection("Master", "Slaves", 2, 3);
+      masterSlaveCom->requestConnection("Master", "Slaves", "Test", 2, 3);
       utils::MasterSlave::configure(3, 4);
     }
   }

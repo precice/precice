@@ -27,13 +27,13 @@ struct MasterComFixture {
     if (utils::Parallel::getProcessRank() == 0) { //Master
       utils::Parallel::splitCommunicator("Master");
       utils::MasterSlave::configure(0, size);
-      utils::MasterSlave::_communication->acceptConnection("Master", "Slaves", utils::Parallel::getProcessRank());
+      utils::MasterSlave::_communication->acceptConnection("Master", "Slaves", "Test", utils::Parallel::getProcessRank());
       utils::MasterSlave::_communication->setRankOffset(1);
     } else { //Slaves
       PRECICE_ASSERT(utils::Parallel::getProcessRank() > 0 && utils::Parallel::getProcessRank() < size);
       utils::Parallel::splitCommunicator("Slaves");
       utils::MasterSlave::configure(utils::Parallel::getProcessRank(), size);
-      utils::MasterSlave::_communication->requestConnection("Master", "Slaves", utils::Parallel::getProcessRank() - 1, size - 1);
+      utils::MasterSlave::_communication->requestConnection("Master", "Slaves", "Test", utils::Parallel::getProcessRank() - 1, size - 1);
     }
   }
 
