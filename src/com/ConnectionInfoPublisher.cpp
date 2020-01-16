@@ -18,7 +18,7 @@ std::string ConnectionInfoPublisher::getFilename() const
   auto                           ns = ns_gen("af7ce8f2-a9ee-46cb-38ee-71c318aa3580"); // md5 hash of precice.org as namespace
 
   boost::uuids::name_generator gen{ns};
-  std::string const            s    = acceptorName + requesterName + std::to_string(rank);
+  std::string const            s    = acceptorName + tag + requesterName + std::to_string(rank);
   std::string                  hash = boost::uuids::to_string(gen(s));
   hash.erase(std::remove(hash.begin(), hash.end(), '-'), hash.end());
 
@@ -61,7 +61,7 @@ void ConnectionInfoWriter::write(std::string const &info) const
   {
     std::ofstream ofs(tmp.string(), std::ofstream::out);
     ofs << info << "\n";
-    ofs << "Acceptor: " << acceptorName << ", Requester: " << requesterName << ", Rank: " << rank << "\n";
+    ofs << "Acceptor: " << acceptorName << ", Requester: " << requesterName << ", Tag: " << tag << ", Rank: " << rank << "\n";
   }
   fs::rename(tmp, path);
 }

@@ -46,6 +46,7 @@ size_t SocketCommunication::getRemoteCommunicatorSize()
 
 void SocketCommunication::acceptConnection(std::string const &acceptorName,
                                            std::string const &requesterName,
+                                           std::string const &tag,
                                            int                acceptorRank)
 {
   PRECICE_TRACE(acceptorName, requesterName);
@@ -70,7 +71,7 @@ void SocketCommunication::acceptConnection(std::string const &acceptorName,
 
     _portNumber = acceptor.local_endpoint().port();
     address     = ipAddress + ":" + std::to_string(_portNumber);
-    ConnectionInfoWriter conInfo(acceptorName, requesterName, _addressDirectory);
+    ConnectionInfoWriter conInfo(acceptorName, requesterName, tag, _addressDirectory);
     conInfo.write(address);
     PRECICE_DEBUG("Accept connection at " << address);
 
@@ -120,6 +121,7 @@ void SocketCommunication::acceptConnection(std::string const &acceptorName,
 
 void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorName,
                                                    std::string const &requesterName,
+                                                   std::string const &tag,
                                                    int                acceptorRank,
                                                    int                requesterCommunicatorSize)
 {
@@ -148,7 +150,7 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorNa
     }
 
     address = ipAddress + ":" + std::to_string(_portNumber);
-    ConnectionInfoWriter conInfo(acceptorName, requesterName, acceptorRank, _addressDirectory);
+    ConnectionInfoWriter conInfo(acceptorName, requesterName, tag, acceptorRank, _addressDirectory);
     conInfo.write(address);
 
     PRECICE_DEBUG("Accepting connection at " << address);
@@ -176,13 +178,14 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorNa
 
 void SocketCommunication::requestConnection(std::string const &acceptorName,
                                             std::string const &requesterName,
+                                            std::string const &tag,
                                             int                requesterRank,
                                             int                requesterCommunicatorSize)
 {
   PRECICE_TRACE(acceptorName, requesterName);
   PRECICE_ASSERT(not isConnected());
 
-  ConnectionInfoReader conInfo(acceptorName, requesterName, _addressDirectory);
+  ConnectionInfoReader conInfo(acceptorName, requesterName, tag, _addressDirectory);
   std::string const    address = conInfo.read();
   PRECICE_DEBUG("Request connection to " << address);
   auto const        sepidx     = address.find(':');
@@ -234,6 +237,7 @@ void SocketCommunication::requestConnection(std::string const &acceptorName,
 
 void SocketCommunication::requestConnectionAsClient(std::string const &  acceptorName,
                                                     std::string const &  requesterName,
+                                                    std::string const &  tag,
                                                     std::set<int> const &acceptorRanks,
                                                     int                  requesterRank)
 
@@ -243,7 +247,7 @@ void SocketCommunication::requestConnectionAsClient(std::string const &  accepto
 
   for (auto const &acceptorRank : acceptorRanks) {
     _isConnected = false;
-    ConnectionInfoReader conInfo(acceptorName, requesterName, acceptorRank, _addressDirectory);
+    ConnectionInfoReader conInfo(acceptorName, requesterName, tag, acceptorRank, _addressDirectory);
     std::string const    address    = conInfo.read();
     auto const           sepidx     = address.find(':');
     std::string const    ipAddress  = address.substr(0, sepidx);

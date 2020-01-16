@@ -9,10 +9,12 @@ class ConnectionInfoPublisher {
 public:
   ConnectionInfoPublisher(std::string acceptorName,
                           std::string requesterName,
+                          std::string tag,
                           int         rank,
                           std::string addressDirectory) noexcept
       : acceptorName(std::move(acceptorName)),
         requesterName(std::move(requesterName)),
+        tag(std::move(tag)),
         rank(rank),
         addressDirectory(std::move(addressDirectory))
   {
@@ -20,9 +22,11 @@ public:
 
   ConnectionInfoPublisher(std::string acceptorName,
                           std::string requesterName,
+                          std::string tag,
                           std::string addressDirectory) noexcept
       : acceptorName(std::move(acceptorName)),
         requesterName(std::move(requesterName)),
+        tag(std::move(tag)),
         addressDirectory(std::move(addressDirectory))
   {
   }
@@ -30,6 +34,7 @@ public:
 protected:
   std::string const acceptorName;
   std::string const requesterName;
+  std::string const tag;
   int const         rank = -1;
   std::string const addressDirectory;
 
@@ -48,16 +53,18 @@ class ConnectionInfoReader : public ConnectionInfoPublisher {
 public:
   ConnectionInfoReader(std::string acceptorName,
                        std::string requesterName,
+                       std::string tag,
                        int         rank,
                        std::string addressDirectory) noexcept
-      : ConnectionInfoPublisher(acceptorName, requesterName, rank, addressDirectory)
+      : ConnectionInfoPublisher(acceptorName, requesterName, tag, rank, addressDirectory)
   {
   }
 
   ConnectionInfoReader(std::string acceptorName,
                        std::string requesterName,
+                       std::string tag,
                        std::string addressDirectory) noexcept
-      : ConnectionInfoPublisher(acceptorName, requesterName, addressDirectory)
+      : ConnectionInfoPublisher(acceptorName, requesterName, tag, addressDirectory)
   {
   }
 
@@ -73,16 +80,18 @@ class ConnectionInfoWriter : public ConnectionInfoPublisher {
 public:
   ConnectionInfoWriter(std::string acceptorName,
                        std::string requesterName,
+                       std::string tag,
                        int         rank,
                        std::string addressDirectory) noexcept
-      : ConnectionInfoPublisher(acceptorName, requesterName, rank, addressDirectory)
+      : ConnectionInfoPublisher(acceptorName, requesterName, tag, rank, addressDirectory)
   {
   }
 
   ConnectionInfoWriter(std::string acceptorName,
                        std::string requesterName,
+                       std::string tag,
                        std::string addressDirectory) noexcept
-      : ConnectionInfoPublisher(acceptorName, requesterName, addressDirectory)
+      : ConnectionInfoPublisher(acceptorName, requesterName, tag, addressDirectory)
   {
   }
 

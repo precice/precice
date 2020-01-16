@@ -33,6 +33,7 @@ size_t MPISinglePortsCommunication::getRemoteCommunicatorSize()
 
 void MPISinglePortsCommunication::acceptConnection(std::string const &acceptorName,
                                                    std::string const &requesterName,
+                                                   std::string const &tag,
                                                    int                acceptorRank)
 {
   PRECICE_TRACE(acceptorName, requesterName);
@@ -42,7 +43,7 @@ void MPISinglePortsCommunication::acceptConnection(std::string const &acceptorNa
 
   MPI_Open_port(MPI_INFO_NULL, const_cast<char *>(_portName.data()));
 
-  ConnectionInfoWriter conPub(acceptorName, requesterName, _addressDirectory);
+  ConnectionInfoWriter conPub(acceptorName, requesterName, tag, _addressDirectory);
   conPub.write(_portName);
 
   size_t peerCurrent               = 0; // current peer to connect to
@@ -84,13 +85,14 @@ void MPISinglePortsCommunication::acceptConnection(std::string const &acceptorNa
 void MPISinglePortsCommunication::acceptConnectionAsServer(
     std::string const &acceptorName,
     std::string const &requesterName,
+    std::string const &tag,
     int                acceptorRank,
     int                requesterCommunicatorSize)
 {
   PRECICE_TRACE(acceptorName, requesterName, acceptorRank, requesterCommunicatorSize);
   PRECICE_ASSERT(not isConnected());
 
-  ConnectionInfoWriter conInfo(acceptorName, requesterName, _addressDirectory);
+  ConnectionInfoWriter conInfo(acceptorName, requesterName, tag, _addressDirectory);
 
   _isAcceptor = true;
 
@@ -111,6 +113,7 @@ void MPISinglePortsCommunication::acceptConnectionAsServer(
 
 void MPISinglePortsCommunication::requestConnection(std::string const &acceptorName,
                                                     std::string const &requesterName,
+                                                    std::string const &tag,
                                                     int                requesterRank,
                                                     int                requesterCommunicatorSize)
 {
@@ -118,7 +121,7 @@ void MPISinglePortsCommunication::requestConnection(std::string const &acceptorN
   PRECICE_ASSERT(not isConnected());
   _isAcceptor = false;
 
-  ConnectionInfoReader conInfo(acceptorName, requesterName, _addressDirectory);
+  ConnectionInfoReader conInfo(acceptorName, requesterName, tag, _addressDirectory);
   _portName = conInfo.read();
   PRECICE_DEBUG("Request connection to " << _portName);
 
@@ -137,16 +140,16 @@ void MPISinglePortsCommunication::requestConnection(std::string const &acceptorN
 
 void MPISinglePortsCommunication::requestConnectionAsClient(std::string const &  acceptorName,
                                                             std::string const &  requesterName,
+                                                            std::string const &  tag,
                                                             std::set<int> const &acceptorRanks,
                                                             int                  requesterRank)
-
 {
   PRECICE_TRACE(acceptorName, requesterName);
   PRECICE_ASSERT(not isConnected());
 
   _isAcceptor = false;
 
-  ConnectionInfoReader conInfo(acceptorName, requesterName, _addressDirectory);
+  ConnectionInfoReader conInfo(acceptorName, requesterName, tag, _addressDirectory);
   _portName = conInfo.read();
   PRECICE_DEBUG("Request connection to " << _portName);
 

@@ -37,16 +37,16 @@ BOOST_AUTO_TEST_CASE(GatherScatterTest, *testing::OnSize(4))
   } else if (utils::Parallel::getProcessRank() == 1) { // Participant 2 - Master
     utils::Parallel::splitCommunicator("Part2Master");
     utils::MasterSlave::configure(0, 3);
-    masterSlaveCom->acceptConnection("Part2Master", "Part2Slaves", utils::Parallel::getProcessRank());
+    masterSlaveCom->acceptConnection("Part2Master", "Part2Slaves", "Test", utils::Parallel::getProcessRank());
     masterSlaveCom->setRankOffset(1);
   } else if (utils::Parallel::getProcessRank() == 2) { // Participant 2 - Slave1
     utils::Parallel::splitCommunicator("Part2Slaves");
     utils::MasterSlave::configure(1, 3);
-    masterSlaveCom->requestConnection("Part2Master", "Part2Slaves", 0, 2);
+    masterSlaveCom->requestConnection("Part2Master", "Part2Slaves", "Test", 0, 2);
   } else if (utils::Parallel::getProcessRank() == 3) { // Participant 2 - Slave2
     utils::Parallel::splitCommunicator("Part2Slaves");
     utils::MasterSlave::configure(2, 3);
-    masterSlaveCom->requestConnection("Part2Master", "Part2Slaves", 1, 2);
+    masterSlaveCom->requestConnection("Part2Master", "Part2Slaves", "Test", 1, 2);
   }
 
   utils::Parallel::synchronizeProcesses();
