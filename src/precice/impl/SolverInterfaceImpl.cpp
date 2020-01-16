@@ -83,10 +83,11 @@ SolverInterfaceImpl::SolverInterfaceImpl(
 }
 
 SolverInterfaceImpl::SolverInterfaceImpl(
-    std::string participantName,
-    int         accessorProcessRank,
-    int         accessorCommunicatorSize)
-    : SolverInterfaceImpl::SolverInterfaceImpl(std::move(participantName), accessorProcessRank, accessorCommunicatorSize, nullptr)
+    std::string        participantName,
+    const std::string &configurationFileName,
+    int                accessorProcessRank,
+    int                accessorCommunicatorSize)
+    : SolverInterfaceImpl::SolverInterfaceImpl(std::move(participantName), configurationFileName, accessorProcessRank, accessorCommunicatorSize, nullptr)
 {
 }
 
