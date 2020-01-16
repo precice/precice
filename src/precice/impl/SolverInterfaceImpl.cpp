@@ -1355,11 +1355,11 @@ void SolverInterfaceImpl::initializeMasterSlaveCommunication()
   int rankOffset = 1;
   if (utils::MasterSlave::isMaster()) {
     PRECICE_INFO("Setting up communication to slaves");
-    utils::MasterSlave::_communication->acceptConnection(_accessorName + "Master", _accessorName, utils::MasterSlave::getRank());
+    utils::MasterSlave::_communication->acceptConnection(_accessorName + "Master", _accessorName, "MasterSlave", utils::MasterSlave::getRank());
     utils::MasterSlave::_communication->setRankOffset(rankOffset);
   } else {
     PRECICE_ASSERT(utils::MasterSlave::isSlave());
-    utils::MasterSlave::_communication->requestConnection(_accessorName + "Master", _accessorName,
+    utils::MasterSlave::_communication->requestConnection(_accessorName + "Master", _accessorName, "MasterSlave",
                                                           _accessorProcessRank - rankOffset, _accessorCommunicatorSize - rankOffset);
   }
 }

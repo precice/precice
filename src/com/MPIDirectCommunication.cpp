@@ -30,6 +30,7 @@ size_t MPIDirectCommunication::getRemoteCommunicatorSize()
 
 void MPIDirectCommunication::acceptConnection(std::string const &acceptorName,
                                               std::string const &requesterName,
+                                              std::string const &tag,
                                               int                acceptorRank)
 {
   PRECICE_TRACE(acceptorName, requesterName);
@@ -65,6 +66,7 @@ void MPIDirectCommunication::closeConnection()
 
 void MPIDirectCommunication::requestConnection(std::string const &acceptorName,
                                                std::string const &requesterName,
+                                               std::string const &tag,
                                                int                requesterRank,
                                                int                requesterCommunicatorSize)
 {
