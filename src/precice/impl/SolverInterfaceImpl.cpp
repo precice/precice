@@ -181,7 +181,6 @@ double SolverInterfaceImpl::initialize()
   Event                    e("initialize", precice::syncMode);
   utils::ScopedEventPrefix sep("initialize/");
 
-
   // Setup communication
 
   PRECICE_INFO("Setting up master communication to coupling partner/s");
@@ -194,7 +193,6 @@ double SolverInterfaceImpl::initialize()
   }
 
   PRECICE_INFO("Masters are connected");
-
 
   // computeBoundingBoxs();
   computePartitions();

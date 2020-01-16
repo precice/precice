@@ -21,7 +21,7 @@ struct WhiteboxAccessor;
  */
 class M2N {
 public:
-  M2N(com::PtrCommunication masterCom, DistributedComFactory::SharedPointer distrFactory, bool useOnlyMasterCom = false);
+  M2N(com::PtrCommunication masterCom, DistributedComFactory::SharedPointer distrFactory, bool useOnlyMasterCom = false, bool useTwoLevelInit = false);
 
   /// Destructor, empty.
   ~M2N();
@@ -194,6 +194,9 @@ private:
 
   /// between two serial participants, only use the master-master com and no slaves-slaves com
   bool _useOnlyMasterCom = false;
+
+  /// use the two-level initialization concept
+  bool _useTwoLevelInit = false;
 
   // @brief To allow access to _useOnlyMasterCom
   friend struct WhiteboxAccessor;

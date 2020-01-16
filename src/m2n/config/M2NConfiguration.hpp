@@ -50,6 +50,7 @@ private:
   const std::string TAG                         = "m2n";
   const std::string ATTR_EXCHANGE_DIRECTORY     = "exchange-directory";
   const std::string ATTR_ENFORCE_GATHER_SCATTER = "enforce-gather-scatter";
+  const std::string ATTR_USE_TWO_LEVEL_INIT     = "use-two-level-initialization";
 
   std::vector<M2NTuple> _m2ns;
 

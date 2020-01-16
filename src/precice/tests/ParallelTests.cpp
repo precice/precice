@@ -42,8 +42,7 @@ struct ParallelTestFixture : testing::SlimConfigurator {
 BOOST_AUTO_TEST_SUITE(PreciceTests)
 BOOST_FIXTURE_TEST_SUITE(Parallel, ParallelTestFixture)
 
-
-BOOST_AUTO_TEST_CASE(TestMasterSlaveSetup, * testing::OnSize(4))
+BOOST_AUTO_TEST_CASE(TestMasterSlaveSetup, *testing::OnSize(4))
 {
   SolverInterface interface("SolverOne", utils::Parallel::getProcessRank(), 4);
   std::string     configFilename = _pathToTests + "config1.xml";
