@@ -40,6 +40,7 @@ public:
 
   virtual void communicateBoundingBox();
   virtual void computeBoundingBox();
+  virtual void compareBoundingBoxes() override;
 
 private:
   /// Sets _bb to the union with the mesh from fromMapping resp. toMapping, also enlage by _safetyFactor
@@ -49,7 +50,7 @@ private:
   bool isVertexInBB(const mesh::Vertex &vertex);
 
   /** Checks whether provided meshes are empty.
-   * 
+   *
    * Empty provided meshes mean that the re-partitioning completely filtered
    * out the mesh received on this rank at the coupling interface.
    */

@@ -13,7 +13,7 @@ namespace partition {
  * 1- receive a set of bounding boxes from other solver
  * 2- each rank compares its bounding box with received set of boundingboxs
  * 3- if there is intersection, local rank is added to the connection map
- * 4- connection map sent to the other participant  
+ * 4- connection map sent to the other participant
  * @todo add documentation
  */
 class ReceivedBoundingBox : public Partition {
@@ -34,6 +34,8 @@ public:
   /// filter the received mesh partitions, fill in communication map and feed back to remote
   /// connected ranks
   virtual void compute() override;
+
+  virtual void compareBoundingBoxes() override;
 
 private:
   logging::Logger _log{"partition::ReceivedBoundingBox"};

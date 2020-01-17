@@ -34,6 +34,8 @@ public:
 
   virtual void createOwnerInformation();
 
+  virtual void compareBoundingBoxes() override;
+
 private:
   logging::Logger _log{"partition::ProvidedBoundingBox"};
 

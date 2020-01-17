@@ -42,6 +42,9 @@ public:
   /// The partition is computed, i.e. the mesh re-partitioned if required and all data structures are set up.
   virtual void computeBoundingBox() = 0;
 
+  /// Intersections between bounding boxes around each rank are computed
+  virtual void compareBoundingBoxes() = 0;
+
   /// The mesh is communicated between both master ranks (if required)
   virtual void communicate() = 0;
 

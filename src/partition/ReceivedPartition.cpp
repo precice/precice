@@ -267,6 +267,10 @@ void ReceivedPartition::computeBoundingBox()
 {
 }
 
+void ReceivedPartition::compareBoundingBoxes()
+{
+}
+
 void ReceivedPartition::prepareBoundingBox()
 {
   PRECICE_TRACE(_safetyFactor);

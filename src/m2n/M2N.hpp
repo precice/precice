@@ -170,6 +170,11 @@ public:
   /// each rank receives an int from remote connetcetd ranks
   void broadcastReceiveAll(std::vector<int> &itemToReceive, mesh::Mesh &mesh);
 
+  bool usesTwoLevelInitialization()
+  {
+    return _useTwoLevelInit;
+  }
+
 private:
   logging::Logger _log{"m2n::M2N"};
 

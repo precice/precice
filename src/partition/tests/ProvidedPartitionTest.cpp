@@ -290,15 +290,6 @@ BOOST_AUTO_TEST_CASE(TestOnlyDistribution2D,
     BOOST_TEST(pMesh->vertices()[1].getGlobalIndex() == 1);
     BOOST_TEST(pMesh->vertices()[0].isOwner() == true);
     BOOST_TEST(pMesh->vertices()[1].isOwner() == true);
-    BOOST_TEST(pMesh->getVertexDistribution()[0].size() == 2);
-    BOOST_TEST(pMesh->getVertexDistribution()[1].size() == 1);
-    BOOST_TEST(pMesh->getVertexDistribution()[2].size() == 0);
-    BOOST_TEST(pMesh->getVertexDistribution()[3].size() == 2);
-    BOOST_TEST(pMesh->getVertexDistribution()[0][0] == 0);
-    BOOST_TEST(pMesh->getVertexDistribution()[0][1] == 1);
-    BOOST_TEST(pMesh->getVertexDistribution()[1][0] == 2);
-    BOOST_TEST(pMesh->getVertexDistribution()[3][0] == 3);
-    BOOST_TEST(pMesh->getVertexDistribution()[3][1] == 4);
   } else if (utils::Parallel::getProcessRank() == 1) { //Slave1
     BOOST_TEST(pMesh->getGlobalNumberOfVertices() == 5);
     BOOST_TEST(pMesh->getVertexOffsets().size() == 4);

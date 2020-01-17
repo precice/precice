@@ -230,5 +230,9 @@ void ProvidedBoundingBox::createOwnerInformation()
   }
 }
 
+void ProvidedBoundingBox::compareBoundingBoxes()
+{
+}
+
 } // namespace partition
 } // namespace precice

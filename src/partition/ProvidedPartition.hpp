@@ -25,10 +25,17 @@ public:
   /// All distribution data structures are set up.
   virtual void compute() override;
 
-  virtual void communicateBoundingBox();
-  virtual void computeBoundingBox();
+  virtual void compareBoundingBoxes() override;
+
+  /// The bounding box is gathered and sent to another participant (if required)
+  virtual void communicateBoundingBox() override;
+
+  /// The feedback from the other participant is received and the initial connection map is build
+  virtual void computeBoundingBox() override;
 
 private:
+  void prepare();
+
   /// Sets owner=True on all vertices
   virtual void createOwnerInformation() override;
 

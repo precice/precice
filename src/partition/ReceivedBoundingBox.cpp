@@ -46,6 +46,10 @@ void ReceivedBoundingBox::communicateBoundingBox()
   }
 }
 
+void ReceivedBoundingBox::compareBoundingBoxes()
+{
+}
+
 void ReceivedBoundingBox::computeBoundingBox()
 {
   PRECICE_TRACE();
