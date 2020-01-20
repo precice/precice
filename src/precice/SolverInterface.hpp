@@ -261,6 +261,20 @@ public:
   bool isTimestepComplete() const;
 
   /**
+   * @brief Checks if the current coupling window is completed.
+   *
+   * @returns whether the timestep is complete.
+   *
+   * The following reasons require several solver time steps per coupling time
+   * step:
+   * - A solver chooses to perform subcycling.
+   * - An implicit coupling timestep iteration is not yet converged.
+   *
+   * @pre initialize() has been called successfully.
+   */
+  bool isTimeWindowComplete() const;
+
+  /**
    * @brief Returns whether the solver has to evaluate the surrogate model representation.
    *
    * @deprecated

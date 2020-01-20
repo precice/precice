@@ -171,10 +171,10 @@ public:
    */
   bool isWriteDataRequired(double computedTimestepLength) const;
 
-  /**
+    /**
    * @brief Returns true, if a global timestep is completed.
    */
-  bool isTimestepComplete() const;
+  bool isTimeWindowComplete() const;
 
   /**
    * @brief Returns whether the solver has to evaluate the surrogate model representation
