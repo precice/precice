@@ -46,6 +46,9 @@ private:
   /// Sets _bb to the union with the mesh from fromMapping resp. toMapping, also enlage by _safetyFactor
   void prepareBoundingBox();
 
+  /// Checks whether two bounding boxes are overlapping
+  bool overlapping(mesh::Mesh::BoundingBox const &currentBB, mesh::Mesh::BoundingBox const &receivedBB);
+
   /// Checks if vertex in contained in _bb
   bool isVertexInBB(const mesh::Vertex &vertex);
 

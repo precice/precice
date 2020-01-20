@@ -1,4 +1,7 @@
 #include "partition/ReceivedPartition.hpp"
+#include <map>
+#include <vector>
+#include "com/CommunicateBoundingBox.hpp"
 #include "com/CommunicateMesh.hpp"
 #include "com/Communication.hpp"
 #include "m2n/M2N.hpp"
@@ -269,6 +272,105 @@ void ReceivedPartition::computeBoundingBox()
 
 void ReceivedPartition::compareBoundingBoxes()
 {
+  PRECICE_TRACE();
+
+  // @todo handle coupling mode (i.e. serial participant)
+  // @todo treatment of multiple m2ns
+
+  // receive and broadcast number of remote ranks
+  int numberOfRemoteRanks = -1;
+  if (utils::MasterSlave::isMaster()) {
+    _m2ns[0]->getMasterCommunication()->receive(numberOfRemoteRanks, 0);
+    utils::MasterSlave::_communication->broadcast(numberOfRemoteRanks);
+  } else {
+    PRECICE_ASSERT(utils::MasterSlave::isSlave());
+    utils::MasterSlave::_communication->broadcast(numberOfRemoteRanks, 0);
+  }
+
+  // define and initialize remote bounding box map
+  mesh::Mesh::BoundingBoxMap remoteBBMap;
+  mesh::Mesh::BoundingBox    initialBB;
+  for (int i = 0; i < _dimensions; i++) {
+    initialBB.push_back(std::make_pair(-1, -1));
+  }
+  for (int remoteRank = 0; remoteRank < numberOfRemoteRanks; remoteRank++) {
+    remoteBBMap[remoteRank] = initialBB;
+  }
+
+  // receive and broadcast remote bounding box map
+  if (utils::MasterSlave::isMaster()) {
+    com::CommunicateBoundingBox(_m2ns[0]->getMasterCommunication()).receiveBoundingBoxMap(remoteBBMap, 0);
+    com::CommunicateBoundingBox(utils::MasterSlave::_communication).broadcastSendBoundingBoxMap(remoteBBMap);
+  } else {
+    PRECICE_ASSERT(utils::MasterSlave::isSlave());
+    com::CommunicateBoundingBox(utils::MasterSlave::_communication).broadcastReceiveBoundingBoxMap(remoteBBMap);
+  }
+
+  // prepare local bounding box
+  prepareBoundingBox();
+
+  if (utils::MasterSlave::isMaster()) {                 // Master
+    std::map<int, std::vector<int>> connectionMap;      //local ranks -> {remote ranks}
+    std::vector<int>                connectedRanksList; // local ranks with any connection
+
+    // connected ranks for master
+    for (auto &remoteBB : remoteBBMap) {
+      if (overlapping(_bb, remoteBB.second)) {
+        _mesh->getConnectedRanks().push_back(remoteBB.first); //connected remote ranks for this rank
+      }
+    }
+    if (not _mesh->getConnectedRanks().empty()) {
+      connectionMap[0] = _mesh->getConnectedRanks();
+      connectedRanksList.push_back(0);
+    }
+
+    // receive connected ranks from slaves and add them to the connection map
+    for (int rank = 1; rank < utils::MasterSlave::getSize(); rank++) {
+      std::vector<int> slaveConnectedRanks;
+      int              connectedRanksSize = -1;
+      utils::MasterSlave::_communication->receive(connectedRanksSize, rank);
+      if (connectedRanksSize != 0) {
+        connectedRanksList.push_back(rank);
+        utils::MasterSlave::_communication->receive(slaveConnectedRanks, rank);
+        connectionMap[rank] = slaveConnectedRanks;
+      }
+    }
+
+    // send connectionMap to other master
+    _m2ns[0]->getMasterCommunication()->send(connectedRanksList, 0);
+    if (not connectionMap.empty()) {
+      com::CommunicateBoundingBox(_m2ns[0]->getMasterCommunication()).sendConnectionMap(connectionMap, 0);
+    } else {
+      PRECICE_ERROR("This participant seems to have no mesh partitions for mesh " << _mesh->getName() << " at the coupling interface.");
+    }
+  } else {
+    PRECICE_ASSERT(utils::MasterSlave::isSlave());
+
+    for (auto &remoteBB : remoteBBMap) {
+      if (overlapping(_bb, remoteBB.second)) {
+        _mesh->getConnectedRanks().push_back(remoteBB.first);
+      }
+    }
+
+    // send connected ranks to master
+    utils::MasterSlave::_communication->send((int) _mesh->getConnectedRanks().size(), 0);
+    if (not _mesh->getConnectedRanks().empty()) {
+      utils::MasterSlave::_communication->send(_mesh->getConnectedRanks(), 0);
+    }
+  }
+}
+
+bool ReceivedPartition::overlapping(mesh::Mesh::BoundingBox const &currentBB, mesh::Mesh::BoundingBox const &receivedBB)
+{
+  // Comparison is done for all dimensions and, of course, to have a proper overlap, each dimension must overlap.
+  // We need to check if first AND second is smaller than first of the other BB to prevent false negatives due to empty bounding boxes.
+  for (int i = 0; i < currentBB.size(); i++) {
+    if ((currentBB[i].first < receivedBB[i].first && currentBB[i].second < receivedBB[i].first) ||
+        (receivedBB[i].first < currentBB[i].first && receivedBB[i].second < currentBB[i].first)) {
+      return false;
+    }
+  }
+  return true;
 }
 
 void ReceivedPartition::prepareBoundingBox()
