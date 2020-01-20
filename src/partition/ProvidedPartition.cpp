@@ -37,9 +37,15 @@ void ProvidedPartition::communicate()
     if (m2n->usesTwoLevelInitialization()) {
       Event e("partition.broadcastMeshPartitions." + _mesh->getName(), precice::syncMode);
 
+      // communicate the total number of vertices to the other participants master
+
+      if (utils::MasterSlave::isMaster()) {
+        _m2ns[0]->getMasterCommunication()->send(_mesh->getGlobalNumberOfVertices(), 0);
+      }
+
       // the min and max of global vertex IDs of this rank's partition
-      int minGlobalVertexID = _mesh->getVertexOffsets()[utils::MasterSlave::getRank()];
-      int maxGlobalVertexID = _mesh->getVertexOffsets()[utils::MasterSlave::getRank()] + _mesh->vertices().size() - 1;
+      int minGlobalVertexID = _mesh->getVertexOffsets()[utils::MasterSlave::getRank()] - _mesh->vertices().size();
+      int maxGlobalVertexID = _mesh->getVertexOffsets()[utils::MasterSlave::getRank()] - 1;
 
       // each rank sends its min/max global vertex index to connected remote ranks
       _m2ns[0]->broadcastSend(minGlobalVertexID, *_mesh);
