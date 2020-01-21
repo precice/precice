@@ -595,7 +595,7 @@ bool BaseCouplingScheme::measureConvergence(
 
     if (not utils::MasterSlave::isSlave()) {
       std::stringstream sstm;
-      sstm << "ResNorm(" << convMeasure.data->getName() << ")";
+      sstm << "ResNorm(" << convMeasure.data->getID() << ")";
       _convergenceWriter->writeData(sstm.str(), convMeasure.measure->getNormResidual());
     }
 
@@ -692,14 +692,15 @@ void BaseCouplingScheme::initializeTXTWriters()
 
     int i = -1;
     if (not doesFirstStep()) {
-      for (ConvergenceMeasure &convMeasure : _convergenceMeasures) {
-        i++;
+      for (size_t i = 0; i < _convergenceMeasures.size(); i++) {
+        ConvergenceMeasure &convMeasure = _convergenceMeasures[i];
+
         // only for fine model optimization, i.e., coupling
         if (convMeasure.level > 0)
           continue;
         std::stringstream sstm, sstm2;
-        sstm << "AvgConvRate(" << convMeasure.data->getName() << ")";
-        sstm2 << "ResNorm(" << convMeasure.data->getName() << ")";
+        sstm << "AvgConvRate(" << convMeasure.data->getID() << ")";
+        sstm2 << "ResNorm(" << convMeasure.data->getID() << ")";
         _iterationsWriter->addData(sstm.str(), io::TXTTableWriter::DOUBLE);
         _convergenceWriter->addData(sstm2.str(), io::TXTTableWriter::DOUBLE);
       }
@@ -738,7 +739,7 @@ void BaseCouplingScheme::advanceTXTWriters()
           continue;
 
         std::stringstream sstm;
-        sstm << "AvgConvRate(" << convMeasure.data->getName() << ")";
+        sstm << "AvgConvRate(" << convMeasure.data->getID() << ")";
         if (math::equals(_firstResiduumNorm[i], 0.)) {
           _iterationsWriter->writeData(sstm.str(), std::numeric_limits<double>::infinity());
         } else {
