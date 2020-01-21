@@ -575,7 +575,7 @@ bool BaseCouplingScheme::measureConvergence(
   PRECICE_ASSERT(_convergenceMeasures.size() > 0);
   if (not utils::MasterSlave::isSlave()) {
     _convergenceWriter->writeData("Timestep", _timesteps);
-    _convergenceWriter->writeData("Iteration", _iterations);
+    _convergenceWriter->writeData("Iterations", _iterations);
   }
   for (size_t i = 0; i < _convergenceMeasures.size(); i++) {
     ConvergenceMeasure &convMeasure = _convergenceMeasures[i];
@@ -595,7 +595,7 @@ bool BaseCouplingScheme::measureConvergence(
 
     if (not utils::MasterSlave::isSlave()) {
       std::stringstream sstm;
-      sstm << "resNorm(" << i << ")";
+      sstm << "ResNorm(" << convMeasure.data->getName() << ")";
       _convergenceWriter->writeData(sstm.str(), convMeasure.measure->getNormResidual());
     }
 
@@ -676,18 +676,18 @@ void BaseCouplingScheme::initializeTXTWriters()
       if (convMeasure.level > 0)
         hasCoarseModelOptimization = true;
 
-    _iterationsWriter->addData("Timesteps", io::TXTTableWriter::INT);
-    _iterationsWriter->addData("Total_Iterations", io::TXTTableWriter::INT);
+    _iterationsWriter->addData("Timestep", io::TXTTableWriter::INT);
+    _iterationsWriter->addData("TotalIterations", io::TXTTableWriter::INT);
     _iterationsWriter->addData("Iterations", io::TXTTableWriter::INT);
     if (hasCoarseModelOptimization) {
-      _iterationsWriter->addData("Total_Iterations_Surrogate_Model", io::TXTTableWriter::INT);
-      _iterationsWriter->addData("Iterations_Surrogate_Model", io::TXTTableWriter::INT);
+      _iterationsWriter->addData("TotalIterations_SurrogateModel", io::TXTTableWriter::INT);
+      _iterationsWriter->addData("Iterations_SurrogateModel", io::TXTTableWriter::INT);
     }
     _iterationsWriter->addData("Convergence", io::TXTTableWriter::INT);
 
     if (not doesFirstStep()) {
       _convergenceWriter->addData("Timestep", io::TXTTableWriter::INT);
-      _convergenceWriter->addData("Iteration", io::TXTTableWriter::INT);
+      _convergenceWriter->addData("Iterations", io::TXTTableWriter::INT);
     }
 
     int i = -1;
@@ -698,12 +698,12 @@ void BaseCouplingScheme::initializeTXTWriters()
         if (convMeasure.level > 0)
           continue;
         std::stringstream sstm, sstm2;
-        sstm << "avgConvRate(" << i << ")";
-        sstm2 << "resNorm(" << i << ")";
+        sstm << "AvgConvRate(" << convMeasure.data->getName() << ")";
+        sstm2 << "ResNorm(" << convMeasure.data->getName() << ")";
         _iterationsWriter->addData(sstm.str(), io::TXTTableWriter::DOUBLE);
         _convergenceWriter->addData(sstm2.str(), io::TXTTableWriter::DOUBLE);
       }
-      _iterationsWriter->addData("deleted_Columns", io::TXTTableWriter::INT);
+      _iterationsWriter->addData("deletedColumns", io::TXTTableWriter::INT);
     }
   }
 }
@@ -718,25 +718,27 @@ void BaseCouplingScheme::advanceTXTWriters()
       if (convMeasure.level > 0)
         hasCoarseModelOptimization = true;
 
-    _iterationsWriter->writeData("Timesteps", _timesteps - 1);
-    _iterationsWriter->writeData("Total_Iterations", _totalIterations);
+    _iterationsWriter->writeData("Timestep", _timesteps - 1);
+    _iterationsWriter->writeData("TotalIterations", _totalIterations);
     _iterationsWriter->writeData("Iterations", _iterations);
     if (hasCoarseModelOptimization) {
-      _iterationsWriter->writeData("Total_Iterations_Surrogate_Model", _totalIterationsCoarseOptimization);
-      _iterationsWriter->writeData("Iterations_Surrogate_Model", _iterationsCoarseOptimization);
+      _iterationsWriter->writeData("TotalIterations_SurrogateModel", _totalIterationsCoarseOptimization);
+      _iterationsWriter->writeData("Iterations_SurrogateModel", _iterationsCoarseOptimization);
     }
     int converged = _iterations < _maxIterations ? 1 : 0;
     _iterationsWriter->writeData("Convergence", converged);
 
+    int i = -1;
     if (not doesFirstStep()) {
-      for (size_t i = 0; i < _convergenceMeasures.size(); i++) {
+      for (ConvergenceMeasure &convMeasure : _convergenceMeasures) {
+        i++;
 
         // only for fine model optimization, i.e., coupling
         if (_convergenceMeasures[i].level > 0)
           continue;
 
         std::stringstream sstm;
-        sstm << "avgConvRate(" << i << ")";
+        sstm << "AvgConvRate(" << convMeasure.data->getName() << ")";
         if (math::equals(_firstResiduumNorm[i], 0.)) {
           _iterationsWriter->writeData(sstm.str(), std::numeric_limits<double>::infinity());
         } else {
@@ -744,7 +746,7 @@ void BaseCouplingScheme::advanceTXTWriters()
           _iterationsWriter->writeData(sstm.str(), std::pow(avgConvRate, 1. / (double) _iterations));
         }
       }
-      _iterationsWriter->writeData("deleted_Columns", _deletedColumnsPPFiltering);
+      _iterationsWriter->writeData("deletedColumns", _deletedColumnsPPFiltering);
     }
   }
 }
