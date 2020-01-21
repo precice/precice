@@ -649,7 +649,7 @@ BOOST_AUTO_TEST_CASE(testImplicit,
       stateChange = initialStateChange / (double) iterationCount;
       state += stateChange;
       maxDt = couplingInterface.advance(maxDt);
-      if (couplingInterface.isTimeWindowComplete()) {
+      if (couplingInterface.isTimestepComplete()) {
         computedTimesteps++;
       }
     }
@@ -674,7 +674,7 @@ BOOST_AUTO_TEST_CASE(testImplicit,
       stateChange = initialStateChange / (double) iterationCount;
       state += stateChange;
       maxDt = couplingInterface.advance(maxDt);
-      if (couplingInterface.isTimeWindowComplete()) {
+      if (couplingInterface.isTimestepComplete()) {
         computedTimesteps++;
       }
     }

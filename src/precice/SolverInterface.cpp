@@ -74,12 +74,7 @@ bool SolverInterface::isWriteDataRequired(
 
 bool SolverInterface::isTimestepComplete() const
 {
-  return _impl->isTimeWindowComplete();
-}
-
-bool SolverInterface::isTimeWindowComplete() const
-{
-  return _impl->isTimeWindowComplete();
+  return _impl->isTimestepComplete();
 }
 
 bool SolverInterface::isActionRequired(

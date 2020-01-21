@@ -453,7 +453,7 @@ bool SolverInterfaceImpl::isWriteDataRequired(
   return _couplingScheme->willDataBeExchanged(computedTimestepLength);
 }
 
-bool SolverInterfaceImpl::isTimeWindowComplete() const
+bool SolverInterfaceImpl::isTimestepComplete() const
 {
   PRECICE_TRACE();
   return _couplingScheme->isCouplingTimestepComplete();
