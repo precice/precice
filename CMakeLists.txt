@@ -80,18 +80,47 @@ include(XSDKOptions)
 include(PrintHelper)
 print_configuration(
   ADDITIONAL
-  "PRECICE_MPICommunication;Build with MPI"
-  "PRECICE_PETScMapping;Build with PETSC"
-  "PRECICE_PythonActions;Build with PYTHON"
   "PRECICE_Packages;Configure package generation"
   "PRECICE_InstallTest;Install tests/testfiles"
   "PRECICE_CTEST_MPI_FLAGS;Additional CTest MPI Flags"
   )
+print_empty()
+
+include(FeatureSummary)
+add_feature_info(MPICommunication PRECICE_MPICommunication
+  "Enables the MPI communication back-end.
+
+   This enables the MPI communication back-end which is highly recommended on multi-node systems.
+   See the documentation of the CMake module FindMPI to control its functionality.
+
+   Set PRECICE_MPICommunication to enable.
+")
+add_feature_info(PETScMapping PRECICE_PETScMapping
+  "Enables the PETSc-powered radial basic function mappings.
+
+   The radial basis function mappings require MPI and PETSc to work in parallel.
+
+   Set PRECICE_PETScMapping to enable.
+   Requires MPICommunication.
+  ")
+add_feature_info(PythonActions PRECICE_PythonActions
+  "Enables the support for user-defined python actions.
+
+   preCICE allows to manipulate coupling data at runtime using configurable actions.
+   This feature enables the support for user-defined actions written in Python based on numpy.
+
+   Set PRECICE_PythonActions to enable.
+  ")
+
+feature_summary(WHAT ENABLED_FEATURES  DESCRIPTION "=== ENABLED FEATURES ===" QUIET_ON_EMPTY)
+feature_summary(WHAT DISABLED_FEATURES DESCRIPTION "=== DISABLED FEATURES ===" QUIET_ON_EMPTY)
+
 
 
 #
 # Find Mandatory Dependencies
 #
+print_section("DEPENDENCIES")
 
 find_package (Threads REQUIRED)
 
@@ -201,6 +230,9 @@ endif()
 #
 # Configuration of Target precice
 #
+
+print_empty()
+print_section("TARGETS & PACKAGES")
 
 # Add a dummy to silence add_library warning for cmake < 3.11.
 if(CMAKE_VERSION VERSION_LESS "3.11")
@@ -502,8 +534,20 @@ include(${CMAKE_CURRENT_LIST_DIR}/cmake/Uninstall.cmake)
 
 
 #
+# CPack
+#
+
+if (PRECICE_Packages)
+  include(${CMAKE_CURRENT_LIST_DIR}/cmake/CPackConfig.cmake)
+endif()
+
+
+#
 # CTest
 #
+
+print_empty()
+print_section("TESTS")
 
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/CTestConfig.cmake)
 
@@ -513,12 +557,3 @@ include(${CMAKE_CURRENT_LIST_DIR}/cmake/CTestConfig.cmake)
 #
 
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/TestInstall.cmake)
-
-
-#
-# CPack
-#
-
-if (PRECICE_Packages)
-  include(${CMAKE_CURRENT_LIST_DIR}/cmake/CPackConfig.cmake)
-endif()

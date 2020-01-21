@@ -29,11 +29,13 @@ function(print_line)
   message(STATUS "--------------------")
 endfunction(print_line)
 
+function(print_empty)
+  message("")
+endfunction(print_empty)
 
 # Prints a header in the log
 function(print_section TITLE)
-  print_line()
-  message(STATUS "== ${TITLE}")
+  message(STATUS "=== ${TITLE} ===")
 endfunction(print_section)
 
 
@@ -59,9 +61,7 @@ function(print_configuration)
     "CMAKE_SOURCE_DIR;Source directory"
     "CMAKE_BINARY_DIR;Binary directory"
     )
-  print_line()
   if(PRINT_CONFIG_ADDITIONAL)
     print_variables(VARS ${PRINT_CONFIG_ADDITIONAL})
-    print_line()
   endif()
 endfunction(print_configuration)
