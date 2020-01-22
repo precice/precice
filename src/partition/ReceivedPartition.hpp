@@ -38,8 +38,6 @@ public:
 
   virtual void compute() override;
 
-  virtual void communicateBoundingBox();
-  virtual void computeBoundingBox();
   virtual void compareBoundingBoxes() override;
 
 private:
@@ -61,7 +59,7 @@ private:
    */
   bool areProvidedMeshesEmpty() const;
 
-  virtual void createOwnerInformation() override;
+  void createOwnerInformation();
 
   /// Helper function for 'createOwnerFunction' to set local owner information
   void setOwnerInformation(const std::vector<int> &ownerVec);

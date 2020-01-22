@@ -353,13 +353,6 @@ void ReceivedPartition::filterByBoundingBox()
   }
 }
 
-void ReceivedPartition::communicateBoundingBox()
-{
-}
-void ReceivedPartition::computeBoundingBox()
-{
-}
-
 void ReceivedPartition::compareBoundingBoxes()
 {
   PRECICE_TRACE();

@@ -14,9 +14,7 @@
 #include "mesh/Vertex.hpp"
 #include "mesh/config/DataConfiguration.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
-#include "partition/ProvidedBoundingBox.hpp"
 #include "partition/ProvidedPartition.hpp"
-#include "partition/ReceivedBoundingBox.hpp"
 #include "partition/ReceivedPartition.hpp"
 #include "precice/config/Configuration.hpp"
 #include "precice/config/ParticipantConfiguration.hpp"
@@ -1133,7 +1131,6 @@ void SolverInterfaceImpl::configurePartitions(
                                      << "and receive mesh " << context->mesh->getName() << "!");
 
       context->partition = partition::PtrPartition(new partition::ProvidedPartition(context->mesh));
-      // context->partition = partition::PtrPartition(new partition::ProvidedBoundingBox(context->mesh, context->safetyFactor));
 
       for (auto &receiver : _participants) {
         for (auto &receiverContext : receiver->usedMeshContexts()) {
@@ -1162,8 +1159,6 @@ void SolverInterfaceImpl::configurePartitions(
 
       PRECICE_DEBUG("Receiving mesh from " << provider);
 
-      // context->partition = partition::PtrPartition(new partition::ReceivedBoundingBox(context->mesh, context->safetyFactor));
-
       context->partition = partition::PtrPartition(new partition::ReceivedPartition(context->mesh, context->geoFilter, context->safetyFactor));
 
       m2n::PtrM2N m2n = m2nConfig->getM2N(receiver, provider);
@@ -1185,11 +1180,7 @@ void SolverInterfaceImpl::computeBoundingBoxs()
 
   for (MeshContext *meshContext : _accessor->usedMeshContexts()) {
     meshContext->mesh->computeBoundingBox();
-    meshContext->partition->communicateBoundingBox();
-  }
-
-  for (MeshContext *meshContext : _accessor->usedMeshContexts()) {
-    meshContext->partition->computeBoundingBox();
+    meshContext->partition->compareBoundingBoxes();
   }
 }
 

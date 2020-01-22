@@ -1,7 +1,5 @@
 #include "partition/Partition.hpp"
-#include "com/Communication.hpp"
 #include "mesh/Mesh.hpp"
-#include "utils/MasterSlave.hpp"
 
 namespace precice {
 namespace partition {
@@ -9,30 +7,6 @@ namespace partition {
 Partition::Partition(mesh::PtrMesh mesh)
     : _mesh(mesh)
 {
-}
-
-void Partition::computeVertexOffsetsBB(int numberOfVertices)
-{
-  PRECICE_TRACE();
-  PRECICE_DEBUG("Generate vertex offsets");
-  if (utils::MasterSlave::isSlave()) {
-    utils::MasterSlave::_communication->send(numberOfVertices, 0);
-    utils::MasterSlave::_communication->broadcast(_mesh->getVertexOffsets(), 0);
-    PRECICE_DEBUG("My vertex offsets: " << _mesh->getVertexOffsets());
-
-  } else if (utils::MasterSlave::isMaster()) {
-    _mesh->getVertexOffsets().resize(utils::MasterSlave::getSize());
-    _mesh->getVertexOffsets()[0] = numberOfVertices;
-    for (int rank = 1; rank < utils::MasterSlave::getSize(); rank++) {
-      utils::MasterSlave::_communication->receive(numberOfVertices, rank);
-      _mesh->getVertexOffsets()[rank] = numberOfVertices + _mesh->getVertexOffsets()[rank - 1];
-    }
-    PRECICE_DEBUG("My vertex offsets: " << _mesh->getVertexOffsets());
-    utils::MasterSlave::_communication->broadcast(_mesh->getVertexOffsets());
-
-  } else { //coupling mode
-    //todo
-  }
 }
 
 } // namespace partition

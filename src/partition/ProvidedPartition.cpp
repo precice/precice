@@ -177,7 +177,7 @@ void ProvidedPartition::prepare()
     _mesh->setGlobalNumberOfVertices(numberOfVertices);
   }
 
-  PRECICE_DEBUG("Create owner information");
+  PRECICE_DEBUG("Set owner information");
   for (mesh::Vertex &v : _mesh->vertices()) {
     v.setOwner(true);
   }
@@ -287,17 +287,6 @@ void ProvidedPartition::compareBoundingBoxes()
       }
     }
   }
-}
-
-void ProvidedPartition::communicateBoundingBox()
-{
-}
-void ProvidedPartition::computeBoundingBox()
-{
-}
-
-void ProvidedPartition::createOwnerInformation()
-{
 }
 
 } // namespace partition
