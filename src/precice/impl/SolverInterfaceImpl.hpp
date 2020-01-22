@@ -572,10 +572,10 @@ private:
   void configurePartitions(
       const m2n::M2NConfiguration::SharedPointer &m2nConfig);
 
-  /// Communicate meshes and create partition
-  void computeBoundingBoxs();
+  /// Communicate bounding boxes and look for overlaps
+  void compareBoundingBoxes();
 
-  /// Communicate meshes and create partition
+  /// Communicate meshes and create partitions
   void computePartitions();
 
   /// Computes, performs, and resets all suitable write mappings.

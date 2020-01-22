@@ -192,29 +192,34 @@ double SolverInterfaceImpl::initialize()
 
   PRECICE_INFO("Masters are connected");
 
-  // computeBoundingBoxs();
+  compareBoundingBoxes();
+
+  PRECICE_INFO("Setting up preliminary slaves communication to coupling partner/s");
+  for (auto &m2nPair : _m2ns) {
+    auto &bm2n = m2nPair.second;
+    if (bm2n.m2n->usesTwoLevelInitialization()) {
+      PRECICE_DEBUG((bm2n.isRequesting ? "Awaiting slaves connection from " : "Establishing slaves connection to ") << bm2n.remoteName);
+      bm2n.preConnectSlaves();
+      PRECICE_DEBUG("Established slaves connection " << (bm2n.isRequesting ? "from " : "to ") << bm2n.remoteName);
+    }
+  }
+
   computePartitions();
 
   PRECICE_INFO("Setting up slaves communication to coupling partner/s");
   for (auto &m2nPair : _m2ns) {
     auto &bm2n = m2nPair.second;
-    PRECICE_DEBUG((bm2n.isRequesting ? "Awaiting slaves connection from " : "Establishing slaves connection to ") << bm2n.remoteName);
-    bm2n.connectSlaves();
-    // bm2n.preConnectSlaves();
+    if (bm2n.m2n->usesTwoLevelInitialization()) {
+      bm2n.m2n->completeSlavesConnection();
+    } else {
+      PRECICE_DEBUG((bm2n.isRequesting ? "Awaiting slaves connection from " : "Establishing slaves connection to ") << bm2n.remoteName);
+      bm2n.connectSlaves();
+      PRECICE_DEBUG("Established slaves connection " << (bm2n.isRequesting ? "from " : "to ") << bm2n.remoteName);
+    }
     bm2n.cleanupEstablishment();
-    PRECICE_DEBUG("Established slaves connection " << (bm2n.isRequesting ? "from " : "to ") << bm2n.remoteName);
   }
 
   PRECICE_INFO("Slaves are connected");
-
-  // computePartitions();
-  //
-  // for (auto &m2nPair : _m2ns) {
-  //   auto &m2n = m2nPair.second.m2n;
-  //   m2n->completeSlavesConnection();
-  // }
-  //
-  // PRECICE_INFO("Vertex lists are updated!");
 
   PRECICE_DEBUG("Initialize watchpoints");
   for (PtrWatchPoint &watchPoint : _accessor->watchPoints()) {
@@ -1170,7 +1175,7 @@ void SolverInterfaceImpl::configurePartitions(
   }
 }
 
-void SolverInterfaceImpl::computeBoundingBoxs()
+void SolverInterfaceImpl::compareBoundingBoxes()
 {
   // sort meshContexts by name, for communication in right order.
   std::sort(_accessor->usedMeshContexts().begin(), _accessor->usedMeshContexts().end(),
@@ -1180,6 +1185,9 @@ void SolverInterfaceImpl::computeBoundingBoxs()
 
   for (MeshContext *meshContext : _accessor->usedMeshContexts()) {
     meshContext->mesh->computeBoundingBox();
+  }
+
+  for (MeshContext *meshContext : _accessor->usedMeshContexts()) {
     meshContext->partition->compareBoundingBoxes();
   }
 }

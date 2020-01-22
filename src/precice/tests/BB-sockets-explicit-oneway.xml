@@ -28,7 +28,7 @@
 
       </participant>
 
-      <m2n:sockets from="Fluid" to="Structure" exchange-directory=".."/>
+      <m2n:sockets from="Fluid" to="Structure" use-two-level-initialization="true"/>
 
       <coupling-scheme:serial-explicit>
          <participants first="Fluid" second="Structure" />

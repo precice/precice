@@ -207,6 +207,8 @@ void ProvidedPartition::compareBoundingBoxes()
   //@todo coupling mode
 
   //@todo treatment of multiple m2ns
+  if (not _m2ns[0]->usesTwoLevelInitialization())
+    return;
 
   // each rank sends its bb to master
   if (utils::MasterSlave::isSlave()) { //slave

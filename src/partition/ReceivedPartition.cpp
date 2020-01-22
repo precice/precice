@@ -359,6 +359,9 @@ void ReceivedPartition::compareBoundingBoxes()
 
   // @todo handle coupling mode (i.e. serial participant)
   // @todo treatment of multiple m2ns
+  PRECICE_ASSERT(_m2ns.size() == 1);
+  if (not _m2ns[0]->usesTwoLevelInitialization())
+    return;
 
   // receive and broadcast number of remote ranks
   int numberOfRemoteRanks = -1;
