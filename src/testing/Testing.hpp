@@ -6,7 +6,7 @@
 #include "precice/config/Configuration.hpp"
 #include "utils/ManageUniqueIDs.hpp"
 #include "utils/Parallel.hpp"
-#include "utils/traits.hpp"
+// #include "utils/traits.hpp"
 #include "xml/XMLTag.hpp"
 
 namespace precice {
@@ -19,14 +19,20 @@ struct Ranks {
   int value;
 };
 
-Ranks operator""_ranks(unsigned long long value)
+inline constexpr Ranks operator""_ranks(unsigned long long value)
 {
   return Ranks{static_cast<int>(value)};
+}
+
+inline constexpr Ranks operator""_rank(unsigned long long value)
+{
+  return (value == 1) ? Ranks{1} : throw;
 }
 
 struct Participant {
   std::string name;
   int         size = 1;
+
   explicit Participant(std::string n)
       : name(std::move(n)){};
 
@@ -37,24 +43,17 @@ struct Participant {
   }
 };
 
-Participant operator""_on(const char *name, long unsigned int)
+inline Participant operator""_on(const char *name, long unsigned int)
 {
   return Participant{name};
 }
 
 static_assert(std::is_same<Participant &, decltype(""_on(2_ranks))>::value, "");
 
-#if 0
-struct OptionTag {};
-
-struct EventsTag : OptionTag {
+enum class Require {
+  PETSc,
+  Events,
 };
-static constexpr EventsTag useEvents{};
-
-struct PetscTag : OptionTag {
-};
-static constexpr EventsTag usePetsc{};
-#endif
 
 class TestContext {
 public:
@@ -68,7 +67,17 @@ public:
   TestContext() = default;
 
   template <class... T>
+  TestContext(Ranks ranks)
+      : _simple(true)
+  {
+    Participants participants{
+        "Serial"_on(ranks)};
+    initialize(participants);
+  }
+
+  template <class... T>
   TestContext(Ranks ranks, T... args)
+      : _simple(true)
   {
     Participants participants{
         "Serial"_on(ranks)};
@@ -90,31 +99,12 @@ public:
   ~TestContext() noexcept;
 
 private:
-  //bool petsc  = false;
-  //bool events = false;
+  bool _petsc  = false;
+  bool _events = false;
   bool _simple = false;
 
   void handleOption(Participants &participants, Participant participant);
-
-  #if 0
-  void handleOption(Participants &, EventsTag);
-  void handleOption(Participants &, PetscTag);
-  void handleOption(Participants &, EventsTag)
-  {
-    events = true;
-  }
-
-  void handleOption(Participants &, PetscTag)
-  {
-    petsc = true;
-  }
-
-  void handleOption(Participants &participants, Participant participant)
-  {
-    PRECICE_ASSERT(!_simple);
-    participants.push_back(participant);
-  }
-  #endif
+  void handleOption(Participants &participants, testing::Require requirement);
 
   template <class LastOption>
   void handleOptions(Participants &participants, LastOption &last)
@@ -137,10 +127,18 @@ private:
   void initializeEvents();
 };
 
-#define PRECICE_TEST(...)           \
-  TestContext context{__VA_ARGS__}; \
-  if (context.invalid) {            \
-    return;                         \
+namespace inject {
+using precice::testing::Require;
+using precice::testing::operator""_rank;
+using precice::testing::operator""_ranks;
+using precice::testing::operator""_on;
+} // namespace inject
+
+#define PRECICE_TEST(...)                             \
+  using namespace precice::testing::inject;           \
+  precice::testing::TestContext context{__VA_ARGS__}; \
+  if (context.invalid) {                              \
+    return;                                           \
   }
 
 /// Fixture to set and reset MPI communicator

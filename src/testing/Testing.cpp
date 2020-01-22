@@ -1,5 +1,6 @@
 #include "testing/Testing.hpp"
 #include <cstdlib>
+#include <exception>
 #include "logging/LogMacros.hpp"
 #include "utils/EventUtils.hpp"
 #include "utils/Parallel.hpp"
@@ -19,33 +20,37 @@ std::string getPathToSources()
 
 TestContext::~TestContext() noexcept
 {
-  if (!invalid) {
-      precice::utils::Petsc::finalize();
-      precice::utils::EventRegistry::instance().finalize();
+  if (!invalid && _petsc) {
+    precice::utils::Petsc::finalize();
+  }
+  if (!invalid && _events) {
+    precice::utils::EventRegistry::instance().finalize();
   }
   Par::setGlobalCommunicator(Par::getCommunicatorWorld());
 }
 
-#if 0
-void TestContext::handleOption(Participants &, EventsTag)
-
-    void TestContext::handleOption(Participants &, EventsTag)
+void TestContext::handleOption(Participants &, testing::Require requirement)
 {
-  PRECICE_ASSERT(!_simple);
-  events = true;
+  using testing::Require;
+  switch (requirement) {
+  case Require::PETSc:
+    _petsc  = true;
+    _events = true;
+    break;
+  case Require::Events:
+    _events = true;
+    break;
+  default:
+    std::terminate();
+  }
 }
-
-void TestContext::handleOption(Participants &, PetscTag)
-{
-  PRECICE_ASSERT(!_simple);
-  petsc = true;
-}
-#endif
 
 void TestContext::handleOption(Participants &participants, Participant participant)
 {
-  PRECICE_ASSERT(!simple);
-  participants.push_back(participant);
+  if (_simple) {
+    std::terminate();
+  }
+  participants.emplace_back(std::move(participant));
 }
 
 void TestContext::setContextFrom(const Participant &p, int rank)
@@ -64,20 +69,20 @@ void TestContext::initialize(const Participants &participants)
 
 void TestContext::initializeMPI(const TestContext::Participants &participants)
 {
-  const int required = std::accumulate(participants.begin(), participants.end(), 0, [](int total, const Participant &next) { return total + next.size; });
+  const int globalRank = Par::getProcessRank();
+  const int required   = std::accumulate(participants.begin(), participants.end(), 0, [](int total, const Participant &next) { return total + next.size; });
   if (required > Par::getCommunicatorSize()) {
     throw std::runtime_error{"This test requests more ranks than available"};
   }
 
   // Restrict the communicator to the total required size
   Par::restrictGlobalCommunicator([required] {std::vector<int> v(required); std::iota(v.begin(), v.end(), 0); return v; }());
-  Par::setGlobalCommunicator(Par::getLocalCommunicator());
 
-  const int globalRank = Par::getProcessRank();
-
-  // Mark all unnecessary ranks as invalid
+  // Mark all unnecessary ranks as invalid and return
   if (globalRank >= required) {
     invalid = true;
+    Par::setGlobalCommunicator(MPI_COMM_NULL);
+    return;
   }
 
   // If there was only a single participant requested, then update its info and we are done.
@@ -108,18 +113,16 @@ void TestContext::initializeMPI(const TestContext::Participants &participants)
 
 void TestContext::initializePetsc()
 {
-  if (invalid) { // && !petsc) {
-    return;
+  if (!invalid && _petsc) {
+    precice::utils::Petsc::initialize(nullptr, nullptr);
   }
-  precice::utils::Petsc::initialize(nullptr, nullptr);
 }
 
 void TestContext::initializeEvents()
 {
-  if (invalid) { // && !events) {
-    return;
+  if (!invalid && !_events) {
+    precice::utils::EventRegistry::instance().initialize();
   }
-  precice::utils::EventRegistry::instance().initialize();
 }
 
 } // namespace testing
