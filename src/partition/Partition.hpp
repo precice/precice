@@ -79,9 +79,6 @@ protected:
   /// Decides which rank owns which vertex, information stored at each rank.
   virtual void createOwnerInformation() = 0;
 
-  /// Generate vertex offsets from the vertexDistribution, broadcast it to all slaves
-  void computeVertexOffsets();
-
   /// Generate vertex offsets from the connection map, broadcast it to all slaves
   void computeVertexOffsetsBB(int numberOfVertices);
 

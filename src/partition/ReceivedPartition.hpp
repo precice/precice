@@ -43,6 +43,8 @@ public:
   virtual void compareBoundingBoxes() override;
 
 private:
+  void filterByBoundingBox();
+
   /// Sets _bb to the union with the mesh from fromMapping resp. toMapping, also enlage by _safetyFactor
   void prepareBoundingBox();
 
@@ -64,6 +66,9 @@ private:
   /// Helper function for 'createOwnerFunction' to set local owner information
   void setOwnerInformation(const std::vector<int> &ownerVec);
 
+  /// Is the local other (i.e. provided) bounding box already prepared (i.e. has prepareBoundingBox() been called)
+  bool _boundingBoxPrepared = false;
+
   GeometricFilter _geometricFilter;
 
   mesh::Mesh::BoundingBox _bb;
@@ -73,6 +78,12 @@ private:
   double _safetyFactor;
 
   logging::Logger _log{"partition::ReceivedPartition"};
+
+  /// Max global vertex IDs of remote connected ranks
+  std::vector<int> _remoteMaxGlobalVertexIDs;
+
+  /// Min global vertex IDs of remote connected ranks
+  std::vector<int> _remoteMinGlobalVertexIDs;
 };
 
 } // namespace partition

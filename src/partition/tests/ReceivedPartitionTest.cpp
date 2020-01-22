@@ -831,14 +831,22 @@ BOOST_AUTO_TEST_CASE(TestRepartitionAndDistribution2D,
   } else if (utils::Parallel::getProcessRank() == 3) { //Slave3
   }
 
+  // a ReceivedPartition needs exactly one m2n
+  com::PtrCommunication participantCom =
+      com::PtrCommunication(new com::MPIDirectCommunication());
+  m2n::DistributedComFactory::SharedPointer distrFactory = m2n::DistributedComFactory::SharedPointer(
+      new m2n::GatherScatterComFactory(participantCom));
+  m2n::PtrM2N m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory));
+
+  pMesh->setGlobalNumberOfVertices(3);
   pOtherMesh->computeState();
   double            safetyFactor = 20.0; //should not filter out anything here
   ReceivedPartition part(pMesh, ReceivedPartition::FILTER_FIRST, safetyFactor);
   part.setFromMapping(boundingFromMapping);
+  part.addM2N(m2n);
   part.compute();
 
   if (utils::Parallel::getProcessRank() == 0) { //Master
-    BOOST_TEST(pMesh->getGlobalNumberOfVertices() == 3);
     BOOST_TEST(pMesh->getVertexOffsets().size() == 4);
     BOOST_TEST(pMesh->getVertexOffsets()[0] == 0);
     BOOST_TEST(pMesh->getVertexOffsets()[1] == 2);
@@ -853,7 +861,6 @@ BOOST_AUTO_TEST_CASE(TestRepartitionAndDistribution2D,
     BOOST_TEST(pMesh->getVertexDistribution()[2][0] == 1);
     BOOST_TEST(pMesh->vertices().size() == 0);
   } else if (utils::Parallel::getProcessRank() == 1) { //Slave1
-    BOOST_TEST(pMesh->getGlobalNumberOfVertices() == 3);
     BOOST_TEST(pMesh->getVertexOffsets().size() == 4);
     BOOST_TEST(pMesh->getVertexOffsets()[0] == 0);
     BOOST_TEST(pMesh->getVertexOffsets()[1] == 2);
@@ -865,7 +872,6 @@ BOOST_AUTO_TEST_CASE(TestRepartitionAndDistribution2D,
     BOOST_TEST(pMesh->vertices()[0].isOwner() == true);
     BOOST_TEST(pMesh->vertices()[1].isOwner() == false);
   } else if (utils::Parallel::getProcessRank() == 2) { //Slave2
-    BOOST_TEST(pMesh->getGlobalNumberOfVertices() == 3);
     BOOST_TEST(pMesh->getVertexOffsets().size() == 4);
     BOOST_TEST(pMesh->getVertexOffsets()[0] == 0);
     BOOST_TEST(pMesh->getVertexOffsets()[1] == 2);
@@ -875,7 +881,6 @@ BOOST_AUTO_TEST_CASE(TestRepartitionAndDistribution2D,
     BOOST_TEST(pMesh->vertices()[0].getGlobalIndex() == 1);
     BOOST_TEST(pMesh->vertices()[0].isOwner() == true);
   } else if (utils::Parallel::getProcessRank() == 3) { //Slave3
-    BOOST_TEST(pMesh->getGlobalNumberOfVertices() == 3);
     BOOST_TEST(pMesh->getVertexOffsets().size() == 4);
     BOOST_TEST(pMesh->getVertexOffsets()[0] == 0);
     BOOST_TEST(pMesh->getVertexOffsets()[1] == 2);

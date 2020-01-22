@@ -11,7 +11,6 @@
 #include "m2n/PointToPointComFactory.hpp"
 #include "mapping/NearestNeighborMapping.hpp"
 #include "partition/ProvidedPartition.hpp"
-#include "partition/ReceivedBoundingBox.hpp" //@todo remove
 #include "partition/ReceivedPartition.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/Parallel.hpp"
@@ -675,7 +674,7 @@ BOOST_AUTO_TEST_CASE(TestCommunicateLocalMeshPartitions, *testing::OnSize(4))
     part.communicate();
   } else {
     m2n->createDistributedCommunication(mesh);
-    ReceivedBoundingBox part(mesh, safetyFactor);
+    ReceivedPartition part(mesh, ReceivedPartition::BROADCAST_FILTER, safetyFactor);
     m2n->requestSlavesPreConnection("SolidSlaves", "FluidSlaves");
     part.addM2N(m2n);
 
@@ -842,15 +841,14 @@ BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning2D, *testing::OnSize(4))
     boundingFromMapping->setMeshes(receivedMesh, mesh);
     boundingToMapping->setMeshes(mesh, receivedMesh);
 
-    ReceivedBoundingBox part(receivedMesh, safetyFactor);
+    ReceivedPartition part(receivedMesh, ReceivedPartition::BROADCAST_FILTER, safetyFactor);
 
     part.addM2N(m2n);
 
     part.setFromMapping(boundingFromMapping);
     part.setToMapping(boundingToMapping);
 
-    part.communicateBoundingBox();
-    part.computeBoundingBox();
+    part.compareBoundingBoxes();
 
     m2n->requestSlavesPreConnection("FluidSlaves", "SolidSlaves");
 
@@ -984,13 +982,13 @@ BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning3D, *testing::OnSize(4))
     boundingFromMapping->setMeshes(receivedMesh, mesh);
     boundingToMapping->setMeshes(mesh, receivedMesh);
 
-    ReceivedBoundingBox part(receivedMesh, safetyFactor);
+    ReceivedPartition part(receivedMesh, ReceivedPartition::BROADCAST_FILTER, safetyFactor);
     part.addM2N(m2n);
 
     part.setFromMapping(boundingFromMapping);
     part.setToMapping(boundingToMapping);
-    part.communicateBoundingBox();
-    part.computeBoundingBox();
+
+    part.compareBoundingBoxes();
 
     m2n->requestSlavesPreConnection("FluidSlaves", "SolidSlaves");
 

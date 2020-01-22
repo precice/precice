@@ -38,7 +38,6 @@ void ProvidedPartition::communicate()
       Event e("partition.broadcastMeshPartitions." + _mesh->getName(), precice::syncMode);
 
       // communicate the total number of vertices to the other participants master
-
       if (utils::MasterSlave::isMaster()) {
         _m2ns[0]->getMasterCommunication()->send(_mesh->getGlobalNumberOfVertices(), 0);
       }
