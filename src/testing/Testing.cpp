@@ -27,6 +27,10 @@ TestContext::~TestContext() noexcept
   if (!invalid && _events) {
     precice::utils::EventRegistry::instance().finalize();
   }
+  if (!invalid && _initMS) {
+      utils::MasterSlave::_communication = nullptr;
+      utils::MasterSlave::reset();
+  }
   // Reset communicators
   Par::setGlobalCommunicator(Par::getCommunicatorWorld());
 }
