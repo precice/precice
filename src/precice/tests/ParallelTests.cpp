@@ -44,12 +44,13 @@ BOOST_FIXTURE_TEST_SUITE(Parallel, ParallelTestFixture)
 
 BOOST_AUTO_TEST_CASE(TestMasterSlaveSetup, *testing::OnSize(4))
 {
-  SolverInterface interface("SolverOne", utils::Parallel::getProcessRank(), 4);
+  PRECICE_TEST("SolverOne"_on(4_ranks));
+  SolverInterface interface(context.name, context.rank, context.size);
   std::string     configFilename = _pathToTests + "config1.xml";
   slimConfigure(interface, configFilename);
   BOOST_TEST(interface.getDimensions() == 3);
 
-  if (utils::Parallel::getProcessRank() == 0) {
+  if (context.rank == 0) {
     BOOST_TEST(utils::MasterSlave::isMaster() == true);
     BOOST_TEST(utils::MasterSlave::isSlave() == false);
   } else {
@@ -57,8 +58,8 @@ BOOST_AUTO_TEST_CASE(TestMasterSlaveSetup, *testing::OnSize(4))
     BOOST_TEST(utils::MasterSlave::isSlave() == true);
   }
 
-  BOOST_TEST(utils::MasterSlave::getRank() == utils::Parallel::getProcessRank());
-  BOOST_TEST(utils::MasterSlave::getSize() == 4);
+  BOOST_TEST(utils::MasterSlave::getRank() == context.rank);
+  BOOST_TEST(utils::MasterSlave::getSize() == context.size);
   BOOST_TEST(utils::MasterSlave::_communication.use_count() > 0);
   BOOST_TEST(utils::MasterSlave::_communication->isConnected());
 
@@ -139,17 +140,18 @@ BOOST_AUTO_TEST_CASE(GlobalRBFPartitioning, *testing::OnSize(4))
   }
 }
 
-BOOST_AUTO_TEST_CASE(LocalRBFPartitioning, *testing::OnSize(4))
+BOOST_AUTO_TEST_CASE(LocalRBFPartitioning)
 {
+  PRECICE_TEST("SolverOne"_on(3_ranks), "SolverTwo"_on(1_rank));
   std::string configFilename = _pathToTests + "localRBFPartitioning.xml";
 
-  if (utils::Parallel::getProcessRank() <= 2) {
-    utils::Parallel::splitCommunicator("SolverOne");
+  if (context.name == "SolverOne") {
+    utils::Parallel::splitCommunicator(context.name);
     utils::Parallel::setGlobalCommunicator(utils::Parallel::getLocalCommunicator());
-    BOOST_TEST(utils::Parallel::getCommunicatorSize() == 3);
+    BOOST_TEST(context.size);
     utils::Parallel::clearGroups();
 
-    SolverInterface interface("SolverOne", utils::Parallel::getProcessRank(), 3);
+    SolverInterface interface(context.name, context.rank, context.size);
     slimConfigure(interface, configFilename);
     int meshID = interface.getMeshID("MeshOne");
     int dataID = interface.getDataID("Data2", meshID);

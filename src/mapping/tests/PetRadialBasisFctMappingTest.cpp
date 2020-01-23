@@ -23,8 +23,7 @@ void addGlobalIndex(mesh::PtrMesh &mesh, int offset = 0)
   }
 }
 
-BOOST_AUTO_TEST_SUITE(Parallel,
-                      *testing::MinRanks(4))
+BOOST_AUTO_TEST_SUITE(Parallel)
 
 /// Holds rank, owner, position and value of a single vertex
 struct VertexSpecification {
@@ -133,13 +132,9 @@ void testDistributed(Mapping &              mapping,
 /// Test with a homogenous distribution of mesh amoung ranks
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1)
 {
-  utils::Parallel::setGlobalCommunicator(utils::Parallel::getRestrictedCommunicator({0, 1, 2, 3}));
-  BOOST_TEST(utils::Parallel::getCommunicatorSize() == 4);
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc);
   Gaussian                           fct(5.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
-
-  MPI_Comm comm = utils::Parallel::getRestrictedCommunicator({0, 1, 2, 3});
-  utils::Parallel::setGlobalCommunicator(comm);
 
   testDistributed(mapping,
                   {// Consistent mapping: The inMesh is communicated
@@ -174,7 +169,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1)
 /// Using a more heterogenous distributon of vertices and owner
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV2)
 {
-  BOOST_TEST(utils::Parallel::getCommunicatorSize() == 4);
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc);
   Gaussian                           fct(5.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
 
@@ -212,7 +207,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV2)
 /// Test with a very heterogenous distributed and non-continues ownership
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3)
 {
-  BOOST_TEST(utils::Parallel::getCommunicatorSize() == 4);
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc);
   Gaussian                           fct(5.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
 
@@ -269,6 +264,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3)
 /// Some ranks are empty, does not converge
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV4)
 {
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc);
   ThinPlateSplines                           fct;
   PetRadialBasisFctMapping<ThinPlateSplines> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
 
@@ -326,7 +322,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV4)
 // same as 2DV4, but all ranks have vertices
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV5)
 {
-  BOOST_TEST(utils::Parallel::getCommunicatorSize() == 4);
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc);
   ThinPlateSplines                           fct;
   PetRadialBasisFctMapping<ThinPlateSplines> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
 
@@ -395,7 +391,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV5)
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV6,
                      *boost::unit_test::tolerance(1e-7))
 {
-  BOOST_TEST(utils::Parallel::getCommunicatorSize() == 4);
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc);
   ThinPlateSplines                           fct;
   PetRadialBasisFctMapping<ThinPlateSplines> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
 
@@ -450,7 +446,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV6,
 /// Test with a homogenous distribution of mesh amoung ranks
 BOOST_AUTO_TEST_CASE(DistributedConservative2DV1)
 {
-  BOOST_TEST(utils::Parallel::getCommunicatorSize() == 4);
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc);
   Gaussian                           fct(5.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
 
@@ -513,7 +509,7 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV1)
 /// Using a more heterogenous distribution of vertices and owner
 BOOST_AUTO_TEST_CASE(DistributedConservative2DV2)
 {
-  BOOST_TEST(utils::Parallel::getCommunicatorSize() == 4);
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc)
   Gaussian                           fct(5.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
 
@@ -578,6 +574,7 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV2)
 /// Using meshes of different sizes, inMesh is smaller then outMesh
 BOOST_AUTO_TEST_CASE(DistributedConservative2DV3)
 {
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc);
   Gaussian                           fct(2.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
 
@@ -643,6 +640,7 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV3)
 BOOST_AUTO_TEST_CASE(DistributedConservative2DV4,
                      *boost::unit_test::tolerance(1e-6))
 {
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc);
   Gaussian                           fct(4.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
 
@@ -705,6 +703,7 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV4,
 /// Tests a non-contigous owner distributed at the outMesh
 BOOST_AUTO_TEST_CASE(testDistributedConservative2DV5)
 {
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc);
   Gaussian                           fct(5.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
 
@@ -826,7 +825,7 @@ void testTagging(MeshSpecification inMeshSpec,
 
 BOOST_AUTO_TEST_CASE(testTagFirstRound)
 {
-  BOOST_TEST(utils::Parallel::getCommunicatorSize() == 4);
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc)
   //    *
   //    + <-- owned
   //* * x * *
@@ -858,8 +857,7 @@ BOOST_AUTO_TEST_CASE(testTagFirstRound)
 
 BOOST_AUTO_TEST_SUITE_END() // Parallel
 
-BOOST_AUTO_TEST_SUITE(Serial,
-                      *boost::unit_test::fixture<testing::SingleRankFixture>())
+BOOST_AUTO_TEST_SUITE(Serial)
 
 void perform2DTestConsistentMapping(Mapping &mapping)
 {
@@ -1203,6 +1201,7 @@ void perform3DTestConservativeMapping(Mapping &mapping)
 
 BOOST_AUTO_TEST_CASE(MapThinPlateSplines)
 {
+  PRECICE_TEST(1_rank, Require::PETSc);
   bool                                       xDead = false;
   bool                                       yDead = false;
   bool                                       zDead = false;
@@ -1219,6 +1218,7 @@ BOOST_AUTO_TEST_CASE(MapThinPlateSplines)
 
 BOOST_AUTO_TEST_CASE(MapMultiquadrics)
 {
+  PRECICE_TEST(1_rank, Require::PETSc);
   bool                                    xDead = false;
   bool                                    yDead = false;
   bool                                    zDead = false;
@@ -1235,6 +1235,7 @@ BOOST_AUTO_TEST_CASE(MapMultiquadrics)
 
 BOOST_AUTO_TEST_CASE(MapInverseMultiquadrics)
 {
+  PRECICE_TEST(1_rank, Require::PETSc);
   bool                                           xDead = false;
   bool                                           yDead = false;
   bool                                           zDead = false;
@@ -1251,6 +1252,7 @@ BOOST_AUTO_TEST_CASE(MapInverseMultiquadrics)
 
 BOOST_AUTO_TEST_CASE(MapVolumeSplines)
 {
+  PRECICE_TEST(1_rank, Require::PETSc);
   bool                                    xDead = false;
   bool                                    yDead = false;
   bool                                    zDead = false;
@@ -1267,6 +1269,7 @@ BOOST_AUTO_TEST_CASE(MapVolumeSplines)
 
 BOOST_AUTO_TEST_CASE(MapGaussian)
 {
+  PRECICE_TEST(1_rank, Require::PETSc);
   bool                               xDead = false;
   bool                               yDead = false;
   bool                               zDead = false;
@@ -1283,6 +1286,7 @@ BOOST_AUTO_TEST_CASE(MapGaussian)
 
 BOOST_AUTO_TEST_CASE(MapCompactThinPlateSplinesC2)
 {
+  PRECICE_TEST(1_rank, Require::PETSc);
   double                    supportRadius = 1.2;
   bool                      xDead         = false;
   bool                      yDead         = false;
@@ -1301,6 +1305,7 @@ BOOST_AUTO_TEST_CASE(MapCompactThinPlateSplinesC2)
 
 BOOST_AUTO_TEST_CASE(MapPetCompactPolynomialC0)
 {
+  PRECICE_TEST(1_rank, Require::PETSc);
   double              supportRadius = 1.2;
   bool                xDead         = false;
   bool                yDead         = false;
@@ -1319,6 +1324,7 @@ BOOST_AUTO_TEST_CASE(MapPetCompactPolynomialC0)
 
 BOOST_AUTO_TEST_CASE(MapPetCompactPolynomialC6)
 {
+  PRECICE_TEST(1_rank, Require::PETSc);
   double              supportRadius = 1.2;
   bool                xDead         = false;
   bool                yDead         = false;
@@ -1337,6 +1343,7 @@ BOOST_AUTO_TEST_CASE(MapPetCompactPolynomialC6)
 
 BOOST_AUTO_TEST_CASE(DeadAxis2)
 {
+  PRECICE_TEST(1_rank, Require::PETSc);
   using Eigen::Vector2d;
   int dimensions = 2;
 
@@ -1384,6 +1391,7 @@ BOOST_AUTO_TEST_CASE(DeadAxis2)
 
 BOOST_AUTO_TEST_CASE(DeadAxis3D)
 {
+  PRECICE_TEST(1_rank, Require::PETSc);
   using Eigen::Vector3d;
   int dimensions = 3;
 
@@ -1436,6 +1444,7 @@ BOOST_AUTO_TEST_CASE(DeadAxis3D)
 
 BOOST_AUTO_TEST_CASE(SolutionCaching)
 {
+  PRECICE_TEST(1_rank, Require::PETSc);
   using Eigen::Vector2d;
   int dimensions = 2;
 
@@ -1488,6 +1497,7 @@ BOOST_AUTO_TEST_CASE(SolutionCaching)
 BOOST_AUTO_TEST_CASE(ConsistentPolynomialSwitch,
                      *boost::unit_test::tolerance(1e-6))
 {
+  PRECICE_TEST(1_rank, Require::PETSc);
   using Eigen::Vector2d;
   int dimensions = 2;
 
@@ -1552,6 +1562,7 @@ BOOST_AUTO_TEST_CASE(ConsistentPolynomialSwitch,
 BOOST_AUTO_TEST_CASE(ConservativePolynomialSwitch,
                      *boost::unit_test::tolerance(1e-6))
 {
+  PRECICE_TEST(1_rank, Require::PETSc);
   using Eigen::Vector2d;
   int dimensions = 2;
 
@@ -1623,6 +1634,7 @@ BOOST_AUTO_TEST_CASE(ConservativePolynomialSwitch,
 
 BOOST_AUTO_TEST_CASE(NoMapping)
 {
+  PRECICE_TEST(1_rank, Require::PETSc);
   /*
    * RATIONALE: Correctly destroying PETSc objects in OOP context can be a bit
    * tricky. We test if an RBF object can be destroyed right after creation
@@ -1661,6 +1673,7 @@ BOOST_AUTO_TEST_CASE(NoMapping)
 
 BOOST_AUTO_TEST_CASE(TestNonHomongenousGlobalIndex)
 {
+  PRECICE_TEST(1_rank, Require::PETSc);
   using Eigen::Vector2d;
   int dimensions = 2;
 

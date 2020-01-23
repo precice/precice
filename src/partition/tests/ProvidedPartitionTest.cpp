@@ -63,6 +63,7 @@ void tearDownParallelEnvironment()
 
 BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate2D, *testing::OnSize(4))
 {
+  PRECICE_TEST("NASTIN"_on(1_rank), "SOLIDZ"_on(3_ranks), Require::Events);
   com::PtrCommunication participantCom =
       com::PtrCommunication(new com::MPIDirectCommunication());
   m2n::DistributedComFactory::SharedPointer distrFactory = m2n::DistributedComFactory::SharedPointer(
