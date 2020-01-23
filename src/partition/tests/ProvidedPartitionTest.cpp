@@ -414,6 +414,7 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D, *testing::OnSize(4))
       pSolidzMesh->createEdge(v5, v6);
     }
 
+    pSolidzMesh->computeBoundingBox();
     pSolidzMesh->computeState();
 
     ProvidedPartition part(pSolidzMesh);
@@ -537,7 +538,7 @@ BOOST_AUTO_TEST_CASE(TestSendBoundingBoxes3D, *testing::OnSize(4))
       pSolidzMesh->createEdge(v5, v6);
     }
 
-    pSolidzMesh->computeState();
+    pSolidzMesh->computeBoundingBox();
 
     ProvidedPartition part(pSolidzMesh);
     part.addM2N(m2n);
@@ -663,8 +664,6 @@ BOOST_AUTO_TEST_CASE(TestCommunicateLocalMeshPartitions, *testing::OnSize(4))
     break;
   }
   }
-
-  mesh->computeState();
 
   if (utils::Parallel::getProcessRank() < 2) {
     m2n->createDistributedCommunication(mesh);
@@ -792,6 +791,7 @@ BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning2D, *testing::OnSize(4))
   }
 
   mesh->computeState();
+  mesh->computeBoundingBox();
 
   // create the communicator for m2n mesh and communciation map exchange
   com::PtrCommunication                     participantsCom       = com::PtrCommunication(new com::SocketCommunication());
@@ -934,6 +934,7 @@ BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning3D, *testing::OnSize(4))
   }
 
   mesh->computeState();
+  mesh->computeBoundingBox();
 
   // create the communicator for m2n mesh and communciation map exchange
   com::PtrCommunication                     participantsCom       = com::PtrCommunication(new com::SocketCommunication());

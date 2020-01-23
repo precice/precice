@@ -280,6 +280,7 @@ BOOST_AUTO_TEST_CASE(RePartitionNNBroadcastFilter2D, *testing::OnSize(4))
 
     createNastinMesh2D(pNastinMesh);
     pNastinMesh->computeState();
+    pNastinMesh->computeBoundingBox();
 
     double safetyFactor = 0.1;
 
@@ -339,6 +340,7 @@ BOOST_AUTO_TEST_CASE(RePartitionNNDoubleNode2D, *testing::OnSize(4))
 
     createNastinMesh2D(pNastinMesh);
     pNastinMesh->computeState();
+    pNastinMesh->computeBoundingBox();
 
     double safetyFactor = 0.5;
 
@@ -397,6 +399,7 @@ BOOST_AUTO_TEST_CASE(RePartitionNPPreFilterPostFilter2D, *testing::OnSize(4))
     createNastinMesh2D(pNastinMesh);
 
     pNastinMesh->computeState();
+    pNastinMesh->computeBoundingBox();
     double            safetyFactor = 0.1;
     ReceivedPartition part(pSolidzMesh, ReceivedPartition::FILTER_FIRST, safetyFactor);
     part.addM2N(m2n);
@@ -444,6 +447,7 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFGlobal2D,
   }
 
   pOtherMesh->computeState();
+  pOtherMesh->computeBoundingBox();
   double            safetyFactor = 20.0;
   ReceivedPartition part(pMesh, ReceivedPartition::NO_FILTER, safetyFactor);
   part.setFromMapping(boundingFromMapping);
@@ -526,6 +530,7 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D1,
   }
 
   pOtherMesh->computeState();
+  pOtherMesh->computeBoundingBox();
   double            safetyFactor = 20.0;
   ReceivedPartition part(pMesh, ReceivedPartition::NO_FILTER, safetyFactor);
   part.setFromMapping(boundingFromMapping);
@@ -596,6 +601,7 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D2,
   }
 
   pOtherMesh->computeState();
+  pOtherMesh->computeBoundingBox();
   double            safetyFactor = 20.0;
   ReceivedPartition part(pMesh, ReceivedPartition::NO_FILTER, safetyFactor);
   part.setFromMapping(boundingFromMapping);
@@ -674,6 +680,7 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal3D,
   }
 
   pOtherMesh->computeState();
+  pOtherMesh->computeBoundingBox();
   double            safetyFactor = 20.0;
   ReceivedPartition part(pMesh, ReceivedPartition::NO_FILTER, safetyFactor);
   part.setFromMapping(boundingFromMapping);
@@ -766,6 +773,7 @@ BOOST_AUTO_TEST_CASE(RePartitionNPBroadcastFilter3D, *testing::OnSize(4))
     createNastinMesh3D(pNastinMesh);
 
     pNastinMesh->computeState();
+    pNastinMesh->computeBoundingBox();
     double            safetyFactor = 20.0;
     ReceivedPartition part(pSolidzMesh, ReceivedPartition::FILTER_FIRST, safetyFactor);
     part.addM2N(m2n);
@@ -840,6 +848,7 @@ BOOST_AUTO_TEST_CASE(TestRepartitionAndDistribution2D,
 
   pMesh->setGlobalNumberOfVertices(3);
   pOtherMesh->computeState();
+  pOtherMesh->computeBoundingBox();
   double            safetyFactor = 20.0; //should not filter out anything here
   ReceivedPartition part(pMesh, ReceivedPartition::FILTER_FIRST, safetyFactor);
   part.setFromMapping(boundingFromMapping);
@@ -1021,7 +1030,7 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D, *testing::OnSize(4))
     boundingToMapping->setMeshes(pNastinMesh, pSolidzMesh);
 
     createNastinMesh2D2(pNastinMesh);
-    pNastinMesh->computeState();
+    pNastinMesh->computeBoundingBox();
 
     double safetyFactor = 0.0;
 
@@ -1098,7 +1107,7 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes3D, *testing::OnSize(4))
     boundingToMapping->setMeshes(pNastinMesh, pSolidzMesh);
 
     createNastinMesh3D2(pNastinMesh);
-    pNastinMesh->computeState();
+    pNastinMesh->computeBoundingBox();
 
     double safetyFactor = 0.0;
 

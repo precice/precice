@@ -109,6 +109,7 @@ void ReceivedPartition::compute()
 
   // (2) Tag vertices 1st round (i.e. who could be owned by this rank)
   PRECICE_DEBUG("Tag vertices for filtering: 1st round.");
+  _mesh->computeState(); // normals need to be ready for NP mapping
   // go to both meshes, vertex is tagged if already one mesh tags him
   if (_fromMapping)
     _fromMapping->tagMeshFirstRound();
@@ -138,7 +139,6 @@ void ReceivedPartition::compute()
 
   _mesh->clear();
   _mesh->addMesh(filteredMesh);
-  _mesh->computeState();
   e5.stop();
 
   // (6) Compute vertex distribution or local communication map
@@ -247,6 +247,8 @@ void ReceivedPartition::filterByBoundingBox()
     PRECICE_CHECK(_geometricFilter != FILTER_FIRST, msg);
   }
 
+  prepareBoundingBox();
+
   if (_geometricFilter == FILTER_FIRST) { //pre-filter-post-filter
 
     PRECICE_ASSERT(not _m2ns[0]->usesTwoLevelInitialization());
@@ -255,7 +257,6 @@ void ReceivedPartition::filterByBoundingBox()
 
     if (utils::MasterSlave::isSlave()) {
       PRECICE_DEBUG("Send bounding box to master");
-      prepareBoundingBox();
       com::CommunicateMesh(utils::MasterSlave::_communication).sendBoundingBox(_bb, 0);
       PRECICE_DEBUG("Receive filtered mesh");
       com::CommunicateMesh(utils::MasterSlave::_communication).receiveMesh(*_mesh, 0);
@@ -286,12 +287,10 @@ void ReceivedPartition::filterByBoundingBox()
       }
 
       // Now also filter the remaining master mesh
-      prepareBoundingBox();
       mesh::Mesh filteredMesh("FilteredMesh", _dimensions, _mesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
       mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { return isVertexInBB(v); });
       _mesh->clear();
       _mesh->addMesh(filteredMesh);
-      _mesh->computeState();
       PRECICE_DEBUG("Master mesh, filtered from "
                     << _mesh->vertices().size() << " to " << filteredMesh.vertices().size() << " vertices, "
                     << _mesh->edges().size() << " to " << filteredMesh.edges().size() << " edges, and "
@@ -325,7 +324,6 @@ void ReceivedPartition::filterByBoundingBox()
       PRECICE_INFO("Filter mesh " << _mesh->getName() << " by bounding box on slaves");
       Event e("partition.filterMeshBB." + _mesh->getName(), precice::syncMode);
 
-      prepareBoundingBox();
       mesh::Mesh filteredMesh("FilteredMesh", _dimensions, _mesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
       mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { return isVertexInBB(v); });
 
@@ -346,7 +344,6 @@ void ReceivedPartition::filterByBoundingBox()
 
       _mesh->clear();
       _mesh->addMesh(filteredMesh);
-      _mesh->computeState();
     } else {
       PRECICE_ASSERT(_geometricFilter == NO_FILTER);
     }

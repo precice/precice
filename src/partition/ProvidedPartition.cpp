@@ -202,8 +202,6 @@ void ProvidedPartition::compareBoundingBoxes()
   if (_m2ns.empty())
     return;
 
-  _mesh->computeState(); //@todo should not be needed here
-
   //@todo coupling mode
 
   //@todo treatment of multiple m2ns

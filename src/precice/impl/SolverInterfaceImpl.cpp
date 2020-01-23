@@ -1184,7 +1184,8 @@ void SolverInterfaceImpl::compareBoundingBoxes()
             });
 
   for (MeshContext *meshContext : _accessor->usedMeshContexts()) {
-    meshContext->mesh->computeBoundingBox();
+    if (meshContext->provideMesh) // provided meshes need their bounding boxes already for the re-partitioning
+      meshContext->mesh->computeBoundingBox();
   }
 
   for (MeshContext *meshContext : _accessor->usedMeshContexts()) {
@@ -1209,7 +1210,7 @@ void SolverInterfaceImpl::computePartitions()
     meshContext->partition->communicate();
   }
 
-  // pull provided meshes up front, to have them ready for the decomposition
+  // pull provided meshes up front, to have them ready for the decomposition of the received meshes (for the mappings)
   std::stable_partition(contexts.begin(), contexts.end(),
                         [](MeshContext const *const meshContext) -> bool {
                           return meshContext->provideMesh;
@@ -1218,6 +1219,8 @@ void SolverInterfaceImpl::computePartitions()
   for (MeshContext *meshContext : contexts) {
     meshContext->partition->compute();
     meshContext->mesh->computeState();
+    if (not meshContext->provideMesh) // received mesh can only compute their bounding boxes here
+      meshContext->mesh->computeBoundingBox();
     meshContext->mesh->allocateDataValues();
   }
 }

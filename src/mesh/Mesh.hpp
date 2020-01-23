@@ -241,7 +241,7 @@ public:
 
   /**
    * @brief Returns the Center Of Gravity of the mesh
-   * 
+   *
    * Returns a vector of doubles, size d, each dimension computed as
    * cog =  (max - min) / 2 + min
    */
@@ -252,9 +252,6 @@ public:
   bool operator!=(const Mesh &other) const;
 
 private:
-  /// Computes the normals for all primitives.
-  void computeNormals();
-
   mutable logging::Logger _log{"mesh::Mesh"};
 
   /// Name of the mesh.
@@ -314,7 +311,7 @@ private:
   std::vector<int> _connectedRanks;
 
   /**
-   * @brief each rank stores list of connected ranks and corresponding vertex IDs here. 
+   * @brief each rank stores list of connected ranks and corresponding vertex IDs here.
    * In the m2n package, this is used to create the final communication channels.
    */
   CommunicationMap _communicationMap;
