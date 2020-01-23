@@ -59,7 +59,7 @@ int precicec_isCouplingOngoing()
   return 0;
 }
 
-int precicec_isCouplingTimestepComplete()
+int precicec_isCouplingTimeWindowComplete()
 {
   PRECICE_ASSERT(impl != nullptr);
   if (impl->isTimeWindowComplete()) {

@@ -247,20 +247,6 @@ public:
   bool isWriteDataRequired(double computedTimestepLength) const;
 
   /**
-   * @brief Checks if the current coupling timestep is completed.
-   *
-   * @returns whether the timestep is complete.
-   *
-   * The following reasons require several solver time steps per coupling time
-   * step:
-   * - A solver chooses to perform subcycling.
-   * - An implicit coupling timestep iteration is not yet converged.
-   *
-   * @pre initialize() has been called successfully.
-   */
-  bool isTimestepComplete() const;
-
-  /**
    * @brief Checks if the current coupling window is completed.
    *
    * @returns whether the timestep is complete.
