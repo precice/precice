@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate2D, *testing::OnSize(4))
 
     double safetyFactor = 0.1;
 
-    ReceivedPartition part(pSolidzMesh, ReceivedPartition::BROADCAST_FILTER, safetyFactor);
+    ReceivedPartition part(pSolidzMesh, ReceivedPartition::ON_SLAVES, safetyFactor);
     part.addM2N(m2n);
     part.communicate();
 
@@ -200,7 +200,7 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate3D, *testing::OnSize(4))
 
     double safetyFactor = 0.1;
 
-    ReceivedPartition part(pSolidzMesh, ReceivedPartition::BROADCAST_FILTER, safetyFactor);
+    ReceivedPartition part(pSolidzMesh, ReceivedPartition::ON_SLAVES, safetyFactor);
     part.addM2N(m2n);
     part.communicate();
 
@@ -673,7 +673,7 @@ BOOST_AUTO_TEST_CASE(TestCommunicateLocalMeshPartitions, *testing::OnSize(4))
     part.communicate();
   } else {
     m2n->createDistributedCommunication(mesh);
-    ReceivedPartition part(mesh, ReceivedPartition::BROADCAST_FILTER, safetyFactor);
+    ReceivedPartition part(mesh, ReceivedPartition::ON_SLAVES, safetyFactor);
     m2n->requestSlavesPreConnection("SolidSlaves", "FluidSlaves");
     part.addM2N(m2n);
 
@@ -841,7 +841,7 @@ BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning2D, *testing::OnSize(4))
     boundingFromMapping->setMeshes(receivedMesh, mesh);
     boundingToMapping->setMeshes(mesh, receivedMesh);
 
-    ReceivedPartition part(receivedMesh, ReceivedPartition::BROADCAST_FILTER, safetyFactor);
+    ReceivedPartition part(receivedMesh, ReceivedPartition::ON_SLAVES, safetyFactor);
 
     part.addM2N(m2n);
 
@@ -983,7 +983,7 @@ BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning3D, *testing::OnSize(4))
     boundingFromMapping->setMeshes(receivedMesh, mesh);
     boundingToMapping->setMeshes(mesh, receivedMesh);
 
-    ReceivedPartition part(receivedMesh, ReceivedPartition::BROADCAST_FILTER, safetyFactor);
+    ReceivedPartition part(receivedMesh, ReceivedPartition::ON_SLAVES, safetyFactor);
     part.addM2N(m2n);
 
     part.setFromMapping(boundingFromMapping);

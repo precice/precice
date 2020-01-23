@@ -284,7 +284,7 @@ BOOST_AUTO_TEST_CASE(RePartitionNNBroadcastFilter2D, *testing::OnSize(4))
 
     double safetyFactor = 0.1;
 
-    ReceivedPartition part(pSolidzMesh, ReceivedPartition::FILTER_FIRST, safetyFactor);
+    ReceivedPartition part(pSolidzMesh, ReceivedPartition::ON_MASTER, safetyFactor);
     part.addM2N(m2n);
     part.setFromMapping(boundingFromMapping);
     part.setToMapping(boundingToMapping);
@@ -344,7 +344,7 @@ BOOST_AUTO_TEST_CASE(RePartitionNNDoubleNode2D, *testing::OnSize(4))
 
     double safetyFactor = 0.5;
 
-    ReceivedPartition part(pSolidzMesh, ReceivedPartition::BROADCAST_FILTER, safetyFactor);
+    ReceivedPartition part(pSolidzMesh, ReceivedPartition::ON_SLAVES, safetyFactor);
     part.addM2N(m2n);
     part.setFromMapping(boundingFromMapping);
     part.setToMapping(boundingToMapping);
@@ -401,7 +401,7 @@ BOOST_AUTO_TEST_CASE(RePartitionNPPreFilterPostFilter2D, *testing::OnSize(4))
     pNastinMesh->computeState();
     pNastinMesh->computeBoundingBox();
     double            safetyFactor = 0.1;
-    ReceivedPartition part(pSolidzMesh, ReceivedPartition::FILTER_FIRST, safetyFactor);
+    ReceivedPartition part(pSolidzMesh, ReceivedPartition::ON_MASTER, safetyFactor);
     part.addM2N(m2n);
     part.setFromMapping(boundingFromMapping);
     part.setToMapping(boundingToMapping);
@@ -775,7 +775,7 @@ BOOST_AUTO_TEST_CASE(RePartitionNPBroadcastFilter3D, *testing::OnSize(4))
     pNastinMesh->computeState();
     pNastinMesh->computeBoundingBox();
     double            safetyFactor = 20.0;
-    ReceivedPartition part(pSolidzMesh, ReceivedPartition::FILTER_FIRST, safetyFactor);
+    ReceivedPartition part(pSolidzMesh, ReceivedPartition::ON_MASTER, safetyFactor);
     part.addM2N(m2n);
     part.setFromMapping(boundingFromMapping);
     part.setToMapping(boundingToMapping);
@@ -850,7 +850,7 @@ BOOST_AUTO_TEST_CASE(TestRepartitionAndDistribution2D,
   pOtherMesh->computeState();
   pOtherMesh->computeBoundingBox();
   double            safetyFactor = 20.0; //should not filter out anything here
-  ReceivedPartition part(pMesh, ReceivedPartition::FILTER_FIRST, safetyFactor);
+  ReceivedPartition part(pMesh, ReceivedPartition::ON_MASTER, safetyFactor);
   part.setFromMapping(boundingFromMapping);
   part.addM2N(m2n);
   part.compute();
@@ -942,7 +942,7 @@ BOOST_FIXTURE_TEST_CASE(ProvideAndReceiveCouplingMode, testing::M2NFixture,
     boundingFromMapping->setMeshes(pSolidzMesh, pOtherMesh);
 
     double            safetyFactor = 0.1;
-    ReceivedPartition part(pSolidzMesh, ReceivedPartition::FILTER_FIRST, safetyFactor);
+    ReceivedPartition part(pSolidzMesh, ReceivedPartition::ON_MASTER, safetyFactor);
     part.setFromMapping(boundingFromMapping);
     part.addM2N(m2n);
     part.communicate();
