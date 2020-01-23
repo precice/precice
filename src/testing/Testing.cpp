@@ -1,6 +1,7 @@
 #include "testing/Testing.hpp"
 #include <cstdlib>
 #include <exception>
+#include "com/MPIDirectCommunication.hpp"
 #include "logging/LogMacros.hpp"
 #include "utils/EventUtils.hpp"
 #include "utils/Parallel.hpp"
@@ -26,7 +27,34 @@ TestContext::~TestContext() noexcept
   if (!invalid && _events) {
     precice::utils::EventRegistry::instance().finalize();
   }
+  // Reset communicators
   Par::setGlobalCommunicator(Par::getCommunicatorWorld());
+}
+
+bool TestContext::hasSize(int size) const
+{
+  return this->size == size;
+}
+
+bool TestContext::isNamed(const std::string &name) const
+{
+  if (std::find(_names.begin(), _names.end(), name) == _names.end()) {
+    throw std::runtime_error("The requested name \"" + name + "\" does not exist!");
+  }
+  return this->name == name;
+}
+
+bool TestContext::isRank(int rank) const
+{
+  if (rank >= size) {
+    throw std::runtime_error("The requested Rank does not exist!");
+  }
+  return this->rank == rank;
+}
+
+bool TestContext::isMaster() const
+{
+  return isRank(0);
 }
 
 void TestContext::handleOption(Participants &, testing::Require requirement)
@@ -50,19 +78,23 @@ void TestContext::handleOption(Participants &participants, Participant participa
   if (_simple) {
     std::terminate();
   }
+  // @TODO add check if name already registered
+  _names.push_back(participant.name);
   participants.emplace_back(std::move(participant));
 }
 
 void TestContext::setContextFrom(const Participant &p, int rank)
 {
-  this->name = p.name;
-  this->size = p.size;
-  this->rank = rank;
+  this->name    = p.name;
+  this->size    = p.size;
+  this->rank    = rank;
+  this->_initMS = p.initMS;
 }
 
 void TestContext::initialize(const Participants &participants)
 {
   initializeMPI(participants);
+  initializeMasterSlave();
   initializeEvents();
   initializePetsc();
 }
@@ -94,7 +126,7 @@ void TestContext::initializeMPI(const TestContext::Participants &participants)
     return;
   }
 
-  // If there were multiple participant requested, we need to split the restricted comm
+  // If there were multiple participants requested, we need to split the restricted comm
   if (participants.size() > 1) {
     int offset = 0;
     for (const auto &participant : participants) {
@@ -103,6 +135,7 @@ void TestContext::initializeMPI(const TestContext::Participants &participants)
       if (localRank < participant.size) {
         Par::splitCommunicator(participant.name);
         Par::setGlobalCommunicator(Par::getLocalCommunicator());
+        Par::clearGroups();
         setContextFrom(participant, localRank);
         return;
       }
@@ -111,17 +144,37 @@ void TestContext::initializeMPI(const TestContext::Participants &participants)
   }
 }
 
-void TestContext::initializePetsc()
+void TestContext::initializeMasterSlave()
 {
-  if (!invalid && _petsc) {
-    precice::utils::Petsc::initialize(nullptr, nullptr);
+  if (invalid || !_initMS) {
+    return;
+  }
+
+  precice::com::PtrCommunication masterSlaveCom = precice::com::PtrCommunication(new precice::com::MPIDirectCommunication());
+  utils::MasterSlave::_communication            = masterSlaveCom;
+  utils::MasterSlave::configure(rank, size);
+
+  const auto masterName = name + "Master";
+  const auto slavesName = name + "Slaves";
+  if (rank == 0) {
+    masterSlaveCom->acceptConnection(masterName, slavesName, rank);
+    masterSlaveCom->setRankOffset(1);
+  } else {
+    masterSlaveCom->requestConnection(masterName, slavesName, rank - 1, size - 1);
   }
 }
 
 void TestContext::initializeEvents()
 {
   if (!invalid && !_events) {
-    precice::utils::EventRegistry::instance().initialize();
+    precice::utils::EventRegistry::instance().initialize("Tests", "", Par::getGlobalCommunicator());
+  }
+}
+
+void TestContext::initializePetsc()
+{
+  if (!invalid && _petsc) {
+    precice::utils::Petsc::initialize(nullptr, nullptr);
   }
 }
 

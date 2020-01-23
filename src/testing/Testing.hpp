@@ -2,6 +2,7 @@
 
 #include <boost/test/unit_test.hpp>
 #include <numeric>
+#include <stdexcept>
 #include "math/math.hpp"
 #include "precice/config/Configuration.hpp"
 #include "utils/ManageUniqueIDs.hpp"
@@ -31,7 +32,8 @@ inline constexpr Ranks operator""_rank(unsigned long long value)
 
 struct Participant {
   std::string name;
-  int         size = 1;
+  int         size   = 1;
+  bool        initMS = false;
 
   explicit Participant(std::string n)
       : name(std::move(n)){};
@@ -39,6 +41,12 @@ struct Participant {
   Participant &operator()(Ranks rsize)
   {
     size = rsize.value;
+    return *this;
+  }
+
+  Participant &setupMasterSlaves()
+  {
+    initMS = true;
     return *this;
   }
 };
@@ -98,10 +106,21 @@ public:
 
   ~TestContext() noexcept;
 
+  bool hasSize(int size) const;
+
+  bool isNamed(const std::string& name) const;
+
+  bool isRank(int rank) const;
+
+  bool isMaster() const;
+
 private:
   bool _petsc  = false;
   bool _events = false;
   bool _simple = false;
+  bool _initMS = false;
+
+  std::vector<std::string> _names;
 
   void handleOption(Participants &participants, Participant participant);
   void handleOption(Participants &participants, testing::Require requirement);
@@ -123,6 +142,7 @@ private:
 
   void initialize(const Participants &participants);
   void initializeMPI(const Participants &participants);
+  void initializeMasterSlave();
   void initializePetsc();
   void initializeEvents();
 };
