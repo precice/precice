@@ -1,6 +1,7 @@
 #include "testing/Testing.hpp"
 #include <cstdlib>
 #include <exception>
+#include <string>
 #include "com/MPIDirectCommunication.hpp"
 #include "logging/LogMacros.hpp"
 #include "utils/EventUtils.hpp"
@@ -107,8 +108,9 @@ void TestContext::initializeMPI(const TestContext::Participants &participants)
 {
   const int globalRank = Par::getProcessRank();
   const int required   = std::accumulate(participants.begin(), participants.end(), 0, [](int total, const Participant &next) { return total + next.size; });
-  if (required > Par::getCommunicatorSize()) {
-    throw std::runtime_error{"This test requests more ranks than available"};
+  const int available  = Par::getCommunicatorSize();
+  if (required > available) {
+    throw std::runtime_error{"This test requests " + std::to_string(required) +" ranks, but there are only "+std::to_string(available)+" available"};
   }
 
   // Restrict the communicator to the total required size
@@ -171,7 +173,7 @@ void TestContext::initializeMasterSlave()
 void TestContext::initializeEvents()
 {
   if (!invalid && !_events) {
-    precice::utils::EventRegistry::instance().initialize("Tests", "", Par::getGlobalCommunicator());
+    precice::utils::EventRegistry::instance().initialize("precice-Tests", "", Par::getGlobalCommunicator());
   }
 }
 
