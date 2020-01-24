@@ -29,21 +29,15 @@ void setupParallelEnvironment(m2n::PtrM2N m2n, const testing::TestContext &conte
   // Establish and configure the master-master connection
   if (context.isNamed("Fluid")) {
     BOOST_TEST(context.hasSize(3));
-    if (context.isMaster()) {
-      m2n->acceptMasterConnection("Fluid", "SolidMaster");
-    }
+    m2n->acceptMasterConnection("Fluid", "SolidMaster");
   }
 
   if (context.isNamed("Solid")) {
     BOOST_TEST(context.hasSize(1));
-    if (context.isMaster()) {
-      m2n->requestMasterConnection("Fluid", "SolidMaster");
-    }
+    m2n->requestMasterConnection("Fluid", "SolidMaster");
   }
 
-  if (context.isMaster()) {
-      BOOST_TEST(m2n->isConnected());
-  }
+  BOOST_TEST(m2n->isConnected());
 }
 
 // create a communciator with two participants: each one has one master and one slave ranks
@@ -56,20 +50,14 @@ void setupM2NBaseEnvironment(m2n::PtrM2N p2p, const testing::TestContext &contex
 
   // Establish and configure the master-master connection
   if (context.isNamed("Fluid")) {
-    if (context.isMaster()) {
-      p2p->acceptMasterConnection("FluidMaster", "SolidMaster");
-    }
+    p2p->acceptMasterConnection("FluidMaster", "SolidMaster");
     utils::MasterSlave::configure(context.rank, context.size);
   }
   if (context.isNamed("Solid")) {
-    if (context.isMaster()) { //Master Solid
-      p2p->requestMasterConnection("FluidMaster", "SolidMaster");
-    }
+    p2p->requestMasterConnection("FluidMaster", "SolidMaster");
   }
 
-  if (context.isMaster()) {
-      BOOST_TEST(p2p->isConnected());
-  }
+  BOOST_TEST(p2p->isConnected());
 }
 
 void tearDownParallelEnvironment()
