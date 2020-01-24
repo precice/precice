@@ -8,8 +8,9 @@ BOOST_AUTO_TEST_SUITE(UtilsTests)
 
 #ifndef PRECICE_NO_MPI
 
-BOOST_AUTO_TEST_CASE(Parallel, *testing::MinRanks{3})
+BOOST_AUTO_TEST_CASE(Parallel)
 {
+  PRECICE_TEST(4_ranks);
   using Par     = utils::Parallel;
   MPI_Comm comm = Par::getRestrictedCommunicator({0, 1, 2});
   if (Par::getProcessRank() <= 2) {
