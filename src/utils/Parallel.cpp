@@ -220,7 +220,7 @@ void Parallel::setGlobalCommunicator(
 {
 #ifndef PRECICE_NO_MPI
   PRECICE_TRACE();
-  if (_globalCommunicator != getCommunicatorWorld()) {
+  if (_globalCommunicator != getCommunicatorWorld() && _globalCommunicator != MPI_COMM_SELF && _globalCommunicator != MPI_COMM_NULL) {
     MPI_Comm_free(&_globalCommunicator);
   }
   _globalCommunicator = defaultCommunicator;
