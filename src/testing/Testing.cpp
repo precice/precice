@@ -172,7 +172,7 @@ void TestContext::initializeMasterSlave()
 
 void TestContext::initializeEvents()
 {
-  if (!invalid && !_events) {
+  if (!invalid && _events) {
     precice::utils::EventRegistry::instance().initialize("precice-Tests", "", Par::getGlobalCommunicator());
   }
 }
