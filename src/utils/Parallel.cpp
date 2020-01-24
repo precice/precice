@@ -245,8 +245,21 @@ const Parallel::Communicator &Parallel::getLocalCommunicator()
 Parallel::Communicator Parallel::getRestrictedCommunicator(const std::vector<int> &ranks)
 {
   PRECICE_TRACE();
-  Communicator restrictedCommunicator = getCommunicatorWorld();
+
 #ifndef PRECICE_NO_MPI
+  if (ranks.empty()) {
+    throw std::runtime_error{"Empty communicators are not allowed."};
+  }
+
+  // Shortcut for running in isolation
+  if (ranks.size() == 1) {
+    PRECICE_DEBUG("Barrier");
+    MPI_Barrier(_globalCommunicator);
+    PRECICE_DEBUG("Restricted to COMM_SELF");
+    return MPI_COMM_SELF;
+  }
+
+  Communicator restrictedCommunicator = getCommunicatorWorld();
   PRECICE_ASSERT(_isInitialized);
   PRECICE_ASSERT(not ranks.empty());
   PRECICE_ASSERT(ranks.size() <= static_cast<size_t>(getCommunicatorSize()));
@@ -285,8 +298,10 @@ Parallel::Communicator Parallel::getRestrictedCommunicator(const std::vector<int
   MPI_Group_free(&currentGroup);
   PRECICE_DEBUG("Free restricted group");
   MPI_Group_free(&restrictedGroup);
-#endif // not PRECICE_NO_MPI
   return restrictedCommunicator;
+#else  // not PRECICE_NO_MPI
+  return getCommunicatorWorld();
+#endif // not PRECICE_NO_MPI
 }
 
 void Parallel::restrictGlobalCommunicator(const std::vector<int> &ranks)
