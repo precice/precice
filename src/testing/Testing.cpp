@@ -158,27 +158,30 @@ void TestContext::initializeMPI(const TestContext::Participants &participants)
 
 void TestContext::initializeMasterSlave()
 {
-  // Establish a consistent state for the tests
-  utils::MasterSlave::reset();
-  
-  if (invalid || !_initMS) {
+  if (invalid)
     return;
+
+  if (_initMS && hasSize(1)) {
+    throw std::runtime_error{
+        "Initializing a Master Slave communication does not make sense for serial participant \"" + name + "\"!"};
   }
+
+  // Establish a consistent state for all tests
   utils::MasterSlave::configure(rank, size);
 
-  // Only setup a master-slaves-connection when there are slaves  ...
-  if (size > 1) {
-    precice::com::PtrCommunication masterSlaveCom = precice::com::PtrCommunication(new precice::com::MPIDirectCommunication());
-    utils::MasterSlave::_communication            = masterSlaveCom;
+  if (!_initMS)
+    return;
 
-    const auto masterName = name + "Master";
-    const auto slavesName = name + "Slaves";
-    if (rank == 0) {
-      masterSlaveCom->acceptConnection(masterName, slavesName, rank);
-      masterSlaveCom->setRankOffset(1);
-    } else {
-      masterSlaveCom->requestConnection(masterName, slavesName, rank - 1, size - 1);
-    }
+  precice::com::PtrCommunication masterSlaveCom = precice::com::PtrCommunication(new precice::com::MPIDirectCommunication());
+  utils::MasterSlave::_communication            = masterSlaveCom;
+
+  const auto masterName = name + "Master";
+  const auto slavesName = name + "Slaves";
+  if (isMaster()) {
+    masterSlaveCom->acceptConnection(masterName, slavesName, rank);
+    masterSlaveCom->setRankOffset(1);
+  } else {
+    masterSlaveCom->requestConnection(masterName, slavesName, rank - 1, size - 1);
   }
 }
 
@@ -210,14 +213,6 @@ m2n::PtrM2N TestContext::connect(const std::string &acceptor, const std::string 
   if (std::find(_names.begin(), _names.end(), requestor) == _names.end()) {
     throw std::runtime_error{
         "Requestor \"" + requestor + "\" not defined in this context."};
-  }
-
-  if (!_initMS) {
-    std::string invocation = "\"" + name + "\"_on(" + std::to_string(size);
-    invocation.append((size == 1) ? "_rank" : "_ranks");
-    invocation.append(").setupMasterSlaves()");
-    throw std::runtime_error{
-        "Using M2N requires to setup the master slave communication. Use " + invocation + "."};
   }
 
   if (isNamed(acceptor)) {

@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(NamedContexts)
  */
 BOOST_AUTO_TEST_CASE(TwoProcTestsWithM2NCommunication)
 {
-  PRECICE_TEST("A"_on(1_rank).setupMasterSlaves(), "B"_on(1_rank).setupMasterSlaves(), Require::Events);
+  PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank), Require::Events);
   BOOST_TEST(context.hasSize(1));
   BOOST_TEST(context.isRank(0));
   BOOST_TEST(context.isMaster());
