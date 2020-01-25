@@ -21,7 +21,7 @@
          <use-data name="VelocityDeltas" />
       </mesh>
 
-      <m2n:mpi-single from="Comsol" to="Peano" />
+      <m2n:sockets from="Comsol" to="Peano" />
 
       <participant name="Peano">
          <use-mesh name="PeanoNodes" provide="yes" />

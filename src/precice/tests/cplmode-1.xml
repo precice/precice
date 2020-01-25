@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+
+<precice-configuration>
+   <solver-interface dimensions="2">
+      <data:scalar name="ScalarData" />
+      <data:vector name="VectorData" />
+      
+      <mesh name="Mesh">
+         <use-data name="ScalarData"/>
+         <use-data name="VectorData"/>
+      </mesh>
+      
+      <participant name="ParticipantA">
+         <use-mesh name="Mesh" provide="true"/>
+         <write-data name="ScalarData" mesh="Mesh"/>
+         <read-data  name="VectorData" mesh="Mesh"/>
+         <export:vtk/>
+      </participant>
+      
+      <participant name="ParticipantB">
+         <server:mpi-single/>
+         <use-mesh name="Mesh" from="ParticipantA" />
+         <write-data name="VectorData" mesh="Mesh"/>
+         <read-data  name="ScalarData" mesh="Mesh"/>
+         <export:vtk/>
+      </participant>
+      
+      <m2n:sockets from="ParticipantA" to="ParticipantB"/>
+      
+      <coupling-scheme:serial-explicit>
+         <participants first="ParticipantA" second="ParticipantB"/>
+         <max-timesteps value="5"/>
+         <timestep-length value="1.0"/>
+         <exchange data="ScalarData" mesh="Mesh" from="ParticipantA" to="ParticipantB"/>
+         <exchange data="VectorData"  mesh="Mesh" from="ParticipantB" to="ParticipantA"/>
+      </coupling-scheme:serial-explicit>
+   </solver-interface>
+</precice-configuration>
