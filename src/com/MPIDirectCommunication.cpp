@@ -13,6 +13,13 @@ MPIDirectCommunication::MPIDirectCommunication()
 {
 }
 
+MPIDirectCommunication::MPIDirectCommunication(const MPI_Comm &global, const MPI_Comm &local)
+    : _communicator(global),
+      _globalCommunicator(global),
+      _localCommunicator(local)
+{
+}
+
 MPIDirectCommunication::~MPIDirectCommunication()
 {
   PRECICE_TRACE(_isConnected);
@@ -36,13 +43,13 @@ void MPIDirectCommunication::acceptConnection(std::string const &acceptorName,
   PRECICE_TRACE(acceptorName, requesterName);
   PRECICE_ASSERT(not isConnected());
 
-  utils::Parallel::splitCommunicator(acceptorName);
+  if (_globalCommunicator == _localCommunicator) {
+    utils::Parallel::splitCommunicator(acceptorName);
+  }
 
-  PRECICE_CHECK(utils::Parallel::getCommunicatorSize() > 1,
+  PRECICE_CHECK(utils::Parallel::getCommunicatorSize(_globalCommunicator) > 1,
                 "MPI communication direct (i.e. single) can be only used with more than one process in base communicator!");
 
-  _globalCommunicator = utils::Parallel::getGlobalCommunicator();
-  _localCommunicator  = utils::Parallel::getLocalCommunicator();
   MPI_Intercomm_create(
       _localCommunicator,
       0, // Local communicator, local leader rank
@@ -73,13 +80,13 @@ void MPIDirectCommunication::requestConnection(std::string const &acceptorName,
   PRECICE_TRACE(acceptorName, requesterName);
   PRECICE_ASSERT(not isConnected());
 
-  utils::Parallel::splitCommunicator(requesterName);
+  if (_globalCommunicator == _localCommunicator) {
+    utils::Parallel::splitCommunicator(requesterName);
+  }
 
-  PRECICE_CHECK(utils::Parallel::getCommunicatorSize() > 1,
+  PRECICE_CHECK(utils::Parallel::getCommunicatorSize(_globalCommunicator) > 1,
                 "MPI communication direct (i.e. single) can be only used with more than one process in base communicator!");
 
-  _globalCommunicator = utils::Parallel::getGlobalCommunicator();
-  _localCommunicator  = utils::Parallel::getLocalCommunicator();
   MPI_Intercomm_create(
       _localCommunicator,
       0, // Local communicator, local leader rank

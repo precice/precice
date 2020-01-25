@@ -64,8 +64,11 @@ public:
    */
   static int getLocalProcessRank();
 
-  /// Returns the number of processes in the communicator.
+  /// Returns the number of processes in the global communicator.
   static int getCommunicatorSize();
+
+  /// Returns the number of processes in the given communicator.
+  static int getCommunicatorSize(Communicator comm);
 
   /// Synchronizes all processes.
   static void synchronizeProcesses();
@@ -86,10 +89,13 @@ public:
    * and communicator size is recomputed, relative to the new default
    * communicator.
    *
+   * @param[in] defaultCommunicator The new global/default Communicator
+   * @param[in] free free the old communicator?
+   *
    * @attention Will result in an error, if called by a process not in the new
    *            default communicator!
    */
-  static void setGlobalCommunicator(Communicator defaultCommunicator);
+  static void setGlobalCommunicator(Communicator defaultCommunicator, bool free = true);
 
   /// Returns the default communicator.
   static const Communicator &getGlobalCommunicator();

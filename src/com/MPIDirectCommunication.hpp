@@ -5,6 +5,7 @@
 #include <string>
 #include "MPICommunication.hpp"
 #include "logging/Logger.hpp"
+#include "utils/Parallel.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -22,7 +23,15 @@ namespace com {
  */
 class MPIDirectCommunication : public MPICommunication {
 public:
+  /** Creates a MPI Direct communication based on the current global communicator.
+   * 
+   * This communicator will be split in acceptConnection() and requestConnection()
+   * based on the name of the acceptor.
+   */
   MPIDirectCommunication();
+
+  /// Creates a MPI Direct communication given the global and a local communicator.
+  MPIDirectCommunication(const MPI_Comm &local, const MPI_Comm &global);
 
   virtual ~MPIDirectCommunication();
 
@@ -33,7 +42,10 @@ public:
    */
   virtual size_t getRemoteCommunicatorSize() override;
 
-  /// See precice::com::Communication::acceptConnection().
+  /** See precice::com::Communication::acceptConnection().
+   * @attention Calls precice::utils::Parallel::splitCommunicator()
+   * if local and global communicators are equal.
+   */
   virtual void acceptConnection(std::string const &acceptorName,
                                 std::string const &requesterName,
                                 std::string const &tag,
@@ -48,7 +60,10 @@ public:
     PRECICE_ASSERT(false, "Not implemented!");
   }
 
-  /// See precice::com::Communication::requestConnection().
+  /** See precice::com::Communication::requestConnection().
+   * @attention Calls precice::utils::Parallel::splitCommunicator()
+   * if local and global communicators are equal.
+   */
   virtual void requestConnection(std::string const &acceptorName,
                                  std::string const &requesterName,
                                  std::string const &tag,

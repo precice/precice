@@ -4,6 +4,7 @@
 #include <string>
 #include "com/MPIDirectCommunication.hpp"
 #include "logging/LogMacros.hpp"
+#include "m2n/GatherScatterComFactory.hpp"
 #include "utils/EventUtils.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Petsc.hpp"
@@ -29,11 +30,13 @@ TestContext::~TestContext() noexcept
     precice::utils::EventRegistry::instance().finalize();
   }
   if (!invalid && _initMS) {
-      utils::MasterSlave::_communication = nullptr;
-      utils::MasterSlave::reset();
+    utils::MasterSlave::_communication = nullptr;
+    utils::MasterSlave::reset();
   }
+
   // Reset communicators
   Par::setGlobalCommunicator(Par::getCommunicatorWorld());
+  Par::clearGroups();
 }
 
 bool TestContext::hasSize(int size) const
@@ -90,10 +93,11 @@ void TestContext::handleOption(Participants &participants, Participant participa
 
 void TestContext::setContextFrom(const Participant &p, int rank)
 {
-  this->name    = p.name;
-  this->size    = p.size;
-  this->rank    = rank;
-  this->_initMS = p.initMS;
+  this->name         = p.name;
+  this->size         = p.size;
+  this->rank         = rank;
+  this->_initMS      = p.initMS;
+  this->_contextComm = Par::getGlobalCommunicator();
 }
 
 void TestContext::initialize(const Participants &participants)
@@ -110,7 +114,7 @@ void TestContext::initializeMPI(const TestContext::Participants &participants)
   const int required   = std::accumulate(participants.begin(), participants.end(), 0, [](int total, const Participant &next) { return total + next.size; });
   const int available  = Par::getCommunicatorSize();
   if (required > available) {
-    throw std::runtime_error{"This test requests " + std::to_string(required) +" ranks, but there are only "+std::to_string(available)+" available"};
+    throw std::runtime_error{"This test requests " + std::to_string(required) + " ranks, but there are only " + std::to_string(available) + " available"};
   }
 
   // Restrict the communicator to the total required size
@@ -119,9 +123,12 @@ void TestContext::initializeMPI(const TestContext::Participants &participants)
   // Mark all unnecessary ranks as invalid and return
   if (globalRank >= required) {
     invalid = true;
-    Par::setGlobalCommunicator(MPI_COMM_NULL);
+    //Par::setGlobalCommunicator(MPI_COMM_NULL);
     return;
   }
+
+  // Save the restricted Comm for establishing MPI Single communications
+  _restrictedComm = Par::getGlobalCommunicator();
 
   // If there was only a single participant requested, then update its info and we are done.
   if (participants.size() == 1) {
@@ -140,8 +147,7 @@ void TestContext::initializeMPI(const TestContext::Participants &participants)
       // Check if my global rank maps to this participant
       if (localRank < participant.size) {
         Par::splitCommunicator(participant.name);
-        Par::setGlobalCommunicator(Par::getLocalCommunicator());
-        Par::clearGroups();
+        Par::setGlobalCommunicator(Par::getLocalCommunicator(), false);
         setContextFrom(participant, localRank);
         return;
       }
@@ -155,18 +161,21 @@ void TestContext::initializeMasterSlave()
   if (invalid || !_initMS) {
     return;
   }
-
-  precice::com::PtrCommunication masterSlaveCom = precice::com::PtrCommunication(new precice::com::MPIDirectCommunication());
-  utils::MasterSlave::_communication            = masterSlaveCom;
   utils::MasterSlave::configure(rank, size);
 
-  const auto masterName = name + "Master";
-  const auto slavesName = name + "Slaves";
-  if (rank == 0) {
-    masterSlaveCom->acceptConnection(masterName, slavesName, rank);
-    masterSlaveCom->setRankOffset(1);
-  } else {
-    masterSlaveCom->requestConnection(masterName, slavesName, rank - 1, size - 1);
+  // Only setup a master-slaves-connection when there are slaves  ...
+  if (size > 1) {
+    precice::com::PtrCommunication masterSlaveCom = precice::com::PtrCommunication(new precice::com::MPIDirectCommunication());
+    utils::MasterSlave::_communication            = masterSlaveCom;
+
+    const auto masterName = name + "Master";
+    const auto slavesName = name + "Slaves";
+    if (rank == 0) {
+      masterSlaveCom->acceptConnection(masterName, slavesName, rank);
+      masterSlaveCom->setRankOffset(1);
+    } else {
+      masterSlaveCom->requestConnection(masterName, slavesName, rank - 1, size - 1);
+    }
   }
 }
 
@@ -182,6 +191,40 @@ void TestContext::initializePetsc()
   if (!invalid && _petsc) {
     precice::utils::Petsc::initialize(nullptr, nullptr);
   }
+}
+
+m2n::PtrM2N TestContext::connect(const std::string &acceptor, const std::string &requestor)
+{
+  auto participantCom   = com::PtrCommunication(new com::MPIDirectCommunication(_restrictedComm, _contextComm));
+  auto distrFactory     = m2n::DistributedComFactory::SharedPointer(new m2n::GatherScatterComFactory(participantCom));
+  bool useOnlyMasterCom = true;
+  auto m2n              = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory, useOnlyMasterCom));
+
+  if (std::find(_names.begin(), _names.end(), acceptor) == _names.end()) {
+    throw std::runtime_error{
+        "Acceptor \"" + acceptor + "\" not defined in this context."};
+  }
+  if (std::find(_names.begin(), _names.end(), requestor) == _names.end()) {
+    throw std::runtime_error{
+        "Requestor \"" + requestor + "\" not defined in this context."};
+  }
+
+  if (!_initMS) {
+    std::string invocation = "\"" + name + "\"_on(" + std::to_string(size);
+    invocation.append((size == 1) ? "_rank" : "_ranks");
+    invocation.append(").setupMasterSlaves()");
+    throw std::runtime_error{
+        "Using M2N requires to setup the master slave communication. Use " + invocation + "."};
+  }
+
+  if (isNamed(acceptor)) {
+    m2n->acceptMasterConnection(acceptor, requestor);
+  } else if (isNamed(requestor)) {
+    m2n->requestMasterConnection(acceptor, requestor);
+  } else {
+    throw std::runtime_error{"You try to connect " + acceptor + " and " + requestor + ", but this context is named " + name};
+  }
+  return m2n;
 }
 
 } // namespace testing

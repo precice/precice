@@ -114,11 +114,17 @@ public:
 
   bool isMaster() const;
 
+  m2n::PtrM2N connect(const std::string& acceptor, const std::string& requestor);
+
 private:
   bool _petsc  = false;
   bool _events = false;
   bool _simple = false;
   bool _initMS = false;
+
+  using Communicator = utils::Parallel::Communicator;
+  Communicator _contextComm;
+  Communicator _restrictedComm;
 
   std::vector<std::string> _names;
 
