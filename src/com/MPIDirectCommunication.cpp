@@ -45,6 +45,7 @@ void MPIDirectCommunication::acceptConnection(std::string const &acceptorName,
 
   if (_globalCommunicator == _localCommunicator) {
     utils::Parallel::splitCommunicator(acceptorName);
+    _localCommunicator = utils::Parallel::getLocalCommunicator();
   }
 
   PRECICE_CHECK(utils::Parallel::getCommunicatorSize(_globalCommunicator) > 1,
@@ -82,6 +83,7 @@ void MPIDirectCommunication::requestConnection(std::string const &acceptorName,
 
   if (_globalCommunicator == _localCommunicator) {
     utils::Parallel::splitCommunicator(requesterName);
+    _localCommunicator = utils::Parallel::getLocalCommunicator();
   }
 
   PRECICE_CHECK(utils::Parallel::getCommunicatorSize(_globalCommunicator) > 1,
