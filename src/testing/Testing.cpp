@@ -199,7 +199,7 @@ void TestContext::initializePetsc()
   }
 }
 
-m2n::PtrM2N TestContext::connect(const std::string &acceptor, const std::string &requestor)
+m2n::PtrM2N TestContext::connect(const std::string &acceptor, const std::string &requestor) const
 {
   auto participantCom   = com::PtrCommunication(new com::MPIDirectCommunication(_restrictedComm, _contextComm));
   auto distrFactory     = m2n::DistributedComFactory::SharedPointer(new m2n::GatherScatterComFactory(participantCom));
