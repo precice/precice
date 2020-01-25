@@ -11,11 +11,12 @@ namespace bg  = boost::geometry;
 namespace bgi = boost::geometry::index;
 
 BOOST_AUTO_TEST_SUITE(MeshTests)
-BOOST_AUTO_TEST_SUITE(RTree, *testing::OnMaster())
+BOOST_AUTO_TEST_SUITE(RTree)
 BOOST_AUTO_TEST_SUITE(BGAdapters)
 
 BOOST_AUTO_TEST_CASE(VectorAdapter)
 {
+  PRECICE_TEST(1_rank);
   Eigen::VectorXd vec = Eigen::Vector2d(1, 2);
   BOOST_TEST(bg::get<0>(vec) == 1);
   BOOST_TEST(bg::get<1>(vec) == 2);
@@ -26,6 +27,7 @@ BOOST_AUTO_TEST_CASE(VectorAdapter)
 
 BOOST_AUTO_TEST_CASE(VertexAdapter)
 {
+  PRECICE_TEST(1_rank);
   precice::mesh::Mesh mesh("MyMesh", 2, false, precice::testing::nextMeshID());
   auto &              v = mesh.createVertex(Eigen::Vector2d(1, 2));
   BOOST_TEST(bg::get<0>(v) == 1);
@@ -37,6 +39,7 @@ BOOST_AUTO_TEST_CASE(VertexAdapter)
 
 BOOST_AUTO_TEST_CASE(EdgeAdapter)
 {
+  PRECICE_TEST(1_rank);
   precice::mesh::Mesh mesh("MyMesh", 2, false, precice::testing::nextMeshID());
   auto &              v1 = mesh.createVertex(Eigen::Vector2d(1, 2));
   auto &              v2 = mesh.createVertex(Eigen::Vector2d(3, 4));
@@ -53,6 +56,7 @@ BOOST_AUTO_TEST_CASE(EdgeAdapter)
 
 BOOST_AUTO_TEST_CASE(TriangleAdapter)
 {
+  PRECICE_TEST(1_rank);
   precice::mesh::Mesh mesh("MyMesh", 3, false, precice::testing::nextMeshID());
   auto &              v1 = mesh.createVertex(Eigen::Vector3d(0, 2, 0));
   auto &              v2 = mesh.createVertex(Eigen::Vector3d(2, 1, 0));
@@ -75,6 +79,7 @@ BOOST_AUTO_TEST_CASE(TriangleAdapter)
 
 BOOST_AUTO_TEST_CASE(QuadAdapter)
 {
+  PRECICE_TEST(1_rank);
   precice::mesh::Mesh mesh("MyMesh", 3, false, testing::nextMeshID());
   auto &              v1 = mesh.createVertex(Eigen::Vector3d(0, 2, 0));
   auto &              v2 = mesh.createVertex(Eigen::Vector3d(2, 1, 0));
@@ -99,6 +104,7 @@ BOOST_AUTO_TEST_CASE(QuadAdapter)
 
 BOOST_AUTO_TEST_CASE(DistanceTestFlatSingleTriangle)
 {
+  PRECICE_TEST(1_rank);
   precice::mesh::Mesh mesh("MyMesh", 3, false, testing::nextMeshID());
   auto &              v1 = mesh.createVertex(Eigen::Vector3d(0, 0, 0));
   auto &              v2 = mesh.createVertex(Eigen::Vector3d(0, 1, 0));
@@ -121,6 +127,7 @@ BOOST_AUTO_TEST_CASE(DistanceTestFlatSingleTriangle)
 
 BOOST_AUTO_TEST_CASE(DistanceTestFlatDoubleTriangle)
 {
+  PRECICE_TEST(1_rank);
   precice::mesh::Mesh mesh("MyMesh", 3, false, testing::nextMeshID());
   auto &              lv1 = mesh.createVertex(Eigen::Vector3d(-1, 1, 0.1));
   auto &              lv2 = mesh.createVertex(Eigen::Vector3d(0, -1, 0));
@@ -156,6 +163,7 @@ BOOST_AUTO_TEST_CASE(DistanceTestFlatDoubleTriangle)
 
 BOOST_AUTO_TEST_CASE(DistanceTestFlatDoubleTriangleInsideOutside)
 {
+  PRECICE_TEST(1_rank);
   precice::mesh::Mesh mesh("MyMesh", 3, false, testing::nextMeshID());
   auto &              a = mesh.createVertex(Eigen::Vector3d(0, 0, 0));
   auto &              b = mesh.createVertex(Eigen::Vector3d(1, 0, 0));
@@ -189,6 +197,7 @@ BOOST_AUTO_TEST_CASE(DistanceTestFlatDoubleTriangleInsideOutside)
 
 BOOST_AUTO_TEST_CASE(DistanceTestSlopedTriangle)
 {
+  PRECICE_TEST(1_rank);
   precice::mesh::Mesh mesh("MyMesh", 3, false, testing::nextMeshID());
   auto &              v1 = mesh.createVertex(Eigen::Vector3d(0, 1, 0));
   auto &              v2 = mesh.createVertex(Eigen::Vector3d(1, 1, 1));
@@ -217,6 +226,7 @@ BOOST_AUTO_TEST_CASE(DistanceTestSlopedTriangle)
 
 BOOST_AUTO_TEST_CASE(EnvelopeTriangleClockWise)
 {
+  PRECICE_TEST(1_rank);
   using precice::testing::equals;
   precice::mesh::Mesh mesh("MyMesh", 3, false, testing::nextMeshID());
   auto &              v1  = mesh.createVertex(Eigen::Vector3d(0, 1, 0));
@@ -233,6 +243,7 @@ BOOST_AUTO_TEST_CASE(EnvelopeTriangleClockWise)
 
 BOOST_AUTO_TEST_CASE(EnvelopeTriangleCounterclockWise)
 {
+  PRECICE_TEST(1_rank);
   using precice::testing::equals;
   precice::mesh::Mesh mesh("MyMesh", 3, false, testing::nextMeshID());
   auto &              v1  = mesh.createVertex(Eigen::Vector3d(0, 1, 0));
@@ -288,6 +299,7 @@ struct MeshFixture {
 
 BOOST_AUTO_TEST_CASE(Query_2D)
 {
+  PRECICE_TEST(1_rank);
   PtrMesh mesh(new precice::mesh::Mesh("MyMesh", 2, false, testing::nextMeshID()));
   mesh->createVertex(Eigen::Vector2d(0, 0));
   mesh->createVertex(Eigen::Vector2d(0, 1));
@@ -329,6 +341,7 @@ BOOST_AUTO_TEST_CASE(Query_2D)
 
 BOOST_AUTO_TEST_CASE(Query_3D)
 {
+  PRECICE_TEST(1_rank);
   PtrMesh mesh(new precice::mesh::Mesh("MyMesh", 3, false, precice::testing::nextMeshID()));
   mesh->createVertex(Eigen::Vector3d(0, 0, 0));
   mesh->createVertex(Eigen::Vector3d(0, 0, 1));
@@ -391,6 +404,7 @@ BOOST_AUTO_TEST_CASE(Query_3D)
 
 BOOST_AUTO_TEST_CASE(Query_3D_FullMesh)
 {
+  PRECICE_TEST(1_rank);
   PtrMesh      mesh(new precice::mesh::Mesh("MyMesh", 3, false, precice::testing::nextMeshID()));
   const double z1  = 0.1;
   const double z2  = -0.1;
@@ -472,6 +486,7 @@ BOOST_AUTO_TEST_CASE(Query_3D_FullMesh)
 /// Resembles how boost geometry is used inside the PetRBF
 BOOST_AUTO_TEST_CASE(QueryWithBox)
 {
+  PRECICE_TEST(1_rank);
   PtrMesh mesh(new precice::mesh::Mesh("MyMesh", 3, false, precice::testing::nextMeshID()));
   mesh->createVertex(Eigen::Vector3d(0, 0, 0));
   mesh->createVertex(Eigen::Vector3d(0, 0, 1));
@@ -531,6 +546,7 @@ BOOST_AUTO_TEST_CASE(QueryWithBox)
 
 BOOST_AUTO_TEST_CASE(CacheClearing)
 {
+  PRECICE_TEST(1_rank);
   PtrMesh mesh(new precice::mesh::Mesh("MyMesh", 2, false, precice::testing::nextMeshID()));
   mesh->createVertex(Eigen::Vector2d(0, 0));
 
@@ -555,6 +571,7 @@ BOOST_AUTO_TEST_CASE(CacheClearing)
 
 BOOST_AUTO_TEST_CASE(PrimitveIndexComparison)
 {
+  PRECICE_TEST(1_rank);
   PrimitiveIndex a{Primitive::Vertex, 2lu};
   PrimitiveIndex b{Primitive::Vertex, 2lu};
   PrimitiveIndex c{Primitive::Edge, 2lu};
@@ -568,6 +585,7 @@ BOOST_AUTO_TEST_CASE(PrimitveIndexComparison)
 
 BOOST_FIXTURE_TEST_CASE(IndexSinglePrimitiveType, MeshFixture)
 {
+  PRECICE_TEST(1_rank);
   PrimitiveRTree            rtree;
   mesh::impl::AABBGenerator gen{mesh};
 
@@ -585,12 +603,14 @@ BOOST_FIXTURE_TEST_CASE(IndexSinglePrimitiveType, MeshFixture)
 
 BOOST_FIXTURE_TEST_CASE(IndexMesh, MeshFixture)
 {
+  PRECICE_TEST(1_rank);
   auto tree = indexMesh(mesh);
   BOOST_TEST(tree.size() == primitive_cnt);
 }
 
 BOOST_FIXTURE_TEST_CASE(CacheFunctionality, MeshFixture)
 {
+  PRECICE_TEST(1_rank);
   PtrMesh ptr{&mesh, [](Mesh *) {}}; // Use an empty deleter to prevent double-free
 
   auto vt1 = rtree::getVertexRTree(ptr);
