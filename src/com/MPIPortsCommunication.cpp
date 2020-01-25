@@ -31,10 +31,13 @@ size_t MPIPortsCommunication::getRemoteCommunicatorSize()
 void MPIPortsCommunication::acceptConnection(std::string const &acceptorName,
                                              std::string const &requesterName,
                                              std::string const &tag,
-                                             int                acceptorRank)
+                                             int                acceptorRank,
+                                             int                rankOffset)
 {
   PRECICE_TRACE(acceptorName, requesterName, acceptorRank);
   PRECICE_ASSERT(not isConnected());
+
+  setRankOffset(rankOffset);
 
   _isAcceptor = true;
 

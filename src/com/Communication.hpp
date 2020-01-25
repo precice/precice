@@ -82,7 +82,8 @@ public:
   virtual void acceptConnection(std::string const &acceptorName,
                                 std::string const &requesterName,
                                 std::string const &tag,
-                                int                acceptorRank) = 0;
+                                int                acceptorRank,
+                                int                rankOffset = 0) = 0;
 
   /**
    * @brief Accepts connection from another communicator, which has to call requestConnectionAsClient().

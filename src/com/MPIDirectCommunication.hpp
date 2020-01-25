@@ -24,11 +24,8 @@ namespace com {
 class MPIDirectCommunication : public MPICommunication {
 public:
   /** Creates a MPI Direct communication based on the current global communicator.
-   * 
-   * This communicator will be split in acceptConnection() and requestConnection()
-   * based on the name of the acceptor.
    */
-  MPIDirectCommunication(bool forceSplit = false);
+  MPIDirectCommunication();
 
   virtual ~MPIDirectCommunication();
 
@@ -46,7 +43,8 @@ public:
   virtual void acceptConnection(std::string const &acceptorName,
                                 std::string const &requesterName,
                                 std::string const &tag,
-                                int                acceptorRank) override;
+                                int                acceptorRank,
+                                int                rankOffset = 0) override;
 
   virtual void acceptConnectionAsServer(std::string const &acceptorName,
                                         std::string const &requesterName,
@@ -126,29 +124,8 @@ private:
 
   logging::Logger _log{"com::MPIDirectCommunication"};
 
-  /// Global comm state
-  utils::Parallel::CommStatePtr _allComm = nullptr;
-
-  /// local comm state after split
-  utils::Parallel::CommStatePtr _localComm = nullptr;
-
-  MPI_Comm _remoteComm = MPI_COMM_NULL;
-
-  bool _forceSplit = false;
-
-  /**
-   * @brief Returns ID belonging to a group of processes.
-   *
-   * @pre Call exchangeGroupInformation.
-   */
-  int getGroupID(std::string const &accessorName);
-
-  /**
-   * @brief Returns rank of leading process of a group.
-   *
-   * @pre Call exchangeGroupInformation.
-   */
-  int getLeaderRank(std::string const &accessorName);
+  /// CommState to use
+  utils::Parallel::CommStatePtr _commState = nullptr;
 };
 
 } // namespace com

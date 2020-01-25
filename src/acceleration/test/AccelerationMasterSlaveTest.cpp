@@ -299,7 +299,6 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp)
   DataMap data;
 
   if (context.isMaster()) { //Master
-    utils::MasterSlave::configure(0, 4);
 
     /**
      * processor with 4 vertices
@@ -331,7 +330,6 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp)
     fpcd->oldValues.col(0) = fcol1;
 
   } else if (context.isRank(1)) { //Slave1
-    utils::MasterSlave::configure(1, 4);
 
     /**
      * processor with 4 vertices
@@ -363,7 +361,6 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp)
     fpcd->oldValues.col(0) = fcol1;
 
   } else if (context.isRank(2)) { //Slave2
-    utils::MasterSlave::configure(2, 4);
 
     /**
      * processor with no vertices
@@ -384,7 +381,6 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp)
     fpcd->oldValues.col(0) = fcol1;
 
   } else if (context.isRank(3)) { //Slave3
-    utils::MasterSlave::configure(3, 4);
 
     /**
      * processor with 2 vertices
