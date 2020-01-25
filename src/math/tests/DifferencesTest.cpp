@@ -6,10 +6,11 @@ using namespace precice;
 using namespace precice::math;
 
 BOOST_AUTO_TEST_SUITE(MathTests)
-BOOST_AUTO_TEST_SUITE(Differences, *testing::OnMaster())
+BOOST_AUTO_TEST_SUITE(Differences)
 
 BOOST_AUTO_TEST_CASE(Scalar)
 {
+  PRECICE_TEST(1_rank);
   double a   = 1.0;
   double b   = 2.0;
   double eps = 1e-14;
@@ -42,6 +43,7 @@ BOOST_AUTO_TEST_CASE(Scalar)
 
 BOOST_AUTO_TEST_CASE(Vector)
 {
+  PRECICE_TEST(1_rank);
   Eigen::Vector3d vec0(1.0, 2.0, 3.0);
   Eigen::Vector3d vec1(vec0);
   BOOST_CHECK(equals(vec0, vec1));
