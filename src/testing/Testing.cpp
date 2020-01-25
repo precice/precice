@@ -158,6 +158,9 @@ void TestContext::initializeMPI(const TestContext::Participants &participants)
 
 void TestContext::initializeMasterSlave()
 {
+  // Establish a consistent state for the tests
+  utils::MasterSlave::reset();
+  
   if (invalid || !_initMS) {
     return;
   }
