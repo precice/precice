@@ -12,10 +12,11 @@
 using namespace precice;
 
 BOOST_AUTO_TEST_SUITE(ActionTests)
-BOOST_AUTO_TEST_SUITE(Scale, *testing::OnMaster())
+BOOST_AUTO_TEST_SUITE(Scale)
 
 BOOST_AUTO_TEST_CASE(DivideByArea)
 {
+  PRECICE_TEST(1_rank);
   using namespace mesh;
   PtrMesh mesh(new Mesh("Mesh", 2, true, testing::nextMeshID()));
   PtrData data   = mesh->createData("test-data", 1);
@@ -48,6 +49,7 @@ BOOST_AUTO_TEST_CASE(DivideByArea)
 
 BOOST_AUTO_TEST_CASE(ScaleByComputedTimestepLength)
 {
+  PRECICE_TEST(1_rank);
   using namespace mesh;
   PtrMesh mesh(new Mesh("Mesh", 3, true, testing::nextMeshID()));
   PtrData sourceData   = mesh->createData("SourceData", 1);
@@ -103,6 +105,7 @@ BOOST_AUTO_TEST_CASE(ScaleByComputedTimestepLength)
 
 BOOST_AUTO_TEST_CASE(ScaleByComputedTimestepPartLength)
 {
+  PRECICE_TEST(1_rank);
   using namespace mesh;
   PtrMesh mesh(new Mesh("Mesh", 3, true, testing::nextMeshID()));
   PtrData sourceData   = mesh->createData("SourceData", 1);
@@ -149,6 +152,7 @@ BOOST_AUTO_TEST_CASE(ScaleByComputedTimestepPartLength)
 
 BOOST_AUTO_TEST_CASE(Configuration)
 {
+  PRECICE_TEST(1_rank);
   {
     std::string                filename = testing::getPathToSources() + "/action/tests/ScaleActionTest-testConfiguration-1.xml";
     xml::XMLTag                tag      = xml::getRootTag();
