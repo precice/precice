@@ -104,7 +104,7 @@ void MPISinglePortsCommunication::acceptConnectionAsServer(
 
   MPI_Comm communicator;
   MPI_Comm_accept(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0,
-                  utils::Parallel::getGlobalCommunicator(), &communicator);
+                  utils::Parallel::current()->comm, &communicator);
   PRECICE_DEBUG("Accepted connection at " << _portName);
   _communicators[0] = communicator; // all comms are the same
 
@@ -155,7 +155,7 @@ void MPISinglePortsCommunication::requestConnectionAsClient(std::string const & 
 
   MPI_Comm communicator;
   MPI_Comm_connect(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0,
-                   utils::Parallel::getGlobalCommunicator(), &communicator);
+                   utils::Parallel::current()->comm, &communicator);
   PRECICE_DEBUG("Requested connection to " << _portName);
   _communicators[0] = communicator; // all comms are the same
   _isConnected      = true;
