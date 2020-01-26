@@ -153,6 +153,9 @@ private:
   /// Caches the solution from the previous iteration, used as starting value for current iteration
   std::map<unsigned int, petsc::Vector> previousSolution;
 
+  /// The CommState used to communicate
+  utils::Parallel::CommStatePtr _commState;
+
   /// Prints an INFO about the current mapping
   void printMappingInfo(int inputDataID, int dim) const;
 
@@ -206,7 +209,8 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping(
       _AOmapping(nullptr),
       _solverRtol(solverRtol),
       _polynomial(polynomial),
-      _preallocation(preallocation)
+      _preallocation(preallocation),
+      _commState(utils::Parallel::current())
 {
   setInputRequirement(Mapping::MeshRequirement::VERTEX);
   setOutputRequirement(Mapping::MeshRequirement::VERTEX);
@@ -271,13 +275,13 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   }
 
   // do not put that in the c'tor, getProcessRank always returns 0 there
-  localPolyparams = utils::Parallel::getProcessRank() > 0 ? 0 : polyparams;
+  localPolyparams = _commState->rank() > 0 ? 0 : polyparams;
 
   // Indizes that are used to build the Petsc AO mapping
   std::vector<PetscInt> myIndizes;
 
   // Indizes for Q^T, holding the polynomial
-  if (utils::Parallel::getProcessRank() <= 0) // Rank 0 or not in MasterSlave mode
+  if (_commState->rank() <= 0) // Rank 0 or not in MasterSlave mode
     for (size_t i = 0; i < polyparams; i++)
       myIndizes.push_back(i); // polyparams reside in the first rows (which are always on rank 0)
 
@@ -324,8 +328,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   auto const ownerRangeAEnd   = _matrixA.ownerRange().second;
 
   // A mapping from globalIndex -> local col/row
-  ierr = AOCreateMapping(utils::Parallel::getGlobalCommunicator(),
-                         myIndizes.size(), myIndizes.data(), nullptr, &_AOmapping);
+  ierr = AOCreateMapping(_commState->comm, myIndizes.size(), myIndizes.data(), nullptr, &_AOmapping);
   CHKERRV(ierr);
 
   eAO.stop();
@@ -894,8 +897,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::estimatePreallocationMat
   std::ignore = rows;
   std::ignore = cols;
 
-  // auto rank = utils::Parallel::getProcessRank();
-  auto size          = utils::Parallel::getCommunicatorSize();
+  // auto rank = _commState->rank();
+  auto size          = _commState->size();
   auto supportRadius = _basisFunction.getSupportRadius();
 
   auto bbox     = mesh->getBoundingBox();
@@ -922,7 +925,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::estimatePreallocationMat
   PRECICE_WARN("nnzPerRow = " << nnzPerRow);
   // int nnz = nnzPerRow * rows;
 
-  if (utils::Parallel::getCommunicatorSize() == 1) {
+  if (_commState->size() == 1) {
     MatSeqSBAIJSetPreallocation(_matrixC, _matrixC.blockSize(), nnzPerRow / 2, nullptr);
   } else {
     MatMPISBAIJSetPreallocation(_matrixC, _matrixC.blockSize(),
@@ -938,8 +941,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::estimatePreallocationMat
   std::ignore = rows;
   std::ignore = cols;
 
-  // auto rank = utils::Parallel::getProcessRank();
-  auto size          = utils::Parallel::getCommunicatorSize();
+  // auto rank = _commState->rank();
+  auto size          = _commState->size();
   auto supportRadius = _basisFunction.getSupportRadius();
 
   auto bbox     = mesh->getBoundingBox();
@@ -966,7 +969,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::estimatePreallocationMat
   PRECICE_WARN("nnzPerRow = " << nnzPerRow);
   // int nnz = nnzPerRow * rows;
 
-  if (utils::Parallel::getCommunicatorSize() == 1) {
+  if (_commState->size() == 1) {
     MatSeqSBAIJSetPreallocation(_matrixA, _matrixA.blockSize(), nnzPerRow, nullptr);
   } else {
     MatMPISBAIJSetPreallocation(_matrixA, _matrixA.blockSize(),
@@ -1037,7 +1040,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computePreallocationMatr
     local_row++;
   }
 
-  if (utils::Parallel::getCommunicatorSize() == 1) {
+  if (_commState->size() == 1) {
     // std::cout << "Computed Preallocation C Seq diagonal = " << std::accumulate(d_nnz.begin(), d_nnz.end(), 0) << '\n';
     ierr = MatSeqSBAIJSetPreallocation(_matrixC, _matrixC.blockSize(), 0, d_nnz.data());
     CHKERRV(ierr);
@@ -1115,7 +1118,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computePreallocationMatr
       }
     }
   }
-  if (utils::Parallel::getCommunicatorSize() == 1) {
+  if (_commState->size() == 1) {
     // std::cout << "Preallocation A Seq diagonal = " << std::accumulate(d_nnz.begin(), d_nnz.end(), 0) << '\n';
     ierr = MatSeqAIJSetPreallocation(_matrixA, 0, d_nnz.data());
     CHKERRV(ierr);
@@ -1193,7 +1196,7 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::savedPreallocationMatrixC(mes
     local_row++;
   }
 
-  if (utils::Parallel::getCommunicatorSize() == 1) {
+  if (_commState->size() == 1) {
     // std::cout << "Computed Preallocation C Seq diagonal = " << std::accumulate(d_nnz.begin(), d_nnz.end(), 0) << '\n';
     MatSeqSBAIJSetPreallocation(_matrixC, _matrixC.blockSize(), 0, d_nnz.data());
   } else {
@@ -1275,7 +1278,7 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::savedPreallocationMatrixA(mes
       }
     }
   }
-  if (utils::Parallel::getCommunicatorSize() == 1) {
+  if (_commState->size() == 1) {
     // std::cout << "Preallocation A Seq diagonal = " << std::accumulate(d_nnz.begin(), d_nnz.end(), 0) << '\n';
     MatSeqAIJSetPreallocation(_matrixA, 0, d_nnz.data());
   } else {
@@ -1367,7 +1370,7 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixC(mesh::
     local_row++;
   }
 
-  if (utils::Parallel::getCommunicatorSize() == 1) {
+  if (_commState->size() == 1) {
     MatSeqSBAIJSetPreallocation(_matrixC, _matrixC.blockSize(), 0, d_nnz.data());
   } else {
     MatMPISBAIJSetPreallocation(_matrixC, _matrixC.blockSize(), 0, d_nnz.data(), 0, o_nnz.data());
@@ -1457,7 +1460,7 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixA(mesh::
       }
     }
   }
-  if (utils::Parallel::getCommunicatorSize() == 1) {
+  if (_commState->size() == 1) {
     MatSeqAIJSetPreallocation(_matrixA, 0, d_nnz.data());
   } else {
     MatMPIAIJSetPreallocation(_matrixA, 0, d_nnz.data(), 0, o_nnz.data());
