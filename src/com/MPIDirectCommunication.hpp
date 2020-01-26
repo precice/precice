@@ -28,10 +28,7 @@ public:
    * This communicator will be split in acceptConnection() and requestConnection()
    * based on the name of the acceptor.
    */
-  MPIDirectCommunication();
-
-  /// Creates a MPI Direct communication given the global and a local communicator.
-  MPIDirectCommunication(const MPI_Comm &local, const MPI_Comm &global);
+  MPIDirectCommunication(bool forceSplit = false);
 
   virtual ~MPIDirectCommunication();
 
@@ -129,13 +126,15 @@ private:
 
   logging::Logger _log{"com::MPIDirectCommunication"};
 
-  MPI_Comm _communicator;
+  /// Global comm state
+  utils::Parallel::CommStatePtr _allComm = nullptr;
 
-  /// Global communicator, as given by utils::Parallel::getDefaultComm().
-  MPI_Comm _globalCommunicator;
+  /// local comm state after split
+  utils::Parallel::CommStatePtr _localComm = nullptr;
 
-  /// Communicator for communicator between process groups.
-  MPI_Comm _localCommunicator;
+  MPI_Comm _remoteComm = MPI_COMM_NULL;
+
+  bool _forceSplit = false;
 
   /**
    * @brief Returns ID belonging to a group of processes.
