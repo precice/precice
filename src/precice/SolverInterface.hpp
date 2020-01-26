@@ -254,7 +254,7 @@ public:
    * The following reasons require several solver time steps per coupling time
    * step:
    * - A solver chooses to perform subcycling.
-   * - An implicit coupling timestep iteration is not yet converged.
+   * - An implicit coupling time window iteration is not yet converged.
    *
    * @pre initialize() has been called successfully.
    */
