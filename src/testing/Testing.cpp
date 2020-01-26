@@ -97,7 +97,7 @@ void TestContext::setContextFrom(const Participant &p, int rank)
   this->size         = p.size;
   this->rank         = rank;
   this->_initMS      = p.initMS;
-  this->_contextComm = Par::getGlobalCommunicator();
+  this->_contextComm = utils::Parallel::current();
 }
 
 void TestContext::initialize(const Participants &participants)
@@ -172,20 +172,18 @@ void TestContext::initializeMasterSlave()
   if (!_initMS)
     return;
 
-  precice::com::PtrCommunication masterSlaveCom = precice::com::PtrCommunication(new precice::com::MPIDirectCommunication());
+  precice::com::PtrCommunication masterSlaveCom = precice::com::PtrCommunication(new precice::com::MPIDirectCommunication(true));
   utils::MasterSlave::_communication            = masterSlaveCom;
 
   const auto masterName = name + "Master";
   const auto slavesName = name + "Slaves";
   if (isMaster()) {
-    utils::Parallel::splitCommunicator(masterName);
     masterSlaveCom->acceptConnection(masterName, slavesName, rank);
     masterSlaveCom->setRankOffset(1);
   } else {
-    utils::Parallel::splitCommunicator(slavesName);
     masterSlaveCom->requestConnection(masterName, slavesName, rank - 1, size - 1);
   }
-  utils::Parallel::unsplit();
+  utils::Parallel::popState();
 }
 
 void TestContext::initializeEvents()
@@ -204,7 +202,7 @@ void TestContext::initializePetsc()
 
 m2n::PtrM2N TestContext::connect(const std::string &acceptor, const std::string &requestor) const
 {
-  auto participantCom   = com::PtrCommunication(new com::MPIDirectCommunication(_restrictedComm, _contextComm));
+  auto participantCom   = com::PtrCommunication(new com::MPIDirectCommunication());
   auto distrFactory     = m2n::DistributedComFactory::SharedPointer(new m2n::GatherScatterComFactory(participantCom));
   bool useOnlyMasterCom = true;
   auto m2n              = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory, useOnlyMasterCom));
