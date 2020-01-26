@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <string>
 #include <vector>
 #include "logging/Logger.hpp"
@@ -29,14 +30,87 @@ public:
     int         size;
   };
 
-  static Communicator getCommunicatorWorld();
+  struct CommState;
 
-  /**
-   * @brief Splits and creates a local MPI communicator according to groupName
-   *
-   * @param[in] groupName MPI group in which the calling process will be put in
+  using CommStatePtr = std::shared_ptr<CommState>;
+
+  /** Represents a Communicator state based on a parent state
+   * An object of this type owns it communicator and will free it at the end of its lifetime.
+   * It also owns the CommState it originated from (parent) via shared ownership.
    */
-  static void splitCommunicator(const std::string &groupName);
+  struct CommState {
+
+    /// The different groups that were used to split the communicator
+    std::vector<AccessorGroup> groups;
+
+    /// The native communicator that represents this state
+    Communicator comm = MPI_COMM_NULL;
+
+    /// A shared pointer to the parent CommState
+    CommStatePtr parent = nullptr;
+
+    /// @name Construction and Destruction
+    /// @{
+    CommState() = default;
+
+    CommState(const CommState &) = delete;
+    CommState &operator=(const CommState &) = delete;
+
+    CommState(CommState &&) noexcept;
+    CommState &operator=(CommState &&) noexcept;
+
+    /// Frees the communicator if allowed
+    ~CommState() noexcept;
+
+    /// @}
+
+    /// @name Factory functions
+    /// @{
+
+    /// returns a commstate containing MPI_COMM_WORLD
+    static CommStatePtr world();
+
+    /// returns an blank commstate representing MPI_COMM_NULL
+    static CommStatePtr null();
+
+    /// returns the commstate representing MPI_COMM_SELF
+    static CommStatePtr self();
+
+    /// returns the commstate representing comm
+    static CommStatePtr fromComm(Communicator comm);
+
+    /// @}
+
+    /// @name Communicator Access
+    /// @{
+
+    /// Returns the current rank in comm
+    int rank() const;
+
+    /// Returns size of comm
+    int size() const;
+
+    /// Returns weather the comm is NULL
+    bool isNull() const;
+
+    /// @}
+
+    /// @name Misc
+    /// @{
+
+    /** Synchronizes all processes in the communicator
+     * @attention This is a collective operation and has to be called by every rank in the communicator comm!
+     */
+    void synchronize() const;
+
+    /// pretty printer for comms
+    std::ostream &operator<<(std::ostream &out) const;
+
+    /// @}
+  };
+
+  /// @name Initialization and Finalization
+  /// @{
 
   /**
    * @brief Initializes the MPI environment.
@@ -51,10 +125,52 @@ public:
   /// Finalizes MPI environment.
   static void finalizeMPI();
 
+  /// @}
+
+  /// @name State-altering Functions
+  /// @{
+
+  /**
+   * @brief Splits and creates a local MPI communicator according to groupName
+   *
+   * Updates the current CommState of Parallel.
+   *
+   * @param[in] groupName MPI group in which the calling process will be put in
+   */
+  static void splitCommunicator(const std::string &groupName);
+
+  /// Creates a restricted communicator
+  /**
+   * Set the new, restricted communicator on all ranks that are contained in
+   * that new communicator. Sets the communicator of the other ranks to MPI_COMM_NULL.
+   *
+   * @param[in] newSize How many ranks to restrict the Communicator to
+   *
+   * @postcondition current()->size() == newSize || current()->isNull()
+   */
+  static void restrictCommunicator(int newSize);
+
+  /** Resets the commState to World
+   *
+   * This resets the _currentState to CommState::world().
+   * Unrequired Communicators will be automatically freed.
+   *
+   * @postcondition cureent() == CommState::world()
+   * 
+   */
+  static void resetCommState();
+
+  /// @}
+
+  /// @name State Access
+  /// @{
+
   /// clears groups for communicator splitting
-  static void clearGroups();
+  // @todo remove
+  // static void clearGroups(){};
 
   /// Returns the global process rank.
+  //@todo remove
   static int getProcessRank();
 
   /**
@@ -62,23 +178,28 @@ public:
    *
    * If only one accessor group is present, returns getProcessRank().
    */
+  //@todo remove
   static int getLocalProcessRank();
 
   /// Returns the number of processes in the global communicator.
-  static int getCommunicatorSize();
+  //@todo remove
+  // static int getCommunicatorSize();
 
   /// Returns the number of processes in the given communicator.
-  static int getCommunicatorSize(Communicator comm);
+  //@todo remove
+  // static int getCommunicatorSize(Communicator comm);
 
   /// Synchronizes all processes.
-  static void synchronizeProcesses();
+  //@todo remove
+  // static void synchronizeProcesses();
 
   /**
    * @brief Synchronizes all local processes.
    *
    * If only one accessor group is present, calls synchcronizeProcesses().
    */
-  static void synchronizeLocalProcesses();
+  //@todo remove
+  // static void synchronizeLocalProcesses();
 
   /**
    * @brief Switches precice communication away from global space to given one.
@@ -95,57 +216,54 @@ public:
    * @attention Will result in an error, if called by a process not in the new
    *            default communicator!
    */
-  static void setGlobalCommunicator(Communicator defaultCommunicator, bool free = true);
+  //static void setGlobalCommunicator(Communicator defaultCommunicator, bool free = true);
 
-  /// Returns the default communicator.
-  static const Communicator &getGlobalCommunicator();
+  /// @}
+
+  /// @name Misc
+  /// @{
+
+  /** Returns an owning pointer to the global CommState, being the parent of the current CommState
+   *
+   * @note Calling this on World returns World.
+   * 
+   * @see getLocalCommunicator()
+   */
+  static const CommStatePtr getGlobalCommState();
 
   /**
-   * @brief Returns communicator of processes within one group.
+   * @brief Returns an owning pointer to the local CommState, being the current CommState
    *
-   * This communicator is empty, until initialize() has been called.
+   * @note equivalent to calling current()
+   *
+   * @see getGlobalCommunicator()
    */
-  static const Communicator &getLocalCommunicator();
+  static const CommStatePtr getLocalCommState();
 
-  /**
-   * @brief Returns a communicator with a subset of processes.
-   *
-   * Does not change the default communicator.
-   *
-   * @attention Has to be called by every process in the communicator to be
-   *            restricted, otherwise, a deadlock is achieved!
-   *
-   * @param[in] ranks Process ranks to be selected for restricted comm.
-   */
-  static Communicator getRestrictedCommunicator(const std::vector<int> &ranks);
+  /// Returns an owning pointer to the current CommState.
+  static CommStatePtr current();
 
-  /// Create a restricted communicator and sets them as the global communicator
-  /**
-   * Set the new, restricted communicator on all ranks that are contained in
-   * that new communicator. Leaves the other ranks untouched.
-   *
-   * @param[in] ranks Process ranks to be selected for restricted comm.
-   *
-   */
-  static void restrictGlobalCommunicator(const std::vector<int> &ranks);
-
-  static const std::vector<AccessorGroup> &getAccessorGroups();
+  /// @}
 
 private:
   static logging::Logger _log;
 
-  static Communicator _globalCommunicator;
-
-  static Communicator _localCommunicator;
-
-  /// Processes participating in direct communication.
-  static std::vector<AccessorGroup> _accessorGroups;
+  static CommStatePtr _currentState;
 
   static bool _isInitialized;
 
-  static bool _isSplit;
-
   static bool _mpiInitializedByPrecice;
+
+  /** Pushes a new state on the state stack
+   *
+   * Sets the parent of newState to the current state.
+   * Sets the current state to the newState.
+   *
+   * @precondition newState->parent == nullptr
+   * @postcondition _currentState == newState
+   * @postcondition _currentState->parent == old _currentState
+   */
+  static void pushState(CommStatePtr newState);
 };
 } // namespace utils
 } // namespace precice
