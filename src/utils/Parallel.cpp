@@ -8,17 +8,13 @@ namespace utils {
 
 logging::Logger Parallel::_log("utils::Parallel");
 
-Parallel::Communicator Parallel::_globalCommunicator = Parallel::getCommunicatorWorld();
-
-Parallel::Communicator Parallel::_localCommunicator = MPI_COMM_NULL;
-
-bool Parallel::_isInitialized           = false;
-bool Parallel::_currentState            = nullptr;
-bool Parallel::_mpiInitializedByPrecice = false;
+bool                   Parallel::_isInitialized           = false;
+Parallel::CommStatePtr Parallel::_currentState            = nullptr;
+bool                   Parallel::_mpiInitializedByPrecice = false;
 
 /// BEGIN CommState
 
-Parallel::ComState::CommState(CommState &&other) noexcept
+Parallel::CommState::CommState(Parallel::CommState &&other) noexcept
 {
   groups     = std::move(other.groups);
   comm       = other.comm;
@@ -26,7 +22,7 @@ Parallel::ComState::CommState(CommState &&other) noexcept
   parent     = std::move(other.parent);
 }
 
-Parallel::ComState::CommState &operator=(CommState &&other) noexcept
+Parallel::CommState &Parallel::CommState::operator=(Parallel::CommState &&other) noexcept
 {
   groups     = std::move(other.groups);
   comm       = other.comm;
@@ -34,14 +30,14 @@ Parallel::ComState::CommState &operator=(CommState &&other) noexcept
   parent     = std::move(other.parent);
 }
 
-Parallel::ComState::~CommState() noexcept
+Parallel::CommState::~CommState() noexcept
 {
   if (comm != MPI_COMM_SELF && comm != MPI_COMM_NULL && comm != MPI_COMM_WORLD) {
     MPI_Comm_free(&comm);
   }
 }
 
-int Parallel::ComState::rank() const
+int Parallel::CommState::rank() const
 {
   int processRank = 0;
 #ifndef PRECICE_NO_MPI
@@ -52,7 +48,7 @@ int Parallel::ComState::rank() const
   return processRank;
 }
 
-int Parallel::ComState::size() const
+int Parallel::CommState::size() const
 {
 
   int communicatorSize = 1;
@@ -64,7 +60,7 @@ int Parallel::ComState::size() const
   return communicatorSize;
 }
 
-void Parallel::CommState::synchronize()
+void Parallel::CommState::synchronize() const
 {
 #ifndef PRECICE_NO_MPI
   PRECICE_TRACE();
@@ -73,27 +69,27 @@ void Parallel::CommState::synchronize()
 #endif // not PRECICE_NO_MPI
 }
 
-bool Parallel::ComState::isNull() const
+bool Parallel::CommState::isNull() const
 {
   return comm == MPI_COMM_NULL;
 }
 
-static Parallel::ComState::CommStatePtr world()
+static Parallel::CommStatePtr Parallel::CommState::world()
 {
   return fromComm(MPI_COMM_WORLD);
 }
 
-static Parallel::ComState::CommStatePtr null()
+static Parallel::CommStatePtr Parallel::CommState::null()
 {
   return std::make_shared<CommState>();
 }
 
-static Parallel::ComState::CommStatePtr self()
+static Parallel::CommState::CommStatePtr Parallel::CommState::self()
 {
   return fromComm(MPI_COMM_SELF);
 }
 
-static Parallel::ComState::CommStatePtr fromComm(Communicator comm)
+static Parallel::CommState::CommStatePtr Parallel::CommState::fromComm(Communicator comm)
 {
   CommStatePtr state = null();
   state->comm        = comm;
@@ -291,7 +287,8 @@ int Parallel::getProcessRank()
 {
   // Do not use TRACE or DEBUG here!
 #ifndef PRECICE_NO_MPI
-  if (!_isInitialized) return 0;
+  if (!_isInitialized)
+    return 0;
 
   return getGlobalCommState()->rank();
 #else
@@ -302,7 +299,8 @@ int Parallel::getProcessRank()
 int Parallel::getLocalProcessRank()
 {
 #ifndef PRECICE_NO_MPI
-  if (!_isInitialized) return 0;
+  if (!_isInitialized)
+    return 0;
 
   return getLocalCommState()->rank();
 #else
@@ -335,7 +333,7 @@ int Parallel::getCommunicatorSize(Communicator comm)
 //   MPI_Barrier(_globalCommunicator);
 // #endif // not PRECICE_NO_MPI
 // }
-// 
+//
 // void Parallel::synchronizeLocalProcesses()
 // {
 // #ifndef PRECICE_NO_MPI
