@@ -178,11 +178,14 @@ void TestContext::initializeMasterSlave()
   const auto masterName = name + "Master";
   const auto slavesName = name + "Slaves";
   if (isMaster()) {
+    utils::Parallel::splitCommunicator(masterName);
     masterSlaveCom->acceptConnection(masterName, slavesName, rank);
     masterSlaveCom->setRankOffset(1);
   } else {
+    utils::Parallel::splitCommunicator(slavesName);
     masterSlaveCom->requestConnection(masterName, slavesName, rank - 1, size - 1);
   }
+  utils::Parallel::unsplit();
 }
 
 void TestContext::initializeEvents()

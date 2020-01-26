@@ -72,7 +72,7 @@ SolverInterfaceImpl::SolverInterfaceImpl(
 #ifndef PRECICE_NO_MPI
   if (communicator != nullptr) {
     auto commptr = static_cast<utils::Parallel::Communicator *>(communicator);
-    utils::Parallel::setGlobalCommunicator(*commptr);
+    utils::Parallel::registerUserProvidedComm(*commptr);
   }
 #endif
 
@@ -159,8 +159,8 @@ void SolverInterfaceImpl::configure(
     _meshLock.add(meshID.second, false);
   }
 
-  logging::setMPIRank(utils::Parallel::getProcessRank());
-  utils::EventRegistry::instance().initialize("precice-" + _accessorName, "", utils::Parallel::getGlobalCommunicator());
+  logging::setMPIRank(utils::Parallel::current()->rank());
+  utils::EventRegistry::instance().initialize("precice-" + _accessorName, "", utils::Parallel::current()->comm);
 
   PRECICE_DEBUG("Initialize master-slave communication");
   if (utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave()) {
@@ -414,18 +414,17 @@ void SolverInterfaceImpl::finalize()
 
   // Stop and print Event logging
   e.stop();
-  utils::EventRegistry::instance().finalize();
   if (not precice::testMode and not precice::utils::MasterSlave::isSlave()) {
     utils::EventRegistry::instance().printAll();
   }
 
   // Tear down MPI and PETSc
+  utils::Petsc::finalize();
+  utils::EventRegistry::instance().clear();
+  utils::EventRegistry::instance().finalize();
   if (not precice::testMode) {
-    utils::Petsc::finalize();
     utils::Parallel::finalizeMPI();
   }
-  utils::Parallel::clearGroups();
-  utils::EventRegistry::instance().clear();
 }
 
 int SolverInterfaceImpl::getDimensions() const

@@ -2,7 +2,7 @@
 
 #include "MPIPortsCommunication.hpp"
 #include "ConnectionInfoPublisher.hpp"
-#include "utils/Parallel.hpp"
+#include "utils/Parallel.hpp" //TODO remove
 #include "utils/assertion.hpp"
 
 namespace precice {

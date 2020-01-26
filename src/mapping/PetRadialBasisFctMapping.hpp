@@ -153,14 +153,14 @@ private:
   /// Caches the solution from the previous iteration, used as starting value for current iteration
   std::map<unsigned int, petsc::Vector> previousSolution;
 
-  /// The CommState used to communicate
-  utils::Parallel::CommStatePtr _commState;
-
   /// Prints an INFO about the current mapping
   void printMappingInfo(int inputDataID, int dim) const;
 
   /// Toggles use of preallocation for matrix C and A
   const Preallocation _preallocation;
+
+  /// The CommState used to communicate
+  utils::Parallel::CommStatePtr _commState;
 
   void estimatePreallocationMatrixC(int rows, int cols, mesh::PtrMesh mesh);
 

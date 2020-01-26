@@ -49,6 +49,9 @@ public:
     /// A shared pointer to the parent CommState
     CommStatePtr parent = nullptr;
 
+    /// Wether this state owns the communicator and has to free it.
+    bool _owning = true;
+
     /// @name Construction and Destruction
     /// @{
     CommState() = default;
@@ -79,6 +82,14 @@ public:
     /// returns the commstate representing comm
     static CommStatePtr fromComm(Communicator comm);
 
+    /** returns the commstate representing an extern comm
+     *
+     * @attention This state is not owning and does not call free on comm!
+     *
+     * @see _owning
+     */
+    static CommStatePtr fromExtern(Communicator comm);
+
     /// @}
 
     /// @name Communicator Access
@@ -104,7 +115,7 @@ public:
     void synchronize() const;
 
     /// pretty printer for comms
-    std::ostream &operator<<(std::ostream &out) const;
+    void print(std::ostream& out) const;
 
     /// @}
   };
@@ -124,6 +135,9 @@ public:
 
   /// Finalizes MPI environment.
   static void finalizeMPI();
+
+  /// Registers a user-provided communicator
+  static void registerUserProvidedComm(Communicator comm);
 
   /// @}
 
@@ -265,5 +279,10 @@ private:
    */
   static void pushState(CommStatePtr newState);
 };
+
+
+/// pretty printer for CommState
+std::ostream &operator<<(std::ostream &out, const Parallel::CommState& value);
+
 } // namespace utils
 } // namespace precice

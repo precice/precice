@@ -1,5 +1,6 @@
 #include "Parallel.hpp"
 #include <map>
+#include <numeric>
 #include "assertion.hpp"
 #include "com/MPIDirectCommunication.hpp"
 
@@ -19,6 +20,7 @@ Parallel::CommState::CommState(Parallel::CommState &&other) noexcept
   groups     = std::move(other.groups);
   comm       = other.comm;
   other.comm = MPI_COMM_NULL;
+  _owning    = other._owning;
   parent     = std::move(other.parent);
 }
 
@@ -27,12 +29,14 @@ Parallel::CommState &Parallel::CommState::operator=(Parallel::CommState &&other)
   groups     = std::move(other.groups);
   comm       = other.comm;
   other.comm = MPI_COMM_NULL;
+  _owning    = other._owning;
   parent     = std::move(other.parent);
+  return *this;
 }
 
 Parallel::CommState::~CommState() noexcept
 {
-  if (comm != MPI_COMM_SELF && comm != MPI_COMM_NULL && comm != MPI_COMM_WORLD) {
+  if (_owning && comm != MPI_COMM_SELF && comm != MPI_COMM_NULL && comm != MPI_COMM_WORLD) {
     MPI_Comm_free(&comm);
   }
 }
@@ -74,61 +78,73 @@ bool Parallel::CommState::isNull() const
   return comm == MPI_COMM_NULL;
 }
 
-static Parallel::CommStatePtr Parallel::CommState::world()
+Parallel::CommStatePtr Parallel::CommState::world()
 {
   return fromComm(MPI_COMM_WORLD);
 }
 
-static Parallel::CommStatePtr Parallel::CommState::null()
+Parallel::CommStatePtr Parallel::CommState::null()
 {
   return std::make_shared<CommState>();
 }
 
-static Parallel::CommState::CommStatePtr Parallel::CommState::self()
+Parallel::CommStatePtr Parallel::CommState::self()
 {
   return fromComm(MPI_COMM_SELF);
 }
 
-static Parallel::CommState::CommStatePtr Parallel::CommState::fromComm(Communicator comm)
+Parallel::CommStatePtr Parallel::CommState::fromComm(Communicator comm)
 {
   CommStatePtr state = null();
   state->comm        = comm;
   return state;
 }
 
-std::ostream &Parallel::CommState::operator<<(std::ostream &out) const
+Parallel::CommStatePtr Parallel::CommState::fromExtern(Communicator comm)
+{
+  CommStatePtr state = null();
+  state->comm        = comm;
+  state->_owning     = false;
+  return state;
+}
+
+void Parallel::CommState::print(std::ostream &out) const
 {
   if (comm == MPI_COMM_SELF) {
-    return out << "COMM_SELF:1/1";
+    out << "COMM_SELF:1/1";
+    return;
   }
   if (comm == MPI_COMM_NULL) {
-    return out << "COMM_NULL:invalid";
+    out << "COMM_NULL:invalid";
+    return;
   }
   out << "COMM" << ((comm == MPI_COMM_WORLD) ? "_WORLD:" : ":");
-  return out << rank() << '/' << size();
+  out << rank() << '/' << size();
+  if (!_owning)
+    out << "EXTERN";
 }
 
 /// END CommState
 
-static Parallel::CommStatePtr current()
+Parallel::CommStatePtr Parallel::current()
 {
-  if (_currentState) {
-    return _currentState;
+  if (!_currentState) {
+    _currentState = CommState::world();
   }
 
-  _currentState = CommState::world();
+  return _currentState;
 }
 
-static CommStatePtr resetCommState()
+void Parallel::resetCommState()
 {
   _currentState = CommState::world();
 }
 
-static void Parallel::pushState(CommStatePtr newState)
+void Parallel::pushState(CommStatePtr newState)
 {
   PRECICE_TRACE();
-  PRECICE_ASSERT(newState, "pushState cannot to be called with nullptr!");
-  PRECICE_ASSERT(newState->parent == false, "The parent of the given state must be empty!");
+  PRECICE_ASSERT(newState != nullptr, "pushState cannot to be called with nullptr!");
+  PRECICE_ASSERT(newState->parent == nullptr, "The parent of the given state must be empty!");
 #ifndef NDEBUG
   PRECICE_DEBUG("Update comm state from " << *current() << " to " << *newState);
 #endif
@@ -136,14 +152,14 @@ static void Parallel::pushState(CommStatePtr newState)
   _currentState    = std::move(newState);
 }
 
-Parallel::Communicator Parallel::getCommunicatorWorld()
-{
-#ifndef PRECICE_NO_MPI
-  return MPI_COMM_WORLD;
-#else
-  return nullptr;
-#endif
-}
+// Parallel::Communicator Parallel::getCommunicatorWorld()
+// {
+// #ifndef PRECICE_NO_MPI
+//   return MPI_COMM_WORLD;
+// #else
+//   return nullptr;
+// #endif
+// }
 
 void Parallel::initializeMPI(
     int *   argc,
@@ -162,6 +178,14 @@ void Parallel::initializeMPI(
 #endif // not PRECICE_NO_MPI
 }
 
+void Parallel::registerUserProvidedComm(Communicator comm)
+{
+#ifndef PRECICE_NO_MPI
+  PRECICE_TRACE();
+  pushState(Parallel::CommState::fromExtern(comm));
+#endif // not PRECICE_NO_MPI
+}
+
 void Parallel::splitCommunicator(const std::string &groupName)
 {
 #ifndef PRECICE_NO_MPI
@@ -172,7 +196,7 @@ void Parallel::splitCommunicator(const std::string &groupName)
   //_accessorGroups.clear(); // Makes reinitialization possible
 
   CommStatePtr baseState  = current();
-  MPI_Comm     globalComm = current->comm;
+  MPI_Comm     globalComm = baseState->comm;
   int          rank       = baseState->rank();
   int          size       = baseState->size();
 
@@ -248,11 +272,9 @@ void Parallel::splitCommunicator(const std::string &groupName)
   MPI_Comm newComm = MPI_COMM_NULL;
   MPI_Comm_split(globalComm, thisGroup->id, rank, &newComm);
   // Assemble and set new state
-  auto newState            = CommState::null();
-  newState->comm           = newComm;
-  newState->accessorGroups = std::move(accessorGroups);
-  newState->parent         = _currentState;
-  _currentState            = std::move(newState);
+  auto newState    = CommState::fromComm(newComm);
+  newState->groups = std::move(accessorGroups);
+  pushState(newState);
 
 #ifndef NDEBUG
   PRECICE_DEBUG("Detected " << accessorGroups.size() << " groups");
@@ -308,22 +330,22 @@ int Parallel::getLocalProcessRank()
 #endif // not PRECICE_NO_MPI
 }
 
-inline int Parallel::getCommunicatorSize()
-{
-  return getCommunicatorSize(_globalCommunicator);
-}
+// inline int Parallel::getCommunicatorSize()
+// {
+//   return getCommunicatorSize(_globalCommunicator);
+// }
 
-int Parallel::getCommunicatorSize(Communicator comm)
-{
-  PRECICE_TRACE();
-  int communicatorSize = 1;
-#ifndef PRECICE_NO_MPI
-  if (_isInitialized) {
-    MPI_Comm_size(comm, &communicatorSize);
-  }
-#endif // not PRECICE_NO_MPI
-  return communicatorSize;
-}
+// int Parallel::getCommunicatorSize(Communicator comm)
+// {
+//   PRECICE_TRACE();
+//   int communicatorSize = 1;
+// #ifndef PRECICE_NO_MPI
+//   if (_isInitialized) {
+//     MPI_Comm_size(comm, &communicatorSize);
+//   }
+// #endif // not PRECICE_NO_MPI
+//   return communicatorSize;
+// }
 
 // void Parallel::synchronizeProcesses()
 // {
@@ -364,13 +386,13 @@ const Parallel::CommStatePtr Parallel::getGlobalCommState()
 {
   PRECICE_TRACE();
   auto local = current();
-  return local->parent ? local->parent->comm : MPI_COMM_WORLD;
+  return local->parent ? local->parent : CommState::world();
 }
 
 const Parallel::CommStatePtr Parallel::getLocalCommState()
 {
   PRECICE_TRACE();
-  return current()->comm;
+  return current();
 }
 
 void Parallel::restrictCommunicator(int newSize)
@@ -406,7 +428,7 @@ void Parallel::restrictCommunicator(int newSize)
   if (newSize == size) {
     PRECICE_DEBUG("Restriction to capacity: duplicating Comm");
     MPI_Comm copiedComm;
-    MPI_Comm_dup(baseState->comm, &copiesComm);
+    MPI_Comm_dup(baseState->comm, &copiedComm);
     pushState(CommState::fromComm(copiedComm));
     return;
   }
@@ -450,12 +472,19 @@ void Parallel::restrictCommunicator(int newSize)
 #endif // not PRECICE_NO_MPI
 }
 
-const std::vector<Parallel::AccessorGroup> &Parallel::getAccessorGroups()
+// const std::vector<Parallel::AccessorGroup> &Parallel::getAccessorGroups()
+// {
+//   PRECICE_TRACE();
+//   PRECICE_ASSERT(_isInitialized);
+//   return _accessorGroups;
+// }
+
+std::ostream &operator<<(std::ostream &out, const Parallel::CommState &value)
 {
-  PRECICE_TRACE();
-  PRECICE_ASSERT(_isInitialized);
-  return _accessorGroups;
+  value.print(out);
+  return out;
 }
+
 } // namespace utils
 } // namespace precice
 
