@@ -287,6 +287,15 @@ void Parallel::splitCommunicator(const std::string &groupName)
 #endif // not PRECICE_NO_MPI
 }
 
+void Parallel::popState()
+{
+  PRECICE_TRACE();
+  auto state = current();
+  if (state->parent) {
+    _currentState = state->parent;
+  }
+}
+
 void Parallel::finalizeMPI()
 {
   PRECICE_TRACE();

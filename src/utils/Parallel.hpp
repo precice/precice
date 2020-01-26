@@ -174,6 +174,12 @@ public:
    */
   static void resetCommState();
 
+
+  /** Sets the current state to its parent
+   *
+   * @postcondition current() == old current()->parent
+   */
+  static void popState();
   /// @}
 
   /// @name State Access
