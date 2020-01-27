@@ -163,11 +163,11 @@ void SerialCouplingScheme::advance()
                 "initializeData() needs to be called before advance if data has to be initialized!");
 
   setHasDataBeenExchanged(false);
-  setIsCouplingTimestepComplete(false);
+  setIsTimeWindowComplete(false);
 
   if (_couplingMode == Explicit) {
     if (math::equals(getThisTimestepRemainder(), 0.0, _eps)) {
-      setIsCouplingTimestepComplete(true);
+      setIsTimeWindowComplete(true);
       setTimesteps(getTimesteps() + 1);
       PRECICE_DEBUG("Sending data...");
       sendDt();
@@ -194,7 +194,7 @@ void SerialCouplingScheme::advance()
         getM2N()->receive(convergence);
         getM2N()->receive(_isCoarseModelOptimizationActive);
         if (convergence) {
-          timestepCompleted();
+          timeWindowCompleted();
         }
         //if (isCouplingOngoing()) {
         receiveData(getM2N());
@@ -254,7 +254,7 @@ void SerialCouplingScheme::advance()
               getAcceleration()->iterationsConverged(getSendData());
             }
             newConvergenceMeasurements();
-            timestepCompleted();
+            timeWindowCompleted();
 
             // no convergence achieved for the coupling iteration within the current time step
           } else if (getAcceleration().get() != nullptr) {

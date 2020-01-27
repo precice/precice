@@ -33,14 +33,14 @@
          <write-data name="Forces"           mesh="FliteNodes"/>
          <read-data  name="Displacements"    mesh="FliteNodes"/>
          <read-data  name="OldDisplacements" mesh="FliteNodes"/>
-         <export:vtk timestep-interval="1" normals="on"/>
+         <export:vtk time-window-interval="1" normals="on"/>
       </participant>
 
       <participant name="Calculix">
          <use-mesh name="CalculixNodes" provide="yes"/>
          <write-data name="Displacements" mesh="CalculixNodes"/>
          <read-data  name="Forces"        mesh="CalculixNodes"/>
-	      <export:vtk timestep-interval="1" normals="on"/>
+	      <export:vtk time-window-interval="1" normals="on"/>
       </participant>
 
       <m2n:mpi enforce-gather-scatter="true" from="Flite" to="Calculix"/>
@@ -48,7 +48,7 @@
       <coupling-scheme:serial-explicit>
          <participants first="Flite" second="Calculix"/>
          <max-time value="2.0e-5" />
-         <timestep-length value="1e-5" method="fixed"/>
+         <time-window-size value="1e-5" method="fixed"/>
          <exchange data="Forces"        mesh="CalculixNodes" from="Flite" to="Calculix" />
          <exchange data="Displacements" mesh="CalculixNodes" from="Calculix" to="Flite"/>
       </coupling-scheme:serial-explicit>

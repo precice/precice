@@ -16,7 +16,7 @@ BOOST_AUTO_TEST_CASE(Configuration)
     BOOST_TEST(config.exportContexts().size() == 1);
     const io::ExportContext &context = config.exportContexts().front();
     BOOST_TEST(context.type == "vtk");
-    BOOST_TEST(context.timestepInterval == 10);
+    BOOST_TEST(context.timeWindowInterval == 10);
     BOOST_TEST(context.triggerSolverPlot);
   }
   {
@@ -26,7 +26,7 @@ BOOST_AUTO_TEST_CASE(Configuration)
     BOOST_TEST(config.exportContexts().size() == 1);
     const io::ExportContext &context = config.exportContexts().front();
     BOOST_TEST(context.type == "vtk");
-    BOOST_TEST(context.timestepInterval == 1);
+    BOOST_TEST(context.timeWindowInterval == 1);
     BOOST_TEST(context.location == "somepath");
     BOOST_TEST(not context.triggerSolverPlot);
   }

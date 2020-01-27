@@ -185,7 +185,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  virtual bool isCouplingTimestepComplete() const
+  virtual bool isTimeWindowComplete() const
   {
     PRECICE_ASSERT(false);
     return false;

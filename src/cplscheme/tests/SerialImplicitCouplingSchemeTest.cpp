@@ -54,7 +54,7 @@ void runCoupling(
 
   if (nameParticipant == nameParticipant0) {
     cplScheme.initialize(0.0, 1);
-    BOOST_TEST(not cplScheme.isCouplingTimestepComplete());
+    BOOST_TEST(not cplScheme.isTimeWindowComplete());
     BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
     BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
     BOOST_TEST(not cplScheme.hasDataBeenExchanged());
@@ -74,7 +74,7 @@ void runCoupling(
       // A coupling timestep is complete, when the coupling iterations are
       // globally converged and if subcycling steps have filled one global
       // timestep.
-      if (cplScheme.isCouplingTimestepComplete()) {
+      if (cplScheme.isTimeWindowComplete()) {
         // Advance participant time and timestep
         computedTime += maxLengthTimestep;
         computedTimesteps++;
@@ -118,7 +118,7 @@ void runCoupling(
     BOOST_TEST(testing::equals(computedTimesteps, 3));
   } else if (nameParticipant == nameParticipant1) {
     cplScheme.initialize(0.0, 1);
-    BOOST_TEST(not cplScheme.isCouplingTimestepComplete());
+    BOOST_TEST(not cplScheme.isTimeWindowComplete());
     BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
     BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
     BOOST_TEST(cplScheme.hasDataBeenExchanged());
@@ -141,7 +141,7 @@ void runCoupling(
       // A coupling timestep is complete, when the coupling iterations are
       // globally converged and if subcycling steps have filled one global
       // timestep.
-      if (cplScheme.isCouplingTimestepComplete()) {
+      if (cplScheme.isTimeWindowComplete()) {
         // Advance participant time and timestep
         computedTime += maxLengthTimestep;
         computedTimesteps++;
@@ -215,7 +215,7 @@ void runCouplingWithSubcycling(
   if (nameParticipant == nameParticipant0) {
     iterationCount++; // different handling due to subcycling
     cplScheme.initialize(0.0, 1);
-    BOOST_TEST(not cplScheme.isCouplingTimestepComplete());
+    BOOST_TEST(not cplScheme.isTimeWindowComplete());
     BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
     BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
     BOOST_TEST(not cplScheme.hasDataBeenExchanged());
@@ -236,7 +236,7 @@ void runCouplingWithSubcycling(
       // A coupling timestep is complete, when the coupling iterations are
       // globally converged and if subcycling steps have filled one global
       // timestep.
-      if (cplScheme.isCouplingTimestepComplete()) {
+      if (cplScheme.isTimeWindowComplete()) {
         // Advance participant time and timestep
         computedTime += maxTimestepLength;
         computedTimesteps++;
@@ -294,7 +294,7 @@ void runCouplingWithSubcycling(
   else if (nameParticipant == nameParticipant1) {
     iterationCount++; // different handling due to subcycling
     cplScheme.initialize(0.0, 1);
-    BOOST_TEST(not cplScheme.isCouplingTimestepComplete());
+    BOOST_TEST(not cplScheme.isTimeWindowComplete());
     BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
     BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
     BOOST_TEST(cplScheme.hasDataBeenExchanged());
@@ -320,7 +320,7 @@ void runCouplingWithSubcycling(
       // A coupling timestep is complete, when the coupling iterations are
       // globally converged and if subcycling steps have filled one global
       // timestep.
-      if (cplScheme.isCouplingTimestepComplete()) {
+      if (cplScheme.isTimeWindowComplete()) {
         // Advance participant time and timestep
         computedTime += maxTimestepLength;
         computedTimesteps++;

@@ -106,7 +106,7 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
     if (participantName == std::string("Participant0")) {
       cplScheme->initialize(0.0, 1);
       BOOST_TEST(not cplScheme->hasDataBeenExchanged());
-      BOOST_TEST(not cplScheme->isCouplingTimestepComplete());
+      BOOST_TEST(not cplScheme->isTimeWindowComplete());
       BOOST_TEST(cplScheme->isCouplingOngoing());
       while (cplScheme->isCouplingOngoing()) {
         BOOST_TEST(testing::equals(0.1, cplScheme->getNextTimestepMaxLength()));
@@ -118,7 +118,7 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
         if (cplScheme->isActionRequired(readIterationCheckpoint)) {
           cplScheme->performedAction(readIterationCheckpoint);
         } else {
-          BOOST_TEST(cplScheme->isCouplingTimestepComplete());
+          BOOST_TEST(cplScheme->isTimeWindowComplete());
           computedTime += cplScheme->getNextTimestepMaxLength();
           computedTimesteps++;
         }
@@ -128,13 +128,13 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
       }
       cplScheme->finalize();
       BOOST_TEST(computedTimesteps == 10);
-      BOOST_TEST(cplScheme->isCouplingTimestepComplete());
+      BOOST_TEST(cplScheme->isTimeWindowComplete());
       BOOST_TEST(not cplScheme->isCouplingOngoing());
       BOOST_TEST(cplScheme->getNextTimestepMaxLength() > 0.0); // ??
     } else if (participantName == std::string("Participant1")) {
       cplScheme->initialize(0.0, 1);
       BOOST_TEST(cplScheme->hasDataBeenExchanged());
-      BOOST_TEST(not cplScheme->isCouplingTimestepComplete());
+      BOOST_TEST(not cplScheme->isTimeWindowComplete());
       BOOST_TEST(cplScheme->isCouplingOngoing());
       while (cplScheme->isCouplingOngoing()) {
         BOOST_TEST(testing::equals(0.1, cplScheme->getNextTimestepMaxLength()));
@@ -146,7 +146,7 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
         if (cplScheme->isActionRequired(readIterationCheckpoint)) {
           cplScheme->performedAction(readIterationCheckpoint);
         } else {
-          BOOST_TEST(cplScheme->isCouplingTimestepComplete());
+          BOOST_TEST(cplScheme->isTimeWindowComplete());
           computedTime += cplScheme->getNextTimestepMaxLength();
           computedTimesteps++;
         }
@@ -156,14 +156,14 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
       }
       cplScheme->finalize();
       BOOST_TEST(computedTimesteps == 10);
-      BOOST_TEST(cplScheme->isCouplingTimestepComplete());
+      BOOST_TEST(cplScheme->isTimeWindowComplete());
       BOOST_TEST(not cplScheme->isCouplingOngoing());
       BOOST_TEST(cplScheme->getNextTimestepMaxLength() > 0.0); // ??
     } else {
       BOOST_TEST(participantName == std::string("Participant2"), participantName);
       cplScheme->initialize(0.0, 1);
       BOOST_TEST(cplScheme->hasDataBeenExchanged());
-      BOOST_TEST(not cplScheme->isCouplingTimestepComplete());
+      BOOST_TEST(not cplScheme->isTimeWindowComplete());
       BOOST_TEST(cplScheme->isCouplingOngoing());
       while (cplScheme->isCouplingOngoing()) {
         BOOST_TEST(testing::equals(0.1, cplScheme->getNextTimestepMaxLength()));
@@ -175,7 +175,7 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
         if (cplScheme->isActionRequired(readIterationCheckpoint)) {
           cplScheme->performedAction(readIterationCheckpoint);
         } else {
-          BOOST_TEST(cplScheme->isCouplingTimestepComplete());
+          BOOST_TEST(cplScheme->isTimeWindowComplete());
           computedTime += cplScheme->getNextTimestepMaxLength();
           computedTimesteps++;
         }
@@ -186,7 +186,7 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
       }
       cplScheme->finalize();
       BOOST_TEST(computedTimesteps == 10);
-      BOOST_TEST(cplScheme->isCouplingTimestepComplete());
+      BOOST_TEST(cplScheme->isTimeWindowComplete());
       BOOST_TEST(not cplScheme->isCouplingOngoing());
       BOOST_TEST(cplScheme->getNextTimestepMaxLength() > 0.0); // ??
     }

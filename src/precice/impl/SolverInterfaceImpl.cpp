@@ -264,7 +264,7 @@ void SolverInterfaceImpl::initializeData()
   resetWrittenData();
   PRECICE_DEBUG("Plot output");
   for (const io::ExportContext &context : _accessor->exportContexts()) {
-    if (context.timestepInterval != -1) {
+    if (context.timeWindowInterval != -1) {
       std::ostringstream suffix;
       suffix << _accessorName << ".init";
       exportMesh(suffix.str());
@@ -335,8 +335,8 @@ double SolverInterfaceImpl::advance(
   if (_couplingScheme->hasDataBeenExchanged()) {
     timings.insert(action::Action::ON_EXCHANGE_POST);
   }
-  if (_couplingScheme->isCouplingTimestepComplete()) {
-    timings.insert(action::Action::ON_TIMESTEP_COMPLETE_POST);
+  if (_couplingScheme->isTimeWindowComplete()) {
+    timings.insert(action::Action::ON_TIME_WINDOW_COMPLETE_POST);
   }
   performDataActions(timings, time, computedTimestepLength, timestepPart, timestepLength);
 
@@ -375,7 +375,7 @@ void SolverInterfaceImpl::finalize()
 
   PRECICE_DEBUG("Handle exports");
   for (const io::ExportContext &context : _accessor->exportContexts()) {
-    if (context.timestepInterval != -1) {
+    if (context.timeWindowInterval != -1) {
       std::ostringstream suffix;
       suffix << _accessorName << ".final";
       exportMesh(suffix.str());
@@ -456,7 +456,7 @@ bool SolverInterfaceImpl::isWriteDataRequired(
 bool SolverInterfaceImpl::isTimeWindowComplete() const
 {
   PRECICE_TRACE();
-  return _couplingScheme->isCouplingTimestepComplete();
+  return _couplingScheme->isTimeWindowComplete();
 }
 
 bool SolverInterfaceImpl::isActionRequired(
@@ -1294,9 +1294,9 @@ void SolverInterfaceImpl::handleExports()
   int timesteps = _couplingScheme->getTimesteps() - 1;
 
   for (const io::ExportContext &context : _accessor->exportContexts()) {
-    if (_couplingScheme->isCouplingTimestepComplete() || context.everyIteration) {
-      if (context.timestepInterval != -1) {
-        if (timesteps % context.timestepInterval == 0) {
+    if (_couplingScheme->isTimeWindowComplete() || context.everyIteration) {
+      if (context.timeWindowInterval != -1) {
+        if (timesteps % context.timeWindowInterval == 0) {
           if (context.everyIteration) {
             std::ostringstream everySuffix;
             everySuffix << _accessorName << ".it" << _numberAdvanceCalls;
@@ -1313,7 +1313,7 @@ void SolverInterfaceImpl::handleExports()
     }
   }
 
-  if (_couplingScheme->isCouplingTimestepComplete()) {
+  if (_couplingScheme->isTimeWindowComplete()) {
     // Export watch point data
     for (const PtrWatchPoint &watchPoint : _accessor->watchPoints()) {
       watchPoint->exportPointData(_couplingScheme->getTime());

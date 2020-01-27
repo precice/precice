@@ -17,11 +17,11 @@ class Action {
 public:
   /// Defines the time and place of application of the action.
   enum Timing {
-    ALWAYS_PRIOR,             // Everytime, before advancing cpl scheme
-    ALWAYS_POST,              // Everytime, after advancing cpl scheme
-    ON_EXCHANGE_PRIOR,        // On data exchange, before advancing cpl scheme
-    ON_EXCHANGE_POST,         // On data exchange, after advancing cpl scheme
-    ON_TIMESTEP_COMPLETE_POST // On advancing to next dt, after adv. cpl scheme
+    ALWAYS_PRIOR,                // Everytime, before advancing cpl scheme
+    ALWAYS_POST,                 // Everytime, after advancing cpl scheme
+    ON_EXCHANGE_PRIOR,           // On data exchange, before advancing cpl scheme
+    ON_EXCHANGE_POST,            // On data exchange, after advancing cpl scheme
+    ON_TIME_WINDOW_COMPLETE_POST // On advancing to next dt, after adv. cpl scheme
   };
 
   Action(
@@ -50,7 +50,7 @@ public:
   /**
     * @brief Performs the action, to be overwritten by subclasses.
     *
-    * @param[in] time the current total simulation time. 
+    * @param[in] time the current total simulation time.
     * @param[in] dt Length of last local timestep computed.
     * @param[in] computedPartFullDt Sum of all local timesteps of current global timestep.
     * @param fullDt[in] Current global timestep length.

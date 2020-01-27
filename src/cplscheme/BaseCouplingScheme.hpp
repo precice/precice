@@ -174,8 +174,8 @@ public:
   /// Returns true, when the coupled simulation is still ongoing.
   virtual bool isCouplingOngoing() const;
 
-  /// Returns true, when the accessor can advance to the next timestep.
-  virtual bool isCouplingTimestepComplete() const;
+  /// Returns true, when the accessor can advance to the next time window.
+  virtual bool isTimeWindowComplete() const;
 
   /// Returns true, if the given action has to be performed by the accessor.
   virtual bool isActionRequired(const std::string &actionName) const;
@@ -241,8 +241,8 @@ protected:
   /// Sets whether the solver evaluates the fine or the coarse model representation
   bool _isCoarseModelOptimizationActive = false;
 
-  /// Updates internal state of coupling scheme for next timestep.
-  void timestepCompleted();
+  /// Updates internal state of coupling scheme for next time window.
+  void timeWindowCompleted();
 
   /// Receives and set the timestep length, if this participant is the one to receive
   void receiveAndSetDt();
@@ -324,9 +324,9 @@ protected:
     _timestepLength = timestepLength;
   }
 
-  void setIsCouplingTimestepComplete(bool isCouplingTimestepComplete)
+  void setIsTimeWindowComplete(bool isTimeWindowComplete)
   {
-    _isCouplingTimestepComplete = isCouplingTimestepComplete;
+    _isTimeWindowComplete = isTimeWindowComplete;
   }
 
   void setIsInitialized(bool isInitialized)
@@ -521,7 +521,7 @@ private:
   /// True, if local participant is the one starting the explicit scheme.
   bool _doesFirstStep = false;
 
-  bool _isCouplingTimestepComplete = false;
+  bool _isTimeWindowComplete = false;
 
   /// Acceleration method to speedup iteration convergence.
   acceleration::PtrAcceleration _acceleration;

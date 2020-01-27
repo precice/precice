@@ -1,6 +1,6 @@
-<?xml version="1.0"?> 
+<?xml version="1.0"?>
 
 <configuration>
-   <export:vtk timestep-interval="10" trigger-solver="on"
+   <export:vtk time-window-interval="10" trigger-solver="on"
            normals="on" directory="./" />
 </configuration>
