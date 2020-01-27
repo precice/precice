@@ -55,14 +55,15 @@ bool Petsc::weInitialized = false;
 
 void Petsc::initialize(
     int *   argc,
-    char ***argv)
+    char ***argv,
+    Parallel::Communicator comm)
 {
   PRECICE_TRACE();
 #ifndef PRECICE_NO_PETSC
   PetscBool petscIsInitialized;
   PetscInitialized(&petscIsInitialized);
   if (not petscIsInitialized) {
-    PETSC_COMM_WORLD = Parallel::current()->comm;
+    PETSC_COMM_WORLD = comm;
     PetscErrorCode ierr;
     ierr = PetscInitialize(argc, argv, "", nullptr);
     CHKERRV(ierr);

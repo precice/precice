@@ -110,25 +110,25 @@ void TestContext::initialize(const Participants &participants)
 
 void TestContext::initializeMPI(const TestContext::Participants &participants)
 {
-  const int globalRank = Par::getProcessRank();
+  auto baseComm = Par::current();
+  const int globalRank = baseComm->rank();
+  const int available  = baseComm->size();
   const int required   = std::accumulate(participants.begin(), participants.end(), 0, [](int total, const Participant &next) { return total + next.size; });
-  const int available  = Par::getCommunicatorSize();
   if (required > available) {
     throw std::runtime_error{"This test requests " + std::to_string(required) + " ranks, but there are only " + std::to_string(available) + " available"};
   }
 
   // Restrict the communicator to the total required size
-  Par::restrictGlobalCommunicator([required] {std::vector<int> v(required); std::iota(v.begin(), v.end(), 0); return v; }());
+  Par::restrictGlobalCommunicator(required);
 
   // Mark all unnecessary ranks as invalid and return
   if (globalRank >= required) {
     invalid = true;
-    //Par::setGlobalCommunicator(MPI_COMM_NULL);
     return;
   }
 
   // Save the restricted Comm for establishing MPI Single communications
-  _restrictedComm = Par::getGlobalCommunicator();
+  _restrictedComm = current();
 
   // If there was only a single participant requested, then update its info and we are done.
   if (participants.size() == 1) {
@@ -147,7 +147,6 @@ void TestContext::initializeMPI(const TestContext::Participants &participants)
       // Check if my global rank maps to this participant
       if (localRank < participant.size) {
         Par::splitCommunicator(participant.name);
-        Par::setGlobalCommunicator(Par::getLocalCommunicator(), false);
         setContextFrom(participant, localRank);
         return;
       }
@@ -172,7 +171,7 @@ void TestContext::initializeMasterSlave()
   if (!_initMS)
     return;
 
-  precice::com::PtrCommunication masterSlaveCom = precice::com::PtrCommunication(new precice::com::MPIDirectCommunication(true));
+  precice::com::PtrCommunication masterSlaveCom = precice::com::PtrCommunication(new precice::com::MPIDirectCommunication());
   utils::MasterSlave::_communication            = masterSlaveCom;
 
   const auto masterName = name + "Master";
@@ -183,20 +182,19 @@ void TestContext::initializeMasterSlave()
   } else {
     masterSlaveCom->requestConnection(masterName, slavesName, rank - 1, size - 1);
   }
-  utils::Parallel::popState();
 }
 
 void TestContext::initializeEvents()
 {
   if (!invalid && _events) {
-    precice::utils::EventRegistry::instance().initialize("precice-Tests", "", Par::getGlobalCommunicator());
+    precice::utils::EventRegistry::instance().initialize("precice-Tests", "", _contextComm->comm);
   }
 }
 
 void TestContext::initializePetsc()
 {
   if (!invalid && _petsc) {
-    precice::utils::Petsc::initialize(nullptr, nullptr);
+    precice::utils::Petsc::initialize(nullptr, nullptr, _contextComm->comm);
   }
 }
 
