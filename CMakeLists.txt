@@ -46,18 +46,29 @@ endif()
 # Setup Options
 #
 
-option(MPI "Enables MPI-based communication and running coupling tests." ON)
-option(PETSC "Enable use of the PETSc linear algebra library." ON)
-option(PYTHON "Python support" ON)
+if(NOT CMAKE_BUILD_TYPE)
+  message(WARNING "You did not specify a CMAKE_BUILD_TYPE.
+
+  We will assume you asked for a Debug build.")
+  set(CMAKE_BUILD_TYPE Debug CACHE STRINGS "The type of this build" FORCE)
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Debug Release RelWithDebInfo MinSizeRel)
+endif()
+
+option(PRECICE_MPICommunication "Enables MPI-based communication and running coupling tests." ON)
+option(PRECICE_PETScMapping "Enable use of the PETSc linear algebra library." ON)
+option(PRECICE_PYTHONACTION "Python support" ON)
 option(PRECICE_Packages "Configure package generation." ON)
 option(PRECICE_InstallTest "Add test binary and necessary files to install target." OFF)
 option(BUILD_SHARED_LIBS "Build shared libraries by default" OFF)
 option(PRECICE_ALWAYS_VALIDATE_LIBS "Validate libraries even after the validatation succeeded." OFF)
-xsdk_tpl_option_override(MPI TPL_ENABLE_MPI)
-xsdk_tpl_option_override(PETSC TPL_ENABLE_PETSC)
-xsdk_tpl_option_override(PYTHON TPL_ENABLE_PYTHON)
 
-if(PETSC AND NOT MPI)
+include(BackwardsCompatibility)
+
+xsdk_tpl_option_override(PRECICE_MPICommunication TPL_ENABLE_MPI)
+xsdk_tpl_option_override(PRECICE_PETScMapping TPL_ENABLE_PETSC)
+xsdk_tpl_option_override(PRECICE_PythonActions TPL_ENABLE_PYTHON)
+
+if(PRECICE_PETScMapping AND NOT PRECICE_MPICommunication)
   message(FATAL_ERROR "Please enable MPI to use PETSC.")
 endif()
 
@@ -69,18 +80,47 @@ include(XSDKOptions)
 include(PrintHelper)
 print_configuration(
   ADDITIONAL
-  "MPI;Build with MPI"
-  "PETSC;Build with PETSC"
-  "PYTHON;Build with PYTHON"
   "PRECICE_Packages;Configure package generation"
   "PRECICE_InstallTest;Install tests/testfiles"
   "PRECICE_CTEST_MPI_FLAGS;Additional CTest MPI Flags"
   )
+print_empty()
+
+include(FeatureSummary)
+add_feature_info(MPICommunication PRECICE_MPICommunication
+  "Enables the MPI communication back-end.
+
+   This enables the MPI communication back-end which is highly recommended on multi-node systems.
+   See the documentation of the CMake module FindMPI to control its functionality.
+
+   Set PRECICE_MPICommunication to enable.
+")
+add_feature_info(PETScMapping PRECICE_PETScMapping
+  "Enables the PETSc-powered radial basic function mappings.
+
+   The radial basis function mappings require MPI and PETSc to work in parallel.
+
+   Set PRECICE_PETScMapping to enable.
+   Requires MPICommunication.
+  ")
+add_feature_info(PythonActions PRECICE_PythonActions
+  "Enables the support for user-defined python actions.
+
+   preCICE allows to manipulate coupling data at runtime using configurable actions.
+   This feature enables the support for user-defined actions written in Python based on numpy.
+
+   Set PRECICE_PythonActions to enable.
+  ")
+
+feature_summary(WHAT ENABLED_FEATURES  DESCRIPTION "=== ENABLED FEATURES ===" QUIET_ON_EMPTY)
+feature_summary(WHAT DISABLED_FEATURES DESCRIPTION "=== DISABLED FEATURES ===" QUIET_ON_EMPTY)
+
 
 
 #
 # Find Mandatory Dependencies
 #
+print_section("DEPENDENCIES")
 
 find_package (Threads REQUIRED)
 
@@ -134,13 +174,13 @@ precice_validate_prettyprint()
 # Find Configurable Dependencies
 #
 
-# Option: MPI
-if (MPI)
+# Option: PRECICE_MPICommunication
+if (PRECICE_MPICommunication)
   find_package(MPI REQUIRED)
 endif()
 
 # Option: PETSC
-if (PETSC)
+if (PRECICE_PETScMapping)
   if (TPL_ENABLE_PETSC)
     xsdk_tpl_require(PETSC PETSC_DIR PETSC_ARCH)
     # PETSc detection uses primarily these ENVs
@@ -161,7 +201,7 @@ else()
 endif()
 
 # Option Python
-if (PYTHON)
+if (PRECICE_PythonActions)
   if (TPL_ENABLE_PYTHON)
     xsdk_tpl_require(PYTHON PYTHON_LIBRARY PYTHON_INCLUDE_DIR NumPy_INCLUDE_DIR)
     find_package(PythonLibs REQUIRED)
@@ -190,6 +230,9 @@ endif()
 #
 # Configuration of Target precice
 #
+
+print_empty()
+print_section("TARGETS & PACKAGES")
 
 # Add a dummy to silence add_library warning for cmake < 3.11.
 if(CMAKE_VERSION VERSION_LESS "3.11")
@@ -238,14 +281,14 @@ target_link_libraries(precice PRIVATE prettyprint)
 target_link_libraries(precice PRIVATE JSON)
 
 # Setup MPI
-if (MPI)
+if (PRECICE_MPICommunication)
   target_link_libraries(precice PRIVATE MPI::MPI_CXX)
 else()
   target_compile_definitions(precice PRIVATE PRECICE_NO_MPI)
 endif()
 
 # Setup PETSC
-if (PETSC AND MPI)
+if (PRECICE_PETScMapping AND PRECICE_MPICommunication)
   target_include_directories(precice PRIVATE ${PETSC_INCLUDES})
   target_link_libraries(precice PRIVATE ${PETSC_LIBRARIES})
 else()
@@ -253,7 +296,7 @@ else()
 endif()
 
 # Option Python
-if (PYTHON)
+if (PRECICE_PythonActions)
   target_link_libraries(precice PRIVATE NumPy::NumPy)
   target_include_directories(precice PRIVATE ${PYTHON_INCLUDE_DIRS})
   target_compile_definitions(precice PRIVATE NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION)
@@ -307,10 +350,10 @@ set_target_properties(binprecice PROPERTIES
 # this executable uses the library source, not only the interface.
 copy_target_property(precice binprecice COMPILE_DEFINITIONS)
 copy_target_property(precice binprecice COMPILE_OPTIONS)
-if(MPI)
+if(PRECICE_MPICommunication)
   target_link_libraries(binprecice PRIVATE MPI::MPI_CXX)
 endif()
-if(MPI AND PETSC)
+if(PRECICE_MPICommunication AND PRECICE_PETScMapping)
   target_include_directories(binprecice PRIVATE ${PETSC_INCLUDES})
   target_link_libraries(binprecice PRIVATE ${PETSC_LIBRARIES})
 endif()
@@ -346,10 +389,10 @@ copy_target_property(precice testprecice COMPILE_DEFINITIONS)
 copy_target_property(precice testprecice COMPILE_OPTIONS)
 
 # Testprecice fully depends on MPI and PETSc.
-if(MPI)
+if(PRECICE_MPICommunication)
   target_link_libraries(testprecice PRIVATE MPI::MPI_CXX)
 endif()
-if(MPI AND PETSC)
+if(PRECICE_MPICommunication AND PRECICE_PETScMapping)
   target_include_directories(testprecice PRIVATE ${PETSC_INCLUDES})
   target_link_libraries(testprecice PRIVATE ${PETSC_LIBRARIES})
 endif()
@@ -491,8 +534,20 @@ include(${CMAKE_CURRENT_LIST_DIR}/cmake/Uninstall.cmake)
 
 
 #
+# CPack
+#
+
+if (PRECICE_Packages)
+  include(${CMAKE_CURRENT_LIST_DIR}/cmake/CPackConfig.cmake)
+endif()
+
+
+#
 # CTest
 #
+
+print_empty()
+print_section("TESTS")
 
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/CTestConfig.cmake)
 
@@ -502,12 +557,3 @@ include(${CMAKE_CURRENT_LIST_DIR}/cmake/CTestConfig.cmake)
 #
 
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/TestInstall.cmake)
-
-
-#
-# CPack
-#
-
-if (PRECICE_Packages)
-  include(${CMAKE_CURRENT_LIST_DIR}/cmake/CPackConfig.cmake)
-endif()
