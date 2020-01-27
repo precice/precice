@@ -29,7 +29,7 @@ endif()
 # General
 set(CPACK_PACKAGE_NAME "libprecice${preCICE_SOVERSION}")
 set(CPACK_PACKAGE_VERSION "${preCICE_VERSION}")
-#set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}_${CPACK_SYSTEM_NAME}")
+set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}_${CPACK_PACKAGE_VERSION}_${CPACK_SYSTEM_NAME}")
 set(CPACK_PACKAGE_VENDOR "precice.org")
 set(CPACK_PACKAGE_CONTACT "The precice developers <precice@mailman.informatik.uni-stuttgart.de>")
 set(CPACK_PACKAGE_MAINTAINER "The precice developers <precice@mailman.informatik.uni-stuttgart.de>")
