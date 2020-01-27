@@ -17,7 +17,8 @@ Only the release manager should update this post (even tickboxes, due to race co
 * [ ] Bump version in:
    * [ ] [CHANGELOG](https://github.com/precice/precice/blob/develop/CHANGELOG.md)
    * [ ] [CMakeLists.txt](https://github.com/precice/precice/blob/develop/CMakeLists.txt)
-   * [ ] **???** [Python bindings](https://github.com/precice/python-bindings) 
+   * [ ] (do independent release, if necessary!) [Python bindings](https://github.com/precice/python-bindings)
+   * [ ] (do independent release, if necessary!) [MATLAB bindings](https://github.com/precice/matlab-bindings)
 * [ ] Draft message to mailing list
 * [ ] Update documentation (all)
   * [ ] Update markdown configuration reference in wiki
@@ -30,7 +31,7 @@ Only the release manager should update this post (even tickboxes, due to race co
 
 Run all these tests manually on your system. If you succeed, please write a comment with the revisions of the components that you used below. Example: https://github.com/precice/precice/pull/507#issuecomment-530432289
 
-* [ ] SU2/CalculiX
+* [ ] SU2 / CalculiX
 * [ ] OpenFOAM / OpenFOAM
 * [ ] OpenFOAM / OpenFOAM - NP mapping in OpenFOAM
 * [ ] OpenFOAM / OpenFOAM fluid coupling module 
