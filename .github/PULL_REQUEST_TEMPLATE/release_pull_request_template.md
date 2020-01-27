@@ -59,7 +59,7 @@ Run all these tests manually on your system. If you succeed, please write a comm
 ## Post-release
 * [ ] Generate packages
    * [ ] Latest Ubuntu LTS
-   * [ ] Ubuntu 19.10
+   * [ ] Latest Ubuntu
    * [ ] Arch Linux AUR Package
 * [ ] Update Spack recipe
 * [ ] Send email and do marketing
