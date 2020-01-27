@@ -53,7 +53,7 @@ Run all these tests manually on your system. If you succeed, please write a comm
 * [ ] Solverdummy [Fortran](https://github.com/precice/precice/tree/develop/tools/solverdummies/fortran)
 * [ ] Solverdummy [Fortran 2003](https://github.com/precice/precice/tree/develop/tools/solverdummies/f2003)
 * [ ] Solverdummy [Python](https://github.com/precice/precice/tree/develop/tools/solverdummies/python)
-* [ ] Solverdummy [MATLAB](https://github.com/precice/precice/tree/develop/tools/solverdummies/matlab)
+* [ ] Solverdummy [MATLAB](https://github.com/precice/precice/tree/develop/tools/solverdummies/matlab); Resolve https://github.com/precice/precice/pull/625!
 
 
 ## Post-release
