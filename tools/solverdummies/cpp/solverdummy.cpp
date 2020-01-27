@@ -29,8 +29,7 @@ int main(int argc, char **argv)
   std::string meshName(argv[3]);
   int         N = 1;
 
-  SolverInterface interface(solverName, commRank, commSize);
-  interface.configure(configFileName);
+  SolverInterface interface(solverName, configFileName, commRank, commSize);
 
   int                              meshID     = interface.getMeshID(meshName);
   int                              dimensions = interface.getDimensions();
