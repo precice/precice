@@ -510,7 +510,7 @@ endif()
 
 # Configure a pkg-config file
 configure_file(
-  "${PROJECT_SOURCE_DIR}/tools/packaging/debian/precice.pc.in"
+  "${PROJECT_SOURCE_DIR}/tools/releasing/packaging/debian/precice.pc.in"
   "lib/pkgconfig/libprecice.pc"
   @ONLY
   )

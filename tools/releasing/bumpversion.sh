@@ -29,7 +29,7 @@ else
 fi
 
 echo -n "Checking location ... "
-DEBLOC="tools/packaging/debian/changelog"
+DEBLOC="tools/releasing/packaging/debian/changelog"
 if [ -f "CMakeLists.txt" ] && [ -f "CHANGELOG.md" ] && [ -f "$DEBLOC" ]; then
     echo "all files found"
 else
