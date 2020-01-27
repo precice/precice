@@ -100,14 +100,16 @@ int main(int argc, char *argv[])
   precice::syncMode = false;
   logging::setupLogging(); // first logging initalization, as early as possible
   utils::Parallel::initializeMPI(&argc, &argv);
-  logging::setMPIRank(utils::Parallel::getProcessRank());
+  const auto rank = utils::Parallel::current()->rank();
+  const auto size = utils::Parallel::current()->size();
+  logging::setMPIRank(rank);
 
-  if (utils::Parallel::getCommunicatorSize() < 4) {
-    if (utils::Parallel::getProcessRank() == 0)
+  if (size < 4) {
+    if (rank == 0)
       std::cerr << "Running tests on less than four processors. Not all tests are executed.\n";
   }
-  if (utils::Parallel::getCommunicatorSize() > 4) {
-    if (utils::Parallel::getProcessRank() == 0)
+  if (size > 4) {
+    if (rank == 0)
       std::cerr << "Running tests on more than 4 processors is not supported. Aborting.\n";
     std::exit(-1);
   }
