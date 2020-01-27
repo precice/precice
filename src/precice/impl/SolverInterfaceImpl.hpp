@@ -196,7 +196,7 @@ public:
    * Some features of preCICE require a solver to perform specific actions, in
    * order to be in valid state for a coupled simulation. A solver is made
    * eligible to use those features, by querying for the required actions,
-   * performing them on demand, and calling fulfilledAction() to signalize
+   * performing them on demand, and calling markActionFulfilled() to signalize
    * preCICE the correct behavior of the solver.
    */
   bool isActionRequired(const std::string &action) const;
@@ -206,7 +206,7 @@ public:
    *
    * For more details see method requireAction().
    */
-  void fulfilledAction(const std::string &action);
+  void markActionFulfilled(const std::string &action);
 
   /// Returns true, if the mesh with given name is used.
   bool hasMesh(const std::string &meshName) const;

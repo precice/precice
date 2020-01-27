@@ -133,7 +133,7 @@ void precice_fastest_action_required_(
   }
 }
 
-void precice_fastest_fulfilled_action_(
+void precice_fastest_mark_action_fulfilled_(
     const char *action,
     const int * useFluid,
     int         lengthAction)
@@ -143,9 +143,9 @@ void precice_fastest_fulfilled_action_(
   int    strippedLength = precice::impl::strippedLength(action, lengthAction);
   string stringAction(action, strippedLength);
   if (*useFluid == 0) {
-    implAcoustic->fulfilledAction(stringAction);
+    implAcoustic->markActionFulfilled(stringAction);
   } else {
-    implFluid->fulfilledAction(stringAction);
+    implFluid->markActionFulfilled(stringAction);
   }
 }
 

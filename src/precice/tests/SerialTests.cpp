@@ -317,7 +317,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDataInitialization,
     int    dataBID = cplInterface.getDataID("DataTwo", meshTwoID);
     cplInterface.writeScalarData(dataBID, 0, 2.0);
     //sagen dass daten jetzt geschrieben
-    cplInterface.fulfilledAction(precice::constants::actionWriteInitialData());
+    cplInterface.markActionFulfilled(precice::constants::actionWriteInitialData());
     cplInterface.initializeData();
     Vector3d valueDataA;
     cplInterface.readVectorData(dataAID, 0, valueDataA.data());
@@ -637,12 +637,12 @@ BOOST_AUTO_TEST_CASE(testImplicit,
     double maxDt = couplingInterface.initialize();
     while (couplingInterface.isCouplingOngoing()) {
       if (couplingInterface.isActionRequired(actionWriteIterationCheckpoint())) {
-        couplingInterface.fulfilledAction(actionWriteIterationCheckpoint());
+        couplingInterface.markActionFulfilled(actionWriteIterationCheckpoint());
         checkpoint     = state;
         iterationCount = 1;
       }
       if (couplingInterface.isActionRequired(actionReadIterationCheckpoint())) {
-        couplingInterface.fulfilledAction(actionReadIterationCheckpoint());
+        couplingInterface.markActionFulfilled(actionReadIterationCheckpoint());
         state = checkpoint;
       }
       iterationCount++;
@@ -662,12 +662,12 @@ BOOST_AUTO_TEST_CASE(testImplicit,
     double maxDt = couplingInterface.initialize();
     while (couplingInterface.isCouplingOngoing()) {
       if (couplingInterface.isActionRequired(actionWriteIterationCheckpoint())) {
-        couplingInterface.fulfilledAction(actionWriteIterationCheckpoint());
+        couplingInterface.markActionFulfilled(actionWriteIterationCheckpoint());
         checkpoint     = state;
         iterationCount = 1;
       }
       if (couplingInterface.isActionRequired(actionReadIterationCheckpoint())) {
-        couplingInterface.fulfilledAction(actionReadIterationCheckpoint());
+        couplingInterface.markActionFulfilled(actionReadIterationCheckpoint());
         state = checkpoint;
         iterationCount++;
       }
@@ -983,17 +983,17 @@ BOOST_AUTO_TEST_CASE(testThreeSolvers,
       double dt = precice.initialize();
 
       if (precice.isActionRequired(writeInitData)) {
-        precice.fulfilledAction(writeInitData);
+        precice.markActionFulfilled(writeInitData);
       }
       precice.initializeData();
 
       while (precice.isCouplingOngoing()) {
         if (precice.isActionRequired(writeIterCheckpoint)) {
-          precice.fulfilledAction(writeIterCheckpoint);
+          precice.markActionFulfilled(writeIterCheckpoint);
         }
         dt = precice.advance(dt);
         if (precice.isActionRequired(readIterCheckpoint)) {
-          precice.fulfilledAction(readIterCheckpoint);
+          precice.markActionFulfilled(readIterCheckpoint);
         }
         callsOfAdvance++;
       }
@@ -1008,17 +1008,17 @@ BOOST_AUTO_TEST_CASE(testThreeSolvers,
       double dt = precice.initialize();
 
       if (precice.isActionRequired(writeInitData)) {
-        precice.fulfilledAction(writeInitData);
+        precice.markActionFulfilled(writeInitData);
       }
       precice.initializeData();
 
       while (precice.isCouplingOngoing()) {
         if (precice.isActionRequired(writeIterCheckpoint)) {
-          precice.fulfilledAction(writeIterCheckpoint);
+          precice.markActionFulfilled(writeIterCheckpoint);
         }
         dt = precice.advance(dt);
         if (precice.isActionRequired(readIterCheckpoint)) {
-          precice.fulfilledAction(readIterCheckpoint);
+          precice.markActionFulfilled(readIterCheckpoint);
         }
         callsOfAdvance++;
       }
@@ -1034,17 +1034,17 @@ BOOST_AUTO_TEST_CASE(testThreeSolvers,
       double dt = precice.initialize();
 
       if (precice.isActionRequired(writeInitData)) {
-        precice.fulfilledAction(writeInitData);
+        precice.markActionFulfilled(writeInitData);
       }
       precice.initializeData();
 
       while (precice.isCouplingOngoing()) {
         if (precice.isActionRequired(writeIterCheckpoint)) {
-          precice.fulfilledAction(writeIterCheckpoint);
+          precice.markActionFulfilled(writeIterCheckpoint);
         }
         dt = precice.advance(dt);
         if (precice.isActionRequired(readIterCheckpoint)) {
-          precice.fulfilledAction(readIterCheckpoint);
+          precice.markActionFulfilled(readIterCheckpoint);
         }
         callsOfAdvance++;
       }
@@ -1129,11 +1129,11 @@ BOOST_AUTO_TEST_CASE(testMultiCoupling, *testing::OnSize(4))
     }
 
     if (precice.isActionRequired(writeIterCheckpoint)) {
-      precice.fulfilledAction(writeIterCheckpoint);
+      precice.markActionFulfilled(writeIterCheckpoint);
     }
     precice.advance(0.0001);
     if (precice.isActionRequired(readIterCheckpoint)) {
-      precice.fulfilledAction(readIterCheckpoint);
+      precice.markActionFulfilled(readIterCheckpoint);
     }
 
     for (size_t i = 0; i < 4; i++) {
@@ -1189,11 +1189,11 @@ BOOST_AUTO_TEST_CASE(testMultiCoupling, *testing::OnSize(4))
     }
 
     if (precice.isActionRequired(writeIterCheckpoint)) {
-      precice.fulfilledAction(writeIterCheckpoint);
+      precice.markActionFulfilled(writeIterCheckpoint);
     }
     precice.advance(0.0001);
     if (precice.isActionRequired(readIterCheckpoint)) {
-      precice.fulfilledAction(readIterCheckpoint);
+      precice.markActionFulfilled(readIterCheckpoint);
     }
 
     precice.finalize();
@@ -1413,9 +1413,9 @@ BOOST_AUTO_TEST_CASE(testPreconditionerBug,
 
   while (cplInterface.isCouplingOngoing()) {
     if (cplInterface.isActionRequired(actionWriteIterationCheckpoint()))
-      cplInterface.fulfilledAction(actionWriteIterationCheckpoint());
+      cplInterface.markActionFulfilled(actionWriteIterationCheckpoint());
     if (cplInterface.isActionRequired(actionReadIterationCheckpoint()))
-      cplInterface.fulfilledAction(actionReadIterationCheckpoint());
+      cplInterface.markActionFulfilled(actionReadIterationCheckpoint());
 
     if (utils::Parallel::getProcessRank() == 1) {
       int dataID = cplInterface.getDataID("DataOne", meshID);
