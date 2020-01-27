@@ -7,6 +7,7 @@ Only the release manager should update this post (even tickboxes, due to race co
 
 ## Step by step guide
 * [ ] Merge master to develop (No commits after the release on master)
+* [ ] Check code base w.r.t code formatting (run [`precice/tools/formatting/check-format`](https://github.com/precice/precice/blob/develop/tools/formatting/check-format))
 * [ ] Create branch `release-N` from develop. If needed, `git rebase develop`.
 * [ ] Open PR from `release-N` to `master` (use [this template](https://github.com/precice/precice/blob/add_PR_template/.github/PULL_REQUEST_TEMPLATE/release_pull_request_template.md))
 * [ ] Look over [`CHANGELOG.md`](https://github.com/precice/precice/blob/develop/CHANGELOG.md) (all)
@@ -63,7 +64,6 @@ Run all these tests manually on your system. If you succeed, please write a comm
 * [ ] Update Spack recipe
 * [ ] Send email and do marketing
 * [ ] Tweet
-* [ ] Format the code base
 * [ ] Update the [PR template](https://github.com/precice/precice/blob/add_PR_template/.github/PULL_REQUEST_TEMPLATE/release_pull_request_template.md)
 
 To open a new PR with this template, use this [PR template query](https://github.com/precice/precice/compare/new?template=release_pull_request_template.md)
