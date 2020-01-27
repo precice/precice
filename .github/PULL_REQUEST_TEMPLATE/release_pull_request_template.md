@@ -58,7 +58,7 @@ Run all these tests manually on your system. If you succeed, please write a comm
 
 ## Post-release
 * [ ] Generate packages
-   * [ ] Ubuntu 18.04
+   * [ ] Latest Ubuntu LTS
    * [ ] Ubuntu 19.10
    * [ ] Arch Linux AUR Package
 * [ ] Update Spack recipe
