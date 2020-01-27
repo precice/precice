@@ -370,7 +370,6 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     }
   }
   cplScheme.finalize();
-  utils::Parallel::clearGroups();
 }
 #endif // not PRECICE_NO_MPI
 

@@ -26,7 +26,7 @@ void process(vector<double> &data)
   }
 }
 
-void P2PComTest1(const TestContext &context, com::Ptr context, com::PtrCommunicationFactory cf)
+void P2PComTest1(const TestContext &context, com::PtrCommunicationFactory cf)
 {
   BOOST_TEST(context.hasSize(2));
 
@@ -103,7 +103,7 @@ void P2PComTest1(const TestContext &context, com::Ptr context, com::PtrCommunica
 }
 
 /// a very similar test, but with a vertex that has been completely filtered out
-void P2PComTest2(const TestContext &context, com::Ptr context, com::PtrCommunicationFactory cf)
+void P2PComTest2(const TestContext &context, com::PtrCommunicationFactory cf)
 {
   BOOST_TEST(context.hasSize(2));
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 2, true, testing::nextMeshID()));
@@ -177,7 +177,7 @@ void P2PComTest2(const TestContext &context, com::Ptr context, com::PtrCommunica
   }
 }
 
-void connectionTest(const TestContext &context, com::Ptr context, com::PtrCommunicationFactory cf)
+void connectionTest(const TestContext &context, com::PtrCommunicationFactory cf)
 {
 
   BOOST_TEST(context.hasSize(2));
@@ -265,7 +265,7 @@ void connectionTest(const TestContext &context, com::Ptr context, com::PtrCommun
   }
 }
 
-void emptyConnectionTest(const TestContext &context, com::Ptr context, com::PtrCommunicationFactory cf)
+void emptyConnectionTest(const TestContext &context, com::PtrCommunicationFactory cf)
 {
   BOOST_TEST(context.hasSize(2));
 
@@ -293,7 +293,7 @@ void emptyConnectionTest(const TestContext &context, com::Ptr context, com::PtrC
 
   std::vector<int> receiveData;
 
-  if (utils::context.isNamed("A")) {
+  if (context.isNamed("A")) {
     c.requestPreConnection("Solid", "Fluid");
     int sendData = 5;
     c.broadcastSend(sendData);
@@ -312,9 +312,9 @@ void emptyConnectionTest(const TestContext &context, com::Ptr context, com::PtrC
   mesh::Data::resetDataCount();
 }
 
-void P2PMeshBroadcastTest(const TestContext &context, com::Ptr context, com::PtrCommunicationFactory cf)
+void P2PMeshBroadcastTest(const TestContext &context, com::PtrCommunicationFactory cf)
 {
-BOOST_TEST(context.hasSize(2));
+  BOOST_TEST(context.hasSize(2));
 
   int           dimensions  = 2;
   bool          flipNormals = false;
@@ -353,7 +353,7 @@ BOOST_TEST(context.hasSize(2));
 
   m2n::PointToPointCommunication c(cf, mesh);
 
-  if (utils::context.isNamed("A")) {
+  if (context.isNamed("A")) {
 
     c.requestPreConnection("Solid", "Fluid");
     c.broadcastSendMesh();
@@ -382,7 +382,7 @@ BOOST_TEST(context.hasSize(2));
   mesh::Data::resetDataCount();
 }
 
-void P2PComLCMTest(const TestContext &context, com::Ptr context, com::PtrCommunicationFactory cf)
+void P2PComLCMTest(const TestContext &context, com::PtrCommunicationFactory cf)
 {
   BOOST_TEST(context.hasSize(2));
 
@@ -431,7 +431,7 @@ void P2PComLCMTest(const TestContext &context, com::Ptr context, com::PtrCommuni
 
   m2n::PointToPointCommunication c(cf, mesh);
 
-  if (utils::context.isNamed("A")) {
+  if (context.isNamed("A")) {
 
     c.requestPreConnection("Solid", "Fluid");
     c.broadcastSendLCM(localCommunicationMap);

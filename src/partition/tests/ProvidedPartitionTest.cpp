@@ -8,8 +8,6 @@
 #include "com/MPIDirectCommunication.hpp"
 #include "m2n/GatherScatterComFactory.hpp"
 #include "m2n/M2N.hpp"
-#include "utils/MasterSlave.hpp"
-#include "utils/Parallel.hpp"
 
 using namespace precice;
 using namespace partition;
@@ -17,65 +15,40 @@ using namespace partition;
 BOOST_AUTO_TEST_SUITE(PartitionTests)
 BOOST_AUTO_TEST_SUITE(ProvidedPartitionTests)
 
-void setupParallelEnvironment(m2n::PtrM2N m2n)
+void setupParallelEnvironment(const TestContext &context, m2n::PtrM2N m2n)
 {
-  BOOST_TEST(utils::Parallel::getCommunicatorSize() == 4);
+  BOOST_TEST(context.hasSize(2));
 
-  com::PtrCommunication masterSlaveCom = com::PtrCommunication(new com::MPIDirectCommunication());
-  utils::MasterSlave::_communication   = masterSlaveCom;
-
-  utils::Parallel::synchronizeProcesses();
-
-  if (utils::Parallel::getProcessRank() == 0) { //NASTIN
-    utils::Parallel::splitCommunicator("Fluid");
+  if (context.isNamed("NASTIN")) { //NASTIN
     m2n->acceptMasterConnection("Fluid", "SolidMaster");
-  } else if (utils::Parallel::getProcessRank() == 1) { //Master
-    utils::Parallel::splitCommunicator("SolidMaster");
-    m2n->requestMasterConnection("Fluid", "SolidMaster");
-    utils::MasterSlave::configure(0, 3);
-  } else if (utils::Parallel::getProcessRank() == 2) { //Slave1
-    utils::Parallel::splitCommunicator("SolidSlaves");
-    utils::MasterSlave::configure(1, 3);
-  } else if (utils::Parallel::getProcessRank() == 3) { //Slave2
-    utils::Parallel::splitCommunicator("SolidSlaves");
-    utils::MasterSlave::configure(3, 2);
-  }
-
-  if (utils::Parallel::getProcessRank() == 1) { //Master
-    masterSlaveCom->acceptConnection("SolidMaster", "SolidSlaves", "Test", utils::Parallel::getProcessRank());
-    masterSlaveCom->setRankOffset(1);
-  } else if (utils::Parallel::getProcessRank() == 2) { //Slave1
-    masterSlaveCom->requestConnection("SolidMaster", "SolidSlaves", "Test", 0, 2);
-  } else if (utils::Parallel::getProcessRank() == 3) { //Slave2
-    masterSlaveCom->requestConnection("SolidMaster", "SolidSlaves", "Test", 1, 2);
+  } else {
+    BOOST_TEST(context.isNamed("SOLIDZ"));
+    if (context.isMaster()) {
+      m2n->requestMasterConnection("Fluid", "SolidMaster");
+    }
   }
 }
 
 void tearDownParallelEnvironment()
 {
-  utils::MasterSlave::_communication = nullptr;
-  utils::MasterSlave::reset();
-  utils::Parallel::synchronizeProcesses();
-  utils::Parallel::clearGroups();
   mesh::Data::resetDataCount();
-  utils::Parallel::setGlobalCommunicator(utils::Parallel::getCommunicatorWorld());
 }
 
-BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate2D, *testing::OnSize(4))
+BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate2D)
 {
-  PRECICE_TEST("NASTIN"_on(1_rank), "SOLIDZ"_on(3_ranks), Require::Events);
+  PRECICE_TEST("NASTIN"_on(1_rank), "SOLIDZ"_on(3_ranks).setupMasterSlaves(), Require::Events);
   com::PtrCommunication participantCom =
       com::PtrCommunication(new com::MPIDirectCommunication());
   m2n::DistributedComFactory::SharedPointer distrFactory = m2n::DistributedComFactory::SharedPointer(
       new m2n::GatherScatterComFactory(participantCom));
   m2n::PtrM2N m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory));
 
-  setupParallelEnvironment(m2n);
+  setupParallelEnvironment(context, m2n);
 
   int  dimensions  = 2;
   bool flipNormals = false;
 
-  if (utils::Parallel::getProcessRank() == 0) { //NASTIN
+  if (context.isNamed("NASTIN")) { //NASTIN
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::nextMeshID()));
 
     double safetyFactor = 0.1;
@@ -93,15 +66,15 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate2D, *testing::OnSize(4))
   } else { //SOLIDZ
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::nextMeshID()));
 
-    if (utils::Parallel::getProcessRank() == 1) { //Master
+    if (context.isMaster()) { //Master
       Eigen::VectorXd position(dimensions);
       position << 0.0, 0.0;
       mesh::Vertex &v1 = pSolidzMesh->createVertex(position);
       position << 0.0, 1.5;
       mesh::Vertex &v2 = pSolidzMesh->createVertex(position);
       pSolidzMesh->createEdge(v1, v2);
-    } else if (utils::Parallel::getProcessRank() == 2) { //Slave1
-    } else if (utils::Parallel::getProcessRank() == 3) { //Slave2
+    } else if (context.isRank(1)) { //Slave1
+    } else if (context.isRank(2)) { //Slave2
       Eigen::VectorXd position(dimensions);
       position << 0.0, 3.5;
       mesh::Vertex &v3 = pSolidzMesh->createVertex(position);
@@ -121,15 +94,15 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate2D, *testing::OnSize(4))
     part.communicate();
     part.compute();
 
-    if (utils::Parallel::getProcessRank() == 1) { //master
+    if (context.isMaster()) { //master
       BOOST_TEST(pSolidzMesh->getVertexOffsets()[0] == 2);
       BOOST_TEST(pSolidzMesh->getVertexOffsets()[1] == 2);
       BOOST_TEST(pSolidzMesh->getVertexOffsets()[2] == 6);
-    } else if (utils::Parallel::getProcessRank() == 2) { //Slave1
+    } else if (context.isRank(1)) { //Slave1
       BOOST_TEST(pSolidzMesh->getVertexOffsets()[0] == 2);
       BOOST_TEST(pSolidzMesh->getVertexOffsets()[1] == 2);
       BOOST_TEST(pSolidzMesh->getVertexOffsets()[2] == 6);
-    } else if (utils::Parallel::getProcessRank() == 3) { //Slave2
+    } else {
       BOOST_TEST(pSolidzMesh->getVertexOffsets()[0] == 2);
       BOOST_TEST(pSolidzMesh->getVertexOffsets()[1] == 2);
       BOOST_TEST(pSolidzMesh->getVertexOffsets()[2] == 6);
@@ -139,19 +112,20 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate2D, *testing::OnSize(4))
   tearDownParallelEnvironment();
 }
 
-BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate3D, *testing::OnSize(4))
+BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate3D)
 {
+  PRECICE_TEST("NASTIN"_on(1_rank), "SOLIDZ"_on(3_ranks).setupMasterSlaves(), Require::Events);
   com::PtrCommunication                     participantCom = com::PtrCommunication(new com::MPIDirectCommunication());
   m2n::DistributedComFactory::SharedPointer distrFactory   = m2n::DistributedComFactory::SharedPointer(
       new m2n::GatherScatterComFactory(participantCom));
   m2n::PtrM2N m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory));
 
-  setupParallelEnvironment(m2n);
+  setupParallelEnvironment(context, m2n);
 
   int  dimensions  = 3;
   bool flipNormals = false;
 
-  if (utils::Parallel::getProcessRank() == 0) { //NASTIN
+  if (context.isNamed("NASTIN")) { //NASTIN
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::nextMeshID()));
 
     double safetyFactor = 0.1;
@@ -170,15 +144,15 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate3D, *testing::OnSize(4))
   } else { //SOLIDZ
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::nextMeshID()));
 
-    if (utils::Parallel::getProcessRank() == 1) { //Master
+    if (context.isMaster()) { //Master
       Eigen::VectorXd position(dimensions);
       position << 0.0, 0.0, 0.0;
       mesh::Vertex &v1 = pSolidzMesh->createVertex(position);
       position << 0.0, 1.5, 1.0;
       mesh::Vertex &v2 = pSolidzMesh->createVertex(position);
       pSolidzMesh->createEdge(v1, v2);
-    } else if (utils::Parallel::getProcessRank() == 2) { //Slave1
-    } else if (utils::Parallel::getProcessRank() == 3) { //Slave2
+    } else if (context.isRank(1)) { //Slave1
+    } else if (context.isRank(2)) { //Slave2
       Eigen::VectorXd position(dimensions);
       position << 0.0, 3.5, 0.1;
       mesh::Vertex &v3 = pSolidzMesh->createVertex(position);
@@ -203,7 +177,7 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate3D, *testing::OnSize(4))
     part.communicate();
     part.compute();
 
-    if (utils::Parallel::getProcessRank() == 1) { //master
+    if (context.isMaster()) { //master
       BOOST_TEST(pSolidzMesh->getVertexOffsets().size() == 3);
       BOOST_TEST(pSolidzMesh->getVertexOffsets()[0] == 2);
       BOOST_TEST(pSolidzMesh->getVertexOffsets()[1] == 2);
@@ -222,13 +196,13 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate3D, *testing::OnSize(4))
       BOOST_TEST(pSolidzMesh->getVertexDistribution()[2][1] == 3);
       BOOST_TEST(pSolidzMesh->getVertexDistribution()[2][2] == 4);
       BOOST_TEST(pSolidzMesh->getVertexDistribution()[2][3] == 5);
-    } else if (utils::Parallel::getProcessRank() == 2) { //Slave1
+    } else if (context.isRank(1)) { //Slave1
       BOOST_TEST(pSolidzMesh->getVertexOffsets().size() == 3);
       BOOST_TEST(pSolidzMesh->getVertexOffsets()[0] == 2);
       BOOST_TEST(pSolidzMesh->getVertexOffsets()[1] == 2);
       BOOST_TEST(pSolidzMesh->getVertexOffsets()[2] == 6);
       BOOST_TEST(pSolidzMesh->getGlobalNumberOfVertices() == 6);
-    } else if (utils::Parallel::getProcessRank() == 3) { //Slave2
+    } else if (context.isRank(2)) { //Slave2
       BOOST_TEST(pSolidzMesh->getVertexOffsets().size() == 3);
       BOOST_TEST(pSolidzMesh->getVertexOffsets()[0] == 2);
       BOOST_TEST(pSolidzMesh->getVertexOffsets()[1] == 2);
@@ -248,27 +222,27 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate3D, *testing::OnSize(4))
   tearDownParallelEnvironment();
 }
 
-BOOST_AUTO_TEST_CASE(TestOnlyDistribution2D,
-                     *testing::OnSize(4) * boost::unit_test::fixture<testing::MasterComFixture>())
+BOOST_AUTO_TEST_CASE(TestOnlyDistribution2D)
 {
+  PRECICE_TEST("NASTIN"_on(4_rank), Require::Events);
   // Create mesh object
   std::string   meshName("MyMesh");
   int           dim         = 2;
   bool          flipNormals = false; // The normals of triangles, edges, vertices
   mesh::PtrMesh pMesh(new mesh::Mesh(meshName, dim, flipNormals, testing::nextMeshID()));
 
-  if (utils::Parallel::getProcessRank() == 0) { //Master
+  if (context.isMaster()) { //Master
     Eigen::VectorXd position(dim);
     position << 0.0, 0.0;
     pMesh->createVertex(position);
     position << 1.0, 0.0;
     pMesh->createVertex(position);
-  } else if (utils::Parallel::getProcessRank() == 1) { //Slave1
+  } else if (context.isRank(1)) { //Slave1
     Eigen::VectorXd position(dim);
     position << 2.0, 0.0;
     pMesh->createVertex(position);
-  } else if (utils::Parallel::getProcessRank() == 2) { //Slave2
-  } else if (utils::Parallel::getProcessRank() == 3) { //Slave3
+  } else if (context.isRank(2)) { //Slave2
+  } else if (context.isRank(3)) { //Slave3
     Eigen::VectorXd position(dim);
     position << 3.0, 0.0;
     pMesh->createVertex(position);
@@ -280,7 +254,7 @@ BOOST_AUTO_TEST_CASE(TestOnlyDistribution2D,
   part.communicate();
   part.compute();
 
-  if (utils::Parallel::getProcessRank() == 0) { //Master
+  if (context.isMaster()) { //Master
     BOOST_TEST(pMesh->getGlobalNumberOfVertices() == 5);
     BOOST_TEST(pMesh->getVertexOffsets().size() == 4);
     BOOST_TEST(pMesh->getVertexOffsets()[0] == 2);
@@ -300,7 +274,7 @@ BOOST_AUTO_TEST_CASE(TestOnlyDistribution2D,
     BOOST_TEST(pMesh->getVertexDistribution()[1][0] == 2);
     BOOST_TEST(pMesh->getVertexDistribution()[3][0] == 3);
     BOOST_TEST(pMesh->getVertexDistribution()[3][1] == 4);
-  } else if (utils::Parallel::getProcessRank() == 1) { //Slave1
+  } else if (context.isRank(1)) { //Slave1
     BOOST_TEST(pMesh->getGlobalNumberOfVertices() == 5);
     BOOST_TEST(pMesh->getVertexOffsets().size() == 4);
     BOOST_TEST(pMesh->getVertexOffsets()[0] == 2);
@@ -309,14 +283,14 @@ BOOST_AUTO_TEST_CASE(TestOnlyDistribution2D,
     BOOST_TEST(pMesh->getVertexOffsets()[3] == 5);
     BOOST_TEST(pMesh->vertices()[0].getGlobalIndex() == 2);
     BOOST_TEST(pMesh->vertices()[0].isOwner() == true);
-  } else if (utils::Parallel::getProcessRank() == 2) { //Slave2
+  } else if (context.isRank(2)) { //Slave2
     BOOST_TEST(pMesh->getGlobalNumberOfVertices() == 5);
     BOOST_TEST(pMesh->getVertexOffsets().size() == 4);
     BOOST_TEST(pMesh->getVertexOffsets()[0] == 2);
     BOOST_TEST(pMesh->getVertexOffsets()[1] == 3);
     BOOST_TEST(pMesh->getVertexOffsets()[2] == 3);
     BOOST_TEST(pMesh->getVertexOffsets()[3] == 5);
-  } else if (utils::Parallel::getProcessRank() == 3) { //Slave3
+  } else if (context.isRank(3)) { //Slave3
     BOOST_TEST(pMesh->getGlobalNumberOfVertices() == 5);
     BOOST_TEST(pMesh->getVertexOffsets().size() == 4);
     BOOST_TEST(pMesh->getVertexOffsets()[0] == 2);
