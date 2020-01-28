@@ -215,7 +215,6 @@ target_sources(precice
     src/precice/SolverInterface.cpp
     src/precice/SolverInterface.hpp
     src/precice/bindings/c/SolverInterfaceC.cpp
-    src/precice/bindings/fortran/ConstantsFortran.hpp
     src/precice/bindings/fortran/SolverInterfaceFASTEST.cpp
     src/precice/bindings/fortran/SolverInterfaceFASTEST.hpp
     src/precice/bindings/fortran/SolverInterfaceFortran.cpp

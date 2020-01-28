@@ -44,13 +44,13 @@ void precice_fastest_create_(
   //cout << "Config  : " << stringConfigFileName << "!" << '\n';
   if (isAcousticUsed) {
     implAcoustic = new precice::SolverInterface(stringAccessorNameAcoustic,
+                                                stringConfigFileName,
                                                 *solverProcessIndex, *solverProcessSize);
-    implAcoustic->configure(stringConfigFileName);
   }
   if (isFluidUsed) {
     implFluid = new precice::SolverInterface(stringAccessorNameFluid,
+                                             stringConfigFileName,
                                              *solverProcessIndex, *solverProcessSize);
-    implFluid->configure(stringConfigFileName);
   }
   PRECICE_CHECK(implAcoustic != nullptr || implFluid != nullptr, "Either the Fluid interface or the Acoustic"
                                                                  " interface or both need to be used");

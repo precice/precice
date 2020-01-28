@@ -13,9 +13,9 @@ set(USE_XSDK_DEFAULTS OFF CACHE BOOL "Use XSDK defaults?")
 if(USE_XSDK_DEFAULTS)
   message(STATUS "XSDK defaults are enabled.")
   # 4. Debug and Release
-  set(CMAKE_BUILD_TYPE Debug CACHE STRING "The build type.")
+  set(CMAKE_BUILD_TYPE Debug CACHE STRING "The build type." FORCE)
   # 5. Shared and static libraries
-  set(BUILD_SHARED_LIBS YES CACHE BOOL "Whether to build shared libraries.")
+  set(BUILD_SHARED_LIBS YES CACHE BOOL "Whether to build shared libraries." FORCE)
 endif()
 
 # 6. Build interface for additional language
@@ -25,5 +25,5 @@ endif()
 
 if (DEFINED XSDK_ENABLE_PYTHON)
   message(STATUS "XSDK override: XSDK_ENABLE_PYTHON")
-  set(PYTHON "${XSDK_ENABLE_PYTHON}")
+  set(PRECICE_PYTHONACTION "${XSDK_ENABLE_PYTHON}" CACHE BOOL "" FORCE)
 endif()

@@ -453,5 +453,52 @@ BOOST_AUTO_TEST_CASE(CreateUniqueEdge)
   BOOST_TEST(mesh.edges().size() == 3);
 }
 
+BOOST_AUTO_TEST_CASE(ComputeStateOfNotFullyConnectedMesh)
+{
+  Mesh mesh("Mesh1", 3, false, testing::nextMeshID());
+  mesh.createData("Data", 1);
+  const double ctz = 0.0000013;
+
+  Eigen::Vector3d coords0;
+  Eigen::Vector3d coords1;
+  Eigen::Vector3d coords2;
+  Eigen::Vector3d coords3;
+  Eigen::Vector3d coords4;
+  Eigen::Vector3d coords5;
+  coords0 << ctz, ctz, ctz;
+  coords1 << 1.0, ctz, ctz;
+  coords2 << ctz, 1.0, ctz;
+  coords3 << ctz, -1.0, ctz;
+  coords4 << ctz, ctz, ctz-1.; // edge only
+  coords5 << ctz, ctz-1, ctz-1; // disconnected
+  Vertex &v0 = mesh.createVertex(coords0);
+  Vertex &v1 = mesh.createVertex(coords1);
+  Vertex &v2 = mesh.createVertex(coords2);
+  Vertex &v3 = mesh.createVertex(coords3);
+  Vertex &v4 = mesh.createVertex(coords4);
+  Vertex &v5 = mesh.createVertex(coords5);
+  BOOST_TEST(mesh.vertices().size() == 6);
+
+  Edge &e0 = mesh.createEdge(v0, v1);
+  Edge &e1 = mesh.createEdge(v1, v2);
+  Edge &e2 = mesh.createEdge(v2, v0);
+  Edge &e3 = mesh.createEdge(v1, v3);
+  Edge &e4 = mesh.createEdge(v3, v0);
+  mesh.createEdge(v0, v4); // edge only
+  BOOST_TEST(mesh.edges().size() == 6);
+
+  mesh.createTriangle(e0, e1, e2);
+  mesh.createTriangle(e0, e3, e4);
+  BOOST_TEST(mesh.triangles().size() == 2);
+
+  mesh.allocateDataValues();
+  BOOST_TEST(mesh.data().size() == 1);
+  mesh.computeState();
+
+  for(const auto& vertex: mesh.vertices()) {
+    BOOST_TEST(vertex.getNormal().allFinite());
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END() // Mesh
 BOOST_AUTO_TEST_SUITE_END() // Mesh
