@@ -33,8 +33,14 @@ void ProvidedPartition::communicate()
   mesh::Mesh globalMesh(_mesh->getName(), _mesh->getDimensions(), _mesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
   bool       hasMeshBeenGathered = false;
 
+  bool twoLevelInitAlreadyUsed = false;
+
   for (auto m2n : _m2ns) {
     if (m2n->usesTwoLevelInitialization()) {
+
+      PRECICE_CHECK(not twoLevelInitAlreadyUsed, "Two-level initialization does not yet support multiple receivers of a provided mesh.");
+      twoLevelInitAlreadyUsed = true;
+
       Event e("partition.broadcastMeshPartitions." + _mesh->getName(), precice::syncMode);
 
       // communicate the total number of vertices to the other participants master
