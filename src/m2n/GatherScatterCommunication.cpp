@@ -160,49 +160,49 @@ void GatherScatterCommunication::acceptPreConnection(
     std::string const &acceptorName,
     std::string const &requesterName)
 {
-  PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
+  PRECICE_ASSERT(false, "Not available for GatherScatterCommunication.");
 }
 
 void GatherScatterCommunication::requestPreConnection(
     std::string const &acceptorName,
     std::string const &requesterName)
 {
-  PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
+  PRECICE_ASSERT(false, "Not available for GatherScatterCommunication.");
 }
 
 void GatherScatterCommunication::broadcastSend(const int &itemToSend)
 {
-  PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
+  PRECICE_ASSERT(false, "Not available for GatherScatterCommunication.");
 }
 
 void GatherScatterCommunication::broadcastReceiveAll(std::vector<int> &itemToReceive)
 {
-  PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
+  PRECICE_ASSERT(false, "Not available for GatherScatterCommunication.");
 }
 
 void GatherScatterCommunication::broadcastSendMesh()
 {
-  PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
+  PRECICE_ASSERT(false, "Not available for GatherScatterCommunication.");
 }
 
-void GatherScatterCommunication::broadcastReceiveMesh()
+void GatherScatterCommunication::broadcastReceiveAllMesh()
 {
-  PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
+  PRECICE_ASSERT(false, "Not available for GatherScatterCommunication.");
 }
 
-void GatherScatterCommunication::broadcastSendLCM(CommunicationMap &localCommunicationMap)
+void GatherScatterCommunication::scatterAllCommunicationMap(CommunicationMap &localCommunicationMap)
 {
-  PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
+  PRECICE_ASSERT(false, "Not available for GatherScatterCommunication.");
 }
 
-void GatherScatterCommunication::broadcastReceiveLCM(CommunicationMap &localCommunicationMap)
+void GatherScatterCommunication::gatherAllCommunicationMap(CommunicationMap &localCommunicationMap)
 {
-  PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
+  PRECICE_ASSERT(false, "Not available for GatherScatterCommunication.");
 }
 
 void GatherScatterCommunication::updateVertexList()
 {
-  PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
+  PRECICE_ASSERT(false, "Not available for GatherScatterCommunication.");
 }
 
 } // namespace m2n

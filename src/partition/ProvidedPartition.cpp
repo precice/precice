@@ -51,7 +51,7 @@ void ProvidedPartition::communicate()
       _m2ns[0]->broadcastSend(maxGlobalVertexID, *_mesh);
 
       // each rank sends its mesh partition to connected remote ranks
-      _m2ns[0]->broadcastSendLocalMesh(*_mesh);
+      _m2ns[0]->broadcastSendMesh(*_mesh);
 
     } else {
 
@@ -191,7 +191,7 @@ void ProvidedPartition::compute()
       // @todo this will probably not work for more than one m2n
       PRECICE_ASSERT(_m2ns.size() <= 1);
       // receive communication map from all remote connected ranks
-      m2n->broadcastReceiveLCM(_mesh->getCommunicationMap(), *_mesh);
+      m2n->gatherAllCommunicationMap(_mesh->getCommunicationMap(), *_mesh);
     }
   }
 }

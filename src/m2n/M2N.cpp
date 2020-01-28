@@ -235,7 +235,7 @@ void M2N::send(double itemToSend)
   }
 }
 
-void M2N::broadcastSendLocalMesh(mesh::Mesh &mesh)
+void M2N::broadcastSendMesh(mesh::Mesh &mesh)
 {
   int meshID = mesh.getID();
   if (utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster()) {
@@ -248,13 +248,13 @@ void M2N::broadcastSendLocalMesh(mesh::Mesh &mesh)
   }
 }
 
-void M2N::broadcastSendLCM(std::map<int, std::vector<int>> &localCommunicationMap,
-                           mesh::Mesh &                     mesh)
+void M2N::scatterAllCommunicationMap(std::map<int, std::vector<int>> &localCommunicationMap,
+                                     mesh::Mesh &                     mesh)
 {
   if (utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster()) {
     int meshID = mesh.getID();
     PRECICE_ASSERT(_areSlavesConnected);
-    _distComs[meshID]->broadcastSendLCM(localCommunicationMap);
+    _distComs[meshID]->scatterAllCommunicationMap(localCommunicationMap);
   } else { //coupling mode
     PRECICE_ASSERT(false, "This method can only be used in parallel communication mode");
   }
@@ -333,25 +333,25 @@ void M2N::broadcastReceiveAll(std::vector<int> &itemToReceive, mesh::Mesh &mesh)
   }
 }
 
-void M2N::broadcastReceiveLocalMesh(mesh::Mesh &mesh)
+void M2N::broadcastReceiveAllMesh(mesh::Mesh &mesh)
 {
   int meshID = mesh.getID();
   if (utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster()) {
     PRECICE_ASSERT(_areSlavesConnected);
     PRECICE_ASSERT(_distComs.find(meshID) != _distComs.end());
     PRECICE_ASSERT(_distComs[meshID].get() != nullptr);
-    _distComs[meshID]->broadcastReceiveMesh();
+    _distComs[meshID]->broadcastReceiveAllMesh();
   } else { //coupling mode
     PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
   }
 }
 
-void M2N::broadcastReceiveLCM(std::map<int, std::vector<int>> &localCommunicationMap, mesh::Mesh &mesh)
+void M2N::gatherAllCommunicationMap(std::map<int, std::vector<int>> &localCommunicationMap, mesh::Mesh &mesh)
 {
   if (utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster()) {
     int meshID = mesh.getID();
     PRECICE_ASSERT(_areSlavesConnected);
-    _distComs[meshID]->broadcastReceiveLCM(localCommunicationMap);
+    _distComs[meshID]->gatherAllCommunicationMap(localCommunicationMap);
   } else { //coupling mode
     PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
   }

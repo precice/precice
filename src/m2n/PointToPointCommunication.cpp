@@ -634,21 +634,21 @@ void PointToPointCommunication::broadcastSendMesh()
   }
 }
 
-void PointToPointCommunication::broadcastReceiveMesh()
+void PointToPointCommunication::broadcastReceiveAllMesh()
 {
   for (auto &connectionData : _connectionDataVector) {
     com::CommunicateMesh(_communication).receiveMesh(*_mesh, connectionData.remoteRank);
   }
 }
 
-void PointToPointCommunication::broadcastSendLCM(CommunicationMap &localCommunicationMap)
+void PointToPointCommunication::scatterAllCommunicationMap(CommunicationMap &localCommunicationMap)
 {
   for (auto &connectionData : _connectionDataVector) {
     _communication->send(localCommunicationMap[connectionData.remoteRank], connectionData.remoteRank);
   }
 }
 
-void PointToPointCommunication::broadcastReceiveLCM(CommunicationMap &localCommunicationMap)
+void PointToPointCommunication::gatherAllCommunicationMap(CommunicationMap &localCommunicationMap)
 {
   for (auto &connectionData : _connectionDataVector) {
     _communication->receive(localCommunicationMap[connectionData.remoteRank], connectionData.remoteRank);

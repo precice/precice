@@ -140,13 +140,13 @@ public:
    */
   void send(double itemToSend);
 
-  /// each rank sends its mesh partition to connected ranks
-  void broadcastSendLocalMesh(mesh::Mesh &mesh);
+  /// Broadcasts a mesh to connected ranks on remote participant (concerning the given mesh)
+  void broadcastSendMesh(mesh::Mesh &mesh);
 
-  /// each rank sends the local communication map to the remote connecetd ranks (of the other participant)
-  void broadcastSendLCM(std::map<int, std::vector<int>> &localCommunicationMap, mesh::Mesh &mesh);
+  /// Scatters a communication map over connected ranks on remote participant (concerning the given mesh)
+  void scatterAllCommunicationMap(std::map<int, std::vector<int>> &localCommunicationMap, mesh::Mesh &mesh);
 
-  /// each rank sends an int to the remote connected ranks
+  /// Broadcasts an int to connected ranks on remote participant (concerning the given mesh)
   void broadcastSend(int &itemToSend, mesh::Mesh &mesh);
 
   /// All slaves receive an array of doubles (different for each slave).
@@ -161,13 +161,16 @@ public:
   /// All slaves receive a double (the same for each slave).
   void receive(double &itemToReceive);
 
-  /// each rank receives mesh partition from connected ranks
-  void broadcastReceiveLocalMesh(mesh::Mesh &mesh);
+  /// Receive mesh partitions per connected rank on remote participant (concerning the given mesh)
+  void broadcastReceiveAllMesh(mesh::Mesh &mesh);
 
-  /// each rank receives local communication maps from remote connetcetd ranks (of the other participant)
-  void broadcastReceiveLCM(std::map<int, std::vector<int>> &localCommunicationMap, mesh::Mesh &mesh);
+  /// Gathers a communication maps from connected ranks on remote participant (concerning the given mesh)
+  void gatherAllCommunicationMap(std::map<int, std::vector<int>> &localCommunicationMap, mesh::Mesh &mesh);
 
-  /// each rank receives an int from remote connetcetd ranks
+  /**
+   * @brief Receives an int per connected rank on remote participant (concerning the given mesh)
+   * @para[out] itemToReceive received ints from remote ranks are stored with the sender rank order
+   */
   void broadcastReceiveAll(std::vector<int> &itemToReceive, mesh::Mesh &mesh);
 
   bool usesTwoLevelInitialization()

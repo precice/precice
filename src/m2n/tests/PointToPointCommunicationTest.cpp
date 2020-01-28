@@ -515,7 +515,7 @@ void P2PMeshBroadcastTest(com::PtrCommunicationFactory cf)
   } else {
 
     c.acceptPreConnection("Solid", "Fluid");
-    c.broadcastReceiveMesh();
+    c.broadcastReceiveAllMesh();
 
     if (utils::Parallel::getProcessRank() == 2) {
       // This rank should receive the mesh from rank 0 (fluid master)
@@ -544,7 +544,7 @@ void P2PMeshBroadcastTest(com::PtrCommunicationFactory cf)
   utils::Parallel::setGlobalCommunicator(utils::Parallel::getCommunicatorWorld());
 }
 
-void P2PComLCMTest(com::PtrCommunicationFactory cf)
+void P2PComLocalCommunicationMapTest(com::PtrCommunicationFactory cf)
 {
   PRECICE_ASSERT(utils::Parallel::getCommunicatorSize() == 4);
   utils::MasterSlave::_communication = std::make_shared<com::MPIDirectCommunication>();
@@ -617,12 +617,12 @@ void P2PComLCMTest(com::PtrCommunicationFactory cf)
   if (utils::Parallel::getProcessRank() < 2) {
 
     c.requestPreConnection("Solid", "Fluid");
-    c.broadcastSendLCM(localCommunicationMap);
+    c.scatterAllCommunicationMap(localCommunicationMap);
     BOOST_TEST(mesh->getID() == expectedId);
 
   } else {
     c.acceptPreConnection("Solid", "Fluid");
-    c.broadcastReceiveLCM(localCommunicationMap);
+    c.gatherAllCommunicationMap(localCommunicationMap);
     BOOST_TEST(mesh->getID() == expectedId);
   }
 
@@ -663,7 +663,7 @@ BOOST_AUTO_TEST_CASE(SocketCommunication,
     connectionTest(cf);
     emptyConnectionTest(cf);
     P2PMeshBroadcastTest(cf);
-    P2PComLCMTest(cf);
+    P2PComLocalCommunicationMapTest(cf);
   }
 }
 

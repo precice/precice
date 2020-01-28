@@ -51,16 +51,16 @@ public:
   void requestConnection(
       const std::string &acceptorName,
       const std::string &requesterName);
-  /** 
-   *  This method has not been implemented yet.    
+  /**
+   *  This method has not been implemented yet.
    *  @todo: Ideally this should not be here
    */
   virtual void acceptPreConnection(
       std::string const &acceptorName,
       std::string const &requesterName);
 
-  /** 
-   *  This method has not been implemented yet.    
+  /**
+   *  This method has not been implemented yet.
    *  @todo: Ideally this should not be here
    */
   virtual void requestPreConnection(
@@ -68,7 +68,7 @@ public:
       std::string const &requesterName);
 
   /*
-   * @brief This function must be called by both acceptor and requester to update 
+   * @brief This function must be called by both acceptor and requester to update
    *        the vertex list in _mappings
    *
    * @todo: Ideally this should not be here
@@ -94,46 +94,26 @@ public:
       size_t  size,
       int     valueDimension) override;
 
-  /**
-   * @brief Broadcasts an int to connected ranks
-   *
-   * @todo: Ideally this should not be here
-   */
-  void broadcastSend(const int &itemToSend) override;
+  /// Broadcasts an int to connected ranks on remote participant. Not available for GatherScatterCommunication.
+  virtual void broadcastSend(const int &itemToSend) override;
 
   /**
-   * @brief Receives an int per connected rank on remote participant
-   * @para[out] itemToReceive received ints from remote ranks are stored with the sender rank order    
-   *
-   * @todo: Ideally this should not be here
+   * @brief Receives an int per connected rank on remote participant. Not available for GatherScatterCommunication.
+   * @para[out] itemToReceive received ints from remote ranks are stored with the sender rank order
    */
-  void broadcastReceiveAll(std::vector<int> &itemToReceive) override;
+  virtual void broadcastReceiveAll(std::vector<int> &itemToReceive) override;
 
-  /**
-   * @brief All ranks send their mesh partition to remote local  connected ranks.
-   *
-   * @todo: Ideally this should not be here
-   */
-  void broadcastSendMesh() override;
+  /// Broadcasts a mesh to connected ranks on remote participant. Not available for GatherScatterCommunication.
+  virtual void broadcastSendMesh() override;
 
-  /**
-   * @brief All ranks receive mesh partitions from remote local ranks.
-   *
-   * @todo: Ideally this should not be here
-   */
-  void broadcastReceiveMesh() override;
+  /// Receive mesh partitions per connected rank on remote participant. Not available for GatherScatterCommunication.
+  virtual void broadcastReceiveAllMesh() override;
 
-  /**
-   *  All ranks Send their local communication map to connected ranks
-   */
-  void broadcastSendLCM(
-      CommunicationMap &localCommunicationMap) override;
+  /// Scatters a communication map over connected ranks on remote participant. Not available for GatherScatterCommunication.
+  virtual void scatterAllCommunicationMap(CommunicationMap &localCommunicationMap) override;
 
-  /*
-   *  Each rank revives local communication maps from connected ranks
-   */
-  void broadcastReceiveLCM(
-      CommunicationMap &localCommunicationMap) override;
+  /// Gathers a communication maps from connected ranks on remote participant. Not available for GatherScatterCommunication.
+  virtual void gatherAllCommunicationMap(CommunicationMap &localCommunicationMap) override;
 
 private:
   logging::Logger _log{"m2n::GatherScatterCommunication"};

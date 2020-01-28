@@ -54,7 +54,7 @@ void ReceivedPartition::communicate()
     _m2ns[0]->broadcastReceiveAll(_remoteMinGlobalVertexIDs, *_mesh);
     _m2ns[0]->broadcastReceiveAll(_remoteMaxGlobalVertexIDs, *_mesh);
     // each rank receives mesh partition from connected remote ranks
-    _m2ns[0]->broadcastReceiveLocalMesh(*_mesh);
+    _m2ns[0]->broadcastReceiveAllMesh(*_mesh);
 
   } else {
     PRECICE_INFO("Receive global mesh " << _mesh->getName());
@@ -165,7 +165,7 @@ void ReceivedPartition::compute()
     }
 
     // communicate remote communication map to all remote connected ranks
-    _m2ns[0]->broadcastSendLCM(remoteCommunicationMap, *_mesh);
+    _m2ns[0]->scatterAllCommunicationMap(remoteCommunicationMap, *_mesh);
 
   } else {
 
