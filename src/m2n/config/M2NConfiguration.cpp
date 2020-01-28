@@ -131,6 +131,17 @@ void M2NConfiguration::xmlTagCallback(const xml::ConfigurationContext &context, 
     bool enforceGatherScatter = tag.getBooleanAttributeValue(ATTR_ENFORCE_GATHER_SCATTER);
     bool useTwoLevelInit      = tag.getBooleanAttributeValue(ATTR_USE_TWO_LEVEL_INIT);
 
+    if (enforceGatherScatter && useTwoLevelInit) {
+      std::ostringstream error;
+      error << "A gather-scatter m2n communication cannot use two-level initialization.";
+      throw std::runtime_error{error.str()};
+    }
+    if (context.size == 1 && useTwoLevelInit) {
+      std::ostringstream error;
+      error << "To use two-level initialization, both participants need to run in parallel.";
+      throw std::runtime_error{error.str()};
+    }
+
     com::PtrCommunicationFactory comFactory;
     com::PtrCommunication        com;
     if (tag.getName() == "sockets") {
