@@ -154,7 +154,7 @@ void M2N::completeSlavesConnection()
 {
   PRECICE_ASSERT(not _useOnlyMasterCom);
   for (const auto &pair : _distComs) {
-    pair.second->updateVertexList();
+    pair.second->completeSlavesConnection();
   }
 }
 

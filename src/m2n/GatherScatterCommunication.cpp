@@ -200,7 +200,7 @@ void GatherScatterCommunication::gatherAllCommunicationMap(CommunicationMap &loc
   PRECICE_ASSERT(false, "Not available for GatherScatterCommunication.");
 }
 
-void GatherScatterCommunication::updateVertexList()
+void GatherScatterCommunication::completeSlavesConnection()
 {
   PRECICE_ASSERT(false, "Not available for GatherScatterCommunication.");
 }

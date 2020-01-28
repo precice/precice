@@ -73,11 +73,8 @@ public:
   virtual void requestPreConnection(std::string const &acceptorName,
                                     std::string const &requesterName);
 
-  /*
-   * @brief This function must be called by both acceptor and requester to update
-   *        the vertex list in _mappings
-   */
-  virtual void updateVertexList() override;
+  /// Completes the slaves connections for both acceptor and requester by updating the vertex list in _mappings
+  virtual void completeSlavesConnection() override;
 
   /**
    * @brief Disconnects from communication space, i.e. participant.
