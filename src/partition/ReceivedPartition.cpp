@@ -447,7 +447,7 @@ bool ReceivedPartition::overlapping(mesh::Mesh::BoundingBox const &currentBB, me
 {
   // Comparison is done for all dimensions and, of course, to have a proper overlap, each dimension must overlap.
   // We need to check if first AND second is smaller than first of the other BB to prevent false negatives due to empty bounding boxes.
-  for (int i = 0; i < currentBB.size(); i++) {
+  for (size_t i = 0; i < currentBB.size(); i++) {
     if ((currentBB[i].first < receivedBB[i].first && currentBB[i].second < receivedBB[i].first) ||
         (receivedBB[i].first < currentBB[i].first && receivedBB[i].second < currentBB[i].first)) {
       return false;
