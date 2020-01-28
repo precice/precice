@@ -6,7 +6,7 @@ import sys
 import subprocess
 
 """ Files matching this pattern will be filtered out """
-IGNORE_PATTERNS = ["drivers", "bindings/python"]
+IGNORE_PATTERNS = ["drivers"]
 
 """ Configured files, which should be ignored by git """
 CONFIGURED_SOURCES = ["src/precice/impl/versions.hpp", "${CMAKE_BINARY_DIR}/src/precice/impl/versions.cpp"]
@@ -48,10 +48,6 @@ def get_file_lists(root):
     public = glob.glob(os.path.join(src_dir, "precice", "*.hpp"))
     public = [os.path.relpath(p, root) for p in public]
 
-    # Find interface c bindings
-    bindings = glob.glob(os.path.join(src_dir, "precice", "bindings", "c", "*.h"))
-    bindings = [os.path.relpath(b, root) for b in bindings]
-
     # Find all test and source cpp files
     sources, tests = [], []
     exts = [".cpp", ".c", ".hpp", ".h"]
@@ -69,10 +65,7 @@ def get_file_lists(root):
             sources += files
     sources += CONFIGURED_SOURCES
 
-    # Remove bindings from the sources
-    sources = [source for source in sources if source not in bindings]
-
-    return sorted(sources), sorted(public + bindings), sorted(tests)
+    return sorted(sources), sorted(public), sorted(tests)
 
 
 SOURCES_BASE = """#
