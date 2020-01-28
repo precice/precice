@@ -11,6 +11,7 @@
 
 using namespace precice;
 using namespace partition;
+using precice::testing::TestContext;
 
 BOOST_AUTO_TEST_SUITE(PartitionTests)
 BOOST_AUTO_TEST_SUITE(ProvidedPartitionTests)
