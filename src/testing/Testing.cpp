@@ -39,8 +39,7 @@ TestContext::~TestContext() noexcept
   impl::Participant::resetParticipantCount();
 
   // Reset communicators
-  Par::setGlobalCommunicator(Par::getCommunicatorWorld());
-  Par::clearGroups();
+  Par::resetCommState();
 }
 
 bool TestContext::hasSize(int size) const
@@ -123,16 +122,13 @@ void TestContext::initializeMPI(const TestContext::Participants &participants)
   }
 
   // Restrict the communicator to the total required size
-  Par::restrictGlobalCommunicator(required);
+  Par::restrictCommunicator(required);
 
   // Mark all unnecessary ranks as invalid and return
   if (globalRank >= required) {
     invalid = true;
     return;
   }
-
-  // Save the restricted Comm for establishing MPI Single communications
-  _restrictedComm = current();
 
   // If there was only a single participant requested, then update its info and we are done.
   if (participants.size() == 1) {
@@ -181,10 +177,10 @@ void TestContext::initializeMasterSlave()
   const auto masterName = name + "Master";
   const auto slavesName = name + "Slaves";
   if (isMaster()) {
-    masterSlaveCom->acceptConnection(masterName, slavesName, rank);
+    masterSlaveCom->acceptConnection(masterName, slavesName, "", rank);
     masterSlaveCom->setRankOffset(1);
   } else {
-    masterSlaveCom->requestConnection(masterName, slavesName, rank - 1, size - 1);
+    masterSlaveCom->requestConnection(masterName, slavesName, "", rank - 1, size - 1);
   }
 }
 
