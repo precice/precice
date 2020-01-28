@@ -4,7 +4,6 @@
 #include <set>
 #include <string>
 #include <vector>
-#include "MeshHandle.hpp"
 
 /**
  * forward declarations.
@@ -28,7 +27,6 @@ namespace precice {
  * To adapt a solver to preCICE, follow the following main structure:
  *
  * -# Create an object of SolverInterface with SolverInterface()
- * -# Configure the object with SolverInterface::configure()
  * -# Initialize preCICE with SolverInterface::initialize()
  * -# Advance to the next (time)step with SolverInterface::advance()
  * -# Finalize preCICE with SolverInterface::finalize()
@@ -45,6 +43,7 @@ public:
   /**
    * @param[in] participantName Name of the participant using the interface. Has to
    *        match the name given for a participant in the xml configuration file.
+   * @param[in] configurationFileName Name (with path) of the xml configuration file.
    * @param[in] solverProcessIndex If the solver code runs with several processes,
    *        each process using preCICE has to specify its index, which has to start
    *        from 0 and end with solverProcessSize - 1.
@@ -52,12 +51,14 @@ public:
    */
   SolverInterface(
       const std::string &participantName,
+      const std::string &configurationFileName,
       int                solverProcessIndex,
       int                solverProcessSize);
 
   /**
    * @param[in] participantName Name of the participant using the interface. Has to
    *        match the name given for a participant in the xml configuration file.
+   * @param[in] configurationFileName Name (with path) of the xml configuration file.
    * @param[in] solverProcessIndex If the solver code runs with several processes,
    *        each process using preCICE has to specify its index, which has to start
    *        from 0 and end with solverProcessSize - 1.
@@ -66,30 +67,12 @@ public:
    */
   SolverInterface(
       const std::string &participantName,
+      const std::string &configurationFileName,
       int                solverProcessIndex,
       int                solverProcessSize,
       void *             communicator);
 
   ~SolverInterface();
-
-  /**
-   * @brief Configures preCICE from the given xml file.
-   *
-   * Only after the configuration a usable state of a SolverInterface
-   * object is achieved. However, most of the functionalities in preCICE can be
-   * used only after initialize() has been called. Some actions, e.g. specifying
-   * the solvers interface mesh, have to be done before initialize is called.
-   *
-   * In configure, the following is done:
-   * - The XML configuration for preCICE is parsed and all objects containing
-   *   data are created, but not necessarily filled with data.
-   * - Communication between master and slaves is established.
-   *
-   * @pre configure() has not yet been called
-   *
-   * @param[in] configurationFileName Name (with path) of the xml configuration file to be read.
-   */
-  void configure(const std::string &configurationFileName);
 
   ///@}
 
@@ -99,7 +82,6 @@ public:
   /**
    * @brief Fully initializes preCICE
    *
-   * @pre configure() has been called successfully.
    * @pre initialize() has not yet bee called.
    *
    * @post Parallel communication to the coupling partner/s is setup.
@@ -184,8 +166,6 @@ public:
    *
    * Currently, two and three dimensional problems can be solved using preCICE.
    * The dimension is specified in the XML configuration.
-   *
-   * @pre configure() has been called successfully.
    */
   int getDimensions() const;
 
@@ -362,16 +342,6 @@ public:
    * @returns the set of ids.
    */
   std::set<int> getMeshIDs() const;
-
-  /**
-   * @brief Returns a handle to a created mesh.
-   * 
-   * @param[in] meshName the name of the mesh
-   * @returns the handle to the mesh
-   *
-   * @see precice::MeshHandle
-   */
-  MeshHandle getMeshHandle(const std::string &meshName);
 
   /**
    * @brief Creates a mesh vertex

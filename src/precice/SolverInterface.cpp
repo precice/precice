@@ -7,28 +7,24 @@ namespace precice {
 
 SolverInterface::SolverInterface(
     const std::string &participantName,
+    const std::string &configurationFileName,
     int                solverProcessIndex,
     int                solverProcessSize)
-    : _impl(new impl::SolverInterfaceImpl(participantName, solverProcessIndex, solverProcessSize))
+    : _impl(new impl::SolverInterfaceImpl(participantName, configurationFileName, solverProcessIndex, solverProcessSize))
 {
 }
 
 SolverInterface::SolverInterface(
     const std::string &participantName,
+    const std::string &configurationFileName,
     int                solverProcessIndex,
     int                solverProcessSize,
     void *             communicator)
-    : _impl(new impl::SolverInterfaceImpl(participantName, solverProcessIndex, solverProcessSize, communicator))
+    : _impl(new impl::SolverInterfaceImpl(participantName, configurationFileName, solverProcessIndex, solverProcessSize, communicator))
 {
 }
 
 SolverInterface::~SolverInterface() = default;
-
-void SolverInterface::configure(
-    const std::string &configurationFileName)
-{
-  _impl->configure(configurationFileName);
-}
 
 double SolverInterface::initialize()
 {
@@ -300,12 +296,6 @@ void SolverInterface::readScalarData(
     double &value) const
 {
   return _impl->readScalarData(dataID, valueIndex, value);
-}
-
-MeshHandle SolverInterface::getMeshHandle(
-    const std::string &meshName)
-{
-  return _impl->getMeshHandle(meshName);
 }
 
 std::string getVersionInformation()

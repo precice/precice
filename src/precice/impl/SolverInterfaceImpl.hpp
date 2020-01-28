@@ -10,7 +10,6 @@
 #include "io/Constants.hpp"
 #include "m2n/BoundM2N.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
-#include "precice/MeshHandle.hpp"
 #include "precice/SolverInterface.hpp"
 #include "precice/impl/DataContext.hpp"
 #include "precice/impl/SharedPointer.hpp"
@@ -42,14 +41,16 @@ public:
    * of this class. The object has to be configured by one of the configure
    * methods before it has a reasonable state and can be used.
    *
+   * @param[in] configurationFileName Name (with path) of the xml config file.
    * @param[in] participantName Name of the participant using the interface. Has to
    *                            match the name given for a participant in the
    *                            xml configuration file.
    */
   SolverInterfaceImpl(
-      std::string participantName,
-      int         accessorProcessRank,
-      int         accessorCommunicatorSize);
+      std::string        participantName,
+      const std::string &configurationFileName,
+      int                accessorProcessRank,
+      int                accessorCommunicatorSize);
 
   /// Deleted copy constructor
   SolverInterfaceImpl(SolverInterfaceImpl const &) = delete;
@@ -76,13 +77,15 @@ public:
    * @param[in] participantName Name of the participant using the interface. Has to
    *                            match the name given for a participant in the
    *                            xml configuration file.
+   * @param[in] configurationFileName Name (with path) of the xml config file.
    * @param[in] communicator    A pointer to the MPI_Comm to use.
    */
   SolverInterfaceImpl(
-      std::string participantName,
-      int         accessorProcessRank,
-      int         accessorCommunicatorSize,
-      void *      communicator);
+      std::string        participantName,
+      const std::string &configurationFileName,
+      int                accessorProcessRank,
+      int                accessorCommunicatorSize,
+      void *             communicator);
 
   /**
    * @brief Configures the coupling interface from the given xml file.
@@ -481,9 +484,6 @@ public:
    */
   //  void scaleReadData ()
 
-  /// Returns a handle to a created mesh.
-  MeshHandle getMeshHandle(const std::string &meshName);
-
   /// Returns the name of the accessor
   std::string getAccessorName() const
   {
@@ -501,6 +501,9 @@ public:
   {
     return _accessorCommunicatorSize;
   }
+
+  /// Allows to access a registered mesh
+  const mesh::Mesh &mesh(const std::string &meshName) const;
 
 private:
   mutable logging::Logger _log{"impl::SolverInterfaceImpl"};

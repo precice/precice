@@ -30,6 +30,7 @@ size_t MPIPortsCommunication::getRemoteCommunicatorSize()
 
 void MPIPortsCommunication::acceptConnection(std::string const &acceptorName,
                                              std::string const &requesterName,
+                                             std::string const &tag,
                                              int                acceptorRank)
 {
   PRECICE_TRACE(acceptorName, requesterName, acceptorRank);
@@ -39,7 +40,7 @@ void MPIPortsCommunication::acceptConnection(std::string const &acceptorName,
 
   MPI_Open_port(MPI_INFO_NULL, const_cast<char *>(_portName.data()));
 
-  ConnectionInfoWriter conInfo(acceptorName, requesterName, _addressDirectory);
+  ConnectionInfoWriter conInfo(acceptorName, requesterName, tag, _addressDirectory);
   conInfo.write(_portName);
   PRECICE_DEBUG("Accept connection at " << _portName);
 
@@ -80,6 +81,7 @@ void MPIPortsCommunication::acceptConnection(std::string const &acceptorName,
 
 void MPIPortsCommunication::acceptConnectionAsServer(std::string const &acceptorName,
                                                      std::string const &requesterName,
+                                                     std::string const &tag,
                                                      int                acceptorRank,
                                                      int                requesterCommunicatorSize)
 {
@@ -91,7 +93,7 @@ void MPIPortsCommunication::acceptConnectionAsServer(std::string const &acceptor
 
   MPI_Open_port(MPI_INFO_NULL, const_cast<char *>(_portName.data()));
 
-  ConnectionInfoWriter conInfo(acceptorName, requesterName, acceptorRank, _addressDirectory);
+  ConnectionInfoWriter conInfo(acceptorName, requesterName, tag, acceptorRank, _addressDirectory);
   conInfo.write(_portName);
   PRECICE_DEBUG("Accept connection at " << _portName);
 
@@ -110,6 +112,7 @@ void MPIPortsCommunication::acceptConnectionAsServer(std::string const &acceptor
 
 void MPIPortsCommunication::requestConnection(std::string const &acceptorName,
                                               std::string const &requesterName,
+                                              std::string const &tag,
                                               int                requesterRank,
                                               int                requesterCommunicatorSize)
 {
@@ -117,7 +120,7 @@ void MPIPortsCommunication::requestConnection(std::string const &acceptorName,
   PRECICE_ASSERT(not isConnected());
   _isAcceptor = false;
 
-  ConnectionInfoReader conInfo(acceptorName, requesterName, _addressDirectory);
+  ConnectionInfoReader conInfo(acceptorName, requesterName, tag, _addressDirectory);
   _portName = conInfo.read();
 
   PRECICE_DEBUG("Request connection to " << _portName);
@@ -137,6 +140,7 @@ void MPIPortsCommunication::requestConnection(std::string const &acceptorName,
 
 void MPIPortsCommunication::requestConnectionAsClient(std::string const &  acceptorName,
                                                       std::string const &  requesterName,
+                                                      std::string const &  tag,
                                                       std::set<int> const &acceptorRanks,
                                                       int                  requesterRank)
 
@@ -147,7 +151,7 @@ void MPIPortsCommunication::requestConnectionAsClient(std::string const &  accep
   _isAcceptor = false;
 
   for (auto const &acceptorRank : acceptorRanks) {
-    ConnectionInfoReader conInfo(acceptorName, requesterName, acceptorRank, _addressDirectory);
+    ConnectionInfoReader conInfo(acceptorName, requesterName, tag, acceptorRank, _addressDirectory);
     _portName = conInfo.read();
     PRECICE_DEBUG("Request connection to " << _portName);
 

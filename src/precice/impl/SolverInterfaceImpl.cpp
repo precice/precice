@@ -51,10 +51,11 @@ bool syncMode = false;
 namespace impl {
 
 SolverInterfaceImpl::SolverInterfaceImpl(
-    std::string participantName,
-    int         accessorProcessRank,
-    int         accessorCommunicatorSize,
-    void *      communicator)
+    std::string        participantName,
+    const std::string &configurationFileName,
+    int                accessorProcessRank,
+    int                accessorCommunicatorSize,
+    void *             communicator)
     : _accessorName(std::move(participantName)),
       _accessorProcessRank(accessorProcessRank),
       _accessorCommunicatorSize(accessorCommunicatorSize)
@@ -77,13 +78,16 @@ SolverInterfaceImpl::SolverInterfaceImpl(
 #endif
 
   logging::setParticipant(_accessorName);
+
+  configure(configurationFileName);
 }
 
 SolverInterfaceImpl::SolverInterfaceImpl(
-    std::string participantName,
-    int         accessorProcessRank,
-    int         accessorCommunicatorSize)
-    : SolverInterfaceImpl::SolverInterfaceImpl(std::move(participantName), accessorProcessRank, accessorCommunicatorSize, nullptr)
+    std::string        participantName,
+    const std::string &configurationFileName,
+    int                accessorProcessRank,
+    int                accessorCommunicatorSize)
+    : SolverInterfaceImpl::SolverInterfaceImpl(std::move(participantName), configurationFileName, accessorProcessRank, accessorCommunicatorSize, nullptr)
 {
 }
 
@@ -1079,19 +1083,6 @@ void SolverInterfaceImpl::exportMesh(
   }
 }
 
-MeshHandle SolverInterfaceImpl::getMeshHandle(
-    const std::string &meshName)
-{
-  PRECICE_TRACE(meshName);
-  for (MeshContext *context : _accessor->usedMeshContexts()) {
-    if (context->mesh->getName() == meshName) {
-      return {*context->mesh};
-    }
-  }
-  PRECICE_ERROR("Participant \"" << _accessorName
-                                 << "\" does not use mesh \"" << meshName << "\"!");
-}
-
 void SolverInterfaceImpl::configureM2Ns(
     const m2n::M2NConfiguration::SharedPointer &config)
 {
@@ -1408,11 +1399,11 @@ void SolverInterfaceImpl::initializeMasterSlaveCommunication()
   int rankOffset = 1;
   if (utils::MasterSlave::isMaster()) {
     PRECICE_INFO("Setting up communication to slaves");
-    utils::MasterSlave::_communication->acceptConnection(_accessorName + "Master", _accessorName, utils::MasterSlave::getRank());
+    utils::MasterSlave::_communication->acceptConnection(_accessorName + "Master", _accessorName, "MasterSlave", utils::MasterSlave::getRank());
     utils::MasterSlave::_communication->setRankOffset(rankOffset);
   } else {
     PRECICE_ASSERT(utils::MasterSlave::isSlave());
-    utils::MasterSlave::_communication->requestConnection(_accessorName + "Master", _accessorName,
+    utils::MasterSlave::_communication->requestConnection(_accessorName + "Master", _accessorName, "MasterSlave",
                                                           _accessorProcessRank - rankOffset, _accessorCommunicatorSize - rankOffset);
   }
 }
@@ -1430,6 +1421,19 @@ void SolverInterfaceImpl::syncTimestep(double computedTimestepLength)
                     "Ambiguous timestep length when calling request advance from several processes!");
     }
   }
+}
+
+const mesh::Mesh &SolverInterfaceImpl::mesh(const std::string &meshName) const
+{
+  PRECICE_TRACE(meshName);
+  for (MeshContext *context : _accessor->usedMeshContexts()) {
+    if (context->mesh->getName() == meshName) {
+      PRECICE_ASSERT(context->mesh);
+      return *context->mesh;
+    }
+  }
+  PRECICE_ERROR("Participant \"" << _accessorName
+                                 << "\" does not use mesh \"" << meshName << "\"!");
 }
 
 } // namespace impl

@@ -48,7 +48,6 @@ target_sources(testprecice
     src/mesh/tests/VertexTest.cpp
     src/partition/tests/ProvidedPartitionTest.cpp
     src/partition/tests/ReceivedPartitionTest.cpp
-    src/precice/tests/MeshHandleTest.cpp
     src/precice/tests/ParallelTests.cpp
     src/precice/tests/SerialTests.cpp
     src/precice/tests/VersioningTests.cpp

@@ -20,7 +20,7 @@ void TestSendAndReceivePrimitiveTypes()
   const int rank = utils::Parallel::getProcessRank();
 
   if (rank == 0) {
-    com.acceptConnection("process0", "process1", rank);
+    com.acceptConnection("process0", "process1", "", rank);
     {
       std::string msg("testOne");
       com.send(msg, 0);
@@ -47,7 +47,7 @@ void TestSendAndReceivePrimitiveTypes()
     }
     com.closeConnection();
   } else if (rank == 1) {
-    com.requestConnection("process0", "process1", 0, 1);
+    com.requestConnection("process0", "process1", "", 0, 1);
     {
       std::string msg;
       com.receive(msg, 0);
@@ -88,7 +88,7 @@ void TestSendAndReceiveVectors()
   const int rank = utils::Parallel::getProcessRank();
 
   if (rank == 0) {
-    com.acceptConnection("process0", "process1", rank);
+    com.acceptConnection("process0", "process1", "", rank);
     {
       Eigen::Vector3d msg = Eigen::Vector3d::Constant(0);
       com.receive(msg.data(), msg.size(), 0);
@@ -118,7 +118,7 @@ void TestSendAndReceiveVectors()
     }
     com.closeConnection();
   } else if (rank == 1) {
-    com.requestConnection("process0", "process1", 0, 1);
+    com.requestConnection("process0", "process1", "", 0, 1);
     {
       Eigen::Vector3d msg = Eigen::Vector3d::Constant(1);
       com.send(msg.data(), msg.size(), 0);
@@ -157,7 +157,7 @@ void TestSendReceiveFourProcesses()
 
   switch (rank) {
   case 0: {
-    communication.acceptConnection("A", "B", rank);
+    communication.acceptConnection("A", "B", "", rank);
 
     communication.send(10, 2);
     communication.receive(message, 2);
@@ -175,7 +175,7 @@ void TestSendReceiveFourProcesses()
     break;
   }
   case 2: {
-    communication.requestConnection("A", "B", rank, 2);
+    communication.requestConnection("A", "B", "", rank, 2);
 
     communication.receive(message, 0);
     BOOST_TEST(message == 10);
@@ -186,7 +186,7 @@ void TestSendReceiveFourProcesses()
     break;
   }
   case 3: {
-    communication.requestConnection("A", "B", rank, 2);
+    communication.requestConnection("A", "B", "", rank, 2);
 
     communication.receive(message, 0);
     BOOST_TEST(message == 20);
@@ -216,7 +216,7 @@ void TestSendReceiveTwoProcessesServerClient()
 
   switch (rank) {
   case 0: {
-    communication.acceptConnectionAsServer("A", "B", rank, 1);
+    communication.acceptConnectionAsServer("A", "B", "", rank, 1);
     communication.send(message, 1);
     communication.receive(message, 1);
     BOOST_TEST(message == 2);
@@ -224,7 +224,7 @@ void TestSendReceiveTwoProcessesServerClient()
     break;
   }
   case 1: {
-    communication.requestConnectionAsClient("A", "B", {0}, rank);
+    communication.requestConnectionAsClient("A", "B", "", {0}, rank);
     communication.receive(message, 0);
     BOOST_TEST(message == 1);
     message = 2;
@@ -244,7 +244,7 @@ void TestSendReceiveFourProcessesServerClient()
 
   switch (rank) {
   case 0: {
-    communication.acceptConnectionAsServer("A", "B", rank, 2);
+    communication.acceptConnectionAsServer("A", "B", "", rank, 2);
 
     communication.send(10, 2);
     communication.receive(message, 2);
@@ -262,7 +262,7 @@ void TestSendReceiveFourProcessesServerClient()
     break;
   }
   case 2: {
-    communication.requestConnectionAsClient("A", "B", {0}, rank);
+    communication.requestConnectionAsClient("A", "B", "", {0}, rank);
 
     communication.receive(message, 0);
     BOOST_TEST(message == 10);
@@ -273,7 +273,7 @@ void TestSendReceiveFourProcessesServerClient()
     break;
   }
   case 3: {
-    communication.requestConnectionAsClient("A", "B", {0}, rank);
+    communication.requestConnectionAsClient("A", "B", "", {0}, rank);
 
     communication.receive(message, 0);
     BOOST_TEST(message == 20);
@@ -295,7 +295,7 @@ void TestSendReceiveFourProcessesServerClientV2()
 
   switch (rank) {
   case 0: {
-    communication.acceptConnectionAsServer("A", "B", rank, 2);
+    communication.acceptConnectionAsServer("A", "B", "", rank, 2);
 
     communication.send(10, 2);
     communication.receive(message, 2);
@@ -309,7 +309,7 @@ void TestSendReceiveFourProcessesServerClientV2()
     break;
   }
   case 1: {
-    communication.acceptConnectionAsServer("A", "B", rank, 2);
+    communication.acceptConnectionAsServer("A", "B", "", rank, 2);
 
     communication.send(20, 2);
     communication.receive(message, 2);
@@ -323,7 +323,7 @@ void TestSendReceiveFourProcessesServerClientV2()
     break;
   }
   case 2: {
-    communication.requestConnectionAsClient("A", "B", {0, 1}, rank);
+    communication.requestConnectionAsClient("A", "B", "", {0, 1}, rank);
 
     communication.receive(message, 0);
     BOOST_TEST(message == 10);
@@ -337,7 +337,7 @@ void TestSendReceiveFourProcessesServerClientV2()
     break;
   }
   case 3: {
-    communication.requestConnectionAsClient("A", "B", {0, 1}, rank);
+    communication.requestConnectionAsClient("A", "B", "", {0, 1}, rank);
 
     communication.receive(message, 0);
     BOOST_TEST(message == 100);
