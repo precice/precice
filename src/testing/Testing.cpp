@@ -34,6 +34,10 @@ TestContext::~TestContext() noexcept
     utils::MasterSlave::reset();
   }
 
+  // Reset static ids and counters
+  mesh::Data::resetDataCount();
+  impl::Participant::resetParticipantCount();
+
   // Reset communicators
   Par::setGlobalCommunicator(Par::getCommunicatorWorld());
   Par::clearGroups();

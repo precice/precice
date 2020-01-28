@@ -13,29 +13,13 @@
 
 using namespace precice;
 
-void reset()
-{
-  mesh::Data::resetDataCount();
-  impl::Participant::resetParticipantCount();
-  utils::MasterSlave::reset();
-}
-
 struct ParallelTestFixture : testing::SlimConfigurator {
 
   std::string _pathToTests;
 
   ParallelTestFixture()
   {
-    reset();
     _pathToTests = testing::getPathToSources() + "/precice/tests/";
-    utils::Parallel::restrictGlobalCommunicator({0, 1, 2, 3});
-    BOOST_TEST(utils::Parallel::getCommunicatorSize() == 4);
-  }
-
-  ~ParallelTestFixture()
-  {
-    utils::Parallel::setGlobalCommunicator(utils::Parallel::getCommunicatorWorld());
-    reset();
   }
 };
 
