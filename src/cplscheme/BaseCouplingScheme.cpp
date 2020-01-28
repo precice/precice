@@ -678,16 +678,16 @@ void BaseCouplingScheme::initializeTXTWriters()
 
     _iterationsWriter->addData("Timestep", io::TXTTableWriter::INT);
     _iterationsWriter->addData("TotalIterations", io::TXTTableWriter::INT);
-    _iterationsWriter->addData("Iterations", io::TXTTableWriter::INT);
+    _iterationsWriter->addData("Iteration", io::TXTTableWriter::INT);
     if (hasCoarseModelOptimization) {
-      _iterationsWriter->addData("TotalIterations_SurrogateModel", io::TXTTableWriter::INT);
-      _iterationsWriter->addData("Iterations_SurrogateModel", io::TXTTableWriter::INT);
+      _iterationsWriter->addData("TotalIterationsSurrogateModel", io::TXTTableWriter::INT);
+      _iterationsWriter->addData("IterationSurrogateModel", io::TXTTableWriter::INT);
     }
     _iterationsWriter->addData("Convergence", io::TXTTableWriter::INT);
 
     if (not doesFirstStep()) {
       _convergenceWriter->addData("Timestep", io::TXTTableWriter::INT);
-      _convergenceWriter->addData("Iterations", io::TXTTableWriter::INT);
+      _convergenceWriter->addData("Iteration", io::TXTTableWriter::INT);
     }
 
     if (not doesFirstStep()) {
@@ -720,10 +720,10 @@ void BaseCouplingScheme::advanceTXTWriters()
 
     _iterationsWriter->writeData("Timestep", _timesteps - 1);
     _iterationsWriter->writeData("TotalIterations", _totalIterations);
-    _iterationsWriter->writeData("Iterations", _iterations);
+    _iterationsWriter->writeData("Iteration", _iterations);
     if (hasCoarseModelOptimization) {
-      _iterationsWriter->writeData("TotalIterations_SurrogateModel", _totalIterationsCoarseOptimization);
-      _iterationsWriter->writeData("Iterations_SurrogateModel", _iterationsCoarseOptimization);
+      _iterationsWriter->writeData("TotalIterationsSurrogateModel", _totalIterationsCoarseOptimization);
+      _iterationsWriter->writeData("IterationSurrogateModel", _iterationsCoarseOptimization);
     }
     int converged = _iterations < _maxIterations ? 1 : 0;
     _iterationsWriter->writeData("Convergence", converged);
