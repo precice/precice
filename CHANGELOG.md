@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file. For future 
 
 ## develop
 
+- Restructure tools and bindings
+  - Moved developer tools to `tools/`
+  - Moved user tools to `extras/`
+  - Moved native bindings to `extras/bindings/`
+- Added CMake options to enable native bindings `PRECICE_ENABLE_C`, `PRECICE_ENABLE_FORTRAN` (on by default)
 - Remove `MeshHandle` from API and replace use in integration tests by `SolverInterfaceImpl::mesh()`.
 - Added the mesh name to the information used to generate connection information files, which is required for the two-level initialization.
 - Merged the `SolverInterface::configure()` into the `SolverInterface` constructors. They now have a second parameter for the configuration file.
