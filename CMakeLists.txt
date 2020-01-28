@@ -114,6 +114,24 @@ add_feature_info(PythonActions PRECICE_PythonActions
 
    Set PRECICE_PythonActions to enable.
   ")
+add_feature_info(CBindings PRECICE_ENABLE_C
+  "Enables the native Fortran bindings.
+
+   preCICE provides native bindings for C, which are compiled into the library.
+   This feature enabled the compilation and installation of the bindings into the library.
+   Note that we strongly recommend to compile with C bindings enabled for compatibility reasons.
+
+   Set PRECICE_ENABLE_C to enable.
+  ")
+add_feature_info(FortranBindings PRECICE_ENABLE_FORTRAN
+  "Enables the native Fortran bindings.
+
+   preCICE provides native bindings for Fortran, which are compiled into the library.
+   This feature enabled the compilation and installation of the bindings into the library.
+   Note that we strongly recommend to compile with Fortran bindings enabled for compatibility reasons.
+
+   Set PRECICE_ENABLE_FORTRAN to enable.
+  ")
 
 feature_summary(WHAT ENABLED_FEATURES  DESCRIPTION "=== ENABLED FEATURES ===" QUIET_ON_EMPTY)
 feature_summary(WHAT DISABLED_FEATURES DESCRIPTION "=== DISABLED FEATURES ===" QUIET_ON_EMPTY)
