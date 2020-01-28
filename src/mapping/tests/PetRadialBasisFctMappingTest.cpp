@@ -93,7 +93,6 @@ void testDistributed(const TestContext &    context,
                      ReferenceSpecification referenceSpec,
                      int                    inGlobalIndexOffset = 0)
 {
-  BOOST_TEST(Par::getCommunicatorSize() == 4);
   int meshDimension  = inMeshSpec[0].position.size();
   int valueDimension = inMeshSpec[0].value.size();
 

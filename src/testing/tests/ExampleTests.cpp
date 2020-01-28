@@ -1,6 +1,4 @@
-#include "testing/Fixtures.hpp" // include that for the more advanced fixtures, e.g. to build up m2n com
 #include "testing/Testing.hpp"
-#include "utils/Parallel.hpp" // only required when using something from utils::Parallel
 
 using namespace precice;
 
@@ -63,7 +61,6 @@ BOOST_AUTO_TEST_CASE(FourProcTests)
   // Don't copy over that line, it's for testing the example
   BOOST_TEST(context.size == 4);
   BOOST_TEST(context.hasSize(4));
-  BOOST_TEST(utils::Parallel::getCommunicatorSize() == 4);
 }
 
 /// Test that runs on 2 processors.

@@ -85,7 +85,7 @@ void createNastinMesh3D(mesh::PtrMesh pNastinMesh, int rank)
     pNastinMesh->createVertex(position);
   } else if (rank == 1) {
     // not at interface
-  } else if (ranks == 2) {
+  } else if (rank == 2) {
 
     Eigen::VectorXd position(dimensions);
     position << 2.1, 2.1, 2.1;
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(TestConnectionMap2D)
       new m2n::GatherScatterComFactory(participantCom));
   m2n::PtrM2N m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory));
 
-  setupParallelEnvironment(m2n);
+  setupParallelEnvironment(m2n, context);
 
   int  dimensions  = 2;
   bool flipNormals = true;
@@ -156,7 +156,7 @@ BOOST_AUTO_TEST_CASE(TestConnectionMap2D)
     boundingFromMapping->setMeshes(pSolidzMesh, pNastinMesh);
     boundingToMapping->setMeshes(pNastinMesh, pSolidzMesh);
 
-    createNastinMesh2D(pNastinMesh);
+    createNastinMesh2D(pNastinMesh, context.rank);
     pNastinMesh->computeState();
 
     double safetyFactor = 0.0;
@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_CASE(TestConnectionMap3D)
       new m2n::GatherScatterComFactory(participantCom));
   m2n::PtrM2N m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory));
 
-  setupParallelEnvironment(m2n);
+  setupParallelEnvironment(m2n, context);
 
   int  dimensions  = 3;
   bool flipNormals = true;
@@ -232,7 +232,7 @@ BOOST_AUTO_TEST_CASE(TestConnectionMap3D)
     boundingFromMapping->setMeshes(pSolidzMesh, pNastinMesh);
     boundingToMapping->setMeshes(pNastinMesh, pSolidzMesh);
 
-    createNastinMesh3D(pNastinMesh);
+    createNastinMesh3D(pNastinMesh, context.rank);
     pNastinMesh->computeState();
 
     double safetyFactor = 0.0;

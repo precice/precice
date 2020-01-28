@@ -1,6 +1,5 @@
 #ifndef PRECICE_NO_MPI
 
-#include "testing/Fixtures.hpp"
 #include "testing/Testing.hpp"
 
 #include "partition/ProvidedPartition.hpp"
@@ -185,7 +184,7 @@ BOOST_AUTO_TEST_CASE(RePartitionNNBroadcastFilter2D)
       new m2n::GatherScatterComFactory(participantCom));
   m2n::PtrM2N m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory));
 
-  setupParallelEnvironment(m2n);
+  setupParallelEnvironment(m2n, context);
 
   int             dimensions  = 2;
   bool            flipNormals = false;
@@ -209,7 +208,7 @@ BOOST_AUTO_TEST_CASE(RePartitionNNBroadcastFilter2D)
     boundingFromMapping->setMeshes(pSolidzMesh, pNastinMesh);
     boundingToMapping->setMeshes(pNastinMesh, pSolidzMesh);
 
-    createNastinMesh2D(pNastinMesh);
+    createNastinMesh2D(pNastinMesh, context.rank);
     pNastinMesh->computeState();
 
     double safetyFactor = 0.1;
@@ -246,7 +245,7 @@ BOOST_AUTO_TEST_CASE(RePartitionNNDoubleNode2D)
       new m2n::GatherScatterComFactory(participantCom));
   m2n::PtrM2N m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory));
 
-  setupParallelEnvironment(m2n);
+  setupParallelEnvironment(m2n, context);
 
   int             dimensions  = 2;
   bool            flipNormals = false;
@@ -270,7 +269,7 @@ BOOST_AUTO_TEST_CASE(RePartitionNNDoubleNode2D)
     boundingFromMapping->setMeshes(pSolidzMesh, pNastinMesh);
     boundingToMapping->setMeshes(pNastinMesh, pSolidzMesh);
 
-    createNastinMesh2D(pNastinMesh);
+    createNastinMesh2D(pNastinMesh, context.rank);
     pNastinMesh->computeState();
 
     double safetyFactor = 0.5;
@@ -306,7 +305,7 @@ BOOST_AUTO_TEST_CASE(RePartitionNPPreFilterPostFilter2D)
       new m2n::GatherScatterComFactory(participantCom));
   m2n::PtrM2N m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory));
 
-  setupParallelEnvironment(m2n);
+  setupParallelEnvironment(m2n, context);
 
   int  dimensions  = 2;
   bool flipNormals = false;
@@ -329,7 +328,7 @@ BOOST_AUTO_TEST_CASE(RePartitionNPPreFilterPostFilter2D)
     boundingFromMapping->setMeshes(pSolidzMesh, pNastinMesh);
     boundingToMapping->setMeshes(pNastinMesh, pSolidzMesh);
 
-    createNastinMesh2D(pNastinMesh);
+    createNastinMesh2D(pNastinMesh, context.rank);
 
     pNastinMesh->computeState();
     double            safetyFactor = 0.1;
@@ -375,7 +374,7 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFGlobal2D, *testing::Deleted())
   if (context.isMaster()) { //Master
     createSolidzMesh2D(pMesh);
   } else { //Slaves
-    createNastinMesh2D(pOtherMesh);
+    createNastinMesh2D(pOtherMesh, context.rank);
   }
 
   pOtherMesh->computeState();
@@ -457,7 +456,7 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D1, *testing::Deleted())
   if (context.isMaster()) { //Master
     createSolidzMesh2D(pMesh);
   } else { //Slaves
-    createNastinMesh2D(pOtherMesh);
+    createNastinMesh2D(pOtherMesh, context.rank);
   }
 
   pOtherMesh->computeState();
@@ -527,7 +526,7 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D2, *testing::Deleted())
   if (context.isMaster()) { //Master
     createSolidzMesh2D(pMesh);
   } else { //Slaves
-    createNastinMesh2D(pOtherMesh);
+    createNastinMesh2D(pOtherMesh, context.rank);
   }
 
   pOtherMesh->computeState();
@@ -605,7 +604,7 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal3D, *testing::Deleted())
   if (context.isMaster()) { //Master
     createSolidzMesh3D(pMesh);
   } else { //Slaves
-    createNastinMesh3D(pOtherMesh);
+    createNastinMesh3D(pOtherMesh, context.rank);
   }
 
   pOtherMesh->computeState();
@@ -677,7 +676,7 @@ BOOST_AUTO_TEST_CASE(RePartitionNPBroadcastFilter3D)
       new m2n::GatherScatterComFactory(participantCom));
   m2n::PtrM2N m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory));
 
-  setupParallelEnvironment(m2n);
+  setupParallelEnvironment(m2n, context);
 
   int  dimensions  = 3;
   bool flipNormals = false;
@@ -700,7 +699,7 @@ BOOST_AUTO_TEST_CASE(RePartitionNPBroadcastFilter3D)
     boundingFromMapping->setMeshes(pSolidzMesh, pNastinMesh);
     boundingToMapping->setMeshes(pNastinMesh, pSolidzMesh);
 
-    createNastinMesh3D(pNastinMesh);
+    createNastinMesh3D(pNastinMesh, context.rank);
 
     pNastinMesh->computeState();
     double            safetyFactor = 20.0;
@@ -822,10 +821,10 @@ BOOST_AUTO_TEST_CASE(TestRepartitionAndDistribution2D)
   }
 }
 
-BOOST_FIXTURE_TEST_CASE(ProvideAndReceiveCouplingMode, testing::M2NFixture,
-                        *testing::MinRanks(2) * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
+BOOST_AUTO_TEST_CASE(ProvideAndReceiveCouplingMode)
 {
   PRECICE_TEST("Fluid"_on(1_rank), "Solid"_on(1_rank), Require::Events);
+  auto m2n = context.connect("Fluid", "Solid");
 
   int  dimensions  = 2;
   bool flipNormals = false;
