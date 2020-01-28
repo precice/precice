@@ -406,7 +406,7 @@ const Parallel::CommStatePtr Parallel::getLocalCommState()
 
 void Parallel::restrictCommunicator(int newSize)
 {
-  PRECICE_TRACE();
+  PRECICE_TRACE(newSize);
   PRECICE_ASSERT(newSize > 0, "Cannot restrict a communicator to nothing!");
 
 #ifndef PRECICE_NO_MPI
@@ -415,7 +415,7 @@ void Parallel::restrictCommunicator(int newSize)
   const auto size      = baseState->size();
   const auto rank      = baseState->rank();
 
-  PRECICE_ASSERT(newSize > size, "Requested more ranks than the Communicator can provide!");
+  PRECICE_ASSERT(newSize <= size, "Requested more ranks than the Communicator can provide!");
 
   // A single rank can use MPI_COMM_SELF, nothing else required
   if (newSize == 1) {
