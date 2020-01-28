@@ -62,6 +62,8 @@ option(PRECICE_Packages "Configure package generation." ON)
 option(PRECICE_InstallTest "Add test binary and necessary files to install target." OFF)
 option(BUILD_SHARED_LIBS "Build shared libraries by default" OFF)
 option(PRECICE_ALWAYS_VALIDATE_LIBS "Validate libraries even after the validatation succeeded." OFF)
+option(PRECICE_ENABLE_C "Enable the native C bindings" ON)
+option(PRECICE_ENABLE_FORTRAN "Enable the native Fortran bindings" ON)
 
 include(BackwardsCompatibility)
 
@@ -406,6 +408,17 @@ endif()
 include(${CMAKE_CURRENT_LIST_DIR}/src/tests.cmake)
 
 
+# Include Native C Bindings
+if (PRECICE_ENABLE_C)
+  # include(${CMAKE_CURRENT_LIST_DIR}/extras/bindings/c/CMakeLists.txt)
+  add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/extras/bindings/c)
+endif()
+
+# Include Native Fortran Bindings
+if (PRECICE_ENABLE_FORTRAN)
+  # include((${CMAKE_CURRENT_LIST_DIR}/extras/bindings/fortran/CMakeLists.txt)
+  add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/extras/bindings/fortran)
+endif()
 #
 # Install Targets for precice
 #
