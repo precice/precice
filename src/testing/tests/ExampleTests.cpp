@@ -1,5 +1,7 @@
 #include "testing/Testing.hpp"
 
+#include "com/Communication.hpp"
+
 using namespace precice;
 
 BOOST_AUTO_TEST_SUITE(TestingTests) // Use name of the module, e.g. subdirectory below src/, suffixed with Tests
