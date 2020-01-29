@@ -231,37 +231,31 @@ void M2N::send(double itemToSend)
 void M2N::broadcastSendMesh(mesh::Mesh &mesh)
 {
   int meshID = mesh.getID();
-  if (utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster()) {
-    PRECICE_ASSERT(_areSlavesConnected);
-    PRECICE_ASSERT(_distComs.find(meshID) != _distComs.end());
-    PRECICE_ASSERT(_distComs[meshID].get() != nullptr);
-    _distComs[meshID]->broadcastSendMesh();
-  } else { //coupling mode
-    PRECICE_ASSERT(false, "This method can only be used in parallel communication mode");
-  }
+  PRECICE_ASSERT(utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster(),
+                 "This method can only be used for parallel participants");
+  PRECICE_ASSERT(_areSlavesConnected);
+  PRECICE_ASSERT(_distComs.find(meshID) != _distComs.end());
+  PRECICE_ASSERT(_distComs[meshID].get() != nullptr);
+  _distComs[meshID]->broadcastSendMesh();
 }
 
 void M2N::scatterAllCommunicationMap(std::map<int, std::vector<int>> &localCommunicationMap,
                                      mesh::Mesh &                     mesh)
 {
-  if (utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster()) {
-    int meshID = mesh.getID();
-    PRECICE_ASSERT(_areSlavesConnected);
-    _distComs[meshID]->scatterAllCommunicationMap(localCommunicationMap);
-  } else { //coupling mode
-    PRECICE_ASSERT(false, "This method can only be used in parallel communication mode");
-  }
+  PRECICE_ASSERT(utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster(),
+                 "This method can only be used for parallel participants");
+  int meshID = mesh.getID();
+  PRECICE_ASSERT(_areSlavesConnected);
+  _distComs[meshID]->scatterAllCommunicationMap(localCommunicationMap);
 }
 
 void M2N::broadcastSend(int &itemToSend, mesh::Mesh &mesh)
 {
+  PRECICE_ASSERT(utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster(),
+                 "This method can only be used for parallel participants");
   int meshID = mesh.getID();
-  if (utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster()) {
-    PRECICE_ASSERT(_areSlavesConnected);
-    _distComs[meshID]->broadcastSend(itemToSend);
-  } else { //coupling mode
-    PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
-  }
+  PRECICE_ASSERT(_areSlavesConnected);
+  _distComs[meshID]->broadcastSend(itemToSend);
 }
 
 void M2N::receive(double *itemsToReceive,
@@ -317,37 +311,31 @@ void M2N::receive(double &itemToReceive)
 
 void M2N::broadcastReceiveAll(std::vector<int> &itemToReceive, mesh::Mesh &mesh)
 {
-  if (utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster()) {
-    int meshID = mesh.getID();
-    PRECICE_ASSERT(_areSlavesConnected);
-    _distComs[meshID]->broadcastReceiveAll(itemToReceive);
-  } else { //coupling mode
-    PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
-  }
+  PRECICE_ASSERT(utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster(),
+                 "This method can only be used for parallel participants");
+  int meshID = mesh.getID();
+  PRECICE_ASSERT(_areSlavesConnected);
+  _distComs[meshID]->broadcastReceiveAll(itemToReceive);
 }
 
 void M2N::broadcastReceiveAllMesh(mesh::Mesh &mesh)
 {
+  PRECICE_ASSERT(utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster(),
+                 "This method can only be used for parallel participants");
   int meshID = mesh.getID();
-  if (utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster()) {
-    PRECICE_ASSERT(_areSlavesConnected);
-    PRECICE_ASSERT(_distComs.find(meshID) != _distComs.end());
-    PRECICE_ASSERT(_distComs[meshID].get() != nullptr);
-    _distComs[meshID]->broadcastReceiveAllMesh();
-  } else { //coupling mode
-    PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
-  }
+  PRECICE_ASSERT(_areSlavesConnected);
+  PRECICE_ASSERT(_distComs.find(meshID) != _distComs.end());
+  PRECICE_ASSERT(_distComs[meshID].get() != nullptr);
+  _distComs[meshID]->broadcastReceiveAllMesh();
 }
 
 void M2N::gatherAllCommunicationMap(std::map<int, std::vector<int>> &localCommunicationMap, mesh::Mesh &mesh)
 {
-  if (utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster()) {
-    int meshID = mesh.getID();
-    PRECICE_ASSERT(_areSlavesConnected);
-    _distComs[meshID]->gatherAllCommunicationMap(localCommunicationMap);
-  } else { //coupling mode
-    PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
-  }
+  PRECICE_ASSERT(utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster(),
+                 "This method can only be used for parallel participants");
+  int meshID = mesh.getID();
+  PRECICE_ASSERT(_areSlavesConnected);
+  _distComs[meshID]->gatherAllCommunicationMap(localCommunicationMap);
 }
 
 } // namespace m2n
