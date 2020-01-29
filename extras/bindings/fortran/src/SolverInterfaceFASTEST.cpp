@@ -1,9 +1,9 @@
-#include "SolverInterfaceFASTEST.hpp"
+#include "precice/SolverInterfaceFASTEST.hpp"
 #include <iostream>
 #include <string>
-#include "SolverInterfaceFortran.hpp"
 #include "logging/Logger.hpp"
 #include "precice/SolverInterface.hpp"
+#include "precice/SolverInterfaceFortran.hpp"
 
 using namespace std;
 
