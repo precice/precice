@@ -155,13 +155,19 @@ public:
 
   /**
    * @brief Prepare environment used to establish the communication.
+   *
+   * @todo doc
    */
-  virtual void prepareEstablishment() {}
+  virtual void prepareEstablishment(std::string const &acceptorName,
+                                    std::string const &requesterName) {}
 
   /**
    * @brief Clean-up environment used to establish the communication.
+   *
+   * @todo doc
    */
-  virtual void cleanupEstablishment() {}
+  virtual void cleanupEstablishment(std::string const &acceptorName,
+                                    std::string const &requesterName) {}
 
   /// @}
 

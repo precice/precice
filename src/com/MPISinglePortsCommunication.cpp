@@ -5,6 +5,7 @@
 #include "utils/MasterSlave.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/assertion.hpp"
+#include <boost/filesystem.hpp>
 
 namespace precice {
 namespace com {
@@ -82,8 +83,7 @@ void MPISinglePortsCommunication::acceptConnection(std::string const &acceptorNa
 }
 
 /// requesterCommunicatorSize is not used, since connection is always made on the entire communicator
-void MPISinglePortsCommunication::acceptConnectionAsServer(
-    std::string const &acceptorName,
+void MPISinglePortsCommunication::acceptConnectionAsServer( std::string const &acceptorName,
     std::string const &requesterName,
     std::string const &tag,
     int                acceptorRank,

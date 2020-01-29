@@ -58,6 +58,12 @@ public:
                                          std::set<int> const &acceptorRanks,
                                          int                  requesterRank) override;
 
+  virtual void prepareEstablishment(std::string const &acceptorName,
+                                    std::string const &requesterName) override;
+
+  virtual void cleanupEstablishment(std::string const &acceptorName,
+                                    std::string const &requesterName) override;
+
   virtual void closeConnection() override;
 
 private:
