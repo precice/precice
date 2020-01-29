@@ -575,7 +575,7 @@ bool BaseCouplingScheme::measureConvergence(
   PRECICE_ASSERT(_convergenceMeasures.size() > 0);
   if (not utils::MasterSlave::isSlave()) {
     _convergenceWriter->writeData("Timestep", _timesteps);
-    _convergenceWriter->writeData("Iterations", _iterations);
+    _convergenceWriter->writeData("Iteration", _iterations);
   }
   for (size_t i = 0; i < _convergenceMeasures.size(); i++) {
     ConvergenceMeasure &convMeasure = _convergenceMeasures[i];
@@ -691,8 +691,7 @@ void BaseCouplingScheme::initializeTXTWriters()
     }
 
     if (not doesFirstStep()) {
-      for (size_t i = 0; i < _convergenceMeasures.size(); i++) {
-        ConvergenceMeasure &convMeasure = _convergenceMeasures[i];
+      for (ConvergenceMeasure &convMeasure : _convergenceMeasures) {
 
         // only for fine model optimization, i.e., coupling
         if (convMeasure.level > 0)
@@ -728,8 +727,8 @@ void BaseCouplingScheme::advanceTXTWriters()
     int converged = _iterations < _maxIterations ? 1 : 0;
     _iterationsWriter->writeData("Convergence", converged);
 
-    int i = -1;
     if (not doesFirstStep()) {
+      int i = -1;
       for (ConvergenceMeasure &convMeasure : _convergenceMeasures) {
         i++;
 
