@@ -48,7 +48,7 @@ matrix:
     - name: "Test Coverage"
       compiler: gcc
       script:
-        - $TRAVIS_BUILD_DIR/tools/travis-coverage.sh
+        - $TRAVIS_BUILD_DIR/tools/ci/travis-coverage.sh
       after_success:
         - lcov --capture --directory "$TRAVIS_BUILD_DIR/build" --output-file coverage.info
         - lcov --remove coverage.info '/usr/*' "$LOCAL_INSTALL/*" --output-file coverage.info # filter system-files and local-dependencies
@@ -71,7 +71,7 @@ before_install:
   - $PY_CMD -m pip install --user --upgrade pip wheel setuptools # install python dependencies
 
 install:
-  - $TRAVIS_BUILD_DIR/tools/travis-install-dependencies.sh $LOCAL_INSTALL
+  - $TRAVIS_BUILD_DIR/tools/ci/travis-install-dependencies.sh $LOCAL_INSTALL
   - pip3 install --user cython numpy mpi4py packaging
   - export PATH=${LOCAL_INSTALL}/cmake/bin:${LOCAL_INSTALL}/bin:${PATH}
 
@@ -79,7 +79,7 @@ before_script:
   - mkdir $TRAVIS_BUILD_DIR/tests
 
 script:
-  - $TRAVIS_BUILD_DIR/tools/travis-build-test.sh
+  - $TRAVIS_BUILD_DIR/tools/ci/travis-build-test.sh
 
 after_failure:
   - cd $TRAVIS_BUILD_DIR

@@ -40,8 +40,8 @@ set(CPACK_PACKAGE_HOMEPAGE_URL "www.precice.org")
 #set(CPACK_PACKAGE_ICON "")
 set(CPACK_PACKAGE_CHECKSUM "SHA256")
 set(CPACK_RESOURCE_FILE_LICENSE "${preCICE_SOURCE_DIR}/LICENSE")
-set(CPACK_RESOURCE_FILE_README  "${preCICE_SOURCE_DIR}/tools/packaging/README.txt")
-set(CPACK_RESOURCE_FILE_WELCOME "${preCICE_SOURCE_DIR}/tools/packaging/WELCOME.txt")
+set(CPACK_RESOURCE_FILE_README  "${preCICE_SOURCE_DIR}/tools/releasing/packaging/README.txt")
+set(CPACK_RESOURCE_FILE_WELCOME "${preCICE_SOURCE_DIR}/tools/releasing/packaging/WELCOME.txt")
 set(CPACK_MONOLITHIC_INSTALL TRUE)
 set(CPACK_STRIP_FILES TRUE)
 set(CPACK_GENERATOR "TGZ")
@@ -71,12 +71,12 @@ set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "Precise Code Interaction Coupling Environm
  time-to-solution for complex multi-physics scenarios.\
 ")
 set(CPACK_DEBIAN_PACKAGE_CONTROL_STRUCT_PERMISSION TRUE)
-set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${preCICE_SOURCE_DIR}/tools/packaging/debian/triggers")
+set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${preCICE_SOURCE_DIR}/tools/releasing/packaging/debian/triggers")
 set(CPACK_DEBIAN_PACKAGE_GENERATE_SHLIBS TRUE)
 set(CPACK_DEBIAN_PACKAGE_GENERATE_SHLIBS_POLICY "=")
 
 # Install doc files
-install(FILES tools/packaging/debian/copyright
+install(FILES tools/releasing/packaging/debian/copyright
   DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/doc/${CPACK_PACKAGE_NAME}
   )
 
@@ -92,7 +92,7 @@ find_program(GZIP_EXE gzip DOC "The gzip executable")
 if(GZIP_EXE)
   # Process the changelog for debian package
   message(STATUS "Compressing changelog")
-  file(COPY tools/packaging/debian/changelog DESTINATION ${PRECICE_PACKAGING_DIR})
+  file(COPY tools/releasing/packaging/debian/changelog DESTINATION ${PRECICE_PACKAGING_DIR})
   execute_process(COMMAND "${GZIP_EXE}" "-9nf" "${PRECICE_PACKAGING_DIR}/changelog")
 
   # Install compressed changelog
@@ -102,7 +102,7 @@ if(GZIP_EXE)
 else()
   message(WARNING "Installing uncompressed changelog")
   # Install uncompressed changelog
-  install(FILES tools/packaging/debian/changelog
+  install(FILES tools/releasing/packaging/debian/changelog
     DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/doc/${CPACK_PACKAGE_NAME}
     )
 endif()

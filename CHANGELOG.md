@@ -11,6 +11,12 @@ All notable changes to this project will be documented in this file. For future 
   - Renamed `acceleration` configuration option `timesteps-reused` to `time-windows-reused`
   - Renamed `acceleration` configuration option `reused-timesteps-at-restart` to `reused-time-windows-at-restart`
   - Renamed `export` configuration option `timestep-interval` to `frequency`
+- Restructure tools and bindings
+  - Moved developer tools to `tools/`
+  - Moved user tools to `extras/`
+  - Moved native bindings to `extras/bindings/`
+- Moved Fortan 2003 bindings (`src/precice/bindings/f2003`) and solverdummy (`tools/solverdummy/f2003`) to a separate repository.
+- Added CMake options to enable native bindings `PRECICE_ENABLE_C`, `PRECICE_ENABLE_FORTRAN` (on by default)
 - Remove `MeshHandle` from API and replace use in integration tests by `SolverInterfaceImpl::mesh()`.
 - Added the mesh name to the information used to generate connection information files, which is required for the two-level initialization.
 - Merged the `SolverInterface::configure()` into the `SolverInterface` constructors. They now have a second parameter for the configuration file.
