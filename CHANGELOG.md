@@ -6,6 +6,9 @@ All notable changes to this project will be documented in this file. For future 
 
 - Remove `MeshHandle` from API and replace use in integration tests by `SolverInterfaceImpl::mesh()`.
 - Added the mesh name to the information used to generate connection information files, which is required for the two-level initialization.
+- Merged the `SolverInterface::configure()` into the `SolverInterface` constructors. They now have a second parameter for the configuration file.
+- Add CMake build type fallback to `Debug` in case it wasn't provided.
+- Renamed CMake variables `MPI`, `PETSC`, `PYTHON` to `PRECICE_MPICommunication`, `PRECICE_PETScMapping`, `PRECICE_PythonActions`
 - Completely remove server mode. Now, the only supported parallelization concept is the peer-to-peer master-slave mode.
 - Added support for python 3 in python actions
 - Simplify parallel configuration
@@ -16,6 +19,7 @@ All notable changes to this project will be documented in this file. For future 
 - Refactored the XML documentation generation out of the `xml::XMLAttribute` and `xml::XMLTag` classes into `xml/Printer.[ch]pp`.
 - Changed the internal handling of Meshes by removing sub-meshes, the type hierarchy based on `mesh::PropertyContainer`, and the obsolete `mesh::Group` and `mesh::Merge`.
   This improves memory consumption, dramatically reduces allocations and improves locality when traversing primitives.
+- Fixed the Debian package generation by using `GNUInstallDirs`, providing a correct `changelog` and `SOVERSION`, as well as generating a package name including the `SOVERSION`.
 - drop official python2 support for python bindings ([remove tests](https://github.com/precice/systemtests/commit/dba924447996574967b2295cf652fb32bec58020)).
 - Move python bindings to independent repository: [`precice/python-bindings`](https://github.com/precice/python-bindings)
 - End support for deprecated python bindings [`precice`](https://github.com/precice/precice/tree/v1.6.1/src/precice/bindings/python) and [`PySolverInterface`](https://github.com/precice/precice/tree/v1.6.1/src/precice/bindings/PySolverInterface). 

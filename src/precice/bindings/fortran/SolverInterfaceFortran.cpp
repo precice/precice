@@ -41,8 +41,8 @@ void precicef_create_(
   //cout << "Accessor: " << stringAccessorName << "!" << '\n';
   //cout << "Config  : " << stringConfigFileName << "!" << '\n';
   impl = new precice::SolverInterface(stringAccessorName,
+                                      stringConfigFileName,
                                       *solverProcessIndex, *solverProcessSize);
-  impl->configure(stringConfigFileName);
 }
 
 void precicef_initialize_(
