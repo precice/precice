@@ -134,7 +134,7 @@ void ProvidedPartition::prepare()
     utils::MasterSlave::_communication->broadcast(_mesh->getVertexOffsets());
 
     // fill vertex distribution
-    if (std::any_of(_m2ns.begin(), _m2ns.end(), [](m2n::PtrM2N m2n) { return not m2n->usesTwoLevelInitialization(); })) {
+    if (std::any_of(_m2ns.begin(), _m2ns.end(), [](const m2n::PtrM2N& m2n) { return not m2n->usesTwoLevelInitialization(); })) {
       if (utils::MasterSlave::isMaster()) {
         PRECICE_DEBUG("Fill vertex distribution");
         for (int i = 0; i < _mesh->getVertexOffsets()[0]; i++) {
