@@ -1,5 +1,5 @@
 extern "C" {
-#include "SolverInterfaceC.h"
+#include "precice/SolverInterfaceC.h"
 }
 #include <string>
 #include "precice/impl/SolverInterfaceImpl.hpp"
