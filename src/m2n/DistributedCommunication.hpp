@@ -88,7 +88,13 @@ public:
       std::string const &acceptorName,
       std::string const &requesterName) = 0;
 
-  /// Completes the slaves connections for both acceptor and requester by updating the vertex list in _mappings
+  /* @brief Completes the slaves connections for both acceptor and requester by updating
+   * the vertex list in _mappings.
+   *
+   * @pre acceptPreConnection or requestPreConnection has been called.
+   * @pre accept/requestConnection has not been called
+   * @post the m2n connection is ready to use
+   */
   virtual void completeSlavesConnection() = 0;
 
   /**
