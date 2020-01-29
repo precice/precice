@@ -1171,7 +1171,7 @@ void SolverInterfaceImpl::compareBoundingBoxes()
 {
   // sort meshContexts by name, for communication in right order.
   std::sort(_accessor->usedMeshContexts().begin(), _accessor->usedMeshContexts().end(),
-            [](MeshContext *lhs, const MeshContext *rhs) -> bool {
+            [](MeshContext const *const lhs, MeshContext const *const rhs) -> bool {
               return lhs->mesh->getName() < rhs->mesh->getName();
             });
 
@@ -1194,7 +1194,7 @@ void SolverInterfaceImpl::computePartitions()
   auto &contexts = _accessor->usedMeshContexts();
 
   std::sort(contexts.begin(), contexts.end(),
-            [](MeshContext *lhs, const MeshContext *rhs) -> bool {
+            [](MeshContext const *const lhs, MeshContext const *const rhs) -> bool {
               return lhs->mesh->getName() < rhs->mesh->getName();
             });
 
