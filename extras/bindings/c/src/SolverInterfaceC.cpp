@@ -115,11 +115,11 @@ int precicec_isActionRequired(const char *action)
   return 0;
 }
 
-void precicec_fulfilledAction(const char *action)
+void precicec_markActionFulfilled(const char *action)
 {
   PRECICE_ASSERT(impl != nullptr);
   PRECICE_ASSERT(action != nullptr);
-  impl->fulfilledAction(std::string(action));
+  impl->markActionFulfilled(std::string(action));
 }
 
 int precicec_hasMesh(const char *meshName)

@@ -125,7 +125,7 @@ int precicec_isActionRequired(const char *action);
  *
  * @param[in] action the name of the action
  */
-void precicec_fulfilledAction(const char *action);
+void precicec_markActionFulfilled(const char *action);
 
 ///@}
 

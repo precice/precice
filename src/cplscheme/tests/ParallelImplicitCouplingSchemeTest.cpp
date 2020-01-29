@@ -331,7 +331,7 @@ BOOST_FIXTURE_TEST_CASE(testInitializeData, testing::M2NFixture,
   if (nameLocalParticipant == nameParticipant0) {
     BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteInitialData()));
     mesh->data(dataID0)->values() = Eigen::VectorXd::Constant(1, 4.0);
-    cplScheme.performedAction(constants::actionWriteInitialData());
+    cplScheme.markActionFulfilled(constants::actionWriteInitialData());
     cplScheme.initializeData();
     BOOST_TEST(cplScheme.hasDataBeenExchanged());
     auto &values = mesh->data(dataID1)->values();
@@ -339,10 +339,10 @@ BOOST_FIXTURE_TEST_CASE(testInitializeData, testing::M2NFixture,
 
     while (cplScheme.isCouplingOngoing()) {
       if (cplScheme.isActionRequired(writeIterationCheckpoint)) {
-        cplScheme.performedAction(writeIterationCheckpoint);
+        cplScheme.markActionFulfilled(writeIterationCheckpoint);
       }
       if (cplScheme.isActionRequired(readIterationCheckpoint)) {
-        cplScheme.performedAction(readIterationCheckpoint);
+        cplScheme.markActionFulfilled(readIterationCheckpoint);
       }
       cplScheme.addComputedTime(timestepLength);
       cplScheme.advance();
@@ -354,7 +354,7 @@ BOOST_FIXTURE_TEST_CASE(testInitializeData, testing::M2NFixture,
     Eigen::VectorXd v(3);
     v << 1.0, 2.0, 3.0;
     mesh->data(dataID1)->values() = v;
-    cplScheme.performedAction(constants::actionWriteInitialData());
+    cplScheme.markActionFulfilled(constants::actionWriteInitialData());
     BOOST_TEST(testing::equals(values(0), 0.0), values);
     cplScheme.initializeData();
     BOOST_TEST(cplScheme.hasDataBeenExchanged());
@@ -362,12 +362,12 @@ BOOST_FIXTURE_TEST_CASE(testInitializeData, testing::M2NFixture,
 
     while (cplScheme.isCouplingOngoing()) {
       if (cplScheme.isActionRequired(writeIterationCheckpoint)) {
-        cplScheme.performedAction(writeIterationCheckpoint);
+        cplScheme.markActionFulfilled(writeIterationCheckpoint);
       }
       cplScheme.addComputedTime(timestepLength);
       cplScheme.advance();
       if (cplScheme.isActionRequired(readIterationCheckpoint)) {
-        cplScheme.performedAction(readIterationCheckpoint);
+        cplScheme.markActionFulfilled(readIterationCheckpoint);
       }
     }
   }
