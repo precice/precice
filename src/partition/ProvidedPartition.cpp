@@ -35,7 +35,7 @@ void ProvidedPartition::communicate()
 
   bool twoLevelInitAlreadyUsed = false;
 
-  for (auto& m2n : _m2ns) {
+  for (auto &m2n : _m2ns) {
     if (m2n->usesTwoLevelInitialization()) {
 
       PRECICE_CHECK(not twoLevelInitAlreadyUsed, "Two-level initialization does not yet support multiple receivers of a provided mesh.");
@@ -64,14 +64,10 @@ void ProvidedPartition::communicate()
       if (not hasMeshBeenGathered) {
         //Gather mesh
         Event e("partition.gatherMesh." + _mesh->getName(), precice::syncMode);
-        // @todo does addMesh set global vertex id?
         if (not utils::MasterSlave::isSlave()) {
           globalMesh.addMesh(*_mesh); // Add local master mesh to global mesh
         }
         PRECICE_INFO("Gather mesh " + _mesh->getName());
-        if (utils::MasterSlave::isSlave()) {
-          com::CommunicateMesh(utils::MasterSlave::_communication).sendMesh(*_mesh, 0);
-        }
         if (utils::MasterSlave::isMaster()) {
           PRECICE_ASSERT(utils::MasterSlave::getRank() == 0);
           PRECICE_ASSERT(utils::MasterSlave::getSize() > 1);
@@ -80,6 +76,9 @@ void ProvidedPartition::communicate()
             com::CommunicateMesh(utils::MasterSlave::_communication).receiveMesh(globalMesh, rankSlave);
             PRECICE_DEBUG("Received sub-mesh, from slave: " << rankSlave << ", global vertexCount: " << globalMesh.vertices().size());
           }
+        }
+        if (utils::MasterSlave::isSlave()) {
+          com::CommunicateMesh(utils::MasterSlave::_communication).sendMesh(*_mesh, 0);
         }
         hasMeshBeenGathered = true;
       }
@@ -104,31 +103,7 @@ void ProvidedPartition::prepare()
 
   int numberOfVertices = _mesh->vertices().size();
 
-  if (utils::MasterSlave::isSlave()) {
-
-    // send number of own vertices
-    PRECICE_DEBUG("Send number of vertices: " << numberOfVertices);
-    utils::MasterSlave::_communication->send(numberOfVertices, 0);
-
-    // set global IDs
-    int globalVertexCounter = -1;
-    utils::MasterSlave::_communication->receive(globalVertexCounter, 0);
-    PRECICE_DEBUG("Set global vertex indices");
-    for (int i = 0; i < numberOfVertices; i++) {
-      _mesh->vertices()[i].setGlobalIndex(globalVertexCounter + i);
-    }
-
-    // set global number of vertices
-    int globalNumberOfVertices = -1;
-    utils::MasterSlave::_communication->broadcast(globalNumberOfVertices, 0);
-    PRECICE_ASSERT(globalNumberOfVertices != -1);
-    _mesh->setGlobalNumberOfVertices(globalNumberOfVertices);
-
-    // set vertex offsets
-    utils::MasterSlave::_communication->broadcast(_mesh->getVertexOffsets(), 0);
-    PRECICE_DEBUG("My vertex offsets: " << _mesh->getVertexOffsets());
-
-  } else if (utils::MasterSlave::isMaster()) {
+  if (utils::MasterSlave::isMaster()) {
     PRECICE_ASSERT(utils::MasterSlave::getSize() > 1);
 
     // set globals IDs on master
@@ -172,6 +147,29 @@ void ProvidedPartition::prepare()
         }
       }
     }
+  } else if (utils::MasterSlave::isSlave()) {
+
+    // send number of own vertices
+    PRECICE_DEBUG("Send number of vertices: " << numberOfVertices);
+    utils::MasterSlave::_communication->send(numberOfVertices, 0);
+
+    // set global IDs
+    int globalVertexCounter = -1;
+    utils::MasterSlave::_communication->receive(globalVertexCounter, 0);
+    PRECICE_DEBUG("Set global vertex indices");
+    for (int i = 0; i < numberOfVertices; i++) {
+      _mesh->vertices()[i].setGlobalIndex(globalVertexCounter + i);
+    }
+
+    // set global number of vertices
+    int globalNumberOfVertices = -1;
+    utils::MasterSlave::_communication->broadcast(globalNumberOfVertices, 0);
+    PRECICE_ASSERT(globalNumberOfVertices != -1);
+    _mesh->setGlobalNumberOfVertices(globalNumberOfVertices);
+
+    // set vertex offsets
+    utils::MasterSlave::_communication->broadcast(_mesh->getVertexOffsets(), 0);
+    PRECICE_DEBUG("My vertex offsets: " << _mesh->getVertexOffsets());
 
   } else { // Coupling mode
 
@@ -256,8 +254,9 @@ void ProvidedPartition::compareBoundingBoxes()
     for (auto &rank : connectedRanksList) {
       remoteConnectionMap[rank] = {-1};
     }
-    if (remoteConnectionMapSize != 0)
+    if (remoteConnectionMapSize != 0) {
       com::CommunicateBoundingBox(_m2ns[0]->getMasterCommunication()).receiveConnectionMap(remoteConnectionMap, 0);
+    }
 
     // broadcast the received feedbackMap
     utils::MasterSlave::_communication->broadcast(connectedRanksList);
@@ -279,14 +278,14 @@ void ProvidedPartition::compareBoundingBoxes()
     utils::MasterSlave::_communication->broadcast(connectedRanksList, 0);
 
     if (!connectedRanksList.empty()) {
-      for (auto &rank : connectedRanksList) {
+      for (int rank : connectedRanksList) {
         remoteConnectionMap[rank] = {-1};
       }
       com::CommunicateBoundingBox(utils::MasterSlave::_communication).broadcastReceiveConnectionMap(remoteConnectionMap);
     }
 
-    for (auto &remoteRank : remoteConnectionMap) {
-      for (auto &includedRanks : remoteRank.second) {
+    for (const auto &remoteRank : remoteConnectionMap) {
+      for (int includedRanks : remoteRank.second) {
         if (utils::MasterSlave::getRank() == includedRanks) {
           _mesh->getConnectedRanks().push_back(remoteRank.first);
         }

@@ -36,36 +36,39 @@ ReceivedPartition::ReceivedPartition(
 void ReceivedPartition::communicate()
 {
   PRECICE_TRACE();
-  PRECICE_ASSERT(_m2ns.size() == 1);
   PRECICE_ASSERT(_mesh->vertices().empty());
 
-  if (_m2ns[0]->usesTwoLevelInitialization()) {
+  // for two-level initialization, receive mesh partitions
+  if (m2n().usesTwoLevelInitialization()) {
     PRECICE_INFO("Receive mesh partitions for mesh " << _mesh->getName());
     Event e("partition.receiveMeshPartitions." + _mesh->getName(), precice::syncMode);
 
     if (utils::MasterSlave::isMaster()) {
       // Master receives remote mesh's global number of vertices
       int globalNumberOfVertices = -1;
-      _m2ns[0]->getMasterCommunication()->receive(globalNumberOfVertices, 0);
+      m2n().getMasterCommunication()->receive(globalNumberOfVertices, 0);
       _mesh->setGlobalNumberOfVertices(globalNumberOfVertices);
     }
 
     // each rank receives max/min global vertex indices from connected remote ranks
-    _m2ns[0]->broadcastReceiveAll(_remoteMinGlobalVertexIDs, *_mesh);
-    _m2ns[0]->broadcastReceiveAll(_remoteMaxGlobalVertexIDs, *_mesh);
+    m2n().broadcastReceiveAll(_remoteMinGlobalVertexIDs, *_mesh);
+    m2n().broadcastReceiveAll(_remoteMaxGlobalVertexIDs, *_mesh);
     // each rank receives mesh partition from connected remote ranks
-    _m2ns[0]->broadcastReceiveAllMesh(*_mesh);
+    m2n().broadcastReceiveAllMesh(*_mesh);
 
   } else {
+    // for one-level initialization receive complete mesh on master
     PRECICE_INFO("Receive global mesh " << _mesh->getName());
     Event e("partition.receiveGlobalMesh." + _mesh->getName(), precice::syncMode);
 
     if (not utils::MasterSlave::isSlave()) {
       // a ReceivedPartition can only have one communication, @todo nicer design
-      com::CommunicateMesh(_m2ns[0]->getMasterCommunication()).receiveMesh(*_mesh, 0);
+      com::CommunicateMesh(m2n().getMasterCommunication()).receiveMesh(*_mesh, 0);
       _mesh->setGlobalNumberOfVertices(_mesh->vertices().size());
     }
   }
+
+  // for both initialization concepts broadcast and set the global number of vertices
   if (utils::MasterSlave::isMaster()) {
     utils::MasterSlave::_communication->broadcast(_mesh->getGlobalNumberOfVertices());
   }
@@ -142,7 +145,7 @@ void ReceivedPartition::compute()
   e5.stop();
 
   // (6) Compute vertex distribution or local communication map
-  if (_m2ns[0]->usesTwoLevelInitialization()) {
+  if (m2n().usesTwoLevelInitialization()) {
 
     PRECICE_INFO("Compute communication map for mesh " << _mesh->getName());
     Event e6("partition.computeCommunicationMap." + _mesh->getName(), precice::syncMode);
@@ -165,7 +168,7 @@ void ReceivedPartition::compute()
     }
 
     // communicate remote communication map to all remote connected ranks
-    _m2ns[0]->scatterAllCommunicationMap(remoteCommunicationMap, *_mesh);
+    m2n().scatterAllCommunicationMap(remoteCommunicationMap, *_mesh);
 
   } else {
 
@@ -239,7 +242,7 @@ void ReceivedPartition::filterByBoundingBox()
 {
   PRECICE_TRACE(_geometricFilter);
 
-  if (_m2ns[0]->usesTwoLevelInitialization()) {
+  if (m2n().usesTwoLevelInitialization()) {
     std::string msg = "The received mesh " + _mesh->getName() +
                       " cannot solely be filtered on the master rank "
                       "(option \"filter-on-master\") if it is communicated by an m2n communication that uses "
@@ -251,7 +254,7 @@ void ReceivedPartition::filterByBoundingBox()
 
   if (_geometricFilter == ON_MASTER) { //filter on master and communicate reduced mesh then
 
-    PRECICE_ASSERT(not _m2ns[0]->usesTwoLevelInitialization());
+    PRECICE_ASSERT(not m2n().usesTwoLevelInitialization());
     PRECICE_INFO("Pre-filter mesh " << _mesh->getName() << " by bounding box on master");
     Event e("partition.preFilterMesh." + _mesh->getName(), precice::syncMode);
 
@@ -307,15 +310,14 @@ void ReceivedPartition::filterByBoundingBox()
       }
     }
   } else {
-    if (not _m2ns[0]->usesTwoLevelInitialization()) {
+    if (not m2n().usesTwoLevelInitialization()) {
       PRECICE_INFO("Broadcast mesh " << _mesh->getName());
       Event e("partition.broadcastMesh." + _mesh->getName(), precice::syncMode);
 
       if (utils::MasterSlave::isSlave()) {
         com::CommunicateMesh(utils::MasterSlave::_communication).broadcastReceiveMesh(*_mesh);
       } else { // Master
-        PRECICE_ASSERT(utils::MasterSlave::getRank() == 0);
-        PRECICE_ASSERT(utils::MasterSlave::getSize() > 1);
+        PRECICE_ASSERT(utils::MasterSlave::isMaster());
         com::CommunicateMesh(utils::MasterSlave::_communication).broadcastSendMesh(*_mesh);
       }
     }
@@ -357,13 +359,13 @@ void ReceivedPartition::compareBoundingBoxes()
   // @todo handle coupling mode (i.e. serial participant)
   // @todo treatment of multiple m2ns
   PRECICE_ASSERT(_m2ns.size() == 1);
-  if (not _m2ns[0]->usesTwoLevelInitialization())
+  if (not m2n().usesTwoLevelInitialization())
     return;
 
   // receive and broadcast number of remote ranks
   int numberOfRemoteRanks = -1;
   if (utils::MasterSlave::isMaster()) {
-    _m2ns[0]->getMasterCommunication()->receive(numberOfRemoteRanks, 0);
+    m2n().getMasterCommunication()->receive(numberOfRemoteRanks, 0);
     utils::MasterSlave::_communication->broadcast(numberOfRemoteRanks);
   } else {
     PRECICE_ASSERT(utils::MasterSlave::isSlave());
@@ -382,7 +384,7 @@ void ReceivedPartition::compareBoundingBoxes()
 
   // receive and broadcast remote bounding box map
   if (utils::MasterSlave::isMaster()) {
-    com::CommunicateBoundingBox(_m2ns[0]->getMasterCommunication()).receiveBoundingBoxMap(remoteBBMap, 0);
+    com::CommunicateBoundingBox(m2n().getMasterCommunication()).receiveBoundingBoxMap(remoteBBMap, 0);
     com::CommunicateBoundingBox(utils::MasterSlave::_communication).broadcastSendBoundingBoxMap(remoteBBMap);
   } else {
     PRECICE_ASSERT(utils::MasterSlave::isSlave());
@@ -420,16 +422,16 @@ void ReceivedPartition::compareBoundingBoxes()
     }
 
     // send connectionMap to other master
-    _m2ns[0]->getMasterCommunication()->send(connectedRanksList, 0);
+    m2n().getMasterCommunication()->send(connectedRanksList, 0);
     if (not connectionMap.empty()) {
-      com::CommunicateBoundingBox(_m2ns[0]->getMasterCommunication()).sendConnectionMap(connectionMap, 0);
+      com::CommunicateBoundingBox(m2n().getMasterCommunication()).sendConnectionMap(connectionMap, 0);
     } else {
       PRECICE_ERROR("This participant seems to have no mesh partitions for mesh " << _mesh->getName() << " at the coupling interface.");
     }
   } else {
     PRECICE_ASSERT(utils::MasterSlave::isSlave());
 
-    for (auto &remoteBB : remoteBBMap) {
+    for (const auto &remoteBB : remoteBBMap) {
       if (overlapping(_bb, remoteBB.second)) {
         _mesh->getConnectedRanks().push_back(remoteBB.first);
       }
@@ -671,6 +673,12 @@ void ReceivedPartition::setOwnerInformation(const std::vector<int> &ownerVec)
     vertex.setOwner(ownerVec[i] == 1);
     i++;
   }
+}
+
+m2n::M2N &ReceivedPartition::m2n()
+{
+  PRECICE_ASSERT(_m2ns.size() == 1);
+  return *_m2ns[0];
 }
 
 } // namespace partition

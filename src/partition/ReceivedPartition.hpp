@@ -41,6 +41,9 @@ public:
   void compareBoundingBoxes() override;
 
 private:
+  /// return the one m2n, a ReceivedPartition can only have one m2n
+  m2n::M2N &m2n();
+
   void filterByBoundingBox();
 
   /// Sets _bb to the union with the mesh from fromMapping resp. toMapping, also enlage by _safetyFactor
