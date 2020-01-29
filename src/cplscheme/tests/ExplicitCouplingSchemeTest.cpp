@@ -514,7 +514,7 @@ BOOST_AUTO_TEST_CASE(testSerialDataInitialization,
     BOOST_TEST(not cplScheme.hasDataBeenExchanged());
     BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteInitialData()));
     dataValues1(0) = 1.0;
-    cplScheme.performedAction(constants::actionWriteInitialData());
+    cplScheme.markActionFulfilled(constants::actionWriteInitialData());
     cplScheme.initializeData();
     BOOST_TEST(testing::equals(dataValues2(0), 2.0));
     cplScheme.addComputedTime(cplScheme.getNextTimestepMaxLength());
@@ -576,7 +576,7 @@ BOOST_AUTO_TEST_CASE(testParallelDataInitialization,
     cplScheme.initialize(0.0, 1);
     BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteInitialData()));
     dataValues2(0) = 3.0;
-    cplScheme.performedAction(constants::actionWriteInitialData());
+    cplScheme.markActionFulfilled(constants::actionWriteInitialData());
     cplScheme.initializeData();
     BOOST_TEST(cplScheme.hasDataBeenExchanged());
     BOOST_TEST(testing::equals(dataValues0(0), 0.0));
@@ -592,7 +592,7 @@ BOOST_AUTO_TEST_CASE(testParallelDataInitialization,
     BOOST_TEST(not cplScheme.hasDataBeenExchanged());
     BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteInitialData()));
     dataValues1(0) = 1.0;
-    cplScheme.performedAction(constants::actionWriteInitialData());
+    cplScheme.markActionFulfilled(constants::actionWriteInitialData());
     cplScheme.initializeData();
     BOOST_TEST(cplScheme.hasDataBeenExchanged());
     BOOST_TEST(testing::equals(dataValues2(0), 3.0));

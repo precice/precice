@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file 
+ * @file
  * This file contains a specific FASTEST Fortran 77 compatible interface
  * written in C/C++. The specialty is that we offer here 2 interfaces. We need
  * this since FASTEST uses an internal subcycling, coupling the FASTEST fluid
@@ -117,16 +117,16 @@ void precice_fastest_action_required_(
     int         lengthAction);
 
 /**
- * @brief See precice::SolverInterface::fulfilledAction().
+ * @brief See precice::SolverInterface::markActionFulfilled().
  *
  * Fortran syntax:
- * precicef_fulfilled_action( CHARACTER action(*), INTEGER useFluid )
+ * precicef_mark_action_fulfilled_( CHARACTER action(*), INTEGER useFluid )
  *
  * IN:  action
  * IN:  useFluid (1: use the Fluid interface , 0: use the Acoustic interface)
  * OUT: -
  */
-void precice_fastest_fulfilled_action_(
+void precice_fastest_mark_action_fulfilled_(
     const char *action,
     const int * useFluid,
     int         lengthAction);

@@ -470,11 +470,11 @@ bool SolverInterfaceImpl::isActionRequired(
   return _couplingScheme->isActionRequired(action);
 }
 
-void SolverInterfaceImpl::fulfilledAction(
+void SolverInterfaceImpl::markActionFulfilled(
     const std::string &action)
 {
   PRECICE_TRACE(action);
-  _couplingScheme->performedAction(action);
+  _couplingScheme->markActionFulfilled(action);
 }
 
 bool SolverInterfaceImpl::hasToEvaluateSurrogateModel() const
