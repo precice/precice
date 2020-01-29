@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file. For future 
 
 ## develop
 
+- Sorted out the different meaning of timestep and time window
+  - Renamed API function `isTimestepComplete` to `isTimeWindowComplete`
+  - Renamed `cplscheme` configuration option `timestep-length` to `time-window-size`
+  - Renamed `cplscheme` configuration option `max-timesteps` to `max-time-windows`
+  - Renamed `acceleration` configuration option `timesteps-reused` to `time-windows-reused`
+  - Renamed `acceleration` configuration option `reused-timesteps-at-restart` to `reused-time-windows-at-restart`
+  - Renamed `export` configuration option `timestep-interval` to `frequency`
 - Remove `MeshHandle` from API and replace use in integration tests by `SolverInterfaceImpl::mesh()`.
 - Added the mesh name to the information used to generate connection information files, which is required for the two-level initialization.
 - Merged the `SolverInterface::configure()` into the `SolverInterface` constructors. They now have a second parameter for the configuration file.
