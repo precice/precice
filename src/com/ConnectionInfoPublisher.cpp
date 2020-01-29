@@ -9,7 +9,7 @@
 namespace precice {
 namespace com {
 
-std::string ConnectionInfoPublisher::getFilename() const
+std::string impl::hashedFilePath(const std::string &acceptorName, const std::string &requesterName, const std::string &tag, int rank)
 {
   using namespace boost::filesystem;
 
@@ -22,7 +22,33 @@ std::string ConnectionInfoPublisher::getFilename() const
   std::string                  hash = boost::uuids::to_string(gen(s));
   hash.erase(std::remove(hash.begin(), hash.end(), '-'), hash.end());
 
-  path p = path(addressDirectory) / path("precice-run") / path(hash.substr(0, firstLevelLen)) / hash.substr(firstLevelLen);
+  path p = path(hash.substr(0, firstLevelLen)) / hash.substr(firstLevelLen);
+
+  return p.string();
+}
+
+std::string impl::localDirectory(const std::string &acceptorName, const std::string &requesterName, const std::string &addressDirectory)
+{
+  using namespace boost::filesystem;
+  std::string directional = acceptorName + "-" + requesterName;
+
+  path p = path(addressDirectory) / path("precice-run") / path(directional);
+
+  return p.string();
+}
+
+std::string ConnectionInfoPublisher::getLocalDirectory() const
+{
+  return impl::localDirectory(acceptorName, requesterName, addressDirectory);
+}
+
+std::string ConnectionInfoPublisher::getFilename() const
+{
+  using namespace boost::filesystem;
+
+  auto local  = getLocalDirectory();
+  auto hashed = impl::hashedFilePath(acceptorName, requesterName, tag, rank);
+  path p      = path(getLocalDirectory()) / path(hashed);
 
   return p.string();
 }
