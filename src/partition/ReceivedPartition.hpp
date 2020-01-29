@@ -34,11 +34,11 @@ public:
 
   virtual ~ReceivedPartition() {}
 
-  virtual void communicate() override;
+  void communicate() override;
 
-  virtual void compute() override;
+  void compute() override;
 
-  virtual void compareBoundingBoxes() override;
+  void compareBoundingBoxes() override;
 
 private:
   void filterByBoundingBox();

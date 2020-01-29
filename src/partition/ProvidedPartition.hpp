@@ -20,12 +20,12 @@ public:
   virtual ~ProvidedPartition() {}
 
   /// The mesh is gathered and sent to another participant (if required)
-  virtual void communicate() override;
+  void communicate() override;
 
   /// All distribution data structures are set up.
-  virtual void compute() override;
+  void compute() override;
 
-  virtual void compareBoundingBoxes() override;
+  void compareBoundingBoxes() override;
 
 private:
   void prepare();

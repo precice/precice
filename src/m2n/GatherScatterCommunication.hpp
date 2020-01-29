@@ -68,7 +68,7 @@ public:
       std::string const &requesterName);
 
   /// Completes the slaves connections for both acceptor and requester by updating the vertex list in _mappings
-  virtual void completeSlavesConnection() override;
+  void completeSlavesConnection() override;
 
   /**
    * @brief Disconnects from communication space, i.e. participant.
@@ -90,25 +90,25 @@ public:
       int     valueDimension) override;
 
   /// Broadcasts an int to connected ranks on remote participant. Not available for GatherScatterCommunication.
-  virtual void broadcastSend(const int &itemToSend) override;
+  void broadcastSend(const int &itemToSend) override;
 
   /**
    * @brief Receives an int per connected rank on remote participant. Not available for GatherScatterCommunication.
    * @para[out] itemToReceive received ints from remote ranks are stored with the sender rank order
    */
-  virtual void broadcastReceiveAll(std::vector<int> &itemToReceive) override;
+  void broadcastReceiveAll(std::vector<int> &itemToReceive) override;
 
   /// Broadcasts a mesh to connected ranks on remote participant. Not available for GatherScatterCommunication.
-  virtual void broadcastSendMesh() override;
+  void broadcastSendMesh() override;
 
   /// Receive mesh partitions per connected rank on remote participant. Not available for GatherScatterCommunication.
-  virtual void broadcastReceiveAllMesh() override;
+  void broadcastReceiveAllMesh() override;
 
   /// Scatters a communication map over connected ranks on remote participant. Not available for GatherScatterCommunication.
-  virtual void scatterAllCommunicationMap(CommunicationMap &localCommunicationMap) override;
+  void scatterAllCommunicationMap(CommunicationMap &localCommunicationMap) override;
 
   /// Gathers a communication maps from connected ranks on remote participant. Not available for GatherScatterCommunication.
-  virtual void gatherAllCommunicationMap(CommunicationMap &localCommunicationMap) override;
+  void gatherAllCommunicationMap(CommunicationMap &localCommunicationMap) override;
 
 private:
   logging::Logger _log{"m2n::GatherScatterCommunication"};
