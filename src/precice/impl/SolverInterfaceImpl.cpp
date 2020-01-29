@@ -201,12 +201,7 @@ double SolverInterfaceImpl::initialize()
   PRECICE_INFO("Setting up preliminary slaves communication to coupling partner/s");
   for (auto &m2nPair : _m2ns) {
     auto &bm2n = m2nPair.second;
-    if (bm2n.m2n->usesTwoLevelInitialization()) {
-      PRECICE_WARN("Two-level initialization is still in beta testing. Several edge cases are known to fail. Please report problems nevertheless.");
-      PRECICE_DEBUG((bm2n.isRequesting ? "Awaiting slaves connection from " : "Establishing slaves connection to ") << bm2n.remoteName);
-      bm2n.preConnectSlaves();
-      PRECICE_DEBUG("Established slaves connection " << (bm2n.isRequesting ? "from " : "to ") << bm2n.remoteName);
-    }
+    bm2n.preConnectSlaves();
   }
 
   computePartitions();
@@ -214,13 +209,7 @@ double SolverInterfaceImpl::initialize()
   PRECICE_INFO("Setting up slaves communication to coupling partner/s");
   for (auto &m2nPair : _m2ns) {
     auto &bm2n = m2nPair.second;
-    if (bm2n.m2n->usesTwoLevelInitialization()) {
-      bm2n.m2n->completeSlavesConnection();
-    } else {
-      PRECICE_DEBUG((bm2n.isRequesting ? "Awaiting slaves connection from " : "Establishing slaves connection to ") << bm2n.remoteName);
-      bm2n.connectSlaves();
-      PRECICE_DEBUG("Established slaves connection " << (bm2n.isRequesting ? "from " : "to ") << bm2n.remoteName);
-    }
+    bm2n.connectSlaves();
     bm2n.cleanupEstablishment();
   }
 

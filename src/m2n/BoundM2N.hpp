@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include "logging/Logger.hpp"
 #include "m2n/SharedPointer.hpp"
 
 namespace precice {
@@ -27,6 +28,9 @@ struct BoundM2N {
   std::string localName;
   std::string remoteName;
   bool        isRequesting;
+
+private:
+  mutable logging::Logger _log{"impl::SolverInterfaceImpl"};
 };
 
 } // namespace m2n
