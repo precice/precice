@@ -1,4 +1,4 @@
-#include "SolverInterfaceFortran.hpp"
+#include "precice/SolverInterfaceFortran.hpp"
 #include <iostream>
 #include <string>
 #include "logging/Logger.hpp"
