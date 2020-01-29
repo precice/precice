@@ -16,9 +16,9 @@ void precicec_createSolverInterface(
   std::string stringAccessorName(participantName);
   std::string stringConfigFileName(configFileName);
   interface = new precice::SolverInterface(stringAccessorName,
-                                        stringConfigFileName,
-                                        solverProcessIndex,
-                                        solverProcessSize);
+                                           stringConfigFileName,
+                                           solverProcessIndex,
+                                           solverProcessSize);
 }
 
 double precicec_initialize()
