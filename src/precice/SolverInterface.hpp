@@ -175,7 +175,7 @@ public:
    * @returns whether the coupling is ongoing.
    *
    * A coupling is ongoing as long as
-   * - the maximum number of timesteps has not been reached, and
+   * - the maximum number of time windows has not been reached, and
    * - the final time has not been reached.
    *
    * @pre initialize() has been called successfully.
@@ -230,12 +230,13 @@ public:
   /**
    * @brief Checks if the current coupling window is completed.
    *
-   * @returns whether the timestep is complete.
+   * @returns whether the current coupling window is complete.
    *
-   * The following reasons require several solver time steps per coupling time
+   * The following reasons require several solver time steps per time window
    * step:
-   * - A solver chooses to perform subcycling.
-   * - An implicit coupling timestep iteration is not yet converged.
+   * - A solver chooses to perform subcycling, i.e. using a smaller timestep
+   *   than the time window..
+   * - An implicit coupling iteration is not yet converged.
    *
    * @pre initialize() has been called successfully.
    */

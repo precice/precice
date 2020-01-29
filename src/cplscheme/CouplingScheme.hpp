@@ -41,10 +41,10 @@ public:
   /// Does not define a time limit for the coupled simulation.
   static const double UNDEFINED_TIME;
 
-  /// Does not define a timestep limit for the coupled simulation.
+  /// Does not define limit on time windows for the coupled simulation.
   static const int UNDEFINED_TIME_WINDOWS;
 
-  /// To be used, when the coupling timestep length is determined dynamically during the coupling.
+  /// To be used, when the time window size is determined dynamically during the coupling.
   static const double UNDEFINED_TIME_WINDOW_SIZE;
 
   CouplingScheme &operator=(CouplingScheme &&) = delete;

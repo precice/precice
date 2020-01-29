@@ -2,8 +2,6 @@
 
 <precice-configuration>
 
-
-
    <solver-interface dimensions="3">
       <data:vector name="Forces"  />
       <data:vector name="Velocities"  />

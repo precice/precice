@@ -175,8 +175,8 @@ public:
    */
   bool isWriteDataRequired(double computedTimestepLength) const;
 
-    /**
-   * @brief Returns true, if a global timestep is completed.
+  /**
+   * @brief Returns true, if a time window is completed.
    */
   bool isTimeWindowComplete() const;
 
