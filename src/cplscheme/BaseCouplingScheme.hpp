@@ -34,7 +34,7 @@ namespace cplscheme {
  *    needed
  * -# retrieve necessary information about sent/received data and the state of
  *    the coupled simulation
- * -# query and fulfill required actions
+ * -# query actions and mark them as fulfilled
  * -# compute data to be sent (possibly taking into account received data from
  *    initialize())
  * -# advance the coupling scheme with advance(); where the maximum timestep
@@ -181,7 +181,7 @@ public:
   virtual bool isActionRequired(const std::string &actionName) const;
 
   /// Tells the coupling scheme that the accessor has performed the given action.
-  virtual void performedAction(const std::string &actionName);
+  virtual void markActionFulfilled(const std::string &actionName);
 
   /// Sets an action required to be performed by the accessor.
   virtual void requireAction(const std::string &actionName);

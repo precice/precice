@@ -111,12 +111,12 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
       while (cplScheme->isCouplingOngoing()) {
         BOOST_TEST(testing::equals(0.1, cplScheme->getNextTimestepMaxLength()));
         if (cplScheme->isActionRequired(writeIterationCheckpoint)) {
-          cplScheme->performedAction(writeIterationCheckpoint);
+          cplScheme->markActionFulfilled(writeIterationCheckpoint);
         }
         cplScheme->addComputedTime(cplScheme->getNextTimestepMaxLength());
         cplScheme->advance();
         if (cplScheme->isActionRequired(readIterationCheckpoint)) {
-          cplScheme->performedAction(readIterationCheckpoint);
+          cplScheme->markActionFulfilled(readIterationCheckpoint);
         } else {
           BOOST_TEST(cplScheme->isCouplingTimestepComplete());
           computedTime += cplScheme->getNextTimestepMaxLength();
@@ -139,12 +139,12 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
       while (cplScheme->isCouplingOngoing()) {
         BOOST_TEST(testing::equals(0.1, cplScheme->getNextTimestepMaxLength()));
         if (cplScheme->isActionRequired(writeIterationCheckpoint)) {
-          cplScheme->performedAction(writeIterationCheckpoint);
+          cplScheme->markActionFulfilled(writeIterationCheckpoint);
         }
         cplScheme->addComputedTime(cplScheme->getNextTimestepMaxLength());
         cplScheme->advance();
         if (cplScheme->isActionRequired(readIterationCheckpoint)) {
-          cplScheme->performedAction(readIterationCheckpoint);
+          cplScheme->markActionFulfilled(readIterationCheckpoint);
         } else {
           BOOST_TEST(cplScheme->isCouplingTimestepComplete());
           computedTime += cplScheme->getNextTimestepMaxLength();
@@ -168,12 +168,12 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
       while (cplScheme->isCouplingOngoing()) {
         BOOST_TEST(testing::equals(0.1, cplScheme->getNextTimestepMaxLength()));
         if (cplScheme->isActionRequired(writeIterationCheckpoint)) {
-          cplScheme->performedAction(writeIterationCheckpoint);
+          cplScheme->markActionFulfilled(writeIterationCheckpoint);
         }
         cplScheme->addComputedTime(cplScheme->getNextTimestepMaxLength());
         cplScheme->advance();
         if (cplScheme->isActionRequired(readIterationCheckpoint)) {
-          cplScheme->performedAction(readIterationCheckpoint);
+          cplScheme->markActionFulfilled(readIterationCheckpoint);
         } else {
           BOOST_TEST(cplScheme->isCouplingTimestepComplete());
           computedTime += cplScheme->getNextTimestepMaxLength();
