@@ -3,6 +3,7 @@ extern "C" {
 }
 #include <string>
 #include "precice/SolverInterface.hpp"
+#include "precice/impl/versions.hpp"
 #include "utils/assertion.hpp"
 
 static precice::SolverInterface *interface = nullptr;
@@ -323,6 +324,11 @@ void precicec_readScalarData(
 {
   PRECICE_ASSERT(interface != nullptr);
   interface->readScalarData(dataID, valueIndex, *dataValue);
+}
+
+const char *precicec_getVersionInformation()
+{
+  return {precice::versionInformation};
 }
 
 void precicec_mapWriteDataFrom(int fromMeshID)

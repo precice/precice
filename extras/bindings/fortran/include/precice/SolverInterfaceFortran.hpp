@@ -644,6 +644,10 @@ void precicef_action_read_iter_checkp_(
     char *nameAction,
     int   lengthNameAction);
 
+void precicef_get_version_information_(
+    char *versionInfo,
+    int   lengthVersionInfo);
+
 #ifdef __cplusplus
 }
 #endif
