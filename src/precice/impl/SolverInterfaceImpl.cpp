@@ -1211,8 +1211,9 @@ void SolverInterfaceImpl::computePartitions()
   for (MeshContext *meshContext : contexts) {
     meshContext->partition->compute();
     meshContext->mesh->computeState();
-    if (not meshContext->provideMesh) // received mesh can only compute their bounding boxes here
+    if (not meshContext->provideMesh) { // received mesh can only compute their bounding boxes here
       meshContext->mesh->computeBoundingBox();
+    }
     meshContext->mesh->allocateDataValues();
   }
 }
