@@ -95,8 +95,11 @@ public:
    *
    * @see com::Communication::prepareEstablishment()
    * @see cleanupEstablishment()
+   *
+   * @todo doc
    */
-  void prepareEstablishment();
+  void prepareEstablishment(const std::string &acceptorName,
+                            const std::string &requesterName);
 
   /**
    * @brief cleans-up to establish the connections
@@ -106,8 +109,11 @@ public:
    *
    * @see com::Communication::cleanupEstablishment()
    * @see prepareEstablishment()
+   *
+   * @todo doc
    */
-  void cleanupEstablishment();
+  void cleanupEstablishment(const std::string &acceptorName,
+                            const std::string &requesterName);
 
   /**
    * @brief Disconnects from communication space, i.e. participant.
