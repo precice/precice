@@ -62,6 +62,8 @@ option(PRECICE_Packages "Configure package generation." ON)
 option(PRECICE_InstallTest "Add test binary and necessary files to install target." OFF)
 option(BUILD_SHARED_LIBS "Build shared libraries by default" OFF)
 option(PRECICE_ALWAYS_VALIDATE_LIBS "Validate libraries even after the validatation succeeded." OFF)
+option(PRECICE_ENABLE_C "Enable the native C bindings" ON)
+option(PRECICE_ENABLE_FORTRAN "Enable the native Fortran bindings" ON)
 
 include(BackwardsCompatibility)
 
@@ -111,6 +113,24 @@ add_feature_info(PythonActions PRECICE_PythonActions
    This feature enables the support for user-defined actions written in Python based on numpy.
 
    Set PRECICE_PythonActions to enable.
+  ")
+add_feature_info(CBindings PRECICE_ENABLE_C
+  "Enables the native Fortran bindings.
+
+   preCICE provides native bindings for C, which are compiled into the library.
+   This feature enables the compilation and installation of the bindings into the library.
+   Note that we strongly recommend to compile with C bindings enabled for compatibility reasons.
+
+   Set PRECICE_ENABLE_C to enable.
+  ")
+add_feature_info(FortranBindings PRECICE_ENABLE_FORTRAN
+  "Enables the native Fortran bindings.
+
+   preCICE provides native bindings for Fortran, which are compiled into the library.
+   This feature enables the compilation and installation of the bindings into the library.
+   Note that we strongly recommend to compile with Fortran bindings enabled for compatibility reasons.
+
+   Set PRECICE_ENABLE_FORTRAN to enable.
   ")
 
 feature_summary(WHAT ENABLED_FEATURES  DESCRIPTION "=== ENABLED FEATURES ===" QUIET_ON_EMPTY)
@@ -406,6 +426,17 @@ endif()
 include(${CMAKE_CURRENT_LIST_DIR}/src/tests.cmake)
 
 
+# Include Native C Bindings
+if (PRECICE_ENABLE_C)
+  # include(${CMAKE_CURRENT_LIST_DIR}/extras/bindings/c/CMakeLists.txt)
+  add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/extras/bindings/c)
+endif()
+
+# Include Native Fortran Bindings
+if (PRECICE_ENABLE_FORTRAN)
+  # include((${CMAKE_CURRENT_LIST_DIR}/extras/bindings/fortran/CMakeLists.txt)
+  add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/extras/bindings/fortran)
+endif()
 #
 # Install Targets for precice
 #
@@ -510,7 +541,7 @@ endif()
 
 # Configure a pkg-config file
 configure_file(
-  "${PROJECT_SOURCE_DIR}/tools/packaging/debian/precice.pc.in"
+  "${PROJECT_SOURCE_DIR}/tools/releasing/packaging/debian/precice.pc.in"
   "lib/pkgconfig/libprecice.pc"
   @ONLY
   )

@@ -393,7 +393,7 @@ bool BaseCouplingScheme::isActionRequired(
   return _actions.count(actionName) > 0;
 }
 
-void BaseCouplingScheme::performedAction(
+void BaseCouplingScheme::markActionFulfilled(
     const std::string &actionName)
 {
   _actions.erase(actionName);

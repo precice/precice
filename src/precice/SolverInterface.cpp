@@ -79,10 +79,10 @@ bool SolverInterface::isActionRequired(
   return _impl->isActionRequired(action);
 }
 
-void SolverInterface::fulfilledAction(
+void SolverInterface::markActionFulfilled(
     const std::string &action)
 {
-  _impl->fulfilledAction(action);
+  _impl->markActionFulfilled(action);
 }
 
 bool SolverInterface::hasMesh(

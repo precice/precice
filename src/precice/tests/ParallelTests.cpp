@@ -299,7 +299,7 @@ BOOST_AUTO_TEST_CASE(TestQN, *testing::OnSize(4))
 
     while (interface.isCouplingOngoing()) {
       if (interface.isActionRequired(precice::constants::actionWriteIterationCheckpoint())) {
-        interface.fulfilledAction(precice::constants::actionWriteIterationCheckpoint());
+        interface.markActionFulfilled(precice::constants::actionWriteIterationCheckpoint());
       }
 
       if (utils::Parallel::getProcessRank() == 0) {
@@ -317,7 +317,7 @@ BOOST_AUTO_TEST_CASE(TestQN, *testing::OnSize(4))
       interface.readBlockScalarData(readDataID, 4, vertexIDs, inValues);
 
       if (interface.isActionRequired(precice::constants::actionReadIterationCheckpoint())) {
-        interface.fulfilledAction(precice::constants::actionReadIterationCheckpoint());
+        interface.markActionFulfilled(precice::constants::actionReadIterationCheckpoint());
         iterations++;
       }
     }
