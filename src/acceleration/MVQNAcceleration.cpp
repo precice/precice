@@ -114,11 +114,11 @@ void MVQNAcceleration::initialize(
       // initialize cyclic communication between successive slaves
       int prevProc = (utils::MasterSlave::getRank() - 1 < 0) ? utils::MasterSlave::getSize() - 1 : utils::MasterSlave::getRank() - 1;
       if ((utils::MasterSlave::getRank() % 2) == 0) {
-        _cyclicCommLeft->acceptConnection("cyclicComm-" + std::to_string(prevProc), "", utils::MasterSlave::getRank());
-        _cyclicCommRight->requestConnection("cyclicComm-" + std::to_string(utils::MasterSlave::getRank()), "", 0, 1);
+        _cyclicCommLeft->acceptConnection("cyclicComm-" + std::to_string(prevProc), "", "", utils::MasterSlave::getRank());
+        _cyclicCommRight->requestConnection("cyclicComm-" + std::to_string(utils::MasterSlave::getRank()), "", "", 0, 1);
       } else {
-        _cyclicCommRight->requestConnection("cyclicComm-" + std::to_string(utils::MasterSlave::getRank()), "", 0, 1);
-        _cyclicCommLeft->acceptConnection("cyclicComm-" + std::to_string(prevProc), "", utils::MasterSlave::getRank());
+        _cyclicCommRight->requestConnection("cyclicComm-" + std::to_string(utils::MasterSlave::getRank()), "", "", 0, 1);
+        _cyclicCommLeft->acceptConnection("cyclicComm-" + std::to_string(prevProc), "", "", utils::MasterSlave::getRank());
       }
     }
   }

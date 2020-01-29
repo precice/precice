@@ -27,7 +27,6 @@ namespace precice {
  * To adapt a solver to preCICE, follow the following main structure:
  *
  * -# Create an object of SolverInterface with SolverInterface()
- * -# Configure the object with SolverInterface::configure()
  * -# Initialize preCICE with SolverInterface::initialize()
  * -# Advance to the next (time)step with SolverInterface::advance()
  * -# Finalize preCICE with SolverInterface::finalize()
@@ -44,6 +43,7 @@ public:
   /**
    * @param[in] participantName Name of the participant using the interface. Has to
    *        match the name given for a participant in the xml configuration file.
+   * @param[in] configurationFileName Name (with path) of the xml configuration file.
    * @param[in] solverProcessIndex If the solver code runs with several processes,
    *        each process using preCICE has to specify its index, which has to start
    *        from 0 and end with solverProcessSize - 1.
@@ -51,12 +51,14 @@ public:
    */
   SolverInterface(
       const std::string &participantName,
+      const std::string &configurationFileName,
       int                solverProcessIndex,
       int                solverProcessSize);
 
   /**
    * @param[in] participantName Name of the participant using the interface. Has to
    *        match the name given for a participant in the xml configuration file.
+   * @param[in] configurationFileName Name (with path) of the xml configuration file.
    * @param[in] solverProcessIndex If the solver code runs with several processes,
    *        each process using preCICE has to specify its index, which has to start
    *        from 0 and end with solverProcessSize - 1.
@@ -65,30 +67,12 @@ public:
    */
   SolverInterface(
       const std::string &participantName,
+      const std::string &configurationFileName,
       int                solverProcessIndex,
       int                solverProcessSize,
       void *             communicator);
 
   ~SolverInterface();
-
-  /**
-   * @brief Configures preCICE from the given xml file.
-   *
-   * Only after the configuration a usable state of a SolverInterface
-   * object is achieved. However, most of the functionalities in preCICE can be
-   * used only after initialize() has been called. Some actions, e.g. specifying
-   * the solvers interface mesh, have to be done before initialize is called.
-   *
-   * In configure, the following is done:
-   * - The XML configuration for preCICE is parsed and all objects containing
-   *   data are created, but not necessarily filled with data.
-   * - Communication between master and slaves is established.
-   *
-   * @pre configure() has not yet been called
-   *
-   * @param[in] configurationFileName Name (with path) of the xml configuration file to be read.
-   */
-  void configure(const std::string &configurationFileName);
 
   ///@}
 
@@ -98,7 +82,6 @@ public:
   /**
    * @brief Fully initializes preCICE
    *
-   * @pre configure() has been called successfully.
    * @pre initialize() has not yet bee called.
    *
    * @post Parallel communication to the coupling partner/s is setup.
@@ -127,13 +110,13 @@ public:
    * Both participants need to call initializeData().
    *
    * @pre initialize() has been called successfully.
-   * @pre The action WriteInitialData is required 
+   * @pre The action WriteInitialData is required
    * @pre advance() has not yet been called.
    * @pre finalize() has not yet been called.
    *
    * @post Initial coupling data was exchanged.
    *
-   * @see isActionRequired  
+   * @see isActionRequired
    * @see precice::constants::actionWriteInitialData
    */
   void initializeData();
@@ -183,8 +166,6 @@ public:
    *
    * Currently, two and three dimensional problems can be solved using preCICE.
    * The dimension is specified in the XML configuration.
-   *
-   * @pre configure() has been called successfully.
    */
   int getDimensions() const;
 
@@ -304,10 +285,10 @@ public:
    * Some features of preCICE require a solver to perform specific actions, in
    * order to be in valid state for a coupled simulation. A solver is made
    * eligible to use those features, by querying for the required actions,
-   * performing them on demand, and calling fulfilledAction() to signalize
+   * performing them on demand, and calling markActionFulfilled() to signalize
    * preCICE the correct behavior of the solver.
    *
-   * @see fulfilledAction()
+   * @see markActionFulfilled()
    * @see cplscheme::constants
    */
   bool isActionRequired(const std::string &action) const;
@@ -322,7 +303,7 @@ public:
    * @see requireAction()
    * @see cplscheme::constants
    */
-  void fulfilledAction(const std::string &action);
+  void markActionFulfilled(const std::string &action);
 
   ///@}
 
@@ -349,7 +330,7 @@ public:
 
   /**
    * @brief Returns the ID belonging to the mesh with given name.
-   * 
+   *
    * @param[in] meshName the name of the mesh
    * @returns the id of the corresponding mesh
    */
@@ -491,7 +472,7 @@ public:
    * per se. Edges are created on the fly within preCICE. This routine is
    * significantly slower than the one using edge IDs, since it needs to check,
    * whether an edge is created already or not.
-   * 
+   *
    * @param[in] meshID ID of the mesh to add the triangle to
    * @param[in] firstVertexID ID of the first vertex of the triangle
    * @param[in] secondVertexID ID of the second vertex of the triangle
@@ -533,7 +514,7 @@ public:
    * per se. Edges are created on the fly within preCICE. This routine is
    * significantly slower than the one using edge IDs, since it needs to check,
    * whether an edge is created already or not.
-   * 
+   *
    * @param[in] meshID ID of the mesh to add the Quad to
    * @param[in] firstVertexID ID of the first vertex of the Quad
    * @param[in] secondVertexID ID of the second vertex of the Quad
@@ -566,7 +547,7 @@ public:
 
   /**
    * @brief Returns the ID of the data associated with the given name and mesh.
-   * 
+   *
    * @param[in] dataName the name of the data
    * @param[in] meshID the id of the associated mesh
    *
@@ -802,11 +783,11 @@ private:
   friend struct testing::WhiteboxAccessor;
 };
 
-/** 
+/**
  * @brief Returns information on the version of preCICE.
  *
  * Returns a semicolon-separated C-string containing:
- * 
+ *
  * 1) the version of preCICE
  * 2) the revision information of preCICE
  * 3) the configuration of preCICE including MPI, PETSC, PYTHON

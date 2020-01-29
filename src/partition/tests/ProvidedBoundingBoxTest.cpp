@@ -47,12 +47,12 @@ void setupParallelEnvironment(m2n::PtrM2N m2n)
   }
 
   if (utils::Parallel::getProcessRank() == 1) { //Master
-    masterSlaveCom->acceptConnection("SolidMaster", "SolidSlaves", utils::Parallel::getProcessRank());
+    masterSlaveCom->acceptConnection("SolidMaster", "SolidSlaves", "Test", utils::Parallel::getProcessRank());
     masterSlaveCom->setRankOffset(1);
   } else if (utils::Parallel::getProcessRank() == 2) { //Slave1
-    masterSlaveCom->requestConnection("SolidMaster", "SolidSlaves", 0, 2);
+    masterSlaveCom->requestConnection("SolidMaster", "SolidSlaves", "Test", 0, 2);
   } else if (utils::Parallel::getProcessRank() == 3) { //Slave2
-    masterSlaveCom->requestConnection("SolidMaster", "SolidSlaves", 1, 2);
+    masterSlaveCom->requestConnection("SolidMaster", "SolidSlaves", "Test", 1, 2);
   }
 }
 
@@ -85,15 +85,15 @@ void setupM2NBaseEnvironment(m2n::PtrM2N p2p)
   }
 
   if (utils::Parallel::getProcessRank() == 0) { //Master Fluid
-    utils::MasterSlave::_communication->acceptConnection("FluidMaster", "FluidSlave", utils::Parallel::getProcessRank());
+    utils::MasterSlave::_communication->acceptConnection("FluidMaster", "FluidSlave", "Test", utils::Parallel::getProcessRank());
     utils::MasterSlave::_communication->setRankOffset(1);
   } else if (utils::Parallel::getProcessRank() == 1) { //Slave Fluid
-    utils::MasterSlave::_communication->requestConnection("FluidMaster", "FluidSlave", 0, 1);
+    utils::MasterSlave::_communication->requestConnection("FluidMaster", "FluidSlave", "Test", 0, 1);
   } else if (utils::Parallel::getProcessRank() == 2) { //Master Solid
-    utils::MasterSlave::_communication->acceptConnection("SolidMaster", "SolidSlave", utils::Parallel::getProcessRank());
+    utils::MasterSlave::_communication->acceptConnection("SolidMaster", "SolidSlave", "Test", utils::Parallel::getProcessRank());
     utils::MasterSlave::_communication->setRankOffset(1);
   } else if (utils::Parallel::getProcessRank() == 3) { //Slave Solis
-    utils::MasterSlave::_communication->requestConnection("SolidMaster", "SolidSlave", 0, 1);
+    utils::MasterSlave::_communication->requestConnection("SolidMaster", "SolidSlave", "Test", 0, 1);
   }
 }
 

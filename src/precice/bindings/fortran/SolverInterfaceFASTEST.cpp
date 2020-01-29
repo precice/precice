@@ -44,13 +44,13 @@ void precice_fastest_create_(
   //cout << "Config  : " << stringConfigFileName << "!" << '\n';
   if (isAcousticUsed) {
     implAcoustic = new precice::SolverInterface(stringAccessorNameAcoustic,
+                                                stringConfigFileName,
                                                 *solverProcessIndex, *solverProcessSize);
-    implAcoustic->configure(stringConfigFileName);
   }
   if (isFluidUsed) {
     implFluid = new precice::SolverInterface(stringAccessorNameFluid,
+                                             stringConfigFileName,
                                              *solverProcessIndex, *solverProcessSize);
-    implFluid->configure(stringConfigFileName);
   }
   PRECICE_CHECK(implAcoustic != nullptr || implFluid != nullptr, "Either the Fluid interface or the Acoustic"
                                                                  " interface or both need to be used");
@@ -133,7 +133,7 @@ void precice_fastest_action_required_(
   }
 }
 
-void precice_fastest_fulfilled_action_(
+void precice_fastest_mark_action_fulfilled_(
     const char *action,
     const int * useFluid,
     int         lengthAction)
@@ -143,9 +143,9 @@ void precice_fastest_fulfilled_action_(
   int    strippedLength = precice::impl::strippedLength(action, lengthAction);
   string stringAction(action, strippedLength);
   if (*useFluid == 0) {
-    implAcoustic->fulfilledAction(stringAction);
+    implAcoustic->markActionFulfilled(stringAction);
   } else {
-    implFluid->fulfilledAction(stringAction);
+    implFluid->markActionFulfilled(stringAction);
   }
 }
 

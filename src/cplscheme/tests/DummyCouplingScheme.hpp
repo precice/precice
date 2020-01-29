@@ -199,7 +199,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  virtual void performedAction(const std::string &actionName)
+  virtual void markActionFulfilled(const std::string &actionName)
   {
     PRECICE_ASSERT(false);
   }

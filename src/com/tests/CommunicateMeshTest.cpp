@@ -45,14 +45,14 @@ BOOST_AUTO_TEST_CASE(VertexEdgeMesh,
 
       if (utils::Parallel::getProcessRank() == 0) {
         utils::Parallel::splitCommunicator(participant0);
-        com->acceptConnection(participant0, participant1, utils::Parallel::getProcessRank());
+        com->acceptConnection(participant0, participant1, "", utils::Parallel::getProcessRank());
         comMesh.sendMesh(sendMesh, 0);
       } else if (utils::Parallel::getProcessRank() == 1) {
         // receiveMesh can also deal with delta meshes
         mesh::Mesh recvMesh("Received Mesh", dim, false, testing::nextMeshID());
         recvMesh.createVertex(Eigen::VectorXd::Constant(dim, 9));
         utils::Parallel::splitCommunicator(participant1);
-        com->requestConnection(participant0, participant1, 0, 1);
+        com->requestConnection(participant0, participant1, "", 0, 1);
         comMesh.receiveMesh(recvMesh, 0);
         BOOST_TEST(recvMesh.vertices().size() == 4);
         BOOST_TEST(testing::equals(recvMesh.vertices()[0].getCoords(), Eigen::VectorXd::Constant(dim, 9)));
@@ -101,14 +101,14 @@ BOOST_AUTO_TEST_CASE(VertexEdgeTriangleMesh,
 
     if (utils::Parallel::getProcessRank() == 0) {
       utils::Parallel::splitCommunicator(participant0);
-      com->acceptConnection(participant0, participant1, utils::Parallel::getProcessRank());
+      com->acceptConnection(participant0, participant1, "", utils::Parallel::getProcessRank());
       comMesh.sendMesh(sendMesh, 0);
     } else if (utils::Parallel::getProcessRank() == 1) {
       mesh::Mesh recvMesh("Received Mesh", dim, false, testing::nextMeshID());
       // receiveMesh can also deal with delta meshes
       recvMesh.createVertex(Eigen::VectorXd::Constant(dim, 9));
       utils::Parallel::splitCommunicator(participant1);
-      com->requestConnection(participant0, participant1, 0, 1);
+      com->requestConnection(participant0, participant1, "", 0, 1);
       comMesh.receiveMesh(recvMesh, 0);
       BOOST_TEST(recvMesh.vertices().size() == 4);
       BOOST_TEST(testing::equals(recvMesh.vertices()[0].getCoords(), Eigen::VectorXd::Constant(dim, 9)));
@@ -158,14 +158,14 @@ BOOST_AUTO_TEST_CASE(BroadcastVertexEdgeTriangleMesh,
 
     if (utils::Parallel::getProcessRank() == 0) {
       utils::Parallel::splitCommunicator(participant0);
-      com->acceptConnection(participant0, participant1, utils::Parallel::getProcessRank());
+      com->acceptConnection(participant0, participant1, "", utils::Parallel::getProcessRank());
       comMesh.broadcastSendMesh(sendMesh);
     } else if (utils::Parallel::getProcessRank() == 1) {
       mesh::Mesh recvMesh("Received Mesh", dim, false, testing::nextMeshID());
       // receiveMesh can also deal with delta meshes
       recvMesh.createVertex(Eigen::VectorXd::Constant(dim, 9));
       utils::Parallel::splitCommunicator(participant1);
-      com->requestConnection(participant0, participant1, 0, 1);
+      com->requestConnection(participant0, participant1, "", 0, 1);
       comMesh.broadcastReceiveMesh(recvMesh);
       BOOST_TEST(recvMesh.vertices().size() == 4);
       BOOST_TEST(testing::equals(recvMesh.vertices()[0].getCoords(), Eigen::VectorXd::Constant(dim, 9)));

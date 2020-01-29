@@ -181,7 +181,7 @@ public:
   virtual bool isActionRequired(const std::string &actionName) const = 0;
 
   /// Tells the coupling scheme that the accessor has performed the given action.
-  virtual void performedAction(const std::string &actionName) = 0;
+  virtual void markActionFulfilled(const std::string &actionName) = 0;
 
   /// Sets an action required to be performed by the accessor.
   virtual void requireAction(const std::string &actionName) = 0;

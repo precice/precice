@@ -51,10 +51,11 @@ bool syncMode = false;
 namespace impl {
 
 SolverInterfaceImpl::SolverInterfaceImpl(
-    std::string participantName,
-    int         accessorProcessRank,
-    int         accessorCommunicatorSize,
-    void *      communicator)
+    std::string        participantName,
+    const std::string &configurationFileName,
+    int                accessorProcessRank,
+    int                accessorCommunicatorSize,
+    void *             communicator)
     : _accessorName(std::move(participantName)),
       _accessorProcessRank(accessorProcessRank),
       _accessorCommunicatorSize(accessorCommunicatorSize)
@@ -77,13 +78,16 @@ SolverInterfaceImpl::SolverInterfaceImpl(
 #endif
 
   logging::setParticipant(_accessorName);
+
+  configure(configurationFileName);
 }
 
 SolverInterfaceImpl::SolverInterfaceImpl(
-    std::string participantName,
-    int         accessorProcessRank,
-    int         accessorCommunicatorSize)
-    : SolverInterfaceImpl::SolverInterfaceImpl(std::move(participantName), accessorProcessRank, accessorCommunicatorSize, nullptr)
+    std::string        participantName,
+    const std::string &configurationFileName,
+    int                accessorProcessRank,
+    int                accessorCommunicatorSize)
+    : SolverInterfaceImpl::SolverInterfaceImpl(std::move(participantName), configurationFileName, accessorProcessRank, accessorCommunicatorSize, nullptr)
 {
 }
 
@@ -466,11 +470,11 @@ bool SolverInterfaceImpl::isActionRequired(
   return _couplingScheme->isActionRequired(action);
 }
 
-void SolverInterfaceImpl::fulfilledAction(
+void SolverInterfaceImpl::markActionFulfilled(
     const std::string &action)
 {
   PRECICE_TRACE(action);
-  _couplingScheme->performedAction(action);
+  _couplingScheme->markActionFulfilled(action);
 }
 
 bool SolverInterfaceImpl::hasToEvaluateSurrogateModel() const
@@ -1355,11 +1359,11 @@ void SolverInterfaceImpl::initializeMasterSlaveCommunication()
   int rankOffset = 1;
   if (utils::MasterSlave::isMaster()) {
     PRECICE_INFO("Setting up communication to slaves");
-    utils::MasterSlave::_communication->acceptConnection(_accessorName + "Master", _accessorName, utils::MasterSlave::getRank());
+    utils::MasterSlave::_communication->acceptConnection(_accessorName + "Master", _accessorName, "MasterSlave", utils::MasterSlave::getRank());
     utils::MasterSlave::_communication->setRankOffset(rankOffset);
   } else {
     PRECICE_ASSERT(utils::MasterSlave::isSlave());
-    utils::MasterSlave::_communication->requestConnection(_accessorName + "Master", _accessorName,
+    utils::MasterSlave::_communication->requestConnection(_accessorName + "Master", _accessorName, "MasterSlave",
                                                           _accessorProcessRank - rankOffset, _accessorCommunicatorSize - rankOffset);
   }
 }

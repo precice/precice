@@ -76,10 +76,12 @@ public:
    *
    * @param[in] acceptorName Name of calling participant.
    * @param[in] requesterName Name of remote participant to connect to.
+   * @param[in] tag Tag for establishing this connection
    * @param[in] acceptorRank Rank of the accpeting process, usually the calling one.
    */
   virtual void acceptConnection(std::string const &acceptorName,
                                 std::string const &requesterName,
+                                std::string const &tag,
                                 int                acceptorRank) = 0;
 
   /**
@@ -93,11 +95,13 @@ public:
    *
    * @param[in] acceptorName Name of calling participant.
    * @param[in] requesterName Name of remote participant to connect to.
+   * @param[in] tag Tag for establishing this connection
    * @param[in] acceptorRank Rank of accepting server, usually the rank of the current process.
    * @param[in] requesterCommunicatorSize Size of the requester (N)
    */
   virtual void acceptConnectionAsServer(std::string const &acceptorName,
                                         std::string const &requesterName,
+                                        std::string const &tag,
                                         int                acceptorRank,
                                         int                requesterCommunicatorSize) = 0;
 
@@ -112,11 +116,13 @@ public:
    *
    * @param[in] acceptorName Name of remote participant to connect to.
    * @param[in] requesterName Name of calling participant.
+   * @param[in] tag Tag for establishing this connection
    * @param[in] requesterRank Rank of the requester (has to go from 0 to N-1)
    * @param[in] requesterCommunicatorSize Size of the requester (N)
    */
   virtual void requestConnection(std::string const &acceptorName,
                                  std::string const &requesterName,
+                                 std::string const &tag,
                                  int                requesterRank,
                                  int                requesterCommunicatorSize) = 0;
 
@@ -130,11 +136,13 @@ public:
    *
    * @param[in] acceptorName Name of calling participant.
    * @param[in] requesterName Name of remote participant to connect to
+   * @param[in] tag Tag for establishing this connection
    * @param[in] acceptorRanks Set of ranks that accept a connection
    * @param[in] requesterRank Rank that requests the connection, usually the caller's rank
    */
   virtual void requestConnectionAsClient(std::string const &  acceptorName,
                                          std::string const &  requesterName,
+                                         std::string const &  tag,
                                          std::set<int> const &acceptorRanks,
                                          int                  requesterRank) = 0;
 

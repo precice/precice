@@ -173,15 +173,15 @@ void precicef_action_required_(
     int         lengthAction);
 
 /**
- * @brief See precice::SolverInterface::fulfilledAction().
+ * @brief See precice::SolverInterface::markActionFulfilled().
  *
  * Fortran syntax:
- * precicef_fulfilled_action( CHARACTER action(*) )
+ * precicef_mark_action_fulfilled( CHARACTER action(*) )
  *
  * IN:  action
  * OUT: -
  */
-void precicef_fulfilled_action_(
+void precicef_mark_action_fulfilled_(
     const char *action,
     int         lengthAction);
 

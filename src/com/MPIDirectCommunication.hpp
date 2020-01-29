@@ -36,10 +36,12 @@ public:
   /// See precice::com::Communication::acceptConnection().
   virtual void acceptConnection(std::string const &acceptorName,
                                 std::string const &requesterName,
+                                std::string const &tag,
                                 int                acceptorRank) override;
 
   virtual void acceptConnectionAsServer(std::string const &acceptorName,
                                         std::string const &requesterName,
+                                        std::string const &tag,
                                         int                acceptorRank,
                                         int                requesterCommunicatorSize) override
   {
@@ -49,11 +51,13 @@ public:
   /// See precice::com::Communication::requestConnection().
   virtual void requestConnection(std::string const &acceptorName,
                                  std::string const &requesterName,
+                                 std::string const &tag,
                                  int                requesterRank,
                                  int                requesterCommunicatorSize) override;
 
   virtual void requestConnectionAsClient(std::string const &  acceptorName,
                                          std::string const &  requesterName,
+                                         std::string const &  tag,
                                          std::set<int> const &acceptorRanks,
                                          int                  requesterRank) override
   {

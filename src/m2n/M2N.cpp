@@ -43,7 +43,7 @@ void M2N::acceptMasterConnection(
   if (not utils::MasterSlave::isSlave()) {
     PRECICE_DEBUG("Accept master-master connection");
     PRECICE_ASSERT(_masterCom);
-    _masterCom->acceptConnection(acceptorName, requesterName, utils::MasterSlave::getRank());
+    _masterCom->acceptConnection(acceptorName, requesterName, "MASTERCOM", utils::MasterSlave::getRank());
     _isMasterConnected = _masterCom->isConnected();
   }
 
@@ -61,7 +61,7 @@ void M2N::requestMasterConnection(
   if (not utils::MasterSlave::isSlave()) {
     PRECICE_ASSERT(_masterCom);
     PRECICE_DEBUG("Request master-master connection");
-    _masterCom->requestConnection(acceptorName, requesterName, 0, 1);
+    _masterCom->requestConnection(acceptorName, requesterName, "MASTERCOM", 0, 1);
     _isMasterConnected = _masterCom->isConnected();
   }
 

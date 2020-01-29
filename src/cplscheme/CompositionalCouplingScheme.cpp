@@ -303,13 +303,13 @@ bool CompositionalCouplingScheme::isActionRequired(
   return isRequired;
 }
 
-void CompositionalCouplingScheme::performedAction(
+void CompositionalCouplingScheme::markActionFulfilled(
     const std::string &actionName)
 {
   PRECICE_TRACE(actionName);
   for (Scheme scheme : _couplingSchemes) {
     if (not scheme.onHold) {
-      scheme.scheme->performedAction(actionName);
+      scheme.scheme->markActionFulfilled(actionName);
     }
   }
 }
@@ -759,13 +759,13 @@ void CompositionalCouplingScheme::advanceActiveCouplingSchemes()
 //  return isRequired;
 //}
 //
-//void CompositionalCouplingScheme:: performedAction
+//void CompositionalCouplingScheme:: markActionFulfilled
 //(
 //  const std::string& actionName)
 //{
 //  PRECICE_TRACE(actionName);
 //  for (PtrCouplingScheme couplingScheme : _couplingSchemes){
-//    couplingScheme->performedAction(actionName);
+//    couplingScheme->markActionFulfilled(actionName);
 //  }
 //}
 //

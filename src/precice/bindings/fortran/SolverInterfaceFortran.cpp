@@ -41,8 +41,8 @@ void precicef_create_(
   //cout << "Accessor: " << stringAccessorName << "!" << '\n';
   //cout << "Config  : " << stringConfigFileName << "!" << '\n';
   impl = new precice::SolverInterface(stringAccessorName,
+                                      stringConfigFileName,
                                       *solverProcessIndex, *solverProcessSize);
-  impl->configure(stringConfigFileName);
 }
 
 void precicef_initialize_(
@@ -170,14 +170,14 @@ void precicef_action_required_(
   }
 }
 
-void precicef_fulfilled_action_(
+void precicef_mark_action_fulfilled_(
     const char *action,
     int         lengthAction)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   int    strippedLength = precice::impl::strippedLength(action, lengthAction);
   string stringAction(action, strippedLength);
-  impl->fulfilledAction(stringAction);
+  impl->markActionFulfilled(stringAction);
 }
 
 void precicef_has_mesh_(

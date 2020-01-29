@@ -41,14 +41,16 @@ public:
    * of this class. The object has to be configured by one of the configure
    * methods before it has a reasonable state and can be used.
    *
+   * @param[in] configurationFileName Name (with path) of the xml config file.
    * @param[in] participantName Name of the participant using the interface. Has to
    *                            match the name given for a participant in the
    *                            xml configuration file.
    */
   SolverInterfaceImpl(
-      std::string participantName,
-      int         accessorProcessRank,
-      int         accessorCommunicatorSize);
+      std::string        participantName,
+      const std::string &configurationFileName,
+      int                accessorProcessRank,
+      int                accessorCommunicatorSize);
 
   /// Deleted copy constructor
   SolverInterfaceImpl(SolverInterfaceImpl const &) = delete;
@@ -75,13 +77,15 @@ public:
    * @param[in] participantName Name of the participant using the interface. Has to
    *                            match the name given for a participant in the
    *                            xml configuration file.
+   * @param[in] configurationFileName Name (with path) of the xml config file.
    * @param[in] communicator    A pointer to the MPI_Comm to use.
    */
   SolverInterfaceImpl(
-      std::string participantName,
-      int         accessorProcessRank,
-      int         accessorCommunicatorSize,
-      void *      communicator);
+      std::string        participantName,
+      const std::string &configurationFileName,
+      int                accessorProcessRank,
+      int                accessorCommunicatorSize,
+      void *             communicator);
 
   /**
    * @brief Configures the coupling interface from the given xml file.
@@ -196,7 +200,7 @@ public:
    * Some features of preCICE require a solver to perform specific actions, in
    * order to be in valid state for a coupled simulation. A solver is made
    * eligible to use those features, by querying for the required actions,
-   * performing them on demand, and calling fulfilledAction() to signalize
+   * performing them on demand, and calling markActionFulfilled() to signalize
    * preCICE the correct behavior of the solver.
    */
   bool isActionRequired(const std::string &action) const;
@@ -206,7 +210,7 @@ public:
    *
    * For more details see method requireAction().
    */
-  void fulfilledAction(const std::string &action);
+  void markActionFulfilled(const std::string &action);
 
   /// Returns true, if the mesh with given name is used.
   bool hasMesh(const std::string &meshName) const;

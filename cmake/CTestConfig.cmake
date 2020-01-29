@@ -25,13 +25,13 @@ function(add_precice_test)
   set(PAT_FULL_NAME "precice.${PAT_NAME}")
 
   # Are direct dependencies fullfilled?
-  if( (PAT_MPI AND NOT MPI) OR (PAT_PETSC AND NOT PETSC) )
+  if( (PAT_MPI AND NOT PRECICE_MPICommunication) OR (PAT_PETSC AND NOT PRECICE_PETScMapping) )
     message(STATUS "Test ${PAT_FULL_NAME} - skipped")
     return()
   endif()
 
   # Assemble the command
-  if(PAT_PETSC OR (NOT PAT_NOMPI AND MPI))
+  if(PAT_PETSC OR (NOT PAT_NOMPI AND PRECICE_MPICommunication))
     # Parallel tests, dispatched by MPI
     message(STATUS "Test ${PAT_FULL_NAME} - parallel")
     add_test(NAME ${PAT_FULL_NAME}

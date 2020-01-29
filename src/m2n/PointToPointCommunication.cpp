@@ -300,7 +300,7 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
     // Establish connection between participants' master processes.
     auto c = _communicationFactory->newCommunication();
 
-    c->acceptConnection(acceptorName, requesterName, utils::MasterSlave::getRank());
+    c->acceptConnection(acceptorName, requesterName, "TMP-MASTERCOM-" + _mesh->getName(), utils::MasterSlave::getRank());
 
     // Exchange vertex distributions.
     m2n::send(vertexDistribution, 0, c);
@@ -363,6 +363,7 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
   // and (multiple) requester processes (in the requester participant).
   _communication->acceptConnectionAsServer(acceptorName,
                                            requesterName,
+                                           _mesh->getName(),
                                            utils::MasterSlave::getRank(),
                                            communicationMap.size());
 
@@ -398,6 +399,7 @@ void PointToPointCommunication::acceptPreConnection(std::string const &acceptorN
   c->acceptConnectionAsServer(
       acceptorName,
       requesterName,
+      _mesh->getName(),
       utils::MasterSlave::getRank(),
       localConnectedRanks.size());
 
@@ -424,7 +426,9 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
     Event e0("m2n.exchangeVertexDistribution");
     // Establish connection between participants' master processes.
     auto c = _communicationFactory->newCommunication();
-    c->requestConnection(acceptorName, requesterName, 0, 1);
+    c->requestConnection(acceptorName, requesterName,
+                         "TMP-MASTERCOM-" + _mesh->getName(),
+                         0, 1);
 
     // Exchange vertex distributions.
     m2n::receive(acceptorVertexDistribution, 0, c);
@@ -493,6 +497,7 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
   // processes (in the acceptor participant) to ranks `accceptingRanks'
   // according to `communicationMap`.
   _communication->requestConnectionAsClient(acceptorName, requesterName,
+                                            _mesh->getName(),
                                             acceptingRanks, utils::MasterSlave::getRank());
 
   PRECICE_DEBUG("Store communication map");
@@ -530,6 +535,7 @@ void PointToPointCommunication::requestPreConnection(std::string const &acceptor
 
   auto c = _communicationFactory->newCommunication();
   c->requestConnectionAsClient(acceptorName, requesterName,
+                               _mesh->getName(),
                                acceptingRanks, utils::MasterSlave::getRank());
 
   for (auto &connectedRank : localConnectedRanks) {
