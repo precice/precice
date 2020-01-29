@@ -127,7 +127,7 @@ add_feature_info(FortranBindings PRECICE_ENABLE_FORTRAN
   "Enables the native Fortran bindings.
 
    preCICE provides native bindings for Fortran, which are compiled into the library.
-   This feature enabled the compilation and installation of the bindings into the library.
+   This feature enables the compilation and installation of the bindings into the library.
    Note that we strongly recommend to compile with Fortran bindings enabled for compatibility reasons.
 
    Set PRECICE_ENABLE_FORTRAN to enable.
