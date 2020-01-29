@@ -35,7 +35,7 @@ void ProvidedPartition::communicate()
 
   bool twoLevelInitAlreadyUsed = false;
 
-  for (auto m2n : _m2ns) {
+  for (auto& m2n : _m2ns) {
     if (m2n->usesTwoLevelInitialization()) {
 
       PRECICE_CHECK(not twoLevelInitAlreadyUsed, "Two-level initialization does not yet support multiple receivers of a provided mesh.");
