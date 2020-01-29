@@ -325,7 +325,7 @@ void precicec_readScalarData(
   impl->readScalarData(dataID, valueIndex, *dataValue);
 }
 
-const char *getVersionInformation()
+const char *precicec_getVersionInformation()
 {
   return {precice::versionInformation};
 }
