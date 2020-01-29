@@ -44,11 +44,11 @@ private:
   const std::string ATTR_AUTO     = "auto";
   const std::string VALUE_VTK     = "vtk";
 
-  const std::string ATTR_TIME_WINDOW_INTERVAL = "time-window-interval";
-  const std::string ATTR_NEIGHBORS            = "neighbors";
-  const std::string ATTR_TRIGGER_SOLVER       = "trigger-solver";
-  const std::string ATTR_NORMALS              = "normals";
-  const std::string ATTR_EVERY_ITERATION      = "every-iteration";
+  const std::string ATTR_FREQUENCY       = "frequency";
+  const std::string ATTR_NEIGHBORS       = "neighbors";
+  const std::string ATTR_TRIGGER_SOLVER  = "trigger-solver";
+  const std::string ATTR_NORMALS         = "normals";
+  const std::string ATTR_EVERY_ITERATION = "every-iteration";
 
   std::list<ExportContext> _contexts;
 };

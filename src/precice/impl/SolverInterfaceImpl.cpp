@@ -268,7 +268,7 @@ void SolverInterfaceImpl::initializeData()
   resetWrittenData();
   PRECICE_DEBUG("Plot output");
   for (const io::ExportContext &context : _accessor->exportContexts()) {
-    if (context.timeWindowInterval != -1) {
+    if (context.frequency != -1) {
       std::ostringstream suffix;
       suffix << _accessorName << ".init";
       exportMesh(suffix.str());
@@ -379,7 +379,7 @@ void SolverInterfaceImpl::finalize()
 
   PRECICE_DEBUG("Handle exports");
   for (const io::ExportContext &context : _accessor->exportContexts()) {
-    if (context.timeWindowInterval != -1) {
+    if (context.frequency != -1) {
       std::ostringstream suffix;
       suffix << _accessorName << ".final";
       exportMesh(suffix.str());
@@ -1299,8 +1299,8 @@ void SolverInterfaceImpl::handleExports()
 
   for (const io::ExportContext &context : _accessor->exportContexts()) {
     if (_couplingScheme->isTimeWindowComplete() || context.everyIteration) {
-      if (context.timeWindowInterval != -1) {
-        if (timesteps % context.timeWindowInterval == 0) {
+      if (context.frequency != -1) {
+        if (timesteps % context.frequency == 0) {
           if (context.everyIteration) {
             std::ostringstream everySuffix;
             everySuffix << _accessorName << ".it" << _numberAdvanceCalls;

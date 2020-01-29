@@ -36,8 +36,8 @@
          <read-data  name="Displacements"  mesh="PeanoNodes" />
          <read-data  name="Velocities"     mesh="PeanoNodes" />
          <read-data  name="VelocityDeltas" mesh="PeanoNodes" />
-         <export:vtk time-window-interval="100" directory="output/"/>
-         <export:vtk time-window-interval="100" directory=""/>
+         <export:vtk frequency="100" directory="output/"/>
+         <export:vtk frequency="100" directory=""/>
          <watch-point name="pointa" mesh="PeanoNodes" coordinate="1.0; 1.0" />
       </participant>
 
