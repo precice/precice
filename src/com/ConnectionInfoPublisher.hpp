@@ -5,6 +5,20 @@
 namespace precice {
 namespace com {
 
+namespace impl {
+/// Returns the file name for the connection information.
+/**
+   * It has the form first two letters from hash of 
+   * (acceptorName, requesterName, mesh, rank)/rest of hash.
+   */
+std::string hashedFilePath(const std::string &acceptorName, const std::string &requesterName, const std::string &meshName, int rank);
+
+/** Returns the local directory which is the root for storing connection information.
+   * It has the form addressDirectory/precice-run/acceptorName-requesterName
+   */
+std::string localDirectory(const std::string &acceptorName, const std::string &requesterName, const std::string &addressDirectory);
+} // namespace impl
+
 class ConnectionInfoPublisher {
 public:
   ConnectionInfoPublisher(std::string acceptorName,
@@ -38,11 +52,10 @@ protected:
   int const         rank = -1;
   std::string const addressDirectory;
 
-  /// Returns the file name for the connection information.
-  /**
-   * It has the form addressDirectory/precice-run/first two letters from hash of 
-   * (acceptorName, requesterName, rank)/rest of hash.
-   */
+  /// Returns the local directory which is used to store the hashed part.
+  std::string getLocalDirectory() const;
+
+  /// Returns the full path to the hashed filename
   std::string getFilename() const;
 
   mutable logging::Logger _log{"com::ConnectionInfoPublisher"};
