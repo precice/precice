@@ -330,7 +330,7 @@ BOOST_AUTO_TEST_CASE(TestQN, *testing::OnSize(4))
 
 // This test does not restrict the communicator per participant, since otherwise MPI ports do not work for Open-MPI
 /// Tests various distributed communication schemes.
-BOOST_AUTO_TEST_CASE(testDistributedCommunications, *testing::OnSize(4))
+BOOST_AUTO_TEST_CASE(TestDistributedCommunications, *testing::OnSize(4))
 {
   std::vector<std::string> fileNames({"point-to-point-sockets.xml",
                                       "point-to-point-mpi.xml",
@@ -436,7 +436,7 @@ BOOST_AUTO_TEST_CASE(testDistributedCommunications, *testing::OnSize(4))
   }
 }
 
-BOOST_AUTO_TEST_CASE(testBoundingBoxInitialization, *testing::OnSize(4))
+BOOST_AUTO_TEST_CASE(TestBoundingBoxInitialization, *testing::OnSize(4))
 {
 
   std::string solverName;
@@ -546,7 +546,7 @@ BOOST_AUTO_TEST_CASE(testBoundingBoxInitialization, *testing::OnSize(4))
   precice.finalize();
 }
 
-BOOST_AUTO_TEST_CASE(testBoundingBoxInitializationTwoWay, *testing::OnSize(4))
+BOOST_AUTO_TEST_CASE(TestBoundingBoxInitializationTwoWay, *testing::OnSize(4))
 {
   reset();
 
