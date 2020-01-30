@@ -124,15 +124,15 @@ void precicef_write_data_required_(
 void precicef_read_data_available_(int *isAvailable);
 
 /**
- * @brief See precice::SolverInterface::isTimestepComplete().
+ * @brief See precice::SolverInterface::isTimeWindowComplete().
  *
  * Fortran syntax:
- * precicef_is_timestep_complete( INTEGER isComplete );
+ * precicef_is_time_window_complete( INTEGER isComplete );
  *
  * IN:  -
  * OUT: isComplete(1:true, 0:false)
  */
-void precicef_is_timestep_complete_(int *isComplete);
+void precicef_is_time_window_complete_(int *isComplete);
 
 /**
  * @brief See precice::SolverInterface::hasToEvaluateSurrogateModel().
@@ -643,6 +643,10 @@ void precicef_action_write_initial_data_(
 void precicef_action_read_iter_checkp_(
     char *nameAction,
     int   lengthNameAction);
+
+void precicef_get_version_information_(
+    char *versionInfo,
+    int   lengthVersionInfo);
 
 #ifdef __cplusplus
 }

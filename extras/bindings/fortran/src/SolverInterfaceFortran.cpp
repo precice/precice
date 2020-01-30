@@ -3,6 +3,7 @@
 #include <string>
 #include "logging/Logger.hpp"
 #include "precice/SolverInterface.hpp"
+#include "precice/impl/versions.hpp"
 #include "utils/assertion.hpp"
 
 using namespace std;
@@ -113,11 +114,11 @@ void precicef_read_data_available_(
   }
 }
 
-void precicef_is_timestep_complete_(
+void precicef_is_time_window_complete_(
     int *isComplete)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  if (impl->isTimestepComplete()) {
+  if (impl->isTimeWindowComplete()) {
     *isComplete = 1;
   } else {
     *isComplete = 0;
@@ -464,5 +465,16 @@ void precicef_action_read_iter_checkp_(
   PRECICE_ASSERT(name.size() < (size_t) lengthNameAction, name.size(), lengthNameAction);
   for (size_t i = 0; i < name.size(); i++) {
     nameAction[i] = name[i];
+  }
+}
+
+void precicef_get_version_information_(
+    char *versionInfo,
+    int   lengthVersionInfo)
+{
+  const std::string &versionInformation = precice::versionInformation;
+  PRECICE_ASSERT(versionInformation.size() < (size_t) lengthVersionInfo, versionInformation.size(), lengthVersionInfo);
+  for (size_t i = 0; i < versionInformation.size(); i++) {
+    versionInfo[i] = versionInformation[i];
   }
 }

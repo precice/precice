@@ -21,13 +21,13 @@ ExportConfiguration::ExportConfiguration(xml::XMLTag &parent)
   auto attrLocation = XMLAttribute<std::string>(ATTR_LOCATION, "")
                           .setDocumentation("Directory to export the files to.");
 
-  auto attrTimestepInterval = makeXMLAttribute(ATTR_TIMESTEP_INTERVAL, 1)
-                                  .setDocumentation("preCICE timestep interval for export of files. Choose -1 for no exports.");
+  auto attrEveryNTimeWindows = makeXMLAttribute(ATTR_EVERY_N_TIME_WINDOWS, 1)
+                           .setDocumentation("preCICE does an export every X time windows. Choose -1 for no exports.");
 
   auto attrTriggerSolver = makeXMLAttribute(ATTR_TRIGGER_SOLVER, false)
                                .setDocumentation(
                                    std::string("If set to on/yes, an action requirement is set for the participant ") +
-                                   "with frequency defined by attribute " + ATTR_TIMESTEP_INTERVAL + ".");
+                                   "with frequency defined by attribute " + ATTR_EVERY_N_TIME_WINDOWS + ".");
 
   auto attrNormals = makeXMLAttribute(ATTR_NORMALS, true)
                          .setDocumentation("If set to on/yes, mesh normals (if available) are added to the export.");
@@ -37,7 +37,7 @@ ExportConfiguration::ExportConfiguration(xml::XMLTag &parent)
 
   for (XMLTag &tag : tags) {
     tag.addAttribute(attrLocation);
-    tag.addAttribute(attrTimestepInterval);
+    tag.addAttribute(attrEveryNTimeWindows);
     tag.addAttribute(attrTriggerSolver);
     tag.addAttribute(attrNormals);
     tag.addAttribute(attrEveryIteration);
@@ -53,7 +53,7 @@ void ExportConfiguration::xmlTagCallback(
     ExportContext context;
     context.location          = tag.getStringAttributeValue(ATTR_LOCATION);
     context.triggerSolverPlot = tag.getBooleanAttributeValue(ATTR_TRIGGER_SOLVER);
-    context.timestepInterval  = tag.getIntAttributeValue(ATTR_TIMESTEP_INTERVAL);
+    context.everyNTimeWindows = tag.getIntAttributeValue(ATTR_EVERY_N_TIME_WINDOWS);
     context.plotNormals       = tag.getBooleanAttributeValue(ATTR_NORMALS);
     context.everyIteration    = tag.getBooleanAttributeValue(ATTR_EVERY_ITERATION);
     context.type              = tag.getName();

@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file. For future 
 
 ## develop
 
+- Sorted out the different meaning of timestep and time window
+  - Renamed API function `isTimestepComplete` to `isTimeWindowComplete`
+  - Renamed `cplscheme` configuration option `timestep-length` to `time-window-size`
+  - Renamed `cplscheme` configuration option `max-timesteps` to `max-time-windows`
+  - Renamed `acceleration` configuration option `timesteps-reused` to `time-windows-reused`
+  - Renamed `acceleration` configuration option `reused-timesteps-at-restart` to `reused-time-windows-at-restart`
+  - Renamed `export` configuration option `timestep-interval` to `frequency`
 - Restructure tools and bindings
   - Moved developer tools to `tools/`
   - Moved user tools to `extras/`

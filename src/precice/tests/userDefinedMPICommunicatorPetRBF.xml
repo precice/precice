@@ -36,8 +36,8 @@
 
       <coupling-scheme:parallel-explicit>
          <participants first="SolverOne" second="SolverTwo" />
-         <max-timesteps value="10" />
-         <timestep-length value="1.0" />
+         <max-time-windows value="10" />
+         <time-window-size value="1.0" />
          <exchange data="Data1" mesh="MeshTwo" from="SolverOne" to="SolverTwo" />
          <exchange data="Data2" mesh="MeshTwo" from="SolverTwo" to="SolverOne"/>
       </coupling-scheme:parallel-explicit>

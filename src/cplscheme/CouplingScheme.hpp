@@ -41,11 +41,11 @@ public:
   /// Does not define a time limit for the coupled simulation.
   static const double UNDEFINED_TIME;
 
-  /// Does not define a timestep limit for the coupled simulation.
-  static const int UNDEFINED_TIMESTEPS;
+  /// Does not define limit on time windows for the coupled simulation.
+  static const int UNDEFINED_TIME_WINDOWS;
 
-  /// To be used, when the coupling timestep length is determined dynamically during the coupling.
-  static const double UNDEFINED_TIMESTEP_LENGTH;
+  /// To be used, when the time window size is determined dynamically during the coupling.
+  static const double UNDEFINED_TIME_WINDOW_SIZE;
 
   CouplingScheme &operator=(CouplingScheme &&) = delete;
 
@@ -174,8 +174,8 @@ public:
   /// Returns true, when the coupled simulation is still ongoing.
   virtual bool isCouplingOngoing() const = 0;
 
-  /// Returns true, when the accessor can advance to the next timestep.
-  virtual bool isCouplingTimestepComplete() const = 0;
+  /// Returns true, when the accessor can advance to the next time window.
+  virtual bool isTimeWindowComplete() const = 0;
 
   /// Returns true, if the given action has to be performed by the accessor.
   virtual bool isActionRequired(const std::string &actionName) const = 0;

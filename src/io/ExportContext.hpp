@@ -14,8 +14,8 @@ struct ExportContext {
   // @brief Path to export location.
   std::string location;
 
-  // @brief Exporting timestep interval (equals -1 when not set).
-  int timestepInterval;
+  // @brief Exporting every N time windows (equals -1 when not set).
+  int everyNTimeWindows;
 
   // @brief Flag for synchronuous triggering of solver plots.
   bool triggerSolverPlot;
@@ -35,7 +35,7 @@ struct ExportContext {
   ExportContext()
       : exporter(),
         location(),
-        timestepInterval(-1),
+        everyNTimeWindows(-1),
         triggerSolverPlot(false),
         everyIteration(false),
         type(),

@@ -137,7 +137,7 @@ void MultiCouplingScheme::advance()
                 "initializeData() needs to be called before advance if data has to be initialized!");
 
   setHasDataBeenExchanged(false);
-  setIsCouplingTimestepComplete(false);
+  setIsTimeWindowComplete(false);
   bool convergence = false;
   if (math::equals(getThisTimestepRemainder(), 0.0, _eps)) {
     PRECICE_DEBUG("Computed full length of iteration");
@@ -156,7 +156,7 @@ void MultiCouplingScheme::advance()
         getAcceleration()->iterationsConverged(_allData);
       }
       newConvergenceMeasurements();
-      timestepCompleted();
+      timeWindowCompleted();
     } else if (getAcceleration().get() != nullptr) {
       getAcceleration()->performAcceleration(_allData);
     }

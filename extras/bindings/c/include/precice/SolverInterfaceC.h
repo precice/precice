@@ -93,7 +93,7 @@ int precicec_isReadDataAvailable();
 int precicec_isWriteDataRequired(double computedTimestepLength);
 
 /**
- * @brief Returns true (->1), if the coupling timestep is completed.
+ * @brief Returns true (->1), if the coupling time window is completed.
  */
 int precicec_isCouplingTimeWindowComplete();
 
@@ -412,6 +412,17 @@ void precicec_readScalarData(
     int     dataID,
     int     valueIndex,
     double *dataValue);
+
+/** 
+ * @brief Returns information on the version of preCICE.
+ *
+ * Returns a semicolon-separated C-string containing:
+ * 
+ * 1) the version of preCICE
+ * 2) the revision information of preCICE
+ * 3) the configuration of preCICE including MPI, PETSC, PYTHON
+ */
+const char *precicec_getVersionInformation();
 
 // @brief Name of action for writing initial data.
 const char *precicec_actionWriteInitialData();

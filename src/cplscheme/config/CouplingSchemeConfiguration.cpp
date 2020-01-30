@@ -35,8 +35,8 @@ CouplingSchemeConfiguration::CouplingSchemeConfiguration(
       TAG_PARTICIPANT("participant"),
       TAG_EXCHANGE("exchange"),
       TAG_MAX_TIME("max-time"),
-      TAG_MAX_TIMESTEPS("max-timesteps"),
-      TAG_TIMESTEP_LENGTH("timestep-length"),
+      TAG_MAX_TIME_WINDOWS("max-time-windows"),
+      TAG_TIME_WINDOW_SIZE("time-window-size"),
       TAG_ABS_CONV_MEASURE("absolute-convergence-measure"),
       TAG_REL_CONV_MEASURE("relative-convergence-measure"),
       TAG_RES_REL_CONV_MEASURE("residual-relative-convergence-measure"),
@@ -56,7 +56,6 @@ CouplingSchemeConfiguration::CouplingSchemeConfiguration(
       ATTR_LIMIT("limit"),
       ATTR_MIN_ITERATIONS("min-iterations"),
       ATTR_NAME("name"),
-      ATTR_TIMESTEP_INTERVAL("timestep-interval"),
       ATTR_FROM("from"),
       ATTR_TO("to"),
       ATTR_SUFFICES("suffices"),
@@ -167,11 +166,11 @@ void CouplingSchemeConfiguration::xmlTagCallback(
 
   } else if (tag.getName() == TAG_MAX_TIME) {
     _config.maxTime = tag.getDoubleAttributeValue(ATTR_VALUE);
-  } else if (tag.getName() == TAG_MAX_TIMESTEPS) {
-    _config.maxTimesteps =
+  } else if (tag.getName() == TAG_MAX_TIME_WINDOWS) {
+    _config.maxTimeWindows =
         tag.getIntAttributeValue(ATTR_VALUE);
-  } else if (tag.getName() == TAG_TIMESTEP_LENGTH) {
-    _config.timestepLength =
+  } else if (tag.getName() == TAG_TIME_WINDOW_SIZE) {
+    _config.timeWindowSize =
         tag.getDoubleAttributeValue(ATTR_VALUE);
     _config.validDigits =
         tag.getIntAttributeValue(ATTR_VALID_DIGITS);
@@ -396,20 +395,20 @@ void CouplingSchemeConfiguration::addTransientLimitTags(
   tagMaxTime.addAttribute(attrValueMaxTime);
   tag.addSubtag(tagMaxTime);
 
-  XMLTag            tagMaxTimesteps(*this, TAG_MAX_TIMESTEPS, XMLTag::OCCUR_NOT_OR_ONCE);
-  XMLAttribute<int> attrValueMaxTimesteps(ATTR_VALUE);
-  tagMaxTimesteps.addAttribute(attrValueMaxTimesteps);
-  tag.addSubtag(tagMaxTimesteps);
+  XMLTag            tagMaxTimeWindows(*this, TAG_MAX_TIME_WINDOWS, XMLTag::OCCUR_NOT_OR_ONCE);
+  XMLAttribute<int> attrValueMaxTimeWindows(ATTR_VALUE);
+  tagMaxTimeWindows.addAttribute(attrValueMaxTimeWindows);
+  tag.addSubtag(tagMaxTimeWindows);
 
-  XMLTag tagTimestepLength(*this, TAG_TIMESTEP_LENGTH, XMLTag::OCCUR_ONCE);
-  auto   attrValueTimestepLength = makeXMLAttribute(ATTR_VALUE, CouplingScheme::UNDEFINED_TIMESTEP_LENGTH);
-  tagTimestepLength.addAttribute(attrValueTimestepLength);
+  XMLTag tagTimeWindowSize(*this, TAG_TIME_WINDOW_SIZE, XMLTag::OCCUR_ONCE);
+  auto   attrValueTimeWindowSize = makeXMLAttribute(ATTR_VALUE, CouplingScheme::UNDEFINED_TIME_WINDOW_SIZE);
+  tagTimeWindowSize.addAttribute(attrValueTimeWindowSize);
   XMLAttribute<int> attrValidDigits(ATTR_VALID_DIGITS, 10);
-  tagTimestepLength.addAttribute(attrValidDigits);
+  tagTimeWindowSize.addAttribute(attrValidDigits);
   auto attrMethod = makeXMLAttribute(ATTR_METHOD, VALUE_FIXED)
                         .setOptions({VALUE_FIXED, VALUE_FIRST_PARTICIPANT});
-  tagTimestepLength.addAttribute(attrMethod);
-  tag.addSubtag(tagTimestepLength);
+  tagTimeWindowSize.addAttribute(attrMethod);
+  tag.addSubtag(tagTimeWindowSize);
 }
 
 void CouplingSchemeConfiguration::addTagParticipants(
@@ -625,7 +624,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialExplicitCouplingSchem
   m2n::PtrM2N m2n = _m2nConfig->getM2N(
       _config.participants[0], _config.participants[1]);
   SerialCouplingScheme *scheme = new SerialCouplingScheme(
-      _config.maxTime, _config.maxTimesteps, _config.timestepLength,
+      _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize,
       _config.validDigits, _config.participants[0], _config.participants[1],
       accessor, m2n, _config.dtMethod, BaseCouplingScheme::Explicit);
 
@@ -641,7 +640,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelExplicitCouplingSch
   m2n::PtrM2N m2n = _m2nConfig->getM2N(
       _config.participants[0], _config.participants[1]);
   ParallelCouplingScheme *scheme = new ParallelCouplingScheme(
-      _config.maxTime, _config.maxTimesteps, _config.timestepLength,
+      _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize,
       _config.validDigits, _config.participants[0], _config.participants[1],
       accessor, m2n, _config.dtMethod, BaseCouplingScheme::Explicit);
 
@@ -658,7 +657,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialImplicitCouplingSchem
   m2n::PtrM2N m2n = _m2nConfig->getM2N(
       _config.participants[0], _config.participants[1]);
   SerialCouplingScheme *scheme = new SerialCouplingScheme(
-      _config.maxTime, _config.maxTimesteps, _config.timestepLength,
+      _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize,
       _config.validDigits, _config.participants[0], _config.participants[1],
       accessor, m2n, _config.dtMethod, BaseCouplingScheme::Implicit, _config.maxIterations);
   scheme->setExtrapolationOrder(_config.extrapolationOrder);
@@ -699,7 +698,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelImplicitCouplingSch
   m2n::PtrM2N m2n = _m2nConfig->getM2N(
       _config.participants[0], _config.participants[1]);
   ParallelCouplingScheme *scheme = new ParallelCouplingScheme(
-      _config.maxTime, _config.maxTimesteps, _config.timestepLength,
+      _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize,
       _config.validDigits, _config.participants[0], _config.participants[1],
       accessor, m2n, _config.dtMethod, BaseCouplingScheme::Implicit, _config.maxIterations);
   scheme->setExtrapolationOrder(_config.extrapolationOrder);
@@ -748,7 +747,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
     }
 
     scheme = new MultiCouplingScheme(
-        _config.maxTime, _config.maxTimesteps, _config.timestepLength,
+        _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize,
         _config.validDigits, accessor, m2ns, _config.dtMethod,
         _config.maxIterations);
     scheme->setExtrapolationOrder(_config.extrapolationOrder);
@@ -759,7 +758,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
     m2n::PtrM2N m2n = _m2nConfig->getM2N(
         accessor, _config.controller);
     scheme = new ParallelCouplingScheme(
-        _config.maxTime, _config.maxTimesteps, _config.timestepLength,
+        _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize,
         _config.validDigits, accessor, _config.controller,
         accessor, m2n, _config.dtMethod, BaseCouplingScheme::Implicit, _config.maxIterations);
     scheme->setExtrapolationOrder(_config.extrapolationOrder);
@@ -805,9 +804,6 @@ CouplingSchemeConfiguration::getTimesteppingMethod(
   } else if (method == VALUE_FIRST_PARTICIPANT) {
     return constants::FIRST_PARTICIPANT_SETS_DT;
   }
-  //  else if ( method == TagTimestepLength::VALUE_SECOND_PARTICIPANT ){
-  //    return constants::SECOND_PARTICIPANT_SETS_DT;
-  //  }
   PRECICE_ERROR("Unknown timestepping method \""
                 << method << "\"!");
 }
