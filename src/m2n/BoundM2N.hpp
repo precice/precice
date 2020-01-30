@@ -8,7 +8,8 @@ namespace precice {
 namespace m2n {
 
 /// An M2N between participants with a configured direction
-struct BoundM2N {
+class BoundM2N {
+public:
   /// Prepare to establish the connection
   void prepareEstablishment();
 
@@ -31,6 +32,14 @@ struct BoundM2N {
 
 private:
   mutable logging::Logger _log{"impl::SolverInterfaceImpl"};
+
+  /** Instructs the Master wait for Slaves.
+   *
+   * Performs a collective operation which forces every slave to sync with the Master.
+   * 
+   * @note this does nothing if the participant is running serially.
+   */
+  void waitForSlaves();
 };
 
 } // namespace m2n
