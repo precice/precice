@@ -193,22 +193,27 @@ double SolverInterfaceImpl::initialize()
     bm2n.connectMasters();
     PRECICE_DEBUG("Established master connection " << (bm2n.isRequesting ? "from " : "to ") << bm2n.remoteName);
   }
+
   PRECICE_INFO("Masters are connected");
+
+  compareBoundingBoxes();
+
+  PRECICE_INFO("Setting up preliminary slaves communication to coupling partner/s");
+  for (auto &m2nPair : _m2ns) {
+    auto &bm2n = m2nPair.second;
+    bm2n.preConnectSlaves();
+  }
 
   computePartitions();
 
   PRECICE_INFO("Setting up slaves communication to coupling partner/s");
   for (auto &m2nPair : _m2ns) {
     auto &bm2n = m2nPair.second;
-    PRECICE_DEBUG((bm2n.isRequesting ? "Awaiting slaves connection from " : "Establishing slaves connection to ") << bm2n.remoteName);
     bm2n.connectSlaves();
     bm2n.cleanupEstablishment();
-    PRECICE_DEBUG("Established slaves connection " << (bm2n.isRequesting ? "from " : "to ") << bm2n.remoteName);
   }
-  PRECICE_INFO("Slaves are connected");
 
-  std::set<action::Action::Timing> timings;
-  double                           dt = 0.0;
+  PRECICE_INFO("Slaves are connected");
 
   PRECICE_DEBUG("Initialize watchpoints");
   for (PtrWatchPoint &watchPoint : _accessor->watchPoints()) {
@@ -221,6 +226,9 @@ double SolverInterfaceImpl::initialize()
 
   PRECICE_DEBUG("Initialize coupling schemes");
   _couplingScheme->initialize(time, timestep);
+
+  std::set<action::Action::Timing> timings;
+  double                           dt = 0.0;
 
   dt = _couplingScheme->getNextTimestepMaxLength();
 
@@ -283,6 +291,7 @@ void SolverInterfaceImpl::initializeData()
 double SolverInterfaceImpl::advance(
     double computedTimestepLength)
 {
+
   PRECICE_TRACE(computedTimestepLength);
 
   // Events for the solver time, stopped when we enter, restarted when we leave advance
@@ -1101,6 +1110,7 @@ void SolverInterfaceImpl::configurePartitions(
 {
   PRECICE_TRACE();
   for (MeshContext *context : _accessor->usedMeshContexts()) {
+
     if (context->provideMesh) { // Accessor provides mesh
       PRECICE_CHECK(context->receiveMeshFrom.empty(),
                     "Participant \"" << _accessorName << "\" cannot provide "
@@ -1111,13 +1121,12 @@ void SolverInterfaceImpl::configurePartitions(
       for (auto &receiver : _participants) {
         for (auto &receiverContext : receiver->usedMeshContexts()) {
           if (receiverContext->receiveMeshFrom == _accessorName && receiverContext->mesh->getName() == context->mesh->getName()) {
-            //PRECICE_CHECK( not hasToSend, "Mesh " << context->mesh->getName() << " can currently only be received once.")
-
             // meshRequirement has to be copied from "from" to provide", since
             // mapping are only defined at "provide"
             if (receiverContext->meshRequirement > context->meshRequirement) {
               context->meshRequirement = receiverContext->meshRequirement;
             }
+
             m2n::PtrM2N m2n = m2nConfig->getM2N(receiver->getName(), _accessorName);
             m2n->createDistributedCommunication(context->mesh);
             context->partition->addM2N(m2n);
@@ -1133,6 +1142,7 @@ void SolverInterfaceImpl::configurePartitions(
                     "Participant \"" << _accessorName << "\" cannot provide and receive mesh " << context->mesh->getName() << "!");
       std::string receiver(_accessorName);
       std::string provider(context->receiveMeshFrom);
+
       PRECICE_DEBUG("Receiving mesh from " << provider);
 
       context->partition = partition::PtrPartition(new partition::ReceivedPartition(context->mesh, context->geoFilter, context->safetyFactor));
@@ -1146,14 +1156,32 @@ void SolverInterfaceImpl::configurePartitions(
   }
 }
 
+void SolverInterfaceImpl::compareBoundingBoxes()
+{
+  // sort meshContexts by name, for communication in right order.
+  std::sort(_accessor->usedMeshContexts().begin(), _accessor->usedMeshContexts().end(),
+            [](MeshContext const *const lhs, MeshContext const *const rhs) -> bool {
+              return lhs->mesh->getName() < rhs->mesh->getName();
+            });
+
+  for (MeshContext *meshContext : _accessor->usedMeshContexts()) {
+    if (meshContext->provideMesh) // provided meshes need their bounding boxes already for the re-partitioning
+      meshContext->mesh->computeBoundingBox();
+  }
+
+  for (MeshContext *meshContext : _accessor->usedMeshContexts()) {
+    meshContext->partition->compareBoundingBoxes();
+  }
+}
+
 void SolverInterfaceImpl::computePartitions()
 {
   //We need to do this in two loops: First, communicate the mesh and later compute the partition.
   //Originally, this was done in one loop. This however gave deadlock if two meshes needed to be communicated cross-wise.
   //Both loops need a different sorting
+
   auto &contexts = _accessor->usedMeshContexts();
 
-  // sort meshContexts by name, for communication in right order.
   std::sort(contexts.begin(), contexts.end(),
             [](MeshContext const *const lhs, MeshContext const *const rhs) -> bool {
               return lhs->mesh->getName() < rhs->mesh->getName();
@@ -1163,15 +1191,31 @@ void SolverInterfaceImpl::computePartitions()
     meshContext->partition->communicate();
   }
 
-  // pull provided meshes up front, to have them ready for the decomposition
-  std::stable_partition(contexts.begin(), contexts.end(),
-                        [](MeshContext const *const meshContext) -> bool {
-                          return meshContext->provideMesh;
-                        });
+  // for two-level initialization, there is also still communication in partition::compute()
+  // therefore, we cannot resort here.
+  // @todo this hacky solution should be removed as part of #633
+  bool resort = true;
+  for (auto &m2nPair : _m2ns) {
+    if (m2nPair.second.m2n->usesTwoLevelInitialization()) {
+      resort = false;
+      break;
+    }
+  }
+
+  if (resort) {
+    // pull provided meshes up front, to have them ready for the decomposition of the received meshes (for the mappings)
+    std::stable_partition(contexts.begin(), contexts.end(),
+                          [](MeshContext const *const meshContext) -> bool {
+                            return meshContext->provideMesh;
+                          });
+  }
 
   for (MeshContext *meshContext : contexts) {
     meshContext->partition->compute();
     meshContext->mesh->computeState();
+    if (not meshContext->provideMesh) { // received mesh can only compute their bounding boxes here
+      meshContext->mesh->computeBoundingBox();
+    }
     meshContext->mesh->allocateDataValues();
   }
 }
@@ -1265,7 +1309,6 @@ void SolverInterfaceImpl::mapReadData()
       PRECICE_DEBUG("Mapped values = " << utils::previewRange(3, context.toData->values()));
     }
   }
-
   // Clear non-initial, non-incremental mappings
   for (impl::MappingContext &context : _accessor->readMappingContexts()) {
     bool isStationary = context.timing == mapping::MappingConfiguration::INITIAL;

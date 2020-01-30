@@ -66,8 +66,8 @@ public:
 
   /**
    * @brief Connects to another participant, which has to call requestPreConnection().
-   *        Exchanged vertex list is not included, only connection between ranks 
-   *        is established. 
+   *        Exchanged vertex list is not included, only connection between ranks
+   *        is established.
    *
    * @param[in] acceptorName Name of calling participant.
    * @param[in] requesterName Name of remote participant to connect to.
@@ -78,8 +78,8 @@ public:
 
   /**
    * @brief Connects to another participant, which has to call acceptPreConnection().
-   *        Exchanged vertex list is not included, only connection between ranks 
-   *        is established. 
+   *        Exchanged vertex list is not included, only connection between ranks
+   *        is established.
    *
    * @param[in] acceptorName Name of remote participant to connect to.
    * @param[in] requesterName Name of calling participant.
@@ -88,10 +88,14 @@ public:
       std::string const &acceptorName,
       std::string const &requesterName) = 0;
 
-  /*
-   * @brief This function must be called by both acceptor and requester to update the vertex list in _mappings
+  /* @brief Completes the slaves connections for both acceptor and requester by updating
+   * the vertex list in _mappings.
+   *
+   * @pre acceptPreConnection or requestPreConnection has been called.
+   * @pre accept/requestConnection has not been called
+   * @post the m2n connection is ready to use
    */
-  virtual void updateVertexList() = 0;
+  virtual void completeSlavesConnection() = 0;
 
   /**
    * @brief Disconnects from communication space, i.e. participant.
@@ -112,43 +116,31 @@ public:
       size_t  size,
       int     valueDimension) = 0;
 
-  /**
-   * @brief Broadcasts a int to connected ranks on remote participant      
-   */
-  virtual void broadcastSend(const int &itemToSend) = 0;
-
-  /**
-   * @brief Receives an int per connected rank on remote participant
-   * @para[out] itemToReceive received ints from remote ranks are stored with the sender rank order 
-   */
-  virtual void broadcastReceiveAll(std::vector<int> &itemToReceive) = 0;
-
-  /**
-   * @brief All ranks send their mesh partition to remote local  connected ranks.
-   */
-  virtual void broadcastSendMesh() = 0;
-
-  /**
-   * @brief All ranks receive mesh partition from remote local ranks.
-   */
-  virtual void broadcastReceiveMesh() = 0;
-
   /*
    * A mapping from remote local ranks to the IDs that must be communicated
    */
   using CommunicationMap = std::map<int, std::vector<int>>;
 
-  /**
-   *  All ranks Send their local communication maps to connected ranks
-   */
-  virtual void broadcastSendLCM(
-      CommunicationMap &localCommunicationMap) = 0;
+  /// Broadcasts an int to connected ranks on remote participant
+  virtual void broadcastSend(const int &itemToSend) = 0;
 
-  /*
-   *  Each rank revives local communication maps from connected ranks
+  /**
+   * @brief Receives an int per connected rank on remote participant
+   * @para[out] itemToReceive received ints from remote ranks are stored with the sender rank order
    */
-  virtual void broadcastReceiveLCM(
-      CommunicationMap &localCommunicationMap) = 0;
+  virtual void broadcastReceiveAll(std::vector<int> &itemToReceive) = 0;
+
+  /// Broadcasts a mesh to connected ranks on remote participant
+  virtual void broadcastSendMesh() = 0;
+
+  /// Receive mesh partitions per connected rank on remote participant
+  virtual void broadcastReceiveAllMesh() = 0;
+
+  /// Scatters a communication map over connected ranks on remote participant
+  virtual void scatterAllCommunicationMap(CommunicationMap &localCommunicationMap) = 0;
+
+  /// Gathers a communication maps from connected ranks on remote participant
+  virtual void gatherAllCommunicationMap(CommunicationMap &localCommunicationMap) = 0;
 
 protected:
   /**

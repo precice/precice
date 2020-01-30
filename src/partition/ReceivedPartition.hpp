@@ -24,9 +24,9 @@ public:
     /// No geometric filter used (e.g. for RBF mappings)
     NO_FILTER,
     /// Filter at master and communicate only filtered mesh.
-    FILTER_FIRST,
-    /// Broadcast first and filter then
-    BROADCAST_FILTER
+    ON_MASTER,
+    /// Filter after communication on all slave ranks
+    ON_SLAVES
   };
 
   /// Constructor
@@ -34,28 +34,41 @@ public:
 
   virtual ~ReceivedPartition() {}
 
-  virtual void communicate() override;
+  void communicate() override;
 
-  virtual void compute() override;
+  void compute() override;
+
+  void compareBoundingBoxes() override;
 
 private:
+  /// return the one m2n, a ReceivedPartition can only have one m2n
+  m2n::M2N &m2n();
+
+  void filterByBoundingBox();
+
   /// Sets _bb to the union with the mesh from fromMapping resp. toMapping, also enlage by _safetyFactor
   void prepareBoundingBox();
+
+  /// Checks whether two bounding boxes are overlapping
+  bool overlapping(mesh::Mesh::BoundingBox const &currentBB, mesh::Mesh::BoundingBox const &receivedBB);
 
   /// Checks if vertex in contained in _bb
   bool isVertexInBB(const mesh::Vertex &vertex);
 
   /** Checks whether provided meshes are empty.
-   * 
+   *
    * Empty provided meshes mean that the re-partitioning completely filtered
    * out the mesh received on this rank at the coupling interface.
    */
   bool areProvidedMeshesEmpty() const;
 
-  virtual void createOwnerInformation() override;
+  void createOwnerInformation();
 
   /// Helper function for 'createOwnerFunction' to set local owner information
   void setOwnerInformation(const std::vector<int> &ownerVec);
+
+  /// Is the local other (i.e. provided) bounding box already prepared (i.e. has prepareBoundingBox() been called)
+  bool _boundingBoxPrepared = false;
 
   GeometricFilter _geometricFilter;
 
@@ -66,6 +79,12 @@ private:
   double _safetyFactor;
 
   logging::Logger _log{"partition::ReceivedPartition"};
+
+  /// Max global vertex IDs of remote connected ranks
+  std::vector<int> _remoteMaxGlobalVertexIDs;
+
+  /// Min global vertex IDs of remote connected ranks
+  std::vector<int> _remoteMinGlobalVertexIDs;
 };
 
 } // namespace partition

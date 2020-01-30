@@ -191,7 +191,6 @@ std::vector<int> BaseCouplingScheme::receiveData(
 
   for (DataMap::value_type &pair : _receiveData) {
     int size = pair.second->values->size();
-    //std::cout<<"\nreceive data id="<<pair.first<<": "<<*(pair.second->values)<<'\n';
     m2n->receive(pair.second->values->data(), size, pair.second->mesh->getID(), pair.second->dimension);
     receivedDataIDs.push_back(pair.first);
   }

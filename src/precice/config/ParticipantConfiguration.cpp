@@ -122,13 +122,14 @@ ParticipantConfiguration::ParticipantConfiguration(
                                "If a mesh is received from another partipant (see tag <from>), it needs to be"
                                "decomposed at the receiving participant. To speed up this process, "
                                "a geometric filter, i.e. filtering by bounding boxes around the local mesh, can be used. "
-                               "2 different variants are implemented: a \"filter-first\" strategy, "
-                               "which is beneficial for a huge mesh and a low number of processors, and a "
-                               "\"broadcast/filter\" strategy, which performs better for a very high number of "
-                               "processors. Both result in the same distribution (if the safety factor is sufficiently large)."
+                               "Two different variants are implemented: a filter \"on-master\" strategy, "
+                               "which is beneficial for a huge mesh and a low number of processors, and a filter "
+                               "\"on-slaves\" strategy, which performs better for a very high number of "
+                               "processors. Both result in the same distribution (if the safety factor is sufficiently large). "
+                               "\"on-master\" is not supported if you use two-level initialization. "
                                "For very asymmetric cases, the filter can also be switched off completely (\"no-filter\").")
-                           .setOptions({VALUE_FILTER_FIRST, VALUE_BROADCAST_FILTER, VALUE_NO_FILTER})
-                           .setDefaultValue(VALUE_BROADCAST_FILTER);
+                           .setOptions({VALUE_FILTER_ON_MASTER, VALUE_FILTER_ON_SLAVES, VALUE_NO_FILTER})
+                           .setDefaultValue(VALUE_FILTER_ON_SLAVES);
   tagUseMesh.addAttribute(attrGeoFilter);
 
   auto attrProvide = makeXMLAttribute(ATTR_PROVIDE, false)
@@ -239,7 +240,7 @@ void ParticipantConfiguration::xmlTagCallback(
              << "\" uses mesh \"" << name << "\" which is not defined";
       throw std::runtime_error{stream.str()};
     }
-    if ((geoFilter != partition::ReceivedPartition::GeometricFilter::BROADCAST_FILTER || safetyFactor != 0.5) && from == "") {
+    if ((geoFilter != partition::ReceivedPartition::GeometricFilter::ON_SLAVES || safetyFactor != 0.5) && from == "") {
       std::ostringstream stream;
       stream << "Participant \"" << _participants.back()->getName()
              << "\" uses mesh \"" << name << "\" which is not received (no \"from\"), but has a geometric-filter and/or"
@@ -298,10 +299,10 @@ ParticipantConfiguration::getParticipants() const
 
 partition::ReceivedPartition::GeometricFilter ParticipantConfiguration::getGeoFilter(const std::string &geoFilter) const
 {
-  if (geoFilter == VALUE_FILTER_FIRST) {
-    return partition::ReceivedPartition::GeometricFilter::FILTER_FIRST;
-  } else if (geoFilter == VALUE_BROADCAST_FILTER) {
-    return partition::ReceivedPartition::GeometricFilter::BROADCAST_FILTER;
+  if (geoFilter == VALUE_FILTER_ON_MASTER) {
+    return partition::ReceivedPartition::GeometricFilter::ON_MASTER;
+  } else if (geoFilter == VALUE_FILTER_ON_SLAVES) {
+    return partition::ReceivedPartition::GeometricFilter::ON_SLAVES;
   } else {
     PRECICE_ASSERT(geoFilter == VALUE_NO_FILTER);
     return partition::ReceivedPartition::GeometricFilter::NO_FILTER;

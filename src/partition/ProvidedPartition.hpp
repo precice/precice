@@ -20,14 +20,15 @@ public:
   virtual ~ProvidedPartition() {}
 
   /// The mesh is gathered and sent to another participant (if required)
-  virtual void communicate() override;
+  void communicate() override;
 
   /// All distribution data structures are set up.
-  virtual void compute() override;
+  void compute() override;
+
+  void compareBoundingBoxes() override;
 
 private:
-  /// Sets owner=True on all vertices
-  virtual void createOwnerInformation() override;
+  void prepare();
 
   logging::Logger _log{"partition::ProvidedPartition"};
 };

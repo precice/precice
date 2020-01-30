@@ -77,8 +77,8 @@ private:
   const std::string ATTR_NETWORK            = "network";
   const std::string ATTR_EXCHANGE_DIRECTORY = "exchange-directory";
 
-  const std::string VALUE_FILTER_FIRST     = "filter-first";
-  const std::string VALUE_BROADCAST_FILTER = "broadcast-filter";
+  const std::string VALUE_FILTER_ON_SLAVES = "on-slaves";
+  const std::string VALUE_FILTER_ON_MASTER = "on-master";
   const std::string VALUE_NO_FILTER        = "no-filter";
 
   const std::string VALUE_VTK = "vtk";

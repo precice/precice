@@ -203,12 +203,8 @@ target_sources(precice
     src/mesh/impl/RTreeAdapter.hpp
     src/partition/Partition.cpp
     src/partition/Partition.hpp
-    src/partition/ProvidedBoundingBox.cpp
-    src/partition/ProvidedBoundingBox.hpp
     src/partition/ProvidedPartition.cpp
     src/partition/ProvidedPartition.hpp
-    src/partition/ReceivedBoundingBox.cpp
-    src/partition/ReceivedBoundingBox.hpp
     src/partition/ReceivedPartition.cpp
     src/partition/ReceivedPartition.hpp
     src/partition/SharedPointer.hpp

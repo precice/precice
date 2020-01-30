@@ -207,9 +207,29 @@ void Mesh::allocateDataValues()
   }
 }
 
-void Mesh::computeNormals()
+void Mesh::computeBoundingBox()
 {
   PRECICE_TRACE(_name);
+  BoundingBox boundingBox(_dimensions,
+                          std::make_pair(std::numeric_limits<double>::max(),
+                                         std::numeric_limits<double>::lowest()));
+  for (const Vertex &vertex : _vertices) {
+    for (int d = 0; d < _dimensions; d++) {
+      boundingBox[d].first  = std::min(vertex.getCoords()[d], boundingBox[d].first);
+      boundingBox[d].second = std::max(vertex.getCoords()[d], boundingBox[d].second);
+    }
+  }
+  for (int d = 0; d < _dimensions; d++) {
+    PRECICE_DEBUG("BoundingBox, dim: " << d << ", first: " << boundingBox[d].first << ", second: " << boundingBox[d].second);
+  }
+  _boundingBox = std::move(boundingBox);
+}
+
+void Mesh::computeState()
+{
+  PRECICE_TRACE(_name);
+  PRECICE_ASSERT(_dimensions == 2 || _dimensions == 3, _dimensions);
+
   // Compute normals only if faces to derive normal information are available
   size_t size2DFaces = _edges.size();
   size_t size3DFaces = _triangles.size() + _quads.size();
@@ -281,33 +301,6 @@ void Mesh::computeNormals()
     // there can be cases when a vertex has no edge though edges exist in general (e.g. after filtering)
     vertex.setNormal(vertex.getNormal().normalized());
   }
-}
-
-void Mesh::computeBoundingBox()
-{
-  PRECICE_TRACE(_name);
-  BoundingBox boundingBox(_dimensions,
-                          std::make_pair(std::numeric_limits<double>::max(),
-                                         std::numeric_limits<double>::lowest()));
-  for (const Vertex &vertex : _vertices) {
-    for (int d = 0; d < _dimensions; d++) {
-      boundingBox[d].first  = std::min(vertex.getCoords()[d], boundingBox[d].first);
-      boundingBox[d].second = std::max(vertex.getCoords()[d], boundingBox[d].second);
-    }
-  }
-  for (int d = 0; d < _dimensions; d++) {
-    PRECICE_DEBUG("BoundingBox, dim: " << d << ", first: " << boundingBox[d].first << ", second: " << boundingBox[d].second);
-  }
-  _boundingBox = std::move(boundingBox);
-}
-
-void Mesh::computeState()
-{
-  PRECICE_TRACE(_name);
-  PRECICE_ASSERT(_dimensions == 2 || _dimensions == 3, _dimensions);
-
-  computeNormals();
-  computeBoundingBox();
 }
 
 void Mesh::clear()
