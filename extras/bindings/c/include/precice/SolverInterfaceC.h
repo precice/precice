@@ -93,9 +93,9 @@ int precicec_isReadDataAvailable();
 int precicec_isWriteDataRequired(double computedTimestepLength);
 
 /**
- * @brief Returns true (->1), if the coupling timestep is completed.
+ * @brief Returns true (->1), if the coupling time window is completed.
  */
-int precicec_isCouplingTimestepComplete();
+int precicec_isCouplingTimeWindowComplete();
 
 /**
  * @brief Returns whether the solver has to evaluate the surrogate model representation.

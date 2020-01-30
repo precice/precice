@@ -61,10 +61,10 @@ int precicec_isCouplingOngoing()
   return 0;
 }
 
-int precicec_isCouplingTimestepComplete()
+int precicec_isCouplingTimeWindowComplete()
 {
   PRECICE_ASSERT(interface != nullptr);
-  if (interface->isTimestepComplete()) {
+  if (interface->isTimeWindowComplete()) {
     return 1;
   }
   return 0;
@@ -120,7 +120,7 @@ void precicec_markActionFulfilled(const char *action)
 {
   PRECICE_ASSERT(interface != nullptr);
   PRECICE_ASSERT(action != nullptr);
-  impl->markActionFulfilled(std::string(action));
+  interface->markActionFulfilled(std::string(action));
 }
 
 int precicec_hasMesh(const char *meshName)

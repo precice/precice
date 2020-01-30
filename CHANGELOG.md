@@ -6,6 +6,13 @@ All notable changes to this project will be documented in this file. For future 
 
 - Refactored and made two-level initialization configurable through `"use-two-level-init"` in `m2n`.
 - Replace geometric filter option "filter-first" and "broadcast-filter" by "on-master" and "on-slaves", respectively, to generalize to two-level initialization.
+- Sorted out the different meaning of timestep and time window
+  - Renamed API function `isTimestepComplete` to `isTimeWindowComplete`
+  - Renamed `cplscheme` configuration option `timestep-length` to `time-window-size`
+  - Renamed `cplscheme` configuration option `max-timesteps` to `max-time-windows`
+  - Renamed `acceleration` configuration option `timesteps-reused` to `time-windows-reused`
+  - Renamed `acceleration` configuration option `reused-timesteps-at-restart` to `reused-time-windows-at-restart`
+  - Renamed `export` configuration option `timestep-interval` to `every-n-time-windows`
 - Restructure tools and bindings
   - Moved developer tools to `tools/`
   - Moved user tools to `extras/`

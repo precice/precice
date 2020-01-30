@@ -32,8 +32,8 @@
 
       <coupling-scheme:parallel-explicit>
          <participants first="FluidSolver" second="SolidSolver" />
-         <max-timesteps value="1" />
-         <timestep-length value="1.0" />
+         <max-time-windows value="1" />
+         <time-window-size value="1.0" />
          <exchange data="Data1" mesh="Nodes" from="SolidSolver" to="FluidSolver" />
    </coupling-scheme:parallel-explicit>
 

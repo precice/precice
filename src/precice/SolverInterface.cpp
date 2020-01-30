@@ -68,9 +68,9 @@ bool SolverInterface::isWriteDataRequired(
   return _impl->isWriteDataRequired(computedTimestepLength);
 }
 
-bool SolverInterface::isTimestepComplete() const
+bool SolverInterface::isTimeWindowComplete() const
 {
-  return _impl->isTimestepComplete();
+  return _impl->isTimeWindowComplete();
 }
 
 bool SolverInterface::isActionRequired(

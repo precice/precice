@@ -40,8 +40,8 @@
 
     <coupling-scheme:serial-implicit> 
       <participants first="SolverOne" second="SolverTwo" /> 
-      <max-timesteps value="10" />
-      <timestep-length value="1.0" />
+      <max-time-windows value="10" />
+      <time-window-size value="1.0" />
       <max-iterations value="3" />
       <min-iteration-convergence-measure min-iterations="5" data="Forces" mesh="MeshOne"/>
       <exchange data="Forces"     mesh="MeshOne" from="SolverOne" to="SolverTwo" />

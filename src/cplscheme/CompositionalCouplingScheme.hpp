@@ -200,11 +200,11 @@ public:
   virtual bool isCouplingOngoing() const;
 
   /**
-   * @brief Returns true, when the accessor can advance to the next timestep.
+   * @brief Returns true, when the accessor can advance to the next time window.
    *
-   * Only true, if all composed coupling schemes have completed the timestep.
+   * Only true, if all composed coupling schemes have completed the time window.
    */
-  virtual bool isCouplingTimestepComplete() const;
+  virtual bool isTimeWindowComplete() const;
 
   /**
    * @brief Returns true, if the given action has to be performed by the accessor.
