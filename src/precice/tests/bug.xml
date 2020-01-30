@@ -33,14 +33,14 @@
          <write-data name="Forces"           mesh="FliteNodes"/>
          <read-data  name="Displacements"    mesh="FliteNodes"/>
          <read-data  name="OldDisplacements" mesh="FliteNodes"/>
-         <export:vtk frequency="1" normals="on"/>
+         <export:vtk every-n-time-windows="1" normals="on"/>
       </participant>
 
       <participant name="Calculix">
          <use-mesh name="CalculixNodes" provide="yes"/>
          <write-data name="Displacements" mesh="CalculixNodes"/>
          <read-data  name="Forces"        mesh="CalculixNodes"/>
-	      <export:vtk frequency="1" normals="on"/>
+	      <export:vtk every-n-time-windows="1" normals="on"/>
       </participant>
 
       <m2n:mpi enforce-gather-scatter="true" from="Flite" to="Calculix"/>
