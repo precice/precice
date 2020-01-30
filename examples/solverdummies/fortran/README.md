@@ -4,10 +4,6 @@ Simply type `make`.
 
 Assumption: `pkg-config` can find preCICE (try `pkg-config --modversion libprecice`). If you installed preCICE in a user directory, you may need to set your `PKG_CONFIG_PATH`. See the preCICE wiki on "Linking to preCICE" for more.
 
-# Compilation with SCons (deprecated)
-
-Simply type `scons`. Assumption: preCICE is available as a shared library in your `LD_LIBRARY_PATH`.
-
 # Run
 
 You can test the dummy solver by coupling two instances with each other. Open two terminals and run
