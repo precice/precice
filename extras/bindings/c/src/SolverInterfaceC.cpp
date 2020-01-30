@@ -120,7 +120,7 @@ void precicec_markActionFulfilled(const char *action)
 {
   PRECICE_ASSERT(interface != nullptr);
   PRECICE_ASSERT(action != nullptr);
-  impl->markActionFulfilled(std::string(action));
+  interface->markActionFulfilled(std::string(action));
 }
 
 int precicec_hasMesh(const char *meshName)
