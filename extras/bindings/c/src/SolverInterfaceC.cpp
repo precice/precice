@@ -61,10 +61,10 @@ int precicec_isCouplingOngoing()
   return 0;
 }
 
-int precicec_isCouplingTimestepComplete()
+int precicec_isCouplingTimeWindowComplete()
 {
   PRECICE_ASSERT(interface != nullptr);
-  if (interface->isTimestepComplete()) {
+  if (interface->isTimeWindowComplete()) {
     return 1;
   }
   return 0;

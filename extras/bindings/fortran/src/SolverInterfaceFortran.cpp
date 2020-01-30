@@ -114,11 +114,11 @@ void precicef_read_data_available_(
   }
 }
 
-void precicef_is_timestep_complete_(
+void precicef_is_time_window_complete_(
     int *isComplete)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  if (impl->isTimestepComplete()) {
+  if (impl->isTimeWindowComplete()) {
     *isComplete = 1;
   } else {
     *isComplete = 0;

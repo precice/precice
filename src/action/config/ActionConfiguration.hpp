@@ -97,7 +97,7 @@ private:
   const std::string VALUE_REGULAR_POST;
   const std::string VALUE_ON_EXCHANGE_PRIOR;
   const std::string VALUE_ON_EXCHANGE_POST;
-  const std::string VALUE_ON_TIMESTEP_COMPLETE_POST;
+  const std::string VALUE_ON_TIME_WINDOW_COMPLETE_POST;
 
   mesh::PtrMeshConfiguration _meshConfig;
 

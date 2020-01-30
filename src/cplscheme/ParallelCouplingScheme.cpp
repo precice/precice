@@ -153,10 +153,10 @@ void ParallelCouplingScheme::explicitAdvance()
   PRECICE_CHECK(!hasToReceiveInitData() && !hasToSendInitData(),
                 "initializeData() needs to be called before advance if data has to be initialized!");
   setHasDataBeenExchanged(false);
-  setIsCouplingTimestepComplete(false);
+  setIsTimeWindowComplete(false);
 
   if (math::equals(getThisTimestepRemainder(), 0.0, _eps)) {
-    setIsCouplingTimestepComplete(true);
+    setIsTimeWindowComplete(true);
     setTimesteps(getTimesteps() + 1);
 
     if (doesFirstStep()) {
@@ -193,7 +193,7 @@ void ParallelCouplingScheme::implicitAdvance()
                 "initializeData() needs to be called before advance if data has to be initialized!");
 
   setHasDataBeenExchanged(false);
-  setIsCouplingTimestepComplete(false);
+  setIsTimeWindowComplete(false);
   bool convergence                   = false;
   bool convergenceCoarseOptimization = true;
   bool doOnlySolverEvaluation        = false;
@@ -204,7 +204,7 @@ void ParallelCouplingScheme::implicitAdvance()
       getM2N()->receive(convergence);
       getM2N()->receive(_isCoarseModelOptimizationActive);
       if (convergence) {
-        timestepCompleted();
+        timeWindowCompleted();
       }
       receiveData(getM2N());
     } else { // second participant
@@ -261,7 +261,7 @@ void ParallelCouplingScheme::implicitAdvance()
             getAcceleration()->iterationsConverged(getAllData());
           }
           newConvergenceMeasurements();
-          timestepCompleted();
+          timeWindowCompleted();
         } else if (getAcceleration().get() != nullptr) {
           getAcceleration()->performAcceleration(getAllData());
         }

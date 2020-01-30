@@ -80,8 +80,8 @@ private:
   const std::string TAG_PARTICIPANT;
   const std::string TAG_EXCHANGE;
   const std::string TAG_MAX_TIME;
-  const std::string TAG_MAX_TIMESTEPS;
-  const std::string TAG_TIMESTEP_LENGTH;
+  const std::string TAG_MAX_TIME_WINDOWS;
+  const std::string TAG_TIME_WINDOW_SIZE;
   const std::string TAG_ABS_CONV_MEASURE;
   const std::string TAG_REL_CONV_MEASURE;
   const std::string TAG_RES_REL_CONV_MEASURE;
@@ -102,7 +102,6 @@ private:
   const std::string ATTR_LIMIT;
   const std::string ATTR_MIN_ITERATIONS;
   const std::string ATTR_NAME;
-  const std::string ATTR_TIMESTEP_INTERVAL;
   const std::string ATTR_FROM;
   const std::string ATTR_TO;
   const std::string ATTR_SUFFICES;
@@ -124,8 +123,8 @@ private:
     std::string                   controller;
     bool                          setController  = false;
     double                        maxTime        = CouplingScheme::UNDEFINED_TIME;
-    int                           maxTimesteps   = CouplingScheme::UNDEFINED_TIMESTEPS;
-    double                        timestepLength = CouplingScheme::UNDEFINED_TIMESTEP_LENGTH;
+    int                           maxTimeWindows = CouplingScheme::UNDEFINED_TIME_WINDOWS;
+    double                        timeWindowSize = CouplingScheme::UNDEFINED_TIME_WINDOW_SIZE;
     int                           validDigits    = 16;
     constants::TimesteppingMethod dtMethod       = constants::FIXED_DT;
     /// Tuples of exchange data, mesh, and participant name.

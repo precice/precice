@@ -278,12 +278,12 @@ bool CompositionalCouplingScheme::isCouplingOngoing() const
   return isOngoing;
 }
 
-bool CompositionalCouplingScheme::isCouplingTimestepComplete() const
+bool CompositionalCouplingScheme::isTimeWindowComplete() const
 {
   PRECICE_TRACE();
   bool isComplete = true;
   for (Scheme scheme : _couplingSchemes) {
-    isComplete &= scheme.scheme->isCouplingTimestepComplete();
+    isComplete &= scheme.scheme->isTimeWindowComplete();
   }
   PRECICE_DEBUG("return " << isComplete);
   return isComplete;
