@@ -49,13 +49,13 @@ int main(int argc, char **argv)
 
     if (precicec_isActionRequired(writeItCheckp)) {
       printf("DUMMY: Writing iteration checkpoint");
-      precicec_fulfilledAction(writeItCheckp);
+      precicec_markActionFulfilled(writeItCheckp);
     }
 
     dt = precicec_advance(dt);
 
     if (precicec_isActionRequired(readItCheckp)) {
-      precicec_fulfilledAction(readItCheckp);
+      precicec_markActionFulfilled(readItCheckp);
       printf("DUMMY: Reading iteration checkpoint");
     } else {
       printf("DUMMY: Advancing in time");

@@ -46,14 +46,14 @@ int main(int argc, char **argv)
 
     if (interface.isActionRequired(actionWriteIterationCheckpoint())) {
       std::cout << "DUMMY: Writing iteration checkpoint\n";
-      interface.fulfilledAction(actionWriteIterationCheckpoint());
+      interface.markActionFulfilled(actionWriteIterationCheckpoint());
     }
 
     dt = interface.advance(dt);
 
     if (interface.isActionRequired(actionReadIterationCheckpoint())) {
       std::cout << "DUMMY: Writing iteration checkpoint\n";
-      interface.fulfilledAction(actionReadIterationCheckpoint());
+      interface.markActionFulfilled(actionReadIterationCheckpoint());
     } else {
       std::cout << "DUMMY: Advancing in time\n";
     }
