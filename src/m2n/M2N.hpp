@@ -93,10 +93,11 @@ public:
    * This should be called before calling the accept and request methods.
    * Calling this function forwards the call to the configured master communication.
    *
+   * @param[in] acceptorName Name of calling participant.
+   * @param[in] requesterName Name of remote participant to connect to.
+   *
    * @see com::Communication::prepareEstablishment()
    * @see cleanupEstablishment()
-   *
-   * @todo doc
    */
   void prepareEstablishment(const std::string &acceptorName,
                             const std::string &requesterName);
@@ -107,10 +108,11 @@ public:
    * This should be called after calling the accept and request methods.
    * Calling this function forwards the call to the configured master communication.
    *
+   * @param[in] acceptorName Name of calling participant.
+   * @param[in] requesterName Name of remote participant to connect to.
+   *
    * @see com::Communication::cleanupEstablishment()
    * @see prepareEstablishment()
-   *
-   * @todo doc
    */
   void cleanupEstablishment(const std::string &acceptorName,
                             const std::string &requesterName);

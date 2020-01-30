@@ -29,6 +29,7 @@ struct MasterComFixture {
       utils::MasterSlave::configure(0, size);
       utils::MasterSlave::_communication->acceptConnection("Master", "Slaves", "Test", utils::Parallel::getProcessRank());
       utils::MasterSlave::_communication->setRankOffset(1);
+      utils::MasterSlave::_communication->cleanupEstablishment("Master", "Slaves");
     } else { //Slaves
       PRECICE_ASSERT(utils::Parallel::getProcessRank() > 0 && utils::Parallel::getProcessRank() < size);
       utils::Parallel::splitCommunicator("Slaves");

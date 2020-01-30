@@ -1,6 +1,7 @@
 #include "m2n/BoundM2N.hpp"
 #include "com/Communication.hpp"
 #include "m2n/M2N.hpp"
+#include "utils/MasterSlave.hpp"
 
 #include "logging/Logger.hpp"
 
@@ -10,10 +11,10 @@ namespace m2n {
 void BoundM2N::prepareEstablishment()
 {
   if (isRequesting) {
-    m2n->prepareEstablishment(remoteName, localName);
-  } else {
-    m2n->prepareEstablishment(localName, remoteName);
+    return;
   }
+
+  m2n->prepareEstablishment(localName, remoteName);
 }
 
 void BoundM2N::connectMasters()
@@ -66,9 +67,26 @@ void BoundM2N::preConnectSlaves()
 void BoundM2N::cleanupEstablishment()
 {
   if (isRequesting) {
-    m2n->cleanupEstablishment(remoteName, localName);
-  } else {
+    return;
+  }
+  waitForSlaves();
+  if (!utils::MasterSlave::isSlave()) {
     m2n->cleanupEstablishment(localName, remoteName);
+  }
+}
+
+void BoundM2N::waitForSlaves()
+{
+  if (utils::MasterSlave::isMaster()) {
+    for (int rank = 1; rank < utils::MasterSlave::getSize(); ++rank) {
+      int item = 0;
+      utils::MasterSlave::_communication->receive(item, rank);
+      PRECICE_ASSERT(item > 0);
+    }
+  }
+  if (utils::MasterSlave::isSlave()) {
+    int item = utils::MasterSlave::getRank();
+    utils::MasterSlave::_communication->send(item, 0);
   }
 }
 

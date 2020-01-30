@@ -13,6 +13,8 @@ All notable changes to this project will be documented in this file. For future 
   - Renamed `acceleration` configuration option `timesteps-reused` to `time-windows-reused`
   - Renamed `acceleration` configuration option `reused-timesteps-at-restart` to `reused-time-windows-at-restart`
   - Renamed `export` configuration option `timestep-interval` to `every-n-time-windows`
+- Added directional directory level for file-based connection exchange. For each connection, there is now a directory in `precice-run` of the form `Accepter-Requestor`.
+- Added step to remove the connection directories after connecting the slaves. `precice-run` will be empty after a successful run.
 - Restructure tools and bindings
   - Moved developer tools to `tools/`
   - Moved user tools to `extras/`

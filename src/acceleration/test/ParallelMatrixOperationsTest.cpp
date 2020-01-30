@@ -167,6 +167,7 @@ BOOST_AUTO_TEST_CASE(ParallelMatrixMatrixOp, *boost::unit_test::fixture<testing:
     _cyclicCommRight->requestConnection("cyclicComm-" + std::to_string(utils::Parallel::getProcessRank()), "", "Test", 0, 1);
     _cyclicCommLeft->acceptConnection("cyclicComm-" + std::to_string(prevProc), "", "Test", utils::Parallel::getProcessRank());
   }
+  _cyclicCommLeft->cleanupEstablishment("cyclicComm-" + std::to_string(prevProc), "");
 
   int              n_global = 10, m_global = 5;
   int              n_local;
