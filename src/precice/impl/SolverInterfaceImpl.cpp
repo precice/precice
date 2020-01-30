@@ -1191,11 +1191,24 @@ void SolverInterfaceImpl::computePartitions()
     meshContext->partition->communicate();
   }
 
-  // pull provided meshes up front, to have them ready for the decomposition of the received meshes (for the mappings)
-  std::stable_partition(contexts.begin(), contexts.end(),
-                        [](MeshContext const *const meshContext) -> bool {
-                          return meshContext->provideMesh;
-                        });
+  // for two-level initialization, there is also still communication in partition::compute()
+  // therefore, we cannot resort here.
+  // @todo this hacky solution should be removed as part of #633
+  bool resort = true;
+  for (auto &m2nPair : _m2ns) {
+    if (m2nPair.second.m2n->usesTwoLevelInitialization()) {
+      resort = false;
+      break;
+    }
+  }
+
+  if (resort) {
+    // pull provided meshes up front, to have them ready for the decomposition of the received meshes (for the mappings)
+    std::stable_partition(contexts.begin(), contexts.end(),
+                          [](MeshContext const *const meshContext) -> bool {
+                            return meshContext->provideMesh;
+                          });
+  }
 
   for (MeshContext *meshContext : contexts) {
     meshContext->partition->compute();
