@@ -24,7 +24,7 @@ All notable changes to this project will be documented in this file. For future 
 - Remove `MeshHandle` from API and replace use in integration tests by `SolverInterfaceImpl::mesh()`.
 - Added the mesh name to the information used to generate connection information files, which is required for the two-level initialization.
 - Merged the `SolverInterface::configure()` into the `SolverInterface` constructors. They now have a second parameter for the configuration file.
-- Add CMake build type fallback to `Debug` in case it wasn't provided.
+- Added CMake build type fallback to `Debug` in case it wasn't provided.
 - Renamed CMake variables `MPI`, `PETSC`, `PYTHON` to `PRECICE_MPICommunication`, `PRECICE_PETScMapping`, `PRECICE_PythonActions`
 - Remove `MeshHandle` from API and replace use in integration tests by `SolverInterfaceImpl::mesh()`.
 - Completely remove server mode. Now, the only supported parallelization concept is the peer-to-peer master-slave mode.
@@ -42,6 +42,25 @@ All notable changes to this project will be documented in this file. For future 
 - Release finalized version of python bindings in independent repository: [`precice/python-bindings`](https://github.com/precice/python-bindings). Package is named [`pyprecice`](https://github.com/precice/python-bindings/blob/3b9aec6c529814e6904a6a4697cf92388d4c4bf0/setup.py#L18) and supports the preCICE version >= 2.0.0.
 - Ended support and removed all experimental python bindings [`precice`](https://github.com/precice/precice/tree/v1.6.1/src/precice/bindings/python), [`precice-future`](https://github.com/precice/precice/tree/v1.6.1/src/precice/bindings/python-future), [`PySolverInterface`](https://github.com/precice/precice/tree/v1.6.1/src/precice/bindings/PySolverInterface).
 - Introduce preCICE-MATLAB bindings (https://github.com/precice/precice/pull/494, https://github.com/precice/precice/pull/580) and provide them in [`precice/matlab-bindings`](https://github.com/precice/matlab-bindings).
+- Added distance statistics of nearest-neighbour and nearest-projection mappings between mesh pairs as debug output.
+- Fixed a bug in the XML parser which lead to ignored error messages from `libxml2`.
+- Fixed a bug in the XML parser which did not correctly checked tag occurrence.
+- Added caching to the CMake library validation
+- Changed CMake to always validate dependencies. Set `PRECICE_ALWAYS_VALIDATE_LIBS=NO` to disable this behaviour.
+- Removed packaging files specific to Ubuntu 18.04 as it is covered by CPack.
+- Added log statements to the connection information file writers and listeners including full paths.
+- Improved efficiency of nearest projection mapping of matching meshes using lazy generation of index trees.
+- Added CMake check for C++11 library conformance. This is especially helpful when using Intel Compilers.
+- Removed an unnecessary assertion in `getMeshVertexIDsFromPositions()`.
+- Removed deprecated `ModifyCoordinatesAction`.
+- Removed deprecated `HierarchicalAitkenAcceleration`.
+- Removed deprecated voxel queries in `src/query/`.
+- Disabled the installation of the test binary and files by default.
+- Added grouped tests by module to CTest
+- Added information to the log of the first written Data values.
+- Changed unit tests to run only on MPI Rank 0.
+- Removed deprecated SCons
+
 
 ## 1.6.1
 
