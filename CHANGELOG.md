@@ -5,43 +5,41 @@ All notable changes to this project will be documented in this file. For future 
 ## develop
 
 - Refactored and made two-level initialization configurable through `"use-two-level-init"` in `m2n`.
-- Replace geometric filter option "filter-first" and "broadcast-filter" by "on-master" and "on-slaves", respectively, to generalize to two-level initialization.
-- Sorted out the different meaning of timestep and time window
-  - Renamed API function `isTimestepComplete` to `isTimeWindowComplete`
-  - Renamed `cplscheme` configuration option `timestep-length` to `time-window-size`
-  - Renamed `cplscheme` configuration option `max-timesteps` to `max-time-windows`
-  - Renamed `acceleration` configuration option `timesteps-reused` to `time-windows-reused`
-  - Renamed `acceleration` configuration option `reused-timesteps-at-restart` to `reused-time-windows-at-restart`
-  - Renamed `export` configuration option `timestep-interval` to `every-n-time-windows`
+- Replaced geometric filter option "filter-first" and "broadcast-filter" by "on-master" and "on-slaves", respectively, to generalize to two-level initialization.
+- Sorted out the different meaning of timestep and time window:
+  - Renamed API function `isTimestepComplete` to `isTimeWindowComplete`.
+  - Renamed `cplscheme` configuration option `timestep-length` to `time-window-size`.
+  - Renamed `cplscheme` configuration option `max-timesteps` to `max-time-windows`.
+  - Renamed `acceleration` configuration option `timesteps-reused` to `time-windows-reused`.
+  - Renamed `acceleration` configuration option `reused-timesteps-at-restart` to `reused-time-windows-at-restart`.
+  - Renamed `export` configuration option `timestep-interval` to `every-n-time-windows`.
 - Added directional directory level for file-based connection exchange. For each connection, there is now a directory in `precice-run` of the form `Accepter-Requestor`.
 - Added step to remove the connection directories after connecting the slaves. `precice-run` will be empty after a successful run.
-- Restructure tools and bindings
-  - Moved developer tools to `tools/`
-  - Moved user tools to `extras/`
-  - Moved native bindings to `extras/bindings/`
+- Restructured tools and bindings:
+  - Moved developer tools to `tools/`.
+  - Moved user tools to `extras/`.
+  - Moved native bindings to `extras/bindings/`.
 - Moved Fortan 2003 bindings (`src/precice/bindings/f2003`) and solverdummy (`tools/solverdummy/f2003`) to a separate repository.
-- Added CMake options to enable native bindings `PRECICE_ENABLE_C`, `PRECICE_ENABLE_FORTRAN` (on by default)
-- Remove `MeshHandle` from API and replace use in integration tests by `SolverInterfaceImpl::mesh()`.
+- Added CMake options to enable native bindings `PRECICE_ENABLE_C`, `PRECICE_ENABLE_FORTRAN` (on by default).
+- Removed `MeshHandle` from API and replace use in integration tests by `SolverInterfaceImpl::mesh()`.
 - Added the mesh name to the information used to generate connection information files, which is required for the two-level initialization.
 - Merged the `SolverInterface::configure()` into the `SolverInterface` constructors. They now have a second parameter for the configuration file.
 - Added CMake build type fallback to `Debug` in case it wasn't provided.
 - Renamed CMake variables `MPI`, `PETSC`, `PYTHON` to `PRECICE_MPICommunication`, `PRECICE_PETScMapping`, `PRECICE_PythonActions`
-- Remove `MeshHandle` from API and replace use in integration tests by `SolverInterfaceImpl::mesh()`.
-- Completely remove server mode. Now, the only supported parallelization concept is the peer-to-peer master-slave mode.
-- Added support for python 3 in python actions
-- Simplify parallel configuration
-  - automatically add `master:mpi-single` for parallel participant if necessary
-  - no longer require `gather-scatter` distribution type for a `m2n` with at least one serial participant
-  - automatically choose suitable RBF implementation based on whether preCICE was built with PETSc and whether the participant is serial or parallel
+- Completely removed server mode. Now, the only supported parallelization concept is the peer-to-peer master-slave mode.
+- Added support for python 3 in python actions.
+- Simplify parallel configuration:
+  - Automatically add `master:mpi-single` for parallel participant if necessary.
+  - No longer require `gather-scatter` distribution type for a `m2n` with at least one serial participant.
+  - Automatically choose suitable RBF implementation based on whether preCICE was built with PETSc and whether the participant is serial or parallel.
 - Added a generator for markdown references `binprecice md`.
-- Refactored the XML documentation generation out of the `xml::XMLAttribute` and `xml::XMLTag` classes into `xml/Printer.[ch]pp`.
-- Changed the internal handling of Meshes by removing sub-meshes, the type hierarchy based on `mesh::PropertyContainer`, and the obsolete `mesh::Group` and `mesh::Merge`.
-  This improves memory consumption, dramatically reduces allocations and improves locality when traversing primitives.
+- Refactored the XML documentation generation out of the `xml::XMLAttribute` and `xml::XMLTag` classes into `xml/Printer.[c/h]pp`.
+- Changed the internal handling of meshes by removing sub-meshes, the type hierarchy based on `mesh::PropertyContainer`, and the obsolete `mesh::Group` and `mesh::Merge`. This improves memory consumption, dramatically reduces allocations and improves locality when traversing primitives.
 - Fixed the Debian package generation by using `GNUInstallDirs`, providing a correct `changelog` and `SOVERSION`, as well as generating a package name including the `SOVERSION`.
-- Drop official python2 support for python bindings ([remove tests](https://github.com/precice/systemtests/commit/dba924447996574967b2295cf652fb32bec58020)).
-- Release finalized version of python bindings in independent repository: [`precice/python-bindings`](https://github.com/precice/python-bindings). Package is named [`pyprecice`](https://github.com/precice/python-bindings/blob/3b9aec6c529814e6904a6a4697cf92388d4c4bf0/setup.py#L18) and supports the preCICE version >= 2.0.0.
+- Dropped official python2 support for python bindings ([remove tests](https://github.com/precice/systemtests/commit/dba924447996574967b2295cf652fb32bec58020)).
+- Released finalized version of python bindings in independent repository: [`precice/python-bindings`](https://github.com/precice/python-bindings). Package is named [`pyprecice`](https://github.com/precice/python-bindings/blob/3b9aec6c529814e6904a6a4697cf92388d4c4bf0/setup.py#L18) and supports the preCICE version >= 2.0.0.
 - Ended support and removed all experimental python bindings [`precice`](https://github.com/precice/precice/tree/v1.6.1/src/precice/bindings/python), [`precice-future`](https://github.com/precice/precice/tree/v1.6.1/src/precice/bindings/python-future), [`PySolverInterface`](https://github.com/precice/precice/tree/v1.6.1/src/precice/bindings/PySolverInterface).
-- Introduce preCICE-MATLAB bindings (https://github.com/precice/precice/pull/494, https://github.com/precice/precice/pull/580) and provide them in [`precice/matlab-bindings`](https://github.com/precice/matlab-bindings).
+- Introduced preCICE-MATLAB bindings (https://github.com/precice/precice/pull/494, https://github.com/precice/precice/pull/580) and provided them in [`precice/matlab-bindings`](https://github.com/precice/matlab-bindings).
 - Added distance statistics of nearest-neighbour and nearest-projection mappings between mesh pairs as debug output.
 - Fixed a bug in the XML parser which lead to ignored error messages from `libxml2`.
 - Fixed a bug in the XML parser which did not correctly checked tag occurrence.
@@ -56,10 +54,10 @@ All notable changes to this project will be documented in this file. For future 
 - Removed deprecated `HierarchicalAitkenAcceleration`.
 - Removed deprecated voxel queries in `src/query/`.
 - Disabled the installation of the test binary and files by default.
-- Added grouped tests by module to CTest
+- Added grouped tests by module to CTest.
 - Added information to the log of the first written Data values.
 - Changed unit tests to run only on MPI Rank 0.
-- Removed deprecated SCons
+- Removed deprecated SCons.
 
 
 ## 1.6.1
