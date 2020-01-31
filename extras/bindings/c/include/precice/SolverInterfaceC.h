@@ -95,7 +95,7 @@ int precicec_isWriteDataRequired(double computedTimestepLength);
 /**
  * @brief Returns true (->1), if the coupling time window is completed.
  */
-int precicec_isCouplingTimeWindowComplete();
+int precicec_isTimeWindowComplete();
 
 /**
  * @brief Returns whether the solver has to evaluate the surrogate model representation.
