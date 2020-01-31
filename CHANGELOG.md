@@ -58,7 +58,7 @@ All notable changes to this project will be documented in this file. For future 
 - Added information to the log of the first written Data values.
 - Changed unit tests to run only on MPI Rank 0.
 - Removed deprecated SCons.
-
+- Added `examples/` to installation and package
 
 ## 1.6.1
 

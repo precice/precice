@@ -474,6 +474,12 @@ if(PRECICE_InstallTest)
     )
 endif()
 
+# Install examples
+install(DIRECTORY examples
+  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/precice
+  PATTERN ".gitignore" EXCLUDE
+  )
+
 # Export the Targets to install
 install(EXPORT preciceTargets
   FILE preciceTargets.cmake
