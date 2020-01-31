@@ -46,6 +46,31 @@ void precicef_create_(
                                       *solverProcessIndex, *solverProcessSize);
 }
 
+void precicef_create_with_communicator_(
+    const char *participantName,
+    const char *configFileName,
+    const int * solverProcessIndex,
+    const int * solverProcessSize,
+    int       * communicator,
+    int         lengthAccessorName,
+    int         lengthConfigFileName)
+{
+  //cout << "lengthAccessorName: " << lengthAccessorName << '\n';
+  //cout << "lengthConfigFileName: " << lengthConfigFileName << '\n';
+  //cout << "solverProcessIndex: " << *solverProcessIndex << '\n';
+  //cout << "solverProcessSize: " << *solverProcessSize << '\n';
+  //cout << "communicator: " << *communicator << '\n';
+  int    strippedLength = precice::impl::strippedLength(participantName, lengthAccessorName);
+  string stringAccessorName(participantName, strippedLength);
+  strippedLength = precice::impl::strippedLength(configFileName, lengthConfigFileName);
+  string stringConfigFileName(configFileName, strippedLength);
+  //cout << "Accessor: " << stringAccessorName << "!" << '\n';
+  //cout << "Config  : " << stringConfigFileName << "!" << '\n';
+  impl = new precice::SolverInterface(stringAccessorName,
+                                      stringConfigFileName,
+                                      *solverProcessIndex, *solverProcessSize, &communicator);
+}
+
 void precicef_initialize_(
     double *timestepLengthLimit)
 {
