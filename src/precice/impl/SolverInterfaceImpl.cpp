@@ -80,6 +80,21 @@ SolverInterfaceImpl::SolverInterfaceImpl(
   logging::setParticipant(_accessorName);
 
   configure(configurationFileName);
+
+// This block cannot be merge with the one above as only configure calls
+// utils::Parallel::initializeMPI, which is needed for getProcessRank.
+#ifndef PRECICE_NO_MPI
+  if (communicator != nullptr) {
+    PRECICE_CHECK(_accessorProcessRank == utils::Parallel::getProcessRank(),
+                  "The passed solverProcessIndex (" << _accessorProcessRank
+                                                    << ") does not match the rank of the passed MPI communicator ("
+                                                    << utils::Parallel::getProcessRank() << ")");
+    PRECICE_CHECK(_accessorCommunicatorSize == utils::Parallel::getCommunicatorSize(),
+                  "The passed solverProcessSize (" << _accessorCommunicatorSize
+                                                   << ") does not match the size of the passed MPI communicator ("
+                                                   << utils::Parallel::getCommunicatorSize() << ")");
+  }
+#endif
 }
 
 SolverInterfaceImpl::SolverInterfaceImpl(
@@ -213,7 +228,7 @@ double SolverInterfaceImpl::initialize()
     PRECICE_DEBUG("Established slaves connection " << (bm2n.isRequesting ? "from " : "to ") << bm2n.remoteName);
   }
   PRECICE_INFO("Slaves are connected");
-  
+
   for (auto &m2nPair : _m2ns) {
     m2nPair.second.cleanupEstablishment();
   }
