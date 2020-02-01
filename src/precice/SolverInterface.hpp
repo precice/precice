@@ -63,7 +63,7 @@ public:
    *        each process using preCICE has to specify its index, which has to start
    *        from 0 and end with solverProcessSize - 1.
    * @param[in] solverProcessSize The number of solver processes using preCICE.
-   * @param[in] communicator A pointer to an MPI_Comm to use as MPI_COMM_WORLD.
+   * @param[in] communicator A pointer to an MPI_Comm to use as communicator.
    */
   SolverInterface(
       const std::string &participantName,
