@@ -85,7 +85,7 @@ $ cmake \
    -DCMAKE_CXX_CPPLINT="cpplint.py" \
    -DCMAKE_CXX_INCLUDE_WHAT_YOU_USE="path/to/iwyu;-p;." \
    -DPRECICE_PythonActions=ON \
-   -DPRECICE_MPICommunicator=ON \
+   -DPRECICE_MPICommunication=ON \
    -DPRECICE_PETScMapping=ON \
    $PRECICE_ROOT
 $ make -j $(nproc)
