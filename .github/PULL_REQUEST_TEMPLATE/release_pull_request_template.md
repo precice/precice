@@ -6,27 +6,32 @@
 Only the release manager should update this post (even tickboxes, due to race conditions in editing). Everybody else should comment on the PR with the progress.
 
 ## Step by step guide
-* [ ] Merge master to develop (No commits after the release on master)
-* [ ] Check code base w.r.t code formatting (run [`precice/tools/formatting/check-format`](https://github.com/precice/precice/blob/develop/tools/formatting/check-format))
-* [ ] Create branch `release-N` from develop. If needed, `git rebase develop`.
-* [ ] Open PR from `release-N` to `master` (use [this template](https://github.com/precice/precice/blob/add_PR_template/.github/PULL_REQUEST_TEMPLATE/release_pull_request_template.md))
 * [ ] Look over [`CHANGELOG.md`](https://github.com/precice/precice/blob/develop/CHANGELOG.md) (all)
    * Add things, if necessary
    * Extract summary
+   * Fix wording
+   * Sort the entries lexicographically
 * [ ] Look over the Roadmap and update entries.
+* [ ] Merge master to develop (No commits after the release on master)
+* [ ] Check code base w.r.t code formatting (run [`precice/tools/formatting/check-format`](https://github.com/precice/precice/blob/develop/tools/formatting/check-format)) and reformat if required (run [`precice/tools/formatting/format-all`](https://github.com/precice/precice/blob/develop/tools/formatting/format-all))
+* [ ] Create branch `release-N` from develop. If needed, `git rebase develop`.
+* [ ] Open PR from `release-N` to `master` (use [this template](https://github.com/precice/precice/blob/add_PR_template/.github/PULL_REQUEST_TEMPLATE/release_pull_request_template.md))
 * [ ] Do regression tests using the release branch (specific revision) _list below :arrow_down:_ (all)
-* [ ] Bump version in:
+* [ ] Fix potential problems in develop (all)
+* [ ] Run `tools/releasing/bumpversion.sh MAJOR.MINOR.PATCH` to bump the version
+* [ ] Verify the version changes in:
    * [ ] [CHANGELOG](https://github.com/precice/precice/blob/develop/CHANGELOG.md)
    * [ ] [CMakeLists.txt](https://github.com/precice/precice/blob/develop/CMakeLists.txt)
+   * [ ] [debian changelog](https://github.com/precice/precice/blob/develop/tools/releasing/packaging/debian/changelog)
    * [ ] (do independent release, if necessary!) [Python bindings](https://github.com/precice/python-bindings)
    * [ ] (do independent release, if necessary!) [MATLAB bindings](https://github.com/precice/matlab-bindings)
 * [ ] Draft message to mailing list
 * [ ] Update documentation (all)
   * [ ] Update markdown configuration reference in wiki
-* [ ] Fix potential problems in develop (all)
 * [ ] Approve the PR with at least two reviews (all)
 * [ ] Merge PR to master 
-* [ ] Tag release (on GitHub, make sure to select the release branch as target) and merge back to develop
+* [ ] Tag release on master and verify by running `git describe --tags` (on GitHub, make sure to select the release branch as target)
+* [ ] Merge back to develop and verify by running `git describe --tags`
 
 ## Regression Tests
 
