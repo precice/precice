@@ -1,10 +1,10 @@
 #ifndef PRECICE_NO_MPI
 
 #include "MPIPortsCommunication.hpp"
+#include <boost/filesystem.hpp>
 #include "ConnectionInfoPublisher.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/assertion.hpp"
-#include <boost/filesystem.hpp>
 
 namespace precice {
 namespace com {
