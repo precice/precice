@@ -573,7 +573,7 @@ bool BaseCouplingScheme::measureConvergence(
   bool oneSuffices  = false;
   PRECICE_ASSERT(_convergenceMeasures.size() > 0);
   if (not utils::MasterSlave::isSlave()) {
-    _convergenceWriter->writeData("Timestep", _timesteps);
+    _convergenceWriter->writeData("TimeWindow", _timesteps);
     _convergenceWriter->writeData("Iteration", _iterations);
   }
   for (size_t i = 0; i < _convergenceMeasures.size(); i++) {
@@ -675,17 +675,17 @@ void BaseCouplingScheme::initializeTXTWriters()
       if (convMeasure.level > 0)
         hasCoarseModelOptimization = true;
 
-    _iterationsWriter->addData("Timestep", io::TXTTableWriter::INT);
+    _iterationsWriter->addData("TimeWindow", io::TXTTableWriter::INT);
     _iterationsWriter->addData("TotalIterations", io::TXTTableWriter::INT);
-    _iterationsWriter->addData("Iteration", io::TXTTableWriter::INT);
+    _iterationsWriter->addData("Iterations", io::TXTTableWriter::INT);
     if (hasCoarseModelOptimization) {
       _iterationsWriter->addData("TotalIterationsSurrogateModel", io::TXTTableWriter::INT);
-      _iterationsWriter->addData("IterationSurrogateModel", io::TXTTableWriter::INT);
+      _iterationsWriter->addData("IterationsSurrogateModel", io::TXTTableWriter::INT);
     }
     _iterationsWriter->addData("Convergence", io::TXTTableWriter::INT);
 
     if (not doesFirstStep()) {
-      _convergenceWriter->addData("Timestep", io::TXTTableWriter::INT);
+      _convergenceWriter->addData("TimeWindow", io::TXTTableWriter::INT);
       _convergenceWriter->addData("Iteration", io::TXTTableWriter::INT);
     }
 
@@ -716,12 +716,12 @@ void BaseCouplingScheme::advanceTXTWriters()
       if (convMeasure.level > 0)
         hasCoarseModelOptimization = true;
 
-    _iterationsWriter->writeData("Timestep", _timesteps - 1);
+    _iterationsWriter->writeData("TimeWindow", _timesteps - 1);
     _iterationsWriter->writeData("TotalIterations", _totalIterations);
-    _iterationsWriter->writeData("Iteration", _iterations);
+    _iterationsWriter->writeData("Iterations", _iterations);
     if (hasCoarseModelOptimization) {
       _iterationsWriter->writeData("TotalIterationsSurrogateModel", _totalIterationsCoarseOptimization);
-      _iterationsWriter->writeData("IterationSurrogateModel", _iterationsCoarseOptimization);
+      _iterationsWriter->writeData("IterationsSurrogateModel", _iterationsCoarseOptimization);
     }
     int converged = _iterations < _maxIterations ? 1 : 0;
     _iterationsWriter->writeData("Convergence", converged);
