@@ -19,8 +19,8 @@ build() {
     cmake . \
 	  -DCMAKE_BUILD_TYPE=Release \
 	  -DCMAKE_INSTALL_PREFIX=/usr \
-          -DPETSC=off \
-          -DPYTHON=off
+          -DPRECICE_PETScMapping=off \
+          -DPRECICE_PythonActions=off
     make
 }
 

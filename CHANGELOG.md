@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file. For future 
 - Replaced geometric filter option "filter-first" and "broadcast-filter" by "on-master" and "on-slaves", respectively, to generalize to two-level initialization.
 - Sorted out the different meaning of timestep and time window:
   - Renamed API function `isTimestepComplete` to `isTimeWindowComplete`.
+  - Renamed C bindings function `precicec_isCouplingTimestepComplete` to `precicec_isTimeWindowComplete`.
   - Renamed `cplscheme` configuration option `timestep-length` to `time-window-size`.
   - Renamed `cplscheme` configuration option `max-timesteps` to `max-time-windows`.
   - Renamed `acceleration` configuration option `timesteps-reused` to `time-windows-reused`.

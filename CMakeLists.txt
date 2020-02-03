@@ -57,15 +57,13 @@ endif()
 
 option(PRECICE_MPICommunication "Enables MPI-based communication and running coupling tests." ON)
 option(PRECICE_PETScMapping "Enable use of the PETSc linear algebra library." ON)
-option(PRECICE_PYTHONACTION "Python support" ON)
+option(PRECICE_PythonActions "Python support" ON)
 option(PRECICE_Packages "Configure package generation." ON)
 option(PRECICE_InstallTest "Add test binary and necessary files to install target." OFF)
 option(BUILD_SHARED_LIBS "Build shared libraries by default" OFF)
 option(PRECICE_ALWAYS_VALIDATE_LIBS "Validate libraries even after the validatation succeeded." OFF)
 option(PRECICE_ENABLE_C "Enable the native C bindings" ON)
 option(PRECICE_ENABLE_FORTRAN "Enable the native Fortran bindings" ON)
-
-include(BackwardsCompatibility)
 
 xsdk_tpl_option_override(PRECICE_MPICommunication TPL_ENABLE_MPI)
 xsdk_tpl_option_override(PRECICE_PETScMapping TPL_ENABLE_PETSC)
