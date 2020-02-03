@@ -22,6 +22,22 @@ void precicec_createSolverInterface(
                                            solverProcessSize);
 }
 
+void precicec_createSolverInterface_withCommunicator(
+    const char *participantName,
+    const char *configFileName,
+    int         solverProcessIndex,
+    int         solverProcessSize,
+    void *      communicator)
+{
+  std::string stringAccessorName(participantName);
+  std::string stringConfigFileName(configFileName);
+  interface = new precice::SolverInterface(stringAccessorName,
+                                           stringConfigFileName,
+                                           solverProcessIndex,
+                                           solverProcessSize,
+                                           communicator);
+}
+
 double precicec_initialize()
 {
   PRECICE_ASSERT(interface != nullptr);
