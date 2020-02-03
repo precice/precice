@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file. For future 
 
 ## develop
 
+## 2.0.0
+
 - Added CMake build type fallback to `Debug` in case it wasn't provided.
 - Added CMake check for C++11 library conformance. This is especially helpful when using Intel Compilers.
 - Added CMake options to enable native bindings `PRECICE_ENABLE_C`, `PRECICE_ENABLE_FORTRAN` (on by default).
