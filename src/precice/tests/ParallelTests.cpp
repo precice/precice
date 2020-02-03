@@ -322,9 +322,10 @@ BOOST_AUTO_TEST_CASE(TestQN, *testing::OnSize(4))
       }
     }
     interface.finalize();
-    // Depending on the hardware, QN can be slighly faster or slower leading to an iteration more or less.
-    BOOST_TEST(iterations <= correctIterations[k] + 1);
-    BOOST_TEST(iterations >= correctIterations[k] - 1);
+    // Depending on the hardware and the Eigen version, QN (for this case) can be faster or slower leading to more iterations or less.
+    // QN is rather sensitive to rounding errors, similar to this specific low-dimensional fixed-point equation.
+    BOOST_TEST(iterations <= correctIterations[k] + 10);
+    BOOST_TEST(iterations >= correctIterations[k] - 10);
   }
 }
 
