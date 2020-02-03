@@ -11,7 +11,7 @@ Only the release manager should update this post (even tickboxes, due to race co
    * Extract summary
    * Fix wording
    * Sort the entries lexicographically
-* [ ] Look over the Roadmap and update entries.
+* [ ] Look over the [Roadmap](https://github.com/precice/precice/wiki/Roadmap) and update entries.
 * [ ] Merge master to develop (No commits after the release on master)
 * [ ] Check code base w.r.t code formatting (run [`precice/tools/formatting/check-format`](https://github.com/precice/precice/blob/develop/tools/formatting/check-format)) and reformat if required (run [`precice/tools/formatting/format-all`](https://github.com/precice/precice/blob/develop/tools/formatting/format-all))
 * [ ] Create branch `release-N` from develop. If needed, `git rebase develop`.
@@ -45,6 +45,7 @@ Run all these tests manually on your system. If you succeed, please write a comm
 * [ ] OpenFOAM / CalculiX / OpenFOAM CHT [heat_exchanger](https://github.com/precice/tutorials/tree/develop/CHT/heat_exchanger/buoyantSimpleFoam-CalculiX)
 * [ ] OpenFOAM / deal.II [flap_perp_2D](https://github.com/precice/tutorials/tree/develop/FSI/flap_perp_2D/OpenFOAM-deal.II)
 * [ ] OpenFOAM / FEniCS [flap_perp](https://github.com/precice/tutorials/tree/master/FSI/flap_perp/OpenFOAM-FEniCS)
+* [ ] OpenFOAM / FEniCS [cylinderFlap, only run first few minutes](https://github.com/precice/tutorials/tree/develop/FSI/cylinderFlap/OpenFOAM-FEniCS)
 * [ ] OpenFOAM / FEniCS [flow-over-plate](https://github.com/precice/tutorials/tree/master/CHT/flow-over-plate/buoyantPimpleFoam-fenics)
 * [ ] OpenFOAM / Nutils [flow-over-plate](https://github.com/precice/tutorials/tree/master/CHT/flow-over-plate/buoyantPimpleFoam-nutils)
 * [ ] FEniCS / FEniCS [partitioned-heat](https://github.com/precice/tutorials/tree/master/HT/partitioned-heat/fenics-fenics)
