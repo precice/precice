@@ -233,8 +233,6 @@ double SolverInterfaceImpl::initialize()
     m2nPair.second.cleanupEstablishment();
   }
 
-  PRECICE_INFO("Slaves are connected");
-
   PRECICE_DEBUG("Initialize watchpoints");
   for (PtrWatchPoint &watchPoint : _accessor->watchPoints()) {
     watchPoint->initialize();
