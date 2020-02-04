@@ -109,8 +109,9 @@ SolverInterfaceImpl::SolverInterfaceImpl(
 void SolverInterfaceImpl::configure(
     const std::string &configurationFileName)
 {
+  config::Configuration config;
   utils::Parallel::initializeMPI(nullptr, nullptr);
-  config::Configuration     config;
+  logging::setMPIRank(utils::Parallel::getProcessRank());
   xml::ConfigurationContext context{
       _accessorName,
       _accessorProcessRank,
@@ -178,7 +179,6 @@ void SolverInterfaceImpl::configure(
     _meshLock.add(meshID.second, false);
   }
 
-  logging::setMPIRank(utils::Parallel::getProcessRank());
   utils::EventRegistry::instance().initialize("precice-" + _accessorName, "", utils::Parallel::getGlobalCommunicator());
 
   PRECICE_DEBUG("Initialize master-slave communication");
