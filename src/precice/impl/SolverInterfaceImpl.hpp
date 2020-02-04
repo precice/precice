@@ -88,24 +88,6 @@ public:
       void *             communicator);
 
   /**
-   * @brief Configures the coupling interface from the given xml file.
-   *
-   * Only after the configuration a reasonable state of a SolverInterfaceImpl
-   * object is achieved.
-   *
-   * @param configurationFileName [IN] Name (with path) of the xml config. file.
-   */
-  void configure(const std::string &configurationFileName);
-
-  /**
-   * @brief Configures the coupling interface with a prepared configuration.
-   *
-   * Can be used to configure the SolverInterfaceImpl without xml file. Requires
-   * to manually setup the configuration object.
-   */
-  void configure(const config::SolverInterfaceConfiguration &configuration);
-
-  /**
    * @brief Initializes all coupling data and starts (coupled) simulation.
    *
    * - Initiates MPI communication, if not done yet.
@@ -537,6 +519,25 @@ private:
   /// Counts calls to advance for plotting.
   long int _numberAdvanceCalls = 0;
 
+  /**
+   * @brief Configures the coupling interface from the given xml file.
+   *
+   * Only after the configuration a reasonable state of a SolverInterfaceImpl
+   * object is achieved.
+   *
+   * @param configurationFileName [IN] Name (with path) of the xml config. file.
+   */
+  void configure(const std::string &configurationFileName);
+
+  /**
+   * @brief Configures the coupling interface with a prepared configuration.
+   *
+   * Can be used to configure the SolverInterfaceImpl without xml file. Requires
+   * to manually setup the configuration object.
+   */
+  void configure(const config::SolverInterfaceConfiguration &configuration);
+
+
   void configureM2Ns(const m2n::M2NConfiguration::SharedPointer &config);
 
   /// Exports meshes with data and watch point data.
@@ -625,6 +626,7 @@ private:
 
   /// To allow white box tests.
   friend struct PreciceTests::Serial::TestConfiguration;
+
 };
 
 } // namespace impl
