@@ -22,17 +22,13 @@
     <img src="https://img.shields.io/github/release/precice/precice.svg" alt="Release">
 </a>
 
-``master`` branch: <a style="text-decoration: none" href="https://travis-ci.org/precice/precice" target="_blank">    
-    <img src="https://travis-ci.org/precice/precice.svg?branch=master" alt="Build status">
-</a> <a style="text-decoration: none" href="https://travis-ci.org/precice/systemtests.svg?branch=master" target="_blank">    
-    <img src="https://img.shields.io/travis/precice/systemtests/master.svg?label=system%20tests&style=flat" alt="Build status">
-</a>
+``precice/master``  
+[![MasterBuild](https://travis-ci.org/precice/precice.svg?branch=master)](https://travis-ci.org/precice/precice)
+[![MasterSystemtests](https://img.shields.io/travis/precice/systemtests/master.svg?label=system%20tests&style=flat)](https://travis-ci.org/precice/systemtests)
 
-``develop`` branch: <a style="text-decoration: none" href="https://travis-ci.org/precice/precice" target="_blank">    
-    <img src="https://travis-ci.org/precice/precice.svg?branch=develop" alt="Build status">
-</a> <a style="text-decoration: none" href="https://travis-ci.org/precice/systemtests.svg?branch=develop" target="_blank">    
-    <img src="https://img.shields.io/travis/precice/systemtests/develop.svg?label=system%20tests&style=flat" alt="Build status">
-</a>
+``precice/develop``  
+[![DevelopBuild](https://travis-ci.org/precice/precice.svg?branch=develop)](https://travis-ci.org/precice/precice)
+[![DevelopSystemtests](https://img.shields.io/travis/precice/systemtests/develop.svg?label=system%20tests&style=flat)](https://travis-ci.org/precice/systemtests)
 
 **Code Quality**  
 [![CodeFactor](https://www.codefactor.io/repository/github/precice/precice/badge)](https://www.codefactor.io/repository/github/precice/precice)
