@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(TestFinalize, *testing::OnSize(4))
   }
 }
 
-#ifndef PRECICE_NO_PETSC
+#if 0 // #ifndef PRECICE_NO_PETSC
 BOOST_AUTO_TEST_CASE(GlobalRBFPartitioning, *testing::OnSize(4))
 {
   std::string configFilename = _pathToTests + "globalRBFPartitioning.xml";
@@ -921,7 +921,7 @@ BOOST_AUTO_TEST_CASE(UserDefinedMPICommunicator, *testing::OnSize(4))
   }
 }
 
-#ifndef PRECICE_NO_PETSC
+#if 0 // #ifndef PRECICE_NO_PETSC
 // Tests SolverInterface() with a user-defined MPI communicator.
 // Since PETSc also uses MPI, we use petrbf mapping here.
 BOOST_AUTO_TEST_CASE(UserDefinedMPICommunicatorPetRBF, *testing::OnSize(4))
