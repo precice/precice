@@ -25,13 +25,13 @@
 ``master`` branch: <a style="text-decoration: none" href="https://travis-ci.org/precice/precice" target="_blank">    
     <img src="https://travis-ci.org/precice/precice.svg?branch=master" alt="Build status">
 </a> <a style="text-decoration: none" href="https://travis-ci.org/precice/systemtests" target="_blank">    
-    <img src="https://travis-ci.org/precice/systemtests.svg?branch=master" alt="Build status">
+    <img src="https://img.shields.io/travis/precice/systemtests.svg?label=system%20tests&style=flat&branch=master" alt="Build status">
 </a>
 
 ``develop`` branch: <a style="text-decoration: none" href="https://travis-ci.org/precice/precice" target="_blank">    
     <img src="https://travis-ci.org/precice/precice.svg?branch=develop" alt="Build status">
 </a> <a style="text-decoration: none" href="https://travis-ci.org/precice/systemtests" target="_blank">    
-    <img src="https://travis-ci.org/precice/systemtests.svg?branch=develop" alt="Build status">
+    <img src="https://img.shields.io/travis/precice/systemtests.svg?label=system%20tests&style=flat&branch=develop" alt="Build status">
 </a>
 
 **Code Quality**  
