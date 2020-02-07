@@ -34,12 +34,12 @@
          <read-data name="Forces"      mesh="Test-Square" />
       </participant>
 
-      <m2n:sockets distribution-type="gather-scatter" from="SolverOne" to="SolverTwo" />
+      <m2n:sockets from="SolverOne" to="SolverTwo" />
 
       <coupling-scheme:serial-explicit>
          <participants first="SolverOne" second="SolverTwo" />
-         <max-timesteps value="10" />
-         <timestep-length value="1.0" />
+         <max-time-windows value="10" />
+         <time-window-size value="1.0" />
          <exchange data="Forces"     mesh="Test-Square" from="SolverOne" to="SolverTwo" />
          <exchange data="Velocities" mesh="Test-Square" from="SolverTwo" to="SolverOne"/>
       </coupling-scheme:serial-explicit>

@@ -4,15 +4,11 @@
 #include "cplscheme/CouplingData.hpp"
 #include "logging/Logger.hpp"
 
-namespace precice
-{
-namespace cplscheme
-{
-namespace impl
-{
+namespace precice {
+namespace cplscheme {
+namespace impl {
 
-class MinIterationConvergenceMeasure : public ConvergenceMeasure
-{
+class MinIterationConvergenceMeasure : public ConvergenceMeasure {
 public:
   explicit MinIterationConvergenceMeasure(int minimumIterationCount);
 
@@ -58,6 +54,6 @@ private:
 
   bool _isConvergence = false;
 };
-}
-}
-} // namespace precice, cplscheme, impl
+} // namespace impl
+} // namespace cplscheme
+} // namespace precice

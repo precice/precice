@@ -1,11 +1,11 @@
-#include "com/MPIDirectCommunication.hpp"
 #include "acceleration/impl/ConstantPreconditioner.hpp"
 #include "acceleration/impl/ResidualPreconditioner.hpp"
 #include "acceleration/impl/ResidualSumPreconditioner.hpp"
 #include "acceleration/impl/SharedPointer.hpp"
 #include "acceleration/impl/ValuePreconditioner.hpp"
-#include "testing/Testing.hpp"
+#include "com/MPIDirectCommunication.hpp"
 #include "testing/Fixtures.hpp"
+#include "testing/Testing.hpp"
 
 BOOST_AUTO_TEST_SUITE(AccelerationTests)
 

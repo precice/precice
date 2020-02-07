@@ -12,21 +12,21 @@ BOOST_AUTO_TEST_CASE(Configuration)
   XMLTag tag = xml::getRootTag();
   {
     io::ExportConfiguration config(tag);
-    xml::configure(tag, testing::getPathToSources() + "/io/tests/config1.xml");
+    xml::configure(tag, xml::ConfigurationContext{}, testing::getPathToSources() + "/io/tests/config1.xml");
     BOOST_TEST(config.exportContexts().size() == 1);
     const io::ExportContext &context = config.exportContexts().front();
     BOOST_TEST(context.type == "vtk");
-    BOOST_TEST(context.timestepInterval == 10);
+    BOOST_TEST(context.everyNTimeWindows == 10);
     BOOST_TEST(context.triggerSolverPlot);
   }
   {
     tag.clear();
     io::ExportConfiguration config(tag);
-    xml::configure(tag, testing::getPathToSources() + "/io/tests/config2.xml");
+    xml::configure(tag, xml::ConfigurationContext{}, testing::getPathToSources() + "/io/tests/config2.xml");
     BOOST_TEST(config.exportContexts().size() == 1);
     const io::ExportContext &context = config.exportContexts().front();
     BOOST_TEST(context.type == "vtk");
-    BOOST_TEST(context.timestepInterval == 1);
+    BOOST_TEST(context.everyNTimeWindows == 1);
     BOOST_TEST(context.location == "somepath");
     BOOST_TEST(not context.triggerSolverPlot);
   }

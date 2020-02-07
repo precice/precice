@@ -3,10 +3,11 @@
 #include "math/barycenter.hpp"
 #include "math/math.hpp"
 
+using namespace precice;
 using namespace precice::math::barycenter;
 
 BOOST_AUTO_TEST_SUITE(MathTests)
-BOOST_AUTO_TEST_SUITE(Barycenter)
+BOOST_AUTO_TEST_SUITE(Barycenter, *testing::OnMaster())
 
 BOOST_AUTO_TEST_CASE(BarycenterEdge)
 {
@@ -126,7 +127,7 @@ BOOST_AUTO_TEST_CASE(BarycenterTriangle)
   {
     Vector3d l(2.0, 0.0, 0.0);
     auto     ret = calcBarycentricCoordsForTriangle(a, b, c, n, l);
-    BOOST_TEST((ret.barycentricCoords.array() < -precice::math::NUMERICAL_ZERO_DIFFERENCE).any(), "Min 1 coord should be negative "<< ret.barycentricCoords);
+    BOOST_TEST((ret.barycentricCoords.array() < -precice::math::NUMERICAL_ZERO_DIFFERENCE).any(), "Min 1 coord should be negative " << ret.barycentricCoords);
   }
 }
 

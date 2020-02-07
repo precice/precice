@@ -1,55 +1,73 @@
 #pragma once
 
+#include <initializer_list>
 #include <iostream>
 #include <string>
-#include <vector>
 #include <type_traits>
-#include <initializer_list>
+#include <vector>
 
 #include "logging/Logger.hpp"
 #include "math/math.hpp"
+#include "utils/String.hpp"
 #include "utils/TypeNames.hpp"
 #include "utils/assertion.hpp"
-#include "utils/String.hpp"
 
-namespace precice
-{
-namespace xml
-{
+namespace precice {
+namespace xml {
 
 template <typename ATTRIBUTE_T>
-class XMLAttribute
-{
+class XMLAttribute {
 public:
   XMLAttribute() = delete;
 
-  explicit XMLAttribute(std::string name) : _name(std::move(name)) {};
+  explicit XMLAttribute(std::string name)
+      : _name(std::move(name)){};
 
-  XMLAttribute(std::string name, ATTRIBUTE_T defaultValue): _name(std::move(name)), _hasDefaultValue(true), _defaultValue(std::move(defaultValue)) {};
+  XMLAttribute(std::string name, ATTRIBUTE_T defaultValue)
+      : _name(std::move(name)), _hasDefaultValue(true), _defaultValue(std::move(defaultValue)){};
 
   XMLAttribute(const XMLAttribute<ATTRIBUTE_T> &other) = default;
 
-  XMLAttribute& operator=(const XMLAttribute<ATTRIBUTE_T> &other) = default;
+  XMLAttribute &operator=(const XMLAttribute<ATTRIBUTE_T> &other) = default;
 
   /// Sets a documentation string for the attribute.
-  XMLAttribute& setDocumentation(std::string documentation);
+  XMLAttribute &setDocumentation(std::string documentation);
 
   const std::string &getUserDocumentation() const
   {
     return _doc;
   }
 
-  XMLAttribute& setOptions(std::vector<ATTRIBUTE_T> options);
+  XMLAttribute &setOptions(std::vector<ATTRIBUTE_T> options);
 
-
-  template<class T>
-  XMLAttribute& setOptions(std::initializer_list<T>&& options)
+  template <class T>
+  XMLAttribute &setOptions(std::initializer_list<T> &&options)
   {
     static_assert(std::is_convertible<T, ATTRIBUTE_T>::value, "Type of initializer_list must be converible to ATTRIBUTE_T!");
     return setOptions(std::vector<ATTRIBUTE_T>(options.begin(), options.end()));
   }
 
-  XMLAttribute& setDefaultValue(const ATTRIBUTE_T &defaultValue);
+  const std::vector<ATTRIBUTE_T> &getOptions() const
+  {
+    return _options;
+  };
+
+  XMLAttribute &setDefaultValue(const ATTRIBUTE_T &defaultValue);
+
+  const ATTRIBUTE_T &getDefaultValue() const
+  {
+    return _defaultValue;
+  };
+
+  bool hasDefaultValue() const
+  {
+    return _hasDefaultValue;
+  };
+
+  bool hasValidation() const
+  {
+    return _hasValidation;
+  };
 
   void readValue(std::map<std::string, std::string> &aAttributes);
 
@@ -85,11 +103,6 @@ public:
     return _read;
   };
 
-  /// Returns a documentation string about the attribute.
-  std::string printDocumentation() const;
-
-  std::string printDTD(const std::string &ElementName) const;
-
 private:
   logging::Logger _log{"xml::XMLAttribute"};
 
@@ -123,23 +136,23 @@ private:
 };
 
 template <typename ATTRIBUTE_T>
-XMLAttribute<ATTRIBUTE_T>& XMLAttribute<ATTRIBUTE_T>::setDocumentation(std::string documentation)
+XMLAttribute<ATTRIBUTE_T> &XMLAttribute<ATTRIBUTE_T>::setDocumentation(std::string documentation)
 {
   _doc = std::move(documentation);
   return *this;
 }
 
 template <typename ATTRIBUTE_T>
-XMLAttribute<ATTRIBUTE_T>& XMLAttribute<ATTRIBUTE_T>::setOptions(std::vector<ATTRIBUTE_T> options)
+XMLAttribute<ATTRIBUTE_T> &XMLAttribute<ATTRIBUTE_T>::setOptions(std::vector<ATTRIBUTE_T> options)
 {
   const auto iter = std::unique(options.begin(), options.end());
-  _options     = std::vector<ATTRIBUTE_T>(options.begin(), iter);
-  _hasValidation = true;
+  _options        = std::vector<ATTRIBUTE_T>(options.begin(), iter);
+  _hasValidation  = true;
   return *this;
 }
 
 template <typename ATTRIBUTE_T>
-XMLAttribute<ATTRIBUTE_T>& XMLAttribute<ATTRIBUTE_T>::setDefaultValue(const ATTRIBUTE_T &defaultValue)
+XMLAttribute<ATTRIBUTE_T> &XMLAttribute<ATTRIBUTE_T>::setDefaultValue(const ATTRIBUTE_T &defaultValue)
 {
   PRECICE_TRACE(defaultValue);
   _hasDefaultValue = true;
@@ -174,8 +187,8 @@ void XMLAttribute<ATTRIBUTE_T>::readValue(std::map<std::string, std::string> &aA
         stream << "value must be \"" << *first << '"';
         ++first;
         // print the remaining with separator
-        for(;first != _options.end();++first) {
-            stream << " or value must be \"" << *first << '"';
+        for (; first != _options.end(); ++first) {
+          stream << " or value must be \"" << *first << '"';
         }
 
         std::cout << stream.str() << '\n';
@@ -295,48 +308,6 @@ Eigen::VectorXd XMLAttribute<Eigen::VectorXd>::getAttributeValueAsEigenVectorXd(
 }*/
 
 template <typename ATTRIBUTE_T>
-std::string XMLAttribute<ATTRIBUTE_T>::printDTD(const std::string &ElementName) const
-{
-  std::ostringstream dtd;
-  dtd << "<!ATTLIST " << ElementName << " " << _name << " CDATA ";
-
-  if (_hasDefaultValue) {
-    dtd << "\"" << _defaultValue << "\"";
-  } else {
-    dtd << "#REQUIRED";
-  }
-
-  dtd << ">\n";
-
-  return dtd.str();
-}
-
-template <typename ATTRIBUTE_T>
-std::string XMLAttribute<ATTRIBUTE_T>::printDocumentation() const
-{
-  std::ostringstream doc;
-  doc << _name << "=\"{" << utils::getTypeName(_value);
-  if (_hasValidation) {
-    PRECICE_ASSERT(!_options.empty());
-    doc << ":";
-    // print the first item
-    auto first = _options.begin();
-    doc << '\'' << *first << '\'';
-    ++first;
-    // print the remaining items with separator
-    for(;first != _options.end(); ++first) {
-        doc << " or '" << *first << '\'';
-    }
-  }
-  doc << "}";
-  if (_hasDefaultValue) {
-    doc << "(default:'" << _defaultValue << "')";
-  }
-  doc << "\"";
-  return doc.str();
-}
-
-template <typename ATTRIBUTE_T>
 template <typename VALUE_T>
 typename std::enable_if<
     std::is_same<VALUE_T, ATTRIBUTE_T>::value && not std::is_same<VALUE_T, Eigen::VectorXd>::value, void>::type
@@ -364,8 +335,9 @@ XMLAttribute<ATTRIBUTE_T>::set(
  *  @param[in] defaultValue the default value of the attribute
  *  @return an XMLAttribute with the above settings
  */
-inline XMLAttribute<std::string> makeXMLAttribute(std::string name, const char * defaultValue) {
-    return XMLAttribute<std::string>(std::move(name), defaultValue);
+inline XMLAttribute<std::string> makeXMLAttribute(std::string name, const char *defaultValue)
+{
+  return XMLAttribute<std::string>(std::move(name), defaultValue);
 }
 
 /** creates an XMLAttribute given a name and a default value.
@@ -374,10 +346,11 @@ inline XMLAttribute<std::string> makeXMLAttribute(std::string name, const char *
  *  @param[in] defaultValue the default value of the attribute
  *  @return an XMLAttribute with the above settings
  */
-template<typename T>
-XMLAttribute<T> makeXMLAttribute(std::string name, T defaultValue) {
-    return XMLAttribute<T>(std::move(name), std::move(defaultValue));
+template <typename T>
+XMLAttribute<T> makeXMLAttribute(std::string name, T defaultValue)
+{
+  return XMLAttribute<T>(std::move(name), std::move(defaultValue));
 }
 
-}
-} // namespace precice, xml
+} // namespace xml
+} // namespace precice

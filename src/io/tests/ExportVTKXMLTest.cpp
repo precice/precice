@@ -43,20 +43,20 @@ struct SetupMasterSlaveFixture {
 
     if (utils::Parallel::getProcessRank() == 0) {
       utils::Parallel::splitCommunicator("Master");
-      masterSlaveCom->acceptConnection("Master", "Slaves", utils::Parallel::getProcessRank());
+      masterSlaveCom->acceptConnection("Master", "Slaves", "Test", utils::Parallel::getProcessRank());
       masterSlaveCom->setRankOffset(1);
       utils::MasterSlave::configure(0, 4);
     } else if (utils::Parallel::getProcessRank() == 1) {
       utils::Parallel::splitCommunicator("Slaves");
-      masterSlaveCom->requestConnection("Master", "Slaves", 0, 3);
+      masterSlaveCom->requestConnection("Master", "Slaves", "Test", 0, 3);
       utils::MasterSlave::configure(1, 4);
     } else if (utils::Parallel::getProcessRank() == 2) {
       utils::Parallel::splitCommunicator("Slaves");
-      masterSlaveCom->requestConnection("Master", "Slaves", 1, 3);
+      masterSlaveCom->requestConnection("Master", "Slaves", "Test", 1, 3);
       utils::MasterSlave::configure(2, 4);
     } else if (utils::Parallel::getProcessRank() == 3) {
       utils::Parallel::splitCommunicator("Slaves");
-      masterSlaveCom->requestConnection("Master", "Slaves", 2, 3);
+      masterSlaveCom->requestConnection("Master", "Slaves", "Test", 2, 3);
       utils::MasterSlave::configure(3, 4);
     }
   }
@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
 {
   int        dim           = 2;
   bool       invertNormals = false;
-  mesh::Mesh mesh("MyMesh", dim, invertNormals);
+  mesh::Mesh mesh("MyMesh", dim, invertNormals, testing::nextMeshID());
 
   if (utils::Parallel::getProcessRank() == 0) {
     mesh::Vertex &  v1      = mesh.createVertex(Eigen::VectorXd::Zero(dim));
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
 {
   int        dim           = 3;
   bool       invertNormals = false;
-  mesh::Mesh mesh("MyMesh", dim, invertNormals);
+  mesh::Mesh mesh("MyMesh", dim, invertNormals, testing::nextMeshID());
 
   if (utils::Parallel::getProcessRank() == 0) {
     mesh::Vertex &  v1      = mesh.createVertex(Eigen::VectorXd::Zero(dim));
@@ -168,9 +168,9 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
 BOOST_AUTO_TEST_CASE(ExportQuadMesh)
 {
   using namespace mesh;
-  int  dim           = 3;
-  bool invertNormals = false;
-  Mesh mesh("QuadMesh", dim, invertNormals);
+  int        dim           = 3;
+  bool       invertNormals = false;
+  mesh::Mesh mesh("QuadMesh", dim, invertNormals, testing::nextMeshID());
 
   if (utils::Parallel::getProcessRank() == 0) {
     mesh.getVertexDistribution()[0] = {};

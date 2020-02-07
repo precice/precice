@@ -4,6 +4,9 @@
 <a style="text-decoration: none" href="https://gitter.im/precice/Lobby" target="_blank">
     <img src="https://img.shields.io/badge/chat-on%20gitter-9c3375.svg" alt="Gitter chat">
 </a>
+<a style="text-decoration: none" href="https://precice.discourse.group" target="_blank">
+    <img alt="Discourse posts" src="https://img.shields.io/discourse/posts?label=discourse%20QA&server=https%3A%2F%2Fprecice.discourse.group">
+</a>
 <a style="text-decoration: none" href="https://mailman.informatik.uni-stuttgart.de/mailman/listinfo/precice" target="_blank">
     <img src="https://img.shields.io/badge/mailing%20list-subscribe-blue.svg" alt="Mailing list">
 </a>

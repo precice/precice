@@ -6,35 +6,36 @@
 
 #pragma once
 
-#include <string>
 #include <Eigen/Core>
+#include <string>
 
 namespace precice {
 namespace utils {
 
-inline std::string getTypeName(const double& var)
+inline std::string getTypeName(const double &var)
 {
   return "float";
 }
 
-inline std::string getTypeName(const std::string& var)
+inline std::string getTypeName(const std::string &var)
 {
   return "string";
 }
 
-inline std::string getTypeName(const bool& var)
+inline std::string getTypeName(const bool &var)
 {
   return "boolean";
 }
 
-inline std::string getTypeName(const int& var)
+inline std::string getTypeName(const int &var)
 {
   return "integer";
 }
 
-inline std::string getTypeName(Eigen::VectorXd const & var)
+inline std::string getTypeName(Eigen::VectorXd const &var)
 {
   return "vector";
 }
 
-}}
+} // namespace utils
+} // namespace precice

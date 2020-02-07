@@ -6,25 +6,19 @@
 #include "math/math.hpp"
 #include "utils/MasterSlave.hpp"
 
-namespace precice
-{
-namespace cplscheme
-{
-namespace tests
-{
+namespace precice {
+namespace cplscheme {
+namespace tests {
 class RelativeConvergenceMeasureTest;
 }
-}
-}
+} // namespace cplscheme
+} // namespace precice
 
 // ----------------------------------------------------------- CLASS DEFINITION
 
-namespace precice
-{
-namespace cplscheme
-{
-namespace impl
-{
+namespace precice {
+namespace cplscheme {
+namespace impl {
 
 /**
  * @brief Measures the convergence from an old data set to a new one.
@@ -37,8 +31,7 @@ namespace impl
  * For a description of how to perform the measurement, see class
  * ConvergenceMeasure.
  */
-class RelativeConvergenceMeasure : public ConvergenceMeasure
-{
+class RelativeConvergenceMeasure : public ConvergenceMeasure {
 public:
   /**
     * @brief Constructor.
@@ -120,6 +113,6 @@ private:
 
   bool _isConvergence = false;
 };
-}
-}
-} // namespace precice, cplscheme, impl
+} // namespace impl
+} // namespace cplscheme
+} // namespace precice

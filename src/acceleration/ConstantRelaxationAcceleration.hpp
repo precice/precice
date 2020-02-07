@@ -2,16 +2,13 @@
 
 #include <map>
 
-#include "logging/Logger.hpp"
 #include "acceleration/Acceleration.hpp"
+#include "logging/Logger.hpp"
 
-namespace precice
-{
-namespace acceleration
-{
+namespace precice {
+namespace acceleration {
 
-class ConstantRelaxationAcceleration : public Acceleration
-{
+class ConstantRelaxationAcceleration : public Acceleration {
 public:
   ConstantRelaxationAcceleration(
       double           relaxation,
@@ -46,5 +43,5 @@ private:
 
   Eigen::VectorXd _designSpecification;
 };
-}
-} // namespace precice, acceleration
+} // namespace acceleration
+} // namespace precice

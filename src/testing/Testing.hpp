@@ -1,16 +1,17 @@
 #pragma once
 
-#include "math/math.hpp"
-#include "utils/Parallel.hpp"
 #include <boost/test/unit_test.hpp>
+#include "math/math.hpp"
+#include "precice/config/Configuration.hpp"
+#include "utils/ManageUniqueIDs.hpp"
+#include "utils/Parallel.hpp"
+#include "xml/XMLTag.hpp"
 
-namespace precice
-{
-namespace testing
-{
+namespace precice {
+namespace testing {
 
 namespace bt = boost::unit_test;
-using Par = precice::utils::Parallel;
+using Par    = precice::utils::Parallel;
 
 /// Fixture to set and reset MPI communicator
 struct MPICommRestrictFixture {
@@ -48,7 +49,6 @@ struct SingleRankFixture {
   }
 };
 
-
 /// Fixture to sync procceses before and after test
 struct SyncProcessesFixture {
   SyncProcessesFixture()
@@ -62,13 +62,11 @@ struct SyncProcessesFixture {
   }
 };
 
-
 /// Boost.Test decorator that makes the test run only on specfic ranks.
 /*
  * This does not restrict the communicator, which must be done by installing the MPICommrestrictFixture.
  */
-class OnRanks : public bt::decorator::base
-{
+class OnRanks : public bt::decorator::base {
 public:
   explicit OnRanks(const std::vector<int> &ranks)
       : _ranks(ranks)
@@ -79,7 +77,7 @@ private:
   virtual void apply(bt::test_unit &tu)
   {
     size_t myRank = Par::getProcessRank();
-    size_t size = Par::getCommunicatorSize();
+    size_t size   = Par::getCommunicatorSize();
 
     // If current rank is not in requested ranks
     if (std::find(_ranks.begin(), _ranks.end(), myRank) == _ranks.end()) {
@@ -110,8 +108,7 @@ private:
 };
 
 /// Boost.Test decorator that makes the test run only on the master aka rank 0
-class OnMaster : public OnRanks
-{
+class OnMaster : public OnRanks {
 public:
   explicit OnMaster()
       : OnRanks({0})
@@ -120,8 +117,7 @@ public:
 };
 
 /// Boost.Test decorator that makes the test run only on a specific MPI size
-class OnSize : public bt::decorator::base
-{
+class OnSize : public bt::decorator::base {
 public:
   explicit OnSize(const int size)
       : givenSize(size)
@@ -148,8 +144,7 @@ public:
 /*
  * This does not restrict the communicator, which must be done by installing the MPICommrestrictFixture.
  */
-class MinRanks : public bt::decorator::base
-{
+class MinRanks : public bt::decorator::base {
 public:
   explicit MinRanks(const int minimumSize)
       : minSize(minimumSize)
@@ -173,10 +168,8 @@ private:
   const int minSize;
 };
 
-
 /// Boost.Test decorator that unconditionally deletes the test.
-class Deleted : public bt::decorator::base
-{
+class Deleted : public bt::decorator::base {
 private:
   virtual void apply(bt::test_unit &tu)
   {
@@ -189,10 +182,9 @@ private:
   }
 };
 
-
 /// struct giving access to the impl of a befriended class or struct
 struct WhiteboxAccessor {
-    /** Returns the impl of the obj by reference.
+  /** Returns the impl of the obj by reference.
      *
      * Returns a reference to the object pointed to by the _impl of a class.
      * This class needs to be friend of T.
@@ -200,25 +192,25 @@ struct WhiteboxAccessor {
      * @param[in] obj The object to fetch the impl from.
      * @returns a lvalue reference to the impl object.
      */
-    template<typename T>
-    static auto impl(T& obj) -> typename std::add_lvalue_reference<decltype(*(obj._impl))>::type {
-        return *obj._impl;
-    }
+  template <typename T>
+  static auto impl(T &obj) -> typename std::add_lvalue_reference<decltype(*(obj._impl))>::type
+  {
+    return *obj._impl;
+  }
 };
-
 
 /// equals to be used in tests. Prints both operatorans on failure
 template <class DerivedA, class DerivedB>
 boost::test_tools::predicate_result equals(const Eigen::MatrixBase<DerivedA> &A,
                                            const Eigen::MatrixBase<DerivedB> &B,
-                                           double tolerance = math::NUMERICAL_ZERO_DIFFERENCE)
+                                           double                             tolerance = math::NUMERICAL_ZERO_DIFFERENCE)
 {
   if (not math::equals(A, B, tolerance)) {
     boost::test_tools::predicate_result res(false);
-    Eigen::IOFormat format;
+    Eigen::IOFormat                     format;
     if (A.cols() == 1) {
       format.rowSeparator = ", ";
-      format.rowPrefix = "  ";
+      format.rowPrefix    = "  ";
     }
     res.message() << "\n"
                   << A.format(format) << " != \n"
@@ -243,6 +235,15 @@ typename std::enable_if<std::is_arithmetic<Scalar>::value, boost::test_tools::pr
 /// Returns $PRECICE_ROOT/src, the base path to the sources.
 std::string getPathToSources();
 
+/** Generates a new mesh id for use in tests.
+ *
+ * @returns a new unique mesh ID
+ */
+inline int nextMeshID()
+{
+  static utils::ManageUniqueIDs manager;
+  return manager.getFreeID();
+}
+
 } // namespace testing
 } // namespace precice
-

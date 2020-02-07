@@ -6,16 +6,14 @@
 #include "CouplingData.hpp"
 #include "CouplingScheme.hpp"
 #include "SharedPointer.hpp"
-#include "impl/SharedPointer.hpp"
 #include "acceleration/SharedPointer.hpp"
+#include "impl/SharedPointer.hpp"
 #include "io/TXTTableWriter.hpp"
 #include "logging/Logger.hpp"
 #include "m2n/SharedPointer.hpp"
 
-namespace precice
-{
-namespace cplscheme
-{
+namespace precice {
+namespace cplscheme {
 
 /**
  * @brief Abstract base class for standard coupling schemes.
@@ -36,7 +34,7 @@ namespace cplscheme
  *    needed
  * -# retrieve necessary information about sent/received data and the state of
  *    the coupled simulation
- * -# query and fulfill required actions
+ * -# query actions and mark them as fulfilled
  * -# compute data to be sent (possibly taking into account received data from
  *    initialize())
  * -# advance the coupling scheme with advance(); where the maximum timestep
@@ -45,8 +43,7 @@ namespace cplscheme
  * -# when the method isCouplingOngoing() returns false, call finalize() to
  *    stop the coupling scheme
  */
-class BaseCouplingScheme : public CouplingScheme
-{
+class BaseCouplingScheme : public CouplingScheme {
 public:
   BaseCouplingScheme(
       double maxTime,
@@ -177,41 +174,17 @@ public:
   /// Returns true, when the coupled simulation is still ongoing.
   virtual bool isCouplingOngoing() const;
 
-  /// Returns true, when the accessor can advance to the next timestep.
-  virtual bool isCouplingTimestepComplete() const;
+  /// Returns true, when the accessor can advance to the next time window.
+  virtual bool isTimeWindowComplete() const;
 
   /// Returns true, if the given action has to be performed by the accessor.
   virtual bool isActionRequired(const std::string &actionName) const;
 
   /// Tells the coupling scheme that the accessor has performed the given action.
-  virtual void performedAction(const std::string &actionName);
+  virtual void markActionFulfilled(const std::string &actionName);
 
   /// Sets an action required to be performed by the accessor.
   virtual void requireAction(const std::string &actionName);
-
-  /**
-   * @brief Send the state of the coupling scheme to another remote scheme.
-   *
-   * Used in client-server approach for parallel solvers. There, the solver
-   * interface does hold a coupling scheme with no data but state. The state
-   * is transferred between the solver coupling scheme and the server coupling
-   * scheme via sendState and receiveState.
-   */
-  virtual void sendState(
-      com::PtrCommunication communication,
-      int                   rankReceiver);
-
-  /**
-   * @brief Receive the state of the coupling scheme from another remote scheme.
-   *
-   * Used in client-server approach for parallel solvers. There, the solver
-   * interface does hold a coupling scheme with no data but state. The state
-   * is transferred between the solver coupling scheme and the server coupling
-   * scheme via sendState and receiveState.
-   */
-  virtual void receiveState(
-      com::PtrCommunication communication,
-      int                   rankSender);
 
   /// Finalizes the coupling scheme.
   virtual void finalize();
@@ -268,8 +241,8 @@ protected:
   /// Sets whether the solver evaluates the fine or the coarse model representation
   bool _isCoarseModelOptimizationActive = false;
 
-  /// Updates internal state of coupling scheme for next timestep.
-  void timestepCompleted();
+  /// Updates internal state of coupling scheme for next time window.
+  void timeWindowCompleted();
 
   /// Receives and set the timestep length, if this participant is the one to receive
   void receiveAndSetDt();
@@ -351,9 +324,9 @@ protected:
     _timestepLength = timestepLength;
   }
 
-  void setIsCouplingTimestepComplete(bool isCouplingTimestepComplete)
+  void setIsTimeWindowComplete(bool isTimeWindowComplete)
   {
-    _isCouplingTimestepComplete = isCouplingTimestepComplete;
+    _isTimeWindowComplete = isTimeWindowComplete;
   }
 
   void setIsInitialized(bool isInitialized)
@@ -548,7 +521,7 @@ private:
   /// True, if local participant is the one starting the explicit scheme.
   bool _doesFirstStep = false;
 
-  bool _isCouplingTimestepComplete = false;
+  bool _isTimeWindowComplete = false;
 
   /// Acceleration method to speedup iteration convergence.
   acceleration::PtrAcceleration _acceleration;
@@ -581,5 +554,5 @@ private:
 
   int getVertexOffset(std::map<int, int> &vertexDistribution, int rank, int dim);
 };
-}
-} // namespace precice, cplscheme
+} // namespace cplscheme
+} // namespace precice

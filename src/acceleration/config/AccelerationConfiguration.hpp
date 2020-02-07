@@ -1,7 +1,7 @@
 #pragma once
 
-#include "acceleration/MVQNAcceleration.hpp"
 #include "acceleration/Acceleration.hpp"
+#include "acceleration/MVQNAcceleration.hpp"
 #include "acceleration/SharedPointer.hpp"
 #include "acceleration/impl/SharedPointer.hpp"
 #include "logging/Logger.hpp"
@@ -9,13 +9,10 @@
 #include "precice/config/SharedPointer.hpp"
 #include "xml/XMLTag.hpp"
 
-namespace precice
-{
-namespace acceleration
-{
+namespace precice {
+namespace acceleration {
 
-class AccelerationConfiguration : public xml::XMLTag::Listener
-{
+class AccelerationConfiguration : public xml::XMLTag::Listener {
 public:
   AccelerationConfiguration(const mesh::PtrMeshConfiguration &meshConfig);
 
@@ -28,10 +25,10 @@ public:
   PtrAccelerationConfiguration getCoarseModelOptimizationConfig();
 
   /// Callback method required when using xml::XMLTag.
-  virtual void xmlTagCallback(xml::XMLTag &callingTag);
+  virtual void xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag);
 
   /// Callback method required when using xml::XMLTag.
-  virtual void xmlEndTagCallback(xml::XMLTag &callingTag);
+  virtual void xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag);
 
   /// Removes configured acceleration.
   void clear();
@@ -56,7 +53,7 @@ private:
   const std::string TAG_RELAX;
   const std::string TAG_INIT_RELAX;
   const std::string TAG_MAX_USED_ITERATIONS;
-  const std::string TAG_TIMESTEPS_REUSED;
+  const std::string TAG_TIME_WINDOWS_REUSED;
   const std::string TAG_DATA;
   const std::string TAG_FILTER;
   const std::string TAG_ESTIMATEJACOBIAN;
@@ -72,13 +69,12 @@ private:
   const std::string ATTR_TYPE;
   const std::string ATTR_BUILDJACOBIAN;
   const std::string ATTR_IMVJCHUNKSIZE;
-  const std::string ATTR_RSLS_REUSEDTSTEPS;
+  const std::string ATTR_RSLS_REUSED_TIME_WINDOWS;
   const std::string ATTR_RSSVD_TRUNCATIONEPS;
-  const std::string ATTR_PRECOND_NONCONST_TIMESTEPS;
+  const std::string ATTR_PRECOND_NONCONST_TIME_WINDOWS;
 
   const std::string VALUE_CONSTANT;
   const std::string VALUE_AITKEN;
-  const std::string VALUE_HIERARCHICAL_AITKEN;
   const std::string VALUE_IQNILS;
   const std::string VALUE_MVQN;
   const std::string VALUE_ManifoldMapping;
@@ -114,19 +110,19 @@ private:
     std::vector<int>      dataIDs;
     std::map<int, double> scalings;
     std::string           type;
-    double                relaxationFactor = 0;
-    bool                  forceInitialRelaxation = false;
-    int                   maxIterationsUsed = 0;
-    int                   timestepsReused = 0;
-    int                   filter = Acceleration::NOFILTER;
-    int                   imvjRestartType = 0;
-    int                   imvjChunkSize = 0;
-    int                   imvjRSLS_reustedTimesteps = 0;
-    int                   precond_nbNonConstTSteps = -1;
-    double                singularityLimit= 0;
-    double                imvjRSSVD_truncationEps = 0;
-    bool                  estimateJacobian = false;
-    bool                  alwaysBuildJacobian = false;
+    double                relaxationFactor           = 0;
+    bool                  forceInitialRelaxation     = false;
+    int                   maxIterationsUsed          = 0;
+    int                   timeWindowsReused          = 0;
+    int                   filter                     = Acceleration::NOFILTER;
+    int                   imvjRestartType            = 0;
+    int                   imvjChunkSize              = 0;
+    int                   imvjRSLS_reusedTimeWindows = 0;
+    int                   precond_nbNonConstTSteps   = -1;
+    double                singularityLimit           = 0;
+    double                imvjRSSVD_truncationEps    = 0;
+    bool                  estimateJacobian           = false;
+    bool                  alwaysBuildJacobian        = false;
     std::string           preconditionerType;
   } _config;
 
@@ -134,5 +130,5 @@ private:
 
   void addTypeSpecificSubtags(xml::XMLTag &tag);
 };
-}
-} // namespace precice, cplscheme
+} // namespace acceleration
+} // namespace precice

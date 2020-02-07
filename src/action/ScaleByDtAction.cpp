@@ -3,10 +3,8 @@
 #include "mesh/Edge.hpp"
 #include "mesh/Mesh.hpp"
 
-namespace precice
-{
-namespace action
-{
+namespace precice {
+namespace action {
 
 ScaleByDtAction::ScaleByDtAction(
     Timing               timing,
@@ -20,7 +18,7 @@ ScaleByDtAction::ScaleByDtAction(
       _scaling(scaling)
 {
   PRECICE_ASSERT(_sourceData->getDimensions() == _targetData->getDimensions(),
-            _sourceData->getDimensions(), _targetData->getDimensions());
+                 _sourceData->getDimensions(), _targetData->getDimensions());
 }
 
 void ScaleByDtAction::performAction(
@@ -33,7 +31,7 @@ void ScaleByDtAction::performAction(
   auto &sourceValues = _sourceData->values();
   auto &targetValues = _targetData->values();
   PRECICE_ASSERT(sourceValues.size() == targetValues.size(),
-            sourceValues.size(), targetValues.size());
+                 sourceValues.size(), targetValues.size());
   if (_scaling == SCALING_BY_COMPUTED_DT_RATIO) {
     double scaling = dt / fullDt;
     PRECICE_DEBUG("Scale by computed dt ratio " << scaling);

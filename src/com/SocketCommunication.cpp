@@ -1,15 +1,14 @@
 #include "SocketCommunication.hpp"
-#include "SocketRequest.hpp"
-#include "ConnectionInfoPublisher.hpp"
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
-#include "utils/assertion.hpp"
+#include <boost/filesystem.hpp>
 #include <sstream>
+#include "ConnectionInfoPublisher.hpp"
+#include "SocketRequest.hpp"
+#include "utils/assertion.hpp"
 
-namespace precice
-{
-namespace com
-{
+namespace precice {
+namespace com {
 
 namespace asio = boost::asio;
 
@@ -30,7 +29,8 @@ SocketCommunication::SocketCommunication(unsigned short     portNumber,
 
 SocketCommunication::SocketCommunication(std::string const &addressDirectory)
     : SocketCommunication(0, false, "lo", addressDirectory)
-{}
+{
+}
 
 SocketCommunication::~SocketCommunication()
 {
@@ -47,6 +47,7 @@ size_t SocketCommunication::getRemoteCommunicatorSize()
 
 void SocketCommunication::acceptConnection(std::string const &acceptorName,
                                            std::string const &requesterName,
+                                           std::string const &tag,
                                            int                acceptorRank)
 {
   PRECICE_TRACE(acceptorName, requesterName);
@@ -70,29 +71,29 @@ void SocketCommunication::acceptConnection(std::string const &acceptorName,
     acceptor.listen();
 
     _portNumber = acceptor.local_endpoint().port();
-    address = ipAddress + ":" + std::to_string(_portNumber);
-    ConnectionInfoWriter conInfo(acceptorName, requesterName, _addressDirectory);
+    address     = ipAddress + ":" + std::to_string(_portNumber);
+    ConnectionInfoWriter conInfo(acceptorName, requesterName, tag, _addressDirectory);
     conInfo.write(address);
     PRECICE_DEBUG("Accept connection at " << address);
 
-    int peerCurrent = 0; // Current peer to connect to
-    int peerCount   = -1; // The total count of peers (initialized in the first iteration)
+    int peerCurrent               = 0;  // Current peer to connect to
+    int peerCount                 = -1; // The total count of peers (initialized in the first iteration)
     int requesterCommunicatorSize = -1;
-        
+
     do {
       auto socket = std::make_shared<Socket>(*_ioService);
-      
+
       acceptor.accept(*socket);
       PRECICE_DEBUG("Accepted connection at " << address);
       _isConnected = true;
-      
+
       int requesterRank = -1;
-      
+
       asio::read(*socket, asio::buffer(&requesterRank, sizeof(int)));
-      
+
       PRECICE_CHECK(_sockets.count(requesterRank) == 0,
-            "Duplicate request to connect by same rank (" << requesterRank << ")!");
-      
+                    "Duplicate request to connect by same rank (" << requesterRank << ")!");
+
       _sockets[requesterRank] = socket;
       send(acceptorRank, requesterRank);
       receive(requesterCommunicatorSize, requesterRank);
@@ -101,13 +102,13 @@ void SocketCommunication::acceptConnection(std::string const &acceptorName,
       if (peerCurrent == 0) {
         peerCount = requesterCommunicatorSize;
       }
-    
+
       PRECICE_CHECK(requesterCommunicatorSize == peerCount,
-            "Requester communicator sizes are inconsistent!");
+                    "Requester communicator sizes are inconsistent!");
       PRECICE_CHECK(requesterCommunicatorSize > 0,
-            "Requester communicator size has to be > 0!");
+                    "Requester communicator size has to be > 0!");
     } while (++peerCurrent < requesterCommunicatorSize);
-    
+
     acceptor.close();
   } catch (std::exception &e) {
     PRECICE_ERROR("Accepting connection at " << address << " failed: " << e.what());
@@ -121,6 +122,7 @@ void SocketCommunication::acceptConnection(std::string const &acceptorName,
 
 void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorName,
                                                    std::string const &requesterName,
+                                                   std::string const &tag,
                                                    int                acceptorRank,
                                                    int                requesterCommunicatorSize)
 {
@@ -149,7 +151,7 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorNa
     }
 
     address = ipAddress + ":" + std::to_string(_portNumber);
-    ConnectionInfoWriter conInfo(acceptorName, requesterName, acceptorRank, _addressDirectory);
+    ConnectionInfoWriter conInfo(acceptorName, requesterName, tag, acceptorRank, _addressDirectory);
     conInfo.write(address);
 
     PRECICE_DEBUG("Accepting connection at " << address);
@@ -172,24 +174,25 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorNa
 
   // NOTE: Keep IO service running so that it fires asynchronous handlers from another thread.
   _work   = std::make_shared<asio::io_service::work>(*_ioService);
-  _thread = std::thread([this] { _ioService->run(); });  
+  _thread = std::thread([this] { _ioService->run(); });
 }
 
 void SocketCommunication::requestConnection(std::string const &acceptorName,
                                             std::string const &requesterName,
+                                            std::string const &tag,
                                             int                requesterRank,
                                             int                requesterCommunicatorSize)
 {
   PRECICE_TRACE(acceptorName, requesterName);
   PRECICE_ASSERT(not isConnected());
 
-  ConnectionInfoReader conInfo(acceptorName, requesterName, _addressDirectory);
-  std::string const address = conInfo.read();
+  ConnectionInfoReader conInfo(acceptorName, requesterName, tag, _addressDirectory);
+  std::string const    address = conInfo.read();
   PRECICE_DEBUG("Request connection to " << address);
-  auto const sepidx = address.find(':');
+  auto const        sepidx     = address.find(':');
   std::string const ipAddress  = address.substr(0, sepidx);
   std::string const portNumber = address.substr(sepidx + 1);
-  _portNumber = static_cast<unsigned short>(std::stoul(portNumber));
+  _portNumber                  = static_cast<unsigned short>(std::stoul(portNumber));
 
   try {
     auto socket = std::make_shared<Socket>(*_ioService);
@@ -199,7 +202,7 @@ void SocketCommunication::requestConnection(std::string const &acceptorName,
     tcp::resolver::query query(tcp::v4(), ipAddress, portNumber, tcp::resolver::query::canonical_name);
 
     while (not isConnected()) {
-      tcp::resolver resolver(*_ioService);
+      tcp::resolver                resolver(*_ioService);
       tcp::resolver::endpoint_type endpoint = *(resolver.resolve(query));
       boost::system::error_code    error    = asio::error::host_not_found;
       socket->connect(endpoint, error);
@@ -217,11 +220,11 @@ void SocketCommunication::requestConnection(std::string const &acceptorName,
     PRECICE_DEBUG("Requested connection to " << address);
 
     asio::write(*socket, asio::buffer(&requesterRank, sizeof(int)));
-    
+
     int acceptorRank = -1;
     asio::read(*socket, asio::buffer(&acceptorRank, sizeof(int)));
     _sockets[0] = socket; // should be acceptorRank instead of 0, likewise all communication below
-    
+
     send(requesterCommunicatorSize, 0);
 
   } catch (std::exception &e) {
@@ -233,23 +236,24 @@ void SocketCommunication::requestConnection(std::string const &acceptorName,
   _thread = std::thread([this] { _ioService->run(); });
 }
 
-void SocketCommunication::requestConnectionAsClient(std::string      const &acceptorName,
-                                                    std::string      const &requesterName,
-                                                    std::set<int>    const &acceptorRanks,
-                                                    int                     requesterRank)
-                                                    
+void SocketCommunication::requestConnectionAsClient(std::string const &  acceptorName,
+                                                    std::string const &  requesterName,
+                                                    std::string const &  tag,
+                                                    std::set<int> const &acceptorRanks,
+                                                    int                  requesterRank)
+
 {
   PRECICE_TRACE(acceptorName, requesterName, acceptorRanks, requesterRank);
   PRECICE_ASSERT(not isConnected());
-  
-  for (auto const & acceptorRank : acceptorRanks) {
+
+  for (auto const &acceptorRank : acceptorRanks) {
     _isConnected = false;
-    ConnectionInfoReader conInfo(acceptorName, requesterName, acceptorRank, _addressDirectory);
-    std::string const address = conInfo.read();
-    auto const sepidx = address.find(':');
-    std::string const ipAddress  = address.substr(0, sepidx);
-    std::string const portNumber = address.substr(sepidx + 1);
-    _portNumber = static_cast<unsigned short>(std::stoul(portNumber));
+    ConnectionInfoReader conInfo(acceptorName, requesterName, tag, acceptorRank, _addressDirectory);
+    std::string const    address    = conInfo.read();
+    auto const           sepidx     = address.find(':');
+    std::string const    ipAddress  = address.substr(0, sepidx);
+    std::string const    portNumber = address.substr(sepidx + 1);
+    _portNumber                     = static_cast<unsigned short>(std::stoul(portNumber));
 
     try {
       auto socket = std::make_shared<Socket>(*_ioService);
@@ -261,11 +265,11 @@ void SocketCommunication::requestConnectionAsClient(std::string      const &acce
       tcp::resolver::query query(tcp::v4(), ipAddress, portNumber);
 
       while (not isConnected()) {
-        tcp::resolver resolver(*_ioService);
-        tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
-        boost::system::error_code error = asio::error::host_not_found;
+        tcp::resolver             resolver(*_ioService);
+        tcp::resolver::iterator   endpoint_iterator = resolver.resolve(query);
+        boost::system::error_code error             = asio::error::host_not_found;
         boost::asio::connect(*socket, endpoint_iterator, error);
-          
+
         _isConnected = not error;
 
         if (not isConnected()) {
@@ -275,7 +279,7 @@ void SocketCommunication::requestConnectionAsClient(std::string      const &acce
           timer.wait();
         }
       }
-      
+
       PRECICE_DEBUG("Requested connection to " << address << ", rank = " << acceptorRank);
       _sockets[acceptorRank] = socket;
       send(requesterRank, acceptorRank); // send my rank
@@ -308,7 +312,7 @@ void SocketCommunication::closeConnection()
     socket.second->close();
   }
 
-  _isConnected            = false;
+  _isConnected = false;
 }
 
 void SocketCommunication::send(std::string const &itemToSend, int rankReceiver)
@@ -342,6 +346,32 @@ void SocketCommunication::send(const int *itemsToSend, int size, int rankReceive
     asio::write(*_sockets[rankReceiver], asio::buffer(itemsToSend, size * sizeof(int)));
   } catch (std::exception &e) {
     PRECICE_ERROR("Send failed: " << e.what());
+  }
+}
+
+void SocketCommunication::prepareEstablishment(std::string const &acceptorName,
+                                               std::string const &requesterName)
+{
+  using namespace boost::filesystem;
+  path dir = com::impl::localDirectory(acceptorName, requesterName, _addressDirectory);
+  PRECICE_DEBUG("Creating connection exchange directory " << dir);
+  try {
+    create_directories(dir);
+  } catch (const boost::filesystem::filesystem_error &e) {
+    PRECICE_WARN("Creating directory for connection info failed with: " << e.what());
+  }
+}
+
+void SocketCommunication::cleanupEstablishment(std::string const &acceptorName,
+                                               std::string const &requesterName)
+{
+  using namespace boost::filesystem;
+  path dir = com::impl::localDirectory(acceptorName, requesterName, _addressDirectory);
+  PRECICE_DEBUG("Removing connection exchange directory " << dir);
+  try {
+    remove_all(dir);
+  } catch (const boost::filesystem::filesystem_error &e) {
+    PRECICE_WARN("Cleaning up connection info failed with: " << e.what());
   }
 }
 
@@ -399,7 +429,7 @@ PtrRequest SocketCommunication::aSend(const double *itemsToSend, int size, int r
   return request;
 }
 
-PtrRequest SocketCommunication::aSend(std::vector<double> const & itemsToSend, int rankReceiver)
+PtrRequest SocketCommunication::aSend(std::vector<double> const &itemsToSend, int rankReceiver)
 {
   PRECICE_TRACE(rankReceiver);
 
@@ -418,7 +448,6 @@ PtrRequest SocketCommunication::aSend(std::vector<double> const & itemsToSend, i
   return request;
 }
 
-
 void SocketCommunication::send(double itemToSend, int rankReceiver)
 {
   PRECICE_TRACE(itemToSend, rankReceiver);
@@ -435,7 +464,7 @@ void SocketCommunication::send(double itemToSend, int rankReceiver)
   }
 }
 
-PtrRequest SocketCommunication::aSend(const double & itemToSend, int rankReceiver)
+PtrRequest SocketCommunication::aSend(const double &itemToSend, int rankReceiver)
 {
   return aSend(&itemToSend, 1, rankReceiver);
 }
@@ -456,7 +485,7 @@ void SocketCommunication::send(int itemToSend, int rankReceiver)
   }
 }
 
-PtrRequest SocketCommunication::aSend(const int& itemToSend, int rankReceiver)
+PtrRequest SocketCommunication::aSend(const int &itemToSend, int rankReceiver)
 {
   return aSend(&itemToSend, 1, rankReceiver);
 }
@@ -477,7 +506,7 @@ void SocketCommunication::send(bool itemToSend, int rankReceiver)
   }
 }
 
-PtrRequest SocketCommunication::aSend(const bool & itemToSend, int rankReceiver)
+PtrRequest SocketCommunication::aSend(const bool &itemToSend, int rankReceiver)
 {
   PRECICE_TRACE(rankReceiver);
 
@@ -489,10 +518,10 @@ PtrRequest SocketCommunication::aSend(const bool & itemToSend, int rankReceiver)
   PtrRequest request(new SocketRequest);
 
   _queue.dispatch(_sockets[rankReceiver],
-              asio::buffer(&itemToSend, sizeof(bool)),
-                [request] {
-                  std::static_pointer_cast<SocketRequest>(request)->complete();
-                });
+                  asio::buffer(&itemToSend, sizeof(bool)),
+                  [request] {
+                    std::static_pointer_cast<SocketRequest>(request)->complete();
+                  });
   return request;
 }
 
@@ -575,7 +604,7 @@ PtrRequest SocketCommunication::aReceive(double *itemsToReceive,
   return request;
 }
 
-PtrRequest SocketCommunication::aReceive(std::vector<double> & itemsToReceive, int rankSender)
+PtrRequest SocketCommunication::aReceive(std::vector<double> &itemsToReceive, int rankSender)
 {
   PRECICE_TRACE(rankSender);
 
@@ -643,7 +672,7 @@ PtrRequest SocketCommunication::aReceive(int &itemToReceive, int rankSender)
   rankSender = rankSender - _rankOffset;
 
   PRECICE_ASSERT((rankSender >= 0) && (rankSender < (int) _sockets.size()),
-            rankSender, _sockets.size());
+                 rankSender, _sockets.size());
   PRECICE_ASSERT(isConnected());
 
   PtrRequest request(new SocketRequest);
@@ -692,7 +721,7 @@ PtrRequest SocketCommunication::aReceive(bool &itemToReceive, int rankSender)
     asio::async_read(*_sockets[rankSender],
                      asio::buffer(&itemToReceive, sizeof(bool)),
                      [request](boost::system::error_code const &, std::size_t) {
-                        std::static_pointer_cast<SocketRequest>(request)->complete();
+                       std::static_pointer_cast<SocketRequest>(request)->complete();
                      });
   } catch (std::exception &e) {
     PRECICE_ERROR("Receive failed: " << e.what());
@@ -800,7 +829,7 @@ std::string SocketCommunication::getIpAddress()
 
   while (itNameInterface && itNameInterface->if_name) {
     PRECICE_CHECK(strlen(itNameInterface->if_name) < IFNAMSIZ,
-          "Network interface \" " << itNameInterface->if_name << "\" has too long name");
+                  "Network interface \" " << itNameInterface->if_name << "\" has too long name");
 
     strncpy(request.ifr_name,
             itNameInterface->if_name,
@@ -812,15 +841,15 @@ std::string SocketCommunication::getIpAddress()
 
     if (ioctl(querySocket, SIOCGIFADDR, &request) >= 0) {
       PRECICE_DEBUG(itNameInterface->if_name
-            << ": " << inet_ntoa(((struct sockaddr_in *) &request.ifr_addr)->sin_addr));
+                    << ": " << inet_ntoa(((struct sockaddr_in *) &request.ifr_addr)->sin_addr));
 
       if (strcmp(itNameInterface->if_name, _networkName.c_str()) == 0) {
         oss << inet_ntoa(((struct sockaddr_in *) &request.ifr_addr)->sin_addr);
       }
     } else {
       PRECICE_CHECK(strcmp(itNameInterface->if_name, _networkName.c_str()) != 0,
-            "Could not obtain network IP from "
-                << "network \"" << itNameInterface->if_name << "\"");
+                    "Could not obtain network IP from "
+                        << "network \"" << itNameInterface->if_name << "\"");
     }
 
     itNameInterface++;
@@ -830,10 +859,8 @@ std::string SocketCommunication::getIpAddress()
   close(querySocket);
 #endif
 
-  return oss.str(); 
+  return oss.str();
 }
-
-
 
 } // namespace com
 } // namespace precice

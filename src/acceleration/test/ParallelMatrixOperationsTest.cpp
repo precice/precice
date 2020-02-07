@@ -2,11 +2,11 @@
 
 #include <Eigen/Core>
 
+#include "acceleration/impl/ParallelMatrixOperations.hpp"
 #include "com/Communication.hpp"
 #include "com/MPIDirectCommunication.hpp"
 #include "com/MPIPortsCommunication.hpp"
 #include "cplscheme/Constants.hpp"
-#include "acceleration/impl/ParallelMatrixOperations.hpp"
 #include "testing/Fixtures.hpp"
 #include "testing/Testing.hpp"
 #include "utils/MasterSlave.hpp"
@@ -41,7 +41,7 @@ void validate_result_equals_reference(
   }
 }
 
-BOOST_AUTO_TEST_CASE(ParVectorOperations, * boost::unit_test::fixture<testing::MasterComFixture>())
+BOOST_AUTO_TEST_CASE(ParVectorOperations, *boost::unit_test::fixture<testing::MasterComFixture>())
 {
   int              n_global = 10;
   int              n_local;
@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE(ParVectorOperations, * boost::unit_test::fixture<testing::M
   BOOST_TEST(testing::equals(dotproduct, 7.069617899295469));
 }
 
-BOOST_AUTO_TEST_CASE(ParallelMatrixMatrixOp,  * boost::unit_test::fixture<testing::MasterComFixture>())
+BOOST_AUTO_TEST_CASE(ParallelMatrixMatrixOp, *boost::unit_test::fixture<testing::MasterComFixture>())
 {
   com::PtrCommunication _cyclicCommLeft  = com::PtrCommunication(new com::MPIPortsCommunication("."));
   com::PtrCommunication _cyclicCommRight = com::PtrCommunication(new com::MPIPortsCommunication("."));
@@ -161,12 +161,13 @@ BOOST_AUTO_TEST_CASE(ParallelMatrixMatrixOp,  * boost::unit_test::fixture<testin
   // initialize cyclic communication between successive slaves
   int prevProc = (utils::Parallel::getProcessRank() - 1 < 0) ? utils::Parallel::getCommunicatorSize() - 1 : utils::Parallel::getProcessRank() - 1;
   if ((utils::Parallel::getProcessRank() % 2) == 0) {
-    _cyclicCommLeft->acceptConnection("cyclicComm-" + std::to_string(prevProc), "", utils::Parallel::getProcessRank());
-    _cyclicCommRight->requestConnection("cyclicComm-" + std::to_string(utils::Parallel::getProcessRank()), "", 0, 1);
+    _cyclicCommLeft->acceptConnection("cyclicComm-" + std::to_string(prevProc), "", "Test", utils::Parallel::getProcessRank());
+    _cyclicCommRight->requestConnection("cyclicComm-" + std::to_string(utils::Parallel::getProcessRank()), "", "Test", 0, 1);
   } else {
-    _cyclicCommRight->requestConnection("cyclicComm-" + std::to_string(utils::Parallel::getProcessRank()), "", 0, 1);
-    _cyclicCommLeft->acceptConnection("cyclicComm-" + std::to_string(prevProc), "", utils::Parallel::getProcessRank());
+    _cyclicCommRight->requestConnection("cyclicComm-" + std::to_string(utils::Parallel::getProcessRank()), "", "Test", 0, 1);
+    _cyclicCommLeft->acceptConnection("cyclicComm-" + std::to_string(prevProc), "", "Test", utils::Parallel::getProcessRank());
   }
+  _cyclicCommLeft->cleanupEstablishment("cyclicComm-" + std::to_string(prevProc), "");
 
   int              n_global = 10, m_global = 5;
   int              n_local;

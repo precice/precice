@@ -11,10 +11,8 @@ namespace tests {
 /**
  * @brief Used to test CompositionalCouplingScheme.
  */
-class DummyCouplingScheme : public CouplingScheme
-{
+class DummyCouplingScheme : public CouplingScheme {
 public:
-
   /**
    * @brief Constructor.
    *
@@ -22,8 +20,8 @@ public:
    *        otherwise and implicit one.
    */
   DummyCouplingScheme(
-    int numberIterations,
-    int maxTimesteps );
+      int numberIterations,
+      int maxTimesteps);
 
   /**
    * @brief Destructor, empty.
@@ -33,24 +31,33 @@ public:
   /**
    * @brief
    */
-  virtual void initialize (
-     double startTime,
-     int    startTimesteps );
+  virtual void initialize(
+      double startTime,
+      int    startTimesteps);
 
   /**
    * @brief Not implemented.
    */
-  virtual bool isInitialized() const { PRECICE_ASSERT(false); return false; }
+  virtual bool isInitialized() const
+  {
+    PRECICE_ASSERT(false);
+    return false;
+  }
 
   /**
    * @brief Not implemented.
    */
-  virtual void initializeData() { PRECICE_ASSERT(false); }
+  virtual void initializeData()
+  {
+    PRECICE_ASSERT(false);
+  }
 
   /**
    * @brief Not implemented.
    */
-  virtual void addComputedTime(double timeToAdd) { /* Do nothing */ }
+  virtual void addComputedTime(double timeToAdd)
+  { /* Do nothing */
+  }
 
   /**
    * @brief
@@ -65,62 +72,110 @@ public:
   /*
    * @brief Not implemented.
    */
-  virtual std::vector<std::string> getCouplingPartners() const { PRECICE_ASSERT(false); return std::vector<std::string>(); }
+  virtual std::vector<std::string> getCouplingPartners() const
+  {
+    PRECICE_ASSERT(false);
+    return std::vector<std::string>();
+  }
 
   /**
    * @brief Not implemented.
    */
-  virtual bool willDataBeExchanged(double lastSolverTimestepLength) const { PRECICE_ASSERT(false); return false; }
+  virtual bool willDataBeExchanged(double lastSolverTimestepLength) const
+  {
+    PRECICE_ASSERT(false);
+    return false;
+  }
 
   /**
    * @brief Not implemented.
    */
-  virtual bool hasDataBeenExchanged() const { PRECICE_ASSERT(false); return false; }
+  virtual bool hasDataBeenExchanged() const
+  {
+    PRECICE_ASSERT(false);
+    return false;
+  }
 
   /**
    * @brief Not implemented.
    */
-  virtual double getTime() const { PRECICE_ASSERT(false); return 0; }
+  virtual double getTime() const
+  {
+    PRECICE_ASSERT(false);
+    return 0;
+  }
 
   /**
    * @brief Not implemented.
    */
-  virtual int getTimesteps() const { return _timesteps; return 0; }
+  virtual int getTimesteps() const
+  {
+    return _timesteps;
+    return 0;
+  }
 
   /**
    * @brief Not implemented.
    */
-  virtual double getMaxTime() const { PRECICE_ASSERT(false); return 0; }
+  virtual double getMaxTime() const
+  {
+    PRECICE_ASSERT(false);
+    return 0;
+  }
 
   /**
    * @brief Not implemented.
    */
-  virtual int getMaxTimesteps() const { PRECICE_ASSERT(false); return 0; }
+  virtual int getMaxTimesteps() const
+  {
+    PRECICE_ASSERT(false);
+    return 0;
+  }
 
   /**
    * @brief Not implemented.
    */
-  virtual bool hasTimestepLength() const { PRECICE_ASSERT(false); return false; }
+  virtual bool hasTimestepLength() const
+  {
+    PRECICE_ASSERT(false);
+    return false;
+  }
 
   /**
    * @brief Not implemented.
    */
-  virtual double getTimestepLength() const { PRECICE_ASSERT(false); return 0; }
+  virtual double getTimestepLength() const
+  {
+    PRECICE_ASSERT(false);
+    return 0;
+  }
 
   /**
    * @brief Not implemented.
    */
-  virtual double getThisTimestepRemainder() const { PRECICE_ASSERT(false); return 0; }
+  virtual double getThisTimestepRemainder() const
+  {
+    PRECICE_ASSERT(false);
+    return 0;
+  }
 
   /**
    * @brief Not implemented.
    */
-  virtual double getComputedTimestepPart() const { PRECICE_ASSERT(false); return 0; }
+  virtual double getComputedTimestepPart() const
+  {
+    PRECICE_ASSERT(false);
+    return 0;
+  }
 
   /**
    * @brief Not implemented.
    */
-  virtual double getNextTimestepMaxLength() const { PRECICE_ASSERT(false); return 0; }
+  virtual double getNextTimestepMaxLength() const
+  {
+    PRECICE_ASSERT(false);
+    return 0;
+  }
 
   /**
    * @brief Not implemented.
@@ -130,59 +185,75 @@ public:
   /**
    * @brief Not implemented.
    */
-  virtual bool isCouplingTimestepComplete() const { PRECICE_ASSERT(false); return false; }
+  virtual bool isTimeWindowComplete() const
+  {
+    PRECICE_ASSERT(false);
+    return false;
+  }
 
   /**
    * @brief
    */
-  virtual bool isActionRequired(const std::string& actionName) const;
+  virtual bool isActionRequired(const std::string &actionName) const;
 
   /**
    * @brief Not implemented.
    */
-  virtual void performedAction(const std::string& actionName) { PRECICE_ASSERT(false); }
+  virtual void markActionFulfilled(const std::string &actionName)
+  {
+    PRECICE_ASSERT(false);
+  }
 
   /**
    * @brief Not implemented.
    */
-  virtual int getCheckpointTimestepInterval() const { PRECICE_ASSERT(false); return 0; }
+  virtual int getCheckpointTimestepInterval() const
+  {
+    PRECICE_ASSERT(false);
+    return 0;
+  }
 
   /**
    * @brief Not implemented.
    */
-  virtual void requireAction(const std::string& actionName) { PRECICE_ASSERT(false); }
+  virtual void requireAction(const std::string &actionName)
+  {
+    PRECICE_ASSERT(false);
+  }
 
   /**
    * @brief Empty.
    */
-  virtual std::string printCouplingState() const { return std::string(); }
+  virtual std::string printCouplingState() const
+  {
+    return std::string();
+  }
 
   /**
    * @brief Empty.
    */
-  virtual void exportState(const std::string& filenamePrefix) const {}
+  virtual void exportState(const std::string &filenamePrefix) const {}
 
   /**
    * @brief Empty.
    */
-  virtual void importState(const std::string& filenamePrefix) {}
+  virtual void importState(const std::string &filenamePrefix) {}
 
   /**
    * @brief Empty.
    */
-  virtual void sendState (
-    com::PtrCommunication communication,
-    int                   rankReceiver ) {}
+  virtual void sendState(
+      com::PtrCommunication communication,
+      int                   rankReceiver) {}
 
   /**
    * @brief Empty.
    */
-  virtual void receiveState (
-    com::PtrCommunication communication,
-    int                   rankSender ) {}
+  virtual void receiveState(
+      com::PtrCommunication communication,
+      int                   rankSender) {}
 
 private:
-
   mutable logging::Logger _log{"cplscheme::tests::DummyCouplingScheme"};
 
   // @brief Number of iterations performed per timestep. 1 --> explicit.
@@ -204,4 +275,6 @@ private:
   bool _isOngoing = false;
 };
 
-}}} // namespace precice, cplscheme, tests
+} // namespace tests
+} // namespace cplscheme
+} // namespace precice

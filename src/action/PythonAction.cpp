@@ -1,15 +1,13 @@
 #ifndef PRECICE_NO_PYTHON
+#include "PythonAction.hpp"
 #include <Python.h>
 #include <numpy/arrayobject.h>
-#include "PythonAction.hpp"
+#include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
-#include "mesh/Data.hpp"
 
-namespace precice
-{
-namespace action
-{
+namespace precice {
+namespace action {
 
 PythonAction::PythonAction(
     Timing               timing,
@@ -81,7 +79,7 @@ void PythonAction::performAction(double time,
     if (PyErr_Occurred()) {
       PyErr_Print();
       PRECICE_ERROR("Error occurred during call of function "
-            << "performAction() python module \"" << _moduleName << "\"!");
+                    << "performAction() python module \"" << _moduleName << "\"!");
     }
   }
 
@@ -95,7 +93,7 @@ void PythonAction::performAction(double time,
       int      id            = vertex.getID();
       coords                 = vertex.getCoords();
       normal                 = vertex.getNormal();
-      PyObject *pythonID     = PyInt_FromLong(id);
+      PyObject *pythonID     = PyLong_FromLong(id);
       PyObject *pythonCoords = PyArray_SimpleNewFromData(1, vdim, NPY_DOUBLE, coords.data());
       PyObject *pythonNormal = PyArray_SimpleNewFromData(1, vdim, NPY_DOUBLE, coords.data());
       PRECICE_CHECK(pythonID != nullptr, "Creating python ID failed!");
@@ -108,7 +106,7 @@ void PythonAction::performAction(double time,
       if (PyErr_Occurred()) {
         PyErr_Print();
         PRECICE_ERROR("Error occurred during call of function "
-              << "vertexCallback() python module \"" << _moduleName << "\"!");
+                      << "vertexCallback() python module \"" << _moduleName << "\"!");
       }
     }
     Py_DECREF(vertexArgs);
@@ -120,7 +118,7 @@ void PythonAction::performAction(double time,
     if (PyErr_Occurred()) {
       PyErr_Print();
       PRECICE_ERROR("Error occurred during call of function "
-            << "postAction() in python module \"" << _moduleName << "\"!");
+                    << "postAction() in python module \"" << _moduleName << "\"!");
     }
     Py_DECREF(postActionArgs);
   }
@@ -138,7 +136,7 @@ void PythonAction::initialize()
   PyRun_SimpleString("import sys");
   std::string appendPathCommand("sys.path.append('" + _modulePath + "')");
   PyRun_SimpleString(appendPathCommand.c_str());
-  _moduleNameObject = PyString_FromString(_moduleName.c_str());
+  _moduleNameObject = PyUnicode_FromString(_moduleName.c_str());
   _module           = PyImport_Import(_moduleNameObject);
   if (_module == nullptr) {
     PyErr_Print();

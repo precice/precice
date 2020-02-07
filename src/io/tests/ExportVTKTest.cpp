@@ -15,7 +15,7 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
 {
   int             dim           = 2;
   bool            invertNormals = false;
-  mesh::Mesh      mesh("MyMesh", dim, invertNormals);
+  mesh::Mesh      mesh("MyMesh", dim, invertNormals, testing::nextMeshID());
   mesh::Vertex &  v1      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 0.0));
   mesh::Vertex &  v2      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 1.0));
   Eigen::VectorXd coords3 = Eigen::VectorXd::Constant(dim, 0.0);
@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
 {
   int             dim           = 3;
   bool            invertNormals = false;
-  mesh::Mesh      mesh("MyMesh", dim, invertNormals);
+  mesh::Mesh      mesh("MyMesh", dim, invertNormals, testing::nextMeshID());
   mesh::Vertex &  v1      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 0.0));
   mesh::Vertex &  v2      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 1.0));
   Eigen::VectorXd coords3 = Eigen::VectorXd::Zero(dim);
@@ -62,9 +62,9 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
 BOOST_AUTO_TEST_CASE(ExportQuadMesh)
 {
   using namespace mesh;
-  int  dim           = 3;
-  bool invertNormals = false;
-  Mesh mesh("QuadMesh", dim, invertNormals);
+  int        dim           = 3;
+  bool       invertNormals = false;
+  mesh::Mesh mesh("QuadMesh", dim, invertNormals, testing::nextMeshID());
   // z=0 plane
   Vertex &v0 = mesh.createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
   Vertex &v1 = mesh.createVertex(Eigen::Vector3d(1.0, 0.0, 0.0));

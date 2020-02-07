@@ -1,20 +1,17 @@
 #pragma once
 
+#include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include "xml/XMLTag.hpp"
-#include "com/SharedPointer.hpp"
 
-namespace precice
-{
-namespace com
-{
+namespace precice {
+namespace com {
 
 /**
- * @brief Configuration for communication channels between server and clients or master and slaves.
+ * @brief Configuration for communication channels between a master and its slaves.
  * The communication between two solvers is configured in m2n::M2NConfiguration
  */
-class CommunicationConfiguration
-{
+class CommunicationConfiguration {
 public:
   virtual ~CommunicationConfiguration() {}
 

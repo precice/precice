@@ -3,23 +3,20 @@
 #include <Eigen/Core>
 #include <deque>
 
-#include "logging/Logger.hpp"
 #include "acceleration/Acceleration.hpp"
 #include "acceleration/SharedPointer.hpp"
 #include "acceleration/impl/Preconditioner.hpp"
 #include "acceleration/impl/SharedPointer.hpp"
+#include "logging/Logger.hpp"
 
-namespace precice
-{
-namespace acceleration
-{
+namespace precice {
+namespace acceleration {
 
 /// Base Class for quasi-Newton acceleration schemes
-class MMAcceleration : public Acceleration
-{
+class MMAcceleration : public Acceleration {
 public:
   MMAcceleration(
-      PtrAcceleration       coarseModelOptimization,
+      PtrAcceleration         coarseModelOptimization,
       int                     maxIterationsUsed,
       int                     timestepsReused,
       int                     filter,
@@ -27,7 +24,7 @@ public:
       bool                    estimateJacobian,
       std::vector<int>        fineDataIDs,
       std::vector<int>        coarseDataIDs,
-      impl::PtrPreconditioner       preconditioner);
+      impl::PtrPreconditioner preconditioner);
 
   virtual ~MMAcceleration()
   {
@@ -274,5 +271,5 @@ private:
   /// Indicates whether the design specification has been set and is active or not
   bool isSet(Eigen::VectorXd &designSpec);
 };
-}
-} // namespace precice, acceleration
+} // namespace acceleration
+} // namespace precice

@@ -1,7 +1,8 @@
 cmake_minimum_required (VERSION 3.10.2)
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/XSDKCompilerDetect.cmake)
 
-project(preCICE VERSION 1.6.1 LANGUAGES CXX)
+project(preCICE VERSION 2.0.0 LANGUAGES CXX)
+set(preCICE_SOVERSION ${preCICE_VERSION_MAJOR})
 
 #
 # Overview of this configuration
@@ -26,6 +27,7 @@ project(preCICE VERSION 1.6.1 LANGUAGES CXX)
 list (APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 list (APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/modules")
 
+include(CheckCXX11Library)
 include(CopyTargetProperty)
 include(XSDKMacros)
 include(Validation)
@@ -45,17 +47,29 @@ endif()
 # Setup Options
 #
 
-option(MPI "Enables MPI-based communication and running coupling tests." ON)
-option(PETSC "Enable use of the PETSc linear algebra library." ON)
-option(PYTHON "Python support" ON)
-option(PRECICE_Packages "Configure package generation." ON)
-option(PRECICE_InstallTest "Add test binary and necessary files to install target." ON)
-option(BUILD_SHARED_LIBS "Build shared libraries by default" OFF)
-xsdk_tpl_option_override(MPI TPL_ENABLE_MPI)
-xsdk_tpl_option_override(PETSC TPL_ENABLE_PETSC)
-xsdk_tpl_option_override(PYTHON TPL_ENABLE_PYTHON)
+if(NOT CMAKE_BUILD_TYPE)
+  message(WARNING "You did not specify a CMAKE_BUILD_TYPE.
 
-if(PETSC AND NOT MPI)
+  We will assume you asked for a Debug build.")
+  set(CMAKE_BUILD_TYPE Debug CACHE STRINGS "The type of this build" FORCE)
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Debug Release RelWithDebInfo MinSizeRel)
+endif()
+
+option(PRECICE_MPICommunication "Enables MPI-based communication and running coupling tests." ON)
+option(PRECICE_PETScMapping "Enable use of the PETSc linear algebra library." ON)
+option(PRECICE_PythonActions "Python support" ON)
+option(PRECICE_Packages "Configure package generation." ON)
+option(PRECICE_InstallTest "Add test binary and necessary files to install target." OFF)
+option(BUILD_SHARED_LIBS "Build shared libraries by default" OFF)
+option(PRECICE_ALWAYS_VALIDATE_LIBS "Validate libraries even after the validatation succeeded." OFF)
+option(PRECICE_ENABLE_C "Enable the native C bindings" ON)
+option(PRECICE_ENABLE_FORTRAN "Enable the native Fortran bindings" ON)
+
+xsdk_tpl_option_override(PRECICE_MPICommunication TPL_ENABLE_MPI)
+xsdk_tpl_option_override(PRECICE_PETScMapping TPL_ENABLE_PETSC)
+xsdk_tpl_option_override(PRECICE_PythonActions TPL_ENABLE_PYTHON)
+
+if(PRECICE_PETScMapping AND NOT PRECICE_MPICommunication)
   message(FATAL_ERROR "Please enable MPI to use PETSC.")
 endif()
 
@@ -67,18 +81,65 @@ include(XSDKOptions)
 include(PrintHelper)
 print_configuration(
   ADDITIONAL
-  "MPI;Build with MPI"
-  "PETSC;Build with PETSC"
-  "PYTHON;Build with PYTHON"
   "PRECICE_Packages;Configure package generation"
   "PRECICE_InstallTest;Install tests/testfiles"
   "PRECICE_CTEST_MPI_FLAGS;Additional CTest MPI Flags"
   )
+print_empty()
+
+include(FeatureSummary)
+add_feature_info(MPICommunication PRECICE_MPICommunication
+  "Enables the MPI communication back-end.
+
+   This enables the MPI communication back-end which is highly recommended on multi-node systems.
+   See the documentation of the CMake module FindMPI to control its functionality.
+
+   Set PRECICE_MPICommunication to enable.
+")
+add_feature_info(PETScMapping PRECICE_PETScMapping
+  "Enables the PETSc-powered radial basic function mappings.
+
+   The radial basis function mappings require MPI and PETSc to work in parallel.
+
+   Set PRECICE_PETScMapping to enable.
+   Requires MPICommunication.
+  ")
+add_feature_info(PythonActions PRECICE_PythonActions
+  "Enables the support for user-defined python actions.
+
+   preCICE allows to manipulate coupling data at runtime using configurable actions.
+   This feature enables the support for user-defined actions written in Python based on numpy.
+
+   Set PRECICE_PythonActions to enable.
+  ")
+add_feature_info(CBindings PRECICE_ENABLE_C
+  "Enables the native Fortran bindings.
+
+   preCICE provides native bindings for C, which are compiled into the library.
+   This feature enables the compilation and installation of the bindings into the library.
+   Note that we strongly recommend to compile with C bindings enabled for compatibility reasons.
+
+   Set PRECICE_ENABLE_C to enable.
+  ")
+add_feature_info(FortranBindings PRECICE_ENABLE_FORTRAN
+  "Enables the native Fortran bindings.
+
+   preCICE provides native bindings for Fortran, which are compiled into the library.
+   This feature enables the compilation and installation of the bindings into the library.
+   Note that we strongly recommend to compile with Fortran bindings enabled for compatibility reasons.
+
+   Set PRECICE_ENABLE_FORTRAN to enable.
+  ")
+
+feature_summary(WHAT ENABLED_FEATURES  DESCRIPTION "=== ENABLED FEATURES ===" QUIET_ON_EMPTY)
+feature_summary(WHAT DISABLED_FEATURES DESCRIPTION "=== DISABLED FEATURES ===" QUIET_ON_EMPTY)
+
 
 
 #
 # Find Mandatory Dependencies
 #
+print_section("DEPENDENCIES")
 
 find_package (Threads REQUIRED)
 
@@ -132,13 +193,13 @@ precice_validate_prettyprint()
 # Find Configurable Dependencies
 #
 
-# Option: MPI
-if (MPI)
+# Option: PRECICE_MPICommunication
+if (PRECICE_MPICommunication)
   find_package(MPI REQUIRED)
 endif()
 
 # Option: PETSC
-if (PETSC)
+if (PRECICE_PETScMapping)
   if (TPL_ENABLE_PETSC)
     xsdk_tpl_require(PETSC PETSC_DIR PETSC_ARCH)
     # PETSc detection uses primarily these ENVs
@@ -159,11 +220,10 @@ else()
 endif()
 
 # Option Python
-if (PYTHON)
-  set(Python_ADDITIONAL_VERSIONS "2.7")
+if (PRECICE_PythonActions)
   if (TPL_ENABLE_PYTHON)
     xsdk_tpl_require(PYTHON PYTHON_LIBRARY PYTHON_INCLUDE_DIR NumPy_INCLUDE_DIR)
-    find_package(PythonLibs 2.7 REQUIRED)
+    find_package(PythonLibs REQUIRED)
 
     # Override NumPy
     # TODO: Incorporate into the FindNumPy module
@@ -173,8 +233,11 @@ if (PYTHON)
       set_property(TARGET NumPy::NumPy PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${NumPy_INCLUDE_DIR}")
     endif()
   else()
-    find_package(PythonLibs 2.7 REQUIRED)
+    find_package(PythonLibs REQUIRED)
     find_package(NumPy REQUIRED)
+  endif()
+  if(PYTHONLIBS_VERSION_STRING VERSION_LESS 2.7)
+    message(FATAL_ERROR "The selected Python Version is too old: ${PYTHONLIBS_VERSION_STRING} (minimum 2.7)")
   endif()
   precice_validate_libpython()
   precice_validate_numpy()
@@ -187,7 +250,11 @@ endif()
 # Configuration of Target precice
 #
 
+print_empty()
+print_section("TARGETS & PACKAGES")
+
 # Add a dummy to silence add_library warning for cmake < 3.11.
+set(preCICE_DUMMY "")
 if(CMAKE_VERSION VERSION_LESS "3.11")
   set(preCICE_DUMMY "${CMAKE_CURRENT_BINARY_DIR}/dummy.cpp")
   if(NOT EXISTS "${preCICE_DUMMY}")
@@ -200,7 +267,10 @@ add_library(precice ${preCICE_DUMMY})
 set_target_properties(precice PROPERTIES
   # precice is a C++11 project
   CXX_STANDARD 11
-  SOVERSION ${preCICE_VERSION}
+  CXX_STANDARD_REQUIRED Yes
+  CXX_EXTENSIONS No
+  VERSION ${preCICE_VERSION}
+  SOVERSION ${preCICE_SOVERSION}
   )
 
 # Setup Boost
@@ -234,14 +304,14 @@ target_link_libraries(precice PRIVATE prettyprint)
 target_link_libraries(precice PRIVATE JSON)
 
 # Setup MPI
-if (MPI)
+if (PRECICE_MPICommunication)
   target_link_libraries(precice PRIVATE MPI::MPI_CXX)
 else()
   target_compile_definitions(precice PRIVATE PRECICE_NO_MPI)
 endif()
 
 # Setup PETSC
-if (PETSC AND MPI)
+if (PRECICE_PETScMapping AND PRECICE_MPICommunication)
   target_include_directories(precice PRIVATE ${PETSC_INCLUDES})
   target_link_libraries(precice PRIVATE ${PETSC_LIBRARIES})
 else()
@@ -249,7 +319,7 @@ else()
 endif()
 
 # Option Python
-if (PYTHON)
+if (PRECICE_PythonActions)
   target_link_libraries(precice PRIVATE NumPy::NumPy)
   target_include_directories(precice PRIVATE ${PYTHON_INCLUDE_DIRS})
   target_compile_definitions(precice PRIVATE NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION)
@@ -303,10 +373,10 @@ set_target_properties(binprecice PROPERTIES
 # this executable uses the library source, not only the interface.
 copy_target_property(precice binprecice COMPILE_DEFINITIONS)
 copy_target_property(precice binprecice COMPILE_OPTIONS)
-if(MPI)
+if(PRECICE_MPICommunication)
   target_link_libraries(binprecice PRIVATE MPI::MPI_CXX)
 endif()
-if(MPI AND PETSC)
+if(PRECICE_MPICommunication AND PRECICE_PETScMapping)
   target_include_directories(binprecice PRIVATE ${PETSC_INCLUDES})
   target_link_libraries(binprecice PRIVATE ${PETSC_LIBRARIES})
 endif()
@@ -342,10 +412,10 @@ copy_target_property(precice testprecice COMPILE_DEFINITIONS)
 copy_target_property(precice testprecice COMPILE_OPTIONS)
 
 # Testprecice fully depends on MPI and PETSc.
-if(MPI)
+if(PRECICE_MPICommunication)
   target_link_libraries(testprecice PRIVATE MPI::MPI_CXX)
 endif()
-if(MPI AND PETSC)
+if(PRECICE_MPICommunication AND PRECICE_PETScMapping)
   target_include_directories(testprecice PRIVATE ${PETSC_INCLUDES})
   target_link_libraries(testprecice PRIVATE ${PETSC_LIBRARIES})
 endif()
@@ -354,6 +424,17 @@ endif()
 include(${CMAKE_CURRENT_LIST_DIR}/src/tests.cmake)
 
 
+# Include Native C Bindings
+if (PRECICE_ENABLE_C)
+  # include(${CMAKE_CURRENT_LIST_DIR}/extras/bindings/c/CMakeLists.txt)
+  add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/extras/bindings/c)
+endif()
+
+# Include Native Fortran Bindings
+if (PRECICE_ENABLE_FORTRAN)
+  # include((${CMAKE_CURRENT_LIST_DIR}/extras/bindings/fortran/CMakeLists.txt)
+  add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/extras/bindings/fortran)
+endif()
 #
 # Install Targets for precice
 #
@@ -361,40 +442,47 @@ include(${CMAKE_CURRENT_LIST_DIR}/src/tests.cmake)
 # Setup General Install for:
 # precice - the library
 # binprecice - the precice binary
+include(GNUInstallDirs)
 install(TARGETS precice binprecice
   EXPORT preciceTargets
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION bin
-  PUBLIC_HEADER DESTINATION include/precice
-  INCLUDES DESTINATION include/precice
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+  PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/precice
+  INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/precice
   )
 
 if(PRECICE_InstallTest)
   # Install the testprecice target
   install(TARGETS testprecice
     EXPORT preciceTargets
-    RUNTIME DESTINATION bin
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     )
 
   # Install the resources necessary for the tests
   install(DIRECTORY src
-    DESTINATION share/precice
+    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/precice
     FILES_MATCHING
     PATTERN "*.xml"
     )
   install(DIRECTORY src/action/tests/
-    DESTINATION share/precice/src/action/tests
+    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/precice/src/action/tests
     FILES_MATCHING
     PATTERN "*.py"
     )
 endif()
 
+# Install examples
+install(DIRECTORY examples
+  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/precice
+  PATTERN ".gitignore" EXCLUDE
+  )
+
 # Export the Targets to install
 install(EXPORT preciceTargets
   FILE preciceTargets.cmake
   NAMESPACE precice::
-  DESTINATION lib/cmake/precice
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/precice
   )
 
 # Generate a Package Config File for precice
@@ -406,7 +494,7 @@ write_basic_package_version_file("preciceConfigVersion.cmake"
 
 # Install the Config and the ConfigVersion files
 install(FILES "cmake/preciceConfig.cmake" "${preCICE_BINARY_DIR}/preciceConfigVersion.cmake"
-  DESTINATION lib/cmake/precice
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/precice
   )
 
 # Setup the config in the build directory
@@ -424,19 +512,9 @@ add_library(precice::precice ALIAS precice)
 set(PRECICE_PACKAGING_DIR "${CMAKE_CURRENT_BINARY_DIR}/packaging")
 mark_as_advanced(PRECICE_PACKAGING_DIR)
 
-# Compress and install changelog and manpages
+# Compress and install the manpages
 find_program(GZIP_EXE gzip DOC "The gzip executable")
 if(GZIP_EXE)
-  # Process the changelog
-  message(STATUS "Compressing changelog")
-  file(COPY CHANGELOG.md DESTINATION ${PRECICE_PACKAGING_DIR})
-  execute_process(COMMAND "${GZIP_EXE}" "-9nf" "${PRECICE_PACKAGING_DIR}/CHANGELOG.md")
-  # Install compressed changelog
-  install(FILES ${PRECICE_PACKAGING_DIR}/CHANGELOG.md.gz
-    DESTINATION share/doc/libprecice${preCICE_VERSION}
-    RENAME changelog.gz
-    )
-
   # Process manpages for binaries
   file(COPY docs/man/man1/binprecice.1 DESTINATION packaging/man1)
   if(PRECICE_InstallTest)
@@ -447,31 +525,32 @@ if(GZIP_EXE)
     message(STATUS "Compressing manpage: ${manpage}")
     execute_process(COMMAND "${GZIP_EXE}" "-9nf" "${manpage}")
   endforeach()
+
   # Install compressed manpages
   install(DIRECTORY ${PRECICE_PACKAGING_DIR}/man1
-    DESTINATION share/man
+    DESTINATION ${CMAKE_INSTALL_MANDIR}
     )
 else()
-  message(WARNING "Installing uncompressed changelog and manpages")
-  # Install uncompressed changelog
-  install(FILES CHANGELOG.md
-    DESTINATION share/doc/libprecice${preCICE_VERSION}
-    RENAME changelog
-    )
+  message(WARNING "Installing uncompressed manpages")
   # Install uncompressed manpages
   install(DIRECTORY docs/man/man1
-    DESTINATION share/man
+    DESTINATION ${CMAKE_INSTALL_MANDIR}
     )
+  if(PRECICE_InstallTest)
+    install(FILES docs/man/man1/testprecice.1
+      DESTINATION share/man
+      )
+  endif()
 endif()
 
 # Configure a pkg-config file
 configure_file(
-  "${PROJECT_SOURCE_DIR}/tools/packaging/debian/precice.pc.in"
+  "${PROJECT_SOURCE_DIR}/tools/releasing/packaging/debian/precice.pc.in"
   "lib/pkgconfig/libprecice.pc"
   @ONLY
   )
 install(DIRECTORY "${preCICE_BINARY_DIR}/lib/pkgconfig" 
-  DESTINATION lib
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
 #
@@ -482,8 +561,20 @@ include(${CMAKE_CURRENT_LIST_DIR}/cmake/Uninstall.cmake)
 
 
 #
+# CPack
+#
+
+if (PRECICE_Packages)
+  include(${CMAKE_CURRENT_LIST_DIR}/cmake/CPackConfig.cmake)
+endif()
+
+
+#
 # CTest
 #
+
+print_empty()
+print_section("TESTS")
 
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/CTestConfig.cmake)
 
@@ -493,12 +584,3 @@ include(${CMAKE_CURRENT_LIST_DIR}/cmake/CTestConfig.cmake)
 #
 
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/TestInstall.cmake)
-
-
-#
-# CPack
-#
-
-if (PRECICE_Packages)
-  include(${CMAKE_CURRENT_LIST_DIR}/cmake/CPackConfig.cmake)
-endif()

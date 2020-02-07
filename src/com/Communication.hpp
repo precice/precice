@@ -3,10 +3,8 @@
 #include "Request.hpp"
 #include "logging/Logger.hpp"
 
-namespace precice
-{
-namespace com
-{
+namespace precice {
+namespace com {
 /**
  * @brief Interface for all interprocess communication classes.
  *
@@ -37,16 +35,14 @@ namespace com
  * 2. Efficiency --- allows one to perform some useful computational work while
  *    sending is happening on the background.
  *
- * @attention All receive methods, that accept a raw array, expect it to be 
+ * @attention All receive methods, that accept a raw array, expect it to be
  * sized appropriatly. Asynchronous receive methods also expect the vector
  * be sized correctly.
  */
-class Communication
-{
+class Communication {
 
 public:
-
-  Communication& operator=(Communication &&) = delete;
+  Communication &operator=(Communication &&) = delete;
 
   /// Destructor, empty.
   virtual ~Communication()
@@ -75,16 +71,17 @@ public:
    * Establishes a 1-to-N communication, whereas the acceptor's side is the "1". Contrary to
    * acceptConnectionAsServer(), the other side needs to be a proper communicator with ranks
    * from 0 to N-1. It is not necessary to know this "N" a-priori on the acceptor's side.
-   * This communication is used for the 1:1 communication between two master ranks, for the
-   * 1:N communication to a preCICE server, and for the master-slave communication. For the
-   * last case, setRankOffset() has to be set.
+   * This communication is used for the 1:1 communication between two master ranks
+   * and for the master-slave communication. For the last case, setRankOffset() has to be set.
    *
    * @param[in] acceptorName Name of calling participant.
    * @param[in] requesterName Name of remote participant to connect to.
+   * @param[in] tag Tag for establishing this connection
    * @param[in] acceptorRank Rank of the accpeting process, usually the calling one.
    */
   virtual void acceptConnection(std::string const &acceptorName,
                                 std::string const &requesterName,
+                                std::string const &tag,
                                 int                acceptorRank) = 0;
 
   /**
@@ -98,30 +95,34 @@ public:
    *
    * @param[in] acceptorName Name of calling participant.
    * @param[in] requesterName Name of remote participant to connect to.
+   * @param[in] tag Tag for establishing this connection
    * @param[in] acceptorRank Rank of accepting server, usually the rank of the current process.
    * @param[in] requesterCommunicatorSize Size of the requester (N)
    */
-   virtual void acceptConnectionAsServer(std::string const &acceptorName,
-                                         std::string const &requesterName,
-                                         int                acceptorRank,
-                                         int                requesterCommunicatorSize) = 0;
-  
+  virtual void acceptConnectionAsServer(std::string const &acceptorName,
+                                        std::string const &requesterName,
+                                        std::string const &tag,
+                                        int                acceptorRank,
+                                        int                requesterCommunicatorSize) = 0;
+
   /**
    * @brief Connects to another communicator, which has to call acceptConnection().
    *
    * Establishes a 1-to-N communication, whereas the requestor's side is the "N". Contrary to
    * requestConnectionAsClient(), this side needs to be a proper communicator with ranks
    * from 0 to N-1. All ranks need to call this function.
-   * This communication is used for the 1:1 communication between two master ranks, for the
-   * 1:N communication to a preCICE server, and for the master-slave communication.
+   * This communication is used for the 1:1 communication between two master ranks,
+   * and for the master-slave communication.
    *
    * @param[in] acceptorName Name of remote participant to connect to.
    * @param[in] requesterName Name of calling participant.
+   * @param[in] tag Tag for establishing this connection
    * @param[in] requesterRank Rank of the requester (has to go from 0 to N-1)
    * @param[in] requesterCommunicatorSize Size of the requester (N)
    */
   virtual void requestConnection(std::string const &acceptorName,
                                  std::string const &requesterName,
+                                 std::string const &tag,
                                  int                requesterRank,
                                  int                requesterCommunicatorSize) = 0;
 
@@ -135,14 +136,16 @@ public:
    *
    * @param[in] acceptorName Name of calling participant.
    * @param[in] requesterName Name of remote participant to connect to
+   * @param[in] tag Tag for establishing this connection
    * @param[in] acceptorRanks Set of ranks that accept a connection
    * @param[in] requesterRank Rank that requests the connection, usually the caller's rank
    */
-   virtual void requestConnectionAsClient(std::string   const &acceptorName,
-                                          std::string   const &requesterName,
-                                          std::set<int> const &acceptorRanks,
-                                          int                  requesterRank) = 0;
-  
+  virtual void requestConnectionAsClient(std::string const &  acceptorName,
+                                         std::string const &  requesterName,
+                                         std::string const &  tag,
+                                         std::set<int> const &acceptorRanks,
+                                         int                  requesterRank) = 0;
+
   /**
    * @brief Disconnects from communication space, i.e. participant.
    *
@@ -152,16 +155,24 @@ public:
 
   /**
    * @brief Prepare environment used to establish the communication.
+   *
+   * @param[in] acceptorName Name of calling participant.
+   * @param[in] requesterName Name of remote participant to connect to.
    */
-  virtual void prepareEstablishment() {}
+  virtual void prepareEstablishment(std::string const &acceptorName,
+                                    std::string const &requesterName) {}
 
   /**
    * @brief Clean-up environment used to establish the communication.
+   *
+   * @param[in] acceptorName Name of calling participant.
+   * @param[in] requesterName Name of remote participant to connect to.
    */
-  virtual void cleanupEstablishment() {}
+  virtual void cleanupEstablishment(std::string const &acceptorName,
+                                    std::string const &requesterName) {}
 
   /// @}
-  
+
   /// @name Reduction
   /// @{
 
@@ -183,7 +194,7 @@ public:
   virtual void allreduceSum(int itemToSend, int &itemToReceive);
 
   /// @}
-  
+
   /// @name Broadcast
   /// @{
 
@@ -203,16 +214,16 @@ public:
   virtual void broadcast(bool &itemToReceive, int rankBroadcaster);
 
   virtual void broadcast(std::vector<int> const &v);
-  virtual void broadcast(std::vector<int>& v, int rankBroadcaster);
+  virtual void broadcast(std::vector<int> &v, int rankBroadcaster);
 
   virtual void broadcast(std::vector<double> const &v);
-  virtual void broadcast(std::vector<double>& v, int rankBroadcaster);
+  virtual void broadcast(std::vector<double> &v, int rankBroadcaster);
 
   /// @}
-  
+
   /// @name Send
   /// @{
-  
+
   /// Sends a std::string to process with given rank.
   virtual void send(std::string const &itemToSend, int rankReceiver) = 0;
 
@@ -231,31 +242,31 @@ public:
   virtual PtrRequest aSend(const double *itemsToSend, int size, int rankReceiver) = 0;
 
   /// @attention The caller must guarantee that the lifetime of the item extends to the completion of the request!
-  virtual PtrRequest aSend(std::vector<double> const & itemsToSend, int rankReceiver) = 0;
+  virtual PtrRequest aSend(std::vector<double> const &itemsToSend, int rankReceiver) = 0;
 
   /// Sends a double to process with given rank.
   virtual void send(double itemToSend, int rankReceiver) = 0;
 
   /// Asynchronously sends a double to process with given rank.
   /// @attention The caller must guarantee that the lifetime of the item extends to the completion of the request!
-  virtual PtrRequest aSend(const double & itemToSend, int rankReceiver) = 0;
+  virtual PtrRequest aSend(const double &itemToSend, int rankReceiver) = 0;
 
   /// Sends an int to process with given rank.
   virtual void send(int itemToSend, int rankReceiver) = 0;
 
   /// Asynchronously sends an int to process with given rank.
   /// @attention The caller must guarantee that the lifetime of the item extends to the completion of the request!
-  virtual PtrRequest aSend(const int & itemToSend, int rankReceiver) = 0;
+  virtual PtrRequest aSend(const int &itemToSend, int rankReceiver) = 0;
 
   /// Sends a bool to process with given rank.
   virtual void send(bool itemToSend, int rankReceiver) = 0;
 
   /// Asynchronously sends a bool to process with given rank.
   /// @attention The caller must guarantee that the lifetime of the item extends to the completion of the request!
-  virtual PtrRequest aSend( const bool & itemToSend, int rankReceiver) = 0;
+  virtual PtrRequest aSend(const bool &itemToSend, int rankReceiver) = 0;
 
   /// @}
-  
+
   /// @name Receive
   /// @{
 
@@ -277,7 +288,7 @@ public:
   /*
    * @attention All asynchronous receives methods require the vector to be appropriately sized
    */
-  virtual PtrRequest aReceive(std::vector<double> & itemsToReceive, int rankSender) = 0;
+  virtual PtrRequest aReceive(std::vector<double> &itemsToReceive, int rankSender) = 0;
 
   /// Receives a double from process with given rank.
   virtual void receive(double &itemToReceive, int rankSender) = 0;
@@ -297,7 +308,6 @@ public:
   /// Asynchronously receives a bool from process with given rank.
   virtual PtrRequest aReceive(bool &itemToReceive, int rankSender) = 0;
 
-  
   virtual void send(std::vector<int> const &v, int rankReceiver) = 0;
   /// Receives an std::vector of ints. The vector will be resized accordingly.
   virtual void receive(std::vector<int> &v, int rankSender) = 0;
@@ -322,7 +332,6 @@ protected:
 
 private:
   logging::Logger _log{"com::Communication"};
-  
 };
 } // namespace com
 } // namespace precice

@@ -1,47 +1,42 @@
 #include "ActionConfiguration.hpp"
-#include "xml/XMLAttribute.hpp"
-#include "action/ModifyCoordinatesAction.hpp"
-#include "action/ScaleByAreaAction.hpp"
-#include "action/ScaleByDtAction.hpp"
 #include "action/ComputeCurvatureAction.hpp"
 #include "action/PythonAction.hpp"
-#include "mesh/config/MeshConfiguration.hpp"
-#include "mesh/Mesh.hpp"
+#include "action/ScaleByAreaAction.hpp"
+#include "action/ScaleByDtAction.hpp"
 #include "mesh/Data.hpp"
+#include "mesh/Mesh.hpp"
+#include "mesh/config/MeshConfiguration.hpp"
+#include "xml/XMLAttribute.hpp"
 
 namespace precice {
 namespace action {
 
-ActionConfiguration:: ActionConfiguration
-(
-  xml::XMLTag&                    parent,
-  const mesh::PtrMeshConfiguration& meshConfig )
-:
-  NAME_DIVIDE_BY_AREA ( "divide-by-area" ),
-  NAME_MULTIPLY_BY_AREA ( "multiply-by-area" ),
-  NAME_SCALE_BY_COMPUTED_DT_RATIO ( "scale-by-computed-dt-ratio" ),
-  NAME_SCALE_BY_COMPUTED_DT_PART_RATIO ( "scale-by-computed-dt-part-ratio" ),
-  NAME_SCALE_BY_DT ( "scale-by-dt" ),
-  NAME_ADD_TO_COORDINATES ( "add-to-coordinates" ),
-  NAME_SUBTRACT_FROM_COORDINATES ( "subtract-from-coordinates" ),
-  NAME_COMPUTE_CURVATURE ( "compute-curvature" ),
-  NAME_PYTHON ( "python" ),
-  TAG_SOURCE_DATA ( "source-data" ),
-  TAG_TARGET_DATA ( "target-data" ),
-  TAG_CONVERGENCE_TOLERANCE ( "convergence-tolerance" ),
-  TAG_MAX_ITERATIONS ( "max-iterations" ),
-  TAG_MODULE_PATH ( "path" ),
-  TAG_MODULE_NAME ( "module" ),
-  VALUE_REGULAR_PRIOR ( "regular-prior" ),
-  VALUE_REGULAR_POST ( "regular-post" ),
-  VALUE_ON_EXCHANGE_PRIOR ( "on-exchange-prior" ),
-  VALUE_ON_EXCHANGE_POST ( "on-exchange-post" ),
-  VALUE_ON_TIMESTEP_COMPLETE_POST("on-timestep-complete-post"),
-  _meshConfig ( meshConfig )
+ActionConfiguration::ActionConfiguration(
+    xml::XMLTag &                     parent,
+    const mesh::PtrMeshConfiguration &meshConfig)
+    : NAME_DIVIDE_BY_AREA("divide-by-area"),
+      NAME_MULTIPLY_BY_AREA("multiply-by-area"),
+      NAME_SCALE_BY_COMPUTED_DT_RATIO("scale-by-computed-dt-ratio"),
+      NAME_SCALE_BY_COMPUTED_DT_PART_RATIO("scale-by-computed-dt-part-ratio"),
+      NAME_SCALE_BY_DT("scale-by-dt"),
+      NAME_COMPUTE_CURVATURE("compute-curvature"),
+      NAME_PYTHON("python"),
+      TAG_SOURCE_DATA("source-data"),
+      TAG_TARGET_DATA("target-data"),
+      TAG_CONVERGENCE_TOLERANCE("convergence-tolerance"),
+      TAG_MAX_ITERATIONS("max-iterations"),
+      TAG_MODULE_PATH("path"),
+      TAG_MODULE_NAME("module"),
+      VALUE_REGULAR_PRIOR("regular-prior"),
+      VALUE_REGULAR_POST("regular-post"),
+      VALUE_ON_EXCHANGE_PRIOR("on-exchange-prior"),
+      VALUE_ON_EXCHANGE_POST("on-exchange-post"),
+      VALUE_ON_TIME_WINDOW_COMPLETE_POST("on-time-window-complete-post"),
+      _meshConfig(meshConfig)
 {
   using namespace xml;
   std::string doc;
-  XMLTag tagSourceData(*this, TAG_SOURCE_DATA, XMLTag::OCCUR_ONCE);
+  XMLTag      tagSourceData(*this, TAG_SOURCE_DATA, XMLTag::OCCUR_ONCE);
   tagSourceData.setDocumentation("Data to read from.");
   XMLTag tagTargetData(*this, TAG_TARGET_DATA, XMLTag::OCCUR_ONCE);
   tagSourceData.setDocumentation("Data to read from and write to.");
@@ -50,22 +45,8 @@ ActionConfiguration:: ActionConfiguration
   tagSourceData.addAttribute(attrName);
   tagTargetData.addAttribute(attrName);
 
-  std::list<XMLTag> tags;
+  std::list<XMLTag>  tags;
   XMLTag::Occurrence occ = XMLTag::OCCUR_ARBITRARY;
-  {
-    XMLTag tag(*this, NAME_ADD_TO_COORDINATES, occ, TAG);
-    doc = "Adds data values to mesh vertex coordinates. Data type has to be vector.";
-    tag.setDocumentation(doc);
-    tag.addSubtag(tagSourceData);
-    tags.push_back(tag);
-  }
-  {
-    XMLTag tag(*this, NAME_SUBTRACT_FROM_COORDINATES, occ, TAG);
-    doc = "Subtracts data values to mesh vertex coordinates. Data type has to be vector.";
-    tag.setDocumentation(doc);
-    tag.addSubtag(tagSourceData);
-    tags.push_back(tag);
-  }
   {
     XMLTag tag(*this, NAME_MULTIPLY_BY_AREA, occ, TAG);
     doc = "Multiplies data values with mesh area associated to vertex holding the value.";
@@ -146,70 +127,62 @@ ActionConfiguration:: ActionConfiguration
     tags.push_back(tag);
   }
 
- auto attrTiming  = XMLAttribute<std::string>( ATTR_TIMING )
-      .setDocumentation(
-              "Determines when (relative to advancing the coupling scheme) the action is executed.")
-      .setOptions({
-              VALUE_REGULAR_PRIOR, VALUE_REGULAR_POST,
-              VALUE_ON_EXCHANGE_PRIOR, VALUE_ON_EXCHANGE_POST,
-              VALUE_ON_TIMESTEP_COMPLETE_POST});
+  auto attrTiming = XMLAttribute<std::string>(ATTR_TIMING)
+                        .setDocumentation(
+                            "Determines when (relative to advancing the coupling scheme) the action is executed.")
+                        .setOptions({VALUE_REGULAR_PRIOR, VALUE_REGULAR_POST,
+                                     VALUE_ON_EXCHANGE_PRIOR, VALUE_ON_EXCHANGE_POST,
+                                     VALUE_ON_TIME_WINDOW_COMPLETE_POST});
 
- auto attrMesh = XMLAttribute<std::string>(ATTR_MESH)
-      .setDocumentation("Determines mesh used in action.");
-  for (XMLTag& tag : tags) {
+  auto attrMesh = XMLAttribute<std::string>(ATTR_MESH)
+                      .setDocumentation("Determines mesh used in action.");
+  for (XMLTag &tag : tags) {
     tag.addAttribute(attrTiming);
     tag.addAttribute(attrMesh);
     parent.addSubtag(tag);
   }
 }
 
-void ActionConfiguration:: xmlTagCallback
-(
-  xml::XMLTag& callingTag )
+void ActionConfiguration::xmlTagCallback(
+    const xml::ConfigurationContext &context,
+    xml::XMLTag &                    callingTag)
 {
   PRECICE_TRACE(callingTag.getName());
-  if (callingTag.getNamespace() == TAG){
-    _configuredAction = ConfiguredAction();
-    _configuredAction.type = callingTag.getName();
+  if (callingTag.getNamespace() == TAG) {
+    _configuredAction        = ConfiguredAction();
+    _configuredAction.type   = callingTag.getName();
     _configuredAction.timing = callingTag.getStringAttributeValue(ATTR_TIMING);
-    _configuredAction.mesh = callingTag.getStringAttributeValue(ATTR_MESH);
+    _configuredAction.mesh   = callingTag.getStringAttributeValue(ATTR_MESH);
     //addSubtags ( callingTag, _configured.type );
-  }
-  else if (callingTag.getName() == TAG_SOURCE_DATA){
+  } else if (callingTag.getName() == TAG_SOURCE_DATA) {
     _configuredAction.sourceData = callingTag.getStringAttributeValue(ATTR_NAME);
-  }
-  else if (callingTag.getName() == TAG_TARGET_DATA){
+  } else if (callingTag.getName() == TAG_TARGET_DATA) {
     _configuredAction.targetData = callingTag.getStringAttributeValue(ATTR_NAME);
-  }
-  else if (callingTag.getName() == TAG_CONVERGENCE_TOLERANCE){
+  } else if (callingTag.getName() == TAG_CONVERGENCE_TOLERANCE) {
     _configuredAction.convergenceTolerance =
         callingTag.getDoubleAttributeValue(ATTR_VALUE);
-  }
-  else if (callingTag.getName() == TAG_MAX_ITERATIONS){
+  } else if (callingTag.getName() == TAG_MAX_ITERATIONS) {
     _configuredAction.maxIterations = callingTag.getIntAttributeValue(ATTR_VALUE);
-  }
-  else if (callingTag.getName() == TAG_MODULE_PATH){
+  } else if (callingTag.getName() == TAG_MODULE_PATH) {
     _configuredAction.path = callingTag.getStringAttributeValue(ATTR_NAME);
-  }
-  else if (callingTag.getName() == TAG_MODULE_NAME){
+  } else if (callingTag.getName() == TAG_MODULE_NAME) {
     _configuredAction.module = callingTag.getStringAttributeValue(ATTR_NAME);
   }
 }
 
-void ActionConfiguration:: xmlEndTagCallback
-(
-  xml::XMLTag& callingTag )
+void ActionConfiguration::xmlEndTagCallback(
+    const xml::ConfigurationContext &context,
+    xml::XMLTag &                    callingTag)
 {
-  if (callingTag.getNamespace() == TAG){
+  if (callingTag.getNamespace() == TAG) {
     createAction();
   }
 }
 
-
-int ActionConfiguration:: getUsedMeshID() const
+int ActionConfiguration::getUsedMeshID() const
 {
   for (mesh::PtrMesh mesh : _meshConfig->meshes()) {
-    if (mesh->getName() == _configuredAction.mesh){
+    if (mesh->getName() == _configuredAction.mesh) {
       return mesh->getID();
     }
   }
@@ -217,8 +190,7 @@ int ActionConfiguration:: getUsedMeshID() const
   return -1; // To please compiler
 }
 
-
-void ActionConfiguration:: createAction()
+void ActionConfiguration::createAction()
 {
   PRECICE_TRACE();
 
@@ -226,118 +198,96 @@ void ActionConfiguration:: createAction()
   action::Action::Timing timing = getTiming();
 
   // Determine data and mesh
-  int sourceDataID = -1;
-  int targetDataID = -1;
+  int           sourceDataID = -1;
+  int           targetDataID = -1;
   mesh::PtrMesh mesh;
   for (mesh::PtrMesh aMesh : _meshConfig->meshes()) {
-    if (aMesh->getName() == _configuredAction.mesh){
+    if (aMesh->getName() == _configuredAction.mesh) {
       mesh = aMesh;
       for (const mesh::PtrData &data : mesh->data()) {
-        if (data->getName() == _configuredAction.sourceData){
-          sourceDataID = data->getID ();
+        if (data->getName() == _configuredAction.sourceData) {
+          sourceDataID = data->getID();
         }
-        if (data->getName() == _configuredAction.targetData){
+        if (data->getName() == _configuredAction.targetData) {
           targetDataID = data->getID();
         }
       }
     }
   }
-  if (mesh.get() == nullptr){
+  if (mesh.get() == nullptr) {
     std::ostringstream stream;
     stream << "Data action uses mesh \"" << _configuredAction.mesh
            << "\" which is not configured";
     throw std::runtime_error{stream.str()};
   }
-  if ((not _configuredAction.sourceData.empty()) && (sourceDataID == -1)){
+  if ((not _configuredAction.sourceData.empty()) && (sourceDataID == -1)) {
     std::ostringstream stream;
     stream << "Data action uses source data \"" << _configuredAction.sourceData
            << "\" which is not configured";
     throw std::runtime_error{stream.str()};
   }
-  if ((not _configuredAction.targetData.empty()) && (targetDataID == -1)){
+  if ((not _configuredAction.targetData.empty()) && (targetDataID == -1)) {
     std::ostringstream stream;
     stream << "Data action uses target data \"" << _configuredAction.targetData
            << "\" which is not configured";
     throw std::runtime_error{stream.str()};
   }
   action::PtrAction action;
-  if (_configuredAction.type == NAME_ADD_TO_COORDINATES){
-    typedef action::ModifyCoordinatesAction Action;
-    Action::Mode mode = Action::ADD_TO_COORDINATES_MODE;
-    action = action::PtrAction (
-        new Action(timing, sourceDataID, mesh, mode) );
-  }
-  else if (_configuredAction.type == NAME_SUBTRACT_FROM_COORDINATES){
-    typedef action::ModifyCoordinatesAction Action;
-    Action::Mode mode = Action::SUBTRACT_FROM_COORDINATES_MODE;
-    action = action::PtrAction (
-        new Action(timing, sourceDataID, mesh, mode) );
-  }
-  else if (_configuredAction.type == NAME_MULTIPLY_BY_AREA){
+  if (_configuredAction.type == NAME_MULTIPLY_BY_AREA) {
     action = action::PtrAction(
         new action::ScaleByAreaAction(timing, targetDataID,
-        mesh, action::ScaleByAreaAction::SCALING_MULTIPLY_BY_AREA));
-  }
-  else if (_configuredAction.type == NAME_DIVIDE_BY_AREA){
+                                      mesh, action::ScaleByAreaAction::SCALING_MULTIPLY_BY_AREA));
+  } else if (_configuredAction.type == NAME_DIVIDE_BY_AREA) {
     action = action::PtrAction(
         new action::ScaleByAreaAction(timing, targetDataID,
-        mesh, action::ScaleByAreaAction::SCALING_DIVIDE_BY_AREA));
-  }
-  else if (_configuredAction.type == NAME_SCALE_BY_COMPUTED_DT_RATIO){
+                                      mesh, action::ScaleByAreaAction::SCALING_DIVIDE_BY_AREA));
+  } else if (_configuredAction.type == NAME_SCALE_BY_COMPUTED_DT_RATIO) {
     action = action::PtrAction(
         new action::ScaleByDtAction(timing, sourceDataID, targetDataID,
-        mesh, action::ScaleByDtAction::SCALING_BY_COMPUTED_DT_RATIO));
-  }
-  else if ( _configuredAction.type == NAME_SCALE_BY_COMPUTED_DT_PART_RATIO ){
+                                    mesh, action::ScaleByDtAction::SCALING_BY_COMPUTED_DT_RATIO));
+  } else if (_configuredAction.type == NAME_SCALE_BY_COMPUTED_DT_PART_RATIO) {
     action = action::PtrAction(
         new action::ScaleByDtAction(timing, sourceDataID, targetDataID,
-        mesh, action::ScaleByDtAction::SCALING_BY_COMPUTED_DT_PART_RATIO));
-  }
-  else if ( _configuredAction.type == NAME_SCALE_BY_DT ){
+                                    mesh, action::ScaleByDtAction::SCALING_BY_COMPUTED_DT_PART_RATIO));
+  } else if (_configuredAction.type == NAME_SCALE_BY_DT) {
     action = action::PtrAction(
         new action::ScaleByDtAction(timing, sourceDataID, targetDataID,
-        mesh, action::ScaleByDtAction::SCALING_BY_DT));
-  }
-  else if (_configuredAction.type == NAME_COMPUTE_CURVATURE){
+                                    mesh, action::ScaleByDtAction::SCALING_BY_DT));
+  } else if (_configuredAction.type == NAME_COMPUTE_CURVATURE) {
     action = action::PtrAction(
         new action::ComputeCurvatureAction(timing, targetDataID,
-        mesh));
+                                           mesh));
   }
-  #ifndef PRECICE_NO_PYTHON
-  else if ( _configuredAction.type == NAME_PYTHON ){
-    action = action::PtrAction (
+#ifndef PRECICE_NO_PYTHON
+  else if (_configuredAction.type == NAME_PYTHON) {
+    action = action::PtrAction(
         new action::PythonAction(timing, _configuredAction.path, _configuredAction.module,
-        mesh, targetDataID, sourceDataID) );
+                                 mesh, targetDataID, sourceDataID));
   }
-  #endif
+#endif
   PRECICE_ASSERT(action.get() != nullptr);
   _actions.push_back(action);
 }
 
-action::Action::Timing ActionConfiguration:: getTiming () const
+action::Action::Timing ActionConfiguration::getTiming() const
 {
-  PRECICE_TRACE(_configuredAction.timing );
+  PRECICE_TRACE(_configuredAction.timing);
   action::Action::Timing timing;
-  if ( _configuredAction.timing == VALUE_REGULAR_PRIOR ){
+  if (_configuredAction.timing == VALUE_REGULAR_PRIOR) {
     timing = action::Action::ALWAYS_PRIOR;
-  }
-  else if ( _configuredAction.timing == VALUE_REGULAR_POST ){
+  } else if (_configuredAction.timing == VALUE_REGULAR_POST) {
     timing = action::Action::ALWAYS_POST;
-  }
-  else if ( _configuredAction.timing == VALUE_ON_EXCHANGE_PRIOR ){
+  } else if (_configuredAction.timing == VALUE_ON_EXCHANGE_PRIOR) {
     timing = action::Action::ON_EXCHANGE_PRIOR;
-  }
-  else if ( _configuredAction.timing == VALUE_ON_EXCHANGE_POST ){
+  } else if (_configuredAction.timing == VALUE_ON_EXCHANGE_POST) {
     timing = action::Action::ON_EXCHANGE_POST;
-  }
-  else if (_configuredAction.timing == VALUE_ON_TIMESTEP_COMPLETE_POST){
-    timing = action::Action::ON_TIMESTEP_COMPLETE_POST;
-  }
-  else {
-    PRECICE_ERROR("Unknown action timing \"" <<  _configuredAction.timing << "\"!" );
+  } else if (_configuredAction.timing == VALUE_ON_TIME_WINDOW_COMPLETE_POST) {
+    timing = action::Action::ON_TIME_WINDOW_COMPLETE_POST;
+  } else {
+    PRECICE_ERROR("Unknown action timing \"" << _configuredAction.timing << "\"!");
   }
   return timing;
 }
 
-}} // namespace precice, config
-
+} // namespace action
+} // namespace precice

@@ -1,15 +1,13 @@
 #include "Quad.hpp"
+#include <Eigen/Dense>
+#include <Eigen/Geometry>
+#include <boost/range/concepts.hpp>
 #include "mesh/Edge.hpp"
 #include "mesh/Vertex.hpp"
 #include "utils/EigenIO.hpp"
-#include <boost/range/concepts.hpp>
-#include <Eigen/Dense>
-#include <Eigen/Geometry>
 
-namespace precice
-{
-namespace mesh
-{
+namespace precice {
+namespace mesh {
 
 BOOST_CONCEPT_ASSERT((boost::RandomAccessIteratorConcept<Quad::iterator>) );
 BOOST_CONCEPT_ASSERT((boost::RandomAccessIteratorConcept<Quad::const_iterator>) );
@@ -22,16 +20,16 @@ Quad::Quad(
     Edge &edgeThree,
     Edge &edgeFour,
     int   id)
-  : _edges({&edgeOne, &edgeTwo, &edgeThree, &edgeFour}),
-    _id(id),
-    _normal(Eigen::VectorXd::Zero(edgeOne.getDimensions()))
+    : _edges({&edgeOne, &edgeTwo, &edgeThree, &edgeFour}),
+      _id(id),
+      _normal(Eigen::VectorXd::Zero(edgeOne.getDimensions()))
 {
   PRECICE_ASSERT(edgeOne.getDimensions() == edgeTwo.getDimensions(),
-            edgeOne.getDimensions(), edgeTwo.getDimensions());
+                 edgeOne.getDimensions(), edgeTwo.getDimensions());
   PRECICE_ASSERT(edgeTwo.getDimensions() == edgeThree.getDimensions(),
-            edgeTwo.getDimensions(), edgeThree.getDimensions());
+                 edgeTwo.getDimensions(), edgeThree.getDimensions());
   PRECICE_ASSERT(edgeThree.getDimensions() == edgeFour.getDimensions(),
-            edgeThree.getDimensions(), edgeFour.getDimensions());
+                 edgeThree.getDimensions(), edgeFour.getDimensions());
   PRECICE_ASSERT(getDimensions() == 3, getDimensions());
 
   // Determine vertex map
@@ -103,32 +101,32 @@ Quad::Quad(
 
 const Eigen::VectorXd Quad::computeNormal(bool flip)
 {
-    // Two triangles are thought by splitting the quad from vertex 0 to 2.
-    // The cross prodcut of the outer edges of the triangles is used to compute
-    // the normal direction and area of the triangles. The direction must be
-    // the same, while the areas differ in general. The normals are added up
-    // and divided by 2 to get the area of the overall quad, since the length
-    // does correspond to the parallelogram spanned by the vectors of the
-    // cross product, which is twice the area of the corresponding triangles.
-    Eigen::Vector3d vectorA = vertex(2).getCoords() - vertex(1).getCoords();
-    Eigen::Vector3d vectorB = vertex(0).getCoords() - vertex(1).getCoords();
-    // Compute cross-product of vector A and vector B
-    auto normal = vectorA.cross(vectorB);
+  // Two triangles are thought by splitting the quad from vertex 0 to 2.
+  // The cross prodcut of the outer edges of the triangles is used to compute
+  // the normal direction and area of the triangles. The direction must be
+  // the same, while the areas differ in general. The normals are added up
+  // and divided by 2 to get the area of the overall quad, since the length
+  // does correspond to the parallelogram spanned by the vectors of the
+  // cross product, which is twice the area of the corresponding triangles.
+  Eigen::Vector3d vectorA = vertex(2).getCoords() - vertex(1).getCoords();
+  Eigen::Vector3d vectorB = vertex(0).getCoords() - vertex(1).getCoords();
+  // Compute cross-product of vector A and vector B
+  auto normal = vectorA.cross(vectorB);
 
-    vectorA = vertex(0).getCoords() - vertex(3).getCoords();
-    vectorB = vertex(2).getCoords() - vertex(3).getCoords();
-    auto normalSecondPart = vectorA.cross(vectorB);
+  vectorA               = vertex(0).getCoords() - vertex(3).getCoords();
+  vectorB               = vertex(2).getCoords() - vertex(3).getCoords();
+  auto normalSecondPart = vectorA.cross(vectorB);
 
-    PRECICE_ASSERT(math::equals(normal.normalized(), normalSecondPart.normalized()),
-            normal, normalSecondPart);
-    normal += normalSecondPart;
-    normal *= 0.5;
+  PRECICE_ASSERT(math::equals(normal.normalized(), normalSecondPart.normalized()),
+                 normal, normalSecondPart);
+  normal += normalSecondPart;
+  normal *= 0.5;
 
-    if (flip){
-        normal *= -1.0; // Invert direction if counterclockwise
-    }
-    _normal = normal.normalized();
-    return normal;
+  if (flip) {
+    normal *= -1.0; // Invert direction if counterclockwise
+  }
+  _normal = normal.normalized();
+  return normal;
 }
 
 int Quad::getDimensions() const
@@ -155,27 +153,27 @@ double Quad::getEnclosingRadius() const
                    (center - vertex(3).getCoords()).norm()});
 }
 
-bool Quad::operator==(const Quad& other) const
+bool Quad::operator==(const Quad &other) const
 {
-    return math::equals(_normal, other._normal) &&
-        std::is_permutation(_edges.begin(), _edges.end(), other._edges.begin(),
-                [](const Edge* e1, const Edge* e2){return *e1 == *e2;});
+  return math::equals(_normal, other._normal) &&
+         std::is_permutation(_edges.begin(), _edges.end(), other._edges.begin(),
+                             [](const Edge *e1, const Edge *e2) { return *e1 == *e2; });
 }
 
-bool Quad::operator!=(const Quad& other) const
+bool Quad::operator!=(const Quad &other) const
 {
   return !(*this == other);
 }
 
-std::ostream& operator<<(std::ostream& os, const Quad& q)
+std::ostream &operator<<(std::ostream &os, const Quad &q)
 {
-    using utils::eigenio::wkt;
-    return os << "POLYGON (("
-              << q.vertex(0).getCoords().transpose().format(wkt()) << ", "
-              << q.vertex(1).getCoords().transpose().format(wkt()) << ", "
-              << q.vertex(2).getCoords().transpose().format(wkt()) << ", "
-              << q.vertex(3).getCoords().transpose().format(wkt()) << ", "
-              << q.vertex(0).getCoords().transpose().format(wkt()) << "))";
+  using utils::eigenio::wkt;
+  return os << "POLYGON (("
+            << q.vertex(0).getCoords().transpose().format(wkt()) << ", "
+            << q.vertex(1).getCoords().transpose().format(wkt()) << ", "
+            << q.vertex(2).getCoords().transpose().format(wkt()) << ", "
+            << q.vertex(3).getCoords().transpose().format(wkt()) << ", "
+            << q.vertex(0).getCoords().transpose().format(wkt()) << "))";
 }
 
 } // namespace mesh

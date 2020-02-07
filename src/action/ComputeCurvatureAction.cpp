@@ -6,10 +6,8 @@
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
 
-namespace precice
-{
-namespace action
-{
+namespace precice {
+namespace action {
 
 ComputeCurvatureAction::ComputeCurvatureAction(
     Timing               timing,

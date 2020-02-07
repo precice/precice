@@ -3,12 +3,12 @@
 #include <string>
 #include <tuple>
 #include <vector>
+#include "acceleration/SharedPointer.hpp"
 #include "cplscheme/Constants.hpp"
 #include "cplscheme/CouplingScheme.hpp"
 #include "cplscheme/MultiCouplingScheme.hpp"
 #include "cplscheme/SharedPointer.hpp"
 #include "cplscheme/impl/SharedPointer.hpp"
-#include "acceleration/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
 #include "mesh/SharedPointer.hpp"
@@ -16,36 +16,28 @@
 #include "precice/impl/MeshContext.hpp"
 #include "xml/XMLTag.hpp"
 
-namespace precice
-{
-namespace cplscheme
-{
+namespace precice {
+namespace cplscheme {
 class CompositionalCouplingScheme;
 class BaseCouplingScheme;
-}
-}
+} // namespace cplscheme
+} // namespace precice
 
 // Forward declaration to friend the boost test struct
-namespace CplSchemeTests
-{
-namespace ParallelImplicitCouplingSchemeTests
-{
+namespace CplSchemeTests {
+namespace ParallelImplicitCouplingSchemeTests {
 struct testParseConfigurationWithRelaxation;
 }
-namespace SerialImplicitCouplingSchemeTests
-{
+namespace SerialImplicitCouplingSchemeTests {
 struct testParseConfigurationWithRelaxation;
 }
-}
+} // namespace CplSchemeTests
 
 // ----------------------------------------------------------- CLASS DEFINITION
-namespace precice
-{
-namespace cplscheme
-{
+namespace precice {
+namespace cplscheme {
 /// Configuration for coupling schemes.
-class CouplingSchemeConfiguration : public xml::XMLTag::Listener
-{
+class CouplingSchemeConfiguration : public xml::XMLTag::Listener {
 public:
   /**
    * @brief Constructor.
@@ -72,16 +64,15 @@ public:
   const std::string &getDataToExchange(int index) const;
 
   /// Callback method required when using xml::XMLTag.
-  virtual void xmlTagCallback(xml::XMLTag &callingTag);
+  virtual void xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag);
 
   /// Callback method required when using xml::XMLTag.
-  virtual void xmlEndTagCallback(xml::XMLTag &callingTag);
+  virtual void xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag);
 
   /// Adds a manually configured coupling scheme for a participant.
   void addCouplingScheme(PtrCouplingScheme cplScheme, const std::string &participantName);
 
 private:
-
   mutable logging::Logger _log{"cplscheme::CouplingSchemeConfiguration"};
 
   const std::string TAG;
@@ -89,8 +80,8 @@ private:
   const std::string TAG_PARTICIPANT;
   const std::string TAG_EXCHANGE;
   const std::string TAG_MAX_TIME;
-  const std::string TAG_MAX_TIMESTEPS;
-  const std::string TAG_TIMESTEP_LENGTH;
+  const std::string TAG_MAX_TIME_WINDOWS;
+  const std::string TAG_TIME_WINDOW_SIZE;
   const std::string TAG_ABS_CONV_MEASURE;
   const std::string TAG_REL_CONV_MEASURE;
   const std::string TAG_RES_REL_CONV_MEASURE;
@@ -111,7 +102,6 @@ private:
   const std::string ATTR_LIMIT;
   const std::string ATTR_MIN_ITERATIONS;
   const std::string ATTR_NAME;
-  const std::string ATTR_TIMESTEP_INTERVAL;
   const std::string ATTR_FROM;
   const std::string ATTR_TO;
   const std::string ATTR_SUFFICES;
@@ -131,19 +121,19 @@ private:
     std::string                   name;
     std::vector<std::string>      participants;
     std::string                   controller;
-    bool                          setController = false;
-    double                        maxTime = CouplingScheme::UNDEFINED_TIME;
-    int                           maxTimesteps = CouplingScheme::UNDEFINED_TIMESTEPS;
-    double                        timestepLength = CouplingScheme::UNDEFINED_TIMESTEP_LENGTH;
-    int                           validDigits = 16;
-    constants::TimesteppingMethod dtMethod = constants::FIXED_DT;
+    bool                          setController  = false;
+    double                        maxTime        = CouplingScheme::UNDEFINED_TIME;
+    int                           maxTimeWindows = CouplingScheme::UNDEFINED_TIME_WINDOWS;
+    double                        timeWindowSize = CouplingScheme::UNDEFINED_TIME_WINDOW_SIZE;
+    int                           validDigits    = 16;
+    constants::TimesteppingMethod dtMethod       = constants::FIXED_DT;
     /// Tuples of exchange data, mesh, and participant name.
     typedef std::tuple<mesh::PtrData, mesh::PtrMesh, std::string, std::string, bool> Exchange;
     std::vector<Exchange>                                                            exchanges;
     /// Tuples of data ID, mesh ID, and convergence measure.
     std::vector<std::tuple<mesh::PtrData, bool, std::string, int, impl::PtrConvergenceMeasure>> convMeasures;
-    int                                                                               maxIterations = -1;
-    int                                                                               extrapolationOrder = 0;
+    int                                                                                         maxIterations      = -1;
+    int                                                                                         extrapolationOrder = 0;
 
   } _config;
 
@@ -232,10 +222,6 @@ private:
   PtrCouplingScheme createMultiCouplingScheme(
       const std::string &accessor) const;
 
-  /// returns name of the actual scheme holder (i.e. server name)
-  std::string determineCouplingSchemeHolder(
-      const std::string &accessorName) const;
-
   constants::TimesteppingMethod getTimesteppingMethod(
       const std::string &method) const;
 
@@ -257,9 +243,8 @@ private:
 
   bool checkIfDataIsCoarse(int id) const;
 
-  friend struct CplSchemeTests::ParallelImplicitCouplingSchemeTests::testParseConfigurationWithRelaxation;  // For whitebox tests
-  friend struct CplSchemeTests::SerialImplicitCouplingSchemeTests::testParseConfigurationWithRelaxation;  // For whitebox tests
-
+  friend struct CplSchemeTests::ParallelImplicitCouplingSchemeTests::testParseConfigurationWithRelaxation; // For whitebox tests
+  friend struct CplSchemeTests::SerialImplicitCouplingSchemeTests::testParseConfigurationWithRelaxation;   // For whitebox tests
 };
-}
-} // namespace precice, cplscheme
+} // namespace cplscheme
+} // namespace precice

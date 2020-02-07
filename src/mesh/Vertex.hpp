@@ -4,25 +4,18 @@
 #include <iostream>
 
 #include "math/differences.hpp"
-#include "mesh/PropertyContainer.hpp"
 
-namespace precice
-{
-namespace mesh
-{
+namespace precice {
+namespace mesh {
 
 /// Vertex of a mesh.
-class Vertex : public PropertyContainer
-{
+class Vertex {
 public:
   /// Constructor for vertex
   template <typename VECTOR_T>
   Vertex(
       const VECTOR_T &coordinates,
       int             id);
-
-  /// Destructor, empty.
-  virtual ~Vertex() {}
 
   /// Returns spatial dimensionality of vertex.
   int getDimensions() const;
@@ -95,8 +88,7 @@ template <typename VECTOR_T>
 Vertex::Vertex(
     const VECTOR_T &coordinates,
     int             id)
-    : PropertyContainer(),
-      _id(id),
+    : _id(id),
       _coords(coordinates),
       _normal(Eigen::VectorXd::Constant(_coords.size(), 0.0))
 {

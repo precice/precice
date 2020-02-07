@@ -26,7 +26,7 @@ Minor or major release step-by-step
 1. Merge master to develop
 2. Do regression tests (SU2/CalculiX, OpenFOAM, Alya, 1D-ElasticTube, SuperMUC, ...) at develop
 3. Look over CHANGELOG and add things if necessary
-4. Bump version in CMakeLists.txt, SConstruct and language bindings (python: APPVERSION; see https://github.com/precice/precice/blob/develop/src/precice/bindings/python/setup.py#L13)
+4. Bump version in CMakeLists.txt, the debian changelog, and language bindings (python: APPVERSION; see https://github.com/precice/precice/blob/develop/src/precice/bindings/python/setup.py#L13)
 5. Draft message to mailing list
 6. Update documentation
 7. Fix potential problems in develop

@@ -1,19 +1,15 @@
 #pragma once
 
-#include <iostream>
 #include <algorithm>
+#include <iostream>
 #include "mesh/Edge.hpp"
-#include "mesh/PropertyContainer.hpp"
 #include "mesh/RangeAccessor.hpp"
 
-namespace precice
-{
-namespace mesh
-{
+namespace precice {
+namespace mesh {
 
 /// Quadrilateral (or Quadrangle) geometric primitive.
-class Quad : public PropertyContainer
-{
+class Quad {
 public:
   /// Type of the read-only const random-access iterator over Vertex coords
   /**
@@ -36,9 +32,6 @@ public:
       Edge &edgeThree,
       Edge &edgeFour,
       int   id);
-
-  /// Destructor, empty.
-  ~Quad() override {}
 
   /// Returns dimensionalty of space the quad is embedded in.
   int getDimensions() const;
@@ -119,10 +112,10 @@ public:
    * Two Quads are equal if their normal vector is equal AND
    * if the four edges are equal, whereas the order of edges is NOT important.
    */
-  bool operator==(const Quad& other) const;
+  bool operator==(const Quad &other) const;
 
   /// Not equal, implemented in terms of equal.
-  bool operator!=(const Quad& other) const;
+  bool operator!=(const Quad &other) const;
 
 private:
   /// Edges defining the quad.
@@ -174,12 +167,12 @@ inline Quad::const_iterator Quad::end() const
 
 inline Quad::const_iterator Quad::cbegin() const
 {
-    return begin();
+  return begin();
 }
 
 inline Quad::const_iterator Quad::cend() const
 {
-    return end();
+  return end();
 }
 
 inline Edge &Quad::edge(int i)
@@ -204,7 +197,7 @@ inline int Quad::getID() const
   return _id;
 }
 
-std::ostream& operator<<(std::ostream& os, const Quad& q);
+std::ostream &operator<<(std::ostream &os, const Quad &q);
 
 } // namespace mesh
 } // namespace precice

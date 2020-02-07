@@ -1,11 +1,8 @@
 #include "acceleration/impl/ConstantPreconditioner.hpp"
 
-namespace precice
-{
-namespace acceleration
-{
-namespace impl
-{
+namespace precice {
+namespace acceleration {
+namespace impl {
 
 ConstantPreconditioner::ConstantPreconditioner(std::vector<double> factors)
     : Preconditioner(-1),
@@ -13,7 +10,7 @@ ConstantPreconditioner::ConstantPreconditioner(std::vector<double> factors)
 {
 }
 
-void ConstantPreconditioner::initialize(std::vector<size_t> & svs)
+void ConstantPreconditioner::initialize(std::vector<size_t> &svs)
 {
   PRECICE_TRACE();
   Preconditioner::initialize(svs);
@@ -34,7 +31,7 @@ void ConstantPreconditioner::initialize(std::vector<size_t> & svs)
   }
 }
 
-void ConstantPreconditioner::_update_(bool timestepComplete,
+void ConstantPreconditioner::_update_(bool                   timestepComplete,
                                       const Eigen::VectorXd &oldValues,
                                       const Eigen::VectorXd &res)
 {
@@ -42,4 +39,6 @@ void ConstantPreconditioner::_update_(bool timestepComplete,
   //nothing to do here
 }
 
-}}} // namespace precice, acceleration, impl
+} // namespace impl
+} // namespace acceleration
+} // namespace precice

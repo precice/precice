@@ -6,15 +6,15 @@ using namespace precice;
 
 BOOST_AUTO_TEST_SUITE(MeshTests)
 
-BOOST_AUTO_TEST_CASE(DataConfig)
+BOOST_AUTO_TEST_CASE(DataConfig, *testing::OnMaster())
 {
-  std::string filename(testing::getPathToSources()  + "/mesh/tests/data-config.xml");
-  int dim = 3;
+  std::string filename(testing::getPathToSources() + "/mesh/tests/data-config.xml");
+  int         dim = 3;
   using xml::XMLTag;
-  XMLTag tag = xml::getRootTag();
+  XMLTag                  tag = xml::getRootTag();
   mesh::DataConfiguration dataConfig(tag);
   dataConfig.setDimensions(dim);
-  xml::configure(tag, filename);
+  xml::configure(tag, xml::ConfigurationContext{}, filename);
   BOOST_TEST(dataConfig.data().size() == 3);
   BOOST_TEST(dataConfig.data()[0].name == "vector-data");
   BOOST_TEST(dataConfig.data()[0].dimensions == 3);

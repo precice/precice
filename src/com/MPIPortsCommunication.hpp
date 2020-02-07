@@ -5,18 +5,15 @@
 #include "MPICommunication.hpp"
 #include "logging/Logger.hpp"
 
-namespace precice
-{
-namespace com
-{
+namespace precice {
+namespace com {
 /**
  * @brief Provides connection methods based on MPI ports (part of MPI 2.0).
  *
  * The two participants to be connected can be run in two process groups started
  * up individually, i.e. not within the same process group.
  */
-class MPIPortsCommunication : public MPICommunication
-{
+class MPIPortsCommunication : public MPICommunication {
 public:
   explicit MPIPortsCommunication(std::string const &addressDirectory = ".");
 
@@ -26,24 +23,34 @@ public:
 
   virtual void acceptConnection(std::string const &acceptorName,
                                 std::string const &requesterName,
+                                std::string const &tag,
                                 int                acceptorRank) override;
 
   virtual void acceptConnectionAsServer(std::string const &acceptorName,
                                         std::string const &requesterName,
+                                        std::string const &tag,
                                         int                acceptorRank,
                                         int                requesterCommunicatorSize) override;
-  
+
   virtual void requestConnection(std::string const &acceptorName,
                                  std::string const &requesterName,
+                                 std::string const &tag,
                                  int                requesterRank,
                                  int                requesterCommunicatorSize) override;
 
-  virtual void requestConnectionAsClient(std::string      const &acceptorName,
-                                         std::string      const &requesterName,
-                                         std::set<int>    const &acceptorRanks,
-                                         int                     requesterRank) override;
+  virtual void requestConnectionAsClient(std::string const &  acceptorName,
+                                         std::string const &  requesterName,
+                                         std::string const &  tag,
+                                         std::set<int> const &acceptorRanks,
+                                         int                  requesterRank) override;
 
   virtual void closeConnection() override;
+
+  virtual void prepareEstablishment(std::string const &acceptorName,
+                                    std::string const &requesterName) override;
+
+  virtual void cleanupEstablishment(std::string const &acceptorName,
+                                    std::string const &requesterName) override;
 
 private:
   virtual MPI_Comm &communicator(int rank) override;
@@ -61,7 +68,6 @@ private:
   std::string _portName = std::string(MPI_MAX_PORT_NAME, '\0');
 
   bool _isAcceptor = false;
-
 };
 } // namespace com
 } // namespace precice

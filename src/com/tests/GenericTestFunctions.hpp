@@ -1,20 +1,26 @@
 #pragma once
 
+#include <Eigen/Core>
+#include <boost/test/unit_test.hpp>
+#include <string>
+#include <vector>
+#include "testing/Testing.hpp"
+#include "utils/Parallel.hpp"
+
 using namespace precice;
 
 /// Generic test function that is called from the tests for MPIPortsCommunication,
 /// MPIDirectCommunication and SocketCommunication
 
-
 /// This tests still uses the old rank enumeration
-template<typename T>
+template <typename T>
 void TestSendAndReceivePrimitiveTypes()
 {
-  T com;
+  T         com;
   const int rank = utils::Parallel::getProcessRank();
-  
+
   if (rank == 0) {
-    com.acceptConnection("process0", "process1", rank);
+    com.acceptConnection("process0", "process1", "", rank);
     {
       std::string msg("testOne");
       com.send(msg, 0);
@@ -41,7 +47,7 @@ void TestSendAndReceivePrimitiveTypes()
     }
     com.closeConnection();
   } else if (rank == 1) {
-    com.requestConnection("process0", "process1", 0, 1);
+    com.requestConnection("process0", "process1", "", 0, 1);
     {
       std::string msg;
       com.receive(msg, 0);
@@ -75,15 +81,15 @@ void TestSendAndReceivePrimitiveTypes()
 }
 
 /// This tests still uses the old rank enumeration
-template<typename T>
+template <typename T>
 void TestSendAndReceiveVectors()
 {
-  T com;
+  T         com;
   const int rank = utils::Parallel::getProcessRank();
-  
+
   if (rank == 0) {
-    com.acceptConnection("process0", "process1", rank);
-     {
+    com.acceptConnection("process0", "process1", "", rank);
+    {
       Eigen::Vector3d msg = Eigen::Vector3d::Constant(0);
       com.receive(msg.data(), msg.size(), 0);
       BOOST_CHECK(testing::equals(msg, Eigen::Vector3d::Constant(1)));
@@ -112,7 +118,7 @@ void TestSendAndReceiveVectors()
     }
     com.closeConnection();
   } else if (rank == 1) {
-    com.requestConnection("process0", "process1", 0, 1);
+    com.requestConnection("process0", "process1", "", 0, 1);
     {
       Eigen::Vector3d msg = Eigen::Vector3d::Constant(1);
       com.send(msg.data(), msg.size(), 0);
@@ -141,18 +147,17 @@ void TestSendAndReceiveVectors()
   }
 }
 
-
 /// Tests connecting four processes using acceptConnection and requestConnection
-template<typename T>
+template <typename T>
 void TestSendReceiveFourProcesses()
 {
-  T communication;
-  const int rank = utils::Parallel::getProcessRank();
-  int message = -1;
-  
+  T         communication;
+  const int rank    = utils::Parallel::getProcessRank();
+  int       message = -1;
+
   switch (rank) {
   case 0: {
-    communication.acceptConnection("A", "B", rank);
+    communication.acceptConnection("A", "B", "", rank);
 
     communication.send(10, 2);
     communication.receive(message, 2);
@@ -170,31 +175,31 @@ void TestSendReceiveFourProcesses()
     break;
   }
   case 2: {
-    communication.requestConnection("A", "B", rank, 2);
-    
+    communication.requestConnection("A", "B", "", rank, 2);
+
     communication.receive(message, 0);
     BOOST_TEST(message == 10);
     message *= 2;
     communication.send(message, 0);
-    
+
     communication.closeConnection();
     break;
   }
   case 3: {
-    communication.requestConnection("A", "B", rank, 2);
-    
+    communication.requestConnection("A", "B", "", rank, 2);
+
     communication.receive(message, 0);
     BOOST_TEST(message == 20);
     message *= 2;
     communication.send(message, 0);
-    
+
     communication.closeConnection();
     break;
   }
   }
 }
 
-template<typename T>
+template <typename T>
 void TestSendAndReceive()
 {
   TestSendAndReceivePrimitiveTypes<T>();
@@ -202,16 +207,16 @@ void TestSendAndReceive()
 }
 
 /// Tests connecting two processes using acceptConnectionAsServer and requestConnectionAsClient
-template<typename T>
+template <typename T>
 void TestSendReceiveTwoProcessesServerClient()
 {
-  T communication;
-  const int rank = utils::Parallel::getProcessRank();
-  int message = 1;
-  
+  T         communication;
+  const int rank    = utils::Parallel::getProcessRank();
+  int       message = 1;
+
   switch (rank) {
   case 0: {
-    communication.acceptConnectionAsServer("A", "B", rank, 1);
+    communication.acceptConnectionAsServer("A", "B", "", rank, 1);
     communication.send(message, 1);
     communication.receive(message, 1);
     BOOST_TEST(message == 2);
@@ -219,7 +224,7 @@ void TestSendReceiveTwoProcessesServerClient()
     break;
   }
   case 1: {
-    communication.requestConnectionAsClient("A", "B", {0}, rank);
+    communication.requestConnectionAsClient("A", "B", "", {0}, rank);
     communication.receive(message, 0);
     BOOST_TEST(message == 1);
     message = 2;
@@ -230,16 +235,16 @@ void TestSendReceiveTwoProcessesServerClient()
   }
 }
 
-template<typename T>
+template <typename T>
 void TestSendReceiveFourProcessesServerClient()
 {
-  T communication;
-  const int rank = utils::Parallel::getProcessRank();
-  int message = -1;
-  
+  T         communication;
+  const int rank    = utils::Parallel::getProcessRank();
+  int       message = -1;
+
   switch (rank) {
   case 0: {
-    communication.acceptConnectionAsServer("A", "B", rank, 2);
+    communication.acceptConnectionAsServer("A", "B", "", rank, 2);
 
     communication.send(10, 2);
     communication.receive(message, 2);
@@ -257,40 +262,40 @@ void TestSendReceiveFourProcessesServerClient()
     break;
   }
   case 2: {
-    communication.requestConnectionAsClient("A", "B", {0}, rank);
-    
+    communication.requestConnectionAsClient("A", "B", "", {0}, rank);
+
     communication.receive(message, 0);
     BOOST_TEST(message == 10);
     message *= 2;
     communication.send(message, 0);
-    
+
     communication.closeConnection();
     break;
   }
   case 3: {
-    communication.requestConnectionAsClient("A", "B", {0}, rank);
-    
+    communication.requestConnectionAsClient("A", "B", "", {0}, rank);
+
     communication.receive(message, 0);
     BOOST_TEST(message == 20);
     message *= 2;
     communication.send(message, 0);
-    
+
     communication.closeConnection();
     break;
   }
   }
 }
 
-template<typename T>
+template <typename T>
 void TestSendReceiveFourProcessesServerClientV2()
 {
-  T communication;
-  int rank = utils::Parallel::getProcessRank();
+  T   communication;
+  int rank    = utils::Parallel::getProcessRank();
   int message = -1;
 
   switch (rank) {
   case 0: {
-    communication.acceptConnectionAsServer("A", "B", rank, 2);
+    communication.acceptConnectionAsServer("A", "B", "", rank, 2);
 
     communication.send(10, 2);
     communication.receive(message, 2);
@@ -304,7 +309,7 @@ void TestSendReceiveFourProcessesServerClientV2()
     break;
   }
   case 1: {
-    communication.acceptConnectionAsServer("A", "B", rank, 2);
+    communication.acceptConnectionAsServer("A", "B", "", rank, 2);
 
     communication.send(20, 2);
     communication.receive(message, 2);
@@ -318,8 +323,8 @@ void TestSendReceiveFourProcessesServerClientV2()
     break;
   }
   case 2: {
-    communication.requestConnectionAsClient("A", "B", {0,1}, rank);
-    
+    communication.requestConnectionAsClient("A", "B", "", {0, 1}, rank);
+
     communication.receive(message, 0);
     BOOST_TEST(message == 10);
     communication.send(20, 0);
@@ -327,12 +332,12 @@ void TestSendReceiveFourProcessesServerClientV2()
     communication.receive(message, 1);
     BOOST_TEST(message == 20);
     communication.send(40, 1);
-    
+
     communication.closeConnection();
     break;
   }
   case 3: {
-    communication.requestConnectionAsClient("A", "B", {0,1}, rank);
+    communication.requestConnectionAsClient("A", "B", "", {0, 1}, rank);
 
     communication.receive(message, 0);
     BOOST_TEST(message == 100);

@@ -2,10 +2,10 @@
 #include <Eigen/Core>
 #include <limits>
 #include <sstream>
+#include "acceleration/Acceleration.hpp"
 #include "com/Communication.hpp"
 #include "com/SharedPointer.hpp"
 #include "impl/ConvergenceMeasure.hpp"
-#include "acceleration/Acceleration.hpp"
 #include "io/TXTReader.hpp"
 #include "io/TXTWriter.hpp"
 #include "m2n/M2N.hpp"
@@ -16,10 +16,8 @@
 #include "utils/Helpers.hpp"
 #include "utils/MasterSlave.hpp"
 
-namespace precice
-{
-namespace cplscheme
-{
+namespace precice {
+namespace cplscheme {
 
 BaseCouplingScheme::BaseCouplingScheme(
     double maxTime,
@@ -43,13 +41,13 @@ BaseCouplingScheme::BaseCouplingScheme(
       _validDigits(validDigits)
 {
   PRECICE_CHECK(not((maxTime != UNDEFINED_TIME) && (maxTime < 0.0)),
-        "Maximum time has to be larger than zero!");
-  PRECICE_CHECK(not((maxTimesteps != UNDEFINED_TIMESTEPS) && (maxTimesteps < 0)),
-        "Maximum timestep number has to be larger than zero!");
-  PRECICE_CHECK(not((timestepLength != UNDEFINED_TIMESTEP_LENGTH) && (timestepLength < 0.0)),
-        "Timestep length has to be larger than zero!");
+                "Maximum time has to be larger than zero!");
+  PRECICE_CHECK(not((maxTimesteps != UNDEFINED_TIME_WINDOWS) && (maxTimesteps < 0)),
+                "Maximum timestep number has to be larger than zero!");
+  PRECICE_CHECK(not((timestepLength != UNDEFINED_TIME_WINDOW_SIZE) && (timestepLength < 0.0)),
+                "Timestep length has to be larger than zero!");
   PRECICE_CHECK((_validDigits >= 1) && (_validDigits < 17),
-        "Valid digits of timestep length has to be between 1 and 16!");
+                "Valid digits of timestep length has to be between 1 and 16!");
 }
 
 BaseCouplingScheme::BaseCouplingScheme(
@@ -63,7 +61,7 @@ BaseCouplingScheme::BaseCouplingScheme(
     m2n::PtrM2N                   m2n,
     int                           maxIterations,
     constants::TimesteppingMethod dtMethod)
-  :   _firstParticipant(firstParticipant),
+    : _firstParticipant(firstParticipant),
       _secondParticipant(secondParticipant),
       _localParticipant(localParticipant),
       _eps(std::pow(10.0, -1 * validDigits)),
@@ -80,25 +78,25 @@ BaseCouplingScheme::BaseCouplingScheme(
       _validDigits(validDigits)
 {
   PRECICE_CHECK(not((maxTime != UNDEFINED_TIME) && (maxTime < 0.0)),
-        "Maximum time has to be larger than zero!");
-  PRECICE_CHECK(not((maxTimesteps != UNDEFINED_TIMESTEPS) && (maxTimesteps < 0)),
-        "Maximum timestep number has to be larger than zero!");
-  PRECICE_CHECK(not((timestepLength != UNDEFINED_TIMESTEP_LENGTH) && (timestepLength < 0.0)),
-        "Timestep length has to be larger than zero!");
+                "Maximum time has to be larger than zero!");
+  PRECICE_CHECK(not((maxTimesteps != UNDEFINED_TIME_WINDOWS) && (maxTimesteps < 0)),
+                "Maximum timestep number has to be larger than zero!");
+  PRECICE_CHECK(not((timestepLength != UNDEFINED_TIME_WINDOW_SIZE) && (timestepLength < 0.0)),
+                "Timestep length has to be larger than zero!");
   PRECICE_CHECK((_validDigits >= 1) && (_validDigits < 17),
-        "Valid digits of timestep length has to be between 1 and 16!");
+                "Valid digits of timestep length has to be between 1 and 16!");
   PRECICE_CHECK(_firstParticipant != _secondParticipant,
-        "First participant and second participant must have different names! Called from BaseCoupling.");
+                "First participant and second participant must have different names! Called from BaseCoupling.");
   if (dtMethod == constants::FIXED_DT) {
     PRECICE_CHECK(hasTimestepLength(),
-          "Timestep length value has to be given when the fixed timestep length method "
-          << "is chosen for an implicit coupling scheme!");
+                  "Timestep length value has to be given when the fixed timestep length method "
+                      << "is chosen for an implicit coupling scheme!");
   }
   if (localParticipant == _firstParticipant) {
     _doesFirstStep = true;
     if (dtMethod == constants::FIRST_PARTICIPANT_SETS_DT) {
       _participantSetsDt = true;
-      setTimestepLength(UNDEFINED_TIMESTEP_LENGTH);
+      setTimestepLength(UNDEFINED_TIME_WINDOW_SIZE);
     }
   } else if (localParticipant == _secondParticipant) {
     if (dtMethod == constants::FIRST_PARTICIPANT_SETS_DT) {
@@ -106,21 +104,21 @@ BaseCouplingScheme::BaseCouplingScheme(
     }
   } else {
     PRECICE_ERROR("Name of local participant \""
-          << localParticipant << "\" does not match any "
-          << "participant specified for the coupling scheme!");
+                  << localParticipant << "\" does not match any "
+                  << "participant specified for the coupling scheme!");
   }
   PRECICE_CHECK((maxIterations > 0) || (maxIterations == -1),
-        "Maximal iteration limit has to be larger than zero!");
+                "Maximal iteration limit has to be larger than zero!");
 }
 
 void BaseCouplingScheme::receiveAndSetDt()
 {
   PRECICE_TRACE();
   if (participantReceivesDt()) {
-    double dt = UNDEFINED_TIMESTEP_LENGTH;
+    double dt = UNDEFINED_TIME_WINDOW_SIZE;
     getM2N()->receive(dt);
     PRECICE_DEBUG("Received timestep length of " << dt);
-    PRECICE_ASSERT(not math::equals(dt, UNDEFINED_TIMESTEP_LENGTH));
+    PRECICE_ASSERT(not math::equals(dt, UNDEFINED_TIME_WINDOW_SIZE));
     setTimestepLength(dt);
   }
 }
@@ -166,67 +164,6 @@ void BaseCouplingScheme::addDataToReceive(
   }
 }
 
-void BaseCouplingScheme::sendState(
-    com::PtrCommunication communication,
-    int                   rankReceiver)
-{
-  PRECICE_TRACE(rankReceiver);
-  PRECICE_ASSERT(communication.get() != nullptr);
-  PRECICE_ASSERT(communication->isConnected());
-  communication->send(_maxTime, rankReceiver);
-  communication->send(_maxTimesteps, rankReceiver);
-  communication->send(_timestepLength, rankReceiver);
-  communication->send(_time, rankReceiver);
-  communication->send(_timesteps, rankReceiver);
-  communication->send(_computedTimestepPart, rankReceiver);
-  //communication->send(_maxLengthNextTimestep, rankReceiver);
-  communication->send(_isInitialized, rankReceiver);
-  communication->send(_isCouplingTimestepComplete, rankReceiver);
-  communication->send(_hasDataBeenExchanged, rankReceiver);
-  communication->send((int) _actions.size(), rankReceiver);
-  for (const std::string &action : _actions) {
-    communication->send(action, rankReceiver);
-  }
-  communication->send(_maxIterations, rankReceiver);
-  communication->send(_iterations, rankReceiver);
-  communication->send(_iterationsCoarseOptimization, rankReceiver); // new, correct?? TODO
-  communication->send(_totalIterations, rankReceiver);
-}
-
-void BaseCouplingScheme::receiveState(
-    com::PtrCommunication communication,
-    int                   rankSender)
-{
-  PRECICE_TRACE(rankSender);
-  PRECICE_ASSERT(communication.get() != nullptr);
-  PRECICE_ASSERT(communication->isConnected());
-  communication->receive(_maxTime, rankSender);
-  communication->receive(_maxTimesteps, rankSender);
-  communication->receive(_timestepLength, rankSender);
-  communication->receive(_time, rankSender);
-  communication->receive(_timesteps, rankSender);
-  communication->receive(_computedTimestepPart, rankSender);
-  //communication->receive(_maxLengthNextTimestep, rankSender);
-  communication->receive(_isInitialized, rankSender);
-  communication->receive(_isCouplingTimestepComplete, rankSender);
-  communication->receive(_hasDataBeenExchanged, rankSender);
-  int actionsSize = 0;
-  communication->receive(actionsSize, rankSender);
-  _actions.clear();
-  for (int i = 0; i < actionsSize; i++) {
-    std::string action;
-    communication->receive(action, rankSender);
-    _actions.insert(action);
-  }
-  communication->receive(_maxIterations, rankSender);
-  int subIteration = -1;
-  communication->receive(subIteration, rankSender);
-  _iterations = subIteration;
-  communication->receive(subIteration, rankSender); // new, correct?? TODO
-  _iterationsCoarseOptimization = subIteration;     // new, correct? TODO
-  communication->receive(_totalIterations, rankSender);
-}
-
 std::vector<int> BaseCouplingScheme::sendData(m2n::PtrM2N m2n)
 {
   PRECICE_TRACE();
@@ -254,7 +191,6 @@ std::vector<int> BaseCouplingScheme::receiveData(
 
   for (DataMap::value_type &pair : _receiveData) {
     int size = pair.second->values->size();
-    //std::cout<<"\nreceive data id="<<pair.first<<": "<<*(pair.second->values)<<'\n';
     m2n->receive(pair.second->values->data(), size, pair.second->mesh->getID(), pair.second->dimension);
     receivedDataIDs.push_back(pair.first);
   }
@@ -308,7 +244,7 @@ void BaseCouplingScheme::setExtrapolationOrder(
     int order)
 {
   PRECICE_CHECK((order == 0) || (order == 1) || (order == 2),
-        "Extrapolation order has to be  0, 1, or 2!");
+                "Extrapolation order has to be  0, 1, or 2!");
   _extrapolationOrder = order;
 }
 
@@ -348,12 +284,12 @@ void BaseCouplingScheme::extrapolateData(DataMap &data)
 
 bool BaseCouplingScheme::hasTimestepLength() const
 {
-  return not math::equals(_timestepLength, UNDEFINED_TIMESTEP_LENGTH);
+  return not math::equals(_timestepLength, UNDEFINED_TIME_WINDOW_SIZE);
 }
 
 double BaseCouplingScheme::getTimestepLength() const
 {
-  PRECICE_ASSERT(not math::equals(_timestepLength, UNDEFINED_TIMESTEP_LENGTH));
+  PRECICE_ASSERT(not math::equals(_timestepLength, UNDEFINED_TIME_WINDOW_SIZE));
   return _timestepLength;
 }
 
@@ -361,7 +297,7 @@ void BaseCouplingScheme::addComputedTime(
     double timeToAdd)
 {
   PRECICE_TRACE(timeToAdd, _time);
-  PRECICE_CHECK(isCouplingOngoing(), "Invalid call of addComputedTime() after simulation end!");
+  PRECICE_ASSERT(isCouplingOngoing(), "Invalid call of addComputedTime() after simulation end!");
 
   // add time interval that has been computed in the solver to get the correct time remainder
   _computedTimestepPart += timeToAdd;
@@ -370,9 +306,9 @@ void BaseCouplingScheme::addComputedTime(
   // Check validness
   bool valid = math::greaterEquals(getThisTimestepRemainder(), 0.0, _eps);
   PRECICE_CHECK(valid, "The computed timestep length of "
-                   << timeToAdd << " exceeds the maximum timestep limit of "
-                   << _timestepLength - _computedTimestepPart + timeToAdd
-                   << " for this time step!");
+                           << timeToAdd << " exceeds the maximum timestep limit of "
+                           << _timestepLength - _computedTimestepPart + timeToAdd
+                           << " for this time step!");
 }
 
 bool BaseCouplingScheme::willDataBeExchanged(
@@ -420,7 +356,7 @@ double BaseCouplingScheme::getThisTimestepRemainder() const
 {
   PRECICE_TRACE();
   double remainder = 0.0;
-  if (not math::equals(_timestepLength, UNDEFINED_TIMESTEP_LENGTH)) {
+  if (not math::equals(_timestepLength, UNDEFINED_TIME_WINDOW_SIZE)) {
     remainder = _timestepLength - _computedTimestepPart;
   }
   PRECICE_DEBUG("return " << remainder);
@@ -429,7 +365,7 @@ double BaseCouplingScheme::getThisTimestepRemainder() const
 
 double BaseCouplingScheme::getNextTimestepMaxLength() const
 {
-  if (math::equals(_timestepLength, UNDEFINED_TIMESTEP_LENGTH)) {
+  if (math::equals(_timestepLength, UNDEFINED_TIME_WINDOW_SIZE)) {
     if (math::equals(_maxTime, UNDEFINED_TIME)) {
       return std::numeric_limits<double>::max();
     } else {
@@ -442,13 +378,13 @@ double BaseCouplingScheme::getNextTimestepMaxLength() const
 bool BaseCouplingScheme::isCouplingOngoing() const
 {
   bool timeLeft      = math::greater(_maxTime, _time, _eps) || math::equals(_maxTime, UNDEFINED_TIME);
-  bool timestepsLeft = (_maxTimesteps >= _timesteps) || (_maxTimesteps == UNDEFINED_TIMESTEPS);
+  bool timestepsLeft = (_maxTimesteps >= _timesteps) || (_maxTimesteps == UNDEFINED_TIME_WINDOWS);
   return timeLeft && timestepsLeft;
 }
 
-bool BaseCouplingScheme::isCouplingTimestepComplete() const
+bool BaseCouplingScheme::isTimeWindowComplete() const
 {
-  return _isCouplingTimestepComplete;
+  return _isTimeWindowComplete;
 }
 
 bool BaseCouplingScheme::isActionRequired(
@@ -457,7 +393,7 @@ bool BaseCouplingScheme::isActionRequired(
   return _actions.count(actionName) > 0;
 }
 
-void BaseCouplingScheme::performedAction(
+void BaseCouplingScheme::markActionFulfilled(
     const std::string &actionName)
 {
   _actions.erase(actionName);
@@ -494,23 +430,23 @@ std::string BaseCouplingScheme::printBasicState(
 {
   std::ostringstream os;
   os << "dt# " << timesteps;
-  if (_maxTimesteps != UNDEFINED_TIMESTEPS) {
+  if (_maxTimesteps != UNDEFINED_TIME_WINDOWS) {
     os << " of " << _maxTimesteps;
   }
   os << " | t " << time;
   if (_maxTime != UNDEFINED_TIME) {
     os << " of " << _maxTime;
   }
-  if (_timestepLength != UNDEFINED_TIMESTEP_LENGTH) {
+  if (_timestepLength != UNDEFINED_TIME_WINDOW_SIZE) {
     os << " | dt " << _timestepLength;
   }
-  if ((_timestepLength != UNDEFINED_TIMESTEP_LENGTH) || (_maxTime != UNDEFINED_TIME)) {
+  if ((_timestepLength != UNDEFINED_TIME_WINDOW_SIZE) || (_maxTime != UNDEFINED_TIME)) {
     os << " | max dt " << getNextTimestepMaxLength();
   }
   os << " | ongoing ";
   isCouplingOngoing() ? os << "yes" : os << "no";
   os << " | dt complete ";
-  _isCouplingTimestepComplete ? os << "yes" : os << "no";
+  _isTimeWindowComplete ? os << "yes" : os << "no";
   return os.str();
 }
 
@@ -590,8 +526,8 @@ void BaseCouplingScheme::setupConvergenceMeasures()
   PRECICE_TRACE();
   PRECICE_ASSERT(not doesFirstStep());
   PRECICE_CHECK(not _convergenceMeasures.empty(),
-        "At least one convergence measure has to be defined for "
-            << "an implicit coupling scheme!");
+                "At least one convergence measure has to be defined for "
+                    << "an implicit coupling scheme!");
   for (ConvergenceMeasure &convMeasure : _convergenceMeasures) {
     int dataID = convMeasure.data->getID();
     if ((getSendData(dataID) != nullptr)) {
@@ -619,11 +555,11 @@ void BaseCouplingScheme::addConvergenceMeasure(
     impl::PtrConvergenceMeasure measure)
 {
   ConvergenceMeasure convMeasure;
-  convMeasure.data     = std::move(data);
+  convMeasure.data         = std::move(data);
   convMeasure.couplingData = nullptr;
-  convMeasure.suffices = suffices;
-  convMeasure.level    = level;
-  convMeasure.measure  = std::move(measure);
+  convMeasure.suffices     = suffices;
+  convMeasure.level        = level;
+  convMeasure.measure      = std::move(measure);
   _convergenceMeasures.push_back(convMeasure);
   _firstResiduumNorm.push_back(0);
 }
@@ -637,7 +573,7 @@ bool BaseCouplingScheme::measureConvergence(
   bool oneSuffices  = false;
   PRECICE_ASSERT(_convergenceMeasures.size() > 0);
   if (not utils::MasterSlave::isSlave()) {
-    _convergenceWriter->writeData("Timestep", _timesteps);
+    _convergenceWriter->writeData("TimeWindow", _timesteps);
     _convergenceWriter->writeData("Iteration", _iterations);
   }
   for (size_t i = 0; i < _convergenceMeasures.size(); i++) {
@@ -658,7 +594,7 @@ bool BaseCouplingScheme::measureConvergence(
 
     if (not utils::MasterSlave::isSlave()) {
       std::stringstream sstm;
-      sstm << "resNorm(" << i << ")";
+      sstm << "ResNorm(" << convMeasure.data->getName() << ")";
       _convergenceWriter->writeData(sstm.str(), convMeasure.measure->getNormResidual());
     }
 
@@ -739,34 +675,33 @@ void BaseCouplingScheme::initializeTXTWriters()
       if (convMeasure.level > 0)
         hasCoarseModelOptimization = true;
 
-    _iterationsWriter->addData("Timesteps", io::TXTTableWriter::INT);
-    _iterationsWriter->addData("Total_Iterations", io::TXTTableWriter::INT);
+    _iterationsWriter->addData("TimeWindow", io::TXTTableWriter::INT);
+    _iterationsWriter->addData("TotalIterations", io::TXTTableWriter::INT);
     _iterationsWriter->addData("Iterations", io::TXTTableWriter::INT);
     if (hasCoarseModelOptimization) {
-      _iterationsWriter->addData("Total_Iterations_Surrogate_Model", io::TXTTableWriter::INT);
-      _iterationsWriter->addData("Iterations_Surrogate_Model", io::TXTTableWriter::INT);
+      _iterationsWriter->addData("TotalIterationsSurrogateModel", io::TXTTableWriter::INT);
+      _iterationsWriter->addData("IterationsSurrogateModel", io::TXTTableWriter::INT);
     }
     _iterationsWriter->addData("Convergence", io::TXTTableWriter::INT);
 
     if (not doesFirstStep()) {
-      _convergenceWriter->addData("Timestep", io::TXTTableWriter::INT);
+      _convergenceWriter->addData("TimeWindow", io::TXTTableWriter::INT);
       _convergenceWriter->addData("Iteration", io::TXTTableWriter::INT);
     }
 
-    int i = -1;
     if (not doesFirstStep()) {
       for (ConvergenceMeasure &convMeasure : _convergenceMeasures) {
-        i++;
+
         // only for fine model optimization, i.e., coupling
         if (convMeasure.level > 0)
           continue;
         std::stringstream sstm, sstm2;
-        sstm << "avgConvRate(" << i << ")";
-        sstm2 << "resNorm(" << i << ")";
+        sstm << "AvgConvRate(" << convMeasure.data->getName() << ")";
+        sstm2 << "ResNorm(" << convMeasure.data->getName() << ")";
         _iterationsWriter->addData(sstm.str(), io::TXTTableWriter::DOUBLE);
         _convergenceWriter->addData(sstm2.str(), io::TXTTableWriter::DOUBLE);
       }
-      _iterationsWriter->addData("deleted_Columns", io::TXTTableWriter::INT);
+      _iterationsWriter->addData("DeletedColumns", io::TXTTableWriter::INT);
     }
   }
 }
@@ -781,25 +716,27 @@ void BaseCouplingScheme::advanceTXTWriters()
       if (convMeasure.level > 0)
         hasCoarseModelOptimization = true;
 
-    _iterationsWriter->writeData("Timesteps", _timesteps - 1);
-    _iterationsWriter->writeData("Total_Iterations", _totalIterations);
+    _iterationsWriter->writeData("TimeWindow", _timesteps - 1);
+    _iterationsWriter->writeData("TotalIterations", _totalIterations);
     _iterationsWriter->writeData("Iterations", _iterations);
     if (hasCoarseModelOptimization) {
-      _iterationsWriter->writeData("Total_Iterations_Surrogate_Model", _totalIterationsCoarseOptimization);
-      _iterationsWriter->writeData("Iterations_Surrogate_Model", _iterationsCoarseOptimization);
+      _iterationsWriter->writeData("TotalIterationsSurrogateModel", _totalIterationsCoarseOptimization);
+      _iterationsWriter->writeData("IterationsSurrogateModel", _iterationsCoarseOptimization);
     }
     int converged = _iterations < _maxIterations ? 1 : 0;
     _iterationsWriter->writeData("Convergence", converged);
 
     if (not doesFirstStep()) {
-      for (size_t i = 0; i < _convergenceMeasures.size(); i++) {
+      int i = -1;
+      for (ConvergenceMeasure &convMeasure : _convergenceMeasures) {
+        i++;
 
         // only for fine model optimization, i.e., coupling
         if (_convergenceMeasures[i].level > 0)
           continue;
 
         std::stringstream sstm;
-        sstm << "avgConvRate(" << i << ")";
+        sstm << "AvgConvRate(" << convMeasure.data->getName() << ")";
         if (math::equals(_firstResiduumNorm[i], 0.)) {
           _iterationsWriter->writeData(sstm.str(), std::numeric_limits<double>::infinity());
         } else {
@@ -807,7 +744,7 @@ void BaseCouplingScheme::advanceTXTWriters()
           _iterationsWriter->writeData(sstm.str(), std::pow(avgConvRate, 1. / (double) _iterations));
         }
       }
-      _iterationsWriter->writeData("deleted_Columns", _deletedColumnsPPFiltering);
+      _iterationsWriter->writeData("DeletedColumns", _deletedColumnsPPFiltering);
     }
   }
 }
@@ -849,11 +786,11 @@ void BaseCouplingScheme::updateTimeAndIterations(
   }
 }
 
-void BaseCouplingScheme::timestepCompleted()
+void BaseCouplingScheme::timeWindowCompleted()
 {
   PRECICE_TRACE(getTimesteps(), getTime());
-  PRECICE_INFO("Timestep completed");
-  setIsCouplingTimestepComplete(true);
+  PRECICE_INFO("Time window completed");
+  setIsTimeWindowComplete(true);
   setTimesteps(getTimesteps() + 1);
   if (isCouplingOngoing()) {
     PRECICE_DEBUG("Setting require create checkpoint");
@@ -869,5 +806,5 @@ bool BaseCouplingScheme::maxIterationsReached()
     return _iterationsCoarseOptimization == _maxIterations;
   }
 }
-}
-} // namespace precice, cplscheme
+} // namespace cplscheme
+} // namespace precice

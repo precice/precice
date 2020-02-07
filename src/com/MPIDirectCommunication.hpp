@@ -4,13 +4,11 @@
 
 #include <string>
 #include "MPICommunication.hpp"
-#include "utils/assertion.hpp"
 #include "logging/Logger.hpp"
+#include "utils/assertion.hpp"
 
-namespace precice
-{
-namespace com
-{
+namespace precice {
+namespace com {
 /**
  * @brief Provides connection methods for processes located in one communicator.
  *
@@ -22,8 +20,7 @@ namespace com
  * participate in the communication. If one of the processes does not call
  * either acceptConnection(), or closeConnection(), a deadlock is achieved.
  */
-class MPIDirectCommunication : public MPICommunication
-{
+class MPIDirectCommunication : public MPICommunication {
 public:
   MPIDirectCommunication();
 
@@ -39,10 +36,12 @@ public:
   /// See precice::com::Communication::acceptConnection().
   virtual void acceptConnection(std::string const &acceptorName,
                                 std::string const &requesterName,
+                                std::string const &tag,
                                 int                acceptorRank) override;
 
   virtual void acceptConnectionAsServer(std::string const &acceptorName,
                                         std::string const &requesterName,
+                                        std::string const &tag,
                                         int                acceptorRank,
                                         int                requesterCommunicatorSize) override
   {
@@ -52,11 +51,13 @@ public:
   /// See precice::com::Communication::requestConnection().
   virtual void requestConnection(std::string const &acceptorName,
                                  std::string const &requesterName,
+                                 std::string const &tag,
                                  int                requesterRank,
                                  int                requesterCommunicatorSize) override;
 
-  virtual void requestConnectionAsClient(std::string   const &acceptorName,
-                                         std::string   const &requesterName,
+  virtual void requestConnectionAsClient(std::string const &  acceptorName,
+                                         std::string const &  requesterName,
+                                         std::string const &  tag,
                                          std::set<int> const &acceptorRanks,
                                          int                  requesterRank) override
   {
