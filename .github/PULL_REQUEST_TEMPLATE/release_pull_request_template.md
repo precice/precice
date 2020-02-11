@@ -69,8 +69,44 @@ Run all these tests manually on your system. If you succeed, please write a comm
    * [ ] Latest Ubuntu
    * [ ] Arch Linux AUR Package
 * [ ] Update Spack recipe
+
+### Release new version for bindings (to ensure compatibility with newest preCICE version)
+
+- [ ] fortan-module?
+- [ ] [MATLAB bindings](https://github.com/precice/matlab-bindings/compare/master...develop)
+- [ ] [python bindings](https://github.com/precice/python-bindings/compare/master...develop)
+
+### (only if breaking changes) Open PRs or issues `develop -> master` for all adapters
+
+- [ ] athlet-adapter? 
+- [ ] [calculix-adapter](https://github.com/precice/calculix-adapter/compare/master...develop)
+- [ ] code_aster-adapter?
+- [ ] [comsol-adapter](https://github.com/precice/comsol-adapter/compare/master...develop)
+- [ ] [dealii-adapter](https://github.com/precice/dealii-adapter/compare/master...develop)
+- [ ] lsdyna-adapter?
+- [ ] [fenics-adapter](https://github.com/precice/fenics-adapter/compare/master...develop)
+- [ ] [fluent-adapter](https://github.com/precice/fluent-adapter/compare/master...develop)
+- [ ] mbdyn-adapter?
+- [ ] [openfoam-adapter](https://github.com/precice/openfoam-adapter/compare/master...develop)
+- [ ] [su2-adapter](https://github.com/precice/su2-adapter/compare/master...develop)
+
+### (only if breaking changes) Open PRs or issues `develop -> master` for all other tools
+
+- [ ] [aste](https://github.com/precice/aste/compare/master...develop)
+- [ ] [elastictube1d](https://github.com/precice/elastictube1d/compare/master...develop)
+- [ ] [tutorials](https://github.com/precice/tutorials/compare/master...develop)
+- [ ] [systemtests](https://github.com/precice/systemtests/compare/master...develop)
+
+### Marketing
+
 * [ ] Send email and do marketing
 * [ ] Tweet
+
+### Misc
+
 * [ ] Update the [PR template](https://github.com/precice/precice/blob/add_PR_template/.github/PULL_REQUEST_TEMPLATE/release_pull_request_template.md)
 
 To open a new PR with this template, use this [PR template query](https://github.com/precice/precice/compare/new?template=release_pull_request_template.md)
+
+
+
