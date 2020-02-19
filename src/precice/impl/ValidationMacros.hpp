@@ -84,25 +84,27 @@
                     return datakv.second == id;                                                                                                     \
                   });                                                                                                                               \
                 }),                                                                                                                                 \
-                "There is no Data with ID " << id);
+                "The given Data ID \"" << id << "\" is not known to preCICE!");
 
 /** Implementation of PRECICE_REQUIRE_DATA_READ()
  *
  * @attention Do not use this macro directly!
  */
-#define PRECICE_REQUIRE_DATA_READ_IMPL(id)                                                  \
-  PRECICE_VALIDATE_DATA_ID_IMPL(id)                                                         \
-  PRECICE_CHECK(_accessor->isDataUsed(id), "Data is not used by this participant! " << id); \
-  PRECICE_CHECK(_accessor->isDataRead(id), "Data is not marked as read! " << id);
+#define PRECICE_REQUIRE_DATA_READ_IMPL(id)                                                                                          \
+  PRECICE_VALIDATE_DATA_ID_IMPL(id)                                                                                                 \
+  DataContext &context = _accessor->dataContext(id);                                                                                \
+  PRECICE_CHECK(_accessor->isDataUsed(id), "This participant does not use Data \"" << context.getName() << "\" [" << id << "] !"); \
+  PRECICE_CHECK(_accessor->isDataRead(id), "This participant uses Data \"" << context.getName() << "\" [" << id << "], but does not request read access!");
 
 /** Implementation of PRECICE_REQUIRE_DATA_WRITE()
  *
  * @attention Do not use this macro directly!
  */
-#define PRECICE_REQUIRE_DATA_WRITE_IMPL(id)                                                 \
-  PRECICE_VALIDATE_DATA_ID_IMPL(id)                                                         \
-  PRECICE_CHECK(_accessor->isDataUsed(id), "Data is not used by this participant! " << id); \
-  PRECICE_CHECK(_accessor->isDataWrite(id), "Data is not marked as write! " << id);
+#define PRECICE_REQUIRE_DATA_WRITE_IMPL(id)                                                                                         \
+  PRECICE_VALIDATE_DATA_ID_IMPL(id)                                                                                                 \
+  DataContext &context = _accessor->dataContext(id);                                                                                \
+  PRECICE_CHECK(_accessor->isDataUsed(id), "This participant does not use Data \"" << context.getName() << "\" [" << id << "] !"); \
+  PRECICE_CHECK(_accessor->isDataWrite(id), "This participant uses Data \"" << context.getName() << "\" [" << id << "], but does not request write access!");
 
 /// Validates a given dataID
 #define PRECICE_VALIDATE_DATA_ID(dataID) \
