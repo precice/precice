@@ -108,7 +108,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  virtual int getTimesteps() const
+  virtual int getTimeWindows() const
   {
     return _timesteps;
     return 0;
@@ -126,7 +126,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  virtual int getMaxTimesteps() const
+  virtual int getMaxTimeWindows() const
   {
     PRECICE_ASSERT(false);
     return 0;
@@ -135,7 +135,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  virtual bool hasTimestepLength() const
+  virtual bool hasTimeWindowSize() const
   {
     PRECICE_ASSERT(false);
     return false;
@@ -144,7 +144,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  virtual double getTimestepLength() const
+  virtual double getTimeWindowSize() const
   {
     PRECICE_ASSERT(false);
     return 0;
@@ -153,7 +153,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  virtual double getThisTimestepRemainder() const
+  virtual double getThisTimeWindowRemainder() const
   {
     PRECICE_ASSERT(false);
     return 0;
@@ -162,7 +162,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  virtual double getComputedTimestepPart() const
+  virtual double getComputedTimeWindowPart() const
   {
     PRECICE_ASSERT(false);
     return 0;

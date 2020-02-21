@@ -58,7 +58,7 @@ void runSimpleExplicitCoupling(
       cplScheme.advance();
       BOOST_TEST(cplScheme.isTimeWindowComplete());
       BOOST_TEST(testing::equals(computedTime, cplScheme.getTime()));
-      BOOST_TEST(computedTimesteps == cplScheme.getTimesteps() - 1);
+      BOOST_TEST(computedTimesteps == cplScheme.getTimeWindows() - 1);
       BOOST_TEST(not cplScheme.isActionRequired("WriteIterationCheckpoint"));
       BOOST_TEST(not cplScheme.isActionRequired("ReadIterationCheckpoint"));
       BOOST_TEST(cplScheme.isTimeWindowComplete());
@@ -100,7 +100,7 @@ void runSimpleExplicitCoupling(
       cplScheme.addComputedTime(cplScheme.getNextTimestepMaxLength());
       cplScheme.advance();
       BOOST_TEST(testing::equals(computedTime, cplScheme.getTime()));
-      BOOST_TEST(computedTimesteps == cplScheme.getTimesteps() - 1);
+      BOOST_TEST(computedTimesteps == cplScheme.getTimeWindows() - 1);
       BOOST_TEST(not cplScheme.isActionRequired("constants::actionWriteIterationCheckpoint()"));
       BOOST_TEST(not cplScheme.isActionRequired("constants::actionReadIterationCheckpoint()"));
       BOOST_TEST(cplScheme.isTimeWindowComplete());
@@ -214,7 +214,7 @@ void runExplicitCouplingWithSubcycling(
       cplScheme.addComputedTime(cplScheme.getNextTimestepMaxLength());
       cplScheme.advance();
       BOOST_TEST(testing::equals(computedTime, cplScheme.getTime()));
-      BOOST_TEST(computedTimesteps == cplScheme.getTimesteps() - 1);
+      BOOST_TEST(computedTimesteps == cplScheme.getTimeWindows() - 1);
       BOOST_TEST(not cplScheme.isActionRequired("constants::actionWriteIterationCheckpoint()"));
       BOOST_TEST(not cplScheme.isActionRequired("constants::actionReadIterationCheckpoint()"));
       BOOST_TEST(cplScheme.isTimeWindowComplete());
@@ -414,7 +414,7 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingFirstParticipantSetsDt,
       cplScheme.advance();
       BOOST_TEST(cplScheme.isTimeWindowComplete());
       BOOST_TEST(testing::equals(computedTime, cplScheme.getTime()));
-      BOOST_TEST(computedTimesteps == cplScheme.getTimesteps() - 1);
+      BOOST_TEST(computedTimesteps == cplScheme.getTimeWindows() - 1);
       if (cplScheme.isCouplingOngoing()) {
         BOOST_TEST(cplScheme.hasDataBeenExchanged());
       }
@@ -430,13 +430,13 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingFirstParticipantSetsDt,
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
     BOOST_TEST(cplScheme.isCouplingOngoing());
     while (cplScheme.isCouplingOngoing()) {
-      computedTime += cplScheme.getTimestepLength();
+      computedTime += cplScheme.getTimeWindowSize();
       computedTimesteps++;
-      cplScheme.addComputedTime(cplScheme.getTimestepLength());
+      cplScheme.addComputedTime(cplScheme.getTimeWindowSize());
       cplScheme.advance();
       BOOST_TEST(cplScheme.isTimeWindowComplete());
       BOOST_TEST(testing::equals(computedTime, cplScheme.getTime()));
-      BOOST_TEST(computedTimesteps == cplScheme.getTimesteps() - 1);
+      BOOST_TEST(computedTimesteps == cplScheme.getTimeWindows() - 1);
       if (cplScheme.isCouplingOngoing()) {
         BOOST_TEST(cplScheme.hasDataBeenExchanged());
       }

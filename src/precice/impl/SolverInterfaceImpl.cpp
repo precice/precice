@@ -239,11 +239,11 @@ double SolverInterfaceImpl::initialize()
   }
 
   // Initialize coupling state, overwrite these values for restart
-  double time     = 0.0;
-  int    timestep = 1;
+  double time       = 0.0;
+  int    timeWindow = 1;
 
   PRECICE_DEBUG("Initialize coupling schemes");
-  _couplingScheme->initialize(time, timestep);
+  _couplingScheme->initialize(time, timeWindow);
 
   std::set<action::Action::Timing> timings;
   double                           dt = 0.0;
@@ -332,21 +332,20 @@ double SolverInterfaceImpl::advance(
   }
 #endif
 
-  double timestepLength = 0.0; // Length of (full) current dt
-  double timestepPart   = 0.0; // Length of computed part of (full) curr. dt
-  double time           = 0.0;
+  double timeWindowSize         = 0.0; // Length of (full) current time window
+  double timeWindowComputedPart = 0.0; // Length of computed part of (full) current time window
+  double time                   = 0.0; // Current time
 
   // Update the coupling scheme time state. Necessary to get correct remainder.
   _couplingScheme->addComputedTime(computedTimestepLength);
 
-  //double timestepLength = 0.0;
-  if (_couplingScheme->hasTimestepLength()) {
-    timestepLength = _couplingScheme->getTimestepLength();
+  if (_couplingScheme->hasTimeWindowSize()) {
+    timeWindowSize = _couplingScheme->getTimeWindowSize();
   } else {
-    timestepLength = computedTimestepLength;
+    timeWindowSize = computedTimestepLength;
   }
-  timestepPart = timestepLength - _couplingScheme->getThisTimestepRemainder();
-  time         = _couplingScheme->getTime();
+  timeWindowComputedPart = timeWindowSize - _couplingScheme->getThisTimeWindowRemainder();
+  time                   = _couplingScheme->getTime();
 
   mapWrittenData();
 
@@ -356,7 +355,7 @@ double SolverInterfaceImpl::advance(
   if (_couplingScheme->willDataBeExchanged(0.0)) {
     timings.insert(action::Action::ON_EXCHANGE_PRIOR);
   }
-  performDataActions(timings, time, computedTimestepLength, timestepPart, timestepLength);
+  performDataActions(timings, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
 
   PRECICE_DEBUG("Advance coupling scheme");
   _couplingScheme->advance();
@@ -369,7 +368,7 @@ double SolverInterfaceImpl::advance(
   if (_couplingScheme->isTimeWindowComplete()) {
     timings.insert(action::Action::ON_TIME_WINDOW_COMPLETE_POST);
   }
-  performDataActions(timings, time, computedTimestepLength, timestepPart, timestepLength);
+  performDataActions(timings, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
 
   if (_couplingScheme->hasDataBeenExchanged()) {
     mapReadData();
@@ -380,9 +379,6 @@ double SolverInterfaceImpl::advance(
   PRECICE_DEBUG("Handle exports");
   handleExports();
 
-  // deactivated the reset of written data, as it deletes all data that is not communicated
-  // within this cycle in the coupling data. This is not wanted forthe manifold mapping.
-  //resetWrittenData();
   _meshLock.lockAll();
   solverEvent.start(precice::syncMode);
   return _couplingScheme->getNextTimestepMaxLength();
@@ -1356,7 +1352,7 @@ void SolverInterfaceImpl::handleExports()
 {
   PRECICE_TRACE();
   //timesteps was already incremented before
-  int timesteps = _couplingScheme->getTimesteps() - 1;
+  int timesteps = _couplingScheme->getTimeWindows() - 1;
 
   for (const io::ExportContext &context : _accessor->exportContexts()) {
     if (_couplingScheme->isTimeWindowComplete() || context.everyIteration) {
@@ -1368,7 +1364,7 @@ void SolverInterfaceImpl::handleExports()
             exportMesh(everySuffix.str());
           }
           std::ostringstream suffix;
-          suffix << _accessorName << ".dt" << _couplingScheme->getTimesteps() - 1;
+          suffix << _accessorName << ".dt" << _couplingScheme->getTimeWindows() - 1;
           exportMesh(suffix.str());
           if (context.triggerSolverPlot) {
             _couplingScheme->requireAction(std::string("plot-output"));

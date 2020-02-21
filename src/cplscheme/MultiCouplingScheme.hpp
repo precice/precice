@@ -6,21 +6,41 @@
 namespace precice {
 namespace cplscheme {
 
+/**
+ * @brief TODO
+ */
 class MultiCouplingScheme : public BaseCouplingScheme {
 public:
+  /**
+ * @brief Constructor.
+ *
+ * @param[in] maxTime Simulation time limit, or UNDEFINED_TIME.
+ * @param[in] maxTimeWindows Simulation time windows limit, or UNDEFINED_TIMEWINDOWS.
+ * @param[in] timeWindowSize Simulation time window size.
+ * @param[in] validDigits TODO
+ * @param[in] localParticipant Name of participant using this coupling scheme.
+ * @param[in] m2n Communication object for com. between participants. TODO?
+ * TODO add dtMethod, maxIterations
+ */
   MultiCouplingScheme(
       double                        maxTime,
-      int                           maxTimesteps,
-      double                        timestepLength,
+      int                           maxTimeWindows,
+      double                        timeWindowSize,
       int                           validDigits,
       const std::string &           localParticipant,
-      std::vector<m2n::PtrM2N>      communications,
+      std::vector<m2n::PtrM2N>      m2n,
       constants::TimesteppingMethod dtMethod,
       int                           maxIterations = 1);
 
   logging::Logger _log{"cplscheme::MultiCouplingScheme"};
 
-  virtual void initialize(double startTime, int startTimestep);
+  /**
+ * @brief TODO
+ *
+ * @param[in] startTime TODO
+ * @param[in] startTimeWindow TODO
+ */
+  virtual void initialize(double startTime, int startTimeWindow);
 
   virtual void initializeData();
 

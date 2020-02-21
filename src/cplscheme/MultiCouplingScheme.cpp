@@ -13,16 +13,16 @@ namespace cplscheme {
 
 MultiCouplingScheme::MultiCouplingScheme(
     double                        maxTime,
-    int                           maxTimesteps,
-    double                        timestepLength,
+    int                           maxTimeWindows,
+    double                        timeWindowSize,
     int                           validDigits,
     const std::string &           localParticipant,
-    std::vector<m2n::PtrM2N>      communications,
+    std::vector<m2n::PtrM2N>      m2n,
     constants::TimesteppingMethod dtMethod,
     int                           maxIterations)
-    : BaseCouplingScheme(maxTime, maxTimesteps, timestepLength, validDigits, "neverFirstParticipant",
+    : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, "neverFirstParticipant",
                          localParticipant, localParticipant, m2n::PtrM2N(), maxIterations, dtMethod),
-      _communications(communications)
+      _communications(m2n)
 {
   for (size_t i = 0; i < _communications.size(); ++i) {
     DataMap receiveMap;
@@ -34,14 +34,14 @@ MultiCouplingScheme::MultiCouplingScheme(
 
 void MultiCouplingScheme::initialize(
     double startTime,
-    int    startTimestep)
+    int    startTimeWindow)
 {
-  PRECICE_TRACE(startTime, startTimestep);
+  PRECICE_TRACE(startTime, startTimeWindow);
   PRECICE_ASSERT(not isInitialized());
   PRECICE_ASSERT(math::greaterEquals(startTime, 0.0), startTime);
-  PRECICE_ASSERT(startTimestep >= 0, startTimestep);
+  PRECICE_ASSERT(startTimeWindow >= 0, startTimeWindow);
   setTime(startTime);
-  setTimesteps(startTimestep);
+  setTimeWindows(startTimeWindow);
 
   mergeData();                 // merge send and receive data for all pp calls
   setupConvergenceMeasures();  // needs _couplingData configured
@@ -104,7 +104,7 @@ void MultiCouplingScheme::initializeData()
       for (DataMap &dataMap : _receiveDataVector) {
         for (DataMap::value_type &pair : dataMap) {
           pair.second->oldValues.col(0) = *pair.second->values;
-          // For extrapolation, treat the initial value as old timestep value
+          // For extrapolation, treat the initial value as old time window value
           utils::shiftSetFirst(pair.second->oldValues, *pair.second->values);
         }
       }
@@ -115,7 +115,7 @@ void MultiCouplingScheme::initializeData()
       for (DataMap &dataMap : _sendDataVector) {
         for (DataMap::value_type &pair : dataMap) {
           pair.second->oldValues.col(0) = *pair.second->values;
-          // For extrapolation, treat the initial value as old timestep value
+          // For extrapolation, treat the initial value as old time window value
           utils::shiftSetFirst(pair.second->oldValues, *pair.second->values);
         }
       }
@@ -130,7 +130,7 @@ void MultiCouplingScheme::initializeData()
 
 void MultiCouplingScheme::advance()
 {
-  PRECICE_TRACE(getTimesteps(), getTime());
+  PRECICE_TRACE(getTimeWindows(), getTime());
   checkCompletenessRequiredActions();
 
   PRECICE_CHECK(!hasToReceiveInitData() && !hasToSendInitData(),
@@ -139,7 +139,7 @@ void MultiCouplingScheme::advance()
   setHasDataBeenExchanged(false);
   setIsTimeWindowComplete(false);
   bool convergence = false;
-  if (math::equals(getThisTimestepRemainder(), 0.0, _eps)) {
+  if (math::equals(getThisTimeWindowRemainder(), 0.0, _eps)) {
     PRECICE_DEBUG("Computed full length of iteration");
 
     receiveData();
@@ -187,7 +187,7 @@ void MultiCouplingScheme::advance()
     }
     updateTimeAndIterations(convergence);
     setHasDataBeenExchanged(true);
-    setComputedTimestepPart(0.0);
+    setComputedTimeWindowPart(0.0);
   } // subcycling complete
 }
 

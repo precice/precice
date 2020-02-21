@@ -38,7 +38,7 @@ namespace cplscheme {
  * -# compute data to be sent (possibly taking into account received data from
  *    initialize())
  * -# advance the coupling scheme with advance(); where the maximum timestep
- *    length needs to be obeyed
+ *    length (= time window size) needs to be obeyed
  * -# ....
  * -# when the method isCouplingOngoing() returns false, call finalize() to
  *    stop the coupling scheme
@@ -47,14 +47,14 @@ class BaseCouplingScheme : public CouplingScheme {
 public:
   BaseCouplingScheme(
       double maxTime,
-      int    maxTimesteps,
-      double timestepLength,
+      int    maxTimeWindows,
+      double timeWindowSize,
       int    validDigits);
 
   BaseCouplingScheme(
       double                        maxTime,
-      int                           maxTimesteps,
-      double                        timestepLength,
+      int                           maxTimeWindows,
+      double                        timeWindowSize,
       int                           validDigits,
       const std::string &           firstParticipant,
       const std::string &           secondParticipant,
@@ -66,18 +66,6 @@ public:
   enum CouplingMode { Explicit,
                       Implicit,
                       Undefined };
-
-  /**
-   * @brief Adds another coupling scheme in parallel to this scheme.
-   *
-   * If this coupling scheme is a normal coupling scheme, an object of
-   * CompositionalCouplingScheme will be created that contains this and the
-   * new scheme in parallel. If this coupling scheme is already a composed
-   * scheme, the new scheme will be added as another parallel scheme.
-   *
-   * @return Pointer to composition of coupling schemes.
-   */
-  //virtual PtrCouplingScheme addSchemeInParallel (PtrCouplingScheme scheme);
 
   /// Adds data to be sent on data exchange and possibly be modified during coupling iterations.
   void addDataToSend(
@@ -117,8 +105,8 @@ public:
   /// Returns the currently computed time of the coupling scheme.
   virtual double getTime() const;
 
-  /// Returns the currently computed timesteps of the coupling scheme.
-  virtual int getTimesteps() const;
+  /// Returns the number of currently computed time windows of the coupling scheme.
+  virtual int getTimeWindows() const;
 
   /// Returns the maximal time to be computed.
   virtual double getMaxTime() const
@@ -126,50 +114,47 @@ public:
     return _maxTime;
   }
 
-  /// Returns the maximal timesteps to be computed.
-  virtual int getMaxTimesteps() const
+  /// Returns the maximal number of time windows to be computed.
+  virtual int getMaxTimeWindows() const
   {
-    return _maxTimesteps;
+    return _maxTimeWindows;
   }
 
-  /// Returns true, if timestep length is prescribed by the cpl scheme.
-  virtual bool hasTimestepLength() const;
+  /// Returns true, if time window size is prescribed by the cpl scheme.
+  virtual bool hasTimeWindowSize() const;
 
   /**
-   * @brief Returns the timestep length, if one is given by the coupling scheme.
+   * @brief Returns the time window size, if one is given by the coupling scheme.
    *
-   * An assertion is thrown, if no valid timestep is given. Check with
-   * hasTimestepLength().
+   * An assertion is thrown, if no valid time window size is given. Check with
+   * hasTimeWindowSize().
    */
-  virtual double getTimestepLength() const;
+  virtual double getTimeWindowSize() const;
 
   /// returns list of all coupling partners
   virtual std::vector<std::string> getCouplingPartners() const;
 
   /**
-   * @brief Returns the remaining timestep length of the current time step.
+   * @brief Returns the remaining timestep length within the current time window.
    *
-   * If no timestep length is precribed by the coupling scheme, always 0.0 is
+   * If no time window size is prescribed by the coupling scheme, always 0.0 is
    * returned.
    */
-  virtual double getThisTimestepRemainder() const;
+  virtual double getThisTimeWindowRemainder() const;
 
-  /// Returns part of the current timestep that has been computed already.
-  virtual double getComputedTimestepPart() const
+  /// Returns part of the current time window that has been computed already.
+  virtual double getComputedTimeWindowPart() const
   {
-    return _computedTimestepPart;
+    return _computedTimeWindowPart;
   }
 
   /**
    * @brief Returns the maximal length of the next timestep to be computed.
    *
-   * If no timestep length is prescribed by the coupling scheme, always the
+   * If no time window size is prescribed by the coupling scheme, always the
    * maximal double accuracy floating point number value is returned.
    */
-  virtual double getNextTimestepMaxLength() const;
-
-  /// Returns the number of valid digits when compare times.
-  int getValidDigits() const;
+  virtual double getNextTimestepMaxLength() const; // TODO mainly used in tests. Is this function actually needed or can we drop it and only use getThisTimeWindowRemainder()?
 
   /// Returns true, when the coupled simulation is still ongoing.
   virtual bool isCouplingOngoing() const;
@@ -189,8 +174,13 @@ public:
   /// Finalizes the coupling scheme.
   virtual void finalize();
 
-  /// Initializes the coupling scheme.
-  virtual void initialize(double startTime, int startTimestep) = 0;
+  /**
+* @brief Initializes the coupling scheme.
+*
+* @param[in] startTime TODO
+* @param[in] startTimeWindow TODO
+*/
+  virtual void initialize(double startTime, int startTimeWindow) = 0;
 
   /**
    * @brief Initializes data with written values.
@@ -212,10 +202,10 @@ public:
    * The first participant in the implicit coupling scheme has to take some
    * initial guess for the interface values computed by the second participant.
    * In order to improve this initial guess, an extrapolation from previous
-   * timesteps can be performed.
+   * time windows can be performed.
    *
    * The standard predictor is of order zero, i.e., simply the converged values
-   * of the last timestep are taken as initial guess for the coupling iterations.
+   * of the last time windows are taken as initial guess for the coupling iterations.
    * Currently, an order 1 predictor is implement besides that.
    */
   void setExtrapolationOrder(int order);
@@ -290,10 +280,10 @@ protected:
   /// Returns all data to be received with data ID as given.
   CouplingData *getReceiveData(int dataID);
 
-  /// Sets value for computed timestep part.
-  void setComputedTimestepPart(double computedTimestepPart)
+  /// Sets value for computed time window part.
+  void setComputedTimeWindowPart(double computedTimeWindowPart)
   {
-    _computedTimestepPart = computedTimestepPart;
+    _computedTimeWindowPart = computedTimeWindowPart;
   }
 
   /// Sets flag to determine whether data has been exchanged in the last coupling iteration.
@@ -310,18 +300,18 @@ protected:
   }
 
   /**
-   * @brief Sets the computed timesteps of the coupling scheme.
+   * @brief Sets the computed time windows of the coupling scheme.
    *
    * Used from subclasses and when a checkpoint has been read.
    */
-  void setTimesteps(int timesteps)
+  void setTimeWindows(int timeWindows)
   {
-    _timesteps = timesteps;
+    _timeWindows = timeWindows;
   }
 
-  void setTimestepLength(double timestepLength)
+  void setTimeWindowSize(double timeWindowSize)
   {
-    _timestepLength = timestepLength;
+    _timeWindowSize = timeWindowSize;
   }
 
   void setIsTimeWindowComplete(bool isTimeWindowComplete)
@@ -340,22 +330,19 @@ protected:
   /**
    * @brief Returns coupling state information.
    *
-   * Includes current iteration, max iterations, time, timestep and action.
+   * Includes current iteration, max iterations, time, time window and action.
    */
   virtual std::string printCouplingState() const;
 
-  /// Returns a string representing the basic state w/o actions.
-  std::string printBasicState() const;
-
   /**
-   * @brief As the version without parameters, but with changed timestep and time.
+   * @brief As the version without parameters, but with changed time window and time.
    *
    * This version is used by the ImplicitCouplingScheme at the moment, which
-   * needs to use the last timestep in the plotting when the iterations of
-   * a timestep are converged.
+   * needs to use the last time window in the plotting when the iterations of
+   * a time window are converged.
    */
   std::string printBasicState(
-      int    timesteps,
+      int    timeWindows,
       double time) const;
 
   /// Returns a string representing the required actions.
@@ -435,7 +422,7 @@ protected:
       std::map<int, Eigen::VectorXd> &designSpecification);
 
   /**
-   * @brief Sets up _dataStorage to store data values of last timestep.
+   * @brief Sets up _dataStorage to store data values of last timestep (@BU or time window?).
    *
    * Every send data has an entry in _dataStorage. Every Entry is a vector
    * of data values with length according to the total number of values on all
@@ -467,12 +454,12 @@ protected:
 
   bool maxIterationsReached();
 
-  /// Smallest number, taking validDigists into account: eps = std::pow(10.0, -1 * validDigits)
+  /// Smallest number, taking validDigits into account: eps = std::pow(10.0, -1 * validDigits)
   const double _eps;
 
   int _deletedColumnsPPFiltering = 0;
 
-  /// Number of  coarse model optimization iterations in current time step.
+  /// Number of coarse model optimization iterations in current time window.
   int _iterationsCoarseOptimization;
 
 private:
@@ -487,29 +474,35 @@ private:
 
   mutable logging::Logger _log{"cplscheme::BaseCouplingScheme"};
 
+  /// Maximum time being computed. End of simulation is reached, if _time == _maxTime
   double _maxTime;
 
-  int _maxTimesteps;
+  /// current time; _time <= _maxTime
+  double _time = 0;
 
-  /// Number of iterations in current time step.
-  int _iterations = -1;
+  /// Number of time windows that have to be computed. End of simulation is reached, if _timeWindows == _maxTimeWindows
+  int _maxTimeWindows;
 
-  /// Number of accumulated coarse model optimization iterations in current time step.
-  int _totalIterationsCoarseOptimization = -1;
+  /// number of completed time windows; _timeWindows <= _maxTimeWindows
+  int _timeWindows = 0;
 
-  /// Limit of iterations during one time step.
+  /// size of time window; _timeWindowSize <= _maxTime
+  double _timeWindowSize;
+
+  /// Part of the window that is already computed; _computedTimeWindowPart <= _timeWindowSize
+  double _computedTimeWindowPart = 0;
+
+  /// Limit of iterations during one time window. Continue to next time window, if _iterations == _maxIterations.
   int _maxIterations = -1;
+
+  /// Number of iterations in current time window. _iterations <= _maxIterations
+  int _iterations = -1;
 
   /// Number of total iterations performed.
   int _totalIterations = -1;
 
-  int _timesteps = 0;
-
-  double _timestepLength;
-
-  double _time = 0;
-
-  double _computedTimestepPart = 0;
+  /// Number of accumulated coarse model optimization iterations in current time window.
+  int _totalIterationsCoarseOptimization = -1;
 
   std::vector<double> _firstResiduumNorm = {0};
 
@@ -521,6 +514,7 @@ private:
   /// True, if local participant is the one starting the explicit scheme.
   bool _doesFirstStep = false;
 
+  /// True, if _computedTimeWindowPart == _timeWindowSize and (coupling has converged or _iterations == _maxIterations)
   bool _isTimeWindowComplete = false;
 
   /// Acceleration method to speedup iteration convergence.
@@ -546,13 +540,11 @@ private:
   /// Map from data ID -> all receive data with that ID
   DataMap _receiveData;
 
-  /// Responsible for monitoring iteration count over timesteps.
+  /// Responsible for monitoring iteration count over time window.
   std::shared_ptr<io::TXTTableWriter> _iterationsWriter;
 
-  /// Writes out coupling convergence within all timesteps.
+  /// Writes out coupling convergence within all time windows.
   std::shared_ptr<io::TXTTableWriter> _convergenceWriter;
-
-  int getVertexOffset(std::map<int, int> &vertexDistribution, int rank, int dim);
 };
 } // namespace cplscheme
 } // namespace precice

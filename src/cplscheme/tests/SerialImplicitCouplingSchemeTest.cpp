@@ -79,7 +79,7 @@ void runCoupling(
         computedTime += maxLengthTimestep;
         computedTimesteps++;
         BOOST_TEST(testing::equals(computedTime, cplScheme.getTime()));
-        BOOST_TEST(testing::equals(computedTimesteps, cplScheme.getTimesteps() - 1));
+        BOOST_TEST(testing::equals(computedTimesteps, cplScheme.getTimeWindows() - 1));
         // The iteration number is enforced by the controlled decrease of the
         // change of data written
         BOOST_TEST(testing::equals(iterationCount, *iterValidIterations));
@@ -146,7 +146,7 @@ void runCoupling(
         computedTime += maxLengthTimestep;
         computedTimesteps++;
         BOOST_TEST(testing::equals(computedTime, cplScheme.getTime()));
-        BOOST_TEST(testing::equals(computedTimesteps, cplScheme.getTimesteps() - 1));
+        BOOST_TEST(testing::equals(computedTimesteps, cplScheme.getTimeWindows() - 1));
         // The iterations are enforced by the controlled decrease of the
         // change of data written
         BOOST_TEST(testing::equals(iterationCount, *iterValidIterations));
@@ -241,7 +241,7 @@ void runCouplingWithSubcycling(
         computedTime += maxTimestepLength;
         computedTimesteps++;
         BOOST_TEST(testing::equals(computedTime, cplScheme.getTime()));
-        BOOST_TEST(testing::equals(computedTimesteps, cplScheme.getTimesteps() - 1));
+        BOOST_TEST(testing::equals(computedTimesteps, cplScheme.getTimeWindows() - 1));
         // The iteration number is enforced by the controlled decrease of the
         // change of data written
         BOOST_TEST(testing::equals(iterationCount, *iterValidIterations));
@@ -325,7 +325,7 @@ void runCouplingWithSubcycling(
         computedTime += maxTimestepLength;
         computedTimesteps++;
         BOOST_TEST(testing::equals(computedTime, cplScheme.getTime()));
-        BOOST_TEST(testing::equals(computedTimesteps, cplScheme.getTimesteps() - 1));
+        BOOST_TEST(testing::equals(computedTimesteps, cplScheme.getTimeWindows() - 1));
         // The iteration number is enforced by the controlled decrease of the
         // change of data written
         BOOST_TEST(testing::equals(iterationCount, *iterValidIterations));
@@ -445,14 +445,14 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
   BOOST_TEST(testing::equals(cplData->oldValues(0, 1), 0.0));
 
   (*cplData->values)[0] = 1.0;
-  scheme.setTimesteps(scheme.getTimesteps() + 1);
+  scheme.setTimeWindows(scheme.getTimeWindows() + 1);
   scheme.extrapolateData(scheme.getSendData());
   BOOST_TEST(testing::equals((*cplData->values)[0], 2.0));
   BOOST_TEST(testing::equals(cplData->oldValues(0, 0), 2.0));
   BOOST_TEST(testing::equals(cplData->oldValues(0, 1), 1.0));
 
   (*cplData->values)[0] = 4.0;
-  scheme.setTimesteps(scheme.getTimesteps() + 1);
+  scheme.setTimeWindows(scheme.getTimeWindows() + 1);
   scheme.extrapolateData(scheme.getSendData());
   BOOST_TEST(testing::equals((*cplData->values)[0], 7.0));
   BOOST_TEST(testing::equals(cplData->oldValues(0, 0), 7.0));
@@ -479,7 +479,7 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
   BOOST_TEST(testing::equals(cplData->oldValues(0, 2), 0.0));
 
   (*cplData->values)[0] = 1.0;
-  scheme2.setTimesteps(scheme2.getTimesteps() + 1);
+  scheme2.setTimeWindows(scheme2.getTimeWindows() + 1);
   scheme2.extrapolateData(scheme2.getSendData());
   BOOST_TEST(testing::equals((*cplData->values)[0], 2.0));
   BOOST_TEST(testing::equals(cplData->oldValues(0, 0), 2.0));
@@ -487,7 +487,7 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
   BOOST_TEST(testing::equals(cplData->oldValues(0, 2), 0.0));
 
   (*cplData->values)[0] = 4.0;
-  scheme2.setTimesteps(scheme2.getTimesteps() + 1);
+  scheme2.setTimeWindows(scheme2.getTimeWindows() + 1);
   scheme2.extrapolateData(scheme2.getSendData());
   BOOST_TEST(testing::equals((*cplData->values)[0], 8.0));
   BOOST_TEST(testing::equals(cplData->oldValues(0, 0), 8.0));

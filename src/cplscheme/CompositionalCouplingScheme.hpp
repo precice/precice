@@ -72,12 +72,14 @@ public:
   void addCouplingScheme(PtrCouplingScheme scheme);
 
   /**
-   * @brief Initializes the coupling scheme and establishes a communiation
+   * @brief Initializes the coupling scheme and establishes a communication
    *        connection to the coupling partner.
-   */
+* @param[in] startTime TODO
+* @param[in] startTimeWindow TODO
+*/
   virtual void initialize(
       double startTime,
-      int    startTimesteps);
+      int    startTimeWindow);
 
   /// Returns true, if initialize has been called.
   virtual bool isInitialized() const;
@@ -127,7 +129,7 @@ public:
    *
    * The timestep is the minimum timestep in any coupling scheme in the composition.
    */
-  virtual int getTimesteps() const;
+  virtual int getTimeWindows() const;
 
   /**
    * @brief Returns the maximal time to be computed.
@@ -137,10 +139,7 @@ public:
   virtual double getMaxTime() const;
 
   /// Returns the maximal timesteps to be computed.
-  virtual int getMaxTimesteps() const;
-
-  /// Returns current subiteration number in timestep.
-  //virtual int getSubIteration() const;
+  virtual int getMaxTimeWindows() const;
 
   /**
    * @brief Returns true, if timestep length is prescribed by the cpl scheme.
@@ -148,18 +147,18 @@ public:
    * If any of the solvers in the composition has a timestep length limit, this
    * counts as limit.
    */
-  virtual bool hasTimestepLength() const;
+  virtual bool hasTimeWindowSize() const;
 
   /**
    * @brief Returns the timestep length, if one is given by the coupling scheme.
    *
    * An assertion is thrown, if no valid timestep is given. Check with
-   * hasTimestepLength().
+   * hasTimeWindowSize().
    *
    * The smallest timestep length limit in the coupling scheme composition has
    * to be obeyed.
    */
-  virtual double getTimestepLength() const;
+  virtual double getTimeWindowSize() const;
 
   /**
    * @brief Returns the remaining timestep length of the current time step.
@@ -172,7 +171,7 @@ public:
    *
    * The maximum remainer of all composed coupling schemes is returned.
    */
-  virtual double getThisTimestepRemainder() const;
+  virtual double getThisTimeWindowRemainder() const;
 
   /**
    * @brief Returns part of the current timestep that has been computed already.
@@ -180,7 +179,7 @@ public:
    * This is the minimum of all computed timestep parts of the composed coupling
    * schemes.
    */
-  virtual double getComputedTimestepPart() const;
+  virtual double getComputedTimeWindowPart() const;
 
   /**
    * @brief Returns the maximal length of the next timestep to be computed.

@@ -123,7 +123,7 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
           computedTimesteps++;
         }
         BOOST_TEST(testing::equals(computedTime, cplScheme->getTime()));
-        BOOST_TEST(computedTimesteps == cplScheme->getTimesteps() - 1);
+        BOOST_TEST(computedTimesteps == cplScheme->getTimeWindows() - 1);
         BOOST_TEST(cplScheme->hasDataBeenExchanged());
       }
       cplScheme->finalize();
@@ -151,7 +151,7 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
           computedTimesteps++;
         }
         BOOST_TEST(testing::equals(computedTime, cplScheme->getTime()));
-        BOOST_TEST(computedTimesteps == cplScheme->getTimesteps() - 1);
+        BOOST_TEST(computedTimesteps == cplScheme->getTimeWindows() - 1);
         BOOST_TEST(cplScheme->hasDataBeenExchanged());
       }
       cplScheme->finalize();
@@ -180,7 +180,7 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
           computedTimesteps++;
         }
         BOOST_TEST(testing::equals(computedTime, cplScheme->getTime()));
-        BOOST_TEST(computedTimesteps == cplScheme->getTimesteps() - 1);
+        BOOST_TEST(computedTimesteps == cplScheme->getTimeWindows() - 1);
         if (cplScheme->isCouplingOngoing())
           BOOST_TEST(cplScheme->hasDataBeenExchanged());
       }
@@ -231,7 +231,7 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1)
   }
   composition.finalize();
   BOOST_TEST(advances == 10);
-  BOOST_TEST(scheme->getTimesteps() - 1 == 10);
+  BOOST_TEST(scheme->getTimeWindows() - 1 == 10);
 }
 
 // Test one implicit dummy coupling scheme
@@ -252,7 +252,7 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit1)
   }
   composition.finalize();
   BOOST_TEST(advances == 20);
-  BOOST_TEST(scheme->getTimesteps() - 1 == 10);
+  BOOST_TEST(scheme->getTimeWindows() - 1 == 10);
 }
 
 // Test two explicit dummy coupling schemes
@@ -278,8 +278,8 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit2)
   }
   composition.finalize();
   BOOST_TEST(advances == 10);
-  BOOST_TEST(scheme1->getTimesteps() - 1 == 10);
-  BOOST_TEST(scheme2->getTimesteps() - 1 == 10);
+  BOOST_TEST(scheme1->getTimeWindows() - 1 == 10);
+  BOOST_TEST(scheme2->getTimeWindows() - 1 == 10);
 }
 
 // Test three explicit dummy coupling schemes
@@ -308,9 +308,9 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit3)
   }
   composition.finalize();
   BOOST_TEST(advances == 10);
-  BOOST_TEST(scheme1->getTimesteps() - 1 == 10);
-  BOOST_TEST(scheme2->getTimesteps() - 1 == 10);
-  BOOST_TEST(scheme3->getTimesteps() - 1 == 10);
+  BOOST_TEST(scheme1->getTimeWindows() - 1 == 10);
+  BOOST_TEST(scheme2->getTimeWindows() - 1 == 10);
+  BOOST_TEST(scheme3->getTimeWindows() - 1 == 10);
 }
 
 // Test two implicit dummy coupling schemes
@@ -343,8 +343,8 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit2)
   }
   composition.finalize();
   BOOST_TEST(advances == 20);
-  BOOST_TEST(scheme1->getTimesteps() - 1 == 10);
-  BOOST_TEST(scheme2->getTimesteps() - 1 == 10);
+  BOOST_TEST(scheme1->getTimeWindows() - 1 == 10);
+  BOOST_TEST(scheme2->getTimeWindows() - 1 == 10);
 }
 
 // Test two implicit dummy coupling schemes with different iteration number
@@ -379,8 +379,8 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit2DiffIteration)
   }
   composition.finalize();
   BOOST_TEST(advances == 30);
-  BOOST_TEST(scheme1->getTimesteps() - 1 == 10);
-  BOOST_TEST(scheme2->getTimesteps() - 1 == 10);
+  BOOST_TEST(scheme1->getTimeWindows() - 1 == 10);
+  BOOST_TEST(scheme2->getTimeWindows() - 1 == 10);
 }
 
 // Test three implicit dummy coupling schemes
@@ -415,9 +415,9 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit3)
   }
   composition.finalize();
   BOOST_TEST(advances == 20);
-  BOOST_TEST(scheme1->getTimesteps() - 1 == 10);
-  BOOST_TEST(scheme2->getTimesteps() - 1 == 10);
-  BOOST_TEST(scheme3->getTimesteps() - 1 == 10);
+  BOOST_TEST(scheme1->getTimeWindows() - 1 == 10);
+  BOOST_TEST(scheme2->getTimeWindows() - 1 == 10);
+  BOOST_TEST(scheme3->getTimeWindows() - 1 == 10);
 }
 
 // Test three implicit dummy coupling schemes with different iteration number
@@ -462,9 +462,9 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit3DiffIteration)
   }
   composition.finalize();
   BOOST_TEST(advances == 40);
-  BOOST_TEST(scheme1->getTimesteps() - 1 == 10);
-  BOOST_TEST(scheme2->getTimesteps() - 1 == 10);
-  BOOST_TEST(scheme3->getTimesteps() - 1 == 10);
+  BOOST_TEST(scheme1->getTimeWindows() - 1 == 10);
+  BOOST_TEST(scheme2->getTimeWindows() - 1 == 10);
+  BOOST_TEST(scheme3->getTimeWindows() - 1 == 10);
 }
 
 // Test E, I(2)
@@ -488,16 +488,16 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1Implicit2)
     advances++;
     if (advances % 2 == 0) {
       BOOST_TEST(scheme2->isActionRequired(writeIterationCheckpoint));
-      BOOST_TEST(scheme1->getTimesteps() - 1 == advances / 2);
+      BOOST_TEST(scheme1->getTimeWindows() - 1 == advances / 2);
     } else {
       BOOST_TEST(scheme2->isActionRequired(readIterationCheckpoint));
-      BOOST_TEST(scheme1->getTimesteps() - 1 == (advances + 1) / 2);
+      BOOST_TEST(scheme1->getTimeWindows() - 1 == (advances + 1) / 2);
     }
   }
   composition.finalize();
   BOOST_TEST(advances == 20);
-  BOOST_TEST(scheme1->getTimesteps() - 1 == 10);
-  BOOST_TEST(scheme2->getTimesteps() - 1 == 10);
+  BOOST_TEST(scheme1->getTimeWindows() - 1 == 10);
+  BOOST_TEST(scheme2->getTimeWindows() - 1 == 10);
 }
 
 // Test I(2), E
@@ -521,16 +521,16 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit2Explicit1)
     advances++;
     if (advances % 2 == 0) {
       BOOST_TEST(scheme1->isActionRequired(writeIterationCheckpoint));
-      BOOST_TEST(scheme1->getTimesteps() - 1 == advances / 2);
+      BOOST_TEST(scheme1->getTimeWindows() - 1 == advances / 2);
     } else {
       BOOST_TEST(scheme1->isActionRequired(readIterationCheckpoint));
-      BOOST_TEST(scheme1->getTimesteps() - 1 == (advances - 1) / 2);
+      BOOST_TEST(scheme1->getTimeWindows() - 1 == (advances - 1) / 2);
     }
   }
   composition.finalize();
   BOOST_TEST(advances == 20);
-  BOOST_TEST(scheme1->getTimesteps() - 1 == 10);
-  BOOST_TEST(scheme2->getTimesteps() - 1 == 10);
+  BOOST_TEST(scheme1->getTimeWindows() - 1 == 10);
+  BOOST_TEST(scheme2->getTimeWindows() - 1 == 10);
 }
 
 // Test E, I(3)
@@ -556,16 +556,16 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1Implicit3)
     advances++;
     if (advances % 3 == 0) {
       BOOST_TEST(scheme2->isActionRequired(writeIterationCheckpoint));
-      BOOST_TEST(scheme1->getTimesteps() - 1 == advances / 3);
+      BOOST_TEST(scheme1->getTimeWindows() - 1 == advances / 3);
     } else {
       BOOST_TEST(scheme2->isActionRequired(readIterationCheckpoint));
-      BOOST_TEST(scheme1->getTimesteps() - 1 == (advances + (3 - advances % 3)) / 3);
+      BOOST_TEST(scheme1->getTimeWindows() - 1 == (advances + (3 - advances % 3)) / 3);
     }
   }
   composition.finalize();
   BOOST_TEST(advances == 30);
-  BOOST_TEST(scheme1->getTimesteps() - 1 == 10);
-  BOOST_TEST(scheme2->getTimesteps() - 1 == 10);
+  BOOST_TEST(scheme1->getTimeWindows() - 1 == 10);
+  BOOST_TEST(scheme2->getTimeWindows() - 1 == 10);
 }
 
 // Test I(3), E
@@ -589,16 +589,16 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit3Explicit1)
     advances++;
     if (advances % 3 == 0) {
       BOOST_TEST(scheme1->isActionRequired(writeIterationCheckpoint));
-      BOOST_TEST(scheme1->getTimesteps() - 1 == advances / 3);
+      BOOST_TEST(scheme1->getTimeWindows() - 1 == advances / 3);
     } else {
       BOOST_TEST(scheme1->isActionRequired(readIterationCheckpoint));
-      BOOST_TEST(scheme1->getTimesteps() - 1 == (advances - (advances % 3)) / 3);
+      BOOST_TEST(scheme1->getTimeWindows() - 1 == (advances - (advances % 3)) / 3);
     }
   }
   composition.finalize();
   BOOST_TEST(advances == 30);
-  BOOST_TEST(scheme1->getTimesteps() - 1 == 10);
-  BOOST_TEST(scheme2->getTimesteps() - 1 == 10);
+  BOOST_TEST(scheme1->getTimeWindows() - 1 == 10);
+  BOOST_TEST(scheme2->getTimeWindows() - 1 == 10);
 }
 
 // Test E, I(2), I(2)
@@ -625,18 +625,18 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1Implicit2Implicit2)
     if (advances % 2 == 0) {
       BOOST_TEST(scheme2->isActionRequired(writeIterationCheckpoint));
       BOOST_TEST(scheme3->isActionRequired(writeIterationCheckpoint));
-      BOOST_TEST(scheme1->getTimesteps() - 1 == advances / 2);
+      BOOST_TEST(scheme1->getTimeWindows() - 1 == advances / 2);
     } else {
       BOOST_TEST(scheme2->isActionRequired(readIterationCheckpoint));
       BOOST_TEST(scheme3->isActionRequired(readIterationCheckpoint));
-      BOOST_TEST(scheme1->getTimesteps() - 1 == (advances + 1) / 2);
+      BOOST_TEST(scheme1->getTimeWindows() - 1 == (advances + 1) / 2);
     }
   }
   composition.finalize();
   BOOST_TEST(advances == 20);
-  BOOST_TEST(scheme1->getTimesteps() - 1 == 10);
-  BOOST_TEST(scheme2->getTimesteps() - 1 == 10);
-  BOOST_TEST(scheme3->getTimesteps() - 1 == 10);
+  BOOST_TEST(scheme1->getTimeWindows() - 1 == 10);
+  BOOST_TEST(scheme2->getTimeWindows() - 1 == 10);
+  BOOST_TEST(scheme3->getTimeWindows() - 1 == 10);
 }
 
 // Test E, I(2), I(3)
@@ -662,24 +662,24 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1Implicit2Implicit3)
     composition.advance();
     advances++;
     if (advances % 3 == 0) {
-      BOOST_TEST(scheme1->getTimesteps() - 1 == advances / 3);
+      BOOST_TEST(scheme1->getTimeWindows() - 1 == advances / 3);
       BOOST_TEST(scheme2->isActionRequired(writeIterationCheckpoint));
       BOOST_TEST(scheme3->isActionRequired(writeIterationCheckpoint));
     } else if (advances % 3 == 1) {
       BOOST_TEST(scheme2->isActionRequired(readIterationCheckpoint));
       BOOST_TEST(scheme3->isActionRequired(readIterationCheckpoint));
-      BOOST_TEST(scheme1->getTimesteps() - 1 == (advances + 2) / 3);
+      BOOST_TEST(scheme1->getTimeWindows() - 1 == (advances + 2) / 3);
     } else if (advances % 3 == 2) {
       BOOST_TEST(scheme2->isActionRequired(writeIterationCheckpoint));
       BOOST_TEST(scheme3->isActionRequired(readIterationCheckpoint));
-      BOOST_TEST(scheme1->getTimesteps() - 1 == (advances + 1) / 3);
+      BOOST_TEST(scheme1->getTimeWindows() - 1 == (advances + 1) / 3);
     }
   }
   composition.finalize();
   BOOST_TEST(advances == 30);
-  BOOST_TEST(scheme1->getTimesteps() - 1 == 10);
-  BOOST_TEST(scheme2->getTimesteps() - 1 == 10);
-  BOOST_TEST(scheme3->getTimesteps() - 1 == 10);
+  BOOST_TEST(scheme1->getTimeWindows() - 1 == 10);
+  BOOST_TEST(scheme2->getTimeWindows() - 1 == 10);
+  BOOST_TEST(scheme3->getTimeWindows() - 1 == 10);
 }
 
 // Test I(2), I(2), E
@@ -706,22 +706,22 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit2Implicit2Explicit1)
     if (advances % 2 == 0) {
       BOOST_TEST(scheme1->isActionRequired(writeIterationCheckpoint));
       BOOST_TEST(scheme2->isActionRequired(writeIterationCheckpoint));
-      BOOST_TEST(scheme1->getTimesteps() - 1 == advances / 2);
-      BOOST_TEST(scheme2->getTimesteps() - 1 == advances / 2);
-      BOOST_TEST(scheme3->getTimesteps() - 1 == advances / 2);
+      BOOST_TEST(scheme1->getTimeWindows() - 1 == advances / 2);
+      BOOST_TEST(scheme2->getTimeWindows() - 1 == advances / 2);
+      BOOST_TEST(scheme3->getTimeWindows() - 1 == advances / 2);
     } else {
       BOOST_TEST(scheme1->isActionRequired(readIterationCheckpoint));
       BOOST_TEST(scheme2->isActionRequired(readIterationCheckpoint));
-      BOOST_TEST(scheme1->getTimesteps() - 1 == (advances - 1) / 2);
-      BOOST_TEST(scheme2->getTimesteps() - 1 == (advances - 1) / 2);
-      BOOST_TEST(scheme3->getTimesteps() - 1 == (advances - 1) / 2);
+      BOOST_TEST(scheme1->getTimeWindows() - 1 == (advances - 1) / 2);
+      BOOST_TEST(scheme2->getTimeWindows() - 1 == (advances - 1) / 2);
+      BOOST_TEST(scheme3->getTimeWindows() - 1 == (advances - 1) / 2);
     }
   }
   composition.finalize();
   BOOST_TEST(advances == 20);
-  BOOST_TEST(scheme1->getTimesteps() - 1 == 10);
-  BOOST_TEST(scheme2->getTimesteps() - 1 == 10);
-  BOOST_TEST(scheme3->getTimesteps() - 1 == 10);
+  BOOST_TEST(scheme1->getTimeWindows() - 1 == 10);
+  BOOST_TEST(scheme2->getTimeWindows() - 1 == 10);
+  BOOST_TEST(scheme3->getTimeWindows() - 1 == 10);
 }
 
 // Test I(2), I(2), E
@@ -749,28 +749,28 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit2Implicit2Explicit1DiffIt
     if (advances % 3 == 0) {
       BOOST_TEST(scheme1->isActionRequired(writeIterationCheckpoint));
       BOOST_TEST(scheme2->isActionRequired(writeIterationCheckpoint));
-      BOOST_TEST(scheme1->getTimesteps() - 1 == advances / 3);
-      BOOST_TEST(scheme2->getTimesteps() - 1 == advances / 3);
-      BOOST_TEST(scheme3->getTimesteps() - 1 == advances / 3);
+      BOOST_TEST(scheme1->getTimeWindows() - 1 == advances / 3);
+      BOOST_TEST(scheme2->getTimeWindows() - 1 == advances / 3);
+      BOOST_TEST(scheme3->getTimeWindows() - 1 == advances / 3);
     } else if (advances % 3 == 1) {
       BOOST_TEST(scheme1->isActionRequired(readIterationCheckpoint));
       BOOST_TEST(scheme2->isActionRequired(readIterationCheckpoint));
-      BOOST_TEST(scheme1->getTimesteps() - 1 == (advances - 1) / 3);
-      BOOST_TEST(scheme2->getTimesteps() - 1 == (advances - 1) / 3);
-      BOOST_TEST(scheme3->getTimesteps() - 1 == (advances - 1) / 3);
+      BOOST_TEST(scheme1->getTimeWindows() - 1 == (advances - 1) / 3);
+      BOOST_TEST(scheme2->getTimeWindows() - 1 == (advances - 1) / 3);
+      BOOST_TEST(scheme3->getTimeWindows() - 1 == (advances - 1) / 3);
     } else if (advances % 3 == 2) {
       BOOST_TEST(scheme1->isActionRequired(readIterationCheckpoint));
       BOOST_TEST(scheme2->isActionRequired(writeIterationCheckpoint));
-      BOOST_TEST(scheme1->getTimesteps() - 1 == (advances - 2) / 3);
-      BOOST_TEST(scheme2->getTimesteps() - 1 == (advances + 1) / 3);
-      BOOST_TEST(scheme3->getTimesteps() - 1 == (advances - 2) / 3);
+      BOOST_TEST(scheme1->getTimeWindows() - 1 == (advances - 2) / 3);
+      BOOST_TEST(scheme2->getTimeWindows() - 1 == (advances + 1) / 3);
+      BOOST_TEST(scheme3->getTimeWindows() - 1 == (advances - 2) / 3);
     }
   }
   composition.finalize();
   BOOST_TEST(advances == 30);
-  BOOST_TEST(scheme1->getTimesteps() - 1 == 10);
-  BOOST_TEST(scheme2->getTimesteps() - 1 == 10);
-  BOOST_TEST(scheme3->getTimesteps() - 1 == 10);
+  BOOST_TEST(scheme1->getTimeWindows() - 1 == 10);
+  BOOST_TEST(scheme2->getTimeWindows() - 1 == 10);
+  BOOST_TEST(scheme3->getTimeWindows() - 1 == 10);
 }
 
 BOOST_AUTO_TEST_CASE(testDummySchemeCompositionUntitled) /// @todo give a better name, what is this test doing?
@@ -796,18 +796,18 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionUntitled) /// @todo give a better
     advances++;
     if (advances % 4 >= 3) {
       BOOST_TEST(scheme1->isActionRequired(writeIterationCheckpoint));
-      BOOST_TEST(scheme1->getTimesteps() - 1 == (advances - (advances % 4) + 4) / 4);
+      BOOST_TEST(scheme1->getTimeWindows() - 1 == (advances - (advances % 4) + 4) / 4);
     } else if (advances % 4 != 0) {
       BOOST_TEST(scheme1->isActionRequired(readIterationCheckpoint));
     }
-    BOOST_TEST(scheme2->getTimesteps() - 1 == (advances + 1) / 4);
-    BOOST_TEST(scheme2->getTimesteps() - 1 == (advances + 1) / 4);
+    BOOST_TEST(scheme2->getTimeWindows() - 1 == (advances + 1) / 4);
+    BOOST_TEST(scheme2->getTimeWindows() - 1 == (advances + 1) / 4);
   }
   composition.finalize();
   BOOST_TEST(advances == 40);
-  BOOST_TEST(scheme1->getTimesteps() - 1 == 10);
-  BOOST_TEST(scheme2->getTimesteps() - 1 == 10);
-  BOOST_TEST(scheme3->getTimesteps() - 1 == 10);
+  BOOST_TEST(scheme1->getTimeWindows() - 1 == 10);
+  BOOST_TEST(scheme2->getTimeWindows() - 1 == 10);
+  BOOST_TEST(scheme3->getTimeWindows() - 1 == 10);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
