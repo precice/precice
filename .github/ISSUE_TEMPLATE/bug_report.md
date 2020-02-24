@@ -12,7 +12,7 @@ assignees: ''
 Operating system (e.g. Linux distribution and version): _Ubuntu 18.04_
 preCICE Version: x.y.z
 
-Add the versions of further adapter and/or bindings.
+Add the versions/commit hashes of further adapter and/or bindings.
 
 **Describe the problem**
 Describe the problem in detail including error output, logs, screenshots etc.
