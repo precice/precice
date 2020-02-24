@@ -238,6 +238,9 @@ protected:
   /// Updates internal state of coupling scheme for next time window.
   void timeWindowCompleted();
 
+  /// Returns true if end time of time window is reached. Does not check for convergence
+  bool subcyclingIsCompleted();
+
   /// Initializes internal state of coupling scheme for at beginning of advance.
   void timeWindowSetup();
 

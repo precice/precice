@@ -132,7 +132,7 @@ void MultiCouplingScheme::advance()
   timeWindowSetup();
 
   bool convergence = false;
-  if (math::equals(getThisTimeWindowRemainder(), 0.0, _eps)) {
+  if (subcyclingIsCompleted()) {
     PRECICE_DEBUG("Computed full length of iteration");
 
     receiveData();
@@ -180,8 +180,7 @@ void MultiCouplingScheme::advance()
     }
     updateTimeAndIterations(convergence);
     setHasDataBeenExchanged(true);
-    setComputedTimeWindowPart(0.0);
-  } // subcycling complete
+  }
 }
 
 void MultiCouplingScheme::mergeData()

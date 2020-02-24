@@ -755,6 +755,7 @@ void BaseCouplingScheme::updateTimeAndIterations(
     _iterationsCoarseOptimization = 1;
     _iterations                   = manifoldmapping ? 0 : 1;
   }
+  _computedTimeWindowPart = 0.0;
 }
 
 void BaseCouplingScheme::timeWindowCompleted()
@@ -767,6 +768,11 @@ void BaseCouplingScheme::timeWindowCompleted()
     PRECICE_DEBUG("Setting require create checkpoint");
     requireAction(constants::actionWriteIterationCheckpoint());
   }
+}
+
+bool BaseCouplingScheme::subcyclingIsCompleted()
+{
+  return math::equals(getThisTimeWindowRemainder(), 0.0, _eps);
 }
 
 void BaseCouplingScheme::timeWindowSetup()

@@ -142,13 +142,13 @@ void ParallelCouplingScheme::advance()
 {
   timeWindowSetup();
 
-  if (math::equals(getThisTimeWindowRemainder(), 0.0, _eps)) {
+  if (subcyclingIsCompleted()) {
     if (_couplingMode == Explicit) {
       explicitAdvance();
     } else if (_couplingMode == Implicit) {
       implicitAdvance();
     }
-  } // subcycling complete
+  }
 }
 
 void ParallelCouplingScheme::explicitAdvance()
@@ -299,7 +299,6 @@ void ParallelCouplingScheme::implicitAdvance()
   }
   updateTimeAndIterations(convergence, convergenceCoarseOptimization);
   setHasDataBeenExchanged(true);
-  setComputedTimeWindowPart(0.0);
 }
 
 void ParallelCouplingScheme::mergeData()

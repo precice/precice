@@ -159,18 +159,19 @@ void SerialCouplingScheme::advance()
 
   timeWindowSetup();
 
-  if (math::equals(getThisTimeWindowRemainder(), 0.0, _eps)) {
+  if (subcyclingIsCompleted()) {
     if (_couplingMode == Explicit) {
       explicitAdvance();
     } else if (_couplingMode == Implicit) {
       implicitAdvance();
     }
-  } //subcycling completed
+  }
 }
 
 void SerialCouplingScheme::explicitAdvance()
 {
   timeWindowCompleted();
+
   PRECICE_DEBUG("Sending data...");
   sendDt();
   sendData(getM2N());
@@ -181,6 +182,7 @@ void SerialCouplingScheme::explicitAdvance()
     receiveData(getM2N());
     setHasDataBeenExchanged(true);
   }
+
   setComputedTimeWindowPart(0.0);
 }
 
@@ -328,7 +330,6 @@ void SerialCouplingScheme::implicitAdvance()
   }
 
   updateTimeAndIterations(convergence, convergenceCoarseOptimization);
-  setComputedTimeWindowPart(0.0);
 }
 
 } // namespace cplscheme
