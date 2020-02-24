@@ -255,7 +255,7 @@ void SerialCouplingScheme::implicitAdvance()
     // for multi-level case, i.e., manifold mapping: after convergence of coarse problem
     // we only want to evaluate the fine model for the new input, no acceleration etc..
     if (not doOnlySolverEvaluation) {
-      // coupling iteration converged for current time step. Advance in time.
+      // coupling iteration converged for current time window. Advance in time.
       if (convergence) {
         if (getAcceleration().get() != nullptr) {
           _deletedColumnsPPFiltering = getAcceleration()->getDeletedColumns();
