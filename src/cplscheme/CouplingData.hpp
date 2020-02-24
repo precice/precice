@@ -14,7 +14,7 @@ struct CouplingData {
   /// Data values of current iteration.
   Eigen::VectorXd *values;
 
-  /// Data values of previous iteration (1st col) and previous timesteps.
+  /// Data values of previous iteration (1st col) and previous time windows.
   DataMatrix oldValues;
 
   mesh::PtrMesh mesh;
