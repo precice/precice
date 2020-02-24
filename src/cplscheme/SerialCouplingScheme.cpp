@@ -39,8 +39,8 @@ void SerialCouplingScheme::initialize(
   PRECICE_ASSERT(not isInitialized());
   PRECICE_ASSERT(math::greaterEquals(startTime, 0.0), startTime);
   PRECICE_ASSERT(startTimeWindow >= 0, startTimeWindow);
-  setTime(startTime);
-  setTimeWindows(startTimeWindow);
+
+  BaseCouplingScheme::initialize(startTime, startTimeWindow);
 
   if (_couplingMode == Implicit) {
     PRECICE_CHECK(not getSendData().empty(), "No send data configured! Use explicit scheme for one-way coupling.");
@@ -145,7 +145,6 @@ void SerialCouplingScheme::initializeData()
 
 void SerialCouplingScheme::advance()
 {
-  PRECICE_TRACE(getTimeWindows(), getTime());
 #ifndef NDEBUG
   for (const DataMap::value_type &pair : getReceiveData()) {
     Eigen::VectorXd &  values = *pair.second->values;
@@ -157,13 +156,8 @@ void SerialCouplingScheme::advance()
     PRECICE_DEBUG("Begin advance, first New Values: " << stream.str());
   }
 #endif
-  checkCompletenessRequiredActions();
 
-  PRECICE_CHECK(not hasToReceiveInitData() && not hasToSendInitData(),
-                "initializeData() needs to be called before advance if data has to be initialized!");
-
-  setHasDataBeenExchanged(false);
-  setIsTimeWindowComplete(false);
+  timeWindowSetup();
 
   if (math::equals(getThisTimeWindowRemainder(), 0.0, _eps)) {
     if (_couplingMode == Explicit) {
@@ -176,8 +170,7 @@ void SerialCouplingScheme::advance()
 
 void SerialCouplingScheme::explicitAdvance()
 {
-  setIsTimeWindowComplete(true);
-  setTimeWindows(getTimeWindows() + 1);
+  timeWindowCompleted();
   PRECICE_DEBUG("Sending data...");
   sendDt();
   sendData(getM2N());
