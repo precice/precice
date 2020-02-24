@@ -40,7 +40,8 @@ void MultiCouplingScheme::initialize(
   PRECICE_ASSERT(not isInitialized());
   PRECICE_ASSERT(math::greaterEquals(startTime, 0.0), startTime);
   PRECICE_ASSERT(startTimeWindow >= 0, startTimeWindow);
-  BaseCouplingScheme::initialize(startTime, startTimeWindow);
+  setTime(startTime);
+  setTimeWindows(startTimeWindow);
 
   mergeData();                 // merge send and receive data for all pp calls
   setupConvergenceMeasures();  // needs _couplingData configured
@@ -129,8 +130,14 @@ void MultiCouplingScheme::initializeData()
 
 void MultiCouplingScheme::advance()
 {
-  timeWindowSetup();
+  PRECICE_TRACE(getTimeWindows(), getTime());
+  checkCompletenessRequiredActions();
 
+  PRECICE_CHECK(!hasToReceiveInitData() && !hasToSendInitData(),
+                "initializeData() needs to be called before advance if data has to be initialized!");
+
+  setHasDataBeenExchanged(false);
+  setIsTimeWindowComplete(false);
   bool convergence = false;
   if (math::equals(getThisTimeWindowRemainder(), 0.0, _eps)) {
     PRECICE_DEBUG("Computed full length of iteration");

@@ -39,9 +39,8 @@ void ParallelCouplingScheme::initialize(
   PRECICE_ASSERT(not isInitialized());
   PRECICE_ASSERT(math::greaterEquals(startTime, 0.0), startTime);
   PRECICE_ASSERT(startTimeWindow >= 0, startTimeWindow);
-
-  BaseCouplingScheme::initialize(startTime, startTimeWindow);
-
+  setTime(startTime);
+  setTimeWindows(startTimeWindow);
   if (_couplingMode == Implicit) {
     PRECICE_CHECK(not getSendData().empty(), "No send data configured! Use explicit scheme for one-way coupling.");
     if (not doesFirstStep()) {         // second participant
@@ -140,7 +139,14 @@ void ParallelCouplingScheme::initializeData()
 
 void ParallelCouplingScheme::advance()
 {
-  timeWindowSetup();
+  PRECICE_TRACE(getTimeWindows(), getTime());
+  checkCompletenessRequiredActions();
+
+  PRECICE_CHECK(!hasToReceiveInitData() && !hasToSendInitData(),
+                "initializeData() needs to be called before advance if data has to be initialized!");
+
+  setHasDataBeenExchanged(false);
+  setIsTimeWindowComplete(false);
 
   if (math::equals(getThisTimeWindowRemainder(), 0.0, _eps)) {
     if (_couplingMode == Explicit) {
@@ -153,7 +159,8 @@ void ParallelCouplingScheme::advance()
 
 void ParallelCouplingScheme::explicitAdvance()
 {
-  timeWindowCompleted();
+  setIsTimeWindowComplete(true);
+  setTimeWindows(getTimeWindows() + 1);
 
   if (doesFirstStep()) {
     PRECICE_DEBUG("Sending data...");

@@ -175,16 +175,12 @@ public:
   virtual void finalize();
 
   /**
-   * @brief Initializes the coupling scheme.
-   *
-   * @param[in] startTime starting time of coupling scheme
-   * @param[in] startTimeWindow ID of time window, from which coupling scheme starts
-   */
-  virtual void initialize(double startTime, int startTimeWindow)
-  {
-    _time        = startTime;
-    _timeWindows = startTimeWindow;
-  }
+* @brief Initializes the coupling scheme.
+*
+* @param[in] startTime TODO
+* @param[in] startTimeWindow TODO
+*/
+  virtual void initialize(double startTime, int startTimeWindow) = 0;
 
   /**
    * @brief Initializes data with written values.
@@ -237,9 +233,6 @@ protected:
 
   /// Updates internal state of coupling scheme for next time window.
   void timeWindowCompleted();
-
-  /// Initializes internal state of coupling scheme for at beginning of advance.
-  void timeWindowSetup();
 
   /// Receives and set the timestep length, if this participant is the one to receive
   void receiveAndSetDt();
@@ -309,22 +302,30 @@ protected:
   /**
    * @brief Sets the computed time windows of the coupling scheme.
    *
-   * Used for testing.
+   * Used from subclasses and when a checkpoint has been read.
    */
   void setTimeWindows(int timeWindows)
   {
     _timeWindows = timeWindows;
   }
 
-  /**
-   * Called at end of initialize() to checkpoint successful initialization of coupling scheme
-   *
-   * @param isInitialized
-   */
+  void setTimeWindowSize(double timeWindowSize)
+  {
+    _timeWindowSize = timeWindowSize;
+  }
+
+  void setIsTimeWindowComplete(bool isTimeWindowComplete)
+  {
+    _isTimeWindowComplete = isTimeWindowComplete;
+  }
+
   void setIsInitialized(bool isInitialized)
   {
     _isInitialized = isInitialized;
   }
+
+  /// If any required actions are open, an error message is issued.
+  void checkCompletenessRequiredActions();
 
   /**
    * @brief Returns coupling state information.
@@ -544,9 +545,6 @@ private:
 
   /// Writes out coupling convergence within all time windows.
   std::shared_ptr<io::TXTTableWriter> _convergenceWriter;
-
-  /// If any required actions are open, an error message is issued.
-  void checkCompletenessRequiredActions();
 };
 } // namespace cplscheme
 } // namespace precice
