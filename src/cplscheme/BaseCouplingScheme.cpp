@@ -96,7 +96,7 @@ BaseCouplingScheme::BaseCouplingScheme(
     _doesFirstStep = true;
     if (dtMethod == constants::FIRST_PARTICIPANT_SETS_DT) {
       _participantSetsDt = true;
-      setTimeWindowSize(UNDEFINED_TIME_WINDOW_SIZE);
+      _timeWindowSize = UNDEFINED_TIME_WINDOW_SIZE;
     }
   } else if (localParticipant == _secondParticipant) {
     if (dtMethod == constants::FIRST_PARTICIPANT_SETS_DT) {
@@ -119,7 +119,7 @@ void BaseCouplingScheme::receiveAndSetDt()
     getM2N()->receive(dt);
     PRECICE_DEBUG("Received timestep length of " << dt);
     PRECICE_ASSERT(not math::equals(dt, UNDEFINED_TIME_WINDOW_SIZE));
-    setTimeWindowSize(dt);
+    _timeWindowSize = dt;
   }
 }
 
@@ -167,12 +167,10 @@ void BaseCouplingScheme::addDataToReceive(
 std::vector<int> BaseCouplingScheme::sendData(m2n::PtrM2N m2n)
 {
   PRECICE_TRACE();
-
   std::vector<int> sentDataIDs;
   PRECICE_ASSERT(m2n.get() != nullptr);
   PRECICE_ASSERT(m2n->isConnected());
   for (const DataMap::value_type &pair : _sendData) {
-    //std::cout<<"\nsend data id="<<pair.first<<": "<<*(pair.second->values)<<'\n';
     int size = pair.second->values->size();
     m2n->send(pair.second->values->data(), size, pair.second->mesh->getID(), pair.second->dimension);
     sentDataIDs.push_back(pair.first);
@@ -188,14 +186,12 @@ std::vector<int> BaseCouplingScheme::receiveData(
   std::vector<int> receivedDataIDs;
   PRECICE_ASSERT(m2n.get() != nullptr);
   PRECICE_ASSERT(m2n->isConnected());
-
   for (DataMap::value_type &pair : _receiveData) {
     int size = pair.second->values->size();
     m2n->receive(pair.second->values->data(), size, pair.second->mesh->getID(), pair.second->dimension);
     receivedDataIDs.push_back(pair.first);
   }
   PRECICE_DEBUG("Number of received data sets = " << receivedDataIDs.size());
-
   return receivedDataIDs;
 }
 
@@ -752,7 +748,6 @@ void BaseCouplingScheme::updateTimeAndIterations(
       _totalIterationsCoarseOptimization++;
     }
   } else {
-
     _totalIterationsCoarseOptimization++;
     if (not manifoldmapping)
       _totalIterations++;
@@ -766,12 +761,22 @@ void BaseCouplingScheme::timeWindowCompleted()
 {
   PRECICE_TRACE(getTimeWindows(), getTime());
   PRECICE_INFO("Time window completed");
-  setIsTimeWindowComplete(true);
-  setTimeWindows(getTimeWindows() + 1);
-  if (isCouplingOngoing()) {
+  _isTimeWindowComplete = true;
+  _timeWindows += 1;
+  if (isCouplingOngoing() && _couplingMode == Implicit) {
     PRECICE_DEBUG("Setting require create checkpoint");
     requireAction(constants::actionWriteIterationCheckpoint());
   }
+}
+
+void BaseCouplingScheme::timeWindowSetup()
+{
+  PRECICE_TRACE(getTimeWindows(), getTime());
+  checkCompletenessRequiredActions();
+  PRECICE_CHECK(not hasToReceiveInitData() && not hasToSendInitData(),
+                "initializeData() needs to be called before advance if data has to be initialized!");
+  setHasDataBeenExchanged(false);
+  _isTimeWindowComplete = false;
 }
 
 bool BaseCouplingScheme::maxIterationsReached()
