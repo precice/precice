@@ -9,7 +9,7 @@ assignees: ''
 
 **Describe your setup**
 
-Distribution: _Ubuntu 18.04_
+Operating system (e.g. Linux distribution and version): _Ubuntu 18.04_
 preCICE Version: x.y.z
 
 Add the versions of further adapter and/or bindings.
