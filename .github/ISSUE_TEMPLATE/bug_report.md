@@ -28,3 +28,4 @@ A clear and concise description of what you expected to happen.
 **Additional context**
 Add any other context about the problem here.
 Attach relevant logs and files to this issue.
+Format your text (and especially any output/error messages) (see the [GitHub Markdown guide](https://guides.github.com/features/mastering-markdown/)
