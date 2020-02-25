@@ -85,7 +85,7 @@ private:
       _deadAxis[1] = yDead;
       PRECICE_CHECK(not(xDead && yDead), "You cannot choose all axis to be dead for a RBF mapping");
       if (zDead)
-        PRECICE_WARN("Setting the z-axis to dead on a 2 dimensional problem has not effect and will be ignored.");
+        PRECICE_WARN("Setting the z-axis to dead on a 2 dimensional problem has not effect.");
     } else if (getDimensions() == 3) {
       _deadAxis[0] = xDead;
       _deadAxis[1] = yDead;
@@ -194,8 +194,10 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   }
 
   _qr = matrixCLU.colPivHouseholderQr();
-  if (not _qr.isInvertible())
-    PRECICE_ERROR("Interpolation matrix C is not invertible.");
+  if (not _qr.isInvertible()) {
+    PRECICE_ERROR("RBF interpolation matrix is not invertible! "
+                  "Try to fix axis-aligned mapping setups by marking perpendicular axis as dead.");
+  }
 
   _hasComputedMapping = true;
 }
