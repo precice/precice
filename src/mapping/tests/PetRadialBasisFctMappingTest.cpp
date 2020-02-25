@@ -784,8 +784,8 @@ void testTagging(const TestContext &context,
   Gaussian                           fct(4.5); //Support radius approx. 1
   Mapping::Constraint                constr = consistent ? Mapping::CONSISTENT : Mapping::CONSERVATIVE;
   PetRadialBasisFctMapping<Gaussian> mapping(constr, 2, fct, false, false, false);
-  inMesh->computeState();
-  outMesh->computeState();
+  inMesh->computeBoundingBox();
+  outMesh->computeBoundingBox();
 
   mapping.setMeshes(inMesh, outMesh);
   mapping.tagMeshFirstRound();

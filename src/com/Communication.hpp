@@ -156,13 +156,21 @@ public:
 
   /**
    * @brief Prepare environment used to establish the communication.
+   *
+   * @param[in] acceptorName Name of calling participant.
+   * @param[in] requesterName Name of remote participant to connect to.
    */
-  virtual void prepareEstablishment() {}
+  virtual void prepareEstablishment(std::string const &acceptorName,
+                                    std::string const &requesterName) {}
 
   /**
    * @brief Clean-up environment used to establish the communication.
+   *
+   * @param[in] acceptorName Name of calling participant.
+   * @param[in] requesterName Name of remote participant to connect to.
    */
-  virtual void cleanupEstablishment() {}
+  virtual void cleanupEstablishment(std::string const &acceptorName,
+                                    std::string const &requesterName) {}
 
   /// @}
 

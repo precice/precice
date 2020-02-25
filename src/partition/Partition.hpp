@@ -36,6 +36,9 @@ public:
 
   virtual ~Partition() {}
 
+  /// Intersections between bounding boxes around each rank are computed
+  virtual void compareBoundingBoxes() = 0;
+
   /// The mesh is communicated between both master ranks (if required)
   virtual void communicate() = 0;
 
@@ -66,12 +69,6 @@ protected:
 
   /// m2n connection to each connected participant
   std::vector<m2n::PtrM2N> _m2ns;
-
-  /// Decides which rank owns which vertex, information stored at each rank.
-  virtual void createOwnerInformation() = 0;
-
-  /// Generate vertex offsets from the vertexDistribution, broadcast it to all slaves
-  void computeVertexOffsets();
 
 private:
   logging::Logger _log{"partition::Partition"};

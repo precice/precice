@@ -203,22 +203,13 @@ target_sources(precice
     src/mesh/impl/RTreeAdapter.hpp
     src/partition/Partition.cpp
     src/partition/Partition.hpp
-    src/partition/ProvidedBoundingBox.cpp
-    src/partition/ProvidedBoundingBox.hpp
     src/partition/ProvidedPartition.cpp
     src/partition/ProvidedPartition.hpp
-    src/partition/ReceivedBoundingBox.cpp
-    src/partition/ReceivedBoundingBox.hpp
     src/partition/ReceivedPartition.cpp
     src/partition/ReceivedPartition.hpp
     src/partition/SharedPointer.hpp
     src/precice/SolverInterface.cpp
     src/precice/SolverInterface.hpp
-    src/precice/bindings/c/SolverInterfaceC.cpp
-    src/precice/bindings/fortran/SolverInterfaceFASTEST.cpp
-    src/precice/bindings/fortran/SolverInterfaceFASTEST.hpp
-    src/precice/bindings/fortran/SolverInterfaceFortran.cpp
-    src/precice/bindings/fortran/SolverInterfaceFortran.hpp
     src/precice/config/Configuration.cpp
     src/precice/config/Configuration.hpp
     src/precice/config/ParticipantConfiguration.cpp
@@ -296,5 +287,4 @@ target_sources(precice
 
 set_property(TARGET precice PROPERTY PUBLIC_HEADER
     src/precice/SolverInterface.hpp
-    src/precice/bindings/c/SolverInterfaceC.h
     )

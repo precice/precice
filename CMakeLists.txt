@@ -1,7 +1,7 @@
 cmake_minimum_required (VERSION 3.10.2)
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/XSDKCompilerDetect.cmake)
 
-project(preCICE VERSION 1.6.1 LANGUAGES CXX)
+project(preCICE VERSION 2.0.0 LANGUAGES CXX)
 set(preCICE_SOVERSION ${preCICE_VERSION_MAJOR})
 
 #
@@ -57,13 +57,13 @@ endif()
 
 option(PRECICE_MPICommunication "Enables MPI-based communication and running coupling tests." ON)
 option(PRECICE_PETScMapping "Enable use of the PETSc linear algebra library." ON)
-option(PRECICE_PYTHONACTION "Python support" ON)
+option(PRECICE_PythonActions "Python support" ON)
 option(PRECICE_Packages "Configure package generation." ON)
 option(PRECICE_InstallTest "Add test binary and necessary files to install target." OFF)
 option(BUILD_SHARED_LIBS "Build shared libraries by default" OFF)
 option(PRECICE_ALWAYS_VALIDATE_LIBS "Validate libraries even after the validatation succeeded." OFF)
-
-include(BackwardsCompatibility)
+option(PRECICE_ENABLE_C "Enable the native C bindings" ON)
+option(PRECICE_ENABLE_FORTRAN "Enable the native Fortran bindings" ON)
 
 xsdk_tpl_option_override(PRECICE_MPICommunication TPL_ENABLE_MPI)
 xsdk_tpl_option_override(PRECICE_PETScMapping TPL_ENABLE_PETSC)
@@ -111,6 +111,24 @@ add_feature_info(PythonActions PRECICE_PythonActions
    This feature enables the support for user-defined actions written in Python based on numpy.
 
    Set PRECICE_PythonActions to enable.
+  ")
+add_feature_info(CBindings PRECICE_ENABLE_C
+  "Enables the native Fortran bindings.
+
+   preCICE provides native bindings for C, which are compiled into the library.
+   This feature enables the compilation and installation of the bindings into the library.
+   Note that we strongly recommend to compile with C bindings enabled for compatibility reasons.
+
+   Set PRECICE_ENABLE_C to enable.
+  ")
+add_feature_info(FortranBindings PRECICE_ENABLE_FORTRAN
+  "Enables the native Fortran bindings.
+
+   preCICE provides native bindings for Fortran, which are compiled into the library.
+   This feature enables the compilation and installation of the bindings into the library.
+   Note that we strongly recommend to compile with Fortran bindings enabled for compatibility reasons.
+
+   Set PRECICE_ENABLE_FORTRAN to enable.
   ")
 
 feature_summary(WHAT ENABLED_FEATURES  DESCRIPTION "=== ENABLED FEATURES ===" QUIET_ON_EMPTY)
@@ -406,6 +424,17 @@ endif()
 include(${CMAKE_CURRENT_LIST_DIR}/src/tests.cmake)
 
 
+# Include Native C Bindings
+if (PRECICE_ENABLE_C)
+  # include(${CMAKE_CURRENT_LIST_DIR}/extras/bindings/c/CMakeLists.txt)
+  add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/extras/bindings/c)
+endif()
+
+# Include Native Fortran Bindings
+if (PRECICE_ENABLE_FORTRAN)
+  # include((${CMAKE_CURRENT_LIST_DIR}/extras/bindings/fortran/CMakeLists.txt)
+  add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/extras/bindings/fortran)
+endif()
 #
 # Install Targets for precice
 #
@@ -442,6 +471,12 @@ if(PRECICE_InstallTest)
     PATTERN "*.py"
     )
 endif()
+
+# Install examples
+install(DIRECTORY examples
+  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/precice
+  PATTERN ".gitignore" EXCLUDE
+  )
 
 # Export the Targets to install
 install(EXPORT preciceTargets
@@ -510,7 +545,7 @@ endif()
 
 # Configure a pkg-config file
 configure_file(
-  "${PROJECT_SOURCE_DIR}/tools/packaging/debian/precice.pc.in"
+  "${PROJECT_SOURCE_DIR}/tools/releasing/packaging/debian/precice.pc.in"
   "lib/pkgconfig/libprecice.pc"
   @ONLY
   )

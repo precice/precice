@@ -125,6 +125,12 @@ public:
   void send(std::vector<double> const &v, int rankReceiver) override;
   void receive(std::vector<double> &v, int rankSender) override;
 
+  virtual void prepareEstablishment(std::string const &acceptorName,
+                                    std::string const &requesterName) override;
+
+  virtual void cleanupEstablishment(std::string const &acceptorName,
+                                    std::string const &requesterName) override;
+
 private:
   logging::Logger _log{"com::SocketCommunication"};
 

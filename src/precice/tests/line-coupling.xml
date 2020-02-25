@@ -29,8 +29,8 @@
 
       <coupling-scheme:parallel-explicit>
          <participants first="FASTEST" second="Ateles" />
-         <max-timesteps value="10" />
-         <timestep-length value="1.0" />
+         <max-time-windows value="10" />
+         <time-window-size value="1.0" />
          <exchange data="Pressure" mesh="FASTEST_Mesh" from="FASTEST" to="Ateles" />
       </coupling-scheme:parallel-explicit>
 

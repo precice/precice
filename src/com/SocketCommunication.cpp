@@ -1,6 +1,7 @@
 #include "SocketCommunication.hpp"
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
+#include <boost/filesystem.hpp>
 #include <sstream>
 #include "ConnectionInfoPublisher.hpp"
 #include "SocketRequest.hpp"
@@ -348,6 +349,32 @@ void SocketCommunication::send(const int *itemsToSend, int size, int rankReceive
     asio::write(*_sockets[rankReceiver], asio::buffer(itemsToSend, size * sizeof(int)));
   } catch (std::exception &e) {
     PRECICE_ERROR("Send failed: " << e.what());
+  }
+}
+
+void SocketCommunication::prepareEstablishment(std::string const &acceptorName,
+                                               std::string const &requesterName)
+{
+  using namespace boost::filesystem;
+  path dir = com::impl::localDirectory(acceptorName, requesterName, _addressDirectory);
+  PRECICE_DEBUG("Creating connection exchange directory " << dir);
+  try {
+    create_directories(dir);
+  } catch (const boost::filesystem::filesystem_error &e) {
+    PRECICE_WARN("Creating directory for connection info failed with: " << e.what());
+  }
+}
+
+void SocketCommunication::cleanupEstablishment(std::string const &acceptorName,
+                                               std::string const &requesterName)
+{
+  using namespace boost::filesystem;
+  path dir = com::impl::localDirectory(acceptorName, requesterName, _addressDirectory);
+  PRECICE_DEBUG("Removing connection exchange directory " << dir);
+  try {
+    remove_all(dir);
+  } catch (const boost::filesystem::filesystem_error &e) {
+    PRECICE_WARN("Cleaning up connection info failed with: " << e.what());
   }
 }
 

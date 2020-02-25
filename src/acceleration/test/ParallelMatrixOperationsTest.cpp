@@ -167,6 +167,7 @@ BOOST_AUTO_TEST_CASE(ParallelMatrixMatrixOp)
     _cyclicCommRight->requestConnection("cyclicComm-" + std::to_string(context.rank), "", "Test", 0, 1);
     _cyclicCommLeft->acceptConnection("cyclicComm-" + std::to_string(prevProc), "", "Test", context.rank);
   }
+  _cyclicCommLeft->cleanupEstablishment("cyclicComm-" + std::to_string(prevProc), "");
 
   int              n_global = 10, m_global = 5;
   int              n_local;

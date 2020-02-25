@@ -14,7 +14,7 @@
    <m2n:sockets from="Participant0" to="Participant1"/>
    <coupling-scheme:serial-explicit>
       <participants first="Participant0" second="Participant1"/>
-      <timestep-length method="first-participant"/>
+      <time-window-size method="first-participant"/>
       <max-time value="1.0"/>
       <exchange data="Data0" mesh="Mesh" from="Participant0" to="Participant1"/>
       <exchange data="Data1" mesh="Mesh" from="Participant1" to="Participant0"/>

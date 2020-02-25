@@ -120,6 +120,7 @@ void MVQNAcceleration::initialize(
         _cyclicCommRight->requestConnection("cyclicComm-" + std::to_string(utils::MasterSlave::getRank()), "", "", 0, 1);
         _cyclicCommLeft->acceptConnection("cyclicComm-" + std::to_string(prevProc), "", "", utils::MasterSlave::getRank());
       }
+      _cyclicCommLeft->cleanupEstablishment("cyclicComm-" + std::to_string(prevProc), "");
     }
   }
 

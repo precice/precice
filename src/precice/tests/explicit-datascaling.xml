@@ -4,40 +4,40 @@
    <solver-interface dimensions="2">
       <data:vector name="Forces"     />
       <data:vector name="Velocities" />
-      
+
       <mesh name="Test-Square">
          <use-data name="Forces" />
          <use-data name="Velocities" />
       </mesh>
-      
-      <m2n:sockets from="SolverOne" to="SolverTwo"/>
-      
+
+      <m2n:mpi-single from="SolverOne" to="SolverTwo"/>
+
       <participant name="SolverOne">
          <use-mesh name="Test-Square" provide="yes"/>
          <write-data name="Velocities" mesh="Test-Square" />
          <read-data  name="Forces"     mesh="Test-Square" />
-         <action:divide-by-area timing="on-exchange-post" mesh="Test-Square"> 
+         <action:divide-by-area timing="on-exchange-post" mesh="Test-Square">
             <target-data name="Forces"/>
          </action:divide-by-area>
       </participant>
-       
+
       <participant name="SolverTwo">
          <use-mesh name="Test-Square" from="SolverOne"/>
          <write-data name="Forces"    mesh="Test-Square" />
          <read-data name="Velocities" mesh="Test-Square" />
-         <action:divide-by-area timing="on-exchange-post" mesh="Test-Square"> 
+         <action:divide-by-area timing="on-exchange-post" mesh="Test-Square">
             <target-data name="Velocities"/>
          </action:divide-by-area>
       </participant>
-      
-      <coupling-scheme:serial-explicit> 
-         <participants first="SolverOne" second="SolverTwo" /> 
-         <max-timesteps value="10" />
-         <timestep-length value="0.01" />
+
+      <coupling-scheme:serial-explicit>
+         <participants first="SolverOne" second="SolverTwo" />
+         <max-time-windows value="10" />
+         <time-window-size value="0.01" />
          <exchange data="Forces"     mesh="Test-Square" from="SolverTwo" to="SolverOne"/>
          <exchange data="Velocities" mesh="Test-Square" from="SolverOne" to="SolverTwo"/>
       </coupling-scheme:serial-explicit>
-                   
+
    </solver-interface>
 
 </precice-configuration>

@@ -87,6 +87,10 @@ M2NConfiguration::M2NConfiguration(xml::XMLTag &parent)
   attrEnforce.setDocumentation("Enforce the distributed communication to a gather-scatter scheme. "
                                "Only recommended for trouble shooting.");
 
+  XMLAttribute<bool> attrTwoLevel(ATTR_USE_TWO_LEVEL_INIT, false);
+  attrTwoLevel.setDocumentation("Use a two-level initialization scheme. "
+                                "Recommended for large parallel runs (>5000 MPI ranks).");
+
   auto attrFrom = XMLAttribute<std::string>("from")
                       .setDocumentation(
                           "First participant name involved in communication. For performance reasons, we recommend to use "
@@ -98,6 +102,7 @@ M2NConfiguration::M2NConfiguration(xml::XMLTag &parent)
     tag.addAttribute(attrFrom);
     tag.addAttribute(attrTo);
     tag.addAttribute(attrEnforce);
+    tag.addAttribute(attrTwoLevel);
     parent.addSubtag(tag);
   }
 }
@@ -112,9 +117,7 @@ m2n::PtrM2N M2NConfiguration::getM2N(const std::string &from, const std::string 
       return get<0>(tuple);
     }
   }
-  std::ostringstream error;
-  error << "No m2n communication configured between \"" << from << "\" and \"" << to << "\"!";
-  throw std::runtime_error{error.str()};
+  throw std::runtime_error{std::string{"No m2n communication configured between \""} + from + "\" and \"" + to + "\"!"};
 }
 
 void M2NConfiguration::xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &tag)
@@ -124,6 +127,14 @@ void M2NConfiguration::xmlTagCallback(const xml::ConfigurationContext &context, 
     std::string to   = tag.getStringAttributeValue("to");
     checkDuplicates(from, to);
     bool enforceGatherScatter = tag.getBooleanAttributeValue(ATTR_ENFORCE_GATHER_SCATTER);
+    bool useTwoLevelInit      = tag.getBooleanAttributeValue(ATTR_USE_TWO_LEVEL_INIT);
+
+    if (enforceGatherScatter && useTwoLevelInit) {
+      throw std::runtime_error{"A gather-scatter m2n communication cannot use two-level initialization."};
+    }
+    if (context.size == 1 && useTwoLevelInit) {
+      throw std::runtime_error{"To use two-level initialization, both participants need to run in parallel."};
+    }
 
     com::PtrCommunicationFactory comFactory;
     com::PtrCommunication        com;
@@ -140,10 +151,7 @@ void M2NConfiguration::xmlTagCallback(const xml::ConfigurationContext &context, 
     } else if (tag.getName() == "mpi") {
       std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
 #ifdef PRECICE_NO_MPI
-      std::ostringstream error;
-      error << "Communication type \"mpi\" can only be used"
-            << "when preCICE is compiled with argument \"mpi=on\"";
-      throw std::runtime_error{error.str()};
+      throw std::runtime_error{"Communication type \"mpi\" can only be used when preCICE is compiled with argument \"mpi=on\""};
 #else
       comFactory = std::make_shared<com::MPIPortsCommunicationFactory>(dir);
       com        = comFactory->newCommunication();
@@ -151,22 +159,14 @@ void M2NConfiguration::xmlTagCallback(const xml::ConfigurationContext &context, 
     } else if (tag.getName() == "mpi-singleports") {
       std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
 #ifdef PRECICE_NO_MPI
-      std::ostringstream error;
-      error << "Communication type \"mpi-singleports\" can only be used "
-            << "when preCICE is compiled with argument \"mpi=on\"";
-      throw std::runtime_error{error.str()};
+      throw std::runtime_error{"Communication type \"mpi-singleports\" can only be used when preCICE is compiled with argument \"mpi=on\""};
 #else
       comFactory = std::make_shared<com::MPISinglePortsCommunicationFactory>(dir);
       com        = comFactory->newCommunication();
 #endif
     } else if (tag.getName() == "mpi-single") {
 #ifdef PRECICE_NO_MPI
-      std::ostringstream error;
-      error << "Communication type \""
-            << "mpi-single"
-            << "\" can only be used "
-            << "when preCICE is compiled with argument \"mpi=on\"";
-      throw std::runtime_error{error.str()};
+      throw std::runtime_error{"Communication type \"mpi-single\" can only be used when preCICE is compiled with argument \"mpi=on\""};
 #else
       com        = std::make_shared<com::MPIDirectCommunication>();
 #endif
@@ -182,7 +182,7 @@ void M2NConfiguration::xmlTagCallback(const xml::ConfigurationContext &context, 
     }
     PRECICE_ASSERT(distrFactory.get() != nullptr);
 
-    auto m2n = std::make_shared<m2n::M2N>(com, distrFactory);
+    auto m2n = std::make_shared<m2n::M2N>(com, distrFactory, false, useTwoLevelInit);
     _m2ns.push_back(std::make_tuple(m2n, from, to));
   }
 }
@@ -198,10 +198,7 @@ void M2NConfiguration::checkDuplicates(
     alreadyAdded |= (get<2>(tuple) == from) && (get<1>(tuple) == to);
   }
   if (alreadyAdded) {
-    std::ostringstream error;
-    error << "Multiple communication defined between participant \"" << from
-          << "\" and \"" << to << "\"";
-    throw std::runtime_error{error.str()};
+    throw std::runtime_error{std::string{"Multiple communication defined between participant \""} + from + "\" and \"" + to + "\""};
   }
 }
 

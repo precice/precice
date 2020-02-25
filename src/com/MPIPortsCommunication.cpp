@@ -1,6 +1,7 @@
 #ifndef PRECICE_NO_MPI
 
 #include "MPIPortsCommunication.hpp"
+#include <boost/filesystem.hpp>
 #include "ConnectionInfoPublisher.hpp"
 #include "utils/Parallel.hpp" //TODO remove
 #include "utils/assertion.hpp"
@@ -188,6 +189,32 @@ void MPIPortsCommunication::closeConnection()
   }
 
   _isConnected = false;
+}
+
+void MPIPortsCommunication::prepareEstablishment(std::string const &acceptorName,
+                                                 std::string const &requesterName)
+{
+  using namespace boost::filesystem;
+  path dir = com::impl::localDirectory(acceptorName, requesterName, _addressDirectory);
+  PRECICE_DEBUG("Creating connection exchange directory " << dir);
+  try {
+    create_directories(dir);
+  } catch (const boost::filesystem::filesystem_error &e) {
+    PRECICE_WARN("Creating directory for connection info failed with: " << e.what());
+  }
+}
+
+void MPIPortsCommunication::cleanupEstablishment(std::string const &acceptorName,
+                                                 std::string const &requesterName)
+{
+  using namespace boost::filesystem;
+  path dir = com::impl::localDirectory(acceptorName, requesterName, _addressDirectory);
+  PRECICE_DEBUG("Removing connection exchange directory " << dir);
+  try {
+    remove_all(dir);
+  } catch (const boost::filesystem::filesystem_error &e) {
+    PRECICE_WARN("Cleaning up connection info failed with: " << e.what());
+  }
 }
 
 MPI_Comm &MPIPortsCommunication::communicator(int rank)

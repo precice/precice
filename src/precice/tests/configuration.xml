@@ -36,8 +36,8 @@
          <read-data  name="Displacements"  mesh="PeanoNodes" />
          <read-data  name="Velocities"     mesh="PeanoNodes" />
          <read-data  name="VelocityDeltas" mesh="PeanoNodes" />
-         <export:vtk timestep-interval="100" directory="output/"/>
-         <export:vtk timestep-interval="100" directory=""/>
+         <export:vtk every-n-time-windows="100" directory="output/"/>
+         <export:vtk every-n-time-windows="100" directory=""/>
          <watch-point name="pointa" mesh="PeanoNodes" coordinate="1.0; 1.0" />
       </participant>
 
@@ -55,7 +55,7 @@
       <coupling-scheme:serial-explicit>
          <participants first="Peano" second="Comsol" />
          <max-time value="1.0" />
-         <timestep-length value="0.1" />
+         <time-window-size value="0.1" />
          <exchange data="Forces"         mesh="ComsolNodes" from="Peano" to="Comsol"/>
          <exchange data="Velocities"     mesh="ComsolNodes" from="Comsol" to="Peano"/>
          <exchange data="Displacements"  mesh="ComsolNodes" from="Comsol" to="Peano"/>

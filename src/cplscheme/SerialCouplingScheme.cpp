@@ -10,8 +10,8 @@ namespace cplscheme {
 
 SerialCouplingScheme::SerialCouplingScheme(
     double                        maxTime,
-    int                           maxTimesteps,
-    double                        timestepLength,
+    int                           maxTimeWindows,
+    double                        timeWindowSize,
     int                           validDigits,
     const std::string &           firstParticipant,
     const std::string &           secondParticipant,
@@ -20,7 +20,7 @@ SerialCouplingScheme::SerialCouplingScheme(
     constants::TimesteppingMethod dtMethod,
     CouplingMode                  cplMode,
     int                           maxIterations)
-    : BaseCouplingScheme(maxTime, maxTimesteps, timestepLength, validDigits, firstParticipant,
+    : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, firstParticipant,
                          secondParticipant, localParticipant, m2n, maxIterations, dtMethod)
 {
   _couplingMode = cplMode;
@@ -33,14 +33,14 @@ SerialCouplingScheme::SerialCouplingScheme(
 
 void SerialCouplingScheme::initialize(
     double startTime,
-    int    startTimestep)
+    int    startTimeWindow)
 {
-  PRECICE_TRACE(startTime, startTimestep);
+  PRECICE_TRACE(startTime, startTimeWindow);
   PRECICE_ASSERT(not isInitialized());
   PRECICE_ASSERT(math::greaterEquals(startTime, 0.0), startTime);
-  PRECICE_ASSERT(startTimestep >= 0, startTimestep);
+  PRECICE_ASSERT(startTimeWindow >= 0, startTimeWindow);
   setTime(startTime);
-  setTimesteps(startTimestep);
+  setTimeWindows(startTimeWindow);
 
   if (_couplingMode == Implicit) {
     PRECICE_CHECK(not getSendData().empty(), "No send data configured! Use explicit scheme for one-way coupling.");
@@ -125,11 +125,11 @@ void SerialCouplingScheme::initializeData()
       if (pair.second->oldValues.cols() == 0)
         break;
       pair.second->oldValues.col(0) = *pair.second->values;
-      // For extrapolation, treat the initial value as old timestep value
+      // For extrapolation, treat the initial value as old time window value
       utils::shiftSetFirst(pair.second->oldValues, *pair.second->values);
     }
 
-    // The second participant sends the initialized data to the first particpant
+    // The second participant sends the initialized data to the first participant
     // here, which receives the data on call of initialize().
     sendData(getM2N());
     receiveAndSetDt();
@@ -145,7 +145,7 @@ void SerialCouplingScheme::initializeData()
 
 void SerialCouplingScheme::advance()
 {
-  PRECICE_TRACE(getTimesteps(), getTime());
+  PRECICE_TRACE(getTimeWindows(), getTime());
 #ifndef NDEBUG
   for (const DataMap::value_type &pair : getReceiveData()) {
     Eigen::VectorXd &  values = *pair.second->values;
@@ -163,172 +163,179 @@ void SerialCouplingScheme::advance()
                 "initializeData() needs to be called before advance if data has to be initialized!");
 
   setHasDataBeenExchanged(false);
-  setIsCouplingTimestepComplete(false);
+  setIsTimeWindowComplete(false);
 
-  if (_couplingMode == Explicit) {
-    if (math::equals(getThisTimestepRemainder(), 0.0, _eps)) {
-      setIsCouplingTimestepComplete(true);
-      setTimesteps(getTimesteps() + 1);
-      PRECICE_DEBUG("Sending data...");
-      sendDt();
-      sendData(getM2N());
-
-      if (isCouplingOngoing() || doesFirstStep()) {
-        PRECICE_DEBUG("Receiving data...");
-        receiveAndSetDt();
-        receiveData(getM2N());
-        setHasDataBeenExchanged(true);
-      }
-      setComputedTimestepPart(0.0);
+  if (math::equals(getThisTimeWindowRemainder(), 0.0, _eps)) {
+    if (_couplingMode == Explicit) {
+      explicitAdvance();
+    } else if (_couplingMode == Implicit) {
+      implicitAdvance();
     }
-  } else if (_couplingMode == Implicit) {
-    bool convergence                   = true;
-    bool convergenceCoarseOptimization = true;
-    bool doOnlySolverEvaluation        = false;
+  } //subcycling completed
+}
 
-    if (math::equals(getThisTimestepRemainder(), 0.0, _eps)) {
-      PRECICE_DEBUG("Computed full length of iteration");
-      if (doesFirstStep()) {
-        sendDt();
-        sendData(getM2N());
-        getM2N()->receive(convergence);
-        getM2N()->receive(_isCoarseModelOptimizationActive);
-        if (convergence) {
-          timestepCompleted();
-        }
-        //if (isCouplingOngoing()) {
-        receiveData(getM2N());
-        //}
-        setHasDataBeenExchanged(true);
-      } else {
+void SerialCouplingScheme::explicitAdvance()
+{
+  setIsTimeWindowComplete(true);
+  setTimeWindows(getTimeWindows() + 1);
+  PRECICE_DEBUG("Sending data...");
+  sendDt();
+  sendData(getM2N());
 
-        // get the current design specifications from the acceleration (for convergence measure)
-        std::map<int, Eigen::VectorXd> designSpecifications;
-        if (getAcceleration().get() != nullptr) {
-          designSpecifications = getAcceleration()->getDesignSpecification(getSendData());
-        }
-        // measure convergence of coupling iteration
-        // measure convergence for coarse model optimization
-        if (_isCoarseModelOptimizationActive) {
-          PRECICE_DEBUG("measure convergence of coarse model optimization.");
-          // in case of multilevel acceleration only: measure the convergence of the coarse model optimization
-          convergenceCoarseOptimization = measureConvergenceCoarseModelOptimization(designSpecifications);
-          // Stop, when maximal iteration count (given in config) is reached
-          if (maxIterationsReached())
-            convergenceCoarseOptimization = true;
-
-          convergence = false;
-          // in case of multilevel PP only: if coarse model optimization converged
-          // steering the requests for evaluation of coarse and fine model, respectively
-          if (convergenceCoarseOptimization) {
-            _isCoarseModelOptimizationActive = false;
-            doOnlySolverEvaluation           = true;
-          } else {
-            _isCoarseModelOptimizationActive = true;
-          }
-        }
-        // measure convergence of coupling iteration
-        else {
-          PRECICE_DEBUG("measure convergence.");
-          doOnlySolverEvaluation = false;
-
-          // measure convergence of the coupling iteration,
-          convergence = measureConvergence(designSpecifications);
-          // Stop, when maximal iteration count (given in config) is reached
-          if (maxIterationsReached())
-            convergence = true;
-        }
-
-        // passed by reference, modified in MM acceleration. No-op for all other accelerations
-        if (getAcceleration().get() != nullptr) {
-          getAcceleration()->setCoarseModelOptimizationActive(&_isCoarseModelOptimizationActive);
-        }
-
-        // for multi-level case, i.e., manifold mapping: after convergence of coarse problem
-        // we only want to evaluate the fine model for the new input, no acceleration etc..
-        if (not doOnlySolverEvaluation) {
-          // coupling iteration converged for current time step. Advance in time.
-          if (convergence) {
-            if (getAcceleration().get() != nullptr) {
-              _deletedColumnsPPFiltering = getAcceleration()->getDeletedColumns();
-              getAcceleration()->iterationsConverged(getSendData());
-            }
-            newConvergenceMeasurements();
-            timestepCompleted();
-
-            // no convergence achieved for the coupling iteration within the current time step
-          } else if (getAcceleration().get() != nullptr) {
-            getAcceleration()->performAcceleration(getSendData());
-          }
-
-          // extrapolate new input data for the solver evaluation in time.
-          if (convergence && (getExtrapolationOrder() > 0)) {
-            extrapolateData(getSendData()); // Also stores data
-          } else {                          // Store data for conv. measurement, acceleration, or extrapolation
-            for (DataMap::value_type &pair : getSendData()) {
-              if (pair.second->oldValues.size() > 0) {
-                pair.second->oldValues.col(0) = *pair.second->values;
-              }
-            }
-            for (DataMap::value_type &pair : getReceiveData()) {
-              if (pair.second->oldValues.size() > 0) {
-                pair.second->oldValues.col(0) = *pair.second->values;
-              }
-            }
-          }
-
-          /*
-          /// @todo: (Edit: Done in the solver now) need to copy coarse old values to fine old values, as first solver always sends zeros to the second solver (as pressure vals)
-          //       in the serial scheme, only the sendData is registered in MM PP, we also need to register the pressure values, i.e.
-          //       old fine pressure vals = old coarse pressure vals TODO: find better solution,
-          //auto fineIDs = getAcceleration()->getDataIDs();
-          //for(auto id: fineIDs){
-          //  std::cout<<"id: "<<id<<", fineIds.size(): "<<fineIDs.size()<<'\n';
-          //  getReceiveData(id)->oldValues.column(0) = getReceiveData(id+fineIDs.size())->oldValues.column(0);
-          //}
-           */
-
-          // only fine model solver evaluation is done, no PP
-        } else {
-
-          // if the coarse model problem converged within the first iteration, i.e., no acceleration at all
-          // we need to register the coarse initialized data again on the fine input data,
-          // otherwise the fine input data would be zero in this case, neither anything has been computed so far for the fine
-          // model nor the acceleration did any data registration
-          // ATTENTION: assumes that coarse data is defined after fine data in same ordering.
-          if (_iterationsCoarseOptimization == 1 && getAcceleration().get() != nullptr) {
-            auto fineIDs = getAcceleration()->getDataIDs();
-            for (auto &fineID : fineIDs) {
-              (*getSendData(fineID)->values) = getSendData(fineID + fineIDs.size() + 1)->oldValues.col(0);
-            }
-          }
-        }
-
-        getM2N()->send(convergence);
-
-        getM2N()->send(_isCoarseModelOptimizationActive);
-
-        sendData(getM2N());
-
-        // the second participant does not want new data in the last iteration of the last timestep
-        if (isCouplingOngoing() || not convergence) {
-          receiveAndSetDt();
-          receiveData(getM2N());
-          setHasDataBeenExchanged(true);
-        }
-      }
-
-      if (not convergence) {
-        PRECICE_DEBUG("No convergence achieved");
-        requireAction(constants::actionReadIterationCheckpoint());
-      } else {
-        PRECICE_DEBUG("Convergence achieved");
-        advanceTXTWriters();
-      }
-      updateTimeAndIterations(convergence, convergenceCoarseOptimization);
-      setComputedTimestepPart(0.0);
-    } //subcycling completed
+  if (isCouplingOngoing() || doesFirstStep()) {
+    PRECICE_DEBUG("Receiving data...");
+    receiveAndSetDt();
+    receiveData(getM2N());
+    setHasDataBeenExchanged(true);
   }
+  setComputedTimeWindowPart(0.0);
+}
+
+void SerialCouplingScheme::implicitAdvance()
+{
+  bool convergence                   = true;
+  bool convergenceCoarseOptimization = true;
+  bool doOnlySolverEvaluation        = false;
+
+  PRECICE_DEBUG("Computed full length of iteration");
+  if (doesFirstStep()) {
+    sendDt();
+    sendData(getM2N());
+    getM2N()->receive(convergence);
+    getM2N()->receive(_isCoarseModelOptimizationActive);
+    if (convergence) {
+      timeWindowCompleted();
+    }
+    receiveData(getM2N());
+    setHasDataBeenExchanged(true);
+  } else {
+
+    // get the current design specifications from the acceleration (for convergence measure)
+    std::map<int, Eigen::VectorXd> designSpecifications;
+    if (getAcceleration().get() != nullptr) {
+      designSpecifications = getAcceleration()->getDesignSpecification(getSendData());
+    }
+    // measure convergence of coupling iteration
+    // measure convergence for coarse model optimization
+    if (_isCoarseModelOptimizationActive) {
+      PRECICE_DEBUG("measure convergence of coarse model optimization.");
+      // in case of multilevel acceleration only: measure the convergence of the coarse model optimization
+      convergenceCoarseOptimization = measureConvergenceCoarseModelOptimization(designSpecifications);
+      // Stop, when maximal iteration count (given in config) is reached
+      if (maxIterationsReached())
+        convergenceCoarseOptimization = true;
+
+      convergence = false;
+      // in case of multilevel PP only: if coarse model optimization converged
+      // steering the requests for evaluation of coarse and fine model, respectively
+      if (convergenceCoarseOptimization) {
+        _isCoarseModelOptimizationActive = false;
+        doOnlySolverEvaluation           = true;
+      } else {
+        _isCoarseModelOptimizationActive = true;
+      }
+    }
+    // measure convergence of coupling iteration
+    else {
+      PRECICE_DEBUG("measure convergence.");
+      doOnlySolverEvaluation = false;
+
+      // measure convergence of the coupling iteration,
+      convergence = measureConvergence(designSpecifications);
+      // Stop, when maximal iteration count (given in config) is reached
+      if (maxIterationsReached())
+        convergence = true;
+    }
+
+    // passed by reference, modified in MM acceleration. No-op for all other accelerations
+    if (getAcceleration().get() != nullptr) {
+      getAcceleration()->setCoarseModelOptimizationActive(&_isCoarseModelOptimizationActive);
+    }
+
+    // for multi-level case, i.e., manifold mapping: after convergence of coarse problem
+    // we only want to evaluate the fine model for the new input, no acceleration etc..
+    if (not doOnlySolverEvaluation) {
+      // coupling iteration converged for current time window. Advance in time.
+      if (convergence) {
+        if (getAcceleration().get() != nullptr) {
+          _deletedColumnsPPFiltering = getAcceleration()->getDeletedColumns();
+          getAcceleration()->iterationsConverged(getSendData());
+        }
+        newConvergenceMeasurements();
+        timeWindowCompleted();
+
+        // no convergence achieved for the coupling iteration within the current time step
+      } else if (getAcceleration().get() != nullptr) {
+        getAcceleration()->performAcceleration(getSendData());
+      }
+
+      // extrapolate new input data for the solver evaluation in time.
+      if (convergence && (getExtrapolationOrder() > 0)) {
+        extrapolateData(getSendData()); // Also stores data
+      } else {                          // Store data for conv. measurement, acceleration, or extrapolation
+        for (DataMap::value_type &pair : getSendData()) {
+          if (pair.second->oldValues.size() > 0) {
+            pair.second->oldValues.col(0) = *pair.second->values;
+          }
+        }
+        for (DataMap::value_type &pair : getReceiveData()) {
+          if (pair.second->oldValues.size() > 0) {
+            pair.second->oldValues.col(0) = *pair.second->values;
+          }
+        }
+      }
+
+      /*
+      /// @todo: (Edit: Done in the solver now) need to copy coarse old values to fine old values, as first solver always sends zeros to the second solver (as pressure vals)
+      //       in the serial scheme, only the sendData is registered in MM PP, we also need to register the pressure values, i.e.
+      //       old fine pressure vals = old coarse pressure vals TODO: find better solution,
+      //auto fineIDs = getAcceleration()->getDataIDs();
+      //for(auto id: fineIDs){
+      //  std::cout<<"id: "<<id<<", fineIds.size(): "<<fineIDs.size()<<'\n';
+      //  getReceiveData(id)->oldValues.column(0) = getReceiveData(id+fineIDs.size())->oldValues.column(0);
+      //}
+       */
+
+      // only fine model solver evaluation is done, no PP
+    } else {
+
+      // if the coarse model problem converged within the first iteration, i.e., no acceleration at all
+      // we need to register the coarse initialized data again on the fine input data,
+      // otherwise the fine input data would be zero in this case, neither anything has been computed so far for the fine
+      // model nor the acceleration did any data registration
+      // ATTENTION: assumes that coarse data is defined after fine data in same ordering.
+      if (_iterationsCoarseOptimization == 1 && getAcceleration().get() != nullptr) {
+        auto fineIDs = getAcceleration()->getDataIDs();
+        for (auto &fineID : fineIDs) {
+          (*getSendData(fineID)->values) = getSendData(fineID + fineIDs.size() + 1)->oldValues.col(0);
+        }
+      }
+    }
+
+    getM2N()->send(convergence);
+
+    getM2N()->send(_isCoarseModelOptimizationActive);
+
+    sendData(getM2N());
+
+    // the second participant does not want new data in the last iteration of the last time window
+    if (isCouplingOngoing() || not convergence) {
+      receiveAndSetDt();
+      receiveData(getM2N());
+      setHasDataBeenExchanged(true);
+    }
+  }
+
+  if (not convergence) {
+    PRECICE_DEBUG("No convergence achieved");
+    requireAction(constants::actionReadIterationCheckpoint());
+  } else {
+    PRECICE_DEBUG("Convergence achieved");
+    advanceTXTWriters();
+  }
+
+  updateTimeAndIterations(convergence, convergenceCoarseOptimization);
+  setComputedTimeWindowPart(0.0);
 }
 
 } // namespace cplscheme

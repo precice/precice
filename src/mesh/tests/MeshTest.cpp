@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(BoundingBoxCOG_2D)
   mesh.createVertex(coords1);
   mesh.createVertex(coords2);
 
-  mesh.computeState();
+  mesh.computeBoundingBox();
 
   mesh::Mesh::BoundingBox bBox = mesh.getBoundingBox();
   auto                    cog  = mesh.getCOG();
@@ -226,7 +226,7 @@ BOOST_AUTO_TEST_CASE(BoundingBoxCOG_3D)
   mesh.createVertex(coords2);
   mesh.createVertex(coords3);
 
-  mesh.computeState();
+  mesh.computeBoundingBox();
 
   mesh::Mesh::BoundingBox bBox = mesh.getBoundingBox();
   auto                    cog  = mesh.getCOG();

@@ -80,6 +80,23 @@ SolverInterfaceImpl::SolverInterfaceImpl(
   logging::setParticipant(_accessorName);
 
   configure(configurationFileName);
+
+// This block cannot be merge with the one above as only configure calls
+// utils::Parallel::initializeMPI, which is needed for getProcessRank.
+#ifndef PRECICE_NO_MPI
+  if (communicator != nullptr) {
+    const auto currentRank = utils::Parallel::current()->rank();
+    PRECICE_CHECK(_accessorProcessRank == currentRank,
+                  "The passed solverProcessIndex (" << _accessorProcessRank
+                                                    << ") does not match the rank of the passed MPI communicator ("
+                                                    << currentRank << ")");
+    const auto currentSize = utils::Parallel::current()->size();
+    PRECICE_CHECK(_accessorCommunicatorSize == currentSize,
+                  "The passed solverProcessSize (" << _accessorCommunicatorSize
+                                                   << ") does not match the size of the passed MPI communicator ("
+                                                   << currentSize << ")");
+  }
+#endif
 }
 
 SolverInterfaceImpl::SolverInterfaceImpl(
@@ -94,8 +111,9 @@ SolverInterfaceImpl::SolverInterfaceImpl(
 void SolverInterfaceImpl::configure(
     const std::string &configurationFileName)
 {
+  config::Configuration config;
   utils::Parallel::initializeMPI(nullptr, nullptr);
-  config::Configuration     config;
+  logging::setMPIRank(utils::Parallel::current()->rank());
   xml::ConfigurationContext context{
       _accessorName,
       _accessorProcessRank,
@@ -163,8 +181,7 @@ void SolverInterfaceImpl::configure(
     _meshLock.add(meshID.second, false);
   }
 
-  logging::setMPIRank(utils::Parallel::current()->rank());
-  utils::EventRegistry::instance().initialize("precice-" + _accessorName, "", utils::Parallel::current()->comm);
+  utils::EventRegistry::instance().initialize("precice-" + _accessorName, "", utils::Parallel::current()->comm());
 
   PRECICE_DEBUG("Initialize master-slave communication");
   if (utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave()) {
@@ -193,22 +210,30 @@ double SolverInterfaceImpl::initialize()
     bm2n.connectMasters();
     PRECICE_DEBUG("Established master connection " << (bm2n.isRequesting ? "from " : "to ") << bm2n.remoteName);
   }
+
   PRECICE_INFO("Masters are connected");
+
+  compareBoundingBoxes();
+
+  PRECICE_INFO("Setting up preliminary slaves communication to coupling partner/s");
+  for (auto &m2nPair : _m2ns) {
+    auto &bm2n = m2nPair.second;
+    bm2n.preConnectSlaves();
+  }
 
   computePartitions();
 
   PRECICE_INFO("Setting up slaves communication to coupling partner/s");
   for (auto &m2nPair : _m2ns) {
     auto &bm2n = m2nPair.second;
-    PRECICE_DEBUG((bm2n.isRequesting ? "Awaiting slaves connection from " : "Establishing slaves connection to ") << bm2n.remoteName);
     bm2n.connectSlaves();
-    bm2n.cleanupEstablishment();
     PRECICE_DEBUG("Established slaves connection " << (bm2n.isRequesting ? "from " : "to ") << bm2n.remoteName);
   }
   PRECICE_INFO("Slaves are connected");
 
-  std::set<action::Action::Timing> timings;
-  double                           dt = 0.0;
+  for (auto &m2nPair : _m2ns) {
+    m2nPair.second.cleanupEstablishment();
+  }
 
   PRECICE_DEBUG("Initialize watchpoints");
   for (PtrWatchPoint &watchPoint : _accessor->watchPoints()) {
@@ -216,11 +241,14 @@ double SolverInterfaceImpl::initialize()
   }
 
   // Initialize coupling state, overwrite these values for restart
-  double time     = 0.0;
-  int    timestep = 1;
+  double time       = 0.0;
+  int    timeWindow = 1;
 
   PRECICE_DEBUG("Initialize coupling schemes");
-  _couplingScheme->initialize(time, timestep);
+  _couplingScheme->initialize(time, timeWindow);
+
+  std::set<action::Action::Timing> timings;
+  double                           dt = 0.0;
 
   dt = _couplingScheme->getNextTimestepMaxLength();
 
@@ -268,7 +296,7 @@ void SolverInterfaceImpl::initializeData()
   resetWrittenData();
   PRECICE_DEBUG("Plot output");
   for (const io::ExportContext &context : _accessor->exportContexts()) {
-    if (context.timestepInterval != -1) {
+    if (context.everyNTimeWindows != -1) {
       std::ostringstream suffix;
       suffix << _accessorName << ".init";
       exportMesh(suffix.str());
@@ -283,6 +311,7 @@ void SolverInterfaceImpl::initializeData()
 double SolverInterfaceImpl::advance(
     double computedTimestepLength)
 {
+
   PRECICE_TRACE(computedTimestepLength);
 
   // Events for the solver time, stopped when we enter, restarted when we leave advance
@@ -305,21 +334,20 @@ double SolverInterfaceImpl::advance(
   }
 #endif
 
-  double timestepLength = 0.0; // Length of (full) current dt
-  double timestepPart   = 0.0; // Length of computed part of (full) curr. dt
-  double time           = 0.0;
+  double timeWindowSize         = 0.0; // Length of (full) current time window
+  double timeWindowComputedPart = 0.0; // Length of computed part of (full) current time window
+  double time                   = 0.0; // Current time
 
   // Update the coupling scheme time state. Necessary to get correct remainder.
   _couplingScheme->addComputedTime(computedTimestepLength);
 
-  //double timestepLength = 0.0;
-  if (_couplingScheme->hasTimestepLength()) {
-    timestepLength = _couplingScheme->getTimestepLength();
+  if (_couplingScheme->hasTimeWindowSize()) {
+    timeWindowSize = _couplingScheme->getTimeWindowSize();
   } else {
-    timestepLength = computedTimestepLength;
+    timeWindowSize = computedTimestepLength;
   }
-  timestepPart = timestepLength - _couplingScheme->getThisTimestepRemainder();
-  time         = _couplingScheme->getTime();
+  timeWindowComputedPart = timeWindowSize - _couplingScheme->getThisTimeWindowRemainder();
+  time                   = _couplingScheme->getTime();
 
   mapWrittenData();
 
@@ -329,7 +357,7 @@ double SolverInterfaceImpl::advance(
   if (_couplingScheme->willDataBeExchanged(0.0)) {
     timings.insert(action::Action::ON_EXCHANGE_PRIOR);
   }
-  performDataActions(timings, time, computedTimestepLength, timestepPart, timestepLength);
+  performDataActions(timings, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
 
   PRECICE_DEBUG("Advance coupling scheme");
   _couplingScheme->advance();
@@ -339,10 +367,10 @@ double SolverInterfaceImpl::advance(
   if (_couplingScheme->hasDataBeenExchanged()) {
     timings.insert(action::Action::ON_EXCHANGE_POST);
   }
-  if (_couplingScheme->isCouplingTimestepComplete()) {
-    timings.insert(action::Action::ON_TIMESTEP_COMPLETE_POST);
+  if (_couplingScheme->isTimeWindowComplete()) {
+    timings.insert(action::Action::ON_TIME_WINDOW_COMPLETE_POST);
   }
-  performDataActions(timings, time, computedTimestepLength, timestepPart, timestepLength);
+  performDataActions(timings, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
 
   if (_couplingScheme->hasDataBeenExchanged()) {
     mapReadData();
@@ -353,9 +381,6 @@ double SolverInterfaceImpl::advance(
   PRECICE_DEBUG("Handle exports");
   handleExports();
 
-  // deactivated the reset of written data, as it deletes all data that is not communicated
-  // within this cycle in the coupling data. This is not wanted forthe manifold mapping.
-  //resetWrittenData();
   _meshLock.lockAll();
   solverEvent.start(precice::syncMode);
   return _couplingScheme->getNextTimestepMaxLength();
@@ -379,7 +404,7 @@ void SolverInterfaceImpl::finalize()
 
   PRECICE_DEBUG("Handle exports");
   for (const io::ExportContext &context : _accessor->exportContexts()) {
-    if (context.timestepInterval != -1) {
+    if (context.everyNTimeWindows != -1) {
       std::ostringstream suffix;
       suffix << _accessorName << ".final";
       exportMesh(suffix.str());
@@ -456,10 +481,10 @@ bool SolverInterfaceImpl::isWriteDataRequired(
   return _couplingScheme->willDataBeExchanged(computedTimestepLength);
 }
 
-bool SolverInterfaceImpl::isTimestepComplete() const
+bool SolverInterfaceImpl::isTimeWindowComplete() const
 {
   PRECICE_TRACE();
-  return _couplingScheme->isCouplingTimestepComplete();
+  return _couplingScheme->isTimeWindowComplete();
 }
 
 bool SolverInterfaceImpl::isActionRequired(
@@ -469,11 +494,11 @@ bool SolverInterfaceImpl::isActionRequired(
   return _couplingScheme->isActionRequired(action);
 }
 
-void SolverInterfaceImpl::fulfilledAction(
+void SolverInterfaceImpl::markActionFulfilled(
     const std::string &action)
 {
   PRECICE_TRACE(action);
-  _couplingScheme->performedAction(action);
+  _couplingScheme->markActionFulfilled(action);
 }
 
 bool SolverInterfaceImpl::hasToEvaluateSurrogateModel() const
@@ -1100,6 +1125,7 @@ void SolverInterfaceImpl::configurePartitions(
 {
   PRECICE_TRACE();
   for (MeshContext *context : _accessor->usedMeshContexts()) {
+
     if (context->provideMesh) { // Accessor provides mesh
       PRECICE_CHECK(context->receiveMeshFrom.empty(),
                     "Participant \"" << _accessorName << "\" cannot provide "
@@ -1110,13 +1136,12 @@ void SolverInterfaceImpl::configurePartitions(
       for (auto &receiver : _participants) {
         for (auto &receiverContext : receiver->usedMeshContexts()) {
           if (receiverContext->receiveMeshFrom == _accessorName && receiverContext->mesh->getName() == context->mesh->getName()) {
-            //PRECICE_CHECK( not hasToSend, "Mesh " << context->mesh->getName() << " can currently only be received once.")
-
             // meshRequirement has to be copied from "from" to provide", since
             // mapping are only defined at "provide"
             if (receiverContext->meshRequirement > context->meshRequirement) {
               context->meshRequirement = receiverContext->meshRequirement;
             }
+
             m2n::PtrM2N m2n = m2nConfig->getM2N(receiver->getName(), _accessorName);
             m2n->createDistributedCommunication(context->mesh);
             context->partition->addM2N(m2n);
@@ -1132,6 +1157,7 @@ void SolverInterfaceImpl::configurePartitions(
                     "Participant \"" << _accessorName << "\" cannot provide and receive mesh " << context->mesh->getName() << "!");
       std::string receiver(_accessorName);
       std::string provider(context->receiveMeshFrom);
+
       PRECICE_DEBUG("Receiving mesh from " << provider);
 
       context->partition = partition::PtrPartition(new partition::ReceivedPartition(context->mesh, context->geoFilter, context->safetyFactor));
@@ -1145,14 +1171,32 @@ void SolverInterfaceImpl::configurePartitions(
   }
 }
 
+void SolverInterfaceImpl::compareBoundingBoxes()
+{
+  // sort meshContexts by name, for communication in right order.
+  std::sort(_accessor->usedMeshContexts().begin(), _accessor->usedMeshContexts().end(),
+            [](MeshContext const *const lhs, MeshContext const *const rhs) -> bool {
+              return lhs->mesh->getName() < rhs->mesh->getName();
+            });
+
+  for (MeshContext *meshContext : _accessor->usedMeshContexts()) {
+    if (meshContext->provideMesh) // provided meshes need their bounding boxes already for the re-partitioning
+      meshContext->mesh->computeBoundingBox();
+  }
+
+  for (MeshContext *meshContext : _accessor->usedMeshContexts()) {
+    meshContext->partition->compareBoundingBoxes();
+  }
+}
+
 void SolverInterfaceImpl::computePartitions()
 {
   //We need to do this in two loops: First, communicate the mesh and later compute the partition.
   //Originally, this was done in one loop. This however gave deadlock if two meshes needed to be communicated cross-wise.
   //Both loops need a different sorting
+
   auto &contexts = _accessor->usedMeshContexts();
 
-  // sort meshContexts by name, for communication in right order.
   std::sort(contexts.begin(), contexts.end(),
             [](MeshContext const *const lhs, MeshContext const *const rhs) -> bool {
               return lhs->mesh->getName() < rhs->mesh->getName();
@@ -1162,15 +1206,31 @@ void SolverInterfaceImpl::computePartitions()
     meshContext->partition->communicate();
   }
 
-  // pull provided meshes up front, to have them ready for the decomposition
-  std::stable_partition(contexts.begin(), contexts.end(),
-                        [](MeshContext const *const meshContext) -> bool {
-                          return meshContext->provideMesh;
-                        });
+  // for two-level initialization, there is also still communication in partition::compute()
+  // therefore, we cannot resort here.
+  // @todo this hacky solution should be removed as part of #633
+  bool resort = true;
+  for (auto &m2nPair : _m2ns) {
+    if (m2nPair.second.m2n->usesTwoLevelInitialization()) {
+      resort = false;
+      break;
+    }
+  }
+
+  if (resort) {
+    // pull provided meshes up front, to have them ready for the decomposition of the received meshes (for the mappings)
+    std::stable_partition(contexts.begin(), contexts.end(),
+                          [](MeshContext const *const meshContext) -> bool {
+                            return meshContext->provideMesh;
+                          });
+  }
 
   for (MeshContext *meshContext : contexts) {
     meshContext->partition->compute();
     meshContext->mesh->computeState();
+    if (not meshContext->provideMesh) { // received mesh can only compute their bounding boxes here
+      meshContext->mesh->computeBoundingBox();
+    }
     meshContext->mesh->allocateDataValues();
   }
 }
@@ -1264,7 +1324,6 @@ void SolverInterfaceImpl::mapReadData()
       PRECICE_DEBUG("Mapped values = " << utils::previewRange(3, context.toData->values()));
     }
   }
-
   // Clear non-initial, non-incremental mappings
   for (impl::MappingContext &context : _accessor->readMappingContexts()) {
     bool isStationary = context.timing == mapping::MappingConfiguration::INITIAL;
@@ -1294,19 +1353,19 @@ void SolverInterfaceImpl::handleExports()
 {
   PRECICE_TRACE();
   //timesteps was already incremented before
-  int timesteps = _couplingScheme->getTimesteps() - 1;
+  int timesteps = _couplingScheme->getTimeWindows() - 1;
 
   for (const io::ExportContext &context : _accessor->exportContexts()) {
-    if (_couplingScheme->isCouplingTimestepComplete() || context.everyIteration) {
-      if (context.timestepInterval != -1) {
-        if (timesteps % context.timestepInterval == 0) {
+    if (_couplingScheme->isTimeWindowComplete() || context.everyIteration) {
+      if (context.everyNTimeWindows != -1) {
+        if (timesteps % context.everyNTimeWindows == 0) {
           if (context.everyIteration) {
             std::ostringstream everySuffix;
             everySuffix << _accessorName << ".it" << _numberAdvanceCalls;
             exportMesh(everySuffix.str());
           }
           std::ostringstream suffix;
-          suffix << _accessorName << ".dt" << _couplingScheme->getTimesteps() - 1;
+          suffix << _accessorName << ".dt" << _couplingScheme->getTimeWindows() - 1;
           exportMesh(suffix.str());
           if (context.triggerSolverPlot) {
             _couplingScheme->requireAction(std::string("plot-output"));
@@ -1316,7 +1375,7 @@ void SolverInterfaceImpl::handleExports()
     }
   }
 
-  if (_couplingScheme->isCouplingTimestepComplete()) {
+  if (_couplingScheme->isTimeWindowComplete()) {
     // Export watch point data
     for (const PtrWatchPoint &watchPoint : _accessor->watchPoints()) {
       watchPoint->exportPointData(_couplingScheme->getTime());
@@ -1358,7 +1417,10 @@ void SolverInterfaceImpl::initializeMasterSlaveCommunication()
   int rankOffset = 1;
   if (utils::MasterSlave::isMaster()) {
     PRECICE_INFO("Setting up communication to slaves");
-    utils::MasterSlave::_communication->acceptConnection(_accessorName + "Master", _accessorName, "MasterSlave", utils::MasterSlave::getRank(), rankOffset);
+    utils::MasterSlave::_communication->prepareEstablishment(_accessorName + "Master", _accessorName);
+    utils::MasterSlave::_communication->acceptConnection(_accessorName + "Master", _accessorName, "MasterSlave", utils::MasterSlave::getRank());
+    utils::MasterSlave::_communication->setRankOffset(rankOffset);
+    utils::MasterSlave::_communication->cleanupEstablishment(_accessorName + "Master", _accessorName);
   } else {
     PRECICE_ASSERT(utils::MasterSlave::isSlave());
     utils::MasterSlave::_communication->requestConnection(_accessorName + "Master", _accessorName, "MasterSlave",

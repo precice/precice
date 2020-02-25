@@ -88,24 +88,6 @@ public:
       void *             communicator);
 
   /**
-   * @brief Configures the coupling interface from the given xml file.
-   *
-   * Only after the configuration a reasonable state of a SolverInterfaceImpl
-   * object is achieved.
-   *
-   * @param configurationFileName [IN] Name (with path) of the xml config. file.
-   */
-  void configure(const std::string &configurationFileName);
-
-  /**
-   * @brief Configures the coupling interface with a prepared configuration.
-   *
-   * Can be used to configure the SolverInterfaceImpl without xml file. Requires
-   * to manually setup the configuration object.
-   */
-  void configure(const config::SolverInterfaceConfiguration &configuration);
-
-  /**
    * @brief Initializes all coupling data and starts (coupled) simulation.
    *
    * - Initiates MPI communication, if not done yet.
@@ -176,9 +158,9 @@ public:
   bool isWriteDataRequired(double computedTimestepLength) const;
 
   /**
-   * @brief Returns true, if a global timestep is completed.
+   * @brief Returns true, if a time window is completed.
    */
-  bool isTimestepComplete() const;
+  bool isTimeWindowComplete() const;
 
   /**
    * @brief Returns whether the solver has to evaluate the surrogate model representation
@@ -200,7 +182,7 @@ public:
    * Some features of preCICE require a solver to perform specific actions, in
    * order to be in valid state for a coupled simulation. A solver is made
    * eligible to use those features, by querying for the required actions,
-   * performing them on demand, and calling fulfilledAction() to signalize
+   * performing them on demand, and calling markActionFulfilled() to signalize
    * preCICE the correct behavior of the solver.
    */
   bool isActionRequired(const std::string &action) const;
@@ -210,7 +192,7 @@ public:
    *
    * For more details see method requireAction().
    */
-  void fulfilledAction(const std::string &action);
+  void markActionFulfilled(const std::string &action);
 
   /// Returns true, if the mesh with given name is used.
   bool hasMesh(const std::string &meshName) const;
@@ -537,6 +519,25 @@ private:
   /// Counts calls to advance for plotting.
   long int _numberAdvanceCalls = 0;
 
+  /**
+   * @brief Configures the coupling interface from the given xml file.
+   *
+   * Only after the configuration a reasonable state of a SolverInterfaceImpl
+   * object is achieved.
+   *
+   * @param configurationFileName [IN] Name (with path) of the xml config. file.
+   */
+  void configure(const std::string &configurationFileName);
+
+  /**
+   * @brief Configures the coupling interface with a prepared configuration.
+   *
+   * Can be used to configure the SolverInterfaceImpl without xml file. Requires
+   * to manually setup the configuration object.
+   */
+  void configure(const config::SolverInterfaceConfiguration &configuration);
+
+
   void configureM2Ns(const m2n::M2NConfiguration::SharedPointer &config);
 
   /// Exports meshes with data and watch point data.
@@ -575,7 +576,10 @@ private:
   void configurePartitions(
       const m2n::M2NConfiguration::SharedPointer &m2nConfig);
 
-  /// Communicate meshes and create partition
+  /// Communicate bounding boxes and look for overlaps
+  void compareBoundingBoxes();
+
+  /// Communicate meshes and create partitions
   void computePartitions();
 
   /// Computes, performs, and resets all suitable write mappings.
@@ -622,6 +626,7 @@ private:
 
   /// To allow white box tests.
   friend struct PreciceTests::Serial::TestConfiguration;
+
 };
 
 } // namespace impl

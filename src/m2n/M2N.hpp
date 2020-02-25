@@ -21,7 +21,7 @@ struct WhiteboxAccessor;
  */
 class M2N {
 public:
-  M2N(com::PtrCommunication masterCom, DistributedComFactory::SharedPointer distrFactory, bool useOnlyMasterCom = false);
+  M2N(com::PtrCommunication masterCom, DistributedComFactory::SharedPointer distrFactory, bool useOnlyMasterCom = false, bool useTwoLevelInit = false);
 
   /// Destructor, empty.
   ~M2N();
@@ -93,10 +93,14 @@ public:
    * This should be called before calling the accept and request methods.
    * Calling this function forwards the call to the configured master communication.
    *
+   * @param[in] acceptorName Name of calling participant.
+   * @param[in] requesterName Name of remote participant to connect to.
+   *
    * @see com::Communication::prepareEstablishment()
    * @see cleanupEstablishment()
    */
-  void prepareEstablishment();
+  void prepareEstablishment(const std::string &acceptorName,
+                            const std::string &requesterName);
 
   /**
    * @brief cleans-up to establish the connections
@@ -104,10 +108,14 @@ public:
    * This should be called after calling the accept and request methods.
    * Calling this function forwards the call to the configured master communication.
    *
+   * @param[in] acceptorName Name of calling participant.
+   * @param[in] requesterName Name of remote participant to connect to.
+   *
    * @see com::Communication::cleanupEstablishment()
    * @see prepareEstablishment()
    */
-  void cleanupEstablishment();
+  void cleanupEstablishment(const std::string &acceptorName,
+                            const std::string &requesterName);
 
   /**
    * @brief Disconnects from communication space, i.e. participant.
@@ -140,13 +148,13 @@ public:
    */
   void send(double itemToSend);
 
-  /// each rank sends its mesh partition to connected ranks
-  void broadcastSendLocalMesh(mesh::Mesh &mesh);
+  /// Broadcasts a mesh to connected ranks on remote participant (concerning the given mesh)
+  void broadcastSendMesh(mesh::Mesh &mesh);
 
-  /// each rank sends the local communication map to the remote connecetd ranks (of the other participant)
-  void broadcastSendLCM(std::map<int, std::vector<int>> &localCommunicationMap, mesh::Mesh &mesh);
+  /// Scatters a communication map over connected ranks on remote participant (concerning the given mesh)
+  void scatterAllCommunicationMap(std::map<int, std::vector<int>> &localCommunicationMap, mesh::Mesh &mesh);
 
-  /// each rank sends an int to the remote connected ranks
+  /// Broadcasts an int to connected ranks on remote participant (concerning the given mesh)
   void broadcastSend(int &itemToSend, mesh::Mesh &mesh);
 
   /// All slaves receive an array of doubles (different for each slave).
@@ -161,14 +169,22 @@ public:
   /// All slaves receive a double (the same for each slave).
   void receive(double &itemToReceive);
 
-  /// each rank receives mesh partition from connected ranks
-  void broadcastReceiveLocalMesh(mesh::Mesh &mesh);
+  /// Receive mesh partitions per connected rank on remote participant (concerning the given mesh)
+  void broadcastReceiveAllMesh(mesh::Mesh &mesh);
 
-  /// each rank receives local communication maps from remote connetcetd ranks (of the other participant)
-  void broadcastReceiveLCM(std::map<int, std::vector<int>> &localCommunicationMap, mesh::Mesh &mesh);
+  /// Gathers a communication maps from connected ranks on remote participant (concerning the given mesh)
+  void gatherAllCommunicationMap(std::map<int, std::vector<int>> &localCommunicationMap, mesh::Mesh &mesh);
 
-  /// each rank receives an int from remote connetcetd ranks
+  /**
+   * @brief Receives an int per connected rank on remote participant (concerning the given mesh)
+   * @para[out] itemToReceive received ints from remote ranks are stored with the sender rank order
+   */
   void broadcastReceiveAll(std::vector<int> &itemToReceive, mesh::Mesh &mesh);
+
+  bool usesTwoLevelInitialization()
+  {
+    return _useTwoLevelInit;
+  }
 
 private:
   logging::Logger _log{"m2n::M2N"};
@@ -194,6 +210,9 @@ private:
 
   /// between two serial participants, only use the master-master com and no slaves-slaves com
   bool _useOnlyMasterCom = false;
+
+  /// use the two-level initialization concept
+  bool _useTwoLevelInit = false;
 
   // @brief To allow access to _useOnlyMasterCom
   friend struct WhiteboxAccessor;

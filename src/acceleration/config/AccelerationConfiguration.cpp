@@ -28,7 +28,7 @@ AccelerationConfiguration::AccelerationConfiguration(
       TAG_RELAX("relaxation"),
       TAG_INIT_RELAX("initial-relaxation"),
       TAG_MAX_USED_ITERATIONS("max-used-iterations"),
-      TAG_TIMESTEPS_REUSED("timesteps-reused"),
+      TAG_TIME_WINDOWS_REUSED("time-windows-reused"),
       TAG_DATA("data"),
       TAG_FILTER("filter"),
       TAG_ESTIMATEJACOBIAN("estimate-jacobian"),
@@ -43,9 +43,9 @@ AccelerationConfiguration::AccelerationConfiguration(
       ATTR_TYPE("type"),
       ATTR_BUILDJACOBIAN("always-build-jacobian"),
       ATTR_IMVJCHUNKSIZE("chunk-size"),
-      ATTR_RSLS_REUSEDTSTEPS("reused-timesteps-at-restart"),
+      ATTR_RSLS_REUSED_TIME_WINDOWS("reused-time-windows-at-restart"),
       ATTR_RSSVD_TRUNCATIONEPS("truncation-threshold"),
-      ATTR_PRECOND_NONCONST_TIMESTEPS("freeze-after"),
+      ATTR_PRECOND_NONCONST_TIME_WINDOWS("freeze-after"),
       VALUE_CONSTANT("constant"),
       VALUE_AITKEN("aitken"),
       VALUE_IQNILS("IQN-ILS"),
@@ -188,8 +188,8 @@ void AccelerationConfiguration::xmlTagCallback(
     _config.forceInitialRelaxation = callingTag.getBooleanAttributeValue(ATTR_ENFORCE);
   } else if (callingTag.getName() == TAG_MAX_USED_ITERATIONS) {
     _config.maxIterationsUsed = callingTag.getIntAttributeValue(ATTR_VALUE);
-  } else if (callingTag.getName() == TAG_TIMESTEPS_REUSED) {
-    _config.timestepsReused = callingTag.getIntAttributeValue(ATTR_VALUE);
+  } else if (callingTag.getName() == TAG_TIME_WINDOWS_REUSED) {
+    _config.timeWindowsReused = callingTag.getIntAttributeValue(ATTR_VALUE);
   } else if (callingTag.getName() == TAG_FILTER) {
     auto f = callingTag.getStringAttributeValue(ATTR_TYPE);
     if (f == VALUE_QR1FILTER) {
@@ -207,7 +207,7 @@ void AccelerationConfiguration::xmlTagCallback(
       _config.estimateJacobian = callingTag.getBooleanAttributeValue(ATTR_VALUE);
   } else if (callingTag.getName() == TAG_PRECONDITIONER) {
     _config.preconditionerType       = callingTag.getStringAttributeValue(ATTR_TYPE);
-    _config.precond_nbNonConstTSteps = callingTag.getIntAttributeValue(ATTR_PRECOND_NONCONST_TIMESTEPS);
+    _config.precond_nbNonConstTSteps = callingTag.getIntAttributeValue(ATTR_PRECOND_NONCONST_TIME_WINDOWS);
   } else if (callingTag.getName() == TAG_IMVJRESTART) {
 
     if (_config.alwaysBuildJacobian)
@@ -221,8 +221,8 @@ void AccelerationConfiguration::xmlTagCallback(
     } else if (f == VALUE_ZERO_RESTART) {
       _config.imvjRestartType = MVQNAcceleration::RS_ZERO;
     } else if (f == VALUE_LS_RESTART) {
-      _config.imvjRSLS_reustedTimesteps = callingTag.getIntAttributeValue(ATTR_RSLS_REUSEDTSTEPS);
-      _config.imvjRestartType           = MVQNAcceleration::RS_LS;
+      _config.imvjRSLS_reusedTimeWindows = callingTag.getIntAttributeValue(ATTR_RSLS_REUSED_TIME_WINDOWS);
+      _config.imvjRestartType            = MVQNAcceleration::RS_LS;
     } else if (f == VALUE_SVD_RESTART) {
       _config.imvjRSSVD_truncationEps = callingTag.getDoubleAttributeValue(ATTR_RSSVD_TRUNCATIONEPS);
       _config.imvjRestartType         = MVQNAcceleration::RS_SVD;
@@ -289,7 +289,7 @@ void AccelerationConfiguration::xmlEndTagCallback(
               _config.relaxationFactor,
               _config.forceInitialRelaxation,
               _config.maxIterationsUsed,
-              _config.timestepsReused,
+              _config.timeWindowsReused,
               _config.filter, _config.singularityLimit,
               _config.dataIDs,
               _preconditioner));
@@ -300,14 +300,14 @@ void AccelerationConfiguration::xmlEndTagCallback(
               _config.relaxationFactor,
               _config.forceInitialRelaxation,
               _config.maxIterationsUsed,
-              _config.timestepsReused,
+              _config.timeWindowsReused,
               _config.filter, _config.singularityLimit,
               _config.dataIDs,
               _preconditioner,
               _config.alwaysBuildJacobian,
               _config.imvjRestartType,
               _config.imvjChunkSize,
-              _config.imvjRSLS_reustedTimesteps,
+              _config.imvjRSLS_reusedTimeWindows,
               _config.imvjRSSVD_truncationEps));
 #else
       PRECICE_ERROR("Acceleration IQN-IMVJ only works if preCICE is compiled with MPI");
@@ -323,7 +323,7 @@ void AccelerationConfiguration::xmlEndTagCallback(
           new MMAcceleration(
               _coarseModelOptimizationConfig->getAcceleration(), // coarse model optimization method
               _config.maxIterationsUsed,
-              _config.timestepsReused,
+              _config.timeWindowsReused,
               _config.filter, _config.singularityLimit,
               _config.estimateJacobian,
               _config.dataIDs,                                                 // fine data IDs
@@ -335,7 +335,7 @@ void AccelerationConfiguration::xmlEndTagCallback(
               _config.relaxationFactor,
               _config.forceInitialRelaxation,
               _config.maxIterationsUsed,
-              _config.timestepsReused,
+              _config.timeWindowsReused,
               _config.filter, _config.singularityLimit,
               _config.dataIDs,
               _preconditioner));
@@ -388,9 +388,9 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
     tagMaxUsedIter.addAttribute(attrIntValue);
     tag.addSubtag(tagMaxUsedIter);
 
-    XMLTag tagTimestepsReused(*this, TAG_TIMESTEPS_REUSED, XMLTag::OCCUR_ONCE);
-    tagTimestepsReused.addAttribute(attrIntValue);
-    tag.addSubtag(tagTimestepsReused);
+    XMLTag tagTimeWindowsReused(*this, TAG_TIME_WINDOWS_REUSED, XMLTag::OCCUR_ONCE);
+    tagTimeWindowsReused.addAttribute(attrIntValue);
+    tag.addSubtag(tagTimeWindowsReused);
 
     XMLTag                    tagData(*this, TAG_DATA, XMLTag::OCCUR_ONCE_OR_MORE);
     XMLAttribute<std::string> attrName(ATTR_NAME);
@@ -428,15 +428,15 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
                                           "To improve the performance of a parallel or a multi coupling schemes a preconditioner"
                                           " can be applied. A constant preconditioner scales every acceleration data by a constant value, which you can define as"
                                           " an attribute of data. "
-                                          " A value preconditioner scales every acceleration data by the norm of the data in the previous timestep."
+                                          " A value preconditioner scales every acceleration data by the norm of the data in the previous time window."
                                           " A residual preconditioner scales every acceleration data by the current residual."
-                                          " A residual-sum preconditioner scales every acceleration data by the sum of the residuals from the current timestep.")
+                                          " A residual-sum preconditioner scales every acceleration data by the sum of the residuals from the current time window.")
                                       .setOptions({VALUE_CONSTANT_PRECONDITIONER,
                                                    VALUE_VALUE_PRECONDITIONER,
                                                    VALUE_RESIDUAL_PRECONDITIONER,
                                                    VALUE_RESIDUAL_SUM_PRECONDITIONER});
     tagPreconditioner.addAttribute(attrPreconditionerType);
-    auto nonconstTSteps = makeXMLAttribute(ATTR_PRECOND_NONCONST_TIMESTEPS, -1)
+    auto nonconstTSteps = makeXMLAttribute(ATTR_PRECOND_NONCONST_TIME_WINDOWS, -1)
                               .setDocumentation(
                                   "After the given number of time steps, the preconditioner weights "
                                   "are freezed and the preconditioner acts like a constant preconditioner.");
@@ -468,12 +468,12 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
                                     "  RS-SLIDE:   IMVJ runs in sliding window restart mode.\n");
     auto attrChunkSize = makeXMLAttribute(ATTR_IMVJCHUNKSIZE, 8)
                              .setDocumentation("Specifies the number of time steps M after which the IMVJ restarts, if run in restart-mode. Defaul value is M=8.");
-    auto attrReusedTimeStepsAtRestart = makeXMLAttribute(ATTR_RSLS_REUSEDTSTEPS, 8)
-                                            .setDocumentation("If IMVJ restart-mode=RS-LS, the number of reused time steps at restart can be specified.");
+    auto attrReusedTimeWindowsAtRestart = makeXMLAttribute(ATTR_RSLS_REUSED_TIME_WINDOWS, 8)
+                                              .setDocumentation("If IMVJ restart-mode=RS-LS, the number of reused time steps at restart can be specified.");
     auto attrRSSVD_truncationEps = makeXMLAttribute(ATTR_RSSVD_TRUNCATIONEPS, 1e-4)
                                        .setDocumentation("If IMVJ restart-mode=RS-SVD, the truncation threshold for the updated SVD can be set.");
     tagIMVJRESTART.addAttribute(attrChunkSize);
-    tagIMVJRESTART.addAttribute(attrReusedTimeStepsAtRestart);
+    tagIMVJRESTART.addAttribute(attrReusedTimeWindowsAtRestart);
     tagIMVJRESTART.addAttribute(attrRSSVD_truncationEps);
     tag.addSubtag(tagIMVJRESTART);
 
@@ -482,9 +482,9 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
     tagMaxUsedIter.addAttribute(attrIntValue);
     tag.addSubtag(tagMaxUsedIter);
 
-    XMLTag tagTimestepsReused(*this, TAG_TIMESTEPS_REUSED, XMLTag::OCCUR_ONCE);
-    tagTimestepsReused.addAttribute(attrIntValue);
-    tag.addSubtag(tagTimestepsReused);
+    XMLTag tagTimeWindowsReused(*this, TAG_TIME_WINDOWS_REUSED, XMLTag::OCCUR_ONCE);
+    tagTimeWindowsReused.addAttribute(attrIntValue);
+    tag.addSubtag(tagTimeWindowsReused);
 
     XMLTag                    tagData(*this, TAG_DATA, XMLTag::OCCUR_ONCE_OR_MORE);
     XMLAttribute<std::string> attrName(ATTR_NAME);
@@ -526,11 +526,11 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
                                           "To improve the performance of a parallel or a multi coupling schemes a preconditioner"
                                           " can be applied. A constant preconditioner scales every acceleration data by a constant value, which you can define as"
                                           " an attribute of data. "
-                                          " A value preconditioner scales every acceleration data by the norm of the data in the previous timestep."
+                                          " A value preconditioner scales every acceleration data by the norm of the data in the previous time window."
                                           " A residual preconditioner scales every acceleration data by the current residual."
-                                          " A residual-sum preconditioner scales every acceleration data by the sum of the residuals from the current timestep.");
+                                          " A residual-sum preconditioner scales every acceleration data by the sum of the residuals from the current time window.");
     tagPreconditioner.addAttribute(attrPreconditionerType);
-    auto nonconstTSteps = makeXMLAttribute(ATTR_PRECOND_NONCONST_TIMESTEPS, -1)
+    auto nonconstTSteps = makeXMLAttribute(ATTR_PRECOND_NONCONST_TIME_WINDOWS, -1)
                               .setDocumentation("After the given number of time steps, the preconditioner weights are freezed and the preconditioner acts like a constant preconditioner.");
     tagPreconditioner.addAttribute(nonconstTSteps);
     tag.addSubtag(tagPreconditioner);
@@ -560,9 +560,9 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
     tagMaxUsedIter.addAttribute(attrIntValue);
     tag.addSubtag(tagMaxUsedIter);
 
-    XMLTag tagTimestepsReused(*this, TAG_TIMESTEPS_REUSED, XMLTag::OCCUR_ONCE);
-    tagTimestepsReused.addAttribute(attrIntValue);
-    tag.addSubtag(tagTimestepsReused);
+    XMLTag tagTimeWindowsReused(*this, TAG_TIME_WINDOWS_REUSED, XMLTag::OCCUR_ONCE);
+    tagTimeWindowsReused.addAttribute(attrIntValue);
+    tag.addSubtag(tagTimeWindowsReused);
 
     XMLTag                    tagData(*this, TAG_DATA, XMLTag::OCCUR_ONCE_OR_MORE);
     XMLAttribute<std::string> attrName(ATTR_NAME);
@@ -600,15 +600,15 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
                                           "To improve the performance of a parallel or a multi coupling schemes a preconditioner"
                                           " can be applied. A constant preconditioner scales every acceleration data by a constant value, which you can define as"
                                           " an attribute of data. "
-                                          " A value preconditioner scales every acceleration data by the norm of the data in the previous timestep."
+                                          " A value preconditioner scales every acceleration data by the norm of the data in the previous time window."
                                           " A residual preconditioner scales every acceleration data by the current residual."
-                                          " A residual-sum preconditioner scales every acceleration data by the sum of the residuals from the current timestep.")
+                                          " A residual-sum preconditioner scales every acceleration data by the sum of the residuals from the current time window.")
                                       .setOptions({VALUE_CONSTANT_PRECONDITIONER,
                                                    VALUE_VALUE_PRECONDITIONER,
                                                    VALUE_RESIDUAL_PRECONDITIONER,
                                                    VALUE_RESIDUAL_SUM_PRECONDITIONER});
     tagPreconditioner.addAttribute(attrPreconditionerType);
-    auto nonconstTSteps = makeXMLAttribute(ATTR_PRECOND_NONCONST_TIMESTEPS, -1)
+    auto nonconstTSteps = makeXMLAttribute(ATTR_PRECOND_NONCONST_TIME_WINDOWS, -1)
                               .setDocumentation(
                                   "After the given number of time steps, the preconditioner weights are "
                                   "freezed and the preconditioner acts like a constant preconditioner.");
@@ -628,9 +628,9 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
     tagMaxUsedIter.addAttribute(attrIntValue);
     tag.addSubtag(tagMaxUsedIter);
 
-    XMLTag tagTimestepsReused(*this, TAG_TIMESTEPS_REUSED, XMLTag::OCCUR_ONCE);
-    tagTimestepsReused.addAttribute(attrIntValue);
-    tag.addSubtag(tagTimestepsReused);
+    XMLTag tagTimeWindowsReused(*this, TAG_TIME_WINDOWS_REUSED, XMLTag::OCCUR_ONCE);
+    tagTimeWindowsReused.addAttribute(attrIntValue);
+    tag.addSubtag(tagTimeWindowsReused);
 
     XMLTag                    tagData(*this, TAG_DATA, XMLTag::OCCUR_ONCE_OR_MORE);
     XMLAttribute<std::string> attrName(ATTR_NAME);

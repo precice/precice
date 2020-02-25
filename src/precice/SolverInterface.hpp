@@ -63,7 +63,7 @@ public:
    *        each process using preCICE has to specify its index, which has to start
    *        from 0 and end with solverProcessSize - 1.
    * @param[in] solverProcessSize The number of solver processes using preCICE.
-   * @param[in] communicator A pointer to an MPI_Comm to use as MPI_COMM_WORLD.
+   * @param[in] communicator A pointer to an MPI_Comm to use as communicator.
    */
   SolverInterface(
       const std::string &participantName,
@@ -110,13 +110,13 @@ public:
    * Both participants need to call initializeData().
    *
    * @pre initialize() has been called successfully.
-   * @pre The action WriteInitialData is required 
+   * @pre The action WriteInitialData is required
    * @pre advance() has not yet been called.
    * @pre finalize() has not yet been called.
    *
    * @post Initial coupling data was exchanged.
    *
-   * @see isActionRequired  
+   * @see isActionRequired
    * @see precice::constants::actionWriteInitialData
    */
   void initializeData();
@@ -175,7 +175,7 @@ public:
    * @returns whether the coupling is ongoing.
    *
    * A coupling is ongoing as long as
-   * - the maximum number of timesteps has not been reached, and
+   * - the maximum number of time windows has not been reached, and
    * - the final time has not been reached.
    *
    * @pre initialize() has been called successfully.
@@ -228,18 +228,19 @@ public:
   bool isWriteDataRequired(double computedTimestepLength) const;
 
   /**
-   * @brief Checks if the current coupling timestep is completed.
+   * @brief Checks if the current coupling window is completed.
    *
-   * @returns whether the timestep is complete.
+   * @returns whether the current coupling window is complete.
    *
-   * The following reasons require several solver time steps per coupling time
+   * The following reasons require several solver time steps per time window
    * step:
-   * - A solver chooses to perform subcycling.
-   * - An implicit coupling timestep iteration is not yet converged.
+   * - A solver chooses to perform subcycling, i.e. using a smaller timestep
+   *   than the time window..
+   * - An implicit coupling iteration is not yet converged.
    *
    * @pre initialize() has been called successfully.
    */
-  bool isTimestepComplete() const;
+  bool isTimeWindowComplete() const;
 
   /**
    * @brief Returns whether the solver has to evaluate the surrogate model representation.
@@ -285,10 +286,10 @@ public:
    * Some features of preCICE require a solver to perform specific actions, in
    * order to be in valid state for a coupled simulation. A solver is made
    * eligible to use those features, by querying for the required actions,
-   * performing them on demand, and calling fulfilledAction() to signalize
+   * performing them on demand, and calling markActionFulfilled() to signalize
    * preCICE the correct behavior of the solver.
    *
-   * @see fulfilledAction()
+   * @see markActionFulfilled()
    * @see cplscheme::constants
    */
   bool isActionRequired(const std::string &action) const;
@@ -303,7 +304,7 @@ public:
    * @see requireAction()
    * @see cplscheme::constants
    */
-  void fulfilledAction(const std::string &action);
+  void markActionFulfilled(const std::string &action);
 
   ///@}
 
@@ -330,7 +331,7 @@ public:
 
   /**
    * @brief Returns the ID belonging to the mesh with given name.
-   * 
+   *
    * @param[in] meshName the name of the mesh
    * @returns the id of the corresponding mesh
    */
@@ -472,7 +473,7 @@ public:
    * per se. Edges are created on the fly within preCICE. This routine is
    * significantly slower than the one using edge IDs, since it needs to check,
    * whether an edge is created already or not.
-   * 
+   *
    * @param[in] meshID ID of the mesh to add the triangle to
    * @param[in] firstVertexID ID of the first vertex of the triangle
    * @param[in] secondVertexID ID of the second vertex of the triangle
@@ -514,7 +515,7 @@ public:
    * per se. Edges are created on the fly within preCICE. This routine is
    * significantly slower than the one using edge IDs, since it needs to check,
    * whether an edge is created already or not.
-   * 
+   *
    * @param[in] meshID ID of the mesh to add the Quad to
    * @param[in] firstVertexID ID of the first vertex of the Quad
    * @param[in] secondVertexID ID of the second vertex of the Quad
@@ -547,7 +548,7 @@ public:
 
   /**
    * @brief Returns the ID of the data associated with the given name and mesh.
-   * 
+   *
    * @param[in] dataName the name of the data
    * @param[in] meshID the id of the associated mesh
    *
@@ -783,11 +784,11 @@ private:
   friend struct testing::WhiteboxAccessor;
 };
 
-/** 
+/**
  * @brief Returns information on the version of preCICE.
  *
  * Returns a semicolon-separated C-string containing:
- * 
+ *
  * 1) the version of preCICE
  * 2) the revision information of preCICE
  * 3) the configuration of preCICE including MPI, PETSC, PYTHON

@@ -1,6 +1,7 @@
 #ifndef PRECICE_NO_MPI
 
 #include "MPISinglePortsCommunication.hpp"
+#include <boost/filesystem.hpp>
 #include "ConnectionInfoPublisher.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/Parallel.hpp"
@@ -85,12 +86,11 @@ void MPISinglePortsCommunication::acceptConnection(std::string const &acceptorNa
 }
 
 /// requesterCommunicatorSize is not used, since connection is always made on the entire communicator
-void MPISinglePortsCommunication::acceptConnectionAsServer(
-    std::string const &acceptorName,
-    std::string const &requesterName,
-    std::string const &tag,
-    int                acceptorRank,
-    int                requesterCommunicatorSize)
+void MPISinglePortsCommunication::acceptConnectionAsServer(std::string const &acceptorName,
+                                                           std::string const &requesterName,
+                                                           std::string const &tag,
+                                                           int                acceptorRank,
+                                                           int                requesterCommunicatorSize)
 {
   PRECICE_TRACE(acceptorName, requesterName, acceptorRank, requesterCommunicatorSize);
   PRECICE_ASSERT(not isConnected());
@@ -193,6 +193,32 @@ MPI_Comm &MPISinglePortsCommunication::communicator(int rank)
 int MPISinglePortsCommunication::rank(int rank)
 {
   return rank;
+}
+
+void MPISinglePortsCommunication::prepareEstablishment(std::string const &acceptorName,
+                                                       std::string const &requesterName)
+{
+  using namespace boost::filesystem;
+  path dir = com::impl::localDirectory(acceptorName, requesterName, _addressDirectory);
+  PRECICE_DEBUG("Creating connection exchange directory " << dir);
+  try {
+    create_directories(dir);
+  } catch (const boost::filesystem::filesystem_error &e) {
+    PRECICE_WARN("Creating directory for connection info failed with: " << e.what());
+  }
+}
+
+void MPISinglePortsCommunication::cleanupEstablishment(std::string const &acceptorName,
+                                                       std::string const &requesterName)
+{
+  using namespace boost::filesystem;
+  path dir = com::impl::localDirectory(acceptorName, requesterName, _addressDirectory);
+  PRECICE_DEBUG("Removing connection exchange directory " << dir);
+  try {
+    remove_all(dir);
+  } catch (const boost::filesystem::filesystem_error &e) {
+    PRECICE_WARN("Cleaning up connection info failed with: " << e.what());
+  }
 }
 
 } // namespace com

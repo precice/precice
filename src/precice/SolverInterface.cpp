@@ -68,9 +68,9 @@ bool SolverInterface::isWriteDataRequired(
   return _impl->isWriteDataRequired(computedTimestepLength);
 }
 
-bool SolverInterface::isTimestepComplete() const
+bool SolverInterface::isTimeWindowComplete() const
 {
-  return _impl->isTimestepComplete();
+  return _impl->isTimeWindowComplete();
 }
 
 bool SolverInterface::isActionRequired(
@@ -79,10 +79,10 @@ bool SolverInterface::isActionRequired(
   return _impl->isActionRequired(action);
 }
 
-void SolverInterface::fulfilledAction(
+void SolverInterface::markActionFulfilled(
     const std::string &action)
 {
-  _impl->fulfilledAction(action);
+  _impl->markActionFulfilled(action);
 }
 
 bool SolverInterface::hasMesh(

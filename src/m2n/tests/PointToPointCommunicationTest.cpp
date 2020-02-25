@@ -11,6 +11,7 @@
 
 using precice::testing::TestContext;
 using precice::utils::MasterSlave;
+using precice::utils::Parallel;
 
 using std::vector;
 
@@ -360,7 +361,7 @@ void P2PMeshBroadcastTest(const TestContext &context, com::PtrCommunicationFacto
   } else {
 
     c.acceptPreConnection("Solid", "Fluid");
-    c.broadcastReceiveMesh();
+    c.broadcastReceiveAllMesh();
 
     if (context.isMaster()) {
       // This rank should receive the mesh from rank 0 (fluid master)
@@ -382,7 +383,7 @@ void P2PMeshBroadcastTest(const TestContext &context, com::PtrCommunicationFacto
   mesh::Data::resetDataCount();
 }
 
-void P2PComLCMTest(const TestContext &context, com::PtrCommunicationFactory cf)
+void P2PComLocalCommunicationMapTest(const TestContext &context, com::PtrCommunicationFactory cf)
 {
   BOOST_TEST(context.hasSize(2));
 
@@ -434,12 +435,12 @@ void P2PComLCMTest(const TestContext &context, com::PtrCommunicationFactory cf)
   if (context.isNamed("A")) {
 
     c.requestPreConnection("Solid", "Fluid");
-    c.broadcastSendLCM(localCommunicationMap);
+    c.scatterAllCommunicationMap(localCommunicationMap);
     BOOST_TEST(mesh->getID() == expectedId);
 
   } else {
     c.acceptPreConnection("Solid", "Fluid");
-    c.broadcastReceiveLCM(localCommunicationMap);
+    c.gatherAllCommunicationMap(localCommunicationMap);
     BOOST_TEST(mesh->getID() == expectedId);
   }
 
@@ -476,7 +477,7 @@ BOOST_AUTO_TEST_CASE(SocketCommunication)
   connectionTest(context, cf);
   emptyConnectionTest(context, cf);
   P2PMeshBroadcastTest(context, cf);
-  P2PComLCMTest(context, cf);
+  P2PComLocalCommunicationMapTest(context, cf);
 }
 
 BOOST_AUTO_TEST_CASE(MPIPortsCommunication, *boost::unit_test::label("MPI_Ports"))
