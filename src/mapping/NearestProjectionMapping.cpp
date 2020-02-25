@@ -123,7 +123,11 @@ void NearestProjectionMapping::computeMapping()
                              }));
       }
     }
-    PRECICE_INFO("Mapping distance " << distanceStatistics);
+    if (distanceStatistics.empty()) {
+      PRECICE_INFO("Mapping distance not available due to empty partition.");
+    } else {
+      PRECICE_INFO("Mapping distance " << distanceStatistics);
+    }
   } else {
     const auto &tTriangles = search_space->triangles();
     if (!fVertices.empty() && tTriangles.empty()) {
@@ -200,7 +204,11 @@ void NearestProjectionMapping::computeMapping()
                              }));
       }
     }
-    PRECICE_INFO("Mapping distance " << distanceStatistics);
+    if (distanceStatistics.empty()) {
+      PRECICE_INFO("Mapping distance not available due to empty partition.");
+    } else {
+      PRECICE_INFO("Mapping distance " << distanceStatistics);
+    }
   }
   _hasComputedMapping = true;
 }
