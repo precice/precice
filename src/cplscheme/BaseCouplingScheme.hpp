@@ -258,17 +258,6 @@ protected:
   std::vector<int> receiveData(m2n::PtrM2N m2n);
 
   /// Returns all data to be sent.
-  const DataMap &getSendData() const
-  {
-    return _sendData;
-  }
-
-  const DataMap &getReceiveData() const
-  {
-    return _receiveData;
-  }
-
-  /// Returns all data to be sent.
   DataMap &getSendData()
   {
     return _sendData;
@@ -361,16 +350,6 @@ protected:
     return _hasToReceiveInitData;
   }
 
-  bool participantReceivesDt()
-  {
-    return _participantReceivesDt;
-  }
-
-  bool participantSetsDt()
-  {
-    return _participantSetsDt;
-  }
-
   /// Holds relevant variables to perform a convergence measurement.
   struct ConvergenceMeasure {
     mesh::PtrData               data;
@@ -418,11 +397,6 @@ protected:
   void advanceTXTWriters();
 
   void updateTimeAndIterations(bool convergence, bool convergenceCoarseOptimization = true);
-
-  int getMaxIterations() const
-  {
-    return _maxIterations;
-  }
 
   int getExtrapolationOrder()
   {

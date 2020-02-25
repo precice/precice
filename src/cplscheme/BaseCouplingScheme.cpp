@@ -114,7 +114,7 @@ BaseCouplingScheme::BaseCouplingScheme(
 void BaseCouplingScheme::receiveAndSetDt()
 {
   PRECICE_TRACE();
-  if (participantReceivesDt()) {
+  if (_participantReceivesDt) {
     double dt = UNDEFINED_TIME_WINDOW_SIZE;
     getM2N()->receive(dt);
     PRECICE_DEBUG("Received timestep length of " << dt);
@@ -126,7 +126,7 @@ void BaseCouplingScheme::receiveAndSetDt()
 void BaseCouplingScheme::sendDt()
 {
   PRECICE_TRACE();
-  if (participantSetsDt()) {
+  if (_participantSetsDt) {
     PRECICE_DEBUG("sending timestep length of " << getComputedTimeWindowPart());
     getM2N()->send(getComputedTimeWindowPart());
   }
@@ -437,8 +437,8 @@ std::string BaseCouplingScheme::printCouplingState() const
 {
   std::ostringstream os;
   os << "it " << _iterations; //_iterations;
-  if (getMaxIterations() != -1) {
-    os << " of " << getMaxIterations();
+  if (_maxIterations != -1) {
+    os << " of " << _maxIterations;
   }
   os << " | " << printBasicState(_timeWindows, _time) << " | " << printActionsState();
   return os.str();
