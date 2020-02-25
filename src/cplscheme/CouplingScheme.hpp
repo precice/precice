@@ -88,7 +88,7 @@ public:
    *
    * @pre initialize() has been called.
    *
-   * Does not necessarily advances in time.
+   * Does not necessarily advance in time.
    */
   virtual void advance() = 0;
 

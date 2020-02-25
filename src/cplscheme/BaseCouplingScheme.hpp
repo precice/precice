@@ -82,7 +82,7 @@ public:
   /// Returns true, if initialize has been called.
   virtual bool isInitialized() const
   {
-    return _isInitialized;
+    return _initializeHasBeenCalled;
   }
 
   /// Adds newly computed time. Has to be called before every advance.
@@ -180,11 +180,7 @@ public:
    * @param[in] startTime starting time of coupling scheme
    * @param[in] startTimeWindow ID of time window, from which coupling scheme starts
    */
-  virtual void initialize(double startTime, int startTimeWindow)
-  {
-    _time        = startTime;
-    _timeWindows = startTimeWindow;
-  }
+  virtual void initialize(double startTime, int startTimeWindow);
 
   /**
    * @brief Initializes data with written values.
@@ -192,7 +188,9 @@ public:
    * @pre initialize() has been called.
    * @pre advance() has NOT yet been called.
    */
-  virtual void initializeData() = 0;
+  virtual void initializeData();
+
+  virtual void advance();
 
   /// Returns whether the solver has to evaluate the coarse or the fine model representation
   virtual bool isCoarseModelOptimizationActive()
@@ -240,9 +238,6 @@ protected:
 
   /// Returns true if end time of time window is reached. Does not check for convergence
   bool subcyclingIsCompleted();
-
-  /// Initializes internal state of coupling scheme for at beginning of advance.
-  void timeWindowSetup();
 
   /// Receives and set the timestep length, if this participant is the one to receive
   void receiveAndSetDt();
@@ -300,16 +295,6 @@ protected:
   void setHasDataBeenExchanged(bool hasDataBeenExchanged);
 
   /**
-   * @brief Sets the computed time of the coupling scheme.
-   *
-   * Used from subclasses and when a checkpoint has been read.
-   */
-  void setTime(double time)
-  {
-    _time = time;
-  }
-
-  /**
    * @brief Sets the computed time windows of the coupling scheme.
    *
    * Used for testing.
@@ -317,16 +302,6 @@ protected:
   void setTimeWindows(int timeWindows)
   {
     _timeWindows = timeWindows;
-  }
-
-  /**
-   * Called at end of initialize() to checkpoint successful initialization of coupling scheme
-   *
-   * @param isInitialized
-   */
-  void setIsInitialized(bool isInitialized)
-  {
-    _isInitialized = isInitialized;
   }
 
   /**
@@ -532,7 +507,10 @@ private:
   bool _hasDataBeenExchanged = false;
 
   /// True, if coupling has been initialized.
-  bool _isInitialized = false;
+  bool _initializeHasBeenCalled = false;
+
+  /// True, if initialize data has been called.
+  bool _initializeDataHasBeenCalled = false;
 
   std::set<std::string> _actions;
 

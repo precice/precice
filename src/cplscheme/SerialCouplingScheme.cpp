@@ -35,11 +35,6 @@ void SerialCouplingScheme::initialize(
     double startTime,
     int    startTimeWindow)
 {
-  PRECICE_TRACE(startTime, startTimeWindow);
-  PRECICE_ASSERT(not isInitialized());
-  PRECICE_ASSERT(math::greaterEquals(startTime, 0.0), startTime);
-  PRECICE_ASSERT(startTimeWindow >= 0, startTimeWindow);
-
   BaseCouplingScheme::initialize(startTime, startTimeWindow);
 
   if (_couplingMode == Implicit) {
@@ -84,7 +79,6 @@ void SerialCouplingScheme::initialize(
     PRECICE_DEBUG("Receiving data");
     receiveAndSetDt();
     receiveData(getM2N());
-    setHasDataBeenExchanged(true);
   }
 
   if (hasToSendInitData()) {
@@ -92,31 +86,16 @@ void SerialCouplingScheme::initialize(
   }
 
   initializeTXTWriters();
-  setIsInitialized(true);
 }
 
 void SerialCouplingScheme::initializeData()
 {
-  PRECICE_TRACE();
-  PRECICE_CHECK(isInitialized(), "initializeData() can be called after initialize() only!");
-
-  if (not hasToSendInitData() && not hasToReceiveInitData()) {
-    PRECICE_INFO("initializeData is skipped since no data has to be initialized");
-    return;
-  }
-
-  PRECICE_DEBUG("Initializing Data ...");
-
-  PRECICE_CHECK(not(hasToSendInitData() && isActionRequired(constants::actionWriteInitialData())),
-                "InitialData has to be written to preCICE before calling initializeData()");
-
-  setHasDataBeenExchanged(false);
+  BaseCouplingScheme::initializeData();
 
   if (hasToReceiveInitData() && isCouplingOngoing()) {
     PRECICE_ASSERT(doesFirstStep());
     PRECICE_DEBUG("Receiving data");
     receiveData(getM2N());
-    setHasDataBeenExchanged(true);
   }
 
   if (hasToSendInitData() && isCouplingOngoing()) {
@@ -135,16 +114,12 @@ void SerialCouplingScheme::initializeData()
     receiveAndSetDt();
     // This receive replaces the receive in initialize().
     receiveData(getM2N());
-    setHasDataBeenExchanged(true);
   }
-
-  //in order to check in advance if initializeData has been called (if necessary)
-  setHasToSendInitData(false);
-  setHasToReceiveInitData(false);
 }
 
 void SerialCouplingScheme::advance()
 {
+  BaseCouplingScheme::advance();
 #ifndef NDEBUG
   for (const DataMap::value_type &pair : getReceiveData()) {
     Eigen::VectorXd &  values = *pair.second->values;
@@ -156,9 +131,6 @@ void SerialCouplingScheme::advance()
     PRECICE_DEBUG("Begin advance, first New Values: " << stream.str());
   }
 #endif
-
-  timeWindowSetup();
-
   if (subcyclingIsCompleted()) {
     if (_couplingMode == Explicit) {
       explicitAdvance();
@@ -180,7 +152,6 @@ void SerialCouplingScheme::explicitAdvance()
     PRECICE_DEBUG("Receiving data...");
     receiveAndSetDt();
     receiveData(getM2N());
-    setHasDataBeenExchanged(true);
   }
 
   setComputedTimeWindowPart(0.0);
@@ -202,7 +173,6 @@ void SerialCouplingScheme::implicitAdvance()
       timeWindowCompleted();
     }
     receiveData(getM2N());
-    setHasDataBeenExchanged(true);
   } else {
 
     // get the current design specifications from the acceleration (for convergence measure)
@@ -317,7 +287,6 @@ void SerialCouplingScheme::implicitAdvance()
     if (isCouplingOngoing() || not convergence) {
       receiveAndSetDt();
       receiveData(getM2N());
-      setHasDataBeenExchanged(true);
     }
   }
 

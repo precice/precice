@@ -36,10 +36,6 @@ void MultiCouplingScheme::initialize(
     double startTime,
     int    startTimeWindow)
 {
-  PRECICE_TRACE(startTime, startTimeWindow);
-  PRECICE_ASSERT(not isInitialized());
-  PRECICE_ASSERT(math::greaterEquals(startTime, 0.0), startTime);
-  PRECICE_ASSERT(startTimeWindow >= 0, startTimeWindow);
   BaseCouplingScheme::initialize(startTime, startTimeWindow);
 
   mergeData();                 // merge send and receive data for all pp calls
@@ -75,28 +71,14 @@ void MultiCouplingScheme::initialize(
   if (hasToSendInitData()) {
     requireAction(constants::actionWriteInitialData());
   }
-
-  setIsInitialized(true);
 }
 
 void MultiCouplingScheme::initializeData()
 {
-  PRECICE_TRACE();
-  PRECICE_CHECK(isInitialized(), "initializeData() can be called after initialize() only!");
-
-  if (not hasToSendInitData() && not hasToReceiveInitData()) {
-    PRECICE_INFO("initializeData is skipped since no data has to be initialized");
-    return;
-  }
-
-  PRECICE_CHECK(not(hasToSendInitData() && isActionRequired(constants::actionWriteInitialData())),
-                "InitialData has to be written to preCICE before calling initializeData()");
-
-  setHasDataBeenExchanged(false);
+  BaseCouplingScheme::initializeData();
 
   if (hasToReceiveInitData()) {
     receiveData();
-    setHasDataBeenExchanged(true);
 
     // second participant has to save values for extrapolation
     if (getExtrapolationOrder() > 0) {
@@ -121,15 +103,11 @@ void MultiCouplingScheme::initializeData()
     }
     sendData();
   }
-
-  // in order to check in advance if initializeData has been called (if necessary)
-  setHasToSendInitData(false);
-  setHasToReceiveInitData(false);
 }
 
 void MultiCouplingScheme::advance()
 {
-  timeWindowSetup();
+  BaseCouplingScheme::advance();
 
   bool convergence = false;
   if (subcyclingIsCompleted()) {
@@ -179,7 +157,6 @@ void MultiCouplingScheme::advance()
       advanceTXTWriters();
     }
     updateTimeAndIterations(convergence);
-    setHasDataBeenExchanged(true);
   }
 }
 
@@ -262,6 +239,7 @@ void MultiCouplingScheme::receiveData()
       }
     }
   }
+  setHasDataBeenExchanged(true);
 }
 
 void MultiCouplingScheme::setupConvergenceMeasures()

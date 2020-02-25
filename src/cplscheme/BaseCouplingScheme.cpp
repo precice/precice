@@ -192,6 +192,7 @@ std::vector<int> BaseCouplingScheme::receiveData(
     receivedDataIDs.push_back(pair.first);
   }
   PRECICE_DEBUG("Number of received data sets = " << receivedDataIDs.size());
+  _hasDataBeenExchanged = true;
   return receivedDataIDs;
 }
 
@@ -221,7 +222,49 @@ void BaseCouplingScheme::finalize()
 {
   PRECICE_TRACE();
   checkCompletenessRequiredActions();
-  PRECICE_CHECK(isInitialized(), "Called finalize() before initialize()!");
+  PRECICE_CHECK(_initializeHasBeenCalled, "Called finalize() before initialize()!");
+}
+
+void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
+{
+  PRECICE_TRACE(startTime, startTimeWindow);
+  PRECICE_ASSERT(math::greaterEquals(startTime, 0.0), startTime);
+  PRECICE_ASSERT(startTimeWindow >= 0, startTimeWindow);
+  PRECICE_CHECK(not _initializeHasBeenCalled, "initialize() can only be called once!");
+  _time          = startTime;
+  _timeWindows   = startTimeWindow;
+  _initializeHasBeenCalled = true;
+}
+
+void BaseCouplingScheme::initializeData()
+{
+  PRECICE_CHECK(_initializeHasBeenCalled, "initializeData() can be called after initialize() only!");
+  PRECICE_CHECK(not _initializeDataHasBeenCalled, "initializeData() can only be called once!");
+  _initializeDataHasBeenCalled = true;
+  PRECICE_TRACE("initializeData()");
+
+  if (not _hasToSendInitData && not _hasToReceiveInitData) {
+    PRECICE_INFO("initializeData is skipped since no data has to be initialized");
+    return;
+  }
+
+  PRECICE_DEBUG("Initializing Data ...");
+
+  PRECICE_CHECK(not(_hasToSendInitData && isActionRequired(constants::actionWriteInitialData())),
+                "InitialData has to be written to preCICE before calling initializeData()");
+
+  _hasDataBeenExchanged = false;
+}
+
+void BaseCouplingScheme::advance()
+{
+  PRECICE_TRACE(getTimeWindows(), getTime());
+  checkCompletenessRequiredActions();
+  PRECICE_CHECK(_initializeHasBeenCalled, "Before calling advance() coupling has to be initialized via initialize()! This will cause an error in future releases.")  // TODO: preCICE v3.0.0 -> PRECICE_CHECK
+  PRECICE_CHECK((not _hasToReceiveInitData && not _hasToSendInitData) || (_initializeDataHasBeenCalled),
+                "initializeData() needs to be called before advance if data has to be initialized!");
+  _hasDataBeenExchanged = false;
+  _isTimeWindowComplete = false;
 }
 
 void BaseCouplingScheme::setExtrapolationOrder(
@@ -756,6 +799,7 @@ void BaseCouplingScheme::updateTimeAndIterations(
     _iterations                   = manifoldmapping ? 0 : 1;
   }
   _computedTimeWindowPart = 0.0;
+  _hasDataBeenExchanged = true;
 }
 
 void BaseCouplingScheme::timeWindowCompleted()
@@ -773,16 +817,6 @@ void BaseCouplingScheme::timeWindowCompleted()
 bool BaseCouplingScheme::subcyclingIsCompleted()
 {
   return math::equals(getThisTimeWindowRemainder(), 0.0, _eps);
-}
-
-void BaseCouplingScheme::timeWindowSetup()
-{
-  PRECICE_TRACE(getTimeWindows(), getTime());
-  checkCompletenessRequiredActions();
-  PRECICE_CHECK(not hasToReceiveInitData() && not hasToSendInitData(),
-                "initializeData() needs to be called before advance if data has to be initialized!");
-  setHasDataBeenExchanged(false);
-  _isTimeWindowComplete = false;
 }
 
 bool BaseCouplingScheme::maxIterationsReached()

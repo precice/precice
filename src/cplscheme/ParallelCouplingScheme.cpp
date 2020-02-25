@@ -35,11 +35,6 @@ void ParallelCouplingScheme::initialize(
     double startTime,
     int    startTimeWindow)
 {
-  PRECICE_TRACE(startTime, startTimeWindow);
-  PRECICE_ASSERT(not isInitialized());
-  PRECICE_ASSERT(math::greaterEquals(startTime, 0.0), startTime);
-  PRECICE_ASSERT(startTimeWindow >= 0, startTimeWindow);
-
   BaseCouplingScheme::initialize(startTime, startTimeWindow);
 
   if (_couplingMode == Implicit) {
@@ -73,24 +68,11 @@ void ParallelCouplingScheme::initialize(
   if (hasToSendInitData()) {
     requireAction(constants::actionWriteInitialData());
   }
-
-  setIsInitialized(true);
 }
 
 void ParallelCouplingScheme::initializeData()
 {
-  PRECICE_TRACE("initializeData()");
-  PRECICE_CHECK(isInitialized(), "initializeData() can be called after initialize() only!");
-
-  if (not hasToSendInitData() && not hasToReceiveInitData()) {
-    PRECICE_INFO("initializeData is skipped since no data has to be initialized");
-    return;
-  }
-
-  PRECICE_CHECK(not(hasToSendInitData() && isActionRequired(constants::actionWriteInitialData())),
-                "InitialData has to be written to preCICE before calling initializeData()");
-
-  setHasDataBeenExchanged(false);
+  BaseCouplingScheme::initializeData();
 
   // F: send, receive, S: receive, send
   if (doesFirstStep()) {
@@ -99,15 +81,12 @@ void ParallelCouplingScheme::initializeData()
     }
     if (hasToReceiveInitData()) {
       receiveData(getM2N());
-      setHasDataBeenExchanged(true);
     }
   }
 
   else { // second participant
     if (hasToReceiveInitData()) {
       receiveData(getM2N());
-      setHasDataBeenExchanged(true);
-
       // second participant has to save values for extrapolation
       if (_couplingMode == Implicit) {
         for (DataMap::value_type &pair : getReceiveData()) {
@@ -132,15 +111,11 @@ void ParallelCouplingScheme::initializeData()
       sendData(getM2N());
     }
   }
-
-  // in order to check in advance if initializeData has been called (if necessary)
-  setHasToSendInitData(false);
-  setHasToReceiveInitData(false);
 }
 
 void ParallelCouplingScheme::advance()
 {
-  timeWindowSetup();
+  BaseCouplingScheme::advance();
 
   if (subcyclingIsCompleted()) {
     if (_couplingMode == Explicit) {
@@ -163,12 +138,10 @@ void ParallelCouplingScheme::explicitAdvance()
     PRECICE_DEBUG("Receiving data...");
     receiveAndSetDt();
     receiveData(getM2N());
-    setHasDataBeenExchanged(true);
   } else { //second participant
     PRECICE_DEBUG("Receiving data...");
     receiveAndSetDt();
     receiveData(getM2N());
-    setHasDataBeenExchanged(true);
 
     PRECICE_DEBUG("Sending data...");
     sendDt();
@@ -298,7 +271,6 @@ void ParallelCouplingScheme::implicitAdvance()
     advanceTXTWriters();
   }
   updateTimeAndIterations(convergence, convergenceCoarseOptimization);
-  setHasDataBeenExchanged(true);
 }
 
 void ParallelCouplingScheme::mergeData()
