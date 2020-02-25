@@ -597,11 +597,11 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingWithSubcycling)
   int         sendDataIndex    = -1;
   int         receiveDataIndex = -1;
   if (context.isNamed(nameParticipant0)) {
-    sendDataIndex        = 0;
-    receiveDataIndex     = 1;
+    sendDataIndex    = 0;
+    receiveDataIndex = 1;
   } else {
-    sendDataIndex        = 1;
-    receiveDataIndex     = 0;
+    sendDataIndex    = 1;
+    receiveDataIndex = 0;
   }
   cplscheme::SerialCouplingScheme cplScheme(
       maxTime, maxTimesteps, timestepLength, 12, nameParticipant0,

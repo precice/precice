@@ -88,8 +88,8 @@ BOOST_AUTO_TEST_CASE(TestExplicit)
   for (std::string configurationFileName : configs) {
     BOOST_TEST_MESSAGE("Config: " << configurationFileName);
 
-    int         timesteps = 0;
-    double      time      = 0.0;
+    int    timesteps = 0;
+    double time      = 0.0;
 
     SolverInterface couplingInterface(context.name, configurationFileName, 0, 1);
 
@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithSubcycling)
     BOOST_TEST(timestep == 20);
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    int             meshID = precice.getMeshID("Test-Square");
+    int meshID = precice.getMeshID("Test-Square");
     precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
     precice.setMeshVertex(meshID, Eigen::Vector3d(1.0, 0.0, 0.0).data());
     double maxDt     = precice.initialize();
@@ -1018,11 +1018,11 @@ BOOST_AUTO_TEST_CASE(testMultiCoupling)
       meshID      = precice.getMeshID("SOLIDZ_Mesh1");
       dataWriteID = precice.getDataID("Displacements1", meshID);
       dataReadID  = precice.getDataID("Forces1", meshID);
-      } else if (context.isNamed("SOLIDZ1")) {
+    } else if (context.isNamed("SOLIDZ1")) {
       meshID      = precice.getMeshID("SOLIDZ_Mesh2");
       dataWriteID = precice.getDataID("Displacements2", meshID);
       dataReadID  = precice.getDataID("Forces2", meshID);
-      } else if (context.isNamed("SOLIDZ1")) {
+    } else if (context.isNamed("SOLIDZ1")) {
       meshID      = precice.getMeshID("SOLIDZ_Mesh3");
       dataWriteID = precice.getDataID("Displacements3", meshID);
       dataReadID  = precice.getDataID("Forces3", meshID);

@@ -469,8 +469,8 @@ BOOST_AUTO_TEST_CASE(ComputeStateOfNotFullyConnectedMesh)
   coords1 << 1.0, ctz, ctz;
   coords2 << ctz, 1.0, ctz;
   coords3 << ctz, -1.0, ctz;
-  coords4 << ctz, ctz, ctz-1.; // edge only
-  coords5 << ctz, ctz-1, ctz-1; // disconnected
+  coords4 << ctz, ctz, ctz - 1.;    // edge only
+  coords5 << ctz, ctz - 1, ctz - 1; // disconnected
   Vertex &v0 = mesh.createVertex(coords0);
   Vertex &v1 = mesh.createVertex(coords1);
   Vertex &v2 = mesh.createVertex(coords2);
@@ -495,7 +495,7 @@ BOOST_AUTO_TEST_CASE(ComputeStateOfNotFullyConnectedMesh)
   BOOST_TEST(mesh.data().size() == 1);
   mesh.computeState();
 
-  for(const auto& vertex: mesh.vertices()) {
+  for (const auto &vertex : mesh.vertices()) {
     BOOST_TEST(vertex.getNormal().allFinite());
   }
 }

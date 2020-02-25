@@ -19,9 +19,8 @@ struct conjunction<B1, Bn...>
     : std::conditional<bool(B1::value), conjunction<Bn...>, B1>::type {
 };
 
-template <class F, class ... Inputs>
-struct type_transform
-{
+template <class F, class... Inputs>
+struct type_transform {
 };
 
 template <class P, class A1, class... A>

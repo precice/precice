@@ -108,13 +108,13 @@ public:
 
   bool hasSize(int size) const;
 
-  bool isNamed(const std::string& name) const;
+  bool isNamed(const std::string &name) const;
 
   bool isRank(int rank) const;
 
   bool isMaster() const;
 
-  m2n::PtrM2N connect(const std::string& acceptor, const std::string& requestor) const;
+  m2n::PtrM2N connect(const std::string &acceptor, const std::string &requestor) const;
 
 private:
   bool _petsc  = false;
@@ -164,7 +164,6 @@ using precice::testing::operator""_on;
   if (context.invalid) {                              \
     return;                                           \
   }
-
 
 /// Boost.Test decorator that unconditionally deletes the test.
 class Deleted : public bt::decorator::base {

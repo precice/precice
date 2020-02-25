@@ -36,8 +36,8 @@ void MPIDirectCommunication::acceptConnection(std::string const &acceptorName,
   PRECICE_ASSERT(not isConnected());
 
   setRankOffset(0); //rankOffset makes no sense here
-  _commState = utils::Parallel::current();
-  _isConnected  = true;
+  _commState   = utils::Parallel::current();
+  _isConnected = true;
 }
 
 void MPIDirectCommunication::closeConnection()
@@ -58,8 +58,8 @@ void MPIDirectCommunication::requestConnection(std::string const &acceptorName,
 {
   PRECICE_TRACE(acceptorName, requesterName);
   PRECICE_ASSERT(not isConnected());
-  _commState = utils::Parallel::current();
-  _isConnected  = true;
+  _commState   = utils::Parallel::current();
+  _isConnected = true;
 }
 
 void MPIDirectCommunication::reduceSum(double *itemsToSend, double *itemsToReceive, int size)

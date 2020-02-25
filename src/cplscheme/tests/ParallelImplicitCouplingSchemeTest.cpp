@@ -296,13 +296,13 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   int         receiveDataIndex = -1;
   bool        initData         = false;
   if (context.isNamed(nameParticipant0)) {
-    sendDataIndex        = 0;
-    receiveDataIndex     = 1;
-    initData             = true;
+    sendDataIndex    = 0;
+    receiveDataIndex = 1;
+    initData         = true;
   } else {
-    sendDataIndex        = 1;
-    receiveDataIndex     = 0;
-    initData             = true;
+    sendDataIndex    = 1;
+    receiveDataIndex = 0;
+    initData         = true;
   }
 
   // Create the coupling scheme object

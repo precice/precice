@@ -115,7 +115,7 @@ public:
     void synchronize() const;
 
     /// pretty printer for comms
-    void print(std::ostream& out) const;
+    void print(std::ostream &out) const;
 
     /// @}
   };
@@ -173,7 +173,6 @@ public:
    * 
    */
   static void resetCommState();
-
 
   /** Sets the current state to its parent
    *
@@ -286,9 +285,8 @@ private:
   static void pushState(CommStatePtr newState);
 };
 
-
 /// pretty printer for CommState
-std::ostream &operator<<(std::ostream &out, const Parallel::CommState& value);
+std::ostream &operator<<(std::ostream &out, const Parallel::CommState &value);
 
 } // namespace utils
 } // namespace precice

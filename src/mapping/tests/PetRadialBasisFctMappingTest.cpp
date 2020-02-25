@@ -55,7 +55,7 @@ using MeshSpecification = std::vector<VertexSpecification>;
 /// Contains which values are expected on which rank: rank -> vector of data.
 using ReferenceSpecification = std::vector<std::pair<int, std::vector<double>>>;
 
-void getDistributedMesh(const TestContext &context,
+void getDistributedMesh(const TestContext &      context,
                         MeshSpecification const &vertices,
                         mesh::PtrMesh &          mesh,
                         mesh::PtrData &          data,

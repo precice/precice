@@ -54,8 +54,8 @@ logging::Logger Petsc::_log("utils::Petsc");
 bool Petsc::weInitialized = false;
 
 void Petsc::initialize(
-    int *   argc,
-    char ***argv,
+    int *                  argc,
+    char ***               argv,
     Parallel::Communicator comm)
 {
   PRECICE_TRACE();

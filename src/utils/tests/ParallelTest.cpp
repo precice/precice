@@ -13,7 +13,7 @@ BOOST_AUTO_TEST_SUITE(Parallel)
 BOOST_AUTO_TEST_CASE(RestrictCommTest)
 {
   PRECICE_TEST(4_ranks);
-  using Par     = utils::Parallel;
+  using Par = utils::Parallel;
 
   auto baseComm = Par::current();
   Par::restrictCommunicator(3);
@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(RestrictCommTest)
 BOOST_AUTO_TEST_CASE(SplitCommTest)
 {
   PRECICE_TEST(3_ranks);
-  using Par     = utils::Parallel;
+  using Par = utils::Parallel;
 
   std::string name{"Group"};
   name.append(context.rank == 2 ? "Two" : "One");

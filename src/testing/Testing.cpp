@@ -113,7 +113,7 @@ void TestContext::initialize(const Participants &participants)
 
 void TestContext::initializeMPI(const TestContext::Participants &participants)
 {
-  auto baseComm = Par::current();
+  auto      baseComm   = Par::current();
   const int globalRank = baseComm->rank();
   const int available  = baseComm->size();
   const int required   = std::accumulate(participants.begin(), participants.end(), 0, [](int total, const Participant &next) { return total + next.size; });
