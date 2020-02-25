@@ -71,11 +71,15 @@ private:
 
 inline std::ostream &operator<<(std::ostream &out, const DistanceAccumulator &accumulator)
 {
-  out << "min:" << accumulator.min()
-      << " max:" << accumulator.max()
-      << " avg: " << accumulator.mean()
-      << " var: " << accumulator.variance()
-      << " cnt: " << accumulator.count();
+  if (accumulator.empty()) {
+    out << "empty";
+  } else {
+    out << "min:" << accumulator.min()
+        << " max:" << accumulator.max()
+        << " avg: " << accumulator.mean()
+        << " var: " << accumulator.variance()
+        << " cnt: " << accumulator.count();
+  }
   return out;
 };
 
