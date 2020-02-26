@@ -101,7 +101,6 @@ void createNastinMesh2D(mesh::PtrMesh pNastinMesh, int rank)
   BOOST_TEST(pNastinMesh->getDimensions() == dimensions);
 
   if (rank == 0) {
-
     Eigen::VectorXd position(dimensions);
     position << 0.0, 0.0;
     pNastinMesh->createVertex(position);
@@ -110,11 +109,34 @@ void createNastinMesh2D(mesh::PtrMesh pNastinMesh, int rank)
   } else if (rank == 1) {
     // not at interface
   } else if (rank == 2) {
-
     Eigen::VectorXd position(dimensions);
     position << 0.0, 4.0;
     pNastinMesh->createVertex(position);
     position << 0.0, 6.0;
+    pNastinMesh->createVertex(position);
+  }
+}
+
+void createNastinMesh2D2(mesh::PtrMesh pNastinMesh, int rank)
+{
+  int dimensions = 2;
+  PRECICE_ASSERT(pNastinMesh.use_count() > 0);
+  PRECICE_ASSERT(pNastinMesh->getDimensions() == dimensions);
+
+  if (rank == 1) {
+    Eigen::VectorXd position(dimensions);
+    position << 0.10, 0.10;
+    pNastinMesh->createVertex(position);
+    position << 0.90, 0.90;
+    pNastinMesh->createVertex(position);
+  } else if (rank == 2) {
+    // not at interface
+  } else if (rank == 3) {
+
+    Eigen::VectorXd position(dimensions);
+    position << 2.1, 2.1;
+    pNastinMesh->createVertex(position);
+    position << 2.9, 2.9;
     pNastinMesh->createVertex(position);
   }
 }
@@ -158,7 +180,6 @@ void createNastinMesh3D(mesh::PtrMesh pNastinMesh, int rank)
   BOOST_TEST(pNastinMesh->getDimensions() == dimensions);
 
   if (rank == 0) { //Master
-
     Eigen::VectorXd position(dimensions);
     position << -1.0, -1.0, 0.0;
     pNastinMesh->createVertex(position);
@@ -167,11 +188,34 @@ void createNastinMesh3D(mesh::PtrMesh pNastinMesh, int rank)
   } else if (rank == 1) { //Slave1
     // slave1 not at interface
   } else if (rank == 2) { //Slave2
-
     Eigen::VectorXd position(dimensions);
     position << 0.0, 0.0, -1.0;
     pNastinMesh->createVertex(position);
     position << 0.5, 0.5, 0.0;
+    pNastinMesh->createVertex(position);
+  }
+}
+
+void createNastinMesh3D2(mesh::PtrMesh pNastinMesh, int rank)
+{
+  int dimensions = 3;
+  PRECICE_ASSERT(pNastinMesh.use_count() > 0);
+  PRECICE_ASSERT(pNastinMesh->getDimensions() == dimensions);
+
+  if (rank == 1) {
+    Eigen::VectorXd position(dimensions);
+    position << 0.10, 0.10, 0.1;
+    pNastinMesh->createVertex(position);
+    position << 0.90, 0.90, 0.9;
+    pNastinMesh->createVertex(position);
+  } else if (rank == 2) {
+    // not at interface
+  } else if (rank == 3) {
+
+    Eigen::VectorXd position(dimensions);
+    position << 2.1, 2.1, 2.1;
+    pNastinMesh->createVertex(position);
+    position << 2.9, 2.9, 2.1;
     pNastinMesh->createVertex(position);
   }
 }
@@ -962,7 +1006,7 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
     boundingFromMapping->setMeshes(pSolidzMesh, pNastinMesh);
     boundingToMapping->setMeshes(pNastinMesh, pSolidzMesh);
 
-    createNastinMesh2D2(pNastinMesh);
+    createNastinMesh2D2(pNastinMesh, context.rank);
     pNastinMesh->computeBoundingBox();
 
     double safetyFactor = 0.0;
@@ -1033,7 +1077,7 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes3D)
     boundingFromMapping->setMeshes(pSolidzMesh, pNastinMesh);
     boundingToMapping->setMeshes(pNastinMesh, pSolidzMesh);
 
-    createNastinMesh3D2(pNastinMesh);
+    createNastinMesh3D2(pNastinMesh, context.rank);
     pNastinMesh->computeBoundingBox();
 
     double safetyFactor = 0.0;

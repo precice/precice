@@ -1,6 +1,7 @@
 #ifndef PRECICE_NO_MPI
-#include "testing/Fixtures.hpp"
 #include "testing/Testing.hpp"
+
+#include "partition/ProvidedPartition.hpp"
 
 #include "com/CommunicateBoundingBox.hpp"
 #include "com/MPIDirectCommunication.hpp"
@@ -8,6 +9,8 @@
 #include "com/SocketCommunicationFactory.hpp"
 #include "m2n/GatherScatterComFactory.hpp"
 #include "m2n/M2N.hpp"
+#include "mapping/NearestNeighborMapping.hpp"
+#include "mapping/SharedPointer.hpp"
 
 using namespace precice;
 using namespace partition;
