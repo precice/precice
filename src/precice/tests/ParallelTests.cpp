@@ -377,13 +377,9 @@ BOOST_AUTO_TEST_CASE(TestDistributedCommunications)
   }
 }
 
-BOOST_AUTO_TEST_CASE(TestBoundingBoxInitialization, *testing::OnSize(4))
+BOOST_AUTO_TEST_CASE(TestBoundingBoxInitialization)
 {
-
-  std::string solverName;
-  int         rank = -1, size = -1;
-  std::string meshName;
-  int         i1 = -1, i2 = -1; //indices for data and positions
+  PRECICE_TEST("Fluid"_on(2_ranks), "Structure"_on(2_ranks));
 
   std::vector<Eigen::VectorXd> positions;
   std::vector<Eigen::VectorXd> data;
@@ -392,20 +388,36 @@ BOOST_AUTO_TEST_CASE(TestBoundingBoxInitialization, *testing::OnSize(4))
   Eigen::Vector3d position;
   Eigen::Vector3d datum;
 
-  if (utils::Parallel::getProcessRank() <= 1) {
-    for (int i = 0; i < 4; i++) {
-      position[0] = i * 1.0;
-      position[1] = i * 0.1;
-      position[2] = -i * 10.0;
-      positions.push_back(position);
-      datum[0] = i * 1.0;
-      datum[1] = i * 2.0;
-      datum[2] = i * 3.0;
-      data.push_back(datum);
+  int i1 = -1, i2 = -1; //indices for data and positions
+
+  if (context.isNamed("Fluid")) {
+    if (context.isMaster()) {
+      i1 = 2;
+      i2 = 4;
+      for (int i = 0; i < 4; i++) {
+        position[0] = i * 1.0;
+        position[1] = i * 0.1;
+        position[2] = -i * 10.0;
+        positions.push_back(position);
+        datum[0] = i * 1.0;
+        datum[1] = i * 2.0;
+        datum[2] = i * 3.0;
+        data.push_back(datum);
+      }
+    } else {
+      i1 = 0;
+      i2 = 2;
     }
   }
 
-  if (utils::Parallel::getProcessRank() > 1) {
+  if (context.isNamed("Structure")) {
+    if (context.isMaster()) {
+      i1 = 0;
+      i2 = 2;
+    } else {
+      i1 = 2;
+      i2 = 4;
+    }
 
     for (int i = 0; i < 4; i++) {
       position[0] = i * 1.0;
@@ -423,40 +435,10 @@ BOOST_AUTO_TEST_CASE(TestBoundingBoxInitialization, *testing::OnSize(4))
     }
   }
 
-  if (utils::Parallel::getProcessRank() == 0) {
-    solverName = "Fluid";
-    rank       = 0;
-    size       = 2;
-    meshName   = "FluidMesh";
-    i1         = 2;
-    i2         = 4;
-  } else if (utils::Parallel::getProcessRank() == 1) {
-    solverName = "Fluid";
-    rank       = 1;
-    size       = 2;
-    meshName   = "FluidMesh";
-    i1         = 0;
-    i2         = 2;
-  } else if (utils::Parallel::getProcessRank() == 2) {
-    solverName = "Structure";
-    rank       = 0;
-    size       = 2;
-    meshName   = "StructureMesh";
-    i1         = 0;
-    i2         = 2;
-  } else if (utils::Parallel::getProcessRank() == 3) {
-    solverName = "Structure";
-    rank       = 1;
-    size       = 2;
-    meshName   = "StructureMesh";
-    i1         = 2;
-    i2         = 4;
-  }
-
   std::string     configFilename = _pathToTests + "BB-sockets-explicit-oneway.xml";
-  SolverInterface precice(solverName, configFilename, rank, size);
+  SolverInterface precice(context.name, configFilename, context.rank, context.size);
 
-  int meshID   = precice.getMeshID(meshName);
+  int meshID   = precice.getMeshID(context.name + "Mesh");
   int forcesID = precice.getDataID("Forces", meshID);
 
   std::vector<int> vertexIDs;
@@ -467,7 +449,7 @@ BOOST_AUTO_TEST_CASE(TestBoundingBoxInitialization, *testing::OnSize(4))
 
   precice.initialize();
 
-  if (utils::Parallel::getProcessRank() <= 1) { //Fluid
+  if (context.isNamed("Fluid")) {
     for (size_t i = 0; i < vertexIDs.size(); i++) {
       precice.writeVectorData(forcesID, vertexIDs[i], data[i + i1].data());
     }
@@ -475,7 +457,7 @@ BOOST_AUTO_TEST_CASE(TestBoundingBoxInitialization, *testing::OnSize(4))
 
   precice.advance(1.0);
 
-  if (utils::Parallel::getProcessRank() > 1) { //Structure
+  if (context.isNamed("Structure")) {
     for (size_t i = 0; i < vertexIDs.size(); i++) {
       precice.readVectorData(forcesID, vertexIDs[i], data[i + i1].data());
       for (size_t d = 0; d < 3; d++) {
@@ -487,14 +469,9 @@ BOOST_AUTO_TEST_CASE(TestBoundingBoxInitialization, *testing::OnSize(4))
   precice.finalize();
 }
 
-BOOST_AUTO_TEST_CASE(TestBoundingBoxInitializationTwoWay, *testing::OnSize(4))
+BOOST_AUTO_TEST_CASE(TestBoundingBoxInitializationTwoWay)
 {
-  reset();
-
-  std::string solverName;
-  int         rank = -1, size = -1;
-  std::string meshName;
-  int         i1 = -1, i2 = -1; //indices for data and positions
+  PRECICE_TEST("Fluid"_on(2_ranks), "Structure"_on(2_ranks));
 
   std::vector<Eigen::VectorXd> positions;
   std::vector<Eigen::VectorXd> data;
@@ -503,7 +480,16 @@ BOOST_AUTO_TEST_CASE(TestBoundingBoxInitializationTwoWay, *testing::OnSize(4))
   Eigen::Vector3d position;
   Eigen::Vector3d datum;
 
-  if (utils::Parallel::getProcessRank() <= 1) {
+  int i1 = -1, i2 = -1; //indices for data and positions
+
+  if (context.isNamed("Fluid")) {
+    if (context.isMaster()) {
+      i1 = 0;
+      i2 = 2;
+    } else {
+      i1 = 2;
+      i2 = 4;
+    }
     for (int i = 0; i < 4; i++) {
       position[0] = i * 1.0;
       position[1] = 0;
@@ -520,7 +506,14 @@ BOOST_AUTO_TEST_CASE(TestBoundingBoxInitializationTwoWay, *testing::OnSize(4))
     }
   }
 
-  if (utils::Parallel::getProcessRank() > 1) {
+  if (context.isNamed("Structure")) {
+    if (context.isMaster()) {
+      i1 = 2;
+      i2 = 4;
+    } else {
+      i1 = 0;
+      i2 = 2;
+    }
 
     for (int i = 0; i < 4; i++) {
       position[0] = i * 1.0;
@@ -538,40 +531,10 @@ BOOST_AUTO_TEST_CASE(TestBoundingBoxInitializationTwoWay, *testing::OnSize(4))
     }
   }
 
-  if (utils::Parallel::getProcessRank() == 0) {
-    solverName = "Fluid";
-    rank       = 0;
-    size       = 2;
-    meshName   = "FluidMesh";
-    i1         = 0;
-    i2         = 2;
-  } else if (utils::Parallel::getProcessRank() == 1) {
-    solverName = "Fluid";
-    rank       = 1;
-    size       = 2;
-    meshName   = "FluidMesh";
-    i1         = 2;
-    i2         = 4;
-  } else if (utils::Parallel::getProcessRank() == 2) {
-    solverName = "Structure";
-    rank       = 0;
-    size       = 2;
-    meshName   = "StructureMesh";
-    i1         = 2;
-    i2         = 4;
-  } else if (utils::Parallel::getProcessRank() == 3) {
-    solverName = "Structure";
-    rank       = 1;
-    size       = 2;
-    meshName   = "StructureMesh";
-    i1         = 0;
-    i2         = 2;
-  }
-
   std::string     configFilename = _pathToTests + "BB-sockets-explicit-twoway.xml";
-  SolverInterface precice(solverName, configFilename, rank, size);
+  SolverInterface precice(context.name, configFilename, context.rank, context.size);
 
-  int meshID       = precice.getMeshID(meshName);
+  int meshID       = precice.getMeshID(context.name + "Mesh");
   int forcesID     = precice.getDataID("Forces", meshID);
   int velocitiesID = precice.getDataID("Velocities", meshID);
 
@@ -583,7 +546,7 @@ BOOST_AUTO_TEST_CASE(TestBoundingBoxInitializationTwoWay, *testing::OnSize(4))
 
   precice.initialize();
 
-  if (utils::Parallel::getProcessRank() <= 1) { //Fluid
+  if (context.isNamed("Fluid")) {
     for (size_t i = 0; i < vertexIDs.size(); i++) {
       precice.writeVectorData(forcesID, vertexIDs[i], data[i + i1].data());
     }
@@ -591,8 +554,7 @@ BOOST_AUTO_TEST_CASE(TestBoundingBoxInitializationTwoWay, *testing::OnSize(4))
 
   precice.advance(1.0);
 
-  if (utils::Parallel::getProcessRank() > 1) { //Structure
-
+  if (context.isNamed("Structure")) {
     for (size_t i = 0; i < vertexIDs.size(); i++) {
       precice.readVectorData(forcesID, vertexIDs[i], data[i + i1].data());
       for (size_t d = 0; d < 3; d++) {
@@ -611,8 +573,7 @@ BOOST_AUTO_TEST_CASE(TestBoundingBoxInitializationTwoWay, *testing::OnSize(4))
 
   precice.advance(1.0);
 
-  if (utils::Parallel::getProcessRank() <= 1) { //fluid
-
+  if (context.isNamed("Fluid")) {
     for (size_t i = 0; i < vertexIDs.size(); i++) {
       precice.readVectorData(velocitiesID, vertexIDs[i], data[i + i1].data());
       for (size_t d = 0; d < 3; d++) {
@@ -838,7 +799,7 @@ BOOST_AUTO_TEST_CASE(UserDefinedMPICommunicator)
   }
 }
 
-#if 0 // #ifndef PRECICE_NO_PETSC
+#if 0  // #ifndef PRECICE_NO_PETSC
 // Tests SolverInterface() with a user-defined MPI communicator.
 // Since PETSc also uses MPI, we use petrbf mapping here.
 BOOST_AUTO_TEST_CASE(UserDefinedMPICommunicatorPetRBF)
