@@ -792,12 +792,7 @@ BOOST_AUTO_TEST_CASE(TestRepartitionAndDistribution2D)
   part.addM2N(m2n);
   part.compute();
 
-<<<<<<< HEAD
   if (context.isMaster()) { //Master
-    BOOST_TEST(pMesh->getGlobalNumberOfVertices() == 3);
-=======
-  if (utils::Parallel::getProcessRank() == 0) { //Master
->>>>>>> develop
     BOOST_TEST(pMesh->getVertexOffsets().size() == 4);
     BOOST_TEST(pMesh->getVertexOffsets()[0] == 0);
     BOOST_TEST(pMesh->getVertexOffsets()[1] == 2);
@@ -910,17 +905,13 @@ BOOST_AUTO_TEST_CASE(ProvideAndReceiveCouplingMode)
   }
 }
 
-BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D, *testing::OnSize(4))
+BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
 {
-  com::PtrCommunication participantCom =
-      com::PtrCommunication(new com::MPIDirectCommunication());
-  m2n::DistributedComFactory::SharedPointer distrFactory = m2n::DistributedComFactory::SharedPointer(
-      new m2n::GatherScatterComFactory(participantCom));
-  bool        useOnlyMasterCom = false;
-  bool        useTwoLevelInit  = true;
-  m2n::PtrM2N m2n              = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory, useOnlyMasterCom, useTwoLevelInit));
+  PRECICE_TEST("SOLIDZ"_on(1_rank), "NASTIN"_on(3_ranks).setupMasterSlaves(), Require::Events);
 
-  setupParallelEnvironment(m2n);
+  bool useOnlyMasterCom = false;
+  bool useTwoLevelInit  = true;
+  auto m2n              = context.connect("SOLIDZ", "NASTIN", useOnlyMasterCom, useTwoLevelInit);
 
   int  dimensions  = 2;
   bool flipNormals = true;
@@ -936,7 +927,7 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D, *testing::OnSize(4))
     initialBB.clear();
   }
 
-  if (utils::Parallel::getProcessRank() == 0) {
+  if (context.isNamed("SOLIDZ")) {
     std::vector<int>                connectedRanksList;
     int                             connectionMapSize = 0;
     std::map<int, std::vector<int>> receivedConnectionMap;
@@ -985,22 +976,16 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D, *testing::OnSize(4))
   tearDownParallelEnvironment();
 }
 
-BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes3D, *testing::OnSize(4))
+BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes3D)
 {
-  com::PtrCommunication participantCom =
-      com::PtrCommunication(new com::MPIDirectCommunication());
-  m2n::DistributedComFactory::SharedPointer distrFactory = m2n::DistributedComFactory::SharedPointer(
-      new m2n::GatherScatterComFactory(participantCom));
-  bool        useOnlyMasterCom = false;
-  bool        useTwoLevelInit  = true;
-  m2n::PtrM2N m2n              = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory, useOnlyMasterCom, useTwoLevelInit));
+  PRECICE_TEST("SOLIDZ"_on(1_rank), "NASTIN"_on(3_ranks).setupMasterSlaves(), Require::Events);
 
-  setupParallelEnvironment(m2n);
+  bool useOnlyMasterCom = false;
+  bool useTwoLevelInit  = true;
+  auto m2n              = context.connect("SOLIDZ", "NASTIN", useOnlyMasterCom, useTwoLevelInit);
 
   int  dimensions  = 3;
   bool flipNormals = true;
-
-  BOOST_TEST(utils::Parallel::getCommunicatorSize() == 4);
 
   // construct send global boundingbox
   mesh::Mesh::BoundingBoxMap sendGlobalBB;
@@ -1013,7 +998,7 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes3D, *testing::OnSize(4))
     initialBB.clear();
   }
 
-  if (utils::Parallel::getProcessRank() == 0) {
+  if (context.isNamed("SOLIDZ")) {
     std::vector<int>                connectedRanksList;
     int                             connectionMapSize = 0;
     std::map<int, std::vector<int>> receivedConnectionMap;
