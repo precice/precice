@@ -114,7 +114,7 @@ public:
 
   bool isMaster() const;
 
-  m2n::PtrM2N connect(const std::string &acceptor, const std::string &requestor) const;
+  m2n::PtrM2N connect(const std::string &acceptor, const std::string &requestor, bool useOnlyMasterCom = false, bool useTwoLevelInit = false) const;
 
 private:
   bool _petsc  = false;

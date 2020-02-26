@@ -198,12 +198,11 @@ void TestContext::initializePetsc()
   }
 }
 
-m2n::PtrM2N TestContext::connect(const std::string &acceptor, const std::string &requestor) const
+m2n::PtrM2N TestContext::connect(const std::string &acceptor, const std::string &requestor, bool useOnlyMasterCom, bool useTwoLevelInit) const
 {
   auto participantCom   = com::PtrCommunication(new com::MPIDirectCommunication());
   auto distrFactory     = m2n::DistributedComFactory::SharedPointer(new m2n::GatherScatterComFactory(participantCom));
-  bool useOnlyMasterCom = true;
-  auto m2n              = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory, useOnlyMasterCom));
+  auto m2n              = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory, useOnlyMasterCom, useTwoLevelInit));
 
   if (std::find(_names.begin(), _names.end(), acceptor) == _names.end()) {
     throw std::runtime_error{
