@@ -34,18 +34,6 @@ public:
 
   logging::Logger _log{"cplscheme::MultiCouplingScheme"};
 
-  /**
- * @brief TODO
- *
- * @param[in] startTime TODO
- * @param[in] startTimeWindow TODO
- */
-  virtual void initialize(double startTime, int startTimeWindow);
-
-  virtual void initializeData();
-
-  virtual void advance();
-
   /// Adds data to be sent on data exchange and possibly be modified during coupling iterations.
   void addDataToSend(
       mesh::PtrData data,
@@ -78,6 +66,21 @@ private:
 
   std::vector<DataMap> _receiveDataVector;
   std::vector<DataMap> _sendDataVector;
+
+  /**
+   * @brief TODO
+   */
+  void initializeImpl() override;
+
+  /**
+   * @brief TODO
+   */
+  void initializeDataImpl() override;
+
+  /**
+   * @brief TODO
+   */
+  void advanceImpl() override;
 };
 
 } // namespace cplscheme

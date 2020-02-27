@@ -40,18 +40,6 @@ public:
       CouplingMode                  cplMode,
       int                           maxIterations = 1);
 
-  /**
- * @brief TODO
- *
- * @param[in] startTime TODO
- * @param[in] startTimeWindow TODO
- */
-  virtual void initialize(double startTime, int startTimeWindow);
-
-  virtual void initializeData();
-
-  virtual void advance();
-
 protected:
   /// merges send and receive data into one map (for parallel acceleration)
   virtual void mergeData();
@@ -72,6 +60,21 @@ private:
   virtual void explicitAdvance();
 
   virtual void implicitAdvance();
+
+  /**
+ * @brief TODO
+ */
+  void initializeImpl() override;
+
+  /**
+   * @brief TODO
+   */
+  void initializeDataImpl() override;
+
+  /**
+   * @brief TODO
+   */
+  void advanceImpl() override;
 };
 
 } // namespace cplscheme

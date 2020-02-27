@@ -227,17 +227,22 @@ void BaseCouplingScheme::finalize()
 
 void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
 {
+  // Initialize uses the template method pattern (https://en.wikipedia.org/wiki/Template_method_pattern).
   PRECICE_TRACE(startTime, startTimeWindow);
   PRECICE_ASSERT(math::greaterEquals(startTime, 0.0), startTime);
   PRECICE_ASSERT(startTimeWindow >= 0, startTimeWindow);
   PRECICE_CHECK(not _initializeHasBeenCalled, "initialize() can only be called once!");
   _time          = startTime;
   _timeWindows   = startTimeWindow;
+
+  initializeImpl();
+
   _initializeHasBeenCalled = true;
 }
 
 void BaseCouplingScheme::initializeData()
 {
+  // InitializeData uses the template method pattern (https://en.wikipedia.org/wiki/Template_method_pattern).
   PRECICE_CHECK(_initializeHasBeenCalled, "initializeData() can be called after initialize() only!");
   PRECICE_CHECK(not _initializeDataHasBeenCalled, "initializeData() can only be called once!");
   _initializeDataHasBeenCalled = true;
@@ -254,6 +259,8 @@ void BaseCouplingScheme::initializeData()
                 "InitialData has to be written to preCICE before calling initializeData()");
 
   _hasDataBeenExchanged = false;
+
+  initializeDataImpl();
 }
 
 void BaseCouplingScheme::advance()
@@ -265,6 +272,22 @@ void BaseCouplingScheme::advance()
                 "initializeData() needs to be called before advance if data has to be initialized!");
   _hasDataBeenExchanged = false;
   _isTimeWindowComplete = false;
+
+#ifndef NDEBUG
+  for (const DataMap::value_type &pair : getReceiveData()) {
+    Eigen::VectorXd &  values = *pair.second->values;
+    int                max    = values.size();
+    std::ostringstream stream;
+    for (int i = 0; (i < max) && (i < 10); i++) {
+      stream << values[i] << " ";
+    }
+    PRECICE_DEBUG("Begin advance, first New Values: " << stream.str());
+  }
+#endif
+
+  if (subcyclingIsCompleted()) {
+    advanceImpl();
+  }
 }
 
 void BaseCouplingScheme::setExtrapolationOrder(

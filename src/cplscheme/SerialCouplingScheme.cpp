@@ -31,12 +31,8 @@ SerialCouplingScheme::SerialCouplingScheme(
   }
 }
 
-void SerialCouplingScheme::initialize(
-    double startTime,
-    int    startTimeWindow)
+void SerialCouplingScheme::initializeImpl()
 {
-  BaseCouplingScheme::initialize(startTime, startTimeWindow);
-
   if (_couplingMode == Implicit) {
     PRECICE_CHECK(not getSendData().empty(), "No send data configured! Use explicit scheme for one-way coupling.");
     if (not doesFirstStep()) {
@@ -88,10 +84,8 @@ void SerialCouplingScheme::initialize(
   initializeTXTWriters();
 }
 
-void SerialCouplingScheme::initializeData()
+void SerialCouplingScheme::initializeDataImpl()
 {
-  BaseCouplingScheme::initializeData();
-
   if (hasToReceiveInitData() && isCouplingOngoing()) {
     PRECICE_ASSERT(doesFirstStep());
     PRECICE_DEBUG("Receiving data");
@@ -117,26 +111,12 @@ void SerialCouplingScheme::initializeData()
   }
 }
 
-void SerialCouplingScheme::advance()
+void SerialCouplingScheme::advanceImpl()
 {
-  BaseCouplingScheme::advance();
-#ifndef NDEBUG
-  for (const DataMap::value_type &pair : getReceiveData()) {
-    Eigen::VectorXd &  values = *pair.second->values;
-    int                max    = values.size();
-    std::ostringstream stream;
-    for (int i = 0; (i < max) && (i < 10); i++) {
-      stream << values[i] << " ";
-    }
-    PRECICE_DEBUG("Begin advance, first New Values: " << stream.str());
-  }
-#endif
-  if (subcyclingIsCompleted()) {
-    if (_couplingMode == Explicit) {
-      explicitAdvance();
-    } else if (_couplingMode == Implicit) {
-      implicitAdvance();
-    }
+  if (_couplingMode == Explicit) {
+    explicitAdvance();
+  } else if (_couplingMode == Implicit) {
+    implicitAdvance();
   }
 }
 

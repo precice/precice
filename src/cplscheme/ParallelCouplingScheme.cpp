@@ -31,12 +31,8 @@ ParallelCouplingScheme::ParallelCouplingScheme(
   }
 }
 
-void ParallelCouplingScheme::initialize(
-    double startTime,
-    int    startTimeWindow)
+void ParallelCouplingScheme::initializeImpl()
 {
-  BaseCouplingScheme::initialize(startTime, startTimeWindow);
-
   if (_couplingMode == Implicit) {
     PRECICE_CHECK(not getSendData().empty(), "No send data configured! Use explicit scheme for one-way coupling.");
     if (not doesFirstStep()) {         // second participant
@@ -70,10 +66,8 @@ void ParallelCouplingScheme::initialize(
   }
 }
 
-void ParallelCouplingScheme::initializeData()
+void ParallelCouplingScheme::initializeDataImpl()
 {
-  BaseCouplingScheme::initializeData();
-
   // F: send, receive, S: receive, send
   if (doesFirstStep()) {
     if (hasToSendInitData()) {
@@ -113,16 +107,12 @@ void ParallelCouplingScheme::initializeData()
   }
 }
 
-void ParallelCouplingScheme::advance()
+void ParallelCouplingScheme::advanceImpl()
 {
-  BaseCouplingScheme::advance();
-
-  if (subcyclingIsCompleted()) {
-    if (_couplingMode == Explicit) {
-      explicitAdvance();
-    } else if (_couplingMode == Implicit) {
-      implicitAdvance();
-    }
+  if (_couplingMode == Explicit) {
+    explicitAdvance();
+  } else if (_couplingMode == Implicit) {
+    implicitAdvance();
   }
 }
 

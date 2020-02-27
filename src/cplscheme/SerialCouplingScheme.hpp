@@ -47,18 +47,6 @@ public:
       CouplingMode                  cplMode,
       int                           maxIterations = 1);
 
-  /**
-   * @brief TODO
-   *
-   * @param[in] startTime TODO
-   * @param[in] startTimeWindow TODO
-   */
-  virtual void initialize(double startTime, int startTimeWindow);
-
-  virtual void initializeData();
-
-  virtual void advance();
-
   logging::Logger _log{"cplschemes::SerialCouplingSchemes"};
 
   friend struct CplSchemeTests::SerialImplicitCouplingSchemeTests::testExtrapolateData; // For whitebox tests
@@ -67,6 +55,21 @@ private:
   virtual void explicitAdvance();
 
   virtual void implicitAdvance();
+
+  /**
+ * @brief TODO
+ */
+  void initializeImpl() override;
+
+  /**
+   * @brief TODO
+   */
+  void initializeDataImpl() override;
+
+  /**
+   * @brief TODO
+   */
+  void advanceImpl() override;
 };
 
 } // namespace cplscheme

@@ -32,12 +32,8 @@ MultiCouplingScheme::MultiCouplingScheme(
   }
 }
 
-void MultiCouplingScheme::initialize(
-    double startTime,
-    int    startTimeWindow)
+void MultiCouplingScheme::initializeImpl()
 {
-  BaseCouplingScheme::initialize(startTime, startTimeWindow);
-
   mergeData();                 // merge send and receive data for all pp calls
   setupConvergenceMeasures();  // needs _couplingData configured
   setupDataMatrices(_allData); // Reserve memory and initialize data with zero
@@ -73,10 +69,8 @@ void MultiCouplingScheme::initialize(
   }
 }
 
-void MultiCouplingScheme::initializeData()
+void MultiCouplingScheme::initializeDataImpl()
 {
-  BaseCouplingScheme::initializeData();
-
   if (hasToReceiveInitData()) {
     receiveData();
 
@@ -105,59 +99,56 @@ void MultiCouplingScheme::initializeData()
   }
 }
 
-void MultiCouplingScheme::advance()
+void MultiCouplingScheme::advanceImpl()
 {
-  BaseCouplingScheme::advance();
+  PRECICE_DEBUG("Computed full length of iteration");
 
-  bool convergence = false;
-  if (subcyclingIsCompleted()) {
-    PRECICE_DEBUG("Computed full length of iteration");
+  receiveData();
 
-    receiveData();
+  auto designSpecifications = getAcceleration()->getDesignSpecification(_allData);
+  bool convergence          = measureConvergence(designSpecifications);
 
-    auto designSpecifications = getAcceleration()->getDesignSpecification(_allData);
-    convergence               = measureConvergence(designSpecifications);
-
-    // Stop, when maximal iteration count (given in config) is reached
-    if (maxIterationsReached()) {
-      convergence = true;
-    }
-    if (convergence) {
-      if (getAcceleration().get() != nullptr) {
-        getAcceleration()->iterationsConverged(_allData);
-      }
-      newConvergenceMeasurements();
-      timeWindowCompleted();
-    } else if (getAcceleration().get() != nullptr) {
-      getAcceleration()->performAcceleration(_allData);
-    }
-
-    for (m2n::PtrM2N m2n : _communications) {
-      m2n->send(convergence);
-      PRECICE_ASSERT(not _isCoarseModelOptimizationActive);
-      m2n->send(_isCoarseModelOptimizationActive); //need to do this to match with ParallelCplScheme
-    }
-
-    if (convergence && (getExtrapolationOrder() > 0)) {
-      extrapolateData(_allData); // Also stores data
-    } else {                     // Store data for conv. measurement, acceleration, or extrapolation
-      for (DataMap::value_type &pair : _allData) {
-        if (pair.second->oldValues.size() > 0) {
-          pair.second->oldValues.col(0) = *pair.second->values;
-        }
-      }
-    }
-    sendData();
-
-    if (not convergence) {
-      PRECICE_DEBUG("No convergence achieved");
-      requireAction(constants::actionReadIterationCheckpoint());
-    } else {
-      PRECICE_DEBUG("Convergence achieved");
-      advanceTXTWriters();
-    }
-    updateTimeAndIterations(convergence);
+  // Stop, when maximal iteration count (given in config) is reached
+  if (maxIterationsReached()) {
+    convergence = true;
   }
+  if (convergence) {
+    if (getAcceleration().get() != nullptr) {
+      getAcceleration()->iterationsConverged(_allData);
+    }
+    newConvergenceMeasurements();
+    timeWindowCompleted();
+  } else if (getAcceleration().get() != nullptr) {
+    getAcceleration()->performAcceleration(_allData);
+  }
+
+  for (m2n::PtrM2N m2n : _communications) {
+    m2n->send(convergence);
+    PRECICE_ASSERT(not _isCoarseModelOptimizationActive);
+    m2n->send(_isCoarseModelOptimizationActive); //need to do this to match with ParallelCplScheme
+  }
+
+  if (convergence && (getExtrapolationOrder() > 0)) {
+    extrapolateData(_allData); // Also stores data
+  } else {                     // Store data for conv. measurement, acceleration, or extrapolation
+    for (DataMap::value_type &pair : _allData) {
+      if (pair.second->oldValues.size() > 0) {
+        pair.second->oldValues.col(0) = *pair.second->values;
+      }
+    }
+  }
+
+  sendData();
+
+  if (not convergence) {
+    PRECICE_DEBUG("No convergence achieved");
+    requireAction(constants::actionReadIterationCheckpoint());
+  } else {
+    PRECICE_DEBUG("Convergence achieved");
+    advanceTXTWriters();
+  }
+
+  updateTimeAndIterations(convergence);
 }
 
 void MultiCouplingScheme::mergeData()

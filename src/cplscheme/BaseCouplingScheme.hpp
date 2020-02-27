@@ -180,7 +180,7 @@ public:
    * @param[in] startTime starting time of coupling scheme
    * @param[in] startTimeWindow ID of time window, from which coupling scheme starts
    */
-  virtual void initialize(double startTime, int startTimeWindow);
+  void initialize(double startTime, int startTimeWindow) override final;
 
   /**
    * @brief Initializes data with written values.
@@ -188,9 +188,12 @@ public:
    * @pre initialize() has been called.
    * @pre advance() has NOT yet been called.
    */
-  virtual void initializeData();
+  void initializeData() override final;
 
-  virtual void advance();
+  /**
+   * @brief TODO
+   */
+  void advance() override final;
 
   /// Returns whether the solver has to evaluate the coarse or the fine model representation
   virtual bool isCoarseModelOptimizationActive()
@@ -235,9 +238,6 @@ protected:
 
   /// Updates internal state of coupling scheme for next time window.
   void timeWindowCompleted();
-
-  /// Returns true if end time of time window is reached. Does not check for convergence
-  bool subcyclingIsCompleted();
 
   /// Receives and set the timestep length, if this participant is the one to receive
   void receiveAndSetDt();
@@ -500,8 +500,20 @@ private:
   /// Writes out coupling convergence within all time windows.
   std::shared_ptr<io::TXTTableWriter> _convergenceWriter;
 
+  /// implements functionality for initialize in base class.
+  virtual void initializeImpl() = 0;
+
+  /// implements functionality for initializeData in base class.
+  virtual void initializeDataImpl() = 0;
+
+  /// implements functionality for advance in base class.
+  virtual void advanceImpl() = 0;
+
   /// If any required actions are open, an error message is issued.
   void checkCompletenessRequiredActions();
+
+  /// Returns true if end time of time window is reached. Does not check for convergence
+  bool subcyclingIsCompleted();
 };
 } // namespace cplscheme
 } // namespace precice
