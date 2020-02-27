@@ -24,6 +24,7 @@ MultiCouplingScheme::MultiCouplingScheme(
                          localParticipant, localParticipant, m2n::PtrM2N(), maxIterations, dtMethod),
       _communications(m2n)
 {
+  _couplingMode = Implicit;
   for (size_t i = 0; i < _communications.size(); ++i) {
     DataMap receiveMap;
     DataMap sendMap;
@@ -32,7 +33,7 @@ MultiCouplingScheme::MultiCouplingScheme(
   }
 }
 
-void MultiCouplingScheme::initializeImpl()
+void MultiCouplingScheme::initializeImplicit()
 {
   mergeData();                 // merge send and receive data for all pp calls
   setupConvergenceMeasures();  // needs _couplingData configured
@@ -43,34 +44,24 @@ void MultiCouplingScheme::initializeImpl()
                       << getAcceleration()->getDataIDs().size());
     getAcceleration()->initialize(_allData); // Reserve memory, initialize
   }
+}
 
-  requireAction(constants::actionWriteIterationCheckpoint());
-  initializeTXTWriters();
+void MultiCouplingScheme::initializeImplementation()
+{
+  PRECICE_CHECK(_couplingMode == Implicit, "MultiCouplingScheme is always Implicit!");
 
   for (DataMap &dataMap : _sendDataVector) {
-    for (DataMap::value_type &pair : dataMap) {
-      if (pair.second->initialize) {
-        setHasToSendInitData(true);
-        break;
-      }
-    }
+    initializeSendingParticipants(dataMap);
   }
   for (DataMap &dataMap : _receiveDataVector) {
-    for (DataMap::value_type &pair : dataMap) {
-      if (pair.second->initialize) {
-        setHasToReceiveInitData(true);
-        break;
-      }
-    }
-  }
-
-  if (hasToSendInitData()) {
-    requireAction(constants::actionWriteInitialData());
+    initializeReceivingParticipants(dataMap);
   }
 }
 
 void MultiCouplingScheme::initializeDataImpl()
 {
+  PRECICE_CHECK(_couplingMode == Implicit, "MultiCouplingScheme is always Implicit!");
+
   if (hasToReceiveInitData()) {
     receiveData();
 
@@ -99,8 +90,14 @@ void MultiCouplingScheme::initializeDataImpl()
   }
 }
 
-void MultiCouplingScheme::advanceImpl()
+void MultiCouplingScheme::explicitAdvance() {
+  PRECICE_CHECK(_couplingMode == Implicit, "MultiCouplingScheme is always Implicit!");
+  // TODO this class hierarchy has a smell! I think that MultiCouplingScheme should not be derived from BaseCouplingScheme, but directly from CouplingScheme or an intermediate layer between CouplingScheme and BaseCouplingScheme.
+}
+
+std::pair<bool, bool> MultiCouplingScheme::implicitAdvance()
 {
+  PRECICE_CHECK(_couplingMode == Implicit, "MultiCouplingScheme is always Implicit!");
   PRECICE_DEBUG("Computed full length of iteration");
 
   receiveData();
@@ -140,15 +137,8 @@ void MultiCouplingScheme::advanceImpl()
 
   sendData();
 
-  if (not convergence) {
-    PRECICE_DEBUG("No convergence achieved");
-    requireAction(constants::actionReadIterationCheckpoint());
-  } else {
-    PRECICE_DEBUG("Convergence achieved");
-    advanceTXTWriters();
-  }
-
-  updateTimeAndIterations(convergence);
+  // TODO: Returning a hard-coded "true" is wrong or at least has a smell! We do not make use of the default value in BaseCouplingScheme::updateTimeAndIterations(bool convergence, bool convergenceCoarseOptimization = true), but provide it explicitly!
+  return std::pair<bool, bool>(convergence, true);
 }
 
 void MultiCouplingScheme::mergeData()

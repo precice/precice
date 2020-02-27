@@ -153,7 +153,7 @@ public:
    */
   virtual double getThisTimeWindowRemainder() const = 0;
 
-  /// Returns part of the current timestep that has been computed already.
+  /// Returns part of the current time window that has been computed already.
   virtual double getComputedTimeWindowPart() const = 0;
 
   /**

@@ -31,39 +31,24 @@ ParallelCouplingScheme::ParallelCouplingScheme(
   }
 }
 
-void ParallelCouplingScheme::initializeImpl()
+void ParallelCouplingScheme::initializeImplicit()
 {
-  if (_couplingMode == Implicit) {
-    PRECICE_CHECK(not getSendData().empty(), "No send data configured! Use explicit scheme for one-way coupling.");
-    if (not doesFirstStep()) {         // second participant
-      setupConvergenceMeasures();      // needs _couplingData configured
-      mergeData();                     // merge send and receive data for all pp calls
-      setupDataMatrices(getAllData()); // Reserve memory and initialize data with zero
-      if (getAcceleration().get() != nullptr) {
-        getAcceleration()->initialize(getAllData()); // Reserve memory, initialize
-      }
-    }
-
-    requireAction(constants::actionWriteIterationCheckpoint());
-    initializeTXTWriters();
-  }
-
-  for (DataMap::value_type &pair : getSendData()) {
-    if (pair.second->initialize) {
-      setHasToSendInitData(true);
-      break;
+  PRECICE_CHECK(not getSendData().empty(), "No send data configured! Use explicit scheme for one-way coupling.");
+  if (not doesFirstStep()) {         // second participant
+    setupConvergenceMeasures();      // needs _couplingData configured
+    mergeData();                     // merge send and receive data for all pp calls
+    setupDataMatrices(getAllData()); // Reserve memory and initialize data with zero
+    if (getAcceleration().get() != nullptr) {
+      getAcceleration()->initialize(getAllData()); // Reserve memory, initialize
     }
   }
-  for (DataMap::value_type &pair : getReceiveData()) {
-    if (pair.second->initialize) {
-      setHasToReceiveInitData(true);
-      break;
-    }
-  }
+}
 
-  if (hasToSendInitData()) {
-    requireAction(constants::actionWriteInitialData());
-  }
+void ParallelCouplingScheme::initializeImplementation()
+{
+  initializeSendingParticipants(getSendData());
+
+  initializeReceivingParticipants(getReceiveData());
 }
 
 void ParallelCouplingScheme::initializeDataImpl()
@@ -107,19 +92,8 @@ void ParallelCouplingScheme::initializeDataImpl()
   }
 }
 
-void ParallelCouplingScheme::advanceImpl()
-{
-  if (_couplingMode == Explicit) {
-    explicitAdvance();
-  } else if (_couplingMode == Implicit) {
-    implicitAdvance();
-  }
-}
-
 void ParallelCouplingScheme::explicitAdvance()
 {
-  timeWindowCompleted();
-
   if (doesFirstStep()) {
     PRECICE_DEBUG("Sending data...");
     sendDt();
@@ -137,12 +111,9 @@ void ParallelCouplingScheme::explicitAdvance()
     sendDt();
     sendData(getM2N());
   }
-
-  //both participants
-  setComputedTimeWindowPart(0.0);
 }
 
-void ParallelCouplingScheme::implicitAdvance()
+std::pair<bool, bool> ParallelCouplingScheme::implicitAdvance()
 {
   PRECICE_DEBUG("Computed full length of iteration");
   bool convergence                   = false;
@@ -252,15 +223,7 @@ void ParallelCouplingScheme::implicitAdvance()
     sendData(getM2N());
   }
 
-  // both participants
-  if (not convergence) {
-    PRECICE_DEBUG("No convergence achieved");
-    requireAction(constants::actionReadIterationCheckpoint());
-  } else {
-    PRECICE_DEBUG("Convergence achieved");
-    advanceTXTWriters();
-  }
-  updateTimeAndIterations(convergence, convergenceCoarseOptimization);
+  return std::pair<bool, bool>(convergence, convergenceCoarseOptimization);
 }
 
 void ParallelCouplingScheme::mergeData()

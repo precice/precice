@@ -235,10 +235,44 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
   _time          = startTime;
   _timeWindows   = startTimeWindow;
 
-  initializeImpl();
+  if (_couplingMode == Implicit) {
+    initializeImplicit();
+
+    requireAction(constants::actionWriteIterationCheckpoint());
+    initializeTXTWriters();
+  }
+
+  initializeImplementation();
+
+  if (hasToSendInitData()) {
+    requireAction(constants::actionWriteInitialData());
+  }
 
   _initializeHasBeenCalled = true;
 }
+
+void BaseCouplingScheme::initializeSendingParticipants(DataMap &dataMap)
+{
+  for (DataMap::value_type &pair : dataMap) {
+    if (pair.second->initialize) {
+      _hasToSendInitData = true;
+      break;
+    }
+  }
+}
+
+void BaseCouplingScheme::initializeReceivingParticipants(DataMap &dataMap)
+{
+  {
+    for (DataMap::value_type &pair : dataMap) {
+      if (pair.second->initialize) {
+        _hasToReceiveInitData = true;
+        break;
+      }
+    }
+  }
+}
+
 
 void BaseCouplingScheme::initializeData()
 {
@@ -284,9 +318,26 @@ void BaseCouplingScheme::advance()
     PRECICE_DEBUG("Begin advance, first New Values: " << stream.str());
   }
 #endif
+  PRECICE_CHECK(_couplingMode != Undefined, "_couplingMode has to be defined!");
 
   if (subcyclingIsCompleted()) {
-    advanceImpl();
+    if (_couplingMode == Explicit) {
+      timeWindowCompleted();
+      explicitAdvance();
+      _computedTimeWindowPart = 0.0;
+    } else if (_couplingMode == Implicit) {
+      std::pair<bool, bool> convergenceInformation = implicitAdvance();
+      bool convergence = convergenceInformation.first;
+      bool convergenceCoarseOptimization = convergenceInformation.second;
+      if (not convergence) {
+        PRECICE_DEBUG("No convergence achieved");
+        requireAction(constants::actionReadIterationCheckpoint());
+      } else {
+        PRECICE_DEBUG("Convergence achieved");
+        advanceTXTWriters();
+      }
+      updateTimeAndIterations(convergence, convergenceCoarseOptimization);
+    }
   }
 }
 

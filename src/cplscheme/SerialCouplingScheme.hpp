@@ -52,24 +52,30 @@ public:
   friend struct CplSchemeTests::SerialImplicitCouplingSchemeTests::testExtrapolateData; // For whitebox tests
 
 private:
-  virtual void explicitAdvance();
+  /**
+* @brief TODO
+*/
+  void explicitAdvance() override;
 
-  virtual void implicitAdvance();
+  /**
+* @brief TODO
+*/
+  std::pair<bool, bool> implicitAdvance() override;
+
+  /**
+* @brief TODO
+*/
+  void initializeImplicit() override;
 
   /**
  * @brief TODO
  */
-  void initializeImpl() override;
+  void initializeImplementation() override;
 
   /**
    * @brief TODO
    */
   void initializeDataImpl() override;
-
-  /**
-   * @brief TODO
-   */
-  void advanceImpl() override;
 };
 
 } // namespace cplscheme

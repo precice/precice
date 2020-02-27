@@ -31,43 +31,43 @@ SerialCouplingScheme::SerialCouplingScheme(
   }
 }
 
-void SerialCouplingScheme::initializeImpl()
+void SerialCouplingScheme::initializeImplicit()
 {
-  if (_couplingMode == Implicit) {
-    PRECICE_CHECK(not getSendData().empty(), "No send data configured! Use explicit scheme for one-way coupling.");
-    if (not doesFirstStep()) {
-      if (not _convergenceMeasures.empty()) {
-        setupConvergenceMeasures();       // needs _couplingData configured
-        setupDataMatrices(getSendData()); // Reserve memory and initialize data with zero
-      }
-      if (getAcceleration().get() != nullptr) {
-        getAcceleration()->initialize(getSendData()); // Reserve memory, initialize
-      }
-    } else if (getAcceleration().get() != nullptr && getAcceleration()->getDataIDs().size() > 0) {
-      int dataID = *(getAcceleration()->getDataIDs().begin());
-      PRECICE_CHECK(getSendData(dataID) == nullptr,
-                    "In case of serial coupling, acceleration can be defined for "
-                        << "data of second participant only!");
+  PRECICE_CHECK(not getSendData().empty(), "No send data configured! Use explicit scheme for one-way coupling.");
+  if (not doesFirstStep()) {
+    if (not _convergenceMeasures.empty()) {
+      setupConvergenceMeasures();       // needs _couplingData configured
+      setupDataMatrices(getSendData()); // Reserve memory and initialize data with zero
     }
-    requireAction(constants::actionWriteIterationCheckpoint());
+    if (getAcceleration().get() != nullptr) {
+      getAcceleration()->initialize(getSendData()); // Reserve memory, initialize
+    }
+  } else if (getAcceleration().get() != nullptr && not getAcceleration()->getDataIDs().empty()) {
+    int dataID = *(getAcceleration()->getDataIDs().begin());
+    PRECICE_CHECK(getSendData(dataID) == nullptr,
+                  "In case of serial coupling, acceleration can be defined for "
+                      << "data of second participant only!");
   }
+}
 
+void SerialCouplingScheme::initializeImplementation()
+{
   for (DataMap::value_type &pair : getSendData()) {
     if (pair.second->initialize) {
       PRECICE_CHECK(not doesFirstStep(), "Only second participant can initialize data!");
-      PRECICE_DEBUG("Initialized data to be written");
-      setHasToSendInitData(true);
       break;
     }
   }
 
+  initializeSendingParticipants(getSendData());
+
   for (DataMap::value_type &pair : getReceiveData()) {
     if (pair.second->initialize) {
       PRECICE_CHECK(doesFirstStep(), "Only first participant can receive initial data!");
-      PRECICE_DEBUG("Initialized data to be received");
-      setHasToReceiveInitData(true);
     }
   }
+
+  initializeReceivingParticipants(getReceiveData());
 
   // If the second participant initializes data, the first receive for the
   // second participant is done in initializeData() instead of initialize().
@@ -76,12 +76,6 @@ void SerialCouplingScheme::initializeImpl()
     receiveAndSetDt();
     receiveData(getM2N());
   }
-
-  if (hasToSendInitData()) {
-    requireAction(constants::actionWriteInitialData());
-  }
-
-  initializeTXTWriters();
 }
 
 void SerialCouplingScheme::initializeDataImpl()
@@ -111,19 +105,8 @@ void SerialCouplingScheme::initializeDataImpl()
   }
 }
 
-void SerialCouplingScheme::advanceImpl()
-{
-  if (_couplingMode == Explicit) {
-    explicitAdvance();
-  } else if (_couplingMode == Implicit) {
-    implicitAdvance();
-  }
-}
-
 void SerialCouplingScheme::explicitAdvance()
 {
-  timeWindowCompleted();
-
   PRECICE_DEBUG("Sending data...");
   sendDt();
   sendData(getM2N());
@@ -133,11 +116,9 @@ void SerialCouplingScheme::explicitAdvance()
     receiveAndSetDt();
     receiveData(getM2N());
   }
-
-  setComputedTimeWindowPart(0.0);
 }
 
-void SerialCouplingScheme::implicitAdvance()
+std::pair<bool, bool> SerialCouplingScheme::implicitAdvance()
 {
   bool convergence                   = true;
   bool convergenceCoarseOptimization = true;
@@ -270,15 +251,7 @@ void SerialCouplingScheme::implicitAdvance()
     }
   }
 
-  if (not convergence) {
-    PRECICE_DEBUG("No convergence achieved");
-    requireAction(constants::actionReadIterationCheckpoint());
-  } else {
-    PRECICE_DEBUG("Convergence achieved");
-    advanceTXTWriters();
-  }
-
-  updateTimeAndIterations(convergence, convergenceCoarseOptimization);
+  return std::pair<bool, bool>(convergence, convergenceCoarseOptimization);
 }
 
 } // namespace cplscheme

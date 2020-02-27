@@ -274,12 +274,6 @@ protected:
   /// Returns all data to be received with data ID as given.
   CouplingData *getReceiveData(int dataID);
 
-  /// Sets value for computed time window part.
-  void setComputedTimeWindowPart(double computedTimeWindowPart)
-  {
-    _computedTimeWindowPart = computedTimeWindowPart;
-  }
-
   /// Sets flag to determine whether data has been exchanged in the last coupling iteration.
   void setHasDataBeenExchanged(bool hasDataBeenExchanged);
 
@@ -311,33 +305,11 @@ protected:
       int    timeWindows,
       double time) const;
 
-  /// Returns a string representing the required actions.
-  std::string printActionsState() const;
-
-  /// First participant name.
-  std::string _firstParticipant = "unknown";
-
-  /// Second participant name.
-  std::string _secondParticipant = "unknown";
-
-  /// Local participant name.
-  std::string _localParticipant = "unknown";
-
   /// @return Communication device to the other coupling participant.
   m2n::PtrM2N getM2N()
   {
     PRECICE_ASSERT(_m2n);
     return _m2n;
-  }
-
-  void setHasToSendInitData(bool hasToSendInitData)
-  {
-    _hasToSendInitData = hasToSendInitData;
-  }
-
-  void setHasToReceiveInitData(bool hasToReceiveInitData)
-  {
-    _hasToReceiveInitData = hasToReceiveInitData;
   }
 
   bool hasToSendInitData()
@@ -392,12 +364,6 @@ protected:
     return _acceleration;
   }
 
-  void initializeTXTWriters();
-
-  void advanceTXTWriters();
-
-  void updateTimeAndIterations(bool convergence, bool convergenceCoarseOptimization = true);
-
   int getExtrapolationOrder()
   {
     return _extrapolationOrder;
@@ -405,13 +371,16 @@ protected:
 
   bool maxIterationsReached();
 
-  /// Smallest number, taking validDigits into account: eps = std::pow(10.0, -1 * validDigits)
-  const double _eps;
-
   int _deletedColumnsPPFiltering = 0;
 
   /// Number of coarse model optimization iterations in current time window.
   int _iterationsCoarseOptimization;
+
+  /// @todo
+  void initializeSendingParticipants(DataMap &dataMap);
+
+  /// @todo
+  void initializeReceivingParticipants(DataMap &dataMap);
 
 private:
   /// Communication device to the other coupling participant.
@@ -500,20 +469,66 @@ private:
   /// Writes out coupling convergence within all time windows.
   std::shared_ptr<io::TXTTableWriter> _convergenceWriter;
 
+  /// First participant name.
+  std::string _firstParticipant = "unknown";
+
+  /// Second participant name.
+  std::string _secondParticipant = "unknown";
+
+  /// Local participant name.
+  std::string _localParticipant = "unknown";
+
+  /// Smallest number, taking validDigits into account: eps = std::pow(10.0, -1 * validDigits)
+  const double _eps;
+
+  /// Functions needed for initialize()
+
+  /// implements functionality needed by initialize if __couplingMode == Implicit
+  virtual void initializeImplicit() = 0;
+
   /// implements functionality for initialize in base class.
-  virtual void initializeImpl() = 0;
+  virtual void initializeImplementation() = 0;
+
+  /// Functions needed for initializeData()
 
   /// implements functionality for initializeData in base class.
   virtual void initializeDataImpl() = 0;
 
+  /// Functions needed for advance()
+
   /// implements functionality for advance in base class.
-  virtual void advanceImpl() = 0;
+  virtual void explicitAdvance() = 0;
+
+  /// implements functionality for advance in base class.
+  virtual std::pair<bool, bool> implicitAdvance() = 0;
 
   /// If any required actions are open, an error message is issued.
   void checkCompletenessRequiredActions();
 
   /// Returns true if end time of time window is reached. Does not check for convergence
   bool subcyclingIsCompleted();
+
+  /**
+   * @brief If coupling iteration has not converged, time will be reset to beginning of
+   *        window since the window has to be repeated. Iteration counters are incremented.
+   *
+   * @param convergence Set true, if coupling iteration in window was successful
+   * @param convergenceCoarseOptimization Optional parameter, needed if manifold mapping is used
+   */
+  void updateTimeAndIterations(bool convergence, bool convergenceCoarseOptimization = true);
+
+  /**
+   * @brief TODO
+   */
+  void initializeTXTWriters();
+
+  /**
+   * @brief TODO
+   */
+  void advanceTXTWriters();
+
+  /// Returns a string representing the required actions.
+  std::string printActionsState() const;
 };
 } // namespace cplscheme
 } // namespace precice
