@@ -21,15 +21,7 @@ SerialCouplingScheme::SerialCouplingScheme(
     CouplingMode                  cplMode,
     int                           maxIterations)
     : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, firstParticipant,
-                         secondParticipant, localParticipant, m2n, maxIterations, dtMethod)
-{
-  _couplingMode = cplMode;
-  // Coupling mode must be either Explicit or Implicit when using SerialCouplingScheme.
-  PRECICE_ASSERT(_couplingMode != Undefined);
-  if (_couplingMode == Explicit) {
-    PRECICE_ASSERT(maxIterations == 1);
-  }
-}
+                         secondParticipant, localParticipant, m2n, maxIterations, cplMode, dtMethod){}
 
 void SerialCouplingScheme::initializeImplicit()
 {
@@ -143,7 +135,7 @@ std::pair<bool, bool> SerialCouplingScheme::implicitAdvance()
     }
     // measure convergence of coupling iteration
     // measure convergence for coarse model optimization
-    if (_isCoarseModelOptimizationActive) {
+    if (isCoarseModelOptimizationActive()) {
       PRECICE_DEBUG("measure convergence of coarse model optimization.");
       // in case of multilevel acceleration only: measure the convergence of the coarse model optimization
       convergenceCoarseOptimization = measureConvergenceCoarseModelOptimization(designSpecifications);
@@ -184,7 +176,7 @@ std::pair<bool, bool> SerialCouplingScheme::implicitAdvance()
       // coupling iteration converged for current time window. Advance in time.
       if (convergence) {
         if (getAcceleration().get() != nullptr) {
-          _deletedColumnsPPFiltering = getAcceleration()->getDeletedColumns();
+          setDeletedColumnsPPFiltering(getAcceleration()->getDeletedColumns());
           getAcceleration()->iterationsConverged(getSendData());
         }
         newConvergenceMeasurements();
@@ -230,7 +222,7 @@ std::pair<bool, bool> SerialCouplingScheme::implicitAdvance()
       // otherwise the fine input data would be zero in this case, neither anything has been computed so far for the fine
       // model nor the acceleration did any data registration
       // ATTENTION: assumes that coarse data is defined after fine data in same ordering.
-      if (_iterationsCoarseOptimization == 1 && getAcceleration().get() != nullptr) {
+      if (getIterationsCoarseOptimization() == 1 && getAcceleration().get() != nullptr) {
         auto fineIDs = getAcceleration()->getDataIDs();
         for (auto &fineID : fineIDs) {
           (*getSendData(fineID)->values) = getSendData(fineID + fineIDs.size() + 1)->oldValues.col(0);
@@ -240,7 +232,7 @@ std::pair<bool, bool> SerialCouplingScheme::implicitAdvance()
 
     getM2N()->send(convergence);
 
-    getM2N()->send(_isCoarseModelOptimizationActive);
+    getM2N()->send(isCoarseModelOptimizationActive());
 
     sendData(getM2N());
 

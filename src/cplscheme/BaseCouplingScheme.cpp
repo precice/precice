@@ -20,37 +20,6 @@ namespace precice {
 namespace cplscheme {
 
 BaseCouplingScheme::BaseCouplingScheme(
-    double maxTime,
-    int    maxTimeWindows,
-    double timeWindowSize,
-    int    validDigits)
-    : _couplingMode(Undefined),
-      _firstParticipant("unknown"),
-      _secondParticipant("unknown"),
-      _localParticipant("unknown"),
-      _eps(std::pow(10.0, -1 * validDigits)),
-      _iterationsCoarseOptimization(-1),
-      _maxTime(maxTime),
-      _maxTimeWindows(maxTimeWindows),
-      _iterations(-1),
-      _totalIterationsCoarseOptimization(-1),
-      _maxIterations(-1),
-      _totalIterations(-1),
-      _timeWindows(0),
-      _timeWindowSize(timeWindowSize),
-      _validDigits(validDigits)
-{
-  PRECICE_CHECK(not((maxTime != UNDEFINED_TIME) && (maxTime < 0.0)),
-                "Maximum time has to be larger than zero!");
-  PRECICE_CHECK(not((maxTimeWindows != UNDEFINED_TIME_WINDOWS) && (maxTimeWindows < 0)),
-                "Maximum number of time windows has to be larger than zero!");
-  PRECICE_CHECK(not((timeWindowSize != UNDEFINED_TIME_WINDOW_SIZE) && (timeWindowSize < 0.0)),
-                "Time window size has to be larger than zero!");
-  PRECICE_CHECK((_validDigits >= 1) && (_validDigits < 17),
-                "Valid digits of time window size has to be between 1 and 16!");
-}
-
-BaseCouplingScheme::BaseCouplingScheme(
     double                        maxTime,
     int                           maxTimeWindows,
     double                        timeWindowSize,
@@ -60,6 +29,7 @@ BaseCouplingScheme::BaseCouplingScheme(
     const std::string &           localParticipant,
     m2n::PtrM2N                   m2n,
     int                           maxIterations,
+    CouplingMode                  cplMode,
     constants::TimesteppingMethod dtMethod)
     : _firstParticipant(firstParticipant),
       _secondParticipant(secondParticipant),
@@ -72,6 +42,7 @@ BaseCouplingScheme::BaseCouplingScheme(
       _iterations(1),
       _totalIterationsCoarseOptimization(1),
       _maxIterations(maxIterations),
+      _couplingMode(cplMode),
       _totalIterations(1),
       _timeWindows(1),
       _timeWindowSize(timeWindowSize),
@@ -109,6 +80,10 @@ BaseCouplingScheme::BaseCouplingScheme(
   }
   PRECICE_CHECK((maxIterations > 0) || (maxIterations == -1),
                 "Maximal iteration limit has to be larger than zero!");
+
+  if (isExplicitCouplingScheme()) {
+    PRECICE_ASSERT(maxIterations == 1);
+  }
 }
 
 void BaseCouplingScheme::receiveAndSetDt()
@@ -321,11 +296,11 @@ void BaseCouplingScheme::advance()
   PRECICE_CHECK(_couplingMode != Undefined, "_couplingMode has to be defined!");
 
   if (subcyclingIsCompleted()) {
-    if (_couplingMode == Explicit) {
+    if (isExplicitCouplingScheme()) {
       timeWindowCompleted();
       explicitAdvance();
       _computedTimeWindowPart = 0.0;
-    } else if (_couplingMode == Implicit) {
+    } else if (isImplicitCouplingScheme()) {
       std::pair<bool, bool> convergenceInformation = implicitAdvance();
       bool convergence = convergenceInformation.first;
       bool convergenceCoarseOptimization = convergenceInformation.second;

@@ -21,10 +21,10 @@ MultiCouplingScheme::MultiCouplingScheme(
     constants::TimesteppingMethod dtMethod,
     int                           maxIterations)
     : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, "neverFirstParticipant",
-                         localParticipant, localParticipant, m2n::PtrM2N(), maxIterations, dtMethod),
+                         localParticipant, localParticipant, m2n::PtrM2N(), maxIterations, Implicit, dtMethod),
       _communications(m2n)
 {
-  _couplingMode = Implicit;
+  PRECICE_CHECK(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit!");
   for (size_t i = 0; i < _communications.size(); ++i) {
     DataMap receiveMap;
     DataMap sendMap;
@@ -48,7 +48,7 @@ void MultiCouplingScheme::initializeImplicit()
 
 void MultiCouplingScheme::initializeImplementation()
 {
-  PRECICE_CHECK(_couplingMode == Implicit, "MultiCouplingScheme is always Implicit!");
+  PRECICE_CHECK(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit!");
 
   for (DataMap &dataMap : _sendDataVector) {
     initializeSendingParticipants(dataMap);
@@ -60,7 +60,7 @@ void MultiCouplingScheme::initializeImplementation()
 
 void MultiCouplingScheme::initializeDataImpl()
 {
-  PRECICE_CHECK(_couplingMode == Implicit, "MultiCouplingScheme is always Implicit!");
+  PRECICE_CHECK(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit!");
 
   if (hasToReceiveInitData()) {
     receiveData();
@@ -91,13 +91,13 @@ void MultiCouplingScheme::initializeDataImpl()
 }
 
 void MultiCouplingScheme::explicitAdvance() {
-  PRECICE_CHECK(_couplingMode == Implicit, "MultiCouplingScheme is always Implicit!");
+  PRECICE_CHECK(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit!");
   // TODO this class hierarchy has a smell! I think that MultiCouplingScheme should not be derived from BaseCouplingScheme, but directly from CouplingScheme or an intermediate layer between CouplingScheme and BaseCouplingScheme.
 }
 
 std::pair<bool, bool> MultiCouplingScheme::implicitAdvance()
 {
-  PRECICE_CHECK(_couplingMode == Implicit, "MultiCouplingScheme is always Implicit!");
+  PRECICE_CHECK(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit!");
   PRECICE_DEBUG("Computed full length of iteration");
 
   receiveData();
@@ -121,8 +121,8 @@ std::pair<bool, bool> MultiCouplingScheme::implicitAdvance()
 
   for (m2n::PtrM2N m2n : _communications) {
     m2n->send(convergence);
-    PRECICE_ASSERT(not _isCoarseModelOptimizationActive);
-    m2n->send(_isCoarseModelOptimizationActive); //need to do this to match with ParallelCplScheme
+    PRECICE_ASSERT(not isCoarseModelOptimizationActive());
+    m2n->send(isCoarseModelOptimizationActive()); //need to do this to match with ParallelCplScheme
   }
 
   if (convergence && (getExtrapolationOrder() > 0)) {

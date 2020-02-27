@@ -45,11 +45,9 @@ namespace cplscheme {
  */
 class BaseCouplingScheme : public CouplingScheme {
 public:
-  BaseCouplingScheme(
-      double maxTime,
-      int    maxTimeWindows,
-      double timeWindowSize,
-      int    validDigits);
+  enum CouplingMode { Explicit,
+    Implicit,
+    Undefined };
 
   BaseCouplingScheme(
       double                        maxTime,
@@ -61,11 +59,8 @@ public:
       const std::string &           localParticipant,
       m2n::PtrM2N                   m2n,
       int                           maxIterations,
+      CouplingMode                  cplMode,
       constants::TimesteppingMethod dtMethod);
-
-  enum CouplingMode { Explicit,
-                      Implicit,
-                      Undefined };
 
   /// Adds data to be sent on data exchange and possibly be modified during coupling iterations.
   void addDataToSend(
@@ -230,8 +225,19 @@ public:
   void setIterationAcceleration(acceleration::PtrAcceleration acceleration);
 
 protected:
-  /// Sets whether explicit or implicit coupling is being done.
-  CouplingMode _couplingMode = Undefined;
+  /// Returns true, if coupling scheme is explicit
+  bool isExplicitCouplingScheme()
+  {
+    PRECICE_CHECK(_couplingMode != Undefined, "Undefined coupling mode is not allowed!");
+    return _couplingMode == Explicit;
+  }
+
+  /// Returns true, if coupling scheme is implicit
+  bool isImplicitCouplingScheme()
+  {
+    PRECICE_CHECK(_couplingMode != Undefined, "Undefined coupling mode is not allowed!");
+    return _couplingMode == Implicit;
+  }
 
   /// Sets whether the solver evaluates the fine or the coarse model representation
   bool _isCoarseModelOptimizationActive = false;
@@ -371,10 +377,16 @@ protected:
 
   bool maxIterationsReached();
 
-  int _deletedColumnsPPFiltering = 0;
+  /// TODO
+  void setDeletedColumnsPPFiltering(int deletedColumnsPPFiltering)
+  {
+    _deletedColumnsPPFiltering = deletedColumnsPPFiltering;
+  }
 
-  /// Number of coarse model optimization iterations in current time window.
-  int _iterationsCoarseOptimization;
+  /// returns number of coarse model optimization iterations in current time window
+  int getIterationsCoarseOptimization(){
+    return _iterationsCoarseOptimization;
+  }
 
   /// @todo
   void initializeSendingParticipants(DataMap &dataMap);
@@ -385,6 +397,9 @@ protected:
 private:
   /// Communication device to the other coupling participant.
   m2n::PtrM2N _m2n;
+
+  /// Coupling mode used by coupling scheme.
+  CouplingMode _couplingMode = Undefined;
 
   /// Determines, if the timestep length is set by the participant.
   bool _participantSetsDt = false;
@@ -421,8 +436,14 @@ private:
   /// Number of total iterations performed.
   int _totalIterations = -1;
 
+  /// Number of coarse model optimization iterations in current time window.
+  int _iterationsCoarseOptimization;
+
   /// Number of accumulated coarse model optimization iterations in current time window.
   int _totalIterationsCoarseOptimization = -1;
+
+  /// TODO
+  int _deletedColumnsPPFiltering = 0;
 
   std::vector<double> _firstResiduumNorm = {0};
 

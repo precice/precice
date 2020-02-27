@@ -21,15 +21,7 @@ ParallelCouplingScheme::ParallelCouplingScheme(
     CouplingMode                  cplMode,
     int                           maxIterations)
     : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowsSize, validDigits, firstParticipant,
-                         secondParticipant, localParticipant, m2n, maxIterations, dtMethod)
-{
-  _couplingMode = cplMode;
-  // Coupling mode must be either Explicit or Implicit when using SerialCouplingScheme.
-  PRECICE_ASSERT(_couplingMode != Undefined);
-  if (_couplingMode == Explicit) {
-    PRECICE_ASSERT(maxIterations == 1);
-  }
-}
+                         secondParticipant, localParticipant, m2n, maxIterations, cplMode, dtMethod){}
 
 void ParallelCouplingScheme::initializeImplicit()
 {
@@ -67,7 +59,7 @@ void ParallelCouplingScheme::initializeDataImpl()
     if (hasToReceiveInitData()) {
       receiveData(getM2N());
       // second participant has to save values for extrapolation
-      if (_couplingMode == Implicit) {
+      if (isImplicitCouplingScheme()) {
         for (DataMap::value_type &pair : getReceiveData()) {
           if (pair.second->oldValues.cols() == 0)
             break;
@@ -78,7 +70,7 @@ void ParallelCouplingScheme::initializeDataImpl()
       }
     }
     if (hasToSendInitData()) {
-      if (_couplingMode == Implicit) {
+      if (isImplicitCouplingScheme()) {
         for (DataMap::value_type &pair : getSendData()) {
           if (pair.second->oldValues.cols() == 0)
             break;
@@ -137,7 +129,7 @@ std::pair<bool, bool> ParallelCouplingScheme::implicitAdvance()
     }
 
     // measure convergence for coarse model optimization
-    if (_isCoarseModelOptimizationActive) {
+    if (isCoarseModelOptimizationActive()) {
       PRECICE_DEBUG("measure convergence of coarse model optimization.");
       // in case of multilevel acceleration only: measure the convergence of the coarse model optimization
       convergenceCoarseOptimization = measureConvergenceCoarseModelOptimization(designSpecifications);
@@ -177,7 +169,7 @@ std::pair<bool, bool> ParallelCouplingScheme::implicitAdvance()
     if (not doOnlySolverEvaluation) {
       if (convergence) {
         if (getAcceleration().get() != nullptr) {
-          _deletedColumnsPPFiltering = getAcceleration()->getDeletedColumns();
+          setDeletedColumnsPPFiltering(getAcceleration()->getDeletedColumns());
           getAcceleration()->iterationsConverged(getAllData());
         }
         newConvergenceMeasurements();
@@ -208,7 +200,7 @@ std::pair<bool, bool> ParallelCouplingScheme::implicitAdvance()
       // otherwise the fine input data would be zero in this case, neither anything has been computed so far for the fine
       // model nor the acceleration did any data registration
       // ATTENTION: assumes that coarse data is defined after fine data in same ordering.
-      if (_iterationsCoarseOptimization == 1 && getAcceleration().get() != nullptr) {
+      if (getIterationsCoarseOptimization() == 1 && getAcceleration().get() != nullptr) {
         auto  fineIDs = getAcceleration()->getDataIDs();
         auto &allData = getAllData();
         for (auto &fineID : fineIDs) {
@@ -218,7 +210,7 @@ std::pair<bool, bool> ParallelCouplingScheme::implicitAdvance()
     }
 
     getM2N()->send(convergence);
-    getM2N()->send(_isCoarseModelOptimizationActive);
+    getM2N()->send(isCoarseModelOptimizationActive());
 
     sendData(getM2N());
   }
