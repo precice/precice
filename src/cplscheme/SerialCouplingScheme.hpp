@@ -47,19 +47,20 @@ public:
       CouplingMode                  cplMode,
       int                           maxIterations = 1);
 
-  logging::Logger _log{"cplschemes::SerialCouplingSchemes"};
-
   friend struct CplSchemeTests::SerialImplicitCouplingSchemeTests::testExtrapolateData; // For whitebox tests
 
 private:
+
+  logging::Logger _log{"cplschemes::SerialCouplingSchemes"};
+
   /**
-* @brief TODO
-*/
+   * @brief TODO
+   */
   void explicitAdvance() override;
 
   /**
-* @brief TODO
-*/
+   * @brief TODO
+   */
   std::pair<bool, bool> implicitAdvance() override;
 
   /**

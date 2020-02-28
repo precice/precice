@@ -32,8 +32,6 @@ public:
       constants::TimesteppingMethod dtMethod,
       int                           maxIterations = 1);
 
-  logging::Logger _log{"cplscheme::MultiCouplingScheme"};
-
   /// Adds data to be sent on data exchange and possibly be modified during coupling iterations.
   void addDataToSend(
       mesh::PtrData data,
@@ -66,6 +64,8 @@ private:
 
   std::vector<DataMap> _receiveDataVector;
   std::vector<DataMap> _sendDataVector;
+
+  logging::Logger _log{"cplscheme::MultiCouplingScheme"};
 
   /**
 * @brief TODO
