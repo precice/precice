@@ -32,7 +32,9 @@ public:
  * @param[in] secondParticipant Name of second participant in coupling.
  * @param[in] localParticipant Name of participant using this coupling scheme.
  * @param[in] m2n Communication object for com. between participants. TODO?
- * TODO add dtMethod, cplMode, maxIterations
+ * @param[in] dtMethod TODO
+ * @param[in] cplMode TODO
+ * @param[in] maxIterations TODO
  */
   SerialCouplingScheme(
       double                        maxTime,
@@ -51,6 +53,9 @@ public:
 
 private:
 
+  /**
+   * @brief TODO
+   */
   logging::Logger _log{"cplschemes::SerialCouplingSchemes"};
 
   /**
