@@ -340,15 +340,7 @@ protected:
     impl::PtrConvergenceMeasure measure;
   };
 
-  /**
-   * @brief All convergence measures of coupling iterations.
-   *
-   * Before initialization, only dataID and measure variables are filled. Then,
-   * the data is fetched from send and receive data assigned to the cpl scheme.
-   */
-  std::vector<ConvergenceMeasure> _convergenceMeasures;
-
-  void setupConvergenceMeasures();
+  virtual void setupConvergenceMeasures() final;
 
   void newConvergenceMeasurements();
 
@@ -396,6 +388,11 @@ protected:
 
   /// @todo
   void initializeReceivingParticipants(DataMap &dataMap);
+
+  std::vector<ConvergenceMeasure> getConvergenceMeasures()
+  {
+    return _convergenceMeasures;
+  }
 
   virtual void deactivateCoarseModelOptimization()
   {
@@ -510,6 +507,14 @@ private:
   /// Smallest number, taking validDigits into account: eps = std::pow(10.0, -1 * validDigits)
   const double _eps;
 
+  /**
+   * @brief All convergence measures of coupling iterations.
+   *
+   * Before initialization, only dataID and measure variables are filled. Then,
+   * the data is fetched from send and receive data assigned to the cpl scheme.
+   */
+  std::vector<ConvergenceMeasure> _convergenceMeasures;
+
   /// Sets whether the solver evaluates the fine or the coarse model representation
   bool _isCoarseModelOptimizationActive = false;
 
@@ -561,6 +566,16 @@ private:
 
   /// Returns a string representing the required actions.
   std::string printActionsState() const;
+
+  /// Implements functionality for setupConvergenceMeasures
+  virtual void assignDataToConvergenceMeasure(ConvergenceMeasure* convMeasure, int dataID){
+    if ((getSendData(dataID) != nullptr)) {
+      convMeasure->couplingData = getSendData(dataID);
+    } else {
+      convMeasure->couplingData = getReceiveData(dataID);
+      PRECICE_ASSERT(convMeasure->couplingData != nullptr);
+    }
+  }
 };
 } // namespace cplscheme
 } // namespace precice

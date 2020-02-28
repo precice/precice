@@ -53,7 +53,6 @@ protected:
 private:
   void          sendData();
   void          receiveData();
-  void          setupConvergenceMeasures();
   CouplingData *getData(int dataID);
 
   /// Communication device to the other coupling participant.
@@ -91,6 +90,11 @@ private:
    * @brief TODO
    */
   void initializeDataImpl() override;
+
+  /**
+   * @brief TODO
+   */
+  void assignDataToConvergenceMeasure(ConvergenceMeasure* convergenceMeasure, int dataID) override;
 };
 
 } // namespace cplscheme

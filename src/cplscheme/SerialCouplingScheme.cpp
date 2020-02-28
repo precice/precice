@@ -27,7 +27,7 @@ void SerialCouplingScheme::initializeImplicit()
 {
   PRECICE_CHECK(not getSendData().empty(), "No send data configured! Use explicit scheme for one-way coupling.");
   if (not doesFirstStep()) {
-    if (not _convergenceMeasures.empty()) {
+    if (not getConvergenceMeasures().empty()) {
       setupConvergenceMeasures();       // needs _couplingData configured
       setupDataMatrices(getSendData()); // Reserve memory and initialize data with zero
     }

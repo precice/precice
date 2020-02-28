@@ -223,19 +223,6 @@ void MultiCouplingScheme::receiveData()
   setHasDataBeenExchanged(true);
 }
 
-void MultiCouplingScheme::setupConvergenceMeasures()
-{
-  PRECICE_TRACE();
-  PRECICE_ASSERT(not doesFirstStep());
-  PRECICE_CHECK(not _convergenceMeasures.empty(),
-                "At least one convergence measure has to be defined for an implicit coupling scheme!");
-  for (ConvergenceMeasure &convMeasure : _convergenceMeasures) {
-    int dataID               = convMeasure.data->getID();
-    convMeasure.couplingData = getData(dataID);
-    PRECICE_ASSERT(convMeasure.couplingData != nullptr);
-  }
-}
-
 CouplingData *MultiCouplingScheme::getData(
     int dataID)
 {
@@ -245,6 +232,12 @@ CouplingData *MultiCouplingScheme::getData(
     return &(*(iter->second));
   }
   return nullptr;
+}
+
+void MultiCouplingScheme::assignDataToConvergenceMeasure(ConvergenceMeasure* convergenceMeasure, int dataID)
+{
+  convergenceMeasure->couplingData = getData(dataID);
+  PRECICE_ASSERT(convergenceMeasure->couplingData != nullptr);
 }
 
 } // namespace cplscheme

@@ -599,12 +599,7 @@ void BaseCouplingScheme::setupConvergenceMeasures()
                     << "an implicit coupling scheme!");
   for (ConvergenceMeasure &convMeasure : _convergenceMeasures) {
     int dataID = convMeasure.data->getID();
-    if ((getSendData(dataID) != nullptr)) {
-      convMeasure.couplingData = getSendData(dataID);
-    } else {
-      convMeasure.couplingData = getReceiveData(dataID);
-      PRECICE_ASSERT(convMeasure.couplingData != nullptr);
-    }
+    assignDataToConvergenceMeasure(&convMeasure, dataID);
   }
 }
 
