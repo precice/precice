@@ -502,13 +502,12 @@ void SolverInterfaceImpl::markActionFulfilled(
 
 bool SolverInterfaceImpl::hasToEvaluateSurrogateModel() const
 {
-  // std::cout<<"_isCoarseModelOptimizationActive() = "<<_couplingScheme->isCoarseModelOptimizationActive();
-  return _couplingScheme->isCoarseModelOptimizationActive();
+  return _couplingScheme->getIsCoarseModelOptimizationActive();
 }
 
 bool SolverInterfaceImpl::hasToEvaluateFineModel() const
 {
-  return not _couplingScheme->isCoarseModelOptimizationActive();
+  return not _couplingScheme->getIsCoarseModelOptimizationActive();
 }
 
 bool SolverInterfaceImpl::hasMesh(

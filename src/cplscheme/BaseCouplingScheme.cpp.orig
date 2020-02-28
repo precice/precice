@@ -20,6 +20,40 @@ namespace precice {
 namespace cplscheme {
 
 BaseCouplingScheme::BaseCouplingScheme(
+<<<<<<< HEAD
+=======
+    double maxTime,
+    int    maxTimeWindows,
+    double timeWindowSize,
+    int    validDigits)
+    : _couplingMode(Undefined),
+      _firstParticipant("unknown"),
+      _secondParticipant("unknown"),
+      _localParticipant("unknown"),
+      _eps(std::pow(10.0, -1 * validDigits)),
+      _iterationsCoarseOptimization(-1),
+      _maxTime(maxTime),
+      _maxTimeWindows(maxTimeWindows),
+      _timeWindows(0),
+      _timeWindowSize(timeWindowSize),
+      _maxIterations(-1),
+      _iterations(-1),
+      _totalIterations(-1),
+      _totalIterationsCoarseOptimization(-1),
+      _validDigits(validDigits)
+{
+  PRECICE_CHECK(not((maxTime != UNDEFINED_TIME) && (maxTime < 0.0)),
+                "Maximum time has to be larger than zero!");
+  PRECICE_CHECK(not((maxTimeWindows != UNDEFINED_TIME_WINDOWS) && (maxTimeWindows < 0)),
+                "Maximum number of time windows has to be larger than zero!");
+  PRECICE_CHECK(not((timeWindowSize != UNDEFINED_TIME_WINDOW_SIZE) && (timeWindowSize < 0.0)),
+                "Time window size has to be larger than zero!");
+  PRECICE_CHECK((_validDigits >= 1) && (_validDigits < 17),
+                "Valid digits of time window size has to be between 1 and 16!");
+}
+
+BaseCouplingScheme::BaseCouplingScheme(
+>>>>>>> precice_develop
     double                        maxTime,
     int                           maxTimeWindows,
     double                        timeWindowSize,
@@ -39,13 +73,20 @@ BaseCouplingScheme::BaseCouplingScheme(
       _m2n(m2n),
       _maxTime(maxTime),
       _maxTimeWindows(maxTimeWindows),
+<<<<<<< HEAD
       _iterations(1),
       _totalIterationsCoarseOptimization(1),
       _maxIterations(maxIterations),
       _couplingMode(cplMode),
       _totalIterations(1),
+=======
+>>>>>>> precice_develop
       _timeWindows(1),
       _timeWindowSize(timeWindowSize),
+      _maxIterations(maxIterations),
+      _iterations(1),
+      _totalIterations(1),
+      _totalIterationsCoarseOptimization(1),
       _validDigits(validDigits)
 {
   PRECICE_CHECK(not((maxTime != UNDEFINED_TIME) && (maxTime < 0.0)),
@@ -578,12 +619,7 @@ void BaseCouplingScheme::setIterationAcceleration(
   // otherwise, we start with the fine model representation as it's the only one
   _isCoarseModelOptimizationActive = _acceleration->isMultilevelBasedApproach();
   if (_acceleration->isMultilevelBasedApproach()) {
-    /**
-     * Links coupling scheme to acceleration, allows acceleration to set whether the
-     * solver has to evaluate the coarse or the fine model representation. Used for steering
-     * the coupling scheme by the acceleration. Only needed for multilevel based PPs.
-     */
-    _acceleration->addCouplingScheme(PtrCouplingScheme(this));
+    _acceleration->setCoarseModelOptimizationActive(&_isCoarseModelOptimizationActive);
     // also initialize the iteration counters with 0, as scheme starts with coarse model evaluation
     _iterations      = 0;
     _totalIterations = 0;

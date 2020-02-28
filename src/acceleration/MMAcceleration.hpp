@@ -76,15 +76,6 @@ public:
    */
   virtual std::map<int, Eigen::VectorXd> getDesignSpecification(DataMap &cplData);
 
-  /**
-   * @brief Sets whether the solver has to evaluate the coarse or the fine model representation
-   * steers the coupling scheme and the acceleration.
-   */
-  virtual void setCoarseModelOptimizationActive(bool *coarseOptActive)
-  {
-    _isCoarseModelOptimizationActive = coarseOptActive;
-  }
-
   /// Exports the current state of the acceleration to a file.
   virtual void exportState(io::TXTWriter &writer);
 
@@ -134,12 +125,6 @@ private:
    */
   Eigen::VectorXd _designSpecification;
   Eigen::VectorXd _coarseModel_designSpecification;
-
-  /**
-   * @brief Sets whether the solver has to evaluate the coarse or the fine model representation
-   * steers the coupling scheme and the acceleration.
-   */
-  bool *_isCoarseModelOptimizationActive = nullptr;
 
   /// @brief Data IDs of data to be involved in the MM algorithm.
   std::vector<int> _fineDataIDs;

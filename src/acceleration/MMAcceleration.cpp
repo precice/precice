@@ -362,7 +362,7 @@ void MMAcceleration::performAcceleration(
    * using input and output datafrom the coarse and the fine model of the previous iterates (time steps)
    * Also updating mapping matrix (if jacobian_estimation = enabled)
    */
-  if (not(*_isCoarseModelOptimizationActive)) {
+  if (not couplingScheme()->getIsCoarseModelOptimizationActive()) {
 
     /**
      * assume the coarse model and the fine model has been evaluated for the new coarse model
@@ -442,7 +442,7 @@ void MMAcceleration::performAcceleration(
      * model optimization problem are updated (also Jacobian of MM mapping matrix if required).
      * next step: coarse model optimization, set the steering variable accordingly
      */
-    (*_isCoarseModelOptimizationActive) = true;
+    couplingScheme()->activateCoarseModelOptimization();
 
     /** Undo of cplData scaling is not necessary, as we only read information from the cpl data.
      * The write back step is done in registerSolutionCoarseModelOptimization
@@ -456,7 +456,7 @@ void MMAcceleration::performAcceleration(
   /**
     * coarse model optimization cycle for the problem x_star = argmin_x|| c(x) - q_k ||
     */
-  if (*_isCoarseModelOptimizationActive) {
+  if (couplingScheme()->getIsCoarseModelOptimizationActive()) {
     // view on coarse coupling data only
     DataMap coarseCplData;
     for (int id : _coarseDataIDs) {
@@ -486,7 +486,6 @@ void MMAcceleration::performAcceleration(
     _iterCoarseModelOpt++;
     // if coarse model optimization exceeds max iteration count, print warning and break coarse model optimization iteration
     if (_iterCoarseModelOpt >= _maxIterCoarseModelOpt) {
-      //(*_isCoarseModelOptimizationActive)  = false;
       _notConvergedWithinMaxIter = true;
       PRECICE_WARN("The coarse model optimization in coupling iteration " << its
                                                                           << " exceeds maximal number of optimization cycles (" << _maxIterCoarseModelOpt << " without convergence!");
@@ -692,7 +691,7 @@ void MMAcceleration::iterationsConverged(
    * optimization in next cycle.
    * next step: coarse model optimization, set the steering variable accordingly
    */
-  (*_isCoarseModelOptimizationActive) = true;
+   couplingScheme()->activateCoarseModelOptimization();
 
   // reset the coarse model design specification
   _coarseModel_designSpecification = _designSpecification;

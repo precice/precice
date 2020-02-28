@@ -55,12 +55,6 @@ public:
    */
   virtual ValuesMap getDesignSpecification(DataMap &cplData) = 0;
 
-  /**
-   * @brief Sets whether the solver has to evaluate the coarse or the fine model representation
-   *        steers the coupling scheme and the acceleration. Only needed for multilevel based PPs.
-   */
-  virtual void setCoarseModelOptimizationActive(bool *coarseOptimizationActive){};
-
   virtual void exportState(io::TXTWriter &writer) {}
 
   virtual void importState(io::TXTReader &reader) {}
@@ -81,11 +75,26 @@ public:
     return 0;
   }
 
+  /// Links acceleration to coupling scheme
+  virtual void addCouplingScheme(cplscheme::PtrCouplingScheme cplScheme) {
+    _cplScheme = cplScheme;
+  }
+
   /// Indicates whether the given acceleration is based on a multi-level approach
   virtual bool isMultilevelBasedApproach()
   {
     return false;
   }
+
+protected:
+  virtual cplscheme::PtrCouplingScheme couplingScheme() {
+    return _cplScheme;
+  }
+
+private:
+
+  /// BaseCouplingScheme linked to this acceleration
+  cplscheme::PtrCouplingScheme _cplScheme;
 };
 } // namespace acceleration
 } // namespace precice

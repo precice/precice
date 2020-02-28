@@ -110,11 +110,17 @@ std::pair<bool, bool> ParallelCouplingScheme::implicitAdvance()
   PRECICE_DEBUG("Computed full length of iteration");
   bool convergence                   = false;
   bool convergenceCoarseOptimization = true;
+  bool isCoarseModelOptimizationActive = false;
   bool doOnlySolverEvaluation        = false;
   if (doesFirstStep()) { //First participant
     sendData(getM2N());
     getM2N()->receive(convergence);
-    getM2N()->receive(_isCoarseModelOptimizationActive);
+    getM2N()->receive(isCoarseModelOptimizationActive);
+    if(isCoarseModelOptimizationActive){
+      activateCoarseModelOptimization();
+    } else {
+      deactivateCoarseModelOptimization();
+    }
     if (convergence) {
       timeWindowCompleted();
     }
@@ -129,7 +135,7 @@ std::pair<bool, bool> ParallelCouplingScheme::implicitAdvance()
     }
 
     // measure convergence for coarse model optimization
-    if (isCoarseModelOptimizationActive()) {
+    if (getIsCoarseModelOptimizationActive()) {
       PRECICE_DEBUG("measure convergence of coarse model optimization.");
       // in case of multilevel acceleration only: measure the convergence of the coarse model optimization
       convergenceCoarseOptimization = measureConvergenceCoarseModelOptimization(designSpecifications);
@@ -141,10 +147,10 @@ std::pair<bool, bool> ParallelCouplingScheme::implicitAdvance()
       // in case of multilevel PP only: if coarse model optimization converged
       // steering the requests for evaluation of coarse and fine model, respectively
       if (convergenceCoarseOptimization) {
-        _isCoarseModelOptimizationActive = false;
+        deactivateCoarseModelOptimization();
         doOnlySolverEvaluation           = true;
       } else {
-        _isCoarseModelOptimizationActive = true;
+        activateCoarseModelOptimization();
       }
     }
     // measure convergence of coupling iteration
@@ -157,11 +163,6 @@ std::pair<bool, bool> ParallelCouplingScheme::implicitAdvance()
       // Stop, when maximal iteration count (given in config) is reached
       if (maxIterationsReached())
         convergence = true;
-    }
-
-    // passed by reference, modified in MM acceleration. No-op for all other accelerations
-    if (getAcceleration().get() != nullptr) {
-      getAcceleration()->setCoarseModelOptimizationActive(&_isCoarseModelOptimizationActive);
     }
 
     // for multi-level case, i.e., manifold mapping: after convergence of coarse problem
@@ -210,7 +211,7 @@ std::pair<bool, bool> ParallelCouplingScheme::implicitAdvance()
     }
 
     getM2N()->send(convergence);
-    getM2N()->send(isCoarseModelOptimizationActive());
+    getM2N()->send(getIsCoarseModelOptimizationActive());
 
     sendData(getM2N());
   }

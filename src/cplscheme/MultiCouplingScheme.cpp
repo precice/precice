@@ -121,8 +121,8 @@ std::pair<bool, bool> MultiCouplingScheme::implicitAdvance()
 
   for (m2n::PtrM2N m2n : _communications) {
     m2n->send(convergence);
-    PRECICE_ASSERT(not isCoarseModelOptimizationActive());
-    m2n->send(isCoarseModelOptimizationActive()); //need to do this to match with ParallelCplScheme
+    PRECICE_ASSERT(not getIsCoarseModelOptimizationActive());
+    m2n->send(getIsCoarseModelOptimizationActive()); //need to do this to match with ParallelCplScheme
   }
 
   if (convergence && (getExtrapolationOrder() > 0)) {

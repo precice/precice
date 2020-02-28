@@ -191,9 +191,15 @@ public:
   void advance() override final;
 
   /// Returns whether the solver has to evaluate the coarse or the fine model representation
-  virtual bool isCoarseModelOptimizationActive()
+  virtual bool getIsCoarseModelOptimizationActive() const
   {
     return _isCoarseModelOptimizationActive;
+  }
+
+  /// Has to be called to notify coupling scheme that coarse Model Optimization is Active
+  virtual void activateCoarseModelOptimization()
+  {
+    _isCoarseModelOptimizationActive = true;
   }
 
   /**
@@ -238,9 +244,6 @@ protected:
     PRECICE_CHECK(_couplingMode != Undefined, "Undefined coupling mode is not allowed!");
     return _couplingMode == Implicit;
   }
-
-  /// Sets whether the solver evaluates the fine or the coarse model representation
-  bool _isCoarseModelOptimizationActive = false;
 
   /// Updates internal state of coupling scheme for next time window.
   void timeWindowCompleted();
@@ -394,6 +397,11 @@ protected:
   /// @todo
   void initializeReceivingParticipants(DataMap &dataMap);
 
+  virtual void deactivateCoarseModelOptimization()
+  {
+    _isCoarseModelOptimizationActive = false;
+  }
+
 private:
   /// Communication device to the other coupling participant.
   m2n::PtrM2N _m2n;
@@ -501,6 +509,9 @@ private:
 
   /// Smallest number, taking validDigits into account: eps = std::pow(10.0, -1 * validDigits)
   const double _eps;
+
+  /// Sets whether the solver evaluates the fine or the coarse model representation
+  bool _isCoarseModelOptimizationActive = false;
 
   /// Functions needed for initialize()
 
