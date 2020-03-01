@@ -24,7 +24,7 @@ MultiCouplingScheme::MultiCouplingScheme(
                          localParticipant, localParticipant, m2n::PtrM2N(), maxIterations, Implicit, dtMethod),
       _communications(m2n)
 {
-  PRECICE_CHECK(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit!");
+  PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
   for (size_t i = 0; i < _communications.size(); ++i) {
     DataMap receiveMap;
     DataMap sendMap;
@@ -48,7 +48,7 @@ void MultiCouplingScheme::initializeImplicit()
 
 void MultiCouplingScheme::initializeImplementation()
 {
-  PRECICE_CHECK(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit!");
+  PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
 
   for (DataMap &dataMap : _sendDataVector) {
     initializeSendingParticipants(dataMap);
@@ -60,7 +60,7 @@ void MultiCouplingScheme::initializeImplementation()
 
 void MultiCouplingScheme::initializeDataImpl()
 {
-  PRECICE_CHECK(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit!");
+  PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
 
   if (hasToReceiveInitData()) {
     receiveData();
@@ -91,13 +91,13 @@ void MultiCouplingScheme::initializeDataImpl()
 }
 
 void MultiCouplingScheme::explicitAdvance() {
-  PRECICE_CHECK(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit!");
+  PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
   // TODO this class hierarchy has a smell! I think that MultiCouplingScheme should not be derived from BaseCouplingScheme, but directly from CouplingScheme or an intermediate layer between CouplingScheme and BaseCouplingScheme.
 }
 
 std::pair<bool, bool> MultiCouplingScheme::implicitAdvance()
 {
-  PRECICE_CHECK(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit!");
+  PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
   PRECICE_DEBUG("Computed full length of iteration");
 
   receiveData();
@@ -127,7 +127,7 @@ std::pair<bool, bool> MultiCouplingScheme::implicitAdvance()
 
   if (convergence && (getExtrapolationOrder() > 0)) {
     extrapolateData(_allData); // Also stores data
-  } else {                     // Store data for conv. measurement, acceleration, or extrapolation
+  } else {                     // Store data for convergence measurement, acceleration, or extrapolation
     for (DataMap::value_type &pair : _allData) {
       if (pair.second->oldValues.size() > 0) {
         pair.second->oldValues.col(0) = *pair.second->values;
@@ -166,7 +166,7 @@ void MultiCouplingScheme::addDataToSend(
   } else {
     PRECICE_ERROR("Data \"" << data->getName()
                             << "\" of mesh \"" << mesh->getName() << "\" cannot be "
-                            << "added twice for sending!");
+                            << "added twice for sending.");
   }
 }
 
@@ -184,7 +184,7 @@ void MultiCouplingScheme::addDataToReceive(
   } else {
     PRECICE_ERROR("Data \"" << data->getName()
                             << "\" of mesh \"" << mesh->getName() << "\" cannot be "
-                            << "added twice for receiving!");
+                            << "added twice for receiving.");
   }
 }
 

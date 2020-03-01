@@ -234,21 +234,21 @@ protected:
   /// Returns true, if coupling scheme is explicit
   bool isExplicitCouplingScheme()
   {
-    PRECICE_CHECK(_couplingMode != Undefined, "Undefined coupling mode is not allowed!");
+    PRECICE_CHECK(_couplingMode != Undefined, "Undefined coupling mode is not allowed.");
     return _couplingMode == Explicit;
   }
 
   /// Returns true, if coupling scheme is implicit
   bool isImplicitCouplingScheme()
   {
-    PRECICE_CHECK(_couplingMode != Undefined, "Undefined coupling mode is not allowed!");
+    PRECICE_CHECK(_couplingMode != Undefined, "Undefined coupling mode is not allowed.");
     return _couplingMode == Implicit;
   }
 
   /// Updates internal state of coupling scheme for next time window.
   void timeWindowCompleted();
 
-  /// Receives and set the timestep length, if this participant is the one to receive
+  /// Receives and sets the time window size, if this participant is the one to receive
   void receiveAndSetDt();
 
   /// Sends the timestep length, if this participant is the one to send

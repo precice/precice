@@ -49,19 +49,19 @@ BaseCouplingScheme::BaseCouplingScheme(
       _validDigits(validDigits)
 {
   PRECICE_CHECK(not((maxTime != UNDEFINED_TIME) && (maxTime < 0.0)),
-                "Maximum time has to be larger than zero!");
+                "Maximum time has to be larger than zero.");
   PRECICE_CHECK(not((maxTimeWindows != UNDEFINED_TIME_WINDOWS) && (maxTimeWindows < 0)),
-                "Maximum number of time windows has to be larger than zero!");
+                "Maximum number of time windows has to be larger than zero.");
   PRECICE_CHECK(not((timeWindowSize != UNDEFINED_TIME_WINDOW_SIZE) && (timeWindowSize < 0.0)),
-                "Time window size has to be larger than zero!");
+                "Time window size has to be larger than zero.");
   PRECICE_CHECK((_validDigits >= 1) && (_validDigits < 17),
-                "Valid digits of timestep length has to be between 1 and 16!");
+                "Valid digits of time window size has to be between 1 and 16.");  // TODO really time window size?
   PRECICE_CHECK(_firstParticipant != _secondParticipant,
-                "First participant and second participant must have different names! Called from BaseCoupling.");
+                "First participant and second participant must have different names. Called from BaseCoupling.");
   if (dtMethod == constants::FIXED_DT) {
     PRECICE_CHECK(hasTimeWindowSize(),
                   "Timestep length value has to be given when the fixed timestep length method "
-                      << "is chosen for an implicit coupling scheme!");
+                      << "is chosen for an implicit coupling scheme.");  // TODO do we talk about window or time step size?
   }
   if (localParticipant == _firstParticipant) {
     _doesFirstStep = true;
@@ -76,10 +76,10 @@ BaseCouplingScheme::BaseCouplingScheme(
   } else {
     PRECICE_ERROR("Name of local participant \""
                   << localParticipant << "\" does not match any "
-                  << "participant specified for the coupling scheme!");
+                  << "participant specified for the coupling scheme.");
   }
   PRECICE_CHECK((maxIterations > 0) || (maxIterations == -1),
-                "Maximal iteration limit has to be larger than zero!");
+                "Maximal iteration limit has to be larger than zero.");
 
   if (isExplicitCouplingScheme()) {
     PRECICE_ASSERT(maxIterations == 1);
@@ -92,7 +92,7 @@ void BaseCouplingScheme::receiveAndSetDt()
   if (_participantReceivesDt) {
     double dt = UNDEFINED_TIME_WINDOW_SIZE;
     getM2N()->receive(dt);
-    PRECICE_DEBUG("Received timestep length of " << dt);
+    PRECICE_DEBUG("Received time window size of " << dt << ".");
     PRECICE_ASSERT(not math::equals(dt, UNDEFINED_TIME_WINDOW_SIZE));
     _timeWindowSize = dt;
   }
@@ -102,7 +102,7 @@ void BaseCouplingScheme::sendDt()
 {
   PRECICE_TRACE();
   if (_participantSetsDt) {
-    PRECICE_DEBUG("sending timestep length of " << getComputedTimeWindowPart());
+    PRECICE_DEBUG("sending time step length of " << getComputedTimeWindowPart());  // TODO is this correct?
     getM2N()->send(getComputedTimeWindowPart());
   }
 }
@@ -119,7 +119,7 @@ void BaseCouplingScheme::addDataToSend(
     DataMap::value_type pair = std::make_pair(id, ptrCplData);
     _sendData.insert(pair);
   } else {
-    PRECICE_ERROR("Data \"" << data->getName() << "\" cannot be added twice for sending!");
+    PRECICE_ERROR("Data \"" << data->getName() << "\" cannot be added twice for sending.");
   }
 }
 
@@ -135,7 +135,7 @@ void BaseCouplingScheme::addDataToReceive(
     DataMap::value_type pair = std::make_pair(id, ptrCplData);
     _receiveData.insert(pair);
   } else {
-    PRECICE_ERROR("Data \"" << data->getName() << "\" cannot be added twice for receiving!");
+    PRECICE_ERROR("Data \"" << data->getName() << "\" cannot be added twice for receiving.");
   }
 }
 
@@ -197,7 +197,7 @@ void BaseCouplingScheme::finalize()
 {
   PRECICE_TRACE();
   checkCompletenessRequiredActions();
-  PRECICE_CHECK(_initializeHasBeenCalled, "Called finalize() before initialize()!");
+  PRECICE_CHECK(_initializeHasBeenCalled, "Called finalize() before initialize().");
 }
 
 void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
@@ -206,7 +206,7 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
   PRECICE_TRACE(startTime, startTimeWindow);
   PRECICE_ASSERT(math::greaterEquals(startTime, 0.0), startTime);
   PRECICE_ASSERT(startTimeWindow >= 0, startTimeWindow);
-  PRECICE_CHECK(not _initializeHasBeenCalled, "initialize() can only be called once!");
+  PRECICE_CHECK(not _initializeHasBeenCalled, "initialize() can only be called once.");
   _time          = startTime;
   _timeWindows   = startTimeWindow;
 
@@ -252,20 +252,20 @@ void BaseCouplingScheme::initializeReceivingParticipants(DataMap &dataMap)
 void BaseCouplingScheme::initializeData()
 {
   // InitializeData uses the template method pattern (https://en.wikipedia.org/wiki/Template_method_pattern).
-  PRECICE_CHECK(_initializeHasBeenCalled, "initializeData() can be called after initialize() only!");
-  PRECICE_CHECK(not _initializeDataHasBeenCalled, "initializeData() can only be called once!");
+  PRECICE_CHECK(_initializeHasBeenCalled, "initializeData() can be called after initialize() only.");
+  PRECICE_CHECK(not _initializeDataHasBeenCalled, "initializeData() can only be called once.");
   _initializeDataHasBeenCalled = true;
   PRECICE_TRACE("initializeData()");
 
   if (not _hasToSendInitData && not _hasToReceiveInitData) {
-    PRECICE_INFO("initializeData is skipped since no data has to be initialized");
+    PRECICE_INFO("initializeData is skipped since no data has to be initialized.");
     return;
   }
 
   PRECICE_DEBUG("Initializing Data ...");
 
   PRECICE_CHECK(not(_hasToSendInitData && isActionRequired(constants::actionWriteInitialData())),
-                "InitialData has to be written to preCICE before calling initializeData()");
+                "InitialData has to be written to preCICE before calling initializeData().");
 
   _hasDataBeenExchanged = false;
 
@@ -276,9 +276,9 @@ void BaseCouplingScheme::advance()
 {
   PRECICE_TRACE(getTimeWindows(), getTime());
   checkCompletenessRequiredActions();
-  PRECICE_CHECK(_initializeHasBeenCalled, "Before calling advance() coupling has to be initialized via initialize()! This will cause an error in future releases.")  // TODO: preCICE v3.0.0 -> PRECICE_CHECK
+  PRECICE_CHECK(_initializeHasBeenCalled, "Before calling advance() coupling has to be initialized via initialize(). This will cause an error in future releases.")  // TODO: preCICE v3.0.0 -> PRECICE_CHECK
   PRECICE_CHECK((not _hasToReceiveInitData && not _hasToSendInitData) || (_initializeDataHasBeenCalled),
-                "initializeData() needs to be called before advance if data has to be initialized!");
+                "initializeData() needs to be called before advance if data has to be initialized.");
   _hasDataBeenExchanged = false;
   _isTimeWindowComplete = false;
 
@@ -293,7 +293,7 @@ void BaseCouplingScheme::advance()
     PRECICE_DEBUG("Begin advance, first New Values: " << stream.str());
   }
 #endif
-  PRECICE_CHECK(_couplingMode != Undefined, "_couplingMode has to be defined!");
+  PRECICE_CHECK(_couplingMode != Undefined, "_couplingMode has to be defined.");
 
   if (subcyclingIsCompleted()) {
     if (isExplicitCouplingScheme()) {
@@ -320,7 +320,7 @@ void BaseCouplingScheme::setExtrapolationOrder(
     int order)
 {
   PRECICE_CHECK((order == 0) || (order == 1) || (order == 2),
-                "Extrapolation order has to be  0, 1, or 2!");
+                "Extrapolation order has to be  0, 1, or 2.");
   _extrapolationOrder = order;
 }
 
@@ -354,7 +354,7 @@ void BaseCouplingScheme::extrapolateData(DataMap &data)
       utils::shiftSetFirst(pair.second->oldValues, values);
     }
   } else {
-    PRECICE_ERROR("Called extrapolation with order != 1,2!");
+    PRECICE_ERROR("Called extrapolation with order != 1,2.");
   }
 }
 
@@ -373,7 +373,7 @@ void BaseCouplingScheme::addComputedTime(
     double timeToAdd)
 {
   PRECICE_TRACE(timeToAdd, _time);
-  PRECICE_ASSERT(isCouplingOngoing(), "Invalid call of addComputedTime() after simulation end!");
+  PRECICE_ASSERT(isCouplingOngoing(), "Invalid call of addComputedTime() after simulation end.");
 
   // add time interval that has been computed in the solver to get the correct time remainder
   _computedTimeWindowPart += timeToAdd;
@@ -381,10 +381,10 @@ void BaseCouplingScheme::addComputedTime(
 
   // Check validness
   bool valid = math::greaterEquals(getThisTimeWindowRemainder(), 0.0, _eps);
-  PRECICE_CHECK(valid, "The computed timestep length of "
-                           << timeToAdd << " exceeds the maximum timestep limit of "
+  PRECICE_CHECK(valid, "The computed time step length of "
+                           << timeToAdd << " exceeds the maximum time step limit of "
                            << _timeWindowSize - _computedTimeWindowPart + timeToAdd
-                           << " for this time step!");
+                           << " for this time window.");
 }
 
 bool BaseCouplingScheme::willDataBeExchanged(
@@ -539,7 +539,7 @@ void BaseCouplingScheme::checkCompletenessRequiredActions()
       }
       stream << action;
     }
-    PRECICE_ERROR("Unfulfilled required actions: " << stream.str() << "!");
+    PRECICE_ERROR("Unfulfilled required actions: " << stream.str() << ".");
   }
 }
 
@@ -596,7 +596,7 @@ void BaseCouplingScheme::setupConvergenceMeasures()
   PRECICE_ASSERT(not doesFirstStep());
   PRECICE_CHECK(not _convergenceMeasures.empty(),
                 "At least one convergence measure has to be defined for "
-                    << "an implicit coupling scheme!");
+                    << "an implicit coupling scheme.");
   for (ConvergenceMeasure &convMeasure : _convergenceMeasures) {
     int dataID = convMeasure.data->getID();
     assignDataToConvergenceMeasure(&convMeasure, dataID);
@@ -824,8 +824,8 @@ void BaseCouplingScheme::updateTimeAndIterations(
 
   if (not convergence) {
 
-    // The computed timestep part equals the timestep length, since the
-    // timestep remainder is zero. Subtract the timestep length do another
+    // The computed time window part equals the time window size, since the
+    // time window remainder is zero. Subtract the time window size and do another
     // coupling iteration.
     PRECICE_ASSERT(math::greater(getComputedTimeWindowPart(), 0.0));
     _time = _time - _computedTimeWindowPart;

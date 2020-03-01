@@ -25,7 +25,7 @@ ParallelCouplingScheme::ParallelCouplingScheme(
 
 void ParallelCouplingScheme::initializeImplicit()
 {
-  PRECICE_CHECK(not getSendData().empty(), "No send data configured! Use explicit scheme for one-way coupling.");
+  PRECICE_CHECK(not getSendData().empty(), "No send data configured. Use explicit scheme for one-way coupling.");
   if (not doesFirstStep()) {         // second participant
     setupConvergenceMeasures();      // needs _couplingData configured
     mergeData();                     // merge send and receive data for all pp calls
