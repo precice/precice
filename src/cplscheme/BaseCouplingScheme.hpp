@@ -249,10 +249,10 @@ protected:
   void timeWindowCompleted();
 
   /// Receives and sets the time window size, if this participant is the one to receive
-  void receiveAndSetDt();
+  void receiveAndSetTimeWindowSize();
 
-  /// Sends the timestep length, if this participant is the one to send
-  void sendDt();
+  /// Sends the time window size, if this participant is the one to send
+  void sendTimeWindowSize();
 
   /// @return True, if local participant is the one starting the scheme.
   bool doesFirstStep() const
@@ -406,11 +406,11 @@ private:
   /// Coupling mode used by coupling scheme.
   CouplingMode _couplingMode = Undefined;
 
-  /// Determines, if the timestep length is set by the participant.
-  bool _participantSetsDt = false;
+  /// Determines, if the time window size is set by the participant.
+  bool _participantSetsTimeWindowSize = false;
 
-  /// Determines, if the dt length is set received from the other participant
-  bool _participantReceivesDt = false;
+  /// Determines, if the time window size is received by the participant.
+  bool _participantReceivesTimeWindowSize = false;
 
   mutable logging::Logger _log{"cplscheme::BaseCouplingScheme"};
 

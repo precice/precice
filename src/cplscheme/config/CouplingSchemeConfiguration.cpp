@@ -800,9 +800,9 @@ CouplingSchemeConfiguration::getTimesteppingMethod(
 {
   PRECICE_TRACE(method);
   if (method == VALUE_FIXED) {
-    return constants::FIXED_DT;
+    return constants::FIXED_TIME_WINDOW_SIZE;
   } else if (method == VALUE_FIRST_PARTICIPANT) {
-    return constants::FIRST_PARTICIPANT_SETS_DT;
+    return constants::FIRST_PARTICIPANT_SETS_TIME_WINDOW_SIZE;
   }
   PRECICE_ERROR("Unknown timestepping method \""
                 << method << "\"!");

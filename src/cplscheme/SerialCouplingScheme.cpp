@@ -65,7 +65,7 @@ void SerialCouplingScheme::initializeImplementation()
   // second participant is done in initializeData() instead of initialize().
   if (not doesFirstStep() && not hasToSendInitData() && isCouplingOngoing()) {
     PRECICE_DEBUG("Receiving data");
-    receiveAndSetDt();
+    receiveAndSetTimeWindowSize();
     receiveData(getM2N());
   }
 }
@@ -91,7 +91,7 @@ void SerialCouplingScheme::initializeDataImpl()
     // The second participant sends the initialized data to the first participant
     // here, which receives the data on call of initialize().
     sendData(getM2N());
-    receiveAndSetDt();
+    receiveAndSetTimeWindowSize();
     // This receive replaces the receive in initialize().
     receiveData(getM2N());
   }
@@ -100,12 +100,12 @@ void SerialCouplingScheme::initializeDataImpl()
 void SerialCouplingScheme::explicitAdvance()
 {
   PRECICE_DEBUG("Sending data...");
-  sendDt();
+  sendTimeWindowSize();
   sendData(getM2N());
 
   if (isCouplingOngoing() || doesFirstStep()) {
     PRECICE_DEBUG("Receiving data...");
-    receiveAndSetDt();
+    receiveAndSetTimeWindowSize();
     receiveData(getM2N());
   }
 }
@@ -119,7 +119,7 @@ std::pair<bool, bool> SerialCouplingScheme::implicitAdvance()
 
   PRECICE_DEBUG("Computed full length of iteration");
   if (doesFirstStep()) {
-    sendDt();
+    sendTimeWindowSize();
     sendData(getM2N());
     getM2N()->receive(convergence);
     getM2N()->receive(isCoarseModelOptimizationActive);
@@ -239,7 +239,7 @@ std::pair<bool, bool> SerialCouplingScheme::implicitAdvance()
 
     // the second participant does not want new data in the last iteration of the last time window
     if (isCouplingOngoing() || not convergence) {
-      receiveAndSetDt();
+      receiveAndSetTimeWindowSize();
       receiveData(getM2N());
     }
   }

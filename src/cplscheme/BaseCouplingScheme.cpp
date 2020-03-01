@@ -58,20 +58,20 @@ BaseCouplingScheme::BaseCouplingScheme(
                 "Valid digits of time window size has to be between 1 and 16.");  // TODO really time window size?
   PRECICE_CHECK(_firstParticipant != _secondParticipant,
                 "First participant and second participant must have different names. Called from BaseCoupling.");
-  if (dtMethod == constants::FIXED_DT) {
+  if (dtMethod == constants::FIXED_TIME_WINDOW_SIZE) {
     PRECICE_CHECK(hasTimeWindowSize(),
-                  "Timestep length value has to be given when the fixed timestep length method "
+                  "Time window size has to be given when the fixed time window size method "
                       << "is chosen for an implicit coupling scheme.");  // TODO do we talk about window or time step size?
   }
   if (localParticipant == _firstParticipant) {
     _doesFirstStep = true;
-    if (dtMethod == constants::FIRST_PARTICIPANT_SETS_DT) {
-      _participantSetsDt = true;
+    if (dtMethod == constants::FIRST_PARTICIPANT_SETS_TIME_WINDOW_SIZE) {
+      _participantSetsTimeWindowSize = true;
       _timeWindowSize = UNDEFINED_TIME_WINDOW_SIZE;
     }
   } else if (localParticipant == _secondParticipant) {
-    if (dtMethod == constants::FIRST_PARTICIPANT_SETS_DT) {
-      _participantReceivesDt = true;
+    if (dtMethod == constants::FIRST_PARTICIPANT_SETS_TIME_WINDOW_SIZE) {
+      _participantReceivesTimeWindowSize = true;
     }
   } else {
     PRECICE_ERROR("Name of local participant \""
@@ -86,10 +86,10 @@ BaseCouplingScheme::BaseCouplingScheme(
   }
 }
 
-void BaseCouplingScheme::receiveAndSetDt()
+void BaseCouplingScheme::receiveAndSetTimeWindowSize()
 {
   PRECICE_TRACE();
-  if (_participantReceivesDt) {
+  if (_participantReceivesTimeWindowSize) {
     double dt = UNDEFINED_TIME_WINDOW_SIZE;
     getM2N()->receive(dt);
     PRECICE_DEBUG("Received time window size of " << dt << ".");
@@ -98,11 +98,11 @@ void BaseCouplingScheme::receiveAndSetDt()
   }
 }
 
-void BaseCouplingScheme::sendDt()
+void BaseCouplingScheme::sendTimeWindowSize()
 {
   PRECICE_TRACE();
-  if (_participantSetsDt) {
-    PRECICE_DEBUG("sending time step length of " << getComputedTimeWindowPart());  // TODO is this correct?
+  if (_participantSetsTimeWindowSize) {
+    PRECICE_DEBUG("sending time window size of " << getComputedTimeWindowPart());  // TODO is this correct?
     getM2N()->send(getComputedTimeWindowPart());
   }
 }
@@ -683,7 +683,7 @@ bool BaseCouplingScheme::measureConvergence(
 }
 
 /// @todo: ugly hack with design specifications, however, getting them here is not possible as
-// parallel coupling scheme and multi-coupling scheme  need allData and not only getSendData()
+/// parallel coupling scheme and multi-coupling scheme  need allData and not only getSendData()
 bool BaseCouplingScheme::measureConvergenceCoarseModelOptimization(
     std::map<int, Eigen::VectorXd> &designSpecifications)
 {

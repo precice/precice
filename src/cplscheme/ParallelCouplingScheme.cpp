@@ -88,19 +88,19 @@ void ParallelCouplingScheme::explicitAdvance()
 {
   if (doesFirstStep()) {
     PRECICE_DEBUG("Sending data...");
-    sendDt();
+    sendTimeWindowSize();
     sendData(getM2N());
 
     PRECICE_DEBUG("Receiving data...");
-    receiveAndSetDt();
+    receiveAndSetTimeWindowSize();
     receiveData(getM2N());
   } else { //second participant
     PRECICE_DEBUG("Receiving data...");
-    receiveAndSetDt();
+    receiveAndSetTimeWindowSize();
     receiveData(getM2N());
 
     PRECICE_DEBUG("Sending data...");
-    sendDt();
+    sendTimeWindowSize();
     sendData(getM2N());
   }
 }
