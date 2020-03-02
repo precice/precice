@@ -17,10 +17,11 @@ public:
  * @param[in] maxTime Simulation time limit, or UNDEFINED_TIME.
  * @param[in] maxTimeWindows Simulation time windows limit, or UNDEFINED_TIMEWINDOWS.
  * @param[in] timeWindowSize Simulation time window size.
- * @param[in] validDigits TODO
+ * @param[in] validDigits valid digits for computation of the remainder of a time window
  * @param[in] localParticipant Name of participant using this coupling scheme.
- * @param[in] m2n Communication object for com. between participants. TODO?
- * TODO add dtMethod, maxIterations
+ * @param[in] m2ns M2N communications to all other participants of coupling scheme.
+ * @param[in] dtMethod method to determine timestep size, see https://github.com/precice/precice/wiki/Adapter's-Time-Step-Sizes
+ * @param[in] maxIterations maximum number of coupling sub-iterations allowed.
  */
   MultiCouplingScheme(
       double                        maxTime,
@@ -28,7 +29,7 @@ public:
       double                        timeWindowSize,
       int                           validDigits,
       const std::string &           localParticipant,
-      std::vector<m2n::PtrM2N>      m2n,
+      std::vector<m2n::PtrM2N>      m2ns,
       constants::TimesteppingMethod dtMethod,
       int                           maxIterations = 1);
 
@@ -67,18 +68,18 @@ private:
   logging::Logger _log{"cplscheme::MultiCouplingScheme"};
 
   /**
-* @brief TODO
-*/
+   * @brief TODO
+   */
   void explicitAdvance() override;
 
   /**
-* @brief TODO
-*/
+   * @brief TODO
+   */
   std::pair<bool, bool> implicitAdvance() override;
 
   /**
-* @brief TODO
-*/
+   * @brief TODO
+   */
   void initializeImplicit() override;
 
   /**
@@ -94,7 +95,7 @@ private:
   /**
    * @brief TODO
    */
-  void assignDataToConvergenceMeasure(ConvergenceMeasure* convergenceMeasure, int dataID) override;
+  void assignDataToConvergenceMeasure(ConvergenceMeasure *convergenceMeasure, int dataID) override;
 };
 
 } // namespace cplscheme

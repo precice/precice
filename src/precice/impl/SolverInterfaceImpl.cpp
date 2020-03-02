@@ -379,6 +379,10 @@ double SolverInterfaceImpl::advance(
   PRECICE_DEBUG("Handle exports");
   handleExports();
 
+  // deactivated the reset of written data, as it deletes all data that is not communicated
+  // within this cycle in the coupling data. This is not wanted forthe manifold mapping.
+  //resetWrittenData();
+
   _meshLock.lockAll();
   solverEvent.start(precice::syncMode);
   return _couplingScheme->getNextTimestepMaxLength();

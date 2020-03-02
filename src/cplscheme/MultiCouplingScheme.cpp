@@ -17,12 +17,12 @@ MultiCouplingScheme::MultiCouplingScheme(
     double                        timeWindowSize,
     int                           validDigits,
     const std::string &           localParticipant,
-    std::vector<m2n::PtrM2N>      m2n,
+    std::vector<m2n::PtrM2N>      m2ns,
     constants::TimesteppingMethod dtMethod,
     int                           maxIterations)
     : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, "neverFirstParticipant",
                          localParticipant, localParticipant, m2n::PtrM2N(), maxIterations, Implicit, dtMethod),
-      _communications(m2n)
+      _communications(m2ns)
 {
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
   for (size_t i = 0; i < _communications.size(); ++i) {
@@ -90,7 +90,8 @@ void MultiCouplingScheme::initializeDataImpl()
   }
 }
 
-void MultiCouplingScheme::explicitAdvance() {
+void MultiCouplingScheme::explicitAdvance()
+{
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
   // TODO this class hierarchy has a smell! I think that MultiCouplingScheme should not be derived from BaseCouplingScheme, but directly from CouplingScheme or an intermediate layer between CouplingScheme and BaseCouplingScheme.
 }
@@ -234,7 +235,7 @@ CouplingData *MultiCouplingScheme::getData(
   return nullptr;
 }
 
-void MultiCouplingScheme::assignDataToConvergenceMeasure(ConvergenceMeasure* convergenceMeasure, int dataID)
+void MultiCouplingScheme::assignDataToConvergenceMeasure(ConvergenceMeasure *convergenceMeasure, int dataID)
 {
   convergenceMeasure->couplingData = getData(dataID);
   PRECICE_ASSERT(convergenceMeasure->couplingData != nullptr);
