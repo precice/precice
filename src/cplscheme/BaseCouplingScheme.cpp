@@ -102,8 +102,8 @@ void BaseCouplingScheme::sendTimeWindowSize()
 {
   PRECICE_TRACE();
   if (_participantSetsTimeWindowSize) {
-    PRECICE_DEBUG("sending time window size of " << getComputedTimeWindowPart());  // TODO is this correct?
-    getM2N()->send(getComputedTimeWindowPart());
+    PRECICE_DEBUG("sending time window size of " << _computedTimeWindowPart);  // TODO is this correct?
+    getM2N()->send(_computedTimeWindowPart);
   }
 }
 
@@ -827,7 +827,7 @@ void BaseCouplingScheme::updateTimeAndIterations(
     // The computed time window part equals the time window size, since the
     // time window remainder is zero. Subtract the time window size and do another
     // coupling iteration.
-    PRECICE_ASSERT(math::greater(getComputedTimeWindowPart(), 0.0));
+    PRECICE_ASSERT(math::greater(_computedTimeWindowPart, 0.0));
     _time = _time - _computedTimeWindowPart;
 
     // in case of multilevel PP: only increment outer iteration count if surrogate model has converged.

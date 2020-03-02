@@ -132,16 +132,6 @@ public:
   virtual int getTimeWindows() const final override;
 
   /**
-   * @brief Returns the maximal time to be computed.
-   *
-   * This is the maximum max time of the coupling schemes in the composition.
-   */
-  virtual double getMaxTime() const final override;
-
-  /// Returns the maximal timesteps to be computed.
-  virtual int getMaxTimeWindows() const final override;
-
-  /**
    * @brief Returns true, if timestep length is prescribed by the cpl scheme.
    *
    * If any of the solvers in the composition has a timestep length limit, this
@@ -182,14 +172,6 @@ public:
    * The maximum remainer of all composed coupling schemes is returned.
    */
   virtual double getThisTimeWindowRemainder() const final override;
-
-  /**
-   * @brief Returns part of the current timestep that has been computed already.
-   *
-   * This is the minimum of all computed timestep parts of the composed coupling
-   * schemes.
-   */
-  virtual double getComputedTimeWindowPart() const final override;
 
   /**
    * @brief Returns the maximal length of the next timestep to be computed.

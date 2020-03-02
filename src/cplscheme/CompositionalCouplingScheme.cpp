@@ -148,28 +148,6 @@ int CompositionalCouplingScheme::getTimeWindows() const
   return timeWindows;
 }
 
-double CompositionalCouplingScheme::getMaxTime() const
-{
-  PRECICE_TRACE();
-  double maxTime = 0.0;
-  for (Scheme scheme : _couplingSchemes) {
-    maxTime = std::max(maxTime, scheme.scheme->getMaxTime());
-  }
-  PRECICE_DEBUG("return " << maxTime);
-  return maxTime;
-}
-
-int CompositionalCouplingScheme::getMaxTimeWindows() const
-{
-  PRECICE_TRACE();
-  int maxTimeWindows = 0;
-  for (Scheme scheme : _couplingSchemes) {
-    maxTimeWindows = std::max(maxTimeWindows, scheme.scheme->getMaxTimeWindows());
-  }
-  PRECICE_DEBUG("return " << maxTimeWindows);
-  return maxTimeWindows;
-}
-
 bool CompositionalCouplingScheme::hasTimeWindowSize() const
 {
   PRECICE_TRACE();
@@ -218,19 +196,6 @@ double CompositionalCouplingScheme::getThisTimeWindowRemainder() const
   }
   PRECICE_DEBUG("return " << maxRemainder);
   return maxRemainder;
-}
-
-double CompositionalCouplingScheme::getComputedTimeWindowPart() const
-{
-  PRECICE_TRACE();
-  double timeWindowPart = std::numeric_limits<double>::max();
-  for (Scheme scheme : _couplingSchemes) {
-    if (not scheme.onHold) {
-      timeWindowPart = std::min(timeWindowPart, scheme.scheme->getComputedTimeWindowPart());
-    }
-  }
-  PRECICE_DEBUG("return " << timeWindowPart);
-  return timeWindowPart;
 }
 
 double CompositionalCouplingScheme::getNextTimestepMaxLength() const

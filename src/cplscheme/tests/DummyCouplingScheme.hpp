@@ -117,24 +117,6 @@ public:
   /**
    * @brief Not implemented.
    */
-  virtual double getMaxTime() const override final
-  {
-    PRECICE_ASSERT(false);
-    return 0;
-  }
-
-  /**
-   * @brief Not implemented.
-   */
-  virtual int getMaxTimeWindows() const override final
-  {
-    PRECICE_ASSERT(false);
-    return 0;
-  }
-
-  /**
-   * @brief Not implemented.
-   */
   virtual bool hasTimeWindowSize() const override final
   {
     PRECICE_ASSERT(false);
@@ -171,15 +153,6 @@ public:
    * @brief Not implemented.
    */
   virtual double getThisTimeWindowRemainder() const override final
-  {
-    PRECICE_ASSERT(false);
-    return 0;
-  }
-
-  /**
-   * @brief Not implemented.
-   */
-  virtual double getComputedTimeWindowPart() const override final
   {
     PRECICE_ASSERT(false);
     return 0;
@@ -241,54 +214,30 @@ public:
   /**
    * @brief Empty.
    */
-  virtual std::string printCouplingState() const
+  virtual std::string printCouplingState() const override final
   {
     return std::string();
   }
 
-  /**
-   * @brief Empty.
-   */
-  virtual void exportState(const std::string &filenamePrefix) const {}
-
-  /**
-   * @brief Empty.
-   */
-  virtual void importState(const std::string &filenamePrefix) {}
-
-  /**
-   * @brief Empty.
-   */
-  virtual void sendState(
-      com::PtrCommunication communication,
-      int                   rankReceiver) {}
-
-  /**
-   * @brief Empty.
-   */
-  virtual void receiveState(
-      com::PtrCommunication communication,
-      int                   rankSender) {}
-
 private:
   mutable logging::Logger _log{"cplscheme::tests::DummyCouplingScheme"};
 
-  // @brief Number of iterations performed per timestep. 1 --> explicit.
+  /// @brief Number of iterations performed per timestep. 1 --> explicit.
   int _numberIterations;
 
-  // @brief Performed iterations in the current timestep.
+  /// @brief Performed iterations in the current timestep.
   int _iterations = 0;
 
-  // @brief Maximal number of timesteps to be performed.
+  /// @brief Maximal number of timesteps to be performed.
   int _maxTimesteps;
 
-  // @brief Performed number of timesteps.
+  /// @brief Performed number of timesteps.
   int _timesteps = 0;
 
-  // @brief True, if initialize has been called.
+  /// @brief True, if initialize has been called.
   bool _isInitialized = false;
 
-  // @brief True, if timesteps are left to be performed.
+  /// @brief True, if timesteps are left to be performed.
   bool _isOngoing = false;
 };
 

@@ -103,18 +103,6 @@ public:
   /// Returns the number of currently computed time windows of the coupling scheme.
   virtual int getTimeWindows() const override final;
 
-  /// Returns the maximal time to be computed.
-  virtual double getMaxTime() const override final
-  {
-    return _maxTime;
-  }
-
-  /// Returns the maximal number of time windows to be computed.
-  virtual int getMaxTimeWindows() const override final
-  {
-    return _maxTimeWindows;
-  }
-
   /// Returns true, if time window size is prescribed by the cpl scheme.
   virtual bool hasTimeWindowSize() const override final;
 
@@ -136,12 +124,6 @@ public:
    * returned.
    */
   virtual double getThisTimeWindowRemainder() const override final;
-
-  /// Returns part of the current time window that has been computed already.
-  virtual double getComputedTimeWindowPart() const override final
-  {
-    return _computedTimeWindowPart;
-  }
 
   /**
    * @brief Returns the maximal length of the next timestep to be computed.
