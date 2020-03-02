@@ -33,12 +33,12 @@ public:
    */
   virtual void initialize(
       double startTime,
-      int    startTimesteps);
+      int    startTimesteps) override final;
 
   /**
    * @brief Not implemented.
    */
-  virtual bool isInitialized() const
+  virtual bool isInitialized() const override final
   {
     PRECICE_ASSERT(false);
     return false;
@@ -47,7 +47,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  virtual void initializeData()
+  virtual void initializeData() override final
   {
     PRECICE_ASSERT(false);
   }
@@ -55,24 +55,24 @@ public:
   /**
    * @brief Not implemented.
    */
-  virtual void addComputedTime(double timeToAdd)
+  virtual void addComputedTime(double timeToAdd) override final
   { /* Do nothing */
   }
 
   /**
    * @brief
    */
-  virtual void advance();
+  virtual void advance() override final;
 
   /**
    * @brief
    */
-  virtual void finalize();
+  virtual void finalize() override final;
 
   /*
    * @brief Not implemented.
    */
-  virtual std::vector<std::string> getCouplingPartners() const
+  virtual std::vector<std::string> getCouplingPartners() const override final
   {
     PRECICE_ASSERT(false);
     return std::vector<std::string>();
@@ -81,7 +81,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  virtual bool willDataBeExchanged(double lastSolverTimestepLength) const
+  virtual bool willDataBeExchanged(double lastSolverTimestepLength) const override final
   {
     PRECICE_ASSERT(false);
     return false;
@@ -90,7 +90,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  virtual bool hasDataBeenExchanged() const
+  virtual bool hasDataBeenExchanged() const override final
   {
     PRECICE_ASSERT(false);
     return false;
@@ -99,7 +99,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  virtual double getTime() const
+  virtual double getTime() const override final
   {
     PRECICE_ASSERT(false);
     return 0;
@@ -108,7 +108,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  virtual int getTimeWindows() const
+  virtual int getTimeWindows() const override final
   {
     return _timesteps;
     return 0;
@@ -117,7 +117,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  virtual double getMaxTime() const
+  virtual double getMaxTime() const override final
   {
     PRECICE_ASSERT(false);
     return 0;
@@ -126,7 +126,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  virtual int getMaxTimeWindows() const
+  virtual int getMaxTimeWindows() const override final
   {
     PRECICE_ASSERT(false);
     return 0;
@@ -135,7 +135,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  virtual bool hasTimeWindowSize() const
+  virtual bool hasTimeWindowSize() const override final
   {
     PRECICE_ASSERT(false);
     return false;
@@ -144,7 +144,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  virtual double getTimeWindowSize() const
+  virtual double getTimeWindowSize() const override final
   {
     PRECICE_ASSERT(false);
     return 0;
@@ -153,53 +153,70 @@ public:
   /**
    * @brief Not implemented.
    */
-  virtual double getThisTimeWindowRemainder() const
-  {
-    PRECICE_ASSERT(false);
-    return 0;
-  }
-
-  /**
-   * @brief Not implemented.
-   */
-  virtual double getComputedTimeWindowPart() const
-  {
-    PRECICE_ASSERT(false);
-    return 0;
-  }
-
-  /**
-   * @brief Not implemented.
-   */
-  virtual double getNextTimestepMaxLength() const
-  {
-    PRECICE_ASSERT(false);
-    return 0;
-  }
-
-  /**
-   * @brief Not implemented.
-   */
-  virtual bool isCouplingOngoing() const;
-
-  /**
-   * @brief Not implemented.
-   */
-  virtual bool isTimeWindowComplete() const
+  virtual bool getIsCoarseModelOptimizationActive() const override final
   {
     PRECICE_ASSERT(false);
     return false;
   }
 
   /**
-   * @brief
+   * @brief Not implemented.
    */
-  virtual bool isActionRequired(const std::string &actionName) const;
+  virtual void activateCoarseModelOptimization() override final
+  {
+    PRECICE_ASSERT(false);
+  }
 
   /**
    * @brief Not implemented.
    */
-  virtual void markActionFulfilled(const std::string &actionName)
+  virtual double getThisTimeWindowRemainder() const override final
+  {
+    PRECICE_ASSERT(false);
+    return 0;
+  }
+
+  /**
+   * @brief Not implemented.
+   */
+  virtual double getComputedTimeWindowPart() const override final
+  {
+    PRECICE_ASSERT(false);
+    return 0;
+  }
+
+  /**
+   * @brief Not implemented.
+   */
+  virtual double getNextTimestepMaxLength() const override final
+  {
+    PRECICE_ASSERT(false);
+    return 0;
+  }
+
+  /**
+   * @brief Not implemented.
+   */
+  virtual bool isCouplingOngoing() const override final;
+
+  /**
+   * @brief Not implemented.
+   */
+  virtual bool isTimeWindowComplete() const override final
+  {
+    PRECICE_ASSERT(false);
+    return false;
+  }
+
+  /**
+   * @brief Not implemented.
+   */
+  virtual bool isActionRequired(const std::string &actionName) const override final;
+
+  /**
+   * @brief Not implemented.
+   */
+  virtual void markActionFulfilled(const std::string &actionName) override final
   {
     PRECICE_ASSERT(false);
   }
@@ -216,7 +233,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  virtual void requireAction(const std::string &actionName)
+  virtual void requireAction(const std::string &actionName) override final
   {
     PRECICE_ASSERT(false);
   }

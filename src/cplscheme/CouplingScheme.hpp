@@ -136,14 +136,15 @@ public:
    */
   virtual double getTimeWindowSize() const = 0;
 
-  /// Defaults to false, i.e., no multilevel PP
-  virtual bool getIsCoarseModelOptimizationActive() const
-  {
-    return false;
-  }
+  /**
+   * @brief TODO
+   */
+  virtual bool getIsCoarseModelOptimizationActive() const = 0;
 
-  /// Has to be called to notify coupling scheme that coarse Model Optimization is Active
-  virtual void activateCoarseModelOptimization() { }
+  /**
+   * @brief Has to be called to notify coupling scheme that coarse Model Optimization is Active
+   */
+  virtual void activateCoarseModelOptimization() = 0;
 
   /**
    * @brief Returns the remaining time within the current time window.

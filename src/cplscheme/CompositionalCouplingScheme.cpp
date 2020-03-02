@@ -194,6 +194,17 @@ double CompositionalCouplingScheme::getTimeWindowSize() const
   return timeWindowSize;
 }
 
+bool CompositionalCouplingScheme::getIsCoarseModelOptimizationActive() const
+{
+  // TODO @BU: what's the desired behaviour for a CompositionalCouplingScheme?
+  return false;
+}
+
+void CompositionalCouplingScheme::activateCoarseModelOptimization()
+{
+  // TODO @BU: what's the desired behaviour for a CompositionalCouplingScheme?
+}
+
 double CompositionalCouplingScheme::getThisTimeWindowRemainder() const
 {
   PRECICE_TRACE();
