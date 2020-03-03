@@ -292,7 +292,7 @@ void BaseCouplingScheme::advance()
     PRECICE_DEBUG("Begin advance, first New Values: " << stream.str());
   }
 #endif
-  PRECICE_CHECK(_couplingMode != Undefined, "_couplingMode has to be defined.");
+  PRECICE_ASSERT(_couplingMode != Undefined");
 
   if (subcyclingIsCompleted()) {
     if (isExplicitCouplingScheme()) {
