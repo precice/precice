@@ -55,7 +55,7 @@ BaseCouplingScheme::BaseCouplingScheme(
   PRECICE_CHECK(not((timeWindowSize != UNDEFINED_TIME_WINDOW_SIZE) && (timeWindowSize < 0.0)),
                 "Time window size has to be larger than zero.");
   PRECICE_CHECK((_validDigits >= 1) && (_validDigits < 17),
-                "Valid digits of time window size has to be between 1 and 16.");  // TODO really time window size?
+                "Valid digits of time window size has to be between 1 and 16.");
   PRECICE_CHECK(_firstParticipant != _secondParticipant,
                 "First participant and second participant must have different names. Called from BaseCoupling.");
   if (dtMethod == constants::FIXED_TIME_WINDOW_SIZE) {
