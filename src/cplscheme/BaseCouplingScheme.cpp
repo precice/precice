@@ -60,8 +60,7 @@ BaseCouplingScheme::BaseCouplingScheme(
                 "First participant and second participant must have different names.");
   if (dtMethod == constants::FIXED_TIME_WINDOW_SIZE) {
     PRECICE_CHECK(hasTimeWindowSize(),
-                  "Time window size has to be given when the fixed time window size method "
-                      << "is chosen for an implicit coupling scheme.");  // TODO do we talk about window or time step size?
+                  "Time window size has to be given when the fixed time window size method is used."); 
   }
   if (localParticipant == _firstParticipant) {
     _doesFirstStep = true;
