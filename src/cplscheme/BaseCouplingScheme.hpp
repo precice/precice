@@ -271,7 +271,7 @@ protected:
   /**
    * @brief Sets the computed time windows of the coupling scheme.
    *
-   * Used for testing.
+   * Used for testing to allow to advance in time without a coupling partner.
    */
   void setTimeWindows(int timeWindows)
   {
