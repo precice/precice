@@ -57,7 +57,7 @@ BaseCouplingScheme::BaseCouplingScheme(
   PRECICE_CHECK((_validDigits >= 1) && (_validDigits < 17),
                 "Valid digits of time window size has to be between 1 and 16.");
   PRECICE_CHECK(_firstParticipant != _secondParticipant,
-                "First participant and second participant must have different names. Called from BaseCoupling.");
+                "First participant and second participant must have different names.");
   if (dtMethod == constants::FIXED_TIME_WINDOW_SIZE) {
     PRECICE_CHECK(hasTimeWindowSize(),
                   "Time window size has to be given when the fixed time window size method "
