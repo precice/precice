@@ -216,7 +216,7 @@ protected:
   /// Returns true, if coupling scheme is explicit
   bool isExplicitCouplingScheme()
   {
-    PRECICE_CHECK(_couplingMode != Undefined, "Undefined coupling mode is not allowed.");
+    PRECICE_ASSERT(_couplingMode != Undefined);
     return _couplingMode == Explicit;
   }
 
