@@ -215,7 +215,7 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping(
     _deadAxis = {xDead, yDead};
     PRECICE_CHECK(not(xDead and yDead), "You cannot choose all axes to be dead for a RBF mapping");
     if (zDead)
-      PRECICE_WARN("Setting the z-axis to dead on a 2 dimensional problem has not effect.");
+      PRECICE_WARN("Setting the z-axis to dead on a 2-dimensional problem has no effect.");
   } else if (getDimensions() == 3) {
     _deadAxis = {xDead, yDead, zDead};
     PRECICE_CHECK(not(xDead and yDead and zDead), "You cannot choose all axes to be dead for a RBF mapping");
@@ -674,7 +674,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
         if (not _QRsolver.solveTranspose(tau, sigma)) {
           KSPView(_QRsolver, PETSC_VIEWER_STDOUT_WORLD);
           PRECICE_ERROR("RBF Polynomial linear system has not converged. "
-                        "Try to fix axis-aligned mapping setups by marking perpendicular axis as dead.");
+                        "Try to fix axis-aligned mapping setups by marking perpendicular axes as dead.");
         }
         VecWAXPY(out, -1, sigma, mu);
       } else {
@@ -684,7 +684,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
         if (not _solver.solve(au, out)) {
           KSPView(_solver, PETSC_VIEWER_STDOUT_WORLD);
           PRECICE_ERROR("RBF linear system has not converged. "
-                        "Try to fix axis-aligned mapping setups by marking perpendicular axis as dead.");
+                        "Try to fix axis-aligned mapping setups by marking perpendicular axes as dead.");
         }
         eSolve.addData("Iterations", _solver.getIterationNumber());
         eSolve.stop();
