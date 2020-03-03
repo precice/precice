@@ -93,7 +93,7 @@ void MultiCouplingScheme::initializeDataImpl()
 void MultiCouplingScheme::explicitAdvance()
 {
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
-  // TODO this class hierarchy has a smell! I think that MultiCouplingScheme should not be derived from BaseCouplingScheme, but directly from CouplingScheme or an intermediate layer between CouplingScheme and BaseCouplingScheme.
+// @todo implement
 }
 
 std::pair<bool, bool> MultiCouplingScheme::implicitAdvance()
