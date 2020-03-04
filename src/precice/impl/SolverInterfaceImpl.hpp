@@ -537,7 +537,6 @@ private:
    */
   void configure(const config::SolverInterfaceConfiguration &configuration);
 
-
   void configureM2Ns(const m2n::M2NConfiguration::SharedPointer &config);
 
   /// Exports meshes with data and watch point data.
@@ -626,7 +625,6 @@ private:
 
   /// To allow white box tests.
   friend struct PreciceTests::Serial::TestConfiguration;
-
 };
 
 } // namespace impl
