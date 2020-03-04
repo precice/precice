@@ -1,6 +1,7 @@
 #include "testing/Testing.hpp"
 #include <cstdlib>
 #include <exception>
+#include <memory>
 #include <string>
 #include "com/MPIDirectCommunication.hpp"
 #include "logging/LogMacros.hpp"
@@ -106,6 +107,7 @@ void TestContext::setContextFrom(const Participant &p, int rank)
 void TestContext::initialize(const Participants &participants)
 {
   initializeMPI(participants);
+  Par::Parallel::current()->synchronize();
   initializeMasterSlave();
   initializeEvents();
   initializePetsc();
@@ -172,7 +174,6 @@ void TestContext::initializeMasterSlave()
     return;
 
   precice::com::PtrCommunication masterSlaveCom = precice::com::PtrCommunication(new precice::com::MPIDirectCommunication());
-  utils::MasterSlave::_communication            = masterSlaveCom;
 
   const auto masterName = name + "Master";
   const auto slavesName = name + "Slaves";
@@ -182,6 +183,8 @@ void TestContext::initializeMasterSlave()
   } else {
     masterSlaveCom->requestConnection(masterName, slavesName, "", rank - 1, size - 1);
   }
+
+  utils::MasterSlave::_communication = std::move(masterSlaveCom);
 }
 
 void TestContext::initializeEvents()
