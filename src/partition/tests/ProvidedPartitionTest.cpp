@@ -19,20 +19,6 @@ using precice::testing::TestContext;
 BOOST_AUTO_TEST_SUITE(PartitionTests)
 BOOST_AUTO_TEST_SUITE(ProvidedPartitionTests)
 
-void setupParallelEnvironment(const TestContext &context, m2n::PtrM2N m2n)
-{
-  BOOST_TEST(context.hasSize(2));
-
-  if (context.isNamed("NASTIN")) { //NASTIN
-    m2n->acceptMasterConnection("Fluid", "SolidMaster");
-  } else {
-    BOOST_TEST(context.isNamed("SOLIDZ"));
-    if (context.isMaster()) {
-      m2n->requestMasterConnection("Fluid", "SolidMaster");
-    }
-  }
-}
-
 void tearDownParallelEnvironment()
 {
   mesh::Data::resetDataCount();
@@ -41,13 +27,7 @@ void tearDownParallelEnvironment()
 BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate2D)
 {
   PRECICE_TEST("NASTIN"_on(1_rank), "SOLIDZ"_on(3_ranks).setupMasterSlaves(), Require::Events);
-  com::PtrCommunication participantCom =
-      com::PtrCommunication(new com::MPIDirectCommunication());
-  m2n::DistributedComFactory::SharedPointer distrFactory = m2n::DistributedComFactory::SharedPointer(
-      new m2n::GatherScatterComFactory(participantCom));
-  m2n::PtrM2N m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory));
-
-  setupParallelEnvironment(context, m2n);
+  auto m2n = context.connect("NASTIN", "SOLIDZ");
 
   int  dimensions  = 2;
   bool flipNormals = false;
@@ -119,12 +99,7 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate2D)
 BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate3D)
 {
   PRECICE_TEST("NASTIN"_on(1_rank), "SOLIDZ"_on(3_ranks).setupMasterSlaves(), Require::Events);
-  com::PtrCommunication                     participantCom = com::PtrCommunication(new com::MPIDirectCommunication());
-  m2n::DistributedComFactory::SharedPointer distrFactory   = m2n::DistributedComFactory::SharedPointer(
-      new m2n::GatherScatterComFactory(participantCom));
-  m2n::PtrM2N m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory));
-
-  setupParallelEnvironment(context, m2n);
+  auto m2n = context.connect("NASTIN", "SOLIDZ", true);
 
   int  dimensions  = 3;
   bool flipNormals = false;
@@ -311,15 +286,9 @@ BOOST_AUTO_TEST_CASE(TestOnlyDistribution2D)
 BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
 {
   PRECICE_TEST("SOLIDZ"_on(3_ranks), "NASTIN"_on(1_rank), Require::Events);
-  com::PtrCommunication participantCom =
-      com::PtrCommunication(new com::SocketCommunication());
-  m2n::DistributedComFactory::SharedPointer distrFactory = m2n::DistributedComFactory::SharedPointer(
-      new m2n::GatherScatterComFactory(participantCom));
   bool        useOnlyMasterCom = false;
   bool        useTwoLevelInit  = true;
-  m2n::PtrM2N m2n              = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory, useOnlyMasterCom, useTwoLevelInit));
-
-  setupParallelEnvironment(context, m2n);
+  auto m2n = context.connect("NASTIN", "SOLIDZ", useOnlyMasterCom, useTwoLevelInit);
 
   int  dimensions  = 2;
   bool flipNormals = true;
@@ -435,15 +404,9 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
 BOOST_AUTO_TEST_CASE(TestSendBoundingBoxes3D)
 {
   PRECICE_TEST("SOLIDZ"_on(3_ranks), "NASTIN"_on(1_rank), Require::Events);
-  com::PtrCommunication participantCom =
-      com::PtrCommunication(new com::SocketCommunication());
-  m2n::DistributedComFactory::SharedPointer distrFactory = m2n::DistributedComFactory::SharedPointer(
-      new m2n::GatherScatterComFactory(participantCom));
   bool        useOnlyMasterCom = false;
   bool        useTwoLevelInit  = true;
-  m2n::PtrM2N m2n              = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory, useOnlyMasterCom, useTwoLevelInit));
-
-  setupParallelEnvironment(context, m2n);
+  auto m2n = context.connect("NASTIN", "SOLIDZ", useOnlyMasterCom, useTwoLevelInit);
 
   int  dimensions  = 3;
   bool flipNormals = true;
