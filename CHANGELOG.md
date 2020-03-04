@@ -2,7 +2,11 @@
 
 All notable changes to this project will be documented in this file. For future plans, see our [Roadmap](https://github.com/precice/precice/wiki/Roadmap).
 
-## develop
+## 2.0.1
+
+- Fixed broken pkg-config file in some cases due to CMake `GNUInstallDirs`.
+- Fixed system-dependent error when displaying mapping distance information for empty partitions.
+- Improved RBF error messages by clarifying them and giving a hint to the user on what to do next.
 
 ## 2.0.0
 
