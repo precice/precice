@@ -292,7 +292,7 @@ void BaseCouplingScheme::advance()
     PRECICE_DEBUG("Begin advance, first New Values: " << stream.str());
   }
 #endif
-  PRECICE_ASSERT(_couplingMode != Undefined");
+  PRECICE_ASSERT(_couplingMode != Undefined);
 
   if (subcyclingIsCompleted()) {
     if (isExplicitCouplingScheme()) {
