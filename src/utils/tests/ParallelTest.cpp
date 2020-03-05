@@ -1,6 +1,7 @@
 #include <string>
 #include "testing/Testing.hpp"
 #include "utils/Parallel.hpp"
+#include "com/Communication.hpp"
 
 using namespace precice;
 
@@ -54,6 +55,122 @@ BOOST_AUTO_TEST_CASE(SplitCommTest)
   BOOST_TEST(groups[1].leaderRank == 2);
   BOOST_TEST(groups[0].size == 2);
   BOOST_TEST(groups[1].size == 1);
+}
+
+BOOST_AUTO_TEST_CASE(Master1SlaveTest)
+{
+  PRECICE_TEST(""_on(2_ranks).setupMasterSlaves());
+
+  BOOST_TEST(context.hasSize(2));
+  auto& com = precice::utils::MasterSlave::_communication;
+  BOOST_TEST(com != nullptr);
+
+  if (context.isMaster()) {
+    int first = 1001;
+
+    com->send(first, 1);
+
+    int answer;
+    com->receive(answer, 1);
+    BOOST_TEST(answer == 1111);
+  } else {
+    int received;
+    com->receive(received, 0);
+    BOOST_TEST(received == 1111);
+    received += 110;
+    com->send(received, 0);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(Master2SlaveTest)
+{
+  PRECICE_TEST(""_on(3_ranks).setupMasterSlaves());
+
+  BOOST_TEST(context.hasSize(3));
+  auto& com = precice::utils::MasterSlave::_communication;
+  BOOST_TEST(com != nullptr);
+
+  if (context.isMaster()) {
+    int sum = 1001;
+
+    int message = -1;
+    com->receive(message, 1);
+    sum += message;
+    BOOST_TEST(sum == 1011);
+
+    message = -1;
+    com->receive(message, 2);
+    sum += message;
+    BOOST_TEST(sum == 1111);
+
+    com->send(message, 1);
+    com->send(message, 2);
+  } else {
+    int tosend = context.isRank(1) ? 10 : 100;
+    com->send(tosend, 0);
+
+    int received = -1;
+    com->receive(received, 0);
+    BOOST_TEST(received == 1111);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(OffsetMaster1SlaveTest)
+{
+  PRECICE_TEST("Offset"_on(1_rank), "Test"_on(2_ranks).setupMasterSlaves());
+
+  BOOST_TEST(context.hasSize(2));
+  auto& com = precice::utils::MasterSlave::_communication;
+  BOOST_TEST(com != nullptr);
+
+  if (context.isMaster()) {
+    int first = 1001;
+
+    com->send(first, 1);
+
+    int answer;
+    com->receive(answer, 1);
+    BOOST_TEST(answer == 1111);
+  } else {
+    int received;
+    com->receive(received, 0);
+    BOOST_TEST(received == 1111);
+    received += 110;
+    com->send(received, 0);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(OffsetMaster2SlaveTest)
+{
+  PRECICE_TEST("Offset"_on(1_rank), "Test"_on(3_ranks).setupMasterSlaves());
+
+  BOOST_TEST(context.hasSize(3));
+  auto& com = precice::utils::MasterSlave::_communication;
+  BOOST_TEST(com != nullptr);
+
+  if (context.isMaster()) {
+    int sum = 1001;
+
+    int message = -1;
+    com->receive(message, 1);
+    sum += message;
+    BOOST_TEST(sum == 1011);
+
+    message = -1;
+    com->receive(message, 2);
+    sum += message;
+    BOOST_TEST(sum == 1111);
+
+    com->send(message, 1);
+    com->send(message, 2);
+  } else {
+    int tosend = context.isRank(1) ? 10 : 100;
+    com->send(tosend, 0);
+
+    int received = -1;
+    com->receive(received, 0);
+    BOOST_TEST(received == 1111);
+  }
 }
 
 #endif // not PRECICE_NO_MPI
