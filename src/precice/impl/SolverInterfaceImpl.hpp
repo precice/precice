@@ -251,9 +251,6 @@ public:
       int           VertexID, 
       int           patchID);
 
-  /**
-   * @brief Leave as int for now for trouble shooting
-   */
   int getMeshVertexPatch(
       int           meshID,
       int           vertexID);

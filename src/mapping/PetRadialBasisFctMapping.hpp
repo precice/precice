@@ -368,9 +368,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     if (not inVertex.isOwner())
       continue;
 
-    // Need the patch ID for the vertex of interest here
-    // int inVertexPatchID = inVertex.getPatchID();
-
     PetscInt colNum = 0; // holds the number of non-zero columns in current row
 
     // -- SETS THE POLYNOMIAL PART OF THE MATRIX --
@@ -406,9 +403,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       ++preallocRow;
     } else {
       for (const mesh::Vertex &vj : inMesh->vertices()) {
-        // If patch ID of vj vertex, then skip all computations
-        //int vjPatchID = vj.getPatchID();
-        //if (vjPatchID == inVertexPatchID) {
+
           int const col = vj.getGlobalIndex() + polyparams;
           if (row > col)
             continue; // matrix is symmetric
@@ -423,9 +418,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
             rowVals[colNum]  = _basisFunction.evaluate(norm);
             colIdx[colNum++] = col; // column of entry is the globalIndex
           }
-        //}else{
-        //  PRECICE_INFO("Skip due to patch ID difference");
-        //}
       }
     }
     ierr = AOApplicationToPetsc(_AOmapping, colNum, colIdx.data());
@@ -473,7 +465,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
   for (PetscInt row = ownerRangeABegin; row < ownerRangeAEnd; ++row) {
     mesh::Vertex const &oVertex = outMesh->vertices()[row - _matrixA.ownerRange().first];
-    //int oVertexPatchID = oVertex.getPatchID();
 
     // -- SET THE POLYNOMIAL PART OF THE MATRIX --
     if (_polynomial == Polynomial::ON or _polynomial == Polynomial::SEPARATE) {
@@ -504,8 +495,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       }
     } else {
       for (const mesh::Vertex &inVertex : inMesh->vertices()) {
-        //int inVertexPatchID = inVertex.getPatchID();
-        //if (inVertexPatchID == oVertexPatchID){
         distance = oVertex.getCoords() - inVertex.getCoords();
         for (int d = 0; d < dimensions; d++) {
           if (_deadAxis[d])
@@ -516,9 +505,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
           rowVals[colNum]  = _basisFunction.evaluate(norm);
           colIdx[colNum++] = inVertex.getGlobalIndex() + polyparams;
         }
-        //}else {
-        //PRECICE_INFO("Skip due to patch ID difference");
-      //}
       } 
     }
     ierr = AOApplicationToPetsc(_AOmapping, colNum, colIdx.data());

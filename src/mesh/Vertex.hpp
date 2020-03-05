@@ -15,9 +15,9 @@ public:
   template <typename VECTOR_T>
   Vertex(
       const VECTOR_T &coordinates,
-      int             id);     // This indicates which patch a vertex is a part of
+      int             id);
 
-  /// Returns spatial dimensionality of vsetMeshVerticesertex.
+  /// Returns spatial dimensionality of vertex
   int getDimensions() const;
 
   /// Sets the coordinates of the vertex.
