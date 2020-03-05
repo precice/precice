@@ -198,10 +198,6 @@ public:
    */
   void setExtrapolationOrder(int order);
 
-  typedef std::map<int, PtrCouplingData> DataMap; // move that back to protected
-
-  void extrapolateData(DataMap &data);
-
   /// Adds a measure to determine the convergence of coupling iterations.
   void addConvergenceMeasure(
       mesh::PtrData               data,
@@ -213,6 +209,9 @@ public:
   void setIterationAcceleration(acceleration::PtrAcceleration acceleration);
 
 protected:
+  /// TODO
+  typedef std::map<int, PtrCouplingData> DataMap;
+
   /// Returns true, if coupling scheme is explicit
   bool isExplicitCouplingScheme()
   {
@@ -351,6 +350,9 @@ protected:
   {
     return _extrapolationOrder;
   }
+
+  /// TODO
+  void extrapolateData(DataMap &data);
 
   bool maxIterationsReached();
 
