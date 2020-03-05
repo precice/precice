@@ -155,7 +155,7 @@ public:
    * @brief Initializes the coupling scheme.
    *
    * @param[in] startTime starting time of coupling scheme
-   * @param[in] startTimeWindow ID of time window, from which coupling scheme starts
+   * @param[in] startTimeWindow starting counter of time window, from which coupling scheme starts
    */
   void initialize(double startTime, int startTimeWindow) override final;
 
