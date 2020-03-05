@@ -196,7 +196,7 @@ void BaseCouplingScheme::finalize()
 {
   PRECICE_TRACE();
   checkCompletenessRequiredActions();
-  PRECICE_CHECK(_initializeHasBeenCalled, "Called finalize() before initialize().");
+  PRECICE_CHECK(_isInitialized, "Called finalize() before initialize().");
 }
 
 void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
@@ -205,7 +205,7 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
   PRECICE_TRACE(startTime, startTimeWindow);
   PRECICE_ASSERT(math::greaterEquals(startTime, 0.0), startTime);
   PRECICE_ASSERT(startTimeWindow >= 0, startTimeWindow);
-  PRECICE_CHECK(not _initializeHasBeenCalled, "initialize() can only be called once.");
+  PRECICE_CHECK(not _isInitialized, "initialize() can only be called once.");
   _time          = startTime;
   _timeWindows   = startTimeWindow;
 
@@ -222,7 +222,7 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
     requireAction(constants::actionWriteInitialData());
   }
 
-  _initializeHasBeenCalled = true;
+  _isInitialized = true;
 }
 
 void BaseCouplingScheme::initializeSendingParticipants(DataMap &dataMap)
@@ -251,7 +251,7 @@ void BaseCouplingScheme::initializeReceivingParticipants(DataMap &dataMap)
 void BaseCouplingScheme::initializeData()
 {
   // InitializeData uses the template method pattern (https://en.wikipedia.org/wiki/Template_method_pattern).
-  PRECICE_CHECK(_initializeHasBeenCalled, "initializeData() can be called after initialize() only.");
+  PRECICE_CHECK(_isInitialized, "initializeData() can be called after initialize() only.");
   PRECICE_CHECK(not _initializeDataHasBeenCalled, "initializeData() can only be called once.");
   _initializeDataHasBeenCalled = true;
   PRECICE_TRACE("initializeData()");
@@ -275,7 +275,7 @@ void BaseCouplingScheme::advance()
 {
   PRECICE_TRACE(getTimeWindows(), getTime());
   checkCompletenessRequiredActions();
-  PRECICE_CHECK(_initializeHasBeenCalled, "Before calling advance() coupling has to be initialized via initialize(). This will cause an error in future releases.")  // TODO: preCICE v3.0.0 -> PRECICE_CHECK
+  PRECICE_CHECK(_isInitialized, "Before calling advance() coupling has to be initialized via initialize(). This will cause an error in future releases.")  // TODO: preCICE v3.0.0 -> PRECICE_CHECK
   PRECICE_CHECK((not _hasToReceiveInitData && not _hasToSendInitData) || (_initializeDataHasBeenCalled),
                 "initializeData() needs to be called before advance if data has to be initialized.");
   _hasDataBeenExchanged = false;

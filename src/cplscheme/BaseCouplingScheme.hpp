@@ -77,7 +77,7 @@ public:
   /// Returns true, if initialize has been called.
   virtual bool isInitialized() const override final
   {
-    return _initializeHasBeenCalled;
+    return _isInitialized;
   }
 
   /// Adds newly computed time. Has to be called before every advance.
@@ -460,7 +460,7 @@ private:
   bool _hasDataBeenExchanged = false;
 
   /// True, if coupling has been initialized.
-  bool _initializeHasBeenCalled = false;
+  bool _isInitialized = false;
 
   /// True, if initialize data has been called.
   bool _initializeDataHasBeenCalled = false;
