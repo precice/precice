@@ -15,9 +15,9 @@ public:
   template <typename VECTOR_T>
   Vertex(
       const VECTOR_T &coordinates,
-      int             id);
+      int             id);     // This indicates which patch a vertex is a part of
 
-  /// Returns spatial dimensionality of vertex.
+  /// Returns spatial dimensionality of vsetMeshVerticesertex.
   int getDimensions() const;
 
   /// Sets the coordinates of the vertex.
@@ -38,6 +38,12 @@ public:
 
   /// Returns the unique (among vertices of one mesh on one processor) ID of the vertex.
   int getID() const;
+
+  /// Returns the patchID that a vertex belongs to
+  int getPatchID() const;
+
+  /// Sets the patchID of a vertex
+  void setPatchID(int patchid);
 
   /// Returns the coordinates of the vertex.
   const Eigen::VectorXd &getCoords() const;
@@ -62,9 +68,14 @@ public:
 
   inline bool operator!=(const Vertex &rhs) const;
 
+  
+
 private:
   /// Unique (among vertices in one mesh) ID of the vertex.
   int _id;
+
+  /// Patch id that a vertex belongs to
+  int _patchid = 0;
 
   /// Coordinates of the vertex.
   Eigen::VectorXd _coords;
@@ -129,6 +140,11 @@ void Vertex::setNormal(
 inline int Vertex::getID() const
 {
   return _id;
+}
+
+inline int Vertex::getPatchID() const
+{
+ return _patchid;
 }
 
 inline const Eigen::VectorXd &Vertex::getCoords() const

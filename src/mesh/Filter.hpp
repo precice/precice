@@ -23,6 +23,7 @@ void filterMesh(Mesh &destination, const Mesh &source, UnaryPredicate p)
     if (p(vertex)) {
       Vertex &v = destination.createVertex(vertex.getCoords());
       v.setGlobalIndex(vertex.getGlobalIndex());
+      v.setPatchID(vertex.getPatchID());
       if (vertex.isTagged())
         v.tag();
       v.setOwner(vertex.isOwner());

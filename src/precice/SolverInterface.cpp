@@ -153,6 +153,21 @@ void SolverInterface::setMeshVertices(
   _impl->setMeshVertices(meshID, size, positions, ids);
 }
 
+void SolverInterface::setMeshVertexPatch(
+    int           meshID,
+    int           VertexID, 
+    int           patchID)
+{
+  _impl->setMeshVertexPatch(meshID, VertexID, patchID);
+}
+
+int SolverInterface::getMeshVertexPatch(
+    int           meshID,
+    int           vertexID)
+{
+  _impl->getMeshVertexPatch(meshID, vertexID);
+}
+
 void SolverInterface::getMeshVertices(
     int        meshID,
     int        size,

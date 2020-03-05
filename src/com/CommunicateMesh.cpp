@@ -30,14 +30,17 @@ void CommunicateMesh::sendMesh(
   if (not mesh.vertices().empty()) {
     std::vector<double> coords(static_cast<size_t>(numberOfVertices) * dim);
     std::vector<int>    globalIDs(numberOfVertices);
+    std::vector<int>    patchIDs(numberOfVertices);
     for (int i = 0; i < numberOfVertices; i++) {
       for (int d = 0; d < dim; d++) {
         coords[i * dim + d] = mesh.vertices()[i].getCoords()[d];
       }
       globalIDs[i] = mesh.vertices()[i].getGlobalIndex();
+      patchIDs[i] = mesh.vertices()[i].getPatchID();
     }
     _communication->send(coords, rankReceiver);
     _communication->send(globalIDs, rankReceiver);
+    _communication->send(patchIDs, rankReceiver);
   }
 
   int numberOfEdges = mesh.edges().size();
@@ -98,8 +101,10 @@ void CommunicateMesh::receiveMesh(
   if (numberOfVertices > 0) {
     std::vector<double> vertexCoords;
     std::vector<int>    globalIDs;
+    std::vector<int>    patchIDs;
     _communication->receive(vertexCoords, rankSender);
     _communication->receive(globalIDs, rankSender);
+    _communication->receive(patchIDs, rankSender);
     for (int i = 0; i < numberOfVertices; i++) {
       Eigen::VectorXd coords(dim);
       for (int d = 0; d < dim; d++) {
@@ -108,6 +113,7 @@ void CommunicateMesh::receiveMesh(
       mesh::Vertex &v = mesh.createVertex(coords);
       PRECICE_ASSERT(v.getID() >= 0, v.getID());
       v.setGlobalIndex(globalIDs[i]);
+      v.setPatchID(patchIDs[i]);
       vertices.push_back(&v);
     }
   }
@@ -178,14 +184,17 @@ void CommunicateMesh::broadcastSendMesh(const mesh::Mesh &mesh)
   if (numberOfVertices > 0) {
     std::vector<double> coords(static_cast<size_t>(numberOfVertices) * dim);
     std::vector<int>    globalIDs(numberOfVertices);
+    std::vector<int>    patchIDs(numberOfVertices);
     for (int i = 0; i < numberOfVertices; i++) {
       for (int d = 0; d < dim; d++) {
         coords[i * dim + d] = mesh.vertices()[i].getCoords()[d];
       }
       globalIDs[i] = mesh.vertices()[i].getGlobalIndex();
+      patchIDs[i] = mesh.vertices()[i].getPatchID();
     }
     _communication->broadcast(coords);
     _communication->broadcast(globalIDs);
+    _communication->broadcast(patchIDs);
   }
 
   int numberOfEdges = mesh.edges().size();
@@ -245,8 +254,10 @@ void CommunicateMesh::broadcastReceiveMesh(
   if (numberOfVertices > 0) {
     std::vector<double> vertexCoords;
     std::vector<int>    globalIDs;
+    std::vector<int>    patchIDs;
     _communication->broadcast(vertexCoords, rankBroadcaster);
     _communication->broadcast(globalIDs, rankBroadcaster);
+    _communication->broadcast(patchIDs, rankBroadcaster);
     for (int i = 0; i < numberOfVertices; i++) {
       Eigen::VectorXd coords(dim);
       for (int d = 0; d < dim; d++) {
@@ -255,6 +266,7 @@ void CommunicateMesh::broadcastReceiveMesh(
       mesh::Vertex &v = mesh.createVertex(coords);
       PRECICE_ASSERT(v.getID() >= 0, v.getID());
       v.setGlobalIndex(globalIDs[i]);
+      v.setPatchID(patchIDs[i]);
       vertices.push_back(&v);
     }
   }

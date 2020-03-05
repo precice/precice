@@ -44,6 +44,11 @@ void Vertex::tag()
   _tagged = true;
 }
 
+void Vertex::setPatchID(int patchid)
+{
+  _patchid = patchid;
+}
+
 std::ostream &operator<<(std::ostream &os, Vertex const &v)
 {
   return os << "POINT (" << v.getCoords().transpose().format(utils::eigenio::wkt()) << ')';

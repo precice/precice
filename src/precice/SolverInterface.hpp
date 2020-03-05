@@ -391,6 +391,16 @@ public:
       const double *positions,
       int *         ids);
 
+
+  void setMeshVertexPatch(
+      int           meshID, 
+      int           VertexID, 
+      int           patchID);
+
+  int getMeshVertexPatch(
+    int           meshID,
+    int           vertexID);
+
   /**
    * @brief Get vertex positions for multiple vertex ids from a given mesh
    *

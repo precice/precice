@@ -631,6 +631,33 @@ void SolverInterfaceImpl::setMeshVertices(
   mesh->allocateDataValues();
 }
 
+void SolverInterfaceImpl::setMeshVertexPatch(
+      int           meshID, 
+      int           VertexID, 
+      int           patchID)
+{
+    PRECICE_TRACE(meshID);
+    PRECICE_REQUIRE_MESH_MODIFY(meshID);
+    MeshContext & context = _accessor->meshContext(meshID);
+    mesh::PtrMesh mesh(context.mesh);
+    auto &vertices = mesh->vertices();
+    vertices[VertexID].setPatchID(patchID);
+}
+
+int SolverInterfaceImpl::getMeshVertexPatch(
+    int           meshID,
+    int           vertexID)
+{
+    PRECICE_TRACE(meshID);
+    int index = -1;
+    PRECICE_REQUIRE_MESH_USE(meshID);
+    MeshContext & context = _accessor->meshContext(meshID);
+    mesh::PtrMesh mesh(context.mesh);
+    auto &vertices = mesh->vertices();
+    index = vertices[vertexID].getPatchID();
+    return index;
+}
+
 void SolverInterfaceImpl::getMeshVertices(
     int        meshID,
     size_t     size,
