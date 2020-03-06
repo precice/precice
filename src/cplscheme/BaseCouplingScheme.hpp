@@ -544,7 +544,7 @@ private:
   void checkCompletenessRequiredActions();
 
   /// Returns true if end time of time window is reached. Does not check for convergence
-  bool subcyclingIsCompleted();
+  bool reachedEndOfTimeWindow();
 
   /**
    * @brief If coupling iteration has not converged, time will be reset to beginning of

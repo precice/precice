@@ -271,7 +271,7 @@ void BaseCouplingScheme::advance()
 #endif
   PRECICE_ASSERT(_couplingMode != Undefined);
 
-  if (subcyclingIsCompleted()) {
+  if (reachedEndOfTimeWindow()) {
     if (isExplicitCouplingScheme()) {
       timeWindowCompleted();
       explicitAdvance();
@@ -839,7 +839,7 @@ void BaseCouplingScheme::timeWindowCompleted()
   }
 }
 
-bool BaseCouplingScheme::subcyclingIsCompleted()
+bool BaseCouplingScheme::reachedEndOfTimeWindow()
 {
   return math::equals(getThisTimeWindowRemainder(), 0.0, _eps);
 }
