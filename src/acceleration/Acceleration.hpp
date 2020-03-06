@@ -93,7 +93,7 @@ protected:
 
 private:
 
-  /// BaseCouplingScheme linked to this acceleration
+  /// BaseCouplingScheme linked to this acceleration @todo ugly design, only needed for MM
   cplscheme::PtrCouplingScheme _cplScheme;
 };
 } // namespace acceleration
