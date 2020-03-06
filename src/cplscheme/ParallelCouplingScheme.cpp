@@ -38,9 +38,9 @@ void ParallelCouplingScheme::initializeImplicit()
 
 void ParallelCouplingScheme::initializeImplementation()
 {
-  initializeSendingParticipants(getSendData());
+  lookUpIfParticipantHasToSendInitialData(getSendData());
 
-  initializeReceivingParticipants(getReceiveData());
+  lookUpIfParticipantHasToReceiveInitialData(getReceiveData());
 }
 
 void ParallelCouplingScheme::exchangeInitialData()

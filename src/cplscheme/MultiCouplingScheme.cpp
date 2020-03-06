@@ -51,10 +51,10 @@ void MultiCouplingScheme::initializeImplementation()
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
 
   for (DataMap &dataMap : _sendDataVector) {
-    initializeSendingParticipants(dataMap);
+    lookUpIfParticipantHasToSendInitialData(dataMap);
   }
   for (DataMap &dataMap : _receiveDataVector) {
-    initializeReceivingParticipants(dataMap);
+    lookUpIfParticipantHasToReceiveInitialData(dataMap);
   }
 }
 

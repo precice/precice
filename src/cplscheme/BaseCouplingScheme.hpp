@@ -367,11 +367,15 @@ protected:
     return _iterationsCoarseOptimization;
   }
 
-  /// @todo
-  void initializeSendingParticipants(DataMap &dataMap);
+  /**
+   * @brief: Checks whether participant has to send data when initializeData() is called
+   */
+  void lookUpIfParticipantHasToSendInitialData(DataMap &dataMap);
 
-  /// @todo
-  void initializeReceivingParticipants(DataMap &dataMap);
+  /**
+   * @brief: Checks whether participant has to receive data when initializeData() is called
+   */
+  void lookUpIfParticipantHasToReceiveInitialData(DataMap &dataMap);
 
   std::vector<ConvergenceMeasure> getConvergenceMeasures()
   {

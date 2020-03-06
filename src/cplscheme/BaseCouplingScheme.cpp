@@ -225,7 +225,7 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
   _isInitialized = true;
 }
 
-void BaseCouplingScheme::initializeSendingParticipants(DataMap &dataMap)
+void BaseCouplingScheme::lookUpIfParticipantHasToSendInitialData(DataMap &dataMap)
 {
   for (DataMap::value_type &pair : dataMap) {
     if (pair.second->initialize) {
@@ -235,7 +235,7 @@ void BaseCouplingScheme::initializeSendingParticipants(DataMap &dataMap)
   }
 }
 
-void BaseCouplingScheme::initializeReceivingParticipants(DataMap &dataMap)
+void BaseCouplingScheme::lookUpIfParticipantHasToReceiveInitialData(DataMap &dataMap)
 {
   {
     for (DataMap::value_type &pair : dataMap) {
