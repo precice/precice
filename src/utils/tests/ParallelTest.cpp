@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(Master1SlaveTest)
   } else {
     int received;
     com->receive(received, 0);
-    BOOST_TEST(received == 1111);
+    BOOST_TEST(received == 1001);
     received += 110;
     com->send(received, 0);
   }
@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(OffsetMaster1SlaveTest)
   } else {
     int received;
     com->receive(received, 0);
-    BOOST_TEST(received == 1111);
+    BOOST_TEST(received == 1001);
     received += 110;
     com->send(received, 0);
   }
