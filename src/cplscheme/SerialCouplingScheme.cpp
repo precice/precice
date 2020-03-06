@@ -45,13 +45,13 @@ void SerialCouplingScheme::initializeImplicit()
 void SerialCouplingScheme::checkInitialize()
 {
   for (DataMap::value_type &pair : getSendData()) {
-    if (pair.second->initialize) {
+    if (pair.second->requiresInitialization) {
       PRECICE_CHECK(not doesFirstStep(), "Only second participant can initialize data and send it!");
     }
   }
 
   for (DataMap::value_type &pair : getReceiveData()) {
-    if (pair.second->initialize) {
+    if (pair.second->requiresInitialization) {
       PRECICE_CHECK(doesFirstStep(), "Only first participant can receive initial data!");
     }
   }

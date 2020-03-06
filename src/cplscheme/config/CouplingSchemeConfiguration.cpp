@@ -830,11 +830,11 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(
       throw std::runtime_error{"Participant \"" + to + "\" is not configured for coupling scheme"};
     }
 
-    bool initialize = get<4>(tuple);
+    bool requiresInitialization = get<4>(tuple);
     if (from == accessor) {
-      scheme.addDataToSend(data, mesh, initialize);
+      scheme.addDataToSend(data, mesh, requiresInitialization);
     } else if (to == accessor) {
-      scheme.addDataToReceive(data, mesh, initialize);
+      scheme.addDataToReceive(data, mesh, requiresInitialization);
     } else {
       PRECICE_ASSERT(_config.type == VALUE_MULTI);
     }

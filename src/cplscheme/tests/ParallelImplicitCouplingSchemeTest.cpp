@@ -292,27 +292,27 @@ BOOST_FIXTURE_TEST_CASE(testInitializeData, testing::M2NFixture,
   std::string nameParticipant0("Participant0");
   std::string nameParticipant1("Participant1");
   std::string nameLocalParticipant("");
-  int         sendDataIndex    = -1;
-  int         receiveDataIndex = -1;
-  bool        initData         = false;
+  int         sendDataIndex              = -1;
+  int         receiveDataIndex           = -1;
+  bool        dataRequiresInitialization = false;
   if (utils::Parallel::getProcessRank() == 0) {
-    nameLocalParticipant = nameParticipant0;
-    sendDataIndex        = 0;
-    receiveDataIndex     = 1;
-    initData             = true;
+    nameLocalParticipant       = nameParticipant0;
+    sendDataIndex              = 0;
+    receiveDataIndex           = 1;
+    dataRequiresInitialization = true;
   } else if (utils::Parallel::getProcessRank() == 1) {
-    nameLocalParticipant = nameParticipant1;
-    sendDataIndex        = 1;
-    receiveDataIndex     = 0;
-    initData             = true;
+    nameLocalParticipant       = nameParticipant1;
+    sendDataIndex              = 1;
+    receiveDataIndex           = 0;
+    dataRequiresInitialization = true;
   }
 
   // Create the coupling scheme object
   ParallelCouplingScheme cplScheme(
       maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
       nameLocalParticipant, m2n, constants::FIXED_TIME_WINDOW_SIZE, BaseCouplingScheme::Implicit, 100);
-  cplScheme.addDataToSend(mesh->data()[sendDataIndex], mesh, initData);
-  cplScheme.addDataToReceive(mesh->data()[receiveDataIndex], mesh, initData);
+  cplScheme.addDataToSend(mesh->data()[sendDataIndex], mesh, dataRequiresInitialization);
+  cplScheme.addDataToReceive(mesh->data()[receiveDataIndex], mesh, dataRequiresInitialization);
 
   // Add convergence measures
   int                                    minIterations = 3;

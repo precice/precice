@@ -109,12 +109,12 @@ void BaseCouplingScheme::sendTimeWindowSize()
 void BaseCouplingScheme::addDataToSend(
     mesh::PtrData data,
     mesh::PtrMesh mesh,
-    bool          initialize)
+    bool          requiresInitialization)
 {
   PRECICE_TRACE();
   int id = data->getID();
   if (!utils::contained(id, _sendData)) {
-    PtrCouplingData     ptrCplData(new CouplingData(&(data->values()), mesh, initialize, data->getDimensions()));
+    PtrCouplingData     ptrCplData(new CouplingData(&(data->values()), mesh, requiresInitialization, data->getDimensions()));
     DataMap::value_type pair = std::make_pair(id, ptrCplData);
     _sendData.insert(pair);
   } else {
@@ -125,12 +125,12 @@ void BaseCouplingScheme::addDataToSend(
 void BaseCouplingScheme::addDataToReceive(
     mesh::PtrData data,
     mesh::PtrMesh mesh,
-    bool          initialize)
+    bool          requiresInitialization)
 {
   PRECICE_TRACE();
   int id = data->getID();
   if (!utils::contained(id, _receiveData)) {
-    PtrCouplingData     ptrCplData(new CouplingData(&(data->values()), mesh, initialize, data->getDimensions()));
+    PtrCouplingData     ptrCplData(new CouplingData(&(data->values()), mesh, requiresInitialization, data->getDimensions()));
     DataMap::value_type pair = std::make_pair(id, ptrCplData);
     _receiveData.insert(pair);
   } else {
@@ -228,7 +228,7 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
 void BaseCouplingScheme::lookUpIfParticipantHasToSendInitialData(DataMap &dataMap)
 {
   for (DataMap::value_type &pair : dataMap) {
-    if (pair.second->initialize) {
+    if (pair.second->requiresInitialization) {
       _hasToSendInitData = true;
       break;
     }
@@ -239,7 +239,7 @@ void BaseCouplingScheme::lookUpIfParticipantHasToReceiveInitialData(DataMap &dat
 {
   {
     for (DataMap::value_type &pair : dataMap) {
-      if (pair.second->initialize) {
+      if (pair.second->requiresInitialization) {
         _hasToReceiveInitData = true;
         break;
       }

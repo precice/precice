@@ -66,13 +66,13 @@ public:
   void addDataToSend(
       mesh::PtrData data,
       mesh::PtrMesh mesh,
-      bool          initialize);
+      bool          requiresInitialization);
 
   /// Adds data to be received on data exchange.
   void addDataToReceive(
       mesh::PtrData data,
       mesh::PtrMesh mesh,
-      bool          initialize);
+      bool          requiresInitialization);
 
   /// Returns true, if initialize has been called.
   virtual bool isInitialized() const override final
