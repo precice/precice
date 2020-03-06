@@ -43,7 +43,7 @@ void ParallelCouplingScheme::initializeImplementation()
   initializeReceivingParticipants(getReceiveData());
 }
 
-void ParallelCouplingScheme::initializeDataImpl()
+void ParallelCouplingScheme::exchangeInitialData()
 {
   // F: send, receive, S: receive, send
   if (doesFirstStep()) {

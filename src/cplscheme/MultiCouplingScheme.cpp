@@ -58,7 +58,7 @@ void MultiCouplingScheme::initializeImplementation()
   }
 }
 
-void MultiCouplingScheme::initializeDataImpl()
+void MultiCouplingScheme::exchangeInitialData()
 {
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
 

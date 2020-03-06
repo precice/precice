@@ -70,7 +70,7 @@ void SerialCouplingScheme::initializeImplementation()
   }
 }
 
-void SerialCouplingScheme::initializeDataImpl()
+void SerialCouplingScheme::exchangeInitialData()
 {
   if (hasToReceiveInitData() && isCouplingOngoing()) {
     PRECICE_ASSERT(doesFirstStep());

@@ -90,7 +90,7 @@ private:
   /**
    * @brief TODO
    */
-  void initializeDataImpl() override;
+  void exchangeInitialData() override;
 
   /**
    * @brief TODO

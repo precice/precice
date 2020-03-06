@@ -513,7 +513,7 @@ private:
   /// Functions needed for initializeData()
 
   /// implements functionality for initializeData in base class.
-  virtual void initializeDataImpl() = 0;
+  virtual void exchangeInitialData() = 0;
 
   /// Functions needed for advance()
 

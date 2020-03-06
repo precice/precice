@@ -268,7 +268,7 @@ void BaseCouplingScheme::initializeData()
 
   _hasDataBeenExchanged = false;
 
-  initializeDataImpl();
+  exchangeInitialData();
 }
 
 void BaseCouplingScheme::advance()
