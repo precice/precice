@@ -296,7 +296,7 @@ protected:
       double time) const;
 
   /// @return Communication device to the other coupling participant.
-  m2n::PtrM2N getM2N()
+  m2n::PtrM2N getM2N() const
   {
     PRECICE_ASSERT(_m2n);
     return _m2n;
