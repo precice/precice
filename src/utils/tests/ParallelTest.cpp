@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(Master1SlaveTest)
 
   BOOST_TEST(context.hasSize(2));
   auto& com = precice::utils::MasterSlave::_communication;
-  BOOST_TEST(com != nullptr);
+  BOOST_TEST((com != nullptr));
 
   if (context.isMaster()) {
     int first = 1001;
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(Master2SlaveTest)
 
   BOOST_TEST(context.hasSize(3));
   auto& com = precice::utils::MasterSlave::_communication;
-  BOOST_TEST(com != nullptr);
+  BOOST_TEST((com != nullptr));
 
   if (context.isMaster()) {
     int sum = 1001;
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(OffsetMaster1SlaveTest)
 
   BOOST_TEST(context.hasSize(2));
   auto& com = precice::utils::MasterSlave::_communication;
-  BOOST_TEST(com != nullptr);
+  BOOST_TEST((com != nullptr));
 
   if (context.isMaster()) {
     int first = 1001;
@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(OffsetMaster2SlaveTest)
 
   BOOST_TEST(context.hasSize(3));
   auto& com = precice::utils::MasterSlave::_communication;
-  BOOST_TEST(com != nullptr);
+  BOOST_TEST((com != nullptr));
 
   if (context.isMaster()) {
     int sum = 1001;
