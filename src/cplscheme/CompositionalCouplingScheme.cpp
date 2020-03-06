@@ -174,13 +174,12 @@ double CompositionalCouplingScheme::getTimeWindowSize() const
 
 bool CompositionalCouplingScheme::getIsCoarseModelOptimizationActive() const
 {
-  // TODO @BU: what's the desired behaviour for a CompositionalCouplingScheme?
   return false;
 }
 
 void CompositionalCouplingScheme::activateCoarseModelOptimization()
 {
-  // TODO @BU: what's the desired behaviour for a CompositionalCouplingScheme?
+  PRECICE_ASSERT(false); // @todo: implement MM for CompositionalCouplingScheme
 }
 
 double CompositionalCouplingScheme::getThisTimeWindowRemainder() const
