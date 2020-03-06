@@ -218,7 +218,7 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
 
   initializeImplementation();
 
-  if (hasToSendInitData()) {
+  if (sendsInitializedData()) {
     requireAction(constants::actionWriteInitialData());
   }
 
@@ -233,14 +233,14 @@ void BaseCouplingScheme::initializeData()
   _initializeDataHasBeenCalled = true;
   PRECICE_TRACE("initializeData()");
 
-  if (not _hasToSendInitData && not _hasToReceiveInitData) {
+  if (not _sendsInitializedData && not _receivesInitializedData) {
     PRECICE_INFO("initializeData is skipped since no data has to be initialized.");
     return;
   }
 
   PRECICE_DEBUG("Initializing Data ...");
 
-  PRECICE_CHECK(not(_hasToSendInitData && isActionRequired(constants::actionWriteInitialData())),
+  PRECICE_CHECK(not(_sendsInitializedData && isActionRequired(constants::actionWriteInitialData())),
                 "InitialData has to be written to preCICE before calling initializeData().");
 
   _hasDataBeenExchanged = false;
@@ -253,7 +253,7 @@ void BaseCouplingScheme::advance()
   PRECICE_TRACE(getTimeWindows(), getTime());
   checkCompletenessRequiredActions();
   PRECICE_CHECK(_isInitialized, "Before calling advance() coupling has to be initialized via initialize(). This will cause an error in future releases.")  // TODO: preCICE v3.0.0 -> PRECICE_CHECK
-  PRECICE_CHECK((not _hasToReceiveInitData && not _hasToSendInitData) || (_initializeDataHasBeenCalled),
+  PRECICE_CHECK((not _receivesInitializedData && not _sendsInitializedData) || (_initializeDataHasBeenCalled),
                 "initializeData() needs to be called before advance if data has to be initialized.");
   _hasDataBeenExchanged = false;
   _isTimeWindowComplete = false;

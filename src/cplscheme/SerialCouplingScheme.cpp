@@ -58,16 +58,16 @@ void SerialCouplingScheme::initializeImplementation()
   checkInitialize();
 
   if(anyDataRequiresInitialization(getSendData())) {
-    setHasToSendInitDataTrue();
+    hasToSendInitializedData();
   }
 
   if(anyDataRequiresInitialization(getReceiveData())) {
-    setHasToReceiveInitDataTrue();
+    hasToReceiveInitializedData();
   }
 
   // If the second participant initializes data, the first receive for the
   // second participant is done in initializeData() instead of initialize().
-  if (not doesFirstStep() && not hasToSendInitData() && isCouplingOngoing()) {
+  if (not doesFirstStep() && not sendsInitializedData() && isCouplingOngoing()) {
     PRECICE_DEBUG("Receiving data");
     receiveAndSetTimeWindowSize();
     receiveData(getM2N());
@@ -76,13 +76,13 @@ void SerialCouplingScheme::initializeImplementation()
 
 void SerialCouplingScheme::exchangeInitialData()
 {
-  if (hasToReceiveInitData() && isCouplingOngoing()) {
+  if (receivesInitializedData() && isCouplingOngoing()) {
     PRECICE_ASSERT(doesFirstStep());
     PRECICE_DEBUG("Receiving data");
     receiveData(getM2N());
   }
 
-  if (hasToSendInitData() && isCouplingOngoing()) {
+  if (sendsInitializedData() && isCouplingOngoing()) {
     PRECICE_ASSERT(not doesFirstStep());
     for (DataMap::value_type &pair : getSendData()) {
       if (pair.second->oldValues.cols() == 0)

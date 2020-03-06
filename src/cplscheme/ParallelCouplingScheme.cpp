@@ -39,11 +39,11 @@ void ParallelCouplingScheme::initializeImplicit()
 void ParallelCouplingScheme::initializeImplementation()
 {
   if(anyDataRequiresInitialization(getSendData())) {
-    setHasToSendInitDataTrue();
+    hasToSendInitializedData();
   }
 
   if(anyDataRequiresInitialization(getReceiveData())) {
-    setHasToReceiveInitDataTrue();
+    hasToReceiveInitializedData();
   }
 }
 
@@ -51,16 +51,16 @@ void ParallelCouplingScheme::exchangeInitialData()
 {
   // F: send, receive, S: receive, send
   if (doesFirstStep()) {
-    if (hasToSendInitData()) {
+    if (sendsInitializedData()) {
       sendData(getM2N());
     }
-    if (hasToReceiveInitData()) {
+    if (receivesInitializedData()) {
       receiveData(getM2N());
     }
   }
 
   else { // second participant
-    if (hasToReceiveInitData()) {
+    if (receivesInitializedData()) {
       receiveData(getM2N());
       // second participant has to save values for extrapolation
       if (isImplicitCouplingScheme()) {
@@ -73,7 +73,7 @@ void ParallelCouplingScheme::exchangeInitialData()
         }
       }
     }
-    if (hasToSendInitData()) {
+    if (sendsInitializedData()) {
       if (isImplicitCouplingScheme()) {
         for (DataMap::value_type &pair : getSendData()) {
           if (pair.second->oldValues.cols() == 0)

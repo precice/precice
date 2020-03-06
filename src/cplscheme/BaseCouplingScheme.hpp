@@ -302,24 +302,30 @@ protected:
     return _m2n;
   }
 
-  bool hasToSendInitData() const
+  /// @return value of _sendsInitializedData.
+  bool sendsInitializedData() const
   {
-    return _hasToSendInitData;
+    return _sendsInitializedData;
   }
 
-  bool setHasToSendInitDataTrue()
+  /// @brief sets _sendsInitializedData true.
+  bool hasToSendInitializedData()
   {
-    _hasToSendInitData = true;
+    PRECICE_ASSERT(_sendsInitializedData == false, "Function hasToSendInitializedData may only be called once.");
+    _sendsInitializedData = true;
   }
 
-  bool hasToReceiveInitData() const
+  /// @return value of _receivesInitializedData
+  bool receivesInitializedData() const
   {
-    return _hasToReceiveInitData;
+    return _receivesInitializedData;
   }
 
-  bool setHasToReceiveInitDataTrue()
+  /// @brief sets _receivesInitializedData true.
+  bool hasToReceiveInitializedData()
   {
-    _hasToReceiveInitData = true;
+    PRECICE_ASSERT(_receivesInitializedData == false, "Function hasToReceiveInitializedData may only be called once.");
+    _receivesInitializedData = true;
   }
 
   /// Holds relevant variables to perform a convergence measurement.
@@ -461,11 +467,11 @@ private:
   /// Acceleration method to speedup iteration convergence.
   acceleration::PtrAcceleration _acceleration;
 
-  /// To carry initData information from initialize to initData
-  bool _hasToSendInitData = false;
+  /// True, if this participant has to send initialized data.
+  bool _sendsInitializedData = false;
 
-  /// To carry initData information from initialize to initData
-  bool _hasToReceiveInitData = false;
+  /// True, if this participant has to receive initialized data.
+  bool _receivesInitializedData = false;
 
   /// True, if data has been exchanged between solvers.
   bool _hasDataBeenExchanged = false;

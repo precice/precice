@@ -52,12 +52,12 @@ void MultiCouplingScheme::initializeImplementation()
 
   for (DataMap &dataMap : _sendDataVector) {
     if(anyDataRequiresInitialization(dataMap)) {
-      setHasToSendInitDataTrue();
+      hasToSendInitializedData();
     }
   }
   for (DataMap &dataMap : _receiveDataVector) {
     if(anyDataRequiresInitialization(dataMap)) {
-      setHasToReceiveInitDataTrue();
+      hasToReceiveInitializedData();
     }
   }
 }
@@ -66,7 +66,7 @@ void MultiCouplingScheme::exchangeInitialData()
 {
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
 
-  if (hasToReceiveInitData()) {
+  if (receivesInitializedData()) {
     receiveData();
 
     // second participant has to save values for extrapolation
@@ -80,7 +80,7 @@ void MultiCouplingScheme::exchangeInitialData()
       }
     }
   }
-  if (hasToSendInitData()) {
+  if (sendsInitializedData()) {
     if (getExtrapolationOrder() > 0) {
       for (DataMap &dataMap : _sendDataVector) {
         for (DataMap::value_type &pair : dataMap) {
