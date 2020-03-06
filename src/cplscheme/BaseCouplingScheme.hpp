@@ -302,14 +302,24 @@ protected:
     return _m2n;
   }
 
-  bool hasToSendInitData()
+  bool hasToSendInitData() const
   {
     return _hasToSendInitData;
   }
 
-  bool hasToReceiveInitData()
+  bool setHasToSendInitDataTrue()
+  {
+    _hasToSendInitData = true;
+  }
+
+  bool hasToReceiveInitData() const
   {
     return _hasToReceiveInitData;
+  }
+
+  bool setHasToReceiveInitDataTrue()
+  {
+    _hasToReceiveInitData = true;
   }
 
   /// Holds relevant variables to perform a convergence measurement.
@@ -368,14 +378,11 @@ protected:
   }
 
   /**
-   * @brief: Checks whether participant has to send data when initializeData() is called
+   * @brief Checks whether any CouplingData in dataMap requires initialization
+   * @param dataMap map containing CouplingData
+   * @return true, if any CouplingData in dataMap requires initialization
    */
-  void lookUpIfParticipantHasToSendInitialData(DataMap &dataMap);
-
-  /**
-   * @brief: Checks whether participant has to receive data when initializeData() is called
-   */
-  void lookUpIfParticipantHasToReceiveInitialData(DataMap &dataMap);
+  bool anyDataRequiresInitialization(DataMap &dataMap) const;
 
   std::vector<ConvergenceMeasure> getConvergenceMeasures()
   {

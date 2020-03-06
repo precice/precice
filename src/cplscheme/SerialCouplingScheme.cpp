@@ -44,16 +44,12 @@ void SerialCouplingScheme::initializeImplicit()
 
 void SerialCouplingScheme::checkInitialize()
 {
-  for (DataMap::value_type &pair : getSendData()) {
-    if (pair.second->requiresInitialization) {
-      PRECICE_CHECK(not doesFirstStep(), "Only second participant can initialize data and send it!");
-    }
+  if(anyDataRequiresInitialization(getSendData())){
+    PRECICE_CHECK(not doesFirstStep(), "Only second participant can initialize data and send it!");
   }
 
-  for (DataMap::value_type &pair : getReceiveData()) {
-    if (pair.second->requiresInitialization) {
-      PRECICE_CHECK(doesFirstStep(), "Only first participant can receive initial data!");
-    }
+  if(anyDataRequiresInitialization(getReceiveData())){
+    PRECICE_CHECK(doesFirstStep(), "Only first participant can receive initial data!");
   }
 }
 
@@ -61,9 +57,13 @@ void SerialCouplingScheme::initializeImplementation()
 {
   checkInitialize();
 
-  lookUpIfParticipantHasToSendInitialData(getSendData());
+  if(anyDataRequiresInitialization(getSendData())) {
+    setHasToSendInitDataTrue();
+  }
 
-  lookUpIfParticipantHasToReceiveInitialData(getReceiveData());
+  if(anyDataRequiresInitialization(getReceiveData())) {
+    setHasToReceiveInitDataTrue();
+  }
 
   // If the second participant initializes data, the first receive for the
   // second participant is done in initializeData() instead of initialize().

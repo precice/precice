@@ -225,29 +225,6 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
   _isInitialized = true;
 }
 
-void BaseCouplingScheme::lookUpIfParticipantHasToSendInitialData(DataMap &dataMap)
-{
-  for (DataMap::value_type &pair : dataMap) {
-    if (pair.second->requiresInitialization) {
-      _hasToSendInitData = true;
-      break;
-    }
-  }
-}
-
-void BaseCouplingScheme::lookUpIfParticipantHasToReceiveInitialData(DataMap &dataMap)
-{
-  {
-    for (DataMap::value_type &pair : dataMap) {
-      if (pair.second->requiresInitialization) {
-        _hasToReceiveInitData = true;
-        break;
-      }
-    }
-  }
-}
-
-
 void BaseCouplingScheme::initializeData()
 {
   // InitializeData uses the template method pattern (https://en.wikipedia.org/wiki/Template_method_pattern).
@@ -874,6 +851,17 @@ bool BaseCouplingScheme::maxIterationsReached()
   } else {
     return _iterationsCoarseOptimization == _maxIterations;
   }
+}
+
+bool BaseCouplingScheme::anyDataRequiresInitialization(BaseCouplingScheme::DataMap &dataMap) const
+{
+  /// @todo implement this function using https://en.cppreference.com/w/cpp/algorithm/all_any_none_of
+  for (DataMap::value_type &pair : dataMap) {
+    if (pair.second->requiresInitialization) {
+      return true;
+    }
+  }
+  return false;
 }
 } // namespace cplscheme
 } // namespace precice
