@@ -69,7 +69,9 @@ void Parallel::CommState::synchronize() const
 #ifndef PRECICE_NO_MPI
   PRECICE_TRACE();
   PRECICE_ASSERT(_isInitialized);
-  MPI_Barrier(comm);
+  if (!isNull()) {
+    MPI_Barrier(comm);
+  }
 #endif // not PRECICE_NO_MPI
 }
 
