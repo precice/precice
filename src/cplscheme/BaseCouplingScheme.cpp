@@ -205,6 +205,7 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
 {
   // Initialize uses the template method pattern (https://en.wikipedia.org/wiki/Template_method_pattern).
   PRECICE_TRACE(startTime, startTimeWindow);
+  PRECICE_ASSERT(not isInitialized());
   PRECICE_ASSERT(math::greaterEquals(startTime, 0.0), startTime);
   PRECICE_ASSERT(startTimeWindow >= 0, startTimeWindow);
   _time          = startTime;
