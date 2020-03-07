@@ -31,7 +31,7 @@ public:
       const std::string &           localParticipant,
       std::vector<m2n::PtrM2N>      m2ns,
       constants::TimesteppingMethod dtMethod,
-      int                           maxIterations = 1);
+      int                           maxIterations = -1);
 
   /// Adds data to be sent on data exchange and possibly be modified during coupling iterations.
   void addDataToSend(

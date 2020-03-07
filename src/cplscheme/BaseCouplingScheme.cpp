@@ -81,7 +81,9 @@ BaseCouplingScheme::BaseCouplingScheme(
                 "Maximal iteration limit has to be larger than zero.");
 
   if (isExplicitCouplingScheme()) {
-    PRECICE_ASSERT(maxIterations == 1);
+    PRECICE_ASSERT(maxIterations == -1);
+  } else {
+    PRECICE_ASSERT(maxIterations >= 1);
   }
 }
 

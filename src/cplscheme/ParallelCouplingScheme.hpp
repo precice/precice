@@ -38,7 +38,7 @@ public:
       m2n::PtrM2N                   m2n,
       constants::TimesteppingMethod dtMethod,
       CouplingMode                  cplMode,
-      int                           maxIterations = 1);
+      int                           maxIterations = -1);
 
 protected:
   /// merges send and receive data into one map (for parallel acceleration)
