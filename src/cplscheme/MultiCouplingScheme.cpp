@@ -107,7 +107,7 @@ std::pair<bool, bool> MultiCouplingScheme::implicitAdvance()
 
   receiveData();
 
-  auto designSpecifications = getAcceleration()->getDesignSpecification(_allData);
+  auto designSpecifications = getAcceleration()->getDesignSpecification(getAcceleratedData());
   bool convergence          = measureConvergence(designSpecifications);
 
   // Stop, when maximal iteration count (given in config) is reached
@@ -116,12 +116,12 @@ std::pair<bool, bool> MultiCouplingScheme::implicitAdvance()
   }
   if (convergence) {
     if (getAcceleration().get() != nullptr) {
-      getAcceleration()->iterationsConverged(_allData);
+      getAcceleration()->iterationsConverged(getAcceleratedData());
     }
     newConvergenceMeasurements();
     timeWindowCompleted();
   } else if (getAcceleration().get() != nullptr) {
-    getAcceleration()->performAcceleration(_allData);
+    getAcceleration()->performAcceleration(getAcceleratedData());
   }
 
   for (m2n::PtrM2N m2n : _communications) {
@@ -131,9 +131,9 @@ std::pair<bool, bool> MultiCouplingScheme::implicitAdvance()
   }
 
   if (convergence && (getExtrapolationOrder() > 0)) {
-    extrapolateData(_allData); // Also stores data
+    extrapolateData(getAcceleratedData()); // Also stores data
   } else {                     // Store data for convergence measurement, acceleration, or extrapolation
-    for (DataMap::value_type &pair : _allData) {
+    for (DataMap::value_type &pair : getAcceleratedData()) {
       if (pair.second->oldValues.size() > 0) {
         pair.second->oldValues.col(0) = *pair.second->values;
       }

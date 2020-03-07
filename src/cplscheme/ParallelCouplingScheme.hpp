@@ -67,6 +67,11 @@ private:
 */
   std::pair<bool, bool> implicitAdvance() override;
 
+  DataMap &getAcceleratedData() override
+  {
+    return getAllData();
+  }
+
   /**
 * @brief TODO
 */

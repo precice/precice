@@ -29,9 +29,9 @@ void ParallelCouplingScheme::initializeImplicit()
   if (not doesFirstStep()) {         // second participant
     setupConvergenceMeasures();      // needs _couplingData configured
     mergeData();                     // merge send and receive data for all pp calls
-    setupDataMatrices(getAllData()); // Reserve memory and initialize data with zero
+    setupDataMatrices(getAcceleratedData()); // Reserve memory and initialize data with zero
     if (getAcceleration().get() != nullptr) {
-      getAcceleration()->initialize(getAllData()); // Reserve memory, initialize
+      getAcceleration()->initialize(getAcceleratedData()); // Reserve memory, initialize
     }
   }
 }
@@ -134,7 +134,7 @@ std::pair<bool, bool> ParallelCouplingScheme::implicitAdvance()
     // get the current design specifications from the acceleration (for convergence measure)
     std::map<int, Eigen::VectorXd> designSpecifications;
     if (getAcceleration().get() != nullptr) {
-      designSpecifications = getAcceleration()->getDesignSpecification(getAllData());
+      designSpecifications = getAcceleration()->getDesignSpecification(getAcceleratedData());
     }
 
     // measure convergence for coarse model optimization
@@ -174,17 +174,17 @@ std::pair<bool, bool> ParallelCouplingScheme::implicitAdvance()
       if (convergence) {
         if (getAcceleration().get() != nullptr) {
           setDeletedColumnsPPFiltering(getAcceleration()->getDeletedColumns());
-          getAcceleration()->iterationsConverged(getAllData());
+          getAcceleration()->iterationsConverged(getAcceleratedData());
         }
         newConvergenceMeasurements();
         timeWindowCompleted();
       } else if (getAcceleration().get() != nullptr) {
-        getAcceleration()->performAcceleration(getAllData());
+        getAcceleration()->performAcceleration(getAcceleratedData());
       }
 
       // extrapolate new input data for the solver evaluation in time.
       if (convergence && (getExtrapolationOrder() > 0)) {
-        extrapolateData(getAllData()); // Also stores data
+        extrapolateData(getAcceleratedData()); // Also stores data
       } else {                         // Store data for conv. measurement, acceleration, or extrapolation
         for (DataMap::value_type &pair : getSendData()) {
           if (pair.second->oldValues.size() > 0) {
@@ -205,10 +205,10 @@ std::pair<bool, bool> ParallelCouplingScheme::implicitAdvance()
       // model nor the acceleration did any data registration
       // ATTENTION: assumes that coarse data is defined after fine data in same ordering.
       if (getIterationsCoarseOptimization() == 1 && getAcceleration().get() != nullptr) {
-        auto  fineIDs = getAcceleration()->getDataIDs();
-        auto &allData = getAllData();
+        auto  fineIDs         = getAcceleration()->getDataIDs();
+        auto &acceleratedData = getAcceleratedData();
         for (auto &fineID : fineIDs) {
-          *allData.at(fineID)->values = allData.at(fineID + fineIDs.size())->oldValues.col(0);
+          *acceleratedData.at(fineID)->values = acceleratedData.at(fineID + fineIDs.size())->oldValues.col(0);
         }
       }
     }

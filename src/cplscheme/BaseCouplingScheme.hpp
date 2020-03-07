@@ -540,6 +540,8 @@ private:
   /// implements functionality for advance in base class.
   virtual std::pair<bool, bool> implicitAdvance() = 0;
 
+  virtual DataMap &getAcceleratedData() = 0;
+
   /// If any required actions are open, an error message is issued.
   void checkCompletenessRequiredActions();
 

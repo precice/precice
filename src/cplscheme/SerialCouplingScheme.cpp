@@ -29,10 +29,10 @@ void SerialCouplingScheme::initializeImplicit()
   if (not doesFirstStep()) {
     if (not getConvergenceMeasures().empty()) {
       setupConvergenceMeasures();       // needs _couplingData configured
-      setupDataMatrices(getSendData()); // Reserve memory and initialize data with zero
+      setupDataMatrices(getAcceleratedData()); // Reserve memory and initialize data with zero
     }
     if (getAcceleration().get() != nullptr) {
-      getAcceleration()->initialize(getSendData()); // Reserve memory, initialize
+      getAcceleration()->initialize(getAcceleratedData()); // Reserve memory, initialize
     }
   } else if (getAcceleration().get() != nullptr && not getAcceleration()->getDataIDs().empty()) {
     int dataID = *(getAcceleration()->getDataIDs().begin());
@@ -139,7 +139,7 @@ std::pair<bool, bool> SerialCouplingScheme::implicitAdvance()
     // get the current design specifications from the acceleration (for convergence measure)
     std::map<int, Eigen::VectorXd> designSpecifications;
     if (getAcceleration().get() != nullptr) {
-      designSpecifications = getAcceleration()->getDesignSpecification(getSendData());
+      designSpecifications = getAcceleration()->getDesignSpecification(getAcceleratedData());
     }
     // measure convergence of coupling iteration
     // measure convergence for coarse model optimization
@@ -180,19 +180,18 @@ std::pair<bool, bool> SerialCouplingScheme::implicitAdvance()
       if (convergence) {
         if (getAcceleration().get() != nullptr) {
           setDeletedColumnsPPFiltering(getAcceleration()->getDeletedColumns());
-          getAcceleration()->iterationsConverged(getSendData());
+          getAcceleration()->iterationsConverged(getAcceleratedData());
         }
         newConvergenceMeasurements();
         timeWindowCompleted();
-
-        // no convergence achieved for the coupling iteration within the current time step
+        // no convergence achieved for the coupling iteration within the current time window
       } else if (getAcceleration().get() != nullptr) {
-        getAcceleration()->performAcceleration(getSendData());
+        getAcceleration()->performAcceleration(getAcceleratedData());
       }
 
       // extrapolate new input data for the solver evaluation in time.
       if (convergence && (getExtrapolationOrder() > 0)) {
-        extrapolateData(getSendData()); // Also stores data
+        extrapolateData(getAcceleratedData()); // Also stores data
       } else {                          // Store data for conv. measurement, acceleration, or extrapolation
         for (DataMap::value_type &pair : getSendData()) {
           if (pair.second->oldValues.size() > 0) {
@@ -226,9 +225,10 @@ std::pair<bool, bool> SerialCouplingScheme::implicitAdvance()
       // model nor the acceleration did any data registration
       // ATTENTION: assumes that coarse data is defined after fine data in same ordering.
       if (getIterationsCoarseOptimization() == 1 && getAcceleration().get() != nullptr) {
-        auto fineIDs = getAcceleration()->getDataIDs();
+        auto   fineIDs        = getAcceleration()->getDataIDs();
+        auto &acceleratedData = getAcceleratedData();
         for (auto &fineID : fineIDs) {
-          (*getSendData(fineID)->values) = getSendData(fineID + fineIDs.size() + 1)->oldValues.col(0);
+          *acceleratedData.at(fineID)->values = acceleratedData.at(fineID + fineIDs.size() + 1)->oldValues.col(0);
         }
       }
     }
