@@ -116,12 +116,10 @@ void SerialCouplingScheme::explicitAdvance()
 
 std::pair<bool, bool> SerialCouplingScheme::implicitAdvance()
 {
-  bool convergence                   = true;
-  bool convergenceCoarseOptimization = true;
-  bool isCoarseModelOptimizationActive = false;
-  bool doOnlySolverEvaluation        = false;
-
   PRECICE_DEBUG("Computed full length of iteration");
+  bool convergence, isCoarseModelOptimizationActive;
+  bool convergenceCoarseOptimization   = true;
+  bool doOnlySolverEvaluation          = false;
   if (doesFirstStep()) {
     sendTimeWindowSize();
     sendData(getM2N());

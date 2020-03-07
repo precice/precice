@@ -112,10 +112,9 @@ void ParallelCouplingScheme::explicitAdvance()
 std::pair<bool, bool> ParallelCouplingScheme::implicitAdvance()
 {
   PRECICE_DEBUG("Computed full length of iteration");
-  bool convergence                   = false;
-  bool convergenceCoarseOptimization = true;
-  bool isCoarseModelOptimizationActive = false;
-  bool doOnlySolverEvaluation        = false;
+  bool convergence, isCoarseModelOptimizationActive;
+  bool convergenceCoarseOptimization   = true;
+  bool doOnlySolverEvaluation          = false;
   if (doesFirstStep()) { //First participant
     sendData(getM2N());
     getM2N()->receive(convergence);
