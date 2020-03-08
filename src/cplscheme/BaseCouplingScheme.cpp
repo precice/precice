@@ -371,8 +371,8 @@ void BaseCouplingScheme::addComputedTime(
 
   // Check validness
   bool valid = math::greaterEquals(getThisTimeWindowRemainder(), 0.0, _eps);
-  PRECICE_CHECK(valid, "The computed time step length of "
-                           << timeToAdd << " exceeds the maximum time step limit of "
+  PRECICE_CHECK(valid, "The computed timestep length of "
+                           << timeToAdd << " exceeds the maximum timestep limit of "
                            << _timeWindowSize - _computedTimeWindowPart + timeToAdd
                            << " for this time window.");
 }

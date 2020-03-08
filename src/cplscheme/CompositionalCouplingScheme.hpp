@@ -161,15 +161,15 @@ public:
   virtual void activateCoarseModelOptimization() final override;
 
   /**
-   * @brief Returns the remaining timestep length of the current time step.
+   * @brief Returns the remaining timestep length inside the current time window.
    *
-   * This is not necessarily the timestep length limit the solver has to obeye
+   * This is not necessarily the timestep length limit the solver has to obey
    * which is returned by getNextTimestepMaxLength().
    *
-   * If no timestep length is precribed by the coupling scheme, always 0.0 is
+   * If no timestep length is prescribed by the coupling scheme, always 0.0 is
    * returned.
    *
-   * The maximum remainer of all composed coupling schemes is returned.
+   * The maximum remainder of all composed coupling schemes is returned.
    */
   virtual double getThisTimeWindowRemainder() const final override;
 

@@ -88,7 +88,7 @@ void MultiCouplingScheme::exchangeInitialData()
 void MultiCouplingScheme::explicitAdvance()
 {
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
-// @todo implement
+  // @todo implement
 }
 
 std::pair<bool, bool> MultiCouplingScheme::implicitAdvance()
