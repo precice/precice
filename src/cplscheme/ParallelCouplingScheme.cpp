@@ -102,110 +102,13 @@ std::pair<bool, bool> ParallelCouplingScheme::implicitAdvance()
   bool convergence, isCoarseModelOptimizationActive;
   bool convergenceCoarseOptimization   = true;
   bool doOnlySolverEvaluation          = false;
-  if (doesFirstStep()) { //First participant
-    sendData(getM2N());
-    getM2N()->receive(convergence);
-    getM2N()->receive(isCoarseModelOptimizationActive);
-    if(isCoarseModelOptimizationActive){
-      activateCoarseModelOptimization();
-    } else {
-      deactivateCoarseModelOptimization();
-    }
-    if (convergence) {
-      timeWindowCompleted();
-    }
+  if (doesFirstStep()) { // First participant
+    implicitAdvanceFirstParticipant(convergence, isCoarseModelOptimizationActive);
+  } else { // Second participant
     receiveData(getM2N());
-  } else { // second participant
-    receiveData(getM2N());
-
-    // get the current design specifications from the acceleration (for convergence measure)
-    std::map<int, Eigen::VectorXd> designSpecifications;
-    if (getAcceleration().get() != nullptr) {
-      designSpecifications = getAcceleration()->getDesignSpecification(getAcceleratedData());
-    }
-
-    // measure convergence for coarse model optimization
-    if (getIsCoarseModelOptimizationActive()) {
-      PRECICE_DEBUG("measure convergence of coarse model optimization.");
-      // in case of multilevel acceleration only: measure the convergence of the coarse model optimization
-      convergenceCoarseOptimization = measureConvergenceCoarseModelOptimization(designSpecifications);
-      // Stop, when maximal iteration count (given in config) is reached
-      if (maxIterationsReached())
-        convergenceCoarseOptimization = true;
-
-      convergence = false;
-      // in case of multilevel PP only: if coarse model optimization converged
-      // steering the requests for evaluation of coarse and fine model, respectively
-      if (convergenceCoarseOptimization) {
-        deactivateCoarseModelOptimization();
-        doOnlySolverEvaluation           = true;
-      } else {
-        activateCoarseModelOptimization();
-      }
-    }
-    // measure convergence of coupling iteration
-    else {
-      PRECICE_DEBUG("measure convergence.");
-      doOnlySolverEvaluation = false;
-
-      // measure convergence of the coupling iteration,
-      convergence = measureConvergence(designSpecifications);
-      // Stop, when maximal iteration count (given in config) is reached
-      if (maxIterationsReached())
-        convergence = true;
-    }
-
-    // for multi-level case, i.e., manifold mapping: after convergence of coarse problem
-    // we only want to evaluate the fine model for the new input, no acceleration etc..
-    if (not doOnlySolverEvaluation) {
-      if (convergence) {
-        if (getAcceleration().get() != nullptr) {
-          setDeletedColumnsPPFiltering(getAcceleration()->getDeletedColumns());
-          getAcceleration()->iterationsConverged(getAcceleratedData());
-        }
-        newConvergenceMeasurements();
-        timeWindowCompleted();
-      } else if (getAcceleration().get() != nullptr) {
-        getAcceleration()->performAcceleration(getAcceleratedData());
-      }
-
-      // extrapolate new input data for the solver evaluation in time.
-      if (convergence && (getExtrapolationOrder() > 0)) {
-        extrapolateData(getAcceleratedData()); // Also stores data
-      } else {                         // Store data for conv. measurement, acceleration, or extrapolation
-        for (DataMap::value_type &pair : getSendData()) {
-          if (pair.second->oldValues.size() > 0) {
-            pair.second->oldValues.col(0) = *pair.second->values;
-          }
-        }
-        for (DataMap::value_type &pair : getReceiveData()) {
-          if (pair.second->oldValues.size() > 0) {
-            pair.second->oldValues.col(0) = *pair.second->values;
-          }
-        }
-      }
-    } else {
-
-      // if the coarse model problem converged within the first iteration, i.e., no acceleration at all
-      // we need to register the coarse initialized data again on the fine input data,
-      // otherwise the fine input data would be zero in this case, neither anything has been computed so far for the fine
-      // model nor the acceleration did any data registration
-      // ATTENTION: assumes that coarse data is defined after fine data in same ordering.
-      if (getIterationsCoarseOptimization() == 1 && getAcceleration().get() != nullptr) {
-        auto  fineIDs         = getAcceleration()->getDataIDs();
-        auto &acceleratedData = getAcceleratedData();
-        for (auto &fineID : fineIDs) {
-          *acceleratedData.at(fineID)->values = acceleratedData.at(fineID + fineIDs.size())->oldValues.col(0);
-        }
-      }
-    }
-
-    getM2N()->send(convergence);
-    getM2N()->send(getIsCoarseModelOptimizationActive());
-
-    sendData(getM2N());
+    ValuesMap designSpecifications;  // TODO make this better?
+    implicitAdvanceSecondParticipant(designSpecifications, convergence, convergenceCoarseOptimization, doOnlySolverEvaluation);
   }
-
   return std::pair<bool, bool>(convergence, convergenceCoarseOptimization);
 }
 

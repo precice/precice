@@ -211,6 +211,7 @@ public:
 protected:
   /// TODO
   typedef std::map<int, PtrCouplingData> DataMap;
+  typedef std::map<int, Eigen::VectorXd> ValuesMap;
 
   /// Returns true, if coupling scheme is explicit
   bool isExplicitCouplingScheme()
@@ -342,10 +343,10 @@ protected:
   void newConvergenceMeasurements();
 
   bool measureConvergence(
-      std::map<int, Eigen::VectorXd> &designSpecification);
+      ValuesMap &designSpecification);
 
   bool measureConvergenceCoarseModelOptimization(
-      std::map<int, Eigen::VectorXd> &designSpecification);
+      ValuesMap &designSpecification);
 
   /**
    * @brief Sets up _dataStorage to store data values of last timestep (@BU or time window?).
@@ -369,6 +370,12 @@ protected:
 
   /// TODO
   void doExtrapolationOn(DataMap &dataMap);
+
+  /// TODO
+  void implicitAdvanceFirstParticipant(bool& convergence, bool& isCoarseModelOptimizationActive);
+
+  /// TODO
+  void implicitAdvanceSecondParticipant(ValuesMap &designSpecifications, bool& convergence, bool& convergenceCoarseOptimization, bool& doOnlySolverEvaluation, int accelerationShift = 0);
 
   /// TODO
   void extrapolateData(DataMap &data);
