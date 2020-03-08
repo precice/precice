@@ -58,30 +58,17 @@ void ParallelCouplingScheme::exchangeInitialData()
       receiveData(getM2N());
     }
   }
-
   else { // second participant
     if (receivesInitializedData()) {
       receiveData(getM2N());
       // second participant has to save values for extrapolation
       if (isImplicitCouplingScheme() && getExtrapolationOrder() > 0) {
-        for (DataMap::value_type &pair : getReceiveData()) {
-          if (pair.second->oldValues.cols() == 0)
-            break;
-          pair.second->oldValues.col(0) = *pair.second->values;
-          // For extrapolation, treat the initial value as old time windows value
-          utils::shiftSetFirst(pair.second->oldValues, *pair.second->values);
-        }
+        doExtrapolationOn(getReceiveData());
       }
     }
     if (sendsInitializedData()) {
       if (isImplicitCouplingScheme() && getExtrapolationOrder() > 0) {
-        for (DataMap::value_type &pair : getSendData()) {
-          if (pair.second->oldValues.cols() == 0)
-            break;
-          pair.second->oldValues.col(0) = *pair.second->values;
-          // For extrapolation, treat the initial value as old time windows value
-          utils::shiftSetFirst(pair.second->oldValues, *pair.second->values);
-        }
+        doExtrapolationOn(getSendData());
       }
       sendData(getM2N());
     }

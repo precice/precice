@@ -87,13 +87,7 @@ void SerialCouplingScheme::exchangeInitialData()
     PRECICE_ASSERT( not receivesInitializedData(), "Only first participant can receive data during initialization.");
     if (sendsInitializedData()) {
       if (isImplicitCouplingScheme() && getExtrapolationOrder() > 0) {
-        for (DataMap::value_type &pair : getSendData()) {
-          if (pair.second->oldValues.cols() == 0)
-            break;
-          pair.second->oldValues.col(0) = *pair.second->values;
-          // For extrapolation, treat the initial value as old time window value
-          utils::shiftSetFirst(pair.second->oldValues, *pair.second->values);
-        }
+        doExtrapolationOn(getSendData());
       }
       // The second participant sends the initialized data to the first participant
       // here, which receives the data on call of initialize().

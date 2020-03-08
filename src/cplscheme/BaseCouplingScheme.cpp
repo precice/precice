@@ -302,6 +302,18 @@ void BaseCouplingScheme::setExtrapolationOrder(
   _extrapolationOrder = order;
 }
 
+void BaseCouplingScheme::doExtrapolationOn(DataMap &dataMap)
+{
+  for (DataMap::value_type &pair : dataMap) {
+    if (pair.second->oldValues.cols() == 0) // TODO @BU: this branch was missing in MultiCouplingScheme.
+      break;
+    pair.second->oldValues.col(0) = *pair.second->values;
+    // For extrapolation, treat the initial value as old time windows value
+    utils::shiftSetFirst(pair.second->oldValues, *pair.second->values);
+  }
+}
+
+
 // @todo extrapolation of data should only be done for the fine cplData -> then copied to the coarse cplData
 void BaseCouplingScheme::extrapolateData(DataMap &data)
 {

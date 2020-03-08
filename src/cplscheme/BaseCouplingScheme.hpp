@@ -368,6 +368,9 @@ protected:
   }
 
   /// TODO
+  void doExtrapolationOn(DataMap &dataMap);
+
+  /// TODO
   void extrapolateData(DataMap &data);
 
   bool maxIterationsReached();
