@@ -76,28 +76,32 @@ void SerialCouplingScheme::initializeImplementation()
 
 void SerialCouplingScheme::exchangeInitialData()
 {
-  if (receivesInitializedData() && isCouplingOngoing()) {
-    PRECICE_ASSERT(doesFirstStep());
-    PRECICE_DEBUG("Receiving data");
-    receiveData(getM2N());
-  }
-
-  if (sendsInitializedData() && isCouplingOngoing()) {
-    PRECICE_ASSERT(not doesFirstStep());
-    for (DataMap::value_type &pair : getSendData()) {
-      if (pair.second->oldValues.cols() == 0)
-        break;
-      pair.second->oldValues.col(0) = *pair.second->values;
-      // For extrapolation, treat the initial value as old time window value
-      utils::shiftSetFirst(pair.second->oldValues, *pair.second->values);
+  PRECICE_ASSERT( isCouplingOngoing());
+  if (doesFirstStep()) {
+    PRECICE_ASSERT( not sendsInitializedData(), "First participant cannot send data during initialization.");
+    if (receivesInitializedData()) {
+      receiveData(getM2N());
     }
-
-    // The second participant sends the initialized data to the first participant
-    // here, which receives the data on call of initialize().
-    sendData(getM2N());
-    receiveAndSetTimeWindowSize();
-    // This receive replaces the receive in initialize().
-    receiveData(getM2N());
+  }
+  else { // second participant
+    PRECICE_ASSERT( not receivesInitializedData(), "Only first participant can receive data during initialization.");
+    if (sendsInitializedData()) {
+      if (isImplicitCouplingScheme() && getExtrapolationOrder() > 0) {
+        for (DataMap::value_type &pair : getSendData()) {
+          if (pair.second->oldValues.cols() == 0)
+            break;
+          pair.second->oldValues.col(0) = *pair.second->values;
+          // For extrapolation, treat the initial value as old time window value
+          utils::shiftSetFirst(pair.second->oldValues, *pair.second->values);
+        }
+      }
+      // The second participant sends the initialized data to the first participant
+      // here, which receives the data on call of initialize().
+      sendData(getM2N());
+      receiveAndSetTimeWindowSize();
+      // This receive replaces the receive in initialize().
+      receiveData(getM2N());
+    }
   }
 }
 

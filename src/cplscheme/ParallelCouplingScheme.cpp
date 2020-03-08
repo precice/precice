@@ -63,7 +63,7 @@ void ParallelCouplingScheme::exchangeInitialData()
     if (receivesInitializedData()) {
       receiveData(getM2N());
       // second participant has to save values for extrapolation
-      if (isImplicitCouplingScheme()) {
+      if (isImplicitCouplingScheme() && getExtrapolationOrder() > 0) {
         for (DataMap::value_type &pair : getReceiveData()) {
           if (pair.second->oldValues.cols() == 0)
             break;
@@ -74,7 +74,7 @@ void ParallelCouplingScheme::exchangeInitialData()
       }
     }
     if (sendsInitializedData()) {
-      if (isImplicitCouplingScheme()) {
+      if (isImplicitCouplingScheme() && getExtrapolationOrder() > 0) {
         for (DataMap::value_type &pair : getSendData()) {
           if (pair.second->oldValues.cols() == 0)
             break;
