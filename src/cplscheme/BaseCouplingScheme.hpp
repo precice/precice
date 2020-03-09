@@ -75,13 +75,13 @@ public:
       bool          requiresInitialization);
 
   /// Returns true, if initialize has been called.
-  virtual bool isInitialized() const override final
+  bool isInitialized() const override final
   {
     return _isInitialized;
   }
 
   /// Adds newly computed time. Has to be called before every advance.
-  virtual void addComputedTime(double timeToAdd) override final;
+  void addComputedTime(double timeToAdd) override final;
 
   /**
    * @brief Returns true, if data will be exchanged when calling advance().
@@ -92,19 +92,19 @@ public:
    * @param lastSolverTimestepLength [IN] The length of the last timestep
    *        computed by the solver calling willDataBeExchanged().
    */
-  virtual bool willDataBeExchanged(double lastSolverTimestepLength) const override final;
+  bool willDataBeExchanged(double lastSolverTimestepLength) const override final;
 
   /// Returns true, if data has been exchanged in last call of advance().
-  virtual bool hasDataBeenExchanged() const override final;
+  bool hasDataBeenReceived() const override final;
 
   /// Returns the currently computed time of the coupling scheme.
-  virtual double getTime() const override final;
+  double getTime() const override final;
 
   /// Returns the number of currently computed time windows of the coupling scheme.
-  virtual int getTimeWindows() const override final;
+  int getTimeWindows() const override final;
 
   /// Returns true, if time window size is prescribed by the cpl scheme.
-  virtual bool hasTimeWindowSize() const override final;
+  bool hasTimeWindowSize() const override final;
 
   /**
    * @brief Returns the time window size, if one is given by the coupling scheme.
@@ -112,10 +112,10 @@ public:
    * An assertion is thrown, if no valid time window size is given. Check with
    * hasTimeWindowSize().
    */
-  virtual double getTimeWindowSize() const override final;
+  double getTimeWindowSize() const override final;
 
   /// returns list of all coupling partners
-  virtual std::vector<std::string> getCouplingPartners() const override final;
+  std::vector<std::string> getCouplingPartners() const override final;
 
   /**
    * @brief Returns the remaining timestep length within the current time window.
@@ -123,7 +123,7 @@ public:
    * If no time window size is prescribed by the coupling scheme, always 0.0 is
    * returned.
    */
-  virtual double getThisTimeWindowRemainder() const override final;
+  double getThisTimeWindowRemainder() const override final;
 
   /**
    * @brief Returns the maximal length of the next timestep to be computed.
@@ -131,25 +131,25 @@ public:
    * If no time window size is prescribed by the coupling scheme, always the
    * maximal double accuracy floating point number value is returned.
    */
-  virtual double getNextTimestepMaxLength() const override final; // TODO mainly used in tests. Is this function actually needed or can we drop it and only use getThisTimeWindowRemainder()?
+  double getNextTimestepMaxLength() const override final; // TODO mainly used in tests. Is this function actually needed or can we drop it and only use getThisTimeWindowRemainder()?
 
   /// Returns true, when the coupled simulation is still ongoing.
-  virtual bool isCouplingOngoing() const override final;
+  bool isCouplingOngoing() const override final;
 
   /// Returns true, when the accessor can advance to the next time window.
-  virtual bool isTimeWindowComplete() const override final;
+  bool isTimeWindowComplete() const override final;
 
   /// Returns true, if the given action has to be performed by the accessor.
-  virtual bool isActionRequired(const std::string &actionName) const override final;
+  bool isActionRequired(const std::string &actionName) const override final;
 
   /// Tells the coupling scheme that the accessor has performed the given action.
-  virtual void markActionFulfilled(const std::string &actionName) override final;
+  void markActionFulfilled(const std::string &actionName) override final;
 
   /// Sets an action required to be performed by the accessor.
-  virtual void requireAction(const std::string &actionName) override final;
+  void requireAction(const std::string &actionName) override final;
 
   /// Finalizes the coupling scheme.
-  virtual void finalize() override final;
+  void finalize() override final;
 
   /**
    * @brief Initializes the coupling scheme.
@@ -170,16 +170,16 @@ public:
   /**
    * @brief TODO
    */
-  void advance() override final;
+  void advance() override; // @todo should be declared final. Currently, override by MultiCouplingScheme
 
   /// Returns whether the solver has to evaluate the coarse or the fine model representation
-  virtual bool getIsCoarseModelOptimizationActive() const override final
+  bool getIsCoarseModelOptimizationActive() const override final
   {
     return _isCoarseModelOptimizationActive;
   }
 
   /// Has to be called to notify coupling scheme that coarse Model Optimization is Active
-  virtual void activateCoarseModelOptimization() override final
+  void activateCoarseModelOptimization() override final
   {
     _isCoarseModelOptimizationActive = true;
   }
@@ -283,7 +283,7 @@ protected:
    *
    * Includes current iteration, max iterations, time, time window and action.
    */
-  virtual std::string printCouplingState() const;
+  std::string printCouplingState() const override;
 
   /**
    * @brief As the version without parameters, but with changed time window and time.
