@@ -310,7 +310,7 @@ protected:
   }
 
   /// @brief sets _sendsInitializedData true.
-  bool hasToSendInitializedData()
+  void hasToSendInitializedData()
   {
     PRECICE_ASSERT(_sendsInitializedData == false, "Function hasToSendInitializedData may only be called once.");
     _sendsInitializedData = true;
@@ -323,7 +323,7 @@ protected:
   }
 
   /// @brief sets _receivesInitializedData true.
-  bool hasToReceiveInitializedData()
+  void hasToReceiveInitializedData()
   {
     PRECICE_ASSERT(_receivesInitializedData == false, "Function hasToReceiveInitializedData may only be called once.");
     _receivesInitializedData = true;
