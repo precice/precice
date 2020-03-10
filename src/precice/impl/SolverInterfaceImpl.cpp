@@ -193,7 +193,7 @@ void SolverInterfaceImpl::configure(
 double SolverInterfaceImpl::initialize()
 {
   PRECICE_TRACE();
-  PRECICE_CHECK(_couplingScheme->isInitialized(),
+  PRECICE_CHECK(not _couplingScheme->isInitialized(),
                 "initialize() may only be called once.");
   auto &solverInitEvent = EventRegistry::instance().getStoredEvent("solver.initialize");
   solverInitEvent.pause(precice::syncMode);
