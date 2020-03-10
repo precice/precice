@@ -95,7 +95,7 @@ public:
   bool willDataBeExchanged(double lastSolverTimestepLength) const override final;
 
   /// Returns true, if data has been exchanged in last call of advance().
-  bool hasDataBeenReceived() const override final;
+  bool hasDataBeenExchanged() const override final;
 
   /// Returns the currently computed time of the coupling scheme.
   double getTime() const override final;
