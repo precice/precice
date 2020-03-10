@@ -51,7 +51,11 @@ void NearestNeighborMapping::computeMapping()
                      distanceStatistics(bg::distance(match, coords));
                    }));
     }
-    PRECICE_INFO("Mapping distance " << distanceStatistics);
+    if (distanceStatistics.empty()) {
+      PRECICE_INFO("Mapping distance not available due to empty partition.");
+    } else {
+      PRECICE_INFO("Mapping distance " << distanceStatistics);
+    }
   } else {
     PRECICE_ASSERT(getConstraint() == CONSERVATIVE, getConstraint());
     PRECICE_DEBUG("Compute conservative mapping");
@@ -72,7 +76,11 @@ void NearestNeighborMapping::computeMapping()
                      distanceStatistics(bg::distance(match, coords));
                    }));
     }
-    PRECICE_INFO("Mapping distance " << distanceStatistics);
+    if (distanceStatistics.empty()) {
+      PRECICE_INFO("Mapping distance not available due to empty partition.");
+    } else {
+      PRECICE_INFO("Mapping distance " << distanceStatistics);
+    }
   }
   _hasComputedMapping = true;
 }

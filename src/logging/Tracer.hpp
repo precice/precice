@@ -10,7 +10,7 @@ public:
   ~Tracer();
 
 private:
-  Logger& _log;
+  Logger &_log;
 
   LogLocation _loc;
 };
