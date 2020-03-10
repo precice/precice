@@ -193,6 +193,8 @@ void SolverInterfaceImpl::configure(
 double SolverInterfaceImpl::initialize()
 {
   PRECICE_TRACE();
+  PRECICE_CHECK(not _couplingScheme->isInitialized(),
+                "initialize() may only be called once.");
   auto &solverInitEvent = EventRegistry::instance().getStoredEvent("solver.initialize");
   solverInitEvent.pause(precice::syncMode);
   Event                    e("initialize", precice::syncMode);
@@ -244,6 +246,7 @@ double SolverInterfaceImpl::initialize()
 
   PRECICE_DEBUG("Initialize coupling schemes");
   _couplingScheme->initialize(time, timeWindow);
+  PRECICE_ASSERT(_couplingScheme->isInitialized());
 
   std::set<action::Action::Timing> timings;
   double                           dt = 0.0;
