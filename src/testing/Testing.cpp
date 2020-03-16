@@ -4,6 +4,7 @@
 #include <memory>
 #include <string>
 #include "com/MPIDirectCommunication.hpp"
+#include "com/SocketCommunication.hpp"
 #include "logging/LogMacros.hpp"
 #include "m2n/GatherScatterComFactory.hpp"
 #include "utils/EventUtils.hpp"
@@ -106,9 +107,9 @@ void TestContext::setContextFrom(const Participant &p, int rank)
 
 void TestContext::initialize(const Participants &participants)
 {
-  Par::Parallel::current()->synchronize();
+  Par::Parallel::CommState::world()->synchronize();
   initializeMPI(participants);
-  Par::Parallel::current()->synchronize();
+  Par::Parallel::CommState::world()->synchronize();
   initializeMasterSlave();
   initializeEvents();
   initializePetsc();
