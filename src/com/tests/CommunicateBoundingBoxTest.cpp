@@ -26,10 +26,10 @@ BOOST_AUTO_TEST_CASE(SendAndReceiveBoundingBox)
 
     CommunicateBoundingBox comBB(m2n->getMasterCommunication());
 
-    if (utils::Parallel::getProcessRank() == 0) {
+    if (context.isNamed("A")) {
       comBB.sendBoundingBox(bb, 0);
-    } else if (utils::Parallel::getProcessRank() == 1) {
-
+    } else {
+      BOOST_TEST (context.isNamed("B"));
       mesh::Mesh::BoundingBox bbCompare;
       for (int i = 0; i < dim; i++) {
         bbCompare.push_back(std::make_pair(-1, -1));
@@ -63,9 +63,10 @@ BOOST_AUTO_TEST_CASE(SendAndReceiveBoundingBoxMap)
 
     CommunicateBoundingBox comBB(m2n->getMasterCommunication());
 
-    if (utils::Parallel::getProcessRank() == 0) {
+    if (context.isNamed("A")) {
       comBB.sendBoundingBoxMap(bbm, 0);
-    } else if (utils::Parallel::getProcessRank() == 1) {
+    } else {
+      BOOST_TEST(context.isNamed("B"));
 
       mesh::Mesh::BoundingBox    bbCompare;
       mesh::Mesh::BoundingBoxMap bbmCompare;
@@ -109,7 +110,7 @@ BOOST_AUTO_TEST_CASE(BroadcastSendAndReceiveBoundingBoxMap)
 
   CommunicateBoundingBox comBB(utils::MasterSlave::_communication);
 
-  if (utils::Parallel::getProcessRank() == 0) {
+  if (context.isMaster()) {
     comBB.broadcastSendBoundingBoxMap(bbm);
   } else {
 
@@ -153,9 +154,9 @@ BOOST_AUTO_TEST_CASE(SendAndReceiveConnectionMap)
 
   CommunicateBoundingBox comBB(m2n->getMasterCommunication());
 
-  if (utils::Parallel::getProcessRank() == 0) {
+  if (context.isNamed("A")) {
     comBB.sendConnectionMap(fbm, 0);
-  } else if (utils::Parallel::getProcessRank() == 1) {
+  } else if (context.isNamed("B")) {
 
     std::vector<int>                fbCompare;
     std::map<int, std::vector<int>> fbmCompare;
@@ -198,7 +199,7 @@ BOOST_AUTO_TEST_CASE(BroadcastSendAndReceiveConnectionMap)
 
   CommunicateBoundingBox comBB(utils::MasterSlave::_communication);
 
-  if (utils::Parallel::getProcessRank() == 0) {
+  if (context.isMaster()) {
     comBB.broadcastSendConnectionMap(fbm);
   } else {
 
