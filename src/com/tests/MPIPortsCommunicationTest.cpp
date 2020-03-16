@@ -16,33 +16,33 @@ BOOST_AUTO_TEST_SUITE(MPIPorts,
 BOOST_AUTO_TEST_CASE(SendAndReceive)
 {
   PRECICE_TEST(2_ranks, Require::Events);
-  TestSendAndReceive<MPIPortsCommunication>();
+  TestSendAndReceive<MPIPortsCommunication>(context.rank);
 }
 
 BOOST_AUTO_TEST_CASE(SendReceiveFourProcesses)
 {
   PRECICE_TEST(4_ranks, Require::Events);
-  TestSendReceiveFourProcesses<MPIPortsCommunication>();
+  TestSendReceiveFourProcesses<MPIPortsCommunication>(context.rank);
 }
 
 BOOST_AUTO_TEST_CASE(SendReceiveTwoProcessesServerClient)
 
 {
   PRECICE_TEST(2_ranks, Require::Events);
-  TestSendReceiveTwoProcessesServerClient<MPIPortsCommunication>();
+  TestSendReceiveTwoProcessesServerClient<MPIPortsCommunication>(context.rank);
 }
 
 BOOST_AUTO_TEST_CASE(SendReceiveFourProcessesServerClient)
 
 {
   PRECICE_TEST(4_ranks, Require::Events);
-  TestSendReceiveFourProcessesServerClient<MPIPortsCommunication>();
+  TestSendReceiveFourProcessesServerClient<MPIPortsCommunication>(context.rank);
 }
 
 BOOST_AUTO_TEST_CASE(SendReceiveFourProcessesServerClientV2)
 {
   PRECICE_TEST(4_ranks, Require::Events);
-  TestSendReceiveFourProcessesServerClientV2<MPIPortsCommunication>();
+  TestSendReceiveFourProcessesServerClientV2<MPIPortsCommunication>(context.rank);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // MPIPortsCommunication

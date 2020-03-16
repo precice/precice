@@ -15,31 +15,31 @@ BOOST_AUTO_TEST_CASE(SendAndReceive)
 
 {
   PRECICE_TEST(2_ranks, Require::Events);
-  TestSendAndReceive<SocketCommunication>();
+  TestSendAndReceive<SocketCommunication>(context.rank);
 }
 
 BOOST_AUTO_TEST_CASE(SendReceiveFourProcesses)
 {
   PRECICE_TEST(4_ranks, Require::Events);
-  TestSendReceiveFourProcesses<SocketCommunication>();
+  TestSendReceiveFourProcesses<SocketCommunication>(context.rank);
 }
 
 BOOST_AUTO_TEST_CASE(SendReceiveTwoProcessesServerClient)
 {
   PRECICE_TEST(2_ranks, Require::Events);
-  TestSendReceiveTwoProcessesServerClient<SocketCommunication>();
+  TestSendReceiveTwoProcessesServerClient<SocketCommunication>(context.rank);
 }
 
 BOOST_AUTO_TEST_CASE(SendReceiveFourProcessesServerClient)
 {
   PRECICE_TEST(4_ranks, Require::Events);
-  TestSendReceiveFourProcessesServerClient<SocketCommunication>();
+  TestSendReceiveFourProcessesServerClient<SocketCommunication>(context.rank);
 }
 
 BOOST_AUTO_TEST_CASE(SendReceiveFourProcessesServerClientV2)
 {
   PRECICE_TEST(4_ranks, Require::Events);
-  TestSendReceiveFourProcessesServerClientV2<SocketCommunication>();
+  TestSendReceiveFourProcessesServerClientV2<SocketCommunication>(context.rank);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Socket

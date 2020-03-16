@@ -14,10 +14,9 @@ using namespace precice;
 
 /// This tests still uses the old rank enumeration
 template <typename T>
-void TestSendAndReceivePrimitiveTypes()
+void TestSendAndReceivePrimitiveTypes(int rank)
 {
   T         com;
-  const int rank = utils::Parallel::getProcessRank();
 
   if (rank == 0) {
     com.acceptConnection("process0", "process1", "", rank);
@@ -82,10 +81,9 @@ void TestSendAndReceivePrimitiveTypes()
 
 /// This tests still uses the old rank enumeration
 template <typename T>
-void TestSendAndReceiveVectors()
+void TestSendAndReceiveVectors(int rank)
 {
   T         com;
-  const int rank = utils::Parallel::getProcessRank();
 
   if (rank == 0) {
     com.acceptConnection("process0", "process1", "", rank);
@@ -149,10 +147,9 @@ void TestSendAndReceiveVectors()
 
 /// Tests connecting four processes using acceptConnection and requestConnection
 template <typename T>
-void TestSendReceiveFourProcesses()
+void TestSendReceiveFourProcesses(int rank)
 {
   T         communication;
-  const int rank    = utils::Parallel::getProcessRank();
   int       message = -1;
 
   switch (rank) {
@@ -200,18 +197,17 @@ void TestSendReceiveFourProcesses()
 }
 
 template <typename T>
-void TestSendAndReceive()
+void TestSendAndReceive(int rank)
 {
-  TestSendAndReceivePrimitiveTypes<T>();
-  TestSendAndReceiveVectors<T>();
+  TestSendAndReceivePrimitiveTypes<T>(rank);
+  TestSendAndReceiveVectors<T>(rank);
 }
 
 /// Tests connecting two processes using acceptConnectionAsServer and requestConnectionAsClient
 template <typename T>
-void TestSendReceiveTwoProcessesServerClient()
+void TestSendReceiveTwoProcessesServerClient(int rank)
 {
   T         communication;
-  const int rank    = utils::Parallel::getProcessRank();
   int       message = 1;
 
   switch (rank) {
@@ -236,10 +232,9 @@ void TestSendReceiveTwoProcessesServerClient()
 }
 
 template <typename T>
-void TestSendReceiveFourProcessesServerClient()
+void TestSendReceiveFourProcessesServerClient(int rank)
 {
   T         communication;
-  const int rank    = utils::Parallel::getProcessRank();
   int       message = -1;
 
   switch (rank) {
@@ -287,10 +282,9 @@ void TestSendReceiveFourProcessesServerClient()
 }
 
 template <typename T>
-void TestSendReceiveFourProcessesServerClientV2()
+void TestSendReceiveFourProcessesServerClientV2(int rank)
 {
   T   communication;
-  int rank    = utils::Parallel::getProcessRank();
   int message = -1;
 
   switch (rank) {
