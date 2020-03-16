@@ -67,17 +67,18 @@ BOOST_AUTO_TEST_CASE(Master1SlaveTest)
 
   if (context.isMaster()) {
     int first = 1001;
-
     com->send(first, 1);
 
-    int answer;
+    int answer = -1;
     com->receive(answer, 1);
     BOOST_TEST(answer == 1111);
   } else {
-    int received;
+    int received = -1;
     com->receive(received, 0);
     BOOST_TEST(received == 1001);
+
     received += 110;
+    BOOST_TEST(received == 1111);
     com->send(received, 0);
   }
 }
