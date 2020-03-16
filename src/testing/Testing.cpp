@@ -203,7 +203,7 @@ void TestContext::initializePetsc()
 
 m2n::PtrM2N TestContext::connect(const std::string &acceptor, const std::string &requestor, bool useOnlyMasterCom, bool useTwoLevelInit) const
 {
-  auto participantCom   = com::PtrCommunication(new com::MPIDirectCommunication());
+  auto participantCom   = com::PtrCommunication(new com::SocketCommunication());
   auto distrFactory     = m2n::DistributedComFactory::SharedPointer(new m2n::GatherScatterComFactory(participantCom));
   auto m2n              = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory, useOnlyMasterCom, useTwoLevelInit));
 
