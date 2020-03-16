@@ -106,6 +106,7 @@ void TestContext::setContextFrom(const Participant &p, int rank)
 
 void TestContext::initialize(const Participants &participants)
 {
+  Par::Parallel::current()->synchronize();
   initializeMPI(participants);
   Par::Parallel::current()->synchronize();
   initializeMasterSlave();
