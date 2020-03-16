@@ -270,11 +270,20 @@ void Parallel::splitCommunicator(const std::string &groupName)
   PRECICE_DEBUG("Split groups");
   auto thisGroup = std::find_if(accessorGroups.begin(), accessorGroups.end(), [groupName](const AccessorGroup &group) { return group.name == groupName; });
   PRECICE_ASSERT(thisGroup != accessorGroups.end(), "This requested groupName \"" << groupName << "\" is not in accessorGroups!");
-  // Create a new communicator that contains only ranks of my group
-  MPI_Comm newComm = MPI_COMM_NULL;
-  MPI_Comm_split(globalComm, thisGroup->id, rank, &newComm);
-  // Assemble and set new state
-  auto newState    = CommState::fromComm(newComm);
+
+  CommStatePtr newState;
+  const bool restrictToSelf = std::all_of(accessorGroups.begin(), accessorGroups.end(), [](const AccessorGroup & group) { return group.size == 1; });
+  if (restrictToSelf) {
+    PRECICE_DEBUG("Split to Comm Self");
+    newState = CommState::self();
+  } else {
+    PRECICE_DEBUG("Split to new Communicator");
+    // Create a new communicator that contains only ranks of my group
+    MPI_Comm newComm = MPI_COMM_NULL;
+    MPI_Comm_split(globalComm, thisGroup->id, rank, &newComm);
+    // Assemble and set new state
+    newState = CommState::fromComm(newComm);
+  }
   newState->groups = std::move(accessorGroups);
   pushState(newState);
 
