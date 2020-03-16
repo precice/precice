@@ -104,8 +104,8 @@ BOOST_AUTO_TEST_CASE(Master2SlaveTest)
     sum += message;
     BOOST_TEST(sum == 1111);
 
-    com->send(message, 1);
-    com->send(message, 2);
+    com->send(sum, 1);
+    com->send(sum, 2);
   } else {
     int tosend = context.isRank(1) ? 10 : 100;
     com->send(tosend, 0);
@@ -120,6 +120,8 @@ BOOST_AUTO_TEST_CASE(OffsetMaster1SlaveTest)
 {
   PRECICE_TEST("Offset"_on(1_rank), "Test"_on(2_ranks).setupMasterSlaves());
 
+  if (context.isNamed("Offset")) return;
+
   BOOST_TEST(context.hasSize(2));
   auto& com = precice::utils::MasterSlave::_communication;
   BOOST_TEST((com != nullptr));
@@ -129,13 +131,14 @@ BOOST_AUTO_TEST_CASE(OffsetMaster1SlaveTest)
 
     com->send(first, 1);
 
-    int answer;
+    int answer = -1;
     com->receive(answer, 1);
     BOOST_TEST(answer == 1111);
   } else {
-    int received;
+    int received = -1;
     com->receive(received, 0);
     BOOST_TEST(received == 1001);
+
     received += 110;
     com->send(received, 0);
   }
@@ -144,6 +147,8 @@ BOOST_AUTO_TEST_CASE(OffsetMaster1SlaveTest)
 BOOST_AUTO_TEST_CASE(OffsetMaster2SlaveTest)
 {
   PRECICE_TEST("Offset"_on(1_rank), "Test"_on(3_ranks).setupMasterSlaves());
+
+  if (context.isNamed("Offset")) return;
 
   BOOST_TEST(context.hasSize(3));
   auto& com = precice::utils::MasterSlave::_communication;
@@ -162,8 +167,8 @@ BOOST_AUTO_TEST_CASE(OffsetMaster2SlaveTest)
     sum += message;
     BOOST_TEST(sum == 1111);
 
-    com->send(message, 1);
-    com->send(message, 2);
+    com->send(sum, 1);
+    com->send(sum, 2);
   } else {
     int tosend = context.isRank(1) ? 10 : 100;
     com->send(tosend, 0);
