@@ -121,6 +121,7 @@ void SolverInterfaceImpl::configure(
     PRECICE_INFO("This is preCICE version " << PRECICE_VERSION);
     PRECICE_INFO("Revision info: " << precice::preciceRevision);
     PRECICE_INFO("Configuring preCICE with configuration: \"" << configurationFileName << "\"");
+    PRECICE_INFO("I am participant: \"" << _accessorName << "\"");
   }
   configure(config.getSolverInterfaceConfiguration());
 }
