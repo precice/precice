@@ -237,7 +237,7 @@ public:
   /**
    * @brief Sets several spatial positions for a mesh.
    *
-   * @param[out] ids IDs fo r data from given positions.
+   * @param[out] ids IDs for data from given positions.
    */
   void setMeshVertices(
       int           meshID,

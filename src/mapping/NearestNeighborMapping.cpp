@@ -43,13 +43,23 @@ void NearestNeighborMapping::computeMapping()
     const mesh::Mesh::VertexContainer &    outputVertices = output()->vertices();
     for (size_t i = 0; i < verticesSize; i++) {
       const Eigen::VectorXd &coords = outputVertices[i].getCoords();
+      int outputPatchID = outputVertices[i].getPatchID();
+      PRECICE_INFO("outputID = " << outputPatchID);
       // Search for the output vertex inside the input mesh and add index to _vertexIndices
-      rtree->query(boost::geometry::index::nearest(coords, 1),
+      rtree->query(boost::geometry::index::nearest(coords, 1) and boost::geometry::index::satisfies([&](size_t const i) { return (outputPatchID - input()->vertices()[i].getPatchID()) < 1 ;}),
                    boost::make_function_output_iterator([&](size_t const &val) {
                      const auto &match = input()->vertices()[val];
                      _vertexIndices[i] = match.getID();
                      distanceStatistics(bg::distance(match, coords));
                    }));
+                   
+      /*rtree->query(boost::geometry::index::nearest(coords, 1) && boost::geometry::index::satisfies([&](size_t const i) {return outputPatchID == input()->vertices()[i].getPatchID();}),
+                   boost::make_function_output_iterator([&](size_t const &val) {
+                     const auto &match = input()->vertices()[val];
+                     _vertexIndices[i] = match.getID();
+                     distanceStatistics(bg::distance(match, coords));
+                   }));
+                   */
     }
     PRECICE_INFO("Mapping distance " << distanceStatistics);
   } else {
@@ -62,15 +72,24 @@ void NearestNeighborMapping::computeMapping()
     _vertexIndices.resize(verticesSize);
     utils::statistics::DistanceAccumulator distanceStatistics;
     const mesh::Mesh::VertexContainer &    inputVertices = input()->vertices();
+    const mesh::Mesh::VertexContainer &    outputVertices = output()->vertices();
     for (size_t i = 0; i < verticesSize; i++) {
       const Eigen::VectorXd &coords = inputVertices[i].getCoords();
+      int inputPatchID = inputVertices[i].getPatchID();
       // Search for the input vertex inside the output mesh and add index to _vertexIndices
-      rtree->query(boost::geometry::index::nearest(coords, 1),
+      /*rtree->query(boost::geometry::index::nearest(coords, 1),
                    boost::make_function_output_iterator([&](size_t const &val) {
                      const auto &match = output()->vertices()[val];
                      _vertexIndices[i] = match.getID();
                      distanceStatistics(bg::distance(match, coords));
                    }));
+                   */
+      rtree->query(boost::geometry::index::nearest(coords, 1) && boost::geometry::index::satisfies([&](size_t const i) {return inputPatchID == outputVertices[i].getPatchID();}),
+                   boost::make_function_output_iterator([&](size_t const &val) {
+                     const auto &match = input()->vertices()[val];
+                     _vertexIndices[i] = match.getID();
+                     distanceStatistics(bg::distance(match, coords));
+                   }));   
     }
     PRECICE_INFO("Mapping distance " << distanceStatistics);
   }
