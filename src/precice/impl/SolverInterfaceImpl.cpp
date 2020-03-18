@@ -781,6 +781,17 @@ void SolverInterfaceImpl::setMeshQuad(
   }
 }
 
+// First organise four points into 2 sets of 3 vertices. 
+// Create two triangles with the four points
+/*
+  2 ------- 3
+    |\    |
+    | \   |
+    |  \  |
+    |   \ |
+    |    \|
+  1 ------- 0
+*/
 void SolverInterfaceImpl::setMeshQuadWithEdges(
     int meshID,
     int firstVertexID,
@@ -803,13 +814,24 @@ void SolverInterfaceImpl::setMeshQuadWithEdges(
     vertices[1] = &mesh->vertices()[secondVertexID];
     vertices[2] = &mesh->vertices()[thirdVertexID];
     vertices[3] = &mesh->vertices()[fourthVertexID];
-    mesh::Edge *edges[4];
+
+    PRECICE_CHECK(utils::unique_elements(utils::make_array(vertices[0]->getCoords(),
+                                                           vertices[1]->getCoords(), vertices[2]->getCoords())),
+                  "The first triangles coordinates of the vertices must be unique!");
+    mesh::Edge *edges[3];
     edges[0] = &mesh->createUniqueEdge(*vertices[0], *vertices[1]);
     edges[1] = &mesh->createUniqueEdge(*vertices[1], *vertices[2]);
-    edges[2] = &mesh->createUniqueEdge(*vertices[2], *vertices[3]);
-    edges[3] = &mesh->createUniqueEdge(*vertices[3], *vertices[0]);
+    edges[2] = &mesh->createUniqueEdge(*vertices[2], *vertices[0]);
+    mesh->createTriangle(*edges[0], *edges[1], *edges[2]);
 
-    mesh->createQuad(*edges[0], *edges[1], *edges[2], *edges[3]);
+    PRECICE_CHECK(utils::unique_elements(utils::make_array(vertices[0]->getCoords(),
+                                                           vertices[2]->getCoords(), vertices[3]->getCoords())),
+                  "The second triangles coordinates of the vertices must be unique!");
+
+    edges[0] = &mesh->createUniqueEdge(*vertices[2], *vertices[3]);
+    edges[1] = &mesh->createUniqueEdge(*vertices[3], *vertices[0]);
+    edges[2] = &mesh->createUniqueEdge(*vertices[2], *vertices[0]);
+    mesh->createTriangle(*edges[0], *edges[1], *edges[2]);
   }
 }
 
