@@ -77,49 +77,57 @@ void ParallelCouplingScheme::exchangeInitialData()
 
 void ParallelCouplingScheme::doAdvance()
 {
-  if (isExplicitCouplingScheme()) {
-    if (doesFirstStep()) {
-      PRECICE_DEBUG("Sending data...");
-      sendData(getM2N());
+  bool convergence, isCoarseModelOptimizationActive, convergenceCoarseOptimization, doOnlySolverEvaluation;  // @todo having the bools for convergence measurement declared for explicit and implicit coupling is not nice
 
-      PRECICE_DEBUG("Receiving data...");
-      receiveAndSetTimeWindowSize();
-      receiveData(getM2N());
-    } else { //second participant
-      PRECICE_DEBUG("Receiving data...");
-      receiveAndSetTimeWindowSize();
-      receiveData(getM2N());
+  // initialize advance
+  if (isImplicitCouplingScheme()) {
+    convergenceCoarseOptimization = true;
+    doOnlySolverEvaluation        = false;
+  }
 
-      PRECICE_DEBUG("Sending data...");
-      sendData(getM2N());
+  // pre-acceleration communication
+  if (doesFirstStep()) { //first participant
+    PRECICE_DEBUG("Sending data...");
+    sendData(getM2N());
+  } else { //second participant
+    PRECICE_DEBUG("Receiving data...");
+    if (isExplicitCouplingScheme()) {
+      receiveAndSetTimeWindowSize();
     }
-  } else {
-    PRECICE_ASSERT(isImplicitCouplingScheme());
-    PRECICE_DEBUG("Computed full length of iteration");
-    bool convergence, isCoarseModelOptimizationActive;
-    bool convergenceCoarseOptimization = true;
-    bool doOnlySolverEvaluation        = false;
-    if (doesFirstStep()) { // First participant
-      PRECICE_DEBUG("Sending data...");
-      sendData(getM2N());
+    receiveData(getM2N());
+  }
 
-      PRECICE_DEBUG("Receiving data...");
+  // acceleration
+  if (isImplicitCouplingScheme()) {
+    if (doesFirstStep()) { // First participant
+      // TODO some parts technically belong to communication. Needs to be improved.
       getM2N()->receive(convergence);
       getM2N()->receive(isCoarseModelOptimizationActive);
       implicitAdvanceFirstParticipant(convergence, isCoarseModelOptimizationActive);
-      receiveData(getM2N());
-    } else { // Second participant
-      PRECICE_DEBUG("Receiving data...");
-      receiveData(getM2N());
-
+    } else {                          // Second participant
       ValuesMap designSpecifications; // TODO make this better?
       implicitAdvanceSecondParticipant(designSpecifications, convergence, convergenceCoarseOptimization, doOnlySolverEvaluation);
+    }
+  }
 
-      PRECICE_DEBUG("Sending data...");
+  // post-acceleration communication
+  if (doesFirstStep()) { //first participant
+    PRECICE_DEBUG("Receiving data...");
+    if (isExplicitCouplingScheme()) {
+      receiveAndSetTimeWindowSize();
+    }
+    receiveData(getM2N());
+  } else { //second participant
+    PRECICE_DEBUG("Sending data...");
+    if(isImplicitCouplingScheme()){
       getM2N()->send(convergence);
       getM2N()->send(getIsCoarseModelOptimizationActive());
-      sendData(getM2N());
     }
+    sendData(getM2N());
+  }
+
+  // finalize advance
+  if (isImplicitCouplingScheme()) {
     if (not convergence) {
       PRECICE_DEBUG("No convergence achieved");
       requireAction(constants::actionReadIterationCheckpoint());
