@@ -101,47 +101,50 @@ void SerialCouplingScheme::exchangeInitialData()
 
 void SerialCouplingScheme::doAdvance()
 {
-  if(isExplicitCouplingScheme()){
-    PRECICE_DEBUG("Sending data...");
-    sendData(getM2N());
-
-    // the second participant does not want new data in the last time window
-    if (isCouplingOngoing() || doesFirstStep()) {
-      PRECICE_DEBUG("Receiving data...");
-      receiveAndSetTimeWindowSize();
-      receiveData(getM2N());
-    }
-  } else {
-    PRECICE_ASSERT(isImplicitCouplingScheme());
+  bool convergence, isCoarseModelOptimizationActive, convergenceCoarseOptimization, doOnlySolverEvaluation;  // @todo having the bools for convergence measurement declared for explicit and implicit coupling is not nice
+  if (isImplicitCouplingScheme()) {
     PRECICE_DEBUG("Computed full length of iteration");
-    bool convergence, isCoarseModelOptimizationActive;
-    bool convergenceCoarseOptimization = true;
-    bool doOnlySolverEvaluation        = false;
-    if (doesFirstStep()) { // First participant
-      PRECICE_DEBUG("Sending data...");
-      sendData(getM2N());
+    convergenceCoarseOptimization = true;
+    doOnlySolverEvaluation        = false;
+  }
 
+  if (not doesFirstStep() && isImplicitCouplingScheme()){
+    PRECICE_DEBUG("Test Convergence and accelerate...");
+    ValuesMap designSpecifications;  // TODO make this better?
+    int       accelerationShift = 1; // TODO @BU: why do we need an "accelerationShift" for SerialCouplingScheme, but not for the ParallelCouplingScheme?
+    implicitAdvanceSecondParticipant(designSpecifications, convergence, convergenceCoarseOptimization, doOnlySolverEvaluation, accelerationShift);
+    getM2N()->send(convergence);
+    getM2N()->send(getIsCoarseModelOptimizationActive());
+  }
+
+  PRECICE_DEBUG("Sending data...");
+  sendData(getM2N());
+
+  if(isImplicitCouplingScheme()) {
+    PRECICE_ASSERT(isImplicitCouplingScheme());
+    if (doesFirstStep()) { // First participant
       PRECICE_DEBUG("Receiving data...");
       getM2N()->receive(convergence);
       getM2N()->receive(isCoarseModelOptimizationActive);
       implicitAdvanceFirstParticipant(convergence, isCoarseModelOptimizationActive);
-      receiveData(getM2N());
-    } else {                           // Second participant
-      ValuesMap designSpecifications;  // TODO make this better?
-      int       accelerationShift = 1; // TODO @BU: why do we need an "accelerationShift" for SerialCouplingScheme, but not for the ParallelCouplingScheme?
-      implicitAdvanceSecondParticipant(designSpecifications, convergence, convergenceCoarseOptimization, doOnlySolverEvaluation, accelerationShift);
-
-      PRECICE_DEBUG("Sending data...");
-      getM2N()->send(convergence);
-      getM2N()->send(getIsCoarseModelOptimizationActive());
-      sendData(getM2N());
+    } else { // Second participant
       // the second participant does not want new data in the last iteration of the last time window
       if (isCouplingOngoing() || not convergence) {
         PRECICE_DEBUG("Receiving data...");
         receiveAndSetTimeWindowSize();
-        receiveData(getM2N());
       }
     }
+  }
+
+  if (doesFirstStep() || isCouplingOngoing() || (isImplicitCouplingScheme() && not convergence)) {
+    PRECICE_DEBUG("Receiving data...");
+    if (isExplicitCouplingScheme()) {
+      receiveAndSetTimeWindowSize();
+    }
+    receiveData(getM2N());
+  }
+
+  if(isImplicitCouplingScheme()) {
     if (not convergence) {
       PRECICE_DEBUG("No convergence achieved");
       requireAction(constants::actionReadIterationCheckpoint());
