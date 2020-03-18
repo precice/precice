@@ -21,14 +21,14 @@ ParallelCouplingScheme::ParallelCouplingScheme(
     CouplingMode                  cplMode,
     int                           maxIterations)
     : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowsSize, validDigits, firstParticipant,
-                         secondParticipant, localParticipant, m2n, maxIterations, cplMode, dtMethod){}
+                         secondParticipant, localParticipant, m2n, maxIterations, cplMode, dtMethod) {}
 
 void ParallelCouplingScheme::initializeImplicit()
 {
   PRECICE_CHECK(not getSendData().empty(), "No send data configured. Use explicit scheme for one-way coupling.");
-  if (not doesFirstStep()) {         // second participant
-    setupConvergenceMeasures();      // needs _couplingData configured
-    mergeData();                     // merge send and receive data for all pp calls
+  if (not doesFirstStep()) {                 // second participant
+    setupConvergenceMeasures();              // needs _couplingData configured
+    mergeData();                             // merge send and receive data for all pp calls
     setupDataMatrices(getAcceleratedData()); // Reserve memory and initialize data with zero
     if (getAcceleration().get() != nullptr) {
       getAcceleration()->initialize(getAcceleratedData()); // Reserve memory, initialize
@@ -38,11 +38,11 @@ void ParallelCouplingScheme::initializeImplicit()
 
 void ParallelCouplingScheme::initializeImplementation()
 {
-  if(anyDataRequiresInitialization(getSendData())) {
+  if (anyDataRequiresInitialization(getSendData())) {
     hasToSendInitializedData();
   }
 
-  if(anyDataRequiresInitialization(getReceiveData())) {
+  if (anyDataRequiresInitialization(getReceiveData())) {
     hasToReceiveInitializedData();
   }
 }
@@ -57,8 +57,7 @@ void ParallelCouplingScheme::exchangeInitialData()
     if (receivesInitializedData()) {
       receiveData(getM2N());
     }
-  }
-  else { // second participant
+  } else { // second participant
     if (receivesInitializedData()) {
       receiveData(getM2N());
       // second participant has to save values for extrapolation
@@ -77,7 +76,7 @@ void ParallelCouplingScheme::exchangeInitialData()
 
 std::pair<bool, bool> ParallelCouplingScheme::doAdvance()
 {
-  bool convergence, isCoarseModelOptimizationActive, convergenceCoarseOptimization, doOnlySolverEvaluation;  // @todo having the bools for convergence measurement declared for explicit and implicit coupling is not nice
+  bool convergence, convergenceCoarseOptimization, doOnlySolverEvaluation; // @todo having the bools for convergence measurement declared for explicit and implicit coupling is not nice
 
   // initialize advance
   if (isImplicitCouplingScheme()) {
@@ -97,36 +96,32 @@ std::pair<bool, bool> ParallelCouplingScheme::doAdvance()
     receiveData(getM2N());
   }
 
-  // acceleration
-  if (isImplicitCouplingScheme()) {
-    if (doesFirstStep()) { // First participant
-      // TODO some parts technically belong to communication. Needs to be improved.
-      getM2N()->receive(convergence);
-      getM2N()->receive(isCoarseModelOptimizationActive);
-      implicitAdvanceFirstParticipant(convergence, isCoarseModelOptimizationActive);
-    } else {                          // Second participant
-      ValuesMap designSpecifications; // TODO make this better?
-      implicitAdvanceSecondParticipant(designSpecifications, convergence, convergenceCoarseOptimization, doOnlySolverEvaluation);
-    }
+  // acceleration (only second participant)
+  if (isImplicitCouplingScheme() && not doesFirstStep()) {
+    ValuesMap designSpecifications; // TODO make this better?
+    doAcceleration(designSpecifications, convergence, convergenceCoarseOptimization, doOnlySolverEvaluation);
   }
 
   // post-acceleration communication
   if (doesFirstStep()) { //first participant
     PRECICE_DEBUG("Receiving data...");
-    if (isExplicitCouplingScheme()) {
+    if(isImplicitCouplingScheme()) {
+      convergence = checkConvergence();
+    } else {
+      PRECICE_ASSERT(isExplicitCouplingScheme());
       receiveAndSetTimeWindowSize();
     }
     receiveData(getM2N());
   } else { //second participant
     PRECICE_DEBUG("Sending data...");
-    if(isImplicitCouplingScheme()){
+    if (isImplicitCouplingScheme()) {
       getM2N()->send(convergence);
       getM2N()->send(getIsCoarseModelOptimizationActive());
     }
     sendData(getM2N());
   }
 
-  return std::pair<bool, bool> (convergence, convergenceCoarseOptimization);
+  return std::pair<bool, bool>(convergence, convergenceCoarseOptimization);
 }
 
 void ParallelCouplingScheme::mergeData()

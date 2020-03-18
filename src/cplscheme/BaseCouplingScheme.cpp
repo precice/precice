@@ -886,8 +886,11 @@ bool BaseCouplingScheme::anyDataRequiresInitialization(BaseCouplingScheme::DataM
   return false;
 }
 
-void BaseCouplingScheme::implicitAdvanceFirstParticipant(bool& convergence, bool& isCoarseModelOptimizationActive)
+bool BaseCouplingScheme::checkConvergence()
 {
+  bool convergence, isCoarseModelOptimizationActive;
+  getM2N()->receive(convergence);
+  getM2N()->receive(isCoarseModelOptimizationActive);
   if(isCoarseModelOptimizationActive){
     activateCoarseModelOptimization();
   } else {
@@ -896,9 +899,10 @@ void BaseCouplingScheme::implicitAdvanceFirstParticipant(bool& convergence, bool
   if (convergence) {
     timeWindowCompleted();
   }
+  return convergence;
 }
 
-void BaseCouplingScheme::implicitAdvanceSecondParticipant(ValuesMap& designSpecifications, bool& convergence, bool& convergenceCoarseOptimization, bool& doOnlySolverEvaluation, int accelerationShift)
+void BaseCouplingScheme::doAcceleration(std::map<int, Eigen::VectorXd> &designSpecifications, bool& convergence, bool& convergenceCoarseOptimization, bool& doOnlySolverEvaluation, int accelerationShift)
 {
   if (getAcceleration().get() != nullptr) {
     designSpecifications = getAcceleration()->getDesignSpecification(getAcceleratedData());

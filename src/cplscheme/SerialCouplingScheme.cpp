@@ -101,7 +101,7 @@ void SerialCouplingScheme::exchangeInitialData()
 
 std::pair<bool, bool> SerialCouplingScheme::doAdvance()
 {
-  bool convergence, isCoarseModelOptimizationActive, convergenceCoarseOptimization, doOnlySolverEvaluation;  // @todo having the bools for convergence measurement declared for explicit and implicit coupling is not nice
+  bool convergence, convergenceCoarseOptimization, doOnlySolverEvaluation;  // @todo having the bools for convergence measurement declared for explicit and implicit coupling is not nice
 
   // initialize advance
   if (isImplicitCouplingScheme()) {
@@ -110,12 +110,12 @@ std::pair<bool, bool> SerialCouplingScheme::doAdvance()
     doOnlySolverEvaluation        = false;
   }
 
-  // TODO acceleration or communication?
+  // acceleration (only second participant)
   if (not doesFirstStep() && isImplicitCouplingScheme()) {
     PRECICE_DEBUG("Test Convergence and accelerate...");
     ValuesMap designSpecifications;  // TODO make this better?
     int       accelerationShift = 1; // TODO @BU: why do we need an "accelerationShift" for SerialCouplingScheme, but not for the ParallelCouplingScheme?
-    implicitAdvanceSecondParticipant(designSpecifications, convergence, convergenceCoarseOptimization, doOnlySolverEvaluation, accelerationShift);
+    doAcceleration(designSpecifications, convergence, convergenceCoarseOptimization, doOnlySolverEvaluation, accelerationShift);
   }
 
   // communication
@@ -128,13 +128,10 @@ std::pair<bool, bool> SerialCouplingScheme::doAdvance()
 
   // TODO acceleration or communication?
   if(isImplicitCouplingScheme()) {
-    PRECICE_ASSERT(isImplicitCouplingScheme());
-    if (doesFirstStep()) { // First participant
+    if (doesFirstStep()) { // first participant
       PRECICE_DEBUG("Receiving data...");
-      getM2N()->receive(convergence);
-      getM2N()->receive(isCoarseModelOptimizationActive);
-      implicitAdvanceFirstParticipant(convergence, isCoarseModelOptimizationActive);
-    } else { // Second participant
+      convergence = checkConvergence();
+    } else { // second participant
       // the second participant does not want new data in the last iteration of the last time window
       if (isCouplingOngoing() || not convergence) {
         PRECICE_DEBUG("Receiving data...");

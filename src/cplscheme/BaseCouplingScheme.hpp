@@ -372,10 +372,10 @@ protected:
   void doExtrapolationOn(DataMap &dataMap);
 
   /// TODO
-  void implicitAdvanceFirstParticipant(bool& convergence, bool& isCoarseModelOptimizationActive);
+  bool checkConvergence();
 
   /// TODO
-  void implicitAdvanceSecondParticipant(ValuesMap &designSpecifications, bool& convergence, bool& convergenceCoarseOptimization, bool& doOnlySolverEvaluation, int accelerationShift = 0);
+  void doAcceleration(ValuesMap &designSpecifications, bool& convergence, bool& convergenceCoarseOptimization, bool& doOnlySolverEvaluation, int accelerationShift = 0);
 
   /// TODO
   void extrapolateData(DataMap &data);
