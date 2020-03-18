@@ -70,7 +70,7 @@ private:
   /**
    * @brief TODO
    */
-  void doAdvance() override;
+  std::pair<bool, bool> doAdvance() override;
 
   DataMap &getAcceleratedData() override
   {

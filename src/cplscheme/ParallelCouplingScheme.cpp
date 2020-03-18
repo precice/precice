@@ -75,7 +75,7 @@ void ParallelCouplingScheme::exchangeInitialData()
   }
 }
 
-void ParallelCouplingScheme::doAdvance()
+std::pair<bool, bool> ParallelCouplingScheme::doAdvance()
 {
   bool convergence, isCoarseModelOptimizationActive, convergenceCoarseOptimization, doOnlySolverEvaluation;  // @todo having the bools for convergence measurement declared for explicit and implicit coupling is not nice
 
@@ -126,7 +126,7 @@ void ParallelCouplingScheme::doAdvance()
     sendData(getM2N());
   }
 
-  finalizeAdvance(convergence, convergenceCoarseOptimization);
+  return std::pair<bool, bool> (convergence, convergenceCoarseOptimization);
 }
 
 void ParallelCouplingScheme::mergeData()

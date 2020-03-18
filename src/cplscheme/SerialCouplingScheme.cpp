@@ -99,7 +99,7 @@ void SerialCouplingScheme::exchangeInitialData()
   }
 }
 
-void SerialCouplingScheme::doAdvance()
+std::pair<bool, bool> SerialCouplingScheme::doAdvance()
 {
   bool convergence, isCoarseModelOptimizationActive, convergenceCoarseOptimization, doOnlySolverEvaluation;  // @todo having the bools for convergence measurement declared for explicit and implicit coupling is not nice
 
@@ -152,7 +152,7 @@ void SerialCouplingScheme::doAdvance()
     receiveData(getM2N());
   }
 
-  finalizeAdvance(convergence, convergenceCoarseOptimization);
+  return std::pair<bool, bool>(convergence, convergenceCoarseOptimization);
 }
 
 } // namespace cplscheme

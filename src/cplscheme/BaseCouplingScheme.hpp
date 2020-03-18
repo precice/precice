@@ -378,9 +378,6 @@ protected:
   void implicitAdvanceSecondParticipant(ValuesMap &designSpecifications, bool& convergence, bool& convergenceCoarseOptimization, bool& doOnlySolverEvaluation, int accelerationShift = 0);
 
   /// TODO
-  void finalizeAdvance(const bool convergence, const bool convergenceCoarseOptimization);
-
-  /// TODO
   void extrapolateData(DataMap &data);
 
   bool maxIterationsReached();
@@ -548,7 +545,7 @@ private:
   /// Functions needed for advance()
 
   /// implements functionality for advance in base class.
-  virtual void doAdvance() = 0;
+  virtual std::pair<bool, bool> doAdvance() = 0;
 
   virtual DataMap &getAcceleratedData() = 0;
 

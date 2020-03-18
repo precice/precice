@@ -85,7 +85,7 @@ void MultiCouplingScheme::exchangeInitialData()
   }
 }
 
-void MultiCouplingScheme::doAdvance()
+std::pair<bool, bool> MultiCouplingScheme::doAdvance()
 {
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
   // @todo implement MultiCouplingScheme for explicit coupling
@@ -130,7 +130,7 @@ void MultiCouplingScheme::doAdvance()
   sendData();
 
   // TODO: Using a hard-coded "true" here looks strange.
-  finalizeAdvance(convergence, true);
+  return std::pair<bool, bool> (convergence, true);
 }
 
 void MultiCouplingScheme::mergeData()

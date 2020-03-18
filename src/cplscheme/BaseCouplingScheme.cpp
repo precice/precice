@@ -281,9 +281,22 @@ void BaseCouplingScheme::advance()
       timeWindowCompleted();
     }
 
-    doAdvance();
+    std::pair<bool, bool> convergenceInformation = doAdvance();
 
-    if (isExplicitCouplingScheme()) {
+    bool convergence = convergenceInformation.first;
+    bool convergenceCoarseOptimization = convergenceInformation.second;
+
+    if(isImplicitCouplingScheme()) {
+      if (not convergence) {
+        PRECICE_DEBUG("No convergence achieved");
+        requireAction(constants::actionReadIterationCheckpoint());
+      } else {
+        PRECICE_DEBUG("Convergence achieved");
+        advanceTXTWriters();
+      }
+      updateTimeAndIterations(convergence, convergenceCoarseOptimization);
+    } else {
+      PRECICE_ASSERT(isExplicitCouplingScheme());
       _computedTimeWindowPart = 0.0;
     }
   }
@@ -981,19 +994,5 @@ void BaseCouplingScheme::implicitAdvanceSecondParticipant(ValuesMap& designSpeci
     }
   }
 }
-
-void BaseCouplingScheme::finalizeAdvance(const bool convergence, const bool convergenceCoarseOptimization) {
-  if(isImplicitCouplingScheme()) {
-    if (not convergence) {
-      PRECICE_DEBUG("No convergence achieved");
-      requireAction(constants::actionReadIterationCheckpoint());
-    } else {
-      PRECICE_DEBUG("Convergence achieved");
-      advanceTXTWriters();
-    }
-    updateTimeAndIterations(convergence, convergenceCoarseOptimization);
-  }
-}
-
 } // namespace cplscheme
 } // namespace precice
