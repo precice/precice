@@ -21,14 +21,14 @@ SerialCouplingScheme::SerialCouplingScheme(
     CouplingMode                  cplMode,
     int                           maxIterations)
     : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, firstParticipant,
-                         secondParticipant, localParticipant, m2n, maxIterations, cplMode, dtMethod){}
+                         secondParticipant, localParticipant, m2n, maxIterations, cplMode, dtMethod) {}
 
 void SerialCouplingScheme::initializeImplicit()
 {
   PRECICE_CHECK(not getSendData().empty(), "No send data configured! Use explicit scheme for one-way coupling.");
   if (not doesFirstStep()) {
     if (not getConvergenceMeasures().empty()) {
-      setupConvergenceMeasures();       // needs _couplingData configured
+      setupConvergenceMeasures();              // needs _couplingData configured
       setupDataMatrices(getAcceleratedData()); // Reserve memory and initialize data with zero
     }
     if (getAcceleration().get() != nullptr) {
@@ -44,11 +44,11 @@ void SerialCouplingScheme::initializeImplicit()
 
 void SerialCouplingScheme::checkInitialize()
 {
-  if(anyDataRequiresInitialization(getSendData())){
+  if (anyDataRequiresInitialization(getSendData())) {
     PRECICE_CHECK(not doesFirstStep(), "Only second participant can initialize data and send it!");
   }
 
-  if(anyDataRequiresInitialization(getReceiveData())){
+  if (anyDataRequiresInitialization(getReceiveData())) {
     PRECICE_CHECK(doesFirstStep(), "Only first participant can receive initial data!");
   }
 }
@@ -57,11 +57,11 @@ void SerialCouplingScheme::initializeImplementation()
 {
   checkInitialize();
 
-  if(anyDataRequiresInitialization(getSendData())) {
+  if (anyDataRequiresInitialization(getSendData())) {
     hasToSendInitializedData();
   }
 
-  if(anyDataRequiresInitialization(getReceiveData())) {
+  if (anyDataRequiresInitialization(getReceiveData())) {
     hasToReceiveInitializedData();
   }
 
@@ -76,15 +76,14 @@ void SerialCouplingScheme::initializeImplementation()
 
 void SerialCouplingScheme::exchangeInitialData()
 {
-  PRECICE_ASSERT( isCouplingOngoing());
+  PRECICE_ASSERT(isCouplingOngoing());
   if (doesFirstStep()) {
-    PRECICE_ASSERT( not sendsInitializedData(), "First participant cannot send data during initialization.");
+    PRECICE_ASSERT(not sendsInitializedData(), "First participant cannot send data during initialization.");
     if (receivesInitializedData()) {
       receiveData(getM2N());
     }
-  }
-  else { // second participant
-    PRECICE_ASSERT( not receivesInitializedData(), "Only first participant can receive data during initialization.");
+  } else { // second participant
+    PRECICE_ASSERT(not receivesInitializedData(), "Only first participant can receive data during initialization.");
     if (sendsInitializedData()) {
       if (isImplicitCouplingScheme() && getExtrapolationOrder() > 0) {
         doExtrapolationOn(getSendData());
@@ -101,7 +100,7 @@ void SerialCouplingScheme::exchangeInitialData()
 
 std::pair<bool, bool> SerialCouplingScheme::doAdvance()
 {
-  bool convergence, convergenceCoarseOptimization, doOnlySolverEvaluation;  // @todo having the bools for convergence measurement declared for explicit and implicit coupling is not nice
+  bool convergence, convergenceCoarseOptimization, doOnlySolverEvaluation; // @todo having the bools for convergence measurement declared for explicit and implicit coupling is not nice
 
   // initialize advance
   if (isImplicitCouplingScheme()) {
@@ -110,45 +109,35 @@ std::pair<bool, bool> SerialCouplingScheme::doAdvance()
     doOnlySolverEvaluation        = false;
   }
 
-  // acceleration (only second participant)
-  if (not doesFirstStep() && isImplicitCouplingScheme()) {
-    PRECICE_DEBUG("Test Convergence and accelerate...");
-    ValuesMap designSpecifications;  // TODO make this better?
-    int       accelerationShift = 1; // TODO @BU: why do we need an "accelerationShift" for SerialCouplingScheme, but not for the ParallelCouplingScheme?
-    doAcceleration(designSpecifications, convergence, convergenceCoarseOptimization, doOnlySolverEvaluation, accelerationShift);
-  }
-
-  // communication
-  if (not doesFirstStep() && isImplicitCouplingScheme()){
-    getM2N()->send(convergence);
-    getM2N()->send(getIsCoarseModelOptimizationActive());
-  }
-  PRECICE_DEBUG("Sending data...");
-  sendData(getM2N());
-
-  // TODO acceleration or communication?
-  if(isImplicitCouplingScheme()) {
-    if (doesFirstStep()) { // first participant
-      PRECICE_DEBUG("Receiving data...");
+  if (doesFirstStep()) { // first participant
+    PRECICE_DEBUG("Sending data...");
+    sendData(getM2N());
+    if (isImplicitCouplingScheme()) {
       convergence = checkConvergence();
-    } else { // second participant
-      // the second participant does not want new data in the last iteration of the last time window
-      if (isCouplingOngoing() || not convergence) {
-        PRECICE_DEBUG("Receiving data...");
-        receiveAndSetTimeWindowSize();
-      }
     }
-  }
-
-  // communication
-  if (doesFirstStep() || isCouplingOngoing() || (isImplicitCouplingScheme() && not convergence)) {
     PRECICE_DEBUG("Receiving data...");
     if (isExplicitCouplingScheme()) {
       receiveAndSetTimeWindowSize();
     }
     receiveData(getM2N());
+  } else { // second participant
+    if (isImplicitCouplingScheme()) {
+      PRECICE_DEBUG("Test Convergence and accelerate...");
+      ValuesMap designSpecifications;  // TODO make this better?
+      int       accelerationShift = 1; // TODO @BU: why do we need an "accelerationShift" for SerialCouplingScheme, but not for the ParallelCouplingScheme?
+      doAcceleration(designSpecifications, convergence, convergenceCoarseOptimization, doOnlySolverEvaluation, accelerationShift);
+      getM2N()->send(convergence);
+      getM2N()->send(getIsCoarseModelOptimizationActive());
+    }
+    PRECICE_DEBUG("Sending data...");
+    sendData(getM2N());
+    // the second participant does not want new data in the last iteration of the last time window
+    if (isCouplingOngoing() || (isImplicitCouplingScheme() && not convergence)) {
+      PRECICE_DEBUG("Receiving data...");
+      receiveAndSetTimeWindowSize();
+      receiveData(getM2N());
+    }
   }
-
   return std::pair<bool, bool>(convergence, convergenceCoarseOptimization);
 }
 

@@ -84,26 +84,9 @@ std::pair<bool, bool> ParallelCouplingScheme::doAdvance()
     doOnlySolverEvaluation        = false;
   }
 
-  // pre-acceleration communication
   if (doesFirstStep()) { //first participant
     PRECICE_DEBUG("Sending data...");
     sendData(getM2N());
-  } else { //second participant
-    PRECICE_DEBUG("Receiving data...");
-    if (isExplicitCouplingScheme()) {
-      receiveAndSetTimeWindowSize();
-    }
-    receiveData(getM2N());
-  }
-
-  // acceleration (only second participant)
-  if (isImplicitCouplingScheme() && not doesFirstStep()) {
-    ValuesMap designSpecifications; // TODO make this better?
-    doAcceleration(designSpecifications, convergence, convergenceCoarseOptimization, doOnlySolverEvaluation);
-  }
-
-  // post-acceleration communication
-  if (doesFirstStep()) { //first participant
     PRECICE_DEBUG("Receiving data...");
     if(isImplicitCouplingScheme()) {
       convergence = checkConvergence();
@@ -113,14 +96,21 @@ std::pair<bool, bool> ParallelCouplingScheme::doAdvance()
     }
     receiveData(getM2N());
   } else { //second participant
-    PRECICE_DEBUG("Sending data...");
+    PRECICE_DEBUG("Receiving data...");
+    if (isExplicitCouplingScheme()) {
+      receiveAndSetTimeWindowSize();
+    }
+    receiveData(getM2N());
     if (isImplicitCouplingScheme()) {
+      PRECICE_DEBUG("Perform acceleration (only second participant)...");
+      ValuesMap designSpecifications; // TODO make this better?
+      doAcceleration(designSpecifications, convergence, convergenceCoarseOptimization, doOnlySolverEvaluation);
       getM2N()->send(convergence);
       getM2N()->send(getIsCoarseModelOptimizationActive());
     }
+    PRECICE_DEBUG("Sending data...");
     sendData(getM2N());
   }
-
   return std::pair<bool, bool>(convergence, convergenceCoarseOptimization);
 }
 
