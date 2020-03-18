@@ -129,15 +129,8 @@ void MultiCouplingScheme::doAdvance()
 
   sendData();
 
-  if (not convergence) {
-    PRECICE_DEBUG("No convergence achieved");
-    requireAction(constants::actionReadIterationCheckpoint());
-  } else {
-    PRECICE_DEBUG("Convergence achieved");
-    advanceTXTWriters();
-  }
   // TODO: Using a hard-coded "true" here looks strange.
-  updateTimeAndIterations(convergence, true);
+  finalizeAdvance(convergence, true);
 }
 
 void MultiCouplingScheme::mergeData()

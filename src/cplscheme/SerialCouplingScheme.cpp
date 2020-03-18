@@ -102,24 +102,31 @@ void SerialCouplingScheme::exchangeInitialData()
 void SerialCouplingScheme::doAdvance()
 {
   bool convergence, isCoarseModelOptimizationActive, convergenceCoarseOptimization, doOnlySolverEvaluation;  // @todo having the bools for convergence measurement declared for explicit and implicit coupling is not nice
+
+  // initialize advance
   if (isImplicitCouplingScheme()) {
     PRECICE_DEBUG("Computed full length of iteration");
     convergenceCoarseOptimization = true;
     doOnlySolverEvaluation        = false;
   }
 
-  if (not doesFirstStep() && isImplicitCouplingScheme()){
+  // TODO acceleration or communication?
+  if (not doesFirstStep() && isImplicitCouplingScheme()) {
     PRECICE_DEBUG("Test Convergence and accelerate...");
     ValuesMap designSpecifications;  // TODO make this better?
     int       accelerationShift = 1; // TODO @BU: why do we need an "accelerationShift" for SerialCouplingScheme, but not for the ParallelCouplingScheme?
     implicitAdvanceSecondParticipant(designSpecifications, convergence, convergenceCoarseOptimization, doOnlySolverEvaluation, accelerationShift);
+  }
+
+  // communication
+  if (not doesFirstStep() && isImplicitCouplingScheme()){
     getM2N()->send(convergence);
     getM2N()->send(getIsCoarseModelOptimizationActive());
   }
-
   PRECICE_DEBUG("Sending data...");
   sendData(getM2N());
 
+  // TODO acceleration or communication?
   if(isImplicitCouplingScheme()) {
     PRECICE_ASSERT(isImplicitCouplingScheme());
     if (doesFirstStep()) { // First participant
@@ -136,6 +143,7 @@ void SerialCouplingScheme::doAdvance()
     }
   }
 
+  // communication
   if (doesFirstStep() || isCouplingOngoing() || (isImplicitCouplingScheme() && not convergence)) {
     PRECICE_DEBUG("Receiving data...");
     if (isExplicitCouplingScheme()) {
@@ -144,16 +152,7 @@ void SerialCouplingScheme::doAdvance()
     receiveData(getM2N());
   }
 
-  if(isImplicitCouplingScheme()) {
-    if (not convergence) {
-      PRECICE_DEBUG("No convergence achieved");
-      requireAction(constants::actionReadIterationCheckpoint());
-    } else {
-      PRECICE_DEBUG("Convergence achieved");
-      advanceTXTWriters();
-    }
-    updateTimeAndIterations(convergence, convergenceCoarseOptimization);
-  }
+  finalizeAdvance(convergence, convergenceCoarseOptimization);
 }
 
 } // namespace cplscheme

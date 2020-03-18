@@ -126,17 +126,7 @@ void ParallelCouplingScheme::doAdvance()
     sendData(getM2N());
   }
 
-  // finalize advance
-  if (isImplicitCouplingScheme()) {
-    if (not convergence) {
-      PRECICE_DEBUG("No convergence achieved");
-      requireAction(constants::actionReadIterationCheckpoint());
-    } else {
-      PRECICE_DEBUG("Convergence achieved");
-      advanceTXTWriters();
-    }
-    updateTimeAndIterations(convergence, convergenceCoarseOptimization);
-  }
+  finalizeAdvance(convergence, convergenceCoarseOptimization);
 }
 
 void ParallelCouplingScheme::mergeData()

@@ -378,6 +378,9 @@ protected:
   void implicitAdvanceSecondParticipant(ValuesMap &designSpecifications, bool& convergence, bool& convergenceCoarseOptimization, bool& doOnlySolverEvaluation, int accelerationShift = 0);
 
   /// TODO
+  void finalizeAdvance(const bool convergence, const bool convergenceCoarseOptimization);
+
+  /// TODO
   void extrapolateData(DataMap &data);
 
   bool maxIterationsReached();
@@ -409,20 +412,6 @@ protected:
   {
     _isCoarseModelOptimizationActive = false;
   }
-
-  /**
-   * @brief If coupling iteration has not converged, time will be reset to beginning of
-   *        window since the window has to be repeated. Iteration counters are incremented.
-   *
-   * @param convergence Set true, if coupling iteration in window was successful
-   * @param convergenceCoarseOptimization Optional parameter, needed if manifold mapping is used
-   */
-  void updateTimeAndIterations(bool convergence, bool convergenceCoarseOptimization = true);
-
-  /**
-   * @brief TODO
-   */
-  void advanceTXTWriters();
 
 private:
   /// Communication device to the other coupling participant.
@@ -573,6 +562,20 @@ private:
    * @brief TODO
    */
   void initializeTXTWriters();
+
+  /**
+ * @brief TODO
+ */
+  void advanceTXTWriters();
+
+  /**
+   * @brief If coupling iteration has not converged, time will be reset to beginning of
+   *        window since the window has to be repeated. Iteration counters are incremented.
+   *
+   * @param convergence Set true, if coupling iteration in window was successful
+   * @param convergenceCoarseOptimization Optional parameter, needed if manifold mapping is used
+   */
+  void updateTimeAndIterations(bool convergence, bool convergenceCoarseOptimization = true);
 
   /// Returns a string representing the required actions.
   std::string printActionsState() const;

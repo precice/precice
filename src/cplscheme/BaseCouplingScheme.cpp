@@ -982,5 +982,18 @@ void BaseCouplingScheme::implicitAdvanceSecondParticipant(ValuesMap& designSpeci
   }
 }
 
+void BaseCouplingScheme::finalizeAdvance(const bool convergence, const bool convergenceCoarseOptimization) {
+  if(isImplicitCouplingScheme()) {
+    if (not convergence) {
+      PRECICE_DEBUG("No convergence achieved");
+      requireAction(constants::actionReadIterationCheckpoint());
+    } else {
+      PRECICE_DEBUG("Convergence achieved");
+      advanceTXTWriters();
+    }
+    updateTimeAndIterations(convergence, convergenceCoarseOptimization);
+  }
+}
+
 } // namespace cplscheme
 } // namespace precice
