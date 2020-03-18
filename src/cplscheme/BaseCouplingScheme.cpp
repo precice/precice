@@ -142,6 +142,9 @@ void BaseCouplingScheme::addDataToReceive(
 
 std::vector<int> BaseCouplingScheme::sendData(m2n::PtrM2N m2n)
 {
+  if(isExplicitCouplingScheme()) {
+    sendTimeWindowSize();
+  }
   PRECICE_TRACE();
   std::vector<int> sentDataIDs;
   PRECICE_ASSERT(m2n.get() != nullptr);

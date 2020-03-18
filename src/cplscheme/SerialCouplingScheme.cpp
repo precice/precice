@@ -103,7 +103,6 @@ void SerialCouplingScheme::doAdvance()
 {
   if(isExplicitCouplingScheme()){
     PRECICE_DEBUG("Sending data...");
-    sendTimeWindowSize();
     sendData(getM2N());
 
     // the second participant does not want new data in the last time window

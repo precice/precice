@@ -80,7 +80,6 @@ void ParallelCouplingScheme::doAdvance()
   if (isExplicitCouplingScheme()) {
     if (doesFirstStep()) {
       PRECICE_DEBUG("Sending data...");
-      sendTimeWindowSize();
       sendData(getM2N());
 
       PRECICE_DEBUG("Receiving data...");
@@ -92,7 +91,6 @@ void ParallelCouplingScheme::doAdvance()
       receiveData(getM2N());
 
       PRECICE_DEBUG("Sending data...");
-      sendTimeWindowSize();
       sendData(getM2N());
     }
   } else {
