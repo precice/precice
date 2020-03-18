@@ -105,6 +105,7 @@ void SerialCouplingScheme::explicitAdvance()
   sendTimeWindowSize();
   sendData(getM2N());
 
+  // the second participant does not want new data in the last time window
   if (isCouplingOngoing() || doesFirstStep()) {
     PRECICE_DEBUG("Receiving data...");
     receiveAndSetTimeWindowSize();
@@ -119,14 +120,26 @@ std::pair<bool, bool> SerialCouplingScheme::implicitAdvance()
   bool convergenceCoarseOptimization   = true;
   bool doOnlySolverEvaluation          = false;
   if (doesFirstStep()) { // First participant
+    PRECICE_DEBUG("Sending data...");
+    sendData(getM2N());
+
+    PRECICE_DEBUG("Receiving data...");
+    getM2N()->receive(convergence);
+    getM2N()->receive(isCoarseModelOptimizationActive);
     implicitAdvanceFirstParticipant(convergence, isCoarseModelOptimizationActive);
+    receiveData(getM2N());
   } else { // Second participant
-    // TODO @BU: why no receiveData(getM2N()); here, like in ParallelCouplingScheme?
     ValuesMap designSpecifications;  // TODO make this better?
-    int acceleationShift = 1;  // TODO @BU: why do we need an "accelerationShift" for SerialCouplingScheme, but not for the ParallelCouplingScheme?
-    implicitAdvanceSecondParticipant(designSpecifications, convergence, convergenceCoarseOptimization, doOnlySolverEvaluation, acceleationShift);
+    int       accelerationShift = 1;  // TODO @BU: why do we need an "accelerationShift" for SerialCouplingScheme, but not for the ParallelCouplingScheme?
+    implicitAdvanceSecondParticipant(designSpecifications, convergence, convergenceCoarseOptimization, doOnlySolverEvaluation, accelerationShift);
+
+    PRECICE_DEBUG("Sending data...");
+    getM2N()->send(convergence);
+    getM2N()->send(getIsCoarseModelOptimizationActive());
+    sendData(getM2N());
     // the second participant does not want new data in the last iteration of the last time window
     if (isCouplingOngoing() || not convergence) {
+      PRECICE_DEBUG("Receiving data...");
       receiveAndSetTimeWindowSize();
       receiveData(getM2N());
     }

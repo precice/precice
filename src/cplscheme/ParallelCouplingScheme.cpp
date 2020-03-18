@@ -103,11 +103,25 @@ std::pair<bool, bool> ParallelCouplingScheme::implicitAdvance()
   bool convergenceCoarseOptimization   = true;
   bool doOnlySolverEvaluation          = false;
   if (doesFirstStep()) { // First participant
+    PRECICE_DEBUG("Sending data...");
+    sendData(getM2N());
+
+    PRECICE_DEBUG("Receiving data...");
+    getM2N()->receive(convergence);
+    getM2N()->receive(isCoarseModelOptimizationActive);
     implicitAdvanceFirstParticipant(convergence, isCoarseModelOptimizationActive);
-  } else { // Second participant
     receiveData(getM2N());
+  } else { // Second participant
+    PRECICE_DEBUG("Receiving data...");
+    receiveData(getM2N());
+
     ValuesMap designSpecifications;  // TODO make this better?
     implicitAdvanceSecondParticipant(designSpecifications, convergence, convergenceCoarseOptimization, doOnlySolverEvaluation);
+
+    PRECICE_DEBUG("Sending data...");
+    getM2N()->send(convergence);
+    getM2N()->send(getIsCoarseModelOptimizationActive());
+    sendData(getM2N());
   }
   return std::pair<bool, bool>(convergence, convergenceCoarseOptimization);
 }

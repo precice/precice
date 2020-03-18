@@ -884,9 +884,6 @@ std::pair<bool, bool> BaseCouplingScheme::implicitAdvance()
 
 void BaseCouplingScheme::implicitAdvanceFirstParticipant(bool& convergence, bool& isCoarseModelOptimizationActive)
 {
-  sendData(getM2N());
-  getM2N()->receive(convergence);
-  getM2N()->receive(isCoarseModelOptimizationActive);
   if(isCoarseModelOptimizationActive){
     activateCoarseModelOptimization();
   } else {
@@ -895,7 +892,6 @@ void BaseCouplingScheme::implicitAdvanceFirstParticipant(bool& convergence, bool
   if (convergence) {
     timeWindowCompleted();
   }
-  receiveData(getM2N());
 }
 
 void BaseCouplingScheme::implicitAdvanceSecondParticipant(ValuesMap& designSpecifications, bool& convergence, bool& convergenceCoarseOptimization, bool& doOnlySolverEvaluation, int accelerationShift)
@@ -993,11 +989,6 @@ void BaseCouplingScheme::implicitAdvanceSecondParticipant(ValuesMap& designSpeci
       }
     }
   }
-
-  getM2N()->send(convergence);
-  getM2N()->send(getIsCoarseModelOptimizationActive());
-
-  sendData(getM2N());
 }
 
 } // namespace cplscheme
