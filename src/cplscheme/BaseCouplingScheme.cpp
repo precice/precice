@@ -902,8 +902,13 @@ bool BaseCouplingScheme::checkConvergence()
   return convergence;
 }
 
-void BaseCouplingScheme::doAcceleration(std::map<int, Eigen::VectorXd> &designSpecifications, bool& convergence, bool& convergenceCoarseOptimization, bool& doOnlySolverEvaluation, int accelerationShift)
+std::pair<bool, bool> BaseCouplingScheme::doAcceleration(int accelerationShift)
 {
+  bool convergence;
+  bool doOnlySolverEvaluation = false;
+  bool convergenceCoarseOptimization = true;
+
+  ValuesMap designSpecifications;
   if (getAcceleration().get() != nullptr) {
     designSpecifications = getAcceleration()->getDesignSpecification(getAcceleratedData());
   }
@@ -997,6 +1002,9 @@ void BaseCouplingScheme::doAcceleration(std::map<int, Eigen::VectorXd> &designSp
       }
     }
   }
+  getM2N()->send(convergence);
+  getM2N()->send(getIsCoarseModelOptimizationActive());
+  return std::pair<bool, bool>(convergence, convergenceCoarseOptimization);
 }
 } // namespace cplscheme
 } // namespace precice

@@ -76,13 +76,7 @@ void ParallelCouplingScheme::exchangeInitialData()
 
 std::pair<bool, bool> ParallelCouplingScheme::doAdvance()
 {
-  bool convergence, convergenceCoarseOptimization, doOnlySolverEvaluation; // @todo having the bools for convergence measurement declared for explicit and implicit coupling is not nice
-
-  // initialize advance
-  if (isImplicitCouplingScheme()) {
-    convergenceCoarseOptimization = true;
-    doOnlySolverEvaluation        = false;
-  }
+  bool convergence, convergenceCoarseOptimization; // @todo having the bools for convergence measurement declared for explicit and implicit coupling is not nice
 
   if (doesFirstStep()) { //first participant
     PRECICE_DEBUG("Sending data...");
@@ -103,10 +97,9 @@ std::pair<bool, bool> ParallelCouplingScheme::doAdvance()
     receiveData(getM2N());
     if (isImplicitCouplingScheme()) {
       PRECICE_DEBUG("Perform acceleration (only second participant)...");
-      ValuesMap designSpecifications; // TODO make this better?
-      doAcceleration(designSpecifications, convergence, convergenceCoarseOptimization, doOnlySolverEvaluation);
-      getM2N()->send(convergence);
-      getM2N()->send(getIsCoarseModelOptimizationActive());
+      std::pair<bool, bool> convergenceInformation = doAcceleration();
+      convergence = convergenceInformation.first;
+      convergenceCoarseOptimization = convergenceInformation.second;
     }
     PRECICE_DEBUG("Sending data...");
     sendData(getM2N());

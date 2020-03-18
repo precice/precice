@@ -375,7 +375,7 @@ protected:
   bool checkConvergence();
 
   /// TODO
-  void doAcceleration(ValuesMap &designSpecifications, bool& convergence, bool& convergenceCoarseOptimization, bool& doOnlySolverEvaluation, int accelerationShift = 0);
+  std::pair<bool, bool> doAcceleration(int accelerationShift = 0);
 
   /// TODO
   void extrapolateData(DataMap &data);

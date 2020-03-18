@@ -100,14 +100,7 @@ void SerialCouplingScheme::exchangeInitialData()
 
 std::pair<bool, bool> SerialCouplingScheme::doAdvance()
 {
-  bool convergence, convergenceCoarseOptimization, doOnlySolverEvaluation; // @todo having the bools for convergence measurement declared for explicit and implicit coupling is not nice
-
-  // initialize advance
-  if (isImplicitCouplingScheme()) {
-    PRECICE_DEBUG("Computed full length of iteration");
-    convergenceCoarseOptimization = true;
-    doOnlySolverEvaluation        = false;
-  }
+  bool convergence, convergenceCoarseOptimization; // @todo having the bools for convergence measurement declared for explicit and implicit coupling is not nice
 
   if (doesFirstStep()) { // first participant
     PRECICE_DEBUG("Sending data...");
@@ -123,11 +116,10 @@ std::pair<bool, bool> SerialCouplingScheme::doAdvance()
   } else { // second participant
     if (isImplicitCouplingScheme()) {
       PRECICE_DEBUG("Test Convergence and accelerate...");
-      ValuesMap designSpecifications;  // TODO make this better?
       int       accelerationShift = 1; // TODO @BU: why do we need an "accelerationShift" for SerialCouplingScheme, but not for the ParallelCouplingScheme?
-      doAcceleration(designSpecifications, convergence, convergenceCoarseOptimization, doOnlySolverEvaluation, accelerationShift);
-      getM2N()->send(convergence);
-      getM2N()->send(getIsCoarseModelOptimizationActive());
+      std::pair<bool, bool> convergenceInformation = doAcceleration(accelerationShift);
+      convergence = convergenceInformation.first;
+      convergenceCoarseOptimization = convergenceInformation.second;
     }
     PRECICE_DEBUG("Sending data...");
     sendData(getM2N());
