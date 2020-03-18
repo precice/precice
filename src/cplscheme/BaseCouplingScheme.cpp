@@ -276,20 +276,12 @@ void BaseCouplingScheme::advance()
   if (reachedEndOfTimeWindow()) {
     if (isExplicitCouplingScheme()) {
       timeWindowCompleted();
-      explicitAdvance();
+    }
+
+    doAdvance();
+
+    if (isExplicitCouplingScheme()) {
       _computedTimeWindowPart = 0.0;
-    } else if (isImplicitCouplingScheme()) {
-      std::pair<bool, bool> convergenceInformation = implicitAdvance();
-      bool convergence = convergenceInformation.first;
-      bool convergenceCoarseOptimization = convergenceInformation.second;
-      if (not convergence) {
-        PRECICE_DEBUG("No convergence achieved");
-        requireAction(constants::actionReadIterationCheckpoint());
-      } else {
-        PRECICE_DEBUG("Convergence achieved");
-        advanceTXTWriters();
-      }
-      updateTimeAndIterations(convergence, convergenceCoarseOptimization);
     }
   }
 }
@@ -876,10 +868,6 @@ bool BaseCouplingScheme::anyDataRequiresInitialization(BaseCouplingScheme::DataM
     }
   }
   return false;
-}
-std::pair<bool, bool> BaseCouplingScheme::implicitAdvance()
-{
-  return std::pair<bool, bool>();
 }
 
 void BaseCouplingScheme::implicitAdvanceFirstParticipant(bool& convergence, bool& isCoarseModelOptimizationActive)

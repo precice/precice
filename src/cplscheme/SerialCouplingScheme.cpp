@@ -99,52 +99,59 @@ void SerialCouplingScheme::exchangeInitialData()
   }
 }
 
-void SerialCouplingScheme::explicitAdvance()
+void SerialCouplingScheme::doAdvance()
 {
-  PRECICE_DEBUG("Sending data...");
-  sendTimeWindowSize();
-  sendData(getM2N());
-
-  // the second participant does not want new data in the last time window
-  if (isCouplingOngoing() || doesFirstStep()) {
-    PRECICE_DEBUG("Receiving data...");
-    receiveAndSetTimeWindowSize();
-    receiveData(getM2N());
-  }
-}
-
-std::pair<bool, bool> SerialCouplingScheme::implicitAdvance()
-{
-  PRECICE_DEBUG("Computed full length of iteration");
-  bool convergence, isCoarseModelOptimizationActive;
-  bool convergenceCoarseOptimization   = true;
-  bool doOnlySolverEvaluation          = false;
-  if (doesFirstStep()) { // First participant
+  if(isExplicitCouplingScheme()){
     PRECICE_DEBUG("Sending data...");
+    sendTimeWindowSize();
     sendData(getM2N());
 
-    PRECICE_DEBUG("Receiving data...");
-    getM2N()->receive(convergence);
-    getM2N()->receive(isCoarseModelOptimizationActive);
-    implicitAdvanceFirstParticipant(convergence, isCoarseModelOptimizationActive);
-    receiveData(getM2N());
-  } else { // Second participant
-    ValuesMap designSpecifications;  // TODO make this better?
-    int       accelerationShift = 1;  // TODO @BU: why do we need an "accelerationShift" for SerialCouplingScheme, but not for the ParallelCouplingScheme?
-    implicitAdvanceSecondParticipant(designSpecifications, convergence, convergenceCoarseOptimization, doOnlySolverEvaluation, accelerationShift);
-
-    PRECICE_DEBUG("Sending data...");
-    getM2N()->send(convergence);
-    getM2N()->send(getIsCoarseModelOptimizationActive());
-    sendData(getM2N());
-    // the second participant does not want new data in the last iteration of the last time window
-    if (isCouplingOngoing() || not convergence) {
+    // the second participant does not want new data in the last time window
+    if (isCouplingOngoing() || doesFirstStep()) {
       PRECICE_DEBUG("Receiving data...");
       receiveAndSetTimeWindowSize();
       receiveData(getM2N());
     }
+  } else {
+    PRECICE_ASSERT(isImplicitCouplingScheme());
+    PRECICE_DEBUG("Computed full length of iteration");
+    bool convergence, isCoarseModelOptimizationActive;
+    bool convergenceCoarseOptimization = true;
+    bool doOnlySolverEvaluation        = false;
+    if (doesFirstStep()) { // First participant
+      PRECICE_DEBUG("Sending data...");
+      sendData(getM2N());
+
+      PRECICE_DEBUG("Receiving data...");
+      getM2N()->receive(convergence);
+      getM2N()->receive(isCoarseModelOptimizationActive);
+      implicitAdvanceFirstParticipant(convergence, isCoarseModelOptimizationActive);
+      receiveData(getM2N());
+    } else {                           // Second participant
+      ValuesMap designSpecifications;  // TODO make this better?
+      int       accelerationShift = 1; // TODO @BU: why do we need an "accelerationShift" for SerialCouplingScheme, but not for the ParallelCouplingScheme?
+      implicitAdvanceSecondParticipant(designSpecifications, convergence, convergenceCoarseOptimization, doOnlySolverEvaluation, accelerationShift);
+
+      PRECICE_DEBUG("Sending data...");
+      getM2N()->send(convergence);
+      getM2N()->send(getIsCoarseModelOptimizationActive());
+      sendData(getM2N());
+      // the second participant does not want new data in the last iteration of the last time window
+      if (isCouplingOngoing() || not convergence) {
+        PRECICE_DEBUG("Receiving data...");
+        receiveAndSetTimeWindowSize();
+        receiveData(getM2N());
+      }
+    }
+    if (not convergence) {
+      PRECICE_DEBUG("No convergence achieved");
+      requireAction(constants::actionReadIterationCheckpoint());
+    } else {
+      PRECICE_DEBUG("Convergence achieved");
+      advanceTXTWriters();
+    }
+    updateTimeAndIterations(convergence, convergenceCoarseOptimization);
   }
-  return std::pair<bool, bool>(convergence, convergenceCoarseOptimization);
 }
 
 } // namespace cplscheme

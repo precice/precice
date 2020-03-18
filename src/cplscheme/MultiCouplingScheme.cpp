@@ -85,15 +85,11 @@ void MultiCouplingScheme::exchangeInitialData()
   }
 }
 
-void MultiCouplingScheme::explicitAdvance()
+void MultiCouplingScheme::doAdvance()
 {
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
-  // @todo implement
-}
+  // @todo implement MultiCouplingScheme for explicit coupling
 
-std::pair<bool, bool> MultiCouplingScheme::implicitAdvance()
-{
-  PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
   PRECICE_DEBUG("Computed full length of iteration");
 
   receiveData();
@@ -133,8 +129,15 @@ std::pair<bool, bool> MultiCouplingScheme::implicitAdvance()
 
   sendData();
 
-  // TODO: Returning a hard-coded "true" is wrong or at least has a smell! We do not make use of the default value in BaseCouplingScheme::updateTimeAndIterations(bool convergence, bool convergenceCoarseOptimization = true), but provide it explicitly!
-  return std::pair<bool, bool>(convergence, true);
+  if (not convergence) {
+    PRECICE_DEBUG("No convergence achieved");
+    requireAction(constants::actionReadIterationCheckpoint());
+  } else {
+    PRECICE_DEBUG("Convergence achieved");
+    advanceTXTWriters();
+  }
+  // TODO: Using a hard-coded "true" here looks strange.
+  updateTimeAndIterations(convergence, true);
 }
 
 void MultiCouplingScheme::mergeData()

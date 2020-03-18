@@ -58,14 +58,9 @@ private:
   DataMap _allData;
 
   /**
-* @brief TODO
-*/
-  void explicitAdvance() override;
-
-  /**
-* @brief TODO
-*/
-  std::pair<bool, bool> implicitAdvance() override;
+   * @brief TODO
+   */
+  void doAdvance() override;
 
   DataMap &getAcceleratedData() override
   {
@@ -73,13 +68,13 @@ private:
   }
 
   /**
-* @brief TODO
-*/
+   * @brief TODO
+   */
   void initializeImplicit() override;
 
   /**
- * @brief TODO
- */
+   * @brief TODO
+   */
   void initializeImplementation() override;
 
   /**

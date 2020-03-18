@@ -410,6 +410,20 @@ protected:
     _isCoarseModelOptimizationActive = false;
   }
 
+  /**
+   * @brief If coupling iteration has not converged, time will be reset to beginning of
+   *        window since the window has to be repeated. Iteration counters are incremented.
+   *
+   * @param convergence Set true, if coupling iteration in window was successful
+   * @param convergenceCoarseOptimization Optional parameter, needed if manifold mapping is used
+   */
+  void updateTimeAndIterations(bool convergence, bool convergenceCoarseOptimization = true);
+
+  /**
+   * @brief TODO
+   */
+  void advanceTXTWriters();
+
 private:
   /// Communication device to the other coupling participant.
   m2n::PtrM2N _m2n;
@@ -545,10 +559,7 @@ private:
   /// Functions needed for advance()
 
   /// implements functionality for advance in base class.
-  virtual void explicitAdvance() = 0;
-
-  /// implements functionality for advance in base class.
-  virtual std::pair<bool, bool> implicitAdvance() = 0;
+  virtual void doAdvance() = 0;
 
   virtual DataMap &getAcceleratedData() = 0;
 
@@ -559,23 +570,9 @@ private:
   bool reachedEndOfTimeWindow();
 
   /**
-   * @brief If coupling iteration has not converged, time will be reset to beginning of
-   *        window since the window has to be repeated. Iteration counters are incremented.
-   *
-   * @param convergence Set true, if coupling iteration in window was successful
-   * @param convergenceCoarseOptimization Optional parameter, needed if manifold mapping is used
-   */
-  void updateTimeAndIterations(bool convergence, bool convergenceCoarseOptimization = true);
-
-  /**
    * @brief TODO
    */
   void initializeTXTWriters();
-
-  /**
-   * @brief TODO
-   */
-  void advanceTXTWriters();
 
   /// Returns a string representing the required actions.
   std::string printActionsState() const;
