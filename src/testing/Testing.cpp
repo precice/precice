@@ -5,8 +5,10 @@
 #include <string>
 #include "com/MPIDirectCommunication.hpp"
 #include "com/SocketCommunication.hpp"
+#include "com/SocketCommunicationFactory.hpp"
 #include "logging/LogMacros.hpp"
 #include "m2n/GatherScatterComFactory.hpp"
+#include "m2n/PointToPointComFactory.hpp"
 #include "utils/EventUtils.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Petsc.hpp"
@@ -202,11 +204,22 @@ void TestContext::initializePetsc()
   }
 }
 
-m2n::PtrM2N TestContext::connect(const std::string &acceptor, const std::string &requestor, bool useOnlyMasterCom, bool useTwoLevelInit) const
+m2n::PtrM2N TestContext::connect(const std::string &acceptor, const std::string &requestor, const ConnectionOptions &options) const
 {
-  auto participantCom   = com::PtrCommunication(new com::SocketCommunication());
-  auto distrFactory     = m2n::DistributedComFactory::SharedPointer(new m2n::GatherScatterComFactory(participantCom));
-  auto m2n              = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory, useOnlyMasterCom, useTwoLevelInit));
+  auto participantCom = com::PtrCommunication(new com::SocketCommunication());
+
+  m2n::DistributedComFactory::SharedPointer distrFactory;
+  switch (options.type) {
+    case ConnectionType::GatherScatter:
+      distrFactory.reset(new m2n::GatherScatterComFactory(participantCom));
+      break;
+    case ConnectionType::PointToPoint:
+      distrFactory.reset(new m2n::PointToPointComFactory(com::PtrCommunicationFactory(new com::SocketCommunicationFactory())));
+      break;
+    default:
+      throw std::runtime_error{"ConnectionType unknown"};
+  };
+  auto m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory, options.useOnlyMasterCom, options.useTwoLevelInit));
 
   if (std::find(_names.begin(), _names.end(), acceptor) == _names.end()) {
     throw std::runtime_error{

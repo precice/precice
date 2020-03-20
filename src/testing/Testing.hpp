@@ -63,6 +63,18 @@ enum class Require {
   Events,
 };
 
+enum struct ConnectionType {
+  GatherScatter,
+  PointToPoint
+};
+
+struct ConnectionOptions {
+  ConnectionOptions() = default;
+  bool useOnlyMasterCom = false;
+  bool useTwoLevelInit = false;
+  ConnectionType type = ConnectionType::GatherScatter;
+};
+
 class TestContext {
 public:
   using Participants = std::vector<Participant>;
@@ -114,7 +126,7 @@ public:
 
   bool isMaster() const;
 
-  m2n::PtrM2N connect(const std::string &acceptor, const std::string &requestor, bool useOnlyMasterCom = false, bool useTwoLevelInit = false) const;
+  m2n::PtrM2N connect(const std::string &acceptor, const std::string &requestor, const ConnectionOptions& options = ConnectionOptions{}) const;
 
 private:
   bool _petsc  = false;
