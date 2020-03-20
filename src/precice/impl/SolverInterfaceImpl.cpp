@@ -781,17 +781,6 @@ void SolverInterfaceImpl::setMeshQuad(
   }
 }
 
-// First organise four points into 2 sets of 3 vertices. 
-// Create two triangles with the four points
-/*
-  2 ------- 3
-    |\    |
-    | \   |
-    |  \  |
-    |   \ |
-    |    \|
-  1 ------- 0
-*/
 void SolverInterfaceImpl::setMeshQuadWithEdges(
     int meshID,
     int firstVertexID,
