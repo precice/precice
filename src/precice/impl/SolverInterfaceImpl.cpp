@@ -761,10 +761,11 @@ void SolverInterfaceImpl::setMeshQuad(
     int firstEdgeID,
     int secondEdgeID,
     int thirdEdgeID,
-    int fourthEdgeID)
+    int fourthEdgeID,
+    int fifthEdgeID)
 {
   PRECICE_TRACE(meshID, firstEdgeID, secondEdgeID, thirdEdgeID,
-                fourthEdgeID);
+                fourthEdgeID, fifthEdgeID);
   PRECICE_REQUIRE_MESH_MODIFY(meshID);
   MeshContext &context = _accessor->meshContext(meshID);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
@@ -773,11 +774,15 @@ void SolverInterfaceImpl::setMeshQuad(
     PRECICE_CHECK(mesh->isValidEdgeID(secondEdgeID), "Given EdgeID is invalid!");
     PRECICE_CHECK(mesh->isValidEdgeID(thirdEdgeID), "Given EdgeID is invalid!");
     PRECICE_CHECK(mesh->isValidEdgeID(fourthEdgeID), "Given EdgeID is invalid!");
+    PRECICE_CHECK(mesh->isValidEdgeID(fifthEdgeID), "Given EdgeID is invalid!");
     mesh::Edge &e0 = mesh->edges()[firstEdgeID];
     mesh::Edge &e1 = mesh->edges()[secondEdgeID];
     mesh::Edge &e2 = mesh->edges()[thirdEdgeID];
     mesh::Edge &e3 = mesh->edges()[fourthEdgeID];
-    mesh->createQuad(e0, e1, e2, e3);
+    mesh::Edge &e4 = mesh->edges()[fifthEdgeID];
+    //mesh->createQuad(e0, e1, e2, e3);
+    mesh->createTriangle(e0, e1, e4);
+    mesh->createTriangle(e2, e3, e4);
   }
 }
 

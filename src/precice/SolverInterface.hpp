@@ -495,8 +495,9 @@ public:
    * @param[in] secondEdgeID ID of the second edge of the Quad
    * @param[in] thirdEdgeID ID of the third edge of the Quad
    * @param[in] fourthEdgeID ID of the forth edge of the Quad
-   *
-   * @pre edges with firstEdgeID, secondEdgeID, thirdEdgeID, and fourthEdgeID were added to the mesh with the ID meshID
+   * @param[in] fifthEdgeID ID of the fifth edge of the Quad connecting two opposing points
+   * 
+   * @pre edges with firstEdgeID, secondEdgeID, thirdEdgeID, fourthEdgeID and fifthEdgeID were added to the mesh with the ID meshID
    *
    * @warning Quads are not fully implemented yet.
    */
@@ -505,7 +506,8 @@ public:
       int firstEdgeID,
       int secondEdgeID,
       int thirdEdgeID,
-      int fourthEdgeID);
+      int fourthEdgeID,
+      int fifthEdgeID);
 
   /**
    * @brief Sets surface mesh quadrangle from vertex IDs.
