@@ -255,7 +255,6 @@ struct ExplicitCouplingSchemeFixture : m2n::WhiteboxAccessor {
   {
     BOOST_TEST(communication);
     BOOST_TEST(not communication->isConnected());
-    utils::Parallel::splitCommunicator(localParticipant);
     useOnlyMasterCom(communication) = true;
     if (participant0 == localParticipant) {
       communication->requestMasterConnection(participant1, participant0);
@@ -273,7 +272,7 @@ BOOST_FIXTURE_TEST_SUITE(ExplicitCouplingSchemeTests, ExplicitCouplingSchemeFixt
 BOOST_AUTO_TEST_CASE(testSimpleExplicitCoupling)
 {
   PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
-  auto m2n = context.connect("Participant0", "Participant1");
+  auto m2n = context.connect("Participant0", "Participant1", true);
 
   xml::XMLTag                root = xml::getRootTag();
   mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(root));
@@ -573,7 +572,7 @@ BOOST_AUTO_TEST_CASE(testParallelDataInitialization)
 BOOST_AUTO_TEST_CASE(testExplicitCouplingWithSubcycling)
 {
   PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
-  auto m2n = context.connect("Participant0", "Participant1");
+  auto m2n = context.connect("Participant0", "Participant1", true);
 
   xml::XMLTag                root = xml::getRootTag();
   mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(root));

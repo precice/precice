@@ -267,7 +267,7 @@ BOOST_AUTO_TEST_CASE(testVIQNPP)
 BOOST_AUTO_TEST_CASE(testInitializeData)
 {
   PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
-  auto m2n = context.connect("Participant0", "Participant1");
+  auto m2n = context.connect("Participant0", "Participant1", true);
 
   xml::XMLTag root = xml::getRootTag();
 
