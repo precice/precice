@@ -331,6 +331,9 @@ protected:
 
   bool _isConnected = false;
 
+  /// Adjusts the given rank bases on the _rankOffset
+  virtual int adjustRank(int rank) const;
+
 private:
   logging::Logger _log{"com::Communication"};
 };

@@ -201,8 +201,14 @@ MPI_Comm &MPIDirectCommunication::communicator(int rank)
 int MPIDirectCommunication::rank(int rank)
 {
   // Correct _rankOffset if we are on master
-  return rank + _rankOffset;
+  return rank;
 }
+
+int MPIDirectCommunication::adjustRank(int rank) const
+{
+  return rank;
+}
+
 } // namespace com
 } // namespace precice
 

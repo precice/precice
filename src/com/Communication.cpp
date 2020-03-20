@@ -284,5 +284,10 @@ void Communication::broadcast(std::vector<double> &v, int rankBroadcaster)
   broadcast(v.data(), size, rankBroadcaster);
 }
 
+int Communication::adjustRank(int rank) const
+{
+  return rank - _rankOffset;
+}
+
 } // namespace com
 } // namespace precice

@@ -98,8 +98,12 @@ void SocketCommunication::acceptConnection(std::string const &acceptorName,
                     "Duplicate request to connect by same rank (" << requesterRank << ")!");
 
       _sockets[requesterRank] = socket;
-      send(acceptorRank, requesterRank);
-      receive(requesterCommunicatorSize, requesterRank);
+      // send and receive expect a rank from the acceptor perspective.
+      // Thus we need to apply given rankOffset before passing it to send/receive.
+      // This is essentially the inverse of adjustRank().
+      auto adjustedRequesterRank = requesterRank + rankOffset;
+      send(acceptorRank, adjustedRequesterRank);
+      receive(requesterCommunicatorSize, adjustedRequesterRank);
 
       // Initialize the count of peers to connect to
       if (peerCurrent == 0) {
@@ -322,7 +326,7 @@ void SocketCommunication::send(std::string const &itemToSend, int rankReceiver)
 {
   PRECICE_TRACE(itemToSend, rankReceiver);
 
-  rankReceiver = rankReceiver - _rankOffset;
+  rankReceiver = adjustRank(rankReceiver);
 
   PRECICE_ASSERT(rankReceiver >= 0, rankReceiver);
   PRECICE_ASSERT(isConnected());
@@ -340,7 +344,7 @@ void SocketCommunication::send(const int *itemsToSend, int size, int rankReceive
 {
   PRECICE_TRACE(size, rankReceiver);
 
-  rankReceiver = rankReceiver - _rankOffset;
+  rankReceiver = adjustRank(rankReceiver);
 
   PRECICE_ASSERT(rankReceiver >= 0, rankReceiver);
   PRECICE_ASSERT(isConnected());
@@ -382,7 +386,7 @@ PtrRequest SocketCommunication::aSend(const int *itemsToSend, int size, int rank
 {
   PRECICE_TRACE(size, rankReceiver);
 
-  rankReceiver = rankReceiver - _rankOffset;
+  rankReceiver = adjustRank(rankReceiver);
 
   PRECICE_ASSERT(rankReceiver >= 0, rankReceiver);
   PRECICE_ASSERT(isConnected());
@@ -401,7 +405,7 @@ void SocketCommunication::send(const double *itemsToSend, int size, int rankRece
 {
   PRECICE_TRACE(size, rankReceiver);
 
-  rankReceiver = rankReceiver - _rankOffset;
+  rankReceiver = adjustRank(rankReceiver);
 
   PRECICE_ASSERT(rankReceiver >= 0, rankReceiver);
   PRECICE_ASSERT(isConnected());
@@ -417,7 +421,7 @@ PtrRequest SocketCommunication::aSend(const double *itemsToSend, int size, int r
 {
   PRECICE_TRACE(size, rankReceiver);
 
-  rankReceiver = rankReceiver - _rankOffset;
+  rankReceiver = adjustRank(rankReceiver);
 
   PRECICE_ASSERT(rankReceiver >= 0, rankReceiver);
   PRECICE_ASSERT(isConnected());
@@ -436,7 +440,7 @@ PtrRequest SocketCommunication::aSend(std::vector<double> const &itemsToSend, in
 {
   PRECICE_TRACE(rankReceiver);
 
-  rankReceiver = rankReceiver - _rankOffset;
+  rankReceiver = adjustRank(rankReceiver);
 
   PRECICE_ASSERT(rankReceiver >= 0, rankReceiver);
   PRECICE_ASSERT(isConnected());
@@ -455,7 +459,7 @@ void SocketCommunication::send(double itemToSend, int rankReceiver)
 {
   PRECICE_TRACE(itemToSend, rankReceiver);
 
-  rankReceiver = rankReceiver - _rankOffset;
+  rankReceiver = adjustRank(rankReceiver);
 
   PRECICE_ASSERT(rankReceiver >= 0, rankReceiver);
   PRECICE_ASSERT(isConnected());
@@ -476,7 +480,7 @@ void SocketCommunication::send(int itemToSend, int rankReceiver)
 {
   PRECICE_TRACE(itemToSend, rankReceiver);
 
-  rankReceiver = rankReceiver - _rankOffset;
+  rankReceiver = adjustRank(rankReceiver);
 
   PRECICE_ASSERT(rankReceiver >= 0, rankReceiver)
   PRECICE_ASSERT(isConnected());
@@ -497,7 +501,7 @@ void SocketCommunication::send(bool itemToSend, int rankReceiver)
 {
   PRECICE_TRACE(itemToSend, rankReceiver);
 
-  rankReceiver = rankReceiver - _rankOffset;
+  rankReceiver = adjustRank(rankReceiver);
 
   PRECICE_ASSERT(rankReceiver >= 0, rankReceiver);
   PRECICE_ASSERT(isConnected());
@@ -513,7 +517,7 @@ PtrRequest SocketCommunication::aSend(const bool &itemToSend, int rankReceiver)
 {
   PRECICE_TRACE(rankReceiver);
 
-  rankReceiver = rankReceiver - _rankOffset;
+  rankReceiver = adjustRank(rankReceiver);
 
   PRECICE_ASSERT(rankReceiver >= 0, rankReceiver);
   PRECICE_ASSERT(isConnected());
@@ -532,7 +536,7 @@ void SocketCommunication::receive(std::string &itemToReceive, int rankSender)
 {
   PRECICE_TRACE(rankSender);
 
-  rankSender = rankSender - _rankOffset;
+  rankSender = adjustRank(rankSender);
 
   PRECICE_ASSERT(rankSender >= 0, rankSender);
   PRECICE_ASSERT(isConnected());
@@ -553,7 +557,7 @@ void SocketCommunication::receive(int *itemsToReceive, int size, int rankSender)
 {
   PRECICE_TRACE(size, rankSender);
 
-  rankSender = rankSender - _rankOffset;
+  rankSender = adjustRank(rankSender);
 
   PRECICE_ASSERT(rankSender >= 0, rankSender);
   PRECICE_ASSERT(isConnected());
@@ -569,7 +573,7 @@ void SocketCommunication::receive(double *itemsToReceive, int size, int rankSend
 {
   PRECICE_TRACE(size, rankSender);
 
-  rankSender = rankSender - _rankOffset;
+  rankSender = adjustRank(rankSender);
 
   PRECICE_ASSERT(rankSender >= 0, rankSender);
   PRECICE_ASSERT(isConnected());
@@ -587,7 +591,7 @@ PtrRequest SocketCommunication::aReceive(double *itemsToReceive,
 {
   PRECICE_TRACE(size, rankSender);
 
-  rankSender = rankSender - _rankOffset;
+  rankSender = adjustRank(rankSender);
 
   PRECICE_ASSERT(rankSender >= 0, rankSender);
   PRECICE_ASSERT(isConnected());
@@ -611,7 +615,7 @@ PtrRequest SocketCommunication::aReceive(std::vector<double> &itemsToReceive, in
 {
   PRECICE_TRACE(rankSender);
 
-  rankSender = rankSender - _rankOffset;
+  rankSender = adjustRank(rankSender);
 
   PRECICE_ASSERT(rankSender >= 0, rankSender);
   PRECICE_ASSERT(isConnected());
@@ -635,7 +639,7 @@ void SocketCommunication::receive(double &itemToReceive, int rankSender)
 {
   PRECICE_TRACE(rankSender);
 
-  rankSender = rankSender - _rankOffset;
+  rankSender = adjustRank(rankSender);
 
   PRECICE_ASSERT(rankSender >= 0, rankSender);
   PRECICE_ASSERT(isConnected());
@@ -656,7 +660,7 @@ void SocketCommunication::receive(int &itemToReceive, int rankSender)
 {
   PRECICE_TRACE(rankSender);
 
-  rankSender = rankSender - _rankOffset;
+  rankSender = adjustRank(rankSender);
 
   PRECICE_ASSERT(rankSender >= 0, rankSender);
   PRECICE_ASSERT(isConnected());
@@ -672,7 +676,7 @@ PtrRequest SocketCommunication::aReceive(int &itemToReceive, int rankSender)
 {
   PRECICE_TRACE(rankSender);
 
-  rankSender = rankSender - _rankOffset;
+  rankSender = adjustRank(rankSender);
 
   PRECICE_ASSERT((rankSender >= 0) && (rankSender < (int) _sockets.size()),
                  rankSender, _sockets.size());
@@ -697,7 +701,7 @@ void SocketCommunication::receive(bool &itemToReceive, int rankSender)
 {
   PRECICE_TRACE(rankSender);
 
-  rankSender = rankSender - _rankOffset;
+  rankSender = adjustRank(rankSender);
 
   PRECICE_ASSERT(rankSender >= 0, rankSender);
   PRECICE_ASSERT(isConnected());
@@ -713,7 +717,7 @@ PtrRequest SocketCommunication::aReceive(bool &itemToReceive, int rankSender)
 {
   PRECICE_TRACE(rankSender);
 
-  rankSender = rankSender - _rankOffset;
+  rankSender = adjustRank(rankSender);
 
   PRECICE_ASSERT(rankSender >= 0, rankSender);
   PRECICE_ASSERT(isConnected());
@@ -737,7 +741,7 @@ void SocketCommunication::send(std::vector<int> const &v, int rankReceiver)
 {
   PRECICE_TRACE(rankReceiver);
 
-  rankReceiver = rankReceiver - _rankOffset;
+  rankReceiver = adjustRank(rankReceiver);
 
   PRECICE_ASSERT(rankReceiver >= 0, rankReceiver);
   PRECICE_ASSERT(isConnected());
@@ -755,7 +759,7 @@ void SocketCommunication::receive(std::vector<int> &v, int rankSender)
 {
   PRECICE_TRACE(rankSender);
 
-  rankSender = rankSender - _rankOffset;
+  rankSender = adjustRank(rankSender);
 
   PRECICE_ASSERT(rankSender >= 0, rankSender);
   PRECICE_ASSERT(isConnected());
@@ -775,7 +779,7 @@ void SocketCommunication::send(std::vector<double> const &v, int rankReceiver)
 {
   PRECICE_TRACE(rankReceiver);
 
-  rankReceiver = rankReceiver - _rankOffset;
+  rankReceiver = adjustRank(rankReceiver);
 
   PRECICE_ASSERT(rankReceiver >= 0, rankReceiver);
   PRECICE_ASSERT(isConnected());
@@ -793,7 +797,7 @@ void SocketCommunication::receive(std::vector<double> &v, int rankSender)
 {
   PRECICE_TRACE(rankSender);
 
-  rankSender = rankSender - _rankOffset;
+  rankSender = adjustRank(rankSender);
 
   PRECICE_ASSERT(rankSender >= 0, rankSender);
   PRECICE_ASSERT(isConnected());

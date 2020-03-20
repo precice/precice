@@ -126,6 +126,10 @@ private:
 
   /// CommState to use
   utils::Parallel::CommStatePtr _commState = nullptr;
+
+protected:
+  /// Turn the rank adjustment into a noop for direct communication
+  virtual int adjustRank(int rank) const override;
 };
 
 } // namespace com
