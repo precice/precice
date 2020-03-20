@@ -180,8 +180,7 @@ void TestContext::initializeMasterSlave()
   const auto masterName = name + "Master";
   const auto slavesName = name + "Slaves";
   if (isMaster()) {
-    masterSlaveCom->acceptConnection(masterName, slavesName, "", rank);
-    masterSlaveCom->setRankOffset(1);
+    masterSlaveCom->acceptConnection(masterName, slavesName, "", rank, 1);
   } else {
     masterSlaveCom->requestConnection(masterName, slavesName, "", rank - 1, size - 1);
   }
