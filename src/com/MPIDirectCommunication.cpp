@@ -34,10 +34,15 @@ void MPIDirectCommunication::acceptConnection(std::string const &acceptorName,
 {
   PRECICE_TRACE(acceptorName, requesterName);
   PRECICE_ASSERT(not isConnected());
+  // MPI Direct Comm only supports MasterSlave connections
+  PRECICE_ASSERT(rankOffset == 1, "MPIDirectCommunication only supports MasterSlave Communications!");
+  setRankOffset(rankOffset);
 
-  setRankOffset(0); //rankOffset makes no sense here
   _commState   = utils::Parallel::current();
   _isConnected = true;
+
+  PRECICE_ASSERT(acceptorRank == 0, "The Acceptor/Master has to be rank 0!");
+  PRECICE_ASSERT(_commState->rank() == acceptorRank, "The given acceptor rank does not match the communicator rank!");
 }
 
 void MPIDirectCommunication::closeConnection()
@@ -58,15 +63,19 @@ void MPIDirectCommunication::requestConnection(std::string const &acceptorName,
 {
   PRECICE_TRACE(acceptorName, requesterName);
   PRECICE_ASSERT(not isConnected());
+
+  setRankOffset(0); //rankOffset makes no sense here
   _commState   = utils::Parallel::current();
   _isConnected = true;
+
+  PRECICE_ASSERT(requesterRank == _commState->rank() - 1);
+  PRECICE_ASSERT(requesterCommunicatorSize + 1 == _commState->size());
 }
 
 void MPIDirectCommunication::reduceSum(double *itemsToSend, double *itemsToReceive, int size)
 {
   PRECICE_TRACE(size);
-  int rank = -1;
-  MPI_Comm_rank(_commState->comm, &rank);
+  int rank = _commState->rank();
   MPI_Reduce(itemsToSend, itemsToReceive, size, MPI_DOUBLE, MPI_SUM, rank, _commState->comm);
 }
 
@@ -79,8 +88,7 @@ void MPIDirectCommunication::reduceSum(double *itemsToSend, double *itemsToRecei
 void MPIDirectCommunication::reduceSum(int itemToSend, int &itemsToReceive)
 {
   PRECICE_TRACE();
-  int rank = -1;
-  MPI_Comm_rank(_commState->comm, &rank);
+  int rank = _commState->rank();
   MPI_Reduce(&itemToSend, &itemsToReceive, 1, MPI_INT, MPI_SUM, rank, _commState->comm);
 }
 
