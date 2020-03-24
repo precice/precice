@@ -178,15 +178,15 @@ public:
   /// @{
 
   /// Performs a reduce summation on the rank given by rankMaster
-  virtual void reduceSum(double *itemsToSend, double *itemsToReceive, int size, int rankMaster);
+  virtual void reduceSum(double const *itemsToSend, double *itemsToReceive, int size, int rankMaster);
   /// Performs a reduce summation on the master, every other rank has to call reduceSum
-  virtual void reduceSum(double *itemsToSend, double *itemsToReceive, int size);
+  virtual void reduceSum(double const *itemsToSend, double *itemsToReceive, int size);
 
   virtual void reduceSum(int itemToSend, int &itemToReceive, int rankMaster);
   virtual void reduceSum(int itemsToSend, int &itemsToReceive);
 
-  virtual void allreduceSum(double *itemsToSend, double *itemsToReceive, int size, int rankMaster);
-  virtual void allreduceSum(double *itemsToSend, double *itemsToReceive, int size);
+  virtual void allreduceSum(double const *itemsToSend, double *itemsToReceive, int size, int rankMaster);
+  virtual void allreduceSum(double const *itemsToSend, double *itemsToReceive, int size);
 
   virtual void allreduceSum(double itemToSend, double &itemToReceive, int rankMaster);
   virtual void allreduceSum(double itemToSend, double &itemToReceive);

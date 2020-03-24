@@ -6,23 +6,24 @@ namespace com {
 /**
  * @attention This method modifies the input buffer.
  */
-void Communication::reduceSum(double *itemsToSend, double *itemsToReceive, int size)
+void Communication::reduceSum(double const *itemsToSend, double *itemsToReceive, int size)
 {
   PRECICE_TRACE(size);
 
   std::copy(itemsToSend, itemsToSend + size, itemsToReceive);
 
+  std::vector<double> received(size);
   // receive local results from slaves
   for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
-    auto request = aReceive(itemsToSend, size, rank + _rankOffset);
+    auto request = aReceive(received.data(), size, rank + _rankOffset);
     request->wait();
     for (int i = 0; i < size; i++) {
-      itemsToReceive[i] += itemsToSend[i];
+      itemsToReceive[i] += received[i];
     }
   }
 }
 
-void Communication::reduceSum(double *itemsToSend, double *itemsToReceive, int size, int rankMaster)
+void Communication::reduceSum(double const *itemsToSend, double *itemsToReceive, int size, int rankMaster)
 {
   PRECICE_TRACE(size);
 
@@ -55,18 +56,19 @@ void Communication::reduceSum(int itemToSend, int &itemToReceive, int rankMaster
 /**
  * @attention This method modifies the input buffer.
  */
-void Communication::allreduceSum(double *itemsToSend, double *itemsToReceive, int size)
+void Communication::allreduceSum(double const *itemsToSend, double *itemsToReceive, int size)
 {
   PRECICE_TRACE(size);
 
   std::copy(itemsToSend, itemsToSend + size, itemsToReceive);
 
+  std::vector<double> received(size);
   // receive local results from slaves
   for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
-    auto request = aReceive(itemsToSend, size, rank + _rankOffset);
+    auto request = aReceive(received.data(), size, rank + _rankOffset);
     request->wait();
     for (int i = 0; i < size; i++) {
-      itemsToReceive[i] += itemsToSend[i];
+      itemsToReceive[i] += received[i];
     }
   }
 
@@ -82,7 +84,7 @@ void Communication::allreduceSum(double *itemsToSend, double *itemsToReceive, in
 /**
  * @attention This method modifies the input buffer.
  */
-void Communication::allreduceSum(double *itemsToSend, double *itemsToReceive, int size, int rankMaster)
+void Communication::allreduceSum(double const *itemsToSend, double *itemsToReceive, int size, int rankMaster)
 {
   PRECICE_TRACE(size);
 

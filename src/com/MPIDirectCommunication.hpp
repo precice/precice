@@ -77,17 +77,17 @@ public:
   /// See precice::com::Communication::closeConnection().
   virtual void closeConnection() override;
 
-  virtual void reduceSum(double *itemsToSend, double *itemsToReceive, int size, int rankMaster) override;
+  virtual void reduceSum(double const *itemsToSend, double *itemsToReceive, int size, int rankMaster) override;
 
-  virtual void reduceSum(double *itemsToSend, double *itemsToReceive, int size) override;
+  virtual void reduceSum(double const *itemsToSend, double *itemsToReceive, int size) override;
 
   virtual void reduceSum(int itemToSend, int &itemsToReceive, int rankMaster) override;
 
   virtual void reduceSum(int itemToSend, int &itemsToReceive) override;
 
-  virtual void allreduceSum(double *itemsToSend, double *itemsToReceive, int size, int rankMaster) override;
+  virtual void allreduceSum(double const *itemsToSend, double *itemsToReceive, int size, int rankMaster) override;
 
-  virtual void allreduceSum(double *itemsToSend, double *itemsToReceive, int size) override;
+  virtual void allreduceSum(double const *itemsToSend, double *itemsToReceive, int size) override;
 
   virtual void allreduceSum(double itemToSend, double &itemsToReceive, int rankMaster) override;
 
