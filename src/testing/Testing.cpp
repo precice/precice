@@ -9,10 +9,10 @@
 #include "logging/LogMacros.hpp"
 #include "m2n/GatherScatterComFactory.hpp"
 #include "m2n/PointToPointComFactory.hpp"
+#include "mesh/RTree.hpp"
 #include "utils/EventUtils.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Petsc.hpp"
-#include "mesh/RTree.hpp"
 
 namespace precice {
 namespace testing {
@@ -214,14 +214,14 @@ m2n::PtrM2N TestContext::connect(const std::string &acceptor, const std::string 
 
   m2n::DistributedComFactory::SharedPointer distrFactory;
   switch (options.type) {
-    case ConnectionType::GatherScatter:
-      distrFactory.reset(new m2n::GatherScatterComFactory(participantCom));
-      break;
-    case ConnectionType::PointToPoint:
-      distrFactory.reset(new m2n::PointToPointComFactory(com::PtrCommunicationFactory(new com::SocketCommunicationFactory())));
-      break;
-    default:
-      throw std::runtime_error{"ConnectionType unknown"};
+  case ConnectionType::GatherScatter:
+    distrFactory.reset(new m2n::GatherScatterComFactory(participantCom));
+    break;
+  case ConnectionType::PointToPoint:
+    distrFactory.reset(new m2n::PointToPointComFactory(com::PtrCommunicationFactory(new com::SocketCommunicationFactory())));
+    break;
+  default:
+    throw std::runtime_error{"ConnectionType unknown"};
   };
   auto m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory, options.useOnlyMasterCom, options.useTwoLevelInit));
 
@@ -242,6 +242,33 @@ m2n::PtrM2N TestContext::connect(const std::string &acceptor, const std::string 
     throw std::runtime_error{"You try to connect " + acceptor + " and " + requestor + ", but this context is named " + name};
   }
   return m2n;
+}
+
+std::string TestContext::describe() const
+{
+  if (invalid)
+    return "This test context is invalid!";
+
+  std::ostringstream os;
+  os << "Test context";
+  if (name.empty()) {
+    os << " is unnamed";
+  } else {
+    os << " represents \"" << name << '"';
+  }
+  os << " and runs on rank " << rank << " out of " << size << '.';
+
+  if (_initMS || _events || _petsc) {
+    os << " Initialized: {";
+    if (_initMS)
+      os << " MasterSlave Communication ";
+    if (_events)
+      os << " Events";
+    if (_petsc)
+      os << " PETSc";
+    os << '}';
+  }
+  return os.str();
 }
 
 } // namespace testing

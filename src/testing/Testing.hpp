@@ -69,10 +69,10 @@ enum struct ConnectionType {
 };
 
 struct ConnectionOptions {
-  ConnectionOptions() = default;
-  bool useOnlyMasterCom = false;
-  bool useTwoLevelInit = false;
-  ConnectionType type = ConnectionType::GatherScatter;
+  ConnectionOptions()             = default;
+  bool           useOnlyMasterCom = false;
+  bool           useTwoLevelInit  = false;
+  ConnectionType type             = ConnectionType::GatherScatter;
 };
 
 class TestContext {
@@ -126,7 +126,9 @@ public:
 
   bool isMaster() const;
 
-  m2n::PtrM2N connect(const std::string &acceptor, const std::string &requestor, const ConnectionOptions& options = ConnectionOptions{}) const;
+  m2n::PtrM2N connect(const std::string &acceptor, const std::string &requestor, const ConnectionOptions &options = ConnectionOptions{}) const;
+
+  std::string describe() const;
 
 private:
   bool _petsc  = false;
@@ -175,7 +177,8 @@ using precice::testing::operator""_on;
   precice::testing::TestContext context{__VA_ARGS__}; \
   if (context.invalid) {                              \
     return;                                           \
-  }
+  }                                                   \
+  BOOST_TEST_MESSAGE(context.describe());
 
 /// Boost.Test decorator that unconditionally deletes the test.
 class Deleted : public bt::decorator::base {
