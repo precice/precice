@@ -141,7 +141,11 @@ void MPIPortsCommunication::requestConnection(std::string const &acceptorName,
   MPI_Send(&requesterRank, 1, MPI_INT, 0, 42, communicator);
   MPI_Send(&requesterCommunicatorSize, 1, MPI_INT, 0, 42, communicator);
   MPI_Recv(&acceptorRank, 1, MPI_INT, 0, 42, communicator, MPI_STATUS_IGNORE);
-  PRECICE_ASSERT(acceptorRank == 0, "The acceptor always has to be 0.");
+  // @todo The following assertion should always be the case, however the
+  // acceleration package currently violates this in order to create a circular
+  // intra Communication.
+  //
+  // PRECICE_ASSERT(acceptorRank == 0, "The acceptor always has to be 0.");
   _communicators[0] = communicator; // should be acceptorRank
 }
 
