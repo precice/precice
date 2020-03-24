@@ -24,22 +24,6 @@ using precice::testing::TestContext;
 BOOST_AUTO_TEST_SUITE(PartitionTests)
 BOOST_AUTO_TEST_SUITE(ReceivedPartitionTests)
 
-void setupParallelEnvironment(m2n::PtrM2N m2n, const testing::TestContext &context)
-{
-  // Establish and configure the master-master connection
-  if (context.isNamed("Fluid")) {
-    BOOST_TEST(context.hasSize(3));
-    m2n->acceptMasterConnection("Fluid", "SolidMaster");
-  }
-
-  if (context.isNamed("Solid")) {
-    BOOST_TEST(context.hasSize(1));
-    m2n->requestMasterConnection("Fluid", "SolidMaster");
-  }
-
-  BOOST_TEST(m2n->isConnected());
-}
-
 void tearDownParallelEnvironment()
 {
   mesh::Data::resetDataCount();
@@ -75,6 +59,8 @@ void createSolidzMesh2D(mesh::PtrMesh pSolidzMesh)
   pSolidzMesh->createEdge(v3, v4);
   pSolidzMesh->createEdge(v4, v5);
   pSolidzMesh->createEdge(v5, v6);
+  pSolidzMesh->computeState();
+  pSolidzMesh->computeBoundingBox();
 }
 
 void createSolidzMesh2DSmall(mesh::PtrMesh pSolidzMesh)
@@ -92,6 +78,8 @@ void createSolidzMesh2DSmall(mesh::PtrMesh pSolidzMesh)
   mesh::Vertex &v3 = pSolidzMesh->createVertex(position);
   pSolidzMesh->createEdge(v1, v2);
   pSolidzMesh->createEdge(v2, v3);
+  pSolidzMesh->computeState();
+  pSolidzMesh->computeBoundingBox();
 }
 
 void createNastinMesh2D(mesh::PtrMesh pNastinMesh, int rank)
@@ -115,6 +103,8 @@ void createNastinMesh2D(mesh::PtrMesh pNastinMesh, int rank)
     position << 0.0, 6.0;
     pNastinMesh->createVertex(position);
   }
+  pNastinMesh->computeState();
+  pNastinMesh->computeBoundingBox();
 }
 
 void createNastinMesh2D2(mesh::PtrMesh pNastinMesh, int rank)
@@ -123,15 +113,15 @@ void createNastinMesh2D2(mesh::PtrMesh pNastinMesh, int rank)
   PRECICE_ASSERT(pNastinMesh.use_count() > 0);
   PRECICE_ASSERT(pNastinMesh->getDimensions() == dimensions);
 
-  if (rank == 1) {
+  if (rank == 0) {
     Eigen::VectorXd position(dimensions);
     position << 0.10, 0.10;
     pNastinMesh->createVertex(position);
     position << 0.90, 0.90;
     pNastinMesh->createVertex(position);
-  } else if (rank == 2) {
+  } else if (rank == 1) {
     // not at interface
-  } else if (rank == 3) {
+  } else if (rank == 2) {
 
     Eigen::VectorXd position(dimensions);
     position << 2.1, 2.1;
@@ -139,6 +129,8 @@ void createNastinMesh2D2(mesh::PtrMesh pNastinMesh, int rank)
     position << 2.9, 2.9;
     pNastinMesh->createVertex(position);
   }
+  pNastinMesh->computeState();
+  pNastinMesh->computeBoundingBox();
 }
 
 void createSolidzMesh3D(mesh::PtrMesh pSolidzMesh)
@@ -171,6 +163,8 @@ void createSolidzMesh3D(mesh::PtrMesh pSolidzMesh)
   mesh::Edge &e6 = pSolidzMesh->createEdge(v5, v1);
   pSolidzMesh->createTriangle(e1, e2, e3);
   pSolidzMesh->createTriangle(e4, e5, e6);
+  pSolidzMesh->computeState();
+  pSolidzMesh->computeBoundingBox();
 }
 
 void createNastinMesh3D(mesh::PtrMesh pNastinMesh, int rank)
@@ -194,6 +188,8 @@ void createNastinMesh3D(mesh::PtrMesh pNastinMesh, int rank)
     position << 0.5, 0.5, 0.0;
     pNastinMesh->createVertex(position);
   }
+  pNastinMesh->computeState();
+  pNastinMesh->computeBoundingBox();
 }
 
 void createNastinMesh3D2(mesh::PtrMesh pNastinMesh, int rank)
@@ -202,15 +198,15 @@ void createNastinMesh3D2(mesh::PtrMesh pNastinMesh, int rank)
   PRECICE_ASSERT(pNastinMesh.use_count() > 0);
   PRECICE_ASSERT(pNastinMesh->getDimensions() == dimensions);
 
-  if (rank == 1) {
+  if (rank == 0) {
     Eigen::VectorXd position(dimensions);
     position << 0.10, 0.10, 0.1;
     pNastinMesh->createVertex(position);
     position << 0.90, 0.90, 0.9;
     pNastinMesh->createVertex(position);
-  } else if (rank == 2) {
+  } else if (rank == 1) {
     // not at interface
-  } else if (rank == 3) {
+  } else if (rank == 2) {
 
     Eigen::VectorXd position(dimensions);
     position << 2.1, 2.1, 2.1;
@@ -218,18 +214,14 @@ void createNastinMesh3D2(mesh::PtrMesh pNastinMesh, int rank)
     position << 2.9, 2.9, 2.1;
     pNastinMesh->createVertex(position);
   }
+  pNastinMesh->computeState();
+  pNastinMesh->computeBoundingBox();
 }
 
 BOOST_AUTO_TEST_CASE(RePartitionNNBroadcastFilter2D)
 {
-  PRECICE_TEST("Fluid"_on(3_ranks).setupMasterSlaves(), "Solid"_on(1_rank), Require::Events);
-  com::PtrCommunication participantCom =
-      com::PtrCommunication(new com::MPIDirectCommunication());
-  m2n::DistributedComFactory::SharedPointer distrFactory = m2n::DistributedComFactory::SharedPointer(
-      new m2n::GatherScatterComFactory(participantCom));
-  m2n::PtrM2N m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory));
-
-  setupParallelEnvironment(m2n, context);
+  PRECICE_TEST("Solid"_on(1_rank), "Fluid"_on(3_ranks).setupMasterSlaves(), Require::Events);
+  auto m2n = context.connect("Solid", "Fluid");
 
   int             dimensions  = 2;
   bool            flipNormals = false;
@@ -238,6 +230,7 @@ BOOST_AUTO_TEST_CASE(RePartitionNNBroadcastFilter2D)
   if (context.isNamed("Solid")) { //SOLIDZ
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::nextMeshID()));
     createSolidzMesh2D(pSolidzMesh);
+    BOOST_TEST(pSolidzMesh->vertices().size() == 6);
     ProvidedPartition part(pSolidzMesh);
     part.addM2N(m2n);
     part.communicate();
@@ -254,8 +247,6 @@ BOOST_AUTO_TEST_CASE(RePartitionNNBroadcastFilter2D)
     boundingToMapping->setMeshes(pNastinMesh, pSolidzMesh);
 
     createNastinMesh2D(pNastinMesh, context.rank);
-    pNastinMesh->computeState();
-    pNastinMesh->computeBoundingBox();
 
     double safetyFactor = 0.1;
 
@@ -266,16 +257,19 @@ BOOST_AUTO_TEST_CASE(RePartitionNNBroadcastFilter2D)
     part.communicate();
     part.compute();
 
-    // check if the sending and filtering worked right
-    if (context.isMaster()) { //Master
-      BOOST_TEST(pSolidzMesh->vertices().size() == 2);
-      BOOST_TEST(pSolidzMesh->edges().size() == 1);
-    } else if (context.isRank(1)) { //Slave1
-      BOOST_TEST(pSolidzMesh->vertices().size() == 0);
-      BOOST_TEST(pSolidzMesh->edges().size() == 0);
-    } else if (context.isRank(2)) { //Slave2
-      BOOST_TEST(pSolidzMesh->vertices().size() == 2);
-      BOOST_TEST(pSolidzMesh->edges().size() == 1);
+    BOOST_TEST_CONTEXT(*pSolidzMesh)
+    {
+      // check if the sending and filtering worked right
+      if (context.isMaster()) { //Master
+        BOOST_TEST(pSolidzMesh->vertices().size() == 2);
+        BOOST_TEST(pSolidzMesh->edges().size() == 1);
+      } else if (context.isRank(1)) { //Slave1
+        BOOST_TEST(pSolidzMesh->vertices().size() == 0);
+        BOOST_TEST(pSolidzMesh->edges().size() == 0);
+      } else if (context.isRank(2)) { //Slave2
+        BOOST_TEST(pSolidzMesh->vertices().size() == 2);
+        BOOST_TEST(pSolidzMesh->edges().size() == 1);
+      }
     }
   }
 
@@ -284,14 +278,8 @@ BOOST_AUTO_TEST_CASE(RePartitionNNBroadcastFilter2D)
 
 BOOST_AUTO_TEST_CASE(RePartitionNNDoubleNode2D)
 {
-  PRECICE_TEST("Fluid"_on(3_ranks).setupMasterSlaves(), "Solid"_on(1_rank), Require::Events);
-  com::PtrCommunication participantCom =
-      com::PtrCommunication(new com::MPIDirectCommunication());
-  m2n::DistributedComFactory::SharedPointer distrFactory = m2n::DistributedComFactory::SharedPointer(
-      new m2n::GatherScatterComFactory(participantCom));
-  m2n::PtrM2N m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory));
-
-  setupParallelEnvironment(m2n, context);
+  PRECICE_TEST("Solid"_on(1_rank), "Fluid"_on(3_ranks).setupMasterSlaves(), Require::Events);
+  auto m2n = context.connect("Solid", "Fluid");
 
   int             dimensions  = 2;
   bool            flipNormals = false;
@@ -316,8 +304,6 @@ BOOST_AUTO_TEST_CASE(RePartitionNNDoubleNode2D)
     boundingToMapping->setMeshes(pNastinMesh, pSolidzMesh);
 
     createNastinMesh2D(pNastinMesh, context.rank);
-    pNastinMesh->computeState();
-    pNastinMesh->computeBoundingBox();
 
     double safetyFactor = 0.5;
 
@@ -345,14 +331,8 @@ BOOST_AUTO_TEST_CASE(RePartitionNNDoubleNode2D)
 
 BOOST_AUTO_TEST_CASE(RePartitionNPPreFilterPostFilter2D)
 {
-  PRECICE_TEST("Fluid"_on(3_ranks).setupMasterSlaves(), "Solid"_on(1_rank), Require::Events);
-  com::PtrCommunication participantCom =
-      com::PtrCommunication(new com::MPIDirectCommunication());
-  m2n::DistributedComFactory::SharedPointer distrFactory = m2n::DistributedComFactory::SharedPointer(
-      new m2n::GatherScatterComFactory(participantCom));
-  m2n::PtrM2N m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory));
-
-  setupParallelEnvironment(m2n, context);
+  PRECICE_TEST("Solid"_on(1_rank), "Fluid"_on(3_ranks).setupMasterSlaves(), Require::Events);
+  auto m2n = context.connect("Solid", "Fluid");
 
   int  dimensions  = 2;
   bool flipNormals = false;
@@ -377,8 +357,6 @@ BOOST_AUTO_TEST_CASE(RePartitionNPPreFilterPostFilter2D)
 
     createNastinMesh2D(pNastinMesh, context.rank);
 
-    pNastinMesh->computeState();
-    pNastinMesh->computeBoundingBox();
     double            safetyFactor = 0.1;
     ReceivedPartition part(pSolidzMesh, ReceivedPartition::ON_MASTER, safetyFactor);
     part.addM2N(m2n);
@@ -387,16 +365,19 @@ BOOST_AUTO_TEST_CASE(RePartitionNPPreFilterPostFilter2D)
     part.communicate();
     part.compute();
 
-    // check if the sending and filtering worked right
-    if (context.isMaster()) { //Master
-      BOOST_TEST(pSolidzMesh->vertices().size() == 3);
-      BOOST_TEST(pSolidzMesh->edges().size() == 2);
-    } else if (context.isRank(1)) { //Slave1
-      BOOST_TEST(pSolidzMesh->vertices().size() == 0);
-      BOOST_TEST(pSolidzMesh->edges().size() == 0);
-    } else if (context.isRank(2)) { //Slave2
-      BOOST_TEST(pSolidzMesh->vertices().size() == 3);
-      BOOST_TEST(pSolidzMesh->edges().size() == 2);
+    BOOST_TEST_CONTEXT(*pSolidzMesh)
+    {
+      // check if the sending and filtering worked right
+      if (context.isMaster()) { //Master
+        BOOST_TEST(pSolidzMesh->vertices().size() == 3);
+        BOOST_TEST(pSolidzMesh->edges().size() == 2);
+      } else if (context.isRank(1)) { //Slave1
+        BOOST_TEST(pSolidzMesh->vertices().size() == 0);
+        BOOST_TEST(pSolidzMesh->edges().size() == 0);
+      } else if (context.isRank(2)) { //Slave2
+        BOOST_TEST(pSolidzMesh->vertices().size() == 3);
+        BOOST_TEST(pSolidzMesh->edges().size() == 2);
+      }
     }
   }
   tearDownParallelEnvironment();
@@ -722,13 +703,7 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal3D, *testing::Deleted())
 BOOST_AUTO_TEST_CASE(RePartitionNPBroadcastFilter3D)
 {
   PRECICE_TEST("Fluid"_on(3_ranks).setupMasterSlaves(), "Solid"_on(1_rank), Require::Events);
-  com::PtrCommunication participantCom =
-      com::PtrCommunication(new com::MPIDirectCommunication());
-  m2n::DistributedComFactory::SharedPointer distrFactory = m2n::DistributedComFactory::SharedPointer(
-      new m2n::GatherScatterComFactory(participantCom));
-  m2n::PtrM2N m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory));
-
-  setupParallelEnvironment(m2n, context);
+  auto m2n = context.connect("Solid", "Fluid");
 
   int  dimensions  = 3;
   bool flipNormals = false;
@@ -753,8 +728,6 @@ BOOST_AUTO_TEST_CASE(RePartitionNPBroadcastFilter3D)
 
     createNastinMesh3D(pNastinMesh, context.rank);
 
-    pNastinMesh->computeState();
-    pNastinMesh->computeBoundingBox();
     double            safetyFactor = 20.0;
     ReceivedPartition part(pSolidzMesh, ReceivedPartition::ON_MASTER, safetyFactor);
     part.addM2N(m2n);
@@ -819,6 +792,11 @@ BOOST_AUTO_TEST_CASE(TestRepartitionAndDistribution2D)
     pOtherMesh->createVertex(position);
   } else if (context.isRank(3)) { //Slave3
   }
+  pOtherMesh->computeState();
+  pOtherMesh->computeBoundingBox();
+  pMesh->setGlobalNumberOfVertices(3);
+  pMesh->computeState();
+  pMesh->computeBoundingBox();
 
   // a ReceivedPartition needs exactly one m2n
   com::PtrCommunication participantCom =
@@ -827,9 +805,6 @@ BOOST_AUTO_TEST_CASE(TestRepartitionAndDistribution2D)
       new m2n::GatherScatterComFactory(participantCom));
   m2n::PtrM2N m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory));
 
-  pMesh->setGlobalNumberOfVertices(3);
-  pOtherMesh->computeState();
-  pOtherMesh->computeBoundingBox();
   double            safetyFactor = 20.0; //should not filter out anything here
   ReceivedPartition part(pMesh, ReceivedPartition::ON_MASTER, safetyFactor);
   part.setFromMapping(boundingFromMapping);
@@ -883,7 +858,7 @@ BOOST_AUTO_TEST_CASE(TestRepartitionAndDistribution2D)
 BOOST_AUTO_TEST_CASE(ProvideAndReceiveCouplingMode)
 {
   PRECICE_TEST("Fluid"_on(1_rank), "Solid"_on(1_rank), Require::Events);
-  auto m2n = context.connect("Fluid", "Solid");
+  auto m2n = context.connect("Solid", "Fluid");
 
   int  dimensions  = 2;
   bool flipNormals = false;
@@ -953,9 +928,10 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
 {
   PRECICE_TEST("SOLIDZ"_on(1_rank), "NASTIN"_on(3_ranks).setupMasterSlaves(), Require::Events);
 
-  bool useOnlyMasterCom = false;
-  bool useTwoLevelInit  = true;
-  auto m2n              = context.connect("SOLIDZ", "NASTIN", useOnlyMasterCom, useTwoLevelInit);
+  testing::ConnectionOptions options;
+  options.useOnlyMasterCom = false;
+  options.useTwoLevelInit  = true;
+  auto m2n                 = context.connect("SOLIDZ", "NASTIN", options);
 
   int  dimensions  = 2;
   bool flipNormals = true;
@@ -980,7 +956,7 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
     com::CommunicateBoundingBox(m2n->getMasterCommunication()).sendBoundingBoxMap(sendGlobalBB, 0);
     m2n->getMasterCommunication()->receive(connectedRanksList, 0);
     connectionMapSize = connectedRanksList.size();
-    BOOST_TEST(connectionMapSize == 2);
+    BOOST_TEST_REQUIRE(connectionMapSize == 2);
 
     std::vector<int> connectedRanks;
     connectedRanks.push_back(-1);
@@ -991,8 +967,8 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
     com::CommunicateBoundingBox(m2n->getMasterCommunication()).receiveConnectionMap(receivedConnectionMap, 0);
 
     // test whether we receive correct connection map
-    BOOST_TEST(receivedConnectionMap[0][0] == 2);
-    BOOST_TEST(receivedConnectionMap[2][0] == 0);
+    BOOST_TEST(receivedConnectionMap.at(0).at(0) == 2);
+    BOOST_TEST(receivedConnectionMap.at(2).at(0) == 0);
 
   } else {
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::nextMeshID()));
@@ -1007,7 +983,6 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
     boundingToMapping->setMeshes(pNastinMesh, pSolidzMesh);
 
     createNastinMesh2D2(pNastinMesh, context.rank);
-    pNastinMesh->computeBoundingBox();
 
     double safetyFactor = 0.0;
 
@@ -1024,9 +999,10 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes3D)
 {
   PRECICE_TEST("SOLIDZ"_on(1_rank), "NASTIN"_on(3_ranks).setupMasterSlaves(), Require::Events);
 
-  bool useOnlyMasterCom = false;
-  bool useTwoLevelInit  = true;
-  auto m2n              = context.connect("SOLIDZ", "NASTIN", useOnlyMasterCom, useTwoLevelInit);
+  testing::ConnectionOptions options;
+  options.useOnlyMasterCom = false;
+  options.useTwoLevelInit  = true;
+  auto m2n                 = context.connect("SOLIDZ", "NASTIN", options);
 
   int  dimensions  = 3;
   bool flipNormals = true;
@@ -1078,7 +1054,6 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes3D)
     boundingToMapping->setMeshes(pNastinMesh, pSolidzMesh);
 
     createNastinMesh3D2(pNastinMesh, context.rank);
-    pNastinMesh->computeBoundingBox();
 
     double safetyFactor = 0.0;
 
