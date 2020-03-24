@@ -476,7 +476,7 @@ BOOST_AUTO_TEST_CASE(ComputeStateOfNotFullyConnectedMesh)
   Vertex &v2 = mesh.createVertex(coords2);
   Vertex &v3 = mesh.createVertex(coords3);
   Vertex &v4 = mesh.createVertex(coords4);
-  Vertex &v5 = mesh.createVertex(coords5);
+  mesh.createVertex(coords5);
   BOOST_TEST(mesh.vertices().size() == 6);
 
   Edge &e0 = mesh.createEdge(v0, v1);
