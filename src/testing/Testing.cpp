@@ -12,6 +12,7 @@
 #include "utils/EventUtils.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Petsc.hpp"
+#include "mesh/RTree.hpp"
 
 namespace precice {
 namespace testing {
@@ -37,6 +38,9 @@ TestContext::~TestContext() noexcept
     utils::MasterSlave::_communication = nullptr;
     utils::MasterSlave::reset();
   }
+
+  // Clear caches
+  mesh::rtree::clear();
 
   // Reset static ids and counters
   mesh::Data::resetDataCount();
