@@ -103,6 +103,7 @@ int main(int argc, char *argv[])
   const auto rank = utils::Parallel::current()->rank();
   const auto size = utils::Parallel::current()->size();
   logging::setMPIRank(rank);
+  std::cout << "This test suite runs on rank " << rank << " of " << size << '\n';
 
   if (size < 4) {
     if (rank == 0)
