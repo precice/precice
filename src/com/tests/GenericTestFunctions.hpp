@@ -205,10 +205,194 @@ void TestSendReceiveFourProcesses(int rank)
 }
 
 template <typename T>
+void TestBroadcastPrimitiveTypes(int rank)
+{
+  T com;
+
+  if (rank == 0) {
+    com.acceptConnection("process0", "process1", "", rank);
+    {
+      double msg = 0.0;
+      com.broadcast(msg);
+    }
+    {
+      int msg = 1;
+      com.broadcast(msg);
+    }
+    {
+      bool msg = true;
+      com.broadcast(msg);
+    }
+    com.closeConnection();
+  } else if (rank == 1) {
+    com.requestConnection("process0", "process1", "", 0, 1);
+    {
+      double msg = 1.0;
+      com.broadcast(msg, 0);
+      BOOST_TEST(msg == 0.0);
+    }
+    {
+      int msg = 0;
+      com.broadcast(msg, 0);
+      BOOST_TEST(msg == 1);
+    }
+    {
+      bool msg = false;
+      com.broadcast(msg, 0);
+      BOOST_TEST(msg == true);
+    }
+    com.closeConnection();
+  }
+}
+
+template <typename T>
+void TestBroadcastVectors(int rank)
+{
+  T com;
+
+  if (rank == 0) {
+    com.acceptConnection("process0", "process1", "", rank);
+    {
+      Eigen::Vector3d msg = Eigen::Vector3d::Constant(3.1415);
+      com.broadcast(msg.data(), msg.size());
+    }
+    {
+      Eigen::Vector4i msg = Eigen::Vector4i::Constant(21);
+      com.broadcast(msg.data(), msg.size());
+    }
+    {
+      std::vector<int> msg{2, 3, 5, 8};
+      com.broadcast(msg.data(), msg.size());
+    }
+    {
+      std::vector<double> msg{1.2, 2.3, 3.5, 4.8};
+      com.broadcast(msg.data(), msg.size());
+    }
+    com.closeConnection();
+  } else if (rank == 1) {
+    com.requestConnection("process0", "process1", "", 0, 1);
+    {
+      Eigen::Vector3d msg = Eigen::Vector3d::Constant(0);
+      com.broadcast(msg.data(), msg.size(), 0);
+      BOOST_CHECK(testing::equals(msg, Eigen::Vector3d::Constant(3.1415)));
+    }
+    {
+      Eigen::Vector4i msg = Eigen::Vector4i::Constant(0);
+      com.broadcast(msg.data(), msg.size(), 0);
+      BOOST_CHECK(testing::equals(msg, Eigen::Vector4i::Constant(21)));
+    }
+    {
+      std::vector<int> msg(4);
+      com.broadcast(msg.data(), msg.size(), 0);
+      BOOST_CHECK(msg == std::vector<int>({2, 3, 5, 8}));
+    }
+    {
+      std::vector<double> msg(4);
+      com.broadcast(msg.data(), msg.size(), 0);
+      BOOST_CHECK(msg == std::vector<double>({1.2, 2.3, 3.5, 4.8}));
+    }
+    com.closeConnection();
+  }
+}
+
+template <typename T>
+void TestReducePrimitiveTypes(int rank)
+{
+  T com;
+
+  if (rank == 0) {
+    com.acceptConnection("process0", "process1", "", 0);
+    {
+      int msg = 1;
+      int rcv = 0;
+      com.reduceSum(msg, rcv);
+      BOOST_TEST(msg == 1);
+      BOOST_TEST(rcv == 4);
+    }
+    {
+      int msg = 1;
+      int rcv = 0;
+      com.allreduceSum(msg, rcv);
+      BOOST_TEST(msg == 1);
+      BOOST_TEST(rcv == 4);
+    }
+    {
+      double msg = 3;
+      double rcv = 0;
+      com.allreduceSum(msg, rcv);
+      BOOST_TEST(msg == 3);
+      BOOST_TEST(rcv == 3.1415);
+    }
+
+    com.closeConnection();
+  } else if (rank == 1) {
+    com.requestConnection("process0", "process1", "", 0, 1);
+    {
+      int msg = 3;
+      int rcv = 0;
+      com.reduceSum(msg, rcv, 0);
+      BOOST_TEST(msg == 3);
+      BOOST_TEST(rcv == 0);
+    }
+    {
+      int msg = 3;
+      int rcv = 0;
+      com.allreduceSum(msg, rcv, 0);
+      BOOST_TEST(msg == 3);
+      BOOST_TEST(rcv == 4);
+    }
+    {
+      double msg = 0.1415;
+      double rcv = 0;
+      com.allreduceSum(msg, rcv, 0);
+      BOOST_TEST(msg == 0.1415);
+      BOOST_TEST(rcv == 3.1415);
+    }
+    com.closeConnection();
+  }
+}
+
+template <typename T>
+void TestReduceVectors(int rank)
+{
+  T com;
+
+  if (rank == 0) {
+    com.acceptConnection("process0", "process1", "", rank);
+    {
+      std::vector<double> msg{0.1, 0.2, 0.3};
+      std::vector<double> rcv{0, 0, 0};
+      com.reduceSum(msg.data(), rcv.data(), msg.size());
+      std::vector<double> msg_expected{0.1, 0.2, 0.3};
+      BOOST_CHECK_EQUAL_COLLECTIONS(msg.begin(), msg.end(), msg_expected.begin(), msg_expected.end());
+      std::vector<double> rcv_expected{1.1, 2.2, 3.3};
+      BOOST_CHECK_EQUAL_COLLECTIONS(rcv.begin(), rcv.end(), rcv_expected.begin(), rcv_expected.end());
+    }
+    com.closeConnection();
+  } else if (rank == 1) {
+    com.requestConnection("process0", "process1", "", 0, 1);
+    {
+      std::vector<double> msg{1, 2, 3};
+      std::vector<double> rcv{0, 0, 0};
+      com.reduceSum(msg.data(), rcv.data(), msg.size(), 0);
+      std::vector<double> msg_expected{1, 2, 3};
+      BOOST_CHECK_EQUAL_COLLECTIONS(msg.begin(), msg.end(), msg_expected.begin(), msg_expected.end());
+      std::vector<double> rcv_expected{0, 0, 0};
+      BOOST_CHECK_EQUAL_COLLECTIONS(rcv.begin(), rcv.end(), rcv_expected.begin(), rcv_expected.end());
+    }
+    com.closeConnection();
+  }
+}
+
+template <typename T>
 void TestSendAndReceive(int rank)
 {
   TestSendAndReceivePrimitiveTypes<T>(rank);
   TestSendAndReceiveVectors<T>(rank);
+  TestBroadcastPrimitiveTypes<T>(rank);
+  TestBroadcastVectors<T>(rank);
+  TestReducePrimitiveTypes<T>(rank);
+  TestReduceVectors<T>(rank);
 }
 
 } // namespace mastermaster
@@ -356,6 +540,10 @@ void TestSendAndReceive(int rank)
 {
   TestSendAndReceivePrimitiveTypes<T>(rank);
   TestSendAndReceiveVectors<T>(rank);
+  //TestBroadcastPrimitiveTypes<T>(rank);
+  //TestBroadcastVectors<T>(rank);
+  //TestReducePrimitiveTypes<T>(rank);
+  //TestReduceVectors<T>(rank);
 }
 
 } // namespace masterslave
