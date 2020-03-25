@@ -11,6 +11,7 @@
 #include "utils/Petsc.hpp"
 
 using namespace precice;
+using testing::TestContext;
 
 struct ParallelTestFixture : testing::WhiteboxAccessor {
 
@@ -192,194 +193,115 @@ BOOST_AUTO_TEST_CASE(CouplingOnLine)
 }
 
 /// tests for various QN settings if correct number of iterations is returned
-BOOST_AUTO_TEST_CASE(TestQN)
+void runTestQN(std::string const &config, int correctIterations, TestContext const &context)
 {
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(3_ranks));
-  int                      numberOfTests = 3;
-  std::vector<std::string> configs;
-  configs.resize(numberOfTests);
-  configs[0] = _pathToTests + "QN1.xml";
-  configs[1] = _pathToTests + "QN2.xml";
-  configs[2] = _pathToTests + "QN3.xml";
-
-  int correctIterations[3] = {29, 17, 15};
-
-  std::string solverName, meshName, writeDataName, readDataName;
+  std::string meshName, writeDataName, readDataName;
 
   if (context.isNamed("SolverOne")) {
     meshName      = "MeshOne";
     writeDataName = "Data1";
     readDataName  = "Data2";
   } else {
+    BOOST_TEST(context.isNamed("SolverTwo"));
     meshName      = "MeshTwo";
     writeDataName = "Data2";
     readDataName  = "Data1";
   }
 
-  for (int k = 0; k < numberOfTests; k++) {
-    SolverInterface interface(context.name, configs[k], context.rank, context.size);
-    int             meshID      = interface.getMeshID(meshName);
-    int             writeDataID = interface.getDataID(writeDataName, meshID);
-    int             readDataID  = interface.getDataID(readDataName, meshID);
+  SolverInterface interface(context.name, config, context.rank, context.size);
+  int             meshID      = interface.getMeshID(meshName);
+  int             writeDataID = interface.getDataID(writeDataName, meshID);
+  int             readDataID  = interface.getDataID(readDataName, meshID);
 
-    int vertexIDs[4];
+  int vertexIDs[4];
+
+  if (context.isNamed("SolverOne")) {
+    if (context.isMaster()) {
+      double positions[8] = {2.0, 0.0, 2.0, 0.5, 2.0, 1.0, 2.5, 1.0};
+      interface.setMeshVertices(meshID, 4, positions, vertexIDs);
+    } else {
+      double positions[8] = {2.0, 0.1, 2.0, 0.25, 2.0, 0.4, 2.0, 0.5};
+      interface.setMeshVertices(meshID, 4, positions, vertexIDs);
+    }
+  } else {
+    BOOST_TEST(context.isNamed("SolverTwo"));
+    if (context.isMaster()) {
+      double positions[8] = {2.0, 0.6, 2.0, 0.75, 2.0, 0.9, 2.0, 1.0};
+      interface.setMeshVertices(meshID, 4, positions, vertexIDs);
+    } else {
+      double positions[8] = {2.1, 1.0, 2.25, 1.0, 2.4, 1.0, 2.5, 1.0};
+      interface.setMeshVertices(meshID, 4, positions, vertexIDs);
+    }
+  }
+
+  interface.initialize();
+  double inValues[4]  = {0.0, 0.0, 0.0, 0.0};
+  double outValues[4] = {0.0, 0.0, 0.0, 0.0};
+
+  int iterations = 0;
+
+  while (interface.isCouplingOngoing()) {
+    if (interface.isActionRequired(precice::constants::actionWriteIterationCheckpoint())) {
+      interface.markActionFulfilled(precice::constants::actionWriteIterationCheckpoint());
+    }
 
     if (context.isNamed("SolverOne")) {
-      if (context.isMaster()) {
-        double positions[8] = {2.0, 0.0, 2.0, 0.5, 2.0, 1.0, 2.5, 1.0};
-        interface.setMeshVertices(meshID, 4, positions, vertexIDs);
-      } else {
-        double positions[8] = {2.0, 0.1, 2.0, 0.25, 2.0, 0.4, 2.0, 0.5};
-        interface.setMeshVertices(meshID, 4, positions, vertexIDs);
+      for (int i = 0; i < 4; i++) {
+        outValues[i] = inValues[i] * inValues[i] - 30.0;
       }
     } else {
-      BOOST_TEST(context.isNamed("SolverTwo"));
-      if (context.isMaster()) {
-        double positions[8] = {2.0, 0.6, 2.0, 0.75, 2.0, 0.9, 2.0, 1.0};
-        interface.setMeshVertices(meshID, 4, positions, vertexIDs);
-      } else {
-        double positions[8] = {2.1, 1.0, 2.25, 1.0, 2.4, 1.0, 2.5, 1.0};
-        interface.setMeshVertices(meshID, 4, positions, vertexIDs);
+      for (int i = 0; i < 4; i++) {
+        outValues[i] = inValues[(i + 1) % 4] * inValues[(i + 2) % 4] - 2.0;
       }
     }
 
-    interface.initialize();
-    double inValues[4]  = {0.0, 0.0, 0.0, 0.0};
-    double outValues[4] = {0.0, 0.0, 0.0, 0.0};
+    interface.writeBlockScalarData(writeDataID, 4, vertexIDs, outValues);
+    interface.advance(1.0);
+    interface.readBlockScalarData(readDataID, 4, vertexIDs, inValues);
 
-    int iterations = 0;
-
-    while (interface.isCouplingOngoing()) {
-      if (interface.isActionRequired(precice::constants::actionWriteIterationCheckpoint())) {
-        interface.markActionFulfilled(precice::constants::actionWriteIterationCheckpoint());
-      }
-
-      if (context.isNamed("SolverOne")) {
-        for (int i = 0; i < 4; i++) {
-          outValues[i] = inValues[i] * inValues[i] - 30.0;
-        }
-      } else {
-        for (int i = 0; i < 4; i++) {
-          outValues[i] = inValues[(i + 1) % 4] * inValues[(i + 2) % 4] - 2.0;
-        }
-      }
-
-      interface.writeBlockScalarData(writeDataID, 4, vertexIDs, outValues);
-      interface.advance(1.0);
-      interface.readBlockScalarData(readDataID, 4, vertexIDs, inValues);
-
-      if (interface.isActionRequired(precice::constants::actionReadIterationCheckpoint())) {
-        interface.markActionFulfilled(precice::constants::actionReadIterationCheckpoint());
-        iterations++;
-      }
+    if (interface.isActionRequired(precice::constants::actionReadIterationCheckpoint())) {
+      interface.markActionFulfilled(precice::constants::actionReadIterationCheckpoint());
+      iterations++;
     }
-    interface.finalize();
-    // Depending on the hardware and the Eigen version, QN (for this case) can be faster or slower leading to more iterations or less.
-    // QN is rather sensitive to rounding errors, similar to this specific low-dimensional fixed-point equation.
-    BOOST_TEST(iterations <= correctIterations[k] + 10);
-    BOOST_TEST(iterations >= correctIterations[k] - 10);
   }
+  interface.finalize();
+  // Depending on the hardware and the Eigen version, QN (for this case) can be faster or slower leading to more iterations or less.
+  // QN is rather sensitive to rounding errors, similar to this specific low-dimensional fixed-point equation.
+  BOOST_TEST(iterations <= correctIterations + 10);
+  BOOST_TEST(iterations >= correctIterations - 10);
+}
+
+BOOST_AUTO_TEST_CASE(TestQN1)
+{
+  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(3_ranks));
+
+  std::string config            = _pathToTests + "QN1.xml";
+  int         correctIterations = 29;
+  runTestQN(config, correctIterations, context);
+}
+
+BOOST_AUTO_TEST_CASE(TestQN2)
+{
+  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(3_ranks));
+  std::string config            = _pathToTests + "QN2.xml";
+  int         correctIterations = 17;
+  runTestQN(config, correctIterations, context);
+}
+
+BOOST_AUTO_TEST_CASE(TestQN3)
+{
+  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(3_ranks));
+  std::string config            = _pathToTests + "QN3.xml";
+  int         correctIterations = 15;
+  runTestQN(config, correctIterations, context);
 }
 
 // This test does not restrict the communicator per participant, since otherwise MPI ports do not work for Open-MPI
 /// Tests various distributed communication schemes.
-BOOST_AUTO_TEST_CASE(TestDistributedCommunications)
+void runTestQN(std::string const &config, TestContext const &context)
 {
-  PRECICE_TEST("Fluid"_on(2_ranks), "Structure"_on(2_ranks));
-  std::vector<std::string> fileNames({"point-to-point-sockets.xml",
-                                      "point-to-point-mpi.xml",
-                                      "gather-scatter-mpi.xml"});
-
-  for (auto fileName : fileNames) {
-    std::string meshName;
-    int         i1 = -1, i2 = -1; //indices for data and positions
-
-    std::vector<Eigen::VectorXd> positions;
-    std::vector<Eigen::VectorXd> data;
-    std::vector<Eigen::VectorXd> expectedData;
-
-    Eigen::Vector3d position;
-    Eigen::Vector3d datum;
-
-    for (int i = 0; i < 4; i++) {
-      position[0] = i * 1.0;
-      position[1] = 0.0;
-      position[2] = 0.0;
-      positions.push_back(position);
-      datum[0] = i * 1.0;
-      datum[1] = i * 1.0;
-      datum[2] = 0.0;
-      data.push_back(datum);
-      datum[0] = i * 2.0 + 1.0;
-      datum[1] = i * 2.0 + 1.0;
-      datum[2] = 1.0;
-      expectedData.push_back(datum);
-    }
-
-    if (context.isNamed("Fluid")) {
-      meshName = "FluidMesh";
-      if (context.isMaster()) {
-        i1 = 0;
-        i2 = 2;
-      } else {
-        i1 = 2;
-        i2 = 4;
-      }
-    } else {
-      meshName = "StructureMesh";
-      if (context.isMaster()) {
-        i1 = 0;
-        i2 = 1;
-      } else {
-        i1 = 1;
-        i2 = 4;
-      }
-    }
-
-    SolverInterface precice(context.name, _pathToTests + fileName, context.rank, context.size);
-    int             meshID   = precice.getMeshID(meshName);
-    int             forcesID = precice.getDataID("Forces", meshID);
-    int             velocID  = precice.getDataID("Velocities", meshID);
-
-    std::vector<int> vertexIDs;
-    for (int i = i1; i < i2; i++) {
-      int vertexID = precice.setMeshVertex(meshID, positions[i].data());
-      vertexIDs.push_back(vertexID);
-    }
-
-    precice.initialize();
-
-    if (context.isNamed("Fluid")) { //Fluid
-      for (size_t i = 0; i < vertexIDs.size(); i++) {
-        precice.writeVectorData(forcesID, vertexIDs[i], data[i + i1].data());
-      }
-    } else {
-      BOOST_TEST(context.isNamed("Structure"));
-      for (size_t i = 0; i < vertexIDs.size(); i++) {
-        precice.readVectorData(forcesID, vertexIDs[i], data[i].data());
-        data[i] = (data[i] * 2).array() + 1.0;
-        precice.writeVectorData(velocID, vertexIDs[i], data[i].data());
-      }
-    }
-
-    precice.advance(1.0);
-
-    if (context.isNamed("Fluid")) { //Fluid
-      for (size_t i = 0; i < vertexIDs.size(); i++) {
-        precice.readVectorData(velocID, vertexIDs[i], data[i + i1].data());
-        for (size_t d = 0; d < 3; d++) {
-          BOOST_TEST(expectedData[i + i1][d] == data[i + i1][d]);
-        }
-      }
-    }
-
-    precice.finalize();
-  }
-}
-
-BOOST_AUTO_TEST_CASE(TestBoundingBoxInitialization)
-{
-  PRECICE_TEST("Fluid"_on(2_ranks), "Structure"_on(2_ranks));
+  std::string meshName;
+  int         i1 = -1, i2 = -1; //indices for data and positions
 
   std::vector<Eigen::VectorXd> positions;
   std::vector<Eigen::VectorXd> data;
@@ -388,29 +310,145 @@ BOOST_AUTO_TEST_CASE(TestBoundingBoxInitialization)
   Eigen::Vector3d position;
   Eigen::Vector3d datum;
 
+  for (int i = 0; i < 4; i++) {
+    position[0] = i * 1.0;
+    position[1] = 0.0;
+    position[2] = 0.0;
+    positions.push_back(position);
+    datum[0] = i * 1.0;
+    datum[1] = i * 1.0;
+    datum[2] = 0.0;
+    data.push_back(datum);
+    datum[0] = i * 2.0 + 1.0;
+    datum[1] = i * 2.0 + 1.0;
+    datum[2] = 1.0;
+    expectedData.push_back(datum);
+  }
+
+  if (context.isNamed("Fluid")) {
+    meshName = "FluidMesh";
+    if (context.isMaster()) {
+      i1 = 0;
+      i2 = 2;
+    } else {
+      i1 = 2;
+      i2 = 4;
+    }
+  } else {
+    meshName = "StructureMesh";
+    if (context.isMaster()) {
+      i1 = 0;
+      i2 = 1;
+    } else {
+      i1 = 1;
+      i2 = 4;
+    }
+  }
+
+  SolverInterface precice(context.name, config, context.rank, context.size);
+  int             meshID   = precice.getMeshID(meshName);
+  int             forcesID = precice.getDataID("Forces", meshID);
+  int             velocID  = precice.getDataID("Velocities", meshID);
+
+  std::vector<int> vertexIDs;
+  for (int i = i1; i < i2; i++) {
+    int vertexID = precice.setMeshVertex(meshID, positions[i].data());
+    vertexIDs.push_back(vertexID);
+  }
+
+  precice.initialize();
+
+  if (context.isNamed("Fluid")) { //Fluid
+    for (size_t i = 0; i < vertexIDs.size(); i++) {
+      precice.writeVectorData(forcesID, vertexIDs[i], data[i + i1].data());
+    }
+  } else {
+    BOOST_TEST(context.isNamed("Structure"));
+    for (size_t i = 0; i < vertexIDs.size(); i++) {
+      precice.readVectorData(forcesID, vertexIDs[i], data[i].data());
+      data[i] = (data[i] * 2).array() + 1.0;
+      precice.writeVectorData(velocID, vertexIDs[i], data[i].data());
+    }
+  }
+
+  precice.advance(1.0);
+
+  if (context.isNamed("Fluid")) { //Fluid
+    for (size_t i = 0; i < vertexIDs.size(); i++) {
+      precice.readVectorData(velocID, vertexIDs[i], data[i + i1].data());
+      for (size_t d = 0; d < 3; d++) {
+        BOOST_TEST(expectedData[i + i1][d] == data[i + i1][d]);
+      }
+    }
+  }
+
+  precice.finalize();
+}
+
+BOOST_AUTO_TEST_CASE(TestDistributedCommunicationsP2PSockets)
+{
+  PRECICE_TEST("Fluid"_on(2_ranks), "Structure"_on(2_ranks));
+  std::string config = _pathToTests + "point-to-point-sockets.xml";
+  runTestQN(config, context);
+}
+
+BOOST_AUTO_TEST_CASE(TestDistributedCommunicationsP2PMPI)
+{
+  PRECICE_TEST("Fluid"_on(2_ranks), "Structure"_on(2_ranks));
+  std::string config = _pathToTests + "point-to-point-mpi.xml";
+  runTestQN(config, context);
+}
+
+BOOST_AUTO_TEST_CASE(TestDistributedCommunicationsGatherScatterMPI)
+{
+  PRECICE_TEST("Fluid"_on(2_ranks), "Structure"_on(2_ranks));
+  std::string config = _pathToTests + "gather-scatter-mpi.xml";
+  runTestQN(config, context);
+}
+
+BOOST_AUTO_TEST_CASE(TestBoundingBoxInitialization)
+{
+  PRECICE_TEST("Fluid"_on(2_ranks), "Structure"_on(2_ranks));
+
+  std::vector<Eigen::Vector3d> positions;
+  std::vector<Eigen::Vector3d> data;
+  std::vector<Eigen::Vector3d> expectedData;
+
+  Eigen::Vector3d position;
+  Eigen::Vector3d datum;
+
+
+  for (int i = 0; i < 4; i++) {
+    position[0] = i * 1.0;
+    position[1] = i * 0.1;
+    position[2] = -i * 10.0;
+    positions.push_back(position);
+    datum[0] = i * 1.0;
+    datum[1] = i * 2.0;
+    datum[2] = i * 3.0;
+    data.push_back(datum);
+    datum[0] = i * 1.0;
+    datum[1] = i * 2.0;
+    datum[2] = i * 3.0;
+    expectedData.push_back(datum);
+  }
+
   int i1 = -1, i2 = -1; //indices for data and positions
 
   if (context.isNamed("Fluid")) {
     if (context.isMaster()) {
       i1 = 2;
       i2 = 4;
-      for (int i = 0; i < 4; i++) {
-        position[0] = i * 1.0;
-        position[1] = i * 0.1;
-        position[2] = -i * 10.0;
-        positions.push_back(position);
-        datum[0] = i * 1.0;
-        datum[1] = i * 2.0;
-        datum[2] = i * 3.0;
-        data.push_back(datum);
-      }
     } else {
       i1 = 0;
       i2 = 2;
     }
-  }
-
-  if (context.isNamed("Structure")) {
+  } else {
+    BOOST_TEST(context.isNamed("Structure"));
+    // This partiticipant starts with negated data
+    for (int i = 0; i < 4; i++) {
+      data[i] = -data[i];
+    }
     if (context.isMaster()) {
       i1 = 0;
       i2 = 2;
@@ -418,22 +456,9 @@ BOOST_AUTO_TEST_CASE(TestBoundingBoxInitialization)
       i1 = 2;
       i2 = 4;
     }
-
-    for (int i = 0; i < 4; i++) {
-      position[0] = i * 1.0;
-      position[1] = i * 0.1;
-      position[2] = -i * 10.0;
-      positions.push_back(position);
-      datum[0] = -i * 1.0;
-      datum[1] = -i * 2.0;
-      datum[2] = -i * 3.0;
-      data.push_back(datum);
-      datum[0] = i * 1.0;
-      datum[1] = i * 2.0;
-      datum[2] = i * 3.0;
-      expectedData.push_back(datum);
-    }
   }
+  BOOST_REQUIRE(i1 >= 0);
+  BOOST_REQUIRE(i2 >= 0);
 
   std::string     configFilename = _pathToTests + "BB-sockets-explicit-oneway.xml";
   SolverInterface precice(context.name, configFilename, context.rank, context.size);
@@ -473,9 +498,9 @@ BOOST_AUTO_TEST_CASE(TestBoundingBoxInitializationTwoWay)
 {
   PRECICE_TEST("Fluid"_on(2_ranks), "Structure"_on(2_ranks));
 
-  std::vector<Eigen::VectorXd> positions;
-  std::vector<Eigen::VectorXd> data;
-  std::vector<Eigen::VectorXd> expectedData;
+  std::vector<Eigen::Vector3d> positions;
+  std::vector<Eigen::Vector3d> data;
+  std::vector<Eigen::Vector3d> expectedData;
 
   Eigen::Vector3d position;
   Eigen::Vector3d datum;
