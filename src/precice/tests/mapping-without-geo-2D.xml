@@ -1,5 +1,3 @@
-<?xml version="1.0"?>
-
 <precice-configuration>
    <solver-interface dimensions="2">
       <data:vector name="Forces"        />

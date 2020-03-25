@@ -74,49 +74,59 @@ BOOST_AUTO_TEST_CASE(TestConfiguration)
 }
 
 /// Test to run simple "do nothing" coupling between two solvers.
-/// @todo split into 1 function and 3 tests
-BOOST_AUTO_TEST_CASE(TestExplicit)
+void runTestExplicit(std::string const &configurationFileName, TestContext const &context)
+{
+  BOOST_TEST_MESSAGE("Config: " << configurationFileName);
+
+  int    timesteps = 0;
+  double time      = 0.0;
+
+  SolverInterface couplingInterface(context.name, configurationFileName, 0, 1);
+
+  //was necessary to replace pre-defined geometries
+  if (context.isNamed("SolverOne") && couplingInterface.hasMesh("MeshOne")) {
+    int meshID = couplingInterface.getMeshID("MeshOne");
+    couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
+    couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(1.0, 0.0, 0.0).data());
+  }
+  if (context.isNamed("SolverTwo") && couplingInterface.hasMesh("Test-Square")) {
+    int meshID = couplingInterface.getMeshID("Test-Square");
+    couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
+    couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(1.0, 0.0, 0.0).data());
+  }
+
+  BOOST_TEST(couplingInterface.getDimensions() == 3);
+  double dt = couplingInterface.initialize();
+  while (couplingInterface.isCouplingOngoing()) {
+    time += dt;
+    dt = couplingInterface.advance(dt);
+    timesteps++;
+  }
+  couplingInterface.finalize();
+
+  BOOST_TEST(time == 10.0);
+  BOOST_TEST(timesteps == 10);
+}
+
+BOOST_AUTO_TEST_CASE(TestExplicitMPISingle)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+  std::string config = _pathToTests + "explicit-mpi-single.xml";
+  runTestExplicit(config, context);
+}
 
-  std::vector<std::string> configs;
-  configs.resize(3);
-  configs[0] = _pathToTests + "explicit-mpi-single.xml";
-  configs[1] = _pathToTests + "explicit-mpi.xml";
-  configs[2] = _pathToTests + "explicit-sockets.xml";
+BOOST_AUTO_TEST_CASE(TestExplicitMPI)
+{
+  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+  std::string config = _pathToTests + "explicit-mpi.xml";
+  runTestExplicit(config, context);
+}
 
-  for (std::string configurationFileName : configs) {
-    BOOST_TEST_MESSAGE("Config: " << configurationFileName);
-
-    int    timesteps = 0;
-    double time      = 0.0;
-
-    SolverInterface couplingInterface(context.name, configurationFileName, 0, 1);
-
-    //was necessary to replace pre-defined geometries
-    if (context.isNamed("SolverOne") && couplingInterface.hasMesh("MeshOne")) {
-      int meshID = couplingInterface.getMeshID("MeshOne");
-      couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
-      couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(1.0, 0.0, 0.0).data());
-    }
-    if (context.isNamed("SolverTwo") && couplingInterface.hasMesh("Test-Square")) {
-      int meshID = couplingInterface.getMeshID("Test-Square");
-      couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
-      couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(1.0, 0.0, 0.0).data());
-    }
-
-    BOOST_TEST(couplingInterface.getDimensions() == 3);
-    double dt = couplingInterface.initialize();
-    while (couplingInterface.isCouplingOngoing()) {
-      time += dt;
-      dt = couplingInterface.advance(dt);
-      timesteps++;
-    }
-    couplingInterface.finalize();
-
-    BOOST_TEST(time == 10.0);
-    BOOST_TEST(timesteps == 10);
-  }
+BOOST_AUTO_TEST_CASE(TestExplicitSockets)
+{
+  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+  std::string config = _pathToTests + "explicit-sockets.xml";
+  runTestExplicit(config, context);
 }
 
 /// Test to run a simple "do nothing" coupling with subcycling solvers.
@@ -388,7 +398,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithBlockDataExchange)
     }
     cplInterface.finalize();
   } else {
-    BOOST_TEST(context.isNamed("SolverOne"));
+    BOOST_TEST(context.isNamed("SolverTwo"));
 
     int squareID       = cplInterface.getMeshID("Test-Square");
     int forcesID       = cplInterface.getDataID("Forces", squareID);
@@ -602,7 +612,7 @@ BOOST_AUTO_TEST_CASE(testImplicit)
     couplingInterface.finalize();
     BOOST_TEST(computedTimesteps == 4);
   } else {
-    BOOST_TEST(context.isNamed("SolverOne"));
+    BOOST_TEST(context.isNamed("SolverTwo"));
     double maxDt = couplingInterface.initialize();
     while (couplingInterface.isCouplingOngoing()) {
       if (couplingInterface.isActionRequired(actionWriteIterationCheckpoint())) {
@@ -628,13 +638,8 @@ BOOST_AUTO_TEST_CASE(testImplicit)
 }
 
 /// Tests stationary mapping with solver provided meshes.
-/// @todo split this test up into function + 4 tests
-BOOST_AUTO_TEST_CASE(testStationaryMappingWithSolverMesh)
+void runTestStationaryMappingWithSolverMesh(std::string const &config, int dim, TestContext const &context)
 {
-  PRECICE_TEST("SolverA"_on(1_rank), "SolverB"_on(1_rank));
-
-  std::string config2D    = _pathToTests + "mapping-without-geo-2D.xml";
-  std::string config3D    = _pathToTests + "mapping-without-geo-3D.xml";
   std::string meshForcesA = "MeshForcesA";
   std::string meshDisplA  = "MeshDisplacementsA";
   std::string meshForcesB = "MeshForcesB";
@@ -643,134 +648,143 @@ BOOST_AUTO_TEST_CASE(testStationaryMappingWithSolverMesh)
   std::string dataDispl   = "Displacements";
   using testing::equals;
 
-  for (int dim : {2, 3}) {
-    // @todo this should normally happen in finalize and should not be necessary
-    mesh::Data::resetDataCount();
-    impl::Participant::resetParticipantCount();
-    SolverInterface interface(context.name, (dim == 2 ? config2D : config3D), 0, 1);
-    BOOST_TEST(interface.getDimensions() == dim);
+  SolverInterface interface(context.name, config, 0, 1);
+  BOOST_TEST(interface.getDimensions() == dim);
 
-    std::vector<Eigen::VectorXd> positions;
-    Eigen::VectorXd              position(dim);
-    if (dim == 2) {
-      position << 0.0, 0.0;
-      positions.push_back(position);
-      position << 1.0, 0.0;
-      positions.push_back(position);
-      position << 1.0, 1.0;
-      positions.push_back(position);
-      position << 0.0, 1.0;
-      positions.push_back(position);
-    } else {
-      position << 0.0, 0.0, 0.0;
-      positions.push_back(position);
-      position << 1.0, 0.0, 0.0;
-      positions.push_back(position);
-      position << 1.0, 1.0, 0.0;
-      positions.push_back(position);
-      position << 0.0, 1.0, 1.0;
-      positions.push_back(position);
-      position << 0.0, 0.0, 1.0;
-      positions.push_back(position);
-    }
-    size_t size = positions.size();
-
-    if (context.isNamed("SolverB")) {
-      int meshForcesID = interface.getMeshID(meshForcesA);
-      int meshDisplID  = interface.getMeshID(meshDisplA);
-      int dataForcesID = interface.getDataID(dataForces, meshForcesID);
-      int dataDisplID  = interface.getDataID(dataDispl, meshDisplID);
-
-      // Set solver mesh positions for reading and writing data with mappings
-      for (size_t i = 0; i < size; i++) {
-        position = positions[i].array() + 0.1;
-        interface.setMeshVertex(meshForcesID, position.data());
-        position = positions[i].array() + 0.6;
-        interface.setMeshVertex(meshDisplID, position.data());
-      }
-      double maxDt = interface.initialize();
-
-      BOOST_TEST(interface.isWriteDataRequired(maxDt));
-      BOOST_TEST(not interface.isReadDataAvailable());
-      Eigen::VectorXd force = Eigen::VectorXd::Constant(dim, 1);
-      Eigen::VectorXd displ = Eigen::VectorXd::Constant(dim, 0);
-      for (size_t i = 0; i < size; i++) {
-        interface.writeVectorData(dataForcesID, i, force.data());
-      }
-      interface.mapWriteDataFrom(meshForcesID);
-      maxDt = interface.advance(maxDt);
-      interface.mapReadDataTo(meshDisplID);
-
-      BOOST_TEST(interface.isWriteDataRequired(maxDt));
-      BOOST_TEST(interface.isReadDataAvailable());
-      force.array() += 1.0;
-      for (size_t i = 0; i < size; i++) {
-        interface.readVectorData(dataDisplID, i, displ.data());
-        BOOST_TEST(displ[0] == positions[i][0] + 0.1);
-        interface.writeVectorData(dataForcesID, i, force.data());
-      }
-      interface.mapWriteDataFrom(meshForcesID);
-      maxDt = interface.advance(maxDt);
-      interface.mapReadDataTo(meshDisplID);
-
-      BOOST_TEST(interface.isWriteDataRequired(maxDt));
-      BOOST_TEST(interface.isReadDataAvailable());
-      for (size_t i = 0; i < size; i++) {
-        interface.readVectorData(dataDisplID, i, displ.data());
-        BOOST_TEST(displ[0] == 2.0 * (positions[i][0] + 0.1));
-      }
-      interface.finalize();
-    } else {
-      BOOST_TEST(context.isNamed("SolverB"));
-      int meshForcesID = interface.getMeshID(meshForcesB);
-      int meshDisplID  = interface.getMeshID(meshDisplB);
-      int dataForcesID = interface.getDataID(dataForces, meshForcesID);
-      int dataDisplID  = interface.getDataID(dataDispl, meshDisplID);
-
-      // Set solver mesh positions provided to SolverA for data mapping
-      for (size_t i = 0; i < size; i++) {
-        interface.setMeshVertex(meshForcesID, positions[i].data());
-        position = positions[i].array() + 0.5;
-        interface.setMeshVertex(meshDisplID, position.data());
-      }
-      double maxDt = interface.initialize();
-
-      BOOST_TEST(interface.isWriteDataRequired(maxDt));
-      BOOST_TEST(interface.isReadDataAvailable());
-      Eigen::VectorXd force      = Eigen::VectorXd::Zero(dim);
-      Eigen::VectorXd totalForce = Eigen::VectorXd::Zero(dim);
-      Eigen::VectorXd displ      = Eigen::VectorXd::Zero(dim);
-      for (size_t i = 0; i < size; i++) {
-        interface.readVectorData(dataForcesID, i, force.data());
-        totalForce += force;
-        displ.setConstant(positions[i][0]);
-        interface.writeVectorData(dataDisplID, i, displ.data());
-      }
-      Eigen::VectorXd expected = Eigen::VectorXd::Constant(dim, size);
-      BOOST_TEST(equals(totalForce, expected));
-      maxDt = interface.advance(maxDt);
-
-      BOOST_TEST(interface.isWriteDataRequired(maxDt));
-      BOOST_TEST(interface.isReadDataAvailable());
-      totalForce.setConstant(0);
-      for (size_t i = 0; i < positions.size(); i++) {
-        interface.readVectorData(dataForcesID, i, force.data());
-        totalForce += force;
-        displ.setConstant(2.0 * positions[i][0]);
-        interface.writeVectorData(dataDisplID, i, displ.data());
-      }
-      expected.setConstant(2.0 * (double) size);
-      BOOST_TEST(equals(totalForce, expected));
-      maxDt = interface.advance(maxDt);
-
-      BOOST_TEST(interface.isWriteDataRequired(maxDt));
-      BOOST_TEST(not interface.isReadDataAvailable()); //second participant has no new data after last advance
-      for (size_t i = 0; i < size; i++) {
-        interface.readVectorData(dataForcesID, i, force.data());
-      }
-      interface.finalize();
-    }
+  std::vector<Eigen::VectorXd> positions;
+  Eigen::VectorXd              position(dim);
+  if (dim == 2) {
+    position << 0.0, 0.0;
+    positions.push_back(position);
+    position << 1.0, 0.0;
+    positions.push_back(position);
+    position << 1.0, 1.0;
+    positions.push_back(position);
+    position << 0.0, 1.0;
+    positions.push_back(position);
+  } else {
+    position << 0.0, 0.0, 0.0;
+    positions.push_back(position);
+    position << 1.0, 0.0, 0.0;
+    positions.push_back(position);
+    position << 1.0, 1.0, 0.0;
+    positions.push_back(position);
+    position << 0.0, 1.0, 1.0;
+    positions.push_back(position);
+    position << 0.0, 0.0, 1.0;
+    positions.push_back(position);
   }
+  size_t size = positions.size();
+
+  if (context.isNamed("SolverA")) {
+    int meshForcesID = interface.getMeshID(meshForcesA);
+    int meshDisplID  = interface.getMeshID(meshDisplA);
+    int dataForcesID = interface.getDataID(dataForces, meshForcesID);
+    int dataDisplID  = interface.getDataID(dataDispl, meshDisplID);
+
+    // Set solver mesh positions for reading and writing data with mappings
+    for (size_t i = 0; i < size; i++) {
+      position = positions[i].array() + 0.1;
+      interface.setMeshVertex(meshForcesID, position.data());
+      position = positions[i].array() + 0.6;
+      interface.setMeshVertex(meshDisplID, position.data());
+    }
+    double maxDt = interface.initialize();
+
+    BOOST_TEST(interface.isWriteDataRequired(maxDt));
+    BOOST_TEST(not interface.isReadDataAvailable());
+    Eigen::VectorXd force = Eigen::VectorXd::Constant(dim, 1);
+    Eigen::VectorXd displ = Eigen::VectorXd::Constant(dim, 0);
+    for (size_t i = 0; i < size; i++) {
+      interface.writeVectorData(dataForcesID, i, force.data());
+    }
+    interface.mapWriteDataFrom(meshForcesID);
+    maxDt = interface.advance(maxDt);
+    interface.mapReadDataTo(meshDisplID);
+
+    BOOST_TEST(interface.isWriteDataRequired(maxDt));
+    BOOST_TEST(interface.isReadDataAvailable());
+    force.array() += 1.0;
+    for (size_t i = 0; i < size; i++) {
+      interface.readVectorData(dataDisplID, i, displ.data());
+      BOOST_TEST(displ[0] == positions[i][0] + 0.1);
+      interface.writeVectorData(dataForcesID, i, force.data());
+    }
+    interface.mapWriteDataFrom(meshForcesID);
+    maxDt = interface.advance(maxDt);
+    interface.mapReadDataTo(meshDisplID);
+
+    BOOST_TEST(interface.isWriteDataRequired(maxDt));
+    BOOST_TEST(interface.isReadDataAvailable());
+    for (size_t i = 0; i < size; i++) {
+      interface.readVectorData(dataDisplID, i, displ.data());
+      BOOST_TEST(displ[0] == 2.0 * (positions[i][0] + 0.1));
+    }
+    interface.finalize();
+  } else {
+    BOOST_TEST(context.isNamed("SolverB"));
+    int meshForcesID = interface.getMeshID(meshForcesB);
+    int meshDisplID  = interface.getMeshID(meshDisplB);
+    int dataForcesID = interface.getDataID(dataForces, meshForcesID);
+    int dataDisplID  = interface.getDataID(dataDispl, meshDisplID);
+
+    // Set solver mesh positions provided to SolverA for data mapping
+    for (size_t i = 0; i < size; i++) {
+      interface.setMeshVertex(meshForcesID, positions[i].data());
+      position = positions[i].array() + 0.5;
+      interface.setMeshVertex(meshDisplID, position.data());
+    }
+    double maxDt = interface.initialize();
+
+    BOOST_TEST(interface.isWriteDataRequired(maxDt));
+    BOOST_TEST(interface.isReadDataAvailable());
+    Eigen::VectorXd force      = Eigen::VectorXd::Zero(dim);
+    Eigen::VectorXd totalForce = Eigen::VectorXd::Zero(dim);
+    Eigen::VectorXd displ      = Eigen::VectorXd::Zero(dim);
+    for (size_t i = 0; i < size; i++) {
+      interface.readVectorData(dataForcesID, i, force.data());
+      totalForce += force;
+      displ.setConstant(positions[i][0]);
+      interface.writeVectorData(dataDisplID, i, displ.data());
+    }
+    Eigen::VectorXd expected = Eigen::VectorXd::Constant(dim, size);
+    BOOST_TEST(equals(totalForce, expected));
+    maxDt = interface.advance(maxDt);
+
+    BOOST_TEST(interface.isWriteDataRequired(maxDt));
+    BOOST_TEST(interface.isReadDataAvailable());
+    totalForce.setConstant(0);
+    for (size_t i = 0; i < positions.size(); i++) {
+      interface.readVectorData(dataForcesID, i, force.data());
+      totalForce += force;
+      displ.setConstant(2.0 * positions[i][0]);
+      interface.writeVectorData(dataDisplID, i, displ.data());
+    }
+    expected.setConstant(2.0 * (double) size);
+    BOOST_TEST(equals(totalForce, expected));
+    maxDt = interface.advance(maxDt);
+
+    BOOST_TEST(interface.isWriteDataRequired(maxDt));
+    BOOST_TEST(not interface.isReadDataAvailable()); //second participant has no new data after last advance
+    for (size_t i = 0; i < size; i++) {
+      interface.readVectorData(dataForcesID, i, force.data());
+    }
+    interface.finalize();
+  }
+}
+
+BOOST_AUTO_TEST_CASE(testStationaryMappingWithSolverMesh2D)
+{
+  PRECICE_TEST("SolverA"_on(1_rank), "SolverB"_on(1_rank));
+  std::string config = _pathToTests + "mapping-without-geo-2D.xml";
+  runTestStationaryMappingWithSolverMesh(config, 2, context);
+}
+
+BOOST_AUTO_TEST_CASE(testStationaryMappingWithSolverMesh3D)
+{
+  PRECICE_TEST("SolverA"_on(1_rank), "SolverB"_on(1_rank));
+  std::string config = _pathToTests + "mapping-without-geo-3D.xml";
+  runTestStationaryMappingWithSolverMesh(config, 3, context);
 }
 
 /**
@@ -863,120 +877,135 @@ BOOST_AUTO_TEST_CASE(testBug)
  *
  * Both couplings are explicit, solver 1 provides the mesh to the other two
  * solvers.
- *
- * @todo split this into function + 5 tests
  */
-BOOST_AUTO_TEST_CASE(testThreeSolvers)
+void runTestThreeSolvers(std::string const &config, std::vector<int> expectedCallsOfAdvance, TestContext const &context)
 {
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank), "SolverThree"_on(1_rank));
+  std::string writeIterCheckpoint(constants::actionWriteIterationCheckpoint());
+  std::string readIterCheckpoint(constants::actionReadIterationCheckpoint());
+  std::string writeInitData(constants::actionWriteInitialData());
 
-  int                      numberOfTests = 5;
-  std::vector<std::string> configs;
-  configs.resize(5);
-  configs[0] = _pathToTests + "three-solver-explicit-explicit.xml";
-  configs[1] = _pathToTests + "three-solver-implicit-implicit.xml";
-  configs[2] = _pathToTests + "three-solver-implicit-explicit.xml";
-  configs[3] = _pathToTests + "three-solver-explicit-implicit.xml";
-  configs[4] = _pathToTests + "three-solver-parallel.xml";
+  int callsOfAdvance = 0;
 
-  std::vector<std::vector<int>> expectedCallsOfAdvance;
-  expectedCallsOfAdvance.resize(5);
-  expectedCallsOfAdvance[0] = {10, 10, 10};
-  expectedCallsOfAdvance[1] = {30, 30, 20};
-  expectedCallsOfAdvance[2] = {30, 30, 10};
-  expectedCallsOfAdvance[3] = {30, 10, 30};
-  expectedCallsOfAdvance[4] = {30, 30, 10};
+  if (context.isNamed("SolverOne")) {
+    SolverInterface precice(context.name, config, 0, 1);
 
-  for (int k = 0; k < numberOfTests; k++) {
-    reset();
+    int meshAID = precice.getMeshID("MeshA");
+    int meshBID = precice.getMeshID("MeshB");
+    precice.setMeshVertex(meshAID, Eigen::Vector2d(0, 0).data());
+    precice.setMeshVertex(meshBID, Eigen::Vector2d(1, 1).data());
+    double dt = precice.initialize();
 
-    std::string writeIterCheckpoint(constants::actionWriteIterationCheckpoint());
-    std::string readIterCheckpoint(constants::actionReadIterationCheckpoint());
-    std::string writeInitData(constants::actionWriteInitialData());
-
-    int callsOfAdvance = 0;
-
-    if (context.isNamed("SolverOne")) {
-      SolverInterface precice(context.name, configs[k], 0, 1);
-
-      int meshAID = precice.getMeshID("MeshA");
-      int meshBID = precice.getMeshID("MeshB");
-      precice.setMeshVertex(meshAID, Eigen::Vector2d(0, 0).data());
-      precice.setMeshVertex(meshBID, Eigen::Vector2d(1, 1).data());
-      double dt = precice.initialize();
-
-      if (precice.isActionRequired(writeInitData)) {
-        precice.markActionFulfilled(writeInitData);
-      }
-      precice.initializeData();
-
-      while (precice.isCouplingOngoing()) {
-        if (precice.isActionRequired(writeIterCheckpoint)) {
-          precice.markActionFulfilled(writeIterCheckpoint);
-        }
-        dt = precice.advance(dt);
-        if (precice.isActionRequired(readIterCheckpoint)) {
-          precice.markActionFulfilled(readIterCheckpoint);
-        }
-        callsOfAdvance++;
-      }
-      precice.finalize();
-      BOOST_TEST(callsOfAdvance == expectedCallsOfAdvance[k][0]);
-    } else if (context.isNamed("SolverTwo")) {
-      SolverInterface precice(context.name, configs[k], 0, 1);
-
-      int meshID = precice.getMeshID("MeshC");
-      precice.setMeshVertex(meshID, Eigen::Vector2d(0, 0).data());
-      double dt = precice.initialize();
-
-      if (precice.isActionRequired(writeInitData)) {
-        precice.markActionFulfilled(writeInitData);
-      }
-      precice.initializeData();
-
-      while (precice.isCouplingOngoing()) {
-        if (precice.isActionRequired(writeIterCheckpoint)) {
-          precice.markActionFulfilled(writeIterCheckpoint);
-        }
-        dt = precice.advance(dt);
-        if (precice.isActionRequired(readIterCheckpoint)) {
-          precice.markActionFulfilled(readIterCheckpoint);
-        }
-        callsOfAdvance++;
-      }
-      precice.finalize();
-      BOOST_TEST(callsOfAdvance == expectedCallsOfAdvance[k][1]);
-    } else {
-      BOOST_TEST(context.isNamed("SolverThree"));
-      SolverInterface precice(context.name, configs[k], 0, 1);
-
-      int meshID = precice.getMeshID("MeshD");
-      precice.setMeshVertex(meshID, Eigen::Vector2d(0, 0).data());
-      double dt = precice.initialize();
-
-      if (precice.isActionRequired(writeInitData)) {
-        precice.markActionFulfilled(writeInitData);
-      }
-      precice.initializeData();
-
-      while (precice.isCouplingOngoing()) {
-        if (precice.isActionRequired(writeIterCheckpoint)) {
-          precice.markActionFulfilled(writeIterCheckpoint);
-        }
-        dt = precice.advance(dt);
-        if (precice.isActionRequired(readIterCheckpoint)) {
-          precice.markActionFulfilled(readIterCheckpoint);
-        }
-        callsOfAdvance++;
-      }
-      precice.finalize();
-      BOOST_TEST(callsOfAdvance == expectedCallsOfAdvance[k][2]);
+    if (precice.isActionRequired(writeInitData)) {
+      precice.markActionFulfilled(writeInitData);
     }
+    precice.initializeData();
+
+    while (precice.isCouplingOngoing()) {
+      if (precice.isActionRequired(writeIterCheckpoint)) {
+        precice.markActionFulfilled(writeIterCheckpoint);
+      }
+      dt = precice.advance(dt);
+      if (precice.isActionRequired(readIterCheckpoint)) {
+        precice.markActionFulfilled(readIterCheckpoint);
+      }
+      callsOfAdvance++;
+    }
+    precice.finalize();
+    BOOST_TEST(callsOfAdvance == expectedCallsOfAdvance[0]);
+  } else if (context.isNamed("SolverTwo")) {
+    SolverInterface precice(context.name, config, 0, 1);
+
+    int meshID = precice.getMeshID("MeshC");
+    precice.setMeshVertex(meshID, Eigen::Vector2d(0, 0).data());
+    double dt = precice.initialize();
+
+    if (precice.isActionRequired(writeInitData)) {
+      precice.markActionFulfilled(writeInitData);
+    }
+    precice.initializeData();
+
+    while (precice.isCouplingOngoing()) {
+      if (precice.isActionRequired(writeIterCheckpoint)) {
+        precice.markActionFulfilled(writeIterCheckpoint);
+      }
+      dt = precice.advance(dt);
+      if (precice.isActionRequired(readIterCheckpoint)) {
+        precice.markActionFulfilled(readIterCheckpoint);
+      }
+      callsOfAdvance++;
+    }
+    precice.finalize();
+    BOOST_TEST(callsOfAdvance == expectedCallsOfAdvance[1]);
+  } else {
+    BOOST_TEST(context.isNamed("SolverThree"));
+    SolverInterface precice(context.name, config, 0, 1);
+
+    int meshID = precice.getMeshID("MeshD");
+    precice.setMeshVertex(meshID, Eigen::Vector2d(0, 0).data());
+    double dt = precice.initialize();
+
+    if (precice.isActionRequired(writeInitData)) {
+      precice.markActionFulfilled(writeInitData);
+    }
+    precice.initializeData();
+
+    while (precice.isCouplingOngoing()) {
+      if (precice.isActionRequired(writeIterCheckpoint)) {
+        precice.markActionFulfilled(writeIterCheckpoint);
+      }
+      dt = precice.advance(dt);
+      if (precice.isActionRequired(readIterCheckpoint)) {
+        precice.markActionFulfilled(readIterCheckpoint);
+      }
+      callsOfAdvance++;
+    }
+    precice.finalize();
+    BOOST_TEST(callsOfAdvance == expectedCallsOfAdvance[2]);
   }
 }
 
+BOOST_AUTO_TEST_CASE(ThreeSolversExplicitExplicit)
+{
+  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank), "SolverThree"_on(1_rank));
+  std::string      config = _pathToTests + "three-solver-explicit-explicit.xml";
+  std::vector<int> expectedCallsOfAdvance{10, 10, 10};
+  runTestThreeSolvers(config, expectedCallsOfAdvance, context);
+}
+
+BOOST_AUTO_TEST_CASE(ThreeSolversImplicitImplicit)
+{
+  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank), "SolverThree"_on(1_rank));
+  std::string      config = _pathToTests + "three-solver-implicit-implicit.xml";
+  std::vector<int> expectedCallsOfAdvance{30, 30, 20};
+  runTestThreeSolvers(config, expectedCallsOfAdvance, context);
+}
+
+BOOST_AUTO_TEST_CASE(ThreeSolversImplicitExplicit)
+{
+  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank), "SolverThree"_on(1_rank));
+  std::string      config = _pathToTests + "three-solver-implicit-explicit.xml";
+  std::vector<int> expectedCallsOfAdvance{30, 30, 10};
+  runTestThreeSolvers(config, expectedCallsOfAdvance, context);
+}
+
+BOOST_AUTO_TEST_CASE(ThreeSolversExplicitImplicit)
+{
+  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank), "SolverThree"_on(1_rank));
+  std::string      config = _pathToTests + "three-solver-explicit-implicit.xml";
+  std::vector<int> expectedCallsOfAdvance{30, 10, 30};
+  runTestThreeSolvers(config, expectedCallsOfAdvance, context);
+}
+
+BOOST_AUTO_TEST_CASE(ThreeSolversParallel)
+{
+  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank), "SolverThree"_on(1_rank));
+  std::string      config = _pathToTests + "three-solver-parallel.xml";
+  std::vector<int> expectedCallsOfAdvance{30, 30, 10};
+  runTestThreeSolvers(config, expectedCallsOfAdvance, context);
+}
+
 /// Four solvers are multi-coupled.
-BOOST_AUTO_TEST_CASE(testMultiCoupling)
+BOOST_AUTO_TEST_CASE(MultiCoupling)
 {
   PRECICE_TEST("SOLIDZ1"_on(1_rank), "SOLIDZ2"_on(1_rank), "SOLIDZ3"_on(1_rank), "NASTIN"_on(1_rank));
   std::vector<Eigen::Vector2d> positions;
@@ -1018,11 +1047,11 @@ BOOST_AUTO_TEST_CASE(testMultiCoupling)
       meshID      = precice.getMeshID("SOLIDZ_Mesh1");
       dataWriteID = precice.getDataID("Displacements1", meshID);
       dataReadID  = precice.getDataID("Forces1", meshID);
-    } else if (context.isNamed("SOLIDZ1")) {
+    } else if (context.isNamed("SOLIDZ2")) {
       meshID      = precice.getMeshID("SOLIDZ_Mesh2");
       dataWriteID = precice.getDataID("Displacements2", meshID);
       dataReadID  = precice.getDataID("Forces2", meshID);
-    } else if (context.isNamed("SOLIDZ1")) {
+    } else if (context.isNamed("SOLIDZ3")) {
       meshID      = precice.getMeshID("SOLIDZ_Mesh3");
       dataWriteID = precice.getDataID("Displacements3", meshID);
       dataReadID  = precice.getDataID("Forces3", meshID);
@@ -1217,7 +1246,7 @@ void testMappingNearestProjection(bool defineEdgesExplicitly, const std::string 
  * @brief Tests the Nearest Projection Mapping between two participants with explicit definition of edges
  *
  */
-BOOST_AUTO_TEST_CASE(testMappingNearestProjectionExplicitEdges)
+BOOST_AUTO_TEST_CASE(MappingNearestProjectionExplicitEdges)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
   bool              defineEdgesExplicitly = true;
@@ -1229,7 +1258,7 @@ BOOST_AUTO_TEST_CASE(testMappingNearestProjectionExplicitEdges)
  * @brief Tests the Nearest Projection Mapping between two participants with explicit definition of edges
  *
  */
-BOOST_AUTO_TEST_CASE(testMappingNearestProjectionImplicitEdges)
+BOOST_AUTO_TEST_CASE(MappingNearestProjectionImplicitEdges)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
   bool              defineEdgesExplicitly = false;
@@ -1241,12 +1270,11 @@ BOOST_AUTO_TEST_CASE(testMappingNearestProjectionImplicitEdges)
  * @brief Tests sending one mesh to multiple participants
  *
  */
-BOOST_AUTO_TEST_CASE(testSendMeshToMultipleParticipants)
+BOOST_AUTO_TEST_CASE(SendMeshToMultipleParticipants)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank), "SolverThree"_on(1_rank));
 
   const std::string configFile = _pathToTests + "send-mesh-to-multiple-participants.xml";
-  std::string       solverName;
   std::string       meshName;
 
   Eigen::Vector2d vertex{0.0, 0.0};
@@ -1261,7 +1289,7 @@ BOOST_AUTO_TEST_CASE(testSendMeshToMultipleParticipants)
     meshName = "MeshC";
   }
 
-  SolverInterface cplInterface(solverName, configFile, 0, 1);
+  SolverInterface cplInterface(context.name, configFile, 0, 1);
 
   const int meshID = cplInterface.getMeshID(meshName);
 
@@ -1287,7 +1315,7 @@ BOOST_AUTO_TEST_CASE(testSendMeshToMultipleParticipants)
  * @brief Test to reproduce the problem of issue 383, https://github.com/precice/precice/issues/383
  *
  */
-BOOST_AUTO_TEST_CASE(testPreconditionerBug)
+BOOST_AUTO_TEST_CASE(PreconditionerBug)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
