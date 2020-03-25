@@ -137,14 +137,18 @@ void ProvidedPartition::prepare()
     if (std::any_of(_m2ns.begin(), _m2ns.end(), [](const m2n::PtrM2N &m2n) { return not m2n->usesTwoLevelInitialization(); })) {
       if (utils::MasterSlave::isMaster()) {
         PRECICE_DEBUG("Fill vertex distribution");
+        auto & localIds = _mesh->getVertexDistribution()[0];
         for (int i = 0; i < _mesh->getVertexOffsets()[0]; i++) {
-          _mesh->getVertexDistribution()[0].push_back(i);
+          localIds.push_back(i);
         }
         for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
+          // This always creates an entry for each slave
+          auto & remoteIds = _mesh->getVertexDistribution()[rankSlave];
           for (int i = _mesh->getVertexOffsets()[rankSlave - 1]; i < _mesh->getVertexOffsets()[rankSlave]; i++) {
-            _mesh->getVertexDistribution()[rankSlave].push_back(i);
+            remoteIds.push_back(i);
           }
         }
+        PRECICE_ASSERT(_mesh->getVertexDistribution().size() == static_cast<std::size_t>(utils::MasterSlave::getSize()));
       }
     }
   } else if (utils::MasterSlave::isSlave()) {
@@ -214,6 +218,7 @@ void ProvidedPartition::compareBoundingBoxes()
 
   // each rank sends its bb to master
   if (utils::MasterSlave::isSlave()) { //slave
+    PRECICE_ASSERT(_mesh->getBoundingBox().size() == static_cast<std::size_t>(_mesh->getDimensions()), "The boundingbox of the local mesh is invalid!");
     com::CommunicateBoundingBox(utils::MasterSlave::_communication).sendBoundingBox(_mesh->getBoundingBox(), 0);
   } else { // Master
 
@@ -225,6 +230,7 @@ void ProvidedPartition::compareBoundingBoxes()
 
     // master stores its bb into bbm
     bbm[0] = _mesh->getBoundingBox();
+    PRECICE_ASSERT(!bbm.empty(), "The bounding box of the local mesh is invalid!");
 
     // master receives bbs from slaves and stores them in bbm
     for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
