@@ -13,7 +13,6 @@
 namespace precice {
 extern bool testMode;
 extern bool syncMode;
-static int  testCount{0};
 } // namespace precice
 
 /// Boost test Initialization function
@@ -43,12 +42,6 @@ bool init_unit_test()
 
   auto &master_suite        = framework::master_test_suite();
   master_suite.p_name.value = "preCICE Tests";
-
-  {
-    test_case_counter tcc;
-    traverse_test_tree(master_suite.p_id, tcc);
-    precice::testCount = tcc.p_count;
-  }
 
   auto logConfigs = logging::readLogConfFile("log.conf");
 
@@ -106,20 +99,13 @@ int main(int argc, char *argv[])
   std::cout << "This test suite runs on rank " << rank << " of " << size << '\n';
 
   if (size < 4) {
-    if (rank == 0)
-      std::cerr << "Running tests on less than four processors. Not all tests are executed.\n";
-  }
-  if (size > 4) {
-    if (rank == 0)
-      std::cerr << "Running tests on more than 4 processors is not supported. Aborting.\n";
-    std::exit(-1);
+    if (rank == 0) {
+      std::cerr << "ERROR: The tests require at least 4 MPI processes.\n";
+    }
+    return 2;
   }
 
-  int retCode = boost::unit_test::unit_test_main(&init_unit_test, argc, argv);
-  // Override the return code if the slaves have nothing to test
-  if ((precice::testCount == 0) && (utils::Parallel::getProcessRank() != 0)) {
-    retCode = EXIT_SUCCESS;
-  }
+  const int retCode = boost::unit_test::unit_test_main(&init_unit_test, argc, argv);
 
   utils::Parallel::finalizeMPI();
   utils::MasterSlave::_communication = nullptr;
