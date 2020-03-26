@@ -39,10 +39,9 @@ public:
 
   virtual void measure(
       const Eigen::VectorXd &oldValues,
-      const Eigen::VectorXd &newValues,
-      const Eigen::VectorXd &designSpecification)
+      const Eigen::VectorXd &newValues)
   {
-    _normDiff      = utils::MasterSlave::l2norm((newValues - oldValues) - designSpecification);
+    _normDiff      = utils::MasterSlave::l2norm(newValues - oldValues);
     _isConvergence = _normDiff <= _convergenceLimit;
     //      PRECICE_INFO("Absolute convergence measure: "
     //                     << "two-norm differences = " << normDiff
