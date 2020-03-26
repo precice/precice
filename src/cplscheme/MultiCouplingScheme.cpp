@@ -37,12 +37,12 @@ void MultiCouplingScheme::initializeImplicit()
 {
   mergeData();                 // merge send and receive data for all pp calls
   setupConvergenceMeasures();  // needs _couplingData configured
-  setupDataMatrices(_allData); // Reserve memory and initialize data with zero
+  setupDataMatrices(getAcceleratedData()); // Reserve memory and initialize data with zero
   if (getAcceleration()) {
     PRECICE_CHECK(getAcceleration()->getDataIDs().size() >= 3,
                   "For parallel coupling, the number of coupling data vectors has to be at least 3, not: "
                       << getAcceleration()->getDataIDs().size());
-    getAcceleration()->initialize(_allData); // Reserve memory, initialize
+    getAcceleration()->initialize(getAcceleratedData()); // Reserve memory, initialize
   }
 }
 
