@@ -202,7 +202,7 @@ void runTestQN(std::string const &config, int correctIterations, TestContext con
     writeDataName = "Data1";
     readDataName  = "Data2";
   } else {
-    BOOST_TEST(context.isNamed("SolverTwo"));
+    BOOST_REQUIRE(context.isNamed("SolverTwo"));
     meshName      = "MeshTwo";
     writeDataName = "Data2";
     readDataName  = "Data1";
@@ -224,7 +224,7 @@ void runTestQN(std::string const &config, int correctIterations, TestContext con
       interface.setMeshVertices(meshID, 4, positions, vertexIDs);
     }
   } else {
-    BOOST_TEST(context.isNamed("SolverTwo"));
+    BOOST_REQUIRE(context.isNamed("SolverTwo"));
     if (context.isMaster()) {
       double positions[8] = {2.0, 0.6, 2.0, 0.75, 2.0, 0.9, 2.0, 1.0};
       interface.setMeshVertices(meshID, 4, positions, vertexIDs);
