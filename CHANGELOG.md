@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file. For future plans, see our [Roadmap](https://github.com/precice/precice/wiki/Roadmap).
 
+## 2.1.0
+
+- Removed deprecated and untested Manifold Mapping. API functions `hasToEvaluateSurrogateModel` and `hasToEvaluateFineModel` remain as nop stubs.
+
 ## 2.0.1
 
 - Fixed broken pkg-config file in some cases due to CMake `GNUInstallDirs`.
