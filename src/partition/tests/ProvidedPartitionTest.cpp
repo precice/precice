@@ -2,7 +2,7 @@
 #include "testing/Testing.hpp"
 
 #include "partition/ProvidedPartition.hpp"
-
+#include "partition/ReceivedPartition.hpp"
 #include "com/CommunicateBoundingBox.hpp"
 #include "com/MPIDirectCommunication.hpp"
 #include "com/SocketCommunication.hpp"
