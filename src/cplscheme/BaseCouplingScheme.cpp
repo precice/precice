@@ -313,7 +313,8 @@ void BaseCouplingScheme::setExtrapolationOrder(
 void BaseCouplingScheme::doExtrapolationOn(DataMap &dataMap)
 {
   for (DataMap::value_type &pair : dataMap) {
-    if (pair.second->oldValues.cols() == 0) // TODO @BU: this branch was missing in MultiCouplingScheme.
+    if (pair.second->oldValues.cols() == 0)
+      PRECICE_ASSERT(isExplicitCouplingScheme());
       break;
     pair.second->oldValues.col(0) = *pair.second->values;
     // For extrapolation, treat the initial value as old time windows value
