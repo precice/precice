@@ -34,7 +34,7 @@ void SerialCouplingScheme::initializeImplicit()
     if (getAcceleration()) {
       getAcceleration()->initialize(getAcceleratedData()); // Reserve memory, initialize
     }
-  } else if (getAcceleration().get() != nullptr && not getAcceleration()->getDataIDs().empty()) {
+  } else if (getAcceleration() && not getAcceleration()->getDataIDs().empty()) {
     int dataID = *(getAcceleration()->getDataIDs().begin());
     PRECICE_CHECK(getSendData(dataID) == nullptr,
                   "In case of serial coupling, acceleration can be defined for "
