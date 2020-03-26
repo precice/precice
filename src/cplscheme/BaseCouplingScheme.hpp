@@ -534,6 +534,9 @@ private:
   /// implements functionality needed by initialize if __couplingMode == Implicit
   virtual void initializeImplicit() = 0;
 
+  /// TODO
+  virtual void mergeData() = 0;
+
   /// implements functionality for initialize in base class.
   virtual void initializeImplementation() = 0;
 

@@ -69,14 +69,19 @@ private:
   }
 
   /**
-* @brief TODO
-*/
+   * @brief TODO
+   */
   void initializeImplicit() override;
 
   /**
- * @brief TODO
- */
+   * @brief TODO
+   */
   void initializeImplementation() override;
+
+  /**
+   * @brief noop for SerialCouplingScheme
+   */
+  void mergeData() override {};
 
   /**
    * @brief TODO

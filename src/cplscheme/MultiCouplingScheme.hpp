@@ -47,10 +47,6 @@ public:
       bool          initialize,
       int           index);
 
-protected:
-  /// merges send and receive data into one map (for parallel acceleration)
-  virtual void mergeData();
-
 private:
   void          sendData();
   void          receiveData();
@@ -86,6 +82,11 @@ private:
    * @brief TODO
    */
   void initializeImplementation() override;
+
+  /**
+   * @brief merges send and receive data into one map (for parallel acceleration)
+   */
+  void mergeData() override;
 
   /**
    * @brief TODO

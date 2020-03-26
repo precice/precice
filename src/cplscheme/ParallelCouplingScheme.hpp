@@ -41,9 +41,6 @@ public:
       int                           maxIterations = -1);
 
 protected:
-  /// merges send and receive data into one map (for parallel acceleration)
-  virtual void mergeData();
-
   /// Returns all data (receive and send)
   DataMap &getAllData()
   {
@@ -76,6 +73,11 @@ private:
    * @brief TODO
    */
   void initializeImplementation() override;
+
+  /**
+   * @brief merges send and receive data into one map (for parallel acceleration)
+   */
+  void mergeData() override;
 
   /**
    * @brief TODO
