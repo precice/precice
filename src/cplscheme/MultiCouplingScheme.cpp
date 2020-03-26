@@ -25,6 +25,7 @@ MultiCouplingScheme::MultiCouplingScheme(
       _communications(m2ns)
 {
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
+  PRECICE_ASSERT(not doesFirstStep(), "MultiCouplingScheme never does the first step, because it is never the first participant");
   for (size_t i = 0; i < _communications.size(); ++i) {
     DataMap receiveMap;
     DataMap sendMap;
@@ -35,15 +36,18 @@ MultiCouplingScheme::MultiCouplingScheme(
 
 void MultiCouplingScheme::initializeImplicit()
 {
-  PRECICE_ASSERT(not getConvergenceMeasures().empty(), "Implicit scheme must have at least one convergence measure.");
-  mergeData();                 // merge send and receive data for all pp calls
-  setupConvergenceMeasures();  // needs _couplingData configured
-  setupDataMatrices(getAcceleratedData()); // Reserve memory and initialize data with zero
-  if (getAcceleration()) {
-    PRECICE_CHECK(getAcceleration()->getDataIDs().size() >= 3,
-                  "For parallel coupling, the number of coupling data vectors has to be at least 3, not: "
-                      << getAcceleration()->getDataIDs().size());
-    getAcceleration()->initialize(getAcceleratedData()); // Reserve memory, initialize
+  PRECICE_CHECK(not getSendData().empty(), "No send data configured! Use explicit scheme for one-way coupling.");
+  if (not doesFirstStep()) {
+    PRECICE_ASSERT(not getConvergenceMeasures().empty(), "Implicit scheme must have at least one convergence measure.");
+    mergeData();                             // merge send and receive data for all pp calls
+    setupConvergenceMeasures();              // needs _couplingData configured
+    setupDataMatrices(getAcceleratedData()); // Reserve memory and initialize data with zero
+    if (getAcceleration()) {
+      PRECICE_CHECK(getAcceleration()->getDataIDs().size() >= 3,
+                    "For parallel coupling, the number of coupling data vectors has to be at least 3, not: "
+                        << getAcceleration()->getDataIDs().size());
+      getAcceleration()->initialize(getAcceleratedData()); // Reserve memory, initialize
+    }
   }
 }
 
