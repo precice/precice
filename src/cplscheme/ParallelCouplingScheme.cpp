@@ -30,7 +30,7 @@ void ParallelCouplingScheme::initializeImplicit()
     setupConvergenceMeasures();              // needs _couplingData configured
     mergeData();                             // merge send and receive data for all pp calls
     setupDataMatrices(getAcceleratedData()); // Reserve memory and initialize data with zero
-    if (getAcceleration().get() != nullptr) {
+    if (getAcceleration()) {
       getAcceleration()->initialize(getAcceleratedData()); // Reserve memory, initialize
     }
   }

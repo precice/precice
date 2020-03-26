@@ -910,7 +910,7 @@ std::pair<bool, bool> BaseCouplingScheme::doAcceleration(int accelerationShift)
   bool convergenceCoarseOptimization = true;
 
   ValuesMap designSpecifications;
-  if (getAcceleration().get() != nullptr) {
+  if (getAcceleration()) {
     designSpecifications = getAcceleration()->getDesignSpecification(getAcceleratedData());
   }
   // measure convergence of coupling iteration
@@ -950,14 +950,14 @@ std::pair<bool, bool> BaseCouplingScheme::doAcceleration(int accelerationShift)
   if (not doOnlySolverEvaluation) {
     // coupling iteration converged for current time window. Advance in time.
     if (convergence) {
-      if (getAcceleration().get() != nullptr) {
+      if (getAcceleration()) {
         setDeletedColumnsPPFiltering(getAcceleration()->getDeletedColumns());
         getAcceleration()->iterationsConverged(getAcceleratedData());
       }
       newConvergenceMeasurements();
       timeWindowCompleted();
       // no convergence achieved for the coupling iteration within the current time window
-    } else if (getAcceleration().get() != nullptr) {
+    } else if (getAcceleration()) {
       getAcceleration()->performAcceleration(getAcceleratedData());
     }
 

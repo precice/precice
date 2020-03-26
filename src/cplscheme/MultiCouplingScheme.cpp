@@ -102,12 +102,12 @@ std::pair<bool, bool> MultiCouplingScheme::doAdvance()
     convergence = true;
   }
   if (convergence) {
-    if (getAcceleration().get() != nullptr) {
+    if (getAcceleration()) {
       getAcceleration()->iterationsConverged(getAcceleratedData());
     }
     newConvergenceMeasurements();
     timeWindowCompleted();
-  } else if (getAcceleration().get() != nullptr) {
+  } else if (getAcceleration()) {
     getAcceleration()->performAcceleration(getAcceleratedData());
   }
 

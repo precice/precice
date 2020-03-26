@@ -31,7 +31,7 @@ void SerialCouplingScheme::initializeImplicit()
       setupConvergenceMeasures();              // needs _couplingData configured
       setupDataMatrices(getAcceleratedData()); // Reserve memory and initialize data with zero
     }
-    if (getAcceleration().get() != nullptr) {
+    if (getAcceleration()) {
       getAcceleration()->initialize(getAcceleratedData()); // Reserve memory, initialize
     }
   } else if (getAcceleration().get() != nullptr && not getAcceleration()->getDataIDs().empty()) {
