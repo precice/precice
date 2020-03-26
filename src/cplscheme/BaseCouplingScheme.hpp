@@ -531,8 +531,11 @@ private:
 
   /// Functions needed for initialize()
 
-  /// implements functionality needed by initialize if __couplingMode == Implicit
-  virtual void initializeImplicit() = 0;
+  /**
+   * @brief implements checks on acceleration specific for CouplingScheme during
+   * initialization if __couplingMode == Implicit
+   */
+  virtual void checkInitializationAcceleration() = 0;
 
   /// TODO
   virtual void mergeData() = 0;

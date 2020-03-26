@@ -215,7 +215,19 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
   _timeWindows   = startTimeWindow;
 
   if (_couplingMode == Implicit) {
-    initializeImplicit();
+    PRECICE_CHECK(not getSendData().empty(), "No send data configured. Use explicit scheme for one-way coupling.");
+    if (not doesFirstStep()) {                 // second participant
+      PRECICE_ASSERT(not getConvergenceMeasures().empty(), "Implicit scheme must have at least one convergence measure.");
+      mergeData();                             // merge send and receive data for all pp calls
+      setupConvergenceMeasures();              // needs _couplingData configured
+      setupDataMatrices(getAcceleratedData()); // Reserve memory and initialize data with zero
+    }
+
+    checkInitializationAcceleration();
+
+    if (not doesFirstStep() && getAcceleration()) {
+      getAcceleration()->initialize(getAcceleratedData()); // Reserve memory, initialize
+    }
 
     requireAction(constants::actionWriteIterationCheckpoint());
     initializeTXTWriters();
