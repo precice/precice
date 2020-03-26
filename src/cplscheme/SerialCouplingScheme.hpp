@@ -79,13 +79,6 @@ private:
   void initializeImplementation() override;
 
   /**
-   * @brief Performs checks initialization of serial coupling. In serial coupling only
-   * the first participant can receive initialized data and the second participant can
-   * initialize data.
-   */
-  void checkInitialize();
-
-  /**
    * @brief TODO
    */
   void exchangeInitialData() override;

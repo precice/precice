@@ -42,21 +42,18 @@ void SerialCouplingScheme::initializeImplicit()
   }
 }
 
-void SerialCouplingScheme::checkInitialize()
+void SerialCouplingScheme::initializeImplementation()
 {
+  // Perform checks for initialization of serial coupling.
   if (anyDataRequiresInitialization(getSendData())) {
-    PRECICE_CHECK(not doesFirstStep(), "Only second participant can initialize data and send it!");
+    PRECICE_CHECK(not doesFirstStep(), "In serial coupling only second participant can initialize data and send it!");
   }
 
   if (anyDataRequiresInitialization(getReceiveData())) {
-    PRECICE_CHECK(doesFirstStep(), "Only first participant can receive initial data!");
+    PRECICE_CHECK(doesFirstStep(), "In serial coupling only first participant can receive initial data!");
   }
-}
 
-void SerialCouplingScheme::initializeImplementation()
-{
-  checkInitialize();
-
+  // Initialize coupling
   if (anyDataRequiresInitialization(getSendData())) {
     hasToSendInitializedData();
   }
