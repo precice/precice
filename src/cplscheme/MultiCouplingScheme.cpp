@@ -72,15 +72,15 @@ void MultiCouplingScheme::exchangeInitialData()
   if (receivesInitializedData()) {
     receiveData();
     // second participant has to save values for extrapolation
-    if (isImplicitCouplingScheme() && getExtrapolationOrder() > 0) {
-      for (DataMap &receiveData : _receiveDataVector) {
+    for (DataMap &receiveData : _receiveDataVector) {
+      if (isImplicitCouplingScheme() && getExtrapolationOrder() > 0) {
         updateOldValues(receiveData);
       }
     }
   }
   if (sendsInitializedData()) {
-    if (isImplicitCouplingScheme() && getExtrapolationOrder() > 0) {
-      for (DataMap &sendData : _sendDataVector) {
+    for (DataMap &sendData : _sendDataVector) {
+      if (isImplicitCouplingScheme() && getExtrapolationOrder() > 0) {
         updateOldValues(sendData);
       }
     }
