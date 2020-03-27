@@ -75,7 +75,8 @@ BOOST_AUTO_TEST_CASE(TestFinalize)
   }
 }
 
-#if 0 // #ifndef PRECICE_NO_PETSC
+#ifndef PRECICE_NO_PETSC
+
 BOOST_AUTO_TEST_CASE(GlobalRBFPartitioning)
 {
   PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(2_ranks));
@@ -97,6 +98,7 @@ BOOST_AUTO_TEST_CASE(GlobalRBFPartitioning)
     //    std::cout << context.rank <<": " << values << '\n';
     interface.finalize();
   } else {
+    BOOST_REQUIRE(context.isNamed("SolverTwo"));
     SolverInterface interface(context.name, configFilename, context.rank, context.size);
     int             meshID = interface.getMeshID("MeshTwo");
     int             vertexIDs[6];
@@ -131,6 +133,7 @@ BOOST_AUTO_TEST_CASE(LocalRBFPartitioning)
     interface.readBlockScalarData(dataID, 2, vertexIDs, values);
     interface.finalize();
   } else {
+    BOOST_REQUIRE(context.isNamed("SolverTwo"));
     SolverInterface interface(context.name, configFilename, context.rank, context.size);
     int             meshID = interface.getMeshID("MeshTwo");
     int             vertexIDs[6];
@@ -150,7 +153,7 @@ BOOST_AUTO_TEST_CASE(LocalRBFPartitioning)
 /// This testcase is based on a bug reported by Thorsten for acoustic FASTEST-Ateles coupling
 BOOST_AUTO_TEST_CASE(CouplingOnLine)
 {
-  PRECICE_TEST("Ateles"_on(3_ranks), "FASTEST"_on(1_ranks));
+  PRECICE_TEST("Ateles"_on(3_ranks), "FASTEST"_on(1_rank));
   std::string configFilename = _pathToTests + "line-coupling.xml";
 
   if (context.isNamed("Ateles")) {
@@ -613,7 +616,7 @@ BOOST_AUTO_TEST_CASE(TestBoundingBoxInitializationTwoWay)
 /// This testcase is based on a bug documented in issue #371
 BOOST_AUTO_TEST_CASE(NearestProjectionRePartitioning)
 {
-  PRECICE_TEST("FluidSolver"_on(3_ranks), "StructureSolver"_on(1_rank));
+  PRECICE_TEST("FluidSolver"_on(3_ranks), "SolidSolver"_on(1_rank));
   std::string configFilename = _pathToTests + "np-repartitioning.xml";
 
   if (context.isNamed("FluidSolver")) {
@@ -706,7 +709,7 @@ BOOST_AUTO_TEST_CASE(NearestProjectionRePartitioning)
       interface.finalize();
     }
   } else {
-    BOOST_TEST(context.isNamed("StructureSolver"));
+    BOOST_TEST(context.isNamed("SolidSolver"));
     SolverInterface interface(context.name, configFilename, context.rank, context.size);
     const int       meshID     = interface.getMeshID("Nodes");
     const int       dimensions = 3;
@@ -824,7 +827,8 @@ BOOST_AUTO_TEST_CASE(UserDefinedMPICommunicator)
   }
 }
 
-#if 0  // #ifndef PRECICE_NO_PETSC
+#ifndef PRECICE_NO_PETSC
+
 // Tests SolverInterface() with a user-defined MPI communicator.
 // Since PETSc also uses MPI, we use petrbf mapping here.
 BOOST_AUTO_TEST_CASE(UserDefinedMPICommunicatorPetRBF)
@@ -846,6 +850,7 @@ BOOST_AUTO_TEST_CASE(UserDefinedMPICommunicatorPetRBF)
     interface.initialize();
     interface.finalize();
   } else {
+    BOOST_REQUIRE(context.isNamed("SolverTwo"));
     SolverInterface interface(context.name, configFilename, context.rank, context.size);
     int             meshID = interface.getMeshID("MeshTwo");
     int             vertexIDs[6];
