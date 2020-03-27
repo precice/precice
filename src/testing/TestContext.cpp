@@ -173,8 +173,12 @@ void TestContext::initializeMasterSlave()
 
   if (!_initMS)
     return;
-
+  
+#ifndef PRECICE_NO_MPI
   precice::com::PtrCommunication masterSlaveCom = precice::com::PtrCommunication(new precice::com::MPIDirectCommunication());
+#else
+  precice::com::PtrCommunication masterSlaveCom = precice::com::PtrCommunication(new precice::com::SocketCommunication());
+#endif
 
   const auto masterName = name + "Master";
   const auto slavesName = name + "Slaves";

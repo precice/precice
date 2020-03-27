@@ -36,9 +36,11 @@ Parallel::CommState &Parallel::CommState::operator=(Parallel::CommState &&other)
 
 Parallel::CommState::~CommState() noexcept
 {
+#ifndef PRECICE_NO_MPI
   if (_owning && comm != MPI_COMM_SELF && comm != MPI_COMM_NULL && comm != MPI_COMM_WORLD) {
     MPI_Comm_free(&comm);
   }
+#endif // not PRECICE_NO_MPI
 }
 
 int Parallel::CommState::rank() const
@@ -77,12 +79,20 @@ void Parallel::CommState::synchronize() const
 
 bool Parallel::CommState::isNull() const
 {
+#ifndef PRECICE_NO_MPI
   return comm == MPI_COMM_NULL;
+#else
+  return true;
+#endif
 }
 
 Parallel::CommStatePtr Parallel::CommState::world()
 {
+#ifndef PRECICE_NO_MPI
   return fromComm(MPI_COMM_WORLD);
+#else
+  return null();
+#endif
 }
 
 Parallel::CommStatePtr Parallel::CommState::null()
@@ -92,7 +102,11 @@ Parallel::CommStatePtr Parallel::CommState::null()
 
 Parallel::CommStatePtr Parallel::CommState::self()
 {
+#ifndef PRECICE_NO_MPI
   return fromComm(MPI_COMM_SELF);
+#else
+  return null();
+#endif
 }
 
 Parallel::CommStatePtr Parallel::CommState::fromComm(Communicator comm)
@@ -112,18 +126,20 @@ Parallel::CommStatePtr Parallel::CommState::fromExtern(Communicator comm)
 
 void Parallel::CommState::print(std::ostream &out) const
 {
-  if (comm == MPI_COMM_SELF) {
-    out << "COMM_SELF:1/1";
-    return;
-  }
   if (comm == MPI_COMM_NULL) {
     out << "COMM_NULL:invalid";
+    return;
+  }
+#ifndef PRECICE_NO_MPI
+  if (comm == MPI_COMM_SELF) {
+    out << "COMM_SELF:1/1";
     return;
   }
   out << "COMM" << ((comm == MPI_COMM_WORLD) ? "_WORLD:" : ":");
   out << rank() << '/' << size();
   if (!_owning)
     out << "EXTERN";
+#endif
 }
 
 /// END CommState
@@ -272,7 +288,7 @@ void Parallel::splitCommunicator(const std::string &groupName)
   PRECICE_ASSERT(thisGroup != accessorGroups.end(), "This requested groupName \"" << groupName << "\" is not in accessorGroups!");
 
   CommStatePtr newState;
-  const bool restrictToSelf = std::all_of(accessorGroups.begin(), accessorGroups.end(), [](const AccessorGroup & group) { return group.size == 1; });
+  const bool   restrictToSelf = std::all_of(accessorGroups.begin(), accessorGroups.end(), [](const AccessorGroup &group) { return group.size == 1; });
   if (restrictToSelf) {
     PRECICE_DEBUG("Split to Comm Self");
     newState = CommState::self();
