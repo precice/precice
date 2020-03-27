@@ -108,7 +108,23 @@ std::pair<bool, bool> SerialCouplingScheme::exchangeDataAndAccelerate()
       convergenceCoarseOptimization = convergenceInformation.second;
     }
     PRECICE_DEBUG("Sending data...");
+    // -> BROKEN
+    /*
+    if (not doesFirstStep() && (isCouplingOngoing() || (isImplicitCouplingScheme() && not convergence))) {
+     receiveAndSetTimeWindowSize();
+    }
+    */
     sendData(getM2N());
+  }
+
+  // -> WORKS
+  if(not doesFirstStep()) {
+    if (isCouplingOngoing() || (isImplicitCouplingScheme() && not convergence)) {
+      receiveAndSetTimeWindowSize();
+    }
+  }
+
+  if(not doesFirstStep()) {
     // the second participant does not want new data in the last iteration of the last time window
     if (isCouplingOngoing() || (isImplicitCouplingScheme() && not convergence)) {
       PRECICE_DEBUG("Receiving data...");

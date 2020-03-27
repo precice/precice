@@ -96,7 +96,6 @@ void BaseCouplingScheme::receiveAndSetTimeWindowSize()
     PRECICE_DEBUG("Received time window size of " << dt << ".");
     PRECICE_ASSERT(not math::equals(dt, UNDEFINED_TIME_WINDOW_SIZE));
     PRECICE_ASSERT(not doesFirstStep(), "Only second participant can receive time window size.");
-    PRECICE_ASSERT(isExplicitCouplingScheme(), "Receiving time window size only possible for explicit coupling.");
     _timeWindowSize = dt;
   }
 }
@@ -285,12 +284,18 @@ void BaseCouplingScheme::advance()
       timeWindowCompleted();
     }
 
-    if(isExplicitCouplingScheme() && doesFirstStep()) {
-      if (_participantSetsTimeWindowSize) {
-        PRECICE_ASSERT(doesFirstStep(), "only first participant can set time window size.");
-        PRECICE_DEBUG("sending time window size of " << _computedTimeWindowPart);  // TODO is this correct?
-        getM2N()->send(_computedTimeWindowPart);
-      }
+    if (_participantSetsTimeWindowSize) {
+      PRECICE_ASSERT(doesFirstStep(), "only first participant can set time window size.");
+      PRECICE_DEBUG("sending time window size of " << _computedTimeWindowPart);  // TODO is this correct?
+      getM2N()->send(_computedTimeWindowPart);
+    }
+    if (_participantReceivesTimeWindowSize) {
+      PRECICE_ASSERT(not doesFirstStep(), "only second participant can receive time window size.");
+      /**
+       * @todo: calling receiveAndSetTimeWindowSize here would be easier to understand, currently
+       *        this call has to happen inside exchangeDataAndAccelerate
+       */
+      //receiveAndSetTimeWindowSize();
     }
 
     if (isExplicitCouplingScheme()) {
@@ -298,10 +303,6 @@ void BaseCouplingScheme::advance()
     }
 
     std::pair<bool, bool> convergenceInformation = exchangeDataAndAccelerate();
-
-    if (isExplicitCouplingScheme() && isCouplingOngoing()) {
-      receiveAndSetTimeWindowSize();
-    }
 
     bool convergence = convergenceInformation.first;
     bool convergenceCoarseOptimization = convergenceInformation.second;

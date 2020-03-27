@@ -398,18 +398,18 @@ protected:
     return _convergenceMeasures;
   }
 
+  /// Determines, if the time window size is set by the participant.
+  bool _participantSetsTimeWindowSize = false;
+
+  /// Determines, if the time window size is received by the participant.
+  bool _participantReceivesTimeWindowSize = false;
+
 private:
   /// Communication device to the other coupling participant.
   m2n::PtrM2N _m2n;
 
   /// Coupling mode used by coupling scheme.
   CouplingMode _couplingMode = Undefined;
-
-  /// Determines, if the time window size is set by the participant.
-  bool _participantSetsTimeWindowSize = false;
-
-  /// Determines, if the time window size is received by the participant.
-  bool _participantReceivesTimeWindowSize = false;
 
   mutable logging::Logger _log{"cplscheme::BaseCouplingScheme"};
 
