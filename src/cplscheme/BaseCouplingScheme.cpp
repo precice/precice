@@ -299,6 +299,10 @@ void BaseCouplingScheme::advance()
 
     std::pair<bool, bool> convergenceInformation = exchangeDataAndAccelerate();
 
+    if (isExplicitCouplingScheme() && isCouplingOngoing()) {
+      receiveAndSetTimeWindowSize();
+    }
+
     bool convergence = convergenceInformation.first;
     bool convergenceCoarseOptimization = convergenceInformation.second;
 

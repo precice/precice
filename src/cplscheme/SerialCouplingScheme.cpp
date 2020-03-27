@@ -112,7 +112,6 @@ std::pair<bool, bool> SerialCouplingScheme::exchangeDataAndAccelerate()
     // the second participant does not want new data in the last iteration of the last time window
     if (isCouplingOngoing() || (isImplicitCouplingScheme() && not convergence)) {
       PRECICE_DEBUG("Receiving data...");
-      receiveAndSetTimeWindowSize();
       receiveData(getM2N());
     }
   }
