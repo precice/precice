@@ -525,6 +525,12 @@ private:
   /// implements functionality needed by initialize if __couplingMode == Implicit
   virtual void initializeImplicit() = 0;
 
+  /// performs checks on SendData if __couplingMode == Implicit
+  virtual void checkForSend() = 0;
+
+  /// performs checks on Acceleration setup if __couplingMode == Implicit
+  virtual void checkAcceleration() = 0;
+
   /// TODO
   virtual void mergeData() = 0;
 

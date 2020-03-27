@@ -36,9 +36,9 @@ MultiCouplingScheme::MultiCouplingScheme(
 
 void MultiCouplingScheme::initializeImplicit()
 {
-  bool hasAnySendData = std::any_of(_sendDataVector.cbegin(), _sendDataVector.cend(), [](DataMap sendData){return not sendData.empty();});
-  PRECICE_CHECK(hasAnySendData, "No send data configured. Use explicit scheme for one-way coupling.");
+  checkForSend();
 
+  /// @todo: move into BaseCouplingScheme
   if (not doesFirstStep()) {
     PRECICE_ASSERT(not getConvergenceMeasures().empty(), "Implicit scheme must have at least one convergence measure.");
     mergeData();                             // merge send and receive data for all pp calls
@@ -46,6 +46,17 @@ void MultiCouplingScheme::initializeImplicit()
     setupDataMatrices(getAcceleratedData()); // Reserve memory and initialize data with zero
   }
 
+  checkAcceleration();
+}
+
+void MultiCouplingScheme::checkForSend()
+{
+  bool hasAnySendData = std::any_of(_sendDataVector.cbegin(), _sendDataVector.cend(), [](DataMap sendData){return not sendData.empty();});
+  PRECICE_CHECK(hasAnySendData, "No send data configured. Use explicit scheme for one-way coupling.");
+}
+
+void MultiCouplingScheme::checkAcceleration()
+{
   if (not doesFirstStep() && getAcceleration()) {
     PRECICE_CHECK(getAcceleration()->getDataIDs().size() >= 3,
                   "For parallel coupling, the number of coupling data vectors has to be at least 3, not: "

@@ -215,7 +215,11 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
   _timeWindows   = startTimeWindow;
 
   if (_couplingMode == Implicit) {
+    /// @todo: implement checkForSend() in child class
+
     initializeImplicit();
+
+    /// @todo: implement checkAcceleration() in child class
 
     if (not doesFirstStep() && getAcceleration()) {
       getAcceleration()->initialize(getAcceleratedData()); // Reserve memory, initialize
