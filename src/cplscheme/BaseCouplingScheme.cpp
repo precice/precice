@@ -909,21 +909,18 @@ bool BaseCouplingScheme::anyDataRequiresInitialization(BaseCouplingScheme::DataM
 
 bool BaseCouplingScheme::receiveConvergence()
 {
-  bool convergence, isCoarseModelOptimizationActive;
+  PRECICE_ASSERT(doesFirstStep(), "For convergence information the receiving participant is always the first one.");
+  bool convergence;
   getM2N()->receive(convergence);
-  getM2N()->receive(isCoarseModelOptimizationActive);
-  if(isCoarseModelOptimizationActive){
-    activateCoarseModelOptimization();
-  } else {
-    deactivateCoarseModelOptimization();
-  }
+  getM2N()->receive(_isCoarseModelOptimizationActive);
   return convergence;
 }
 
-void BaseCouplingScheme::sendConvergence(bool convergence)
+void BaseCouplingScheme::sendConvergence(m2n::PtrM2N m2n, bool convergence)
 {
-  getM2N()->send(convergence);
-  getM2N()->send(getIsCoarseModelOptimizationActive());
+  PRECICE_ASSERT(not doesFirstStep(), "For convergence information the sending participant is never the first one.");
+  m2n->send(convergence);
+  m2n->send(_isCoarseModelOptimizationActive);
 }
 
 std::pair<bool, bool> BaseCouplingScheme::accelerate(int accelerationShift)
@@ -950,10 +947,10 @@ std::pair<bool, bool> BaseCouplingScheme::accelerate(int accelerationShift)
     // in case of multilevel PP only: if coarse model optimization converged
     // steering the requests for evaluation of coarse and fine model, respectively
     if (convergenceCoarseOptimization) {
-      deactivateCoarseModelOptimization();
+      _isCoarseModelOptimizationActive = false;
       doOnlySolverEvaluation           = true;
     } else {
-      activateCoarseModelOptimization();
+      _isCoarseModelOptimizationActive = true;
     }
   }
   // measure convergence of coupling iteration
@@ -1026,7 +1023,7 @@ std::pair<bool, bool> BaseCouplingScheme::accelerate(int accelerationShift)
       }
     }
   }
-  sendConvergence(convergence);
+  sendConvergence(getM2N(), convergence);
   return std::pair<bool, bool>(convergence, convergenceCoarseOptimization);
 }
 } // namespace cplscheme

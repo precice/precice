@@ -111,9 +111,8 @@ std::pair<bool, bool> MultiCouplingScheme::exchangeDataAndAccelerate()
   }
 
   for (m2n::PtrM2N m2n : _communications) {
-    m2n->send(convergence);
     PRECICE_ASSERT(not getIsCoarseModelOptimizationActive());
-    m2n->send(getIsCoarseModelOptimizationActive()); //need to do this to match with ParallelCplScheme
+    sendConvergence(m2n, convergence);
   }
 
   if (convergence) {

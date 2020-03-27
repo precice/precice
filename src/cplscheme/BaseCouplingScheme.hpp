@@ -356,7 +356,7 @@ protected:
   bool receiveConvergence();
 
   /// TODO
-  void sendConvergence(bool convergence);
+  void sendConvergence(m2n::PtrM2N m2n, bool convergence);
 
   /// TODO
   std::pair<bool, bool> accelerate(int accelerationShift = 0);
@@ -399,11 +399,6 @@ protected:
   std::vector<ConvergenceMeasure> getConvergenceMeasures()
   {
     return _convergenceMeasures;
-  }
-
-  virtual void deactivateCoarseModelOptimization()
-  {
-    _isCoarseModelOptimizationActive = false;
   }
 
 private:
