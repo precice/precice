@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(FourProcTestsWithMasterCommmunication)
 /// Test that requires 2 participants "A" on 1 rank and "B" on 2 ranks
 BOOST_AUTO_TEST_CASE(NamedContexts)
 {
-  PRECICE_TEST("A"_on(1_ranks), "B"_on(2_ranks));
+  PRECICE_TEST("A"_on(1_rank), "B"_on(2_ranks));
 
   if (context.isNamed("A")) {
     BOOST_TEST(context.hasSize(1));
