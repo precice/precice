@@ -40,14 +40,6 @@ public:
       CouplingMode                  cplMode,
       int                           maxIterations = -1);
 
-protected:
-  /// Returns all data (receive and send)
-  DataMap &getAllData()
-  {
-    PRECICE_ASSERT(!doesFirstStep(), "Only the second participant should do the acceleration.");
-    return _allData;
-  }
-
 private:
   logging::Logger _log{"cplscheme::ParallelCouplingScheme"};
 
@@ -61,7 +53,8 @@ private:
 
   DataMap &getAcceleratedData() override
   {
-    return getAllData();
+    PRECICE_ASSERT(!doesFirstStep(), "Only the second participant should do the acceleration.");
+    return _allData;
   }
 
   /**
