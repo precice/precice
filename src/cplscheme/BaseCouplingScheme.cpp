@@ -95,16 +95,9 @@ void BaseCouplingScheme::receiveAndSetTimeWindowSize()
     getM2N()->receive(dt);
     PRECICE_DEBUG("Received time window size of " << dt << ".");
     PRECICE_ASSERT(not math::equals(dt, UNDEFINED_TIME_WINDOW_SIZE));
+    PRECICE_ASSERT(not doesFirstStep(), "Only second participant can receive time window size.");
+    PRECICE_ASSERT(isExplicitCouplingScheme(), "Receiving time window size only possible for explicit coupling.");
     _timeWindowSize = dt;
-  }
-}
-
-void BaseCouplingScheme::sendTimeWindowSize()
-{
-  PRECICE_TRACE();
-  if (_participantSetsTimeWindowSize) {
-    PRECICE_DEBUG("sending time window size of " << _computedTimeWindowPart);  // TODO is this correct?
-    getM2N()->send(_computedTimeWindowPart);
   }
 }
 
@@ -142,9 +135,6 @@ void BaseCouplingScheme::addDataToReceive(
 
 std::vector<int> BaseCouplingScheme::sendData(m2n::PtrM2N m2n)
 {
-  if(isExplicitCouplingScheme()) {
-    sendTimeWindowSize();
-  }
   PRECICE_TRACE();
   std::vector<int> sentDataIDs;
   PRECICE_ASSERT(m2n.get() != nullptr);
@@ -290,8 +280,21 @@ void BaseCouplingScheme::advance()
   PRECICE_ASSERT(_couplingMode != Undefined);
 
   if (reachedEndOfTimeWindow()) {
+
     if (isExplicitCouplingScheme()) {
       timeWindowCompleted();
+    }
+
+    if(isExplicitCouplingScheme() && doesFirstStep()) {
+      if (_participantSetsTimeWindowSize) {
+        PRECICE_ASSERT(doesFirstStep(), "only first participant can set time window size.");
+        PRECICE_DEBUG("sending time window size of " << _computedTimeWindowPart);  // TODO is this correct?
+        getM2N()->send(_computedTimeWindowPart);
+      }
+    }
+
+    if (isExplicitCouplingScheme()) {
+      _computedTimeWindowPart = 0.0;
     }
 
     std::pair<bool, bool> convergenceInformation = exchangeDataAndAccelerate();
@@ -308,9 +311,6 @@ void BaseCouplingScheme::advance()
         advanceTXTWriters();
       }
       updateTimeAndIterations(convergence, convergenceCoarseOptimization);
-    } else {
-      PRECICE_ASSERT(isExplicitCouplingScheme());
-      _computedTimeWindowPart = 0.0;
     }
   }
 }

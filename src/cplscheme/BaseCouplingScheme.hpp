@@ -233,9 +233,6 @@ protected:
   /// Receives and sets the time window size, if this participant is the one to receive
   void receiveAndSetTimeWindowSize();
 
-  /// Sends the time window size, if this participant is the one to send
-  void sendTimeWindowSize();
-
   /// @return True, if local participant is the one starting the scheme.
   bool doesFirstStep() const
   {

@@ -75,7 +75,8 @@ std::pair<bool, bool> ParallelCouplingScheme::exchangeDataAndAccelerate()
       if (convergence) {
         timeWindowCompleted();
       }
-    } else {
+    }
+    if(isExplicitCouplingScheme()) {
       PRECICE_ASSERT(isExplicitCouplingScheme());
       receiveAndSetTimeWindowSize();
     }
