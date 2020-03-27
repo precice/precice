@@ -36,7 +36,6 @@ MultiCouplingScheme::MultiCouplingScheme(
 
 void MultiCouplingScheme::initializeImplicit()
 {
-  PRECICE_CHECK(not getSendData().empty(), "No send data configured! Use explicit scheme for one-way coupling.");
   if (not doesFirstStep()) {
     PRECICE_ASSERT(not getConvergenceMeasures().empty(), "Implicit scheme must have at least one convergence measure.");
     mergeData();                             // merge send and receive data for all pp calls
