@@ -880,6 +880,18 @@ bool BaseCouplingScheme::maxIterationsReached()
   }
 }
 
+void BaseCouplingScheme::determineInitialSend(BaseCouplingScheme::DataMap &sendData) {
+  if(anyDataRequiresInitialization(sendData)) {
+    _sendsInitializedData = true;
+  }
+}
+
+void BaseCouplingScheme::determineInitialReceive(BaseCouplingScheme::DataMap &receiveData) {
+  if(anyDataRequiresInitialization(receiveData)) {
+    _receivesInitializedData = true;
+  }
+}
+
 bool BaseCouplingScheme::anyDataRequiresInitialization(BaseCouplingScheme::DataMap &dataMap) const
 {
   /// @todo implement this function using https://en.cppreference.com/w/cpp/algorithm/all_any_none_of

@@ -309,24 +309,10 @@ protected:
     return _sendsInitializedData;
   }
 
-  /// @brief sets _sendsInitializedData true.
-  void hasToSendInitializedData()
-  {
-    PRECICE_ASSERT(_sendsInitializedData == false, "Function hasToSendInitializedData may only be called once.");
-    _sendsInitializedData = true;
-  }
-
   /// @return value of _receivesInitializedData
   bool receivesInitializedData() const
   {
     return _receivesInitializedData;
-  }
-
-  /// @brief sets _receivesInitializedData true.
-  void hasToReceiveInitializedData()
-  {
-    PRECICE_ASSERT(_receivesInitializedData == false, "Function hasToReceiveInitializedData may only be called once.");
-    _receivesInitializedData = true;
   }
 
   /// Holds relevant variables to perform a convergence measurement.
@@ -395,6 +381,18 @@ protected:
   int getIterationsCoarseOptimization(){
     return _iterationsCoarseOptimization;
   }
+
+  /**
+   * @brief Sets _sendsInitializedData, if sendData requires initialization
+   * @param sendData CouplingData being checked
+   */
+  void determineInitialSend(DataMap &sendData);
+
+  /**
+   * @brief Sets _receivesInitializedData, if receiveData requires initialization
+   * @param receiveData CouplingData being checked
+   */
+  void determineInitialReceive(DataMap &receiveData);
 
   /**
    * @brief Checks whether any CouplingData in dataMap requires initialization

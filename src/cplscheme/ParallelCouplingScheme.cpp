@@ -37,13 +37,8 @@ void ParallelCouplingScheme::initializeImplicit()
 
 void ParallelCouplingScheme::initializeImplementation()
 {
-  if (anyDataRequiresInitialization(getSendData())) {
-    hasToSendInitializedData();
-  }
-
-  if (anyDataRequiresInitialization(getReceiveData())) {
-    hasToReceiveInitializedData();
-  }
+  determineInitialSend(getSendData());
+  determineInitialReceive(getReceiveData());
 }
 
 void ParallelCouplingScheme::exchangeInitialData()

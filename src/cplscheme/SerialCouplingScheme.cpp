@@ -54,13 +54,8 @@ void SerialCouplingScheme::initializeImplementation()
   }
 
   // Initialize coupling
-  if (anyDataRequiresInitialization(getSendData())) {
-    hasToSendInitializedData();
-  }
-
-  if (anyDataRequiresInitialization(getReceiveData())) {
-    hasToReceiveInitializedData();
-  }
+  determineInitialSend(getSendData());
+  determineInitialReceive(getReceiveData());
 
   // If the second participant initializes data, the first receive for the
   // second participant is done in initializeData() instead of initialize().

@@ -57,15 +57,11 @@ void MultiCouplingScheme::initializeImplementation()
 {
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
 
-  for (DataMap &dataMap : _sendDataVector) {
-    if(anyDataRequiresInitialization(dataMap)) {
-      hasToSendInitializedData();
-    }
+  for (DataMap &sendData : _sendDataVector) {
+    determineInitialSend(sendData);
   }
-  for (DataMap &dataMap : _receiveDataVector) {
-    if(anyDataRequiresInitialization(dataMap)) {
-      hasToReceiveInitializedData();
-    }
+  for (DataMap &receiveData : _receiveDataVector) {
+    determineInitialReceive(receiveData);
   }
 }
 
@@ -77,15 +73,15 @@ void MultiCouplingScheme::exchangeInitialData()
     receiveData();
     // second participant has to save values for extrapolation
     if (isImplicitCouplingScheme() && getExtrapolationOrder() > 0) {
-      for (DataMap &dataMap : _receiveDataVector) {
-        updateOldValues(dataMap);
+      for (DataMap &receiveData : _receiveDataVector) {
+        updateOldValues(receiveData);
       }
     }
   }
   if (sendsInitializedData()) {
     if (isImplicitCouplingScheme() && getExtrapolationOrder() > 0) {
-      for (DataMap &dataMap : _sendDataVector) {
-        updateOldValues(dataMap);
+      for (DataMap &sendData : _sendDataVector) {
+        updateOldValues(sendData);
       }
     }
     sendData();
