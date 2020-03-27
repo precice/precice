@@ -26,8 +26,6 @@ MultiCouplingScheme::MultiCouplingScheme(
 {
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
   PRECICE_ASSERT(not doesFirstStep(), "MultiCouplingScheme never does the first step, because it is never the first participant");
-  PRECICE_ASSERT(not _participantSetsTimeWindowSize && not _participantReceivesTimeWindowSize,
-                 "<time-window-size method=\"first-participant\" not allowed for MultiCouplingScheme/>");
   for (size_t i = 0; i < _communications.size(); ++i) {
     DataMap receiveMap;
     DataMap sendMap;

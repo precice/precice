@@ -64,19 +64,14 @@ BaseCouplingScheme::BaseCouplingScheme(
   }
   if (localParticipant == _firstParticipant) {
     _doesFirstStep = true;
-    if (dtMethod == constants::FIRST_PARTICIPANT_SETS_TIME_WINDOW_SIZE) {
-      _participantSetsTimeWindowSize = true;
-      _timeWindowSize = UNDEFINED_TIME_WINDOW_SIZE;
-    }
   } else if (localParticipant == _secondParticipant) {
-    if (dtMethod == constants::FIRST_PARTICIPANT_SETS_TIME_WINDOW_SIZE) {
-      _participantReceivesTimeWindowSize = true;
-    }
+    _doesFirstStep = false;
   } else {
     PRECICE_ERROR("Name of local participant \""
                   << localParticipant << "\" does not match any "
                   << "participant specified for the coupling scheme.");
   }
+
   PRECICE_CHECK((maxIterations > 0) || (maxIterations == -1),
                 "Maximal iteration limit has to be larger than zero.");
 
@@ -87,17 +82,9 @@ BaseCouplingScheme::BaseCouplingScheme(
   }
 }
 
-void BaseCouplingScheme::receiveAndSetTimeWindowSize()
+void BaseCouplingScheme::setTimeWindowSize(double timeWindowSize)
 {
-  PRECICE_TRACE();
-  if (_participantReceivesTimeWindowSize) {
-    double dt = UNDEFINED_TIME_WINDOW_SIZE;
-    getM2N()->receive(dt);
-    PRECICE_DEBUG("Received time window size of " << dt << ".");
-    PRECICE_ASSERT(not math::equals(dt, UNDEFINED_TIME_WINDOW_SIZE));
-    PRECICE_ASSERT(not doesFirstStep(), "Only second participant can receive time window size.");
-    _timeWindowSize = dt;
-  }
+  _timeWindowSize = timeWindowSize;
 }
 
 void BaseCouplingScheme::addDataToSend(
@@ -284,25 +271,11 @@ void BaseCouplingScheme::advance()
       timeWindowCompleted();
     }
 
-    if (_participantSetsTimeWindowSize) {
-      PRECICE_ASSERT(doesFirstStep(), "only first participant can set time window size.");
-      PRECICE_DEBUG("sending time window size of " << _computedTimeWindowPart);  // TODO is this correct?
-      getM2N()->send(_computedTimeWindowPart);
-    }
-    if (_participantReceivesTimeWindowSize) {
-      PRECICE_ASSERT(not doesFirstStep(), "only second participant can receive time window size.");
-      /**
-       * @todo: calling receiveAndSetTimeWindowSize here would be easier to understand, currently
-       *        this call has to happen inside exchangeDataAndAccelerate
-       */
-      //receiveAndSetTimeWindowSize();
-    }
+    std::pair<bool, bool> convergenceInformation = exchangeDataAndAccelerate();
 
     if (isExplicitCouplingScheme()) {
       _computedTimeWindowPart = 0.0;
     }
-
-    std::pair<bool, bool> convergenceInformation = exchangeDataAndAccelerate();
 
     bool convergence = convergenceInformation.first;
     bool convergenceCoarseOptimization = convergenceInformation.second;

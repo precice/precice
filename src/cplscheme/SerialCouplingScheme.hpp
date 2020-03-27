@@ -58,6 +58,15 @@ private:
    */
   logging::Logger _log{"cplschemes::SerialCouplingSchemes"};
 
+  /// Determines, if the time window size is set by the participant.
+  bool _participantSetsTimeWindowSize = false;
+
+  /// Determines, if the time window size is received by the participant.
+  bool _participantReceivesTimeWindowSize = false;
+
+  /// Receives and sets the time window size, if this participant is the one to receive
+  void receiveAndSetTimeWindowSize();
+
   /**
    * @brief TODO
    */

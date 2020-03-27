@@ -21,10 +21,7 @@ ParallelCouplingScheme::ParallelCouplingScheme(
     CouplingMode                  cplMode,
     int                           maxIterations)
     : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowsSize, validDigits, firstParticipant,
-                         secondParticipant, localParticipant, m2n, maxIterations, cplMode, dtMethod) {
-  PRECICE_ASSERT(not _participantSetsTimeWindowSize && not _participantReceivesTimeWindowSize,
-      "<time-window-size method=\"first-participant\" not allowed for ParallelCouplingScheme/>");
-}
+                         secondParticipant, localParticipant, m2n, maxIterations, cplMode, dtMethod) {}
 
 void ParallelCouplingScheme::checkForSend()
 {

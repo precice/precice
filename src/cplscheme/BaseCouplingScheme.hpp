@@ -230,8 +230,13 @@ protected:
   /// Updates internal state of coupling scheme for next time window.
   void timeWindowCompleted();
 
-  /// Receives and sets the time window size, if this participant is the one to receive
-  void receiveAndSetTimeWindowSize();
+  /// Sets _timeWindowSize
+  void setTimeWindowSize(double timeWindowSize);
+
+  /// Get _computedTimeWindowPart
+  double getComputedTimeWindowPart() {
+    return _computedTimeWindowPart;
+  }
 
   /// @return True, if local participant is the one starting the scheme.
   bool doesFirstStep() const
@@ -397,12 +402,6 @@ protected:
   {
     return _convergenceMeasures;
   }
-
-  /// Determines, if the time window size is set by the participant.
-  bool _participantSetsTimeWindowSize = false;
-
-  /// Determines, if the time window size is received by the participant.
-  bool _participantReceivesTimeWindowSize = false;
 
 private:
   /// Communication device to the other coupling participant.

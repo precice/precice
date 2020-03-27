@@ -21,7 +21,29 @@ SerialCouplingScheme::SerialCouplingScheme(
     CouplingMode                  cplMode,
     int                           maxIterations)
     : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, firstParticipant,
-                         secondParticipant, localParticipant, m2n, maxIterations, cplMode, dtMethod) {}
+                         secondParticipant, localParticipant, m2n, maxIterations, cplMode, dtMethod) {
+  if (dtMethod == constants::FIRST_PARTICIPANT_SETS_TIME_WINDOW_SIZE) {
+    if (doesFirstStep()) {
+      _participantSetsTimeWindowSize = true;
+      setTimeWindowSize(UNDEFINED_TIME_WINDOW_SIZE);
+    } else {
+      _participantReceivesTimeWindowSize = true;
+    }
+  }
+}
+
+void SerialCouplingScheme::receiveAndSetTimeWindowSize()
+{
+  PRECICE_TRACE();
+  if (_participantReceivesTimeWindowSize) {
+    double dt = UNDEFINED_TIME_WINDOW_SIZE;
+    getM2N()->receive(dt);
+    PRECICE_DEBUG("Received time window size of " << dt << ".");
+    PRECICE_ASSERT(not math::equals(dt, UNDEFINED_TIME_WINDOW_SIZE));
+    PRECICE_ASSERT(not doesFirstStep(), "Only second participant can receive time window size.");
+    setTimeWindowSize(dt);
+  }
+}
 
 void SerialCouplingScheme::checkForSend()
 {
@@ -88,6 +110,12 @@ std::pair<bool, bool> SerialCouplingScheme::exchangeDataAndAccelerate()
 {
   bool convergence, convergenceCoarseOptimization; // @todo having the bools for convergence measurement declared for explicit and implicit coupling is not nice
 
+  if (_participantSetsTimeWindowSize) {
+    PRECICE_ASSERT(doesFirstStep(), "only first participant can set time window size.");
+    PRECICE_DEBUG("sending time window size of " << getComputedTimeWindowPart());  // TODO is this correct?
+    getM2N()->send(getComputedTimeWindowPart());
+  }
+
   if (doesFirstStep()) { // first participant
     PRECICE_DEBUG("Sending data...");
     sendData(getM2N());
@@ -108,23 +136,16 @@ std::pair<bool, bool> SerialCouplingScheme::exchangeDataAndAccelerate()
       convergenceCoarseOptimization = convergenceInformation.second;
     }
     PRECICE_DEBUG("Sending data...");
-    // -> BROKEN
-    /*
-    if (not doesFirstStep() && (isCouplingOngoing() || (isImplicitCouplingScheme() && not convergence))) {
-     receiveAndSetTimeWindowSize();
-    }
-    */
     sendData(getM2N());
   }
 
-  // -> WORKS
-  if(not doesFirstStep()) {
+  if (_participantReceivesTimeWindowSize) {
     if (isCouplingOngoing() || (isImplicitCouplingScheme() && not convergence)) {
       receiveAndSetTimeWindowSize();
     }
   }
 
-  if(not doesFirstStep()) {
+  if (not doesFirstStep()) {
     // the second participant does not want new data in the last iteration of the last time window
     if (isCouplingOngoing() || (isImplicitCouplingScheme() && not convergence)) {
       PRECICE_DEBUG("Receiving data...");
