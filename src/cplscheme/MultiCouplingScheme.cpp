@@ -73,16 +73,12 @@ void MultiCouplingScheme::exchangeInitialData()
     receiveData();
     // second participant has to save values for extrapolation
     for (DataMap &receiveData : _receiveDataVector) {
-      if (isImplicitCouplingScheme() && getExtrapolationOrder() > 0) {
-        updateOldValues(receiveData);
-      }
+      updateOldValues(receiveData);
     }
   }
   if (sendsInitializedData()) {
     for (DataMap &sendData : _sendDataVector) {
-      if (isImplicitCouplingScheme() && getExtrapolationOrder() > 0) {
-        updateOldValues(sendData);
-      }
+      updateOldValues(sendData);
     }
     sendData();
   }
@@ -120,7 +116,7 @@ std::pair<bool, bool> MultiCouplingScheme::exchangeDataAndAccelerate()
     m2n->send(getIsCoarseModelOptimizationActive()); //need to do this to match with ParallelCplScheme
   }
 
-  if (convergence && (getExtrapolationOrder() > 0)) {
+  if (convergence) {
     extrapolateData(getAcceleratedData()); // Also stores data
   } else {                     // Store data for convergence measurement, acceleration, or extrapolation
     for (DataMap::value_type &pair : getAcceleratedData()) {

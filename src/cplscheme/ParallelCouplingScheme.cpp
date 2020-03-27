@@ -55,14 +55,10 @@ void ParallelCouplingScheme::exchangeInitialData()
     if (receivesInitializedData()) {
       receiveData(getM2N());
       // second participant has to save values for extrapolation
-      if (isImplicitCouplingScheme() && getExtrapolationOrder() > 0) {
-        updateOldValues(getReceiveData());
-      }
+      updateOldValues(getReceiveData());
     }
     if (sendsInitializedData()) {
-      if (isImplicitCouplingScheme() && getExtrapolationOrder() > 0) {
-        updateOldValues(getSendData());
-      }
+      updateOldValues(getSendData());
       sendData(getM2N());
     }
   }

@@ -316,13 +316,15 @@ void BaseCouplingScheme::setExtrapolationOrder(
 
 void BaseCouplingScheme::updateOldValues(DataMap &dataMap)
 {
-  for (DataMap::value_type &pair : dataMap) {
-    if (pair.second->oldValues.cols() == 0)
-      PRECICE_ASSERT(isExplicitCouplingScheme());
+  if (isImplicitCouplingScheme() && _extrapolationOrder > 0) {
+    for (DataMap::value_type &pair : dataMap) {
+      if (pair.second->oldValues.cols() == 0)
+        PRECICE_ASSERT(isExplicitCouplingScheme());
       break;
-    pair.second->oldValues.col(0) = *pair.second->values;
-    // For extrapolation, treat the initial value as old time windows value
-    utils::shiftSetFirst(pair.second->oldValues, *pair.second->values);
+      pair.second->oldValues.col(0) = *pair.second->values;
+      // For extrapolation, treat the initial value as old time windows value
+      utils::shiftSetFirst(pair.second->oldValues, *pair.second->values);
+    }
   }
 }
 
@@ -330,34 +332,36 @@ void BaseCouplingScheme::updateOldValues(DataMap &dataMap)
 // @todo extrapolation of data should only be done for the fine cplData -> then copied to the coarse cplData
 void BaseCouplingScheme::extrapolateData(DataMap &data)
 {
-  PRECICE_TRACE(_timeWindows);
-  if ((_extrapolationOrder == 1) || getTimeWindows() == 2) { //timesteps is increased before extrapolate is called
-    PRECICE_INFO("Performing first order extrapolation");
-    for (DataMap::value_type &pair : data) {
-      PRECICE_DEBUG("Extrapolate data: " << pair.first);
-      PRECICE_ASSERT(pair.second->oldValues.cols() > 1);
-      Eigen::VectorXd &values       = *pair.second->values;
-      pair.second->oldValues.col(0) = values;  // = x^t
-      values *= 2.0;                           // = 2*x^t
-      values -= pair.second->oldValues.col(1); // = 2*x^t - x^(t-1)
-      utils::shiftSetFirst(pair.second->oldValues, values);
-    }
-  } else if (_extrapolationOrder == 2) {
-    PRECICE_INFO("Performing second order extrapolation");
-    for (DataMap::value_type &pair : data) {
-      PRECICE_ASSERT(pair.second->oldValues.cols() > 2);
-      Eigen::VectorXd &values     = *pair.second->values;
-      auto             valuesOld1 = pair.second->oldValues.col(1);
-      auto             valuesOld2 = pair.second->oldValues.col(2);
+  if (_extrapolationOrder > 0) {
+    PRECICE_TRACE(_timeWindows);
+    if ((_extrapolationOrder == 1) || getTimeWindows() == 2) { //timesteps is increased before extrapolate is called
+      PRECICE_INFO("Performing first order extrapolation");
+      for (DataMap::value_type &pair : data) {
+        PRECICE_DEBUG("Extrapolate data: " << pair.first);
+        PRECICE_ASSERT(pair.second->oldValues.cols() > 1);
+        Eigen::VectorXd &values       = *pair.second->values;
+        pair.second->oldValues.col(0) = values;  // = x^t
+        values *= 2.0;                           // = 2*x^t
+        values -= pair.second->oldValues.col(1); // = 2*x^t - x^(t-1)
+        utils::shiftSetFirst(pair.second->oldValues, values);
+      }
+    } else if (_extrapolationOrder == 2) {
+      PRECICE_INFO("Performing second order extrapolation");
+      for (DataMap::value_type &pair : data) {
+        PRECICE_ASSERT(pair.second->oldValues.cols() > 2);
+        Eigen::VectorXd &values     = *pair.second->values;
+        auto             valuesOld1 = pair.second->oldValues.col(1);
+        auto             valuesOld2 = pair.second->oldValues.col(2);
 
-      pair.second->oldValues.col(0) = values; // = x^t
-      values *= 2.5;                          // = 2.5 x^t
-      values -= valuesOld1 * 2.0;             // = 2.5x^t - 2x^(t-1)
-      values += valuesOld2 * 0.5;             // = 2.5x^t - 2x^(t-1) + 0.5x^(t-2)
-      utils::shiftSetFirst(pair.second->oldValues, values);
+        pair.second->oldValues.col(0) = values; // = x^t
+        values *= 2.5;                          // = 2.5 x^t
+        values -= valuesOld1 * 2.0;             // = 2.5x^t - 2x^(t-1)
+        values += valuesOld2 * 0.5;             // = 2.5x^t - 2x^(t-1) + 0.5x^(t-2)
+        utils::shiftSetFirst(pair.second->oldValues, values);
+      }
+    } else {
+      PRECICE_ERROR("Called extrapolation with order != 1,2.");
     }
-  } else {
-    PRECICE_ERROR("Called extrapolation with order != 1,2.");
   }
 }
 
@@ -981,7 +985,7 @@ std::pair<bool, bool> BaseCouplingScheme::accelerate(int accelerationShift)
     }
 
     // extrapolate new input data for the solver evaluation in time.
-    if (convergence && (getExtrapolationOrder() > 0)) {
+    if (convergence) {
       extrapolateData(getAcceleratedData()); // Also stores data
     } else {                          // Store data for conv. measurement, acceleration, or extrapolation
       for (DataMap::value_type &pair : getSendData()) {

@@ -349,11 +349,6 @@ protected:
     return _acceleration;
   }
 
-  int getExtrapolationOrder()
-  {
-    return _extrapolationOrder;
-  }
-
   /// TODO
   void updateOldValues(DataMap &dataMap);
 
