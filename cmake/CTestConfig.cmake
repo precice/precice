@@ -8,6 +8,9 @@ set(PRECICE_TEST_TIMEOUT_SHORT 20 CACHE STRING "The timeout in seconds for short
 set(PRECICE_TEST_DIR "${preCICE_BINARY_DIR}/TestOutput")
 mark_as_advanced(PRECICE_TEST_DIR)
 
+# Solverdummies will be build in $PRECICE_SOLVERDUMMY_DIR/LANG
+set(PRECICE_SOLVERDUMMY_DIR "${preCICE_BINARY_DIR}/Solverdummies")
+
 function(add_precice_test)
   cmake_parse_arguments(PARSE_ARGV 0 PAT "NOMPI;PETSC;MPI;CANFAIL" "NAME;ARGUMENTS;TIMEOUT;LABELS" "")
   # Check arguments
@@ -66,6 +69,41 @@ function(add_precice_test)
   endif()
   set_tests_properties(${PAT_FULL_NAME} PROPERTIES LABELS "${_labels}")
 endfunction(add_precice_test)
+
+function(add_precice_test_build_solverdummy PAT_LANG)
+  # Turn language to lowercase
+  string(TOLOWER ${PAT_LANG} PAT_LANG)
+
+  # Locate the source directory
+  set(PAT_SRC_DIR "${preCICE_SOURCE_DIR}/examples/solverdummies/${PAT_LANG}")
+  if(NOT IS_DIRECTORY ${PAT_SRC_DIR})
+    message(FATAL_ERROR "There is no solverdummy for language \"${PAT_LANG}\"")
+  endif()
+
+  # Generate build directory
+  set(PAT_BIN_DIR "${PRECICE_SOLVERDUMMY_DIR}/${PAT_LANG}")
+  file(MAKE_DIRECTORY "${PAT_BIN_DIR}")
+
+
+  # We always prefix our tests
+  set(PAT_FULL_NAME "precice.solverdummy.build.${PAT_LANG}")
+
+  message(STATUS "Test ${PAT_FULL_NAME}")
+  add_test(NAME ${PAT_FULL_NAME}
+    COMMAND ${CMAKE_CTEST_COMMAND}
+    --build-and-test ${PAT_SRC_DIR} ${PAT_BIN_DIR}
+    --build-generator ${CMAKE_GENERATOR}
+    --build-options -Dprecice_DIR=${preCICE_BINARY_DIR}
+    )
+  # Setting properties
+  set_tests_properties(${PAT_FULL_NAME}
+    PROPERTIES
+    RUN_SERIAL TRUE # Do not run this test in parallel with others
+    WORKING_DIRECTORY "${PAT_BIN_DIR}"
+    FIXTURE_SETUP "${PAT_LANG}-solverdummy"
+    LABELS "Solverdummy"
+    )
+endfunction(add_precice_test_build_solverdummy)
 
 enable_testing()
 
@@ -177,6 +215,11 @@ else()
     TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
     )
 endif()
+
+
+add_precice_test_build_solverdummy(cpp)
+add_precice_test_build_solverdummy(c)
+add_precice_test_build_solverdummy(fortran)
 
 
 # Add a separate target to test only the base
