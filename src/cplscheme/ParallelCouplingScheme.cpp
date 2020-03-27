@@ -23,21 +23,6 @@ ParallelCouplingScheme::ParallelCouplingScheme(
     : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowsSize, validDigits, firstParticipant,
                          secondParticipant, localParticipant, m2n, maxIterations, cplMode, dtMethod) {}
 
-void ParallelCouplingScheme::initializeImplicit()
-{
-  checkForSend();
-
-  /// @todo: move into BaseCouplingScheme
-  if (not doesFirstStep()) {                 // second participant
-    PRECICE_ASSERT(not getConvergenceMeasures().empty(), "Implicit scheme must have at least one convergence measure.");
-    mergeData();                             // merge send and receive data for all pp calls
-    setupConvergenceMeasures();              // needs _couplingData configured
-    setupDataMatrices(getAcceleratedData()); // Reserve memory and initialize data with zero
-  }
-
-  checkAcceleration();
-}
-
 void ParallelCouplingScheme::checkForSend()
 {
   PRECICE_CHECK(not getSendData().empty(), "No send data configured. Use explicit scheme for one-way coupling.");

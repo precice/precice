@@ -34,21 +34,6 @@ MultiCouplingScheme::MultiCouplingScheme(
   }
 }
 
-void MultiCouplingScheme::initializeImplicit()
-{
-  checkForSend();
-
-  /// @todo: move into BaseCouplingScheme
-  if (not doesFirstStep()) {
-    PRECICE_ASSERT(not getConvergenceMeasures().empty(), "Implicit scheme must have at least one convergence measure.");
-    mergeData();                             // merge send and receive data for all pp calls
-    setupConvergenceMeasures();              // needs _couplingData configured
-    setupDataMatrices(getAcceleratedData()); // Reserve memory and initialize data with zero
-  }
-
-  checkAcceleration();
-}
-
 void MultiCouplingScheme::checkForSend()
 {
   bool hasAnySendData = std::any_of(_sendDataVector.cbegin(), _sendDataVector.cend(), [](DataMap sendData){return not sendData.empty();});

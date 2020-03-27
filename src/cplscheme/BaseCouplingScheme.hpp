@@ -522,9 +522,6 @@ private:
 
   /// Functions needed for initialize()
 
-  /// implements functionality needed by initialize if __couplingMode == Implicit
-  virtual void initializeImplicit() = 0;
-
   /// performs checks on SendData if __couplingMode == Implicit
   virtual void checkForSend() = 0;
 

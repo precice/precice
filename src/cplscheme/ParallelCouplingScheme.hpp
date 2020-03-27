@@ -60,11 +60,6 @@ private:
   /**
    * @brief TODO
    */
-  void initializeImplicit() override;
-
-  /**
-   * @brief TODO
-   */
   void checkForSend() override;
 
   /**

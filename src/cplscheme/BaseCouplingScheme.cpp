@@ -215,11 +215,16 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
   _timeWindows   = startTimeWindow;
 
   if (_couplingMode == Implicit) {
-    /// @todo: implement checkForSend() in child class
+    checkForSend();
 
-    initializeImplicit();
+    if (not doesFirstStep()) {
+      PRECICE_ASSERT(not getConvergenceMeasures().empty(), "Implicit scheme must have at least one convergence measure.");
+      mergeData();                             // merge send and receive data for all pp calls
+      setupConvergenceMeasures();              // needs _couplingData configured
+      setupDataMatrices(getAcceleratedData()); // Reserve memory and initialize data with zero
+    }
 
-    /// @todo: implement checkAcceleration() in child class
+    checkAcceleration();
 
     if (not doesFirstStep() && getAcceleration()) {
       getAcceleration()->initialize(getAcceleratedData()); // Reserve memory, initialize

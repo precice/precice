@@ -23,21 +23,6 @@ SerialCouplingScheme::SerialCouplingScheme(
     : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, firstParticipant,
                          secondParticipant, localParticipant, m2n, maxIterations, cplMode, dtMethod) {}
 
-void SerialCouplingScheme::initializeImplicit()
-{
-  checkForSend();
-
-  /// @todo: move into BaseCouplingScheme
-  if (not doesFirstStep()) {
-    PRECICE_ASSERT(not getConvergenceMeasures().empty(), "Implicit scheme must have at least one convergence measure.");
-    mergeData();                             // noop for SerialCouplingScheme
-    setupConvergenceMeasures();              // needs _couplingData configured
-    setupDataMatrices(getAcceleratedData()); // Reserve memory and initialize data with zero
-  }
-
-  checkAcceleration();
-}
-
 void SerialCouplingScheme::checkForSend()
 {
   PRECICE_CHECK(not getSendData().empty(), "No send data configured! Use explicit scheme for one-way coupling.");
