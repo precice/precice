@@ -24,7 +24,7 @@ struct Ranks {
  */
 inline constexpr Ranks operator""_ranks(unsigned long long value)
 {
-  return (value <= 1) ? throw : Ranks{static_cast<int>(value)};
+  return (value <= 1) ? throw std::runtime_error{"Cannot create a single rank with _ranks()! Use _rank() instead!"} : Ranks{static_cast<int>(value)};
 }
 
 /** User-defined literal for expressively defining a single rank
@@ -35,7 +35,7 @@ inline constexpr Ranks operator""_ranks(unsigned long long value)
  */
 inline constexpr Ranks operator""_rank(unsigned long long value)
 {
-  return (value == 1) ? Ranks{1} : throw;
+  return (value == 1) ? Ranks{1} : throw std::runtime_error{"Cannot create multiple ranks with _rank()! Use _ranks() instead!"};
 }
 
 /// Represents a Partiticipant in a test
