@@ -67,7 +67,7 @@ private:
   /**
    * @brief TODO
    */
-  void checkInitializationAcceleration() override;
+  void initializeImplicit() override;
 
   /**
    * @brief TODO
