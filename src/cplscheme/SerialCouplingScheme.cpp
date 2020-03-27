@@ -98,9 +98,6 @@ std::pair<bool, bool> SerialCouplingScheme::exchangeDataAndAccelerate()
       }
     }
     PRECICE_DEBUG("Receiving data...");
-    if (isExplicitCouplingScheme()) {
-      receiveAndSetTimeWindowSize();
-    }
     receiveData(getM2N());
   } else { // second participant
     if (isImplicitCouplingScheme()) {

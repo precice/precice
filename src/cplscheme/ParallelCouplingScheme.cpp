@@ -76,10 +76,6 @@ std::pair<bool, bool> ParallelCouplingScheme::exchangeDataAndAccelerate()
         timeWindowCompleted();
       }
     }
-    if(isExplicitCouplingScheme()) {
-      PRECICE_ASSERT(isExplicitCouplingScheme());
-      receiveAndSetTimeWindowSize();
-    }
     receiveData(getM2N());
   } else { //second participant
     PRECICE_DEBUG("Receiving data...");
