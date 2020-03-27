@@ -26,15 +26,15 @@ SerialCouplingScheme::SerialCouplingScheme(
 void SerialCouplingScheme::initializeImplicit()
 {
   PRECICE_CHECK(not getSendData().empty(), "No send data configured! Use explicit scheme for one-way coupling.");
+
   if (not doesFirstStep()) {
     PRECICE_ASSERT(not getConvergenceMeasures().empty(), "Implicit scheme must have at least one convergence measure.");
     mergeData();                             // noop for SerialCouplingScheme
     setupConvergenceMeasures();              // needs _couplingData configured
     setupDataMatrices(getAcceleratedData()); // Reserve memory and initialize data with zero
-    if (getAcceleration()) {
-      getAcceleration()->initialize(getAcceleratedData()); // Reserve memory, initialize
-    }
-  } else if (getAcceleration() && not getAcceleration()->getDataIDs().empty()) {
+  }
+
+  if (doesFirstStep() && getAcceleration() && not getAcceleration()->getDataIDs().empty()) {
     int dataID = *(getAcceleration()->getDataIDs().begin());
     PRECICE_CHECK(getSendData(dataID) == nullptr,
                   "In case of serial coupling, acceleration can be defined for "

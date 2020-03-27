@@ -217,6 +217,10 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
   if (_couplingMode == Implicit) {
     initializeImplicit();
 
+    if (not doesFirstStep() && getAcceleration()) {
+      getAcceleration()->initialize(getAcceleratedData()); // Reserve memory, initialize
+    }
+
     requireAction(constants::actionWriteIterationCheckpoint());
     initializeTXTWriters();
   }
