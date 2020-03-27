@@ -103,7 +103,10 @@ std::pair<bool, bool> SerialCouplingScheme::doAdvance()
     PRECICE_DEBUG("Sending data...");
     sendData(getM2N());
     if (isImplicitCouplingScheme()) {
-      convergence = checkConvergence();
+      convergence = receiveConvergence();
+      if (convergence) {
+        timeWindowCompleted();
+      }
     }
     PRECICE_DEBUG("Receiving data...");
     if (isExplicitCouplingScheme()) {

@@ -891,7 +891,7 @@ bool BaseCouplingScheme::anyDataRequiresInitialization(BaseCouplingScheme::DataM
   return false;
 }
 
-bool BaseCouplingScheme::checkConvergence()
+bool BaseCouplingScheme::receiveConvergence()
 {
   bool convergence, isCoarseModelOptimizationActive;
   getM2N()->receive(convergence);
@@ -901,10 +901,13 @@ bool BaseCouplingScheme::checkConvergence()
   } else {
     deactivateCoarseModelOptimization();
   }
-  if (convergence) {
-    timeWindowCompleted();
-  }
   return convergence;
+}
+
+void BaseCouplingScheme::sendConvergence(bool convergence)
+{
+  getM2N()->send(convergence);
+  getM2N()->send(getIsCoarseModelOptimizationActive());
 }
 
 std::pair<bool, bool> BaseCouplingScheme::doAcceleration(int accelerationShift)
@@ -1007,8 +1010,7 @@ std::pair<bool, bool> BaseCouplingScheme::doAcceleration(int accelerationShift)
       }
     }
   }
-  getM2N()->send(convergence);
-  getM2N()->send(getIsCoarseModelOptimizationActive());
+  sendConvergence(convergence);
   return std::pair<bool, bool>(convergence, convergenceCoarseOptimization);
 }
 } // namespace cplscheme

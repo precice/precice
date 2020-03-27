@@ -82,7 +82,10 @@ std::pair<bool, bool> ParallelCouplingScheme::doAdvance()
     sendData(getM2N());
     PRECICE_DEBUG("Receiving data...");
     if(isImplicitCouplingScheme()) {
-      convergence = checkConvergence();
+      convergence = receiveConvergence();
+      if (convergence) {
+        timeWindowCompleted();
+      }
     } else {
       PRECICE_ASSERT(isExplicitCouplingScheme());
       receiveAndSetTimeWindowSize();

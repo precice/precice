@@ -372,7 +372,10 @@ protected:
   void doExtrapolationOn(DataMap &dataMap);
 
   /// TODO
-  bool checkConvergence();
+  bool receiveConvergence();
+
+  /// TODO
+  void sendConvergence(bool convergence);
 
   /// TODO
   std::pair<bool, bool> doAcceleration(int accelerationShift = 0);
