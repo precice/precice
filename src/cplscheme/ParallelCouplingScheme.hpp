@@ -49,7 +49,7 @@ private:
   /**
    * @brief TODO
    */
-  std::pair<bool, bool> doAdvance() override;
+  std::pair<bool, bool> exchangeDataAndAccelerate() override;
 
   DataMap &getAcceleratedData() override
   {

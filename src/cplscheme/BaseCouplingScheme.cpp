@@ -285,7 +285,7 @@ void BaseCouplingScheme::advance()
       timeWindowCompleted();
     }
 
-    std::pair<bool, bool> convergenceInformation = doAdvance();
+    std::pair<bool, bool> convergenceInformation = exchangeDataAndAccelerate();
 
     bool convergence = convergenceInformation.first;
     bool convergenceCoarseOptimization = convergenceInformation.second;
@@ -314,7 +314,7 @@ void BaseCouplingScheme::setExtrapolationOrder(
   _extrapolationOrder = order;
 }
 
-void BaseCouplingScheme::doExtrapolationOn(DataMap &dataMap)
+void BaseCouplingScheme::updateOldValues(DataMap &dataMap)
 {
   for (DataMap::value_type &pair : dataMap) {
     if (pair.second->oldValues.cols() == 0)
@@ -910,7 +910,7 @@ void BaseCouplingScheme::sendConvergence(bool convergence)
   getM2N()->send(getIsCoarseModelOptimizationActive());
 }
 
-std::pair<bool, bool> BaseCouplingScheme::doAcceleration(int accelerationShift)
+std::pair<bool, bool> BaseCouplingScheme::accelerate(int accelerationShift)
 {
   bool convergence;
   bool doOnlySolverEvaluation = false;

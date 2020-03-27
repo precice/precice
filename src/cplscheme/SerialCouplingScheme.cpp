@@ -83,7 +83,7 @@ void SerialCouplingScheme::exchangeInitialData()
     PRECICE_ASSERT(not receivesInitializedData(), "Only first participant can receive data during initialization.");
     if (sendsInitializedData()) {
       if (isImplicitCouplingScheme() && getExtrapolationOrder() > 0) {
-        doExtrapolationOn(getSendData());
+        updateOldValues(getSendData());
       }
       // The second participant sends the initialized data to the first participant
       // here, which receives the data on call of initialize().
@@ -95,7 +95,7 @@ void SerialCouplingScheme::exchangeInitialData()
   }
 }
 
-std::pair<bool, bool> SerialCouplingScheme::doAdvance()
+std::pair<bool, bool> SerialCouplingScheme::exchangeDataAndAccelerate()
 {
   bool convergence, convergenceCoarseOptimization; // @todo having the bools for convergence measurement declared for explicit and implicit coupling is not nice
 
@@ -117,7 +117,7 @@ std::pair<bool, bool> SerialCouplingScheme::doAdvance()
     if (isImplicitCouplingScheme()) {
       PRECICE_DEBUG("Test Convergence and accelerate...");
       int       accelerationShift = 1; // TODO @BU: why do we need an "accelerationShift" for SerialCouplingScheme, but not for the ParallelCouplingScheme?
-      std::pair<bool, bool> convergenceInformation = doAcceleration(accelerationShift);
+      std::pair<bool, bool> convergenceInformation = accelerate(accelerationShift);
       convergence = convergenceInformation.first;
       convergenceCoarseOptimization = convergenceInformation.second;
     }

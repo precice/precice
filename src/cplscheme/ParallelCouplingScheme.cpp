@@ -61,19 +61,19 @@ void ParallelCouplingScheme::exchangeInitialData()
       receiveData(getM2N());
       // second participant has to save values for extrapolation
       if (isImplicitCouplingScheme() && getExtrapolationOrder() > 0) {
-        doExtrapolationOn(getReceiveData());
+        updateOldValues(getReceiveData());
       }
     }
     if (sendsInitializedData()) {
       if (isImplicitCouplingScheme() && getExtrapolationOrder() > 0) {
-        doExtrapolationOn(getSendData());
+        updateOldValues(getSendData());
       }
       sendData(getM2N());
     }
   }
 }
 
-std::pair<bool, bool> ParallelCouplingScheme::doAdvance()
+std::pair<bool, bool> ParallelCouplingScheme::exchangeDataAndAccelerate()
 {
   bool convergence, convergenceCoarseOptimization; // @todo having the bools for convergence measurement declared for explicit and implicit coupling is not nice
 
@@ -99,7 +99,7 @@ std::pair<bool, bool> ParallelCouplingScheme::doAdvance()
     receiveData(getM2N());
     if (isImplicitCouplingScheme()) {
       PRECICE_DEBUG("Perform acceleration (only second participant)...");
-      std::pair<bool, bool> convergenceInformation = doAcceleration();
+      std::pair<bool, bool> convergenceInformation = accelerate();
       convergence = convergenceInformation.first;
       convergenceCoarseOptimization = convergenceInformation.second;
     }

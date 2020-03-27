@@ -369,7 +369,7 @@ protected:
   }
 
   /// TODO
-  void doExtrapolationOn(DataMap &dataMap);
+  void updateOldValues(DataMap &dataMap);
 
   /// TODO
   bool receiveConvergence();
@@ -378,7 +378,7 @@ protected:
   void sendConvergence(bool convergence);
 
   /// TODO
-  std::pair<bool, bool> doAcceleration(int accelerationShift = 0);
+  std::pair<bool, bool> accelerate(int accelerationShift = 0);
 
   /// TODO
   void extrapolateData(DataMap &data);
@@ -551,7 +551,7 @@ private:
   /// Functions needed for advance()
 
   /// implements functionality for advance in base class.
-  virtual std::pair<bool, bool> doAdvance() = 0;
+  virtual std::pair<bool, bool> exchangeDataAndAccelerate() = 0;
 
   virtual DataMap &getAcceleratedData() = 0;
 

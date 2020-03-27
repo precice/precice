@@ -75,21 +75,21 @@ void MultiCouplingScheme::exchangeInitialData()
     // second participant has to save values for extrapolation
     if (isImplicitCouplingScheme() && getExtrapolationOrder() > 0) {
       for (DataMap &dataMap : _receiveDataVector) {
-        doExtrapolationOn(dataMap);
+        updateOldValues(dataMap);
       }
     }
   }
   if (sendsInitializedData()) {
     if (isImplicitCouplingScheme() && getExtrapolationOrder() > 0) {
       for (DataMap &dataMap : _sendDataVector) {
-        doExtrapolationOn(dataMap);
+        updateOldValues(dataMap);
       }
     }
     sendData();
   }
 }
 
-std::pair<bool, bool> MultiCouplingScheme::doAdvance()
+std::pair<bool, bool> MultiCouplingScheme::exchangeDataAndAccelerate()
 {
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
   // @todo implement MultiCouplingScheme for explicit coupling
