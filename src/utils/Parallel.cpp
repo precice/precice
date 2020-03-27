@@ -326,6 +326,8 @@ void Parallel::popState()
 void Parallel::finalizeMPI()
 {
   PRECICE_TRACE();
+  // Make sure all com states were freed at this point in time
+  resetCommState();
 #ifndef PRECICE_NO_MPI
   if (_mpiInitializedByPrecice) {
     PRECICE_DEBUG("preCICE finalizes MPI");
