@@ -2,7 +2,7 @@
 # CTest
 #
 
-set(PRECICE_TEST_TIMEOUT_LONG 180 CACHE STRING "The timeout in seconds for longer tests.")
+set(PRECICE_TEST_TIMEOUT_LONG 60 CACHE STRING "The timeout in seconds for longer tests.")
 set(PRECICE_TEST_TIMEOUT_SHORT 20 CACHE STRING "The timeout in seconds for shorter tests.")
 
 set(PRECICE_TEST_DIR "${preCICE_BINARY_DIR}/TestOutput")
@@ -100,10 +100,64 @@ function(add_precice_test_build_solverdummy PAT_LANG)
     PROPERTIES
     RUN_SERIAL TRUE # Do not run this test in parallel with others
     WORKING_DIRECTORY "${PAT_BIN_DIR}"
-    FIXTURE_SETUP "${PAT_LANG}-solverdummy"
+    FIXTURES_SETUP "${PAT_LANG}-solverdummy"
     LABELS "Solverdummy"
+    TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
     )
 endfunction(add_precice_test_build_solverdummy)
+
+function(add_precice_test_run_solverdummies PAT_LANG_A PAT_LANG_B)
+  # Turn languages to lowercase
+  string(TOLOWER ${PAT_LANG_A} PAT_LANG_A)
+  string(TOLOWER ${PAT_LANG_B} PAT_LANG_B)
+
+  # Locate the solverdummy config
+  set(PAT_CONFIG "${preCICE_SOURCE_DIR}/examples/solverdummies/precice-config.xml")
+  if(NOT EXISTS ${PAT_CONFIG})
+    message(FATAL_ERROR "CMake was unable to locate the solverdummy config!")
+  endif()
+
+  # Locate binary dir of solverdummy A
+  set(PAT_BIN_DIR_A "${PRECICE_SOLVERDUMMY_DIR}/${PAT_LANG_A}")
+  if(NOT IS_DIRECTORY ${PAT_BIN_DIR_A})
+    message(FATAL_ERROR "There is no configured solverdummy for language ${PAT_LANG_A}!")
+  endif()
+
+  # Locate binary dir of solverdummy B
+  set(PAT_BIN_DIR_B "${PRECICE_SOLVERDUMMY_DIR}/${PAT_LANG_B}")
+  if(NOT IS_DIRECTORY ${PAT_BIN_DIR_B})
+    message(FATAL_ERROR "There is no configured solverdummy for language ${PAT_LANG_B}!")
+  endif()
+
+  # We always prefix our tests
+  set(PAT_NAME "solverdummy.run.${PAT_LANG_A}-${PAT_LANG_B}")
+  set(PAT_FULL_NAME "precice.${PAT_NAME}")
+
+  # Generate run directory
+  set(PAT_RUN_DIR "${PRECICE_TEST_DIR}/${PAT_NAME}")
+  file(MAKE_DIRECTORY "${PAT_RUN_DIR}")
+
+  message(STATUS "Test ${PAT_FULL_NAME}")
+  add_test(NAME ${PAT_FULL_NAME}
+    COMMAND ${CMAKE_COMMAND}
+    -D DUMMY_A=${PAT_BIN_DIR_A}/solverdummy
+    -D DUMMY_B=${PAT_BIN_DIR_B}/solverdummy
+    -D DUMMY_RUN_DIR=${PAT_RUN_DIR}
+    -D DUMMY_CONFIG=${PAT_CONFIG}
+    -P ${preCICE_SOURCE_DIR}/cmake/runsolverdummies.cmake
+    )
+  # Setting properties
+  set_tests_properties(${PAT_FULL_NAME}
+    PROPERTIES
+    RUN_SERIAL TRUE # Do not run this test in parallel with others
+    WORKING_DIRECTORY "${PAT_RUN_DIR}"
+    FIXTURES_REQUIRED "${PAT_LANG_A}-solverdummy"
+    FIXTURES_REQUIRED "${PAT_LANG_B}-solverdummy"
+    LABELS "Solverdummy"
+    TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
+    )
+endfunction(add_precice_test_run_solverdummies)
+
 
 enable_testing()
 
@@ -187,12 +241,12 @@ else()
   add_precice_test(
     NAME serial
     ARGUMENTS "--run_test=PreciceTests/Serial"
-    TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
+    TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
     )
   add_precice_test(
     NAME parallel
     ARGUMENTS "--run_test=PreciceTests/Parallel"
-    TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
+    TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
     )
   add_precice_test(
     NAME query
@@ -216,11 +270,17 @@ else()
     )
 endif()
 
-
 add_precice_test_build_solverdummy(cpp)
 add_precice_test_build_solverdummy(c)
 add_precice_test_build_solverdummy(fortran)
 
+add_precice_test_run_solverdummies(cpp cpp)
+add_precice_test_run_solverdummies(c c)
+add_precice_test_run_solverdummies(fortran fortran)
+
+add_precice_test_run_solverdummies(cpp c)
+add_precice_test_run_solverdummies(cpp fortran)
+add_precice_test_run_solverdummies(c fortran)
 
 # Add a separate target to test only the base
 add_custom_target(
