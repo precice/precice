@@ -44,10 +44,6 @@ void ParallelCouplingScheme::initializeImplementation()
 
 void ParallelCouplingScheme::exchangeInitialData()
 {
-  if (not doesFirstStep()) {
-    receiveAndSetTimeWindowSize();
-  }
-
   // F: send, receive, S: receive, send
   if (doesFirstStep()) {
     if (sendsInitializedData()) {
