@@ -267,25 +267,29 @@ void BaseCouplingScheme::advance()
 
   if (reachedEndOfTimeWindow()) {
 
+    _timeWindows += 1;  // increment window counter. If not converged, will be decremented again later.
+
     std::pair<bool, bool> convergenceInformation = exchangeDataAndAccelerate();
 
-    if (isExplicitCouplingScheme()) {
-      _computedTimeWindowPart = 0.0;
-    }
-
-    bool convergence = convergenceInformation.first;
-    bool convergenceCoarseOptimization = convergenceInformation.second;
-
-    if(isImplicitCouplingScheme()) {
-      if (not convergence) {
+    if(isImplicitCouplingScheme()) {  // check convergence
+      bool convergence = convergenceInformation.first;
+      bool convergenceCoarseOptimization = convergenceInformation.second;
+      if (not convergence) {  // repeat window
         PRECICE_DEBUG("No convergence achieved");
         requireAction(constants::actionReadIterationCheckpoint());
-      } else {
+        // The computed time window part equals the time window size, since the
+        // time window remainder is zero. Subtract the time window size and do another
+        // coupling iteration.
+        PRECICE_ASSERT(math::greater(_computedTimeWindowPart, 0.0));
+        _time = _time - _computedTimeWindowPart;
+        _timeWindows -= 1;
+      } else {  // write output, prepare for next window
         PRECICE_DEBUG("Convergence achieved");
         advanceTXTWriters();
       }
-      updateTimeAndIterations(convergence, convergenceCoarseOptimization);
+      updateIterations(convergence, convergenceCoarseOptimization);
     }
+    _computedTimeWindowPart = 0.0;  // reset window
   }
 }
 
@@ -803,7 +807,7 @@ void BaseCouplingScheme::advanceTXTWriters()
   }
 }
 
-void BaseCouplingScheme::updateTimeAndIterations(
+void BaseCouplingScheme::updateIterations(
     bool convergence,
     bool convergenceCoarseOptimization)
 {
@@ -813,13 +817,6 @@ void BaseCouplingScheme::updateTimeAndIterations(
   }
 
   if (not convergence) {
-
-    // The computed time window part equals the time window size, since the
-    // time window remainder is zero. Subtract the time window size and do another
-    // coupling iteration.
-    PRECICE_ASSERT(math::greater(_computedTimeWindowPart, 0.0));
-    _time = _time - _computedTimeWindowPart;
-
     // in case of multilevel PP: only increment outer iteration count if surrogate model has converged.
     if (convergenceCoarseOptimization) {
       _totalIterations++;
@@ -837,7 +834,6 @@ void BaseCouplingScheme::updateTimeAndIterations(
     _iterationsCoarseOptimization = 1;
     _iterations                   = manifoldmapping ? 0 : 1;
   }
-  _computedTimeWindowPart = 0.0;
   _hasDataBeenExchanged = true;
 }
 
@@ -846,7 +842,6 @@ void BaseCouplingScheme::timeWindowCompleted()
   PRECICE_TRACE(getTimeWindows(), getTime());
   PRECICE_INFO("Time window completed");
   _isTimeWindowComplete = true;
-  _timeWindows += 1;
   if (isCouplingOngoing() && _couplingMode == Implicit) {
     PRECICE_DEBUG("Setting require create checkpoint");
     requireAction(constants::actionWriteIterationCheckpoint());

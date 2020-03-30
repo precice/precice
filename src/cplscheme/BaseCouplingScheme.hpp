@@ -565,7 +565,7 @@ private:
    * @param convergence Set true, if coupling iteration in window was successful
    * @param convergenceCoarseOptimization Optional parameter, needed if manifold mapping is used
    */
-  void updateTimeAndIterations(bool convergence, bool convergenceCoarseOptimization = true);
+  void updateIterations(bool convergence, bool convergenceCoarseOptimization = true);
 
   /// Returns a string representing the required actions.
   std::string printActionsState() const;
