@@ -271,19 +271,8 @@ void BaseCouplingScheme::advance()
 
     std::pair<bool, bool> convergenceInformation = exchangeDataAndAccelerate();
 
-    bool convergence = convergenceInformation.first;
-
-    if (_couplingMode == Explicit || (_couplingMode == Implicit && convergence)) {
-      PRECICE_TRACE(getTimeWindows(), getTime());
-      PRECICE_INFO("Time window completed");
-      _isTimeWindowComplete = true;
-      if (isCouplingOngoing() && _couplingMode == Implicit) {
-        PRECICE_DEBUG("Setting require create checkpoint");
-        requireAction(constants::actionWriteIterationCheckpoint());
-      }
-    }
-
     if(_couplingMode == Implicit) {  // check convergence
+      bool convergence = convergenceInformation.first;
       bool convergenceCoarseOptimization = convergenceInformation.second;
       if (not convergence) {  // repeat window
         PRECICE_DEBUG("No convergence achieved");
@@ -297,10 +286,21 @@ void BaseCouplingScheme::advance()
       } else {  // write output, prepare for next window
         PRECICE_DEBUG("Convergence achieved");
         advanceTXTWriters();
+        PRECICE_TRACE(getTimeWindows(), getTime());
+        PRECICE_INFO("Time window completed");
+        _isTimeWindowComplete = true;
+        if (isCouplingOngoing()) {
+          PRECICE_DEBUG("Setting require create checkpoint");
+          requireAction(constants::actionWriteIterationCheckpoint());
+        }
       }
       updateIterations(convergence, convergenceCoarseOptimization);
+    } else {
+      PRECICE_TRACE(getTimeWindows(), getTime());
+      PRECICE_INFO("Time window completed");
+      _isTimeWindowComplete = true;
     }
-    _computedTimeWindowPart = 0.0;  // reset window
+    _computedTimeWindowPart = 0.0; // reset window
   }
 }
 
