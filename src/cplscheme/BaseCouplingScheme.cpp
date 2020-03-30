@@ -191,7 +191,7 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
   _timeWindows   = startTimeWindow;
 
   if (isImplicitCouplingScheme()) {
-    checkForSend();
+    checkConfiguration();
 
     if (not doesFirstStep()) {
       PRECICE_ASSERT(not _convergenceMeasures.empty(), "Implicit scheme must have at least one convergence measure.");
@@ -200,7 +200,6 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
       setupDataMatrices(getAcceleratedData()); // Reserve memory and initialize data with zero
     }
 
-    checkAcceleration();
 
     if (not doesFirstStep() && getAcceleration()) {
       getAcceleration()->initialize(getAcceleratedData()); // Reserve memory, initialize

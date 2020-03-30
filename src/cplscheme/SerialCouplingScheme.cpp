@@ -45,13 +45,9 @@ void SerialCouplingScheme::receiveAndSetTimeWindowSize()
   }
 }
 
-void SerialCouplingScheme::checkForSend()
+void SerialCouplingScheme::checkConfiguration()
 {
   PRECICE_CHECK(not getSendData().empty(), "No send data configured! Use explicit scheme for one-way coupling.");
-}
-
-void SerialCouplingScheme::checkAcceleration()
-{
   if (doesFirstStep() && getAcceleration() && not getAcceleration()->getDataIDs().empty()) {
     int dataID = *(getAcceleration()->getDataIDs().begin());
     PRECICE_CHECK(getSendData(dataID) == nullptr,

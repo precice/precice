@@ -23,14 +23,9 @@ ParallelCouplingScheme::ParallelCouplingScheme(
     : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowsSize, validDigits, firstParticipant,
                          secondParticipant, localParticipant, m2n, maxIterations, cplMode, dtMethod) {}
 
-void ParallelCouplingScheme::checkForSend()
+void ParallelCouplingScheme::checkConfiguration()
 {
   PRECICE_CHECK(not getSendData().empty(), "No send data configured. Use explicit scheme for one-way coupling.");
-}
-
-void ParallelCouplingScheme::checkAcceleration()
-{
-  //no checks required
 }
 
 void ParallelCouplingScheme::initializeImplementation()

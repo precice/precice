@@ -76,12 +76,7 @@ private:
   /**
    * @brief TODO
    */
-  void checkForSend() override;
-
-  /**
-   * @brief TODO
-   */
-  void checkAcceleration() override;
+  void checkConfiguration() override;
 
   /**
    * @brief TODO

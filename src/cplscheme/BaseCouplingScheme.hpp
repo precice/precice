@@ -497,11 +497,8 @@ private:
 
   /// Functions needed for initialize()
 
-  /// performs checks on SendData if __couplingMode == Implicit
-  virtual void checkForSend() = 0;
-
-  /// performs checks on Acceleration setup if __couplingMode == Implicit
-  virtual void checkAcceleration() = 0;
+  /// performs checks on configuration if __couplingMode == Implicit
+  virtual void checkConfiguration() = 0;
 
   void setupConvergenceMeasures();
 
