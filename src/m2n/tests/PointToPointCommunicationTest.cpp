@@ -187,40 +187,22 @@ void runSameConnectionTest(const TestContext &context, com::PtrCommunicationFact
   bool          flipNormals = false;
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, flipNormals, testing::nextMeshID()));
 
-  std::string connectionType = "same";
-
   if (context.isNamed("A")) {
     if (context.isMaster()) {
 
-      if (connectionType == "same") {
-        mesh->getConnectedRanks().push_back(0);
-      } else {
-        mesh->getConnectedRanks().push_back(1);
-      }
+      mesh->getConnectedRanks().push_back(0);
     } else {
 
-      if (connectionType == "same") {
-        mesh->getConnectedRanks().push_back(1);
-      } else {
-        mesh->getConnectedRanks().push_back(0);
-      }
+      mesh->getConnectedRanks().push_back(1);
     }
   } else {
     BOOST_TEST(context.isNamed("B"));
     if (context.isMaster()) {
 
-      if (connectionType == "same") {
-        mesh->getConnectedRanks().push_back(0);
-      } else {
-        mesh->getConnectedRanks().push_back(1);
-      }
+      mesh->getConnectedRanks().push_back(0);
     } else {
 
-      if (connectionType == "same") {
-        mesh->getConnectedRanks().push_back(1);
-      } else {
-        mesh->getConnectedRanks().push_back(0);
-      }
+      mesh->getConnectedRanks().push_back(1);
     }
   }
 
@@ -246,17 +228,9 @@ void runSameConnectionTest(const TestContext &context, com::PtrCommunicationFact
     c.broadcastReceiveAll(receiveData);
 
     if (context.isMaster()) {
-      if (connectionType == "same") {
-        BOOST_TEST(receiveData[0] == 5);
-      } else {
-        BOOST_TEST(receiveData[1] == 10);
-      }
+      BOOST_TEST(receiveData[0] == 5);
     } else {
-      if (connectionType == "same") {
-        BOOST_TEST(receiveData[0] == 10);
-      } else {
-        BOOST_TEST(receiveData[1] == 5);
-      }
+      BOOST_TEST(receiveData[0] == 10);
     }
   }
 }
@@ -270,40 +244,22 @@ void runCrossConnectionTest(const TestContext &context, com::PtrCommunicationFac
   bool          flipNormals = false;
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, flipNormals, testing::nextMeshID()));
 
-  std::string connectionType = "cross";
-
   if (context.isNamed("A")) {
     if (context.isMaster()) {
 
-      if (connectionType == "same") {
-        mesh->getConnectedRanks().push_back(0);
-      } else {
-        mesh->getConnectedRanks().push_back(1);
-      }
+      mesh->getConnectedRanks().push_back(1);
     } else {
 
-      if (connectionType == "same") {
-        mesh->getConnectedRanks().push_back(1);
-      } else {
-        mesh->getConnectedRanks().push_back(0);
-      }
+      mesh->getConnectedRanks().push_back(0);
     }
   } else {
     BOOST_TEST(context.isNamed("B"));
     if (context.isMaster()) {
 
-      if (connectionType == "same") {
-        mesh->getConnectedRanks().push_back(0);
-      } else {
-        mesh->getConnectedRanks().push_back(1);
-      }
+      mesh->getConnectedRanks().push_back(1);
     } else {
 
-      if (connectionType == "same") {
-        mesh->getConnectedRanks().push_back(1);
-      } else {
-        mesh->getConnectedRanks().push_back(0);
-      }
+      mesh->getConnectedRanks().push_back(0);
     }
   }
 
@@ -329,17 +285,9 @@ void runCrossConnectionTest(const TestContext &context, com::PtrCommunicationFac
     c.broadcastReceiveAll(receiveData);
 
     if (context.isMaster()) {
-      if (connectionType == "same") {
-        BOOST_TEST(receiveData[0] == 5);
-      } else {
-        BOOST_TEST(receiveData[1] == 10);
-      }
+      BOOST_TEST(receiveData[1] == 10);
     } else {
-      if (connectionType == "same") {
-        BOOST_TEST(receiveData[0] == 10);
-      } else {
-        BOOST_TEST(receiveData[1] == 5);
-      }
+      BOOST_TEST(receiveData[1] == 5);
     }
   }
 }
