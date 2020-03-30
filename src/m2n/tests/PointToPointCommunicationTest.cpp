@@ -27,7 +27,7 @@ void process(vector<double> &data)
   }
 }
 
-void P2PComTest1(const TestContext &context, com::PtrCommunicationFactory cf)
+void runP2PComTest1(const TestContext &context, com::PtrCommunicationFactory cf)
 {
   BOOST_TEST(context.hasSize(2));
 
@@ -104,7 +104,7 @@ void P2PComTest1(const TestContext &context, com::PtrCommunicationFactory cf)
 }
 
 /// a very similar test, but with a vertex that has been completely filtered out
-void P2PComTest2(const TestContext &context, com::PtrCommunicationFactory cf)
+void runP2PComTest2(const TestContext &context, com::PtrCommunicationFactory cf)
 {
   BOOST_TEST(context.hasSize(2));
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 2, true, testing::nextMeshID()));
@@ -178,7 +178,7 @@ void P2PComTest2(const TestContext &context, com::PtrCommunicationFactory cf)
   }
 }
 
-void connectionTest(const TestContext &context, com::PtrCommunicationFactory cf)
+void runConnectionTest(const TestContext &context, com::PtrCommunicationFactory cf)
 {
 
   BOOST_TEST(context.hasSize(2));
@@ -261,12 +261,10 @@ void connectionTest(const TestContext &context, com::PtrCommunicationFactory cf)
         }
       }
     }
-
-    mesh::Data::resetDataCount();
   }
 }
 
-void emptyConnectionTest(const TestContext &context, com::PtrCommunicationFactory cf)
+void runEmptyConnectionTest(const TestContext &context, com::PtrCommunicationFactory cf)
 {
   BOOST_TEST(context.hasSize(2));
 
@@ -309,11 +307,9 @@ void emptyConnectionTest(const TestContext &context, com::PtrCommunicationFactor
       BOOST_TEST(receiveData.size() == 0);
     }
   }
-
-  mesh::Data::resetDataCount();
 }
 
-void P2PMeshBroadcastTest(const TestContext &context, com::PtrCommunicationFactory cf)
+void runP2PMeshBroadcastTest(const TestContext &context, com::PtrCommunicationFactory cf)
 {
   BOOST_TEST(context.hasSize(2));
 
@@ -379,11 +375,9 @@ void P2PMeshBroadcastTest(const TestContext &context, com::PtrCommunicationFacto
       BOOST_TEST(mesh->vertices()[1].getCoords()[1] == 2.0);
     }
   }
-
-  mesh::Data::resetDataCount();
 }
 
-void P2PComLocalCommunicationMapTest(const TestContext &context, com::PtrCommunicationFactory cf)
+void runP2PComLocalCommunicationMapTest(const TestContext &context, com::PtrCommunicationFactory cf)
 {
   BOOST_TEST(context.hasSize(2));
 
@@ -464,31 +458,85 @@ void P2PComLocalCommunicationMapTest(const TestContext &context, com::PtrCommuni
       BOOST_TEST(localCommunicationMap[1][2] == 11333);
     }
   }
-
-  mesh::Data::resetDataCount();
 }
 
-BOOST_AUTO_TEST_CASE(SocketCommunication)
+BOOST_AUTO_TEST_SUITE(Sockets)
+
+BOOST_AUTO_TEST_CASE(P2PComTest1)
 {
   PRECICE_TEST("A"_on(2_ranks).setupMasterSlaves(), "B"_on(2_ranks).setupMasterSlaves(), Require::Events);
   com::PtrCommunicationFactory cf(new com::SocketCommunicationFactory);
-  P2PComTest1(context, cf);
-  P2PComTest2(context, cf);
-  connectionTest(context, cf);
-  emptyConnectionTest(context, cf);
-  P2PMeshBroadcastTest(context, cf);
-  P2PComLocalCommunicationMapTest(context, cf);
+  runP2PComTest1(context, cf);
 }
 
-BOOST_AUTO_TEST_CASE(MPIPortsCommunication, *boost::unit_test::label("MPI_Ports"))
+BOOST_AUTO_TEST_CASE(P2PComTest2)
+{
+  PRECICE_TEST("A"_on(2_ranks).setupMasterSlaves(), "B"_on(2_ranks).setupMasterSlaves(), Require::Events);
+  com::PtrCommunicationFactory cf(new com::SocketCommunicationFactory);
+  runP2PComTest2(context, cf);
+}
+
+BOOST_AUTO_TEST_CASE(ConnectionTest)
+{
+  PRECICE_TEST("A"_on(2_ranks).setupMasterSlaves(), "B"_on(2_ranks).setupMasterSlaves(), Require::Events);
+  com::PtrCommunicationFactory cf(new com::SocketCommunicationFactory);
+  runConnectionTest(context, cf);
+}
+
+BOOST_AUTO_TEST_CASE(EmptyConnectionTest)
+{
+  PRECICE_TEST("A"_on(2_ranks).setupMasterSlaves(), "B"_on(2_ranks).setupMasterSlaves(), Require::Events);
+  com::PtrCommunicationFactory cf(new com::SocketCommunicationFactory);
+  runEmptyConnectionTest(context, cf);
+}
+
+BOOST_AUTO_TEST_CASE(P2PMeshBroadcastTest)
+{
+  PRECICE_TEST("A"_on(2_ranks).setupMasterSlaves(), "B"_on(2_ranks).setupMasterSlaves(), Require::Events);
+  com::PtrCommunicationFactory cf(new com::SocketCommunicationFactory);
+  runP2PMeshBroadcastTest(context, cf);
+}
+
+BOOST_AUTO_TEST_CASE(P2PComLocalCommunicationMapTest)
+{
+  PRECICE_TEST("A"_on(2_ranks).setupMasterSlaves(), "B"_on(2_ranks).setupMasterSlaves(), Require::Events);
+  com::PtrCommunicationFactory cf(new com::SocketCommunicationFactory);
+  runP2PComLocalCommunicationMapTest(context, cf);
+}
+
+BOOST_AUTO_TEST_SUITE_END() // Sockets
+
+BOOST_AUTO_TEST_SUITE(MPIPorts, *boost::unit_test::label("MPI_Ports"))
+
+BOOST_AUTO_TEST_CASE(P2PComTest1)
 {
   PRECICE_TEST("A"_on(2_ranks).setupMasterSlaves(), "B"_on(2_ranks).setupMasterSlaves(), Require::Events);
   com::PtrCommunicationFactory cf(new com::MPIPortsCommunicationFactory);
-  P2PComTest1(context, cf);
-  P2PComTest2(context, cf);
-  connectionTest(context, cf);
-  emptyConnectionTest(context, cf);
+  runP2PComTest1(context, cf);
 }
+
+BOOST_AUTO_TEST_CASE(P2PComTest2)
+{
+  PRECICE_TEST("A"_on(2_ranks).setupMasterSlaves(), "B"_on(2_ranks).setupMasterSlaves(), Require::Events);
+  com::PtrCommunicationFactory cf(new com::MPIPortsCommunicationFactory);
+  runP2PComTest2(context, cf);
+}
+
+BOOST_AUTO_TEST_CASE(ConnectionTest)
+{
+  PRECICE_TEST("A"_on(2_ranks).setupMasterSlaves(), "B"_on(2_ranks).setupMasterSlaves(), Require::Events);
+  com::PtrCommunicationFactory cf(new com::MPIPortsCommunicationFactory);
+  runConnectionTest(context, cf);
+}
+
+BOOST_AUTO_TEST_CASE(EmptyConnectionTest)
+{
+  PRECICE_TEST("A"_on(2_ranks).setupMasterSlaves(), "B"_on(2_ranks).setupMasterSlaves(), Require::Events);
+  com::PtrCommunicationFactory cf(new com::MPIPortsCommunicationFactory);
+  runEmptyConnectionTest(context, cf);
+}
+
+BOOST_AUTO_TEST_SUITE_END() // MPIPorts
 
 BOOST_AUTO_TEST_SUITE_END()
 

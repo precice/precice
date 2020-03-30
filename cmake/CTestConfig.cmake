@@ -180,12 +180,12 @@ add_precice_test(
   )
 add_precice_test(
   NAME m2n
-  ARGUMENTS "--run_test=M2NTests:\!M2NTests/MPIPortsCommunication"
+  ARGUMENTS "--run_test=M2NTests:\!M2NTests/MPIPorts"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
   )
 add_precice_test(
   NAME m2n.mpiports
-  ARGUMENTS "--run_test=M2NTests/MPIPortsCommunication"
+  ARGUMENTS "--run_test=M2NTests/MPIPorts"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
   LABELS "mpiports;canfail"
   )
