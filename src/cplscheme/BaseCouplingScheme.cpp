@@ -191,20 +191,15 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
   _timeWindows   = startTimeWindow;
 
   if (isImplicitCouplingScheme()) {
-    checkConfiguration();
-
     if (not doesFirstStep()) {
       PRECICE_ASSERT(not _convergenceMeasures.empty(), "Implicit scheme must have at least one convergence measure.");
       mergeData();                             // merge send and receive data for all pp calls
       setupConvergenceMeasures();              // needs _couplingData configured
       setupDataMatrices(getAcceleratedData()); // Reserve memory and initialize data with zero
+      if (getAcceleration()) {
+        getAcceleration()->initialize(getAcceleratedData()); // Reserve memory, initialize
+      }
     }
-
-
-    if (not doesFirstStep() && getAcceleration()) {
-      getAcceleration()->initialize(getAcceleratedData()); // Reserve memory, initialize
-    }
-
     requireAction(constants::actionWriteIterationCheckpoint());
     initializeTXTWriters();
   }

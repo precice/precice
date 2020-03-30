@@ -47,6 +47,11 @@ public:
       bool          initialize,
       int           index);
 
+  /**
+   * @brief TODO
+   */
+  void checkConfiguration() override;
+
 private:
   void          sendData();
   void          receiveData();
@@ -72,11 +77,6 @@ private:
   {
     return _allData;
   }
-
-  /**
-   * @brief TODO
-   */
-  void checkConfiguration() override;
 
   /**
    * @brief TODO

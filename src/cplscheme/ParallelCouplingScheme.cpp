@@ -25,7 +25,9 @@ ParallelCouplingScheme::ParallelCouplingScheme(
 
 void ParallelCouplingScheme::checkConfiguration()
 {
-  PRECICE_CHECK(not getSendData().empty(), "No send data configured. Use explicit scheme for one-way coupling.");
+  if (isImplicitCouplingScheme()) {
+    PRECICE_CHECK(not getSendData().empty(), "No send data configured. Use explicit scheme for one-way coupling.");
+  }
 }
 
 void ParallelCouplingScheme::initializeImplementation()

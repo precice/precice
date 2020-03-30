@@ -74,6 +74,9 @@ public:
       mesh::PtrMesh mesh,
       bool          requiresInitialization);
 
+  /// performs checks on configured coupling scheme
+  virtual void checkConfiguration() = 0;
+
   /// Returns true, if initialize has been called.
   bool isInitialized() const override final
   {
@@ -496,10 +499,6 @@ private:
   bool _isCoarseModelOptimizationActive = false;
 
   /// Functions needed for initialize()
-
-  /// performs checks on configuration if __couplingMode == Implicit
-  virtual void checkConfiguration() = 0;
-
   void setupConvergenceMeasures();
 
   /// TODO

@@ -637,6 +637,8 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialExplicitCouplingSchem
 
   addDataToBeExchanged(*scheme, accessor);
 
+  scheme->checkConfiguration();
+
   return PtrCouplingScheme(scheme);
 }
 
@@ -652,6 +654,8 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelExplicitCouplingSch
       accessor, m2n, _config.dtMethod, BaseCouplingScheme::Explicit);
 
   addDataToBeExchanged(*scheme, accessor);
+
+  scheme->checkConfiguration();
 
   return PtrCouplingScheme(scheme);
 }
@@ -695,6 +699,9 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialImplicitCouplingSchem
     }
     scheme->setIterationAcceleration(_accelerationConfig->getAcceleration());
   }
+
+  scheme->checkConfiguration();
+
   return PtrCouplingScheme(scheme);
 }
 
@@ -736,6 +743,9 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelImplicitCouplingSch
     }
     scheme->setIterationAcceleration(_accelerationConfig->getAcceleration());
   }
+
+  scheme->checkConfiguration();
+
   return PtrCouplingScheme(scheme);
 }
 
@@ -798,6 +808,9 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
 
     scheme->setIterationAcceleration(_accelerationConfig->getAcceleration());
   }
+
+  scheme->checkConfiguration();
+
   return PtrCouplingScheme(scheme);
 }
 

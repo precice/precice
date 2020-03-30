@@ -40,6 +40,11 @@ public:
       CouplingMode                  cplMode,
       int                           maxIterations = -1);
 
+  /**
+   * @brief TODO
+   */
+  void checkConfiguration() override;
+
 private:
   logging::Logger _log{"cplscheme::ParallelCouplingScheme"};
 
@@ -56,11 +61,6 @@ private:
     PRECICE_ASSERT(!doesFirstStep(), "Only the second participant should do the acceleration.");
     return _allData;
   }
-
-  /**
-   * @brief TODO
-   */
-  void checkConfiguration() override;
 
   /**
    * @brief TODO

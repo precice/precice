@@ -51,6 +51,11 @@ public:
 
   friend struct CplSchemeTests::SerialImplicitCouplingSchemeTests::testExtrapolateData; // For whitebox tests
 
+  /**
+   * @brief TODO
+   */
+  void checkConfiguration() override;
+
 private:
 
   /**
@@ -76,11 +81,6 @@ private:
   {
     return getSendData();
   }
-
-  /**
-   * @brief TODO
-   */
-  void checkConfiguration() override;
 
   /**
    * @brief TODO
