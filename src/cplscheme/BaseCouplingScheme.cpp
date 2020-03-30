@@ -32,12 +32,12 @@ BaseCouplingScheme::BaseCouplingScheme(
       _iterationsCoarseOptimization(-1),
       _maxTime(maxTime),
       _maxTimeWindows(maxTimeWindows),
-      _iterations(-1),
-      _totalIterationsCoarseOptimization(-1),
-      _maxIterations(-1),
-      _totalIterations(-1),
       _timeWindows(0),
       _timeWindowSize(timeWindowSize),
+      _maxIterations(-1),
+      _iterations(-1),
+      _totalIterations(-1),
+      _totalIterationsCoarseOptimization(-1),
       _validDigits(validDigits)
 {
   PRECICE_CHECK(not((maxTime != UNDEFINED_TIME) && (maxTime < 0.0)),
@@ -69,12 +69,12 @@ BaseCouplingScheme::BaseCouplingScheme(
       _m2n(m2n),
       _maxTime(maxTime),
       _maxTimeWindows(maxTimeWindows),
-      _iterations(1),
-      _totalIterationsCoarseOptimization(1),
-      _maxIterations(maxIterations),
-      _totalIterations(1),
       _timeWindows(1),
       _timeWindowSize(timeWindowSize),
+      _maxIterations(maxIterations),
+      _iterations(1),
+      _totalIterations(1),
+      _totalIterationsCoarseOptimization(1),
       _validDigits(validDigits)
 {
   PRECICE_CHECK(not((maxTime != UNDEFINED_TIME) && (maxTime < 0.0)),

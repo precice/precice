@@ -218,7 +218,8 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping(
   if (getDimensions() == 2) {
     _deadAxis = {xDead, yDead};
     PRECICE_CHECK(not(xDead and yDead), "You cannot choose all axes to be dead for a RBF mapping");
-    PRECICE_CHECK(not zDead, "You cannot dead out the z-axis if dimension is set to 2");
+    if (zDead)
+      PRECICE_WARN("Setting the z-axis to dead on a 2-dimensional problem has no effect.");
   } else if (getDimensions() == 3) {
     _deadAxis = {xDead, yDead, zDead};
     PRECICE_CHECK(not(xDead and yDead and zDead), "You cannot choose all axes to be dead for a RBF mapping");
@@ -675,7 +676,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
         auto sigma = petsc::Vector::allocate(_matrixQ, "sigma", petsc::Vector::LEFT);
         if (not _QRsolver.solveTranspose(tau, sigma)) {
           KSPView(_QRsolver, PETSC_VIEWER_STDOUT_WORLD);
-          PRECICE_ERROR("RBF Polynomial linear system has not converged.");
+          PRECICE_ERROR("RBF Polynomial linear system has not converged. "
+                        "Try to fix axis-aligned mapping setups by marking perpendicular axes as dead.");
         }
         VecWAXPY(out, -1, sigma, mu);
       } else {
@@ -684,7 +686,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
         utils::Event eSolve("map.pet.solveConservative.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
         if (not _solver.solve(au, out)) {
           KSPView(_solver, PETSC_VIEWER_STDOUT_WORLD);
-          PRECICE_ERROR("RBF linear system has not converged.");
+          PRECICE_ERROR("RBF linear system has not converged. "
+                        "Try to fix axis-aligned mapping setups by marking perpendicular axes as dead.");
         }
         eSolve.addData("Iterations", _solver.getIterationNumber());
         eSolve.stop();
@@ -736,7 +739,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
       if (_polynomial == Polynomial::SEPARATE) {
         if (not _QRsolver.solve(in, a)) {
           KSPView(_QRsolver, PETSC_VIEWER_STDOUT_WORLD);
-          PRECICE_ERROR("Polynomial QR linear system has not converged.");
+          PRECICE_ERROR("Polynomial QR linear system has not converged. "
+                        "Try to fix axis-aligned mapping setups by marking perpendicular axis as dead.");
         }
         VecScale(a, -1);
         MatMultAdd(_matrixQ, a, in, in); // Subtract the polynomial from the input values
@@ -751,7 +755,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
       utils::Event eSolve("map.pet.solveConsistent.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
       if (not _solver.solve(in, p)) {
         KSPView(_solver, PETSC_VIEWER_STDOUT_WORLD);
-        PRECICE_ERROR("RBF linear system has not converged.");
+        PRECICE_ERROR("RBF linear system has not converged. "
+                      "Try to fix axis-aligned mapping setups by marking perpendicular axis as dead.");
       }
       eSolve.addData("Iterations", _solver.getIterationNumber());
       eSolve.stop();

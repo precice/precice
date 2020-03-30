@@ -239,7 +239,7 @@ void ReceivedPartition::compute()
 }
 
 namespace {
-bool vertexInBoundingBox(mesh::Vertex const &vertex, mesh::Mesh::BoundingBox const &bb)
+bool isVertexInBoundingBox(mesh::Vertex const &vertex, mesh::Mesh::BoundingBox const &bb)
 {
   const int dim = bb.size();
   for (int d = 0; d < dim; d++) {
@@ -295,11 +295,9 @@ void ReceivedPartition::filterByBoundingBox()
         mesh::Mesh::BoundingBox slaveBB(_bb.size(), std::make_pair(std::numeric_limits<double>::max(), std::numeric_limits<double>::lowest()));
         com::CommunicateMesh(utils::MasterSlave::_communication).receiveBoundingBox(slaveBB, rankSlave);
 
-        PRECICE_DEBUG("From slave " << rankSlave << ", bounding mesh: "
-                                    << slaveBB[0].first << ", " << slaveBB[0].second << " and "
-                                    << slaveBB[1].first << ", " << slaveBB[1].second);
+        PRECICE_DEBUG("From slave " << rankSlave << ", bounding mesh: " << slaveBB);
         mesh::Mesh slaveMesh("SlaveMesh", _dimensions, _mesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
-        mesh::filterMesh(slaveMesh, *_mesh, [&slaveBB](const mesh::Vertex &v) { return vertexInBoundingBox(v, slaveBB); });
+        mesh::filterMesh(slaveMesh, *_mesh, [&slaveBB](const mesh::Vertex &v) { return isVertexInBoundingBox(v, slaveBB); });
         PRECICE_DEBUG("Send filtered mesh to slave: " << rankSlave);
         com::CommunicateMesh(utils::MasterSlave::_communication).sendMesh(slaveMesh, rankSlave);
       }
@@ -523,7 +521,7 @@ void ReceivedPartition::prepareBoundingBox()
 
 bool ReceivedPartition::isVertexInBB(const mesh::Vertex &vertex)
 {
-  return vertexInBoundingBox(vertex, _bb);
+  return isVertexInBoundingBox(vertex, _bb);
 }
 
 void ReceivedPartition::createOwnerInformation()

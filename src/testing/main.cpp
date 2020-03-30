@@ -84,6 +84,14 @@ bool init_unit_test()
   return true;
 }
 
+int countEnabledTests()
+{
+  using namespace boost::unit_test;
+  test_case_counter tcc;
+  traverse_test_tree(framework::master_test_suite(), tcc, true);
+  return tcc.p_count;
+}
+
 /// Entry point for the boost test executable
 int main(int argc, char *argv[])
 {
@@ -106,7 +114,13 @@ int main(int argc, char *argv[])
 
   std::cout << "This test suite runs on rank " << rank << " of " << size << '\n';
 
-  const int retCode = boost::unit_test::unit_test_main(&init_unit_test, argc, argv);
+  int       retCode  = boost::unit_test::unit_test_main(&init_unit_test, argc, argv);
+  const int testsRan = countEnabledTests();
+
+  // Override the return code if the slaves have nothing to test
+  if ((testsRan == 0) && (rank != 0)) {
+    retCode = EXIT_SUCCESS;
+  }
 
   utils::MasterSlave::_communication = nullptr;
   utils::Parallel::finalizeMPI();
