@@ -285,9 +285,9 @@ void runCrossConnectionTest(const TestContext &context, com::PtrCommunicationFac
     c.broadcastReceiveAll(receiveData);
 
     if (context.isMaster()) {
-      BOOST_TEST(receiveData[1] == 10);
+      BOOST_TEST(receiveData[0] == 10);
     } else {
-      BOOST_TEST(receiveData[1] == 5);
+      BOOST_TEST(receiveData[0] == 5);
     }
   }
 }
