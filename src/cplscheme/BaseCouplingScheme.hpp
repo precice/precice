@@ -151,6 +151,13 @@ public:
   /// Sets an action required to be performed by the accessor.
   void requireAction(const std::string &actionName) override final;
 
+  /**
+   * @brief Returns coupling state information.
+   *
+   * Includes current iteration, max iterations, time, time window and action.
+   */
+  std::string printCouplingState() const override;
+
   /// Finalizes the coupling scheme.
   void finalize() override final;
 
@@ -279,24 +286,6 @@ protected:
   {
     _timeWindows = timeWindows;
   }
-
-  /**
-   * @brief Returns coupling state information.
-   *
-   * Includes current iteration, max iterations, time, time window and action.
-   */
-  std::string printCouplingState() const override;
-
-  /**
-   * @brief As the version without parameters, but with changed time window and time.
-   *
-   * This version is used by the ImplicitCouplingScheme at the moment, which
-   * needs to use the last time window in the plotting when the iterations of
-   * a time window are converged.
-   */
-  std::string printBasicState(
-      int    timeWindows,
-      double time) const;
 
   /// @return Communication device to the other coupling participant.
   m2n::PtrM2N getM2N() const
@@ -543,6 +532,17 @@ private:
    * @param convergenceCoarseOptimization Optional parameter, needed if manifold mapping is used
    */
   void updateIterations(bool convergence, bool convergenceCoarseOptimization = true);
+
+  /**
+   * @brief As the version without parameters, but with changed time window and time.
+   *
+   * This version is used by the ImplicitCouplingScheme at the moment, which
+   * needs to use the last time window in the plotting when the iterations of
+   * a time window are converged.
+   */
+  std::string printBasicState(
+      int    timeWindows,
+      double time) const;
 
   /// Returns a string representing the required actions.
   std::string printActionsState() const;

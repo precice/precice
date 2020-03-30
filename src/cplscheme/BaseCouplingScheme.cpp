@@ -238,7 +238,7 @@ void BaseCouplingScheme::initializeData()
 
 void BaseCouplingScheme::advance()
 {
-  PRECICE_TRACE(getTimeWindows(), getTime());
+  PRECICE_TRACE(_timeWindows, _time);
   checkCompletenessRequiredActions();
   PRECICE_ASSERT(_isInitialized, "Before calling advance() coupling scheme has to be initialized via initialize().");
   PRECICE_CHECK((not _receivesInitializedData && not _sendsInitializedData) || (_initializeDataHasBeenCalled),
@@ -280,7 +280,7 @@ void BaseCouplingScheme::advance()
       } else {  // write output, prepare for next window
         PRECICE_DEBUG("Convergence achieved");
         advanceTXTWriters();
-        PRECICE_TRACE(getTimeWindows(), getTime());
+        PRECICE_TRACE(_timeWindows, _time);
         PRECICE_INFO("Time window completed");
         _isTimeWindowComplete = true;
         if (isCouplingOngoing()) {
@@ -290,7 +290,7 @@ void BaseCouplingScheme::advance()
       }
       updateIterations(convergence, convergenceCoarseOptimization);
     } else {
-      PRECICE_TRACE(getTimeWindows(), getTime());
+      PRECICE_TRACE(_timeWindows, _time);
       PRECICE_INFO("Time window completed");
       _isTimeWindowComplete = true;
     }
