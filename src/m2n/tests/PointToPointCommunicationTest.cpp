@@ -178,7 +178,7 @@ void runP2PComTest2(const TestContext &context, com::PtrCommunicationFactory cf)
   }
 }
 
-void runConnectionTest(const TestContext &context, com::PtrCommunicationFactory cf)
+void runSameConnectionTest(const TestContext &context, com::PtrCommunicationFactory cf)
 {
 
   BOOST_TEST(context.hasSize(2));
@@ -187,78 +187,158 @@ void runConnectionTest(const TestContext &context, com::PtrCommunicationFactory 
   bool          flipNormals = false;
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, flipNormals, testing::nextMeshID()));
 
-  std::vector<std::string> conections = {"same", "cross"};
+  std::string connectionType = "same";
 
-  for (auto &connectionType : conections) {
+  if (context.isNamed("A")) {
+    if (context.isMaster()) {
 
-    if (context.isNamed("A")) {
-      if (context.isMaster()) {
-
-        if (connectionType == "same") {
-          mesh->getConnectedRanks().push_back(0);
-        } else {
-          mesh->getConnectedRanks().push_back(1);
-        }
+      if (connectionType == "same") {
+        mesh->getConnectedRanks().push_back(0);
       } else {
-
-        if (connectionType == "same") {
-          mesh->getConnectedRanks().push_back(1);
-        } else {
-          mesh->getConnectedRanks().push_back(0);
-        }
+        mesh->getConnectedRanks().push_back(1);
       }
     } else {
-      BOOST_TEST(context.isNamed("B"));
-      if (context.isMaster()) {
 
-        if (connectionType == "same") {
-          mesh->getConnectedRanks().push_back(0);
-        } else {
-          mesh->getConnectedRanks().push_back(1);
-        }
+      if (connectionType == "same") {
+        mesh->getConnectedRanks().push_back(1);
       } else {
-
-        if (connectionType == "same") {
-          mesh->getConnectedRanks().push_back(1);
-        } else {
-          mesh->getConnectedRanks().push_back(0);
-        }
+        mesh->getConnectedRanks().push_back(0);
       }
     }
+  } else {
+    BOOST_TEST(context.isNamed("B"));
+    if (context.isMaster()) {
 
-    m2n::PointToPointCommunication c(cf, mesh);
-
-    std::vector<int> receiveData;
-
-    if (context.isNamed("A")) {
-      if (context.isMaster()) {
-
-        c.requestPreConnection("Solid", "Fluid");
-        int sendData = 5;
-        c.broadcastSend(sendData);
-
+      if (connectionType == "same") {
+        mesh->getConnectedRanks().push_back(0);
       } else {
-
-        c.requestPreConnection("Solid", "Fluid");
-        int sendData = 10;
-        c.broadcastSend(sendData);
+        mesh->getConnectedRanks().push_back(1);
       }
     } else {
-      c.acceptPreConnection("Solid", "Fluid");
-      c.broadcastReceiveAll(receiveData);
 
-      if (context.isMaster()) {
-        if (connectionType == "same") {
-          BOOST_TEST(receiveData[0] == 5);
-        } else {
-          BOOST_TEST(receiveData[1] == 10);
-        }
+      if (connectionType == "same") {
+        mesh->getConnectedRanks().push_back(1);
       } else {
-        if (connectionType == "same") {
-          BOOST_TEST(receiveData[0] == 10);
-        } else {
-          BOOST_TEST(receiveData[1] == 5);
-        }
+        mesh->getConnectedRanks().push_back(0);
+      }
+    }
+  }
+
+  m2n::PointToPointCommunication c(cf, mesh);
+
+  std::vector<int> receiveData;
+
+  if (context.isNamed("A")) {
+    if (context.isMaster()) {
+
+      c.requestPreConnection("Solid", "Fluid");
+      int sendData = 5;
+      c.broadcastSend(sendData);
+
+    } else {
+
+      c.requestPreConnection("Solid", "Fluid");
+      int sendData = 10;
+      c.broadcastSend(sendData);
+    }
+  } else {
+    c.acceptPreConnection("Solid", "Fluid");
+    c.broadcastReceiveAll(receiveData);
+
+    if (context.isMaster()) {
+      if (connectionType == "same") {
+        BOOST_TEST(receiveData[0] == 5);
+      } else {
+        BOOST_TEST(receiveData[1] == 10);
+      }
+    } else {
+      if (connectionType == "same") {
+        BOOST_TEST(receiveData[0] == 10);
+      } else {
+        BOOST_TEST(receiveData[1] == 5);
+      }
+    }
+  }
+}
+
+void runCrossConnectionTest(const TestContext &context, com::PtrCommunicationFactory cf)
+{
+
+  BOOST_TEST(context.hasSize(2));
+
+  int           dimensions  = 2;
+  bool          flipNormals = false;
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, flipNormals, testing::nextMeshID()));
+
+  std::string connectionType = "cross";
+
+  if (context.isNamed("A")) {
+    if (context.isMaster()) {
+
+      if (connectionType == "same") {
+        mesh->getConnectedRanks().push_back(0);
+      } else {
+        mesh->getConnectedRanks().push_back(1);
+      }
+    } else {
+
+      if (connectionType == "same") {
+        mesh->getConnectedRanks().push_back(1);
+      } else {
+        mesh->getConnectedRanks().push_back(0);
+      }
+    }
+  } else {
+    BOOST_TEST(context.isNamed("B"));
+    if (context.isMaster()) {
+
+      if (connectionType == "same") {
+        mesh->getConnectedRanks().push_back(0);
+      } else {
+        mesh->getConnectedRanks().push_back(1);
+      }
+    } else {
+
+      if (connectionType == "same") {
+        mesh->getConnectedRanks().push_back(1);
+      } else {
+        mesh->getConnectedRanks().push_back(0);
+      }
+    }
+  }
+
+  m2n::PointToPointCommunication c(cf, mesh);
+
+  std::vector<int> receiveData;
+
+  if (context.isNamed("A")) {
+    if (context.isMaster()) {
+
+      c.requestPreConnection("Solid", "Fluid");
+      int sendData = 5;
+      c.broadcastSend(sendData);
+
+    } else {
+
+      c.requestPreConnection("Solid", "Fluid");
+      int sendData = 10;
+      c.broadcastSend(sendData);
+    }
+  } else {
+    c.acceptPreConnection("Solid", "Fluid");
+    c.broadcastReceiveAll(receiveData);
+
+    if (context.isMaster()) {
+      if (connectionType == "same") {
+        BOOST_TEST(receiveData[0] == 5);
+      } else {
+        BOOST_TEST(receiveData[1] == 10);
+      }
+    } else {
+      if (connectionType == "same") {
+        BOOST_TEST(receiveData[0] == 10);
+      } else {
+        BOOST_TEST(receiveData[1] == 5);
       }
     }
   }
@@ -476,11 +556,18 @@ BOOST_AUTO_TEST_CASE(P2PComTest2)
   runP2PComTest2(context, cf);
 }
 
-BOOST_AUTO_TEST_CASE(ConnectionTest)
+BOOST_AUTO_TEST_CASE(TestSameConnection)
 {
   PRECICE_TEST("A"_on(2_ranks).setupMasterSlaves(), "B"_on(2_ranks).setupMasterSlaves(), Require::Events);
   com::PtrCommunicationFactory cf(new com::SocketCommunicationFactory);
-  runConnectionTest(context, cf);
+  runSameConnectionTest(context, cf);
+}
+
+BOOST_AUTO_TEST_CASE(TestCrossConnection)
+{
+  PRECICE_TEST("A"_on(2_ranks).setupMasterSlaves(), "B"_on(2_ranks).setupMasterSlaves(), Require::Events);
+  com::PtrCommunicationFactory cf(new com::SocketCommunicationFactory);
+  runCrossConnectionTest(context, cf);
 }
 
 BOOST_AUTO_TEST_CASE(EmptyConnectionTest)
@@ -522,11 +609,18 @@ BOOST_AUTO_TEST_CASE(P2PComTest2)
   runP2PComTest2(context, cf);
 }
 
-BOOST_AUTO_TEST_CASE(ConnectionTest)
+BOOST_AUTO_TEST_CASE(TestSameConnection)
 {
   PRECICE_TEST("A"_on(2_ranks).setupMasterSlaves(), "B"_on(2_ranks).setupMasterSlaves(), Require::Events);
   com::PtrCommunicationFactory cf(new com::MPIPortsCommunicationFactory);
-  runConnectionTest(context, cf);
+  runSameConnectionTest(context, cf);
+}
+
+BOOST_AUTO_TEST_CASE(TestCrossConnection)
+{
+  PRECICE_TEST("A"_on(2_ranks).setupMasterSlaves(), "B"_on(2_ranks).setupMasterSlaves(), Require::Events);
+  com::PtrCommunicationFactory cf(new com::MPIPortsCommunicationFactory);
+  runCrossConnectionTest(context, cf);
 }
 
 BOOST_AUTO_TEST_CASE(EmptyConnectionTest)
