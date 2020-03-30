@@ -323,8 +323,6 @@ protected:
     impl::PtrConvergenceMeasure measure;
   };
 
-  virtual void setupConvergenceMeasures() final;
-
   void newConvergenceMeasurements();
 
   bool measureConvergence(
@@ -365,17 +363,6 @@ protected:
 
   bool maxIterationsReached();
 
-  /// TODO
-  void setDeletedColumnsPPFiltering(int deletedColumnsPPFiltering)
-  {
-    _deletedColumnsPPFiltering = deletedColumnsPPFiltering;
-  }
-
-  /// returns number of coarse model optimization iterations in current time window
-  int getIterationsCoarseOptimization(){
-    return _iterationsCoarseOptimization;
-  }
-
   /**
    * @brief Sets _sendsInitializedData, if sendData requires initialization
    * @param sendData CouplingData being checked
@@ -394,11 +381,6 @@ protected:
    * @return true, if any CouplingData in dataMap requires initialization
    */
   bool anyDataRequiresInitialization(DataMap &dataMap) const;
-
-  std::vector<ConvergenceMeasure> getConvergenceMeasures()
-  {
-    return _convergenceMeasures;
-  }
 
 private:
   /// Communication device to the other coupling participant.
@@ -520,6 +502,8 @@ private:
 
   /// performs checks on Acceleration setup if __couplingMode == Implicit
   virtual void checkAcceleration() = 0;
+
+  void setupConvergenceMeasures();
 
   /// TODO
   virtual void mergeData() = 0;

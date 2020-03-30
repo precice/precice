@@ -190,11 +190,11 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
   _time          = startTime;
   _timeWindows   = startTimeWindow;
 
-  if (_couplingMode == Implicit) {
+  if (isImplicitCouplingScheme()) {
     checkForSend();
 
     if (not doesFirstStep()) {
-      PRECICE_ASSERT(not getConvergenceMeasures().empty(), "Implicit scheme must have at least one convergence measure.");
+      PRECICE_ASSERT(not _convergenceMeasures.empty(), "Implicit scheme must have at least one convergence measure.");
       mergeData();                             // merge send and receive data for all pp calls
       setupConvergenceMeasures();              // needs _couplingData configured
       setupDataMatrices(getAcceleratedData()); // Reserve memory and initialize data with zero
@@ -271,7 +271,7 @@ void BaseCouplingScheme::advance()
 
     std::pair<bool, bool> convergenceInformation = exchangeDataAndAccelerate();
 
-    if(_couplingMode == Implicit) {  // check convergence
+    if(isImplicitCouplingScheme()) {  // check convergence
       bool convergence = convergenceInformation.first;
       bool convergenceCoarseOptimization = convergenceInformation.second;
       if (not convergence) {  // repeat window
@@ -949,7 +949,7 @@ std::pair<bool, bool> BaseCouplingScheme::accelerate(int accelerationShift)
     // coupling iteration converged for current time window. Advance in time.
     if (convergence) {
       if (getAcceleration()) {
-        setDeletedColumnsPPFiltering(getAcceleration()->getDeletedColumns());
+        _deletedColumnsPPFiltering = getAcceleration()->getDeletedColumns();
         getAcceleration()->iterationsConverged(getAcceleratedData());
       }
       newConvergenceMeasurements();
@@ -992,7 +992,7 @@ std::pair<bool, bool> BaseCouplingScheme::accelerate(int accelerationShift)
     // otherwise the fine input data would be zero in this case, neither anything has been computed so far for the fine
     // model nor the acceleration did any data registration
     // ATTENTION: assumes that coarse data is defined after fine data in same ordering.
-    if (getIterationsCoarseOptimization() == 1 && getAcceleration().get() != nullptr) {
+    if (_iterationsCoarseOptimization == 1 && getAcceleration().get() != nullptr) {
       auto   fineIDs        = getAcceleration()->getDataIDs();
       auto &acceleratedData = getAcceleratedData();
       for (auto &fineID : fineIDs) {
