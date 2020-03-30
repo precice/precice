@@ -72,9 +72,6 @@ std::pair<bool, bool> ParallelCouplingScheme::exchangeDataAndAccelerate()
     PRECICE_DEBUG("Receiving data...");
     if(isImplicitCouplingScheme()) {
       convergence = receiveConvergence();
-      if (convergence) {
-        timeWindowCompleted();
-      }
     }
     receiveData(getM2N());
   } else { //second participant
@@ -89,6 +86,11 @@ std::pair<bool, bool> ParallelCouplingScheme::exchangeDataAndAccelerate()
     PRECICE_DEBUG("Sending data...");
     sendData(getM2N());
   }
+
+  if (isExplicitCouplingScheme() || (isImplicitCouplingScheme() && convergence)) {
+    timeWindowCompleted();
+  }
+
   return std::pair<bool, bool>(convergence, convergenceCoarseOptimization);
 }
 

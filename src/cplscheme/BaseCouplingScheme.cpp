@@ -267,10 +267,6 @@ void BaseCouplingScheme::advance()
 
   if (reachedEndOfTimeWindow()) {
 
-    if (isExplicitCouplingScheme()) {
-      timeWindowCompleted();
-    }
-
     std::pair<bool, bool> convergenceInformation = exchangeDataAndAccelerate();
 
     if (isExplicitCouplingScheme()) {
@@ -962,7 +958,6 @@ std::pair<bool, bool> BaseCouplingScheme::accelerate(int accelerationShift)
         getAcceleration()->iterationsConverged(getAcceleratedData());
       }
       newConvergenceMeasurements();
-      timeWindowCompleted();
       // no convergence achieved for the coupling iteration within the current time window
     } else if (getAcceleration()) {
       getAcceleration()->performAcceleration(getAcceleratedData());

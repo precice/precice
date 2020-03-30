@@ -101,9 +101,12 @@ std::pair<bool, bool> MultiCouplingScheme::exchangeDataAndAccelerate()
       getAcceleration()->iterationsConverged(getAcceleratedData());
     }
     newConvergenceMeasurements();
-    timeWindowCompleted();
   } else if (getAcceleration()) {
     getAcceleration()->performAcceleration(getAcceleratedData());
+  }
+
+  if (isExplicitCouplingScheme() || (isImplicitCouplingScheme() && convergence)) {
+    timeWindowCompleted();
   }
 
   for (m2n::PtrM2N m2n : _communications) {

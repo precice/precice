@@ -121,9 +121,6 @@ std::pair<bool, bool> SerialCouplingScheme::exchangeDataAndAccelerate()
     sendData(getM2N());
     if (isImplicitCouplingScheme()) {
       convergence = receiveConvergence();
-      if (convergence) {
-        timeWindowCompleted();
-      }
     }
     PRECICE_DEBUG("Receiving data...");
     receiveData(getM2N());
@@ -137,6 +134,10 @@ std::pair<bool, bool> SerialCouplingScheme::exchangeDataAndAccelerate()
     }
     PRECICE_DEBUG("Sending data...");
     sendData(getM2N());
+  }
+
+  if (isExplicitCouplingScheme() || (isImplicitCouplingScheme() && convergence)) {
+    timeWindowCompleted();
   }
 
   if (_participantReceivesTimeWindowSize) {
