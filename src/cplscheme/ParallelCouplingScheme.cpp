@@ -87,10 +87,6 @@ std::pair<bool, bool> ParallelCouplingScheme::exchangeDataAndAccelerate()
     sendData(getM2N());
   }
 
-  if (isExplicitCouplingScheme() || (isImplicitCouplingScheme() && convergence)) {
-    timeWindowCompleted();
-  }
-
   return std::pair<bool, bool>(convergence, convergenceCoarseOptimization);
 }
 

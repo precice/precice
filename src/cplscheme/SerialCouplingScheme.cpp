@@ -136,10 +136,6 @@ std::pair<bool, bool> SerialCouplingScheme::exchangeDataAndAccelerate()
     sendData(getM2N());
   }
 
-  if (isExplicitCouplingScheme() || (isImplicitCouplingScheme() && convergence)) {
-    timeWindowCompleted();
-  }
-
   if (not doesFirstStep()) {
     // the second participant does not want new data in the last iteration of the last time window
     if (isCouplingOngoing() || (isImplicitCouplingScheme() && not convergence)) {
@@ -150,6 +146,7 @@ std::pair<bool, bool> SerialCouplingScheme::exchangeDataAndAccelerate()
       receiveData(getM2N());
     }
   }
+
   return std::pair<bool, bool>(convergence, convergenceCoarseOptimization);
 }
 

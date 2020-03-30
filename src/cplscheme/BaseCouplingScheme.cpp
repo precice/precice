@@ -271,8 +271,19 @@ void BaseCouplingScheme::advance()
 
     std::pair<bool, bool> convergenceInformation = exchangeDataAndAccelerate();
 
-    if(isImplicitCouplingScheme()) {  // check convergence
-      bool convergence = convergenceInformation.first;
+    bool convergence = convergenceInformation.first;
+
+    if (_couplingMode == Explicit || (_couplingMode == Implicit && convergence)) {
+      PRECICE_TRACE(getTimeWindows(), getTime());
+      PRECICE_INFO("Time window completed");
+      _isTimeWindowComplete = true;
+      if (isCouplingOngoing() && _couplingMode == Implicit) {
+        PRECICE_DEBUG("Setting require create checkpoint");
+        requireAction(constants::actionWriteIterationCheckpoint());
+      }
+    }
+
+    if(_couplingMode == Implicit) {  // check convergence
       bool convergenceCoarseOptimization = convergenceInformation.second;
       if (not convergence) {  // repeat window
         PRECICE_DEBUG("No convergence achieved");
@@ -835,17 +846,6 @@ void BaseCouplingScheme::updateIterations(
     _iterations                   = manifoldmapping ? 0 : 1;
   }
   _hasDataBeenExchanged = true;
-}
-
-void BaseCouplingScheme::timeWindowCompleted()
-{
-  PRECICE_TRACE(getTimeWindows(), getTime());
-  PRECICE_INFO("Time window completed");
-  _isTimeWindowComplete = true;
-  if (isCouplingOngoing() && _couplingMode == Implicit) {
-    PRECICE_DEBUG("Setting require create checkpoint");
-    requireAction(constants::actionWriteIterationCheckpoint());
-  }
 }
 
 bool BaseCouplingScheme::reachedEndOfTimeWindow()

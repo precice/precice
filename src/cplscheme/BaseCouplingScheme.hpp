@@ -227,9 +227,6 @@ protected:
     return _couplingMode == Implicit;
   }
 
-  /// Updates internal state of coupling scheme for next time window.
-  void timeWindowCompleted();
-
   /// Sets _timeWindowSize
   void setTimeWindowSize(double timeWindowSize);
 

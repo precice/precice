@@ -105,10 +105,6 @@ std::pair<bool, bool> MultiCouplingScheme::exchangeDataAndAccelerate()
     getAcceleration()->performAcceleration(getAcceleratedData());
   }
 
-  if (isExplicitCouplingScheme() || (isImplicitCouplingScheme() && convergence)) {
-    timeWindowCompleted();
-  }
-
   for (m2n::PtrM2N m2n : _communications) {
     PRECICE_ASSERT(not getIsCoarseModelOptimizationActive());
     sendConvergence(m2n, convergence);
