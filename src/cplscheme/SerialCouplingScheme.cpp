@@ -140,15 +140,12 @@ std::pair<bool, bool> SerialCouplingScheme::exchangeDataAndAccelerate()
     timeWindowCompleted();
   }
 
-  if (_participantReceivesTimeWindowSize) {
-    if (isCouplingOngoing() || (isImplicitCouplingScheme() && not convergence)) {
-      receiveAndSetTimeWindowSize();
-    }
-  }
-
   if (not doesFirstStep()) {
     // the second participant does not want new data in the last iteration of the last time window
     if (isCouplingOngoing() || (isImplicitCouplingScheme() && not convergence)) {
+      if (_participantReceivesTimeWindowSize) {
+        receiveAndSetTimeWindowSize();
+      }
       PRECICE_DEBUG("Receiving data...");
       receiveData(getM2N());
     }
