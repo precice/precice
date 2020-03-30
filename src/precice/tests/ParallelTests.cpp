@@ -195,8 +195,8 @@ BOOST_AUTO_TEST_CASE(CouplingOnLine)
   }
 }
 
-/// tests for various QN settings if correct number of iterations is returned
-void runTestQN(std::string const &config, int correctIterations, TestContext const &context)
+/// tests for different QN settings if correct fixed point is reached
+void runTestQN(std::string const &config, TestContext const &context)
 {
   std::string meshName, writeDataName, readDataName;
 
@@ -218,22 +218,22 @@ void runTestQN(std::string const &config, int correctIterations, TestContext con
 
   int vertexIDs[4];
 
+  // meshes for rank 0 and rank 1, we use matching meshes for both participants
+  double positions0[8] = {1.0, 0.0, 1.0, 0.5, 1.0, 1.0, 1.0, 1.5};
+  double positions1[8] = {2.0, 0.0, 2.0, 0.5, 2.0, 1.0, 2.0, 1.5};
+
   if (context.isNamed("SolverOne")) {
     if (context.isMaster()) {
-      double positions[8] = {2.0, 0.0, 2.0, 0.5, 2.0, 1.0, 2.5, 1.0};
-      interface.setMeshVertices(meshID, 4, positions, vertexIDs);
+      interface.setMeshVertices(meshID, 4, positions0, vertexIDs);
     } else {
-      double positions[8] = {2.0, 0.1, 2.0, 0.25, 2.0, 0.4, 2.0, 0.5};
-      interface.setMeshVertices(meshID, 4, positions, vertexIDs);
+      interface.setMeshVertices(meshID, 4, positions1, vertexIDs);
     }
   } else {
     BOOST_REQUIRE(context.isNamed("SolverTwo"));
     if (context.isMaster()) {
-      double positions[8] = {2.0, 0.6, 2.0, 0.75, 2.0, 0.9, 2.0, 1.0};
-      interface.setMeshVertices(meshID, 4, positions, vertexIDs);
+      interface.setMeshVertices(meshID, 4, positions0, vertexIDs);
     } else {
-      double positions[8] = {2.1, 1.0, 2.25, 1.0, 2.4, 1.0, 2.5, 1.0};
-      interface.setMeshVertices(meshID, 4, positions, vertexIDs);
+      interface.setMeshVertices(meshID, 4, positions1, vertexIDs);
     }
   }
 
@@ -248,60 +248,79 @@ void runTestQN(std::string const &config, int correctIterations, TestContext con
       interface.markActionFulfilled(precice::constants::actionWriteIterationCheckpoint());
     }
 
+    if (interface.isReadDataAvailable())
+      interface.readBlockScalarData(readDataID, 4, vertexIDs, inValues);
+
+    /*
+      Solves the following non-linear equations, which are extended to a fixed-point equation (simply +x)
+      2 * x_1^2 - x_2 * x_3 - 8 = 0
+      x_1^2 * x_2 + 2 * x_1 * x_2 * x_3 + x_2 * x_3^2 + x_2 = 0
+      x_3^2 - 4 = 0
+      x_4^2 - 4 = 0
+
+      Analyical solutions are (+/-2, 0, +/-2, +/-2).
+      Assumably due to the initial relaxation the iteration always converges to the solution in the negative quadrant.
+    */
+
     if (context.isNamed("SolverOne")) {
       for (int i = 0; i < 4; i++) {
-        outValues[i] = inValues[i] * inValues[i] - 30.0;
+        outValues[i] = inValues[i]; //only pushes solution through
       }
     } else {
-      for (int i = 0; i < 4; i++) {
-        outValues[i] = inValues[(i + 1) % 4] * inValues[(i + 2) % 4] - 2.0;
-      }
+      outValues[0] = 2 * inValues[0] * inValues[0] - inValues[1] * inValues[2] - 8.0 + inValues[0];
+      outValues[1] = inValues[0] * inValues[0] * inValues[1] + 2.0 * inValues[0] * inValues[1] * inValues[2] + inValues[1] * inValues[2] * inValues[2] + inValues[1];
+      outValues[2] = inValues[2] * inValues[2] - 4.0 + inValues[2];
+      outValues[3] = inValues[3] * inValues[3] - 4.0 + inValues[3];
     }
 
     interface.writeBlockScalarData(writeDataID, 4, vertexIDs, outValues);
     interface.advance(1.0);
-    interface.readBlockScalarData(readDataID, 4, vertexIDs, inValues);
 
     if (interface.isActionRequired(precice::constants::actionReadIterationCheckpoint())) {
       interface.markActionFulfilled(precice::constants::actionReadIterationCheckpoint());
-      iterations++;
     }
+    iterations++;
   }
+
   interface.finalize();
-  // Depending on the hardware and the Eigen version, QN (for this case) can be faster or slower leading to more iterations or less.
-  // QN is rather sensitive to rounding errors, similar to this specific low-dimensional fixed-point equation.
-  BOOST_TEST(iterations <= correctIterations + 10);
-  BOOST_TEST(iterations >= correctIterations - 10);
+
+  //relative residual in config is 1e-7, so 2 orders of magnitude less strict
+  BOOST_TEST(outValues[0] == -2.0, boost::test_tools::tolerance(1e-5));
+  BOOST_TEST(outValues[1] == 0.0, boost::test_tools::tolerance(1e-5));
+  BOOST_TEST(outValues[2] == -2.0, boost::test_tools::tolerance(1e-5));
+  BOOST_TEST(outValues[3] == -2.0, boost::test_tools::tolerance(1e-5));
+
+  // to exclude false or no convergence
+  BOOST_TEST(iterations <= 20);
+  BOOST_TEST(iterations >= 5);
 }
 
 BOOST_AUTO_TEST_CASE(TestQN1)
 {
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(3_ranks));
-
-  std::string config            = _pathToTests + "QN1.xml";
-  int         correctIterations = 29;
-  runTestQN(config, correctIterations, context);
+  PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(2_ranks));
+  // serial coupling, IQN-ILS, strict QR2 filter
+  std::string config = _pathToTests + "QN1.xml";
+  runTestQN(config, context);
 }
 
 BOOST_AUTO_TEST_CASE(TestQN2)
 {
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(3_ranks));
-  std::string config            = _pathToTests + "QN2.xml";
-  int         correctIterations = 17;
-  runTestQN(config, correctIterations, context);
+  PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(2_ranks));
+  // parallel coupling, IQN-ILS, strict QR2 filter
+  std::string config = _pathToTests + "QN2.xml";
+  runTestQN(config, context);
 }
 
 BOOST_AUTO_TEST_CASE(TestQN3)
 {
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(3_ranks));
-  std::string config            = _pathToTests + "QN3.xml";
-  int         correctIterations = 15;
-  runTestQN(config, correctIterations, context);
+  PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(2_ranks));
+  // serial coupling, IQN-IMVJ (which is identical to IQN-ILS as only first timestep is considered), relaxed QR2 filter
+  std::string config = _pathToTests + "QN3.xml";
+  runTestQN(config, context);
 }
 
-// This test does not restrict the communicator per participant, since otherwise MPI ports do not work for Open-MPI
 /// Tests various distributed communication schemes.
-void runTestQN(std::string const &config, TestContext const &context)
+void runTestDistributedCommunication(std::string const &config, TestContext const &context)
 {
   std::string meshName;
   int         i1 = -1, i2 = -1; //indices for data and positions
@@ -388,25 +407,25 @@ void runTestQN(std::string const &config, TestContext const &context)
   precice.finalize();
 }
 
-BOOST_AUTO_TEST_CASE(TestDistributedCommunicationsP2PSockets)
+BOOST_AUTO_TEST_CASE(TestDistributedCommunicationP2PSockets)
 {
   PRECICE_TEST("Fluid"_on(2_ranks), "Structure"_on(2_ranks));
   std::string config = _pathToTests + "point-to-point-sockets.xml";
-  runTestQN(config, context);
+  runTestDistributedCommunication(config, context);
 }
 
-BOOST_AUTO_TEST_CASE(TestDistributedCommunicationsP2PMPI)
+BOOST_AUTO_TEST_CASE(TestDistributedCommunicationP2PMPI)
 {
   PRECICE_TEST("Fluid"_on(2_ranks), "Structure"_on(2_ranks));
   std::string config = _pathToTests + "point-to-point-mpi.xml";
-  runTestQN(config, context);
+  runTestDistributedCommunication(config, context);
 }
 
-BOOST_AUTO_TEST_CASE(TestDistributedCommunicationsGatherScatterMPI)
+BOOST_AUTO_TEST_CASE(TestDistributedCommunicationGatherScatterMPI)
 {
   PRECICE_TEST("Fluid"_on(2_ranks), "Structure"_on(2_ranks));
   std::string config = _pathToTests + "gather-scatter-mpi.xml";
-  runTestQN(config, context);
+  runTestDistributedCommunication(config, context);
 }
 
 BOOST_AUTO_TEST_CASE(TestBoundingBoxInitialization)
@@ -419,7 +438,6 @@ BOOST_AUTO_TEST_CASE(TestBoundingBoxInitialization)
 
   Eigen::Vector3d position;
   Eigen::Vector3d datum;
-
 
   for (int i = 0; i < 4; i++) {
     position[0] = i * 1.0;
