@@ -636,7 +636,7 @@ bool BaseCouplingScheme::measureConvergence(
   bool oneSuffices  = false;
   PRECICE_ASSERT(_convergenceMeasures.size() > 0);
   if (not utils::MasterSlave::isSlave()) {
-    _convergenceWriter->writeData("TimeWindow", _timeWindows);
+    _convergenceWriter->writeData("TimeWindow", _timeWindows - 1);
     _convergenceWriter->writeData("Iteration", _iterations);
   }
   for (size_t i = 0; i < _convergenceMeasures.size(); i++) {
