@@ -55,7 +55,7 @@ void MPIPortsCommunication::acceptConnection(std::string const &acceptorName,
   do {
     // Connection
     MPI_Comm communicator;
-    MPI_Comm_accept(_portName.c_str(), MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
+    MPI_Comm_accept(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
     PRECICE_DEBUG("Accepted connection at " << _portName << " for peer " << peerCurrent);
 
     int requesterRank = -1;
@@ -104,7 +104,7 @@ void MPIPortsCommunication::acceptConnectionAsServer(std::string const &acceptor
 
   for (int connection = 0; connection < requesterCommunicatorSize; ++connection) {
     MPI_Comm communicator;
-    MPI_Comm_accept(_portName.c_str(), MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
+    MPI_Comm_accept(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
     PRECICE_DEBUG("Accepted connection at " << _portName);
 
     int requesterRank = -1;
@@ -132,7 +132,7 @@ void MPIPortsCommunication::requestConnection(std::string const &acceptorName,
   PRECICE_DEBUG("Request connection to " << _portName);
 
   MPI_Comm communicator;
-  MPI_Comm_connect(_portName.c_str(), MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
+  MPI_Comm_connect(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
   PRECICE_DEBUG("Requested connection to " << _portName);
 
   _isConnected = true;
@@ -167,7 +167,7 @@ void MPIPortsCommunication::requestConnectionAsClient(std::string const &  accep
     PRECICE_DEBUG("Request connection to " << _portName);
 
     MPI_Comm communicator;
-    MPI_Comm_connect(_portName.c_str(), MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
+    MPI_Comm_connect(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
     PRECICE_DEBUG("Requested connection to " << _portName);
     _communicators[acceptorRank] = communicator;
 
@@ -191,7 +191,7 @@ void MPIPortsCommunication::closeConnection()
   PRECICE_DEBUG("Disconnected");
 
   if (_isAcceptor) {
-    MPI_Close_port(_portName.c_str());
+    MPI_Close_port(const_cast<char *>(_portName.c_str()));
     PRECICE_DEBUG("Port closed");
   }
 
