@@ -4,7 +4,6 @@
 #include "acceleration/impl/SharedPointer.hpp"
 #include "acceleration/impl/ValuePreconditioner.hpp"
 #include "com/MPIDirectCommunication.hpp"
-#include "testing/Fixtures.hpp"
 #include "testing/Testing.hpp"
 
 BOOST_AUTO_TEST_SUITE(AccelerationTests)

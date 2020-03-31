@@ -20,7 +20,6 @@
 #include "utils/MasterSlave.hpp"
 #include "utils/Parallel.hpp"
 
-#include "testing/Fixtures.hpp"
 #include "testing/Testing.hpp"
 
 using namespace precice;

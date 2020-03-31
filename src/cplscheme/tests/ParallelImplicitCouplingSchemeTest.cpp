@@ -27,7 +27,6 @@
 #include "utils/EigenHelperFunctions.hpp"
 #include "xml/XMLTag.hpp"
 
-#include "testing/Fixtures.hpp"
 #include "testing/Testing.hpp"
 
 using namespace precice;

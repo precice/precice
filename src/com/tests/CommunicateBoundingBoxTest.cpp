@@ -1,7 +1,6 @@
 #ifndef PRECICE_NO_MPI
 #include "com/CommunicateBoundingBox.hpp"
 #include "mesh/Mesh.hpp"
-#include "testing/Fixtures.hpp"
 #include "testing/Testing.hpp"
 #include "utils/Parallel.hpp"
 
