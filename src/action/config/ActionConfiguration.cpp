@@ -47,6 +47,7 @@ ActionConfiguration::ActionConfiguration(
 
   auto attrName = XMLAttribute<std::string>(ATTR_NAME).setDocumentation("Name of data.");
   tagSourceData.addAttribute(attrName);
+  tagMultipleSourceData.addAttribute(attrName);
   tagTargetData.addAttribute(attrName);
 
   std::list<XMLTag>  tags;
