@@ -32,9 +32,12 @@ void SummationAction::performAction(
 {
 	PRECICE_TRACE();
 	auto & targetValues = _targetData->values();
-	for(const auto & source : _sourceData){
-		targetValues += source->values();
+	auto sum = _sourceData.at(0)->values();
+
+	for(int i = 1; i < _sourceData.size(); ++i){
+		sum += _sourceData.at(i)->values();
 	}
+	targetValues = sum;
 }
 
 }
