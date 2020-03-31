@@ -143,9 +143,9 @@ void ProvidedPartition::prepare()
         }
         for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
           // This always creates an entry for each slave
-          auto & remoteIds = _mesh->getVertexDistribution()[rankSlave];
+          auto & slaveIds = _mesh->getVertexDistribution()[rankSlave];
           for (int i = _mesh->getVertexOffsets()[rankSlave - 1]; i < _mesh->getVertexOffsets()[rankSlave]; i++) {
-            remoteIds.push_back(i);
+            slaveIds.push_back(i);
           }
         }
         PRECICE_ASSERT(_mesh->getVertexDistribution().size() == static_cast<std::size_t>(utils::MasterSlave::getSize()));
