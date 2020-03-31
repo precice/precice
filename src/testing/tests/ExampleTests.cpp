@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE(NamedContexts)
 /// Tests that requires an m2n communication
 /*
  * For some master tests, you might need an m2n communication (e.g. partition or cplscheme).
- * This example shows how to set up one. Call .connect() on the context and pass the participants to be connected.
+ * This example shows how to set up one. Call .connectMaster() on the context and pass the participants to be connected.
  * M2N requires Events, thus you also need to list it as a requirement using Require::Events.
  * Please note: Such tests always need to be excluded for compilation without MPI (PRECICE_NO_MPI).
  */
@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(TwoProcTestsWithM2NCommunication)
   BOOST_TEST(context.isRank(0));
   BOOST_TEST(context.isMaster());
 
-  auto m2n = context.connect("A", "B");
+  auto m2n = context.connectMasters("A", "B");
 
   //This is how you can access the m2n communication
   BOOST_TEST(m2n->getMasterCommunication()->isConnected());

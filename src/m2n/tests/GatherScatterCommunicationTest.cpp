@@ -19,7 +19,7 @@ using namespace m2n;
 BOOST_AUTO_TEST_CASE(GatherScatterTest)
 {
   PRECICE_TEST("Part1"_on(1_rank), "Part2"_on(3_ranks).setupMasterSlaves(), Require::Events);
-  auto m2n = context.connect("Part1", "Part2");
+  auto m2n = context.connectMasters("Part1", "Part2");
 
   int             dimensions       = 2;
   int             numberOfVertices = 6;

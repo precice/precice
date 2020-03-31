@@ -19,7 +19,7 @@ BOOST_AUTO_TEST_SUITE(MeshTests)
 BOOST_AUTO_TEST_CASE(VertexEdgeMesh)
 {
   PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank), Require::Events);
-  auto m2n = context.connect("A", "B");
+  auto m2n = context.connectMasters("A", "B");
 
   for (int dim = 2; dim <= 3; dim++) {
     mesh::Mesh    sendMesh("Sent Mesh", dim, false, testing::nextMeshID());
@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(VertexEdgeMesh)
 BOOST_AUTO_TEST_CASE(VertexEdgeTriangleMesh)
 {
   PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank), Require::Events);
-  auto m2n = context.connect("A", "B");
+  auto m2n = context.connectMasters("A", "B");
 
   int             dim = 3;
   mesh::Mesh      sendMesh("Sent Mesh", dim, false, testing::nextMeshID());

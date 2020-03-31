@@ -27,7 +27,7 @@ void tearDownParallelEnvironment()
 BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate2D)
 {
   PRECICE_TEST("NASTIN"_on(1_rank), "SOLIDZ"_on(3_ranks).setupMasterSlaves(), Require::Events);
-  auto m2n = context.connect("NASTIN", "SOLIDZ");
+  auto m2n = context.connectMasters("NASTIN", "SOLIDZ");
 
   int  dimensions  = 2;
   bool flipNormals = false;
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate2D)
 BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate3D)
 {
   PRECICE_TEST("NASTIN"_on(1_rank), "SOLIDZ"_on(3_ranks).setupMasterSlaves(), Require::Events);
-  auto m2n                 = context.connect("NASTIN", "SOLIDZ");
+  auto m2n                 = context.connectMasters("NASTIN", "SOLIDZ");
 
   int  dimensions  = 3;
   bool flipNormals = false;
@@ -299,7 +299,7 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
   testing::ConnectionOptions options;
   options.useOnlyMasterCom = false;
   options.useTwoLevelInit  = true;
-  auto m2n                 = context.connect("NASTIN", "SOLIDZ", options);
+  auto m2n                 = context.connectMasters("NASTIN", "SOLIDZ", options);
 
   int  dimensions  = 2;
   bool flipNormals = true;
@@ -417,7 +417,7 @@ BOOST_AUTO_TEST_CASE(TestSendBoundingBoxes3D)
   testing::ConnectionOptions options;
   options.useOnlyMasterCom = false;
   options.useTwoLevelInit  = true;
-  auto m2n                 = context.connect("NASTIN", "SOLIDZ", options);
+  auto m2n                 = context.connectMasters("NASTIN", "SOLIDZ", options);
 
   int  dimensions  = 3;
   bool flipNormals = true;
@@ -524,7 +524,7 @@ BOOST_AUTO_TEST_CASE(TestCommunicateLocalMeshPartitions)
   options.useOnlyMasterCom = false;
   options.useTwoLevelInit  = true;
   options.type             = testing::ConnectionType::PointToPoint;
-  auto m2n                 = context.connect("Fluid", "Solid", options);
+  auto m2n                 = context.connectMasters("Fluid", "Solid", options);
 
   if (context.isNamed("Solid")) {
     if (context.isMaster()) {
@@ -626,7 +626,7 @@ BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning2D)
   options.useOnlyMasterCom = false;
   options.useTwoLevelInit  = true;
   options.type             = testing::ConnectionType::PointToPoint;
-  auto m2n                 = context.connect("Fluid", "Solid", options);
+  auto m2n                 = context.connectMasters("Fluid", "Solid", options);
 
   if (context.isNamed("Solid")) {
     if (context.isMaster()) {
@@ -769,7 +769,7 @@ BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning3D)
   options.useOnlyMasterCom = false;
   options.useTwoLevelInit  = true;
   options.type             = testing::ConnectionType::PointToPoint;
-  auto m2n                 = context.connect("Fluid", "Solid", options);
+  auto m2n                 = context.connectMasters("Fluid", "Solid", options);
 
   if (context.isNamed("Solid")) {
     if (context.isMaster()) {
