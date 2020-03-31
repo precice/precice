@@ -28,12 +28,15 @@ void SummationAction::performAction(
 {
   PRECICE_TRACE();
   auto &targetValues = _targetData->values();
-  auto  sum          = _sourceDataVector.at(0)->values();
+  targetValues.setZero();
 
-  for (int i = 1; i < _sourceDataVector.size(); ++i) {
-    sum += _sourceDataVector.at(i)->values();
+  for(const auto& sourceData : _sourceDataVector){
+    auto sourceValues = sourceData->values();
+    for(int i = 0; i < targetValues.size(); ++i){
+      targetValues[i] += sourceValues[i];
+    }
   }
-  targetValues = sum;
+  
 }
 
 } // namespace action
