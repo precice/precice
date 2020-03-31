@@ -3,7 +3,6 @@
 #include "MPIPortsCommunication.hpp"
 #include <boost/filesystem.hpp>
 #include "ConnectionInfoPublisher.hpp"
-#include "utils/Parallel.hpp" //TODO remove
 #include "utils/assertion.hpp"
 
 namespace precice {
