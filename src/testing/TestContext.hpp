@@ -40,7 +40,7 @@ inline constexpr Ranks operator""_rank(unsigned long long value)
 
 /// Represents a Partiticipant in a test
 struct Participant {
-  /// the name of the pariticipant
+  /// the name of the participant
   std::string name;
 
   /// the amount of ranks this participant runs on
@@ -49,11 +49,11 @@ struct Participant {
   /// wheather to initialize a master-slave communication for this participant
   bool        initMS = false;
 
-  /// Constructs a serial pariticipant with a given name
+  /// Constructs a serial participant with a given name
   explicit Participant(std::string n)
       : name(std::move(n)){};
 
-  /** Injects the amount of ranks this pariticipant should run on.
+  /** Injects the amount of ranks this participant should run on.
    *
    * This call operator allows to write `"Fluid"_on(3_ranks)`
    *
@@ -149,13 +149,13 @@ class TestContext {
 public:
   using Participants = std::vector<Participant>;
 
-  /// the name of the current Pariticipant
+  /// the name of the current participant
   std::string name;
 
-  /// the rank of the current Pariticipant
+  /// the rank of the current participant
   int         rank    = 0;
 
-  /// the size of the Communicator of the current Pariticipant
+  /// the size of the Communicator of the current participant
   int         size    = 1;
 
   /// wheather this context is valid or not
@@ -237,8 +237,8 @@ public:
   bool isMaster() const;
 
   /** Creates a M2N and establishes a master-master connection between participants
-   * @param[in] acceptor the accepting Pariticipant
-   * @param[in] requestor the requesting Pariticipant
+   * @param[in] acceptor the accepting participant
+   * @param[in] requestor the requesting participant
    * @param[in] options a set of options concerning the created connection
    * 
    * @note This function throws if the acceptor or requestor are unknown!
@@ -267,7 +267,7 @@ private:
   /// the MPI communicator of the context
   utils::Parallel::CommStatePtr _contextComm;
 
-  /// contains the name of every known Pariticipant
+  /// contains the name of every known Participant
   std::vector<std::string> _names;
 
   /// @{
