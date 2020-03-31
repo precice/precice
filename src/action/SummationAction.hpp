@@ -5,13 +5,6 @@
 #include "mesh/SharedPointer.hpp"
 
 namespace precice {
-namespace mesh {
-class Edge;
-class Triangle;
-} // namespace mesh
-} // namespace precice
-
-namespace precice {
 namespace action {
 
 /// Action that adds multiple source data into target data
