@@ -40,7 +40,7 @@ ActionConfiguration::ActionConfiguration(
   std::string doc;
   XMLTag      tagSourceData(*this, TAG_SOURCE_DATA, XMLTag::OCCUR_ONCE);
   tagSourceData.setDocumentation("Single data to read from. ");
-  XMLTag      tagMultipleSourceData(*this, TAG_SOURCE_DATA, XMLTag::OCCUR_ONCE_OR_MORE);
+  XMLTag tagMultipleSourceData(*this, TAG_SOURCE_DATA, XMLTag::OCCUR_ONCE_OR_MORE);
   tagSourceData.setDocumentation("Multiple data to read from.");
   XMLTag tagTargetData(*this, TAG_TARGET_DATA, XMLTag::OCCUR_ONCE);
   tagTargetData.setDocumentation("Data to read from and write to.");
@@ -212,13 +212,13 @@ void ActionConfiguration::createAction()
   action::Action::Timing timing = getTiming();
 
   // Determine data and mesh
-  std::vector<int>  sourceDataID;
-  int               targetDataID = -1;
-  mesh::PtrMesh mesh;
+  std::vector<int> sourceDataID;
+  int              targetDataID = -1;
+  mesh::PtrMesh    mesh;
   for (mesh::PtrMesh aMesh : _meshConfig->meshes()) {
     if (aMesh->getName() == _configuredAction.mesh) {
       mesh = aMesh;
-      for(const mesh::PtrData &data : mesh->data()){
+      for (const mesh::PtrData &data : mesh->data()) {
         if (data->getName() == _configuredAction.sourceData) {
           sourceDataID.push_back(data->getID());
         }
@@ -256,7 +256,7 @@ void ActionConfiguration::createAction()
         new action::ScaleByAreaAction(timing, targetDataID,
                                       mesh, action::ScaleByAreaAction::SCALING_DIVIDE_BY_AREA));
   } else if (_configuredAction.type == NAME_SCALE_BY_COMPUTED_DT_RATIO) {
-   action = action::PtrAction(
+    action = action::PtrAction(
         new action::ScaleByDtAction(timing, sourceDataID.back(), targetDataID,
                                     mesh, action::ScaleByDtAction::SCALING_BY_COMPUTED_DT_RATIO));
   } else if (_configuredAction.type == NAME_SCALE_BY_COMPUTED_DT_PART_RATIO) {
@@ -271,7 +271,7 @@ void ActionConfiguration::createAction()
     action = action::PtrAction(
         new action::ComputeCurvatureAction(timing, targetDataID,
                                            mesh));
-  } else if(_configuredAction.type == NAME_SUMMATION) {
+  } else if (_configuredAction.type == NAME_SUMMATION) {
     action = action::PtrAction(
         new action::SummationAction(timing, sourceDataID, targetDataID, mesh));
   }

@@ -1,44 +1,40 @@
 #include "SummationAction.hpp"
-#include "mesh/Data.hpp"
-#include "mesh/Edge.hpp"
-#include "mesh/Mesh.hpp"
 
 namespace precice {
-namespace action{
+namespace action {
 
 SummationAction::SummationAction(
-	Timing				timing,
-	std::vector<int>	sourceDataID,
-	int					targetDataID,
-	const mesh::PtrMesh	&mesh)
-	: Action(timing, mesh, mapping::Mapping::MeshRequirement::VERTEX), _targetData(mesh->data(targetDataID))
+    Timing               timing,
+    std::vector<int>     sourceDataIDs,
+    int                  targetDataID,
+    const mesh::PtrMesh &mesh)
+    : Action(timing, mesh, mapping::Mapping::MeshRequirement::VERTEX), _targetData(mesh->data(targetDataID))
 {
 
-	for(auto sourceID : sourceDataID){
-		_sourceData.push_back(mesh->data(sourceID));
-	}
+  for (int sourceID : sourceDataIDs) {
+    _sourceDataVector.push_back(mesh->data(sourceID));
+  }
 
-	for(const auto & source : _sourceData) {
-		PRECICE_ASSERT(source->getDimensions() == _targetData->getDimensions(), source->getDimensions(), _targetData->getDimensions());
-	}
-
+  for (const auto &source : _sourceDataVector) {
+    PRECICE_CHECK(source->getDimensions() == _targetData->getDimensions(), "Source and target data dimensions should be same for summation action.");
+  }
 }
 
 void SummationAction::performAction(
-	double time,
-	double dt,
-	double computedPartFullDt,
-	double fullDt)
+    double time,
+    double dt,
+    double computedPartFullDt,
+    double fullDt)
 {
-	PRECICE_TRACE();
-	auto & targetValues = _targetData->values();
-	auto sum = _sourceData.at(0)->values();
+  PRECICE_TRACE();
+  auto &targetValues = _targetData->values();
+  auto  sum          = _sourceDataVector.at(0)->values();
 
-	for(int i = 1; i < _sourceData.size(); ++i){
-		sum += _sourceData.at(i)->values();
-	}
-	targetValues = sum;
+  for (int i = 1; i < _sourceDataVector.size(); ++i) {
+    sum += _sourceDataVector.at(i)->values();
+  }
+  targetValues = sum;
 }
 
-}
-}
+} // namespace action
+} // namespace precice
