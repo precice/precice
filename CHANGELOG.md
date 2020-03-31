@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file. For future plans, see our [Roadmap](https://github.com/precice/precice/wiki/Roadmap).
 
-
+- Change the CMake FindNumPy module to only consider information based on the selected python interpreter.
 - Implemented a new action to sum up data values, `action:summation`.
 
 ## 2.0.2
