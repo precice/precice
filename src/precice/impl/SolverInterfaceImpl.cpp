@@ -1416,20 +1416,9 @@ void SolverInterfaceImpl::initializeMasterSlaveCommunication()
   PRECICE_TRACE();
 
   Event e("com.initializeMasterSlaveCom", precice::syncMode);
-  //slaves create new communicator with ranks 0 to size-2
-  //therefore, the master uses a rankOffset and the slaves have to call request
-  // with that offset
-  int rankOffset = 1;
-  if (utils::MasterSlave::isMaster()) {
-    PRECICE_INFO("Setting up communication to slaves");
-    utils::MasterSlave::_communication->prepareEstablishment(_accessorName + "Master", _accessorName);
-    utils::MasterSlave::_communication->acceptConnection(_accessorName + "Master", _accessorName, "MasterSlave", utils::MasterSlave::getRank(), rankOffset);
-    utils::MasterSlave::_communication->cleanupEstablishment(_accessorName + "Master", _accessorName);
-  } else {
-    PRECICE_ASSERT(utils::MasterSlave::isSlave());
-    utils::MasterSlave::_communication->requestConnection(_accessorName + "Master", _accessorName, "MasterSlave",
-                                                          _accessorProcessRank - rankOffset, _accessorCommunicatorSize - rankOffset);
-  }
+  utils::MasterSlave::_communication->connectMasterSlaves(
+      _accessorName, "MasterSlaves",
+      _accessorProcessRank, _accessorCommunicatorSize);
 }
 
 void SolverInterfaceImpl::syncTimestep(double computedTimestepLength)
