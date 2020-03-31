@@ -28,6 +28,9 @@ void SummationAction::performAction(
 {
   PRECICE_TRACE();
   auto &targetValues = _targetData->values();
+  
+  targetValues +=
+  
   targetValues.setZero();
 
   for(const auto& sourceData : _sourceDataVector){
@@ -36,7 +39,7 @@ void SummationAction::performAction(
       targetValues[i] += sourceValues[i];
     }
   }
-  
+
 }
 
 } // namespace action

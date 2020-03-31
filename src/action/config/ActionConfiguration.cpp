@@ -95,7 +95,7 @@ ActionConfiguration::ActionConfiguration(
   }
   {
     XMLTag tag(*this, NAME_SUMMATION, occ, TAG);
-    doc = "Sums the multiple source data values and writes the result into ";
+    doc = "Sums up multiple source data values and writes the result into ";
     doc += "target data.";
     tag.setDocumentation(doc);
     tag.addSubtag(tagMultipleSourceData);
@@ -212,7 +212,7 @@ void ActionConfiguration::createAction()
   action::Action::Timing timing = getTiming();
 
   // Determine data and mesh
-  std::vector<int> sourceDataID;
+  std::vector<int> sourceDataIDs;
   int              targetDataID = -1;
   mesh::PtrMesh    mesh;
   for (mesh::PtrMesh aMesh : _meshConfig->meshes()) {
@@ -220,7 +220,7 @@ void ActionConfiguration::createAction()
       mesh = aMesh;
       for (const mesh::PtrData &data : mesh->data()) {
         if (data->getName() == _configuredAction.sourceData) {
-          sourceDataID.push_back(data->getID());
+          sourceDataIDs.push_back(data->getID());
         }
         if (data->getName() == _configuredAction.targetData) {
           targetDataID = data->getID();
@@ -234,7 +234,7 @@ void ActionConfiguration::createAction()
            << "\" which is not configured";
     throw std::runtime_error{stream.str()};
   }
-  if ((not _configuredAction.sourceData.empty()) && (sourceDataID.empty())) {
+  if ((not _configuredAction.sourceData.empty()) && (sourceDataIDs.empty())) {
     std::ostringstream stream;
     stream << "Data action uses source data \"" << _configuredAction.sourceData
            << "\" which is not configured";
@@ -257,15 +257,15 @@ void ActionConfiguration::createAction()
                                       mesh, action::ScaleByAreaAction::SCALING_DIVIDE_BY_AREA));
   } else if (_configuredAction.type == NAME_SCALE_BY_COMPUTED_DT_RATIO) {
     action = action::PtrAction(
-        new action::ScaleByDtAction(timing, sourceDataID.back(), targetDataID,
+        new action::ScaleByDtAction(timing, sourceDataIDs.back(), targetDataID,
                                     mesh, action::ScaleByDtAction::SCALING_BY_COMPUTED_DT_RATIO));
   } else if (_configuredAction.type == NAME_SCALE_BY_COMPUTED_DT_PART_RATIO) {
     action = action::PtrAction(
-        new action::ScaleByDtAction(timing, sourceDataID.back(), targetDataID,
+        new action::ScaleByDtAction(timing, sourceDataIDs.back(), targetDataID,
                                     mesh, action::ScaleByDtAction::SCALING_BY_COMPUTED_DT_PART_RATIO));
   } else if (_configuredAction.type == NAME_SCALE_BY_DT) {
     action = action::PtrAction(
-        new action::ScaleByDtAction(timing, sourceDataID.back(), targetDataID,
+        new action::ScaleByDtAction(timing, sourceDataIDs.back(), targetDataID,
                                     mesh, action::ScaleByDtAction::SCALING_BY_DT));
   } else if (_configuredAction.type == NAME_COMPUTE_CURVATURE) {
     action = action::PtrAction(
@@ -273,13 +273,13 @@ void ActionConfiguration::createAction()
                                            mesh));
   } else if (_configuredAction.type == NAME_SUMMATION) {
     action = action::PtrAction(
-        new action::SummationAction(timing, sourceDataID, targetDataID, mesh));
+        new action::SummationAction(timing, sourceDataIDs, targetDataID, mesh));
   }
 #ifndef PRECICE_NO_PYTHON
   else if (_configuredAction.type == NAME_PYTHON) {
     action = action::PtrAction(
         new action::PythonAction(timing, _configuredAction.path, _configuredAction.module,
-                                 mesh, targetDataID, sourceDataID.back()));
+                                 mesh, targetDataID, sourceDataIDs.back()));
   }
 #endif
   PRECICE_ASSERT(action.get() != nullptr);
