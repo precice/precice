@@ -11,6 +11,10 @@ mark_as_advanced(PRECICE_TEST_DIR)
 # Solverdummies will be build in $PRECICE_SOLVERDUMMY_DIR/LANG
 set(PRECICE_SOLVERDUMMY_DIR "${preCICE_BINARY_DIR}/Solverdummies")
 
+include(CheckLanguage)
+check_language(C)
+check_language(Fortran)
+
 function(add_precice_test)
   cmake_parse_arguments(PARSE_ARGV 0 PAT "PETSC;CANFAIL" "NAME;ARGUMENTS;TIMEOUT;LABELS" "")
   # Check arguments
@@ -62,14 +66,27 @@ function(add_precice_test_build_solverdummy PAT_LANG)
     message(FATAL_ERROR "There is no solverdummy for language \"${PAT_LANG}\"")
   endif()
 
+  # We always prefix our tests
+  set(PAT_FULL_NAME "precice.solverdummy.build.${PAT_LANG}")
+
+  # Make sure the required compiler is available
+  if(PAT_LANG STREQUAL "fortran")
+    if(NOT CMAKE_Fortran_COMPILER)
+      message(STATUS "Test ${PAT_FULL_NAME} - skipped")
+      return()
+    endif()
+  elseif(_lang STREQUAL "c")
+    if(NOT CMAKE_C_COMPILER)
+      message(STATUS "Test ${PAT_FULL_NAME} - skipped")
+      return()
+    endif()
+  endif()
+
   # Generate build directory
   set(PAT_BIN_DIR "${PRECICE_SOLVERDUMMY_DIR}/${PAT_LANG}")
   file(MAKE_DIRECTORY "${PAT_BIN_DIR}")
 
-
-  # We always prefix our tests
-  set(PAT_FULL_NAME "precice.solverdummy.build.${PAT_LANG}")
-
+  # Add the actual test
   message(STATUS "Test ${PAT_FULL_NAME}")
   add_test(NAME ${PAT_FULL_NAME}
     COMMAND ${CMAKE_CTEST_COMMAND}
@@ -77,6 +94,7 @@ function(add_precice_test_build_solverdummy PAT_LANG)
     --build-generator ${CMAKE_GENERATOR}
     --build-options -Dprecice_DIR=${preCICE_BINARY_DIR}
     )
+
   # Setting properties
   set_tests_properties(${PAT_FULL_NAME}
     PROPERTIES
@@ -92,6 +110,25 @@ function(add_precice_test_run_solverdummies PAT_LANG_A PAT_LANG_B)
   # Turn languages to lowercase
   string(TOLOWER ${PAT_LANG_A} PAT_LANG_A)
   string(TOLOWER ${PAT_LANG_B} PAT_LANG_B)
+
+  # We always prefix our tests
+  set(PAT_NAME "solverdummy.run.${PAT_LANG_A}-${PAT_LANG_B}")
+  set(PAT_FULL_NAME "precice.${PAT_NAME}")
+
+  # Make sure all required compilers are available
+  foreach(_lang IN ITEMS ${PAT_LANG_A} ${PAT_LANG_B})
+    if(_lang STREQUAL "fortran")
+      if(NOT CMAKE_Fortran_COMPILER)
+        message(STATUS "Test ${PAT_FULL_NAME} - skipped")
+        return()
+      endif()
+    elseif(_lang STREQUAL "c")
+      if(NOT CMAKE_C_COMPILER)
+        message(STATUS "Test ${PAT_FULL_NAME} - skipped")
+        return()
+      endif()
+    endif()
+  endforeach()
 
   # Locate the solverdummy config
   set(PAT_CONFIG "${preCICE_SOURCE_DIR}/examples/solverdummies/precice-config.xml")
@@ -111,14 +148,11 @@ function(add_precice_test_run_solverdummies PAT_LANG_A PAT_LANG_B)
     message(FATAL_ERROR "There is no configured solverdummy for language ${PAT_LANG_B}!")
   endif()
 
-  # We always prefix our tests
-  set(PAT_NAME "solverdummy.run.${PAT_LANG_A}-${PAT_LANG_B}")
-  set(PAT_FULL_NAME "precice.${PAT_NAME}")
-
   # Generate run directory
   set(PAT_RUN_DIR "${PRECICE_TEST_DIR}/${PAT_NAME}")
   file(MAKE_DIRECTORY "${PAT_RUN_DIR}")
 
+  # Add the actual test
   message(STATUS "Test ${PAT_FULL_NAME}")
   add_test(NAME ${PAT_FULL_NAME}
     COMMAND ${CMAKE_COMMAND}
@@ -128,6 +162,7 @@ function(add_precice_test_run_solverdummies PAT_LANG_A PAT_LANG_B)
     -D DUMMY_CONFIG=${PAT_CONFIG}
     -P ${preCICE_SOURCE_DIR}/cmake/runsolverdummies.cmake
     )
+
   # Setting properties
   set_tests_properties(${PAT_FULL_NAME}
     PROPERTIES
