@@ -76,13 +76,13 @@ void MPIDirectCommunication::reduceSum(double const *itemsToSend, double *itemsT
 {
   PRECICE_TRACE(size);
   int rank = _commState->rank();
-  MPI_Reduce(itemsToSend, itemsToReceive, size, MPI_DOUBLE, MPI_SUM, rank, _commState->comm);
+  MPI_Reduce(const_cast<double *>(itemsToSend), itemsToReceive, size, MPI_DOUBLE, MPI_SUM, rank, _commState->comm);
 }
 
 void MPIDirectCommunication::reduceSum(double const *itemsToSend, double *itemsToReceive, int size, int rankMaster)
 {
   PRECICE_TRACE(size);
-  MPI_Reduce(itemsToSend, itemsToReceive, size, MPI_DOUBLE, MPI_SUM, rankMaster, _commState->comm);
+  MPI_Reduce(const_cast<double *>(itemsToSend), itemsToReceive, size, MPI_DOUBLE, MPI_SUM, rankMaster, _commState->comm);
 }
 
 void MPIDirectCommunication::reduceSum(int itemToSend, int &itemsToReceive)
@@ -101,13 +101,13 @@ void MPIDirectCommunication::reduceSum(int itemToSend, int &itemsToReceive, int 
 void MPIDirectCommunication::allreduceSum(double const *itemsToSend, double *itemsToReceive, int size)
 {
   PRECICE_TRACE(size);
-  MPI_Allreduce(itemsToSend, itemsToReceive, size, MPI_DOUBLE, MPI_SUM, _commState->comm);
+  MPI_Allreduce(const_cast<double *>(itemsToSend), itemsToReceive, size, MPI_DOUBLE, MPI_SUM, _commState->comm);
 }
 
 void MPIDirectCommunication::allreduceSum(double const *itemsToSend, double *itemsToReceive, int size, int rankMaster)
 {
   PRECICE_TRACE(size);
-  MPI_Allreduce(itemsToSend, itemsToReceive, size, MPI_DOUBLE, MPI_SUM, _commState->comm);
+  MPI_Allreduce(const_cast<double *>(itemsToSend), itemsToReceive, size, MPI_DOUBLE, MPI_SUM, _commState->comm);
 }
 
 void MPIDirectCommunication::allreduceSum(double itemToSend, double &itemToReceive)
