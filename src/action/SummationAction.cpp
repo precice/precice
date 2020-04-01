@@ -16,7 +16,7 @@ SummationAction::SummationAction(
   }
 
   for (const auto &source : _sourceDataVector) {
-    PRECICE_CHECK(source->getDimensions() == _targetData->getDimensions(), "Source and target data dimensions should be same for summation action.");
+    PRECICE_CHECK(source->getDimensions() == _targetData->getDimensions(), "Source and target data dimensions (scalar or vector) of summation action need to be identical.");
   }
 }
 
@@ -27,11 +27,9 @@ void SummationAction::performAction(
     double fullDt)
 {
   PRECICE_TRACE();
+  
   auto &targetValues = _targetData->values();
-
-  targetValues +=
-
-      targetValues.setZero();
+  targetValues.setZero();
 
   for (const auto &sourceData : _sourceDataVector) {
     auto sourceValues = sourceData->values();
