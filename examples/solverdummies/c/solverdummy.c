@@ -15,7 +15,11 @@ int main(int argc, char **argv)
   int     vertexID = -1;
 
   if (argc != 4) {
-    printf("Usage: ./exec precice-config participant-name mesh-name \n");
+    printf("Usage: ./solverdummy configFile solverName meshName\n\n");
+    printf("Parameter description\n");
+    printf("  configurationFile: Path and filename of preCICE configuration\n");
+    printf("  solverName:        SolverDummy participant name in preCICE configuration\n");
+    printf("  meshName:          Mesh in preCICE configuration that carries read and write data\n");
     return 1;
   }
 
