@@ -28,7 +28,7 @@ BOOST_AUTO_TEST_CASE(SendAndReceiveBoundingBox)
     if (context.isNamed("A")) {
       comBB.sendBoundingBox(bb, 0);
     } else {
-      BOOST_TEST (context.isNamed("B"));
+      BOOST_TEST(context.isNamed("B"));
       mesh::Mesh::BoundingBox bbCompare;
       for (int i = 0; i < dim; i++) {
         bbCompare.push_back(std::make_pair(-1, -1));

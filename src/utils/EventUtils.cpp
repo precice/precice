@@ -355,7 +355,8 @@ void EventRegistry::writeJSON(std::ostream &out) const
   using json = nlohmann::json;
   using namespace std::chrono;
 
-  if (globalRankData.empty()) return;
+  if (globalRankData.empty())
+    return;
 
   json js;
 

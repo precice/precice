@@ -2,8 +2,8 @@
 
 #include <boost/test/unit_test.hpp>
 #include "math/math.hpp"
-#include "utils/ManageUniqueIDs.hpp"
 #include "testing/TestContext.hpp"
+#include "utils/ManageUniqueIDs.hpp"
 #include "utils/MasterSlave.hpp"
 
 namespace precice {

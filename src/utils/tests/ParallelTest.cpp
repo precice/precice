@@ -1,7 +1,7 @@
 #include <string>
+#include "com/Communication.hpp"
 #include "testing/Testing.hpp"
 #include "utils/Parallel.hpp"
-#include "com/Communication.hpp"
 
 using namespace precice;
 
@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(Master1SlaveTest)
   PRECICE_TEST(""_on(2_ranks).setupMasterSlaves());
 
   BOOST_TEST(context.hasSize(2));
-  auto& com = precice::utils::MasterSlave::_communication;
+  auto &com = precice::utils::MasterSlave::_communication;
   BOOST_TEST((com != nullptr));
 
   if (context.isMaster()) {
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(Master2SlaveTest)
   PRECICE_TEST(""_on(3_ranks).setupMasterSlaves());
 
   BOOST_TEST(context.hasSize(3));
-  auto& com = precice::utils::MasterSlave::_communication;
+  auto &com = precice::utils::MasterSlave::_communication;
   BOOST_TEST((com != nullptr));
 
   if (context.isMaster()) {
@@ -120,10 +120,11 @@ BOOST_AUTO_TEST_CASE(OffsetMaster1SlaveTest)
 {
   PRECICE_TEST("Offset"_on(1_rank), "Test"_on(2_ranks).setupMasterSlaves());
 
-  if (context.isNamed("Offset")) return;
+  if (context.isNamed("Offset"))
+    return;
 
   BOOST_TEST(context.hasSize(2));
-  auto& com = precice::utils::MasterSlave::_communication;
+  auto &com = precice::utils::MasterSlave::_communication;
   BOOST_TEST((com != nullptr));
 
   if (context.isMaster()) {
@@ -148,10 +149,11 @@ BOOST_AUTO_TEST_CASE(OffsetMaster2SlaveTest)
 {
   PRECICE_TEST("Offset"_on(1_rank), "Test"_on(3_ranks).setupMasterSlaves());
 
-  if (context.isNamed("Offset")) return;
+  if (context.isNamed("Offset"))
+    return;
 
   BOOST_TEST(context.hasSize(3));
-  auto& com = precice::utils::MasterSlave::_communication;
+  auto &com = precice::utils::MasterSlave::_communication;
   BOOST_TEST((com != nullptr));
 
   if (context.isMaster()) {

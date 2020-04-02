@@ -137,13 +137,13 @@ void ProvidedPartition::prepare()
     if (std::any_of(_m2ns.begin(), _m2ns.end(), [](const m2n::PtrM2N &m2n) { return not m2n->usesTwoLevelInitialization(); })) {
       if (utils::MasterSlave::isMaster()) {
         PRECICE_DEBUG("Fill vertex distribution");
-        auto & localIds = _mesh->getVertexDistribution()[0];
+        auto &localIds = _mesh->getVertexDistribution()[0];
         for (int i = 0; i < _mesh->getVertexOffsets()[0]; i++) {
           localIds.push_back(i);
         }
         for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
           // This always creates an entry for each slave
-          auto & slaveIds = _mesh->getVertexDistribution()[rankSlave];
+          auto &slaveIds = _mesh->getVertexDistribution()[rankSlave];
           for (int i = _mesh->getVertexOffsets()[rankSlave - 1]; i < _mesh->getVertexOffsets()[rankSlave]; i++) {
             slaveIds.push_back(i);
           }

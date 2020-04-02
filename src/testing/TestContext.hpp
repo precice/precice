@@ -44,10 +44,10 @@ struct Participant {
   std::string name;
 
   /// the amount of ranks this participant runs on
-  int         size   = 1;
+  int size = 1;
 
   /// wheather to initialize a master-slave communication for this participant
-  bool        initMS = false;
+  bool initMS = false;
 
   /// Constructs a serial participant with a given name
   explicit Participant(std::string n)
@@ -114,22 +114,22 @@ enum struct ConnectionType {
  * @see M2N::M2N()
  */
 struct ConnectionOptions {
-  ConnectionOptions()             = default;
+  ConnectionOptions() = default;
 
   /** Wheather to use only the Master-Master connection
    * @see M2N::M2N()
    */
-  bool           useOnlyMasterCom = false;
+  bool useOnlyMasterCom = false;
 
   /** Wheather to enable the two-level initialization
    * @see M2N::M2N()
    */
-  bool           useTwoLevelInit  = false;
+  bool useTwoLevelInit = false;
 
   /** The type of \ref DistributedCommunication to create
    * @see M2N::M2N()Q
    */
-  ConnectionType type             = ConnectionType::GatherScatter;
+  ConnectionType type = ConnectionType::GatherScatter;
 };
 
 /** Type representing the context of a test.
@@ -153,13 +153,13 @@ public:
   std::string name;
 
   /// the rank of the current participant
-  int         rank    = 0;
+  int rank = 0;
 
   /// the size of the Communicator of the current participant
-  int         size    = 1;
+  int size = 1;
 
   /// wheather this context is valid or not
-  bool        invalid = false;
+  bool invalid = false;
 
   /// @{
   /// @name Construction
@@ -251,9 +251,8 @@ public:
   std::string describe() const;
 
 private:
-
   /// wheater to initialize PETSc
-  bool _petsc  = false;
+  bool _petsc = false;
 
   /// wheater to initialize events
   bool _events = false;
@@ -297,7 +296,7 @@ private:
   /// @{
   /// @name Initialization
 
-  /// Main entrypoint 
+  /// Main entrypoint
   void initialize(const Participants &participants);
 
   /** Check, restrict and split the MPI communicator

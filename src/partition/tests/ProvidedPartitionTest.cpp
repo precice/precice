@@ -1,8 +1,6 @@
 #ifndef PRECICE_NO_MPI
 #include "testing/Testing.hpp"
 
-#include "partition/ProvidedPartition.hpp"
-#include "partition/ReceivedPartition.hpp"
 #include "com/CommunicateBoundingBox.hpp"
 #include "com/MPIDirectCommunication.hpp"
 #include "com/SocketCommunication.hpp"
@@ -11,6 +9,8 @@
 #include "m2n/M2N.hpp"
 #include "mapping/NearestNeighborMapping.hpp"
 #include "mapping/SharedPointer.hpp"
+#include "partition/ProvidedPartition.hpp"
+#include "partition/ReceivedPartition.hpp"
 
 using namespace precice;
 using namespace partition;
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate2D)
 BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate3D)
 {
   PRECICE_TEST("NASTIN"_on(1_rank), "SOLIDZ"_on(3_ranks).setupMasterSlaves(), Require::Events);
-  auto m2n                 = context.connectMasters("NASTIN", "SOLIDZ");
+  auto m2n = context.connectMasters("NASTIN", "SOLIDZ");
 
   int  dimensions  = 3;
   bool flipNormals = false;
@@ -162,9 +162,9 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate3D)
     part.compute();
 
     BOOST_TEST(pSolidzMesh->getGlobalNumberOfVertices() == 6);
-    const auto& vertices = pSolidzMesh->vertices();
-    const auto& vertexOffsets = pSolidzMesh->getVertexOffsets();
-    const auto& vertexDistribution = pSolidzMesh->getVertexDistribution();
+    const auto &vertices           = pSolidzMesh->vertices();
+    const auto &vertexOffsets      = pSolidzMesh->getVertexOffsets();
+    const auto &vertexDistribution = pSolidzMesh->getVertexDistribution();
 
     if (context.isMaster()) { //master
       BOOST_REQUIRE(vertexOffsets.size() == 3);
