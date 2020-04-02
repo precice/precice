@@ -92,7 +92,7 @@ function(add_precice_test_build_solverdummy PAT_LANG)
     COMMAND ${CMAKE_CTEST_COMMAND}
     --build-and-test ${PAT_SRC_DIR} ${PAT_BIN_DIR}
     --build-generator ${CMAKE_GENERATOR}
-    --build-options -Dprecice_DIR=${preCICE_BINARY_DIR}
+    --build-options -Dprecice_DIR=${preCICE_BINARY_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
     )
 
   # Setting properties
