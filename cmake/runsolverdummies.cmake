@@ -28,6 +28,6 @@ execute_process(
 # Check the return codes of the solvers
 foreach(RE IN LISTS DUMMY_RESULTS)
   if(NOT RE EQUAL 0)
-    message(FATAL_ERROR "An error occured running the solverdummies!")
+    message(FATAL_ERROR "An error occured running the solverdummies! Return codes : \"${DUMMY_RESULTS}\"")
   endif()
 endforeach(RE)
