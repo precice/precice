@@ -1,6 +1,5 @@
 #include "M2NConfiguration.hpp"
 #include <list>
-#include "com/MPIDirectCommunication.hpp"
 #include "com/MPIPortsCommunicationFactory.hpp"
 #include "com/MPISinglePortsCommunicationFactory.hpp"
 #include "com/SocketCommunicationFactory.hpp"
@@ -73,13 +72,6 @@ M2NConfiguration::M2NConfiguration(xml::XMLTag &parent)
                                          "directory of startup is chosen, and both solvers have to be started "
                                          "in the same directory.");
     tag.addAttribute(attrExchangeDirectory);
-    tags.push_back(tag);
-  }
-
-  {
-    XMLTag tag(*this, "mpi-single", occ, TAG);
-    doc = "Communication via MPI with startup in common communication space.";
-    tag.setDocumentation(doc);
     tags.push_back(tag);
   }
 
@@ -164,18 +156,12 @@ void M2NConfiguration::xmlTagCallback(const xml::ConfigurationContext &context, 
       comFactory = std::make_shared<com::MPISinglePortsCommunicationFactory>(dir);
       com        = comFactory->newCommunication();
 #endif
-    } else if (tag.getName() == "mpi-single") {
-#ifdef PRECICE_NO_MPI
-      throw std::runtime_error{"Communication type \"mpi-single\" can only be used when preCICE is compiled with argument \"mpi=on\""};
-#else
-      com        = std::make_shared<com::MPIDirectCommunication>();
-#endif
     }
 
     PRECICE_ASSERT(com.get() != nullptr);
 
     DistributedComFactory::SharedPointer distrFactory;
-    if (tag.getName() == "mpi-single" || enforceGatherScatter) {
+    if (enforceGatherScatter) {
       distrFactory = std::make_shared<GatherScatterComFactory>(com);
     } else {
       distrFactory = std::make_shared<PointToPointComFactory>(comFactory);
