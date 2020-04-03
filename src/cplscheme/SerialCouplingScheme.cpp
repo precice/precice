@@ -69,7 +69,7 @@ void SerialCouplingScheme::initializeImplementation()
     PRECICE_CHECK(doesFirstStep(), "In serial coupling only first participant can receive initial data!");
   }
 
-  // Initialize coupling
+  // determine whether initial data needs to be communicated
   determineInitialSend(getSendData());
   determineInitialReceive(getReceiveData());
 
