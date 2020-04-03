@@ -41,7 +41,7 @@ void MultiCouplingScheme::checkConfiguration()
     PRECICE_CHECK(hasAnySendData, "No send data configured. Use explicit scheme for one-way coupling.");
     if (not doesFirstStep() && getAcceleration()) {
       PRECICE_CHECK(getAcceleration()->getDataIDs().size() >= 3,
-                    "For parallel coupling, the number of coupling data vectors has to be at least 3, not: "
+                    "For multi coupling, the number of coupling data vectors has to be at least 3, not: "
                         << getAcceleration()->getDataIDs().size());
     }
   }
