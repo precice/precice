@@ -1403,13 +1403,13 @@ void testSummationAction(const std::string configFile)
 {
   using Eigen::Vector3d;
 
-  // Expected values in the target solver
-  double expectedValueA = 3.0;
-  double expectedValueB = 7.0;
-  double expectedValueC = 11.0;
-  double expectedValueD = 15.0;
-
   if (utils::Parallel::getProcessRank() == 0) {
+    // Expected values in the target solver
+    double expectedValueA = 3.0;
+    double expectedValueB = 7.0;
+    double expectedValueC = 11.0;
+    double expectedValueD = 15.0;
+    
     // Target solver
     SolverInterface cplInterface("SolverTarget", configFile, 0, 1);
 
@@ -1442,9 +1442,9 @@ void testSummationAction(const std::string configFile)
     int    dataAID = cplInterface.getDataID("Target", meshID);
     double valueA, valueB, valueC, valueD;
 
-    while(cplInterface.isCouplingOngoing()){
-      cplInterface.advance(dt);
-
+    while(cplInterface.isCouplingOngoing()){ 
+      dt = cplInterface.advance(dt);
+      
       cplInterface.readScalarData(dataAID, idA, valueA);
       cplInterface.readScalarData(dataAID, idB, valueB);
       cplInterface.readScalarData(dataAID, idC, valueC);
@@ -1494,12 +1494,14 @@ void testSummationAction(const std::string configFile)
     double   valueD = 7.0;
 
     while(cplInterface.isCouplingOngoing()){
+
       cplInterface.writeScalarData(dataAID, idA, valueA);
       cplInterface.writeScalarData(dataAID, idB, valueB);
       cplInterface.writeScalarData(dataAID, idC, valueC);
       cplInterface.writeScalarData(dataAID, idD, valueD);
 
-      cplInterface.advance(dt);
+      dt = cplInterface.advance(dt);
+
     }
     cplInterface.finalize();
   } else if (utils::Parallel::getProcessRank() == 2) {
@@ -1537,12 +1539,14 @@ void testSummationAction(const std::string configFile)
     double   valueD = 8.0;
 
     while(cplInterface.isCouplingOngoing()){
+
       cplInterface.writeScalarData(dataAID, idA, valueA);
       cplInterface.writeScalarData(dataAID, idB, valueB);
       cplInterface.writeScalarData(dataAID, idC, valueC);
       cplInterface.writeScalarData(dataAID, idD, valueD);
 
-      cplInterface.advance(dt);
+      dt = cplInterface.advance(dt);
+      
     }
     cplInterface.finalize();
   }
