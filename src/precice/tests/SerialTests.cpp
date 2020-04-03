@@ -1426,15 +1426,6 @@ void testSummationAction(const std::string configFile)
     int idC = cplInterface.setMeshVertex(meshID, coordC.data());
     int idD = cplInterface.setMeshVertex(meshID, coordD.data());
 
-    int idAB = cplInterface.setMeshEdge(meshID, idA, idB);
-    int idBC = cplInterface.setMeshEdge(meshID, idB, idC);
-    int idCD = cplInterface.setMeshEdge(meshID, idC, idD);
-    int idDA = cplInterface.setMeshEdge(meshID, idD, idA);
-    int idCA = cplInterface.setMeshEdge(meshID, idC, idA);
-
-    cplInterface.setMeshTriangle(meshID, idAB, idBC, idCA);
-    cplInterface.setMeshTriangle(meshID, idCD, idDA, idCA);
-
     // Initialize, the mesh
     double dt = cplInterface.initialize();
 
@@ -1443,18 +1434,20 @@ void testSummationAction(const std::string configFile)
     double valueA, valueB, valueC, valueD;
 
     while(cplInterface.isCouplingOngoing()){ 
-      dt = cplInterface.advance(dt);
-      
+
       cplInterface.readScalarData(dataAID, idA, valueA);
       cplInterface.readScalarData(dataAID, idB, valueB);
       cplInterface.readScalarData(dataAID, idC, valueC);
       cplInterface.readScalarData(dataAID, idD, valueD);
-    }
 
-    BOOST_TEST(valueA == expectedValueA);
-    BOOST_TEST(valueB == expectedValueB);
-    BOOST_TEST(valueC == expectedValueC);
-    BOOST_TEST(valueD == expectedValueD);
+      BOOST_TEST(valueA == expectedValueA);
+      BOOST_TEST(valueB == expectedValueB);
+      BOOST_TEST(valueC == expectedValueC);
+      BOOST_TEST(valueD == expectedValueD);
+
+      dt = cplInterface.advance(dt);
+
+    }
 
     cplInterface.finalize();
   }
@@ -1474,15 +1467,6 @@ void testSummationAction(const std::string configFile)
     int idB = cplInterface.setMeshVertex(meshID, coordB.data());
     int idC = cplInterface.setMeshVertex(meshID, coordC.data());
     int idD = cplInterface.setMeshVertex(meshID, coordD.data());
-
-    int idAB = cplInterface.setMeshEdge(meshID, idA, idB);
-    int idBC = cplInterface.setMeshEdge(meshID, idB, idC);
-    int idCD = cplInterface.setMeshEdge(meshID, idC, idD);
-    int idDA = cplInterface.setMeshEdge(meshID, idD, idA);
-    int idCA = cplInterface.setMeshEdge(meshID, idC, idA);
-
-    cplInterface.setMeshTriangle(meshID, idAB, idBC, idCA);
-    cplInterface.setMeshTriangle(meshID, idCD, idDA, idCA);
 
     // Initialize, the mesh
     double dt = cplInterface.initialize();
@@ -1519,15 +1503,6 @@ void testSummationAction(const std::string configFile)
     int idB = cplInterface.setMeshVertex(meshID, coordB.data());
     int idC = cplInterface.setMeshVertex(meshID, coordC.data());
     int idD = cplInterface.setMeshVertex(meshID, coordD.data());
-
-    int idAB = cplInterface.setMeshEdge(meshID, idA, idB);
-    int idBC = cplInterface.setMeshEdge(meshID, idB, idC);
-    int idCD = cplInterface.setMeshEdge(meshID, idC, idD);
-    int idDA = cplInterface.setMeshEdge(meshID, idD, idA);
-    int idCA = cplInterface.setMeshEdge(meshID, idC, idA);
-
-    cplInterface.setMeshTriangle(meshID, idAB, idBC, idCA);
-    cplInterface.setMeshTriangle(meshID, idCD, idDA, idCA);
 
     // Initialize, the mesh
     double dt = cplInterface.initialize();

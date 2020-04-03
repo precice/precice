@@ -59,7 +59,7 @@ private:
   struct ConfiguredAction {
     std::string type;
     std::string timing;
-    std::string sourceData;
+    std::vector<std::string> sourceDataVector;
     std::string targetData;
     std::string mesh;
     double      convergenceTolerance = 0;

@@ -41,7 +41,7 @@ ActionConfiguration::ActionConfiguration(
   XMLTag      tagSourceData(*this, TAG_SOURCE_DATA, XMLTag::OCCUR_ONCE);
   tagSourceData.setDocumentation("Single data to read from. ");
   XMLTag tagMultipleSourceData(*this, TAG_SOURCE_DATA, XMLTag::OCCUR_ONCE_OR_MORE);
-  tagSourceData.setDocumentation("Multiple data to read from.");
+  tagMultipleSourceData.setDocumentation("Multiple data to read from.");
   XMLTag tagTargetData(*this, TAG_TARGET_DATA, XMLTag::OCCUR_ONCE);
   tagTargetData.setDocumentation("Data to read from and write to.");
 
@@ -169,7 +169,7 @@ void ActionConfiguration::xmlTagCallback(
     _configuredAction.mesh   = callingTag.getStringAttributeValue(ATTR_MESH);
     //addSubtags ( callingTag, _configured.type );
   } else if (callingTag.getName() == TAG_SOURCE_DATA) {
-    _configuredAction.sourceData = callingTag.getStringAttributeValue(ATTR_NAME);
+    _configuredAction.sourceDataVector.push_back(callingTag.getStringAttributeValue(ATTR_NAME));
   } else if (callingTag.getName() == TAG_TARGET_DATA) {
     _configuredAction.targetData = callingTag.getStringAttributeValue(ATTR_NAME);
   } else if (callingTag.getName() == TAG_CONVERGENCE_TOLERANCE) {
@@ -219,7 +219,7 @@ void ActionConfiguration::createAction()
     if (aMesh->getName() == _configuredAction.mesh) {
       mesh = aMesh;
       for (const mesh::PtrData &data : mesh->data()) {
-        if (data->getName() == _configuredAction.sourceData) {
+        if (std::find(_configuredAction.sourceDataVector.begin(), _configuredAction.sourceDataVector.end(), data->getName()) != _configuredAction.sourceDataVector.end()) {
           sourceDataIDs.push_back(data->getID());
         }
         if (data->getName() == _configuredAction.targetData) {
@@ -234,9 +234,9 @@ void ActionConfiguration::createAction()
            << "\" which is not configured";
     throw std::runtime_error{stream.str()};
   }
-  if ((not _configuredAction.sourceData.empty()) && (sourceDataIDs.empty())) {
+  if ((not _configuredAction.sourceDataVector.empty()) && (sourceDataIDs.empty())) {
     std::ostringstream stream;
-    stream << "Data action uses source data \"" << _configuredAction.sourceData
+    stream << "Data action uses source data \"" << _configuredAction.sourceDataVector.back()
            << "\" which is not configured";
     throw std::runtime_error{stream.str()};
   }
