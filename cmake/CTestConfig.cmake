@@ -15,6 +15,16 @@ include(CheckLanguage)
 check_language(C)
 check_language(Fortran)
 
+# Detect the wrapper script that runs 2 solvers in parallel
+set(PRECICE_TEST_WRAPPER_SCRIPT "")
+if(UNIX)
+  set(PRECICE_TEST_WRAPPER_SCRIPT "${preCICE_SOURCE_DIR}/cmake/runsolverdummies.sh")
+else()
+  message(STATUS "Running solverdummies on your system is not supported. We will ignore affected tests.")
+endif()
+mark_as_advanced(PRECICE_TEST_WRAPPER_SCRIPT)
+
+
 function(add_precice_test)
   cmake_parse_arguments(PARSE_ARGV 0 PAT "PETSC;CANFAIL" "NAME;ARGUMENTS;TIMEOUT;LABELS" "")
   # Check arguments
@@ -115,6 +125,11 @@ function(add_precice_test_run_solverdummies PAT_LANG_A PAT_LANG_B)
   set(PAT_NAME "solverdummy.run.${PAT_LANG_A}-${PAT_LANG_B}")
   set(PAT_FULL_NAME "precice.${PAT_NAME}")
 
+  if(NOT PRECICE_TEST_WRAPPER_SCRIPT)
+      message(STATUS "Test ${PAT_FULL_NAME} - skipped")
+      return()
+  endif()
+
   # Make sure all required compilers are available
   foreach(_lang IN ITEMS ${PAT_LANG_A} ${PAT_LANG_B})
     if(_lang STREQUAL "fortran")
@@ -156,6 +171,7 @@ function(add_precice_test_run_solverdummies PAT_LANG_A PAT_LANG_B)
   message(STATUS "Test ${PAT_FULL_NAME}")
   add_test(NAME ${PAT_FULL_NAME}
     COMMAND ${CMAKE_COMMAND}
+    -D WRAPPER=${PRECICE_TEST_WRAPPER_SCRIPT}
     -D DUMMY_A=${PAT_BIN_DIR_A}/solverdummy
     -D DUMMY_B=${PAT_BIN_DIR_B}/solverdummy
     -D DUMMY_RUN_DIR=${PAT_RUN_DIR}
