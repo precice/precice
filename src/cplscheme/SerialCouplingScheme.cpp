@@ -84,7 +84,6 @@ void SerialCouplingScheme::initializeImplementation()
 
 void SerialCouplingScheme::exchangeInitialData()
 {
-  PRECICE_ASSERT(isCouplingOngoing());
   if (doesFirstStep()) {
     PRECICE_ASSERT(not sendsInitializedData(), "First participant cannot send data during initialization.");
     if (receivesInitializedData()) {
