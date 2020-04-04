@@ -43,10 +43,9 @@ public:
 
   virtual void measure(
       const Eigen::VectorXd &oldValues,
-      const Eigen::VectorXd &newValues,
-      const Eigen::VectorXd &designSpecification)
+      const Eigen::VectorXd &newValues)
   {
-    _normDiff = utils::MasterSlave::l2norm((newValues - oldValues) - designSpecification);
+    _normDiff = utils::MasterSlave::l2norm(newValues - oldValues);
     if (_isFirstIteration) {
       _normFirstResidual = _normDiff;
       _isFirstIteration  = false;

@@ -151,16 +151,6 @@ public:
   virtual double getTimeWindowSize() const final override;
 
   /**
-   * @brief TODO
-   */
-  virtual bool getIsCoarseModelOptimizationActive() const final override;
-
-  /**
-   * @brief Has to be called to notify coupling scheme that coarse Model Optimization is Active
-   */
-  virtual void activateCoarseModelOptimization() final override;
-
-  /**
    * @brief Returns the remaining timestep length inside the current time window.
    *
    * This is not necessarily the timestep length limit the solver has to obey

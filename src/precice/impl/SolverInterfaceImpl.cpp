@@ -510,12 +510,12 @@ void SolverInterfaceImpl::markActionFulfilled(
 
 bool SolverInterfaceImpl::hasToEvaluateSurrogateModel() const
 {
-  return _couplingScheme->getIsCoarseModelOptimizationActive();
+  return false;
 }
 
 bool SolverInterfaceImpl::hasToEvaluateFineModel() const
 {
-  return not _couplingScheme->getIsCoarseModelOptimizationActive();
+  return true;
 }
 
 bool SolverInterfaceImpl::hasMesh(

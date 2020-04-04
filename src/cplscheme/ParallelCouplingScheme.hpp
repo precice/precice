@@ -54,7 +54,7 @@ private:
   /**
    * @brief TODO
    */
-  std::pair<bool, bool> exchangeDataAndAccelerate() override;
+  bool exchangeDataAndAccelerate() override;
 
   DataMap &getAccelerationData() override
   {

@@ -182,18 +182,6 @@ public:
    */
   void advance() override; // @todo should be declared final. Currently, override by MultiCouplingScheme
 
-  /// Returns whether the solver has to evaluate the coarse or the fine model representation
-  bool getIsCoarseModelOptimizationActive() const override final
-  {
-    return _isCoarseModelOptimizationActive;
-  }
-
-  /// Has to be called to notify coupling scheme that coarse Model Optimization is Active
-  void activateCoarseModelOptimization() override final
-  {
-    _isCoarseModelOptimizationActive = true;
-  }
-
   /**
    * @brief Sets order of predictor of interface values for first participant.
    *
@@ -212,7 +200,6 @@ public:
   void addConvergenceMeasure(
       mesh::PtrData               data,
       bool                        suffices,
-      int                         level,
       impl::PtrConvergenceMeasure measure);
 
   /// Set a coupling iteration acceleration technique.
@@ -311,17 +298,12 @@ protected:
     mesh::PtrData               data;
     CouplingData *              couplingData;
     bool                        suffices;
-    int                         level;
     impl::PtrConvergenceMeasure measure;
   };
 
   void newConvergenceMeasurements();
 
-  bool measureConvergence(
-      ValuesMap &designSpecification);
-
-  bool measureConvergenceCoarseModelOptimization(
-      ValuesMap &designSpecification);
+  bool measureConvergence();
 
   /**
    * @brief Sets up _dataStorage to store data values of last timestep (@BU or time window?).
@@ -348,7 +330,7 @@ protected:
   void sendConvergence(m2n::PtrM2N m2n, bool convergence);
 
   /// TODO
-  std::pair<bool, bool> accelerate(int accelerationShift = 0);
+  bool accelerate();
 
   /// TODO
   void extrapolateData(DataMap &data);
@@ -409,12 +391,6 @@ private:
 
   /// Number of total iterations performed.
   int _totalIterations = -1;
-
-  /// Number of coarse model optimization iterations in current time window.
-  int _iterationsCoarseOptimization;
-
-  /// Number of accumulated coarse model optimization iterations in current time window.
-  int _totalIterationsCoarseOptimization = -1;
 
   /// TODO
   int _deletedColumnsPPFiltering = 0;
@@ -504,7 +480,7 @@ private:
   /// Functions needed for advance()
 
   /// implements functionality for advance in base class.
-  virtual std::pair<bool, bool> exchangeDataAndAccelerate() = 0;
+  virtual bool exchangeDataAndAccelerate() = 0;
 
   virtual DataMap &getAccelerationData  () = 0;
 
@@ -529,9 +505,8 @@ private:
    *        window since the window has to be repeated. Iteration counters are incremented.
    *
    * @param convergence Set true, if coupling iteration in window was successful
-   * @param convergenceCoarseOptimization Optional parameter, needed if manifold mapping is used
    */
-  void updateIterations(bool convergence, bool convergenceCoarseOptimization = true);
+  void updateIterations(bool convergence);
 
   /**
    * @brief As the version without parameters, but with changed time window and time.

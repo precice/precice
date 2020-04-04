@@ -78,7 +78,7 @@ void MultiCouplingScheme::exchangeInitialData()
   }
 }
 
-std::pair<bool, bool> MultiCouplingScheme::exchangeDataAndAccelerate()
+bool MultiCouplingScheme::exchangeDataAndAccelerate()
 {
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
   // @todo implement MultiCouplingScheme for explicit coupling
@@ -88,18 +88,16 @@ std::pair<bool, bool> MultiCouplingScheme::exchangeDataAndAccelerate()
   receiveData();
 
   PRECICE_DEBUG("Perform acceleration (only second participant)...");
-  std::pair<bool, bool> convergenceInformation = accelerate();
-  bool convergence = convergenceInformation.first;
+  bool convergence = accelerate();
 
   for (m2n::PtrM2N m2n : _communications) {
-    PRECICE_ASSERT(not getIsCoarseModelOptimizationActive());
     sendConvergence(m2n, convergence);
   }
 
   sendData();
 
   // TODO: Using a hard-coded "true" here looks strange.
-  return std::pair<bool, bool> (convergence, true);
+  return convergence;
 }
 
 void MultiCouplingScheme::mergeData()

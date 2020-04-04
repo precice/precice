@@ -172,16 +172,6 @@ double CompositionalCouplingScheme::getTimeWindowSize() const
   return timeWindowSize;
 }
 
-bool CompositionalCouplingScheme::getIsCoarseModelOptimizationActive() const
-{
-  return false;
-}
-
-void CompositionalCouplingScheme::activateCoarseModelOptimization()
-{
-  PRECICE_ASSERT(false); // @todo: implement MM for CompositionalCouplingScheme
-}
-
 double CompositionalCouplingScheme::getThisTimeWindowRemainder() const
 {
   PRECICE_TRACE();

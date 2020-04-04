@@ -131,16 +131,6 @@ public:
   virtual double getTimeWindowSize() const = 0;
 
   /**
-   * @brief TODO
-   */
-  virtual bool getIsCoarseModelOptimizationActive() const = 0;
-
-  /**
-   * @brief Has to be called to notify coupling scheme that coarse Model Optimization is Active
-   */
-  virtual void activateCoarseModelOptimization() = 0;
-
-  /**
    * @brief Returns the remaining time within the current time window.
    *
    * This is not necessarily the time window size limit the solver has to obey

@@ -103,10 +103,9 @@ void SerialCouplingScheme::exchangeInitialData()
   }
 }
 
-std::pair<bool, bool> SerialCouplingScheme::exchangeDataAndAccelerate()
+bool SerialCouplingScheme::exchangeDataAndAccelerate()
 {
   bool convergence = true;
-  bool convergenceCoarseOptimization = true;
 
   if (doesFirstStep()) { // first participant
     PRECICE_DEBUG("Sending data...");
@@ -123,10 +122,7 @@ std::pair<bool, bool> SerialCouplingScheme::exchangeDataAndAccelerate()
   } else { // second participant
     if (isImplicitCouplingScheme()) {
       PRECICE_DEBUG("Test Convergence and accelerate...");
-      int       accelerationShift = 1; // TODO @BU: why do we need an "accelerationShift" for SerialCouplingScheme, but not for the ParallelCouplingScheme?
-      std::pair<bool, bool> convergenceInformation = accelerate(accelerationShift);
-      convergence = convergenceInformation.first;
-      convergenceCoarseOptimization = convergenceInformation.second;
+      convergence = accelerate();
       sendConvergence(getM2N(), convergence);
     }
     PRECICE_DEBUG("Sending data...");
@@ -141,7 +137,7 @@ std::pair<bool, bool> SerialCouplingScheme::exchangeDataAndAccelerate()
     }
   }
 
-  return std::pair<bool, bool>(convergence, convergenceCoarseOptimization);
+  return convergence;
 }
 
 } // namespace cplscheme

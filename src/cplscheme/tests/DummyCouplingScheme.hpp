@@ -135,23 +135,6 @@ public:
   /**
    * @brief Not implemented.
    */
-  virtual bool getIsCoarseModelOptimizationActive() const override final
-  {
-    PRECICE_ASSERT(false);
-    return false;
-  }
-
-  /**
-   * @brief Not implemented.
-   */
-  virtual void activateCoarseModelOptimization() override final
-  {
-    PRECICE_ASSERT(false);
-  }
-
-  /**
-   * @brief Not implemented.
-   */
   virtual double getThisTimeWindowRemainder() const override final
   {
     PRECICE_ASSERT(false);

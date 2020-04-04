@@ -19,11 +19,6 @@ public:
   /// Returns the configured coupling scheme.
   PtrAcceleration getAcceleration();
 
-  /**
-    * @brief Returns a pointer to the AccelerationConfig object for the coarse model optimization method
-    */
-  PtrAccelerationConfiguration getCoarseModelOptimizationConfig();
-
   /// Callback method required when using xml::XMLTag.
   virtual void xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag);
 
@@ -39,11 +34,6 @@ public:
   std::vector<std::string> &getNeededMeshes()
   {
     return _neededMeshes;
-  }
-
-  void setIsAddManifoldMappingTagAllowed(bool b)
-  {
-    _isAddManifoldMappingTagAllowed = b;
   }
 
 private:
@@ -77,7 +67,6 @@ private:
   const std::string VALUE_AITKEN;
   const std::string VALUE_IQNILS;
   const std::string VALUE_MVQN;
-  const std::string VALUE_ManifoldMapping;
   const std::string VALUE_BROYDEN;
   const std::string VALUE_QR1FILTER;
   const std::string VALUE_QR1_ABSFILTER;
@@ -98,9 +87,6 @@ private:
 
   // acceleration method
   PtrAcceleration _acceleration;
-
-  // recursive definition of accelerations for multi level methods (i.e., manifold mapping)
-  PtrAccelerationConfiguration _coarseModelOptimizationConfig;
 
   std::vector<std::string> _neededMeshes;
 
@@ -125,8 +111,6 @@ private:
     bool                  alwaysBuildJacobian        = false;
     std::string           preconditionerType;
   } _config;
-
-  bool _isAddManifoldMappingTagAllowed;
 
   void addTypeSpecificSubtags(xml::XMLTag &tag);
 };

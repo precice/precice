@@ -59,10 +59,9 @@ void ParallelCouplingScheme::exchangeInitialData()
   }
 }
 
-std::pair<bool, bool> ParallelCouplingScheme::exchangeDataAndAccelerate()
+bool ParallelCouplingScheme::exchangeDataAndAccelerate()
 {
   bool convergence = true;
-  bool convergenceCoarseOptimization = true;
 
   if (doesFirstStep()) { //first participant
     PRECICE_DEBUG("Sending data...");
@@ -77,16 +76,14 @@ std::pair<bool, bool> ParallelCouplingScheme::exchangeDataAndAccelerate()
     receiveData(getM2N());
     if (isImplicitCouplingScheme()) {
       PRECICE_DEBUG("Perform acceleration (only second participant)...");
-      std::pair<bool, bool> convergenceInformation = accelerate();
-      convergence = convergenceInformation.first;
-      convergenceCoarseOptimization = convergenceInformation.second;
+      convergence = accelerate();
       sendConvergence(getM2N(), convergence);
     }
     PRECICE_DEBUG("Sending data...");
     sendData(getM2N());
   }
 
-  return std::pair<bool, bool>(convergence, convergenceCoarseOptimization);
+  return convergence;
 }
 
 void ParallelCouplingScheme::mergeData()
