@@ -566,7 +566,7 @@ void BaseCouplingScheme::setupDataMatrices(DataMap &data)
   }
 }
 
-void BaseCouplingScheme::setIterationAcceleration(
+void BaseCouplingScheme::setAcceleration(
     acceleration::PtrAcceleration acceleration)
 {
   PRECICE_ASSERT(acceleration.get() != nullptr);

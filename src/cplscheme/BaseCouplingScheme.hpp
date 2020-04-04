@@ -202,8 +202,8 @@ public:
       bool                        suffices,
       impl::PtrConvergenceMeasure measure);
 
-  /// Set a coupling iteration acceleration technique.
-  void setIterationAcceleration(acceleration::PtrAcceleration acceleration);
+  /// Set an acceleration technique.
+  void setAcceleration(acceleration::PtrAcceleration acceleration);
 
 protected:
   /// TODO

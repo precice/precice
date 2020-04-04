@@ -682,7 +682,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialImplicitCouplingSchem
     for (const int dataID : _accelerationConfig->getAcceleration()->getDataIDs()) {
       checkIfDataIsExchanged(dataID);
     }
-    scheme->setIterationAcceleration(_accelerationConfig->getAcceleration());
+    scheme->setAcceleration(_accelerationConfig->getAcceleration());
   }
 
   scheme->checkConfiguration();
@@ -724,7 +724,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelImplicitCouplingSch
     for (const int dataID : _accelerationConfig->getAcceleration()->getDataIDs()) {
       checkIfDataIsExchanged(dataID);
     }
-    scheme->setIterationAcceleration(_accelerationConfig->getAcceleration());
+    scheme->setAcceleration(_accelerationConfig->getAcceleration());
   }
 
   scheme->checkConfiguration();
@@ -787,7 +787,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
       checkIfDataIsExchanged(dataID);
     }
 
-    scheme->setIterationAcceleration(_accelerationConfig->getAcceleration());
+    scheme->setAcceleration(_accelerationConfig->getAcceleration());
   }
 
   scheme->checkConfiguration();
