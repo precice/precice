@@ -280,7 +280,6 @@ void BaseCouplingScheme::advance()
       } else {  // write output, prepare for next window
         PRECICE_DEBUG("Convergence achieved");
         advanceTXTWriters();
-        PRECICE_TRACE(_timeWindows, _time);
         PRECICE_INFO("Time window completed");
         _isTimeWindowComplete = true;
         if (isCouplingOngoing()) {
@@ -290,7 +289,6 @@ void BaseCouplingScheme::advance()
       }
       updateIterations(convergence, convergenceCoarseOptimization);
     } else {
-      PRECICE_TRACE(_timeWindows, _time);
       PRECICE_INFO("Time window completed");
       _isTimeWindowComplete = true;
     }
