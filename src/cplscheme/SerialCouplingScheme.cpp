@@ -127,6 +127,7 @@ std::pair<bool, bool> SerialCouplingScheme::exchangeDataAndAccelerate()
       std::pair<bool, bool> convergenceInformation = accelerate(accelerationShift);
       convergence = convergenceInformation.first;
       convergenceCoarseOptimization = convergenceInformation.second;
+      sendConvergence(getM2N(), convergence);
     }
     PRECICE_DEBUG("Sending data...");
     sendData(getM2N());

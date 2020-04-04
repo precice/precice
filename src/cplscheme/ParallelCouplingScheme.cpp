@@ -80,6 +80,7 @@ std::pair<bool, bool> ParallelCouplingScheme::exchangeDataAndAccelerate()
       std::pair<bool, bool> convergenceInformation = accelerate();
       convergence = convergenceInformation.first;
       convergenceCoarseOptimization = convergenceInformation.second;
+      sendConvergence(getM2N(), convergence);
     }
     PRECICE_DEBUG("Sending data...");
     sendData(getM2N());

@@ -992,7 +992,7 @@ std::pair<bool, bool> BaseCouplingScheme::accelerate(int accelerationShift)
       }
     }
   }
-  sendConvergence(getM2N(), convergence);
+
   return std::pair<bool, bool>(convergence, convergenceCoarseOptimization);
 }
 } // namespace cplscheme
