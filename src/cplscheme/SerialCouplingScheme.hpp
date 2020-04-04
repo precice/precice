@@ -77,7 +77,7 @@ private:
    */
   std::pair<bool, bool> exchangeDataAndAccelerate() override;
 
-  DataMap &getAcceleratedData() override
+  DataMap &getAccelerationData() override
   {
     return getSendData();
   }

@@ -195,9 +195,9 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
       PRECICE_ASSERT(not _convergenceMeasures.empty(), "Implicit scheme must have at least one convergence measure.");
       mergeData();                             // merge send and receive data for all pp calls
       setupConvergenceMeasures();              // needs _couplingData configured
-      setupDataMatrices(getAcceleratedData()); // Reserve memory and initialize data with zero
+      setupDataMatrices(getAccelerationData()); // Reserve memory and initialize data with zero
       if (getAcceleration()) {
-        getAcceleration()->initialize(getAcceleratedData()); // Reserve memory, initialize
+        getAcceleration()->initialize(getAccelerationData()); // Reserve memory, initialize
       }
     }
     requireAction(constants::actionWriteIterationCheckpoint());
@@ -903,7 +903,7 @@ std::pair<bool, bool> BaseCouplingScheme::accelerate(int accelerationShift)
 
   ValuesMap designSpecifications;
   if (getAcceleration()) {
-    designSpecifications = getAcceleration()->getDesignSpecification(getAcceleratedData());
+    designSpecifications = getAcceleration()->getDesignSpecification(getAccelerationData());
   }
   // measure convergence of coupling iteration
   // measure convergence for coarse model optimization
@@ -944,17 +944,17 @@ std::pair<bool, bool> BaseCouplingScheme::accelerate(int accelerationShift)
     if (convergence) {
       if (getAcceleration()) {
         _deletedColumnsPPFiltering = getAcceleration()->getDeletedColumns();
-        getAcceleration()->iterationsConverged(getAcceleratedData());
+        getAcceleration()->iterationsConverged(getAccelerationData());
       }
       newConvergenceMeasurements();
       // no convergence achieved for the coupling iteration within the current time window
     } else if (getAcceleration()) {
-      getAcceleration()->performAcceleration(getAcceleratedData());
+      getAcceleration()->performAcceleration(getAccelerationData());
     }
 
     // extrapolate new input data for the solver evaluation in time.
     if (convergence) {
-      extrapolateData(getAcceleratedData()); // Also stores data
+      extrapolateData(getAccelerationData()); // Also stores data
     } else {                          // Store data for conv. measurement, acceleration, or extrapolation
       for (DataMap::value_type &pair : getSendData()) {
         if (pair.second->oldValues.size() > 0) {
@@ -988,7 +988,7 @@ std::pair<bool, bool> BaseCouplingScheme::accelerate(int accelerationShift)
     // ATTENTION: assumes that coarse data is defined after fine data in same ordering.
     if (_iterationsCoarseOptimization == 1 && getAcceleration().get() != nullptr) {
       auto   fineIDs        = getAcceleration()->getDataIDs();
-      auto &acceleratedData = getAcceleratedData();
+      auto &acceleratedData = getAccelerationData();
       for (auto &fineID : fineIDs) {
         *acceleratedData.at(fineID)->values = acceleratedData.at(fineID + fineIDs.size() + accelerationShift)->oldValues.col(0);
       }

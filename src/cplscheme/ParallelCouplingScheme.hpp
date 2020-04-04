@@ -56,7 +56,7 @@ private:
    */
   std::pair<bool, bool> exchangeDataAndAccelerate() override;
 
-  DataMap &getAcceleratedData() override
+  DataMap &getAccelerationData() override
   {
     PRECICE_ASSERT(!doesFirstStep(), "Only the second participant should do the acceleration.");
     return _allData;

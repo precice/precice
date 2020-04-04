@@ -506,7 +506,7 @@ private:
   /// implements functionality for advance in base class.
   virtual std::pair<bool, bool> exchangeDataAndAccelerate() = 0;
 
-  virtual DataMap &getAcceleratedData() = 0;
+  virtual DataMap &getAccelerationData  () = 0;
 
   /// If any required actions are open, an error message is issued.
   void checkCompletenessRequiredActions();

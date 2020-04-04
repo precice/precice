@@ -87,7 +87,7 @@ std::pair<bool, bool> MultiCouplingScheme::exchangeDataAndAccelerate()
 
   receiveData();
 
-  auto designSpecifications = getAcceleration()->getDesignSpecification(getAcceleratedData());
+  auto designSpecifications = getAcceleration()->getDesignSpecification(getAccelerationData());
   bool convergence          = measureConvergence(designSpecifications);
 
   // Stop, when maximal iteration count (given in config) is reached
@@ -96,11 +96,11 @@ std::pair<bool, bool> MultiCouplingScheme::exchangeDataAndAccelerate()
   }
   if (convergence) {
     if (getAcceleration()) {
-      getAcceleration()->iterationsConverged(getAcceleratedData());
+      getAcceleration()->iterationsConverged(getAccelerationData());
     }
     newConvergenceMeasurements();
   } else if (getAcceleration()) {
-    getAcceleration()->performAcceleration(getAcceleratedData());
+    getAcceleration()->performAcceleration(getAccelerationData());
   }
 
   for (m2n::PtrM2N m2n : _communications) {
@@ -109,9 +109,9 @@ std::pair<bool, bool> MultiCouplingScheme::exchangeDataAndAccelerate()
   }
 
   if (convergence) {
-    extrapolateData(getAcceleratedData()); // Also stores data
+    extrapolateData(getAccelerationData()); // Also stores data
   } else {                     // Store data for convergence measurement, acceleration, or extrapolation
-    for (DataMap::value_type &pair : getAcceleratedData()) {
+    for (DataMap::value_type &pair : getAccelerationData()) {
       if (pair.second->oldValues.size() > 0) {
         pair.second->oldValues.col(0) = *pair.second->values;
       }
