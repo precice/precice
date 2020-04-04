@@ -283,7 +283,14 @@ void BaseCouplingScheme::advance()
           requireAction(constants::actionWriteIterationCheckpoint());
         }
       }
-      updateIterations(convergence);
+      //update iterations
+      _totalIterations++;
+      if (not convergence) {
+        _iterations++;
+      } else {
+        _iterations = 1;
+      }
+      _hasDataBeenExchanged = true;
     } else {
       PRECICE_INFO("Time window completed");
       _isTimeWindowComplete = true;
@@ -707,18 +714,6 @@ void BaseCouplingScheme::advanceTXTWriters()
       _iterationsWriter->writeData("DeletedColumns", _deletedColumnsPPFiltering);
     }
   }
-}
-
-void BaseCouplingScheme::updateIterations(
-    bool convergence)
-{
-  _totalIterations++;
-  if (not convergence) {
-    _iterations++;
-  } else {
-    _iterations = 1;
-  }
-  _hasDataBeenExchanged = true;
 }
 
 bool BaseCouplingScheme::reachedEndOfTimeWindow()

@@ -501,14 +501,6 @@ private:
   void advanceTXTWriters();
 
   /**
-   * @brief If coupling iteration has not converged, time will be reset to beginning of
-   *        window since the window has to be repeated. Iteration counters are incremented.
-   *
-   * @param convergence Set true, if coupling iteration in window was successful
-   */
-  void updateIterations(bool convergence);
-
-  /**
    * @brief As the version without parameters, but with changed time window and time.
    *
    * This version is used by the ImplicitCouplingScheme at the moment, which
