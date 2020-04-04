@@ -61,7 +61,8 @@ void ParallelCouplingScheme::exchangeInitialData()
 
 std::pair<bool, bool> ParallelCouplingScheme::exchangeDataAndAccelerate()
 {
-  bool convergence, convergenceCoarseOptimization; // @todo having the bools for convergence measurement declared for explicit and implicit coupling is not nice
+  bool convergence = true;
+  bool convergenceCoarseOptimization = true;
 
   if (doesFirstStep()) { //first participant
     PRECICE_DEBUG("Sending data...");

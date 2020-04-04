@@ -105,16 +105,15 @@ void SerialCouplingScheme::exchangeInitialData()
 
 std::pair<bool, bool> SerialCouplingScheme::exchangeDataAndAccelerate()
 {
-  bool convergence, convergenceCoarseOptimization; // @todo having the bools for convergence measurement declared for explicit and implicit coupling is not nice
-
-  if (_participantSetsTimeWindowSize) {
-    PRECICE_ASSERT(doesFirstStep(), "only first participant can set time window size.");
-    PRECICE_DEBUG("sending time window size of " << getComputedTimeWindowPart());  // TODO is this correct?
-    getM2N()->send(getComputedTimeWindowPart());
-  }
+  bool convergence = true;
+  bool convergenceCoarseOptimization = true;
 
   if (doesFirstStep()) { // first participant
     PRECICE_DEBUG("Sending data...");
+    if (_participantSetsTimeWindowSize) {
+      PRECICE_DEBUG("sending time window size of " << getComputedTimeWindowPart());  // TODO is this correct?
+      getM2N()->send(getComputedTimeWindowPart());
+    }
     sendData(getM2N());
     if (isImplicitCouplingScheme()) {
       convergence = receiveConvergence();
@@ -131,9 +130,6 @@ std::pair<bool, bool> SerialCouplingScheme::exchangeDataAndAccelerate()
     }
     PRECICE_DEBUG("Sending data...");
     sendData(getM2N());
-  }
-
-  if (not doesFirstStep()) {
     // the second participant does not want new data in the last iteration of the last time window
     if (isCouplingOngoing() || (isImplicitCouplingScheme() && not convergence)) {
       if (_participantReceivesTimeWindowSize) {
