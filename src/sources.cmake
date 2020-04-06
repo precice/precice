@@ -48,6 +48,8 @@ target_sources(precice
     src/action/ScaleByAreaAction.hpp
     src/action/ScaleByDtAction.cpp
     src/action/ScaleByDtAction.hpp
+    src/action/SummationAction.cpp
+    src/action/SummationAction.hpp
     src/action/SharedPointer.hpp
     src/action/config/ActionConfiguration.cpp
     src/action/config/ActionConfiguration.hpp

@@ -1241,7 +1241,6 @@ void testMappingNearestProjection(bool defineEdgesExplicitly, const std::string 
     cplInterface.finalize();
   }
 }
-
 /**
  * @brief Tests the Nearest Projection Mapping between two participants with explicit definition of edges
  *
@@ -1352,6 +1351,146 @@ BOOST_AUTO_TEST_CASE(PreconditionerBug)
     ++numberOfAdvanceCalls;
   }
   cplInterface.finalize();
+}
+
+void testSummationAction(const std::string configFile)
+{
+  using Eigen::Vector3d;
+
+  if (utils::Parallel::getProcessRank() == 0) {
+    // Expected values in the target solver
+    double expectedValueA = 3.0;
+    double expectedValueB = 7.0;
+    double expectedValueC = 11.0;
+    double expectedValueD = 15.0;
+    
+    // Target solver
+    SolverInterface cplInterface("SolverTarget", configFile, 0, 1);
+
+    // Set mesh
+    Vector3d coordA{0.0, 0.0, 0.3};
+    Vector3d coordB{1.0, 0.0, 0.3};
+    Vector3d coordC{1.0, 1.0, 0.3};
+    Vector3d coordD{0.0, 1.0, 0.3};
+
+    const int meshID = cplInterface.getMeshID("MeshTarget");
+
+    int idA = cplInterface.setMeshVertex(meshID, coordA.data());
+    int idB = cplInterface.setMeshVertex(meshID, coordB.data());
+    int idC = cplInterface.setMeshVertex(meshID, coordC.data());
+    int idD = cplInterface.setMeshVertex(meshID, coordD.data());
+
+    // Initialize, the mesh
+    double dt = cplInterface.initialize();
+
+    // Read the summed data from the mesh.
+    int    dataAID = cplInterface.getDataID("Target", meshID);
+    double valueA, valueB, valueC, valueD;
+
+    while(cplInterface.isCouplingOngoing()){ 
+
+      cplInterface.readScalarData(dataAID, idA, valueA);
+      cplInterface.readScalarData(dataAID, idB, valueB);
+      cplInterface.readScalarData(dataAID, idC, valueC);
+      cplInterface.readScalarData(dataAID, idD, valueD);
+
+      BOOST_TEST(valueA == expectedValueA);
+      BOOST_TEST(valueB == expectedValueB);
+      BOOST_TEST(valueC == expectedValueC);
+      BOOST_TEST(valueD == expectedValueD);
+
+      dt = cplInterface.advance(dt);
+
+    }
+
+    cplInterface.finalize();
+  }
+  else if (utils::Parallel::getProcessRank() == 1) {
+    // Source solver one
+    SolverInterface cplInterface("SolverSourceOne", configFile, 0, 1);
+
+    // Set mesh
+    Vector3d coordA{0.0, 0.0, 0.3};
+    Vector3d coordB{1.0, 0.0, 0.3};
+    Vector3d coordC{1.0, 1.0, 0.3};
+    Vector3d coordD{0.0, 1.0, 0.3};
+
+    const int meshID = cplInterface.getMeshID("MeshOne");
+
+    int idA = cplInterface.setMeshVertex(meshID, coordA.data());
+    int idB = cplInterface.setMeshVertex(meshID, coordB.data());
+    int idC = cplInterface.setMeshVertex(meshID, coordC.data());
+    int idD = cplInterface.setMeshVertex(meshID, coordD.data());
+
+    // Initialize, the mesh
+    double dt = cplInterface.initialize();
+
+    int    dataAID = cplInterface.getDataID("SourceOne", meshID);
+    double   valueA = 1.0;
+    double   valueB = 3.0;
+    double   valueC = 5.0;
+    double   valueD = 7.0;
+
+    while(cplInterface.isCouplingOngoing()){
+
+      cplInterface.writeScalarData(dataAID, idA, valueA);
+      cplInterface.writeScalarData(dataAID, idB, valueB);
+      cplInterface.writeScalarData(dataAID, idC, valueC);
+      cplInterface.writeScalarData(dataAID, idD, valueD);
+
+      dt = cplInterface.advance(dt);
+
+    }
+    cplInterface.finalize();
+  } else if (utils::Parallel::getProcessRank() == 2) {
+    // Source solver two
+    SolverInterface cplInterface("SolverSourceTwo", configFile, 0, 1);
+    // Set mesh
+    Vector3d coordA{0.0, 0.0, 0.3};
+    Vector3d coordB{1.0, 0.0, 0.3};
+    Vector3d coordC{1.0, 1.0, 0.3};
+    Vector3d coordD{0.0, 1.0, 0.3};
+
+    const int meshID = cplInterface.getMeshID("MeshTwo");
+
+    int idA = cplInterface.setMeshVertex(meshID, coordA.data());
+    int idB = cplInterface.setMeshVertex(meshID, coordB.data());
+    int idC = cplInterface.setMeshVertex(meshID, coordC.data());
+    int idD = cplInterface.setMeshVertex(meshID, coordD.data());
+
+    // Initialize, the mesh
+    double dt = cplInterface.initialize();
+
+    int    dataAID = cplInterface.getDataID("SourceTwo", meshID);
+    double   valueA = 2.0;
+    double   valueB = 4.0;
+    double   valueC = 6.0;
+    double   valueD = 8.0;
+
+    while(cplInterface.isCouplingOngoing()){
+
+      cplInterface.writeScalarData(dataAID, idA, valueA);
+      cplInterface.writeScalarData(dataAID, idB, valueB);
+      cplInterface.writeScalarData(dataAID, idC, valueC);
+      cplInterface.writeScalarData(dataAID, idD, valueD);
+
+      dt = cplInterface.advance(dt);
+      
+    }
+    cplInterface.finalize();
+  }
+}
+/**
+ * @brief Test for additon action
+ *
+ */
+BOOST_AUTO_TEST_CASE(testSummationActionTwoSources,
+                     *testing::MinRanks(3) * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1, 2})))
+{
+  if (utils::Parallel::getCommunicatorSize() != 3)
+    return;
+  const std::string configFile            = _pathToTests + "summation-action.xml";
+  testSummationAction(configFile);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

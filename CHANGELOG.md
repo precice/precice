@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. For future plans, see our [Roadmap](https://github.com/precice/precice/wiki/Roadmap).
 
+
+- Implemented a new action to sum up data values, `action:summation`.
+
+## 2.0.2
+
+- Fixed a critical bug in the testing framework.
+- Fixed a critical bug in the partitioning for geometric filter set to `on-master` in `<use-mesh>` tags. The default configuration is `on-slave`.
+
 ## 2.0.1
 
 - Fixed broken pkg-config file in some cases due to CMake `GNUInstallDirs`.
