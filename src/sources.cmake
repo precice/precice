@@ -187,6 +187,8 @@ target_sources(precice
     src/mesh/Filter.hpp
     src/mesh/Mesh.cpp
     src/mesh/Mesh.hpp
+    src/mesh/BoundingBox.hpp
+    src/mesh/BoundingBox.cpp
     src/mesh/Quad.cpp
     src/mesh/Quad.hpp
     src/mesh/RTree.cpp
