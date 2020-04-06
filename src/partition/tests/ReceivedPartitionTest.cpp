@@ -384,9 +384,9 @@ BOOST_AUTO_TEST_CASE(RePartitionNPPreFilterPostFilter2D)
 }
 
 #ifndef PRECICE_NO_PETSC
-BOOST_AUTO_TEST_CASE(RePartitionRBFGlobal2D, *testing::Deleted())
+BOOST_AUTO_TEST_CASE(RePartitionRBFGlobal2D)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::Events);
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc);
   int           dimensions  = 2;
   bool          flipNormals = false;
   mesh::PtrMesh pMesh(new mesh::Mesh("MyMesh", dimensions, flipNormals, testing::nextMeshID()));
@@ -406,12 +406,16 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFGlobal2D, *testing::Deleted())
     createNastinMesh2D(pOtherMesh, context.rank);
   }
 
+  pMesh->computeState();
+  pMesh->computeBoundingBox();
   pOtherMesh->computeState();
   pOtherMesh->computeBoundingBox();
   double            safetyFactor = 20.0;
   ReceivedPartition part(pMesh, ReceivedPartition::NO_FILTER, safetyFactor);
   part.setFromMapping(boundingFromMapping);
   part.setToMapping(boundingToMapping);
+  part.addM2N(context.dummyM2N());
+  part.communicate();
   part.compute();
 
   BOOST_TEST(pMesh->getVertexOffsets().size() == 4);
@@ -465,9 +469,9 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFGlobal2D, *testing::Deleted())
   }
 }
 
-BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D1, *testing::Deleted())
+BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D1)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::Events);
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc);
   int           dimensions  = 2;
   bool          flipNormals = false;
   mesh::PtrMesh pMesh(new mesh::Mesh("MyMesh", dimensions, flipNormals, testing::nextMeshID()));
@@ -489,12 +493,16 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D1, *testing::Deleted())
     createNastinMesh2D(pOtherMesh, context.rank);
   }
 
+  pMesh->computeState();
+  pMesh->computeBoundingBox();
   pOtherMesh->computeState();
   pOtherMesh->computeBoundingBox();
   double            safetyFactor = 20.0;
   ReceivedPartition part(pMesh, ReceivedPartition::NO_FILTER, safetyFactor);
   part.setFromMapping(boundingFromMapping);
   part.setToMapping(boundingToMapping);
+  part.addM2N(context.dummyM2N());
+  part.communicate();
   part.compute();
 
   BOOST_TEST(pMesh->getVertexOffsets().size() == 4);
@@ -536,9 +544,9 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D1, *testing::Deleted())
   }
 }
 
-BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D2, *testing::Deleted())
+BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D2)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::Events);
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc);
   int           dimensions  = 2;
   bool          flipNormals = false;
   mesh::PtrMesh pMesh(new mesh::Mesh("MyMesh", dimensions, flipNormals, testing::nextMeshID()));
@@ -560,12 +568,16 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D2, *testing::Deleted())
     createNastinMesh2D(pOtherMesh, context.rank);
   }
 
+  pMesh->computeState();
+  pMesh->computeBoundingBox();
   pOtherMesh->computeState();
   pOtherMesh->computeBoundingBox();
   double            safetyFactor = 20.0;
   ReceivedPartition part(pMesh, ReceivedPartition::NO_FILTER, safetyFactor);
   part.setFromMapping(boundingFromMapping);
   part.setToMapping(boundingToMapping);
+  part.addM2N(context.dummyM2N());
+  part.communicate();
   part.compute();
 
   BOOST_TEST(pMesh->getVertexOffsets().size() == 4);
@@ -613,9 +625,9 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D2, *testing::Deleted())
   }
 }
 
-BOOST_AUTO_TEST_CASE(RePartitionRBFLocal3D, *testing::Deleted())
+BOOST_AUTO_TEST_CASE(RePartitionRBFLocal3D)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::Events);
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc);
   int           dimensions  = 3;
   bool          flipNormals = false;
   mesh::PtrMesh pMesh(new mesh::Mesh("MyMesh", dimensions, flipNormals, testing::nextMeshID()));
@@ -639,12 +651,16 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal3D, *testing::Deleted())
     createNastinMesh3D(pOtherMesh, context.rank);
   }
 
+  pMesh->computeState();
+  pMesh->computeBoundingBox();
   pOtherMesh->computeState();
   pOtherMesh->computeBoundingBox();
   double            safetyFactor = 20.0;
   ReceivedPartition part(pMesh, ReceivedPartition::NO_FILTER, safetyFactor);
   part.setFromMapping(boundingFromMapping);
   part.setToMapping(boundingToMapping);
+  part.addM2N(context.dummyM2N());
+  part.communicate();
   part.compute();
 
   BOOST_TEST(pMesh->getVertexOffsets().size() == 4);
@@ -798,17 +814,10 @@ BOOST_AUTO_TEST_CASE(TestRepartitionAndDistribution2D)
   pMesh->computeState();
   pMesh->computeBoundingBox();
 
-  // a ReceivedPartition needs exactly one m2n
-  com::PtrCommunication participantCom =
-      com::PtrCommunication(new com::MPIDirectCommunication());
-  m2n::DistributedComFactory::SharedPointer distrFactory = m2n::DistributedComFactory::SharedPointer(
-      new m2n::GatherScatterComFactory(participantCom));
-  m2n::PtrM2N m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory));
-
   double            safetyFactor = 20.0; //should not filter out anything here
   ReceivedPartition part(pMesh, ReceivedPartition::ON_MASTER, safetyFactor);
   part.setFromMapping(boundingFromMapping);
-  part.addM2N(m2n);
+  part.addM2N(context.dummyM2N());
   part.compute();
 
   if (context.isMaster()) { //Master

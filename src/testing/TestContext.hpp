@@ -247,6 +247,13 @@ public:
    */
   m2n::PtrM2N connectMasters(const std::string &acceptor, const std::string &requestor, const ConnectionOptions &options = ConnectionOptions{}) const;
 
+
+  /** Creates a dummy M2N
+   *
+   * @see connectMasters()
+   */
+  m2n::PtrM2N dummyM2N() const;
+
   /// Provides a user- and log-friendly description of the current context
   std::string describe() const;
 
