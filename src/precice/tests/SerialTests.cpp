@@ -1353,11 +1353,11 @@ BOOST_AUTO_TEST_CASE(PreconditionerBug)
   cplInterface.finalize();
 }
 
-void testSummationAction(const std::string configFile)
+void testSummationAction(const std::string configFile, TestContext const & context)
 {
   using Eigen::Vector3d;
 
-  if (utils::Parallel::getProcessRank() == 0) {
+  if (context.isNamed("SolverTarget")) {
     // Expected values in the target solver
     double expectedValueA = 3.0;
     double expectedValueB = 7.0;
@@ -1365,7 +1365,7 @@ void testSummationAction(const std::string configFile)
     double expectedValueD = 15.0;
     
     // Target solver
-    SolverInterface cplInterface("SolverTarget", configFile, 0, 1);
+    SolverInterface cplInterface(context.name, configFile, 0, 1);
 
     // Set mesh
     Vector3d coordA{0.0, 0.0, 0.3};
@@ -1405,9 +1405,9 @@ void testSummationAction(const std::string configFile)
 
     cplInterface.finalize();
   }
-  else if (utils::Parallel::getProcessRank() == 1) {
+  else if (context.isNamed("SolverSourceOne")) {
     // Source solver one
-    SolverInterface cplInterface("SolverSourceOne", configFile, 0, 1);
+    SolverInterface cplInterface(context.name, configFile, 0, 1);
 
     // Set mesh
     Vector3d coordA{0.0, 0.0, 0.3};
@@ -1442,9 +1442,10 @@ void testSummationAction(const std::string configFile)
 
     }
     cplInterface.finalize();
-  } else if (utils::Parallel::getProcessRank() == 2) {
+  } else {
+    BOOST_REQUIRE(context.isNamed("SolverSourceTwo"));
     // Source solver two
-    SolverInterface cplInterface("SolverSourceTwo", configFile, 0, 1);
+    SolverInterface cplInterface(context.name, configFile, 0, 1);
     // Set mesh
     Vector3d coordA{0.0, 0.0, 0.3};
     Vector3d coordB{1.0, 0.0, 0.3};
@@ -1480,17 +1481,16 @@ void testSummationAction(const std::string configFile)
     cplInterface.finalize();
   }
 }
+
 /**
  * @brief Test for additon action
  *
  */
-BOOST_AUTO_TEST_CASE(testSummationActionTwoSources,
-                     *testing::MinRanks(3) * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1, 2})))
+BOOST_AUTO_TEST_CASE(testSummationActionTwoSources)
 {
-  if (utils::Parallel::getCommunicatorSize() != 3)
-    return;
+  PRECICE_TEST("SolverTarget"_on(1_rank), "SolverSourceOne"_on(1_rank), "SolverSourceTwo"_on(1_rank));
   const std::string configFile            = _pathToTests + "summation-action.xml";
-  testSummationAction(configFile);
+  testSummationAction(configFile, context);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
