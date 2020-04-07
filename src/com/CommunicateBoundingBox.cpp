@@ -1,5 +1,6 @@
 #include "CommunicateBoundingBox.hpp"
 #include "Communication.hpp"
+#include "mesh/BoundingBox.hpp"
 
 namespace precice {
 namespace com {
@@ -10,27 +11,23 @@ CommunicateBoundingBox::CommunicateBoundingBox(
 }
 
 void CommunicateBoundingBox::sendBoundingBox(
-    const mesh::Mesh::BoundingBox &bb,
+    const mesh::BoundingBox &bb,
     int                            rankReceiver)
 {
   PRECICE_TRACE(rankReceiver);
 
-  for (const auto &d : bb) {
-    _communication->send(d.first, rankReceiver);
-    _communication->send(d.second, rankReceiver);
-  }
+  _communication->send(bb.data(), rankReceiver);
+
 }
 
 void CommunicateBoundingBox::receiveBoundingBox(
-    mesh::Mesh::BoundingBox &bb,
+    mesh::BoundingBox &bb,
     int                      rankSender)
 {
+  std::vector<double> receivedData;
   PRECICE_TRACE(rankSender);
-
-  for (auto &d : bb) {
-    _communication->receive(d.first, rankSender);
-    _communication->receive(d.second, rankSender);
-  }
+  _communication->receive(receivedData, rankSender);
+  bb = mesh::BoundingBox::createFromData(receivedData);
 }
 
 void CommunicateBoundingBox::sendBoundingBoxMap(
@@ -102,10 +99,7 @@ void CommunicateBoundingBox::broadcastSendBoundingBoxMap(
   _communication->broadcast((int) bbm.size());
 
   for (const auto &rank : bbm) {
-    for (const auto &dimension : rank.second) {
-      _communication->broadcast(dimension.first);
-      _communication->broadcast(dimension.second);
-    }
+    _communication->broadcast(rank.second.data());
   }
 }
 
@@ -118,10 +112,9 @@ void CommunicateBoundingBox::broadcastReceiveBoundingBoxMap(
   PRECICE_ASSERT(sizeOfReceivingMap == (int) bbm.size());
 
   for (auto &rank : bbm) {
-    for (auto &dimension : rank.second) {
-      _communication->broadcast(dimension.first, 0);
-      _communication->broadcast(dimension.second, 0);
-    }
+    std::vector<double> receivedData;
+    _communication->receive(receivedData,0);
+    rank.second = mesh::BoundingBox::createFromData(receivedData);
   }
 }
 

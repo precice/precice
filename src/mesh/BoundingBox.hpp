@@ -1,6 +1,7 @@
 #pragma once
 #include "logging/Logger.hpp"
-#include "mesh/Mesh.hpp"
+#include "mesh/Vertex.hpp"
+#include <vector>
 
 namespace precice {
 namespace mesh {
@@ -17,11 +18,15 @@ public:
   * @param[in] safetyFactor Factor which enlarges the bounding box
   * 
   */
-  BoundingBox(std::vector<double> bounds, double safetyFactor);
+  BoundingBox(std::vector<double> bounds);
+  BoundingBox(int dimension);
+  BoundingBox();
   ~BoundingBox();
+  BoundingBox(const BoundingBox &bb);
+  bool operator==(const BoundingBox& otherBB) const;
 
   /// Bounding box factory function
-  static BoundingBox createFromData(std::vector<double> bounds, double safetyFactor);
+  static BoundingBox createFromData(std::vector<double> bounds);
 
   /***
   * 
@@ -33,31 +38,46 @@ public:
   * 
   */
   void setBounds(int dimension, double min, double max);
+  void setMin(int dimension, double min);
+  void setMax(int dimension, double max);
+
+  void setSafetyFactor(double safetyFactor);
 
   /// Merges the bounding box with given bounding box, also enlage by _safetyFactor
-  void mergeBoundingBoxes(const BoundingBox &otherBB, double safety);
+  bool mergeBoundingBoxes(const BoundingBox &otherBB);
+
+  /// Expand bounding box
+  void expandTo(const Vertex& vertices);
 
   /// Checks if vertex in contained in _bb
-  bool isVertexInBB(const mesh::Vertex &vertex);
+  bool isVertexInBB(const Vertex &vertex);
 
   /// Checks whether two bounding boxes are overlapping
   bool overlapping(const BoundingBox &otherBB);
+
+  /// Return the value for given dimension and bound type
+  double getData(int dimension, int type) const;
+
+  const double* data() const;
+  std::vector<double> dataVector();
+
+  bool empty();
+
+  int getDimension() const;
 
   friend std::ostream &operator<<(std::ostream &out, const BoundingBox &bb);
 
 private:
   logging::Logger _log{"mesh::BoundingBox"};
 
-  BoundingBox(const BoundingBox &bb);
-
   int    _dimensions;
   double _safetyFactor;
 
   /// Whether this bounding box is prepared or not
-  bool _prepared;
+  bool _prepared{false};
 
   /// Container of min and max points in each dimension
-  std::array<double, 6> _bounds;
+  std::vector<double> _bounds;
 };
 
 } // namespace mesh

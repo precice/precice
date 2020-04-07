@@ -19,10 +19,10 @@ BOOST_FIXTURE_TEST_CASE(SendAndReceiveBoundingBox, testing::M2NFixture,
     return;
 
   for (int dim = 2; dim <= 3; dim++) {
-    mesh::Mesh::BoundingBox bb;
+    mesh::BoundingBox bb(dim);
 
     for (int i = 0; i < dim; i++) {
-      bb.push_back(std::make_pair(i, i + 1));
+      bb.setBounds(i,i, i + 1);
     }
 
     CommunicateBoundingBox comBB(m2n->getMasterCommunication());
@@ -31,9 +31,9 @@ BOOST_FIXTURE_TEST_CASE(SendAndReceiveBoundingBox, testing::M2NFixture,
       comBB.sendBoundingBox(bb, 0);
     } else if (utils::Parallel::getProcessRank() == 1) {
 
-      mesh::Mesh::BoundingBox bbCompare;
+      mesh::BoundingBox bbCompare(dim);
       for (int i = 0; i < dim; i++) {
-        bbCompare.push_back(std::make_pair(-1, -1));
+        bbCompare.setBounds(i,-1, -1);
       }
 
       comBB.receiveBoundingBox(bbCompare, 0);
@@ -50,17 +50,15 @@ BOOST_FIXTURE_TEST_CASE(SendAndReceiveBoundingBoxMap, testing::M2NFixture,
     return;
 
   for (int dim = 2; dim <= 3; dim++) {
-    mesh::Mesh::BoundingBox    bb;
+    mesh::BoundingBox    bb(dim);
     mesh::Mesh::BoundingBoxMap bbm;
 
     for (int rank = 0; rank < 3; rank++) {
 
       for (int i = 0; i < dim; i++) {
-        bb.push_back(std::make_pair(rank * i, i + 1));
+        bb.setBounds(i, rank * i, i + 1);
       }
-
       bbm[rank] = bb;
-      bb.clear();
     }
 
     CommunicateBoundingBox comBB(m2n->getMasterCommunication());
@@ -69,17 +67,14 @@ BOOST_FIXTURE_TEST_CASE(SendAndReceiveBoundingBoxMap, testing::M2NFixture,
       comBB.sendBoundingBoxMap(bbm, 0);
     } else if (utils::Parallel::getProcessRank() == 1) {
 
-      mesh::Mesh::BoundingBox    bbCompare;
+      mesh::BoundingBox    bbCompare(dim);
       mesh::Mesh::BoundingBoxMap bbmCompare;
 
       for (int rank = 0; rank < 3; rank++) {
-
         for (int i = 0; i < dim; i++) {
-          bbCompare.push_back(std::make_pair(-1, -1));
+          bbCompare.setBounds(i,-1, -1);
         }
-
         bbmCompare[rank] = bbCompare;
-        bbCompare.clear();
       }
 
       comBB.receiveBoundingBoxMap(bbmCompare, 0);
@@ -98,15 +93,14 @@ BOOST_AUTO_TEST_CASE(BroadcastSendAndReceiveBoundingBoxMap,
 
   // Build BB/BBMap to communicate
 
-  mesh::Mesh::BoundingBox    bb;
+  mesh::BoundingBox    bb(3);
   mesh::Mesh::BoundingBoxMap bbm;
 
   for (int i = 0; i < 3; i++) {
     for (int j = 0; j < 3; j++) {
-      bb.push_back(std::make_pair(i * j, i * (j + 1)));
+      bb.setBounds(j, i * j, i * (j + 1));
     }
     bbm[i] = bb;
-    bb.clear();
   }
 
   CommunicateBoundingBox comBB(utils::MasterSlave::_communication);
@@ -115,15 +109,12 @@ BOOST_AUTO_TEST_CASE(BroadcastSendAndReceiveBoundingBoxMap,
     comBB.broadcastSendBoundingBoxMap(bbm);
   } else {
 
-    mesh::Mesh::BoundingBox    bbCompare;
+    mesh::BoundingBox    bbCompare(3);
     mesh::Mesh::BoundingBoxMap bbmCompare;
 
     for (int i = 0; i < 3; i++) {
-      for (int j = 0; j < 3; j++) {
-        bbCompare.push_back(std::make_pair(-1, -1));
-      }
+      bbCompare.setBounds(i, -1, -1);
       bbmCompare[i] = bbCompare;
-      bbCompare.clear();
     }
 
     comBB.broadcastReceiveBoundingBoxMap(bbmCompare);

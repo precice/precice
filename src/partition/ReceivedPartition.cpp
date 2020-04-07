@@ -26,11 +26,11 @@ ReceivedPartition::ReceivedPartition(
     mesh::PtrMesh mesh, GeometricFilter geometricFilter, double safetyFactor)
     : Partition(mesh),
       _geometricFilter(geometricFilter),
-      _bb(mesh->getDimensions(), std::make_pair(std::numeric_limits<double>::max(),
-                                                std::numeric_limits<double>::lowest())),
+      _bb(mesh->getDimensions()),
       _dimensions(mesh->getDimensions()),
       _safetyFactor(safetyFactor)
 {
+  _bb.setSafetyFactor(_safetyFactor);
 }
 
 void ReceivedPartition::communicate()
@@ -238,19 +238,6 @@ void ReceivedPartition::compute()
   }
 }
 
-namespace {
-bool isVertexInBoundingBox(mesh::Vertex const &vertex, mesh::Mesh::BoundingBox const &bb)
-{
-  const int dim = bb.size();
-  for (int d = 0; d < dim; d++) {
-    if (vertex.getCoords()[d] < bb[d].first || vertex.getCoords()[d] > bb[d].second) {
-      return false;
-    }
-  }
-  return true;
-}
-} // namespace
-
 void ReceivedPartition::filterByBoundingBox()
 {
   PRECICE_TRACE(_geometricFilter);
@@ -292,19 +279,19 @@ void ReceivedPartition::filterByBoundingBox()
       PRECICE_ASSERT(utils::MasterSlave::getSize() > 1);
 
       for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
-        mesh::Mesh::BoundingBox slaveBB(_bb.size(), std::make_pair(std::numeric_limits<double>::max(), std::numeric_limits<double>::lowest()));
+        mesh::BoundingBox slaveBB(_bb.getDimension());
         com::CommunicateMesh(utils::MasterSlave::_communication).receiveBoundingBox(slaveBB, rankSlave);
 
         PRECICE_DEBUG("From slave " << rankSlave << ", bounding mesh: " << slaveBB);
         mesh::Mesh slaveMesh("SlaveMesh", _dimensions, _mesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
-        mesh::filterMesh(slaveMesh, *_mesh, [&slaveBB](const mesh::Vertex &v) { return isVertexInBoundingBox(v, slaveBB); });
+        mesh::filterMesh(slaveMesh, *_mesh, [&slaveBB](const mesh::Vertex &v) { return slaveBB.isVertexInBB(v); });
         PRECICE_DEBUG("Send filtered mesh to slave: " << rankSlave);
         com::CommunicateMesh(utils::MasterSlave::_communication).sendMesh(slaveMesh, rankSlave);
       }
 
       // Now also filter the remaining master mesh
       mesh::Mesh filteredMesh("FilteredMesh", _dimensions, _mesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
-      mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { return isVertexInBB(v); });
+      mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { return _bb.isVertexInBB(v); });
       _mesh->clear();
       _mesh->addMesh(filteredMesh);
       PRECICE_DEBUG("Master mesh, filtered from "
@@ -340,7 +327,7 @@ void ReceivedPartition::filterByBoundingBox()
       Event e("partition.filterMeshBB." + _mesh->getName(), precice::syncMode);
 
       mesh::Mesh filteredMesh("FilteredMesh", _dimensions, _mesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
-      mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { return isVertexInBB(v); });
+      mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { return _bb.isVertexInBB(v); });
 
       if (areProvidedMeshesEmpty()) {
         std::string msg = "The re-partitioning completely filtered out the mesh " + _mesh->getName() +
@@ -387,9 +374,9 @@ void ReceivedPartition::compareBoundingBoxes()
 
   // define and initialize remote bounding box map
   mesh::Mesh::BoundingBoxMap remoteBBMap;
-  mesh::Mesh::BoundingBox    initialBB;
+  mesh::BoundingBox    initialBB(_dimensions);
   for (int i = 0; i < _dimensions; i++) {
-    initialBB.push_back(std::make_pair(-1, -1));
+    initialBB.setBounds(i, -1, -1);
   }
   for (int remoteRank = 0; remoteRank < numberOfRemoteRanks; remoteRank++) {
     remoteBBMap[remoteRank] = initialBB;
@@ -413,7 +400,7 @@ void ReceivedPartition::compareBoundingBoxes()
 
     // connected ranks for master
     for (auto &remoteBB : remoteBBMap) {
-      if (overlapping(_bb, remoteBB.second)) {
+      if (_bb.overlapping(remoteBB.second)) {
         _mesh->getConnectedRanks().push_back(remoteBB.first); //connected remote ranks for this rank
       }
     }
@@ -445,7 +432,7 @@ void ReceivedPartition::compareBoundingBoxes()
     PRECICE_ASSERT(utils::MasterSlave::isSlave());
 
     for (const auto &remoteBB : remoteBBMap) {
-      if (overlapping(_bb, remoteBB.second)) {
+      if (_bb.overlapping(remoteBB.second)) {
         _mesh->getConnectedRanks().push_back(remoteBB.first);
       }
     }
@@ -458,19 +445,6 @@ void ReceivedPartition::compareBoundingBoxes()
   }
 }
 
-bool ReceivedPartition::overlapping(mesh::Mesh::BoundingBox const &currentBB, mesh::Mesh::BoundingBox const &receivedBB)
-{
-  // Comparison is done for all dimensions and, of course, to have a proper overlap, each dimension must overlap.
-  // We need to check if first AND second is smaller than first of the other BB to prevent false negatives due to empty bounding boxes.
-  for (size_t i = 0; i < currentBB.size(); i++) {
-    if ((currentBB[i].first < receivedBB[i].first && currentBB[i].second < receivedBB[i].first) ||
-        (receivedBB[i].first < currentBB[i].first && receivedBB[i].second < currentBB[i].first)) {
-      return false;
-    }
-  }
-  return true;
-}
-
 void ReceivedPartition::prepareBoundingBox()
 {
   PRECICE_TRACE(_safetyFactor);
@@ -480,48 +454,17 @@ void ReceivedPartition::prepareBoundingBox()
 
   PRECICE_DEBUG("Merge bounding boxes and increase by safety factor");
 
-  _bb.resize(_dimensions,
-             std::make_pair(std::numeric_limits<double>::max(), std::numeric_limits<double>::lowest()));
-
   // Create BB around both "other" meshes
   if (_fromMapping) {
     auto other_bb = _fromMapping->getOutputMesh()->getBoundingBox();
     PRECICE_ASSERT(!other_bb.empty(), "Output Mesh of from Mapping has an empty bounding box!");
-    for (int d = 0; d < _dimensions; d++) {
-      _bb[d].first  = std::min(_bb[d].first, other_bb[d].first);
-      _bb[d].second = std::max(_bb[d].second, other_bb[d].second);
-    }
+    _boundingBoxPrepared = _bb.mergeBoundingBoxes(other_bb);
   }
   if (_toMapping) {
     auto other_bb = _toMapping->getInputMesh()->getBoundingBox();
     PRECICE_ASSERT(!other_bb.empty(), "Input Mesh of to Mapping has an empty bounding box!");
-    for (int d = 0; d < _dimensions; d++) {
-      _bb[d].first  = std::min(_bb[d].first, other_bb[d].first);
-      _bb[d].second = std::max(_bb[d].second, other_bb[d].second);
-    }
+    _boundingBoxPrepared = _bb.mergeBoundingBoxes(other_bb);
   }
-
-  // Enlarge BB
-  PRECICE_ASSERT(_safetyFactor >= 0.0);
-
-  double maxSideLength = 1e-6; // we need some minimum > 0 here
-
-  for (int d = 0; d < _dimensions; d++) {
-    if (_bb[d].second > _bb[d].first)
-      maxSideLength = std::max(maxSideLength, _bb[d].second - _bb[d].first);
-  }
-  for (int d = 0; d < _dimensions; d++) {
-    _bb[d].second += _safetyFactor * maxSideLength;
-    _bb[d].first -= _safetyFactor * maxSideLength;
-    PRECICE_DEBUG("Merged BoundingBox, dim: " << d << ", first: " << _bb[d].first << ", second: " << _bb[d].second);
-  }
-
-  _boundingBoxPrepared = true;
-}
-
-bool ReceivedPartition::isVertexInBB(const mesh::Vertex &vertex)
-{
-  return isVertexInBoundingBox(vertex, _bb);
 }
 
 void ReceivedPartition::createOwnerInformation()

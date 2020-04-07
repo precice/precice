@@ -176,53 +176,53 @@ struct closure<pm::Quad> {
 /*
  * Mesh::BoundingBox should be fulfilling the boost.geometry Box concept
  */
-using BoundingBox = std::vector<std::pair<double, double>>;
+//using BoundingBox = std::vector<std::pair<double, double>>;
 
 template <>
-struct tag<BoundingBox> {
+struct tag<pm::BoundingBox> {
   using type = box_tag;
 };
 
 namespace bg = ::boost::geometry;
 template <>
-struct point_type<BoundingBox> {
+struct point_type<pm::BoundingBox> {
   using point_t = bg::model::point<double, 3, bg::cs::cartesian>; //fake point type.
   using type    = point_t;                                        //BoundingBox does not consist of this point type, actually.
 };
 
 template <std::size_t Dimension>
-struct indexed_access<BoundingBox, min_corner, Dimension> {
-  static inline double get(const BoundingBox &bb)
+struct indexed_access<pm::BoundingBox, min_corner, Dimension> {
+  static inline double get(const pm::BoundingBox &bb)
   {
-    if (Dimension >= bb.size())
+    if (Dimension >= bb.getDimension())
       return std::numeric_limits<double>::lowest();
-    return bb[Dimension].first;
+    return bb.getData(Dimension, 1);
   }
-  static inline void set(BoundingBox &bb, double value)
+  static inline void set(pm::BoundingBox &bb, double value)
   {
-    if (Dimension >= bb.size())
+    if (Dimension >= bb.getDimension())
       return;
-    bb[Dimension].first = value;
+    bb.setMin(Dimension,value);
   }
 };
 
 template <std::size_t Dimension>
-struct indexed_access<BoundingBox, max_corner, Dimension> {
-  static inline double get(const BoundingBox &bb)
+struct indexed_access<pm::BoundingBox, max_corner, Dimension> {
+  static inline double get(const pm::BoundingBox &bb)
   {
-    if (Dimension >= bb.size())
+    if (Dimension >= bb.getDimension())
       return std::numeric_limits<double>::max();
-    return bb[Dimension].second;
+    return bb.getData(Dimension, 2);
   }
-  static inline void set(BoundingBox &bb, const double &value)
+  static inline void set(pm::BoundingBox &bb, const double &value)
   {
-    if (Dimension >= bb.size())
+    if (Dimension >= bb.getDimension())
       return;
-    bb[Dimension].second = value;
+    bb.setMax(Dimension,value);
   }
 };
 
-BOOST_CONCEPT_ASSERT((bg::concepts::Box<BoundingBox>) );
+BOOST_CONCEPT_ASSERT((bg::concepts::Box<pm::BoundingBox>) );
 
 } // namespace traits
 } // namespace geometry

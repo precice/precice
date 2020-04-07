@@ -14,11 +14,11 @@ public:
       com::PtrCommunication communication);
 
   void sendBoundingBox(
-      const mesh::Mesh::BoundingBox &bb,
+      const mesh::BoundingBox &bb,
       int                            rankReceiver);
 
   void receiveBoundingBox(
-      mesh::Mesh::BoundingBox &bb,
+      mesh::BoundingBox &bb,
       int                      rankSender);
 
   void sendBoundingBoxMap(

@@ -819,8 +819,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
     auto bb       = otherMesh->getBoundingBox();
     // Enlarge by support radius
     for (int d = 0; d < otherMesh->getDimensions(); d++) {
-      bb[d].first -= _basisFunction.getSupportRadius();
-      bb[d].second += _basisFunction.getSupportRadius();
+      bb.setBounds(d,  bb.getData(d,1) - _basisFunction.getSupportRadius(), bb.getData(d,2) + _basisFunction.getSupportRadius());      
     }
     rtree->query(bgi::within(bb),
                  boost::make_function_output_iterator([&filterMesh](size_t idx) {
@@ -851,25 +850,19 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
   else if (getConstraint() == CONSERVATIVE)
     mesh = output();
 
-  mesh::Mesh::BoundingBox bb(mesh->getDimensions(),
-                             std::make_pair(std::numeric_limits<double>::max(),
-                                            std::numeric_limits<double>::lowest()));
+  mesh::BoundingBox bb(mesh->getDimensions());
 
   // Construct bounding box around all owned vertices
   for (mesh::Vertex &v : mesh->vertices()) {
     if (v.isOwner()) {
       PRECICE_ASSERT(v.isTagged()); // Should be tagged from the first round
-      for (int d = 0; d < v.getDimensions(); d++) {
-        bb[d].first  = std::min(v.getCoords()[d], bb[d].first);
-        bb[d].second = std::max(v.getCoords()[d], bb[d].second);
-      }
+      bb.expandTo(v);
     }
   }
 
   // Enlarge bb by support radius
   for (int d = 0; d < mesh->getDimensions(); d++) {
-    bb[d].first -= _basisFunction.getSupportRadius();
-    bb[d].second += _basisFunction.getSupportRadius();
+    bb.setBounds(d,  bb.getData(d,1) - _basisFunction.getSupportRadius(), bb.getData(d,2) + _basisFunction.getSupportRadius());   
   }
   auto rtree = mesh::rtree::getVertexRTree(mesh);
   rtree->query(boost::geometry::index::within(bb),
@@ -910,7 +903,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::estimatePreallocationMat
   // PRECICE_WARN(bbox);
   for (int d = 0; d < getDimensions(); d++)
     if (not _deadAxis[d])
-      meshArea *= bbox[d].second - bbox[d].first;
+      meshArea *= bbox.getData(d,2) - bbox.getData(d,1);
 
   // supportVolume = math::PI * 4.0/3.0 * std::pow(supportRadius, 3);
   double supportVolume = 0;
@@ -954,7 +947,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::estimatePreallocationMat
   // PRECICE_WARN(bbox);
   for (int d = 0; d < getDimensions(); d++)
     if (not _deadAxis[d])
-      meshArea *= bbox[d].second - bbox[d].first;
+      meshArea *= bbox.getData(d,2) - bbox.getData(d,1);
 
   // supportVolume = math::PI * 4.0/3.0 * std::pow(supportRadius, 3);
   double supportVolume = 0;
