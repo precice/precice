@@ -6,9 +6,7 @@ All notable changes to this project will be documented in this file. For future 
 - Implemented a new action to sum up data values, `action:summation`.
 - Added many tests for the communication abstraction.
 - Refactor `com::Communication` handling of rank adjustments.
-- Changed test setup to a simpler and consistent version. Tests now require to run on 4 MPI ranks. They will still compile but not run when `MPICommunication=OFF`.
-- Added `testing::TestContext` which handles test setups.
-- Changed the example tests to reflect the new test system.
+- Changed test setup to a simpler and consistent version using the new `testing::TestContext`. Tests now require to run on 4 MPI ranks. They will still compile but not run when `MPICommunication=OFF`.
 - Added tests which build solverdummies and test which run them in various configurations.
 - Enable RBF-based tests in partiton unit-tests and serial integration tests
 - Split multi-setup intergration tests into multiple single-setup tests.
