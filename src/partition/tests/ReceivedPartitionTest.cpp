@@ -771,95 +771,89 @@ BOOST_AUTO_TEST_CASE(RePartitionNPBroadcastFilter3D)
 
 BOOST_AUTO_TEST_CASE(TestRepartitionAndDistribution2D)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::Events);
-  // Create mesh object
-  int           dimensions  = 2;
-  bool          flipNormals = false; // The normals of triangles, edges, vertices
-  mesh::PtrMesh pMesh(new mesh::Mesh("MyMesh", dimensions, flipNormals, testing::nextMeshID()));
-  mesh::PtrMesh pOtherMesh(new mesh::Mesh("OtherMesh", dimensions, flipNormals, testing::nextMeshID()));
+  PRECICE_TEST("Solid"_on(1_rank), "Fluid"_on(3_ranks).setupMasterSlaves(), Require::Events);
+  auto m2n = context.connectMasters("Solid", "Fluid");
 
-  mapping::PtrMapping boundingFromMapping = mapping::PtrMapping(
-      new mapping::NearestNeighborMapping(mapping::Mapping::CONSISTENT, dimensions));
-  boundingFromMapping->setMeshes(pMesh, pOtherMesh);
+  int  dimensions  = 2;
+  bool flipNormals = false;
 
-  if (context.isMaster()) { //Master
+  if (context.isNamed("Solid")) { //SOLIDZ
+    mesh::PtrMesh pMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::nextMeshID()));
+
     Eigen::VectorXd position(dimensions);
     position << 0.0, 0.0;
     mesh::Vertex &v1 = pMesh->createVertex(position);
-    v1.setGlobalIndex(0);
     position << 1.0, 0.0;
     mesh::Vertex &v2 = pMesh->createVertex(position);
-    v2.setGlobalIndex(1);
     position << 2.0, 0.0;
     mesh::Vertex &v3 = pMesh->createVertex(position);
-    v3.setGlobalIndex(2);
-  } else if (context.isRank(1)) { //Slave1
-    Eigen::VectorXd position(dimensions);
-    position << 0.0, 0.0;
-    pOtherMesh->createVertex(position);
-    position << 0.8, 0.0;
-    pOtherMesh->createVertex(position);
-  } else if (context.isRank(2)) { //Slave2
-    Eigen::VectorXd position(dimensions);
-    position << 1.0, 0.0;
-    pOtherMesh->createVertex(position);
-    position << 1.2, 0.0;
-    pOtherMesh->createVertex(position);
-  } else if (context.isRank(3)) { //Slave3
-  }
-  pOtherMesh->computeState();
-  pOtherMesh->computeBoundingBox();
-  pMesh->setGlobalNumberOfVertices(3);
-  pMesh->computeState();
-  pMesh->computeBoundingBox();
 
-  double            safetyFactor = 20.0; //should not filter out anything here
-  ReceivedPartition part(pMesh, ReceivedPartition::ON_MASTER, safetyFactor);
-  part.setFromMapping(boundingFromMapping);
-  part.addM2N(context.dummyM2N());
-  part.compute();
+    pMesh->computeState();
+    pMesh->computeBoundingBox();
 
-  if (context.isMaster()) { //Master
-    BOOST_TEST(pMesh->getVertexOffsets().size() == 4);
-    BOOST_TEST(pMesh->getVertexOffsets()[0] == 0);
-    BOOST_TEST(pMesh->getVertexOffsets()[1] == 2);
+    ProvidedPartition part(pMesh);
+    part.addM2N(m2n);
+    part.communicate();
+
+  } else {
+    BOOST_TEST(context.isNamed("Fluid"));
+    mesh::PtrMesh pMesh(new mesh::Mesh("NastinMesh", dimensions, flipNormals, testing::nextMeshID()));
+    mesh::PtrMesh pOtherMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::nextMeshID()));
+
+    mapping::PtrMapping boundingFromMapping = mapping::PtrMapping(
+        new mapping::NearestNeighborMapping(mapping::Mapping::CONSISTENT, dimensions));
+    boundingFromMapping->setMeshes(pMesh, pOtherMesh);
+
+    if (context.isMaster()) { //Master
+      Eigen::VectorXd position(dimensions);
+      position << 0.0, 0.0;
+      pOtherMesh->createVertex(position);
+      position << 0.8, 0.0;
+      pOtherMesh->createVertex(position);
+    } else if (context.isRank(1)) { //Slave2
+      Eigen::VectorXd position(dimensions);
+      position << 1.0, 0.0;
+      pOtherMesh->createVertex(position);
+      position << 1.2, 0.0;
+      pOtherMesh->createVertex(position);
+    } else if (context.isRank(2)) { //Slave3
+      // no vertices
+    }
+
+    pOtherMesh->computeState();
+    pOtherMesh->computeBoundingBox();
+
+    double            safetyFactor = 20.0;
+    ReceivedPartition part(pMesh, ReceivedPartition::ON_MASTER, safetyFactor);
+    part.addM2N(m2n);
+    part.setFromMapping(boundingFromMapping);
+    part.communicate();
+    part.compute();
+
+    BOOST_TEST(pMesh->getVertexOffsets().size() == 3);
+    BOOST_TEST(pMesh->getVertexOffsets()[0] == 2);
+    BOOST_TEST(pMesh->getVertexOffsets()[1] == 3);
     BOOST_TEST(pMesh->getVertexOffsets()[2] == 3);
-    BOOST_TEST(pMesh->getVertexOffsets()[3] == 3);
-    BOOST_TEST(pMesh->getVertexDistribution()[0].size() == 0);
-    BOOST_TEST(pMesh->getVertexDistribution()[1].size() == 2);
-    BOOST_TEST(pMesh->getVertexDistribution()[2].size() == 1);
-    BOOST_TEST(pMesh->getVertexDistribution()[3].size() == 0);
-    BOOST_TEST(pMesh->getVertexDistribution()[1][0] == 0);
-    BOOST_TEST(pMesh->getVertexDistribution()[1][1] == 1);
-    BOOST_TEST(pMesh->getVertexDistribution()[2][0] == 1);
-    BOOST_TEST(pMesh->vertices().size() == 0);
-  } else if (context.isRank(1)) { //Slave1
-    BOOST_TEST(pMesh->getVertexOffsets().size() == 4);
-    BOOST_TEST(pMesh->getVertexOffsets()[0] == 0);
-    BOOST_TEST(pMesh->getVertexOffsets()[1] == 2);
-    BOOST_TEST(pMesh->getVertexOffsets()[2] == 3);
-    BOOST_TEST(pMesh->getVertexOffsets()[3] == 3);
-    BOOST_TEST(pMesh->vertices().size() == 2);
-    BOOST_TEST(pMesh->vertices()[0].getGlobalIndex() == 0);
-    BOOST_TEST(pMesh->vertices()[1].getGlobalIndex() == 1);
-    BOOST_TEST(pMesh->vertices()[0].isOwner() == true);
-    BOOST_TEST(pMesh->vertices()[1].isOwner() == false);
-  } else if (context.isRank(2)) { //Slave2
-    BOOST_TEST(pMesh->getVertexOffsets().size() == 4);
-    BOOST_TEST(pMesh->getVertexOffsets()[0] == 0);
-    BOOST_TEST(pMesh->getVertexOffsets()[1] == 2);
-    BOOST_TEST(pMesh->getVertexOffsets()[2] == 3);
-    BOOST_TEST(pMesh->getVertexOffsets()[3] == 3);
-    BOOST_TEST(pMesh->vertices().size() == 1);
-    BOOST_TEST(pMesh->vertices()[0].getGlobalIndex() == 1);
-    BOOST_TEST(pMesh->vertices()[0].isOwner() == true);
-  } else if (context.isRank(3)) { //Slave3
-    BOOST_TEST(pMesh->getVertexOffsets().size() == 4);
-    BOOST_TEST(pMesh->getVertexOffsets()[0] == 0);
-    BOOST_TEST(pMesh->getVertexOffsets()[1] == 2);
-    BOOST_TEST(pMesh->getVertexOffsets()[2] == 3);
-    BOOST_TEST(pMesh->getVertexOffsets()[3] == 3);
-    BOOST_TEST(pMesh->vertices().size() == 0);
+
+    if (context.isMaster()) { //Master
+      BOOST_TEST(pMesh->getVertexDistribution()[0].size() == 2);
+      BOOST_TEST(pMesh->getVertexDistribution()[1].size() == 1);
+      BOOST_TEST(pMesh->getVertexDistribution()[2].size() == 0);
+      BOOST_TEST(pMesh->getVertexDistribution()[0][0] == 0);
+      BOOST_TEST(pMesh->getVertexDistribution()[0][1] == 1);
+      BOOST_TEST(pMesh->getVertexDistribution()[1][0] == 1);
+      BOOST_TEST(pMesh->vertices().size() == 2);
+      BOOST_TEST(pMesh->vertices()[0].getGlobalIndex() == 0);
+      BOOST_TEST(pMesh->vertices()[1].getGlobalIndex() == 1);
+      BOOST_TEST(pMesh->vertices()[0].isOwner() == true);
+      BOOST_TEST(pMesh->vertices()[1].isOwner() == false);
+    } else if (context.isRank(1)) { //Slave2
+      BOOST_TEST(pMesh->vertices().size() == 1);
+      BOOST_TEST(pMesh->vertices()[0].getGlobalIndex() == 1);
+      BOOST_TEST(pMesh->vertices()[0].isOwner() == true);
+    } else if (context.isRank(2)) { //Slave3
+      BOOST_TEST(pMesh->vertices().size() == 0);
+    }
   }
 }
 

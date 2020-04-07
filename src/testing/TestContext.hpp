@@ -20,7 +20,7 @@ struct Ranks {
  *
  * @param[in] value the amount of ranks <= 1
  *
- * @returns a strong typed count of ranks 
+ * @returns a strong typed count of ranks
  */
 inline constexpr Ranks operator""_ranks(unsigned long long value)
 {
@@ -136,7 +136,7 @@ struct ConnectionOptions {
  *
  * @note Do not use this type directly. Use @ref PRECICE_TEST() instead.
  *
- * This type is responsible for 
+ * This type is responsible for
  * 1. making sure that there are enough ranks to run the test on.
  * 2. restricting and splitting the MPI Communicator.
  * 3. handling invalid contexts (such as unneeded ranks)
@@ -240,19 +240,12 @@ public:
    * @param[in] acceptor the accepting participant
    * @param[in] requestor the requesting participant
    * @param[in] options a set of options concerning the created connection
-   * 
+   *
    * @note This function throws if the acceptor or requestor are unknown!
    *
    * @see ConnectionOptions
    */
   m2n::PtrM2N connectMasters(const std::string &acceptor, const std::string &requestor, const ConnectionOptions &options = ConnectionOptions{}) const;
-
-
-  /** Creates a dummy M2N
-   *
-   * @see connectMasters()
-   */
-  m2n::PtrM2N dummyM2N() const;
 
   /// Provides a user- and log-friendly description of the current context
   std::string describe() const;
