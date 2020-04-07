@@ -510,25 +510,27 @@ BOOST_AUTO_TEST_CASE(testExplicitWithSolverGeometry)
  * and stay constant over the coupling cycles. SolverTwo has a scaling of the
  * values activated and reads the scaled values.
  */
-BOOST_AUTO_TEST_CASE(testExplicitWithDataScaling, *testing::Deleted())
+BOOST_AUTO_TEST_CASE(testExplicitWithDataScaling)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
   SolverInterface cplInterface(context.name, _pathToTests + "explicit-datascaling.xml", 0, 1);
   BOOST_TEST(cplInterface.getDimensions() == 2);
+
+  std::vector<double> positions = {0.0, 0.0, 0.0, 0.1, 0.1, 0.1, 0.1, 0.0};
+  std::vector<int>    ids       = {0, 0, 0, 0};
+
   if (context.isNamed("SolverOne")) {
-    int                 meshID    = cplInterface.getMeshID("Test-Square");
-    std::vector<double> positions = {0.0, 0.0, 0.1, 0.0, 0.2, 0.0, 0.3, 0.0, 0.4, 0.0};
-    std::vector<int>    ids       = {0, 0, 0, 0, 0};
-    cplInterface.setMeshVertices(meshID, 5, positions.data(), ids.data());
+    int meshID = cplInterface.getMeshID("Test-Square-One");
+    cplInterface.setMeshVertices(meshID, 4, positions.data(), ids.data());
     for (int i = 0; i < 4; i++)
-      cplInterface.setMeshEdge(meshID, ids[i], ids[i + 1]);
+      cplInterface.setMeshEdge(meshID, ids[i], ids[(i + 1) % 4]);
 
     double dt = cplInterface.initialize();
 
     int velocitiesID = cplInterface.getDataID("Velocities", meshID);
     while (cplInterface.isCouplingOngoing()) {
-      for (size_t i = 0; i < impl(cplInterface).mesh("Test-Square").vertices().size(); ++i) {
+      for (size_t i = 0; i < impl(cplInterface).mesh("Test-Square-One").vertices().size(); ++i) {
         Eigen::Vector2d data = Eigen::Vector2d::Constant(i);
         cplInterface.writeVectorData(velocitiesID, i, data.data());
       }
@@ -537,16 +539,22 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDataScaling, *testing::Deleted())
     cplInterface.finalize();
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    double dt           = cplInterface.initialize();
-    int    meshID       = cplInterface.getMeshID("Test-Square");
-    int    velocitiesID = cplInterface.getDataID("Velocities", meshID);
+    int meshID = cplInterface.getMeshID("Test-Square-Two");
+    cplInterface.setMeshVertices(meshID, 4, positions.data(), ids.data());
+    for (int i = 0; i < 4; i++)
+      cplInterface.setMeshEdge(meshID, ids[i], ids[(i + 1) % 4]);
+
+    double dt = cplInterface.initialize();
+
+    int velocitiesID = cplInterface.getDataID("Velocities", meshID);
     while (cplInterface.isCouplingOngoing()) {
-      const auto size = impl(cplInterface).mesh("Test-Square").vertices().size();
+      const auto size = impl(cplInterface).mesh("Test-Square-Two").vertices().size();
       for (size_t i = 0; i < size; ++i) {
         Eigen::Vector2d readData;
         cplInterface.readVectorData(velocitiesID, i, readData.data());
         Eigen::Vector2d expectedData = Eigen::Vector2d::Constant(i * 10.0);
-        BOOST_TEST(readData == expectedData, boost::test_tools::tolerance(5e-13));
+        BOOST_TEST(readData[0] == expectedData[0]);
+        BOOST_TEST(readData[1] == expectedData[1]);
       }
       dt = cplInterface.advance(dt);
     }
@@ -1353,7 +1361,7 @@ BOOST_AUTO_TEST_CASE(PreconditionerBug)
   cplInterface.finalize();
 }
 
-void testSummationAction(const std::string configFile, TestContext const & context)
+void testSummationAction(const std::string configFile, TestContext const &context)
 {
   using Eigen::Vector3d;
 
@@ -1363,7 +1371,7 @@ void testSummationAction(const std::string configFile, TestContext const & conte
     double expectedValueB = 7.0;
     double expectedValueC = 11.0;
     double expectedValueD = 15.0;
-    
+
     // Target solver
     SolverInterface cplInterface(context.name, configFile, 0, 1);
 
@@ -1387,7 +1395,7 @@ void testSummationAction(const std::string configFile, TestContext const & conte
     int    dataAID = cplInterface.getDataID("Target", meshID);
     double valueA, valueB, valueC, valueD;
 
-    while(cplInterface.isCouplingOngoing()){ 
+    while (cplInterface.isCouplingOngoing()) {
 
       cplInterface.readScalarData(dataAID, idA, valueA);
       cplInterface.readScalarData(dataAID, idB, valueB);
@@ -1400,12 +1408,10 @@ void testSummationAction(const std::string configFile, TestContext const & conte
       BOOST_TEST(valueD == expectedValueD);
 
       dt = cplInterface.advance(dt);
-
     }
 
     cplInterface.finalize();
-  }
-  else if (context.isNamed("SolverSourceOne")) {
+  } else if (context.isNamed("SolverSourceOne")) {
     // Source solver one
     SolverInterface cplInterface(context.name, configFile, 0, 1);
 
@@ -1426,12 +1432,12 @@ void testSummationAction(const std::string configFile, TestContext const & conte
     double dt = cplInterface.initialize();
 
     int    dataAID = cplInterface.getDataID("SourceOne", meshID);
-    double   valueA = 1.0;
-    double   valueB = 3.0;
-    double   valueC = 5.0;
-    double   valueD = 7.0;
+    double valueA  = 1.0;
+    double valueB  = 3.0;
+    double valueC  = 5.0;
+    double valueD  = 7.0;
 
-    while(cplInterface.isCouplingOngoing()){
+    while (cplInterface.isCouplingOngoing()) {
 
       cplInterface.writeScalarData(dataAID, idA, valueA);
       cplInterface.writeScalarData(dataAID, idB, valueB);
@@ -1439,7 +1445,6 @@ void testSummationAction(const std::string configFile, TestContext const & conte
       cplInterface.writeScalarData(dataAID, idD, valueD);
 
       dt = cplInterface.advance(dt);
-
     }
     cplInterface.finalize();
   } else {
@@ -1463,12 +1468,12 @@ void testSummationAction(const std::string configFile, TestContext const & conte
     double dt = cplInterface.initialize();
 
     int    dataAID = cplInterface.getDataID("SourceTwo", meshID);
-    double   valueA = 2.0;
-    double   valueB = 4.0;
-    double   valueC = 6.0;
-    double   valueD = 8.0;
+    double valueA  = 2.0;
+    double valueB  = 4.0;
+    double valueC  = 6.0;
+    double valueD  = 8.0;
 
-    while(cplInterface.isCouplingOngoing()){
+    while (cplInterface.isCouplingOngoing()) {
 
       cplInterface.writeScalarData(dataAID, idA, valueA);
       cplInterface.writeScalarData(dataAID, idB, valueB);
@@ -1476,7 +1481,6 @@ void testSummationAction(const std::string configFile, TestContext const & conte
       cplInterface.writeScalarData(dataAID, idD, valueD);
 
       dt = cplInterface.advance(dt);
-      
     }
     cplInterface.finalize();
   }
@@ -1489,7 +1493,7 @@ void testSummationAction(const std::string configFile, TestContext const & conte
 BOOST_AUTO_TEST_CASE(testSummationActionTwoSources)
 {
   PRECICE_TEST("SolverTarget"_on(1_rank), "SolverSourceOne"_on(1_rank), "SolverSourceTwo"_on(1_rank));
-  const std::string configFile            = _pathToTests + "summation-action.xml";
+  const std::string configFile = _pathToTests + "summation-action.xml";
   testSummationAction(configFile, context);
 }
 
