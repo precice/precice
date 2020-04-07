@@ -243,7 +243,7 @@ m2n::PtrM2N TestContext::connectMasters(const std::string &acceptor, const std::
 
 m2n::PtrM2N TestContext::dummyM2N() const
 {
-  com::PtrCommunication participantCom = com::PtrCommunication(new com::MPIDirectCommunication());
+  com::PtrCommunication participantCom = com::PtrCommunication(new com::SocketCommunication());
   m2n::DistributedComFactory::SharedPointer distrFactory = m2n::DistributedComFactory::SharedPointer(new m2n::GatherScatterComFactory(participantCom));
   return m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory));
 }
