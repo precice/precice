@@ -9,7 +9,7 @@ All notable changes to this project will be documented in this file. For future 
 - Changed test setup to a simpler and consistent version using the new `testing::TestContext`. Tests now require to run on 4 MPI ranks. They will still compile but not run when `MPICommunication=OFF`.
 - Added tests which build solverdummies and test which run them in various configurations.
 - Enable RBF-based tests in partiton unit-tests and serial integration tests
-- Split multi-setup intergration tests into multiple single-setup tests.
+- Split multi-setup integration tests into multiple single-setup tests.
 - Change `com::MPIDirectcommunication` to work only for Master-Slave connections.
 - Removed `m2n:mpi-single`, which never worked outside tests.
 
