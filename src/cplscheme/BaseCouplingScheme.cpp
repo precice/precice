@@ -117,31 +117,30 @@ void BaseCouplingScheme::addDataToReceive(
   }
 }
 
-std::vector<int> BaseCouplingScheme::sendData(m2n::PtrM2N m2n)
+std::vector<int> BaseCouplingScheme::sendData()
 {
   PRECICE_TRACE();
   std::vector<int> sentDataIDs;
-  PRECICE_ASSERT(m2n.get() != nullptr);
-  PRECICE_ASSERT(m2n->isConnected());
+  PRECICE_ASSERT(_m2n.get() != nullptr);
+  PRECICE_ASSERT(_m2n->isConnected());
   for (const DataMap::value_type &pair : _sendData) {
     int size = pair.second->values->size();
-    m2n->send(pair.second->values->data(), size, pair.second->mesh->getID(), pair.second->dimension);
+    _m2n->send(pair.second->values->data(), size, pair.second->mesh->getID(), pair.second->dimension);
     sentDataIDs.push_back(pair.first);
   }
   PRECICE_DEBUG("Number of sent data sets = " << sentDataIDs.size());
   return sentDataIDs;
 }
 
-std::vector<int> BaseCouplingScheme::receiveData(
-    m2n::PtrM2N m2n)
+std::vector<int> BaseCouplingScheme::receiveData()
 {
   PRECICE_TRACE();
   std::vector<int> receivedDataIDs;
-  PRECICE_ASSERT(m2n.get() != nullptr);
-  PRECICE_ASSERT(m2n->isConnected());
+  PRECICE_ASSERT(_m2n.get() != nullptr);
+  PRECICE_ASSERT(_m2n->isConnected());
   for (DataMap::value_type &pair : _receiveData) {
     int size = pair.second->values->size();
-    m2n->receive(pair.second->values->data(), size, pair.second->mesh->getID(), pair.second->dimension);
+    _m2n->receive(pair.second->values->data(), size, pair.second->mesh->getID(), pair.second->dimension);
     receivedDataIDs.push_back(pair.first);
   }
   PRECICE_DEBUG("Number of received data sets = " << receivedDataIDs.size());
@@ -753,14 +752,14 @@ bool BaseCouplingScheme::receiveConvergence()
 {
   PRECICE_ASSERT(doesFirstStep(), "For convergence information the receiving participant is always the first one.");
   bool convergence;
-  getM2N()->receive(convergence);
+  _m2n->receive(convergence);
   return convergence;
 }
 
-void BaseCouplingScheme::sendConvergence(m2n::PtrM2N m2n, bool convergence)
+void BaseCouplingScheme::sendConvergence(bool convergence)
 {
   PRECICE_ASSERT(not doesFirstStep(), "For convergence information the sending participant is never the first one.");
-  m2n->send(convergence);
+  _m2n->send(convergence);
 }
 
 bool BaseCouplingScheme::accelerate()

@@ -78,7 +78,7 @@ void SerialCouplingScheme::initializeImplementation()
   if (not doesFirstStep() && not sendsInitializedData() && isCouplingOngoing()) {
     PRECICE_DEBUG("Receiving data");
     receiveAndSetTimeWindowSize();
-    receiveData(getM2N());
+    receiveData();
   }
 }
 
@@ -87,7 +87,7 @@ void SerialCouplingScheme::exchangeInitialData()
   if (doesFirstStep()) {
     PRECICE_ASSERT(not sendsInitializedData(), "First participant cannot send data during initialization.");
     if (receivesInitializedData()) {
-      receiveData(getM2N());
+      receiveData();
     }
   } else { // second participant
     PRECICE_ASSERT(not receivesInitializedData(), "Only first participant can receive data during initialization.");
@@ -95,10 +95,10 @@ void SerialCouplingScheme::exchangeInitialData()
       updateOldValues(getSendData());
       // The second participant sends the initialized data to the first participant
       // here, which receives the data on call of initialize().
-      sendData(getM2N());
+      sendData();
       receiveAndSetTimeWindowSize();
       // This receive replaces the receive in initialize().
-      receiveData(getM2N());
+      receiveData();
     }
   }
 }
@@ -113,27 +113,27 @@ bool SerialCouplingScheme::exchangeDataAndAccelerate()
       PRECICE_DEBUG("sending time window size of " << getComputedTimeWindowPart());  // TODO is this correct?
       getM2N()->send(getComputedTimeWindowPart());
     }
-    sendData(getM2N());
+    sendData();
     if (isImplicitCouplingScheme()) {
       convergence = receiveConvergence();
     }
     PRECICE_DEBUG("Receiving data...");
-    receiveData(getM2N());
+    receiveData();
   } else { // second participant
     if (isImplicitCouplingScheme()) {
       PRECICE_DEBUG("Test Convergence and accelerate...");
       convergence = accelerate();
-      sendConvergence(getM2N(), convergence);
+      sendConvergence(convergence);
     }
     PRECICE_DEBUG("Sending data...");
-    sendData(getM2N());
+    sendData();
     // the second participant does not want new data in the last iteration of the last time window
     if (isCouplingOngoing() || (isImplicitCouplingScheme() && not convergence)) {
       if (_participantReceivesTimeWindowSize) {
         receiveAndSetTimeWindowSize();
       }
       PRECICE_DEBUG("Receiving data...");
-      receiveData(getM2N());
+      receiveData();
     }
   }
 

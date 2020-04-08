@@ -55,6 +55,7 @@ public:
 private:
   void          sendData();
   void          receiveData();
+  void          sendConvergence(bool convergence);
   CouplingData *getData(int dataID);
 
   /// Communication device to the other coupling participant.

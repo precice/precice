@@ -90,9 +90,7 @@ bool MultiCouplingScheme::exchangeDataAndAccelerate()
   PRECICE_DEBUG("Perform acceleration (only second participant)...");
   bool convergence = accelerate();
 
-  for (m2n::PtrM2N m2n : _communications) {
-    sendConvergence(m2n, convergence);
-  }
+  sendConvergence(convergence);
 
   sendData();
 
@@ -152,6 +150,7 @@ void MultiCouplingScheme::sendData()
   PRECICE_TRACE();
 
   for (size_t i = 0; i < _communications.size(); i++) {
+    // copy of BaseCouplingScheme::sendData() @todo can we improve this?
     PRECICE_ASSERT(_communications[i].get() != nullptr);
     PRECICE_ASSERT(_communications[i]->isConnected());
 
@@ -169,6 +168,7 @@ void MultiCouplingScheme::receiveData()
   PRECICE_TRACE();
 
   for (size_t i = 0; i < _communications.size(); i++) {
+    // copy of BaseCouplingScheme::receiveData() @todo can we improve this?
     PRECICE_ASSERT(_communications[i].get() != nullptr);
     PRECICE_ASSERT(_communications[i]->isConnected());
 
@@ -180,6 +180,15 @@ void MultiCouplingScheme::receiveData()
     }
   }
   setHasDataBeenExchanged(true);
+}
+
+void MultiCouplingScheme::sendConvergence(bool convergence)
+{
+  for (m2n::PtrM2N m2n : _communications) {
+    // copy of BaseCouplingScheme::sendConvergence(bool convergence) @todo can we improve this?
+    PRECICE_ASSERT(not doesFirstStep(), "For convergence information the sending participant is never the first one.");
+    m2n->send(convergence);
+  }
 }
 
 CouplingData *MultiCouplingScheme::getData(

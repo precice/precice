@@ -41,20 +41,20 @@ void ParallelCouplingScheme::exchangeInitialData()
   // F: send, receive, S: receive, send
   if (doesFirstStep()) {
     if (sendsInitializedData()) {
-      sendData(getM2N());
+      sendData();
     }
     if (receivesInitializedData()) {
-      receiveData(getM2N());
+      receiveData();
     }
   } else { // second participant
     if (receivesInitializedData()) {
-      receiveData(getM2N());
+      receiveData();
       // second participant has to save values for extrapolation
       updateOldValues(getReceiveData());
     }
     if (sendsInitializedData()) {
       updateOldValues(getSendData());
-      sendData(getM2N());
+      sendData();
     }
   }
 }
@@ -65,22 +65,22 @@ bool ParallelCouplingScheme::exchangeDataAndAccelerate()
 
   if (doesFirstStep()) { //first participant
     PRECICE_DEBUG("Sending data...");
-    sendData(getM2N());
+    sendData();
     PRECICE_DEBUG("Receiving data...");
     if(isImplicitCouplingScheme()) {
       convergence = receiveConvergence();
     }
-    receiveData(getM2N());
+    receiveData();
   } else { //second participant
     PRECICE_DEBUG("Receiving data...");
-    receiveData(getM2N());
+    receiveData();
     if (isImplicitCouplingScheme()) {
       PRECICE_DEBUG("Perform acceleration (only second participant)...");
       convergence = accelerate();
-      sendConvergence(getM2N(), convergence);
+      sendConvergence(convergence);
     }
     PRECICE_DEBUG("Sending data...");
-    sendData(getM2N());
+    sendData();
   }
 
   return convergence;

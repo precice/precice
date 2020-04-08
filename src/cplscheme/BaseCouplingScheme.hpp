@@ -239,10 +239,10 @@ protected:
   }
 
   /// Sends data sendDataIDs given in mapCouplingData with communication.
-  std::vector<int> sendData(m2n::PtrM2N m2n);
+  std::vector<int> sendData();
 
   /// Receives data receiveDataIDs given in mapCouplingData with communication.
-  std::vector<int> receiveData(m2n::PtrM2N m2n);
+  std::vector<int> receiveData();
 
   /// Returns all data to be sent.
   DataMap &getSendData()
@@ -327,7 +327,7 @@ protected:
   bool receiveConvergence();
 
   /// TODO
-  void sendConvergence(m2n::PtrM2N m2n, bool convergence);
+  void sendConvergence(bool convergence);
 
   /// TODO
   bool accelerate();
