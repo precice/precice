@@ -6,10 +6,11 @@ using namespace precice;
 using namespace precice::utils;
 
 BOOST_AUTO_TEST_SUITE(UtilsTests)
-BOOST_AUTO_TEST_SUITE(MultiLockTests, *testing::OnMaster())
+BOOST_AUTO_TEST_SUITE(MultiLockTests)
 
 BOOST_AUTO_TEST_CASE(MultiLockTest)
 {
+  PRECICE_TEST(1_rank);
   MultiLock<std::string> mlock;
 
   BOOST_TEST(mlock.checkAll());

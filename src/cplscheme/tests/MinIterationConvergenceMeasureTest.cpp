@@ -8,6 +8,7 @@ using namespace cplscheme;
 
 BOOST_AUTO_TEST_CASE(MinIterationConvergenceMeasureTest)
 {
+  PRECICE_TEST(1_rank);
   cplscheme::impl::MinIterationConvergenceMeasure measure(5);
   Eigen::VectorXd                                 emptyValues; // No values needed for min-iter
 

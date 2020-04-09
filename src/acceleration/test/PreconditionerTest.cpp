@@ -4,7 +4,6 @@
 #include "acceleration/impl/SharedPointer.hpp"
 #include "acceleration/impl/ValuePreconditioner.hpp"
 #include "com/MPIDirectCommunication.hpp"
-#include "testing/Fixtures.hpp"
 #include "testing/Testing.hpp"
 
 BOOST_AUTO_TEST_SUITE(AccelerationTests)
@@ -89,6 +88,7 @@ BOOST_FIXTURE_TEST_SUITE(ResPreconditionerTests, ResPreconditionerFixture)
 
 BOOST_AUTO_TEST_CASE(testResPreconditioner)
 {
+  PRECICE_TEST(1_rank);
   std::vector<size_t> svs;
   svs.push_back(2);
   svs.push_back(4);
@@ -119,6 +119,7 @@ BOOST_AUTO_TEST_CASE(testResPreconditioner)
 
 BOOST_AUTO_TEST_CASE(testResSumPreconditioner)
 {
+  PRECICE_TEST(1_rank);
   std::vector<size_t> svs;
   svs.push_back(2);
   svs.push_back(4);
@@ -151,6 +152,7 @@ BOOST_AUTO_TEST_CASE(testResSumPreconditioner)
 
 BOOST_AUTO_TEST_CASE(testValuePreconditioner)
 {
+  PRECICE_TEST(1_rank);
   std::vector<size_t> svs;
   svs.push_back(2);
   svs.push_back(4);
@@ -186,6 +188,7 @@ BOOST_AUTO_TEST_CASE(testValuePreconditioner)
 
 BOOST_AUTO_TEST_CASE(testConstPreconditioner)
 {
+  PRECICE_TEST(1_rank);
   std::vector<size_t> svs;
   svs.push_back(2);
   svs.push_back(4);
@@ -220,6 +223,7 @@ BOOST_AUTO_TEST_CASE(testConstPreconditioner)
 
 BOOST_AUTO_TEST_CASE(testMultilpleMeshes)
 {
+  PRECICE_TEST(1_rank);
   std::vector<size_t> svs;
   svs.push_back(3);
   svs.push_back(5);
@@ -248,18 +252,18 @@ BOOST_AUTO_TEST_CASE(testMultilpleMeshes)
 }
 
 #ifndef PRECICE_NO_MPI
-BOOST_AUTO_TEST_CASE(testParallelMatrixScaling,
-                     *testing::OnSize(4) * boost::unit_test::fixture<testing::MasterComFixture>())
+BOOST_AUTO_TEST_CASE(testParallelMatrixScaling)
 {
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
   //setup data
   int localN = -1;
-  if (utils::Parallel::getProcessRank() == 0) {
+  if (context.isMaster()) {
     localN = 2;
-  } else if (utils::Parallel::getProcessRank() == 1) {
+  } else if (context.isRank(1)) {
     localN = 1;
-  } else if (utils::Parallel::getProcessRank() == 2) {
+  } else if (context.isRank(2)) {
     localN = 0;
-  } else if (utils::Parallel::getProcessRank() == 3) {
+  } else if (context.isRank(3)) {
     localN = 1;
   }
 
@@ -272,7 +276,7 @@ BOOST_AUTO_TEST_CASE(testParallelMatrixScaling,
   Eigen::MatrixXd M_back(globalN, localN);
   Eigen::VectorXd x_back(localN);
 
-  if (utils::Parallel::getProcessRank() == 0) {
+  if (context.isMaster()) {
     V(0, 0) = 1.0;
     V(0, 1) = 2.0;
     V(1, 0) = 3.0;
@@ -287,7 +291,7 @@ BOOST_AUTO_TEST_CASE(testParallelMatrixScaling,
     M(3, 1) = 4.0;
     x(0)    = 5.0;
     x(1)    = 5.0;
-  } else if (utils::Parallel::getProcessRank() == 1) {
+  } else if (context.isRank(1)) {
     V(0, 0) = 5.0;
     V(0, 1) = 6.0;
     M(0, 0) = 1.0;
@@ -295,8 +299,8 @@ BOOST_AUTO_TEST_CASE(testParallelMatrixScaling,
     M(2, 0) = 3.0;
     M(3, 0) = 4.0;
     x(0)    = 5.0;
-  } else if (utils::Parallel::getProcessRank() == 2) {
-  } else if (utils::Parallel::getProcessRank() == 3) {
+  } else if (context.isRank(2)) {
+  } else if (context.isRank(3)) {
     V(0, 0) = 7.0;
     V(0, 1) = 8.0;
     M(0, 0) = 1.0;

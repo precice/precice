@@ -6,8 +6,9 @@ using namespace precice;
 
 BOOST_AUTO_TEST_SUITE(MeshTests)
 
-BOOST_AUTO_TEST_CASE(DataConfig, *testing::OnMaster())
+BOOST_AUTO_TEST_CASE(DataConfig)
 {
+  PRECICE_TEST(1_rank);
   std::string filename(testing::getPathToSources() + "/mesh/tests/data-config.xml");
   int         dim = 3;
   using xml::XMLTag;
