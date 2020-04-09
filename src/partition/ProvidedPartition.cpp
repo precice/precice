@@ -222,13 +222,13 @@ void ProvidedPartition::compareBoundingBoxes()
 
     // to store the collection of bounding boxes
     mesh::Mesh::BoundingBoxMap bbm;
-
+    mesh::BoundingBox bb(_mesh->getDimensions());
     bbm[0] = _mesh->getBoundingBox();
 
     // master receives bbs from slaves and stores them in bbm
     for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
       // initialize bbm
-      bbm[rankSlave] = mesh::BoundingBox(_mesh->getDimensions());
+      bbm[rankSlave] = bb;
       com::CommunicateBoundingBox(utils::MasterSlave::_communication).receiveBoundingBox(bbm[rankSlave], rankSlave);
     }
 

@@ -374,7 +374,7 @@ void ReceivedPartition::compareBoundingBoxes()
 
   // define and initialize remote bounding box map
   mesh::Mesh::BoundingBoxMap remoteBBMap;
-  mesh::BoundingBox    initialBB(_dimensions);
+  mesh::BoundingBox    initialBB(_mesh->getDimensions());
   for (int i = 0; i < _dimensions; i++) {
     initialBB.setBounds(i, -1, -1);
   }
@@ -453,6 +453,8 @@ void ReceivedPartition::prepareBoundingBox()
     return;
 
   PRECICE_DEBUG("Merge bounding boxes and increase by safety factor");
+
+  _bb.setSafetyFactor(_safetyFactor);
 
   // Create BB around both "other" meshes
   if (_fromMapping) {

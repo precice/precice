@@ -12,27 +12,26 @@ CommunicateBoundingBox::CommunicateBoundingBox(
 
 void CommunicateBoundingBox::sendBoundingBox(
     const mesh::BoundingBox &bb,
-    int                            rankReceiver)
+    int                     rankReceiver)
 {
   PRECICE_TRACE(rankReceiver);
-
-  _communication->send(bb.data(), rankReceiver);
-
+  _communication->send(bb.data(), bb.getSize(), rankReceiver);
 }
 
 void CommunicateBoundingBox::receiveBoundingBox(
     mesh::BoundingBox &bb,
-    int                      rankSender)
+    int               rankSender)
 {
-  std::vector<double> receivedData;
   PRECICE_TRACE(rankSender);
+  std::vector<double> receivedData;
+  receivedData.reserve(6);
   _communication->receive(receivedData, rankSender);
   bb = mesh::BoundingBox::createFromData(receivedData);
 }
 
 void CommunicateBoundingBox::sendBoundingBoxMap(
     mesh::Mesh::BoundingBoxMap &bbm,
-    int                         rankReceiver)
+    int                        rankReceiver)
 {
 
   PRECICE_TRACE(rankReceiver);
@@ -99,7 +98,7 @@ void CommunicateBoundingBox::broadcastSendBoundingBoxMap(
   _communication->broadcast((int) bbm.size());
 
   for (const auto &rank : bbm) {
-    _communication->broadcast(rank.second.data());
+    _communication->broadcast(rank.second.dataVector());
   }
 }
 
@@ -111,10 +110,11 @@ void CommunicateBoundingBox::broadcastReceiveBoundingBoxMap(
   _communication->broadcast(sizeOfReceivingMap, 0);
   PRECICE_ASSERT(sizeOfReceivingMap == (int) bbm.size());
 
-  for (auto &rank : bbm) {
-    std::vector<double> receivedData;
+  std::vector<double> receivedData;
+
+  for (int i = 0; i < sizeOfReceivingMap; ++i) {
     _communication->receive(receivedData,0);
-    rank.second = mesh::BoundingBox::createFromData(receivedData);
+    bbm[i] = mesh::BoundingBox::createFromData(receivedData);
   }
 }
 

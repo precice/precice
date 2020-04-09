@@ -32,10 +32,6 @@ BOOST_FIXTURE_TEST_CASE(SendAndReceiveBoundingBox, testing::M2NFixture,
     } else if (utils::Parallel::getProcessRank() == 1) {
 
       mesh::BoundingBox bbCompare(dim);
-      for (int i = 0; i < dim; i++) {
-        bbCompare.setBounds(i,-1, -1);
-      }
-
       comBB.receiveBoundingBox(bbCompare, 0);
 
       BOOST_TEST(bb == bbCompare);
@@ -71,16 +67,11 @@ BOOST_FIXTURE_TEST_CASE(SendAndReceiveBoundingBoxMap, testing::M2NFixture,
       mesh::Mesh::BoundingBoxMap bbmCompare;
 
       for (int rank = 0; rank < 3; rank++) {
-        for (int i = 0; i < dim; i++) {
-          bbCompare.setBounds(i,-1, -1);
-        }
         bbmCompare[rank] = bbCompare;
       }
-
       comBB.receiveBoundingBoxMap(bbmCompare, 0);
 
       for (int rank = 0; rank < 3; rank++) {
-
         BOOST_TEST(bbm[rank] == bbmCompare[rank]);
       }
     }
@@ -90,14 +81,14 @@ BOOST_FIXTURE_TEST_CASE(SendAndReceiveBoundingBoxMap, testing::M2NFixture,
 BOOST_AUTO_TEST_CASE(BroadcastSendAndReceiveBoundingBoxMap,
                      *testing::OnSize(4) * boost::unit_test::fixture<testing::MasterComFixture>())
 {
-
+  int dimension = 3;
   // Build BB/BBMap to communicate
 
-  mesh::BoundingBox    bb(3);
+  mesh::BoundingBox    bb{dimension};
   mesh::Mesh::BoundingBoxMap bbm;
 
   for (int i = 0; i < 3; i++) {
-    for (int j = 0; j < 3; j++) {
+    for (int j = 0; j < dimension; j++) {
       bb.setBounds(j, i * j, i * (j + 1));
     }
     bbm[i] = bb;
@@ -109,18 +100,15 @@ BOOST_AUTO_TEST_CASE(BroadcastSendAndReceiveBoundingBoxMap,
     comBB.broadcastSendBoundingBoxMap(bbm);
   } else {
 
-    mesh::BoundingBox    bbCompare(3);
+    mesh::BoundingBox    bbCompare{dimension};
     mesh::Mesh::BoundingBoxMap bbmCompare;
 
     for (int i = 0; i < 3; i++) {
-      bbCompare.setBounds(i, -1, -1);
       bbmCompare[i] = bbCompare;
     }
-
     comBB.broadcastReceiveBoundingBoxMap(bbmCompare);
-
+    BOOST_TEST((int) bbmCompare.size() == 3);
     for (int rank = 0; rank < 3; rank++) {
-
       BOOST_TEST(bbm[rank] == bbmCompare[rank]);
     }
   }

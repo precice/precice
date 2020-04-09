@@ -453,7 +453,6 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D, *testing::OnSize(4))
 
     // we receive golbal bounding box from othe participant!
     com::CommunicateBoundingBox(m2n->getMasterCommunication()).receiveBoundingBoxMap(receivedGlobalBB, 0);
-
     // check wether we have received the correct com size
     BOOST_TEST(receivedFeedbackSize == 3);
 

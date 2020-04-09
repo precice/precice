@@ -4,14 +4,24 @@ namespace precice {
 namespace mesh {
 
 BoundingBox::BoundingBox(std::vector<double> bounds)
-: _bounds(bounds), _dimensions(bounds.size()/2)
 {
-
+  //PRECICE_CHECK(bounds.size() == 4 || bounds.size() == 6, "Dimension of the bounding box should be 2 or 3.");
+  _bounds = bounds;
+  _dimensions = _bounds.size() / 2;
 }
 
 BoundingBox::BoundingBox(int dimension)
 :_dimensions(dimension)
 {
+  PRECICE_CHECK(dimension == 2 || dimension == 3, "Dimension of the bounding box should be 2 or 3.");
+  for(int i = 0; i < _dimensions; ++i){
+    _bounds.push_back(std::numeric_limits<double>::max());
+    _bounds.push_back(std::numeric_limits<double>::lowest());
+  }
+}
+
+BoundingBox::BoundingBox(){
+  _dimensions = 3;
   for(int i = 0; i < _dimensions; ++i){
     _bounds.push_back(std::numeric_limits<double>::max());
     _bounds.push_back(std::numeric_limits<double>::lowest());
@@ -23,8 +33,6 @@ BoundingBox::BoundingBox(const BoundingBox &bb)
   _dimensions = bb._dimensions;
   _bounds     = bb._bounds;
 }
-
-BoundingBox::BoundingBox(){}
 
 BoundingBox::~BoundingBox()
 {
@@ -39,7 +47,15 @@ std::ostream &operator<<(std::ostream &out, const BoundingBox &bb)
 }
 
 bool BoundingBox::operator==(const BoundingBox& otherBB) const{
-  return _bounds == otherBB._bounds;
+  if(_dimensions != otherBB._dimensions){
+    return false;
+  }
+  for(int i = 0; i < _dimensions; ++i){
+    if(std::abs(_bounds.at(i) - otherBB._bounds.at(i)) > 1e-6){
+      return false;
+    }
+  }
+  return true;
 }
 
 BoundingBox BoundingBox::createFromData(std::vector<double> bounds)
@@ -50,23 +66,25 @@ BoundingBox BoundingBox::createFromData(std::vector<double> bounds)
 
 void BoundingBox::setBounds(int dimension, double min, double max)
 {
+  
   if (_dimensions == 2) {
     PRECICE_CHECK(dimension == 0 || dimension == 1, "Given bound limit axis is not compatible with bounding box dimensions.");
   }
   if (_dimensions == 3) {
     PRECICE_CHECK(dimension == 0 || dimension == 1 || dimension == 2, "Given bound limit axis is not compatible with bounding box dimensions.");
   }
-
   _bounds.at(dimension * 2)     = min;
   _bounds.at(dimension * 2 + 1) = max;
 }
 
 void BoundingBox::setMin(int dimension, double min){
-  _bounds[2*dimension] = min;
+  PRECICE_CHECK(dimension == 2 || dimension == 3, "Given dimension to set bounding box is not compatible with the bounding box.");
+  _bounds.at(2*dimension) = min;
 }
 
 void BoundingBox::setMax(int dimension, double max){
-  _bounds[2*dimension+1] = max;
+  PRECICE_CHECK(dimension == 2 || dimension == 3, "Given dimension to set bounding box is not compatible with the bounding box.");
+  _bounds.at(2*dimension+1) = max;
 }
 
 void BoundingBox::setSafetyFactor(double safetyFactor){
@@ -76,7 +94,7 @@ void BoundingBox::setSafetyFactor(double safetyFactor){
 bool BoundingBox::isVertexInBB(const mesh::Vertex &vertex)
 {
   for (int d = 0; d < _dimensions; d++) {
-    if (vertex.getCoords()[d] < _bounds[2 * d] || vertex.getCoords()[d] > _bounds[2 * d + 1]) {
+    if (vertex.getCoords()[d] < _bounds.at(2 * d) || vertex.getCoords()[d] > _bounds.at(2 * d + 1)) {
       return false;
     }
   }
@@ -84,27 +102,27 @@ bool BoundingBox::isVertexInBB(const mesh::Vertex &vertex)
 }
 
 double BoundingBox::getData(int dimension, int type) const{
-
   if(type == 1){
-    return _bounds[2*dimension];
+    return _bounds.at(2*dimension);
   }
   if(type == 2){
-    return _bounds[2*dimension+1];
+    return _bounds.at(2*dimension+1);
   }
-
 }
 
 int BoundingBox::getDimension() const{
   return _dimensions;
 }
 
-const double* BoundingBox::data() const{
-
-  return _bounds.data();
-
+int BoundingBox::getSize() const{
+  return _bounds.size();
 }
 
-std::vector<double> BoundingBox::dataVector(){
+const double* BoundingBox::data() const{
+  return _bounds.data();
+}
+
+const std::vector<double> BoundingBox::dataVector() const{
   return _bounds;
 }
 
@@ -129,13 +147,13 @@ bool BoundingBox::mergeBoundingBoxes(const BoundingBox &otherBB)
   double maxSideLength = 1e-6; // we need some minimum > 0 here
 
   for (int d = 0; d < _dimensions; d++) {
-    if (_bounds[2 * d + 1] > _bounds[2 * d])
+    if (_bounds.at(2 * d + 1) > _bounds.at(2 * d))
       maxSideLength = std::max(maxSideLength, _bounds[2 * d + 1] - _bounds[2 * d]);
   }
   for (int d = 0; d < _dimensions; d++) {
-    _bounds[2 * d + 1] += _safetyFactor * maxSideLength;
-    _bounds[2 * d] -= _safetyFactor * maxSideLength;
-    PRECICE_DEBUG("Merged BoundingBox, dim: " << d << ", first: " << _bounds[2 * d] << ", second: " << _bounds[2 * d + 1]);
+    _bounds.at(2 * d + 1) += _safetyFactor * maxSideLength;
+    _bounds.at(2 * d) -= _safetyFactor * maxSideLength;
+    PRECICE_DEBUG("Merged BoundingBox" << *this);
   }
 
   _prepared = true;
@@ -145,8 +163,8 @@ bool BoundingBox::mergeBoundingBoxes(const BoundingBox &otherBB)
 void BoundingBox::expandTo(const Vertex& vertices){
 
   for(int d = 0; d < _dimensions; ++d){
-    _bounds[2*d] = std::min(vertices.getCoords()[d], _bounds[2*d]);
-    _bounds[2*d+1] = std::max(vertices.getCoords()[d], _bounds[2*d+1]);
+    _bounds.at(2*d) = std::min(vertices.getCoords()[d], _bounds.at(2*d));
+    _bounds.at(2*d+1) = std::max(vertices.getCoords()[d], _bounds.at(2*d+1));
   }
 
 }
