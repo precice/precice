@@ -7,7 +7,7 @@ assignees: ''
 
 ---
 
-**Please describe the problem you are trying to solve?**
+**Please describe the problem you are trying to solve.**
 A clear and concise description of what the problem is.
 
 **Describe the solution you propose.**
