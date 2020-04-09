@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file. For future 
 - Split multi-setup integration tests into multiple single-setup tests.
 - Change `com::MPIDirectcommunication` to work only for Master-Slave connections.
 - Removed `m2n:mpi-single`, which never worked outside tests.
+- Fix target `test_install` requiring CMake version 1.13.
 
 ## 2.0.2
 
