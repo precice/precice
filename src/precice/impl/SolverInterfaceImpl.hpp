@@ -300,8 +300,7 @@ public:
       int firstEdgeID,
       int secondEdgeID,
       int thirdEdgeID,
-      int fourthEdgeID,
-      int fifthEdgeID);
+      int fourthEdgeID);
 
   /// Sets a quadrangle and creates/sets edges automatically of a solver mesh.
   void setMeshQuadWithEdges(

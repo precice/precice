@@ -466,5 +466,95 @@ std::ostream &operator<<(std::ostream &os, const Mesh &m)
   return os;
 }
 
+void Mesh::computeQuadConvexityFromPoints(int v0, int v1, int v2, int v3) const
+{
+
+  int vertexOrderIDs[4];
+  vertexOrderIDs[0] = v0;
+  vertexOrderIDs[1] = v1;
+  vertexOrderIDs[2] = v2;
+  vertexOrderIDs[3] = v3;
+
+  int hull[4];
+
+  double vx[4];     // x coordinate of projection onto 2D plane
+  double vy[4];     // y coordinate of projection onto 2D plane
+
+
+  // All points need to be projected into a new plane with only 2 coordinates, x and y. These are used to check the quad.
+  // These are store in vx and vy. For now keep same valiues
+  for (int i = 0; i < 4; i++){
+    vx[i] = vertices()[vertexOrderIDs[0]].getCoords()[0];
+    vy[i] = vertices()[vertexOrderIDs[0]].getCoords()[1];
+  }
+
+  //First find point with smallest x coord. This point must be in the convex set then.
+  //double coordLowestPoint = vx[0];
+  int idLowestPoint = 0;
+
+  for (int i = 1; i < 4; i++) {
+    if (vx[i] < vx[idLowestPoint]){
+      idLowestPoint = i;
+    }
+  }
+
+  // Found starting point. Add this as the first vertex in the convex hull.
+  // p is the origin point => hull[0]
+  int currentVertexIDCounter = 0;
+  int p = idLowestPoint;
+  int q = 0;
+  do
+    {
+        // Add current point to result
+        hull[currentVertexIDCounter]=p;
+        // Search for a point 'q' such that orientation(p, x,
+        // q) is counterclockwise for all points 'x'. The idea
+        // is to keep track of last visited most counterclock-
+        // wise point in q. If any point 'i' is more counterclock-
+        // wise than q, then update q.
+        q = (p+1)%4;              // remainder resets loop through vector of points
+        for (int i = 0; i < 4; i++)
+        {
+            // If i is more counterclockwise than current q, then
+            // update q
+            int val = (vy[i] - vy[p]) * (vx[q] - vx[i]) - (vx[i] - vx[p]) * (vy[q] - vy[i]);
+            if (val == 2)
+              q = i; 	// clock or counterclock wise
+        }
+        // Now q is the most counterclockwise with respect to p
+        // Set p as q for next iteration, so that q is added to
+        // result 'hull'
+        p = q;
+        currentVertexIDCounter++;
+    } while (p != hull[0]);  // While we don't come to first point
+
+    if (currentVertexIDCounter < 4){
+      //Error, quad is invalid
+    }
+
+    //Ordering of quad is hull 0-1-2-3-0
+
+
+  //Vertex *vertices[4];
+ 
+  //vertices[0] = &mesh.vertices()[vertexOrderIDs[0]];
+  //int ID1 = vertices[0]->getID();
+  PRECICE_INFO("Coords inside computeQuadConvexity: " << vertices()[vertexOrderIDs[0]].getID());
+  /* 
+  double lowestVertex;
+  int lowestVertexID;
+
+  Eigen::VectorXd coords(_dimensions);
+  
+  coords = vertices[vertexOrderIDs[0]]->getCoords();
+  PRECICE_INFO("Coords inside computeQuadConvexity: " << coords);
+
+*/
+  
+
+  
+}
+  
+
 } // namespace mesh
 } // namespace precice
