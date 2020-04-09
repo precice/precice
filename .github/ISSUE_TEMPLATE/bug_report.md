@@ -7,8 +7,11 @@ assignees: ''
 
 ---
 
-If you found a clear bug in the preCICE library itself, please use this issue. You can also open issues in [preCICE adapters and tutorials](https://github.com/precice).
+<!--
+Use this issue if you found a bug in the preCICE library. You can also open issues in [preCICE adapters and tutorials](https://github.com/precice).
 For general user support, please use the [Discourse forum](https://precice.discourse.group/) or the [Gitter chatroom](https://gitter.im/precice/Lobby).
+-->
+
 **Describe your setup**
 
 Operating system (e.g. Linux distribution and version): _Ubuntu 18.04_
