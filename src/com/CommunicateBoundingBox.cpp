@@ -15,7 +15,7 @@ void CommunicateBoundingBox::sendBoundingBox(
     int                     rankReceiver)
 {
   PRECICE_TRACE(rankReceiver);
-  _communication->send(bb.data(), bb.getSize(), rankReceiver);
+  _communication->send(bb.dataVector(), rankReceiver);
 }
 
 void CommunicateBoundingBox::receiveBoundingBox(
@@ -50,6 +50,7 @@ void CommunicateBoundingBox::receiveBoundingBoxMap(
   int sizeOfReceivingMap;
   _communication->receive(sizeOfReceivingMap, rankSender);
 
+  PRECICE_CHECK(sizeOfReceivingMap == (int) bbm.size(), "Incoming size of map is not compatible");
   PRECICE_ASSERT(sizeOfReceivingMap == (int) bbm.size());
 
   for (auto &bb : bbm) {
@@ -95,7 +96,7 @@ void CommunicateBoundingBox::broadcastSendBoundingBoxMap(
     mesh::Mesh::BoundingBoxMap &bbm)
 {
   PRECICE_TRACE();
-  _communication->broadcast((int) bbm.size());
+  _communication->broadcast(static_cast<int>(bbm.size()));
 
   for (const auto &rank : bbm) {
     _communication->broadcast(rank.second.dataVector());

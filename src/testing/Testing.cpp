@@ -1,6 +1,8 @@
-#include "Testing.hpp"
 #include <cstdlib>
+#include <string>
+
 #include "logging/LogMacros.hpp"
+#include "testing/Testing.hpp"
 
 namespace precice {
 namespace testing {

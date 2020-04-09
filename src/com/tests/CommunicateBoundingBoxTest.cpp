@@ -1,7 +1,6 @@
 #ifndef PRECICE_NO_MPI
 #include "com/CommunicateBoundingBox.hpp"
 #include "mesh/Mesh.hpp"
-#include "testing/Fixtures.hpp"
 #include "testing/Testing.hpp"
 #include "utils/Parallel.hpp"
 
@@ -12,11 +11,10 @@ BOOST_AUTO_TEST_SUITE(CommunicationTests)
 
 BOOST_AUTO_TEST_SUITE(CommunicateBoundingBoxTests)
 
-BOOST_FIXTURE_TEST_CASE(SendAndReceiveBoundingBox, testing::M2NFixture,
-                        *testing::MinRanks(2) * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
+BOOST_AUTO_TEST_CASE(SendAndReceiveBoundingBox)
 {
-  if (utils::Parallel::getCommunicatorSize() != 2)
-    return;
+  PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank), Require::Events);
+  auto m2n = context.connectMasters("A", "B");
 
   for (int dim = 2; dim <= 3; dim++) {
     mesh::BoundingBox bb(dim);
@@ -27,11 +25,12 @@ BOOST_FIXTURE_TEST_CASE(SendAndReceiveBoundingBox, testing::M2NFixture,
 
     CommunicateBoundingBox comBB(m2n->getMasterCommunication());
 
-    if (utils::Parallel::getProcessRank() == 0) {
+    if (context.isNamed("A")) {
       comBB.sendBoundingBox(bb, 0);
-    } else if (utils::Parallel::getProcessRank() == 1) {
-
+    } else {
+      BOOST_TEST(context.isNamed("B"));
       mesh::BoundingBox bbCompare(dim);
+
       comBB.receiveBoundingBox(bbCompare, 0);
 
       BOOST_TEST(bb == bbCompare);
@@ -39,11 +38,10 @@ BOOST_FIXTURE_TEST_CASE(SendAndReceiveBoundingBox, testing::M2NFixture,
   }
 }
 
-BOOST_FIXTURE_TEST_CASE(SendAndReceiveBoundingBoxMap, testing::M2NFixture,
-                        *testing::MinRanks(2) * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
+BOOST_AUTO_TEST_CASE(SendAndReceiveBoundingBoxMap)
 {
-  if (utils::Parallel::getCommunicatorSize() != 2)
-    return;
+  PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank), Require::Events);
+  auto m2n = context.connectMasters("A", "B");
 
   for (int dim = 2; dim <= 3; dim++) {
     mesh::BoundingBox    bb(dim);
@@ -59,9 +57,10 @@ BOOST_FIXTURE_TEST_CASE(SendAndReceiveBoundingBoxMap, testing::M2NFixture,
 
     CommunicateBoundingBox comBB(m2n->getMasterCommunication());
 
-    if (utils::Parallel::getProcessRank() == 0) {
+    if (context.isNamed("A")) {
       comBB.sendBoundingBoxMap(bbm, 0);
-    } else if (utils::Parallel::getProcessRank() == 1) {
+    } else {
+      BOOST_TEST(context.isNamed("B"));
 
       mesh::BoundingBox    bbCompare(dim);
       mesh::Mesh::BoundingBoxMap bbmCompare;
@@ -78,12 +77,12 @@ BOOST_FIXTURE_TEST_CASE(SendAndReceiveBoundingBoxMap, testing::M2NFixture,
   }
 }
 
-BOOST_AUTO_TEST_CASE(BroadcastSendAndReceiveBoundingBoxMap,
-                     *testing::OnSize(4) * boost::unit_test::fixture<testing::MasterComFixture>())
+BOOST_AUTO_TEST_CASE(BroadcastSendAndReceiveBoundingBoxMap)
 {
-  int dimension = 3;
-  // Build BB/BBMap to communicate
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::Events);
 
+  // Build BB/BBMap to communicate
+  int dimension = 3;
   mesh::BoundingBox    bb{dimension};
   mesh::Mesh::BoundingBoxMap bbm;
 
@@ -96,7 +95,7 @@ BOOST_AUTO_TEST_CASE(BroadcastSendAndReceiveBoundingBoxMap,
 
   CommunicateBoundingBox comBB(utils::MasterSlave::_communication);
 
-  if (utils::Parallel::getProcessRank() == 0) {
+  if (context.isMaster()) {
     comBB.broadcastSendBoundingBoxMap(bbm);
   } else {
 
@@ -114,11 +113,10 @@ BOOST_AUTO_TEST_CASE(BroadcastSendAndReceiveBoundingBoxMap,
   }
 }
 
-BOOST_FIXTURE_TEST_CASE(SendAndReceiveConnectionMap, testing::M2NFixture,
-                        *testing::MinRanks(2) * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
+BOOST_AUTO_TEST_CASE(SendAndReceiveConnectionMap)
 {
-  if (utils::Parallel::getCommunicatorSize() != 2)
-    return;
+  PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank), Require::Events);
+  auto m2n = context.connectMasters("A", "B");
 
   std::vector<int>                fb;
   std::map<int, std::vector<int>> fbm;
@@ -135,9 +133,9 @@ BOOST_FIXTURE_TEST_CASE(SendAndReceiveConnectionMap, testing::M2NFixture,
 
   CommunicateBoundingBox comBB(m2n->getMasterCommunication());
 
-  if (utils::Parallel::getProcessRank() == 0) {
+  if (context.isNamed("A")) {
     comBB.sendConnectionMap(fbm, 0);
-  } else if (utils::Parallel::getProcessRank() == 1) {
+  } else if (context.isNamed("B")) {
 
     std::vector<int>                fbCompare;
     std::map<int, std::vector<int>> fbmCompare;
@@ -161,9 +159,9 @@ BOOST_FIXTURE_TEST_CASE(SendAndReceiveConnectionMap, testing::M2NFixture,
   }
 }
 
-BOOST_AUTO_TEST_CASE(BroadcastSendAndReceiveConnectionMap,
-                     *testing::OnSize(4) * boost::unit_test::fixture<testing::MasterComFixture>())
+BOOST_AUTO_TEST_CASE(BroadcastSendAndReceiveConnectionMap)
 {
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::Events);
 
   std::vector<int>                fb;
   std::map<int, std::vector<int>> fbm;
@@ -180,7 +178,7 @@ BOOST_AUTO_TEST_CASE(BroadcastSendAndReceiveConnectionMap,
 
   CommunicateBoundingBox comBB(utils::MasterSlave::_communication);
 
-  if (utils::Parallel::getProcessRank() == 0) {
+  if (context.isMaster()) {
     comBB.broadcastSendConnectionMap(fbm);
   } else {
 

@@ -388,7 +388,7 @@ void CouplingSchemeConfiguration::addTypespecifcSubtags(
 
 void CouplingSchemeConfiguration::addTransientLimitTags(
     const std::string &type,
-    xml::XMLTag &tag)
+    xml::XMLTag &      tag)
 {
   using namespace xml;
   XMLTag               tagMaxTime(*this, TAG_MAX_TIME, XMLTag::OCCUR_NOT_OR_ONCE);

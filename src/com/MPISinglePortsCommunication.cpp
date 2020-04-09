@@ -35,10 +35,13 @@ size_t MPISinglePortsCommunication::getRemoteCommunicatorSize()
 void MPISinglePortsCommunication::acceptConnection(std::string const &acceptorName,
                                                    std::string const &requesterName,
                                                    std::string const &tag,
-                                                   int                acceptorRank)
+                                                   int                acceptorRank,
+                                                   int                rankOffset)
 {
   PRECICE_TRACE(acceptorName, requesterName);
   PRECICE_ASSERT(not isConnected());
+
+  setRankOffset(rankOffset);
 
   _isAcceptor = true;
 
@@ -104,7 +107,7 @@ void MPISinglePortsCommunication::acceptConnectionAsServer(std::string const &ac
 
   MPI_Comm communicator;
   MPI_Comm_accept(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0,
-                  utils::Parallel::getGlobalCommunicator(), &communicator);
+                  utils::Parallel::current()->comm, &communicator);
   PRECICE_DEBUG("Accepted connection at " << _portName);
   _communicators[0] = communicator; // all comms are the same
 
@@ -155,7 +158,7 @@ void MPISinglePortsCommunication::requestConnectionAsClient(std::string const & 
 
   MPI_Comm communicator;
   MPI_Comm_connect(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0,
-                   utils::Parallel::getGlobalCommunicator(), &communicator);
+                   utils::Parallel::current()->comm, &communicator);
   PRECICE_DEBUG("Requested connection to " << _portName);
   _communicators[0] = communicator; // all comms are the same
   _isConnected      = true;

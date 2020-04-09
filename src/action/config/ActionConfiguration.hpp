@@ -57,15 +57,15 @@ private:
    * @brief Stores configuration information temporarily to create the Action.
    */
   struct ConfiguredAction {
-    std::string type;
-    std::string timing;
+    std::string              type;
+    std::string              timing;
     std::vector<std::string> sourceDataVector;
-    std::string targetData;
-    std::string mesh;
-    double      convergenceTolerance = 0;
-    int         maxIterations        = 0;
-    std::string path;
-    std::string module;
+    std::string              targetData;
+    std::string              mesh;
+    double                   convergenceTolerance = 0;
+    int                      maxIterations        = 0;
+    std::string              path;
+    std::string              module;
   };
 
   mutable logging::Logger _log{"config::ActionConfiguration"};

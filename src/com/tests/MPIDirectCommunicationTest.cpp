@@ -11,10 +11,10 @@ BOOST_AUTO_TEST_SUITE(CommunicationTests)
 
 BOOST_AUTO_TEST_SUITE(MPIDirect)
 
-BOOST_AUTO_TEST_CASE(SendAndReceive,
-                     *testing::MinRanks(2) * boost::unit_test::fixture<testing::SyncProcessesFixture>() * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
+BOOST_AUTO_TEST_CASE(SendAndReceive)
 {
-  TestSendAndReceive<MPIDirectCommunication>();
+  PRECICE_TEST(2_ranks, Require::Events);
+  testing::com::masterslave::TestSendAndReceive<MPIDirectCommunication>(context.rank);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // MPIDirectCommunication

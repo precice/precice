@@ -11,10 +11,11 @@ using namespace precice;
 using namespace precice::mesh;
 
 BOOST_AUTO_TEST_SUITE(MeshTests)
-BOOST_AUTO_TEST_SUITE(QuadTests, *testing::OnMaster())
+BOOST_AUTO_TEST_SUITE(QuadTests)
 
 BOOST_AUTO_TEST_CASE(Quads)
 {
+  PRECICE_TEST(1_rank);
   using Eigen::Vector3d;
   Vector3d coords0(0.0, 0.0, 0.0);
   Vector3d coords1(1.0, 0.0, 0.0);
@@ -184,6 +185,7 @@ BOOST_AUTO_TEST_CASE(Quads)
 }
 BOOST_AUTO_TEST_CASE(QuadEquality)
 {
+  PRECICE_TEST(1_rank);
   using Eigen::Vector3d;
   Vector3d coords0(0.0, 0.0, 0.0);
   Vector3d coords1(1.0, 0.0, 0.0);
@@ -226,6 +228,7 @@ BOOST_AUTO_TEST_CASE(QuadEquality)
 }
 BOOST_AUTO_TEST_CASE(QuadWKTPrint)
 {
+  PRECICE_TEST(1_rank);
   Vertex            v1(Eigen::Vector3d(0., 0., 0.), 0);
   Vertex            v2(Eigen::Vector3d(0., 1., 0.), 0);
   Vertex            v3(Eigen::Vector3d(1., 1., 0.), 0);

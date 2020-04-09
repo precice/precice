@@ -292,12 +292,12 @@ void ReceivedPartition::filterByBoundingBox()
       // Now also filter the remaining master mesh
       mesh::Mesh filteredMesh("FilteredMesh", _dimensions, _mesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
       mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { return _bb.isVertexInBB(v); });
-      _mesh->clear();
-      _mesh->addMesh(filteredMesh);
       PRECICE_DEBUG("Master mesh, filtered from "
                     << _mesh->vertices().size() << " to " << filteredMesh.vertices().size() << " vertices, "
                     << _mesh->edges().size() << " to " << filteredMesh.edges().size() << " edges, and "
                     << _mesh->triangles().size() << " to " << filteredMesh.triangles().size() << " triangles.");
+      _mesh->clear();
+      _mesh->addMesh(filteredMesh);
 
       if (areProvidedMeshesEmpty()) {
         std::string msg = "The re-partitioning completely filtered out the mesh " + _mesh->getName() +

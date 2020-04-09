@@ -5,10 +5,11 @@
 #include <sstream>
 
 BOOST_AUTO_TEST_SUITE(XML)
-BOOST_AUTO_TEST_SUITE(Printer, *precice::testing::OnMaster())
+BOOST_AUTO_TEST_SUITE(Printer)
 
 BOOST_AUTO_TEST_CASE(Documentation)
 {
+  PRECICE_TEST(1_rank);
   std::ostringstream             oss;
   precice::config::Configuration config;
   precice::xml::toDocumentation(oss, config.getXMLTag());
@@ -17,6 +18,7 @@ BOOST_AUTO_TEST_CASE(Documentation)
 
 BOOST_AUTO_TEST_CASE(DTD)
 {
+  PRECICE_TEST(1_rank);
   std::ostringstream             oss;
   precice::config::Configuration config;
   precice::xml::toDTD(oss, config.getXMLTag());
@@ -25,6 +27,7 @@ BOOST_AUTO_TEST_CASE(DTD)
 
 BOOST_AUTO_TEST_CASE(Markdown)
 {
+  PRECICE_TEST(1_rank);
   std::ostringstream             oss;
   precice::config::Configuration config;
   precice::xml::toMarkdown(oss, config.getXMLTag());
