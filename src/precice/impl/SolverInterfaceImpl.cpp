@@ -864,7 +864,7 @@ void SolverInterfaceImpl::setMeshQuadWithEdges(
                   "The first triangles coordinates of the vertices must be unique!");
 
     // Don't assume connectivity. Use gift wrapping algorithm to check quad quality and connectivity.
-    //mesh->computeQuadConvexityFromPoints(firstVertexID, secondVertexID, thirdVertexID, fourthVertexID);
+    mesh->computeQuadConvexityFromPoints(firstVertexID, secondVertexID, thirdVertexID, fourthVertexID);
     
     mesh::Edge *edges[3];
     edges[0] = &mesh->createUniqueEdge(*vertices[0], *vertices[1]);
