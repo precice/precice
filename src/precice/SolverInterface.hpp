@@ -506,8 +506,7 @@ public:
       int firstEdgeID,
       int secondEdgeID,
       int thirdEdgeID,
-      int fourthEdgeID,
-      int fifthEdgeID);
+      int fourthEdgeID);
 
   /**
    * @brief Sets surface mesh quadrangle from vertex IDs.

@@ -202,10 +202,9 @@ void SolverInterface::setMeshQuad(
     int firstEdgeID,
     int secondEdgeID,
     int thirdEdgeID,
-    int fourthEdgeID,
-    int fifthEdgeID)
+    int fourthEdgeID)
 {
-  _impl->setMeshQuad(meshID, firstEdgeID, secondEdgeID, thirdEdgeID, fourthEdgeID, fifthEdgeID);
+  _impl->setMeshQuad(meshID, firstEdgeID, secondEdgeID, thirdEdgeID, fourthEdgeID);
 }
 
 void SolverInterface::setMeshQuadWithEdges(

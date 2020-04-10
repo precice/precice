@@ -192,7 +192,7 @@ public:
   void computeBoundingBox();
 
   /// Computes if a quad is convex and returns and ordered set of vertices.
-  void computeQuadConvexityFromPoints(int v0, int v1, int v2, int v3) const;
+  void computeQuadConvexityFromPoints(std::array<int,4> &hull, int startID) const;
 
   /**
    * @brief Removes all mesh elements and data values (does not remove data).

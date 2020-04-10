@@ -466,27 +466,19 @@ std::ostream &operator<<(std::ostream &os, const Mesh &m)
   return os;
 }
 
-void Mesh::computeQuadConvexityFromPoints(int v0, int v1, int v2, int v3) const
+void Mesh::computeQuadConvexityFromPoints(std::array<int,4> &hull, int startID) const
 {
 
   PRECICE_INFO("Entering compute quad: ");
-  int vertexOrderIDs[4];
-  vertexOrderIDs[0] = v0;
-  vertexOrderIDs[1] = v1;
-  vertexOrderIDs[2] = v2;
-  vertexOrderIDs[3] = v3;
-  PRECICE_INFO("Vertex IDs are: " << v0 << " " << v1 << " " << v2 << " " << v3);
+  int vertexOrderIDs[4];    // Initial ordering of vertices from solver adapter
 
-  int hull[4];
-
+  // All points need to be projected into a new plane with only 2 coordinates, x and y. These are used to check the quad.
+  // These are store in vx and vy. For now keep same valiues
   double vx[4];     // x coordinate of projection onto 2D plane
   double vy[4];     // y coordinate of projection onto 2D plane
   double vz[4];     // y coordinate of projection onto 2D plane
 
-
-  // All points need to be projected into a new plane with only 2 coordinates, x and y. These are used to check the quad.
-  // These are store in vx and vy. For now keep same valiues
-  /* Valid Quad points
+  // Valid Quad vertices on a 2D plane
   vx[0] = 0.5;
   vx[1] = 0.62;
   vx[2] = 0.6;
@@ -495,7 +487,8 @@ void Mesh::computeQuadConvexityFromPoints(int v0, int v1, int v2, int v3) const
   vy[1] = 0.32;
   vy[2] = 0.24;
   vy[3] = 0.22;
-  */
+  /*
+  // Invalid Quad vertices on a 2D plane
   vx[0] = 0.5;
   vx[1] = 0.62;
   vx[2] = 0.52;
@@ -504,18 +497,20 @@ void Mesh::computeQuadConvexityFromPoints(int v0, int v1, int v2, int v3) const
   vy[1] = 0.32;
   vy[2] = 0.31;
   vy[3] = 0.22;
-
+  */
 
   for (int i = 0; i < 4; i++){
-  //  vx[i] = vertices()[vertexOrderIDs[i]].getCoords()[0];
-  //  vy[i] = vertices()[vertexOrderIDs[i]].getCoords()[2];
-  //  vz[i] = vertices()[vertexOrderIDs[i]].getCoords()[1];
+    vertexOrderIDs[i] = hull[i];
+    //vx[i] = vertices()[vertexOrderIDs[i]].getCoords()[0];
+    //vy[i] = vertices()[vertexOrderIDs[i]].getCoords()[2];
+    //vz[i] = vertices()[vertexOrderIDs[i]].getCoords()[1];
   }
-
-  //First find point with smallest x coord. This point must be in the convex set then.
-  //double coordLowestPoint = vx[0];
+  PRECICE_INFO("Vertex IDs are: " << hull[0] << " " << hull[1] << " " << hull[2] << " " << hull[3]);
+  PRECICE_INFO("X coordinates are: " << vx[0] << " " << vx[1] << " " << vx[2] << " " << vx[3]);
+  PRECICE_INFO("Y coordinates are: " << vy[0] << " " << vy[1] << " " << vy[2] << " " << vy[3]);
+  
+  //First find point with smallest x coord. This point must be in the convex set then and is the starting point of gift wrapping algorithm
   int idLowestPoint = 0;
-
   for (int i = 1; i < 4; i++) {
     if (vx[i] < vx[idLowestPoint]){
       idLowestPoint = i;
@@ -524,53 +519,64 @@ void Mesh::computeQuadConvexityFromPoints(int v0, int v1, int v2, int v3) const
 
   // Found starting point. Add this as the first vertex in the convex hull.
   // current is the origin point => hull[0]
-  int currentVertexIDCounter = 0;
-  int current = idLowestPoint;
-  int nextTarget = 0;
+  int validVertexIDCounter = 0;           // Counts number of times a valid vertex is found
+  int currentVertex = idLowestPoint;      // current valid vertex 
+  int nextVertex = 0;                     // Next potential valid vertex
   do
   {
-    PRECICE_INFO("inside loop:");
-        // Add current point to result
-    hull[currentVertexIDCounter]=current;
-        // Search for a point 'nextTarget' such that orientation(p, x,
-        // nextTarget) is clockwise for all points 'x'. The idea
-        // is to keep track of last visited most clock-
-        // wise point in nextTarget. If any point 'i' is more clock-
-        // wise than nextTarget, then update nextTarget.
-    nextTarget = (current + 1)%4;              // remainder resets loop through vector of points
+    // Add current point to result
+    hull[validVertexIDCounter]=currentVertex;
+    
+    // Search for a point 'nextVertex' such that orientation(p, x,
+    // nextVertex) is clockwise for all points 'x'. The idea
+    // is to keep track of last visited most clock-
+    // wise point in nextVertex. If any point 'i' is more clock-
+    // wise than nextVertex, then update nextVertex.
+    nextVertex = (currentVertex + 1)%4;              // remainder resets loop through vector of points
     for (int i = 0; i < 4; i++)
-      {
-        // If i is more clockwise than, nextTarget, then
-        // update nextTarget
+    {
+      // If i is more clockwise than, nextVertex, then
+      // update nextVertex
 
-        double y1 = vy[current] - vy[nextTarget];
-        double y2 = vy[current] - vy[i];
-        double x1 = vx[current] - vx[nextTarget];
-        double x2 = vx[current] - vx[i];
-        double val = y2 * x1 - y1 * x2;
-        //PRECICE_INFO("y1: y2: x1 : x2: val = y2*x1 - y1*x2 = " << val << " " << y1 << " " << y2 << " " << x1 << " " << x2);
+      double y1 = vy[currentVertex] - vy[nextVertex];
+      double y2 = vy[currentVertex] - vy[i];
+      double x1 = vx[currentVertex] - vx[nextVertex];
+      double x2 = vx[currentVertex] - vx[i];
+      double val = y2 * x1 - y1 * x2;
+      //PRECICE_INFO("y1: y2: x1 : x2: val = y2*x1 - y1*x2 = " << val << " " << y1 << " " << y2 << " " << x1 << " " << x2);
 
-        if (val > 0){
-          nextTarget = i; 	// clock or counterclock wise
-          //PRECICE_INFO("Changeing nextTarget");
-        }
+      if (val > 0){
+        nextVertex = i; 	// clock or counterclock wise
+          //PRECICE_INFO("Changeing nextVertex");
       }
-        // Now nextTarget is the most clockwise with respect to current
-        // Set current as nextTarget for next iteration, so that nextTarget is added to
-        // result 'hull'
-      current = nextTarget;
-      currentVertexIDCounter++;
-    } while (current != idLowestPoint);  // While we don't come to first point
-
-    if (currentVertexIDCounter < 4){
-      //Error, quad is invalid
-      PRECICE_INFO("Invalid Quad. Hull: " << hull);
-    } else {
-      PRECICE_INFO("Valid Quad. Hull: " << hull);
     }
+    // Now nextVertex is the most clockwise with respect to current
+    // Set current as nextVertex for next iteration, so that nextVertex is added to
+    // result 'hull'
+    currentVertex = nextVertex;
+    validVertexIDCounter++; 
+  } while (currentVertex != idLowestPoint);  // While we don't come to first point
 
-    //Ordering of quad is hull 0-1-2-3-0
+  if (validVertexIDCounter < 4){
+    //Error, quad is invalid
+    PRECICE_INFO("Invalid Quad. Hull: " << hull);
+  } else {
+    PRECICE_INFO("Valid Quad. Hull: " << hull);
+  }
 
+
+  //Ordering of quad is hull 0-1-2-3-0
+
+  // Need to check shortest diagonal
+  Eigen::VectorXd distance1(_dimensions),distance2(_dimensions);
+
+  distance1 = vertices()[hull[0]].getCoords() - vertices()[hull[2]].getCoords();
+  distance2 = vertices()[hull[1]].getCoords() - vertices()[hull[3]].getCoords();
+  PRECICE_INFO("Distance 1: " << distance1.norm() << " and Distance 2: " << distance2.norm());
+    
+  if (distance1.norm() > distance2.norm()){
+    startID = 1;
+  }
   
 }
   
