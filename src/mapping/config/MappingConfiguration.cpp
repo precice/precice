@@ -231,8 +231,20 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
   ConfiguredMapping configuredMapping;
   mesh::PtrMesh     fromMesh(_meshConfig->getMesh(fromMeshName));
   mesh::PtrMesh     toMesh(_meshConfig->getMesh(toMeshName));
+  int               totalPatches = fromMesh->getTotalPatches();   // How many patches to create a mapping for
   PRECICE_CHECK(fromMesh.get() != nullptr, "Mesh \"" << fromMeshName << "\" not defined at creation of mapping!");
   PRECICE_CHECK(toMesh.get() != nullptr, "Mesh \"" << toMeshName << "\" not defined at creation of mapping!");
+  // Having a list of the patches associated with the mesh, and configure a mapping per patch.
+  /*
+  for (i = patch Start; i < patch End; i++)
+    configuredMapping.fromPatch = fromPatch;
+    configuredMapping.toPatch   = toPatch;
+    configuredMapping.timing   = timing;
+    int dimensions             = fromMesh->getDimensions();
+    ...
+    ...
+    ...
+  */
   configuredMapping.fromMesh = fromMesh;
   configuredMapping.toMesh   = toMesh;
   configuredMapping.timing   = timing;
@@ -382,6 +394,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
 void MappingConfiguration::checkDuplicates(const ConfiguredMapping &mapping)
 {
   for (const ConfiguredMapping &configuredMapping : _mappings) {
+    // Check same patch as well
     bool sameFromMesh = mapping.fromMesh->getName() == configuredMapping.fromMesh->getName();
     bool sameToMesh   = mapping.toMesh->getName() == configuredMapping.toMesh->getName();
     PRECICE_CHECK(!sameFromMesh, "There cannot be two mappings from mesh \""

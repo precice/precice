@@ -5,6 +5,7 @@
 #include <array>
 #include <boost/container/flat_map.hpp>
 #include "Edge.hpp"
+#include "Patch.hpp"
 #include "Quad.hpp"
 #include "RTree.hpp"
 #include "Triangle.hpp"
@@ -76,9 +77,24 @@ const Mesh::QuadContainer &Mesh::quads() const
   return _quads;
 }
 
+Mesh::PatchContainer &Mesh::patches()
+{
+  return _patches;
+}
+
+const Mesh::PatchContainer &Mesh::patches() const
+{
+  return _patches;
+}
+
 int Mesh::getDimensions() const
 {
   return _dimensions;
+}
+
+int Mesh::getTotalPatches()
+{
+  return 1;
 }
 
 Edge &Mesh::createEdge(

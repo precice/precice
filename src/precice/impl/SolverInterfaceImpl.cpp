@@ -9,6 +9,7 @@
 #include "m2n/config/M2NConfiguration.hpp"
 #include "mapping/Mapping.hpp"
 #include "mesh/Edge.hpp"
+#include "mesh/Patch.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"

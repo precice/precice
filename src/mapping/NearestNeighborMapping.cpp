@@ -46,6 +46,7 @@ void NearestNeighborMapping::computeMapping()
       int outputPatchID = outputVertices[i].getPatchID();
       PRECICE_INFO("outputID = " << outputPatchID);
       // Search for the output vertex inside the input mesh and add index to _vertexIndices
+      // rtree will only have vertices with a specific patch number
       rtree->query(boost::geometry::index::nearest(coords, 1) and boost::geometry::index::satisfies([&](size_t const i) { return (outputPatchID - input()->vertices()[i].getPatchID()) < 1 ;}),
                    boost::make_function_output_iterator([&](size_t const &val) {
                      const auto &match = input()->vertices()[val];

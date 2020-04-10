@@ -8,6 +8,7 @@
 #include "mesh/Data.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Quad.hpp"
+#include "mesh/Patch.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
@@ -34,6 +35,7 @@ public:
   using EdgeContainer     = std::deque<Edge>;
   using TriangleContainer = std::deque<Triangle>;
   using QuadContainer     = std::deque<Quad>;
+  using PatchContainer    = std::deque<Patch>;
   using DataContainer     = std::vector<PtrData>;
   using BoundingBox       = std::vector<std::pair<double, double>>;
   using BoundingBoxMap    = std::map<int, BoundingBox>;
@@ -93,6 +95,12 @@ public:
 
   /// Returns const container holding all quads.
   const QuadContainer &quads() const;
+
+  /// Returns modifiable container holding all quads.
+  PatchContainer &patches();
+
+  /// Returns const container holding all quads.
+  const PatchContainer &patches() const;
 
   int getDimensions() const;
 
@@ -167,6 +175,9 @@ public:
 
   /// Returns the base ID of the mesh.
   int getID() const;
+
+  /// Returns the base ID of the mesh.
+  int getTotalPatches();
 
   /// Returns true if the given vertexID is valid
   bool isValidVertexID(int vertexID) const;
@@ -271,6 +282,7 @@ private:
   EdgeContainer     _edges;
   TriangleContainer _triangles;
   QuadContainer     _quads;
+  PatchContainer   _patches;
 
   /// Data hold by the vertices of the mesh.
   DataContainer _data;

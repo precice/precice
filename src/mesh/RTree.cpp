@@ -23,6 +23,7 @@ rtree::vertex_traits::Ptr rtree::getVertexRTree(const PtrMesh &mesh)
 {
   PRECICE_ASSERT(mesh);
   auto &cache = cacheEntry(mesh->getID());
+  int patchID = mesh->getTotalPatches();      //This actually needs to be the patch number, but totalPatches will suffice for intial testing
   if (cache.vertices) {
     return cache.vertices;
   }
@@ -31,6 +32,13 @@ rtree::vertex_traits::Ptr rtree::getVertexRTree(const PtrMesh &mesh)
   // the best we can do. Even passing an index range instead of calling
   // tree->insert repeatedly is about 10x faster.
   RTreeParameters            params;
+  // If adding a patch class, mesh->patch()->vertices();
+  for (int i = 0; i < mesh->vertices().size(); i++){
+    int vertexPatchID = mesh->vertices()[i].getPatchID();
+    //PRECICE_INFO("PatchID: " << vertexPatchID);
+  }
+  
+
   vertex_traits::IndexGetter ind(mesh->vertices());
   auto                       tree = std::make_shared<vertex_traits::RTree>(
       boost::irange<std::size_t>(0lu, mesh->vertices().size()), params, ind);
