@@ -457,10 +457,12 @@ void ReceivedPartition::prepareBoundingBox()
   // Create BB around both "other" meshes
   if (_fromMapping) {
     auto other_bb = _fromMapping->getOutputMesh()->getBoundingBox();
+    PRECICE_ASSERT(!other_bb.empty(), "Output Mesh of from Mapping has an empty bounding box!");
     _boundingBoxPrepared = _bb.mergeBoundingBoxes(other_bb);
   }
   if (_toMapping) {
     auto other_bb = _toMapping->getInputMesh()->getBoundingBox();
+    PRECICE_ASSERT(!other_bb.empty(), "Input Mesh of to Mapping has an empty bounding box!");
     _boundingBoxPrepared = _bb.mergeBoundingBoxes(other_bb);
   }
 }

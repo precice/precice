@@ -86,6 +86,9 @@ public:
   /// Getter of size of the bound container
   int getSize() const;
 
+  /// Whether the bounds container is empty or not
+  bool empty();
+
   /// Output operator for easy logging
   friend std::ostream &operator<<(std::ostream &out, const BoundingBox &bb);
 
@@ -96,10 +99,10 @@ private:
   int    _dimensions;
 
   /// Safety factor to enlarge the bounding box
-  double _safetyFactor{0.0};
+  double _safetyFactor{1.0};
 
   /// Whether this bounding box is prepared or not
-  bool _isDefault{true};
+  bool _prepared{false};
 
   /// Container of min and max points in each dimension
   std::vector<double> _bounds;

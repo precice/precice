@@ -5,10 +5,9 @@ namespace mesh {
 
 BoundingBox::BoundingBox(std::vector<double> bounds)
 {
-  PRECICE_CHECK(bounds.size() == 4 || bounds.size() == 6, "Dimension of the bounding box should be 2 or 3.");
+  //PRECICE_CHECK(bounds.size() == 4 || bounds.size() == 6, "Dimension of the bounding box should be 2 or 3.");
   _bounds = bounds;
   _dimensions = _bounds.size() / 2;
-  _isDefault = false;
 }
 
 BoundingBox::BoundingBox(int dimension)
@@ -19,7 +18,6 @@ BoundingBox::BoundingBox(int dimension)
     _bounds.push_back(std::numeric_limits<double>::max());
     _bounds.push_back(std::numeric_limits<double>::lowest());
   }
-  _isDefault = true;
 }
 
 BoundingBox::BoundingBox(){
@@ -28,31 +26,28 @@ BoundingBox::BoundingBox(){
     _bounds.push_back(std::numeric_limits<double>::max());
     _bounds.push_back(std::numeric_limits<double>::lowest());
   }
-  _isDefault = true;
 }
 
 void BoundingBox::modifyForTest(int rank, std::string testName){
   if(testName == "com")
   {
     for (int i = 0; i < _dimensions; i++) {
-      _bounds.at(2*i) = rank*i;
-      _bounds.at(2*i + 1) = i + 1;
+      _bounds[2*i] = rank*i;
+      _bounds[2*i + 1] = i + 1;
     }
   }
   if(testName == "partition"){
     for (int i = 0; i < _dimensions; i++) {
-      _bounds.at(2*i) = 3 - rank - 1;
-      _bounds.at(2*i + 1) = 3 - rank;
+      _bounds[2*i] = 3 - rank - 1;
+      _bounds[2*i + 1] = 3 - rank;
     }
   }
-  _isDefault = false;
 }
 
 BoundingBox::BoundingBox(const BoundingBox &bb)
 {
   _dimensions = bb._dimensions;
   _bounds     = bb._bounds;
-  _isDefault  = bb._isDefault;
 }
 
 BoundingBox::~BoundingBox()
@@ -62,7 +57,7 @@ BoundingBox::~BoundingBox()
 std::ostream &operator<<(std::ostream &out, const BoundingBox &bb)
 {
   for (int d = 0; d < bb._dimensions; ++d) {
-    out << "dim: " << d << " min: " << bb._bounds.at(2 * d) << ", max: " << bb._bounds.at(2 * d + 1) << "\n";
+    out << "dim: " << d << " min: " << bb._bounds[2 * d] << ", max: " << bb._bounds[2 * d + 1] << "\n";
   }
   return out;
 }
@@ -134,11 +129,19 @@ const std::vector<double> BoundingBox::dataVector() const{
   return _bounds;
 }
 
+bool BoundingBox::empty(){
+  return _bounds.empty();
+}
+
 bool BoundingBox::mergeBoundingBoxes(const BoundingBox &otherBB)
 {
+  if (_prepared)
+    return _prepared;
+
+  PRECICE_ASSERT(!otherBB._bounds.empty(), "Output Mesh of from Mapping has an empty bounding box!");
   for (int d = 0; d < _dimensions; d++) {
-    _bounds.at(2 * d)     = std::min(_bounds.at(2 * d), otherBB._bounds.at(2 * d));
-    _bounds.at(2 * d + 1) = std::max(_bounds.at(2 * d + 1), otherBB._bounds.at(2 * d + 1));
+    _bounds[2 * d]     = std::min(_bounds[2 * d], otherBB._bounds[2 * d]);
+    _bounds[2 * d + 1] = std::max(_bounds[2 * d + 1], otherBB._bounds[2 * d + 1]);
   }
 
   // Enlarge BB
@@ -148,7 +151,7 @@ bool BoundingBox::mergeBoundingBoxes(const BoundingBox &otherBB)
 
   for (int d = 0; d < _dimensions; d++) {
     if (_bounds.at(2 * d + 1) > _bounds.at(2 * d))
-      maxSideLength = std::max(maxSideLength, _bounds.at(2 * d + 1) - _bounds.at(2 * d));
+      maxSideLength = std::max(maxSideLength, _bounds[2 * d + 1] - _bounds[2 * d]);
   }
   for (int d = 0; d < _dimensions; d++) {
     _bounds.at(2 * d + 1) += _safetyFactor * maxSideLength;
@@ -156,32 +159,31 @@ bool BoundingBox::mergeBoundingBoxes(const BoundingBox &otherBB)
     PRECICE_DEBUG("Merged BoundingBox" << *this);
   }
 
-  _isDefault = false;
-  return true;
+  _prepared = true;
+  return _prepared;
 }
 
 void BoundingBox::expandTo(const Vertex& vertices){
+
   for(int d = 0; d < _dimensions; ++d){
     _bounds.at(2*d) = std::min(vertices.getCoords()[d], _bounds.at(2*d));
     _bounds.at(2*d+1) = std::max(vertices.getCoords()[d], _bounds.at(2*d+1));
   }
-  _isDefault = false;
+
 }
 
 void BoundingBox::enlargeWith(double value){
-  if(!_isDefault){
-    for (int d = 0; d < _dimensions; d++) {
-      _bounds.at(2*d) -= value;
-      _bounds.at(2*d + 1) += value;   
-    }
+  for (int d = 0; d < _dimensions; d++) {
+    _bounds[2*d] -= value;
+    _bounds[2*d + 1] += value;   
   }
 }
 
 bool BoundingBox::overlapping(const BoundingBox &otherBB)
 {
   for (int d = 0; d < _dimensions; d++) {
-    if ((_bounds.at(2 * d) < otherBB._bounds.at(2 * d) && _bounds.at(2 * d + 1) < otherBB._bounds.at(2 * d)) ||
-        (otherBB._bounds.at(2 * d) < _bounds.at(2 * d) && otherBB._bounds.at(2 * d + 1) < _bounds.at(2 * d))) {
+    if ((_bounds[2 * d] < otherBB._bounds[2 * d] && _bounds[2 * d + 1] < otherBB._bounds[2 * d]) ||
+        (otherBB._bounds[2 * d] < _bounds[2 * d] && otherBB._bounds[2 * d + 1] < _bounds[2 * d])) {
       return false;
     }
   }
