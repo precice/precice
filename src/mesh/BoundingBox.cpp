@@ -129,16 +129,8 @@ const std::vector<double> BoundingBox::dataVector() const{
   return _bounds;
 }
 
-bool BoundingBox::empty(){
-  return _bounds.empty();
-}
-
 bool BoundingBox::mergeBoundingBoxes(const BoundingBox &otherBB)
 {
-  if (_prepared)
-    return _prepared;
-
-  PRECICE_ASSERT(!otherBB._bounds.empty(), "Output Mesh of from Mapping has an empty bounding box!");
   for (int d = 0; d < _dimensions; d++) {
     _bounds[2 * d]     = std::min(_bounds[2 * d], otherBB._bounds[2 * d]);
     _bounds[2 * d + 1] = std::max(_bounds[2 * d + 1], otherBB._bounds[2 * d + 1]);
@@ -158,9 +150,7 @@ bool BoundingBox::mergeBoundingBoxes(const BoundingBox &otherBB)
     _bounds.at(2 * d) -= _safetyFactor * maxSideLength;
     PRECICE_DEBUG("Merged BoundingBox" << *this);
   }
-
-  _prepared = true;
-  return _prepared;
+  return true;
 }
 
 void BoundingBox::expandTo(const Vertex& vertices){
