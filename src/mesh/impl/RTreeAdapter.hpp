@@ -176,7 +176,6 @@ struct closure<pm::Quad> {
 /*
  * Mesh::BoundingBox should be fulfilling the boost.geometry Box concept
  */
-//using BoundingBox = std::vector<std::pair<double, double>>;
 
 template <>
 struct tag<pm::BoundingBox> {

@@ -32,6 +32,9 @@ public:
   /// Default constructor
   BoundingBox();
 
+  /// Special function for tests to create custom bounds
+  void modifyForTest(int rank, std::string testName);
+
   /// Copy Constructor
   BoundingBox(const BoundingBox &bb);
 
@@ -43,17 +46,6 @@ public:
 
   /// Bounding box factory function
   static BoundingBox createFromData(std::vector<double> bounds);
-
-  /***
-  * 
-  * @brief Set bounds manually
-  * 
-  * @param[in] dimension Dimension in which the bounds are given
-  * @param[in] min Minimum bound
-  * @param[in] max Maximum bound
-  * 
-  */
-  void setBounds(int dimension, double min, double max);
 
   /// Setter of minimum bound in given direction
   void setMin(int dimension, double min);
@@ -69,6 +61,9 @@ public:
 
   /// Expand bounding box
   void expandTo(const Vertex& vertices);
+
+  /// Enlarge the bounding box with given value in each direction
+  void enlargeWith(double value);
 
   /// Checks if vertex in contained in _bb
   bool isVertexInBB(const Vertex &vertex);

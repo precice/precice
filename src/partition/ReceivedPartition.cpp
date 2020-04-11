@@ -375,9 +375,7 @@ void ReceivedPartition::compareBoundingBoxes()
   // define and initialize remote bounding box map
   mesh::Mesh::BoundingBoxMap remoteBBMap;
   mesh::BoundingBox    initialBB(_mesh->getDimensions());
-  for (int i = 0; i < _dimensions; i++) {
-    initialBB.setBounds(i, -1, -1);
-  }
+
   for (int remoteRank = 0; remoteRank < numberOfRemoteRanks; remoteRank++) {
     remoteBBMap[remoteRank] = initialBB;
   }

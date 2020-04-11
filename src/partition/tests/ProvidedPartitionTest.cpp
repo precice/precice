@@ -360,15 +360,12 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
     BOOST_TEST(context.isNamed("NASTIN"));
 
     mesh::Mesh::BoundingBoxMap receivedGlobalBB;
-    mesh::BoundingBox    localBB;
+    mesh::BoundingBox    localBB{dimensions};
 
     // we receive other participants communicator size
     int receivedFeedbackSize = 3;
     m2n->getMasterCommunication()->receive(receivedFeedbackSize, 0);
 
-    for (int j = 0; j < dimensions; j++) {
-      localBB.setBounds(j, -1, -1);
-    }
     for (int i = 0; i < receivedFeedbackSize; i++) {
       receivedGlobalBB[i] = localBB;
     }
@@ -463,15 +460,12 @@ BOOST_AUTO_TEST_CASE(TestSendBoundingBoxes3D)
     BOOST_TEST(context.isNamed("NASTIN"));
 
     mesh::Mesh::BoundingBoxMap receivedGlobalBB;
-    mesh::BoundingBox    localBB;
+    mesh::BoundingBox    localBB{dimensions};
 
     // we receive other participants communicator size
     int remoteParComSize = 3;
     m2n->getMasterCommunication()->receive(remoteParComSize, 0);
 
-    for (int j = 0; j < dimensions; j++) {
-      localBB.setBounds(j,-1, -1);
-    }
     for (int i = 0; i < remoteParComSize; i++) {
       receivedGlobalBB[i] = localBB;
     }

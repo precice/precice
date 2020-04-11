@@ -28,6 +28,22 @@ BoundingBox::BoundingBox(){
   }
 }
 
+void BoundingBox::modifyForTest(int rank, std::string testName){
+  if(testName == "com")
+  {
+    for (int i = 0; i < _dimensions; i++) {
+      _bounds[2*i] = rank*i;
+      _bounds[2*i + 1] = i + 1;
+    }
+  }
+  if(testName == "partition"){
+    for (int i = 0; i < _dimensions; i++) {
+      _bounds[2*i] = 3 - rank - 1;
+      _bounds[2*i + 1] = 3 - rank;
+    }
+  }
+}
+
 BoundingBox::BoundingBox(const BoundingBox &bb)
 {
   _dimensions = bb._dimensions;
@@ -62,19 +78,6 @@ BoundingBox BoundingBox::createFromData(std::vector<double> bounds)
 {
   BoundingBox box{bounds};
   return box;
-}
-
-void BoundingBox::setBounds(int dimension, double min, double max)
-{
-  
-  if (_dimensions == 2) {
-    PRECICE_CHECK(dimension == 0 || dimension == 1, "Given bound limit axis is not compatible with bounding box dimensions.");
-  }
-  if (_dimensions == 3) {
-    PRECICE_CHECK(dimension == 0 || dimension == 1 || dimension == 2, "Given bound limit axis is not compatible with bounding box dimensions.");
-  }
-  _bounds.at(dimension * 2)     = min;
-  _bounds.at(dimension * 2 + 1) = max;
 }
 
 void BoundingBox::setMin(int dimension, double min){
@@ -167,6 +170,13 @@ void BoundingBox::expandTo(const Vertex& vertices){
     _bounds.at(2*d+1) = std::max(vertices.getCoords()[d], _bounds.at(2*d+1));
   }
 
+}
+
+void BoundingBox::enlargeWith(double value){
+  for (int d = 0; d < _dimensions; d++) {
+    _bounds[2*d] -= value;
+    _bounds[2*d + 1] += value;   
+  }
 }
 
 bool BoundingBox::overlapping(const BoundingBox &otherBB)

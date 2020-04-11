@@ -940,11 +940,9 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
 
   // construct send global boundingbox
   mesh::Mesh::BoundingBoxMap sendGlobalBB;
-  mesh::BoundingBox    initialBB;
+  mesh::BoundingBox    initialBB{dimensions};
   for (int remoteRank = 0; remoteRank < 3; remoteRank++) {
-    for (int i = 0; i < dimensions; i++) {
-      initialBB.setBounds(i,3 - remoteRank - 1, 3 - remoteRank);
-    }
+    initialBB.modifyForTest(remoteRank, static_cast<std::string>("partition"));
     sendGlobalBB[remoteRank] = initialBB;
   }
 
@@ -1010,11 +1008,9 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes3D)
 
   // construct send global boundingbox
   mesh::Mesh::BoundingBoxMap sendGlobalBB;
-  mesh::BoundingBox    initialBB;
+  mesh::BoundingBox    initialBB{dimensions};
   for (int remoteRank = 0; remoteRank < 3; remoteRank++) {
-    for (int i = 0; i < dimensions; i++) {
-      initialBB.setBounds(i,3 - remoteRank - 1, 3 - remoteRank);
-    }
+    initialBB.modifyForTest(remoteRank, static_cast<std::string>("partition"));
     sendGlobalBB[remoteRank] = initialBB;
   }
 
