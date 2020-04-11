@@ -114,7 +114,7 @@ void CommunicateBoundingBox::broadcastReceiveBoundingBoxMap(
   std::vector<double> receivedData;
 
   for (int i = 0; i < sizeOfReceivingMap; ++i) {
-    _communication->receive(receivedData,0);
+    _communication->broadcast(receivedData,0);
     bbm[i] = mesh::BoundingBox::createFromData(receivedData);
   }
 }
