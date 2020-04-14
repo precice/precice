@@ -48,7 +48,7 @@ VERSIONREGEX='[0-9]\+\.[0-9]\+\.[0-9]\+'
 echo " - CMake"
 sed "s/\(project(preCICE\s\+VERSION\s\+\)$VERSIONREGEX/\1$VERSION/" -i CMakeLists.txt
 echo " - Changelog"
-CL_FILES=`find docs/changelog -type f -not -name ".*"`
+CL_FILES=`find docs/changelog -type f -name "*.md"`
 echo "   compressing"
 echo -e "$(head -n4 CHANGELOG.md)\n\n## $VERSION\n\n$(cat $CL_FILES)\n$(tail +6 CHANGELOG.md)" > CHANGELOG.md
 echo "   cleaning"
