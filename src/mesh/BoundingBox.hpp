@@ -47,12 +47,6 @@ public:
   /// Bounding box factory function
   static BoundingBox createFromData(std::vector<double> bounds);
 
-  /// Setter of minimum bound in given direction
-  void setMin(int dimension, double min);
-
-  /// Setter of maximum bound in given direction
-  void setMax(int dimension, double max);
-
   /// Setter safety factor
   void setSafetyFactor(double safetyFactor);
 
@@ -66,7 +60,7 @@ public:
   void enlargeWith(double value);
 
   /// Checks if vertex in contained in _bb
-  bool isVertexInBB(const Vertex &vertex);
+  bool isVertexInBB(const Vertex &vertex) const;
 
   /// Checks whether two bounding boxes are overlapping
   bool overlapping(const BoundingBox &otherBB);
@@ -82,9 +76,6 @@ public:
 
   /// Getter dimension of the bounding box
   int getDimension() const;
-
-  /// Getter of size of the bound container
-  int getSize() const;
 
   /// Output operator for easy logging
   friend std::ostream &operator<<(std::ostream &out, const BoundingBox &bb);

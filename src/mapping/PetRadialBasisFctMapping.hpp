@@ -822,10 +822,11 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
     auto bb       = otherMesh->getBoundingBox();
     // Enlarge by support radius
     bb.enlargeWith(_basisFunction.getSupportRadius());
-    rtree->query(bgi::within(bb),
-                 boost::make_function_output_iterator([&filterMesh](size_t idx) {
-                   filterMesh->vertices()[idx].tag();
-                 }));
+    rtree->query(bgi::satisfies([&](size_t const i){ return bb.isVertexInBB(filterMesh->vertices()[i]); }), 
+      boost::make_function_output_iterator([&filterMesh](size_t idx) {
+        filterMesh->vertices()[idx].tag();
+      }));
+    
   } else {
     for (auto &vert : filterMesh->vertices())
       vert.tag();
@@ -840,6 +841,7 @@ template <typename RADIAL_BASIS_FUNCTION_T>
 void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
 {
   PRECICE_TRACE();
+  namespace bgi = boost::geometry::index;
 
   if (not _basisFunction.hasCompactSupport())
     return; // Tags should not be changed
@@ -860,14 +862,14 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
       bb.expandTo(v);
     }
   }
-
   // Enlarge bb by support radius
   bb.enlargeWith(_basisFunction.getSupportRadius());
   auto rtree = mesh::rtree::getVertexRTree(mesh);
-  rtree->query(boost::geometry::index::within(bb),
-               boost::make_function_output_iterator([&mesh](size_t idx) {
-                 mesh->vertices()[idx].tag();
-               }));
+
+  rtree->query(bgi::satisfies([&](size_t const i){ return bb.isVertexInBB(mesh->vertices()[i]); }), 
+    boost::make_function_output_iterator([&mesh](size_t idx) {
+      mesh->vertices()[idx].tag();
+    }));
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>

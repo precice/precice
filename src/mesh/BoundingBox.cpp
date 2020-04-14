@@ -13,34 +13,18 @@ BoundingBox::BoundingBox(std::vector<double> bounds)
 BoundingBox::BoundingBox(int dimension)
 :_dimensions(dimension)
 {
-  PRECICE_CHECK(dimension == 2 || dimension == 3, "Dimension of the bounding box should be 2 or 3.");
   for(int i = 0; i < _dimensions; ++i){
     _bounds.push_back(std::numeric_limits<double>::max());
     _bounds.push_back(std::numeric_limits<double>::lowest());
   }
 }
 
-BoundingBox::BoundingBox(){
+BoundingBox::BoundingBox()
+{
   _dimensions = 3;
   for(int i = 0; i < _dimensions; ++i){
     _bounds.push_back(std::numeric_limits<double>::max());
     _bounds.push_back(std::numeric_limits<double>::lowest());
-  }
-}
-
-void BoundingBox::modifyForTest(int rank, std::string testName){
-  if(testName == "com")
-  {
-    for (int i = 0; i < _dimensions; i++) {
-      _bounds[2*i] = rank*i;
-      _bounds[2*i + 1] = i + 1;
-    }
-  }
-  if(testName == "partition"){
-    for (int i = 0; i < _dimensions; i++) {
-      _bounds[2*i] = 3 - rank - 1;
-      _bounds[2*i + 1] = 3 - rank;
-    }
   }
 }
 
@@ -62,7 +46,8 @@ std::ostream &operator<<(std::ostream &out, const BoundingBox &bb)
   return out;
 }
 
-bool BoundingBox::operator==(const BoundingBox& otherBB) const{
+bool BoundingBox::operator==(const BoundingBox& otherBB) const
+{
   if(_dimensions != otherBB._dimensions){
     return false;
   }
@@ -74,27 +59,34 @@ bool BoundingBox::operator==(const BoundingBox& otherBB) const{
   return true;
 }
 
+void BoundingBox::modifyForTest(int rank, std::string testName)
+{
+  if(testName == "com")
+  {
+    for (int i = 0; i < _dimensions; i++) {
+      _bounds[2*i] = rank*i;
+      _bounds[2*i + 1] = i + 1;
+    }
+  }
+  if(testName == "partition"){
+    for (int i = 0; i < _dimensions; i++) {
+      _bounds[2*i] = 3 - rank - 1;
+      _bounds[2*i + 1] = 3 - rank;
+    }
+  }
+}
+
 BoundingBox BoundingBox::createFromData(std::vector<double> bounds)
 {
   BoundingBox box{bounds};
   return box;
 }
 
-void BoundingBox::setMin(int dimension, double min){
-  PRECICE_CHECK(dimension == 2 || dimension == 3, "Given dimension to set bounding box is not compatible with the bounding box.");
-  _bounds.at(2*dimension) = min;
-}
-
-void BoundingBox::setMax(int dimension, double max){
-  PRECICE_CHECK(dimension == 2 || dimension == 3, "Given dimension to set bounding box is not compatible with the bounding box.");
-  _bounds.at(2*dimension+1) = max;
-}
-
 void BoundingBox::setSafetyFactor(double safetyFactor){
   _safetyFactor = safetyFactor;
 }
 
-bool BoundingBox::isVertexInBB(const mesh::Vertex &vertex)
+bool BoundingBox::isVertexInBB(const mesh::Vertex &vertex) const
 {
   for (int d = 0; d < _dimensions; d++) {
     if (vertex.getCoords()[d] < _bounds.at(2 * d) || vertex.getCoords()[d] > _bounds.at(2 * d + 1)) {
@@ -104,28 +96,23 @@ bool BoundingBox::isVertexInBB(const mesh::Vertex &vertex)
   return true;
 }
 
-double BoundingBox::getData(int dimension, int type) const{
-  if(type == 1){
-    return _bounds.at(2*dimension);
-  }
-  if(type == 2){
-    return _bounds.at(2*dimension+1);
-  }
+double BoundingBox::getData(int dimension, int type) const
+{
+  return _bounds.at(2*dimension + (type - 1));
 }
 
-int BoundingBox::getDimension() const{
+int BoundingBox::getDimension() const
+{
   return _dimensions;
 }
 
-int BoundingBox::getSize() const{
-  return _bounds.size();
-}
-
-const double* BoundingBox::data() const{
+const double* BoundingBox::data() const
+{
   return _bounds.data();
 }
 
-const std::vector<double> BoundingBox::dataVector() const{
+const std::vector<double> BoundingBox::dataVector() const
+{
   return _bounds;
 }
 
@@ -153,16 +140,16 @@ bool BoundingBox::mergeBoundingBoxes(const BoundingBox &otherBB)
   return true;
 }
 
-void BoundingBox::expandTo(const Vertex& vertices){
-
+void BoundingBox::expandTo(const Vertex& vertices)
+{
   for(int d = 0; d < _dimensions; ++d){
     _bounds.at(2*d) = std::min(vertices.getCoords()[d], _bounds.at(2*d));
     _bounds.at(2*d+1) = std::max(vertices.getCoords()[d], _bounds.at(2*d+1));
   }
-
 }
 
-void BoundingBox::enlargeWith(double value){
+void BoundingBox::enlargeWith(double value)
+{
   for (int d = 0; d < _dimensions; d++) {
     _bounds[2*d] -= value;
     _bounds[2*d + 1] += value;   
