@@ -24,7 +24,7 @@ void CommunicateBoundingBox::receiveBoundingBox(
 {
   PRECICE_TRACE(rankSender);
   std::vector<double> receivedData;
-  receivedData.reserve(6);
+
   _communication->receive(receivedData, rankSender);
   bb = mesh::BoundingBox::createFromData(receivedData);
 }
