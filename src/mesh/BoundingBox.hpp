@@ -15,7 +15,6 @@ public:
   * @brief Constructor.
   * 
   * @param[in] bounds Vector of minimum and maximum points in each dimension
-  * @param[in] safetyFactor Factor which enlarges the bounding box
   * 
   */
   BoundingBox(std::vector<double> bounds);
