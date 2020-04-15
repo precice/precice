@@ -288,10 +288,11 @@ void BaseCouplingScheme::addComputedTime(
 
   // Check validness
   bool valid = math::greaterEquals(getThisTimeWindowRemainder(), 0.0, _eps);
-  PRECICE_CHECK(valid, "The computed timestep length of "
-                           << timeToAdd << " exceeds the maximum timestep limit of "
-                           << _timeWindowSize - _computedTimeWindowPart + timeToAdd
-                           << " for this time step!");
+  PRECICE_CHECK(valid, "The timestep "
+                       "length given to preCICE in \"advance\" "
+                           << timeToAdd << " exceeds the maximum allowed timestep length " << _timeWindowSize - _computedTimeWindowPart + timeToAdd
+                           << " in the remaining of this time window. Did you restrict your timestep length, \"dt = min(precice_dt, dt)\" ?"
+                           << " For more information, consult the adapter example in the preCICE documentation.");
 }
 
 bool BaseCouplingScheme::willDataBeExchanged(
