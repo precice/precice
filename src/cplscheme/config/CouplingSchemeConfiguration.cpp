@@ -137,7 +137,9 @@ const PtrCouplingScheme &CouplingSchemeConfiguration::getCouplingScheme(
 {
   PRECICE_CHECK(utils::contained(participantName, _couplingSchemes),
                 "No coupling scheme defined for "
-                    << "participant \"" << participantName << "\"!");
+                    << "participant \"" << participantName << "\". "
+                    << "Please make sure to provide at least one <coupling-scheme:TYPE> in your "
+                    << "precice-config.xml that couples this participant using the <participants .../> tag.");
   return _couplingSchemes.find(participantName)->second;
 }
 
