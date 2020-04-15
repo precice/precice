@@ -179,7 +179,7 @@ void AccelerationConfiguration::xmlTagCallback(
     if (_config.dataIDs.empty()) {
       std::ostringstream stream;
       stream << "Data with name \"" << dataName << "\" associated to mesh \""
-             << _meshName << "\" not found on configuration of acceleration. Assign \"" << dataName << "\" to \"" << _meshName << "\", or change the  "
+             << _meshName << "\" not found on configuration of acceleration. Assign \"" << dataName << "\" to the \"<mesh name=" << _meshName << ">\" tag, or change the  "
              << "data name in the acceleration scheme.";
       throw std::runtime_error{stream.str()};
     }
