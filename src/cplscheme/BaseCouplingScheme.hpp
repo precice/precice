@@ -190,12 +190,6 @@ public:
    */
   virtual void initializeData() = 0;
 
-  /// Returns whether the solver has to evaluate the coarse or the fine model representation
-  virtual bool isCoarseModelOptimizationActive()
-  {
-    return _isCoarseModelOptimizationActive;
-  }
-
   /**
    * @brief Sets order of predictor of interface values for first participant.
    *
@@ -218,7 +212,6 @@ public:
   void addConvergenceMeasure(
       mesh::PtrData               data,
       bool                        suffices,
-      int                         level,
       impl::PtrConvergenceMeasure measure);
 
   /// Set a coupling iteration acceleration technique.
@@ -227,9 +220,6 @@ public:
 protected:
   /// Sets whether explicit or implicit coupling is being done.
   CouplingMode _couplingMode = Undefined;
-
-  /// Sets whether the solver evaluates the fine or the coarse model representation
-  bool _isCoarseModelOptimizationActive = false;
 
   /// Updates internal state of coupling scheme for next time window.
   void timeWindowCompleted();
@@ -399,7 +389,6 @@ protected:
     mesh::PtrData               data;
     CouplingData *              couplingData;
     bool                        suffices;
-    int                         level;
     impl::PtrConvergenceMeasure measure;
   };
 
@@ -415,11 +404,7 @@ protected:
 
   void newConvergenceMeasurements();
 
-  bool measureConvergence(
-      std::map<int, Eigen::VectorXd> &designSpecification);
-
-  bool measureConvergenceCoarseModelOptimization(
-      std::map<int, Eigen::VectorXd> &designSpecification);
+  bool measureConvergence();
 
   /**
    * @brief Sets up _dataStorage to store data values of last timestep (@BU or time window?).
@@ -440,7 +425,7 @@ protected:
 
   void advanceTXTWriters();
 
-  void updateTimeAndIterations(bool convergence, bool convergenceCoarseOptimization = true);
+  void updateTimeAndIterations(bool convergence);
 
   int getMaxIterations() const
   {
@@ -458,9 +443,6 @@ protected:
   const double _eps;
 
   int _deletedColumnsPPFiltering = 0;
-
-  /// Number of coarse model optimization iterations in current time window.
-  int _iterationsCoarseOptimization;
 
 private:
   /// Communication device to the other coupling participant.
@@ -500,9 +482,6 @@ private:
 
   /// Number of total iterations performed.
   int _totalIterations = -1;
-
-  /// Number of accumulated coarse model optimization iterations in current time window.
-  int _totalIterationsCoarseOptimization = -1;
 
   std::vector<double> _firstResiduumNorm = {0};
 
