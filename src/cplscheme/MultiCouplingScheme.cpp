@@ -144,8 +144,7 @@ void MultiCouplingScheme::advance()
 
     receiveData();
 
-    auto designSpecifications = getAcceleration()->getDesignSpecification(_allData);
-    convergence               = measureConvergence(designSpecifications);
+    convergence = measureConvergence();
 
     // Stop, when maximal iteration count (given in config) is reached
     if (maxIterationsReached()) {
@@ -163,8 +162,6 @@ void MultiCouplingScheme::advance()
 
     for (m2n::PtrM2N m2n : _communications) {
       m2n->send(convergence);
-      PRECICE_ASSERT(not _isCoarseModelOptimizationActive);
-      m2n->send(_isCoarseModelOptimizationActive); //need to do this to match with ParallelCplScheme
     }
 
     if (convergence && (getExtrapolationOrder() > 0)) {
