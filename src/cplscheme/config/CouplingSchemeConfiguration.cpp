@@ -382,7 +382,8 @@ void CouplingSchemeConfiguration::addTypespecifcSubtags(
     addTagMaxIterations(tag);
     addTagExtrapolation(tag);
   } else {
-    PRECICE_ERROR("Unknown coupling scheme type!");
+    // If wrong coupling scheme type is provided, this is already caught by the config parser. If the assertion below is triggered, it's a bug in preCICE, not wrong usage.
+    PRECICE_ASSERT(false, "Unknown coupling scheme.");
   }
 }
 
