@@ -445,7 +445,7 @@ void BaseCouplingScheme::checkCompletenessRequiredActions()
       }
       stream << action;
     }
-    PRECICE_ERROR("Unfulfilled required actions: " << stream.str() << "!");
+    PRECICE_ERROR("The required actions " << stream.str() << " are not fulfilled. Did you forget to call \"markActionFulfilled\"?");
   }
 }
 
