@@ -578,15 +578,13 @@ void SolverInterfaceImpl::resetMesh(
     int meshID)
 {
   PRECICE_TRACE(meshID);
+  PRECICE_ASSERT(false, "At the moment, we can no longer and not yet again reset meshes.");
   PRECICE_VALIDATE_MESH_ID(meshID);
   impl::MeshContext &context    = _accessor->meshContext(meshID);
   bool               hasMapping = context.fromMappingContext.mapping || context.toMappingContext.mapping;
   bool               isStationary =
       context.fromMappingContext.timing == mapping::MappingConfiguration::INITIAL &&
       context.toMappingContext.timing == mapping::MappingConfiguration::INITIAL;
-
-  PRECICE_CHECK(!isStationary, "A mesh with only initial mappings  must not be reseted");
-  PRECICE_CHECK(hasMapping, "A mesh with no mappings must not be reseted");
 
   PRECICE_DEBUG("Clear mesh positions for mesh \"" << context.mesh->getName() << "\"");
   _meshLock.unlock(meshID);
