@@ -79,9 +79,9 @@ void DataConfiguration::addData(
 {
   ConfiguredData data(name, dataDimensions);
 
-  // Check, if data with same name has been added already
+  // Check if data with same name has been added already
   for (auto &elem : _data) {
-    PRECICE_CHECK(elem.name != data.name, "Data \"" << data.name << "\" uses non-unique name!");
+    PRECICE_CHECK(elem.name != data.name, "Data \"" << data.name << "\" has already been defined. Please rename or remove one of the data tags with name=\"" << data.name << "\".");
   }
   _data.push_back(data);
 }
@@ -94,7 +94,7 @@ int DataConfiguration::getDataDimensions(
   } else if (typeName == VALUE_SCALAR) {
     return 1;
   }
-  PRECICE_ERROR("Unknown data type!");
+  PRECICE_ERROR("Unknown data type \"" << typeName << "\". Known data types: " << VALUE_SCALAR << ", " << VALUE_VECTOR << ".");
 }
 
 } // namespace mesh

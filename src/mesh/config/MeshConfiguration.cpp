@@ -85,8 +85,9 @@ void MeshConfiguration::xmlTagCallback(
     }
     if (not found) {
       std::ostringstream stream;
-      stream << "Data with name \"" << name << "\" is not available during "
-             << "configuration of mesh \"" << _meshes.back()->getName() << "\"";
+      stream << "Data with name \"" << name << "\" used by "
+             << "mesh \"" << _meshes.back()->getName() << "\" is not defined. "
+             << "Please define a data tag with name=\"" << name << "\".";
       throw std::runtime_error{stream.str()};
     }
   }
@@ -114,7 +115,7 @@ void MeshConfiguration::addMesh(
         break;
       }
     }
-    PRECICE_CHECK(found, "Data " << dataNewMesh->getName() << " is not available in data configuration!");
+    PRECICE_CHECK(found, "Data " << dataNewMesh->getName() << " is not defined. Please define a data tag with name=\""<< dataNewMesh->getName() << "\".");
   }
   _meshes.push_back(mesh);
 }
