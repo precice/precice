@@ -1438,7 +1438,7 @@ void SolverInterfaceImpl::syncTimestep(double computedTimestepLength)
       double dt;
       utils::MasterSlave::_communication->receive(dt, rankSlave);
       PRECICE_CHECK(math::equals(dt, computedTimestepLength),
-                    "Ambiguous timestep length when calling request advance from several processes!");
+                    "Found ambiguous values for the timestep length passed to preCICE in \"advance\". On rank " << rankSlave << ", the value is " << dt << ", while on rank 0, the value is " << computedTimestepLength << ".");
     }
   }
 }
