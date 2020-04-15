@@ -5,6 +5,7 @@
 target_sources(precice
     PRIVATE
     ${CMAKE_BINARY_DIR}/src/precice/impl/versions.cpp
+    src/acceleration/Acceleration.cpp
     src/acceleration/Acceleration.hpp
     src/acceleration/AitkenAcceleration.cpp
     src/acceleration/AitkenAcceleration.hpp
@@ -46,9 +47,9 @@ target_sources(precice
     src/action/ScaleByAreaAction.hpp
     src/action/ScaleByDtAction.cpp
     src/action/ScaleByDtAction.hpp
+    src/action/SharedPointer.hpp
     src/action/SummationAction.cpp
     src/action/SummationAction.hpp
-    src/action/SharedPointer.hpp
     src/action/config/ActionConfiguration.cpp
     src/action/config/ActionConfiguration.hpp
     src/com/CommunicateBoundingBox.cpp
