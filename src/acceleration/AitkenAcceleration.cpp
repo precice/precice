@@ -22,7 +22,7 @@ AitkenAcceleration::AitkenAcceleration(double           initialRelaxation,
 {
   PRECICE_CHECK((_initialRelaxation > 0.0) && (_initialRelaxation <= 1.0),
                 "Initial relaxation factor for aitken acceleration has to "
-                    << "be larger than zero and smaller or equal than one!");
+                    << "be larger than zero and smaller or equal to one.");
 }
 
 void AitkenAcceleration::initialize(DataMap &cplData)
@@ -143,7 +143,7 @@ void AitkenAcceleration::setDesignSpecification(
     Eigen::VectorXd &q)
 {
   _designSpecification = q;
-  PRECICE_ERROR("design specification for Aitken relaxation is not supported yet.");
+  PRECICE_ERROR("Design specification for Aitken relaxation is not supported in MM. Select IQN-ILS or IQN-IMVJ acceleration schemes only.");
 }
 } // namespace acceleration
 } // namespace precice

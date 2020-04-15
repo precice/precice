@@ -947,7 +947,7 @@ bool CouplingSchemeConfiguration::checkIfDataIsCoarse(
 
       err = not isCoarse;
     } else {
-      std::cout << "There is no coarse model optkmaiimization defined.\n";
+      std::cout << "There is no coarse model optimization defined.\n";
       err = true;
     }
   }

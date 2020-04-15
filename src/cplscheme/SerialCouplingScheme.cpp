@@ -56,10 +56,11 @@ void SerialCouplingScheme::initialize(
       int dataID = *(getAcceleration()->getDataIDs().begin());
       PRECICE_CHECK(getSendData(dataID) == nullptr,
                     "In case of serial coupling, acceleration can be defined for "
-                        << "data of second participant only!");
+                        << "data of second participant only. Ensure that the data in the <exchange tag"
+                        << " in <coupling-scheme:serial-implicit> is sent from the second participant.");
     }
     requireAction(constants::actionWriteIterationCheckpoint());
-  }
+  } 
 
   for (DataMap::value_type &pair : getSendData()) {
     if (pair.second->initialize) {

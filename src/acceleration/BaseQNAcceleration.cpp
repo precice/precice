@@ -42,9 +42,9 @@ BaseQNAcceleration::BaseQNAcceleration(
                 "Initial relaxation factor for QN acceleration has to "
                     << "be larger than zero and smaller or equal than one!");
   PRECICE_CHECK(_maxIterationsUsed > 0,
-                "Maximal iterations used for QN acceleration has to be larger than zero!");
+                "Maximum number of iterations used in the Quasi-Newton acceleration scheme has to be larger than zero.");
   PRECICE_CHECK(_timestepsReused >= 0,
-                "Number of old timesteps to be reused for QN acceleration has to be >= 0!");
+                "Number of previous time windows to be reused in the Quasi-Newton acceleration scheme has to be larger or equal to 0.");
 }
 
 /** ---------------------------------------------------------------------------------------------
@@ -233,6 +233,7 @@ void BaseQNAcceleration::updateDifferenceMatrices(
   } else {
     PRECICE_DEBUG("   Update Difference Matrices");
     if (not _firstIteration) {
+      //_maxIterationsUsed = 50; // Works to change maxIterations reused. If this changes, the history needs to be there to change.
       // Update matrices V, W with newest information
 
       PRECICE_ASSERT(_matrixV.cols() == _matrixW.cols(), _matrixV.cols(), _matrixW.cols());
@@ -466,6 +467,7 @@ void BaseQNAcceleration::applyFilter()
   } else {
     // do: filtering of least-squares system to maintain good conditioning
     std::vector<int> delIndices(0);
+    //_singularityLimit = 0.001;
     _qrV.applyFilter(_singularityLimit, delIndices, _matrixV);
     // start with largest index (as V,W matrices are shrinked and shifted
     for (int i = delIndices.size() - 1; i >= 0; i--) {

@@ -68,7 +68,7 @@ void BroydenAcceleration::computeQNUpdate(Acceleration::DataMap &cplData, Eigen:
 
   PRECICE_DEBUG("currentColumns=" << _currentColumns);
   if (_currentColumns > 1) {
-    PRECICE_ERROR("truncated IMVJ no longer supported, needs to be parallelized and datastructures need to be changed to Eigen datastructures.");
+    PRECICE_ERROR("Truncated IMVJ is no longer supported and needs to be parallelized. Data structures need to be changed to Eigen data structures.");
     PRECICE_DEBUG("compute update with QR-dec");
     //computeNewtonFactorsQRDecomposition(cplData, xUpdate);
   } else {

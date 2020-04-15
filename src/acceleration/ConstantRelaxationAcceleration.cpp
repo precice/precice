@@ -18,7 +18,7 @@ ConstantRelaxationAcceleration::ConstantRelaxationAcceleration(
 {
   PRECICE_CHECK((relaxation > 0.0) && (relaxation <= 1.0),
                 "Relaxation factor for constant relaxation acceleration "
-                    << "has to be larger than zero and smaller or equal than one!");
+                    << "has to be larger than zero and smaller or equal to one.");
 }
 
 void ConstantRelaxationAcceleration::initialize(DataMap &cplData)
@@ -84,7 +84,7 @@ std::map<int, Eigen::VectorXd> ConstantRelaxationAcceleration::getDesignSpecific
 void ConstantRelaxationAcceleration::setDesignSpecification(Eigen::VectorXd &q)
 {
   _designSpecification = q;
-  PRECICE_ERROR("Design specification for constant relaxation is not supported yet.");
+  PRECICE_ERROR("Design specification for constant relaxation is not supported in MM. Select IQN-ILS or IQN-IMVJ acceleration schemes only.");
 }
 } // namespace acceleration
 } // namespace precice

@@ -45,12 +45,12 @@ MMAcceleration::MMAcceleration(
       _filter(filter)
 {
   PRECICE_CHECK(_maxIterationsUsed > 0,
-                "Maximal iterations used for MM acceleration has to be larger than zero!");
+                "Maximum number of iterations used for MM acceleration has to be larger than zero.");
   PRECICE_CHECK(_maxIterCoarseModelOpt > 0,
-                "Maximal iterations used for coarse model optimization for MM acceleration has to "
-                    << "be larger than zero!");
+                "Maximum number of iterations used for coarse model optimization for MM acceleration has to "
+                    << "be larger than zero.");
   PRECICE_CHECK(_timestepsReused >= 0,
-                "Number of old timesteps to be reused for MM acceleration has to be >= 0!");
+                "Number of previous time windows to be reused for MM acceleration has to be larger than or equal to 0!");
 }
 
 /** ---------------------------------------------------------------------------------------------
