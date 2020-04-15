@@ -7,7 +7,7 @@ using namespace precice;
 using namespace precice::xml;
 using precice::testing::getPathToSources;
 
-BOOST_AUTO_TEST_SUITE(XML, *testing::OnMaster())
+BOOST_AUTO_TEST_SUITE(XML)
 
 struct CallbackHost : public XMLTag::Listener {
   Eigen::VectorXd eigenVectorXd;
@@ -27,6 +27,7 @@ struct CallbackHost : public XMLTag::Listener {
 
 BOOST_AUTO_TEST_CASE(AttributeConcatenation)
 {
+  PRECICE_TEST(1_rank);
   std::string filename(getPathToSources() + "/xml/tests/config_xmltest_concatenation.xml");
 
   CallbackHost cb;
@@ -45,6 +46,7 @@ BOOST_AUTO_TEST_CASE(AttributeConcatenation)
 
 BOOST_AUTO_TEST_CASE(VectorAttributes)
 {
+  PRECICE_TEST(1_rank);
   std::string filename(getPathToSources() + "/xml/tests/config_xmltest_vectorattributes.xml");
 
   CallbackHost cb;

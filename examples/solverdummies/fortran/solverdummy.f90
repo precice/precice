@@ -1,6 +1,7 @@
 PROGRAM main
   IMPLICIT NONE
-  CHARACTER*50                    :: config, participantName, meshName, writeInitialData, readItCheckp, writeItCheckp
+  CHARACTER*512                   :: config
+  CHARACTER*50                    :: participantName, meshName, writeInitialData, readItCheckp, writeItCheckp
   INTEGER                         :: rank, commsize, ongoing, dimensions, meshID, vertexID, bool
   REAL                            :: dtlimit
   REAL, DIMENSION(:), ALLOCATABLE :: vertex

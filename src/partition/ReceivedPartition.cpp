@@ -238,6 +238,19 @@ void ReceivedPartition::compute()
   }
 }
 
+namespace {
+bool isVertexInBoundingBox(mesh::Vertex const &vertex, mesh::Mesh::BoundingBox const &bb)
+{
+  const int dim = bb.size();
+  for (int d = 0; d < dim; d++) {
+    if (vertex.getCoords()[d] < bb[d].first || vertex.getCoords()[d] > bb[d].second) {
+      return false;
+    }
+  }
+  return true;
+}
+} // namespace
+
 void ReceivedPartition::filterByBoundingBox()
 {
   PRECICE_TRACE(_geometricFilter);
@@ -279,12 +292,12 @@ void ReceivedPartition::filterByBoundingBox()
       PRECICE_ASSERT(utils::MasterSlave::getSize() > 1);
 
       for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
-        com::CommunicateMesh(utils::MasterSlave::_communication).receiveBoundingBox(_bb, rankSlave);
+        mesh::Mesh::BoundingBox slaveBB(_bb.size(), std::make_pair(std::numeric_limits<double>::max(), std::numeric_limits<double>::lowest()));
+        com::CommunicateMesh(utils::MasterSlave::_communication).receiveBoundingBox(slaveBB, rankSlave);
 
-        PRECICE_DEBUG("From slave " << rankSlave << ", bounding mesh: " << _bb[0].first
-                                    << ", " << _bb[0].second << " and " << _bb[1].first << ", " << _bb[1].second);
+        PRECICE_DEBUG("From slave " << rankSlave << ", bounding mesh: " << slaveBB);
         mesh::Mesh slaveMesh("SlaveMesh", _dimensions, _mesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
-        mesh::filterMesh(slaveMesh, *_mesh, [&](const mesh::Vertex &v) { return isVertexInBB(v); });
+        mesh::filterMesh(slaveMesh, *_mesh, [&slaveBB](const mesh::Vertex &v) { return isVertexInBoundingBox(v, slaveBB); });
         PRECICE_DEBUG("Send filtered mesh to slave: " << rankSlave);
         com::CommunicateMesh(utils::MasterSlave::_communication).sendMesh(slaveMesh, rankSlave);
       }
@@ -292,12 +305,12 @@ void ReceivedPartition::filterByBoundingBox()
       // Now also filter the remaining master mesh
       mesh::Mesh filteredMesh("FilteredMesh", _dimensions, _mesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
       mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { return isVertexInBB(v); });
-      _mesh->clear();
-      _mesh->addMesh(filteredMesh);
       PRECICE_DEBUG("Master mesh, filtered from "
                     << _mesh->vertices().size() << " to " << filteredMesh.vertices().size() << " vertices, "
                     << _mesh->edges().size() << " to " << filteredMesh.edges().size() << " edges, and "
                     << _mesh->triangles().size() << " to " << filteredMesh.triangles().size() << " triangles.");
+      _mesh->clear();
+      _mesh->addMesh(filteredMesh);
 
       if (areProvidedMeshesEmpty()) {
         std::string msg = "The re-partitioning completely filtered out the mesh " + _mesh->getName() +
@@ -473,6 +486,7 @@ void ReceivedPartition::prepareBoundingBox()
   // Create BB around both "other" meshes
   if (_fromMapping) {
     auto other_bb = _fromMapping->getOutputMesh()->getBoundingBox();
+    PRECICE_ASSERT(!other_bb.empty(), "Output Mesh of from Mapping has an empty bounding box!");
     for (int d = 0; d < _dimensions; d++) {
       _bb[d].first  = std::min(_bb[d].first, other_bb[d].first);
       _bb[d].second = std::max(_bb[d].second, other_bb[d].second);
@@ -480,6 +494,7 @@ void ReceivedPartition::prepareBoundingBox()
   }
   if (_toMapping) {
     auto other_bb = _toMapping->getInputMesh()->getBoundingBox();
+    PRECICE_ASSERT(!other_bb.empty(), "Input Mesh of to Mapping has an empty bounding box!");
     for (int d = 0; d < _dimensions; d++) {
       _bb[d].first  = std::min(_bb[d].first, other_bb[d].first);
       _bb[d].second = std::max(_bb[d].second, other_bb[d].second);
@@ -506,12 +521,7 @@ void ReceivedPartition::prepareBoundingBox()
 
 bool ReceivedPartition::isVertexInBB(const mesh::Vertex &vertex)
 {
-  for (int d = 0; d < _dimensions; d++) {
-    if (vertex.getCoords()[d] < _bb[d].first or vertex.getCoords()[d] > _bb[d].second) {
-      return false;
-    }
-  }
-  return true;
+  return isVertexInBoundingBox(vertex, _bb);
 }
 
 void ReceivedPartition::createOwnerInformation()

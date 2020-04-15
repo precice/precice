@@ -12,6 +12,7 @@
 using namespace precice;
 using namespace precice::mesh;
 using namespace precice::mapping;
+using precice::testing::TestContext;
 
 BOOST_AUTO_TEST_SUITE(MappingTests)
 BOOST_AUTO_TEST_SUITE(PetRadialBasisFunctionMapping)
@@ -23,8 +24,7 @@ void addGlobalIndex(mesh::PtrMesh &mesh, int offset = 0)
   }
 }
 
-BOOST_AUTO_TEST_SUITE(Parallel,
-                      *testing::MinRanks(4))
+BOOST_AUTO_TEST_SUITE(Parallel)
 
 /// Holds rank, owner, position and value of a single vertex
 struct VertexSpecification {
@@ -55,23 +55,23 @@ using MeshSpecification = std::vector<VertexSpecification>;
 /// Contains which values are expected on which rank: rank -> vector of data.
 using ReferenceSpecification = std::vector<std::pair<int, std::vector<double>>>;
 
-void getDistributedMesh(MeshSpecification const &vertices,
+void getDistributedMesh(const TestContext &      context,
+                        MeshSpecification const &vertices,
                         mesh::PtrMesh &          mesh,
                         mesh::PtrData &          data,
                         int                      globalIndexOffset = 0)
 {
-  using Par = utils::Parallel;
   Eigen::VectorXd d;
 
   int i = 0;
   for (auto &vertex : vertices) {
-    if (vertex.rank == Par::getProcessRank() or vertex.rank == -1) {
+    if (vertex.rank == context.rank or vertex.rank == -1) {
       if (vertex.position.size() == 3) // 3-dimensional
         mesh->createVertex(Eigen::Vector3d(vertex.position.data()));
       else if (vertex.position.size() == 2) // 2-dimensional
         mesh->createVertex(Eigen::Vector2d(vertex.position.data()));
 
-      if (vertex.owner == Par::getProcessRank())
+      if (vertex.owner == context.rank)
         mesh->vertices().back().setOwner(true);
       else
         mesh->vertices().back().setOwner(false);
@@ -86,14 +86,13 @@ void getDistributedMesh(MeshSpecification const &vertices,
   data->values() = d;
 }
 
-void testDistributed(Mapping &              mapping,
+void testDistributed(const TestContext &    context,
+                     Mapping &              mapping,
                      MeshSpecification      inMeshSpec,
                      MeshSpecification      outMeshSpec,
                      ReferenceSpecification referenceSpec,
                      int                    inGlobalIndexOffset = 0)
 {
-  using Par = utils::Parallel;
-  BOOST_TEST(Par::getCommunicatorSize() == 4);
   int meshDimension  = inMeshSpec[0].position.size();
   int valueDimension = inMeshSpec[0].value.size();
 
@@ -101,13 +100,13 @@ void testDistributed(Mapping &              mapping,
   mesh::PtrData inData   = inMesh->createData("InData", valueDimension);
   int           inDataID = inData->getID();
 
-  getDistributedMesh(inMeshSpec, inMesh, inData, inGlobalIndexOffset);
+  getDistributedMesh(context, inMeshSpec, inMesh, inData, inGlobalIndexOffset);
 
   mesh::PtrMesh outMesh(new mesh::Mesh("outMesh", meshDimension, false, testing::nextMeshID()));
   mesh::PtrData outData   = outMesh->createData("OutData", valueDimension);
   int           outDataID = outData->getID();
 
-  getDistributedMesh(outMeshSpec, outMesh, outData);
+  getDistributedMesh(context, outMeshSpec, outMesh, outData);
 
   mapping.setMeshes(inMesh, outMesh);
   BOOST_TEST(mapping.hasComputedMapping() == false);
@@ -118,7 +117,7 @@ void testDistributed(Mapping &              mapping,
 
   int index = 0;
   for (auto &referenceVertex : referenceSpec) {
-    if (referenceVertex.first == Par::getProcessRank() or referenceVertex.first == -1) {
+    if (referenceVertex.first == context.rank or referenceVertex.first == -1) {
       for (auto &point : referenceVertex.second) {
         // only 1-d here for now
         BOOST_TEST_INFO("index of vertex is " << index);
@@ -133,15 +132,11 @@ void testDistributed(Mapping &              mapping,
 /// Test with a homogenous distribution of mesh amoung ranks
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1)
 {
-  utils::Parallel::setGlobalCommunicator(utils::Parallel::getRestrictedCommunicator({0, 1, 2, 3}));
-  BOOST_TEST(utils::Parallel::getCommunicatorSize() == 4);
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc);
   Gaussian                           fct(5.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
 
-  MPI_Comm comm = utils::Parallel::getRestrictedCommunicator({0, 1, 2, 3});
-  utils::Parallel::setGlobalCommunicator(comm);
-
-  testDistributed(mapping,
+  testDistributed(context, mapping,
                   {// Consistent mapping: The inMesh is communicated
                    {-1, 0, {0, 0}, {1}},
                    {-1, 0, {0, 1}, {2}},
@@ -174,11 +169,11 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1)
 /// Using a more heterogenous distributon of vertices and owner
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV2)
 {
-  BOOST_TEST(utils::Parallel::getCommunicatorSize() == 4);
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc);
   Gaussian                           fct(5.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
 
-  testDistributed(mapping,
+  testDistributed(context, mapping,
                   {// Consistent mapping: The inMesh is communicated, rank 2 owns no vertices
                    {-1, 0, {0, 0}, {1}},
                    {-1, 0, {0, 1}, {2}},
@@ -212,13 +207,13 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV2)
 /// Test with a very heterogenous distributed and non-continues ownership
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3)
 {
-  BOOST_TEST(utils::Parallel::getCommunicatorSize() == 4);
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc);
   Gaussian                           fct(5.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
 
   std::vector<int> globalIndexOffsets = {0, 0, 0, 4};
 
-  testDistributed(mapping,
+  testDistributed(context, mapping,
                   {
                       // Rank 0 has part of the mesh, owns a subpart
                       {0, 0, {0, 0}, {1}},
@@ -262,19 +257,20 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3)
                    {2, {6}},
                    {3, {7}},
                    {3, {8}}},
-                  globalIndexOffsets[utils::Parallel::getProcessRank()]);
+                  globalIndexOffsets[context.rank]);
 }
 
 #if PETSC_MAJOR >= 3 and PETSC_MINOR >= 8
 /// Some ranks are empty, does not converge
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV4)
 {
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc);
   ThinPlateSplines                           fct;
   PetRadialBasisFctMapping<ThinPlateSplines> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
 
   std::vector<int> globalIndexOffsets = {0, 0, 0, 0};
 
-  testDistributed(mapping,
+  testDistributed(context, mapping,
                   {
                       // Rank 0 has no vertices
                       // Rank 1 has the entire mesh, owns a subpart
@@ -317,7 +313,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV4)
                    {2, {6}},
                    {2, {7}},
                    {2, {8}}},
-                  globalIndexOffsets[utils::Parallel::getProcessRank()]);
+                  globalIndexOffsets[context.rank]);
 }
 #else
 #warning "Test case MappingTests/PetRadialBasisFunctionMapping/Parallel/DistributedConsistent2DV4 deactivated, due to PETSc version < 3.8"
@@ -326,13 +322,13 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV4)
 // same as 2DV4, but all ranks have vertices
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV5)
 {
-  BOOST_TEST(utils::Parallel::getCommunicatorSize() == 4);
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc);
   ThinPlateSplines                           fct;
   PetRadialBasisFctMapping<ThinPlateSplines> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
 
   std::vector<int> globalIndexOffsets = {0, 0, 0, 0};
 
-  testDistributed(mapping,
+  testDistributed(context, mapping,
                   {
                       // Every rank has the entire mesh and owns a subpart
                       {0, 0, {0, 0}, {1.1}},
@@ -388,20 +384,20 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV5)
                    {2, {6}},
                    {2, {7}},
                    {2, {8}}},
-                  globalIndexOffsets[utils::Parallel::getProcessRank()]);
+                  globalIndexOffsets[context.rank]);
 }
 
 /// same as 2DV4, but strictly linear input values, converges and gives correct results
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV6,
                      *boost::unit_test::tolerance(1e-7))
 {
-  BOOST_TEST(utils::Parallel::getCommunicatorSize() == 4);
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc);
   ThinPlateSplines                           fct;
   PetRadialBasisFctMapping<ThinPlateSplines> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
 
   std::vector<int> globalIndexOffsets = {0, 0, 0, 0};
 
-  testDistributed(mapping,
+  testDistributed(context, mapping,
                   {
                       // Rank 0 has no vertices
                       // Rank 1 has the entire mesh, owns a subpart
@@ -444,17 +440,17 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV6,
                    {2, {6}},
                    {2, {7}},
                    {2, {8}}},
-                  globalIndexOffsets[utils::Parallel::getProcessRank()]);
+                  globalIndexOffsets[context.rank]);
 }
 
 /// Test with a homogenous distribution of mesh amoung ranks
 BOOST_AUTO_TEST_CASE(DistributedConservative2DV1)
 {
-  BOOST_TEST(utils::Parallel::getCommunicatorSize() == 4);
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc);
   Gaussian                           fct(5.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
 
-  testDistributed(mapping,
+  testDistributed(context, mapping,
                   {// Conservative mapping: The inMesh is local
                    {0, -1, {0, 0}, {1}},
                    {0, -1, {0, 1}, {2}},
@@ -507,19 +503,19 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV1)
                    {3, {0}},
                    {3, {7}},
                    {3, {8}}},
-                  utils::Parallel::getProcessRank() * 2);
+                  context.rank * 2);
 }
 
 /// Using a more heterogenous distribution of vertices and owner
 BOOST_AUTO_TEST_CASE(DistributedConservative2DV2)
 {
-  BOOST_TEST(utils::Parallel::getCommunicatorSize() == 4);
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc)
   Gaussian                           fct(5.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
 
   std::vector<int> globalIndexOffsets = {0, 0, 4, 6};
 
-  testDistributed(mapping,
+  testDistributed(context, mapping,
                   {// Conservative mapping: The inMesh is local but rank 0 has no vertices
                    {1, -1, {0, 0}, {1}},
                    {1, -1, {0, 1}, {2}},
@@ -572,18 +568,19 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV2)
                    {3, {0}},
                    {3, {7}},
                    {3, {8}}},
-                  globalIndexOffsets[utils::Parallel::getProcessRank()]);
+                  globalIndexOffsets[context.rank]);
 }
 
 /// Using meshes of different sizes, inMesh is smaller then outMesh
 BOOST_AUTO_TEST_CASE(DistributedConservative2DV3)
 {
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc);
   Gaussian                           fct(2.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
 
   std::vector<int> globalIndexOffsets = {0, 0, 3, 5};
 
-  testDistributed(mapping,
+  testDistributed(context, mapping,
                   {// Conservative mapping: The inMesh is local but rank 0 has no vertices
                    {1, -1, {0, 0}, {1}},
                    {1, -1, {1, 0}, {3}},
@@ -635,7 +632,7 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV3)
                    {3, {0}},
                    {3, {7}},
                    {3, {8}}}, // Sum of reference is also 34
-                  globalIndexOffsets[utils::Parallel::getProcessRank()]);
+                  globalIndexOffsets[context.rank]);
 }
 
 #if PETSC_MAJOR >= 3 and PETSC_MINOR >= 8
@@ -643,12 +640,13 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV3)
 BOOST_AUTO_TEST_CASE(DistributedConservative2DV4,
                      *boost::unit_test::tolerance(1e-6))
 {
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc);
   Gaussian                           fct(4.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
 
   std::vector<int> globalIndexOffsets = {0, 2, 4, 6};
 
-  testDistributed(mapping,
+  testDistributed(context, mapping,
                   {// Conservative mapping: The inMesh is local
                    {0, -1, {0, 0}, {1}},
                    {0, -1, {0, 1}, {2}},
@@ -696,7 +694,7 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV4,
                    {3, {0}},
                    {3, {7.047619}},
                    {3, {7.571428}}}, // Sum is ~36
-                  globalIndexOffsets[utils::Parallel::getProcessRank()]);
+                  globalIndexOffsets[context.rank]);
 }
 #else
 #warning "Test case MappingTests/PetRadialBasisFunctionMapping/Parallel/DistributedConservative2DV4 deactivated, due to PETSc version < 3.8."
@@ -705,10 +703,11 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV4,
 /// Tests a non-contigous owner distributed at the outMesh
 BOOST_AUTO_TEST_CASE(testDistributedConservative2DV5)
 {
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc);
   Gaussian                           fct(5.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
 
-  testDistributed(mapping,
+  testDistributed(context, mapping,
                   {// Conservative mapping: The inMesh is local
                    {0, -1, {0, 0}, {1}},
                    {0, -1, {0, 1}, {2}},
@@ -761,25 +760,26 @@ BOOST_AUTO_TEST_CASE(testDistributedConservative2DV5)
                    {3, {0}},
                    {3, {7}},
                    {3, {8}}},
-                  utils::Parallel::getProcessRank() * 2);
+                  context.rank * 2);
 }
 
-void testTagging(MeshSpecification inMeshSpec,
-                 MeshSpecification outMeshSpec,
-                 MeshSpecification shouldTagFirstRound,
-                 MeshSpecification shouldTagSecondRound,
-                 bool              consistent)
+void testTagging(const TestContext &context,
+                 MeshSpecification  inMeshSpec,
+                 MeshSpecification  outMeshSpec,
+                 MeshSpecification  shouldTagFirstRound,
+                 MeshSpecification  shouldTagSecondRound,
+                 bool               consistent)
 {
   int meshDimension  = inMeshSpec[0].position.size();
   int valueDimension = inMeshSpec[0].value.size();
 
   mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", meshDimension, false, testing::nextMeshID()));
   mesh::PtrData inData = inMesh->createData("InData", valueDimension);
-  getDistributedMesh(inMeshSpec, inMesh, inData);
+  getDistributedMesh(context, inMeshSpec, inMesh, inData);
 
   mesh::PtrMesh outMesh(new mesh::Mesh("outMesh", meshDimension, false, testing::nextMeshID()));
   mesh::PtrData outData = outMesh->createData("OutData", valueDimension);
-  getDistributedMesh(outMeshSpec, outMesh, outData);
+  getDistributedMesh(context, outMeshSpec, outMesh, outData);
 
   Gaussian                           fct(4.5); //Support radius approx. 1
   Mapping::Constraint                constr = consistent ? Mapping::CONSISTENT : Mapping::CONSERVATIVE;
@@ -826,7 +826,7 @@ void testTagging(MeshSpecification inMeshSpec,
 
 BOOST_AUTO_TEST_CASE(testTagFirstRound)
 {
-  BOOST_TEST(utils::Parallel::getCommunicatorSize() == 4);
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc)
   //    *
   //    + <-- owned
   //* * x * *
@@ -851,15 +851,14 @@ BOOST_AUTO_TEST_CASE(testTagFirstRound)
       {0, -1, {0, 1}, {1}}};
   MeshSpecification shouldTagSecondRound = {
       {0, -1, {2, 0}, {1}}};
-  testTagging(inMeshSpec, outMeshSpec, shouldTagFirstRound, shouldTagSecondRound, true);
+  testTagging(context, inMeshSpec, outMeshSpec, shouldTagFirstRound, shouldTagSecondRound, true);
   // For conservative just swap meshes.
-  testTagging(outMeshSpec, inMeshSpec, shouldTagFirstRound, shouldTagSecondRound, false);
+  testTagging(context, outMeshSpec, inMeshSpec, shouldTagFirstRound, shouldTagSecondRound, false);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Parallel
 
-BOOST_AUTO_TEST_SUITE(Serial,
-                      *boost::unit_test::fixture<testing::SingleRankFixture>())
+BOOST_AUTO_TEST_SUITE(Serial)
 
 void perform2DTestConsistentMapping(Mapping &mapping)
 {
@@ -1203,6 +1202,7 @@ void perform3DTestConservativeMapping(Mapping &mapping)
 
 BOOST_AUTO_TEST_CASE(MapThinPlateSplines)
 {
+  PRECICE_TEST(1_rank, Require::PETSc);
   bool                                       xDead = false;
   bool                                       yDead = false;
   bool                                       zDead = false;
@@ -1219,6 +1219,7 @@ BOOST_AUTO_TEST_CASE(MapThinPlateSplines)
 
 BOOST_AUTO_TEST_CASE(MapMultiquadrics)
 {
+  PRECICE_TEST(1_rank, Require::PETSc);
   bool                                    xDead = false;
   bool                                    yDead = false;
   bool                                    zDead = false;
@@ -1235,6 +1236,7 @@ BOOST_AUTO_TEST_CASE(MapMultiquadrics)
 
 BOOST_AUTO_TEST_CASE(MapInverseMultiquadrics)
 {
+  PRECICE_TEST(1_rank, Require::PETSc);
   bool                                           xDead = false;
   bool                                           yDead = false;
   bool                                           zDead = false;
@@ -1251,6 +1253,7 @@ BOOST_AUTO_TEST_CASE(MapInverseMultiquadrics)
 
 BOOST_AUTO_TEST_CASE(MapVolumeSplines)
 {
+  PRECICE_TEST(1_rank, Require::PETSc);
   bool                                    xDead = false;
   bool                                    yDead = false;
   bool                                    zDead = false;
@@ -1267,6 +1270,7 @@ BOOST_AUTO_TEST_CASE(MapVolumeSplines)
 
 BOOST_AUTO_TEST_CASE(MapGaussian)
 {
+  PRECICE_TEST(1_rank, Require::PETSc);
   bool                               xDead = false;
   bool                               yDead = false;
   bool                               zDead = false;
@@ -1283,6 +1287,7 @@ BOOST_AUTO_TEST_CASE(MapGaussian)
 
 BOOST_AUTO_TEST_CASE(MapCompactThinPlateSplinesC2)
 {
+  PRECICE_TEST(1_rank, Require::PETSc);
   double                    supportRadius = 1.2;
   bool                      xDead         = false;
   bool                      yDead         = false;
@@ -1301,6 +1306,7 @@ BOOST_AUTO_TEST_CASE(MapCompactThinPlateSplinesC2)
 
 BOOST_AUTO_TEST_CASE(MapPetCompactPolynomialC0)
 {
+  PRECICE_TEST(1_rank, Require::PETSc);
   double              supportRadius = 1.2;
   bool                xDead         = false;
   bool                yDead         = false;
@@ -1319,6 +1325,7 @@ BOOST_AUTO_TEST_CASE(MapPetCompactPolynomialC0)
 
 BOOST_AUTO_TEST_CASE(MapPetCompactPolynomialC6)
 {
+  PRECICE_TEST(1_rank, Require::PETSc);
   double              supportRadius = 1.2;
   bool                xDead         = false;
   bool                yDead         = false;
@@ -1337,6 +1344,7 @@ BOOST_AUTO_TEST_CASE(MapPetCompactPolynomialC6)
 
 BOOST_AUTO_TEST_CASE(DeadAxis2)
 {
+  PRECICE_TEST(1_rank, Require::PETSc);
   using Eigen::Vector2d;
   int dimensions = 2;
 
@@ -1384,6 +1392,7 @@ BOOST_AUTO_TEST_CASE(DeadAxis2)
 
 BOOST_AUTO_TEST_CASE(DeadAxis3D)
 {
+  PRECICE_TEST(1_rank, Require::PETSc);
   using Eigen::Vector3d;
   int dimensions = 3;
 
@@ -1436,6 +1445,7 @@ BOOST_AUTO_TEST_CASE(DeadAxis3D)
 
 BOOST_AUTO_TEST_CASE(SolutionCaching)
 {
+  PRECICE_TEST(1_rank, Require::PETSc);
   using Eigen::Vector2d;
   int dimensions = 2;
 
@@ -1488,6 +1498,7 @@ BOOST_AUTO_TEST_CASE(SolutionCaching)
 BOOST_AUTO_TEST_CASE(ConsistentPolynomialSwitch,
                      *boost::unit_test::tolerance(1e-6))
 {
+  PRECICE_TEST(1_rank, Require::PETSc);
   using Eigen::Vector2d;
   int dimensions = 2;
 
@@ -1552,6 +1563,7 @@ BOOST_AUTO_TEST_CASE(ConsistentPolynomialSwitch,
 BOOST_AUTO_TEST_CASE(ConservativePolynomialSwitch,
                      *boost::unit_test::tolerance(1e-6))
 {
+  PRECICE_TEST(1_rank, Require::PETSc);
   using Eigen::Vector2d;
   int dimensions = 2;
 
@@ -1623,6 +1635,7 @@ BOOST_AUTO_TEST_CASE(ConservativePolynomialSwitch,
 
 BOOST_AUTO_TEST_CASE(NoMapping)
 {
+  PRECICE_TEST(1_rank, Require::PETSc);
   /*
    * RATIONALE: Correctly destroying PETSc objects in OOP context can be a bit
    * tricky. We test if an RBF object can be destroyed right after creation
@@ -1661,6 +1674,7 @@ BOOST_AUTO_TEST_CASE(NoMapping)
 
 BOOST_AUTO_TEST_CASE(TestNonHomongenousGlobalIndex)
 {
+  PRECICE_TEST(1_rank, Require::PETSc);
   using Eigen::Vector2d;
   int dimensions = 2;
 

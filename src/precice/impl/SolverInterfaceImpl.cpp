@@ -73,7 +73,7 @@ SolverInterfaceImpl::SolverInterfaceImpl(
 #ifndef PRECICE_NO_MPI
   if (communicator != nullptr) {
     auto commptr = static_cast<utils::Parallel::Communicator *>(communicator);
-    utils::Parallel::setGlobalCommunicator(*commptr);
+    utils::Parallel::registerUserProvidedComm(*commptr);
   }
 #endif
 
@@ -85,14 +85,16 @@ SolverInterfaceImpl::SolverInterfaceImpl(
 // utils::Parallel::initializeMPI, which is needed for getProcessRank.
 #ifndef PRECICE_NO_MPI
   if (communicator != nullptr) {
-    PRECICE_CHECK(_accessorProcessRank == utils::Parallel::getProcessRank(),
+    const auto currentRank = utils::Parallel::current()->rank();
+    PRECICE_CHECK(_accessorProcessRank == currentRank,
                   "The passed solverProcessIndex (" << _accessorProcessRank
                                                     << ") does not match the rank of the passed MPI communicator ("
-                                                    << utils::Parallel::getProcessRank() << ")");
-    PRECICE_CHECK(_accessorCommunicatorSize == utils::Parallel::getCommunicatorSize(),
+                                                    << currentRank << ")");
+    const auto currentSize = utils::Parallel::current()->size();
+    PRECICE_CHECK(_accessorCommunicatorSize == currentSize,
                   "The passed solverProcessSize (" << _accessorCommunicatorSize
                                                    << ") does not match the size of the passed MPI communicator ("
-                                                   << utils::Parallel::getCommunicatorSize() << ")");
+                                                   << currentSize << ")");
   }
 #endif
 }
@@ -111,7 +113,7 @@ void SolverInterfaceImpl::configure(
 {
   config::Configuration config;
   utils::Parallel::initializeMPI(nullptr, nullptr);
-  logging::setMPIRank(utils::Parallel::getProcessRank());
+  logging::setMPIRank(utils::Parallel::current()->rank());
   xml::ConfigurationContext context{
       _accessorName,
       _accessorProcessRank,
@@ -180,7 +182,7 @@ void SolverInterfaceImpl::configure(
     _meshLock.add(meshID.second, false);
   }
 
-  utils::EventRegistry::instance().initialize("precice-" + _accessorName, "", utils::Parallel::getGlobalCommunicator());
+  utils::EventRegistry::instance().initialize("precice-" + _accessorName, "", utils::Parallel::current()->comm);
 
   PRECICE_DEBUG("Initialize master-slave communication");
   if (utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave()) {
@@ -445,18 +447,17 @@ void SolverInterfaceImpl::finalize()
 
   // Stop and print Event logging
   e.stop();
-  utils::EventRegistry::instance().finalize();
   if (not precice::testMode and not precice::utils::MasterSlave::isSlave()) {
     utils::EventRegistry::instance().printAll();
   }
 
   // Tear down MPI and PETSc
+  utils::Petsc::finalize();
+  utils::EventRegistry::instance().clear();
+  utils::EventRegistry::instance().finalize();
   if (not precice::testMode) {
-    utils::Petsc::finalize();
     utils::Parallel::finalizeMPI();
   }
-  utils::Parallel::clearGroups();
-  utils::EventRegistry::instance().clear();
 }
 
 int SolverInterfaceImpl::getDimensions() const
@@ -1420,8 +1421,7 @@ void SolverInterfaceImpl::initializeMasterSlaveCommunication()
   if (utils::MasterSlave::isMaster()) {
     PRECICE_INFO("Setting up communication to slaves");
     utils::MasterSlave::_communication->prepareEstablishment(_accessorName + "Master", _accessorName);
-    utils::MasterSlave::_communication->acceptConnection(_accessorName + "Master", _accessorName, "MasterSlave", utils::MasterSlave::getRank());
-    utils::MasterSlave::_communication->setRankOffset(rankOffset);
+    utils::MasterSlave::_communication->acceptConnection(_accessorName + "Master", _accessorName, "MasterSlave", utils::MasterSlave::getRank(), rankOffset);
     utils::MasterSlave::_communication->cleanupEstablishment(_accessorName + "Master", _accessorName);
   } else {
     PRECICE_ASSERT(utils::MasterSlave::isSlave());

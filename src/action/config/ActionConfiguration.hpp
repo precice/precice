@@ -57,15 +57,15 @@ private:
    * @brief Stores configuration information temporarily to create the Action.
    */
   struct ConfiguredAction {
-    std::string type;
-    std::string timing;
-    std::string sourceData;
-    std::string targetData;
-    std::string mesh;
-    double      convergenceTolerance = 0;
-    int         maxIterations        = 0;
-    std::string path;
-    std::string module;
+    std::string              type;
+    std::string              timing;
+    std::vector<std::string> sourceDataVector;
+    std::string              targetData;
+    std::string              mesh;
+    double                   convergenceTolerance = 0;
+    int                      maxIterations        = 0;
+    std::string              path;
+    std::string              module;
   };
 
   mutable logging::Logger _log{"config::ActionConfiguration"};
@@ -77,6 +77,7 @@ private:
   const std::string NAME_SCALE_BY_COMPUTED_DT_RATIO;
   const std::string NAME_SCALE_BY_COMPUTED_DT_PART_RATIO;
   const std::string NAME_SCALE_BY_DT;
+  const std::string NAME_SUMMATION;
   const std::string NAME_COMPUTE_CURVATURE;
   const std::string NAME_PYTHON;
 

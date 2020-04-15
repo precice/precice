@@ -1,5 +1,3 @@
-<?xml version="1.0"?>
-
 <precice-configuration>
    <solver-interface dimensions="2">
       <data:vector name="Forces"        />
@@ -19,7 +17,7 @@
          <use-data name="Displacements"/>
       </mesh>
 
-      <m2n:mpi-single from="SolverA" to="SolverB"/>
+      <m2n:sockets from="SolverA" to="SolverB"/>
 
       <participant name="SolverA">
          <use-mesh name="MeshDisplacementsA" provide="yes"/>

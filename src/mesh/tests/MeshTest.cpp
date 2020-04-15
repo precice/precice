@@ -16,10 +16,11 @@ using precice::testing::equals;
 
 BOOST_AUTO_TEST_SUITE(MeshTests)
 
-BOOST_AUTO_TEST_SUITE(MeshTests, *testing::OnMaster())
+BOOST_AUTO_TEST_SUITE(MeshTests)
 
 BOOST_AUTO_TEST_CASE(ComputeState_2D)
 {
+  PRECICE_TEST(1_rank);
   mesh::Mesh mesh("MyMesh", 2, true, testing::nextMeshID());
   // Create mesh
   Vertex &v1 = mesh.createVertex(Vector2d(0.0, 0.0));
@@ -49,6 +50,7 @@ BOOST_AUTO_TEST_CASE(ComputeState_2D)
 
 BOOST_AUTO_TEST_CASE(ComputeState_3D_Triangle)
 {
+  PRECICE_TEST(1_rank);
   precice::mesh::Mesh mesh("MyMesh", 3, true, testing::nextMeshID());
   // Create mesh
   Vertex &v1 = mesh.createVertex(Vector3d(0.0, 0.0, 0.0));
@@ -108,6 +110,7 @@ BOOST_AUTO_TEST_CASE(ComputeState_3D_Triangle)
 
 BOOST_AUTO_TEST_CASE(ComputeState_3D_Quad)
 {
+  PRECICE_TEST(1_rank);
   mesh::Mesh mesh("MyMesh", 3, true, testing::nextMeshID());
   // Create mesh (Two rectangles with a common edge at z-axis. One extends in
   // x-y-plane (2 long), the other in y-z-plane (1 long))
@@ -177,6 +180,7 @@ BOOST_AUTO_TEST_CASE(ComputeState_3D_Quad)
 
 BOOST_AUTO_TEST_CASE(BoundingBoxCOG_2D)
 {
+  PRECICE_TEST(1_rank);
   Eigen::Vector2d coords0(2, 0);
   Eigen::Vector2d coords1(-1, 4);
   Eigen::Vector2d coords2(0, 1);
@@ -210,6 +214,7 @@ BOOST_AUTO_TEST_CASE(BoundingBoxCOG_2D)
 
 BOOST_AUTO_TEST_CASE(BoundingBoxCOG_3D)
 {
+  PRECICE_TEST(1_rank);
   Eigen::Vector3d coords0(2, 0, -3);
   Eigen::Vector3d coords1(-1, 4, 8);
   Eigen::Vector3d coords2(0, 1, -2);
@@ -246,6 +251,7 @@ BOOST_AUTO_TEST_CASE(BoundingBoxCOG_3D)
 
 BOOST_AUTO_TEST_CASE(Demonstration)
 {
+  PRECICE_TEST(1_rank);
   for (int dim = 2; dim <= 3; dim++) {
     // Create mesh object
     std::string         meshName("MyMesh");
@@ -355,6 +361,7 @@ BOOST_AUTO_TEST_CASE(Demonstration)
 
 BOOST_AUTO_TEST_CASE(MeshEquality)
 {
+  PRECICE_TEST(1_rank);
   int   dim = 3;
   Mesh  mesh1("Mesh1", dim, false, testing::nextMeshID());
   Mesh  mesh1flipped("Mesh1flipped", dim, true, testing::nextMeshID());
@@ -389,6 +396,7 @@ BOOST_AUTO_TEST_CASE(MeshEquality)
 
 BOOST_AUTO_TEST_CASE(MeshWKTPrint)
 {
+  PRECICE_TEST(1_rank);
   Mesh    mesh("WKTMesh", 3, false, testing::nextMeshID());
   Vertex &v0 = mesh.createVertex(Eigen::Vector3d(0., 0., 0.));
   Vertex &v1 = mesh.createVertex(Eigen::Vector3d(1., 0., 0.));
@@ -417,6 +425,7 @@ BOOST_AUTO_TEST_CASE(MeshWKTPrint)
 
 BOOST_AUTO_TEST_CASE(CreateUniqueEdge)
 {
+  PRECICE_TEST(1_rank);
   int             dim = 3;
   Mesh            mesh1("Mesh1", dim, false, testing::nextMeshID());
   auto &          mesh = mesh1;
@@ -467,7 +476,7 @@ BOOST_AUTO_TEST_CASE(ComputeStateOfNotFullyConnectedMesh)
   Vertex &v2 = mesh.createVertex(coords2);
   Vertex &v3 = mesh.createVertex(coords3);
   Vertex &v4 = mesh.createVertex(coords4);
-  Vertex &v5 = mesh.createVertex(coords5);
+  mesh.createVertex(coords5);
   BOOST_TEST(mesh.vertices().size() == 6);
 
   Edge &e0 = mesh.createEdge(v0, v1);

@@ -3,6 +3,7 @@
 #include "action/PythonAction.hpp"
 #include "action/ScaleByAreaAction.hpp"
 #include "action/ScaleByDtAction.hpp"
+#include "action/SummationAction.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
@@ -19,6 +20,7 @@ ActionConfiguration::ActionConfiguration(
       NAME_SCALE_BY_COMPUTED_DT_RATIO("scale-by-computed-dt-ratio"),
       NAME_SCALE_BY_COMPUTED_DT_PART_RATIO("scale-by-computed-dt-part-ratio"),
       NAME_SCALE_BY_DT("scale-by-dt"),
+      NAME_SUMMATION("summation"),
       NAME_COMPUTE_CURVATURE("compute-curvature"),
       NAME_PYTHON("python"),
       TAG_SOURCE_DATA("source-data"),
@@ -37,12 +39,15 @@ ActionConfiguration::ActionConfiguration(
   using namespace xml;
   std::string doc;
   XMLTag      tagSourceData(*this, TAG_SOURCE_DATA, XMLTag::OCCUR_ONCE);
-  tagSourceData.setDocumentation("Data to read from.");
+  tagSourceData.setDocumentation("Single data to read from. ");
+  XMLTag tagMultipleSourceData(*this, TAG_SOURCE_DATA, XMLTag::OCCUR_ONCE_OR_MORE);
+  tagMultipleSourceData.setDocumentation("Multiple data to read from.");
   XMLTag tagTargetData(*this, TAG_TARGET_DATA, XMLTag::OCCUR_ONCE);
-  tagSourceData.setDocumentation("Data to read from and write to.");
+  tagTargetData.setDocumentation("Data to read from and write to.");
 
   auto attrName = XMLAttribute<std::string>(ATTR_NAME).setDocumentation("Name of data.");
   tagSourceData.addAttribute(attrName);
+  tagMultipleSourceData.addAttribute(attrName);
   tagTargetData.addAttribute(attrName);
 
   std::list<XMLTag>  tags;
@@ -85,6 +90,15 @@ ActionConfiguration::ActionConfiguration(
     doc += "result into target data.";
     tag.setDocumentation(doc);
     tag.addSubtag(tagSourceData);
+    tag.addSubtag(tagTargetData);
+    tags.push_back(tag);
+  }
+  {
+    XMLTag tag(*this, NAME_SUMMATION, occ, TAG);
+    doc = "Sums up multiple source data values and writes the result into ";
+    doc += "target data.";
+    tag.setDocumentation(doc);
+    tag.addSubtag(tagMultipleSourceData);
     tag.addSubtag(tagTargetData);
     tags.push_back(tag);
   }
@@ -155,7 +169,7 @@ void ActionConfiguration::xmlTagCallback(
     _configuredAction.mesh   = callingTag.getStringAttributeValue(ATTR_MESH);
     //addSubtags ( callingTag, _configured.type );
   } else if (callingTag.getName() == TAG_SOURCE_DATA) {
-    _configuredAction.sourceData = callingTag.getStringAttributeValue(ATTR_NAME);
+    _configuredAction.sourceDataVector.push_back(callingTag.getStringAttributeValue(ATTR_NAME));
   } else if (callingTag.getName() == TAG_TARGET_DATA) {
     _configuredAction.targetData = callingTag.getStringAttributeValue(ATTR_NAME);
   } else if (callingTag.getName() == TAG_CONVERGENCE_TOLERANCE) {
@@ -198,15 +212,15 @@ void ActionConfiguration::createAction()
   action::Action::Timing timing = getTiming();
 
   // Determine data and mesh
-  int           sourceDataID = -1;
-  int           targetDataID = -1;
-  mesh::PtrMesh mesh;
+  std::vector<int> sourceDataIDs;
+  int              targetDataID = -1;
+  mesh::PtrMesh    mesh;
   for (mesh::PtrMesh aMesh : _meshConfig->meshes()) {
     if (aMesh->getName() == _configuredAction.mesh) {
       mesh = aMesh;
       for (const mesh::PtrData &data : mesh->data()) {
-        if (data->getName() == _configuredAction.sourceData) {
-          sourceDataID = data->getID();
+        if (std::find(_configuredAction.sourceDataVector.begin(), _configuredAction.sourceDataVector.end(), data->getName()) != _configuredAction.sourceDataVector.end()) {
+          sourceDataIDs.push_back(data->getID());
         }
         if (data->getName() == _configuredAction.targetData) {
           targetDataID = data->getID();
@@ -220,9 +234,9 @@ void ActionConfiguration::createAction()
            << "\" which is not configured";
     throw std::runtime_error{stream.str()};
   }
-  if ((not _configuredAction.sourceData.empty()) && (sourceDataID == -1)) {
+  if ((not _configuredAction.sourceDataVector.empty()) && (sourceDataIDs.empty())) {
     std::ostringstream stream;
-    stream << "Data action uses source data \"" << _configuredAction.sourceData
+    stream << "Data action uses source data \"" << _configuredAction.sourceDataVector.back()
            << "\" which is not configured";
     throw std::runtime_error{stream.str()};
   }
@@ -243,26 +257,29 @@ void ActionConfiguration::createAction()
                                       mesh, action::ScaleByAreaAction::SCALING_DIVIDE_BY_AREA));
   } else if (_configuredAction.type == NAME_SCALE_BY_COMPUTED_DT_RATIO) {
     action = action::PtrAction(
-        new action::ScaleByDtAction(timing, sourceDataID, targetDataID,
+        new action::ScaleByDtAction(timing, sourceDataIDs.back(), targetDataID,
                                     mesh, action::ScaleByDtAction::SCALING_BY_COMPUTED_DT_RATIO));
   } else if (_configuredAction.type == NAME_SCALE_BY_COMPUTED_DT_PART_RATIO) {
     action = action::PtrAction(
-        new action::ScaleByDtAction(timing, sourceDataID, targetDataID,
+        new action::ScaleByDtAction(timing, sourceDataIDs.back(), targetDataID,
                                     mesh, action::ScaleByDtAction::SCALING_BY_COMPUTED_DT_PART_RATIO));
   } else if (_configuredAction.type == NAME_SCALE_BY_DT) {
     action = action::PtrAction(
-        new action::ScaleByDtAction(timing, sourceDataID, targetDataID,
+        new action::ScaleByDtAction(timing, sourceDataIDs.back(), targetDataID,
                                     mesh, action::ScaleByDtAction::SCALING_BY_DT));
   } else if (_configuredAction.type == NAME_COMPUTE_CURVATURE) {
     action = action::PtrAction(
         new action::ComputeCurvatureAction(timing, targetDataID,
                                            mesh));
+  } else if (_configuredAction.type == NAME_SUMMATION) {
+    action = action::PtrAction(
+        new action::SummationAction(timing, sourceDataIDs, targetDataID, mesh));
   }
 #ifndef PRECICE_NO_PYTHON
   else if (_configuredAction.type == NAME_PYTHON) {
     action = action::PtrAction(
         new action::PythonAction(timing, _configuredAction.path, _configuredAction.module,
-                                 mesh, targetDataID, sourceDataID));
+                                 mesh, targetDataID, sourceDataIDs.back()));
   }
 #endif
   PRECICE_ASSERT(action.get() != nullptr);

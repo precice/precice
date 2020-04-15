@@ -150,7 +150,7 @@ private:
 
   void addTypespecifcSubtags(const std::string &type, xml::XMLTag &tag);
 
-  void addTransientLimitTags(xml::XMLTag &tag);
+  void addTransientLimitTags(const std::string &type, xml::XMLTag &tag);
 
   void addTagParticipants(xml::XMLTag &tag);
 

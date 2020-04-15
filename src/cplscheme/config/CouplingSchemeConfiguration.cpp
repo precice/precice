@@ -336,7 +336,7 @@ void CouplingSchemeConfiguration::addTypespecifcSubtags(
     xml::XMLTag &tag)
 {
   PRECICE_TRACE(type);
-  addTransientLimitTags(tag);
+  addTransientLimitTags(type, tag);
   _config.type = type;
   //_config.name = name;
 
@@ -382,7 +382,8 @@ void CouplingSchemeConfiguration::addTypespecifcSubtags(
 }
 
 void CouplingSchemeConfiguration::addTransientLimitTags(
-    xml::XMLTag &tag)
+    const std::string &type,
+    xml::XMLTag &      tag)
 {
   using namespace xml;
   XMLTag               tagMaxTime(*this, TAG_MAX_TIME, XMLTag::OCCUR_NOT_OR_ONCE);
@@ -400,8 +401,14 @@ void CouplingSchemeConfiguration::addTransientLimitTags(
   tagTimeWindowSize.addAttribute(attrValueTimeWindowSize);
   XMLAttribute<int> attrValidDigits(ATTR_VALID_DIGITS, 10);
   tagTimeWindowSize.addAttribute(attrValidDigits);
-  auto attrMethod = makeXMLAttribute(ATTR_METHOD, VALUE_FIXED)
-                        .setOptions({VALUE_FIXED, VALUE_FIRST_PARTICIPANT});
+  std::vector<std::string> allowedMethods;
+  if (type == VALUE_SERIAL_EXPLICIT || type == VALUE_SERIAL_IMPLICIT) {
+    // method="first-participant" is only allowed for serial coupling schemes
+    allowedMethods = {VALUE_FIXED, VALUE_FIRST_PARTICIPANT};
+  } else {
+    allowedMethods = {VALUE_FIXED};
+  }
+  auto attrMethod = makeXMLAttribute(ATTR_METHOD, VALUE_FIXED).setOptions(allowedMethods);
   tagTimeWindowSize.addAttribute(attrMethod);
   tag.addSubtag(tagTimeWindowSize);
 }

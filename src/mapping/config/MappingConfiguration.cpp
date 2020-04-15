@@ -279,7 +279,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
   char *arg  = new char[8];
   strcpy(arg, "precice");
   char **argv = &arg;
-  utils::Petsc::initialize(&argc, &argv);
+  utils::Petsc::initialize(&argc, &argv, utils::Parallel::current()->comm);
   delete[] arg;
   usePETSc = true;
 #endif
