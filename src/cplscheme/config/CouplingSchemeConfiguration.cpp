@@ -174,7 +174,11 @@ void CouplingSchemeConfiguration::xmlTagCallback(
                       << "\" /> tag in the <coupling-scheme:...> of your precice-config.xml");
     if (control) {
       PRECICE_CHECK(not _config.setController,
-                    "Only one controller per MultiCoupling can be defined");
+                    "Only one controller per MultiCouplingScheme can be defined. Please check the <participant name=\""
+                      << participantName
+                      << "\" control=\""
+                      << control
+                      << "\" /> tag in the <coupling-scheme:...> of your precice-config.xml");
       _config.controller = participantName;
       _config.setController = true;
     } else {
