@@ -289,7 +289,7 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
                                                  std::string const &requesterName)
 {
   PRECICE_TRACE(acceptorName, requesterName);
-  PRECICE_CHECK(not isConnected(), "Already connected!");
+  PRECICE_ASSERT(not isConnected(), "Already connected.");
 
   mesh::Mesh::VertexDistribution &vertexDistribution = _mesh->getVertexDistribution();
   mesh::Mesh::VertexDistribution  requesterVertexDistribution;
@@ -382,7 +382,7 @@ void PointToPointCommunication::acceptPreConnection(std::string const &acceptorN
                                                     std::string const &requesterName)
 {
   PRECICE_TRACE(acceptorName, requesterName);
-  PRECICE_ASSERT(not isConnected(), "Already connected!");
+  PRECICE_ASSERT(not isConnected(), "Already connected.");
 
   const std::vector<int> &localConnectedRanks = _mesh->getConnectedRanks();
 
@@ -413,7 +413,7 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
                                                   std::string const &requesterName)
 {
   PRECICE_TRACE(acceptorName, requesterName);
-  PRECICE_CHECK(not isConnected(), "Already connected!");
+  PRECICE_ASSERT(not isConnected(), "Already connected.");
 
   mesh::Mesh::VertexDistribution &vertexDistribution = _mesh->getVertexDistribution();
   mesh::Mesh::VertexDistribution  acceptorVertexDistribution;
@@ -512,7 +512,7 @@ void PointToPointCommunication::requestPreConnection(std::string const &acceptor
                                                      std::string const &requesterName)
 {
   PRECICE_TRACE(acceptorName, requesterName);
-  PRECICE_CHECK(not isConnected(), "Already connected!");
+  PRECICE_ASSERT(not isConnected(), "Already connected.");
 
   std::vector<int> localConnectedRanks = _mesh->getConnectedRanks();
 
