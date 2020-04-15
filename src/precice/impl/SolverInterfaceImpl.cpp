@@ -819,9 +819,11 @@ void SolverInterfaceImpl::mapWriteDataFrom(
   PRECICE_VALIDATE_MESH_ID(fromMeshID);
   impl::MeshContext &   context        = _accessor->meshContext(fromMeshID);
   impl::MappingContext &mappingContext = context.fromMappingContext;
-  if (mappingContext.mapping.use_count() == 0) {
-    PRECICE_ERROR("From mesh \"" << context.mesh->getName()
-                                 << "\", there is no mapping defined");
+  if (not mappingContext.mapping) {
+    PRECICE_ERROR("You attempt to \"mapWriteDataFrom\" mesh "
+                  << context.mesh->getName()
+                  << ", but there is no mapping from this mesh configured."
+                     "Maybe you don't want to call this function at all or you forgot to configure the mapping.");
     return;
   }
   if (not mappingContext.mapping->hasComputedMapping()) {
@@ -850,8 +852,10 @@ void SolverInterfaceImpl::mapReadDataTo(
   impl::MeshContext &   context        = _accessor->meshContext(toMeshID);
   impl::MappingContext &mappingContext = context.toMappingContext;
   if (mappingContext.mapping.use_count() == 0) {
-    PRECICE_ERROR("From mesh \"" << context.mesh->getName()
-                                 << "\", there is no mapping defined!");
+    PRECICE_ERROR("You attempt to \"mapReadDataTo\" mesh "
+                  << context.mesh->getName()
+                  << ", but there is no mapping to this mesh configured."
+                     "Maybe you don't want to call this function at all or you forgot to configure the mapping.");
     return;
   }
   if (not mappingContext.mapping->hasComputedMapping()) {
