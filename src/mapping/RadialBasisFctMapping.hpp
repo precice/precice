@@ -195,8 +195,10 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
   _qr = matrixCLU.colPivHouseholderQr();
   if (not _qr.isInvertible()) {
-    PRECICE_ERROR("RBF interpolation matrix is not invertible! "
-                  "Try to fix axis-aligned mapping setups by marking perpendicular axes as dead.");
+    PRECICE_ERROR("The interpolation matrix of the RBF mapping from mesh " << input()->getName() << " to mesh "
+                                                                           << output()->getName() << " is not invertable. This means that the mapping problem is not well-posed. "
+                                                                           << "Please check if your coupling meshes are correct. Maybe you need to fix axis-aligned mapping setups "
+                                                                           << "by marking perpendicular axes as dead?");
   }
 
   _hasComputedMapping = true;
