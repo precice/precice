@@ -152,18 +152,34 @@ void CouplingSchemeConfiguration::xmlTagCallback(
     _config.type = tag.getName();
     _accelerationConfig->clear();
   } else if (tag.getName() == TAG_PARTICIPANTS) {
-    _config.participants.push_back(tag.getStringAttributeValue(ATTR_FIRST));
-    _config.participants.push_back(tag.getStringAttributeValue(ATTR_SECOND));
+    std::string first = tag.getStringAttributeValue(ATTR_FIRST);
+    _config.participants.push_back(first);
+    std::string second = tag.getStringAttributeValue(ATTR_SECOND);
+    PRECICE_CHECK(std::find(_config.participants.begin(), _config.participants.end(), second) == _config.participants.end(),
+                  "Provided first participant equals second participant in coupling scheme. Please correct the <participants first=\""
+                  << first
+                  << "\" second=\""
+                  << second
+                  << "\" /> tag in the <coupling-scheme:...> of your precice-config.xml");
+    _config.participants.push_back(tag.getStringAttributeValue(second));
   } else if (tag.getName() == TAG_PARTICIPANT) {
     PRECICE_ASSERT(_config.type == VALUE_MULTI);
-    bool control = tag.getBooleanAttributeValue(ATTR_CONTROL);
+    bool control                = tag.getBooleanAttributeValue(ATTR_CONTROL);
+    std::string participantName = tag.getStringAttributeValue(ATTR_NAME);
+    PRECICE_CHECK(std::find(_config.participants.begin(), _config.participants.end(), participantName) == _config.participants.end()
+                      && participantName.compare(_config.controller) != 0,
+                  "Participant \""
+                      << participantName
+                      << "\" is provided multiple times to multi coupling scheme. Please make sure that you do not provide the participant multiple times via the <participant name=\""
+                      << participantName
+                      << "\" /> tag in the <coupling-scheme:...> of your precice-config.xml");
     if (control) {
       PRECICE_CHECK(not _config.setController,
                     "Only one controller per MultiCoupling can be defined");
-      _config.controller    = tag.getStringAttributeValue(ATTR_NAME);
+      _config.controller = participantName;
       _config.setController = true;
     } else {
-      _config.participants.push_back(tag.getStringAttributeValue(ATTR_NAME));
+      _config.participants.push_back(participantName);
     }
 
   } else if (tag.getName() == TAG_MAX_TIME) {
