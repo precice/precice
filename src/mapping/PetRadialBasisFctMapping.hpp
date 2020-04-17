@@ -821,7 +821,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
     namespace bgi = boost::geometry::index;
     auto bb       = otherMesh->getBoundingBox();
     // Enlarge by support radius
-    bb.enlargeWith(_basisFunction.getSupportRadius());
+    bb.expandTo(_basisFunction.getSupportRadius());
     rtree->query(bgi::satisfies([&](size_t const i){ return bb.isVertexInBB(filterMesh->vertices()[i]); }), 
       boost::make_function_output_iterator([&filterMesh](size_t idx) {
         filterMesh->vertices()[idx].tag();
@@ -863,7 +863,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
     }
   }
   // Enlarge bb by support radius
-  bb.enlargeWith(_basisFunction.getSupportRadius());
+  bb.expandTo(_basisFunction.getSupportRadius());
   auto rtree = mesh::rtree::getVertexRTree(mesh);
 
   rtree->query(bgi::satisfies([&](size_t const i){ return bb.isVertexInBB(mesh->vertices()[i]); }), 

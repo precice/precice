@@ -40,17 +40,17 @@ public:
   /// Bounding box factory function
   static BoundingBox createFromData(std::vector<double> bounds);
 
-  /// Setter safety factor
-  void setSafetyFactor(double safetyFactor);
+  /// Expand bounding box using another bounding box
+  void expandTo(const BoundingBox &otherBB);
 
-  /// Merges the bounding box with given bounding box, also enlage by _safetyFactor
-  bool mergeBoundingBoxes(const BoundingBox &otherBB);
-
-  /// Expand bounding box
+  /// Expand bounding box using vertices
   void expandTo(const Vertex& vertices);
+  
+  /// Expand bounding box using value
+  void expandTo(double value);
 
-  /// Enlarge the bounding box with given value in each direction
-  void enlargeWith(double value);
+  /// Increase the size of bounding box by safety margin
+  void addSafetyMargin(double safetyFactor);
 
   /// Checks if vertex in contained in _bb
   bool isVertexInBB(const Vertex &vertex) const;
@@ -75,9 +75,6 @@ private:
 
   /// Number of dimensions
   int    _dimensions;
-
-  /// Safety factor to enlarge the bounding box
-  double _safetyFactor{0.0};
 
   /// Container of min and max points in each dimension
   std::vector<double> _bounds;

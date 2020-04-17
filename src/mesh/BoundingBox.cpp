@@ -60,10 +60,6 @@ BoundingBox BoundingBox::createFromData(std::vector<double> bounds)
   return box;
 }
 
-void BoundingBox::setSafetyFactor(double safetyFactor){
-  _safetyFactor = safetyFactor;
-}
-
 bool BoundingBox::isVertexInBB(const mesh::Vertex &vertex) const
 {
   PRECICE_ASSERT(_dimensions == vertex.getDimensions(), "Vertex with different dimensions than bounding box cannot be checked.");
@@ -90,28 +86,12 @@ const std::vector<double> BoundingBox::dataVector() const
   return _bounds;
 }
 
-bool BoundingBox::mergeBoundingBoxes(const BoundingBox &otherBB)
+void BoundingBox::expandTo(const BoundingBox &otherBB)
 {
   for (int d = 0; d < _dimensions; d++) {
     _bounds[2 * d]     = std::min(_bounds[2 * d], otherBB._bounds[2 * d]);
     _bounds[2 * d + 1] = std::max(_bounds[2 * d + 1], otherBB._bounds[2 * d + 1]);
   }
-
-  // Enlarge BB
-  PRECICE_ASSERT(_safetyFactor >= 0.0);
-
-  double maxSideLength = 1e-6; // we need some minimum > 0 here
-
-  for (int d = 0; d < _dimensions; d++) {
-    if (_bounds.at(2 * d + 1) > _bounds.at(2 * d))
-      maxSideLength = std::max(maxSideLength, _bounds[2 * d + 1] - _bounds[2 * d]);
-  }
-  for (int d = 0; d < _dimensions; d++) {
-    _bounds.at(2 * d + 1) += _safetyFactor * maxSideLength;
-    _bounds.at(2 * d) -= _safetyFactor * maxSideLength;
-    PRECICE_DEBUG("Merged BoundingBox" << *this);
-  }
-  return true;
 }
 
 void BoundingBox::expandTo(const Vertex& vertices)
@@ -123,11 +103,25 @@ void BoundingBox::expandTo(const Vertex& vertices)
   }
 }
 
-void BoundingBox::enlargeWith(double value)
+void BoundingBox::expandTo(double value)
 {
   for (int d = 0; d < _dimensions; d++) {
     _bounds[2*d] -= value;
     _bounds[2*d + 1] += value;   
+  }
+}
+
+void BoundingBox::addSafetyMargin(double safetyFactor){
+  double maxSideLength = 1e-6; // we need some minimum > 0 here
+
+  for (int d = 0; d < _dimensions; d++) {
+    if (_bounds.at(2 * d + 1) > _bounds.at(2 * d))
+      maxSideLength = std::max(maxSideLength, _bounds[2 * d + 1] - _bounds[2 * d]);
+  }
+  for (int d = 0; d < _dimensions; d++) {
+    _bounds.at(2 * d + 1) += safetyFactor * maxSideLength;
+    _bounds.at(2 * d) -= safetyFactor * maxSideLength;
+    PRECICE_DEBUG("Merged BoundingBox" << *this);
   }
 }
 

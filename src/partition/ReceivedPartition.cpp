@@ -30,7 +30,6 @@ ReceivedPartition::ReceivedPartition(
       _dimensions(mesh->getDimensions()),
       _safetyFactor(safetyFactor)
 {
-  _bb.setSafetyFactor(_safetyFactor);
 }
 
 void ReceivedPartition::communicate()
@@ -452,16 +451,18 @@ void ReceivedPartition::prepareBoundingBox()
 
   PRECICE_DEBUG("Merge bounding boxes and increase by safety factor");
 
-  _bb.setSafetyFactor(_safetyFactor);
-
   // Create BB around both "other" meshes
   if (_fromMapping) {
     auto other_bb = _fromMapping->getOutputMesh()->getBoundingBox();
-    _boundingBoxPrepared = _bb.mergeBoundingBoxes(other_bb);
+    _bb.expandTo(other_bb);
+    _bb.addSafetyMargin(_safetyFactor);
+    _boundingBoxPrepared = true;
   }
   if (_toMapping) {
     auto other_bb = _toMapping->getInputMesh()->getBoundingBox();
-    _boundingBoxPrepared = _bb.mergeBoundingBoxes(other_bb);
+    _bb.expandTo(other_bb);
+    _bb.addSafetyMargin(_safetyFactor);
+    _boundingBoxPrepared = true;
   }
 }
 
