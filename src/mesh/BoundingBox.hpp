@@ -6,7 +6,7 @@
 namespace precice {
 namespace mesh {
 
-/// Bounding box class for mesh and partions
+/// An axis-aligned bounding box around a (partition of a) mesh
 class BoundingBox {
 
 public:

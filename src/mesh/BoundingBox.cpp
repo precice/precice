@@ -5,7 +5,7 @@ namespace mesh {
 
 BoundingBox::BoundingBox(std::vector<double> bounds)
 {
-  //PRECICE_CHECK(bounds.size() == 4 || bounds.size() == 6, "Dimension of the bounding box should be 2 or 3.");
+  PRECICE_ASSERT(bounds.size() == 4 || bounds.size() == 6, "Dimension of a bounding box can only be 2 or 3.");
   _bounds = bounds;
   _dimensions = _bounds.size() / 2;
 }
@@ -13,6 +13,7 @@ BoundingBox::BoundingBox(std::vector<double> bounds)
 BoundingBox::BoundingBox(int dimension)
 :_dimensions(dimension)
 {
+  PRECICE_ASSERT(dimension == 2 || dimension == 3, "Dimension of a bounding box can only be 2 or 3.");
   for(int i = 0; i < _dimensions; ++i){
     _bounds.push_back(std::numeric_limits<double>::max());
     _bounds.push_back(std::numeric_limits<double>::lowest());
@@ -44,9 +45,7 @@ std::ostream &operator<<(std::ostream &out, const BoundingBox &bb)
 
 bool BoundingBox::operator==(const BoundingBox& otherBB) const
 {
-  if(_dimensions != otherBB._dimensions){
-    return false;
-  }
+  PRECICE_ASSERT(_dimensions == otherBB._dimensions, "Bounding boxes with different dimensions cannot be compared.");
   for(int i = 0; i < _dimensions; ++i){
     if(std::abs(_bounds.at(i) - otherBB._bounds.at(i)) > 1e-6){
       return false;
@@ -67,6 +66,7 @@ void BoundingBox::setSafetyFactor(double safetyFactor){
 
 bool BoundingBox::isVertexInBB(const mesh::Vertex &vertex) const
 {
+  PRECICE_ASSERT(_dimensions == vertex.getDimensions(), "Vertex with different dimensions than bounding box cannot be checked.");
   for (int d = 0; d < _dimensions; d++) {
     if (vertex.getCoords()[d] < _bounds.at(2 * d) || vertex.getCoords()[d] > _bounds.at(2 * d + 1)) {
       return false;
@@ -121,6 +121,7 @@ bool BoundingBox::mergeBoundingBoxes(const BoundingBox &otherBB)
 
 void BoundingBox::expandTo(const Vertex& vertices)
 {
+  PRECICE_ASSERT(_dimensions == vertices.getDimensions(), "Vertex with different dimensions than bounding box cannot be used to expand bounding box");
   for(int d = 0; d < _dimensions; ++d){
     _bounds.at(2*d) = std::min(vertices.getCoords()[d], _bounds.at(2*d));
     _bounds.at(2*d+1) = std::max(vertices.getCoords()[d], _bounds.at(2*d+1));
