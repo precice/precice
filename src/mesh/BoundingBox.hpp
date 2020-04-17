@@ -45,7 +45,7 @@ public:
 
   /// Expand bounding box using vertices
   void expandTo(const Vertex& vertices);
-  
+
   /// Expand bounding box using value
   void expandTo(double value);
 
@@ -58,8 +58,16 @@ public:
   /// Checks whether two bounding boxes are overlapping
   bool overlapping(const BoundingBox &otherBB);
 
-  /// Return the value for given dimension and bound type
-  double getData(int dimension, int type) const;
+  /**
+   * @brief Returns the Center Of Gravity of the mesh
+   *
+   * Returns a vector of doubles, size d, each dimension computed as
+   * cog =  (max - min) / 2 + min
+   */
+  std::vector<double> getCOG() const;
+
+  /// Calculate the area of bounding box
+  double getArea(std::vector<bool> deadAxis);
 
   /// Return data as std::vector
   const std::vector<double> dataVector() const;

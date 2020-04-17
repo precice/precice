@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(BoundingBoxCOG_2D)
   mesh.computeBoundingBox();
 
   mesh::BoundingBox bBox = mesh.getBoundingBox();
-  auto                    cog  = mesh.getCOG();
+  auto                    cog  = bBox.getCOG();
 
   std::vector<double> referenceData{-1.0, 2.0, 
                                     0.0, 4.0};
@@ -228,7 +228,7 @@ BOOST_AUTO_TEST_CASE(BoundingBoxCOG_3D)
   mesh.computeBoundingBox();
 
   mesh::BoundingBox bBox = mesh.getBoundingBox();
-  auto                    cog  = mesh.getCOG();
+  auto                    cog  = bBox.getCOG();
 
   std::vector<double> referenceData{-1.0, 3.5,
                                     0.0, 4.0,

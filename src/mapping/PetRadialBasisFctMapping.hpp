@@ -900,11 +900,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::estimatePreallocationMat
   auto bbox     = mesh->getBoundingBox();
   auto meshSize = mesh->vertices().size();
 
-  double meshArea = 1;
+  double meshArea = bbox.getArea(_deadAxis);
   // PRECICE_WARN(bbox);
-  for (int d = 0; d < getDimensions(); d++)
-    if (not _deadAxis[d])
-      meshArea *= bbox.getData(d,2) - bbox.getData(d,1);
 
   // supportVolume = math::PI * 4.0/3.0 * std::pow(supportRadius, 3);
   double supportVolume = 0;
@@ -944,11 +941,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::estimatePreallocationMat
   auto bbox     = mesh->getBoundingBox();
   auto meshSize = mesh->vertices().size();
 
-  double meshArea = 1;
+  double meshArea = bbox.getArea(_deadAxis);
   // PRECICE_WARN(bbox);
-  for (int d = 0; d < getDimensions(); d++)
-    if (not _deadAxis[d])
-      meshArea *= bbox.getData(d,2) - bbox.getData(d,1);
 
   // supportVolume = math::PI * 4.0/3.0 * std::pow(supportRadius, 3);
   double supportVolume = 0;

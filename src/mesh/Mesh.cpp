@@ -404,15 +404,6 @@ const BoundingBox Mesh::getBoundingBox() const
   return _boundingBox;
 }
 
-const std::vector<double> Mesh::getCOG() const
-{
-  std::vector<double> cog(_dimensions);
-  for (int d = 0; d < _dimensions; d++) {
-    cog[d] = (_boundingBox.getData(d, 2) - _boundingBox.getData(d, 1)) / 2.0 + _boundingBox.getData(d,1);
-  }
-  return cog;
-}
-
 bool Mesh::operator==(const Mesh &other) const
 {
   bool equal = true;

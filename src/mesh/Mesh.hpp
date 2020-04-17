@@ -239,14 +239,6 @@ public:
    */
   const BoundingBox getBoundingBox() const;
 
-  /**
-   * @brief Returns the Center Of Gravity of the mesh
-   *
-   * Returns a vector of doubles, size d, each dimension computed as
-   * cog =  (max - min) / 2 + min
-   */
-  const std::vector<double> getCOG() const;
-
   bool operator==(const Mesh &other) const;
 
   bool operator!=(const Mesh &other) const;

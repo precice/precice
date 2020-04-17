@@ -71,9 +71,21 @@ bool BoundingBox::isVertexInBB(const mesh::Vertex &vertex) const
   return true;
 }
 
-double BoundingBox::getData(int dimension, int type) const
+std::vector<double> BoundingBox::getCOG() const
 {
-  return _bounds.at(2*dimension + (type - 1));
+  std::vector<double> cog(_dimensions);
+  for (int d = 0; d < _dimensions; d++) {
+    cog[d] = (_bounds[2*d+1] - _bounds[2*d]) / 2.0 + _bounds[2*d];
+  }
+  return cog;
+}
+
+double BoundingBox::getArea(std::vector<bool> deadAxis){
+  double meshArea = 1.0;
+  for (int d = 0; d < _dimensions; d++)
+    if (not deadAxis[d])
+      meshArea *= _bounds[2*d + 1] -_bounds[2*d];
+  return meshArea;
 }
 
 int BoundingBox::getDimension() const
