@@ -31,9 +31,6 @@ public:
   /// Default constructor
   BoundingBox();
 
-  /// Special function for tests to create custom bounds
-  void modifyForTest(int rank, std::string testName);
-
   /// Copy Constructor
   BoundingBox(const BoundingBox &bb);
 
