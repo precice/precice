@@ -308,27 +308,5 @@ void CommunicateMesh::broadcastReceiveMesh(
   }
 }
 
-void CommunicateMesh::sendBoundingBox(
-    const mesh::BoundingBox &bb,
-    int                            rankReceiver)
-{
-  PRECICE_TRACE(rankReceiver);
-  int dim = bb.getDimension();
-  _communication->send(dim, rankReceiver);
-  _communication->send(bb.dataVector(), rankReceiver);
-}
-
-void CommunicateMesh::receiveBoundingBox(
-    mesh::BoundingBox &bb,
-    int               rankSender)
-{
-  PRECICE_TRACE(rankSender);
-  int dim = -1;
-  _communication->receive(dim, rankSender);
-  PRECICE_ASSERT(dim == static_cast<int>(bb.getDimension()), "The dimension of the receiving BB is " << dim << " but I expected " << bb.getDimension());
-  std::vector<double> receivedData;
-  _communication->receive(receivedData, rankSender);
-  bb = mesh::BoundingBox::createFromData(receivedData);
-}
 } // namespace com
 } // namespace precice

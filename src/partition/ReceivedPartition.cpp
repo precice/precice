@@ -259,7 +259,7 @@ void ReceivedPartition::filterByBoundingBox()
 
     if (utils::MasterSlave::isSlave()) {
       PRECICE_DEBUG("Send bounding box to master");
-      com::CommunicateMesh(utils::MasterSlave::_communication).sendBoundingBox(_bb, 0);
+      com::CommunicateBoundingBox(utils::MasterSlave::_communication).sendBoundingBox(_bb, 0);
       PRECICE_DEBUG("Receive filtered mesh");
       com::CommunicateMesh(utils::MasterSlave::_communication).receiveMesh(*_mesh, 0);
 
@@ -279,7 +279,7 @@ void ReceivedPartition::filterByBoundingBox()
 
       for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
         mesh::BoundingBox slaveBB(_bb.getDimension());
-        com::CommunicateMesh(utils::MasterSlave::_communication).receiveBoundingBox(slaveBB, rankSlave);
+        com::CommunicateBoundingBox(utils::MasterSlave::_communication).receiveBoundingBox(slaveBB, rankSlave);
 
         PRECICE_DEBUG("From slave " << rankSlave << ", bounding mesh: " << slaveBB);
         mesh::Mesh slaveMesh("SlaveMesh", _dimensions, _mesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);

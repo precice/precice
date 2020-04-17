@@ -30,14 +30,6 @@ public:
   void broadcastReceiveMesh(
       mesh::Mesh &mesh);
 
-  void sendBoundingBox(
-      const mesh::BoundingBox &bb,
-      int                     rankReceiver);
-
-  void receiveBoundingBox(
-      mesh::BoundingBox &bb,
-      int               rankSender);
-
 private:
   logging::Logger _log{"com::CommunicateMesh"};
 
