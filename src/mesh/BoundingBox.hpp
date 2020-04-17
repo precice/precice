@@ -61,9 +61,6 @@ public:
   /// Return the value for given dimension and bound type
   double getData(int dimension, int type) const;
 
-  /// Return data as pointer, may require to use getSize()
-  const double* data() const;
-
   /// Return data as std::vector
   const std::vector<double> dataVector() const;
 

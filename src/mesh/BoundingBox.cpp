@@ -85,11 +85,6 @@ int BoundingBox::getDimension() const
   return _dimensions;
 }
 
-const double* BoundingBox::data() const
-{
-  return _bounds.data();
-}
-
 const std::vector<double> BoundingBox::dataVector() const
 {
   return _bounds;
