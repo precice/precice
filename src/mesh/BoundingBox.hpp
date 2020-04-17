@@ -34,9 +34,6 @@ public:
   /// Copy Constructor
   BoundingBox(const BoundingBox &bb);
 
-  /// Destructor
-  ~BoundingBox();
-
   /// Comparison Operator
   bool operator==(const BoundingBox& otherBB) const;
 

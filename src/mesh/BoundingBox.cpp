@@ -34,10 +34,6 @@ BoundingBox::BoundingBox(const BoundingBox &bb)
   _bounds     = bb._bounds;
 }
 
-BoundingBox::~BoundingBox()
-{
-}
-
 std::ostream &operator<<(std::ostream &out, const BoundingBox &bb)
 {
   for (int d = 0; d < bb._dimensions; ++d) {
