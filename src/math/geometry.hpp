@@ -42,6 +42,7 @@ bool segmentsIntersect(
     const Eigen::Ref<const Eigen::Vector2d> &d,
     bool                                     countTouchingAsIntersection);
 
+
 /**
  * @brief Determines the intersection point of two lines, if one exists.
  *

@@ -33,10 +33,15 @@ rtree::vertex_traits::Ptr rtree::getVertexRTree(const PtrMesh &mesh)
   // tree->insert repeatedly is about 10x faster.
   RTreeParameters            params;
   // If adding a patch class, mesh->patch()->vertices();
+
   for (int i = 0; i < mesh->vertices().size(); i++){
     int vertexPatchID = mesh->vertices()[i].getPatchID();
-    //PRECICE_INFO("PatchID: " << vertexPatchID);
+    PRECICE_INFO("PatchID: " << vertexPatchID);
   }
+  // If not using a patchVertexContainer, then check if patchID matches, then add the vertex if it does.
+  // This slows down this process, but NN with boost remains O(NlogN). This is a larger savings.
+  // This can also be used for NP mapping. RBF does not matter. It runs through both. Maybe include this for RBF
+  // and use boost to find points N nearest points or within a radius? Speed up building RBF function.
   
 
   vertex_traits::IndexGetter ind(mesh->vertices());
