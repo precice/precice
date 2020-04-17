@@ -17,9 +17,12 @@ BOOST_AUTO_TEST_CASE(SendAndReceiveBoundingBox)
   auto m2n = context.connectMasters("A", "B");
   
   for (int dim = 2; dim <= 3; dim++) {
-    mesh::BoundingBox bb{dim};
-    bb.modifyForTest(1, "com");
-
+    std::vector<double> bounds;
+    for (int i = 0; i < dim; i++) {
+      bounds.push_back(i);
+      bounds.push_back(i + 1);
+    }
+    mesh::BoundingBox bb{bounds};
     CommunicateBoundingBox comBB(m2n->getMasterCommunication());
 
     if (context.isNamed("A")) {
@@ -42,10 +45,15 @@ BOOST_AUTO_TEST_CASE(SendAndReceiveBoundingBoxMap)
 
   for (int dim = 2; dim <= 3; dim++) {
     mesh::Mesh::BoundingBoxMap bbm;
-    mesh::BoundingBox    bb{dim};
+    
     for (int rank = 0; rank < 3; rank++) {
-      bb.modifyForTest(rank, static_cast<std::string>("com"));
-      bbm[rank] = bb;
+      std::vector<double> bounds;
+      for (int i = 0; i < dim; i++) {
+        bounds.push_back(rank*i);
+        bounds.push_back(i + 1);
+      }
+      
+      bbm[rank] = mesh::BoundingBox::createFromData(bounds);
     }
 
     CommunicateBoundingBox comBB(m2n->getMasterCommunication());
@@ -78,10 +86,14 @@ BOOST_AUTO_TEST_CASE(BroadcastSendAndReceiveBoundingBoxMap)
   // Build BB/BBMap to communicate
   int dimension = 3;
   mesh::Mesh::BoundingBoxMap bbm;
-  mesh::BoundingBox    bb{dimension};
-  for (int i = 0; i < 3; i++) {
-    bb.modifyForTest(i, static_cast<std::string>("com"));
-    bbm[i] = bb;
+  for (int rank = 0; rank < 3; rank++) {
+    std::vector<double> bounds;
+    for (int i = 0; i < dimension; i++) {
+      bounds.push_back(rank*i);
+      bounds.push_back(i + 1);
+    }
+
+    bbm[rank] =  mesh::BoundingBox::createFromData(bounds);
   }
 
   CommunicateBoundingBox comBB(utils::MasterSlave::_communication);

@@ -50,8 +50,7 @@ void CommunicateBoundingBox::receiveBoundingBoxMap(
   int sizeOfReceivingMap;
   _communication->receive(sizeOfReceivingMap, rankSender);
 
-  PRECICE_CHECK(sizeOfReceivingMap == (int) bbm.size(), "Incoming size of map is not compatible");
-  PRECICE_ASSERT(sizeOfReceivingMap == (int) bbm.size());
+  PRECICE_ASSERT(sizeOfReceivingMap == (int) bbm.size(), "Incoming size of map is not compatible");
 
   for (auto &bb : bbm) {
     receiveBoundingBox(bb.second, rankSender);

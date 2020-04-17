@@ -61,13 +61,6 @@ bool BoundingBox::operator==(const BoundingBox& otherBB) const
 
 void BoundingBox::modifyForTest(int rank, std::string testName)
 {
-  if(testName == "com")
-  {
-    for (int i = 0; i < _dimensions; i++) {
-      _bounds[2*i] = rank*i;
-      _bounds[2*i + 1] = i + 1;
-    }
-  }
   if(testName == "partition"){
     for (int i = 0; i < _dimensions; i++) {
       _bounds[2*i] = 3 - rank - 1;
