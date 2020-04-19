@@ -254,7 +254,8 @@ void ParticipantConfiguration::xmlTagCallback(
     mesh::PtrMesh mesh     = _meshConfig->getMesh(meshName);
     PRECICE_CHECK(mesh, "Participant "
                             << "\"" << _participants.back()->getName() << "\" has to use "
-                            << "mesh \"" << meshName << "\" in order to write data to it!");
+                            << "mesh \"" << meshName << "\" in order to write data to it. "
+                            << "Please add a use-mesh node with name=\"" << meshName << "\".");
     mesh::PtrData data = getData(mesh, dataName);
     _participants.back()->addWriteData(data, mesh);
   } else if (tag.getName() == TAG_READ) {
@@ -263,7 +264,8 @@ void ParticipantConfiguration::xmlTagCallback(
     mesh::PtrMesh mesh     = _meshConfig->getMesh(meshName);
     PRECICE_CHECK(mesh, "Participant "
                             << "\"" << _participants.back()->getName() << "\" has to use "
-                            << "mesh \"" << meshName << "\" in order to read data from it!");
+                            << "mesh \"" << meshName << "\" in order to read data from it! "
+                            << "Please add a use-mesh node with name=\"" << meshName << "\".");
     mesh::PtrData data = getData(mesh, dataName);
     _participants.back()->addReadData(data, mesh);
   } else if (tag.getName() == TAG_WATCH_POINT) {
@@ -427,7 +429,8 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     int fromMeshID = dataContext.mesh->getID();
     PRECICE_CHECK(participant->isMeshUsed(fromMeshID),
                   "Participant \"" << participant->getName() << "\" has to use mesh \""
-                                   << dataContext.mesh->getName() << "\" when writing data to it!");
+                                   << dataContext.mesh->getName() << "\" when writing data to it. "
+                                   << "Please add a use-mesh node with name=\"" << dataContext.mesh->getName() << "\".");
 
     for (impl::MappingContext &mappingContext : participant->writeMappingContexts()) {
       if (mappingContext.fromMeshID == fromMeshID) {
@@ -449,7 +452,8 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     int toMeshID = dataContext.mesh->getID();
     PRECICE_CHECK(participant->isMeshUsed(toMeshID),
                   "Participant \"" << participant->getName() << "\" has to use mesh \""
-                                   << dataContext.mesh->getName() << "\" when writing data to it!");
+                                   << dataContext.mesh->getName() << "\" in order to write data to it. "
+                                   << "Please add a use-mesh node with name=\"" << dataContext.mesh->getName() << "\".");
 
     for (impl::MappingContext &mappingContext : participant->readMappingContexts()) {
       if (mappingContext.toMeshID == toMeshID) {
@@ -472,7 +476,9 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     bool used = _participants.back()->isMeshUsed(action->getMesh()->getID());
     PRECICE_CHECK(used, "Data action of participant "
                             << _participants.back()->getName()
-                            << "\" uses mesh which is not used by the participant!");
+                            << "\" uses mesh \"" << action->getMesh()->getName()
+                            << "\" which is not used by the participant. "
+                            << "Please add a use-mesh node with name=\"" << action->getMesh()->getName() << "\".");
     _participants.back()->addAction(action);
   }
   _actionConfig->resetActions();
@@ -507,7 +513,8 @@ void ParticipantConfiguration::finishParticipantConfiguration(
                   "Participant \"" << participant->getName()
                                    << "\" defines watchpoint \"" << config.name
                                    << "\" for mesh \"" << config.nameMesh
-                                   << "\" which is not used by him!");
+                                   << "\" which is not used by the participant."
+                                   << "Please add a use-mesh node with name=\"" << config.nameMesh << "\".");
     std::string         filename = "precice-" + participant->getName() + "-watchpoint-" + config.name + ".log";
     impl::PtrWatchPoint watchPoint(new impl::WatchPoint(config.coordinates, mesh, filename));
     participant->addWatchPoint(watchPoint);

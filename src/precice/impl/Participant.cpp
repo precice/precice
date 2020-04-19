@@ -91,8 +91,10 @@ void Participant::useMesh(
   _usedMeshContexts.push_back(context);
 
   PRECICE_CHECK(fromParticipant.empty() || (!provideMesh),
-                "Participant " << _name << " cannot receive and provide mesh "
-                               << mesh->getName() << " at the same time!");
+                "Participant \"" << _name << "\" cannot receive and provide mesh "
+                                 << mesh->getName() << " at the same time."
+                                 << "Please check your \"from\" and \"provide\" attributes in the <use-mesh name=\""
+                                 << mesh->getName() << "\"/> node of " << _name << ".");
 }
 
 void Participant::addWriteData(
@@ -277,7 +279,7 @@ void Participant::checkDuplicatedUse(
   PRECICE_ASSERT((int) _meshContexts.size() > mesh->getID());
   PRECICE_CHECK(_meshContexts[mesh->getID()] == nullptr,
                 "Mesh \"" << mesh->getName() << " cannot be used twice by "
-                          << "participant " << _name << "!");
+                          << "participant " << _name << ". Please remove one of the use-mesh nodes with name=\"" << mesh->getName() << "\"./>");
 }
 
 void Participant::checkDuplicatedData(
