@@ -13,7 +13,7 @@ In order to get your contributions into the code base as smoothly as possible, p
 * Make commits of logical units.  
   Write [good commit messages][commit].
   Check for unnecessary whitespace with `git diff --check` before committing. 
-* Write tests to assure your feature works as aspected and prevent it from being broken in the future.  
+* Write tests to assure your feature works as expected and prevent it from getting broken in the future.  
   See our example tests in `src/testing/tests/ExampleTests.cpp` and the [documentation of boost.test][boosttest] for more information.
 * Run _all_ the tests to assure nothing else accidentally broke.
 * Follow our [style guide][style].
