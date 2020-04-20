@@ -210,12 +210,12 @@ add_precice_test(
   )
 add_precice_test(
   NAME com
-  ARGUMENTS "--run_test=CommunicationTests:\!CommunicationTests/MPIPorts"
+  ARGUMENTS "--run_test=CommunicationTests:\!CommunicationTests/MPIPorts:\!CommunicationTests/MPISinglePorts"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
   )
 add_precice_test(
   NAME com.mpiports
-  ARGUMENTS "--run_test=CommunicationTests/MPIPorts"
+  ARGUMENTS "--run_test=CommunicationTests/MPIPorts:CommunicationTests/MPISinglePorts"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
   LABELS "mpiports;canfail"
   )
@@ -231,12 +231,12 @@ add_precice_test(
   )
 add_precice_test(
   NAME m2n
-  ARGUMENTS "--run_test=M2NTests:\!M2NTests/MPIPorts"
+  ARGUMENTS "--run_test=M2NTests:\!M2NTests/MPIPorts:\!M2NTets/MPISinglePorts"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
   )
 add_precice_test(
   NAME m2n.mpiports
-  ARGUMENTS "--run_test=M2NTests/MPIPorts"
+  ARGUMENTS "--run_test=M2NTests/MPIPorts:M2NTests/MPISinglePorts"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
   LABELS "mpiports;canfail"
   )
