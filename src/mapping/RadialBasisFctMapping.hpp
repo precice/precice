@@ -122,14 +122,12 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
   precice::utils::Event e("map.rbf.computeMapping.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
 
-  PRECICE_CHECK(not utils::MasterSlave::isSlave() && not utils::MasterSlave::isMaster(),
-                "RBF mapping is not supported for a participant in master mode, use petrbf instead");
-
   PRECICE_ASSERT(input()->getDimensions() == output()->getDimensions(),
                  input()->getDimensions(), output()->getDimensions());
   PRECICE_ASSERT(getDimensions() == output()->getDimensions(),
                  getDimensions(), output()->getDimensions());
   int           dimensions = getDimensions();
+
   mesh::PtrMesh inMesh;
   mesh::PtrMesh outMesh;
   if (getConstraint() == CONSERVATIVE) {
@@ -139,6 +137,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     inMesh  = input();
     outMesh = output();
   }
+
   int inputSize      = (int) inMesh->vertices().size();
   int outputSize     = (int) outMesh->vertices().size();
   int deadDimensions = 0;
@@ -149,6 +148,38 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   int polyparams = 1 + dimensions - deadDimensions;
   PRECICE_ASSERT(inputSize >= 1 + polyparams, inputSize);
   int             n = inputSize + polyparams; // Add linear polynom degrees
+  
+  std::vector<int> inputIndices(inputSize, -1);
+
+  if(utils::MasterSlave::isSlave()){
+    int numberOfVertices = -1;
+    numberOfVertices = (int) inMesh->vertices().size();
+    utils::MasterSlave::_communication::send(numberOfVertices, 0);
+    if(numberOfVertices != 0){
+      std::vector<int> vertexIDs(numberOfVertices, -1);
+      for(int i = 0; i < numberOfVertices; ++i){
+        vertexIDs[i] = inMesh->vertices()[i].getGlobalIndex();
+      }
+      utils::MasterSlave::_communication.send(vertexIDs, 0);
+    }
+  } else {
+    int numberOfVertices = (int) inMesh->vertices().size();
+    for(int i = 0; i < numberOfVertices; ++i){
+      inputIndices.push_back(inMesh->vertices()[i].getGlobalIndex());
+    }
+    for(int slaveRank = 1; slaveRank < utils::MasterSlave::getSize(); ++slaveRank){
+      int slaveNumberOfVertices = -1;
+      utils::MasterSlave::_communication::receive(slaveNumberOfVertices, slaveRank);
+      if(slaveNumberOfVertices != 0{
+        std::vector<int> slaveIndices(slaveNumberOfVertices, -1);
+        utils::MasterSlave::_communication::receive(slaveIndices, slaveRank);
+        for(int i = 0; i < slaveNumberOfVertices; ++i){
+          inputIndices.push_back(slaveIndices[i]);
+        }
+      }
+    }
+  }
+  
   Eigen::MatrixXd matrixCLU(n, n);
   matrixCLU.setZero();
   _matrixA = Eigen::MatrixXd(outputSize, n);
