@@ -136,12 +136,6 @@ public:
    */
   virtual double getTimeWindowSize() const = 0;
 
-  /// Defaults to false, i.e., no multilevel PP
-  virtual bool isCoarseModelOptimizationActive()
-  {
-    return false;
-  }
-
   /**
    * @brief Returns the remaining time within the current time window.
    *

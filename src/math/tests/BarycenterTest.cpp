@@ -7,10 +7,11 @@ using namespace precice;
 using namespace precice::math::barycenter;
 
 BOOST_AUTO_TEST_SUITE(MathTests)
-BOOST_AUTO_TEST_SUITE(Barycenter, *testing::OnMaster())
+BOOST_AUTO_TEST_SUITE(Barycenter)
 
 BOOST_AUTO_TEST_CASE(BarycenterEdge)
 {
+  PRECICE_TEST(1_rank);
   using Eigen::Vector2d;
   using Eigen::Vector3d;
   using precice::testing::equals;
@@ -57,6 +58,7 @@ BOOST_AUTO_TEST_CASE(BarycenterEdge)
 
 BOOST_AUTO_TEST_CASE(BarycenterTriangle)
 {
+  PRECICE_TEST(1_rank);
   using Eigen::Vector3d;
   using precice::testing::equals;
   Vector3d a(0.0, 0.0, 0.0);
@@ -133,6 +135,7 @@ BOOST_AUTO_TEST_CASE(BarycenterTriangle)
 
 BOOST_AUTO_TEST_CASE(BarycenterQuad)
 {
+  PRECICE_TEST(1_rank);
   /// @todo implement tests for interpolation on quads
 }
 

@@ -7,10 +7,11 @@ using namespace precice;
 using namespace precice::utils;
 
 BOOST_AUTO_TEST_SUITE(DimensionTests)
-BOOST_AUTO_TEST_SUITE(UtilsTests, *testing::OnMaster())
+BOOST_AUTO_TEST_SUITE(UtilsTests)
 
 BOOST_AUTO_TEST_CASE(LinearizeDelinearize)
 {
+  PRECICE_TEST(1_rank);
   { // 2D
     using Eigen::Vector2d;
     BOOST_TEST(linearize(Vector2d(0.0, 0.0)) == 0);

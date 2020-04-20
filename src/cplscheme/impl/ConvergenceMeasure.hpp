@@ -35,8 +35,7 @@ public:
    */
   virtual void measure(
       const Eigen::VectorXd &oldValues,
-      const Eigen::VectorXd &newValues,
-      const Eigen::VectorXd &designSpecification) = 0;
+      const Eigen::VectorXd &newValues) = 0;
 
   /// Returns true, if the last measurement indicates convergence.
   virtual bool isConvergence() const = 0;

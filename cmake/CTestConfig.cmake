@@ -2,51 +2,50 @@
 # CTest
 #
 
-set(PRECICE_TEST_TIMEOUT_LONG 180 CACHE STRING "The timeout in seconds for longer tests.")
+set(PRECICE_TEST_TIMEOUT_LONG 60 CACHE STRING "The timeout in seconds for longer tests.")
 set(PRECICE_TEST_TIMEOUT_SHORT 20 CACHE STRING "The timeout in seconds for shorter tests.")
 
 set(PRECICE_TEST_DIR "${preCICE_BINARY_DIR}/TestOutput")
 mark_as_advanced(PRECICE_TEST_DIR)
 
+# Solverdummies will be build in $PRECICE_SOLVERDUMMY_DIR/LANG
+set(PRECICE_SOLVERDUMMY_DIR "${preCICE_BINARY_DIR}/Solverdummies")
+
+include(CheckLanguage)
+check_language(C)
+check_language(Fortran)
+
+# Detect the wrapper script that runs 2 solvers in parallel
+set(PRECICE_TEST_WRAPPER_SCRIPT "")
+if(UNIX)
+  set(PRECICE_TEST_WRAPPER_SCRIPT "${preCICE_SOURCE_DIR}/cmake/runsolverdummies.sh")
+else()
+  message(STATUS "Running solverdummies on your system is not supported. We will ignore affected tests.")
+endif()
+mark_as_advanced(PRECICE_TEST_WRAPPER_SCRIPT)
+
+
 function(add_precice_test)
-  cmake_parse_arguments(PARSE_ARGV 0 PAT "NOMPI;PETSC;MPI;CANFAIL" "NAME;ARGUMENTS;TIMEOUT;LABELS" "")
+  cmake_parse_arguments(PARSE_ARGV 0 PAT "PETSC;CANFAIL" "NAME;ARGUMENTS;TIMEOUT;LABELS" "")
   # Check arguments
   if(NOT PAT_NAME)
     message(FATAL_ERROR "Argument NAME not passed")
-  endif()
-  if(PAT_MPI AND PAT_NOMPI)
-    message(FATAL_ERROR "You cannot specify MPI and NOMPI simultaneously.")
-  endif()
-  if(PAT_NOMPI AND PAT_PETSC)
-    message(FATAL_ERROR "You cannot specify NOMPI and PETSC simultaneously.")
   endif()
 
   # We always prefix our tests
   set(PAT_FULL_NAME "precice.${PAT_NAME}")
 
   # Are direct dependencies fullfilled?
-  if( (PAT_MPI AND NOT PRECICE_MPICommunication) OR (PAT_PETSC AND NOT PRECICE_PETScMapping) )
+  if( (NOT PRECICE_MPICommunication) OR (PAT_PETSC AND NOT PRECICE_PETScMapping) )
     message(STATUS "Test ${PAT_FULL_NAME} - skipped")
     return()
   endif()
 
   # Assemble the command
-  if(PAT_PETSC OR (NOT PAT_NOMPI AND PRECICE_MPICommunication))
-    # Parallel tests, dispatched by MPI
-    message(STATUS "Test ${PAT_FULL_NAME} - parallel")
-    add_test(NAME ${PAT_FULL_NAME}
-      COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 4 ${PRECICE_CTEST_MPI_FLAGS} ${MPIEXEC_PREFLAGS} $<TARGET_FILE:testprecice> ${PAT_ARGUMENTS} ${MPIEXEC_POSTFLAGS}
-      )
-  elseif(NOT PAT_MPI)
-    # Serial tests, called directly
-    message(STATUS "Test ${PAT_FULL_NAME} - serial")
-    add_test(NAME ${PAT_FULL_NAME}
-      COMMAND $<TARGET_FILE:testprecice> ${PAT_ARGUMENTS}
-      )
-  else()
-    message(STATUS "Test ${PAT_FULL_NAME} - skipped")
-    return()
-  endif()
+  message(STATUS "Test ${PAT_FULL_NAME}")
+  add_test(NAME ${PAT_FULL_NAME}
+    COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 4 ${PRECICE_CTEST_MPI_FLAGS} ${MPIEXEC_PREFLAGS} $<TARGET_FILE:testprecice> ${PAT_ARGUMENTS} ${MPIEXEC_POSTFLAGS}
+    )
   # Generate working directory
   set(PAT_WDIR "${PRECICE_TEST_DIR}/${PAT_NAME}")
   file(MAKE_DIRECTORY "${PAT_WDIR}")
@@ -67,7 +66,137 @@ function(add_precice_test)
   set_tests_properties(${PAT_FULL_NAME} PROPERTIES LABELS "${_labels}")
 endfunction(add_precice_test)
 
+function(add_precice_test_build_solverdummy PAT_LANG)
+  # Turn language to lowercase
+  string(TOLOWER ${PAT_LANG} PAT_LANG)
+
+  # Locate the source directory
+  set(PAT_SRC_DIR "${preCICE_SOURCE_DIR}/examples/solverdummies/${PAT_LANG}")
+  if(NOT IS_DIRECTORY ${PAT_SRC_DIR})
+    message(FATAL_ERROR "There is no solverdummy for language \"${PAT_LANG}\"")
+  endif()
+
+  # We always prefix our tests
+  set(PAT_FULL_NAME "precice.solverdummy.build.${PAT_LANG}")
+
+  # Make sure the required compiler is available
+  if(PAT_LANG STREQUAL "fortran")
+    if(NOT CMAKE_Fortran_COMPILER OR NOT PRECICE_ENABLE_FORTRAN)
+      message(STATUS "Test ${PAT_FULL_NAME} - skipped")
+      return()
+    endif()
+  elseif(PAT_LANG STREQUAL "c")
+    if(NOT CMAKE_C_COMPILER OR NOT PRECICE_ENABLE_C)
+      message(STATUS "Test ${PAT_FULL_NAME} - skipped")
+      return()
+    endif()
+  endif()
+
+  # Generate build directory
+  set(PAT_BIN_DIR "${PRECICE_SOLVERDUMMY_DIR}/${PAT_LANG}")
+  file(MAKE_DIRECTORY "${PAT_BIN_DIR}")
+
+  # Add the actual test
+  message(STATUS "Test ${PAT_FULL_NAME}")
+  add_test(NAME ${PAT_FULL_NAME}
+    COMMAND ${CMAKE_CTEST_COMMAND}
+    --build-and-test ${PAT_SRC_DIR} ${PAT_BIN_DIR}
+    --build-generator ${CMAKE_GENERATOR}
+    --build-options -Dprecice_DIR=${preCICE_BINARY_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER} -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} -DCMAKE_Fortran_COMPILER=${CMAKE_Fortran_COMPILER}
+    )
+
+  # Setting properties
+  set_tests_properties(${PAT_FULL_NAME}
+    PROPERTIES
+    RUN_SERIAL TRUE # Do not run this test in parallel with others
+    WORKING_DIRECTORY "${PAT_BIN_DIR}"
+    FIXTURES_SETUP "${PAT_LANG}-solverdummy"
+    LABELS "Solverdummy"
+    TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
+    )
+endfunction(add_precice_test_build_solverdummy)
+
+function(add_precice_test_run_solverdummies PAT_LANG_A PAT_LANG_B)
+  # Turn languages to lowercase
+  string(TOLOWER ${PAT_LANG_A} PAT_LANG_A)
+  string(TOLOWER ${PAT_LANG_B} PAT_LANG_B)
+
+  # We always prefix our tests
+  set(PAT_NAME "solverdummy.run.${PAT_LANG_A}-${PAT_LANG_B}")
+  set(PAT_FULL_NAME "precice.${PAT_NAME}")
+
+  if(NOT PRECICE_TEST_WRAPPER_SCRIPT)
+      message(STATUS "Test ${PAT_FULL_NAME} - skipped")
+      return()
+  endif()
+
+  # Make sure all required compilers are available
+  foreach(_lang IN ITEMS ${PAT_LANG_A} ${PAT_LANG_B})
+    if(_lang STREQUAL "fortran")
+      if(NOT CMAKE_Fortran_COMPILER OR NOT PRECICE_ENABLE_FORTRAN)
+        message(STATUS "Test ${PAT_FULL_NAME} - skipped")
+        return()
+      endif()
+    elseif(_lang STREQUAL "c")
+      if(NOT CMAKE_C_COMPILER OR NOT PRECICE_ENABLE_C)
+        message(STATUS "Test ${PAT_FULL_NAME} - skipped")
+        return()
+      endif()
+    endif()
+  endforeach()
+
+  # Locate the solverdummy config
+  set(PAT_CONFIG "${preCICE_SOURCE_DIR}/examples/solverdummies/precice-config.xml")
+  if(NOT EXISTS ${PAT_CONFIG})
+    message(FATAL_ERROR "CMake was unable to locate the solverdummy config!")
+  endif()
+
+  # Locate binary dir of solverdummy A
+  set(PAT_BIN_DIR_A "${PRECICE_SOLVERDUMMY_DIR}/${PAT_LANG_A}")
+  if(NOT IS_DIRECTORY ${PAT_BIN_DIR_A})
+    message(FATAL_ERROR "There is no configured solverdummy for language ${PAT_LANG_A}!")
+  endif()
+
+  # Locate binary dir of solverdummy B
+  set(PAT_BIN_DIR_B "${PRECICE_SOLVERDUMMY_DIR}/${PAT_LANG_B}")
+  if(NOT IS_DIRECTORY ${PAT_BIN_DIR_B})
+    message(FATAL_ERROR "There is no configured solverdummy for language ${PAT_LANG_B}!")
+  endif()
+
+  # Generate run directory
+  set(PAT_RUN_DIR "${PRECICE_TEST_DIR}/${PAT_NAME}")
+  file(MAKE_DIRECTORY "${PAT_RUN_DIR}")
+
+  # Add the actual test
+  message(STATUS "Test ${PAT_FULL_NAME}")
+  add_test(NAME ${PAT_FULL_NAME}
+    COMMAND ${CMAKE_COMMAND}
+    -D WRAPPER=${PRECICE_TEST_WRAPPER_SCRIPT}
+    -D DUMMY_A=${PAT_BIN_DIR_A}/solverdummy
+    -D DUMMY_B=${PAT_BIN_DIR_B}/solverdummy
+    -D DUMMY_RUN_DIR=${PAT_RUN_DIR}
+    -D DUMMY_CONFIG=${PAT_CONFIG}
+    -P ${preCICE_SOURCE_DIR}/cmake/runsolverdummies.cmake
+    )
+
+  # Setting properties
+  set_tests_properties(${PAT_FULL_NAME}
+    PROPERTIES
+    RUN_SERIAL TRUE # Do not run this test in parallel with others
+    WORKING_DIRECTORY "${PAT_RUN_DIR}"
+    FIXTURES_REQUIRED "${PAT_LANG_A}-solverdummy"
+    FIXTURES_REQUIRED "${PAT_LANG_B}-solverdummy"
+    LABELS "Solverdummy"
+    TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
+    )
+endfunction(add_precice_test_run_solverdummies)
+
+
 enable_testing()
+
+if(NOT PRECICE_MPICommunication)
+  message("Tests require MPICommunication to be enabled.")
+endif()
 
 add_precice_test(
   NAME acceleration
@@ -83,14 +212,12 @@ add_precice_test(
   NAME com
   ARGUMENTS "--run_test=CommunicationTests:\!CommunicationTests/MPIPorts"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  MPI
   )
 add_precice_test(
   NAME com.mpiports
   ARGUMENTS "--run_test=CommunicationTests/MPIPorts"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
   LABELS "mpiports;canfail"
-  MPI
   )
 add_precice_test(
   NAME cplscheme
@@ -104,16 +231,14 @@ add_precice_test(
   )
 add_precice_test(
   NAME m2n
-  ARGUMENTS "--run_test=M2NTests:\!M2NTests/MPIPortsCommunication"
+  ARGUMENTS "--run_test=M2NTests:\!M2NTests/MPIPorts"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  MPI
   )
 add_precice_test(
   NAME m2n.mpiports
-  ARGUMENTS "--run_test=M2NTests/MPIPortsCommunication"
+  ARGUMENTS "--run_test=M2NTests/MPIPorts"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
   LABELS "mpiports;canfail"
-  MPI
   )
 add_precice_test(
   NAME mapping
@@ -125,7 +250,6 @@ add_precice_test(
   ARGUMENTS "--run_test=MappingTests/PetRadialBasisFunctionMapping"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
   LABELS petsc
-  MPI
   PETSC
   )
 add_precice_test(
@@ -142,7 +266,6 @@ add_precice_test(
   NAME partition
   ARGUMENTS "--run_test=PartitionTests"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  MPI
   )
 add_precice_test(
   NAME interface
@@ -152,14 +275,12 @@ add_precice_test(
 add_precice_test(
   NAME serial
   ARGUMENTS "--run_test=PreciceTests/Serial"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  MPI
+  TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
   )
 add_precice_test(
   NAME parallel
   ARGUMENTS "--run_test=PreciceTests/Parallel"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  MPI
+  TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
   )
 add_precice_test(
   NAME query
@@ -182,13 +303,17 @@ add_precice_test(
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
   )
 
-if(MPI)
-  add_precice_test(
-    NAME nompi
-    TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
-    NOMPI
-    )
-endif()
+add_precice_test_build_solverdummy(cpp)
+add_precice_test_build_solverdummy(c)
+add_precice_test_build_solverdummy(fortran)
+
+add_precice_test_run_solverdummies(cpp cpp)
+add_precice_test_run_solverdummies(c c)
+add_precice_test_run_solverdummies(fortran fortran)
+
+add_precice_test_run_solverdummies(cpp c)
+add_precice_test_run_solverdummies(cpp fortran)
+add_precice_test_run_solverdummies(c fortran)
 
 # Add a separate target to test only the base
 add_custom_target(

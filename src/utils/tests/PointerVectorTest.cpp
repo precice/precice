@@ -5,8 +5,9 @@ using namespace precice;
 
 BOOST_AUTO_TEST_SUITE(UtilsTests)
 
-BOOST_AUTO_TEST_CASE(PointerVector, *testing::OnMaster())
+BOOST_AUTO_TEST_CASE(PointerVector)
 {
+  PRECICE_TEST(1_rank);
   utils::ptr_vector<double> ptrVector;
 }
 

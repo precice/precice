@@ -314,6 +314,7 @@ void CommunicateMesh::sendBoundingBox(
 {
   PRECICE_TRACE(rankReceiver);
   int dim = bb.size();
+  _communication->send(dim, rankReceiver);
   for (int d = 0; d < dim; d++) {
     _communication->send(bb[d].first, rankReceiver);
     _communication->send(bb[d].second, rankReceiver);
@@ -325,7 +326,9 @@ void CommunicateMesh::receiveBoundingBox(
     int                      rankSender)
 {
   PRECICE_TRACE(rankSender);
-  int dim = bb.size();
+  int dim = -1;
+  _communication->receive(dim, rankSender);
+  PRECICE_ASSERT(dim == static_cast<int>(bb.size()), "The dimension of the receiving BB is " << dim << " but I expected " << bb.size());
   for (int d = 0; d < dim; d++) {
     _communication->receive(bb[d].first, rankSender);
     _communication->receive(bb[d].second, rankSender);

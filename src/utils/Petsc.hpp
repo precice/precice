@@ -1,6 +1,7 @@
 #pragma once
 
 #include "logging/Logger.hpp"
+#include "utils/Parallel.hpp"
 
 namespace precice {
 namespace utils {
@@ -13,10 +14,12 @@ public:
    *
    * @param[in] argc Parameter count, passed to PetscInitialize
    * @param[in] argv Parameter values, passed to PetscInitialize
+   * @param[in] comm The communicator to Initialize PETSc on
    */
   static void initialize(
-      int *   argc,
-      char ***argv);
+      int *                         argc,
+      char ***                      argv,
+      utils::Parallel::Communicator comm);
 
   /// Finalizes Petsc environment.
   static void finalize();

@@ -7,10 +7,11 @@
 using namespace precice;
 
 BOOST_AUTO_TEST_SUITE(ActionTests)
-BOOST_AUTO_TEST_SUITE(Summation, *testing::OnMaster())
+BOOST_AUTO_TEST_SUITE(Summation)
 
 BOOST_AUTO_TEST_CASE(SummationOneDimensional)
 {
+  PRECICE_TEST(1_rank);
   using namespace mesh;
   PtrMesh          mesh(new Mesh("Mesh", 3, true, testing::nextMeshID()));
   int              dimension   = 1;
@@ -65,8 +66,10 @@ BOOST_AUTO_TEST_CASE(SummationOneDimensional)
   BOOST_TEST(targetValues[1] == 8.0);
   BOOST_TEST(targetValues[2] == 11.0);
 }
+
 BOOST_AUTO_TEST_CASE(SummationThreeDimensional)
 {
+  PRECICE_TEST(1_rank);
   using namespace mesh;
   int              dimension = 3;
   PtrMesh          mesh(new Mesh("Mesh", dimension, true, testing::nextMeshID()));
@@ -129,19 +132,18 @@ BOOST_AUTO_TEST_CASE(SummationThreeDimensional)
 
 BOOST_AUTO_TEST_CASE(Configuration)
 {
-  {
-    std::string                filename = testing::getPathToSources() + "/action/tests/SummationActionTest-testConfiguration-1.xml";
-    xml::XMLTag                tag      = xml::getRootTag();
-    mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(tag));
-    dataConfig->setDimensions(3);
-    mesh::PtrMeshConfiguration meshConfig(new mesh::MeshConfiguration(tag, dataConfig));
-    meshConfig->setDimensions(3);
-    action::ActionConfiguration config(tag, meshConfig);
-    xml::configure(tag, xml::ConfigurationContext{}, filename);
-    BOOST_TEST(config.actions().size() == 1);
-    action::PtrAction action = config.actions().front();
-    BOOST_TEST(action);
-  }
+  PRECICE_TEST(1_rank);
+  std::string                filename = testing::getPathToSources() + "/action/tests/SummationActionTest-testConfiguration-1.xml";
+  xml::XMLTag                tag      = xml::getRootTag();
+  mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(tag));
+  dataConfig->setDimensions(3);
+  mesh::PtrMeshConfiguration meshConfig(new mesh::MeshConfiguration(tag, dataConfig));
+  meshConfig->setDimensions(3);
+  action::ActionConfiguration config(tag, meshConfig);
+  xml::configure(tag, xml::ConfigurationContext{}, filename);
+  BOOST_TEST(config.actions().size() == 1);
+  action::PtrAction action = config.actions().front();
+  BOOST_TEST(action);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Summation

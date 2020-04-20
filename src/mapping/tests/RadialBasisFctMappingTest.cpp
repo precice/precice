@@ -10,7 +10,7 @@ using namespace precice;
 using namespace precice::mapping;
 
 BOOST_AUTO_TEST_SUITE(MappingTests)
-BOOST_AUTO_TEST_SUITE(RadialBasisFunctionMapping, *testing::OnMaster())
+BOOST_AUTO_TEST_SUITE(RadialBasisFunctionMapping)
 
 // Forward declarations, see end of file for definitions
 void perform2DTestConsistentMapping(Mapping &mapping);
@@ -20,6 +20,7 @@ void perform3DTestConservativeMapping(Mapping &mapping);
 
 BOOST_AUTO_TEST_CASE(MapThinPlateSplines)
 {
+  PRECICE_TEST(1_rank);
   bool                                    xDead = false;
   bool                                    yDead = false;
   bool                                    zDead = false;
@@ -36,6 +37,7 @@ BOOST_AUTO_TEST_CASE(MapThinPlateSplines)
 
 BOOST_AUTO_TEST_CASE(MapMultiquadrics)
 {
+  PRECICE_TEST(1_rank);
   bool                                 xDead = false;
   bool                                 yDead = false;
   bool                                 zDead = false;
@@ -52,6 +54,7 @@ BOOST_AUTO_TEST_CASE(MapMultiquadrics)
 
 BOOST_AUTO_TEST_CASE(MapInverseMultiquadrics)
 {
+  PRECICE_TEST(1_rank);
   bool                                        xDead = false;
   bool                                        yDead = false;
   bool                                        zDead = false;
@@ -68,6 +71,7 @@ BOOST_AUTO_TEST_CASE(MapInverseMultiquadrics)
 
 BOOST_AUTO_TEST_CASE(MapVolumeSplines)
 {
+  PRECICE_TEST(1_rank);
   bool                                 xDead = false;
   bool                                 yDead = false;
   bool                                 zDead = false;
@@ -84,6 +88,7 @@ BOOST_AUTO_TEST_CASE(MapVolumeSplines)
 
 BOOST_AUTO_TEST_CASE(MapGaussian)
 {
+  PRECICE_TEST(1_rank);
   bool                            xDead = false;
   bool                            yDead = false;
   bool                            zDead = false;
@@ -100,6 +105,7 @@ BOOST_AUTO_TEST_CASE(MapGaussian)
 
 BOOST_AUTO_TEST_CASE(MapThinPlaceSplinesC2)
 {
+  PRECICE_TEST(1_rank);
   double                    supportRadius = 1.2;
   bool                      xDead         = false;
   bool                      yDead         = false;
@@ -118,6 +124,7 @@ BOOST_AUTO_TEST_CASE(MapThinPlaceSplinesC2)
 
 BOOST_AUTO_TEST_CASE(MapCompactPolynomialC0)
 {
+  PRECICE_TEST(1_rank);
   double              supportRadius = 1.2;
   bool                xDead         = false;
   bool                yDead         = false;
@@ -136,6 +143,7 @@ BOOST_AUTO_TEST_CASE(MapCompactPolynomialC0)
 
 BOOST_AUTO_TEST_CASE(MapCompactPolynomialC6)
 {
+  PRECICE_TEST(1_rank);
   double              supportRadius = 1.2;
   bool                xDead         = false;
   bool                yDead         = false;
@@ -154,6 +162,7 @@ BOOST_AUTO_TEST_CASE(MapCompactPolynomialC6)
 
 BOOST_AUTO_TEST_CASE(DeadAxis2D)
 {
+  PRECICE_TEST(1_rank);
   int dimensions = 2;
 
   bool xDead = false;
@@ -196,6 +205,7 @@ BOOST_AUTO_TEST_CASE(DeadAxis2D)
 
 BOOST_AUTO_TEST_CASE(DeadAxis3D)
 {
+  PRECICE_TEST(1_rank);
   int dimensions = 3;
   using Eigen::Vector3d;
 

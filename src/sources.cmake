@@ -16,8 +16,6 @@ target_sources(precice
     src/acceleration/ConstantRelaxationAcceleration.hpp
     src/acceleration/IQNILSAcceleration.cpp
     src/acceleration/IQNILSAcceleration.hpp
-    src/acceleration/MMAcceleration.cpp
-    src/acceleration/MMAcceleration.hpp
     src/acceleration/MVQNAcceleration.cpp
     src/acceleration/MVQNAcceleration.hpp
     src/acceleration/SharedPointer.hpp
@@ -219,6 +217,7 @@ target_sources(precice
     src/precice/config/SharedPointer.hpp
     src/precice/config/SolverInterfaceConfiguration.cpp
     src/precice/config/SolverInterfaceConfiguration.hpp
+    src/precice/impl/DataContext.cpp
     src/precice/impl/DataContext.hpp
     src/precice/impl/MappingContext.hpp
     src/precice/impl/MeshContext.hpp
@@ -273,6 +272,7 @@ target_sources(precice
     src/utils/assertion.hpp
     src/utils/stacktrace.cpp
     src/utils/stacktrace.hpp
+    src/utils/traits.hpp
     src/xml/ConfigParser.cpp
     src/xml/ConfigParser.hpp
     src/xml/Printer.cpp

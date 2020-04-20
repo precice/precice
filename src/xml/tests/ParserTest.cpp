@@ -8,7 +8,7 @@ using namespace precice;
 using namespace precice::xml;
 using precice::testing::getPathToSources;
 
-BOOST_AUTO_TEST_SUITE(XML, *testing::OnMaster())
+BOOST_AUTO_TEST_SUITE(XML)
 
 struct CallbackHostAttr : public XMLTag::Listener {
   Eigen::VectorXd eigenValue;
@@ -48,6 +48,7 @@ struct CallbackHostAttr : public XMLTag::Listener {
 
 BOOST_AUTO_TEST_CASE(AttributeTypeTest)
 {
+  PRECICE_TEST(1_rank);
   std::string filename(getPathToSources() + "/xml/tests/xmlparser_test.xml");
 
   CallbackHostAttr cb;
@@ -94,6 +95,7 @@ BOOST_AUTO_TEST_CASE(AttributeTypeTest)
 
 BOOST_AUTO_TEST_CASE(OccurenceTest)
 {
+  PRECICE_TEST(1_rank);
   std::string filename(getPathToSources() + "/xml/tests/xmlparser_occtest.xml");
 
   CallbackHostAttr cb;
@@ -123,6 +125,7 @@ BOOST_AUTO_TEST_CASE(OccurenceTest)
 
 BOOST_AUTO_TEST_CASE(NamespaceTest)
 {
+  PRECICE_TEST(1_rank);
   std::string filename(getPathToSources() + "/xml/tests/xmlparser_nstest.xml");
 
   CallbackHostAttr cb;
@@ -159,12 +162,13 @@ struct ContextListener : public XMLTag::Listener {
 
 BOOST_AUTO_TEST_CASE(Context)
 {
+  PRECICE_TEST(1_rank);
   std::string filename(getPathToSources() + "/xml/tests/config_xmltest_context.xml");
 
   ContextListener      cl;
   XMLTag               rootTag(cl, "configuration", XMLTag::OCCUR_ONCE);
-  ConfigurationContext context{"test", 12, 32};
-  configure(rootTag, context, filename);
+  ConfigurationContext ccontext{"test", 12, 32};
+  configure(rootTag, ccontext, filename);
   BOOST_TEST(cl.startContext.name == "test");
   BOOST_TEST(cl.startContext.rank == 12);
   BOOST_TEST(cl.startContext.size == 32);

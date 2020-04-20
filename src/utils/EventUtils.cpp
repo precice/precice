@@ -269,7 +269,7 @@ Event &EventRegistry::getStoredEvent(std::string const &name)
   return std::get<0>(insertion)->second;
 }
 
-void EventRegistry::printAll()
+void EventRegistry::printAll() const
 {
   int myRank;
   MPI_Comm_rank(comm, &myRank);
@@ -288,7 +288,7 @@ void EventRegistry::printAll()
   writeJSON(ofs);
 }
 
-void EventRegistry::writeSummary(std::ostream &out)
+void EventRegistry::writeSummary(std::ostream &out) const
 {
   int rank, size;
   MPI_Comm_rank(comm, &rank);
@@ -350,10 +350,13 @@ void EventRegistry::writeSummary(std::ostream &out)
   }
 }
 
-void EventRegistry::writeJSON(std::ostream &out)
+void EventRegistry::writeJSON(std::ostream &out) const
 {
   using json = nlohmann::json;
   using namespace std::chrono;
+
+  if (globalRankData.empty())
+    return;
 
   json js;
 
@@ -552,7 +555,7 @@ EventRegistry::collectInitAndFinalize()
           sys_clk::time_point{sys_clk::duration{maxTicks}}};
 }
 
-size_t EventRegistry::getMaxNameWidth()
+size_t EventRegistry::getMaxNameWidth() const
 {
   size_t maxEventWidth = 0;
   for (auto &ev : localRankData.evData)
@@ -562,7 +565,7 @@ size_t EventRegistry::getMaxNameWidth()
   return maxEventWidth;
 }
 
-std::pair<sys_clk::time_point, sys_clk::time_point> EventRegistry::findFirstAndLastTime()
+std::pair<sys_clk::time_point, sys_clk::time_point> EventRegistry::findFirstAndLastTime() const
 {
   using T    = decltype(globalRankData)::value_type const &;
   auto first = std::min_element(std::begin(globalRankData), std::end(globalRankData),

@@ -45,6 +45,7 @@ void testQTQequalsIdentity(Eigen::MatrixXd &Q)
 
 BOOST_AUTO_TEST_CASE(testQRFactorization)
 {
+  PRECICE_TEST(1_rank);
   int             m = 6, n = 8;
   int             filter = BaseQNAcceleration::QR1FILTER;
   Eigen::MatrixXd A(n, m);

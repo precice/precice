@@ -34,25 +34,22 @@
 
       <m2n:sockets from="SolverOne" to="SolverTwo" enforce-gather-scatter="true"/>
 
-      <coupling-scheme:parallel-implicit>
+      <coupling-scheme:serial-implicit>
          <participants first="SolverOne" second="SolverTwo" />
          <max-time-windows value="1" />
          <time-window-size value="1.0" />
          <exchange data="Data1" mesh="MeshOne" from="SolverOne" to="SolverTwo" />
          <exchange data="Data2" mesh="MeshOne" from="SolverTwo" to="SolverOne"/>
          <max-iterations value="100"/>
-         <relative-convergence-measure limit="5e-1" data="Data1" mesh="MeshOne"/>
-         <relative-convergence-measure limit="5e-1" data="Data2" mesh="MeshOne"/>
+         <relative-convergence-measure limit="1e-7" data="Data2" mesh="MeshOne"/>
          <acceleration:IQN-IMVJ>
-            <data name="Data1" mesh="MeshOne"/>
             <data name="Data2" mesh="MeshOne"/>
-            <preconditioner type="residual-sum"/>
-            <filter type="QR1" limit="1e-4"/>
-            <initial-relaxation value="0.001"/>
-            <max-used-iterations value="30"/>
-            <time-windows-reused value="2"/>
-     </acceleration:IQN-IMVJ>
-      </coupling-scheme:parallel-implicit>
+            <filter type="QR2" limit="1e-3"/>
+            <initial-relaxation value="1.0"/>
+            <max-used-iterations value="10"/>
+            <time-windows-reused value="0"/>
+        </acceleration:IQN-IMVJ>
+      </coupling-scheme:serial-implicit>
 
    </solver-interface>
 

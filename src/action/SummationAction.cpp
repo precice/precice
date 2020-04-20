@@ -27,7 +27,7 @@ void SummationAction::performAction(
     double fullDt)
 {
   PRECICE_TRACE();
-  
+
   auto &targetValues = _targetData->values();
   targetValues.setZero();
 
