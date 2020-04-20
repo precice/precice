@@ -7,6 +7,7 @@
 #include "com/Communication.hpp"
 #include "com/SocketSendQueue.hpp"
 #include "logging/Logger.hpp"
+#include "utils/networking.hpp"
 
 namespace precice {
 namespace com {
@@ -15,7 +16,7 @@ class SocketCommunication : public Communication {
 public:
   SocketCommunication(unsigned short     portNumber       = 0,
                       bool               reuseAddress     = false,
-                      std::string const &networkName      = "lo",
+                      std::string const &networkName      = utils::networking::loopbackInterfaceName(),
                       std::string const &addressDirectory = ".");
 
   explicit SocketCommunication(std::string const &addressDirectory);

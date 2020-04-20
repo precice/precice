@@ -2,6 +2,7 @@
 
 #include "SocketCommunicationFactory.hpp"
 #include "com/SharedPointer.hpp"
+#include "utils/networking.hpp"
 
 namespace precice {
 namespace com {
@@ -22,7 +23,7 @@ SocketCommunicationFactory::SocketCommunicationFactory(
 
 SocketCommunicationFactory::SocketCommunicationFactory(
     std::string const &addressDirectory)
-    : SocketCommunicationFactory(0, false, "lo", addressDirectory)
+    : SocketCommunicationFactory(0, false, utils::networking::loopbackInterfaceName(), addressDirectory)
 {
 }
 

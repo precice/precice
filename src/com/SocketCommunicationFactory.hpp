@@ -2,6 +2,7 @@
 
 #include "CommunicationFactory.hpp"
 #include "com/SharedPointer.hpp"
+#include "utils/networking.hpp"
 
 #include <string>
 
@@ -11,7 +12,7 @@ class SocketCommunicationFactory : public CommunicationFactory {
 public:
   SocketCommunicationFactory(unsigned short     portNumber       = 0,
                              bool               reuseAddress     = false,
-                             std::string const &networkName      = "lo",
+                             std::string const &networkName      = utils::networking::loopbackInterfaceName(),
                              std::string const &addressDirectory = ".");
 
   explicit SocketCommunicationFactory(std::string const &addressDirectory);
