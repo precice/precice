@@ -28,7 +28,7 @@ size_t MPISinglePortsCommunication::getRemoteCommunicatorSize()
   PRECICE_TRACE();
   PRECICE_ASSERT(isConnected());
   int size = -1;
-  MPI_Comm_remote_size(_communicators[0], &size);
+  MPI_Comm_remote_size(_communicators.at(0), &size);
   return size;
 }
 
@@ -78,7 +78,7 @@ void MPISinglePortsCommunication::acceptConnection(std::string const &acceptorNa
     PRECICE_CHECK(_communicators.count(requesterRank) == 0,
                   "Duplicate request to connect by same rank (" << requesterRank << ")!");
 
-    _communicators[requesterRank] = communicator;
+    _communicators.at(requesterRank) = communicator;
 
   } while (++peerCurrent < requesterCommunicatorSize);
 
@@ -109,7 +109,7 @@ void MPISinglePortsCommunication::acceptConnectionAsServer(std::string const &ac
   MPI_Comm_accept(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0,
                   utils::Parallel::current()->comm, &communicator);
   PRECICE_DEBUG("Accepted connection at " << _portName);
-  _communicators[0] = communicator; // all comms are the same
+  _communicators.at(0) = communicator; // all comms are the same
 
   _isConnected = true;
 }
@@ -138,7 +138,7 @@ void MPISinglePortsCommunication::requestConnection(std::string const &acceptorN
   MPI_Send(&requesterRank, 1, MPI_INT, 0, 42, communicator);
   MPI_Send(&requesterCommunicatorSize, 1, MPI_INT, 0, 42, communicator);
   MPI_Recv(&acceptorRank, 1, MPI_INT, 0, 42, communicator, MPI_STATUS_IGNORE);
-  _communicators[0] = communicator; // should be acceptorRank
+  _communicators.at(0) = communicator; // should be acceptorRank
 }
 
 void MPISinglePortsCommunication::requestConnectionAsClient(std::string const &  acceptorName,
@@ -160,7 +160,7 @@ void MPISinglePortsCommunication::requestConnectionAsClient(std::string const & 
   MPI_Comm_connect(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0,
                    utils::Parallel::current()->comm, &communicator);
   PRECICE_DEBUG("Requested connection to " << _portName);
-  _communicators[0] = communicator; // all comms are the same
+  _communicators.at(0) = communicator; // all comms are the same
   _isConnected      = true;
 }
 
@@ -187,7 +187,7 @@ void MPISinglePortsCommunication::closeConnection()
 
 MPI_Comm &MPISinglePortsCommunication::communicator(int rank)
 {
-  return _communicators[0];
+  return _communicators.at(0);
 }
 
 int MPISinglePortsCommunication::rank(int rank)
