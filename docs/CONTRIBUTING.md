@@ -14,7 +14,7 @@ In order to get your contributions into the code base as smoothly as possible, p
   Write [good commit messages][commit].
   Check for unnecessary whitespace with `git diff --check` before committing. 
 * Write tests to assure your feature works as aspected and prevent it from being broken in the future.  
-  See our [`Example Tests`][exampletest] and the [documentation of boost.test][boosttest] for more information.
+  See our example tests in `src/testing/tests/ExampleTests.cpp` and the [documentation of boost.test][boosttest] for more information.
 * Run _all_ the tests to assure nothing else accidentally broke.
 * Follow our [style guide][style].
   Install `clang-format-8` and run `tools/formatting/format-all` to format your code.
@@ -27,7 +27,6 @@ We believe in the power of Open Source or Free Software Software to share and re
 Please contact the maintainers before integrating non-trivial amount of code from other projects, so we can ensure the compatibility of licences. Same holds true for additional dependencies, libraries etc.
 
 [newissue]: https://github.com/precice/precice/issues/new/choose
-[exampletest]: src/testing/tests/ExampleTests.cpp
 [boosttest]: https://www.boost.org/doc/libs/1_65_1/libs/test/doc/html/index.html
 [commit]: http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html
 [pullrequest]: https://help.github.com/articles/creating-a-pull-request
