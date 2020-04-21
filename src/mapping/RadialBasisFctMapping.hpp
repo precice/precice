@@ -4,6 +4,7 @@
 #include "impl/BasisFunctions.hpp"
 #include "utils/Event.hpp"
 #include "utils/MasterSlave.hpp"
+#include "com/CommunicateMesh.hpp"
 
 #include <Eigen/Core>
 #include <Eigen/QR>
@@ -127,9 +128,10 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   PRECICE_ASSERT(getDimensions() == output()->getDimensions(),
                  getDimensions(), output()->getDimensions());
   int           dimensions = getDimensions();
-
+  
   mesh::PtrMesh inMesh;
   mesh::PtrMesh outMesh;
+
   if (getConstraint() == CONSERVATIVE) {
     inMesh  = output();
     outMesh = input();
@@ -138,99 +140,99 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     outMesh = output();
   }
 
-  int inputSize      = (int) inMesh->vertices().size();
-  int outputSize     = (int) outMesh->vertices().size();
-  int deadDimensions = 0;
-  for (int d = 0; d < dimensions; d++) {
+  mesh::Mesh globalInMesh(inMesh->getName(), inMesh->getDimensions(), inMesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
+  mesh::Mesh globalOutMesh(outMesh->getName(), outMesh->getDimensions(), outMesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
+  mesh::Mesh dummyMesh(inMesh->getName(), inMesh->getDimensions(), inMesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
+
+  // Gather the input matrix
+  if(utils::MasterSlave::isSlave()){
+    com::CommunicateMesh(utils::MasterSlave::_communication).sendMesh(*inMesh.get(), 0);
+  } else {
+    globalInMesh.addMesh(*inMesh);
+    for(int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); ++rankSlave){
+      com::CommunicateMesh(utils::MasterSlave::_communication).receiveMesh(dummyMesh, rankSlave);
+      globalInMesh.addMesh(dummyMesh);
+    }
+  }
+
+  // Gather the output matrix
+  if(utils::MasterSlave::isSlave()){
+    com::CommunicateMesh(utils::MasterSlave::_communication).sendMesh(*outMesh.get(),0);
+  } else {
+    globalOutMesh.addMesh(*outMesh);
+    for(int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); ++rankSlave){
+      com::CommunicateMesh(utils::MasterSlave::_communication).receiveMesh(dummyMesh, rankSlave);
+      globalOutMesh.addMesh(dummyMesh);
+    }
+  }
+
+  // LU Decomposition
+  if(utils::MasterSlave::isMaster()){
+    
+    int inputSize      = (int) globalInMesh.vertices().size();
+    int outputSize     = (int) globalOutMesh.vertices().size();
+    int deadDimensions = 0;
+    for (int d = 0; d < dimensions; d++) {
     if (_deadAxis[d])
       deadDimensions += 1;
-  }
-  int polyparams = 1 + dimensions - deadDimensions;
-  PRECICE_ASSERT(inputSize >= 1 + polyparams, inputSize);
-  int             n = inputSize + polyparams; // Add linear polynom degrees
+    }
+    int polyparams = 1 + dimensions - deadDimensions;
+    PRECICE_ASSERT(inputSize >= 1 + polyparams, inputSize);
+    int             n = inputSize + polyparams; // Add linear polynom degrees
+    
+    Eigen::MatrixXd matrixCLU(n, n);
+    matrixCLU.setZero();
+    _matrixA = Eigen::MatrixXd(outputSize, n);
+    _matrixA.setZero();
   
-  std::vector<int> inputIndices(inputSize, -1);
-
-  if(utils::MasterSlave::isSlave()){
-    int numberOfVertices = -1;
-    numberOfVertices = (int) inMesh->vertices().size();
-    utils::MasterSlave::_communication::send(numberOfVertices, 0);
-    if(numberOfVertices != 0){
-      std::vector<int> vertexIDs(numberOfVertices, -1);
-      for(int i = 0; i < numberOfVertices; ++i){
-        vertexIDs[i] = inMesh->vertices()[i].getGlobalIndex();
+    // Fill upper right part (due to symmetry) of _matrixCLU with values
+    int             i = 0;
+    Eigen::VectorXd difference(dimensions);
+    for (const mesh::Vertex &iVertex : globalInMesh.vertices()) {
+      for (int j = iVertex.getID(); j < inputSize; j++) {
+        difference = iVertex.getCoords();
+        difference -= inMesh->vertices()[j].getCoords();
+        matrixCLU(i, j) = _basisFunction.evaluate(reduceVector(difference).norm());
       }
-      utils::MasterSlave::_communication.send(vertexIDs, 0);
+      matrixCLU(i, inputSize) = 1.0;
+      for (int dim = 0; dim < dimensions - deadDimensions; dim++) {
+        matrixCLU(i, inputSize + 1 + dim) = reduceVector(iVertex.getCoords())[dim];
+      }
+      i++;
     }
-  } else {
-    int numberOfVertices = (int) inMesh->vertices().size();
-    for(int i = 0; i < numberOfVertices; ++i){
-      inputIndices.push_back(inMesh->vertices()[i].getGlobalIndex());
-    }
-    for(int slaveRank = 1; slaveRank < utils::MasterSlave::getSize(); ++slaveRank){
-      int slaveNumberOfVertices = -1;
-      utils::MasterSlave::_communication::receive(slaveNumberOfVertices, slaveRank);
-      if(slaveNumberOfVertices != 0{
-        std::vector<int> slaveIndices(slaveNumberOfVertices, -1);
-        utils::MasterSlave::_communication::receive(slaveIndices, slaveRank);
-        for(int i = 0; i < slaveNumberOfVertices; ++i){
-          inputIndices.push_back(slaveIndices[i]);
-        }
+    // Copy values of upper right part of C to lower left part
+    for (int i = 0; i < n; i++) {
+      for (int j = i + 1; j < n; j++) {
+        matrixCLU(j, i) = matrixCLU(i, j);
       }
     }
-  }
-  
-  Eigen::MatrixXd matrixCLU(n, n);
-  matrixCLU.setZero();
-  _matrixA = Eigen::MatrixXd(outputSize, n);
-  _matrixA.setZero();
 
-  // Fill upper right part (due to symmetry) of _matrixCLU with values
-  int             i = 0;
-  Eigen::VectorXd difference(dimensions);
-  for (const mesh::Vertex &iVertex : inMesh->vertices()) {
-    for (int j = iVertex.getID(); j < inputSize; j++) {
-      difference = iVertex.getCoords();
-      difference -= inMesh->vertices()[j].getCoords();
-      matrixCLU(i, j) = _basisFunction.evaluate(reduceVector(difference).norm());
+    // Fill _matrixA with values
+    i = 0;
+    for (const mesh::Vertex &iVertex : globalOutMesh.vertices()) {
+      int j = 0;
+      for (const mesh::Vertex &jVertex : globalInMesh.vertices()) {
+        difference = iVertex.getCoords();
+        difference -= jVertex.getCoords();
+        _matrixA(i, j) = _basisFunction.evaluate(reduceVector(difference).norm());
+        j++;
+      }
+      _matrixA(i, inputSize) = 1.0;
+      for (int dim = 0; dim < dimensions - deadDimensions; dim++) {
+        _matrixA(i, inputSize + 1 + dim) = reduceVector(iVertex.getCoords())[dim];
+      }
+      i++;
     }
-    matrixCLU(i, inputSize) = 1.0;
-    for (int dim = 0; dim < dimensions - deadDimensions; dim++) {
-      matrixCLU(i, inputSize + 1 + dim) = reduceVector(iVertex.getCoords())[dim];
-    }
-    i++;
-  }
-  // Copy values of upper right part of C to lower left part
-  for (int i = 0; i < n; i++) {
-    for (int j = i + 1; j < n; j++) {
-      matrixCLU(j, i) = matrixCLU(i, j);
-    }
-  }
 
-  // Fill _matrixA with values
-  i = 0;
-  for (const mesh::Vertex &iVertex : outMesh->vertices()) {
-    int j = 0;
-    for (const mesh::Vertex &jVertex : inMesh->vertices()) {
-      difference = iVertex.getCoords();
-      difference -= jVertex.getCoords();
-      _matrixA(i, j) = _basisFunction.evaluate(reduceVector(difference).norm());
-      j++;
-    }
-    _matrixA(i, inputSize) = 1.0;
-    for (int dim = 0; dim < dimensions - deadDimensions; dim++) {
-      _matrixA(i, inputSize + 1 + dim) = reduceVector(iVertex.getCoords())[dim];
-    }
-    i++;
-  }
-
-  _qr = matrixCLU.colPivHouseholderQr();
-  if (not _qr.isInvertible()) {
+    _qr = matrixCLU.colPivHouseholderQr();
+    if (not _qr.isInvertible()) {
     PRECICE_ERROR("RBF interpolation matrix is not invertible! "
                   "Try to fix axis-aligned mapping setups by marking perpendicular axes as dead.");
+    }
   }
 
   _hasComputedMapping = true;
+
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
