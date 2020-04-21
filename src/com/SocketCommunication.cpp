@@ -791,7 +791,7 @@ void SocketCommunication::send(std::vector<double> const &v, int rankReceiver)
     asio::write(*_sockets[rankReceiver], asio::buffer(&size, sizeof(size_t)));
     asio::write(*_sockets[rankReceiver], asio::buffer(v));
   } catch (std::exception &e) {
-    PRECICE_ERROR("Send failed: " << e.what());
+    PRECICE_ERROR("Send using sockets failed with system error: " << e.what());
   }
 }
 
