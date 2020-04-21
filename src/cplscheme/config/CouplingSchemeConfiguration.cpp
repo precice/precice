@@ -244,12 +244,12 @@ void CouplingSchemeConfiguration::xmlTagCallback(
         }
       }
     }
-    if (exchangeData.get() == nullptr) {
-      std::ostringstream stream;
-      stream << "Mesh \"" << nameMesh << "\" with data \"" << nameData
-             << "\" not defined at definition of coupling scheme";
-      throw std::runtime_error{stream.str()};
-    }
+    PRECICE_CHECK(exchangeData.get(), "Mesh \"" << nameMesh << "\" with data \"" << nameData
+                                   << "\" not defined. Please check the <exchange "
+                                      "data=\"" << nameData << "\" "
+                                      "mesh=\"" << nameMesh << "\" "
+                                      "from=\"" << nameParticipantFrom << "\" "
+                                      "to=\"" << nameParticipantTo << "\" /> tag in the <coupling-scheme:... /> of your precice-config.xml.");
     _meshConfig->addNeededMesh(nameParticipantFrom, nameMesh);
     _meshConfig->addNeededMesh(nameParticipantTo, nameMesh);
     _config.exchanges.push_back(std::make_tuple(exchangeData, exchangeMesh,
