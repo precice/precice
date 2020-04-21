@@ -170,6 +170,8 @@ struct closure<pm::Quad> {
   static const closure_selector value = open;
 };
 
+// BOOST_CONCEPT_ASSERT( (bg::concepts::Ring<pm::Quad>));
+
 } // namespace traits
 } // namespace geometry
 } // namespace boost

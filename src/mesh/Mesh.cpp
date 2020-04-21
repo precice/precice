@@ -211,11 +211,11 @@ void Mesh::allocateDataValues()
 void Mesh::computeBoundingBox()
 {
   PRECICE_TRACE(_name);
-  
+  BoundingBox bb(_dimensions);
   for (const Vertex &vertex : _vertices) {
-    _boundingBox.expandTo(vertex);
+    bb.expandBy(vertex);
   }
-
+  _boundingBox = std::move(bb);
   PRECICE_DEBUG("Bounding Box, " << _boundingBox);
   
 }
@@ -399,7 +399,7 @@ void Mesh::addMesh(
   meshChanged(*this);
 }
 
-const BoundingBox Mesh::getBoundingBox() const
+const BoundingBox &Mesh::getBoundingBox() const
 {
   return _boundingBox;
 }

@@ -22,7 +22,7 @@ BOOST_AUTO_TEST_CASE(SendAndReceiveBoundingBox)
       bounds.push_back(i);
       bounds.push_back(i + 1);
     }
-    mesh::BoundingBox bb{bounds};
+    mesh::BoundingBox bb = mesh::BoundingBox::createFromData(bounds);
     CommunicateBoundingBox comBB(m2n->getMasterCommunication());
 
     if (context.isNamed("A")) {

@@ -14,22 +14,16 @@ public:
   * 
   * @brief Constructor.
   * 
-  * @param[in] bounds Vector of minimum and maximum points in each dimension
-  * 
-  */
-  BoundingBox(std::vector<double> bounds);
-  
-  /***
-  * 
-  * @brief Constructor.
-  * 
   * @param[in] dimension Dimension of the bounding box
   * 
   */
-  BoundingBox(int dimension);
+  explicit BoundingBox(int dimension);
 
-  /// Copy Constructor
-  BoundingBox(const BoundingBox &bb);
+  /// Special Members
+  BoundingBox(const BoundingBox &) = default;
+  BoundingBox(BoundingBox &&) = default;
+  BoundingBox& operator=(const BoundingBox &bb) = default;
+  BoundingBox& operator=(BoundingBox &&bb) = default;
 
   /// Comparison Operator
   bool operator==(const BoundingBox& otherBB) const;
@@ -38,19 +32,19 @@ public:
   static BoundingBox createFromData(std::vector<double> bounds);
 
   /// Expand bounding box using another bounding box
-  void expandTo(const BoundingBox &otherBB);
+  void expandBy(const BoundingBox &otherBB);
 
   /// Expand bounding box using vertices
-  void expandTo(const Vertex& vertices);
+  void expandBy(const Vertex& vertices);
 
   /// Expand bounding box using value
-  void expandTo(double value);
+  void expandBy(double value);
 
   /// Increase the size of bounding box by safety margin
-  void addSafetyMargin(double safetyFactor);
+  void scaleBy(double safetyFactor);
 
   /// Checks if vertex in contained in _bb
-  bool isVertexInBB(const Vertex &vertex) const;
+  bool contains(const Vertex &vertex) const;
 
   /// Checks whether two bounding boxes are overlapping
   bool overlapping(const BoundingBox &otherBB);
@@ -61,7 +55,7 @@ public:
    * Returns a vector of doubles, size d, each dimension computed as
    * cog =  (max - min) / 2 + min
    */
-  std::vector<double> getCOG() const;
+  Eigen::VectorXd center() const;
 
   /// Calculate the area of bounding box
   double getArea(std::vector<bool> deadAxis);
@@ -72,18 +66,23 @@ public:
   /// Getter dimension of the bounding box
   int getDimension() const;
 
-  /// Output operator for easy logging
-  friend std::ostream &operator<<(std::ostream &out, const BoundingBox &bb);
+  /// Print bounds of bounding box, output operator overload
+  void print(std::ostream& out) const;
 
 private:
-  logging::Logger _log{"mesh::BoundingBox"};
+  static logging::Logger _log;
 
   /// Number of dimensions
   int    _dimensions;
 
   /// Container of min and max points in each dimension
   std::vector<double> _bounds;
+
+  /// Whether the data of bounding box is assigned or not
+  bool _isDefault{true};
 };
+
+std::ostream& operator<<(std::ostream&, const BoundingBox&);
 
 } // namespace mesh
 } // namespace precice

@@ -821,8 +821,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
     namespace bgi = boost::geometry::index;
     auto bb       = otherMesh->getBoundingBox();
     // Enlarge by support radius
-    bb.expandTo(_basisFunction.getSupportRadius());
-    rtree->query(bgi::satisfies([&](size_t const i){ return bb.isVertexInBB(filterMesh->vertices()[i]); }), 
+    bb.expandBy(_basisFunction.getSupportRadius());
+    rtree->query(bgi::satisfies([&](size_t const i){ return bb.contains(filterMesh->vertices()[i]); }), 
       boost::make_function_output_iterator([&filterMesh](size_t idx) {
         filterMesh->vertices()[idx].tag();
       }));
@@ -859,14 +859,14 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
   for (mesh::Vertex &v : mesh->vertices()) {
     if (v.isOwner()) {
       PRECICE_ASSERT(v.isTagged()); // Should be tagged from the first round
-      bb.expandTo(v);
+      bb.expandBy(v);
     }
   }
   // Enlarge bb by support radius
-  bb.expandTo(_basisFunction.getSupportRadius());
+  bb.expandBy(_basisFunction.getSupportRadius());
   auto rtree = mesh::rtree::getVertexRTree(mesh);
 
-  rtree->query(bgi::satisfies([&](size_t const i){ return bb.isVertexInBB(mesh->vertices()[i]); }), 
+  rtree->query(bgi::satisfies([&](size_t const i){ return bb.contains(mesh->vertices()[i]); }), 
     boost::make_function_output_iterator([&mesh](size_t idx) {
       mesh->vertices()[idx].tag();
     }));

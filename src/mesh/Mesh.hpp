@@ -237,7 +237,7 @@ public:
    * BoundingBox is a vector of pairs (min, max), one pair for each dimension.
    * computeState() has to be called after setting the mesh.
    */
-  const BoundingBox getBoundingBox() const;
+  const BoundingBox &getBoundingBox() const;
 
   bool operator==(const Mesh &other) const;
 
