@@ -816,9 +816,9 @@ CouplingSchemeConfiguration::getTimesteppingMethod(
     return constants::FIXED_DT;
   } else if (method == VALUE_FIRST_PARTICIPANT) {
     return constants::FIRST_PARTICIPANT_SETS_DT;
+  } else {
+    PRECICE_ASSERT(false, "Unknown timestepping method \"" << method << "\"!");
   }
-  PRECICE_ERROR("Unknown timestepping method \""
-                << method << "\"!");
 }
 
 void CouplingSchemeConfiguration::addDataToBeExchanged(
