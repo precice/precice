@@ -160,7 +160,7 @@ void CouplingSchemeConfiguration::xmlTagCallback(
                   << "\" second=\""
                   << second
                   << "\" /> tag in the <coupling-scheme:...> of your precice-config.xml");
-    _config.participants.push_back(tag.getStringAttributeValue(second));
+    _config.participants.push_back(second);
   } else if (tag.getName() == TAG_PARTICIPANT) {
     PRECICE_ASSERT(_config.type == VALUE_MULTI);
     bool control                = tag.getBooleanAttributeValue(ATTR_CONTROL);
