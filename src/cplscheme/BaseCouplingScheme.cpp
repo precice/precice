@@ -46,18 +46,18 @@ BaseCouplingScheme::BaseCouplingScheme(
       _localParticipant(localParticipant),
       _eps(std::pow(10.0, -1 * validDigits))
 {
-  PRECICE_CHECK(not((maxTime != UNDEFINED_TIME) && (maxTime < 0.0)),
+  PRECICE_ASSERT(not((maxTime != UNDEFINED_TIME) && (maxTime < 0.0)),
                 "Maximum time has to be larger than zero.");
-  PRECICE_CHECK(not((maxTimeWindows != UNDEFINED_TIME_WINDOWS) && (maxTimeWindows < 0)),
+  PRECICE_ASSERT(not((maxTimeWindows != UNDEFINED_TIME_WINDOWS) && (maxTimeWindows < 0)),
                 "Maximum number of time windows has to be larger than zero.");
-  PRECICE_CHECK(not((timeWindowSize != UNDEFINED_TIME_WINDOW_SIZE) && (timeWindowSize < 0.0)),
+  PRECICE_ASSERT(not((timeWindowSize != UNDEFINED_TIME_WINDOW_SIZE) && (timeWindowSize < 0.0)),
                 "Time window size has to be larger than zero.");
-  PRECICE_CHECK((_validDigits >= 1) && (_validDigits < 17),
+  PRECICE_ASSERT((_validDigits >= 1) && (_validDigits < 17),
                 "Valid digits of time window size has to be between 1 and 16.");
-  PRECICE_CHECK(_firstParticipant != _secondParticipant,
+  PRECICE_ASSERT(_firstParticipant != _secondParticipant,
                 "First participant and second participant must have different names.");
   if (dtMethod == constants::FIXED_TIME_WINDOW_SIZE) {
-    PRECICE_CHECK(hasTimeWindowSize(),
+    PRECICE_ASSERT(hasTimeWindowSize(),
                   "Time window size has to be given when the fixed time window size method is used."); 
   }
   if (localParticipant == _firstParticipant) {
@@ -70,8 +70,8 @@ BaseCouplingScheme::BaseCouplingScheme(
                   << "participant specified for the coupling scheme.");
   }
 
-  PRECICE_CHECK((maxIterations > 0) || (maxIterations == -1),
-                "Maximal iteration limit has to be larger than zero.");
+  PRECICE_ASSERT((maxIterations > 0) || (maxIterations == -1),
+                 "Maximal iteration limit has to be larger than zero.");
 
   if (isExplicitCouplingScheme()) {
     PRECICE_ASSERT(maxIterations == -1);
