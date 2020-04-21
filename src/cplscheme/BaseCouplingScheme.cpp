@@ -38,13 +38,13 @@ BaseCouplingScheme::BaseCouplingScheme(
       _totalIterations(-1),
       _validDigits(validDigits)
 {
-  PRECICE_CHECK(not((maxTime != UNDEFINED_TIME) && (maxTime < 0.0)),
+  PRECICE_ASSERT(not((maxTime != UNDEFINED_TIME) && (maxTime < 0.0)),
                 "Maximum time has to be larger than zero!");
-  PRECICE_CHECK(not((maxTimeWindows != UNDEFINED_TIME_WINDOWS) && (maxTimeWindows < 0)),
+  PRECICE_ASSERT(not((maxTimeWindows != UNDEFINED_TIME_WINDOWS) && (maxTimeWindows < 0)),
                 "Maximum number of time windows has to be larger than zero!");
-  PRECICE_CHECK(not((timeWindowSize != UNDEFINED_TIME_WINDOW_SIZE) && (timeWindowSize < 0.0)),
+  PRECICE_ASSERT(not((timeWindowSize != UNDEFINED_TIME_WINDOW_SIZE) && (timeWindowSize < 0.0)),
                 "Time window size has to be larger than zero!");
-  PRECICE_CHECK((_validDigits >= 1) && (_validDigits < 17),
+  PRECICE_ASSERT((_validDigits >= 1) && (_validDigits < 17),
                 "Valid digits of time window size has to be between 1 and 16!");
 }
 
