@@ -839,13 +839,26 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(
                               "mesh=\"" << mesh->getName() << "\" "
                               "from=\"" << from << "\" "
                               "to=\"" << to << "\" "
-                              "/> tag in the <coupling-scheme:... /> of your precice-config.xml. ");
+                              "/> tag in the <coupling-scheme:... /> of your precice-config.xml.");
+
     if (not(utils::contained(from, _config.participants) || from == _config.controller)) {
-      throw std::runtime_error{"Participant \"" + from + "\" is not configured for coupling scheme"};
+      PRECICE_CHECK(false, "Participant \"" + from + "\" is not configured for coupling scheme. "
+                                          "Please check the <exchange "
+                                          "data=\"" << data->getName() << "\" "
+                                          "mesh=\"" << mesh->getName() << "\" "
+                                          "from=\"" << from << "\" "
+                                          "to=\"" << to << "\" "
+                                          "/> tag in the <coupling-scheme:... /> of your precice-config.xml.");
     }
 
     if (not(utils::contained(to, _config.participants) || to == _config.controller)) {
-      throw std::runtime_error{"Participant \"" + to + "\" is not configured for coupling scheme"};
+      PRECICE_CHECK(false, "Participant \"" + to + "\" is not configured for coupling scheme. "
+                                          "Please check the <exchange "
+                                          "data=\"" << data->getName() << "\" "
+                                          "mesh=\"" << mesh->getName() << "\" "
+                                          "from=\"" << from << "\" "
+                                          "to=\"" << to << "\" "
+                                          "/> tag in the <coupling-scheme:... /> of your precice-config.xml.");
     }
 
     bool initialize = get<4>(tuple);
