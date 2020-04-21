@@ -833,8 +833,13 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(
     const std::string &from = get<2>(tuple);
     const std::string &to   = get<3>(tuple);
 
-    PRECICE_CHECK(to != from, "You cannot define an exchange from and to the same participant");
-
+    PRECICE_CHECK(to != from, "You cannot define an exchange from and to the same participant. "
+                              "Please check the <exchange "
+                              "data=\"" << data->getName() << "\" "
+                              "mesh=\"" << mesh->getName() << "\" "
+                              "from=\"" << from << "\" "
+                              "to=\"" << to << "\" "
+                              "/> tag in the <coupling-scheme:... /> of your precice-config.xml. ");
     if (not(utils::contained(from, _config.participants) || from == _config.controller)) {
       throw std::runtime_error{"Participant \"" + from + "\" is not configured for coupling scheme"};
     }
