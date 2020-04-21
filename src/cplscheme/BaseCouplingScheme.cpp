@@ -73,20 +73,20 @@ BaseCouplingScheme::BaseCouplingScheme(
       _totalIterations(1),
       _validDigits(validDigits)
 {
-  PRECICE_CHECK(not((maxTime != UNDEFINED_TIME) && (maxTime < 0.0)),
-                "Maximum time has to be larger than zero!");
-  PRECICE_CHECK(not((maxTimeWindows != UNDEFINED_TIME_WINDOWS) && (maxTimeWindows < 0)),
-                "Maximum number of time windows has to be larger than zero!");
-  PRECICE_CHECK(not((timeWindowSize != UNDEFINED_TIME_WINDOW_SIZE) && (timeWindowSize < 0.0)),
-                "Time window size has to be larger than zero!");
-  PRECICE_CHECK((_validDigits >= 1) && (_validDigits < 17),
-                "Valid digits of timestep length has to be between 1 and 16!");
-  PRECICE_CHECK(_firstParticipant != _secondParticipant,
-                "First participant and second participant must have different names! Called from BaseCoupling.");
+  PRECICE_ASSERT(not((maxTime != UNDEFINED_TIME) && (maxTime < 0.0)),
+                 "Maximum time has to be larger than zero!");
+  PRECICE_ASSERT(not((maxTimeWindows != UNDEFINED_TIME_WINDOWS) && (maxTimeWindows < 0)),
+                 "Maximum number of time windows has to be larger than zero!");
+  PRECICE_ASSERT(not((timeWindowSize != UNDEFINED_TIME_WINDOW_SIZE) && (timeWindowSize < 0.0)),
+                 "Time window size has to be larger than zero!");
+  PRECICE_ASSERT((_validDigits >= 1) && (_validDigits < 17),
+                 "Valid digits of timestep length has to be between 1 and 16!");
+  PRECICE_ASSERT(_firstParticipant != _secondParticipant,
+                 "First participant and second participant must have different names! Called from BaseCoupling.");
   if (dtMethod == constants::FIXED_DT) {
-    PRECICE_CHECK(hasTimeWindowSize(),
-                  "Timestep length value has to be given when the fixed timestep length method "
-                      << "is chosen for an implicit coupling scheme!");
+    PRECICE_ASSERT(hasTimeWindowSize(),
+                   "Timestep length value has to be given when the fixed timestep length method "
+                   << "is chosen for an implicit coupling scheme!");
   }
   if (localParticipant == _firstParticipant) {
     _doesFirstStep = true;
