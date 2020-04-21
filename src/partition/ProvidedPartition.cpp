@@ -228,14 +228,14 @@ void ProvidedPartition::compareBoundingBoxes()
     // to store the collection of bounding boxes
     mesh::Mesh::BoundingBoxMap bbm;
     mesh::BoundingBox bb(_mesh->getDimensions());
-    bbm[0] = _mesh->getBoundingBox();
+    bbm.emplace(0, _mesh->getBoundingBox());
     PRECICE_ASSERT(!bbm.empty(), "The bounding box of the local mesh is invalid!");
 
     // master receives bbs from slaves and stores them in bbm
     for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
       // initialize bbm
-      bbm[rankSlave] = bb;
-      com::CommunicateBoundingBox(utils::MasterSlave::_communication).receiveBoundingBox(bbm[rankSlave], rankSlave);
+      bbm.emplace(rankSlave, bb);
+      com::CommunicateBoundingBox(utils::MasterSlave::_communication).receiveBoundingBox(bbm.at(rankSlave), rankSlave);
     }
 
     // master sends number of ranks and bbm to the other master

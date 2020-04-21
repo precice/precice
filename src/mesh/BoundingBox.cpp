@@ -20,15 +20,6 @@ BoundingBox::BoundingBox(int dimension)
   }
 }
 
-BoundingBox::BoundingBox()
-{
-  _dimensions = 3;
-  for(int i = 0; i < _dimensions; ++i){
-    _bounds.push_back(std::numeric_limits<double>::max());
-    _bounds.push_back(std::numeric_limits<double>::lowest());
-  }
-}
-
 BoundingBox::BoundingBox(const BoundingBox &bb)
 {
   _dimensions = bb._dimensions;

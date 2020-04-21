@@ -363,16 +363,16 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
     mesh::BoundingBox    localBB{dimensions};
 
     mesh::Mesh::BoundingBoxMap compareBB;
-    compareBB[0] = mesh::BoundingBox::createFromData({-1, 5, 0, 3});
-    compareBB[1] = mesh::BoundingBox::createFromData({0, 1, 3.5, 4.5});
-    compareBB[2] = mesh::BoundingBox::createFromData({2.5, 4.5, 5.5, 7.0});
+    compareBB.emplace(0, mesh::BoundingBox::createFromData({-1, 5, 0, 3}));
+    compareBB.emplace(1, mesh::BoundingBox::createFromData({0, 1, 3.5, 4.5}));
+    compareBB.emplace(2, mesh::BoundingBox::createFromData({2.5, 4.5, 5.5, 7.0}));
 
     // we receive other participants communicator size
     int receivedFeedbackSize = 3;
     m2n->getMasterCommunication()->receive(receivedFeedbackSize, 0);
 
     for (int i = 0; i < receivedFeedbackSize; i++) {
-      receivedGlobalBB[i] = localBB;
+      receivedGlobalBB.emplace(i, localBB);
     }
 
     // we receive golbal bounding box from othe participant!
@@ -381,9 +381,9 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
     BOOST_TEST(receivedFeedbackSize == 3);
 
     //check the validity of received golbal bounding box (globalBB)
-    BOOST_TEST(receivedGlobalBB[0] == compareBB[0]);
-    BOOST_TEST(receivedGlobalBB[1] == compareBB[1]);
-    BOOST_TEST(receivedGlobalBB[2] == compareBB[2]);
+    BOOST_TEST(receivedGlobalBB.at(0) == compareBB.at(0));
+    BOOST_TEST(receivedGlobalBB.at(1) == compareBB.at(1));
+    BOOST_TEST(receivedGlobalBB.at(2) == compareBB.at(2));
 
     std::vector<int> connectedRanks = {0, 1, 2};
     m2n->getMasterCommunication()->send(connectedRanks, 0);
@@ -459,16 +459,16 @@ BOOST_AUTO_TEST_CASE(TestSendBoundingBoxes3D)
     mesh::BoundingBox    localBB{dimensions};
 
     mesh::Mesh::BoundingBoxMap compareBB;
-    compareBB[0] = mesh::BoundingBox::createFromData({-1, 5, 0, 3, -1, 5});
-    compareBB[1] = mesh::BoundingBox::createFromData({0, 1, 3.5, 4.5, 0, 1});
-    compareBB[2] = mesh::BoundingBox::createFromData({2.5, 4.5, 5.5, 7.0, 2.5, 4.5});
+    compareBB.emplace(0, mesh::BoundingBox::createFromData({-1, 5, 0, 3, -1, 5}));
+    compareBB.emplace(1, mesh::BoundingBox::createFromData({0, 1, 3.5, 4.5, 0, 1}));
+    compareBB.emplace(2, mesh::BoundingBox::createFromData({2.5, 4.5, 5.5, 7.0, 2.5, 4.5}));
 
     // we receive other participants communicator size
     int remoteParComSize = 3;
     m2n->getMasterCommunication()->receive(remoteParComSize, 0);
 
     for (int i = 0; i < remoteParComSize; i++) {
-      receivedGlobalBB[i] = localBB;
+      receivedGlobalBB.emplace(i, localBB);
     }
 
     // we receive golbal bounding box from othe participant!
@@ -478,9 +478,9 @@ BOOST_AUTO_TEST_CASE(TestSendBoundingBoxes3D)
     BOOST_TEST(remoteParComSize == 3);
 
     //check the validity of received golbal bounding box (globalBB)
-    BOOST_TEST(receivedGlobalBB[0] == compareBB[0]);
-    BOOST_TEST(receivedGlobalBB[1] == compareBB[1]);
-    BOOST_TEST(receivedGlobalBB[2] == compareBB[2]);
+    BOOST_TEST(receivedGlobalBB.at(0) == compareBB.at(0));
+    BOOST_TEST(receivedGlobalBB.at(1) == compareBB.at(1));
+    BOOST_TEST(receivedGlobalBB.at(2) == compareBB.at(2));
 
     //send empty dummy list of connected ranks as feedback
     std::vector<int> connectedRanksList;

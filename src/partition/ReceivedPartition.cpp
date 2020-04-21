@@ -376,7 +376,7 @@ void ReceivedPartition::compareBoundingBoxes()
   mesh::BoundingBox    initialBB(_mesh->getDimensions());
 
   for (int remoteRank = 0; remoteRank < numberOfRemoteRanks; remoteRank++) {
-    remoteBBMap[remoteRank] = initialBB;
+    remoteBBMap.emplace(remoteRank, initialBB);
   }
 
   // receive and broadcast remote bounding box map

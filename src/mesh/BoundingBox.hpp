@@ -28,9 +28,6 @@ public:
   */
   BoundingBox(int dimension);
 
-  /// Default constructor
-  BoundingBox();
-
   /// Copy Constructor
   BoundingBox(const BoundingBox &bb);
 
