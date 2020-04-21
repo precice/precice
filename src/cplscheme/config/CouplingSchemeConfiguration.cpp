@@ -187,16 +187,28 @@ void CouplingSchemeConfiguration::xmlTagCallback(
 
   } else if (tag.getName() == TAG_MAX_TIME) {
     _config.maxTime = tag.getDoubleAttributeValue(ATTR_VALUE);
-    PRECICE_CHECK(_config.maxTime > 0,"Maximum time has to be larger than zero.");
+    PRECICE_CHECK(_config.maxTime > 0,"Maximum time has to be larger than zero. Please check the <max-time value=\""
+                                             << _config.maxTime << "\""
+                                             <<" /> tag in the <coupling-scheme:...> of your precice-config.xml");
   } else if (tag.getName() == TAG_MAX_TIME_WINDOWS) {
     _config.maxTimeWindows = tag.getIntAttributeValue(ATTR_VALUE);
-    PRECICE_CHECK(_config.maxTimeWindows > 0,"Maximum number of time windows has to be larger than zero.");
+    PRECICE_CHECK(_config.maxTimeWindows > 0,"Maximum number of time windows has to be larger than zero. Please check the <max-time-windows value=\""
+        << _config.maxTimeWindows << "\""
+        << "/> tag in the <coupling-scheme:...> of your precice-config.xml");
   } else if (tag.getName() == TAG_TIME_WINDOW_SIZE) {
     _config.timeWindowSize = tag.getDoubleAttributeValue(ATTR_VALUE);
-    PRECICE_CHECK(_config.timeWindowSize > 0,"Time window size has to be larger than zero.");
     _config.validDigits = tag.getIntAttributeValue(ATTR_VALID_DIGITS);
-    PRECICE_CHECK((_config.validDigits >= 1) && (_config.validDigits < 17),"Valid digits of time window size has to be between 1 and 16.");
     _config.dtMethod = getTimesteppingMethod(tag.getStringAttributeValue(ATTR_METHOD));
+    PRECICE_CHECK(_config.timeWindowSize > 0,"Time window size has to be larger than zero. Please check the <time-window-size "
+        << "value=\"" << _config.timeWindowSize << "\" "
+        << "valid-digits=\"" << _config.validDigits << "\" "
+        << "method=\"" << tag.getStringAttributeValue(ATTR_METHOD) << "\" "
+        << "/> tag in the <coupling-scheme:...> of your precice-config.xml");
+    PRECICE_CHECK((_config.validDigits >= 1) && (_config.validDigits < 17),"Valid digits of time window size has to be between 1 and 16. Please check the <time-window-size "
+        << "value=\"" << _config.timeWindowSize << "\" "
+        << "valid-digits=\"" << _config.validDigits << "\" "
+        << "method=\"" << tag.getStringAttributeValue(ATTR_METHOD) << "\" "
+        << "/> tag in the <coupling-scheme:...> of your precice-config.xml");
   } else if (tag.getName() == TAG_ABS_CONV_MEASURE) {
     std::string dataName = tag.getStringAttributeValue(ATTR_DATA);
     std::string meshName = tag.getStringAttributeValue(ATTR_MESH);
