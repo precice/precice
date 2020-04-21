@@ -29,7 +29,6 @@ BaseCouplingScheme::BaseCouplingScheme(
       _secondParticipant("unknown"),
       _localParticipant("unknown"),
       _eps(std::pow(10.0, -1 * validDigits)),
-      _iterationsCoarseOptimization(-1),
       _maxTime(maxTime),
       _maxTimeWindows(maxTimeWindows),
       _timeWindows(0),
@@ -37,7 +36,6 @@ BaseCouplingScheme::BaseCouplingScheme(
       _maxIterations(-1),
       _iterations(-1),
       _totalIterations(-1),
-      _totalIterationsCoarseOptimization(-1),
       _validDigits(validDigits)
 {
   PRECICE_CHECK(not((maxTime != UNDEFINED_TIME) && (maxTime < 0.0)),
@@ -65,7 +63,6 @@ BaseCouplingScheme::BaseCouplingScheme(
       _secondParticipant(secondParticipant),
       _localParticipant(localParticipant),
       _eps(std::pow(10.0, -1 * validDigits)),
-      _iterationsCoarseOptimization(1),
       _m2n(m2n),
       _maxTime(maxTime),
       _maxTimeWindows(maxTimeWindows),
@@ -74,7 +71,6 @@ BaseCouplingScheme::BaseCouplingScheme(
       _maxIterations(maxIterations),
       _iterations(1),
       _totalIterations(1),
-      _totalIterationsCoarseOptimization(1),
       _validDigits(validDigits)
 {
   PRECICE_CHECK(not((maxTime != UNDEFINED_TIME) && (maxTime < 0.0)),
@@ -236,7 +232,6 @@ void BaseCouplingScheme::setExtrapolationOrder(
   _extrapolationOrder = order;
 }
 
-// @todo extrapolation of data should only be done for the fine cplData -> then copied to the coarse cplData
 void BaseCouplingScheme::extrapolateData(DataMap &data)
 {
   PRECICE_TRACE(_timeWindows);
@@ -393,7 +388,6 @@ void BaseCouplingScheme::requireAction(
   _actions.insert(actionName);
 }
 
-/// @todo: insert _iterationsCoarseOptimization in print state
 std::string BaseCouplingScheme::printCouplingState() const
 {
   std::ostringstream os;
@@ -484,17 +478,6 @@ void BaseCouplingScheme::setIterationAcceleration(
 {
   PRECICE_ASSERT(acceleration.get() != nullptr);
   _acceleration = acceleration;
-
-  // if multilevel based approach, i.e., manifold mapping, we have to start
-  // with the evaluation/optimization of the coarse model representation.
-  // otherwise, we start with the fine model representation as it's the only one
-  _isCoarseModelOptimizationActive = _acceleration->isMultilevelBasedApproach();
-  if (_acceleration->isMultilevelBasedApproach()) {
-    _acceleration->setCoarseModelOptimizationActive(&_isCoarseModelOptimizationActive);
-    // also initialize the iteration counters with 0, as scheme starts with coarse model evaluation
-    _iterations      = 0;
-    _totalIterations = 0;
-  }
 }
 
 void BaseCouplingScheme::setupConvergenceMeasures()
@@ -527,21 +510,18 @@ void BaseCouplingScheme::newConvergenceMeasurements()
 void BaseCouplingScheme::addConvergenceMeasure(
     mesh::PtrData               data,
     bool                        suffices,
-    int                         level,
     impl::PtrConvergenceMeasure measure)
 {
   ConvergenceMeasure convMeasure;
   convMeasure.data         = std::move(data);
   convMeasure.couplingData = nullptr;
   convMeasure.suffices     = suffices;
-  convMeasure.level        = level;
   convMeasure.measure      = std::move(measure);
   _convergenceMeasures.push_back(convMeasure);
   _firstResiduumNorm.push_back(0);
 }
 
-bool BaseCouplingScheme::measureConvergence(
-    std::map<int, Eigen::VectorXd> &designSpecifications)
+bool BaseCouplingScheme::measureConvergence()
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(not doesFirstStep());
@@ -555,18 +535,11 @@ bool BaseCouplingScheme::measureConvergence(
   for (size_t i = 0; i < _convergenceMeasures.size(); i++) {
     ConvergenceMeasure &convMeasure = _convergenceMeasures[i];
 
-    // only apply convergence measures for fine model optimization, i.e., coupling
-    if (convMeasure.level > 0)
-      continue;
-
     PRECICE_ASSERT(convMeasure.couplingData != nullptr);
     PRECICE_ASSERT(convMeasure.measure.get() != nullptr);
-    const auto &    oldValues = convMeasure.couplingData->oldValues.col(0);
-    Eigen::VectorXd q         = Eigen::VectorXd::Zero(convMeasure.couplingData->values->size());
-    if (designSpecifications.find(convMeasure.data->getID()) != designSpecifications.end())
-      q = designSpecifications.at(convMeasure.data->getID());
+    const auto &oldValues = convMeasure.couplingData->oldValues.col(0);
 
-    convMeasure.measure->measure(oldValues, *convMeasure.couplingData->values, q);
+    convMeasure.measure->measure(oldValues, *convMeasure.couplingData->values);
 
     if (not utils::MasterSlave::isSlave()) {
       std::stringstream sstm;
@@ -594,48 +567,6 @@ bool BaseCouplingScheme::measureConvergence(
   return allConverged || oneSuffices;
 }
 
-/// @todo: ugly hack with design specifications, however, getting them here is not possible as
-// parallel coupling scheme and multi-coupling scheme  need allData and not only getSendData()
-bool BaseCouplingScheme::measureConvergenceCoarseModelOptimization(
-    std::map<int, Eigen::VectorXd> &designSpecifications)
-{
-  PRECICE_TRACE();
-  bool allConverged = true;
-  bool oneSuffices  = false;
-  PRECICE_ASSERT(_convergenceMeasures.size() > 0);
-  for (ConvergenceMeasure &convMeasure : _convergenceMeasures) {
-
-    // only apply convergence measures for coarse model optimization
-    if (convMeasure.level == 0)
-      continue;
-
-    std::cout << "  measure convergence coarse measure, data:" << convMeasure.data->getName() << '\n';
-    PRECICE_ASSERT(convMeasure.couplingData != nullptr);
-    PRECICE_ASSERT(convMeasure.measure.get() != nullptr);
-    const auto &    oldValues = convMeasure.couplingData->oldValues.col(0);
-    Eigen::VectorXd q         = Eigen::VectorXd::Zero(convMeasure.couplingData->values->size());
-    if (designSpecifications.find(convMeasure.data->getID()) != designSpecifications.end())
-      q = designSpecifications.at(convMeasure.data->getID());
-
-    convMeasure.measure->measure(oldValues, *convMeasure.couplingData->values, q);
-
-    if (not convMeasure.measure->isConvergence()) {
-      allConverged = false;
-    } else if (convMeasure.suffices == true) {
-      oneSuffices = true;
-    }
-    PRECICE_INFO('<' << convMeasure.data->getName() << '<' << convMeasure.measure->printState());
-  }
-
-  if (allConverged) {
-    PRECICE_INFO("All converged");
-  } else if (oneSuffices) {
-    PRECICE_INFO("Sufficient measure converged");
-  }
-
-  return allConverged || oneSuffices;
-}
-
 void BaseCouplingScheme::initializeTXTWriters()
 {
   if (not utils::MasterSlave::isSlave()) {
@@ -645,19 +576,9 @@ void BaseCouplingScheme::initializeTXTWriters()
       _convergenceWriter = std::make_shared<io::TXTTableWriter>("precice-" + _localParticipant + "-convergence.log");
     }
 
-    // check if coarse model optimization exists
-    bool hasCoarseModelOptimization = false;
-    for (ConvergenceMeasure &convMeasure : _convergenceMeasures)
-      if (convMeasure.level > 0)
-        hasCoarseModelOptimization = true;
-
     _iterationsWriter->addData("TimeWindow", io::TXTTableWriter::INT);
     _iterationsWriter->addData("TotalIterations", io::TXTTableWriter::INT);
     _iterationsWriter->addData("Iterations", io::TXTTableWriter::INT);
-    if (hasCoarseModelOptimization) {
-      _iterationsWriter->addData("TotalIterationsSurrogateModel", io::TXTTableWriter::INT);
-      _iterationsWriter->addData("IterationsSurrogateModel", io::TXTTableWriter::INT);
-    }
     _iterationsWriter->addData("Convergence", io::TXTTableWriter::INT);
 
     if (not doesFirstStep()) {
@@ -667,10 +588,6 @@ void BaseCouplingScheme::initializeTXTWriters()
 
     if (not doesFirstStep()) {
       for (ConvergenceMeasure &convMeasure : _convergenceMeasures) {
-
-        // only for fine model optimization, i.e., coupling
-        if (convMeasure.level > 0)
-          continue;
         std::stringstream sstm, sstm2;
         sstm << "AvgConvRate(" << convMeasure.data->getName() << ")";
         sstm2 << "ResNorm(" << convMeasure.data->getName() << ")";
@@ -686,19 +603,9 @@ void BaseCouplingScheme::advanceTXTWriters()
 {
   if (not utils::MasterSlave::isSlave()) {
 
-    // check if coarse model optimization exists
-    bool hasCoarseModelOptimization = false;
-    for (ConvergenceMeasure &convMeasure : _convergenceMeasures)
-      if (convMeasure.level > 0)
-        hasCoarseModelOptimization = true;
-
     _iterationsWriter->writeData("TimeWindow", _timeWindows - 1);
     _iterationsWriter->writeData("TotalIterations", _totalIterations);
     _iterationsWriter->writeData("Iterations", _iterations);
-    if (hasCoarseModelOptimization) {
-      _iterationsWriter->writeData("TotalIterationsSurrogateModel", _totalIterationsCoarseOptimization);
-      _iterationsWriter->writeData("IterationsSurrogateModel", _iterationsCoarseOptimization);
-    }
     int converged = _iterations < _maxIterations ? 1 : 0;
     _iterationsWriter->writeData("Convergence", converged);
 
@@ -706,10 +613,6 @@ void BaseCouplingScheme::advanceTXTWriters()
       int i = -1;
       for (ConvergenceMeasure &convMeasure : _convergenceMeasures) {
         i++;
-
-        // only for fine model optimization, i.e., coupling
-        if (_convergenceMeasures[i].level > 0)
-          continue;
 
         std::stringstream sstm;
         sstm << "AvgConvRate(" << convMeasure.data->getName() << ")";
@@ -726,14 +629,8 @@ void BaseCouplingScheme::advanceTXTWriters()
 }
 
 void BaseCouplingScheme::updateTimeAndIterations(
-    bool convergence,
-    bool convergenceCoarseOptimization)
+    bool convergence)
 {
-  bool manifoldmapping = false;
-  if (getAcceleration().get() != nullptr) {
-    manifoldmapping = _acceleration->isMultilevelBasedApproach();
-  }
-
   if (not convergence) {
 
     // The computed timestep part equals the timestep length, since the
@@ -742,23 +639,12 @@ void BaseCouplingScheme::updateTimeAndIterations(
     PRECICE_ASSERT(math::greater(getComputedTimeWindowPart(), 0.0));
     _time = _time - _computedTimeWindowPart;
 
-    // in case of multilevel PP: only increment outer iteration count if surrogate model has converged.
-    if (convergenceCoarseOptimization) {
-      _totalIterations++;
-      _iterations++;
-    } else {
-      // in case of multilevel PP: increment the iteration count of the surrogate model
-      _iterationsCoarseOptimization++;
-      _totalIterationsCoarseOptimization++;
-    }
+    _totalIterations++;
+    _iterations++;
   } else {
 
-    _totalIterationsCoarseOptimization++;
-    if (not manifoldmapping)
-      _totalIterations++;
-
-    _iterationsCoarseOptimization = 1;
-    _iterations                   = manifoldmapping ? 0 : 1;
+    _totalIterations++;
+    _iterations = 1;
   }
 }
 
@@ -776,11 +662,7 @@ void BaseCouplingScheme::timeWindowCompleted()
 
 bool BaseCouplingScheme::maxIterationsReached()
 {
-  if (not _isCoarseModelOptimizationActive) {
-    return _iterations == _maxIterations;
-  } else {
-    return _iterationsCoarseOptimization == _maxIterations;
-  }
+  return _iterations == _maxIterations;
 }
 } // namespace cplscheme
 } // namespace precice

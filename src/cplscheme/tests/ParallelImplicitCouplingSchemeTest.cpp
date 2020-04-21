@@ -319,8 +319,8 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
       new cplscheme::impl::MinIterationConvergenceMeasure(minIterations));
   cplscheme::impl::PtrConvergenceMeasure minIterationConvMeasure2(
       new cplscheme::impl::MinIterationConvergenceMeasure(minIterations));
-  cplScheme.addConvergenceMeasure(mesh->data()[1], false, false, minIterationConvMeasure1);
-  cplScheme.addConvergenceMeasure(mesh->data()[0], false, false, minIterationConvMeasure2);
+  cplScheme.addConvergenceMeasure(mesh->data()[1], false, minIterationConvMeasure1);
+  cplScheme.addConvergenceMeasure(mesh->data()[0], false, minIterationConvMeasure2);
 
   std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());

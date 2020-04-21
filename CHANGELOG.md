@@ -2,7 +2,10 @@
 
 All notable changes to this project will be documented in this file. For future plans, see our [Roadmap](https://github.com/precice/precice/wiki/Roadmap).
 
-- BoundingBox is refactored into a seperate class.
+## 2.1.0
+
+- Refactor `mesh::BoundingBox` into seperate class
+- Removed deprecated and untested Manifold Mapping. API functions `hasToEvaluateSurrogateModel` and `hasToEvaluateFineModel` remain as nop stubs.
 - Change the CMake FindNumPy module to only consider information based on the selected python interpreter.
 - Implemented a new action to sum up data values, `action:summation`.
 - Added many tests for the communication abstraction.
