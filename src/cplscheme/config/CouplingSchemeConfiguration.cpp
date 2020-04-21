@@ -309,7 +309,9 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
       _config = Config();
     } else if (_config.type == VALUE_MULTI) {
       PRECICE_CHECK(_config.setController,
-                    "One controller per MultiCoupling need to be defined");
+                    "One controller per MultiCoupling needs to be defined. "
+                    "Please check the <participant name=... /> tags in the <coupling-scheme:... /> of your precice-config.xml. "
+                    "Make sure that at least one participant tag provides the attribute <participant name=... control=True/>.");
       for (std::string &accessor : _config.participants) {
         PtrCouplingScheme scheme = createMultiCouplingScheme(accessor);
         addCouplingScheme(scheme, accessor);
