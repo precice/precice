@@ -950,9 +950,12 @@ void CouplingSchemeConfiguration::checkIfDataIsExchanged(
       hasFound = true;
     }
   }
-  PRECICE_CHECK(hasFound,
-                "You need to exchange every data that you use for convergence measures"
-                    << " and/or the iteration acceleration");
+  PRECICE_CHECK(hasFound,"You need to exchange every data that you use for convergence measures "
+                    << "and/or the iteration acceleration. Data \"" << dataID << "\" is "   /// @todo better provide the dataName! Is there an easy way to access it?
+                    << "currently not exchanged, but used for convergence measures and/or iteration "
+                    << "acceleration. Please check the <exchange ... /> and "
+                    << "<...-convergence-measure ... /> tags in the "
+                    << "<coupling-scheme:... /> of your precice-config.xml.");
 }
 
 } // namespace cplscheme
