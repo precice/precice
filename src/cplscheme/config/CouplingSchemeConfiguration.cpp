@@ -706,6 +706,9 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialImplicitCouplingSchem
 
   // Add convergence measures
   using std::get;
+  PRECICE_CHECK(not _config.convMeasures.empty(),
+                "At least one convergence measure has to be defined for an implicit coupling scheme. "
+                "Please check your <coupling-scheme ... /> and make sure that you provide at least one <...-convergence-measure/> subtag in the precice-config.xml.");
   for (auto &elem : _config.convMeasures) {
     mesh::PtrData               data       = get<0>(elem);
     bool                        suffices   = get<1>(elem);
@@ -745,6 +748,9 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelImplicitCouplingSch
 
   // Add convergence measures
   using std::get;
+  PRECICE_CHECK(not _config.convMeasures.empty(),
+                "At least one convergence measure has to be defined for an implicit coupling scheme. "
+                "Please check your <coupling-scheme ... /> and make sure that you provide at least one <...-convergence-measure/> subtag in the precice-config.xml.");
   for (auto &elem : _config.convMeasures) {
     mesh::PtrData               data       = get<0>(elem);
     bool                        suffices   = get<1>(elem);
@@ -804,6 +810,9 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
 
   // Add convergence measures
   using std::get;
+  PRECICE_CHECK(not _config.convMeasures.empty(),
+      "At least one convergence measure has to be defined for an implicit coupling scheme. "
+      "Please check your <coupling-scheme ... /> and make sure that you provide at least one <...-convergence-measure/> subtag in the precice-config.xml.");
   for (auto &elem : _config.convMeasures) {
     mesh::PtrData               data       = get<0>(elem);
     bool                        suffices   = get<1>(elem);

@@ -273,8 +273,8 @@ void MultiCouplingScheme::setupConvergenceMeasures()
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(not doesFirstStep());
-  PRECICE_CHECK(not _convergenceMeasures.empty(),
-                "At least one convergence measure has to be defined for an implicit coupling scheme!");
+  PRECICE_ASSERT(not _convergenceMeasures.empty(),
+      "At least one convergence measure has to be defined for an implicit coupling scheme!");
   for (ConvergenceMeasure &convMeasure : _convergenceMeasures) {
     int dataID               = convMeasure.data->getID();
     convMeasure.couplingData = getData(dataID);
