@@ -611,6 +611,13 @@ void CouplingSchemeConfiguration::addRelativeConvergenceMeasure(
     bool               suffices)
 {
   PRECICE_TRACE();
+  PRECICE_CHECK(math::greater(limit, 0.0) && math::greaterEquals(1.0, limit),
+                "Relative convergence limit has to be in ]0;1]. Please check the "
+                "<relative-convergence-measure "
+                    << "limit=\"" << limit << "\" "
+                    << "data=\""<< dataName << "\" "
+                    << "mesh=\""<< meshName << "\" "
+                    << "suffices=\""<< suffices << "\"/> subtag in your <coupling-scheme ... /> in the precice-config.xml.");
   impl::PtrConvergenceMeasure measure(
       new impl::RelativeConvergenceMeasure(limit));
   _config.convMeasures.push_back(std::make_tuple(getData(dataName, meshName), suffices, meshName, measure));
@@ -623,6 +630,13 @@ void CouplingSchemeConfiguration::addResidualRelativeConvergenceMeasure(
     bool               suffices)
 {
   PRECICE_TRACE();
+  PRECICE_CHECK(math::greater(limit, 0.0) && math::greaterEquals(1.0, limit),
+                "Relative convergence limit has to be in ]0;1]. Please check the "
+                "<residual-relative-convergence-measure "
+                << "limit=\"" << limit << "\" "
+                << "data=\""<< dataName << "\" "
+                << "mesh=\""<< meshName << "\" "
+                << "suffices=\""<< suffices << "\"/> subtag in your <coupling-scheme ... /> in the precice-config.xml.");
   impl::PtrConvergenceMeasure measure(
       new impl::ResidualRelativeConvergenceMeasure(limit));
   _config.convMeasures.push_back(std::make_tuple(getData(dataName, meshName), suffices, meshName, measure));
