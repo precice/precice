@@ -103,7 +103,7 @@ BaseCouplingScheme::BaseCouplingScheme(
                   << localParticipant << "\" does not match any "
                   << "participant specified for the coupling scheme!");
   }
-  PRECICE_CHECK((maxIterations > 0) || (maxIterations == -1),
+  PRECICE_ASSERT((maxIterations > 0) || (maxIterations == -1),
                 "Maximal iteration limit has to be larger than zero!");
 }
 
