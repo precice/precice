@@ -199,11 +199,20 @@ void CouplingSchemeConfiguration::xmlTagCallback(
     _config.timeWindowSize = tag.getDoubleAttributeValue(ATTR_VALUE);
     _config.validDigits = tag.getIntAttributeValue(ATTR_VALID_DIGITS);
     _config.dtMethod = getTimesteppingMethod(tag.getStringAttributeValue(ATTR_METHOD));
-    PRECICE_CHECK(_config.timeWindowSize > 0,"Time window size has to be larger than zero. Please check the <time-window-size "
-        << "value=\"" << _config.timeWindowSize << "\" "
-        << "valid-digits=\"" << _config.validDigits << "\" "
-        << "method=\"" << tag.getStringAttributeValue(ATTR_METHOD) << "\" "
-        << "/> tag in the <coupling-scheme:...> of your precice-config.xml");
+    if(_config.dtMethod == constants::TimesteppingMethod::FIXED_DT) {
+      PRECICE_CHECK(_config.timeWindowSize > 0, "Time window size has to be larger than zero. Please check the <time-window-size "
+          << "value=\"" << _config.timeWindowSize << "\" "
+          << "valid-digits=\"" << _config.validDigits << "\" "
+          << "method=\"" << tag.getStringAttributeValue(ATTR_METHOD) << "\" "
+          << "/> tag in the <coupling-scheme:...> of your precice-config.xml");
+    } else {
+      PRECICE_ASSERT(_config.dtMethod == constants::TimesteppingMethod::FIRST_PARTICIPANT_SETS_DT);
+      PRECICE_CHECK(_config.timeWindowSize == -1, "Time window size value has to be equal to -1 (default), if method=\"first-participant\" is used. Please check the <time-window-size "
+          << "value=\"" << _config.timeWindowSize << "\" "
+          << "valid-digits=\"" << _config.validDigits << "\" "
+          << "method=\"" << tag.getStringAttributeValue(ATTR_METHOD) << "\" "
+          << "/> tag in the <coupling-scheme:...> of your precice-config.xml");
+    }
     PRECICE_CHECK((_config.validDigits >= 1) && (_config.validDigits < 17),"Valid digits of time window size has to be between 1 and 16. Please check the <time-window-size "
         << "value=\"" << _config.timeWindowSize << "\" "
         << "valid-digits=\"" << _config.validDigits << "\" "
