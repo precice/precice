@@ -600,6 +600,13 @@ void CouplingSchemeConfiguration::addAbsoluteConvergenceMeasure(
     bool               suffices)
 {
   PRECICE_TRACE();
+  PRECICE_CHECK(math::greater(limit, 0.0),
+                 "Absolute convergence limit has to be greater than zero. Please check the "
+                 "<absolute-convergence-measure "
+                     << "limit=\"" << limit << "\" "
+                     << "data=\""<< dataName << "\" "
+                     << "mesh=\""<< meshName << "\" "
+                     << "suffices=\""<< suffices << "\"/> subtag in your <coupling-scheme ... /> in the precice-config.xml.");
   impl::PtrConvergenceMeasure measure(new impl::AbsoluteConvergenceMeasure(limit));
   _config.convMeasures.push_back(std::make_tuple(getData(dataName, meshName), suffices, meshName, measure));
 }
