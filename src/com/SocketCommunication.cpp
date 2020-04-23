@@ -97,7 +97,7 @@ void SocketCommunication::acceptConnection(std::string const &acceptorName,
       asio::read(*socket, asio::buffer(&requesterRank, sizeof(int)));
 
       PRECICE_CHECK(_sockets.count(requesterRank) == 0,
-                    "Duplicate request to connect by same rank (" << requesterRank << ")!");
+                    "Rank " << requesterRank << " has already been connected. Duplicate requests are not allowed.");
 
       _sockets[requesterRank] = socket;
       // send and receive expect a rank from the acceptor perspective.
@@ -112,10 +112,10 @@ void SocketCommunication::acceptConnection(std::string const &acceptorName,
         peerCount = requesterCommunicatorSize;
       }
 
-      PRECICE_CHECK(requesterCommunicatorSize == peerCount,
-                    "Requester communicator sizes are inconsistent!");
-      PRECICE_CHECK(requesterCommunicatorSize > 0,
-                    "Requester communicator size has to be > 0!");
+      PRECICE_ASSERT(requesterCommunicatorSize > 0,
+          "Requester communicator size is " << requesterCommunicatorSize << " which is invalid.");
+      PRECICE_ASSERT(requesterCommunicatorSize == peerCount,
+          "Current requester size from rank " << requesterRank << " is " << requesterCommunicatorSize<< " but should be " << peerCount);
     } while (++peerCurrent < requesterCommunicatorSize);
 
     acceptor.close();
@@ -136,7 +136,7 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorNa
                                                    int                requesterCommunicatorSize)
 {
   PRECICE_TRACE(acceptorName, requesterName, acceptorRank, requesterCommunicatorSize);
-  PRECICE_CHECK(requesterCommunicatorSize > 0, "Requester communicator size has to be > 0!");
+  PRECICE_ASSERT(requesterCommunicatorSize > 0, "Requester communicator size has to be > 0!");
   PRECICE_ASSERT(not isConnected());
 
   std::string address;

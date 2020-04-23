@@ -68,12 +68,12 @@ void MPIPortsCommunication::acceptConnection(std::string const &acceptorName,
       peerCount = requesterCommunicatorSize;
     }
 
-    PRECICE_CHECK(requesterCommunicatorSize > 0,
-                  "Requester communicator size has to be > 0!");
-    PRECICE_CHECK(requesterCommunicatorSize == peerCount,
-                  "Requester communicator sizes are inconsistent!");
-    PRECICE_CHECK(_communicators.count(requesterRank) == 0,
-                  "Duplicate request to connect by same rank (" << requesterRank << ")!");
+    PRECICE_ASSERT(requesterCommunicatorSize > 0,
+                  "Requester communicator size is " << requesterCommunicatorSize << " which is invalid.");
+    PRECICE_ASSERT(requesterCommunicatorSize == peerCount,
+                  "Current requester size from rank " << requesterRank << " is " << requesterCommunicatorSize<< " but should be " << peerCount);
+    PRECICE_ASSERT(_communicators.count(requesterRank) == 0,
+                  "Rank " << requesterRank << " has already been connected. Duplicate requests are not allowed.");
 
     _communicators[requesterRank] = communicator;
 
@@ -89,7 +89,7 @@ void MPIPortsCommunication::acceptConnectionAsServer(std::string const &acceptor
                                                      int                requesterCommunicatorSize)
 {
   PRECICE_TRACE(acceptorName, requesterName, acceptorRank, requesterCommunicatorSize);
-  PRECICE_CHECK(requesterCommunicatorSize > 0, "Requester communicator size has to be > 0!");
+  PRECICE_ASSERT(requesterCommunicatorSize > 0, "Requester communicator size has to be > 0!");
   PRECICE_ASSERT(not isConnected());
 
   _isAcceptor = true;
