@@ -480,6 +480,7 @@ void Mesh::computeQuadConvexityFromPoints(std::array<int,4> &hull, int startID) 
 
   
   // Valid Quad vertices on a 2D plane
+  /*
   vx[0] = 0.5;
   vx[1] = 0.62;
   vx[2] = 0.6;
@@ -488,7 +489,7 @@ void Mesh::computeQuadConvexityFromPoints(std::array<int,4> &hull, int startID) 
   vy[1] = 0.32;
   vy[2] = 0.24;
   vy[3] = 0.22;
-  /*
+  
   // Invalid Quad vertices on a 2D plane
   vx[0] = 0.5;
   vx[1] = 0.62;
@@ -502,9 +503,9 @@ void Mesh::computeQuadConvexityFromPoints(std::array<int,4> &hull, int startID) 
 
   for (int i = 0; i < 4; i++){
     vertexOrderIDs[i] = hull[i];
-    //vx[i] = vertices()[vertexOrderIDs[i]].getCoords()[0];
-    //vy[i] = vertices()[vertexOrderIDs[i]].getCoords()[1];
-    //vz[i] = vertices()[vertexOrderIDs[i]].getCoords()[1];
+    vx[i] = vertices()[vertexOrderIDs[i]].getCoords()[0];
+    vy[i] = vertices()[vertexOrderIDs[i]].getCoords()[1];
+    vz[i] = vertices()[vertexOrderIDs[i]].getCoords()[1];
   }
   PRECICE_INFO("Vertex IDs are: " << hull[0] << " " << hull[1] << " " << hull[2] << " " << hull[3]);
   PRECICE_INFO("X coordinates are: " << vx[0] << " " << vx[1] << " " << vx[2] << " " << vx[3]);

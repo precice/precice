@@ -491,5 +491,75 @@ BOOST_AUTO_TEST_CASE(ComputeStateOfNotFullyConnectedMesh)
   }
 }
 
+
+BOOST_AUTO_TEST_CASE(ComputeValidQuadConvexity)
+{
+  int             dim = 3;
+  Mesh            mesh1("Mesh1", dim, false, testing::nextMeshID());
+  auto &          mesh = mesh1;
+  Eigen::VectorXd coords0(dim);
+  Eigen::VectorXd coords1(dim);
+  Eigen::VectorXd coords2(dim);
+  Eigen::VectorXd coords3(dim);
+  coords0 << 0.5, 0.34, 0.0;
+  coords1 << 0.62, 0.32, 0.0;
+  coords2 << 0.6, 0.24, 1.0;
+  coords3 << 0.3, 0.22, 1.0;
+  Vertex &v0 = mesh.createVertex(coords0);
+  Vertex &v1 = mesh.createVertex(coords1);
+  Vertex &v2 = mesh.createVertex(coords2);
+  Vertex &v3 = mesh.createVertex(coords3);
+
+  std::array<int,4>  hull;
+  hull[0] = v0.getID();
+  hull[1] = v1.getID();
+  hull[2] = v2.getID();
+  hull[3] = v3.getID();
+  int startID = 0;
+
+  mesh.computeQuadConvexityFromPoints(hull, startID);
+  BOOST_TEST(startID == 0);
+  BOOST_TEST(hull[0] ==  v3.getID());
+  BOOST_TEST(hull[1] ==  v0.getID());
+  BOOST_TEST(hull[2] ==  v1.getID());
+  BOOST_TEST(hull[3] ==  v2.getID());
+  
+}
+
+BOOST_AUTO_TEST_CASE(ComputeInvalidQuadConvexity)
+{
+  int             dim = 3;
+  Mesh            mesh1("Mesh1", dim, false, testing::nextMeshID());
+  auto &          mesh = mesh1;
+  Eigen::VectorXd coords0(dim);
+  Eigen::VectorXd coords1(dim);
+  Eigen::VectorXd coords2(dim);
+  Eigen::VectorXd coords3(dim);
+  coords0 << 0.5, 0.34, 0.0;
+  coords1 << 0.62, 0.32, 0.0;
+  coords2 << 0.52, 0.31, 1.0;
+  coords3 << 0.51, 0.22, 1.0;
+  Vertex &v0 = mesh.createVertex(coords0);
+  Vertex &v1 = mesh.createVertex(coords1);
+  Vertex &v2 = mesh.createVertex(coords2);
+  Vertex &v3 = mesh.createVertex(coords3);
+
+  std::array<int,4>  hull;
+  hull[0] = v0.getID();
+  hull[1] = v1.getID();
+  hull[2] = v2.getID();
+  hull[3] = v3.getID();
+  int startID = 0;
+
+  mesh.computeQuadConvexityFromPoints(hull, startID);
+  BOOST_TEST(startID == 0);
+  BOOST_TEST(hull[0] ==  v0.getID());
+  BOOST_TEST(hull[1] ==  v1.getID());
+  BOOST_TEST(hull[2] ==  v3.getID());
+  BOOST_TEST(hull[3] !=  v2.getID());
+
+}
+
+
 BOOST_AUTO_TEST_SUITE_END() // Mesh
 BOOST_AUTO_TEST_SUITE_END() // Mesh
