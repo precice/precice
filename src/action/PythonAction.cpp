@@ -1,3 +1,5 @@
+#include <pthread.h>
+#include <string>
 #ifndef PRECICE_NO_PYTHON
 #include "PythonAction.hpp"
 #include <Python.h>
@@ -5,9 +7,39 @@
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
+#include <cstdlib>
 
 namespace precice {
 namespace action {
+
+namespace {
+  std::string python_error_as_string() {
+    PyObject *ptype, *pvalue, *ptraceback;
+    PyErr_Fetch(&ptype, &pvalue, &ptraceback);
+    if (ptype == nullptr) {
+      return "<no error available>";
+    } else {
+      // pvalue and ptraceback may be NULL
+      // We don't need the type or the traceback, so we dereference them straight away
+      Py_DECREF(ptype);
+      Py_XDECREF(ptraceback); // may be NULL
+      
+      if(pvalue == nullptr) {
+        return "<no error message available>";
+      }
+      wchar_t* wmessage = PyUnicode_AsWideCharString(pvalue, nullptr);
+      Py_DECREF(pvalue);
+
+      if (wmessage) {
+        auto message = utils::truncate_wstring_to_string(wmessage);
+        PyMem_Free(wmessage);
+        return message;
+      } else {
+        return "<fetching error message failed>";
+      }
+    }
+}
+}
 
 PythonAction::PythonAction(
     Timing               timing,
@@ -77,9 +109,7 @@ void PythonAction::performAction(double time,
     }
     PyObject_CallObject(_performAction, dataArgs);
     if (PyErr_Occurred()) {
-      PyErr_Print();
-      PRECICE_ERROR("Error occurred during call of function "
-                    << "performAction() python module \"" << _moduleName << "\"!");
+      PRECICE_ERROR("Error occurred during call of function performAction() in python module \"" << _moduleName << "\". The error message is: "<<python_error_as_string());
     }
   }
 
@@ -104,9 +134,7 @@ void PythonAction::performAction(double time,
       PyTuple_SetItem(vertexArgs, 2, pythonNormal);
       PyObject_CallObject(_vertexCallback, vertexArgs);
       if (PyErr_Occurred()) {
-        PyErr_Print();
-        PRECICE_ERROR("Error occurred during call of function "
-                      << "vertexCallback() python module \"" << _moduleName << "\"!");
+        PRECICE_ERROR("Error occurred during call of function vertexCallback() in python module \"" << _moduleName << "\". The error message is: "<<python_error_as_string());
       }
     }
     Py_DECREF(vertexArgs);
@@ -116,9 +144,7 @@ void PythonAction::performAction(double time,
     PyObject *postActionArgs = PyTuple_New(0);
     PyObject_CallObject(_postAction, postActionArgs);
     if (PyErr_Occurred()) {
-      PyErr_Print();
-      PRECICE_ERROR("Error occurred during call of function "
-                    << "postAction() in python module \"" << _moduleName << "\"!");
+        PRECICE_ERROR("Error occurred during call of function postAction() in python module \"" << _moduleName << "\". The error message is: "<<python_error_as_string());
     }
     Py_DECREF(postActionArgs);
   }
@@ -139,8 +165,7 @@ void PythonAction::initialize()
   _moduleNameObject = PyUnicode_FromString(_moduleName.c_str());
   _module           = PyImport_Import(_moduleNameObject);
   if (_module == nullptr) {
-    PyErr_Print();
-    PRECICE_ERROR("Could not load python module \"" << _moduleName << "\" at path \"" << _modulePath << "\"!");
+    PRECICE_ERROR("An error occurred while loading python module \"" << _moduleName << "\": "<<python_error_as_string());
   }
 
   // Construct method performAction
