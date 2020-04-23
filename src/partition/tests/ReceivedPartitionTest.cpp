@@ -1057,7 +1057,7 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
       bounds.push_back(3 - remoteRank - 1);
       bounds.push_back(3 - remoteRank);
     }
-    sendGlobalBB.emplace(remoteRank, mesh::BoundingBox::createFromData(bounds));
+    sendGlobalBB.emplace(remoteRank, bounds);
   }
 
   if (context.isNamed("SOLIDZ")) {
@@ -1128,7 +1128,7 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes3D)
       bounds.push_back(3 - remoteRank - 1);
       bounds.push_back(3 - remoteRank);
     }
-    sendGlobalBB.emplace(remoteRank, mesh::BoundingBox::createFromData(bounds));
+    sendGlobalBB.emplace(remoteRank, bounds);
   }
 
   if (context.isNamed("SOLIDZ")) {

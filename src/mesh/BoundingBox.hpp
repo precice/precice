@@ -11,13 +11,22 @@ class BoundingBox {
 
 public:
   /***
-  * 
+  *
   * @brief Constructor.
-  * 
+  *
   * @param[in] dimension Dimension of the bounding box
-  * 
+  *
   */
   explicit BoundingBox(int dimension);
+
+  /***
+  *
+  * @brief Constructor.
+  *
+  * @param[in] bounds Min-max values of the bounding box in each dimesion
+  *
+  */
+  explicit BoundingBox(std::vector<double> bounds);
 
   /// Special Members
   BoundingBox(const BoundingBox &) = default;
@@ -28,8 +37,8 @@ public:
   /// Comparison Operator
   bool operator==(const BoundingBox& otherBB) const;
 
-  /// Bounding box factory function
-  static BoundingBox createFromData(std::vector<double> bounds);
+  /// Check whether the bounding box is at default state or not
+  bool empty() const;
 
   /// Expand bounding box using another bounding box
   void expandBy(const BoundingBox &otherBB);
@@ -78,8 +87,6 @@ private:
   /// Container of min and max points in each dimension
   std::vector<double> _bounds;
 
-  /// Whether the data of bounding box is assigned or not
-  bool _isDefault{true};
 };
 
 std::ostream& operator<<(std::ostream&, const BoundingBox&);

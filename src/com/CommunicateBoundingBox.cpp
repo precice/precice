@@ -24,9 +24,9 @@ void CommunicateBoundingBox::receiveBoundingBox(
 {
   PRECICE_TRACE(rankSender);
   std::vector<double> receivedData;
-
   _communication->receive(receivedData, rankSender);
-  bb = mesh::BoundingBox::createFromData(receivedData);
+  mesh::BoundingBox tempBB(receivedData);
+  bb = std::move(tempBB);
 }
 
 void CommunicateBoundingBox::sendBoundingBoxMap(
@@ -114,7 +114,8 @@ void CommunicateBoundingBox::broadcastReceiveBoundingBoxMap(
 
   for (int i = 0; i < sizeOfReceivingMap; ++i) {
     _communication->broadcast(receivedData,0);
-    bbm.at(i) = mesh::BoundingBox::createFromData(receivedData);
+    mesh::BoundingBox tempBB(receivedData);
+    bbm.at(i) = std::move(tempBB);
   }
 }
 

@@ -5,20 +5,25 @@ namespace mesh {
 
 logging::Logger BoundingBox::_log{"mesh::BoundingBox"};
 
+BoundingBox::BoundingBox(std::vector<double> bounds){
+  PRECICE_ASSERT((int) bounds.size() == 4 || (int) bounds.size() == 6, "Dimension of a bounding box can only be 2 or 3. Given dimension is: " << bounds.size()/2);
+  _bounds = std::move(bounds);
+  _dimensions = _bounds.size() / 2;
+}
+
 BoundingBox::BoundingBox(int dimension)
 :_dimensions(dimension)
 {
-  PRECICE_ASSERT(dimension == 2 || dimension == 3, "Dimension of a bounding box can only be 2 or 3.");
+  PRECICE_ASSERT(dimension == 2 || dimension == 3, "Dimension of a bounding box can only be 2 or 3. Given dimension is: " << dimension);
   for(int i = 0; i < _dimensions; ++i){
     _bounds.push_back(std::numeric_limits<double>::max());
     _bounds.push_back(std::numeric_limits<double>::lowest());
   }
-  _isDefault = true;
 }
 
 bool BoundingBox::operator==(const BoundingBox& otherBB) const
 {
-  PRECICE_ASSERT(_dimensions == otherBB._dimensions, "Bounding boxes with different dimensions cannot be compared.");
+  PRECICE_ASSERT(_dimensions == otherBB._dimensions, "Bounding boxes with different dimensions cannot be compared. Dimensions: " << _dimensions << " and " << otherBB._dimensions);
   for(int i = 0; i < _dimensions; ++i){
     if(_bounds.at(i) != otherBB._bounds.at(i)){
       return false;
@@ -27,14 +32,14 @@ bool BoundingBox::operator==(const BoundingBox& otherBB) const
   return true;
 }
 
-BoundingBox BoundingBox::createFromData(std::vector<double> bounds)
+bool BoundingBox::empty() const
 {
-  PRECICE_ASSERT(bounds.size() == 4 || bounds.size() == 6, "Dimension of a bounding box can only be 2 or 3.");
-  BoundingBox box(bounds.size() / 2);
-  box._bounds = bounds;
-  box._dimensions = bounds.size() / 2;
-  box._isDefault = false;
-  return box;
+  for(int i = 0; i < _dimensions; ++i){
+    if(_bounds[2*i] > _bounds[2*i + 1]){
+      return true;
+    }
+  }
+  return false;
 }
 
 bool BoundingBox::contains(const mesh::Vertex &vertex) const
@@ -50,7 +55,7 @@ bool BoundingBox::contains(const mesh::Vertex &vertex) const
 
 Eigen::VectorXd BoundingBox::center() const
 {
-  PRECICE_ASSERT(!_isDefault, "Data of the bounding box is at default state.");
+  PRECICE_ASSERT(!empty(), "Data of the bounding box is at default state.");
   Eigen::VectorXd cog(_dimensions);
   for (int d = 0; d < _dimensions; d++) {
     cog[d] = (_bounds[2*d+1] - _bounds[2*d]) / 2.0 + _bounds[2*d];
@@ -59,7 +64,7 @@ Eigen::VectorXd BoundingBox::center() const
 }
 
 double BoundingBox::getArea(std::vector<bool> deadAxis){
-  PRECICE_ASSERT(!_isDefault, "Data of the bounding box is at default state.");
+  PRECICE_ASSERT(!empty(), "Data of the bounding box is at default state.");
   double meshArea = 1.0;
   for (int d = 0; d < _dimensions; d++)
     if (not deadAxis[d])
@@ -83,7 +88,6 @@ void BoundingBox::expandBy(const BoundingBox &otherBB)
     _bounds[2 * d]     = std::min(_bounds[2 * d], otherBB._bounds[2 * d]);
     _bounds[2 * d + 1] = std::max(_bounds[2 * d + 1], otherBB._bounds[2 * d + 1]);
   }
-  _isDefault = false;
 }
 
 void BoundingBox::expandBy(const Vertex& vertices)
@@ -93,7 +97,6 @@ void BoundingBox::expandBy(const Vertex& vertices)
     _bounds.at(2*d) = std::min(vertices.getCoords()[d], _bounds.at(2*d));
     _bounds.at(2*d+1) = std::max(vertices.getCoords()[d], _bounds.at(2*d+1));
   }
-  _isDefault = false;
 }
 
 void BoundingBox::expandBy(double value)
@@ -105,7 +108,7 @@ void BoundingBox::expandBy(double value)
 }
 
 void BoundingBox::scaleBy(double safetyFactor){
-  PRECICE_ASSERT(!_isDefault, "Data of the bounding box is at default state.");
+  if(empty()) return;
   double maxSideLength = 1e-6; // we need some minimum > 0 here
   for (int d = 0; d < _dimensions; d++) {
     if (_bounds.at(2 * d + 1) > _bounds.at(2 * d))
@@ -131,11 +134,11 @@ bool BoundingBox::overlapping(const BoundingBox &otherBB)
 
 void BoundingBox::print(std::ostream& out) const
 {
-  out << "[ ";
+  out << "( ";
   for(int d = 0; d < _dimensions; ++d){
     out << "[" << _bounds[2*d] << " " << _bounds[2*d+1] << "], ";
   }
-  out << "]";
+  out << ")";
 }
 
 std::ostream &operator<<(std::ostream &os, const BoundingBox &bb){
