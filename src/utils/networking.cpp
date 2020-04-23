@@ -14,7 +14,7 @@ std::string loopbackInterfaceName()
   // Not required as we directly use the 127.0.0.1 under Windows
   return "";
 #else
-#warning "Your target architecture does not define a loopback interface. Please consider reporting this upstream."
+#warning "Your target architecture does not define a loopback interface. Please consider reporting this to the preCICE developers."
   return "";
 #endif
 }
