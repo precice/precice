@@ -101,6 +101,7 @@ void BoundingBox::expandBy(const Vertex& vertices)
 
 void BoundingBox::expandBy(double value)
 {
+  if(empty()) return;
   for (int d = 0; d < _dimensions; d++) {
     _bounds[2*d] -= value;
     _bounds[2*d + 1] += value;   
