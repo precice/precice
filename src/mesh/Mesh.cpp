@@ -478,35 +478,52 @@ void Mesh::computeQuadConvexityFromPoints(std::array<int,4> &hull, int startID) 
   double vy[4];     // y coordinate of projection onto 2D plane
   double vz[4];     // y coordinate of projection onto 2D plane
 
+  //Eigen::Vector3d zeroToOne;  
+  //Eigen::Vector3d zeroToTwo; 
+  Eigen::Vector3d coords[4];
   
   // Valid Quad vertices on a 2D plane
-  /*
-  vx[0] = 0.5;
-  vx[1] = 0.62;
-  vx[2] = 0.6;
-  vx[3] = 0.3;
-  vy[0] = 0.34;
-  vy[1] = 0.32;
-  vy[2] = 0.24;
-  vy[3] = 0.22;
-  
-  // Invalid Quad vertices on a 2D plane
-  vx[0] = 0.5;
-  vx[1] = 0.62;
-  vx[2] = 0.52;
-  vx[3] = 0.51;
-  vy[0] = 0.34;
-  vy[1] = 0.32;
-  vy[2] = 0.31;
-  vy[3] = 0.22;
-  */
 
   for (int i = 0; i < 4; i++){
     vertexOrderIDs[i] = hull[i];
-    vx[i] = vertices()[vertexOrderIDs[i]].getCoords()[0];
-    vy[i] = vertices()[vertexOrderIDs[i]].getCoords()[1];
-    vz[i] = vertices()[vertexOrderIDs[i]].getCoords()[1];
+    coords[i][0] = vertices()[vertexOrderIDs[i]].getCoords()[0];
+    coords[i][1] = vertices()[vertexOrderIDs[i]].getCoords()[1];
+    coords[i][2] = vertices()[vertexOrderIDs[i]].getCoords()[2];
+    //vx[i] = vertices()[vertexOrderIDs[i]].getCoords()[0];
+    //vy[i] = vertices()[vertexOrderIDs[i]].getCoords()[1];
+    //vz[i] = vertices()[vertexOrderIDs[i]].getCoords()[1];
   }
+
+  // Create 2 vectors using v1 - v0 and v2 - v0. The origin of the new plane is v0
+  /*zeroToOne[0] = vx[1] - vx[0];
+  zeroToOne[1] = vy[1] - vy[0];
+  zeroToOne[2] = vz[1] - vz[0];
+  zeroToTwo[0] = vx[2] - vx[0];
+  zeroToTwo[1] = vy[2] - vy[0];
+  zeroToTwo[2] = vz[2] - vz[0];
+  */
+  // Normal of the plane of three points
+  Eigen::Vector3d e_1 = coords[1] - coords[0];
+  Eigen::Vector3d e_2 = coords[2] - coords[0];
+  Eigen::Vector3d normalPlane = e_1.cross(e_2);
+  Eigen::Vector3d diff;
+
+  //Transform Coordinates
+  for (int i = 0; i < 4; i++){
+    diff = coords[i] - coords[0];
+    vx[i] = e_1.dot(diff);
+    vy[i] = e_2.dot(diff);
+    vz[i] = normalPlane.dot(diff);
+  }
+
+  //Eigen::Vector3d newPlaneNormal = zeroToOne.cross(zeroToTwo);
+
+  //Coordinates of 4th point on plane.
+  //s = np.dot(n,r_P-r_0)
+  //t_1 = np.dot(e_1,r_P-r_0)
+  //t_2 = np.dot(e_2,r_P-r_0)
+
+
   PRECICE_INFO("Vertex IDs are: " << hull[0] << " " << hull[1] << " " << hull[2] << " " << hull[3]);
   PRECICE_INFO("X coordinates are: " << vx[0] << " " << vx[1] << " " << vx[2] << " " << vx[3]);
   PRECICE_INFO("Y coordinates are: " << vy[0] << " " << vy[1] << " " << vy[2] << " " << vy[3]);

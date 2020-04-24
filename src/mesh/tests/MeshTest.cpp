@@ -503,8 +503,8 @@ BOOST_AUTO_TEST_CASE(ComputeValidQuadConvexity)
   Eigen::VectorXd coords3(dim);
   coords0 << 0.5, 0.34, 0.0;
   coords1 << 0.62, 0.32, 0.0;
-  coords2 << 0.6, 0.24, 1.0;
-  coords3 << 0.3, 0.22, 1.0;
+  coords2 << 0.6, 0.24, 0.0;
+  coords3 << 0.3, 0.22, 0.0;
   Vertex &v0 = mesh.createVertex(coords0);
   Vertex &v1 = mesh.createVertex(coords1);
   Vertex &v2 = mesh.createVertex(coords2);
@@ -520,9 +520,9 @@ BOOST_AUTO_TEST_CASE(ComputeValidQuadConvexity)
   mesh.computeQuadConvexityFromPoints(hull, startID);
   BOOST_TEST(startID == 0);
   BOOST_TEST(hull[0] ==  v3.getID());
-  BOOST_TEST(hull[1] ==  v0.getID());
+  BOOST_TEST(hull[1] ==  v2.getID());
   BOOST_TEST(hull[2] ==  v1.getID());
-  BOOST_TEST(hull[3] ==  v2.getID());
+  BOOST_TEST(hull[3] ==  v0.getID());
   
 }
 
@@ -537,8 +537,8 @@ BOOST_AUTO_TEST_CASE(ComputeInvalidQuadConvexity)
   Eigen::VectorXd coords3(dim);
   coords0 << 0.5, 0.34, 0.0;
   coords1 << 0.62, 0.32, 0.0;
-  coords2 << 0.52, 0.31, 1.0;
-  coords3 << 0.51, 0.22, 1.0;
+  coords2 << 0.52, 0.31, 0.0;
+  coords3 << 0.51, 0.22, 0.0;
   Vertex &v0 = mesh.createVertex(coords0);
   Vertex &v1 = mesh.createVertex(coords1);
   Vertex &v2 = mesh.createVertex(coords2);
@@ -554,8 +554,8 @@ BOOST_AUTO_TEST_CASE(ComputeInvalidQuadConvexity)
   mesh.computeQuadConvexityFromPoints(hull, startID);
   BOOST_TEST(startID == 0);
   BOOST_TEST(hull[0] ==  v0.getID());
-  BOOST_TEST(hull[1] ==  v1.getID());
-  BOOST_TEST(hull[2] ==  v3.getID());
+  BOOST_TEST(hull[1] ==  v3.getID());
+  BOOST_TEST(hull[2] ==  v1.getID());
   BOOST_TEST(hull[3] !=  v2.getID());
 
 }
