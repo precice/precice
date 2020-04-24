@@ -470,68 +470,32 @@ void Mesh::computeQuadConvexityFromPoints(std::array<int,4> &hull, int startID) 
 {
 
   PRECICE_INFO("Entering compute quad: ");
-  int vertexOrderIDs[4];    // Initial ordering of vertices from solver adapter
-
   // All points need to be projected into a new plane with only 2 coordinates, x and y. These are used to check the quad.
   // These are store in vx and vy. For now keep same valiues
-  double vx[4];     // x coordinate of projection onto 2D plane
-  double vy[4];     // y coordinate of projection onto 2D plane
-  double vz[4];     // y coordinate of projection onto 2D plane
-
-  //Eigen::Vector3d zeroToOne;  
-  //Eigen::Vector3d zeroToTwo; 
   Eigen::Vector3d coords[4];
-  
-  // Valid Quad vertices on a 2D plane
 
-  for (int i = 0; i < 4; i++){
-    vertexOrderIDs[i] = hull[i];
-    coords[i][0] = vertices()[vertexOrderIDs[i]].getCoords()[0];
-    coords[i][1] = vertices()[vertexOrderIDs[i]].getCoords()[1];
-    coords[i][2] = vertices()[vertexOrderIDs[i]].getCoords()[2];
-    //vx[i] = vertices()[vertexOrderIDs[i]].getCoords()[0];
-    //vy[i] = vertices()[vertexOrderIDs[i]].getCoords()[1];
-    //vz[i] = vertices()[vertexOrderIDs[i]].getCoords()[1];
-  }
-
-  // Create 2 vectors using v1 - v0 and v2 - v0. The origin of the new plane is v0
-  /*zeroToOne[0] = vx[1] - vx[0];
-  zeroToOne[1] = vy[1] - vy[0];
-  zeroToOne[2] = vz[1] - vz[0];
-  zeroToTwo[0] = vx[2] - vx[0];
-  zeroToTwo[1] = vy[2] - vy[0];
-  zeroToTwo[2] = vz[2] - vz[0];
-  */
   // Normal of the plane of three points
-  Eigen::Vector3d e_1 = coords[1] - coords[0];
-  Eigen::Vector3d e_2 = coords[2] - coords[0];
+  Eigen::Vector3d e_1 = vertices()[hull[1]].getCoords() - vertices()[hull[0]].getCoords();
+  Eigen::Vector3d e_2 = vertices()[hull[2]].getCoords() - vertices()[hull[0]].getCoords();
   Eigen::Vector3d normalPlane = e_1.cross(e_2);
   Eigen::Vector3d diff;
 
-  //Transform Coordinates
+  //Transform Coordinates - coord[0] is the origin
   for (int i = 0; i < 4; i++){
-    diff = coords[i] - coords[0];
-    vx[i] = e_1.dot(diff);
-    vy[i] = e_2.dot(diff);
-    vz[i] = normalPlane.dot(diff);
+    diff = vertices()[hull[i]].getCoords() - vertices()[hull[0]].getCoords();
+    coords[i][0] = e_1.dot(diff);
+    coords[i][1] = e_2.dot(diff);
+    coords[i][2] = normalPlane.dot(diff);
   }
 
-  //Eigen::Vector3d newPlaneNormal = zeroToOne.cross(zeroToTwo);
-
-  //Coordinates of 4th point on plane.
-  //s = np.dot(n,r_P-r_0)
-  //t_1 = np.dot(e_1,r_P-r_0)
-  //t_2 = np.dot(e_2,r_P-r_0)
-
-
   PRECICE_INFO("Vertex IDs are: " << hull[0] << " " << hull[1] << " " << hull[2] << " " << hull[3]);
-  PRECICE_INFO("X coordinates are: " << vx[0] << " " << vx[1] << " " << vx[2] << " " << vx[3]);
-  PRECICE_INFO("Y coordinates are: " << vy[0] << " " << vy[1] << " " << vy[2] << " " << vy[3]);
+  PRECICE_INFO("X coordinates are: " << coords[0][0] << " " << coords[1][0] << " " << coords[2][0] << " " << coords[3][0]);
+  PRECICE_INFO("Y coordinates are: " << coords[0][1] << " " << coords[1][1] << " " << coords[2][1] << " " << coords[3][1]);
   
   //First find point with smallest x coord. This point must be in the convex set then and is the starting point of gift wrapping algorithm
   int idLowestPoint = 0;
   for (int i = 1; i < 4; i++) {
-    if (vx[i] < vx[idLowestPoint]){
+    if (coords[i][0] < coords[idLowestPoint][0]){
       idLowestPoint = i;
     }
   }
@@ -554,22 +518,21 @@ void Mesh::computeQuadConvexityFromPoints(std::array<int,4> &hull, int startID) 
     nextVertex = (currentVertex + 1)%4;              // remainder resets loop through vector of points
     for (int i = 0; i < 4; i++)
     {
-      // If i is more clockwise than, nextVertex, then
+      // If i is more counter-clockwise than nextVertex, then
       // update nextVertex
 
-      double y1 = vy[currentVertex] - vy[nextVertex];
-      double y2 = vy[currentVertex] - vy[i];
-      double x1 = vx[currentVertex] - vx[nextVertex];
-      double x2 = vx[currentVertex] - vx[i];
+      double y1 = coords[currentVertex][1] - coords[nextVertex][1];
+      double y2 = coords[currentVertex][1] - coords[i][1];
+      double x1 = coords[currentVertex][0] - coords[nextVertex][0];
+      double x2 = coords[currentVertex][0] - coords[i][0];
       double val = y2 * x1 - y1 * x2;
-      //PRECICE_INFO("y1: y2: x1 : x2: val = y2*x1 - y1*x2 = " << val << " " << y1 << " " << y2 << " " << x1 << " " << x2);
 
       if (val > 0){
         nextVertex = i; 	// clock or counterclock wise
           //PRECICE_INFO("Changeing nextVertex");
       }
     }
-    // Now nextVertex is the most clockwise with respect to current
+    // Now nextVertex is the most counter-clockwise with respect to current
     // Set current as nextVertex for next iteration, so that nextVertex is added to
     // result 'hull'
     currentVertex = nextVertex;
