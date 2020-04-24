@@ -444,14 +444,18 @@ void SolverInterfaceImpl::finalize()
 
   // Stop and print Event logging
   e.stop();
+
+  // Finalize PETSc and Events first
+  utils::Petsc::finalize();
+  utils::EventRegistry::instance().finalize();
+
+  // Printing requires finalization
   if (not precice::utils::MasterSlave::isSlave()) {
     utils::EventRegistry::instance().printAll();
   }
 
-  // Tear down MPI and PETSc
-  utils::Petsc::finalize();
+  // Finally clear events and finalize MPI
   utils::EventRegistry::instance().clear();
-  utils::EventRegistry::instance().finalize();
   utils::Parallel::finalizeManagedMPI();
 }
 
