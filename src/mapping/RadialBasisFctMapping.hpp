@@ -5,6 +5,7 @@
 #include "utils/Event.hpp"
 #include "utils/MasterSlave.hpp"
 #include "com/CommunicateMesh.hpp"
+#include "com/Communication.hpp"
 
 #include <Eigen/Core>
 #include <Eigen/QR>
@@ -265,11 +266,19 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(
   PRECICE_ASSERT(getDimensions() == output()->getDimensions(),
                  getDimensions(), output()->getDimensions());
 
-  Eigen::VectorXd &inValues  = input()->data(inputDataID)->values();
-  Eigen::VectorXd &outValues = output()->data(outputDataID)->values();
+  std::vector<double> inValues;
+  inValues.resize(input()->data(inputDataID)->values().size());
+  std::vector<double> outValues;
+  outValues.resize(output()->data(outputDataID)->values().size());
+
+  // Map the data from Eigen::VectorXd to std::vector for send and receive operations
+  Eigen::Map<Eigen::VectorXd>(&inValues[0], input()->data(inputDataID)->values().size())     = input()->data(inputDataID)->values();
+  Eigen::Map<Eigen::VectorXd>(&outValues[0], output()->data(outputDataID)->values().size())  = output()->data(outputDataID)->values();
+  
   int              valueDim  = input()->data(inputDataID)->getDimensions();
   PRECICE_ASSERT(valueDim == output()->data(outputDataID)->getDimensions(),
                  valueDim, output()->data(outputDataID)->getDimensions());
+  
   int deadDimensions = 0;
   for (int d = 0; d < getDimensions(); d++) {
     if (_deadAxis[d])
@@ -277,53 +286,102 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(
   }
   int polyparams = 1 + getDimensions() - deadDimensions;
 
-  if (getConstraint() == CONSERVATIVE) {
-    PRECICE_DEBUG("Map conservative");
-    static int      mappingIndex = 0;
-    Eigen::VectorXd Au(_matrixA.cols());  // rows == n
-    Eigen::VectorXd in(_matrixA.rows());  // rows == outputSize
-    Eigen::VectorXd out(_matrixA.cols()); // rows == n
+  std::vector<double> globalInValues;
+  std::vector<double> globalOutValues;
 
-    // PRECICE_DEBUG("C rows=" << _matrixCLU.rows() << " cols=" << _matrixCLU.cols());
-    PRECICE_DEBUG("A rows=" << _matrixA.rows() << " cols=" << _matrixA.cols());
-    PRECICE_DEBUG("in size=" << in.size() << ", out size=" << out.size());
+  // Gather input data
+  if(utils::MasterSlave::isSlave()){
+    utils::MasterSlave::_communication->send(inValues, 0);
+  }
+  else {
+    globalInValues.resize(inValues.size());
+    globalInValues = inValues;
 
-    for (int dim = 0; dim < valueDim; dim++) {
-      for (int i = 0; i < in.size(); i++) { // Fill input data values
-        in[i] = inValues(i * valueDim + dim);
-      }
-
-      Au  = _matrixA.transpose() * in;
-      out = _qr.solve(Au);
-
-      // Copy mapped data to output data values
-      for (int i = 0; i < out.size() - polyparams; i++) {
-        outValues(i * valueDim + dim) = out[i];
+    for(int rank = 1; rank < utils::MasterSlave::getSize(); ++rank){
+      std::vector<double> data;
+      utils::MasterSlave::_communication->receive(data, rank);
+      for(int i = 0; i < data.size(); ++i){
+        globalInValues.push_back(data[i]);
       }
     }
-    mappingIndex++;
-  } else { // Map consistent
-    PRECICE_DEBUG("Map consistent");
-    Eigen::VectorXd p(_matrixA.cols());   // rows == n
-    Eigen::VectorXd in(_matrixA.cols());  // rows == n
-    Eigen::VectorXd out(_matrixA.rows()); // rows == outputSize
-    in.setZero();
+  }
 
-    // For every data dimension, perform mapping
-    for (int dim = 0; dim < valueDim; dim++) {
-      // Fill input from input data values (last polyparams entries remain zero)
-      for (int i = 0; i < in.size() - polyparams; i++) {
-        in[i] = inValues(i * valueDim + dim);
-      }
+  // Gather output data
+  if(utils::MasterSlave::isSlave()){
+    utils::MasterSlave::_communication->send(outValues, 0);
+  }
+  else {
+    globalOutValues.resize(outValues.size());
+    globalOutValues = outValues;
 
-      p   = _qr.solve(in);
-      out = _matrixA * p;
-
-      // Copy mapped data to ouptut data values
-      for (int i = 0; i < out.size(); i++) {
-        outValues(i * valueDim + dim) = out[i];
+    for(int rank = 1; rank < utils::MasterSlave::getSize(); ++rank){
+      std::vector<double> data;
+      utils::MasterSlave::_communication->receive(data, rank);
+      for(int i = 0; i < data.size(); ++i){
+        globalOutValues.push_back(data[i]);
       }
     }
+  }
+  
+  if(utils::MasterSlave::isMaster()){
+    
+    Eigen::Map<Eigen::VectorXd> inputValues(globalInValues.data(), globalInValues.size());
+    Eigen::Map<Eigen::VectorXd> outputValues(globalOutValues.data(), globalOutValues.size());
+    
+    if (getConstraint() == CONSERVATIVE) {
+      //PRECICE_DEBUG("Map conservative");
+      static int      mappingIndex = 0;
+      Eigen::VectorXd Au(_matrixA.cols());  // rows == n
+      Eigen::VectorXd in(_matrixA.rows());  // rows == outputSize
+      Eigen::VectorXd out(_matrixA.cols()); // rows == n
+
+      //PRECICE_DEBUG("C rows=" << _matrixCLU.rows() << " cols=" << _matrixCLU.cols());
+      PRECICE_DEBUG("A rows=" << _matrixA.rows() << " cols=" << _matrixA.cols());
+      PRECICE_DEBUG("in size=" << in.size() << ", out size=" << out.size());
+
+      for (int dim = 0; dim < valueDim; dim++) {
+        for (int i = 0; i < in.size(); i++) { // Fill input data values
+          in[i] = inputValues(i * valueDim + dim);
+        }
+
+        Au  = _matrixA.transpose() * in;
+        out = _qr.solve(Au);
+
+        // Copy mapped data to output data values
+        for (int i = 0; i < out.size() - polyparams; i++) {
+          outputValues(i * valueDim + dim) = out[i];
+        }
+      }
+      mappingIndex++;
+    } else { // Map consistent
+      PRECICE_DEBUG("Map consistent");
+      Eigen::VectorXd p(_matrixA.cols());   // rows == n
+      Eigen::VectorXd in(_matrixA.cols());  // rows == n
+      Eigen::VectorXd out(_matrixA.rows()); // rows == outputSize
+      in.setZero();
+
+      // For every data dimension, perform mapping
+      for (int dim = 0; dim < valueDim; dim++) {
+        // Fill input from input data values (last polyparams entries remain zero)
+        for (int i = 0; i < in.size() - polyparams; i++) {
+          in[i] = inputValues(i * valueDim + dim);
+        }
+
+        p   = _qr.solve(in);
+        out = _matrixA * p;
+
+        // Copy mapped data to ouptut data values
+        for (int i = 0; i < out.size(); i++) {
+          outputValues(i * valueDim + dim) = out[i];
+        }
+      }
+    }
+    utils::MasterSlave::_communication->broadcast(globalOutValues);
+  }
+  else{
+    std::vector<double> receivedValues;
+    utils::MasterSlave::_communication->broadcast(receivedValues, 0);
+    output()->data(outputDataID)->values() = Eigen::Map<Eigen::VectorXd>(receivedValues.data(), receivedValues.size());
   }
 }
 
