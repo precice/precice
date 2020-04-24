@@ -278,14 +278,19 @@ void EventRegistry::printAll() const
     return;
 
   std::string logFile;
-  if (applicationName.empty())
+  std::string summaryFile;
+  if (applicationName.empty()) {
     logFile = "Events.json";
-  else
+    summaryFile = "Events-summary.log";
+  } else {
     logFile = applicationName + "-events.json";
+    summaryFile = applicationName + "-events-summary.log";
+  }
 
-  writeSummary(std::cout);
-  std::ofstream ofs(logFile);
-  writeJSON(ofs);
+  std::ofstream summaryFS{summaryFile};
+  writeSummary(summaryFS);
+  std::ofstream logFS{logFile};
+  writeJSON(logFS);
 }
 
 void EventRegistry::writeSummary(std::ostream &out) const
