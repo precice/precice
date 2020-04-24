@@ -42,9 +42,6 @@ using precice::utils::EventRegistry;
 
 namespace precice {
 
-/// Set to true if unit/integration tests are executed
-bool testMode = false;
-
 /// Enabled further inter- and intra-solver synchronisation
 bool syncMode = false;
 
@@ -112,7 +109,7 @@ void SolverInterfaceImpl::configure(
     const std::string &configurationFileName)
 {
   config::Configuration config;
-  utils::Parallel::initializeMPI(nullptr, nullptr);
+  utils::Parallel::initializeManagedMPI(nullptr, nullptr);
   logging::setMPIRank(utils::Parallel::current()->rank());
   xml::ConfigurationContext context{
       _accessorName,
@@ -447,7 +444,7 @@ void SolverInterfaceImpl::finalize()
 
   // Stop and print Event logging
   e.stop();
-  if (not precice::testMode and not precice::utils::MasterSlave::isSlave()) {
+  if (not precice::utils::MasterSlave::isSlave()) {
     utils::EventRegistry::instance().printAll();
   }
 
@@ -455,9 +452,7 @@ void SolverInterfaceImpl::finalize()
   utils::Petsc::finalize();
   utils::EventRegistry::instance().clear();
   utils::EventRegistry::instance().finalize();
-  if (not precice::testMode) {
-    utils::Parallel::finalizeMPI();
-  }
+  utils::Parallel::finalizeManagedMPI();
 }
 
 int SolverInterfaceImpl::getDimensions() const

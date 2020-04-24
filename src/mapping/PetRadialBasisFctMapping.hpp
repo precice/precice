@@ -26,7 +26,6 @@ struct SolutionCaching;
 } // namespace MappingTests
 
 namespace precice {
-extern bool testMode;
 extern bool syncMode;
 } // namespace precice
 
@@ -884,15 +883,13 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
 template <typename RADIAL_BASIS_FUNCTION_T>
 void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::printMappingInfo(int inputDataID, int dim) const
 {
-  if (not precice::testMode) {
-    const std::string constraintName = getConstraint() == CONSERVATIVE ? "conservative" : "consistent";
-    const std::string polynomialName = _polynomial == Polynomial::ON ? "on" : _polynomial == Polynomial::OFF ? "off" : "separate";
+  const std::string constraintName = getConstraint() == CONSERVATIVE ? "conservative" : "consistent";
+  const std::string polynomialName = _polynomial == Polynomial::ON ? "on" : _polynomial == Polynomial::OFF ? "off" : "separate";
 
-    PRECICE_INFO("Mapping " << input()->data(inputDataID)->getName() << " " << constraintName
-                            << " from " << input()->getName() << " (ID " << input()->getID() << ")"
-                            << " to " << output()->getName() << " (ID " << output()->getID() << ") "
-                            << "for dimension " << dim << ") with polynomial set to " << polynomialName);
-  }
+  PRECICE_INFO("Mapping " << input()->data(inputDataID)->getName() << " " << constraintName
+      << " from " << input()->getName() << " (ID " << input()->getID() << ")"
+      << " to " << output()->getName() << " (ID " << output()->getID() << ") "
+      << "for dimension " << dim << ") with polynomial set to " << polynomialName);
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>

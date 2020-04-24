@@ -122,9 +122,24 @@ public:
 
   /// @name Initialization and Finalization
   /// @{
+  
+  /**
+   * @brief Initializes the MPI environment and manages it.
+   *
+   * This keeps track of the state when called by setting _isInitialized and _mpiInitializedByPrecice
+   * To finalize the managed MPI call @ref finalizeManagedMPI().
+   *
+   * @param[in] argc Parameter count
+   * @param[in] argv Parameter values, is passed to MPI_Init
+   *
+   * @see finalizeManagedMPI
+   */
+  static void initializeManagedMPI(
+      int *   argc,
+      char ***argv);
 
   /**
-   * @brief Initializes the MPI environment.
+   * @brief Unconditionally initializes the MPI environment.
    *
    * @param[in] argc Parameter count
    * @param[in] argv Parameter values, is passed to MPI_Init
@@ -133,7 +148,17 @@ public:
       int *   argc,
       char ***argv);
 
-  /// Finalizes MPI environment.
+  /**
+   * @brief Finalized a managed MPI environment.
+   *
+   * To initialize the managed MPI call @ref initializeManagedMPI().
+   * This finalizes MPI only if it was not initialized before the call to @ref initializeManagedMPI()
+   *
+   * @see InitializeManagedMPI
+   */
+  static void finalizeManagedMPI();
+
+  /// Unconditionally finalizes MPI environment.
   static void finalizeMPI();
 
   /// Registers a user-provided communicator
@@ -173,6 +198,12 @@ public:
    * 
    */
   static void resetCommState();
+
+  /** Resets managed MPI
+   *
+   * This resets _mpiInitializedByPrecice and _isInitialized to false
+   */
+  static void resetManagedMPI();
 
   /** Sets the current state to its parent
    *
