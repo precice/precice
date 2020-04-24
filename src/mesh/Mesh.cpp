@@ -546,7 +546,6 @@ void Mesh::computeQuadConvexityFromPoints(std::array<int,4> &hull, int startID) 
     PRECICE_INFO("Valid Quad. Hull: " << hull);
   }
 
-
   //Ordering of quad is hull 0-1-2-3-0
 
   // Need to check shortest diagonal
@@ -559,7 +558,84 @@ void Mesh::computeQuadConvexityFromPoints(std::array<int,4> &hull, int startID) 
   if (distance1.norm() > distance2.norm()){
     startID = 1;
   }
-  
+}
+
+void Mesh::computeQuadEdgeOrder(std::array<int,4> &edgeList, std::array<int,4> &vertexList) const
+{
+
+  int edgeOrder[4];
+  edgeOrder[0] = 0;
+
+  vertexList[0] = edges()[edgeList[0]].vertex(0).getID();
+  vertexList[1] = edges()[edgeList[0]].vertex(1).getID();
+
+  for (int j = 1; j < 4; j++){  // looping thorugh edges 2, 3 and 4
+
+    int ID1 = edges()[edgeList[j]].vertex(0).getID();
+    int ID2 = edges()[edgeList[j]].vertex(1).getID();
+
+    if (ID1 != vertexList[0] && ID2 != vertexList[0] && ID1 != vertexList[1] && ID2 != vertexList[1] ){
+        // Doesnt match any point on edge 1, therefore must be edge 3 for the reordered set
+        //edgeOrder[2] = j;
+        edgeOrder[2] = edgeList[j];
+      } else if ((ID1 == vertexList[0] || ID2 == vertexList[0]) && (ID1 != vertexList[1] || ID2 != vertexList[1])){
+        // One of the vertices matches V0, and does not match V1, must be edge 4 (connected V3 to V0)
+        edgeOrder[3] = edgeList[j];
+        if (ID1 == vertexList[0]){
+          vertexList[3] = edges()[edgeList[j]].vertex(1).getID();
+        }else{
+          vertexList[3] = edges()[edgeList[j]].vertex(0).getID();
+        }
+      }else if((ID1 == vertexList[1] || ID2 == vertexList[1]) && (ID1 != vertexList[0] || ID2 != vertexList[0])){
+        // Must be edge 2, as it matches V1 and not V0
+        edgeOrder[1] = edgeList[j];
+        if (ID1 == vertexList[1]){
+          vertexList[2] = edges()[edgeList[j]].vertex(1).getID();
+        }else{
+          vertexList[2] = edges()[edgeList[j]].vertex(0).getID();
+        }
+      }
+    }
+
+    edgeList[0] = edgeOrder[0];
+    edgeList[1] = edgeOrder[1];
+    edgeList[2] = edgeOrder[2];
+    edgeList[3] = edgeOrder[3];
+
+/*
+    vertices[0] = &mesh->edges()[edgeList[0]].vertex(0);
+  vertices[1] = &mesh->edges()[edgeList[0]].vertex(1);
+
+  for (int j = 1; j < 4; j++){  // looping thorugh edges 2, 3 and 4
+
+    int ID1 = mesh->edges()[e[j]->getID()].vertex(0).getID();
+    int ID2 = mesh->edges()[e[j]->getID()].vertex(1).getID();
+
+    if (ID1 != vertices[0]->getID() && ID2 != vertices[0]->getID() && ID1 != vertices[1]->getID() && ID2 != vertices[1]->getID() ){
+        // Doesnt match any point on edge 1, therefore must be edge 3 for the reordered set
+        edgeOrder[2] = j;
+      } else if ((ID1 == vertices[0]->getID() || ID2 == vertices[0]->getID()) && ID1 != vertices[1]->getID() || ID2 != vertices[1]->getID()){
+        // One of the vertices matches V0, and does not match V1, must be edge 4 (connected V3 to V0)
+        edgeOrder[3] = j;
+        if (ID1 == vertices[0]->getID()){
+          vertices[3] = &mesh->edges()[e[j]->getID()].vertex(1);
+        }else{
+          vertices[3] = &mesh->edges()[e[j]->getID()].vertex(0);
+        }
+      }else if((ID1 == vertices[1]->getID() || ID2 == vertices[1]->getID()) && ID1 != vertices[0]->getID() || ID2 != vertices[0]->getID()){
+        // Must be edge 2, as it matches V1 and not V0
+        edgeOrder[1] = j;
+        if (ID1 == vertices[1]->getID()){
+          vertices[2] = &mesh->edges()[e[j]->getID()].vertex(1);
+        }else{
+          vertices[2] = &mesh->edges()[e[j]->getID()].vertex(0);
+        }
+      }
+    }
+*/
+
+
+
 }
   
 

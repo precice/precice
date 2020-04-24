@@ -194,6 +194,10 @@ public:
   /// Computes if a quad is convex and returns and ordered set of vertices.
   void computeQuadConvexityFromPoints(std::array<int,4> &hull, int startID) const;
 
+  /// Computes if a quad is convex and returns and ordered set of vertices.
+  //void computeQuadEdgeOrder(Vertex &verticesOne, Vertex &verticesTwo, Vertex &verticesThree, Vertex &verticesFour) const;
+  void computeQuadEdgeOrder(std::array<int,4> &edgeList, std::array<int,4>  &vertexList) const;
+
   /**
    * @brief Removes all mesh elements and data values (does not remove data).
    *

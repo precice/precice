@@ -560,6 +560,59 @@ BOOST_AUTO_TEST_CASE(ComputeInvalidQuadConvexity)
 
 }
 
+BOOST_AUTO_TEST_CASE(ComputeValidEdgeConnectivity)
+{
+  Mesh mesh("Mesh1", 3, false, testing::nextMeshID());
+  mesh.createData("Data", 1);
+
+  Eigen::Vector3d coords0;
+  Eigen::Vector3d coords1;
+  Eigen::Vector3d coords2;
+  Eigen::Vector3d coords3;
+  coords0 << 1.0, 0.0, 0.0;
+  coords1 << 0.0, 0.0, 0.0;
+  coords2 << 2.0, 2.0, 0.0;
+  coords3 << 0.0, 1.0, 0.0;
+  Vertex &v0 = mesh.createVertex(coords0);
+  Vertex &v1 = mesh.createVertex(coords1);
+  Vertex &v2 = mesh.createVertex(coords2);
+  Vertex &v3 = mesh.createVertex(coords3);
+
+  BOOST_TEST(mesh.vertices().size() == 4);
+
+  Edge &e0 = mesh.createEdge(v0, v1);
+  Edge &e1 = mesh.createEdge(v3, v2);
+  Edge &e2 = mesh.createEdge(v3, v1);
+  Edge &e3 = mesh.createEdge(v0, v2);
+
+  BOOST_TEST(mesh.edges().size() == 4);
+
+  std::array<int,4>  vertexList;
+  std::array<int,4>  edgeList;
+  edgeList[0] = e0.getID();
+  edgeList[1] = e1.getID();
+  edgeList[2] = e2.getID();
+  edgeList[3] = e3.getID();
+
+  mesh.computeQuadEdgeOrder(edgeList,vertexList);
+
+  BOOST_TEST(edgeList[0] == e0.getID());
+  BOOST_TEST(edgeList[1] == e2.getID());
+  BOOST_TEST(edgeList[2] == e1.getID());
+  BOOST_TEST(edgeList[3] == e3.getID());
+
+  BOOST_TEST(vertexList[0] == e0.vertex(0).getID());
+  BOOST_TEST(vertexList[1] == e0.vertex(1).getID());
+  BOOST_TEST(vertexList[2] == e1.vertex(0).getID());
+  BOOST_TEST(vertexList[3] == e1.vertex(1).getID());
+
+  Eigen::VectorXd distance1(3),distance2(3);
+  distance1 = e0.vertex(0).getCoords() - e1.vertex(0).getCoords();
+  distance2 = e0.vertex(1).getCoords() - e1.vertex(1).getCoords();
+
+  BOOST_TEST(distance1.norm() < distance2.norm());
+
+}
 
 BOOST_AUTO_TEST_SUITE_END() // Mesh
 BOOST_AUTO_TEST_SUITE_END() // Mesh

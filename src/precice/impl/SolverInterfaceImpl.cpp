@@ -779,59 +779,36 @@ void SolverInterfaceImpl::setMeshQuad(
     e[2] = &mesh->edges()[thirdEdgeID];
     e[3] = &mesh->edges()[fourthEdgeID];
 
-    int edgeOrder[4];
-    edgeOrder[0] = 0;     // Start with firstEdgeID being the first edge. The rest are not necessarily given in the correct order
+    std::array<int,4>  vertexList;
+    std::array<int,4>  edgeList;
+    edgeList[0] = firstEdgeID;
+    edgeList[1] = secondEdgeID;
+    edgeList[2] = thirdEdgeID;
+    edgeList[3] = fourthEdgeID;
+    
+    //edgeOrder[0] = firstEdgeID;     // Start with firstEdgeID being the first edge. The rest are not necessarily given in the correct order
 
     // Write out a list of all vertex ID's that are eventually connected in V0-V1-V2-V3-V0 order to get diagonal distances.
     mesh::Vertex *vertices[4];
-    vertices[0] = &mesh->edges()[firstEdgeID].vertex(0);
-    vertices[1] = &mesh->edges()[firstEdgeID].vertex(1);
-
-    for (int j = 1; j < 4; j++){  // looping thorugh edges 2, 3 and 4
-
-      int ID1 = mesh->edges()[e[j]->getID()].vertex(0).getID();
-      int ID2 = mesh->edges()[e[j]->getID()].vertex(1).getID();
-
-      if (ID1 != vertices[0]->getID() && ID2 != vertices[0]->getID() && ID1 != vertices[1]->getID() && ID2 != vertices[1]->getID() ){
-        // Doesnt match any point on edge 1, therefore must be edge 3 for the reordered set
-        edgeOrder[2] = j;
-      } else if ((ID1 == vertices[0]->getID() || ID2 == vertices[0]->getID()) && ID1 != vertices[1]->getID() || ID2 != vertices[1]->getID()){
-        // One of the vertices matches V0, and does not match V1, must be edge 4 (connected V3 to V0)
-        edgeOrder[3] = j;
-        if (ID1 == vertices[0]->getID()){
-          vertices[3] = &mesh->edges()[e[j]->getID()].vertex(1);
-        }else{
-          vertices[3] = &mesh->edges()[e[j]->getID()].vertex(0);
-        }
-      }else if((ID1 == vertices[1]->getID() || ID2 == vertices[1]->getID()) && ID1 != vertices[0]->getID() || ID2 != vertices[0]->getID()){
-        // Must be edge 2, as it matches V1 and not V0
-        edgeOrder[1] = j;
-        if (ID1 == vertices[1]->getID()){
-          vertices[2] = &mesh->edges()[e[j]->getID()].vertex(1);
-        }else{
-          vertices[2] = &mesh->edges()[e[j]->getID()].vertex(0);
-        }
-      }
-    }
-
-    PRECICE_CHECK(utils::unique_elements(utils::make_array(vertices[0]->getCoords(),
-                                                           vertices[1]->getCoords(), vertices[2]->getCoords(), vertices[3]->getCoords())),
-                  "The coordinates of the vertices must be unique!");
+    mesh->computeQuadEdgeOrder(edgeList,vertexList);
+    //PRECICE_CHECK(utils::unique_elements(utils::make_array(vertices[0]->getCoords(),
+    //                                                       vertices[1]->getCoords(), vertices[2]->getCoords(), vertices[3]->getCoords())),
+    //              "The coordinates of the vertices must be unique!");
 
     // Vertices are now in 0-1-2-3-0 form. Diagonal is either 0-2 or 1-3 
     Eigen::VectorXd distance1(_dimensions),distance2(_dimensions);
-    distance1 = vertices[0]->getCoords() - vertices[2]->getCoords();
-    distance2 = vertices[1]->getCoords() - vertices[3]->getCoords();
+    distance1 = vertices[vertexList[0]]->getCoords() - vertices[vertexList[2]]->getCoords();
+    distance2 = vertices[vertexList[1]]->getCoords() - vertices[vertexList[3]]->getCoords();
     
-    if (distance1.norm() > distance2.norm()){
+    if (distance1.norm() < distance2.norm()){
       // Diagonal is V1 and V2
-      e[4] = &mesh->createUniqueEdge(*vertices[0], *vertices[2]);
-      mesh->createTriangle(*e[edgeOrder[0]], *e[edgeOrder[1]], *e[4]);
-      mesh->createTriangle(*e[edgeOrder[2]], *e[edgeOrder[3]], *e[4]);
+      e[4] = &mesh->createUniqueEdge(*vertices[vertexList[0]], *vertices[vertexList[2]]);
+      mesh->createTriangle(*e[edgeList[0]], *e[edgeList[1]], *e[4]);
+      mesh->createTriangle(*e[edgeList[2]], *e[edgeList[3]], *e[4]);
     }else{
-      e[4] = &mesh->createUniqueEdge(*vertices[1], *vertices[3]);
-      mesh->createTriangle(*e[edgeOrder[3]], *e[edgeOrder[0]], *e[4]);
-      mesh->createTriangle(*e[edgeOrder[1]], *e[edgeOrder[2]], *e[4]);
+      e[4] = &mesh->createUniqueEdge(*vertices[vertexList[1]], *vertices[vertexList[3]]);
+      mesh->createTriangle(*e[edgeList[3]], *e[edgeList[0]], *e[4]);
+      mesh->createTriangle(*e[edgeList[1]], *e[edgeList[2]], *e[4]);
     }
   }
 }
