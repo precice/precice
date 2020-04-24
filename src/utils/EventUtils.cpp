@@ -16,10 +16,6 @@
 #include "utils/assertion.hpp"
 
 namespace precice {
-extern bool testMode;
-}
-
-namespace precice {
 namespace utils {
 
 using sys_clk  = std::chrono::system_clock;
@@ -223,12 +219,10 @@ void EventRegistry::finalize()
   for (auto &e : storedEvents)
     e.second.stop();
 
-  // @todo remove testMode flag once we have properly refactored the tests, cf. issue #597
-  if (initialized && not precice::testMode) // this makes only sense when it was properly initialized
+  if (initialized) // this makes only sense when it was properly initialized
     normalize();
 
-  if (not precice::testMode)
-    collect();
+  collect();
 
   initialized = false;
   finalized   = true;
@@ -278,14 +272,19 @@ void EventRegistry::printAll() const
     return;
 
   std::string logFile;
-  if (applicationName.empty())
+  std::string summaryFile;
+  if (applicationName.empty()) {
     logFile = "Events.json";
-  else
+    summaryFile = "Events-summary.log";
+  } else {
     logFile = applicationName + "-events.json";
+    summaryFile = applicationName + "-events-summary.log";
+  }
 
-  writeSummary(std::cout);
-  std::ofstream ofs(logFile);
-  writeJSON(ofs);
+  std::ofstream summaryFS{summaryFile};
+  writeSummary(summaryFS);
+  std::ofstream logFS{logFile};
+  writeJSON(logFS);
 }
 
 void EventRegistry::writeSummary(std::ostream &out) const

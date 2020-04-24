@@ -47,9 +47,7 @@ int Parallel::CommState::rank() const
 {
   int processRank = 0;
 #ifndef PRECICE_NO_MPI
-  if (_isInitialized) {
-    MPI_Comm_rank(comm, &processRank);
-  }
+  MPI_Comm_rank(comm, &processRank);
 #endif // not PRECICE_NO_MPI
   return processRank;
 }
@@ -59,9 +57,7 @@ int Parallel::CommState::size() const
 
   int communicatorSize = 1;
 #ifndef PRECICE_NO_MPI
-  if (_isInitialized) {
-    MPI_Comm_size(comm, &communicatorSize);
-  }
+  MPI_Comm_size(comm, &communicatorSize);
 #endif // not PRECICE_NO_MPI
   return communicatorSize;
 }
@@ -70,7 +66,6 @@ void Parallel::CommState::synchronize() const
 {
 #ifndef PRECICE_NO_MPI
   PRECICE_TRACE();
-  PRECICE_ASSERT(_isInitialized);
   if (!isNull()) {
     MPI_Barrier(comm);
   }
@@ -158,6 +153,12 @@ void Parallel::resetCommState()
   _currentState = CommState::world();
 }
 
+void Parallel::resetManagedMPI()
+{
+  _mpiInitializedByPrecice = false;
+  _isInitialized = false;
+}
+
 void Parallel::pushState(CommStatePtr newState)
 {
   PRECICE_TRACE();
@@ -179,22 +180,74 @@ void Parallel::pushState(CommStatePtr newState)
 // #endif
 // }
 
-void Parallel::initializeMPI(
+void Parallel::initializeManagedMPI(
     int *   argc,
     char ***argv)
 {
 #ifndef PRECICE_NO_MPI
   PRECICE_TRACE();
-  int isMPIInitialized;
+  PRECICE_ASSERT(!_isInitialized, "A managed MPI session already exists.");
+  PRECICE_ASSERT(!_mpiInitializedByPrecice);
+  int isMPIInitialized{-1};
   MPI_Initialized(&isMPIInitialized);
-  if (not isMPIInitialized) {
-    PRECICE_DEBUG("Initialize MPI");
+  if (isMPIInitialized) {
+    PRECICE_DEBUG("Initializing unmanaged MPI.");
+    _mpiInitializedByPrecice = false;
+  } else {
+    PRECICE_DEBUG("Initializing managed MPI");
     _mpiInitializedByPrecice = true;
-    MPI_Init(argc, argv);
+    initializeMPI(argc, argv);
   }
-  _isInitialized = true;
+    _isInitialized = true;
 #endif // not PRECICE_NO_MPI
 }
+
+void Parallel::initializeMPI(
+    int *   argc,
+    char ***argv)
+{
+#ifndef PRECICE_NO_MPI
+  int isMPIInitialized{-1};
+  MPI_Initialized(&isMPIInitialized);
+  PRECICE_ASSERT(!isMPIInitialized, "MPI was already initalized.");
+  PRECICE_DEBUG("Initialize MPI");
+  MPI_Init(argc, argv);
+#endif // not PRECICE_NO_MPI
+}
+
+
+
+void Parallel::finalizeManagedMPI()
+{
+  PRECICE_TRACE();
+  // Make sure all com states were freed at this point in time
+  resetCommState();
+#ifndef PRECICE_NO_MPI
+  PRECICE_ASSERT(_isInitialized, "There is no managed MPI session.");
+  if (_mpiInitializedByPrecice) {
+    PRECICE_DEBUG("Finalizing managed MPI.");
+    finalizeMPI();
+  } else {
+    PRECICE_DEBUG("Finalizing unmanaged MPI");
+  }
+  _mpiInitializedByPrecice = false;
+  _isInitialized = false;
+#endif // not PRECICE_NO_MPI
+}
+
+
+void Parallel::finalizeMPI()
+{
+#ifndef PRECICE_NO_MPI
+  PRECICE_TRACE();
+  int isMPIInitialized;
+  MPI_Initialized(&isMPIInitialized);
+  PRECICE_ASSERT(isMPIInitialized, "MPI was not initalized.");
+  PRECICE_DEBUG("Finalize MPI");
+  MPI_Finalize();
+#endif // not PRECICE_NO_MPI
+}
+
 
 void Parallel::registerUserProvidedComm(Communicator comm)
 {
@@ -323,20 +376,6 @@ void Parallel::popState()
   }
 }
 
-void Parallel::finalizeMPI()
-{
-  PRECICE_TRACE();
-  // Make sure all com states were freed at this point in time
-  resetCommState();
-#ifndef PRECICE_NO_MPI
-  if (_mpiInitializedByPrecice) {
-    PRECICE_DEBUG("preCICE finalizes MPI");
-    MPI_Finalize();
-  }
-#endif // not PRECICE_NO_MPI
-  _isInitialized = false;
-}
-
 // void Parallel::clearGroups()
 // {
 //   _accessorGroups.clear();
@@ -439,7 +478,6 @@ void Parallel::restrictCommunicator(int newSize)
   PRECICE_ASSERT(newSize > 0, "Cannot restrict a communicator to nothing!");
 
 #ifndef PRECICE_NO_MPI
-  PRECICE_ASSERT(_isInitialized);
   auto       baseState = current();
   const auto size      = baseState->size();
   const auto rank      = baseState->rank();

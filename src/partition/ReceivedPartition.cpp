@@ -557,6 +557,7 @@ void ReceivedPartition::createOwnerInformation()
 
     // Decide upon owners,
     PRECICE_DEBUG("Decide owners, first round by rough load balancing");
+    PRECICE_ASSERT(ranksAtInterface != 0);
     int localGuess = _mesh->getGlobalNumberOfVertices() / ranksAtInterface; // Guess for a decent load balancing
     // First round: every slave gets localGuess vertices
     for (int rank = 0; rank < utils::MasterSlave::getSize(); rank++) {
