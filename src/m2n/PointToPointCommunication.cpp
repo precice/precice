@@ -144,7 +144,10 @@ void printCommunicationPartnerCountStats(std::map<int, std::vector<int>> const &
     if (minimum > maximum)
       minimum = maximum;
 
-    auto average = static_cast<double>(total) / count;
+    auto average = static_cast<double>(total);
+    if (count != 0) {
+      average /= count;
+    }
 
     std::cout << std::fixed << std::setprecision(3) //
               << "Number of Communication Partners per Interface Process:"
@@ -198,7 +201,10 @@ void printLocalIndexCountStats(std::map<int, std::vector<int>> const &m)
     if (minimum > maximum)
       minimum = maximum;
 
-    auto average = static_cast<double>(total) / count;
+    auto average = static_cast<double>(total);
+    if (count != 0) {
+      average /= count;
+    }
 
     std::cout << std::fixed << std::setprecision(3) //
               << "Number of LVDIs per Interface Process:"

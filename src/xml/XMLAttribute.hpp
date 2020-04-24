@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cwchar>
 #include <initializer_list>
 #include <iostream>
 #include <string>
@@ -17,6 +18,8 @@ namespace xml {
 
 template <typename ATTRIBUTE_T>
 class XMLAttribute {
+  static_assert(std::is_default_constructible<ATTRIBUTE_T>::value, "The value type of XMLAttributes need to be default-constructible.");
+
 public:
   XMLAttribute() = delete;
 
@@ -112,11 +115,11 @@ private:
 
   bool _read = false;
 
-  ATTRIBUTE_T _value;
+  ATTRIBUTE_T _value{};
 
   bool _hasDefaultValue = false;
 
-  ATTRIBUTE_T _defaultValue;
+  ATTRIBUTE_T _defaultValue{};
 
   bool _hasValidation = false;
 

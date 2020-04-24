@@ -46,9 +46,9 @@ target_sources(precice
     src/action/ScaleByAreaAction.hpp
     src/action/ScaleByDtAction.cpp
     src/action/ScaleByDtAction.hpp
+    src/action/SharedPointer.hpp
     src/action/SummationAction.cpp
     src/action/SummationAction.hpp
-    src/action/SharedPointer.hpp
     src/action/config/ActionConfiguration.cpp
     src/action/config/ActionConfiguration.hpp
     src/com/CommunicateBoundingBox.cpp
@@ -270,6 +270,8 @@ target_sources(precice
     src/utils/TypeNames.hpp
     src/utils/algorithm.hpp
     src/utils/assertion.hpp
+    src/utils/networking.cpp
+    src/utils/networking.hpp
     src/utils/stacktrace.cpp
     src/utils/stacktrace.hpp
     src/utils/traits.hpp

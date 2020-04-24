@@ -156,10 +156,12 @@ ParticipantConfiguration::ParticipantConfiguration(
                             "bind it automatically.");
     tagMaster.addAttribute(attrPort);
 
-    auto attrNetwork = makeXMLAttribute(ATTR_NETWORK, "lo")
+    auto attrNetwork = makeXMLAttribute(ATTR_NETWORK, utils::networking::loopbackInterfaceName())
                            .setDocumentation(
-                               "Network name to be used for socket communiation. "
-                               "Default is \"lo\", i.e., the local host loopback.");
+                               "Interface name to be used for socket communiation. "
+                               "Default is the cannonical name of the loopback interface of your platform. "
+                               "Might be different on supercomputing systems, e.g. \"ib0\" "
+                               "for the InfiniBand on SuperMUC. ");
     tagMaster.addAttribute(attrNetwork);
 
     auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, "")
