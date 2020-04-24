@@ -25,7 +25,8 @@ struct MappingContext;
 // Forward declaration to friend the boost test struct
 namespace PreciceTests {
 namespace Serial {
-struct TestConfiguration;
+struct TestConfigurationPeano;
+struct TestConfigurationComsol;
 }
 } // namespace PreciceTests
 
@@ -189,7 +190,8 @@ private:
   void checkDuplicatedData(const mesh::PtrData &data);
 
   /// To allow white box tests.
-  friend struct PreciceTests::Serial::TestConfiguration;
+  friend struct PreciceTests::Serial::TestConfigurationPeano;
+  friend struct PreciceTests::Serial::TestConfigurationComsol;
 };
 
 // --------------------------------------------------------- HEADER DEFINITIONS

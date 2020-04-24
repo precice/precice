@@ -34,10 +34,11 @@ BOOST_AUTO_TEST_SUITE(PreciceTests)
 BOOST_FIXTURE_TEST_SUITE(Serial, SerialTestFixture)
 
 /// Test reading of a full features coupling configuration file.
-BOOST_AUTO_TEST_CASE(TestConfiguration)
+BOOST_AUTO_TEST_CASE(TestConfigurationPeano)
 {
   PRECICE_TEST(1_rank);
-  std::string filename = _pathToTests + "/configuration.xml";
+  std::string filename = _pathToTests + "configuration.xml";
+
   // Test configuration for accessor "Peano"
   SolverInterface interfacePeano("Peano", filename, 0, 1);
 
@@ -55,6 +56,12 @@ BOOST_AUTO_TEST_CASE(TestConfiguration)
 
   BOOST_TEST(meshContexts[0]->mesh->getName() == std::string("PeanoNodes"));
   BOOST_TEST(meshContexts[1]->mesh->getName() == std::string("ComsolNodes"));
+}
+
+BOOST_AUTO_TEST_CASE(TestConfigurationComsol)
+{
+  PRECICE_TEST(1_rank);
+  std::string filename = _pathToTests + "configuration.xml";
 
   // Test configuration for accessor "Comsol"
   SolverInterface interfaceComsol("Comsol", filename, 0, 1);
@@ -66,7 +73,7 @@ BOOST_AUTO_TEST_CASE(TestConfiguration)
   BOOST_TEST(comsol->getName() == "Comsol");
   BOOST_TEST(comsol->getID() == 1);
 
-  meshContexts = comsol->_meshContexts;
+  std::vector<impl::MeshContext *> meshContexts = comsol->_meshContexts;
   BOOST_TEST(meshContexts.size() == 2);
   BOOST_TEST(meshContexts[0] == static_cast<void *>(nullptr));
   BOOST_TEST(meshContexts[1]->mesh->getName() == std::string("ComsolNodes"));

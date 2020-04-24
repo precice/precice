@@ -41,6 +41,7 @@ TestContext::~TestContext() noexcept
 
   // Reset communicators
   Par::resetCommState();
+  Par::resetManagedMPI();
 }
 
 bool TestContext::hasSize(int size) const
