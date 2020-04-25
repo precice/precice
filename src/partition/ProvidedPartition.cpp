@@ -218,7 +218,7 @@ void ProvidedPartition::compareBoundingBoxes()
 
   // each rank sends its bb to master
   if (utils::MasterSlave::isSlave()) { //slave
-    PRECICE_ASSERT(_mesh->getBoundingBox().size() == static_cast<std::size_t>(_mesh->getDimensions()), "The boundingbox of the local mesh is invalid!");
+    PRECICE_ASSERT(_mesh->getBoundingBox().getDimension() == static_cast<std::size_t>(_mesh->getDimensions()), "The boundingbox of the local mesh is invalid!");
     com::CommunicateBoundingBox(utils::MasterSlave::_communication).sendBoundingBox(_mesh->getBoundingBox(), 0);
   } else { // Master
 
@@ -227,16 +227,15 @@ void ProvidedPartition::compareBoundingBoxes()
 
     // to store the collection of bounding boxes
     mesh::Mesh::BoundingBoxMap bbm;
-
-    // master stores its bb into bbm
-    bbm[0] = _mesh->getBoundingBox();
+    mesh::BoundingBox bb(_mesh->getDimensions());
+    bbm.emplace(0, _mesh->getBoundingBox());
     PRECICE_ASSERT(!bbm.empty(), "The bounding box of the local mesh is invalid!");
 
     // master receives bbs from slaves and stores them in bbm
     for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
       // initialize bbm
-      bbm[rankSlave] = mesh::Mesh::BoundingBox(_mesh->getDimensions());
-      com::CommunicateBoundingBox(utils::MasterSlave::_communication).receiveBoundingBox(bbm[rankSlave], rankSlave);
+      bbm.emplace(rankSlave, bb);
+      com::CommunicateBoundingBox(utils::MasterSlave::_communication).receiveBoundingBox(bbm.at(rankSlave), rankSlave);
     }
 
     // master sends number of ranks and bbm to the other master

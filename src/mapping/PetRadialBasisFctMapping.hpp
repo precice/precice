@@ -820,14 +820,12 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
     namespace bgi = boost::geometry::index;
     auto bb       = otherMesh->getBoundingBox();
     // Enlarge by support radius
-    for (int d = 0; d < otherMesh->getDimensions(); d++) {
-      bb[d].first -= _basisFunction.getSupportRadius();
-      bb[d].second += _basisFunction.getSupportRadius();
-    }
-    rtree->query(bgi::within(bb),
-                 boost::make_function_output_iterator([&filterMesh](size_t idx) {
-                   filterMesh->vertices()[idx].tag();
-                 }));
+    bb.expandBy(_basisFunction.getSupportRadius());
+    rtree->query(bgi::satisfies([&](size_t const i){ return bb.contains(filterMesh->vertices()[i]); }), 
+      boost::make_function_output_iterator([&filterMesh](size_t idx) {
+        filterMesh->vertices()[idx].tag();
+      }));
+    
   } else {
     for (auto &vert : filterMesh->vertices())
       vert.tag();
@@ -842,6 +840,7 @@ template <typename RADIAL_BASIS_FUNCTION_T>
 void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
 {
   PRECICE_TRACE();
+  namespace bgi = boost::geometry::index;
 
   if (not _basisFunction.hasCompactSupport())
     return; // Tags should not be changed
@@ -853,31 +852,23 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
   else if (getConstraint() == CONSERVATIVE)
     mesh = output();
 
-  mesh::Mesh::BoundingBox bb(mesh->getDimensions(),
-                             std::make_pair(std::numeric_limits<double>::max(),
-                                            std::numeric_limits<double>::lowest()));
+  mesh::BoundingBox bb(mesh->getDimensions());
 
   // Construct bounding box around all owned vertices
   for (mesh::Vertex &v : mesh->vertices()) {
     if (v.isOwner()) {
       PRECICE_ASSERT(v.isTagged()); // Should be tagged from the first round
-      for (int d = 0; d < v.getDimensions(); d++) {
-        bb[d].first  = std::min(v.getCoords()[d], bb[d].first);
-        bb[d].second = std::max(v.getCoords()[d], bb[d].second);
-      }
+      bb.expandBy(v);
     }
   }
-
   // Enlarge bb by support radius
-  for (int d = 0; d < mesh->getDimensions(); d++) {
-    bb[d].first -= _basisFunction.getSupportRadius();
-    bb[d].second += _basisFunction.getSupportRadius();
-  }
+  bb.expandBy(_basisFunction.getSupportRadius());
   auto rtree = mesh::rtree::getVertexRTree(mesh);
-  rtree->query(boost::geometry::index::within(bb),
-               boost::make_function_output_iterator([&mesh](size_t idx) {
-                 mesh->vertices()[idx].tag();
-               }));
+
+  rtree->query(bgi::satisfies([&](size_t const i){ return bb.contains(mesh->vertices()[i]); }), 
+    boost::make_function_output_iterator([&mesh](size_t idx) {
+      mesh->vertices()[idx].tag();
+    }));
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
@@ -906,11 +897,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::estimatePreallocationMat
   auto bbox     = mesh->getBoundingBox();
   auto meshSize = mesh->vertices().size();
 
-  double meshArea = 1;
+  double meshArea = bbox.getArea(_deadAxis);
   // PRECICE_WARN(bbox);
-  for (int d = 0; d < getDimensions(); d++)
-    if (not _deadAxis[d])
-      meshArea *= bbox[d].second - bbox[d].first;
 
   // supportVolume = math::PI * 4.0/3.0 * std::pow(supportRadius, 3);
   double supportVolume = 0;
@@ -950,11 +938,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::estimatePreallocationMat
   auto bbox     = mesh->getBoundingBox();
   auto meshSize = mesh->vertices().size();
 
-  double meshArea = 1;
+  double meshArea = bbox.getArea(_deadAxis);
   // PRECICE_WARN(bbox);
-  for (int d = 0; d < getDimensions(); d++)
-    if (not _deadAxis[d])
-      meshArea *= bbox[d].second - bbox[d].first;
 
   // supportVolume = math::PI * 4.0/3.0 * std::pow(supportRadius, 3);
   double supportVolume = 0;

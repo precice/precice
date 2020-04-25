@@ -360,38 +360,30 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
     BOOST_TEST(context.isNamed("NASTIN"));
 
     mesh::Mesh::BoundingBoxMap receivedGlobalBB;
-    mesh::Mesh::BoundingBox    localBB;
+    mesh::BoundingBox    localBB{dimensions};
+
+    mesh::Mesh::BoundingBoxMap compareBB;
+    compareBB.emplace(0, (std::vector<double>) {-1, 5, 0, 3});
+    compareBB.emplace(1, (std::vector<double>) {0, 1, 3.5, 4.5});
+    compareBB.emplace(2, (std::vector<double>) {2.5, 4.5, 5.5, 7.0});
 
     // we receive other participants communicator size
     int receivedFeedbackSize = 3;
     m2n->getMasterCommunication()->receive(receivedFeedbackSize, 0);
 
-    for (int j = 0; j < dimensions; j++) {
-      localBB.push_back(std::make_pair(-1, -1));
-    }
     for (int i = 0; i < receivedFeedbackSize; i++) {
-      receivedGlobalBB[i] = localBB;
+      receivedGlobalBB.emplace(i, localBB);
     }
 
     // we receive golbal bounding box from othe participant!
     com::CommunicateBoundingBox(m2n->getMasterCommunication()).receiveBoundingBoxMap(receivedGlobalBB, 0);
-
     // check wether we have received the correct com size
     BOOST_TEST(receivedFeedbackSize == 3);
 
     //check the validity of received golbal bounding box (globalBB)
-    BOOST_TEST(receivedGlobalBB[0][0].first == -1);
-    BOOST_TEST(receivedGlobalBB[0][0].second == 5);
-    BOOST_TEST(receivedGlobalBB[0][1].first == 0);
-    BOOST_TEST(receivedGlobalBB[0][1].second == 3);
-    BOOST_TEST(receivedGlobalBB[1][0].first == 0);
-    BOOST_TEST(receivedGlobalBB[1][0].second == 1);
-    BOOST_TEST(receivedGlobalBB[1][1].first == 3.5);
-    BOOST_TEST(receivedGlobalBB[1][1].second == 4.5);
-    BOOST_TEST(receivedGlobalBB[2][0].first == 2.5);
-    BOOST_TEST(receivedGlobalBB[2][0].second == 4.5);
-    BOOST_TEST(receivedGlobalBB[2][1].first == 5.5);
-    BOOST_TEST(receivedGlobalBB[2][1].second == 7.0);
+    BOOST_TEST(receivedGlobalBB.at(0) == compareBB.at(0));
+    BOOST_TEST(receivedGlobalBB.at(1) == compareBB.at(1));
+    BOOST_TEST(receivedGlobalBB.at(2) == compareBB.at(2));
 
     std::vector<int> connectedRanks = {0, 1, 2};
     m2n->getMasterCommunication()->send(connectedRanks, 0);
@@ -464,17 +456,19 @@ BOOST_AUTO_TEST_CASE(TestSendBoundingBoxes3D)
     BOOST_TEST(context.isNamed("NASTIN"));
 
     mesh::Mesh::BoundingBoxMap receivedGlobalBB;
-    mesh::Mesh::BoundingBox    localBB;
+    mesh::BoundingBox    localBB{dimensions};
+
+    mesh::Mesh::BoundingBoxMap compareBB;
+    compareBB.emplace(0, (std::vector<double>) {-1, 5, 0, 3, -1, 5});
+    compareBB.emplace(1, (std::vector<double>) {0, 1, 3.5, 4.5, 0, 1});
+    compareBB.emplace(2, (std::vector<double>) {2.5, 4.5, 5.5, 7.0, 2.5, 4.5});
 
     // we receive other participants communicator size
     int remoteParComSize = 3;
     m2n->getMasterCommunication()->receive(remoteParComSize, 0);
 
-    for (int j = 0; j < dimensions; j++) {
-      localBB.push_back(std::make_pair(-1, -1));
-    }
     for (int i = 0; i < remoteParComSize; i++) {
-      receivedGlobalBB[i] = localBB;
+      receivedGlobalBB.emplace(i, localBB);
     }
 
     // we receive golbal bounding box from othe participant!
@@ -484,24 +478,9 @@ BOOST_AUTO_TEST_CASE(TestSendBoundingBoxes3D)
     BOOST_TEST(remoteParComSize == 3);
 
     //check the validity of received golbal bounding box (globalBB)
-    BOOST_TEST(receivedGlobalBB[0][0].first == -1);
-    BOOST_TEST(receivedGlobalBB[0][0].second == 5);
-    BOOST_TEST(receivedGlobalBB[0][1].first == 0);
-    BOOST_TEST(receivedGlobalBB[0][1].second == 3);
-    BOOST_TEST(receivedGlobalBB[0][2].first == -1);
-    BOOST_TEST(receivedGlobalBB[0][2].second == 5);
-    BOOST_TEST(receivedGlobalBB[1][0].first == 0);
-    BOOST_TEST(receivedGlobalBB[1][0].second == 1);
-    BOOST_TEST(receivedGlobalBB[1][1].first == 3.5);
-    BOOST_TEST(receivedGlobalBB[1][1].second == 4.5);
-    BOOST_TEST(receivedGlobalBB[1][2].first == 0);
-    BOOST_TEST(receivedGlobalBB[1][2].second == 1);
-    BOOST_TEST(receivedGlobalBB[2][0].first == 2.5);
-    BOOST_TEST(receivedGlobalBB[2][0].second == 4.5);
-    BOOST_TEST(receivedGlobalBB[2][1].first == 5.5);
-    BOOST_TEST(receivedGlobalBB[2][1].second == 7.0);
-    BOOST_TEST(receivedGlobalBB[2][2].first == 2.5);
-    BOOST_TEST(receivedGlobalBB[2][2].second == 4.5);
+    BOOST_TEST(receivedGlobalBB.at(0) == compareBB.at(0));
+    BOOST_TEST(receivedGlobalBB.at(1) == compareBB.at(1));
+    BOOST_TEST(receivedGlobalBB.at(2) == compareBB.at(2));
 
     //send empty dummy list of connected ranks as feedback
     std::vector<int> connectedRanksList;

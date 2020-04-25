@@ -192,21 +192,18 @@ BOOST_AUTO_TEST_CASE(BoundingBoxCOG_2D)
 
   mesh.computeBoundingBox();
 
-  mesh::Mesh::BoundingBox bBox = mesh.getBoundingBox();
-  auto                    cog  = mesh.getCOG();
+  mesh::BoundingBox bBox = mesh.getBoundingBox();
+  auto                    cog  = bBox.center();
 
-  mesh::Mesh::BoundingBox referenceBox = {{-1.0, 2.0},
-                                          {0.0, 4.0}};
+  mesh::BoundingBox referenceBox({-1.0, 2.0,
+                                  0.0, 4.0});
 
   std::vector<double> referenceCOG = {0.5, 2.0};
 
-  BOOST_TEST(bBox.size() == 2);
+  BOOST_TEST(bBox.getDimension() == 2);
   BOOST_TEST(cog.size() == 2);
+  BOOST_TEST(referenceBox == bBox);
 
-  for (size_t d = 0; d < bBox.size(); d++) {
-    BOOST_TEST(referenceBox[d].first == bBox[d].first);
-    BOOST_TEST(referenceBox[d].second == bBox[d].second);
-  }
   for (size_t d = 0; d < cog.size(); d++) {
     BOOST_TEST(referenceCOG[d] == cog[d]);
   }
@@ -228,22 +225,19 @@ BOOST_AUTO_TEST_CASE(BoundingBoxCOG_3D)
 
   mesh.computeBoundingBox();
 
-  mesh::Mesh::BoundingBox bBox = mesh.getBoundingBox();
-  auto                    cog  = mesh.getCOG();
+  mesh::BoundingBox bBox = mesh.getBoundingBox();
+  auto                    cog  = bBox.center();
 
-  mesh::Mesh::BoundingBox referenceBox = {{-1.0, 3.5},
-                                          {0.0, 4.0},
-                                          {-3.0, 8.0}};
+  mesh::BoundingBox referenceBox({-1.0, 3.5,
+                                  0.0, 4.0,
+                                  -3.0, 8.0});
 
   std::vector<double> referenceCOG = {1.25, 2.0, 2.5};
 
-  BOOST_TEST(bBox.size() == 3);
+  BOOST_TEST(bBox.getDimension() == 3);
   BOOST_TEST(cog.size() == 3);
+  BOOST_TEST(referenceBox == bBox);
 
-  for (size_t d = 0; d < bBox.size(); d++) {
-    BOOST_TEST(referenceBox[d].first == bBox[d].first);
-    BOOST_TEST(referenceBox[d].second == bBox[d].second);
-  }
   for (size_t d = 0; d < cog.size(); d++) {
     BOOST_TEST(referenceCOG[d] == cog[d]);
   }

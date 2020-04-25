@@ -1051,13 +1051,13 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
 
   // construct send global boundingbox
   mesh::Mesh::BoundingBoxMap sendGlobalBB;
-  mesh::Mesh::BoundingBox    initialBB;
   for (int remoteRank = 0; remoteRank < 3; remoteRank++) {
+    std::vector<double> bounds;
     for (int i = 0; i < dimensions; i++) {
-      initialBB.push_back(std::make_pair(3 - remoteRank - 1, 3 - remoteRank));
+      bounds.push_back(3 - remoteRank - 1);
+      bounds.push_back(3 - remoteRank);
     }
-    sendGlobalBB[remoteRank] = initialBB;
-    initialBB.clear();
+    sendGlobalBB.emplace(remoteRank, bounds);
   }
 
   if (context.isNamed("SOLIDZ")) {
@@ -1122,13 +1122,13 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes3D)
 
   // construct send global boundingbox
   mesh::Mesh::BoundingBoxMap sendGlobalBB;
-  mesh::Mesh::BoundingBox    initialBB;
   for (int remoteRank = 0; remoteRank < 3; remoteRank++) {
+    std::vector<double> bounds;
     for (int i = 0; i < dimensions; i++) {
-      initialBB.push_back(std::make_pair(3 - remoteRank - 1, 3 - remoteRank));
+      bounds.push_back(3 - remoteRank - 1);
+      bounds.push_back(3 - remoteRank);
     }
-    sendGlobalBB[remoteRank] = initialBB;
-    initialBB.clear();
+    sendGlobalBB.emplace(remoteRank, bounds);
   }
 
   if (context.isNamed("SOLIDZ")) {
