@@ -204,7 +204,7 @@ BOOST_AUTO_TEST_CASE(BoundingBoxCOG_2D)
   BOOST_TEST(cog.size() == 2);
   BOOST_TEST(referenceBox == bBox);
 
-  for (size_t d = 0; d < cog.size(); d++) {
+  for (decltype(cog.size()) d = 0; d < cog.size(); d++) {
     BOOST_TEST(referenceCOG[d] == cog[d]);
   }
 }
@@ -238,7 +238,7 @@ BOOST_AUTO_TEST_CASE(BoundingBoxCOG_3D)
   BOOST_TEST(cog.size() == 3);
   BOOST_TEST(referenceBox == bBox);
 
-  for (size_t d = 0; d < cog.size(); d++) {
+  for (decltype(cog.size()) d = 0; d < cog.size(); d++) {
     BOOST_TEST(referenceCOG[d] == cog[d]);
   }
 }
