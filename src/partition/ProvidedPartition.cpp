@@ -218,7 +218,7 @@ void ProvidedPartition::compareBoundingBoxes()
 
   // each rank sends its bb to master
   if (utils::MasterSlave::isSlave()) { //slave
-    PRECICE_ASSERT(_mesh->getBoundingBox().getDimension() == static_cast<std::size_t>(_mesh->getDimensions()), "The boundingbox of the local mesh is invalid!");
+    PRECICE_ASSERT(_mesh->getBoundingBox().getDimension() == _mesh->getDimensions(), "The boundingbox of the local mesh is invalid!");
     com::CommunicateBoundingBox(utils::MasterSlave::_communication).sendBoundingBox(_mesh->getBoundingBox(), 0);
   } else { // Master
 
