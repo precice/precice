@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(SendAndReceiveBoundingBoxMap)
         bounds.push_back(rank*i);
         bounds.push_back(i + 1);
       }
-      bbm.emplace(rank, bounds);
+      bbm.emplace(rank, mesh::BoundingBox(bounds));
     }
 
     CommunicateBoundingBox comBB(m2n->getMasterCommunication());
@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(BroadcastSendAndReceiveBoundingBoxMap)
       bounds.push_back(rank*i);
       bounds.push_back(i + 1);
     }
-    bbm.emplace(rank, bounds);
+    bbm.emplace(rank, mesh::BoundingBox(bounds));
   }
 
   CommunicateBoundingBox comBB(utils::MasterSlave::_communication);
