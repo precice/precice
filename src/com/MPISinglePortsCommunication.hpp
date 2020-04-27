@@ -1,4 +1,5 @@
 #pragma once
+#include <mpi.h>
 #ifndef PRECICE_NO_MPI
 
 #include <map>
@@ -76,8 +77,14 @@ private:
 
   std::string _addressDirectory;
 
-  /// Remote rank -> communicator map
-  std::map<int, MPI_Comm> _communicators;
+  /// A map of direct communication channels based on MPI_COMM_SELF on both sides
+  std::map<int, MPI_Comm> _direct;
+
+  /// The global intercommunicator that connects all ranks
+  MPI_Comm _global = MPI_COMM_NULL;
+
+  /// The communicator size known from acceptConnection and requestConnection
+  int _initialCommSize = -1;
 
   /// Name of the port used for connection.
   std::string _portName = std::string(MPI_MAX_PORT_NAME, '\0');

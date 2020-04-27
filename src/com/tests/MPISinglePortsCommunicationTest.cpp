@@ -27,14 +27,12 @@ BOOST_AUTO_TEST_CASE(SendAndReceiveMS)
   TestSendAndReceive<MPISinglePortsCommunication>(context);
 }
 
-#if 0
 BOOST_AUTO_TEST_CASE(SendReceiveFourProcessesMM)
 {
   PRECICE_TEST("A"_on(2_ranks), "B"_on(2_ranks), Require::Events);
   using namespace precice::testing::com::mastermaster;
   TestSendReceiveFourProcesses<MPISinglePortsCommunication>(context);
 }
-#endif
 
 BOOST_AUTO_TEST_CASE(SendReceiveTwoProcessesServerClient)
 {
