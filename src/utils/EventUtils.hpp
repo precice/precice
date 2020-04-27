@@ -91,7 +91,6 @@ private:
   std::chrono::steady_clock::time_point finalizedAtTicks;
 
   bool isFinalized = true;
-  int  rank        = 0;
 };
 
 /// Holds data aggregated from all MPI ranks for one event
