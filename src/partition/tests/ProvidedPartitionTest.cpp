@@ -363,9 +363,9 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
     mesh::BoundingBox    localBB{dimensions};
 
     mesh::Mesh::BoundingBoxMap compareBB;
-    compareBB.emplace(0, (std::vector<double>) {-1, 5, 0, 3});
-    compareBB.emplace(1, (std::vector<double>) {0, 1, 3.5, 4.5});
-    compareBB.emplace(2, (std::vector<double>) {2.5, 4.5, 5.5, 7.0});
+    compareBB.emplace(0, std::vector<double>{-1, 5, 0, 3});
+    compareBB.emplace(1, std::vector<double>{0, 1, 3.5, 4.5});
+    compareBB.emplace(2, std::vector<double>{2.5, 4.5, 5.5, 7.0});
 
     // we receive other participants communicator size
     int receivedFeedbackSize = 3;
@@ -459,9 +459,9 @@ BOOST_AUTO_TEST_CASE(TestSendBoundingBoxes3D)
     mesh::BoundingBox    localBB{dimensions};
 
     mesh::Mesh::BoundingBoxMap compareBB;
-    compareBB.emplace(0, (std::vector<double>) {-1, 5, 0, 3, -1, 5});
-    compareBB.emplace(1, (std::vector<double>) {0, 1, 3.5, 4.5, 0, 1});
-    compareBB.emplace(2, (std::vector<double>) {2.5, 4.5, 5.5, 7.0, 2.5, 4.5});
+    compareBB.emplace(0, std::vector<double>{-1, 5, 0, 3, -1, 5});
+    compareBB.emplace(1, std::vector<double>{0, 1, 3.5, 4.5, 0, 1});
+    compareBB.emplace(2, std::vector<double>{2.5, 4.5, 5.5, 7.0, 2.5, 4.5});
 
     // we receive other participants communicator size
     int remoteParComSize = 3;
