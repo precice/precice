@@ -39,13 +39,13 @@ BaseCouplingScheme::BaseCouplingScheme(
       _validDigits(validDigits)
 {
   PRECICE_ASSERT(not((maxTime != UNDEFINED_TIME) && (maxTime < 0.0)),
-                "Maximum time has to be larger than zero!");
+                 "Maximum time has to be larger than zero!");
   PRECICE_ASSERT(not((maxTimeWindows != UNDEFINED_TIME_WINDOWS) && (maxTimeWindows < 0)),
-                "Maximum number of time windows has to be larger than zero!");
+                 "Maximum number of time windows has to be larger than zero!");
   PRECICE_ASSERT(not((timeWindowSize != UNDEFINED_TIME_WINDOW_SIZE) && (timeWindowSize < 0.0)),
-                "Time window size has to be larger than zero!");
+                 "Time window size has to be larger than zero!");
   PRECICE_ASSERT((_validDigits >= 1) && (_validDigits < 17),
-                "Valid digits of time window size has to be between 1 and 16!");
+                 "Valid digits of time window size has to be between 1 and 16!");
 }
 
 BaseCouplingScheme::BaseCouplingScheme(
@@ -86,7 +86,7 @@ BaseCouplingScheme::BaseCouplingScheme(
   if (dtMethod == constants::FIXED_DT) {
     PRECICE_ASSERT(hasTimeWindowSize(),
                    "Timestep length value has to be given when the fixed timestep length method "
-                   << "is chosen for an implicit coupling scheme!");
+                       << "is chosen for an implicit coupling scheme!");
   }
   if (localParticipant == _firstParticipant) {
     _doesFirstStep = true;
@@ -104,7 +104,7 @@ BaseCouplingScheme::BaseCouplingScheme(
                   << "participant specified for the coupling scheme!");
   }
   PRECICE_ASSERT((maxIterations > 0) || (maxIterations == -1),
-                "Maximal iteration limit has to be larger than zero!");
+                 "Maximal iteration limit has to be larger than zero!");
 }
 
 void BaseCouplingScheme::receiveAndSetDt()
@@ -228,7 +228,7 @@ void BaseCouplingScheme::setExtrapolationOrder(
     int order)
 {
   PRECICE_ASSERT((order == 0) || (order == 1) || (order == 2),
-                "Extrapolation order has to be  0, 1, or 2!");
+                 "Extrapolation order has to be  0, 1, or 2!");
   _extrapolationOrder = order;
 }
 
@@ -485,8 +485,8 @@ void BaseCouplingScheme::setupConvergenceMeasures()
   PRECICE_TRACE();
   PRECICE_ASSERT(not doesFirstStep());
   PRECICE_ASSERT(not _convergenceMeasures.empty(),
-      "At least one convergence measure has to be defined for "
-      << "an implicit coupling scheme!");
+                 "At least one convergence measure has to be defined for "
+                     << "an implicit coupling scheme!");
   for (ConvergenceMeasure &convMeasure : _convergenceMeasures) {
     int dataID = convMeasure.data->getID();
     if ((getSendData(dataID) != nullptr)) {
