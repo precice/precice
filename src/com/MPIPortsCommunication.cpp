@@ -59,7 +59,7 @@ void MPIPortsCommunication::acceptConnection(std::string const &acceptorName,
     int requesterRank = -1;
     MPI_Recv(&requesterRank, 1, MPI_INT, 0, 42, communicator, MPI_STATUS_IGNORE);
     // Who big is the communicator of the requester
-    int requesterCommunicatorSize = -1; 
+    int requesterCommunicatorSize = -1;
     MPI_Recv(&requesterCommunicatorSize, 1, MPI_INT, 0, 42, communicator, MPI_STATUS_IGNORE);
     // Send the rank of the acceptor (this rank).
     MPI_Send(&acceptorRank, 1, MPI_INT, 0, 42, communicator);
@@ -152,7 +152,7 @@ void MPIPortsCommunication::requestConnection(std::string const &acceptorName,
   // intra Communication.
   //
   // PRECICE_ASSERT(acceptorRank == 0, "The acceptor always has to be 0.");
-  
+
   _communicators.emplace(acceptorRank, communicator);
 }
 
