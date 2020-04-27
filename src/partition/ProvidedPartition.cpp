@@ -148,7 +148,7 @@ void ProvidedPartition::prepare()
             slaveIds.push_back(i);
           }
         }
-        PRECICE_ASSERT(_mesh->getVertexDistribution().size() == static_cast<std::size_t>(utils::MasterSlave::getSize()));
+        PRECICE_ASSERT(_mesh->getVertexDistribution().size() == utils::MasterSlave::getSize());
       }
     }
   } else if (utils::MasterSlave::isSlave()) {
