@@ -137,6 +137,12 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorNa
   PRECICE_CHECK(requesterCommunicatorSize >= 0, "Requester communicator size has to be positve!");
   PRECICE_ASSERT(not isConnected());
 
+  if (requesterCommunicatorSize == 0) {
+    PRECICE_DEBUG("Accepting no connections.");
+    _isConnected = true;
+    return;
+  }
+
   std::string address;
 
   try {
