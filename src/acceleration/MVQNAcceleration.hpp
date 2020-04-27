@@ -96,12 +96,6 @@ private:
   /// @brief number of cols per time step
   std::deque<int> _matrixCols_RSLS;
 
-  /// @brief Communication between neighboring slaves, backwards
-  com::PtrCommunication _cyclicCommLeft;
-
-  /// @brief Communication between neighboring slaves, forward
-  com::PtrCommunication _cyclicCommRight;
-
   /// @brief encapsulates matrix-matrix and matrix-vector multiplications for serial and parallel execution
   impl::PtrParMatrixOps _parMatrixOps;
 
@@ -199,6 +193,7 @@ private:
 
   /// @brief: Removes one column form the V_RSLS and W_RSLS matrices and adapts _matrixCols_RSLS
   void removeMatrixColumnRSLS(int columnINdex);
+
 };
 } // namespace acceleration
 } // namespace precice

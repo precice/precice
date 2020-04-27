@@ -1,3 +1,4 @@
+#include "utils/assertion.hpp"
 #ifndef PRECICE_NO_MPI
 
 #include <Eigen/Core>
@@ -10,7 +11,6 @@
 #include "acceleration/impl/QRFactorization.hpp"
 #include "com/Communication.hpp"
 #include "com/MPIPortsCommunication.hpp"
-#include "com/SocketCommunication.hpp"
 #include "cplscheme/CouplingData.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
@@ -48,8 +48,6 @@ MVQNAcceleration::MVQNAcceleration(
       _matrixV_RSLS(),
       _matrixW_RSLS(),
       _matrixCols_RSLS(),
-      _cyclicCommLeft(nullptr),
-      _cyclicCommRight(nullptr),
       _parMatrixOps(nullptr),
       _svdJ(RSSVDtruncationEps, preconditioner),
       _alwaysBuildJacobian(alwaysBuildJacobian),
@@ -67,22 +65,6 @@ MVQNAcceleration::MVQNAcceleration(
 // ==================================================================================
 MVQNAcceleration::~MVQNAcceleration()
 {
-  //if(utils::MasterSlave::isMaster() ||utils::MasterSlave::isSlave()){ // not possible because of tests, MasterSlave is deactivated when PP is killed
-
-  // close and shut down cyclic communication connections
-  if (not _imvjRestart) {
-    if (_cyclicCommRight != nullptr || _cyclicCommLeft != nullptr) {
-      if ((utils::MasterSlave::getRank() % 2) == 0) {
-        _cyclicCommLeft->closeConnection();
-        _cyclicCommRight->closeConnection();
-      } else {
-        _cyclicCommRight->closeConnection();
-        _cyclicCommLeft->closeConnection();
-      }
-      _cyclicCommRight = nullptr;
-      _cyclicCommLeft  = nullptr;
-    }
-  }
 }
 
 // ==================================================================================
@@ -97,36 +79,9 @@ void MVQNAcceleration::initialize(
   if (_imvjRestartType > 0)
     _imvjRestart = true;
 
-  // only need cyclic communication if no MVJ restart mode is used
-  if (not _imvjRestart) {
-    if (utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave()) {
-      /*
-     * @todo: FIXME: This is a temporary and hacky realization of the cyclic commmunication between slaves
-     *        Therefore the requesterName and accessorName are not given (cf solverInterfaceImpl).
-     *        The master-slave communication should be modified such that direct communication between
-     *        slaves is possible (via MPIDirect)
-     */
-      _cyclicCommLeft  = com::PtrCommunication(new com::MPIPortsCommunication());
-      _cyclicCommRight = com::PtrCommunication(new com::MPIPortsCommunication());
-      //_cyclicCommLeft = com::Communication::SharedPointer(new com::SocketCommunication(0, false, "ib0", "."));
-      //_cyclicCommRight = com::Communication::SharedPointer(new com::SocketCommunication(0, false, "ib0", "."));
-
-      // initialize cyclic communication between successive slaves
-      int prevProc = (utils::MasterSlave::getRank() - 1 < 0) ? utils::MasterSlave::getSize() - 1 : utils::MasterSlave::getRank() - 1;
-      if ((utils::MasterSlave::getRank() % 2) == 0) {
-        _cyclicCommLeft->acceptConnection("cyclicComm-" + std::to_string(prevProc), "", "", utils::MasterSlave::getRank());
-        _cyclicCommRight->requestConnection("cyclicComm-" + std::to_string(utils::MasterSlave::getRank()), "", "", 0, 1);
-      } else {
-        _cyclicCommRight->requestConnection("cyclicComm-" + std::to_string(utils::MasterSlave::getRank()), "", "", 0, 1);
-        _cyclicCommLeft->acceptConnection("cyclicComm-" + std::to_string(prevProc), "", "", utils::MasterSlave::getRank());
-      }
-      _cyclicCommLeft->cleanupEstablishment("cyclicComm-" + std::to_string(prevProc), "");
-    }
-  }
-
   // initialize parallel matrix-matrix operation module
   _parMatrixOps = impl::PtrParMatrixOps(new impl::ParallelMatrixOperations());
-  _parMatrixOps->initialize(_cyclicCommLeft, _cyclicCommRight, not _imvjRestart);
+  _parMatrixOps->initialize(not _imvjRestart);
   _svdJ.initialize(_parMatrixOps, getLSSystemRows());
 
   int entries  = _residuals.size();
@@ -863,6 +818,7 @@ void MVQNAcceleration::removeMatrixColumnRSLS(
     iter++;
   }
 }
+
 } // namespace acceleration
 } // namespace precice
 

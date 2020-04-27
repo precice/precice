@@ -16,13 +16,10 @@ namespace impl {
 
 class ParallelMatrixOperations {
 public:
-  /// Destructor, empty.
-  virtual ~ParallelMatrixOperations(){};
+  ~ParallelMatrixOperations();
 
   /// Initializes the acceleration.
-  void initialize(com::PtrCommunication leftComm,
-                  com::PtrCommunication rightComm,
-                  bool                  needcyclicComm);
+  void initialize(bool                  needcyclicComm);
 
   template <typename Derived1, typename Derived2>
   void multiply(
@@ -50,7 +47,7 @@ public:
       // if p equals r (and p = global_n), we have to perform the
       // cyclic communication with block-wise matrix-matrix multiplication
       if (p == r) {
-        PRECICE_ASSERT(_needCycliclComm);
+        PRECICE_ASSERT(_needCyclicComm);
         PRECICE_ASSERT(_cyclicCommLeft.get() != NULL);
         PRECICE_ASSERT(_cyclicCommLeft->isConnected());
         PRECICE_ASSERT(_cyclicCommRight.get() != NULL);
@@ -129,7 +126,7 @@ private:
      * -----------------------------------------------------------------------
      */
 
-    PRECICE_ASSERT(_needCycliclComm);
+    PRECICE_ASSERT(_needCyclicComm);
     PRECICE_ASSERT(leftMatrix.cols() == q, leftMatrix.cols(), q);
     PRECICE_ASSERT(leftMatrix.rows() == rightMatrix.cols(), leftMatrix.rows(), rightMatrix.cols());
     PRECICE_ASSERT(result.rows() == p, result.rows(), p);
@@ -308,7 +305,24 @@ private:
   /// Communication between neighboring slaves, forward
   com::PtrCommunication _cyclicCommRight = nullptr;
 
-  bool _needCycliclComm = true;
+  bool _needCyclicComm = true;
+
+  /** Establishes the circular connection between slaves
+   *
+   * This creates and connects the slaves.
+   *
+   * @precondition _cyclicCommLeft and _cyclicCommRight must be nullptr
+   * @postcondition _cyclicCommLeft, _cyclicCommRight are connected
+   */
+  void establishCircularCommunication();
+
+  /** Closes the circular connection between slaves
+   *
+   * @precondition establishCircularCommunication() was called
+   * @postcondition _cyclicCommLeft, _cyclicCommRight are disconnected and set to nullptr
+   */
+  void closeCircularCommunication();
+
 };
 
 } // namespace impl
