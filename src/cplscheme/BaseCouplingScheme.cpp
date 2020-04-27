@@ -227,7 +227,7 @@ void BaseCouplingScheme::finalize()
 void BaseCouplingScheme::setExtrapolationOrder(
     int order)
 {
-  PRECICE_CHECK((order == 0) || (order == 1) || (order == 2),
+  PRECICE_ASSERT((order == 0) || (order == 1) || (order == 2),
                 "Extrapolation order has to be  0, 1, or 2!");
   _extrapolationOrder = order;
 }
