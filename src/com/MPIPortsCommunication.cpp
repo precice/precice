@@ -196,6 +196,7 @@ void MPIPortsCommunication::closeConnection()
   for (auto &communicator : _communicators) {
     MPI_Comm_disconnect(&communicator.second);
   }
+  _communicators.clear();
 
   PRECICE_DEBUG("Disconnected");
 
