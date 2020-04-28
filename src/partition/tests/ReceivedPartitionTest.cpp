@@ -893,11 +893,11 @@ BOOST_AUTO_TEST_CASE(TestRepartitionAndDistribution2D)
 
     Eigen::VectorXd position(dimensions);
     position << 0.0, 0.0;
-    mesh::Vertex &v1 = pMesh->createVertex(position);
+    pMesh->createVertex(position);
     position << 1.0, 0.0;
-    mesh::Vertex &v2 = pMesh->createVertex(position);
+    pMesh->createVertex(position);
     position << 2.0, 0.0;
-    mesh::Vertex &v3 = pMesh->createVertex(position);
+    pMesh->createVertex(position);
 
     pMesh->computeState();
     pMesh->computeBoundingBox();

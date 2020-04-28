@@ -367,6 +367,7 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
     compareBB.emplace(1, mesh::BoundingBox({0, 1, 3.5, 4.5}));
     compareBB.emplace(2, mesh::BoundingBox({2.5, 4.5, 5.5, 7.0}));
 
+
     // we receive other participants communicator size
     int receivedFeedbackSize = 3;
     m2n->getMasterCommunication()->receive(receivedFeedbackSize, 0);

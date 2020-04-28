@@ -21,9 +21,9 @@ Mesh::Mesh(
     int                id)
     : _name(name),
       _dimensions(dimensions),
-      _boundingBox(dimensions),
       _flipNormals(flipNormals),
-      _id(id)
+      _id(id),
+      _boundingBox(dimensions)
 {
   PRECICE_ASSERT((_dimensions == 2) || (_dimensions == 3), _dimensions);
   PRECICE_ASSERT(_name != std::string(""));
