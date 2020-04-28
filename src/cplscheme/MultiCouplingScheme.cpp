@@ -21,7 +21,7 @@ MultiCouplingScheme::MultiCouplingScheme(
     constants::TimesteppingMethod dtMethod,
     int                           maxIterations)
     : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, "neverFirstParticipant",
-                         localParticipant, localParticipant, m2n::PtrM2N(), maxIterations, Implicit, dtMethod),
+                         localParticipant, localParticipant, maxIterations, Implicit, dtMethod),
       _communications(m2ns)
 {
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");

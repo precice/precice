@@ -57,22 +57,9 @@ public:
       const std::string &           firstParticipant,
       const std::string &           secondParticipant,
       const std::string &           localParticipant,
-      m2n::PtrM2N                   m2n,
       int                           maxIterations,
       CouplingMode                  cplMode,
       constants::TimesteppingMethod dtMethod);
-
-  /// Adds data to be sent on data exchange and possibly be modified during coupling iterations.
-  void addDataToSend(
-      mesh::PtrData data,
-      mesh::PtrMesh mesh,
-      bool          requiresInitialization);
-
-  /// Adds data to be received on data exchange.
-  void addDataToReceive(
-      mesh::PtrData data,
-      mesh::PtrMesh mesh,
-      bool          requiresInitialization);
 
   /// performs checks on configured coupling scheme
   virtual void checkConfiguration() = 0;
@@ -238,29 +225,6 @@ protected:
     return _doesFirstStep;
   }
 
-  /// Sends data sendDataIDs given in mapCouplingData with communication.
-  std::vector<int> sendData();
-
-  /// Receives data receiveDataIDs given in mapCouplingData with communication.
-  std::vector<int> receiveData();
-
-  /// Returns all data to be sent.
-  DataMap &getSendData()
-  {
-    return _sendData;
-  }
-
-  DataMap &getReceiveData()
-  {
-    return _receiveData;
-  }
-
-  /// Sets the values
-  CouplingData *getSendData(int dataID);
-
-  /// Returns all data to be received with data ID as given.
-  CouplingData *getReceiveData(int dataID);
-
   /// Sets flag to determine whether data has been exchanged in the last coupling iteration.
   void setHasDataBeenExchanged(bool hasDataBeenExchanged);
 
@@ -272,13 +236,6 @@ protected:
   void setTimeWindows(int timeWindows)
   {
     _timeWindows = timeWindows;
-  }
-
-  /// @return Communication device to the other coupling participant.
-  m2n::PtrM2N getM2N() const
-  {
-    PRECICE_ASSERT(_m2n);
-    return _m2n;
   }
 
   /// @return value of _sendsInitializedData.
@@ -324,10 +281,7 @@ protected:
   void updateOldValues(DataMap &dataMap);
 
   /// TODO
-  bool receiveConvergence();
-
-  /// TODO
-  void sendConvergence(bool convergence);
+  virtual void sendConvergence(bool convergence) = 0;
 
   /// TODO
   bool accelerate();
@@ -357,9 +311,6 @@ protected:
   bool anyDataRequiresInitialization(DataMap &dataMap) const;
 
 private:
-  /// Communication device to the other coupling participant.
-  m2n::PtrM2N _m2n;
-
   /// Coupling mode used by coupling scheme.
   CouplingMode _couplingMode = Undefined;
 
@@ -428,12 +379,6 @@ private:
 
   std::set<std::string> _actions;
 
-  /// Map from data ID -> all send data with that ID
-  DataMap _sendData;
-
-  /// Map from data ID -> all receive data with that ID
-  DataMap _receiveData;
-
   /// Responsible for monitoring iteration count over time window.
   std::shared_ptr<io::TXTTableWriter> _iterationsWriter;
 
@@ -459,9 +404,6 @@ private:
    * the data is fetched from send and receive data assigned to the cpl scheme.
    */
   std::vector<ConvergenceMeasure> _convergenceMeasures;
-
-  /// Sets whether the solver evaluates the fine or the coarse model representation
-  bool _isCoarseModelOptimizationActive = false;
 
   /// Functions needed for initialize()
   void setupConvergenceMeasures();
@@ -514,15 +456,11 @@ private:
   /// Returns a string representing the required actions.
   std::string printActionsState() const;
 
-  /// Implements functionality for setupConvergenceMeasures
-  virtual void assignDataToConvergenceMeasure(ConvergenceMeasure* convMeasure, int dataID){
-    if ((getSendData(dataID) != nullptr)) {
-      convMeasure->couplingData = getSendData(dataID);
-    } else {
-      convMeasure->couplingData = getReceiveData(dataID);
-      PRECICE_ASSERT(convMeasure->couplingData != nullptr);
-    }
-  }
+  /// Needed for setupConvergenceMeasures, implemented in child class
+  virtual void assignDataToConvergenceMeasure(ConvergenceMeasure* convMeasure, int dataID) = 0;
+
+  /// @todo
+  virtual void storeData() = 0;
 };
 } // namespace cplscheme
 } // namespace precice

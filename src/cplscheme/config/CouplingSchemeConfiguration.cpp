@@ -804,13 +804,15 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
   } else {
     m2n::PtrM2N m2n = _m2nConfig->getM2N(
         accessor, _config.controller);
+
     scheme = new ParallelCouplingScheme(
         _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize,
         _config.validDigits, accessor, _config.controller,
         accessor, m2n, _config.dtMethod, BaseCouplingScheme::Implicit, _config.maxIterations);
     scheme->setExtrapolationOrder(_config.extrapolationOrder);
 
-    addDataToBeExchanged(*scheme, accessor);
+    BiCouplingScheme *castedScheme = dynamic_cast<BiCouplingScheme *>(scheme);
+    addDataToBeExchanged(*castedScheme, accessor);
   }
 
   // Add convergence measures
@@ -857,7 +859,7 @@ CouplingSchemeConfiguration::getTimesteppingMethod(
 }
 
 void CouplingSchemeConfiguration::addDataToBeExchanged(
-    BaseCouplingScheme &scheme,
+    BiCouplingScheme &scheme,
     const std::string & accessor) const
 {
   PRECICE_TRACE();

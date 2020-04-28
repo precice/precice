@@ -55,7 +55,7 @@ public:
 private:
   void          sendData();
   void          receiveData();
-  void          sendConvergence(bool convergence);
+  void          sendConvergence(bool convergence) override;
   CouplingData *getData(int dataID);
 
   /// Communication device to the other coupling participant.
@@ -98,6 +98,25 @@ private:
    * @brief TODO
    */
   void assignDataToConvergenceMeasure(ConvergenceMeasure *convergenceMeasure, int dataID) override;
+
+  /// @brief TODO
+  void storeData() override {
+    for (DataMap &sendData : _sendDataVector) {
+      for (DataMap::value_type &pair : sendData) {
+        if (pair.second->oldValues.size() > 0) {
+          pair.second->oldValues.col(0) = *pair.second->values;
+        }
+      }
+    }
+    for (DataMap &receiveData : _receiveDataVector) {
+      for (DataMap::value_type &pair : receiveData) {
+        if (pair.second->oldValues.size() > 0) {
+          pair.second->oldValues.col(0) = *pair.second->values;
+        }
+      }
+    }
+
+  }
 };
 
 } // namespace cplscheme

@@ -19,7 +19,7 @@
 namespace precice {
 namespace cplscheme {
 class CompositionalCouplingScheme;
-class BaseCouplingScheme;
+class BiCouplingScheme;
 } // namespace cplscheme
 } // namespace precice
 
@@ -222,7 +222,7 @@ private:
 
   /// Adds configured exchange data to be sent or received to scheme.
   void addDataToBeExchanged(
-      BaseCouplingScheme &scheme,
+      BiCouplingScheme &scheme,
       const std::string & accessor) const;
 
   /**

@@ -8,12 +8,9 @@
 #include "impl/ConvergenceMeasure.hpp"
 #include "io/TXTReader.hpp"
 #include "io/TXTWriter.hpp"
-#include "m2n/M2N.hpp"
-#include "m2n/SharedPointer.hpp"
 #include "math/math.hpp"
 #include "mesh/Mesh.hpp"
 #include "utils/EigenHelperFunctions.hpp"
-#include "utils/Helpers.hpp"
 #include "utils/MasterSlave.hpp"
 
 namespace precice {
@@ -27,12 +24,10 @@ BaseCouplingScheme::BaseCouplingScheme(
     const std::string &           firstParticipant,
     const std::string &           secondParticipant,
     const std::string &           localParticipant,
-    m2n::PtrM2N                   m2n,
     int                           maxIterations,
     CouplingMode                  cplMode,
     constants::TimesteppingMethod dtMethod)
-    : _m2n(m2n),
-      _couplingMode(cplMode),
+    : _couplingMode(cplMode),
       _maxTime(maxTime),
       _maxTimeWindows(maxTimeWindows),
       _timeWindows(1),
@@ -83,91 +78,6 @@ BaseCouplingScheme::BaseCouplingScheme(
 void BaseCouplingScheme::setTimeWindowSize(double timeWindowSize)
 {
   _timeWindowSize = timeWindowSize;
-}
-
-void BaseCouplingScheme::addDataToSend(
-    mesh::PtrData data,
-    mesh::PtrMesh mesh,
-    bool          requiresInitialization)
-{
-  PRECICE_TRACE();
-  int id = data->getID();
-  if (!utils::contained(id, _sendData)) {
-    PtrCouplingData     ptrCplData(new CouplingData(&(data->values()), mesh, requiresInitialization, data->getDimensions()));
-    DataMap::value_type pair = std::make_pair(id, ptrCplData);
-    _sendData.insert(pair);
-  } else {
-    PRECICE_ERROR("Data \"" << data->getName() << "\" cannot be added twice for sending.");
-  }
-}
-
-void BaseCouplingScheme::addDataToReceive(
-    mesh::PtrData data,
-    mesh::PtrMesh mesh,
-    bool          requiresInitialization)
-{
-  PRECICE_TRACE();
-  int id = data->getID();
-  if (!utils::contained(id, _receiveData)) {
-    PtrCouplingData     ptrCplData(new CouplingData(&(data->values()), mesh, requiresInitialization, data->getDimensions()));
-    DataMap::value_type pair = std::make_pair(id, ptrCplData);
-    _receiveData.insert(pair);
-  } else {
-    PRECICE_ERROR("Data \"" << data->getName() << "\" cannot be added twice for receiving.");
-  }
-}
-
-std::vector<int> BaseCouplingScheme::sendData()
-{
-  PRECICE_TRACE();
-  std::vector<int> sentDataIDs;
-  PRECICE_ASSERT(_m2n.get() != nullptr);
-  PRECICE_ASSERT(_m2n->isConnected());
-  for (const DataMap::value_type &pair : _sendData) {
-    int size = pair.second->values->size();
-    _m2n->send(pair.second->values->data(), size, pair.second->mesh->getID(), pair.second->dimension);
-    sentDataIDs.push_back(pair.first);
-  }
-  PRECICE_DEBUG("Number of sent data sets = " << sentDataIDs.size());
-  return sentDataIDs;
-}
-
-std::vector<int> BaseCouplingScheme::receiveData()
-{
-  PRECICE_TRACE();
-  std::vector<int> receivedDataIDs;
-  PRECICE_ASSERT(_m2n.get() != nullptr);
-  PRECICE_ASSERT(_m2n->isConnected());
-  for (DataMap::value_type &pair : _receiveData) {
-    int size = pair.second->values->size();
-    _m2n->receive(pair.second->values->data(), size, pair.second->mesh->getID(), pair.second->dimension);
-    receivedDataIDs.push_back(pair.first);
-  }
-  PRECICE_DEBUG("Number of received data sets = " << receivedDataIDs.size());
-  _hasDataBeenExchanged = true;
-  return receivedDataIDs;
-}
-
-CouplingData *BaseCouplingScheme::getSendData(
-    int dataID)
-{
-  PRECICE_TRACE(dataID);
-  DataMap::iterator iter = _sendData.find(dataID);
-  if (iter != _sendData.end()) {
-    return &(*(iter->second));
-  }
-  return nullptr;
-}
-
-CouplingData *BaseCouplingScheme::getReceiveData(
-    int dataID)
-{
-  PRECICE_TRACE(dataID);
-  DataMap::iterator iter = _receiveData.find(dataID);
-  if (iter != _receiveData.end()) {
-    return &(*(iter->second));
-  }
-  return nullptr;
 }
 
 void BaseCouplingScheme::finalize()
@@ -243,17 +153,6 @@ void BaseCouplingScheme::advance()
   _hasDataBeenExchanged = false;
   _isTimeWindowComplete = false;
 
-#ifndef NDEBUG
-  for (const DataMap::value_type &pair : getReceiveData()) {
-    Eigen::VectorXd &  values = *pair.second->values;
-    int                max    = values.size();
-    std::ostringstream stream;
-    for (int i = 0; (i < max) && (i < 10); i++) {
-      stream << values[i] << " ";
-    }
-    PRECICE_DEBUG("Begin advance, first New Values: " << stream.str());
-  }
-#endif
   PRECICE_ASSERT(_couplingMode != Undefined);
 
   if (reachedEndOfTimeWindow()) {
@@ -748,20 +647,6 @@ bool BaseCouplingScheme::anyDataRequiresInitialization(BaseCouplingScheme::DataM
   return false;
 }
 
-bool BaseCouplingScheme::receiveConvergence()
-{
-  PRECICE_ASSERT(doesFirstStep(), "For convergence information the receiving participant is always the first one.");
-  bool convergence;
-  _m2n->receive(convergence);
-  return convergence;
-}
-
-void BaseCouplingScheme::sendConvergence(bool convergence)
-{
-  PRECICE_ASSERT(not doesFirstStep(), "For convergence information the sending participant is never the first one.");
-  _m2n->send(convergence);
-}
-
 bool BaseCouplingScheme::accelerate()
 {
   PRECICE_DEBUG("measure convergence of the coupling iteration");
@@ -785,17 +670,9 @@ bool BaseCouplingScheme::accelerate()
   // extrapolate new input data for the solver evaluation in time.
   if (convergence) {
     extrapolateData(getAccelerationData()); // Also stores data
-  } else {                          // Store data for conv. measurement, acceleration, or extrapolation
-    for (DataMap::value_type &pair : getSendData()) {
-      if (pair.second->oldValues.size() > 0) {
-        pair.second->oldValues.col(0) = *pair.second->values;
-      }
-    }
-    for (DataMap::value_type &pair : getReceiveData()) {
-      if (pair.second->oldValues.size() > 0) {
-        pair.second->oldValues.col(0) = *pair.second->values;
-      }
-    }
+  } else {
+    // Store data for conv. measurement, acceleration, or extrapolation
+    storeData();
   }
 
   return convergence;

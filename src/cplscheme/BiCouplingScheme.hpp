@@ -29,6 +29,93 @@ public:
       int                           maxIterations,
       CouplingMode                  cplMode,
       constants::TimesteppingMethod dtMethod);
+
+  /// Adds data to be sent on data exchange and possibly be modified during coupling iterations.
+  void addDataToSend(
+      mesh::PtrData data,
+      mesh::PtrMesh mesh,
+      bool          requiresInitialization);
+
+  /// Adds data to be received on data exchange.
+  void addDataToReceive(
+      mesh::PtrData data,
+      mesh::PtrMesh mesh,
+      bool          requiresInitialization);
+
+protected:
+
+  /// Sends data sendDataIDs given in mapCouplingData with communication.
+  std::vector<int> sendData();
+
+  /// Receives data receiveDataIDs given in mapCouplingData with communication.
+  std::vector<int> receiveData();
+
+  /// Returns all data to be sent.
+  DataMap &getSendData()
+  {
+    return _sendData;
+  }
+
+  DataMap &getReceiveData()
+  {
+    return _receiveData;
+  }
+
+  /// Sets the values
+  CouplingData *getSendData(int dataID);
+
+  /// Returns all data to be received with data ID as given.
+  CouplingData *getReceiveData(int dataID);
+
+  /// @return Communication device to the other coupling participant.
+  m2n::PtrM2N getM2N() const
+  {
+    PRECICE_ASSERT(_m2n);
+    return _m2n;
+  }
+
+  /// TODO
+  bool receiveConvergence();
+
+  /// TODO
+  void sendConvergence(bool convergence) override;
+
+private:
+
+  mutable logging::Logger _log{"cplscheme::BiCouplingScheme"};
+
+  /// Communication device to the other coupling participant.
+  m2n::PtrM2N _m2n;
+
+  /// Map from data ID -> all send data with that ID
+  DataMap _sendData;
+
+  /// Map from data ID -> all receive data with that ID
+  DataMap _receiveData;
+
+  /// Implements functionality for setupConvergenceMeasures
+  void assignDataToConvergenceMeasure(ConvergenceMeasure* convMeasure, int dataID) override {
+    if ((getSendData(dataID) != nullptr)) {
+      convMeasure->couplingData = getSendData(dataID);
+    } else {
+      convMeasure->couplingData = getReceiveData(dataID);
+      PRECICE_ASSERT(convMeasure->couplingData != nullptr);
+    }
+  }
+
+  /// @brief TODO
+  void storeData() override {
+    for (DataMap::value_type &pair : getSendData()) {
+      if (pair.second->oldValues.size() > 0) {
+        pair.second->oldValues.col(0) = *pair.second->values;
+      }
+    }
+    for (DataMap::value_type &pair : getReceiveData()) {
+      if (pair.second->oldValues.size() > 0) {
+        pair.second->oldValues.col(0) = *pair.second->values;
+      }
+    }
+  }
 };
 
 } // namespace cplscheme
