@@ -172,7 +172,7 @@ void PythonAction::initialize()
   _performAction = PyObject_GetAttrString(_module, "performAction");
   if (PyErr_Occurred()) {
     PyErr_Clear();
-    PRECICE_WARN("No function void performAction() in python module \"" << _moduleName << "\" found.");
+    PRECICE_WARN("Python module \"" << _module << "\" does not define function performAction().");
     _performAction = nullptr;
   }
   //  bool valid = _performAction != NULL;
@@ -184,7 +184,7 @@ void PythonAction::initialize()
   _vertexCallback = PyObject_GetAttrString(_module, "vertexCallback");
   if (PyErr_Occurred()) {
     PyErr_Clear();
-    PRECICE_WARN("No function void vertexCallback() in python module \"" << _moduleName << "\" found.");
+    PRECICE_WARN("Python module \"" << _module << "\" does not define function vertexCallback().");
     _vertexCallback = nullptr;
   }
 
@@ -192,7 +192,7 @@ void PythonAction::initialize()
   _postAction = PyObject_GetAttrString(_module, "postAction");
   if (PyErr_Occurred()) {
     PyErr_Clear();
-    PRECICE_WARN("No function void postAction() in python module \"" << _moduleName << "\" found.");
+    PRECICE_WARN("Python module \"" << _module << "\" does not define function postAction().");
     _postAction = nullptr;
   }
 }
