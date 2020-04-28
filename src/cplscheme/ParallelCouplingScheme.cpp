@@ -41,20 +41,22 @@ void ParallelCouplingScheme::exchangeInitialData()
   // F: send, receive, S: receive, send
   if (doesFirstStep()) {
     if (sendsInitializedData()) {
-      sendData();
+      sendData(getM2N(), getSendData());
     }
     if (receivesInitializedData()) {
-      receiveData();
+      receiveData(getM2N(), getReceiveData());
+      setHasDataBeenExchanged(true);
     }
   } else { // second participant
     if (receivesInitializedData()) {
-      receiveData();
+      receiveData(getM2N(), getReceiveData());
+      setHasDataBeenExchanged(true);
       // second participant has to save values for extrapolation
       updateOldValues(getReceiveData());
     }
     if (sendsInitializedData()) {
       updateOldValues(getSendData());
-      sendData();
+      sendData(getM2N(), getSendData());
     }
   }
 }
@@ -65,22 +67,24 @@ bool ParallelCouplingScheme::exchangeDataAndAccelerate()
 
   if (doesFirstStep()) { //first participant
     PRECICE_DEBUG("Sending data...");
-    sendData();
+    sendData(getM2N(), getSendData());
     PRECICE_DEBUG("Receiving data...");
     if(isImplicitCouplingScheme()) {
       convergence = receiveConvergence();
     }
-    receiveData();
+    receiveData(getM2N(), getReceiveData());
+    setHasDataBeenExchanged(true);
   } else { //second participant
     PRECICE_DEBUG("Receiving data...");
-    receiveData();
+    receiveData(getM2N(), getReceiveData());
+    setHasDataBeenExchanged(true);
     if (isImplicitCouplingScheme()) {
       PRECICE_DEBUG("Perform acceleration (only second participant)...");
       convergence = accelerate();
-      sendConvergence(convergence);
+      sendConvergence(getM2N(), convergence);
     }
     PRECICE_DEBUG("Sending data...");
-    sendData();
+    sendData(getM2N(), getSendData());
   }
 
   return convergence;

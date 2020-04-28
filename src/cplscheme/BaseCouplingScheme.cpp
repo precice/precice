@@ -75,6 +75,39 @@ BaseCouplingScheme::BaseCouplingScheme(
   }
 }
 
+void BaseCouplingScheme::sendData(m2n::PtrM2N m2n, DataMap sendData)
+{
+  PRECICE_TRACE();
+  std::vector<int> sentDataIDs;
+  PRECICE_ASSERT(m2n.get() != nullptr);
+  PRECICE_ASSERT(m2n->isConnected());
+
+  for (const DataMap::value_type &pair : sendData) {
+    int size = pair.second->values->size();
+    if (size > 0) {
+      m2n->send(pair.second->values->data(), size, pair.second->mesh->getID(), pair.second->dimension);
+    }
+    sentDataIDs.push_back(pair.first);
+  }
+  PRECICE_DEBUG("Number of sent data sets = " << sentDataIDs.size());
+}
+
+void BaseCouplingScheme::receiveData(m2n::PtrM2N m2n, DataMap receiveData)
+{
+  PRECICE_TRACE();
+  std::vector<int> receivedDataIDs;
+  PRECICE_ASSERT(m2n.get());
+  PRECICE_ASSERT(m2n->isConnected());
+  for (DataMap::value_type &pair : receiveData) {
+    int size = pair.second->values->size();
+    if (size > 0) {
+      m2n->receive(pair.second->values->data(), size, pair.second->mesh->getID(), pair.second->dimension);
+    }
+    receivedDataIDs.push_back(pair.first);
+  }
+  PRECICE_DEBUG("Number of received data sets = " << receivedDataIDs.size());
+}
+
 void BaseCouplingScheme::setTimeWindowSize(double timeWindowSize)
 {
   _timeWindowSize = timeWindowSize;

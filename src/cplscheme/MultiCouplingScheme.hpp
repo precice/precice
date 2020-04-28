@@ -53,13 +53,10 @@ public:
   void checkConfiguration() override;
 
 private:
-  void          sendData();
-  void          receiveData();
-  void          sendConvergence(bool convergence) override;
   CouplingData *getData(int dataID);
 
   /// Communication device to the other coupling participant.
-  std::vector<m2n::PtrM2N> _communications;
+  std::vector<m2n::PtrM2N> _m2ns;
 
   /// Map from data ID -> all data (receive and send) with that ID
   DataMap _allData;

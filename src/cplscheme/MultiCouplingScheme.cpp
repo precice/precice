@@ -22,11 +22,11 @@ MultiCouplingScheme::MultiCouplingScheme(
     int                           maxIterations)
     : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, "neverFirstParticipant",
                          localParticipant, localParticipant, maxIterations, Implicit, dtMethod),
-      _communications(m2ns)
+      _m2ns(m2ns)
 {
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
   PRECICE_ASSERT(not doesFirstStep(), "MultiCouplingScheme never does the first step, because it is never the first participant");
-  for (size_t i = 0; i < _communications.size(); ++i) {
+  for (size_t i = 0; i < _m2ns.size(); ++i) {
     DataMap receiveMap;
     DataMap sendMap;
     _receiveDataVector.push_back(receiveMap);
@@ -64,7 +64,10 @@ void MultiCouplingScheme::exchangeInitialData()
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
 
   if (receivesInitializedData()) {
-    receiveData();
+    for (size_t i = 0; i < _m2ns.size(); i++) {
+      receiveData(_m2ns[i], _receiveDataVector[i]);
+    }
+    setHasDataBeenExchanged(true);
     // second participant has to save values for extrapolation
     for (DataMap &receiveData : _receiveDataVector) {
       updateOldValues(receiveData);
@@ -74,7 +77,9 @@ void MultiCouplingScheme::exchangeInitialData()
     for (DataMap &sendData : _sendDataVector) {
       updateOldValues(sendData);
     }
-    sendData();
+    for (size_t i = 0; i < _m2ns.size(); i++) {
+      sendData(_m2ns[i], _sendDataVector[i]);
+    }
   }
 }
 
@@ -85,14 +90,21 @@ bool MultiCouplingScheme::exchangeDataAndAccelerate()
 
   PRECICE_DEBUG("Computed full length of iteration");
 
-  receiveData();
+  for (size_t i = 0; i < _m2ns.size(); i++) {
+    receiveData(_m2ns[i], _receiveDataVector[i]);
+  }
+  setHasDataBeenExchanged(true);
 
   PRECICE_DEBUG("Perform acceleration (only second participant)...");
   bool convergence = accelerate();
 
-  sendConvergence(convergence);
+  for (m2n::PtrM2N m2n : _m2ns) {
+    sendConvergence(m2n, convergence);
+  }
 
-  sendData();
+  for (size_t i = 0; i < _m2ns.size(); i++) {
+    sendData(_m2ns[i], _sendDataVector[i]);
+  }
 
   // TODO: Using a hard-coded "true" here looks strange.
   return convergence;
@@ -142,52 +154,6 @@ void MultiCouplingScheme::addDataToReceive(
     PRECICE_ERROR("Data \"" << data->getName()
                             << "\" of mesh \"" << mesh->getName() << "\" cannot be "
                             << "added twice for receiving.");
-  }
-}
-
-void MultiCouplingScheme::sendData()
-{
-  PRECICE_TRACE();
-
-  for (size_t i = 0; i < _communications.size(); i++) {
-    // copy of BaseCouplingScheme::sendData() @todo can we improve this?
-    PRECICE_ASSERT(_communications[i].get() != nullptr);
-    PRECICE_ASSERT(_communications[i]->isConnected());
-
-    for (DataMap::value_type &pair : _sendDataVector[i]) {
-      int size = pair.second->values->size();
-      if (size > 0) {
-        _communications[i]->send(pair.second->values->data(), size, pair.second->mesh->getID(), pair.second->dimension);
-      }
-    }
-  }
-}
-
-void MultiCouplingScheme::receiveData()
-{
-  PRECICE_TRACE();
-
-  for (size_t i = 0; i < _communications.size(); i++) {
-    // copy of BaseCouplingScheme::receiveData() @todo can we improve this?
-    PRECICE_ASSERT(_communications[i].get() != nullptr);
-    PRECICE_ASSERT(_communications[i]->isConnected());
-
-    for (DataMap::value_type &pair : _receiveDataVector[i]) {
-      int size = pair.second->values->size();
-      if (size > 0) {
-        _communications[i]->receive(pair.second->values->data(), size, pair.second->mesh->getID(), pair.second->dimension);
-      }
-    }
-  }
-  setHasDataBeenExchanged(true);
-}
-
-void MultiCouplingScheme::sendConvergence(bool convergence)
-{
-  for (m2n::PtrM2N m2n : _communications) {
-    // copy of BaseCouplingScheme::sendConvergence(bool convergence) @todo can we improve this?
-    PRECICE_ASSERT(not doesFirstStep(), "For convergence information the sending participant is never the first one.");
-    m2n->send(convergence);
   }
 }
 

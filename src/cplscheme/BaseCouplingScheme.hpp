@@ -11,6 +11,7 @@
 #include "io/TXTTableWriter.hpp"
 #include "logging/Logger.hpp"
 #include "m2n/SharedPointer.hpp"
+#include "m2n/M2N.hpp"
 
 namespace precice {
 namespace cplscheme {
@@ -195,6 +196,13 @@ public:
 protected:
   /// TODO
   typedef std::map<int, PtrCouplingData> DataMap;
+
+  /// Sends data sendDataIDs given in mapCouplingData with communication.
+  void sendData(m2n::PtrM2N m2n, DataMap sendData);
+
+  /// Receives data receiveDataIDs given in mapCouplingData with communication.
+  void receiveData(m2n::PtrM2N m2n, DataMap receiveData);
+
   typedef std::map<int, Eigen::VectorXd> ValuesMap;
 
   /// Returns true, if coupling scheme is explicit
@@ -281,7 +289,12 @@ protected:
   void updateOldValues(DataMap &dataMap);
 
   /// TODO
-  virtual void sendConvergence(bool convergence) = 0;
+  void sendConvergence(m2n::PtrM2N m2n, bool convergence)
+  {
+    // copy of BaseCouplingScheme::sendConvergence(bool convergence) @todo can we improve this?
+    PRECICE_ASSERT(not doesFirstStep(), "For convergence information the sending participant is never the first one.");
+    m2n->send(convergence);
+  }
 
   /// TODO
   bool accelerate();

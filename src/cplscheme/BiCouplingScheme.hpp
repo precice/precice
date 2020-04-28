@@ -43,13 +43,6 @@ public:
       bool          requiresInitialization);
 
 protected:
-
-  /// Sends data sendDataIDs given in mapCouplingData with communication.
-  std::vector<int> sendData();
-
-  /// Receives data receiveDataIDs given in mapCouplingData with communication.
-  std::vector<int> receiveData();
-
   /// Returns all data to be sent.
   DataMap &getSendData()
   {
@@ -76,9 +69,6 @@ protected:
 
   /// TODO
   bool receiveConvergence();
-
-  /// TODO
-  void sendConvergence(bool convergence) override;
 
 private:
 
