@@ -121,9 +121,7 @@ int ConfigParser::readXmlFile(std::string const &filePath)
   SAXHandler.serror         = OnStructuredErrorFunc;
 
   std::ifstream ifs(filePath);
-  if (not ifs) {
-    PRECICE_ERROR("File open error: " << filePath);
-  }
+  PRECICE_CHECK(ifs, "XML parser was unable to open configuration file \"" << filePath << '"');
 
   std::string content{std::istreambuf_iterator<char>(ifs), std::istreambuf_iterator<char>()};
 
