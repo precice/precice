@@ -129,49 +129,56 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   PRECICE_ASSERT(getDimensions() == output()->getDimensions(),
                  getDimensions(), output()->getDimensions());
   int           dimensions = getDimensions();
-  
-  mesh::PtrMesh inMesh;
-  mesh::PtrMesh outMesh;
 
-  if (getConstraint() == CONSERVATIVE) {
-    inMesh  = output();
-    outMesh = input();
-  } else {
-    inMesh  = input();
-    outMesh = output();
-  }
-
-  mesh::Mesh globalInMesh(inMesh->getName(), inMesh->getDimensions(), inMesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
-  mesh::Mesh globalOutMesh(outMesh->getName(), outMesh->getDimensions(), outMesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
-  mesh::Mesh dummyMesh(inMesh->getName(), inMesh->getDimensions(), inMesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
-
-  // Gather the input matrix
   if(utils::MasterSlave::isSlave()){
-    com::CommunicateMesh(utils::MasterSlave::_communication).sendMesh(*inMesh.get(), 0);
-  } else {
-    globalInMesh.addMesh(*inMesh);
-    for(int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); ++rankSlave){
-      com::CommunicateMesh(utils::MasterSlave::_communication).receiveMesh(dummyMesh, rankSlave);
-      globalInMesh.addMesh(dummyMesh);
+    mesh::PtrMesh inMesh;
+    mesh::PtrMesh outMesh;
+    if (getConstraint() == CONSERVATIVE) {
+      inMesh  = output();
+      outMesh = input();
+    } else {
+      inMesh  = input();
+      outMesh = output();
     }
-  }
+    com::CommunicateMesh(utils::MasterSlave::_communication).sendMesh(*inMesh, 0);
+    com::CommunicateMesh(utils::MasterSlave::_communication).sendMesh(*outMesh,0);
+  } else { 
 
-  // Gather the output matrix
-  if(utils::MasterSlave::isSlave()){
-    com::CommunicateMesh(utils::MasterSlave::_communication).sendMesh(*outMesh.get(),0);
-  } else {
-    globalOutMesh.addMesh(*outMesh);
-    for(int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); ++rankSlave){
-      com::CommunicateMesh(utils::MasterSlave::_communication).receiveMesh(dummyMesh, rankSlave);
-      globalOutMesh.addMesh(dummyMesh);
-    }
-  }
-
-  // LU Decomposition
-  if(utils::MasterSlave::isMaster()){
+    mesh::PtrMesh inMesh;
+    mesh::PtrMesh outMesh;
     
+    if (getConstraint() == CONSERVATIVE) {
+      inMesh  = output();
+      outMesh = input();
+    } else {
+      inMesh  = input();
+      outMesh = output();
+    }
+
+    mesh::Mesh globalInMesh("globalInMesh", inMesh->getDimensions(), inMesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
+    mesh::Mesh globalOutMesh("globalOutMesh", outMesh->getDimensions(), outMesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
+
+    globalInMesh.addMesh(*inMesh);
+    globalOutMesh.addMesh(*outMesh);
+
+    for(int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); ++rankSlave){
+      mesh::Mesh slaveInMesh(inMesh->getName(), inMesh->getDimensions(), inMesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
+      com::CommunicateMesh(utils::MasterSlave::_communication).receiveMesh(slaveInMesh, rankSlave);
+      if(!slaveInMesh.vertices().empty()){ 
+        globalInMesh.addMesh(slaveInMesh);
+      }
+      mesh::Mesh slaveOutMesh(outMesh->getName(), outMesh->getDimensions(), outMesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
+      com::CommunicateMesh(utils::MasterSlave::_communication).receiveMesh(slaveOutMesh, rankSlave);
+      if(!slaveOutMesh.vertices().empty()){
+        globalOutMesh.addMesh(slaveOutMesh);
+      }
+    }
+
     int inputSize      = (int) globalInMesh.vertices().size();
     int outputSize     = (int) globalOutMesh.vertices().size();
+    PRECICE_DEBUG("Size of input mesh: " << inputSize);
+    PRECICE_DEBUG("Size of output mesh: " << outputSize);
+    
     int deadDimensions = 0;
     for (int d = 0; d < dimensions; d++) {
     if (_deadAxis[d])
@@ -180,19 +187,18 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     int polyparams = 1 + dimensions - deadDimensions;
     PRECICE_ASSERT(inputSize >= 1 + polyparams, inputSize);
     int             n = inputSize + polyparams; // Add linear polynom degrees
-    
+
     Eigen::MatrixXd matrixCLU(n, n);
     matrixCLU.setZero();
     _matrixA = Eigen::MatrixXd(outputSize, n);
     _matrixA.setZero();
-  
     // Fill upper right part (due to symmetry) of _matrixCLU with values
     int             i = 0;
     Eigen::VectorXd difference(dimensions);
     for (const mesh::Vertex &iVertex : globalInMesh.vertices()) {
       for (int j = iVertex.getID(); j < inputSize; j++) {
         difference = iVertex.getCoords();
-        difference -= inMesh->vertices()[j].getCoords();
+        difference -= globalInMesh.vertices()[j].getCoords();
         matrixCLU(i, j) = _basisFunction.evaluate(reduceVector(difference).norm());
       }
       matrixCLU(i, inputSize) = 1.0;
@@ -207,7 +213,6 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
         matrixCLU(j, i) = matrixCLU(i, j);
       }
     }
-
     // Fill _matrixA with values
     i = 0;
     for (const mesh::Vertex &iVertex : globalOutMesh.vertices()) {
@@ -224,16 +229,13 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       }
       i++;
     }
-
     _qr = matrixCLU.colPivHouseholderQr();
-    if (not _qr.isInvertible()) {
-    PRECICE_ERROR("RBF interpolation matrix is not invertible! "
-                  "Try to fix axis-aligned mapping setups by marking perpendicular axes as dead.");
-    }
+    //if (not _qr.isInvertible()) {
+    //PRECICE_ERROR("RBF interpolation matrix is not invertible! "
+    //              "Try to fix axis-aligned mapping setups by marking perpendicular axes as dead.");
+    //}
   }
-
   _hasComputedMapping = true;
-
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
@@ -266,15 +268,6 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(
   PRECICE_ASSERT(getDimensions() == output()->getDimensions(),
                  getDimensions(), output()->getDimensions());
 
-  std::vector<double> inValues;
-  inValues.resize(input()->data(inputDataID)->values().size());
-  std::vector<double> outValues;
-  outValues.resize(output()->data(outputDataID)->values().size());
-
-  // Map the data from Eigen::VectorXd to std::vector for send and receive operations
-  Eigen::Map<Eigen::VectorXd>(&inValues[0], input()->data(inputDataID)->values().size())     = input()->data(inputDataID)->values();
-  Eigen::Map<Eigen::VectorXd>(&outValues[0], output()->data(outputDataID)->values().size())  = output()->data(outputDataID)->values();
-  
   int              valueDim  = input()->data(inputDataID)->getDimensions();
   PRECICE_ASSERT(valueDim == output()->data(outputDataID)->getDimensions(),
                  valueDim, output()->data(outputDataID)->getDimensions());
@@ -285,45 +278,41 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(
       deadDimensions += 1;
   }
   int polyparams = 1 + getDimensions() - deadDimensions;
-
-  std::vector<double> globalInValues;
-  std::vector<double> globalOutValues;
-
   // Gather input data
   if(utils::MasterSlave::isSlave()){
+    auto & localInData = input()->data(inputDataID)->values();
+    auto & localOutData = output()->data(outputDataID)->values();
+    std::vector<double> inValues(localInData.data(), localInData.data() + localInData.size());
+    std::vector<double> outValues(localOutData.data(), localOutData.data() + localOutData.size());
+
     utils::MasterSlave::_communication->send(inValues, 0);
-  }
-  else {
-    globalInValues.resize(inValues.size());
-    globalInValues = inValues;
-
-    for(int rank = 1; rank < utils::MasterSlave::getSize(); ++rank){
-      std::vector<double> data;
-      utils::MasterSlave::_communication->receive(data, rank);
-      for(int i = 0; i < data.size(); ++i){
-        globalInValues.push_back(data[i]);
-      }
-    }
-  }
-
-  // Gather output data
-  if(utils::MasterSlave::isSlave()){
     utils::MasterSlave::_communication->send(outValues, 0);
   }
   else {
-    globalOutValues.resize(outValues.size());
-    globalOutValues = outValues;
+    // Eigen::VectorXd to std::vector conversion
+    auto & localInData = input()->data(inputDataID)->values();
+    auto & localOutData = output()->data(outputDataID)->values();
+    std::vector<double> inValues(localInData.data(), localInData.data() + localInData.size());
+    std::vector<double> outValues(localOutData.data(), localOutData.data() + localOutData.size());
+    
+    // Global data containers for master 
+    std::vector<double> globalInValues = inValues;
+    std::vector<double> globalOutValues = outValues;
 
-    for(int rank = 1; rank < utils::MasterSlave::getSize(); ++rank){
-      std::vector<double> data;
-      utils::MasterSlave::_communication->receive(data, rank);
-      for(int i = 0; i < data.size(); ++i){
-        globalOutValues.push_back(data[i]);
+    if(utils::MasterSlave::getSize() > 1){
+      for(int rank = 1; rank < utils::MasterSlave::getSize(); ++rank){
+        std::vector<double> slaveInData;
+        utils::MasterSlave::_communication->receive(slaveInData, rank);
+        if(!slaveInData.empty()){
+          globalInValues.insert(globalInValues.end(), slaveInData.begin(), slaveInData.end());
+        }
+        std::vector<double> slaveOutData;
+        utils::MasterSlave::_communication->receive(slaveOutData, rank);
+        if(!slaveOutData.empty()){
+          globalOutValues.insert(globalOutValues.end(), slaveOutData.begin(), slaveOutData.end());
+        }
       }
     }
-  }
-  
-  if(utils::MasterSlave::isMaster()){
     
     Eigen::Map<Eigen::VectorXd> inputValues(globalInValues.data(), globalInValues.size());
     Eigen::Map<Eigen::VectorXd> outputValues(globalOutValues.data(), globalOutValues.size());
@@ -376,9 +365,13 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(
         }
       }
     }
-    utils::MasterSlave::_communication->broadcast(globalOutValues);
+    output()->data(outputDataID)->values() = outputValues;
+    std::vector<double> sendValues(outputValues.data(), outputValues.data() + outputValues.size());
+    if(utils::MasterSlave::isMaster()){
+      utils::MasterSlave::_communication->broadcast(sendValues);
+    }
   }
-  else{
+  if(utils::MasterSlave::isSlave()){
     std::vector<double> receivedValues;
     utils::MasterSlave::_communication->broadcast(receivedValues, 0);
     output()->data(outputDataID)->values() = Eigen::Map<Eigen::VectorXd>(receivedValues.data(), receivedValues.size());
