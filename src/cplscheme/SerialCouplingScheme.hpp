@@ -1,6 +1,7 @@
 #pragma once
 
 #include "BaseCouplingScheme.hpp"
+#include "BiCouplingScheme.hpp"
 #include "logging/Logger.hpp"
 
 // Forward declaration to friend the boost test struct
@@ -19,7 +20,7 @@ namespace cplscheme {
  * For more information, look into Benjamin's thesis, Section 3.5. 
  * https://mediatum.ub.tum.de/doc/1320661/document.pdf
  */
-class SerialCouplingScheme : public BaseCouplingScheme {
+class SerialCouplingScheme : public BiCouplingScheme {
 public:
   /**
  * @brief Constructor.

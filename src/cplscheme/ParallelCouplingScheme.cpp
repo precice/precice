@@ -11,7 +11,7 @@ namespace cplscheme {
 ParallelCouplingScheme::ParallelCouplingScheme(
     double                        maxTime,
     int                           maxTimeWindows,
-    double                        timeWindowsSize,
+    double                        timeWindowSize,
     int                           validDigits,
     const std::string &           firstParticipant,
     const std::string &           secondParticipant,
@@ -20,8 +20,8 @@ ParallelCouplingScheme::ParallelCouplingScheme(
     constants::TimesteppingMethod dtMethod,
     CouplingMode                  cplMode,
     int                           maxIterations)
-    : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowsSize, validDigits, firstParticipant,
-                         secondParticipant, localParticipant, m2n, maxIterations, cplMode, dtMethod) {}
+    : BiCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, firstParticipant,
+        secondParticipant, localParticipant, m2n, maxIterations, cplMode, dtMethod) {}
 
 void ParallelCouplingScheme::checkConfiguration()
 {

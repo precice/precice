@@ -20,7 +20,7 @@ SerialCouplingScheme::SerialCouplingScheme(
     constants::TimesteppingMethod dtMethod,
     CouplingMode                  cplMode,
     int                           maxIterations)
-    : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, firstParticipant,
+    : BiCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, firstParticipant,
                          secondParticipant, localParticipant, m2n, maxIterations, cplMode, dtMethod) {
   if (dtMethod == constants::FIRST_PARTICIPANT_SETS_TIME_WINDOW_SIZE) {
     if (doesFirstStep()) {
