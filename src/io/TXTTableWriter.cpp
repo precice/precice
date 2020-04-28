@@ -12,11 +12,9 @@ TXTTableWriter::TXTTableWriter(
       _writeIterator(_data.end()),
       _outputStream()
 {
-  _outputStream.open(filename.c_str());
-  if (not _outputStream) {
-    PRECICE_ERROR("Could not open file \"" << filename
-                                           << "\" for writing txt table data!");
-  }
+  _outputStream.open(filename);
+  PRECICE_CHECK(_outputStream, "TXT table writer failed to open file \"" << filename << '"');
+
   _outputStream.setf(std::ios::showpoint);
   _outputStream.setf(std::ios::fixed);
   _outputStream << std::setprecision(16);
