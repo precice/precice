@@ -344,7 +344,7 @@ void precicec_readScalarData(
 
 const char *precicec_getVersionInformation()
 {
-  return {precice::versionInformation};
+  return precice::versionInformation;
 }
 
 void precicec_mapWriteDataFrom(int fromMeshID)

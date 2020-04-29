@@ -172,58 +172,6 @@ struct closure<pm::Quad> {
 
 // BOOST_CONCEPT_ASSERT( (bg::concepts::Ring<pm::Quad>));
 
-/// Adapts precice's Mesh::BoundingBox to boost.geometry
-/*
- * Mesh::BoundingBox should be fulfilling the boost.geometry Box concept
- */
-using BoundingBox = std::vector<std::pair<double, double>>;
-
-template <>
-struct tag<BoundingBox> {
-  using type = box_tag;
-};
-
-namespace bg = ::boost::geometry;
-template <>
-struct point_type<BoundingBox> {
-  using point_t = bg::model::point<double, 3, bg::cs::cartesian>; //fake point type.
-  using type    = point_t;                                        //BoundingBox does not consist of this point type, actually.
-};
-
-template <std::size_t Dimension>
-struct indexed_access<BoundingBox, min_corner, Dimension> {
-  static inline double get(const BoundingBox &bb)
-  {
-    if (Dimension >= bb.size())
-      return std::numeric_limits<double>::lowest();
-    return bb[Dimension].first;
-  }
-  static inline void set(BoundingBox &bb, double value)
-  {
-    if (Dimension >= bb.size())
-      return;
-    bb[Dimension].first = value;
-  }
-};
-
-template <std::size_t Dimension>
-struct indexed_access<BoundingBox, max_corner, Dimension> {
-  static inline double get(const BoundingBox &bb)
-  {
-    if (Dimension >= bb.size())
-      return std::numeric_limits<double>::max();
-    return bb[Dimension].second;
-  }
-  static inline void set(BoundingBox &bb, const double &value)
-  {
-    if (Dimension >= bb.size())
-      return;
-    bb[Dimension].second = value;
-  }
-};
-
-BOOST_CONCEPT_ASSERT((bg::concepts::Box<BoundingBox>) );
-
 } // namespace traits
 } // namespace geometry
 } // namespace boost

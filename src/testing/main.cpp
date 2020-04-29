@@ -11,7 +11,6 @@
 #include "utils/Petsc.hpp"
 
 namespace precice {
-extern bool testMode;
 extern bool syncMode;
 } // namespace precice
 
@@ -97,7 +96,6 @@ int main(int argc, char *argv[])
 {
   using namespace precice;
 
-  precice::testMode = true;
   precice::syncMode = false;
   logging::setupLogging(); // first logging initalization, as early as possible
   utils::Parallel::initializeMPI(&argc, &argv);
