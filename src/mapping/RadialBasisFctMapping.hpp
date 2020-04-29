@@ -193,19 +193,21 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     _matrixA = Eigen::MatrixXd(outputSize, n);
     _matrixA.setZero();
     // Fill upper right part (due to symmetry) of _matrixCLU with values
-    int             i = 0;
     Eigen::VectorXd difference(dimensions);
     for (const mesh::Vertex &iVertex : globalInMesh.vertices()) {
-      for (int j = iVertex.getID(); j < inputSize; j++) {
-        difference = iVertex.getCoords();
-        difference -= globalInMesh.vertices()[j].getCoords();
-        matrixCLU(i, j) = _basisFunction.evaluate(reduceVector(difference).norm());
+      int iGlobal = iVertex.getGlobalIndex();
+      for (const mesh::Vertex &jVertex : globalInMesh.vertices()) {
+        int jGlobal = jVertex.getGlobalIndex();
+        if (iGlobal > jGlobal)
+          continue;
+        difference = globalInMesh.vertices()[iGlobal].getCoords();
+        difference -= globalInMesh.vertices()[jGlobal].getCoords();
+        matrixCLU(iGlobal, jGlobal) = _basisFunction.evaluate(reduceVector(difference).norm());
       }
-      matrixCLU(i, inputSize) = 1.0;
+      matrixCLU(iGlobal, inputSize) = 1.0;
       for (int dim = 0; dim < dimensions - deadDimensions; dim++) {
-        matrixCLU(i, inputSize + 1 + dim) = reduceVector(iVertex.getCoords())[dim];
+        matrixCLU(iGlobal, inputSize + 1 + dim) = reduceVector(globalInMesh.vertices()[iGlobal].getCoords())[dim];
       }
-      i++;
     }
     // Copy values of upper right part of C to lower left part
     for (int i = 0; i < n; i++) {
@@ -214,26 +216,24 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       }
     }
     // Fill _matrixA with values
-    i = 0;
     for (const mesh::Vertex &iVertex : globalOutMesh.vertices()) {
-      int j = 0;
+      int iGlobal = iVertex.getGlobalIndex();
       for (const mesh::Vertex &jVertex : globalInMesh.vertices()) {
-        difference = iVertex.getCoords();
-        difference -= jVertex.getCoords();
-        _matrixA(i, j) = _basisFunction.evaluate(reduceVector(difference).norm());
-        j++;
+        int jGlobal = jVertex.getGlobalIndex();
+        difference = globalOutMesh.vertices()[iGlobal].getCoords();
+        difference -= globalInMesh.vertices()[jGlobal].getCoords();
+        _matrixA(iGlobal, jGlobal) = _basisFunction.evaluate(reduceVector(difference).norm());
       }
-      _matrixA(i, inputSize) = 1.0;
+      _matrixA(iGlobal, inputSize) = 1.0;
       for (int dim = 0; dim < dimensions - deadDimensions; dim++) {
-        _matrixA(i, inputSize + 1 + dim) = reduceVector(iVertex.getCoords())[dim];
+        _matrixA(iGlobal, inputSize + 1 + dim) = reduceVector(globalOutMesh.vertices()[iGlobal].getCoords())[dim];
       }
-      i++;
     }
     _qr = matrixCLU.colPivHouseholderQr();
-    //if (not _qr.isInvertible()) {
-    //PRECICE_ERROR("RBF interpolation matrix is not invertible! "
-    //              "Try to fix axis-aligned mapping setups by marking perpendicular axes as dead.");
-    //}
+    if (not _qr.isInvertible()) {
+    PRECICE_ERROR("RBF interpolation matrix is not invertible! "
+                  "Try to fix axis-aligned mapping setups by marking perpendicular axes as dead.");
+    }
   }
   _hasComputedMapping = true;
 }
