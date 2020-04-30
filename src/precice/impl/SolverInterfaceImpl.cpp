@@ -578,7 +578,6 @@ void SolverInterfaceImpl::resetMesh(
     int meshID)
 {
   PRECICE_TRACE(meshID);
-  PRECICE_ASSERT(false, "At the moment, we can no longer and not yet again reset meshes.");
   PRECICE_VALIDATE_MESH_ID(meshID);
   impl::MeshContext &context    = _accessor->meshContext(meshID);
   bool               hasMapping = context.fromMappingContext.mapping || context.toMappingContext.mapping;
