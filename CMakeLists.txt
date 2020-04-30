@@ -195,7 +195,16 @@ precice_validate_prettyprint()
 
 # Option: PRECICE_MPICommunication
 if (PRECICE_MPICommunication)
+  set(MPI_DETERMINE_LIBRARY_VERSION ON) # Try to detect the library vendor
+
   find_package(MPI REQUIRED)
+  message(STATUS "MPI Version: ${MPI_CXX_LIBRARY_VERSION_STRING}")
+
+  # We need to disable the MPIPorts tests in case we detect Open MPI
+  if(MPI_CXX_LIBRARY_VERSION_STRING MATCHES "Open MPI")
+    set(PRECICE_MPI_OPENMPI TRUE CACHE BOOL "Is the MPI implementation OpenMPI?" FORCE)
+    mark_as_advanced(PRECICE_MPI_OPENMPI)
+  endif()
 endif()
 
 # Option: PETSC

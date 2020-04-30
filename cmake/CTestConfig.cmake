@@ -26,7 +26,7 @@ mark_as_advanced(PRECICE_TEST_WRAPPER_SCRIPT)
 
 
 function(add_precice_test)
-  cmake_parse_arguments(PARSE_ARGV 0 PAT "PETSC;CANFAIL" "NAME;ARGUMENTS;TIMEOUT;LABELS" "")
+  cmake_parse_arguments(PARSE_ARGV 0 PAT "PETSC;CANFAIL;MPIPORTS" "NAME;ARGUMENTS;TIMEOUT;LABELS" "")
   # Check arguments
   if(NOT PAT_NAME)
     message(FATAL_ERROR "Argument NAME not passed")
@@ -38,6 +38,11 @@ function(add_precice_test)
   # Are direct dependencies fullfilled?
   if( (NOT PRECICE_MPICommunication) OR (PAT_PETSC AND NOT PRECICE_PETScMapping) )
     message(STATUS "Test ${PAT_FULL_NAME} - skipped")
+    return()
+  endif()
+
+  if(PAT_MPIPORTS AND PRECICE_MPI_OPENMPI)
+    message(STATUS "Test ${PAT_FULL_NAME} - skipped (OpenMPI)")
     return()
   endif()
 
@@ -218,6 +223,7 @@ add_precice_test(
   ARGUMENTS "--run_test=CommunicationTests/MPIPorts:CommunicationTests/MPISinglePorts"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
   LABELS "mpiports;canfail"
+  MPIPORTS
   )
 add_precice_test(
   NAME cplscheme
@@ -239,6 +245,7 @@ add_precice_test(
   ARGUMENTS "--run_test=M2NTests/MPIPorts:M2NTests/MPISinglePorts"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
   LABELS "mpiports;canfail"
+  MPIPORTS
   )
 add_precice_test(
   NAME mapping
