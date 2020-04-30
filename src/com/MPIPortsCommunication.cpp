@@ -80,6 +80,10 @@ void MPIPortsCommunication::acceptConnection(std::string const &acceptorName,
 
   } while (++peerCurrent < peerCount);
 
+  MPI_Close_port(const_cast<char *>(_portName.c_str()));
+  _portName.clear();
+  PRECICE_DEBUG("Closed Port");
+
   _isConnected = true;
 }
 
@@ -116,6 +120,11 @@ void MPIPortsCommunication::acceptConnectionAsServer(std::string const &acceptor
 
     _communicators.emplace(requesterRank, communicator);
   }
+
+  MPI_Close_port(const_cast<char *>(_portName.c_str()));
+  _portName.clear();
+  PRECICE_DEBUG("Closed Port");
+
   _isConnected = true;
 }
 
@@ -199,11 +208,6 @@ void MPIPortsCommunication::closeConnection()
   _communicators.clear();
 
   PRECICE_DEBUG("Disconnected");
-
-  if (_isAcceptor) {
-    MPI_Close_port(const_cast<char *>(_portName.c_str()));
-    PRECICE_DEBUG("Port closed");
-  }
 
   _isConnected = false;
 }
