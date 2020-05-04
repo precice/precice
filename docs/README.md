@@ -23,12 +23,12 @@
 </a>
 
 ``precice/master``  
-[![MasterBuild](https://travis-ci.org/precice/precice.svg?branch=master)](https://travis-ci.org/precice/precice)
-[![MasterSystemtests](https://img.shields.io/travis/precice/systemtests/master.svg?label=system%20tests&style=flat)](https://travis-ci.org/precice/systemtests)
+[![MasterBuild](https://travis-ci.org/precice/precice.svg?branch=master)](https://travis-ci.org/precice/precice/branches)
+[![MasterSystemtests](https://img.shields.io/travis/precice/systemtests/master.svg?label=system%20tests&style=flat)](https://travis-ci.org/precice/systemtests/branches)
 
 ``precice/develop``  
-[![DevelopBuild](https://travis-ci.org/precice/precice.svg?branch=develop)](https://travis-ci.org/precice/precice)
-[![DevelopSystemtests](https://img.shields.io/travis/precice/systemtests/develop.svg?label=system%20tests&style=flat)](https://travis-ci.org/precice/systemtests)
+[![DevelopBuild](https://travis-ci.org/precice/precice.svg?branch=develop)](https://travis-ci.org/precice/precice/branches)
+[![DevelopSystemtests](https://img.shields.io/travis/precice/systemtests/develop.svg?label=system%20tests&style=flat)](https://travis-ci.org/precice/systemtests/branches)
 
 **Code Quality**  
 [![CodeFactor](https://www.codefactor.io/repository/github/precice/precice/badge)](https://www.codefactor.io/repository/github/precice/precice)
