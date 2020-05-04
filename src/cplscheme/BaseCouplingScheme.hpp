@@ -419,7 +419,6 @@ private:
   std::vector<ConvergenceMeasure> _convergenceMeasures;
 
   /// Functions needed for initialize()
-  void setupConvergenceMeasures();
 
   /// TODO
   virtual void mergeData() = 0;
@@ -469,7 +468,7 @@ private:
   /// Returns a string representing the required actions.
   std::string printActionsState() const;
 
-  /// Needed for setupConvergenceMeasures, implemented in child class
+  /// Needed for setting up convergence measures, implemented in child class
   virtual void assignDataToConvergenceMeasure(ConvergenceMeasure* convMeasure, int dataID) = 0;
 
   /// @todo

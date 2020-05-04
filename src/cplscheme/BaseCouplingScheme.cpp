@@ -132,10 +132,18 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
 
   if (isImplicitCouplingScheme()) {
     if (not doesFirstStep()) {
-      PRECICE_ASSERT(not _convergenceMeasures.empty(), "Implicit scheme must have at least one convergence measure.");
-      mergeData();                             // merge send and receive data for all pp calls
-      setupConvergenceMeasures();              // needs _couplingData configured
-      setupDataMatrices(getAccelerationData()); // Reserve memory and initialize data with zero
+      PRECICE_CHECK(not _convergenceMeasures.empty(),
+                    "At least one convergence measure has to be defined for "
+                        << "an implicit coupling scheme.");
+      // merge send and receive data for all pp calls
+      mergeData();
+      // setup convergence measures
+      for (ConvergenceMeasure &convergenceMeasure : _convergenceMeasures) {
+        int dataID = convergenceMeasure.data->getID();
+        assignDataToConvergenceMeasure(&convergenceMeasure, dataID);
+      }
+      // reserve memory and initialize data with zero
+      setupDataMatrices(getAccelerationData());
       if (getAcceleration()) {
         getAcceleration()->initialize(getAccelerationData()); // Reserve memory, initialize
       }
@@ -502,19 +510,6 @@ void BaseCouplingScheme::setAcceleration(
 {
   PRECICE_ASSERT(acceleration.get() != nullptr);
   _acceleration = acceleration;
-}
-
-void BaseCouplingScheme::setupConvergenceMeasures()
-{
-  PRECICE_TRACE();
-  PRECICE_ASSERT(not doesFirstStep());
-  PRECICE_CHECK(not _convergenceMeasures.empty(),
-                "At least one convergence measure has to be defined for "
-                    << "an implicit coupling scheme.");
-  for (ConvergenceMeasure &convMeasure : _convergenceMeasures) {
-    int dataID = convMeasure.data->getID();
-    assignDataToConvergenceMeasure(&convMeasure, dataID);
-  }
 }
 
 void BaseCouplingScheme::newConvergenceMeasurements()
