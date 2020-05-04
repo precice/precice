@@ -1,6 +1,6 @@
-#include <mpi.h>
 #ifndef PRECICE_NO_MPI
 
+#include <mpi.h>
 #include "MPISinglePortsCommunication.hpp"
 #include <boost/filesystem.hpp>
 #include "ConnectionInfoPublisher.hpp"
