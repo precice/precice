@@ -194,19 +194,15 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     _matrixA.setZero();
     // Fill upper right part (due to symmetry) of _matrixCLU with values
     Eigen::VectorXd difference(dimensions);
-    for (const mesh::Vertex &iVertex : globalInMesh.vertices()) {
-      int iGlobal = iVertex.getGlobalIndex();
-      for (const mesh::Vertex &jVertex : globalInMesh.vertices()) {
-        int jGlobal = jVertex.getGlobalIndex();
-        if (iGlobal > jGlobal)
-          continue;
-        difference = globalInMesh.vertices()[iGlobal].getCoords();
-        difference -= globalInMesh.vertices()[jGlobal].getCoords();
-        matrixCLU(iGlobal, jGlobal) = _basisFunction.evaluate(reduceVector(difference).norm());
+    for (int i = 0; i < inputSize; ++i) {
+      for (int j = i + 1; j < inputSize; ++j) {
+        difference = globalInMesh.vertices()[i].getCoords();
+        difference -= globalInMesh.vertices()[j].getCoords();
+        matrixCLU(i, j) = _basisFunction.evaluate(reduceVector(difference).norm());
       }
-      matrixCLU(iGlobal, inputSize) = 1.0;
+      matrixCLU(i, inputSize) = 1.0;
       for (int dim = 0; dim < dimensions - deadDimensions; dim++) {
-        matrixCLU(iGlobal, inputSize + 1 + dim) = reduceVector(globalInMesh.vertices()[iGlobal].getCoords())[dim];
+        matrixCLU(i, inputSize + 1 + dim) = reduceVector(globalInMesh.vertices()[i].getCoords())[dim];
       }
     }
     // Copy values of upper right part of C to lower left part
@@ -216,17 +212,15 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       }
     }
     // Fill _matrixA with values
-    for (const mesh::Vertex &iVertex : globalOutMesh.vertices()) {
-      int iGlobal = iVertex.getGlobalIndex();
-      for (const mesh::Vertex &jVertex : globalInMesh.vertices()) {
-        int jGlobal = jVertex.getGlobalIndex();
-        difference = globalOutMesh.vertices()[iGlobal].getCoords();
-        difference -= globalInMesh.vertices()[jGlobal].getCoords();
-        _matrixA(iGlobal, jGlobal) = _basisFunction.evaluate(reduceVector(difference).norm());
+    for (int i = 0; i < outputSize; ++i) {
+      for (int j = 0; j < inputSize; ++j) {
+        difference = globalOutMesh.vertices()[i].getCoords();
+        difference -= globalInMesh.vertices()[j].getCoords();
+        _matrixA(i, j) = _basisFunction.evaluate(reduceVector(difference).norm());
       }
-      _matrixA(iGlobal, inputSize) = 1.0;
+      _matrixA(i, inputSize) = 1.0;
       for (int dim = 0; dim < dimensions - deadDimensions; dim++) {
-        _matrixA(iGlobal, inputSize + 1 + dim) = reduceVector(globalOutMesh.vertices()[iGlobal].getCoords())[dim];
+        _matrixA(i, inputSize + 1 + dim) = reduceVector(globalOutMesh.vertices()[i].getCoords())[dim];
       }
     }
     _qr = matrixCLU.colPivHouseholderQr();
@@ -278,13 +272,14 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(
       deadDimensions += 1;
   }
   int polyparams = 1 + getDimensions() - deadDimensions;
+
   // Gather input data
   if(utils::MasterSlave::isSlave()){
     auto & localInData = input()->data(inputDataID)->values();
     auto & localOutData = output()->data(outputDataID)->values();
     std::vector<double> inValues(localInData.data(), localInData.data() + localInData.size());
     std::vector<double> outValues(localOutData.data(), localOutData.data() + localOutData.size());
-
+    
     utils::MasterSlave::_communication->send(inValues, 0);
     utils::MasterSlave::_communication->send(outValues, 0);
   }
@@ -292,14 +287,17 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(
     // Eigen::VectorXd to std::vector conversion
     auto & localInData = input()->data(inputDataID)->values();
     auto & localOutData = output()->data(outputDataID)->values();
+
     std::vector<double> inValues(localInData.data(), localInData.data() + localInData.size());
     std::vector<double> outValues(localOutData.data(), localOutData.data() + localOutData.size());
+    std::vector<int> outValuesSize;
+    outValuesSize.push_back(output()->data(outputDataID)->getDataCount());
     
     // Global data containers for master 
     std::vector<double> globalInValues = inValues;
     std::vector<double> globalOutValues = outValues;
-
     if(utils::MasterSlave::getSize() > 1){
+      outValuesSize.resize(utils::MasterSlave::getSize());
       for(int rank = 1; rank < utils::MasterSlave::getSize(); ++rank){
         std::vector<double> slaveInData;
         utils::MasterSlave::_communication->receive(slaveInData, rank);
@@ -310,13 +308,14 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(
         utils::MasterSlave::_communication->receive(slaveOutData, rank);
         if(!slaveOutData.empty()){
           globalOutValues.insert(globalOutValues.end(), slaveOutData.begin(), slaveOutData.end());
+          outValuesSize.at(rank) = slaveOutData.size();
         }
       }
     }
-    
+
     Eigen::Map<Eigen::VectorXd> inputValues(globalInValues.data(), globalInValues.size());
     Eigen::Map<Eigen::VectorXd> outputValues(globalOutValues.data(), globalOutValues.size());
-    
+
     if (getConstraint() == CONSERVATIVE) {
       //PRECICE_DEBUG("Map conservative");
       static int      mappingIndex = 0;
@@ -365,15 +364,24 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(
         }
       }
     }
-    output()->data(outputDataID)->values() = outputValues;
-    std::vector<double> sendValues(outputValues.data(), outputValues.data() + outputValues.size());
+
+    Eigen::Map<Eigen::VectorXd> masterValues(outputValues.data(), outValuesSize.at(0));
+    output()->data(outputDataID)->values() = masterValues;
+    int beginPoint = outValuesSize.at(0);
     if(utils::MasterSlave::isMaster()){
-      utils::MasterSlave::_communication->broadcast(sendValues);
+      for(int rank = 1; rank < utils::MasterSlave::getSize(); ++rank){
+        std::vector<double> sendValues(outputValues.data() + beginPoint, outputValues.data() + beginPoint + outValuesSize.at(rank));
+        PRECICE_DEBUG("Begin offset: " << beginPoint << "Size: " << beginPoint + outValuesSize.at(rank)); 
+        utils::MasterSlave::_communication->send(sendValues, rank);
+        beginPoint += outValuesSize.at(rank);
+      } 
     }
   }
+
   if(utils::MasterSlave::isSlave()){
     std::vector<double> receivedValues;
-    utils::MasterSlave::_communication->broadcast(receivedValues, 0);
+    utils::MasterSlave::_communication->receive(receivedValues, 0);
+    PRECICE_DEBUG("Size of data values: " << receivedValues.size());
     output()->data(outputDataID)->values() = Eigen::Map<Eigen::VectorXd>(receivedValues.data(), receivedValues.size());
   }
 }
