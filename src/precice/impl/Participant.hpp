@@ -42,8 +42,6 @@ public:
     MAPPING_DIRECT
   };
 
-  static void resetParticipantCount();
-
   /**
    * @brief Constructor.
    *
@@ -57,8 +55,6 @@ public:
 
   /// Returns the name of the participant.
   const std::string &getName() const;
-
-  int getID() const;
 
   void addWriteData(
       const mesh::PtrData &data,
@@ -143,11 +139,7 @@ public:
 private:
   logging::Logger _log{"impl::Participant"};
 
-  static int _participantsSize;
-
   std::string _name;
-
-  int _id;
 
   std::vector<PtrWatchPoint> _watchPoints;
 

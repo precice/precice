@@ -20,7 +20,6 @@ struct SerialTestFixture : testing::WhiteboxAccessor {
   void reset()
   {
     mesh::Data::resetDataCount();
-    impl::Participant::resetParticipantCount();
   }
 
   SerialTestFixture()
@@ -48,7 +47,6 @@ BOOST_AUTO_TEST_CASE(TestConfigurationPeano)
   impl::PtrParticipant peano = impl(interfacePeano)._participants[0];
   BOOST_TEST(peano);
   BOOST_TEST(peano->getName() == "Peano");
-  BOOST_TEST(peano->getID() == 0);
 
   std::vector<impl::MeshContext *> meshContexts = peano->_meshContexts;
   BOOST_TEST(meshContexts.size() == 2);
@@ -71,7 +69,6 @@ BOOST_AUTO_TEST_CASE(TestConfigurationComsol)
   impl::PtrParticipant comsol = impl(interfaceComsol)._participants[1];
   BOOST_TEST(comsol);
   BOOST_TEST(comsol->getName() == "Comsol");
-  BOOST_TEST(comsol->getID() == 1);
 
   std::vector<impl::MeshContext *> meshContexts = comsol->_meshContexts;
   BOOST_TEST(meshContexts.size() == 2);

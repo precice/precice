@@ -134,7 +134,6 @@ void SolverInterfaceImpl::configure(
   utils::ScopedEventPrefix sep("configure/");
 
   mesh::Data::resetDataCount();
-  Participant::resetParticipantCount();
   _meshLock.clear();
 
   _dimensions = config.getDimensions();
