@@ -203,6 +203,12 @@ protected:
   /// Receives data receiveDataIDs given in mapCouplingData with communication.
   void receiveData(m2n::PtrM2N m2n, DataMap receiveData);
 
+  /**
+   * @brief Used by storeData to take care of storing individual DataMap
+   * @param data DataMap that will be stored
+   */
+  void store(DataMap data);
+
   typedef std::map<int, Eigen::VectorXd> ValuesMap;
 
   /// Returns true, if coupling scheme is explicit
@@ -471,7 +477,9 @@ private:
   /// Needed for setting up convergence measures, implemented in child class
   virtual void assignDataToConvergenceMeasure(ConvergenceMeasure* convMeasure, int dataID) = 0;
 
-  /// @todo
+  /**
+   * @brief used for storing send/receive data at end of acceleration, if not converged.
+   */
   virtual void storeData() = 0;
 };
 } // namespace cplscheme

@@ -108,6 +108,15 @@ void BaseCouplingScheme::receiveData(m2n::PtrM2N m2n, DataMap receiveData)
   PRECICE_DEBUG("Number of received data sets = " << receivedDataIDs.size());
 }
 
+void BaseCouplingScheme::store(DataMap data)
+{
+  for (DataMap::value_type &pair : data) {
+    if (pair.second->oldValues.size() > 0) {
+      pair.second->oldValues.col(0) = *pair.second->values;
+    }
+  }
+}
+
 void BaseCouplingScheme::setTimeWindowSize(double timeWindowSize)
 {
   _timeWindowSize = timeWindowSize;

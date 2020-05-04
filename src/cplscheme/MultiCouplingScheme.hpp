@@ -96,23 +96,16 @@ private:
    */
   void assignDataToConvergenceMeasure(ConvergenceMeasure *convergenceMeasure, int dataID) override;
 
-  /// @brief TODO
+  /**
+   * @brief MultiCouplingScheme has to call store for all receive and send data in the vectors
+   */
   void storeData() override {
     for (DataMap &sendData : _sendDataVector) {
-      for (DataMap::value_type &pair : sendData) {
-        if (pair.second->oldValues.size() > 0) {
-          pair.second->oldValues.col(0) = *pair.second->values;
-        }
-      }
+      store(sendData);
     }
     for (DataMap &receiveData : _receiveDataVector) {
-      for (DataMap::value_type &pair : receiveData) {
-        if (pair.second->oldValues.size() > 0) {
-          pair.second->oldValues.col(0) = *pair.second->values;
-        }
-      }
+      store(receiveData);
     }
-
   }
 };
 

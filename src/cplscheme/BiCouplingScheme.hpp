@@ -93,18 +93,12 @@ private:
     }
   }
 
-  /// @brief TODO
+  /**
+   * @brief BiCouplingScheme has to call store for receive and send data
+   */
   void storeData() override {
-    for (DataMap::value_type &pair : getSendData()) {
-      if (pair.second->oldValues.size() > 0) {
-        pair.second->oldValues.col(0) = *pair.second->values;
-      }
-    }
-    for (DataMap::value_type &pair : getReceiveData()) {
-      if (pair.second->oldValues.size() > 0) {
-        pair.second->oldValues.col(0) = *pair.second->values;
-      }
-    }
+    store(getSendData());
+    store(getReceiveData());
   }
 };
 
