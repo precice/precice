@@ -114,7 +114,7 @@ bool SerialCouplingScheme::exchangeDataAndAccelerate()
   if (doesFirstStep()) { // first participant
     PRECICE_DEBUG("Sending data...");
     if (_participantSetsTimeWindowSize) {
-      PRECICE_DEBUG("sending time window size of " << getComputedTimeWindowPart()); // TODO is this correct?
+      PRECICE_DEBUG("sending time window size of " << getComputedTimeWindowPart());
       getM2N()->send(getComputedTimeWindowPart());
     }
     sendData(getM2N(), getSendData());

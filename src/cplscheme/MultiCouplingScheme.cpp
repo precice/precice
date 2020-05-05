@@ -106,7 +106,6 @@ bool MultiCouplingScheme::exchangeDataAndAccelerate()
     sendData(_m2ns[i], _sendDataVector[i]);
   }
 
-  // TODO: Using a hard-coded "true" here looks strange.
   return convergence;
 }
 
