@@ -1,7 +1,7 @@
 name: coverity-scan
 on:
   schedule:
-    - cron: '0 3 * * *' # Daily at 03:00 UTC
+    - cron: '0 3 * * 7'
 
 jobs:
   latest:
