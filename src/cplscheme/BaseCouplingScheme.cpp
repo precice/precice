@@ -42,18 +42,18 @@ BaseCouplingScheme::BaseCouplingScheme(
       _eps(std::pow(10.0, -1 * validDigits))
 {
   PRECICE_ASSERT(not((maxTime != UNDEFINED_TIME) && (maxTime < 0.0)),
-                "Maximum time has to be larger than zero.");
+                 "Maximum time has to be larger than zero.");
   PRECICE_ASSERT(not((maxTimeWindows != UNDEFINED_TIME_WINDOWS) && (maxTimeWindows < 0)),
-                "Maximum number of time windows has to be larger than zero.");
+                 "Maximum number of time windows has to be larger than zero.");
   PRECICE_ASSERT(not((timeWindowSize != UNDEFINED_TIME_WINDOW_SIZE) && (timeWindowSize < 0.0)),
-                "Time window size has to be larger than zero.");
+                 "Time window size has to be larger than zero.");
   PRECICE_ASSERT((_validDigits >= 1) && (_validDigits < 17),
-                "Valid digits of time window size has to be between 1 and 16.");
+                 "Valid digits of time window size has to be between 1 and 16.");
   PRECICE_ASSERT(_firstParticipant != _secondParticipant,
-                "First participant and second participant must have different names.");
+                 "First participant and second participant must have different names.");
   if (dtMethod == constants::FIXED_TIME_WINDOW_SIZE) {
     PRECICE_ASSERT(hasTimeWindowSize(),
-                  "Time window size has to be given when the fixed time window size method is used."); 
+                   "Time window size has to be given when the fixed time window size method is used.");
   }
   if (localParticipant == _firstParticipant) {
     _doesFirstStep = true;
@@ -136,8 +136,8 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
   PRECICE_ASSERT(not isInitialized());
   PRECICE_ASSERT(math::greaterEquals(startTime, 0.0), startTime);
   PRECICE_ASSERT(startTimeWindow >= 0, startTimeWindow);
-  _time          = startTime;
-  _timeWindows   = startTimeWindow;
+  _time        = startTime;
+  _timeWindows = startTimeWindow;
 
   if (isImplicitCouplingScheme()) {
     if (not doesFirstStep()) {
@@ -207,12 +207,12 @@ void BaseCouplingScheme::advance()
 
   if (reachedEndOfTimeWindow()) {
 
-    _timeWindows += 1;  // increment window counter. If not converged, will be decremented again later.
+    _timeWindows += 1; // increment window counter. If not converged, will be decremented again later.
 
     bool convergence = exchangeDataAndAccelerate();
 
-    if(isImplicitCouplingScheme()) {  // check convergence
-      if (not convergence) {  // repeat window
+    if (isImplicitCouplingScheme()) { // check convergence
+      if (not convergence) {          // repeat window
         PRECICE_DEBUG("No convergence achieved");
         requireAction(constants::actionReadIterationCheckpoint());
         // The computed time window part equals the time window size, since the
@@ -221,7 +221,7 @@ void BaseCouplingScheme::advance()
         PRECICE_ASSERT(math::greater(_computedTimeWindowPart, 0.0));
         _time = _time - _computedTimeWindowPart;
         _timeWindows -= 1;
-      } else {  // write output, prepare for next window
+      } else { // write output, prepare for next window
         PRECICE_DEBUG("Convergence achieved");
         advanceTXTWriters();
         PRECICE_INFO("Time window completed");
@@ -242,7 +242,7 @@ void BaseCouplingScheme::advance()
       PRECICE_INFO("Time window completed");
       _isTimeWindowComplete = true;
     }
-    if(isCouplingOngoing()) {
+    if (isCouplingOngoing()) {
       PRECICE_ASSERT(_hasDataBeenExchanged);
     }
     _computedTimeWindowPart = 0.0; // reset window
@@ -274,7 +274,6 @@ void BaseCouplingScheme::updateOldValues(DataMap &dataMap)
     }
   }
 }
-
 
 // @todo extrapolation of data should only be done for the fine cplData -> then copied to the coarse cplData
 void BaseCouplingScheme::extrapolateData(DataMap &data)
@@ -667,14 +666,16 @@ bool BaseCouplingScheme::maxIterationsReached()
   return _iterations == _maxIterations;
 }
 
-void BaseCouplingScheme::determineInitialSend(BaseCouplingScheme::DataMap &sendData) {
-  if(anyDataRequiresInitialization(sendData)) {
+void BaseCouplingScheme::determineInitialSend(BaseCouplingScheme::DataMap &sendData)
+{
+  if (anyDataRequiresInitialization(sendData)) {
     _sendsInitializedData = true;
   }
 }
 
-void BaseCouplingScheme::determineInitialReceive(BaseCouplingScheme::DataMap &receiveData) {
-  if(anyDataRequiresInitialization(receiveData)) {
+void BaseCouplingScheme::determineInitialReceive(BaseCouplingScheme::DataMap &receiveData)
+{
+  if (anyDataRequiresInitialization(receiveData)) {
     _receivesInitializedData = true;
   }
 }

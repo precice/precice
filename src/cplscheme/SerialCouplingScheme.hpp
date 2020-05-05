@@ -58,7 +58,6 @@ public:
   void checkConfiguration() override;
 
 private:
-
   logging::Logger _log{"cplschemes::SerialCouplingSchemes"};
 
   /// Determines, if the time window size is set by the participant.
@@ -93,7 +92,7 @@ private:
   /**
    * @brief noop for SerialCouplingScheme
    */
-  void mergeData() override {};
+  void mergeData() override{};
 
   /**
    * @brief Exchanges data, if it has to be initialized.

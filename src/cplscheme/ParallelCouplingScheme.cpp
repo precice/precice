@@ -21,7 +21,7 @@ ParallelCouplingScheme::ParallelCouplingScheme(
     CouplingMode                  cplMode,
     int                           maxIterations)
     : BiCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, firstParticipant,
-        secondParticipant, localParticipant, m2n, maxIterations, cplMode, dtMethod) {}
+                       secondParticipant, localParticipant, m2n, maxIterations, cplMode, dtMethod) {}
 
 void ParallelCouplingScheme::checkConfiguration()
 {
@@ -69,7 +69,7 @@ bool ParallelCouplingScheme::exchangeDataAndAccelerate()
     PRECICE_DEBUG("Sending data...");
     sendData(getM2N(), getSendData());
     PRECICE_DEBUG("Receiving data...");
-    if(isImplicitCouplingScheme()) {
+    if (isImplicitCouplingScheme()) {
       convergence = receiveConvergence();
     }
     receiveData(getM2N(), getReceiveData());

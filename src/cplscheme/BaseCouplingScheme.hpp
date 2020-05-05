@@ -10,8 +10,8 @@
 #include "impl/SharedPointer.hpp"
 #include "io/TXTTableWriter.hpp"
 #include "logging/Logger.hpp"
-#include "m2n/SharedPointer.hpp"
 #include "m2n/M2N.hpp"
+#include "m2n/SharedPointer.hpp"
 
 namespace precice {
 namespace cplscheme {
@@ -47,8 +47,8 @@ namespace cplscheme {
 class BaseCouplingScheme : public CouplingScheme {
 public:
   enum CouplingMode { Explicit,
-    Implicit,
-    Undefined };
+                      Implicit,
+                      Undefined };
 
   BaseCouplingScheme(
       double                        maxTime,
@@ -261,7 +261,8 @@ protected:
    * @brief Getter for _computedTimeWindowPart
    * @returns _computedTimeWindowPart
    */
-  double getComputedTimeWindowPart() {
+  double getComputedTimeWindowPart()
+  {
     return _computedTimeWindowPart;
   }
 
@@ -537,7 +538,7 @@ private:
    * @brief interface to provide accelerated data, depending on coupling scheme being used
    * @return data being accelerated
    */
-  virtual DataMap &getAccelerationData  () = 0;
+  virtual DataMap &getAccelerationData() = 0;
 
   /**
    * @brief If any required actions are open, an error message is issued.
@@ -586,8 +587,8 @@ private:
    * @param dataID TODO
    */
   virtual void assignDataToConvergenceMeasure(
-      ConvergenceMeasure* convMeasure,
-      int dataID) = 0;
+      ConvergenceMeasure *convMeasure,
+      int                 dataID) = 0;
 
   /**
    * @brief used for storing send/receive data at end of acceleration, if not converged.

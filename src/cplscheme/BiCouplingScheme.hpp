@@ -72,7 +72,6 @@ protected:
   bool receiveConvergence();
 
 private:
-
   mutable logging::Logger _log{"cplscheme::BiCouplingScheme"};
 
   /// Communication device to the other coupling participant.
@@ -85,7 +84,8 @@ private:
   DataMap _receiveData;
 
   /// Implements functionality for setupConvergenceMeasures
-  void assignDataToConvergenceMeasure(ConvergenceMeasure* convMeasure, int dataID) override {
+  void assignDataToConvergenceMeasure(ConvergenceMeasure *convMeasure, int dataID) override
+  {
     if ((getSendData(dataID) != nullptr)) {
       convMeasure->couplingData = getSendData(dataID);
     } else {
@@ -97,7 +97,8 @@ private:
   /**
    * @brief BiCouplingScheme has to call store for receive and send data
    */
-  void storeData() override {
+  void storeData() override
+  {
     store(getSendData());
     store(getReceiveData());
   }

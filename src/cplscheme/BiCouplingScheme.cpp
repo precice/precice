@@ -21,7 +21,8 @@ BiCouplingScheme::BiCouplingScheme(
     : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, firstParticipant,
                          secondParticipant, localParticipant, maxIterations, cplMode, dtMethod),
       _m2n(m2n)
-{}
+{
+}
 
 void BiCouplingScheme::addDataToSend(
     mesh::PtrData data,

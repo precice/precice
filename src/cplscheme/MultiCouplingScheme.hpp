@@ -125,7 +125,8 @@ private:
   /**
    * @brief MultiCouplingScheme has to call store for all receive and send data in the vectors
    */
-  void storeData() override {
+  void storeData() override
+  {
     for (DataMap &sendData : _sendDataVector) {
       store(sendData);
     }

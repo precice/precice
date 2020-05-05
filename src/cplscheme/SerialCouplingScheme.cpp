@@ -21,7 +21,8 @@ SerialCouplingScheme::SerialCouplingScheme(
     CouplingMode                  cplMode,
     int                           maxIterations)
     : BiCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, firstParticipant,
-                         secondParticipant, localParticipant, m2n, maxIterations, cplMode, dtMethod) {
+                       secondParticipant, localParticipant, m2n, maxIterations, cplMode, dtMethod)
+{
   if (dtMethod == constants::FIRST_PARTICIPANT_SETS_TIME_WINDOW_SIZE) {
     if (doesFirstStep()) {
       _participantSetsTimeWindowSize = true;
@@ -113,7 +114,7 @@ bool SerialCouplingScheme::exchangeDataAndAccelerate()
   if (doesFirstStep()) { // first participant
     PRECICE_DEBUG("Sending data...");
     if (_participantSetsTimeWindowSize) {
-      PRECICE_DEBUG("sending time window size of " << getComputedTimeWindowPart());  // TODO is this correct?
+      PRECICE_DEBUG("sending time window size of " << getComputedTimeWindowPart()); // TODO is this correct?
       getM2N()->send(getComputedTimeWindowPart());
     }
     sendData(getM2N(), getSendData());
