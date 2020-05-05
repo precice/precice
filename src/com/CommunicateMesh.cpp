@@ -308,28 +308,5 @@ void CommunicateMesh::broadcastReceiveMesh(
   }
 }
 
-void CommunicateMesh::sendBoundingBox(
-    const mesh::Mesh::BoundingBox &bb,
-    int                            rankReceiver)
-{
-  PRECICE_TRACE(rankReceiver);
-  int dim = bb.size();
-  for (int d = 0; d < dim; d++) {
-    _communication->send(bb[d].first, rankReceiver);
-    _communication->send(bb[d].second, rankReceiver);
-  }
-}
-
-void CommunicateMesh::receiveBoundingBox(
-    mesh::Mesh::BoundingBox &bb,
-    int                      rankSender)
-{
-  PRECICE_TRACE(rankSender);
-  int dim = bb.size();
-  for (int d = 0; d < dim; d++) {
-    _communication->receive(bb[d].first, rankSender);
-    _communication->receive(bb[d].second, rankSender);
-  }
-}
 } // namespace com
 } // namespace precice

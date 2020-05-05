@@ -11,9 +11,7 @@
 #include "utils/Petsc.hpp"
 
 namespace precice {
-extern bool testMode;
 extern bool syncMode;
-static int  testCount{0};
 } // namespace precice
 
 /// Boost test Initialization function
@@ -43,12 +41,6 @@ bool init_unit_test()
 
   auto &master_suite        = framework::master_test_suite();
   master_suite.p_name.value = "preCICE Tests";
-
-  {
-    test_case_counter tcc;
-    traverse_test_tree(master_suite.p_id, tcc);
-    precice::testCount = tcc.p_count;
-  }
 
   auto logConfigs = logging::readLogConfFile("log.conf");
 
@@ -91,38 +83,44 @@ bool init_unit_test()
   return true;
 }
 
+int countEnabledTests()
+{
+  using namespace boost::unit_test;
+  test_case_counter tcc;
+  traverse_test_tree(framework::master_test_suite(), tcc, true);
+  return tcc.p_count;
+}
+
 /// Entry point for the boost test executable
 int main(int argc, char *argv[])
 {
   using namespace precice;
 
-  precice::testMode = true;
   precice::syncMode = false;
   logging::setupLogging(); // first logging initalization, as early as possible
   utils::Parallel::initializeMPI(&argc, &argv);
-  logging::setMPIRank(utils::Parallel::getProcessRank());
-  utils::Petsc::initialize(&argc, &argv);
-  utils::EventRegistry::instance().initialize("precice-Tests", "", utils::Parallel::getGlobalCommunicator());
+  const auto rank = utils::Parallel::current()->rank();
+  const auto size = utils::Parallel::current()->size();
+  logging::setMPIRank(rank);
 
-  if (utils::Parallel::getCommunicatorSize() < 4) {
-    if (utils::Parallel::getProcessRank() == 0)
-      std::cerr << "Running tests on less than four processors. Not all tests are executed.\n";
-  }
-  if (utils::Parallel::getCommunicatorSize() > 4) {
-    if (utils::Parallel::getProcessRank() == 0)
-      std::cerr << "Running tests on more than 4 processors is not supported. Aborting.\n";
-    std::exit(-1);
+  if (size < 4) {
+    if (rank == 0) {
+      std::cerr << "ERROR: The tests require at least 4 MPI processes.\n";
+    }
+    return 2;
   }
 
-  int retCode = boost::unit_test::unit_test_main(&init_unit_test, argc, argv);
+  std::cout << "This test suite runs on rank " << rank << " of " << size << '\n';
+
+  int       retCode  = boost::unit_test::unit_test_main(&init_unit_test, argc, argv);
+  const int testsRan = countEnabledTests();
+
   // Override the return code if the slaves have nothing to test
-  if ((precice::testCount == 0) && (utils::Parallel::getProcessRank() != 0)) {
+  if ((testsRan == 0) && (rank != 0)) {
     retCode = EXIT_SUCCESS;
   }
 
-  utils::EventRegistry::instance().finalize();
-  utils::Petsc::finalize();
-  utils::Parallel::finalizeMPI();
   utils::MasterSlave::_communication = nullptr;
+  utils::Parallel::finalizeMPI();
   return retCode;
 }

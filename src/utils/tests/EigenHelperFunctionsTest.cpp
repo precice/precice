@@ -5,10 +5,11 @@ using namespace precice;
 using namespace precice::utils;
 
 BOOST_AUTO_TEST_SUITE(UtilsTests)
-BOOST_AUTO_TEST_SUITE(EigenHelperFunctionsTests, *testing::OnMaster())
+BOOST_AUTO_TEST_SUITE(EigenHelperFunctionsTests)
 
 BOOST_AUTO_TEST_CASE(FirstN)
 {
+  PRECICE_TEST(1_rank);
   Eigen::VectorXd a(7);
   a << 1, 2, 3, 4, 5, 6, 7;
   Eigen::RowVectorXd b(3);
@@ -20,6 +21,7 @@ BOOST_AUTO_TEST_SUITE(RangePreview)
 
 BOOST_AUTO_TEST_CASE(EigenVector)
 {
+  PRECICE_TEST(1_rank);
   Eigen::VectorXd a{7};
   a << 1, 2, 3, 4, 5, 6, 0;
   std::ostringstream oss;
@@ -32,6 +34,7 @@ BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_CASE(ComponentWiseLess)
 {
+  PRECICE_TEST(1_rank);
   precice::utils::ComponentWiseLess cwl;
 
   Eigen::VectorXd a(8);

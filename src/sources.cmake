@@ -47,6 +47,8 @@ target_sources(precice
     src/action/ScaleByDtAction.cpp
     src/action/ScaleByDtAction.hpp
     src/action/SharedPointer.hpp
+    src/action/SummationAction.cpp
+    src/action/SummationAction.hpp
     src/action/config/ActionConfiguration.cpp
     src/action/config/ActionConfiguration.hpp
     src/com/CommunicateBoundingBox.cpp
@@ -183,6 +185,8 @@ target_sources(precice
     src/mesh/Edge.cpp
     src/mesh/Edge.hpp
     src/mesh/Filter.hpp
+    src/mesh/BoundingBox.hpp
+    src/mesh/BoundingBox.cpp
     src/mesh/Mesh.cpp
     src/mesh/Mesh.hpp
     src/mesh/Quad.cpp
@@ -217,6 +221,7 @@ target_sources(precice
     src/precice/config/SharedPointer.hpp
     src/precice/config/SolverInterfaceConfiguration.cpp
     src/precice/config/SolverInterfaceConfiguration.hpp
+    src/precice/impl/DataContext.cpp
     src/precice/impl/DataContext.hpp
     src/precice/impl/MappingContext.hpp
     src/precice/impl/MeshContext.hpp
@@ -269,8 +274,11 @@ target_sources(precice
     src/utils/TypeNames.hpp
     src/utils/algorithm.hpp
     src/utils/assertion.hpp
+    src/utils/networking.cpp
+    src/utils/networking.hpp
     src/utils/stacktrace.cpp
     src/utils/stacktrace.hpp
+    src/utils/traits.hpp
     src/xml/ConfigParser.cpp
     src/xml/ConfigParser.hpp
     src/xml/Printer.cpp

@@ -8,6 +8,7 @@ using namespace precice;
 
 BOOST_AUTO_TEST_CASE(Configuration)
 {
+  PRECICE_TEST(1_rank);
   using xml::XMLTag;
   XMLTag tag = xml::getRootTag();
   {

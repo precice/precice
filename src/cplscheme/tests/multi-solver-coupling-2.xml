@@ -13,8 +13,8 @@
       <use-data name="Data1"/>
       <use-data name="Data2"/>
    </mesh>
-   <m2n:mpi-single from="Participant0" to="Participant1"/>
-   <m2n:mpi-single from="Participant1" to="Participant2"/>
+   <m2n:sockets from="Participant0" to="Participant1"/>
+   <m2n:sockets from="Participant1" to="Participant2"/>
    <coupling-scheme:serial-implicit>
       <participants first="Participant0" second="Participant1"/>
       <time-window-size value="0.1" method="fixed"/>

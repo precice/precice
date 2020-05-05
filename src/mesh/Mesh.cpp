@@ -22,7 +22,8 @@ Mesh::Mesh(
     : _name(name),
       _dimensions(dimensions),
       _flipNormals(flipNormals),
-      _id(id)
+      _id(id),
+      _boundingBox(dimensions)
 {
   PRECICE_ASSERT((_dimensions == 2) || (_dimensions == 3), _dimensions);
   PRECICE_ASSERT(_name != std::string(""));
@@ -210,19 +211,13 @@ void Mesh::allocateDataValues()
 void Mesh::computeBoundingBox()
 {
   PRECICE_TRACE(_name);
-  BoundingBox boundingBox(_dimensions,
-                          std::make_pair(std::numeric_limits<double>::max(),
-                                         std::numeric_limits<double>::lowest()));
+  BoundingBox bb(_dimensions);
   for (const Vertex &vertex : _vertices) {
-    for (int d = 0; d < _dimensions; d++) {
-      boundingBox[d].first  = std::min(vertex.getCoords()[d], boundingBox[d].first);
-      boundingBox[d].second = std::max(vertex.getCoords()[d], boundingBox[d].second);
-    }
+    bb.expandBy(vertex);
   }
-  for (int d = 0; d < _dimensions; d++) {
-    PRECICE_DEBUG("BoundingBox, dim: " << d << ", first: " << boundingBox[d].first << ", second: " << boundingBox[d].second);
-  }
-  _boundingBox = std::move(boundingBox);
+  _boundingBox = std::move(bb);
+  PRECICE_DEBUG("Bounding Box, " << _boundingBox);
+  
 }
 
 void Mesh::computeState()
@@ -404,18 +399,9 @@ void Mesh::addMesh(
   meshChanged(*this);
 }
 
-const Mesh::BoundingBox Mesh::getBoundingBox() const
+const BoundingBox &Mesh::getBoundingBox() const
 {
   return _boundingBox;
-}
-
-const std::vector<double> Mesh::getCOG() const
-{
-  std::vector<double> cog(_dimensions);
-  for (int d = 0; d < _dimensions; d++) {
-    cog[d] = (_boundingBox[d].second - _boundingBox[d].first) / 2.0 + _boundingBox[d].first;
-  }
-  return cog;
 }
 
 bool Mesh::operator==(const Mesh &other) const

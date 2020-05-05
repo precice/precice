@@ -1,7 +1,7 @@
 cmake_minimum_required (VERSION 3.10.2)
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/XSDKCompilerDetect.cmake)
 
-project(preCICE VERSION 2.0.1 LANGUAGES CXX)
+project(preCICE VERSION 2.0.2 LANGUAGES CXX)
 set(preCICE_SOVERSION ${preCICE_VERSION_MAJOR})
 
 #

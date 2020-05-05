@@ -9,6 +9,7 @@ target_sources(testprecice
     src/acceleration/test/QRFactorizationTest.cpp
     src/action/tests/PythonActionTest.cpp
     src/action/tests/ScaleActionTest.cpp
+    src/action/tests/SummationActionTest.cpp
     src/com/tests/CommunicateBoundingBoxTest.cpp
     src/com/tests/CommunicateMeshTest.cpp
     src/com/tests/GenericTestFunctions.hpp
@@ -46,6 +47,7 @@ target_sources(testprecice
     src/mesh/tests/RTreeTests.cpp
     src/mesh/tests/TriangleTest.cpp
     src/mesh/tests/VertexTest.cpp
+    src/mesh/tests/BoundingBoxTest.cpp
     src/partition/tests/ProvidedPartitionTest.cpp
     src/partition/tests/ReceivedPartitionTest.cpp
     src/precice/tests/ParallelTests.cpp
@@ -54,7 +56,8 @@ target_sources(testprecice
     src/precice/tests/WatchPointTest.cpp
     src/query/tests/FindClosestTest.cpp
     src/query/tests/FindClosestVertexVisitorTest.cpp
-    src/testing/Fixtures.hpp
+    src/testing/TestContext.cpp
+    src/testing/TestContext.hpp
     src/testing/Testing.cpp
     src/testing/Testing.hpp
     src/testing/main.cpp

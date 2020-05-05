@@ -800,6 +800,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
     scheme->setExtrapolationOrder(_config.extrapolationOrder);
 
     MultiCouplingScheme *castedScheme = dynamic_cast<MultiCouplingScheme *>(scheme);
+    PRECICE_ASSERT(castedScheme, "The dynamic cast of CouplingScheme failed.");
     addMultiDataToBeExchanged(*castedScheme, accessor);
   } else {
     m2n::PtrM2N m2n = _m2nConfig->getM2N(

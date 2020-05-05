@@ -11,6 +11,7 @@
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
+#include "mesh/BoundingBox.hpp"
 #include "utils/ManageUniqueIDs.hpp"
 #include "utils/PointerVector.hpp"
 
@@ -35,8 +36,7 @@ public:
   using TriangleContainer = std::deque<Triangle>;
   using QuadContainer     = std::deque<Quad>;
   using DataContainer     = std::vector<PtrData>;
-  using BoundingBox       = std::vector<std::pair<double, double>>;
-  using BoundingBoxMap    = std::map<int, BoundingBox>;
+  using BoundingBoxMap    = std::map<int,BoundingBox>;
 
   /// A mapping from rank to used (not necessarily owned) vertex IDs
   using VertexDistribution = std::map<int, std::vector<int>>;
@@ -237,15 +237,7 @@ public:
    * BoundingBox is a vector of pairs (min, max), one pair for each dimension.
    * computeState() has to be called after setting the mesh.
    */
-  const BoundingBox getBoundingBox() const;
-
-  /**
-   * @brief Returns the Center Of Gravity of the mesh
-   *
-   * Returns a vector of doubles, size d, each dimension computed as
-   * cog =  (max - min) / 2 + min
-   */
-  const std::vector<double> getCOG() const;
+  const BoundingBox &getBoundingBox() const;
 
   bool operator==(const Mesh &other) const;
 

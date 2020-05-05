@@ -3,7 +3,6 @@
 #include "MPIPortsCommunication.hpp"
 #include <boost/filesystem.hpp>
 #include "ConnectionInfoPublisher.hpp"
-#include "utils/Parallel.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -32,14 +31,17 @@ size_t MPIPortsCommunication::getRemoteCommunicatorSize()
 void MPIPortsCommunication::acceptConnection(std::string const &acceptorName,
                                              std::string const &requesterName,
                                              std::string const &tag,
-                                             int                acceptorRank)
+                                             int                acceptorRank,
+                                             int                rankOffset)
 {
   PRECICE_TRACE(acceptorName, requesterName, acceptorRank);
   PRECICE_ASSERT(not isConnected());
 
-  _isAcceptor = true;
+  setRankOffset(rankOffset);
 
-  MPI_Open_port(MPI_INFO_NULL, const_cast<char *>(_portName.data()));
+  _isAcceptor = true;
+  _portName.reserve(MPI_MAX_PORT_NAME);
+  MPI_Open_port(MPI_INFO_NULL, &_portName[0]);
 
   ConnectionInfoWriter conInfo(acceptorName, requesterName, tag, _addressDirectory);
   conInfo.write(_portName);
@@ -92,7 +94,8 @@ void MPIPortsCommunication::acceptConnectionAsServer(std::string const &acceptor
 
   _isAcceptor = true;
 
-  MPI_Open_port(MPI_INFO_NULL, const_cast<char *>(_portName.data()));
+  _portName.reserve(MPI_MAX_PORT_NAME);
+  MPI_Open_port(MPI_INFO_NULL, &_portName[0]);
 
   ConnectionInfoWriter conInfo(acceptorName, requesterName, tag, acceptorRank, _addressDirectory);
   conInfo.write(_portName);
@@ -106,6 +109,7 @@ void MPIPortsCommunication::acceptConnectionAsServer(std::string const &acceptor
     int requesterRank = -1;
     // Receive the real rank of requester
     MPI_Recv(&requesterRank, 1, MPI_INT, 0, 42, communicator, MPI_STATUS_IGNORE);
+    PRECICE_ASSERT(requesterRank >= 0, "Invalid requester rank!");
     _communicators[requesterRank] = communicator;
   }
   _isConnected = true;
@@ -136,6 +140,11 @@ void MPIPortsCommunication::requestConnection(std::string const &acceptorName,
   MPI_Send(&requesterRank, 1, MPI_INT, 0, 42, communicator);
   MPI_Send(&requesterCommunicatorSize, 1, MPI_INT, 0, 42, communicator);
   MPI_Recv(&acceptorRank, 1, MPI_INT, 0, 42, communicator, MPI_STATUS_IGNORE);
+  // @todo The following assertion should always be the case, however the
+  // acceleration package currently violates this in order to create a circular
+  // intra Communication.
+  //
+  // PRECICE_ASSERT(acceptorRank == 0, "The acceptor always has to be 0.");
   _communicators[0] = communicator; // should be acceptorRank
 }
 

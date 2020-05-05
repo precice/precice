@@ -11,34 +11,46 @@ BOOST_AUTO_TEST_SUITE(CommunicationTests)
 
 BOOST_AUTO_TEST_SUITE(Socket)
 
-BOOST_AUTO_TEST_CASE(SendAndReceive,
-                     *testing::MinRanks(2))
+BOOST_AUTO_TEST_CASE(SendAndReceiveMM)
 {
-  TestSendAndReceive<SocketCommunication>();
+  PRECICE_TEST(2_ranks, Require::Events);
+  using namespace precice::testing::com::mastermaster;
+  TestSendAndReceive<SocketCommunication>(context.rank);
 }
 
-BOOST_AUTO_TEST_CASE(SendReceiveFourProcesses,
-                     *testing::MinRanks(4) * boost::unit_test::fixture<testing::SyncProcessesFixture>())
+BOOST_AUTO_TEST_CASE(SendAndReceiveMS)
 {
-  TestSendReceiveFourProcesses<SocketCommunication>();
+  PRECICE_TEST(2_ranks, Require::Events);
+  using namespace precice::testing::com::masterslave;
+  TestSendAndReceive<SocketCommunication>(context.rank);
 }
 
-BOOST_AUTO_TEST_CASE(SendReceiveTwoProcessesServerClient,
-                     *testing::MinRanks(2) * boost::unit_test::fixture<testing::SyncProcessesFixture>())
+BOOST_AUTO_TEST_CASE(SendReceiveFourProcesses)
 {
-  TestSendReceiveTwoProcessesServerClient<SocketCommunication>();
+  PRECICE_TEST(4_ranks, Require::Events);
+  using namespace precice::testing::com::mastermaster;
+  TestSendReceiveFourProcesses<SocketCommunication>(context.rank);
 }
 
-BOOST_AUTO_TEST_CASE(SendReceiveFourProcessesServerClient,
-                     *testing::MinRanks(4) * boost::unit_test::fixture<testing::SyncProcessesFixture>())
+BOOST_AUTO_TEST_CASE(SendReceiveTwoProcessesServerClient)
 {
-  TestSendReceiveFourProcessesServerClient<SocketCommunication>();
+  PRECICE_TEST(2_ranks, Require::Events);
+  using namespace precice::testing::com::serverclient;
+  TestSendReceiveTwoProcessesServerClient<SocketCommunication>(context.rank);
 }
 
-BOOST_AUTO_TEST_CASE(SendReceiveFourProcessesServerClientV2,
-                     *testing::MinRanks(4) * boost::unit_test::fixture<testing::SyncProcessesFixture>())
+BOOST_AUTO_TEST_CASE(SendReceiveFourProcessesServerClient)
 {
-  TestSendReceiveFourProcessesServerClientV2<SocketCommunication>();
+  PRECICE_TEST(4_ranks, Require::Events);
+  using namespace precice::testing::com::serverclient;
+  TestSendReceiveFourProcessesServerClient<SocketCommunication>(context.rank);
+}
+
+BOOST_AUTO_TEST_CASE(SendReceiveFourProcessesServerClientV2)
+{
+  PRECICE_TEST(4_ranks, Require::Events);
+  using namespace precice::testing::com::serverclient;
+  TestSendReceiveFourProcessesServerClientV2<SocketCommunication>(context.rank);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Socket

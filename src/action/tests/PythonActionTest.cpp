@@ -9,10 +9,11 @@ using namespace precice;
 using namespace precice::action;
 
 BOOST_AUTO_TEST_SUITE(ActionTests)
-BOOST_AUTO_TEST_SUITE(Python, *testing::OnMaster())
+BOOST_AUTO_TEST_SUITE(Python)
 
 BOOST_AUTO_TEST_CASE(AllMethods)
 {
+  PRECICE_TEST(1_rank);
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, false, testing::nextMeshID()));
   mesh->createVertex(Eigen::Vector3d::Constant(1.0));
   mesh->createVertex(Eigen::Vector3d::Constant(2.0));
@@ -35,6 +36,7 @@ BOOST_AUTO_TEST_CASE(AllMethods)
 
 BOOST_AUTO_TEST_CASE(OmitMethods)
 {
+  PRECICE_TEST(1_rank);
   std::string path = testing::getPathToSources() + "/action/tests/";
   {
     mesh::PtrMesh mesh;

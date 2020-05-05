@@ -27,7 +27,6 @@
 #include "utils/EigenHelperFunctions.hpp"
 #include "xml/XMLTag.hpp"
 
-#include "testing/Fixtures.hpp"
 #include "testing/Testing.hpp"
 
 using namespace precice;
@@ -52,6 +51,7 @@ BOOST_FIXTURE_TEST_SUITE(ParallelImplicitCouplingSchemeTests, ParallelImplicitCo
 
 BOOST_AUTO_TEST_CASE(testParseConfigurationWithRelaxation)
 {
+  PRECICE_TEST(1_rank);
   using namespace mesh;
 
   std::string path(_pathToTests + "parallel-implicit-cplscheme-relax-const-config.xml");
@@ -71,6 +71,7 @@ BOOST_AUTO_TEST_CASE(testParseConfigurationWithRelaxation)
 
 BOOST_AUTO_TEST_CASE(testMVQNPP)
 {
+  PRECICE_TEST(1_rank);
   //use two vectors and see if underrelaxation works
   double           initialRelaxation        = 0.01;
   int              maxIterationsUsed        = 50;
@@ -168,6 +169,7 @@ BOOST_AUTO_TEST_CASE(testMVQNPP)
 
 BOOST_AUTO_TEST_CASE(testVIQNPP)
 {
+  PRECICE_TEST(1_rank);
   //use two vectors and see if underrelaxation works
 
   double           initialRelaxation        = 0.01;
@@ -261,12 +263,12 @@ BOOST_AUTO_TEST_CASE(testVIQNPP)
   BOOST_TEST(testing::equals((*data.at(1)->values)(3), 8.28025852497733944046e-02));
 }
 
-/// Test that runs on 2 processors.
-BOOST_FIXTURE_TEST_CASE(testInitializeData, testing::M2NFixture,
-                        *testing::MinRanks(2) * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
+BOOST_AUTO_TEST_CASE(testInitializeData)
 {
-  if (utils::Parallel::getCommunicatorSize() != 2) // only run test on ranks {0,1}, for other ranks return
-    return;
+  PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
+  testing::ConnectionOptions options;
+  options.useOnlyMasterCom = true;
+  auto m2n                 = context.connectMasters("Participant0", "Participant1", options);
 
   xml::XMLTag root = xml::getRootTag();
 
@@ -291,26 +293,23 @@ BOOST_FIXTURE_TEST_CASE(testInitializeData, testing::M2NFixture,
   double      timestepLength = 0.1;
   std::string nameParticipant0("Participant0");
   std::string nameParticipant1("Participant1");
-  std::string nameLocalParticipant("");
-  int         sendDataIndex              = -1;
-  int         receiveDataIndex           = -1;
+  int         sendDataIndex    = -1;
+  int         receiveDataIndex = -1;
   bool        dataRequiresInitialization = false;
-  if (utils::Parallel::getProcessRank() == 0) {
-    nameLocalParticipant       = nameParticipant0;
-    sendDataIndex              = 0;
-    receiveDataIndex           = 1;
+  if (context.isNamed(nameParticipant0)) {
+    sendDataIndex    = 0;
+    receiveDataIndex = 1;
     dataRequiresInitialization = true;
-  } else if (utils::Parallel::getProcessRank() == 1) {
-    nameLocalParticipant       = nameParticipant1;
-    sendDataIndex              = 1;
-    receiveDataIndex           = 0;
+  } else {
+    sendDataIndex    = 1;
+    receiveDataIndex = 0;
     dataRequiresInitialization = true;
   }
 
   // Create the coupling scheme object
   ParallelCouplingScheme cplScheme(
       maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
-      nameLocalParticipant, m2n, constants::FIXED_TIME_WINDOW_SIZE, BaseCouplingScheme::Implicit, 100);
+      context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE, BaseCouplingScheme::Implicit, 100);
   cplScheme.addDataToSend(mesh->data()[sendDataIndex], mesh, dataRequiresInitialization);
   cplScheme.addDataToReceive(mesh->data()[receiveDataIndex], mesh, dataRequiresInitialization);
 
@@ -328,7 +327,7 @@ BOOST_FIXTURE_TEST_CASE(testInitializeData, testing::M2NFixture,
 
   cplScheme.initialize(0.0, 0);
 
-  if (nameLocalParticipant == nameParticipant0) {
+  if (context.isNamed(nameParticipant0)) {
     BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteInitialData()));
     mesh->data(dataID0)->values() = Eigen::VectorXd::Constant(1, 4.0);
     cplScheme.markActionFulfilled(constants::actionWriteInitialData());
@@ -348,7 +347,7 @@ BOOST_FIXTURE_TEST_CASE(testInitializeData, testing::M2NFixture,
       cplScheme.advance();
     }
   } else {
-    BOOST_TEST(nameLocalParticipant == nameParticipant1);
+    BOOST_TEST(context.isNamed(nameParticipant1));
     auto &values = mesh->data(dataID0)->values();
     BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteInitialData()));
     Eigen::VectorXd v(3);
@@ -372,7 +371,6 @@ BOOST_FIXTURE_TEST_CASE(testInitializeData, testing::M2NFixture,
     }
   }
   cplScheme.finalize();
-  utils::Parallel::clearGroups();
 }
 #endif // not PRECICE_NO_MPI
 

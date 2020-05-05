@@ -9,10 +9,11 @@ using namespace precice;
 using namespace precice::mapping;
 
 BOOST_AUTO_TEST_SUITE(MappingTests)
-BOOST_AUTO_TEST_SUITE(Configuration, *testing::OnMaster())
+BOOST_AUTO_TEST_SUITE(Configuration)
 
 BOOST_AUTO_TEST_CASE(Configuration)
 {
+  PRECICE_TEST(1_rank);
 
   std::string pathToTests = testing::getPathToSources() + "/mapping/tests/";
   std::string file(pathToTests + "mapping-config.xml");

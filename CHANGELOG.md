@@ -4,7 +4,24 @@ All notable changes to this project will be documented in this file. For future 
 
 ## 2.1.0
 
+- Refactor `mesh::BoundingBox` into seperate class
 - Removed deprecated and untested Manifold Mapping. API functions `hasToEvaluateSurrogateModel` and `hasToEvaluateFineModel` remain as nop stubs.
+- Change the CMake FindNumPy module to only consider information based on the selected python interpreter.
+- Implemented a new action to sum up data values, `action:summation`.
+- Added many tests for the communication abstraction.
+- Refactor `com::Communication` handling of rank adjustments.
+- Changed test setup to a simpler and consistent version using the new `testing::TestContext`. Tests now require to run on 4 MPI ranks. They will still compile but not run when `MPICommunication=OFF`.
+- Added tests which build solverdummies and test which run them in various configurations.
+- Enable RBF-based tests in partiton unit-tests and serial integration tests
+- Split multi-setup integration tests into multiple single-setup tests.
+- Change `com::MPIDirectcommunication` to work only for Master-Slave connections.
+- Removed `m2n:mpi-single`, which never worked outside tests.
+- Fix target `test_install` requiring CMake version 1.13.
+
+## 2.0.2
+
+- Fixed a critical bug in the testing framework.
+- Fixed a critical bug in the partitioning for geometric filter set to `on-master` in `<use-mesh>` tags. The default configuration is `on-slave`.
 
 ## 2.0.1
 

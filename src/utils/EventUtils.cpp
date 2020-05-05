@@ -16,10 +16,6 @@
 #include "utils/assertion.hpp"
 
 namespace precice {
-extern bool testMode;
-}
-
-namespace precice {
 namespace utils {
 
 using sys_clk  = std::chrono::system_clock;
@@ -223,12 +219,10 @@ void EventRegistry::finalize()
   for (auto &e : storedEvents)
     e.second.stop();
 
-  // @todo remove testMode flag once we have properly refactored the tests, cf. issue #597
-  if (initialized && not precice::testMode) // this makes only sense when it was properly initialized
+  if (initialized) // this makes only sense when it was properly initialized
     normalize();
 
-  if (not precice::testMode)
-    collect();
+  collect();
 
   initialized = false;
   finalized   = true;
@@ -269,7 +263,7 @@ Event &EventRegistry::getStoredEvent(std::string const &name)
   return std::get<0>(insertion)->second;
 }
 
-void EventRegistry::printAll()
+void EventRegistry::printAll() const
 {
   int myRank;
   MPI_Comm_rank(comm, &myRank);
@@ -278,17 +272,22 @@ void EventRegistry::printAll()
     return;
 
   std::string logFile;
-  if (applicationName.empty())
+  std::string summaryFile;
+  if (applicationName.empty()) {
     logFile = "Events.json";
-  else
+    summaryFile = "Events-summary.log";
+  } else {
     logFile = applicationName + "-events.json";
+    summaryFile = applicationName + "-events-summary.log";
+  }
 
-  writeSummary(std::cout);
-  std::ofstream ofs(logFile);
-  writeJSON(ofs);
+  std::ofstream summaryFS{summaryFile};
+  writeSummary(summaryFS);
+  std::ofstream logFS{logFile};
+  writeJSON(logFS);
 }
 
-void EventRegistry::writeSummary(std::ostream &out)
+void EventRegistry::writeSummary(std::ostream &out) const
 {
   int rank, size;
   MPI_Comm_rank(comm, &rank);
@@ -350,10 +349,13 @@ void EventRegistry::writeSummary(std::ostream &out)
   }
 }
 
-void EventRegistry::writeJSON(std::ostream &out)
+void EventRegistry::writeJSON(std::ostream &out) const
 {
   using json = nlohmann::json;
   using namespace std::chrono;
+
+  if (globalRankData.empty())
+    return;
 
   json js;
 
@@ -552,7 +554,7 @@ EventRegistry::collectInitAndFinalize()
           sys_clk::time_point{sys_clk::duration{maxTicks}}};
 }
 
-size_t EventRegistry::getMaxNameWidth()
+size_t EventRegistry::getMaxNameWidth() const
 {
   size_t maxEventWidth = 0;
   for (auto &ev : localRankData.evData)
@@ -562,7 +564,7 @@ size_t EventRegistry::getMaxNameWidth()
   return maxEventWidth;
 }
 
-std::pair<sys_clk::time_point, sys_clk::time_point> EventRegistry::findFirstAndLastTime()
+std::pair<sys_clk::time_point, sys_clk::time_point> EventRegistry::findFirstAndLastTime() const
 {
   using T    = decltype(globalRankData)::value_type const &;
   auto first = std::min_element(std::begin(globalRankData), std::end(globalRankData),

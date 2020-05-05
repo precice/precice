@@ -91,7 +91,6 @@ private:
   std::chrono::steady_clock::time_point finalizedAtTicks;
 
   bool isFinalized = true;
-  int  rank        = 0;
 };
 
 /// Holds data aggregated from all MPI ranks for one event
@@ -140,13 +139,13 @@ public:
   Event &getStoredEvent(std::string const &name);
 
   /// Prints a pretty report to stdout and a JSON report to appName-events.json
-  void printAll();
+  void printAll() const;
 
   /// Prints the result table to an arbitrary stream, only prints at rank 0.
-  void writeSummary(std::ostream &out);
+  void writeSummary(std::ostream &out) const;
 
   /// Writes the aggregated timings and state changes at JSON, only at rank 0.
-  void writeJSON(std::ostream &out);
+  void writeJSON(std::ostream &out) const;
 
   MPI_Comm const &getMPIComm() const;
 
@@ -178,10 +177,10 @@ private:
   std::pair<std::chrono::system_clock::time_point, std::chrono::system_clock::time_point> collectInitAndFinalize();
 
   /// Returns length of longest name
-  size_t getMaxNameWidth();
+  size_t getMaxNameWidth() const;
 
   /// Finds the first initialized time and last finalized time in globalRankData
-  std::pair<std::chrono::system_clock::time_point, std::chrono::system_clock::time_point> findFirstAndLastTime();
+  std::pair<std::chrono::system_clock::time_point, std::chrono::system_clock::time_point> findFirstAndLastTime() const;
 
   /// Event for measuring global time
   Event globalEvent;

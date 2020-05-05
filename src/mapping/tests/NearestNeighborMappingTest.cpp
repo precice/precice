@@ -10,10 +10,11 @@ using namespace precice;
 using namespace precice::mesh;
 
 BOOST_AUTO_TEST_SUITE(MappingTests)
-BOOST_AUTO_TEST_SUITE(NearestNeighborMapping, *testing::OnMaster())
+BOOST_AUTO_TEST_SUITE(NearestNeighborMapping)
 
 BOOST_AUTO_TEST_CASE(ConsistentNonIncremental)
 {
+  PRECICE_TEST(1_rank);
   int dimensions = 2;
   using testing::equals;
 
@@ -94,6 +95,7 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncremental)
 
 BOOST_AUTO_TEST_CASE(ConservativeNonIncremental)
 {
+  PRECICE_TEST(1_rank);
   int dimensions = 2;
 
   // Create mesh to map from

@@ -26,7 +26,6 @@ struct SolutionCaching;
 } // namespace MappingTests
 
 namespace precice {
-extern bool testMode;
 extern bool syncMode;
 } // namespace precice
 
@@ -159,6 +158,9 @@ private:
   /// Toggles use of preallocation for matrix C and A
   const Preallocation _preallocation;
 
+  /// The CommState used to communicate
+  utils::Parallel::CommStatePtr _commState;
+
   void estimatePreallocationMatrixC(int rows, int cols, mesh::PtrMesh mesh);
 
   void estimatePreallocationMatrixA(int rows, int cols, mesh::PtrMesh mesh);
@@ -206,7 +208,8 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping(
       _AOmapping(nullptr),
       _solverRtol(solverRtol),
       _polynomial(polynomial),
-      _preallocation(preallocation)
+      _preallocation(preallocation),
+      _commState(utils::Parallel::current())
 {
   setInputRequirement(Mapping::MeshRequirement::VERTEX);
   setOutputRequirement(Mapping::MeshRequirement::VERTEX);
@@ -272,13 +275,13 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   }
 
   // do not put that in the c'tor, getProcessRank always returns 0 there
-  localPolyparams = utils::Parallel::getProcessRank() > 0 ? 0 : polyparams;
+  localPolyparams = _commState->rank() > 0 ? 0 : polyparams;
 
   // Indizes that are used to build the Petsc AO mapping
   std::vector<PetscInt> myIndizes;
 
   // Indizes for Q^T, holding the polynomial
-  if (utils::Parallel::getProcessRank() <= 0) // Rank 0 or not in MasterSlave mode
+  if (_commState->rank() <= 0) // Rank 0 or not in MasterSlave mode
     for (size_t i = 0; i < polyparams; i++)
       myIndizes.push_back(i); // polyparams reside in the first rows (which are always on rank 0)
 
@@ -325,8 +328,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   auto const ownerRangeAEnd   = _matrixA.ownerRange().second;
 
   // A mapping from globalIndex -> local col/row
-  ierr = AOCreateMapping(utils::Parallel::getGlobalCommunicator(),
-                         myIndizes.size(), myIndizes.data(), nullptr, &_AOmapping);
+  ierr = AOCreateMapping(_commState->comm, myIndizes.size(), myIndizes.data(), nullptr, &_AOmapping);
   CHKERRV(ierr);
 
   eAO.stop();
@@ -818,14 +820,12 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
     namespace bgi = boost::geometry::index;
     auto bb       = otherMesh->getBoundingBox();
     // Enlarge by support radius
-    for (int d = 0; d < otherMesh->getDimensions(); d++) {
-      bb[d].first -= _basisFunction.getSupportRadius();
-      bb[d].second += _basisFunction.getSupportRadius();
-    }
-    rtree->query(bgi::within(bb),
-                 boost::make_function_output_iterator([&filterMesh](size_t idx) {
-                   filterMesh->vertices()[idx].tag();
-                 }));
+    bb.expandBy(_basisFunction.getSupportRadius());
+    rtree->query(bgi::satisfies([&](size_t const i){ return bb.contains(filterMesh->vertices()[i]); }), 
+      boost::make_function_output_iterator([&filterMesh](size_t idx) {
+        filterMesh->vertices()[idx].tag();
+      }));
+    
   } else {
     for (auto &vert : filterMesh->vertices())
       vert.tag();
@@ -840,6 +840,7 @@ template <typename RADIAL_BASIS_FUNCTION_T>
 void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
 {
   PRECICE_TRACE();
+  namespace bgi = boost::geometry::index;
 
   if (not _basisFunction.hasCompactSupport())
     return; // Tags should not be changed
@@ -851,45 +852,35 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
   else if (getConstraint() == CONSERVATIVE)
     mesh = output();
 
-  mesh::Mesh::BoundingBox bb(mesh->getDimensions(),
-                             std::make_pair(std::numeric_limits<double>::max(),
-                                            std::numeric_limits<double>::lowest()));
+  mesh::BoundingBox bb(mesh->getDimensions());
 
   // Construct bounding box around all owned vertices
   for (mesh::Vertex &v : mesh->vertices()) {
     if (v.isOwner()) {
       PRECICE_ASSERT(v.isTagged()); // Should be tagged from the first round
-      for (int d = 0; d < v.getDimensions(); d++) {
-        bb[d].first  = std::min(v.getCoords()[d], bb[d].first);
-        bb[d].second = std::max(v.getCoords()[d], bb[d].second);
-      }
+      bb.expandBy(v);
     }
   }
-
   // Enlarge bb by support radius
-  for (int d = 0; d < mesh->getDimensions(); d++) {
-    bb[d].first -= _basisFunction.getSupportRadius();
-    bb[d].second += _basisFunction.getSupportRadius();
-  }
+  bb.expandBy(_basisFunction.getSupportRadius());
   auto rtree = mesh::rtree::getVertexRTree(mesh);
-  rtree->query(boost::geometry::index::within(bb),
-               boost::make_function_output_iterator([&mesh](size_t idx) {
-                 mesh->vertices()[idx].tag();
-               }));
+
+  rtree->query(bgi::satisfies([&](size_t const i){ return bb.contains(mesh->vertices()[i]); }), 
+    boost::make_function_output_iterator([&mesh](size_t idx) {
+      mesh->vertices()[idx].tag();
+    }));
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::printMappingInfo(int inputDataID, int dim) const
 {
-  if (not precice::testMode) {
-    const std::string constraintName = getConstraint() == CONSERVATIVE ? "conservative" : "consistent";
-    const std::string polynomialName = _polynomial == Polynomial::ON ? "on" : _polynomial == Polynomial::OFF ? "off" : "separate";
+  const std::string constraintName = getConstraint() == CONSERVATIVE ? "conservative" : "consistent";
+  const std::string polynomialName = _polynomial == Polynomial::ON ? "on" : _polynomial == Polynomial::OFF ? "off" : "separate";
 
-    PRECICE_INFO("Mapping " << input()->data(inputDataID)->getName() << " " << constraintName
-                            << " from " << input()->getName() << " (ID " << input()->getID() << ")"
-                            << " to " << output()->getName() << " (ID " << output()->getID() << ") "
-                            << "for dimension " << dim << ") with polynomial set to " << polynomialName);
-  }
+  PRECICE_INFO("Mapping " << input()->data(inputDataID)->getName() << " " << constraintName
+      << " from " << input()->getName() << " (ID " << input()->getID() << ")"
+      << " to " << output()->getName() << " (ID " << output()->getID() << ") "
+      << "for dimension " << dim << ") with polynomial set to " << polynomialName);
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
@@ -899,18 +890,15 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::estimatePreallocationMat
   std::ignore = rows;
   std::ignore = cols;
 
-  // auto rank = utils::Parallel::getProcessRank();
-  auto size          = utils::Parallel::getCommunicatorSize();
+  // auto rank = _commState->rank();
+  auto size          = _commState->size();
   auto supportRadius = _basisFunction.getSupportRadius();
 
   auto bbox     = mesh->getBoundingBox();
   auto meshSize = mesh->vertices().size();
 
-  double meshArea = 1;
+  double meshArea = bbox.getArea(_deadAxis);
   // PRECICE_WARN(bbox);
-  for (int d = 0; d < getDimensions(); d++)
-    if (not _deadAxis[d])
-      meshArea *= bbox[d].second - bbox[d].first;
 
   // supportVolume = math::PI * 4.0/3.0 * std::pow(supportRadius, 3);
   double supportVolume = 0;
@@ -927,7 +915,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::estimatePreallocationMat
   PRECICE_WARN("nnzPerRow = " << nnzPerRow);
   // int nnz = nnzPerRow * rows;
 
-  if (utils::Parallel::getCommunicatorSize() == 1) {
+  if (_commState->size() == 1) {
     MatSeqSBAIJSetPreallocation(_matrixC, _matrixC.blockSize(), nnzPerRow / 2, nullptr);
   } else {
     MatMPISBAIJSetPreallocation(_matrixC, _matrixC.blockSize(),
@@ -943,18 +931,15 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::estimatePreallocationMat
   std::ignore = rows;
   std::ignore = cols;
 
-  // auto rank = utils::Parallel::getProcessRank();
-  auto size          = utils::Parallel::getCommunicatorSize();
+  // auto rank = _commState->rank();
+  auto size          = _commState->size();
   auto supportRadius = _basisFunction.getSupportRadius();
 
   auto bbox     = mesh->getBoundingBox();
   auto meshSize = mesh->vertices().size();
 
-  double meshArea = 1;
+  double meshArea = bbox.getArea(_deadAxis);
   // PRECICE_WARN(bbox);
-  for (int d = 0; d < getDimensions(); d++)
-    if (not _deadAxis[d])
-      meshArea *= bbox[d].second - bbox[d].first;
 
   // supportVolume = math::PI * 4.0/3.0 * std::pow(supportRadius, 3);
   double supportVolume = 0;
@@ -971,7 +956,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::estimatePreallocationMat
   PRECICE_WARN("nnzPerRow = " << nnzPerRow);
   // int nnz = nnzPerRow * rows;
 
-  if (utils::Parallel::getCommunicatorSize() == 1) {
+  if (_commState->size() == 1) {
     MatSeqSBAIJSetPreallocation(_matrixA, _matrixA.blockSize(), nnzPerRow, nullptr);
   } else {
     MatMPISBAIJSetPreallocation(_matrixA, _matrixA.blockSize(),
@@ -1042,7 +1027,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computePreallocationMatr
     local_row++;
   }
 
-  if (utils::Parallel::getCommunicatorSize() == 1) {
+  if (_commState->size() == 1) {
     // std::cout << "Computed Preallocation C Seq diagonal = " << std::accumulate(d_nnz.begin(), d_nnz.end(), 0) << '\n';
     ierr = MatSeqSBAIJSetPreallocation(_matrixC, _matrixC.blockSize(), 0, d_nnz.data());
     CHKERRV(ierr);
@@ -1120,7 +1105,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computePreallocationMatr
       }
     }
   }
-  if (utils::Parallel::getCommunicatorSize() == 1) {
+  if (_commState->size() == 1) {
     // std::cout << "Preallocation A Seq diagonal = " << std::accumulate(d_nnz.begin(), d_nnz.end(), 0) << '\n';
     ierr = MatSeqAIJSetPreallocation(_matrixA, 0, d_nnz.data());
     CHKERRV(ierr);
@@ -1198,7 +1183,7 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::savedPreallocationMatrixC(mes
     local_row++;
   }
 
-  if (utils::Parallel::getCommunicatorSize() == 1) {
+  if (_commState->size() == 1) {
     // std::cout << "Computed Preallocation C Seq diagonal = " << std::accumulate(d_nnz.begin(), d_nnz.end(), 0) << '\n';
     MatSeqSBAIJSetPreallocation(_matrixC, _matrixC.blockSize(), 0, d_nnz.data());
   } else {
@@ -1280,7 +1265,7 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::savedPreallocationMatrixA(mes
       }
     }
   }
-  if (utils::Parallel::getCommunicatorSize() == 1) {
+  if (_commState->size() == 1) {
     // std::cout << "Preallocation A Seq diagonal = " << std::accumulate(d_nnz.begin(), d_nnz.end(), 0) << '\n';
     MatSeqAIJSetPreallocation(_matrixA, 0, d_nnz.data());
   } else {
@@ -1372,7 +1357,7 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixC(mesh::
     local_row++;
   }
 
-  if (utils::Parallel::getCommunicatorSize() == 1) {
+  if (_commState->size() == 1) {
     MatSeqSBAIJSetPreallocation(_matrixC, _matrixC.blockSize(), 0, d_nnz.data());
   } else {
     MatMPISBAIJSetPreallocation(_matrixC, _matrixC.blockSize(), 0, d_nnz.data(), 0, o_nnz.data());
@@ -1462,7 +1447,7 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixA(mesh::
       }
     }
   }
-  if (utils::Parallel::getCommunicatorSize() == 1) {
+  if (_commState->size() == 1) {
     MatSeqAIJSetPreallocation(_matrixA, 0, d_nnz.data());
   } else {
     MatMPIAIJSetPreallocation(_matrixA, 0, d_nnz.data(), 0, o_nnz.data());

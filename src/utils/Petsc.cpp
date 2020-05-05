@@ -54,15 +54,16 @@ logging::Logger Petsc::_log("utils::Petsc");
 bool Petsc::weInitialized = false;
 
 void Petsc::initialize(
-    int *   argc,
-    char ***argv)
+    int *                  argc,
+    char ***               argv,
+    Parallel::Communicator comm)
 {
   PRECICE_TRACE();
 #ifndef PRECICE_NO_PETSC
   PetscBool petscIsInitialized;
   PetscInitialized(&petscIsInitialized);
   if (not petscIsInitialized) {
-    PETSC_COMM_WORLD = Parallel::getGlobalCommunicator();
+    PETSC_COMM_WORLD = comm;
     PetscErrorCode ierr;
     ierr = PetscInitialize(argc, argv, "", nullptr);
     CHKERRV(ierr);
@@ -163,9 +164,9 @@ Vector::Vector(Vector &&other)
 Vector::Vector(const std::string &name)
 {
   int size;
-  MPI_Comm_size(utils::Parallel::getGlobalCommunicator(), &size);
+  MPI_Comm_size(utils::Parallel::current()->comm, &size);
   PetscErrorCode ierr = 0;
-  ierr                = VecCreate(utils::Parallel::getGlobalCommunicator(), &vector);
+  ierr                = VecCreate(utils::Parallel::current()->comm, &vector);
   CHKERRV(ierr);
   setName(vector, name);
 }
@@ -370,7 +371,7 @@ void swap(Vector &lhs, Vector &rhs) noexcept
 Matrix::Matrix(std::string name)
 {
   PetscErrorCode ierr = 0;
-  ierr                = MatCreate(utils::Parallel::getGlobalCommunicator(), &matrix);
+  ierr                = MatCreate(utils::Parallel::current()->comm, &matrix);
   CHKERRV(ierr);
   setName(matrix, name);
 }
@@ -422,7 +423,7 @@ void Matrix::reset()
   std::string    name = getName(matrix);
   ierr                = MatDestroy(&matrix);
   CHKERRV(ierr);
-  ierr = MatCreate(utils::Parallel::getGlobalCommunicator(), &matrix);
+  ierr = MatCreate(utils::Parallel::current()->comm, &matrix);
   CHKERRV(ierr);
   setName(matrix, name);
 }
@@ -578,7 +579,7 @@ void Matrix::viewDraw() const
 KSPSolver::KSPSolver(std::string name)
 {
   PetscErrorCode ierr = 0;
-  ierr                = KSPCreate(utils::Parallel::getGlobalCommunicator(), &ksp);
+  ierr                = KSPCreate(utils::Parallel::current()->comm, &ksp);
   CHKERRV(ierr);
   setName(ksp, name);
 }

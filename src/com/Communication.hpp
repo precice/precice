@@ -82,7 +82,8 @@ public:
   virtual void acceptConnection(std::string const &acceptorName,
                                 std::string const &requesterName,
                                 std::string const &tag,
-                                int                acceptorRank) = 0;
+                                int                acceptorRank,
+                                int                rankOffset = 0) = 0;
 
   /**
    * @brief Accepts connection from another communicator, which has to call requestConnectionAsClient().
@@ -177,15 +178,15 @@ public:
   /// @{
 
   /// Performs a reduce summation on the rank given by rankMaster
-  virtual void reduceSum(double *itemsToSend, double *itemsToReceive, int size, int rankMaster);
+  virtual void reduceSum(double const *itemsToSend, double *itemsToReceive, int size, int rankMaster);
   /// Performs a reduce summation on the master, every other rank has to call reduceSum
-  virtual void reduceSum(double *itemsToSend, double *itemsToReceive, int size);
+  virtual void reduceSum(double const *itemsToSend, double *itemsToReceive, int size);
 
   virtual void reduceSum(int itemToSend, int &itemToReceive, int rankMaster);
   virtual void reduceSum(int itemsToSend, int &itemsToReceive);
 
-  virtual void allreduceSum(double *itemsToSend, double *itemsToReceive, int size, int rankMaster);
-  virtual void allreduceSum(double *itemsToSend, double *itemsToReceive, int size);
+  virtual void allreduceSum(double const *itemsToSend, double *itemsToReceive, int size, int rankMaster);
+  virtual void allreduceSum(double const *itemsToSend, double *itemsToReceive, int size);
 
   virtual void allreduceSum(double itemToSend, double &itemToReceive, int rankMaster);
   virtual void allreduceSum(double itemToSend, double &itemToReceive);
@@ -329,6 +330,9 @@ protected:
   int _rankOffset = 0;
 
   bool _isConnected = false;
+
+  /// Adjusts the given rank bases on the _rankOffset
+  virtual int adjustRank(int rank) const;
 
 private:
   logging::Logger _log{"com::Communication"};

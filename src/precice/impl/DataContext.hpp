@@ -13,6 +13,8 @@ namespace impl {
 struct DataContext {
   bool used = false;
 
+  std::string getName() const;
+
   mesh::PtrData fromData;
 
   mesh::PtrData toData;

@@ -1,6 +1,5 @@
 #include "M2NConfiguration.hpp"
 #include <list>
-#include "com/MPIDirectCommunication.hpp"
 #include "com/MPIPortsCommunicationFactory.hpp"
 #include "com/MPISinglePortsCommunicationFactory.hpp"
 #include "com/SocketCommunicationFactory.hpp"
@@ -9,6 +8,7 @@
 #include "m2n/M2N.hpp"
 #include "m2n/PointToPointComFactory.hpp"
 #include "utils/Helpers.hpp"
+#include "utils/networking.hpp"
 #include "xml/XMLAttribute.hpp"
 
 namespace precice {
@@ -32,13 +32,12 @@ M2NConfiguration::M2NConfiguration(xml::XMLTag &parent)
                             "bind it automatically.");
     tag.addAttribute(attrPort);
 
-    auto attrNetwork = makeXMLAttribute("network", "lo")
+    auto attrNetwork = makeXMLAttribute("network", utils::networking::loopbackInterfaceName())
                            .setDocumentation(
                                "Interface name to be used for socket communiation. "
-                               "Default is \"lo\", i.e., the local host loopback. "
+                               "Default is the cannonical name of the loopback interface of your platform. "
                                "Might be different on supercomputing systems, e.g. \"ib0\" "
-                               "for the InfiniBand on SuperMUC. "
-                               "For macOS use \"lo0\". ");
+                               "for the InfiniBand on SuperMUC. ");
     tag.addAttribute(attrNetwork);
 
     auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, "")
@@ -73,13 +72,6 @@ M2NConfiguration::M2NConfiguration(xml::XMLTag &parent)
                                          "directory of startup is chosen, and both solvers have to be started "
                                          "in the same directory.");
     tag.addAttribute(attrExchangeDirectory);
-    tags.push_back(tag);
-  }
-
-  {
-    XMLTag tag(*this, "mpi-single", occ, TAG);
-    doc = "Communication via MPI with startup in common communication space.";
-    tag.setDocumentation(doc);
     tags.push_back(tag);
   }
 
@@ -164,18 +156,12 @@ void M2NConfiguration::xmlTagCallback(const xml::ConfigurationContext &context, 
       comFactory = std::make_shared<com::MPISinglePortsCommunicationFactory>(dir);
       com        = comFactory->newCommunication();
 #endif
-    } else if (tag.getName() == "mpi-single") {
-#ifdef PRECICE_NO_MPI
-      throw std::runtime_error{"Communication type \"mpi-single\" can only be used when preCICE is compiled with argument \"mpi=on\""};
-#else
-      com        = std::make_shared<com::MPIDirectCommunication>();
-#endif
     }
 
     PRECICE_ASSERT(com.get() != nullptr);
 
     DistributedComFactory::SharedPointer distrFactory;
-    if (tag.getName() == "mpi-single" || enforceGatherScatter) {
+    if (enforceGatherScatter) {
       distrFactory = std::make_shared<GatherScatterComFactory>(com);
     } else {
       distrFactory = std::make_shared<PointToPointComFactory>(comFactory);

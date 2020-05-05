@@ -28,6 +28,10 @@ else
     exit 1
 fi
 
+REPO=`git rev-parse --show-toplevel`
+cd $REPO
+echo "Root at $REPO"
+
 echo -n "Checking location ... "
 DEBLOC="tools/releasing/packaging/debian/changelog"
 if [ -f "CMakeLists.txt" ] && [ -f "CHANGELOG.md" ] && [ -f "$DEBLOC" ]; then
@@ -44,7 +48,11 @@ VERSIONREGEX='[0-9]\+\.[0-9]\+\.[0-9]\+'
 echo " - CMake"
 sed "s/\(project(preCICE\s\+VERSION\s\+\)$VERSIONREGEX/\1$VERSION/" -i CMakeLists.txt
 echo " - Changelog"
-sed "s/## develop/&\n\n## $VERSION/" -i CHANGELOG.md
+CL_FILES=`find docs/changelog -type f -name "*.md"`
+echo "   compressing"
+echo -e "$(head -n4 CHANGELOG.md)\n\n## $VERSION\n\n$(cat $CL_FILES)\n$(tail +6 CHANGELOG.md)" > CHANGELOG.md
+echo "   cleaning"
+rm $CL_FILES
 echo " - Debian Changelog"
 
 DEBENTRY="
