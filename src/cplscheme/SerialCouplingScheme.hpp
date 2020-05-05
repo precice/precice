@@ -28,14 +28,14 @@ public:
  * @param[in] maxTime Simulation time limit, or UNDEFINED_TIME.
  * @param[in] maxTimeWindows Simulation time windows limit, or UNDEFINED_TIMEWINDOWS.
  * @param[in] timeWindowSize Simulation time window size.
- * @param[in] validDigits TODO
+ * @param[in] validDigits valid digits for computation of the remainder of a time window
  * @param[in] firstParticipant Name of participant starting simulation.
  * @param[in] secondParticipant Name of second participant in coupling.
  * @param[in] localParticipant Name of participant using this coupling scheme.
- * @param[in] m2n Communication object for com. between participants. TODO?
- * @param[in] dtMethod TODO
- * @param[in] cplMode TODO
- * @param[in] maxIterations TODO
+ * @param[in] m2n Communication object for com. between participants.
+ * @param[in] dtMethod Method used for determining the time window size, see https://github.com/precice/precice/wiki/Adapter's-Time-Step-Sizes
+ * @param[in] cplMode Set implicit or explicit coupling
+ * @param[in] maxIterations maximum number of coupling iterations allowed for implicit coupling per time window
  */
   SerialCouplingScheme(
       double                        maxTime,
@@ -53,15 +53,12 @@ public:
   friend struct CplSchemeTests::SerialImplicitCouplingSchemeTests::testExtrapolateData; // For whitebox tests
 
   /**
-   * @brief TODO
+   * @brief performs checks on a configured SerialCouplingScheme
    */
   void checkConfiguration() override;
 
 private:
 
-  /**
-   * @brief TODO
-   */
   logging::Logger _log{"cplschemes::SerialCouplingSchemes"};
 
   /// Determines, if the time window size is set by the participant.
@@ -74,17 +71,22 @@ private:
   void receiveAndSetTimeWindowSize();
 
   /**
-   * @brief TODO
+   * @brief Exchanges data between the participants of the SerialCouplingSchemes and applies acceleration.
+   * @returns true, if iteration converged
    */
   bool exchangeDataAndAccelerate() override;
 
+  /**
+   * @brief SerialCouplingSchemes applies acceleration to send data
+   * @returns DataMap being accelerated
+   */
   DataMap &getAccelerationData() override
   {
     return getSendData();
   }
 
   /**
-   * @brief TODO
+   * @brief determine whether data has to be sent/received
    */
   void initializeImplementation() override;
 
@@ -94,7 +96,7 @@ private:
   void mergeData() override {};
 
   /**
-   * @brief TODO
+   * @brief Exchanges data, if it has to be initialized.
    */
   void exchangeInitialData() override;
 };

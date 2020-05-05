@@ -15,18 +15,20 @@ namespace cplscheme {
 class ParallelCouplingScheme : public BiCouplingScheme {
 public:
   /**
- * @brief Constructor.
- *
- * @param[in] maxTime Simulation time limit, or UNDEFINED_TIME.
- * @param[in] maxTimeWindows Simulation time windows limit, or UNDEFINED_TIMEWINDOWS.
- * @param[in] timeWindowSize Simulation time window size.
- * @param[in] validDigits TODO
- * @param[in] firstParticipant Name of participant starting simulation.
- * @param[in] secondParticipant Name of second participant in coupling.
- * @param[in] localParticipant Name of participant using this coupling scheme.
- * @param[in] m2n Communication object for com. between participants. TODO?
- * TODO add dtMethod, cplMode, maxIterations
- */
+   * @brief Constructor.
+   *
+   * @param[in] maxTime Simulation time limit, or UNDEFINED_TIME.
+   * @param[in] maxTimeWindows Simulation time windows limit, or UNDEFINED_TIMEWINDOWS.
+   * @param[in] timeWindowSize Simulation time window size.
+   * @param[in] validDigits valid digits for computation of the remainder of a time window
+   * @param[in] firstParticipant Name of participant starting simulation.
+   * @param[in] secondParticipant Name of second participant in coupling.
+   * @param[in] localParticipant Name of participant using this coupling scheme.
+   * @param[in] m2n Communication object for com. between participants.
+   * @param[in] dtMethod Method used for determining the time window size, see https://github.com/precice/precice/wiki/Adapter's-Time-Step-Sizes
+   * @param[in] cplMode Set implicit or explicit coupling
+   * @param[in] maxIterations maximum number of coupling iterations allowed for implicit coupling per time window
+   */
   ParallelCouplingScheme(
       double                        maxTime,
       int                           maxTimeWindows,
@@ -41,7 +43,7 @@ public:
       int                           maxIterations = -1);
 
   /**
-   * @brief TODO
+   * @brief performs checks on a configured ParallelCouplingScheme
    */
   void checkConfiguration() override;
 
@@ -52,10 +54,15 @@ private:
   DataMap _allData;
 
   /**
-   * @brief TODO
+   * @brief Exchanges all data between the participants of the ParallelCouplingScheme and applies acceleration.
+   * @returns true, if iteration converged
    */
   bool exchangeDataAndAccelerate() override;
 
+  /**
+   * @brief ParallelCouplingScheme applies acceleration to _allData
+   * @returns DataMap being accelerated
+   */
   DataMap &getAccelerationData() override
   {
     PRECICE_ASSERT(!doesFirstStep(), "Only the second participant should do the acceleration.");
@@ -63,7 +70,7 @@ private:
   }
 
   /**
-   * @brief TODO
+   * @brief determine whether data has to be sent/received
    */
   void initializeImplementation() override;
 
@@ -73,7 +80,7 @@ private:
   void mergeData() override;
 
   /**
-   * @brief TODO
+   * @brief Exchanges data, if it has to be initialized.
    */
   void exchangeInitialData() override;
 };

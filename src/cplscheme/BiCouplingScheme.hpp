@@ -49,6 +49,7 @@ protected:
     return _sendData;
   }
 
+  /// Returns all data to be received.
   DataMap &getReceiveData()
   {
     return _receiveData;

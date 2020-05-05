@@ -7,7 +7,12 @@ namespace precice {
 namespace cplscheme {
 
 /**
- * @brief TODO
+ * @brief A coupling scheme with multiple participants.
+ *
+ * ! General description
+ * A MultiCouplingScheme couples multiple participants. It is a specialization of
+ * BaseCouplingScheme.
+ *
  */
 class MultiCouplingScheme : public BaseCouplingScheme {
 public:
@@ -20,7 +25,7 @@ public:
  * @param[in] validDigits valid digits for computation of the remainder of a time window
  * @param[in] localParticipant Name of participant using this coupling scheme.
  * @param[in] m2ns M2N communications to all other participants of coupling scheme.
- * @param[in] dtMethod method to determine timestep size, see https://github.com/precice/precice/wiki/Adapter's-Time-Step-Sizes
+ * @param[in] dtMethod Method used for determining the time window size, see https://github.com/precice/precice/wiki/Adapter's-Time-Step-Sizes
  * @param[in] maxIterations maximum number of coupling sub-iterations allowed.
  */
   MultiCouplingScheme(
@@ -48,36 +53,57 @@ public:
       int           index);
 
   /**
-   * @brief TODO
+   * @brief performs checks on a configured MultiCouplingScheme
    */
   void checkConfiguration() override;
 
 private:
+  /**
+   * @brief get CouplingData from _allData using dataID
+   * @param dataID identifies CouplingData to be searched for
+   * @return CouplingData from _allData corresponding to dataID
+   */
   CouplingData *getData(int dataID);
 
-  /// Communication device to the other coupling participant.
+  /**
+   * @brief A vector of m2ns. A m2n is a communication device to the other coupling participant.
+   */
   std::vector<m2n::PtrM2N> _m2ns;
 
-  /// Map from data ID -> all data (receive and send) with that ID
+  /**
+   * @brief Map from data ID -> all data (receive and send) with that ID
+   */
   DataMap _allData;
 
+  /**
+   * @brief A vector of all data to be received.
+   */
   std::vector<DataMap> _receiveDataVector;
+
+  /**
+   * @brief A vector of all data to be sent.
+   */
   std::vector<DataMap> _sendDataVector;
 
   logging::Logger _log{"cplscheme::MultiCouplingScheme"};
 
   /**
-   * @brief TODO
+   * @brief Exchanges all data between the participants of the MultiCouplingScheme and applies acceleration.
+   * @returns true, if iteration converged
    */
   bool exchangeDataAndAccelerate() override;
 
+  /**
+   * @brief MultiCouplingScheme applies acceleration to _allData
+   * @returns DataMap bein accelerated
+   */
   DataMap &getAccelerationData() override
   {
     return _allData;
   }
 
   /**
-   * @brief TODO
+   * @brief Initialization of MultiCouplingScheme is similar to ParallelCouplingScheme. We only have to iterate over all pieces of data in _sendDataVector and _receiveDataVector.
    */
   void initializeImplementation() override;
 
@@ -87,7 +113,7 @@ private:
   void mergeData() override;
 
   /**
-   * @brief TODO
+   * @brief Exchanges data, if it has to be initialized.
    */
   void exchangeInitialData() override;
 

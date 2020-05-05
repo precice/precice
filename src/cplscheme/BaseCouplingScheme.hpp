@@ -62,16 +62,24 @@ public:
       CouplingMode                  cplMode,
       constants::TimesteppingMethod dtMethod);
 
-  /// performs checks on configured coupling scheme
+  /**
+   * @brief performs checks on configured coupling scheme
+   */
   virtual void checkConfiguration() = 0;
 
-  /// Returns true, if initialize has been called.
+  /**
+   * @brief getter for _isInitialized
+   * @returns true, if initialize has been called.
+   */
   bool isInitialized() const override final
   {
     return _isInitialized;
   }
 
-  /// Adds newly computed time. Has to be called before every advance.
+  /**
+   * @brief Adds newly computed time. Has to be called before every advance.
+   * @param timeToAdd time to be added
+   */
   void addComputedTime(double timeToAdd) override final;
 
   /**
@@ -85,16 +93,28 @@ public:
    */
   bool willDataBeExchanged(double lastSolverTimestepLength) const override final;
 
-  /// Returns true, if data has been exchanged in last call of advance().
+  /**
+   * @brief getter for _hasDataBeenExchanged
+   * @returns true, if data has been exchanged in last call of advance().
+   */
   bool hasDataBeenExchanged() const override final;
 
-  /// Returns the currently computed time of the coupling scheme.
+  /**
+   * @brief getter for _time
+   * @returns the currently computed time of the coupling scheme.
+   */
   double getTime() const override final;
 
-  /// Returns the number of currently computed time windows of the coupling scheme.
+  /**
+   * @brief getter for _timeWindows
+   * @returns the number of currently computed time windows of the coupling scheme.
+   */
   int getTimeWindows() const override final;
 
-  /// Returns true, if time window size is prescribed by the cpl scheme.
+  /**
+   * @brief Function to check whether time window size is defined by coupling scheme.
+   * @returns true, if time window size is prescribed by the coupling scheme.
+   */
   bool hasTimeWindowSize() const override final;
 
   /**
@@ -166,9 +186,9 @@ public:
   void initializeData() override final;
 
   /**
-   * @brief TODO
+   * @brief Advances the coupling scheme.
    */
-  void advance() override; // @todo should be declared final. Currently, override by MultiCouplingScheme
+  void advance() override final;
 
   /**
    * @brief Sets order of predictor of interface values for first participant.
@@ -194,7 +214,7 @@ public:
   void setAcceleration(acceleration::PtrAcceleration acceleration);
 
 protected:
-  /// TODO
+  /// Map that links DataID to CouplingData
   typedef std::map<int, PtrCouplingData> DataMap;
 
   /// Sends data sendDataIDs given in mapCouplingData with communication.
@@ -211,60 +231,93 @@ protected:
 
   typedef std::map<int, Eigen::VectorXd> ValuesMap;
 
-  /// Returns true, if coupling scheme is explicit
+  /**
+   * @brief Function to determine whether coupling scheme is an explicit coupling scheme
+   * @returns true, if coupling scheme is explicit
+   */
   bool isExplicitCouplingScheme()
   {
     PRECICE_ASSERT(_couplingMode != Undefined);
     return _couplingMode == Explicit;
   }
 
-  /// Returns true, if coupling scheme is implicit
+  /**
+   * @brief Function to determine whether coupling scheme is an implicit coupling scheme
+   * @returns true, if coupling scheme is implicit
+   */
   bool isImplicitCouplingScheme()
   {
     PRECICE_ASSERT(_couplingMode != Undefined);
     return _couplingMode == Implicit;
   }
 
-  /// Sets _timeWindowSize
+  /**
+   * @brief Setter for _timeWindowSize
+   * @param timeWindowSize
+   */
   void setTimeWindowSize(double timeWindowSize);
 
-  /// Get _computedTimeWindowPart
+  /**
+   * @brief Getter for _computedTimeWindowPart
+   * @returns _computedTimeWindowPart
+   */
   double getComputedTimeWindowPart() {
     return _computedTimeWindowPart;
   }
 
-  /// @return True, if local participant is the one starting the scheme.
+  /**
+   * @brief Getter for _doesFirstStep
+   * @returns _doesFirstStep
+   */
   bool doesFirstStep() const
   {
     return _doesFirstStep;
   }
 
-  /// Sets flag to determine whether data has been exchanged in the last coupling iteration.
+  /**
+   * @brief Sets flag to determine whether data has been exchanged in the last coupling iteration.
+   * @param hasDataBeenExchanged
+   */
   void setHasDataBeenExchanged(bool hasDataBeenExchanged);
 
   /**
-   * @brief Sets the computed time windows of the coupling scheme.
+   * @brief Setter for _timeWindows
    *
+   * Sets the computed time windows of the coupling scheme.
    * Used for testing to allow to advance in time without a coupling partner.
+   *
+   * @param timeWindows number of time windows
    */
   void setTimeWindows(int timeWindows)
   {
     _timeWindows = timeWindows;
   }
 
-  /// @return value of _sendsInitializedData.
+  /**
+   * @brief Getter for _sendsInitializedData
+   * @returns _sendsInitializedData
+   */
   bool sendsInitializedData() const
   {
     return _sendsInitializedData;
   }
 
-  /// @return value of _receivesInitializedData
+  /**
+   * @brief Getter for _receivesInitializedData
+   * @returns _receivesInitializedData
+   */
   bool receivesInitializedData() const
   {
     return _receivesInitializedData;
   }
 
-  /// Holds relevant variables to perform a convergence measurement.
+  /**
+   * @brief Holds relevant variables to perform a convergence measurement.
+   * @param data TODO
+   * @param couplingData TODO
+   * @param suffices TODO
+   * @param measure TODO
+   */
   struct ConvergenceMeasure {
     mesh::PtrData               data;
     CouplingData *              couplingData;
@@ -272,12 +325,20 @@ protected:
     impl::PtrConvergenceMeasure measure;
   };
 
+  /**
+   * @brief TODO
+   */
   void newConvergenceMeasurements();
 
+  /**
+   * @brief TODO
+   * @return TODO
+   */
   bool measureConvergence();
 
   /**
    * @brief Sets up _dataStorage to store data values of last timestep (@BU or time window?).
+   * @param data TODO
    *
    * Every send data has an entry in _dataStorage. Every Entry is a vector
    * of data values with length according to the total number of values on all
@@ -286,28 +347,48 @@ protected:
    */
   void setupDataMatrices(DataMap &data);
 
+  /**
+   * @brief Getter for _acceleration
+   * @returns _acceleration
+   */
   acceleration::PtrAcceleration getAcceleration()
   {
     return _acceleration;
   }
 
-  /// TODO
+  /**
+   * @brief TODO
+   * @param dataMap TODO
+   */
   void updateOldValues(DataMap &dataMap);
 
-  /// TODO
+  /**
+   * @brief sends convergence to other participant via m2n
+   * @param m2n used for sending
+   * @param convergence bool that is being sent
+   */
   void sendConvergence(m2n::PtrM2N m2n, bool convergence)
   {
-    // copy of BaseCouplingScheme::sendConvergence(bool convergence) @todo can we improve this?
     PRECICE_ASSERT(not doesFirstStep(), "For convergence information the sending participant is never the first one.");
     m2n->send(convergence);
   }
 
-  /// TODO
+  /**
+   * @brief apply acceleration to the current iteration
+   * @returns whether this iteration has converged or not
+   */
   bool accelerate();
 
-  /// TODO
+  /**
+   * @brief TODO
+   * @param data TODO
+   */
   void extrapolateData(DataMap &data);
 
+  /**
+   * @brief compares _iterations with _maxIterations
+   * @returns true, if maximum number of coupling iterations is reached
+   */
   bool maxIterationsReached();
 
   /**
@@ -370,6 +451,7 @@ private:
   /// Extrapolation order of coupling data for first iteration of every dt.
   int _extrapolationOrder = 0;
 
+  /// valid digits for computation of the remainder of a time window
   int _validDigits;
 
   /// True, if local participant is the one starting the explicit scheme.
@@ -426,28 +508,46 @@ private:
 
   /// Functions needed for initialize()
 
-  /// TODO
+  /**
+   * @brief merges all send and receive data into a single data structure.
+   */
   virtual void mergeData() = 0;
 
-  /// implements functionality for initialize in base class.
+  /**
+   * @brief implements functionality for initialize in base class.
+   */
   virtual void initializeImplementation() = 0;
 
   /// Functions needed for initializeData()
 
-  /// implements functionality for initializeData in base class.
+  /**
+   * @brief implements functionality for initializeData in base class.
+   */
   virtual void exchangeInitialData() = 0;
 
   /// Functions needed for advance()
 
-  /// implements functionality for advance in base class.
+  /**
+   * @brief implements functionality for advance in base class.
+   * @returns true, if iteration converged
+   */
   virtual bool exchangeDataAndAccelerate() = 0;
 
+  /**
+   * @brief interface to provide accelerated data, depending on coupling scheme being used
+   * @return data being accelerated
+   */
   virtual DataMap &getAccelerationData  () = 0;
 
-  /// If any required actions are open, an error message is issued.
+  /**
+   * @brief If any required actions are open, an error message is issued.
+   */
   void checkCompletenessRequiredActions();
 
-  /// Returns true if end time of time window is reached. Does not check for convergence
+  /**
+   * @brief Function to check whether end of time window is reached. Does not check for convergence
+   * @returns true if end time of time window is reached.
+   */
   bool reachedEndOfTimeWindow();
 
   /**
@@ -456,8 +556,8 @@ private:
   void initializeTXTWriters();
 
   /**
- * @brief TODO
- */
+   * @brief TODO
+   */
   void advanceTXTWriters();
 
   /**
@@ -466,16 +566,28 @@ private:
    * This version is used by the ImplicitCouplingScheme at the moment, which
    * needs to use the last time window in the plotting when the iterations of
    * a time window are converged.
+   *
+   * @param timeWindows current number of completed time windows
+   * @param time current time
    */
   std::string printBasicState(
       int    timeWindows,
       double time) const;
 
-  /// Returns a string representing the required actions.
+  /**
+   * @brief TODO
+   * @returns a string representing the required actions.
+   */
   std::string printActionsState() const;
 
-  /// Needed for setting up convergence measures, implemented in child class
-  virtual void assignDataToConvergenceMeasure(ConvergenceMeasure* convMeasure, int dataID) = 0;
+  /**
+   * @brief Needed for setting up convergence measures, implemented in child class
+   * @param convMeasure TODO
+   * @param dataID TODO
+   */
+  virtual void assignDataToConvergenceMeasure(
+      ConvergenceMeasure* convMeasure,
+      int dataID) = 0;
 
   /**
    * @brief used for storing send/receive data at end of acceleration, if not converged.
