@@ -261,7 +261,7 @@ void BaseCouplingScheme::extrapolateData(DataMap &data)
       utils::shiftSetFirst(pair.second->oldValues, values);
     }
   } else {
-    PRECICE_ERROR("Called extrapolation with order != 1,2!");
+    PRECICE_ASSERT(false, "Extrapolation order is invalid.");
   }
 }
 
