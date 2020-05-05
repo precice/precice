@@ -33,6 +33,7 @@
 
 #include <algorithm>
 #include <utility>
+#include <sstream>
 
 #include "logging/LogConfiguration.hpp"
 #include "logging/Logger.hpp"
@@ -675,7 +676,16 @@ void SolverInterfaceImpl::getMeshVertexIDsFromPositions(
         break;
       }
     }
-    PRECICE_CHECK(j != vsize, "Position " << i << "=" << ids[i] << " unknown!");
+    if (j == vsize) {
+      std::ostringstream err;
+      err << "Unable to find a vertex on mesh \"" << mesh->getName() << "\" at position (";
+      err << posMatrix.col(i)[0] << ", " << posMatrix.col(i)[1];
+      if (_dimensions == 3) {
+        err << ", " << posMatrix.col(i)[2];
+      }
+      err << "). The request failed for query " << i+1 << " out of " << size << '.';
+      PRECICE_ERROR(err.str());
+    }
     ids[i] = j;
   }
 }
