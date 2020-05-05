@@ -238,10 +238,12 @@ void BaseCouplingScheme::advance()
       } else {
         _iterations = 1;
       }
-      _hasDataBeenExchanged = true;
     } else {
       PRECICE_INFO("Time window completed");
       _isTimeWindowComplete = true;
+    }
+    if(isCouplingOngoing()) {
+      PRECICE_ASSERT(_hasDataBeenExchanged);
     }
     _computedTimeWindowPart = 0.0; // reset window
   }
