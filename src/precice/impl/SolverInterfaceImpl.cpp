@@ -1464,8 +1464,7 @@ const mesh::Mesh &SolverInterfaceImpl::mesh(const std::string &meshName) const
       return *context->mesh;
     }
   }
-  PRECICE_ERROR("Participant \"" << _accessorName
-                                 << "\" does not use mesh \"" << meshName << "\"!");
+  PRECICE_ASSERT(false, "Participant \"" << _accessorName << "\" does not use mesh \"" << meshName << "\".");
 }
 
 } // namespace impl
