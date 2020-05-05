@@ -259,7 +259,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3)
 }
 
 /// Some ranks are empty, does not converge
-BOOST_AUTO_TEST_CASE(DistributedConsistent2DV4)
+/*BOOST_AUTO_TEST_CASE(DistributedConsistent2DV4)
 {
   PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
   ThinPlateSplines                           fct;
@@ -311,10 +311,10 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV4)
                    {2, {7}},
                    {2, {8}}},
                   globalIndexOffsets[context.rank]);
-}
+}*/
 
 // same as 2DV4, but all ranks have vertices
-BOOST_AUTO_TEST_CASE(DistributedConsistent2DV5)
+/*BOOST_AUTO_TEST_CASE(DistributedConsistent2DV5)
 {
   PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
   ThinPlateSplines                           fct;
@@ -379,8 +379,8 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV5)
                    {2, {7}},
                    {2, {8}}},
                   globalIndexOffsets[context.rank]);
-}
-
+}*/
+/*
 /// same as 2DV4, but strictly linear input values, converges and gives correct results
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV6,
                      *boost::unit_test::tolerance(1e-7))
@@ -436,6 +436,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV6,
                    {2, {8}}},
                   globalIndexOffsets[context.rank]);
 }
+*/
 
 /// Test with a homogenous distribution of mesh amoung ranks
 BOOST_AUTO_TEST_CASE(DistributedConservative2DV1)
@@ -813,7 +814,7 @@ void testTagging(const TestContext &context,
                                                                                    << " is tagged, but should not be.");
   }
 }
-
+/*
 BOOST_AUTO_TEST_CASE(testTagFirstRound)
 {
   PRECICE_TEST(""_on(4_ranks).setupMasterSlaves())
@@ -845,7 +846,7 @@ BOOST_AUTO_TEST_CASE(testTagFirstRound)
   // For conservative just swap meshes.
   testTagging(context, outMeshSpec, inMeshSpec, shouldTagFirstRound, shouldTagSecondRound, false);
 }
-
+*/
 BOOST_AUTO_TEST_SUITE_END() // Parallel
 
 BOOST_AUTO_TEST_SUITE(Serial)

@@ -131,8 +131,10 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   int           dimensions = getDimensions();
 
   if(utils::MasterSlave::isSlave()){
+    
     mesh::PtrMesh inMesh;
     mesh::PtrMesh outMesh;
+    
     if (getConstraint() == CONSERVATIVE) {
       inMesh  = output();
       outMesh = input();
@@ -146,7 +148,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
     mesh::PtrMesh inMesh;
     mesh::PtrMesh outMesh;
-    
+  
     if (getConstraint() == CONSERVATIVE) {
       inMesh  = output();
       outMesh = input();
@@ -158,8 +160,12 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     mesh::Mesh globalInMesh("globalInMesh", inMesh->getDimensions(), inMesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
     mesh::Mesh globalOutMesh("globalOutMesh", outMesh->getDimensions(), outMesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
 
-    globalInMesh.addMesh(*inMesh);
-    globalOutMesh.addMesh(*outMesh);
+    if(!inMesh->vertices().empty()){
+        globalInMesh.addMesh(*inMesh);
+    }
+    if(!outMesh->vertices().empty()){
+        globalOutMesh.addMesh(*outMesh);
+    }
 
     for(int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); ++rankSlave){
       mesh::Mesh slaveInMesh(inMesh->getName(), inMesh->getDimensions(), inMesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
@@ -262,7 +268,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(
   PRECICE_ASSERT(getDimensions() == output()->getDimensions(),
                  getDimensions(), output()->getDimensions());
 
-  int              valueDim  = input()->data(inputDataID)->getDimensions();
+  int            valueDim  = input()->data(inputDataID)->getDimensions();
   PRECICE_ASSERT(valueDim == output()->data(outputDataID)->getDimensions(),
                  valueDim, output()->data(outputDataID)->getDimensions());
   
@@ -284,37 +290,55 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(
     utils::MasterSlave::_communication->send(outValues, 0);
   }
   else {
+    // Global data containers for master 
+    std::vector<double> globalInValues;
+    std::vector<double> globalOutValues;
+    
     // Eigen::VectorXd to std::vector conversion
     auto & localInData = input()->data(inputDataID)->values();
     auto & localOutData = output()->data(outputDataID)->values();
 
-    std::vector<double> inValues(localInData.data(), localInData.data() + localInData.size());
-    std::vector<double> outValues(localOutData.data(), localOutData.data() + localOutData.size());
+    if(localInData.size() != 0){
+      std::vector<double> inValues(localInData.data(), localInData.data() + localInData.size());
+      globalInValues.insert(globalInValues.begin(), inValues.begin(), inValues.end());
+    }
+    if(localOutData.size() != 0){
+      std::vector<double> outValues(localOutData.data(), localOutData.data() + localOutData.size());
+      globalOutValues.insert(globalOutValues.begin(), outValues.begin(), outValues.end());
+    }
+
     std::vector<int> outValuesSize;
-    outValuesSize.push_back(output()->data(outputDataID)->getDataCount());
-    
-    // Global data containers for master 
-    std::vector<double> globalInValues = inValues;
-    std::vector<double> globalOutValues = outValues;
+    outValuesSize.push_back(output()->data(outputDataID)->values().size());
+
     if(utils::MasterSlave::getSize() > 1){
-      outValuesSize.resize(utils::MasterSlave::getSize());
       for(int rank = 1; rank < utils::MasterSlave::getSize(); ++rank){
         std::vector<double> slaveInData;
         utils::MasterSlave::_communication->receive(slaveInData, rank);
         if(!slaveInData.empty()){
           globalInValues.insert(globalInValues.end(), slaveInData.begin(), slaveInData.end());
         }
+
         std::vector<double> slaveOutData;
         utils::MasterSlave::_communication->receive(slaveOutData, rank);
+        outValuesSize.push_back(slaveOutData.size());
         if(!slaveOutData.empty()){
           globalOutValues.insert(globalOutValues.end(), slaveOutData.begin(), slaveOutData.end());
-          outValuesSize.at(rank) = slaveOutData.size();
         }
       }
     }
 
     Eigen::Map<Eigen::VectorXd> inputValues(globalInValues.data(), globalInValues.size());
     Eigen::Map<Eigen::VectorXd> outputValues(globalOutValues.data(), globalOutValues.size());
+
+    PRECICE_DEBUG(" Size of input values, Eigen::Vector: " << inputValues.size());
+    PRECICE_DEBUG(" Size of output values, Eigen::Vector: " << outputValues.size());
+
+    PRECICE_DEBUG(" Size of input values, std::vector: " << globalInValues.size());
+    PRECICE_DEBUG(" Size of output values, std::vector: " << globalOutValues.size());
+
+    for(int i = 0; i < outValuesSize.size(); ++i){
+      PRECICE_DEBUG(" Size of data in rank " << i << ": " << outValuesSize.at(i));
+    }
 
     if (getConstraint() == CONSERVATIVE) {
       //PRECICE_DEBUG("Map conservative");
@@ -365,13 +389,16 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(
       }
     }
 
-    Eigen::Map<Eigen::VectorXd> masterValues(outputValues.data(), outValuesSize.at(0));
-    output()->data(outputDataID)->values() = masterValues;
+    if(outValuesSize.at(0) != 0){
+        Eigen::Map<Eigen::VectorXd> masterValues(outputValues.data(), outValuesSize.at(0));
+        output()->data(outputDataID)->values() = masterValues;
+    }
+
     int beginPoint = outValuesSize.at(0);
+    
     if(utils::MasterSlave::isMaster()){
       for(int rank = 1; rank < utils::MasterSlave::getSize(); ++rank){
         std::vector<double> sendValues(outputValues.data() + beginPoint, outputValues.data() + beginPoint + outValuesSize.at(rank));
-        PRECICE_DEBUG("Begin offset: " << beginPoint << "Size: " << beginPoint + outValuesSize.at(rank)); 
         utils::MasterSlave::_communication->send(sendValues, rank);
         beginPoint += outValuesSize.at(rank);
       } 
@@ -379,10 +406,12 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(
   }
 
   if(utils::MasterSlave::isSlave()){
+    PRECICE_DEBUG("Size of output data" << output()->data(outputDataID)->values().size()); 
     std::vector<double> receivedValues;
     utils::MasterSlave::_communication->receive(receivedValues, 0);
-    PRECICE_DEBUG("Size of data values: " << receivedValues.size());
-    output()->data(outputDataID)->values() = Eigen::Map<Eigen::VectorXd>(receivedValues.data(), receivedValues.size());
+    if(!receivedValues.empty()){
+      output()->data(outputDataID)->values() = Eigen::Map<Eigen::VectorXd>(receivedValues.data(), receivedValues.size());
+    }
   }
 }
 
